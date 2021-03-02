@@ -68,9 +68,12 @@ struct _GstD3D11BaseConvert
   GstD3D11VideoProcessor *processor;
   gboolean processor_in_use;
 
-  /* used for fallback texture copy */
-  D3D11_BOX in_src_box;
-  D3D11_BOX out_src_box;
+  /* used for border rendering */
+  RECT in_rect;
+  RECT out_rect;
+
+  gint borders_h;
+  gint borders_w;
 };
 
 /**
@@ -1326,6 +1329,103 @@ error:
   return FALSE;
 }
 
+/* 16.0 / 255.0 ~= 0.062745 */
+static const float luma_black_level_limited = 0.062745f;
+
+static inline void
+clear_rtv_color_rgb (GstD3D11BaseConvert * self,
+    ID3D11DeviceContext * context_handle, ID3D11RenderTargetView * rtv,
+    gboolean full_range)
+{
+  const FLOAT clear_color_full[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+  const FLOAT clear_color_limited[4] =
+      { luma_black_level_limited, luma_black_level_limited,
+    luma_black_level_limited, 1.0f
+  };
+  const FLOAT *target;
+
+  if (full_range)
+    target = clear_color_full;
+  else
+    target = clear_color_limited;
+
+  ID3D11DeviceContext_ClearRenderTargetView (context_handle, rtv, target);
+}
+
+static inline void
+clear_rtv_color_vuya (GstD3D11BaseConvert * self,
+    ID3D11DeviceContext * context_handle, ID3D11RenderTargetView * rtv,
+    gboolean full_range)
+{
+  const FLOAT clear_color_full[4] = { 0.5f, 0.5f, 0.0f, 1.0f };
+  const FLOAT clear_color_limited[4] =
+      { 0.5f, 0.5f, luma_black_level_limited, 1.0f };
+  const FLOAT *target;
+
+  if (full_range)
+    target = clear_color_full;
+  else
+    target = clear_color_limited;
+
+  ID3D11DeviceContext_ClearRenderTargetView (context_handle, rtv, target);
+}
+
+static inline void
+clear_rtv_color_luma (GstD3D11BaseConvert * self,
+    ID3D11DeviceContext * context_handle, ID3D11RenderTargetView * rtv,
+    gboolean full_range)
+{
+  const FLOAT clear_color_full[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+  const FLOAT clear_color_limited[4] =
+      { luma_black_level_limited, luma_black_level_limited,
+    luma_black_level_limited, 1.0f
+  };
+  const FLOAT *target;
+
+  if (full_range)
+    target = clear_color_full;
+  else
+    target = clear_color_limited;
+
+  ID3D11DeviceContext_ClearRenderTargetView (context_handle, rtv, target);
+}
+
+static inline void
+clear_rtv_color_chroma (GstD3D11BaseConvert * self,
+    ID3D11DeviceContext * context_handle, ID3D11RenderTargetView * rtv)
+{
+  const FLOAT clear_color[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+
+  ID3D11DeviceContext_ClearRenderTargetView (context_handle, rtv, clear_color);
+}
+
+static void
+clear_rtv_color_all (GstD3D11BaseConvert * self, GstVideoInfo * info,
+    ID3D11DeviceContext * context_handle,
+    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
+{
+  gint i;
+  gboolean full_range = info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255;
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    if (!rtv[i])
+      break;
+
+    if (GST_VIDEO_INFO_IS_RGB (info)) {
+      clear_rtv_color_rgb (self, context_handle, rtv[i], full_range);
+    } else {
+      if (GST_VIDEO_INFO_N_PLANES (info) == 1) {
+        clear_rtv_color_vuya (self, context_handle, rtv[i], full_range);
+      } else {
+        if (i == 0)
+          clear_rtv_color_luma (self, context_handle, rtv[i], full_range);
+        else
+          clear_rtv_color_chroma (self, context_handle, rtv[i]);
+      }
+    }
+  }
+}
+
 static gboolean
 create_shader_output_resource (GstD3D11BaseConvert * self,
     GstD3D11Device * device, const GstD3D11Format * format, GstVideoInfo * info)
@@ -1334,6 +1434,7 @@ create_shader_output_resource (GstD3D11BaseConvert * self,
   D3D11_RENDER_TARGET_VIEW_DESC view_desc = { 0, };
   HRESULT hr;
   ID3D11Device *device_handle;
+  ID3D11DeviceContext *context_handle;
   ID3D11Texture2D *tex[GST_VIDEO_MAX_PLANES] = { NULL, };
   ID3D11RenderTargetView *view[GST_VIDEO_MAX_PLANES] = { NULL, };
   gint i;
@@ -1342,6 +1443,7 @@ create_shader_output_resource (GstD3D11BaseConvert * self,
     return TRUE;
 
   device_handle = gst_d3d11_device_get_device_handle (device);
+  context_handle = gst_d3d11_device_get_device_context_handle (device);
 
   texture_desc.MipLevels = 1;
   texture_desc.ArraySize = 1;
@@ -1414,6 +1516,10 @@ create_shader_output_resource (GstD3D11BaseConvert * self,
     }
   }
 
+  gst_d3d11_device_lock (device);
+  clear_rtv_color_all (self, info, context_handle, view);
+  gst_d3d11_device_unlock (device);
+
   self->num_output_view = i;
 
   GST_DEBUG_OBJECT (self, "%d render view created", self->num_output_view);
@@ -1446,9 +1552,47 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
 {
   GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (filter);
   const GstVideoInfo *unknown_info;
+  gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
+  D3D11_VIEWPORT view_port;
+  gint border_offset_x = 0;
+  gint border_offset_y = 0;
 
   if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (filter)))
     return TRUE;
+
+  if (!gst_util_fraction_multiply (in_info->width,
+          in_info->height, in_info->par_n, in_info->par_d, &from_dar_n,
+          &from_dar_d)) {
+    from_dar_n = from_dar_d = -1;
+  }
+
+  if (!gst_util_fraction_multiply (out_info->width,
+          out_info->height, out_info->par_n, out_info->par_d, &to_dar_n,
+          &to_dar_d)) {
+    to_dar_n = to_dar_d = -1;
+  }
+
+  self->borders_w = self->borders_h = 0;
+  if (to_dar_n != from_dar_n || to_dar_d != from_dar_d) {
+    gint n, d, to_h, to_w;
+
+    if (from_dar_n != -1 && from_dar_d != -1
+        && gst_util_fraction_multiply (from_dar_n, from_dar_d,
+            out_info->par_d, out_info->par_n, &n, &d)) {
+      to_h = gst_util_uint64_scale_int (out_info->width, d, n);
+      if (to_h <= out_info->height) {
+        self->borders_h = out_info->height - to_h;
+        self->borders_w = 0;
+      } else {
+        to_w = gst_util_uint64_scale_int (out_info->height, n, d);
+        g_assert (to_w <= out_info->width);
+        self->borders_h = 0;
+        self->borders_w = out_info->width - to_w;
+      }
+    } else {
+      GST_WARNING_OBJECT (self, "Can't calculate borders");
+    }
+  }
 
   gst_d3d11_base_convert_clear_shader_resource (self);
 
@@ -1460,11 +1604,13 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   if (in_info->interlace_mode != out_info->interlace_mode)
     goto format_mismatch;
 
-  /* FIXME: add support border */
   if (in_info->width == out_info->width && in_info->height == out_info->height
-      && in_info->finfo == out_info->finfo) {
+      && in_info->finfo == out_info->finfo && self->borders_w == 0 &&
+      self->borders_h == 0) {
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
     return TRUE;
+  } else {
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), FALSE);
   }
 
   self->in_d3d11_format =
@@ -1545,20 +1691,45 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   }
 #endif
 
-  /* setup D3D11_BOX struct for fallback copy */
-  self->in_src_box.left = 0;
-  self->in_src_box.top = 0;
-  self->in_src_box.front = 0;
-  self->in_src_box.back = 1;
-  self->in_src_box.right = GST_VIDEO_INFO_WIDTH (in_info);
-  self->in_src_box.bottom = GST_VIDEO_INFO_HEIGHT (in_info);
+  GST_DEBUG_OBJECT (self, "from=%dx%d (par=%d/%d dar=%d/%d), size %"
+      G_GSIZE_FORMAT " -> to=%dx%d (par=%d/%d dar=%d/%d borders=%d:%d), "
+      "size %" G_GSIZE_FORMAT,
+      in_info->width, in_info->height, in_info->par_n, in_info->par_d,
+      from_dar_n, from_dar_d, in_info->size, out_info->width,
+      out_info->height, out_info->par_n, out_info->par_d, to_dar_n, to_dar_d,
+      self->borders_w, self->borders_h, out_info->size);
 
-  self->out_src_box.left = 0;
-  self->out_src_box.top = 0;
-  self->out_src_box.front = 0;
-  self->out_src_box.back = 1;
-  self->out_src_box.right = GST_VIDEO_INFO_WIDTH (out_info);
-  self->out_src_box.bottom = GST_VIDEO_INFO_HEIGHT (out_info);
+  self->in_rect.left = 0;
+  self->in_rect.top = 0;
+  self->in_rect.right = GST_VIDEO_INFO_WIDTH (in_info);
+  self->in_rect.bottom = GST_VIDEO_INFO_HEIGHT (in_info);
+
+  if (self->borders_w) {
+    border_offset_x = self->borders_w / 2;
+    self->out_rect.left = border_offset_x;
+    self->out_rect.right = GST_VIDEO_INFO_WIDTH (out_info) - border_offset_x;
+  } else {
+    self->out_rect.left = 0;
+    self->out_rect.right = GST_VIDEO_INFO_WIDTH (out_info);
+  }
+
+  if (self->borders_h) {
+    border_offset_y = self->borders_h / 2;
+    self->out_rect.top = border_offset_y;
+    self->out_rect.bottom = GST_VIDEO_INFO_HEIGHT (out_info) - border_offset_y;
+  } else {
+    self->out_rect.top = 0;
+    self->out_rect.bottom = GST_VIDEO_INFO_HEIGHT (out_info);
+  }
+
+  view_port.TopLeftX = border_offset_x;
+  view_port.TopLeftY = border_offset_y;
+  view_port.Width = GST_VIDEO_INFO_WIDTH (out_info) - self->borders_w;
+  view_port.Height = GST_VIDEO_INFO_HEIGHT (out_info) - self->borders_h;
+  view_port.MinDepth = 0.0f;
+  view_port.MaxDepth = 1.0f;
+
+  gst_d3d11_color_converter_update_viewport (self->converter, &view_port);
 
   return TRUE;
 
@@ -1585,38 +1756,54 @@ gst_d3d11_base_convert_prefer_video_processor (GstD3D11BaseConvert * self,
   GstMemory *mem;
   GstD3D11Memory *dmem;
 
-  if (!self->processor)
+  if (!self->processor) {
+    GST_TRACE_OBJECT (self, "Processor is unavailable");
     return FALSE;
+  }
 
-  if (gst_buffer_n_memory (inbuf) != 1 || gst_buffer_n_memory (outbuf) != 1)
+  if (gst_buffer_n_memory (inbuf) != 1 || gst_buffer_n_memory (outbuf) != 1) {
+    GST_TRACE_OBJECT (self, "Num memory objects is mismatched, in: %d, out: %d",
+        gst_buffer_n_memory (inbuf), gst_buffer_n_memory (outbuf));
     return FALSE;
+  }
 
   mem = gst_buffer_peek_memory (inbuf, 0);
   g_assert (gst_is_d3d11_memory (mem));
 
   dmem = (GstD3D11Memory *) mem;
-  if (dmem->device != filter->device)
+  if (dmem->device != filter->device) {
+    GST_TRACE_OBJECT (self, "Input memory belongs to different device");
     return FALSE;
+  }
 
-  /* If we can use shader, we prefer to use shader instead of video processor
+  /* If we can use shader, and video processor was not used previously,
+   * we prefer to use shader instead of video processor
    * because video processor implementation is vendor dependent
    * and not flexible */
   if (!self->processor_in_use &&
-      gst_d3d11_memory_get_shader_resource_view_size (dmem))
+      gst_d3d11_memory_get_shader_resource_view_size (dmem)) {
+    GST_TRACE_OBJECT (self, "SRV is available");
     return FALSE;
+  }
 
-  if (!gst_d3d11_video_processor_get_input_view (self->processor, dmem))
+  if (!gst_d3d11_video_processor_get_input_view (self->processor, dmem)) {
+    GST_TRACE_OBJECT (self, "PIV is unavailable");
     return FALSE;
+  }
 
   mem = gst_buffer_peek_memory (outbuf, 0);
   g_assert (gst_is_d3d11_memory (mem));
 
   dmem = (GstD3D11Memory *) mem;
-  if (dmem->device != filter->device)
+  if (dmem->device != filter->device) {
+    GST_TRACE_OBJECT (self, "Output memory belongs to different device");
     return FALSE;
+  }
 
-  if (!gst_d3d11_video_processor_get_output_view (self->processor, dmem))
+  if (!gst_d3d11_video_processor_get_output_view (self->processor, dmem)) {
+    GST_TRACE_OBJECT (self, "POV is unavailable");
     return FALSE;
+  }
 
   return TRUE;
 }
@@ -1626,7 +1813,6 @@ gst_d3d11_base_convert_transform_using_processor (GstD3D11BaseConvert * self,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
   GstD3D11Memory *in_mem, *out_mem;
-  RECT in_rect, out_rect;
   ID3D11VideoProcessorInputView *piv;
   ID3D11VideoProcessorOutputView *pov;
 
@@ -1645,18 +1831,25 @@ gst_d3d11_base_convert_transform_using_processor (GstD3D11BaseConvert * self,
     return FALSE;
   }
 
-  in_rect.left = 0;
-  in_rect.top = 0;
-  in_rect.right = self->in_src_box.right;
-  in_rect.bottom = self->in_src_box.bottom;
+  /* Clear background color with black */
+  if (self->borders_w || self->borders_h) {
+    GstD3D11BaseFilter *bfilter = GST_D3D11_BASE_FILTER_CAST (self);
+    ID3D11DeviceContext *context_handle =
+        gst_d3d11_device_get_device_context_handle (bfilter->device);
+    ID3D11RenderTargetView *render_view[GST_VIDEO_MAX_PLANES] = { NULL, };
 
-  out_rect.left = 0;
-  out_rect.top = 0;
-  out_rect.right = self->out_src_box.right;
-  out_rect.bottom = self->out_src_box.bottom;
+    if (!gst_d3d11_buffer_get_render_target_view (outbuf, render_view)) {
+      GST_ERROR_OBJECT (self, "ID3D11RenderTargetView is unavailable");
+      return FALSE;
+    }
+
+    gst_d3d11_device_lock (bfilter->device);
+    clear_rtv_color_all (self, &bfilter->out_info, context_handle, render_view);
+    gst_d3d11_device_unlock (bfilter->device);
+  }
 
   return gst_d3d11_video_processor_render (self->processor,
-      &in_rect, piv, &out_rect, pov);
+      &self->in_rect, piv, &self->out_rect, pov);
 }
 
 static GstFlowReturn
@@ -1670,6 +1863,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
   ID3D11DeviceContext *context_handle;
   ID3D11ShaderResourceView *resource_view[GST_VIDEO_MAX_PLANES] = { NULL, };
   ID3D11RenderTargetView *render_view[GST_VIDEO_MAX_PLANES] = { NULL, };
+  ID3D11RenderTargetView **target_rtv;
   gint i;
   gboolean copy_input = FALSE;
   gboolean copy_output = FALSE;
@@ -1700,6 +1894,8 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
     }
 
     self->processor_in_use = TRUE;
+
+    GST_TRACE_OBJECT (self, "Conversion done by video processor");
 
     gst_d3d11_buffer_unmap (inbuf, in_map);
     gst_d3d11_buffer_unmap (outbuf, out_map);
@@ -1755,9 +1951,25 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
     copy_output = TRUE;
   }
 
+  /* If we need border, clear render target view first */
+  if (copy_output) {
+    target_rtv = self->render_target_view;
+  } else {
+    target_rtv = render_view;
+  }
+
+  /* We need to clear background color as our shader wouldn't touch border
+   * area. Likely output texture was initialized with zeros which is fine for
+   * RGB, but it's not black color in case of YUV */
+  if (self->borders_w || self->borders_h) {
+    gst_d3d11_device_lock (device);
+    clear_rtv_color_all (self, &filter->out_info, context_handle, target_rtv);
+    gst_d3d11_device_unlock (device);
+  }
+
   if (!gst_d3d11_color_converter_convert (self->converter,
           copy_input ? self->shader_resource_view : resource_view,
-          copy_output ? self->render_target_view : render_view, NULL, NULL)) {
+          target_rtv, NULL, NULL)) {
     goto conversion_failed;
   }
 
