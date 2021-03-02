@@ -1641,11 +1641,11 @@ gst_d3d11_decoder_decide_allocation (GstVideoDecoder * decoder,
       return FALSE;
     }
 
-    if (codec == GST_D3D11_CODEC_VP9) {
-      /* Needs render target bind flag so that it can be used for
-       * output of shader pipeline if internal resizing is required */
-      d3d11_params->desc[0].BindFlags |= D3D11_BIND_RENDER_TARGET;
-    }
+    /* Needs render target bind flag so that it can be used for
+     * output of shader pipeline if internal resizing is required.
+     * Also, downstream can keep using video processor even if we copy
+     * some decoded textures into downstream buffer */
+    d3d11_params->desc[0].BindFlags |= D3D11_BIND_RENDER_TARGET;
 
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
     gst_d3d11_allocation_params_free (d3d11_params);
