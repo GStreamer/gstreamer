@@ -420,6 +420,7 @@ _try_export_dmabuf (GstGLDownloadElement * download, GstBuffer * inbuf)
 
   src_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM (download)->srcpad);
   gst_video_info_from_caps (&out_info, src_caps);
+  gst_caps_unref (src_caps);
 
   if (download->add_videometa) {
     GstVideoMeta *meta;
