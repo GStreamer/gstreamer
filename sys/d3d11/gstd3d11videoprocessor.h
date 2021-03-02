@@ -51,7 +51,7 @@ gboolean  gst_d3d11_video_processor_set_input_color_space  (GstD3D11VideoProcess
 gboolean  gst_d3d11_video_processor_set_output_color_space (GstD3D11VideoProcessor * processor,
                                                             GstVideoColorimetry * color);
 
-#if (DXGI_HEADER_VERSION >= 4)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
 gboolean  gst_d3d11_video_processor_check_format_conversion (GstD3D11VideoProcessor * processor,
                                                              DXGI_FORMAT in_format,
                                                              DXGI_COLOR_SPACE_TYPE in_color_space,
@@ -65,7 +65,7 @@ gboolean  gst_d3d11_video_processor_set_output_dxgi_color_space (GstD3D11VideoPr
                                                                 DXGI_COLOR_SPACE_TYPE color_space);
 #endif
 
-#if (DXGI_HEADER_VERSION >= 5)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
 gboolean  gst_d3d11_video_processor_set_input_hdr10_metadata (GstD3D11VideoProcessor * processor,
                                                               DXGI_HDR_METADATA_HDR10 * hdr10_meta);
 

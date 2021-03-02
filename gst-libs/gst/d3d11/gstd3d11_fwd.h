@@ -41,15 +41,15 @@
 #include <d3d11.h>
 #endif
 
-#if (GST_D3D11_DXGI_H_VERSION >= 6)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 6)
 #include <dxgi1_6.h>
-#elif (GST_D3D11_DXGI_H_VERSION >= 5)
+#elif (GST_D3D11_DXGI_HEADER_VERSION >= 5)
 #include <dxgi1_5.h>
-#elif (GST_D3D11_DXGI_H_VERSION >= 4)
+#elif (GST_D3D11_DXGI_HEADER_VERSION >= 4)
 #include <dxgi1_4.h>
-#elif (GST_D3D11_DXGI_H_VERSION >= 3)
+#elif (GST_D3D11_DXGI_HEADER_VERSION >= 3)
 #include <dxgi1_3.h>
-#elif (GST_D3D11_DXGI_H_VERSION >= 2)
+#elif (GST_D3D11_DXGI_HEADER_VERSION >= 2)
 #include <dxgi1_2.h>
 #else
 #include <dxgi.h>

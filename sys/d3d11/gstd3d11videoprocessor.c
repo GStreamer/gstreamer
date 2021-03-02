@@ -28,11 +28,11 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_video_processor_debug);
 #define GST_CAT_DEFAULT gst_d3d11_video_processor_debug
 
-#if (D3D11_HEADER_VERSION >= 1 && DXGI_HEADER_VERSION >= 4)
+#if (GST_D3D11_HEADER_VERSION >= 1 && GST_D3D11_DXGI_HEADER_VERSION >= 4)
 #define HAVE_VIDEO_CONTEXT_ONE
 #endif
 
-#if (D3D11_HEADER_VERSION >= 4) && (DXGI_HEADER_VERSION >= 5)
+#if (GST_D3D11_HEADER_VERSION >= 4) && (GST_D3D11_DXGI_HEADER_VERSION >= 5)
 #define HAVE_VIDEO_CONTEXT_TWO
 #endif
 
@@ -297,7 +297,7 @@ gst_d3d11_video_processor_set_output_color_space (GstD3D11VideoProcessor *
   return TRUE;
 }
 
-#if (DXGI_HEADER_VERSION >= 4)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
 gboolean
 gst_d3d11_video_processor_check_format_conversion (GstD3D11VideoProcessor *
     processor, DXGI_FORMAT in_format, DXGI_COLOR_SPACE_TYPE in_color_space,
@@ -361,7 +361,7 @@ gst_d3d11_video_processor_set_output_dxgi_color_space (GstD3D11VideoProcessor *
 }
 #endif
 
-#if (DXGI_HEADER_VERSION >= 5)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
 /* D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_METADATA_HDR10
  * missing in mingw header */
 #define FEATURE_CAPS_METADATA_HDR10 (0x800)

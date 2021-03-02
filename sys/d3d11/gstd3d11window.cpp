@@ -671,12 +671,12 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   };
   const GstD3D11WindowDisplayFormat *chosen_format = NULL;
   const GstDxgiColorSpace * chosen_colorspace = NULL;
-#if (DXGI_HEADER_VERSION >= 4)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
   gboolean have_hdr10 = FALSE;
   DXGI_COLOR_SPACE_TYPE native_colorspace_type =
       DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
 #endif
-#if (DXGI_HEADER_VERSION >= 5)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
   DXGI_HDR_METADATA_HDR10 hdr10_metadata = { 0, };
 #endif
 
@@ -801,7 +801,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
    * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/1175
    * To workaround it, BT709 colorspace will be chosen for non-HDR case.
    */
-#if (DXGI_HEADER_VERSION >= 5)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
   {
     GstVideoMasteringDisplayInfo minfo;
     GstVideoContentLightLevel cll;
@@ -846,7 +846,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
    * target display color space type */
   window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
 
-#if (DXGI_HEADER_VERSION >= 4)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
   {
     IDXGISwapChain3 *swapchain3 = NULL;
     HRESULT hr;
@@ -896,7 +896,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
   }
 
-#if (DXGI_HEADER_VERSION >= 4)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
   if (chosen_colorspace) {
     const GstDxgiColorSpace *in_color_space =
         gst_d3d11_video_info_to_dxgi_color_space (&window->info);
@@ -939,7 +939,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
         gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
             out_dxgi_color_space);
 
-#if (DXGI_HEADER_VERSION >= 5)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
         if (have_hdr10) {
           GST_DEBUG_OBJECT (window, "Set HDR metadata on video processor");
           gst_d3d11_video_processor_set_input_hdr10_metadata (processor,
@@ -1171,7 +1171,7 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
     gst_d3d11_overlay_compositor_upload (self->compositor, buffer);
     gst_d3d11_overlay_compositor_draw_unlocked (self->compositor, &rtv);
 
-#if (DXGI_HEADER_VERSION >= 5)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
     if (self->allow_tearing && self->fullscreen) {
       present_flags |= DXGI_PRESENT_ALLOW_TEARING;
     }

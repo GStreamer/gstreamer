@@ -1487,7 +1487,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     GST_ERROR_OBJECT (self, "couldn't set converter");
     return FALSE;
   }
-#if (DXGI_HEADER_VERSION >= 4)
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
   /* If both input and output formats are native DXGI format */
   if (self->in_d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN &&
       self->out_d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN) {
