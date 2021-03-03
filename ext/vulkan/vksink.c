@@ -146,7 +146,7 @@ gst_vulkan_sink_class_init (GstVulkanSinkClass * klass)
           GST_TYPE_VULKAN_DEVICE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class, "Vulkan video sink",
-      "Sink/Video", "A videosink based on OpenGL",
+      "Sink/Video", "A videosink based on Vulkan",
       "Matthew Waters <matthew@centricular.com>");
 
   gst_element_class_add_static_pad_template (element_class,
