@@ -2223,6 +2223,9 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
 
   gst_buffer_map (in, &map, GST_MAP_READ);
 
+  if (map.size < offset)
+    goto not_enough_data;
+
   data = map.data + offset;
   size = map.size - offset;
 
@@ -2288,6 +2291,9 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
         fragment_size = pkg_length;
     }
     GST_DEBUG_OBJECT (rmdemux, "fragment size %d", fragment_size);
+
+    if (map.size < (data - map.data) + fragment_size)
+      goto not_enough_data;
 
     /* get the fragment */
     fragment =
@@ -2437,6 +2443,9 @@ gst_rmdemux_parse_audio_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
   GstFlowReturn ret;
   GstBuffer *buffer;
 
+  if (gst_buffer_get_size (in) < offset)
+    goto not_enough_data;
+
   buffer = gst_buffer_copy_region (in, GST_BUFFER_COPY_MEMORY, offset, -1);
 
   if (rmdemux->first_ts != -1 && timestamp > rmdemux->first_ts)
@@ -2467,9 +2476,19 @@ gst_rmdemux_parse_audio_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     ret = gst_pad_push (stream->pad, buffer);
   }
 
+done:
   gst_buffer_unref (in);
 
   return ret;
+
+  /* ERRORS */
+not_enough_data:
+  {
+    GST_ELEMENT_WARNING (rmdemux, STREAM, DECODE, ("Skipping bad packet."),
+        (NULL));
+    ret = GST_FLOW_OK;
+    goto done;
+  }
 }
 
 static GstFlowReturn
@@ -2489,6 +2508,9 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
   gst_buffer_map (in, &map, GST_MAP_READ);
   data = map.data;
   size = map.size;
+
+  if (size < 4 + 6 + 1 + 2)
+    goto not_enough_data;
 
   /* stream number */
   id = RMDEMUX_GUINT16_GET (data);
@@ -2525,6 +2547,9 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
 
   /* version 1 has an extra byte */
   if (version == 1) {
+    if (size < 1)
+      goto not_enough_data;
+
     data += 1;
     size -= 1;
   }
@@ -2592,6 +2617,16 @@ unknown_stream:
   {
     GST_WARNING_OBJECT (rmdemux, "No stream for stream id %d in parsing "
         "data packet", id);
+    gst_buffer_unmap (in, &map);
+    gst_buffer_unref (in);
+    return GST_FLOW_OK;
+  }
+
+  /* ERRORS */
+not_enough_data:
+  {
+    GST_ELEMENT_WARNING (rmdemux, STREAM, DECODE, ("Skipping bad packet."),
+        (NULL));
     gst_buffer_unmap (in, &map);
     gst_buffer_unref (in);
     return GST_FLOW_OK;
