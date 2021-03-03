@@ -26,6 +26,12 @@
 #include "gstv4l2codecpool.h"
 #include "gstv4l2codecvp8dec.h"
 
+#define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
+
+#define V4L2_MIN_KERNEL_VER_MAJOR 5
+#define V4L2_MIN_KERNEL_VER_MINOR 13
+#define V4L2_MIN_KERNEL_VERSION KERNEL_VERSION(V4L2_MIN_KERNEL_VER_MAJOR, V4L2_MIN_KERNEL_VER_MINOR, 0)
+
 GST_DEBUG_CATEGORY_STATIC (v4l2_vp8dec_debug);
 #define GST_CAT_DEFAULT v4l2_vp8dec_debug
 
@@ -103,6 +109,7 @@ static gboolean
 gst_v4l2_codec_vp8_dec_open (GstVideoDecoder * decoder)
 {
   GstV4l2CodecVp8Dec *self = GST_V4L2_CODEC_VP8_DEC (decoder);
+  guint version;
 
   if (!gst_v4l2_decoder_open (self->decoder)) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
@@ -110,6 +117,13 @@ gst_v4l2_codec_vp8_dec_open (GstVideoDecoder * decoder)
         ("gst_v4l2_decoder_open() failed: %s", g_strerror (errno)));
     return FALSE;
   }
+
+  version = gst_v4l2_decoder_get_version (self->decoder);
+  if (version < V4L2_MIN_KERNEL_VERSION)
+    GST_WARNING_OBJECT (self,
+        "V4L2 API v%u.%u too old, at least v%u.%u required",
+        (version >> 16) & 0xff, (version >> 8) & 0xff,
+        V4L2_MIN_KERNEL_VER_MAJOR, V4L2_MIN_KERNEL_VER_MINOR);
 
   return TRUE;
 }
