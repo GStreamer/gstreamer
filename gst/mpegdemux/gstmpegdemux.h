@@ -142,6 +142,7 @@ struct _GstPsDemux
   GstSegment sink_segment;
   GstSegment src_segment;
   gboolean adjust_segment;
+  guint32 segment_seqnum;
 
   /* stream output */
   GstPsStream *current_stream;

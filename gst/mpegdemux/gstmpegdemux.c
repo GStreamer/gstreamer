@@ -646,6 +646,7 @@ gst_ps_demux_send_segment (GstPsDemux * demux, GstPsStream * stream,
   /* discont */
   if (G_UNLIKELY (stream->need_segment)) {
     GstSegment segment;
+    GstEvent *segment_event;
 
     GST_DEBUG ("PTS timestamp:%" GST_TIME_FORMAT " base_time %" GST_TIME_FORMAT
         " src_segment.start:%" GST_TIME_FORMAT " .stop:%" GST_TIME_FORMAT,
@@ -678,10 +679,15 @@ gst_ps_demux_send_segment (GstPsDemux * demux, GstPsStream * stream,
       segment.time = segment.start - demux->base_time;
     }
 
+    segment_event = gst_event_new_segment (&segment);
+    if (demux->segment_seqnum)
+      gst_event_set_seqnum (segment_event, demux->segment_seqnum);
+    else
+      demux->segment_seqnum = gst_event_get_seqnum (segment_event);
     GST_INFO_OBJECT (demux, "sending segment event %" GST_SEGMENT_FORMAT
         " to pad %" GST_PTR_FORMAT, &segment, stream->pad);
 
-    gst_pad_push_event (stream->pad, gst_event_new_segment (&segment));
+    gst_pad_push_event (stream->pad, segment_event);
 
     stream->need_segment = FALSE;
   }
@@ -785,6 +791,8 @@ gst_ps_demux_mark_discont (GstPsDemux * demux, gboolean discont,
       stream->discont |= discont;
       stream->need_segment |= need_segment;
       demux->adjust_segment |= need_segment;
+      if (need_segment)
+        demux->segment_seqnum = 0;
       GST_DEBUG_OBJECT (demux, "marked stream as discont %d, need_segment %d",
           stream->discont, stream->need_segment);
     }
@@ -1292,6 +1300,7 @@ gst_ps_demux_handle_seek_pull (GstPsDemux * demux, GstEvent * event)
   gboolean update, flush;
   GstSegment seeksegment;
   GstClockTime first_pts = MPEGTIME_TO_GSTTIME (demux->first_pts);
+  guint32 seek_seqnum = gst_event_get_seqnum (event);
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &start_type, &start, &stop_type, &stop);
@@ -1307,13 +1316,16 @@ gst_ps_demux_handle_seek_pull (GstPsDemux * demux, GstEvent * event)
     goto no_scr_rate;
 
   flush = flags & GST_SEEK_FLAG_FLUSH;
+
   /* keyframe = flags & GST_SEEK_FLAG_KEY_UNIT; *//* FIXME */
 
   if (flush) {
+    GstEvent *event = gst_event_new_flush_start ();
+    gst_event_set_seqnum (event, seek_seqnum);
     /* Flush start up and downstream to make sure data flow and loops are
        idle */
     demux->flushing = TRUE;
-    gst_ps_demux_send_event (demux, gst_event_new_flush_start ());
+    gst_ps_demux_send_event (demux, event);
     gst_pad_push_event (demux->sinkpad, gst_event_new_flush_start ());
   } else {
     /* Pause the pulling task */
@@ -1365,8 +1377,10 @@ gst_ps_demux_handle_seek_pull (GstPsDemux * demux, GstEvent * event)
       &seeksegment);
 
   if (flush) {
+    GstEvent *event = gst_event_new_flush_stop (TRUE);
     /* Stop flushing, the sinks are at time 0 now */
-    gst_ps_demux_send_event (demux, gst_event_new_flush_stop (TRUE));
+    gst_event_set_seqnum (event, seek_seqnum);
+    gst_ps_demux_send_event (demux, event);
   }
 
   if (flush || seeksegment.position != demux->src_segment.position) {
@@ -1385,6 +1399,9 @@ gst_ps_demux_handle_seek_pull (GstPsDemux * demux, GstEvent * event)
 
   /* Tell all the stream a new segment is needed */
   gst_ps_demux_mark_discont (demux, TRUE, TRUE);
+
+  /* Update the segment_seqnum with the seek event seqnum */
+  demux->segment_seqnum = seek_seqnum;
 
   gst_pad_start_task (demux->sinkpad,
       (GstTaskFunction) gst_ps_demux_loop, demux->sinkpad, NULL);
@@ -3054,10 +3071,14 @@ pause:
                   demux->src_segment.start));
         }
       } else {
+        GstEvent *event;
         /* normal playback, send EOS to all linked pads */
         gst_element_no_more_pads (GST_ELEMENT (demux));
         GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
-        if (!gst_ps_demux_send_event (demux, gst_event_new_eos ())
+        event = gst_event_new_eos ();
+        if (demux->segment_seqnum)
+          gst_event_set_seqnum (event, demux->segment_seqnum);
+        if (!gst_ps_demux_send_event (demux, event)
             && !have_open_streams (demux)) {
           GST_WARNING_OBJECT (demux, "EOS and no streams open");
           GST_ELEMENT_ERROR (demux, STREAM, FAILED,
@@ -3065,8 +3086,12 @@ pause:
         }
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
+      GstEvent *event;
       GST_ELEMENT_FLOW_ERROR (demux, ret);
-      gst_ps_demux_send_event (demux, gst_event_new_eos ());
+      event = gst_event_new_eos ();
+      if (demux->segment_seqnum)
+        gst_event_set_seqnum (event, demux->segment_seqnum);
+      gst_ps_demux_send_event (demux, event);
     }
 
     gst_object_unref (demux);
