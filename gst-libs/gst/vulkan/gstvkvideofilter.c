@@ -161,7 +161,7 @@ gst_vulkan_video_filter_set_context (GstElement * element, GstContext * context)
 
 struct choose_data
 {
-  GstVulkanVideoFilter *upload;
+  GstVulkanVideoFilter *filter;
   GstVulkanQueue *queue;
 };
 
@@ -183,14 +183,14 @@ _choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
 }
 
 static GstVulkanQueue *
-_find_graphics_queue (GstVulkanVideoFilter * upload)
+_find_graphics_queue (GstVulkanVideoFilter * filter)
 {
   struct choose_data data;
 
-  data.upload = upload;
+  data.filter = filter;
   data.queue = NULL;
 
-  gst_vulkan_device_foreach_queue (upload->device,
+  gst_vulkan_device_foreach_queue (filter->device,
       (GstVulkanDeviceForEachQueueFunc) _choose_queue, &data);
 
   return data.queue;
