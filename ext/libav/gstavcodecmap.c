@@ -102,7 +102,7 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
   guint nchannels = 0;
   gboolean none_layout = FALSE;
 
-  if (channel_layout == 0) {
+  if (channel_layout == 0 || channels > 64) {
     nchannels = channels;
     none_layout = TRUE;
   } else {
@@ -163,7 +163,7 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
     } else {
       guint i;
 
-      for (i = 0; i < nchannels; i++)
+      for (i = 0; i < nchannels && i < 64; i++)
         pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
     }
   }
