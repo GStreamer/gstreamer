@@ -951,7 +951,9 @@ gst_video_aggregator_find_best_format (GstVideoAggregator * vagg,
   for (i = 0; i < vagg->priv->supported_formats->len; i++) {
     GstVideoFormatInfo *format_info = vagg->priv->supported_formats->pdata[i];
 
-    if ((! !GST_VIDEO_FORMAT_INFO_HAS_ALPHA (format_info)) == (! !need_alpha)) {
+    /* either we don't care about alpha, or the output format needs to have
+     * alpha */
+    if (!need_alpha || GST_VIDEO_FORMAT_INFO_HAS_ALPHA (format_info)) {
       gst_video_info_set_format (best_info, format_info->format,
           best_info->width, best_info->height);
       possible_caps =
