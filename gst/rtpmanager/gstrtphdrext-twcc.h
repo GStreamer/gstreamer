@@ -28,7 +28,6 @@
 
 G_BEGIN_DECLS
 
-GST_RTP_API
 GType gst_rtp_header_extension_twcc_get_type (void);
 #define GST_TYPE_RTP_HEADER_EXTENSION_TWCC (gst_rtp_header_extension_twcc_get_type())
 #define GST_RTP_HEADER_EXTENSION_TWCC(obj) \
