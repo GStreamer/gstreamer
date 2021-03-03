@@ -692,6 +692,8 @@ gst_matroska_demux_parse_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml,
 
   DEBUG_ELEMENT_START (demux, ebml, "TrackEntry");
 
+  *dest_context = NULL;
+
   /* start with the master */
   if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
     DEBUG_ELEMENT_STOP (demux, ebml, "TrackEntry", ret);
