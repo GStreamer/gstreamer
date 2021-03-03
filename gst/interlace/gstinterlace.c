@@ -172,7 +172,32 @@ gst_interlace_pattern_get_type (void)
   return interlace_pattern_type;
 }
 
-#define VIDEO_FORMATS "{AYUV,YUY2,UYVY,I420,YV12,Y42B,Y444,NV12,NV21}"
+/* We can support all planar and packed YUV formats, but not tiled formats.
+ * We don't advertise RGB formats because interlaced video is usually YUV. */
+#define VIDEO_FORMATS \
+  "{" \
+  "AYUV64, "                                                               /* 16-bit 4:4:4:4 */ \
+  "Y412_BE, Y412_LE, "                                                     /* 12-bit 4:4:4:4 */ \
+  "A444_10BE,A444_10LE, "                                                  /* 10-bit 4:4:4:4 */ \
+  "AYUV, VUYA, "                                                           /*  8-bit 4:4:4:4 */ \
+  "A422_10BE, A422_10LE, "                                                 /* 10-bit 4:4:2:2 */ \
+  "A420_10BE, A420_10LE, "                                                 /* 10-bit 4:4:2:0 */ \
+  "A420, "                                                                 /*  8-bit 4:4:2:0 */ \
+  "Y444_16BE, Y444_16LE, "                                                 /* 16-bit 4:4:4 */ \
+  "Y444_12BE, Y444_12LE, "                                                 /* 12-bit 4:4:4 */ \
+  "Y410, Y444_10BE, Y444_10LE, "                                           /* 10-bit 4:4:4 */ \
+  "v308, IYU2, Y444, NV24, "                                               /*  8-bit 4:4:4 */ \
+  "v216, I422_12BE, I422_12LE, "                                           /* 16-bit 4:2:2 */ \
+  "Y212_BE, Y212_LE, "                                                     /* 12-bit 4:2:2 */ \
+  "UYVP, Y210, NV16_10LE32, v210, I422_10BE, I422_10LE, "                  /* 10-bit 4:2:2 */ \
+  "YUY2, UYVY, VYUY, YVYU, Y42B, NV16, NV61, "                             /*  8-bit 4:2:2 */ \
+  "P016_BE, P016_LE, "                                                     /* 16-bit 4:2:0 */ \
+  "I420_12BE, I420_12LE, P012_BE, P012_LE, "                               /* 12-bit 4:2:0 */ \
+  "NV12_10LE40, NV12_10LE32, I420_10BE, I420_10LE, P010_10BE, P010_10LE, " /* 10-bit 4:2:0 */ \
+  "I420, YV12, NV12, NV21, "                                               /*  8-bit 4:2:0 */ \
+  "IYU1, Y41B, "                                                           /*  8-bit 4:1:1 */ \
+  "YUV9, YVU9, "                                                           /*  8-bit 4:1:0 */ \
+  "}"
 
 static GstStaticPadTemplate gst_interlace_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
@@ -189,9 +214,7 @@ static GstStaticPadTemplate gst_interlace_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
-        ("{AYUV,YUY2,UYVY,I420,YV12,Y42B,Y444,NV12,NV21}")
-    )
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
     );
 
 GType gst_interlace_get_type (void);
