@@ -684,7 +684,7 @@ main (gint   argc,
   g_main_loop_unref (loop);
 
   return 0;
-  }
+}
 ```
 
 ### Grabbing data with appsink
