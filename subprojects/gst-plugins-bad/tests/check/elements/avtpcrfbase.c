@@ -29,6 +29,10 @@
 static struct avtp_crf_pdu *
 generate_crf_pdu (int data_len, guint64 first_tstamp)
 {
+  const guint64 base_freq = 48000;
+  const guint64 interval = 160;
+  const gdouble interval_time = 1.0e9 / base_freq * interval;
+
   struct avtp_crf_pdu *crf_pdu =
       g_malloc0 (sizeof (struct avtp_crf_pdu) + data_len);
 
@@ -36,12 +40,14 @@ generate_crf_pdu (int data_len, guint64 first_tstamp)
   avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_SV, 1);
   avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_STREAM_ID, 0xABCD1234ABCD1234);
   avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_TYPE, AVTP_CRF_TYPE_AUDIO_SAMPLE);
-  avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_BASE_FREQ, 48000);
+  avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_BASE_FREQ, base_freq);
   avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_PULL, 1);
   avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_CRF_DATA_LEN, data_len);
-  avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_TIMESTAMP_INTERVAL, 160);
-  for (int i = 0; i < data_len / 8; i++)
-    crf_pdu->crf_data[i] = htobe64 (first_tstamp + i * 3333333);
+  avtp_crf_pdu_set (crf_pdu, AVTP_CRF_FIELD_TIMESTAMP_INTERVAL, interval);
+  for (int i = 0; i < data_len / 8; i++) {
+    const guint64 offset = i * interval_time;
+    crf_pdu->crf_data[i] = htobe64 (first_tstamp + offset);
+  }
 
   return crf_pdu;
 }
@@ -523,6 +529,54 @@ GST_START_TEST (test_calculate_average_period_multiple_crf_tstamps)
 GST_END_TEST;
 
 /*
+ * Test for rounding error
+ */
+GST_START_TEST (test_calculate_average_period_rounding_error)
+{
+  /* the presentation time in ns */
+  const GstClockTimeDiff ptime = 50000000;
+  /* the time in ns of one sync event e.g. one audio sample @48kHz */
+  const gdouble event_interval = 1.0e9 / 48000;
+  /* the presentation time measured in sync events (e.g. sample rate)
+   * for class B traffic with a presentation time of 50ms.
+   */
+  const GstClockTime ptime_in_events = ptime / event_interval;
+
+  /* With 4 timestamps generate_crf_pdu() multiples the interval time
+   * with 3. This results into an integer time stamp in nsi without decimal
+   * digits. Therefore the rounding issue when generating the timestamps for
+   * the CRF PDU is avoided here.
+   */
+  int data_len = 32;
+  struct avtp_crf_pdu *crf_pdu = generate_crf_pdu (data_len, 1000);
+  gdouble past_periods[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  GstAvtpCrfBase *avtpcrfbase = g_object_new (GST_TYPE_AVTP_CRF_BASE, NULL);
+  GstAvtpCrfThreadData *thread_data = &avtpcrfbase->thread_data;
+
+  setup_thread_defaults (avtpcrfbase, past_periods);
+
+  thread_data->timestamp_interval = 160;
+  thread_data->num_pkt_tstamps = data_len / sizeof (uint64_t);
+  thread_data->past_periods_iter = 0;
+  thread_data->periods_stored = 0;
+
+  calculate_average_period (avtpcrfbase, crf_pdu);
+
+  /* When internally using integer for average_period calculation the following
+   * multiplication will result to (20833 * 2400=) 49999200ns. This value
+   * differs by 800ns from the original presentation time of 50ms. When using
+   * double this rounding error is avoided.
+   */
+  fail_unless_equals_float ((thread_data->average_period * ptime_in_events),
+      ptime);
+
+  gst_object_unref (avtpcrfbase);
+  g_free (crf_pdu);
+}
+
+GST_END_TEST;
+
+/*
  * Test for an overflow in the 64-bit CRF timestamp in the CRF AVTPDU when
  * there are multiple CRF timestamps in a packet.
  */
@@ -776,6 +830,7 @@ avtpcrfbase_suite (void)
   tcase_add_test (tc_chain, test_validate_crf_pdu_tstamps_not_monotonic);
   tcase_add_test (tc_chain, test_gst_base_freq_multiplier);
   tcase_add_test (tc_chain, test_calculate_average_period_multiple_crf_tstamps);
+  tcase_add_test (tc_chain, test_calculate_average_period_rounding_error);
   tcase_add_test (tc_chain,
       test_calculate_average_period_multiple_crf_tstamps_64_bit_overflow);
   tcase_add_test (tc_chain, test_calculate_average_period_single_crf_tstamp);
