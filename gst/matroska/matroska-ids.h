@@ -688,6 +688,8 @@ typedef struct _Wavpack4Header {
   guint32 crc;           /* crc for actual decoded data                    */
 } Wavpack4Header;
 
+#define WAVPACK4_HEADER_SIZE (32)
+
 typedef enum {
   GST_MATROSKA_TRACK_ENCODING_SCOPE_FRAME = (1<<0),
   GST_MATROSKA_TRACK_ENCODING_SCOPE_CODEC_DATA = (1<<1),

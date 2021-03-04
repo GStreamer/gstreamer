@@ -3856,6 +3856,12 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     guint32 block_samples, tmp;
     gsize size = gst_buffer_get_size (*buf);
 
+    if (size < 4) {
+      GST_ERROR_OBJECT (element, "Too small wavpack buffer");
+      gst_buffer_unmap (*buf, &map);
+      return GST_FLOW_ERROR;
+    }
+
     gst_buffer_extract (*buf, 0, &tmp, sizeof (guint32));
     block_samples = GUINT32_FROM_LE (tmp);
     /* we need to reconstruct the header of the wavpack block */
@@ -3863,10 +3869,10 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     /* -20 because ck_size is the size of the wavpack block -8
      * and lace_size is the size of the wavpack block + 12
      * (the three guint32 of the header that already are in the buffer) */
-    wvh.ck_size = size + sizeof (Wavpack4Header) - 20;
+    wvh.ck_size = size + WAVPACK4_HEADER_SIZE - 20;
 
     /* block_samples, flags and crc are already in the buffer */
-    newbuf = gst_buffer_new_allocate (NULL, sizeof (Wavpack4Header) - 12, NULL);
+    newbuf = gst_buffer_new_allocate (NULL, WAVPACK4_HEADER_SIZE - 12, NULL);
 
     gst_buffer_map (newbuf, &outmap, GST_MAP_WRITE);
     data = outmap.data;
@@ -3891,9 +3897,11 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     audiocontext->wvpk_block_index += block_samples;
   } else {
     guint8 *outdata = NULL;
-    guint outpos = 0;
-    gsize buf_size, size, out_size = 0;
+    gsize buf_size, size;
     guint32 block_samples, flags, crc, blocksize;
+    GstAdapter *adapter;
+
+    adapter = gst_adapter_new ();
 
     gst_buffer_map (*buf, &map, GST_MAP_READ);
     buf_data = map.data;
@@ -3902,6 +3910,7 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     if (buf_size < 4) {
       GST_ERROR_OBJECT (element, "Too small wavpack buffer");
       gst_buffer_unmap (*buf, &map);
+      g_object_unref (adapter);
       return GST_FLOW_ERROR;
     }
 
@@ -3923,59 +3932,57 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
       data += 4;
       size -= 4;
 
-      if (blocksize == 0 || size < blocksize)
-        break;
-
-      g_assert ((newbuf == NULL) == (outdata == NULL));
-
-      if (newbuf == NULL) {
-        out_size = sizeof (Wavpack4Header) + blocksize;
-        newbuf = gst_buffer_new_allocate (NULL, out_size, NULL);
-
-        gst_buffer_copy_into (newbuf, *buf,
-            GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS, 0, -1);
-
-        outpos = 0;
-        gst_buffer_map (newbuf, &outmap, GST_MAP_WRITE);
-        outdata = outmap.data;
-      } else {
-        gst_buffer_unmap (newbuf, &outmap);
-        out_size += sizeof (Wavpack4Header) + blocksize;
-        gst_buffer_set_size (newbuf, out_size);
-        gst_buffer_map (newbuf, &outmap, GST_MAP_WRITE);
-        outdata = outmap.data;
+      if (blocksize == 0 || size < blocksize) {
+        GST_ERROR_OBJECT (element, "Too small wavpack buffer");
+        gst_buffer_unmap (*buf, &map);
+        g_object_unref (adapter);
+        return GST_FLOW_ERROR;
       }
 
-      outdata[outpos] = 'w';
-      outdata[outpos + 1] = 'v';
-      outdata[outpos + 2] = 'p';
-      outdata[outpos + 3] = 'k';
-      outpos += 4;
+      g_assert (newbuf == NULL);
 
-      GST_WRITE_UINT32_LE (outdata + outpos,
-          blocksize + sizeof (Wavpack4Header) - 8);
-      GST_WRITE_UINT16_LE (outdata + outpos + 4, wvh.version);
-      GST_WRITE_UINT8 (outdata + outpos + 6, wvh.track_no);
-      GST_WRITE_UINT8 (outdata + outpos + 7, wvh.index_no);
-      GST_WRITE_UINT32_LE (outdata + outpos + 8, wvh.total_samples);
-      GST_WRITE_UINT32_LE (outdata + outpos + 12, wvh.block_index);
-      GST_WRITE_UINT32_LE (outdata + outpos + 16, block_samples);
-      GST_WRITE_UINT32_LE (outdata + outpos + 20, flags);
-      GST_WRITE_UINT32_LE (outdata + outpos + 24, crc);
-      outpos += 28;
+      newbuf =
+          gst_buffer_new_allocate (NULL, WAVPACK4_HEADER_SIZE + blocksize,
+          NULL);
+      gst_buffer_map (newbuf, &outmap, GST_MAP_WRITE);
+      outdata = outmap.data;
 
-      memmove (outdata + outpos, data, blocksize);
-      outpos += blocksize;
+      outdata[0] = 'w';
+      outdata[1] = 'v';
+      outdata[2] = 'p';
+      outdata[3] = 'k';
+      outdata += 4;
+
+      GST_WRITE_UINT32_LE (outdata, blocksize + WAVPACK4_HEADER_SIZE - 8);
+      GST_WRITE_UINT16_LE (outdata + 4, wvh.version);
+      GST_WRITE_UINT8 (outdata + 6, wvh.track_no);
+      GST_WRITE_UINT8 (outdata + 7, wvh.index_no);
+      GST_WRITE_UINT32_LE (outdata + 8, wvh.total_samples);
+      GST_WRITE_UINT32_LE (outdata + 12, wvh.block_index);
+      GST_WRITE_UINT32_LE (outdata + 16, block_samples);
+      GST_WRITE_UINT32_LE (outdata + 20, flags);
+      GST_WRITE_UINT32_LE (outdata + 24, crc);
+      outdata += 28;
+
+      memcpy (outdata, data, blocksize);
+
+      gst_buffer_unmap (newbuf, &outmap);
+      gst_adapter_push (adapter, newbuf);
+      newbuf = NULL;
+
       data += blocksize;
       size -= blocksize;
     }
     gst_buffer_unmap (*buf, &map);
+
+    newbuf = gst_adapter_take_buffer (adapter, gst_adapter_available (adapter));
+    g_object_unref (adapter);
+
+    gst_buffer_copy_into (newbuf, *buf,
+        GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS, 0, -1);
     gst_buffer_unref (*buf);
-
-    if (newbuf)
-      gst_buffer_unmap (newbuf, &outmap);
-
     *buf = newbuf;
+
     audiocontext->wvpk_block_index += block_samples;
   }
 
