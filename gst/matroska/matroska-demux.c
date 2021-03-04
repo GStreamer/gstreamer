@@ -142,6 +142,8 @@ static gboolean gst_matroska_demux_sink_activate (GstPad * sinkpad,
 static gboolean gst_matroska_demux_sink_activate_mode (GstPad * sinkpad,
     GstObject * parent, GstPadMode mode, gboolean active);
 
+static gboolean gst_matroska_demux_handle_seek_push (GstMatroskaDemux * demux,
+    GstPad * pad, GstEvent * event);
 static gboolean gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     GstPad * pad, GstEvent * event);
 static gboolean gst_matroska_demux_handle_src_event (GstPad * pad,
@@ -1987,7 +1989,10 @@ gst_matroska_demux_element_send_event (GstElement * element, GstEvent * event)
       demux->deferred_seek_pad = NULL;
       return TRUE;
     }
-    res = gst_matroska_demux_handle_seek_event (demux, NULL, event);
+    if (!demux->streaming)
+      res = gst_matroska_demux_handle_seek_event (demux, NULL, event);
+    else
+      res = gst_matroska_demux_handle_seek_push (demux, NULL, event);
   } else {
     GST_WARNING_OBJECT (demux, "Unhandled event of type %s",
         GST_EVENT_TYPE_NAME (event));
