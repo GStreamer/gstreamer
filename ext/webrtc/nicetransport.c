@@ -208,6 +208,7 @@ gst_webrtc_nice_transport_update_buffer_size (GstWebRTCNiceTransport * nice)
 #endif
   }
   g_ptr_array_unref (sockets);
+  g_object_unref (agent);
 }
 
 
