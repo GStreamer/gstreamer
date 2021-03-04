@@ -68,6 +68,8 @@ gboolean              gst_va_filter_install_properties    (GstVaFilter * self,
 gboolean              gst_va_filter_set_orientation       (GstVaFilter * self,
                                                            GstVideoOrientationMethod orientation);
 GstVideoOrientationMethod gst_va_filter_get_orientation   (GstVaFilter * self);
+void                  gst_va_filter_enable_cropping       (GstVaFilter * self,
+                                                           gboolean cropping);
 const gpointer        gst_va_filter_get_filter_caps       (GstVaFilter * self,
                                                            VAProcFilterType type,
                                                            guint * num_caps);

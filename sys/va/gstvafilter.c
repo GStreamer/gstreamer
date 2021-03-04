@@ -59,6 +59,8 @@ struct _GstVaFilter
   guint rotation;
   GstVideoOrientationMethod orientation;
 
+  gboolean crop_enabled;
+
   VARectangle input_region;
   VARectangle output_region;
 
@@ -854,6 +856,15 @@ gst_va_filter_get_orientation (GstVaFilter * self)
   return ret;
 }
 
+void
+gst_va_filter_enable_cropping (GstVaFilter * self, gboolean cropping)
+{
+  GST_OBJECT_LOCK (self);
+  if (cropping != self->crop_enabled)
+    self->crop_enabled = cropping;
+  GST_OBJECT_UNLOCK (self);
+}
+
 static inline GstCaps *
 _create_base_caps (GstVaFilter * self)
 {
@@ -1238,14 +1249,37 @@ static gboolean
 _fill_va_sample (GstVaFilter * self, GstVaSample * sample,
     GstPadDirection direction)
 {
+  GstVideoCropMeta *crop;
+
   sample->surface = gst_va_buffer_get_surface (sample->buffer);
   if (sample->surface == VA_INVALID_ID)
     return FALSE;
 
-  /* TODO: handle GstVideoCropMeta */
+  /* XXX: cropping occurs only in input frames */
+  if (direction == GST_PAD_SRC) {
+    GST_OBJECT_LOCK (self);
+    sample->rect = self->output_region;
+    GST_OBJECT_UNLOCK (self);
+
+    return TRUE;
+  }
+
+  /* if buffer has crop meta, its real size is in video meta */
+  crop = gst_buffer_get_video_crop_meta (sample->buffer);
+
   GST_OBJECT_LOCK (self);
-  sample->rect = (direction == GST_PAD_SRC) ?
-      self->output_region : self->input_region;
+  if (crop && self->crop_enabled) {
+    /* *INDENT-OFF* */
+    sample->rect = (VARectangle) {
+      .x = crop->x,
+      .y = crop->y,
+      .width = crop->width,
+      .height = crop->height
+    };
+    /* *INDENT-ON* */
+  } else {
+    sample->rect = self->input_region;
+  }
   GST_OBJECT_UNLOCK (self);
 
   return TRUE;
