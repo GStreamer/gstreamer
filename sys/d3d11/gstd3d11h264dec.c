@@ -470,7 +470,6 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
   if (self->max_dpb_size < max_dpb_size) {
     GST_INFO_OBJECT (self, "Requires larger DPB size (%d -> %d)",
         self->max_dpb_size, max_dpb_size);
-    self->max_dpb_size = max_dpb_size;
     modified = TRUE;
   }
 
@@ -501,6 +500,12 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
     gst_video_info_set_format (&info,
         self->out_format, self->width, self->height);
 
+    /* Store configured DPB size here. Then, it will be referenced later
+     * to decide whether we need to re-open decoder object or not.
+     * For instance, if every configuration is same apart from DPB size and
+     * new DPB size is decreased, we can reuse existing decoder object.
+     */
+    self->max_dpb_size = max_dpb_size;
     gst_d3d11_decoder_reset (self->d3d11_decoder);
     if (!gst_d3d11_decoder_open (self->d3d11_decoder, GST_D3D11_CODEC_H264,
             &info, self->coded_width, self->coded_height,
