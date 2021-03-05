@@ -587,9 +587,26 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
     self->configured_input_source = input_source;
 
     self->vanc_mode = vanc_mode;
-    self->device->device->SetEnableVANCData(NTV2_IS_VANCMODE_TALL(vanc_mode),
-                                            NTV2_IS_VANCMODE_TALLER(vanc_mode),
-                                            self->channel);
+
+    const NTV2Standard standard(
+        ::GetNTV2StandardFromVideoFormat(self->video_format));
+    self->device->device->SetStandard(standard, self->channel);
+    const NTV2FrameGeometry geometry =
+        ::GetNTV2FrameGeometryFromVideoFormat(self->video_format);
+
+    self->vanc_mode =
+        ::HasVANCGeometries(geometry) ? vanc_mode : ::NTV2_VANCMODE_OFF;
+    if (self->vanc_mode == ::NTV2_VANCMODE_OFF) {
+      self->device->device->SetFrameGeometry(geometry, false, self->channel);
+      self->device->device->SetVANCMode(self->vanc_mode, self->channel);
+    } else {
+      const NTV2FrameGeometry vanc_geometry =
+          ::GetVANCFrameGeometry(geometry, self->vanc_mode);
+
+      self->device->device->SetFrameGeometry(vanc_geometry, false,
+                                             self->channel);
+      self->device->device->SetVANCMode(self->vanc_mode, self->channel);
+    }
 
     CNTV2SignalRouter router;
 

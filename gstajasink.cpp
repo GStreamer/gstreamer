@@ -811,14 +811,14 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
   self->vanc_mode =
       ::HasVANCGeometries(geometry) ? vanc_mode : ::NTV2_VANCMODE_OFF;
   if (self->vanc_mode == ::NTV2_VANCMODE_OFF) {
-    self->device->device->SetVANCMode(self->vanc_mode, standard, geometry,
-                                      self->channel);
+    self->device->device->SetFrameGeometry(geometry, false, self->channel);
+    self->device->device->SetVANCMode(self->vanc_mode, self->channel);
   } else {
     const NTV2FrameGeometry vanc_geometry =
         ::GetVANCFrameGeometry(geometry, self->vanc_mode);
 
-    self->device->device->SetVANCMode(self->vanc_mode, standard, vanc_geometry,
-                                      self->channel);
+    self->device->device->SetFrameGeometry(vanc_geometry, false, self->channel);
+    self->device->device->SetVANCMode(self->vanc_mode, self->channel);
   }
 
   NTV2SmpteLineNumber smpte_line_num_info = ::GetSmpteLineNumber(standard);
