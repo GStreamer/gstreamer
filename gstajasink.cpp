@@ -1177,11 +1177,9 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
       (caption_meta = (GstVideoCaptionMeta *)gst_buffer_iterate_meta_filtered(
            buffer, &iter, GST_VIDEO_CAPTION_META_API_TYPE))) {
     if (caption_meta->caption_type == GST_VIDEO_CAPTION_TYPE_CEA708_CDP) {
-      const uint16_t kF1PktLineNumCEA708(9);
       const AJAAncillaryDataLocation kCEA708LocF1(
           AJAAncillaryDataLink_A, AJAAncillaryDataVideoStream_Y,
-          AJAAncillaryDataSpace_VANC, kF1PktLineNumCEA708,
-          AJAAncDataHorizOffset_AnyVanc);
+          AJAAncillaryDataSpace_VANC, 12, AJAAncDataHorizOffset_AnyVanc);
 
       AJAAncillaryData_Cea708 pkt;
 
