@@ -84,6 +84,8 @@ struct _GstVulkanDeviceClass
   gpointer _reserved        [GST_PADDING];
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanDevice, gst_object_unref)
+
 GST_VULKAN_API
 GstVulkanDevice *   gst_vulkan_device_new                   (GstVulkanPhysicalDevice * physical_device);
 GST_VULKAN_API

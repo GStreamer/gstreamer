@@ -35,7 +35,7 @@ GType gst_vulkan_descriptor_cache_get_type       (void);
 
 /**
  * GstVulkanDescriptorCache:
- * @parent: the parent #GstObject
+ * @parent: the parent #GstVulkanHandlePool
  * @pool: the #GstVulkanDescriptorPool to cache descriptor sets for
  *
  * Since: 1.18
@@ -63,6 +63,8 @@ struct _GstVulkanDescriptorCacheClass
   /* <private> */
   gpointer _reserved        [GST_PADDING];
 };
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanDescriptorCache, gst_object_unref)
 
 GST_VULKAN_API
 GstVulkanDescriptorCache *   gst_vulkan_descriptor_cache_new            (GstVulkanDescriptorPool * pool,

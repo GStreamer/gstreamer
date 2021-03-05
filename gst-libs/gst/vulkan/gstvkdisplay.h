@@ -125,6 +125,8 @@ struct _GstVulkanDisplayClass
   gpointer _reserved        [GST_PADDING];
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanDisplay, gst_object_unref)
+
 GST_VULKAN_API
 GstVulkanDisplay *      gst_vulkan_display_new                      (GstVulkanInstance *instance);
 GST_VULKAN_API

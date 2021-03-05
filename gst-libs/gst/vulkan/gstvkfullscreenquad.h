@@ -99,6 +99,8 @@ struct _GstVulkanFullScreenQuadClass
   gpointer _reserved        [GST_PADDING];
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanFullScreenQuad, gst_object_unref)
+
 GST_VULKAN_API
 GstVulkanFullScreenQuad *   gst_vulkan_full_screen_quad_new         (GstVulkanQueue * queue);
 

@@ -96,9 +96,7 @@ gst_vulkan_trash_unref (GstVulkanTrash * trash)
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (trash));
 }
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanTrash, gst_vulkan_trash_unref)
-#endif
 
 GST_VULKAN_API
 GstVulkanTrash *    gst_vulkan_trash_new                            (GstVulkanFence * fence,
@@ -163,9 +161,7 @@ GType gst_vulkan_trash_list_get_type (void);
 #define GST_IS_VULKAN_TRASH_LIST(obj)           (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VULKAN_TRASH_LIST))
 #define GST_IS_VULKAN_TRASH_LIST_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VULKAN_TRASH_LIST))
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanTrashList, gst_object_unref)
-#endif
 
 /**
  * GstVulkanTrashList:

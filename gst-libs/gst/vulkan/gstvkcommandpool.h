@@ -66,6 +66,8 @@ struct _GstVulkanCommandPoolClass
   gpointer _reserved        [GST_PADDING];
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanCommandPool, gst_object_unref)
+
 GST_VULKAN_API
 GstVulkanQueue *        gst_vulkan_command_pool_get_queue           (GstVulkanCommandPool * pool);
 

@@ -89,6 +89,8 @@ struct _GstVulkanHandlePoolClass
   gpointer _padding[GST_PADDING];
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanHandlePool, gst_object_unref)
+
 GST_VULKAN_API
 gpointer        gst_vulkan_handle_pool_alloc        (GstVulkanHandlePool * pool, GError ** error);
 GST_VULKAN_API

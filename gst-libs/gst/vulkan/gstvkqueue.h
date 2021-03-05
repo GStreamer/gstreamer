@@ -78,7 +78,9 @@ struct _GstVulkanQueueClass
   gpointer _reserved        [GST_PADDING];
 };
 
-GST_VULKAN_API
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanQueue, gst_object_unref)
+
+  GST_VULKAN_API
 GstVulkanDevice *   gst_vulkan_queue_get_device (GstVulkanQueue * queue);
 
 GST_VULKAN_API
