@@ -49,6 +49,12 @@ variables:
   WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$GST_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
+  # Current windows image doesn't seem to be able to spawn procceses for reason,
+  # use a different image until this is debuged
+  # Running command 'c:/builds/alatiera/gst-ci/cerbero-build/build-tools/bin/meson --prefix=c:/builds/alatiera/gst-ci/cerbero-build/dist/msvc_x86_64 --libdir=lib -Ddebug=true --default-library=both -Doptimization=2 --backend=ninja --wrap-mode=nodownload -Db_vscrt=md --native-file c:/builds/alatiera/gst-ci/cerbero-build/sources/msvc_x86_64/gstreamer-1.0-1.19.0.1/_builddir/meson-native-file.txt -Dlibunwind=disabled -Ddbghelp=enabled -Dintrospection=disabled -Dexamples=disabled'
+  # failed to create process
+  CERBERO_WINDOWS_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v13-master'
+
   # Can't use $CI_* variables since we use this template in all repos, not just gst-ci
   CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/cerbero_setup.sh"
   WINDOWS_CONTAINER_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/docker/windows/container.ps1"
@@ -1281,7 +1287,7 @@ build gst-omx tizonia fedora x86_64:
 #
 .cerbero windows native:
   needs: ['manifest']
-  image: $WINDOWS_IMAGE
+  image: $CERBERO_WINDOWS_IMAGE
   tags:
     - 'docker'
     - 'windows'
