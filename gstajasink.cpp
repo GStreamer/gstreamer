@@ -1266,7 +1266,33 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
     } else {
       NTV2_POINTER ptr(item.video_map.data, item.video_map.size);
 
-      anc_packet_list.GetVANCTransmitData(ptr, format_desc);
+      // Work around bug in GetVANCTransmitData() for SD formats that
+      // truncates ADF packets that are not a multiple of 12 words long.
+      //
+      // See AJA SDK support ticket #4845.
+      if (format_desc.IsSDFormat()) {
+        guint32 n_vanc_packets = anc_packet_list.CountAncillaryData();
+        for (guint32 i = 0; i < n_vanc_packets; i++) {
+          AJAAncillaryData *packet = anc_packet_list.GetAncillaryDataAtIndex(i);
+
+          ULWord line_offset = 0;
+          if (!format_desc.GetLineOffsetFromSMPTELine(
+                  packet->GetLocationLineNumber(), line_offset))
+            continue;
+
+          UWordSequence data;
+          if (packet->GenerateTransmitData(data) != AJA_STATUS_SUCCESS)
+            continue;
+
+          // Pad to a multiple of 12 words
+          while (data.size() < 12 || data.size() % 12 != 0)
+            data.push_back(0x040);
+          ::YUVComponentsTo10BitYUVPackedBuffer(data, ptr, format_desc,
+                                                line_offset);
+        }
+      } else {
+        anc_packet_list.GetVANCTransmitData(ptr, format_desc);
+      }
     }
   }
 
