@@ -1041,7 +1041,10 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
         format_desc.RasterLineToByteOffset(format_desc.GetFirstActiveLine());
     guint size = format_desc.GetVisibleRasterBytes();
 
-    if (offset != 0) memset(item.video_map.data, 0, offset);
+    if (offset != 0)
+      ::SetRasterLinesBlack(::NTV2_FBF_10BIT_YCBCR, item.video_map.data,
+                            format_desc.GetBytesPerRow(),
+                            format_desc.GetFirstActiveLine());
     memcpy(item.video_map.data + offset,
            GST_VIDEO_FRAME_PLANE_DATA(&in_frame, 0), size);
 
