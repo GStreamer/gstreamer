@@ -422,6 +422,7 @@ enum
   ARG_TUNE,
   ARG_FRAME_PACKING,
   ARG_INSERT_VUI,
+  ARG_NAL_HRD,
 };
 
 #define ARG_THREADS_DEFAULT            0        /* 0 means 'auto' which is 1.5x number of CPU cores */
@@ -464,6 +465,7 @@ static GString *x264enc_defaults;
 #define ARG_TUNE_DEFAULT               0        /* no tuning */
 #define ARG_FRAME_PACKING_DEFAULT      -1       /* automatic (none, or from input caps) */
 #define ARG_INSERT_VUI_DEFAULT         TRUE
+#define ARG_NAL_HRD_DEFAULT            0
 
 enum
 {
@@ -502,6 +504,25 @@ gst_x264_enc_pass_get_type (void)
     pass_type = g_enum_register_static ("GstX264EncPass", pass_types);
   }
   return pass_type;
+}
+
+#define GST_X264_ENC_NAL_HRD_TYPE (gst_x264_enc_nal_hrd_get_type())
+static GType
+gst_x264_enc_nal_hrd_get_type (void)
+{
+  static GType nal_hrd_type = 0;
+
+  static const GEnumValue nal_hrd_types[] = {
+    {GST_X264_ENC_NAL_HRD_NONE, "None", "none"},
+    {GST_X264_ENC_NAL_HRD_VBR, "Variable bitrate", "vbr"},
+    {GST_X264_ENC_NAL_HRD_CBR, "Constant bitrate", "cbr"},
+    {0, NULL, NULL}
+  };
+
+  if (!nal_hrd_type) {
+    nal_hrd_type = g_enum_register_static ("GstX264EncNalHrd", nal_hrd_types);
+  }
+  return nal_hrd_type;
 }
 
 #define GST_X264_ENC_ME_TYPE (gst_x264_enc_me_get_type())
@@ -1209,6 +1230,25 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_string_append_printf (x264enc_defaults, ":interlaced=%d",
       ARG_INTERLACED_DEFAULT);
 
+  /**
+   * x264enc:nal-hrd:
+   *
+   * Signal Hypothetical Reference Decoder information.
+   *
+   * Required for Blu-ray streams, television broadcast and a
+   * few other specialist areas.
+   *
+   * It can be used for instance to force true CBR, and will cause
+   * the encoder to output NULL padding packets.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, ARG_NAL_HRD,
+      g_param_spec_enum ("nal-hrd", "NAL HRD",
+          "Signal Hypothetical Reference Decoder information",
+          GST_X264_ENC_NAL_HRD_TYPE, ARG_NAL_HRD_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /* append deblock parameters */
   g_string_append_printf (x264enc_defaults, ":deblock=0,0");
   /* append weighted prediction parameter */
@@ -1243,6 +1283,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   gst_type_mark_as_plugin_api (GST_X264_ENC_PSY_TUNE_TYPE, 0);
   gst_type_mark_as_plugin_api (GST_X264_ENC_SPEED_PRESET_TYPE, 0);
   gst_type_mark_as_plugin_api (GST_X264_ENC_TUNE_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_X264_ENC_NAL_HRD_TYPE, 0);
 }
 
 /* *INDENT-OFF* */
@@ -1340,6 +1381,7 @@ gst_x264_enc_init (GstX264Enc * encoder)
   encoder->tune = ARG_TUNE_DEFAULT;
   encoder->frame_packing = ARG_FRAME_PACKING_DEFAULT;
   encoder->insert_vui = ARG_INSERT_VUI_DEFAULT;
+  encoder->nal_hrd = ARG_NAL_HRD_DEFAULT;
 
   encoder->bitrate_manager =
       gst_encoder_bitrate_profile_manager_new (ARG_BITRATE_DEFAULT);
@@ -1914,6 +1956,8 @@ skip_vui_parameters:
   encoder->reconfig = FALSE;
 
   GST_OBJECT_UNLOCK (encoder);
+
+  encoder->x264param.i_nal_hrd = encoder->nal_hrd;
 
   encoder->x264enc = encoder->vtable->x264_encoder_open (&encoder->x264param);
   if (!encoder->x264enc) {
@@ -2988,6 +3032,9 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     case ARG_INSERT_VUI:
       encoder->insert_vui = g_value_get_boolean (value);
       break;
+    case ARG_NAL_HRD:
+      encoder->nal_hrd = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3131,6 +3178,9 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_INSERT_VUI:
       g_value_set_boolean (value, encoder->insert_vui);
+      break;
+    case ARG_NAL_HRD:
+      g_value_set_enum (value, encoder->nal_hrd);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

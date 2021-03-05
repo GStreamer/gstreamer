@@ -113,6 +113,7 @@ struct _GstX264Enc
   GString *option_string; /* used by set prop */
   gint frame_packing;
   gboolean insert_vui;
+  gint nal_hrd;
 
   /* input description */
   GstVideoCodecState *input_state;
@@ -135,6 +136,24 @@ struct _GstX264EncClass
 {
   GstVideoEncoderClass parent_class;
 };
+
+/**
+ * GstX264EncNalHrd:
+ * @GST_X264_ENC_NAL_HRD_NONE: Specify no HRD information
+ * @GST_X264_ENC_NAL_HRD_VBR: Specify HRD information
+ * @GST_X264_ENC_NAL_HRD_CBR: Specify HRD information and pack the bitstream
+ *
+ * Signal HRD information. Required for Blu-ray streams,
+ * television broadcast and a few other specialist areas.
+ *
+ * Since: 1.26
+ */
+typedef enum
+{
+  GST_X264_ENC_NAL_HRD_NONE = 0,
+  GST_X264_ENC_NAL_HRD_VBR = 1,
+  GST_X264_ENC_NAL_HRD_CBR = 2,
+} GstX264EncNalHrd;
 
 GType gst_x264_enc_get_type (void);
 GST_ELEMENT_REGISTER_DECLARE (x264enc);

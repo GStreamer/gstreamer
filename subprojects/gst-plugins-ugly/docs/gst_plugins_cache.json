@@ -1014,6 +1014,18 @@
                         "type": "gchararray",
                         "writable": true
                     },
+                    "nal-hrd": {
+                        "blurb": "Signal Hypothetical Reference Decoder information",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstX264EncNalHrd",
+                        "writable": true
+                    },
                     "noise-reduction": {
                         "blurb": "Noise reduction strength",
                         "conditionally-available": false,
@@ -1396,6 +1408,26 @@
                         "desc": "tesa",
                         "name": "tesa",
                         "value": "4"
+                    }
+                ]
+            },
+            "GstX264EncNalHrd": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "None",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Variable bitrate",
+                        "name": "vbr",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Constant bitrate",
+                        "name": "cbr",
+                        "value": "2"
                     }
                 ]
             },
