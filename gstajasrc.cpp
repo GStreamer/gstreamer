@@ -1105,15 +1105,23 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
   gst_clear_buffer(&item.anc_buffer);
   gst_clear_buffer(&item.anc_buffer2);
 
-  if (anc_packets.CountAncillaryDataWithType(AJAAncillaryDataType_Cea708)) {
-    AJAAncillaryData packet =
-        anc_packets.GetAncillaryDataWithType(AJAAncillaryDataType_Cea708);
+  // Not using CountAncillaryDataWithType(AJAAncillaryDataType_Cea708) etc
+  // here because for SD it doesn't recognize the packets. It assumes they
+  // would only be received on AJAAncillaryDataChannel_Y but for SD it is
+  // actually AJAAncillaryDataChannel_Both.
+  //
+  // See AJA SDK support ticket #4844.
+  guint32 n_vanc_packets = anc_packets.CountAncillaryData();
+  for (guint32 i = 0; i < n_vanc_packets; i++) {
+    AJAAncillaryData *packet = anc_packets.GetAncillaryDataAtIndex(i);
 
-    if (packet.GetPayloadData() && packet.GetPayloadByteCount() &&
-        AJA_SUCCESS(packet.ParsePayloadData())) {
+    if (packet->GetDID() == AJAAncillaryData_CEA708_DID &&
+        packet->GetSID() == AJAAncillaryData_CEA708_SID &&
+        packet->GetPayloadData() && packet->GetPayloadByteCount() &&
+        AJA_SUCCESS(packet->ParsePayloadData())) {
       gst_buffer_add_video_caption_meta(
-          *buffer, GST_VIDEO_CAPTION_TYPE_CEA708_CDP, packet.GetPayloadData(),
-          packet.GetPayloadByteCount());
+          *buffer, GST_VIDEO_CAPTION_TYPE_CEA708_CDP, packet->GetPayloadData(),
+          packet->GetPayloadByteCount());
     }
   }
 
