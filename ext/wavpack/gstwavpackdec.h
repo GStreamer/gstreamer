@@ -52,6 +52,7 @@ struct _GstWavpackDec
   gint width;
   gint channels;
   gint channel_mask;
+  gboolean mode_float;
 
   gint channel_reorder_map[64];
 
