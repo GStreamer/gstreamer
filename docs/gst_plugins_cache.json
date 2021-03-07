@@ -26817,7 +26817,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: S8\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\naudio/x-raw:\n         format: S16LE\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\naudio/x-raw:\n         format: S32LE\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\n",
+                        "caps": "audio/x-raw:\n         format: S8\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\naudio/x-raw:\n         format: S16LE\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\naudio/x-raw:\n         format: S32LE\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\naudio/x-raw:\n         format: F32LE\n         layout: interleaved\n       channels: [ 1, 8 ]\n           rate: [ 6000, 192000 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
