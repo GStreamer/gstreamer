@@ -112,6 +112,7 @@ struct _GstNvH264Dec
   guint coded_width, coded_height;
   guint bitdepth;
   guint chroma_format_idc;
+  gint max_dpb_size;
   GstVideoFormat out_format;
 
   /* For OpenGL interop. */
@@ -232,6 +233,20 @@ gst_nv_h264_dec_set_context (GstElement * element, GstContext * context)
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
+/* Clear all codec specific (e.g., SPS) data */
+static void
+gst_d3d11_h264_dec_reset (GstNvH264Dec * self)
+{
+  self->width = 0;
+  self->height = 0;
+  self->coded_width = 0;
+  self->coded_height = 0;
+  self->bitdepth = 0;
+  self->chroma_format_idc = 0;
+  self->out_format = GST_VIDEO_FORMAT_UNKNOWN;
+  self->max_dpb_size = 0;
+}
+
 static gboolean
 gst_nv_h264_dec_open (GstVideoDecoder * decoder)
 {
@@ -244,6 +259,8 @@ gst_nv_h264_dec_open (GstVideoDecoder * decoder)
     GST_ERROR_OBJECT (self, "Required element data is unavailable");
     return FALSE;
   }
+
+  gst_d3d11_h264_dec_reset (self);
 
   return TRUE;
 }
@@ -362,6 +379,12 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     modified = TRUE;
   }
 
+  if (self->max_dpb_size < max_dpb_size) {
+    GST_INFO_OBJECT (self, "Requires larger DPB size (%d -> %d)",
+        self->max_dpb_size, max_dpb_size);
+    modified = TRUE;
+  }
+
   if (modified || !self->decoder) {
     GstVideoInfo info;
 
@@ -391,6 +414,7 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     gst_video_info_set_format (&info,
         self->out_format, self->width, self->height);
 
+    self->max_dpb_size = max_dpb_size;
     /* FIXME: add support cudaVideoCodec_H264_SVC and cudaVideoCodec_H264_MVC */
     self->decoder = gst_nv_decoder_new (self->context, cudaVideoCodec_H264,
         &info,
