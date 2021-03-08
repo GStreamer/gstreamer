@@ -33,6 +33,7 @@ base_tests = [
   [['elements/h265parse.c'], false, [libparser_dep, gstcodecparsers_dep]],
   [['elements/hlsdemux_m3u8.c'], not hls_dep.found(), [hls_dep]],
   [['elements/id3mux.c']],
+  [['elements/interlace.c']],
   [['elements/jpeg2000parse.c'], false, [libparser_dep, gstcodecparsers_dep]],
   [['elements/mfvideosrc.c'], host_machine.system() != 'windows', ],
   [['elements/mpegtsdemux.c'], false, [gstmpegts_dep]],
