@@ -678,6 +678,10 @@ gst_interlace_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
 #endif
 
+      if (interlace->stored_frame) {
+        gst_buffer_unref (interlace->stored_frame);
+        interlace->stored_frame = NULL;
+      }
       ret = gst_pad_push_event (interlace->srcpad, event);
       break;
     case GST_EVENT_CAPS:
@@ -1471,6 +1475,9 @@ gst_interlace_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       g_mutex_lock (&interlace->lock);
       interlace->src_fps_n = 0;
+      if (interlace->stored_frame) {
+        gst_buffer_unref (interlace->stored_frame);
+      }
       g_mutex_unlock (&interlace->lock);
       /* why? */
       //gst_interlace_reset (interlace);
