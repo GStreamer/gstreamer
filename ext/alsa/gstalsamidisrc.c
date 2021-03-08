@@ -307,7 +307,7 @@ enum
 G_DEFINE_TYPE_WITH_CODE (GstAlsaMidiSrc, gst_alsa_midi_src, GST_TYPE_PUSH_SRC,
     _do_init);
 #define _do_element_init \
-    ret |= alsa_element_init (plugin);
+    alsa_element_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (alsamidisrc, "alsamidisrc",
     GST_RANK_PRIMARY, GST_TYPE_ALSA_MIDI_SRC, _do_element_init);
 

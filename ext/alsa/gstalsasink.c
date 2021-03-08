@@ -74,7 +74,7 @@ enum
 };
 
 #define _do_init \
-    ret |= alsa_element_init (plugin);
+    alsa_element_init (plugin);
 #define gst_alsasink_parent_class parent_class
 G_DEFINE_TYPE (GstAlsaSink, gst_alsasink, GST_TYPE_AUDIO_SINK);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (alsasink, "alsasink", GST_RANK_PRIMARY,
