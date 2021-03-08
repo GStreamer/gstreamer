@@ -35,7 +35,6 @@ G_BEGIN_DECLS
 G_BEGIN_DECLS \
 gboolean G_PASTE (gst_element_register_, element) (GstPlugin * plugin) \
 { \
-  gboolean ret = FALSE; \
   {
 
 /**
@@ -43,8 +42,7 @@ gboolean G_PASTE (gst_element_register_, element) (GstPlugin * plugin) \
  */
 #define _GST_ELEMENT_REGISTER_DEFINE_END(element_name, rank, type) \
   } \
-  ret |= gst_element_register (plugin, element_name, rank, type); \
-  return ret; \
+  return gst_element_register (plugin, element_name, rank, type); \
 } \
 G_END_DECLS
 
@@ -113,7 +111,7 @@ G_END_DECLS
  *
  * ```
  * #define _pre_register_init \
- *   ret |= my_stream_filter_pre_register (plugin);
+ *   my_stream_filter_pre_register (plugin);
  * GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (stream_filter, "stream-filter", GST_RANK_PRIMARY, MY_TYPE_STREAM_FILTER, _pre_register_init)
  * ```
  *
