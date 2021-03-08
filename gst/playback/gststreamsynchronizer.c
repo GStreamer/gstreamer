@@ -57,7 +57,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%u",
 G_DEFINE_TYPE (GstStreamSynchronizer, gst_stream_synchronizer,
     GST_TYPE_ELEMENT);
 #define _do_init \
-    ret |= playback_element_init (plugin);
+    playback_element_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (streamsynchronizer, "streamsynchronizer",
     GST_RANK_NONE, GST_TYPE_STREAM_SYNCHRONIZER, _do_init);
 

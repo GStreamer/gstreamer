@@ -427,7 +427,7 @@ GType gst_decodebin3_get_type (void);
 G_DEFINE_TYPE (GstDecodebin3, gst_decodebin3, GST_TYPE_BIN);
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (decodebin3_debug, "decodebin3", 0, "decoder bin");\
-    ret |= playback_element_init (plugin);
+    playback_element_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (decodebin3, "decodebin3", GST_RANK_NONE,
     GST_TYPE_DECODEBIN3, _do_init);
 

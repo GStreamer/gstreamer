@@ -502,7 +502,7 @@ static GType gst_parse_bin_get_type (void);
 G_DEFINE_TYPE (GstParseBin, gst_parse_bin, GST_TYPE_BIN);
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_parse_bin_debug, "parsebin", 0, "parser bin");\
-    ret |= playback_element_init (plugin);
+    playback_element_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (parsebin, "parsebin", GST_RANK_NONE,
     GST_TYPE_PARSE_BIN, _do_init);
 

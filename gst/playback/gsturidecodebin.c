@@ -210,7 +210,7 @@ G_DEFINE_TYPE (GstURIDecodeBin, gst_uri_decode_bin, GST_TYPE_BIN);
 
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_uri_decode_bin_debug, "uridecodebin", 0, "URI decoder element"); \
-    ret |= playback_element_init (plugin);
+    playback_element_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (uridecodebin, "uridecodebin",
     GST_RANK_NONE, GST_TYPE_URI_DECODE_BIN, _do_init);
 

@@ -41,6 +41,7 @@ plugin_init (GstPlugin * plugin)
   gboolean res = FALSE;
   if (!g_getenv ("USE_PLAYBIN3"))
     res |= GST_ELEMENT_REGISTER (playbin, plugin);
+
   res |= GST_ELEMENT_REGISTER (playbin3, plugin);
   res |= GST_ELEMENT_REGISTER (playsink, plugin);
   res |= GST_ELEMENT_REGISTER (subtitleoverlay, plugin);

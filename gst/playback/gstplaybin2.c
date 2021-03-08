@@ -685,7 +685,7 @@ G_DEFINE_TYPE_WITH_CODE (GstPlayBin, gst_play_bin, GST_TYPE_PIPELINE,
     _do_init_type (g_define_type_id));
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_play_bin_debug, "playbin", 0, "play bin");\
-    ret |= playback_element_init (plugin);
+    playback_element_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (playbin, "playbin", GST_RANK_NONE,
     GST_TYPE_PLAY_BIN, _do_init);
 

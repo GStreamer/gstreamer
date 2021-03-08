@@ -603,7 +603,7 @@ G_DEFINE_TYPE (GstDecodeBin, gst_decode_bin, GST_TYPE_BIN);
     topology_next = g_quark_from_static_string ("next");\
     topology_pad = g_quark_from_static_string ("pad");\
     topology_element_srcpad = g_quark_from_static_string ("element-srcpad");\
-    ret |= playback_element_init (plugin);\
+    playback_element_init (plugin);\
 
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (decodebin, "decodebin", GST_RANK_NONE,
     GST_TYPE_DECODE_BIN, _do_init);

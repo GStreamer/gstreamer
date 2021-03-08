@@ -441,7 +441,7 @@ G_DEFINE_TYPE_WITH_CODE (GstPlaySink, gst_play_sink, GST_TYPE_BIN,
     _do_init_type (g_define_type_id));
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_play_sink_debug, "playsink", 0, "play sink");\
-    ret |= playback_element_init (plugin);
+    playback_element_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (playsink, "playsink", GST_RANK_NONE,
     GST_TYPE_PLAY_SINK, _do_init);
 
