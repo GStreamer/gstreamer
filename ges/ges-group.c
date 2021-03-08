@@ -457,7 +457,7 @@ _group (GList * containers)
 {
   GList *tmp;
   GESTimeline *timeline = NULL;
-  GESContainer *ret = g_object_new (GES_TYPE_GROUP, NULL);
+  GESContainer *ret = GES_CONTAINER (ges_group_new ());
 
   if (!containers)
     return ret;
