@@ -211,10 +211,16 @@ static GstStaticPadTemplate gst_interlace_src_template =
     );
 
 static GstStaticPadTemplate gst_interlace_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS)
+        ",interlace-mode=progressive ;" GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS)
+        ",interlace-mode=interleaved,field-order={top-field-first,bottom-field-first}; "
+        GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS) ",interlace-mode=mixed ;"
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+            VIDEO_FORMATS)
+        ",interlace-mode=alternate")
     );
 
 GType gst_interlace_get_type (void);
