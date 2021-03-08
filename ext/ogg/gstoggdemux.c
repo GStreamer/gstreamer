@@ -2298,7 +2298,7 @@ static gboolean gst_ogg_demux_plugin_init (GstPlugin * plugin);
 G_DEFINE_TYPE (GstOggDemux, gst_ogg_demux, GST_TYPE_ELEMENT);
 
 #define _do_init \
-    ret |= gst_ogg_demux_plugin_init (plugin);
+    gst_ogg_demux_plugin_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (oggdemux, "oggdemux", GST_RANK_PRIMARY,
     GST_TYPE_OGG_DEMUX, _do_init);
 
