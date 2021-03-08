@@ -107,18 +107,19 @@ struct _GESClip
 
 /**
  * GESClipClass:
- * @create_track_element: Method to create the core #GESTrackElement of
- * a clip of this class. If a clip of this class may create several track
- * elements per track type, this should be left as %NULL, and
- * create_track_elements() should be used instead. Otherwise, you should
- * implement this class method and leave create_track_elements() as the
- * default implementation
+ * @create_track_element: Method to create the core #GESTrackElement of a clip
+ * of this class. If a clip of this class may create several track elements per
+ * track type, this should be left as %NULL, and
+ * GESClipClass::create_track_elements should be used instead. Otherwise, you
+ * should implement this class method and leave
+ * GESClipClass::create_track_elements as the default implementation
  * @create_track_elements: Method to create the (multiple) core
- * #GESTrackElement-s of a clip of this class. If create_track_element()
- * is implemented, this should be kept as the default implementation
+ * #GESTrackElement-s of a clip of this class. If
+ * GESClipClass::create_track_element is implemented, this should be kept as the
+ * default implementation
  * @can_add_effects: Whether the user can add additional non-core
- * #GESBaseEffect-s to clips from this class, to be applied to the output
- * data of the core elements.
+ * #GESBaseEffect-s to clips from this class, to be applied to the output data
+ * of the core elements.
  */
 struct _GESClipClass
 {
