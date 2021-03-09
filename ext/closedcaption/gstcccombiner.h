@@ -40,18 +40,38 @@ G_BEGIN_DECLS
 typedef struct _GstCCCombiner GstCCCombiner;
 typedef struct _GstCCCombinerClass GstCCCombinerClass;
 
+struct cdp_fps_entry
+{
+  guint8 fps_idx;
+  guint fps_n, fps_d;
+  guint max_cc_count;
+  guint max_ccp_count;
+  guint max_cea608_count;
+};
+
 struct _GstCCCombiner
 {
   GstAggregator parent;
 
   gint video_fps_n, video_fps_d;
+  gboolean progressive;
   GstClockTime previous_video_running_time_end;
   GstClockTime current_video_running_time;
   GstClockTime current_video_running_time_end;
   GstBuffer *current_video_buffer;
 
   GArray *current_frame_captions;
-  GstVideoCaptionType current_caption_type;
+  GstVideoCaptionType caption_type;
+
+  gboolean prop_schedule;
+  guint prop_max_scheduled;
+
+  gboolean schedule;
+  guint max_scheduled;
+  /* One queue per field */
+  GstQueueArray *scheduled[2];
+  guint16 cdp_hdr_sequence_cntr;
+  const struct cdp_fps_entry *cdp_fps_entry;
 };
 
 struct _GstCCCombinerClass
