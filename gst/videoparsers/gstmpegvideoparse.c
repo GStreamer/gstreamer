@@ -999,9 +999,6 @@ gst_mpegv_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     mpvparse->send_codec_tag = FALSE;
   }
 
-  /* usual clipping applies */
-  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
-
   if (mpvparse->send_mpeg_meta) {
     GstBuffer *buf;
 
