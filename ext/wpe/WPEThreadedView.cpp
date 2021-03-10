@@ -35,8 +35,8 @@
 #include <wpe/unstable/fdo-shm.h>
 #endif
 
-GST_DEBUG_CATEGORY_EXTERN (wpe_src_debug);
-#define GST_CAT_DEFAULT wpe_src_debug
+GST_DEBUG_CATEGORY_EXTERN (wpe_view_debug);
+#define GST_CAT_DEFAULT wpe_view_debug
 
 #if defined(WPE_FDO_CHECK_VERSION) && WPE_FDO_CHECK_VERSION(1, 3, 0)
 #define USE_DEPRECATED_FDO_EGL_IMAGE 0
@@ -165,7 +165,7 @@ gpointer WPEContextThread::s_viewThread(gpointer data)
     return nullptr;
 }
 
-WPEView* WPEContextThread::createWPEView(GstWpeSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
+WPEView* WPEContextThread::createWPEView(GstWpeVideoSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
 {
     GST_DEBUG("context %p display %p, size (%d,%d)", context, display, width, height);
 
@@ -199,7 +199,7 @@ WPEView* WPEContextThread::createWPEView(GstWpeSrc* src, GstGLContext* context, 
 
 static gboolean s_loadFailed(WebKitWebView*, WebKitLoadEvent, gchar* failing_uri, GError* error, gpointer data)
 {
-    GstWpeSrc* src = GST_WPE_SRC(data);
+    GstWpeVideoSrc* src = GST_WPE_VIDEO_SRC(data);
 
     if (g_error_matches(error, WEBKIT_NETWORK_ERROR, WEBKIT_NETWORK_ERROR_CANCELLED)) {
         GST_INFO_OBJECT (src, "Loading cancelled.");
@@ -231,7 +231,7 @@ static void s_loadProgressChaned(GObject* object, GParamSpec*, gpointer data)
     gst_object_unref (bus);
 }
 
-WPEView::WPEView(WebKitWebContext* web_context, GstWpeSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
+WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
 {
     g_mutex_init(&threading.ready_mutex);
     g_cond_init(&threading.ready_cond);
@@ -292,7 +292,7 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeSrc* src, GstGLContext* co
     g_signal_connect(webkit.view, "load-failed-with-tls-errors", G_CALLBACK(s_loadFailedWithTLSErrors), src);
     g_signal_connect(webkit.view, "notify::estimated-load-progress", G_CALLBACK(s_loadProgressChaned), src);
 
-    gst_wpe_src_configure_web_view(src, webkit.view);
+    gst_wpe_video_src_configure_web_view(src, webkit.view);
 
     gchar* location;
     gboolean drawBackground = TRUE;

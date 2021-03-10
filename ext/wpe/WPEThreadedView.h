@@ -26,7 +26,7 @@
 #include <wpe/fdo.h>
 #include <wpe/fdo-egl.h>
 #include <wpe/webkit.h>
-#include "gstwpesrc.h"
+#include "gstwpevideosrc.h"
 
 typedef struct _GstGLContext GstGLContext;
 typedef struct _GstGLDisplay GstGLDisplay;
@@ -40,12 +40,12 @@ typedef struct _GstEGLImage GstEGLImage;
 
 class WPEView {
 public:
-    WPEView(WebKitWebContext*, GstWpeSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
+    WPEView(WebKitWebContext*, GstWpeVideoSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
     ~WPEView();
 
     bool operator!() const { return m_isValid; }
 
-    /*  Used by wpesrc */
+    /*  Used by wpevideosrc */
     void resize(int width, int height);
     void loadUri(const gchar*);
     void loadData(GBytes*);
@@ -134,7 +134,7 @@ public:
     WPEContextThread();
     ~WPEContextThread();
 
-    WPEView* createWPEView(GstWpeSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
+    WPEView* createWPEView(GstWpeVideoSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
 
     template<typename Function>
     void dispatch(Function);

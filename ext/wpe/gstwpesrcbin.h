@@ -17,11 +17,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
+
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/gl/gl.h>
-#include <wpe/webkit.h>
 
 G_BEGIN_DECLS
 
@@ -36,13 +35,9 @@ typedef struct _GstWpeSrcClass GstWpeSrcClass;
 
 struct _GstWpeSrcClass
 {
-  GstGLBaseSrcClass parent_class;
+  GstBinClass parent_class;
 };
 
 GType gst_wpe_src_get_type (void);
-
-GST_ELEMENT_REGISTER_DECLARE (wpesrc);
-
-void gst_wpe_src_configure_web_view(GstWpeSrc * src, WebKitWebView * webview);
 
 G_END_DECLS

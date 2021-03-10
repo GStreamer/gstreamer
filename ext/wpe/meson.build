@@ -17,7 +17,7 @@ if not wpe_dep.found() or not wpe_fdo_dep.found() or not egl_dep.found() or not 
 endif
 
 gstwpe = library('gstwpe',
-  ['WPEThreadedView.cpp', 'gstwpesrc.cpp'],
+  ['WPEThreadedView.cpp', 'gstwpe.cpp', 'gstwpevideosrc.cpp', 'gstwpesrcbin.cpp'],
   dependencies : [egl_dep, wpe_dep, wpe_fdo_dep, gstvideo_dep, gstbase_dep, gstgl_dep, xkbcommon_dep, wl_server_dep],
   cpp_args : gst_plugins_bad_args + ['-DHAVE_CONFIG_H=1'],
   include_directories : [configinc],

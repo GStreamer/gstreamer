@@ -18,19 +18,19 @@
  */
 
 /**
- * SECTION:element-wpesrc
- * @title: wpesrc
+ * SECTION:element-wpevideosrc
+ * @title: wpevideosrc
  *
- * The wpesrc element is used to produce a video texture representing a web page
+ * The wpevideosrc element is used to produce a video texture representing a web page
  * rendered off-screen by WPE.
  *
  * Starting from WPEBackend-FDO 1.6.x, software rendering support is available. This
- * features allows wpesrc to be used on machines without GPU, and/or for testing
+ * features allows wpevideosrc to be used on machines without GPU, and/or for testing
  * purpose. To enable it, set the `LIBGL_ALWAYS_SOFTWARE=true` environment
  * variable and make sure `video/x-raw, format=BGRA` caps are negotiated by the
- * wpesrc element.
+ * wpevideosrc element.
  *
- * As the webview loading is usually not instantaneous, the wpesrc element emits
+ * As the webview loading is usually not instantaneous, the wpevideosrc element emits
  * messages indicating the load progress, in percent. The value is an estimate
  * based on the total number of bytes expected to be received for a document,
  * including all its possible subresources and child documents. The application
@@ -42,12 +42,12 @@
  * ## Example launch lines
  *
  * ```shell
- * gst-launch-1.0 -v wpesrc location="https://gstreamer.freedesktop.org" ! queue ! glimagesink
+ * gst-launch-1.0 -v wpevideosrc location="https://gstreamer.freedesktop.org" ! queue ! glimagesink
  * ```
  * Shows the GStreamer website homepage
  *
  * ```shell
- * LIBGL_ALWAYS_SOFTWARE=true gst-launch-1.0 -v wpesrc num-buffers=50 location="https://gstreamer.freedesktop.org" \
+ * LIBGL_ALWAYS_SOFTWARE=true gst-launch-1.0 -v wpevideosrc num-buffers=50 location="https://gstreamer.freedesktop.org" \
  *   videoconvert ! pngenc ! multifilesink location=/tmp/snapshot-%05d.png
  * ```
  * Saves the first 50 video frames generated for the GStreamer website as PNG files in /tmp.
@@ -58,14 +58,14 @@
  * Shows the GStreamer website homepage as played with GstPlayer in a GTK+ window.
  *
  * ```shell
- * gst-launch-1.0  glvideomixer name=m sink_1::zorder=0 ! glimagesink wpesrc location="file:///tmp/asset.html" draw-background=0 \
+ * gst-launch-1.0  glvideomixer name=m sink_1::zorder=0 ! glimagesink wpevideosrc location="file:///tmp/asset.html" draw-background=0 \
  *   ! m. videotestsrc ! queue ! glupload ! glcolorconvert ! m.
  * ```
  * Composite WPE with a video stream in a single OpenGL scene.
  *
  * ```shell
  * gst-launch-1.0 glvideomixer name=m sink_1::zorder=0 sink_0::height=818 sink_0::width=1920 ! gtkglsink \
- *    wpesrc location="file:///tmp/asset.html" draw-background=0 ! m.
+ *    wpevideosrc location="file:///tmp/asset.html" draw-background=0 ! m.
  *    uridecodebin uri="http://example.com/Sintel.2010.1080p.mkv" name=d d. ! queue ! glupload ! glcolorconvert ! m.
  * ```
  * Composite WPE with a video stream, sink_0 pad properties have to match the video dimensions.
@@ -85,7 +85,7 @@
 #include <config.h>
 #endif
 
-#include "gstwpesrc.h"
+#include "gstwpevideosrc.h"
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gstglmemoryegl.h>
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
@@ -93,9 +93,6 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include "WPEThreadedView.h"
-
-GST_DEBUG_CATEGORY (wpe_src_debug);
-#define GST_CAT_DEFAULT wpe_src_debug
 
 #define DEFAULT_WIDTH 1920
 #define DEFAULT_HEIGHT 1080
@@ -115,9 +112,9 @@ enum
   SIGNAL_LOAD_BYTES,
   LAST_SIGNAL
 };
-static guint gst_wpe_src_signals[LAST_SIGNAL] = { 0 };
+static guint gst_wpe_video_src_signals[LAST_SIGNAL] = { 0 };
 
-struct _GstWpeSrc
+struct _GstWpeVideoSrc
 {
   GstGLBaseSrc parent;
 
@@ -138,14 +135,8 @@ struct _GstWpeSrc
 #define WPE_LOCK(o) g_mutex_lock(&(o)->lock)
 #define WPE_UNLOCK(o) g_mutex_unlock(&(o)->lock)
 
-static void gst_wpe_src_uri_handler_init (gpointer iface, gpointer data);
-
-#define gst_wpe_src_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstWpeSrc, gst_wpe_src, GST_TYPE_GL_BASE_SRC,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_wpe_src_uri_handler_init);
-    GST_DEBUG_CATEGORY_INIT (wpe_src_debug, "wpesrc", 0, "WPE Source"););
-GST_ELEMENT_REGISTER_DEFINE (wpesrc, "wpesrc", GST_RANK_NONE,
-      GST_TYPE_WPE_SRC);
+#define gst_wpe_video_src_parent_class parent_class
+G_DEFINE_TYPE(GstWpeVideoSrc, gst_wpe_video_src, GST_TYPE_GL_BASE_SRC);
 
 #if ENABLE_SHM_BUFFER_SUPPORT
 #define WPE_RAW_CAPS "; video/x-raw, "          \
@@ -165,19 +156,19 @@ GST_ELEMENT_REGISTER_DEFINE (wpesrc, "wpesrc", GST_RANK_NONE,
   "framerate = " GST_VIDEO_FPS_RANGE ", "               \
   "pixel-aspect-ratio = (fraction)1/1, texture-target = (string)2D"
 
-#define WPE_SRC_CAPS WPE_BASIC_CAPS WPE_RAW_CAPS
-#define WPE_SRC_DOC_CAPS WPE_BASIC_CAPS "; video/x-raw, format = (string) BGRA"
+#define WPE_VIDEO_SRC_CAPS WPE_BASIC_CAPS WPE_RAW_CAPS
+#define WPE_VIDEO_SRC_DOC_CAPS WPE_BASIC_CAPS "; video/x-raw, format = (string) BGRA"
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (WPE_SRC_CAPS));
+    GST_STATIC_CAPS (WPE_VIDEO_SRC_CAPS));
 
 static GstFlowReturn
-gst_wpe_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer ** buf)
+gst_wpe_video_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer ** buf)
 {
   GstGLBaseSrc *gl_src = GST_GL_BASE_SRC (bsrc);
-  GstWpeSrc *src = GST_WPE_SRC (bsrc);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (bsrc);
   GstFlowReturn ret = GST_FLOW_ERROR;
   GstBuffer *locked_buffer;
   GstClockTime next_time;
@@ -224,9 +215,9 @@ gst_wpe_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer *
 }
 
 static gboolean
-gst_wpe_src_fill_memory (GstGLBaseSrc * bsrc, GstGLMemory * memory)
+gst_wpe_video_src_fill_memory (GstGLBaseSrc * bsrc, GstGLMemory * memory)
 {
-  GstWpeSrc *src = GST_WPE_SRC (bsrc);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (bsrc);
   const GstGLFuncs *gl;
   guint tex_id;
   GstEGLImage *locked_image;
@@ -258,7 +249,7 @@ gst_wpe_src_fill_memory (GstGLBaseSrc * bsrc, GstGLMemory * memory)
 }
 
 static gboolean
-gst_wpe_src_start (GstWpeSrc * src)
+gst_wpe_video_src_start (GstWpeVideoSrc * src)
 {
   GstGLContext *context = NULL;
   GstGLDisplay *display = NULL;
@@ -311,10 +302,10 @@ gst_wpe_src_start (GstWpeSrc * src)
 }
 
 static gboolean
-gst_wpe_src_decide_allocation (GstBaseSrc * base_src, GstQuery * query)
+gst_wpe_video_src_decide_allocation (GstBaseSrc * base_src, GstQuery * query)
 {
   GstGLBaseSrc *gl_src = GST_GL_BASE_SRC (base_src);
-  GstWpeSrc *src = GST_WPE_SRC (base_src);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (base_src);
   GstCapsFeatures *caps_features;
 
   WPE_LOCK (src);
@@ -330,18 +321,18 @@ gst_wpe_src_decide_allocation (GstBaseSrc * base_src, GstQuery * query)
     return GST_CALL_PARENT_WITH_DEFAULT(GST_BASE_SRC_CLASS, decide_allocation, (base_src, query), FALSE);
   }
   WPE_UNLOCK (src);
-  return gst_wpe_src_start (src);
+  return gst_wpe_video_src_start (src);
 }
 
 static gboolean
-gst_wpe_src_gl_start (GstGLBaseSrc * base_src)
+gst_wpe_video_src_gl_start (GstGLBaseSrc * base_src)
 {
-  GstWpeSrc *src = GST_WPE_SRC (base_src);
-  return gst_wpe_src_start (src);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (base_src);
+  return gst_wpe_video_src_start (src);
 }
 
 static void
-gst_wpe_src_stop_unlocked (GstWpeSrc * src)
+gst_wpe_video_src_stop_unlocked (GstWpeVideoSrc * src)
 {
   if (src->view) {
     GST_DEBUG_OBJECT (src, "deleting view %p", src->view);
@@ -351,42 +342,42 @@ gst_wpe_src_stop_unlocked (GstWpeSrc * src)
 }
 
 static void
-gst_wpe_src_gl_stop (GstGLBaseSrc * base_src)
+gst_wpe_video_src_gl_stop (GstGLBaseSrc * base_src)
 {
-  GstWpeSrc *src = GST_WPE_SRC (base_src);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (base_src);
 
   WPE_LOCK (src);
-  gst_wpe_src_stop_unlocked (src);
+  gst_wpe_video_src_stop_unlocked (src);
   WPE_UNLOCK (src);
 }
 
 static gboolean
-gst_wpe_src_stop (GstBaseSrc * base_src)
+gst_wpe_video_src_stop (GstBaseSrc * base_src)
 {
-  GstWpeSrc *src = GST_WPE_SRC (base_src);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (base_src);
 
   /* we can call this always, GstGLBaseSrc is smart enough to not crash if
    * gst_gl_base_src_gl_start() has not been called from chaining up
-   * gst_wpe_src_decide_allocation() */
+   * gst_wpe_video_src_decide_allocation() */
   if (!GST_CALL_PARENT_WITH_DEFAULT(GST_BASE_SRC_CLASS, stop, (base_src), FALSE))
     return FALSE;
 
   WPE_LOCK (src);
 
-  /* if gl-enabled, gst_wpe_src_stop_unlocked() would have already been called
-   * inside gst_wpe_src_gl_stop() from the base class stopping the OpenGL
+  /* if gl-enabled, gst_wpe_video_src_stop_unlocked() would have already been called
+   * inside gst_wpe_video_src_gl_stop() from the base class stopping the OpenGL
    * context */
   if (!src->gl_enabled)
-    gst_wpe_src_stop_unlocked (src);
+    gst_wpe_video_src_stop_unlocked (src);
 
   WPE_UNLOCK (src);
   return TRUE;
 }
 
 static GstCaps *
-gst_wpe_src_fixate (GstBaseSrc * base_src, GstCaps * caps)
+gst_wpe_video_src_fixate (GstBaseSrc * base_src, GstCaps * caps)
 {
-  GstWpeSrc *src = GST_WPE_SRC (base_src);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (base_src);
   GstStructure *structure;
   gint width, height;
 
@@ -414,7 +405,7 @@ gst_wpe_src_fixate (GstBaseSrc * base_src, GstCaps * caps)
 }
 
 void
-gst_wpe_src_configure_web_view (GstWpeSrc * src, WebKitWebView * webview)
+gst_wpe_video_src_configure_web_view (GstWpeVideoSrc * src, WebKitWebView * webview)
 {
   GValue args[2] = { {0}, {0} };
 
@@ -423,7 +414,7 @@ gst_wpe_src_configure_web_view (GstWpeSrc * src, WebKitWebView * webview)
   g_value_init (&args[1], G_TYPE_OBJECT);
   g_value_set_object (&args[1], webview);
 
-  g_signal_emitv (args, gst_wpe_src_signals[SIGNAL_CONFIGURE_WEB_VIEW], 0,
+  g_signal_emitv (args, gst_wpe_video_src_signals[SIGNAL_CONFIGURE_WEB_VIEW], 0,
       NULL);
 
   g_value_unset (&args[0]);
@@ -431,7 +422,7 @@ gst_wpe_src_configure_web_view (GstWpeSrc * src, WebKitWebView * webview)
 }
 
 static void
-gst_wpe_src_load_bytes (GstWpeSrc * src, GBytes * bytes)
+gst_wpe_video_src_load_bytes (GstWpeVideoSrc * src, GBytes * bytes)
 {
   if (src->view && GST_STATE (GST_ELEMENT_CAST (src)) > GST_STATE_NULL) {
     src->view->loadData (bytes);
@@ -445,7 +436,7 @@ gst_wpe_src_load_bytes (GstWpeSrc * src, GBytes * bytes)
 }
 
 static gboolean
-gst_wpe_src_set_location (GstWpeSrc * src, const gchar * location,
+gst_wpe_video_src_set_location (GstWpeVideoSrc * src, const gchar * location,
     GError ** error)
 {
   GST_OBJECT_LOCK (src);
@@ -460,7 +451,7 @@ gst_wpe_src_set_location (GstWpeSrc * src, const gchar * location,
 }
 
 static void
-gst_wpe_src_set_draw_background (GstWpeSrc * src, gboolean draw_background)
+gst_wpe_video_src_set_draw_background (GstWpeVideoSrc * src, gboolean draw_background)
 {
   GST_OBJECT_LOCK (src);
   src->draw_background = draw_background;
@@ -471,10 +462,10 @@ gst_wpe_src_set_draw_background (GstWpeSrc * src, gboolean draw_background)
 }
 
 static void
-gst_wpe_src_set_property (GObject * object, guint prop_id, const GValue * value,
+gst_wpe_video_src_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstWpeSrc *src = GST_WPE_SRC (object);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
@@ -487,14 +478,14 @@ gst_wpe_src_set_property (GObject * object, guint prop_id, const GValue * value,
         return;
       }
 
-      if (!gst_wpe_src_set_location (src, location, NULL)) {
+      if (!gst_wpe_video_src_set_location (src, location, NULL)) {
         GST_WARNING_OBJECT (src, "badly formatted location");
         return;
       }
       break;
     }
     case PROP_DRAW_BACKGROUND:
-      gst_wpe_src_set_draw_background (src, g_value_get_boolean (value));
+      gst_wpe_video_src_set_draw_background (src, g_value_get_boolean (value));
       break;
     default:
       break;
@@ -502,10 +493,10 @@ gst_wpe_src_set_property (GObject * object, guint prop_id, const GValue * value,
 }
 
 static void
-gst_wpe_src_get_property (GObject * object, guint prop_id, GValue * value,
+gst_wpe_video_src_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstWpeSrc *src = GST_WPE_SRC (object);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (object);
 
   switch (prop_id) {
     case PROP_LOCATION:
@@ -525,10 +516,10 @@ gst_wpe_src_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-gst_wpe_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_wpe_video_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret = FALSE;
-  GstWpeSrc *src = GST_WPE_SRC (parent);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (parent);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION) {
     const gchar *key;
@@ -647,11 +638,11 @@ gst_wpe_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static void
-gst_wpe_src_init (GstWpeSrc * src)
+gst_wpe_video_src_init (GstWpeVideoSrc * src)
 {
   GstPad *pad = gst_element_get_static_pad (GST_ELEMENT_CAST (src), "src");
 
-  gst_pad_set_event_function (pad, gst_wpe_src_event);
+  gst_pad_set_event_function (pad, gst_wpe_video_src_event);
   gst_object_unref (pad);
 
   src->draw_background = TRUE;
@@ -662,9 +653,9 @@ gst_wpe_src_init (GstWpeSrc * src)
 }
 
 static void
-gst_wpe_src_finalize (GObject * object)
+gst_wpe_video_src_finalize (GObject * object)
 {
-  GstWpeSrc *src = GST_WPE_SRC (object);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (object);
 
   g_free (src->location);
   g_clear_pointer (&src->bytes, g_bytes_unref);
@@ -673,54 +664,8 @@ gst_wpe_src_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static GstURIType
-gst_wpe_src_uri_get_type (GType)
-{
-  return GST_URI_SRC;
-}
-
-static const gchar *const *
-gst_wpe_src_get_protocols (GType)
-{
-  static const char *protocols[] = { "wpe", NULL };
-  return protocols;
-}
-
-static gchar *
-gst_wpe_src_get_uri (GstURIHandler * handler)
-{
-  GstWpeSrc *src = GST_WPE_SRC (handler);
-  gchar *uri;
-
-  GST_OBJECT_LOCK (src);
-  uri = g_strdup_printf ("wpe://%s", src->location);
-  GST_OBJECT_UNLOCK (src);
-
-  return uri;
-}
-
-static gboolean
-gst_wpe_src_set_uri (GstURIHandler * handler, const gchar * uri,
-    GError ** error)
-{
-  GstWpeSrc *src = GST_WPE_SRC (handler);
-
-  return gst_wpe_src_set_location (src, uri + 6, error);
-}
-
 static void
-gst_wpe_src_uri_handler_init (gpointer iface_ptr, gpointer data)
-{
-  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) iface_ptr;
-
-  iface->get_type = gst_wpe_src_uri_get_type;
-  iface->get_protocols = gst_wpe_src_get_protocols;
-  iface->get_uri = gst_wpe_src_get_uri;
-  iface->set_uri = gst_wpe_src_set_uri;
-}
-
-static void
-gst_wpe_src_class_init (GstWpeSrcClass * klass)
+gst_wpe_video_src_class_init (GstWpeVideoSrcClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
@@ -729,9 +674,9 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
   GstPadTemplate *tmpl;
   GstCaps *doc_caps;
 
-  gobject_class->set_property = gst_wpe_src_set_property;
-  gobject_class->get_property = gst_wpe_src_get_property;
-  gobject_class->finalize = gst_wpe_src_finalize;
+  gobject_class->set_property = gst_wpe_video_src_set_property;
+  gobject_class->get_property = gst_wpe_video_src_get_property;
+  gobject_class->finalize = gst_wpe_video_src_finalize;
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "location",
@@ -750,56 +695,44 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
   tmpl = gst_static_pad_template_get (&src_factory);
   gst_element_class_add_pad_template (gstelement_class, tmpl);
 
-  base_src_class->fixate = GST_DEBUG_FUNCPTR (gst_wpe_src_fixate);
-  base_src_class->create = GST_DEBUG_FUNCPTR (gst_wpe_src_create);
-  base_src_class->decide_allocation = GST_DEBUG_FUNCPTR (gst_wpe_src_decide_allocation);
-  base_src_class->stop = GST_DEBUG_FUNCPTR (gst_wpe_src_stop);
+  base_src_class->fixate = GST_DEBUG_FUNCPTR (gst_wpe_video_src_fixate);
+  base_src_class->create = GST_DEBUG_FUNCPTR (gst_wpe_video_src_create);
+  base_src_class->decide_allocation = GST_DEBUG_FUNCPTR (gst_wpe_video_src_decide_allocation);
+  base_src_class->stop = GST_DEBUG_FUNCPTR (gst_wpe_video_src_stop);
 
   gl_base_src_class->supported_gl_api =
       static_cast < GstGLAPI >
       (GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2);
-  gl_base_src_class->gl_start = GST_DEBUG_FUNCPTR (gst_wpe_src_gl_start);
-  gl_base_src_class->gl_stop = GST_DEBUG_FUNCPTR (gst_wpe_src_gl_stop);
+  gl_base_src_class->gl_start = GST_DEBUG_FUNCPTR (gst_wpe_video_src_gl_start);
+  gl_base_src_class->gl_stop = GST_DEBUG_FUNCPTR (gst_wpe_video_src_gl_stop);
   gl_base_src_class->fill_gl_memory =
-      GST_DEBUG_FUNCPTR (gst_wpe_src_fill_memory);
+      GST_DEBUG_FUNCPTR (gst_wpe_video_src_fill_memory);
 
-  doc_caps = gst_caps_from_string (WPE_SRC_DOC_CAPS);
+  doc_caps = gst_caps_from_string (WPE_VIDEO_SRC_DOC_CAPS);
   gst_pad_template_set_documentation_caps (tmpl, doc_caps);
   gst_clear_caps (&doc_caps);
 
   /**
-   * GstWpeSrc::configure-web-view:
+   * GstWpeVideoSrc::configure-web-view:
    * @src: the object which received the signal
    * @webview: the webView
    *
    * Allow application to configure the webView settings.
    */
-  gst_wpe_src_signals[SIGNAL_CONFIGURE_WEB_VIEW] =
+  gst_wpe_video_src_signals[SIGNAL_CONFIGURE_WEB_VIEW] =
       g_signal_new ("configure-web-view", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_OBJECT);
 
   /**
-   * GstWpeSrc::load-bytes:
+   * GstWpeVideoSrc::load-bytes:
    * @src: the object which received the signal
    * @bytes: the GBytes data to load
    *
    * Load the specified bytes into the internal webView.
    */
-  gst_wpe_src_signals[SIGNAL_LOAD_BYTES] =
+  gst_wpe_video_src_signals[SIGNAL_LOAD_BYTES] =
       g_signal_new_class_handler ("load-bytes", G_TYPE_FROM_CLASS (klass),
       static_cast < GSignalFlags > (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
-      G_CALLBACK (gst_wpe_src_load_bytes), NULL, NULL, NULL,
+      G_CALLBACK (gst_wpe_video_src_load_bytes), NULL, NULL, NULL,
       G_TYPE_NONE, 1, G_TYPE_BYTES);
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-
-
-  return GST_ELEMENT_REGISTER (wpesrc, plugin);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    wpe, "WPE src plugin", plugin_init, VERSION, GST_LICENSE, PACKAGE,
-    GST_PACKAGE_ORIGIN)
