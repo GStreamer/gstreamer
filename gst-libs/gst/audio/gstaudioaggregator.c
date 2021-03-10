@@ -1071,7 +1071,7 @@ gst_audio_aggregator_update_converters (GstAudioAggregator * aagg,
     if (aaggpad->priv->buffer) {
       GstBuffer *new_converted_buffer =
           gst_audio_aggregator_convert_buffer (aagg, GST_PAD (aaggpad),
-          old_info, new_info, aaggpad->priv->input_buffer);
+          old_info, new_info, aaggpad->priv->buffer);
       gst_buffer_replace (&aaggpad->priv->buffer, new_converted_buffer);
       gst_buffer_unref (new_converted_buffer);
     }
