@@ -710,8 +710,9 @@ gst_d3d11_device_constructed (GObject * object)
       description = g_utf16_to_utf8 (desc.Description, -1, NULL, NULL, NULL);
       GST_DEBUG_OBJECT (self,
           "adapter index %d: D3D11 device vendor-id: 0x%04x, device-id: 0x%04x, "
-          "Flags: 0x%x, adapter-luid: " G_GINT64_FORMAT ", %s",
-          priv->adapter, desc.VendorId, desc.DeviceId, desc.Flags, description);
+          "Flags: 0x%x, adapter-luid: %" G_GINT64_FORMAT ", %s",
+          priv->adapter, desc.VendorId, desc.DeviceId, desc.Flags, adapter_luid,
+          description);
 
       priv->vendor_id = desc.VendorId;
       priv->device_id = desc.DeviceId;
