@@ -100,8 +100,6 @@ struct _GstAudioAggregatorPadPrivate
   guint position, size;         /* position in the input buffer and size of the
                                    input buffer in number of samples */
 
-  GstBuffer *input_buffer;
-
   guint64 output_offset;        /* Sample offset in output segment relative to
                                    srcpad.segment.start where the current position
                                    of this input_buffer would be placed. */
@@ -139,7 +137,6 @@ gst_audio_aggregator_pad_finalize (GObject * object)
   GstAudioAggregatorPad *pad = (GstAudioAggregatorPad *) object;
 
   gst_buffer_replace (&pad->priv->buffer, NULL);
-  gst_buffer_replace (&pad->priv->input_buffer, NULL);
 
   G_OBJECT_CLASS (gst_audio_aggregator_pad_parent_class)->finalize (object);
 }
@@ -162,7 +159,6 @@ gst_audio_aggregator_pad_init (GstAudioAggregatorPad * pad)
   gst_audio_info_init (&pad->info);
 
   pad->priv->buffer = NULL;
-  pad->priv->input_buffer = NULL;
   pad->priv->position = 0;
   pad->priv->size = 0;
   pad->priv->output_offset = -1;
@@ -182,7 +178,6 @@ gst_audio_aggregator_pad_flush_pad (GstAggregatorPad * aggpad,
   pad->priv->output_offset = pad->priv->next_offset = -1;
   pad->priv->discont_time = GST_CLOCK_TIME_NONE;
   gst_buffer_replace (&pad->priv->buffer, NULL);
-  gst_buffer_replace (&pad->priv->input_buffer, NULL);
   GST_OBJECT_UNLOCK (aggpad);
 
   return GST_FLOW_OK;
@@ -1814,7 +1809,6 @@ gst_audio_aggregator_mix_buffer (GstAudioAggregator * aagg,
     pad->priv->position = pad->priv->size;
 
     gst_buffer_replace (&pad->priv->buffer, NULL);
-    gst_buffer_replace (&pad->priv->input_buffer, NULL);
     return FALSE;
   }
 
@@ -1844,7 +1838,6 @@ gst_audio_aggregator_mix_buffer (GstAudioAggregator * aagg,
   if (pad->priv->position == pad->priv->size) {
     /* Buffer done, drop it */
     gst_buffer_replace (&pad->priv->buffer, NULL);
-    gst_buffer_replace (&pad->priv->input_buffer, NULL);
     GST_LOG_OBJECT (pad, "Finished mixing buffer, waiting for next");
     return FALSE;
   }
@@ -2093,14 +2086,15 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     GstAudioAggregatorPad *pad = (GstAudioAggregatorPad *) iter->data;
     GstAggregatorPad *aggpad = (GstAggregatorPad *) iter->data;
     gboolean pad_eos = gst_aggregator_pad_is_eos (aggpad);
+    GstBuffer *input_buffer;
 
     if (!pad_eos)
       is_eos = FALSE;
 
-    pad->priv->input_buffer = gst_aggregator_pad_peek_buffer (aggpad);
+    input_buffer = gst_aggregator_pad_peek_buffer (aggpad);
 
     GST_OBJECT_LOCK (pad);
-    if (!pad->priv->input_buffer) {
+    if (!input_buffer) {
       if (timeout) {
         if (pad->priv->output_offset < next_offset) {
           gint64 diff = next_offset - pad->priv->output_offset;
@@ -2125,24 +2119,21 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
       if (GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (pad)->convert_buffer)
         pad->priv->buffer =
             gst_audio_aggregator_convert_buffer
-            (aagg, GST_PAD (pad), &pad->info, &srcpad->info,
-            pad->priv->input_buffer);
+            (aagg, GST_PAD (pad), &pad->info, &srcpad->info, input_buffer);
       else
-        pad->priv->buffer = gst_buffer_ref (pad->priv->input_buffer);
+        pad->priv->buffer = gst_buffer_ref (input_buffer);
 
       if (!gst_audio_aggregator_fill_buffer (aagg, pad)) {
         gst_buffer_replace (&pad->priv->buffer, NULL);
-        gst_buffer_replace (&pad->priv->input_buffer, NULL);
-        pad->priv->buffer = NULL;
+        gst_buffer_unref (input_buffer);
         dropped = TRUE;
         GST_OBJECT_UNLOCK (pad);
 
         gst_aggregator_pad_drop_buffer (aggpad);
         continue;
       }
-    } else {
-      gst_buffer_unref (pad->priv->input_buffer);
     }
+    gst_buffer_unref (input_buffer);
 
     if (!pad->priv->buffer && !dropped && pad_eos) {
       GST_DEBUG_OBJECT (aggpad, "Pad is in EOS state");
@@ -2170,7 +2161,6 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
                     GST_AUDIO_INFO_RATE (&srcpad->info))), pad->priv->buffer);
         /* Buffer done, drop it */
         gst_buffer_replace (&pad->priv->buffer, NULL);
-        gst_buffer_replace (&pad->priv->input_buffer, NULL);
         dropped = TRUE;
         GST_OBJECT_UNLOCK (pad);
         gst_aggregator_pad_drop_buffer (aggpad);
