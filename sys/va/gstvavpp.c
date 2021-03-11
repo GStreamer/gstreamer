@@ -198,6 +198,26 @@ gst_va_vpp_dispose (GObject * object)
 }
 
 static void
+_update_passthrough (GstVaVpp * self, gboolean reconf)
+{
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (self);
+  gboolean old, new;
+
+  old = gst_base_transform_is_passthrough (trans);
+
+  GST_OBJECT_LOCK (self);
+  new = (self->op_flags == 0);
+  GST_OBJECT_UNLOCK (self);
+
+  if (old != new) {
+    GST_INFO_OBJECT (self, "%s passthrough", new ? "enabling" : "disabling");
+    if (reconf)
+      gst_base_transform_reconfigure_src (trans);
+    gst_base_transform_set_passthrough (trans, new);
+  }
+}
+
+static void
 _update_properties_unlocked (GstVaVpp * self)
 {
   if (!self->filter)
@@ -290,6 +310,10 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
 
   _update_properties_unlocked (self);
   GST_OBJECT_UNLOCK (object);
+
+  /* no reconfig here because it's done in
+   * _update_properties_unlocked() */
+  _update_passthrough (self, FALSE);
 }
 
 static void
@@ -360,6 +384,7 @@ gst_va_vpp_change_state (GstElement * element, GstStateChange transition)
       if (!gst_va_filter_open (self->filter))
         goto open_failed;
       _update_properties_unlocked (self);
+      _update_passthrough (self, FALSE);
       break;
     default:
       break;
@@ -776,6 +801,9 @@ gst_va_vpp_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   self->negotiated =
       gst_va_filter_set_formats (self->filter, &self->in_info, &self->out_info);
 
+  if (self->negotiated)
+    _update_passthrough (self, FALSE);
+
   return self->negotiated;
 
   /* ERRORS */
@@ -947,7 +975,7 @@ gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
     self->op_flags &= ~VPP_CONVERT_FILTERS;
   GST_OBJECT_UNLOCK (self);
 
-  gst_base_transform_set_passthrough (trans, self->op_flags == 0);
+  _update_passthrough (self, TRUE);
 }
 
 static inline gsize
@@ -2182,6 +2210,11 @@ gst_va_vpp_sink_event (GstBaseTransform * trans, GstEvent * event)
 
       _update_properties_unlocked (self);
       GST_OBJECT_UNLOCK (self);
+
+      /* no reconfig here because it's done in
+       * _update_properties_unlocked */
+      _update_passthrough (self, FALSE);
+
       break;
     default:
       break;
