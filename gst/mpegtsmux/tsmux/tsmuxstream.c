@@ -719,7 +719,7 @@ tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data)
  *
  * Submit @len bytes of @data into @stream. @pts and @dts can be set to the
  * timestamp (against a 90Hz clock) of the first access unit in @data. A
- * timestamp of GST_CLOCK_STIME_NNOE for @pts or @dts means unknown.
+ * timestamp of GST_CLOCK_STIME_NONE for @pts or @dts means unknown.
  *
  * @user_data will be passed to the release function as set with
  * tsmux_stream_set_buffer_release_func() when @data can be freed.
