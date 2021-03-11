@@ -179,15 +179,64 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, GstBuffer * buffer,
 
   output_state = gst_video_decoder_get_output_state (decoder);
   if ((output_state == NULL)
-      || GST_VIDEO_INFO_WIDTH (&output_state->info) != dimension.width
-      || GST_VIDEO_INFO_HEIGHT (&output_state->info) != dimension.height) {
+      || rsvg->dimension.width != dimension.width
+      || rsvg->dimension.height != dimension.height) {
+    GstCaps *peer_caps;
+    GstCaps *source_caps;
+    GstCaps *templ_caps;
 
-    /* Create the output state */
-    if (output_state)
-      gst_video_codec_state_unref (output_state);
-    output_state =
-        gst_video_decoder_set_output_state (decoder, GST_RSVG_VIDEO_FORMAT,
-        dimension.width, dimension.height, rsvg->input_state);
+    templ_caps =
+        gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD (rsvg));
+    peer_caps =
+        gst_pad_peer_query_caps (GST_VIDEO_DECODER_SRC_PAD (rsvg), templ_caps);
+
+    GST_DEBUG_OBJECT (rsvg,
+        "Trying to negotiate for SVG resolution %ux%u with downstream caps %"
+        GST_PTR_FORMAT, dimension.width, dimension.height, peer_caps);
+
+    source_caps = gst_caps_make_writable (g_steal_pointer (&templ_caps));
+    gst_caps_set_simple (source_caps, "width", G_TYPE_INT, dimension.width,
+        "height", G_TYPE_INT, dimension.height, "pixel-aspect-ratio",
+        GST_TYPE_FRACTION, 1, 1, NULL);
+
+    if (gst_caps_can_intersect (source_caps, peer_caps)
+        || gst_caps_is_empty (peer_caps)) {
+      GST_DEBUG_OBJECT (rsvg, "Using input resolution");
+      if (output_state)
+        gst_video_codec_state_unref (output_state);
+      output_state =
+          gst_video_decoder_set_output_state (decoder, GST_RSVG_VIDEO_FORMAT,
+          dimension.width, dimension.height, rsvg->input_state);
+      output_state->info.par_n = 1;
+      output_state->info.par_d = 1;
+    } else {
+      GstVideoInfo info;
+      GstStructure *s;
+
+      peer_caps = gst_caps_make_writable (peer_caps);
+      peer_caps = gst_caps_truncate (peer_caps);
+      s = gst_caps_get_structure (peer_caps, 0);
+      gst_structure_fixate_field_nearest_int (s, "width", dimension.width);
+      gst_structure_fixate_field_nearest_int (s, "height", dimension.height);
+      peer_caps = gst_caps_fixate (peer_caps);
+
+      gst_video_info_from_caps (&info, peer_caps);
+
+      if (output_state)
+        gst_video_codec_state_unref (output_state);
+      output_state =
+          gst_video_decoder_set_output_state (decoder, GST_RSVG_VIDEO_FORMAT,
+          info.width, info.height, rsvg->input_state);
+      GST_DEBUG_OBJECT (rsvg,
+          "Using resolution %ux%u with pixel-aspect-ratio %u/%u",
+          output_state->info.width, output_state->info.height,
+          output_state->info.par_n, output_state->info.par_d);
+    }
+
+    gst_clear_caps (&source_caps);
+    gst_clear_caps (&peer_caps);
+
+    rsvg->dimension = dimension;
   }
 
   ret = gst_video_decoder_allocate_output_frame (decoder, frame);
@@ -236,6 +285,7 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, GstBuffer * buffer,
         ((gdouble) GST_VIDEO_INFO_HEIGHT (&output_state->info)) /
         ((gdouble) dimension.height);
   }
+
   cairo_scale (cr, scalex, scaley);
   rsvg_handle_render_cairo (handle, cr);
 
@@ -259,17 +309,10 @@ static gboolean
 gst_rsvg_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   GstRsvgDec *rsvg = GST_RSVG_DEC (decoder);
-  GstVideoInfo *info = &state->info;
 
   if (rsvg->input_state)
     gst_video_codec_state_unref (rsvg->input_state);
   rsvg->input_state = gst_video_codec_state_ref (state);
-
-  /* Create the output state */
-  state = gst_video_decoder_set_output_state (decoder, GST_RSVG_VIDEO_FORMAT,
-      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
-      rsvg->input_state);
-  gst_video_codec_state_unref (state);
 
   return TRUE;
 }
@@ -369,6 +412,8 @@ gst_rsvg_dec_stop (GstVideoDecoder * decoder)
     gst_video_codec_state_unref (rsvg->input_state);
     rsvg->input_state = NULL;
   }
+
+  memset (&rsvg->dimension, 0, sizeof (RsvgDimensionData));
 
   return TRUE;
 }
