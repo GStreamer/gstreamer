@@ -928,7 +928,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtspSrc:teardown-timeout
+   * GstRTSPSrc:teardown-timeout
    *
    * When transitioning PAUSED-READY, allow up to timeout (in nanoseconds)
    * delay in order to send teardown (0 = disabled)
@@ -943,13 +943,13 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtspSrc:onvif-mode
+   * GstRTSPSrc:onvif-mode
    *
    * Act as an ONVIF client. When set to %TRUE:
    *
    * - seeks will be interpreted as nanoseconds since prime epoch (1900-01-01)
    *
-   * - #GstRtspSrc:onvif-rate-control can be used to request that the server sends
+   * - #GstRTSPSrc:onvif-rate-control can be used to request that the server sends
    *   data as fast as it can
    *
    * - TCP is picked as the transport protocol
@@ -965,7 +965,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_ONVIF_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtspSrc:onvif-rate-control
+   * GstRTSPSrc:onvif-rate-control
    *
    * When in onvif-mode, whether to set Rate-Control to yes or no. When set
    * to %FALSE, the server will deliver data as fast as the client can consume
@@ -980,10 +980,10 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtspSrc:is-live
+   * GstRTSPSrc:is-live
    *
    * Whether to act as a live source. This is useful in combination with
-   * #GstRtspSrc:onvif-rate-control set to %FALSE and usage of the TCP
+   * #GstRTSPSrc:onvif-rate-control set to %FALSE and usage of the TCP
    * protocol. In that situation, data delivery rate can be entirely
    * controlled from the client side, enabling features such as frame
    * stepping and instantaneous rate changes.
