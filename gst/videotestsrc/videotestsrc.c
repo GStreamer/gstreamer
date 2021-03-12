@@ -256,11 +256,21 @@ videotestsrc_convert_tmpline (paintinfo * p, GstVideoFrame * frame, int j)
   int height = frame->info.height;
   int n_lines = p->n_lines;
   int offset = p->offset;
+  guint8 *tmpline = p->tmpline, *tmpline2 = p->tmpline2;
 
+  /* `tmpline2` is only used here and when the shift amount `x` is
+   * non-zero, which only applies when `horizontal-speed` is set.
+   *
+   * Instead of copying the rotated line back to `tmpline` for
+   * `p->convert_tmpline` to use, swap the pointers briefly. Besides
+   * being cheaper, this also lets us reuse the painted `tmpline` for
+   * subsequent lines.
+   */
   if (x != 0) {
-    memcpy (p->tmpline2, p->tmpline, width * 4);
-    memcpy (p->tmpline, p->tmpline2 + x * 4, (width - x) * 4);
-    memcpy (p->tmpline + (width - x) * 4, p->tmpline2, x * 4);
+    memcpy (tmpline2, tmpline + x * 4, (width - x) * 4);
+    memcpy (tmpline2 + (width - x) * 4, tmpline, x * 4);
+    p->tmpline = tmpline2;
+    p->tmpline2 = tmpline;
   }
 
   for (i = width; i < width + 5; i++) {
@@ -277,6 +287,11 @@ videotestsrc_convert_tmpline (paintinfo * p, GstVideoFrame * frame, int j)
       j++;
       p->convert_tmpline (p, frame, j);
     }
+  }
+
+  if (x != 0) {
+    p->tmpline = tmpline;
+    p->tmpline2 = tmpline2;
   }
 }
 
