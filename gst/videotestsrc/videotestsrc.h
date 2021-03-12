@@ -60,6 +60,7 @@ struct paintinfo_struct
 #define PAINT_INFO_INIT {0, }
 
 void    gst_video_test_src_smpte        (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
+void    gst_video_test_src_smpte_rp_219 (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
 void    gst_video_test_src_smpte75      (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
 void    gst_video_test_src_snow         (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);
 void    gst_video_test_src_black        (GstVideoTestSrc * v, GstClockTime pts, GstVideoFrame *frame);

@@ -14609,6 +14609,11 @@
                         "desc": "Colors",
                         "name": "colors",
                         "value": "24"
+                    },
+                    {
+                        "desc": "SMPTE test pattern, RP 219 conformant",
+                        "name": "smpte-rp-219",
+                        "value": "25"
                     }
                 ]
             }

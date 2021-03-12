@@ -88,6 +88,41 @@ static const struct vts_color_struct vts_colors_bt709_ycbcr_75[] = {
   {32, 128, 128, 255, 19, 19, 19, (32 << 8)},
 };
 
+/* 8-bit values, the selection and order of the colors is done by the
+   drawing function */
+static const struct vts_color_struct vts_colors_bt709_ycbcr_rp_219[] = {
+  /* Pattern 1, smpte75 with 16:9 gray extensions */
+  {104, 128, 128, 255, 102, 102, 102, (104 << 8)},      /* row 0, 40% gray */
+  {180, 128, 128, 255, 191, 191, 191, (180 << 8)},      /* row 1, 75% white */
+  {168, 44, 136, 255, 190, 203, 8, (168 << 8)}, /* row 2, 75% yellow */
+  {145, 147, 44, 255, 16, 211, 189, (145 << 8)},        /* row 3, 75% cyan */
+  {133, 63, 52, 255, 15, 223, 5, (133 << 8)},   /* row 4, 75% green */
+  {63, 193, 204, 255, 176, 0, 186, (63 << 8)},  /* row 5, 75% magenta */
+  {51, 109, 212, 255, 175, 0, 2, (51 << 8)},    /* row 6, 75% red */
+  {28, 212, 120, 255, 1, 0, 183, (28 << 8)},    /* row 7, 75% blue */
+
+  /* Pattern 2 */
+  {188, 154, 16, 255, 22, 255, 253, (188 << 8)},        /* row 8, 100% cyan */
+  {235, 128, 128, 255, 255, 255, 255, (235 << 8)},      /* row 9, 100% white */
+  {61, 103, 157, 255, 99, 48, 15, (61 << 8)},   /* row 10, *2=+I */
+  {61, 153, 99, 255, 6, 66, 103, (61 << 8)},    /* row 11, *2=-I */
+  {32, 240, 118, 255, 3, 0, 245, (32 << 8)},    /* row 12, 100% blue */
+
+  /* Pattern 3 */
+  {219, 16, 138, 255, 252, 255, 10, (219 << 8)},        /* row 13, 100% yellow */
+  {16, 128, 128, 255, 0, 0, 0, (16 << 8)},      /* row 14, 0% black */
+  {35, 174, 152, 255, 60, 0, 115, (35 << 8)},   /* row 15, +Q */
+  {63, 102, 240, 255, 233, 0, 2, (63 << 8)},    /* row 16, 100% red */
+
+  /* Pattern 4 */
+  {49, 128, 128, 255, 38, 38, 38, (47 << 8)},   /* row 17, 15% gray */
+  {1, 128, 128, 255, 0, 0, 0, (1 << 8)},        /* row 18, sub-black valley */
+  {254, 128, 128, 255, 255, 255, 255, (254 << 8)},      /* row 19, super-white peak */
+  {12, 128, 128, 255, 0, 0, 0, (12 << 8)},      /* row 20, -2% black */
+  {20, 128, 128, 255, 5, 5, 5, (20 << 8)},      /* row 21, +2% black */
+  {25, 128, 128, 255, 10, 11, 10, (25 << 8)},   /* row 22, +4% black */
+};
+
 static const struct vts_color_struct vts_colors_bt601_ycbcr_100[] = {
   {235, 128, 128, 255, 255, 255, 255, (235 << 8)},
   {210, 16, 146, 255, 255, 255, 0, (219 << 8)},
@@ -438,6 +473,340 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, GstClockTime pts,
     videotestsrc_convert_tmpline (p, frame, j);
 
   }
+}
+
+void
+gst_video_test_src_smpte_rp_219 (GstVideoTestSrc * v, GstClockTime pts,
+    GstVideoFrame * frame)
+{
+  /* heights */
+  int b, b1;
+  int bs[6];                    /* bottom-half 6 rows */
+
+  /* widths */
+  int a, d, k, g, h, m, k1, k2, g1, g2;
+  int cs[7];                    /* 'c's and 'f's */
+  int ij[5];                    /* parts of 'x' and 'y' */
+  int x, y, x1, x2, y1, y2;
+
+  paintinfo pi = PAINT_INFO_INIT;
+  paintinfo *p = &pi;
+
+  a = frame->info.width;
+  b = frame->info.height;
+
+  videotestsrc_setup_paintinfo (v, p, a, b);
+  p->colors = vts_colors_bt709_ycbcr_rp_219;
+
+  /* heights */
+  {
+    /* error distribution for the bottom 6 rows
+     * x.e., pattern 1 is always shorter when b%12 != 0 */
+    static const int b12_err[6][6] = {
+      {0, 0, 0, 0, 0, 0},
+      {0, 1, 0, 0, 0, 0},
+      {0, 1, 1, 0, 0, 0},
+      {0, 0, 0, 1, 1, 1},
+      {0, 1, 1, 1, 0, 1},
+      {0, 1, 1, 1, 1, 1},
+    };
+
+    int b2, b12, b12_r, x;
+
+    b1 = b / 2;
+    b2 = b - b1;
+
+    b12 = b2 / 6;
+    b12_r = b2 % 6;
+    for (x = 0; x < 6; x++) {
+      bs[x] = b12 + b12_err[b12_r][x];
+    }
+  }
+
+  /* widths */
+  {
+    /* error distribution for 'c' columns */
+    static const int c_w_err[7][7] = {
+      {0, 0, 0, 0, 0, 0, 0},
+      {0, 0, 0, 1, 0, 0, 0},
+      {1, 0, 0, 0, 0, 0, 1},
+      {0, 1, 0, 1, 0, 1, 0},
+      {1, 0, 1, 0, 1, 0, 1},
+      {0, 1, 1, 1, 1, 1, 0},
+      {1, 1, 1, 0, 1, 1, 1}
+    };
+
+    /* error distribution for 'x' column in pattern 4 */
+    static const int i_err[3][3] = {
+      {0, 0, 0},
+      {0, 1, 0},
+      {1, 0, 1}
+    };
+
+    int a34, c, cr, kg, dkg, hijm, hijmd, c3, c3r, i;
+
+    d = a / 8;
+    a34 = a - 2 * d;
+
+    /* 'c's and 'f's */
+    c = a34 / 7;
+    cr = a34 % 7;
+    for (i = 0; i < 7; i++) {
+      cs[i] = c + c_w_err[cr][i];
+    }
+
+    dkg = a / 2;
+    hijmd = a - dkg;
+
+    kg = dkg - d;
+    g = cs[0] + cs[1];
+    k = kg - g;
+    k1 = k / 2;
+    k2 = k - k1;
+    g1 = g / 2;
+    g2 = g - g1;
+
+    hijm = hijmd - d;
+
+    /* i = c = 3 * c3 */
+    c3 = cs[5] / 3;
+    c3r = cs[5] % 3;
+    for (i = 0; i < 3; i++) {
+      ij[i] = c3 + i_err[c3r][i];
+    }
+    ij[3] = ij[1];
+    ij[4] = ij[2];
+
+    m = cs[5];                  /* m = c */
+    h = hijm - ij[0] - ij[1] - ij[2] - ij[3] - ij[4] - m;
+  }
+
+  /* pattern 1 */
+  x1 = 0;
+  x2 = d;                       /* 'd' bar size */
+  p->color = p->colors;         /* 40% gray */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + cs[0];              /* 'f' bar size */
+  p->color = p->colors + 1;     /* 75% white */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + cs[1];              /* 'c' bar size */
+  p->color = p->colors + 2;     /* 75% yellow */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + cs[2];              /* 'c' bar size */
+  p->color = p->colors + 3;     /* 75% cyan */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + cs[3];              /* 'c' bar size */
+  p->color = p->colors + 4;     /* 75% green */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + cs[4];              /* 'c' bar size */
+  p->color = p->colors + 5;     /* 75% magenta */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + cs[5];              /* 'c' bar size */
+  p->color = p->colors + 6;     /* 75% red */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + cs[6];              /* 'f' bar size */
+  p->color = p->colors + 7;     /* 75% blue */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + d;                  /* 'd' bar size */
+  p->color = p->colors;         /* 40% gray */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  y1 = 0;
+  y2 = b1 + bs[0];
+  for (y = y1; y < y2; y++)
+    videotestsrc_convert_tmpline (p, frame, y);
+
+  /* pattern 2 */
+  x1 = 0;
+  x2 = d;
+  p->color = p->colors + 8;     /* 100% cyan */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + cs[0];
+  p->color = p->colors + 11;    /* *2: -I, +Q in *3 */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + cs[1] + cs[2] + cs[3] + cs[4] + cs[5] + cs[6];
+  p->color = p->colors + 1;     /* 75% white */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + d;
+  p->color = p->colors + 12;    /* 100% blue */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  y1 = y2;
+  y2 = y1 + bs[1];
+  for (y = y1; y < y2; y++)
+    videotestsrc_convert_tmpline (p, frame, y);
+
+  /* pattern 3 */
+  x1 = 0;
+  x2 = d;
+  p->color = p->colors + 13;    /* 100% yellow */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + cs[0];
+  p->color = p->colors + 15;    /* *3: +Q, -I in *2 */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  /* Y-Ramp, from row 14 to row 9 */
+  x1 = x2;
+  x2 = x1 + cs[1] + cs[2] + cs[3] + cs[4] + cs[5];
+  for (x = x1; x < x2; x++)
+    p->tmpline_u8[x] = 255 * (x - x1) / (x2 - x1);
+  videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8, p->colors + 9,
+      p->colors + 14, x1, x2);
+
+  x1 = x2;
+  x2 = x1 + cs[6];
+  p->color = p->colors + 9;     /* 100% white */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + d;
+  p->color = p->colors + 16;    /* 100% red */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  y1 = y2;
+  y2 = y1 + bs[2];
+  for (y = y1; y < y2; y++)
+    videotestsrc_convert_tmpline (p, frame, y);
+
+  /* pattern 4, subdivision 1 */
+  x1 = 0;
+  x2 = d;
+  p->color = p->colors + 17;    /* *4: 15% gray */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + k;                  /* 3 sub divisions */
+  p->color = p->colors + 14;    /* 0% black */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + g;                  /* 3 sub divisions */
+  p->color = p->colors + 9;     /* 100% white */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + h;
+  p->color = p->colors + 14;    /* 0% black */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + ij[0];
+  p->color = p->colors + 20;    /* -2% black */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + ij[1];
+  p->color = p->colors + 14;    /* 0% black */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + ij[2];
+  p->color = p->colors + 21;    /* +2% black */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + ij[3];
+  p->color = p->colors + 20;    /* 0% black */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + ij[4];
+  p->color = p->colors + 22;    /* +4% black */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + m;
+  p->color = p->colors + 14;    /* 0% black */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + d;
+  p->color = p->colors + 17;    /* *4: 15% gray */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  y1 = y2;
+  y2 = y1 + bs[3];
+  for (y = y1; y < y2; y++)
+    videotestsrc_convert_tmpline (p, frame, y);
+
+  /* pattern 4, subdivision 2 */
+
+  /* *5: sub-black valley, from row 14 to row 18 (first half) */
+  x1 = d;
+  x2 = x1 + k1;
+  for (x = x1; x < x2; x++)
+    p->tmpline_u8[x] = 255 * (x - x1) / (x2 - x1);
+  videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8, p->colors + 18,
+      p->colors + 14, x1, x2);
+
+  /* *5: sub-black valley, from row 18 to row 14 (second half) */
+  x1 = x2;
+  x2 = x1 + k2;
+  for (x = x1; x < x2; x++)
+    p->tmpline_u8[x] = 255 * (x - x1) / (x2 - x1);
+  videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8, p->colors + 14,
+      p->colors + 18, x1, x2);
+
+  /* *6: super-white peak, from row 9 to row 19 (first half) */
+  x1 = x2;
+  x2 = x1 + g1;
+  for (x = x1; x < x2; x++)
+    p->tmpline_u8[x] = 255 * (x - x1) / (x2 - x1);
+  videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8, p->colors + 19,
+      p->colors + 9, x1, x2);
+
+  /* *6: super-white peak, from row 19 to row 9 (second half) */
+  x1 = x2;
+  x2 = x1 + g2;
+  for (x = x1; x < x2; x++)
+    p->tmpline_u8[x] = 255 * (x - x1) / (x2 - x1);
+  videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8, p->colors + 9,
+      p->colors + 19, x1, x2);
+
+  y1 = y2;
+  y2 = y1 + bs[4];
+  for (y = y1; y < y2; y++)
+    videotestsrc_convert_tmpline (p, frame, y);
+
+  /* pattern 4, subdivision 3 */
+  x1 = d;
+  x2 = x1 + k;
+  p->color = p->colors + 14;    /* 0% black */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  x1 = x2;
+  x2 = x1 + g;
+  p->color = p->colors + 9;     /* 100% white */
+  p->paint_tmpline (p, x1, (x2 - x1));
+
+  y1 = y2;
+  y2 = y1 + bs[5];
+  for (y = y1; y < y2; y++)
+    videotestsrc_convert_tmpline (p, frame, y);
 }
 
 void

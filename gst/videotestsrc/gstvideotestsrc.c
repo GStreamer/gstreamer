@@ -169,6 +169,8 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_SPOKES, "Spokes", "spokes"},
     {GST_VIDEO_TEST_SRC_GRADIENT, "Gradient", "gradient"},
     {GST_VIDEO_TEST_SRC_COLORS, "Colors", "colors"},
+    {GST_VIDEO_TEST_SRC_SMPTE_RP_219, "SMPTE test pattern, RP 219 conformant",
+        "smpte-rp-219"},
     {0, NULL, NULL}
   };
 
@@ -602,6 +604,9 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
       break;
     case GST_VIDEO_TEST_SRC_COLORS:
       videotestsrc->make_image = gst_video_test_src_colors;
+      break;
+    case GST_VIDEO_TEST_SRC_SMPTE_RP_219:
+      videotestsrc->make_image = gst_video_test_src_smpte_rp_219;
       break;
     default:
       g_assert_not_reached ();
