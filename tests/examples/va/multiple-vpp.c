@@ -3,9 +3,12 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+#define CHANGE_DIR_WITH_EVENT 0
+
 static gint num_buffers = 50;
 static gboolean camera = FALSE;
 static gboolean randomcb = FALSE;
+static gboolean randomdir = FALSE;
 
 static GOptionEntry entries[] = {
   {"num-buffers", 'n', 0, G_OPTION_ARG_INT, &num_buffers,
@@ -14,6 +17,8 @@ static GOptionEntry entries[] = {
       NULL},
   {"random-cb", 'r', 0, G_OPTION_ARG_NONE, &randomcb,
       "Change colorbalance randomly every second", NULL},
+  {"random-dir", 'd', 0, G_OPTION_ARG_NONE, &randomdir,
+      "Change video direction randomly every second (if supported)", NULL},
   {NULL},
 };
 
@@ -186,7 +191,7 @@ build_pipeline (struct _app *app)
   }
 
   app->vpp = gst_bin_get_by_name (GST_BIN (app->pipeline), "vpp");
-  if (!randomcb)
+  if (!randomcb && !randomdir)
     config_vpp (app->vpp);
 
   app->caps = gst_bin_get_by_name (GST_BIN (app->pipeline), "caps");
@@ -218,6 +223,50 @@ change_cb_randomly (gpointer data)
 
     gst_color_balance_set_value (cb, channel, value);
   }
+
+  return G_SOURCE_CONTINUE;
+}
+
+static gboolean
+change_dir_randomly (gpointer data)
+{
+  struct _app *app = data;
+  GObjectClass *g_class = G_OBJECT_GET_CLASS (app->vpp);
+  GParamSpec *pspec;
+
+  pspec = g_object_class_find_property (g_class, "video-direction");
+  if (!pspec)
+    return G_SOURCE_REMOVE;
+
+  /* choose either sent direction by property or by event */
+#if !CHANGE_DIR_WITH_EVENT
+  {
+    GEnumClass *enumclass;
+    guint idx, value;
+
+    enumclass = G_PARAM_SPEC_ENUM (pspec)->enum_class;
+    idx = g_random_int_range (0, enumclass->n_values);
+    value = enumclass->values[idx].value;
+
+    g_object_set (app->vpp, "video-direction", value, NULL);
+  }
+#else
+  {
+    GstEvent *event;
+    guint idx;
+    static const gchar *orientation[] = {
+      "rotate-0", "rotate-90", "rotate-180", "rotate-270",
+      "flip-rotate-0", "flip-rotate-90", "flip-rotate-180", "flip-rotate-270",
+      "undefined",
+    };
+
+    idx = g_random_int_range (0, G_N_ELEMENTS (orientation));
+
+    event = gst_event_new_tag (gst_tag_list_new (GST_TAG_IMAGE_ORIENTATION,
+            orientation[idx], NULL));
+    gst_element_send_event (app->pipeline, event);
+  }
+#endif
 
   return G_SOURCE_CONTINUE;
 }
@@ -261,6 +310,13 @@ main (int argc, char **argv)
 
   if (randomcb)
     g_timeout_add_seconds (1, change_cb_randomly, &app);
+
+  if (randomdir) {
+#if CHANGE_DIR_WITH_EVENT
+    gst_util_set_object_arg (G_OBJECT (app.vpp), "video-direction", "auto");
+#endif
+    g_timeout_add_seconds (1, change_dir_randomly, &app);
+  }
 
   gst_element_set_state (app.pipeline, GST_STATE_PLAYING);
 
