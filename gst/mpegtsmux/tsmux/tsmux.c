@@ -812,38 +812,46 @@ tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr)
     return TRUE;
   }
 
-  if (mux->bitrate)
+  if (mux->bitrate) {
     GST_BUFFER_PTS (buf) =
         gst_util_uint64_scale (mux->n_bytes * 8, GST_SECOND, mux->bitrate);
 
-  if (mux->bitrate && mux->first_pcr_ts != G_MININT64) {
-    GList *cur;
+    /* Check and insert a PCR observation for each program if needed,
+     * but only for programs that have written their SI at least once,
+     * so the stream starts with PAT/PMT */
+    if (mux->first_pcr_ts != G_MININT64) {
+      GList *cur;
 
-    for (cur = mux->programs; cur; cur = cur->next) {
-      TsMuxProgram *program = (TsMuxProgram *) cur->data;
-      TsMuxStream *stream = program->pcr_stream;
-      gint64 cur_pcr = get_current_pcr (mux, 0);
-      gint64 next_pcr = get_next_pcr (mux, 0);
+      for (cur = mux->programs; cur; cur = cur->next) {
+        TsMuxProgram *program = (TsMuxProgram *) cur->data;
+        TsMuxStream *stream = program->pcr_stream;
+        gint64 cur_pcr, next_pcr, new_pcr;
 
-      gint64 new_pcr = write_new_pcr (mux, stream, cur_pcr, next_pcr);
+        if (!program->wrote_si)
+          continue;
 
-      if (new_pcr != -1) {
-        GstBuffer *buf = NULL;
-        GstMapInfo map;
-        guint payload_len, payload_offs;
+        cur_pcr = get_current_pcr (mux, 0);
+        next_pcr = get_next_pcr (mux, 0);
+        new_pcr = write_new_pcr (mux, stream, cur_pcr, next_pcr);
 
-        if (!tsmux_get_buffer (mux, &buf)) {
-          goto error;
+        if (new_pcr != -1) {
+          GstBuffer *buf = NULL;
+          GstMapInfo map;
+          guint payload_len, payload_offs;
+
+          if (!tsmux_get_buffer (mux, &buf)) {
+            goto error;
+          }
+
+          gst_buffer_map (buf, &map, GST_MAP_READ);
+          tsmux_write_ts_header (mux, map.data, &stream->pi, &payload_len,
+              &payload_offs, 0);
+          gst_buffer_unmap (buf, &map);
+
+          stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+          if (!tsmux_packet_out (mux, buf, new_pcr))
+            goto error;
         }
-
-        gst_buffer_map (buf, &map, GST_MAP_READ);
-        tsmux_write_ts_header (mux, map.data, &stream->pi, &payload_len,
-            &payload_offs, 0);
-        gst_buffer_unmap (buf, &map);
-
-        stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
-        if (!tsmux_packet_out (mux, buf, new_pcr))
-          goto error;
       }
     }
   }
@@ -1452,6 +1460,8 @@ rewrite_si (TsMux * mux, gint64 cur_ts)
         next_pcr = get_current_pcr (mux, cur_ts);
       }
     }
+
+    program->wrote_si = TRUE;
   }
 
   return TRUE;

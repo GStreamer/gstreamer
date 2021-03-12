@@ -111,6 +111,9 @@ struct TsMuxSection {
 
 /* Information for the streams associated with one program */
 struct TsMuxProgram {
+  /* TRUE if the SI has been written at least once */
+  gboolean wrote_si;
+
   TsMuxSection pmt;
   /* PMT version */
   guint8   pmt_version;
