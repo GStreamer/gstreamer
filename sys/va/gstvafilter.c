@@ -1220,6 +1220,19 @@ gst_va_filter_add_filter_buffer (GstVaFilter * self, gpointer data, gsize size,
   return TRUE;
 }
 
+gboolean
+gst_va_filter_drop_filter_buffers (GstVaFilter * self)
+{
+  gboolean ret = TRUE;
+
+  GST_OBJECT_LOCK (self);
+  if (self->filters)
+    ret = _destroy_filters_unlocked (self);
+  GST_OBJECT_UNLOCK (self);
+
+  return ret;
+}
+
 static gboolean
 _create_pipeline_buffer (GstVaFilter * self, VASurfaceID surface,
     VARectangle * src_rect, VARectangle * dst_rect, VABufferID * buffer)
@@ -1350,10 +1363,8 @@ gst_va_filter_convert_surface (GstVaFilter * self, VASurfaceID in_surface,
 
 bail:
   GST_OBJECT_LOCK (self);
-  if (self->filters) {
+  if (self->filters)
     g_array_unref (self->filters);
-    _destroy_filters_unlocked (self);
-  }
 
   gst_va_display_lock (self->display);
   status = vaDestroyBuffer (dpy, buffer);

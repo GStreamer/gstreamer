@@ -112,6 +112,7 @@ struct _GstVaVpp
   GstBufferPool *other_pool;
   GstVideoInfo srcpad_info;
 
+  gboolean rebuild_filters;
   guint op_flags;
 
   /* filters */
@@ -265,15 +266,18 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case GST_VA_FILTER_PROP_DENOISE:
       self->denoise = g_value_get_float (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
     case GST_VA_FILTER_PROP_SHARPEN:
       self->sharpen = g_value_get_float (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
     case GST_VA_FILTER_PROP_SKINTONE:
       if (G_VALUE_TYPE (value) == G_TYPE_BOOLEAN)
         self->skintone = (float) g_value_get_boolean (value);
       else
         self->skintone = g_value_get_float (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
     case GST_VA_FILTER_PROP_VIDEO_DIR:{
       GstVideoOrientationMethod direction = g_value_get_enum (value);
@@ -284,24 +288,31 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
     }
     case GST_VA_FILTER_PROP_HUE:
       self->hue = g_value_get_float (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
     case GST_VA_FILTER_PROP_SATURATION:
       self->saturation = g_value_get_float (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
     case GST_VA_FILTER_PROP_BRIGHTNESS:
       self->brightness = g_value_get_float (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
     case GST_VA_FILTER_PROP_CONTRAST:
       self->contrast = g_value_get_float (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
     case GST_VA_FILTER_PROP_AUTO_SATURATION:
       self->auto_saturation = g_value_get_boolean (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
     case GST_VA_FILTER_PROP_AUTO_BRIGHTNESS:
       self->auto_brightness = g_value_get_boolean (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
     case GST_VA_FILTER_PROP_AUTO_CONTRAST:
       self->auto_contrast = g_value_get_boolean (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -934,9 +945,8 @@ _add_filter_cb_buffer (GstVaVpp * self,
 }
 
 static void
-gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
+_build_filters (GstVaVpp * self)
 {
-  GstVaVpp *self = GST_VA_VPP (trans);
   static const VAProcFilterType filter_types[] = { VAProcFilterNoiseReduction,
     VAProcFilterSharpening, VAProcFilterSkinToneEnhancement,
     VAProcFilterColorBalance,
@@ -974,8 +984,19 @@ gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
   else
     self->op_flags &= ~VPP_CONVERT_FILTERS;
   GST_OBJECT_UNLOCK (self);
+}
 
-  _update_passthrough (self, TRUE);
+static void
+gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
+{
+  GstVaVpp *self = GST_VA_VPP (trans);
+
+  if (g_atomic_int_get (&self->rebuild_filters) == TRUE) {
+    gst_va_filter_drop_filter_buffers (self->filter);
+    _build_filters (self);
+    _update_passthrough (self, TRUE);
+    g_atomic_int_set (&self->rebuild_filters, FALSE);
+  }
 }
 
 static inline gsize
@@ -2562,6 +2583,7 @@ _set_cb_val (GstVaVpp * self, const gchar * name,
   if (changed) {
     GST_INFO_OBJECT (self, "%s: %d / %f", channel->label, value, new_value);
     gst_color_balance_value_changed (GST_COLOR_BALANCE (self), channel, value);
+    g_atomic_int_set (&self->rebuild_filters, TRUE);
   }
 
   return TRUE;

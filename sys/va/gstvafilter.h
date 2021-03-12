@@ -70,6 +70,7 @@ gboolean              gst_va_filter_add_filter_buffer     (GstVaFilter * self,
                                                            gpointer data,
                                                            gsize size,
                                                            guint num);
+gboolean              gst_va_filter_drop_filter_buffers   (GstVaFilter * self);
 gboolean              gst_va_filter_convert_surface       (GstVaFilter * self,
                                                            VASurfaceID in_surface,
                                                            VASurfaceID out_surface);
