@@ -316,19 +316,20 @@ videotestsrc_blend_color (struct vts_color_struct *dest,
 #endif
 
 static void
-videotestsrc_blend_line (GstVideoTestSrc * v, guint8 * dest, guint8 * src,
-    struct vts_color_struct *a, struct vts_color_struct *b, int n)
+videotestsrc_blend_line (GstVideoTestSrc * v, guint8 * dest,
+    const guint8 * src, const struct vts_color_struct *a,
+    const struct vts_color_struct *b, int x1, int x2)
 {
   int i;
   if (v->bayer || GST_VIDEO_INFO_IS_RGB (&v->info)) {
-    for (i = 0; i < n; i++) {
+    for (i = x1; i < x2; i++) {
       dest[i * 4 + 0] = BLEND (a->A, b->A, src[i]);
       dest[i * 4 + 1] = BLEND (a->R, b->R, src[i]);
       dest[i * 4 + 2] = BLEND (a->G, b->G, src[i]);
       dest[i * 4 + 3] = BLEND (a->B, b->B, src[i]);
     }
   } else {
-    for (i = 0; i < n; i++) {
+    for (i = x1; i < x2; i++) {
       dest[i * 4 + 0] = BLEND (a->A, b->A, src[i]);
       dest[i * 4 + 1] = BLEND (a->Y, b->Y, src[i]);
       dest[i * 4 + 2] = BLEND (a->U, b->U, src[i]);
@@ -430,8 +431,8 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, GstClockTime pts,
         int y = random_char (&v->random_state);
         p->tmpline_u8[i] = y;
       }
-      videotestsrc_blend_line (v, p->tmpline + x1 * 4, p->tmpline_u8 + x1,
-          &p->foreground_color, &p->background_color, w - x1);
+      videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
+          &p->foreground_color, &p->background_color, x1, w);
 
     }
     videotestsrc_convert_tmpline (p, frame, j);
@@ -539,7 +540,7 @@ gst_video_test_src_snow (GstVideoTestSrc * v, GstClockTime pts,
       p->tmpline_u8[i] = y;
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
-        &p->foreground_color, &p->background_color, w);
+        &p->foreground_color, &p->background_color, 0, w);
     videotestsrc_convert_tmpline (p, frame, j);
   }
 }
@@ -895,7 +896,7 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, GstClockTime pts,
       p->tmpline_u8[i] = sine_table[phase & 0xff];
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
-        &p->foreground_color, &p->background_color, w);
+        &p->foreground_color, &p->background_color, 0, w);
     videotestsrc_convert_tmpline (p, frame, j);
   }
 }
@@ -1031,7 +1032,7 @@ gst_video_test_src_circular (GstVideoTestSrc * v, GstClockTime pts,
       }
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
-        &p->foreground_color, &p->background_color, w);
+        &p->foreground_color, &p->background_color, 0, w);
     videotestsrc_convert_tmpline (p, frame, j);
   }
 }
@@ -1196,7 +1197,7 @@ gst_video_test_src_ball (GstVideoTestSrc * v, GstClockTime pts,
     }
 
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
-        foreground_color, background_color, w);
+        foreground_color, background_color, 0, w);
     videotestsrc_convert_tmpline (p, frame, i);
   }
 
@@ -1207,7 +1208,7 @@ gst_video_test_src_ball (GstVideoTestSrc * v, GstClockTime pts,
       p->tmpline_u8[i] = 255;
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
-        foreground_color, background_color, w);
+        foreground_color, background_color, 0, w);
     videotestsrc_convert_tmpline (p, frame, h / 2);
     videotestsrc_convert_tmpline (p, frame, y);
   }
@@ -1384,7 +1385,7 @@ gst_video_test_src_pinwheel (GstVideoTestSrc * v, GstClockTime pts,
       p->tmpline_u8[i] = CLAMP (rint (v * 128 + 128), 0, 255);
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
-        &p->foreground_color, &p->background_color, w);
+        &p->foreground_color, &p->background_color, 0, w);
     videotestsrc_convert_tmpline (p, frame, j);
   }
 }
@@ -1436,7 +1437,7 @@ gst_video_test_src_spokes (GstVideoTestSrc * v, GstClockTime pts,
       p->tmpline_u8[i] = CLAMP (rint (v * 255), 0, 255);
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
-        &p->foreground_color, &p->background_color, w);
+        &p->foreground_color, &p->background_color, 0, w);
     videotestsrc_convert_tmpline (p, frame, j);
   }
 }
@@ -1463,7 +1464,7 @@ gst_video_test_src_gradient (GstVideoTestSrc * v, GstClockTime pts,
       p->tmpline_u8[i] = y;
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
-        &p->foreground_color, &p->background_color, w);
+        &p->foreground_color, &p->background_color, 0, w);
     videotestsrc_convert_tmpline (p, frame, j);
   }
 }
