@@ -708,8 +708,6 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
 
   // alt-ref
   svt_config->tf_level = 1;
-  svt_config->altref_strength = 5;
-  svt_config->altref_nframes = 7;
   svt_config->enable_overlays = FALSE;
 
   // super resolution
