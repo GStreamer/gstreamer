@@ -79,8 +79,14 @@
 #include <d3d9.h>
 #include <dxva.h>
 
+/* *INDENT-OFF* */
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_h264_dec_debug);
 #define GST_CAT_DEFAULT gst_d3d11_h264_dec_debug
+
+G_END_DECLS
+/* *INDENT-ON* */
 
 enum
 {
@@ -106,10 +112,10 @@ typedef struct _GstD3D11H264Dec
 
   GstD3D11Device *device;
 
-  guint width, height;
-  guint coded_width, coded_height;
-  guint bitdepth;
-  guint chroma_format_idc;
+  gint width, height;
+  gint coded_width, coded_height;
+  gint bitdepth;
+  guint8 chroma_format_idc;
   GstVideoFormat out_format;
   gboolean interlaced;
   gint max_dpb_size;
@@ -198,17 +204,17 @@ gst_d3d11_h264_dec_class_init (GstD3D11H264DecClass * klass, gpointer data)
       g_param_spec_uint ("adapter", "Adapter",
           "DXGI Adapter index for creating device",
           0, G_MAXUINT32, cdata->adapter,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
       g_param_spec_uint ("device-id", "Device Id",
           "DXGI Device ID", 0, G_MAXUINT32, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_VENDOR_ID,
       g_param_spec_uint ("vendor-id", "Vendor Id",
           "DXGI Vendor ID", 0, G_MAXUINT32, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
-  parent_class = g_type_class_peek_parent (klass);
+  parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
 
   klass->adapter = cdata->adapter;
   klass->device_id = cdata->device_id;
@@ -450,7 +456,7 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
 
   if (self->bitdepth != sps->bit_depth_luma_minus8 + 8) {
     GST_INFO_OBJECT (self, "bitdepth changed");
-    self->bitdepth = sps->bit_depth_luma_minus8 + 8;
+    self->bitdepth = (guint) sps->bit_depth_luma_minus8 + 8;
     modified = TRUE;
   }
 
@@ -809,7 +815,8 @@ gst_d3d11_h264_dec_new_field_picture (GstH264Decoder * decoder,
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
   GstBuffer *view_buffer;
 
-  view_buffer = gst_h264_picture_get_user_data ((GstH264Picture *) first_field);
+  view_buffer = (GstBuffer *) gst_h264_picture_get_user_data ((GstH264Picture *)
+      first_field);
 
   if (!view_buffer) {
     GST_WARNING_OBJECT (self, "First picture does not have output view buffer");
@@ -910,8 +917,8 @@ gst_d3d11_h264_dec_submit_slice_data (GstD3D11H264Dec * self)
   gpointer buffer;
   guint8 *data;
   gsize offset = 0;
-  gint i;
-  D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[4] = { 0, };
+  guint i;
+  D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[4];
   gboolean ret;
   DXVA_Slice_H264_Short *slice_data;
 
@@ -919,6 +926,8 @@ gst_d3d11_h264_dec_submit_slice_data (GstD3D11H264Dec * self)
     GST_WARNING_OBJECT (self, "Nothing to submit");
     return FALSE;
   }
+
+  memset (buffer_desc, 0, sizeof (buffer_desc));
 
   slice_data = &g_array_index (self->slice_list, DXVA_Slice_H264_Short,
       self->slice_list->len - 1);
@@ -949,7 +958,7 @@ gst_d3d11_h264_dec_submit_slice_data (GstD3D11H264Dec * self)
     return FALSE;
   }
 
-  data = buffer;
+  data = (guint8 *) buffer;
   for (i = 0; i < self->slice_list->len; i++) {
     DXVA_Slice_H264_Short *slice_data =
         &g_array_index (self->slice_list, DXVA_Slice_H264_Short, i);
@@ -1037,9 +1046,12 @@ gst_d3d11_h264_dec_picture_params_from_sps (GstD3D11H264Dec * self,
   (params)->f = (sps)->f
 
   params->wFrameWidthInMbsMinus1 = sps->pic_width_in_mbs_minus1;
-  params->wFrameHeightInMbsMinus1 =
-      ((sps->pic_height_in_map_units_minus1 + 1) << !sps->frame_mbs_only_flag)
-      - 1;
+  if (!sps->frame_mbs_only_flag) {
+    params->wFrameHeightInMbsMinus1 =
+        ((sps->pic_height_in_map_units_minus1 + 1) << 1) - 1;
+  } else {
+    params->wFrameHeightInMbsMinus1 = sps->pic_height_in_map_units_minus1;
+  }
   params->residual_colour_transform_flag = sps->separate_colour_plane_flag;
   params->MbaffFrameFlag = (sps->mb_adaptive_frame_field_flag && !field_pic);
   params->field_pic_flag = field_pic;
@@ -1356,7 +1368,7 @@ gst_d3d11_h264_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   }
 
   type = g_type_register_static (GST_TYPE_H264_DECODER,
-      type_name, &type_info, 0);
+      type_name, &type_info, (GTypeFlags) 0);
 
   /* make lower rank than default device */
   if (rank > 0 && index != 0)

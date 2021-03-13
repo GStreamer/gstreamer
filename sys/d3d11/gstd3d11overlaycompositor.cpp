@@ -23,11 +23,18 @@
 
 #include "gstd3d11overlaycompositor.h"
 #include "gstd3d11shader.h"
+#include "gstd3d11pluginutils.h"
+#include <wrl.h>
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+
+G_BEGIN_DECLS
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_overlay_compositor_debug);
 #define GST_CAT_DEFAULT gst_d3d11_overlay_compositor_debug
 
-/* *INDENT-OFF* */
+G_END_DECLS
 typedef struct
 {
   struct {
@@ -108,11 +115,10 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   GstD3D11CompositionOverlay *overlay = NULL;
   gint x, y;
   guint width, height;
-  D3D11_SUBRESOURCE_DATA subresource_data = { 0, };
-  D3D11_TEXTURE2D_DESC texture_desc = { 0, };
-  D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc = { 0, };
-  D3D11_BUFFER_DESC buffer_desc = { 0, };
-  ID3D11Buffer *vertex_buffer = NULL;
+  D3D11_SUBRESOURCE_DATA subresource_data;
+  D3D11_TEXTURE2D_DESC texture_desc;
+  D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc;
+  D3D11_BUFFER_DESC buffer_desc;
   D3D11_MAPPED_SUBRESOURCE map;
   VertexData *vertex_data;
   GstBuffer *buf;
@@ -120,8 +126,6 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   GstMapInfo info;
   guint8 *data;
   gint stride;
-  ID3D11Texture2D *texture = NULL;
-  ID3D11ShaderResourceView *srv = NULL;
   HRESULT hr;
   ID3D11Device *device_handle;
   ID3D11DeviceContext *context_handle;
@@ -129,8 +133,18 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   const guint index_count = 2 * 3;
   FLOAT x1, y1, x2, y2;
   gdouble val;
+  /* *INDENT-OFF* */
+  ComPtr<ID3D11Texture2D> texture;
+  ComPtr<ID3D11ShaderResourceView> srv;
+  ComPtr<ID3D11Buffer> vertex_buffer;
+  /* *INDENT-ON* */
 
   g_return_val_if_fail (overlay_rect != NULL, NULL);
+
+  memset (&subresource_data, 0, sizeof (subresource_data));
+  memset (&texture_desc, 0, sizeof (texture_desc));
+  memset (&srv_desc, 0, sizeof (srv_desc));
+  memset (&buffer_desc, 0, sizeof (buffer_desc));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
@@ -177,7 +191,7 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
   texture_desc.CPUAccessFlags = 0;
 
-  hr = ID3D11Device_CreateTexture2D (device_handle, &texture_desc,
+  hr = device_handle->CreateTexture2D (&texture_desc,
       &subresource_data, &texture);
   gst_video_meta_unmap (vmeta, 0, &info);
 
@@ -189,11 +203,11 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
   srv_desc.Texture2D.MipLevels = 1;
 
-  hr = ID3D11Device_CreateShaderResourceView (device_handle,
-      (ID3D11Resource *) texture, &srv_desc, &srv);
+  hr = device_handle->CreateShaderResourceView (texture.Get (), &srv_desc,
+      &srv);
   if (!gst_d3d11_result (hr, device) || !srv) {
     GST_ERROR ("Failed to create shader resource view");
-    goto clear;
+    return NULL;
   }
 
   buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
@@ -201,21 +215,20 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
   buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-  hr = ID3D11Device_CreateBuffer (device_handle, &buffer_desc, NULL,
-      &vertex_buffer);
+  hr = device_handle->CreateBuffer (&buffer_desc, NULL, &vertex_buffer);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
-    goto clear;
+    return NULL;
   }
 
   gst_d3d11_device_lock (device);
-  hr = ID3D11DeviceContext_Map (context_handle,
-      (ID3D11Resource *) vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
+  hr = context_handle->Map (vertex_buffer.Get (),
+      0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
     gst_d3d11_device_unlock (device);
-    goto clear;
+    return NULL;
   }
 
   vertex_data = (VertexData *) map.pData;
@@ -264,29 +277,17 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   vertex_data[3].texture.x = 1.0f;
   vertex_data[3].texture.y = 1.0f;
 
-  ID3D11DeviceContext_Unmap (context_handle,
-      (ID3D11Resource *) vertex_buffer, 0);
+  context_handle->Unmap (vertex_buffer.Get (), 0);
   gst_d3d11_device_unlock (device);
 
   overlay = g_new0 (GstD3D11CompositionOverlay, 1);
   overlay->overlay_rect = gst_video_overlay_rectangle_ref (overlay_rect);
-  overlay->texture = texture;
-  overlay->srv = srv;
+  overlay->texture = texture.Detach ();
+  overlay->srv = srv.Detach ();
   overlay->quad = gst_d3d11_quad_new (device,
       self->ps, self->vs, self->layout, self->sampler, self->blend, NULL, NULL,
-      vertex_buffer, sizeof (VertexData),
+      vertex_buffer.Get (), sizeof (VertexData),
       self->index_buffer, DXGI_FORMAT_R16_UINT, index_count);
-
-clear:
-  if (!overlay) {
-    if (srv)
-      ID3D11ShaderResourceView_Release (srv);
-    if (texture)
-      ID3D11Texture2D_Release (texture);
-  }
-
-  if (vertex_buffer)
-    ID3D11Buffer_Release (vertex_buffer);
 
   return overlay;
 }
@@ -300,11 +301,8 @@ gst_d3d11_composition_overlay_free (GstD3D11CompositionOverlay * overlay)
   if (overlay->overlay_rect)
     gst_video_overlay_rectangle_unref (overlay->overlay_rect);
 
-  if (overlay->srv)
-    ID3D11ShaderResourceView_Release (overlay->srv);
-
-  if (overlay->texture)
-    ID3D11Texture2D_Release (overlay->texture);
+  GST_D3D11_CLEAR_COM (overlay->srv);
+  GST_D3D11_CLEAR_COM (overlay->texture);
 
   if (overlay->quad)
     gst_d3d11_quad_free (overlay->quad);
@@ -317,22 +315,28 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self,
     GstD3D11Device * device)
 {
   HRESULT hr;
-  D3D11_SAMPLER_DESC sampler_desc = { 0, };
-  D3D11_INPUT_ELEMENT_DESC input_desc[2] = { 0, };
-  D3D11_BUFFER_DESC buffer_desc = { 0, };
-  D3D11_BLEND_DESC blend_desc = { 0, };
+  D3D11_SAMPLER_DESC sampler_desc;
+  D3D11_INPUT_ELEMENT_DESC input_desc[2];
+  D3D11_BUFFER_DESC buffer_desc;
+  D3D11_BLEND_DESC blend_desc;
   D3D11_MAPPED_SUBRESOURCE map;
   WORD *indices;
   ID3D11Device *device_handle;
   ID3D11DeviceContext *context_handle;
-  ID3D11PixelShader *ps = NULL;
-  ID3D11VertexShader *vs = NULL;
-  ID3D11InputLayout *layout = NULL;
-  ID3D11SamplerState *sampler = NULL;
-  ID3D11BlendState *blend = NULL;
-  ID3D11Buffer *index_buffer = NULL;
+  /* *INDENT-OFF* */
+  ComPtr<ID3D11PixelShader> ps;
+  ComPtr<ID3D11VertexShader> vs;
+  ComPtr<ID3D11InputLayout> layout;
+  ComPtr<ID3D11SamplerState> sampler;
+  ComPtr<ID3D11BlendState> blend;
+  ComPtr<ID3D11Buffer> index_buffer;
+  /* *INDENT-ON* */
   const guint index_count = 2 * 3;
-  gboolean ret = TRUE;
+
+  memset (&sampler_desc, 0, sizeof (sampler_desc));
+  memset (input_desc, 0, sizeof (input_desc));
+  memset (&buffer_desc, 0, sizeof (buffer_desc));
+  memset (&blend_desc, 0, sizeof (blend_desc));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
@@ -346,19 +350,17 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self,
   sampler_desc.MinLOD = 0;
   sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
 
-  hr = ID3D11Device_CreateSamplerState (device_handle, &sampler_desc, &sampler);
+  hr = device_handle->CreateSamplerState (&sampler_desc, &sampler);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't create sampler state, hr: 0x%x", (guint) hr);
-    ret = FALSE;
-    goto clear;
+    return FALSE;
   }
 
   GST_LOG ("Create Pixel Shader \n%s", templ_pixel_shader);
 
   if (!gst_d3d11_create_pixel_shader (device, templ_pixel_shader, &ps)) {
     GST_ERROR ("Couldn't create pixel shader");
-    ret = FALSE;
-    goto clear;
+    return FALSE;
   }
 
   input_desc[0].SemanticName = "POSITION";
@@ -380,8 +382,7 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self,
   if (!gst_d3d11_create_vertex_shader (device, templ_vertex_shader,
           input_desc, G_N_ELEMENTS (input_desc), &vs, &layout)) {
     GST_ERROR ("Couldn't vertex pixel shader");
-    ret = FALSE;
-    goto clear;
+    return FALSE;
   }
 
   blend_desc.AlphaToCoverageEnable = FALSE;
@@ -396,11 +397,10 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self,
   blend_desc.RenderTarget[0].RenderTargetWriteMask =
       D3D11_COLOR_WRITE_ENABLE_ALL;
 
-  hr = ID3D11Device_CreateBlendState (device_handle, &blend_desc, &blend);
+  hr = device_handle->CreateBlendState (&blend_desc, &blend);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't create blend staten, hr: 0x%x", (guint) hr);
-    ret = FALSE;
-    goto clear;
+    return FALSE;
   }
 
   buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
@@ -408,23 +408,20 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self,
   buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
   buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-  hr = ID3D11Device_CreateBuffer (device_handle, &buffer_desc, NULL,
-      &index_buffer);
+  hr = device_handle->CreateBuffer (&buffer_desc, NULL, &index_buffer);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't create index buffer, hr: 0x%x", (guint) hr);
-    ret = FALSE;
-    goto clear;
+    return FALSE;
   }
 
   gst_d3d11_device_lock (device);
-  hr = ID3D11DeviceContext_Map (context_handle,
-      (ID3D11Resource *) index_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
+  hr = context_handle->Map (index_buffer.Get (),
+      0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't map index buffer, hr: 0x%x", (guint) hr);
     gst_d3d11_device_unlock (device);
-    ret = FALSE;
-    goto clear;
+    return FALSE;
   }
 
   indices = (WORD *) map.pData;
@@ -438,35 +435,17 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self,
   indices[4] = 0;               /* bottom left  */
   indices[5] = 2;               /* top right */
 
-  ID3D11DeviceContext_Unmap (context_handle,
-      (ID3D11Resource *) index_buffer, 0);
+  context_handle->Unmap (index_buffer.Get (), 0);
   gst_d3d11_device_unlock (device);
 
-  self->ps = ps;
-  self->vs = vs;
-  self->layout = layout;
-  self->sampler = sampler;
-  self->blend = blend;
-  self->index_buffer = index_buffer;
+  self->ps = ps.Detach ();
+  self->vs = vs.Detach ();
+  self->layout = layout.Detach ();
+  self->sampler = sampler.Detach ();
+  self->blend = blend.Detach ();
+  self->index_buffer = index_buffer.Detach ();
 
-clear:
-  if (ret)
-    return TRUE;
-
-  if (ps)
-    ID3D11PixelShader_Release (ps);
-  if (vs)
-    ID3D11VertexShader_Release (vs);
-  if (layout)
-    ID3D11InputLayout_Release (layout);
-  if (sampler)
-    ID3D11SamplerState_Release (sampler);
-  if (blend)
-    ID3D11BlendState_Release (blend);
-  if (index_buffer)
-    ID3D11Buffer_Release (index_buffer);
-
-  return FALSE;
+  return TRUE;
 }
 
 
@@ -486,7 +465,7 @@ gst_d3d11_overlay_compositor_new (GstD3D11Device * device,
     return NULL;
   }
 
-  compositor->device = gst_object_ref (device);
+  compositor->device = (GstD3D11Device *) gst_object_ref (device);
   compositor->out_info = *out_info;
 
   compositor->viewport.TopLeftX = 0;
@@ -506,18 +485,12 @@ gst_d3d11_overlay_compositor_free (GstD3D11OverlayCompositor * compositor)
 
   gst_d3d11_overlay_compositor_free_overlays (compositor);
 
-  if (compositor->ps)
-    ID3D11PixelShader_Release (compositor->ps);
-  if (compositor->vs)
-    ID3D11VertexShader_Release (compositor->vs);
-  if (compositor->layout)
-    ID3D11InputLayout_Release (compositor->layout);
-  if (compositor->sampler)
-    ID3D11SamplerState_Release (compositor->sampler);
-  if (compositor->blend)
-    ID3D11BlendState_Release (compositor->blend);
-  if (compositor->index_buffer)
-    ID3D11Buffer_Release (compositor->index_buffer);
+  GST_D3D11_CLEAR_COM (compositor->ps);
+  GST_D3D11_CLEAR_COM (compositor->vs);
+  GST_D3D11_CLEAR_COM (compositor->layout);
+  GST_D3D11_CLEAR_COM (compositor->sampler);
+  GST_D3D11_CLEAR_COM (compositor->blend);
+  GST_D3D11_CLEAR_COM (compositor->index_buffer);
 
   gst_clear_object (&compositor->device);
   g_free (compositor);

@@ -49,8 +49,14 @@
 #include <d3d9.h>
 #include <dxva.h>
 
+/* *INDENT-OFF* */
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_h265_dec_debug);
 #define GST_CAT_DEFAULT gst_d3d11_h265_dec_debug
+
+G_END_DECLS
+/* *INDENT-ON* */
 
 enum
 {
@@ -74,10 +80,10 @@ typedef struct _GstD3D11H265Dec
 
   GstD3D11Device *device;
 
-  guint width, height;
-  guint coded_width, coded_height;
+  gint width, height;
+  gint coded_width, coded_height;
   guint bitdepth;
-  guint chroma_format_idc;
+  guint8 chroma_format_idc;
   GstVideoFormat out_format;
   GstVideoInterlaceMode interlace_mode;
 
@@ -170,17 +176,17 @@ gst_d3d11_h265_dec_class_init (GstD3D11H265DecClass * klass, gpointer data)
       g_param_spec_uint ("adapter", "Adapter",
           "DXGI Adapter index for creating device",
           0, G_MAXUINT32, cdata->adapter,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
       g_param_spec_uint ("device-id", "Device Id",
           "DXGI Device ID", 0, G_MAXUINT32, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_VENDOR_ID,
       g_param_spec_uint ("vendor-id", "Vendor Id",
           "DXGI Vendor ID", 0, G_MAXUINT32, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
-  parent_class = g_type_class_peek_parent (klass);
+  parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
 
   klass->adapter = cdata->adapter;
   klass->device_id = cdata->device_id;
@@ -398,7 +404,7 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
     modified = TRUE;
   }
 
-  if (self->bitdepth != sps->bit_depth_luma_minus8 + 8) {
+  if (self->bitdepth != (guint) sps->bit_depth_luma_minus8 + 8) {
     GST_INFO_OBJECT (self, "bitdepth changed");
     self->bitdepth = sps->bit_depth_luma_minus8 + 8;
     modified = TRUE;
@@ -528,7 +534,7 @@ gst_d3d11_h265_dec_get_output_view_from_picture (GstD3D11H265Dec * self,
 static gint
 gst_d3d11_h265_dec_get_ref_index (GstD3D11H265Dec * self, gint view_id)
 {
-  gint i;
+  guint i;
   for (i = 0; i < G_N_ELEMENTS (self->ref_pic_list); i++) {
     if (self->ref_pic_list[i].Index7Bits == view_id)
       return i;
@@ -543,7 +549,7 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
   ID3D11VideoDecoderOutputView *view;
-  gint i, j;
+  guint i, j;
   GArray *dpb_array;
   GstH265SPS *sps;
   GstH265PPS *pps;
@@ -881,8 +887,8 @@ gst_d3d11_h265_dec_submit_slice_data (GstD3D11H265Dec * self)
   gpointer buffer;
   guint8 *data;
   gsize offset = 0;
-  gint i;
-  D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[4] = { 0, };
+  guint i;
+  D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[4];
   gboolean ret;
   guint buffer_count = 0;
   DXVA_Slice_HEVC_Short *slice_data;
@@ -891,6 +897,8 @@ gst_d3d11_h265_dec_submit_slice_data (GstD3D11H265Dec * self)
     GST_WARNING_OBJECT (self, "Nothing to submit");
     return FALSE;
   }
+
+  memset (buffer_desc, 0, sizeof (buffer_desc));
 
   slice_data = &g_array_index (self->slice_list, DXVA_Slice_HEVC_Short,
       self->slice_list->len - 1);
@@ -921,7 +929,7 @@ gst_d3d11_h265_dec_submit_slice_data (GstD3D11H265Dec * self)
     return FALSE;
   }
 
-  data = buffer;
+  data = (guint8 *) buffer;
   for (i = 0; i < self->slice_list->len; i++) {
     slice_data = &g_array_index (self->slice_list, DXVA_Slice_HEVC_Short, i);
 
@@ -1062,7 +1070,7 @@ static void
 gst_d3d11_h265_dec_picture_params_from_pps (GstD3D11H265Dec * self,
     const GstH265PPS * pps, DXVA_PicParams_HEVC * params)
 {
-  gint i;
+  guint i;
 
 #define COPY_FIELD(f) \
   (params)->f = (pps)->f
@@ -1168,7 +1176,7 @@ static void
 gst_d3d11_h265_dec_dump_pic_params (GstD3D11H265Dec * self,
     DXVA_PicParams_HEVC * params)
 {
-  gint i;
+  guint i;
 
   GST_TRACE_OBJECT (self, "Dump current DXVA_PicParams_HEVC");
 
@@ -1587,7 +1595,7 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   }
 
   type = g_type_register_static (GST_TYPE_H265_DECODER,
-      type_name, &type_info, 0);
+      type_name, &type_info, (GTypeFlags) 0);
 
   /* make lower rank than default device */
   if (rank > 0 && index != 0)

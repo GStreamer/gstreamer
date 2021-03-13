@@ -79,8 +79,14 @@
 #include <d3d9.h>
 #include <dxva.h>
 
+/* *INDENT-OFF* */
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_vp9_dec_debug);
 #define GST_CAT_DEFAULT gst_d3d11_vp9_dec_debug
+
+G_END_DECLS
+/* *INDENT-ON* */
 
 enum
 {
@@ -176,17 +182,17 @@ gst_d3d11_vp9_dec_class_init (GstD3D11Vp9DecClass * klass, gpointer data)
       g_param_spec_uint ("adapter", "Adapter",
           "DXGI Adapter index for creating device",
           0, G_MAXUINT32, cdata->adapter,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
       g_param_spec_uint ("device-id", "Device Id",
           "DXGI Device ID", 0, G_MAXUINT32, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_VENDOR_ID,
       g_param_spec_uint ("vendor-id", "Vendor Id",
           "DXGI Vendor ID", 0, G_MAXUINT32, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
-  parent_class = g_type_class_peek_parent (klass);
+  parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
 
   klass->adapter = cdata->adapter;
   klass->device_id = cdata->device_id;
@@ -376,7 +382,7 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
   }
 
   if (self->profile != frame_hdr->profile) {
-    self->profile = frame_hdr->profile;
+    self->profile = (GstVP9Profile) frame_hdr->profile;
     GST_INFO_OBJECT (self, "profile changed %d", self->profile);
     modified = TRUE;
   }
@@ -452,7 +458,7 @@ gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
   GstBuffer *view_buffer;
   GstVp9Picture *new_picture;
 
-  view_buffer = gst_vp9_picture_get_user_data (picture);
+  view_buffer = (GstBuffer *) gst_vp9_picture_get_user_data (picture);
 
   if (!view_buffer) {
     GST_ERROR_OBJECT (self, "Parent picture does not have output view buffer");
@@ -499,9 +505,9 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
   if (self->use_d3d11_output
       && GST_VIDEO_DECODER (self)->input_segment.rate > 0
       && GST_VIDEO_INFO_WIDTH (&self->output_state->info) ==
-      picture->frame_hdr.width
+      (gint) picture->frame_hdr.width
       && GST_VIDEO_INFO_HEIGHT (&self->output_state->info) ==
-      picture->frame_hdr.height
+      (gint) picture->frame_hdr.height
       && gst_d3d11_decoder_can_direct_render (self->d3d11_decoder, view_buffer,
           GST_MINI_OBJECT_CAST (picture))) {
     direct_rendering = TRUE;
@@ -895,8 +901,10 @@ gst_d3d11_vp9_dec_submit_picture_data (GstD3D11Vp9Dec * self,
     gsize written_buffer_size;
     gboolean is_last = TRUE;
     DXVA_Slice_VPx_Short slice_short = { 0, };
-    D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[3] = { 0, };
+    D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[3];
     gboolean bad_aligned_bitstream_buffer = FALSE;
+
+    memset (buffer_desc, 0, sizeof (buffer_desc));
 
     GST_TRACE_OBJECT (self, "Getting bitstream buffer");
     if (!gst_d3d11_decoder_get_decoder_buffer (self->d3d11_decoder,
@@ -1240,7 +1248,7 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   }
 
   type = g_type_register_static (GST_TYPE_VP9_DECODER,
-      type_name, &type_info, 0);
+      type_name, &type_info, (GTypeFlags) 0);
 
   /* make lower rank than default device */
   if (rank > 0 && index != 0)

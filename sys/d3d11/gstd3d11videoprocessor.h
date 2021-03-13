@@ -89,10 +89,6 @@ gboolean  gst_d3d11_video_processor_create_output_view (GstD3D11VideoProcessor *
 ID3D11VideoProcessorOutputView * gst_d3d11_video_processor_get_output_view (GstD3D11VideoProcessor * processor,
                                                                             GstD3D11Memory *mem);
 
-void      gst_d3d11_video_processor_input_view_release  (ID3D11VideoProcessorInputView * view);
-
-void      gst_d3d11_video_processor_output_view_release (ID3D11VideoProcessorOutputView * view);
-
 gboolean  gst_d3d11_video_processor_render             (GstD3D11VideoProcessor * processor,
                                                         RECT *in_rect,
                                                         ID3D11VideoProcessorInputView * in_view,

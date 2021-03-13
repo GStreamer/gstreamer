@@ -23,6 +23,7 @@
 #endif
 
 #include "gstd3d11window_dummy.h"
+#include "gstd3d11pluginutils.h"
 #include <wrl.h>
 
 using namespace Microsoft::WRL;
@@ -88,7 +89,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     gboolean * video_processor_available, GError ** error)
 {
   g_clear_pointer (&window->processor, gst_d3d11_video_processor_free);
-  g_clear_pointer (&window->converter, gst_d3d11_color_converter_free);
+  g_clear_pointer (&window->converter, gst_d3d11_converter_free);
   g_clear_pointer (&window->compositor, gst_d3d11_overlay_compositor_free);
 
   /* We are supporting only RGBA, BGRA or RGB10A2_LE formats but we don't know
@@ -174,7 +175,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
   *video_processor_available = !!window->processor;
 
   window->converter =
-      gst_d3d11_color_converter_new (window->device, &window->info,
+      gst_d3d11_converter_new (window->device, &window->info,
       &window->render_info);
 
   if (!window->converter) {
@@ -206,20 +207,9 @@ error:
 static void
 gst_d3d11_window_dummy_clear_resources (GstD3D11WindowDummy * self)
 {
-  if (self->fallback_pov) {
-    self->fallback_pov->Release ();
-    self->fallback_pov = nullptr;
-  }
-
-  if (self->fallback_rtv) {
-    self->fallback_rtv->Release ();
-    self->fallback_rtv = nullptr;
-  }
-
-  if (self->fallback_texture) {
-    self->fallback_texture->Release ();
-    self->fallback_texture = nullptr;
-  }
+  GST_D3D11_CLEAR_COM (self->fallback_pov);
+  GST_D3D11_CLEAR_COM (self->fallback_rtv);
+  GST_D3D11_CLEAR_COM (self->fallback_texture);
 }
 
 static void
@@ -450,14 +440,10 @@ gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
   return TRUE;
 
 out:
-  if (texture)
-    texture->Release ();
-  if (keyed_mutex)
-    keyed_mutex->Release ();
-  if (pov)
-    pov->Release ();
-  if (rtv)
-    rtv->Release ();
+  GST_D3D11_CLEAR_COM (texture);
+  GST_D3D11_CLEAR_COM (keyed_mutex);
+  GST_D3D11_CLEAR_COM (pov);
+  GST_D3D11_CLEAR_COM (rtv);
 
   return FALSE;
 }
@@ -527,12 +513,9 @@ gst_d3d11_window_dummy_release_shared_handle (GstD3D11Window * window,
     }
   }
 
-  if (data->rtv)
-    data->rtv->Release ();
-  if (data->pov)
-    data->pov->Release ();
-  if (data->texture)
-    data->texture->Release ();
+  GST_D3D11_CLEAR_COM (data->rtv);
+  GST_D3D11_CLEAR_COM (data->pov);
+  GST_D3D11_CLEAR_COM (data->texture);
 
   return TRUE;
 }

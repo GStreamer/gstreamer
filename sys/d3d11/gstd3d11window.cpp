@@ -40,16 +40,17 @@
 #include <sstream>
 #endif
 
-#if GST_D3D11_WINAPI_APP || defined(HAVE_DIRECT_WRITE)
 #include <wrl.h>
-#include <wrl/wrappers/corewrappers.h>
+/* *INDENT-OFF* */
 using namespace Microsoft::WRL;
-#endif
 
-extern "C" {
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
 #define GST_CAT_DEFAULT gst_d3d11_window_debug
-}
+
+G_END_DECLS
+/* *INDENT-ON* */
 
 struct _GstD3D11WindowPrivate
 {
@@ -297,35 +298,12 @@ gst_d3d11_window_release_dwrite_resources (GstD3D11Window * self)
 {
   GstD3D11WindowPrivate *priv = self->priv;
 
-  if (priv->d2d_device_context) {
-    priv->d2d_device_context->Release ();
-    priv->d2d_device_context = NULL;
-  }
-
-  if (priv->d2d_factory) {
-    priv->d2d_factory->Release ();
-    priv->d2d_factory = NULL;
-  }
-
-  if (priv->d2d_device) {
-    priv->d2d_device->Release ();
-    priv->d2d_device = NULL;
-  }
-
-  if (priv->d2d_brush) {
-    priv->d2d_brush->Release ();
-    priv->d2d_brush = NULL;
-  }
-
-  if (priv->dwrite_factory) {
-    priv->dwrite_factory->Release ();
-    priv->dwrite_factory = NULL;
-  }
-
-  if (priv->dwrite_format) {
-    priv->dwrite_format->Release ();
-    priv->dwrite_format = NULL;
-  }
+  GST_D3D11_CLEAR_COM (priv->d2d_device_context);
+  GST_D3D11_CLEAR_COM (priv->d2d_factory);
+  GST_D3D11_CLEAR_COM (priv->d2d_device);
+  GST_D3D11_CLEAR_COM (priv->d2d_brush);
+  GST_D3D11_CLEAR_COM (priv->dwrite_factory);
+  GST_D3D11_CLEAR_COM (priv->dwrite_format);
 }
 
 static void
@@ -440,20 +418,9 @@ gst_d3d11_window_release_resources (GstD3D11Device * device,
   gst_d3d11_window_release_dwrite_resources (window);
 #endif
 
-  if (window->rtv) {
-    window->rtv->Release ();
-    window->rtv = NULL;
-  }
-
-  if (window->pov) {
-    window->pov->Release ();
-    window->pov = NULL;
-  }
-
-  if (window->swap_chain) {
-    window->swap_chain->Release ();
-    window->swap_chain = NULL;
-  }
+  GST_D3D11_CLEAR_COM (window->rtv);
+  GST_D3D11_CLEAR_COM (window->pov);
+  GST_D3D11_CLEAR_COM (window->swap_chain);
 }
 
 static void
@@ -466,7 +433,7 @@ gst_d3d11_window_dispose (GObject * object)
   }
 
   g_clear_pointer (&self->processor, gst_d3d11_video_processor_free);
-  g_clear_pointer (&self->converter, gst_d3d11_color_converter_free);
+  g_clear_pointer (&self->converter, gst_d3d11_converter_free);
   g_clear_pointer (&self->compositor, gst_d3d11_overlay_compositor_free);
 
   gst_clear_buffer (&self->cached_buffer);
@@ -497,15 +464,8 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
   device_handle = gst_d3d11_device_get_device_handle (window->device);
   swap_chain = window->swap_chain;
 
-  if (window->rtv) {
-    window->rtv->Release ();
-    window->rtv = NULL;
-  }
-
-  if (window->pov) {
-    window->pov->Release ();
-    window->pov = NULL;
-  }
+  GST_D3D11_CLEAR_COM (window->rtv);
+  GST_D3D11_CLEAR_COM (window->pov);
 
 #ifdef HAVE_DIRECT_WRITE
   /* D2D bitmap need to be cleared before resizing swapchain buffer */
@@ -593,8 +553,7 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
   }
 
 done:
-  if (backbuffer)
-    backbuffer->Release ();
+  GST_D3D11_CLEAR_COM (backbuffer);
 
   gst_d3d11_device_unlock (window->device);
 }
@@ -683,7 +642,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   /* Step 1: Clear old resources and objects */
   gst_clear_buffer (&window->cached_buffer);
   g_clear_pointer (&window->processor, gst_d3d11_video_processor_free);
-  g_clear_pointer (&window->converter, gst_d3d11_color_converter_free);
+  g_clear_pointer (&window->converter, gst_d3d11_converter_free);
   g_clear_pointer (&window->compositor, gst_d3d11_overlay_compositor_free);
 
   /* Step 2: Decide display color format
@@ -958,7 +917,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
 
   /* configure shader even if video processor is available for fallback */
   window->converter =
-      gst_d3d11_color_converter_new (window->device, &window->info,
+      gst_d3d11_converter_new (window->device, &window->info,
       &window->render_info);
 
   if (!window->converter) {
@@ -1142,7 +1101,7 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
       viewport.Height = self->render_rect.bottom - self->render_rect.top;
       viewport.MinDepth = 0.0f;
       viewport.MaxDepth = 1.0f;
-      gst_d3d11_color_converter_update_viewport (self->converter,
+      gst_d3d11_converter_update_viewport (self->converter,
           &viewport);
       gst_d3d11_overlay_compositor_update_viewport (self->compositor,
           &viewport);
@@ -1158,7 +1117,7 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
         GST_TRACE_OBJECT (self, "Rendered using processor");
       }
     } else {
-      if (!gst_d3d11_color_converter_convert_unlocked (self->converter,
+      if (!gst_d3d11_converter_convert_unlocked (self->converter,
           srv, &rtv, NULL, NULL)) {
         GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using converter");
         ret = GST_FLOW_ERROR;

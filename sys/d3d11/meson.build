@@ -1,29 +1,29 @@
 d3d11_sources = [
-  'gstd3d11basefilter.c',
-  'gstd3d11colorconvert.c',
-  'gstd3d11colorconverter.c',
-  'gstd3d11compositor.c',
-  'gstd3d11compositorbin.c',
-  'gstd3d11download.c',
-  'gstd3d11overlaycompositor.c',
-  'gstd3d11pluginutils.c',
-  'gstd3d11shader.c',
-  'gstd3d11upload.c',
-  'gstd3d11videoprocessor.c',
-  'gstd3d11videosink.c',
-  'gstd3d11videosinkbin.c',
+  'gstd3d11basefilter.cpp',
+  'gstd3d11convert.cpp',
+  'gstd3d11converter.cpp',
+  'gstd3d11compositor.cpp',
+  'gstd3d11compositorbin.cpp',
+  'gstd3d11download.cpp',
+  'gstd3d11overlaycompositor.cpp',
+  'gstd3d11pluginutils.cpp',
+  'gstd3d11shader.cpp',
+  'gstd3d11upload.cpp',
+  'gstd3d11videoprocessor.cpp',
+  'gstd3d11videosink.cpp',
+  'gstd3d11videosinkbin.cpp',
   'gstd3d11window.cpp',
   'gstd3d11window_dummy.cpp',
   'plugin.c',
 ]
 
 d3d11_dec_sources = [
-  'gstd3d11decoder.c',
-  'gstd3d11h264dec.c',
-  'gstd3d11vp9dec.c',
-  'gstd3d11h265dec.c',
-  'gstd3d11mpeg2dec.c',
-  'gstd3d11vp8dec.c',
+  'gstd3d11decoder.cpp',
+  'gstd3d11h264dec.cpp',
+  'gstd3d11vp9dec.cpp',
+  'gstd3d11h265dec.cpp',
+  'gstd3d11mpeg2dec.cpp',
+  'gstd3d11vp8dec.cpp',
 ]
 
 extra_c_args = ['-DCOBJMACROS', '-DGST_USE_UNSTABLE_API']
@@ -81,7 +81,7 @@ if d3d11_winapi_desktop
     # Desktop Duplication API is unavailable for UWP
     # and MinGW is not supported due to some missing headers
     extra_c_args += ['-DHAVE_DXGI_DESKTOP_DUP']
-    d3d11_sources += ['gstd3d11desktopdup.cpp', 'gstd3d11desktopdupsrc.c']
+    d3d11_sources += ['gstd3d11desktopdup.cpp', 'gstd3d11desktopdupsrc.cpp']
     message('Enable D3D11 Desktop Duplication API')
   endif
 endif

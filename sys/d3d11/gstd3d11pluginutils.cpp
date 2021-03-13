@@ -27,8 +27,14 @@
 #include <windows.h>
 #include <versionhelpers.h>
 
+/* *INDENT-OFF* */
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_plugin_utils_debug);
 #define GST_CAT_DEFAULT gst_d3d11_plugin_utils_debug
+
+G_END_DECLS
+/* *INDENT-ON* */
 
 /* Max Texture Dimension for feature level 11_0 ~ 12_1 */
 static guint _gst_d3d11_texture_max_dimension = 16384;
@@ -100,7 +106,8 @@ gst_d3d11_get_device_vendor (GstD3D11Device * device)
   gchar *desc = NULL;
   GstD3D11DeviceVendor vendor = GST_D3D11_DEVICE_VENDOR_UNKNOWN;
 
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device),
+      GST_D3D11_DEVICE_VENDOR_UNKNOWN);
 
   g_object_get (device, "device-id", &device_id, "vendor-id", &vendor_id,
       "description", &desc, NULL);
@@ -455,7 +462,8 @@ static const GstDxgiColorSpace *
 gst_d3d11_video_info_to_dxgi_color_space_rgb (GstVideoInfo * info)
 {
   gint best_score = G_MAXINT;
-  gint score, i;
+  gint score;
+  guint i;
   const GstDxgiColorSpace *colorspace = NULL;
 
   for (i = 0; i < G_N_ELEMENTS (rgb_colorspace_map); i++) {
@@ -477,7 +485,8 @@ static const GstDxgiColorSpace *
 gst_d3d11_video_info_to_dxgi_color_space_yuv (GstVideoInfo * info)
 {
   gint best_score = G_MAXINT;
-  gint score, i;
+  gint score;
+  guint i;
   const GstDxgiColorSpace *colorspace = NULL;
 
   for (i = 0; i < G_N_ELEMENTS (yuv_colorspace_map); i++) {
@@ -515,7 +524,7 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
 {
   const GstDxgiColorSpace *colorspace = NULL;
   gint best_score = G_MAXINT;
-  gint i;
+  guint i;
 
   g_return_val_if_fail (info != NULL, FALSE);
   g_return_val_if_fail (swapchain != NULL, FALSE);
@@ -529,8 +538,8 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
     UINT can_support = 0;
     HRESULT hr;
     gint score;
-    GST_DXGI_COLOR_SPACE_TYPE cur_type =
-        rgb_colorspace_map[i].dxgi_color_space_type;
+    DXGI_COLOR_SPACE_TYPE cur_type =
+        (DXGI_COLOR_SPACE_TYPE) rgb_colorspace_map[i].dxgi_color_space_type;
 
     /* FIXME: Non-HDR colorspace with BT2020 primaries will break rendering.
      * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/1175
@@ -540,8 +549,7 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
         rgb_colorspace_map[i].primaries == GST_VIDEO_COLOR_PRIMARIES_BT2020)
       continue;
 
-    hr = IDXGISwapChain3_CheckColorSpaceSupport (swapchain,
-        cur_type, &can_support);
+    hr = swapchain->CheckColorSpaceSupport (cur_type, &can_support);
 
     if (FAILED (hr))
       continue;
@@ -570,7 +578,7 @@ gst_d3d11_allocate_staging_buffer (GstD3D11Allocator * allocator,
     gboolean add_videometa)
 {
   GstBuffer *buffer;
-  gint i;
+  guint i;
   gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
   gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
   GstMemory *mem;
@@ -586,8 +594,9 @@ gst_d3d11_allocate_staging_buffer (GstD3D11Allocator * allocator,
     gsize size[GST_VIDEO_MAX_PLANES] = { 0, };
 
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-      mem = gst_d3d11_allocator_alloc_staging (allocator, &desc[i], 0,
-          &stride[i]);
+      mem =
+          gst_d3d11_allocator_alloc_staging (allocator, &desc[i],
+          (GstD3D11AllocationFlags) 0, &stride[i]);
 
       if (!mem) {
         GST_ERROR_OBJECT (allocator, "Couldn't allocate memory for plane %d",
@@ -604,8 +613,8 @@ gst_d3d11_allocate_staging_buffer (GstD3D11Allocator * allocator,
     /* must be YUV semi-planar or single plane */
     g_assert (GST_VIDEO_INFO_N_PLANES (info) <= 2);
 
-    mem = gst_d3d11_allocator_alloc_staging (allocator, &desc[0], 0,
-        &stride[0]);
+    mem = gst_d3d11_allocator_alloc_staging (allocator, &desc[0],
+        (GstD3D11AllocationFlags) 0, &stride[0]);
 
     if (!mem) {
       GST_ERROR_OBJECT (allocator, "Couldn't allocate memory");
@@ -646,7 +655,7 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
   GstD3D11Allocator *alloc = NULL;
   GstBuffer *staging_buffer = NULL;
   D3D11_TEXTURE2D_DESC *desc;
-  gint i;
+  guint i;
 
   for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
     GstMemory *mem = gst_buffer_peek_memory (buffer, i);
@@ -662,7 +671,7 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
   device = dmem->device;
 
   params = gst_d3d11_allocation_params_new (device, (GstVideoInfo *) info,
-      0, 0);
+      (GstD3D11AllocationFlags) 0, 0);
 
   if (!params) {
     GST_WARNING ("Couldn't create alloc params");
@@ -718,11 +727,11 @@ gst_d3d11_buffer_copy_into_fallback (GstBuffer * dst, GstBuffer * src,
   gboolean ret;
 
   if (!gst_video_frame_map (&in_frame, (GstVideoInfo *) info, src,
-          GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
+          (GstMapFlags) (GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)))
     goto invalid_buffer;
 
   if (!gst_video_frame_map (&out_frame, (GstVideoInfo *) info, dst,
-          GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
+          (GstMapFlags) (GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))) {
     gst_video_frame_unmap (&in_frame);
     goto invalid_buffer;
   }
@@ -796,12 +805,14 @@ gst_d3d11_buffer_copy_into (GstBuffer * dst, GstBuffer * src,
 
     device_context = gst_d3d11_device_get_device_context_handle (device);
 
-    if (!gst_memory_map (dst_mem, &dst_info, GST_MAP_WRITE | GST_MAP_D3D11)) {
+    if (!gst_memory_map (dst_mem, &dst_info,
+            (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
       GST_ERROR ("Cannot map dst d3d11 memory");
       return FALSE;
     }
 
-    if (!gst_memory_map (src_mem, &src_info, GST_MAP_READ | GST_MAP_D3D11)) {
+    if (!gst_memory_map (src_mem, &src_info,
+            (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11))) {
       GST_ERROR ("Cannot map src d3d11 memory");
       gst_memory_unmap (dst_mem, &dst_info);
       return FALSE;
@@ -823,8 +834,8 @@ gst_d3d11_buffer_copy_into (GstBuffer * dst, GstBuffer * src,
     src_subidx = gst_d3d11_memory_get_subresource_index (src_dmem);
 
     gst_d3d11_device_lock (device);
-    ID3D11DeviceContext_CopySubresourceRegion (device_context,
-        dst_texture, dst_subidx, 0, 0, 0, src_texture, src_subidx, &src_box);
+    device_context->CopySubresourceRegion (dst_texture, dst_subidx, 0, 0, 0,
+        src_texture, src_subidx, &src_box);
     gst_d3d11_device_unlock (device);
 
     gst_memory_unmap (src_mem, &src_info);
@@ -888,7 +899,7 @@ gst_d3d11_buffer_map (GstBuffer * buffer, ID3D11Device * device,
     GstMapInfo info[GST_VIDEO_MAX_PLANES], GstMapFlags flags)
 {
   GstMapFlags map_flags;
-  gint num_mapped = 0;
+  guint num_mapped = 0;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
@@ -896,7 +907,7 @@ gst_d3d11_buffer_map (GstBuffer * buffer, ID3D11Device * device,
   if (!gst_d3d11_buffer_can_access_device (buffer, device))
     return FALSE;
 
-  map_flags = flags | GST_MAP_D3D11;
+  map_flags = (GstMapFlags) (flags | GST_MAP_D3D11);
 
   for (num_mapped = 0; num_mapped < gst_buffer_n_memory (buffer); num_mapped++) {
     GstMemory *mem = gst_buffer_peek_memory (buffer, num_mapped);
@@ -911,7 +922,7 @@ gst_d3d11_buffer_map (GstBuffer * buffer, ID3D11Device * device,
 
 error:
   {
-    gint i;
+    guint i;
     for (i = 0; i < num_mapped; i++) {
       GstMemory *mem = gst_buffer_peek_memory (buffer, num_mapped);
       gst_memory_unmap (mem, &info[i]);
@@ -925,7 +936,7 @@ gboolean
 gst_d3d11_buffer_unmap (GstBuffer * buffer,
     GstMapInfo info[GST_VIDEO_MAX_PLANES])
 {
-  gint i;
+  guint i;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
@@ -943,7 +954,7 @@ guint
 gst_d3d11_buffer_get_shader_resource_view (GstBuffer * buffer,
     ID3D11ShaderResourceView * view[GST_VIDEO_MAX_PLANES])
 {
-  gint i;
+  guint i;
   guint num_views = 0;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
@@ -957,7 +968,7 @@ gst_d3d11_buffer_get_shader_resource_view (GstBuffer * buffer,
   for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
     GstD3D11Memory *mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, i);
     guint view_size;
-    gint j;
+    guint j;
 
     view_size = gst_d3d11_memory_get_shader_resource_view_size (mem);
     if (!view_size) {
@@ -982,7 +993,7 @@ guint
 gst_d3d11_buffer_get_render_target_view (GstBuffer * buffer,
     ID3D11RenderTargetView * view[GST_VIDEO_MAX_PLANES])
 {
-  gint i;
+  guint i;
   guint num_views = 0;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
@@ -996,7 +1007,7 @@ gst_d3d11_buffer_get_render_target_view (GstBuffer * buffer,
   for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
     GstD3D11Memory *mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, i);
     guint view_size;
-    gint j;
+    guint j;
 
     view_size = gst_d3d11_memory_get_render_target_view_size (mem);
     if (!view_size) {

@@ -48,6 +48,13 @@ struct _GstDxgiColorSpace
   GstVideoColorPrimaries primaries;
 };
 
+#define GST_D3D11_CLEAR_COM(obj) G_STMT_START { \
+    if (obj) { \
+      (obj)->Release (); \
+      (obj) = NULL; \
+    } \
+  } G_STMT_END
+
 void            gst_d3d11_plugin_utils_init         (D3D_FEATURE_LEVEL feature_level);
 
 GstCaps *       gst_d3d11_get_updated_template_caps (GstStaticCaps * template_caps);

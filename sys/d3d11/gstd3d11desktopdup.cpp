@@ -48,6 +48,7 @@
 
 #include "gstd3d11desktopdup.h"
 #include "gstd3d11shader.h"
+#include "gstd3d11pluginutils.h"
 #include <string.h>
 
 #include <wrl.h>
@@ -1620,10 +1621,7 @@ gst_d3d11_desktop_dup_dispose (GObject * object)
 {
   GstD3D11DesktopDup *self = GST_D3D11_DESKTOP_DUP (object);
 
-  if (self->texture) {
-    self->texture->Release ();
-    self->texture = nullptr;
-  }
+  GST_D3D11_CLEAR_COM (self->texture);
 
   if (self->dupl_obj) {
     delete self->dupl_obj;

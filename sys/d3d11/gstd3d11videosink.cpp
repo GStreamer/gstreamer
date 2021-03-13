@@ -196,35 +196,36 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
       g_param_spec_int ("adapter", "Adapter",
           "Adapter index for creating device (-1 for default)",
           -1, G_MAXINT32, DEFAULT_ADAPTER,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio",
           "Force aspect ratio",
           "When enabled, scaling will respect original aspect ratio",
           DEFAULT_FORCE_ASPECT_RATIO,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_ENABLE_NAVIGATION_EVENTS,
       g_param_spec_boolean ("enable-navigation-events",
           "Enable navigation events",
           "When enabled, navigation events are sent upstream",
           DEFAULT_ENABLE_NAVIGATION_EVENTS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_FULLSCREEN_TOGGLE_MODE,
       g_param_spec_flags ("fullscreen-toggle-mode",
           "Full screen toggle mode",
           "Full screen toggle mode used to trigger fullscreen mode change",
           GST_D3D11_WINDOW_TOGGLE_MODE_GET_TYPE, DEFAULT_FULLSCREEN_TOGGLE_MODE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
       g_param_spec_boolean ("fullscreen",
           "fullscreen",
           "Ignored when \"fullscreen-toggle-mode\" does not include \"property\"",
-          DEFAULT_FULLSCREEN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_FULLSCREEN,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
 #ifdef HAVE_DIRECT_WRITE
   g_object_class_install_property (gobject_class, PROP_RENDER_STATS,
@@ -232,8 +233,9 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
           "Render Stats",
           "Render statistics data (e.g., average framerate) on window",
           DEFAULT_RENDER_STATS,
-          GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+              GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
 #endif
 
   /**
@@ -262,8 +264,8 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
           "DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM, and "
           "DXGI_FORMAT_R10G10B10A2_UNORM.",
           DEFAULT_DRAW_ON_SHARED_TEXTURE,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
 
   /**
    * GstD3D11VideoSink::begin-draw:
@@ -301,7 +303,7 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
    */
   gst_d3d11_video_sink_signals[SIGNAL_DRAW] =
       g_signal_new ("draw", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      (GSignalFlags) (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
       G_STRUCT_OFFSET (GstD3D11VideoSinkClass, draw), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 4, G_TYPE_POINTER, G_TYPE_UINT, G_TYPE_UINT64,
       G_TYPE_UINT64);
@@ -335,7 +337,8 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
 
   klass->draw = gst_d3d11_video_sink_draw_action;
 
-  gst_type_mark_as_plugin_api (GST_D3D11_WINDOW_TOGGLE_MODE_GET_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_D3D11_WINDOW_TOGGLE_MODE_GET_TYPE,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -377,7 +380,8 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
       }
       break;
     case PROP_FULLSCREEN_TOGGLE_MODE:
-      self->fullscreen_toggle_mode = g_value_get_flags (value);
+      self->fullscreen_toggle_mode =
+          (GstD3D11WindowFullscreenToggleMode) g_value_get_flags (value);
       if (self->window) {
         g_object_set (self->window,
             "fullscreen-toggle-mode", self->fullscreen_toggle_mode, NULL);
@@ -471,7 +475,7 @@ gst_d3d11_video_sink_get_supported_caps (GstD3D11VideoSink * self,
   GstD3D11Device *device;
   ID3D11Device *d3d11_device;
   HRESULT hr;
-  gint i;
+  guint i;
   GValue v_list = G_VALUE_INIT;
   GstCaps *supported_caps;
   static const GstVideoFormat format_list[] = {
@@ -501,8 +505,8 @@ gst_d3d11_video_sink_get_supported_caps (GstD3D11VideoSink * self,
       continue;
 
     format = d3d11_format->format;
-    hr = ID3D11Device_CheckFormatSupport (d3d11_device,
-        d3d11_format->dxgi_format, &format_support);
+    hr = d3d11_device->CheckFormatSupport (d3d11_format->dxgi_format,
+        &format_support);
 
     if (SUCCEEDED (hr) && ((format_support & flags) == flags)) {
       GValue v_str = G_VALUE_INIT;
@@ -539,7 +543,8 @@ gst_d3d11_video_sink_get_caps (GstBaseSink * sink, GstCaps * filter)
     GstCapsFeatures *features;
 
     caps = gst_d3d11_video_sink_get_supported_caps (self,
-        D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_DISPLAY);
+        (D3D11_FORMAT_SUPPORT) (D3D11_FORMAT_SUPPORT_TEXTURE2D |
+            D3D11_FORMAT_SUPPORT_DISPLAY));
     overlaycaps = gst_caps_copy (caps);
     features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
@@ -684,7 +689,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
     }
 
     d3d11_params = gst_d3d11_allocation_params_new (self->device,
-        &self->info, 0, bind_flags);
+        &self->info, (GstD3D11AllocationFlags) 0, bind_flags);
 
     self->fallback_pool = gst_d3d11_buffer_pool_new_with_options (self->device,
         caps, d3d11_params, 2, 0);
@@ -909,8 +914,8 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
 
     GST_DEBUG_OBJECT (self, "create new pool");
 
-    d3d11_params = gst_d3d11_allocation_params_new (self->device, &info, 0,
-        D3D11_BIND_SHADER_RESOURCE);
+    d3d11_params = gst_d3d11_allocation_params_new (self->device, &info,
+        (GstD3D11AllocationFlags) 0, D3D11_BIND_SHADER_RESOURCE);
     pool = gst_d3d11_buffer_pool_new_with_options (self->device, caps,
         d3d11_params, 2, 0);
     gst_d3d11_allocation_params_free (d3d11_params);
@@ -1001,11 +1006,11 @@ gst_d3d11_video_sink_upload_frame (GstD3D11VideoSink * self, GstBuffer * inbuf,
   GST_LOG_OBJECT (self, "Copy to fallback buffer");
 
   if (!gst_video_frame_map (&in_frame, &self->info, inbuf,
-          GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
+          (GstMapFlags) (GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)))
     goto invalid_buffer;
 
   if (!gst_video_frame_map (&out_frame, &self->info, outbuf,
-          GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
+          (GstMapFlags) (GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))) {
     gst_video_frame_unmap (&in_frame);
     goto invalid_buffer;
   }

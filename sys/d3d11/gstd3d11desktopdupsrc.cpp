@@ -42,8 +42,14 @@
 
 #include <string.h>
 
+/* *INDENT-OFF* */
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_desktop_dup_debug);
 #define GST_CAT_DEFAULT gst_d3d11_desktop_dup_debug
+
+G_END_DECLS
+/* *INDENT-ON* */
 
 enum
 {
@@ -131,12 +137,14 @@ gst_d3d11_desktop_dup_src_class_init (GstD3D11DesktopDupSrcClass * klass)
       g_param_spec_int ("monitor-index", "Monitor Index",
       "Zero-based index for monitor to capture (-1 = primary monitor)",
       -1, G_MAXINT, DEFAULT_MONITOR_INDEX,
-      G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY | G_PARAM_STATIC_STRINGS);
+      (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
 
   properties[PROP_SHOW_CURSOR] =
       g_param_spec_boolean ("show-cursor",
       "Show Mouse Cursor", "Whether to show mouse cursor",
-      DEFAULT_SHOW_CURSOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      DEFAULT_SHOW_CURSOR,
+      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
@@ -356,8 +364,8 @@ gst_d3d11_desktop_dup_src_decide_allocation (GstBaseSrc * bsrc,
 
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (!d3d11_params) {
-    d3d11_params = gst_d3d11_allocation_params_new (self->device, &vinfo, 0,
-        D3D11_BIND_RENDER_TARGET);
+    d3d11_params = gst_d3d11_allocation_params_new (self->device, &vinfo,
+        (GstD3D11AllocationFlags) 0, D3D11_BIND_RENDER_TARGET);
   } else {
     d3d11_params->desc[0].BindFlags |= D3D11_BIND_RENDER_TARGET;
   }
@@ -497,7 +505,7 @@ gst_d3d11_desktop_dup_src_fill (GstPushSrc * pushsrc, GstBuffer * buffer)
   GstClockTime latency;
   GstClockTime dur;
   gboolean update_latency = FALSE;
-  gint64 next_frame_no;
+  guint64 next_frame_no;
   gboolean draw_mouse;
 
   if (!self->dupl) {
@@ -538,7 +546,7 @@ again:
 
   if (next_frame_no == self->last_frame_no) {
     GstClockID id;
-    GstClockReturn ret;
+    GstClockReturn clock_ret;
 
     /* Need to wait for the next frame */
     next_frame_no += 1;
@@ -556,13 +564,13 @@ again:
 
     GST_LOG_OBJECT (self, "Waiting for next frame time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (next_capture_ts));
-    ret = gst_clock_id_wait (id, NULL);
+    clock_ret = gst_clock_id_wait (id, NULL);
     GST_OBJECT_LOCK (self);
 
     gst_clock_id_unref (id);
     self->clock_id = NULL;
 
-    if (ret == GST_CLOCK_UNSCHEDULED) {
+    if (clock_ret == GST_CLOCK_UNSCHEDULED) {
       /* Got woken up by the unlock function */
       ret = GST_FLOW_FLUSHING;
       GST_OBJECT_UNLOCK (self);
@@ -599,7 +607,8 @@ again:
     goto out;
   }
 
-  if (!gst_memory_map (mem, &info, GST_MAP_WRITE | GST_MAP_D3D11)) {
+  if (!gst_memory_map (mem, &info,
+          (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
     GST_ERROR_OBJECT (self, "Failed to map d3d11 memory");
     ret = GST_FLOW_ERROR;
     goto out;

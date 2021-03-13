@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/d3d11/gstd3d11.h>
-#include "gstd3d11colorconverter.h"
+#include "gstd3d11converter.h"
 #include "gstd3d11overlaycompositor.h"
 #include "gstd3d11videoprocessor.h"
 #include "gstd3d11pluginutils.h"
@@ -99,7 +99,7 @@ struct _GstD3D11Window
   GstVideoInfo info;
   GstVideoInfo render_info;
   GstD3D11VideoProcessor *processor;
-  GstD3D11ColorConverter *converter;
+  GstD3D11Converter *converter;
   GstD3D11OverlayCompositor *compositor;
 
   /* calculated rect with aspect ratio and window area */

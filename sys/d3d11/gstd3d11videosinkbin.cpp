@@ -180,105 +180,111 @@ gst_d3d11_video_sink_bin_class_init (GstD3D11VideoSinkBinClass * klass)
   /* basesink */
   g_object_class_install_property (gobject_class, PROP_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_MAX_LATENESS,
       g_param_spec_int64 ("max-lateness", "Max Lateness",
           "Maximum number of nanoseconds that a buffer can be late before it "
           "is dropped (-1 unlimited)", -1, G_MAXINT64, DEFAULT_MAX_LATENESS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_QOS,
       g_param_spec_boolean ("qos", "Qos",
           "Generate Quality-of-Service events upstream", DEFAULT_QOS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_ASYNC,
       g_param_spec_boolean ("async", "Async",
           "Go asynchronously to PAUSED", DEFAULT_ASYNC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
       g_param_spec_int64 ("ts-offset", "TS Offset",
           "Timestamp offset in nanoseconds", G_MININT64, G_MAXINT64,
-          DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_TS_OFFSET,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_ENABLE_LAST_SAMPLE,
       g_param_spec_boolean ("enable-last-sample", "Enable Last Buffer",
           "Enable the last-sample property", DEFAULT_ENABLE_LAST_SAMPLE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_LAST_SAMPLE,
       g_param_spec_boxed ("last-sample", "Last Sample",
           "The last sample received in the sink", GST_TYPE_SAMPLE,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
       g_param_spec_uint ("blocksize", "Block size",
           "Size in bytes to pull per buffer (0 = default)", 0, G_MAXUINT,
-          DEFAULT_BLOCKSIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_BLOCKSIZE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_RENDER_DELAY,
       g_param_spec_uint64 ("render-delay", "Render Delay",
           "Additional render delay of the sink in nanoseconds", 0, G_MAXUINT64,
-          DEFAULT_RENDER_DELAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_RENDER_DELAY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_THROTTLE_TIME,
       g_param_spec_uint64 ("throttle-time", "Throttle time",
           "The time to keep between rendered buffers (0 = disabled)", 0,
           G_MAXUINT64, DEFAULT_THROTTLE_TIME,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
       g_param_spec_uint64 ("max-bitrate", "Max Bitrate",
           "The maximum bits per second to render (0 = disabled)", 0,
           G_MAXUINT64, DEFAULT_MAX_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_PROCESSING_DEADLINE,
       g_param_spec_uint64 ("processing-deadline", "Processing deadline",
           "Maximum processing deadline in nanoseconds", 0, G_MAXUINT64,
           DEFAULT_PROCESSING_DEADLINE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_STATS,
       g_param_spec_boxed ("stats", "Statistics",
           "Sink Statistics", GST_TYPE_STRUCTURE,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   /* videosink */
   g_object_class_install_property (gobject_class, PROP_SHOW_PREROLL_FRAME,
       g_param_spec_boolean ("show-preroll-frame", "Show preroll frame",
           "Whether to render video frames during preroll",
           DEFAULT_SHOW_PREROLL_FRAME,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+              G_PARAM_STATIC_STRINGS)));
 
   /* d3d11videosink */
   g_object_class_install_property (gobject_class, PROP_ADAPTER,
       g_param_spec_int ("adapter", "Adapter",
           "Adapter index for creating device (-1 for default)",
           -1, G_MAXINT32, DEFAULT_ADAPTER,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio",
           "Force aspect ratio",
           "When enabled, scaling will respect original aspect ratio",
           DEFAULT_FORCE_ASPECT_RATIO,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_ENABLE_NAVIGATION_EVENTS,
       g_param_spec_boolean ("enable-navigation-events",
           "Enable navigation events",
           "When enabled, navigation events are sent upstream",
           DEFAULT_ENABLE_NAVIGATION_EVENTS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_FULLSCREEN_TOGGLE_MODE,
       g_param_spec_flags ("fullscreen-toggle-mode",
           "Full screen toggle mode",
           "Full screen toggle mode used to trigger fullscreen mode change",
           GST_D3D11_WINDOW_TOGGLE_MODE_GET_TYPE, DEFAULT_FULLSCREEN_TOGGLE_MODE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
       g_param_spec_boolean ("fullscreen",
           "fullscreen",
           "Ignored when \"fullscreen-toggle-mode\" does not include \"property\"",
-          DEFAULT_FULLSCREEN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_FULLSCREEN,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 #ifdef HAVE_DIRECT_WRITE
   g_object_class_install_property (gobject_class, PROP_RENDER_STATS,
       g_param_spec_boolean ("render-stats",
           "Render Stats",
           "Render statistics data (e.g., average framerate) on window",
           DEFAULT_RENDER_STATS,
-          GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+              GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
 #endif
 
   /**
@@ -307,8 +313,8 @@ gst_d3d11_video_sink_bin_class_init (GstD3D11VideoSinkBinClass * klass)
           "DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM, and "
           "DXGI_FORMAT_R10G10B10A2_UNORM.",
           DEFAULT_DRAW_ON_SHARED_TEXTURE,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
 
   /**
    * GstD3D11VideoSinkBin::begin-draw:
@@ -346,7 +352,7 @@ gst_d3d11_video_sink_bin_class_init (GstD3D11VideoSinkBinClass * klass)
    */
   gst_d3d11_video_sink_bin_signals[SIGNAL_DRAW] =
       g_signal_new ("draw", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      (GSignalFlags) (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
       G_STRUCT_OFFSET (GstD3D11VideoSinkBinClass, draw), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 4, G_TYPE_POINTER, G_TYPE_UINT, G_TYPE_UINT64,
       G_TYPE_UINT64);

@@ -49,8 +49,14 @@
 #include <d3d9.h>
 #include <dxva.h>
 
+/* *INDENT-OFF* */
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_mpeg2_dec_debug);
 #define GST_CAT_DEFAULT gst_d3d11_mpeg2_dec_debug
+
+G_END_DECLS
+/* *INDENT-ON* */
 
 enum
 {
@@ -77,7 +83,7 @@ typedef struct _GstD3D11Mpeg2Dec
   GstD3D11Device *device;
   GstD3D11Decoder *d3d11_decoder;
 
-  guint width, height;
+  gint width, height;
   guint width_in_mb, height_in_mb;
   GstVideoFormat out_format;
   GstMpegVideoSequenceHdr seq;
@@ -162,17 +168,17 @@ gst_d3d11_mpeg2_dec_class_init (GstD3D11Mpeg2DecClass * klass, gpointer data)
       g_param_spec_uint ("adapter", "Adapter",
           "DXGI Adapter index for creating device",
           0, G_MAXUINT32, cdata->adapter,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
       g_param_spec_uint ("device-id", "Device Id",
           "DXGI Device ID", 0, G_MAXUINT32, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_VENDOR_ID,
       g_param_spec_uint ("vendor-id", "Vendor Id",
           "DXGI Vendor ID", 0, G_MAXUINT32, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
-  parent_class = g_type_class_peek_parent (klass);
+  parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
 
   klass->adapter = cdata->adapter;
   klass->device_id = cdata->device_id;
@@ -398,7 +404,7 @@ gst_d3d11_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
 
   mpeg_profile = GST_MPEG_VIDEO_PROFILE_MAIN;
   if (seq_ext)
-    mpeg_profile = seq_ext->profile;
+    mpeg_profile = (GstMpegVideoProfile) seq_ext->profile;
 
   if (mpeg_profile != GST_MPEG_VIDEO_PROFILE_MAIN &&
       mpeg_profile != GST_MPEG_VIDEO_PROFILE_SIMPLE) {
@@ -470,7 +476,7 @@ gst_d3d11_mpeg2_dec_new_field_picture (GstMpeg2Decoder * decoder,
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
   GstBuffer *view_buffer;
 
-  view_buffer =
+  view_buffer = (GstBuffer *)
       gst_mpeg2_picture_get_user_data ((GstMpeg2Picture *) first_field);
 
   if (!view_buffer) {
@@ -729,8 +735,8 @@ gst_d3d11_mpeg2_dec_submit_slice_data (GstD3D11Mpeg2Dec * self,
   gpointer buffer;
   guint8 *data;
   gsize offset = 0;
-  gint i;
-  D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[4] = { 0, };
+  guint i;
+  D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[4];
   gboolean ret;
   guint buffer_count = 0;
   DXVA_SliceInfo *slice_data;
@@ -743,6 +749,8 @@ gst_d3d11_mpeg2_dec_submit_slice_data (GstD3D11Mpeg2Dec * self,
     return FALSE;
   }
 
+  memset (buffer_desc, 0, sizeof (buffer_desc));
+
   GST_TRACE_OBJECT (self, "Getting slice control buffer");
 
   if (!gst_d3d11_decoder_get_decoder_buffer (self->d3d11_decoder,
@@ -751,7 +759,7 @@ gst_d3d11_mpeg2_dec_submit_slice_data (GstD3D11Mpeg2Dec * self,
     return FALSE;
   }
 
-  data = buffer;
+  data = (guint8 *) buffer;
   for (i = 0; i < self->slice_list->len; i++) {
     slice_data = &g_array_index (self->slice_list, DXVA_SliceInfo, i);
 
@@ -1038,7 +1046,7 @@ gst_d3d11_mpeg2_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   }
 
   type = g_type_register_static (GST_TYPE_MPEG2_DECODER,
-      type_name, &type_info, 0);
+      type_name, &type_info, (GTypeFlags) 0);
 
   /* make lower rank than default device */
   if (rank > 0 && index != 0)

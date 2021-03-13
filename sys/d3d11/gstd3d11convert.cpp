@@ -26,9 +26,10 @@
 #  include <config.h>
 #endif
 
-#include "gstd3d11colorconvert.h"
-#include "gstd3d11colorconverter.h"
+#include "gstd3d11convert.h"
+#include "gstd3d11converter.h"
 #include "gstd3d11videoprocessor.h"
+#include "gstd3d11pluginutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_convert_debug);
 #define GST_CAT_DEFAULT gst_d3d11_convert_debug
@@ -64,7 +65,7 @@ struct _GstD3D11BaseConvert
   ID3D11RenderTargetView *render_target_view[GST_VIDEO_MAX_PLANES];
   guint num_output_view;
 
-  GstD3D11ColorConverter *converter;
+  GstD3D11Converter *converter;
   GstD3D11VideoProcessor *processor;
   gboolean processor_in_use;
 
@@ -271,7 +272,8 @@ gst_d3d11_base_convert_class_init (GstD3D11BaseConvertClass * klass)
 
   bfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_set_info);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_BASE_CONVERT, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_BASE_CONVERT,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -285,33 +287,19 @@ gst_d3d11_base_convert_clear_shader_resource (GstD3D11BaseConvert * self)
   gint i;
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (self->shader_resource_view[i]) {
-      ID3D11ShaderResourceView_Release (self->shader_resource_view[i]);
-      self->shader_resource_view[i] = NULL;
-    }
-
-    if (self->render_target_view[i]) {
-      ID3D11RenderTargetView_Release (self->render_target_view[i]);
-      self->render_target_view[i] = NULL;
-    }
+    GST_D3D11_CLEAR_COM (self->shader_resource_view[i]);
+    GST_D3D11_CLEAR_COM (self->render_target_view[i]);
   }
 
   self->num_input_view = 0;
   self->num_output_view = 0;
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (self->in_texture[i]) {
-      ID3D11Texture2D_Release (self->in_texture[i]);
-      self->in_texture[i] = NULL;
-    }
-
-    if (self->out_texture[i]) {
-      ID3D11Texture2D_Release (self->out_texture[i]);
-      self->out_texture[i] = NULL;
-    }
+    GST_D3D11_CLEAR_COM (self->in_texture[i]);
+    GST_D3D11_CLEAR_COM (self->out_texture[i]);
   }
 
-  g_clear_pointer (&self->converter, gst_d3d11_color_converter_free);
+  g_clear_pointer (&self->converter, gst_d3d11_converter_free);
   g_clear_pointer (&self->processor, gst_d3d11_video_processor_free);
 
   self->processor_in_use = FALSE;
@@ -402,7 +390,7 @@ score_value (GstBaseTransform * base, const GstVideoFormatInfo * in_info,
 {
   const gchar *fname;
   const GstVideoFormatInfo *t_info;
-  GstVideoFormatFlags in_flags, t_flags;
+  guint in_flags, t_flags;
   gint loss;
 
   fname = g_value_get_string (val);
@@ -540,7 +528,7 @@ gst_d3d11_base_convert_fixate_format (GstBaseTransform * trans,
 static gboolean
 subsampling_unchanged (GstVideoInfo * in_info, GstVideoInfo * out_info)
 {
-  gint i;
+  guint i;
   const GstVideoFormatInfo *in_format, *out_format;
 
   if (GST_VIDEO_INFO_N_COMPONENTS (in_info) !=
@@ -1124,7 +1112,7 @@ gst_d3d11_base_convert_fixate_caps (GstBaseTransform * base,
       gst_d3d11_base_convert_fixate_size (base, direction, caps, othercaps);
 
   if (gst_caps_get_size (othercaps) == 1) {
-    gint i;
+    guint i;
     const gchar *format_fields[] = { "format", "colorimetry", "chroma-site" };
     GstStructure *format_struct = gst_caps_get_structure (format, 0);
     GstStructure *fixated_struct;
@@ -1208,8 +1196,8 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
 
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (!d3d11_params) {
-    d3d11_params = gst_d3d11_allocation_params_new (filter->device, &info, 0,
-        D3D11_BIND_SHADER_RESOURCE);
+    d3d11_params = gst_d3d11_allocation_params_new (filter->device, &info,
+        (GstD3D11AllocationFlags) 0, D3D11_BIND_SHADER_RESOURCE);
   } else {
     /* Set bind flag */
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
@@ -1258,7 +1246,7 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
   GstD3D11AllocationParams *d3d11_params;
   gboolean update_pool = FALSE;
   GstVideoInfo info;
-  gint i;
+  guint i;
 
   gst_query_parse_allocation (query, &outcaps, NULL);
 
@@ -1288,7 +1276,8 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
 
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (!d3d11_params) {
-    d3d11_params = gst_d3d11_allocation_params_new (filter->device, &info, 0,
+    d3d11_params = gst_d3d11_allocation_params_new (filter->device, &info,
+        (GstD3D11AllocationFlags) 0,
         D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
   } else {
     /* Set bind flag */
@@ -1321,8 +1310,8 @@ static gboolean
 create_shader_input_resource (GstD3D11BaseConvert * self,
     GstD3D11Device * device, const GstD3D11Format * format, GstVideoInfo * info)
 {
-  D3D11_TEXTURE2D_DESC texture_desc = { 0, };
-  D3D11_SHADER_RESOURCE_VIEW_DESC view_desc = { 0 };
+  D3D11_TEXTURE2D_DESC texture_desc;
+  D3D11_SHADER_RESOURCE_VIEW_DESC view_desc;
   HRESULT hr;
   ID3D11Device *device_handle;
   ID3D11Texture2D *tex[GST_VIDEO_MAX_PLANES] = { NULL, };
@@ -1331,6 +1320,9 @@ create_shader_input_resource (GstD3D11BaseConvert * self,
 
   if (self->num_input_view)
     return TRUE;
+
+  memset (&texture_desc, 0, sizeof (texture_desc));
+  memset (&view_desc, 0, sizeof (view_desc));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
 
@@ -1350,8 +1342,7 @@ create_shader_input_resource (GstD3D11BaseConvert * self,
       texture_desc.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
       texture_desc.Format = format->resource_format[i];
 
-      hr = ID3D11Device_CreateTexture2D (device_handle,
-          &texture_desc, NULL, &tex[i]);
+      hr = device_handle->CreateTexture2D (&texture_desc, NULL, &tex[i]);
       if (!gst_d3d11_result (hr, device)) {
         GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
         goto error;
@@ -1375,15 +1366,14 @@ create_shader_input_resource (GstD3D11BaseConvert * self,
       texture_desc.Height = GST_ROUND_UP_2 (texture_desc.Height);
     }
 
-    hr = ID3D11Device_CreateTexture2D (device_handle,
-        &texture_desc, NULL, &tex[0]);
+    hr = device_handle->CreateTexture2D (&texture_desc, NULL, &tex[0]);
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
       goto error;
     }
 
     if (is_semiplanar) {
-      ID3D11Resource_AddRef (tex[0]);
+      tex[0]->AddRef ();
       tex[1] = tex[0];
     }
   }
@@ -1396,8 +1386,7 @@ create_shader_input_resource (GstD3D11BaseConvert * self,
       break;
 
     view_desc.Format = format->resource_format[i];
-    hr = ID3D11Device_CreateShaderResourceView (device_handle,
-        (ID3D11Resource *) tex[i], &view_desc, &view[i]);
+    hr = device_handle->CreateShaderResourceView (tex[i], &view_desc, &view[i]);
 
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR_OBJECT (self,
@@ -1420,13 +1409,11 @@ create_shader_input_resource (GstD3D11BaseConvert * self,
 
 error:
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (view[i])
-      ID3D11ShaderResourceView_Release (view[i]);
+    GST_D3D11_CLEAR_COM (view[i]);
   }
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (tex[i])
-      ID3D11Texture2D_Release (tex[i]);
+    GST_D3D11_CLEAR_COM (tex[i]);
   }
 
   return FALSE;
@@ -1452,7 +1439,7 @@ clear_rtv_color_rgb (GstD3D11BaseConvert * self,
   else
     target = clear_color_limited;
 
-  ID3D11DeviceContext_ClearRenderTargetView (context_handle, rtv, target);
+  context_handle->ClearRenderTargetView (rtv, target);
 }
 
 static inline void
@@ -1470,7 +1457,7 @@ clear_rtv_color_vuya (GstD3D11BaseConvert * self,
   else
     target = clear_color_limited;
 
-  ID3D11DeviceContext_ClearRenderTargetView (context_handle, rtv, target);
+  context_handle->ClearRenderTargetView (rtv, target);
 }
 
 static inline void
@@ -1490,7 +1477,7 @@ clear_rtv_color_luma (GstD3D11BaseConvert * self,
   else
     target = clear_color_limited;
 
-  ID3D11DeviceContext_ClearRenderTargetView (context_handle, rtv, target);
+  context_handle->ClearRenderTargetView (rtv, target);
 }
 
 static inline void
@@ -1499,7 +1486,7 @@ clear_rtv_color_chroma (GstD3D11BaseConvert * self,
 {
   const FLOAT clear_color[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 
-  ID3D11DeviceContext_ClearRenderTargetView (context_handle, rtv, clear_color);
+  context_handle->ClearRenderTargetView (rtv, clear_color);
 }
 
 static void
@@ -1533,8 +1520,8 @@ static gboolean
 create_shader_output_resource (GstD3D11BaseConvert * self,
     GstD3D11Device * device, const GstD3D11Format * format, GstVideoInfo * info)
 {
-  D3D11_TEXTURE2D_DESC texture_desc = { 0, };
-  D3D11_RENDER_TARGET_VIEW_DESC view_desc = { 0, };
+  D3D11_TEXTURE2D_DESC texture_desc;
+  D3D11_RENDER_TARGET_VIEW_DESC view_desc;
   HRESULT hr;
   ID3D11Device *device_handle;
   ID3D11DeviceContext *context_handle;
@@ -1544,6 +1531,9 @@ create_shader_output_resource (GstD3D11BaseConvert * self,
 
   if (self->num_output_view)
     return TRUE;
+
+  memset (&texture_desc, 0, sizeof (texture_desc));
+  memset (&view_desc, 0, sizeof (view_desc));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
@@ -1565,8 +1555,7 @@ create_shader_output_resource (GstD3D11BaseConvert * self,
       texture_desc.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
       texture_desc.Format = format->resource_format[i];
 
-      hr = ID3D11Device_CreateTexture2D (device_handle,
-          &texture_desc, NULL, &tex[i]);
+      hr = device_handle->CreateTexture2D (&texture_desc, NULL, &tex[i]);
       if (!gst_d3d11_result (hr, device)) {
         GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
         goto error;
@@ -1590,15 +1579,14 @@ create_shader_output_resource (GstD3D11BaseConvert * self,
       texture_desc.Height = GST_ROUND_UP_2 (texture_desc.Height);
     }
 
-    hr = ID3D11Device_CreateTexture2D (device_handle,
-        &texture_desc, NULL, &tex[0]);
+    hr = device_handle->CreateTexture2D (&texture_desc, NULL, &tex[0]);
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
       goto error;
     }
 
     if (is_semiplanar) {
-      ID3D11Resource_AddRef (tex[0]);
+      tex[0]->AddRef ();
       tex[1] = tex[0];
     }
   }
@@ -1610,8 +1598,7 @@ create_shader_output_resource (GstD3D11BaseConvert * self,
       break;
 
     view_desc.Format = format->resource_format[i];
-    hr = ID3D11Device_CreateRenderTargetView (device_handle,
-        (ID3D11Resource *) tex[i], &view_desc, &view[i]);
+    hr = device_handle->CreateRenderTargetView (tex[i], &view_desc, &view[i]);
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR_OBJECT (self,
           "Failed to create %dth render target view (0x%x)", i, (guint) hr);
@@ -1636,13 +1623,11 @@ create_shader_output_resource (GstD3D11BaseConvert * self,
 
 error:
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (view[i])
-      ID3D11RenderTargetView_Release (view[i]);
+    GST_D3D11_CLEAR_COM (view[i]);
   }
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (tex[i])
-      ID3D11Texture2D_Release (tex[i]);
+    GST_D3D11_CLEAR_COM (tex[i]);
   }
 
   return FALSE;
@@ -1732,8 +1717,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     goto format_unknown;
   }
 
-  self->converter = gst_d3d11_color_converter_new (filter->device,
-      in_info, out_info);
+  self->converter = gst_d3d11_converter_new (filter->device, in_info, out_info);
 
   if (!self->converter) {
     GST_ERROR_OBJECT (self, "couldn't set converter");
@@ -1832,7 +1816,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   view_port.MinDepth = 0.0f;
   view_port.MaxDepth = 1.0f;
 
-  gst_d3d11_color_converter_update_viewport (self->converter, &view_port);
+  gst_d3d11_converter_update_viewport (self->converter, &view_port);
 
   return TRUE;
 
@@ -1967,7 +1951,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
   ID3D11ShaderResourceView *resource_view[GST_VIDEO_MAX_PLANES] = { NULL, };
   ID3D11RenderTargetView *render_view[GST_VIDEO_MAX_PLANES] = { NULL, };
   ID3D11RenderTargetView **target_rtv;
-  gint i;
+  guint i;
   gboolean copy_input = FALSE;
   gboolean copy_output = FALSE;
   GstMapInfo in_map[GST_VIDEO_MAX_PLANES];
@@ -2027,7 +2011,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
       subidx = gst_d3d11_memory_get_subresource_index (mem);
       gst_d3d11_memory_get_texture_desc (mem, &src_desc);
 
-      ID3D11Texture2D_GetDesc (self->in_texture[i], &dst_desc);
+      self->in_texture[i]->GetDesc (&dst_desc);
 
       src_box.left = 0;
       src_box.top = 0;
@@ -2036,8 +2020,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
       src_box.right = MIN (src_desc.Width, dst_desc.Width);
       src_box.bottom = MIN (src_desc.Height, dst_desc.Height);
 
-      ID3D11DeviceContext_CopySubresourceRegion (context_handle,
-          (ID3D11Resource *) self->in_texture[i], 0, 0, 0, 0,
+      context_handle->CopySubresourceRegion (self->in_texture[i], 0, 0, 0, 0,
           (ID3D11Resource *) in_map[i].data, subidx, &src_box);
     }
     gst_d3d11_device_unlock (device);
@@ -2070,7 +2053,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
     gst_d3d11_device_unlock (device);
   }
 
-  if (!gst_d3d11_color_converter_convert (self->converter,
+  if (!gst_d3d11_converter_convert (self->converter,
           copy_input ? self->shader_resource_view : resource_view,
           target_rtv, NULL, NULL)) {
     goto conversion_failed;
@@ -2086,7 +2069,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
       D3D11_TEXTURE2D_DESC src_desc;
       D3D11_TEXTURE2D_DESC dst_desc;
 
-      ID3D11Texture2D_GetDesc (self->out_texture[i], &src_desc);
+      self->out_texture[i]->GetDesc (&src_desc);
       subidx = gst_d3d11_memory_get_subresource_index (mem);
       gst_d3d11_memory_get_texture_desc (mem, &dst_desc);
 
@@ -2097,9 +2080,8 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
       src_box.right = MIN (src_desc.Width, dst_desc.Width);
       src_box.bottom = MIN (src_desc.Height, dst_desc.Height);
 
-      ID3D11DeviceContext_CopySubresourceRegion (context_handle,
-          (ID3D11Resource *) out_map[i].data, subidx, 0, 0, 0,
-          (ID3D11Resource *) self->out_texture[i], 0, &src_box);
+      context_handle->CopySubresourceRegion ((ID3D11Resource *) out_map[i].data,
+          subidx, 0, 0, 0, self->out_texture[i], 0, &src_box);
     }
     gst_d3d11_device_unlock (device);
   }

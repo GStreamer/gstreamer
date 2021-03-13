@@ -47,8 +47,14 @@
 #include "gstd3d11compositor.h"
 #include "gstd3d11pluginutils.h"
 
+/* *INDENT-OFF* */
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_compositor_debug);
 #define GST_CAT_DEFAULT gst_d3d11_compositor_debug
+
+G_END_DECLS
+/* *INDENT-ON* */
 
 /****************************
  * GstD3D11CompositorBinPad *
@@ -113,7 +119,7 @@ gst_d3d11_compositor_bin_pad_class_init (GstD3D11CompositorBinPadClass * klass)
       g_param_spec_boolean ("emit-signals", "Emit signals",
           "Send signals to signal data consumption",
           DEFAULT_PAD_EMIT_SIGNALS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_d3d11_compositor_bin_pad_signals[SIGNAL_PAD_BUFFER_CONSUMED] =
       g_signal_new ("buffer-consumed", G_TYPE_FROM_CLASS (klass),
@@ -286,13 +292,15 @@ gst_d3d11_compositor_bin_input_class_init (GstD3D11CompositorBinInputClass *
   g_object_class_install_property (gobject_class, PROP_INPUT_ZORDER,
       g_param_spec_uint ("zorder", "Z-Order", "Z Order of the picture",
           0, G_MAXUINT, DEFAULT_INPUT_ZORDER,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_INPUT_REPEAT_AFTER_EOS,
       g_param_spec_boolean ("repeat-after-eos", "Repeat After EOS",
           "Repeat the " "last frame after EOS until all pads are EOS",
           DEFAULT_INPUT_REPEAT_AFTER_EOS,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class,
       PROP_INPUT_MAX_LAST_BUFFER_REPEAT,
@@ -300,46 +308,53 @@ gst_d3d11_compositor_bin_input_class_init (GstD3D11CompositorBinInputClass *
           "Repeat last buffer for time (in ns, -1=until EOS), "
           "behaviour on EOS is not affected", 0, G_MAXUINT64,
           DEFAULT_INPUT_MAX_LAST_BUFFER_REPEAT,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
-          G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_STATIC_STRINGS)));
 
   /* GstD3D11CompositorPad */
   g_object_class_install_property (gobject_class, PROP_INPUT_XPOS,
       g_param_spec_int ("xpos", "X Position", "X position of the picture",
           G_MININT, G_MAXINT, DEFAULT_INPUT_XPOS,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_INPUT_YPOS,
       g_param_spec_int ("ypos", "Y Position", "Y position of the picture",
           G_MININT, G_MAXINT, DEFAULT_INPUT_YPOS,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_INPUT_WIDTH,
       g_param_spec_int ("width", "Width", "Width of the picture",
           G_MININT, G_MAXINT, DEFAULT_INPUT_WIDTH,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_INPUT_HEIGHT,
       g_param_spec_int ("height", "Height", "Height of the picture",
           G_MININT, G_MAXINT, DEFAULT_INPUT_HEIGHT,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_INPUT_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
           DEFAULT_INPUT_ALPHA,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_INPUT_BLEND_OP_RGB,
       g_param_spec_enum ("blend-op-rgb", "Blend Operation RGB",
           "Blend equation for RGB", GST_TYPE_D3D11_COMPOSITOR_BLEND_OPERATION,
           DEFAULT_INPUT_BLEND_OP_RGB,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_INPUT_BLEND_OP_ALPHA,
       g_param_spec_enum ("blend-op-alpha", "Blend Operation Alpha",
           "Blend equation for alpha", GST_TYPE_D3D11_COMPOSITOR_BLEND_OPERATION,
           DEFAULT_INPUT_BLEND_OP_ALPHA,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class,
       PROP_INPUT_BLEND_SRC_RGB,
@@ -347,7 +362,8 @@ gst_d3d11_compositor_bin_input_class_init (GstD3D11CompositorBinInputClass *
           "Blend factor for source RGB",
           GST_TYPE_D3D11_COMPOSITOR_BLEND,
           DEFAULT_INPUT_BLEND_SRC_RGB,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class,
       PROP_INPUT_BLEND_SRC_ALPHA,
@@ -356,7 +372,8 @@ gst_d3d11_compositor_bin_input_class_init (GstD3D11CompositorBinInputClass *
           "Blend factor for source alpha, \"*-color\" values are not allowed",
           GST_TYPE_D3D11_COMPOSITOR_BLEND,
           DEFAULT_INPUT_BLEND_SRC_ALPHA,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class,
       PROP_INPUT_BLEND_DEST_RGB,
@@ -365,7 +382,8 @@ gst_d3d11_compositor_bin_input_class_init (GstD3D11CompositorBinInputClass *
           "Blend factor for destination RGB",
           GST_TYPE_D3D11_COMPOSITOR_BLEND,
           DEFAULT_INPUT_BLEND_DEST_RGB,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class,
       PROP_INPUT_BLEND_DEST_ALPHA,
@@ -375,35 +393,40 @@ gst_d3d11_compositor_bin_input_class_init (GstD3D11CompositorBinInputClass *
           "\"*-color\" values are not allowed",
           GST_TYPE_D3D11_COMPOSITOR_BLEND,
           DEFAULT_INPUT_BLEND_DEST_ALPHA,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_INPUT_BLEND_FACTOR_RED,
       g_param_spec_float ("blend-factor-red", "Blend Factor Red",
           "Blend factor for red component "
           "when blend type is \"blend-factor\" or \"inv-blend-factor\"",
           0.0, 1.0, 1.0,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_INPUT_BLEND_FACTOR_GREEN,
       g_param_spec_float ("blend-factor-green", "Blend Factor Green",
           "Blend factor for green component "
           "when blend type is \"blend-factor\" or \"inv-blend-factor\"",
           0.0, 1.0, 1.0,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_INPUT_BLEND_FACTOR_BLUE,
       g_param_spec_float ("blend-factor-blue", "Blend Factor Blue",
           "Blend factor for blue component "
           "when blend type is \"blend-factor\" or \"inv-blend-factor\"",
           0.0, 1.0, 1.0,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_INPUT_BLEND_FACTOR_ALPHA,
       g_param_spec_float ("blend-factor-alpha", "Blend Factor Alpha",
           "Blend factor for alpha component "
           "when blend type is \"blend-factor\" or \"inv-blend-factor\"",
           0.0, 1.0, 1.0,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   pad_class->set_target =
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_bin_input_set_target);
@@ -590,7 +613,8 @@ gst_d3d11_compositor_bin_class_init (GstD3D11CompositorBinClass * klass)
   g_object_class_install_property (gobject_class, PROP_MIXER,
       g_param_spec_object ("mixer", "D3D11 mixer element",
           "The d3d11 mixer chain to use",
-          GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_ELEMENT,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   /*GstAggregator */
   g_object_class_install_property (gobject_class, PROP_LATENCY,
@@ -598,7 +622,8 @@ gst_d3d11_compositor_bin_class_init (GstD3D11CompositorBinClass * klass)
           "Additional latency in live mode to allow upstream "
           "to take longer to produce buffers for the current "
           "position (in nanoseconds)", 0, G_MAXUINT64,
-          DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_LATENCY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_MIN_UPSTREAM_LATENCY,
       g_param_spec_uint64 ("min-upstream-latency", "Buffer latency",
@@ -608,41 +633,46 @@ gst_d3d11_compositor_bin_class_init (GstD3D11CompositorBinClass * klass)
           "initial source(s). This is only taken into account when larger "
           "than the actually reported minimum latency. (nanoseconds)",
           0, G_MAXUINT64,
-          DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_LATENCY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_START_TIME_SELECTION,
       g_param_spec_enum ("start-time-selection", "Start Time Selection",
           "Decides which start time is output",
           gst_aggregator_start_time_selection_get_type (),
           DEFAULT_START_TIME_SELECTION,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_START_TIME,
       g_param_spec_uint64 ("start-time", "Start Time",
           "Start time to use if start-time-selection=set", 0,
           G_MAXUINT64,
-          DEFAULT_START_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_START_TIME,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_EMIT_SIGNALS,
       g_param_spec_boolean ("emit-signals", "Emit signals",
           "Send signals", DEFAULT_EMIT_SIGNALS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* GstD3D11Compositor */
   g_object_class_install_property (gobject_class, PROP_ADAPTER,
       g_param_spec_int ("adapter", "Adapter",
           "Adapter index for creating device (-1 for default)",
           -1, G_MAXINT32, DEFAULT_ADAPTER,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_BACKGROUND,
       g_param_spec_enum ("background", "Background", "Background type",
           GST_TYPE_COMPOSITOR_BACKGROUND,
-          DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_BACKGROUND,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_BIN_PAD, 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_BIN_INPUT, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_BIN_PAD,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_BIN_INPUT,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -934,14 +964,15 @@ gst_d3d11_compositor_bin_child_proxy_get_child_by_index (GstChildProxy * proxy,
 
   GST_OBJECT_LOCK (self);
   /* XXX: not exactly thread safe with ordering */
-  if (index < bin->numchildren) {
-    if ((res = g_list_nth_data (bin->children, index)))
+  if (index < (guint) bin->numchildren) {
+    if ((res = (GObject *) g_list_nth_data (bin->children, index)))
       gst_object_ref (res);
   } else {
     GstD3D11CompositorBinChain *chain;
     if ((chain =
-            g_list_nth_data (self->input_chains, index - bin->numchildren))) {
-      res = gst_object_ref (chain->ghost_pad);
+            (GstD3D11CompositorBinChain *) g_list_nth_data (self->input_chains,
+                index - bin->numchildren))) {
+      res = (GObject *) gst_object_ref (chain->ghost_pad);
     }
   }
   GST_OBJECT_UNLOCK (self);
@@ -967,7 +998,7 @@ static void
 gst_d3d11_compositor_bin_child_proxy_init (gpointer g_iface,
     gpointer iface_data)
 {
-  GstChildProxyInterface *iface = g_iface;
+  GstChildProxyInterface *iface = (GstChildProxyInterface *) g_iface;
 
   iface->get_child_by_index =
       gst_d3d11_compositor_bin_child_proxy_get_child_by_index;

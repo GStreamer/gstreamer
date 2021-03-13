@@ -18,17 +18,22 @@
  */
 
 /**
- * SECTION:element-d3d11upload
- * @title: d3d11upload
+ * SECTION:element-d3d11download
+ * @title: d3d11download
+ * @short_description: Downloads Direct3D11 texture memory into system memory
  *
- * Upload video frame to Direct3D11 texture memory
+ * Downloads Direct3D11 texture memory into system memory
  *
  * ## Example launch line
  * ```
- * gst-launch-1.0 videotestsrc ! d3d11upload ! d3d11videosinkelement
+ * gst-launch-1.0 filesrc location=test_h264.mp4 ! parsebin ! d3d11h264dec ! \
+ *   d3d11convert ! d3d11download ! video/x-raw,width=640,height=480 ! mfh264enc ! \
+ *   h264parse ! mp4mux ! filesink location=output.mp4
  * ```
- *   This pipeline will upload video test frame (system memory) into Direct3D11
- * textures and d3d11videosinkelement will display frames on screen.
+ * This pipeline will resize decoded (by #d3d11h264dec) frames to 640x480
+ * resolution by using #d3d11convert. Then it will be copied into system memory
+ * by d3d11download. Finally downloaded frames will be encoded as a new
+ * H.264 stream via #mfh264enc and muxed via mp4mux
  *
  * Since: 1.18
  *
@@ -38,23 +43,22 @@
 #  include <config.h>
 #endif
 
-#include "gstd3d11upload.h"
+#include "gstd3d11download.h"
 
-#include <string.h>
-
-GST_DEBUG_CATEGORY_STATIC (gst_d3d11_upload_debug);
-#define GST_CAT_DEFAULT gst_d3d11_upload_debug
+GST_DEBUG_CATEGORY_STATIC (gst_d3d11_download_debug);
+#define GST_CAT_DEFAULT gst_d3d11_download_debug
 
 static GstStaticCaps sink_template_caps =
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_D3D11_ALL_FORMATS) "; "
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_ALL_FORMATS) "; "
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY ","
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+        GST_D3D11_ALL_FORMATS) "; "
+    GST_VIDEO_CAPS_MAKE (GST_D3D11_ALL_FORMATS) "; "
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES
     (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-        GST_D3D11_ALL_FORMATS) "; "
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
-        GST_D3D11_ALL_FORMATS) ";"
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY
-        "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
         GST_D3D11_ALL_FORMATS));
 
 static GstStaticCaps src_template_caps =
@@ -63,41 +67,42 @@ static GstStaticCaps src_template_caps =
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES
     (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY ","
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-        GST_D3D11_ALL_FORMATS) ";"
+        GST_D3D11_ALL_FORMATS) "; "
     GST_VIDEO_CAPS_MAKE (GST_D3D11_ALL_FORMATS) "; "
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES
     (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
         GST_D3D11_ALL_FORMATS));
 
-struct _GstD3D11Upload
+struct _GstD3D11Download
 {
   GstD3D11BaseFilter parent;
 
   GstBuffer *staging_buffer;
 };
 
-#define gst_d3d11_upload_parent_class parent_class
-G_DEFINE_TYPE (GstD3D11Upload, gst_d3d11_upload, GST_TYPE_D3D11_BASE_FILTER);
+#define gst_d3d11_download_parent_class parent_class
+G_DEFINE_TYPE (GstD3D11Download, gst_d3d11_download,
+    GST_TYPE_D3D11_BASE_FILTER);
 
-static void gst_d3d11_upload_dispose (GObject * object);
-static gboolean gst_d3d11_upload_stop (GstBaseTransform * trans);
-static gboolean gst_d3d11_upload_sink_event (GstBaseTransform * trans,
+static void gst_d3d11_download_dispose (GObject * object);
+static gboolean gst_d3d11_download_stop (GstBaseTransform * trans);
+static gboolean gst_d3d11_download_sink_event (GstBaseTransform * trans,
     GstEvent * event);
-static GstCaps *gst_d3d11_upload_transform_caps (GstBaseTransform * trans,
+static GstCaps *gst_d3d11_download_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
-static gboolean gst_d3d11_upload_propose_allocation (GstBaseTransform * trans,
+static gboolean gst_d3d11_download_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query);
-static gboolean gst_d3d11_upload_decide_allocation (GstBaseTransform * trans,
+static gboolean gst_d3d11_download_decide_allocation (GstBaseTransform * trans,
     GstQuery * query);
-static GstFlowReturn gst_d3d11_upload_transform (GstBaseTransform * trans,
+static GstFlowReturn gst_d3d11_download_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean gst_d3d11_upload_set_info (GstD3D11BaseFilter * filter,
+static gboolean gst_d3d11_download_set_info (GstD3D11BaseFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info);
 
 static void
-gst_d3d11_upload_class_init (GstD3D11UploadClass * klass)
+gst_d3d11_download_class_init (GstD3D11DownloadClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
@@ -105,7 +110,7 @@ gst_d3d11_upload_class_init (GstD3D11UploadClass * klass)
   GstD3D11BaseFilterClass *bfilter_class = GST_D3D11_BASE_FILTER_CLASS (klass);
   GstCaps *caps;
 
-  gobject_class->dispose = gst_d3d11_upload_dispose;
+  gobject_class->dispose = gst_d3d11_download_dispose;
 
   caps = gst_d3d11_get_updated_template_caps (&sink_template_caps);
   gst_element_class_add_pad_template (element_class,
@@ -118,37 +123,37 @@ gst_d3d11_upload_class_init (GstD3D11UploadClass * klass)
   gst_caps_unref (caps);
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 uploader", "Filter/Video",
-      "Uploads data into Direct3D11 texture memory",
+      "Direct3D11 downloader", "Filter/Video",
+      "Downloads Direct3D11 texture memory into system memory",
       "Seungha Yang <seungha.yang@navercorp.com>");
 
   trans_class->passthrough_on_same_caps = TRUE;
 
-  trans_class->stop = GST_DEBUG_FUNCPTR (gst_d3d11_upload_stop);
-  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d11_upload_sink_event);
+  trans_class->stop = GST_DEBUG_FUNCPTR (gst_d3d11_download_stop);
+  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d11_download_sink_event);
   trans_class->transform_caps =
-      GST_DEBUG_FUNCPTR (gst_d3d11_upload_transform_caps);
+      GST_DEBUG_FUNCPTR (gst_d3d11_download_transform_caps);
   trans_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d11_upload_propose_allocation);
+      GST_DEBUG_FUNCPTR (gst_d3d11_download_propose_allocation);
   trans_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d11_upload_decide_allocation);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d11_upload_transform);
+      GST_DEBUG_FUNCPTR (gst_d3d11_download_decide_allocation);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d11_download_transform);
 
-  bfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d11_upload_set_info);
+  bfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d11_download_set_info);
 
-  GST_DEBUG_CATEGORY_INIT (gst_d3d11_upload_debug,
-      "d3d11upload", 0, "d3d11upload Element");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_download_debug,
+      "d3d11download", 0, "d3d11download Element");
 }
 
 static void
-gst_d3d11_upload_init (GstD3D11Upload * upload)
+gst_d3d11_download_init (GstD3D11Download * download)
 {
 }
 
 static void
-gst_d3d11_upload_dispose (GObject * object)
+gst_d3d11_download_dispose (GObject * object)
 {
-  GstD3D11Upload *self = GST_D3D11_UPLOAD (object);
+  GstD3D11Download *self = GST_D3D11_DOWNLOAD (object);
 
   gst_clear_buffer (&self->staging_buffer);
 
@@ -156,9 +161,9 @@ gst_d3d11_upload_dispose (GObject * object)
 }
 
 static gboolean
-gst_d3d11_upload_stop (GstBaseTransform * trans)
+gst_d3d11_download_stop (GstBaseTransform * trans)
 {
-  GstD3D11Upload *self = GST_D3D11_UPLOAD (trans);
+  GstD3D11Download *self = GST_D3D11_DOWNLOAD (trans);
 
   gst_clear_buffer (&self->staging_buffer);
 
@@ -166,9 +171,9 @@ gst_d3d11_upload_stop (GstBaseTransform * trans)
 }
 
 static gboolean
-gst_d3d11_upload_sink_event (GstBaseTransform * trans, GstEvent * event)
+gst_d3d11_download_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
-  GstD3D11Upload *self = GST_D3D11_UPLOAD (trans);
+  GstD3D11Download *self = GST_D3D11_DOWNLOAD (trans);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -185,58 +190,19 @@ gst_d3d11_upload_sink_event (GstBaseTransform * trans, GstEvent * event)
 static GstCaps *
 _set_caps_features (const GstCaps * caps, const gchar * feature_name)
 {
-  guint i, j, m, n;
-  GstCaps *tmp;
-  GstCapsFeatures *overlay_feature =
-      gst_caps_features_from_string
-      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+  GstCaps *tmp = gst_caps_copy (caps);
+  guint n = gst_caps_get_size (tmp);
+  guint i = 0;
 
-  tmp = gst_caps_new_empty ();
-
-  n = gst_caps_get_size (caps);
-  for (i = 0; i < n; i++) {
-    GstCapsFeatures *features, *orig_features;
-    GstStructure *s = gst_caps_get_structure (caps, i);
-
-    orig_features = gst_caps_get_features (caps, i);
-    features = gst_caps_features_new (feature_name, NULL);
-
-    if (gst_caps_features_is_any (orig_features)) {
-      gst_caps_append_structure_full (tmp, gst_structure_copy (s),
-          gst_caps_features_copy (features));
-
-      if (!gst_caps_features_contains (features,
-              GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION))
-        gst_caps_features_add (features,
-            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
-    } else {
-      m = gst_caps_features_get_size (orig_features);
-      for (j = 0; j < m; j++) {
-        const gchar *feature = gst_caps_features_get_nth (orig_features, j);
-
-        /* if we already have the features */
-        if (gst_caps_features_contains (features, feature))
-          continue;
-
-        if (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY) == 0)
-          continue;
-
-        if (gst_caps_features_contains (overlay_feature, feature)) {
-          gst_caps_features_add (features, feature);
-        }
-      }
-    }
-
-    gst_caps_append_structure_full (tmp, gst_structure_copy (s), features);
-  }
-
-  gst_caps_features_free (overlay_feature);
+  for (i = 0; i < n; i++)
+    gst_caps_set_features (tmp, i,
+        gst_caps_features_from_string (feature_name));
 
   return tmp;
 }
 
 static GstCaps *
-gst_d3d11_upload_transform_caps (GstBaseTransform * trans,
+gst_d3d11_download_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstCaps *result, *tmp;
@@ -246,12 +212,13 @@ gst_d3d11_upload_transform_caps (GstBaseTransform * trans,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
   if (direction == GST_PAD_SINK) {
-    tmp = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+    tmp = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
     tmp = gst_caps_merge (gst_caps_ref (caps), tmp);
   } else {
     GstCaps *newcaps;
     tmp = gst_caps_ref (caps);
-    newcaps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+
+    newcaps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
     tmp = gst_caps_merge (tmp, newcaps);
   }
 
@@ -268,7 +235,7 @@ gst_d3d11_upload_transform_caps (GstBaseTransform * trans,
 }
 
 static gboolean
-gst_d3d11_upload_propose_allocation (GstBaseTransform * trans,
+gst_d3d11_download_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
@@ -326,17 +293,17 @@ gst_d3d11_upload_propose_allocation (GstBaseTransform * trans,
     if (!gst_buffer_pool_set_config (pool, config))
       goto config_failed;
 
+    gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
     /* d3d11 buffer pool might update buffer size by self */
-    if (is_d3d11)
+    if (is_d3d11) {
       size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
+    }
 
     gst_query_add_allocation_pool (query, pool, size, 0, 0);
+
     gst_object_unref (pool);
   }
-
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-  gst_query_add_allocation_meta (query,
-      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
 
   return TRUE;
 
@@ -350,50 +317,40 @@ config_failed:
 }
 
 static gboolean
-gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
+gst_d3d11_download_decide_allocation (GstBaseTransform * trans,
+    GstQuery * query)
 {
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
-  GstCaps *outcaps = NULL;
   GstBufferPool *pool = NULL;
-  guint size, min, max;
   GstStructure *config;
-  gboolean update_pool = FALSE;
-  GstVideoInfo vinfo;
-
-  gst_query_parse_allocation (query, &outcaps, NULL);
-
-  if (!outcaps)
-    return FALSE;
-
-  gst_video_info_from_caps (&vinfo, outcaps);
+  guint min, max, size;
+  gboolean update_pool;
+  GstCaps *outcaps = NULL;
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-    if (pool && !GST_IS_D3D11_BUFFER_POOL (pool)) {
-      gst_object_unref (pool);
-      pool = NULL;
-    }
+
+    if (!pool)
+      gst_query_parse_allocation (query, &outcaps, NULL);
 
     update_pool = TRUE;
   } else {
-    size = GST_VIDEO_INFO_SIZE (&vinfo);
+    GstVideoInfo vinfo;
+
+    gst_query_parse_allocation (query, &outcaps, NULL);
+    gst_video_info_from_caps (&vinfo, outcaps);
+    size = vinfo.size;
     min = max = 0;
+    update_pool = FALSE;
   }
 
-  if (!pool) {
-    GST_DEBUG_OBJECT (trans, "create our pool");
-
-    pool = gst_d3d11_buffer_pool_new (filter->device);
-  }
+  if (!pool)
+    pool = gst_video_buffer_pool_new ();
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
-
+  if (outcaps)
+    gst_buffer_pool_config_set_params (config, outcaps, size, 0, 0);
   gst_buffer_pool_set_config (pool, config);
-
-  /* update size with calculated one */
-  size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
@@ -407,21 +364,21 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 }
 
 static gboolean
-gst_d3d11_upload_can_use_staging_buffer (GstD3D11Upload * self,
-    GstBuffer * outbuf)
+gst_d3d11_download_can_use_staging_buffer (GstD3D11Download * self,
+    GstBuffer * inbuf)
 {
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (self);
   ID3D11Device *device_handle =
       gst_d3d11_device_get_device_handle (filter->device);
 
-  if (!gst_d3d11_buffer_can_access_device (outbuf, device_handle))
+  if (!gst_d3d11_buffer_can_access_device (inbuf, device_handle))
     return FALSE;
 
   if (self->staging_buffer)
     return TRUE;
 
-  self->staging_buffer = gst_d3d11_allocate_staging_buffer_for (outbuf,
-      &filter->out_info, TRUE);
+  self->staging_buffer = gst_d3d11_allocate_staging_buffer_for (inbuf,
+      &filter->in_info, TRUE);
 
   if (!self->staging_buffer) {
     GST_WARNING_OBJECT (self, "Couldn't allocate staging buffer");
@@ -432,37 +389,46 @@ gst_d3d11_upload_can_use_staging_buffer (GstD3D11Upload * self,
 }
 
 static GstFlowReturn
-gst_d3d11_upload_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+gst_d3d11_download_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
-  GstD3D11Upload *self = GST_D3D11_UPLOAD (trans);
+  GstD3D11Download *self = GST_D3D11_DOWNLOAD (trans);
   GstVideoFrame in_frame, out_frame;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean use_staging_buf;
-  GstBuffer *target_outbuf = outbuf;
-  gint i;
+  GstBuffer *target_inbuf = inbuf;
+  guint i;
 
-  use_staging_buf = gst_d3d11_upload_can_use_staging_buffer (self, outbuf);
+  use_staging_buf = gst_d3d11_download_can_use_staging_buffer (self, inbuf);
 
   if (use_staging_buf) {
     GST_TRACE_OBJECT (self, "Copy input buffer to staging buffer");
-    target_outbuf = self->staging_buffer;
+
+    /* Copy d3d11 texture to staging texture */
+    if (!gst_d3d11_buffer_copy_into (self->staging_buffer,
+            inbuf, &filter->in_info)) {
+      GST_ERROR_OBJECT (self,
+          "Failed to copy input buffer into staging texture");
+      return GST_FLOW_ERROR;
+    }
+
+    target_inbuf = self->staging_buffer;
   }
 
-  if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf,
-          GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
+  if (!gst_video_frame_map (&in_frame, &filter->in_info, target_inbuf,
+          (GstMapFlags) (GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)))
     goto invalid_buffer;
 
-  if (!gst_video_frame_map (&out_frame, &filter->out_info, target_outbuf,
-          GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
+  if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
+          (GstMapFlags) (GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))) {
     gst_video_frame_unmap (&in_frame);
     goto invalid_buffer;
   }
 
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&in_frame); i++) {
     if (!gst_video_frame_copy_plane (&out_frame, &in_frame, i)) {
-      GST_ERROR_OBJECT (filter, "Couldn't copy plane %d", i);
+      GST_ERROR_OBJECT (filter, "Couldn't copy %dth plane", i);
       ret = GST_FLOW_ERROR;
       break;
     }
@@ -470,15 +436,6 @@ gst_d3d11_upload_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   gst_video_frame_unmap (&out_frame);
   gst_video_frame_unmap (&in_frame);
-
-  /* Copy staging texture to d3d11 texture */
-  if (use_staging_buf) {
-    if (!gst_d3d11_buffer_copy_into (outbuf,
-            self->staging_buffer, &filter->out_info)) {
-      GST_ERROR_OBJECT (self, "Cannot copy staging texture into texture");
-      return GST_FLOW_ERROR;
-    }
-  }
 
   return ret;
 
@@ -492,11 +449,11 @@ invalid_buffer:
 }
 
 static gboolean
-gst_d3d11_upload_set_info (GstD3D11BaseFilter * filter,
+gst_d3d11_download_set_info (GstD3D11BaseFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info)
 {
-  GstD3D11Upload *self = GST_D3D11_UPLOAD (filter);
+  GstD3D11Download *self = GST_D3D11_DOWNLOAD (filter);
 
   gst_clear_buffer (&self->staging_buffer);
 

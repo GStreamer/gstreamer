@@ -78,8 +78,8 @@ gst_d3d11_base_filter_class_init (GstD3D11BaseFilterClass * klass)
       g_param_spec_int ("adapter", "Adapter",
           "Adapter index for creating device (-1 for default)",
           -1, G_MAXINT32, DEFAULT_ADAPTER,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_base_filter_set_context);
@@ -93,7 +93,8 @@ gst_d3d11_base_filter_class_init (GstD3D11BaseFilterClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_base_filter_get_unit_size);
   trans_class->query = GST_DEBUG_FUNCPTR (gst_d3d11_base_filter_query);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_BASE_FILTER, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_BASE_FILTER,
+      (GstPluginAPIFlags) 0);
 }
 
 static void

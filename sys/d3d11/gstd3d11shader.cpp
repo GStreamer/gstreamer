@@ -22,10 +22,20 @@
 #endif
 
 #include "gstd3d11shader.h"
+#include "gstd3d11pluginutils.h"
 #include <gmodule.h>
+#include <wrl.h>
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+
+G_BEGIN_DECLS
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_shader_debug);
 #define GST_CAT_DEFAULT gst_d3d11_shader_debug
+
+G_END_DECLS
+/* *INDENT-ON* */
 
 static GModule *d3d_compiler_module = NULL;
 static pD3DCompile GstD3DCompileFunc = NULL;
@@ -47,7 +57,7 @@ gst_d3d11_shader_init (void)
       "d3dcompiler_44.dll",
       "d3dcompiler_43.dll",
     };
-    gint i;
+    guint i;
     for (i = 0; i < G_N_ELEMENTS (d3d_compiler_names); i++) {
       d3d_compiler_module =
           g_module_open (d3d_compiler_names[i], G_MODULE_BIND_LAZY);
@@ -74,27 +84,29 @@ gst_d3d11_shader_init (void)
     g_once_init_leave (&_init, 1);
   }
 
-  return ! !GstD3DCompileFunc;
+  return !!GstD3DCompileFunc;
 }
 
-static ID3DBlob *
+static gboolean
 compile_shader (GstD3D11Device * device, const gchar * shader_source,
-    gboolean is_pixel_shader)
+    gboolean is_pixel_shader, ID3DBlob ** blob)
 {
-  ID3DBlob *ret;
-  ID3DBlob *error = NULL;
   const gchar *shader_target;
   D3D_FEATURE_LEVEL feature_level;
   HRESULT hr;
   ID3D11Device *device_handle;
+  /* *INDENT-OFF* */
+  ComPtr<ID3DBlob> ret;
+  ComPtr<ID3DBlob> error;
+  /* *INDENT-ON* */
 
   if (!gst_d3d11_shader_init ()) {
     GST_ERROR ("D3DCompiler is unavailable");
-    return NULL;
+    return FALSE;
   }
 
   device_handle = gst_d3d11_device_get_device_handle (device);
-  feature_level = ID3D11Device_GetFeatureLevel (device_handle);
+  feature_level = device_handle->GetFeatureLevel ();
 
   if (is_pixel_shader) {
     if (feature_level >= D3D_FEATURE_LEVEL_10_0)
@@ -123,62 +135,51 @@ compile_shader (GstD3D11Device * device, const gchar * shader_source,
     const gchar *err = NULL;
 
     if (error)
-      err = ID3D10Blob_GetBufferPointer (error);
+      err = (const gchar *) error->GetBufferPointer ();
 
     GST_ERROR ("could not compile source, hr: 0x%x, error detail %s",
         (guint) hr, GST_STR_NULL (err));
-
-    if (error)
-      ID3D10Blob_Release (error);
-
-    return NULL;
+    return FALSE;
   }
 
   if (error) {
-    const gchar *err = ID3D10Blob_GetBufferPointer (error);
+    const gchar *err = (const gchar *) error->GetBufferPointer ();
 
     GST_DEBUG ("HLSL compiler warnings:\n%s\nShader code:\n%s",
         GST_STR_NULL (err), GST_STR_NULL (shader_source));
-    ID3D10Blob_Release (error);
   }
 
-  return ret;
+  *blob = ret.Detach ();
+
+  return TRUE;
 }
 
 gboolean
 gst_d3d11_create_pixel_shader (GstD3D11Device * device,
     const gchar * source, ID3D11PixelShader ** shader)
 {
-  ID3DBlob *ps_blob;
   ID3D11Device *device_handle;
   HRESULT hr;
+  /* *INDENT-OFF* */
+  ComPtr<ID3DBlob> ps_blob;
+  /* *INDENT-ON* */
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
   g_return_val_if_fail (source != NULL, FALSE);
   g_return_val_if_fail (shader != NULL, FALSE);
 
-  gst_d3d11_device_lock (device);
-  ps_blob = compile_shader (device, source, TRUE);
-
-  if (!ps_blob) {
+  if (!compile_shader (device, source, TRUE, &ps_blob)) {
     GST_ERROR ("Failed to compile pixel shader");
-    gst_d3d11_device_unlock (device);
     return FALSE;
   }
 
   device_handle = gst_d3d11_device_get_device_handle (device);
-  hr = ID3D11Device_CreatePixelShader (device_handle,
-      (gpointer) ID3D10Blob_GetBufferPointer (ps_blob),
-      ID3D10Blob_GetBufferSize (ps_blob), NULL, shader);
-
+  hr = device_handle->CreatePixelShader (ps_blob->GetBufferPointer (),
+      ps_blob->GetBufferSize (), NULL, shader);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("could not create pixel shader, hr: 0x%x", (guint) hr);
-    gst_d3d11_device_unlock (device);
     return FALSE;
   }
-
-  ID3D10Blob_Release (ps_blob);
-  gst_d3d11_device_unlock (device);
 
   return TRUE;
 }
@@ -188,12 +189,13 @@ gst_d3d11_create_vertex_shader (GstD3D11Device * device, const gchar * source,
     const D3D11_INPUT_ELEMENT_DESC * input_desc, guint desc_len,
     ID3D11VertexShader ** shader, ID3D11InputLayout ** layout)
 {
-  ID3DBlob *vs_blob;
   ID3D11Device *device_handle;
   HRESULT hr;
-  ID3D11VertexShader *vshader = NULL;
-  ID3D11InputLayout *in_layout = NULL;
-  gboolean ret = FALSE;
+  /* *INDENT-OFF* */
+  ComPtr<ID3DBlob> vs_blob;
+  ComPtr<ID3D11VertexShader> vs;
+  ComPtr<ID3D11InputLayout> in_layout;
+  /* *INDENT-ON* */
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
   g_return_val_if_fail (source != NULL, FALSE);
@@ -202,47 +204,31 @@ gst_d3d11_create_vertex_shader (GstD3D11Device * device, const gchar * source,
   g_return_val_if_fail (shader != NULL, FALSE);
   g_return_val_if_fail (layout != NULL, FALSE);
 
-  gst_d3d11_device_lock (device);
-  vs_blob = compile_shader (device, source, FALSE);
-  if (!vs_blob) {
+  if (!compile_shader (device, source, FALSE, &vs_blob)) {
     GST_ERROR ("Failed to compile shader code");
-    goto done;
+    return FALSE;
   }
 
   device_handle = gst_d3d11_device_get_device_handle (device);
-
-  hr = ID3D11Device_CreateVertexShader (device_handle,
-      (gpointer) ID3D10Blob_GetBufferPointer (vs_blob),
-      ID3D10Blob_GetBufferSize (vs_blob), NULL, &vshader);
-
+  hr = device_handle->CreateVertexShader (vs_blob->GetBufferPointer (),
+      vs_blob->GetBufferSize (), NULL, &vs);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("could not create vertex shader, hr: 0x%x", (guint) hr);
-    ID3D10Blob_Release (vs_blob);
-    goto done;
+    return FALSE;
   }
 
-  hr = ID3D11Device_CreateInputLayout (device_handle, input_desc,
-      desc_len, (gpointer) ID3D10Blob_GetBufferPointer (vs_blob),
-      ID3D10Blob_GetBufferSize (vs_blob), &in_layout);
-
+  hr = device_handle->CreateInputLayout (input_desc,
+      desc_len, vs_blob->GetBufferPointer (),
+      vs_blob->GetBufferSize (), &in_layout);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("could not create input layout shader, hr: 0x%x", (guint) hr);
-    ID3D10Blob_Release (vs_blob);
-    ID3D11VertexShader_Release (vshader);
-    goto done;
+    return FALSE;
   }
 
-  ID3D10Blob_Release (vs_blob);
+  *shader = vs.Detach ();
+  *layout = in_layout.Detach ();
 
-  *shader = vshader;
-  *layout = in_layout;
-
-  ret = TRUE;
-
-done:
-  gst_d3d11_device_unlock (device);
-
-  return ret;
+  return TRUE;
 }
 
 struct _GstD3D11Quad
@@ -289,7 +275,7 @@ gst_d3d11_quad_new (GstD3D11Device * device, ID3D11PixelShader * pixel_shader,
 
   quad = g_new0 (GstD3D11Quad, 1);
 
-  quad->device = gst_object_ref (device);
+  quad->device = (GstD3D11Device *) gst_object_ref (device);
   quad->ps = pixel_shader;
   quad->vs = vertex_shader;
   quad->layout = layout;
@@ -302,24 +288,25 @@ gst_d3d11_quad_new (GstD3D11Device * device, ID3D11PixelShader * pixel_shader,
   quad->index_format = index_format;
   quad->index_count = index_count;
 
-  ID3D11PixelShader_AddRef (pixel_shader);
-  ID3D11VertexShader_AddRef (vertex_shader);
-  ID3D11InputLayout_AddRef (layout);
+  pixel_shader->AddRef ();
+  vertex_shader->AddRef ();
+  layout->AddRef ();
+  vertex_buffer->AddRef ();
+  index_buffer->AddRef ();
+
   if (sampler)
-    ID3D11SamplerState_AddRef (sampler);
+    sampler->AddRef ();
 
   if (blend)
-    ID3D11BlendState_AddRef (blend);
+    blend->AddRef ();
 
   if (depth_stencil)
-    ID3D11DepthStencilState_AddRef (depth_stencil);
+    depth_stencil->AddRef ();
 
   if (const_buffer) {
     quad->const_buffer = const_buffer;
-    ID3D11Buffer_AddRef (const_buffer);
+    const_buffer->AddRef ();
   }
-  ID3D11Buffer_AddRef (vertex_buffer);
-  ID3D11Buffer_AddRef (index_buffer);
 
   return quad;
 }
@@ -329,24 +316,15 @@ gst_d3d11_quad_free (GstD3D11Quad * quad)
 {
   g_return_if_fail (quad != NULL);
 
-  if (quad->ps)
-    ID3D11PixelShader_Release (quad->ps);
-  if (quad->vs)
-    ID3D11VertexShader_Release (quad->vs);
-  if (quad->layout)
-    ID3D11InputLayout_Release (quad->layout);
-  if (quad->sampler)
-    ID3D11SamplerState_Release (quad->sampler);
-  if (quad->blend)
-    ID3D11BlendState_Release (quad->blend);
-  if (quad->depth_stencil)
-    ID3D11DepthStencilState_Release (quad->depth_stencil);
-  if (quad->const_buffer)
-    ID3D11Buffer_Release (quad->const_buffer);
-  if (quad->vertex_buffer)
-    ID3D11Buffer_Release (quad->vertex_buffer);
-  if (quad->index_buffer)
-    ID3D11Buffer_Release (quad->index_buffer);
+  GST_D3D11_CLEAR_COM (quad->ps);
+  GST_D3D11_CLEAR_COM (quad->vs);
+  GST_D3D11_CLEAR_COM (quad->layout);
+  GST_D3D11_CLEAR_COM (quad->sampler);
+  GST_D3D11_CLEAR_COM (quad->blend);
+  GST_D3D11_CLEAR_COM (quad->depth_stencil);
+  GST_D3D11_CLEAR_COM (quad->const_buffer);
+  GST_D3D11_CLEAR_COM (quad->vertex_buffer);
+  GST_D3D11_CLEAR_COM (quad->index_buffer);
 
   gst_clear_object (&quad->device);
   g_free (quad);
@@ -380,7 +358,7 @@ gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
     ID3D11DepthStencilView * dsv, ID3D11BlendState * blend,
     gfloat blend_factor[4])
 {
-  ID3D11DeviceContext *context_handle;
+  ID3D11DeviceContext *context;
   UINT offsets = 0;
   ID3D11ShaderResourceView *clear_view[GST_VIDEO_MAX_PLANES] = { NULL, };
   ID3D11BlendState *blend_state = blend;
@@ -391,43 +369,36 @@ gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
   g_return_val_if_fail (rtv != NULL, FALSE);
   g_return_val_if_fail (num_rtv <= GST_VIDEO_MAX_PLANES, FALSE);
 
-  context_handle = gst_d3d11_device_get_device_context_handle (quad->device);
+  context = gst_d3d11_device_get_device_context_handle (quad->device);
 
-  ID3D11DeviceContext_IASetPrimitiveTopology (context_handle,
-      D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  ID3D11DeviceContext_IASetInputLayout (context_handle, quad->layout);
-  ID3D11DeviceContext_IASetVertexBuffers (context_handle,
-      0, 1, &quad->vertex_buffer, &quad->vertex_stride, &offsets);
-  ID3D11DeviceContext_IASetIndexBuffer (context_handle,
-      quad->index_buffer, quad->index_format, 0);
+  context->IASetPrimitiveTopology (D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  context->IASetInputLayout (quad->layout);
+  context->IASetVertexBuffers (0, 1, &quad->vertex_buffer, &quad->vertex_stride,
+      &offsets);
+  context->IASetIndexBuffer (quad->index_buffer, quad->index_format, 0);
 
   if (quad->sampler)
-    ID3D11DeviceContext_PSSetSamplers (context_handle, 0, 1, &quad->sampler);
-  ID3D11DeviceContext_VSSetShader (context_handle, quad->vs, NULL, 0);
-  ID3D11DeviceContext_PSSetShader (context_handle, quad->ps, NULL, 0);
-  ID3D11DeviceContext_RSSetViewports (context_handle, num_viewport, viewport);
+    context->PSSetSamplers (0, 1, &quad->sampler);
+  context->VSSetShader (quad->vs, NULL, 0);
+  context->PSSetShader (quad->ps, NULL, 0);
+  context->RSSetViewports (num_viewport, viewport);
 
   if (quad->const_buffer)
-    ID3D11DeviceContext_PSSetConstantBuffers (context_handle,
-        0, 1, &quad->const_buffer);
+    context->PSSetConstantBuffers (0, 1, &quad->const_buffer);
 
   if (srv)
-    ID3D11DeviceContext_PSSetShaderResources (context_handle, 0, num_srv, srv);
-  ID3D11DeviceContext_OMSetRenderTargets (context_handle, num_rtv, rtv, dsv);
+    context->PSSetShaderResources (0, num_srv, srv);
+  context->OMSetRenderTargets (num_rtv, rtv, dsv);
   if (!blend_state)
     blend_state = quad->blend;
-  ID3D11DeviceContext_OMSetBlendState (context_handle,
-      blend_state, blend_factor, 0xffffffff);
-  ID3D11DeviceContext_OMSetDepthStencilState (context_handle,
-      quad->depth_stencil, 1);
+  context->OMSetBlendState (blend_state, blend_factor, 0xffffffff);
+  context->OMSetDepthStencilState (quad->depth_stencil, 1);
 
-  ID3D11DeviceContext_DrawIndexed (context_handle, quad->index_count, 0, 0);
+  context->DrawIndexed (quad->index_count, 0, 0);
 
-  if (srv) {
-    ID3D11DeviceContext_PSSetShaderResources (context_handle,
-        0, num_srv, clear_view);
-  }
-  ID3D11DeviceContext_OMSetRenderTargets (context_handle, 0, NULL, NULL);
+  if (srv)
+    context->PSSetShaderResources (0, num_srv, clear_view);
+  context->OMSetRenderTargets (0, NULL, NULL);
 
   return TRUE;
 }

@@ -22,11 +22,18 @@
 #endif
 
 #include "gstd3d11videoprocessor.h"
+#include "gstd3d11pluginutils.h"
 
 #include <string.h>
 
+/* *INDENT-OFF* */
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_video_processor_debug);
 #define GST_CAT_DEFAULT gst_d3d11_video_processor_debug
+
+G_END_DECLS
+/* *INDENT-ON* */
 
 #if (GST_D3D11_HEADER_VERSION >= 1 && GST_D3D11_DXGI_HEADER_VERSION >= 4)
 #define HAVE_VIDEO_CONTEXT_ONE
@@ -64,23 +71,23 @@ gst_d3d11_video_processor_new (GstD3D11Device * device, guint in_width,
   ID3D11Device *device_handle;
   ID3D11DeviceContext *context_handle;
   HRESULT hr;
-  D3D11_VIDEO_PROCESSOR_CONTENT_DESC desc = { 0, };
+  D3D11_VIDEO_PROCESSOR_CONTENT_DESC desc;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+
+  memset (&desc, 0, sizeof (desc));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
 
   self = g_new0 (GstD3D11VideoProcessor, 1);
-  self->device = gst_object_ref (device);
+  self->device = (GstD3D11Device *) gst_object_ref (device);
 
-  hr = ID3D11Device_QueryInterface (device_handle,
-      &IID_ID3D11VideoDevice, (void **) &self->video_device);
+  hr = device_handle->QueryInterface (IID_PPV_ARGS (&self->video_device));
   if (!gst_d3d11_result (hr, device))
     goto fail;
 
-  hr = ID3D11DeviceContext_QueryInterface (context_handle,
-      &IID_ID3D11VideoContext, (void **) &self->video_context);
+  hr = context_handle->QueryInterface (IID_PPV_ARGS (&self->video_context));
   if (!gst_d3d11_result (hr, device))
     goto fail;
 
@@ -93,38 +100,36 @@ gst_d3d11_video_processor_new (GstD3D11Device * device, guint in_width,
   /* TODO: make option for this */
   desc.Usage = D3D11_VIDEO_USAGE_PLAYBACK_NORMAL;
 
-  hr = ID3D11VideoDevice_CreateVideoProcessorEnumerator (self->video_device,
-      &desc, &self->enumerator);
+  hr = self->video_device->CreateVideoProcessorEnumerator (&desc,
+      &self->enumerator);
   if (!gst_d3d11_result (hr, device))
     goto fail;
 #ifdef HAVE_VIDEO_CONTEXT_ONE
-  hr = ID3D11VideoContext_QueryInterface (self->enumerator,
-      &IID_ID3D11VideoProcessorEnumerator1, (void **) &self->enumerator1);
+  hr = self->enumerator->QueryInterface (IID_PPV_ARGS (&self->enumerator1));
   if (gst_d3d11_result (hr, device)) {
     GST_DEBUG ("ID3D11VideoProcessorEnumerator1 interface available");
   }
 #endif
 
-  hr = ID3D11VideoProcessorEnumerator_GetVideoProcessorCaps (self->enumerator,
-      &self->processor_caps);
+  hr = self->enumerator->GetVideoProcessorCaps (&self->processor_caps);
   if (!gst_d3d11_result (hr, device))
     goto fail;
 
-  hr = ID3D11VideoDevice_CreateVideoProcessor (self->video_device,
-      self->enumerator, 0, &self->processor);
+  hr = self->video_device->CreateVideoProcessor (self->enumerator, 0,
+      &self->processor);
   if (!gst_d3d11_result (hr, device))
     goto fail;
 
 #ifdef HAVE_VIDEO_CONTEXT_ONE
-  hr = ID3D11VideoContext_QueryInterface (self->video_context,
-      &IID_ID3D11VideoContext1, (void **) &self->video_context1);
+  hr = self->video_context->
+      QueryInterface (IID_PPV_ARGS (&self->video_context1));
   if (gst_d3d11_result (hr, device)) {
     GST_DEBUG ("ID3D11VideoContext1 interface available");
   }
 #endif
 #ifdef HAVE_VIDEO_CONTEXT_TWO
-  hr = ID3D11VideoContext_QueryInterface (self->video_context,
-      &IID_ID3D11VideoContext2, (void **) &self->video_context2);
+  hr = self->video_context->
+      QueryInterface (IID_PPV_ARGS (&self->video_context2));
   if (gst_d3d11_result (hr, device)) {
     GST_DEBUG ("ID3D11VideoContext2 interface available");
   }
@@ -133,8 +138,8 @@ gst_d3d11_video_processor_new (GstD3D11Device * device, guint in_width,
   /* Setting up default options */
   gst_d3d11_device_lock (self->device);
   /* We don't want auto processing by driver */
-  ID3D11VideoContext_VideoProcessorSetStreamAutoProcessingMode
-      (self->video_context, self->processor, 0, FALSE);
+  self->video_context->VideoProcessorSetStreamAutoProcessingMode
+      (self->processor, 0, FALSE);
   gst_d3d11_device_unlock (self->device);
 
   return self;
@@ -150,25 +155,18 @@ gst_d3d11_video_processor_free (GstD3D11VideoProcessor * processor)
 {
   g_return_if_fail (processor != NULL);
 
-  if (processor->video_device)
-    ID3D11VideoDevice_Release (processor->video_device);
-  if (processor->video_context)
-    ID3D11VideoContext_Release (processor->video_context);
+  GST_D3D11_CLEAR_COM (processor->video_device);
+  GST_D3D11_CLEAR_COM (processor->video_context);
 #ifdef HAVE_VIDEO_CONTEXT_ONE
-  if (processor->video_context1)
-    ID3D11VideoContext1_Release (processor->video_context1);
+  GST_D3D11_CLEAR_COM (processor->video_context1);
 #endif
 #ifdef HAVE_VIDEO_CONTEXT_TWO
-  if (processor->video_context2)
-    ID3D11VideoContext2_Release (processor->video_context2);
+  GST_D3D11_CLEAR_COM (processor->video_context2);
 #endif
-  if (processor->processor)
-    ID3D11VideoProcessor_Release (processor->processor);
-  if (processor->enumerator)
-    ID3D11VideoProcessorEnumerator_Release (processor->enumerator);
+  GST_D3D11_CLEAR_COM (processor->processor);
+  GST_D3D11_CLEAR_COM (processor->enumerator);
 #ifdef HAVE_VIDEO_CONTEXT_ONE
-  if (processor->enumerator1)
-    ID3D11VideoProcessorEnumerator1_Release (processor->enumerator1);
+  GST_D3D11_CLEAR_COM (processor->enumerator1);
 #endif
 
   gst_clear_object (&processor->device);
@@ -182,8 +180,7 @@ gst_d3d11_video_processor_supports_format (GstD3D11VideoProcessor *
   HRESULT hr;
   UINT flag = 0;
 
-  hr = ID3D11VideoProcessorEnumerator_CheckVideoProcessorFormat
-      (self->enumerator, format, &flag);
+  hr = self->enumerator->CheckVideoProcessorFormat (format, &flag);
 
   if (!gst_d3d11_result (hr, self->device))
     return FALSE;
@@ -281,8 +278,8 @@ gst_d3d11_video_processor_set_input_color_space (GstD3D11VideoProcessor *
 
   video_processor_color_space_from_gst (processor, color, &color_space);
 
-  ID3D11VideoContext_VideoProcessorSetStreamColorSpace
-      (processor->video_context, processor->processor, 0, &color_space);
+  processor->video_context->VideoProcessorSetStreamColorSpace
+      (processor->processor, 0, &color_space);
 
   return TRUE;
 }
@@ -298,8 +295,8 @@ gst_d3d11_video_processor_set_output_color_space (GstD3D11VideoProcessor *
 
   video_processor_color_space_from_gst (processor, color, &color_space);
 
-  ID3D11VideoContext_VideoProcessorSetOutputColorSpace
-      (processor->video_context, processor->processor, &color_space);
+  processor->video_context->VideoProcessorSetOutputColorSpace
+      (processor->processor, &color_space);
 
   return TRUE;
 }
@@ -319,9 +316,8 @@ gst_d3d11_video_processor_check_format_conversion (GstD3D11VideoProcessor *
   if (!processor->enumerator1)
     return FALSE;
 
-  hr = ID3D11VideoProcessorEnumerator1_CheckVideoProcessorFormatConversion
-      (processor->enumerator1, in_format, in_color_space, out_format,
-      out_color_space, &supported);
+  hr = processor->enumerator1->CheckVideoProcessorFormatConversion
+      (in_format, in_color_space, out_format, out_color_space, &supported);
   if (!gst_d3d11_result (hr, processor->device)) {
     GST_WARNING ("Failed to check conversion support");
     return FALSE;
@@ -341,8 +337,8 @@ gst_d3d11_video_processor_set_input_dxgi_color_space (GstD3D11VideoProcessor *
 
 #ifdef HAVE_VIDEO_CONTEXT_ONE
   if (processor->video_context1) {
-    ID3D11VideoContext1_VideoProcessorSetStreamColorSpace1
-        (processor->video_context1, processor->processor, 0, color_space);
+    processor->video_context1->VideoProcessorSetStreamColorSpace1
+        (processor->processor, 0, color_space);
     return TRUE;
   }
 #endif
@@ -358,8 +354,8 @@ gst_d3d11_video_processor_set_output_dxgi_color_space (GstD3D11VideoProcessor *
 
 #ifdef HAVE_VIDEO_CONTEXT_ONE
   if (processor->video_context1) {
-    ID3D11VideoContext1_VideoProcessorSetOutputColorSpace1
-        (processor->video_context1, processor->processor, color_space);
+    processor->video_context1->VideoProcessorSetOutputColorSpace1
+        (processor->processor, color_space);
     return TRUE;
   }
 #endif
@@ -383,14 +379,13 @@ gst_d3d11_video_processor_set_input_hdr10_metadata (GstD3D11VideoProcessor *
   if (processor->video_context2 && (processor->processor_caps.FeatureCaps &
           FEATURE_CAPS_METADATA_HDR10)) {
     if (hdr10_meta) {
-      ID3D11VideoContext2_VideoProcessorSetStreamHDRMetaData
-          (processor->video_context2, processor->processor, 0,
+      processor->video_context2->VideoProcessorSetStreamHDRMetaData
+          (processor->processor, 0,
           DXGI_HDR_METADATA_TYPE_HDR10, sizeof (DXGI_HDR_METADATA_HDR10),
           hdr10_meta);
     } else {
-      ID3D11VideoContext2_VideoProcessorSetStreamHDRMetaData
-          (processor->video_context2, processor->processor, 0,
-          DXGI_HDR_METADATA_TYPE_NONE, 0, NULL);
+      processor->video_context2->VideoProcessorSetStreamHDRMetaData
+          (processor->processor, 0, DXGI_HDR_METADATA_TYPE_NONE, 0, NULL);
     }
 
     return TRUE;
@@ -410,14 +405,12 @@ gst_d3d11_video_processor_set_output_hdr10_metadata (GstD3D11VideoProcessor *
   if (processor->video_context2 && (processor->processor_caps.FeatureCaps &
           FEATURE_CAPS_METADATA_HDR10)) {
     if (hdr10_meta) {
-      ID3D11VideoContext2_VideoProcessorSetOutputHDRMetaData
-          (processor->video_context2, processor->processor,
-          DXGI_HDR_METADATA_TYPE_HDR10, sizeof (DXGI_HDR_METADATA_HDR10),
-          hdr10_meta);
+      processor->video_context2->VideoProcessorSetOutputHDRMetaData
+          (processor->processor, DXGI_HDR_METADATA_TYPE_HDR10,
+          sizeof (DXGI_HDR_METADATA_HDR10), hdr10_meta);
     } else {
-      ID3D11VideoContext2_VideoProcessorSetOutputHDRMetaData
-          (processor->video_context2, processor->processor,
-          DXGI_HDR_METADATA_TYPE_NONE, 0, NULL);
+      processor->video_context2->VideoProcessorSetOutputHDRMetaData
+          (processor->processor, DXGI_HDR_METADATA_TYPE_NONE, 0, NULL);
     }
 
     return TRUE;
@@ -440,8 +433,8 @@ gst_d3d11_video_processor_create_input_view (GstD3D11VideoProcessor * processor,
   g_return_val_if_fail (resource != NULL, FALSE);
   g_return_val_if_fail (view != NULL, FALSE);
 
-  hr = ID3D11VideoDevice_CreateVideoProcessorInputView (processor->video_device,
-      resource, processor->enumerator, desc, view);
+  hr = processor->video_device->CreateVideoProcessorInputView (resource,
+      processor->enumerator, desc, view);
   if (!gst_d3d11_result (hr, processor->device))
     return FALSE;
 
@@ -468,8 +461,8 @@ gst_d3d11_video_processor_create_output_view (GstD3D11VideoProcessor *
   g_return_val_if_fail (resource != NULL, FALSE);
   g_return_val_if_fail (view != NULL, FALSE);
 
-  hr = ID3D11VideoDevice_CreateVideoProcessorOutputView
-      (processor->video_device, resource, processor->enumerator, desc, view);
+  hr = processor->video_device->CreateVideoProcessorOutputView
+      (resource, processor->enumerator, desc, view);
   if (!gst_d3d11_result (hr, processor->device))
     return FALSE;
 
@@ -482,26 +475,6 @@ gst_d3d11_video_processor_get_output_view (GstD3D11VideoProcessor *
 {
   return gst_d3d11_memory_get_processor_output_view (mem,
       processor->video_device, processor->enumerator);
-}
-
-void
-gst_d3d11_video_processor_input_view_release (ID3D11VideoProcessorInputView *
-    view)
-{
-  if (!view)
-    return;
-
-  ID3D11VideoProcessorInputView_Release (view);
-}
-
-void
-gst_d3d11_video_processor_output_view_release (ID3D11VideoProcessorOutputView *
-    view)
-{
-  if (!view)
-    return;
-
-  ID3D11VideoProcessorOutputView_Release (view);
 }
 
 gboolean
@@ -530,6 +503,8 @@ gst_d3d11_video_processor_render_unlocked (GstD3D11VideoProcessor * processor,
 {
   HRESULT hr;
   D3D11_VIDEO_PROCESSOR_STREAM stream = { 0, };
+  ID3D11VideoContext *context;
+  ID3D11VideoProcessor *proc;
 
   g_return_val_if_fail (processor != NULL, FALSE);
   g_return_val_if_fail (in_view != NULL, FALSE);
@@ -537,29 +512,24 @@ gst_d3d11_video_processor_render_unlocked (GstD3D11VideoProcessor * processor,
 
   stream.Enable = TRUE;
   stream.pInputSurface = in_view;
+  context = processor->video_context;
+  proc = processor->processor;
 
   if (in_rect) {
-    ID3D11VideoContext_VideoProcessorSetStreamSourceRect
-        (processor->video_context, processor->processor, 0, TRUE, in_rect);
+    context->VideoProcessorSetStreamSourceRect (proc, 0, TRUE, in_rect);
   } else {
-    ID3D11VideoContext_VideoProcessorSetStreamSourceRect
-        (processor->video_context, processor->processor, 0, FALSE, NULL);
+    context->VideoProcessorSetStreamSourceRect (proc, 0, FALSE, NULL);
   }
 
   if (out_rect) {
-    ID3D11VideoContext_VideoProcessorSetStreamDestRect
-        (processor->video_context, processor->processor, 0, TRUE, out_rect);
-    ID3D11VideoContext_VideoProcessorSetOutputTargetRect
-        (processor->video_context, processor->processor, TRUE, out_rect);
+    context->VideoProcessorSetStreamDestRect (proc, 0, TRUE, out_rect);
+    context->VideoProcessorSetOutputTargetRect (proc, TRUE, out_rect);
   } else {
-    ID3D11VideoContext_VideoProcessorSetStreamDestRect
-        (processor->video_context, processor->processor, 0, FALSE, NULL);
-    ID3D11VideoContext_VideoProcessorSetOutputTargetRect
-        (processor->video_context, processor->processor, FALSE, NULL);
+    context->VideoProcessorSetStreamDestRect (proc, 0, FALSE, NULL);
+    context->VideoProcessorSetOutputTargetRect (proc, FALSE, NULL);
   }
 
-  hr = ID3D11VideoContext_VideoProcessorBlt (processor->video_context,
-      processor->processor, out_view, 0, 1, &stream);
+  hr = context->VideoProcessorBlt (proc, out_view, 0, 1, &stream);
   if (!gst_d3d11_result (hr, processor->device))
     return FALSE;
 

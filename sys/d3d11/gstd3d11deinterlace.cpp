@@ -660,15 +660,8 @@ gst_d3d11_deinterlace_reset (GstD3D11Deinterlace * self)
     self->fallback_out_pool = NULL;
   }
 
-  if (self->video_enum) {
-    self->video_enum->Release ();
-    self->video_enum = NULL;
-  }
-
-  if (self->video_proc) {
-    self->video_proc->Release ();
-    self->video_proc = NULL;
-  }
+  GST_D3D11_CLEAR_COM (self->video_enum);
+  GST_D3D11_CLEAR_COM (self->video_proc);
 
   gst_d3d11_deinterlace_reset_history (self);
   self->default_buffer_duration = GST_CLOCK_TIME_NONE;
@@ -681,15 +674,8 @@ gst_d3d11_deinterlace_close (GstD3D11Deinterlace * self)
 {
   gst_d3d11_deinterlace_reset (self);
 
-  if (self->video_device) {
-    self->video_device->Release ();
-    self->video_device = NULL;
-  }
-
-  if (self->video_context) {
-    self->video_context->Release ();
-    self->video_context = NULL;
-  }
+  GST_D3D11_CLEAR_COM (self->video_device);
+  GST_D3D11_CLEAR_COM (self->video_context);
 
   gst_clear_object (&self->device);
 }

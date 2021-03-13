@@ -26,7 +26,7 @@
 #include "gstd3d11videosink.h"
 #include "gstd3d11upload.h"
 #include "gstd3d11download.h"
-#include "gstd3d11colorconvert.h"
+#include "gstd3d11convert.h"
 #include "gstd3d11videosinkbin.h"
 #include "gstd3d11shader.h"
 #include "gstd3d11compositor.h"
@@ -47,7 +47,7 @@
 
 GST_DEBUG_CATEGORY (gst_d3d11_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_shader_debug);
-GST_DEBUG_CATEGORY (gst_d3d11_colorconverter_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_converter_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_plugin_utils_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_format_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_device_debug);
@@ -84,8 +84,8 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_debug, "d3d11", 0, "direct3d 11 plugin");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_shader_debug,
       "d3d11shader", 0, "d3d11shader");
-  GST_DEBUG_CATEGORY_INIT (gst_d3d11_colorconverter_debug,
-      "d3d11colorconverter", 0, "d3d11colorconverter");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_converter_debug,
+      "d3d11converter", 0, "d3d11converter");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_plugin_utils_debug,
       "d3d11pluginutils", 0, "d3d11 plugin utility functions");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_overlay_compositor_debug,

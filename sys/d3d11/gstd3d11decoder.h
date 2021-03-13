@@ -72,8 +72,8 @@ GstD3D11Decoder * gst_d3d11_decoder_new (GstD3D11Device * device);
 gboolean          gst_d3d11_decoder_open (GstD3D11Decoder * decoder,
                                           GstD3D11Codec codec,
                                           GstVideoInfo * info,
-                                          guint codec_width,
-                                          guint codec_height,
+                                          gint codec_width,
+                                          gint codec_height,
                                           guint dpb_size,
                                           const GUID ** decoder_profiles,
                                           guint profile_size);
