@@ -2,6 +2,8 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/controller/gstinterpolationcontrolsource.h>
+#include <gst/controller/gstdirectcontrolbinding.h>
 
 #define CHANGE_DIR_WITH_EVENT 0
 
@@ -9,6 +11,7 @@ static gint num_buffers = 50;
 static gboolean camera = FALSE;
 static gboolean randomcb = FALSE;
 static gboolean randomdir = FALSE;
+static gboolean randomsharpen = FALSE;
 
 static GOptionEntry entries[] = {
   {"num-buffers", 'n', 0, G_OPTION_ARG_INT, &num_buffers,
@@ -16,9 +19,11 @@ static GOptionEntry entries[] = {
   {"camera", 'c', 0, G_OPTION_ARG_NONE, &camera, "Use v4l2src as video source",
       NULL},
   {"random-cb", 'r', 0, G_OPTION_ARG_NONE, &randomcb,
-      "Change colorbalance randomly every second", NULL},
+      "Change colorbalance randomly every second (if supported)", NULL},
   {"random-dir", 'd', 0, G_OPTION_ARG_NONE, &randomdir,
       "Change video direction randomly every second (if supported)", NULL},
+  {"random-sharpen", 's', 0, G_OPTION_ARG_NONE, &randomsharpen,
+      "Change sharpen filter randombly every second (if supported)", NULL},
   {NULL},
 };
 
@@ -30,6 +35,8 @@ struct _app
   GstElement *vpp;
   GstElement *caps;
   GMutex mutex;
+
+  GstControlSource *sharpen;
 };
 
 static GstBusSyncReply
@@ -173,7 +180,8 @@ build_pipeline (struct _app *app)
   const gchar *source = camera ? "v4l2src" : "videotestsrc";
 
   g_string_printf (cmd, "%s name=src ! tee name=t "
-      "t. ! queue ! vapostproc name=vpp ! capsfilter name=caps ! autovideosink "
+      "t. ! queue ! vapostproc name=vpp ! capsfilter name=caps ! "
+      "fpsdisplaysink video-sink=autovideosink "
       "t. ! queue ! vapostproc ! timeoverlay ! autovideosink", source);
 
   app->pipeline = gst_parse_launch (cmd->str, &err);
@@ -191,7 +199,7 @@ build_pipeline (struct _app *app)
   }
 
   app->vpp = gst_bin_get_by_name (GST_BIN (app->pipeline), "vpp");
-  if (!randomcb && !randomdir)
+  if (!randomcb && !randomdir && !randomsharpen)
     config_vpp (app->vpp);
 
   app->caps = gst_bin_get_by_name (GST_BIN (app->pipeline), "caps");
@@ -271,6 +279,32 @@ change_dir_randomly (gpointer data)
   return G_SOURCE_CONTINUE;
 }
 
+static inline GParamSpec *
+vpp_has_sharpen (GstElement * vpp)
+{
+  GObjectClass *g_class = G_OBJECT_GET_CLASS (vpp);
+  return g_object_class_find_property (g_class, "sharpen");
+}
+
+static gboolean
+change_sharpen_randomly (gpointer data)
+{
+  struct _app *app = data;
+  GParamSpec *pspec;
+  gdouble value;
+
+  pspec = vpp_has_sharpen (app->vpp);
+  if (!pspec)
+    return G_SOURCE_REMOVE;
+  value = g_random_double_range (G_PARAM_SPEC_FLOAT (pspec)->minimum,
+      G_PARAM_SPEC_FLOAT (pspec)->maximum);
+
+  gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE
+      (app->sharpen), GST_SECOND, value);
+
+  return G_SOURCE_CONTINUE;
+}
+
 static gboolean
 parse_arguments (int *argc, char ***argv)
 {
@@ -318,6 +352,19 @@ main (int argc, char **argv)
     g_timeout_add_seconds (1, change_dir_randomly, &app);
   }
 
+  if (randomsharpen && vpp_has_sharpen (app.vpp)) {
+    GstControlBinding *bind;
+
+    app.sharpen = gst_interpolation_control_source_new ();
+    bind = gst_direct_control_binding_new_absolute (GST_OBJECT (app.vpp),
+        "sharpen", app.sharpen);
+    gst_object_add_control_binding (GST_OBJECT (app.vpp), bind);
+    g_object_set (app.sharpen, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+
+    change_sharpen_randomly (&app);
+    g_timeout_add_seconds (1, change_sharpen_randomly, &app);
+  }
+
   gst_element_set_state (app.pipeline, GST_STATE_PLAYING);
 
   g_main_loop_run (app.loop);
@@ -335,6 +382,7 @@ main (int argc, char **argv)
   gst_clear_object (&app.caps);
   gst_clear_object (&app.vpp);
   gst_clear_object (&app.pipeline);
+  gst_clear_object (&app.sharpen);
 
 gst_failed:
   g_mutex_clear (&app.mutex);
