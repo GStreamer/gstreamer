@@ -103,10 +103,14 @@ struct _GstD3D11DevicePrivate
   ID3D11Device *device;
   ID3D11DeviceContext *device_context;
 
+  ID3D11VideoDevice *video_device;
+  ID3D11VideoContext *video_context;
+
   IDXGIFactory1 *factory;
   GstD3D11Format format_table[GST_D3D11_N_FORMATS];
 
   GRecMutex extern_lock;
+  GMutex resource_lock;
 
 #if HAVE_D3D11SDKLAYERS_H
   ID3D11Debug *d3d11_debug;
@@ -409,6 +413,7 @@ gst_d3d11_device_init (GstD3D11Device * self)
   priv->adapter = DEFAULT_ADAPTER;
 
   g_rec_mutex_init (&priv->extern_lock);
+  g_mutex_init (&priv->resource_lock);
 
   self->priv = priv;
 }
@@ -894,6 +899,16 @@ gst_d3d11_device_dispose (GObject * object)
 
   GST_LOG_OBJECT (self, "dispose");
 
+  if (priv->video_device) {
+    ID3D11VideoDevice_Release (priv->video_device);
+    priv->video_device = NULL;
+  }
+
+  if (priv->video_context) {
+    ID3D11VideoContext_Release (priv->video_context);
+    priv->video_context = NULL;
+  }
+
   if (priv->device) {
     ID3D11Device_Release (priv->device);
     priv->device = NULL;
@@ -952,6 +967,7 @@ gst_d3d11_device_finalize (GObject * object)
   GST_LOG_OBJECT (self, "finalize");
 
   g_rec_mutex_clear (&priv->extern_lock);
+  g_mutex_clear (&priv->resource_lock);
   g_free (priv->description);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -1044,6 +1060,72 @@ gst_d3d11_device_get_dxgi_factory_handle (GstD3D11Device * device)
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
   return device->priv->factory;
+}
+
+/**
+ * gst_d3d11_device_get_video_device_handle:
+ * @device: a #GstD3D11Device
+ *
+ * Used for various D3D11 APIs directly. Caller must not destroy returned device
+ * object.
+ *
+ * Returns: (nullable) (transfer none) : the ID3D11VideoDevice handle or %NULL
+ * if ID3D11VideoDevice is unavailable.
+ *
+ * Since: 1.20
+ */
+ID3D11VideoDevice *
+gst_d3d11_device_get_video_device_handle (GstD3D11Device * device)
+{
+  GstD3D11DevicePrivate *priv;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+
+  priv = device->priv;
+  g_mutex_lock (&priv->resource_lock);
+  if (!priv->video_device) {
+    HRESULT hr;
+
+    hr = ID3D11Device_QueryInterface (priv->device, &IID_ID3D11VideoDevice,
+        (void **) &priv->video_device);
+    gst_d3d11_result (hr, device);
+  }
+  g_mutex_unlock (&priv->resource_lock);
+
+  return priv->video_device;
+}
+
+/**
+ * gst_d3d11_device_get_video_context_handle:
+ * @device: a #GstD3D11Device
+ *
+ * Used for various D3D11 APIs directly. Caller must not destroy returned device
+ * object.
+ *
+ * Returns: (nullable) (transfer none): the ID3D11VideoContext handle or %NULL
+ * if ID3D11VideoContext is unavailable.
+ *
+ * Since: 1.20
+ */
+ID3D11VideoContext *
+gst_d3d11_device_get_video_context_handle (GstD3D11Device * device)
+{
+  GstD3D11DevicePrivate *priv;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+
+  priv = device->priv;
+  g_mutex_lock (&priv->resource_lock);
+  if (!priv->video_context) {
+    HRESULT hr;
+
+    hr = ID3D11DeviceContext_QueryInterface (priv->device_context,
+        &IID_ID3D11VideoContext, (void **) &priv->video_context);
+    gst_d3d11_result (hr, device);
+  }
+  g_mutex_unlock (&priv->resource_lock);
+
+  return priv->video_context;
 }
 
 /**

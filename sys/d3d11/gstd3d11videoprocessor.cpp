@@ -68,28 +68,35 @@ gst_d3d11_video_processor_new (GstD3D11Device * device, guint in_width,
     guint in_height, guint out_width, guint out_height)
 {
   GstD3D11VideoProcessor *self;
-  ID3D11Device *device_handle;
-  ID3D11DeviceContext *context_handle;
+  ID3D11VideoDevice *video_device;
+  ID3D11VideoContext *video_context;
   HRESULT hr;
   D3D11_VIDEO_PROCESSOR_CONTENT_DESC desc;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
-  memset (&desc, 0, sizeof (desc));
+  video_device = gst_d3d11_device_get_video_device_handle (device);
+  if (!video_device) {
+    GST_WARNING_OBJECT (device, "ID3D11VideoDevice is not available");
+    return NULL;
+  }
 
-  device_handle = gst_d3d11_device_get_device_handle (device);
-  context_handle = gst_d3d11_device_get_device_context_handle (device);
+  video_context = gst_d3d11_device_get_video_context_handle (device);
+  if (!video_context) {
+    GST_WARNING_OBJECT (device, "ID3D11VideoContext is not availale");
+    return NULL;
+  }
+
+  memset (&desc, 0, sizeof (desc));
 
   self = g_new0 (GstD3D11VideoProcessor, 1);
   self->device = (GstD3D11Device *) gst_object_ref (device);
 
-  hr = device_handle->QueryInterface (IID_PPV_ARGS (&self->video_device));
-  if (!gst_d3d11_result (hr, device))
-    goto fail;
+  self->video_device = video_device;
+  video_device->AddRef ();
 
-  hr = context_handle->QueryInterface (IID_PPV_ARGS (&self->video_context));
-  if (!gst_d3d11_result (hr, device))
-    goto fail;
+  self->video_context = video_context;
+  video_context->AddRef ();
 
   /* FIXME: Add support intelace */
   desc.InputFrameFormat = D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE;

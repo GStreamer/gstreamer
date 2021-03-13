@@ -72,6 +72,12 @@ GST_D3D11_API
 IDXGIFactory1 *       gst_d3d11_device_get_dxgi_factory_handle (GstD3D11Device * device);
 
 GST_D3D11_API
+ID3D11VideoDevice *   gst_d3d11_device_get_video_device_handle (GstD3D11Device * device);
+
+GST_D3D11_API
+ID3D11VideoContext *  gst_d3d11_device_get_video_context_handle (GstD3D11Device * device);
+
+GST_D3D11_API
 void                  gst_d3d11_device_lock               (GstD3D11Device * device);
 
 GST_D3D11_API

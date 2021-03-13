@@ -150,43 +150,31 @@ gst_d3d11_decoder_constructed (GObject * object)
 {
   GstD3D11Decoder *self = GST_D3D11_DECODER (object);
   GstD3D11DecoderPrivate *priv = self->priv;
-  HRESULT hr;
-  ID3D11Device *device_handle;
-  ID3D11DeviceContext *device_context_handle;
+  ID3D11VideoDevice *video_device;
+  ID3D11VideoContext *video_context;
 
   if (!priv->device) {
     GST_ERROR_OBJECT (self, "No D3D11Device available");
     return;
   }
 
-  device_handle = gst_d3d11_device_get_device_handle (priv->device);
-  device_context_handle =
-      gst_d3d11_device_get_device_context_handle (priv->device);
-
-  hr = device_handle->QueryInterface (IID_PPV_ARGS (&priv->video_device));
-  if (!gst_d3d11_result (hr, priv->device) || !priv->video_device) {
-    GST_WARNING_OBJECT (self, "Cannot create VideoDevice Object: 0x%x",
-        (guint) hr);
-    priv->video_device = NULL;
-
+  video_device = gst_d3d11_device_get_video_device_handle (priv->device);
+  if (!video_device) {
+    GST_ERROR_OBJECT (self, "ID3D11VideoDevice is not available");
     return;
   }
 
-  hr = device_context_handle->
-      QueryInterface (IID_PPV_ARGS (&priv->video_context));
-  if (!gst_d3d11_result (hr, priv->device) || !priv->video_context) {
-    GST_WARNING_OBJECT (self, "Cannot create VideoContext Object: 0x%x",
-        (guint) hr);
-    priv->video_context = NULL;
-
-    goto fail;
+  video_context = gst_d3d11_device_get_video_context_handle (priv->device);
+  if (!video_context) {
+    GST_ERROR_OBJECT (self, "ID3D11VideoContext is not available");
+    return;
   }
 
-  return;
+  priv->video_device = video_device;
+  video_device->AddRef ();
 
-fail:
-  GST_D3D11_CLEAR_COM (priv->video_device);
-  GST_D3D11_CLEAR_COM (priv->video_context);
+  priv->video_context = video_context;
+  video_context->AddRef ();
 
   return;
 }

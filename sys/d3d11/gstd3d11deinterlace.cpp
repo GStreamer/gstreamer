@@ -603,27 +603,26 @@ gst_d3d11_deinterlace_set_context (GstElement * element, GstContext * context)
 static gboolean
 gst_d3d11_deinterlace_open (GstD3D11Deinterlace * self)
 {
-  HRESULT hr;
-  ID3D11Device *device_handle;
-  ID3D11DeviceContext *context_handle;
-  /* *INDENT-OFF* */
-  ComPtr<ID3D11VideoDevice> video_device;
-  ComPtr<ID3D11VideoContext> video_context;
-  /* *INDENT-ON* */
+  ID3D11VideoDevice *video_device;
+  ID3D11VideoContext *video_context;
 
-  device_handle = gst_d3d11_device_get_device_handle (self->device);
-  context_handle = gst_d3d11_device_get_device_context_handle (self->device);
-
-  hr = device_handle->QueryInterface (IID_PPV_ARGS (&video_device));
-  if (!gst_d3d11_result (hr, self->device))
+  video_device = gst_d3d11_device_get_video_device_handle (self->device);
+  if (!video_device) {
+    GST_ERROR_OBJECT (self, "ID3D11VideoDevice is not availale");
     return FALSE;
+  }
 
-  hr = context_handle->QueryInterface (IID_PPV_ARGS (&video_context));
-  if (!gst_d3d11_result (hr, self->device))
+  video_context = gst_d3d11_device_get_video_context_handle (self->device);
+  if (!video_context) {
+    GST_ERROR_OBJECT (self, "ID3D11VideoContext is not available");
     return FALSE;
+  }
 
-  self->video_device = video_device.Detach ();
-  self->video_context = video_context.Detach ();
+  self->video_device = video_device;
+  video_device->AddRef ();
+
+  self->video_context = video_context;
+  video_context->AddRef ();
 
   return TRUE;
 }
