@@ -990,6 +990,16 @@ static void
 gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
 {
   GstVaVpp *self = GST_VA_VPP (trans);
+  GstClockTime ts, stream_time;
+
+  ts = GST_BUFFER_TIMESTAMP (inbuf);
+  stream_time =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, ts);
+
+  GST_TRACE_OBJECT (self, "sync to %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (GST_OBJECT (self), stream_time);
 
   if (g_atomic_int_get (&self->rebuild_filters) == TRUE) {
     gst_va_filter_drop_filter_buffers (self->filter);
