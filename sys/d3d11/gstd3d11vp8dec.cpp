@@ -66,10 +66,6 @@ enum
   PROP_VENDOR_ID,
 };
 
-/* copied from d3d11.h since mingw header doesn't define them */
-DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_VP8_VLD,
-    0x90b899ea, 0x3a62, 0x4705, 0x88, 0xb3, 0x8d, 0xf0, 0x4b, 0x27, 0x44, 0xe7);
-
 /* reference list 4 + 4 margin */
 #define NUM_OUTPUT_VIEW 8
 
@@ -325,7 +321,6 @@ gst_d3d11_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     const GstVp8FrameHdr * frame_hdr)
 {
   GstD3D11Vp8Dec *self = GST_D3D11_VP8_DEC (decoder);
-  static const GUID *profile_guid = &GST_GUID_D3D11_DECODER_PROFILE_VP8_VLD;
   GstVideoInfo info;
 
   GST_LOG_OBJECT (self, "new sequence");
@@ -340,8 +335,7 @@ gst_d3d11_vp8_dec_new_sequence (GstVp8Decoder * decoder,
 
   gst_d3d11_decoder_reset (self->d3d11_decoder);
   if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_VP8,
-          &info, self->width, self->height,
-          NUM_OUTPUT_VIEW, &profile_guid, 1)) {
+          &info, self->width, self->height, NUM_OUTPUT_VIEW)) {
     GST_ERROR_OBJECT (self, "Failed to create decoder");
     return FALSE;
   }
@@ -858,7 +852,6 @@ gst_d3d11_vp8_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   gchar *feature_name;
   guint index = 0;
   guint i;
-  GUID profile;
   GTypeInfo type_info = {
     sizeof (GstD3D11Vp8DecClass),
     NULL,
@@ -870,7 +863,7 @@ gst_d3d11_vp8_dec_register (GstPlugin * plugin, GstD3D11Device * device,
     0,
     (GInstanceInitFunc) gst_d3d11_vp8_dec_init,
   };
-  static const GUID *profile_guid = &GST_GUID_D3D11_DECODER_PROFILE_VP8_VLD;
+  const GUID *profile_guid = NULL;
   /* values were taken from chromium. See supported_profile_helper.cc */
   GstD3D11Vp8DecResolution resolutions_to_check[] = {
     {1920, 1088}, {2560, 1440}, {3840, 2160}, {4096, 2160}, {4096, 2304}
@@ -883,13 +876,13 @@ gst_d3d11_vp8_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   DXGI_FORMAT format = DXGI_FORMAT_NV12;
 
   if (!gst_d3d11_decoder_get_supported_decoder_profile (decoder,
-          &profile_guid, 1, &profile)) {
+          GST_D3D11_CODEC_VP8, GST_VIDEO_FORMAT_NV12, &profile_guid)) {
     GST_INFO_OBJECT (device, "device does not support VP8 decoding");
     return;
   }
 
   for (i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
-    if (gst_d3d11_decoder_supports_resolution (decoder, &profile,
+    if (gst_d3d11_decoder_supports_resolution (decoder, profile_guid,
             format, resolutions_to_check[i].width,
             resolutions_to_check[i].height)) {
       max_width = resolutions_to_check[i].width;

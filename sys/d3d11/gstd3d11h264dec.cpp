@@ -96,14 +96,6 @@ enum
   PROP_VENDOR_ID,
 };
 
-/* copied from d3d11.h since mingw header doesn't define them */
-DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_H264_IDCT_FGT, 0x1b81be67, 0xa0c7,
-    0x11d3, 0xb9, 0x84, 0x00, 0xc0, 0x4f, 0x2e, 0x73, 0xc5);
-DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_NOFGT, 0x1b81be68, 0xa0c7,
-    0x11d3, 0xb9, 0x84, 0x00, 0xc0, 0x4f, 0x2e, 0x73, 0xc5);
-DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_FGT, 0x1b81be69, 0xa0c7,
-    0x11d3, 0xb9, 0x84, 0x00, 0xc0, 0x4f, 0x2e, 0x73, 0xc5);
-
 typedef struct _GstD3D11H264Dec
 {
   GstH264Decoder parent;
@@ -427,11 +419,6 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
   gint crop_width, crop_height;
   gboolean interlaced;
   gboolean modified = FALSE;
-  static const GUID *supported_profiles[] = {
-    &GST_GUID_D3D11_DECODER_PROFILE_H264_IDCT_FGT,
-    &GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_NOFGT,
-    &GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_FGT
-  };
 
   GST_LOG_OBJECT (self, "new sequence");
 
@@ -490,12 +477,6 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
       else {
         GST_FIXME_OBJECT (self, "Could not support 8bits non-4:2:0 format");
       }
-    } else if (self->bitdepth == 10) {
-      if (self->chroma_format_idc == 1)
-        self->out_format = GST_VIDEO_FORMAT_P010_10LE;
-      else {
-        GST_FIXME_OBJECT (self, "Could not support 10bits non-4:2:0 format");
-      }
     }
 
     if (self->out_format == GST_VIDEO_FORMAT_UNKNOWN) {
@@ -516,8 +497,7 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
     if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_H264,
             &info, self->coded_width, self->coded_height,
             /* Additional 4 views margin for zero-copy rendering */
-            max_dpb_size + 4,
-            supported_profiles, G_N_ELEMENTS (supported_profiles))) {
+            max_dpb_size + 4)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return FALSE;
     }
@@ -1268,7 +1248,6 @@ gst_d3d11_h264_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   guint index = 0;
   guint i;
   gboolean ret;
-  GUID profile;
   GTypeInfo type_info = {
     sizeof (GstD3D11H264DecClass),
     NULL,
@@ -1280,11 +1259,7 @@ gst_d3d11_h264_dec_register (GstPlugin * plugin, GstD3D11Device * device,
     0,
     (GInstanceInitFunc) gst_d3d11_h264_dec_init,
   };
-  static const GUID *supported_profiles[] = {
-    &GST_GUID_D3D11_DECODER_PROFILE_H264_IDCT_FGT,
-    &GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_NOFGT,
-    &GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_FGT
-  };
+  const GUID *supported_profile = NULL;
   /* values were taken from chromium. See supported_profile_helper.cc */
   GstD3D11H264DecResolution resolutions_to_check[] = {
     {1920, 1088}, {2560, 1440}, {3840, 2160}, {4096, 2160},
@@ -1297,14 +1272,16 @@ gst_d3d11_h264_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   guint resolution;
 
   ret = gst_d3d11_decoder_get_supported_decoder_profile (decoder,
-      supported_profiles, G_N_ELEMENTS (supported_profiles), &profile);
+      GST_D3D11_CODEC_H264, GST_VIDEO_FORMAT_NV12, &supported_profile);
 
   if (!ret) {
     GST_WARNING_OBJECT (device, "decoder profile unavailable");
     return;
   }
 
-  ret = gst_d3d11_decoder_supports_format (decoder, &profile, DXGI_FORMAT_NV12);
+  ret =
+      gst_d3d11_decoder_supports_format (decoder, supported_profile,
+      DXGI_FORMAT_NV12);
   if (!ret) {
     GST_FIXME_OBJECT (device, "device does not support NV12 format");
     return;
@@ -1317,7 +1294,7 @@ gst_d3d11_h264_dec_register (GstPlugin * plugin, GstD3D11Device * device,
     max_height = resolutions_to_check[0].height;
   } else {
     for (i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
-      if (gst_d3d11_decoder_supports_resolution (decoder, &profile,
+      if (gst_d3d11_decoder_supports_resolution (decoder, supported_profile,
               DXGI_FORMAT_NV12, resolutions_to_check[i].width,
               resolutions_to_check[i].height)) {
         max_width = resolutions_to_check[i].width;

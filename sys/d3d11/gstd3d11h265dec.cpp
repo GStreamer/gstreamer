@@ -66,12 +66,6 @@ enum
   PROP_VENDOR_ID,
 };
 
-/* copied from d3d11.h since mingw header doesn't define them */
-DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN,
-    0x5b11d51b, 0x2f4c, 0x4452, 0xbc, 0xc3, 0x09, 0xf2, 0xa1, 0x16, 0x0c, 0xc0);
-DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10,
-    0x107af0e0, 0xef1a, 0x4d19, 0xab, 0xa8, 0x67, 0xa1, 0x63, 0x07, 0x3d, 0x13);
-
 typedef struct _GstD3D11H265Dec
 {
   GstH265Decoder parent;
@@ -378,9 +372,6 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
   gint crop_width, crop_height;
   gboolean modified = FALSE;
-  static const GUID *main_10_guid =
-      &GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10;
-  static const GUID *main_guid = &GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN;
   GstVideoInterlaceMode interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
   GST_LOG_OBJECT (self, "new sequence");
@@ -436,7 +427,6 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
   }
 
   if (modified || !gst_d3d11_decoder_is_configured (self->d3d11_decoder)) {
-    const GUID *profile_guid = NULL;
     GstVideoInfo info;
 
     self->out_format = GST_VIDEO_FORMAT_UNKNOWN;
@@ -444,14 +434,12 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
     if (self->bitdepth == 8) {
       if (self->chroma_format_idc == 1) {
         self->out_format = GST_VIDEO_FORMAT_NV12;
-        profile_guid = main_guid;
       } else {
         GST_FIXME_OBJECT (self, "Could not support 8bits non-4:2:0 format");
       }
     } else if (self->bitdepth == 10) {
       if (self->chroma_format_idc == 1) {
         self->out_format = GST_VIDEO_FORMAT_P010_10LE;
-        profile_guid = main_10_guid;
       } else {
         GST_FIXME_OBJECT (self, "Could not support 10bits non-4:2:0 format");
       }
@@ -469,7 +457,7 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
     if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_H265,
             &info, self->coded_width, self->coded_height,
             /* Additional 4 views margin for zero-copy rendering */
-            max_dpb_size + 4, &profile_guid, 1)) {
+            max_dpb_size + 4)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return FALSE;
     }
@@ -1406,7 +1394,7 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   gchar *feature_name;
   guint index = 0;
   guint i;
-  GUID profile;
+  const GUID *profile = NULL;
   GTypeInfo type_info = {
     sizeof (GstD3D11H265DecClass),
     NULL,
@@ -1418,9 +1406,8 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
     0,
     (GInstanceInitFunc) gst_d3d11_h265_dec_init,
   };
-  static const GUID *main_10_guid =
-      &GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10;
-  static const GUID *main_guid = &GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN;
+  const GUID *main_10_guid = NULL;
+  const GUID *main_guid = NULL;
   /* values were taken from chromium.
    * Note that since chromium does not support hevc decoding, this list is
    * the combination of lists for avc and vp9.
@@ -1442,24 +1429,26 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
 
   have_main10 = gst_d3d11_decoder_get_supported_decoder_profile (decoder,
-      &main_10_guid, 1, &profile);
+      GST_D3D11_CODEC_H265, GST_VIDEO_FORMAT_P010_10LE, &main_10_guid);
   if (!have_main10) {
     GST_DEBUG_OBJECT (device, "decoder does not support HEVC_VLD_MAIN10");
   } else {
     have_main10 &=
-        gst_d3d11_decoder_supports_format (decoder, &profile, DXGI_FORMAT_P010);
+        gst_d3d11_decoder_supports_format (decoder, main_10_guid,
+        DXGI_FORMAT_P010);
     if (!have_main10) {
       GST_FIXME_OBJECT (device, "device does not support P010 format");
     }
   }
 
   have_main = gst_d3d11_decoder_get_supported_decoder_profile (decoder,
-      &main_guid, 1, &profile);
+      GST_D3D11_CODEC_H265, GST_VIDEO_FORMAT_NV12, &main_guid);
   if (!have_main) {
     GST_DEBUG_OBJECT (device, "decoder does not support HEVC_VLD_MAIN");
   } else {
     have_main =
-        gst_d3d11_decoder_supports_format (decoder, &profile, DXGI_FORMAT_NV12);
+        gst_d3d11_decoder_supports_format (decoder, main_guid,
+        DXGI_FORMAT_NV12);
     if (!have_main) {
       GST_FIXME_OBJECT (device, "device does not support NV12 format");
     }
@@ -1471,15 +1460,15 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   }
 
   if (have_main) {
-    profile = *main_guid;
+    profile = main_guid;
     format = DXGI_FORMAT_NV12;
   } else {
-    profile = *main_10_guid;
+    profile = main_10_guid;
     format = DXGI_FORMAT_P010;
   }
 
   for (i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
-    if (gst_d3d11_decoder_supports_resolution (decoder, &profile,
+    if (gst_d3d11_decoder_supports_resolution (decoder, profile,
             format, resolutions_to_check[i].width,
             resolutions_to_check[i].height)) {
       max_width = resolutions_to_check[i].width;

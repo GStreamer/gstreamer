@@ -96,12 +96,6 @@ enum
   PROP_VENDOR_ID,
 };
 
-/* copied from d3d11.h since mingw header doesn't define them */
-DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_PROFILE0,
-    0x463707f8, 0xa1d0, 0x4585, 0x87, 0x6d, 0x83, 0xaa, 0x6d, 0x60, 0xb8, 0x9e);
-DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_10BIT_PROFILE2,
-    0xa4c749ef, 0x6ecf, 0x48aa, 0x84, 0x48, 0x50, 0xa7, 0xa1, 0x16, 0x5f, 0xf7);
-
 /* reference list 8 + 4 margin */
 #define NUM_OUTPUT_VIEW 12
 
@@ -366,10 +360,6 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   gboolean modified = FALSE;
-  static const GUID *profile0_guid =
-      &GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_PROFILE0;
-  static const GUID *profile2_guid =
-      &GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_10BIT_PROFILE2;
 
   GST_LOG_OBJECT (self, "new sequence");
 
@@ -388,17 +378,14 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
   }
 
   if (modified || !gst_d3d11_decoder_is_configured (self->d3d11_decoder)) {
-    const GUID *profile_guid = NULL;
     GstVideoInfo info;
 
     self->out_format = GST_VIDEO_FORMAT_UNKNOWN;
 
     if (self->profile == GST_VP9_PROFILE_0) {
       self->out_format = GST_VIDEO_FORMAT_NV12;
-      profile_guid = profile0_guid;
     } else if (self->profile == GST_VP9_PROFILE_2) {
       self->out_format = GST_VIDEO_FORMAT_P010_10LE;
-      profile_guid = profile2_guid;
     }
 
     if (self->out_format == GST_VIDEO_FORMAT_UNKNOWN) {
@@ -411,8 +398,7 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
 
     gst_d3d11_decoder_reset (self->d3d11_decoder);
     if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_VP9,
-            &info, self->width, self->height,
-            NUM_OUTPUT_VIEW, &profile_guid, 1)) {
+            &info, self->width, self->height, NUM_OUTPUT_VIEW)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return FALSE;
     }
@@ -1091,7 +1077,7 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   gchar *feature_name;
   guint index = 0;
   guint i;
-  GUID profile;
+  const GUID *profile;
   GTypeInfo type_info = {
     sizeof (GstD3D11Vp9DecClass),
     NULL,
@@ -1103,10 +1089,8 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
     0,
     (GInstanceInitFunc) gst_d3d11_vp9_dec_init,
   };
-  static const GUID *profile2_guid =
-      &GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_10BIT_PROFILE2;
-  static const GUID *profile0_guid =
-      &GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_PROFILE0;
+  const GUID *profile2_guid = NULL;
+  const GUID *profile0_guid = NULL;
   /* values were taken from chromium. See supported_profile_helper.cc */
   GstD3D11Vp9DecResolution resolutions_to_check[] = {
     {4096, 2160}, {4096, 2304}, {7680, 4320}, {8192, 4320}, {8192, 8192}
@@ -1122,25 +1106,27 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   GValue vp9_profiles = G_VALUE_INIT;
 
   have_profile2 = gst_d3d11_decoder_get_supported_decoder_profile (decoder,
-      &profile2_guid, 1, &profile);
+      GST_D3D11_CODEC_VP9, GST_VIDEO_FORMAT_P010_10LE, &profile2_guid);
   if (!have_profile2) {
     GST_DEBUG_OBJECT (device,
         "decoder does not support VP9_VLD_10BIT_PROFILE2");
   } else {
     have_profile2 &=
-        gst_d3d11_decoder_supports_format (decoder, &profile, DXGI_FORMAT_P010);
+        gst_d3d11_decoder_supports_format (decoder,
+        profile2_guid, DXGI_FORMAT_P010);
     if (!have_profile2) {
       GST_FIXME_OBJECT (device, "device does not support P010 format");
     }
   }
 
   have_profile0 = gst_d3d11_decoder_get_supported_decoder_profile (decoder,
-      &profile0_guid, 1, &profile);
+      GST_D3D11_CODEC_VP9, GST_VIDEO_FORMAT_NV12, &profile0_guid);
   if (!have_profile0) {
     GST_DEBUG_OBJECT (device, "decoder does not support VP9_VLD_PROFILE0");
   } else {
     have_profile0 =
-        gst_d3d11_decoder_supports_format (decoder, &profile, DXGI_FORMAT_NV12);
+        gst_d3d11_decoder_supports_format (decoder, profile0_guid,
+        DXGI_FORMAT_NV12);
     if (!have_profile0) {
       GST_FIXME_OBJECT (device, "device does not support NV12 format");
     }
@@ -1152,15 +1138,15 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   }
 
   if (have_profile0) {
-    profile = *profile0_guid;
+    profile = profile0_guid;
     format = DXGI_FORMAT_NV12;
   } else {
-    profile = *profile2_guid;
+    profile = profile2_guid;
     format = DXGI_FORMAT_P010;
   }
 
   for (i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
-    if (gst_d3d11_decoder_supports_resolution (decoder, &profile,
+    if (gst_d3d11_decoder_supports_resolution (decoder, profile,
             format, resolutions_to_check[i].width,
             resolutions_to_check[i].height)) {
       max_width = resolutions_to_check[i].width;

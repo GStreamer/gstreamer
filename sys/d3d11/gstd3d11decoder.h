@@ -62,11 +62,9 @@ gboolean          gst_d3d11_decoder_is_configured (GstD3D11Decoder * decoder);
 gboolean          gst_d3d11_decoder_configure     (GstD3D11Decoder * decoder,
                                                    GstD3D11Codec codec,
                                                    GstVideoInfo * info,
-                                                   gint codec_width,
-                                                   gint codec_height,
-                                                   guint dpb_size,
-                                                   const GUID ** decoder_profiles,
-                                                   guint profile_size);
+                                                   gint coded_width,
+                                                   gint coded_height,
+                                                   guint dpb_size);
 
 void              gst_d3d11_decoder_reset (GstD3D11Decoder * decoder);
 
@@ -129,9 +127,9 @@ gboolean          gst_d3d11_decoder_can_direct_render   (GstD3D11Decoder * decod
 gboolean          gst_d3d11_decoder_util_is_legacy_device (GstD3D11Device * device);
 
 gboolean          gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
-                                                                   const GUID ** decoder_profiles,
-                                                                   guint profile_size,
-                                                                   GUID * selected_profile);
+                                                                   GstD3D11Codec codec,
+                                                                   GstVideoFormat format,
+                                                                   const GUID ** selected_profile);
 
 gboolean          gst_d3d11_decoder_supports_format (GstD3D11Decoder * decoder,
                                                      const GUID * decoder_profile,

@@ -59,6 +59,59 @@
 GST_DEBUG_CATEGORY (d3d11_decoder_debug);
 #define GST_CAT_DEFAULT d3d11_decoder_debug
 
+/* GUID might not be defined in MinGW header */
+DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_H264_IDCT_FGT, 0x1b81be67, 0xa0c7,
+    0x11d3, 0xb9, 0x84, 0x00, 0xc0, 0x4f, 0x2e, 0x73, 0xc5);
+DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_NOFGT, 0x1b81be68, 0xa0c7,
+    0x11d3, 0xb9, 0x84, 0x00, 0xc0, 0x4f, 0x2e, 0x73, 0xc5);
+DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_FGT, 0x1b81be69, 0xa0c7,
+    0x11d3, 0xb9, 0x84, 0x00, 0xc0, 0x4f, 0x2e, 0x73, 0xc5);
+DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN,
+    0x5b11d51b, 0x2f4c, 0x4452, 0xbc, 0xc3, 0x09, 0xf2, 0xa1, 0x16, 0x0c, 0xc0);
+DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10,
+    0x107af0e0, 0xef1a, 0x4d19, 0xab, 0xa8, 0x67, 0xa1, 0x63, 0x07, 0x3d, 0x13);
+DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_VP8_VLD,
+    0x90b899ea, 0x3a62, 0x4705, 0x88, 0xb3, 0x8d, 0xf0, 0x4b, 0x27, 0x44, 0xe7);
+DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_PROFILE0,
+    0x463707f8, 0xa1d0, 0x4585, 0x87, 0x6d, 0x83, 0xaa, 0x6d, 0x60, 0xb8, 0x9e);
+DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_10BIT_PROFILE2,
+    0xa4c749ef, 0x6ecf, 0x48aa, 0x84, 0x48, 0x50, 0xa7, 0xa1, 0x16, 0x5f, 0xf7);
+DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_MPEG2_VLD, 0xee27417f, 0x5e28,
+    0x4e65, 0xbe, 0xea, 0x1d, 0x26, 0xb5, 0x08, 0xad, 0xc9);
+DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_MPEG2and1_VLD, 0x86695f12, 0x340e,
+    0x4f04, 0x9f, 0xd3, 0x92, 0x53, 0xdd, 0x32, 0x74, 0x60);
+
+static const GUID *profile_h264_list[] = {
+  &GST_GUID_D3D11_DECODER_PROFILE_H264_IDCT_FGT,
+  &GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_NOFGT,
+  &GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_FGT,
+};
+
+static const GUID *profile_hevc_list[] = {
+  &GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN,
+};
+
+static const GUID *profile_hevc_10_list[] = {
+  &GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10,
+};
+
+static const GUID *profile_vp8_list[] = {
+  &GST_GUID_D3D11_DECODER_PROFILE_VP8_VLD,
+};
+
+static const GUID *profile_vp9_list[] = {
+  &GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_PROFILE0,
+};
+
+static const GUID *profile_vp9_10_list[] = {
+  &GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_10BIT_PROFILE2,
+};
+
+static const GUID *profile_mpeg2_list[] = {
+  &GST_GUID_D3D11_DECODER_PROFILE_MPEG2_VLD,
+  &GST_GUID_D3D11_DECODER_PROFILE_MPEG2and1_VLD
+};
+
 enum
 {
   PROP_0,
@@ -376,7 +429,7 @@ error:
 
 gboolean
 gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
-    const GUID ** decoder_profiles, guint profile_size, GUID * selected_profile)
+    GstD3D11Codec codec, GstVideoFormat format, const GUID ** selected_profile)
 {
   GUID *guid_list = NULL;
   const GUID *profile = NULL;
@@ -384,11 +437,59 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
   guint i, j;
   HRESULT hr;
   ID3D11VideoDevice *video_device;
+  const GUID **profile_list = NULL;
+  gint profile_size = 0;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
-  g_return_val_if_fail (decoder_profiles != NULL, FALSE);
-  g_return_val_if_fail (profile_size > 0, FALSE);
   g_return_val_if_fail (selected_profile != NULL, FALSE);
+
+  switch (codec) {
+    case GST_D3D11_CODEC_H264:
+      if (format == GST_VIDEO_FORMAT_NV12) {
+        profile_list = profile_h264_list;
+        profile_size = G_N_ELEMENTS (profile_h264_list);
+      }
+      break;
+    case GST_D3D11_CODEC_H265:
+      if (format == GST_VIDEO_FORMAT_NV12) {
+        profile_list = profile_hevc_list;
+        profile_size = G_N_ELEMENTS (profile_hevc_list);
+      } else if (format == GST_VIDEO_FORMAT_P010_10LE) {
+        profile_list = profile_hevc_10_list;
+        profile_size = G_N_ELEMENTS (profile_hevc_10_list);
+      }
+      break;
+    case GST_D3D11_CODEC_VP8:
+      if (format == GST_VIDEO_FORMAT_NV12) {
+        profile_list = profile_vp8_list;
+        profile_size = G_N_ELEMENTS (profile_vp8_list);
+      }
+      break;
+    case GST_D3D11_CODEC_VP9:
+      if (format == GST_VIDEO_FORMAT_NV12) {
+        profile_list = profile_vp9_list;
+        profile_size = G_N_ELEMENTS (profile_vp9_list);
+      } else if (format == GST_VIDEO_FORMAT_P010_10LE) {
+        profile_list = profile_vp9_10_list;
+        profile_size = G_N_ELEMENTS (profile_vp9_10_list);
+      }
+      break;
+    case GST_D3D11_CODEC_MPEG2:
+      if (format == GST_VIDEO_FORMAT_NV12) {
+        profile_list = profile_mpeg2_list;
+        profile_size = G_N_ELEMENTS (profile_mpeg2_list);
+      }
+      break;
+    default:
+      break;
+  }
+
+  if (!profile_list) {
+    GST_ERROR_OBJECT (decoder,
+        "Not supported codec (%d) and format (%s) configuration", codec,
+        gst_video_format_to_string (format));
+    return FALSE;
+  }
 
   video_device = decoder->video_device;
 
@@ -425,7 +526,7 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
 
   GST_LOG_OBJECT (decoder, "Requested decoder GUID");
   for (i = 0; i < profile_size; i++) {
-    const GUID *guid = decoder_profiles[i];
+    const GUID *guid = profile_list[i];
 
     GST_LOG_OBJECT (decoder,
         "\t { %8.8x-%4.4x-%4.4x-%2.2x%2.2x-%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x }",
@@ -437,8 +538,8 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
 
   for (i = 0; i < profile_size; i++) {
     for (j = 0; j < available_profile_count; j++) {
-      if (IsEqualGUID (*decoder_profiles[i], guid_list[j])) {
-        profile = decoder_profiles[i];
+      if (IsEqualGUID (*profile_list[i], guid_list[j])) {
+        profile = profile_list[i];
         break;
       }
     }
@@ -449,25 +550,22 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
     return FALSE;
   }
 
-  *selected_profile = *profile;
+  *selected_profile = profile;
 
   GST_DEBUG_OBJECT (decoder,
       "Selected guid "
       "{ %8.8x-%4.4x-%4.4x-%2.2x%2.2x-%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x }",
-      (guint) selected_profile->Data1, (guint) selected_profile->Data2,
-      (guint) selected_profile->Data3,
-      selected_profile->Data4[0], selected_profile->Data4[1],
-      selected_profile->Data4[2], selected_profile->Data4[3],
-      selected_profile->Data4[4], selected_profile->Data4[5],
-      selected_profile->Data4[6], selected_profile->Data4[7]);
+      (guint) profile->Data1, (guint) profile->Data2, (guint) profile->Data3,
+      profile->Data4[0], profile->Data4[1], profile->Data4[2],
+      profile->Data4[3], profile->Data4[4], profile->Data4[5],
+      profile->Data4[6], profile->Data4[7]);
 
   return TRUE;
 }
 
 gboolean
 gst_d3d11_decoder_configure (GstD3D11Decoder * decoder, GstD3D11Codec codec,
-    GstVideoInfo * info, gint coded_width, gint coded_height,
-    guint dpb_size, const GUID ** decoder_profiles, guint profile_size)
+    GstVideoInfo * info, gint coded_width, gint coded_height, guint dpb_size)
 {
   const GstD3D11Format *d3d11_format;
   HRESULT hr;
@@ -477,7 +575,7 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   D3D11_VIDEO_DECODER_CONFIG *best_config = NULL;
   D3D11_VIDEO_DECODER_DESC decoder_desc = { 0, };
   D3D11_TEXTURE2D_DESC staging_desc = { 0, };
-  GUID selected_profile;
+  const GUID *selected_profile = NULL;
   guint i;
   gint aligned_width, aligned_height;
   guint alignment;
@@ -492,8 +590,6 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   g_return_val_if_fail (coded_width >= GST_VIDEO_INFO_WIDTH (info), FALSE);
   g_return_val_if_fail (coded_height >= GST_VIDEO_INFO_HEIGHT (info), FALSE);
   g_return_val_if_fail (dpb_size > 0, FALSE);
-  g_return_val_if_fail (decoder_profiles != NULL, FALSE);
-  g_return_val_if_fail (profile_size > 0, FALSE);
 
   decoder->configured = FALSE;
   decoder->use_array_of_texture = FALSE;
@@ -511,11 +607,11 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder, GstD3D11Codec codec,
 
   gst_d3d11_device_lock (decoder->device);
   if (!gst_d3d11_decoder_get_supported_decoder_profile (decoder,
-          decoder_profiles, profile_size, &selected_profile)) {
+          codec, GST_VIDEO_INFO_FORMAT (info), &selected_profile)) {
     goto error;
   }
 
-  hr = video_device->CheckVideoDecoderFormat (&selected_profile,
+  hr = video_device->CheckVideoDecoderFormat (selected_profile,
       d3d11_format->dxgi_format, &can_support);
   if (!gst_d3d11_result (hr, decoder->device) || !can_support) {
     GST_ERROR_OBJECT (decoder,
@@ -576,7 +672,7 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   decoder_desc.SampleWidth = aligned_width;
   decoder_desc.SampleHeight = aligned_height;
   decoder_desc.OutputFormat = d3d11_format->dxgi_format;
-  decoder_desc.Guid = selected_profile;
+  decoder_desc.Guid = *selected_profile;
 
   hr = video_device->GetVideoDecoderConfigCount (&decoder_desc, &config_count);
   if (!gst_d3d11_result (hr, decoder->device) || config_count == 0) {
@@ -675,7 +771,7 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   memset (decoder->stating_texture_stride,
       0, sizeof (decoder->stating_texture_stride));
 
-  decoder->decoder_profile = selected_profile;
+  decoder->decoder_profile = *selected_profile;
 
   /* Store pool related information here, then we will setup internal pool
    * later once the number of min buffer size required by downstream is known.

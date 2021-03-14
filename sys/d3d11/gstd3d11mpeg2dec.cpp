@@ -66,12 +66,6 @@ enum
   PROP_VENDOR_ID,
 };
 
-/* copied from d3d11.h since mingw header doesn't define them */
-DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_MPEG2_VLD, 0xee27417f, 0x5e28,
-    0x4e65, 0xbe, 0xea, 0x1d, 0x26, 0xb5, 0x08, 0xad, 0xc9);
-DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_MPEG2and1_VLD, 0x86695f12, 0x340e,
-    0x4f04, 0x9f, 0xd3, 0x92, 0x53, 0xdd, 0x32, 0x74, 0x60);
-
 /* reference list 2 + 4 margin */
 #define NUM_OUTPUT_VIEW 6
 
@@ -369,10 +363,6 @@ gst_d3d11_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
   gboolean interlaced;
   gboolean modified = FALSE;
-  static const GUID *supported_profiles[] = {
-    &GST_GUID_D3D11_DECODER_PROFILE_MPEG2_VLD,
-    &GST_GUID_D3D11_DECODER_PROFILE_MPEG2and1_VLD,
-  };
   gint width, height;
   GstMpegVideoProfile mpeg_profile;
 
@@ -431,8 +421,7 @@ gst_d3d11_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
     gst_d3d11_decoder_reset (self->d3d11_decoder);
     if (!gst_d3d11_decoder_configure (self->d3d11_decoder,
             GST_D3D11_CODEC_MPEG2, &info, self->width, self->height,
-            NUM_OUTPUT_VIEW, supported_profiles,
-            G_N_ELEMENTS (supported_profiles))) {
+            NUM_OUTPUT_VIEW)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return FALSE;
     }
@@ -991,7 +980,6 @@ gst_d3d11_mpeg2_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   gchar *type_name;
   gchar *feature_name;
   guint index = 0;
-  GUID profile;
   GTypeInfo type_info = {
     sizeof (GstD3D11Mpeg2DecClass),
     NULL,
@@ -1003,15 +991,12 @@ gst_d3d11_mpeg2_dec_register (GstPlugin * plugin, GstD3D11Device * device,
     0,
     (GInstanceInitFunc) gst_d3d11_mpeg2_dec_init,
   };
-  static const GUID *supported_profiles[] = {
-    &GST_GUID_D3D11_DECODER_PROFILE_MPEG2_VLD,
-    &GST_GUID_D3D11_DECODER_PROFILE_MPEG2and1_VLD
-  };
+  const GUID *supported_profile = NULL;
   GstCaps *sink_caps = NULL;
   GstCaps *src_caps = NULL;
 
   if (!gst_d3d11_decoder_get_supported_decoder_profile (decoder,
-          supported_profiles, G_N_ELEMENTS (supported_profiles), &profile)) {
+          GST_D3D11_CODEC_MPEG2, GST_VIDEO_FORMAT_NV12, &supported_profile)) {
     GST_INFO_OBJECT (device, "device does not support MPEG-2 video decoding");
     return;
   }
