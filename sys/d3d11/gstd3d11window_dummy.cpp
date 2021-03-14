@@ -26,6 +26,7 @@
 #include "gstd3d11pluginutils.h"
 #include <wrl.h>
 
+/* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
 G_BEGIN_DECLS
@@ -34,6 +35,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
 #define GST_CAT_DEFAULT gst_d3d11_window_debug
 
 G_END_DECLS
+/* *INDENT-ON* */
 
 struct _GstD3D11WindowDummy
 {
@@ -68,8 +70,7 @@ gst_d3d11_window_dummy_class_init (GstD3D11WindowDummyClass * klass)
 
   window_class->on_resize =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_on_resize);
-  window_class->prepare =
-      GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_prepare);
+  window_class->prepare = GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_prepare);
   window_class->unprepare =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_unprepare);
   window_class->open_shared_handle =
@@ -142,8 +143,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
       processor =
           gst_d3d11_video_processor_new (window->device,
           GST_VIDEO_INFO_WIDTH (&window->info),
-          GST_VIDEO_INFO_HEIGHT (&window->info),
-          display_width, display_height);
+          GST_VIDEO_INFO_HEIGHT (&window->info), display_width, display_height);
     }
 
     /* Check if video processor can support all possible output dxgi formats */
@@ -319,8 +319,8 @@ gst_d3d11_window_dummy_setup_fallback_texture (GstD3D11Window * window,
     pov_desc.Texture2D.MipSlice = 0;
 
     if (!gst_d3d11_video_processor_create_output_view (window->processor,
-        &pov_desc, (ID3D11Resource *) self->fallback_texture,
-        &self->fallback_pov)) {
+            &pov_desc, (ID3D11Resource *) self->fallback_texture,
+            &self->fallback_pov)) {
       GST_ERROR_OBJECT (window,
           "ID3D11VideoProcessorOutputView is unavailable");
       gst_d3d11_window_dummy_clear_resources (self);
@@ -331,6 +331,7 @@ gst_d3d11_window_dummy_setup_fallback_texture (GstD3D11Window * window,
   return TRUE;
 }
 
+/* *INDENT-OFF* */
 static gboolean
 gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
     GstD3D11WindowSharedHandleData * data)
@@ -404,8 +405,9 @@ gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
 
       GST_TRACE_OBJECT (window,
           "We are using video processor but keyed mutex is unavailable");
-      if (!gst_d3d11_window_dummy_setup_fallback_texture (window, &desc))
+      if (!gst_d3d11_window_dummy_setup_fallback_texture (window, &desc)) {
         goto out;
+      }
     }
   }
 
@@ -447,6 +449,7 @@ out:
 
   return FALSE;
 }
+/* *INDENT-ON* */
 
 static gboolean
 gst_d3d11_window_dummy_release_shared_handle (GstD3D11Window * window,
@@ -463,7 +466,9 @@ gst_d3d11_window_dummy_release_shared_handle (GstD3D11Window * window,
 
     data->keyed_mutex->Release ();
   } else {
+    /* *INDENT-OFF* */
     ComPtr<ID3D11Query> query;
+    /* *INDENT-ON* */
     D3D11_QUERY_DESC query_desc;
     ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
     ID3D11DeviceContext *context_handle =
@@ -485,7 +490,7 @@ gst_d3d11_window_dummy_release_shared_handle (GstD3D11Window * window,
     if (data->fallback_rtv) {
       D3D11_BOX src_box;
       D3D11_TEXTURE2D_DESC desc;
-      ID3D11DeviceContext * context_handle =
+      ID3D11DeviceContext *context_handle =
           gst_d3d11_device_get_device_context_handle (device);
 
       data->texture->GetDesc (&desc);
@@ -500,11 +505,11 @@ gst_d3d11_window_dummy_release_shared_handle (GstD3D11Window * window,
       context_handle->CopySubresourceRegion (data->texture, 0, 0, 0, 0,
           self->fallback_texture, 0, &src_box);
     }
-    context_handle->End (query.Get());
+    context_handle->End (query.Get ());
 
     /* Wait until all issued GPU commands are finished */
     do {
-      context_handle->GetData (query.Get(), &sync_done, sizeof (BOOL), 0);
+      context_handle->GetData (query.Get (), &sync_done, sizeof (BOOL), 0);
     } while (!sync_done && (hr == S_OK || hr == S_FALSE));
 
     if (!gst_d3d11_result (hr, device)) {

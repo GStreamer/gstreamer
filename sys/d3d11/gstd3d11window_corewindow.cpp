@@ -35,6 +35,7 @@
 #include <wrl/wrappers/corewrappers.h>
 #include <windows.graphics.display.h>
 
+/* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows::UI;
@@ -46,10 +47,11 @@ typedef ABI::Windows::Foundation::
     __FITypedEventHandler_2_Windows__CUI__CCore__CCoreWindow_Windows__CUI__CCore__CWindowSizeChangedEventArgs_t
         IWindowSizeChangedEventHandler;
 
-extern "C" {
+G_BEGIN_DECLS
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
 #define GST_CAT_DEFAULT gst_d3d11_window_debug
-}
+
+G_END_DECLS
 
 /* timeout to wait busy UI thread */
 #define DEFAULT_ASYNC_TIMEOUT (10 * 1000)
@@ -61,6 +63,7 @@ typedef struct _CoreWindowWinRTStorage
   HANDLE cancellable;
   EventRegistrationToken event_token;
 } CoreWindowWinRTStorage;
+/* *INDENT-ON* */
 
 struct _GstD3D11WindowCoreWindow
 {
@@ -75,18 +78,16 @@ G_DEFINE_TYPE (GstD3D11WindowCoreWindow, gst_d3d11_window_core_window,
 
 static void gst_d3d11_window_core_window_constructed (GObject * object);
 static void gst_d3d11_window_core_window_dispose (GObject * object);
-static void gst_d3d11_window_core_window_update_swap_chain (GstD3D11Window * window);
-static void
-gst_d3d11_window_core_window_change_fullscreen_mode (GstD3D11Window * window);
-static gboolean
-gst_d3d11_window_core_window_create_swap_chain (GstD3D11Window * window,
-    DXGI_FORMAT format, guint width, guint height, guint swapchain_flags,
-    IDXGISwapChain ** swap_chain);
-static GstFlowReturn
-gst_d3d11_window_core_window_present (GstD3D11Window * window,
-     guint present_flags);
-static gboolean
-gst_d3d11_window_core_window_unlock (GstD3D11Window * window);
+static void gst_d3d11_window_core_window_update_swap_chain (GstD3D11Window *
+    window);
+static void gst_d3d11_window_core_window_change_fullscreen_mode (GstD3D11Window
+    * window);
+static gboolean gst_d3d11_window_core_window_create_swap_chain (GstD3D11Window *
+    window, DXGI_FORMAT format, guint width, guint height,
+    guint swapchain_flags, IDXGISwapChain ** swap_chain);
+static GstFlowReturn gst_d3d11_window_core_window_present (GstD3D11Window *
+    window, guint present_flags);
+static gboolean gst_d3d11_window_core_window_unlock (GstD3D11Window * window);
 static gboolean
 gst_d3d11_window_core_window_unlock_stop (GstD3D11Window * window);
 static void
@@ -94,18 +95,20 @@ gst_d3d11_window_core_window_on_resize (GstD3D11Window * window,
     guint width, guint height);
 static void
 gst_d3d11_window_core_window_on_resize_sync (GstD3D11Window * window);
-static void
-gst_d3d11_window_core_window_unprepare (GstD3D11Window * window);
+static void gst_d3d11_window_core_window_unprepare (GstD3D11Window * window);
 
 static float
 get_logical_dpi (void)
 {
+  /* *INDENT-OFF* */
   ComPtr<Display::IDisplayPropertiesStatics> properties;
+  /* *INDENT-ON* */
   HRESULT hr;
   HStringReference str_ref =
-      HStringReference (RuntimeClass_Windows_Graphics_Display_DisplayProperties);
+      HStringReference
+      (RuntimeClass_Windows_Graphics_Display_DisplayProperties);
 
-  hr = GetActivationFactory (str_ref.Get(), properties.GetAddressOf());
+  hr = GetActivationFactory (str_ref.Get (), properties.GetAddressOf ());
 
   if (gst_d3d11_result (hr, NULL)) {
     float dpi = 96.0f;
@@ -118,12 +121,14 @@ get_logical_dpi (void)
   return 96.0f;
 }
 
-static inline float dip_to_pixel (float dip)
+static inline float
+dip_to_pixel (float dip)
 {
   /* https://docs.microsoft.com/en-us/windows/win32/learnwin32/dpi-and-device-independent-pixels */
-  return dip * get_logical_dpi() / 96.0f;
+  return dip * get_logical_dpi () / 96.0f;
 }
 
+/* *INDENT-OFF* */
 class CoreResizeHandler
     : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
         IWindowSizeChangedEventHandler>
@@ -233,6 +238,7 @@ get_window_size (const ComPtr<Core::ICoreDispatcher> &dispatcher,
         return hr;
       });
 }
+/* *INDENT-ON* */
 
 static void
 gst_d3d11_window_core_window_class_init (GstD3D11WindowCoreWindowClass * klass)
@@ -268,6 +274,7 @@ gst_d3d11_window_core_window_init (GstD3D11WindowCoreWindow * self)
   self->storage->cancellable = CreateEvent (NULL, TRUE, FALSE, NULL);
 }
 
+/* *INDENT-OFF* */
 static void
 gst_d3d11_window_core_window_constructed (GObject * object)
 {
@@ -277,8 +284,8 @@ gst_d3d11_window_core_window_constructed (GObject * object)
   HRESULT hr;
   ComPtr<IInspectable> inspectable;
   ComPtr<IWindowSizeChangedEventHandler> resize_handler;
-  Size size;
   ComPtr<Core::ICoreWindow> core_window;
+  Size size;
 
   if (!window->external_handle) {
     GST_ERROR_OBJECT (self, "No external window handle");
@@ -329,6 +336,7 @@ error:
   GST_ERROR_OBJECT (self, "Invalid window handle");
   return;
 }
+/* *INDENT-ON* */
 
 static void
 gst_d3d11_window_core_window_dispose (GObject * object)
@@ -338,6 +346,7 @@ gst_d3d11_window_core_window_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+/* *INDENT-OFF* */
 static void
 gst_d3d11_window_core_window_unprepare (GstD3D11Window * window)
 {
@@ -365,6 +374,7 @@ gst_d3d11_window_core_window_unprepare (GstD3D11Window * window)
 
   self->storage = NULL;
 }
+/* *INDENT-ON* */
 
 static IDXGISwapChain1 *
 create_swap_chain_for_core_window (GstD3D11WindowCoreWindow * self,
@@ -405,7 +415,9 @@ gst_d3d11_window_core_window_create_swap_chain (GstD3D11Window * window,
     IDXGISwapChain ** swap_chain)
 {
   GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
+  /* *INDENT-OFF* */
   ComPtr<IDXGISwapChain1> new_swapchain;
+  /* *INDENT-ON* */
   GstD3D11Device *device = window->device;
   DXGI_SWAP_CHAIN_DESC1 desc1 = { 0, };
 
@@ -423,8 +435,8 @@ gst_d3d11_window_core_window_create_swap_chain (GstD3D11Window * window,
   desc1.Flags = swapchain_flags;
 
   new_swapchain =
-    create_swap_chain_for_core_window (self, device,
-    window->external_handle, &desc1, NULL);
+      create_swap_chain_for_core_window (self, device,
+      window->external_handle, &desc1, NULL);
 
   if (!new_swapchain) {
     GST_ERROR_OBJECT (self, "Cannot create swapchain");
@@ -507,11 +519,13 @@ gst_d3d11_window_core_window_on_resize (GstD3D11Window * window,
   GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
   CoreWindowWinRTStorage *storage = self->storage;
 
+  /* *INDENT-OFF* */
   run_async (storage->dispatcher, storage->cancellable, INFINITE,
       [window] {
         gst_d3d11_window_core_window_on_resize_sync (window);
         return S_OK;
       });
+  /* *INDENT-ON* */
 }
 
 static void

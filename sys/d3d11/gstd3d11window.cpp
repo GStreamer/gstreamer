@@ -128,7 +128,7 @@ static void gst_d3d11_window_get_property (GObject * object, guint prop_id,
 static void gst_d3d11_window_dispose (GObject * object);
 static GstFlowReturn gst_d3d111_window_present (GstD3D11Window * self,
     GstBuffer * buffer, GstStructure * stats,
-    ID3D11VideoProcessorOutputView *pov, ID3D11RenderTargetView * rtv);
+    ID3D11VideoProcessorOutputView * pov, ID3D11RenderTargetView * rtv);
 static void gst_d3d11_window_on_resize_default (GstD3D11Window * window,
     guint width, guint height);
 static gboolean gst_d3d11_window_prepare_default (GstD3D11Window * window,
@@ -311,7 +311,9 @@ gst_d3d11_window_prepare_dwrite_device (GstD3D11Window * self)
 {
   GstD3D11WindowPrivate *priv = self->priv;
   HRESULT hr;
+  /* *INDENT-OFF* */
   ComPtr<IDXGIDevice> dxgi_device;
+  /* *INDENT-ON* */
   ID3D11Device *device_handle;
 
   if (!self->device) {
@@ -337,23 +339,25 @@ gst_d3d11_window_prepare_dwrite_device (GstD3D11Window * self)
   if (!gst_d3d11_result (hr, self->device))
     goto error;
 
-  hr = priv->d2d_device->CreateDeviceContext (D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS,
+  hr = priv->d2d_device->CreateDeviceContext
+      (D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS,
       &priv->d2d_device_context);
   if (!gst_d3d11_result (hr, self->device))
     goto error;
 
-  hr = priv->d2d_device_context->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Yellow),
-      &priv->d2d_brush);
+  hr = priv->
+      d2d_device_context->CreateSolidColorBrush (D2D1::ColorF (D2D1::ColorF::
+          Yellow), &priv->d2d_brush);
   if (!gst_d3d11_result (hr, self->device))
     goto error;
 
   hr = DWriteCreateFactory (DWRITE_FACTORY_TYPE_SHARED,
-      __uuidof (IDWriteFactory), (IUnknown **) &priv->dwrite_factory);
+      __uuidof (IDWriteFactory), (IUnknown **) & priv->dwrite_factory);
   if (!gst_d3d11_result (hr, self->device))
     goto error;
 
   /* Configure font */
-  hr = priv->dwrite_factory->CreateTextFormat(L"Arial", NULL,
+  hr = priv->dwrite_factory->CreateTextFormat (L"Arial", NULL,
       DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
       DWRITE_FONT_STRETCH_NORMAL, 12.0f, L"en-US", &priv->dwrite_format);
   if (!gst_d3d11_result (hr, self->device))
@@ -372,8 +376,10 @@ gst_d3d11_window_dwrite_on_resize (GstD3D11Window * self,
     ID3D11Texture2D * backbuffer)
 {
   GstD3D11WindowPrivate *priv = self->priv;
+  /* *INDENT-OFF* */
   ComPtr<IDXGISurface> dxgi_surface;
   ComPtr<ID2D1Bitmap1> bitmap;
+  /* *INDENT-ON* */
   D2D1_BITMAP_PROPERTIES1 prop;
   HRESULT hr;
 
@@ -393,8 +399,8 @@ gst_d3d11_window_dwrite_on_resize (GstD3D11Window * self,
   if (!gst_d3d11_result (hr, self->device))
     goto error;
 
-  hr = priv->d2d_device_context->CreateBitmapFromDxgiSurface (dxgi_surface.Get (),
-      &prop, &bitmap);
+  hr = priv->d2d_device_context->
+      CreateBitmapFromDxgiSurface (dxgi_surface.Get (), &prop, &bitmap);
   if (!gst_d3d11_result (hr, self->device))
     goto error;
 
@@ -535,10 +541,9 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
     pov_desc.Texture2D.MipSlice = 0;
 
     if (!gst_d3d11_video_processor_create_output_view (window->processor,
-        &pov_desc, (ID3D11Resource *) backbuffer, &window->pov))
+            &pov_desc, (ID3D11Resource *) backbuffer, &window->pov))
       goto done;
   }
-
 #ifdef HAVE_DIRECT_WRITE
   if (window->render_stats)
     gst_d3d11_window_dwrite_on_resize (window, backbuffer);
@@ -624,12 +629,12 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
       D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_DISPLAY;
   UINT supported_flags = 0;
   GstD3D11WindowDisplayFormat formats[] = {
-    { DXGI_FORMAT_R8G8B8A8_UNORM, GST_VIDEO_FORMAT_RGBA, FALSE },
-    { DXGI_FORMAT_B8G8R8A8_UNORM, GST_VIDEO_FORMAT_BGRA, FALSE },
-    { DXGI_FORMAT_R10G10B10A2_UNORM, GST_VIDEO_FORMAT_RGB10A2_LE, FALSE },
+    {DXGI_FORMAT_R8G8B8A8_UNORM, GST_VIDEO_FORMAT_RGBA, FALSE},
+    {DXGI_FORMAT_B8G8R8A8_UNORM, GST_VIDEO_FORMAT_BGRA, FALSE},
+    {DXGI_FORMAT_R10G10B10A2_UNORM, GST_VIDEO_FORMAT_RGB10A2_LE, FALSE},
   };
   const GstD3D11WindowDisplayFormat *chosen_format = NULL;
-  const GstDxgiColorSpace * chosen_colorspace = NULL;
+  const GstDxgiColorSpace *chosen_colorspace = NULL;
 #if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
   gboolean have_hdr10 = FALSE;
   DXGI_COLOR_SPACE_TYPE native_colorspace_type =
@@ -669,7 +674,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
         "Cannot determine render format");
     return FALSE;
   }
-
 #ifdef HAVE_DIRECT_WRITE
   if (window->render_stats && formats[1].supported) {
     /* FIXME: D2D seems to be accepting only DXGI_FORMAT_B8G8R8A8_UNORM */
@@ -730,7 +734,8 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   klass = GST_D3D11_WINDOW_GET_CLASS (window);
   if (!window->swap_chain &&
       !klass->create_swap_chain (window, window->dxgi_format,
-          display_width, display_height, swapchain_flags, &window->swap_chain)) {
+          display_width, display_height, swapchain_flags,
+          &window->swap_chain)) {
     GST_ERROR_OBJECT (window, "Cannot create swapchain");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create swapchain");
@@ -771,7 +776,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
       HRESULT hr;
 
       hr = window->swap_chain->QueryInterface (IID_IDXGISwapChain4,
-        (void **) &swapchain4);
+          (void **) &swapchain4);
       if (gst_d3d11_result (hr, window->device)) {
         GST_DEBUG_OBJECT (window, "Have HDR metadata, set to DXGI swapchain");
 
@@ -814,7 +819,8 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
         (void **) &swapchain3);
 
     if (gst_d3d11_result (hr, window->device)) {
-      chosen_colorspace = gst_d3d11_find_swap_chain_color_space (&window->render_info,
+      chosen_colorspace =
+          gst_d3d11_find_swap_chain_color_space (&window->render_info,
           swapchain3, have_hdr10);
       if (chosen_colorspace) {
         native_colorspace_type =
@@ -822,7 +828,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
         hr = swapchain3->SetColorSpace1 (native_colorspace_type);
         if (!gst_d3d11_result (hr, window->device)) {
           GST_WARNING_OBJECT (window, "Failed to set colorspace %d, hr: 0x%x",
-            native_colorspace_type, (guint) hr);
+              native_colorspace_type, (guint) hr);
           chosen_colorspace = NULL;
           native_colorspace_type = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
         } else {
@@ -834,10 +840,8 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
               chosen_colorspace->primaries;
           window->render_info.colorimetry.transfer =
               chosen_colorspace->transfer;
-          window->render_info.colorimetry.range =
-              chosen_colorspace->range;
-          window->render_info.colorimetry.matrix =
-              chosen_colorspace->matrix;
+          window->render_info.colorimetry.range = chosen_colorspace->range;
+          window->render_info.colorimetry.matrix = chosen_colorspace->matrix;
         }
       }
 
@@ -854,7 +858,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     window->render_info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
     window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
   }
-
 #if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
   if (chosen_colorspace) {
     const GstDxgiColorSpace *in_color_space =
@@ -874,8 +877,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
       processor =
           gst_d3d11_video_processor_new (window->device,
           GST_VIDEO_INFO_WIDTH (&window->info),
-          GST_VIDEO_INFO_HEIGHT (&window->info),
-          display_width, display_height);
+          GST_VIDEO_INFO_HEIGHT (&window->info), display_width, display_height);
     }
 
     if (processor) {
@@ -935,7 +937,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
         "Cannot create overlay compositor");
     goto error;
   }
-
 #ifdef HAVE_DIRECT_WRITE
   if (window->render_stats)
     gst_d3d11_window_prepare_dwrite_device (window);
@@ -1016,7 +1017,9 @@ gst_d3d11_window_present_d2d (GstD3D11Window * self, GstStructure * stats)
   guint64 dropped = 0;
   guint64 rendered = 0;
   std::wostringstream stats_str;
+  /* *INDENT-OFF* */
   ComPtr<IDWriteTextLayout> layout;
+  /* *INDENT-ON* */
   FLOAT left;
   FLOAT top;
 
@@ -1035,11 +1038,10 @@ gst_d3d11_window_present_d2d (GstD3D11Window * self, GstStructure * stats)
   stats_str << "Dropped: " << dropped << std::endl;
   stats_str << "Rendered: " << rendered << std::endl;
 
-  hr = priv->dwrite_factory->CreateTextLayout (stats_str.str().c_str(),
-      (UINT32) stats_str.str().size(), priv->dwrite_format,
+  hr = priv->dwrite_factory->CreateTextLayout (stats_str.str ().c_str (),
+      (UINT32) stats_str.str ().size (), priv->dwrite_format,
       self->render_rect.right - self->render_rect.left,
-      self->render_rect.bottom - self->render_rect.top,
-      &layout);
+      self->render_rect.bottom - self->render_rect.top, &layout);
   if (!gst_d3d11_result (hr, self->device))
     return;
 
@@ -1047,8 +1049,8 @@ gst_d3d11_window_present_d2d (GstD3D11Window * self, GstStructure * stats)
   top = self->render_rect.top + 5.0f;
 
   priv->d2d_device_context->BeginDraw ();
-  priv->d2d_device_context->DrawTextLayout(D2D1::Point2F(left, top),
-      layout.Get(), priv->d2d_brush);
+  priv->d2d_device_context->DrawTextLayout (D2D1::Point2F (left, top),
+      layout.Get (), priv->d2d_brush);
 
   hr = priv->d2d_device_context->EndDraw ();
   gst_d3d11_result (hr, self->device);
@@ -1059,7 +1061,7 @@ gst_d3d11_window_present_d2d (GstD3D11Window * self, GstStructure * stats)
 
 static GstFlowReturn
 gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
-    GstStructure * stats, ID3D11VideoProcessorOutputView *pov,
+    GstStructure * stats, ID3D11VideoProcessorOutputView * pov,
     ID3D11RenderTargetView * rtv)
 {
   GstD3D11WindowClass *klass = GST_D3D11_WINDOW_GET_CLASS (self);
@@ -1077,16 +1079,14 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
         gst_d3d11_device_get_device_handle (self->device);
 
     /* Map memory in any case so that we can upload pending stage texture */
-    if (!gst_d3d11_buffer_map (buffer, device_handle,
-        infos, GST_MAP_READ)) {
+    if (!gst_d3d11_buffer_map (buffer, device_handle, infos, GST_MAP_READ)) {
       GST_ERROR_OBJECT (self, "Couldn't map buffer");
 
       return GST_FLOW_ERROR;
     }
 
     if (!gst_d3d11_buffer_get_shader_resource_view (buffer, srv)) {
-      if (!gst_d3d11_window_buffer_ensure_processor_input (self,
-          buffer, &piv)) {
+      if (!gst_d3d11_window_buffer_ensure_processor_input (self, buffer, &piv)) {
         GST_ERROR_OBJECT (self, "Input texture cannot be used for converter");
         return GST_FLOW_ERROR;
       }
@@ -1101,16 +1101,16 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
       viewport.Height = self->render_rect.bottom - self->render_rect.top;
       viewport.MinDepth = 0.0f;
       viewport.MaxDepth = 1.0f;
-      gst_d3d11_converter_update_viewport (self->converter,
-          &viewport);
+      gst_d3d11_converter_update_viewport (self->converter, &viewport);
       gst_d3d11_overlay_compositor_update_viewport (self->compositor,
           &viewport);
     }
 
     if (self->processor && piv && pov) {
       if (!gst_d3d11_video_processor_render_unlocked (self->processor,
-          &self->input_rect, piv, &self->render_rect, pov)) {
-        GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using processor");
+              &self->input_rect, piv, &self->render_rect, pov)) {
+        GST_ERROR_OBJECT (self,
+            "Couldn't render to backbuffer using processor");
         ret = GST_FLOW_ERROR;
         goto unmap_and_out;
       } else {
@@ -1118,8 +1118,9 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
       }
     } else {
       if (!gst_d3d11_converter_convert_unlocked (self->converter,
-          srv, &rtv, NULL, NULL)) {
-        GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using converter");
+              srv, &rtv, NULL, NULL)) {
+        GST_ERROR_OBJECT (self,
+            "Couldn't render to backbuffer using converter");
         ret = GST_FLOW_ERROR;
         goto unmap_and_out;
       } else {
@@ -1145,7 +1146,7 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
 
     self->first_present = FALSE;
 
-unmap_and_out:
+  unmap_and_out:
     gst_d3d11_buffer_unmap (buffer, infos);
   }
 
@@ -1231,8 +1232,7 @@ gst_d3d11_window_render_on_shared_handle (GstD3D11Window * window,
     pov = data.pov;
   }
 
-  ret = gst_d3d111_window_present (window, buffer, NULL,
-      pov, rtv);
+  ret = gst_d3d111_window_present (window, buffer, NULL, pov, rtv);
 
   klass->release_shared_handle (window, &data);
   gst_d3d11_device_unlock (window->device);
@@ -1301,9 +1301,11 @@ gst_d3d11_window_get_native_type_from_handle (guintptr handle)
 #endif
 #if GST_D3D11_WINAPI_ONLY_APP
   {
+    /* *INDENT-OFF* */
     ComPtr<IInspectable> window = reinterpret_cast<IInspectable*> (handle);
     ComPtr<ABI::Windows::UI::Core::ICoreWindow> core_window;
     ComPtr<ABI::Windows::UI::Xaml::Controls::ISwapChainPanel> panel;
+    /* *INDENT-ON* */
 
     if (SUCCEEDED (window.As (&core_window)))
       return GST_D3D11_WINDOW_NATIVE_TYPE_CORE_WINDOW;

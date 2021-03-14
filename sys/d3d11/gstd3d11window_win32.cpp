@@ -26,10 +26,14 @@
 
 #include "gstd3d11window_win32.h"
 
-extern "C" {
+/* *INDENT-OFF* */
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
 #define GST_CAT_DEFAULT gst_d3d11_window_debug
-}
+
+G_END_DECLS
+/* *INDENT-ON* */
 
 G_LOCK_DEFINE_STATIC (create_lock);
 
@@ -350,7 +354,7 @@ gst_d3d11_window_win32_release_external_handle (GstD3D11WindowWin32 * self)
       external_proc);
 
   if (!SetWindowLongPtr (self->external_hwnd,
-      GWLP_WNDPROC, (LONG_PTR) external_proc)) {
+          GWLP_WNDPROC, (LONG_PTR) external_proc)) {
     GST_WARNING_OBJECT (self, "Couldn't restore original window procedure");
   }
 
@@ -599,7 +603,8 @@ gst_d3d11_window_win32_handle_window_proc (GstD3D11WindowWin32 * self,
     case WM_MOUSEMOVE:
       /* To handle mouse event only once, do this only for internal window */
       if (self->internal_hwnd && self->internal_hwnd == hWnd)
-        gst_d3d11_window_win32_on_mouse_event (self, hWnd, uMsg, wParam, lParam);
+        gst_d3d11_window_win32_on_mouse_event (self, hWnd, uMsg, wParam,
+            lParam);
 
       /* DefWindowProc will not chain up mouse event to parent window */
       if (self->external_hwnd && self->external_hwnd != hWnd)
@@ -757,8 +762,7 @@ create_swap_chain (GstD3D11WindowWin32 * self, GstD3D11Device * device,
   IDXGIFactory1 *factory = gst_d3d11_device_get_dxgi_factory_handle (device);
 
   gst_d3d11_device_lock (device);
-  hr = factory->CreateSwapChain ((IUnknown *) device_handle,
-      desc, &swap_chain);
+  hr = factory->CreateSwapChain ((IUnknown *) device_handle, desc, &swap_chain);
   gst_d3d11_device_unlock (device);
 
   if (!gst_d3d11_result (hr, device)) {
@@ -948,7 +952,6 @@ gst_d3d11_window_win32_present (GstD3D11Window * window, guint present_flags)
 
     return GST_D3D11_WINDOW_FLOW_CLOSED;
   }
-
 #if (GST_D3D11_DXGI_HEADER_VERSION >= 2)
   if (self->have_swapchain1) {
     IDXGISwapChain1 *swap_chain1 = (IDXGISwapChain1 *) window->swap_chain;

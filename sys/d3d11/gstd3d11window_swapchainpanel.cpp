@@ -34,15 +34,19 @@
 #include <wrl.h>
 #include <wrl/wrappers/corewrappers.h>
 
+/* *INDENT-OFF* */
+
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows::UI;
 using namespace ABI::Windows::Foundation;
 
-extern "C" {
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
 #define GST_CAT_DEFAULT gst_d3d11_window_debug
-}
+
+G_END_DECLS
 
 /* timeout to wait busy UI thread */
 #define DEFAULT_ASYNC_TIMEOUT (10 * 1000)
@@ -55,6 +59,7 @@ typedef struct _SwapChainPanelWinRTStorage
   HANDLE cancellable;
   EventRegistrationToken event_token;
 } SwapChainPanelWinRTStorage;
+/* *INDENT-ON* */
 
 struct _GstD3D11WindowSwapChainPanel
 {
@@ -90,11 +95,11 @@ static void
 gst_d3d11_window_swap_chain_panel_on_resize (GstD3D11Window * window,
     guint width, guint height);
 static void
-gst_d3d11_window_swap_chain_panel_on_resize_sync (GstD3D11Window *
-    window);
+gst_d3d11_window_swap_chain_panel_on_resize_sync (GstD3D11Window * window);
 static void
 gst_d3d11_window_swap_chain_panel_unprepare (GstD3D11Window * window);
 
+/* *INDENT-OFF* */
 class PanelResizeHandler
     : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
         Xaml::ISizeChangedEventHandler>
@@ -198,6 +203,7 @@ get_panel_size (const ComPtr<Core::ICoreDispatcher> &dispatcher,
 
   return hr;
 }
+/* *INDENT-ON* */
 
 static void
 gst_d3d11_window_swap_chain_panel_class_init (GstD3D11WindowSwapChainPanelClass
@@ -212,7 +218,8 @@ gst_d3d11_window_swap_chain_panel_class_init (GstD3D11WindowSwapChainPanelClass
   window_class->update_swap_chain =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_swap_chain_panel_update_swap_chain);
   window_class->change_fullscreen_mode =
-      GST_DEBUG_FUNCPTR (gst_d3d11_window_swap_chain_panel_change_fullscreen_mode);
+      GST_DEBUG_FUNCPTR
+      (gst_d3d11_window_swap_chain_panel_change_fullscreen_mode);
   window_class->create_swap_chain =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_swap_chain_panel_create_swap_chain);
   window_class->present =
@@ -234,6 +241,7 @@ gst_d3d11_window_swap_chain_panel_init (GstD3D11WindowSwapChainPanel * self)
   self->storage->cancellable = CreateEvent (NULL, TRUE, FALSE, NULL);
 }
 
+/* *INDENT-OFF* */
 static void
 gst_d3d11_window_swap_chain_panel_constructed (GObject * object)
 {
@@ -301,6 +309,7 @@ error:
   GST_ERROR_OBJECT (self, "Invalid window handle");
   return;
 }
+/* *INDENT-ON* */
 
 static void
 gst_d3d11_window_swap_chain_panel_dispose (GObject * object)
@@ -310,6 +319,7 @@ gst_d3d11_window_swap_chain_panel_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+/* *INDENT-OFF* */
 static void
 gst_d3d11_window_swap_chain_panel_unprepare (GstD3D11Window * window)
 {
@@ -339,6 +349,7 @@ gst_d3d11_window_swap_chain_panel_unprepare (GstD3D11Window * window)
 
   self->storage = NULL;
 }
+/* *INDENT-ON* */
 
 static IDXGISwapChain1 *
 create_swap_chain_for_composition (GstD3D11WindowSwapChainPanel * self,
@@ -372,6 +383,7 @@ create_swap_chain_for_composition (GstD3D11WindowSwapChainPanel * self,
   return swap_chain;
 }
 
+/* *INDENT-OFF* */
 static gboolean
 gst_d3d11_window_swap_chain_panel_create_swap_chain (GstD3D11Window * window,
     DXGI_FORMAT format, guint width, guint height, guint swapchain_flags,
@@ -424,6 +436,7 @@ gst_d3d11_window_swap_chain_panel_create_swap_chain (GstD3D11Window * window,
 
   return TRUE;
 }
+/* *INDENT-ON* */
 
 static GstFlowReturn
 gst_d3d11_window_swap_chain_panel_present (GstD3D11Window * window,
@@ -501,11 +514,11 @@ gst_d3d11_window_swap_chain_panel_on_resize (GstD3D11Window * window,
       GST_D3D11_WINDOW_SWAP_CHAIN_PANEL (window);
   SwapChainPanelWinRTStorage *storage = self->storage;
 
-  run_async (storage->dispatcher, storage->cancellable, INFINITE,
-      [window] {
+  run_async (storage->dispatcher, storage->cancellable, INFINITE,[window] {
         gst_d3d11_window_swap_chain_panel_on_resize_sync (window);
         return S_OK;
-      });
+      }
+  );
 }
 
 static void
@@ -528,7 +541,7 @@ gst_d3d11_window_swap_chain_panel_new (GstD3D11Device * device, guintptr handle)
 
   window = (GstD3D11Window *)
       g_object_new (GST_TYPE_D3D11_WINDOW_SWAP_CHAIN_PANEL,
-          "d3d11device", device, "window-handle", handle, NULL);
+      "d3d11device", device, "window-handle", handle, NULL);
   if (!window->initialized) {
     gst_object_unref (window);
     return NULL;

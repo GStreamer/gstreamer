@@ -53,6 +53,7 @@
 
 #include <wrl.h>
 
+/* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
 G_BEGIN_DECLS
@@ -1408,6 +1409,7 @@ private:
   BYTE *vertex_buffer_;
   UINT vertex_buffer_size_;
 };
+/* *INDENT-ON* */
 
 struct _GstD3D11DesktopDup
 {
@@ -1450,17 +1452,15 @@ gst_d3d11_desktop_dup_class_init (GstD3D11DesktopDupClass * klass)
   g_object_class_install_property (gobject_class, PROP_D3D11_DEVICE,
       g_param_spec_object ("d3d11device", "D3D11 Device",
           "GstD3D11Device object for operating",
-          GST_TYPE_D3D11_DEVICE,
-          (GParamFlags)
+          GST_TYPE_D3D11_DEVICE, (GParamFlags)
           (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
-          G_PARAM_STATIC_STRINGS)));
+              G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_OUTPUT_INDEX,
       g_param_spec_int ("monitor-index", "Monitor Index",
           "Zero-based index for monitor to capture (-1 = primary monitor)",
-          -1, G_MAXINT, DEFAULT_MONITOR_INDEX,
-          (GParamFlags)
+          -1, G_MAXINT, DEFAULT_MONITOR_INDEX, (GParamFlags)
           (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
-          G_PARAM_STATIC_STRINGS)));
+              G_PARAM_STATIC_STRINGS)));
 }
 
 static void
@@ -1480,7 +1480,7 @@ gst_d3d11_desktop_dup_get_monitor_size (GstD3D11DesktopDup * self,
   DEVMODE dev_mode;
 
   monitor_info.cbSize = sizeof (MONITORINFOEX);
-  if (!GetMonitorInfo (hmonitor, (LPMONITORINFO) &monitor_info)) {
+  if (!GetMonitorInfo (hmonitor, (LPMONITORINFO) & monitor_info)) {
     GST_WARNING_OBJECT (self, "Couldn't get monitor info");
     return FALSE;
   }
@@ -1506,10 +1506,12 @@ static void
 gst_d3d11_desktop_dup_constructed (GObject * object)
 {
   GstD3D11DesktopDup *self = GST_D3D11_DESKTOP_DUP (object);
+  /* *INDENT-OFF* */
   ComPtr<IDXGIDevice> dxgi_device;
   ComPtr<IDXGIAdapter> adapter;
   ComPtr<IDXGIOutput> output;
   ComPtr<IDXGIOutput1> output1;
+  /* *INDENT-ON* */
   ID3D11Device *device_handle;
   HRESULT hr;
   gboolean ret = FALSE;
@@ -1537,7 +1539,7 @@ gst_d3d11_desktop_dup_constructed (GObject * object)
     guint index = 0;
     /* Enumerate all outputs to find primary monitor */
     do {
-      hr = adapter->EnumOutputs (index, output.ReleaseAndGetAddressOf());
+      hr = adapter->EnumOutputs (index, output.ReleaseAndGetAddressOf ());
       if (!gst_d3d11_result (hr, self->device))
         goto out;
 
@@ -1576,7 +1578,7 @@ gst_d3d11_desktop_dup_constructed (GObject * object)
    * application is running without dpi-awareness. To get actual monitor size,
    * we need to use Win32 API... */
   if (!gst_d3d11_desktop_dup_get_monitor_size (self,
-      output_desc.Monitor, &self->desktop_coordinates)) {
+          output_desc.Monitor, &self->desktop_coordinates)) {
     goto out;
   }
 
@@ -1587,8 +1589,9 @@ gst_d3d11_desktop_dup_constructed (GObject * object)
 
   GST_DEBUG_OBJECT (self,
       "Desktop coordinates left:top:right:bottom = %ld:%ld:%ld:%ld (%dx%d)",
-      self->desktop_coordinates.left, self->desktop_coordinates.top, self->desktop_coordinates.right,
-      self->desktop_coordinates.bottom, self->width, self->height);
+      self->desktop_coordinates.left, self->desktop_coordinates.top,
+      self->desktop_coordinates.right, self->desktop_coordinates.bottom,
+      self->width, self->height);
 
   ret = TRUE;
 
@@ -1649,7 +1652,9 @@ gst_d3d11_desktop_dup_setup_texture (GstD3D11DesktopDup * self)
   D3D11_TEXTURE2D_DESC texture_desc = { 0, };
   ID3D11Device *device_handle;
   HRESULT hr;
+  /* *INDENT-OFF* */
   ComPtr<ID3D11Texture2D> texture;
+  /* *INDENT-ON* */
 
   /* This texture is for copying/updating only updated region from previously
    * captured frame (like a reference frame) */
@@ -1674,7 +1679,7 @@ gst_d3d11_desktop_dup_setup_texture (GstD3D11DesktopDup * self)
     return FALSE;
   }
 
-  self->texture = texture.Detach();
+  self->texture = texture.Detach ();
 
   return TRUE;
 }
