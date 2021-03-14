@@ -96,15 +96,6 @@ struct _GstD3D11DecoderPrivate
 
   /* For device specific workaround */
   gboolean can_direct_rendering;
-
-  /* for internal shader */
-  GstD3D11Converter *converter;
-  ID3D11Texture2D *shader_resource_texture;
-  ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
-  ID3D11Texture2D *fallback_shader_output_texture;
-  ID3D11RenderTargetView *fallback_render_target_view[GST_VIDEO_MAX_PLANES];
-  DXGI_FORMAT resource_formats[GST_VIDEO_MAX_PLANES];
-  guint num_resource_views;
 };
 
 static void gst_d3d11_decoder_constructed (GObject * object);
@@ -230,23 +221,12 @@ static void
 gst_d3d11_decoder_reset_unlocked (GstD3D11Decoder * decoder)
 {
   GstD3D11DecoderPrivate *priv;
-  gint i;
 
   priv = decoder->priv;
   gst_clear_object (&priv->internal_pool);
 
   GST_D3D11_CLEAR_COM (priv->decoder);
   GST_D3D11_CLEAR_COM (priv->staging);
-
-  g_clear_pointer (&priv->converter, gst_d3d11_converter_free);
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    GST_D3D11_CLEAR_COM (priv->shader_resource_view[i]);
-    GST_D3D11_CLEAR_COM (priv->fallback_render_target_view[i]);
-  }
-
-  GST_D3D11_CLEAR_COM (priv->shader_resource_texture);
-  GST_D3D11_CLEAR_COM (priv->fallback_shader_output_texture);
 
   priv->dpb_size = 0;
   priv->downstream_min_buffers = 0;
@@ -725,128 +705,6 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
 
   decoder->opened = TRUE;
 
-  /* VP9 codec allows internal frame resizing. To handle that case, we need to
-   * configure converter here.
-   *
-   * Note: d3d11videoprocessor seemly does not work well and its ability of
-   * YUV to YUV resizing would vary depending on device.
-   * To make sure this conversion, shader will be placed
-   * instead of d3d11videoprocessor.
-   *
-   * TODO: VP8 has the same resizing spec.
-   * Need to VP8 here when VP8 support is added
-   */
-  if (codec == GST_D3D11_CODEC_VP9) {
-    D3D11_TEXTURE2D_DESC texture_desc;
-    D3D11_RENDER_TARGET_VIEW_DESC render_desc;
-    D3D11_SHADER_RESOURCE_VIEW_DESC resource_desc;
-    ID3D11Device *device_handle;
-    D3D11_VIEWPORT viewport;
-
-    memset (&texture_desc, 0, sizeof (texture_desc));
-    memset (&render_desc, 0, sizeof (render_desc));
-    memset (&resource_desc, 0, sizeof (resource_desc));
-
-    priv->converter = gst_d3d11_converter_new (priv->device, info, info);
-
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.Width = priv->display_width;
-    viewport.Height = priv->display_height;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-    gst_d3d11_converter_update_viewport (priv->converter, &viewport);
-
-    device_handle = gst_d3d11_device_get_device_handle (priv->device);
-
-    texture_desc.Width = aligned_width;
-    texture_desc.Height = aligned_height;
-    texture_desc.MipLevels = 1;
-    texture_desc.Format = d3d11_format->dxgi_format;
-    texture_desc.SampleDesc.Count = 1;
-    texture_desc.ArraySize = 1;
-    texture_desc.Usage = D3D11_USAGE_DEFAULT;
-    texture_desc.BindFlags = D3D11_BIND_RENDER_TARGET;
-
-    hr = device_handle->CreateTexture2D (&texture_desc, NULL,
-        &priv->fallback_shader_output_texture);
-    if (!gst_d3d11_result (hr, priv->device)) {
-      GST_ERROR_OBJECT (decoder, "Couldn't create shader output texture");
-      goto error;
-    }
-
-    texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    hr = device_handle->CreateTexture2D (&texture_desc, NULL,
-        &priv->shader_resource_texture);
-    if (!gst_d3d11_result (hr, priv->device)) {
-      GST_ERROR_OBJECT (decoder, "Couldn't create shader input texture");
-      goto error;
-    }
-
-    switch (texture_desc.Format) {
-      case DXGI_FORMAT_B8G8R8A8_UNORM:
-      case DXGI_FORMAT_R8G8B8A8_UNORM:
-      case DXGI_FORMAT_R10G10B10A2_UNORM:
-      case DXGI_FORMAT_R8_UNORM:
-      case DXGI_FORMAT_R8G8_UNORM:
-      case DXGI_FORMAT_R16_UNORM:
-      case DXGI_FORMAT_R16G16_UNORM:
-        priv->num_resource_views = 1;
-        priv->resource_formats[0] = texture_desc.Format;
-        break;
-      case DXGI_FORMAT_AYUV:
-        priv->num_resource_views = 1;
-        priv->resource_formats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        break;
-      case DXGI_FORMAT_NV12:
-        priv->num_resource_views = 2;
-        priv->resource_formats[0] = DXGI_FORMAT_R8_UNORM;
-        priv->resource_formats[1] = DXGI_FORMAT_R8G8_UNORM;
-        break;
-      case DXGI_FORMAT_P010:
-      case DXGI_FORMAT_P016:
-        priv->num_resource_views = 2;
-        priv->resource_formats[0] = DXGI_FORMAT_R16_UNORM;
-        priv->resource_formats[1] = DXGI_FORMAT_R16G16_UNORM;
-        break;
-      default:
-        g_assert_not_reached ();
-        break;
-    }
-
-    render_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-    render_desc.Texture2D.MipSlice = 0;
-
-    for (i = 0; i < priv->num_resource_views; i++) {
-      render_desc.Format = priv->resource_formats[i];
-
-      hr = device_handle->
-          CreateRenderTargetView (priv->fallback_shader_output_texture,
-          &render_desc, &priv->fallback_render_target_view[i]);
-      if (!gst_d3d11_result (hr, priv->device)) {
-        GST_ERROR_OBJECT (decoder,
-            "Failed to create %dth render target view (0x%x)", i, (guint) hr);
-        goto error;
-      }
-    }
-
-    resource_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    resource_desc.Texture2D.MipLevels = 1;
-
-    for (i = 0; i < priv->num_resource_views; i++) {
-      resource_desc.Format = priv->resource_formats[i];
-      hr = device_handle->
-          CreateShaderResourceView (priv->shader_resource_texture,
-          &resource_desc, &priv->shader_resource_view[i]);
-
-      if (!gst_d3d11_result (hr, priv->device)) {
-        GST_ERROR_OBJECT (decoder,
-            "Failed to create %dth resource view (0x%x)", i, (guint) hr);
-        goto error;
-      }
-    }
-  }
-
   gst_d3d11_device_unlock (priv->device);
 
   return TRUE;
@@ -1103,8 +961,7 @@ gst_d3d11_decoder_get_output_view_index (ID3D11VideoDecoderOutputView *
 
 static gboolean
 copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
-    gint display_height, gboolean need_convert,
-    GstBuffer * decoder_buffer, GstBuffer * output)
+    gint display_height, GstBuffer * decoder_buffer, GstBuffer * output)
 {
   GstD3D11DecoderPrivate *priv = self->priv;
   GstVideoFrame out_frame;
@@ -1128,62 +985,6 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
   in_subresource_index = gst_d3d11_memory_get_subresource_index (in_mem);
 
   gst_d3d11_device_lock (priv->device);
-
-  if (need_convert) {
-    D3D11_BOX src_box;
-    RECT rect;
-    ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES] = { NULL, };
-    guint srv_size;
-    guint i;
-
-    GST_LOG_OBJECT (self, "convert resolution, %dx%d -> %dx%d",
-        display_width, display_height,
-        priv->display_width, priv->display_height);
-
-    src_box.left = 0;
-    src_box.top = 0;
-    src_box.front = 0;
-    src_box.back = 1;
-    src_box.right = GST_ROUND_UP_2 (display_width);
-    src_box.bottom = GST_ROUND_UP_2 (display_height);
-
-    /* array of texture can be used for shader resource view */
-    if (priv->use_array_of_texture &&
-        (srv_size =
-            gst_d3d11_memory_get_shader_resource_view_size (in_mem)) != 0) {
-      GST_TRACE_OBJECT (self, "Decoded texture supports shader resource view");
-      for (i = 0; i < srv_size; i++)
-        srv[i] = gst_d3d11_memory_get_shader_resource_view (in_mem, i);
-    }
-
-    if (!srv[0]) {
-      /* copy decoded texture into shader resource texture */
-      GST_TRACE_OBJECT (self,
-          "Copy decoded texture to internal shader texture");
-      device_context->CopySubresourceRegion (priv->shader_resource_texture,
-          0, 0, 0, 0, in_texture, in_subresource_index, &src_box);
-
-      for (i = 0; i < priv->num_resource_views; i++)
-        srv[i] = priv->shader_resource_view[i];
-    }
-
-    rect.left = 0;
-    rect.top = 0;
-    rect.right = display_width;
-    rect.bottom = display_height;
-
-    gst_d3d11_converter_update_src_rect (priv->converter, &rect);
-
-    if (!gst_d3d11_converter_convert_unlocked (priv->converter,
-            srv, priv->fallback_render_target_view, NULL, NULL)) {
-      GST_ERROR_OBJECT (self, "Failed to convert");
-      goto error;
-    }
-
-    in_texture = priv->fallback_shader_output_texture;
-    in_subresource_index = 0;
-  }
-
   device_context->CopySubresourceRegion (priv->staging, 0, 0, 0, 0,
       in_texture, in_subresource_index, NULL);
 
@@ -1191,7 +992,11 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
 
   if (!gst_d3d11_result (hr, priv->device)) {
     GST_ERROR_OBJECT (self, "Failed to map, hr: 0x%x", (guint) hr);
-    goto error;
+
+    gst_d3d11_device_unlock (priv->device);
+    gst_video_frame_unmap (&out_frame);
+
+    return FALSE;
   }
 
   /* calculate stride and offset only once */
@@ -1228,16 +1033,11 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
   gst_d3d11_device_unlock (priv->device);
 
   return TRUE;
-
-error:
-  gst_d3d11_device_unlock (priv->device);
-  return FALSE;
 }
 
 static gboolean
 copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
-    gint display_height, gboolean need_convert,
-    GstBuffer * decoder_buffer, GstBuffer * output)
+    gint display_height, GstBuffer * decoder_buffer, GstBuffer * output)
 {
   GstD3D11DecoderPrivate *priv = self->priv;
   GstD3D11Memory *in_mem;
@@ -1248,7 +1048,6 @@ copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
   guint in_subresource_index, out_subresource_index;
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (priv->device);
-  gboolean ret = FALSE;
 
   in_mem = (GstD3D11Memory *) gst_buffer_peek_memory (decoder_buffer, 0);
   out_mem = (GstD3D11Memory *) gst_buffer_peek_memory (output, 0);
@@ -1268,76 +1067,6 @@ copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
   src_box.front = 0;
   src_box.back = 1;
 
-  if (need_convert) {
-    gboolean need_copy = FALSE;
-    ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES] = { NULL, };
-    ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES] = { NULL, };
-    RECT rect;
-    guint rtv_size;
-    guint srv_size;
-    guint i;
-
-    GST_LOG_OBJECT (self, "convert resolution, %dx%d -> %dx%d",
-        display_width, display_height,
-        priv->display_width, priv->display_height);
-
-    rtv_size = gst_d3d11_memory_get_render_target_view_size (out_mem);
-
-    if (!rtv_size) {
-      /* convert to fallback output view */
-      GST_LOG_OBJECT (self, "output memory cannot support render target view");
-      for (i = 0; priv->num_resource_views; i++)
-        rtv[i] = priv->fallback_render_target_view[i];
-      need_copy = TRUE;
-    } else {
-      for (i = 0; rtv_size; i++)
-        rtv[i] = gst_d3d11_memory_get_render_target_view (out_mem, i);
-    }
-
-    src_box.right = GST_ROUND_UP_2 (display_width);
-    src_box.bottom = GST_ROUND_UP_2 (display_height);
-
-    /* array of texture can be used for shader resource view */
-    if (priv->use_array_of_texture &&
-        (srv_size =
-            gst_d3d11_memory_get_shader_resource_view_size (in_mem)) != 0) {
-      GST_TRACE_OBJECT (self, "Decoded texture supports shader resource view");
-      for (i = 0; i < srv_size; i++)
-        srv[i] = gst_d3d11_memory_get_shader_resource_view (in_mem, i);
-    } else {
-      /* copy decoded texture into shader resource texture */
-      GST_TRACE_OBJECT (self,
-          "Copy decoded texture to internal shader texture");
-      device_context->CopySubresourceRegion (priv->shader_resource_texture,
-          0, 0, 0, 0, in_texture, in_subresource_index, &src_box);
-
-      for (i = 0; i < priv->num_resource_views; i++)
-        srv[i] = priv->shader_resource_view[i];
-    }
-
-    rect.left = 0;
-    rect.top = 0;
-    rect.right = display_width;
-    rect.bottom = display_height;
-
-    gst_d3d11_converter_update_src_rect (priv->converter, &rect);
-
-    if (!gst_d3d11_converter_convert_unlocked (priv->converter,
-            srv, rtv, NULL, NULL)) {
-      GST_ERROR_OBJECT (self, "Failed to convert");
-      ret = FALSE;
-      goto out;
-    }
-
-    if (!need_copy) {
-      ret = TRUE;
-      goto out;
-    }
-
-    in_texture = priv->fallback_shader_output_texture;
-    in_subresource_index = 0;
-  }
-
   src_box.right = GST_ROUND_UP_2 (priv->display_width);
   src_box.bottom = GST_ROUND_UP_2 (priv->display_height);
 
@@ -1346,14 +1075,10 @@ copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
       out_subresource_index, 0, 0, 0, in_texture, in_subresource_index,
       &src_box);
 
-  ret = TRUE;
-
-out:
   gst_d3d11_device_unlock (priv->device);
-
   gst_memory_unmap (GST_MEMORY_CAST (out_mem), &out_map);
 
-  return ret;
+  return TRUE;
 }
 
 gboolean
@@ -1363,7 +1088,6 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
 {
   GstD3D11DecoderPrivate *priv;
   gboolean can_device_copy = TRUE;
-  gboolean need_convert = FALSE;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (decoder_buffer), FALSE);
@@ -1371,13 +1095,9 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
 
   priv = decoder->priv;
 
-  need_convert = priv->converter &&
-      (priv->display_width != display_width ||
-      priv->display_height != display_height);
-
   /* if decoder buffer is intended to be outputted and we don't need to
    * do post processing, do nothing here */
-  if (decoder_buffer == output && !need_convert)
+  if (decoder_buffer == output)
     return TRUE;
 
   /* decoder buffer must have single memory */
@@ -1401,11 +1121,11 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
 do_process:
   if (can_device_copy) {
     return copy_to_d3d11 (decoder, info, display_width, display_height,
-        need_convert, decoder_buffer, output);
+        decoder_buffer, output);
   }
 
   return copy_to_system (decoder, info, display_width, display_height,
-      need_convert, decoder_buffer, output);
+      decoder_buffer, output);
 }
 
 gboolean

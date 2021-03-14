@@ -504,10 +504,6 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
    * up to gop size but our dpb pool cannot be increased */
   if (self->use_d3d11_output
       && GST_VIDEO_DECODER (self)->input_segment.rate > 0
-      && GST_VIDEO_INFO_WIDTH (&self->output_state->info) ==
-      (gint) picture->frame_hdr.width
-      && GST_VIDEO_INFO_HEIGHT (&self->output_state->info) ==
-      (gint) picture->frame_hdr.height
       && gst_d3d11_decoder_can_direct_render (self->d3d11_decoder, view_buffer,
           GST_MINI_OBJECT_CAST (picture))) {
     direct_rendering = TRUE;
