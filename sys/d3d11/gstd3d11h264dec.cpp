@@ -123,8 +123,6 @@ typedef struct _GstD3D11H264Dec
   guint remaining_buffer_size;
   guint8 *bitstream_buffer_data;
 
-  gboolean use_d3d11_output;
-
   DXVA_PicEntry_H264 ref_frame_list[16];
   INT field_order_cnt_list[16][2];
   USHORT frame_num_list[16];
@@ -368,12 +366,10 @@ gst_d3d11_h264_dec_negotiate (GstVideoDecoder * decoder)
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
   GstH264Decoder *h264dec = GST_H264_DECODER (decoder);
 
-  if (!gst_d3d11_decoder_negotiate (decoder, h264dec->input_state,
-          self->out_format, self->width, self->height,
-          self->interlaced ? GST_VIDEO_INTERLACE_MODE_MIXED :
-          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
-          &self->output_state, &self->use_d3d11_output))
+  if (!gst_d3d11_decoder_negotiate (self->d3d11_decoder, decoder,
+          h264dec->input_state, &self->output_state)) {
     return FALSE;
+  }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
@@ -384,9 +380,10 @@ gst_d3d11_h264_dec_decide_allocation (GstVideoDecoder * decoder,
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
 
-  if (!gst_d3d11_decoder_decide_allocation (decoder, query, self->device,
-          GST_D3D11_CODEC_H264, self->use_d3d11_output, self->d3d11_decoder))
+  if (!gst_d3d11_decoder_decide_allocation (self->d3d11_decoder,
+          decoder, query)) {
     return FALSE;
+  }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation
       (decoder, query);
@@ -486,6 +483,8 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
 
     gst_video_info_set_format (&info,
         self->out_format, self->width, self->height);
+    if (self->interlaced)
+      GST_VIDEO_INFO_INTERLACE_MODE (&info) = GST_VIDEO_INTERLACE_MODE_MIXED;
 
     /* Store configured DPB size here. Then, it will be referenced later
      * to decide whether we need to re-open decoder object or not.
@@ -493,7 +492,6 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
      * new DPB size is decreased, we can reuse existing decoder object.
      */
     self->max_dpb_size = max_dpb_size;
-    gst_d3d11_decoder_reset (self->d3d11_decoder);
     if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_H264,
             &info, self->coded_width, self->coded_height,
             /* Additional 4 views margin for zero-copy rendering */
@@ -836,8 +834,7 @@ gst_d3d11_h264_dec_output_picture (GstH264Decoder * decoder,
    * expose our decoder view without copy. In case of reverse playback, however,
    * we cannot do that since baseclass will store the decoded buffer
    * up to gop size but our dpb pool cannot be increased */
-  if (self->use_d3d11_output
-      && GST_VIDEO_DECODER (self)->input_segment.rate > 0
+  if (GST_VIDEO_DECODER (self)->input_segment.rate > 0
       && gst_d3d11_decoder_can_direct_render (self->d3d11_decoder, view_buffer,
           GST_MINI_OBJECT_CAST (picture))) {
     direct_rendering = TRUE;

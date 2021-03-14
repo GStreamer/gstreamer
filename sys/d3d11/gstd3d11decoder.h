@@ -66,8 +66,6 @@ gboolean          gst_d3d11_decoder_configure     (GstD3D11Decoder * decoder,
                                                    gint coded_height,
                                                    guint dpb_size);
 
-void              gst_d3d11_decoder_reset (GstD3D11Decoder * decoder);
-
 gboolean          gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
                                                  ID3D11VideoDecoderOutputView * output_view,
                                                  guint content_key_size,
@@ -102,21 +100,14 @@ gboolean          gst_d3d11_decoder_process_output      (GstD3D11Decoder * decod
                                                          GstBuffer * decoder_buffer,
                                                          GstBuffer * output);
 
-gboolean          gst_d3d11_decoder_negotiate           (GstVideoDecoder * decoder,
+gboolean          gst_d3d11_decoder_negotiate           (GstD3D11Decoder * decoder,
+                                                         GstVideoDecoder * videodec,
                                                          GstVideoCodecState * input_state,
-                                                         GstVideoFormat format,
-                                                         guint width,
-                                                         guint height,
-                                                         GstVideoInterlaceMode interlace_mode,
-                                                         GstVideoCodecState ** output_state,
-                                                         gboolean * downstream_supports_d3d11);
+                                                         GstVideoCodecState ** output_state);
 
-gboolean          gst_d3d11_decoder_decide_allocation   (GstVideoDecoder * decoder,
-                                                         GstQuery * query,
-                                                         GstD3D11Device * device,
-                                                         GstD3D11Codec codec,
-                                                         gboolean use_d3d11_pool,
-                                                         GstD3D11Decoder * d3d11_decoder);
+gboolean          gst_d3d11_decoder_decide_allocation   (GstD3D11Decoder * decoder,
+                                                         GstVideoDecoder * videodec,
+                                                         GstQuery * query);
 
 gboolean          gst_d3d11_decoder_can_direct_render   (GstD3D11Decoder * decoder,
                                                          GstBuffer * view_buffer,

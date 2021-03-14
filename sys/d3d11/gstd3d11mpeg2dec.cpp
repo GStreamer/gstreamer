@@ -92,8 +92,6 @@ typedef struct _GstD3D11Mpeg2Dec
   guint written_buffer_size;
   guint remaining_buffer_size;
   guint8 *bitstream_buffer_data;
-
-  gboolean use_d3d11_output;
 } GstD3D11Mpeg2Dec;
 
 typedef struct _GstD3D11Mpeg2DecClass
@@ -310,12 +308,10 @@ gst_d3d11_mpeg2_dec_negotiate (GstVideoDecoder * decoder)
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
   GstMpeg2Decoder *mpeg2dec = GST_MPEG2_DECODER (decoder);
 
-  if (!gst_d3d11_decoder_negotiate (decoder, mpeg2dec->input_state,
-          self->out_format, self->width, self->height,
-          self->interlaced ? GST_VIDEO_INTERLACE_MODE_MIXED :
-          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
-          &self->output_state, &self->use_d3d11_output))
+  if (!gst_d3d11_decoder_negotiate (self->d3d11_decoder, decoder,
+          mpeg2dec->input_state, &self->output_state)) {
     return FALSE;
+  }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
@@ -326,9 +322,10 @@ gst_d3d11_mpeg2_dec_decide_allocation (GstVideoDecoder * decoder,
 {
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
 
-  if (!gst_d3d11_decoder_decide_allocation (decoder, query, self->device,
-          GST_D3D11_CODEC_MPEG2, self->use_d3d11_output, self->d3d11_decoder))
+  if (!gst_d3d11_decoder_decide_allocation (self->d3d11_decoder,
+          decoder, query)) {
     return FALSE;
+  }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation
       (decoder, query);
@@ -417,8 +414,9 @@ gst_d3d11_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
 
     gst_video_info_set_format (&info,
         self->out_format, self->width, self->height);
+    if (self->interlaced)
+      GST_VIDEO_INFO_INTERLACE_MODE (&info) = GST_VIDEO_INTERLACE_MODE_MIXED;
 
-    gst_d3d11_decoder_reset (self->d3d11_decoder);
     if (!gst_d3d11_decoder_configure (self->d3d11_decoder,
             GST_D3D11_CODEC_MPEG2, &info, self->width, self->height,
             NUM_OUTPUT_VIEW)) {
@@ -892,8 +890,7 @@ gst_d3d11_mpeg2_dec_output_picture (GstMpeg2Decoder * decoder,
    * expose our decoder view without copy. In case of reverse playback, however,
    * we cannot do that since baseclass will store the decoded buffer
    * up to gop size but our dpb pool cannot be increased */
-  if (self->use_d3d11_output
-      && GST_VIDEO_DECODER (self)->input_segment.rate > 0
+  if (GST_VIDEO_DECODER (self)->input_segment.rate > 0
       && gst_d3d11_decoder_can_direct_render (self->d3d11_decoder, view_buffer,
           GST_MINI_OBJECT_CAST (picture))) {
     direct_rendering = TRUE;

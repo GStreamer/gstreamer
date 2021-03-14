@@ -113,8 +113,6 @@ typedef struct _GstD3D11Vp9Dec
   GstVP9Profile profile;
 
   GstVideoFormat out_format;
-
-  gboolean use_d3d11_output;
 } GstD3D11Vp9Dec;
 
 typedef struct _GstD3D11Vp9DecClass
@@ -312,11 +310,10 @@ gst_d3d11_vp9_dec_negotiate (GstVideoDecoder * decoder)
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   GstVp9Decoder *vp9dec = GST_VP9_DECODER (decoder);
 
-  if (!gst_d3d11_decoder_negotiate (decoder, vp9dec->input_state,
-          self->out_format, self->width, self->height,
-          GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
-          &self->output_state, &self->use_d3d11_output))
+  if (!gst_d3d11_decoder_negotiate (self->d3d11_decoder,
+          decoder, vp9dec->input_state, &self->output_state)) {
     return FALSE;
+  }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
@@ -327,9 +324,10 @@ gst_d3d11_vp9_dec_decide_allocation (GstVideoDecoder * decoder,
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
 
-  if (!gst_d3d11_decoder_decide_allocation (decoder, query, self->device,
-          GST_D3D11_CODEC_VP9, self->use_d3d11_output, self->d3d11_decoder))
+  if (!gst_d3d11_decoder_decide_allocation (self->d3d11_decoder,
+          decoder, query)) {
     return FALSE;
+  }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation
       (decoder, query);
@@ -396,7 +394,6 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
     gst_video_info_set_format (&info,
         self->out_format, self->width, self->height);
 
-    gst_d3d11_decoder_reset (self->d3d11_decoder);
     if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_VP9,
             &info, self->width, self->height, NUM_OUTPUT_VIEW)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
@@ -488,8 +485,7 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
    * expose our decoder view without copy. In case of reverse playback, however,
    * we cannot do that since baseclass will store the decoded buffer
    * up to gop size but our dpb pool cannot be increased */
-  if (self->use_d3d11_output
-      && GST_VIDEO_DECODER (self)->input_segment.rate > 0
+  if (GST_VIDEO_DECODER (self)->input_segment.rate > 0
       && gst_d3d11_decoder_can_direct_render (self->d3d11_decoder, view_buffer,
           GST_MINI_OBJECT_CAST (picture))) {
     direct_rendering = TRUE;
