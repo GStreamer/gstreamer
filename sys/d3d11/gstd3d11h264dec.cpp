@@ -479,7 +479,7 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
     modified = TRUE;
   }
 
-  if (modified || !self->d3d11_decoder->opened) {
+  if (modified || !gst_d3d11_decoder_is_configured (self->d3d11_decoder)) {
     GstVideoInfo info;
 
     self->out_format = GST_VIDEO_FORMAT_UNKNOWN;
@@ -513,7 +513,7 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
      */
     self->max_dpb_size = max_dpb_size;
     gst_d3d11_decoder_reset (self->d3d11_decoder);
-    if (!gst_d3d11_decoder_open (self->d3d11_decoder, GST_D3D11_CODEC_H264,
+    if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_H264,
             &info, self->coded_width, self->coded_height,
             /* Additional 4 views margin for zero-copy rendering */
             max_dpb_size + 4,

@@ -65,19 +65,20 @@ enum
   PROP_DEVICE,
 };
 
-struct _GstD3D11DecoderPrivate
+struct _GstD3D11Decoder
 {
+  GstObject parent;
+
+  gboolean configured;
+
   GstD3D11Device *device;
 
   ID3D11VideoDevice *video_device;
   ID3D11VideoContext *video_context;
 
-  ID3D11VideoDecoder *decoder;
+  ID3D11VideoDecoder *decoder_handle;
 
   GstVideoInfo info;
-
-  gint display_width;
-  gint display_height;
 
   GstBufferPool *internal_pool;
   /* Internal pool params */
@@ -106,8 +107,7 @@ static void gst_d3d11_decoder_get_property (GObject * object, guint prop_id,
 static void gst_d3d11_decoder_dispose (GObject * obj);
 
 #define parent_class gst_d3d11_decoder_parent_class
-G_DEFINE_TYPE_WITH_PRIVATE (GstD3D11Decoder,
-    gst_d3d11_decoder, GST_TYPE_OBJECT);
+G_DEFINE_TYPE (GstD3D11Decoder, gst_d3d11_decoder, GST_TYPE_OBJECT);
 
 static void
 gst_d3d11_decoder_class_init (GstD3D11DecoderClass * klass)
@@ -132,39 +132,36 @@ gst_d3d11_decoder_class_init (GstD3D11DecoderClass * klass)
 static void
 gst_d3d11_decoder_init (GstD3D11Decoder * self)
 {
-  self->priv =
-      (GstD3D11DecoderPrivate *) gst_d3d11_decoder_get_instance_private (self);
 }
 
 static void
 gst_d3d11_decoder_constructed (GObject * object)
 {
   GstD3D11Decoder *self = GST_D3D11_DECODER (object);
-  GstD3D11DecoderPrivate *priv = self->priv;
   ID3D11VideoDevice *video_device;
   ID3D11VideoContext *video_context;
 
-  if (!priv->device) {
+  if (!self->device) {
     GST_ERROR_OBJECT (self, "No D3D11Device available");
     return;
   }
 
-  video_device = gst_d3d11_device_get_video_device_handle (priv->device);
+  video_device = gst_d3d11_device_get_video_device_handle (self->device);
   if (!video_device) {
     GST_ERROR_OBJECT (self, "ID3D11VideoDevice is not available");
     return;
   }
 
-  video_context = gst_d3d11_device_get_video_context_handle (priv->device);
+  video_context = gst_d3d11_device_get_video_context_handle (self->device);
   if (!video_context) {
     GST_ERROR_OBJECT (self, "ID3D11VideoContext is not available");
     return;
   }
 
-  priv->video_device = video_device;
+  self->video_device = video_device;
   video_device->AddRef ();
 
-  priv->video_context = video_context;
+  self->video_context = video_context;
   video_context->AddRef ();
 
   return;
@@ -175,11 +172,10 @@ gst_d3d11_decoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstD3D11Decoder *self = GST_D3D11_DECODER (object);
-  GstD3D11DecoderPrivate *priv = self->priv;
 
   switch (prop_id) {
     case PROP_DEVICE:
-      priv->device = (GstD3D11Device *) g_value_dup_object (value);
+      self->device = (GstD3D11Device *) g_value_dup_object (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -192,11 +188,10 @@ gst_d3d11_decoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstD3D11Decoder *self = GST_D3D11_DECODER (object);
-  GstD3D11DecoderPrivate *priv = self->priv;
 
   switch (prop_id) {
     case PROP_DEVICE:
-      g_value_set_object (value, priv->device);
+      g_value_set_object (value, self->device);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -207,12 +202,10 @@ gst_d3d11_decoder_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_d3d11_decoder_close (GstD3D11Decoder * self)
 {
-  GstD3D11DecoderPrivate *priv = self->priv;
-
   gst_d3d11_decoder_reset (self);
 
-  GST_D3D11_CLEAR_COM (priv->video_device);
-  GST_D3D11_CLEAR_COM (priv->video_context);
+  GST_D3D11_CLEAR_COM (self->video_device);
+  GST_D3D11_CLEAR_COM (self->video_context);
 
   return TRUE;
 }
@@ -220,43 +213,36 @@ gst_d3d11_decoder_close (GstD3D11Decoder * self)
 static void
 gst_d3d11_decoder_reset_unlocked (GstD3D11Decoder * decoder)
 {
-  GstD3D11DecoderPrivate *priv;
+  gst_clear_object (&decoder->internal_pool);
 
-  priv = decoder->priv;
-  gst_clear_object (&priv->internal_pool);
+  GST_D3D11_CLEAR_COM (decoder->decoder_handle);
+  GST_D3D11_CLEAR_COM (decoder->staging);
 
-  GST_D3D11_CLEAR_COM (priv->decoder);
-  GST_D3D11_CLEAR_COM (priv->staging);
+  decoder->dpb_size = 0;
+  decoder->downstream_min_buffers = 0;
 
-  priv->dpb_size = 0;
-  priv->downstream_min_buffers = 0;
-
-  decoder->opened = FALSE;
+  decoder->configured = FALSE;
 }
 
 void
 gst_d3d11_decoder_reset (GstD3D11Decoder * decoder)
 {
-  GstD3D11DecoderPrivate *priv;
-
   g_return_if_fail (GST_IS_D3D11_DECODER (decoder));
 
-  priv = decoder->priv;
-  gst_d3d11_device_lock (priv->device);
+  gst_d3d11_device_lock (decoder->device);
   gst_d3d11_decoder_reset_unlocked (decoder);
-  gst_d3d11_device_unlock (priv->device);
+  gst_d3d11_device_unlock (decoder->device);
 }
 
 static void
 gst_d3d11_decoder_dispose (GObject * obj)
 {
   GstD3D11Decoder *self = GST_D3D11_DECODER (obj);
-  GstD3D11DecoderPrivate *priv = self->priv;
 
-  if (priv->device) {
+  if (self->device) {
     gst_d3d11_decoder_close (self);
-    gst_object_unref (priv->device);
-    priv->device = NULL;
+    gst_object_unref (self->device);
+    self->device = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
@@ -265,35 +251,40 @@ gst_d3d11_decoder_dispose (GObject * obj)
 GstD3D11Decoder *
 gst_d3d11_decoder_new (GstD3D11Device * device)
 {
-  GstD3D11Decoder *decoder;
-  GstD3D11DecoderPrivate *priv;
+  GstD3D11Decoder *self;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
-  decoder = (GstD3D11Decoder *)
+  self = (GstD3D11Decoder *)
       g_object_new (GST_TYPE_D3D11_DECODER, "device", device, NULL);
-  priv = decoder->priv;
 
-  if (!priv->video_device || !priv->video_context) {
-    gst_object_unref (decoder);
+  if (!self->video_device || !self->video_context) {
+    gst_object_unref (self);
     return NULL;
   }
 
-  gst_object_ref_sink (decoder);
+  gst_object_ref_sink (self);
 
-  return decoder;
+  return self;
+}
+
+gboolean
+gst_d3d11_decoder_is_configured (GstD3D11Decoder * decoder)
+{
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+
+  return decoder->configured;
 }
 
 static gboolean
 gst_d3d11_decoder_ensure_output_view (GstD3D11Decoder * self,
     GstBuffer * buffer)
 {
-  GstD3D11DecoderPrivate *priv = self->priv;
   GstD3D11Memory *mem;
 
   mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, 0);
-  if (!gst_d3d11_memory_get_decoder_output_view (mem, priv->video_device,
-          &priv->decoder_profile)) {
+  if (!gst_d3d11_memory_get_decoder_output_view (mem, self->video_device,
+          &self->decoder_profile)) {
     GST_ERROR_OBJECT (self, "Decoder output view is unavailable");
     return FALSE;
   }
@@ -304,26 +295,25 @@ gst_d3d11_decoder_ensure_output_view (GstD3D11Decoder * self,
 static gboolean
 gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
 {
-  GstD3D11DecoderPrivate *priv = self->priv;
   GstD3D11AllocationParams *alloc_params = NULL;
   GstBufferPool *pool = NULL;
   GstCaps *caps = NULL;
   GstVideoAlignment align;
   GstD3D11AllocationFlags alloc_flags = (GstD3D11AllocationFlags) 0;
   gint bind_flags = D3D11_BIND_DECODER;
-  GstVideoInfo *info = &priv->info;
+  GstVideoInfo *info = &self->info;
   guint pool_size;
 
-  gst_clear_object (&priv->internal_pool);
+  gst_clear_object (&self->internal_pool);
 
-  if (!priv->use_array_of_texture) {
+  if (!self->use_array_of_texture) {
     alloc_flags = GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY;
   } else {
     /* array of texture can have shader resource view */
     bind_flags |= D3D11_BIND_SHADER_RESOURCE;
   }
 
-  alloc_params = gst_d3d11_allocation_params_new (priv->device, info,
+  alloc_params = gst_d3d11_allocation_params_new (self->device, info,
       alloc_flags, bind_flags);
 
   if (!alloc_params) {
@@ -331,18 +321,18 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
     goto error;
   }
 
-  pool_size = priv->dpb_size + priv->downstream_min_buffers;
+  pool_size = self->dpb_size + self->downstream_min_buffers;
   GST_DEBUG_OBJECT (self,
       "Configuring internal pool with size %d "
-      "(dpb size: %d, downstream min buffers: %d)", pool_size, priv->dpb_size,
-      priv->downstream_min_buffers);
+      "(dpb size: %d, downstream min buffers: %d)", pool_size, self->dpb_size,
+      self->downstream_min_buffers);
 
-  if (!priv->use_array_of_texture)
+  if (!self->use_array_of_texture)
     alloc_params->desc[0].ArraySize = pool_size;
   gst_video_alignment_reset (&align);
 
-  align.padding_right = priv->aligned_width - GST_VIDEO_INFO_WIDTH (info);
-  align.padding_bottom = priv->aligned_height - GST_VIDEO_INFO_HEIGHT (info);
+  align.padding_right = self->aligned_width - GST_VIDEO_INFO_WIDTH (info);
+  align.padding_bottom = self->aligned_height - GST_VIDEO_INFO_HEIGHT (info);
   if (!gst_d3d11_allocation_params_alignment (alloc_params, &align)) {
     GST_ERROR_OBJECT (self, "Cannot set alignment");
     goto error;
@@ -354,7 +344,7 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
     goto error;
   }
 
-  pool = gst_d3d11_buffer_pool_new_with_options (priv->device,
+  pool = gst_d3d11_buffer_pool_new_with_options (self->device,
       caps, alloc_params, 0, pool_size);
   gst_clear_caps (&caps);
   g_clear_pointer (&alloc_params, gst_d3d11_allocation_params_free);
@@ -369,7 +359,7 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
     goto error;
   }
 
-  priv->internal_pool = pool;
+  self->internal_pool = pool;
 
   return TRUE;
 
@@ -388,7 +378,6 @@ gboolean
 gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
     const GUID ** decoder_profiles, guint profile_size, GUID * selected_profile)
 {
-  GstD3D11DecoderPrivate *priv;
   GUID *guid_list = NULL;
   const GUID *profile = NULL;
   guint available_profile_count;
@@ -401,8 +390,7 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
   g_return_val_if_fail (profile_size > 0, FALSE);
   g_return_val_if_fail (selected_profile != NULL, FALSE);
 
-  priv = decoder->priv;
-  video_device = priv->video_device;
+  video_device = decoder->video_device;
 
   available_profile_count = video_device->GetVideoDecoderProfileCount ();
 
@@ -417,7 +405,7 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
 
   for (i = 0; i < available_profile_count; i++) {
     hr = video_device->GetVideoDecoderProfile (i, &guid_list[i]);
-    if (!gst_d3d11_result (hr, priv->device)) {
+    if (!gst_d3d11_result (hr, decoder->device)) {
       GST_WARNING_OBJECT (decoder, "Failed to get %d th decoder profile", i);
       return FALSE;
     }
@@ -477,11 +465,10 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
 }
 
 gboolean
-gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
+gst_d3d11_decoder_configure (GstD3D11Decoder * decoder, GstD3D11Codec codec,
     GstVideoInfo * info, gint coded_width, gint coded_height,
     guint dpb_size, const GUID ** decoder_profiles, guint profile_size)
 {
-  GstD3D11DecoderPrivate *priv;
   const GstD3D11Format *d3d11_format;
   HRESULT hr;
   BOOL can_support = FALSE;
@@ -508,14 +495,13 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   g_return_val_if_fail (decoder_profiles != NULL, FALSE);
   g_return_val_if_fail (profile_size > 0, FALSE);
 
-  priv = decoder->priv;
-  decoder->opened = FALSE;
-  priv->use_array_of_texture = FALSE;
+  decoder->configured = FALSE;
+  decoder->use_array_of_texture = FALSE;
 
-  device_handle = gst_d3d11_device_get_device_handle (priv->device);
-  video_device = priv->video_device;
+  device_handle = gst_d3d11_device_get_device_handle (decoder->device);
+  video_device = decoder->video_device;
 
-  d3d11_format = gst_d3d11_device_format_from_gst (priv->device,
+  d3d11_format = gst_d3d11_device_format_from_gst (decoder->device,
       GST_VIDEO_INFO_FORMAT (info));
   if (!d3d11_format || d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (decoder, "Could not determine dxgi format from %s",
@@ -523,7 +509,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
     return FALSE;
   }
 
-  gst_d3d11_device_lock (priv->device);
+  gst_d3d11_device_lock (decoder->device);
   if (!gst_d3d11_decoder_get_supported_decoder_profile (decoder,
           decoder_profiles, profile_size, &selected_profile)) {
     goto error;
@@ -531,7 +517,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
 
   hr = video_device->CheckVideoDecoderFormat (&selected_profile,
       d3d11_format->dxgi_format, &can_support);
-  if (!gst_d3d11_result (hr, priv->device) || !can_support) {
+  if (!gst_d3d11_result (hr, decoder->device) || !can_support) {
     GST_ERROR_OBJECT (decoder,
         "VideoDevice could not support dxgi format %d, hr: 0x%x",
         d3d11_format->dxgi_format, (guint) hr);
@@ -540,9 +526,9 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
 
   gst_d3d11_decoder_reset_unlocked (decoder);
 
-  priv->can_direct_rendering = TRUE;
+  decoder->can_direct_rendering = TRUE;
 
-  vendor = gst_d3d11_get_device_vendor (priv->device);
+  vendor = gst_d3d11_get_device_vendor (decoder->device);
   switch (vendor) {
     case GST_D3D11_DEVICE_VENDOR_XBOX:
     case GST_D3D11_DEVICE_VENDOR_QUALCOMM:
@@ -551,7 +537,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
        *
        * Qualcomm driver seems to be buggy in zero-copy scenario
        */
-      priv->can_direct_rendering = FALSE;
+      decoder->can_direct_rendering = FALSE;
       break;
     default:
       break;
@@ -593,7 +579,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   decoder_desc.Guid = selected_profile;
 
   hr = video_device->GetVideoDecoderConfigCount (&decoder_desc, &config_count);
-  if (!gst_d3d11_result (hr, priv->device) || config_count == 0) {
+  if (!gst_d3d11_result (hr, decoder->device) || config_count == 0) {
     GST_ERROR_OBJECT (decoder, "Could not get decoder config count, hr: 0x%x",
         (guint) hr);
     goto error;
@@ -607,7 +593,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   for (i = 0; i < config_count; i++) {
     hr = video_device->GetVideoDecoderConfig (&decoder_desc, i,
         &config_list[i]);
-    if (!gst_d3d11_result (hr, priv->device)) {
+    if (!gst_d3d11_result (hr, decoder->device)) {
       GST_ERROR_OBJECT (decoder, "Could not get decoder %dth config, hr: 0x%x",
           i, (guint) hr);
       goto error;
@@ -653,22 +639,20 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
    * it's recommended type as per DXVA spec */
   if ((best_config->ConfigDecoderSpecific & 0x4000) == 0x4000) {
     GST_DEBUG_OBJECT (decoder, "Config support array of texture");
-    priv->use_array_of_texture = TRUE;
+    decoder->use_array_of_texture = TRUE;
   }
 #endif
 
   hr = video_device->CreateVideoDecoder (&decoder_desc,
-      best_config, &priv->decoder);
-  if (!gst_d3d11_result (hr, priv->device) || !priv->decoder) {
+      best_config, &decoder->decoder_handle);
+  if (!gst_d3d11_result (hr, decoder->device) || !decoder->decoder_handle) {
     GST_ERROR_OBJECT (decoder,
         "Could not create decoder object, hr: 0x%x", (guint) hr);
     goto error;
   }
 
-  GST_DEBUG_OBJECT (decoder, "Decoder object %p created", priv->decoder);
-
-  priv->display_width = GST_VIDEO_INFO_WIDTH (info);
-  priv->display_height = GST_VIDEO_INFO_HEIGHT (info);
+  GST_DEBUG_OBJECT (decoder,
+      "Decoder object %p created", decoder->decoder_handle);
 
   /* create stage texture to copy out */
   staging_desc.Width = aligned_width;
@@ -680,38 +664,38 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   staging_desc.Usage = D3D11_USAGE_STAGING;
   staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 
-  hr = device_handle->CreateTexture2D (&staging_desc, NULL, &priv->staging);
-  if (!gst_d3d11_result (hr, priv->device)) {
+  hr = device_handle->CreateTexture2D (&staging_desc, NULL, &decoder->staging);
+  if (!gst_d3d11_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't create staging texture");
     goto error;
   }
 
-  memset (priv->staging_texture_offset,
-      0, sizeof (priv->staging_texture_offset));
-  memset (priv->stating_texture_stride,
-      0, sizeof (priv->stating_texture_stride));
+  memset (decoder->staging_texture_offset,
+      0, sizeof (decoder->staging_texture_offset));
+  memset (decoder->stating_texture_stride,
+      0, sizeof (decoder->stating_texture_stride));
 
-  priv->decoder_profile = selected_profile;
+  decoder->decoder_profile = selected_profile;
 
   /* Store pool related information here, then we will setup internal pool
    * later once the number of min buffer size required by downstream is known.
    * Actual buffer pool size will be "dpb_size + downstream_min_buffers"
    */
-  priv->info = *info;
-  priv->dpb_size = dpb_size;
-  priv->aligned_width = aligned_width;
-  priv->aligned_height = aligned_height;
-  priv->downstream_min_buffers = 0;
+  decoder->info = *info;
+  decoder->dpb_size = dpb_size;
+  decoder->aligned_width = aligned_width;
+  decoder->aligned_height = aligned_height;
+  decoder->downstream_min_buffers = 0;
 
-  decoder->opened = TRUE;
+  decoder->configured = TRUE;
 
-  gst_d3d11_device_unlock (priv->device);
+  gst_d3d11_device_unlock (decoder->device);
 
   return TRUE;
 
 error:
   gst_d3d11_decoder_reset_unlocked (decoder);
-  gst_d3d11_device_unlock (priv->device);
+  gst_d3d11_device_unlock (decoder->device);
 
   return FALSE;
 }
@@ -721,21 +705,21 @@ gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
     ID3D11VideoDecoderOutputView * output_view, guint content_key_size,
     gconstpointer content_key)
 {
-  GstD3D11DecoderPrivate *priv;
+  ID3D11VideoContext *video_context;
   guint retry_count = 0;
   HRESULT hr;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (output_view != NULL, FALSE);
 
-  priv = decoder->priv;
+  video_context = decoder->video_context;
 
   do {
     GST_LOG_OBJECT (decoder, "Try begin frame, retry count %d", retry_count);
-    gst_d3d11_device_lock (priv->device);
-    hr = priv->video_context->DecoderBeginFrame (priv->decoder,
+    gst_d3d11_device_lock (decoder->device);
+    hr = video_context->DecoderBeginFrame (decoder->decoder_handle,
         output_view, content_key_size, content_key);
-    gst_d3d11_device_unlock (priv->device);
+    gst_d3d11_device_unlock (decoder->device);
 
     /* HACK: Do 100 times retry with 1ms sleep per failure, since DXVA/D3D11
      * doesn't provide API for "GPU-IS-READY-TO-DECODE" like signal.
@@ -748,7 +732,7 @@ gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
           retry_count);
       g_usleep (1000);
     } else {
-      if (gst_d3d11_result (hr, priv->device))
+      if (gst_d3d11_result (hr, decoder->device))
         GST_LOG_OBJECT (decoder, "Succeeded with retry count %d", retry_count);
       break;
     }
@@ -756,7 +740,7 @@ gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
     retry_count++;
   } while (TRUE);
 
-  if (!gst_d3d11_result (hr, priv->device)) {
+  if (!gst_d3d11_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Failed to begin frame, hr: 0x%x", (guint) hr);
     return FALSE;
   }
@@ -767,18 +751,18 @@ gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
 gboolean
 gst_d3d11_decoder_end_frame (GstD3D11Decoder * decoder)
 {
-  GstD3D11DecoderPrivate *priv;
   HRESULT hr;
+  ID3D11VideoContext *video_context;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
 
-  priv = decoder->priv;
+  video_context = decoder->video_context;
 
-  gst_d3d11_device_lock (priv->device);
-  hr = priv->video_context->DecoderEndFrame (priv->decoder);
-  gst_d3d11_device_unlock (priv->device);
+  gst_d3d11_device_lock (decoder->device);
+  hr = video_context->DecoderEndFrame (decoder->decoder_handle);
+  gst_d3d11_device_unlock (decoder->device);
 
-  if (!gst_d3d11_result (hr, priv->device)) {
+  if (!gst_d3d11_result (hr, decoder->device)) {
     GST_WARNING_OBJECT (decoder, "EndFrame failed, hr: 0x%x", (guint) hr);
     return FALSE;
   }
@@ -791,21 +775,21 @@ gst_d3d11_decoder_get_decoder_buffer (GstD3D11Decoder * decoder,
     D3D11_VIDEO_DECODER_BUFFER_TYPE type, guint * buffer_size,
     gpointer * buffer)
 {
-  GstD3D11DecoderPrivate *priv;
   UINT size;
   void *decoder_buffer;
   HRESULT hr;
+  ID3D11VideoContext *video_context;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
 
-  priv = decoder->priv;
+  video_context = decoder->video_context;
 
-  gst_d3d11_device_lock (priv->device);
-  hr = priv->video_context->GetDecoderBuffer (priv->decoder,
+  gst_d3d11_device_lock (decoder->device);
+  hr = video_context->GetDecoderBuffer (decoder->decoder_handle,
       type, &size, &decoder_buffer);
-  gst_d3d11_device_unlock (priv->device);
+  gst_d3d11_device_unlock (decoder->device);
 
-  if (!gst_d3d11_result (hr, priv->device)) {
+  if (!gst_d3d11_result (hr, decoder->device)) {
     GST_WARNING_OBJECT (decoder, "Getting buffer type %d error, hr: 0x%x",
         type, (guint) hr);
     return FALSE;
@@ -821,18 +805,18 @@ gboolean
 gst_d3d11_decoder_release_decoder_buffer (GstD3D11Decoder * decoder,
     D3D11_VIDEO_DECODER_BUFFER_TYPE type)
 {
-  GstD3D11DecoderPrivate *priv;
   HRESULT hr;
+  ID3D11VideoContext *video_context;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
 
-  priv = decoder->priv;
+  video_context = decoder->video_context;
 
-  gst_d3d11_device_lock (priv->device);
-  hr = priv->video_context->ReleaseDecoderBuffer (priv->decoder, type);
-  gst_d3d11_device_unlock (priv->device);
+  gst_d3d11_device_lock (decoder->device);
+  hr = video_context->ReleaseDecoderBuffer (decoder->decoder_handle, type);
+  gst_d3d11_device_unlock (decoder->device);
 
-  if (!gst_d3d11_result (hr, priv->device)) {
+  if (!gst_d3d11_result (hr, decoder->device)) {
     GST_WARNING_OBJECT (decoder, "ReleaseDecoderBuffer failed, hr: 0x%x",
         (guint) hr);
     return FALSE;
@@ -845,19 +829,19 @@ gboolean
 gst_d3d11_decoder_submit_decoder_buffers (GstD3D11Decoder * decoder,
     guint buffer_count, const D3D11_VIDEO_DECODER_BUFFER_DESC * buffers)
 {
-  GstD3D11DecoderPrivate *priv;
   HRESULT hr;
+  ID3D11VideoContext *video_context;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
 
-  priv = decoder->priv;
+  video_context = decoder->video_context;
 
-  gst_d3d11_device_lock (priv->device);
-  hr = priv->video_context->SubmitDecoderBuffers (priv->decoder, buffer_count,
-      buffers);
-  gst_d3d11_device_unlock (priv->device);
+  gst_d3d11_device_lock (decoder->device);
+  hr = video_context->SubmitDecoderBuffers (decoder->decoder_handle,
+      buffer_count, buffers);
+  gst_d3d11_device_unlock (decoder->device);
 
-  if (!gst_d3d11_result (hr, priv->device)) {
+  if (!gst_d3d11_result (hr, decoder->device)) {
     GST_WARNING_OBJECT (decoder, "SubmitDecoderBuffers failed, hr: 0x%x",
         (guint) hr);
     return FALSE;
@@ -870,14 +854,12 @@ GstBuffer *
 gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
     GstVideoDecoder * videodec)
 {
-  GstD3D11DecoderPrivate *priv;
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
 
-  priv = decoder->priv;
-  if (!priv->internal_pool) {
+  if (!decoder->internal_pool) {
     /* Replicate gst_video_decoder_allocate_output_buffer().
      * In case of zero-copy playback, this is the last chance for querying
      * required min-buffer size by downstream and take account of
@@ -896,7 +878,7 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
     }
   }
 
-  ret = gst_buffer_pool_acquire_buffer (priv->internal_pool, &buf, NULL);
+  ret = gst_buffer_pool_acquire_buffer (decoder->internal_pool, &buf, NULL);
 
   if (ret != GST_FLOW_OK || !buf) {
     GST_ERROR_OBJECT (videodec, "Couldn't get buffer from pool, ret %s",
@@ -918,15 +900,12 @@ ID3D11VideoDecoderOutputView *
 gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
     GstBuffer * buffer)
 {
-  GstD3D11DecoderPrivate *priv;
   GstMemory *mem;
   GstD3D11Memory *dmem;
   ID3D11VideoDecoderOutputView *view;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), NULL);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-
-  priv = decoder->priv;
 
   mem = gst_buffer_peek_memory (buffer, 0);
   if (!gst_is_d3d11_memory (mem)) {
@@ -935,8 +914,8 @@ gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
   }
 
   dmem = (GstD3D11Memory *) mem;
-  view = gst_d3d11_memory_get_decoder_output_view (dmem, priv->video_device,
-      &priv->decoder_profile);
+  view = gst_d3d11_memory_get_decoder_output_view (dmem, decoder->video_device,
+      &decoder->decoder_profile);
 
   if (!view) {
     GST_ERROR_OBJECT (decoder, "Decoder output view is unavailable");
@@ -963,7 +942,6 @@ static gboolean
 copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
     gint display_height, GstBuffer * decoder_buffer, GstBuffer * output)
 {
-  GstD3D11DecoderPrivate *priv = self->priv;
   GstVideoFrame out_frame;
   guint i;
   GstD3D11Memory *in_mem;
@@ -972,7 +950,7 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
   ID3D11Texture2D *in_texture;
   guint in_subresource_index;
   ID3D11DeviceContext *device_context =
-      gst_d3d11_device_get_device_context_handle (priv->device);
+      gst_d3d11_device_get_device_context_handle (self->device);
 
   if (!gst_video_frame_map (&out_frame, info, output, GST_MAP_WRITE)) {
     GST_ERROR_OBJECT (self, "Couldn't map output buffer");
@@ -984,31 +962,31 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
   in_texture = gst_d3d11_memory_get_texture_handle (in_mem);
   in_subresource_index = gst_d3d11_memory_get_subresource_index (in_mem);
 
-  gst_d3d11_device_lock (priv->device);
-  device_context->CopySubresourceRegion (priv->staging, 0, 0, 0, 0,
+  gst_d3d11_device_lock (self->device);
+  device_context->CopySubresourceRegion (self->staging, 0, 0, 0, 0,
       in_texture, in_subresource_index, NULL);
 
-  hr = device_context->Map (priv->staging, 0, D3D11_MAP_READ, 0, &map);
+  hr = device_context->Map (self->staging, 0, D3D11_MAP_READ, 0, &map);
 
-  if (!gst_d3d11_result (hr, priv->device)) {
+  if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to map, hr: 0x%x", (guint) hr);
 
-    gst_d3d11_device_unlock (priv->device);
+    gst_d3d11_device_unlock (self->device);
     gst_video_frame_unmap (&out_frame);
 
     return FALSE;
   }
 
   /* calculate stride and offset only once */
-  if (priv->stating_texture_stride[0] == 0) {
+  if (self->stating_texture_stride[0] == 0) {
     D3D11_TEXTURE2D_DESC desc;
     gsize dummy;
 
-    priv->staging->GetDesc (&desc);
+    self->staging->GetDesc (&desc);
 
     gst_d3d11_dxgi_format_get_size (desc.Format, desc.Width, desc.Height,
-        map.RowPitch, priv->staging_texture_offset,
-        priv->stating_texture_stride, &dummy);
+        map.RowPitch, self->staging_texture_offset,
+        self->stating_texture_stride, &dummy);
   }
 
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&out_frame); i++) {
@@ -1016,7 +994,7 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
     gint j;
     gint width;
 
-    src = (guint8 *) map.pData + priv->staging_texture_offset[i];
+    src = (guint8 *) map.pData + self->staging_texture_offset[i];
     dst = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&out_frame, i);
     width = GST_VIDEO_FRAME_COMP_WIDTH (&out_frame, i) *
         GST_VIDEO_FRAME_COMP_PSTRIDE (&out_frame, i);
@@ -1024,13 +1002,13 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
     for (j = 0; j < GST_VIDEO_FRAME_COMP_HEIGHT (&out_frame, i); j++) {
       memcpy (dst, src, width);
       dst += GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, i);
-      src += priv->stating_texture_stride[i];
+      src += self->stating_texture_stride[i];
     }
   }
 
   gst_video_frame_unmap (&out_frame);
-  device_context->Unmap (priv->staging, 0);
-  gst_d3d11_device_unlock (priv->device);
+  device_context->Unmap (self->staging, 0);
+  gst_d3d11_device_unlock (self->device);
 
   return TRUE;
 }
@@ -1039,7 +1017,6 @@ static gboolean
 copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
     gint display_height, GstBuffer * decoder_buffer, GstBuffer * output)
 {
-  GstD3D11DecoderPrivate *priv = self->priv;
   GstD3D11Memory *in_mem;
   GstD3D11Memory *out_mem;
   GstMapInfo out_map;
@@ -1047,7 +1024,7 @@ copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
   ID3D11Texture2D *in_texture;
   guint in_subresource_index, out_subresource_index;
   ID3D11DeviceContext *device_context =
-      gst_d3d11_device_get_device_context_handle (priv->device);
+      gst_d3d11_device_get_device_context_handle (self->device);
 
   in_mem = (GstD3D11Memory *) gst_buffer_peek_memory (decoder_buffer, 0);
   out_mem = (GstD3D11Memory *) gst_buffer_peek_memory (output, 0);
@@ -1058,7 +1035,7 @@ copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
     return FALSE;
   }
 
-  gst_d3d11_device_lock (priv->device);
+  gst_d3d11_device_lock (self->device);
   in_texture = gst_d3d11_memory_get_texture_handle (in_mem);
   in_subresource_index = gst_d3d11_memory_get_subresource_index (in_mem);
 
@@ -1067,15 +1044,15 @@ copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
   src_box.front = 0;
   src_box.back = 1;
 
-  src_box.right = GST_ROUND_UP_2 (priv->display_width);
-  src_box.bottom = GST_ROUND_UP_2 (priv->display_height);
+  src_box.right = GST_ROUND_UP_2 (GST_VIDEO_INFO_WIDTH (&self->info));
+  src_box.bottom = GST_ROUND_UP_2 (GST_VIDEO_INFO_HEIGHT (&self->info));
 
   out_subresource_index = gst_d3d11_memory_get_subresource_index (out_mem);
   device_context->CopySubresourceRegion ((ID3D11Resource *) out_map.data,
       out_subresource_index, 0, 0, 0, in_texture, in_subresource_index,
       &src_box);
 
-  gst_d3d11_device_unlock (priv->device);
+  gst_d3d11_device_unlock (self->device);
   gst_memory_unmap (GST_MEMORY_CAST (out_mem), &out_map);
 
   return TRUE;
@@ -1086,14 +1063,11 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
     GstVideoInfo * info, gint display_width, gint display_height,
     GstBuffer * decoder_buffer, GstBuffer * output)
 {
-  GstD3D11DecoderPrivate *priv;
   gboolean can_device_copy = TRUE;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (decoder_buffer), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (output), FALSE);
-
-  priv = decoder->priv;
 
   /* if decoder buffer is intended to be outputted and we don't need to
    * do post processing, do nothing here */
@@ -1112,7 +1086,7 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
     }
 
     dmem = (GstD3D11Memory *) mem;
-    if (dmem->device != priv->device)
+    if (dmem->device != decoder->device)
       can_device_copy = FALSE;
   } else {
     can_device_copy = FALSE;
@@ -1323,7 +1297,7 @@ gst_d3d11_decoder_decide_allocation (GstVideoDecoder * decoder,
     /* Store min buffer size. We need to take account of the amount of buffers
      * which might be held by downstream in case of zero-copy playback */
     /* XXX: hardcoded bound 16, to avoid too large pool size */
-    d3d11_decoder->priv->downstream_min_buffers = MIN (min, 16);
+    d3d11_decoder->downstream_min_buffers = MIN (min, 16);
 
     GST_DEBUG_OBJECT (decoder, "Downstream min buffres: %d", min);
   }
@@ -1345,7 +1319,6 @@ gboolean
 gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * decoder,
     GstBuffer * view_buffer, GstMiniObject * picture)
 {
-  GstD3D11DecoderPrivate *priv;
   GstMemory *mem;
   GstD3D11Allocator *alloc;
   guint array_size, num_texture_in_use;
@@ -1354,9 +1327,7 @@ gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * decoder,
   g_return_val_if_fail (GST_IS_BUFFER (view_buffer), FALSE);
   g_return_val_if_fail (picture != NULL, FALSE);
 
-  priv = decoder->priv;
-
-  if (!priv->can_direct_rendering)
+  if (!decoder->can_direct_rendering)
     return FALSE;
 
   /* XXX: Not a thread-safe way, but should not be a problem.
@@ -1484,19 +1455,19 @@ gboolean
 gst_d3d11_decoder_supports_format (GstD3D11Decoder * decoder,
     const GUID * decoder_profile, DXGI_FORMAT format)
 {
-  GstD3D11DecoderPrivate *priv;
   HRESULT hr;
   BOOL can_support = FALSE;
+  ID3D11VideoDevice *video_device;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (decoder_profile != NULL, FALSE);
   g_return_val_if_fail (format != DXGI_FORMAT_UNKNOWN, FALSE);
 
-  priv = decoder->priv;
+  video_device = decoder->video_device;
 
-  hr = priv->video_device->CheckVideoDecoderFormat (decoder_profile, format,
+  hr = video_device->CheckVideoDecoderFormat (decoder_profile, format,
       &can_support);
-  if (!gst_d3d11_result (hr, priv->device) || !can_support) {
+  if (!gst_d3d11_result (hr, decoder->device) || !can_support) {
     GST_DEBUG_OBJECT (decoder,
         "VideoDevice could not support dxgi format %d, hr: 0x%x",
         format, (guint) hr);
@@ -1513,23 +1484,23 @@ gst_d3d11_decoder_supports_resolution (GstD3D11Decoder * decoder,
     const GUID * decoder_profile, DXGI_FORMAT format, guint width, guint height)
 {
   D3D11_VIDEO_DECODER_DESC desc;
-  GstD3D11DecoderPrivate *priv;
   HRESULT hr;
   UINT config_count;
+  ID3D11VideoDevice *video_device;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (decoder_profile != NULL, FALSE);
   g_return_val_if_fail (format != DXGI_FORMAT_UNKNOWN, FALSE);
 
-  priv = decoder->priv;
+  video_device = decoder->video_device;
 
   desc.SampleWidth = width;
   desc.SampleHeight = height;
   desc.OutputFormat = format;
   desc.Guid = *decoder_profile;
 
-  hr = priv->video_device->GetVideoDecoderConfigCount (&desc, &config_count);
-  if (!gst_d3d11_result (hr, priv->device) || config_count == 0) {
+  hr = video_device->GetVideoDecoderConfigCount (&desc, &config_count);
+  if (!gst_d3d11_result (hr, decoder->device) || config_count == 0) {
     GST_DEBUG_OBJECT (decoder, "Could not get decoder config count, hr: 0x%x",
         (guint) hr);
     return FALSE;

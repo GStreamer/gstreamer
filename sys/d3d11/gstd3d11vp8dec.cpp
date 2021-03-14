@@ -339,7 +339,7 @@ gst_d3d11_vp8_dec_new_sequence (GstVp8Decoder * decoder,
       self->out_format, self->width, self->height);
 
   gst_d3d11_decoder_reset (self->d3d11_decoder);
-  if (!gst_d3d11_decoder_open (self->d3d11_decoder, GST_D3D11_CODEC_VP8,
+  if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_VP8,
           &info, self->width, self->height,
           NUM_OUTPUT_VIEW, &profile_guid, 1)) {
     GST_ERROR_OBJECT (self, "Failed to create decoder");

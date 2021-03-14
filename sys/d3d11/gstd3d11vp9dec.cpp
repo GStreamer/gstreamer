@@ -387,7 +387,7 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
     modified = TRUE;
   }
 
-  if (modified || !self->d3d11_decoder->opened) {
+  if (modified || !gst_d3d11_decoder_is_configured (self->d3d11_decoder)) {
     const GUID *profile_guid = NULL;
     GstVideoInfo info;
 
@@ -410,7 +410,7 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
         self->out_format, self->width, self->height);
 
     gst_d3d11_decoder_reset (self->d3d11_decoder);
-    if (!gst_d3d11_decoder_open (self->d3d11_decoder, GST_D3D11_CODEC_VP9,
+    if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_VP9,
             &info, self->width, self->height,
             NUM_OUTPUT_VIEW, &profile_guid, 1)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");

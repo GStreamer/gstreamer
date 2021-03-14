@@ -55,28 +55,18 @@ typedef struct
   gchar *description;
 } GstD3D11DecoderClassData;
 
-struct _GstD3D11Decoder
-{
-  GstObject parent;
-
-  /* TRUE if decoder was successfully opened ever */
-  gboolean opened;
-
-  /*< private >*/
-  GstD3D11DecoderPrivate *priv;
-  gpointer padding[GST_PADDING_LARGE];
-};
-
 GstD3D11Decoder * gst_d3d11_decoder_new (GstD3D11Device * device);
 
-gboolean          gst_d3d11_decoder_open (GstD3D11Decoder * decoder,
-                                          GstD3D11Codec codec,
-                                          GstVideoInfo * info,
-                                          gint codec_width,
-                                          gint codec_height,
-                                          guint dpb_size,
-                                          const GUID ** decoder_profiles,
-                                          guint profile_size);
+gboolean          gst_d3d11_decoder_is_configured (GstD3D11Decoder * decoder);
+
+gboolean          gst_d3d11_decoder_configure     (GstD3D11Decoder * decoder,
+                                                   GstD3D11Codec codec,
+                                                   GstVideoInfo * info,
+                                                   gint codec_width,
+                                                   gint codec_height,
+                                                   guint dpb_size,
+                                                   const GUID ** decoder_profiles,
+                                                   guint profile_size);
 
 void              gst_d3d11_decoder_reset (GstD3D11Decoder * decoder);
 
