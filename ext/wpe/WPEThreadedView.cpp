@@ -195,6 +195,13 @@ WPEView* WPEContextThread::createWPEView(GstWpeSrc* src, GstGLContext* context, 
 static gboolean s_loadFailed(WebKitWebView*, WebKitLoadEvent, gchar* failing_uri, GError* error, gpointer data)
 {
     GstWpeSrc* src = GST_WPE_SRC(data);
+
+    if (g_error_matches(error, WEBKIT_NETWORK_ERROR, WEBKIT_NETWORK_ERROR_CANCELLED)) {
+        GST_INFO_OBJECT (src, "Loading cancelled.");
+
+        return FALSE;
+    }
+
     GST_ELEMENT_ERROR (GST_ELEMENT_CAST(src), RESOURCE, FAILED, (NULL), ("Failed to load %s (%s)", failing_uri, error->message));
     return FALSE;
 }
