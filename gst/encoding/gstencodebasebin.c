@@ -1434,6 +1434,22 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
    * * One for already encoded data
    */
 
+  /* Put _get_encoder() before request pad from muxer as _get_encoder() may fail and
+   * MOV/MP4 muxer don't support addition/removal of tracks at random times */
+  sgroup->encoder = _get_encoder (ebin, sprof);
+  if (!sgroup->encoder && (gst_encoding_profile_get_preset (sgroup->profile)
+          || gst_encoding_profile_get_preset_name (sgroup->profile))) {
+
+    if (!encoder_not_found)
+      _post_missing_plugin_message (ebin, sprof);
+    else
+      *encoder_not_found = TRUE;
+    goto cleanup;
+  } else {
+    /* passthrough can still work, if we discover that *
+     * encoding is required we post a missing plugin message */
+  }
+
   /* Muxer.
    * If we are handling a container profile, figure out if the muxer has a
    * sinkpad compatible with the selected profile */
@@ -1497,7 +1513,6 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
     goto outfilter_link_failure;
   last = sgroup->outfilter;
 
-  sgroup->encoder = _get_encoder (ebin, sprof);
   sgroup->parser = _get_parser (ebin, sgroup->profile, sgroup->encoder);
   if (sgroup->parser != NULL) {
     GST_DEBUG ("Got a parser %s", GST_ELEMENT_NAME (sgroup->parser));
@@ -1622,17 +1637,6 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
     gst_object_unref (sinkpad);
     gst_object_unref (srcpad);
     srcpad = NULL;
-  } else if (gst_encoding_profile_get_preset (sgroup->profile)
-      || gst_encoding_profile_get_preset_name (sgroup->profile)) {
-
-    if (!encoder_not_found)
-      _post_missing_plugin_message (ebin, sprof);
-    else
-      *encoder_not_found = TRUE;
-    goto cleanup;
-  } else {
-    /* passthrough can still work, if we discover that *
-     * encoding is required we post a missing plugin message */
   }
 
 
