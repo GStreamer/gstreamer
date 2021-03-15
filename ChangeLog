@@ -1,3 +1,28 @@
+=== release 1.18.4 ===
+
+2021-03-15 17:50:04 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.18.4
+
+2021-03-08 09:56:49 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-group.c:
+	  group: Use proper group constructor
+	  Otherwise we might en up having a group which is not backed by any asset
+	  leading to possible assertion as this should never happen (see
+	  https://gitlab.gnome.org/GNOME/pitivi/-/issues/2526)
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/233>
+
+2021-01-14 02:17:48 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.3 ===
 
 2021-01-13 21:13:01 +0000  Tim-Philipp Müller <tim@centricular.com>
