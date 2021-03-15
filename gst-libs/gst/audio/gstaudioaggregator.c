@@ -200,6 +200,7 @@ gst_audio_aggregator_convert_pad_update_converter (GstAudioAggregatorConvertPad
     * aaggcpad, GstAudioInfo * in_info, GstAudioInfo * out_info)
 {
   GstStructure *config = aaggcpad->priv->converter_config;
+  GstAudioConverter *converter;
 
   if (!aaggcpad->priv->converter_config_changed)
     return;
@@ -207,16 +208,27 @@ gst_audio_aggregator_convert_pad_update_converter (GstAudioAggregatorConvertPad
   g_clear_pointer (&aaggcpad->priv->converter, gst_audio_converter_free);
   aaggcpad->priv->converter_config_changed = FALSE;
 
-  if (gst_audio_info_is_equal (in_info, out_info) ||
-      in_info->finfo->format == GST_AUDIO_FORMAT_UNKNOWN) {
+  if (in_info->finfo->format == GST_AUDIO_FORMAT_UNKNOWN) {
     /* If we haven't received caps yet, this pad should not have
      * a buffer to convert anyway */
     return;
   }
 
-  aaggcpad->priv->converter =
+  converter =
       gst_audio_converter_new (GST_AUDIO_CONVERTER_FLAG_NONE, in_info, out_info,
       config ? gst_structure_copy (config) : NULL);
+
+  if (converter == NULL) {
+    /* FIXME: Not converting when we need to but the config is invalid (e.g.
+     * because the mix-matrix is not the right size) produces garbage. An
+     * invalid config should cause a GST_FLOW_NOT_NEGOTIATED. */
+    return;
+  }
+
+  if (!gst_audio_converter_is_passthrough (converter))
+    aaggcpad->priv->converter = converter;
+  else
+    gst_audio_converter_free (converter);
 }
 
 static void
