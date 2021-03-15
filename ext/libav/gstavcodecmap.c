@@ -1233,6 +1233,21 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       break;
     }
 
+    case AV_CODEC_ID_XMA1:
+    {
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-xma",
+          "xmaversion", G_TYPE_INT, 1, NULL);
+      break;
+    }
+    case AV_CODEC_ID_XMA2:
+    {
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-xma",
+          "xmaversion", G_TYPE_INT, 2, NULL);
+      break;
+    }
+
     case AV_CODEC_ID_MACE3:
     case AV_CODEC_ID_MACE6:
     {
@@ -3992,6 +4007,21 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
           break;
         case 3:
           id = AV_CODEC_ID_WMAPRO;
+          break;
+      }
+    }
+    if (id != AV_CODEC_ID_NONE)
+      audio = TRUE;
+  } else if (!strcmp (mimetype, "audio/x-xma")) {
+    gint xmaversion = 0;
+
+    if (gst_structure_get_int (structure, "xmaversion", &xmaversion)) {
+      switch (xmaversion) {
+        case 1:
+          id = AV_CODEC_ID_XMA1;
+          break;
+        case 2:
+          id = AV_CODEC_ID_XMA2;
           break;
       }
     }
