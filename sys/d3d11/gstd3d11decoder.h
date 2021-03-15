@@ -109,10 +109,12 @@ gboolean          gst_d3d11_decoder_decide_allocation   (GstD3D11Decoder * decod
                                                          GstVideoDecoder * videodec,
                                                          GstQuery * query);
 
+gboolean          gst_d3d11_decoder_flush               (GstD3D11Decoder * decoder,
+                                                         GstVideoDecoder * videodec);
+
 gboolean          gst_d3d11_decoder_can_direct_render   (GstD3D11Decoder * decoder,
                                                          GstBuffer * view_buffer,
                                                          GstMiniObject * picture);
-
 
 /* Utils for class registration */
 gboolean          gst_d3d11_decoder_util_is_legacy_device (GstD3D11Device * device);

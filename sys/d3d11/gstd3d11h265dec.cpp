@@ -127,6 +127,7 @@ static gboolean gst_d3d11_h265_dec_decide_allocation (GstVideoDecoder *
     decoder, GstQuery * query);
 static gboolean gst_d3d11_h265_dec_src_query (GstVideoDecoder * decoder,
     GstQuery * query);
+static gboolean gst_d3d11_h265_dec_flush (GstVideoDecoder * decoder);
 
 /* GstH265Decoder */
 static gboolean gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
@@ -209,6 +210,7 @@ gst_d3d11_h265_dec_class_init (GstD3D11H265DecClass * klass, gpointer data)
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_d3d11_h265_dec_decide_allocation);
   decoder_class->src_query = GST_DEBUG_FUNCPTR (gst_d3d11_h265_dec_src_query);
+  decoder_class->flush = GST_DEBUG_FUNCPTR (gst_d3d11_h265_dec_flush);
 
   h265decoder_class->new_sequence =
       GST_DEBUG_FUNCPTR (gst_d3d11_h265_dec_new_sequence);
@@ -361,6 +363,17 @@ gst_d3d11_h265_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
   }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
+}
+
+static gboolean
+gst_d3d11_h265_dec_flush (GstVideoDecoder * decoder)
+{
+  GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
+
+  if (self->d3d11_decoder)
+    gst_d3d11_decoder_flush (self->d3d11_decoder, decoder);
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->flush (decoder);
 }
 
 static gboolean

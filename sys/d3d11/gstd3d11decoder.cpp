@@ -125,6 +125,8 @@ struct _GstD3D11Decoder
   gboolean configured;
   gboolean opened;
 
+  gboolean reverse_playback;
+
   GstD3D11Device *device;
 
   ID3D11VideoDevice *video_device;
@@ -989,26 +991,43 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
 {
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
+  gboolean reverse_playback = FALSE;
+  gboolean rate_changed = FALSE;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
 
-  if (!decoder->internal_pool) {
+  if (videodec->input_segment.rate < 0)
+    reverse_playback = TRUE;
+
+  if (reverse_playback != decoder->reverse_playback) {
+    GST_DEBUG_OBJECT (videodec, "Rate was changed, need re-negotiation");
+    rate_changed = TRUE;
+  }
+
+  if (!decoder->internal_pool || rate_changed) {
+    gboolean reconfigured;
+
     /* Replicate gst_video_decoder_allocate_output_buffer().
      * In case of zero-copy playback, this is the last chance for querying
      * required min-buffer size by downstream and take account of
      * the min-buffer size into our internel pool size */
     GST_VIDEO_DECODER_STREAM_LOCK (videodec);
-    if (gst_pad_check_reconfigure (GST_VIDEO_DECODER_SRC_PAD (videodec))) {
-      GST_DEBUG_OBJECT (videodec,
-          "Downstream was reconfigured, negotiating again");
-      gst_video_decoder_negotiate (videodec);
-    }
+    reconfigured =
+        gst_pad_check_reconfigure (GST_VIDEO_DECODER_SRC_PAD (videodec));
+    GST_DEBUG_OBJECT (videodec,
+        "Downstream was reconfigured, negotiating again");
     GST_VIDEO_DECODER_STREAM_UNLOCK (videodec);
+
+    if (reconfigured || rate_changed)
+      gst_video_decoder_negotiate (videodec);
 
     if (!gst_d3d11_decoder_prepare_output_view_pool (decoder)) {
       GST_ERROR_OBJECT (videodec, "Failed to setup internal pool");
       return NULL;
     }
+  } else if (!gst_buffer_pool_set_active (decoder->internal_pool, TRUE)) {
+    GST_ERROR_OBJECT (videodec, "Couldn't set active internal pool");
+    return NULL;
   }
 
   ret = gst_buffer_pool_acquire_buffer (decoder->internal_pool, &buf, NULL);
@@ -1408,6 +1427,22 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
     size = (guint) vinfo.size;
   }
 
+  if (videodec->input_segment.rate >= 0) {
+    decoder->reverse_playback = FALSE;
+
+    /* Don't allow too large pool size */
+    if (use_d3d11_pool) {
+      guint prev_max = max;
+
+      max = MAX (4, max);
+      max = MAX (max, min);
+
+      GST_DEBUG_OBJECT (videodec, "Update max size %d -> %d", prev_max, max);
+    }
+  } else {
+    decoder->reverse_playback = TRUE;
+  }
+
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -1460,6 +1495,19 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
   gst_object_unref (pool);
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_decoder_flush (GstD3D11Decoder * decoder, GstVideoDecoder * videodec)
+{
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+
+  /* Set active FALSE so that other thread which is waiting DPB texture buffer
+   * to be able to wakeup */
+  if (decoder->internal_pool)
+    gst_buffer_pool_set_active (decoder->internal_pool, FALSE);
 
   return TRUE;
 }
