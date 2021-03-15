@@ -87,20 +87,30 @@ the following state changes are possible:
 
 ## State variables
 
-An element has 4 state variables that are protected with the object LOCK:
+An element has 5 state variables that are protected with the object LOCK:
 
   - `STATE`
   - `STATE_NEXT`
   - `STATE_PENDING`
+  - `STATE_TARGET`
   - `STATE_RETURN`
 
-The `STATE` always reflects the current state of the element. The
-`STATE_NEXT` reflects the next state the element will go to. The
-`STATE_PENDING` always reflects the required state of the element. The
+`STATE` always reflects the current state of the element.
+
+`STATE_NEXT` reflects the next state the element will go to.
+
+`STATE_PENDING` always reflects the final state that the element is going to.
+This is different than `STATE_NEXT` when the final state involves going through
+multiple state changes, like from `PLAYING -> NULL`.
+
+`STATE_TARGET` is the final state that the element should go to as set by the
+application. `STATE_PENDING` can diverge from `STATE_TARGET` during `ASYNC`
+state changes when the element does state transitions.
+
 `STATE_RETURN` reflects the last return value of a state change.
 
-The `STATE_NEXT` and `STATE_PENDING` can be `VOID_PENDING` if the element
-is in the right state.
+`STATE_NEXT` and `STATE_PENDING` can be `VOID_PENDING` if the element is
+already in the right state.
 
 An element has a special lock to protect against concurrent invocations
 of `set_state()`, called the `STATE_LOCK`.
