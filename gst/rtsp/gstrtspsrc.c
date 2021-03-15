@@ -9224,9 +9224,12 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       set_manager_buffer_mode (rtspsrc);
       /* fall-through */
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      if (rtspsrc->is_live && (GST_STATE_TARGET (element) == GST_STATE_PAUSED)) {
-        /* unblock the tcp tasks only if rtspsrc is going to PAUSED (not if
-         * it's going to NULL) and make the loop waiting */
+      if (rtspsrc->is_live &&
+          (transition == GST_STATE_CHANGE_PAUSED_TO_PLAYING ||
+              GST_STATE_TARGET (element) == GST_STATE_PAUSED)) {
+        /* Unblock the tcp tasks and make the loop waiting. But if the state
+         * transition is PLAY->PAUSE, then only do this if the final target
+         * state is PAUSED */
         if (gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_WAIT, CMD_LOOP)) {
           /* make sure it is waiting before we send PAUSE or PLAY below */
           GST_RTSP_STREAM_LOCK (rtspsrc);
