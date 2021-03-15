@@ -1,3 +1,28 @@
+=== release 1.18.4 ===
+
+2021-03-15 17:48:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.18.4
+
+2021-03-03 11:05:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Make sure we have enough data available when parsing audio/video packets
+	  Otherwise there will be out-of-bounds reads and potential crashes.
+	  Thanks to Natalie Silvanovich for reporting.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/issues/37
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/75>
+
+2021-01-14 02:17:15 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.3 ===
 
 2021-01-13 21:09:14 +0000  Tim-Philipp Müller <tim@centricular.com>
