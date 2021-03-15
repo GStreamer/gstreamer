@@ -256,6 +256,28 @@ build_reset (GstRTSPBuilder * builder)
   memset (builder, 0, sizeof (GstRTSPBuilder));
 }
 
+static GstRTSPResult
+gst_rtsp_result_from_g_io_error (GError * error, GstRTSPResult default_res)
+{
+  if (error == NULL)
+    return GST_RTSP_OK;
+
+  if (error->domain != G_IO_ERROR)
+    return default_res;
+
+  switch (error->code) {
+    case G_IO_ERROR_TIMED_OUT:
+      return GST_RTSP_ETIMEOUT;
+    case G_IO_ERROR_INVALID_ARGUMENT:
+      return GST_RTSP_EINVAL;
+    case G_IO_ERROR_CANCELLED:
+    case G_IO_ERROR_WOULD_BLOCK:
+      return GST_RTSP_EINTR;
+    default:
+      return default_res;
+  }
+}
+
 static gboolean
 tls_accept_certificate (GTlsConnection * conn, GTlsCertificate * peer_cert,
     GTlsCertificateFlags errors, GstRTSPConnection * rtspconn)
@@ -470,8 +492,9 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
 getnameinfo_failed:
   {
     GST_ERROR ("failed to get local address: %s", err->message);
+    res = gst_rtsp_result_from_g_io_error (err, GST_RTSP_ERROR);
     g_clear_error (&err);
-    return GST_RTSP_ERROR;
+    return res;
   }
 newconn_failed:
   {
@@ -526,19 +549,21 @@ gst_rtsp_connection_accept (GSocket * socket, GstRTSPConnection ** conn,
 accept_failed:
   {
     GST_DEBUG ("Accepting client failed: %s", err->message);
+    ret = gst_rtsp_result_from_g_io_error (err, GST_RTSP_ESYS);
     g_clear_error (&err);
-    return GST_RTSP_ESYS;
+    return ret;
   }
 getnameinfo_failed:
   {
     GST_DEBUG ("getnameinfo failed: %s", err->message);
+    ret = gst_rtsp_result_from_g_io_error (err, GST_RTSP_ERROR);
     g_clear_error (&err);
     if (!g_socket_close (client_sock, &err)) {
       GST_DEBUG ("Closing socket failed: %s", err->message);
       g_clear_error (&err);
     }
     g_object_unref (client_sock);
-    return GST_RTSP_ERROR;
+    return ret;
   }
 }
 
@@ -956,16 +981,17 @@ wrong_result:
 connect_failed:
   {
     GST_ERROR ("failed to connect: %s", error->message);
-    res = GST_RTSP_ERROR;
+    res = gst_rtsp_result_from_g_io_error (error, GST_RTSP_ERROR);
     g_clear_error (&error);
     goto exit;
   }
 remote_address_failed:
   {
     GST_ERROR ("failed to resolve address: %s", error->message);
+    res = gst_rtsp_result_from_g_io_error (error, GST_RTSP_ERROR);
     g_object_unref (connection);
     g_clear_error (&error);
-    return GST_RTSP_ERROR;
+    return res;
   }
 }
 
@@ -1064,19 +1090,21 @@ gst_rtsp_connection_connect_with_response_usec (GstRTSPConnection * conn,
 connect_failed:
   {
     GST_ERROR ("failed to connect: %s", error->message);
+    res = gst_rtsp_result_from_g_io_error (error, GST_RTSP_ERROR);
     g_clear_error (&error);
     g_free (connection_uri);
     g_free (request_uri);
-    return GST_RTSP_ERROR;
+    return res;
   }
 remote_address_failed:
   {
     GST_ERROR ("failed to connect: %s", error->message);
+    res = gst_rtsp_result_from_g_io_error (error, GST_RTSP_ERROR);
     g_object_unref (connection);
     g_clear_error (&error);
     g_free (connection_uri);
     g_free (request_uri);
-    return GST_RTSP_ERROR;
+    return res;
   }
 tunneling_failed:
   {
@@ -1225,6 +1253,7 @@ write_bytes (GOutputStream * stream, const guint8 * buffer, guint * idx,
 {
   guint left;
   gssize r;
+  GstRTSPResult res;
   GError *err = NULL;
 
   if (G_UNLIKELY (*idx > size))
@@ -1258,18 +1287,9 @@ error:
     else
       GST_DEBUG ("%s", err->message);
 
-    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-      g_clear_error (&err);
-      return GST_RTSP_EINTR;
-    } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
-      g_clear_error (&err);
-      return GST_RTSP_EINTR;
-    } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
-      g_clear_error (&err);
-      return GST_RTSP_ETIMEOUT;
-    }
+    res = gst_rtsp_result_from_g_io_error (err, GST_RTSP_ESYS);
     g_clear_error (&err);
-    return GST_RTSP_ESYS;
+    return res;
   }
 }
 
@@ -1281,6 +1301,7 @@ writev_bytes (GOutputStream * stream, GOutputVector * vectors, gint n_vectors,
 {
   gsize _bytes_written = 0;
   gsize written;
+  GstRTSPResult ret;
   GError *err = NULL;
   GPollableReturn res = G_POLLABLE_RETURN_OK;
 
@@ -1332,19 +1353,14 @@ error:
     if (res == G_POLLABLE_RETURN_WOULD_BLOCK) {
       g_assert (!err);
       return GST_RTSP_EINTR;
-    } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-      g_clear_error (&err);
-      return GST_RTSP_EINTR;
-    } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
-      g_clear_error (&err);
-      return GST_RTSP_ETIMEOUT;
     } else if (G_UNLIKELY (written == 0)) {
       g_clear_error (&err);
       return GST_RTSP_EEOF;
     }
 
+    ret = gst_rtsp_result_from_g_io_error (err, GST_RTSP_ESYS);
     g_clear_error (&err);
-    return GST_RTSP_ESYS;
+    return ret;
   }
 }
 #else
@@ -1472,6 +1488,7 @@ read_bytes (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size,
 {
   guint left;
   gint r;
+  GstRTSPResult res;
   GError *err = NULL;
 
   if (G_UNLIKELY (*idx > size))
@@ -1496,18 +1513,9 @@ error:
       return GST_RTSP_EEOF;
 
     GST_DEBUG ("%s", err->message);
-    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-      g_clear_error (&err);
-      return GST_RTSP_EINTR;
-    } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
-      g_clear_error (&err);
-      return GST_RTSP_EINTR;
-    } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
-      g_clear_error (&err);
-      return GST_RTSP_ETIMEOUT;
-    }
+    res = gst_rtsp_result_from_g_io_error (err, GST_RTSP_ESYS);
     g_clear_error (&err);
-    return GST_RTSP_ESYS;
+    return res;
   }
 }
 
