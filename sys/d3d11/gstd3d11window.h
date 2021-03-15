@@ -102,6 +102,8 @@ struct _GstD3D11Window
   GstD3D11Converter *converter;
   GstD3D11OverlayCompositor *compositor;
 
+  gboolean processor_in_use;
+
   /* calculated rect with aspect ratio and window area */
   RECT render_rect;
 

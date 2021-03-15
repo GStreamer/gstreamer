@@ -125,6 +125,7 @@ struct _GstD3D11VideoSink
   GstBufferPool *fallback_pool;
   gboolean can_convert;
   gboolean have_video_processor;
+  gboolean processor_in_use;
 
   /* For drawing on user texture */
   GstD3D11VideoSinkCallbacks callbacks;
@@ -701,6 +702,8 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
     return FALSE;
   }
 
+  self->processor_in_use = FALSE;
+
   return TRUE;
 
   /* ERRORS */
@@ -1117,6 +1120,11 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       if ((desc.BindFlags & D3D11_BIND_DECODER) == D3D11_BIND_DECODER) {
         GST_TRACE_OBJECT (self,
             "Got VideoProcessor compatible texture, do direct rendering");
+        direct_rendering = TRUE;
+        self->processor_in_use = TRUE;
+      } else if (self->processor_in_use &&
+          (desc.BindFlags & D3D11_BIND_RENDER_TARGET) ==
+          D3D11_BIND_RENDER_TARGET) {
         direct_rendering = TRUE;
       }
     }

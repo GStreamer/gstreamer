@@ -650,6 +650,8 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   g_clear_pointer (&window->converter, gst_d3d11_converter_free);
   g_clear_pointer (&window->compositor, gst_d3d11_overlay_compositor_free);
 
+  window->processor_in_use = FALSE;
+
   /* Step 2: Decide display color format
    * If upstream format is 10bits, try DXGI_FORMAT_R10G10B10A2_UNORM first
    * Otherwise, use DXGI_FORMAT_B8G8R8A8_UNORM or DXGI_FORMAT_B8G8R8A8_UNORM
@@ -1059,6 +1061,40 @@ gst_d3d11_window_present_d2d (GstD3D11Window * self, GstStructure * stats)
 }
 #endif
 
+static gboolean
+gst_d3d11_window_do_processor (GstD3D11Window * self,
+    ID3D11VideoProcessorInputView * piv, ID3D11VideoProcessorOutputView * pov)
+{
+  gboolean ret;
+
+  ret = gst_d3d11_video_processor_render_unlocked (self->processor,
+      &self->input_rect, piv, &self->render_rect, pov);
+  if (!ret) {
+    GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using processor");
+  } else {
+    GST_TRACE_OBJECT (self, "Rendered using processor");
+    self->processor_in_use = TRUE;
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_d3d11_window_do_convert (GstD3D11Window * self,
+    ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
+    ID3D11RenderTargetView * rtv)
+{
+  if (!gst_d3d11_converter_convert_unlocked (self->converter,
+          srv, &rtv, NULL, NULL)) {
+    GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using converter");
+    return FALSE;
+  } else {
+    GST_TRACE_OBJECT (self, "Rendered using converter");
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
     GstStructure * stats, ID3D11VideoProcessorOutputView * pov,
@@ -1077,19 +1113,25 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
     ID3D11VideoProcessorInputView *piv = NULL;
     ID3D11Device *device_handle =
         gst_d3d11_device_get_device_handle (self->device);
+    gboolean can_convert = FALSE;
+    gboolean can_process = FALSE;
+    gboolean convert_ret = FALSE;
 
     /* Map memory in any case so that we can upload pending stage texture */
     if (!gst_d3d11_buffer_map (buffer, device_handle, infos, GST_MAP_READ)) {
       GST_ERROR_OBJECT (self, "Couldn't map buffer");
-
       return GST_FLOW_ERROR;
     }
 
-    if (!gst_d3d11_buffer_get_shader_resource_view (buffer, srv)) {
-      if (!gst_d3d11_window_buffer_ensure_processor_input (self, buffer, &piv)) {
-        GST_ERROR_OBJECT (self, "Input texture cannot be used for converter");
-        return GST_FLOW_ERROR;
-      }
+    can_convert = gst_d3d11_buffer_get_shader_resource_view (buffer, srv);
+    if (pov) {
+      can_process = gst_d3d11_window_buffer_ensure_processor_input (self,
+          buffer, &piv);
+    }
+
+    if (!can_convert && !can_process) {
+      GST_ERROR_OBJECT (self, "Input texture cannot be used for converter");
+      return GST_FLOW_ERROR;
     }
 
     if (self->first_present) {
@@ -1106,26 +1148,27 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
           &viewport);
     }
 
-    if (self->processor && piv && pov) {
-      if (!gst_d3d11_video_processor_render_unlocked (self->processor,
-              &self->input_rect, piv, &self->render_rect, pov)) {
-        GST_ERROR_OBJECT (self,
-            "Couldn't render to backbuffer using processor");
-        ret = GST_FLOW_ERROR;
-        goto unmap_and_out;
-      } else {
-        GST_TRACE_OBJECT (self, "Rendered using processor");
-      }
+    /* Converter preference order
+     * 1) If this texture can be converted via processor, and we used processor
+     *    previously, use processor
+     * 2) If SRV is available, use converter
+     * 3) otherwise, use processor
+     */
+    if (can_process && self->processor_in_use) {
+      convert_ret = gst_d3d11_window_do_processor (self, piv, pov);
+    } else if (can_convert) {
+      convert_ret = gst_d3d11_window_do_convert (self, srv, rtv);
+    } else if (can_process) {
+      convert_ret = gst_d3d11_window_do_processor (self, piv, pov);
     } else {
-      if (!gst_d3d11_converter_convert_unlocked (self->converter,
-              srv, &rtv, NULL, NULL)) {
-        GST_ERROR_OBJECT (self,
-            "Couldn't render to backbuffer using converter");
-        ret = GST_FLOW_ERROR;
-        goto unmap_and_out;
-      } else {
-        GST_TRACE_OBJECT (self, "Rendered using converter");
-      }
+      g_assert_not_reached ();
+      ret = GST_FLOW_ERROR;
+      goto unmap_and_out;
+    }
+
+    if (!convert_ret) {
+      ret = GST_FLOW_ERROR;
+      goto unmap_and_out;
     }
 
     gst_d3d11_overlay_compositor_upload (self->compositor, buffer);
