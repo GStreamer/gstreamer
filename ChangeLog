@@ -1,3 +1,87 @@
+=== release 1.18.4 ===
+
+2021-03-15 17:49:53 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.18.4
+
+2021-02-15 12:07:15 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/rtspclientsink.c:
+	  tests: rtspclientsink: fix some leaks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/192>
+
+2021-02-15 12:26:30 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: mark cached caps as maybe-leaked to make leaks tracer happy
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/192>
+
+2021-02-15 12:07:45 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/rtspclientsink.c:
+	  rtspclientsink: add unit test for potential shutdown deadlock
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/191>
+
+2021-02-15 12:01:34 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: fix deadlock on shutdown before preroll
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/issues/130
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/191>
+
+2021-02-01 12:16:46 +0100  Branko Subasic <branko@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: avoid deadlock in send_func
+	  Currently the send_func() runs in a thread of its own which is started
+	  the first time we enter handle_new_sample(). It runs in an outer loop
+	  until priv->continue_sending is FALSE, which happens when a TEARDOWN
+	  request is received. We use a local variable, cont, which is initialized
+	  to TRUE, meaning that we will always enter the outer loop, and at the
+	  end of the outer loop we assign it the value of priv->continue_sending.
+	  Within the outer loop there is an inner loop, where we wait to be
+	  signaled when there is more data to send. The inner loop is exited when
+	  priv->send_cookie has changed value, which it does when more data is
+	  available or when a TEARDOWN has been received.
+	  But if we get a TEARDOWN before send_func() is entered we will get stuck
+	  in the inner loop because no one will increase priv->session_cookie
+	  anymore.
+	  By not entering the outer loop in send_func() if priv->continue_sending
+	  is FALSE we make sure that we do not get stuck in send_func()'s inner
+	  loop should we receive a TEARDOWN before the send thread has started.
+	  Change-Id: I7338a0ea60ea435bb685f875965f5165839afa20
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/188>
+
+2021-01-22 08:58:23 +0100  Branko Subasic <branko@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: cleanup transports during TEARDOWN
+	  When tunneling RTP over RTSP the stream transports are stored in a hash
+	  table in the GstRTSPClientPrivate struct. They are used for, among other
+	  things, mapping channel id to stream transports when receiving data from
+	  the client. The stream tranports are created and added to the hash table
+	  in handle_setup_request(), but unfortuately they are not removed in
+	  handle_teardown_request(). This means that if the client sends data on
+	  the RTSP connection after it has sent the TEARDOWN, which is often the
+	  case when audio backchannel is enabled, handle_data() will still be able
+	  to map the channel to a session transport and pass the data along to it.
+	  Which eventually leads to a failing assert in gst_rtsp_stream_recv_rtp()
+	  because the stream is no longer joined to a bin.
+	  We avoid this by removing the stream transports from the hash table when
+	  we handle the TEARDOWN request.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/186>
+
+2021-01-14 02:17:42 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.18.3 ===
 
 2021-01-13 21:12:06 +0000  Tim-Philipp Müller <tim@centricular.com>
@@ -5,6 +89,7 @@
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-rtsp-server.doap:
 	* meson.build:
 	  Release 1.18.3
