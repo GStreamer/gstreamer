@@ -2,13 +2,13 @@ GStreamer 1.18 Release Notes
 
 GStreamer 1.18.0 was originally released on 8 September 2020.
 
-The latest bug-fix release in the 1.18 series is 1.18.3 and was released
-on 13 January 2021.
+The latest bug-fix release in the 1.18 series is 1.18.4 and was released
+on 15 March 2021.
 
 See https://gstreamer.freedesktop.org/releases/1.18/ for the latest
 version of this document.
 
-Last updated: Wednesday 13 January 2021, 20:00 UTC (log)
+Last updated: Monday 15 March 2021, 13:00 UTC (log)
 
 Introduction
 
@@ -2717,6 +2717,168 @@ List of merge requests and issues fixed in 1.18.3
 -   List of Merge Requests applied in 1.18.3
 -   List of Issues fixed in 1.18.3
 
+1.18.4
+
+The fourth 1.18 bug-fix release (1.18.4) was released on 15 March 2021.
+
+This release only contains bugfixes and security fixes and it should be
+safe to update from 1.18.x.
+
+Highlighted bugfixes in 1.18.4
+
+-   important security fixes for ID3 tag reading, matroska and realmedia
+    parsing, and gst-libav audio decoding
+-   audiomixer, audioaggregator: input buffer handling fixes
+-   decodebin3: improve stream-selection message handling
+-   uridecodebin3: make “caps” property work
+-   wavenc: fix writing of INFO chunks in some cases
+-   v4l2: bt601 colorimetry, allow encoder resolution changes, fix
+    decoder frame rate negotiation
+-   decklinkvideosink: fix auto format detection, and fixes for 29.97fps
+    framerate output
+-   mpeg-2 video handling fixes when seeking
+-   avviddec: fix bufferpool negotiation and possible memory corruption
+    when changing resolution
+-   various stability, performance and reliability improvements
+-   memory leak fixes
+-   build fixes: rpicamsrc, qt overlay example, d3d11videosink on UWP
+
+gstreamer
+
+-   info: Don’t leak log function user_data if the debug system is
+    compiled out
+-   task: Use SetThreadDescription() Win32 API for setting thread names,
+    which preserves thread names in dump files.
+-   buffer, memory: Mark info in map functions as caller-allocates and
+    pass allocation params as const pointers where possible
+-   clock: define AUTO_CLEANUP_FREE_FUNC for GstClockID
+
+gst-plugins-base
+
+-   tag: id3v2: fix frame size check and potential invalid reads
+-   audio: Fix gst_audio_buffer_truncate() meta handling for
+    non-interleaved audio
+-   audioresample: respect buffer layout when draining
+-   audioaggregator: fix input_buffer ownership
+-   decodebin3: change stream selection message owner, so that the app
+    sends the stream-selection event to the right element
+-   rtspconnection: correct data_size when tunneled mode
+-   uridecodebin3: make caps property work
+-   video-converter: Don’t upsample invalid lines
+-   videodecoder: Fix racy critical when pool negotiation occurs during
+    flush
+-   video: Convert gst_video_info_to_caps() to take self as const ptr
+-   examples: added qt core dependency for qt overlay example
+
+gst-plugins-good
+
+-   matroskademux: header parsing fixes
+-   rpicamsrc: depend on posix threads and vchiq_arm to fix build on
+    raspios again
+-   wavenc: Fixed INFO chunk corruption, caused by odd sized data not
+    being padded
+-   wavpackdec: Add floating point format support to fix distortions in
+    some cases
+-   v4l2: recognize V4L2 bt601 colorimetry again
+-   v4l2videoenc: support resolution change stream encode
+-   v4l2h265codec: fix HEVC profile string issue
+-   v4l2object: Need keep same transfer as input caps
+-   v4l2videodec: Fix vp8 and vp9 streams can’t play on board with
+    vendor bsp
+-   v4l2videodec: fix src side frame rate negotiation
+
+gst-plugins-bad
+
+-   avwait: Don’t post messages with the mutex locked
+-   d3d11h264dec: Reconfigure decoder object on DPB size change and keep
+    track of actually configured DPB size
+-   dashsink: fix double unref of sinkpad caps
+-   decklinkvideosink: Use correct numerator for 29.97fps
+-   decklinkvideosink: fix auto format detection
+-   decklinksrc: Use a more accurate capture time
+-   d3d11videosink: Fix build error on UWP
+-   interlace: negotiation and buffer leak fixes
+-   mpegvideoparse: do not clip, so decoder receives data from keyframe
+    even if it’s before the segment start
+-   mpegtsparse: Fix switched DTS/PTS when set-timestamps=false
+-   nvh264sldec: Reopen decoder object if larger DPB size is required
+-   sdpsrc: fix double free if sdp is provided as string via the
+    property
+-   vulkan: Fix elements long name.
+
+gst-plugins-ugly
+
+-   rmdemux: Make sure we have enough data available when parsing
+    audio/video packets
+
+gst-libav
+
+-   avviddec: take the maximum of the height/coded_height
+-   viddec: don’t configure an incorrect buffer pool when receiving a
+    gap event
+-   audiodec: fix stack overflow in gst_ffmpeg_channel_layout_to_gst()
+
+gst-rtsp-server
+
+-   rtspclientsink: fix deadlock on shutdown if no data has been
+    received yet
+-   rtspclientsink: fix leaks in unit tests
+-   rtsp-stream: avoid deadlock in send_func
+-   rtsp-client: cleanup transports during TEARDOWN
+
+gstreamer-vaapi
+
+-   h264 encoder: append encoder exposure to aud
+-   postproc: Fix a problem of propose_allocation when passthrough
+-   glx: Iterate over FBConfig and select 8 bit color size
+
+gstreamer-sharp
+
+-   no changes
+
+gst-omx
+
+-   no changes
+
+gst-python
+
+-   no changes
+
+gst-editing-services
+
+-   group: Use proper group constructor
+
+gst-integration-testsuites
+
+-   no changes
+
+gst-build
+
+-   no changes
+
+Cerbero build tool and packaging changes in 1.18.4
+
+-   macOS: more BigSur fixes
+-   glib: Backport patch to set thread names on Windows 10
+
+Contributors to 1.18.4
+
+Alicia Boya García, Ashley Brighthope, Bing Song, Branko Subasic, Edward
+Hervey, Guillaume Desmottes, Haihua Hu, He Junyan, Hou Qi, Jan Alexander
+Steffens (heftig), Jeongki Kim, Jordan Petridis, Knobe, Kristofer
+Björkström, Marijn Suijten, Matthew Waters, Paul Goulpié, Philipp Zabel,
+Rafał Dzięgiel, Sebastian Dröge, Seungha Yang, Staz M, Stéphane Cerveau,
+Thibault Saunier, Tim-Philipp Müller, Víctor Manuel Jáquez Leal, Vivia
+Nikolaidou, Vladimir Menshakov,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.18.4
+
+-   List of Merge Requests applied in 1.18.4
+-   List of Issues fixed in 1.18.4
+
 Schedule for 1.20
 
 Our next major feature release will be 1.20, and 1.19 will be the
@@ -2724,9 +2886,9 @@ unstable development version leading up to the stable 1.20 release. The
 development of 1.19/1.20 will happen in the git master branch.
 
 The plan for the 1.20 development cycle is yet to be confirmed, but it
-is now expected that feature freeze will take place some time in
-January/February 2021, with the first 1.20 stable release hopefully
-around February/March 2021.
+is now expected that feature freeze will take place some time in April
+2021, with the first 1.20 stable release hopefully around April/May
+2021.
 
 1.20 will be backwards-compatible to the stable 1.18, 1.16, 1.14, 1.12,
 1.10, 1.8, 1.6, 1.4, 1.2 and 1.0 release series.
