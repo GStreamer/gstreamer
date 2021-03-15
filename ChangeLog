@@ -1,3 +1,51 @@
+=== release 1.18.4 ===
+
+2021-03-15 17:50:17 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.18.4
+
+2021-02-24 17:41:02 +0100  Paul Goulpié <paul.goulpie@ubicast.eu>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  gstvaapiencoder_h264: add ENCODER_EXPOSURE on aud propertie
+	  forgot during the following mainline commit: https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/commit/bc2f8fd19e924aa0e193708307326acd037691ce#
+	  Signed-off-by: Paul Goulpié <paul.goulpie@ubicast.eu>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/416>
+
+2021-02-04 15:05:55 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  plugins: postproc: Fix a problem of propose_allocation when passthrough.
+	  We should query the downstream element to answer a precise allocation
+	  query when the passthrough mode is enabled.
+	  The current way still decides the allocation by the postproc itself. The
+	  pipeline such as:
+	  gst-launch-1.0 -v filesrc location=xxx.264 ! h264parse ! vaapih264dec ! \
+	  vaapipostproc ! fakevideosink silent=false sync=true
+	  will lose some info such as the GST_VIDEO_META_API_TYPE.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/414>
+
+2021-01-20 10:42:09 +0100  Rafał Dzięgiel <rafostar.github@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_glx.c:
+	  glx: Iterate over FBConfig and select 8 bit color size
+	  Texture upload mechanism used by gstreamer-vaapi relies on 8 bpc.
+	  In latest mesa versions the first fbconfig might not be 8 bit, so iterate
+	  over it to find the correct config with supported values.
+	  This also adds 8 bit alpha size to the framebuffer configuration which is
+	  required to get it working properly.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/411>
+
+2021-01-14 02:17:55 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.3 ===
 
 2021-01-13 21:13:25 +0000  Tim-Philipp Müller <tim@centricular.com>
