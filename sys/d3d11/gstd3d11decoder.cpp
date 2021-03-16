@@ -209,13 +209,13 @@ gst_d3d11_decoder_constructed (GObject * object)
 
   video_device = gst_d3d11_device_get_video_device_handle (self->device);
   if (!video_device) {
-    GST_ERROR_OBJECT (self, "ID3D11VideoDevice is not available");
+    GST_WARNING_OBJECT (self, "ID3D11VideoDevice is not available");
     return;
   }
 
   video_context = gst_d3d11_device_get_video_context_handle (self->device);
   if (!video_context) {
-    GST_ERROR_OBJECT (self, "ID3D11VideoContext is not available");
+    GST_WARNING_OBJECT (self, "ID3D11VideoContext is not available");
     return;
   }
 
