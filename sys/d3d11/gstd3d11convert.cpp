@@ -2253,6 +2253,7 @@ gst_d3d11_color_convert_fixate_caps (GstBaseTransform * base,
 
   format = gst_d3d11_base_convert_get_fixed_format (base, direction, caps,
       othercaps);
+  gst_caps_unref (othercaps);
 
   if (gst_caps_is_empty (format)) {
     GST_ERROR_OBJECT (base, "Could not convert formats");
