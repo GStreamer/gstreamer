@@ -1040,6 +1040,11 @@ gst_mf_transform_close (GstMFTransform * object)
 
   gst_mf_transform_flush (object);
 
+  /* Otherwise IMFTransform will be alive even after we release the IMFTransform
+   * below */
+  if (object->activate)
+    object->activate->ShutdownObject ();
+
   if (object->callback_object) {
     object->callback_object->Release ();
     object->callback_object = nullptr;

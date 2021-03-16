@@ -74,6 +74,7 @@ struct _GstMFSourceReader
   /* protected by lock */
   GstQueueArray *queue;
 
+  IMFActivate *activate;
   IMFMediaSource *source;
   IMFSourceReader *reader;
 
@@ -307,6 +308,8 @@ gst_mf_source_reader_open (GstMFSourceReader * self, IMFActivate * activate)
     return FALSE;
   }
 
+  self->activate = activate;
+  activate->AddRef ();
   self->source = source.Detach ();
   self->reader = reader.Detach ();
 
@@ -331,6 +334,12 @@ static gboolean
 gst_mf_source_reader_close (GstMFSourceReader * self)
 {
   gst_clear_caps (&self->supported_caps);
+
+  if (self->activate) {
+    self->activate->ShutdownObject ();
+    self->activate->Release ();
+    self->activate = NULL;
+  }
 
   if (self->media_types) {
     g_list_free_full (self->media_types,
