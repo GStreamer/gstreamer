@@ -2296,11 +2296,8 @@ static gboolean gst_ogg_demux_plugin_init (GstPlugin * plugin);
 
 #define gst_ogg_demux_parent_class parent_class
 G_DEFINE_TYPE (GstOggDemux, gst_ogg_demux, GST_TYPE_ELEMENT);
-
-#define _do_init \
-    gst_ogg_demux_plugin_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (oggdemux, "oggdemux", GST_RANK_PRIMARY,
-    GST_TYPE_OGG_DEMUX, _do_init);
+    GST_TYPE_OGG_DEMUX, gst_ogg_demux_plugin_init (plugin));
 
 static void
 gst_ogg_demux_class_init (GstOggDemuxClass * klass)
