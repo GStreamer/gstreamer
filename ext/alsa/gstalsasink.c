@@ -73,12 +73,10 @@ enum
   PROP_LAST
 };
 
-#define _do_init \
-    alsa_element_init (plugin);
 #define gst_alsasink_parent_class parent_class
 G_DEFINE_TYPE (GstAlsaSink, gst_alsasink, GST_TYPE_AUDIO_SINK);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (alsasink, "alsasink", GST_RANK_PRIMARY,
-    GST_TYPE_ALSA_SINK, _do_init);
+    GST_TYPE_ALSA_SINK, alsa_element_init (plugin));
 
 static void gst_alsasink_finalise (GObject * object);
 static void gst_alsasink_set_property (GObject * object,

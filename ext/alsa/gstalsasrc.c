@@ -71,10 +71,8 @@ enum
 
 #define gst_alsasrc_parent_class parent_class
 G_DEFINE_TYPE (GstAlsaSrc, gst_alsasrc, GST_TYPE_AUDIO_SRC);
-#define _do_init \
-    alsa_element_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (alsasrc, "alsasrc", GST_RANK_PRIMARY,
-    GST_TYPE_ALSA_SRC, _do_init);
+    GST_TYPE_ALSA_SRC, alsa_element_init (plugin));
 
 static void gst_alsasrc_finalize (GObject * object);
 static void gst_alsasrc_set_property (GObject * object,

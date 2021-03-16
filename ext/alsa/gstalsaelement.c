@@ -59,7 +59,7 @@ gst_alsa_error_wrapper (const char *file, int line, const char *function,
 GST_DEVICE_PROVIDER_REGISTER_DEFINE (alsadeviceprovider, "alsadeviceprovider",
     GST_RANK_SECONDARY, GST_TYPE_ALSA_DEVICE_PROVIDER);
 
-gboolean
+void
 alsa_element_init (GstPlugin * plugin)
 {
   static gsize res = FALSE;
@@ -76,5 +76,4 @@ alsa_element_init (GstPlugin * plugin)
       GST_WARNING ("failed to set alsa error handler");
     g_once_init_leave (&res, TRUE);
   }
-  return res;
 }

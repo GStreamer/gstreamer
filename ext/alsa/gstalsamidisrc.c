@@ -301,15 +301,12 @@ enum
   PROP_LAST,
 };
 
-#define _do_init \
-    GST_DEBUG_CATEGORY_INIT (gst_alsa_midi_src_debug, "alsamidisrc", 0, "alsamidisrc element");
 #define gst_alsa_midi_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAlsaMidiSrc, gst_alsa_midi_src, GST_TYPE_PUSH_SRC,
-    _do_init);
-#define _do_element_init \
-    alsa_element_init (plugin);
+    GST_DEBUG_CATEGORY_INIT (gst_alsa_midi_src_debug, "alsamidisrc", 0,
+        "alsamidisrc element"));
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (alsamidisrc, "alsamidisrc",
-    GST_RANK_PRIMARY, GST_TYPE_ALSA_MIDI_SRC, _do_element_init);
+    GST_RANK_PRIMARY, GST_TYPE_ALSA_MIDI_SRC, alsa_element_init (plugin));
 
 static void gst_alsa_midi_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

@@ -24,7 +24,7 @@
 
 G_BEGIN_DECLS
 
-G_GNUC_INTERNAL gboolean alsa_element_init (GstPlugin * plugin);
+G_GNUC_INTERNAL void alsa_element_init (GstPlugin * plugin);
 
 GST_ELEMENT_REGISTER_DECLARE (alsasrc);
 GST_ELEMENT_REGISTER_DECLARE (alsasink);
