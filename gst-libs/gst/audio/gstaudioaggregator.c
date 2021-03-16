@@ -199,31 +199,24 @@ static void
 gst_audio_aggregator_convert_pad_update_converter (GstAudioAggregatorConvertPad
     * aaggcpad, GstAudioInfo * in_info, GstAudioInfo * out_info)
 {
+  GstStructure *config = aaggcpad->priv->converter_config;
+
   if (!aaggcpad->priv->converter_config_changed)
     return;
 
-  if (aaggcpad->priv->converter) {
-    gst_audio_converter_free (aaggcpad->priv->converter);
-    aaggcpad->priv->converter = NULL;
-  }
+  g_clear_pointer (&aaggcpad->priv->converter, gst_audio_converter_free);
+  aaggcpad->priv->converter_config_changed = FALSE;
 
   if (gst_audio_info_is_equal (in_info, out_info) ||
       in_info->finfo->format == GST_AUDIO_FORMAT_UNKNOWN) {
-    if (aaggcpad->priv->converter) {
-      gst_audio_converter_free (aaggcpad->priv->converter);
-      aaggcpad->priv->converter = NULL;
-    }
-  } else {
     /* If we haven't received caps yet, this pad should not have
      * a buffer to convert anyway */
-    aaggcpad->priv->converter =
-        gst_audio_converter_new (GST_AUDIO_CONVERTER_FLAG_NONE,
-        in_info, out_info,
-        aaggcpad->priv->converter_config ? gst_structure_copy (aaggcpad->priv->
-            converter_config) : NULL);
+    return;
   }
 
-  aaggcpad->priv->converter_config_changed = FALSE;
+  aaggcpad->priv->converter =
+      gst_audio_converter_new (GST_AUDIO_CONVERTER_FLAG_NONE, in_info, out_info,
+      config ? gst_structure_copy (config) : NULL);
 }
 
 static void
