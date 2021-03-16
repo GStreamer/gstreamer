@@ -84,11 +84,9 @@ struct _GstOggParseClass
 
 static GstElementClass *parent_class = NULL;
 G_DEFINE_TYPE (GstOggParse, gst_ogg_parse, GST_TYPE_ELEMENT);
-
-#define _do_init \
-    GST_DEBUG_CATEGORY_INIT (gst_ogg_parse_debug, "oggparse", 0, "ogg parser");
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (oggparse, "oggparse", GST_RANK_NONE,
-    GST_TYPE_OGG_PARSE, _do_init);
+    GST_TYPE_OGG_PARSE, GST_DEBUG_CATEGORY_INIT (gst_ogg_parse_debug,
+        "oggparse", 0, "ogg parser"));
 
 static void
 free_stream (GstOggStream * stream)

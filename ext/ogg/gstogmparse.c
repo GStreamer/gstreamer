@@ -150,7 +150,7 @@ static void gst_ogm_parse_init (GstOgmParse * ogm);
 static void gst_ogm_video_parse_init (GstOgmParse * ogm);
 static void gst_ogm_audio_parse_init (GstOgmParse * ogm);
 static void gst_ogm_text_parse_init (GstOgmParse * ogm);
-static gboolean gst_ogm_parse_element_init (GstPlugin * plugin);
+static void gst_ogm_parse_element_init (GstPlugin * plugin);
 
 static gboolean gst_ogm_parse_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
@@ -966,7 +966,7 @@ gst_ogm_parse_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-static gboolean
+static void
 gst_ogm_parse_element_init (GstPlugin * plugin)
 {
   static gsize res = FALSE;
@@ -975,5 +975,4 @@ gst_ogm_parse_element_init (GstPlugin * plugin)
     GST_DEBUG_CATEGORY_INIT (gst_ogm_parse_debug, "ogmparse", 0, "ogm parser");
     g_once_init_leave (&res, TRUE);
   }
-  return res;
 }

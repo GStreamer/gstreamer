@@ -140,11 +140,9 @@ static GstStateChangeReturn gst_ogg_mux_change_state (GstElement * element,
 #define gst_ogg_mux_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOggMux, gst_ogg_mux, GST_TYPE_ELEMENT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
-
-#define _do_init \
-    GST_DEBUG_CATEGORY_INIT (gst_ogg_mux_debug, "oggmux", 0, "ogg muxer");
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (oggmux, "oggmux", GST_RANK_PRIMARY,
-    GST_TYPE_OGG_MUX, _do_init);
+    GST_TYPE_OGG_MUX, GST_DEBUG_CATEGORY_INIT (gst_ogg_mux_debug, "oggmux", 0,
+        "ogg muxer"));
 
 static void
 gst_ogg_mux_class_init (GstOggMuxClass * klass)

@@ -76,41 +76,41 @@ struct _GstOggAviParseClass
 static GstElementClass *parent_class = NULL;
 
 G_DEFINE_TYPE (GstOggAviParse, gst_ogg_avi_parse, GST_TYPE_ELEMENT);
-
-#define _do_init \
-    GST_DEBUG_CATEGORY_INIT (gst_ogg_avi_parse_debug, "oggaviparse", 0, "ogg avi parser");
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (oggaviparse, "oggaviparse",
-    GST_RANK_PRIMARY, GST_TYPE_OGG_AVI_PARSE, _do_init)
+    GST_RANK_PRIMARY, GST_TYPE_OGG_AVI_PARSE,
+    GST_DEBUG_CATEGORY_INIT (gst_ogg_avi_parse_debug, "oggaviparse", 0,
+        "ogg avi parser"));
 
-     enum
-     {
-       PROP_0
-     };
+enum
+{
+  PROP_0
+};
 
-     static GstStaticPadTemplate ogg_avi_parse_src_template_factory =
-         GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate ogg_avi_parse_src_template_factory =
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-vorbis")
     );
 
-     static GstStaticPadTemplate ogg_avi_parse_sink_template_factory =
-         GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate ogg_avi_parse_sink_template_factory =
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-ogg-avi")
     );
 
-     static void gst_ogg_avi_parse_finalize (GObject * object);
-     static GstStateChangeReturn gst_ogg_avi_parse_change_state (GstElement *
+static void gst_ogg_avi_parse_finalize (GObject * object);
+static GstStateChangeReturn gst_ogg_avi_parse_change_state (GstElement *
     element, GstStateChange transition);
-     static gboolean gst_ogg_avi_parse_event (GstPad * pad, GstObject * parent,
+static gboolean gst_ogg_avi_parse_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
-     static GstFlowReturn gst_ogg_avi_parse_chain (GstPad * pad,
+static GstFlowReturn gst_ogg_avi_parse_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
-     static gboolean gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps);
 
-     static void gst_ogg_avi_parse_class_init (GstOggAviParseClass * klass)
+static void
+gst_ogg_avi_parse_class_init (GstOggAviParseClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
