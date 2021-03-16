@@ -1534,7 +1534,7 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
       GST_DEBUG_OBJECT (jitterbuffer, "Got media clock %s", mediaclk);
 
       if (!g_str_has_prefix (mediaclk, "direct=") ||
-          !g_ascii_string_to_unsigned (&mediaclk[8], 10, 0, G_MAXUINT64,
+          !g_ascii_string_to_unsigned (&mediaclk[7], 10, 0, G_MAXUINT64,
               &clock_offset, NULL))
         GST_FIXME_OBJECT (jitterbuffer, "Unsupported media clock");
       if (strstr (mediaclk, "rate=") != NULL) {
