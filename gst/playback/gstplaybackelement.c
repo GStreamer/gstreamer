@@ -36,10 +36,11 @@
 #include "gstplaybackelements.h"
 
 
-gboolean
+void
 playback_element_init (GstPlugin * plugin)
 {
   static gsize res = FALSE;
+
   if (g_once_init_enter (&res)) {
     gst_pb_utils_init ();
 
@@ -51,5 +52,4 @@ playback_element_init (GstPlugin * plugin)
 #endif /* ENABLE_NLS */
     g_once_init_leave (&res, TRUE);
   }
-  return res;
 }

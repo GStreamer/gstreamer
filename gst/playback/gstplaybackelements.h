@@ -39,6 +39,6 @@ GST_ELEMENT_REGISTER_DECLARE (parsebin);
 gboolean gst_play_bin_custom_element_init (GstPlugin * plugin);
 gboolean gst_play_bin3_custom_element_init (GstPlugin * plugin);
 
-G_GNUC_INTERNAL gboolean playback_element_init (GstPlugin * plugin);
+G_GNUC_INTERNAL void playback_element_init (GstPlugin * plugin);
 
 #endif /* __GST_PLAY_BACK_ELEMENTS_H__ */

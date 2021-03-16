@@ -5154,7 +5154,7 @@ gst_play_bin3_custom_element_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (gst_play_bin3_debug, "playbin3", 0, "play bin3");
 
-  ret &= playback_element_init (plugin);
+  playback_element_init (plugin);
 
   if (g_getenv ("USE_PLAYBIN3"))
     ret &= gst_element_register (plugin, "playbin", GST_RANK_NONE,
