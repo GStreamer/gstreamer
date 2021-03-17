@@ -1116,8 +1116,8 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       G_TYPE_BOOLEAN, 3, G_TYPE_TLS_CONNECTION, G_TYPE_TLS_CERTIFICATE,
       G_TYPE_TLS_CERTIFICATE_FLAGS);
 
-  /*
-   * GstRTSPSrc::before-send
+  /**
+   * GstRTSPSrc::before-send:
    * @rtspsrc: a #GstRTSPSrc
    * @num: the stream number
    *

@@ -20158,7 +20158,7 @@
                             }
                         ],
                         "return-type": "gboolean",
-                        "when": "first"
+                        "when": "last"
                     },
                     "get-parameter": {
                         "action": true,
