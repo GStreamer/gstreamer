@@ -359,6 +359,10 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   GstStructure *config;
   gboolean update_pool = FALSE;
   GstVideoInfo vinfo;
+  const GstD3D11Format *d3d11_format;
+  GstD3D11AllocationParams *d3d11_params;
+  guint bind_flags = 0;
+  guint i;
 
   gst_query_parse_allocation (query, &outcaps, NULL);
 
@@ -366,6 +370,37 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     return FALSE;
 
   gst_video_info_from_caps (&vinfo, outcaps);
+
+  d3d11_format = gst_d3d11_device_format_from_gst (filter->device,
+      GST_VIDEO_INFO_FORMAT (&vinfo));
+  if (!d3d11_format) {
+    GST_ERROR_OBJECT (filter, "Unknown format caps %" GST_PTR_FORMAT, outcaps);
+    return FALSE;
+  }
+
+  /* Not a native format, we can bind this format with SRV and RTV */
+  if (d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
+    bind_flags = (D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+  } else {
+    UINT supported = 0;
+    HRESULT hr;
+    ID3D11Device *device_handle =
+        gst_d3d11_device_get_device_handle (filter->device);
+
+    hr = device_handle->CheckFormatSupport (d3d11_format->dxgi_format,
+        &supported);
+    if (gst_d3d11_result (hr, filter->device)) {
+      if ((supported & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) ==
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
+        bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+      }
+
+      if ((supported & D3D11_FORMAT_SUPPORT_RENDER_TARGET) ==
+          D3D11_FORMAT_SUPPORT_RENDER_TARGET) {
+        bind_flags |= D3D11_BIND_RENDER_TARGET;
+      }
+    }
+  }
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
@@ -389,6 +424,20 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+
+  d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
+  if (!d3d11_params) {
+    d3d11_params = gst_d3d11_allocation_params_new (filter->device, &vinfo,
+        (GstD3D11AllocationFlags) 0, bind_flags);
+  } else {
+    /* Set bind flag */
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vinfo); i++) {
+      d3d11_params->desc[i].BindFlags |= bind_flags;
+    }
+  }
+
+  gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
+  gst_d3d11_allocation_params_free (d3d11_params);
 
   gst_buffer_pool_set_config (pool, config);
 
