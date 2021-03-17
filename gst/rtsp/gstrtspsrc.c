@@ -85,19 +85,6 @@
  * ]| Establish a connection to an RTSP server and send the raw RTP packets to a
  * fakesink.
  *
- * NOTE: rtspsrc will send a PAUSE command to the server if you set the
- * element to the PAUSED state, and will send a PLAY command if you set it to
- * the PLAYING state. Sending of the PAUSE command only happens when the
- * target state of the element is PAUSED. For instance, it won't happen if you
- * call gst_element_set_state() on rtspsrc with %GST_STATE_NULL.
- *
- * BUT: due to how recursive state changes work, this doesn't apply to states
- * set on parent elements, such as bins or the pipeline. Child elements will
- * always see intermediate states as the target state. If you want to tear
- * down rtspsrc without interrupting other clients when streaming a shared
- * media, you should set rtspsrc to %GST_STATE_NULL first, and then the
- * pipeline itself.
- *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -9224,12 +9211,8 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       set_manager_buffer_mode (rtspsrc);
       /* fall-through */
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      if (rtspsrc->is_live &&
-          (transition == GST_STATE_CHANGE_PAUSED_TO_PLAYING ||
-              GST_STATE_TARGET (element) == GST_STATE_PAUSED)) {
-        /* Unblock the tcp tasks and make the loop waiting. But if the state
-         * transition is PLAY->PAUSE, then only do this if the final target
-         * state is PAUSED */
+      if (rtspsrc->is_live) {
+        /* unblock the tcp tasks and make the loop waiting */
         if (gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_WAIT, CMD_LOOP)) {
           /* make sure it is waiting before we send PAUSE or PLAY below */
           GST_RTSP_STREAM_LOCK (rtspsrc);
@@ -9264,9 +9247,8 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      if (rtspsrc->is_live && (GST_STATE_TARGET (element) == GST_STATE_PAUSED)) {
-        /* send pause request only if rtspsrc is going to PAUSED (not if it's
-         * going to NULL) and keep the idle task around */
+      if (rtspsrc->is_live) {
+        /* send pause request and keep the idle task around */
         gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PAUSE, CMD_LOOP);
       }
       ret = GST_STATE_CHANGE_SUCCESS;
