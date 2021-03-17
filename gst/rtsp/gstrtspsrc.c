@@ -85,6 +85,14 @@
  * ]| Establish a connection to an RTSP server and send the raw RTP packets to a
  * fakesink.
  *
+ * NOTE: rtspsrc will send a PAUSE command to the server if you set the
+ * element to the PAUSED state, and will send a PLAY command if you set it to
+ * the PLAYING state.
+ *
+ * Unfortunately, going to the NULL state involves going through PAUSED, so
+ * rtspsrc does not know the difference and will send a PAUSE when you wanted
+ * a TEARDOWN. The workaround is to hook into the `before-send` signal and
+ * return FALSE in this case.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1124,7 +1132,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    */
   gst_rtspsrc_signals[SIGNAL_BEFORE_SEND] =
       g_signal_new_class_handler ("before-send", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP,
+      G_SIGNAL_RUN_LAST,
       (GCallback) default_before_send, before_send_accum, NULL, NULL,
       G_TYPE_BOOLEAN, 1, GST_TYPE_RTSP_MESSAGE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
