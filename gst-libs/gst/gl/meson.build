@@ -923,6 +923,8 @@ if host_system == 'android' and need_win_android != 'no' and need_platform_egl !
   endif
 endif
 
+gl_nvmm = false
+nvbuf_utils_dep = unneeded_dep
 if egl_dep.found()
   # XXX: provide options for this?
   # c_args and c_link_args can also cover this case just fine e.g.:
@@ -931,6 +933,7 @@ if egl_dep.found()
   nvbuf_utils_h = cc.has_header('nvbuf_utils.h')
   if nvbuf_utils_dep.found() and nvbuf_utils_h
     gl_misc_deps += [nvbuf_utils_dep]
+    gl_nvmm = true
     gl_cpp_args += ['-DHAVE_NVMM']
   endif
 endif

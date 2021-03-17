@@ -133,10 +133,17 @@ if ['darwin', 'ios'].contains(host_system)
   gl_objc_args += ['-fobjc-arc']
 endif
 
+extra_c_args = []
+# gl_nvmm and nvbuf_utils_dep are set in gst-libs/gst/gl/meson.build
+if gl_nvmm
+  extra_c_args += ['-DHAVE_NVMM']
+  optional_deps += [nvbuf_utils_dep]
+endif
+
 gstopengl = library('gstopengl',
   opengl_sources,
-  c_args : gst_plugins_base_args,
-  objc_args : gst_plugins_base_args + gl_objc_args,
+  c_args : gst_plugins_base_args + extra_c_args,
+  objc_args : gst_plugins_base_args + gl_objc_args + extra_c_args,
   link_args : noseh_link_args,
   include_directories : [configinc],
   dependencies : [gstgl_dep, video_dep,
