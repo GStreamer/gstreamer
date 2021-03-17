@@ -56,6 +56,7 @@ enum
   PROP_P_PYRAMID,
   PROP_MIN_QP,
   PROP_MAX_QP,
+  PROP_INTRA_REFRESH_TYPE,
 };
 
 enum
@@ -74,6 +75,7 @@ enum
 #define PROP_P_PYRAMID_DEFAULT          FALSE
 #define PROP_MIN_QP_DEFAULT             0
 #define PROP_MAX_QP_DEFAULT             0
+#define PROP_INTRA_REFRESH_TYPE_DEFAULT MFX_REFRESH_NO
 
 #define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
 #define PROFILES    "main, main-10, main-444"
@@ -351,6 +353,7 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
       h265enc->min_qp;
   encoder->option2.MaxQPI = encoder->option2.MaxQPP = encoder->option2.MaxQPB =
       h265enc->max_qp;
+  encoder->option2.IntRefType = h265enc->intra_refresh_type;
 
 #if (MFX_VERSION >= 1026)
   if (h265enc->transform_skip != MFX_CODINGOPTION_UNKNOWN) {
@@ -574,6 +577,10 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       thiz->max_qp = g_value_get_uint (value);
       break;
 
+    case PROP_INTRA_REFRESH_TYPE:
+      thiz->intra_refresh_type = g_value_get_enum (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -632,6 +639,10 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
 
     case PROP_MAX_QP:
       g_value_set_uint (value, thiz->max_qp);
+      break;
+
+    case PROP_INTRA_REFRESH_TYPE:
+      g_value_set_enum (value, thiz->intra_refresh_type);
       break;
 
     default:
@@ -781,6 +792,13 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
           0, 51, PROP_MAX_QP_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_INTRA_REFRESH_TYPE,
+      g_param_spec_enum ("intra-refresh-type", "Intra refresh type",
+          "Set intra refresh type",
+          gst_msdkenc_intra_refresh_type_get_type (),
+          PROP_INTRA_REFRESH_TYPE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H265 encoder",
       "Codec/Encoder/Video/Hardware",
@@ -805,5 +823,6 @@ gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
   thiz->p_pyramid = PROP_P_PYRAMID_DEFAULT;
   thiz->min_qp = PROP_MIN_QP_DEFAULT;
   thiz->max_qp = PROP_MAX_QP_DEFAULT;
+  thiz->intra_refresh_type = PROP_INTRA_REFRESH_TYPE_DEFAULT;
   msdk_enc->num_extra_frames = 1;
 }

@@ -215,6 +215,26 @@ gst_msdkenc_transform_skip_get_type (void)
   return type;
 }
 
+GType
+gst_msdkenc_intra_refresh_type_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {MFX_REFRESH_NO, "No (default)", "no"},
+    {MFX_REFRESH_VERTICAL, "Vertical", "vertical"},
+    {MFX_REFRESH_HORIZONTAL, "Horizontal ", "horizontal"},
+    {MFX_REFRESH_SLICE, "Slice ", "slice"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstMsdkEncIntraRefreshType", values);
+  }
+
+  return type;
+}
+
 /*========= MSDK VPP Enums =========================*/
 
 #ifndef GST_REMOVE_DEPRECATED

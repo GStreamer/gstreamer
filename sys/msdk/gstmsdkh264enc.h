@@ -74,6 +74,7 @@ struct _GstMsdkH264Enc
   guint p_pyramid;
   guint min_qp;
   guint max_qp;
+  guint intra_refresh_type;
 
   GstH264NalParser *parser;
   GArray *cc_sei_array;
