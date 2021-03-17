@@ -380,6 +380,31 @@ gst_gl_buffer_pool_finalize (GObject * object)
 }
 
 /**
+ * gst_gl_buffer_pool_get_gl_allocation_params:
+ * @pool: the #GstGLBufferPool
+ *
+ * The returned #GstGLAllocationParams will by %NULL before the first successful
+ * call to gst_buffer_pool_set_config().  Subsequent successful calls to
+ * gst_buffer_pool_set_config() will cause this function to return a new
+ * #GstGLAllocationParams which may or may not contain the same information.
+ *
+ * Returns: (transfer full): a copy of the #GstGLAllocationParams being used by the @pool
+ *
+ * Since: 1.20
+ */
+GstGLAllocationParams *
+gst_gl_buffer_pool_get_gl_allocation_params (GstGLBufferPool * pool)
+{
+  g_return_val_if_fail (GST_IS_GL_BUFFER_POOL (pool), NULL);
+
+  if (pool->priv->gl_params)
+    return gst_gl_allocation_params_copy ((GstGLAllocationParams *) pool->
+        priv->gl_params);
+  else
+    return NULL;
+}
+
+/**
  * gst_buffer_pool_config_get_gl_allocation_params:
  * @config: a buffer pool config
  *
