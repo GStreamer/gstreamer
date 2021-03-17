@@ -93,7 +93,6 @@ struct _GstNvH264Dec
   const GstH264PPS *last_pps;
 
   GstCudaContext *context;
-  CUstream cuda_stream;
   GstNvDecoder *decoder;
   CUVIDPICPARAMS params;
 
@@ -113,14 +112,6 @@ struct _GstNvH264Dec
   guint bitdepth;
   guint chroma_format_idc;
   gint max_dpb_size;
-  GstVideoFormat out_format;
-
-  /* For OpenGL interop. */
-  GstObject *gl_display;
-  GstObject *gl_context;
-  GstObject *other_gl_context;
-
-  GstNvDecoderOutputType output_type;
 };
 
 struct _GstNvH264DecClass
@@ -232,9 +223,15 @@ gst_nv_h264_dec_set_context (GstElement * element, GstContext * context)
   GST_DEBUG_OBJECT (self, "set context %s",
       gst_context_get_context_type (context));
 
-  gst_nv_decoder_set_context (element, context, klass->cuda_device_id,
-      &self->context, &self->gl_display, &self->other_gl_context);
+  if (gst_cuda_handle_set_context (element, context, klass->cuda_device_id,
+          &self->context)) {
+    goto done;
+  }
 
+  if (self->decoder)
+    gst_nv_decoder_handle_set_context (self->decoder, element, context);
+
+done:
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
@@ -248,7 +245,6 @@ gst_d3d11_h264_dec_reset (GstNvH264Dec * self)
   self->coded_height = 0;
   self->bitdepth = 0;
   self->chroma_format_idc = 0;
-  self->out_format = GST_VIDEO_FORMAT_UNKNOWN;
   self->max_dpb_size = 0;
 }
 
@@ -258,10 +254,17 @@ gst_nv_h264_dec_open (GstVideoDecoder * decoder)
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
   GstNvH264DecClass *klass = GST_NV_H264_DEC_GET_CLASS (self);
 
-  if (!gst_nv_decoder_ensure_element_data (GST_ELEMENT (self),
-          klass->cuda_device_id, &self->context, &self->cuda_stream,
-          &self->gl_display, &self->other_gl_context)) {
+  if (!gst_cuda_ensure_element_context (GST_ELEMENT (self),
+          klass->cuda_device_id, &self->context)) {
     GST_ERROR_OBJECT (self, "Required element data is unavailable");
+    return FALSE;
+  }
+
+  self->decoder = gst_nv_decoder_new (self->context);
+  if (!self->decoder) {
+    GST_ERROR_OBJECT (self, "Failed to create decoder object");
+    gst_clear_object (&self->context);
+
     return FALSE;
   }
 
@@ -277,19 +280,7 @@ gst_nv_h264_dec_close (GstVideoDecoder * decoder)
 
   g_clear_pointer (&self->output_state, gst_video_codec_state_unref);
   gst_clear_object (&self->decoder);
-
-  if (self->context && self->cuda_stream) {
-    if (gst_cuda_context_push (self->context)) {
-      gst_cuda_result (CuStreamDestroy (self->cuda_stream));
-      gst_cuda_context_pop (NULL);
-    }
-  }
-
-  gst_clear_object (&self->gl_context);
-  gst_clear_object (&self->other_gl_context);
-  gst_clear_object (&self->gl_display);
   gst_clear_object (&self->context);
-  self->cuda_stream = NULL;
 
   return TRUE;
 }
@@ -302,9 +293,8 @@ gst_nv_h264_dec_negotiate (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "negotiate");
 
-  gst_nv_decoder_negotiate (decoder, h264dec->input_state, self->out_format,
-      self->width, self->height, self->gl_display, self->other_gl_context,
-      &self->gl_context, &self->output_state, &self->output_type);
+  gst_nv_decoder_negotiate (self->decoder, decoder, h264dec->input_state,
+      &self->output_state);
 
   /* TODO: add support D3D11 memory */
 
@@ -316,8 +306,10 @@ gst_nv_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
 
-  gst_nv_decoder_decide_allocation (self->decoder, decoder, query,
-      self->gl_context, self->output_type);
+  if (!gst_nv_decoder_decide_allocation (self->decoder, decoder, query)) {
+    GST_WARNING_OBJECT (self, "Failed to handle decide allocation");
+    return FALSE;
+  }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation
       (decoder, query);
@@ -330,9 +322,11 @@ gst_nv_h264_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
-      if (gst_nv_decoder_handle_context_query (GST_ELEMENT (self), query,
-              self->context, self->gl_display, self->gl_context,
-              self->other_gl_context)) {
+      if (gst_cuda_handle_context_query (GST_ELEMENT (decoder), query,
+              self->context)) {
+        return TRUE;
+      } else if (self->decoder &&
+          gst_nv_decoder_handle_context_query (self->decoder, decoder, query)) {
         return TRUE;
       }
       break;
@@ -390,44 +384,38 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     modified = TRUE;
   }
 
-  if (modified || !self->decoder) {
+  if (modified || !gst_nv_decoder_is_configured (self->decoder)) {
     GstVideoInfo info;
-
-    self->out_format = GST_VIDEO_FORMAT_UNKNOWN;
+    GstVideoFormat out_format = GST_VIDEO_FORMAT_UNKNOWN;
 
     if (self->bitdepth == 8) {
       if (self->chroma_format_idc == 1)
-        self->out_format = GST_VIDEO_FORMAT_NV12;
+        out_format = GST_VIDEO_FORMAT_NV12;
       else {
         GST_FIXME_OBJECT (self, "Could not support 8bits non-4:2:0 format");
       }
     } else if (self->bitdepth == 10) {
       if (self->chroma_format_idc == 1)
-        self->out_format = GST_VIDEO_FORMAT_P010_10LE;
+        out_format = GST_VIDEO_FORMAT_P010_10LE;
       else {
         GST_FIXME_OBJECT (self, "Could not support 10bits non-4:2:0 format");
       }
     }
 
-    if (self->out_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    if (out_format == GST_VIDEO_FORMAT_UNKNOWN) {
       GST_ERROR_OBJECT (self, "Could not support bitdepth/chroma format");
       return FALSE;
     }
 
-    gst_clear_object (&self->decoder);
-
-    gst_video_info_set_format (&info,
-        self->out_format, self->width, self->height);
+    gst_video_info_set_format (&info, out_format, self->width, self->height);
 
     self->max_dpb_size = max_dpb_size;
     /* FIXME: add support cudaVideoCodec_H264_SVC and cudaVideoCodec_H264_MVC */
-    self->decoder = gst_nv_decoder_new (self->context, cudaVideoCodec_H264,
-        &info,
-        /* Additional 2 buffers for margin */
-        max_dpb_size + 2);
-
-    if (!self->decoder) {
-      GST_ERROR_OBJECT (self, "Failed to create decoder");
+    if (!gst_nv_decoder_configure (self->decoder,
+            cudaVideoCodec_H264, &info, self->coded_width, self->coded_height,
+            /* Additional 2 buffers for margin */
+            max_dpb_size + 2)) {
+      GST_ERROR_OBJECT (self, "Failed to configure decoder");
       return FALSE;
     }
 
@@ -473,7 +461,6 @@ gst_nv_h264_dec_output_picture (GstH264Decoder * decoder,
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstNvDecoderFrame *decoder_frame;
-  gboolean ret G_GNUC_UNUSED = FALSE;
 
   GST_LOG_OBJECT (self,
       "Outputting picture %p (poc %d)", picture, picture->pic_order_cnt);
@@ -485,34 +472,10 @@ gst_nv_h264_dec_output_picture (GstH264Decoder * decoder,
     goto error;
   }
 
-  frame->output_buffer = gst_video_decoder_allocate_output_buffer (vdec);
-  if (!frame->output_buffer) {
-    GST_ERROR_OBJECT (self, "Couldn't allocate output buffer");
+  if (!gst_nv_decoder_finish_frame (self->decoder, vdec, decoder_frame,
+          &frame->output_buffer)) {
+    GST_ERROR_OBJECT (self, "Failed to handle output picture");
     goto error;
-  }
-
-  if (self->output_type == GST_NV_DECODER_OUTPUT_TYPE_GL) {
-    ret = gst_nv_decoder_finish_frame (self->decoder,
-        GST_NV_DECODER_OUTPUT_TYPE_GL, self->gl_context,
-        decoder_frame, frame->output_buffer);
-
-    /* FIXME: This is the case where OpenGL context of downstream glbufferpool
-     * belongs to non-nvidia (or different device).
-     * There should be enhancement to ensure nvdec has compatible OpenGL context
-     */
-    if (!ret) {
-      GST_WARNING_OBJECT (self,
-          "Couldn't copy frame to GL memory, fallback to system memory");
-      self->output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
-    }
-  }
-
-  if (!ret) {
-    if (!gst_nv_decoder_finish_frame (self->decoder,
-            self->output_type, NULL, decoder_frame, frame->output_buffer)) {
-      GST_ERROR_OBJECT (self, "Failed to finish frame");
-      goto error;
-    }
   }
 
   gst_h264_picture_unref (picture);

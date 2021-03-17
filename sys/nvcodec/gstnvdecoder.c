@@ -67,20 +67,39 @@ typedef struct _GstNvDecoderFrameInfo
   gboolean available;
 } GstNvDecoderFrameInfo;
 
+typedef enum
+{
+  GST_NV_DECODER_OUTPUT_TYPE_SYSTEM = 0,
+  GST_NV_DECODER_OUTPUT_TYPE_GL,
+  GST_NV_DECODER_OUTPUT_TYPE_CUDA,
+  /* FIXME: add support D3D11 memory */
+} GstNvDecoderOutputType;
+
 struct _GstNvDecoder
 {
   GstObject parent;
   GstCudaContext *context;
+  CUstream cuda_stream;
   CUvideodecoder decoder_handle;
 
   GstNvDecoderFrameInfo *frame_pool;
   guint pool_size;
 
   GstVideoInfo info;
+  GstVideoInfo coded_info;
+
+  gboolean configured;
+
+  /* For OpenGL interop. */
+  GstObject *gl_display;
+  GstObject *gl_context;
+  GstObject *other_gl_context;
+
+  GstNvDecoderOutputType output_type;
 };
 
 static void gst_nv_decoder_dispose (GObject * object);
-static void gst_nv_decoder_finalize (GObject * object);
+static void gst_nv_decoder_reset (GstNvDecoder * self);
 
 #define parent_class gst_nv_decoder_parent_class
 G_DEFINE_TYPE (GstNvDecoder, gst_nv_decoder, GST_TYPE_OBJECT);
@@ -91,7 +110,6 @@ gst_nv_decoder_class_init (GstNvDecoderClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->dispose = gst_nv_decoder_dispose;
-  gobject_class->finalize = gst_nv_decoder_finalize;
 }
 
 static void
@@ -104,21 +122,22 @@ gst_nv_decoder_dispose (GObject * object)
 {
   GstNvDecoder *self = GST_NV_DECODER (object);
 
+  gst_nv_decoder_reset (self);
+
+  if (self->context && self->cuda_stream) {
+    if (gst_cuda_context_push (self->context)) {
+      gst_cuda_result (CuStreamDestroy (self->cuda_stream));
+      gst_cuda_context_pop (NULL);
+      self->cuda_stream = NULL;
+    }
+  }
+
   gst_clear_object (&self->context);
+  gst_clear_object (&self->gl_display);
+  gst_clear_object (&self->gl_context);
+  gst_clear_object (&self->other_gl_context);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_nv_decoder_finalize (GObject * object)
-{
-  GstNvDecoder *self = GST_NV_DECODER (object);
-
-  g_free (self->frame_pool);
-  if (self->decoder_handle)
-    gst_cuda_result (CuvidDestroyDecoder (self->decoder_handle));
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static cudaVideoChromaFormat
@@ -206,27 +225,81 @@ gst_nv_decoder_prepare_frame_pool (GstNvDecoder * self, guint pool_size)
 }
 
 GstNvDecoder *
-gst_nv_decoder_new (GstCudaContext * context, cudaVideoCodec codec,
-    GstVideoInfo * info, guint pool_size)
+gst_nv_decoder_new (GstCudaContext * context)
 {
-  GstNvDecoder *decoder;
-  CUVIDDECODECREATEINFO create_info = { 0, };
-  GstVideoFormat format;
+  GstNvDecoder *self;
 
   g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), NULL);
-  g_return_val_if_fail (codec < cudaVideoCodec_NumCodecs, NULL);
-  g_return_val_if_fail (info != NULL, NULL);
-  g_return_val_if_fail (pool_size > 0, NULL);
 
-  decoder = g_object_new (GST_TYPE_NV_DECODER, NULL);
-  decoder->context = gst_object_ref (context);
-  gst_object_ref_sink (decoder);
+  self = g_object_new (GST_TYPE_NV_DECODER, NULL);
+  self->context = gst_object_ref (context);
+  gst_object_ref_sink (self);
+
+  if (gst_cuda_context_push (context)) {
+    CUresult cuda_ret;
+    cuda_ret = CuStreamCreate (&self->cuda_stream, CU_STREAM_DEFAULT);
+    if (!gst_cuda_result (cuda_ret)) {
+      GST_WARNING_OBJECT (self,
+          "Could not create CUDA stream, will use default stream");
+      self->cuda_stream = NULL;
+    }
+
+    gst_cuda_context_pop (NULL);
+  }
+
+  return self;
+}
+
+gboolean
+gst_nv_decoder_is_configured (GstNvDecoder * decoder)
+{
+  g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
+
+  return decoder->configured;
+}
+
+static void
+gst_nv_decoder_reset (GstNvDecoder * self)
+{
+  g_clear_pointer (&self->frame_pool, g_free);
+
+  if (self->decoder_handle) {
+    gst_cuda_context_push (self->context);
+    CuvidDestroyDecoder (self->decoder_handle);
+    gst_cuda_context_pop (NULL);
+    self->decoder_handle = NULL;
+  }
+
+  self->output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
+  self->configured = FALSE;
+}
+
+gboolean
+gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
+    GstVideoInfo * info, gint coded_width, gint coded_height, guint pool_size)
+{
+  CUVIDDECODECREATEINFO create_info = { 0, };
+  GstVideoFormat format;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
+  g_return_val_if_fail (codec < cudaVideoCodec_NumCodecs, FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (coded_width >= GST_VIDEO_INFO_WIDTH (info), FALSE);
+  g_return_val_if_fail (coded_height >= GST_VIDEO_INFO_HEIGHT (info), FALSE);
+  g_return_val_if_fail (pool_size > 0, FALSE);
+
+  gst_nv_decoder_reset (decoder);
+
+  decoder->info = *info;
+  gst_video_info_set_format (&decoder->coded_info, GST_VIDEO_INFO_FORMAT (info),
+      coded_width, coded_height);
 
   format = GST_VIDEO_INFO_FORMAT (info);
 
-  /* FIXME: check aligned resolution or actaul coded resolution */
-  create_info.ulWidth = GST_VIDEO_INFO_WIDTH (info);;
-  create_info.ulHeight = GST_VIDEO_INFO_HEIGHT (info);;
+  /* FIXME: check aligned resolution or actual coded resolution */
+  create_info.ulWidth = GST_VIDEO_INFO_WIDTH (&decoder->coded_info);
+  create_info.ulHeight = GST_VIDEO_INFO_HEIGHT (&decoder->coded_info);
   create_info.ulNumDecodeSurfaces = pool_size;
   create_info.CodecType = codec;
   create_info.ChromaFormat = chroma_format_from_video_format (format);
@@ -241,44 +314,39 @@ gst_nv_decoder_new (GstCudaContext * context, cudaVideoCodec codec,
   create_info.OutputFormat = output_format_from_video_format (format);
   create_info.DeinterlaceMode = cudaVideoDeinterlaceMode_Weave;
 
-  create_info.ulTargetWidth = GST_VIDEO_INFO_WIDTH (info);;
-  create_info.ulTargetHeight = GST_VIDEO_INFO_HEIGHT (info);
+  create_info.ulTargetWidth = GST_VIDEO_INFO_WIDTH (&decoder->coded_info);
+  create_info.ulTargetHeight = GST_VIDEO_INFO_HEIGHT (&decoder->coded_info);
   /* we always copy decoded picture to output buffer */
   create_info.ulNumOutputSurfaces = 1;
 
   create_info.target_rect.left = 0;
   create_info.target_rect.top = 0;
-  create_info.target_rect.right = GST_VIDEO_INFO_WIDTH (info);
-  create_info.target_rect.bottom = GST_VIDEO_INFO_HEIGHT (info);
+  create_info.target_rect.right = GST_VIDEO_INFO_WIDTH (&decoder->coded_info);
+  create_info.target_rect.bottom = GST_VIDEO_INFO_HEIGHT (&decoder->coded_info);
 
-  if (!gst_cuda_context_push (context)) {
+  if (!gst_cuda_context_push (decoder->context)) {
     GST_ERROR_OBJECT (decoder, "Failed to lock CUDA context");
-    goto error;
+    return FALSE;
   }
 
-  if (!gst_cuda_result (CuvidCreateDecoder (&decoder->decoder_handle,
-              &create_info))) {
+  ret = gst_cuda_result (CuvidCreateDecoder (&decoder->decoder_handle,
+          &create_info));
+  gst_cuda_context_pop (NULL);
+
+  if (!ret) {
     GST_ERROR_OBJECT (decoder, "Cannot create decoder instance");
-    goto error;
-  }
-
-  if (!gst_cuda_context_pop (NULL)) {
-    GST_ERROR_OBJECT (decoder, "Failed to unlock CUDA context");
-    goto error;
+    return FALSE;
   }
 
   if (!gst_nv_decoder_prepare_frame_pool (decoder, pool_size)) {
     GST_ERROR_OBJECT (decoder, "Cannot prepare internal surface buffer pool");
-    goto error;
+    gst_nv_decoder_reset (decoder);
+    return FALSE;
   }
 
-  decoder->info = *info;
+  decoder->configured = TRUE;
 
-  return decoder;
-
-error:
-  gst_clear_object (&decoder);
-  return NULL;
+  return TRUE;
 }
 
 GstNvDecoderFrame *
@@ -593,7 +661,7 @@ gst_nv_decoder_copy_frame_to_gl_internal (GstGLContext * context,
         * GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
 
     copy_params.srcDevice = frame->devptr +
-        (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (info));
+        (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (&self->coded_info));
     copy_params.dstDevice = dst_ptr;
     copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
@@ -662,18 +730,18 @@ gst_nv_decoder_copy_frame_to_system (GstNvDecoder * decoder,
 
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&video_frame); i++) {
     copy_params.srcDevice = frame->devptr +
-        (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->info));
+        (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->coded_info));
     copy_params.dstHost = GST_VIDEO_FRAME_PLANE_DATA (&video_frame, i);
     copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
     copy_params.Height = GST_VIDEO_FRAME_COMP_HEIGHT (&video_frame, i);
 
-    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, NULL))) {
+    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, decoder->cuda_stream))) {
       GST_ERROR_OBJECT (decoder, "failed to copy %dth plane", i);
       goto done;
     }
   }
 
-  gst_cuda_result (CuStreamSynchronize (NULL));
+  gst_cuda_result (CuStreamSynchronize (decoder->cuda_stream));
 
   ret = TRUE;
 
@@ -737,13 +805,13 @@ gst_nv_decoder_copy_frame_to_cuda (GstNvDecoder * decoder,
         * GST_VIDEO_INFO_COMP_PSTRIDE (&decoder->info, 0);
     copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (&decoder->info, i);
 
-    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, NULL))) {
+    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, decoder->cuda_stream))) {
       GST_ERROR_OBJECT (decoder, "failed to copy %dth plane", i);
       goto done;
     }
   }
 
-  gst_cuda_result (CuStreamSynchronize (NULL));
+  gst_cuda_result (CuStreamSynchronize (decoder->cuda_stream));
 
   ret = TRUE;
 
@@ -756,55 +824,84 @@ done:
 }
 
 gboolean
-gst_nv_decoder_finish_frame (GstNvDecoder * decoder,
-    GstNvDecoderOutputType output_type, GstObject * graphics_context,
-    GstNvDecoderFrame * frame, GstBuffer * buffer)
+gst_nv_decoder_finish_frame (GstNvDecoder * decoder, GstVideoDecoder * videodec,
+    GstNvDecoderFrame * frame, GstBuffer ** buffer)
 {
+  GstBuffer *outbuf = NULL;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
-  g_return_val_if_fail (frame != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (GST_IS_NV_DECODER (decoder), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), GST_FLOW_ERROR);
+  g_return_val_if_fail (frame != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
-#ifdef HAVE_NVCODEC_GST_GL
-  if (output_type == GST_NV_DECODER_OUTPUT_TYPE_GL && !graphics_context) {
-    if (!GST_IS_GL_CONTEXT (graphics_context)) {
-      GST_ERROR_OBJECT (decoder, "Invalid GL Context");
-      return FALSE;
-    }
+  outbuf = gst_video_decoder_allocate_output_buffer (videodec);
+  if (!outbuf) {
+    GST_ERROR_OBJECT (videodec, "Couldn't allocate output buffer");
+    return FALSE;
   }
-#endif
 
   if (!gst_cuda_context_push (decoder->context)) {
     GST_ERROR_OBJECT (decoder, "Failed to push CUDA context");
-    return FALSE;
+    goto error;
   }
 
   if (!gst_nv_decoder_frame_map (frame)) {
     GST_ERROR_OBJECT (decoder, "Couldn't map frame");
     gst_cuda_context_pop (NULL);
-    return FALSE;
+    goto error;
   }
 
   gst_cuda_context_pop (NULL);
 
+  switch (decoder->output_type) {
+    case GST_NV_DECODER_OUTPUT_TYPE_SYSTEM:
+      ret = gst_nv_decoder_copy_frame_to_system (decoder, frame, outbuf);
+      break;
 #ifdef HAVE_NVCODEC_GST_GL
-  if (output_type == GST_NV_DECODER_OUTPUT_TYPE_GL) {
-    ret = gst_nv_decoder_copy_frame_to_gl (decoder,
-        GST_GL_CONTEXT (graphics_context), frame, buffer);
-  } else
+    case GST_NV_DECODER_OUTPUT_TYPE_GL:
+      g_assert (decoder->gl_context != NULL);
+
+      ret = gst_nv_decoder_copy_frame_to_gl (decoder,
+          GST_GL_CONTEXT (decoder->gl_context), frame, outbuf);
+      break;
 #endif
-  if (output_type == GST_NV_DECODER_OUTPUT_TYPE_CUDA) {
-    ret = gst_nv_decoder_copy_frame_to_cuda (decoder, frame, buffer);
-  } else {
-    ret = gst_nv_decoder_copy_frame_to_system (decoder, frame, buffer);
+    case GST_NV_DECODER_OUTPUT_TYPE_CUDA:
+      ret = gst_nv_decoder_copy_frame_to_cuda (decoder, frame, outbuf);
+      break;
+    default:
+      g_assert_not_reached ();
+      goto error;
+  }
+
+  /* FIXME: This is the case where OpenGL context of downstream glbufferpool
+   * belongs to non-nvidia (or different device).
+   * There should be enhancement to ensure nvdec has compatible OpenGL context
+   */
+  if (!ret && decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_GL) {
+    GST_WARNING_OBJECT (videodec,
+        "Couldn't copy frame to GL memory, fallback to system memory");
+    decoder->output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
+
+    ret = gst_nv_decoder_copy_frame_to_system (decoder, frame, outbuf);
   }
 
   gst_cuda_context_push (decoder->context);
   gst_nv_decoder_frame_unmap (frame);
   gst_cuda_context_pop (NULL);
 
-  return ret;
+  if (!ret) {
+    GST_WARNING_OBJECT (videodec, "Failed to copy frame");
+    goto error;
+  }
+
+  *buffer = outbuf;
+
+  return TRUE;
+
+error:
+  gst_clear_buffer (&outbuf);
+  return FALSE;
 }
 
 typedef enum
@@ -1230,84 +1327,37 @@ gst_cuda_video_codec_to_string (cudaVideoCodec codec)
 }
 
 gboolean
-gst_nv_decoder_ensure_element_data (GstElement * decoder, guint cuda_device_id,
-    GstCudaContext ** cuda_context, CUstream * cuda_stream,
-    GstObject ** gl_display, GstObject ** other_gl_context)
+gst_nv_decoder_handle_set_context (GstNvDecoder * decoder,
+    GstElement * videodec, GstContext * context)
 {
-  CUresult cuda_ret;
+  g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (videodec), FALSE);
 
-  g_return_val_if_fail (GST_IS_ELEMENT (decoder), FALSE);
-  g_return_val_if_fail (cuda_context, FALSE);
-  g_return_val_if_fail (cuda_stream, FALSE);
-  g_return_val_if_fail (gl_display, FALSE);
-  g_return_val_if_fail (other_gl_context, FALSE);
-
-  if (!gst_cuda_ensure_element_context (decoder, cuda_device_id, cuda_context)) {
-    GST_ERROR_OBJECT (decoder, "failed to create CUDA context");
-    return FALSE;
-  }
-
-  if (gst_cuda_context_push (*cuda_context)) {
-    CUstream stream;
-    cuda_ret = CuStreamCreate (&stream, CU_STREAM_DEFAULT);
-    if (!gst_cuda_result (cuda_ret)) {
-      GST_WARNING_OBJECT (decoder,
-          "Could not create CUDA stream, will use default stream");
-      *cuda_stream = NULL;
-    } else {
-      *cuda_stream = stream;
-    }
-
-    gst_cuda_context_pop (NULL);
-  }
-#if HAVE_NVCODEC_GST_GL
-  gst_gl_ensure_element_data (decoder,
-      (GstGLDisplay **) gl_display, (GstGLContext **) other_gl_context);
-  if (*gl_display)
-    gst_gl_display_filter_gl_api (GST_GL_DISPLAY (*gl_display),
-        SUPPORTED_GL_APIS);
-#endif
-
-  return TRUE;
-}
-
-void
-gst_nv_decoder_set_context (GstElement * decoder, GstContext * context,
-    guint cuda_device_id, GstCudaContext ** cuda_context,
-    GstObject ** gl_display, GstObject ** other_gl_context)
-{
-  g_return_if_fail (GST_IS_ELEMENT (decoder));
-  g_return_if_fail (GST_IS_CONTEXT (context));
-  g_return_if_fail (cuda_context != NULL);
-  g_return_if_fail (gl_display != NULL);
-  g_return_if_fail (other_gl_context != NULL);
-
-  if (gst_cuda_handle_set_context (decoder, context, cuda_device_id,
-          cuda_context)) {
-    return;
-  }
 #ifdef HAVE_NVCODEC_GST_GL
-  gst_gl_handle_set_context (decoder, context,
-      (GstGLDisplay **) gl_display, (GstGLContext **) other_gl_context);
+  if (gst_gl_handle_set_context (videodec, context,
+          (GstGLDisplay **) & decoder->gl_display,
+          (GstGLContext **) & decoder->other_gl_context)) {
+    return TRUE;
+  }
 #endif
+
+  return FALSE;
 }
 
 gboolean
-gst_nv_decoder_handle_context_query (GstElement * decoder, GstQuery * query,
-    GstCudaContext * cuda_context, GstObject * gl_display,
-    GstObject * gl_context, GstObject * other_gl_context)
+gst_nv_decoder_handle_context_query (GstNvDecoder * decoder,
+    GstVideoDecoder * videodec, GstQuery * query)
 {
-  g_return_val_if_fail (GST_IS_ELEMENT (decoder), FALSE);
+  g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (videodec), FALSE);
 
-  if (gst_cuda_handle_context_query (decoder, query, cuda_context)) {
-    return TRUE;
-  }
 #ifdef HAVE_NVCODEC_GST_GL
-  if (gst_gl_handle_context_query (GST_ELEMENT (decoder), query,
-          (GstGLDisplay *) gl_display,
-          (GstGLContext *) gl_context, (GstGLContext *) other_gl_context)) {
-    if (gl_display)
-      gst_gl_display_filter_gl_api (GST_GL_DISPLAY (gl_display),
+  if (gst_gl_handle_context_query (GST_ELEMENT (videodec), query,
+          (GstGLDisplay *) decoder->gl_display,
+          (GstGLContext *) decoder->gl_context,
+          (GstGLContext *) decoder->other_gl_context)) {
+    if (decoder->gl_display)
+      gst_gl_display_filter_gl_api (GST_GL_DISPLAY (decoder->gl_display),
           SUPPORTED_GL_APIS);
     return TRUE;
   }
@@ -1339,50 +1389,52 @@ gst_nv_decoder_check_cuda_device_from_context (GstGLContext * context,
 }
 
 static gboolean
-gst_nv_decoder_ensure_gl_context (GstElement * decoder, GstObject * gl_display,
-    GstObject * other_gl_context, GstObject ** gl_context)
+gst_nv_decoder_ensure_gl_context (GstNvDecoder * decoder, GstElement * videodec)
 {
   gboolean ret;
   GstGLDisplay *display;
   GstGLContext *context;
 
-  if (!gl_display) {
-    GST_DEBUG_OBJECT (decoder, "No available OpenGL display");
+  if (!gst_gl_ensure_element_data (videodec,
+          (GstGLDisplay **) & decoder->gl_display,
+          (GstGLContext **) & decoder->other_gl_context)) {
+    GST_DEBUG_OBJECT (videodec, "No available OpenGL display");
     return FALSE;
   }
 
-  display = GST_GL_DISPLAY (gl_display);
+  display = GST_GL_DISPLAY (decoder->gl_display);
 
-  if (!gst_gl_query_local_gl_context (decoder, GST_PAD_SRC,
-          (GstGLContext **) gl_context)) {
-    GST_INFO_OBJECT (decoder, "failed to query local OpenGL context");
+  if (!gst_gl_query_local_gl_context (videodec, GST_PAD_SRC,
+          (GstGLContext **) & decoder->gl_context)) {
+    GST_INFO_OBJECT (videodec, "failed to query local OpenGL context");
 
-    gst_clear_object (gl_context);
-    *gl_context =
+    gst_clear_object (&decoder->gl_context);
+    decoder->gl_context =
         (GstObject *) gst_gl_display_get_gl_context_for_thread (display, NULL);
-    if (*gl_context == NULL
+    if (decoder->gl_context == NULL
         || !gst_gl_display_add_context (display,
-            GST_GL_CONTEXT (*gl_context))) {
-      gst_clear_object (gl_context);
+            GST_GL_CONTEXT (decoder->gl_context))) {
+      gst_clear_object (&decoder->gl_context);
       if (!gst_gl_display_create_context (display,
-              (GstGLContext *) other_gl_context,
-              (GstGLContext **) gl_context, NULL)) {
-        GST_WARNING_OBJECT (decoder, "failed to create OpenGL context");
+              (GstGLContext *) decoder->other_gl_context,
+              (GstGLContext **) & decoder->gl_context, NULL)) {
+        GST_WARNING_OBJECT (videodec, "failed to create OpenGL context");
         return FALSE;
       }
 
-      if (!gst_gl_display_add_context (display, (GstGLContext *) * gl_context)) {
-        GST_WARNING_OBJECT (decoder,
+      if (!gst_gl_display_add_context (display,
+              (GstGLContext *) decoder->gl_context)) {
+        GST_WARNING_OBJECT (videodec,
             "failed to add the OpenGL context to the display");
         return FALSE;
       }
     }
   }
 
-  context = GST_GL_CONTEXT (*gl_context);
+  context = GST_GL_CONTEXT (decoder->gl_context);
 
   if (!gst_gl_context_check_gl_version (context, SUPPORTED_GL_APIS, 3, 0)) {
-    GST_WARNING_OBJECT (decoder,
+    GST_WARNING_OBJECT (videodec,
         "OpenGL context could not support PBO download");
     return FALSE;
   }
@@ -1392,7 +1444,7 @@ gst_nv_decoder_ensure_gl_context (GstElement * decoder, GstObject * gl_display,
       &ret);
 
   if (!ret) {
-    GST_WARNING_OBJECT (decoder,
+    GST_WARNING_OBJECT (videodec,
         "Current OpenGL context is not CUDA-compatible");
     return FALSE;
   }
@@ -1402,40 +1454,42 @@ gst_nv_decoder_ensure_gl_context (GstElement * decoder, GstObject * gl_display,
 #endif
 
 gboolean
-gst_nv_decoder_negotiate (GstVideoDecoder * decoder,
-    GstVideoCodecState * input_state, GstVideoFormat format, guint width,
-    guint height, GstObject * gl_display, GstObject * other_gl_context,
-    GstObject ** gl_context, GstVideoCodecState ** output_state,
-    GstNvDecoderOutputType * output_type)
+gst_nv_decoder_negotiate (GstNvDecoder * decoder,
+    GstVideoDecoder * videodec, GstVideoCodecState * input_state,
+    GstVideoCodecState ** output_state)
 {
   GstVideoCodecState *state;
+  GstVideoInfo *info;
 
-  g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), FALSE);
+  g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
+  g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), FALSE);
   g_return_val_if_fail (input_state != NULL, FALSE);
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-  g_return_val_if_fail (width > 0, FALSE);
-  g_return_val_if_fail (height > 0, FALSE);
   g_return_val_if_fail (output_state != NULL, FALSE);
-  g_return_val_if_fail (gl_context != NULL, FALSE);
-  g_return_val_if_fail (output_type != NULL, FALSE);
 
-  state = gst_video_decoder_set_output_state (decoder,
-      format, width, height, input_state);
+  if (!decoder->configured) {
+    GST_ERROR_OBJECT (videodec, "Should configure decoder first");
+    return FALSE;
+  }
+
+  info = &decoder->info;
+  state = gst_video_decoder_set_output_state (videodec,
+      GST_VIDEO_INFO_FORMAT (info),
+      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info), input_state);
   state->caps = gst_video_info_to_caps (&state->info);
 
   if (*output_state)
     gst_video_codec_state_unref (*output_state);
   *output_state = state;
 
-  *output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
+  decoder->output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
 
   {
     GstCaps *caps;
-    caps = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (decoder));
-    GST_DEBUG_OBJECT (decoder, "Allowed caps %" GST_PTR_FORMAT, caps);
+    caps = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (videodec));
+    GST_DEBUG_OBJECT (videodec, "Allowed caps %" GST_PTR_FORMAT, caps);
 
     if (!caps || gst_caps_is_any (caps)) {
-      GST_DEBUG_OBJECT (decoder,
+      GST_DEBUG_OBJECT (videodec,
           "cannot determine output format, using system memory");
     } else {
       GstCapsFeatures *features;
@@ -1448,47 +1502,45 @@ gst_nv_decoder_negotiate (GstVideoDecoder * decoder,
         features = gst_caps_get_features (caps, i);
         if (features && gst_caps_features_contains (features,
                 GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY)) {
-          GST_DEBUG_OBJECT (decoder, "found CUDA memory feature");
+          GST_DEBUG_OBJECT (videodec, "found CUDA memory feature");
           have_cuda = TRUE;
           break;
         }
 #ifdef HAVE_NVCODEC_GST_GL
-        if (gl_display &&
-            features && gst_caps_features_contains (features,
+        if (features && gst_caps_features_contains (features,
                 GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
-          GST_DEBUG_OBJECT (decoder, "found GL memory feature");
+          GST_DEBUG_OBJECT (videodec, "found GL memory feature");
           have_gl = TRUE;
         }
 #endif
       }
 
       if (have_cuda)
-        *output_type = GST_NV_DECODER_OUTPUT_TYPE_CUDA;
+        decoder->output_type = GST_NV_DECODER_OUTPUT_TYPE_CUDA;
       else if (have_gl)
-        *output_type = GST_NV_DECODER_OUTPUT_TYPE_GL;
+        decoder->output_type = GST_NV_DECODER_OUTPUT_TYPE_GL;
     }
     gst_clear_caps (&caps);
   }
 
 #ifdef HAVE_NVCODEC_GST_GL
-  if (*output_type == GST_NV_DECODER_OUTPUT_TYPE_GL &&
-      !gst_nv_decoder_ensure_gl_context (GST_ELEMENT (decoder),
-          gl_display, other_gl_context, gl_context)) {
-    GST_WARNING_OBJECT (decoder,
+  if (decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_GL &&
+      !gst_nv_decoder_ensure_gl_context (decoder, GST_ELEMENT (videodec))) {
+    GST_WARNING_OBJECT (videodec,
         "OpenGL context is not CUDA-compatible, fallback to system memory");
-    *output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
+    decoder->output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
   }
 #endif
 
-  switch (*output_type) {
+  switch (decoder->output_type) {
     case GST_NV_DECODER_OUTPUT_TYPE_CUDA:
-      GST_DEBUG_OBJECT (decoder, "using CUDA memory");
+      GST_DEBUG_OBJECT (videodec, "using CUDA memory");
       gst_caps_set_features (state->caps, 0,
           gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, NULL));
       break;
 #ifdef HAVE_NVCODEC_GST_GL
     case GST_NV_DECODER_OUTPUT_TYPE_GL:
-      GST_DEBUG_OBJECT (decoder, "using GL memory");
+      GST_DEBUG_OBJECT (videodec, "using GL memory");
       gst_caps_set_features (state->caps, 0,
           gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
       gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING,
@@ -1496,7 +1548,7 @@ gst_nv_decoder_negotiate (GstVideoDecoder * decoder,
       break;
 #endif
     default:
-      GST_DEBUG_OBJECT (decoder, "using system memory");
+      GST_DEBUG_OBJECT (videodec, "using system memory");
       break;
   }
 
@@ -1547,16 +1599,23 @@ gst_nv_decoder_ensure_cuda_pool (GstNvDecoder * decoder, GstQuery * query)
 
 #ifdef HAVE_NVCODEC_GST_GL
 static gboolean
-gst_nv_decoder_ensure_gl_pool (GstNvDecoder * decoder, GstQuery * query,
-    GstObject * gl_context)
+gst_nv_decoder_ensure_gl_pool (GstNvDecoder * decoder, GstQuery * query)
 {
   GstCaps *outcaps;
   GstBufferPool *pool = NULL;
   guint n, size, min, max;
   GstVideoInfo vinfo = { 0, };
   GstStructure *config;
+  GstGLContext *gl_context;
 
   GST_DEBUG_OBJECT (decoder, "decide allocation");
+
+  if (!decoder->gl_context) {
+    GST_ERROR_OBJECT (decoder, "GL context is not available");
+    return FALSE;
+  }
+
+  gl_context = GST_GL_CONTEXT (decoder->gl_context);
 
   gst_query_parse_allocation (query, &outcaps, NULL);
   n = gst_query_get_n_allocation_pools (query);
@@ -1593,25 +1652,29 @@ gst_nv_decoder_ensure_gl_pool (GstNvDecoder * decoder, GstQuery * query,
 #endif
 
 gboolean
-gst_nv_decoder_decide_allocation (GstNvDecoder * nvdec,
-    GstVideoDecoder * decoder, GstQuery * query, GstObject * gl_context,
-    GstNvDecoderOutputType output_type)
+gst_nv_decoder_decide_allocation (GstNvDecoder * decoder,
+    GstVideoDecoder * videodec, GstQuery * query)
 {
-  GST_DEBUG_OBJECT (decoder, "decide allocation");
+  gboolean ret = TRUE;
 
-  /* GstVideoDecoder will take care this case */
-  if (output_type == GST_NV_DECODER_OUTPUT_TYPE_SYSTEM)
-    return TRUE;
+  GST_DEBUG_OBJECT (videodec, "decide allocation");
 
+  switch (decoder->output_type) {
+    case GST_NV_DECODER_OUTPUT_TYPE_SYSTEM:
+      /* GstVideoDecoder will take care this case */
+      break;
 #ifdef HAVE_NVCODEC_GST_GL
-  if (output_type == GST_NV_DECODER_OUTPUT_TYPE_GL) {
-    if (!gst_nv_decoder_ensure_gl_pool (nvdec, query, gl_context))
-      return FALSE;
-  } else
+    case GST_NV_DECODER_OUTPUT_TYPE_GL:
+      ret = gst_nv_decoder_ensure_gl_pool (decoder, query);
+      break;
 #endif
-  if (!gst_nv_decoder_ensure_cuda_pool (nvdec, query)) {
-    return FALSE;
+    case GST_NV_DECODER_OUTPUT_TYPE_CUDA:
+      ret = gst_nv_decoder_ensure_cuda_pool (decoder, query);
+      break;
+    default:
+      g_assert_not_reached ();
+      return FALSE;
   }
 
-  return TRUE;
+  return ret;
 }
