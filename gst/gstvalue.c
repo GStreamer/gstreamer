@@ -2754,9 +2754,7 @@ _priv_gst_value_parse_value (gchar * str,
   /* check if there's a (type_name) 'cast' */
   type_name = NULL;
 
-  if (pspec) {
-    type = G_PARAM_SPEC_VALUE_TYPE (pspec);
-  } else if (*s == '(') {
+  if (*s == '(') {
     s++;
     while (g_ascii_isspace (*s))
       s++;
@@ -2782,6 +2780,8 @@ _priv_gst_value_parse_value (gchar * str,
       GST_WARNING ("invalid type");
       return FALSE;
     }
+  } else if (pspec) {
+    type = G_PARAM_SPEC_VALUE_TYPE (pspec);
   }
 
   while (g_ascii_isspace (*s))
