@@ -116,8 +116,6 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
   window->render_info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
   window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
 
-  gst_d3d11_device_lock (window->device);
-
 #if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
   {
     const GstDxgiColorSpace *in_color_space =
@@ -193,8 +191,6 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
         "Cannot create overlay compositor");
     goto error;
   }
-
-  gst_d3d11_device_unlock (window->device);
 
   return TRUE;
 

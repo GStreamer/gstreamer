@@ -1037,7 +1037,6 @@ gst_mf_video_enc_create_input_sample_d3d11 (GstMFVideoEnc * self,
     return FALSE;
   }
 
-  gst_d3d11_device_lock (dmem->device);
   context_handle->CopySubresourceRegion (shared_texture.Get (), 0, 0, 0, 0,
       texture, subidx, &src_box);
   context_handle->End (query.Get());
@@ -1049,13 +1048,11 @@ gst_mf_video_enc_create_input_sample_d3d11 (GstMFVideoEnc * self,
 
   if (!gst_d3d11_result (hr, dmem->device)) {
     GST_ERROR_OBJECT (self, "Couldn't sync GPU operation");
-    gst_d3d11_device_unlock (dmem->device);
     gst_memory_unmap (mem, &info);
 
     return FALSE;
   }
 
-  gst_d3d11_device_unlock (dmem->device);
   gst_memory_unmap (mem, &info);
 
   *sample = new_sample.Detach ();

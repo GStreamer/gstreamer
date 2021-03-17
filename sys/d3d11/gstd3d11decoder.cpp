@@ -661,7 +661,6 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
 
   video_device = self->video_device;
 
-  gst_d3d11_device_lock (self->device);
   if (!gst_d3d11_decoder_get_supported_decoder_profile (self,
           self->codec, GST_VIDEO_INFO_FORMAT (info), &selected_profile)) {
     goto error;
@@ -824,13 +823,11 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
   self->downstream_min_buffers = 0;
 
   self->opened = TRUE;
-  gst_d3d11_device_unlock (self->device);
 
   return TRUE;
 
 error:
   gst_d3d11_decoder_reset (self);
-  gst_d3d11_device_unlock (self->device);
 
   return FALSE;
 }
@@ -851,10 +848,8 @@ gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
 
   do {
     GST_LOG_OBJECT (decoder, "Try begin frame, retry count %d", retry_count);
-    gst_d3d11_device_lock (decoder->device);
     hr = video_context->DecoderBeginFrame (decoder->decoder_handle,
         output_view, content_key_size, content_key);
-    gst_d3d11_device_unlock (decoder->device);
 
     /* HACK: Do 100 times retry with 1ms sleep per failure, since DXVA/D3D11
      * doesn't provide API for "GPU-IS-READY-TO-DECODE" like signal.
@@ -893,9 +888,7 @@ gst_d3d11_decoder_end_frame (GstD3D11Decoder * decoder)
 
   video_context = decoder->video_context;
 
-  gst_d3d11_device_lock (decoder->device);
   hr = video_context->DecoderEndFrame (decoder->decoder_handle);
-  gst_d3d11_device_unlock (decoder->device);
 
   if (!gst_d3d11_result (hr, decoder->device)) {
     GST_WARNING_OBJECT (decoder, "EndFrame failed, hr: 0x%x", (guint) hr);
@@ -919,10 +912,8 @@ gst_d3d11_decoder_get_decoder_buffer (GstD3D11Decoder * decoder,
 
   video_context = decoder->video_context;
 
-  gst_d3d11_device_lock (decoder->device);
   hr = video_context->GetDecoderBuffer (decoder->decoder_handle,
       type, &size, &decoder_buffer);
-  gst_d3d11_device_unlock (decoder->device);
 
   if (!gst_d3d11_result (hr, decoder->device)) {
     GST_WARNING_OBJECT (decoder, "Getting buffer type %d error, hr: 0x%x",
@@ -947,9 +938,7 @@ gst_d3d11_decoder_release_decoder_buffer (GstD3D11Decoder * decoder,
 
   video_context = decoder->video_context;
 
-  gst_d3d11_device_lock (decoder->device);
   hr = video_context->ReleaseDecoderBuffer (decoder->decoder_handle, type);
-  gst_d3d11_device_unlock (decoder->device);
 
   if (!gst_d3d11_result (hr, decoder->device)) {
     GST_WARNING_OBJECT (decoder, "ReleaseDecoderBuffer failed, hr: 0x%x",
@@ -971,10 +960,8 @@ gst_d3d11_decoder_submit_decoder_buffers (GstD3D11Decoder * decoder,
 
   video_context = decoder->video_context;
 
-  gst_d3d11_device_lock (decoder->device);
   hr = video_context->SubmitDecoderBuffers (decoder->decoder_handle,
       buffer_count, buffers);
-  gst_d3d11_device_unlock (decoder->device);
 
   if (!gst_d3d11_result (hr, decoder->device)) {
     GST_WARNING_OBJECT (decoder, "SubmitDecoderBuffers failed, hr: 0x%x",
@@ -1119,7 +1106,6 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
   in_texture = gst_d3d11_memory_get_texture_handle (in_mem);
   in_subresource_index = gst_d3d11_memory_get_subresource_index (in_mem);
 
-  gst_d3d11_device_lock (self->device);
   device_context->CopySubresourceRegion (self->staging, 0, 0, 0, 0,
       in_texture, in_subresource_index, NULL);
 
@@ -1128,7 +1114,6 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to map, hr: 0x%x", (guint) hr);
 
-    gst_d3d11_device_unlock (self->device);
     gst_video_frame_unmap (&out_frame);
 
     return FALSE;
@@ -1165,7 +1150,6 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
 
   gst_video_frame_unmap (&out_frame);
   device_context->Unmap (self->staging, 0);
-  gst_d3d11_device_unlock (self->device);
 
   return TRUE;
 }
@@ -1192,7 +1176,6 @@ copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
     return FALSE;
   }
 
-  gst_d3d11_device_lock (self->device);
   in_texture = gst_d3d11_memory_get_texture_handle (in_mem);
   in_subresource_index = gst_d3d11_memory_get_subresource_index (in_mem);
 
@@ -1209,7 +1192,6 @@ copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
       out_subresource_index, 0, 0, 0, in_texture, in_subresource_index,
       &src_box);
 
-  gst_d3d11_device_unlock (self->device);
   gst_memory_unmap (GST_MEMORY_CAST (out_mem), &out_map);
 
   return TRUE;

@@ -143,11 +143,9 @@ gst_d3d11_video_processor_new (GstD3D11Device * device, guint in_width,
 #endif
 
   /* Setting up default options */
-  gst_d3d11_device_lock (self->device);
   /* We don't want auto processing by driver */
   self->video_context->VideoProcessorSetStreamAutoProcessingMode
       (self->processor, 0, FALSE);
-  gst_d3d11_device_unlock (self->device);
 
   return self;
 
@@ -495,10 +493,8 @@ gst_d3d11_video_processor_render (GstD3D11VideoProcessor * processor,
   g_return_val_if_fail (in_view != NULL, FALSE);
   g_return_val_if_fail (out_view != NULL, FALSE);
 
-  gst_d3d11_device_lock (processor->device);
   ret = gst_d3d11_video_processor_render_unlocked (processor, in_rect, in_view,
       out_rect, out_view);
-  gst_d3d11_device_unlock (processor->device);
 
   return ret;
 }
