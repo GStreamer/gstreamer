@@ -533,15 +533,14 @@ out:
 }
 
 gboolean
-gst_wasapi_util_get_device_client (GstElement * self,
+gst_wasapi_util_get_device (GstElement * self,
     gint data_flow, gint role, const wchar_t * device_strid,
-    IMMDevice ** ret_device, IAudioClient ** ret_client)
+    IMMDevice ** ret_device)
 {
   gboolean res = FALSE;
   HRESULT hr;
   IMMDeviceEnumerator *enumerator = NULL;
   IMMDevice *device = NULL;
-  IAudioClient *client = NULL;
 
   if (!(enumerator = gst_wasapi_util_get_device_enumerator (GST_OBJECT (self))))
     goto beach;
@@ -561,6 +560,29 @@ gst_wasapi_util_get_device_client (GstElement * self,
     }
   }
 
+  IUnknown_AddRef (device);
+  *ret_device = device;
+
+  res = TRUE;
+
+beach:
+  if (device != NULL)
+    IUnknown_Release (device);
+
+  if (enumerator != NULL)
+    IUnknown_Release (enumerator);
+
+  return res;
+}
+
+gboolean
+gst_wasapi_util_get_audio_client (GstElement * self,
+    IMMDevice * device, IAudioClient ** ret_client)
+{
+  IAudioClient *client = NULL;
+  gboolean res = FALSE;
+  HRESULT hr;
+
   if (gst_wasapi_util_have_audioclient3 ())
     hr = IMMDevice_Activate (device, &IID_IAudioClient3, CLSCTX_ALL, NULL,
         (void **) &client);
@@ -570,21 +592,13 @@ gst_wasapi_util_get_device_client (GstElement * self,
   HR_FAILED_GOTO (hr, IMMDevice::Activate (IID_IAudioClient), beach);
 
   IUnknown_AddRef (client);
-  IUnknown_AddRef (device);
   *ret_client = client;
-  *ret_device = device;
 
   res = TRUE;
 
 beach:
   if (client != NULL)
     IUnknown_Release (client);
-
-  if (device != NULL)
-    IUnknown_Release (device);
-
-  if (enumerator != NULL)
-    IUnknown_Release (enumerator);
 
   return res;
 }

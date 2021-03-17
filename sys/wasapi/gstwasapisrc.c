@@ -426,9 +426,11 @@ gst_wasapi_src_open (GstAudioSrc * asrc)
    * even if the old device was unplugged. We need to handle this somehow.
    * For example, perhaps we should automatically switch to the new device if
    * the default device is changed and a device isn't explicitly selected. */
-  if (!gst_wasapi_util_get_device_client (GST_ELEMENT (self),
+  if (!gst_wasapi_util_get_device (GST_ELEMENT (self),
           self->loopback ? eRender : eCapture, self->role, self->device_strid,
-          &device, &client)) {
+          &device)
+      || !gst_wasapi_util_get_audio_client (GST_ELEMENT (self),
+          device, &client)) {
     if (!self->device_strid)
       GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
           ("Failed to get default device"));
@@ -445,9 +447,10 @@ gst_wasapi_src_open (GstAudioSrc * asrc)
    * we will keep pusing silence data to into wasapi client so that make audio
    * client report audio data in any case
    */
-  if (!gst_wasapi_util_get_device_client (GST_ELEMENT (self),
-          eRender, self->role, self->device_strid,
-          &loopback_device, &self->loopback_client)) {
+  if (!gst_wasapi_util_get_device (GST_ELEMENT (self),
+          eRender, self->role, self->device_strid, &loopback_device)
+      || !gst_wasapi_util_get_audio_client (GST_ELEMENT (self),
+          loopback_device, &self->loopback_client)) {
     if (!self->device_strid)
       GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
           ("Failed to get default device for loopback"));
