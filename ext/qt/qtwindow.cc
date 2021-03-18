@@ -103,7 +103,7 @@ QtGLWindow::QtGLWindow ( QWindow * parent, QQuickWindow *src ) :
   QQuickWindow( parent ), source (src)
 {
   QGuiApplication *app = static_cast<QGuiApplication *> (QCoreApplication::instance ());
-  static volatile gsize _debug;
+  static gsize _debug;
 
   g_assert (app != NULL);
 
@@ -152,7 +152,7 @@ QtGLWindow::beforeRendering()
 
   g_mutex_lock (&this->priv->lock);
 
-  static volatile gsize once = 0;
+  static gsize once = 0;
   if (g_once_init_enter(&once)) {
     this->priv->start = QDateTime::currentDateTime().toMSecsSinceEpoch();
     g_once_init_leave(&once,1);

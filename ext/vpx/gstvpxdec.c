@@ -79,7 +79,7 @@ gst_vpx_dec_post_processing_flags_get_type (void)
     {C_FLAGS (VP8_MFQE), "Multi-frame quality enhancement", "mfqe"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;

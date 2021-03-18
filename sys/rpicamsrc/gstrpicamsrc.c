@@ -292,7 +292,7 @@ gst_rpi_cam_src_sensor_mode_get_type (void)
         "640x480 4:3 60.1-90fps", "640x480-fast"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
     _id = g_enum_register_static ("GstRpiCamSrcSensorMode", values);

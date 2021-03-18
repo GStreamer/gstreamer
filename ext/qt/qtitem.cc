@@ -104,7 +104,7 @@ void InitializeSceneGraph::run()
 
 QtGLVideoItem::QtGLVideoItem()
 {
-  static volatile gsize _debug;
+  static gsize _debug;
 
   if (g_once_init_enter (&_debug)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "qtglwidget", 0, "Qt GL Widget");

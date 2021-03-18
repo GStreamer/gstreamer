@@ -66,7 +66,7 @@ gst_qt_get_gl_display ()
 {
   GstGLDisplay *display = NULL;
   QGuiApplication *app = static_cast<QGuiApplication *> (QCoreApplication::instance ());
-  static volatile gsize _debug;
+  static gsize _debug;
 
   g_assert (app != NULL);
 

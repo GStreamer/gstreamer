@@ -22,7 +22,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 static void
 init_debug (void)
 {
-  static volatile gsize _debug;
+  static gsize _debug;
 
   if (g_once_init_enter (&_debug)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "qtglrenderer", 0,
@@ -115,7 +115,7 @@ typedef enum
 
 struct SharedRenderData
 {
-  volatile int refcount;
+  int refcount;
   SharedRenderDataState state;
   GMutex lock;
   GCond cond;
@@ -130,7 +130,7 @@ shared_render_data_new (void)
 {
   struct SharedRenderData *ret = g_new0 (struct SharedRenderData, 1);
 
-  ret->refcount = 1;
+  g_atomic_int_set (&ret->refcount, 1);
   g_mutex_init (&ret->lock);
 
   return ret;
