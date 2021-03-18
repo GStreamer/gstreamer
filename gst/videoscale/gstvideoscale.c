@@ -161,7 +161,7 @@ static GstCaps *
 gst_video_scale_get_capslist (void)
 {
   static GstCaps *caps = NULL;
-  static volatile gsize inited = 0;
+  static gsize inited = 0;
 
   if (g_once_init_enter (&inited)) {
     caps = gst_static_caps_get (&gst_video_scale_format_caps);

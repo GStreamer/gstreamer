@@ -90,7 +90,7 @@ static gboolean gst_tag_mux_sink_event (GstPad * pad, GstObject * parent,
 GType
 gst_tag_mux_get_type (void)
 {
-  static volatile gsize tag_mux_type = 0;
+  static gsize tag_mux_type = 0;
 
   if (g_once_init_enter (&tag_mux_type)) {
     const GInterfaceInfo interface_info = { NULL, NULL, NULL };

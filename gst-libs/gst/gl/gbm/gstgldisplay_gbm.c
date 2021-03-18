@@ -398,7 +398,7 @@ gst_gl_display_gbm_shutdown_gbm (GstGLDisplayGBM * display_gbm)
 static void
 _init_debug (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");

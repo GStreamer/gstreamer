@@ -499,7 +499,7 @@ static gboolean gst_video_decoder_transform_meta_default (GstVideoDecoder *
 GType
 gst_video_decoder_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;

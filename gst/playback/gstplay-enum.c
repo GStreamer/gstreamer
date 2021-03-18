@@ -32,7 +32,7 @@ gst_autoplug_select_result_get_type (void)
     {C_ENUM (GST_AUTOPLUG_SELECT_SKIP), "GST_AUTOPLUG_SELECT_SKIP", "skip"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -74,7 +74,7 @@ gst_play_flags_get_type (void)
         "force-sw-decoders"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;

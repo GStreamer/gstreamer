@@ -502,7 +502,7 @@ _mem_free (GstAllocator * allocator, GstMemory * memory)
 void
 gst_gl_base_memory_init_once (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_GL_BASE_MEMORY, "glbasememory", 0,

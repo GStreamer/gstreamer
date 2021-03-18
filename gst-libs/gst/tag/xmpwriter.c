@@ -53,7 +53,7 @@ typedef struct
 GType
 gst_tag_xmp_writer_get_type (void)
 {
-  static volatile gsize xmp_config_type = 0;
+  static gsize xmp_config_type = 0;
 
   if (g_once_init_enter (&xmp_config_type)) {
     GType _type;

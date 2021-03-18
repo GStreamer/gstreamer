@@ -1107,7 +1107,7 @@ gst_gl_memory_get_texture_id (GstGLMemory * gl_mem)
 void
 gst_gl_memory_init_once (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     gst_gl_base_memory_init_once ();

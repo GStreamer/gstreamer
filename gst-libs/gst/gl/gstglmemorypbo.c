@@ -816,7 +816,7 @@ gst_gl_memory_pbo_upload_transfer (GstGLMemoryPBO * gl_mem)
 void
 gst_gl_memory_pbo_init_once (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     gst_gl_memory_init_once ();

@@ -932,7 +932,7 @@ gst_video_vbi_encoder_write_line (GstVideoVBIEncoder * encoder, guint8 * data)
 GType
 gst_video_caption_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
 
   if (g_once_init_enter (&type)) {
     static const gchar *tags[] = { NULL };
@@ -1135,7 +1135,7 @@ gst_video_caption_type_to_caps (GstVideoCaptionType type)
 GType
 gst_video_afd_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
 
   if (g_once_init_enter (&type)) {
     static const gchar *tags[] = {
@@ -1274,7 +1274,7 @@ gst_buffer_add_video_afd_meta (GstBuffer * buffer, guint8 field,
 GType
 gst_video_bar_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
 
   if (g_once_init_enter (&type)) {
     static const gchar *tags[] = {
