@@ -27,6 +27,7 @@
 
 #include "gl.h"
 #include "gstglupload.h"
+#include "gstglfuncs.h"
 
 #if GST_GL_HAVE_PLATFORM_EGL
 #include "egl/gsteglimage.h"
@@ -525,6 +526,11 @@ _dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
   GstCaps *ret;
 
   if (context) {
+    const GstGLFuncs *gl = context->gl_vtable;
+
+    if (!gl->EGLImageTargetTexture2D)
+      return NULL;
+
     /* Don't propose DMABuf caps feature unless it can be supported */
     if (gst_gl_context_get_gl_platform (context) != GST_GL_PLATFORM_EGL)
       return NULL;
@@ -624,6 +630,9 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
 
   n_mem = gst_buffer_n_memory (buffer);
   meta = gst_buffer_get_video_meta (buffer);
+
+  if (!dmabuf->upload->context->gl_vtable->EGLImageTargetTexture2D)
+    return FALSE;
 
   /* dmabuf upload is only supported with EGL contexts. */
   if (gst_gl_context_get_gl_platform (dmabuf->upload->context) !=
@@ -834,6 +843,11 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
   GstCaps *ret;
 
   if (context) {
+    const GstGLFuncs *gl = context->gl_vtable;
+
+    if (!gl->EGLImageTargetTexture2D)
+      return NULL;
+
     /* Don't propose direct DMABuf caps feature unless it can be supported */
     if (gst_gl_context_get_gl_platform (context) != GST_GL_PLATFORM_EGL)
       return NULL;

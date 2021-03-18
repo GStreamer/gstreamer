@@ -203,6 +203,13 @@ _gl_mem_create (GstGLMemoryEGL * gl_mem, GError ** error)
   } else {
     guint gl_target = gst_gl_texture_target_to_gl (gl_mem->mem.tex_target);
 
+    if (!gl->EGLImageTargetTexture2D) {
+      g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
+          "Required function glEGLImageTargetTexture2D() is not available for "
+          "attaching an EGLImage to a texture");
+      return FALSE;
+    }
+
     gl->ActiveTexture (GL_TEXTURE0 + gl_mem->mem.plane);
     gl->BindTexture (gl_target, gl_mem->mem.tex_id);
     gl->EGLImageTargetTexture2D (gl_target,
