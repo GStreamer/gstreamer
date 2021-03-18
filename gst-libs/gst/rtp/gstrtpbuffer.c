@@ -856,15 +856,23 @@ gst_rtp_buffer_set_extension_data (GstRTPBuffer * rtp, guint16 bits,
     mem = gst_allocator_alloc (NULL, min_size, NULL);
 
     if (rtp->data[1]) {
-      /* copy old data */
+      /* copy old data & initialize the remainder of the new buffer */
       gst_memory_map (mem, &map, GST_MAP_WRITE);
       memcpy (map.data, rtp->data[1], rtp->size[1]);
+      if (min_size > rtp->size[1]) {
+        memset (map.data + rtp->size[1], 0, min_size - rtp->size[1]);
+      }
       gst_memory_unmap (mem, &map);
 
       /* unmap old */
       gst_buffer_unmap (rtp->buffer, &rtp->map[1]);
       gst_buffer_replace_memory (rtp->buffer, 1, mem);
     } else {
+      /* don't leak data from uninitialized memory via the padding */
+      gst_memory_map (mem, &map, GST_MAP_WRITE);
+      memset (map.data, 0, map.size);
+      gst_memory_unmap (mem, &map);
+
       /* we didn't have extension data, add */
       gst_buffer_insert_memory (rtp->buffer, 1, mem);
     }

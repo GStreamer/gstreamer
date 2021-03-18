@@ -1765,6 +1765,11 @@ set_headers (GstBuffer ** buffer, guint idx, gpointer user_data)
         (GFunc) write_header_extension, &hdrext);
 
     wordlen = hdrext.written_size / 4 + ((hdrext.written_size % 4) ? 1 : 0);
+
+    /* zero-fill the hdrext padding bytes */
+    memset (&hdrext.data[hdrext.written_size], 0,
+        wordlen * 4 - hdrext.written_size);
+
     gst_rtp_buffer_set_extension_data (&rtp, bit_pattern, wordlen);
   }
   GST_OBJECT_UNLOCK (data->payload);
