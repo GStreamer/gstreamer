@@ -20804,7 +20804,7 @@
                             }
                         ],
                         "return-type": "gboolean",
-                        "when": "first"
+                        "when": "last"
                     },
                     "set-parameter": {
                         "action": true,

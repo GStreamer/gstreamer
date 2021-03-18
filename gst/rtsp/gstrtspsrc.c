@@ -1060,7 +1060,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    */
   gst_rtspsrc_signals[SIGNAL_SELECT_STREAM] =
       g_signal_new_class_handler ("select-stream", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP,
+      G_SIGNAL_RUN_LAST,
       (GCallback) default_select_stream, select_stream_accum, NULL, NULL,
       G_TYPE_BOOLEAN, 2, G_TYPE_UINT, GST_TYPE_CAPS);
   /**
@@ -1075,8 +1075,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    */
   gst_rtspsrc_signals[SIGNAL_NEW_MANAGER] =
       g_signal_new_class_handler ("new-manager", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL, NULL,
-      G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      0, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
    * GstRTSPSrc::request-rtcp-key:
@@ -1091,7 +1090,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    */
   gst_rtspsrc_signals[SIGNAL_REQUEST_RTCP_KEY] =
       g_signal_new ("request-rtcp-key", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_CAPS, 1, G_TYPE_UINT);
+      0, 0, NULL, NULL, NULL, GST_TYPE_CAPS, 1, G_TYPE_UINT);
 
   /**
    * GstRTSPSrc::accept-certificate:
