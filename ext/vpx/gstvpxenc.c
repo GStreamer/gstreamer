@@ -169,7 +169,7 @@ gst_vpx_enc_end_usage_get_type (void)
     {VPX_CQ, "Constant Quality Mode (CQ) mode", "cq"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -192,7 +192,7 @@ gst_vpx_enc_multipass_mode_get_type (void)
     {VPX_RC_LAST_PASS, "Last pass of multipass encoding", "last-pass"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -214,7 +214,7 @@ gst_vpx_enc_kf_mode_get_type (void)
     {VPX_KF_DISABLED, "Don't automatically place keyframes", "disabled"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -236,7 +236,7 @@ gst_vpx_enc_tuning_get_type (void)
     {VP8_TUNE_SSIM, "Tune for SSIM", "ssim"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -260,7 +260,7 @@ gst_vpx_enc_scaling_mode_get_type (void)
     {VP8E_ONETWO, "1:2", "1:2"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -284,7 +284,7 @@ gst_vpx_enc_token_partitions_get_type (void)
     {VP8_EIGHT_TOKENPARTITION, "Eight token partitions", "8"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -307,7 +307,7 @@ gst_vpx_enc_er_flags_get_type (void)
         "Allow partitions to be decoded independently", "partitions"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -336,7 +336,7 @@ gst_vpx_enc_ts_layer_flags_get_type (void)
     {VP8_EFLAG_NO_UPD_ENTROPY, "Disable entropy update", "no-upd-entropy"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;

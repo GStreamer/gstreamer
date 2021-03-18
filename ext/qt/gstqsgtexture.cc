@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 GstQSGTexture::GstQSGTexture ()
 {
-  static volatile gsize _debug;
+  static gsize _debug;
 
   initializeOpenGLFunctions();
 
