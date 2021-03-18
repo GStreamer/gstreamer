@@ -658,6 +658,7 @@ gst_qt_mux_pad_reset (GstQTMuxPad * qtpad)
   qtpad->sparse = FALSE;
   qtpad->first_cc_sample_size = 0;
   qtpad->flow_status = GST_FLOW_OK;
+  qtpad->warned_empty_duration = FALSE;
 
   gst_buffer_replace (&qtpad->last_buf, NULL);
 
@@ -5150,18 +5151,28 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTMuxPad * pad, GstBuffer * buf)
   /* duration actually means time delta between samples, so we calculate
    * the duration based on the difference in DTS or PTS, falling back
    * to DURATION if the other two don't exist, such as with the last
-   * sample before EOS. Or use 0 if nothing else is available */
+   * sample before EOS. Or use 0 if nothing else is available,
+   * making sure that duration doesn't go negative and wraparound. */
   if (GST_BUFFER_DURATION_IS_VALID (last_buf))
     duration = GST_BUFFER_DURATION (last_buf);
   else
     duration = 0;
   if (!pad->sparse) {
     if (buf && GST_BUFFER_DTS_IS_VALID (buf)
-        && GST_BUFFER_DTS_IS_VALID (last_buf))
-      duration = GST_BUFFER_DTS (buf) - GST_BUFFER_DTS (last_buf);
-    else if (buf && GST_BUFFER_PTS_IS_VALID (buf)
-        && GST_BUFFER_PTS_IS_VALID (last_buf))
-      duration = GST_BUFFER_PTS (buf) - GST_BUFFER_PTS (last_buf);
+        && GST_BUFFER_DTS_IS_VALID (last_buf)) {
+      if (GST_BUFFER_DTS (buf) >= GST_BUFFER_DTS (last_buf))
+        duration = GST_BUFFER_DTS (buf) - GST_BUFFER_DTS (last_buf);
+    } else if (buf && GST_BUFFER_PTS_IS_VALID (buf)
+        && GST_BUFFER_PTS_IS_VALID (last_buf)) {
+      if (GST_BUFFER_PTS (buf) >= GST_BUFFER_PTS (last_buf))
+        duration = GST_BUFFER_PTS (buf) - GST_BUFFER_PTS (last_buf);
+    }
+    if (duration == 0 && !pad->warned_empty_duration) {
+      GST_WARNING_OBJECT (qtmux,
+          "Sample with zero duration on pad %" GST_PTR_FORMAT
+          " due to missing or backward timestamps on the input stream", pad);
+      pad->warned_empty_duration = TRUE;
+    }
   }
 
   if (qtmux->current_pad != pad || qtmux->current_chunk_offset == -1) {

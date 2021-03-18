@@ -128,6 +128,10 @@ struct _GstQTMuxPad
   GstClockTime last_dts;
   guint64 sample_offset;
 
+  /* TRUE if we saw backward/missing DTS on this
+   * pad (and warned about it */
+  gboolean warned_empty_duration;
+
   /* This is compensate for CTTS */
   GstClockTime dts_adjustment;
 
