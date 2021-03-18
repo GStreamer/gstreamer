@@ -487,6 +487,13 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
   CoInitializeEx (NULL, COINIT_MULTITHREADED);
 
+  if (!self->client) {
+    GST_DEBUG_OBJECT (self, "no IAudioClient, creating a new one");
+    if (!gst_wasapi_util_get_audio_client (GST_ELEMENT (self),
+            self->device, &self->client))
+      goto beach;
+  }
+
   if (gst_wasapi_sink_can_audioclient3 (self)) {
     if (!gst_wasapi_util_initialize_audioclient3 (GST_ELEMENT (self), spec,
             (IAudioClient3 *) self->client, self->mix_format, self->low_latency,
@@ -592,7 +599,8 @@ gst_wasapi_sink_unprepare (GstAudioSink * asink)
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
 
   if (self->client != NULL) {
-    IAudioClient_Stop (self->client);
+    IUnknown_Release (self->client);
+    self->client = NULL;
   }
 
   if (self->render_client != NULL) {
