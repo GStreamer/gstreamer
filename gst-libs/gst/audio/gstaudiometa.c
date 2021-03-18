@@ -177,7 +177,7 @@ gst_buffer_add_audio_downmix_meta (GstBuffer * buffer,
 GType
 gst_audio_downmix_meta_api_get_type (void)
 {
-  static volatile GType type;
+  static GType type;
   static const gchar *tags[] =
       { GST_META_TAG_AUDIO_STR, GST_META_TAG_AUDIO_CHANNELS_STR, NULL };
 
@@ -280,7 +280,7 @@ gst_buffer_add_audio_clipping_meta (GstBuffer * buffer,
 GType
 gst_audio_clipping_meta_api_get_type (void)
 {
-  static volatile GType type;
+  static GType type;
   static const gchar *tags[] =
       { GST_META_TAG_AUDIO_STR, GST_META_TAG_AUDIO_RATE_STR, NULL };
 
@@ -463,7 +463,7 @@ gst_buffer_add_audio_meta (GstBuffer * buffer, const GstAudioInfo * info,
 GType
 gst_audio_meta_api_get_type (void)
 {
-  static volatile GType type;
+  static GType type;
   static const gchar *tags[] = {
     GST_META_TAG_AUDIO_STR, GST_META_TAG_AUDIO_CHANNELS_STR,
     GST_META_TAG_AUDIO_RATE_STR, NULL
@@ -505,7 +505,7 @@ gst_audio_meta_get_info (void)
 GType
 gst_audio_level_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] = { NULL };
 
   if (g_once_init_enter (&type)) {

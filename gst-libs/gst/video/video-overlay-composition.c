@@ -236,7 +236,7 @@ gst_video_overlay_composition_meta_transform (GstBuffer * dest, GstMeta * meta,
 GType
 gst_video_overlay_composition_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] = { NULL };
 
   if (g_once_init_enter (&type)) {

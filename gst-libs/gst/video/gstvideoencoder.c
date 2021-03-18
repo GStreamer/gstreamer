@@ -291,7 +291,7 @@ static gboolean gst_video_encoder_transform_meta_default (GstVideoEncoder *
 GType
 gst_video_encoder_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;

@@ -360,9 +360,9 @@ gst_encoding_profile_class_intern_init (gpointer klass)
 GType
 gst_encoding_profile_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static gsize g_define_type_id_init = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile)) {
+  if (g_once_init_enter (&g_define_type_id_init)) {
     GType g_define_type_id = g_type_register_static_simple (G_TYPE_OBJECT,
         g_intern_static_string ("GstEncodingProfile"),
         sizeof (GstEncodingProfileClass),
@@ -385,9 +385,9 @@ gst_encoding_profile_get_type (void)
     /* Register gst-specific GValue functions */
     gst_value_register (&gstvtable);
 
-    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    g_once_init_leave (&g_define_type_id_init, g_define_type_id);
   }
-  return g_define_type_id__volatile;
+  return g_define_type_id_init;
 }
 
 

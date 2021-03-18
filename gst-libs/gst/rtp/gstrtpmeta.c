@@ -190,7 +190,7 @@ gst_rtp_source_meta_append_csrc (GstRTPSourceMeta * meta, const guint32 * csrc,
 GType
 gst_rtp_source_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] = { NULL };
 
   if (g_once_init_enter (&type)) {

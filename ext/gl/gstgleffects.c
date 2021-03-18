@@ -660,7 +660,7 @@ gst_gl_effects_filters_descriptors (void)
 gboolean
 gst_gl_effects_register_filters (GstPlugin * plugin, GstRank rank)
 {
-  static volatile gsize registered = 0;
+  static gsize registered = 0;
 
   if (g_once_init_enter (&registered)) {
     GTypeInfo info = {

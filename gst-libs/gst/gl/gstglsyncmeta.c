@@ -333,7 +333,7 @@ static gboolean
 _gst_gl_sync_meta_init (GstGLSyncMeta * sync_meta, gpointer params,
     GstBuffer * buffer)
 {
-  static volatile gsize _init;
+  static gsize _init;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_gl_sync_meta_debug, "glsyncmeta", 0,
@@ -359,7 +359,7 @@ _gst_gl_sync_meta_init (GstGLSyncMeta * sync_meta, gpointer params,
 GType
 gst_gl_sync_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] = { NULL };
 
   if (g_once_init_enter (&type)) {

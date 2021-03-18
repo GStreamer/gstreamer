@@ -36,7 +36,7 @@
 GType
 gst_video_affine_transformation_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] =
       { GST_META_TAG_VIDEO_STR, GST_META_TAG_VIDEO_ORIENTATION_STR,
     GST_META_TAG_VIDEO_ORIENTATION_STR, NULL

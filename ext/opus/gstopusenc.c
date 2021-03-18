@@ -80,7 +80,7 @@ gst_opus_enc_bandwidth_get_type (void)
     {OPUS_AUTO, "Auto", "auto"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -106,7 +106,7 @@ gst_opus_enc_frame_size_get_type (void)
     {60, "60", "60"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -130,7 +130,7 @@ gst_opus_enc_audio_type_get_type (void)
         "restricted-lowdelay"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -153,7 +153,7 @@ gst_opus_enc_bitrate_type_get_type (void)
     {BITRATE_TYPE_CONSTRAINED_VBR, "Constrained VBR", "constrained-vbr"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -819,7 +819,7 @@ gst_opus_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
 static GstCaps *
 gst_opus_enc_get_sink_template_caps (void)
 {
-  static volatile gsize init = 0;
+  static gsize init = 0;
   static GstCaps *caps = NULL;
 
   if (g_once_init_enter (&init)) {

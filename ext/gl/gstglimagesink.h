@@ -106,7 +106,7 @@ struct _GstGLImageSink
     GstBuffer *next_sync;
     GstGLSyncMeta *next_sync_meta;
 
-    volatile gint to_quit;
+    gint to_quit;
     gboolean keep_aspect_ratio;
     gint par_n, par_d;
 

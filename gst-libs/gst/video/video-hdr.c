@@ -465,7 +465,7 @@ gst_video_content_light_level_add_to_caps (const GstVideoContentLightLevel *
 GType
 gst_video_hdr_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
 
   if (g_once_init_enter (&type)) {
     static const gchar *tags[] = {

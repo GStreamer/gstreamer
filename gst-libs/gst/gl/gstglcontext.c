@@ -150,7 +150,7 @@ load_self_module (gpointer user_data)
  */
 struct ContextShareGroup
 {
-  volatile int refcount;
+  int refcount;
 };
 
 static struct ContextShareGroup *
@@ -305,7 +305,7 @@ gst_gl_context_class_init (GstGLContextClass * klass)
 static void
 _init_debug (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_gl_context_debug, "glcontext", 0,

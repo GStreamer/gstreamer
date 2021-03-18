@@ -802,9 +802,9 @@ static gint video_aggregator_private_offset = 0;
 GType
 gst_video_aggregator_get_type (void)
 {
-  static volatile gsize g_define_type_id_volatile = 0;
+  static gsize static_g_define_type_id = 0;
 
-  if (g_once_init_enter (&g_define_type_id_volatile)) {
+  if (g_once_init_enter (&static_g_define_type_id)) {
     GType g_define_type_id = g_type_register_static_simple (GST_TYPE_AGGREGATOR,
         g_intern_static_string ("GstVideoAggregator"),
         sizeof (GstVideoAggregatorClass),
@@ -817,9 +817,9 @@ gst_video_aggregator_get_type (void)
         g_type_add_instance_private (g_define_type_id,
         sizeof (GstVideoAggregatorPrivate));
 
-    g_once_init_leave (&g_define_type_id_volatile, g_define_type_id);
+    g_once_init_leave (&static_g_define_type_id, g_define_type_id);
   }
-  return g_define_type_id_volatile;
+  return static_g_define_type_id;
 }
 
 static inline GstVideoAggregatorPrivate *

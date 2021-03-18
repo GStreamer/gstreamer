@@ -338,7 +338,7 @@ static void gst_audio_decoder_init (GstAudioDecoder * dec,
 GType
 gst_audio_decoder_get_type (void)
 {
-  static volatile gsize audio_decoder_type = 0;
+  static gsize audio_decoder_type = 0;
 
   if (g_once_init_enter (&audio_decoder_type)) {
     GType _type;

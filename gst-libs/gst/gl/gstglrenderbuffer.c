@@ -312,7 +312,7 @@ gst_gl_renderbuffer_get_id (GstGLRenderbuffer * gl_mem)
 void
 gst_gl_renderbuffer_init_once (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     gst_gl_base_memory_init_once ();

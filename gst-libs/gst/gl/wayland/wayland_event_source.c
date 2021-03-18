@@ -45,7 +45,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 static void
 init_debug (void)
 {
-  static volatile gsize _debug;
+  static gsize _debug;
 
   if (g_once_init_enter (&_debug)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "glwaylandeventsource", 0,
