@@ -84,7 +84,7 @@ static gint private_offset = 0;
 GType
 gst_device_provider_get_type (void)
 {
-  static volatile gsize gst_device_provider_type = 0;
+  static gsize gst_device_provider_type = 0;
 
   if (g_once_init_enter (&gst_device_provider_type)) {
     GType _type;

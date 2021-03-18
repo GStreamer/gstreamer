@@ -238,8 +238,8 @@ struct _GstBaseSrcPrivate
   GstClockTimeDiff ts_offset;   /* OBJECT_LOCK */
 
   gboolean do_timestamp;        /* OBJECT_LOCK */
-  volatile gint dynamic_size;   /* atomic */
-  volatile gint automatic_eos;  /* atomic */
+  gint dynamic_size;            /* atomic */
+  gint automatic_eos;           /* atomic */
 
   /* stream sequence number */
   guint32 seqnum;               /* STREAM_LOCK */
@@ -247,7 +247,7 @@ struct _GstBaseSrcPrivate
   /* pending events (TAG, CUSTOM_BOTH, CUSTOM_DOWNSTREAM) to be
    * pushed in the data stream */
   GList *pending_events;        /* OBJECT_LOCK */
-  volatile gint have_events;    /* OBJECT_LOCK */
+  gint have_events;             /* OBJECT_LOCK */
 
   /* QoS *//* with LOCK */
   gdouble proportion;           /* OBJECT_LOCK */
@@ -277,7 +277,7 @@ static void gst_base_src_finalize (GObject * object);
 GType
 gst_base_src_get_type (void)
 {
-  static volatile gsize base_src_type = 0;
+  static gsize base_src_type = 0;
 
   if (g_once_init_enter (&base_src_type)) {
     GType _type;
@@ -442,7 +442,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   g_cond_init (&basesrc->live_cond);
   basesrc->num_buffers = DEFAULT_NUM_BUFFERS;
   basesrc->num_buffers_left = -1;
-  basesrc->priv->automatic_eos = TRUE;
+  g_atomic_int_set (&basesrc->priv->automatic_eos, TRUE);
 
   basesrc->can_activate_push = TRUE;
 

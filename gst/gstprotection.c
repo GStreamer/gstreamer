@@ -56,7 +56,7 @@ static const gchar *gst_protection_factory_check (GstElementFactory * fact,
 GType
 gst_protection_meta_api_get_type (void)
 {
-  static volatile GType type;
+  static GType type;
   static const gchar *tags[] = { NULL };
 
   if (g_once_init_enter (&type)) {

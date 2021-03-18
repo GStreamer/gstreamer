@@ -220,7 +220,7 @@ struct _MyBufferPool
 {
   GSList *buffers;
 
-  volatile gboolean is_closed;
+  gboolean is_closed;
 };
 
 static void my_recycle_buffer_destroy (MyRecycleBuffer * buf);
@@ -310,7 +310,7 @@ thread_buffer_producer (MyBufferPool * pool)
     gst_buffer_unref (buf);
   }
 
-  pool->is_closed = TRUE;
+  g_atomic_int_set (&pool->is_closed, TRUE);
 }
 
 static void
@@ -327,7 +327,7 @@ thread_buffer_consumer (MyBufferPool * pool)
 
     THREAD_SWITCH ();
   }
-  while (!pool->is_closed);
+  while (!g_atomic_int_get (&pool->is_closed));
 }
 
 GST_START_TEST (test_recycle_threaded)

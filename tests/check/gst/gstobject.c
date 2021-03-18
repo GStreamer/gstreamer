@@ -48,7 +48,7 @@ struct _GstFakeObjectClass
 static GType
 gst_fake_object_get_type (void)
 {
-  static volatile gsize fake_object_type = 0;
+  static gsize fake_object_type = 0;
 
   if (g_once_init_enter (&fake_object_type)) {
     GType type;

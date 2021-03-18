@@ -338,7 +338,7 @@ static void gst_base_sink_finalize (GObject * object);
 GType
 gst_base_sink_get_type (void)
 {
-  static volatile gsize base_sink_type = 0;
+  static gsize base_sink_type = 0;
 
   if (g_once_init_enter (&base_sink_type)) {
     GType _type;

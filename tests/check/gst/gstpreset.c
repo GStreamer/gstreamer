@@ -114,7 +114,7 @@ gst_preset_test_base_init (GstPresetTestClass * klass)
 static GType
 gst_preset_test_get_type (void)
 {
-  static volatile gsize preset_test_type = 0;
+  static gsize preset_test_type = 0;
 
   if (g_once_init_enter (&preset_test_type)) {
     GType type;

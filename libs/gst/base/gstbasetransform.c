@@ -219,7 +219,7 @@ static GstFlowReturn default_generate_output (GstBaseTransform * trans,
 GType
 gst_base_transform_get_type (void)
 {
-  static volatile gsize base_transform_type = 0;
+  static gsize base_transform_type = 0;
 
   if (g_once_init_enter (&base_transform_type)) {
     GType _type;

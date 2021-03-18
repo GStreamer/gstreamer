@@ -2878,7 +2878,7 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
 GType
 gst_aggregator_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;

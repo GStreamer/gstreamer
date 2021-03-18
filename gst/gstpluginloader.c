@@ -381,7 +381,7 @@ plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
 static gboolean
 gst_plugin_loader_use_usr_bin_arch (void)
 {
-  static volatile gsize multiarch = 0;
+  static gsize multiarch = 0;
 
   if (g_once_init_enter (&multiarch)) {
     gsize res = NO_MULTIARCH;

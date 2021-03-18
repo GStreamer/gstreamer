@@ -347,7 +347,7 @@ gst_promise_free (GstMiniObject * object)
 static void
 gst_promise_init (GstPromise * promise)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_promise_debug, "gstpromise", 0, "gstpromise");

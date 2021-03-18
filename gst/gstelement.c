@@ -169,7 +169,7 @@ GQuark __gst_elementclass_factory = 0;
 GType
 gst_element_get_type (void)
 {
-  static volatile gsize gst_element_type = 0;
+  static gsize gst_element_type = 0;
 
   if (g_once_init_enter (&gst_element_type)) {
     GType _type;

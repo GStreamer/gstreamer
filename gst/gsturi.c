@@ -123,7 +123,7 @@ _gst_ascii_strcasestr (const gchar * s, const gchar * find)
 GType
 gst_uri_handler_get_type (void)
 {
-  static volatile gsize urihandler_type = 0;
+  static gsize urihandler_type = 0;
 
   if (g_once_init_enter (&urihandler_type)) {
     GType _type;

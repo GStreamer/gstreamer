@@ -302,8 +302,8 @@ static gboolean add_default_log_func = TRUE;
 #define PRETTY_TAGS_DEFAULT  TRUE
 static gboolean pretty_tags = PRETTY_TAGS_DEFAULT;
 
-static volatile gint G_GNUC_MAY_ALIAS __default_level = GST_LEVEL_DEFAULT;
-static volatile gint G_GNUC_MAY_ALIAS __use_color = GST_DEBUG_COLOR_MODE_ON;
+static gint G_GNUC_MAY_ALIAS __default_level = GST_LEVEL_DEFAULT;
+static gint G_GNUC_MAY_ALIAS __use_color = GST_DEBUG_COLOR_MODE_ON;
 
 /* FIXME: export this? */
 gboolean

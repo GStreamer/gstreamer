@@ -96,7 +96,7 @@ gst_protection_test_base_init (GstProtectionTestClass * klass)
 static GType
 gst_protection_test_get_type (void)
 {
-  static volatile gsize protection_test_type = 0;
+  static gsize protection_test_type = 0;
 
   if (g_once_init_enter (&protection_test_type)) {
     GType type;
