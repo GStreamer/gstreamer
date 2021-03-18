@@ -38,6 +38,16 @@ vorbis_element_init (GstPlugin * plugin)
 
   if (g_once_init_enter (&res)) {
     gst_tag_register_musicbrainz_tags ();
+
+    GST_DEBUG_CATEGORY_INIT (vorbisenc_debug, "vorbisenc", 0,
+        "vorbis encoding element");
+    GST_DEBUG_CATEGORY_INIT (vorbisdec_debug, "vorbisdec", 0,
+        "vorbis decoding element");
+    GST_DEBUG_CATEGORY_INIT (vorbisparse_debug, "vorbisparse", 0,
+        "vorbis parsing element");
+    GST_DEBUG_CATEGORY_INIT (vorbistag_debug, "vorbistag", 0,
+        "vorbis tagging element");
+
     g_once_init_leave (&res, TRUE);
   }
 }
