@@ -26,6 +26,7 @@
 #include "gstd3d11utils.h"
 #include "gstd3d11format.h"
 #include "gstd3d11_private.h"
+#include "gstd3d11memory.h"
 #include <gmodule.h>
 
 #include <windows.h>
@@ -165,7 +166,10 @@ gst_d3d11_device_enable_d3d11_debug (void)
     g_once_init_leave (&_init, 1);
   }
 
-  return ! !d3d11_debug_module;
+  if (d3d11_debug_module)
+    return TRUE;
+
+  return FALSE;
 }
 
 static inline GstDebugLevel
@@ -257,7 +261,8 @@ gst_d3d11_device_enable_dxgi_debug (void)
     if (dxgi_debug_module)
       g_module_symbol (dxgi_debug_module,
           "DXGIGetDebugInterface", (gpointer *) & GstDXGIGetDebugInterface);
-    ret = ! !GstDXGIGetDebugInterface;
+    if (GstDXGIGetDebugInterface)
+      ret = TRUE;
 #elif (GST_D3D11_DXGI_HEADER_VERSION >= 3)
     ret = TRUE;
 #endif
@@ -402,6 +407,8 @@ gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
       g_param_spec_int64 ("adapter-luid", "Adapter LUID",
           "DXGI Adapter LUID (Locally Unique Identifier) of created device",
           0, G_MAXINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  gst_d3d11_memory_init_once ();
 }
 
 static void

@@ -571,78 +571,20 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
 }
 #endif
 
-GstBuffer *
-gst_d3d11_allocate_staging_buffer (GstD3D11Allocator * allocator,
-    const GstVideoInfo * info, const GstD3D11Format * format,
-    const D3D11_TEXTURE2D_DESC desc[GST_VIDEO_MAX_PLANES],
-    gboolean add_videometa)
+static void
+fill_staging_desc (const D3D11_TEXTURE2D_DESC * ref,
+    D3D11_TEXTURE2D_DESC * staging)
 {
-  GstBuffer *buffer;
-  guint i;
-  gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
-  gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
-  GstMemory *mem;
+  memset (staging, 0, sizeof (D3D11_TEXTURE2D_DESC));
 
-  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
-  g_return_val_if_fail (info != NULL, NULL);
-  g_return_val_if_fail (format != NULL, NULL);
-  g_return_val_if_fail (desc != NULL, NULL);
-
-  buffer = gst_buffer_new ();
-
-  if (format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    gsize size[GST_VIDEO_MAX_PLANES] = { 0, };
-
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-      mem =
-          gst_d3d11_allocator_alloc_staging (allocator, &desc[i],
-          (GstD3D11AllocationFlags) 0, &stride[i]);
-
-      if (!mem) {
-        GST_ERROR_OBJECT (allocator, "Couldn't allocate memory for plane %d",
-            i);
-        goto error;
-      }
-
-      size[i] = gst_memory_get_sizes (mem, NULL, NULL);
-      if (i > 0)
-        offset[i] = offset[i - 1] + size[i - 1];
-      gst_buffer_append_memory (buffer, mem);
-    }
-  } else {
-    /* must be YUV semi-planar or single plane */
-    g_assert (GST_VIDEO_INFO_N_PLANES (info) <= 2);
-
-    mem = gst_d3d11_allocator_alloc_staging (allocator, &desc[0],
-        (GstD3D11AllocationFlags) 0, &stride[0]);
-
-    if (!mem) {
-      GST_ERROR_OBJECT (allocator, "Couldn't allocate memory");
-      goto error;
-    }
-
-    gst_memory_get_sizes (mem, NULL, NULL);
-    gst_buffer_append_memory (buffer, mem);
-
-    if (GST_VIDEO_INFO_N_PLANES (info) == 2) {
-      stride[1] = stride[0];
-      offset[1] = stride[0] * desc[0].Height;
-    }
-  }
-
-  if (add_videometa) {
-    gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
-        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
-        GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
-        offset, stride);
-  }
-
-  return buffer;
-
-error:
-  gst_buffer_unref (buffer);
-
-  return NULL;
+  staging->Width = ref->Width;
+  staging->Height = ref->Height;
+  staging->MipLevels = 1;
+  staging->Format = ref->Format;
+  staging->SampleDesc.Count = 1;
+  staging->ArraySize = 1;
+  staging->Usage = D3D11_USAGE_STAGING;
+  staging->CPUAccessFlags = (D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE);
 }
 
 GstBuffer *
@@ -651,11 +593,14 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
 {
   GstD3D11Memory *dmem;
   GstD3D11Device *device;
-  GstD3D11AllocationParams *params = NULL;
   GstD3D11Allocator *alloc = NULL;
   GstBuffer *staging_buffer = NULL;
-  D3D11_TEXTURE2D_DESC *desc;
+  gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
+  gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
   guint i;
+  gsize size = 0;
+  const GstD3D11Format *format;
+  D3D11_TEXTURE2D_DESC desc;
 
   for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
     GstMemory *mem = gst_buffer_peek_memory (buffer, i);
@@ -669,54 +614,73 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
 
   dmem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, 0);
   device = dmem->device;
-
-  params = gst_d3d11_allocation_params_new (device, (GstVideoInfo *) info,
-      (GstD3D11AllocationFlags) 0, 0);
-
-  if (!params) {
-    GST_WARNING ("Couldn't create alloc params");
-    goto done;
+  format = gst_d3d11_device_format_from_gst (device,
+      GST_VIDEO_INFO_FORMAT (info));
+  if (!format) {
+    GST_ERROR ("Unknown d3d11 format");
+    return NULL;
   }
 
-  desc = &params->desc[0];
-  /* resolution of semi-planar formats must be multiple of 2 */
-  if (desc[0].Format == DXGI_FORMAT_NV12 || desc[0].Format == DXGI_FORMAT_P010
-      || desc[0].Format == DXGI_FORMAT_P016) {
-    if (desc[0].Width % 2 || desc[0].Height % 2) {
-      gint width, height;
-      GstVideoAlignment align;
-
-      width = GST_ROUND_UP_2 (desc[0].Width);
-      height = GST_ROUND_UP_2 (desc[0].Height);
-
-      gst_video_alignment_reset (&align);
-      align.padding_right = width - desc[0].Width;
-      align.padding_bottom = height - desc[0].Height;
-
-      gst_d3d11_allocation_params_alignment (params, &align);
-    }
-  }
-
-  alloc = gst_d3d11_allocator_new (device);
+  alloc = (GstD3D11Allocator *) gst_allocator_find (GST_D3D11_MEMORY_NAME);
   if (!alloc) {
-    GST_WARNING ("Couldn't create allocator");
-    goto done;
+    GST_ERROR ("D3D11 allocator is not available");
+    return NULL;
   }
 
-  staging_buffer = gst_d3d11_allocate_staging_buffer (alloc,
-      info, params->d3d11_format, params->desc, add_videometa);
+  staging_buffer = gst_buffer_new ();
+  for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    D3D11_TEXTURE2D_DESC staging_desc;
+    GstD3D11Memory *mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, i);
+    GstD3D11Memory *new_mem;
 
-  if (!staging_buffer)
-    GST_WARNING ("Couldn't allocate staging buffer");
+    guint cur_stride = 0;
 
-done:
-  if (params)
-    gst_d3d11_allocation_params_free (params);
+    gst_d3d11_memory_get_texture_desc (mem, &desc);
+    fill_staging_desc (&desc, &staging_desc);
+
+    new_mem = (GstD3D11Memory *)
+        gst_d3d11_allocator_alloc (alloc, mem->device, &staging_desc);
+    if (!new_mem) {
+      GST_ERROR ("Failed to allocate memory");
+      goto error;
+    }
+
+    if (!gst_d3d11_memory_get_texture_stride (new_mem, &cur_stride) ||
+        cur_stride < staging_desc.Width) {
+      GST_ERROR ("Failed to calculate memory size");
+      gst_memory_unref (GST_MEMORY_CAST (mem));
+      goto error;
+    }
+
+    offset[i] = size;
+    stride[i] = cur_stride;
+    size += GST_MEMORY_CAST (new_mem)->size;
+
+    gst_buffer_append_memory (staging_buffer, GST_MEMORY_CAST (new_mem));
+  }
+
+  /* single texture semi-planar formats */
+  if (format->dxgi_format != DXGI_FORMAT_UNKNOWN &&
+      GST_VIDEO_INFO_N_PLANES (info) == 2) {
+    stride[1] = stride[0];
+    offset[1] = stride[0] * desc.Height;
+  }
+
+  gst_buffer_add_video_meta_full (staging_buffer, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+      GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+      offset, stride);
 
   if (alloc)
     gst_object_unref (alloc);
 
   return staging_buffer;
+
+error:
+  gst_clear_buffer (&staging_buffer);
+  gst_clear_object (&alloc);
+
+  return NULL;
 }
 
 static gboolean

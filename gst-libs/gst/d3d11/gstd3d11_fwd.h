@@ -64,9 +64,13 @@ typedef struct _GstD3D11DevicePrivate GstD3D11DevicePrivate;
 typedef struct _GstD3D11AllocationParams GstD3D11AllocationParams;
 typedef struct _GstD3D11Memory GstD3D11Memory;
 typedef struct _GstD3D11MemoryPrivate GstD3D11MemoryPrivate;
+
 typedef struct _GstD3D11Allocator GstD3D11Allocator;
 typedef struct _GstD3D11AllocatorClass GstD3D11AllocatorClass;
-typedef struct _GstD3D11AllocatorPrivate GstD3D11AllocatorPrivate;
+
+typedef struct _GstD3D11PoolAllocator GstD3D11PoolAllocator;
+typedef struct _GstD3D11PoolAllocatorClass GstD3D11PoolAllocatorClass;
+typedef struct _GstD3D11PoolAllocatorPrivate GstD3D11PoolAllocatorPrivate;
 
 typedef struct _GstD3D11BufferPool GstD3D11BufferPool;
 typedef struct _GstD3D11BufferPoolClass GstD3D11BufferPoolClass;

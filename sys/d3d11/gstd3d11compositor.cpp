@@ -1531,7 +1531,10 @@ gst_d3d11_compositor_release_pad (GstElement * element, GstPad * pad)
       GST_OBJECT_NAME (pad));
 
   gst_clear_buffer (&cpad->fallback_buf);
-  gst_clear_object (&cpad->fallback_pool);
+  if (cpad->fallback_pool) {
+    gst_buffer_pool_set_active (cpad->fallback_pool, FALSE);
+    gst_clear_object (&cpad->fallback_pool);
+  }
   g_clear_pointer (&cpad->convert, gst_d3d11_converter_free);
   GST_D3D11_CLEAR_COM (cpad->blend);
 

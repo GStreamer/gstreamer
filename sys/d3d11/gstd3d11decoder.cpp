@@ -270,7 +270,10 @@ gst_d3d11_decoder_get_property (GObject * object, guint prop_id,
 static void
 gst_d3d11_decoder_clear_resource (GstD3D11Decoder * self)
 {
-  gst_clear_object (&self->internal_pool);
+  if (self->internal_pool) {
+    gst_buffer_pool_set_active (self->internal_pool, FALSE);
+    gst_clear_object (&self->internal_pool);
+  }
 
   GST_D3D11_CLEAR_COM (self->decoder_handle);
   GST_D3D11_CLEAR_COM (self->staging);
@@ -381,7 +384,10 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
   GstVideoInfo *info = &self->info;
   guint pool_size;
 
-  gst_clear_object (&self->internal_pool);
+  if (self->internal_pool) {
+    gst_buffer_pool_set_active (self->internal_pool, FALSE);
+    gst_clear_object (&self->internal_pool);
+  }
 
   if (!self->use_array_of_texture) {
     alloc_flags = GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY;

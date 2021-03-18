@@ -39,6 +39,8 @@ struct _GstD3D11BufferPool
 {
   GstBufferPool parent;
 
+  GstD3D11Device *device;
+
   /* re-calculated buffer size based on d3d11 pitch and stride */
   guint buffer_size;
 

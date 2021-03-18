@@ -30,16 +30,15 @@
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_allocator_debug);
 #define GST_CAT_DEFAULT gst_d3d11_allocator_debug
 
-#define GST_D3D11_ALLOCATOR_GET_LOCK(a) (&(GST_D3D11_ALLOCATOR_CAST(a)->priv->lock))
-#define GST_D3D11_ALLOCATOR_LOCK(a) g_mutex_lock(GST_D3D11_ALLOCATOR_GET_LOCK(a))
-#define GST_D3D11_ALLOCATOR_UNLOCK(a) g_mutex_unlock(GST_D3D11_ALLOCATOR_GET_LOCK(a))
+static GstAllocator *_d3d11_memory_allocator;
 
-#define GST_D3D11_MEMORY_CAST(m) ((GstD3D11Memory *) m)
-#define GST_D3D11_MEMORY_GET_LOCK(m) (&(GST_D3D11_MEMORY_CAST(m)->priv->lock))
-#define GST_D3D11_MEMORY_LOCK(m) g_mutex_lock(GST_D3D11_MEMORY_GET_LOCK(m))
-#define GST_D3D11_MEMORY_UNLOCK(m) g_mutex_unlock(GST_D3D11_MEMORY_GET_LOCK(m))
-
-#define GST_D3D11_MEMORY_NAME "D3D11Memory"
+/* GstD3D11AllocationParams */
+static void gst_d3d11_allocation_params_init (GType type);
+G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D11AllocationParams,
+    gst_d3d11_allocation_params,
+    (GBoxedCopyFunc) gst_d3d11_allocation_params_copy,
+    (GBoxedFreeFunc) gst_d3d11_allocation_params_free,
+    gst_d3d11_allocation_params_init (g_define_type_id));
 
 /**
  * gst_d3d11_allocation_params_new:
@@ -220,7 +219,7 @@ gst_d3d11_allocation_params_compare (const GstD3D11AllocationParams * p1,
 }
 
 static void
-_init_alloc_params (GType type)
+gst_d3d11_allocation_params_init (GType type)
 {
   static GstValueTable table = {
     0, (GstValueCompareFunc) gst_d3d11_allocation_params_compare,
@@ -231,30 +230,19 @@ _init_alloc_params (GType type)
   gst_value_register (&table);
 }
 
-G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D11AllocationParams,
-    gst_d3d11_allocation_params,
-    (GBoxedCopyFunc) gst_d3d11_allocation_params_copy,
-    (GBoxedFreeFunc) gst_d3d11_allocation_params_free,
-    _init_alloc_params (g_define_type_id));
-
-typedef enum
-{
-  GST_D3D11_MEMORY_TYPE_TEXTURE = 0,
-  GST_D3D11_MEMORY_TYPE_ARRAY = 1,
-  GST_D3D11_MEMORY_TYPE_STAGING = 2,
-} GstD3D11MemoryType;
+/* GstD3D11Memory */
+#define GST_D3D11_MEMORY_GET_LOCK(m) (&(GST_D3D11_MEMORY_CAST(m)->priv->lock))
+#define GST_D3D11_MEMORY_LOCK(m) g_mutex_lock(GST_D3D11_MEMORY_GET_LOCK(m))
+#define GST_D3D11_MEMORY_UNLOCK(m) g_mutex_unlock(GST_D3D11_MEMORY_GET_LOCK(m))
 
 struct _GstD3D11MemoryPrivate
 {
-  GstD3D11MemoryType type;
-
   ID3D11Texture2D *texture;
+  ID3D11Texture2D *staging;
+
   D3D11_TEXTURE2D_DESC desc;
 
-  /* valid only for array typed memory */
   guint subresource_index;
-
-  ID3D11Texture2D *staging;
 
   ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
   guint num_shader_resource_views;
@@ -268,34 +256,15 @@ struct _GstD3D11MemoryPrivate
 
   D3D11_MAPPED_SUBRESOURCE map;
 
+
   GMutex lock;
   gint cpu_map_count;
 };
 
-struct _GstD3D11AllocatorPrivate
-{
-  /* parent texture when array typed memory is used */
-  ID3D11Texture2D *texture;
-  GArray *array_in_use;
-  GArray *decoder_output_view_array;
-  GArray *processor_input_view_array;
-
-  /* Count the number of array textures in use */
-  guint num_array_textures_in_use;
-  guint array_texture_size;
-
-  GMutex lock;
-  GCond cond;
-
-  gboolean flushing;
-};
-
-#define gst_d3d11_allocator_parent_class parent_class
-G_DEFINE_TYPE_WITH_PRIVATE (GstD3D11Allocator,
-    gst_d3d11_allocator, GST_TYPE_ALLOCATOR);
+GST_DEFINE_MINI_OBJECT_TYPE (GstD3D11Memory, gst_d3d11_memory);
 
 static inline D3D11_MAP
-gst_map_flags_to_d3d11 (GstMapFlags flags)
+gst_d3d11_map_flags_to_d3d11 (GstMapFlags flags)
 {
   if ((flags & GST_MAP_READWRITE) == GST_MAP_READWRITE)
     return D3D11_MAP_READ_WRITE;
@@ -310,7 +279,7 @@ gst_map_flags_to_d3d11 (GstMapFlags flags)
 }
 
 static ID3D11Texture2D *
-create_staging_texture (GstD3D11Device * device,
+gst_d3d11_allocate_staging_texture (GstD3D11Device * device,
     const D3D11_TEXTURE2D_DESC * ref)
 {
   D3D11_TEXTURE2D_DESC desc = { 0, };
@@ -337,101 +306,74 @@ create_staging_texture (GstD3D11Device * device,
 }
 
 static gboolean
-map_cpu_access_data (GstD3D11Memory * dmem, D3D11_MAP map_type)
+gst_d3d11_memory_map_cpu_access (GstD3D11Memory * dmem, D3D11_MAP map_type)
 {
   GstD3D11MemoryPrivate *priv = dmem->priv;
   HRESULT hr;
-  gboolean ret = TRUE;
-  ID3D11Resource *texture = (ID3D11Resource *) priv->texture;
   ID3D11Resource *staging = (ID3D11Resource *) priv->staging;
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (dmem->device);
 
   gst_d3d11_device_lock (dmem->device);
-  if (GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD)) {
-    ID3D11DeviceContext_CopySubresourceRegion (device_context,
-        staging, 0, 0, 0, 0, texture, priv->subresource_index, NULL);
-  }
-
   hr = ID3D11DeviceContext_Map (device_context,
       staging, 0, map_type, 0, &priv->map);
+  gst_d3d11_device_unlock (dmem->device);
 
   if (!gst_d3d11_result (hr, dmem->device)) {
     GST_ERROR_OBJECT (GST_MEMORY_CAST (dmem)->allocator,
         "Failed to map staging texture (0x%x)", (guint) hr);
-    ret = FALSE;
+    return FALSE;
   }
 
+  return TRUE;
+}
+
+static void
+gst_d3d11_memory_upload (GstD3D11Memory * dmem)
+{
+  GstD3D11MemoryPrivate *priv = dmem->priv;
+  ID3D11DeviceContext *device_context;
+
+  if (!priv->staging || priv->staging == priv->texture ||
+      !GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD))
+    return;
+
+  device_context = gst_d3d11_device_get_device_context_handle (dmem->device);
+  gst_d3d11_device_lock (dmem->device);
+  ID3D11DeviceContext_CopySubresourceRegion (device_context,
+      (ID3D11Resource *) priv->texture, priv->subresource_index, 0, 0, 0,
+      (ID3D11Resource *) priv->staging, 0, NULL);
   gst_d3d11_device_unlock (dmem->device);
+}
 
-  return ret;
+static void
+gst_d3d11_memory_download (GstD3D11Memory * dmem)
+{
+  GstD3D11MemoryPrivate *priv = dmem->priv;
+  ID3D11DeviceContext *device_context;
+
+  if (!priv->staging || priv->staging == priv->texture ||
+      !GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD))
+    return;
+
+  device_context = gst_d3d11_device_get_device_context_handle (dmem->device);
+  gst_d3d11_device_lock (dmem->device);
+  ID3D11DeviceContext_CopySubresourceRegion (device_context,
+      (ID3D11Resource *) priv->staging, 0, 0, 0, 0,
+      (ID3D11Resource *) priv->texture, priv->subresource_index, NULL);
+  gst_d3d11_device_unlock (dmem->device);
 }
 
 static gpointer
-gst_d3d11_memory_map_staging (GstMemory * mem, GstMapFlags flags)
+gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
 {
-  GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
+  GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
   GstD3D11MemoryPrivate *priv = dmem->priv;
-
-  GST_D3D11_MEMORY_LOCK (dmem);
-  if (priv->cpu_map_count == 0) {
-    ID3D11DeviceContext *device_context =
-        gst_d3d11_device_get_device_context_handle (dmem->device);
-    D3D11_MAP map_type;
-    HRESULT hr;
-    gboolean ret = TRUE;
-
-    map_type = gst_map_flags_to_d3d11 (flags);
-
-    gst_d3d11_device_lock (dmem->device);
-    hr = ID3D11DeviceContext_Map (device_context,
-        (ID3D11Resource *) priv->texture, 0, map_type, 0, &priv->map);
-    if (!gst_d3d11_result (hr, dmem->device)) {
-      GST_ERROR_OBJECT (GST_MEMORY_CAST (dmem)->allocator,
-          "Failed to map staging texture (0x%x)", (guint) hr);
-      ret = FALSE;
-    }
-    gst_d3d11_device_unlock (dmem->device);
-
-    if (!ret) {
-      GST_D3D11_MEMORY_UNLOCK (dmem);
-      return NULL;
-    }
-  }
-
-  priv->cpu_map_count++;
-  GST_D3D11_MEMORY_UNLOCK (dmem);
-
-  return dmem->priv->map.pData;
-}
-
-static gpointer
-gst_d3d11_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
-{
-  GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
-  GstD3D11MemoryPrivate *priv = dmem->priv;
-
-  if (priv->type == GST_D3D11_MEMORY_TYPE_STAGING) {
-    if ((flags & GST_MAP_D3D11) == GST_MAP_D3D11)
-      return priv->texture;
-
-    return gst_d3d11_memory_map_staging (mem, flags);
-  }
+  GstMapFlags flags = info->flags;
 
   GST_D3D11_MEMORY_LOCK (dmem);
   if ((flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
-    if (priv->staging &&
-        GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD)) {
-      ID3D11DeviceContext *device_context =
-          gst_d3d11_device_get_device_context_handle (dmem->device);
-
-      gst_d3d11_device_lock (dmem->device);
-      ID3D11DeviceContext_CopySubresourceRegion (device_context,
-          (ID3D11Resource *) priv->texture, priv->subresource_index, 0, 0, 0,
-          (ID3D11Resource *) priv->staging, 0, NULL);
-      gst_d3d11_device_unlock (dmem->device);
-    }
-
+    gst_d3d11_memory_upload (dmem);
     GST_MEMORY_FLAG_UNSET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD);
 
     if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE)
@@ -448,7 +390,8 @@ gst_d3d11_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 
     /* Allocate staging texture for CPU access */
     if (!priv->staging) {
-      priv->staging = create_staging_texture (dmem->device, &priv->desc);
+      priv->staging = gst_d3d11_allocate_staging_texture (dmem->device,
+          &priv->desc);
       if (!priv->staging) {
         GST_ERROR_OBJECT (mem->allocator, "Couldn't create staging texture");
         GST_D3D11_MEMORY_UNLOCK (dmem);
@@ -460,9 +403,10 @@ gst_d3d11_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
       GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
     }
 
-    map_type = gst_map_flags_to_d3d11 (flags);
+    gst_d3d11_memory_download (dmem);
+    map_type = gst_d3d11_map_flags_to_d3d11 (flags);
 
-    if (!map_cpu_access_data (dmem, map_type)) {
+    if (!gst_d3d11_memory_map_cpu_access (dmem, map_type)) {
       GST_ERROR_OBJECT (mem->allocator, "Couldn't map staging texture");
       GST_D3D11_MEMORY_UNLOCK (dmem);
 
@@ -470,8 +414,9 @@ gst_d3d11_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
     }
   }
 
-  if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE)
+  if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE) {
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD);
+  }
 
   GST_MEMORY_FLAG_UNSET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
@@ -482,15 +427,12 @@ gst_d3d11_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 }
 
 static void
-unmap_cpu_access_data (GstD3D11Memory * dmem)
+gst_d3d11_memory_unmap_cpu_access (GstD3D11Memory * dmem)
 {
   GstD3D11MemoryPrivate *priv = dmem->priv;
   ID3D11Resource *staging = (ID3D11Resource *) priv->staging;
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (dmem->device);
-
-  if (priv->type == GST_D3D11_MEMORY_TYPE_STAGING)
-    staging = (ID3D11Resource *) priv->texture;
 
   gst_d3d11_device_lock (dmem->device);
   ID3D11DeviceContext_Unmap (device_context, staging, 0);
@@ -500,21 +442,19 @@ unmap_cpu_access_data (GstD3D11Memory * dmem)
 static void
 gst_d3d11_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
 {
-  GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
+  GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
   GstD3D11MemoryPrivate *priv = dmem->priv;
 
   GST_D3D11_MEMORY_LOCK (dmem);
   if ((info->flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
-    if (priv->type != GST_D3D11_MEMORY_TYPE_STAGING &&
-        (info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
+    if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
       GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
     GST_D3D11_MEMORY_UNLOCK (dmem);
     return;
   }
 
-  if (priv->type != GST_D3D11_MEMORY_TYPE_STAGING &&
-      (info->flags & GST_MAP_WRITE))
+  if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD);
 
   priv->cpu_map_count--;
@@ -523,8 +463,7 @@ gst_d3d11_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
     return;
   }
 
-  unmap_cpu_access_data (dmem);
-
+  gst_d3d11_memory_unmap_cpu_access (dmem);
   GST_D3D11_MEMORY_UNLOCK (dmem);
 }
 
@@ -535,181 +474,153 @@ gst_d3d11_memory_share (GstMemory * mem, gssize offset, gssize size)
   return NULL;
 }
 
-static GstMemory *
-gst_d3d11_allocator_dummy_alloc (GstAllocator * allocator, gsize size,
-    GstAllocationParams * params)
-{
-  g_return_val_if_reached (NULL);
-}
-
-static void
-gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
-{
-  GstD3D11Allocator *self = GST_D3D11_ALLOCATOR (allocator);
-  GstD3D11AllocatorPrivate *priv = self->priv;
-  GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
-  GstD3D11MemoryPrivate *dmem_priv = dmem->priv;
-  gint i;
-
-  if (priv->array_in_use) {
-    GST_D3D11_ALLOCATOR_LOCK (self);
-    g_array_index (priv->array_in_use,
-        guint8, dmem_priv->subresource_index) = 0;
-    priv->num_array_textures_in_use--;
-    g_cond_broadcast (&priv->cond);
-    GST_D3D11_ALLOCATOR_UNLOCK (self);
-  }
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (dmem_priv->render_target_view[i])
-      ID3D11RenderTargetView_Release (dmem_priv->render_target_view[i]);
-
-    if (dmem_priv->shader_resource_view[i])
-      ID3D11ShaderResourceView_Release (dmem_priv->shader_resource_view[i]);
-  }
-
-  if (dmem_priv->decoder_output_view)
-    ID3D11VideoDecoderOutputView_Release (dmem_priv->decoder_output_view);
-
-  if (dmem_priv->processor_input_view)
-    ID3D11VideoProcessorInputView_Release (dmem_priv->processor_input_view);
-
-  if (dmem_priv->processor_output_view)
-    ID3D11VideoProcessorOutputView_Release (dmem_priv->processor_output_view);
-
-  if (dmem_priv->texture)
-    ID3D11Texture2D_Release (dmem_priv->texture);
-
-  if (dmem_priv->staging)
-    ID3D11Texture2D_Release (dmem_priv->staging);
-
-  gst_clear_object (&dmem->device);
-  g_mutex_clear (&dmem_priv->lock);
-  g_free (dmem->priv);
-  g_free (dmem);
-}
-
-static void
-gst_d3d11_allocator_dispose (GObject * object)
-{
-  GstD3D11Allocator *alloc = GST_D3D11_ALLOCATOR (object);
-  GstD3D11AllocatorPrivate *priv = alloc->priv;
-
-  g_clear_pointer (&priv->decoder_output_view_array, g_array_unref);
-  g_clear_pointer (&priv->processor_input_view_array, g_array_unref);
-
-  if (priv->texture) {
-    ID3D11Texture2D_Release (priv->texture);
-    priv->texture = NULL;
-  }
-
-  gst_clear_object (&alloc->device);
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_d3d11_allocator_finalize (GObject * object)
-{
-  GstD3D11Allocator *alloc = GST_D3D11_ALLOCATOR (object);
-  GstD3D11AllocatorPrivate *priv = alloc->priv;
-
-  g_mutex_clear (&priv->lock);
-  g_cond_clear (&priv->cond);
-
-  g_clear_pointer (&priv->array_in_use, g_array_unref);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_d3d11_allocator_class_init (GstD3D11AllocatorClass * klass)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstAllocatorClass *allocator_class = GST_ALLOCATOR_CLASS (klass);
-
-  gobject_class->dispose = gst_d3d11_allocator_dispose;
-  gobject_class->finalize = gst_d3d11_allocator_finalize;
-
-  allocator_class->alloc = gst_d3d11_allocator_dummy_alloc;
-  allocator_class->free = gst_d3d11_allocator_free;
-
-  GST_DEBUG_CATEGORY_INIT (gst_d3d11_allocator_debug, "d3d11allocator", 0,
-      "d3d11allocator object");
-}
-
-static void
-gst_d3d11_allocator_init (GstD3D11Allocator * allocator)
-{
-  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
-  GstD3D11AllocatorPrivate *priv;
-
-  alloc->mem_type = GST_D3D11_MEMORY_NAME;
-  alloc->mem_map = gst_d3d11_memory_map;
-  alloc->mem_unmap_full = gst_d3d11_memory_unmap_full;
-  alloc->mem_share = gst_d3d11_memory_share;
-  /* fallback copy */
-
-  GST_OBJECT_FLAG_SET (alloc, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
-
-  priv = gst_d3d11_allocator_get_instance_private (allocator);
-  g_mutex_init (&priv->lock);
-  g_cond_init (&priv->cond);
-  priv->array_texture_size = 1;
-
-  allocator->priv = priv;
-}
-
-/**
- * gst_d3d11_allocator_new:
- * @device: a #GstD3D11Device
- *
- * Returns: a newly created #GstD3D11Allocator
- *
- * Since: 1.20
- */
-GstD3D11Allocator *
-gst_d3d11_allocator_new (GstD3D11Device * device)
-{
-  GstD3D11Allocator *allocator;
-
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
-
-  allocator = g_object_new (GST_TYPE_D3D11_ALLOCATOR, NULL);
-  allocator->device = gst_object_ref (device);
-
-  return allocator;
-}
-
 static gboolean
-calculate_mem_size (GstD3D11Device * device, ID3D11Texture2D * texture,
-    const D3D11_TEXTURE2D_DESC * desc, D3D11_MAP map_type,
-    gint stride[GST_VIDEO_MAX_PLANES], gsize * size)
+gst_d3d11_memory_update_size (GstMemory * mem)
 {
-  HRESULT hr;
-  gboolean ret = TRUE;
-  D3D11_MAPPED_SUBRESOURCE map;
+  GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
+  GstD3D11MemoryPrivate *priv = dmem->priv;
   gsize offset[GST_VIDEO_MAX_PLANES];
-  ID3D11DeviceContext *device_context =
-      gst_d3d11_device_get_device_context_handle (device);
+  gint stride[GST_VIDEO_MAX_PLANES];
+  gsize size;
+  D3D11_TEXTURE2D_DESC *desc = &priv->desc;
 
-  gst_d3d11_device_lock (device);
-  hr = ID3D11DeviceContext_Map (device_context,
-      (ID3D11Resource *) texture, 0, map_type, 0, &map);
+  if (!priv->staging) {
+    priv->staging = gst_d3d11_allocate_staging_texture (dmem->device,
+        &priv->desc);
+    if (!priv->staging) {
+      GST_ERROR_OBJECT (mem->allocator, "Couldn't create staging texture");
+      return FALSE;
+    }
 
-  if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (device, "Failed to map texture (0x%x)", (guint) hr);
-    gst_d3d11_device_unlock (device);
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
+  }
+
+  if (!gst_d3d11_memory_map_cpu_access (dmem, D3D11_MAP_READ_WRITE)) {
+    GST_ERROR_OBJECT (mem->allocator, "Couldn't map staging texture");
     return FALSE;
   }
 
-  ret = gst_d3d11_dxgi_format_get_size (desc->Format,
-      desc->Width, desc->Height, map.RowPitch, offset, stride, size);
+  gst_d3d11_memory_unmap_cpu_access (dmem);
 
-  ID3D11DeviceContext_Unmap (device_context, (ID3D11Resource *) texture, 0);
-  gst_d3d11_device_unlock (device);
+  if (!gst_d3d11_dxgi_format_get_size (desc->Format, desc->Width, desc->Height,
+          priv->map.RowPitch, offset, stride, &size)) {
+    GST_ERROR_OBJECT (mem->allocator, "Couldn't calculate memory size");
+    return FALSE;
+  }
 
-  return ret;
+  mem->maxsize = mem->size = size;
+
+  return TRUE;
+}
+
+/**
+ * gst_is_d3d11_memory:
+ * @mem: a #GstMemory
+ *
+ * Returns: whether @mem is a #GstD3D11Memory
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_is_d3d11_memory (GstMemory * mem)
+{
+  return mem != NULL && mem->allocator != NULL &&
+      (GST_IS_D3D11_ALLOCATOR (mem->allocator) ||
+      GST_IS_D3D11_POOL_ALLOCATOR (mem->allocator));
+}
+
+/**
+ * gst_d3d11_memory_init_once:
+ *
+ * Initializes the Direct3D11 Texture allocator. It is safe to call
+ * this function multiple times. This must be called before any other
+ * GstD3D11Memory operation.
+ *
+ * Since: 1.20
+ */
+void
+gst_d3d11_memory_init_once (void)
+{
+  static gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+
+    GST_DEBUG_CATEGORY_INIT (gst_d3d11_allocator_debug, "d3d11allocator", 0,
+        "Direct3D11 Texture Allocator");
+
+    _d3d11_memory_allocator = g_object_new (GST_TYPE_D3D11_ALLOCATOR, NULL);
+    gst_object_ref_sink (_d3d11_memory_allocator);
+
+    gst_allocator_register (GST_D3D11_MEMORY_NAME, _d3d11_memory_allocator);
+    g_once_init_leave (&_init, 1);
+  }
+}
+
+/**
+ * gst_d3d11_memory_get_texture_handle:
+ * @mem: a #GstD3D11Memory
+ *
+ * Returns: (transfer none): a ID3D11Texture2D handle. Caller must not release
+ * returned handle.
+ *
+ * Since: 1.20
+ */
+ID3D11Texture2D *
+gst_d3d11_memory_get_texture_handle (GstD3D11Memory * mem)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
+
+  return mem->priv->texture;
+}
+
+/**
+ * gst_d3d11_memory_get_subresource_index:
+ * @mem: a #GstD3D11Memory
+ *
+ * Returns: subresource index corresponding to @mem.
+ *
+ * Since: 1.20
+ */
+guint
+gst_d3d11_memory_get_subresource_index (GstD3D11Memory * mem)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), 0);
+
+  return mem->priv->subresource_index;
+}
+
+/**
+ * gst_d3d11_memory_get_texture_desc:
+ * @mem: a #GstD3D11Memory
+ * @desc: (out): a D3D11_TEXTURE2D_DESC
+ *
+ * Fill @desc with D3D11_TEXTURE2D_DESC for ID3D11Texture2D
+ *
+ * Returns: %TRUE if successeed
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_d3d11_memory_get_texture_desc (GstD3D11Memory * mem,
+    D3D11_TEXTURE2D_DESC * desc)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (desc != NULL, FALSE);
+
+  *desc = mem->priv->desc;
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_memory_get_texture_stride (GstD3D11Memory * mem, guint * stride)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (stride != NULL, FALSE);
+
+  *stride = mem->priv->map.RowPitch;
+
+  return TRUE;
 }
 
 static gboolean
@@ -806,6 +717,83 @@ error:
 }
 
 static gboolean
+gst_d3d11_memory_ensure_shader_resource_view (GstD3D11Memory * mem)
+{
+  GstD3D11MemoryPrivate *priv = mem->priv;
+  gboolean ret = FALSE;
+
+  if (!(priv->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE)) {
+    GST_LOG_OBJECT (GST_MEMORY_CAST (mem)->allocator,
+        "Need BindFlags, current flag 0x%x", priv->desc.BindFlags);
+    return FALSE;
+  }
+
+  GST_D3D11_MEMORY_LOCK (mem);
+  if (priv->num_shader_resource_views) {
+    ret = TRUE;
+    goto done;
+  }
+
+  ret = create_shader_resource_views (mem);
+
+done:
+  GST_D3D11_MEMORY_UNLOCK (mem);
+
+  return ret;
+}
+
+/**
+ * gst_d3d11_memory_get_shader_resource_view_size:
+ * @mem: a #GstD3D11Memory
+ *
+ * Returns: the number of ID3D11ShaderResourceView that can be used
+ * for processing GPU operation with @mem
+ *
+ * Since: 1.20
+ */
+guint
+gst_d3d11_memory_get_shader_resource_view_size (GstD3D11Memory * mem)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), 0);
+
+  if (!gst_d3d11_memory_ensure_shader_resource_view (mem))
+    return 0;
+
+  return mem->priv->num_shader_resource_views;
+}
+
+/**
+ * gst_d3d11_memory_get_shader_resource_view:
+ * @mem: a #GstD3D11Memory
+ * @index: the index of the ID3D11ShaderResourceView
+ *
+ * Returns: (transfer none) (nullable): a pointer to the
+ * ID3D11ShaderResourceView or %NULL if ID3D11ShaderResourceView is unavailable
+ * for @index
+ *
+ * Since: 1.20
+ */
+ID3D11ShaderResourceView *
+gst_d3d11_memory_get_shader_resource_view (GstD3D11Memory * mem, guint index)
+{
+  GstD3D11MemoryPrivate *priv;
+
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
+
+  if (!gst_d3d11_memory_ensure_shader_resource_view (mem))
+    return NULL;
+
+  priv = mem->priv;
+
+  if (index >= priv->num_shader_resource_views) {
+    GST_ERROR ("Invalid SRV index %d", index);
+    return NULL;
+  }
+
+  return priv->shader_resource_view[index];
+}
+
+static gboolean
 create_render_target_views (GstD3D11Memory * mem)
 {
   GstD3D11MemoryPrivate *priv = mem->priv;
@@ -884,410 +872,6 @@ error:
   priv->num_render_target_views = 0;
 
   return FALSE;
-}
-
-static void
-gst_d3d11_decoder_output_view_clear (ID3D11VideoDecoderOutputView ** view)
-{
-  if (view && *view) {
-    ID3D11VideoDecoderOutputView_Release (*view);
-    *view = NULL;
-  }
-}
-
-static void
-gst_d3d11_processor_input_view_clear (ID3D11VideoProcessorInputView ** view)
-{
-  if (view && *view) {
-    ID3D11VideoProcessorInputView_Release (*view);
-    *view = NULL;
-  }
-}
-
-static gboolean
-check_bind_flags_for_processor_input_view (guint bind_flags)
-{
-  static const guint compatible_flags = (D3D11_BIND_DECODER |
-      D3D11_BIND_VIDEO_ENCODER | D3D11_BIND_RENDER_TARGET |
-      D3D11_BIND_UNORDERED_ACCESS);
-
-  if (bind_flags == 0)
-    return TRUE;
-
-  if ((bind_flags & compatible_flags) != 0)
-    return TRUE;
-
-  return FALSE;
-}
-
-/**
- * gst_d3d11_allocator_alloc:
- * @allocator: a #GstD3D11Allocator
- * @desc: a D3D11_TEXTURE2D_DESC struct
- * @flags: a #GstD3D11AllocationFlags
- * @size: a size of CPU accesible memory
- *
- * Returns: a newly allocated #GstD3D11Memory with given parameters.
- *
- * Since: 1.20
- */
-GstMemory *
-gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
-    const D3D11_TEXTURE2D_DESC * desc, GstD3D11AllocationFlags flags,
-    gsize size)
-{
-  GstD3D11Memory *mem;
-  GstD3D11Device *device;
-  ID3D11Texture2D *texture = NULL;
-  guint index_to_use = 0;
-  GstD3D11AllocatorPrivate *priv;
-  GstD3D11MemoryType type = GST_D3D11_MEMORY_TYPE_TEXTURE;
-  HRESULT hr;
-  ID3D11Device *device_handle;
-
-  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
-  g_return_val_if_fail (desc != NULL, NULL);
-  g_return_val_if_fail (size > 0, NULL);
-
-  priv = allocator->priv;
-  device = allocator->device;
-  device_handle = gst_d3d11_device_get_device_handle (device);
-
-  if ((flags & GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY)) {
-    gint i;
-
-  do_again:
-    GST_D3D11_ALLOCATOR_LOCK (allocator);
-    if (priv->flushing) {
-      GST_DEBUG_OBJECT (allocator, "we are flushing");
-      GST_D3D11_ALLOCATOR_UNLOCK (allocator);
-
-      return NULL;
-    }
-
-    if (!priv->array_in_use) {
-      priv->array_in_use = g_array_sized_new (FALSE,
-          TRUE, sizeof (guint8), desc->ArraySize);
-      g_array_set_size (priv->array_in_use, desc->ArraySize);
-
-      priv->array_texture_size = desc->ArraySize;
-
-      if ((desc->BindFlags & D3D11_BIND_DECODER) == D3D11_BIND_DECODER &&
-          !priv->decoder_output_view_array) {
-        priv->decoder_output_view_array = g_array_sized_new (FALSE,
-            TRUE, sizeof (ID3D11VideoDecoderOutputView *), desc->ArraySize);
-        g_array_set_clear_func (priv->decoder_output_view_array,
-            (GDestroyNotify) gst_d3d11_decoder_output_view_clear);
-        g_array_set_size (priv->decoder_output_view_array, desc->ArraySize);
-      }
-
-      if (check_bind_flags_for_processor_input_view (desc->BindFlags)) {
-        priv->processor_input_view_array = g_array_sized_new (FALSE,
-            TRUE, sizeof (ID3D11VideoProcessorInputView *), desc->ArraySize);
-        g_array_set_clear_func (priv->processor_input_view_array,
-            (GDestroyNotify) gst_d3d11_processor_input_view_clear);
-        g_array_set_size (priv->processor_input_view_array, desc->ArraySize);
-      }
-    }
-
-    for (i = 0; i < desc->ArraySize; i++) {
-      if (!g_array_index (priv->array_in_use, guint8, i)) {
-        index_to_use = i;
-        break;
-      }
-    }
-
-    if (i == desc->ArraySize) {
-      GST_DEBUG_OBJECT (allocator, "All elements in array are used now");
-      g_cond_wait (&priv->cond, &priv->lock);
-      GST_D3D11_ALLOCATOR_UNLOCK (allocator);
-      goto do_again;
-    }
-
-    g_array_index (priv->array_in_use, guint8, index_to_use) = 1;
-    priv->num_array_textures_in_use++;
-
-    GST_D3D11_ALLOCATOR_UNLOCK (allocator);
-
-    if (!priv->texture) {
-      hr = ID3D11Device_CreateTexture2D (device_handle, desc, NULL,
-          &priv->texture);
-      if (!gst_d3d11_result (hr, device)) {
-        GST_ERROR_OBJECT (allocator, "Couldn't create texture");
-        goto error;
-      }
-    }
-
-    ID3D11Texture2D_AddRef (priv->texture);
-    texture = priv->texture;
-
-    type = GST_D3D11_MEMORY_TYPE_ARRAY;
-  } else {
-    hr = ID3D11Device_CreateTexture2D (device_handle, desc, NULL, &texture);
-    if (!gst_d3d11_result (hr, device)) {
-      GST_ERROR_OBJECT (allocator, "Couldn't create texture");
-      goto error;
-    }
-  }
-
-  mem = g_new0 (GstD3D11Memory, 1);
-  mem->priv = g_new0 (GstD3D11MemoryPrivate, 1);
-
-  gst_memory_init (GST_MEMORY_CAST (mem),
-      0, GST_ALLOCATOR_CAST (allocator), NULL, size, 0, 0, size);
-
-  g_mutex_init (&mem->priv->lock);
-  mem->priv->texture = texture;
-  mem->priv->desc = *desc;
-  mem->priv->type = type;
-  mem->priv->subresource_index = index_to_use;
-  mem->device = gst_object_ref (device);
-
-  return GST_MEMORY_CAST (mem);
-
-error:
-  if (texture)
-    ID3D11Texture2D_Release (texture);
-
-  return NULL;
-}
-
-/**
- * gst_d3d11_allocator_alloc_staging:
- * @allocator: a #GstD3D11Allocator
- * @desc: a D3D11_TEXTURE2D_DESC struct
- * @flags: a #GstD3D11AllocationFlags
- * @stride: (out): a stride of CPU accesible memory
- *
- * Returns: a newly allocated #GstD3D11Memory with given parameters.
- * Returned #GstD3D11Memory can be used only for staging texture.
- *
- * Since: 1.20
- */
-GstMemory *
-gst_d3d11_allocator_alloc_staging (GstD3D11Allocator * allocator,
-    const D3D11_TEXTURE2D_DESC * desc, GstD3D11AllocationFlags flags,
-    gint * stride)
-{
-  GstD3D11Memory *mem;
-  GstD3D11Device *device;
-  ID3D11Texture2D *texture = NULL;
-  gsize mem_size = 0;
-  gint mem_stride[GST_VIDEO_MAX_PLANES];
-
-  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
-  g_return_val_if_fail (desc != NULL, NULL);
-
-  device = allocator->device;
-
-  texture = create_staging_texture (device, desc);
-  if (!texture) {
-    GST_ERROR_OBJECT (allocator, "Couldn't create staging texture");
-    goto error;
-  }
-
-  if (!calculate_mem_size (device,
-          texture, desc, D3D11_MAP_READ, mem_stride, &mem_size)) {
-    GST_ERROR_OBJECT (allocator, "Couldn't calculate staging texture size");
-    goto error;
-  }
-
-  mem = g_new0 (GstD3D11Memory, 1);
-  mem->priv = g_new0 (GstD3D11MemoryPrivate, 1);
-
-  gst_memory_init (GST_MEMORY_CAST (mem),
-      0, GST_ALLOCATOR_CAST (allocator), NULL, mem_size, 0, 0, mem_size);
-
-  g_mutex_init (&mem->priv->lock);
-  mem->priv->texture = texture;
-  mem->priv->desc = *desc;
-  mem->priv->type = GST_D3D11_MEMORY_TYPE_STAGING;
-  mem->device = gst_object_ref (device);
-
-  /* every plan will have identical size */
-  if (stride)
-    *stride = mem_stride[0];
-
-  return GST_MEMORY_CAST (mem);
-
-error:
-  if (texture)
-    ID3D11Texture2D_Release (texture);
-
-  return NULL;
-}
-
-/**
- * gst_d3d11_allocator_set_flushing:
- * @allocator: a #GstD3D11Allocator
- * @flusing: whether to start or stop flusing
- *
- * Enable or disable the flushing state of @allocator.
- *
- * Since: 1.20
- */
-void
-gst_d3d11_allocator_set_flushing (GstD3D11Allocator * allocator,
-    gboolean flushing)
-{
-  GstD3D11AllocatorPrivate *priv;
-
-  g_return_if_fail (GST_IS_D3D11_ALLOCATOR (allocator));
-
-  priv = allocator->priv;
-
-  GST_D3D11_ALLOCATOR_LOCK (allocator);
-  priv->flushing = flushing;
-  g_cond_broadcast (&priv->cond);
-  GST_D3D11_ALLOCATOR_UNLOCK (allocator);
-}
-
-/**
- * gst_is_d3d11_memory:
- * @mem: a #GstMemory
- *
- * Returns: whether @mem is a #GstD3D11Memory
- *
- * Since: 1.20
- */
-gboolean
-gst_is_d3d11_memory (GstMemory * mem)
-{
-  return mem != NULL && mem->allocator != NULL &&
-      GST_IS_D3D11_ALLOCATOR (mem->allocator);
-}
-
-/**
- * gst_d3d11_memory_get_texture_handle:
- * @mem: a #GstD3D11Memory
- *
- * Returns: (transfer none): a ID3D11Texture2D handle. Caller must not release
- * returned handle.
- *
- * Since: 1.20
- */
-ID3D11Texture2D *
-gst_d3d11_memory_get_texture_handle (GstD3D11Memory * mem)
-{
-  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
-
-  return mem->priv->texture;
-}
-
-/**
- * gst_d3d11_memory_get_subresource_index:
- * @mem: a #GstD3D11Memory
- *
- * Returns: subresource index corresponding to @mem.
- *
- * Since: 1.20
- */
-guint
-gst_d3d11_memory_get_subresource_index (GstD3D11Memory * mem)
-{
-  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), 0);
-
-  return mem->priv->subresource_index;
-}
-
-/**
- * gst_d3d11_memory_get_texture_desc:
- * @mem: a #GstD3D11Memory
- * @desc: (out): a D3D11_TEXTURE2D_DESC
- *
- * Fill @desc with D3D11_TEXTURE2D_DESC for ID3D11Texture2D
- *
- * Returns: %TRUE if successeed
- *
- * Since: 1.20
- */
-gboolean
-gst_d3d11_memory_get_texture_desc (GstD3D11Memory * mem,
-    D3D11_TEXTURE2D_DESC * desc)
-{
-  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
-  g_return_val_if_fail (desc != NULL, FALSE);
-
-  *desc = mem->priv->desc;
-
-  return TRUE;
-}
-
-static gboolean
-gst_d3d11_memory_ensure_shader_resource_view (GstD3D11Memory * mem)
-{
-  GstD3D11MemoryPrivate *priv = mem->priv;
-  gboolean ret = FALSE;
-
-  if (!(priv->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE)) {
-    GST_LOG_OBJECT (GST_MEMORY_CAST (mem)->allocator,
-        "Need BindFlags, current flag 0x%x", priv->desc.BindFlags);
-    return FALSE;
-  }
-
-  GST_D3D11_MEMORY_LOCK (mem);
-  if (priv->num_shader_resource_views) {
-    ret = TRUE;
-    goto done;
-  }
-
-  ret = create_shader_resource_views (mem);
-
-done:
-  GST_D3D11_MEMORY_UNLOCK (mem);
-
-  return ret;
-}
-
-/**
- * gst_d3d11_memory_get_shader_resource_view_size:
- * @mem: a #GstD3D11Memory
- *
- * Returns: the number of ID3D11ShaderResourceView that can be used
- * for processing GPU operation with @mem
- *
- * Since: 1.20
- */
-guint
-gst_d3d11_memory_get_shader_resource_view_size (GstD3D11Memory * mem)
-{
-  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), 0);
-
-  if (!gst_d3d11_memory_ensure_shader_resource_view (mem))
-    return 0;
-
-  return mem->priv->num_shader_resource_views;
-}
-
-/**
- * gst_d3d11_memory_get_shader_resource_view:
- * @mem: a #GstD3D11Memory
- * @index: the index of the ID3D11ShaderResourceView
- *
- * Returns: (transfer none) (nullable): a pointer to the
- * ID3D11ShaderResourceView or %NULL if ID3D11ShaderResourceView is unavailable
- * for @index
- *
- * Since: 1.20
- */
-ID3D11ShaderResourceView *
-gst_d3d11_memory_get_shader_resource_view (GstD3D11Memory * mem, guint index)
-{
-  GstD3D11MemoryPrivate *priv;
-
-  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
-
-  if (!gst_d3d11_memory_ensure_shader_resource_view (mem))
-    return NULL;
-
-  priv = mem->priv;
-
-  if (index >= priv->num_shader_resource_views) {
-    GST_ERROR ("Invalid SRV index %d", index);
-    return NULL;
-  }
-
-  return priv->shader_resource_view[index];
 }
 
 static gboolean
@@ -1373,14 +957,11 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
 {
   GstD3D11MemoryPrivate *dmem_priv = mem->priv;
   GstD3D11Allocator *allocator;
-  GstD3D11AllocatorPrivate *priv;
   D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC desc;
-  ID3D11VideoDecoderOutputView *view = NULL;
   HRESULT hr;
   gboolean ret = FALSE;
 
   allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
-  priv = allocator->priv;
 
   if (!(dmem_priv->desc.BindFlags & D3D11_BIND_DECODER)) {
     GST_LOG_OBJECT (allocator,
@@ -1403,32 +984,6 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
     }
   }
 
-  if (priv->decoder_output_view_array) {
-    GST_D3D11_ALLOCATOR_LOCK (allocator);
-    view = g_array_index (priv->decoder_output_view_array,
-        ID3D11VideoDecoderOutputView *, dmem_priv->subresource_index);
-
-    if (view) {
-      ID3D11VideoDecoderOutputView_GetDesc (view, &desc);
-      /* Shouldn't happen because decoder will not reuse this allocator
-       * over different codec/profiles */
-      if (!IsEqualGUID (&desc.DecodeProfile, decoder_profile)) {
-        GST_WARNING_OBJECT (allocator,
-            "Existing view has different decoder profile");
-        ID3D11VideoDecoderOutputView_Release (view);
-        view = NULL;
-        g_array_index (priv->decoder_output_view_array,
-            ID3D11VideoDecoderOutputView *,
-            dmem_priv->subresource_index) = NULL;
-      } else {
-        /* Increase refcount and reuse existing view */
-        dmem_priv->decoder_output_view = view;
-        ID3D11VideoDecoderOutputView_AddRef (view);
-      }
-    }
-    GST_D3D11_ALLOCATOR_UNLOCK (allocator);
-  }
-
   if (dmem_priv->decoder_output_view)
     goto succeeded;
 
@@ -1443,22 +998,6 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
     GST_ERROR_OBJECT (allocator,
         "Could not create decoder output view, hr: 0x%x", (guint) hr);
     goto done;
-  }
-
-  /* Store view array for later reuse */
-  if (priv->decoder_output_view_array) {
-    GST_D3D11_ALLOCATOR_LOCK (allocator);
-    view = g_array_index (priv->decoder_output_view_array,
-        ID3D11VideoDecoderOutputView *, dmem_priv->subresource_index);
-
-    if (view)
-      ID3D11VideoDecoderOutputView_Release (view);
-
-    g_array_index (priv->decoder_output_view_array,
-        ID3D11VideoDecoderOutputView *, dmem_priv->subresource_index) =
-        dmem_priv->decoder_output_view;
-    ID3D11VideoDecoderOutputView_AddRef (dmem_priv->decoder_output_view);
-    GST_D3D11_ALLOCATOR_UNLOCK (allocator);
   }
 
 succeeded:
@@ -1496,20 +1035,33 @@ gst_d3d11_memory_get_decoder_output_view (GstD3D11Memory * mem,
 }
 
 static gboolean
+check_bind_flags_for_processor_input_view (guint bind_flags)
+{
+  static const guint compatible_flags = (D3D11_BIND_DECODER |
+      D3D11_BIND_VIDEO_ENCODER | D3D11_BIND_RENDER_TARGET |
+      D3D11_BIND_UNORDERED_ACCESS);
+
+  if (bind_flags == 0)
+    return TRUE;
+
+  if ((bind_flags & compatible_flags) != 0)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
 gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
     ID3D11VideoDevice * video_device,
     ID3D11VideoProcessorEnumerator * enumerator)
 {
   GstD3D11MemoryPrivate *dmem_priv = mem->priv;
   GstD3D11Allocator *allocator;
-  GstD3D11AllocatorPrivate *priv;
   D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC desc;
-  ID3D11VideoProcessorInputView *view = NULL;
   HRESULT hr;
   gboolean ret = FALSE;
 
   allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
-  priv = allocator->priv;
 
   if (!check_bind_flags_for_processor_input_view (dmem_priv->desc.BindFlags)) {
     GST_LOG_OBJECT (allocator,
@@ -1518,22 +1070,6 @@ gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
   }
 
   GST_D3D11_MEMORY_LOCK (mem);
-  if (dmem_priv->processor_input_view)
-    goto succeeded;
-
-  if (priv->processor_input_view_array) {
-    GST_D3D11_ALLOCATOR_LOCK (allocator);
-    view = g_array_index (priv->processor_input_view_array,
-        ID3D11VideoProcessorInputView *, dmem_priv->subresource_index);
-
-    /* Increase refcount and reuse existing view */
-    if (view) {
-      dmem_priv->processor_input_view = view;
-      ID3D11VideoProcessorInputView_AddRef (view);
-    }
-    GST_D3D11_ALLOCATOR_UNLOCK (allocator);
-  }
-
   if (dmem_priv->processor_input_view)
     goto succeeded;
 
@@ -1549,22 +1085,6 @@ gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
     GST_ERROR_OBJECT (allocator,
         "Could not create processor input view, hr: 0x%x", (guint) hr);
     goto done;
-  }
-
-  /* Store view array for later reuse */
-  if (priv->processor_input_view_array) {
-    GST_D3D11_ALLOCATOR_LOCK (allocator);
-    view = g_array_index (priv->processor_input_view_array,
-        ID3D11VideoProcessorInputView *, dmem_priv->subresource_index);
-
-    if (view)
-      ID3D11VideoProcessorInputView_Release (view);
-
-    g_array_index (priv->processor_input_view_array,
-        ID3D11VideoProcessorInputView *, dmem_priv->subresource_index) =
-        dmem_priv->processor_input_view;
-    ID3D11VideoProcessorInputView_AddRef (dmem_priv->processor_input_view);
-    GST_D3D11_ALLOCATOR_UNLOCK (allocator);
   }
 
 succeeded:
@@ -1681,4 +1201,758 @@ gst_d3d11_memory_get_processor_output_view (GstD3D11Memory * mem,
     return NULL;
 
   return mem->priv->processor_output_view;
+}
+
+/* GstD3D11Allocator */
+#define gst_d3d11_allocator_parent_class alloc_parent_class
+G_DEFINE_TYPE (GstD3D11Allocator, gst_d3d11_allocator, GST_TYPE_ALLOCATOR);
+
+static GstMemory *gst_d3d11_allocator_dummy_alloc (GstAllocator * allocator,
+    gsize size, GstAllocationParams * params);
+static void gst_d3d11_allocator_free (GstAllocator * allocator,
+    GstMemory * mem);
+
+static void
+gst_d3d11_allocator_class_init (GstD3D11AllocatorClass * klass)
+{
+  GstAllocatorClass *allocator_class = GST_ALLOCATOR_CLASS (klass);
+
+  allocator_class->alloc = gst_d3d11_allocator_dummy_alloc;
+  allocator_class->free = gst_d3d11_allocator_free;
+}
+
+static void
+gst_d3d11_allocator_init (GstD3D11Allocator * allocator)
+{
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+
+  alloc->mem_type = GST_D3D11_MEMORY_NAME;
+  alloc->mem_map_full = gst_d3d11_memory_map_full;
+  alloc->mem_unmap_full = gst_d3d11_memory_unmap_full;
+  alloc->mem_share = gst_d3d11_memory_share;
+  /* fallback copy */
+
+  GST_OBJECT_FLAG_SET (alloc, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
+}
+
+static GstMemory *
+gst_d3d11_allocator_dummy_alloc (GstAllocator * allocator, gsize size,
+    GstAllocationParams * params)
+{
+  g_return_val_if_reached (NULL);
+}
+
+static void
+gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
+{
+  GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
+  GstD3D11MemoryPrivate *dmem_priv = dmem->priv;
+  gint i;
+
+  GST_LOG_OBJECT (allocator, "Free memory %p", mem);
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    if (dmem_priv->render_target_view[i])
+      ID3D11RenderTargetView_Release (dmem_priv->render_target_view[i]);
+
+    if (dmem_priv->shader_resource_view[i])
+      ID3D11ShaderResourceView_Release (dmem_priv->shader_resource_view[i]);
+  }
+
+  if (dmem_priv->decoder_output_view)
+    ID3D11VideoDecoderOutputView_Release (dmem_priv->decoder_output_view);
+
+  if (dmem_priv->processor_input_view)
+    ID3D11VideoProcessorInputView_Release (dmem_priv->processor_input_view);
+
+  if (dmem_priv->processor_output_view)
+    ID3D11VideoProcessorOutputView_Release (dmem_priv->processor_output_view);
+
+  if (dmem_priv->texture)
+    ID3D11Texture2D_Release (dmem_priv->texture);
+
+  if (dmem_priv->staging)
+    ID3D11Texture2D_Release (dmem_priv->staging);
+
+  gst_clear_object (&dmem->device);
+  g_mutex_clear (&dmem_priv->lock);
+  g_free (dmem->priv);
+  g_free (dmem);
+}
+
+static GstMemory *
+gst_d3d11_allocator_alloc_wrapped (GstD3D11Allocator * self,
+    GstD3D11Device * device, const D3D11_TEXTURE2D_DESC * desc,
+    ID3D11Texture2D * texture)
+{
+  GstD3D11Memory *mem;
+
+  mem = g_new0 (GstD3D11Memory, 1);
+  mem->priv = g_new0 (GstD3D11MemoryPrivate, 1);
+
+  gst_memory_init (GST_MEMORY_CAST (mem),
+      0, GST_ALLOCATOR_CAST (self), NULL, 0, 0, 0, 0);
+  g_mutex_init (&mem->priv->lock);
+  mem->priv->texture = texture;
+  mem->priv->desc = *desc;
+  mem->device = gst_object_ref (device);
+
+  /* This is staging texture as well */
+  if (desc->Usage == D3D11_USAGE_STAGING) {
+    mem->priv->staging = texture;
+    ID3D11Texture2D_AddRef (texture);
+  }
+
+  return GST_MEMORY_CAST (mem);
+}
+
+static GstMemory *
+gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
+    GstD3D11Device * device, const D3D11_TEXTURE2D_DESC * desc)
+{
+  ID3D11Texture2D *texture = NULL;
+  ID3D11Device *device_handle;
+  HRESULT hr;
+
+  device_handle = gst_d3d11_device_get_device_handle (device);
+
+  hr = ID3D11Device_CreateTexture2D (device_handle, desc, NULL, &texture);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self, "Couldn't create texture");
+    return NULL;
+  }
+
+  return gst_d3d11_allocator_alloc_wrapped (self, device, desc, texture);
+}
+
+/**
+ * gst_d3d11_allocator_alloc:
+ * @allocator: a #GstD3D11Allocator
+ * @device: a #GstD3D11Device
+ * @desc: a D3D11_TEXTURE2D_DESC struct
+ *
+ * Returns: a newly allocated #GstD3D11Memory with given parameters.
+ *
+ * Since: 1.20
+ */
+GstMemory *
+gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
+    GstD3D11Device * device, const D3D11_TEXTURE2D_DESC * desc)
+{
+  GstMemory *mem;
+
+  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+  g_return_val_if_fail (desc != NULL, NULL);
+
+  mem = gst_d3d11_allocator_alloc_internal (allocator, device, desc);
+  if (!mem)
+    return NULL;
+
+  if (!gst_d3d11_memory_update_size (mem)) {
+    GST_ERROR_OBJECT (allocator, "Failed to calculate size");
+    gst_memory_unref (mem);
+    return NULL;
+  }
+
+  return mem;
+}
+
+gboolean
+gst_d3d11_allocator_set_active (GstD3D11Allocator * allocator, gboolean active)
+{
+  GstD3D11AllocatorClass *klass;
+
+  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), FALSE);
+
+  klass = GST_D3D11_ALLOCATOR_GET_CLASS (allocator);
+  if (klass->set_actvie)
+    return klass->set_actvie (allocator, active);
+
+  return TRUE;
+}
+
+/* GstD3D11PoolAllocator */
+#define GST_D3D11_POOL_ALLOCATOR_LOCK(alloc)   (g_rec_mutex_lock(&alloc->priv->lock))
+#define GST_D3D11_POOL_ALLOCATOR_UNLOCK(alloc) (g_rec_mutex_unlock(&alloc->priv->lock))
+#define GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING(alloc)  (g_atomic_int_get (&alloc->priv->flushing))
+
+struct _GstD3D11PoolAllocatorPrivate
+{
+  /* parent texture when array typed memory is used */
+  ID3D11Texture2D *texture;
+  D3D11_TEXTURE2D_DESC desc;
+
+  /* All below member variables are analogous to that of GstBufferPool */
+  GstAtomicQueue *queue;
+  GstPoll *poll;
+
+  /* This lock will protect all below variables apart from atomic ones
+   * (identical to GstBufferPool::priv::rec_lock) */
+  GRecMutex lock;
+  gboolean started;
+  gboolean active;
+
+  /* atomic */
+  gint outstanding;
+  guint max_mems;
+  guint cur_mems;
+  gboolean flushing;
+
+  /* Calculated memory size, based on Direct3D11 staging texture map.
+   * Note that, we cannot know the actually staging texture memory size prior
+   * to map the staging texture because driver will likely require padding */
+  gsize mem_size;
+};
+
+static void gst_d3d11_pool_allocator_dispose (GObject * object);
+static void gst_d3d11_pool_allocator_finalize (GObject * object);
+
+static gboolean
+gst_d3d11_pool_allocator_set_active (GstD3D11Allocator * allocator,
+    gboolean active);
+
+static gboolean gst_d3d11_pool_allocator_start (GstD3D11PoolAllocator * self);
+static gboolean gst_d3d11_pool_allocator_stop (GstD3D11PoolAllocator * self);
+static gboolean gst_d3d11_memory_release (GstMiniObject * mini_object);
+
+#define gst_d3d11_pool_allocator_parent_class pool_alloc_parent_class
+G_DEFINE_TYPE_WITH_PRIVATE (GstD3D11PoolAllocator,
+    gst_d3d11_pool_allocator, GST_TYPE_D3D11_ALLOCATOR);
+
+static void
+gst_d3d11_pool_allocator_class_init (GstD3D11PoolAllocatorClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstD3D11AllocatorClass *d3d11alloc_class = GST_D3D11_ALLOCATOR_CLASS (klass);
+
+  gobject_class->dispose = gst_d3d11_pool_allocator_dispose;
+  gobject_class->finalize = gst_d3d11_pool_allocator_finalize;
+
+  d3d11alloc_class->set_actvie = gst_d3d11_pool_allocator_set_active;
+}
+
+static void
+gst_d3d11_pool_allocator_init (GstD3D11PoolAllocator * allocator)
+{
+  GstD3D11PoolAllocatorPrivate *priv;
+
+  priv = allocator->priv =
+      gst_d3d11_pool_allocator_get_instance_private (allocator);
+  g_rec_mutex_init (&priv->lock);
+
+  priv->poll = gst_poll_new_timer ();
+  priv->queue = gst_atomic_queue_new (16);
+  priv->flushing = 1;
+  priv->active = FALSE;
+  priv->started = FALSE;
+
+  /* 1 control write for flushing - the flush token */
+  gst_poll_write_control (priv->poll);
+  /* 1 control write for marking that we are not waiting for poll - the wait token */
+  gst_poll_write_control (priv->poll);
+}
+
+static void
+gst_d3d11_pool_allocator_dispose (GObject * object)
+{
+  GstD3D11PoolAllocator *self = GST_D3D11_POOL_ALLOCATOR (object);
+
+  gst_clear_object (&self->device);
+
+  G_OBJECT_CLASS (pool_alloc_parent_class)->dispose (object);
+}
+
+static void
+gst_d3d11_pool_allocator_finalize (GObject * object)
+{
+  GstD3D11PoolAllocator *self = GST_D3D11_POOL_ALLOCATOR (object);
+  GstD3D11PoolAllocatorPrivate *priv = self->priv;
+
+  GST_DEBUG_OBJECT (self, "Finalize");
+
+  gst_d3d11_pool_allocator_stop (self);
+  gst_atomic_queue_unref (priv->queue);
+  gst_poll_free (priv->poll);
+  g_rec_mutex_clear (&priv->lock);
+
+  if (priv->texture)
+    ID3D11Texture2D_Release (priv->texture);
+
+  G_OBJECT_CLASS (pool_alloc_parent_class)->finalize (object);
+}
+
+static gboolean
+gst_d3d11_pool_allocator_start (GstD3D11PoolAllocator * self)
+{
+  GstD3D11PoolAllocatorPrivate *priv = self->priv;
+  ID3D11Device *device_handle;
+  HRESULT hr;
+  guint i;
+
+  if (priv->started)
+    return TRUE;
+
+  /* Nothing to do */
+  if (priv->desc.ArraySize == 1) {
+    priv->started = TRUE;
+    return TRUE;
+  }
+
+  device_handle = gst_d3d11_device_get_device_handle (self->device);
+
+  if (!priv->texture) {
+    hr = ID3D11Device_CreateTexture2D (device_handle, &priv->desc, NULL,
+        &priv->texture);
+    if (!gst_d3d11_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Failed to allocate texture");
+      return FALSE;
+    }
+  }
+
+  /* Pre-allocate memory objects */
+  for (i = 0; i < priv->desc.ArraySize; i++) {
+    GstMemory *mem;
+
+    ID3D11Texture2D_AddRef (priv->texture);
+    mem =
+        gst_d3d11_allocator_alloc_wrapped (GST_D3D11_ALLOCATOR_CAST
+        (_d3d11_memory_allocator), self->device, &priv->desc, priv->texture);
+
+    if (i == 0) {
+      if (!gst_d3d11_memory_update_size (mem)) {
+        GST_ERROR_OBJECT (self, "Failed to calculate memory size");
+        gst_memory_unref (mem);
+        return FALSE;
+      }
+
+      priv->mem_size = mem->size;
+    } else {
+      mem->size = mem->maxsize = priv->mem_size;
+    }
+
+    GST_D3D11_MEMORY_CAST (mem)->priv->subresource_index = i;
+
+    g_atomic_int_add (&priv->cur_mems, 1);
+    gst_atomic_queue_push (priv->queue, mem);
+    gst_poll_write_control (priv->poll);
+  }
+
+  priv->started = TRUE;
+
+  return TRUE;
+}
+
+static void
+gst_d3d11_pool_allocator_do_set_flushing (GstD3D11PoolAllocator * self,
+    gboolean flushing)
+{
+  GstD3D11PoolAllocatorPrivate *priv = self->priv;
+
+  if (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (self) == flushing)
+    return;
+
+  if (flushing) {
+    g_atomic_int_set (&priv->flushing, 1);
+    /* Write the flush token to wake up any waiters */
+    gst_poll_write_control (priv->poll);
+  } else {
+    while (!gst_poll_read_control (priv->poll)) {
+      if (errno == EWOULDBLOCK) {
+        /* This should not really happen unless flushing and unflushing
+         * happens on different threads. Let's wait a bit to get back flush
+         * token from the thread that was setting it to flushing */
+        g_thread_yield ();
+        continue;
+      } else {
+        /* Critical error but GstPoll already complained */
+        break;
+      }
+    }
+
+    g_atomic_int_set (&priv->flushing, 0);
+  }
+}
+
+static gboolean
+gst_d3d11_pool_allocator_set_active (GstD3D11Allocator * allocator,
+    gboolean active)
+{
+  GstD3D11PoolAllocator *self = GST_D3D11_POOL_ALLOCATOR (allocator);
+  GstD3D11PoolAllocatorPrivate *priv = self->priv;
+
+  GST_LOG_OBJECT (self, "active %d", active);
+
+  GST_D3D11_POOL_ALLOCATOR_LOCK (self);
+  /* just return if we are already in the right state */
+  if (priv->active == active)
+    goto was_ok;
+
+  if (active) {
+    if (!gst_d3d11_pool_allocator_start (self))
+      goto start_failed;
+
+    /* flush_stop may release memory objects, setting to active to avoid running
+     * do_stop while activating the pool */
+    priv->active = TRUE;
+
+    gst_d3d11_pool_allocator_do_set_flushing (self, FALSE);
+  } else {
+    gint outstanding;
+
+    /* set to flushing first */
+    gst_d3d11_pool_allocator_do_set_flushing (self, TRUE);
+
+    /* when all memory objects are in the pool, free them. Else they will be
+     * freed when they are released */
+    outstanding = g_atomic_int_get (&priv->outstanding);
+    GST_LOG_OBJECT (self, "outstanding memories %d, (in queue %d)",
+        outstanding, gst_atomic_queue_length (priv->queue));
+    if (outstanding == 0) {
+      if (!gst_d3d11_pool_allocator_stop (self))
+        goto stop_failed;
+    }
+
+    priv->active = FALSE;
+  }
+
+  GST_D3D11_POOL_ALLOCATOR_UNLOCK (self);
+
+  return TRUE;
+
+was_ok:
+  {
+    GST_DEBUG_OBJECT (self, "allocator was in the right state");
+    GST_D3D11_POOL_ALLOCATOR_UNLOCK (self);
+    return TRUE;
+  }
+start_failed:
+  {
+    GST_ERROR_OBJECT (self, "start failed");
+    GST_D3D11_POOL_ALLOCATOR_UNLOCK (self);
+    return FALSE;
+  }
+stop_failed:
+  {
+    GST_ERROR_OBJECT (self, "stop failed");
+    GST_D3D11_POOL_ALLOCATOR_UNLOCK (self);
+    return FALSE;
+  }
+}
+
+static void
+gst_d3d11_pool_allocator_free_memory (GstD3D11PoolAllocator * self,
+    GstMemory * mem)
+{
+  GstD3D11PoolAllocatorPrivate *priv = self->priv;
+
+  g_atomic_int_add (&priv->cur_mems, -1);
+  GST_LOG_OBJECT (self, "freeing memory %p (%u left)", mem, priv->cur_mems);
+
+  GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
+  gst_memory_unref (mem);
+}
+
+/* must be called with the lock */
+static gboolean
+gst_d3d11_pool_allocator_clear_queue (GstD3D11PoolAllocator * self)
+{
+  GstD3D11PoolAllocatorPrivate *priv = self->priv;
+  GstMemory *memory;
+
+  GST_LOG_OBJECT (self, "Clearing queue");
+
+  /* clear the pool */
+  while ((memory = gst_atomic_queue_pop (priv->queue))) {
+    while (!gst_poll_read_control (priv->poll)) {
+      if (errno == EWOULDBLOCK) {
+        /* We put the memory into the queue but did not finish writing control
+         * yet, let's wait a bit and retry */
+        g_thread_yield ();
+        continue;
+      } else {
+        /* Critical error but GstPoll already complained */
+        break;
+      }
+    }
+    gst_d3d11_pool_allocator_free_memory (self, memory);
+  }
+
+  GST_LOG_OBJECT (self, "Clear done");
+
+  return priv->cur_mems == 0;
+}
+
+/* must be called with the lock */
+static gboolean
+gst_d3d11_pool_allocator_stop (GstD3D11PoolAllocator * self)
+{
+  GstD3D11PoolAllocatorPrivate *priv = self->priv;
+
+  GST_DEBUG_OBJECT (self, "Stop");
+
+  if (priv->started) {
+    if (!gst_d3d11_pool_allocator_clear_queue (self))
+      return FALSE;
+
+    priv->started = FALSE;
+  } else {
+    GST_DEBUG_OBJECT (self, "Wasn't started");
+  }
+
+  return TRUE;
+}
+
+static inline void
+dec_outstanding (GstD3D11PoolAllocator * self)
+{
+  if (g_atomic_int_dec_and_test (&self->priv->outstanding)) {
+    /* all memory objects are returned to the pool, see if we need to free them */
+    if (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (self)) {
+      /* take the lock so that set_active is not run concurrently */
+      GST_D3D11_POOL_ALLOCATOR_LOCK (self);
+      /* now that we have the lock, check if we have been de-activated with
+       * outstanding buffers */
+      if (!self->priv->active)
+        gst_d3d11_pool_allocator_stop (self);
+
+      GST_D3D11_POOL_ALLOCATOR_UNLOCK (self);
+    }
+  }
+}
+
+static void
+gst_d3d11_pool_allocator_release_memory (GstD3D11PoolAllocator * self,
+    GstMemory * mem)
+{
+  GST_LOG_OBJECT (self, "Released memory %p", mem);
+
+  GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
+  mem->allocator = gst_object_ref (_d3d11_memory_allocator);
+  gst_object_unref (self);
+
+  /* keep it around in our queue */
+  gst_atomic_queue_push (self->priv->queue, mem);
+  gst_poll_write_control (self->priv->poll);
+  dec_outstanding (self);
+}
+
+static gboolean
+gst_d3d11_memory_release (GstMiniObject * mini_object)
+{
+  GstMemory *mem = GST_MEMORY_CAST (mini_object);
+  GstD3D11PoolAllocator *alloc;
+
+  g_assert (mem->allocator != NULL);
+
+  if (!GST_IS_D3D11_POOL_ALLOCATOR (mem->allocator)) {
+    GST_LOG_OBJECT (mem->allocator, "Not our memory, free");
+    return TRUE;
+  }
+
+  alloc = GST_D3D11_POOL_ALLOCATOR (mem->allocator);
+  /* if flushing, free this memory */
+  if (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (alloc)) {
+    GST_LOG_OBJECT (alloc, "allocator is flushing, free %p", mem);
+    return TRUE;
+  }
+
+  /* return the memory to the allocator */
+  gst_memory_ref (mem);
+  gst_d3d11_pool_allocator_release_memory (alloc, mem);
+
+  return FALSE;
+}
+
+static GstFlowReturn
+gst_d3d11_pool_allocator_alloc (GstD3D11PoolAllocator * self, GstMemory ** mem)
+{
+  GstD3D11PoolAllocatorPrivate *priv = self->priv;
+  GstMemory *new_mem;
+
+  /* we allcates texture array during start */
+  if (priv->desc.ArraySize > 1)
+    return GST_FLOW_EOS;
+
+  /* increment the allocation counter */
+  g_atomic_int_add (&priv->cur_mems, 1);
+  new_mem =
+      gst_d3d11_allocator_alloc_internal (GST_D3D11_ALLOCATOR_CAST
+      (_d3d11_memory_allocator), self->device, &priv->desc);
+  if (!new_mem) {
+    GST_ERROR_OBJECT (self, "Failed to allocate new memory");
+    g_atomic_int_add (&priv->cur_mems, -1);
+    return GST_FLOW_ERROR;
+  }
+
+  if (!priv->mem_size) {
+    if (!gst_d3d11_memory_update_size (new_mem)) {
+      GST_ERROR_OBJECT (self, "Failed to calculate size");
+      gst_memory_unref (new_mem);
+      g_atomic_int_add (&priv->cur_mems, -1);
+
+      return GST_FLOW_ERROR;
+    }
+
+    priv->mem_size = new_mem->size;
+  }
+
+  new_mem->size = new_mem->maxsize = priv->mem_size;
+
+  *mem = new_mem;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_d3d11_pool_allocator_acquire_memory_internal (GstD3D11PoolAllocator * self,
+    GstMemory ** memory)
+{
+  GstFlowReturn result;
+  GstD3D11PoolAllocatorPrivate *priv = self->priv;
+
+  while (TRUE) {
+    if (G_UNLIKELY (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (self)))
+      goto flushing;
+
+    /* try to get a memory from the queue */
+    *memory = gst_atomic_queue_pop (priv->queue);
+    if (G_LIKELY (*memory)) {
+      while (!gst_poll_read_control (priv->poll)) {
+        if (errno == EWOULDBLOCK) {
+          /* We put the memory into the queue but did not finish writing control
+           * yet, let's wait a bit and retry */
+          g_thread_yield ();
+          continue;
+        } else {
+          /* Critical error but GstPoll already complained */
+          break;
+        }
+      }
+      result = GST_FLOW_OK;
+      GST_LOG_OBJECT (self, "acquired memory %p", *memory);
+      break;
+    }
+
+    /* no memory, try to allocate some more */
+    GST_LOG_OBJECT (self, "no memory, trying to allocate");
+    result = gst_d3d11_pool_allocator_alloc (self, memory);
+    if (G_LIKELY (result == GST_FLOW_OK))
+      /* we have a memory, return it */
+      break;
+
+    if (G_UNLIKELY (result != GST_FLOW_EOS))
+      /* something went wrong, return error */
+      break;
+
+    /* now we release the control socket, we wait for a memory release or
+     * flushing */
+    if (!gst_poll_read_control (priv->poll)) {
+      if (errno == EWOULDBLOCK) {
+        /* This means that we have two threads trying to allocate memory
+         * already, and the other one already got the wait token. This
+         * means that we only have to wait for the poll now and not write the
+         * token afterwards: we will be woken up once the other thread is
+         * woken up and that one will write the wait token it removed */
+        GST_LOG_OBJECT (self, "waiting for free memory or flushing");
+        gst_poll_wait (priv->poll, GST_CLOCK_TIME_NONE);
+      } else {
+        /* This is a critical error, GstPoll already gave a warning */
+        result = GST_FLOW_ERROR;
+        break;
+      }
+    } else {
+      /* We're the first thread waiting, we got the wait token and have to
+       * write it again later
+       * OR
+       * We're a second thread and just consumed the flush token and block all
+       * other threads, in which case we must not wait and give it back
+       * immediately */
+      if (!GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (self)) {
+        GST_LOG_OBJECT (self, "waiting for free memory or flushing");
+        gst_poll_wait (priv->poll, GST_CLOCK_TIME_NONE);
+      }
+      gst_poll_write_control (priv->poll);
+    }
+  }
+
+  return result;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG_OBJECT (self, "we are flushing");
+    return GST_FLOW_FLUSHING;
+  }
+}
+
+/**
+ * gst_d3d11_pool_allocator_new:
+ * @device: a #GstD3D11Device
+ * @desc: a D3D11_TEXTURE2D_DESC for texture allocation
+ *
+ * Creates a new #GstD3D11PoolAllocator instance.
+ *
+ * Returns: (transfer full): a new #GstD3D11PoolAllocator instance
+ */
+GstD3D11PoolAllocator *
+gst_d3d11_pool_allocator_new (GstD3D11Device * device,
+    const D3D11_TEXTURE2D_DESC * desc)
+{
+  GstD3D11PoolAllocator *self;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+  g_return_val_if_fail (desc != NULL, NULL);
+
+  gst_d3d11_memory_init_once ();
+
+  self = g_object_new (GST_TYPE_D3D11_POOL_ALLOCATOR, NULL);
+  gst_object_ref_sink (self);
+
+  self->device = gst_object_ref (device);
+  self->priv->desc = *desc;
+
+  return self;
+}
+
+/**
+ * gst_d3d11_pool_allocator_acquire_memory:
+ * @allocator: a #GstD3D11PoolAllocator
+ * @memory: (transfer full): a #GstMemory
+ *
+ * Acquires a #GstMemory from @allocator. @memory should point to a memory
+ * location that can hold a pointer to the new #GstMemory.
+ *
+ * Returns: a #GstFlowReturn such as %GST_FLOW_FLUSHING when the allocator is
+ * inactive.
+ */
+GstFlowReturn
+gst_d3d11_pool_allocator_acquire_memory (GstD3D11PoolAllocator * allocator,
+    GstMemory ** memory)
+{
+  GstD3D11PoolAllocatorPrivate *priv;
+  GstFlowReturn result;
+
+  g_return_val_if_fail (GST_IS_D3D11_POOL_ALLOCATOR (allocator),
+      GST_FLOW_ERROR);
+  g_return_val_if_fail (memory != NULL, FALSE);
+
+  priv = allocator->priv;
+
+  /* assume we'll have one more outstanding buffer we need to do that so
+   * that concurrent set_active doesn't clear the buffers */
+  g_atomic_int_inc (&priv->outstanding);
+  result = gst_d3d11_pool_allocator_acquire_memory_internal (allocator, memory);
+
+  if (result == GST_FLOW_OK) {
+    GstMemory *mem = *memory;
+    /* Replace default allocator with ours */
+    gst_object_unref (mem->allocator);
+    mem->allocator = gst_object_ref (allocator);
+    GST_MINI_OBJECT_CAST (mem)->dispose = gst_d3d11_memory_release;
+  } else {
+    dec_outstanding (allocator);
+  }
+
+  return result;
 }
