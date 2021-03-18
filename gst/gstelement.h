@@ -484,7 +484,7 @@ typedef enum
 #define GST_ELEMENT_START_TIME(elem)            (GST_ELEMENT_CAST(elem)->start_time)
 
 GST_API
-GstStructure *gst_make_element_message_details (const char *name, ...);
+GstStructure *gst_make_element_message_details (const char *name, ...) G_GNUC_NULL_TERMINATED;
 
 #define GST_ELEMENT_MESSAGE_MAKE_DETAILS(args) gst_make_element_message_details args
 

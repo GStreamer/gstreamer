@@ -196,7 +196,7 @@ GST_API
 void            gst_type_find_suggest_simple (GstTypeFind * find,
                                               guint         probability,
                                               const char  * media_type,
-                                              const char  * fieldname, ...);
+                                              const char  * fieldname, ...) G_GNUC_NULL_TERMINATED;
 GST_API
 guint64   gst_type_find_get_length (GstTypeFind   * find);
 

@@ -58,7 +58,7 @@ GST_API
 GstCapsFeatures * gst_caps_features_new_any (void);
 
 GST_API
-GstCapsFeatures * gst_caps_features_new (const gchar *feature1, ...);
+GstCapsFeatures * gst_caps_features_new (const gchar *feature1, ...) G_GNUC_NULL_TERMINATED;
 
 GST_API
 GstCapsFeatures * gst_caps_features_new_valist (const gchar *feature1, va_list varargs);

@@ -337,12 +337,12 @@ GstElement *  gst_harness_find_element (GstHarness * h,
 GST_CHECK_API
 void          gst_harness_set (GstHarness  * h,
                                const gchar * element_name,
-                               const gchar * first_property_name, ...);
+                               const gchar * first_property_name, ...) G_GNUC_NULL_TERMINATED;
 
 GST_CHECK_API
 void          gst_harness_get (GstHarness  * h,
                                const gchar * element_name,
-                               const gchar * first_property_name, ...);
+                               const gchar * first_property_name, ...) G_GNUC_NULL_TERMINATED;
 
 GST_CHECK_API
 void          gst_harness_add_probe (GstHarness        * h,

@@ -3845,7 +3845,8 @@ _priv_gst_element_cleanup (void)
  * @name: Name of the first field to set
  * @...: variable arguments in the same form as #GstStructure
  *
- * Create a #GstStructure to be used with #gst_element_message_full_with_details
+ * Create a #GstStructure to be used with #gst_element_message_full_with_details.
+ * %NULL terminator required.
  *
  * Since: 1.10
  */
