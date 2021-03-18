@@ -3638,7 +3638,7 @@ test_flags_get_type (void)
     {1 << 3, "Eight", "eight"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;

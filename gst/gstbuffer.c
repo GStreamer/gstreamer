@@ -173,14 +173,14 @@ static gint64 meta_seq;         /* 0 *//* ATOMIC */
 /* TODO: use GLib's once https://gitlab.gnome.org/GNOME/glib/issues/1076 lands */
 #if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_8)
 static inline gint64
-gst_atomic_int64_inc (volatile gint64 * atomic)
+gst_atomic_int64_inc (gint64 * atomic)
 {
   return __sync_fetch_and_add (atomic, 1);
 }
 #elif defined (G_PLATFORM_WIN32)
 #include <windows.h>
 static inline gint64
-gst_atomic_int64_inc (volatile gint64 * atomic)
+gst_atomic_int64_inc (gint64 * atomic)
 {
   return InterlockedExchangeAdd64 (atomic, 1);
 }
@@ -192,7 +192,7 @@ gst_atomic_int64_inc (volatile gint64 * atomic)
 #define NO_64BIT_ATOMIC_INT_FOR_PLATFORM
 G_LOCK_DEFINE_STATIC (meta_seq);
 static inline gint64
-gst_atomic_int64_inc (volatile gint64 * atomic)
+gst_atomic_int64_inc (gint64 * atomic)
 {
   gint64 ret;
 
@@ -2630,7 +2630,7 @@ static gboolean
 _gst_parent_buffer_meta_init (GstParentBufferMeta * parent_meta,
     gpointer params, GstBuffer * buffer)
 {
-  static volatile gsize _init;
+  static gsize _init;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_parent_buffer_meta_debug, "parentbuffermeta",
@@ -2649,7 +2649,7 @@ _gst_parent_buffer_meta_init (GstParentBufferMeta * parent_meta,
 GType
 gst_parent_buffer_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] = { NULL };
 
   if (g_once_init_enter (&type)) {
@@ -2799,7 +2799,7 @@ static gboolean
 _gst_reference_timestamp_meta_init (GstReferenceTimestampMeta * meta,
     gpointer params, GstBuffer * buffer)
 {
-  static volatile gsize _init;
+  static gsize _init;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_reference_timestamp_meta_debug,
@@ -2820,7 +2820,7 @@ _gst_reference_timestamp_meta_init (GstReferenceTimestampMeta * meta,
 GType
 gst_reference_timestamp_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] = { NULL };
 
   if (g_once_init_enter (&type)) {

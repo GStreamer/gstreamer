@@ -72,7 +72,7 @@ struct _GstValve
   GstElement parent;
 
   /* atomic boolean */
-  volatile gint drop;
+  gint drop;
 
   GstValveDropMode drop_mode;
 

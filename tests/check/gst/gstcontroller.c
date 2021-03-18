@@ -181,7 +181,7 @@ gst_test_obj_class_init (GstTestObjClass * klass)
 static GType
 gst_test_obj_get_type (void)
 {
-  static volatile gsize test_obj_type = 0;
+  static gsize test_obj_type = 0;
 
   if (g_once_init_enter (&test_obj_type)) {
     GType type;
@@ -276,7 +276,7 @@ gst_test_control_source_init (GstTestControlSource * self)
 static GType
 gst_test_control_source_get_type (void)
 {
-  static volatile gsize test_countrol_source_type = 0;
+  static gsize test_countrol_source_type = 0;
 
   if (g_once_init_enter (&test_countrol_source_type)) {
     GType type;
@@ -406,7 +406,7 @@ gst_test_control_binding_class_init (gpointer klass, gpointer class_data)
 static GType
 gst_test_control_binding_get_type (void)
 {
-  static volatile gsize test_countrol_binding_type = 0;
+  static gsize test_countrol_binding_type = 0;
 
   if (g_once_init_enter (&test_countrol_binding_type)) {
     GType type;

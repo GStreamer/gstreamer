@@ -135,7 +135,7 @@ test_transform_func (GstBuffer * transbuf, GstMeta * meta,
 static GType
 gst_meta_test_api_get_type (void)
 {
-  static volatile GType type;
+  static GType type;
   static const gchar *tags[] = { "timing", NULL };
 
   if (g_once_init_enter (&type)) {
@@ -193,7 +193,7 @@ foo_transform_func (GstBuffer * transbuf, GstMeta * meta,
 static GType
 gst_meta_foo_api_get_type (void)
 {
-  static volatile GType type;
+  static GType type;
   static const gchar *tags[] = { NULL };
 
   if (g_once_init_enter (&type)) {

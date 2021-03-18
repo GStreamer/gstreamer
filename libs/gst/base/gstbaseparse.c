@@ -377,7 +377,7 @@ static void gst_base_parse_init (GstBaseParse * parse,
 GType
 gst_base_parse_get_type (void)
 {
-  static volatile gsize base_parse_type = 0;
+  static gsize base_parse_type = 0;
 
   if (g_once_init_enter (&base_parse_type)) {
     static const GTypeInfo base_parse_info = {

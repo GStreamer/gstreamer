@@ -38,12 +38,12 @@
 struct _GstStreamConsistency
 {
   /* FIXME: do we want to track some states per pad? */
-  volatile gboolean flushing;
-  volatile gboolean segment;
-  volatile gboolean eos;
-  volatile gboolean expect_flush;
-  volatile gboolean saw_serialized_event;
-  volatile gboolean saw_stream_start;
+  gboolean flushing;
+  gboolean segment;
+  gboolean eos;
+  gboolean expect_flush;
+  gboolean saw_serialized_event;
+  gboolean saw_stream_start;
   GstObject *parent;
   GList *pads;
 };

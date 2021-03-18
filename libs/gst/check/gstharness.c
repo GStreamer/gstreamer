@@ -172,9 +172,9 @@ struct _GstHarnessPrivate
   GstPad *sink_forward_pad;
   GstTestClock *testclock;
 
-  volatile gint recv_buffers;
-  volatile gint recv_events;
-  volatile gint recv_upstream_events;
+  gint recv_buffers;
+  gint recv_events;
+  gint recv_upstream_events;
 
   GAsyncQueue *buffer_queue;
   GAsyncQueue *src_event_queue;

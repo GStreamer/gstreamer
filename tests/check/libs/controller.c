@@ -240,7 +240,7 @@ gst_test_obj_base_init (GstTestObjClass * klass)
 static GType
 gst_test_obj_get_type (void)
 {
-  static volatile gsize test_obj_type = 0;
+  static gsize test_obj_type = 0;
 
   if (g_once_init_enter (&test_obj_type)) {
     GType type;

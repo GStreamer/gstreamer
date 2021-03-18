@@ -2271,7 +2271,7 @@ static GstValueAbbreviation *
 _priv_gst_value_get_abbrs (gint * n_abbrs)
 {
   static GstValueAbbreviation *abbrs = NULL;
-  static volatile gsize num = 0;
+  static gsize num = 0;
 
   if (g_once_init_enter (&num)) {
     /* dynamically generate the array */
@@ -7855,7 +7855,7 @@ GType _gst_ ## type ## _type = 0;                               \
                                                                 \
 GType gst_ ## type ## _get_type (void)                          \
 {                                                               \
-  static volatile GType gst_ ## type ## _type = 0;              \
+  static GType gst_ ## type ## _type = 0;              \
                                                                 \
   if (g_once_init_enter (&gst_ ## type ## _type)) {             \
     GType _type;                                                \
@@ -8196,9 +8196,8 @@ _priv_gst_value_initialize (void)
       GST_TYPE_FRACTION_RANGE,
       gst_value_subtract_fraction_range_fraction_range);
 
-  /* see bug #317246, #64994, #65041 */
   {
-    volatile GType date_type = G_TYPE_DATE;
+    GType date_type = G_TYPE_DATE;
 
     g_type_name (date_type);
   }

@@ -112,7 +112,7 @@ typedef struct _GstSingleQueue GstSingleQueue;
 
 struct _GstSingleQueue
 {
-  volatile gint refcount;
+  gint refcount;
 
   /* unique identifier of the queue */
   guint id;
@@ -3383,7 +3383,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
   }
 
   sq = g_new0 (GstSingleQueue, 1);
-  sq->refcount = 1;
+  g_atomic_int_set (&sq->refcount, 1);
 
   mqueue->nbqueues++;
   sq->id = temp_id;

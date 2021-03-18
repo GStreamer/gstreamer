@@ -72,7 +72,7 @@ net_address_meta_free (GstMeta * meta, GstBuffer * buffer)
 GType
 gst_net_address_meta_api_get_type (void)
 {
-  static volatile GType type;
+  static GType type;
   static const gchar *tags[] = { "origin", NULL };
 
   if (g_once_init_enter (&type)) {
