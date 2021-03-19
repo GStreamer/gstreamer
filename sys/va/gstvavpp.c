@@ -199,7 +199,7 @@ gst_va_vpp_dispose (GObject * object)
 }
 
 static void
-_update_passthrough (GstVaVpp * self, gboolean reconf)
+gst_va_vpp_update_passthrough (GstVaVpp * self, gboolean reconf)
 {
   GstBaseTransform *trans = GST_BASE_TRANSFORM (self);
   gboolean old, new;
@@ -324,7 +324,7 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
 
   /* no reconfig here because it's done in
    * _update_properties_unlocked() */
-  _update_passthrough (self, FALSE);
+  gst_va_vpp_update_passthrough (self, FALSE);
 }
 
 static void
@@ -395,7 +395,7 @@ gst_va_vpp_change_state (GstElement * element, GstStateChange transition)
       if (!gst_va_filter_open (self->filter))
         goto open_failed;
       _update_properties_unlocked (self);
-      _update_passthrough (self, FALSE);
+      gst_va_vpp_update_passthrough (self, FALSE);
       break;
     default:
       break;
@@ -813,7 +813,7 @@ gst_va_vpp_set_caps (GstBaseTransform * trans, GstCaps * incaps,
       gst_va_filter_set_formats (self->filter, &self->in_info, &self->out_info);
 
   if (self->negotiated)
-    _update_passthrough (self, FALSE);
+    gst_va_vpp_update_passthrough (self, FALSE);
 
   return self->negotiated;
 
@@ -1004,7 +1004,7 @@ gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
   if (g_atomic_int_get (&self->rebuild_filters) == TRUE) {
     gst_va_filter_drop_filter_buffers (self->filter);
     _build_filters (self);
-    _update_passthrough (self, TRUE);
+    gst_va_vpp_update_passthrough (self, TRUE);
     g_atomic_int_set (&self->rebuild_filters, FALSE);
   }
 }
@@ -2291,7 +2291,7 @@ gst_va_vpp_sink_event (GstBaseTransform * trans, GstEvent * event)
 
       /* no reconfig here because it's done in
        * _update_properties_unlocked */
-      _update_passthrough (self, FALSE);
+      gst_va_vpp_update_passthrough (self, FALSE);
 
       break;
     default:
