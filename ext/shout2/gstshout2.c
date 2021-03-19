@@ -229,7 +229,7 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
   /* signals */
   gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM] =
       g_signal_new ("connection-problem", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
+      0, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
 
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_shout2send_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_shout2send_stop);
