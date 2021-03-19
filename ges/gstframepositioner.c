@@ -624,7 +624,7 @@ gst_frame_positioner_get_property (GObject * object, guint property_id,
 GType
 gst_frame_positioner_meta_api_get_type (void)
 {
-  static volatile GType type;
+  static GType type;
   static const gchar *tags[] = { "video", NULL };
 
   if (g_once_init_enter (&type)) {

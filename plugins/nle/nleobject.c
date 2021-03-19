@@ -835,7 +835,7 @@ nle_object_reset (NleObject * object)
 GType
 nle_object_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;

@@ -195,7 +195,7 @@ struct _NleCompositionPrivate
   gint seqnum_to_restart_task;
   gboolean waiting_serialized_query_or_buffer;
   GstEvent *stack_initialization_seek;
-  volatile gboolean stack_initialization_seek_sent;
+  gboolean stack_initialization_seek_sent;
 
   gboolean tearing_down_stack;
   gboolean suppress_child_error;

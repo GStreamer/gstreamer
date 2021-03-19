@@ -124,7 +124,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
 
 typedef struct _PadInfos
 {
-  volatile gint refcount;
+  gint refcount;
 
   GESSmartMixer *self;
   GstPad *mixer_pad;
@@ -149,7 +149,7 @@ static PadInfos *
 pad_infos_new (void)
 {
   PadInfos *info = g_new0 (PadInfos, 1);
-  info->refcount = 1;
+  g_atomic_int_set (&info->refcount, 1);
 
   return info;
 }
