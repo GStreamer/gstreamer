@@ -205,7 +205,7 @@ gst_encoder_bitrate_profile_manager_new (guint default_bitrate)
 {
   GstEncoderBitrateProfileManager *self =
       g_new0 (GstEncoderBitrateProfileManager, 1);
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "encoderbitratemanager", 0,
