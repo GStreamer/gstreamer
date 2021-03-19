@@ -72,13 +72,10 @@ static GstFlowReturn gst_rsvg_dec_handle_frame (GstVideoDecoder * decoder,
 static GstFlowReturn gst_rsvg_decode_image (GstRsvgDec * rsvg,
     GstBuffer * buffer, GstVideoCodecFrame * frame);
 
-static void gst_rsvg_dec_finalize (GObject * object);
-
 static void
 gst_rsvg_dec_class_init (GstRsvgDecClass * klass)
 {
   GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
-  GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (rsvgdec_debug, "rsvgdec", 0, "RSVG decoder");
@@ -91,7 +88,6 @@ gst_rsvg_dec_class_init (GstRsvgDecClass * klass)
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
   gst_element_class_add_static_pad_template (element_class, &src_factory);
 
-  gobject_class->finalize = gst_rsvg_dec_finalize;
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_rsvg_dec_stop);
   video_decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_rsvg_dec_set_format);
   video_decoder_class->parse = GST_DEBUG_FUNCPTR (gst_rsvg_dec_parse);
@@ -108,13 +104,6 @@ gst_rsvg_dec_init (GstRsvgDec * rsvg)
       (rsvg), TRUE);
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (rsvg));
 }
-
-static void
-gst_rsvg_dec_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (gst_rsvg_dec_parent_class)->finalize (object);
-}
-
 
 #define CAIRO_UNPREMULTIPLY(a,r,g,b) G_STMT_START { \
   b = (a > 0) ? MIN ((b * 255 + a / 2) / a, 255) : 0; \
