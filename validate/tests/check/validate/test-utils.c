@@ -155,7 +155,7 @@ fake_demuxer_class_init (FakeDemuxerClass * self_class)
 GType
 fake_demuxer_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;
@@ -275,7 +275,7 @@ fake_decoder_class_init (FakeDecoderClass * self_class)
 GType
 fake_decoder_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;
@@ -411,7 +411,7 @@ fake_mixer_class_init (FakeMixerClass * self_class)
 GType
 fake_mixer_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;
@@ -482,7 +482,7 @@ fake_src_class_init (FakeSrcClass * self_class)
 GType
 fake_src_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;
