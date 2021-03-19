@@ -170,6 +170,7 @@ static GQuark meta_tag_orientation_quark;
 static GQuark meta_tag_video_quark;
 
 static void gst_va_vpp_colorbalance_init (gpointer iface, gpointer data);
+static void gst_va_vpp_rebuild_filters (GstVaVpp * self);
 
 static void
 gst_va_vpp_dispose (GObject * object)
@@ -395,6 +396,7 @@ gst_va_vpp_change_state (GstElement * element, GstStateChange transition)
       if (!gst_va_filter_open (self->filter))
         goto open_failed;
       _update_properties_unlocked (self);
+      gst_va_vpp_rebuild_filters (self);
       gst_va_vpp_update_passthrough (self, FALSE);
       break;
     default:
@@ -987,6 +989,17 @@ _build_filters (GstVaVpp * self)
 }
 
 static void
+gst_va_vpp_rebuild_filters (GstVaVpp * self)
+{
+  if (!g_atomic_int_get (&self->rebuild_filters))
+    return;
+
+  gst_va_filter_drop_filter_buffers (self->filter);
+  _build_filters (self);
+  g_atomic_int_set (&self->rebuild_filters, FALSE);
+}
+
+static void
 gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
 {
   GstVaVpp *self = GST_VA_VPP (trans);
@@ -1001,12 +1014,8 @@ gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (self), stream_time);
 
-  if (g_atomic_int_get (&self->rebuild_filters) == TRUE) {
-    gst_va_filter_drop_filter_buffers (self->filter);
-    _build_filters (self);
-    gst_va_vpp_update_passthrough (self, TRUE);
-    g_atomic_int_set (&self->rebuild_filters, FALSE);
-  }
+  gst_va_vpp_rebuild_filters (self);
+  gst_va_vpp_update_passthrough (self, TRUE);
 }
 
 static inline gsize
