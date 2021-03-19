@@ -2201,6 +2201,9 @@ gst_v4l2_object_get_colorspace (GstV4l2Object * v4l2object,
     case V4L2_XFER_FUNC_NONE:
       cinfo->transfer = GST_VIDEO_TRANSFER_GAMMA10;
       break;
+    case V4L2_XFER_FUNC_SMPTE2084:
+      cinfo->transfer = GST_VIDEO_TRANSFER_SMPTE2084;
+      break;
     case V4L2_XFER_FUNC_DEFAULT:
       /* nothing, just use defaults for colorspace */
       break;
@@ -3578,6 +3581,9 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       /* fallthrough */
     case GST_VIDEO_TRANSFER_GAMMA10:
       transfer = V4L2_XFER_FUNC_NONE;
+      break;
+    case GST_VIDEO_TRANSFER_SMPTE2084:
+      transfer = V4L2_XFER_FUNC_SMPTE2084;
       break;
     case GST_VIDEO_TRANSFER_BT601:
     case GST_VIDEO_TRANSFER_BT2020_12:
