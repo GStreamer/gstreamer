@@ -754,7 +754,7 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
    */
   gst_rtsp_client_sink_signals[SIGNAL_NEW_MANAGER] =
       g_signal_new_class_handler ("new-manager", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL, NULL,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
@@ -768,7 +768,7 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
    */
   gst_rtsp_client_sink_signals[SIGNAL_NEW_PAYLOADER] =
       g_signal_new_class_handler ("new-payloader", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL, NULL,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
