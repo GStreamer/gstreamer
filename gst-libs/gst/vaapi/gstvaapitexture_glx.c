@@ -249,7 +249,7 @@ GstVaapiGLApi
 gl_get_curent_api_once ()
 {
   static GstVaapiGLApi cur_api = GST_VAAPI_GL_API_NONE;
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     cur_api = gl_get_current_api (NULL, NULL);

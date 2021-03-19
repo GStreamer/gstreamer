@@ -120,7 +120,7 @@ struct egl_display_s
   GMutex mutex;
   GThread *gl_thread;
   GCond gl_thread_ready;
-  volatile gboolean gl_thread_cancel;
+  gboolean gl_thread_cancel;
   GAsyncQueue *gl_queue;
   gboolean created;
 };

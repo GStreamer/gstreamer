@@ -51,7 +51,7 @@ static void
 _init_vaapi_context_debug (void)
 {
 #ifndef GST_DISABLE_GST_DEBUG
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi_context, "vaapicontext", 0,

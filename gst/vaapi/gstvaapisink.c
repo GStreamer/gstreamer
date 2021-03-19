@@ -976,7 +976,7 @@ static gpointer
 gst_vaapisink_event_thread (GstVaapiSink * sink)
 {
   GST_OBJECT_LOCK (sink);
-  while (!sink->event_thread_cancel) {
+  while (!g_atomic_int_get (&sink->event_thread_cancel)) {
     GST_OBJECT_UNLOCK (sink);
     sink->backend->handle_events (sink);
     g_usleep (G_USEC_PER_SEC / 20);
@@ -1001,7 +1001,7 @@ gst_vaapisink_set_event_handling (GstVaapiSink * sink, gboolean handle_events)
     if (sink->backend->pre_start_event_thread)
       sink->backend->pre_start_event_thread (sink);
 
-    sink->event_thread_cancel = FALSE;
+    g_atomic_int_set (&sink->event_thread_cancel, FALSE);
     sink->event_thread = g_thread_try_new ("vaapisink-events",
         (GThreadFunc) gst_vaapisink_event_thread, sink, NULL);
   } else if (!handle_events && sink->event_thread) {
@@ -1012,7 +1012,7 @@ gst_vaapisink_set_event_handling (GstVaapiSink * sink, gboolean handle_events)
     /* Grab thread and mark it as NULL */
     thread = sink->event_thread;
     sink->event_thread = NULL;
-    sink->event_thread_cancel = TRUE;
+    g_atomic_int_set (&sink->event_thread_cancel, TRUE);
   }
   GST_OBJECT_UNLOCK (sink);
 
