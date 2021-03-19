@@ -49,10 +49,15 @@ video_crop_get_test_caps (GstElement * videocrop)
   for (i = 0; i < gst_caps_get_size (allowed_caps); ++i) {
     GstStructure *new_structure;
     GstCaps *single_caps;
+    GstStructure *structure;
+
+    /* featured caps don't describe format: skip them */
+    structure = gst_caps_get_structure (allowed_caps, i);
+    if (!gst_structure_has_field (structure, "format"))
+      continue;
 
     single_caps = gst_caps_new_empty ();
-    new_structure =
-        gst_structure_copy (gst_caps_get_structure (allowed_caps, i));
+    new_structure = gst_structure_copy (structure);
     gst_structure_set (new_structure, "framerate", GST_TYPE_FRACTION,
         1, 1, NULL);
     gst_structure_remove_field (new_structure, "width");
@@ -177,13 +182,18 @@ handoff_cb (GstElement * sink, GstBuffer * buf, GstPad * pad,
 }
 
 static void
-videocrop_test_cropping_init_context (GstVideoCropTestContext * ctx)
+videocrop_test_cropping_init_context_full (GstVideoCropTestContext * ctx,
+    gboolean featured)
 {
   fail_unless (ctx != NULL);
 
   ctx->pipeline = gst_pipeline_new ("pipeline");
   fail_unless (ctx->pipeline != NULL);
-  ctx->src = gst_element_factory_make ("videotestsrc", "src");
+
+  if (featured)
+    ctx->src = gst_element_factory_make ("fakesrc", "src");
+  else
+    ctx->src = gst_element_factory_make ("videotestsrc", "src");
   fail_unless (ctx->src != NULL, "Failed to create videotestsrc element");
   ctx->filter = gst_element_factory_make ("capsfilter", "filter");
   fail_unless (ctx->filter != NULL, "Failed to create capsfilter element");
@@ -200,16 +210,29 @@ videocrop_test_cropping_init_context (GstVideoCropTestContext * ctx)
   gst_element_link_many (ctx->src, ctx->filter, ctx->crop, ctx->filter2,
       ctx->sink, NULL);
 
-  /* set pattern to 'red' - for our purposes it doesn't matter anyway */
-  g_object_set (ctx->src, "pattern", 4, NULL);
+  if (featured) {
+    g_object_set (ctx->src, "format", GST_FORMAT_TIME, NULL);
+  } else {
+    /* set pattern to 'red' - for our purposes it doesn't matter anyway */
+    g_object_set (ctx->src, "pattern", 4, NULL);
+  }
 
-  g_object_set (ctx->sink, "signal-handoffs", TRUE, NULL);
-  g_signal_connect (ctx->sink, "preroll-handoff", G_CALLBACK (handoff_cb), ctx);
+  if (!featured) {
+    g_object_set (ctx->sink, "signal-handoffs", TRUE, NULL);
+    g_signal_connect (ctx->sink, "preroll-handoff", G_CALLBACK (handoff_cb),
+        ctx);
+  }
 
   ctx->last_buf = NULL;
   ctx->last_caps = NULL;
 
   GST_LOG ("context inited");
+}
+
+static void
+videocrop_test_cropping_init_context (GstVideoCropTestContext * ctx)
+{
+  videocrop_test_cropping_init_context_full (ctx, FALSE);
 }
 
 static void
@@ -786,6 +809,94 @@ GST_START_TEST (test_caps_transform)
 
 GST_END_TEST;
 
+static GstCaps *
+get_featured_caps (void)
+{
+  GstCaps *caps;
+  GstCapsFeatures *features;
+
+  features = gst_caps_features_new ("memory:DMABuf", NULL);
+  caps = gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, "NV12",
+      "framerate", GST_TYPE_FRACTION, 1, 1,
+      "width", G_TYPE_INT, 200, "height", G_TYPE_INT, 100, NULL);
+  gst_caps_set_features_simple (caps, features);
+
+  return caps;
+}
+
+GST_START_TEST (test_caps_transform_featured)
+{
+  GstVideoCropTestContext ctx;
+  GstBaseTransformClass *klass;
+  GstBaseTransform *crop;
+  GstCaps *caps, *adj_caps;
+
+  videocrop_test_cropping_init_context (&ctx);
+
+  caps = get_featured_caps ();
+
+  crop = GST_BASE_TRANSFORM (ctx.crop);
+  klass = GST_BASE_TRANSFORM_GET_CLASS (ctx.crop);
+  fail_unless (klass != NULL);
+
+  /* by default, it should be no cropping and hence passthrough */
+  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps, NULL);
+  fail_unless (adj_caps != NULL);
+
+  fail_unless (gst_caps_is_equal (adj_caps, caps));
+  gst_caps_unref (adj_caps);
+
+  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps, NULL);
+  fail_unless (adj_caps != NULL);
+  fail_unless (gst_caps_is_equal (adj_caps, caps));
+  gst_caps_unref (adj_caps);
+
+  /* make sure that's still true after changing properties back and forth */
+  g_object_set (ctx.crop, "left", 1, "right", 3, "top", 5, "bottom", 7, NULL);
+  g_object_set (ctx.crop, "left", 0, "right", 0, "top", 0, "bottom", 0, NULL);
+
+  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps, NULL);
+  fail_unless (adj_caps != NULL);
+  fail_unless (gst_caps_is_equal (adj_caps, caps));
+  gst_caps_unref (adj_caps);
+
+  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps, NULL);
+  fail_unless (adj_caps != NULL);
+  fail_unless (gst_caps_is_equal (adj_caps, caps));
+  gst_caps_unref (adj_caps);
+
+  gst_caps_unref (caps);
+  videocrop_test_cropping_deinit_context (&ctx);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_passthrough_featured)
+{
+  GstStateChangeReturn state_ret;
+  GstVideoCropTestContext ctx;
+  GstCaps *caps;
+
+  videocrop_test_cropping_init_context_full (&ctx, TRUE);
+
+  g_object_set (ctx.src, "num-buffers", 1, NULL);
+
+  caps = get_featured_caps ();
+  g_object_set (ctx.filter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  g_object_set (ctx.crop, "left", 50, "top", 10, NULL);
+
+  state_ret = gst_element_set_state (ctx.pipeline, GST_STATE_PAUSED);
+  fail_unless (state_ret == GST_STATE_CHANGE_ASYNC,
+      "pipeline should fail on negotiation");
+
+  videocrop_test_cropping_deinit_context (&ctx);
+}
+
+GST_END_TEST;
+
 static Suite *
 videocrop_suite (void)
 {
@@ -807,7 +918,9 @@ videocrop_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_crop_to_1x1);
   tcase_add_test (tc_chain, test_caps_transform);
+  tcase_add_test (tc_chain, test_caps_transform_featured);
   tcase_add_test (tc_chain, test_passthrough);
+  tcase_add_test (tc_chain, test_passthrough_featured);
   tcase_add_test (tc_chain, test_unit_sizes);
   tcase_add_loop_test (tc_chain, test_cropping, 0, 25);
 

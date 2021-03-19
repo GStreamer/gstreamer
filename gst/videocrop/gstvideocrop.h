@@ -68,6 +68,8 @@ struct _GstVideoCrop
 
   VideoCropPixelFormat  packing;
   gint macro_y_off;
+
+  gboolean raw_caps;
 };
 
 struct _GstVideoCropClass

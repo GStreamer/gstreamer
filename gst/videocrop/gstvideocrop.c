@@ -82,7 +82,11 @@ enum
   GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR, "    \
       "RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, YUY2, Y444, " \
       "Y42B, Y41B, YVYU, UYVY, I420, YV12, RGB16, RGB15, "  \
-      "GRAY8, NV12, NV21, GRAY16_LE, GRAY16_BE }")
+      "GRAY8, NV12, NV21, GRAY16_LE, GRAY16_BE }") "; "     \
+  "video/x-raw(ANY), "                                      \
+      "width = " GST_VIDEO_SIZE_RANGE ", "                  \
+      "height = " GST_VIDEO_SIZE_RANGE ", "                 \
+      "framerate = " GST_VIDEO_FPS_RANGE
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -479,10 +483,14 @@ gst_video_crop_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     GST_INFO_OBJECT (crop, "we are doing in-place transform using crop meta");
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (crop), FALSE);
     gst_base_transform_set_in_place (GST_BASE_TRANSFORM (crop), TRUE);
-  } else {
+  } else if (crop->raw_caps) {
     GST_INFO_OBJECT (crop, "we are not using passthrough");
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (crop), FALSE);
     gst_base_transform_set_in_place (GST_BASE_TRANSFORM (crop), FALSE);
+  } else {
+    GST_ELEMENT_ERROR (crop, STREAM, WRONG_TYPE,
+        ("Dowstream doesn't support crop for non-raw caps"), (NULL));
+    return FALSE;
   }
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
@@ -692,8 +700,10 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
     const GValue *v;
     GstStructure *structure, *new_structure;
     GValue w_val = G_VALUE_INIT, h_val = G_VALUE_INIT;
+    GstCapsFeatures *features;
 
     structure = gst_caps_get_structure (caps, i);
+    features = gst_caps_get_features (caps, i);
 
     v = gst_structure_get_value (structure, "width");
     if (!gst_video_crop_transform_dimension_value (v, dx, &w_val, direction,
@@ -717,9 +727,13 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
     gst_structure_set_value (new_structure, "height", &h_val);
     g_value_unset (&w_val);
     g_value_unset (&h_val);
+
     GST_LOG_OBJECT (vcrop, "transformed structure %2d: %" GST_PTR_FORMAT
-        " => %" GST_PTR_FORMAT, i, structure, new_structure);
+        " => %" GST_PTR_FORMAT "features %" GST_PTR_FORMAT, i, structure,
+        new_structure, features);
     gst_caps_append_structure (other_caps, new_structure);
+
+    gst_caps_set_features (other_caps, i, gst_caps_features_copy (features));
   }
 
   if (!gst_caps_is_empty (other_caps) && filter_caps) {
@@ -737,6 +751,7 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
     GstVideoInfo * in_info, GstCaps * out, GstVideoInfo * out_info)
 {
   GstVideoCrop *crop = GST_VIDEO_CROP (vfilter);
+  GstCapsFeatures *features;
   int dx, dy;
 
   GST_OBJECT_LOCK (crop);
@@ -786,6 +801,13 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
     GST_LOG_OBJECT (crop, "incaps = %" GST_PTR_FORMAT ", outcaps = %"
         GST_PTR_FORMAT, in, out);
 
+  features = gst_caps_get_features (in, 0);
+  crop->raw_caps = gst_caps_features_is_equal (features,
+      GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY);
+
+  if (!crop->raw_caps)
+    goto beach;
+
   if (GST_VIDEO_INFO_IS_RGB (in_info)
       || GST_VIDEO_INFO_IS_GRAY (in_info)) {
     crop->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE;
@@ -822,6 +844,7 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
     }
   }
 
+beach:
   crop->in_info = *in_info;
   crop->out_info = *out_info;
 

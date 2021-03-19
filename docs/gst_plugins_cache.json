@@ -24781,12 +24781,12 @@
                 "long-name": "Crop",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n         format: { RGBx, xRGB, BGRx, xBGR, RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, YUY2, Y444, Y42B, Y41B, YVYU, UYVY, I420, YV12, RGB16, RGB15, GRAY8, NV12, NV21, GRAY16_LE, GRAY16_BE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { RGBx, xRGB, BGRx, xBGR, RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, YUY2, Y444, Y42B, Y41B, YVYU, UYVY, I420, YV12, RGB16, RGB15, GRAY8, NV12, NV21, GRAY16_LE, GRAY16_BE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw:\n         format: { RGBx, xRGB, BGRx, xBGR, RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, YUY2, Y444, Y42B, Y41B, YVYU, UYVY, I420, YV12, RGB16, RGB15, GRAY8, NV12, NV21, GRAY16_LE, GRAY16_BE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { RGBx, xRGB, BGRx, xBGR, RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, YUY2, Y444, Y42B, Y41B, YVYU, UYVY, I420, YV12, RGB16, RGB15, GRAY8, NV12, NV21, GRAY16_LE, GRAY16_BE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
