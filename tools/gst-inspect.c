@@ -45,6 +45,9 @@
 /* "R" : support color
  * "X" : do not clear the screen when leaving the pager
  * "F" : skip the pager if content fit into the screen
+ *
+ * Don't forget to update the manpage gst-inspect-1.0.1
+ * after changing this default.
  */
 #define DEFAULT_LESS_OPTS "RXF"
 
@@ -1949,7 +1952,7 @@ redirect_stdout (void)
 {
   GError *error = NULL;
   gchar **argv;
-  const gchar *pager;
+  const gchar *pager, *less;
   gint stdin_fd;
   gchar **envp;
 
@@ -1959,8 +1962,12 @@ redirect_stdout (void)
 
   argv = g_strsplit (pager, " ", 0);
 
+  less = g_getenv ("GST_LESS");
+  if (less == NULL)
+    less = DEFAULT_LESS_OPTS;
+
   envp = g_get_environ ();
-  envp = g_environ_setenv (envp, "LESS", DEFAULT_LESS_OPTS, TRUE);
+  envp = g_environ_setenv (envp, "LESS", less, TRUE);
 
   if (!g_spawn_async_with_pipes (NULL, argv, envp,
           G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH,

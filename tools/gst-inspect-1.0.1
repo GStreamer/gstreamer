@@ -81,6 +81,17 @@ Enable printout of errors while loading \fIGStreamer\fP plugins
 .B  \-\-gst\-plugin\-path=PATH
 Add directories separated with ':' to the plugin search path
 .
+.SH "ENVIRONMENT VARIABLES"
+.l
+\fIgst\-inspect\-1.0\fP reads the following environment variables, in addition
+to the generic \fIGStreamer\fP environment variables also described in
+.BR gst\-launch\-1.0 (1):
+.TP 8
+.B GST_LESS
+Override the options passed to \fIless\fR (by default "RXF").
+.br
+See \fBless\fR(1) for more information.
+.
 .SH "SEE ALSO"
 .BR gst\-launch\-1.0 (1),
 .BR gst\-typefind\-1.0 (1)
