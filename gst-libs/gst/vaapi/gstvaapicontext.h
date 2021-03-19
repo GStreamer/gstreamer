@@ -100,7 +100,7 @@ struct _GstVaapiContextInfo
 struct _GstVaapiContext
 {
   /*< private >*/
-  volatile gint ref_count;
+  gint ref_count;
   GstVaapiDisplay *display;
   GstVaapiID object_id;
 

@@ -614,7 +614,7 @@ egl_display_thread (gpointer data)
   g_cond_broadcast (&display->gl_thread_ready);
   g_mutex_unlock (&display->mutex);
 
-  while (!display->gl_thread_cancel) {
+  while (!g_atomic_int_get (&display->gl_thread_cancel)) {
     EglMessage *const msg =
         g_async_queue_timeout_pop (display->gl_queue, 100000);
 
@@ -671,7 +671,7 @@ egl_display_init (EglDisplay * display)
 static void
 egl_display_finalize (EglDisplay * display)
 {
-  display->gl_thread_cancel = TRUE;
+  g_atomic_int_set (&display->gl_thread_cancel, TRUE);
   g_thread_join (display->gl_thread);
   g_cond_clear (&display->gl_thread_ready);
   g_mutex_clear (&display->mutex);

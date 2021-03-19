@@ -38,7 +38,7 @@ struct _GstVaapiFilterOpData
 {
   GstVaapiFilterOp op;
   GParamSpec *pspec;
-  volatile gint ref_count;
+  gint ref_count;
   guint va_type;
   guint va_subtype;
   gpointer va_caps;
@@ -550,7 +550,7 @@ op_data_new (GstVaapiFilterOp op, GParamSpec * pspec)
 
   op_data->op = op;
   op_data->pspec = pspec;
-  op_data->ref_count = 1;
+  g_atomic_int_set (&op_data->ref_count, 1);
   op_data->va_buffer = VA_INVALID_ID;
 
   switch (op) {

@@ -70,7 +70,7 @@ gst_vaapi_mini_object_new (const GstVaapiMiniObjectClass * object_class)
     return NULL;
 
   object->object_class = object_class;
-  object->ref_count = 1;
+  g_atomic_int_set (&object->ref_count, 1);
   object->flags = 0;
   return object;
 }

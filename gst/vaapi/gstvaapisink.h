@@ -99,7 +99,7 @@ struct _GstVaapiSink
   guint color_standard;
   gint32 view_id;
   GThread *event_thread;
-  volatile gboolean event_thread_cancel;
+  gboolean event_thread_cancel;
 
   /* Color balance values */
   guint cb_changed;

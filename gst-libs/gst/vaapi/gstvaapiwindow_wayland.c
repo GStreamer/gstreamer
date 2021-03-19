@@ -98,7 +98,7 @@ struct _GstVaapiWindowWaylandPrivate
   guint is_shown:1;
   guint fullscreen_on_show:1;
   guint sync_failed:1;
-  volatile guint num_frames_pending;
+  guint num_frames_pending;
   gint configure_pending;
   gboolean need_vpp;
   gboolean dmabuf_broken;

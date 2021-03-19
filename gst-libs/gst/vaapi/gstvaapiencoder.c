@@ -1822,7 +1822,7 @@ out:
 GType
 gst_vaapi_encoder_tune_get_type (void)
 {
-  static volatile gsize g_type = 0;
+  static gsize g_type = 0;
 
   static const GEnumValue encoder_tune_values[] = {
     /* *INDENT-OFF* */
@@ -1850,7 +1850,7 @@ gst_vaapi_encoder_tune_get_type (void)
 GType
 gst_vaapi_encoder_mbbrc_get_type (void)
 {
-  static volatile gsize g_type = 0;
+  static gsize g_type = 0;
 
   if (g_once_init_enter (&g_type)) {
     static const GEnumValue encoder_mbbrc_values[] = {

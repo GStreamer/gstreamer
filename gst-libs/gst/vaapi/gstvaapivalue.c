@@ -50,7 +50,7 @@ default_free_func (gpointer data)
 GType
 gst_vaapi_point_get_type (void)
 {
-  static volatile gsize g_type = 0;
+  static gsize g_type = 0;
 
   if (g_once_init_enter (&g_type)) {
     GType type =
@@ -67,7 +67,7 @@ gst_vaapi_point_get_type (void)
 GType
 gst_vaapi_rectangle_get_type (void)
 {
-  static volatile gsize g_type = 0;
+  static gsize g_type = 0;
 
   if (g_once_init_enter (&g_type)) {
     GType type =
@@ -85,7 +85,7 @@ gst_vaapi_rectangle_get_type (void)
 GType
 gst_vaapi_render_mode_get_type (void)
 {
-  static volatile gsize g_type = 0;
+  static gsize g_type = 0;
 
   static const GEnumValue render_modes[] = {
     {GST_VAAPI_RENDER_MODE_OVERLAY,
@@ -108,7 +108,7 @@ gst_vaapi_render_mode_get_type (void)
 GType
 gst_vaapi_rotation_get_type (void)
 {
-  static volatile gsize g_type = 0;
+  static gsize g_type = 0;
 
   static const GEnumValue rotation_values[] = {
     {GST_VAAPI_ROTATION_0,
@@ -137,7 +137,7 @@ gst_vaapi_rotation_get_type (void)
 GType
 gst_vaapi_rate_control_get_type (void)
 {
-  static volatile gsize g_type = 0;
+  static gsize g_type = 0;
 
   static const GEnumValue rate_control_values[] = {
     {GST_VAAPI_RATECONTROL_NONE,

@@ -120,7 +120,7 @@ struct _GstVaapiMiniObject
 {
   /*< private >*/
   gconstpointer object_class;
-  volatile gint ref_count;
+  gint ref_count;
   guint flags;
 };
 

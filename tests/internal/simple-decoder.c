@@ -85,7 +85,7 @@ typedef struct
   GstVaapiDisplay *display;
   GstVaapiDecoder *decoder;
   GThread *decoder_thread;
-  volatile gboolean decoder_thread_cancel;
+  gboolean decoder_thread_cancel;
   GAsyncQueue *decoder_queue;
   GstVaapiCodec codec;
   guint fps_n;
@@ -97,7 +97,7 @@ typedef struct
   guint window_width;
   guint window_height;
   GThread *render_thread;
-  volatile gboolean render_thread_cancel;
+  gboolean render_thread_cancel;
   GCond render_ready;
   RenderFrame *last_frame;
   GError *error;
@@ -241,7 +241,7 @@ decoder_thread (gpointer data)
 
   pts = g_get_monotonic_time ();
   ofs = 0;
-  while (!app->decoder_thread_cancel) {
+  while (!g_atomic_int_get (&app->decoder_thread_cancel)) {
     if (G_UNLIKELY (ofs == app->file_size))
       buffer = NULL;
     else {
@@ -376,7 +376,7 @@ stop_decoder (App * app)
 {
   g_timer_stop (app->timer);
 
-  app->decoder_thread_cancel = TRUE;
+  g_atomic_int_set (&app->decoder_thread_cancel, TRUE);
   g_thread_join (app->decoder_thread);
   g_print ("Decoder thread stopped\n");
   return TRUE;
@@ -462,7 +462,7 @@ renderer_thread (gpointer data)
 
   g_print ("Render thread started\n");
 
-  while (!app->render_thread_cancel) {
+  while (!g_atomic_int_get (&app->render_thread_cancel)) {
     rfp = g_async_queue_timeout_pop (app->decoder_queue, 1000000);
     if (rfp && !renderer_process (app, rfp))
       break;
@@ -497,7 +497,7 @@ start_renderer (App * app)
 static gboolean
 stop_renderer (App * app)
 {
-  app->render_thread_cancel = TRUE;
+  g_atomic_int_set (&app->render_thread_cancel, TRUE);
   g_thread_join (app->render_thread);
 
   g_print ("Render thread stopped\n");
