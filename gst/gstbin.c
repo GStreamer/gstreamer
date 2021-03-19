@@ -326,8 +326,7 @@ _gst_boolean_accumulator (GSignalInvocationHint * ihint,
   gboolean myboolean;
 
   myboolean = g_value_get_boolean (handler_return);
-  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
-    g_value_set_boolean (return_accu, myboolean);
+  g_value_set_boolean (return_accu, myboolean);
 
   GST_DEBUG ("invocation %d, %d", ihint->run_type, myboolean);
 
