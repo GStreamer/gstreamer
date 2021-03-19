@@ -188,8 +188,9 @@ void
 rtp_twcc_manager_parse_recv_ext_id (RTPTWCCManager * twcc,
     const GstStructure * s)
 {
-  twcc->recv_ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
-  if (twcc->recv_ext_id > 0) {
+  guint8 recv_ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
+  if (recv_ext_id > 0) {
+    twcc->recv_ext_id = recv_ext_id;
     GST_INFO ("TWCC enabled for recv using extension id: %u",
         twcc->recv_ext_id);
   }
@@ -199,8 +200,9 @@ void
 rtp_twcc_manager_parse_send_ext_id (RTPTWCCManager * twcc,
     const GstStructure * s)
 {
-  twcc->send_ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
-  if (twcc->send_ext_id > 0) {
+  guint8 send_ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
+  if (send_ext_id > 0) {
+    twcc->send_ext_id = send_ext_id;
     GST_INFO ("TWCC enabled for send using extension id: %u",
         twcc->send_ext_id);
   }
