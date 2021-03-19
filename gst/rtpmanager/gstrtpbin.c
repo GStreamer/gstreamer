@@ -2010,8 +2010,7 @@ _gst_element_accumulator (GSignalInvocationHint * ihint,
   element = g_value_get_object (handler_return);
   GST_DEBUG ("got element %" GST_PTR_FORMAT, element);
 
-  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
-    g_value_set_object (return_accu, element);
+  g_value_set_object (return_accu, element);
 
   /* stop emission if we have an element */
   return (element == NULL);
@@ -2026,8 +2025,7 @@ _gst_caps_accumulator (GSignalInvocationHint * ihint,
   caps = g_value_get_boxed (handler_return);
   GST_DEBUG ("got caps %" GST_PTR_FORMAT, caps);
 
-  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
-    g_value_set_boxed (return_accu, caps);
+  g_value_set_boxed (return_accu, caps);
 
   /* stop emission if we have a caps */
   return (caps == NULL);
