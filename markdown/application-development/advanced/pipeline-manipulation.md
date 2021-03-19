@@ -274,7 +274,7 @@ Here is the code:
 #include <gst/gst.h>
 
 static GMainLoop *loop;
-static volatile gint counter;
+static gint counter;
 static GstBus *bus;
 static gboolean prerolled = FALSE;
 static GstPad *sinkpad;

@@ -287,7 +287,7 @@ function is implemented in the `my-example-meta.c` file:
 GType
 my_example_meta_api_get_type (void)
 {
-  static volatile GType type;
+  static GType type;
   static const gchar *tags[] = { "foo", "bar", NULL };
 
   if (g_once_init_enter (&type)) {
