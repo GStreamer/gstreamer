@@ -360,8 +360,7 @@ _gst_int_accumulator (GSignalInvocationHint * ihint,
 {
   gint res = g_value_get_int (handler_return);
 
-  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
-    g_value_set_int (return_accu, res);
+  g_value_set_int (return_accu, res);
 
   if (res == -1)
     return TRUE;
