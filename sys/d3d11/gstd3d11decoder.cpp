@@ -129,8 +129,6 @@ struct _GstD3D11Decoder
   gboolean configured;
   gboolean opened;
 
-  gboolean reverse_playback;
-
   GstD3D11Device *device;
 
   ID3D11VideoDevice *video_device;
@@ -1048,20 +1046,10 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
 {
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
-  gboolean reverse_playback = FALSE;
-  gboolean rate_changed = FALSE;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
 
-  if (videodec->input_segment.rate < 0)
-    reverse_playback = TRUE;
-
-  if (reverse_playback != decoder->reverse_playback) {
-    GST_DEBUG_OBJECT (videodec, "Rate was changed, need re-negotiation");
-    rate_changed = TRUE;
-  }
-
-  if (!decoder->internal_pool || rate_changed) {
+  if (!decoder->internal_pool) {
     gboolean reconfigured;
 
     /* Replicate gst_video_decoder_allocate_output_buffer().
@@ -1075,7 +1063,7 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
         "Downstream was reconfigured, negotiating again");
     GST_VIDEO_DECODER_STREAM_UNLOCK (videodec);
 
-    if (reconfigured || rate_changed)
+    if (reconfigured)
       gst_video_decoder_negotiate (videodec);
 
     if (!gst_d3d11_decoder_prepare_output_view_pool (decoder)) {
@@ -1484,22 +1472,6 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
     size = (guint) vinfo.size;
   }
 
-  if (videodec->input_segment.rate >= 0) {
-    decoder->reverse_playback = FALSE;
-
-    /* Don't allow too large pool size */
-    if (use_d3d11_pool) {
-      guint prev_max = max;
-
-      max = MAX (4, max);
-      max = MAX (max, min);
-
-      GST_DEBUG_OBJECT (videodec, "Update max size %d -> %d", prev_max, max);
-    }
-  } else {
-    decoder->reverse_playback = TRUE;
-  }
-
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -1573,46 +1545,7 @@ gboolean
 gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * decoder,
     GstBuffer * view_buffer, GstMiniObject * picture)
 {
-  GstMemory *mem;
-  GstD3D11Allocator *alloc;
-  guint array_size, num_texture_in_use;
-
-  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (view_buffer), FALSE);
-  g_return_val_if_fail (picture != NULL, FALSE);
-
-  if (!decoder->can_direct_rendering || !decoder->downstream_supports_d3d11)
-    return FALSE;
-
-  /* XXX: Not a thread-safe way, but should not be a problem.
-   * This object must be protected by videodecoder stream lock
-   * and codec base classes are working on upstream streaming thread
-   * (i.g., single threaded) */
-
-  /* Baseclass is not holding this picture. So we can wait for this memory
-   * to be consumed by downstream as it will be relased once it's processed
-   * by downstream */
-  if (GST_MINI_OBJECT_REFCOUNT (picture) == 1)
-    return TRUE;
-
-  mem = gst_buffer_peek_memory (view_buffer, 0);
-  alloc = GST_D3D11_ALLOCATOR_CAST (mem->allocator);
-
-  /* something went wrong */
-  if (!gst_d3d11_allocator_get_texture_array_size (alloc, &array_size,
-          &num_texture_in_use)) {
-    GST_ERROR_OBJECT (decoder, "Couldn't query size of texture array");
-    return FALSE;
-  }
-
-  GST_TRACE_OBJECT (decoder, "textures-in-use/array-size: %d/%d",
-      num_texture_in_use, array_size);
-
-  /* DPB pool is full now */
-  if (num_texture_in_use >= array_size)
-    return FALSE;
-
-  return TRUE;
+  return FALSE;
 }
 
 /* Keep sync with chromium and keep in sorted order.

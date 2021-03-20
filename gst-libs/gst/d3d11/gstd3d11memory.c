@@ -1143,45 +1143,6 @@ gst_d3d11_allocator_set_flushing (GstD3D11Allocator * allocator,
 }
 
 /**
- * gst_d3d11_allocator_get_texture_array_size:
- * @allocator: a #GstD3D11Allocator
- * @array_size: (out) (optional): the size of texture array
- * @num_texture_in_use: (out) (optional): the number of textures in use
- *
- * Returns: %TRUE if the size of texture array is known
- *
- * Since: 1.20
- */
-gboolean
-gst_d3d11_allocator_get_texture_array_size (GstD3D11Allocator * allocator,
-    guint * array_size, guint * num_texture_in_use)
-{
-  GstD3D11AllocatorPrivate *priv;
-
-  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), FALSE);
-
-  priv = allocator->priv;
-
-  /* For non-array-texture memory, the size is 1 */
-  if (array_size)
-    *array_size = priv->array_texture_size;
-  if (num_texture_in_use)
-    *num_texture_in_use = 1;
-
-  /* size == 1 means we are not texture pool allocator */
-  if (priv->array_texture_size == 1)
-    return TRUE;
-
-  if (num_texture_in_use) {
-    GST_D3D11_ALLOCATOR_LOCK (allocator);
-    *num_texture_in_use = priv->num_array_textures_in_use;
-    GST_D3D11_ALLOCATOR_UNLOCK (allocator);
-  }
-
-  return TRUE;
-}
-
-/**
  * gst_is_d3d11_memory:
  * @mem: a #GstMemory
  *
