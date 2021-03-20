@@ -26,8 +26,9 @@
  * controlled by the position property and an optional blended border
  * can be added by the border property.
  *
- * Transition bitmaps can be downloaded from the
- * [Cinelerra transition](http://cinelerra.org/transitions.php) page.
+ * Transition bitmaps can be downloaded from the Cinelerra pages
+ * [here](http://cinelerra-cv.wikidot.com/main:transitions-themes) or
+ * [here](https://cinelerra-gg.org/download/CinelerraGG_Manual/Shape_Wipe.html).
  *
  * ## Example launch line
  * |[
