@@ -1663,7 +1663,9 @@ create_shader_output_resource (GstD3D11BaseConvert * self,
     }
   }
 
+  gst_d3d11_device_lock (device);
   clear_rtv_color_all (self, info, context_handle, view);
+  gst_d3d11_device_unlock (device);
 
   self->num_output_view = i;
 
@@ -1785,6 +1787,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     gboolean hardware = FALSE;
     GstD3D11VideoProcessor *processor = NULL;
 
+    gst_d3d11_device_lock (filter->device);
     g_object_get (filter->device, "hardware", &hardware, NULL);
     if (hardware) {
       processor = gst_d3d11_video_processor_new (filter->device,
@@ -1828,6 +1831,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     }
 
     self->processor = processor;
+    gst_d3d11_device_unlock (filter->device);
   }
 #endif
 
@@ -1983,7 +1987,9 @@ gst_d3d11_base_convert_transform_using_processor (GstD3D11BaseConvert * self,
       return FALSE;
     }
 
+    gst_d3d11_device_lock (bfilter->device);
     clear_rtv_color_all (self, &bfilter->out_info, context_handle, render_view);
+    gst_d3d11_device_unlock (bfilter->device);
   }
 
   return gst_d3d11_video_processor_render (self->processor,
@@ -2050,6 +2056,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
     }
 
     copy_input = TRUE;
+    gst_d3d11_device_lock (device);
     for (i = 0; i < gst_buffer_n_memory (inbuf); i++) {
       GstD3D11Memory *mem =
           (GstD3D11Memory *) gst_buffer_peek_memory (inbuf, i);
@@ -2073,6 +2080,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
       context_handle->CopySubresourceRegion (self->in_texture[i], 0, 0, 0, 0,
           (ID3D11Resource *) in_map[i].data, subidx, &src_box);
     }
+    gst_d3d11_device_unlock (device);
   }
 
   /* Ensure render target views */
@@ -2097,7 +2105,9 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
    * area. Likely output texture was initialized with zeros which is fine for
    * RGB, but it's not black color in case of YUV */
   if (self->borders_w || self->borders_h) {
+    gst_d3d11_device_lock (device);
     clear_rtv_color_all (self, &filter->out_info, context_handle, target_rtv);
+    gst_d3d11_device_unlock (device);
   }
 
   if (!gst_d3d11_converter_convert (self->converter,
@@ -2107,6 +2117,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
   }
 
   if (copy_output) {
+    gst_d3d11_device_lock (device);
     for (i = 0; i < gst_buffer_n_memory (outbuf); i++) {
       GstD3D11Memory *mem =
           (GstD3D11Memory *) gst_buffer_peek_memory (outbuf, i);
@@ -2129,6 +2140,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
       context_handle->CopySubresourceRegion ((ID3D11Resource *) out_map[i].data,
           subidx, 0, 0, 0, self->out_texture[i], 0, &src_box);
     }
+    gst_d3d11_device_unlock (device);
   }
 
   gst_d3d11_buffer_unmap (inbuf, in_map);

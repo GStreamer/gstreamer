@@ -1820,8 +1820,10 @@ gst_d3d11_desktop_dup_capture (GstD3D11DesktopDup * desktop,
     return ret;
   }
 
+  gst_d3d11_device_lock (desktop->device);
   ret = desktop->dupl_obj->Capture (draw_mouse);
   if (ret != GST_FLOW_OK) {
+    gst_d3d11_device_unlock (desktop->device);
 
     delete desktop->dupl_obj;
     desktop->dupl_obj = nullptr;
@@ -1834,6 +1836,7 @@ gst_d3d11_desktop_dup_capture (GstD3D11DesktopDup * desktop,
       GST_ERROR_OBJECT (desktop, "Unexpected failure during capture");
     }
 
+    g_rec_mutex_unlock (&desktop->lock);
     return ret;
   }
 
@@ -1845,6 +1848,7 @@ gst_d3d11_desktop_dup_capture (GstD3D11DesktopDup * desktop,
       desktop->texture, 0, nullptr);
   if (draw_mouse)
     desktop->dupl_obj->DrawMouse (rtv);
+  gst_d3d11_device_unlock (desktop->device);
   g_rec_mutex_unlock (&desktop->lock);
 
   return GST_FLOW_OK;

@@ -30,7 +30,6 @@
 
 #include <windows.h>
 #include <versionhelpers.h>
-#include <d3d10.h>
 
 /**
  * SECTION:gstd3d11device
@@ -106,11 +105,11 @@ struct _GstD3D11DevicePrivate
 
   ID3D11VideoDevice *video_device;
   ID3D11VideoContext *video_context;
-  ID3D10Multithread *multi_thread;
 
   IDXGIFactory1 *factory;
   GstD3D11Format format_table[GST_D3D11_N_FORMATS];
 
+  GRecMutex extern_lock;
   GMutex resource_lock;
 
 #if HAVE_D3D11SDKLAYERS_H
@@ -413,6 +412,7 @@ gst_d3d11_device_init (GstD3D11Device * self)
   priv = gst_d3d11_device_get_instance_private (self);
   priv->adapter = DEFAULT_ADAPTER;
 
+  g_rec_mutex_init (&priv->extern_lock);
   g_mutex_init (&priv->resource_lock);
 
   self->priv = priv;
@@ -784,20 +784,6 @@ gst_d3d11_device_constructed (GObject * object)
     goto error;
   }
 
-  hr = ID3D11Device_QueryInterface (priv->device, &IID_ID3D10Multithread,
-      (void **) &priv->multi_thread);
-  if (!gst_d3d11_result (hr, NULL)) {
-    GST_ERROR_OBJECT (self, "ID3D10Multithread interface is not available");
-    ID3D11Device_Release (priv->device);
-    priv->device = NULL;
-
-    ID3D11DeviceContext_Release (priv->device_context);
-    priv->device_context = NULL;
-    goto error;
-  }
-
-  ID3D10Multithread_SetMultithreadProtected (priv->multi_thread, TRUE);
-
   priv->factory = factory;
 
 #if HAVE_D3D11SDKLAYERS_H
@@ -913,11 +899,6 @@ gst_d3d11_device_dispose (GObject * object)
 
   GST_LOG_OBJECT (self, "dispose");
 
-  if (priv->multi_thread) {
-    ID3D10Multithread_Release (priv->multi_thread);
-    priv->multi_thread = NULL;
-  }
-
   if (priv->video_device) {
     ID3D11VideoDevice_Release (priv->video_device);
     priv->video_device = NULL;
@@ -985,6 +966,7 @@ gst_d3d11_device_finalize (GObject * object)
 
   GST_LOG_OBJECT (self, "finalize");
 
+  g_rec_mutex_clear (&priv->extern_lock);
   g_mutex_clear (&priv->resource_lock);
   g_free (priv->description);
 
@@ -1166,7 +1148,7 @@ gst_d3d11_device_lock (GstD3D11Device * device)
   priv = device->priv;
 
   GST_TRACE_OBJECT (device, "device locking");
-  ID3D10Multithread_Enter (priv->multi_thread);
+  g_rec_mutex_lock (&priv->extern_lock);
   GST_TRACE_OBJECT (device, "device locked");
 }
 
@@ -1187,8 +1169,8 @@ gst_d3d11_device_unlock (GstD3D11Device * device)
   g_return_if_fail (GST_IS_D3D11_DEVICE (device));
 
   priv = device->priv;
-  ID3D10Multithread_Leave (priv->multi_thread);
 
+  g_rec_mutex_unlock (&priv->extern_lock);
   GST_TRACE_OBJECT (device, "device unlocked");
 }
 

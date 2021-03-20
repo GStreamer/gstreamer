@@ -1136,11 +1136,13 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
       return FALSE;
     }
 
+    gst_d3d11_device_lock (device);
     hr = context_handle->Map (const_buffer.Get (),
         0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Couldn't map constant buffer, hr: 0x%x", (guint) hr);
+      gst_d3d11_device_unlock (device);
       return FALSE;
     }
 
@@ -1148,6 +1150,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
         sizeof (PixelShaderColorTransform));
 
     context_handle->Unmap (const_buffer.Get (), 0);
+    gst_d3d11_device_unlock (device);
   }
 
   input_desc[0].SemanticName = "POSITION";
@@ -1195,10 +1198,12 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
     return FALSE;
   }
 
+  gst_d3d11_device_lock (device);
   hr = context_handle->Map (vertex_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
       &map);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
+    gst_d3d11_device_unlock (device);
     return FALSE;
   }
 
@@ -1209,6 +1214,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't map index buffer, hr: 0x%x", (guint) hr);
     context_handle->Unmap (vertex_buffer.Get (), 0);
+    gst_d3d11_device_unlock (device);
     return FALSE;
   }
 
@@ -1253,6 +1259,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
 
   context_handle->Unmap (vertex_buffer.Get (), 0);
   context_handle->Unmap (index_buffer.Get (), 0);
+  gst_d3d11_device_unlock (device);
 
   self->quad[0] = gst_d3d11_quad_new (device,
       ps[0].Get (), vs.Get (), layout.Get (), sampler.Get (), NULL, NULL,

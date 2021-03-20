@@ -2187,7 +2187,6 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
     ret = GST_FLOW_ERROR;
     goto done;
   }
-  gst_d3d11_device_unlock (self->device);
 
   GST_OBJECT_LOCK (self);
 
@@ -2224,7 +2223,7 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
       }
     }
 
-    if (!gst_d3d11_converter_convert(cpad->convert, srv, rtv,
+    if (!gst_d3d11_converter_convert_unlocked (cpad->convert, srv, rtv,
             cpad->blend, cpad->blend_factor)) {
       GST_ERROR_OBJECT (self, "Couldn't convert frame");
       ret = GST_FLOW_ERROR;
@@ -2232,6 +2231,7 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
     }
   }
   GST_OBJECT_UNLOCK (self);
+  gst_d3d11_device_unlock (self->device);
 
   if (ret != GST_FLOW_OK)
     goto done;

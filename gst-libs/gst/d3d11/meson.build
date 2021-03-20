@@ -72,7 +72,7 @@ foreach d3d11_h: d3d11_headers
   endif
 endforeach
 
-have_d3d11 = d3d11_lib.found() and dxgi_lib.found() and have_d3d11_header and have_dxgi_header and cc.has_header('d3d10.h')
+have_d3d11 = d3d11_lib.found() and dxgi_lib.found() and have_d3d11_header and have_dxgi_header
 if not have_d3d11
   if d3d11_option.enabled()
     error('The d3d11 was enabled explicitly, but required dependencies were not found.')

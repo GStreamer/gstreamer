@@ -221,11 +221,13 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
     return NULL;
   }
 
+  gst_d3d11_device_lock (device);
   hr = context_handle->Map (vertex_buffer.Get (),
       0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
+    gst_d3d11_device_unlock (device);
     return NULL;
   }
 
@@ -276,6 +278,7 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   vertex_data[3].texture.y = 1.0f;
 
   context_handle->Unmap (vertex_buffer.Get (), 0);
+  gst_d3d11_device_unlock (device);
 
   overlay = g_new0 (GstD3D11CompositionOverlay, 1);
   overlay->overlay_rect = gst_video_overlay_rectangle_ref (overlay_rect);
@@ -411,11 +414,13 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self,
     return FALSE;
   }
 
+  gst_d3d11_device_lock (device);
   hr = context_handle->Map (index_buffer.Get (),
       0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't map index buffer, hr: 0x%x", (guint) hr);
+    gst_d3d11_device_unlock (device);
     return FALSE;
   }
 
@@ -431,6 +436,7 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self,
   indices[5] = 2;               /* top right */
 
   context_handle->Unmap (index_buffer.Get (), 0);
+  gst_d3d11_device_unlock (device);
 
   self->ps = ps.Detach ();
   self->vs = vs.Detach ();

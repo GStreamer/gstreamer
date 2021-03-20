@@ -553,14 +553,13 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
 
   /* redraw the last scene if cached buffer exits */
   if (window->cached_buffer) {
-    gst_d3d11_device_unlock (window->device);
     gst_d3d111_window_present (window, window->cached_buffer, NULL,
         window->pov, window->rtv);
-    gst_d3d11_device_lock (window->device);
   }
 
 done:
   GST_D3D11_CLEAR_COM (backbuffer);
+
   gst_d3d11_device_unlock (window->device);
 }
 
@@ -731,6 +730,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     swapchain_flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
   }
 
+  gst_d3d11_device_lock (window->device);
   window->dxgi_format = chosen_format->dxgi_format;
 
   klass = GST_D3D11_WINDOW_GET_CLASS (window);
@@ -943,6 +943,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   if (window->render_stats)
     gst_d3d11_window_prepare_dwrite_device (window);
 #endif
+  gst_d3d11_device_unlock (window->device);
 
   /* call resize to allocated resources */
   klass->on_resize (window, display_width, display_height);
@@ -956,6 +957,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   return TRUE;
 
 error:
+  gst_d3d11_device_unlock (window->device);
 
   return FALSE;
 }
@@ -1214,10 +1216,12 @@ gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer,
     return GST_FLOW_ERROR;
   }
 
+  gst_d3d11_device_lock (window->device);
   gst_buffer_replace (&window->cached_buffer, buffer);
 
   ret = gst_d3d111_window_present (window, window->cached_buffer, stats,
       window->pov, window->rtv);
+  gst_d3d11_device_unlock (window->device);
 
   if (stats)
     gst_structure_free (stats);
@@ -1256,8 +1260,10 @@ gst_d3d11_window_render_on_shared_handle (GstD3D11Window * window,
   data.acquire_key = acquire_key;
   data.release_key = release_key;
 
+  gst_d3d11_device_lock (window->device);
   if (!klass->open_shared_handle (window, &data)) {
     GST_ERROR_OBJECT (window, "Couldn't open shared handle");
+    gst_d3d11_device_unlock (window->device);
     return GST_FLOW_OK;
   }
 
@@ -1272,6 +1278,7 @@ gst_d3d11_window_render_on_shared_handle (GstD3D11Window * window,
   ret = gst_d3d111_window_present (window, buffer, NULL, pov, rtv);
 
   klass->release_shared_handle (window, &data);
+  gst_d3d11_device_unlock (window->device);
 
   return ret;
 }
@@ -1305,7 +1312,9 @@ gst_d3d11_window_unlock_stop (GstD3D11Window * window)
   if (klass->unlock_stop)
     ret = klass->unlock_stop (window);
 
+  gst_d3d11_device_lock (window->device);
   gst_clear_buffer (&window->cached_buffer);
+  gst_d3d11_device_unlock (window->device);
 
   return ret;
 }
