@@ -151,6 +151,9 @@ struct _GstD3D11Decoder
   guint dpb_size;
   guint downstream_min_buffers;
 
+  /* Used for array-of-texture */
+  guint8 next_view_id;
+
   /* for staging */
   ID3D11Texture2D *staging;
   gsize staging_texture_offset[GST_VIDEO_MAX_PLANES];
@@ -356,11 +359,25 @@ gst_d3d11_decoder_is_configured (GstD3D11Decoder * decoder)
   return decoder->configured;
 }
 
+static GQuark
+gst_d3d11_decoder_view_id_quark (void)
+{
+  static gsize id_quark = 0;
+
+  if (g_once_init_enter (&id_quark)) {
+    GQuark quark = g_quark_from_string ("GstD3D11DecoderViewId");
+    g_once_init_leave (&id_quark, quark);
+  }
+
+  return (GQuark) id_quark;
+}
+
 static gboolean
 gst_d3d11_decoder_ensure_output_view (GstD3D11Decoder * self,
     GstBuffer * buffer)
 {
   GstD3D11Memory *mem;
+  gpointer val = NULL;
 
   mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, 0);
   if (!gst_d3d11_memory_get_decoder_output_view (mem, self->video_device,
@@ -368,6 +385,28 @@ gst_d3d11_decoder_ensure_output_view (GstD3D11Decoder * self,
     GST_ERROR_OBJECT (self, "Decoder output view is unavailable");
     return FALSE;
   }
+
+  if (!self->use_array_of_texture)
+    return TRUE;
+
+  val = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+      gst_d3d11_decoder_view_id_quark ());
+  if (!val) {
+    g_assert (self->next_view_id < 128);
+    g_assert (self->next_view_id > 0);
+
+    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
+        gst_d3d11_decoder_view_id_quark (),
+        GUINT_TO_POINTER (self->next_view_id), NULL);
+
+    self->next_view_id++;
+    /* valid view range is [0, 126], but 0 is not used to here
+     * (it's NULL as well) */
+    self->next_view_id %= 128;
+    if (self->next_view_id == 0)
+      self->next_view_id = 1;
+  }
+
 
   return TRUE;
 }
@@ -410,8 +449,17 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
       "(dpb size: %d, downstream min buffers: %d)", pool_size, self->dpb_size,
       self->downstream_min_buffers);
 
-  if (!self->use_array_of_texture)
+  if (!self->use_array_of_texture) {
     alloc_params->desc[0].ArraySize = pool_size;
+  } else {
+    /* Valid view id is [0, 126], but we will use [1, 127] range so that
+     * it can be used by qdata, because zero is equal to null */
+    self->next_view_id = 1;
+
+    /* our pool size can be increased as much as possbile */
+    pool_size = 0;
+  }
+
   gst_video_alignment_reset (&align);
 
   align.padding_right = self->aligned_width - GST_VIDEO_INFO_WIDTH (info);
@@ -843,18 +891,12 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
   GST_DEBUG_OBJECT (self, "ConfigDecoderSpecific 0x%x",
       best_config->ConfigDecoderSpecific);
 
-  /* FIXME: Revisit this at some point.
-   * Some 4K VP9 + super frame enabled streams would be broken with
-   * this configuration (driver crash) on Intel and Nvidia
-   */
-#if 0
   /* bit 14 is equal to 1b means this config support array of texture and
    * it's recommended type as per DXVA spec */
   if ((best_config->ConfigDecoderSpecific & 0x4000) == 0x4000) {
     GST_DEBUG_OBJECT (self, "Config support array of texture");
     self->use_array_of_texture = TRUE;
   }
-#endif
 
   hr = video_device->CreateVideoDecoder (&decoder_desc,
       best_config, &self->decoder_handle);
@@ -1101,7 +1143,7 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
 
 ID3D11VideoDecoderOutputView *
 gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
-    GstBuffer * buffer)
+    GstBuffer * buffer, guint8 * index)
 {
   GstMemory *mem;
   GstD3D11Memory *dmem;
@@ -1125,20 +1167,26 @@ gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
     return NULL;
   }
 
+  if (index) {
+    if (decoder->use_array_of_texture) {
+      guint8 id;
+      gpointer val = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+          gst_d3d11_decoder_view_id_quark ());
+      if (!val) {
+        GST_ERROR_OBJECT (decoder, "memory has no qdata");
+        return NULL;
+      }
+
+      id = (guint8) GPOINTER_TO_UINT (val);
+      g_assert (id < 128);
+
+      *index = (id - 1);
+    } else {
+      *index = gst_d3d11_memory_get_subresource_index (dmem);
+    }
+  }
+
   return view;
-}
-
-guint8
-gst_d3d11_decoder_get_output_view_index (ID3D11VideoDecoderOutputView *
-    view_handle)
-{
-  D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC view_desc;
-
-  g_return_val_if_fail (view_handle != NULL, 0xff);
-
-  view_handle->GetDesc (&view_desc);
-
-  return view_desc.Texture2D.ArraySlice;
 }
 
 static gboolean
@@ -1551,7 +1599,13 @@ gboolean
 gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * decoder,
     GstBuffer * view_buffer, GstMiniObject * picture)
 {
-  return FALSE;
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+
+  if (!decoder->can_direct_rendering || !decoder->downstream_supports_d3d11 ||
+      !decoder->use_array_of_texture)
+    return FALSE;
+
+  return TRUE;
 }
 
 /* Keep sync with chromium and keep in sorted order.

@@ -451,7 +451,7 @@ error:
 
 static ID3D11VideoDecoderOutputView *
 gst_d3d11_vp8_dec_get_output_view_from_picture (GstD3D11Vp8Dec * self,
-    GstVp8Picture * picture)
+    GstVp8Picture * picture, guint8 * view_id)
 {
   GstBuffer *view_buffer;
   ID3D11VideoDecoderOutputView *view;
@@ -464,7 +464,7 @@ gst_d3d11_vp8_dec_get_output_view_from_picture (GstD3D11Vp8Dec * self,
 
   view =
       gst_d3d11_decoder_get_output_view_from_buffer (self->d3d11_decoder,
-      view_buffer);
+      view_buffer, view_id);
   if (!view) {
     GST_DEBUG_OBJECT (self, "current picture does not have output view handle");
     return NULL;
@@ -480,7 +480,7 @@ gst_d3d11_vp8_dec_start_picture (GstVp8Decoder * decoder,
   GstD3D11Vp8Dec *self = GST_D3D11_VP8_DEC (decoder);
   ID3D11VideoDecoderOutputView *view;
 
-  view = gst_d3d11_vp8_dec_get_output_view_from_picture (self, picture);
+  view = gst_d3d11_vp8_dec_get_output_view_from_picture (self, picture, NULL);
   if (!view) {
     GST_ERROR_OBJECT (self, "current picture does not have output view handle");
     return FALSE;
@@ -556,45 +556,43 @@ gst_d3d11_vp8_dec_copy_reference_frames (GstD3D11Vp8Dec * self,
 {
   GstVp8Decoder *decoder = GST_VP8_DECODER (self);
   ID3D11VideoDecoderOutputView *view;
+  guint8 view_id = 0xff;
 
   if (decoder->alt_ref_picture) {
     view = gst_d3d11_vp8_dec_get_output_view_from_picture (self,
-        decoder->alt_ref_picture);
+        decoder->alt_ref_picture, &view_id);
     if (!view) {
       GST_ERROR_OBJECT (self, "picture does not have output view handle");
       return;
     }
 
-    params->alt_fb_idx.Index7Bits =
-        gst_d3d11_decoder_get_output_view_index (view);
+    params->alt_fb_idx.Index7Bits = view_id;
   } else {
     params->alt_fb_idx.bPicEntry = 0xff;
   }
 
   if (decoder->golden_ref_picture) {
     view = gst_d3d11_vp8_dec_get_output_view_from_picture (self,
-        decoder->golden_ref_picture);
+        decoder->golden_ref_picture, &view_id);
     if (!view) {
       GST_ERROR_OBJECT (self, "picture does not have output view handle");
       return;
     }
 
-    params->gld_fb_idx.Index7Bits =
-        gst_d3d11_decoder_get_output_view_index (view);
+    params->gld_fb_idx.Index7Bits = view_id;
   } else {
     params->gld_fb_idx.bPicEntry = 0xff;
   }
 
   if (decoder->last_picture) {
     view = gst_d3d11_vp8_dec_get_output_view_from_picture (self,
-        decoder->last_picture);
+        decoder->last_picture, &view_id);
     if (!view) {
       GST_ERROR_OBJECT (self, "picture does not have output view handle");
       return;
     }
 
-    params->lst_fb_idx.Index7Bits =
-        gst_d3d11_decoder_get_output_view_index (view);
+    params->lst_fb_idx.Index7Bits = view_id;
   } else {
     params->lst_fb_idx.bPicEntry = 0xff;
   }
@@ -811,9 +809,11 @@ gst_d3d11_vp8_dec_decode_picture (GstVp8Decoder * decoder,
   GstD3D11Vp8Dec *self = GST_D3D11_VP8_DEC (decoder);
   DXVA_PicParams_VP8 pic_params = { 0, };
   ID3D11VideoDecoderOutputView *view;
+  guint8 view_id = 0xff;
   const GstVp8FrameHdr *frame_hdr = &picture->frame_hdr;
 
-  view = gst_d3d11_vp8_dec_get_output_view_from_picture (self, picture);
+  view = gst_d3d11_vp8_dec_get_output_view_from_picture (self,
+      picture, &view_id);
   if (!view) {
     GST_ERROR_OBJECT (self, "current picture does not have output view handle");
     return FALSE;
@@ -822,8 +822,7 @@ gst_d3d11_vp8_dec_decode_picture (GstVp8Decoder * decoder,
   pic_params.first_part_size = frame_hdr->first_part_size;
   pic_params.width = self->width;
   pic_params.height = self->height;
-  pic_params.CurrPic.Index7Bits =
-      gst_d3d11_decoder_get_output_view_index (view);
+  pic_params.CurrPic.Index7Bits = view_id;
   pic_params.StatusReportFeedbackNumber = 1;
 
   gst_d3d11_vp8_dec_copy_frame_params (self, picture, parser, &pic_params);

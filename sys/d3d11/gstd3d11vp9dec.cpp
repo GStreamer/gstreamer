@@ -542,7 +542,7 @@ error:
 
 static ID3D11VideoDecoderOutputView *
 gst_d3d11_vp9_dec_get_output_view_from_picture (GstD3D11Vp9Dec * self,
-    GstVp9Picture * picture)
+    GstVp9Picture * picture, guint8 * view_id)
 {
   GstBuffer *view_buffer;
   ID3D11VideoDecoderOutputView *view;
@@ -555,7 +555,7 @@ gst_d3d11_vp9_dec_get_output_view_from_picture (GstD3D11Vp9Dec * self,
 
   view =
       gst_d3d11_decoder_get_output_view_from_buffer (self->d3d11_decoder,
-      view_buffer);
+      view_buffer, view_id);
   if (!view) {
     GST_DEBUG_OBJECT (self, "current picture does not have output view handle");
     return NULL;
@@ -571,7 +571,7 @@ gst_d3d11_vp9_dec_start_picture (GstVp9Decoder * decoder,
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   ID3D11VideoDecoderOutputView *view;
 
-  view = gst_d3d11_vp9_dec_get_output_view_from_picture (self, picture);
+  view = gst_d3d11_vp9_dec_get_output_view_from_picture (self, picture, NULL);
   if (!view) {
     GST_ERROR_OBJECT (self, "current picture does not have output view handle");
     return FALSE;
@@ -669,15 +669,16 @@ gst_d3d11_vp9_dec_copy_reference_frames (GstD3D11Vp9Dec * self,
     if (dpb->pic_list[i]) {
       GstVp9Picture *other_pic = dpb->pic_list[i];
       ID3D11VideoDecoderOutputView *view;
+      guint8 view_id = 0xff;
 
-      view = gst_d3d11_vp9_dec_get_output_view_from_picture (self, other_pic);
+      view = gst_d3d11_vp9_dec_get_output_view_from_picture (self, other_pic,
+          &view_id);
       if (!view) {
         GST_ERROR_OBJECT (self, "picture does not have output view handle");
         return;
       }
 
-      params->ref_frame_map[i].Index7Bits =
-          gst_d3d11_decoder_get_output_view_index (view);
+      params->ref_frame_map[i].Index7Bits = view_id;
       params->ref_frame_coded_width[i] = picture->frame_hdr.width;
       params->ref_frame_coded_height[i] = picture->frame_hdr.height;
     } else {
@@ -1034,15 +1035,16 @@ gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   DXVA_PicParams_VP9 pic_params = { 0, };
   ID3D11VideoDecoderOutputView *view;
+  guint8 view_id = 0xff;
 
-  view = gst_d3d11_vp9_dec_get_output_view_from_picture (self, picture);
+  view = gst_d3d11_vp9_dec_get_output_view_from_picture (self, picture,
+      &view_id);
   if (!view) {
     GST_ERROR_OBJECT (self, "current picture does not have output view handle");
     return FALSE;
   }
 
-  pic_params.CurrPic.Index7Bits =
-      gst_d3d11_decoder_get_output_view_index (view);
+  pic_params.CurrPic.Index7Bits = view_id;
   pic_params.uncompressed_header_size_byte_aligned =
       picture->frame_hdr.frame_header_length_in_bytes;
   pic_params.first_partition_size = picture->frame_hdr.first_partition_size;

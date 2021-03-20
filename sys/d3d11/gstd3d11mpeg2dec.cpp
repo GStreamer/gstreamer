@@ -519,7 +519,7 @@ gst_d3d11_mpeg2_dec_get_bitstream_buffer (GstD3D11Mpeg2Dec * self)
 
 static ID3D11VideoDecoderOutputView *
 gst_d3d11_mpeg2_dec_get_output_view_from_picture (GstD3D11Mpeg2Dec * self,
-    GstMpeg2Picture * picture)
+    GstMpeg2Picture * picture, guint8 * view_id)
 {
   GstBuffer *view_buffer;
   ID3D11VideoDecoderOutputView *view;
@@ -535,7 +535,7 @@ gst_d3d11_mpeg2_dec_get_output_view_from_picture (GstD3D11Mpeg2Dec * self,
 
   view =
       gst_d3d11_decoder_get_output_view_from_buffer (self->d3d11_decoder,
-      view_buffer);
+      view_buffer, view_id);
   if (!view) {
     GST_DEBUG_OBJECT (self, "current picture does not have output view handle");
     return NULL;
@@ -577,6 +577,8 @@ gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
   ID3D11VideoDecoderOutputView *view;
   ID3D11VideoDecoderOutputView *other_view;
+  guint8 view_id = 0xff;
+  guint8 other_view_id = 0xff;
   DXVA_PictureParameters pic_params = { 0, };
   DXVA_QmatrixData iq_matrix = { 0, };
   guint d3d11_buffer_size = 0;
@@ -584,7 +586,8 @@ gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
   gboolean is_field =
       picture->structure != GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME;
 
-  view = gst_d3d11_mpeg2_dec_get_output_view_from_picture (self, picture);
+  view = gst_d3d11_mpeg2_dec_get_output_view_from_picture (self, picture,
+      &view_id);
   if (!view) {
     GST_ERROR_OBJECT (self, "current picture does not have output view handle");
     return FALSE;
@@ -597,8 +600,7 @@ gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
   }
 
   /* Fill DXVA_PictureParameters */
-  pic_params.wDecodedPictureIndex =
-      gst_d3d11_decoder_get_output_view_index (view);
+  pic_params.wDecodedPictureIndex = view_id;
   pic_params.wForwardRefPictureIndex = 0xffff;
   pic_params.wBackwardRefPictureIndex = 0xffff;
 
@@ -607,10 +609,9 @@ gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
       if (next_picture) {
         other_view =
             gst_d3d11_mpeg2_dec_get_output_view_from_picture (self,
-            next_picture);
+            next_picture, &other_view_id);
         if (other_view)
-          pic_params.wBackwardRefPictureIndex =
-              gst_d3d11_decoder_get_output_view_index (other_view);
+          pic_params.wBackwardRefPictureIndex = other_view_id;
       }
     }
       /* fall-through */
@@ -618,10 +619,9 @@ gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
       if (prev_picture) {
         other_view =
             gst_d3d11_mpeg2_dec_get_output_view_from_picture (self,
-            prev_picture);
+            prev_picture, &other_view_id);
         if (other_view)
-          pic_params.wForwardRefPictureIndex =
-              gst_d3d11_decoder_get_output_view_index (other_view);
+          pic_params.wForwardRefPictureIndex = other_view_id;
       }
     }
     default:

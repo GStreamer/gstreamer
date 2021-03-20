@@ -549,7 +549,7 @@ gst_d3d11_h264_dec_get_bitstream_buffer (GstD3D11H264Dec * self)
 
 static ID3D11VideoDecoderOutputView *
 gst_d3d11_h264_dec_get_output_view_from_picture (GstD3D11H264Dec * self,
-    GstH264Picture * picture)
+    GstH264Picture * picture, guint8 * view_id)
 {
   GstBuffer *view_buffer;
   ID3D11VideoDecoderOutputView *view;
@@ -561,7 +561,7 @@ gst_d3d11_h264_dec_get_output_view_from_picture (GstD3D11H264Dec * self,
   }
 
   view = gst_d3d11_decoder_get_output_view_from_buffer (self->d3d11_decoder,
-      view_buffer);
+      view_buffer, view_id);
   if (!view) {
     GST_DEBUG_OBJECT (self, "current picture does not have output view handle");
     return NULL;
@@ -576,6 +576,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
   ID3D11VideoDecoderOutputView *view;
+  guint8 view_id = 0xff;
   GArray *dpb_array;
   GstH264SPS *sps;
   GstH264PPS *pps;
@@ -591,7 +592,8 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
   sps = pps->sequence;
   g_assert (sps != NULL);
 
-  view = gst_d3d11_h264_dec_get_output_view_from_picture (self, picture);
+  view = gst_d3d11_h264_dec_get_output_view_from_picture (self, picture,
+      &view_id);
   if (!view) {
     GST_ERROR_OBJECT (self, "current picture does not have output view handle");
     return FALSE;
@@ -616,8 +618,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
 
   for (i = dpb_array->len - 1, j = 0; i >= 0 && j < 16; i--) {
     GstH264Picture *other = g_array_index (dpb_array, GstH264Picture *, i);
-    ID3D11VideoDecoderOutputView *other_view;
-    gint id = 0xff;
+    guint8 id = 0xff;
 
     if (!GST_H264_PICTURE_IS_REF (other))
       continue;
@@ -626,11 +627,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     if (other->second_field)
       continue;
 
-    other_view = gst_d3d11_h264_dec_get_output_view_from_picture (self, other);
-
-    if (other_view)
-      id = gst_d3d11_decoder_get_output_view_index (other_view);
-
+    gst_d3d11_h264_dec_get_output_view_from_picture (self, other, &id);
     self->ref_frame_list[j].Index7Bits = id;
 
     if (GST_H264_PICTURE_IS_LONG_TERM_REF (other)) {
@@ -681,8 +678,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
 
   gst_d3d11_h264_dec_fill_picture_params (self, &slice->header, &pic_params);
 
-  pic_params.CurrPic.Index7Bits =
-      gst_d3d11_decoder_get_output_view_index (view);
+  pic_params.CurrPic.Index7Bits = view_id;
   pic_params.RefPicFlag = GST_H264_PICTURE_IS_REF (picture);
   pic_params.frame_num = picture->frame_num;
 
