@@ -23,6 +23,9 @@ Print version and exit
 .TP 8
 .B  \-f, \-\-follow
 Don't exit after showing the initial device list, but wait for devices to be added or removed
+.TP 8
+.B  \-i, \-\-include\-hidden
+Include devices from hidden device providers.
 
 .SH "EXAMPLES"
 .l
@@ -33,6 +36,8 @@ Don't exit after showing the initial device list, but wait for devices to be add
 .B  gst\-device\-monitor\-1.0 Audio/Source
 .TP 8
 .B  gst\-device\-monitor\-1.0 Video/Source:video/x-raw
+.TP 8
+.B  gst-device-monitor-1.0 -s Audio/Sink
 
 .SH "SEE ALSO"
 .BR gst\-inspect\-1.0 (1),

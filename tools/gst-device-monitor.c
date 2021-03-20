@@ -287,6 +287,7 @@ main (int argc, char **argv)
   GError *err = NULL;
   gchar **arg, **args = NULL;
   gboolean follow = FALSE;
+  gboolean include_hidden = FALSE;
   GOptionContext *ctx;
   GOptionEntry options[] = {
     {"version", 0, 0, G_OPTION_ARG_NONE, &print_version,
@@ -294,6 +295,8 @@ main (int argc, char **argv)
     {"follow", 'f', 0, G_OPTION_ARG_NONE, &follow,
         N_("Don't exit after showing the initial device list, but wait "
               "for devices to added/removed."), NULL},
+    {"include-hidden", 'i', 0, G_OPTION_ARG_NONE, &include_hidden,
+        N_("Include devices from hidden device providers."), NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &args, NULL},
     {NULL}
   };
@@ -340,6 +343,7 @@ main (int argc, char **argv)
 
   app.loop = g_main_loop_new (NULL, FALSE);
   app.monitor = gst_device_monitor_new ();
+  gst_device_monitor_set_show_all_devices (app.monitor, include_hidden);
 
   bus = gst_device_monitor_get_bus (app.monitor);
   app.bus_watch_id = gst_bus_add_watch (bus, bus_msg_handler, &app);
