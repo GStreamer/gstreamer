@@ -127,7 +127,7 @@ if winapi_desktop
   # Since MFTEnum2 is desktop only we don't support d3d11 interop for UWP build
   # And because MFTEnum2 is Windows 10 API, we will load MFTEnum2 symbol
   # by using g_module_open() so that keep supporting old OS versions
-  if gstd3d11_dep.found() and cc.has_header('d3d11_4.h')
+  if gstd3d11_dep.found() and cc.has_header('d3d11_4.h') and cc.has_header('d3d10.h')
     have_mf_d3d11 = true
     mf_lib_deps += [gstd3d11_dep, gmodule_dep]
     extra_c_args += ['-DGST_USE_UNSTABLE_API']

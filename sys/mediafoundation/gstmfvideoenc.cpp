@@ -28,6 +28,10 @@
 #include "gstmfvideobuffer.h"
 #include <string.h>
 
+#if GST_MF_HAVE_D3D11
+#include <d3d10.h>
+#endif
+
 using namespace Microsoft::WRL;
 
 G_BEGIN_DECLS
@@ -135,6 +139,7 @@ gst_mf_video_enc_open (GstVideoEncoder * enc)
   if (device_caps->d3d11_aware) {
     HRESULT hr;
     ID3D11Device *device_handle;
+    ComPtr<ID3D10Multithread> multi_thread;
     GstD3D11Device *device;
 
     if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self),
@@ -164,6 +169,18 @@ gst_mf_video_enc_open (GstVideoEncoder * enc)
     }
 
     device_handle = gst_d3d11_device_get_device_handle (device);
+    /* Enable multi thread protection as this device will be shared with
+     * MFT */
+    hr = device_handle->QueryInterface (IID_PPV_ARGS (&multi_thread));
+    if (!gst_d3d11_result (hr, device)) {
+      GST_WARNING_OBJECT (self,
+          "device doesn't suport ID3D10Multithread interface");
+      gst_clear_object (&self->other_d3d11_device);
+      gst_clear_object (&self->d3d11_device);
+    }
+
+    multi_thread->SetMultithreadProtected (TRUE);
+
     hr = self->device_manager->ResetDevice ((IUnknown *) device_handle,
         self->reset_token);
     if (!gst_mf_result (hr)) {
