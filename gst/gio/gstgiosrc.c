@@ -485,6 +485,7 @@ gst_gio_src_query (GstBaseSrc * base_src, GstQuery * query)
             "no random access possible", scheme);
       } else {
         GST_LOG_OBJECT (src, "unhandled protocol '%s', asking parent", scheme);
+        g_free (scheme);
         goto forward_parent;
       }
       g_free (scheme);
