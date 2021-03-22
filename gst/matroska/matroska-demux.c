@@ -64,6 +64,7 @@
 #include <gst/audio/audio.h>
 #include <gst/tag/tag.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/video/gstvideocodecalphameta.h>
 #include <gst/video/video.h>
 
 #include "gstmatroskaelements.h"
@@ -4982,14 +4983,20 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
         while ((blockadd = g_queue_pop_head (&additions))) {
           if (blockadd->id == 1
-              && !strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8)) {
-            GST_TRACE_OBJECT (demux, "adding block addition %u as VP8 alpha "
-                "qdata to buffer %p, %u bytes", (guint) blockadd->id, buf,
+              && (!strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8)
+                  || !strcmp (stream->codec_id,
+                      GST_MATROSKA_CODEC_ID_VIDEO_VP9))) {
+            GstBuffer *alpha_buffer;
+
+            GST_TRACE_OBJECT (demux, "adding block addition %u as VP8/VP9 "
+                "alpha meta to buffer %p, %u bytes", (guint) blockadd->id, buf,
                 (guint) blockadd->size);
-            gst_mini_object_set_qdata (GST_MINI_OBJECT (sub),
-                matroska_block_additional_quark,
-                g_bytes_new_take (blockadd->data, blockadd->size),
-                (GDestroyNotify) g_bytes_unref);
+
+            alpha_buffer = gst_buffer_new_wrapped (blockadd->data,
+                blockadd->size);
+            gst_buffer_copy_into (alpha_buffer, sub,
+                GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+            gst_buffer_add_video_codec_alpha_meta (sub, alpha_buffer);
           } else {
             g_free (blockadd->data);
           }
