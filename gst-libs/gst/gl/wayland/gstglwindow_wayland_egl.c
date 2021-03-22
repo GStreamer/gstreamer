@@ -494,7 +494,8 @@ registry_handle_global (void *data, struct wl_registry *registry,
   GstGLWindowWaylandEGL *window_wayland = data;
 
   GST_TRACE_OBJECT (window_wayland, "registry_handle_global with registry %p, "
-      "interface %s, version %u", registry, interface, version);
+      "name %" G_GUINT32_FORMAT ", interface %s, version %u", registry, name,
+      interface, version);
 
   if (g_strcmp0 (interface, "wl_compositor") == 0) {
     window_wayland->display.compositor =
@@ -518,8 +519,20 @@ registry_handle_global (void *data, struct wl_registry *registry,
   }
 }
 
+static void
+registry_handle_global_remove (void *data, struct wl_registry *registry,
+    uint32_t name)
+{
+  GstGLWindowWaylandEGL *window_wayland = data;
+
+  /* TODO: deal with any registry objects that may be removed */
+  GST_TRACE_OBJECT (window_wayland, "wl_registry %p global_remove %"
+      G_GUINT32_FORMAT, registry, name);
+}
+
 static const struct wl_registry_listener registry_listener = {
-  registry_handle_global
+  registry_handle_global,
+  registry_handle_global_remove,
 };
 
 static gboolean
