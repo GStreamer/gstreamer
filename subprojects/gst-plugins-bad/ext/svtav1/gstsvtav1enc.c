@@ -719,6 +719,12 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->enable_qp_scaling_flag = 0;
   svt_config->use_cpu_flags = CPU_FLAGS_ALL;
   svt_config->ten_bit_format = FALSE;
+
+  // color description
+  svt_config->color_range = 0;
+  svt_config->color_primaries = 2;
+  svt_config->transfer_characteristics = 2;
+  svt_config->matrix_coefficients = 2;
 }
 
 GstFlowReturn
