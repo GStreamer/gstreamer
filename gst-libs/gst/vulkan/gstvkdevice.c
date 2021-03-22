@@ -67,7 +67,7 @@ struct _GstVulkanDevicePrivate
 static void
 _init_debug (void)
 {
-  static volatile gsize init;
+  static gsize init;
 
   if (g_once_init_enter (&init)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkandevice", 0,

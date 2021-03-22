@@ -59,7 +59,7 @@ struct _GstAvdtpSrc
 
   GstPoll *poll;
   GstPollFD pfd;
-  volatile gint unlocked;
+  gint unlocked;
 
   GstClockTime duration;
 

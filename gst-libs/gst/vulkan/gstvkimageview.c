@@ -40,7 +40,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFUALT);
 static void
 init_debug (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_VULKAN_IMAGE_VIEW, "vulkanimageview",

@@ -119,7 +119,7 @@ typedef struct {
   GValue        * input_formats;                  /* OBJECT LOCK */
 
   GstVideoCodecState *input_state;
-  volatile gint       reconfig;                   /* ATOMIC */
+  gint                reconfig;                   /* ATOMIC */
   GstNvEncMemType     mem_type;
 
   /* array of allocated input/output buffers (GstNvEncFrameState),

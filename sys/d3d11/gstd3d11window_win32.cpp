@@ -81,7 +81,7 @@ struct _GstD3D11WindowWin32
   gboolean have_swapchain1;
 
   /* atomic */
-  volatile gint pending_fullscreen_count;
+  gint pending_fullscreen_count;
 
   /* fullscreen related */
   RECT restore_rect;

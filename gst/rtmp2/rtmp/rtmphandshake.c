@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtmp_handshake_debug_category);
 static void
 init_debug (void)
 {
-  static volatile gsize done = 0;
+  static gsize done = 0;
   if (g_once_init_enter (&done)) {
     GST_DEBUG_CATEGORY_INIT (gst_rtmp_handshake_debug_category, "rtmphandshake",
         0, "debug category for the rtmp connection handshake");

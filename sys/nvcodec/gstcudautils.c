@@ -36,7 +36,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 static void
 _init_debug (void)
 {
-  static volatile gsize once_init = 0;
+  static gsize once_init = 0;
 
   if (g_once_init_enter (&once_init)) {
 
@@ -354,7 +354,7 @@ static GQuark gst_cuda_quark_table[GST_CUDA_QUARK_MAX];
 static void
 init_cuda_quark_once (void)
 {
-  static volatile gsize once_init = 0;
+  static gsize once_init = 0;
 
   if (g_once_init_enter (&once_init)) {
     gint i;

@@ -2318,7 +2318,7 @@ G_STMT_START {                                                          \
 void
 gst_ipc_pipeline_comm_plugin_init (void)
 {
-  static volatile gsize once = 0;
+  static gsize once = 0;
 
   if (g_once_init_enter (&once)) {
     GST_DEBUG_CATEGORY_INIT (gst_ipc_pipeline_comm_debug, "ipcpipelinecomm", 0,

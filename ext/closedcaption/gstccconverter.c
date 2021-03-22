@@ -85,7 +85,7 @@ gst_cc_converter_cdp_mode_get_type (void)
         "Store CC service information in CDP packets", "cc-svc-info"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;

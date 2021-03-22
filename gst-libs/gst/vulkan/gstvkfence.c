@@ -42,7 +42,7 @@ GST_DEBUG_CATEGORY (gst_debug_vulkan_fence);
 static void
 _init_debug (void)
 {
-  static volatile gsize init;
+  static gsize init;
 
   if (g_once_init_enter (&init)) {
     GST_DEBUG_CATEGORY_INIT (gst_debug_vulkan_fence,

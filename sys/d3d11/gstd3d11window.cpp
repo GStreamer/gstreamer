@@ -97,7 +97,7 @@ static guint d3d11_window_signals[SIGNAL_LAST] = { 0, };
 GType
 gst_d3d11_window_fullscreen_toggle_mode_type (void)
 {
-  static volatile gsize mode_type = 0;
+  static gsize mode_type = 0;
 
   if (g_once_init_enter (&mode_type)) {
     static const GFlagsValue mode_types[] = {

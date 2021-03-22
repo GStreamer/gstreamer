@@ -126,7 +126,7 @@ typedef enum
 static GType
 gst_d3d11_deinterlace_method_type (void)
 {
-  static volatile gsize method_type = 0;
+  static gsize method_type = 0;
 
   if (g_once_init_enter (&method_type)) {
     static const GFlagsValue method_types[] = {

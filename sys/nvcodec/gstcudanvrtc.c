@@ -29,7 +29,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_cuda_nvrtc_debug);
 static void
 _init_debug (void)
 {
-  static volatile gsize once_init = 0;
+  static gsize once_init = 0;
 
   if (g_once_init_enter (&once_init)) {
 

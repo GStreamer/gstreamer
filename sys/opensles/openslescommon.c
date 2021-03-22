@@ -42,7 +42,7 @@ gst_opensles_recording_preset_get_type (void)
         "voice-communication"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
@@ -100,7 +100,7 @@ gst_opensles_stream_type_get_type (void)
         "GST_OPENSLES_STREAM_TYPE_NONE", "none"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;

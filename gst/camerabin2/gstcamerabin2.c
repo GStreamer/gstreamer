@@ -263,7 +263,7 @@ gst_cam_flags_get_type (void)
           "elements", "no-image-conversion"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;

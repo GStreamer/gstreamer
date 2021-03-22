@@ -309,7 +309,7 @@ gst_vulkan_memory_allocator_init (GstVulkanMemoryAllocator * allocator)
 void
 gst_vulkan_memory_init_once (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_VULKAN_MEMORY, "vulkanmemory", 0,

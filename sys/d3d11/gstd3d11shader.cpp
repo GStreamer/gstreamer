@@ -43,7 +43,7 @@ static pD3DCompile GstD3DCompileFunc = NULL;
 gboolean
 gst_d3d11_shader_init (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
 #if GST_D3D11_WINAPI_ONLY_APP

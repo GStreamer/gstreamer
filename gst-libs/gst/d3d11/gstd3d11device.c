@@ -150,7 +150,7 @@ static void gst_d3d11_device_finalize (GObject * object);
 static gboolean
 gst_d3d11_device_enable_d3d11_debug (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   /* If all below libraries are unavailable, d3d11 device would fail with
    * D3D11_CREATE_DEVICE_DEBUG flag */
@@ -245,7 +245,7 @@ gst_d3d11_device_d3d11_debug (GstD3D11Device * device,
 static gboolean
 gst_d3d11_device_enable_dxgi_debug (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
   gboolean ret = FALSE;
 
   /* If all below libraries are unavailable, d3d11 device would fail with

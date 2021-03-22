@@ -339,7 +339,7 @@ gst_nonstream_audio_decoder_subsong_mode_get_type (void)
 GType
 gst_nonstream_audio_decoder_get_type (void)
 {
-  static volatile gsize nonstream_audio_decoder_type = 0;
+  static gsize nonstream_audio_decoder_type = 0;
 
   if (g_once_init_enter (&nonstream_audio_decoder_type)) {
     GType type_;

@@ -114,7 +114,7 @@ static GstVideoEncoderClass *parent_class = NULL;
 GType
 gst_amc_video_enc_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;

@@ -56,7 +56,7 @@ static GstElementClass *parent_class;
 GType
 gst_segment_clip_get_type (void)
 {
-  static volatile gsize segment_clip_type = 0;
+  static gsize segment_clip_type = 0;
 
   if (g_once_init_enter (&segment_clip_type)) {
     GType _type;

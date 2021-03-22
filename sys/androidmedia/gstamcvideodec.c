@@ -263,7 +263,7 @@ static GstVideoDecoderClass *parent_class = NULL;
 GType
 gst_amc_video_dec_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;

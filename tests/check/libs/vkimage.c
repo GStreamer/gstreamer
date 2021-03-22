@@ -149,7 +149,7 @@ struct view_stress
   GMutex lock;
   GCond cond;
   gboolean ready;
-  volatile int n_ops;
+  int n_ops;
   GQueue *memories;
   GstHarnessThread *threads[N_THREADS];
 };
@@ -189,7 +189,7 @@ GST_START_TEST (test_image_view_stress)
   g_mutex_init (&stress.lock);
   g_cond_init (&stress.cond);
   stress.ready = FALSE;
-  stress.n_ops = 0;
+  g_atomic_int_set (&stress.n_ops, 0);
   stress.memories = g_queue_new ();
 
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 16, 16);

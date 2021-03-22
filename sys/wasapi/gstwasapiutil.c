@@ -144,7 +144,7 @@ gst_wasapi_device_role_get_type (void)
     {GST_WASAPI_DEVICE_ROLE_COMMS, "Voice communications", "comms"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;

@@ -100,7 +100,7 @@ private:
                              DWORD length);
 
 private:
-  volatile ULONG ref_count_;
+  ULONG ref_count_;
   DWORD current_len_;
   DWORD contiguous_len_;
   BYTE *data_;

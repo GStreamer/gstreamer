@@ -44,7 +44,7 @@ static void on_publish_or_play_status (const gchar * command_name,
 static void
 init_debug (void)
 {
-  static volatile gsize done = 0;
+  static gsize done = 0;
   if (g_once_init_enter (&done)) {
     GST_DEBUG_CATEGORY_INIT (gst_rtmp_client_debug_category,
         "rtmpclient", 0, "debug category for the rtmp client");
@@ -66,7 +66,7 @@ static const gchar *scheme_strings[] = {
 GType
 gst_rtmp_scheme_get_type (void)
 {
-  static volatile gsize scheme_type = 0;
+  static gsize scheme_type = 0;
   static const GEnumValue scheme[] = {
     {GST_RTMP_SCHEME_RTMP, "GST_RTMP_SCHEME_RTMP", "rtmp"},
     {GST_RTMP_SCHEME_RTMPS, "GST_RTMP_SCHEME_RTMPS", "rtmps"},
@@ -142,7 +142,7 @@ gst_rtmp_scheme_get_default_port (GstRtmpScheme scheme)
 GType
 gst_rtmp_authmod_get_type (void)
 {
-  static volatile gsize authmod_type = 0;
+  static gsize authmod_type = 0;
   static const GEnumValue authmod[] = {
     {GST_RTMP_AUTHMOD_NONE, "GST_RTMP_AUTHMOD_NONE", "none"},
     {GST_RTMP_AUTHMOD_AUTO, "GST_RTMP_AUTHMOD_AUTO", "auto"},
@@ -169,7 +169,7 @@ gst_rtmp_authmod_get_nick (GstRtmpAuthmod value)
 GType
 gst_rtmp_stop_commands_get_type (void)
 {
-  static volatile gsize stop_commands_type = 0;
+  static gsize stop_commands_type = 0;
   static const GFlagsValue stop_commands[] = {
     {GST_RTMP_STOP_COMMANDS_NONE, "No command", "none"},
     {GST_RTMP_STOP_COMMANDS_FCUNPUBLISH, "FCUnpublish", "fcunpublish"},

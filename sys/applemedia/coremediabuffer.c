@@ -93,7 +93,7 @@ gst_core_media_meta_transform (GstBuffer * transbuf, GstCoreMediaMeta * meta,
 GType
 gst_core_media_meta_api_get_type (void)
 {
-  static volatile GType type;
+  static GType type;
   static const gchar *tags[] = { "memory", NULL };
 
   if (g_once_init_enter (&type)) {

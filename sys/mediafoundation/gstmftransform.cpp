@@ -54,7 +54,7 @@ gboolean
 gst_mf_transform_load_library (void)
 {
 #if GST_MF_HAVE_D3D11
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
   if (g_once_init_enter (&_init)) {
     mf_plat_module = g_module_open ("mfplat.dll", G_MODULE_BIND_LAZY);
 
@@ -247,7 +247,7 @@ private:
   }
 
 private:
-  volatile ULONG ref_count_;
+  ULONG ref_count_;
   ComPtr<IMFMediaEventGenerator> gen_;
   GstMFTransformAsyncCallbackOnEvent event_cb_;
   GWeakRef client_;
