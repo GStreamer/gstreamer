@@ -141,7 +141,7 @@ gst_io_surface_gl_memory_allocator_init (GstIOSurfaceGLMemoryAllocator *
 void
 gst_ios_surface_gl_memory_init (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_IO_SURFACE_GL_MEMORY, "iosurfacegl", 0,

@@ -44,7 +44,7 @@ gst_openjpeg_enc_progression_order_get_type (void)
     {OPJ_CPRL, "CPRL", "crpl"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;

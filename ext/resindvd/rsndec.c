@@ -346,7 +346,7 @@ rsn_dec_change_state (GstElement * element, GstStateChange transition)
 GType
 rsn_dec_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;

@@ -151,7 +151,7 @@ static void gst_wildmidi_dec_update_options (GstWildmidiDec * wildmidi_dec);
 
 static GMutex load_mutex;
 static unsigned long init_refcount = 0;
-static volatile gint wildmidi_initialized = 0;
+static gint wildmidi_initialized = 0;
 
 
 static gchar *

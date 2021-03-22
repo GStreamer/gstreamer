@@ -705,7 +705,7 @@ gst_vulkan_image_memory_allocator_init (GstVulkanImageMemoryAllocator *
 void
 gst_vulkan_image_memory_init_once (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_VULKAN_IMAGE_MEMORY, "vulkanimagememory",

@@ -31,7 +31,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtmp_chunk_stream_debug_category);
 static void
 init_debug (void)
 {
-  static volatile gsize done = 0;
+  static gsize done = 0;
   if (g_once_init_enter (&done)) {
     GST_DEBUG_CATEGORY_INIT (gst_rtmp_chunk_stream_debug_category,
         "rtmpchunkstream", 0, "debug category for rtmp chunk streams");

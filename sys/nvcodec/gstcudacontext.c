@@ -121,7 +121,7 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
 static void
 gst_cuda_context_constructed (GObject * object)
 {
-  static volatile gsize once = 0;
+  static gsize once = 0;
   GstCudaContext *context = GST_CUDA_CONTEXT (object);
   GstCudaContextPrivate *priv = context->priv;
   CUcontext cuda_ctx, old_ctx;

@@ -37,7 +37,7 @@ GType
 gst_sctp_receive_meta_api_get_type (void)
 {
   static const gchar *tags[] = { NULL };
-  static volatile GType type;
+  static GType type;
   if (g_once_init_enter (&type)) {
     GType _type = gst_meta_api_type_register ("GstSctpReceiveMetaAPI", tags);
     g_once_init_leave (&type, _type);

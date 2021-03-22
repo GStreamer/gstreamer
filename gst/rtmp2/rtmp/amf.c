@@ -38,7 +38,7 @@ static GBytes *empty_bytes;
 static void
 init_static (void)
 {
-  static volatile gsize done = 0;
+  static gsize done = 0;
   if (g_once_init_enter (&done)) {
     empty_bytes = g_bytes_new_static ("", 0);
     GST_DEBUG_CATEGORY_INIT (gst_rtmp_amf_debug_category, "rtmpamf", 0,

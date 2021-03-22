@@ -43,7 +43,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_video_processor_debug);
 GQuark
 gst_d3d11_video_processor_input_view_quark (void)
 {
-  static volatile gsize quark = 0;
+  static gsize quark = 0;
 
   if (g_once_init_enter (&quark)) {
     GQuark q = g_quark_from_static_string ("GstD3D11VideoProcessorInputView");
@@ -56,7 +56,7 @@ gst_d3d11_video_processor_input_view_quark (void)
 GQuark
 gst_d3d11_video_processor_output_view_quark (void)
 {
-  static volatile gsize quark = 0;
+  static gsize quark = 0;
 
   if (g_once_init_enter (&quark)) {
     GQuark q = g_quark_from_static_string ("GstD3D11VideoProcessorOutputView");

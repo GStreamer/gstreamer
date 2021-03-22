@@ -277,7 +277,7 @@ struct _GstWasapi2Client
 GType
 gst_wasapi2_client_device_class_get_type (void)
 {
-  static volatile GType class_type = 0;
+  static GType class_type = 0;
   static const GEnumValue types[] = {
     {GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE, "Capture", "capture"},
     {GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER, "Render", "render"},

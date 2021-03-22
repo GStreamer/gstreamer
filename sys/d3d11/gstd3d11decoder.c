@@ -109,7 +109,7 @@ struct _GstD3D11DecoderPrivate
 static GQuark
 _decoder_output_view_get (void)
 {
-  static volatile gsize g_quark = 0;
+  static gsize g_quark = 0;
 
   if (g_once_init_enter (&g_quark)) {
     gsize quark =

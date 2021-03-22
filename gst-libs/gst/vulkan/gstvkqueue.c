@@ -40,7 +40,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 static void
 _init_debug (void)
 {
-  static volatile gsize init;
+  static gsize init;
 
   if (g_once_init_enter (&init)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkanqueue", 0, "Vulkan Queue");

@@ -56,7 +56,7 @@ gst_sctp_association_state_get_type (void)
     {GST_SCTP_ASSOCIATION_STATE_ERROR, "state-error", "state-error"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;

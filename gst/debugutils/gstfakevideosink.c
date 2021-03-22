@@ -54,7 +54,7 @@ gst_fake_video_sink_allocation_meta_flags_get_type (void)
         "overlay-composition"},
     {0, NULL, NULL}
   };
-  static volatile GType id = 0;
+  static GType id = 0;
 
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;

@@ -138,7 +138,7 @@ gst_vulkan_window_default_close (GstVulkanWindow * window)
 static void
 _init_debug (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkanwindow", 0,

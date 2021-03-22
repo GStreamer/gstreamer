@@ -146,7 +146,7 @@ gst_rtmp_user_control_type_get_nick (GstRtmpUserControlType type)
 GType
 gst_rtmp_meta_api_get_type (void)
 {
-  static volatile GType type = 0;
+  static GType type = 0;
   static const gchar *tags[] = {
     NULL
   };

@@ -166,7 +166,7 @@ static pD3DCompile GstD3DCompileFunc = NULL;
 gboolean
 gst_dxgicap_shader_init (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
   static const gchar *d3d_compiler_names[] = {
     "d3dcompiler_47.dll",
     "d3dcompiler_46.dll",

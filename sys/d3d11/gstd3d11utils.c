@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_utils_debug);
 static void
 _init_context_debug (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");

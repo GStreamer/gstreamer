@@ -56,14 +56,14 @@ struct _GstVaBufferSurface
 {
   GstVideoInfo info;
   VASurfaceID surface;
-  volatile gint ref_count;
+  gint ref_count;
 };
 
 static void
 _init_debug_category (void)
 {
 #ifndef GST_DISABLE_GST_DEBUG
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_va_memory_debug, "vamemory", 0, "VA memory");
@@ -573,7 +573,7 @@ struct _GstVaMemory
   gpointer mapped_data;
 
   GstMapFlags prev_mapflags;
-  volatile gint map_count;
+  gint map_count;
 
   gboolean is_derived;
   gboolean is_dirty;

@@ -211,7 +211,7 @@ struct _GstAdaptiveDemuxPrivate
 
 typedef struct _GstAdaptiveDemuxTimer
 {
-  volatile gint ref_count;
+  gint ref_count;
   GCond *cond;
   GMutex *mutex;
   GstClockID clock_id;
@@ -312,7 +312,7 @@ gst_adaptive_demux_requires_periodical_playlist_update_default (GstAdaptiveDemux
 GType
 gst_adaptive_demux_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
 
   if (g_once_init_enter (&type)) {
     GType _type;
@@ -4577,7 +4577,7 @@ gst_adaptive_demux_timer_new (GCond * cond, GMutex * mutex)
   timer->fired = FALSE;
   timer->cond = cond;
   timer->mutex = mutex;
-  timer->ref_count = 1;
+  g_atomic_int_set (&timer->ref_count, 1);
   return timer;
 }
 

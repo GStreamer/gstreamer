@@ -6581,7 +6581,7 @@ mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
 GType
 mxf_descriptive_metadata_framework_get_type (void)
 {
-  static volatile gsize type = 0;
+  static gsize type = 0;
   if (g_once_init_enter (&type)) {
     GType _type = 0;
     static const GTypeInfo info = {

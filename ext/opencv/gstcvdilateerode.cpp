@@ -87,7 +87,7 @@ static void gst_cv_dilate_erode_get_property (GObject * object, guint prop_id,
 GType
 gst_cv_dilate_erode_get_type (void)
 {
-  static volatile gsize opencv_dilate_erode_type = 0;
+  static gsize opencv_dilate_erode_type = 0;
 
   if (g_once_init_enter (&opencv_dilate_erode_type)) {
     GType _type;

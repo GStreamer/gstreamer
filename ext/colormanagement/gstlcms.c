@@ -67,7 +67,7 @@ enum
 GType
 gst_lcms_intent_get_type (void)
 {
-  static volatile gsize intent_type = 0;
+  static gsize intent_type = 0;
   static const GEnumValue intent[] = {
     {GST_LCMS_INTENT_PERCEPTUAL, "Perceptual",
         "perceptual"},
@@ -90,7 +90,7 @@ gst_lcms_intent_get_type (void)
 static GType
 gst_lcms_lookup_method_get_type (void)
 {
-  static volatile gsize lookup_method_type = 0;
+  static gsize lookup_method_type = 0;
   static const GEnumValue lookup_method[] = {
     {GST_LCMS_LOOKUP_METHOD_UNCACHED,
           "Uncached, calculate every pixel on the fly (very slow playback)",
