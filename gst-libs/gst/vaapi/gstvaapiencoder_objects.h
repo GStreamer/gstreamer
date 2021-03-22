@@ -266,6 +266,7 @@ struct _GstVaapiEncPicture
   guint frame_num;
   guint poc;
   guint temporal_id;
+  gboolean has_roi;
 };
 
 G_GNUC_INTERNAL

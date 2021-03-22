@@ -193,6 +193,8 @@ gst_vaapi_encoder_ensure_param_roi_regions (GstVaapiEncoder * encoder,
         g_quark_to_string (roi->roi_type), roi->id, roi->x, roi->y, roi->w,
         roi->h);
 
+    picture->has_roi = TRUE;
+
     region_roi[i].roi_rectangle.x = roi->x;
     region_roi[i].roi_rectangle.y = roi->y;
     region_roi[i].roi_rectangle.width = roi->w;
@@ -214,7 +216,9 @@ gst_vaapi_encoder_ensure_param_roi_regions (GstVaapiEncoder * encoder,
     }
   }
 
-  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  if (picture->has_roi)
+    gst_vaapi_enc_picture_add_misc_param (picture, misc);
+
   gst_vaapi_codec_object_replace (&misc, NULL);
 #endif
   return TRUE;

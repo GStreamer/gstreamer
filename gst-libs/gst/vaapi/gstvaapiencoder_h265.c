@@ -2033,6 +2033,7 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   /* it seems driver requires enablement of cu_qp_delta_enabled_flag
    * to modifiy QP values in CBR mode or low power encoding */
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) != GST_VAAPI_RATECONTROL_CQP
+      || picture->has_roi
       || encoder->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP)
     pic_param->pic_fields.bits.cu_qp_delta_enabled_flag = 1;
 
