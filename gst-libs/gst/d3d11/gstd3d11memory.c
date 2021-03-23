@@ -1956,3 +1956,38 @@ gst_d3d11_pool_allocator_acquire_memory (GstD3D11PoolAllocator * allocator,
 
   return result;
 }
+
+/**
+ * gst_d3d11_pool_allocator_get_pool_size:
+ * @allocator: a #GstD3D11PoolAllocator
+ * @max_size: (out) (optional): the max size of pool
+ * @outstanding_size: (out) (optional): the number of outstanding memory
+ *
+ * Returns: %TRUE if the size of memory pool is known
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_d3d11_pool_allocator_get_pool_size (GstD3D11PoolAllocator * allocator,
+    guint * max_size, guint * outstanding_size)
+{
+  GstD3D11PoolAllocatorPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_D3D11_POOL_ALLOCATOR (allocator), FALSE);
+
+  priv = allocator->priv;
+
+  if (max_size) {
+    if (priv->desc.ArraySize > 1) {
+      *max_size = priv->desc.ArraySize;
+    } else {
+      /* For non-texture-array memory, we don't have any limit yet */
+      *max_size = 0;
+    }
+  }
+
+  if (outstanding_size)
+    *outstanding_size = g_atomic_int_get (&priv->outstanding);
+
+  return TRUE;
+}

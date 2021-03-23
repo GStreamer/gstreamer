@@ -150,6 +150,7 @@ struct _GstD3D11Decoder
   gboolean use_array_of_texture;
   guint dpb_size;
   guint downstream_min_buffers;
+  gboolean wait_on_pool_full;
 
   /* Used for array-of-texture */
   guint8 next_view_id;
@@ -921,6 +922,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
    * Actual buffer pool size will be "dpb_size + downstream_min_buffers"
    */
   self->downstream_min_buffers = 0;
+  self->wait_on_pool_full = FALSE;
 
   self->opened = TRUE;
   gst_d3d11_device_unlock (self->device);
@@ -1511,9 +1513,18 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
   /* create our own pool */
-  if (pool && (use_d3d11_pool && !GST_D3D11_BUFFER_POOL (pool))) {
-    gst_object_unref (pool);
-    pool = NULL;
+  if (pool && use_d3d11_pool) {
+    if (!GST_D3D11_BUFFER_POOL (pool)) {
+      GST_DEBUG_OBJECT (videodec,
+          "Downstream pool is not d3d11, will create new one");
+      gst_clear_object (&pool);
+    } else {
+      GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
+      if (dpool->device != decoder->device) {
+        GST_DEBUG_OBJECT (videodec, "Different device, will create new one");
+        gst_clear_object (&pool);
+      }
+    }
   }
 
   if (!pool) {
@@ -1522,7 +1533,6 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
     else
       pool = gst_video_buffer_pool_new ();
 
-    min = max = 0;
     size = (guint) vinfo.size;
   }
 
@@ -1563,8 +1573,35 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
 
     /* Store min buffer size. We need to take account of the amount of buffers
      * which might be held by downstream in case of zero-copy playback */
-    /* XXX: hardcoded bound 16, to avoid too large pool size */
-    decoder->downstream_min_buffers = MIN (min, 16);
+    if (!decoder->internal_pool) {
+      if (n > 0) {
+        GST_DEBUG_OBJECT (videodec, "Downstream proposed pool");
+        decoder->wait_on_pool_full = TRUE;
+        /* XXX: hardcoded bound 16, to avoid too large pool size */
+        decoder->downstream_min_buffers = MIN (min, 16);
+      } else {
+        GST_DEBUG_OBJECT (videodec, "Downstream didn't propose pool");
+        decoder->wait_on_pool_full = FALSE;
+        /* don't know how many buffers would be queued by downstream */
+        decoder->downstream_min_buffers = 4;
+      }
+    } else {
+      /* We configured our DPB pool already, let's check if our margin can
+       * cover min size */
+      decoder->wait_on_pool_full = FALSE;
+
+      if (n > 0) {
+        if (decoder->downstream_min_buffers >= min)
+          decoder->wait_on_pool_full = TRUE;
+
+        GST_DEBUG_OBJECT (videodec,
+            "Pre-allocated margin %d can%s cover downstream min size %d",
+            decoder->downstream_min_buffers,
+            decoder->wait_on_pool_full ? "" : "not", min);
+      } else {
+        GST_DEBUG_OBJECT (videodec, "Downstream min size is unknown");
+      }
+    }
 
     GST_DEBUG_OBJECT (videodec, "Downstream min buffres: %d", min);
   }
@@ -1599,11 +1636,49 @@ gboolean
 gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * decoder,
     GstBuffer * view_buffer, GstMiniObject * picture)
 {
-  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+  GstMemory *mem;
+  GstD3D11PoolAllocator *alloc;
+  guint max_size = 0, outstanding_size = 0;
 
-  if (!decoder->can_direct_rendering || !decoder->downstream_supports_d3d11 ||
-      !decoder->use_array_of_texture)
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (view_buffer), FALSE);
+
+  if (!decoder->can_direct_rendering || !decoder->downstream_supports_d3d11)
     return FALSE;
+
+  /* we can do direct render in this case, since there is no DPB pool size
+   * limit */
+  if (decoder->use_array_of_texture)
+    return TRUE;
+
+  /* Let's believe downstream info */
+  if (decoder->wait_on_pool_full)
+    return TRUE;
+
+  /* Check if we are about to full */
+  mem = gst_buffer_peek_memory (view_buffer, 0);
+
+  /* something went wrong */
+  if (!gst_is_d3d11_memory (mem)) {
+    GST_ERROR_OBJECT (decoder, "Not a D3D11 memory");
+    return FALSE;
+  }
+
+  alloc = GST_D3D11_POOL_ALLOCATOR (mem->allocator);
+  if (!gst_d3d11_pool_allocator_get_pool_size (alloc, &max_size,
+          &outstanding_size)) {
+    GST_ERROR_OBJECT (decoder, "Couldn't query pool size");
+    return FALSE;
+  }
+
+  /* 2 buffer margin */
+  if (max_size <= outstanding_size + 1) {
+    GST_DEBUG_OBJECT (decoder, "memory pool is about to full (%u/%u)",
+        outstanding_size, max_size);
+    return FALSE;
+  }
+
+  GST_LOG_OBJECT (decoder, "Can do direct rendering");
 
   return TRUE;
 }

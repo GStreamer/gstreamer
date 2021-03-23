@@ -267,6 +267,11 @@ GST_D3D11_API
 GstFlowReturn           gst_d3d11_pool_allocator_acquire_memory (GstD3D11PoolAllocator * allocator,
                                                                  GstMemory ** memory);
 
+GST_D3D11_API
+gboolean                gst_d3d11_pool_allocator_get_pool_size (GstD3D11PoolAllocator * allocator,
+                                                                guint * max_size,
+                                                                guint * outstanding_size);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_MEMORY_H__ */
