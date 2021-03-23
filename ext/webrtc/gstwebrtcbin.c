@@ -6268,6 +6268,7 @@ gst_webrtc_bin_release_pad (GstElement * element, GstPad * pad)
   if (webrtc_pad->trans)
     gst_object_unref (webrtc_pad->trans);
   webrtc_pad->trans = NULL;
+  gst_caps_replace (&webrtc_pad->received_caps, NULL);
   PC_UNLOCK (webrtc);
 
   _remove_pad (webrtc, webrtc_pad);
