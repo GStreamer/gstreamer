@@ -3391,9 +3391,9 @@ get_v4l2_field_for_info (GstVideoInfo * info)
 
 static gboolean
 gst_v4l2_video_colorimetry_matches (const GstVideoColorimetry * cinfo,
-    const gchar * color)
+    GstCaps * caps)
 {
-  GstVideoColorimetry ci;
+  GstVideoInfo info;
   static const GstVideoColorimetry ci_likely_jpeg = {
     GST_VIDEO_COLOR_RANGE_0_255, GST_VIDEO_COLOR_MATRIX_BT601,
     GST_VIDEO_TRANSFER_UNKNOWN, GST_VIDEO_COLOR_PRIMARIES_UNKNOWN
@@ -3403,14 +3403,14 @@ gst_v4l2_video_colorimetry_matches (const GstVideoColorimetry * cinfo,
     GST_VIDEO_TRANSFER_SRGB, GST_VIDEO_COLOR_PRIMARIES_BT709
   };
 
-  if (!gst_video_colorimetry_from_string (&ci, color))
+  if (!gst_video_info_from_caps (&info, caps))
     return FALSE;
 
-  if (gst_video_colorimetry_is_equal (&ci, cinfo))
+  if (gst_video_colorimetry_is_equal (&info.colorimetry, cinfo))
     return TRUE;
 
   /* Allow 1:4:0:0 (produced by jpegdec) if the device expects 1:4:7:1 */
-  if (gst_video_colorimetry_is_equal (&ci, &ci_likely_jpeg)
+  if (gst_video_colorimetry_is_equal (&info.colorimetry, &ci_likely_jpeg)
       && gst_video_colorimetry_is_equal (cinfo, &ci_jpeg))
     return TRUE;
 
@@ -3804,8 +3804,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
   if (gst_v4l2_object_get_colorspace (v4l2object, &format, &info.colorimetry)) {
     if (gst_structure_has_field (s, "colorimetry")) {
-      if (!gst_v4l2_video_colorimetry_matches (&info.colorimetry,
-              gst_structure_get_string (s, "colorimetry")))
+      if (!gst_v4l2_video_colorimetry_matches (&info.colorimetry, caps))
         goto invalid_colorimetry;
     }
   } else {
