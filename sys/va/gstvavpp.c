@@ -543,7 +543,7 @@ gst_va_vpp_propose_allocation (GstBaseTransform * trans,
         return FALSE;
     }
 
-    pool = _create_sinkpad_bufferpool (caps, size, 0, 0, usage_hint, allocator,
+    pool = _create_sinkpad_bufferpool (caps, size, 1, 0, usage_hint, allocator,
         &params);
     if (!pool) {
       gst_object_unref (allocator);
@@ -555,7 +555,7 @@ gst_va_vpp_propose_allocation (GstBaseTransform * trans,
     else
       gst_query_add_allocation_param (query, allocator, &params);
 
-    gst_query_add_allocation_pool (query, pool, size, 0, 0);
+    gst_query_add_allocation_pool (query, pool, size, 1, 0);
 
     GST_DEBUG_OBJECT (self,
         "proposing %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
@@ -649,7 +649,8 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     gst_video_info_init (&vinfo);
     gst_video_info_from_caps (&vinfo, outcaps);
     size = GST_VIDEO_INFO_SIZE (&vinfo);
-    min = max = 0;
+    min = 1;
+    max = 0;
     update_pool = FALSE;
   }
 
@@ -1112,7 +1113,7 @@ _get_sinkpad_pool (GstVaVpp * self)
 
   allocator = _create_allocator (self, self->incaps, usage_hint);
 
-  self->sinkpad_pool = _create_sinkpad_bufferpool (self->incaps, size, 0, 0,
+  self->sinkpad_pool = _create_sinkpad_bufferpool (self->incaps, size, 1, 0,
       usage_hint, allocator, &params);
 
   if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
