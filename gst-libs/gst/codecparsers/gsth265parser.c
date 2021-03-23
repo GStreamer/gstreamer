@@ -1531,6 +1531,14 @@ gst_h265_parser_identify_nalu_hevc (GstH265Parser * parser,
 
   memset (nalu, 0, sizeof (*nalu));
 
+  /* Would overflow guint below otherwise: the callers needs to ensure that
+   * this never happens */
+  if (offset > G_MAXUINT32 - nal_length_size) {
+    GST_WARNING ("offset + nal_length_size overflow");
+    nalu->size = 0;
+    return GST_H265_PARSER_BROKEN_DATA;
+  }
+
   if (size < offset + nal_length_size) {
     GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT
         ", offset %u", size, offset);
@@ -1545,7 +1553,13 @@ gst_h265_parser_identify_nalu_hevc (GstH265Parser * parser,
   nalu->sc_offset = offset;
   nalu->offset = offset + nal_length_size;
 
-  if (size < nalu->size + nal_length_size) {
+  if (nalu->size > G_MAXUINT32 - nal_length_size) {
+    GST_WARNING ("NALU size + nal_length_size overflow");
+    nalu->size = 0;
+    return GST_H265_PARSER_BROKEN_DATA;
+  }
+
+  if (size < (gsize) nalu->size + nal_length_size) {
     nalu->size = 0;
 
     return GST_H265_PARSER_NO_NAL_END;

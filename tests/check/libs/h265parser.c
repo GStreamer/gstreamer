@@ -255,6 +255,65 @@ GST_START_TEST (test_h265_parse_slice_6bytes)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h265_parse_identify_nalu_hevc)
+{
+  GstH265ParserResult res;
+  GstH265NalUnit nalu;
+  GstH265Parser *parser = gst_h265_parser_new ();
+  /* Skip 4 bytes for the start code */
+  const gsize nal_size = sizeof (slice_eos_slice_eob) - 4;
+  const gsize buf_size = 4 + nal_size;
+  guint8 *buf = g_new (guint8, buf_size);
+
+  memcpy (buf + 4, slice_eos_slice_eob + 4, nal_size);
+
+  GST_WRITE_UINT16_BE (buf + 2, nal_size);
+  res = gst_h265_parser_identify_nalu_hevc (parser, buf, 2, buf_size, 2, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_SLICE_IDR_W_RADL);
+  assert_equals_int (nalu.offset, 4);
+  assert_equals_int (nalu.size, nal_size);
+
+  GST_WRITE_UINT32_BE (buf, nal_size);
+  res = gst_h265_parser_identify_nalu_hevc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_SLICE_IDR_W_RADL);
+  assert_equals_int (nalu.offset, 4);
+  assert_equals_int (nalu.size, nal_size);
+
+  GST_WRITE_UINT32_BE (buf, G_MAXUINT32);
+  res = gst_h265_parser_identify_nalu_hevc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_BROKEN_DATA);
+
+  GST_WRITE_UINT32_BE (buf, G_MAXUINT32 - 2);
+  res = gst_h265_parser_identify_nalu_hevc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_BROKEN_DATA);
+
+  GST_WRITE_UINT32_BE (buf, G_MAXUINT32 - 3);
+  res = gst_h265_parser_identify_nalu_hevc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_BROKEN_DATA);
+
+  GST_WRITE_UINT32_BE (buf, G_MAXUINT32 - 4);
+  res = gst_h265_parser_identify_nalu_hevc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_NO_NAL_END);
+
+  GST_WRITE_UINT32_BE (buf, G_MAXUINT32 - 6);
+  res = gst_h265_parser_identify_nalu_hevc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_NO_NAL_END);
+
+  g_free (buf);
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_h265_base_profiles)
 {
   GstH265ProfileTierLevel ptl;
@@ -1101,6 +1160,7 @@ h265parser_suite (void)
   tcase_add_test (tc_chain, test_h265_parse_slice_eos_slice_eob);
   tcase_add_test (tc_chain, test_h265_parse_pic_timing);
   tcase_add_test (tc_chain, test_h265_parse_slice_6bytes);
+  tcase_add_test (tc_chain, test_h265_parse_identify_nalu_hevc);
   tcase_add_test (tc_chain, test_h265_base_profiles);
   tcase_add_test (tc_chain, test_h265_base_profiles_compat);
   tcase_add_test (tc_chain, test_h265_format_range_profiles_exact_match);

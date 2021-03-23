@@ -229,6 +229,65 @@ GST_START_TEST (test_h264_parse_slice_5bytes)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h264_parse_identify_nalu_avc)
+{
+  GstH264ParserResult res;
+  GstH264NalUnit nalu;
+  GstH264NalParser *const parser = gst_h264_nal_parser_new ();
+  /* Skip 3 bytes for the start code */
+  const gsize nal_size = sizeof (slice_dpa) - 3;
+  const gsize buf_size = 4 + nal_size;
+  guint8 *buf = g_new (guint8, buf_size);
+
+  memcpy (buf + 4, slice_dpa + 3, nal_size);
+
+  GST_WRITE_UINT16_BE (buf + 2, nal_size);
+  res = gst_h264_parser_identify_nalu_avc (parser, buf, 2, buf_size, 2, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H264_NAL_SLICE_DPA);
+  assert_equals_int (nalu.offset, 4);
+  assert_equals_int (nalu.size, nal_size);
+
+  GST_WRITE_UINT32_BE (buf, nal_size);
+  res = gst_h264_parser_identify_nalu_avc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H264_NAL_SLICE_DPA);
+  assert_equals_int (nalu.offset, 4);
+  assert_equals_int (nalu.size, nal_size);
+
+  GST_WRITE_UINT32_BE (buf, G_MAXUINT32);
+  res = gst_h264_parser_identify_nalu_avc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_BROKEN_DATA);
+
+  GST_WRITE_UINT32_BE (buf, G_MAXUINT32 - 2);
+  res = gst_h264_parser_identify_nalu_avc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_BROKEN_DATA);
+
+  GST_WRITE_UINT32_BE (buf, G_MAXUINT32 - 3);
+  res = gst_h264_parser_identify_nalu_avc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_BROKEN_DATA);
+
+  GST_WRITE_UINT32_BE (buf, G_MAXUINT32 - 4);
+  res = gst_h264_parser_identify_nalu_avc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_NO_NAL_END);
+
+  GST_WRITE_UINT32_BE (buf, G_MAXUINT32 - 6);
+  res = gst_h264_parser_identify_nalu_avc (parser, buf, 0, buf_size, 4, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_NO_NAL_END);
+
+  g_free (buf);
+  gst_h264_nal_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static guint8 nalu_sps_with_vui[] = {
   0x00, 0x00, 0x00, 0x01, 0x67, 0x64, 0x00, 0x28,
   0xac, 0xd9, 0x40, 0x78, 0x04, 0x4f, 0xde, 0x03,
@@ -666,6 +725,7 @@ h264parser_suite (void)
   tcase_add_test (tc_chain, test_h264_parse_slice_dpa);
   tcase_add_test (tc_chain, test_h264_parse_slice_eoseq_slice);
   tcase_add_test (tc_chain, test_h264_parse_slice_5bytes);
+  tcase_add_test (tc_chain, test_h264_parse_identify_nalu_avc);
   tcase_add_test (tc_chain, test_h264_parse_invalid_sei);
   tcase_add_test (tc_chain, test_h264_create_sei);
 
