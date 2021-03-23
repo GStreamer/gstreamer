@@ -42,8 +42,6 @@ struct _GstWebRTCBinPad
 {
   GstGhostPad           parent;
 
-  guint                 mlineindex;
-
   GstWebRTCRTPTransceiver *trans;
   gulong                block_id;
 

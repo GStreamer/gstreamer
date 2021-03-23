@@ -636,21 +636,21 @@ _remove_pad (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
 typedef struct
 {
   GstPadDirection direction;
-  guint mlineindex;
+  guint mline;
 } MLineMatch;
 
 static gboolean
 pad_match_for_mline (GstWebRTCBinPad * pad, const MLineMatch * match)
 {
   return GST_PAD_DIRECTION (pad) == match->direction
-      && pad->mlineindex == match->mlineindex;
+      && pad->trans->mline == match->mline;
 }
 
 static GstWebRTCBinPad *
 _find_pad_for_mline (GstWebRTCBin * webrtc, GstPadDirection direction,
-    guint mlineindex)
+    guint mline)
 {
-  MLineMatch m = { direction, mlineindex };
+  MLineMatch m = { direction, mline };
 
   return _find_pad (webrtc, &m, (FindPadFunc) pad_match_for_mline);
 }
@@ -2991,6 +2991,9 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
     }
   }
 
+  webrtc->priv->max_sink_pad_serial = MAX (webrtc->priv->max_sink_pad_serial,
+      media_idx);
+
   g_assert (media_idx == gst_sdp_message_medias_len (ret));
 
   if (bundled_mids) {
@@ -3722,17 +3725,25 @@ gst_webrtc_bin_create_answer (GstWebRTCBin * webrtc,
 
 static GstWebRTCBinPad *
 _create_pad_for_sdp_media (GstWebRTCBin * webrtc, GstPadDirection direction,
-    guint media_idx)
+    GstWebRTCRTPTransceiver * trans, guint serial)
 {
   GstWebRTCBinPad *pad;
   gchar *pad_name;
 
+  if (direction == GST_PAD_SINK) {
+    if (serial == G_MAXUINT)
+      serial = webrtc->priv->max_sink_pad_serial++;
+  } else {
+    serial = trans->mline;
+  }
+
   pad_name =
       g_strdup_printf ("%s_%u", direction == GST_PAD_SRC ? "src" : "sink",
-      media_idx);
+      serial);
   pad = gst_webrtc_bin_pad_new (pad_name, direction);
   g_free (pad_name);
-  pad->mlineindex = media_idx;
+
+  pad->trans = gst_object_ref (trans);
 
   return pad;
 }
@@ -3804,9 +3815,9 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
 
   g_return_val_if_fail (pad->trans != NULL, NULL);
 
-  GST_INFO_OBJECT (pad, "linking input stream %u", pad->mlineindex);
-
   trans = WEBRTC_TRANSCEIVER (pad->trans);
+
+  GST_INFO_OBJECT (pad, "linking input stream %u", pad->trans->mline);
 
   g_assert (trans->stream);
 
@@ -3816,20 +3827,20 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
         "send_rtp_sink_%u");
     g_assert (rtp_templ);
 
-    pad_name = g_strdup_printf ("send_rtp_sink_%u", pad->mlineindex);
+    pad_name = g_strdup_printf ("send_rtp_sink_%u", pad->trans->mline);
     rtp_sink =
         gst_element_request_pad (webrtc->rtpbin, rtp_templ, pad_name, NULL);
     g_free (pad_name);
     gst_ghost_pad_set_target (GST_GHOST_PAD (pad), rtp_sink);
     gst_object_unref (rtp_sink);
 
-    pad_name = g_strdup_printf ("send_rtp_src_%u", pad->mlineindex);
+    pad_name = g_strdup_printf ("send_rtp_src_%u", pad->trans->mline);
     if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
             GST_ELEMENT (trans->stream->send_bin), "rtp_sink"))
       g_warn_if_reached ();
     g_free (pad_name);
   } else {
-    gchar *pad_name = g_strdup_printf ("sink_%u", pad->mlineindex);
+    gchar *pad_name = g_strdup_printf ("sink_%u", pad->trans->mline);
     GstPad *funnel_sinkpad =
         gst_element_get_request_pad (webrtc->rtpfunnel, pad_name);
 
@@ -4249,18 +4260,16 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY ||
         new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV) {
       GstWebRTCBinPad *pad =
-          _find_pad_for_mline (webrtc, GST_PAD_SINK, media_idx);
+          _find_pad_for_transceiver (webrtc, GST_PAD_SINK, rtp_trans);
       if (pad) {
         GST_DEBUG_OBJECT (webrtc, "found existing send pad %" GST_PTR_FORMAT
             " for transceiver %" GST_PTR_FORMAT, pad, trans);
-        g_assert (pad->trans == rtp_trans);
-        g_assert (pad->mlineindex == media_idx);
         gst_object_unref (pad);
       } else {
         GST_DEBUG_OBJECT (webrtc,
             "creating new send pad for transceiver %" GST_PTR_FORMAT, trans);
-        pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, media_idx);
-        pad->trans = gst_object_ref (rtp_trans);
+        pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, rtp_trans,
+            G_MAXUINT);
         _connect_input_stream (webrtc, pad);
         _add_pad (webrtc, pad);
       }
@@ -4268,18 +4277,16 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY ||
         new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV) {
       GstWebRTCBinPad *pad =
-          _find_pad_for_mline (webrtc, GST_PAD_SRC, media_idx);
+          _find_pad_for_transceiver (webrtc, GST_PAD_SRC, rtp_trans);
       if (pad) {
         GST_DEBUG_OBJECT (webrtc, "found existing receive pad %" GST_PTR_FORMAT
             " for transceiver %" GST_PTR_FORMAT, pad, trans);
-        g_assert (pad->trans == rtp_trans);
-        g_assert (pad->mlineindex == media_idx);
         gst_object_unref (pad);
       } else {
         GST_DEBUG_OBJECT (webrtc,
             "creating new receive pad for transceiver %" GST_PTR_FORMAT, trans);
-        pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SRC, media_idx);
-        pad->trans = gst_object_ref (rtp_trans);
+        pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SRC, rtp_trans,
+            G_MAXUINT);
 
         if (!trans->stream) {
           TransportStream *item;
@@ -4892,13 +4899,13 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
         continue;
       }
 
-      if (pad->mlineindex >= gst_sdp_message_medias_len (sd->sdp->sdp)) {
+      if (pad->trans->mline >= gst_sdp_message_medias_len (sd->sdp->sdp)) {
         GST_DEBUG_OBJECT (pad, "not mentioned in this description. Skipping");
         tmp = tmp->next;
         continue;
       }
 
-      media = gst_sdp_message_get_media (sd->sdp->sdp, pad->mlineindex);
+      media = gst_sdp_message_get_media (sd->sdp->sdp, pad->trans->mline);
       /* skip rejected media */
       if (gst_sdp_media_get_port (media) == 0) {
         /* FIXME: arrange for an appropriate flow return */
@@ -6193,6 +6200,7 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
   if (templ->direction == GST_PAD_SINK ||
       g_strcmp0 (templ->name_template, "sink_%u") == 0) {
     GstWebRTCRTPTransceiver *trans;
+    GstWebRTCBinPad *pad2;
 
     GST_OBJECT_LOCK (webrtc);
     if (name == NULL || strlen (name) < 6 || !g_str_has_prefix (name, "sink_")) {
@@ -6206,19 +6214,27 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     }
     GST_OBJECT_UNLOCK (webrtc);
 
-    pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, serial);
     trans = _find_transceiver_for_mline (webrtc, serial);
+
+    /* Ignore transceivers that already have a pad allocated */
+    pad2 = _find_pad_for_transceiver (webrtc, GST_PAD_SINK, trans);
+    if (pad2) {
+      serial = -1;
+      trans = NULL;
+      gst_object_unref (pad2);
+    }
+
     if (!trans) {
       trans =
           GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
-              GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV, serial));
-      GST_LOG_OBJECT (webrtc, "Created new transceiver %" GST_PTR_FORMAT
-          " for mline %u", trans, serial);
+              GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV, -1));
+      GST_LOG_OBJECT (webrtc, "Created new transceiver %" GST_PTR_FORMAT,
+          trans);
     } else {
       GST_LOG_OBJECT (webrtc, "Using existing transceiver %" GST_PTR_FORMAT
           " for mline %u", trans, serial);
     }
-    pad->trans = gst_object_ref (trans);
+    pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, trans, serial);
 
     if (caps && name && !_update_transceiver_kind_from_caps (trans, caps))
       GST_WARNING_OBJECT (webrtc,
