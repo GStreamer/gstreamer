@@ -56,6 +56,10 @@
 #include "gstd3d11pluginutils.h"
 #include <string.h>
 
+#ifdef HAVE_WINMM
+#include <timeapi.h>
+#endif
+
 GST_DEBUG_CATEGORY (d3d11_decoder_debug);
 #define GST_CAT_DEFAULT d3d11_decoder_debug
 
@@ -158,6 +162,9 @@ struct _GstD3D11Decoder
 
   /* For device specific workaround */
   gboolean can_direct_rendering;
+
+  /* For high precision clock */
+  guint timer_resolution;
 };
 
 static void gst_d3d11_decoder_constructed (GObject * object);
@@ -166,6 +173,7 @@ static void gst_d3d11_decoder_set_property (GObject * object, guint prop_id,
 static void gst_d3d11_decoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_d3d11_decoder_dispose (GObject * obj);
+static void gst_d3d11_decoder_finalize (GObject * obj);
 
 #define parent_class gst_d3d11_decoder_parent_class
 G_DEFINE_TYPE (GstD3D11Decoder, gst_d3d11_decoder, GST_TYPE_OBJECT);
@@ -179,6 +187,7 @@ gst_d3d11_decoder_class_init (GstD3D11DecoderClass * klass)
   gobject_class->set_property = gst_d3d11_decoder_set_property;
   gobject_class->get_property = gst_d3d11_decoder_get_property;
   gobject_class->dispose = gst_d3d11_decoder_dispose;
+  gobject_class->finalize = gst_d3d11_decoder_finalize;
 
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_object ("device", "Device",
@@ -302,6 +311,20 @@ gst_d3d11_decoder_dispose (GObject * obj)
   gst_clear_object (&self->device);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
+}
+
+static void
+gst_d3d11_decoder_finalize (GObject * obj)
+{
+#if HAVE_WINMM
+  GstD3D11Decoder *self = GST_D3D11_DECODER (obj);
+
+  /* Restore clock precision */
+  if (self->timer_resolution)
+    timeEndPeriod (self->timer_resolution);
+#endif
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 GstD3D11Decoder *
@@ -634,6 +657,36 @@ gst_d3d11_decoder_ensure_staging_texture (GstD3D11Decoder * self)
   return TRUE;
 }
 
+static void
+gst_d3d11_decoder_enable_high_precision_timer (GstD3D11Decoder * self)
+{
+#if HAVE_WINMM
+  GstD3D11DeviceVendor vendor;
+
+  if (self->timer_resolution)
+    return;
+
+  vendor = gst_d3d11_get_device_vendor (self->device);
+  /* Do this only for NVIDIA at the moment, other vendors doesn't seem to be
+   * requiring retry for BeginFrame() */
+  if (vendor == GST_D3D11_DEVICE_VENDOR_NVIDIA) {
+    TIMECAPS time_caps;
+    if (timeGetDevCaps (&time_caps, sizeof (TIMECAPS)) == TIMERR_NOERROR) {
+      guint resolution;
+      MMRESULT ret;
+
+      resolution = MIN (MAX (time_caps.wPeriodMin, 1), time_caps.wPeriodMax);
+
+      ret = timeBeginPeriod (resolution);
+      if (ret == TIMERR_NOERROR) {
+        self->timer_resolution = resolution;
+        GST_INFO_OBJECT (self, "Updated timer resolution to %d", resolution);
+      }
+    }
+  }
+#endif
+}
+
 static gboolean
 gst_d3d11_decoder_open (GstD3D11Decoder * self)
 {
@@ -826,6 +879,8 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
   self->opened = TRUE;
   gst_d3d11_device_unlock (self->device);
 
+  gst_d3d11_decoder_enable_high_precision_timer (self);
+
   return TRUE;
 
 error:
@@ -843,26 +898,27 @@ gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
   ID3D11VideoContext *video_context;
   guint retry_count = 0;
   HRESULT hr;
+  guint retry_threshold = 100;
+
+  /* if we have high resolution timer, do more retry */
+  if (decoder->timer_resolution)
+    retry_threshold = 500;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (output_view != NULL, FALSE);
 
   video_context = decoder->video_context;
 
+  gst_d3d11_device_lock (decoder->device);
   do {
     GST_LOG_OBJECT (decoder, "Try begin frame, retry count %d", retry_count);
-    gst_d3d11_device_lock (decoder->device);
     hr = video_context->DecoderBeginFrame (decoder->decoder_handle,
         output_view, content_key_size, content_key);
-    gst_d3d11_device_unlock (decoder->device);
 
-    /* HACK: Do 100 times retry with 1ms sleep per failure, since DXVA/D3D11
+    /* HACK: Do retry with 1ms sleep per failure, since DXVA/D3D11
      * doesn't provide API for "GPU-IS-READY-TO-DECODE" like signal.
-     * In the worst case, we will error out after 100ms.
-     * Note that Windows' clock precision is known to be incorrect,
-     * so it would be longer than 100ms in reality.
      */
-    if (hr == E_PENDING && retry_count < 100) {
+    if (hr == E_PENDING && retry_count < retry_threshold) {
       GST_LOG_OBJECT (decoder, "GPU is busy, try again. Retry count %d",
           retry_count);
       g_usleep (1000);
@@ -874,6 +930,7 @@ gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
 
     retry_count++;
   } while (TRUE);
+  gst_d3d11_device_unlock (decoder->device);
 
   if (!gst_d3d11_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Failed to begin frame, hr: 0x%x", (guint) hr);

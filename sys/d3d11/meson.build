@@ -44,6 +44,8 @@ endif
 
 d3dcompiler_lib = cc.find_library('d3dcompiler', required: d3d11_option)
 runtimeobject_lib = cc.find_library('runtimeobject', required : false)
+winmm_lib = cc.find_library('winmm', required: false)
+has_decoder = false
 
 have_d3d11 = cc.has_header('d3dcompiler.h')
 if not have_d3d11
@@ -58,6 +60,7 @@ if cc.has_header('dxva.h') and cc.has_header('d3d9.h')
   d3d11_sources += d3d11_dec_sources
   extra_c_args += ['-DHAVE_DXVA_H']
   extra_dep += [gstcodecs_dep]
+  has_decoder = true
 endif
 
 if d3d11_winapi_only_app and (not d3dcompiler_lib.found() or not runtimeobject_lib.found())
@@ -83,6 +86,11 @@ if d3d11_winapi_desktop
     extra_c_args += ['-DHAVE_DXGI_DESKTOP_DUP']
     d3d11_sources += ['gstd3d11desktopdup.cpp', 'gstd3d11desktopdupsrc.cpp']
     message('Enable D3D11 Desktop Duplication API')
+  endif
+  # multimedia clock is desktop only API
+  if has_decoder and winmm_lib.found() and cc.has_header('timeapi.h')
+    extra_cpp_args += ['-DHAVE_WINMM']
+    extra_dep += [winmm_lib]
   endif
 endif
 
