@@ -320,8 +320,11 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 
   fps_n = GST_VIDEO_INFO_FPS_N (info);
   fps_d = GST_VIDEO_INFO_FPS_D (info);
-  if (fps_n == 0 || fps_d == 0) {
-    fps_n = 0;
+  if (fps_n <= 0 || fps_d <= 0) {
+    /* XXX: not sure why. NVIDIA MFT accepts 0/1 framerate, but Intel or
+     * Microsoft's software MFT doesn't accept 0/1 framerate.
+     * Need to set something meaningful value here therefore */
+    fps_n = 25;
     fps_d = 1;
   }
 
