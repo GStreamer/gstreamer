@@ -49,6 +49,12 @@ else
   noseh_link_args = []
 endif
 
+# glib doesn't support unloading, which means that unloading and reloading
+# any library that registers static types will fail
+if cc.has_link_argument('-Wl,-z,nodelete')
+  add_project_link_arguments('-Wl,-z,nodelete', language: 'c')
+endif
+
 cdata = configuration_data()
 check_headers = [
 #  ['HAVE_DLFCN_H', 'dlfcn.h'],
