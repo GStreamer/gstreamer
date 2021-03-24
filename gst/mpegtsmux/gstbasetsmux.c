@@ -328,6 +328,7 @@ gst_base_ts_mux_reset (GstBaseTsMux * mux, gboolean alloc)
 
   if (mux->out_adapter)
     gst_adapter_clear (mux->out_adapter);
+  mux->output_ts_offset = GST_CLOCK_TIME_NONE;
 
   if (mux->tsmux) {
     if (mux->tsmux->si_sections)
@@ -1080,15 +1081,43 @@ static gboolean
 new_packet_cb (GstBuffer * buf, void *user_data, gint64 new_pcr)
 {
   GstBaseTsMux *mux = (GstBaseTsMux *) user_data;
+  GstAggregator *agg = GST_AGGREGATOR (mux);
   GstBaseTsMuxClass *klass = GST_BASE_TS_MUX_GET_CLASS (mux);
   GstMapInfo map;
+  GstSegment *agg_segment = &GST_AGGREGATOR_PAD (agg->srcpad)->segment;
 
   g_assert (klass->output_packet);
 
   gst_buffer_map (buf, &map, GST_MAP_READWRITE);
 
-  if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf)))
+  if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf))) {
+    /* tsmux isn't generating timestamps. Use the input times */
     GST_BUFFER_PTS (buf) = mux->last_ts;
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf))) {
+    if (!GST_CLOCK_TIME_IS_VALID (mux->output_ts_offset)) {
+      GstClockTime output_start_time = agg_segment->position;
+      if (agg_segment->position == -1
+          || agg_segment->position < agg_segment->start) {
+        output_start_time = agg_segment->start;
+      }
+
+      mux->output_ts_offset =
+          GST_CLOCK_DIFF (GST_BUFFER_PTS (buf), output_start_time);
+
+      GST_DEBUG_OBJECT (mux, "New output ts offset %" GST_STIME_FORMAT,
+          GST_STIME_ARGS (mux->output_ts_offset));
+    }
+
+    if (GST_CLOCK_TIME_IS_VALID (mux->output_ts_offset)) {
+      GST_BUFFER_PTS (buf) += mux->output_ts_offset;
+    }
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf))) {
+    agg_segment->position = GST_BUFFER_PTS (buf);
+  }
 
   /* do common init (flags and streamheaders) */
   new_packet_common_init (mux, buf, map.data, map.size);

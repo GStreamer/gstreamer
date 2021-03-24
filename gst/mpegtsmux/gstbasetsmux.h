@@ -197,6 +197,7 @@ struct GstBaseTsMux {
   /* output buffer aggregation */
   GstAdapter *out_adapter;
   GstBuffer *out_buffer;
+  GstClockTimeDiff output_ts_offset;
 };
 
 /**
