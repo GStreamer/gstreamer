@@ -2894,7 +2894,7 @@ GST_START_TEST (test_renego_data_channel_add_stream)
   GObject *channel;
   GstHarness *h;
 
-  /* negotiate an AV stream and then renegotiate a data channel */
+  /* negotiate an data channel and then renegotiate to add a av stream */
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
   t->on_pad_added = _pad_added_fakesink;
@@ -2915,6 +2915,75 @@ GST_START_TEST (test_renego_data_channel_add_stream)
 
   media_formats.next = &renego_fingerprint;
   count.user_data = GUINT_TO_POINTER (2);
+
+  /* renegotiate! */
+  test_webrtc_reset_negotiation (t);
+  test_validate_sdp_full (t, &offer, &answer, 0, FALSE);
+
+  g_object_unref (channel);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_renego_stream_data_channel_add_stream)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  guint media_format_count[] = { 1, 1, 1 };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, NULL);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (2),
+      &media_formats);
+  VAL_SDP_INIT (payloads, on_sdp_media_no_duplicate_payloads, NULL, &count);
+  const gchar *expected_offer_setup[] = { "actpass", "actpass", "actpass" };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup,
+      &payloads);
+  const gchar *expected_answer_setup[] = { "active", "active", "active" };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
+      &payloads);
+  const gchar *expected_offer_direction[] = { "sendrecv", NULL, "sendrecv" };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_direction[] = { "recvonly", NULL, "recvonly" };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+  VAL_SDP_INIT (renego_mid, sdp_media_equal_mid, NULL, NULL);
+  VAL_SDP_INIT (renego_ice_params, sdp_media_equal_ice_params, NULL,
+      &renego_mid);
+  VAL_SDP_INIT (renego_sess_id, sdp_equal_session_id, NULL, &renego_ice_params);
+  VAL_SDP_INIT (renego_sess_ver, sdp_increasing_session_version, NULL,
+      &renego_sess_id);
+  VAL_SDP_INIT (renego_fingerprint, sdp_media_equal_fingerprint, NULL,
+      &renego_sess_ver);
+  GObject *channel;
+  GstHarness *h;
+
+  /* Negotiate a stream and a data channel, then renogotiate with a new stream */
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
+  add_fake_audio_src_harness (h, 97);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+
+  g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
+      &channel);
+
+  test_validate_sdp_full (t, &offer, &answer, 0, FALSE);
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_2", NULL);
+  add_fake_audio_src_harness (h, 97);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  media_formats.next = &renego_fingerprint;
+  count.user_data = GUINT_TO_POINTER (3);
 
   /* renegotiate! */
   test_webrtc_reset_negotiation (t);
@@ -3349,6 +3418,7 @@ webrtcbin_suite (void)
       tcase_add_test (tc, test_bundle_audio_video_data);
       tcase_add_test (tc, test_renego_stream_add_data_channel);
       tcase_add_test (tc, test_renego_data_channel_add_stream);
+      tcase_add_test (tc, test_renego_stream_data_channel_add_stream);
     } else {
       GST_WARNING ("Some required elements were not found. "
           "All datachannel tests are disabled. sctpenc %p, sctpdec %p", sctpenc,
