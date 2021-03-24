@@ -1,0 +1,15 @@
+codecalpha_sources = [
+  'gstplugin.c',
+  'gstcodecalphademux.c',
+]
+
+gstcodecalpha = library('gstcodecalpha',
+  codecalpha_sources,
+  c_args : gst_plugins_bad_args,
+  include_directories : [configinc],
+  dependencies : [gstvideo_dep],
+  install : true,
+  install_dir : plugins_install_dir,
+)
+pkgconfig.generate(gstcodecalpha, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstcodecalpha]
