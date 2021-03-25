@@ -34,12 +34,6 @@
 #include <windows.applicationmodel.core.h>
 #endif
 
-#ifdef HAVE_DIRECT_WRITE
-#include <dwrite.h>
-#include <d2d1_1.h>
-#include <sstream>
-#endif
-
 #include <wrl.h>
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -51,21 +45,6 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
 
 G_END_DECLS
 /* *INDENT-ON* */
-
-struct _GstD3D11WindowPrivate
-{
-#ifdef HAVE_DIRECT_WRITE
-  IDWriteFactory *dwrite_factory;
-  IDWriteTextFormat *dwrite_format;
-
-  ID2D1Factory1 *d2d_factory;
-  ID2D1Device *d2d_device;
-  ID2D1DeviceContext *d2d_device_context;
-  ID2D1SolidColorBrush *d2d_brush;
-#else
-  gpointer dummy;
-#endif
-};
 
 enum
 {
@@ -118,8 +97,7 @@ gst_d3d11_window_fullscreen_toggle_mode_type (void)
 }
 
 #define gst_d3d11_window_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstD3D11Window, gst_d3d11_window,
-    GST_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GstD3D11Window, gst_d3d11_window, GST_TYPE_OBJECT);
 
 static void gst_d3d11_window_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -127,8 +105,8 @@ static void gst_d3d11_window_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_d3d11_window_dispose (GObject * object);
 static GstFlowReturn gst_d3d111_window_present (GstD3D11Window * self,
-    GstBuffer * buffer, GstStructure * stats,
-    ID3D11VideoProcessorOutputView * pov, ID3D11RenderTargetView * rtv);
+    GstBuffer * buffer, ID3D11VideoProcessorOutputView * pov,
+    ID3D11RenderTargetView * rtv);
 static void gst_d3d11_window_on_resize_default (GstD3D11Window * window,
     guint width, guint height);
 static gboolean gst_d3d11_window_prepare_default (GstD3D11Window * window,
@@ -188,15 +166,6 @@ gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
           (GParamFlags) (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
               G_PARAM_STATIC_STRINGS)));
 
-#ifdef HAVE_DIRECT_WRITE
-  g_object_class_install_property (gobject_class, PROP_RENDER_STATS,
-      g_param_spec_boolean ("render-stats",
-          "Render Stats",
-          "Render statistics data (e.g., average framerate) on window",
-          DEFAULT_RENDER_STATS,
-          (GParamFlags) (G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
-#endif
-
   d3d11_window_signals[SIGNAL_KEY_EVENT] =
       g_signal_new ("key-event", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
@@ -216,9 +185,6 @@ gst_d3d11_window_init (GstD3D11Window * self)
   self->fullscreen_toggle_mode = GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE;
   self->fullscreen = DEFAULT_FULLSCREEN;
   self->render_stats = DEFAULT_RENDER_STATS;
-
-  self->priv =
-      (GstD3D11WindowPrivate *) gst_d3d11_window_get_instance_private (self);
 }
 
 static void
@@ -256,11 +222,6 @@ gst_d3d11_window_set_property (GObject * object, guint prop_id,
     case PROP_WINDOW_HANDLE:
       self->external_handle = (guintptr) g_value_get_pointer (value);
       break;
-#ifdef HAVE_DIRECT_WRITE
-    case PROP_RENDER_STATS:
-      self->render_stats = g_value_get_boolean (value);
-      break;
-#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -292,138 +253,10 @@ gst_d3d11_window_get_property (GObject * object, guint prop_id,
   }
 }
 
-#ifdef HAVE_DIRECT_WRITE
-static void
-gst_d3d11_window_release_dwrite_resources (GstD3D11Window * self)
-{
-  GstD3D11WindowPrivate *priv = self->priv;
-
-  GST_D3D11_CLEAR_COM (priv->d2d_device_context);
-  GST_D3D11_CLEAR_COM (priv->d2d_factory);
-  GST_D3D11_CLEAR_COM (priv->d2d_device);
-  GST_D3D11_CLEAR_COM (priv->d2d_brush);
-  GST_D3D11_CLEAR_COM (priv->dwrite_factory);
-  GST_D3D11_CLEAR_COM (priv->dwrite_format);
-}
-
-static void
-gst_d3d11_window_prepare_dwrite_device (GstD3D11Window * self)
-{
-  GstD3D11WindowPrivate *priv = self->priv;
-  HRESULT hr;
-  /* *INDENT-OFF* */
-  ComPtr<IDXGIDevice> dxgi_device;
-  /* *INDENT-ON* */
-  ID3D11Device *device_handle;
-
-  if (!self->device) {
-    GST_ERROR_OBJECT (self, "D3D11Device is unavailable");
-    return;
-  }
-
-  /* Already prepared */
-  if (priv->d2d_device)
-    return;
-
-  hr = D2D1CreateFactory (D2D1_FACTORY_TYPE_MULTI_THREADED,
-      IID_PPV_ARGS (&priv->d2d_factory));
-  if (!gst_d3d11_result (hr, self->device))
-    goto error;
-
-  device_handle = gst_d3d11_device_get_device_handle (self->device);
-  hr = device_handle->QueryInterface (IID_PPV_ARGS (&dxgi_device));
-  if (!gst_d3d11_result (hr, self->device))
-    goto error;
-
-  hr = priv->d2d_factory->CreateDevice (dxgi_device.Get (), &priv->d2d_device);
-  if (!gst_d3d11_result (hr, self->device))
-    goto error;
-
-  hr = priv->d2d_device->CreateDeviceContext
-      (D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS,
-      &priv->d2d_device_context);
-  if (!gst_d3d11_result (hr, self->device))
-    goto error;
-
-  hr = priv->
-      d2d_device_context->CreateSolidColorBrush (D2D1::ColorF (D2D1::ColorF::
-          Yellow), &priv->d2d_brush);
-  if (!gst_d3d11_result (hr, self->device))
-    goto error;
-
-  hr = DWriteCreateFactory (DWRITE_FACTORY_TYPE_SHARED,
-      __uuidof (IDWriteFactory), (IUnknown **) & priv->dwrite_factory);
-  if (!gst_d3d11_result (hr, self->device))
-    goto error;
-
-  /* Configure font */
-  hr = priv->dwrite_factory->CreateTextFormat (L"Arial", NULL,
-      DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
-      DWRITE_FONT_STRETCH_NORMAL, 12.0f, L"en-US", &priv->dwrite_format);
-  if (!gst_d3d11_result (hr, self->device))
-    goto error;
-
-  GST_DEBUG_OBJECT (self, "Direct2D device is prepared");
-
-  return;
-
-error:
-  gst_d3d11_window_release_dwrite_resources (self);
-}
-
-static void
-gst_d3d11_window_dwrite_on_resize (GstD3D11Window * self,
-    ID3D11Texture2D * backbuffer)
-{
-  GstD3D11WindowPrivate *priv = self->priv;
-  /* *INDENT-OFF* */
-  ComPtr<IDXGISurface> dxgi_surface;
-  ComPtr<ID2D1Bitmap1> bitmap;
-  /* *INDENT-ON* */
-  D2D1_BITMAP_PROPERTIES1 prop;
-  HRESULT hr;
-
-  if (!priv->d2d_device)
-    return;
-
-  prop.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  prop.pixelFormat.alphaMode = D2D1_ALPHA_MODE_IGNORE;
-  /* default dpi */
-  prop.dpiX = 96.0f;
-  prop.dpiY = 96.0f;
-  prop.bitmapOptions =
-      D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW;
-  prop.colorContext = NULL;
-
-  hr = backbuffer->QueryInterface (IID_PPV_ARGS (&dxgi_surface));
-  if (!gst_d3d11_result (hr, self->device))
-    goto error;
-
-  hr = priv->d2d_device_context->
-      CreateBitmapFromDxgiSurface (dxgi_surface.Get (), &prop, &bitmap);
-  if (!gst_d3d11_result (hr, self->device))
-    goto error;
-
-  priv->d2d_device_context->SetTarget (bitmap.Get ());
-
-  GST_LOG_OBJECT (self, "New D2D bitmap has been configured");
-
-  return;
-
-error:
-  gst_d3d11_window_release_dwrite_resources (self);
-}
-
-#endif
-
 static void
 gst_d3d11_window_release_resources (GstD3D11Device * device,
     GstD3D11Window * window)
 {
-#ifdef HAVE_DIRECT_WRITE
-  gst_d3d11_window_release_dwrite_resources (window);
-#endif
-
   GST_D3D11_CLEAR_COM (window->rtv);
   GST_D3D11_CLEAR_COM (window->pov);
   GST_D3D11_CLEAR_COM (window->swap_chain);
@@ -452,9 +285,6 @@ static void
 gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
     guint height)
 {
-#ifdef HAVE_DIRECT_WRITE
-  GstD3D11WindowPrivate *priv = window->priv;
-#endif
   HRESULT hr;
   ID3D11Device *device_handle;
   D3D11_TEXTURE2D_DESC desc;
@@ -472,12 +302,6 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
 
   GST_D3D11_CLEAR_COM (window->rtv);
   GST_D3D11_CLEAR_COM (window->pov);
-
-#ifdef HAVE_DIRECT_WRITE
-  /* D2D bitmap need to be cleared before resizing swapchain buffer */
-  if (priv->d2d_device_context)
-    priv->d2d_device_context->SetTarget (NULL);
-#endif
 
   swap_chain->GetDesc (&swap_desc);
   hr = swap_chain->ResizeBuffers (0, width, height, window->dxgi_format,
@@ -544,16 +368,12 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
             &pov_desc, (ID3D11Resource *) backbuffer, &window->pov))
       goto done;
   }
-#ifdef HAVE_DIRECT_WRITE
-  if (window->render_stats)
-    gst_d3d11_window_dwrite_on_resize (window, backbuffer);
-#endif
 
   window->first_present = TRUE;
 
   /* redraw the last scene if cached buffer exits */
   if (window->cached_buffer) {
-    gst_d3d111_window_present (window, window->cached_buffer, NULL,
+    gst_d3d111_window_present (window, window->cached_buffer,
         window->pov, window->rtv);
   }
 
@@ -676,23 +496,15 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
         "Cannot determine render format");
     return FALSE;
   }
-#ifdef HAVE_DIRECT_WRITE
-  if (window->render_stats && formats[1].supported) {
-    /* FIXME: D2D seems to be accepting only DXGI_FORMAT_B8G8R8A8_UNORM */
-    chosen_format = &formats[1];
-  } else
-#else
-  {
-    for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (&window->info); i++) {
-      if (GST_VIDEO_INFO_COMP_DEPTH (&window->info, i) > 8) {
-        if (formats[2].supported) {
-          chosen_format = &formats[2];
-        }
-        break;
+
+  for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (&window->info); i++) {
+    if (GST_VIDEO_INFO_COMP_DEPTH (&window->info, i) > 8) {
+      if (formats[2].supported) {
+        chosen_format = &formats[2];
       }
+      break;
     }
   }
-#endif
 
   if (!chosen_format) {
     /* prefer native format over conversion */
@@ -939,10 +751,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
         "Cannot create overlay compositor");
     goto error;
   }
-#ifdef HAVE_DIRECT_WRITE
-  if (window->render_stats)
-    gst_d3d11_window_prepare_dwrite_device (window);
-#endif
   gst_d3d11_device_unlock (window->device);
 
   /* call resize to allocated resources */
@@ -1009,58 +817,6 @@ gst_d3d11_window_buffer_ensure_processor_input (GstD3D11Window * self,
   return TRUE;
 }
 
-#ifdef HAVE_DIRECT_WRITE
-static void
-gst_d3d11_window_present_d2d (GstD3D11Window * self, GstStructure * stats)
-{
-  GstD3D11WindowPrivate *priv = self->priv;
-  HRESULT hr;
-  gdouble framerate = 0.0;
-  guint64 dropped = 0;
-  guint64 rendered = 0;
-  std::wostringstream stats_str;
-  /* *INDENT-OFF* */
-  ComPtr<IDWriteTextLayout> layout;
-  /* *INDENT-ON* */
-  FLOAT left;
-  FLOAT top;
-
-  if (!priv->d2d_device)
-    return;
-
-  if (!stats)
-    return;
-
-  gst_structure_get_double (stats, "average-rate", &framerate);
-  gst_structure_get_uint64 (stats, "dropped", &dropped);
-  gst_structure_get_uint64 (stats, "rendered", &rendered);
-
-  stats_str.precision (5);
-  stats_str << "Average-rate: " << framerate << std::endl;
-  stats_str << "Dropped: " << dropped << std::endl;
-  stats_str << "Rendered: " << rendered << std::endl;
-
-  hr = priv->dwrite_factory->CreateTextLayout (stats_str.str ().c_str (),
-      (UINT32) stats_str.str ().size (), priv->dwrite_format,
-      self->render_rect.right - self->render_rect.left,
-      self->render_rect.bottom - self->render_rect.top, &layout);
-  if (!gst_d3d11_result (hr, self->device))
-    return;
-
-  left = self->render_rect.left + 5.0f;
-  top = self->render_rect.top + 5.0f;
-
-  priv->d2d_device_context->BeginDraw ();
-  priv->d2d_device_context->DrawTextLayout (D2D1::Point2F (left, top),
-      layout.Get (), priv->d2d_brush);
-
-  hr = priv->d2d_device_context->EndDraw ();
-  gst_d3d11_result (hr, self->device);
-
-  return;
-}
-#endif
-
 static gboolean
 gst_d3d11_window_do_processor (GstD3D11Window * self,
     ID3D11VideoProcessorInputView * piv, ID3D11VideoProcessorOutputView * pov)
@@ -1097,8 +853,7 @@ gst_d3d11_window_do_convert (GstD3D11Window * self,
 
 static GstFlowReturn
 gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
-    GstStructure * stats, ID3D11VideoProcessorOutputView * pov,
-    ID3D11RenderTargetView * rtv)
+    ID3D11VideoProcessorOutputView * pov, ID3D11RenderTargetView * rtv)
 {
   GstD3D11WindowClass *klass = GST_D3D11_WINDOW_GET_CLASS (self);
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1180,10 +935,6 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
     }
 #endif
 
-#if HAVE_DIRECT_WRITE
-    gst_d3d11_window_present_d2d (self, stats);
-#endif
-
     if (klass->present)
       ret = klass->present (self, present_flags);
 
@@ -1198,7 +949,7 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
 
 GstFlowReturn
 gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer,
-    GstVideoRectangle * rect, GstStructure * stats)
+    GstVideoRectangle * rect)
 {
   GstMemory *mem;
   GstFlowReturn ret;
@@ -1210,21 +961,15 @@ gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer,
   if (!gst_is_d3d11_memory (mem)) {
     GST_ERROR_OBJECT (window, "Invalid buffer");
 
-    if (stats)
-      gst_structure_free (stats);
-
     return GST_FLOW_ERROR;
   }
 
   gst_d3d11_device_lock (window->device);
   gst_buffer_replace (&window->cached_buffer, buffer);
 
-  ret = gst_d3d111_window_present (window, window->cached_buffer, stats,
+  ret = gst_d3d111_window_present (window, window->cached_buffer,
       window->pov, window->rtv);
   gst_d3d11_device_unlock (window->device);
-
-  if (stats)
-    gst_structure_free (stats);
 
   return ret;
 }
@@ -1275,7 +1020,7 @@ gst_d3d11_window_render_on_shared_handle (GstD3D11Window * window,
     pov = data.pov;
   }
 
-  ret = gst_d3d111_window_present (window, buffer, NULL, pov, rtv);
+  ret = gst_d3d111_window_present (window, buffer, pov, rtv);
 
   klass->release_shared_handle (window, &data);
   gst_d3d11_device_unlock (window->device);

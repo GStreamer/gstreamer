@@ -70,7 +70,6 @@ enum
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS  TRUE
 #define DEFAULT_FULLSCREEN_TOGGLE_MODE    GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE
 #define DEFAULT_FULLSCREEN                FALSE
-#define DEFAULT_RENDER_STATS              FALSE
 #define DEFAULT_DRAW_ON_SHARED_TEXTURE    FALSE
 
 enum
@@ -115,7 +114,6 @@ struct _GstD3D11VideoSink
   gboolean enable_navigation_events;
   GstD3D11WindowFullscreenToggleMode fullscreen_toggle_mode;
   gboolean fullscreen;
-  gboolean render_stats;
   gboolean draw_on_shared_texture;
 
   /* saved render rectangle until we have a window */
@@ -228,17 +226,6 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
           DEFAULT_FULLSCREEN,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-#ifdef HAVE_DIRECT_WRITE
-  g_object_class_install_property (gobject_class, PROP_RENDER_STATS,
-      g_param_spec_boolean ("render-stats",
-          "Render Stats",
-          "Render statistics data (e.g., average framerate) on window",
-          DEFAULT_RENDER_STATS,
-          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-              GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
-              G_PARAM_STATIC_STRINGS)));
-#endif
-
   /**
    * GstD3D11VideoSink:draw-on-shared-texture:
    *
@@ -350,7 +337,6 @@ gst_d3d11_video_sink_init (GstD3D11VideoSink * self)
   self->enable_navigation_events = DEFAULT_ENABLE_NAVIGATION_EVENTS;
   self->fullscreen_toggle_mode = DEFAULT_FULLSCREEN_TOGGLE_MODE;
   self->fullscreen = DEFAULT_FULLSCREEN;
-  self->render_stats = DEFAULT_RENDER_STATS;
   self->draw_on_shared_texture = DEFAULT_DRAW_ON_SHARED_TEXTURE;
 
   g_rec_mutex_init (&self->draw_lock);
@@ -394,11 +380,6 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
         g_object_set (self->window, "fullscreen", self->fullscreen, NULL);
       }
       break;
-#ifdef HAVE_DIRECT_WRITE
-    case PROP_RENDER_STATS:
-      self->render_stats = g_value_get_boolean (value);
-      break;
-#endif
     case PROP_DRAW_ON_SHARED_TEXTURE:
       self->draw_on_shared_texture = g_value_get_boolean (value);
       break;
@@ -435,11 +416,6 @@ gst_d3d11_videosink_get_property (GObject * object, guint prop_id,
         g_value_set_boolean (value, self->fullscreen);
       }
       break;
-#ifdef HAVE_DIRECT_WRITE
-    case PROP_RENDER_STATS:
-      g_value_set_boolean (value, self->render_stats);
-      break;
-#endif
     case PROP_DRAW_ON_SHARED_TEXTURE:
       g_value_set_boolean (value, self->draw_on_shared_texture);
       break;
@@ -853,9 +829,6 @@ gst_d3d11_video_sink_prepare_window (GstD3D11VideoSink * self)
       "fullscreen-toggle-mode", self->fullscreen_toggle_mode,
       "fullscreen", self->fullscreen,
       "enable-navigation-events", self->enable_navigation_events, NULL);
-#ifdef HAVE_DIRECT_WRITE
-  g_object_set (self->window, "render-stats", self->render_stats, NULL);
-#endif
   GST_OBJECT_UNLOCK (self);
 
   g_signal_connect (self->window, "key-event",
@@ -1096,7 +1069,6 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoRectangle rect = { 0, };
   GstBuffer *fallback_buf = NULL;
-  GstStructure *stats = NULL;
   ID3D11Device *device_handle =
       gst_d3d11_device_get_device_handle (self->device);
   ID3D11ShaderResourceView *view[GST_VIDEO_MAX_PLANES];
@@ -1170,11 +1142,8 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
     self->current_buffer = NULL;
     g_rec_mutex_unlock (&self->draw_lock);
   } else {
-    if (self->render_stats)
-      stats = gst_base_sink_get_stats (GST_BASE_SINK_CAST (self));
-
     ret = gst_d3d11_window_render (self->window,
-        fallback_buf ? fallback_buf : buf, &rect, stats);
+        fallback_buf ? fallback_buf : buf, &rect);
   }
 
   gst_clear_buffer (&fallback_buf);
@@ -1233,7 +1202,7 @@ gst_d3d11_video_sink_expose (GstVideoOverlay * overlay)
     rect.w = GST_VIDEO_SINK_WIDTH (self);
     rect.h = GST_VIDEO_SINK_HEIGHT (self);
 
-    gst_d3d11_window_render (self->window, NULL, &rect, NULL);
+    gst_d3d11_window_render (self->window, NULL, &rect);
   }
 }
 

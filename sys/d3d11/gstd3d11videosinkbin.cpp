@@ -276,16 +276,6 @@ gst_d3d11_video_sink_bin_class_init (GstD3D11VideoSinkBinClass * klass)
           "Ignored when \"fullscreen-toggle-mode\" does not include \"property\"",
           DEFAULT_FULLSCREEN,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-#ifdef HAVE_DIRECT_WRITE
-  g_object_class_install_property (gobject_class, PROP_RENDER_STATS,
-      g_param_spec_boolean ("render-stats",
-          "Render Stats",
-          "Render statistics data (e.g., average framerate) on window",
-          DEFAULT_RENDER_STATS,
-          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-              GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
-              G_PARAM_STATIC_STRINGS)));
-#endif
 
   /**
    * GstD3D11VideoSinkBin:draw-on-shared-texture:

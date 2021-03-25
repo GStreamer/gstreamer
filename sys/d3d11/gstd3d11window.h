@@ -42,7 +42,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstD3D11Window        GstD3D11Window;
 typedef struct _GstD3D11WindowClass   GstD3D11WindowClass;
-typedef struct _GstD3D11WindowPrivate GstD3D11WindowPrivate;
 
 #define GST_D3D11_WINDOW_FLOW_CLOSED GST_FLOW_CUSTOM_ERROR
 
@@ -124,8 +123,6 @@ struct _GstD3D11Window
   GstBuffer *cached_buffer;
   gboolean first_present;
   gboolean allow_tearing;
-
-  GstD3D11WindowPrivate *priv;
 };
 
 struct _GstD3D11WindowClass
@@ -189,8 +186,7 @@ gboolean      gst_d3d11_window_prepare              (GstD3D11Window * window,
 
 GstFlowReturn gst_d3d11_window_render               (GstD3D11Window * window,
                                                      GstBuffer * buffer,
-                                                     GstVideoRectangle * src_rect,
-                                                     GstStructure * stats);
+                                                     GstVideoRectangle * src_rect);
 
 GstFlowReturn gst_d3d11_window_render_on_shared_handle (GstD3D11Window * window,
                                                         GstBuffer * buffer,
