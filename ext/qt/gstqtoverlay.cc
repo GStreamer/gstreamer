@@ -335,6 +335,14 @@ gst_qt_overlay_gl_start (GstGLBaseFilter * bfilter)
   g_object_notify (G_OBJECT (qt_overlay), "root-item");
   g_signal_emit (qt_overlay, gst_qt_overlay_signals[SIGNAL_QML_SCENE_INITIALIZED], 0);
 
+  GST_OBJECT_LOCK (bfilter);
+  if (!qt_overlay->widget) {
+    QtGLVideoItem *qt_item = static_cast<QtGLVideoItem *>(root->findChild<QtGLVideoItem *> ());
+    if (qt_item)
+      qt_overlay->widget = qt_item->getInterface();
+  }
+  GST_OBJECT_UNLOCK (bfilter);
+
   return TRUE;
 
 fail_renderer:
