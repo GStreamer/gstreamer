@@ -1302,7 +1302,9 @@ get_merged_collection (GstDecodebin3 * dbin)
       for (i = 0; i < nb_stream; i++) {
         GstStream *stream =
             gst_stream_collection_get_stream (input->collection, i);
-        unsorted_streams = g_list_append (unsorted_streams, stream);
+        /* Only add if not already present in the list */
+        if (!g_list_find (unsorted_streams, stream))
+          unsorted_streams = g_list_append (unsorted_streams, stream);
       }
     }
   }
