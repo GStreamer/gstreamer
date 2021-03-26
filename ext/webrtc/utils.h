@@ -41,6 +41,7 @@ typedef enum
   GST_WEBRTC_BIN_ERROR_DATA_CHANNEL_FAILURE,
   GST_WEBRTC_BIN_ERROR_CLOSED,
   GST_WEBRTC_BIN_ERROR_NOT_IMPLEMENTED,
+  GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION
 } GstWebRTCError;
 
 GstPadTemplate *        _find_pad_template          (GstElement * element,

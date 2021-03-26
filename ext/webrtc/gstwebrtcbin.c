@@ -470,6 +470,9 @@ match_for_mid (GstWebRTCRTPTransceiver * trans, const gchar * mid)
 static gboolean
 transceiver_match_for_mline (GstWebRTCRTPTransceiver * trans, guint * mline)
 {
+  if (trans->stopped)
+    return FALSE;
+
   return trans->mline == *mline;
 }
 
@@ -2866,8 +2869,19 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
           if (trans->mid && g_strcmp0 (trans->mid, last_mid) == 0) {
             GstSDPMedia *media;
             const gchar *mid;
+            WebRTCTransceiver *wtrans = WEBRTC_TRANSCEIVER (trans);
 
             g_assert (!g_list_find (seen_transceivers, trans));
+
+            if (wtrans->mline_locked && trans->mline != media_idx) {
+              g_set_error (error, GST_WEBRTC_BIN_ERROR,
+                  GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION,
+                  "Previous negotiatied transceiver %"
+                  GST_PTR_FORMAT " with mid %s was in mline %d but transceiver"
+                  " has locked mline %u", trans, trans->mid, media_idx,
+                  trans->mline);
+              goto cancel_offer;
+            }
 
             GST_LOG_OBJECT (webrtc, "using previous negotiatied transceiver %"
                 GST_PTR_FORMAT " with mid %s into media index %u", trans,
@@ -2885,7 +2899,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
               g_set_error (error, GST_WEBRTC_BIN_ERROR,
                   GST_WEBRTC_BIN_ERROR_FAILED,
                   "Duplicate mid %s when creating offer", mid);
-              goto duplicate_mid;
+              goto cancel_offer;
             }
 
             g_hash_table_insert (all_mids, g_strdup (mid), NULL);
@@ -2929,27 +2943,94 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       if (g_hash_table_contains (all_mids, trans->mid)) {
         g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_FAILED,
             "Duplicate mid %s when creating offer", trans->mid);
-        goto duplicate_mid;
+        goto cancel_offer;
       }
 
       g_hash_table_insert (all_mids, g_strdup (trans->mid), NULL);
     }
   }
 
+
   /* add any extra streams */
-  for (i = 0; i < webrtc->priv->transceivers->len; i++) {
-    GstWebRTCRTPTransceiver *trans;
+  for (;;) {
+    GstWebRTCRTPTransceiver *trans = NULL;
     GstSDPMedia media = { 0, };
 
-    trans = g_ptr_array_index (webrtc->priv->transceivers, i);
+    /* First find a transceiver requesting this m-line */
+    trans = _find_transceiver_for_mline (webrtc, media_idx);
 
-    /* don't add transceivers twice */
-    if (g_list_find (seen_transceivers, trans))
-      continue;
+    if (trans) {
+      /* We can't have seen it already, because it is locked to this line */
+      g_assert (!g_list_find (seen_transceivers, trans));
+      seen_transceivers = g_list_prepend (seen_transceivers, trans);
+    } else {
+      /* Otherwise find a free transceiver */
+      for (i = 0; i < webrtc->priv->transceivers->len; i++) {
+        WebRTCTransceiver *wtrans;
 
-    /* don't add stopped transceivers */
-    if (trans->stopped)
-      continue;
+        trans = g_ptr_array_index (webrtc->priv->transceivers, i);
+        wtrans = WEBRTC_TRANSCEIVER (trans);
+
+        /* don't add transceivers twice */
+        if (g_list_find (seen_transceivers, trans))
+          continue;
+
+        /* Ignore transceivers with a locked mline, as they would have been
+         * found above or will be used later */
+        if (wtrans->mline_locked)
+          continue;
+
+        seen_transceivers = g_list_prepend (seen_transceivers, trans);
+        /* don't add stopped transceivers */
+        if (trans->stopped) {
+          continue;
+        }
+
+        /* Otherwise take it */
+        break;
+      }
+
+      /* Stop if we got all transceivers */
+      if (i == webrtc->priv->transceivers->len) {
+
+        /* But try to add a data channel first, we do it here, because
+         * it can allow a locked m-line to be put after, so we need to
+         * do another iteration after.
+         */
+        if (_message_get_datachannel_index (ret) == G_MAXUINT) {
+          GstSDPMedia media = { 0, };
+          gst_sdp_media_init (&media);
+          if (_add_data_channel_offer (webrtc, ret, &media, bundled_mids, 0,
+                  bundle_ufrag, bundle_pwd, all_mids)) {
+            gst_sdp_message_add_media (ret, &media);
+            media_idx++;
+            continue;
+          } else {
+            gst_sdp_media_uninit (&media);
+          }
+        }
+
+        /* Verify that we didn't ignore any locked m-line transceivers */
+        for (i = 0; i < webrtc->priv->transceivers->len; i++) {
+          WebRTCTransceiver *wtrans;
+
+          trans = g_ptr_array_index (webrtc->priv->transceivers, i);
+          wtrans = WEBRTC_TRANSCEIVER (trans);
+          /* don't add transceivers twice */
+          if (g_list_find (seen_transceivers, trans))
+            continue;
+          g_assert (wtrans->mline_locked);
+
+          g_set_error (error, GST_WEBRTC_BIN_ERROR,
+              GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION,
+              "Tranceiver %" GST_PTR_FORMAT " with mid %s has locked mline %d"
+              " but the whole offer only has %u sections", trans, trans->mid,
+              trans->mline, media_idx);
+          goto cancel_offer;
+        }
+        break;
+      }
+    }
 
     gst_sdp_media_init (&media);
 
@@ -2973,25 +3054,11 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       g_array_free (reserved_pts, TRUE);
       reserved_pts = NULL;
     }
-    seen_transceivers = g_list_prepend (seen_transceivers, trans);
   }
 
   if (webrtc->bundle_policy != GST_WEBRTC_BUNDLE_POLICY_NONE) {
     g_array_free (reserved_pts, TRUE);
     reserved_pts = NULL;
-  }
-
-  /* add a data channel if exists and not renegotiated */
-  if (_message_get_datachannel_index (ret) == G_MAXUINT) {
-    GstSDPMedia media = { 0, };
-    gst_sdp_media_init (&media);
-    if (_add_data_channel_offer (webrtc, ret, &media, bundled_mids, 0,
-            bundle_ufrag, bundle_pwd, all_mids)) {
-      gst_sdp_message_add_media (ret, &media);
-      media_idx++;
-    } else {
-      gst_sdp_media_uninit (&media);
-    }
   }
 
   webrtc->priv->max_sink_pad_serial = MAX (webrtc->priv->max_sink_pad_serial,
@@ -3040,7 +3107,7 @@ out:
 
   return ret;
 
-duplicate_mid:
+cancel_offer:
   gst_sdp_message_uninit (ret);
   ret = NULL;
   goto out;
