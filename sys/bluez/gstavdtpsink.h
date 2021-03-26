@@ -86,8 +86,6 @@ gchar *gst_avdtp_sink_get_device (GstAvdtpSink * sink);
 
 gchar *gst_avdtp_sink_get_transport (GstAvdtpSink * sink);
 
-gboolean gst_avdtp_sink_plugin_init (GstPlugin * plugin);
-
 void gst_avdtp_sink_set_crc (GstAvdtpSink * self, gboolean crc);
 
 void gst_avdtp_sink_set_channel_mode (GstAvdtpSink * self, const gchar * mode);

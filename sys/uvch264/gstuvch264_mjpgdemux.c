@@ -130,6 +130,8 @@ static gboolean gst_uvc_h264_mjpg_demux_query (GstPad * pad,
 
 #define gst_uvc_h264_mjpg_demux_parent_class parent_class
 G_DEFINE_TYPE (GstUvcH264MjpgDemux, gst_uvc_h264_mjpg_demux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (uvch264mjpgdemux, "uvch264mjpgdemux",
+    GST_RANK_NONE, GST_TYPE_UVC_H264_MJPG_DEMUX);
 
 static void
 gst_uvc_h264_mjpg_demux_class_init (GstUvcH264MjpgDemuxClass * klass)

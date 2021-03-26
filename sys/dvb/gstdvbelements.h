@@ -1,10 +1,5 @@
-
-/*
- * gstdvb.c - 
- * Copyright (C) 2007 Alessandro Decina
- * 
- * Authors:
- *   Alessandro Decina <alessandro.d@gmail.com>
+/* GStreamer
+ * Copyright (C) <2020> Julian Bouzas <julian.bouzas@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,27 +16,19 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
+
+#ifndef __GST_DVB_ELEMENTS_H__
+#define __GST_DVB_ELEMENTS_H__
+
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif
 
-#include <gst/gst-i18n-plugin.h>
+#include <gst/gst.h>
 
-#include "gstdvbelements.h"
+void dvb_element_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (dvbbasebin);
+GST_ELEMENT_REGISTER_DECLARE (dvbsrc);
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (dvbsrc, plugin);
-  ret |= GST_ELEMENT_REGISTER (dvbbasebin, plugin);
-
-  return ret;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    dvb,
-    "DVB elements",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+#endif /* __GST_DVB_ELEMENTS_H__ */

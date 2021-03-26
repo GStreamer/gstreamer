@@ -42,6 +42,7 @@
 
 #include <string.h>
 
+#include "gstipcpipelineelements.h"
 #include "gstipcpipelinesrc.h"
 #include "gstipcslavepipeline.h"
 
@@ -53,6 +54,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_ipcslavepipeline_debug);
 #define gst_ipc_slave_pipeline_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstIpcSlavePipeline, gst_ipc_slave_pipeline,
     GST_TYPE_PIPELINE, _do_init);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (ipcslavepipeline, "ipcslavepipeline",
+    GST_RANK_NONE, GST_TYPE_IPC_SLAVE_PIPELINE,
+    icepipeline_element_init (plugin));
 
 static gboolean gst_ipc_slave_pipeline_post_message (GstElement * element,
     GstMessage * message);

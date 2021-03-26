@@ -31,6 +31,7 @@
 #include <poll.h>
 
 #include <gst/rtp/gstrtppayloads.h>
+#include "gstbluezelements.h"
 #include "gstavdtpsrc.h"
 
 GST_DEBUG_CATEGORY_STATIC (avdtpsrc_debug);
@@ -47,6 +48,8 @@ enum
 
 #define parent_class gst_avdtp_src_parent_class
 G_DEFINE_TYPE (GstAvdtpSrc, gst_avdtp_src, GST_TYPE_BASE_SRC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (avdtpsrc, "avdtpsrc", GST_RANK_NONE,
+    GST_TYPE_AVDTP_SRC, bluez_element_init (plugin));
 
 static GstStaticPadTemplate gst_avdtp_src_template =
     GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -524,11 +527,4 @@ gst_avdtp_src_unlock_stop (GstBaseSrc * bsrc)
   gst_avdtp_connection_conf_recv_stream_fd (&avdtpsrc->conn);
 
   return TRUE;
-}
-
-gboolean
-gst_avdtp_src_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "avdtpsrc", GST_RANK_NONE,
-      GST_TYPE_AVDTP_SRC);
 }

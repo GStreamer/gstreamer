@@ -81,6 +81,8 @@ G_DEFINE_TYPE_WITH_CODE (GstKMSSink, gst_kms_sink, GST_TYPE_VIDEO_SINK,
     GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
         gst_kms_sink_video_overlay_init));
+GST_ELEMENT_REGISTER_DEFINE (kmssink, GST_PLUGIN_NAME, GST_RANK_SECONDARY,
+    GST_TYPE_KMS_SINK);
 
 enum
 {
@@ -2084,11 +2086,7 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, GST_PLUGIN_NAME, GST_RANK_SECONDARY,
-          GST_TYPE_KMS_SINK))
-    return FALSE;
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (kmssink, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, kms,

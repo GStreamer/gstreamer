@@ -113,6 +113,9 @@ struct _GstMLAudioSink
 };
 
 G_DEFINE_TYPE (GstMLAudioSink, gst_ml_audio_sink, GST_TYPE_AUDIO_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (mlaudiosink, "mlaudiosink",
+    GST_RANK_PRIMARY + 10, GST_TYPE_ML_AUDIO_SINK,
+    GST_DEBUG_CATEGORY_INIT (mgl_debug, "magicleap", 0, "Magic Leap elements"));
 
 enum
 {

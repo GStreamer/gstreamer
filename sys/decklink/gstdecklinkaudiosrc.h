@@ -94,6 +94,8 @@ struct _GstDecklinkAudioSrcClass
 
 GType gst_decklink_audio_src_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (decklinkaudiosrc);
+
 G_END_DECLS
 
 #endif /* __GST_DECKLINK_AUDIO_SRC_H__ */

@@ -1,10 +1,5 @@
-
-/*
- * gstdvb.c - 
- * Copyright (C) 2007 Alessandro Decina
- * 
- * Authors:
- *   Alessandro Decina <alessandro.d@gmail.com>
+/* GStreamer
+ * Copyright (C) 2012 Fluendo S.A. <support@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,27 +16,28 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include <gst/gst-i18n-plugin.h>
-
-#include "gstdvbelements.h"
+#include "opensles.h"
+#include "openslessink.h"
+#include "openslessrc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
-  ret |= GST_ELEMENT_REGISTER (dvbsrc, plugin);
-  ret |= GST_ELEMENT_REGISTER (dvbbasebin, plugin);
+  ret |= GST_ELEMENT_REGISTER (openslessink, plugin);
+  ret |= GST_ELEMENT_REGISTER (openslessrc, plugin);
 
   return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    dvb,
-    "DVB elements",
+    opensles,
+    "OpenSL ES support for GStreamer",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

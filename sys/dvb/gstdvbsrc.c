@@ -93,6 +93,7 @@
 #include "config.h"
 #endif
 
+#include "gstdvbelements.h"
 #include "gstdvbsrc.h"
 #include <gst/gst.h>
 #include <gst/glib-compat-private.h>
@@ -601,6 +602,11 @@ static GstStaticPadTemplate ts_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_dvbsrc_parent_class parent_class
 G_DEFINE_TYPE (GstDvbSrc, gst_dvbsrc, GST_TYPE_PUSH_SRC);
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (gstdvbsrc_debug, "dvbsrc", 0, "DVB Source Element");\
+  dvb_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (dvbsrc, "dvbsrc", GST_RANK_NONE,
+    GST_TYPE_DVBSRC, _do_init);
 
 static guint gst_dvbsrc_signals[LAST_SIGNAL] = { 0 };
 
@@ -1859,14 +1865,6 @@ gst_dvbsrc_finalize (GObject * _object)
  * register the element factories and pad templates
  * register the features
  */
-gboolean
-gst_dvbsrc_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gstdvbsrc_debug, "dvbsrc", 0, "DVB Source Element");
-
-  return gst_element_register (plugin, "dvbsrc", GST_RANK_NONE,
-      GST_TYPE_DVBSRC);
-}
 
 static GstFlowReturn
 gst_dvbsrc_read_device (GstDvbSrc * object, int size, GstBuffer ** buffer)

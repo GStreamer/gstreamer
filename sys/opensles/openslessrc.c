@@ -35,6 +35,7 @@
 #  include <config.h>
 #endif
 
+#include "opensles.h"
 #include "openslessrc.h"
 
 GST_DEBUG_CATEGORY_STATIC (opensles_src_debug);
@@ -58,6 +59,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define parent_class gst_opensles_src_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOpenSLESSrc, gst_opensles_src,
     GST_TYPE_AUDIO_BASE_SRC, _do_init);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (openslessrc, "openslessrc",
+    GST_RANK_PRIMARY, GST_TYPE_OPENSLES_SRC, opensles_element_init (plugin));
 
 enum
 {

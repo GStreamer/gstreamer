@@ -1,6 +1,8 @@
 /* GStreamer
- * Copyright (C) 2017 YouView TV Ltd
- *  Author: George Kiagiadakis <george.Kiagiadakis@collabora.com>
+ * Copyright (C) 2011 David Schleef <ds@schleef.org>
+ * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
+ * Copyright (C) 2015 Florian Langlois <florian.langlois@fr.thalesgroup.com>
+ * Copyright (C) 2020 Sohonet <dev@sohonet.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,21 +24,29 @@
 #include "config.h"
 #endif
 
-#include "gstipcpipelineelements.h"
+#include <gst/gst.h>
 
+#include "gstdecklinkaudiosink.h"
+#include "gstdecklinkvideosink.h"
+#include "gstdecklinkaudiosrc.h"
+#include "gstdecklinkvideosrc.h"
+#include "gstdecklinkdeviceprovider.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_ELEMENT_REGISTER (ipcpipelinesrc, plugin);
-  GST_ELEMENT_REGISTER (ipcpipelinesink, plugin);
-  GST_ELEMENT_REGISTER (ipcslavepipeline, plugin);
+  GST_ELEMENT_REGISTER (decklinkaudiosink, plugin);
+  GST_ELEMENT_REGISTER (decklinkvideosink, plugin);
+  GST_ELEMENT_REGISTER (decklinkaudiosrc, plugin);
+  GST_ELEMENT_REGISTER (decklinkvideosrc, plugin);
+
+  GST_DEVICE_PROVIDER_REGISTER (decklinkdeviceprovider, plugin);
 
   return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    ipcpipeline,
-    "plugin for inter-process pipeline communication",
+    decklink,
+    "Blackmagic Decklink plugin",
     plugin_init, VERSION, "LGPL", PACKAGE_NAME, GST_PACKAGE_ORIGIN)

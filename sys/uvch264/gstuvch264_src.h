@@ -158,6 +158,8 @@ struct _GstUvcH264SrcClass
   GstBaseCameraSrcClass parent;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (uvch264src);
+
 G_END_DECLS
 
 #endif /* __GST_UVC_H264_SRC_H__ */

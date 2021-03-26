@@ -74,6 +74,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 #define parent_class gst_opensles_sink_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOpenSLESSink, gst_opensles_sink,
     GST_TYPE_AUDIO_BASE_SINK, _do_init);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (openslessink, "openslessink",
+    GST_RANK_PRIMARY, GST_TYPE_OPENSLES_SINK, opensles_element_init (plugin));
 
 static GstAudioRingBuffer *
 gst_opensles_sink_create_ringbuffer (GstAudioBaseSink * base)

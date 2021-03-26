@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gst/mpegts/mpegts.h>
+#include "gstdvbelements.h"
 #include "dvbbasebin.h"
 #include "parsechannels.h"
 
@@ -169,7 +170,12 @@ G_DEFINE_TYPE_EXTENDED (DvbBaseBin, dvb_base_bin, GST_TYPE_BIN,
     0,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         dvb_base_bin_uri_handler_init));
-
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (dvb_base_bin_debug, "dvbbasebin", 0, "DVB bin"); \
+  cam_init (); \
+  dvb_element_init (plugin);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (dvbbasebin, "dvbbasebin", GST_RANK_NONE,
+    GST_TYPE_DVB_BASE_BIN, _do_init);
 
 static void
 dvb_base_bin_ref_stream (DvbBaseBinStream * stream)
@@ -1216,16 +1222,6 @@ dvb_base_bin_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->set_uri = dvb_base_bin_uri_set_uri;
 }
 
-gboolean
-gst_dvb_base_bin_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (dvb_base_bin_debug, "dvbbasebin", 0, "DVB bin");
-
-  cam_init ();
-
-  return gst_element_register (plugin, "dvbbasebin",
-      GST_RANK_NONE, GST_TYPE_DVB_BASE_BIN);
-}
 
 static void
 dvb_base_bin_program_destroy (gpointer data)

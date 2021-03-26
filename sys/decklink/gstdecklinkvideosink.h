@@ -84,6 +84,8 @@ struct _GstDecklinkVideoSinkClass
 
 GType gst_decklink_video_sink_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (decklinkvideosink);
+
 void gst_decklink_video_sink_convert_to_internal_clock (GstDecklinkVideoSink * self,
     GstClockTime * timestamp, GstClockTime * duration);
 

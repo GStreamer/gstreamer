@@ -83,6 +83,8 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_shm_sink_parent_class parent_class
 G_DEFINE_TYPE (GstShmSink, gst_shm_sink, GST_TYPE_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE (shmsink, "shmsink", GST_RANK_NONE,
+    GST_TYPE_SHM_SINK);
 
 static void gst_shm_sink_finalize (GObject * object);
 static void gst_shm_sink_set_property (GObject * object, guint prop_id,

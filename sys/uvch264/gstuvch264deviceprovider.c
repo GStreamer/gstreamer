@@ -54,6 +54,9 @@ struct _GstUvcH264Device
 
 G_DEFINE_TYPE (GstUvcH264Device, gst_uvc_h264_device, GST_TYPE_DEVICE);
 /* *INDENT-ON* */
+GST_DEVICE_PROVIDER_REGISTER_DEFINE (uvch264deviceprovider,
+    "uvch264deviceprovider", GST_RANK_PRIMARY,
+    gst_uvc_h264_device_provider_get_type ());
 
 static void
 gst_uvc_h264_device_get_property (GObject * object, guint prop_id,

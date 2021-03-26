@@ -11,6 +11,7 @@ dvb_sources = [
   'camutils.c',
   'dvbbasebin.c',
   'gstdvb.c',
+  'gstdvbelement.c',
   'gstdvbsrc.c',
   'parsechannels.c',
 ]

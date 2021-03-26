@@ -67,6 +67,8 @@ struct _GstDecklinkAudioSinkClass
 
 GType gst_decklink_audio_sink_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (decklinkaudiosink);
+
 G_END_DECLS
 
 #endif /* __GST_DECKLINK_AUDIO_SINK_H__ */

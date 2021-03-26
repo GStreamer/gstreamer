@@ -29,12 +29,7 @@ GST_DEBUG_CATEGORY (mgl_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "mlaudiosink", GST_RANK_PRIMARY + 10,
-          GST_TYPE_ML_AUDIO_SINK))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (mgl_debug, "magicleap", 0, "Magic Leap elements");
-  return TRUE;
+  return GST_ELEMENT_REGISTER (mlaudiosink, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

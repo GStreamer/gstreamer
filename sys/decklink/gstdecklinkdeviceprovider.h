@@ -41,6 +41,7 @@ struct _GstDecklinkDeviceProvider
 };
 
 GType gst_decklink_device_provider_get_type (void);
+GST_DEVICE_PROVIDER_REGISTER_DECLARE (decklinkdeviceprovider);
 
 G_END_DECLS
 

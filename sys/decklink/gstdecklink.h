@@ -55,6 +55,8 @@
 #define WINAPI
 #endif /* G_OS_WIN32 */
 
+void decklink_element_init (GstPlugin * plugin);
+
 typedef enum {
   GST_DECKLINK_MODE_AUTO,
 

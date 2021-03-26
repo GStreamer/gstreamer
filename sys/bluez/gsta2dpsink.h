@@ -66,8 +66,6 @@ struct _GstA2dpSinkClass
 
 GType gst_a2dp_sink_get_type (void);
 
-gboolean gst_a2dp_sink_plugin_init (GstPlugin * plugin);
-
 GstCaps *gst_a2dp_sink_get_device_caps (GstA2dpSink * self);
 
 G_END_DECLS

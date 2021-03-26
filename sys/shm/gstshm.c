@@ -29,10 +29,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "shmsrc",
-      GST_RANK_NONE, GST_TYPE_SHM_SRC) &&
-      gst_element_register (plugin, "shmsink",
-      GST_RANK_NONE, GST_TYPE_SHM_SINK);
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (shmsrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (shmsink, plugin);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

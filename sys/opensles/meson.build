@@ -4,6 +4,7 @@ opensles_sources = [
   'openslessink.c',
   'openslessrc.c',
   'opensles.c',
+  'openslesplugin.c',
 ]
 
 opensles_option = get_option('opensles')

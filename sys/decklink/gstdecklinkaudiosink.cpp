@@ -101,6 +101,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 #define parent_class gst_decklink_audio_sink_parent_class
 G_DEFINE_TYPE (GstDecklinkAudioSink, gst_decklink_audio_sink,
     GST_TYPE_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (decklinkaudiosink, "decklinkaudiosink", GST_RANK_NONE,
+    GST_TYPE_DECKLINK_AUDIO_SINK, decklink_element_init (plugin));
 
 static void
 gst_decklink_audio_sink_class_init (GstDecklinkAudioSinkClass * klass)

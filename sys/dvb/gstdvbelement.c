@@ -1,8 +1,7 @@
-
 /*
- * gstdvb.c - 
+ * gstdvb.c -
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Alessandro Decina <alessandro.d@gmail.com>
  *
@@ -29,19 +28,17 @@
 
 #include "gstdvbelements.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+dvb_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (dvbsrc, plugin);
-  ret |= GST_ELEMENT_REGISTER (dvbbasebin, plugin);
-
-  return ret;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+#ifdef ENABLE_NLS
+    GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+        LOCALEDIR);
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif /* ENABLE_NLS */
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    dvb,
-    "DVB elements",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

@@ -76,6 +76,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_shm_src_parent_class parent_class
 G_DEFINE_TYPE (GstShmSrc, gst_shm_src, GST_TYPE_PUSH_SRC);
+GST_ELEMENT_REGISTER_DEFINE (shmsrc, "shmsrc", GST_RANK_NONE, GST_TYPE_SHM_SRC);
 
 static void gst_shm_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

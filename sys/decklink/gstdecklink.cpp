@@ -1992,45 +1992,22 @@ gst_decklink_clock_get_internal_time (GstClock * clock)
   return result;
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+decklink_element_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_decklink_debug, "decklink", 0,
-      "debug category for decklink plugin");
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    GST_DEBUG_CATEGORY_INIT (gst_decklink_debug, "decklink", 0,
+        "debug category for decklink plugin");
+    gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CHANNELS, (GstPluginAPIFlags) 0);
+    gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CONNECTION, (GstPluginAPIFlags) 0);
+    gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_PROFILE_ID, (GstPluginAPIFlags) 0);
+    gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_KEYER_MODE, (GstPluginAPIFlags) 0);
+    gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_MODE, (GstPluginAPIFlags) 0);
+    gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_TIMECODE_FORMAT, (GstPluginAPIFlags) 0);
+    gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_VIDEO_FORMAT, (GstPluginAPIFlags) 0);
+    gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_CONNECTION, (GstPluginAPIFlags) 0);
 
-  gst_element_register (plugin, "decklinkaudiosink", GST_RANK_NONE,
-      GST_TYPE_DECKLINK_AUDIO_SINK);
-  gst_element_register (plugin, "decklinkvideosink", GST_RANK_NONE,
-      GST_TYPE_DECKLINK_VIDEO_SINK);
-  gst_element_register (plugin, "decklinkaudiosrc", GST_RANK_NONE,
-      GST_TYPE_DECKLINK_AUDIO_SRC);
-  gst_element_register (plugin, "decklinkvideosrc", GST_RANK_NONE,
-      GST_TYPE_DECKLINK_VIDEO_SRC);
-
-  gst_device_provider_register (plugin, "decklinkdeviceprovider",
-      GST_RANK_PRIMARY, GST_TYPE_DECKLINK_DEVICE_PROVIDER);
-
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CHANNELS,
-      (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CONNECTION,
-      (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_PROFILE_ID,
-      (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_KEYER_MODE,
-      (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_MODE, (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_TIMECODE_FORMAT,
-      (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_VIDEO_FORMAT,
-      (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_CONNECTION,
-      (GstPluginAPIFlags) 0);
-
-  return TRUE;
+    g_once_init_leave (&res, TRUE);
+  }
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    decklink,
-    "Blackmagic Decklink plugin",
-    plugin_init, VERSION, "LGPL", PACKAGE_NAME, GST_PACKAGE_ORIGIN)

@@ -36,6 +36,7 @@
 
 #include "a2dp-codecs.h"
 
+#include "gstbluezelements.h"
 #include "gstavdtpsink.h"
 
 #include <gst/rtp/rtp.h>
@@ -69,6 +70,8 @@ enum
 
 #define parent_class gst_avdtp_sink_parent_class
 G_DEFINE_TYPE (GstAvdtpSink, gst_avdtp_sink, GST_TYPE_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (avdtpsink, "avdtpsink", GST_RANK_NONE,
+    GST_TYPE_AVDTP_SINK, bluez_element_init (plugin));
 
 static GstStaticPadTemplate avdtp_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -409,14 +412,6 @@ gst_avdtp_sink_init (GstAvdtpSink * self)
    gst_base_sink_set_sync(GST_BASE_SINK(self), FALSE);
    */
 }
-
-gboolean
-gst_avdtp_sink_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "avdtpsink", GST_RANK_NONE,
-      GST_TYPE_AVDTP_SINK);
-}
-
 
 /* public functions */
 GstCaps *

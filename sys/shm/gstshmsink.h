@@ -78,5 +78,7 @@ struct _GstShmSinkClass
 
 GType gst_shm_sink_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (shmsink);
+
 G_END_DECLS
 #endif /* __GST_SHM_SINK_H__ */

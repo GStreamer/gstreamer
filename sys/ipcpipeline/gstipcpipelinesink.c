@@ -73,6 +73,7 @@
 #  include "config.h"
 #endif
 
+#include "gstipcpipelineelements.h"
 #include "gstipcpipelinesink.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -109,6 +110,9 @@ enum
 #define gst_ipc_pipeline_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstIpcPipelineSink, gst_ipc_pipeline_sink,
     GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (ipcpipelinesink, "ipcpipelinesink",
+    GST_RANK_NONE, GST_TYPE_IPC_PIPELINE_SINK,
+    icepipeline_element_init (plugin));
 
 static void gst_ipc_pipeline_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

@@ -1,5 +1,6 @@
 ipcpipeline_sources = [
   'gstipcpipeline.c',
+  'gstipcpipelineelement.c',
   'gstipcpipelinecomm.c',
   'gstipcpipelinesink.c',
   'gstipcpipelinesrc.c',

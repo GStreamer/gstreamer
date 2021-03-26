@@ -48,6 +48,7 @@ struct _GstOpenSLESSrcClass
 };
 
 GType gst_opensles_src_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (openslessrc);
 
 G_END_DECLS
 #endif /* __OPENSLESSRC_H__ */

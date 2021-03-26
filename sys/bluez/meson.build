@@ -1,5 +1,6 @@
 bluez_sources = [
   'bluez-plugin.c',
+  'gstbluezelement.c',
   'gsta2dpsink.c',
   'gstavdtpsink.c',
   'gstavdtpsrc.c',

@@ -77,25 +77,12 @@ gst_opensles_release_engine (SLObjectItf engine_object_parameter)
   g_mutex_unlock (&engine_mutex);
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+opensles_element_init (GstPlugin * plugin)
 {
-  g_mutex_init (&engine_mutex);
-
-  if (!gst_element_register (plugin, "openslessink", GST_RANK_PRIMARY,
-          GST_TYPE_OPENSLES_SINK)) {
-    return FALSE;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    g_mutex_init (&engine_mutex);
+    g_once_init_leave (&res, TRUE);
   }
-  if (!gst_element_register (plugin, "openslessrc", GST_RANK_PRIMARY,
-          GST_TYPE_OPENSLES_SRC)) {
-    return FALSE;
-  }
-
-  return TRUE;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    opensles,
-    "OpenSL ES support for GStreamer",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

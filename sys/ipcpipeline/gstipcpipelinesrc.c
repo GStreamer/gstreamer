@@ -40,6 +40,7 @@
 #  include "config.h"
 #endif
 
+#include "gstipcpipelineelements.h"
 #include "gstipcpipelinesrc.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
@@ -79,6 +80,9 @@ static GQuark QUARK_UPSTREAM;
 #define gst_ipc_pipeline_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstIpcPipelineSrc, gst_ipc_pipeline_src,
     GST_TYPE_ELEMENT, _do_init);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (ipcpipelinesrc, "ipcpipelinesrc",
+    GST_RANK_NONE, GST_TYPE_IPC_PIPELINE_SRC,
+    icepipeline_element_init (plugin));
 
 static void gst_ipc_pipeline_src_finalize (GObject * object);
 static void gst_ipc_pipeline_src_dispose (GObject * object);

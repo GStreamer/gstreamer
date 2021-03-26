@@ -242,6 +242,8 @@ static void gst_decklink_video_src_start_streams (GstElement * element);
 
 #define parent_class gst_decklink_video_src_parent_class
 G_DEFINE_TYPE (GstDecklinkVideoSrc, gst_decklink_video_src, GST_TYPE_PUSH_SRC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (decklinkvideosrc, "decklinkvideosrc", GST_RANK_NONE,
+    GST_TYPE_DECKLINK_VIDEO_SRC, decklink_element_init (plugin));
 
 static void
 gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)

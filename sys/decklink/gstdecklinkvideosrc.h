@@ -124,6 +124,8 @@ struct _GstDecklinkVideoSrcClass
 
 GType gst_decklink_video_src_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (decklinkvideosrc);
+
 G_END_DECLS
 
 #endif /* __GST_DECKLINK_VIDEO_SRC_H__ */

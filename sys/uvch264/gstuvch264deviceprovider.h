@@ -26,5 +26,5 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstUvcH264Device, gst_uvc_h264_device, GST, UVC_H264_DEVICE, GstDevice)
 
 G_DECLARE_FINAL_TYPE (GstUvcH264DeviceProvider, gst_uvc_h264_device_provider, GST, UVC_H264_DEVICE_PROVIDER, GstDeviceProvider)
-
+GST_DEVICE_PROVIDER_REGISTER_DECLARE (uvch264deviceprovider);
 G_END_DECLS

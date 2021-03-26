@@ -104,6 +104,8 @@ struct _GstUvcH264MjpgDemuxClass {
 
 GType gst_uvc_h264_mjpg_demux_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (uvch264mjpgdemux);
+
 G_END_DECLS
 
 #endif /* __GST_UVC_H264_MJPG_DEMUX_H__ */

@@ -27,6 +27,7 @@
 
 #include <unistd.h>
 
+#include "gstbluezelements.h"
 #include "gsta2dpsink.h"
 
 #include <gst/rtp/gstrtpbasepayload.h>
@@ -48,6 +49,8 @@ enum
 
 #define parent_class gst_a2dp_sink_parent_class
 G_DEFINE_TYPE (GstA2dpSink, gst_a2dp_sink, GST_TYPE_BIN);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (a2dpsink, "a2dpsink", GST_RANK_NONE,
+    GST_TYPE_A2DP_SINK, bluez_element_init (plugin));
 
 static GstStaticPadTemplate gst_a2dp_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,

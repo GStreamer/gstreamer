@@ -1,4 +1,5 @@
 decklink_sources = [
+  'gstdecklinkplugin.cpp',
   'gstdecklink.cpp',
   'gstdecklinkaudiosink.cpp',
   'gstdecklinkvideosink.cpp',

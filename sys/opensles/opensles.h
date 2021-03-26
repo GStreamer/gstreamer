@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 #include <SLES/OpenSLES.h>
 
+void opensles_element_init (GstPlugin * plugin);
+
 SLObjectItf gst_opensles_get_engine (void);
 void gst_opensles_release_engine (SLObjectItf engine_object);
 

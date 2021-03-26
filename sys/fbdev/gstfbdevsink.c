@@ -83,6 +83,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define parent_class gst_fbdevsink_parent_class
 G_DEFINE_TYPE (GstFBDEVSink, gst_fbdevsink, GST_TYPE_VIDEO_SINK);
+GST_ELEMENT_REGISTER_DEFINE (fbdevsink, "fbdevsink", GST_RANK_NONE,
+    GST_TYPE_FBDEVSINK);
 
 static void
 gst_fbdevsink_init (GstFBDEVSink * fbdevsink)
@@ -394,11 +396,7 @@ gst_fbdevsink_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "fbdevsink", GST_RANK_NONE,
-          GST_TYPE_FBDEVSINK))
-    return FALSE;
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (fbdevsink, plugin);
 }
 
 static void

@@ -52,6 +52,7 @@ struct _GstOpenSLESSinkClass
 };
 
 GType gst_opensles_sink_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (openslessink);
 
 G_END_DECLS
 #endif /* __OPENSLESSINK_H__ */

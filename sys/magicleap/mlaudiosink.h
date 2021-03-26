@@ -27,5 +27,5 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_ML_AUDIO_SINK gst_ml_audio_sink_get_type ()
 G_DECLARE_FINAL_TYPE (GstMLAudioSink, gst_ml_audio_sink, GST, ML_AUDIO_SINK, GstAudioSink)
-
+GST_ELEMENT_REGISTER_DECLARE (mlaudiosink);
 G_END_DECLS

@@ -140,6 +140,8 @@ static gboolean gst_decklink_audio_src_stop (GstDecklinkAudioSrc * self);
 
 #define parent_class gst_decklink_audio_src_parent_class
 G_DEFINE_TYPE (GstDecklinkAudioSrc, gst_decklink_audio_src, GST_TYPE_PUSH_SRC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (decklinkaudiosrc, "decklinkaudiosrc", GST_RANK_NONE,
+    GST_TYPE_DECKLINK_AUDIO_SRC, decklink_element_init (plugin));
 
 static void
 gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)

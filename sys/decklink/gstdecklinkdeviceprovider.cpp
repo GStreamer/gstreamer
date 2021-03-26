@@ -26,6 +26,8 @@
 
 G_DEFINE_TYPE (GstDecklinkDeviceProvider, gst_decklink_device_provider,
     GST_TYPE_DEVICE_PROVIDER);
+GST_DEVICE_PROVIDER_REGISTER_DEFINE (decklinkdeviceprovider, "decklinkdeviceprovider",
+    GST_RANK_PRIMARY, GST_TYPE_DECKLINK_DEVICE_PROVIDER);
 
 static void
 gst_decklink_device_provider_init (GstDecklinkDeviceProvider * self)

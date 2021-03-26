@@ -280,6 +280,8 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element);
 #define parent_class gst_decklink_video_sink_parent_class
 G_DEFINE_TYPE (GstDecklinkVideoSink, gst_decklink_video_sink,
     GST_TYPE_BASE_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (decklinkvideosink, "decklinkvideosink", GST_RANK_NONE,
+                                       GST_TYPE_DECKLINK_VIDEO_SINK, decklink_element_init (plugin));
 
 static gboolean
 reset_framerate (GstCapsFeatures * features, GstStructure * structure,

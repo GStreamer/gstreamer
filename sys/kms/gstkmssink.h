@@ -100,7 +100,7 @@ struct _GstKMSSinkClass {
 };
 
 GType gst_kms_sink_get_type (void) G_GNUC_CONST;
-
+GST_ELEMENT_REGISTER_DECLARE (kmssink);
 G_END_DECLS
 
 #endif /* __GST_KMS_SINK_H__ */
