@@ -484,6 +484,7 @@ rtp_twcc_stats_get_packets_structure (GArray * twcc_packets)
         "seqnum", G_TYPE_UINT, pkt->seqnum,
         "local-ts", G_TYPE_UINT64, pkt->local_ts,
         "remote-ts", G_TYPE_UINT64, pkt->remote_ts,
+        "payload-type", G_TYPE_UCHAR, pkt->pt,
         "size", G_TYPE_UINT, pkt->size,
         "lost", G_TYPE_BOOLEAN, pkt->status == RTP_TWCC_PACKET_STATUS_NOT_RECV,
         NULL);

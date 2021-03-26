@@ -49,6 +49,7 @@ struct _RTPTWCCPacket
   RTPTWCCPacketStatus status;
   guint16 seqnum;
   guint size;
+  guint8 pt;
 };
 
 RTPTWCCManager * rtp_twcc_manager_new (guint mtu);

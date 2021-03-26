@@ -65,6 +65,7 @@ typedef struct
   GstClockTime socket_ts;
   GstClockTime remote_ts;
   guint16 seqnum;
+  guint8 pt;
   guint size;
   gboolean lost;
 } SentPacket;
@@ -842,6 +843,7 @@ sent_packet_init (SentPacket * packet, guint16 seqnum, RTPPacketInfo * pinfo)
   packet->seqnum = seqnum;
   packet->ts = pinfo->running_time;
   packet->size = pinfo->payload_len;
+  packet->pt = pinfo->pt;
   packet->remote_ts = GST_CLOCK_TIME_NONE;
   packet->socket_ts = GST_CLOCK_TIME_NONE;
   packet->lost = FALSE;
@@ -1095,6 +1097,7 @@ rtp_twcc_manager_parse_fci (RTPTWCCManager * twcc,
           pkt->local_ts = found->ts;
         }
         pkt->size = found->size;
+        pkt->pt = found->pt;
 
         GST_LOG ("matching pkt: #%u with local_ts: %" GST_TIME_FORMAT
             " size: %u", pkt->seqnum, GST_TIME_ARGS (pkt->local_ts), pkt->size);
