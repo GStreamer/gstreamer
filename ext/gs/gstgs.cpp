@@ -34,18 +34,15 @@
 #include "gstgssink.h"
 #include "gstgssrc.h"
 
-GST_DEBUG_CATEGORY (gst_gs_src_debug);
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "gssrc", GST_RANK_NONE, GST_TYPE_GS_SRC))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  if (!gst_element_register (plugin, "gssink", GST_RANK_NONE, GST_TYPE_GS_SINK))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (gssrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (gssink, plugin);
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
