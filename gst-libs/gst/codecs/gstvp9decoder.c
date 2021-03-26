@@ -388,7 +388,7 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
 
   gst_buffer_unmap (in_buf, &map);
 
-  if (!picture->frame_hdr.show_frame) {
+  if (!frame_hdr.show_frame && !frame_hdr.show_existing_frame) {
     GST_LOG_OBJECT (self, "Decode only picture %p", picture);
     GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
 
