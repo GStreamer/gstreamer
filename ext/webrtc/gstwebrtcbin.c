@@ -59,7 +59,10 @@
 /* The extra time for the rtpstorage compared to the RTP jitterbuffer (in ms) */
 #define RTPSTORAGE_EXTRA_TIME (50)
 
-/*
+/**
+ * SECTION: element-webrtcbin
+ * title: webrtcbin
+ *
  * This webrtcbin implements the majority of the W3's peerconnection API and
  * implementation guide where possible. Generating offers, answers and setting
  * local and remote SDP's are all supported.  Both media descriptions and
