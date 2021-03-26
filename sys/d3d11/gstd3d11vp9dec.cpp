@@ -1220,11 +1220,11 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   /* To cover both landscape and portrait, select max value */
   resolution = MAX (max_width, max_height);
   gst_caps_set_simple (sink_caps,
-      "width", GST_TYPE_INT_RANGE, 64, resolution,
-      "height", GST_TYPE_INT_RANGE, 64, resolution, NULL);
+      "width", GST_TYPE_INT_RANGE, 1, resolution,
+      "height", GST_TYPE_INT_RANGE, 1, resolution, NULL);
   gst_caps_set_simple (src_caps,
-      "width", GST_TYPE_INT_RANGE, 64, resolution,
-      "height", GST_TYPE_INT_RANGE, 64, resolution, NULL);
+      "width", GST_TYPE_INT_RANGE, 1, resolution,
+      "height", GST_TYPE_INT_RANGE, 1, resolution, NULL);
 
   type_info.class_data =
       gst_d3d11_decoder_class_data_new (device, sink_caps, src_caps);
