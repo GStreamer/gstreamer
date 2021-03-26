@@ -6194,10 +6194,10 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
 {
   GstWebRTCBin *webrtc = GST_WEBRTC_BIN (element);
-  GstWebRTCRTPTransceiver *trans;
+  GstWebRTCRTPTransceiver *trans = NULL;
   GstWebRTCBinPad *pad = NULL;
-  GstWebRTCBinPad *pad2;
   guint serial;
+  gboolean lock_mline = FALSE;
 
   if (!_have_nice_elements (webrtc) || !_have_dtls_elements (webrtc))
     return NULL;
@@ -6215,19 +6215,26 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
   } else {
     /* parse serial number from requested padname */
     serial = g_ascii_strtoull (&name[5], NULL, 10);
-    if (serial > webrtc->priv->max_sink_pad_serial)
-      webrtc->priv->max_sink_pad_serial = serial;
+    lock_mline = TRUE;
   }
   GST_OBJECT_UNLOCK (webrtc);
 
-  trans = _find_transceiver_for_mline (webrtc, serial);
+  if (lock_mline) {
+    GstWebRTCBinPad *pad2;
 
-  /* Ignore transceivers that already have a pad allocated */
-  pad2 = _find_pad_for_transceiver (webrtc, GST_PAD_SINK, trans);
-  if (pad2) {
-    serial = -1;
-    trans = NULL;
-    gst_object_unref (pad2);
+    trans = _find_transceiver_for_mline (webrtc, serial);
+
+    if (trans) {
+      /* Ignore transceivers that already have a pad allocated */
+      pad2 = _find_pad_for_transceiver (webrtc, GST_PAD_SINK, trans);
+      if (pad2) {
+        GST_ERROR_OBJECT (element, "Trying to request pad %s for m-line %d, "
+            " but the transceiver associated with this m-line already has pad"
+            " %s", name, serial, GST_PAD_NAME (pad2));
+        gst_object_unref (pad2);
+        return NULL;
+      }
+    }
   }
 
   if (!trans) {
