@@ -483,8 +483,6 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
   GstBuffer *view_buffer;
   gboolean direct_rendering = FALSE;
 
-  g_assert (picture->frame_hdr.show_frame);
-
   GST_LOG_OBJECT (self, "Outputting picture %p", picture);
 
   view_buffer = (GstBuffer *) gst_vp9_picture_get_user_data (picture);
