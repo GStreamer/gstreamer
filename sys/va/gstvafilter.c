@@ -664,6 +664,13 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
             common_flags));
   }
 
+  g_object_class_install_property (klass,
+      GST_VA_FILTER_PROP_DISABLE_PASSTHROUGH,
+      g_param_spec_boolean ("disable-passthrough", "Disable Passthrough",
+          "Forces passing buffers through the postprocessor", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
+          | GST_PARAM_MUTABLE_READY));
+
   return TRUE;
 }
 

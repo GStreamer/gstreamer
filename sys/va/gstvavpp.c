@@ -161,6 +161,7 @@ enum
   VPP_CONVERT_DIRECTION = 1 << 3,
   VPP_CONVERT_FEATURE = 1 << 4,
   VPP_CONVERT_CROP = 1 << 5,
+  VPP_CONVERT_DUMMY = 1 << 6,
 };
 
 extern GRecMutex GST_VA_SHARED_LOCK;
@@ -328,6 +329,14 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
       self->auto_contrast = g_value_get_boolean (value);
       g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
+    case GST_VA_FILTER_PROP_DISABLE_PASSTHROUGH:{
+      gboolean disable_passthrough = g_value_get_boolean (value);
+      if (disable_passthrough)
+        self->op_flags |= VPP_CONVERT_DUMMY;
+      else
+        self->op_flags &= ~VPP_CONVERT_DUMMY;
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -384,6 +393,9 @@ gst_va_vpp_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case GST_VA_FILTER_PROP_AUTO_CONTRAST:
       g_value_set_boolean (value, self->auto_contrast);
+      break;
+    case GST_VA_FILTER_PROP_DISABLE_PASSTHROUGH:
+      g_value_set_boolean (value, (self->op_flags & VPP_CONVERT_DUMMY));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
