@@ -48,6 +48,8 @@ struct _WebRTCTransceiver
   gboolean                 do_nack;
 
   GstCaps                  *last_configured_caps;
+
+  gboolean                 mline_locked;
 };
 
 struct _WebRTCTransceiverClass

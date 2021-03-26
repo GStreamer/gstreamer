@@ -6281,6 +6281,12 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
       gst_object_ref (pad));
   _add_pad (webrtc, pad);
 
+  if (lock_mline) {
+    WebRTCTransceiver *wtrans = WEBRTC_TRANSCEIVER (trans);
+    wtrans->mline_locked = TRUE;
+    trans->mline = serial;
+  }
+
   return GST_PAD (pad);
 }
 
