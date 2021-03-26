@@ -20,9 +20,3 @@ if gs_dep.found()
   pkgconfig.generate(gstgs, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstgs]
 endif
-
-clang_format_p = find_program('clang-format', required: false)
-if clang_format_p.found()
-  run_command(clang_format_p, '--style=file', '-i', 'gstgssink.cpp', 'gstgssrc.cpp')
-endif
-
