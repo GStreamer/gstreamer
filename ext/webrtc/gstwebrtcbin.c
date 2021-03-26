@@ -6235,13 +6235,26 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
         return NULL;
       }
 
-      if (caps && trans->codec_preferences) {
-        if (!gst_caps_can_intersect (caps, trans->codec_preferences)) {
+      if (caps) {
+        if (trans->codec_preferences &&
+            !gst_caps_can_intersect (caps, trans->codec_preferences)) {
           GST_ERROR_OBJECT (element, "Tried to request a new sink pad %s for"
               " existing m-line %d, but requested caps %" GST_PTR_FORMAT
               " don't match existing codec preferences %" GST_PTR_FORMAT,
               name, serial, caps, trans->codec_preferences);
           return NULL;
+        }
+
+        if (trans->kind != GST_WEBRTC_KIND_UNKNOWN) {
+          GstWebRTCKind kind = _kind_from_caps (caps);
+
+          if (trans->kind != kind) {
+            GST_ERROR_OBJECT (element, "Tried to request a new sink pad %s for"
+                " existing m-line %d, but requested caps %" GST_PTR_FORMAT
+                " don't match transceiver kind %d",
+                name, serial, caps, trans->kind);
+            return NULL;
+          }
         }
       }
     }
@@ -6257,11 +6270,8 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
   }
   pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, trans, serial);
 
-  if (caps && name && !_update_transceiver_kind_from_caps (trans, caps))
-    GST_WARNING_OBJECT (webrtc,
-        "Trying to create pad %s with caps %" GST_PTR_FORMAT
-        " but transceiver %d already exists with a different"
-        " media type", name, caps, serial);
+  if (caps)
+    _update_transceiver_kind_from_caps (trans, caps);
 
   pad->block_id = gst_pad_add_probe (GST_PAD (pad), GST_PAD_PROBE_TYPE_BLOCK |
       GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
