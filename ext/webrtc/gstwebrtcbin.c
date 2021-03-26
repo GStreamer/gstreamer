@@ -6194,65 +6194,65 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
 {
   GstWebRTCBin *webrtc = GST_WEBRTC_BIN (element);
+  GstWebRTCRTPTransceiver *trans;
   GstWebRTCBinPad *pad = NULL;
+  GstWebRTCBinPad *pad2;
   guint serial;
 
   if (!_have_nice_elements (webrtc) || !_have_dtls_elements (webrtc))
     return NULL;
 
-  if (templ->direction == GST_PAD_SINK ||
-      g_strcmp0 (templ->name_template, "sink_%u") == 0) {
-    GstWebRTCRTPTransceiver *trans;
-    GstWebRTCBinPad *pad2;
-
-    GST_OBJECT_LOCK (webrtc);
-    if (name == NULL || strlen (name) < 6 || !g_str_has_prefix (name, "sink_")) {
-      /* no name given when requesting the pad, use next available int */
-      serial = webrtc->priv->max_sink_pad_serial++;
-    } else {
-      /* parse serial number from requested padname */
-      serial = g_ascii_strtoull (&name[5], NULL, 10);
-      if (serial > webrtc->priv->max_sink_pad_serial)
-        webrtc->priv->max_sink_pad_serial = serial;
-    }
-    GST_OBJECT_UNLOCK (webrtc);
-
-    trans = _find_transceiver_for_mline (webrtc, serial);
-
-    /* Ignore transceivers that already have a pad allocated */
-    pad2 = _find_pad_for_transceiver (webrtc, GST_PAD_SINK, trans);
-    if (pad2) {
-      serial = -1;
-      trans = NULL;
-      gst_object_unref (pad2);
-    }
-
-    if (!trans) {
-      trans =
-          GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
-              GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV, -1));
-      GST_LOG_OBJECT (webrtc, "Created new transceiver %" GST_PTR_FORMAT,
-          trans);
-    } else {
-      GST_LOG_OBJECT (webrtc, "Using existing transceiver %" GST_PTR_FORMAT
-          " for mline %u", trans, serial);
-    }
-    pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, trans, serial);
-
-    if (caps && name && !_update_transceiver_kind_from_caps (trans, caps))
-      GST_WARNING_OBJECT (webrtc,
-          "Trying to create pad %s with caps %" GST_PTR_FORMAT
-          " but transceiver %d already exists with a different"
-          " media type", name, caps, serial);
-
-    pad->block_id = gst_pad_add_probe (GST_PAD (pad), GST_PAD_PROBE_TYPE_BLOCK |
-        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
-        (GstPadProbeCallback) sink_pad_block, NULL, NULL);
-    webrtc->priv->pending_sink_transceivers =
-        g_list_append (webrtc->priv->pending_sink_transceivers,
-        gst_object_ref (pad));
-    _add_pad (webrtc, pad);
+  if (templ->direction != GST_PAD_SINK ||
+      g_strcmp0 (templ->name_template, "sink_%u") != 0) {
+    GST_ERROR_OBJECT (element, "Requested pad that shouldn't be requestable");
+    return NULL;
   }
+
+  GST_OBJECT_LOCK (webrtc);
+  if (name == NULL || strlen (name) < 6 || !g_str_has_prefix (name, "sink_")) {
+    /* no name given when requesting the pad, use next available int */
+    serial = webrtc->priv->max_sink_pad_serial++;
+  } else {
+    /* parse serial number from requested padname */
+    serial = g_ascii_strtoull (&name[5], NULL, 10);
+    if (serial > webrtc->priv->max_sink_pad_serial)
+      webrtc->priv->max_sink_pad_serial = serial;
+  }
+  GST_OBJECT_UNLOCK (webrtc);
+
+  trans = _find_transceiver_for_mline (webrtc, serial);
+
+  /* Ignore transceivers that already have a pad allocated */
+  pad2 = _find_pad_for_transceiver (webrtc, GST_PAD_SINK, trans);
+  if (pad2) {
+    serial = -1;
+    trans = NULL;
+    gst_object_unref (pad2);
+  }
+
+  if (!trans) {
+    trans = GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
+            GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV, -1));
+    GST_LOG_OBJECT (webrtc, "Created new transceiver %" GST_PTR_FORMAT, trans);
+  } else {
+    GST_LOG_OBJECT (webrtc, "Using existing transceiver %" GST_PTR_FORMAT
+        " for mline %u", trans, serial);
+  }
+  pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, trans, serial);
+
+  if (caps && name && !_update_transceiver_kind_from_caps (trans, caps))
+    GST_WARNING_OBJECT (webrtc,
+        "Trying to create pad %s with caps %" GST_PTR_FORMAT
+        " but transceiver %d already exists with a different"
+        " media type", name, caps, serial);
+
+  pad->block_id = gst_pad_add_probe (GST_PAD (pad), GST_PAD_PROBE_TYPE_BLOCK |
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+      (GstPadProbeCallback) sink_pad_block, NULL, NULL);
+  webrtc->priv->pending_sink_transceivers =
+      g_list_append (webrtc->priv->pending_sink_transceivers,
+      gst_object_ref (pad));
+  _add_pad (webrtc, pad);
 
   return GST_PAD (pad);
 }
