@@ -949,6 +949,8 @@ gst_mpeg2_decoder_handle_slice (GstMpeg2Decoder * decoder,
   slice.pic_hdr = &priv->pic_hdr;
   slice.pic_ext = _pic_hdr_ext_is_valid (&priv->pic_ext) ?
       &priv->pic_ext : NULL;
+  slice.sc_offset = slice.packet.offset - 4;
+  slice.size = slice.packet.size + 4;
 
   ret = gst_mpeg2_decoder_ensure_current_picture (decoder, &slice);
   if (ret != GST_FLOW_OK) {

@@ -65,6 +65,10 @@ struct _GstMpeg2Slice
 
   /* parsed video packet (doesn't take ownership of raw data) */
   GstMpegVideoPacket packet;
+  /* offset of the start code for the slice */
+  guint sc_offset;
+  /* size, including the start code */
+  guint size;
 };
 
 /**
