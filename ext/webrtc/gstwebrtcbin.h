@@ -95,7 +95,6 @@ struct _GstWebRTCBinPrivate
 
   gboolean bundle;
   GPtrArray *transceivers;
-  GArray *session_mid_map;
   GPtrArray *transports;
   GPtrArray *data_channels;
   /* list of data channels we've received a sctp stream for but no data

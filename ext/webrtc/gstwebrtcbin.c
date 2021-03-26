@@ -429,18 +429,6 @@ _add_ice_stream_item (GstWebRTCBin * webrtc, guint session_id,
   g_array_append_val (webrtc->priv->ice_stream_map, item);
 }
 
-typedef struct
-{
-  guint session_id;
-  gchar *mid;
-} SessionMidItem;
-
-static void
-clear_session_mid_item (SessionMidItem * item)
-{
-  g_free (item->mid);
-}
-
 typedef gboolean (*FindTransceiverFunc) (GstWebRTCRTPTransceiver * p1,
     gconstpointer data);
 
@@ -6586,10 +6574,6 @@ gst_webrtc_bin_finalize (GObject * object)
     g_array_free (webrtc->priv->pending_local_ice_candidates, TRUE);
   webrtc->priv->pending_local_ice_candidates = NULL;
 
-  if (webrtc->priv->session_mid_map)
-    g_array_free (webrtc->priv->session_mid_map, TRUE);
-  webrtc->priv->session_mid_map = NULL;
-
   if (webrtc->priv->pending_pads)
     g_list_free_full (webrtc->priv->pending_pads,
         (GDestroyNotify) _free_pending_pad);
@@ -7098,11 +7082,6 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
 
   webrtc->priv->pending_data_channels =
       g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
-
-  webrtc->priv->session_mid_map =
-      g_array_new (FALSE, TRUE, sizeof (SessionMidItem));
-  g_array_set_clear_func (webrtc->priv->session_mid_map,
-      (GDestroyNotify) clear_session_mid_item);
 
   webrtc->priv->ice_stream_map =
       g_array_new (FALSE, TRUE, sizeof (IceStreamItem));
