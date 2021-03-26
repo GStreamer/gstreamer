@@ -520,15 +520,9 @@ gst_va_mpeg2_dec_decode_slice (GstMpeg2Decoder * decoder,
   GstVaDecodePicture *va_pic;
   VASliceParameterBufferMPEG2 slice_param;
 
-  /* The slice data pass to driver should be a full packet
-     include the start code. The packet->offset return by
-     gst_mpeg_video_parse does not include the start code
-     and so we need to wrap back 4 bytes. */
-  g_assert (packet->offset >= 4);
-
   /* *INDENT-OFF* */
   slice_param = (VASliceParameterBufferMPEG2) {
-    .slice_data_size = packet->size + 4 /* start code */,
+    .slice_data_size = slice->size,
     .slice_data_offset = 0,
     .slice_data_flag = VA_SLICE_DATA_FLAG_ALL,
     .macroblock_offset = header->header_size + 32,
@@ -542,8 +536,7 @@ gst_va_mpeg2_dec_decode_slice (GstMpeg2Decoder * decoder,
   va_pic = gst_mpeg2_picture_get_user_data (picture);
   if (!gst_va_decoder_add_slice_buffer (base->decoder, va_pic,
           &slice_param, sizeof (slice_param),
-          (guint8 *) (packet->data + packet->offset - 4 /* start code */ ),
-          packet->size + 4 /* start code */ ))
+          (guint8 *) (packet->data + slice->sc_offset), slice->size))
     return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;
