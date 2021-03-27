@@ -193,6 +193,10 @@ void            gst_type_find_suggest    (GstTypeFind   * find,
                                           guint           probability,
                                           GstCaps       * caps);
 GST_API
+void            gst_type_find_suggest_empty_simple (GstTypeFind * find,
+                                                    guint         probability,
+                                                    const char  * media_type);
+GST_API
 void            gst_type_find_suggest_simple (GstTypeFind * find,
                                               guint         probability,
                                               const char  * media_type,
