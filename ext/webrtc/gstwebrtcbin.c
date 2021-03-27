@@ -4716,6 +4716,61 @@ check_transceivers_not_removed (GstWebRTCBin * webrtc,
   return TRUE;
 }
 
+static gboolean
+check_locked_mlines (GstWebRTCBin * webrtc, GstWebRTCSessionDescription * sdp,
+    GError ** error)
+{
+  guint i;
+
+  for (i = 0; i < gst_sdp_message_medias_len (sdp->sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (sdp->sdp, i);
+    GstWebRTCRTPTransceiver *rtp_trans;
+    WebRTCTransceiver *trans;
+
+    rtp_trans = _find_transceiver_for_sdp_media (webrtc, sdp->sdp, i);
+    /* only look for matching mid */
+    if (rtp_trans == NULL)
+      continue;
+
+    trans = WEBRTC_TRANSCEIVER (rtp_trans);
+
+    /* We only validate the locked mlines for now */
+    if (!trans->mline_locked)
+      continue;
+
+    if (rtp_trans->mline != i) {
+      g_set_error (error, GST_WEBRTC_BIN_ERROR,
+          GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION,
+          "m-line with mid %s is at position %d, but was locked to %d, "
+          "rejecting", rtp_trans->mid, i, rtp_trans->mline);
+      return FALSE;
+    }
+
+    if (rtp_trans->kind != GST_WEBRTC_KIND_UNKNOWN) {
+      if (!g_strcmp0 (gst_sdp_media_get_media (media), "audio") &&
+          rtp_trans->kind != GST_WEBRTC_KIND_AUDIO) {
+        g_set_error (error, GST_WEBRTC_BIN_ERROR,
+            GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION,
+            "m-line %d was locked to audio, but SDP has %s media", i,
+            gst_sdp_media_get_media (media));
+        return FALSE;
+      }
+
+      if (!g_strcmp0 (gst_sdp_media_get_media (media), "video") &&
+          rtp_trans->kind != GST_WEBRTC_KIND_VIDEO) {
+        g_set_error (error, GST_WEBRTC_BIN_ERROR,
+            GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION,
+            "m-line %d was locked to video, but SDP has %s media", i,
+            gst_sdp_media_get_media (media));
+        return FALSE;
+      }
+    }
+  }
+
+  return TRUE;
+}
+
+
 struct set_description
 {
   GstPromise *promise;
@@ -4796,6 +4851,9 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
         "is not currently supported.");
     goto out;
   }
+
+  if (!check_locked_mlines (webrtc, sd->sdp, &error))
+    goto out;
 
   switch (sd->sdp->type) {
     case GST_WEBRTC_SDP_TYPE_OFFER:{
