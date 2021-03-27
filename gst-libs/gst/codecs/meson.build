@@ -11,6 +11,7 @@ codecs_sources = files([
   'gstmpeg2picture.c',
   'gstav1decoder.c',
   'gstav1picture.c',
+  'gstvp9statefulparser.c',
 ])
 
 codecs_headers = [
@@ -26,6 +27,7 @@ codecs_headers = [
   'gstmpeg2picture.h',
   'gstav1decoder.h',
   'gstav1picture.h',
+  'gstvp9statefulparser.h',
 ]
 
 cp_args = [
