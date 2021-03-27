@@ -6373,6 +6373,52 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     }
   }
 
+  /* Let's try to find a free transceiver that matches */
+  if (!trans) {
+    GstWebRTCKind kind = GST_WEBRTC_KIND_UNKNOWN;
+    guint i;
+
+    if (caps)
+      kind = _kind_from_caps (caps);
+
+    for (i = 0; i < webrtc->priv->transceivers->len; i++) {
+      GstWebRTCRTPTransceiver *tmptrans =
+          g_ptr_array_index (webrtc->priv->transceivers, i);
+      GstWebRTCBinPad *pad2;
+
+      /* Ignore transceivers with a non-matching kind */
+      if (tmptrans->kind != GST_WEBRTC_KIND_UNKNOWN &&
+          kind != GST_WEBRTC_KIND_UNKNOWN && tmptrans->kind != kind)
+        continue;
+
+      /* Ignore stopped transmitters */
+      if (tmptrans->stopped)
+        continue;
+
+      /* Ignore transceivers that are only for receiving ... */
+      if (tmptrans->direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY
+          || tmptrans->direction ==
+          GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE)
+        continue;
+
+      /* Ignore transceivers that already have a pad allocated */
+      pad2 = _find_pad_for_transceiver (webrtc, GST_PAD_SINK, tmptrans);
+      if (pad2) {
+        gst_object_unref (pad2);
+        continue;
+      }
+
+      /* Ignore transceivers with non-matching caps */
+      if (caps && tmptrans->codec_preferences &&
+          !gst_caps_can_intersect (caps, tmptrans->codec_preferences)) {
+        continue;
+      }
+
+      trans = tmptrans;
+      break;
+    }
+  }
+
   if (!trans) {
     trans = GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
             GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV, -1));

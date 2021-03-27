@@ -1702,6 +1702,7 @@ GST_START_TEST (test_recvonly_sendonly)
   t->harnesses = g_list_prepend (t->harnesses, h);
   g_signal_emit_by_name (t->webrtc1, "get-transceivers", &transceivers);
   fail_unless (transceivers != NULL);
+  fail_unless_equals_int (transceivers->len, 2);
   trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 1);
   trans->direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
 
