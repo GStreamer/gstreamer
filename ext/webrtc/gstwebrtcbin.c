@@ -6302,6 +6302,7 @@ sink_pad_block (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
   return GST_PAD_PROBE_OK;
 }
 
+
 static GstPad *
 gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
@@ -6338,7 +6339,20 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     trans = _find_transceiver_for_mline (webrtc, serial);
 
     if (trans) {
-      /* Ignore transceivers that already have a pad allocated */
+      /* Reject transceivers that are only for receiving ... */
+      if (trans->direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY ||
+          trans->direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE) {
+        gchar *direction =
+            g_enum_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
+            trans->direction);
+        GST_ERROR_OBJECT (element, "Tried to request a new sink pad %s for"
+            " existing m-line %d, but the transceiver's direction is %s",
+            name, serial, direction);
+        g_free (direction);
+        return NULL;
+      }
+
+      /* Reject transceivers that already have a pad allocated */
       pad2 = _find_pad_for_transceiver (webrtc, GST_PAD_SINK, trans);
       if (pad2) {
         GST_ERROR_OBJECT (element, "Trying to request pad %s for m-line %d, "
