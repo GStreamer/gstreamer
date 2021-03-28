@@ -79,10 +79,10 @@ G_BEGIN_DECLS
 
 /**
  * GstD3D11AllocationFlags:
- * GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY: Indicates each allocated texture
- *                                          should be array type. This type of
- *                                          is used for D3D11/DXVA decoders
- *                                          in general.
+ * @GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY: Indicates each allocated texture
+ *                                           should be array type. This type of
+ *                                           is used for D3D11/DXVA decoders
+ *                                           in general.
  *
  * Since: 1.20
  */

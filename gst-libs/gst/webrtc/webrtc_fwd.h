@@ -280,10 +280,10 @@ typedef enum /*< underscore_name=gst_webrtc_fec_type >*/
 
 /**
  * GstWebRTCSCTPTransportState:
- * GST_WEBRTC_SCTP_TRANSPORT_STATE_NEW: new
- * GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTING: connecting
- * GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED: connected
- * GST_WEBRTC_SCTP_TRANSPORT_STATE_CLOSED: closed
+ * @GST_WEBRTC_SCTP_TRANSPORT_STATE_NEW: new
+ * @GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTING: connecting
+ * @GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED: connected
+ * @GST_WEBRTC_SCTP_TRANSPORT_STATE_CLOSED: closed
  *
  * See <http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate>
  *
@@ -299,10 +299,10 @@ typedef enum /*< underscore_name=gst_webrtc_sctp_transport_state >*/
 
 /**
  * GstWebRTCPriorityType:
- * GST_WEBRTC_PRIORITY_TYPE_VERY_LOW: very-low
- * GST_WEBRTC_PRIORITY_TYPE_LOW: low
- * GST_WEBRTC_PRIORITY_TYPE_MEDIUM: medium
- * GST_WEBRTC_PRIORITY_TYPE_HIGH: high
+ * @GST_WEBRTC_PRIORITY_TYPE_VERY_LOW: very-low
+ * @GST_WEBRTC_PRIORITY_TYPE_LOW: low
+ * @GST_WEBRTC_PRIORITY_TYPE_MEDIUM: medium
+ * @GST_WEBRTC_PRIORITY_TYPE_HIGH: high
  *
  * See <http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype>
  *
@@ -318,11 +318,11 @@ typedef enum /*< underscore_name=gst_webrtc_priority_type >*/
 
 /**
  * GstWebRTCDataChannelState:
- * GST_WEBRTC_DATA_CHANNEL_STATE_NEW: new
- * GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING: connection
- * GST_WEBRTC_DATA_CHANNEL_STATE_OPEN: open
- * GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING: closing
- * GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED: closed
+ * @GST_WEBRTC_DATA_CHANNEL_STATE_NEW: new
+ * @GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING: connection
+ * @GST_WEBRTC_DATA_CHANNEL_STATE_OPEN: open
+ * @GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING: closing
+ * @GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED: closed
  *
  * See <http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate>
  *
@@ -339,10 +339,10 @@ typedef enum /*< underscore_name=gst_webrtc_data_channel_state >*/
 
 /**
  * GstWebRTCBundlePolicy:
- * GST_WEBRTC_BUNDLE_POLICY_NONE: none
- * GST_WEBRTC_BUNDLE_POLICY_BALANCED: balanced
- * GST_WEBRTC_BUNDLE_POLICY_MAX_COMPAT: max-compat
- * GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE: max-bundle
+ * @GST_WEBRTC_BUNDLE_POLICY_NONE: none
+ * @GST_WEBRTC_BUNDLE_POLICY_BALANCED: balanced
+ * @GST_WEBRTC_BUNDLE_POLICY_MAX_COMPAT: max-compat
+ * @GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE: max-bundle
  *
  * See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
  * for more information.
@@ -359,8 +359,8 @@ typedef enum /*<underscore_name=gst_webrtc_bundle_policy>*/
 
 /**
  * GstWebRTCICETransportPolicy:
- * GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL: all
- * GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY: relay
+ * @GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL: all
+ * @GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY: relay
  *
  * See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
  * for more information.
