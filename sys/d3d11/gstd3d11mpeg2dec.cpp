@@ -73,7 +73,6 @@ typedef struct _GstD3D11Mpeg2Dec
 {
   GstMpeg2Decoder parent;
 
-  GstVideoCodecState *output_state;
   GstD3D11Device *device;
   GstD3D11Decoder *d3d11_decoder;
 
@@ -308,12 +307,9 @@ static gboolean
 gst_d3d11_mpeg2_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
-  GstMpeg2Decoder *mpeg2dec = GST_MPEG2_DECODER (decoder);
 
-  if (!gst_d3d11_decoder_negotiate (self->d3d11_decoder, decoder,
-          mpeg2dec->input_state, &self->output_state)) {
+  if (!gst_d3d11_decoder_negotiate (self->d3d11_decoder, decoder))
     return FALSE;
-  }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
@@ -431,8 +427,8 @@ gst_d3d11_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
       GST_VIDEO_INFO_INTERLACE_MODE (&info) = GST_VIDEO_INTERLACE_MODE_MIXED;
 
     if (!gst_d3d11_decoder_configure (self->d3d11_decoder,
-            GST_D3D11_CODEC_MPEG2, &info, self->width, self->height,
-            NUM_OUTPUT_VIEW)) {
+            GST_D3D11_CODEC_MPEG2, decoder->input_state, &info,
+            self->width, self->height, NUM_OUTPUT_VIEW)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return FALSE;
     }
@@ -886,9 +882,7 @@ gst_d3d11_mpeg2_dec_output_picture (GstMpeg2Decoder * decoder,
 {
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  GstBuffer *output_buffer = NULL;
   GstBuffer *view_buffer;
-  gboolean direct_rendering = FALSE;
 
   GST_LOG_OBJECT (self, "Outputting picture %p", picture);
 
@@ -899,38 +893,8 @@ gst_d3d11_mpeg2_dec_output_picture (GstMpeg2Decoder * decoder,
     goto error;
   }
 
-  /* if downstream is d3d11 element and forward playback case,
-   * expose our decoder view without copy. In case of reverse playback, however,
-   * we cannot do that since baseclass will store the decoded buffer
-   * up to gop size but our dpb pool cannot be increased */
-  if (GST_VIDEO_DECODER (self)->input_segment.rate > 0
-      && gst_d3d11_decoder_can_direct_render (self->d3d11_decoder, view_buffer,
-          GST_MINI_OBJECT_CAST (picture))) {
-    direct_rendering = TRUE;
-  }
-
-  if (direct_rendering) {
-    GstMemory *mem;
-
-    output_buffer = gst_buffer_ref (view_buffer);
-    mem = gst_buffer_peek_memory (output_buffer, 0);
-    GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
-  } else {
-    output_buffer = gst_video_decoder_allocate_output_buffer (vdec);
-  }
-
-  if (!output_buffer) {
-    GST_ERROR_OBJECT (self, "Couldn't allocate output buffer");
-    goto error;
-  }
-
-  frame->output_buffer = output_buffer;
-
-  if (!gst_d3d11_decoder_process_output (self->d3d11_decoder,
-          &self->output_state->info,
-          GST_VIDEO_INFO_WIDTH (&self->output_state->info),
-          GST_VIDEO_INFO_HEIGHT (&self->output_state->info),
-          view_buffer, output_buffer)) {
+  if (!gst_d3d11_decoder_process_output (self->d3d11_decoder, vdec,
+          self->width, self->height, view_buffer, &frame->output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
     goto error;
   }

@@ -103,16 +103,8 @@ typedef struct _GstD3D11Vp9Dec
 {
   GstVp9Decoder parent;
 
-  GstVideoCodecState *output_state;
-
   GstD3D11Device *device;
-
   GstD3D11Decoder *d3d11_decoder;
-
-  guint width, height;
-  GstVP9Profile profile;
-
-  GstVideoFormat out_format;
 } GstD3D11Vp9Dec;
 
 typedef struct _GstD3D11Vp9DecClass
@@ -310,12 +302,9 @@ static gboolean
 gst_d3d11_vp9_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
-  GstVp9Decoder *vp9dec = GST_VP9_DECODER (decoder);
 
-  if (!gst_d3d11_decoder_negotiate (self->d3d11_decoder,
-          decoder, vp9dec->input_state, &self->output_state)) {
+  if (!gst_d3d11_decoder_negotiate (self->d3d11_decoder, decoder))
     return FALSE;
-  }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
@@ -370,53 +359,34 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
     const GstVp9Parser * parser, const GstVp9FrameHdr * frame_hdr)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
-  gboolean modified = FALSE;
+  GstVideoInfo info;
+  GstVideoFormat out_format = GST_VIDEO_FORMAT_UNKNOWN;
 
   GST_LOG_OBJECT (self, "new sequence");
 
-  if (self->width < frame_hdr->width || self->height < frame_hdr->height) {
-    self->width = frame_hdr->width;
-    self->height = frame_hdr->height;
-    GST_INFO_OBJECT (self, "resolution changed %dx%d",
-        self->width, self->height);
-    modified = TRUE;
+  if (frame_hdr->profile == GST_VP9_PROFILE_0)
+    out_format = GST_VIDEO_FORMAT_NV12;
+  else if (frame_hdr->profile == GST_VP9_PROFILE_2)
+    out_format = GST_VIDEO_FORMAT_P010_10LE;
+
+  if (out_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT (self, "Could not support profile %d", frame_hdr->profile);
+    return FALSE;
   }
 
-  if (self->profile != frame_hdr->profile) {
-    self->profile = (GstVP9Profile) frame_hdr->profile;
-    GST_INFO_OBJECT (self, "profile changed %d", self->profile);
-    modified = TRUE;
+  gst_video_info_set_format (&info,
+      out_format, frame_hdr->width, frame_hdr->height);
+
+  if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_VP9,
+          decoder->input_state, &info, (gint) frame_hdr->width,
+          (gint) frame_hdr->height, NUM_OUTPUT_VIEW)) {
+    GST_ERROR_OBJECT (self, "Failed to create decoder");
+    return FALSE;
   }
 
-  if (modified || !gst_d3d11_decoder_is_configured (self->d3d11_decoder)) {
-    GstVideoInfo info;
-
-    self->out_format = GST_VIDEO_FORMAT_UNKNOWN;
-
-    if (self->profile == GST_VP9_PROFILE_0) {
-      self->out_format = GST_VIDEO_FORMAT_NV12;
-    } else if (self->profile == GST_VP9_PROFILE_2) {
-      self->out_format = GST_VIDEO_FORMAT_P010_10LE;
-    }
-
-    if (self->out_format == GST_VIDEO_FORMAT_UNKNOWN) {
-      GST_ERROR_OBJECT (self, "Could not support profile %d", self->profile);
-      return FALSE;
-    }
-
-    gst_video_info_set_format (&info,
-        self->out_format, self->width, self->height);
-
-    if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_VP9,
-            &info, self->width, self->height, NUM_OUTPUT_VIEW)) {
-      GST_ERROR_OBJECT (self, "Failed to create decoder");
-      return FALSE;
-    }
-
-    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
-      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
-    }
+  if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
+    GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
+    return FALSE;
   }
 
   return TRUE;
@@ -479,9 +449,7 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  GstBuffer *output_buffer = NULL;
   GstBuffer *view_buffer;
-  gboolean direct_rendering = FALSE;
 
   GST_LOG_OBJECT (self, "Outputting picture %p", picture);
 
@@ -492,37 +460,9 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
     goto error;
   }
 
-  /* if downstream is d3d11 element and forward playback case,
-   * expose our decoder view without copy. In case of reverse playback, however,
-   * we cannot do that since baseclass will store the decoded buffer
-   * up to gop size but our dpb pool cannot be increased */
-  if (GST_VIDEO_DECODER (self)->input_segment.rate > 0
-      && gst_d3d11_decoder_can_direct_render (self->d3d11_decoder, view_buffer,
-          GST_MINI_OBJECT_CAST (picture))) {
-    direct_rendering = TRUE;
-  }
-
-  if (direct_rendering) {
-    GstMemory *mem;
-
-    output_buffer = gst_buffer_ref (view_buffer);
-    mem = gst_buffer_peek_memory (output_buffer, 0);
-    GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
-  } else {
-    output_buffer = gst_video_decoder_allocate_output_buffer (vdec);
-  }
-
-  if (!output_buffer) {
-    GST_ERROR_OBJECT (self, "Couldn't allocate output buffer");
-    goto error;
-  }
-
-  frame->output_buffer = output_buffer;
-
-  if (!gst_d3d11_decoder_process_output (self->d3d11_decoder,
-          &self->output_state->info,
-          picture->frame_hdr.width, picture->frame_hdr.height,
-          view_buffer, output_buffer)) {
+  if (!gst_d3d11_decoder_process_output (self->d3d11_decoder, vdec,
+          picture->frame_hdr.width, picture->frame_hdr.height, view_buffer,
+          &frame->output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
     goto error;
   }

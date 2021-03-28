@@ -73,7 +73,6 @@ typedef struct _GstD3D11Vp8Dec
 {
   GstVp8Decoder parent;
 
-  GstVideoCodecState *output_state;
   GstD3D11Device *device;
   GstD3D11Decoder *d3d11_decoder;
 
@@ -272,12 +271,9 @@ static gboolean
 gst_d3d11_vp8_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstD3D11Vp8Dec *self = GST_D3D11_VP8_DEC (decoder);
-  GstVp8Decoder *vp8dec = GST_VP8_DECODER (decoder);
 
-  if (!gst_d3d11_decoder_negotiate (self->d3d11_decoder,
-          decoder, vp8dec->input_state, &self->output_state)) {
+  if (!gst_d3d11_decoder_negotiate (self->d3d11_decoder, decoder))
     return FALSE;
-  }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
@@ -345,7 +341,8 @@ gst_d3d11_vp8_dec_new_sequence (GstVp8Decoder * decoder,
       self->out_format, self->width, self->height);
 
   if (!gst_d3d11_decoder_configure (self->d3d11_decoder, GST_D3D11_CODEC_VP8,
-          &info, self->width, self->height, NUM_OUTPUT_VIEW)) {
+          decoder->input_state, &info, self->width, self->height,
+          NUM_OUTPUT_VIEW)) {
     GST_ERROR_OBJECT (self, "Failed to create decoder");
     return FALSE;
   }
@@ -388,9 +385,7 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
 {
   GstD3D11Vp8Dec *self = GST_D3D11_VP8_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  GstBuffer *output_buffer = NULL;
   GstBuffer *view_buffer;
-  gboolean direct_rendering = FALSE;
 
   g_assert (picture->frame_hdr.show_frame);
 
@@ -403,37 +398,8 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
     goto error;
   }
 
-  /* if downstream is d3d11 element and forward playback case,
-   * expose our decoder view without copy. In case of reverse playback, however,
-   * we cannot do that since baseclass will store the decoded buffer
-   * up to gop size but our dpb pool cannot be increased */
-  if (GST_VIDEO_DECODER (self)->input_segment.rate > 0
-      && gst_d3d11_decoder_can_direct_render (self->d3d11_decoder, view_buffer,
-          GST_MINI_OBJECT_CAST (picture))) {
-    direct_rendering = TRUE;
-  }
-
-  if (direct_rendering) {
-    GstMemory *mem;
-
-    output_buffer = gst_buffer_ref (view_buffer);
-    mem = gst_buffer_peek_memory (output_buffer, 0);
-    GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
-  } else {
-    output_buffer = gst_video_decoder_allocate_output_buffer (vdec);
-  }
-
-  if (!output_buffer) {
-    GST_ERROR_OBJECT (self, "Couldn't allocate output buffer");
-    goto error;
-  }
-
-  frame->output_buffer = output_buffer;
-
-  if (!gst_d3d11_decoder_process_output (self->d3d11_decoder,
-          &self->output_state->info,
-          picture->frame_hdr.width, picture->frame_hdr.height,
-          view_buffer, output_buffer)) {
+  if (!gst_d3d11_decoder_process_output (self->d3d11_decoder, vdec,
+          self->width, self->height, view_buffer, &frame->output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
     goto error;
   }

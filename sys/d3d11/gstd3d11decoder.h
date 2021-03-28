@@ -61,6 +61,7 @@ gboolean          gst_d3d11_decoder_is_configured (GstD3D11Decoder * decoder);
 
 gboolean          gst_d3d11_decoder_configure     (GstD3D11Decoder * decoder,
                                                    GstD3D11Codec codec,
+                                                   GstVideoCodecState * input_state,
                                                    GstVideoInfo * info,
                                                    gint coded_width,
                                                    gint coded_height,
@@ -93,16 +94,14 @@ ID3D11VideoDecoderOutputView * gst_d3d11_decoder_get_output_view_from_buffer (Gs
                                                                               guint8 * view_id);
 
 gboolean          gst_d3d11_decoder_process_output      (GstD3D11Decoder * decoder,
-                                                         GstVideoInfo * info,
+                                                         GstVideoDecoder * videodec,
                                                          gint display_width,
                                                          gint display_height,
                                                          GstBuffer * decoder_buffer,
-                                                         GstBuffer * output);
+                                                         GstBuffer ** output);
 
 gboolean          gst_d3d11_decoder_negotiate           (GstD3D11Decoder * decoder,
-                                                         GstVideoDecoder * videodec,
-                                                         GstVideoCodecState * input_state,
-                                                         GstVideoCodecState ** output_state);
+                                                         GstVideoDecoder * videodec);
 
 gboolean          gst_d3d11_decoder_decide_allocation   (GstD3D11Decoder * decoder,
                                                          GstVideoDecoder * videodec,
@@ -110,10 +109,6 @@ gboolean          gst_d3d11_decoder_decide_allocation   (GstD3D11Decoder * decod
 
 gboolean          gst_d3d11_decoder_flush               (GstD3D11Decoder * decoder,
                                                          GstVideoDecoder * videodec);
-
-gboolean          gst_d3d11_decoder_can_direct_render   (GstD3D11Decoder * decoder,
-                                                         GstBuffer * view_buffer,
-                                                         GstMiniObject * picture);
 
 /* Utils for class registration */
 gboolean          gst_d3d11_decoder_util_is_legacy_device (GstD3D11Device * device);
