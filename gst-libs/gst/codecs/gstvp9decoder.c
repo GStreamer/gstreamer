@@ -297,7 +297,8 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     goto unmap_and_error;
   }
 
-  if (priv->wait_keyframe && frame_hdr.frame_type != GST_VP9_KEY_FRAME) {
+  if (priv->wait_keyframe && (frame_hdr.frame_type != GST_VP9_KEY_FRAME
+          || frame_hdr.show_existing_frame)) {
     GST_DEBUG_OBJECT (self, "Drop frame before initial keyframe");
     gst_buffer_unmap (in_buf, &map);
 
@@ -307,6 +308,7 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
   }
 
   if (frame_hdr.frame_type == GST_VP9_KEY_FRAME &&
+      !frame_hdr.show_existing_frame &&
       !gst_vp9_decoder_check_codec_change (self, &frame_hdr)) {
     GST_ERROR_OBJECT (self, "codec change error");
     goto unmap_and_error;
