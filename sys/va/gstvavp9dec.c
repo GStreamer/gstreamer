@@ -458,7 +458,7 @@ gst_va_vp9_dec_output_picture (GstVp9Decoder * decoder,
 
 static GstVp9Picture *
 gst_va_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
-    GstVp9Picture * picture)
+    GstVideoCodecFrame * frame, GstVp9Picture * picture)
 {
   GstVaDecodePicture *va_pic, *va_dup;
   GstVp9Picture *new_picture;
@@ -468,6 +468,8 @@ gst_va_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
 
   new_picture = gst_vp9_picture_new ();
   new_picture->frame_hdr = picture->frame_hdr;
+
+  frame->output_buffer = gst_buffer_ref (va_dup->gstbuffer);
 
   gst_vp9_picture_set_user_data (picture, va_dup,
       (GDestroyNotify) gst_va_decode_picture_free);

@@ -100,6 +100,7 @@ struct _GstVp9DecoderClass
                                         GstVp9Picture * picture);
 
   GstVp9Picture * (*duplicate_picture) (GstVp9Decoder * decoder,
+                                        GstVideoCodecFrame * frame,
                                         GstVp9Picture * picture);
 
   gboolean        (*start_picture)     (GstVp9Decoder * decoder,

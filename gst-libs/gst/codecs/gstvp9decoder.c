@@ -95,7 +95,7 @@ static GstFlowReturn gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 
 static GstVp9Picture *gst_vp9_decoder_duplicate_picture_default (GstVp9Decoder *
-    decoder, GstVp9Picture * picture);
+    decoder, GstVideoCodecFrame * frame, GstVp9Picture * picture);
 
 static void
 gst_vp9_decoder_class_init (GstVp9DecoderClass * klass)
@@ -247,7 +247,7 @@ gst_vp9_decoder_drain (GstVideoDecoder * decoder)
 
 static GstVp9Picture *
 gst_vp9_decoder_duplicate_picture_default (GstVp9Decoder * decoder,
-    GstVp9Picture * picture)
+    GstVideoCodecFrame * frame, GstVp9Picture * picture)
 {
   GstVp9Picture *new_picture;
 
@@ -322,7 +322,7 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
 
     g_assert (klass->duplicate_picture);
     pic_to_dup = priv->dpb->pic_list[frame_hdr.frame_to_show_map_idx];
-    picture = klass->duplicate_picture (self, pic_to_dup);
+    picture = klass->duplicate_picture (self, frame, pic_to_dup);
 
     if (!picture) {
       GST_ERROR_OBJECT (self, "subclass didn't provide duplicated picture");

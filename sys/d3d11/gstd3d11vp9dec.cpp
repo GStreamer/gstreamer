@@ -141,7 +141,7 @@ static gboolean gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
 static gboolean gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static GstVp9Picture *gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder *
-    decoder, GstVp9Picture * picture);
+    decoder, GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static GstFlowReturn gst_d3d11_vp9_dec_output_picture (GstVp9Decoder *
     decoder, GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static gboolean gst_d3d11_vp9_dec_start_picture (GstVp9Decoder * decoder,
@@ -418,7 +418,7 @@ gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
 
 static GstVp9Picture *
 gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
-    GstVp9Picture * picture)
+    GstVideoCodecFrame * frame, GstVp9Picture * picture)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   GstBuffer *view_buffer;

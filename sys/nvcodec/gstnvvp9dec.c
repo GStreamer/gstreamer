@@ -78,7 +78,7 @@ static gboolean gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
 static gboolean gst_nv_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static GstVp9Picture *gst_nv_vp9_dec_duplicate_picture (GstVp9Decoder *
-    decoder, GstVp9Picture * picture);
+    decoder, GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static gboolean gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture, GstVp9Dpb * dpb);
 static GstFlowReturn gst_nv_vp9_dec_output_picture (GstVp9Decoder *
@@ -315,15 +315,15 @@ gst_nv_vp9_dec_get_decoder_frame_from_picture (GstNvVp9Dec * self,
 
 static GstVp9Picture *
 gst_nv_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
-    GstVp9Picture * picture)
+    GstVideoCodecFrame * frame, GstVp9Picture * picture)
 {
   GstNvVp9Dec *self = GST_NV_VP9_DEC (decoder);
-  GstNvDecoderFrame *frame;
+  GstNvDecoderFrame *nv_frame;
   GstVp9Picture *new_picture;
 
-  frame = gst_nv_vp9_dec_get_decoder_frame_from_picture (self, picture);
+  nv_frame = gst_nv_vp9_dec_get_decoder_frame_from_picture (self, picture);
 
-  if (!frame) {
+  if (!nv_frame) {
     GST_ERROR_OBJECT (self, "Parent picture does not have decoder frame");
     return NULL;
   }
@@ -332,7 +332,7 @@ gst_nv_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
   new_picture->frame_hdr = picture->frame_hdr;
 
   gst_vp9_picture_set_user_data (new_picture,
-      gst_nv_decoder_frame_ref (frame),
+      gst_nv_decoder_frame_ref (nv_frame),
       (GDestroyNotify) gst_nv_decoder_frame_unref);
 
   return new_picture;
