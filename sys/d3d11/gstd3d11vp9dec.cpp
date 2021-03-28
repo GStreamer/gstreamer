@@ -557,44 +557,6 @@ gst_d3d11_vp9_dec_copy_frame_params (GstD3D11Vp9Dec * self,
   params->interp_filter = frame_hdr->mcomp_filter_type;
   params->log2_tile_cols = frame_hdr->log2_tile_columns;
   params->log2_tile_rows = frame_hdr->log2_tile_rows;
-
-#ifndef GST_DISABLE_GST_DEBUG
-  GST_TRACE_OBJECT (self, "Dump frame params");
-  /* set before calling this function */
-  GST_TRACE_OBJECT (self, "\tCurrPic.Index7Bits: %d",
-      params->CurrPic.Index7Bits);
-  GST_TRACE_OBJECT (self, "\tuncompressed_header_size_byte_aligned: %d",
-      params->uncompressed_header_size_byte_aligned);
-  GST_TRACE_OBJECT (self, "\tfirst_partition_size: %d",
-      params->first_partition_size);
-
-  GST_TRACE_OBJECT (self, "\tprofile: %d", params->profile);
-  GST_TRACE_OBJECT (self, "\tframe_type: %d", params->frame_type);
-  GST_TRACE_OBJECT (self, "\tshow_frame: %d", params->show_frame);
-  GST_TRACE_OBJECT (self, "\terror_resilient_mode: %d",
-      params->error_resilient_mode);
-  GST_TRACE_OBJECT (self, "\tsubsampling_x: %d", params->subsampling_x);
-  GST_TRACE_OBJECT (self, "\tsubsampling_t: %d", params->subsampling_y);
-  GST_TRACE_OBJECT (self, "\trefresh_frame_context: %d",
-      params->refresh_frame_context);
-  GST_TRACE_OBJECT (self, "\tframe_parallel_decoding_mode: %d",
-      params->frame_parallel_decoding_mode);
-  GST_TRACE_OBJECT (self, "\tintra_only: %d", params->intra_only);
-  GST_TRACE_OBJECT (self, "\tframe_context_idx: %d", params->frame_context_idx);
-  GST_TRACE_OBJECT (self, "\treset_frame_context: %d",
-      params->reset_frame_context);
-  GST_TRACE_OBJECT (self, "\tallow_high_precision_mv: %d",
-      params->allow_high_precision_mv);
-  GST_TRACE_OBJECT (self, "\twidth: %d", params->width);
-  GST_TRACE_OBJECT (self, "\theight: %d", params->height);
-  GST_TRACE_OBJECT (self, "\tBitDepthMinus8Luma: %d",
-      params->BitDepthMinus8Luma);
-  GST_TRACE_OBJECT (self, "\tBitDepthMinus8Chroma: %d",
-      params->BitDepthMinus8Chroma);
-  GST_TRACE_OBJECT (self, "\tinterp_filter: %d", params->interp_filter);
-  GST_TRACE_OBJECT (self, "\tlog2_tile_cols: %d", params->log2_tile_cols);
-  GST_TRACE_OBJECT (self, "\tlog2_tile_rows: %d", params->log2_tile_rows);
-#endif
 }
 
 static void
@@ -625,18 +587,6 @@ gst_d3d11_vp9_dec_copy_reference_frames (GstD3D11Vp9Dec * self,
       params->ref_frame_coded_height[i] = 0;
     }
   }
-
-#ifndef GST_DISABLE_GST_DEBUG
-  GST_TRACE_OBJECT (self, "Dump reference frames");
-  for (i = 0; i < GST_VP9_REF_FRAMES; i++) {
-    GST_TRACE_OBJECT (self, "\t[%d] ref_frame_map.Index7Bits: %d", i,
-        params->ref_frame_map[i].Index7Bits);
-    GST_TRACE_OBJECT (self, "\t[%d] ref_frame_coded_width: %d", i,
-        params->ref_frame_coded_width[i]);
-    GST_TRACE_OBJECT (self, "\t[%d] ref_frame_coded_height: %d", i,
-        params->ref_frame_coded_height[i]);
-  }
-#endif
 }
 
 static void
@@ -654,18 +604,6 @@ gst_d3d11_vp9_dec_copy_frame_refs (GstD3D11Vp9Dec * self,
   for (i = 0; i < GST_VP9_REFS_PER_FRAME; i++) {
     params->ref_frame_sign_bias[i + 1] = frame_hdr->ref_frame_sign_bias[i];
   }
-
-#ifndef GST_DISABLE_GST_DEBUG
-  GST_TRACE_OBJECT (self, "Dump frame refs");
-  for (i = 0; i < GST_VP9_REFS_PER_FRAME; i++) {
-    GST_TRACE_OBJECT (self, "\t[%d] ref_frame_indices: %d", i,
-        frame_hdr->ref_frame_indices[i]);
-    GST_TRACE_OBJECT (self, "\t[%d] frame_refs.Index7Bits: %d", i,
-        params->frame_refs[i].Index7Bits);
-    GST_TRACE_OBJECT (self, "\t[%d] ref_frame_sign_bias: %d", i,
-        params->ref_frame_sign_bias[i + 1]);
-  }
-#endif
 }
 
 static void
@@ -688,20 +626,6 @@ gst_d3d11_vp9_dec_copy_loop_filter_params (GstD3D11Vp9Dec * self,
   for (i = 0; i < GST_VP9_MAX_MODE_LF_DELTAS; i++) {
     params->mode_deltas[i] = loopfilter->mode_deltas[i];
   }
-
-#ifndef GST_DISABLE_GST_DEBUG
-  GST_TRACE_OBJECT (self, "Dump loop filter params");
-  GST_TRACE_OBJECT (self, "\tfilter_level: %d", params->filter_level);
-  GST_TRACE_OBJECT (self, "\tsharpness_level: %d", params->sharpness_level);
-  GST_TRACE_OBJECT (self, "\tmode_ref_delta_enabled: %d",
-      params->mode_ref_delta_enabled);
-  GST_TRACE_OBJECT (self, "\tmode_ref_delta_update: %d",
-      params->mode_ref_delta_update);
-  for (i = 0; i < GST_VP9_MAX_REF_LF_DELTAS; i++)
-    GST_TRACE_OBJECT (self, "\tref_deltas[%d]: %d", i, params->ref_deltas[i]);
-  for (i = 0; i < GST_VP9_MAX_MODE_LF_DELTAS; i++)
-    GST_TRACE_OBJECT (self, "\tmode_deltas[%d]: %d", i, params->mode_deltas[i]);
-#endif
 }
 
 static void
@@ -715,14 +639,6 @@ gst_d3d11_vp9_dec_copy_quant_params (GstD3D11Vp9Dec * self,
   params->y_dc_delta_q = quant_indices->y_dc_delta;
   params->uv_dc_delta_q = quant_indices->uv_dc_delta;
   params->uv_ac_delta_q = quant_indices->uv_ac_delta;
-
-#ifndef GST_DISABLE_GST_DEBUG
-  GST_TRACE_OBJECT (self, "Dump quantization params");
-  GST_TRACE_OBJECT (self, "\tbase_qindex: %d", params->base_qindex);
-  GST_TRACE_OBJECT (self, "\ty_dc_delta_q: %d", params->y_dc_delta_q);
-  GST_TRACE_OBJECT (self, "\tuv_dc_delta_q: %d", params->uv_dc_delta_q);
-  GST_TRACE_OBJECT (self, "\tuv_ac_delta_q: %d", params->uv_ac_delta_q);
-#endif
 }
 
 static void
@@ -765,29 +681,6 @@ gst_d3d11_vp9_dec_copy_segmentation_params (GstD3D11Vp9Dec * self,
     params->stVP9Segments.feature_data[i][2] = seg->data[i].reference_frame;
     params->stVP9Segments.feature_data[i][3] = 0;
   }
-
-#ifndef GST_DISABLE_GST_DEBUG
-  GST_TRACE_OBJECT (self, "Dump segmentation params");
-  GST_TRACE_OBJECT (self, "\tenabled: %d", params->stVP9Segments.enabled);
-  GST_TRACE_OBJECT (self, "\tupdate_map: %d", params->stVP9Segments.update_map);
-  GST_TRACE_OBJECT (self, "\ttemporal_update: %d",
-      params->stVP9Segments.temporal_update);
-  GST_TRACE_OBJECT (self, "\tabs_delta: %d", params->stVP9Segments.abs_delta);
-  for (i = 0; i < GST_VP9_SEG_TREE_PROBS; i++)
-    GST_TRACE_OBJECT (self, "\ttree_probs[%d]: %d", i,
-        params->stVP9Segments.tree_probs[i]);
-  for (i = 0; i < GST_VP9_PREDICTION_PROBS; i++)
-    GST_TRACE_OBJECT (self, "\tpred_probs[%d]: %d", i,
-        params->stVP9Segments.pred_probs[i]);
-  for (i = 0; i < GST_VP9_MAX_SEGMENTS; i++) {
-    gint j;
-    GST_TRACE_OBJECT (self, "\tfeature_mask[%d]: 0x%x", i,
-        params->stVP9Segments.feature_mask[i]);
-    for (j = 0; j < 4; j++)
-      GST_TRACE_OBJECT (self, "\tfeature_data[%d][%d]: %d", i, j,
-          params->stVP9Segments.feature_data[i][j]);
-  }
-#endif
 }
 
 static gboolean
