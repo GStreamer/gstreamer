@@ -52,7 +52,6 @@ struct _GstQtOverlay
   GstGLFilter           parent;
 
   gchar                *qml_scene;
-  QQuickItem           *root_item;
 
   GstQuickRenderer     *renderer;
 

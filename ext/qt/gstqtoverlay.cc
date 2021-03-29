@@ -209,12 +209,16 @@ static void
 gst_qt_overlay_init (GstQtOverlay * qt_overlay)
 {
   qt_overlay->widget = QSharedPointer<QtGLVideoItemInterface>();
+  qt_overlay->qml_scene = NULL;
 }
 
 static void
 gst_qt_overlay_finalize (GObject * object)
 {
   GstQtOverlay *qt_overlay = GST_QT_OVERLAY (object);
+
+  g_free (qt_overlay->qml_scene);
+  qt_overlay->qml_scene = NULL;
 
   qt_overlay->widget.clear();
 
