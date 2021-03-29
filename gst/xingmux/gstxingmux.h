@@ -79,6 +79,7 @@ struct _GstXingMuxClass {
 
 /* Standard function returning type information. */
 GType gst_xing_mux_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (xingmux);
 
 G_END_DECLS
 

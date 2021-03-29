@@ -52,6 +52,8 @@ GST_DEBUG_CATEGORY_STATIC (xing_mux_debug);
 
 #define gst_xing_mux_parent_class parent_class
 G_DEFINE_TYPE (GstXingMux, gst_xing_mux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (xingmux, "xingmux", GST_RANK_MARGINAL,
+    GST_TYPE_XING_MUX);
 
 /* Xing Header stuff */
 #define GST_XING_FRAME_FIELD   (1 << 0)
