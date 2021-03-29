@@ -61,6 +61,8 @@ GST_DEBUG_CATEGORY_STATIC (real_audio_demux_debug);
 
 #define gst_real_audio_demux_parent_class parent_class
 G_DEFINE_TYPE (GstRealAudioDemux, gst_real_audio_demux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rademux, "rademux",
+    GST_RANK_SECONDARY, GST_TYPE_REAL_AUDIO_DEMUX);
 
 static GstStateChangeReturn gst_real_audio_demux_change_state (GstElement * e,
     GstStateChange transition);
@@ -995,11 +997,4 @@ gst_real_audio_demux_change_state (GstElement * element,
   }
 
   return ret;
-}
-
-gboolean
-gst_rademux_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rademux",
-      GST_RANK_SECONDARY, GST_TYPE_REAL_AUDIO_DEMUX);
 }

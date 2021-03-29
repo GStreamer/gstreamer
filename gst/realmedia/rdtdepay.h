@@ -67,7 +67,7 @@ struct _GstRDTDepayClass
 
 GType gst_rdt_depay_get_type (void);
 
-gboolean gst_rdt_depay_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (rdtdepay);
 
 G_END_DECLS
 

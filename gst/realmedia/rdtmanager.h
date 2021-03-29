@@ -86,7 +86,7 @@ struct _GstRDTManagerClass {
 
 GType gst_rdt_manager_get_type(void);
 
-gboolean gst_rdt_manager_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (rdtmanager);
 
 G_END_DECLS
 

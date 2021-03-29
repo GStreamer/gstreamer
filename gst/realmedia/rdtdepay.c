@@ -66,6 +66,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_rdt_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRDTDepay, gst_rdt_depay, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rdtdepay, "rdtdepay",
+    GST_RANK_MARGINAL, GST_TYPE_RDT_DEPAY);
 
 static void gst_rdt_depay_finalize (GObject * object);
 
@@ -491,11 +493,4 @@ gst_rdt_depay_change_state (GstElement * element, GstStateChange transition)
       break;
   }
   return ret;
-}
-
-gboolean
-gst_rdt_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rdtdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RDT_DEPAY);
 }

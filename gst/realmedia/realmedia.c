@@ -31,25 +31,16 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_rmdemux_plugin_init (plugin))
-    return FALSE;
+  gboolean ret = FALSE;
 
-  if (!gst_rademux_plugin_init (plugin))
-    return FALSE;
+  ret |= GST_ELEMENT_REGISTER (rmdemux, plugin);
+  ret |= GST_ELEMENT_REGISTER (rademux, plugin);
+  ret |= GST_ELEMENT_REGISTER (rdtdepay, plugin);
+  ret |= GST_ELEMENT_REGISTER (rdtmanager, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtspreal, plugin);
+  ret |= GST_ELEMENT_REGISTER (pnmsrc, plugin);
 
-  if (!gst_rdt_depay_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_rdt_manager_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_rtsp_real_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_pnm_src_plugin_init (plugin))
-    return FALSE;
-
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

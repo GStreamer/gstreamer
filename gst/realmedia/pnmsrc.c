@@ -58,6 +58,8 @@ static void gst_pnm_src_uri_handler_init (gpointer g_iface,
 #define gst_pnm_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPNMSrc, gst_pnm_src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_pnm_src_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE (pnmsrc, "pnmsrc",
+    GST_RANK_MARGINAL, GST_TYPE_PNM_SRC);
 
 static void gst_pnm_src_finalize (GObject * object);
 
@@ -108,13 +110,6 @@ static void
 gst_pnm_src_init (GstPNMSrc * pnmsrc)
 {
   pnmsrc->location = g_strdup (DEFAULT_LOCATION);
-}
-
-gboolean
-gst_pnm_src_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "pnmsrc",
-      GST_RANK_MARGINAL, GST_TYPE_PNM_SRC);
 }
 
 static void

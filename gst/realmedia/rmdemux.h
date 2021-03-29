@@ -158,7 +158,7 @@ struct _GstRMDemuxClass {
 #define GST_RM_AUD_xRA4 GST_MAKE_FOURCC('.','r','a','4') // Not a real audio codec
 #define GST_RM_AUD_xRA5 GST_MAKE_FOURCC('.','r','a','5') // Not a real audio codec
 
-gboolean gst_rmdemux_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (rmdemux);
 
 G_END_DECLS
 

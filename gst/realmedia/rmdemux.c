@@ -192,6 +192,9 @@ gst_rmdemux_get_type (void)
   return rmdemux_type;
 }
 
+GST_ELEMENT_REGISTER_DEFINE (rmdemux, "rmdemux",
+    GST_RANK_PRIMARY, GST_TYPE_RMDEMUX);
+
 static void
 gst_rmdemux_base_init (GstRMDemuxClass * klass)
 {
@@ -2631,11 +2634,4 @@ not_enough_data:
     gst_buffer_unref (in);
     return GST_FLOW_OK;
   }
-}
-
-gboolean
-gst_rmdemux_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rmdemux",
-      GST_RANK_PRIMARY, GST_TYPE_RMDEMUX);
 }

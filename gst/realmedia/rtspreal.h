@@ -85,7 +85,8 @@ struct _GstRTSPRealClass {
 
 GType gst_rtsp_real_get_type(void);
 
-gboolean gst_rtsp_real_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (rtspreal);
+
 
 G_END_DECLS
 

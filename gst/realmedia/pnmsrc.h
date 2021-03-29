@@ -52,7 +52,7 @@ struct _GstPNMSrcClass
 };
 
 GType gst_pnm_src_get_type (void);
-gboolean gst_pnm_src_plugin_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DECLARE (pnmsrc);
 
 G_END_DECLS
 

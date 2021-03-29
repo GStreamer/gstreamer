@@ -337,6 +337,8 @@ free_session (GstRDTManagerSession * session)
 
 #define gst_rdt_manager_parent_class parent_class
 G_DEFINE_TYPE (GstRDTManager, gst_rdt_manager, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (rdtmanager, "rdtmanager",
+    GST_RANK_NONE, GST_TYPE_RDT_MANAGER);
 
 /* BOXED:UINT,UINT */
 #define g_marshal_value_peek_uint(v)     g_value_get_uint (v)
@@ -1366,11 +1368,4 @@ wrong_template:
 static void
 gst_rdt_manager_release_pad (GstElement * element, GstPad * pad)
 {
-}
-
-gboolean
-gst_rdt_manager_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rdtmanager",
-      GST_RANK_NONE, GST_TYPE_RDT_MANAGER);
 }
