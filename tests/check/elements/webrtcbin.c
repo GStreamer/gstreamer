@@ -3364,6 +3364,98 @@ GST_START_TEST (test_bundle_codec_preferences_rtx_no_duplicate_payloads)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reject_request_pad)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstWebRTCRTPTransceiverDirection direction;
+  GstWebRTCRTPTransceiver *trans, *trans2;
+  guint offer_media_format_count[] = { 1, };
+  guint answer_media_format_count[] = { 1, };
+  VAL_SDP_INIT (payloads, on_sdp_media_no_duplicate_payloads, NULL, NULL);
+  VAL_SDP_INIT (offer_media_formats, on_sdp_media_count_formats,
+      offer_media_format_count, &payloads);
+  VAL_SDP_INIT (answer_media_formats, on_sdp_media_count_formats,
+      answer_media_format_count, &payloads);
+  const gchar *expected_offer_setup[] = { "actpass", };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup,
+      &offer_media_formats);
+  const gchar *expected_answer_setup[] = { "active", };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
+      &answer_media_formats);
+  const gchar *expected_offer_direction[] = { "recvonly", };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_direction[] = { "sendonly", };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+  GstCaps *caps;
+  GstHarness *h;
+  GstPad *pad;
+  GstPadTemplate *templ;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
+      "max-bundle");
+  gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
+      "max-bundle");
+
+  /* setup recvonly transceiver */
+  caps = gst_caps_from_string (VP8_RTP_CAPS (96));
+  direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
+  g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
+      &trans);
+  gst_caps_unref (caps);
+  fail_unless (trans != NULL);
+
+  h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
+  add_fake_video_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  /* This should fail because the direction is wrong */
+  pad = gst_element_get_request_pad (t->webrtc1, "sink_0");
+  fail_unless (pad == NULL);
+
+  g_object_set (trans, "direction",
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV, NULL);
+
+  templ = gst_element_get_pad_template (t->webrtc1, "sink_%u");
+  fail_unless (templ != NULL);
+
+  /* This should fail because the caps are wrong */
+  caps = gst_caps_from_string (OPUS_RTP_CAPS (96));
+  pad = gst_element_request_pad (t->webrtc1, templ, "sink_0", caps);
+  fail_unless (pad == NULL);
+
+  gst_caps_unref (trans->codec_preferences);
+  trans->codec_preferences = NULL;
+
+  /* This should fail because the kind doesn't match */
+  pad = gst_element_request_pad (t->webrtc1, templ, "sink_0", caps);
+  fail_unless (pad == NULL);
+  gst_caps_unref (caps);
+
+  /* This should succeed and give us sink_0 */
+  pad = gst_element_get_request_pad (t->webrtc1, "sink_0");
+  fail_unless (pad != NULL);
+
+  g_object_get (pad, "transceiver", &trans2, NULL);
+
+  fail_unless (trans == trans2);
+
+  gst_object_unref (pad);
+  gst_object_unref (trans);
+  gst_object_unref (trans2);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -3407,6 +3499,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_renego_lose_media_fails);
     tcase_add_test (tc,
         test_bundle_codec_preferences_rtx_no_duplicate_payloads);
+    tcase_add_test (tc, test_reject_request_pad);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
