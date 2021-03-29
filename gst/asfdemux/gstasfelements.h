@@ -17,36 +17,23 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+
+#ifndef __GST_ASF_ELEMENTS_H__
+#define __GST_ASF_ELEMENTS_H__
+
 
 #include <gst/gst.h>
-#include <gst/riff/riff-read.h>
-#include "gst/gst-i18n-plugin.h"
-
-#include "gstasfelements.h"
+#include <gst/video/video.h>
 
 
-/* #include "gstasfmux.h" */
+G_BEGIN_DECLS
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
+void asf_element_init (GstPlugin * plugin);
 
-  ret |= GST_ELEMENT_REGISTER (asfdemux, plugin);
-  ret |= GST_ELEMENT_REGISTER (rtspwms, plugin);
-  ret |= GST_ELEMENT_REGISTER (rtpasfdepay, plugin);
-/*
-  if (!gst_element_register (plugin, "asfmux", GST_RANK_NONE, GST_TYPE_ASFMUX))
-    return FALSE;
-*/
-  return ret;
-}
+GST_ELEMENT_REGISTER_DECLARE (asfdemux);
+GST_ELEMENT_REGISTER_DECLARE (rtspwms);
+GST_ELEMENT_REGISTER_DECLARE (rtpasfdepay);
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    asf,
-    "Demuxes and muxes audio and video in Microsofts ASF format",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+G_END_DECLS
+
+#endif /* __GST_ASF_ELEMENTS_H__ */

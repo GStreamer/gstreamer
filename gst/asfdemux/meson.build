@@ -1,6 +1,7 @@
 asf_sources = [
   'gstasfdemux.c',
   'gstasf.c',
+  'gstasfelement.c',
   'asfheaders.c',
   'asfpacket.c',
   'gstrtpasfdepay.c',

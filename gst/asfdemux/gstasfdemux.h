@@ -40,9 +40,6 @@ G_BEGIN_DECLS
 #define GST_IS_ASF_DEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ASF_DEMUX))
 
-GST_DEBUG_CATEGORY_EXTERN (asfdemux_dbg);
-#define GST_CAT_DEFAULT asfdemux_dbg
-
 typedef struct _GstASFDemux GstASFDemux;
 typedef struct _GstASFDemuxClass GstASFDemuxClass;
 typedef enum _GstASF3DMode GstASF3DMode;

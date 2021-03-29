@@ -27,26 +27,26 @@
 
 #include "gstasfelements.h"
 
-
 /* #include "gstasfmux.h" */
+GST_DEBUG_CATEGORY_EXTERN (asfdemux_dbg);
+#define GST_CAT_DEFAULT asfdemux_dbg
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+void
+asf_element_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    GST_DEBUG_CATEGORY_INIT (asfdemux_dbg, "asfdemux", 0,
+        "asf demuxer element");
 
-  ret |= GST_ELEMENT_REGISTER (asfdemux, plugin);
-  ret |= GST_ELEMENT_REGISTER (rtspwms, plugin);
-  ret |= GST_ELEMENT_REGISTER (rtpasfdepay, plugin);
-/*
-  if (!gst_element_register (plugin, "asfmux", GST_RANK_NONE, GST_TYPE_ASFMUX))
-    return FALSE;
-*/
-  return ret;
+#ifdef ENABLE_NLS
+    GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+        LOCALEDIR);
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif /* ENABLE_NLS */
+    gst_riff_init ();
+    g_once_init_leave (&res, TRUE);
+  }
+
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    asf,
-    "Demuxes and muxes audio and video in Microsofts ASF format",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

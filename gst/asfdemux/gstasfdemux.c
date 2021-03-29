@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "gstasfelements.h"
 #include "gstasfdemux.h"
 #include "asfheaders.h"
 #include "asfpacket.h"
@@ -117,6 +118,8 @@ static GstFlowReturn gst_asf_demux_push_complete_payloads (GstASFDemux * demux,
 
 #define gst_asf_demux_parent_class parent_class
 G_DEFINE_TYPE (GstASFDemux, gst_asf_demux, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (asfdemux, "asfdemux", GST_RANK_SECONDARY,
+    GST_TYPE_ASF_DEMUX, asf_element_init (plugin));
 
 static void
 gst_asf_demux_class_init (GstASFDemuxClass * klass)

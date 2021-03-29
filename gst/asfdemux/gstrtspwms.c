@@ -29,6 +29,7 @@
 
 #include <gst/rtsp/gstrtspextension.h>
 
+#include "gstasfelements.h"
 #include "gstrtspwms.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtspwms_debug);
@@ -205,6 +206,8 @@ static void gst_rtsp_wms_extension_init (gpointer g_iface, gpointer iface_data);
 G_DEFINE_TYPE_WITH_CODE (GstRTSPWMS, gst_rtsp_wms, GST_TYPE_ELEMENT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_RTSP_EXTENSION,
         gst_rtsp_wms_extension_init));
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtspwms, "rtspwms", GST_RANK_SECONDARY,
+    GST_TYPE_RTSP_WMS, asf_element_init (plugin));
 
 static void
 gst_rtsp_wms_class_init (GstRTSPWMSClass * g_class)
