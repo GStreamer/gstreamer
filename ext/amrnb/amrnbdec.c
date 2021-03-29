@@ -103,6 +103,8 @@ static GstFlowReturn gst_amrnbdec_handle_frame (GstAudioDecoder * dec,
 
 #define gst_amrnbdec_parent_class parent_class
 G_DEFINE_TYPE (GstAmrnbDec, gst_amrnbdec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (amrnbdec, "amrnbdec", GST_RANK_PRIMARY,
+    GST_TYPE_AMRNBDEC);
 
 static void
 gst_amrnbdec_class_init (GstAmrnbDecClass * klass)

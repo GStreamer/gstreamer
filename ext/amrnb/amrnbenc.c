@@ -98,6 +98,8 @@ static GstFlowReturn gst_amrnbenc_handle_frame (GstAudioEncoder * enc,
 
 #define gst_amrnbenc_parent_class parent_class
 G_DEFINE_TYPE (GstAmrnbEnc, gst_amrnbenc, GST_TYPE_AUDIO_ENCODER);
+GST_ELEMENT_REGISTER_DEFINE (amrnbenc, "amrnbenc", GST_RANK_SECONDARY,
+    GST_TYPE_AMRNBENC);
 
 static void
 gst_amrnbenc_set_property (GObject * object, guint prop_id,

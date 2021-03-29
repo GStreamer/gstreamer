@@ -60,6 +60,7 @@ struct _GstAmrnbEncClass {
 };
 
 GType gst_amrnbenc_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (amrnbenc);
 
 G_END_DECLS
 

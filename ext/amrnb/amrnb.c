@@ -27,10 +27,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "amrnbdec",
-      GST_RANK_PRIMARY, GST_TYPE_AMRNBDEC) &&
-      gst_element_register (plugin, "amrnbenc",
-      GST_RANK_SECONDARY, GST_TYPE_AMRNBENC);
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (amrnbdec, plugin);
+  ret |= GST_ELEMENT_REGISTER (amrnbenc, plugin);
+
+  return ret;
 }
 
 
