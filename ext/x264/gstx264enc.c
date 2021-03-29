@@ -724,6 +724,7 @@ static void gst_x264_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_x264_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static gboolean x264_element_init (GstPlugin * plugin);
 
 typedef gboolean (*LoadPresetFunc) (GstPreset * preset, const gchar * name);
 
@@ -755,10 +756,9 @@ gst_x264_enc_preset_interface_init (GstPresetInterface * iface)
 G_DEFINE_TYPE_WITH_CODE (GstX264Enc, gst_x264_enc, GST_TYPE_VIDEO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET,
         gst_x264_enc_preset_interface_init));
-
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (x264enc, x264_element_init)
 /* don't forget to free the string after use */
-static const gchar *
-gst_x264_enc_build_partitions (gint analyse)
+     static const gchar *gst_x264_enc_build_partitions (gint analyse)
 {
   GString *string;
 
@@ -2988,7 +2988,7 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+x264_element_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (x264_enc_debug, "x264enc", 0,
       "h264 encoding element");
@@ -3024,6 +3024,12 @@ plugin_init (GstPlugin * plugin)
 
   return gst_element_register (plugin, "x264enc",
       GST_RANK_PRIMARY, GST_TYPE_X264_ENC);
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (x264enc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

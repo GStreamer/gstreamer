@@ -137,6 +137,7 @@ struct _GstX264EncClass
 };
 
 GType gst_x264_enc_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (x264enc);
 
 G_END_DECLS
 
