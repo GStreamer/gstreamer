@@ -92,8 +92,11 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) [ 4000, 96000 ], " "channels = (int) [ 1, 6 ]")
     );
 
+static gboolean a52_element_init (GstPlugin * plugin);
+
 #define gst_a52dec_parent_class parent_class
 G_DEFINE_TYPE (GstA52Dec, gst_a52dec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (a52dec, a52_element_init);
 
 static gboolean gst_a52dec_start (GstAudioDecoder * dec);
 static gboolean gst_a52dec_stop (GstAudioDecoder * dec);
@@ -822,17 +825,20 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+a52_element_init (GstPlugin * plugin)
 {
 #if HAVE_ORC
   orc_init ();
 #endif
 
-  if (!gst_element_register (plugin, "a52dec", GST_RANK_SECONDARY,
-          GST_TYPE_A52DEC))
-    return FALSE;
+  return gst_element_register (plugin, "a52dec", GST_RANK_SECONDARY,
+      GST_TYPE_A52DEC);
+}
 
-  return TRUE;
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (a52dec, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -73,6 +73,7 @@ struct _GstA52DecClass {
 };
 
 GType gst_a52dec_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (a52dec);
 
 #ifndef A52_MONO
 #define A52_MONO 1
