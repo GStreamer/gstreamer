@@ -616,26 +616,32 @@ gst_avwait_vsink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:{
+      const GstSegment *segment;
       gboolean send_message = FALSE;
+      gboolean segment_changed;
 
       g_mutex_lock (&self->mutex);
-      gst_event_copy_segment (event, &self->vsegment);
+      gst_event_parse_segment (event, &segment);
+      segment_changed = !gst_segment_is_equal (segment, &self->vsegment);
+      self->vsegment = *segment;
       if (self->vsegment.format != GST_FORMAT_TIME) {
         GST_ERROR_OBJECT (self, "Invalid segment format");
         g_mutex_unlock (&self->mutex);
         gst_event_unref (event);
         return FALSE;
       }
-      GST_DEBUG_OBJECT (self, "First time reset in video segment");
-      self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
-      self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
-      self->audio_running_time_to_wait_for = GST_CLOCK_TIME_NONE;
-      self->audio_running_time_to_end_at = GST_CLOCK_TIME_NONE;
-      if (!self->dropping) {
-        self->dropping = TRUE;
-        send_message = TRUE;
+      if (segment_changed) {
+        GST_DEBUG_OBJECT (self, "First time reset in video segment");
+        self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+        self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
+        self->audio_running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+        self->audio_running_time_to_end_at = GST_CLOCK_TIME_NONE;
+        if (!self->dropping) {
+          self->dropping = TRUE;
+          send_message = TRUE;
+        }
+        self->vsegment.position = GST_CLOCK_TIME_NONE;
       }
-      self->vsegment.position = GST_CLOCK_TIME_NONE;
       g_mutex_unlock (&self->mutex);
 
       if (send_message)
@@ -750,18 +756,28 @@ gst_avwait_asink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_LOG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEGMENT:
+    case GST_EVENT_SEGMENT:{
+      const GstSegment *segment;
+      gboolean segment_changed;
+
       g_mutex_lock (&self->mutex);
-      gst_event_copy_segment (event, &self->asegment);
+      gst_event_parse_segment (event, &segment);
+      segment_changed = !gst_segment_is_equal (segment, &self->asegment);
+      self->asegment = *segment;
+
       if (self->asegment.format != GST_FORMAT_TIME) {
         GST_ERROR_OBJECT (self, "Invalid segment format");
         g_mutex_unlock (&self->mutex);
         gst_event_unref (event);
         return FALSE;
       }
-      self->asegment.position = GST_CLOCK_TIME_NONE;
+
+      if (segment_changed) {
+        self->asegment.position = GST_CLOCK_TIME_NONE;
+      }
       g_mutex_unlock (&self->mutex);
       break;
+    }
     case GST_EVENT_FLUSH_START:
       g_mutex_lock (&self->mutex);
       self->audio_flush_flag = TRUE;
