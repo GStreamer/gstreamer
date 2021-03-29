@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <cdio/cdio.h>
 #include <cdio/cdtext.h>
+#include <cdio/logging.h>
 
 #if LIBCDIO_VERSION_NUM <= 83 && LIBCDIO_VERSION_NUM >= 76
   #define CDTEXT_FIELD_PERFORMER CDTEXT_PERFORMER
@@ -31,8 +32,6 @@
   #define CDTEXT_FIELD_TITLE     CDTEXT_TITLE
 #endif
 
-GST_DEBUG_CATEGORY_EXTERN (gst_cdio_debug);
-#define GST_CAT_DEFAULT gst_cdio_debug
 
 void     gst_cdio_add_cdtext_field (GstObject      * src,
                                     cdtext_t       * cdtext,
@@ -56,6 +55,7 @@ void      gst_cdio_add_cdtext_album_tags (GstObject  * src,
                                           CdIo       * cdio,
 #endif
                                           GstTagList * tags);
+void gst_cdio_log_handler (cdio_log_level_t level, const char *msg);
 
 #endif /* __GST_CDIO_H__ */
 

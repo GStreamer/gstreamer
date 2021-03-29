@@ -85,7 +85,15 @@ enum
   PROP_READ_SPEED
 };
 
+GST_DEBUG_CATEGORY (gst_cdio_debug);
+
+
 G_DEFINE_TYPE (GstCdioCddaSrc, gst_cdio_cdda_src, GST_TYPE_AUDIO_CD_SRC);
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (gst_cdio_debug, "cdio", 0, "libcdio elements"); \
+    cdio_log_set_handler (gst_cdio_log_handler);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (cdiocddasrc, "cdiocddasrc",
+    GST_RANK_SECONDARY - 1, GST_TYPE_CDIO_CDDA_SRC, _do_init);
 
 static void gst_cdio_cdda_src_finalize (GObject * obj);
 static void gst_cdio_cdda_src_set_property (GObject * object, guint prop_id,

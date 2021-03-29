@@ -25,6 +25,9 @@
 #include <gst/gst.h>
 #include <gst/tag/tag.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gst_cdio_debug);
+#define GST_CAT_DEFAULT gst_cdio_debug
+
 static gboolean plugin_init (GstPlugin * plugin);
 
 /* cdio headers redefine VERSION etc., so do this here before including them */
@@ -36,10 +39,6 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 
 #include "gstcdio.h"
 #include "gstcdiocddasrc.h"
-
-#include <cdio/logging.h>
-
-GST_DEBUG_CATEGORY (gst_cdio_debug);
 
 void
 gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext, track_t track,
@@ -134,7 +133,7 @@ gst_cdio_add_cdtext_album_tags (GstObject * src, CdIo * cdio, GstTagList * tags)
   GST_DEBUG ("CD-TEXT album tags: %" GST_PTR_FORMAT, tags);
 }
 
-static void
+void
 gst_cdio_log_handler (cdio_log_level_t level, const char *msg)
 {
   const gchar *level_str[] = { "DEBUG", "INFO", "WARN", "ERROR", "ASSERT" };
@@ -147,13 +146,5 @@ gst_cdio_log_handler (cdio_log_level_t level, const char *msg)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "cdiocddasrc", GST_RANK_SECONDARY - 1,
-          GST_TYPE_CDIO_CDDA_SRC))
-    return FALSE;
-
-  cdio_log_set_handler (gst_cdio_log_handler);
-
-  GST_DEBUG_CATEGORY_INIT (gst_cdio_debug, "cdio", 0, "libcdio elements");
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (cdiocddasrc, plugin);
 }
