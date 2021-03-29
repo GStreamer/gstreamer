@@ -95,6 +95,7 @@ struct _GstDvdReadSrcClass {
 };
 
 GType gst_dvd_read_src_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (dvdreadsrc);
 
 G_END_DECLS
 

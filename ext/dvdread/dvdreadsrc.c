@@ -91,11 +91,13 @@ static gint gst_dvd_read_src_get_sector_from_time (GstDvdReadSrc * src,
 
 static void gst_dvd_read_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
+static gboolean dvdread_element_init (GstPlugin * plugin);
 
 #define gst_dvd_read_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstDvdReadSrc, gst_dvd_read_src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_dvd_read_src_uri_handler_init));
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (dvdreadsrc, dvdread_element_init);
 
 static void
 gst_dvd_read_src_finalize (GObject * object)
@@ -1789,7 +1791,7 @@ gst_dvd_read_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+dvdread_element_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gstgst_dvd_read_src_debug, "dvdreadsrc", 0,
       "DVD reader element based on dvdreadsrc");
@@ -1800,13 +1802,14 @@ plugin_init (GstPlugin * plugin)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
+  return gst_element_register (plugin, "dvdreadsrc", GST_RANK_NONE,
+      GST_TYPE_DVD_READ_SRC);
+}
 
-  if (!gst_element_register (plugin, "dvdreadsrc", GST_RANK_NONE,
-          GST_TYPE_DVD_READ_SRC)) {
-    return FALSE;
-  }
-
-  return TRUE;
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return GST_ELEMENT_REGISTER (dvdreadsrc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
