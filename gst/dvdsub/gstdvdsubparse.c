@@ -54,6 +54,8 @@ static GstStateChangeReturn gst_dvd_sub_parse_change_state (GstElement *
 
 #define gst_dvd_sub_parse_parent_class parent_class
 G_DEFINE_TYPE (GstDvdSubParse, gst_dvd_sub_parse, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (dvdsubparse, "dvdsubparse", GST_RANK_NONE,
+    GST_TYPE_DVD_SUB_PARSE);
 
 static void
 gst_dvd_sub_parse_class_init (GstDvdSubParseClass * klass)

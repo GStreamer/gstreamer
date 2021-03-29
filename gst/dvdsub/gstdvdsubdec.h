@@ -17,9 +17,13 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifndef __GST_DVDSUBDEC_H__
+#define __GST_DVDSUBDEC_H__
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+
+G_BEGIN_DECLS
 
 #define GST_TYPE_DVD_SUB_DEC             (gst_dvd_sub_dec_get_type())
 #define GST_DVD_SUB_DEC(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVD_SUB_DEC,GstDvdSubDec))
@@ -100,3 +104,8 @@ struct _GstDvdSubDecClass
 };
 
 GType gst_dvd_sub_dec_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (dvdsubdec);
+
+G_END_DECLS
+
+#endif /* __GST_DVDSUBDEC_H__ */

@@ -26,8 +26,14 @@
 #include "gstdvdsubparse.h"
 #include <string.h>
 
+GST_DEBUG_CATEGORY_STATIC (gst_dvd_sub_dec_debug);
+#define GST_CAT_DEFAULT (gst_dvd_sub_dec_debug)
+
 #define gst_dvd_sub_dec_parent_class parent_class
 G_DEFINE_TYPE (GstDvdSubDec, gst_dvd_sub_dec, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (dvdsubdec, "dvdsubdec", GST_RANK_NONE,
+    GST_TYPE_DVD_SUB_DEC, GST_DEBUG_CATEGORY_INIT (gst_dvd_sub_dec_debug,
+        "dvdsubdec", 0, "DVD subtitle decoder"));
 
 static gboolean gst_dvd_sub_dec_src_event (GstPad * srcpad, GstObject * parent,
     GstEvent * event);
@@ -61,8 +67,6 @@ static GstStaticPadTemplate subtitle_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("subpicture/x-dvd")
     );
 
-GST_DEBUG_CATEGORY_STATIC (gst_dvd_sub_dec_debug);
-#define GST_CAT_DEFAULT (gst_dvd_sub_dec_debug)
 
 enum
 {
@@ -1145,17 +1149,12 @@ not_handled:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "dvdsubdec", GST_RANK_NONE,
-          GST_TYPE_DVD_SUB_DEC) ||
-      !gst_element_register (plugin, "dvdsubparse", GST_RANK_NONE,
-          GST_TYPE_DVD_SUB_PARSE)) {
-    return FALSE;
-  }
+  gboolean ret = FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (gst_dvd_sub_dec_debug, "dvdsubdec", 0,
-      "DVD subtitle decoder");
+  ret |= GST_ELEMENT_REGISTER (dvdsubdec, plugin);
+  ret |= GST_ELEMENT_REGISTER (dvdsubparse, plugin);
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
