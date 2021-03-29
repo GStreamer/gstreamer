@@ -68,6 +68,7 @@ struct _GstMsdkH265Enc
   guint min_qp;
   guint max_qp;
   guint intra_refresh_type;
+  guint dblk_idc;
 
   mfxExtHEVCTiles ext_tiles;
   /* roi[0] for current ROI and roi[1] for previous ROI */
