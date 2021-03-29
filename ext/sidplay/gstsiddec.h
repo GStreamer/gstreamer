@@ -69,7 +69,8 @@ struct _GstSidDecClass {
 };
 
 GType gst_siddec_get_type (void);
-        
+GST_ELEMENT_REGISTER_DECLARE (siddec);
+
 G_END_DECLS
 
 #endif /* __GST_SIDDEC_H__ */

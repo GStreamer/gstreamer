@@ -144,6 +144,8 @@ static void gst_siddec_set_property (GObject * object, guint prop_id,
 
 #define gst_siddec_parent_class parent_class
 G_DEFINE_TYPE (GstSidDec, gst_siddec, GST_TYPE_ELEMENT);
+GST_ELEMENT_REGISTER_DEFINE (siddec, "siddec", GST_RANK_PRIMARY,
+    GST_TYPE_SIDDEC);
 
 static void
 gst_siddec_class_init (GstSidDecClass * klass)
@@ -768,8 +770,7 @@ gst_siddec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "siddec", GST_RANK_PRIMARY,
-      GST_TYPE_SIDDEC);
+  return GST_ELEMENT_REGISTER (siddec, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
