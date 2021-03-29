@@ -83,6 +83,7 @@ struct _GstMpeg2decClass {
 };
 
 GType gst_mpeg2dec_get_type(void);
+GST_ELEMENT_REGISTER_DECLARE (mpeg2dec);
 
 G_END_DECLS
 

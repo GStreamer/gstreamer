@@ -62,6 +62,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_mpeg2dec_parent_class parent_class
 G_DEFINE_TYPE (GstMpeg2dec, gst_mpeg2dec, GST_TYPE_VIDEO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (mpeg2dec, "mpeg2dec", GST_RANK_SECONDARY,
+    GST_TYPE_MPEG2DEC);
 
 static void gst_mpeg2dec_finalize (GObject * object);
 
@@ -1160,11 +1162,7 @@ done:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "mpeg2dec", GST_RANK_SECONDARY,
-          GST_TYPE_MPEG2DEC))
-    return FALSE;
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (mpeg2dec, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
