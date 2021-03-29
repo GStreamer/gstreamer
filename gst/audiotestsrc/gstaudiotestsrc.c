@@ -154,6 +154,10 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_audio_test_src_parent_class parent_class
 G_DEFINE_TYPE (GstAudioTestSrc, gst_audio_test_src, GST_TYPE_BASE_SRC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (audiotestsrc, "audiotestsrc",
+    GST_RANK_NONE, GST_TYPE_AUDIO_TEST_SRC,
+    GST_DEBUG_CATEGORY_INIT (audio_test_src_debug, "audiotestsrc", 0,
+        "Audio Test Source"));
 
 #define GST_TYPE_AUDIO_TEST_SRC_WAVE (gst_audiostestsrc_wave_get_type())
 static GType
@@ -1679,11 +1683,7 @@ gst_audio_test_src_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (audio_test_src_debug, "audiotestsrc", 0,
-      "Audio Test Source");
-
-  return gst_element_register (plugin, "audiotestsrc",
-      GST_RANK_NONE, GST_TYPE_AUDIO_TEST_SRC);
+  return GST_ELEMENT_REGISTER (audiotestsrc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

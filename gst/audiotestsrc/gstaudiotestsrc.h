@@ -135,6 +135,8 @@ struct _GstAudioTestSrc {
   guint tick_counter;
 };
 
+GST_ELEMENT_REGISTER_DECLARE (audiotestsrc);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_TEST_SRC_H__ */
