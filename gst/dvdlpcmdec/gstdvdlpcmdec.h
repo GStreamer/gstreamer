@@ -72,6 +72,7 @@ struct _GstDvdLpcmDecClass {
 };
 
 GType gst_dvdlpcmdec_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (dvdlpcmdec);
 
 G_END_DECLS
 

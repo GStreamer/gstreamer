@@ -60,6 +60,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_dvdlpcmdec_parent_class parent_class
 G_DEFINE_TYPE (GstDvdLpcmDec, gst_dvdlpcmdec, GST_TYPE_AUDIO_DECODER);
+GST_ELEMENT_REGISTER_DEFINE (dvdlpcmdec, "dvdlpcmdec", GST_RANK_PRIMARY,
+    GST_TYPE_DVDLPCMDEC);
 
 static gboolean gst_dvdlpcmdec_set_format (GstAudioDecoder * bdec,
     GstCaps * caps);
@@ -1006,13 +1008,7 @@ invalid_width:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-
-  if (!gst_element_register (plugin, "dvdlpcmdec", GST_RANK_PRIMARY,
-          GST_TYPE_DVDLPCMDEC)) {
-    return FALSE;
-  }
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (dvdlpcmdec, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
