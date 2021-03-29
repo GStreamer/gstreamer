@@ -64,6 +64,7 @@ struct _GstAudioResample {
   GstAudioInfo out;
   GstAudioConverter *converter;
 };
+GST_ELEMENT_REGISTER_DECLARE (audioresample);
 
 G_END_DECLS
 

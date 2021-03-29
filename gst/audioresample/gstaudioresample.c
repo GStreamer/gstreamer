@@ -136,7 +136,10 @@ static void gst_audio_resample_push_drain (GstAudioResample * resample,
 
 #define gst_audio_resample_parent_class parent_class
 G_DEFINE_TYPE (GstAudioResample, gst_audio_resample, GST_TYPE_BASE_TRANSFORM);
-
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (audioresample, "audioresample",
+    GST_RANK_PRIMARY, GST_TYPE_AUDIO_RESAMPLE,
+    GST_DEBUG_CATEGORY_INIT (audio_resample_debug, "audioresample", 0,
+        "audio resampling element"));
 static void
 gst_audio_resample_class_init (GstAudioResampleClass * klass)
 {
@@ -1121,15 +1124,7 @@ gst_audio_resample_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (audio_resample_debug, "audioresample", 0,
-      "audio resampling element");
-
-  if (!gst_element_register (plugin, "audioresample", GST_RANK_PRIMARY,
-          GST_TYPE_AUDIO_RESAMPLE)) {
-    return FALSE;
-  }
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (audioresample, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
