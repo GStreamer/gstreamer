@@ -60,6 +60,7 @@ struct _GstAudioRate
   /* we output TIME format on the src */
   GstSegment src_segment;
 };
+GST_ELEMENT_REGISTER_DECLARE (audiorate);
 
 G_END_DECLS
 
