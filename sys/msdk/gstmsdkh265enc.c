@@ -79,7 +79,7 @@ enum
 #define PROP_INTRA_REFRESH_TYPE_DEFAULT MFX_REFRESH_NO
 #define PROP_DBLK_IDC_DEFAULT           0
 
-#define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
+#define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, BGR10A2_LE, P010_10LE, VUYA"
 #define PROFILES    "main, main-10, main-444"
 #define COMMON_FORMAT "{ " RAW_FORMATS " }"
 #define PRFOLIE_STR   "{ " PROFILES " }"
@@ -328,6 +328,7 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
         break;
       case MFX_FOURCC_AYUV:
       case MFX_FOURCC_YUY2:
+      case MFX_FOURCC_A2RGB10:
 #if (MFX_VERSION >= 1027)
       case MFX_FOURCC_Y410:
       case MFX_FOURCC_Y210:
@@ -472,6 +473,10 @@ gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
       case MFX_FOURCC_YUY2:
         /* The profile is main-422-10 for 8-bit 422 */
         gst_structure_set (structure, "profile", G_TYPE_STRING, "main-422-10",
+            NULL);
+        break;
+      case MFX_FOURCC_A2RGB10:
+        gst_structure_set (structure, "profile", G_TYPE_STRING, "main-444-10",
             NULL);
         break;
 #if (MFX_VERSION >= 1027)
@@ -689,6 +694,7 @@ gst_msdkh265enc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
 
   switch (GST_VIDEO_INFO_FORMAT (info)) {
     case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_VUYA:
 #if (MFX_VERSION >= 1027)
