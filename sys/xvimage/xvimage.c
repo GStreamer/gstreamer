@@ -23,25 +23,11 @@
 
 #include "xvimagesink.h"
 
-GST_DEBUG_CATEGORY (gst_debug_xv_context);
-GST_DEBUG_CATEGORY (gst_debug_xv_image_pool);
-GST_DEBUG_CATEGORY (gst_debug_xv_image_sink);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "xvimagesink",
-          GST_RANK_PRIMARY, GST_TYPE_XV_IMAGE_SINK))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (gst_debug_xv_context, "xcontext", 0,
-      "xcontext miniobject");
-  GST_DEBUG_CATEGORY_INIT (gst_debug_xv_image_sink, "xvimagesink", 0,
-      "xvimagesink element");
-  GST_DEBUG_CATEGORY_INIT (gst_debug_xv_image_pool, "xvimagepool", 0,
-      "xvimagepool object");
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (xvimagesink, plugin);;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

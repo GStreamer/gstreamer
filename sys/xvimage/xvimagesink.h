@@ -132,6 +132,7 @@ struct _GstXvImageSinkClass
 };
 
 GType gst_xv_image_sink_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (xvimagesink);
 
 G_END_DECLS
 #endif /* __GST_XV_IMAGE_SINK_H__ */

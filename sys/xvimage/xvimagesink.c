@@ -132,7 +132,10 @@
 /* for XkbKeycodeToKeysym */
 #include <X11/XKBlib.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_debug_xv_image_sink);
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_xv_context);
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_xv_image_pool);
+GST_DEBUG_CATEGORY (gst_debug_xv_image_sink);
+
 #define GST_CAT_DEFAULT gst_debug_xv_image_sink
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
@@ -213,7 +216,13 @@ G_DEFINE_TYPE_WITH_CODE (GstXvImageSink, gst_xv_image_sink, GST_TYPE_VIDEO_SINK,
         gst_xv_image_sink_video_overlay_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
         gst_xv_image_sink_colorbalance_init));
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (gst_debug_xv_context, "xcontext", 0, "xcontext miniobject");\
+  GST_DEBUG_CATEGORY_INIT (gst_debug_xv_image_sink, "xvimagesink", 0, "ximagesink element");\
+  GST_DEBUG_CATEGORY_INIT (gst_debug_xv_image_pool, "xvimagepool", 0, "ximagepool object");\
 
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (xvimagesink, "xvimagesink",
+    GST_RANK_PRIMARY, GST_TYPE_XV_IMAGE_SINK, _do_init);
 
 /* ============================================================= */
 /*                                                               */

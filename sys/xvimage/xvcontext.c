@@ -33,7 +33,7 @@
 /* for XkbKeycodeToKeysym */
 #include <X11/XKBlib.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_debug_xv_context);
+GST_DEBUG_CATEGORY (gst_debug_xv_context);
 #define GST_CAT_DEFAULT gst_debug_xv_context
 
 void
