@@ -26,8 +26,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "amrwbdec",
-      GST_RANK_PRIMARY, GST_TYPE_AMRWBDEC);
+  return GST_ELEMENT_REGISTER (amrwbdec, plugin);
 }
 
 

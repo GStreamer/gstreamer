@@ -62,6 +62,7 @@ struct _GstAmrwbDecClass {
 };
 
 GType gst_amrwbdec_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (amrwbdec);
 
 G_END_DECLS
 
