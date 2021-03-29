@@ -32,7 +32,7 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_debug_x_image_pool);
+GST_DEBUG_CATEGORY (gst_debug_x_image_pool);
 #define GST_CAT_DEFAULT gst_debug_x_image_pool
 
 /* X11 stuff */

@@ -208,6 +208,7 @@ struct _GstXImageSinkClass
 };
 
 GType gst_x_image_sink_get_type (void);
+GST_ELEMENT_REGISTER_DECLARE (ximagesink);
 
 G_END_DECLS
 #endif /* __GST_X_IMAGE_SINK_H__ */

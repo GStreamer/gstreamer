@@ -23,25 +23,11 @@
 
 #include "ximagesink.h"
 
-GST_DEBUG_CATEGORY (gst_debug_x_image_pool);
-GST_DEBUG_CATEGORY (gst_debug_x_image_sink);
-GST_DEBUG_CATEGORY (CAT_PERFORMANCE);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "ximagesink",
-          GST_RANK_SECONDARY, GST_TYPE_X_IMAGE_SINK))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (gst_debug_x_image_sink, "ximagesink", 0,
-      "ximagesink element");
-  GST_DEBUG_CATEGORY_INIT (gst_debug_x_image_pool, "ximagepool", 0,
-      "ximagepool object");
-
-  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (ximagesink, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
