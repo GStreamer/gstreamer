@@ -3456,6 +3456,85 @@ GST_START_TEST (test_reject_request_pad)
 
 GST_END_TEST;
 
+static void
+_verify_media_types (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  gchar **media_types = user_data;
+  int i;
+
+  for (i = 0; i < gst_sdp_message_medias_len (desc->sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
+
+    fail_unless_equals_string (gst_sdp_media_get_media (media), media_types[i]);
+  }
+}
+
+GST_START_TEST (test_reject_create_offer)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstHarness *h;
+  GstPromise *promise;
+  GstPromiseResult res;
+  const GstStructure *s;
+  GError *error = NULL;
+
+  const gchar *media_types[] = { "video", "audio" };
+  VAL_SDP_INIT (media_type, _verify_media_types, &media_types, NULL);
+  guint media_format_count[] = { 1, 1 };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, &media_type);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (2),
+      &media_formats);
+  VAL_SDP_INIT (payloads, on_sdp_media_no_duplicate_payloads, NULL, &count);
+  const gchar *expected_offer_setup[] = { "actpass", "actpass" };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup,
+      &payloads);
+  const gchar *expected_answer_setup[] = { "active", "active" };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
+      &payloads);
+  const gchar *expected_offer_direction[] = { "sendrecv", "sendrecv" };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_direction[] = { "recvonly", "recvonly" };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  /* setup sendonly peer */
+  h = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
+  add_fake_audio_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  /* Check that if there is no 0, we can't create an offer with a hole */
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc1, "create-offer", NULL, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_unless (s != NULL);
+  fail_unless (gst_structure_has_name (s, "application/x-gstwebrtcbin-error"));
+  gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
+  fail_unless (g_error_matches (error, GST_WEBRTC_BIN_ERROR,
+          GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION));
+  g_clear_error (&error);
+  gst_promise_unref (promise);
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_%u", NULL);
+  add_fake_video_src_harness (h, 97);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  /* Adding a second sink, which will fill m-line 0, should fix it */
+  test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -3500,6 +3579,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc,
         test_bundle_codec_preferences_rtx_no_duplicate_payloads);
     tcase_add_test (tc, test_reject_request_pad);
+    tcase_add_test (tc, test_reject_create_offer);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
