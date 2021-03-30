@@ -225,8 +225,11 @@ gst_ivf_parse_update_src_caps (GstIvfParse * ivf)
   media_type = fourcc_to_media_type (ivf->fourcc);
 
   /* Create src pad caps */
-  caps = gst_caps_new_simple (media_type, "width", G_TYPE_INT, ivf->width,
-      "height", G_TYPE_INT, ivf->height, NULL);
+  caps = gst_caps_new_empty_simple (media_type);
+  if (ivf->width > 0 && ivf->height > 0) {
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, ivf->width,
+        "height", G_TYPE_INT, ivf->height, NULL);
+  }
 
   if (ivf->fps_n > 0 && ivf->fps_d > 0) {
     gst_base_parse_set_frame_rate (GST_BASE_PARSE_CAST (ivf),
