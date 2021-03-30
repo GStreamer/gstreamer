@@ -30,6 +30,7 @@ GType gst_compare_get_type (void);
 GType gst_debug_spy_get_type (void);
 GType gst_error_ignore_get_type (void);
 GType gst_watchdog_get_type (void);
+GType gst_fake_audio_sink_get_type (void);
 GType gst_fake_video_sink_get_type (void);
 GType gst_test_src_bin_get_type (void);
 GType gst_clock_select_get_type (void);
@@ -51,6 +52,8 @@ plugin_init (GstPlugin * plugin)
       gst_watchdog_get_type ());
   gst_element_register (plugin, "errorignore", GST_RANK_NONE,
       gst_error_ignore_get_type ());
+  gst_element_register (plugin, "fakeaudiosink", GST_RANK_NONE,
+      gst_fake_audio_sink_get_type ());
   gst_element_register (plugin, "fakevideosink", GST_RANK_NONE,
       gst_fake_video_sink_get_type ());
   gst_element_register (plugin, "testsrcbin", GST_RANK_NONE,
