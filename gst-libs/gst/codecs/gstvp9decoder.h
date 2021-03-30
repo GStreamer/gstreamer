@@ -23,7 +23,6 @@
 #include <gst/codecs/codecs-prelude.h>
 
 #include <gst/video/video.h>
-#include <gst/codecparsers/gstvp9parser.h>
 #include <gst/codecs/gstvp9picture.h>
 
 G_BEGIN_DECLS
@@ -85,8 +84,7 @@ struct _GstVp9DecoderClass
   GstVideoDecoderClass parent_class;
 
   gboolean        (*new_sequence)      (GstVp9Decoder * decoder,
-                                        const GstVp9Parser * parser,
-                                        const GstVp9FrameHdr * frame_hdr);
+                                        const GstVp9FrameHeader *frame_hdr);
 
   /**
    * GstVp9Decoder:new_picture:

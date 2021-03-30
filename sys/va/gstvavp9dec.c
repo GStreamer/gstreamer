@@ -144,8 +144,8 @@ _get_profile (GstVaVp9Dec * self, GstVP9Profile profile)
 }
 
 static gboolean
-gst_va_vp9_new_sequence (GstVp9Decoder * decoder, const GstVp9Parser * parser,
-    const GstVp9FrameHdr * frame_hdr)
+gst_va_vp9_new_sequence (GstVp9Decoder * decoder,
+    const GstVp9FrameHeader * frame_hdr)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaVp9Dec *self = GST_VA_VP9_DEC (decoder);
@@ -163,8 +163,8 @@ gst_va_vp9_new_sequence (GstVp9Decoder * decoder, const GstVp9Parser * parser,
     return FALSE;
   }
 
-  rt_format = _get_rtformat (self, frame_hdr->profile, parser->bit_depth,
-      parser->subsampling_x, parser->subsampling_y);
+  rt_format = _get_rtformat (self, frame_hdr->profile, frame_hdr->bit_depth,
+      frame_hdr->subsampling_x, frame_hdr->subsampling_y);
   if (rt_format == 0)
     return FALSE;
 
@@ -227,9 +227,9 @@ _fill_param (GstVp9Decoder * decoder, GstVp9Picture * picture, GstVp9Dpb * dpb)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaDecodePicture *va_pic;
-  const GstVp9FrameHdr *frame_hdr = &picture->frame_hdr;
-  const GstVp9LoopFilter *loopfilter = &frame_hdr->loopfilter;
-  const GstVp9SegmentationInfo *seg = &frame_hdr->segmentation;
+  const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
+  const GstVp9LoopFilterParams *lfp = &frame_hdr->loop_filter_params;
+  const GstVp9SegmentationParams *sp = &frame_hdr->segmentation_params;
   VADecPictureParameterBufferVP9 pic_param;
   guint i;
 
@@ -239,59 +239,58 @@ _fill_param (GstVp9Decoder * decoder, GstVp9Picture * picture, GstVp9Dpb * dpb)
     .frame_height = base->height,
 
     .pic_fields.bits = {
-      .subsampling_x = picture->subsampling_x,
-      .subsampling_y = picture->subsampling_x,
+      .subsampling_x = frame_hdr->subsampling_x,
+      .subsampling_y = frame_hdr->subsampling_x,
       .frame_type = frame_hdr->frame_type,
       .show_frame = frame_hdr->show_frame,
       .error_resilient_mode = frame_hdr->error_resilient_mode,
       .intra_only = frame_hdr->intra_only,
-      .allow_high_precision_mv = (frame_hdr->frame_type == GST_VP9_KEY_FRAME) ?
-          0 : frame_hdr->allow_high_precision_mv,
-      .mcomp_filter_type = frame_hdr->mcomp_filter_type,
+      .allow_high_precision_mv = frame_hdr->allow_high_precision_mv,
+      .mcomp_filter_type = frame_hdr->interpolation_filter,
       .frame_parallel_decoding_mode = frame_hdr->frame_parallel_decoding_mode,
       .reset_frame_context = frame_hdr->reset_frame_context,
       .refresh_frame_context = frame_hdr->refresh_frame_context,
       .frame_context_idx = frame_hdr->frame_context_idx,
 
-      .segmentation_enabled = seg->enabled,
-      .segmentation_temporal_update = seg->temporal_update,
-      .segmentation_update_map = seg->update_map,
+      .segmentation_enabled = sp->segmentation_enabled,
+      .segmentation_temporal_update = sp->segmentation_temporal_update,
+      .segmentation_update_map = sp->segmentation_update_map,
 
       .last_ref_frame =
-          frame_hdr->ref_frame_indices[GST_VP9_REF_FRAME_LAST - 1],
+          frame_hdr->ref_frame_idx[GST_VP9_REF_FRAME_LAST - 1],
       .last_ref_frame_sign_bias =
-          frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_LAST - 1],
+          frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_LAST],
       .golden_ref_frame =
-          frame_hdr->ref_frame_indices[GST_VP9_REF_FRAME_GOLDEN - 1],
+          frame_hdr->ref_frame_idx[GST_VP9_REF_FRAME_GOLDEN - 1],
       .golden_ref_frame_sign_bias =
-          frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_GOLDEN - 1],
+          frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_GOLDEN],
       .alt_ref_frame =
-          frame_hdr->ref_frame_indices[GST_VP9_REF_FRAME_ALTREF - 1],
+          frame_hdr->ref_frame_idx[GST_VP9_REF_FRAME_ALTREF - 1],
       .alt_ref_frame_sign_bias =
-          frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_ALTREF - 1],
+          frame_hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_ALTREF],
 
       .lossless_flag = frame_hdr->lossless_flag,
     },
 
-    .filter_level = loopfilter->filter_level,
-    .sharpness_level = loopfilter->sharpness_level,
-    .log2_tile_rows = frame_hdr->log2_tile_rows,
-    .log2_tile_columns = frame_hdr->log2_tile_columns,
+    .filter_level = lfp->loop_filter_level,
+    .sharpness_level = lfp->loop_filter_sharpness,
+    .log2_tile_rows = frame_hdr->tile_rows_log2,
+    .log2_tile_columns = frame_hdr->tile_cols_log2,
 
     .frame_header_length_in_bytes = frame_hdr->frame_header_length_in_bytes,
-    .first_partition_size = frame_hdr->first_partition_size,
+    .first_partition_size = frame_hdr->header_size_in_bytes,
 
     .profile = frame_hdr->profile,
-    .bit_depth = picture->bit_depth
+    .bit_depth = frame_hdr->bit_depth
   };
   /* *INDENT-ON* */
 
-  memcpy (pic_param.mb_segment_tree_probs, seg->tree_probs,
-      sizeof (seg->tree_probs));
+  memcpy (pic_param.mb_segment_tree_probs, sp->segmentation_tree_probs,
+      sizeof (sp->segmentation_tree_probs));
 
-  if (seg->temporal_update) {
-    memcpy (pic_param.segment_pred_probs, seg->pred_probs,
-        sizeof (seg->pred_probs));
+  if (sp->segmentation_temporal_update) {
+    memcpy (pic_param.segment_pred_probs, sp->segmentation_pred_prob,
+        sizeof (sp->segmentation_pred_prob));
   } else {
     memset (pic_param.segment_pred_probs, 255,
         sizeof (pic_param.segment_pred_probs));
@@ -320,7 +319,11 @@ _fill_slice (GstVp9Decoder * decoder, GstVp9Picture * picture)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaDecodePicture *va_pic;
-  const GstVp9Segmentation *seg = picture->segmentation;
+  const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
+  const GstVp9LoopFilterParams *lfp = &frame_hdr->loop_filter_params;
+  const GstVp9QuantizationParams *qp = &frame_hdr->quantization_params;
+  const GstVp9SegmentationParams *sp = &frame_hdr->segmentation_params;
+  guint8 n_shift = lfp->loop_filter_level >> 5;
   VASliceParameterBufferVP9 slice_param;
   guint i;
 
@@ -333,22 +336,79 @@ _fill_slice (GstVp9Decoder * decoder, GstVp9Picture * picture)
   /* *INDENT-ON* */
 
   for (i = 0; i < GST_VP9_MAX_SEGMENTS; i++) {
+    gint16 luma_dc_quant_scale;
+    gint16 luma_ac_quant_scale;
+    gint16 chroma_dc_quant_scale;
+    gint16 chroma_ac_quant_scale;
+    guint8 qindex;
+    guint8 lvl_lookup[GST_VP9_MAX_REF_LF_DELTAS][GST_VP9_MAX_MODE_LF_DELTAS];
+    guint lvl_seg = lfp->loop_filter_level;
+
+    /* 8.6.1 Dequantization functions */
+    qindex = gst_vp9_get_qindex (sp, qp, i);
+    luma_dc_quant_scale =
+        gst_vp9_get_dc_quant (qindex, qp->delta_q_y_dc, frame_hdr->bit_depth);
+    luma_ac_quant_scale =
+        gst_vp9_get_ac_quant (qindex, 0, frame_hdr->bit_depth);
+    chroma_dc_quant_scale =
+        gst_vp9_get_dc_quant (qindex, qp->delta_q_uv_dc, frame_hdr->bit_depth);
+    chroma_ac_quant_scale =
+        gst_vp9_get_ac_quant (qindex, qp->delta_q_uv_ac, frame_hdr->bit_depth);
+
+    if (!lfp->loop_filter_level) {
+      memset (lvl_lookup, 0, sizeof (lvl_lookup));
+    } else {
+      /* 8.8.1 Loop filter frame init process */
+      if (gst_vp9_seg_feature_active (sp, i, GST_VP9_SEG_LVL_ALT_L)) {
+        if (sp->segmentation_abs_or_delta_update) {
+          lvl_seg = sp->feature_data[i][GST_VP9_SEG_LVL_ALT_L];
+        } else {
+          lvl_seg += sp->feature_data[i][GST_VP9_SEG_LVL_ALT_L];
+        }
+
+        lvl_seg = CLAMP (lvl_seg, 0, GST_VP9_MAX_LOOP_FILTER);
+      }
+
+      if (!lfp->loop_filter_delta_enabled) {
+        memset (lvl_lookup, lvl_seg, sizeof (lvl_lookup));
+      } else {
+        guint8 ref, mode;
+        guint intra_lvl = lvl_seg +
+            (((guint) lfp->loop_filter_ref_deltas[GST_VP9_REF_FRAME_INTRA]) <<
+            n_shift);
+
+        lvl_lookup[GST_VP9_REF_FRAME_INTRA][0] =
+            CLAMP (intra_lvl, 0, GST_VP9_MAX_LOOP_FILTER);
+        for (ref = GST_VP9_REF_FRAME_LAST; ref < GST_VP9_REF_FRAME_MAX; ref++) {
+          for (mode = 0; mode < GST_VP9_MAX_MODE_LF_DELTAS; mode++) {
+            intra_lvl = lvl_seg + (lfp->loop_filter_ref_deltas[ref] << n_shift)
+                + (lfp->loop_filter_mode_deltas[mode] << n_shift);
+            lvl_lookup[ref][mode] =
+                CLAMP (intra_lvl, 0, GST_VP9_MAX_LOOP_FILTER);
+          }
+        }
+      }
+    }
+
     /* *INDENT-OFF* */
     slice_param.seg_param[i] = (VASegmentParameterVP9) {
         .segment_flags.fields = {
-            .segment_reference_enabled = seg[i].reference_frame_enabled,
-            .segment_reference = seg[i].reference_frame,
-            .segment_reference_skipped = seg[i].reference_skip,
+            .segment_reference_enabled =
+                sp->feature_enabled[i][GST_VP9_SEG_LVL_REF_FRAME],
+            .segment_reference =
+                sp->feature_data[i][GST_VP9_SEG_LVL_REF_FRAME],
+            .segment_reference_skipped =
+                sp->feature_enabled[i][GST_VP9_SEG_SEG_LVL_SKIP],
          },
 
-        .luma_dc_quant_scale = seg[i].luma_dc_quant_scale,
-        .luma_ac_quant_scale = seg[i].luma_ac_quant_scale,
-        .chroma_dc_quant_scale = seg[i].chroma_dc_quant_scale,
-        .chroma_ac_quant_scale = seg[i].chroma_ac_quant_scale,
+        .luma_dc_quant_scale = luma_dc_quant_scale,
+        .luma_ac_quant_scale = luma_ac_quant_scale,
+        .chroma_dc_quant_scale = chroma_dc_quant_scale,
+        .chroma_ac_quant_scale = chroma_ac_quant_scale,
     };
     /* *INDENT-ON* */
 
-    memcpy (slice_param.seg_param[i].filter_level, seg[i].filter_level,
+    memcpy (slice_param.seg_param[i].filter_level, lvl_lookup,
         sizeof (slice_param.seg_param[i].filter_level));
   }
 

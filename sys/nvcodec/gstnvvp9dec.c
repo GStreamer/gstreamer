@@ -74,7 +74,7 @@ static gboolean gst_nv_vp9_dec_src_query (GstVideoDecoder * decoder,
 
 /* GstVp9Decoder */
 static gboolean gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
-    const GstVp9Parser * parser, const GstVp9FrameHdr * frame_hdr);
+    const GstVp9FrameHeader * frame_hdr);
 static gboolean gst_nv_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static GstVp9Picture *gst_nv_vp9_dec_duplicate_picture (GstVp9Decoder *
@@ -232,70 +232,47 @@ gst_nv_vp9_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 
 static gboolean
 gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
-    const GstVp9Parser * parser, const GstVp9FrameHdr * frame_hdr)
+    const GstVp9FrameHeader * frame_hdr)
 {
   GstNvVp9Dec *self = GST_NV_VP9_DEC (decoder);
-  gboolean modified = FALSE;
+  GstVideoFormat out_format = GST_VIDEO_FORMAT_UNKNOWN;
+  GstVideoInfo info;
 
   GST_LOG_OBJECT (self, "new sequence");
 
-  if (self->width != frame_hdr->width || self->height != frame_hdr->height) {
-    if (self->decoder) {
-      GST_INFO_OBJECT (self, "resolution changed %dx%d -> %dx%d",
-          self->width, self->height, frame_hdr->width, frame_hdr->height);
-    }
+  self->width = frame_hdr->width;
+  self->height = frame_hdr->height;
 
-    self->width = frame_hdr->width;
-    self->height = frame_hdr->height;
-    modified = TRUE;
+  if (self->profile == GST_VP9_PROFILE_0) {
+    out_format = GST_VIDEO_FORMAT_NV12;
+  } else if (self->profile == GST_VP9_PROFILE_2) {
+    if (frame_hdr->bit_depth == 10)
+      out_format = GST_VIDEO_FORMAT_P010_10LE;
+    else
+      out_format = GST_VIDEO_FORMAT_P016_LE;
   }
 
-  if (self->profile != frame_hdr->profile) {
-    if (self->decoder) {
-      GST_INFO_OBJECT (self, "profile changed %d -> %d", self->profile,
-          frame_hdr->profile);
-    }
-
-    self->profile = frame_hdr->profile;
-    modified = TRUE;
+  if (out_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT (self, "Could not support profile %d", self->profile);
+    return FALSE;
   }
 
-  if (modified || !gst_nv_decoder_is_configured (self->decoder)) {
-    GstVideoInfo info;
-    GstVideoFormat out_format = GST_VIDEO_FORMAT_UNKNOWN;
-
-    if (self->profile == GST_VP9_PROFILE_0) {
-      out_format = GST_VIDEO_FORMAT_NV12;
-    } else if (self->profile == GST_VP9_PROFILE_2) {
-      if (parser->bit_depth == 10)
-        out_format = GST_VIDEO_FORMAT_P010_10LE;
-      else
-        out_format = GST_VIDEO_FORMAT_P016_LE;
-    }
-
-    if (out_format == GST_VIDEO_FORMAT_UNKNOWN) {
-      GST_ERROR_OBJECT (self, "Could not support profile %d", self->profile);
-      return FALSE;
-    }
-
-    gst_video_info_set_format (&info, out_format, self->width, self->height);
-
-    if (!gst_nv_decoder_configure (self->decoder,
-            cudaVideoCodec_VP9, &info, self->width, self->height,
-            NUM_OUTPUT_VIEW)) {
-      GST_ERROR_OBJECT (self, "Failed to configure decoder");
-      return FALSE;
-    }
-
-    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
-      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
-    }
-
-    memset (&self->params, 0, sizeof (CUVIDPICPARAMS));
-
-    self->params.CodecSpecific.vp9.colorSpace = parser->color_space;
+  gst_video_info_set_format (&info, out_format, self->width, self->height);
+  if (!gst_nv_decoder_configure (self->decoder,
+          cudaVideoCodec_VP9, &info, self->width, self->height,
+          NUM_OUTPUT_VIEW)) {
+    GST_ERROR_OBJECT (self, "Failed to configure decoder");
+    return FALSE;
   }
+
+  if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
+    GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
+    return FALSE;
+  }
+
+  memset (&self->params, 0, sizeof (CUVIDPICPARAMS));
+
+  self->params.CodecSpecific.vp9.colorSpace = frame_hdr->color_space;
 
   return TRUE;
 }
@@ -366,10 +343,10 @@ gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture, GstVp9Dpb * dpb)
 {
   GstNvVp9Dec *self = GST_NV_VP9_DEC (decoder);
-  const GstVp9FrameHdr *frame_hdr = &picture->frame_hdr;
-  const GstVp9LoopFilter *loopfilter = &frame_hdr->loopfilter;
-  const GstVp9SegmentationInfo *seg = &frame_hdr->segmentation;
-  const GstVp9QuantIndices *quant_indices = &frame_hdr->quant_indices;
+  const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
+  const GstVp9LoopFilterParams *lfp = &frame_hdr->loop_filter_params;
+  const GstVp9SegmentationParams *sp = &frame_hdr->segmentation_params;
+  const GstVp9QuantizationParams *qp = &frame_hdr->quantization_params;
   CUVIDPICPARAMS *params = &self->params;
   CUVIDVP9PICPARAMS *vp9_params = &params->CodecSpecific.vp9;
   GstNvDecoderFrame *frame;
@@ -384,14 +361,26 @@ gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
       GST_VP9_MAX_MODE_LF_DELTAS);
   G_STATIC_ASSERT (G_N_ELEMENTS (vp9_params->mb_segment_tree_probs) ==
       GST_VP9_SEG_TREE_PROBS);
+  G_STATIC_ASSERT (sizeof (vp9_params->mb_segment_tree_probs) ==
+      sizeof (sp->segmentation_tree_probs));
+  G_STATIC_ASSERT (G_N_ELEMENTS (vp9_params->segment_pred_probs) ==
+      GST_VP9_PREDICTION_PROBS);
+  G_STATIC_ASSERT (sizeof (vp9_params->segment_pred_probs) ==
+      sizeof (sp->segmentation_pred_prob));
   G_STATIC_ASSERT (G_N_ELEMENTS (vp9_params->refFrameSignBias) ==
       GST_VP9_REFS_PER_FRAME + 1);
+  G_STATIC_ASSERT (sizeof (vp9_params->refFrameSignBias) ==
+      sizeof (frame_hdr->ref_frame_sign_bias));
   G_STATIC_ASSERT (G_N_ELEMENTS (vp9_params->activeRefIdx) ==
       GST_VP9_REFS_PER_FRAME);
   G_STATIC_ASSERT (G_N_ELEMENTS (vp9_params->segmentFeatureEnable) ==
       GST_VP9_MAX_SEGMENTS);
+  G_STATIC_ASSERT (sizeof (vp9_params->segmentFeatureEnable) ==
+      sizeof (sp->feature_enabled));
   G_STATIC_ASSERT (G_N_ELEMENTS (vp9_params->segmentFeatureData) ==
       GST_VP9_MAX_SEGMENTS);
+  G_STATIC_ASSERT (sizeof (vp9_params->segmentFeatureData) ==
+      sizeof (sp->feature_data));
 
   GST_LOG_OBJECT (self, "Decode picture, size %" G_GSIZE_FORMAT, picture->size);
 
@@ -428,9 +417,9 @@ gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
     }
   }
 
-  vp9_params->LastRefIdx = ref_frame_map[frame_hdr->ref_frame_indices[0]];
-  vp9_params->GoldenRefIdx = ref_frame_map[frame_hdr->ref_frame_indices[1]];
-  vp9_params->AltRefIdx = ref_frame_map[frame_hdr->ref_frame_indices[2]];
+  vp9_params->LastRefIdx = ref_frame_map[frame_hdr->ref_frame_idx[0]];
+  vp9_params->GoldenRefIdx = ref_frame_map[frame_hdr->ref_frame_idx[1]];
+  vp9_params->AltRefIdx = ref_frame_map[frame_hdr->ref_frame_idx[2]];
 
   vp9_params->profile = frame_hdr->profile;
   vp9_params->frameContextIdx = frame_hdr->frame_context_idx;
@@ -438,65 +427,57 @@ gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
   vp9_params->showFrame = frame_hdr->show_frame;
   vp9_params->errorResilient = frame_hdr->error_resilient_mode;
   vp9_params->frameParallelDecoding = frame_hdr->frame_parallel_decoding_mode;
-  vp9_params->subSamplingX = picture->subsampling_x;
-  vp9_params->subSamplingY = picture->subsampling_y;
+  vp9_params->subSamplingX = frame_hdr->subsampling_x;
+  vp9_params->subSamplingY = frame_hdr->subsampling_y;
   vp9_params->intraOnly = frame_hdr->intra_only;
   vp9_params->allow_high_precision_mv = frame_hdr->allow_high_precision_mv;
   vp9_params->refreshEntropyProbs = frame_hdr->refresh_frame_context;
-  vp9_params->bitDepthMinus8Luma = picture->bit_depth - 8;
-  vp9_params->bitDepthMinus8Chroma = picture->bit_depth - 8;
+  vp9_params->bitDepthMinus8Luma = frame_hdr->bit_depth - 8;
+  vp9_params->bitDepthMinus8Chroma = frame_hdr->bit_depth - 8;
 
-  vp9_params->loopFilterLevel = loopfilter->filter_level;
-  vp9_params->loopFilterSharpness = loopfilter->sharpness_level;
-  vp9_params->modeRefLfEnabled = loopfilter->mode_ref_delta_enabled;
+  vp9_params->loopFilterLevel = lfp->loop_filter_level;
+  vp9_params->loopFilterSharpness = lfp->loop_filter_sharpness;
+  vp9_params->modeRefLfEnabled = lfp->loop_filter_delta_enabled;
 
-  vp9_params->log2_tile_columns = frame_hdr->log2_tile_columns;
-  vp9_params->log2_tile_rows = frame_hdr->log2_tile_rows;
+  vp9_params->log2_tile_columns = frame_hdr->tile_cols_log2;
+  vp9_params->log2_tile_rows = frame_hdr->tile_rows_log2;
 
-  vp9_params->segmentEnabled = seg->enabled;
-  vp9_params->segmentMapUpdate = seg->update_map;
-  vp9_params->segmentMapTemporalUpdate = seg->temporal_update;
-  vp9_params->segmentFeatureMode = seg->abs_delta;
+  vp9_params->segmentEnabled = sp->segmentation_enabled;
+  vp9_params->segmentMapUpdate = sp->segmentation_update_map;
+  vp9_params->segmentMapTemporalUpdate = sp->segmentation_temporal_update;
+  vp9_params->segmentFeatureMode = sp->segmentation_abs_or_delta_update;
 
-  vp9_params->qpYAc = quant_indices->y_ac_qi;
-  vp9_params->qpYDc = quant_indices->y_dc_delta;
-  vp9_params->qpChDc = quant_indices->uv_dc_delta;
-  vp9_params->qpChAc = quant_indices->uv_ac_delta;
+  vp9_params->qpYAc = qp->base_q_idx;
+  vp9_params->qpYDc = qp->delta_q_y_dc;
+  vp9_params->qpChDc = qp->delta_q_uv_dc;
+  vp9_params->qpChAc = qp->delta_q_uv_ac;
 
   vp9_params->resetFrameContext = frame_hdr->reset_frame_context;
-  vp9_params->mcomp_filter_type = frame_hdr->mcomp_filter_type;
+  vp9_params->mcomp_filter_type = frame_hdr->interpolation_filter;
   vp9_params->frameTagSize = frame_hdr->frame_header_length_in_bytes;
-  vp9_params->offsetToDctParts = frame_hdr->first_partition_size;
+  vp9_params->offsetToDctParts = frame_hdr->header_size_in_bytes;
 
   for (i = 0; i < GST_VP9_MAX_REF_LF_DELTAS; i++)
-    vp9_params->mbRefLfDelta[i] = loopfilter->ref_deltas[i];
+    vp9_params->mbRefLfDelta[i] = lfp->loop_filter_ref_deltas[i];
 
   for (i = 0; i < GST_VP9_MAX_MODE_LF_DELTAS; i++)
-    vp9_params->mbModeLfDelta[i] = loopfilter->mode_deltas[i];
+    vp9_params->mbModeLfDelta[i] = lfp->loop_filter_mode_deltas[i];
 
-  for (i = 0; i < GST_VP9_SEG_TREE_PROBS; i++)
-    vp9_params->mb_segment_tree_probs[i] = seg->tree_probs[i];
+  memcpy (vp9_params->mb_segment_tree_probs, sp->segmentation_tree_probs,
+      sizeof (sp->segmentation_tree_probs));
+  memcpy (vp9_params->segment_pred_probs, sp->segmentation_pred_prob,
+      sizeof (sp->segmentation_pred_prob));
+  memcpy (vp9_params->refFrameSignBias, frame_hdr->ref_frame_sign_bias,
+      sizeof (frame_hdr->ref_frame_sign_bias));
 
-  vp9_params->refFrameSignBias[0] = 0;
   for (i = 0; i < GST_VP9_REFS_PER_FRAME; i++) {
-    vp9_params->refFrameSignBias[i + 1] = frame_hdr->ref_frame_sign_bias[i];
-    vp9_params->activeRefIdx[i] = frame_hdr->ref_frame_indices[i];
+    vp9_params->activeRefIdx[i] = frame_hdr->ref_frame_idx[i];
   }
 
-  for (i = 0; i < GST_VP9_MAX_SEGMENTS; i++) {
-    vp9_params->segmentFeatureEnable[i][0] =
-        seg->data[i].alternate_quantizer_enabled;
-    vp9_params->segmentFeatureEnable[i][1] =
-        seg->data[i].alternate_loop_filter_enabled;
-    vp9_params->segmentFeatureEnable[i][2] =
-        seg->data[i].reference_frame_enabled;
-    vp9_params->segmentFeatureEnable[i][3] = seg->data[i].reference_skip;
-
-    vp9_params->segmentFeatureData[i][0] = seg->data[i].alternate_quantizer;
-    vp9_params->segmentFeatureData[i][1] = seg->data[i].alternate_loop_filter;
-    vp9_params->segmentFeatureData[i][2] = seg->data[i].reference_frame;
-    vp9_params->segmentFeatureData[i][3] = 0;
-  }
+  memcpy (vp9_params->segmentFeatureEnable, sp->feature_enabled,
+      sizeof (sp->feature_enabled));
+  memcpy (vp9_params->segmentFeatureData, sp->feature_data,
+      sizeof (sp->feature_data));
 
   return gst_nv_decoder_decode_picture (self->decoder, &self->params);
 }

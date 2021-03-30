@@ -71,7 +71,7 @@ struct _GstVp9DecoderPrivate
 
   gboolean had_sequence;
 
-  GstVp9Parser *parser;
+  GstVp9StatefulParser *parser;
   GstVp9Dpb *dpb;
 
   gboolean wait_keyframe;
@@ -129,7 +129,7 @@ gst_vp9_decoder_start (GstVideoDecoder * decoder)
   GstVp9Decoder *self = GST_VP9_DECODER (decoder);
   GstVp9DecoderPrivate *priv = self->priv;
 
-  priv->parser = gst_vp9_parser_new ();
+  priv->parser = gst_vp9_stateful_parser_new ();
   priv->dpb = gst_vp9_dpb_new ();
   priv->wait_keyframe = TRUE;
 
@@ -142,27 +142,16 @@ gst_vp9_decoder_stop (GstVideoDecoder * decoder)
   GstVp9Decoder *self = GST_VP9_DECODER (decoder);
   GstVp9DecoderPrivate *priv = self->priv;
 
-  if (self->input_state) {
-    gst_video_codec_state_unref (self->input_state);
-    self->input_state = NULL;
-  }
-
-  if (priv->parser) {
-    gst_vp9_parser_free (priv->parser);
-    priv->parser = NULL;
-  }
-
-  if (priv->dpb) {
-    gst_vp9_dpb_free (priv->dpb);
-    priv->dpb = NULL;
-  }
+  g_clear_pointer (&self->input_state, gst_video_codec_state_unref);
+  g_clear_pointer (&priv->parser, gst_vp9_stateful_parser_free);
+  g_clear_pointer (&priv->dpb, gst_vp9_dpb_free);
 
   return TRUE;
 }
 
 static gboolean
 gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
-    const GstVp9FrameHdr * frame_hdr)
+    const GstVp9FrameHeader * frame_hdr)
 {
   GstVp9DecoderPrivate *priv = self->priv;
   gboolean ret = TRUE;
@@ -187,7 +176,7 @@ gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
 
     priv->had_sequence = TRUE;
     if (klass->new_sequence)
-      priv->had_sequence = klass->new_sequence (self, priv->parser, frame_hdr);
+      priv->had_sequence = klass->new_sequence (self, frame_hdr);
 
     ret = priv->had_sequence;
   }
@@ -276,7 +265,7 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
   GstVp9DecoderClass *klass = GST_VP9_DECODER_GET_CLASS (self);
   GstVp9DecoderPrivate *priv = self->priv;
   GstBuffer *in_buf = frame->input_buffer;
-  GstVp9FrameHdr frame_hdr;
+  GstVp9FrameHeader frame_hdr;
   GstVp9Picture *picture = NULL;
   GstVp9ParserResult pres;
   GstMapInfo map;
@@ -289,7 +278,7 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     goto error;
   }
 
-  pres = gst_vp9_parser_parse_frame_header (priv->parser, &frame_hdr,
+  pres = gst_vp9_stateful_parser_parse_frame_header (priv->parser, &frame_hdr,
       map.data, map.size);
 
   if (pres != GST_VP9_PARSER_OK) {
@@ -324,15 +313,15 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
   if (frame_hdr.show_existing_frame) {
     GstVp9Picture *pic_to_dup;
 
-    if (frame_hdr.frame_to_show >= GST_VP9_REF_FRAMES ||
-        !priv->dpb->pic_list[frame_hdr.frame_to_show]) {
-      GST_ERROR_OBJECT (self, "Invalid frame_to_show %d",
-          frame_hdr.frame_to_show);
+    if (frame_hdr.frame_to_show_map_idx >= GST_VP9_REF_FRAMES ||
+        !priv->dpb->pic_list[frame_hdr.frame_to_show_map_idx]) {
+      GST_ERROR_OBJECT (self, "Invalid frame_to_show_map_idx %d",
+          frame_hdr.frame_to_show_map_idx);
       goto unmap_and_error;
     }
 
     g_assert (klass->duplicate_picture);
-    pic_to_dup = priv->dpb->pic_list[frame_hdr.frame_to_show];
+    pic_to_dup = priv->dpb->pic_list[frame_hdr.frame_to_show_map_idx];
     picture = klass->duplicate_picture (self, pic_to_dup);
 
     if (!picture) {
@@ -345,13 +334,6 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
 
     picture->data = map.data;
     picture->size = map.size;
-
-    picture->subsampling_x = priv->parser->subsampling_x;
-    picture->subsampling_y = priv->parser->subsampling_y;
-    picture->bit_depth = priv->parser->bit_depth;
-
-    memcpy (picture->segmentation, priv->parser->segmentation,
-        sizeof (priv->parser->segmentation));
 
     if (klass->new_picture) {
       if (!klass->new_picture (self, frame, picture)) {

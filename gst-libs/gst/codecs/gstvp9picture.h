@@ -21,7 +21,7 @@
 #define __GST_VP9_PICTURE_H__
 
 #include <gst/codecs/codecs-prelude.h>
-#include <gst/codecparsers/gstvp9parser.h>
+#include <gst/codecs/gstvp9statefulparser.h>
 
 G_BEGIN_DECLS
 
@@ -40,12 +40,7 @@ struct _GstVp9Picture
   /* From GstVideoCodecFrame */
   guint32 system_frame_number;
 
-  GstVp9FrameHdr frame_hdr;
-
-  /* copied from parser */
-  gint subsampling_x;
-  gint subsampling_y;
-  guint bit_depth;
+  GstVp9FrameHeader frame_hdr;
 
   /* raw data and size (does not have ownership) */
   const guint8 * data;
@@ -53,8 +48,6 @@ struct _GstVp9Picture
 
   gpointer user_data;
   GDestroyNotify notify;
-
-  GstVp9Segmentation segmentation[GST_VP9_MAX_SEGMENTS];
 };
 
 GST_CODECS_API

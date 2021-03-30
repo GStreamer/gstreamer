@@ -137,7 +137,7 @@ static gboolean gst_d3d11_vp9_dec_flush (GstVideoDecoder * decoder);
 
 /* GstVp9Decoder */
 static gboolean gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
-    const GstVp9Parser * parser, const GstVp9FrameHdr * frame_hdr);
+    const GstVp9FrameHeader * frame_hdr);
 static gboolean gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static GstVp9Picture *gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder *
@@ -356,7 +356,7 @@ gst_d3d11_vp9_dec_flush (GstVideoDecoder * decoder)
 
 static gboolean
 gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
-    const GstVp9Parser * parser, const GstVp9FrameHdr * frame_hdr)
+    const GstVp9FrameHeader * frame_hdr)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   GstVideoInfo info;
@@ -529,15 +529,14 @@ static void
 gst_d3d11_vp9_dec_copy_frame_params (GstD3D11Vp9Dec * self,
     GstVp9Picture * picture, DXVA_PicParams_VP9 * params)
 {
-  const GstVp9FrameHdr *frame_hdr = &picture->frame_hdr;
+  const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
 
   params->profile = frame_hdr->profile;
-
   params->frame_type = frame_hdr->frame_type;
   params->show_frame = frame_hdr->show_frame;
   params->error_resilient_mode = frame_hdr->error_resilient_mode;
-  params->subsampling_x = picture->subsampling_x;
-  params->subsampling_y = picture->subsampling_y;
+  params->subsampling_x = frame_hdr->subsampling_x;
+  params->subsampling_y = frame_hdr->subsampling_y;
   params->refresh_frame_context = frame_hdr->refresh_frame_context;
   params->frame_parallel_decoding_mode =
       frame_hdr->frame_parallel_decoding_mode;
@@ -551,12 +550,12 @@ gst_d3d11_vp9_dec_copy_frame_params (GstD3D11Vp9Dec * self,
 
   params->width = frame_hdr->width;
   params->height = frame_hdr->height;
-  params->BitDepthMinus8Luma = picture->bit_depth - 8;
-  params->BitDepthMinus8Chroma = picture->bit_depth - 8;
+  params->BitDepthMinus8Luma = frame_hdr->bit_depth - 8;
+  params->BitDepthMinus8Chroma = frame_hdr->bit_depth - 8;
 
-  params->interp_filter = frame_hdr->mcomp_filter_type;
-  params->log2_tile_cols = frame_hdr->log2_tile_columns;
-  params->log2_tile_rows = frame_hdr->log2_tile_rows;
+  params->interp_filter = frame_hdr->interpolation_filter;
+  params->log2_tile_cols = frame_hdr->tile_cols_log2;
+  params->log2_tile_rows = frame_hdr->tile_rows_log2;
 }
 
 static void
@@ -593,92 +592,103 @@ static void
 gst_d3d11_vp9_dec_copy_frame_refs (GstD3D11Vp9Dec * self,
     GstVp9Picture * picture, DXVA_PicParams_VP9 * params)
 {
-  const GstVp9FrameHdr *frame_hdr = &picture->frame_hdr;
+  const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
   gint i;
 
   for (i = 0; i < GST_VP9_REFS_PER_FRAME; i++) {
-    params->frame_refs[i] =
-        params->ref_frame_map[frame_hdr->ref_frame_indices[i]];
+    params->frame_refs[i] = params->ref_frame_map[frame_hdr->ref_frame_idx[i]];
   }
 
-  for (i = 0; i < GST_VP9_REFS_PER_FRAME; i++) {
-    params->ref_frame_sign_bias[i + 1] = frame_hdr->ref_frame_sign_bias[i];
-  }
+  G_STATIC_ASSERT (G_N_ELEMENTS (params->ref_frame_sign_bias) ==
+      G_N_ELEMENTS (frame_hdr->ref_frame_sign_bias));
+  G_STATIC_ASSERT (sizeof (params->ref_frame_sign_bias) ==
+      sizeof (frame_hdr->ref_frame_sign_bias));
+  memcpy (params->ref_frame_sign_bias,
+      frame_hdr->ref_frame_sign_bias, sizeof (frame_hdr->ref_frame_sign_bias));
 }
 
 static void
 gst_d3d11_vp9_dec_copy_loop_filter_params (GstD3D11Vp9Dec * self,
     GstVp9Picture * picture, DXVA_PicParams_VP9 * params)
 {
-  const GstVp9FrameHdr *frame_hdr = &picture->frame_hdr;
-  const GstVp9LoopFilter *loopfilter = &frame_hdr->loopfilter;
-  gint i;
+  const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
+  const GstVp9LoopFilterParams *lfp = &frame_hdr->loop_filter_params;
 
-  params->filter_level = loopfilter->filter_level;
-  params->sharpness_level = loopfilter->sharpness_level;
-  params->mode_ref_delta_enabled = loopfilter->mode_ref_delta_enabled;
-  params->mode_ref_delta_update = loopfilter->mode_ref_delta_update;
+  params->filter_level = lfp->loop_filter_level;
+  params->sharpness_level = lfp->loop_filter_sharpness;
+  params->mode_ref_delta_enabled = lfp->loop_filter_delta_enabled;
+  params->mode_ref_delta_update = lfp->loop_filter_delta_update;
 
-  for (i = 0; i < GST_VP9_MAX_REF_LF_DELTAS; i++) {
-    params->ref_deltas[i] = loopfilter->ref_deltas[i];
-  }
+  G_STATIC_ASSERT (G_N_ELEMENTS (params->ref_deltas) ==
+      G_N_ELEMENTS (lfp->loop_filter_ref_deltas));
+  G_STATIC_ASSERT (sizeof (params->ref_deltas) ==
+      sizeof (lfp->loop_filter_ref_deltas));
+  memcpy (params->ref_deltas, lfp->loop_filter_ref_deltas,
+      sizeof (lfp->loop_filter_ref_deltas));
 
-  for (i = 0; i < GST_VP9_MAX_MODE_LF_DELTAS; i++) {
-    params->mode_deltas[i] = loopfilter->mode_deltas[i];
-  }
+  G_STATIC_ASSERT (G_N_ELEMENTS (params->mode_deltas) ==
+      G_N_ELEMENTS (lfp->loop_filter_mode_deltas));
+  G_STATIC_ASSERT (sizeof (params->mode_deltas) ==
+      sizeof (lfp->loop_filter_mode_deltas));
+  memcpy (params->mode_deltas, lfp->loop_filter_mode_deltas,
+      sizeof (lfp->loop_filter_mode_deltas));
 }
 
 static void
 gst_d3d11_vp9_dec_copy_quant_params (GstD3D11Vp9Dec * self,
     GstVp9Picture * picture, DXVA_PicParams_VP9 * params)
 {
-  const GstVp9FrameHdr *frame_hdr = &picture->frame_hdr;
-  const GstVp9QuantIndices *quant_indices = &frame_hdr->quant_indices;
+  const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
+  const GstVp9QuantizationParams *qp = &frame_hdr->quantization_params;
 
-  params->base_qindex = quant_indices->y_ac_qi;
-  params->y_dc_delta_q = quant_indices->y_dc_delta;
-  params->uv_dc_delta_q = quant_indices->uv_dc_delta;
-  params->uv_ac_delta_q = quant_indices->uv_ac_delta;
+  params->base_qindex = qp->base_q_idx;
+  params->y_dc_delta_q = qp->delta_q_y_dc;
+  params->uv_dc_delta_q = qp->delta_q_uv_dc;
+  params->uv_ac_delta_q = qp->delta_q_uv_ac;
 }
 
 static void
 gst_d3d11_vp9_dec_copy_segmentation_params (GstD3D11Vp9Dec * self,
     GstVp9Picture * picture, DXVA_PicParams_VP9 * params)
 {
-  const GstVp9FrameHdr *frame_hdr = &picture->frame_hdr;
-  const GstVp9SegmentationInfo *seg = &frame_hdr->segmentation;
-  gint i;
+  const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
+  const GstVp9SegmentationParams *sp = &frame_hdr->segmentation_params;
+  gint i, j;
 
-  params->stVP9Segments.enabled = seg->enabled;
-  params->stVP9Segments.update_map = seg->update_map;
-  params->stVP9Segments.temporal_update = seg->temporal_update;
-  params->stVP9Segments.abs_delta = seg->abs_delta;
+  params->stVP9Segments.enabled = sp->segmentation_enabled;
+  params->stVP9Segments.update_map = sp->segmentation_update_map;
+  params->stVP9Segments.temporal_update = sp->segmentation_temporal_update;
+  params->stVP9Segments.abs_delta = sp->segmentation_abs_or_delta_update;
 
-  for (i = 0; i < GST_VP9_SEG_TREE_PROBS; i++)
-    params->stVP9Segments.tree_probs[i] = seg->tree_probs[i];
+  G_STATIC_ASSERT (G_N_ELEMENTS (params->stVP9Segments.tree_probs) ==
+      G_N_ELEMENTS (sp->segmentation_tree_probs));
+  G_STATIC_ASSERT (sizeof (params->stVP9Segments.tree_probs) ==
+      sizeof (sp->segmentation_tree_probs));
+  memcpy (params->stVP9Segments.tree_probs, sp->segmentation_tree_probs,
+      sizeof (sp->segmentation_tree_probs));
 
-  for (i = 0; i < GST_VP9_PREDICTION_PROBS; i++)
-    params->stVP9Segments.pred_probs[i] = seg->pred_probs[i];
+  G_STATIC_ASSERT (G_N_ELEMENTS (params->stVP9Segments.pred_probs) ==
+      G_N_ELEMENTS (sp->segmentation_pred_prob));
+  G_STATIC_ASSERT (sizeof (params->stVP9Segments.pred_probs) ==
+      sizeof (sp->segmentation_pred_prob));
+
+  if (sp->segmentation_temporal_update) {
+    memcpy (params->stVP9Segments.pred_probs, sp->segmentation_pred_prob,
+        sizeof (params->stVP9Segments.pred_probs));
+  } else {
+    memset (params->stVP9Segments.pred_probs, 255,
+        sizeof (params->stVP9Segments.pred_probs));
+  }
 
   for (i = 0; i < GST_VP9_MAX_SEGMENTS; i++) {
-    params->stVP9Segments.feature_mask[i] = 0;
+    params->stVP9Segments.feature_mask[i] =
+        (sp->feature_enabled[i][GST_VP9_SEG_LVL_ALT_Q] << 0) |
+        (sp->feature_enabled[i][GST_VP9_SEG_LVL_ALT_L] << 1) |
+        (sp->feature_enabled[i][GST_VP9_SEG_LVL_REF_FRAME] << 2) |
+        (sp->feature_enabled[i][GST_VP9_SEG_SEG_LVL_SKIP] << 3);
 
-    if (seg->data[i].alternate_quantizer_enabled)
-      params->stVP9Segments.feature_mask[i] |= (1 << 0);
-
-    if (seg->data[i].alternate_loop_filter_enabled)
-      params->stVP9Segments.feature_mask[i] |= (1 << 1);
-
-    if (seg->data[i].reference_frame_enabled)
-      params->stVP9Segments.feature_mask[i] |= (1 << 2);
-
-    if (seg->data[i].reference_skip)
-      params->stVP9Segments.feature_mask[i] |= (1 << 3);
-
-    params->stVP9Segments.feature_data[i][0] = seg->data[i].alternate_quantizer;
-    params->stVP9Segments.feature_data[i][1] =
-        seg->data[i].alternate_loop_filter;
-    params->stVP9Segments.feature_data[i][2] = seg->data[i].reference_frame;
+    for (j = 0; j < 3; j++)
+      params->stVP9Segments.feature_data[i][j] = sp->feature_data[i][j];
     params->stVP9Segments.feature_data[i][3] = 0;
   }
 }
@@ -878,7 +888,7 @@ gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
   pic_params.CurrPic.Index7Bits = view_id;
   pic_params.uncompressed_header_size_byte_aligned =
       picture->frame_hdr.frame_header_length_in_bytes;
-  pic_params.first_partition_size = picture->frame_hdr.first_partition_size;
+  pic_params.first_partition_size = picture->frame_hdr.header_size_in_bytes;
   pic_params.StatusReportFeedbackNumber = 1;
 
   gst_d3d11_vp9_dec_copy_frame_params (self, picture, &pic_params);
