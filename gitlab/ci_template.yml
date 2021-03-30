@@ -21,7 +21,7 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2021-01-22.0'
+  FEDORA_TAG:  '2021-03-30.0'
   CERBERO_TAG: '2020-10-22.0'
   ANDROID_TAG: '2020-10-22.0'
   MANIFEST_TAG: '2020-10-22.0'
