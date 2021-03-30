@@ -55,8 +55,8 @@ typedef struct _GstVideoCodecFrame GstVideoCodecFrame;
  * respective @set_format vmethods.
  *
  * Decoders and encoders can set the downstream state, by using the
- * @gst_video_decoder_set_output_state() or
- * @gst_video_encoder_set_output_state() methods.
+ * gst_video_decoder_set_output_state() or
+ * gst_video_encoder_set_output_state() methods.
  */
 struct _GstVideoCodecState
 {
@@ -223,8 +223,8 @@ typedef enum
  *           be kept.
  * @output_buffer: the output #GstBuffer. Implementations should set this either
  *           directly, or by using the
- *           @gst_video_decoder_allocate_output_frame() or
- *           @gst_video_decoder_allocate_output_buffer() methods. The buffer is
+ *           gst_video_decoder_allocate_output_frame() or
+ *           gst_video_decoder_allocate_output_buffer() methods. The buffer is
  *           owned by the frame and references to the frame instead of the
  *           buffer should be kept.
  * @deadline: Running time when the frame will be used.

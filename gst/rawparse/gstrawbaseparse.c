@@ -91,8 +91,8 @@
  *   which contains caps from the updated configuration.
  *
  * * In case there are bytes in each frame that aren't part of the actual
- *   payload, the get_overhead_size() vfunc must be defined, and the
- *   @get_config_frame_size() vfunc must return a frame size that includes
+ *   payload, the `get_overhead_size()` vfunc must be defined, and the
+ *   `get_config_frame_size()` vfunc must return a frame size that includes
  *   the number of non-payload bytes (= the overhead). Otherwise, the
  *   timestamps will incorrectly include the overhead bytes.
  */

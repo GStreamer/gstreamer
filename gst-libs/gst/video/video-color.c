@@ -547,7 +547,7 @@ gst_video_color_transfer_decode (GstVideoTransferFunction func, gdouble val)
  * @val: a value
  *
  * Convert @val to its gamma decoded value. This is the inverse operation of
- * @gst_video_color_transfer_encode().
+ * gst_video_color_transfer_encode().
  *
  * For a non-linear value L' in the range [0..1], conversion to the linear
  * L is in general performed with a power function like:
