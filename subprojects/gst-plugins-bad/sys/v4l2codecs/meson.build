@@ -6,6 +6,7 @@ v4l2codecs_sources = [
   'gstv4l2codecmpeg2dec.c',
   'gstv4l2codecpool.c',
   'gstv4l2codecvp8dec.c',
+  'gstv4l2codecvp9dec.c',
   'gstv4l2decoder.c',
   'gstv4l2format.c',
   'gstv4l2codecalphadecodebin.c',
