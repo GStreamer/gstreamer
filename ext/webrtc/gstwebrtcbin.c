@@ -5180,7 +5180,7 @@ out:
   if (error) {
     GST_WARNING_OBJECT (webrtc, "returning error: %s", error->message);
     gst_promise_reply (sd->promise,
-        gst_structure_new ("application/x-getwebrtcbin-error", "error",
+        gst_structure_new ("application/x-gstwebrtcbin-error", "error",
             G_TYPE_ERROR, error, NULL));
     g_clear_error (&error);
   } else {
