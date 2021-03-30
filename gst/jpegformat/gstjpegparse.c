@@ -719,7 +719,8 @@ gst_jpeg_parse_pre_push_frame (GstBaseParse * bparse, GstBaseParseFrame * frame)
   GstJpegParse *parse = GST_JPEG_PARSE_CAST (bparse);
   GstBuffer *outbuf = frame->buffer;
 
-  if (parse->has_fps && !GST_CLOCK_TIME_IS_VALID (parse->next_ts))
+  if (parse->has_fps && parse->framerate_numerator != 0
+      && !GST_CLOCK_TIME_IS_VALID (parse->next_ts))
     parse->next_ts = bparse->segment.start;
 
   GST_BUFFER_TIMESTAMP (outbuf) = parse->next_ts;
