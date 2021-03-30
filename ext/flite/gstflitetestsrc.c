@@ -90,8 +90,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) 48000, " "channels = (int) [1, 8]")
     );
 
+GST_ELEMENT_REGISTER_DECLARE (flitetestsrc);
 #define gst_flite_test_src_parent_class parent_class
 G_DEFINE_TYPE (GstFliteTestSrc, gst_flite_test_src, GST_TYPE_BASE_SRC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (flitetestsrc, "flitetestsrc",
+    GST_RANK_NONE, gst_flite_test_src_get_type (), flite_init ());
 
 static void gst_flite_test_src_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);

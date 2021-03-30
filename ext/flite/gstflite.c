@@ -25,17 +25,12 @@
 #include <flite/flite.h>
 
 GType gst_flite_test_src_get_type (void);
-
+GST_ELEMENT_REGISTER_DECLARE (flitetestsrc);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  flite_init ();
-
-  gst_element_register (plugin, "flitetestsrc", GST_RANK_NONE,
-      gst_flite_test_src_get_type ());
-
-  return TRUE;
+  return GST_ELEMENT_REGISTER (flitetestsrc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
