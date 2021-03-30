@@ -32,7 +32,10 @@ GstGLDisplay * gst_qt_get_gl_display ();
 gboolean       gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
     GstGLContext **wrap_glcontext, GstGLContext **context);
 
-QVariant       qt_opengl_native_context_from_gst_gl_context     (GstGLContext * context);
-
 G_END_DECLS
+
+#if defined(__cplusplus)
+QVariant       qt_opengl_native_context_from_gst_gl_context     (GstGLContext * context);
+#endif
+
 #endif /* __QT_GL_UTILS_H__ */
