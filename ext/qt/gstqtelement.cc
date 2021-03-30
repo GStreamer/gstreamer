@@ -26,7 +26,7 @@
 #include "qtitem.h"
 #include <QtQml/QQmlApplicationEngine>
 
-gboolean
+void
 qt5_element_init (GstPlugin * plugin)
 {
   static gsize res = FALSE;
@@ -35,5 +35,4 @@ qt5_element_init (GstPlugin * plugin)
     qmlRegisterType<QtGLVideoItem> ("org.freedesktop.gstreamer.GLVideoItem", 1, 0, "GstGLVideoItem");
     g_once_init_leave (&res, TRUE);
   }
-  return res;
 }

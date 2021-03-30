@@ -24,7 +24,7 @@
 
 G_BEGIN_DECLS
 
-gboolean qt5_element_init (GstPlugin * plugin);
+void qt5_element_init (GstPlugin * plugin);
 
 GST_ELEMENT_REGISTER_DECLARE (qmlglsink);
 GST_ELEMENT_REGISTER_DECLARE (qmlglsrc);
