@@ -3535,6 +3535,74 @@ GST_START_TEST (test_reject_create_offer)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reject_set_description)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstHarness *h;
+  GstPromise *promise;
+  GstPromiseResult res;
+  const GstStructure *s;
+  GError *error = NULL;
+  GstWebRTCSessionDescription *desc = NULL;
+  GstPadTemplate *templ;
+  GstCaps *caps;
+  GstPad *pad;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  /* setup peer 1 */
+  h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
+  add_fake_audio_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  /* Create a second side with specific video caps */
+  templ = gst_element_get_pad_template (t->webrtc2, "sink_%u");
+  fail_unless (templ != NULL);
+  caps = gst_caps_from_string (VP8_RTP_CAPS (97));
+  pad = gst_element_request_pad (t->webrtc2, templ, "sink_0", caps);
+  fail_unless (pad != NULL);
+  gst_caps_unref (caps);
+  gst_object_unref (pad);
+
+  /* Create an offer */
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc1, "create-offer", NULL, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_unless (s != NULL);
+  fail_unless (gst_structure_has_name (s, "application/x-gst-promise"));
+  gst_structure_get (s, "offer", GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &desc,
+      NULL);
+  fail_unless (desc != NULL);
+  gst_promise_unref (promise);
+
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
+  /* Verify that setting an offer where there is a forced m-line with
+     a different kind fails. */
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc2, "set-remote-description", desc, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_unless (gst_structure_has_name (s, "application/x-gstwebrtcbin-error"));
+  gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
+  fail_unless (g_error_matches (error, GST_WEBRTC_BIN_ERROR,
+          GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION));
+  g_clear_error (&error);
+  fail_unless (s != NULL);
+  gst_promise_unref (promise);
+  gst_webrtc_session_description_free (desc);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -3580,6 +3648,7 @@ webrtcbin_suite (void)
         test_bundle_codec_preferences_rtx_no_duplicate_payloads);
     tcase_add_test (tc, test_reject_request_pad);
     tcase_add_test (tc, test_reject_create_offer);
+    tcase_add_test (tc, test_reject_set_description);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
