@@ -165,15 +165,28 @@ gst_rtp_src_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_URI:{
       GstUri *uri = NULL;
+      const gchar *str_uri = g_value_get_string (value);
 
       GST_RTP_SRC_LOCK (object);
-      uri = gst_uri_from_string (g_value_get_string (value));
-      if (uri == NULL)
-        break;
+      uri = gst_uri_from_string (str_uri);
+      if (uri == NULL) {
+        if (str_uri) {
+          GST_RTP_SRC_UNLOCK (object);
+          GST_ERROR_OBJECT (object, "Invalid uri: %s", str_uri);
+
+          break;
+        }
+      }
 
       if (self->uri)
         gst_uri_unref (self->uri);
       self->uri = uri;
+
+      if (!uri) {
+        GST_RTP_SRC_UNLOCK (object);
+
+        break;
+      }
 
       /* Recursive set to self, do not use the same lock in all property
        * setters. */
