@@ -5508,6 +5508,8 @@ gst_webrtc_bin_add_transceiver (GstWebRTCBin * webrtc,
   g_return_val_if_fail (direction != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE,
       NULL);
 
+  PC_LOCK (webrtc);
+
   trans = _create_webrtc_transceiver (webrtc, direction, -1);
   GST_LOG_OBJECT (webrtc,
       "Created new unassociated transceiver %" GST_PTR_FORMAT, trans);
@@ -5517,6 +5519,8 @@ gst_webrtc_bin_add_transceiver (GstWebRTCBin * webrtc,
     rtp_trans->codec_preferences = gst_caps_ref (caps);
     _update_transceiver_kind_from_caps (rtp_trans, caps);
   }
+
+  PC_UNLOCK (webrtc);
 
   return gst_object_ref (trans);
 }
@@ -5533,6 +5537,8 @@ gst_webrtc_bin_get_transceivers (GstWebRTCBin * webrtc)
   GArray *arr = g_array_new (FALSE, TRUE, sizeof (GstWebRTCRTPTransceiver *));
   int i;
 
+  PC_LOCK (webrtc);
+
   g_array_set_clear_func (arr, (GDestroyNotify) _deref_and_unref);
 
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
@@ -5541,6 +5547,7 @@ gst_webrtc_bin_get_transceivers (GstWebRTCBin * webrtc)
     gst_object_ref (trans);
     g_array_append_val (arr, trans);
   }
+  PC_UNLOCK (webrtc);
 
   return arr;
 }
@@ -5549,6 +5556,8 @@ static GstWebRTCRTPTransceiver *
 gst_webrtc_bin_get_transceiver (GstWebRTCBin * webrtc, guint idx)
 {
   GstWebRTCRTPTransceiver *trans = NULL;
+
+  PC_LOCK (webrtc);
 
   if (idx >= webrtc->priv->transceivers->len) {
     GST_ERROR_OBJECT (webrtc, "No transceiver for idx %d", idx);
@@ -5559,18 +5568,25 @@ gst_webrtc_bin_get_transceiver (GstWebRTCBin * webrtc, guint idx)
   gst_object_ref (trans);
 
 done:
+  PC_UNLOCK (webrtc);
   return trans;
 }
 
 static gboolean
 gst_webrtc_bin_add_turn_server (GstWebRTCBin * webrtc, const gchar * uri)
 {
+  gboolean ret;
+
   g_return_val_if_fail (GST_IS_WEBRTC_BIN (webrtc), FALSE);
   g_return_val_if_fail (uri != NULL, FALSE);
 
   GST_DEBUG_OBJECT (webrtc, "Adding turn server: %s", uri);
 
-  return gst_webrtc_ice_add_turn_server (webrtc->priv->ice, uri);
+  PC_LOCK (webrtc);
+  ret = gst_webrtc_ice_add_turn_server (webrtc->priv->ice, uri);
+  PC_UNLOCK (webrtc);
+
+  return ret;
 }
 
 static gboolean
