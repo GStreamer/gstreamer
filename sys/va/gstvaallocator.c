@@ -1012,6 +1012,7 @@ struct _GstVaAllocator
   guint32 fourcc;
   guint32 rt_format;
 
+  GstVideoInfo derived_info;
   GstVideoInfo info;
   guint usage_hint;
 
@@ -1146,13 +1147,24 @@ _ensure_image (GstVaDisplay * display, VASurfaceID surface,
   return ret;
 }
 
+static inline void
+_update_info (GstVideoInfo * info, const VAImage * image)
+{
+  guint i;
+
+  for (i = 0; i < image->num_planes; i++) {
+    GST_VIDEO_INFO_PLANE_OFFSET (info, i) = image->offsets[i];
+    GST_VIDEO_INFO_PLANE_STRIDE (info, i) = image->pitches[i];
+  }
+
+  GST_VIDEO_INFO_SIZE (info) = image->data_size;
+}
+
 static inline gboolean
 _update_image_info (GstVaAllocator * va_allocator)
 {
   VASurfaceID surface;
   VAImage image = {.image_id = VA_INVALID_ID, };
-  gboolean derived;
-  guint i;
 
   /* Create a test surface first */
   if (!_create_surfaces (va_allocator->display, va_allocator->rt_format,
@@ -1169,13 +1181,16 @@ _update_image_info (GstVaAllocator * va_allocator)
 
   /* Try derived first, but different formats can never derive */
   if (va_allocator->surface_format == va_allocator->img_format) {
-    derived = TRUE;
-    if (_get_derive_image (va_allocator->display, surface, &image))
-      goto update;
+    if (_get_derive_image (va_allocator->display, surface, &image)) {
+      va_allocator->use_derived = TRUE;
+      va_allocator->derived_info = va_allocator->info;
+      _update_info (&va_allocator->derived_info, &image);
+      _destroy_image (va_allocator->display, image.image_id);
+    }
+    image.image_id = VA_INVALID_ID;     /* reset it */
   }
 
   /* Then we try to create a image. */
-  derived = FALSE;
   if (!_create_image (va_allocator->display, va_allocator->img_format,
           GST_VIDEO_INFO_WIDTH (&va_allocator->info),
           GST_VIDEO_INFO_HEIGHT (&va_allocator->info), &image)) {
@@ -1183,16 +1198,7 @@ _update_image_info (GstVaAllocator * va_allocator)
     return FALSE;
   }
 
-update:
-  va_allocator->use_derived = derived;
-
-  for (i = 0; i < image.num_planes; i++) {
-    GST_VIDEO_INFO_PLANE_OFFSET (&va_allocator->info, i) = image.offsets[i];
-    GST_VIDEO_INFO_PLANE_STRIDE (&va_allocator->info, i) = image.pitches[i];
-  }
-
-  GST_VIDEO_INFO_SIZE (&va_allocator->info) = image.data_size;
-
+  _update_info (&va_allocator->info, &image);
   _destroy_image (va_allocator->display, image.image_id);
   _destroy_surfaces (va_allocator->display, &surface, 1);
 
@@ -1203,8 +1209,10 @@ static gpointer
 _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
 {
   GstAllocator *allocator = GST_MEMORY_CAST (mem)->allocator;
+  GstVideoInfo *info;
   GstVaAllocator *va_allocator;
   GstVaDisplay *display;
+  gboolean use_derived;
 
   g_return_val_if_fail (mem->surface != VA_INVALID_ID, NULL);
   g_return_val_if_fail (GST_IS_VA_ALLOCATOR (allocator), NULL);
@@ -1230,11 +1238,20 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
     goto success;
   }
 
-  if (!_ensure_image (display, mem->surface, &va_allocator->info, &mem->image,
-          va_allocator->use_derived))
+  /* On Gen7-Gen9 Intel graphics the memory is mappable but not
+   * cached, so normal memcpy() access is very slow to read, but it's
+   * ok for writing. So let's assume that users won't prefer
+   * direct-mapped memory if they request read access. */
+  use_derived = va_allocator->use_derived && !(flags & GST_MAP_READ);
+  if (use_derived)
+    info = &va_allocator->derived_info;
+  else
+    info = &va_allocator->info;
+
+  if (!_ensure_image (display, mem->surface, info, &mem->image, use_derived))
     return NULL;
 
-  mem->is_derived = va_allocator->use_derived;
+  mem->is_derived = use_derived;
 
   if (!mem->is_derived) {
     if (!_get_image (display, mem->surface, &mem->image))
@@ -1358,8 +1375,6 @@ gst_va_allocator_init (GstVaAllocator * self)
   allocator->mem_map = (GstMemoryMapFunction) _va_map;
   allocator->mem_unmap = (GstMemoryUnmapFunction) _va_unmap;
   allocator->mem_share = _va_share;
-
-  self->use_derived = TRUE;
 
   gst_va_memory_pool_init (&self->pool);
 
