@@ -68,6 +68,10 @@ class QtGLVideoItem : public QQuickItem, protected QOpenGLFunctions
     Q_PROPERTY(bool itemInitialized
                READ itemInitialized
                NOTIFY itemInitializedChanged)
+    Q_PROPERTY(bool forceAspectRatio
+               READ getForceAspectRatio
+               WRITE setForceAspectRatio
+               NOTIFY forceAspectRatioChanged)
 
 public:
     QtGLVideoItem();
@@ -85,6 +89,7 @@ public:
 
 Q_SIGNALS:
     void itemInitializedChanged();
+    void forceAspectRatioChanged(bool);
 
 private Q_SLOTS:
     void handleWindowChanged(QQuickWindow * win);

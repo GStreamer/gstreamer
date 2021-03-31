@@ -184,6 +184,8 @@ void
 QtGLVideoItem::setForceAspectRatio(bool force_aspect_ratio)
 {
   this->priv->force_aspect_ratio = !!force_aspect_ratio;
+
+  emit forceAspectRatioChanged(force_aspect_ratio);
 }
 
 bool
