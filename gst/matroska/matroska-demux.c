@@ -4534,7 +4534,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         segment->position = GST_CLOCK_TIME_NONE;
       }
       segment->start = clace_time;
-      segment->stop = GST_CLOCK_TIME_NONE;
+      segment->stop = demux->common.segment.stop;
       segment->time = segment->start - demux->stream_start_time;
       segment->position = segment->start - demux->stream_start_time;
       GST_DEBUG_OBJECT (demux,
