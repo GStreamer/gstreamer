@@ -1511,9 +1511,28 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
         GST_LOG_OBJECT (webrtc, "Using current pad caps: %" GST_PTR_FORMAT,
             caps);
       } else {
-        if ((caps = gst_pad_peer_query_caps (GST_PAD (pad), NULL)))
-          GST_LOG_OBJECT (webrtc, "Using peer query caps: %" GST_PTR_FORMAT,
-              caps);
+        static GstStaticCaps static_filter =
+            GST_STATIC_CAPS ("application/x-rtp, "
+            "media = (string) { audio, video }, payload = (int) [ 0, 127 ]");
+        GstCaps *filter = gst_static_caps_get (&static_filter);
+
+        filter = gst_caps_make_writable (filter);
+
+        if (rtp_trans->kind == GST_WEBRTC_KIND_AUDIO)
+          gst_caps_set_simple (filter, "media", G_TYPE_STRING, "audio", NULL);
+        else if (rtp_trans->kind == GST_WEBRTC_KIND_VIDEO)
+          gst_caps_set_simple (filter, "media", G_TYPE_STRING, "video", NULL);
+
+        caps = gst_pad_peer_query_caps (GST_PAD (pad), filter);
+        GST_LOG_OBJECT (webrtc, "Using peer query caps: %" GST_PTR_FORMAT,
+            caps);
+
+        if (!gst_caps_is_fixed (caps) || gst_caps_is_equal_fixed (caps, filter)
+            || gst_caps_is_empty (caps) || gst_caps_is_any (caps)) {
+          gst_caps_unref (caps);
+          caps = NULL;
+        }
+        gst_caps_unref (filter);
       }
       if (caps) {
         if (trans)
@@ -1538,6 +1557,9 @@ _add_supported_attributes_to_caps (GstWebRTCBin * webrtc,
 {
   GstCaps *ret;
   guint i;
+
+  if (caps == NULL)
+    return NULL;
 
   ret = gst_caps_make_writable (caps);
 
