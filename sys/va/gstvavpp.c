@@ -691,6 +691,9 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   }
 
   if (!allocator) {
+    /* XXX(victor): VPP_WRITE uses a tiled drm modifier by iHD */
+    if (gst_caps_is_dmabuf (outcaps) && GST_VIDEO_INFO_IS_RGB (&vinfo))
+      usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
     if (!(allocator = _create_allocator (self, outcaps, usage_hint)))
       return FALSE;
   }
