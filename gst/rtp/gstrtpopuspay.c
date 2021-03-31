@@ -58,6 +58,13 @@
 GST_DEBUG_CATEGORY_STATIC (rtpopuspay_debug);
 #define GST_CAT_DEFAULT (rtpopuspay_debug)
 
+enum
+{
+  PROP_0,
+  PROP_DTX,
+};
+
+#define DEFAULT_DTX FALSE
 
 static GstStaticPadTemplate gst_rtp_opus_pay_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -90,23 +97,76 @@ G_DEFINE_TYPE (GstRtpOPUSPay, gst_rtp_opus_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpopuspay, "rtpopuspay",
     GST_RANK_PRIMARY, GST_TYPE_RTP_OPUS_PAY, rtp_element_init (plugin));
 
+#define GST_RTP_OPUS_PAY_CAST(obj) ((GstRtpOPUSPay *)(obj))
+
+static void
+gst_rtp_opus_pay_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstRtpOPUSPay *self = GST_RTP_OPUS_PAY (object);
+
+  switch (prop_id) {
+    case PROP_DTX:
+      self->dtx = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_opus_pay_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstRtpOPUSPay *self = GST_RTP_OPUS_PAY (object);
+
+  switch (prop_id) {
+    case PROP_DTX:
+      g_value_set_boolean (value, self->dtx);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static void
 gst_rtp_opus_pay_class_init (GstRtpOPUSPayClass * klass)
 {
   GstRTPBasePayloadClass *gstbasertppayload_class;
   GstElementClass *element_class;
+  GObjectClass *gobject_class;
 
   gstbasertppayload_class = (GstRTPBasePayloadClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
+  gobject_class = (GObjectClass *) klass;
 
   gstbasertppayload_class->set_caps = gst_rtp_opus_pay_setcaps;
   gstbasertppayload_class->get_caps = gst_rtp_opus_pay_getcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_opus_pay_handle_buffer;
 
+  gobject_class->set_property = gst_rtp_opus_pay_set_property;
+  gobject_class->get_property = gst_rtp_opus_pay_get_property;
+
   gst_element_class_add_static_pad_template (element_class,
       &gst_rtp_opus_pay_src_template);
   gst_element_class_add_static_pad_template (element_class,
       &gst_rtp_opus_pay_sink_template);
+
+  /**
+   * GstRtpOPUSPay:dtx:
+   *
+   * If enabled, the payloader will not transmit empty packets.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_DTX,
+      g_param_spec_boolean ("dtx", "Discontinuous Transmission",
+          "If enabled, the payloader will not transmit empty packets",
+          DEFAULT_DTX,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
       "RTP Opus payloader",
@@ -121,6 +181,7 @@ gst_rtp_opus_pay_class_init (GstRtpOPUSPayClass * klass)
 static void
 gst_rtp_opus_pay_init (GstRtpOPUSPay * rtpopuspay)
 {
+  rtpopuspay->dtx = DEFAULT_DTX;
 }
 
 static gboolean
@@ -236,8 +297,17 @@ static GstFlowReturn
 gst_rtp_opus_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
+  GstRtpOPUSPay *self = GST_RTP_OPUS_PAY_CAST (basepayload);
   GstBuffer *outbuf;
   GstClockTime pts, dts, duration;
+
+  /* DTX packets are zero-length frames, with a 1 or 2-bytes header */
+  if (self->dtx && gst_buffer_get_size (buffer) <= 2) {
+    GST_LOG_OBJECT (self,
+        "discard empty buffer as DTX is enabled: %" GST_PTR_FORMAT, buffer);
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
 
   pts = GST_BUFFER_PTS (buffer);
   dts = GST_BUFFER_DTS (buffer);

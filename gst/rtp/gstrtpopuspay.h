@@ -44,6 +44,8 @@ typedef struct _GstRtpOPUSPayClass GstRtpOPUSPayClass;
 struct _GstRtpOPUSPay
 {
   GstRTPBasePayload payload;
+
+  gboolean dtx;
 };
 
 struct _GstRtpOPUSPayClass

@@ -14854,7 +14854,20 @@
                         "presence": "always"
                     }
                 },
-                "properties": {},
+                "properties": {
+                    "dtx": {
+                        "blurb": "If enabled, the payloader will not transmit empty packets",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                },
                 "rank": "primary"
             },
             "rtppcmadepay": {
