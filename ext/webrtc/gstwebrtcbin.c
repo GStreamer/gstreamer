@@ -4527,11 +4527,15 @@ static gboolean
 _find_compatible_unassociated_transceiver (GstWebRTCRTPTransceiver * p1,
     gconstpointer data)
 {
+  GstWebRTCKind kind = GPOINTER_TO_INT (data);
+
   if (p1->mid)
     return FALSE;
   if (p1->mline != -1)
     return FALSE;
   if (p1->stopped)
+    return FALSE;
+  if (p1->kind != GST_WEBRTC_KIND_UNKNOWN && p1->kind != kind)
     return FALSE;
 
   return TRUE;
@@ -4659,7 +4663,14 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
           g_strcmp0 (gst_sdp_media_get_media (media), "video") == 0) {
         /* No existing transceiver, find an unused one */
         if (!trans) {
-          trans = _find_transceiver (webrtc, NULL,
+          GstWebRTCKind kind;
+
+          if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0)
+            kind = GST_WEBRTC_KIND_AUDIO;
+          else
+            kind = GST_WEBRTC_KIND_VIDEO;
+
+          trans = _find_transceiver (webrtc, GINT_TO_POINTER (kind),
               (FindTransceiverFunc) _find_compatible_unassociated_transceiver);
         }
 
