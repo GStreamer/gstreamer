@@ -29,6 +29,7 @@
 #include "gstrusage.h"
 #include "gststats.h"
 #include "gstleaks.h"
+#include "gstfactories.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -46,6 +47,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_tracer_register (plugin, "stats", gst_stats_tracer_get_type ()))
     return FALSE;
   if (!gst_tracer_register (plugin, "leaks", gst_leaks_tracer_get_type ()))
+    return FALSE;
+  if (!gst_tracer_register (plugin, "factories",
+          gst_factories_tracer_get_type ()))
     return FALSE;
   return TRUE;
 }

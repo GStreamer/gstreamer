@@ -10,6 +10,7 @@ gst_tracers_sources = [
   'gstleaks.c',
   'gststats.c',
   'gsttracers.c',
+  'gstfactories.c'
 ]
 
 if gst_debug

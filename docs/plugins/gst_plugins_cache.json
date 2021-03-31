@@ -2868,6 +2868,7 @@
         "package": "GStreamer",
         "source": "gstreamer",
         "tracers": {
+            "factories": {},
             "latency": {},
             "leaks": {},
             "log": {},

@@ -47,6 +47,8 @@ static GstClockTime last_ts = G_GUINT64_CONSTANT (0);
 static guint total_cpuload = 0;
 static gboolean have_cpuload = FALSE;
 
+static GPtrArray *plugin_stats = NULL;
+
 static gboolean have_latency = FALSE;
 static gboolean have_element_latency = FALSE;
 static gboolean have_element_reported_latency = FALSE;
@@ -121,6 +123,22 @@ typedef struct
   GstClockTime tthread;
   guint cpuload;
 } GstThreadStats;
+
+static const gchar *FACTORY_TYPES[] = {
+  "element",
+  "device-provider",
+  "typefind",
+  "dynamic-type",
+};
+
+#define N_FACTORY_TYPES G_N_ELEMENTS(FACTORY_TYPES)
+
+typedef struct
+{
+  gchar *name;
+
+  GPtrArray *factories[N_FACTORY_TYPES];
+} GstPluginStats;
 
 /* stats helper */
 
@@ -281,6 +299,36 @@ static void
 free_thread_stats (gpointer data)
 {
   g_slice_free (GstThreadStats, data);
+}
+
+static GstPluginStats *
+new_plugin_stats (const gchar * plugin_name)
+{
+  GstPluginStats *plugin = g_slice_new (GstPluginStats);
+  guint i;
+
+  plugin->name = g_strdup (plugin_name);
+
+  for (i = 0; i < N_FACTORY_TYPES; i++)
+    plugin->factories[i] = g_ptr_array_new_with_free_func (g_free);
+
+  g_ptr_array_add (plugin_stats, plugin);
+
+  return plugin;
+}
+
+static void
+free_plugin_stats (gpointer data)
+{
+  GstPluginStats *plugin = data;
+  guint i;
+
+  g_free (plugin->name);
+
+  for (i = 0; i < N_FACTORY_TYPES; i++)
+    g_ptr_array_unref (plugin->factories[i]);
+
+  g_slice_free (GstPluginStats, data);
 }
 
 static void
@@ -608,6 +656,48 @@ do_element_reported_latency (GstStructure * s)
   have_element_reported_latency = TRUE;
 }
 
+static void
+do_factory_used (GstStructure * s)
+{
+  const gchar *factory = NULL;
+  const gchar *factory_type = NULL;
+  const gchar *plugin_name = NULL;
+  GstPluginStats *plugin = NULL;
+  guint i, f;
+
+  factory = gst_structure_get_string (s, "factory");
+  factory_type = gst_structure_get_string (s, "factory-type");
+  plugin_name = gst_structure_get_string (s, "plugin");
+
+  if (!g_strcmp0 (plugin_name, "staticelements"))
+    return;
+
+  if (plugin_name == NULL || plugin_name[0] == 0)
+    plugin_name = "built-in";
+
+  for (f = 0; f < N_FACTORY_TYPES; f++)
+    if (!g_strcmp0 (factory_type, FACTORY_TYPES[f]))
+      break;
+  if (f == N_FACTORY_TYPES)
+    return;
+
+  for (i = 0; i < plugin_stats->len; i++) {
+    GstPluginStats *tmp_plugin = g_ptr_array_index (plugin_stats, i);
+    if (!strcmp (tmp_plugin->name, plugin_name)) {
+      plugin = tmp_plugin;
+      break;
+    }
+  }
+
+  if (plugin == NULL)
+    plugin = new_plugin_stats (plugin_name);
+
+  if (factory && factory[0] &&
+      !g_ptr_array_find_with_equal_func (plugin->factories[f], factory,
+          g_str_equal, NULL))
+    g_ptr_array_add (plugin->factories[f], g_strdup (factory));
+}
+
 /* reporting */
 
 static gint
@@ -874,6 +964,8 @@ init (void)
       free_latency_stats);
   element_reported_latencies = g_queue_new ();
 
+  plugin_stats = g_ptr_array_new_with_free_func (free_plugin_stats);
+
   return TRUE;
 }
 
@@ -902,10 +994,30 @@ done (void)
     element_reported_latencies = NULL;
   }
 
+  g_clear_pointer (&plugin_stats, g_ptr_array_unref);
+
   if (raw_log)
     g_regex_unref (raw_log);
   if (ansi_log)
     g_regex_unref (ansi_log);
+}
+
+static gint
+compare_plugin_stats (gconstpointer a, gconstpointer b)
+{
+  const GstPluginStats *plugin_a = *(GstPluginStats **) a;
+  const GstPluginStats *plugin_b = *(GstPluginStats **) b;
+
+  return strcmp (plugin_a->name, plugin_b->name);
+}
+
+static gint
+compare_string (gconstpointer a, gconstpointer b)
+{
+  const char *str_a = *(const char **) a;
+  const char *str_b = *(const char **) b;
+
+  return strcmp (str_a, str_b);
 }
 
 static void
@@ -1012,6 +1124,43 @@ print_stats (void)
         (GFunc) reported_latencies_foreach_print_stats, NULL);
     puts ("");
   }
+
+  if (plugin_stats->len > 0) {
+    guint i, j, f;
+
+    g_ptr_array_sort (plugin_stats, compare_plugin_stats);
+
+    printf ("Plugins used: ");
+    for (i = 0; i < plugin_stats->len; i++) {
+      GstPluginStats *ps = g_ptr_array_index (plugin_stats, i);
+      printf ("%s%s", i == 0 ? "" : ";", ps->name);
+    }
+    printf ("\n");
+
+    for (f = 0; f < N_FACTORY_TYPES; f++) {
+      gboolean first = TRUE;
+
+      printf ("%c%ss: ", g_ascii_toupper (FACTORY_TYPES[f][0]),
+          FACTORY_TYPES[f] + 1);
+      for (i = 0; i < plugin_stats->len; i++) {
+        GstPluginStats *ps = g_ptr_array_index (plugin_stats, i);
+
+        if (ps->factories[f]->len > 0) {
+          printf ("%s%s:", first ? "" : ";", ps->name);
+          first = FALSE;
+
+          g_ptr_array_sort (ps->factories[f], compare_string);
+
+          for (j = 0; j < ps->factories[f]->len; j++) {
+            const gchar *factory = g_ptr_array_index (ps->factories[f], j);
+
+            printf ("%s%s", j == 0 ? "" : ",", factory);
+          }
+        }
+      }
+      printf ("\n");
+    }
+  }
 }
 
 static void
@@ -1072,6 +1221,8 @@ collect_stats (const gchar * filename)
                   do_element_latency_stats (s);
                 } else if (!strcmp (name, "element-reported-latency")) {
                   do_element_reported_latency (s);
+                } else if (!strcmp (name, "factory-used")) {
+                  do_factory_used (s);
                 } else {
                   // TODO(ensonic): parse the xxx.class log lines
                   if (!g_str_has_suffix (data, ".class")) {
