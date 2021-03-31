@@ -222,11 +222,19 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
   }
   /* raw caps */
   /* XXX(victor): assumption -- drivers can only download to image
-   * formats with same chroma of surface's format
+   * formats with same chroma of surface's format.
+   *
+   * This assumption is only valid for i965 and Gallium (so far).
+   * iHD's color space conversor, in decoders, has some problems or
+   * outputs wrong MD5 in tests.
    */
   {
     GstCaps *raw_caps;
-    GArray *image_formats = gst_va_display_get_image_formats (display);
+    GArray *image_formats = NULL;
+
+    if (!gst_va_display_is_implementation (display,
+            GST_VA_IMPLEMENTATION_INTEL_IHD))
+      image_formats = gst_va_display_get_image_formats (display);
 
     if (!image_formats) {
       raw_caps = gst_caps_copy (base_caps);
