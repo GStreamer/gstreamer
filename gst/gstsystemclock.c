@@ -966,7 +966,7 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
         /* In order to provide more accurate wait, we will use BLOCKING
            clock_nanosleep for any deadlines at or below 500us */
         struct timespec end;
-        GST_TIME_TO_TIMESPEC (entryt, end);
+        GST_TIME_TO_TIMESPEC (mono_ts * 1000 + diff, end);
         GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
         waitret =
             clock_nanosleep (CLOCK_MONOTONIC, TIMER_ABSTIME, &end, NULL) == 0;
