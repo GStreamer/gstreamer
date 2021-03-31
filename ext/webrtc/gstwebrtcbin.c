@@ -4680,9 +4680,10 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
          * that calls to setDirection will change the value.  Nothing about
          * a default value when the transceiver is created internally */
         if (!trans) {
-          trans =
-              GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
-                  _get_direction_from_media (media), i));
+          WebRTCTransceiver *t = _create_webrtc_transceiver (webrtc,
+              _get_direction_from_media (media), i);
+          webrtc_transceiver_set_transport (t, stream);
+          trans = GST_WEBRTC_RTP_TRANSCEIVER (t);
         }
 
         _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, stream,
