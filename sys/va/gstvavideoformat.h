@@ -32,5 +32,7 @@ const VAImageFormat * gst_va_image_format_from_video_format (GstVideoFormat form
 GstVideoFormat        gst_va_video_format_from_va_image_format (const VAImageFormat * va_format);
 GstVideoFormat        gst_va_video_surface_format_from_image_format (GstVideoFormat image_format,
 								     GArray * surface_formats);
+void                  gst_va_video_format_fix_map         (VAImageFormat * image_formats,
+							   gint num);
 
 G_END_DECLS

@@ -418,6 +418,8 @@ gst_va_display_get_image_formats (GstVaDisplay * self)
   status = vaQueryImageFormats (dpy, va_formats, &num);
   gst_va_display_unlock (self);
 
+  gst_va_video_format_fix_map (va_formats, num);
+
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaQueryImageFormats: %s", vaErrorStr (status));
     goto bail;
