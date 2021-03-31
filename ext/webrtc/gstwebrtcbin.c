@@ -6356,7 +6356,8 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     return NULL;
   }
 
-  GST_OBJECT_LOCK (webrtc);
+  PC_LOCK (webrtc);
+
   if (name == NULL || strlen (name) < 6 || !g_str_has_prefix (name, "sink_")) {
     /* no name given when requesting the pad, use next available int */
     serial = webrtc->priv->max_sink_pad_serial++;
@@ -6365,7 +6366,6 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     serial = g_ascii_strtoull (&name[5], NULL, 10);
     lock_mline = TRUE;
   }
-  GST_OBJECT_UNLOCK (webrtc);
 
   if (lock_mline) {
     GstWebRTCBinPad *pad2;
@@ -6383,7 +6383,7 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
             " existing m-line %d, but the transceiver's direction is %s",
             name, serial, direction);
         g_free (direction);
-        return NULL;
+        goto error_out;
       }
 
       /* Reject transceivers that already have a pad allocated */
@@ -6393,7 +6393,7 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
             " but the transceiver associated with this m-line already has pad"
             " %s", name, serial, GST_PAD_NAME (pad2));
         gst_object_unref (pad2);
-        return NULL;
+        goto error_out;
       }
 
       if (caps) {
@@ -6403,7 +6403,7 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
               " existing m-line %d, but requested caps %" GST_PTR_FORMAT
               " don't match existing codec preferences %" GST_PTR_FORMAT,
               name, serial, caps, trans->codec_preferences);
-          return NULL;
+          goto error_out;
         }
 
         if (trans->kind != GST_WEBRTC_KIND_UNKNOWN) {
@@ -6414,7 +6414,7 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
                 " existing m-line %d, but requested caps %" GST_PTR_FORMAT
                 " don't match transceiver kind %d",
                 name, serial, caps, trans->kind);
-            return NULL;
+            goto error_out;
           }
         }
       }
@@ -6486,7 +6486,6 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
   webrtc->priv->pending_sink_transceivers =
       g_list_append (webrtc->priv->pending_sink_transceivers,
       gst_object_ref (pad));
-  _add_pad (webrtc, pad);
 
   if (lock_mline) {
     WebRTCTransceiver *wtrans = WEBRTC_TRANSCEIVER (trans);
@@ -6494,7 +6493,15 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     trans->mline = serial;
   }
 
+  PC_UNLOCK (webrtc);
+
+  _add_pad (webrtc, pad);
+
   return GST_PAD (pad);
+
+error_out:
+  PC_UNLOCK (webrtc);
+  return NULL;
 }
 
 static void
