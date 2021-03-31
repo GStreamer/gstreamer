@@ -31,6 +31,24 @@
 #include <gst/vulkan/vulkan_fwd.h>
 #include <gst/vulkan/vulkan-enumtypes.h>
 
+/**
+ * VK_DEFINE_NON_DISPATCHABLE_HANDLE:
+ *
+ * Allow applications to override the VK_DEFINE_NON_DISPATCHABLE_HANDLE
+ * but provide our own version otherwise. The default vulkan define
+ * provides a different symbol type depending on the architecture and
+ * this causes multilib problems because the generated .gir files are
+ * different.
+ *
+ * Also make sure to provide a suitable GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT
+ * implementation when redefining VK_DEFINE_NON_DISPATCHABLE_HANDLE.
+ *
+ * Since: 1.20
+ */
+#if !defined(VK_DEFINE_NON_DISPATCHABLE_HANDLE)
+#define VK_DEFINE_NON_DISPATCHABLE_HANDLE(object) typedef uint64_t object;
+#endif
+
 #include <vulkan/vulkan_core.h>
 
 #endif /* __GST_VULKAN_API_H__ */

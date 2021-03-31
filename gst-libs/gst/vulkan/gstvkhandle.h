@@ -54,11 +54,12 @@ VK_DEFINE_NON_DISPATCHABLE_HANDLE(GstVulkanHandleTypedef)
  *
  * The printf format specifier for raw Vulkan non dispatchable handles.
  *
+ * When redefining VK_DEFINE_NON_DISPATCHABLE_HANDLE, also make sure
+ * to redefine a suitable printf format specifier.
+ *
  * Since: 1.18
  */
-#if GLIB_SIZEOF_VOID_P == 8
-# define GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT "p"
-#else
+#if !defined(GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT)
 # define GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT G_GUINT64_FORMAT
 #endif
 

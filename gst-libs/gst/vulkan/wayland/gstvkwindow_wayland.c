@@ -268,14 +268,14 @@ gst_vulkan_window_wayland_get_surface (GstVulkanWindow * window,
   if (!window_wl->CreateWaylandSurface) {
     g_set_error_literal (error, GST_VULKAN_ERROR, VK_ERROR_FEATURE_NOT_PRESENT,
         "Could not retrieve \"vkCreateWaylandSurfaceKHR\" function pointer");
-    return NULL;
+    return VK_NULL_HANDLE;
   }
 
   err =
       window_wl->CreateWaylandSurface (window->display->instance->instance,
       &info, NULL, &ret);
   if (gst_vulkan_error_to_g_error (err, error, "vkCreateWaylandSurfaceKHR") < 0)
-    return NULL;
+    return VK_NULL_HANDLE;
 
   return ret;
 }

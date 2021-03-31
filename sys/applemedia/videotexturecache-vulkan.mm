@@ -292,8 +292,8 @@ gst_io_surface_vulkan_memory_set_surface (GstIOSurfaceVulkanMemory * memory,
     texture_data->texture = (__bridge_retained gpointer) texture;
 
     VkResult err = vkSetMTLTextureMVK (memory->vulkan_mem.image, texture);
-    GST_DEBUG ("bound texture %p to image %p: 0x%x", texture, memory->vulkan_mem.image,
-        err);
+    GST_DEBUG ("bound texture %p to image %"GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT": 0x%x",
+               texture, memory->vulkan_mem.image, err);
 
     vk_mem->user_data = texture_data;
     vk_mem->notify = (GDestroyNotify) free_texture_wrapper;

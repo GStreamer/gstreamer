@@ -393,7 +393,7 @@ gst_vulkan_window_win32_get_surface (GstVulkanWindow * window, GError ** error)
   if (!window_win32->CreateWin32Surface) {
     g_set_error_literal (error, GST_VULKAN_ERROR, VK_ERROR_FEATURE_NOT_PRESENT,
         "Could not retrieve \"vkCreateWin32SurfaceKHR\" function pointer");
-    return NULL;
+    return VK_NULL_HANDLE;
   }
 
   err =
@@ -401,7 +401,7 @@ gst_vulkan_window_win32_get_surface (GstVulkanWindow * window, GError ** error)
       &info, NULL, &ret);
 
   if (gst_vulkan_error_to_g_error (err, error, "vkCreateWin32SurfaceKHR") < 0)
-    return NULL;
+    return VK_NULL_HANDLE;
 
   return ret;
 }
