@@ -214,6 +214,29 @@ gst_caps_features_new_any (void)
 }
 
 /**
+ * gst_caps_features_new_single:
+ * @feature: The feature
+ *
+ * Creates a new, ANY #GstCapsFeatures. This will be equal
+ * to any other #GstCapsFeatures but caps with these are
+ * unfixed.
+ *
+ * Returns: (transfer full): a new #GstCapsFeatures
+ *
+ * Since: 1.20
+ */
+GstCapsFeatures *
+gst_caps_features_new_single (const gchar * feature)
+{
+  GstCapsFeatures *features;
+  g_return_val_if_fail (feature != NULL, NULL);
+
+  features = gst_caps_features_new_empty ();
+  gst_caps_features_add (features, feature);
+  return features;
+}
+
+/**
  * gst_caps_features_new:
  * @feature1: name of first feature to set
  * @...: additional features
