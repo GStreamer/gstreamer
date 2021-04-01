@@ -140,7 +140,7 @@ struct _GstWebRTCBinPrivate
   gboolean tos_attached;
 };
 
-typedef void (*GstWebRTCBinFunc) (GstWebRTCBin * webrtc, gpointer data);
+typedef GstStructure *(*GstWebRTCBinFunc) (GstWebRTCBin * webrtc, gpointer data);
 
 typedef struct
 {
