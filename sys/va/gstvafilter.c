@@ -239,6 +239,29 @@ gst_va_filter_ensure_config_attributes (GstVaFilter * self,
   return TRUE;
 }
 
+/* There are formats that are not handled correctly by driver */
+static gboolean
+format_is_accepted (GstVaFilter * self, GstVideoFormat format)
+{
+  /* https://github.com/intel/media-driver/issues/690
+   * https://github.com/intel/media-driver/issues/644 */
+  if (!gst_va_display_is_implementation (self->display,
+          GST_VA_IMPLEMENTATION_INTEL_IHD))
+    return TRUE;
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_xBGR:
+      return FALSE;
+    default:
+      break;
+  }
+
+  return TRUE;
+}
+
 static gboolean
 gst_va_filter_ensure_surface_attributes (GstVaFilter * self)
 {
@@ -259,7 +282,8 @@ gst_va_filter_ensure_surface_attributes (GstVaFilter * self)
     switch (attribs[i].type) {
       case VASurfaceAttribPixelFormat:
         format = gst_va_video_format_from_va_fourcc (attribs[i].value.value.i);
-        if (format != GST_VIDEO_FORMAT_UNKNOWN)
+        if (format != GST_VIDEO_FORMAT_UNKNOWN
+            && format_is_accepted (self, format))
           g_array_append_val (surface_formats, format);
         break;
       case VASurfaceAttribMinWidth:
