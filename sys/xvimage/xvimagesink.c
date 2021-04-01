@@ -704,7 +704,7 @@ gst_xv_image_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstXvImageSink *xvimagesink;
   GstXvContext *context;
-  GstBufferPool *newpool, *oldpool;
+  GstBufferPool *oldpool;
   GstVideoInfo info;
   guint32 im_format = 0;
   gint video_par_n, video_par_d;        /* video's PAR */
@@ -820,12 +820,9 @@ gst_xv_image_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
    * doesn't cover the same area */
   xvimagesink->redraw_border = TRUE;
 
-  /* create a new pool for the new configuration */
-  newpool = gst_xv_image_sink_create_pool (xvimagesink, caps, info.size, 2);
-
-  /* we don't activate the internal pool yet as it may not be needed */
+  /* destroy current pool */
   oldpool = xvimagesink->pool;
-  xvimagesink->pool = newpool;
+  xvimagesink->pool = NULL;
   g_mutex_unlock (&xvimagesink->flow_lock);
 
   /* deactivate and unref the old internal pool */
@@ -962,9 +959,17 @@ gst_xv_image_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     /* if we have one... */
     GST_LOG_OBJECT (xvimagesink, "buffer %p not from our pool, copying", buf);
 
-    /* we should have a pool, configured in setcaps */
-    if (xvimagesink->pool == NULL)
-      goto no_pool;
+    if (xvimagesink->pool == NULL) {
+      GstCaps *caps = gst_video_info_to_caps (&xvimagesink->info);
+
+      GST_DEBUG_OBJECT (xvimagesink, "create new pool");
+      xvimagesink->pool = gst_xv_image_sink_create_pool (xvimagesink, caps,
+          xvimagesink->info.size, 2);
+      if (xvimagesink->pool == NULL)
+        goto no_pool;
+
+      gst_caps_unref (caps);
+    }
 
     if (!gst_buffer_pool_set_active (xvimagesink->pool, TRUE))
       goto activate_failed;
