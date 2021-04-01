@@ -256,6 +256,9 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_fpcm, "RAW Float PCM", 0},
   {FOURCC_pcmC, "RAW PCM Configuration Box", 0},
   {FOURCC_chnl, "Channel Layout Box", 0},
+  {FOURCC_mha1, "MPEG-H 3D Audio sample entry (mha1)", 0},
+  {FOURCC_mhm1, "MPEG-H 3D Audio sample entry (mhm1)", 0},
+  {FOURCC_mhaC, "MPEG-H 3D Audio Configuration Box", 0, qtdemux_dump_mhaC},
   {0, "unknown", 0,},
 };
 

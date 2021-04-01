@@ -151,6 +151,7 @@ static const FormatInfo formats[] = {
   {"audio/x-private1-lpcm", "DVD LPCM", FLAG_AUDIO, ""},
   {"audio/x-m4a", "MPEG-4 AAC", FLAG_CONTAINER, "m4a"},
   {"audio/x-mod", "Module Music Format (MOD)", FLAG_AUDIO, "mod"},
+  {"audio/x-mpeg-h", "MPEG-H 3D Audio", FLAG_AUDIO, ""},
   {"audio/x-mulaw", "Mu-Law", FLAG_AUDIO, ""},
   {"audio/x-musepack", "Musepack (MPC)", FLAG_AUDIO, "mpc"},
   {"audio/x-ffmpeg-parsed-musepack", "Musepack (MPC)", FLAG_AUDIO, "mpc"},

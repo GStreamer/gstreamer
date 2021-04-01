@@ -9079,6 +9079,8 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case GST_MAKE_FOURCC ('Q', 'c', 'l', 'p'):
       case GST_MAKE_FOURCC ('a', 'c', '-', '4'):
       case FOURCC_enca:
+      case FOURCC_mha1:
+      case FOURCC_mhm1:
         /* FIXME FOURCC_raw_ but that is used for video too */
       {
         guint8 stsd_version;
@@ -16869,6 +16871,154 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             }
             break;
           }
+          case FOURCC_mha1:
+          case FOURCC_mhm1:
+          {
+            GNode *mhaC =
+                qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_mhaC);
+            if (mhaC) {
+              GstByteReader br;
+              guint32 mhaC_box_length;
+              guint8 configuration_version;
+              guint8 audio_profile_level_indication;
+              guint8 reference_channel_layout;
+              guint16 mpegh3da_config_length;
+              GstBuffer *mpegh3da_config_buf;
+              const guint8 *mpegh3da_config_data;
+              const guint8 *data = mhaC->data;
+
+              /* The mhaC box begins with a MHADecoderConfigurationRecord.
+               * This record contains the following information:
+               *
+               * - configuration version (1 byte)
+               * - MPEG-H 3D audio profile level indication (1 byte)
+               * - reference channel layout (1 byte)
+               * - MPEG-H 3D audio configuration length (2 bytes)
+               *
+               * Combined with the usual FourCC and box length, this
+               * results in a minimum box length of 8+5 = 13 bytes.
+               */
+              const guint32 min_mhaC_box_length = 8 + 5;
+
+              mhaC_box_length = QT_UINT32 (data);
+              if (mhaC_box_length < min_mhaC_box_length) {
+                GST_ERROR_OBJECT (qtdemux,
+                    "mhaC box length is less than expected; "
+                    "expected at least %" G_GUINT32_FORMAT " byte(s), got %"
+                    G_GUINT32_FORMAT, min_mhaC_box_length, mhaC_box_length);
+                goto corrupt_file;
+              }
+
+              /* The 8-byte offset is there to skip over FourCC and length
+               * when setting up the byte reader. */
+              gst_byte_reader_init (&br, data + 8, mhaC_box_length - 8);
+
+              configuration_version = gst_byte_reader_get_uint8_unchecked (&br);
+              if (configuration_version != 1) {
+                GST_INFO_OBJECT (qtdemux, "mhaC configuration box version "
+                    "is %d, which is unsupported (expected version 1)",
+                    configuration_version);
+                goto unknown_stream;
+              }
+
+              /* These profile levels are defined in ISO/IEC 23008-3, subclause 5.3.2.
+               * Levels always start at 1 in the specification. The indication byte
+               * encodes them in ranges. 0x01 - 0x05 Are levels 1 to 5 of the main
+               * profile, 0x06 - 0x0A are levels 1 to 5 of the high profile etc. */
+              audio_profile_level_indication =
+                  gst_byte_reader_get_uint8_unchecked (&br);
+              switch (audio_profile_level_indication) {
+                case 0x01:
+                case 0x02:
+                case 0x03:
+                case 0x04:
+                case 0x05:
+                  gst_caps_set_simple (entry->caps, "profile", G_TYPE_STRING,
+                      "main", "level", G_TYPE_INT,
+                      audio_profile_level_indication - 0x00, NULL);
+                  break;
+                case 0x06:
+                case 0x07:
+                case 0x08:
+                case 0x09:
+                case 0x0A:
+                  gst_caps_set_simple (entry->caps, "profile", G_TYPE_STRING,
+                      "high", "level", G_TYPE_INT,
+                      audio_profile_level_indication - 0x05, NULL);
+                  break;
+                case 0x0B:
+                case 0x0C:
+                case 0x0D:
+                case 0x0E:
+                case 0x0F:
+                  gst_caps_set_simple (entry->caps, "profile", G_TYPE_STRING,
+                      "low-complexity", "level", G_TYPE_INT,
+                      audio_profile_level_indication - 0x0A, NULL);
+                  break;
+                case 0x10:
+                case 0x11:
+                case 0x12:
+                case 0x13:
+                case 0x14:
+                  gst_caps_set_simple (entry->caps, "profile", G_TYPE_STRING,
+                      "baseline", "level", G_TYPE_INT,
+                      audio_profile_level_indication - 0x0F, NULL);
+                  break;
+                default:
+                  GST_WARNING_OBJECT (qtdemux,
+                      "mhaC configuration box audio profile level "
+                      "indication %#x is not supported",
+                      audio_profile_level_indication);
+                  goto unknown_stream;
+              }
+
+              /* This layout is defined in ISO/IEC 23091-3. It is added to the caps
+               * as information about the MPEG-H content, but it is important to note
+               * that this value is _not_ the same as a channel count, and deriving
+               * a channel count out of it is not correct. */
+              reference_channel_layout =
+                  gst_byte_reader_get_uint8_unchecked (&br);
+              gst_caps_set_simple (entry->caps, "reference-channel-layout",
+                  G_TYPE_INT, reference_channel_layout, NULL);
+
+              /* The MPEG-H 3D audio configuration length is now read. Right
+               * after it, the configuration data follows. Consequently, it
+               * is expected that the remaining bytes in the byte reader
+               * are not fewer than what mpegh3da_config_length indicates. */
+
+              mpegh3da_config_length =
+                  gst_byte_reader_get_uint16_be_unchecked (&br);
+              if (G_UNLIKELY ((mpegh3da_config_length == 0) ||
+                      (gst_byte_reader_get_remaining (&br) <
+                          mpegh3da_config_length))) {
+                GST_WARNING_OBJECT (qtdemux,
+                    "mhaC configuration box contains"
+                    " invalid configuration length %" G_GUINT16_FORMAT,
+                    mpegh3da_config_length);
+                goto corrupt_file;
+              }
+
+              GST_DEBUG_OBJECT (qtdemux, "reading mpegh3da config data with %"
+                  G_GUINT16_FORMAT
+                  " byte(s) and adding it to caps as codec_data",
+                  mpegh3da_config_length);
+              mpegh3da_config_data = gst_byte_reader_get_data_unchecked (&br,
+                  mpegh3da_config_length);
+              mpegh3da_config_buf =
+                  gst_buffer_new_memdup (mpegh3da_config_data,
+                  mpegh3da_config_length);
+              gst_caps_set_simple (entry->caps, "codec_data", GST_TYPE_BUFFER,
+                  mpegh3da_config_buf, NULL);
+              gst_buffer_unref (mpegh3da_config_buf);
+            } else {
+              if (fourcc == FOURCC_mha1) {
+                GST_ERROR_OBJECT (qtdemux, "mha1 sample entry does not contain"
+                    " mhaC configuration box");
+                goto corrupt_file;
+              }
+            }
+            break;
+          }
           case FOURCC_opus:{
             /* Fully handled elsewhere */
             break;
@@ -19317,6 +19467,21 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     {
       _codec ("AC4");
       caps = gst_caps_new_empty_simple ("audio/x-ac4");
+      break;
+    }
+    case FOURCC_mha1:
+    case FOURCC_mhm1:
+    {
+      caps = gst_caps_new_simple ("audio/x-mpeg-h",
+          "stream-type", G_TYPE_STRING, "single",
+          "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+      if (fourcc == FOURCC_mha1) {
+        gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "raw", NULL);
+      } else {
+        gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "mhas",
+            NULL);
+      }
+      _codec ("MPEG-H 3D audio");
       break;
     }
     case GST_MAKE_FOURCC ('q', 't', 'v', 'r'):
