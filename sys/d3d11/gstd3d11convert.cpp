@@ -1164,7 +1164,10 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
   GstD3D11AllocationParams *d3d11_params;
   const GstD3D11Format *d3d11_format;
   guint bind_flags = D3D11_BIND_SHADER_RESOURCE;
-
+  DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
+  UINT supported = 0;
+  HRESULT hr;
+  ID3D11Device *device_handle;
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
           decide_query, query))
@@ -1191,22 +1194,18 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
     return FALSE;
   }
 
-  /* Not a native format, we can bind this format with SRV and RTV */
   if (d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    bind_flags |= D3D11_BIND_RENDER_TARGET;
+    dxgi_format = d3d11_format->resource_format[0];
   } else {
-    UINT supported = 0;
-    HRESULT hr;
-    ID3D11Device *device_handle =
-        gst_d3d11_device_get_device_handle (filter->device);
+    dxgi_format = d3d11_format->dxgi_format;
+  }
 
-    hr = device_handle->CheckFormatSupport (d3d11_format->dxgi_format,
-        &supported);
-    if (gst_d3d11_result (hr, filter->device) &&
-        (supported & D3D11_FORMAT_SUPPORT_RENDER_TARGET) ==
-        D3D11_FORMAT_SUPPORT_RENDER_TARGET) {
-      bind_flags |= D3D11_BIND_RENDER_TARGET;
-    }
+  device_handle = gst_d3d11_device_get_device_handle (filter->device);
+  hr = device_handle->CheckFormatSupport (dxgi_format, &supported);
+  if (gst_d3d11_result (hr, filter->device) &&
+      (supported & D3D11_FORMAT_SUPPORT_RENDER_TARGET) ==
+      D3D11_FORMAT_SUPPORT_RENDER_TARGET) {
+    bind_flags |= D3D11_BIND_RENDER_TARGET;
   }
 
   n_pools = gst_query_get_n_allocation_pools (query);
@@ -1279,6 +1278,10 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
   guint i;
   const GstD3D11Format *d3d11_format;
   guint bind_flags = D3D11_BIND_RENDER_TARGET;
+  DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
+  UINT supported = 0;
+  HRESULT hr;
+  ID3D11Device *device_handle;
 
   gst_query_parse_allocation (query, &outcaps, NULL);
 
@@ -1297,22 +1300,18 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
     return FALSE;
   }
 
-  /* Not a native format, we can bind this format with SRV and RTV */
   if (d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+    dxgi_format = d3d11_format->resource_format[0];
   } else {
-    UINT supported = 0;
-    HRESULT hr;
-    ID3D11Device *device_handle =
-        gst_d3d11_device_get_device_handle (filter->device);
+    dxgi_format = d3d11_format->dxgi_format;
+  }
 
-    hr = device_handle->CheckFormatSupport (d3d11_format->dxgi_format,
-        &supported);
-    if (gst_d3d11_result (hr, filter->device) &&
-        (supported & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) ==
-        D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
-      bind_flags |= D3D11_BIND_SHADER_RESOURCE;
-    }
+  device_handle = gst_d3d11_device_get_device_handle (filter->device);
+  hr = device_handle->CheckFormatSupport (dxgi_format, &supported);
+  if (gst_d3d11_result (hr, filter->device) &&
+      (supported & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) ==
+      D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
+    bind_flags |= D3D11_BIND_SHADER_RESOURCE;
   }
 
   size = GST_VIDEO_INFO_SIZE (&info);

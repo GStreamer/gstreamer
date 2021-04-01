@@ -363,6 +363,10 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   GstD3D11AllocationParams *d3d11_params;
   guint bind_flags = 0;
   guint i;
+  DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
+  UINT supported = 0;
+  HRESULT hr;
+  ID3D11Device *device_handle;
 
   gst_query_parse_allocation (query, &outcaps, NULL);
 
@@ -378,27 +382,23 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     return FALSE;
   }
 
-  /* Not a native format, we can bind this format with SRV and RTV */
   if (d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    bind_flags = (D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+    dxgi_format = d3d11_format->resource_format[0];
   } else {
-    UINT supported = 0;
-    HRESULT hr;
-    ID3D11Device *device_handle =
-        gst_d3d11_device_get_device_handle (filter->device);
+    dxgi_format = d3d11_format->dxgi_format;
+  }
 
-    hr = device_handle->CheckFormatSupport (d3d11_format->dxgi_format,
-        &supported);
-    if (gst_d3d11_result (hr, filter->device)) {
-      if ((supported & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) ==
-          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
-        bind_flags |= D3D11_BIND_SHADER_RESOURCE;
-      }
+  device_handle = gst_d3d11_device_get_device_handle (filter->device);
+  hr = device_handle->CheckFormatSupport (dxgi_format, &supported);
+  if (gst_d3d11_result (hr, filter->device)) {
+    if ((supported & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) ==
+        D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
+      bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+    }
 
-      if ((supported & D3D11_FORMAT_SUPPORT_RENDER_TARGET) ==
-          D3D11_FORMAT_SUPPORT_RENDER_TARGET) {
-        bind_flags |= D3D11_BIND_RENDER_TARGET;
-      }
+    if ((supported & D3D11_FORMAT_SUPPORT_RENDER_TARGET) ==
+        D3D11_FORMAT_SUPPORT_RENDER_TARGET) {
+      bind_flags |= D3D11_BIND_RENDER_TARGET;
     }
   }
 
