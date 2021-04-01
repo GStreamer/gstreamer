@@ -759,6 +759,8 @@ _execute_op (GstWebRTCBinTask * op)
 {
   PC_LOCK (op->webrtc);
   if (op->webrtc->priv->is_closed) {
+    PC_UNLOCK (op->webrtc);
+
     if (op->promise) {
       GError *error =
           g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
@@ -778,8 +780,9 @@ _execute_op (GstWebRTCBinTask * op)
 
   op->op (op->webrtc, op->data);
 
-out:
   PC_UNLOCK (op->webrtc);
+
+out:
   return G_SOURCE_REMOVE;
 }
 
@@ -5462,11 +5465,16 @@ _free_get_stats (struct get_stats *stats)
 static void
 _get_stats_task (GstWebRTCBin * webrtc, struct get_stats *stats)
 {
+  GstStructure *s;
   /* Our selector is the pad,
    * https://www.w3.org/TR/webrtc/#dfn-stats-selection-algorithm
    */
-  gst_promise_reply (stats->promise, gst_webrtc_bin_create_stats (webrtc,
-          stats->pad));
+
+  s = gst_webrtc_bin_create_stats (webrtc, stats->pad);
+
+  PC_UNLOCK (webrtc);
+  gst_promise_reply (stats->promise, s);
+  PC_LOCK (webrtc);
 }
 
 static void
