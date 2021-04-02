@@ -4310,7 +4310,7 @@ pnm_type_find (GstTypeFind * tf, gpointer unused)
     gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM, media_type,
         "width", G_TYPE_INT, w, "height", G_TYPE_INT, h, NULL);
   } else {
-    gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, media_type, NULL);
+    gst_type_find_suggest_empty_simple (tf, GST_TYPE_FIND_LIKELY, media_type);
   }
 }
 
@@ -4622,7 +4622,7 @@ matroska_type_find (GstTypeFind * tf, gpointer unused)
   else
     prob = GST_TYPE_FIND_MAXIMUM;
 
-  gst_type_find_suggest_simple (tf, prob, type_name, NULL);
+  gst_type_find_suggest_empty_simple (tf, prob, type_name);
 }
 
 /*** application/mxf ***/
@@ -4816,7 +4816,7 @@ ogganx_type_find (GstTypeFind * tf, gpointer private)
       media_type, hdr_count[OGG_AUDIO], hdr_count[OGG_VIDEO],
       hdr_count[OGG_ANNODEX], hdr_count[OGG_SKELETON], hdr_count[OGG_OTHER]);
 
-  gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM, media_type, NULL);
+  gst_type_find_suggest_empty_simple (tf, GST_TYPE_FIND_MAXIMUM, media_type);
 }
 
 /*** audio/x-vorbis ***/
@@ -4905,11 +4905,11 @@ kate_type_find (GstTypeFind * tf, gpointer private)
   if (strcmp (category, "subtitles") == 0 || strcmp (category, "SUB") == 0 ||
       strcmp (category, "spu-subtitles") == 0 ||
       strcmp (category, "K-SPU") == 0) {
-    gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM,
-        "subtitle/x-kate", NULL);
+    gst_type_find_suggest_empty_simple (tf, GST_TYPE_FIND_MAXIMUM,
+        "subtitle/x-kate");
   } else {
-    gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM,
-        "application/x-kate", NULL);
+    gst_type_find_suggest_empty_simple (tf, GST_TYPE_FIND_MAXIMUM,
+        "application/x-kate");
   }
 }
 
@@ -5493,7 +5493,7 @@ xdgmime_typefind (GstTypeFind * find, gpointer user_data)
    * non-media formats, so suggest the type with a probability that trumps
    * uncertain results of our typefinders, but not more than that. */
   GST_LOG ("Suggesting '%s' with probability POSSIBLE", mimetype);
-  gst_type_find_suggest_simple (find, GST_TYPE_FIND_POSSIBLE, mimetype, NULL);
+  gst_type_find_suggest_empty_simple (find, GST_TYPE_FIND_POSSIBLE, mimetype);
   g_free (mimetype);
 }
 #endif /* USE_GIO */
@@ -5538,8 +5538,8 @@ windows_icon_typefind (GstTypeFind * find, gpointer user_data)
       || size + offset > datalen)
     return;
 
-  gst_type_find_suggest_simple (find, GST_TYPE_FIND_NEARLY_CERTAIN,
-      "image/x-icon", NULL);
+  gst_type_find_suggest_empty_simple (find, GST_TYPE_FIND_NEARLY_CERTAIN,
+      "image/x-icon");
 }
 
 /*** WAP WBMP typefinder ***/
@@ -5593,8 +5593,8 @@ wbmp_typefind (GstTypeFind * find, gpointer user_data)
   size += h * (GST_ROUND_UP_8 (w) / 8);
 
   if (datalen == size) {
-    gst_type_find_suggest_simple (find, GST_TYPE_FIND_POSSIBLE - 10,
-        "image/vnd.wap.wbmp", NULL);
+    gst_type_find_suggest_empty_simple (find, GST_TYPE_FIND_POSSIBLE - 10,
+        "image/vnd.wap.wbmp");
   }
 }
 
@@ -5619,8 +5619,8 @@ degas_type_find (GstTypeFind * tf, gpointer private)
   if (len == 32034) {
     /* could be DEGAS */
     if (resolution <= 2)
-      gst_type_find_suggest_simple (tf, GST_TYPE_FIND_POSSIBLE + 5,
-          "image/x-degas", NULL);
+      gst_type_find_suggest_empty_simple (tf, GST_TYPE_FIND_POSSIBLE + 5,
+          "image/x-degas");
   } else if (len == 32066) {
     /* could be DEGAS Elite */
     if (resolution <= 2) {
@@ -5631,8 +5631,8 @@ degas_type_find (GstTypeFind * tf, gpointer private)
         if (GST_READ_UINT16_BE (data + n * 2) > 2)
           return;
       }
-      gst_type_find_suggest_simple (tf, GST_TYPE_FIND_POSSIBLE + 5,
-          "image/x-degas", NULL);
+      gst_type_find_suggest_empty_simple (tf, GST_TYPE_FIND_POSSIBLE + 5,
+          "image/x-degas");
     }
   } else if (len >= 66 && len < 32066) {
     /* could be compressed DEGAS Elite, but it's compressed and so we can't rely on size,
@@ -5645,8 +5645,8 @@ degas_type_find (GstTypeFind * tf, gpointer private)
         if (GST_READ_UINT16_BE (data + n * 2) > 2)
           return;
       }
-      gst_type_find_suggest_simple (tf, GST_TYPE_FIND_POSSIBLE + 5,
-          "image/x-degas", NULL);
+      gst_type_find_suggest_empty_simple (tf, GST_TYPE_FIND_POSSIBLE + 5,
+          "image/x-degas");
     }
   }
 }
@@ -5687,8 +5687,8 @@ dvdiso_type_find (GstTypeFind * tf, gpointer private)
     return;
 
   /* May need more inspection, we may be able to demux some of them */
-  gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY,
-      "application/octet-stream", NULL);
+  gst_type_find_suggest_empty_simple (tf, GST_TYPE_FIND_LIKELY,
+      "application/octet-stream");
 }
 
 /* SSA/ASS subtitles
