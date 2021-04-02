@@ -18,28 +18,18 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#ifndef __GST_ALPHA_COMBINE_H__
+#define __GST_ALPHA_COMBINE_H__
 
 #include <gst/gst.h>
 
-#include "gstcodecalphademux.h"
-#include "gstalphacombine.h"
+G_BEGIN_DECLS
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
+#define GST_TYPE_ALPHA_COMBINE (gst_alpha_combine_get_type())
+G_DECLARE_FINAL_TYPE (GstAlphaCombine,
+    gst_alpha_combine, GST, ALPHA_COMBINE, GstElement);
 
-  ret |= GST_ELEMENT_REGISTER (codec_alpha_demux, plugin);
-  ret |= GST_ELEMENT_REGISTER (alpha_combine, plugin);
+GST_ELEMENT_REGISTER_DECLARE (alpha_combine);
 
-  return ret;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    codecalpha,
-    "CODEC Alpha Utilities",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+G_END_DECLS
+#endif

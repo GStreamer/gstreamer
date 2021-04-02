@@ -1,5 +1,6 @@
 codecalpha_sources = [
   'gstplugin.c',
+  'gstalphacombine.c',
   'gstcodecalphademux.c',
 ]
 
