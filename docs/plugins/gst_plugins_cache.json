@@ -1926,6 +1926,7 @@
             "GstCompositorPad": {
                 "hierarchy": [
                     "GstCompositorPad",
+                    "GstVideoAggregatorParallelConvertPad",
                     "GstVideoAggregatorConvertPad",
                     "GstVideoAggregatorPad",
                     "GstAggregatorPad",

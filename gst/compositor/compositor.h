@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideoaggregator.h>
+#include <gst/base/base.h>
 
 #include "blend.h"
 
@@ -35,7 +36,7 @@ G_DECLARE_FINAL_TYPE (GstCompositor, gst_compositor, GST, COMPOSITOR,
 
 #define GST_TYPE_COMPOSITOR_PAD (gst_compositor_pad_get_type())
 G_DECLARE_FINAL_TYPE (GstCompositorPad, gst_compositor_pad, GST, COMPOSITOR_PAD,
-    GstVideoAggregatorConvertPad)
+    GstVideoAggregatorParallelConvertPad)
 
 /**
  * GstCompositorBackground:
@@ -80,28 +81,22 @@ typedef enum
 typedef void (*GstParallelizedTaskFunc) (gpointer user_data);
 
 typedef struct _GstParallelizedTaskRunner GstParallelizedTaskRunner;
-typedef struct _GstParallelizedTaskThread GstParallelizedTaskThread;
-
-struct _GstParallelizedTaskThread
-{
-  GstParallelizedTaskRunner *runner;
-  guint idx;
-  GThread *thread;
-};
 
 struct _GstParallelizedTaskRunner
 {
+  GstTaskPool *pool;
+  gboolean own_pool;
   guint n_threads;
 
-  GstParallelizedTaskThread *threads;
+  GstQueueArray *tasks;
 
   GstParallelizedTaskFunc func;
   gpointer *task_data;
 
   GMutex lock;
-  GCond cond_todo, cond_done;
-  gint n_todo, n_done;
-  gboolean quit;
+  gint n_todo;
+
+  gboolean async_tasks;
 };
 
 /**
@@ -139,7 +134,7 @@ struct _GstCompositor
  */
 struct _GstCompositorPad
 {
-  GstVideoAggregatorConvertPad parent;
+  GstVideoAggregatorParallelConvertPad parent;
 
   /* properties */
   gint xpos, ypos;
