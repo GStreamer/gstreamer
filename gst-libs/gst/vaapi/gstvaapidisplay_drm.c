@@ -350,15 +350,15 @@ gst_vaapi_display_drm_new (const gchar * device_path)
   } else {
     const gchar *user_choice = g_getenv ("GST_VAAPI_DRM_DEVICE");
 
-    if (user_choice && g_str_has_prefix (user_choice, "/dev/dri/")) {
+    if (user_choice) {
       device_paths[num_types] = (gpointer) user_choice;
       types[num_types++] = 0;
+    } else {
+      device_paths[num_types] = (gpointer) device_path;
+      types[num_types++] = DRM_DEVICE_RENDERNODES;
+      device_paths[num_types] = (gpointer) device_path;
+      types[num_types++] = DRM_DEVICE_LEGACY;
     }
-
-    device_paths[num_types] = (gpointer) device_path;
-    types[num_types++] = DRM_DEVICE_RENDERNODES;
-    device_paths[num_types] = (gpointer) device_path;
-    types[num_types++] = DRM_DEVICE_LEGACY;
   }
 
   for (i = 0; i < num_types; i++) {
