@@ -1672,7 +1672,7 @@ GST_START_TEST (rtp_vorbis_renegotiate)
 GST_END_TEST;
 
 static guint16
-pull_rtp_buffer (GstHarness * h)
+pull_rtp_buffer (GstHarness * h, gboolean has_marker)
 {
   gint16 seq;
   GstBuffer *buf;
@@ -1684,6 +1684,11 @@ pull_rtp_buffer (GstHarness * h)
   fail_unless (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
   seq = gst_rtp_buffer_get_seq (&rtp);
   gst_rtp_buffer_unmap (&rtp);
+
+  if (has_marker)
+    fail_unless (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_MARKER));
+  else
+    fail_if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_MARKER));
 
   gst_buffer_unref (buf);
   return seq;
@@ -1715,7 +1720,7 @@ test_rtp_opus_dtx (gboolean dtx)
       gst_buffer_new_wrapped (g_memdup (opus_frame, sizeof (opus_frame)),
       sizeof (opus_frame));
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
-  seq = pull_rtp_buffer (h);
+  seq = pull_rtp_buffer (h, TRUE);
   expected_seq = seq + 1;
 
   /* push empty frame */
@@ -1728,7 +1733,7 @@ test_rtp_opus_dtx (gboolean dtx)
     buf = gst_harness_try_pull (h);
     fail_if (buf);
   } else {
-    seq = pull_rtp_buffer (h);
+    seq = pull_rtp_buffer (h, FALSE);
     fail_unless_equals_int (seq, expected_seq);
     expected_seq++;
   }
@@ -1738,7 +1743,7 @@ test_rtp_opus_dtx (gboolean dtx)
       gst_buffer_new_wrapped (g_memdup (opus_frame, sizeof (opus_frame)),
       sizeof (opus_frame));
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
-  seq = pull_rtp_buffer (h);
+  seq = pull_rtp_buffer (h, dtx);
   fail_unless_equals_int (seq, expected_seq);
 
   gst_harness_teardown (h);

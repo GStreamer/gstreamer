@@ -46,6 +46,9 @@ struct _GstRtpOPUSPay
   GstRTPBasePayload payload;
 
   gboolean dtx;
+
+  /* if the next produced buffer should have the MARKER flag */
+  gboolean marker;
 };
 
 struct _GstRtpOPUSPayClass

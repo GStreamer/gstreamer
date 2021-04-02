@@ -131,6 +131,32 @@ gst_rtp_opus_pay_get_property (GObject * object,
   }
 }
 
+static GstStateChangeReturn
+gst_rtp_opus_pay_change_state (GstElement * element, GstStateChange transition)
+{
+  GstRtpOPUSPay *self = GST_RTP_OPUS_PAY (element);
+  GstStateChangeReturn ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      self->marker = TRUE;
+      break;
+    default:
+      break;
+  }
+
+  ret =
+      GST_ELEMENT_CLASS (gst_rtp_opus_pay_parent_class)->change_state (element,
+      transition);
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  return ret;
+}
+
 static void
 gst_rtp_opus_pay_class_init (GstRtpOPUSPayClass * klass)
 {
@@ -141,6 +167,8 @@ gst_rtp_opus_pay_class_init (GstRtpOPUSPayClass * klass)
   gstbasertppayload_class = (GstRTPBasePayloadClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
   gobject_class = (GObjectClass *) klass;
+
+  element_class->change_state = gst_rtp_opus_pay_change_state;
 
   gstbasertppayload_class->set_caps = gst_rtp_opus_pay_setcaps;
   gstbasertppayload_class->get_caps = gst_rtp_opus_pay_getcaps;
@@ -305,6 +333,7 @@ gst_rtp_opus_pay_handle_buffer (GstRTPBasePayload * basepayload,
   if (self->dtx && gst_buffer_get_size (buffer) <= 2) {
     GST_LOG_OBJECT (self,
         "discard empty buffer as DTX is enabled: %" GST_PTR_FORMAT, buffer);
+    self->marker = TRUE;
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
@@ -322,6 +351,11 @@ gst_rtp_opus_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GST_BUFFER_PTS (outbuf) = pts;
   GST_BUFFER_DTS (outbuf) = dts;
   GST_BUFFER_DURATION (outbuf) = duration;
+
+  if (self->marker) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
+    self->marker = FALSE;
+  }
 
   /* Push out */
   return gst_rtp_base_payload_push (basepayload, outbuf);
