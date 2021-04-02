@@ -2,5 +2,5 @@
 directory=harfbuzz
 url=https://github.com/harfbuzz/harfbuzz.git
 push-url=git@github.com:harfbuzz/harfbuzz.git
-revision=main
+revision=2.8.1
 depth=1
