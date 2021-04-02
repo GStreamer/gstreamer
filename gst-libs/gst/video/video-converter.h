@@ -273,6 +273,18 @@ typedef enum {
  */
 #define GST_VIDEO_CONVERTER_OPT_THREADS   "GstVideoConverter.threads"
 
+/**
+ * GST_VIDEO_CONVERTER_OPT_ASYNC_TASKS:
+ *
+ * #G_TYPE_BOOLEAN, whether gst_video_converter_frame() will return immediately
+ * without waiting for the conversion to complete.  A subsequent
+ * gst_video_converter_frame_finish() must be performed to ensure completion of the
+ * conversion before subsequent use.  Default %FALSE
+ *
+ * Since: 1.20
+ */
+#define GST_VIDEO_CONVERTER_OPT_ASYNC_TASKS   "GstVideoConverter.async-tasks"
+
 typedef struct _GstVideoConverter GstVideoConverter;
 
 GST_VIDEO_API
@@ -298,7 +310,8 @@ const GstStructure * gst_video_converter_get_config     (GstVideoConverter * con
 GST_VIDEO_API
 void                 gst_video_converter_frame          (GstVideoConverter * convert,
                                                          const GstVideoFrame *src, GstVideoFrame *dest);
-
+GST_VIDEO_API
+void                 gst_video_converter_frame_finish   (GstVideoConverter * convert);
 
 G_END_DECLS
 

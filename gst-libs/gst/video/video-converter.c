@@ -119,7 +119,14 @@ ensure_debug_category (void)
 typedef void (*GstParallelizedTaskFunc) (gpointer user_data);
 
 typedef struct _GstParallelizedTaskRunner GstParallelizedTaskRunner;
-typedef struct _GstParallelizedTaskThread GstParallelizedTaskThread;
+typedef struct _GstParallelizedWorkItem GstParallelizedWorkItem;
+
+struct _GstParallelizedWorkItem
+{
+  GstParallelizedTaskRunner *self;
+  GstParallelizedTaskFunc func;
+  gpointer user_data;
+};
 
 struct _GstParallelizedTaskRunner
 {
@@ -128,28 +135,30 @@ struct _GstParallelizedTaskRunner
   guint n_threads;
 
   GstQueueArray *tasks;
-
-  GstParallelizedTaskFunc func;
-  gpointer *task_data;
+  GstQueueArray *work_items;
 
   GMutex lock;
-  gint n_todo;
+
+  gboolean async_tasks;
 };
 
 static void
 gst_parallelized_task_thread_func (gpointer data)
 {
   GstParallelizedTaskRunner *runner = data;
-  gint idx;
+  GstParallelizedWorkItem *work_item;
 
   g_mutex_lock (&runner->lock);
-  idx = runner->n_todo--;
-  g_assert (runner->n_todo >= -1);
+  work_item = gst_queue_array_pop_head (runner->work_items);
   g_mutex_unlock (&runner->lock);
 
-  g_assert (runner->func != NULL);
+  g_assert (work_item != NULL);
+  g_assert (work_item->func != NULL);
 
-  runner->func (runner->task_data[idx]);
+
+  work_item->func (work_item->user_data);
+  if (runner->async_tasks)
+    g_free (work_item);
 }
 
 static void
@@ -174,6 +183,7 @@ gst_parallelized_task_runner_free (GstParallelizedTaskRunner * self)
 {
   gst_parallelized_task_runner_join (self);
 
+  gst_queue_array_free (self->work_items);
   gst_queue_array_free (self->tasks);
   if (self->own_pool)
     gst_task_pool_cleanup (self->pool);
@@ -183,7 +193,8 @@ gst_parallelized_task_runner_free (GstParallelizedTaskRunner * self)
 }
 
 static GstParallelizedTaskRunner *
-gst_parallelized_task_runner_new (guint n_threads, GstTaskPool * pool)
+gst_parallelized_task_runner_new (guint n_threads, GstTaskPool * pool,
+    gboolean async_tasks)
 {
   GstParallelizedTaskRunner *self;
 
@@ -211,17 +222,22 @@ gst_parallelized_task_runner_new (guint n_threads, GstTaskPool * pool)
   }
 
   self->tasks = gst_queue_array_new (n_threads);
+  self->work_items = gst_queue_array_new (n_threads);
 
   self->n_threads = n_threads;
 
-  self->n_todo = -1;
   g_mutex_init (&self->lock);
 
   /* Set when scheduling a job */
-  self->func = NULL;
-  self->task_data = NULL;
+  self->async_tasks = async_tasks;
 
   return self;
+}
+
+static void
+gst_parallelized_task_runner_finish (GstParallelizedTaskRunner * self)
+{
+  gst_parallelized_task_runner_join (self);
 }
 
 static void
@@ -230,15 +246,28 @@ gst_parallelized_task_runner_run (GstParallelizedTaskRunner * self,
 {
   guint n_threads = self->n_threads;
 
-  self->func = func;
-  self->task_data = task_data;
-
-  if (n_threads > 1) {
+  if (n_threads > 1 || self->async_tasks) {
     guint i = 0;
     g_mutex_lock (&self->lock);
-    self->n_todo = self->n_threads - 2;
-    for (i = 1; i < n_threads; i++) {
-      gpointer task =
+    if (!self->async_tasks) {
+      /* if not async, perform one of the functions in the current thread */
+      i = 1;
+    }
+    for (; i < n_threads; i++) {
+      gpointer task;
+      GstParallelizedWorkItem *work_item;
+
+      if (!self->async_tasks)
+        work_item = g_newa (GstParallelizedWorkItem, 1);
+      else
+        work_item = g_new0 (GstParallelizedWorkItem, 1);
+
+      work_item->self = self;
+      work_item->func = func;
+      work_item->user_data = task_data[i];
+      gst_queue_array_push_tail (self->work_items, work_item);
+
+      task =
           gst_task_pool_push (self->pool, gst_parallelized_task_thread_func,
           self, NULL);
 
@@ -249,12 +278,11 @@ gst_parallelized_task_runner_run (GstParallelizedTaskRunner * self,
     g_mutex_unlock (&self->lock);
   }
 
-  self->func (self->task_data[self->n_threads - 1]);
+  if (!self->async_tasks) {
+    func (task_data[0]);
 
-  gst_parallelized_task_runner_join (self);
-
-  self->func = NULL;
-  self->task_data = NULL;
+    gst_parallelized_task_runner_finish (self);
+  }
 }
 
 typedef struct _GstLineCache GstLineCache;
@@ -447,6 +475,10 @@ struct _GstVideoConverter
     GstVideoScaler **scaler;
   } fv_scaler[4];
   FastConvertFunc fconvert[4];
+
+  /* for parallel async running */
+  gpointer tasks[4];
+  gpointer tasks_p[4];
 };
 
 typedef gpointer (*GstLineCacheAllocLineFunc) (GstLineCache * cache, gint idx,
@@ -760,6 +792,7 @@ get_opt_enum (GstVideoConverter * convert, const gchar * opt, GType type,
 #define DEFAULT_OPT_RESAMPLER_TAPS 0
 #define DEFAULT_OPT_DITHER_METHOD GST_VIDEO_DITHER_BAYER
 #define DEFAULT_OPT_DITHER_QUANTIZATION 1
+#define DEFAULT_OPT_ASYNC_TASKS FALSE
 
 #define GET_OPT_FILL_BORDER(c) get_opt_bool(c, \
     GST_VIDEO_CONVERTER_OPT_FILL_BORDER, DEFAULT_OPT_FILL_BORDER)
@@ -790,6 +823,8 @@ get_opt_enum (GstVideoConverter * convert, const gchar * opt, GType type,
     DEFAULT_OPT_DITHER_METHOD)
 #define GET_OPT_DITHER_QUANTIZATION(c) get_opt_uint(c, \
     GST_VIDEO_CONVERTER_OPT_DITHER_QUANTIZATION, DEFAULT_OPT_DITHER_QUANTIZATION)
+#define GET_OPT_ASYNC_TASKS(c) get_opt_bool(c, \
+    GST_VIDEO_CONVERTER_OPT_ASYNC_TASKS, DEFAULT_OPT_ASYNC_TASKS)
 
 #define CHECK_ALPHA_COPY(c) (GET_OPT_ALPHA_MODE(c) == GST_VIDEO_ALPHA_MODE_COPY)
 #define CHECK_ALPHA_SET(c) (GET_OPT_ALPHA_MODE(c) == GST_VIDEO_ALPHA_MODE_SET)
@@ -2259,6 +2294,7 @@ gst_video_converter_new_with_pool (const GstVideoInfo * in_info,
   const GstVideoFormatInfo *fin, *fout, *finfo;
   gdouble alpha_value;
   gint n_threads, i;
+  gboolean async_tasks;
 
   g_return_val_if_fail (in_info != NULL, NULL);
   g_return_val_if_fail (out_info != NULL, NULL);
@@ -2388,8 +2424,9 @@ gst_video_converter_new_with_pool (const GstVideoInfo * in_info,
   if (n_threads < 1)
     n_threads = 1;
 
+  async_tasks = GET_OPT_ASYNC_TASKS (convert);
   convert->conversion_runner =
-      gst_parallelized_task_runner_new (n_threads, pool);
+      gst_parallelized_task_runner_new (n_threads, pool, async_tasks);
 
   if (video_converter_lookup_fastpath (convert))
     goto done;
@@ -2611,6 +2648,11 @@ gst_video_converter_free (GstVideoConverter * convert)
   clear_matrix_data (&convert->convert_matrix);
   clear_matrix_data (&convert->to_YUV_matrix);
 
+  for (i = 0; i < 4; i++) {
+    g_free (convert->tasks[i]);
+    g_free (convert->tasks_p[i]);
+  }
+
   g_slice_free (GstVideoConverter, convert);
 }
 
@@ -2680,6 +2722,10 @@ gst_video_converter_get_config (GstVideoConverter * convert)
  *
  * Convert the pixels of @src into @dest using @convert.
  *
+ * If #GST_VIDEO_CONVERTER_OPT_ASYNC_TASKS is %TRUE then this function will
+ * return immediately and needs to be followed by a call to
+ * gst_video_converter_frame_finish().
+ *
  * Since: 1.6
  */
 void
@@ -2716,6 +2762,25 @@ gst_video_converter_frame (GstVideoConverter * convert,
     return;
 
   convert->convert (convert, src, dest);
+}
+
+/**
+ * gst_video_converter_frame_finish:
+ * @convert: a #GstVideoConverter
+ *
+ * Wait for a previous async conversion performed using
+ * gst_video_converter_frame() to complete.
+ *
+ * Since: 1.20
+ */
+void
+gst_video_converter_frame_finish (GstVideoConverter * convert)
+{
+  g_return_if_fail (convert);
+  g_return_if_fail (convert->conversion_runner);
+  g_return_if_fail (convert->conversion_runner->async_tasks);
+
+  gst_parallelized_task_runner_finish (convert->conversion_runner);
 }
 
 static void
@@ -3223,8 +3288,10 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
   }
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (ConvertTask, n_threads);
-  tasks_p = g_newa (ConvertTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (ConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (ConvertTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread =
       GST_ROUND_UP_N ((out_height + n_threads - 1) / n_threads, pack_lines);
@@ -3332,8 +3399,10 @@ convert_I420_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
     h2 = GST_ROUND_DOWN_2 (height);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertTask, n_threads);
-  tasks_p = g_newa (FConvertTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
 
@@ -3407,8 +3476,10 @@ convert_I420_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
     h2 = GST_ROUND_DOWN_2 (height);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertTask, n_threads);
-  tasks_p = g_newa (FConvertTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
 
@@ -3484,8 +3555,10 @@ convert_I420_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
 
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertTask, n_threads);
-  tasks_p = g_newa (FConvertTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
 
@@ -3562,8 +3635,10 @@ convert_YUY2_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
     h2 = GST_ROUND_DOWN_2 (height);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertTask, n_threads);
-  tasks_p = g_newa (FConvertTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
 
@@ -3723,8 +3798,10 @@ convert_v210_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
     h2 = GST_ROUND_DOWN_2 (height);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertTask, n_threads);
-  tasks_p = g_newa (FConvertTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
 
@@ -3792,8 +3869,10 @@ convert_YUY2_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (convert->out_x * 4);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -3850,8 +3929,10 @@ convert_YUY2_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
   dv += convert->out_x >> 1;
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -3913,8 +3994,10 @@ convert_YUY2_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
   dv += convert->out_x;
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4035,8 +4118,10 @@ convert_v210_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
   dv += convert->out_x >> 1;
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4108,8 +4193,10 @@ convert_UYVY_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
     h2 = GST_ROUND_DOWN_2 (height);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertTask, n_threads);
-  tasks_p = g_newa (FConvertTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
 
@@ -4166,8 +4253,10 @@ convert_UYVY_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (convert->out_x * 4);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4218,8 +4307,10 @@ convert_UYVY_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4329,8 +4420,10 @@ convert_v210_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4440,8 +4533,10 @@ convert_v210_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4497,8 +4592,10 @@ convert_UYVY_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
   dv += convert->out_x >> 1;
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4560,8 +4657,10 @@ convert_UYVY_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
   dv += convert->out_x;
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4614,8 +4713,10 @@ convert_UYVY_GRAY8 (GstVideoConverter * convert, const GstVideoFrame * src,
   d = GST_VIDEO_FRAME_PLANE_DATA (dest, 0);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4681,8 +4782,10 @@ convert_AYUV_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   /* only for even width/height */
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = GST_ROUND_UP_2 ((height + n_threads - 1) / n_threads);
 
@@ -4739,8 +4842,10 @@ convert_AYUV_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* only for even width */
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4791,8 +4896,10 @@ convert_AYUV_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* only for even width */
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4849,8 +4956,10 @@ convert_AYUV_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* only works for even width */
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4910,8 +5019,10 @@ convert_AYUV_Y444 (GstVideoConverter * convert, const GstVideoFrame * src,
   dv += convert->out_x;
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -4971,8 +5082,10 @@ convert_Y42B_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5033,8 +5146,10 @@ convert_Y42B_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5098,8 +5213,10 @@ convert_Y42B_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
 
   /* only for even width */
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5161,8 +5278,10 @@ convert_Y444_YUY2 (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5223,8 +5342,10 @@ convert_Y444_UYVY (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (GST_ROUND_UP_2 (convert->out_x) * 2);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5287,8 +5408,10 @@ convert_Y444_AYUV (GstVideoConverter * convert, const GstVideoFrame * src,
   d += convert->out_x * 4;
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5347,8 +5470,10 @@ convert_AYUV_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (convert->out_x * 4);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5402,8 +5527,10 @@ convert_AYUV_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (convert->out_x * 4);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5457,8 +5584,10 @@ convert_AYUV_ABGR (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (convert->out_x * 4);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5512,8 +5641,10 @@ convert_AYUV_RGBA (GstVideoConverter * convert, const GstVideoFrame * src,
   d += (convert->out_x * 4);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertPlaneTask, n_threads);
-  tasks_p = g_newa (FConvertPlaneTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5584,8 +5715,10 @@ convert_I420_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
   gint lines_per_thread;
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertTask, n_threads);
-  tasks_p = g_newa (FConvertTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5658,8 +5791,10 @@ convert_I420_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
   gint lines_per_thread;
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertTask, n_threads);
-  tasks_p = g_newa (FConvertTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5742,8 +5877,10 @@ convert_I420_pack_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
   gint lines_per_thread;
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FConvertTask, n_threads);
-  tasks_p = g_newa (FConvertTask *, n_threads);
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
 
   lines_per_thread = (height + n_threads - 1) / n_threads;
 
@@ -5949,8 +6086,10 @@ convert_plane_fill (GstVideoConverter * convert,
   d += convert->fout_x[plane];
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FSimpleScaleTask, n_threads);
-  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  tasks = convert->tasks[plane] =
+      g_renew (FSimpleScaleTask, convert->tasks[plane], n_threads);
+  tasks_p = convert->tasks_p[plane] =
+      g_renew (FSimpleScaleTask *, convert->tasks_p[plane], n_threads);
   lines_per_thread = (convert->fout_height[plane] + n_threads - 1) / n_threads;
 
   for (i = 0; i < n_threads; i++) {
@@ -5995,8 +6134,10 @@ convert_plane_h_double (GstVideoConverter * convert,
   d += convert->fout_x[plane];
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FSimpleScaleTask, n_threads);
-  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  tasks = convert->tasks[plane] =
+      g_renew (FSimpleScaleTask, convert->tasks[plane], n_threads);
+  tasks_p = convert->tasks_p[plane] =
+      g_renew (FSimpleScaleTask *, convert->tasks_p[plane], n_threads);
   lines_per_thread = (convert->fout_height[plane] + n_threads - 1) / n_threads;
 
   for (i = 0; i < n_threads; i++) {
@@ -6044,8 +6185,10 @@ convert_plane_h_halve (GstVideoConverter * convert,
   d += convert->fout_x[plane];
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FSimpleScaleTask, n_threads);
-  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  tasks = convert->tasks[plane] =
+      g_renew (FSimpleScaleTask, convert->tasks[plane], n_threads);
+  tasks_p = convert->tasks_p[plane] =
+      g_renew (FSimpleScaleTask *, convert->tasks_p[plane], n_threads);
   lines_per_thread = (convert->fout_height[plane] + n_threads - 1) / n_threads;
 
   for (i = 0; i < n_threads; i++) {
@@ -6095,8 +6238,10 @@ convert_plane_v_double (GstVideoConverter * convert,
   ds = FRAME_GET_PLANE_STRIDE (dest, plane);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FSimpleScaleTask, n_threads);
-  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  tasks = convert->tasks[plane] =
+      g_renew (FSimpleScaleTask, convert->tasks[plane], n_threads);
+  tasks_p = convert->tasks_p[plane] =
+      g_renew (FSimpleScaleTask *, convert->tasks_p[plane], n_threads);
   lines_per_thread =
       GST_ROUND_UP_2 ((convert->fout_height[plane] + n_threads -
           1) / n_threads);
@@ -6152,8 +6297,10 @@ convert_plane_v_halve (GstVideoConverter * convert,
   ds = FRAME_GET_PLANE_STRIDE (dest, plane);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FSimpleScaleTask, n_threads);
-  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  tasks = convert->tasks[plane] =
+      g_renew (FSimpleScaleTask, convert->tasks[plane], n_threads);
+  tasks_p = convert->tasks_p[plane] =
+      g_renew (FSimpleScaleTask *, convert->tasks_p[plane], n_threads);
   lines_per_thread = (convert->fout_height[plane] + n_threads - 1) / n_threads;
 
   for (i = 0; i < n_threads; i++) {
@@ -6205,8 +6352,10 @@ convert_plane_hv_double (GstVideoConverter * convert,
   ds = FRAME_GET_PLANE_STRIDE (dest, plane);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FSimpleScaleTask, n_threads);
-  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  tasks = convert->tasks[plane] =
+      g_renew (FSimpleScaleTask, convert->tasks[plane], n_threads);
+  tasks_p = convert->tasks_p[plane] =
+      g_renew (FSimpleScaleTask *, convert->tasks_p[plane], n_threads);
   lines_per_thread =
       GST_ROUND_UP_2 ((convert->fout_height[plane] + n_threads -
           1) / n_threads);
@@ -6261,8 +6410,10 @@ convert_plane_hv_halve (GstVideoConverter * convert,
   ds = FRAME_GET_PLANE_STRIDE (dest, plane);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FSimpleScaleTask, n_threads);
-  tasks_p = g_newa (FSimpleScaleTask *, n_threads);
+  tasks = convert->tasks[plane] =
+      g_renew (FSimpleScaleTask, convert->tasks[plane], n_threads);
+  tasks_p = convert->tasks_p[plane] =
+      g_renew (FSimpleScaleTask *, convert->tasks_p[plane], n_threads);
   lines_per_thread = (convert->fout_height[plane] + n_threads - 1) / n_threads;
 
   for (i = 0; i < n_threads; i++) {
@@ -6333,8 +6484,10 @@ convert_plane_hv (GstVideoConverter * convert,
   dstride = FRAME_GET_PLANE_STRIDE (dest, plane);
 
   n_threads = convert->conversion_runner->n_threads;
-  tasks = g_newa (FScaleTask, n_threads);
-  tasks_p = g_newa (FScaleTask *, n_threads);
+  tasks = convert->tasks[plane] =
+      g_renew (FScaleTask, convert->tasks[plane], n_threads);
+  tasks_p = convert->tasks_p[plane] =
+      g_renew (FScaleTask *, convert->tasks_p[plane], n_threads);
 
   lines_per_thread = (out_height + n_threads - 1) / n_threads;
 
