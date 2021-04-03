@@ -1218,7 +1218,7 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
   g_return_val_if_fail (GST_IS_VA_ALLOCATOR (allocator), NULL);
 
   if (g_atomic_int_get (&mem->map_count) > 0) {
-    if (mem->prev_mapflags != flags || !mem->mapped_data)
+    if (!(mem->prev_mapflags & flags) || !mem->mapped_data)
       return NULL;
     else
       goto success;
@@ -1339,6 +1339,7 @@ _va_share (GstMemory * mem, gssize offset, gssize size)
   GstVaMemory *vamem = (GstVaMemory *) mem;
   GstVaMemory *sub;
   GstMemory *parent;
+
   GST_DEBUG ("%p: share %" G_GSSIZE_FORMAT ", %" G_GSIZE_FORMAT, mem, offset,
       size);
 
@@ -1350,6 +1351,7 @@ _va_share (GstMemory * mem, gssize offset, gssize size)
     size = mem->maxsize - offset;
 
   sub = g_slice_new (GstVaMemory);
+
   /* the shared memory is alwyas readonly */
   gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, vamem->mem.allocator, parent,
@@ -1366,6 +1368,69 @@ _va_share (GstMemory * mem, gssize offset, gssize size)
   return GST_MEMORY_CAST (sub);
 }
 
+/* XXX(victor): deep copy implementation. A further optimization can
+ * be done with vaCopy() from libva 2.12 */
+static GstMemory *
+_va_copy (GstMemory * mem, gssize offset, gssize size)
+{
+  GstMemory *copy;
+  GstMapInfo sinfo, dinfo;
+  GstVaAllocator *va_allocator = GST_VA_ALLOCATOR (mem->allocator);
+
+  GST_DEBUG ("%p: copy %" G_GSSIZE_FORMAT ", %" G_GSIZE_FORMAT, mem, offset,
+      size);
+
+  {
+    GST_VA_MEMORY_POOL_LOCK (&va_allocator->pool);
+    copy = gst_va_memory_pool_pop (&va_allocator->pool);
+    GST_VA_MEMORY_POOL_UNLOCK (&va_allocator->pool);
+
+    if (!copy) {
+      copy = gst_va_allocator_alloc (mem->allocator);
+      if (!copy) {
+        GST_WARNING ("failed to allocate new memory");
+        gst_memory_unmap (mem, &sinfo);
+        return NULL;
+      }
+    } else {
+      gst_object_ref (mem->allocator);
+    }
+  }
+
+  if (!gst_memory_map (mem, &sinfo, GST_MAP_READ))
+    return NULL;
+
+  if (size == -1)
+    size = sinfo.size > offset ? sinfo.size - offset : 0;
+
+  if (offset == 0 && size == sinfo.size) {
+    GstVaMemory *va_mem = (GstVaMemory *) mem;
+    GstVaMemory *va_copy = (GstVaMemory *) copy;
+
+    if (!va_mem->is_derived) {
+      if (_put_image (va_allocator->display, va_copy->surface, &va_mem->image)) {
+        GST_LOG ("shallow copy of %#x to %#x", va_mem->surface,
+            va_copy->surface);
+        gst_memory_unmap (mem, &sinfo);
+        return copy;
+      }
+    }
+  }
+
+  if (!gst_memory_map (copy, &dinfo, GST_MAP_WRITE)) {
+    GST_WARNING ("could not write map memory %p", copy);
+    gst_allocator_free (mem->allocator, copy);
+    gst_memory_unmap (mem, &sinfo);
+    return NULL;
+  }
+
+  memcpy (dinfo.data, sinfo.data + offset, size);
+  gst_memory_unmap (copy, &dinfo);
+  gst_memory_unmap (mem, &sinfo);
+
+  return copy;
+}
+
 static void
 gst_va_allocator_init (GstVaAllocator * self)
 {
@@ -1375,6 +1440,7 @@ gst_va_allocator_init (GstVaAllocator * self)
   allocator->mem_map = (GstMemoryMapFunction) _va_map;
   allocator->mem_unmap = (GstMemoryUnmapFunction) _va_unmap;
   allocator->mem_share = _va_share;
+  allocator->mem_copy = _va_copy;
 
   gst_va_memory_pool_init (&self->pool);
 
