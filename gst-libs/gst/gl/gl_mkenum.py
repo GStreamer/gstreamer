@@ -37,7 +37,7 @@ argn = 1
 for arg in sys.argv[1:]:
     cmd.append(arg)
     argn += 1
-    if arg.endswith('glib-mkenums'):
+    if arg.endswith('glib-mkenums') or arg.lower().endswith('glib-mkenums.exe'):
         break
 ofilename = sys.argv[argn]
 headers = sys.argv[argn + 1:]
