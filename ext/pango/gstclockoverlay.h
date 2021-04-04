@@ -48,6 +48,10 @@ typedef struct _GstClockOverlayClass GstClockOverlayClass;
 struct _GstClockOverlay {
   GstBaseTextOverlay textoverlay;
   gchar         *format; /* as in strftime () */
+
+  /* for wcsftime */
+  gunichar2     *wformat;
+
   gchar         *text;
 };
 
