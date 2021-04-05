@@ -297,6 +297,7 @@ enum
   PROP_PROGRAM_NUMBER,
   PROP_EMIT_STATS,
   PROP_LATENCY,
+  PROP_SEND_SCTE35_EVENTS,
   /* FILL ME */
 };
 
@@ -340,6 +341,7 @@ static gboolean push_event (MpegTSBase * base, GstEvent * event);
 static gboolean sink_query (MpegTSBase * base, GstQuery * query);
 static void gst_ts_demux_check_and_sync_streams (GstTSDemux * demux,
     GstClockTime time);
+static void handle_psi (MpegTSBase * base, GstMpegtsSection * section);
 
 static void
 _extra_init (void)
@@ -395,6 +397,22 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
           "Emit messages for every pcr/opcr/pts/dts", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * mpegtsdemux:send-scte35-events:
+   *
+   * Whether SCTE 35 sections should be forwarded as events.
+   *
+   * When forwarding those, potential splice times are converted
+   * to running time, and can be used by a downstream muxer to reinject
+   * the sections.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_SEND_SCTE35_EVENTS,
+      g_param_spec_boolean ("send-scte35-events", "Send SCTE 35 events",
+          "Whether SCTE 35 sections should be forwarded as events", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_LATENCY,
       g_param_spec_int ("latency", "Latency",
           "Latency to add for smooth demuxing (in ms)", -1,
@@ -422,6 +440,7 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
   ts_class->reset = GST_DEBUG_FUNCPTR (gst_ts_demux_reset);
   ts_class->push = GST_DEBUG_FUNCPTR (gst_ts_demux_push);
   ts_class->push_event = GST_DEBUG_FUNCPTR (push_event);
+  ts_class->handle_psi = GST_DEBUG_FUNCPTR (handle_psi);
   ts_class->sink_query = GST_DEBUG_FUNCPTR (sink_query);
   ts_class->program_started = GST_DEBUG_FUNCPTR (gst_ts_demux_program_started);
   ts_class->program_stopped = GST_DEBUG_FUNCPTR (gst_ts_demux_program_stopped);
@@ -495,6 +514,9 @@ gst_ts_demux_set_property (GObject * object, guint prop_id,
     case PROP_EMIT_STATS:
       demux->emit_statistics = g_value_get_boolean (value);
       break;
+    case PROP_SEND_SCTE35_EVENTS:
+      demux->send_scte35_events = g_value_get_boolean (value);
+      break;
     case PROP_LATENCY:
       demux->latency = g_value_get_int (value);
       break;
@@ -515,6 +537,9 @@ gst_ts_demux_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EMIT_STATS:
       g_value_set_boolean (value, demux->emit_statistics);
+      break;
+    case PROP_SEND_SCTE35_EVENTS:
+      g_value_set_boolean (value, demux->send_scte35_events);
       break;
     case PROP_LATENCY:
       g_value_set_int (value, demux->latency);
@@ -1053,6 +1078,96 @@ push_event (MpegTSBase * base, GstEvent * event)
   gst_event_unref (event);
 
   return TRUE;
+}
+
+static GstMpegtsSCTESpliceEvent *
+copy_splice (GstMpegtsSCTESpliceEvent * splice)
+{
+  return g_boxed_copy (GST_TYPE_MPEGTS_SCTE_SPLICE_EVENT, splice);
+}
+
+static GstMpegtsSCTESIT *
+deep_copy_sit (const GstMpegtsSCTESIT * sit)
+{
+  GstMpegtsSCTESIT *sit_copy = g_boxed_copy (GST_TYPE_MPEGTS_SCTE_SIT, sit);
+  GPtrArray *splices_copy =
+      g_ptr_array_copy (sit_copy->splices, (GCopyFunc) copy_splice, NULL);
+
+  g_ptr_array_unref (sit_copy->splices);
+  sit_copy->splices = splices_copy;
+
+  return sit_copy;
+}
+
+static void
+handle_psi (MpegTSBase * base, GstMpegtsSection * section)
+{
+  GstTSDemux *demux = (GstTSDemux *) base;
+
+  if (section->section_type == GST_MPEGTS_SECTION_SCTE_SIT) {
+    GList *tmp;
+    gboolean forward = FALSE;
+
+    if (demux->send_scte35_events) {
+      for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+        TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
+
+        if (stream->stream.pid == section->pid) {
+          forward = TRUE;
+          break;
+        }
+      }
+    }
+
+    /* Create a new section to travel through the pipeline, with splice
+     * times translated from local time to running time */
+    if (forward) {
+      GstEvent *event;
+      GstClockTime pts;
+      guint i = 0;
+      const GstMpegtsSCTESIT *sit = gst_mpegts_section_get_scte_sit (section);
+      GstMpegtsSCTESIT *sit_copy = deep_copy_sit (sit);
+      GstMpegtsSection *new_section;
+
+      if (sit_copy->splice_time_specified) {
+        pts =
+            mpegts_packetizer_pts_to_ts (base->packetizer,
+            MPEGTIME_TO_GSTTIME (sit_copy->splice_time +
+                sit_copy->pts_adjustment), demux->program->pcr_pid);
+        sit_copy->splice_time =
+            gst_segment_to_running_time (&base->out_segment, GST_FORMAT_TIME,
+            pts);
+      }
+
+      for (i = 0; i < sit_copy->splices->len; i++) {
+        GstMpegtsSCTESpliceEvent *sevent =
+            g_ptr_array_index (sit_copy->splices, i);
+        if (sevent->program_splice_time_specified) {
+          pts =
+              mpegts_packetizer_pts_to_ts (base->packetizer,
+              MPEGTIME_TO_GSTTIME (sevent->program_splice_time),
+              demux->program->pcr_pid);
+          sevent->program_splice_time =
+              gst_segment_to_running_time (&base->out_segment, GST_FORMAT_TIME,
+              pts);
+          if (sevent->duration_flag) {
+            sevent->break_duration =
+                MPEGTIME_TO_GSTTIME (sevent->break_duration);
+          }
+        }
+      }
+
+      sit_copy->pts_adjustment = 0;
+
+      new_section = gst_mpegts_section_from_scte_sit (sit_copy, section->pid);
+
+      event = gst_event_new_mpegts_section (new_section);
+
+      gst_mpegts_section_unref (new_section);
+
+      push_event (base, event);
+    }
+  }
 }
 
 static gboolean

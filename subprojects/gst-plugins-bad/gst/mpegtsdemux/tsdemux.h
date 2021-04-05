@@ -76,6 +76,7 @@ struct _GstTSDemux
   gint requested_program_number; /* Required program number (ignore:-1) */
   guint program_number;
   gboolean emit_statistics;
+  gboolean send_scte35_events;
   gint latency; /* latency in ms */
 
   /*< private >*/
