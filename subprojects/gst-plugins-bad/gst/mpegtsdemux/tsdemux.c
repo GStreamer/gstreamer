@@ -376,6 +376,16 @@ gst_ts_demux_dispose (GObject * object)
 }
 
 static void
+gst_ts_demux_finalize (GObject * object)
+{
+  GstTSDemux *demux = GST_TS_DEMUX_CAST (object);
+
+  g_mutex_clear (&demux->lock);
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
+}
+
+static void
 gst_ts_demux_class_init (GstTSDemuxClass * klass)
 {
   GObjectClass *gobject_class;
@@ -386,6 +396,7 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
   gobject_class->set_property = gst_ts_demux_set_property;
   gobject_class->get_property = gst_ts_demux_get_property;
   gobject_class->dispose = gst_ts_demux_dispose;
+  gobject_class->finalize = gst_ts_demux_finalize;
 
   g_object_class_install_property (gobject_class, PROP_PROGRAM_NUMBER,
       g_param_spec_int ("program-number", "Program number",
@@ -459,10 +470,12 @@ gst_ts_demux_reset (MpegTSBase * base)
   GstTSDemux *demux = (GstTSDemux *) base;
 
   demux->rate = 1.0;
+  g_mutex_lock (&demux->lock);
   if (demux->segment_event) {
     gst_event_unref (demux->segment_event);
     demux->segment_event = NULL;
   }
+  g_mutex_unlock (&demux->lock);
 
   if (demux->global_tags) {
     gst_tag_list_unref (demux->global_tags);
@@ -498,6 +511,8 @@ gst_ts_demux_init (GstTSDemux * demux)
   demux->program_number = -1;
   demux->latency = DEFAULT_LATENCY;
   gst_ts_demux_reset (base);
+
+  g_mutex_init (&demux->lock);
 }
 
 
@@ -936,6 +951,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
       &seeksegment);
 
   /* If the position actually changed, update == TRUE */
+  g_mutex_lock (&demux->lock);
   if (update) {
     GstClockTime target = seeksegment.start;
     if (target >= SEEK_TIMESTAMP_OFFSET)
@@ -982,6 +998,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
       stream->need_newsegment = TRUE;
     }
   }
+  g_mutex_unlock (&demux->lock);
 
   /* Commit the new segment */
   memcpy (&base->out_segment, &seeksegment, sizeof (GstSegment));
@@ -2218,10 +2235,12 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
 
     /* If this is not the initial program, we need to calculate
      * a new segment */
+    g_mutex_lock (&demux->lock);
     if (demux->segment_event) {
       gst_event_unref (demux->segment_event);
       demux->segment_event = NULL;
     }
+    g_mutex_unlock (&demux->lock);
 
     /* DRAIN ALL STREAMS FIRST ! */
     if (demux->previous_program) {
@@ -2769,12 +2788,14 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream,
   GST_LOG_OBJECT (demux, "Output segment now %" GST_SEGMENT_FORMAT,
       &base->out_segment);
 
+  g_mutex_lock (&demux->lock);
   if (!demux->segment_event) {
     demux->segment_event = gst_event_new_segment (&base->out_segment);
 
     if (base->last_seek_seqnum != GST_SEQNUM_INVALID)
       gst_event_set_seqnum (demux->segment_event, base->last_seek_seqnum);
   }
+  g_mutex_unlock (&demux->lock);
 
 push_new_segment:
   for (tmp = target_program->stream_list; tmp; tmp = tmp->next) {
@@ -2782,12 +2803,14 @@ push_new_segment:
     if (stream->pad == NULL)
       continue;
 
+    g_mutex_lock (&demux->lock);
     if (demux->segment_event) {
       GST_DEBUG_OBJECT (stream->pad, "Pushing newsegment event");
 
       gst_event_ref (demux->segment_event);
       gst_pad_push_event (stream->pad, demux->segment_event);
     }
+    g_mutex_unlock (&demux->lock);
 
     if (demux->global_tags) {
       gst_pad_push_event (stream->pad,
@@ -3531,10 +3554,12 @@ gst_ts_demux_flush (MpegTSBase * base, gboolean hard)
 
   gst_ts_demux_flush_streams (demux, hard);
 
+  g_mutex_lock (&demux->lock);
   if (demux->segment_event) {
     gst_event_unref (demux->segment_event);
     demux->segment_event = NULL;
   }
+  g_mutex_unlock (&demux->lock);
   if (demux->global_tags) {
     gst_tag_list_unref (demux->global_tags);
     demux->global_tags = NULL;

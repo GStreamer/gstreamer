@@ -107,6 +107,8 @@ struct _GstTSDemux
    * in the MPEG time domain. This is used for potentially updating
    * SCTE 35 sections' pts_adjustment further down the line (eg mpegtsmux) */
   guint64 mpeg_pts_offset;
+
+  GMutex lock;
 };
 
 struct _GstTSDemuxClass
