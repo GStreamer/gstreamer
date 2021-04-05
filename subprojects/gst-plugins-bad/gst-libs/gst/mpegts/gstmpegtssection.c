@@ -99,6 +99,7 @@ static GQuark QUARK_SDT;
 static GQuark QUARK_EIT;
 static GQuark QUARK_TDT;
 static GQuark QUARK_TOT;
+static GQuark QUARK_SCTE_SIT;
 static GQuark QUARK_SECTION;
 
 static GType _gst_mpegts_section_type = 0;
@@ -318,6 +319,9 @@ _mpegts_section_get_structure (GstMpegtsSection * section)
     case GST_MPEGTS_SECTION_TOT:
       quark = QUARK_TOT;
       break;
+    case GST_MPEGTS_SECTION_SCTE_SIT:
+      quark = QUARK_SCTE_SIT;
+      break;
     default:
       GST_DEBUG ("Creating structure for unknown GstMpegtsSection");
       quark = QUARK_SECTION;
@@ -353,8 +357,8 @@ gst_message_new_mpegts_section (GstObject * parent, GstMpegtsSection * section)
   return msg;
 }
 
-static GstEvent *
-_mpegts_section_get_event (GstMpegtsSection * section)
+GstEvent *
+gst_event_new_mpegts_section (GstMpegtsSection * section)
 {
   GstStructure *structure;
   GstEvent *event;
@@ -411,7 +415,7 @@ gst_mpegts_section_send_event (GstMpegtsSection * section, GstElement * element)
   g_return_val_if_fail (section != NULL, FALSE);
   g_return_val_if_fail (element != NULL, FALSE);
 
-  event = _mpegts_section_get_event (section);
+  event = gst_event_new_mpegts_section (section);
 
   if (!gst_element_send_event (element, event)) {
     gst_event_unref (event);
@@ -1329,5 +1333,6 @@ __initialize_sections (void)
   QUARK_EIT = g_quark_from_string ("eit");
   QUARK_TDT = g_quark_from_string ("tdt");
   QUARK_TOT = g_quark_from_string ("tot");
+  QUARK_SCTE_SIT = g_quark_from_string ("scte-sit");
   QUARK_SECTION = g_quark_from_string ("section");
 }

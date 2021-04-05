@@ -484,6 +484,9 @@ GST_MPEGTS_API
 GstMessage *gst_message_new_mpegts_section (GstObject *parent, GstMpegtsSection *section);
 
 GST_MPEGTS_API
+GstEvent *gst_event_new_mpegts_section (GstMpegtsSection * section);
+
+GST_MPEGTS_API
 gboolean gst_mpegts_section_send_event (GstMpegtsSection * section, GstElement * element);
 
 GST_MPEGTS_API
