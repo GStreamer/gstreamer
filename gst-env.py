@@ -442,7 +442,7 @@ def get_subprocess_env(options, gst_version):
 
 def get_windows_shell():
     command = ['powershell.exe' ,'-noprofile', '-executionpolicy', 'bypass', '-file', 'cmd_or_ps.ps1']
-    result = subprocess.check_output(command)
+    result = subprocess.check_output(command, cwd=SCRIPTDIR)
     return result.decode().strip()
 
 if __name__ == "__main__":
