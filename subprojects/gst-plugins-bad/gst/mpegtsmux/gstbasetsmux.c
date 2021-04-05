@@ -194,6 +194,7 @@ enum
 #define CLOCK_BASE 9LL
 #define CLOCK_FREQ (CLOCK_BASE * 10000) /* 90 kHz PTS clock */
 #define CLOCK_FREQ_SCR (CLOCK_FREQ * 300)       /* 27 MHz SCR clock */
+#define TS_MUX_CLOCK_BASE (TSMUX_CLOCK_FREQ * 10 * 360)
 
 #define GSTTIME_TO_MPEGTIME(time) \
     (((time) > 0 ? (gint64) 1 : (gint64) -1) * \
@@ -355,6 +356,8 @@ gst_base_ts_mux_reset (GstBaseTsMux * mux, gboolean alloc)
 
   if (si_sections)
     g_hash_table_unref (si_sections);
+
+  mux->last_scte35_event_seqnum = GST_SEQNUM_INVALID;
 
   if (klass->reset)
     klass->reset (mux);
@@ -1245,7 +1248,9 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf))) {
     pts = GSTTIME_TO_MPEGTIME (GST_BUFFER_PTS (buf));
     GST_DEBUG_OBJECT (mux, "Buffer has PTS  %" GST_TIME_FORMAT " pts %"
-        G_GINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (buf)), pts);
+        G_GINT64_FORMAT "%s", GST_TIME_ARGS (GST_BUFFER_PTS (buf)), pts,
+        !GST_BUFFER_FLAG_IS_SET (buf,
+            GST_BUFFER_FLAG_DELTA_UNIT) ? " (keyframe)" : "");
   }
 
   if (GST_CLOCK_STIME_IS_VALID (best->dts)) {
@@ -1415,6 +1420,181 @@ gst_base_ts_mux_release_pad (GstElement * element, GstPad * pad)
   GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
 }
 
+static GstMpegtsSCTESpliceEvent *
+copy_splice (GstMpegtsSCTESpliceEvent * splice)
+{
+  return g_boxed_copy (GST_TYPE_MPEGTS_SCTE_SPLICE_EVENT, splice);
+}
+
+static GstMpegtsSCTESIT *
+deep_copy_sit (const GstMpegtsSCTESIT * sit)
+{
+  GstMpegtsSCTESIT *sit_copy = g_boxed_copy (GST_TYPE_MPEGTS_SCTE_SIT, sit);
+  GPtrArray *splices_copy =
+      g_ptr_array_copy (sit_copy->splices, (GCopyFunc) copy_splice, NULL);
+
+  g_ptr_array_unref (sit_copy->splices);
+  sit_copy->splices = splices_copy;
+
+  return sit_copy;
+}
+
+/* GstAggregator implementation */
+
+static void
+request_keyframe (GstBaseTsMux * mux, GstClockTime running_time)
+{
+  GList *l;
+  GST_OBJECT_LOCK (mux);
+
+  for (l = GST_ELEMENT_CAST (mux)->sinkpads; l; l = l->next) {
+    gst_pad_push_event (GST_PAD (l->data),
+        gst_video_event_new_upstream_force_key_unit (running_time, TRUE, 0));
+  }
+
+  GST_OBJECT_UNLOCK (mux);
+}
+
+/* Takes ownership of @section */
+static void
+handle_scte35_section (GstBaseTsMux * mux, GstMpegtsSection * section)
+{
+  const GstMpegtsSCTESIT *sit;
+  GstMpegtsSCTESIT *sit_copy;
+  guint i;
+  gboolean forward = TRUE;
+
+  sit = gst_mpegts_section_get_scte_sit (section);
+  sit_copy = deep_copy_sit (sit);
+
+  switch (sit_copy->splice_command_type) {
+    case GST_MTS_SCTE_SPLICE_COMMAND_NULL:
+      /* We implement heartbeating ourselves */
+      forward = FALSE;
+      break;
+    case GST_MTS_SCTE_SPLICE_COMMAND_SCHEDULE:
+      /* Only translate timestamps and forward, splice_insert
+       * messages will precede the future splice points and we
+       * can request keyframes then.
+       */
+      for (i = 0; i < sit_copy->splices->len; i++) {
+        GstMpegtsSCTESpliceEvent *sevent =
+            g_ptr_array_index (sit_copy->splices, i);
+        if (sevent->program_splice_time_specified) {
+          sevent->program_splice_time =
+              GSTTIME_TO_MPEGTIME (sevent->program_splice_time) +
+              TS_MUX_CLOCK_BASE;
+        }
+        if (sevent->duration_flag) {
+          sevent->break_duration = GSTTIME_TO_MPEGTIME (sevent->break_duration);
+        }
+      }
+      break;
+    case GST_MTS_SCTE_SPLICE_COMMAND_INSERT:
+      /* We want keyframes at splice points */
+      for (i = 0; i < sit_copy->splices->len; i++) {
+        guint64 running_time = GST_CLOCK_TIME_NONE;
+
+        GstMpegtsSCTESpliceEvent *sevent =
+            g_ptr_array_index (sit_copy->splices, i);
+        if (sevent->program_splice_time_specified) {
+          GST_DEBUG_OBJECT (mux,
+              "Requesting keyframe for splice point at %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (sevent->program_splice_time));
+          running_time = sevent->program_splice_time;
+          request_keyframe (mux, running_time);
+          sevent->program_splice_time =
+              GSTTIME_TO_MPEGTIME (sevent->program_splice_time) +
+              TS_MUX_CLOCK_BASE;
+        } else {
+          GST_DEBUG_OBJECT (mux,
+              "Requesting keyframe for immediate splice point");
+          request_keyframe (mux, GST_CLOCK_TIME_NONE);
+        }
+
+        if (sevent->duration_flag) {
+          /* Even if auto_return is FALSE, when a break_duration is specified it
+           * is intended as a redundancy mechanism in case the follow-up
+           * splice insert goes missing.
+           *
+           * Schedule a keyframe at that point (if we can calculate its position
+           * accurately).
+           */
+          if (GST_CLOCK_STIME_IS_VALID (running_time)) {
+            GST_DEBUG_OBJECT (mux,
+                "Requesting keyframe for end of break at %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (running_time + sevent->break_duration));
+            request_keyframe (mux, running_time + sevent->break_duration);
+          }
+          sevent->break_duration = GSTTIME_TO_MPEGTIME (sevent->break_duration);
+        }
+      }
+      break;
+    case GST_MTS_SCTE_SPLICE_COMMAND_TIME:{
+      /* Adjust timestamps and potentially request keyframes */
+      gboolean do_request_keyframes = FALSE;
+
+      /* TODO: we can probably be a little more fine-tuned about determining
+       * whether a keyframe is actually needed, but this at least takes care
+       * of the requirement in 10.3.4 that a keyframe should not be created
+       * when the signal contains only a time_descriptor.
+       */
+      for (i = 0; i < sit_copy->descriptors->len; i++) {
+        GstMpegtsDescriptor *descriptor =
+            g_ptr_array_index (sit_copy->descriptors, i);
+
+        switch (descriptor->tag) {
+          case GST_MTS_SCTE_DESC_AVAIL:
+          case GST_MTS_SCTE_DESC_DTMF:
+          case GST_MTS_SCTE_DESC_SEGMENTATION:
+            do_request_keyframes = TRUE;
+            break;
+          case GST_MTS_SCTE_DESC_TIME:
+          case GST_MTS_SCTE_DESC_AUDIO:
+            break;
+        }
+
+        if (do_request_keyframes)
+          break;
+      }
+
+      if (sit_copy->splice_time_specified) {
+        if (do_request_keyframes) {
+          GST_DEBUG_OBJECT (mux,
+              "Requesting keyframe for time signal at %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (sit_copy->splice_time));
+          request_keyframe (mux, sit_copy->splice_time);
+        }
+        sit_copy->splice_time =
+            GSTTIME_TO_MPEGTIME (sit_copy->splice_time) + TS_MUX_CLOCK_BASE;
+      } else if (do_request_keyframes) {
+        GST_DEBUG_OBJECT (mux, "Requesting keyframe for immediate time signal");
+        request_keyframe (mux, GST_CLOCK_TIME_NONE);
+      }
+      break;
+    }
+    case GST_MTS_SCTE_SPLICE_COMMAND_BANDWIDTH:
+    case GST_MTS_SCTE_SPLICE_COMMAND_PRIVATE:
+      /* Just let those go through untouched, none of our business */
+      break;
+    default:
+      break;
+  }
+
+  if (!forward) {
+    gst_mpegts_section_unref (section);
+    return;
+  }
+
+  GST_OBJECT_LOCK (mux);
+  GST_DEBUG_OBJECT (mux, "Storing SCTE section");
+  if (mux->pending_scte35_section)
+    gst_mpegts_section_unref (mux->pending_scte35_section);
+  mux->pending_scte35_section =
+      gst_mpegts_section_from_scte_sit (sit_copy, mux->scte35_pid);
+  GST_OBJECT_UNLOCK (mux);
+}
+
 static gboolean
 gst_base_ts_mux_send_event (GstElement * element, GstEvent * event)
 {
@@ -1427,13 +1607,7 @@ gst_base_ts_mux_send_event (GstElement * element, GstEvent * event)
     GST_DEBUG ("Received event with mpegts section");
 
     if (section->section_type == GST_MPEGTS_SECTION_SCTE_SIT) {
-      /* Will be sent from the streaming threads */
-      GST_DEBUG_OBJECT (mux, "Storing SCTE event");
-      GST_OBJECT_LOCK (element);
-      if (mux->pending_scte35_section)
-        gst_mpegts_section_unref (mux->pending_scte35_section);
-      mux->pending_scte35_section = section;
-      GST_OBJECT_UNLOCK (element);
+      handle_scte35_section (mux, section);
     } else {
       /* TODO: Check that the section type is supported */
       tsmux_add_mpegts_si_section (mux->tsmux, section);
@@ -1465,6 +1639,38 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
       GstClockTime timestamp, stream_time, running_time;
       gboolean all_headers;
       guint count;
+      const GstStructure *s;
+
+      s = gst_event_get_structure (event);
+
+      if (gst_structure_has_name (s, "scte-sit") && mux->scte35_pid != 0) {
+
+        /* When operating downstream of tsdemux, tsdemux will send out events
+         * on all its source pads for each splice table it encounters. If we
+         * are remuxing multiple streams it has demuxed, this means we could
+         * unnecessarily repeat the same table multiple times, we avoid that
+         * by deduplicating thanks to the event sequm
+         */
+        if (gst_event_get_seqnum (event) != mux->last_scte35_event_seqnum) {
+          GstMpegtsSection *section;
+
+          gst_structure_get (s, "section", GST_TYPE_MPEGTS_SECTION, &section,
+              NULL);
+
+          if (section) {
+            handle_scte35_section (mux, section);
+            mux->last_scte35_event_seqnum = gst_event_get_seqnum (event);
+          } else {
+            GST_WARNING_OBJECT (ts_pad,
+                "Ignoring scte-sit event without a section");
+          }
+        } else {
+          GST_DEBUG_OBJECT (ts_pad, "Ignoring duplicate scte-sit event");
+        }
+        res = TRUE;
+        forward = FALSE;
+        goto out;
+      }
 
       if (!gst_video_event_is_force_key_unit (event))
         goto out;
