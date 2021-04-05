@@ -104,7 +104,7 @@ typedef enum {
 } GstMpegtsSectionSCTETableID;
 
 /* Splice Information Table (SIT) */
-#define GST_TYPE_MPEGTS_SCTE_SPLICE_EVENT (gst_mpegts_scte_splice_event_get_type);
+#define GST_TYPE_MPEGTS_SCTE_SPLICE_EVENT (gst_mpegts_scte_splice_event_get_type())
 typedef struct _GstMpegtsSCTESpliceEvent GstMpegtsSCTESpliceEvent;
 
 struct _GstMpegtsSCTESpliceEvent {
@@ -153,7 +153,7 @@ typedef enum {
   GST_MTS_SCTE_SPLICE_COMMAND_PRIVATE   = 0xff
 } GstMpegtsSCTESpliceCommandType;
 
-#define GST_TYPE_MPEGTS_SCTE_SIT (gst_mpegts_scte_sit_get_type());
+#define GST_TYPE_MPEGTS_SCTE_SIT (gst_mpegts_scte_sit_get_type())
 
 typedef struct _GstMpegtsSCTESIT GstMpegtsSCTESIT;
 
