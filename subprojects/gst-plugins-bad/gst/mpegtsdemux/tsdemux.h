@@ -108,6 +108,7 @@ struct _GstTSDemux
    * SCTE 35 sections' pts_adjustment further down the line (eg mpegtsmux) */
   guint64 mpeg_pts_offset;
 
+  /* This is to protect demux->segment_event */
   GMutex lock;
 };
 

@@ -170,6 +170,9 @@ struct _MpegTSBase {
   /* Do not use the PCR stream for timestamp calculation. Useful for
    * streams with broken/invalid PCR streams. */
   gboolean ignore_pcr;
+
+  /* Used for delayed seek events */
+  GstEvent *seek_event;
 };
 
 struct _MpegTSBaseClass {

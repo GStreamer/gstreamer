@@ -249,6 +249,8 @@ mpegts_base_reset (MpegTSBase * base)
       GST_BIN_FLAG_STREAMS_AWARE);
   GST_DEBUG_OBJECT (base, "Streams aware : %d", base->streams_aware);
 
+  gst_event_replace (&base->seek_event, NULL);
+
   if (klass->reset)
     klass->reset (base);
 }
@@ -309,6 +311,8 @@ mpegts_base_finalize (GObject * object)
     base->pat = NULL;
   }
   g_hash_table_destroy (base->programs);
+
+  gst_event_replace (&base->seek_event, NULL);
 
   if (G_OBJECT_CLASS (parent_class)->finalize)
     G_OBJECT_CLASS (parent_class)->finalize (object);
