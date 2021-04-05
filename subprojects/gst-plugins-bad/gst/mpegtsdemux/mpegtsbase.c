@@ -162,6 +162,7 @@ mpegts_base_class_init (MpegTSBaseClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->sink_query = GST_DEBUG_FUNCPTR (mpegts_base_default_sink_query);
+  klass->handle_psi = NULL;
 
   gst_type_mark_as_plugin_api (GST_TYPE_MPEGTS_BASE, 0);
 }
@@ -1237,6 +1238,10 @@ mpegts_base_handle_psi (MpegTSBase * base, GstMpegtsSection * section)
     default:
       break;
   }
+
+  /* Give the subclass a chance to look at the section */
+  if (GST_MPEGTS_BASE_GET_CLASS (base)->handle_psi)
+    GST_MPEGTS_BASE_GET_CLASS (base)->handle_psi (base, section);
 
   /* Finally post message (if it wasn't corrupted) */
   if (post_message)

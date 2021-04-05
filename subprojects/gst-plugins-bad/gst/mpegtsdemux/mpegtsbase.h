@@ -181,6 +181,7 @@ struct _MpegTSBaseClass {
   void (*inspect_packet) (MpegTSBase *base, MpegTSPacketizerPacket *packet);
   /* takes ownership of @event */
   gboolean (*push_event) (MpegTSBase *base, GstEvent * event);
+  void (*handle_psi) (MpegTSBase *base, GstMpegtsSection * section);
 
   /* program_started gets called when program's pmt arrives for first time */
   void (*program_started) (MpegTSBase *base, MpegTSBaseProgram *program);
