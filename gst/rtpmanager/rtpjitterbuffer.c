@@ -919,8 +919,14 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
     else
       pts = 0;
 
-    GST_DEBUG ("RFC7273 clock time %" GST_TIME_FORMAT ", out %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (pts));
+    GST_DEBUG ("RFC7273 clock time %" GST_TIME_FORMAT ", ntptime %"
+        GST_TIME_FORMAT ", ntprtptime %" G_GUINT64_FORMAT ", rtptime %"
+        G_GUINT32_FORMAT ", base_time %" GST_TIME_FORMAT ", internal %"
+        GST_TIME_FORMAT ", external %" GST_TIME_FORMAT ", out %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (ntptime),
+        ntprtptime, rtptime, GST_TIME_ARGS (base_time),
+        GST_TIME_ARGS (internal), GST_TIME_ARGS (external),
+        GST_TIME_ARGS (pts));
   } else {
     /* If we used the RFC7273 clock before and not anymore,
      * we need to resync it later again */
