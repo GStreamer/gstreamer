@@ -654,6 +654,9 @@ advanced_seek_button_cb (GtkButton * button, PlaybackApp * app)
   const gchar *text;
   gchar *endptr;
 
+  if (!app->seek_format)
+    return;
+
   fmt = app->seek_format->value;
 
   text = gtk_entry_get_text (GTK_ENTRY (app->seek_entry));
