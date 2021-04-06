@@ -1936,6 +1936,7 @@ gst_aggregator_release_pad (GstElement * element, GstPad * pad)
 
   SRC_LOCK (self);
   gst_aggregator_pad_set_flushing (aggpad, GST_FLOW_FLUSHING, TRUE);
+  gst_buffer_replace (&aggpad->priv->peeked_buffer, NULL);
   gst_element_remove_pad (element, pad);
 
   self->priv->has_peer_latency = FALSE;
@@ -3191,6 +3192,7 @@ gst_aggregator_pad_finalize (GObject * object)
 {
   GstAggregatorPad *pad = (GstAggregatorPad *) object;
 
+  gst_buffer_replace (&pad->priv->peeked_buffer, NULL);
   g_cond_clear (&pad->priv->event_cond);
   g_mutex_clear (&pad->priv->flush_lock);
   g_mutex_clear (&pad->priv->lock);
