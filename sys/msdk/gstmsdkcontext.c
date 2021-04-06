@@ -87,20 +87,19 @@ get_device_id (void)
       drmVersionPtr drm_version = drmGetVersion (fd);
 
       if (!drm_version || strncmp (drm_version->name, "i915", 4)) {
-        GST_WARNING ("The specified device isn't an Intel device, "
-            "use the default device instead");
+        GST_ERROR ("The specified device isn't an Intel device");
         drmFreeVersion (drm_version);
         close (fd);
         fd = -1;
       } else {
         GST_DEBUG ("Opened the specified drm device %s", user_choice);
         drmFreeVersion (drm_version);
-        return fd;
       }
     } else {
-      GST_WARNING ("The specified device isn't a valid drm device, "
-          "use the default device instead");
+      GST_ERROR ("The specified device isn't a valid drm device");
     }
+
+    return fd;
   }
 
   client = g_udev_client_new (NULL);
