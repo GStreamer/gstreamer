@@ -500,7 +500,6 @@ _packetize_sit (GstMpegtsSection * section)
 
   switch (sit->splice_command_type) {
     case GST_MTS_SCTE_SPLICE_COMMAND_SCHEDULE:
-    case GST_MTS_SCTE_SPLICE_COMMAND_TIME:
     case GST_MTS_SCTE_SPLICE_COMMAND_PRIVATE:
       GST_WARNING ("SCTE command not supported");
       return FALSE;
@@ -538,6 +537,14 @@ _packetize_sit (GstMpegtsSection * section)
         command_length += 5;
     }
   }
+
+  if (sit->splice_command_type == GST_MTS_SCTE_SPLICE_COMMAND_TIME) {
+    if (sit->splice_time_specified)
+      command_length += 5;
+    else
+      command_length += 1;
+  }
+
   length += command_length;
 
   /* Calculate size of descriptors */
@@ -572,6 +579,16 @@ _packetize_sit (GstMpegtsSection * section)
   tmp32 |= sit->splice_command_type;
   GST_WRITE_UINT32_BE (data, tmp32);
   data += 4;
+
+  if (sit->splice_command_type == GST_MTS_SCTE_SPLICE_COMMAND_TIME) {
+    if (!sit->splice_time_specified) {
+      *data++ = 0x7f;
+    } else {
+      *data++ = 0xf2 | ((sit->splice_time >> 32) & 0x1);
+      GST_WRITE_UINT32_BE (data, sit->splice_time & 0xffffffff);
+      data += 4;
+    }
+  }
 
   /* Write the events */
   for (i = 0; i < sit->splices->len; i++) {
