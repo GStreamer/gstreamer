@@ -1713,6 +1713,9 @@ struct v4l2_ext_control {
 		struct v4l2_ctrl_h264_slice_params *p_h264_slice_params;
 		struct v4l2_ctrl_h264_decode_params *p_h264_decode_params;
 		struct v4l2_ctrl_fwht_params *p_fwht_params;
+		struct v4l2_ctrl_mpeg2_sequence *p_mpeg2_sequence;
+		struct v4l2_ctrl_mpeg2_picture *p_mpeg2_picture;
+		struct v4l2_ctrl_mpeg2_quantisation *p_mpeg2_quantisation;
 		void *ptr;
 	};
 } __attribute__ ((packed));
