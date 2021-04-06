@@ -1124,7 +1124,6 @@ gst_v4l2_request_set_done (GstV4l2Request * request)
       }
     }
 
-    g_clear_pointer (&pending_req->pic_buf, gst_buffer_unref);
     pending_req->pending = FALSE;
     gst_v4l2_request_unref (pending_req);
 
