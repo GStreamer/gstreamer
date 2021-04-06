@@ -388,7 +388,7 @@ gst_mpegts_scte_cancel_new (guint32 event_id)
 /**
  * gst_mpegts_scte_splice_in_new:
  * @event_id: The event ID.
- * @splice_time: The PCR time for the splice event
+ * @splice_time: The running time for the splice event
  *
  * Allocates and initializes a new "Splice In" INSERT command
  * #GstMpegtsSCTESIT for the given @event_id and @splice_time.
@@ -399,7 +399,7 @@ gst_mpegts_scte_cancel_new (guint32 event_id)
  * Returns: (transfer full): A newly allocated #GstMpegtsSCTESIT
  */
 GstMpegtsSCTESIT *
-gst_mpegts_scte_splice_in_new (guint32 event_id, guint64 splice_time)
+gst_mpegts_scte_splice_in_new (guint32 event_id, GstClockTime splice_time)
 {
   GstMpegtsSCTESIT *sit = gst_mpegts_scte_sit_new ();
   GstMpegtsSCTESpliceEvent *event = gst_mpegts_scte_splice_event_new ();
@@ -420,12 +420,12 @@ gst_mpegts_scte_splice_in_new (guint32 event_id, guint64 splice_time)
 /**
  * gst_mpegts_scte_splice_out_new:
  * @event_id: The event ID.
- * @splice_time: The PCR time for the splice event
+ * @splice_time: The running time for the splice event
  * @duration: The optional duration.
  *
  * Allocates and initializes a new "Splice Out" INSERT command
  * #GstMpegtsSCTESIT for the given @event_id, @splice_time and
- * duration.
+ * @duration.
  *
  * If the @splice_time is #G_MAXUINT64 then the event will be
  * immediate as opposed to for the target @splice_time.
@@ -435,8 +435,8 @@ gst_mpegts_scte_splice_in_new (guint32 event_id, guint64 splice_time)
  * Returns: (transfer full): A newly allocated #GstMpegtsSCTESIT
  */
 GstMpegtsSCTESIT *
-gst_mpegts_scte_splice_out_new (guint32 event_id, guint64 splice_time,
-    guint64 duration)
+gst_mpegts_scte_splice_out_new (guint32 event_id, GstClockTime splice_time,
+    GstClockTime duration)
 {
   GstMpegtsSCTESIT *sit = gst_mpegts_scte_sit_new ();
   GstMpegtsSCTESpliceEvent *event = gst_mpegts_scte_splice_event_new ();

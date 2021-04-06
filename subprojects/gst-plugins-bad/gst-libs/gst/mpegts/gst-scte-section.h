@@ -193,12 +193,12 @@ GstMpegtsSCTESIT *gst_mpegts_scte_cancel_new (guint32 event_id);
 
 GST_MPEGTS_API
 GstMpegtsSCTESIT *gst_mpegts_scte_splice_in_new (guint32 event_id,
-						 guint64 splice_time);
+						 GstClockTime splice_time);
 
 GST_MPEGTS_API
 GstMpegtsSCTESIT *gst_mpegts_scte_splice_out_new (guint32 event_id,
-						  guint64 splice_time,
-						  guint64 duration);
+						  GstClockTime splice_time,
+						  GstClockTime duration);
 
 
 GST_MPEGTS_API
