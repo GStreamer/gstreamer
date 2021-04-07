@@ -137,6 +137,23 @@ gst_v4l2_codec_vp9_dec_picture_data_get (GstVp9Picture * picture)
   return gst_v4l2_codec_vp9_dec_picture_data_ref (data);
 }
 
+static guint
+gst_v4l2_codec_vp9_dec_get_preferred_output_delay (GstVp9Decoder * decoder,
+    gboolean is_live)
+{
+
+  GstV4l2CodecVp9Dec *self = GST_V4L2_CODEC_VP9_DEC (decoder);
+  guint delay;
+
+  if (is_live)
+    delay = 0;
+  else
+    delay = 1;
+
+  gst_v4l2_decoder_set_render_delay (self->decoder, delay);
+  return delay;
+}
+
 static void
 gst_v4l2_codec_vp9_dec_fill_lf_params (GstV4l2CodecVp9Dec * self,
     const GstVp9LoopFilterParams * lf)
@@ -538,6 +555,7 @@ gst_v4l2_codec_vp9_dec_decide_allocation (GstVideoDecoder * decoder,
 {
   GstV4l2CodecVp9Dec *self = GST_V4L2_CODEC_VP9_DEC (decoder);
   guint min = 0;
+  guint num_bitstream;
 
   self->has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
@@ -550,8 +568,11 @@ gst_v4l2_codec_vp9_dec_decide_allocation (GstVideoDecoder * decoder,
 
   min = MAX (2, min);
 
+  num_bitstream = 1 +
+      MAX (1, gst_v4l2_decoder_get_render_delay (self->decoder));
+
   self->sink_allocator = gst_v4l2_codec_allocator_new (self->decoder,
-      GST_PAD_SINK, 2);
+      GST_PAD_SINK, num_bitstream);
   self->src_allocator = gst_v4l2_codec_allocator_new (self->decoder,
       GST_PAD_SRC, GST_VP9_REF_FRAMES + min + 4);
   self->src_pool = gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo);
@@ -1090,6 +1111,8 @@ gst_v4l2_codec_vp9_dec_subclass_init (GstV4l2CodecVp9DecClass * klass,
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_vp9_dec_output_picture);
   vp9decoder_class->duplicate_picture =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_vp9_dec_duplicate_picture);
+  vp9decoder_class->get_preferred_output_delay =
+      GST_DEBUG_FUNCPTR (gst_v4l2_codec_vp9_dec_get_preferred_output_delay);
 
   klass->device = device;
   gst_v4l2_decoder_install_properties (gobject_class, PROP_LAST, device);
