@@ -207,6 +207,7 @@ gst_clock_sync_init (GstClockSync * clocksync)
   clocksync->sync_to_first = DEFAULT_SYNC_TO_FIRST;
   g_cond_init (&clocksync->blocked_cond);
 
+  GST_OBJECT_FLAG_SET (clocksync, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   GST_OBJECT_FLAG_SET (clocksync, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
 }
 
