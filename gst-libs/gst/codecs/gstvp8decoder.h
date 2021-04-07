@@ -121,6 +121,21 @@ struct _GstVp8DecoderClass
                                         GstVideoCodecFrame * frame,
                                         GstVp8Picture * picture);
 
+  /**
+   * GstVp8DecoderClass::get_preferred_output_delay:
+   * @decoder: a #GstVp8Decoder
+   * @is_live: whether upstream is live or not
+   *
+   * Optional. Called by baseclass to query whether delaying output is
+   * preferred by subclass or not.
+   *
+   * Returns: the number of perferred delayed output frame
+   *
+   * Since: 1.20
+   */
+  guint           (*get_preferred_output_delay)   (GstVp8Decoder * decoder,
+                                                   gboolean is_live);
+
   /*< private >*/
   gpointer padding[GST_PADDING_LARGE];
 };
