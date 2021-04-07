@@ -806,59 +806,79 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
   if (!crop->raw_caps)
     goto beach;
 
-  if (GST_VIDEO_INFO_IS_RGB (in_info)
-      || GST_VIDEO_INFO_IS_GRAY (in_info)) {
-    crop->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE;
-  } else {
-    switch (GST_VIDEO_INFO_FORMAT (in_info)) {
-      case GST_VIDEO_FORMAT_AYUV:
-        crop->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE;
-        break;
-      case GST_VIDEO_FORMAT_YVYU:
-      case GST_VIDEO_FORMAT_YUY2:
-      case GST_VIDEO_FORMAT_UYVY:
-        crop->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX;
-        if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_UYVY) {
-          /* UYVY = 4:2:2 - [U0 Y0 V0 Y1] [U2 Y2 V2 Y3] [U4 Y4 V4 Y5] */
-          crop->macro_y_off = 1;
-        } else {
-          /* YUYV = 4:2:2 - [Y0 U0 Y1 V0] [Y2 U2 Y3 V2] [Y4 U4 Y5 V4] = YUY2 */
-          crop->macro_y_off = 0;
-        }
-        break;
-      case GST_VIDEO_FORMAT_I420:
-      case GST_VIDEO_FORMAT_I420_10BE:
-      case GST_VIDEO_FORMAT_I420_10LE:
-      case GST_VIDEO_FORMAT_I420_12BE:
-      case GST_VIDEO_FORMAT_I420_12LE:
-      case GST_VIDEO_FORMAT_A420:
-      case GST_VIDEO_FORMAT_A420_10BE:
-      case GST_VIDEO_FORMAT_A420_10LE:
-      case GST_VIDEO_FORMAT_YV12:
-      case GST_VIDEO_FORMAT_Y444:
-      case GST_VIDEO_FORMAT_Y444_10BE:
-      case GST_VIDEO_FORMAT_Y444_10LE:
-      case GST_VIDEO_FORMAT_Y444_12BE:
-      case GST_VIDEO_FORMAT_Y444_12LE:
-      case GST_VIDEO_FORMAT_A444_10BE:
-      case GST_VIDEO_FORMAT_A444_10LE:
-      case GST_VIDEO_FORMAT_Y42B:
-      case GST_VIDEO_FORMAT_I422_10BE:
-      case GST_VIDEO_FORMAT_I422_10LE:
-      case GST_VIDEO_FORMAT_A422_10BE:
-      case GST_VIDEO_FORMAT_A422_10LE:
-      case GST_VIDEO_FORMAT_I422_12BE:
-      case GST_VIDEO_FORMAT_I422_12LE:
-      case GST_VIDEO_FORMAT_Y41B:
-        crop->packing = VIDEO_CROP_PIXEL_FORMAT_PLANAR;
-        break;
-      case GST_VIDEO_FORMAT_NV12:
-      case GST_VIDEO_FORMAT_NV21:
-        crop->packing = VIDEO_CROP_PIXEL_FORMAT_SEMI_PLANAR;
-        break;
-      default:
-        goto unknown_format;
-    }
+  switch (GST_VIDEO_INFO_FORMAT (in_info)) {
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_RGB15:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+    case GST_VIDEO_FORMAT_AYUV:
+      crop->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE;
+      break;
+    case GST_VIDEO_FORMAT_YVYU:
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+      crop->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX;
+      if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_UYVY) {
+        /* UYVY = 4:2:2 - [U0 Y0 V0 Y1] [U2 Y2 V2 Y3] [U4 Y4 V4 Y5] */
+        crop->macro_y_off = 1;
+      } else {
+        /* YUYV = 4:2:2 - [Y0 U0 Y1 V0] [Y2 U2 Y3 V2] [Y4 U4 Y5 V4] = YUY2 */
+        crop->macro_y_off = 0;
+      }
+      break;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_I420_10BE:
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_12BE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_A420_10BE:
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y444_10BE:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_Y444_12BE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_A444_10BE:
+    case GST_VIDEO_FORMAT_A444_10LE:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_I422_10BE:
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_A422_10BE:
+    case GST_VIDEO_FORMAT_A422_10LE:
+    case GST_VIDEO_FORMAT_I422_12BE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_GBR_10BE:
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_GBR_12BE:
+    case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBRA:
+    case GST_VIDEO_FORMAT_GBRA_10BE:
+    case GST_VIDEO_FORMAT_GBRA_10LE:
+    case GST_VIDEO_FORMAT_GBRA_12BE:
+    case GST_VIDEO_FORMAT_GBRA_12LE:
+    case GST_VIDEO_FORMAT_Y41B:
+      crop->packing = VIDEO_CROP_PIXEL_FORMAT_PLANAR;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      crop->packing = VIDEO_CROP_PIXEL_FORMAT_SEMI_PLANAR;
+      break;
+    default:
+      goto unknown_format;
   }
 
 beach:
