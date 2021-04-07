@@ -350,7 +350,7 @@ gst_avtpcvpay_fragment_nal (GstAvtpCvfPay * avtpcvfpay, GstBuffer * nal,
     *last_fragment = TRUE;
     *offset = nal_size;
     GST_DEBUG_OBJECT (avtpcvfpay,
-        "Generated fragment with size %" G_GUINT64_FORMAT, nal_size);
+        "Generated fragment with size %" G_GSIZE_FORMAT, nal_size);
     return gst_buffer_ref (nal);
   }
 
@@ -406,7 +406,7 @@ gst_avtpcvpay_fragment_nal (GstAvtpCvfPay * avtpcvfpay, GstBuffer * nal,
   *offset += fragment_size;
 
   GST_DEBUG_OBJECT (avtpcvfpay,
-      "Generated fragment with size %" G_GUINT64_FORMAT, fragment_size);
+      "Generated fragment with size %" G_GSIZE_FORMAT, fragment_size);
 
   return fragment;
 }
@@ -536,7 +536,7 @@ gst_avtp_cvf_pay_prepare_avtp_packets (GstAvtpCvfPay * avtpcvfpay,
 
     nal = g_ptr_array_index (nals, i);
     GST_LOG_OBJECT (avtpcvfpay,
-        "Preparing AVTP packets for NAL whose size is %" G_GUINT64_FORMAT,
+        "Preparing AVTP packets for NAL whose size is %" G_GSIZE_FORMAT,
         gst_buffer_get_size (nal));
 
     /* Calculate timestamps. Note that we do it twice, one using DTS as base,
@@ -665,7 +665,7 @@ gst_avtp_cvf_pay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (avtpcvfpay,
-      "Incoming buffer size: %" G_GUINT64_FORMAT " PTS: %" GST_TIME_FORMAT
+      "Incoming buffer size: %" G_GSIZE_FORMAT " PTS: %" GST_TIME_FORMAT
       " DTS: %" GST_TIME_FORMAT, gst_buffer_get_size (buffer),
       GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DTS (buffer)));

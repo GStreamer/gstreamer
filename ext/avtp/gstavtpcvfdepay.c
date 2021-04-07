@@ -333,7 +333,8 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   g_assert (r == 0);
   if (G_UNLIKELY (val != 1)) {
     GST_DEBUG_OBJECT (avtpcvfdepay,
-        "Unexpected AVTP header stream valid %ld, expected %d", val, 1);
+        "Unexpected AVTP header stream valid %" G_GUINT64_FORMAT
+        ", expected %d", val, 1);
     goto end;
   }
 
@@ -341,7 +342,8 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   g_assert (r == 0);
   if (val != avtpbasedepayload->streamid) {
     GST_DEBUG_OBJECT (avtpcvfdepay,
-        "Unexpected AVTP header stream id 0x%lx, expected 0x%lx", val,
+        "Unexpected AVTP header stream id 0x%" G_GINT64_MODIFIER
+        "x, expected 0x%" G_GINT64_MODIFIER "x", val,
         avtpbasedepayload->streamid);
     goto end;
   }
@@ -350,7 +352,7 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   g_assert (r == 0);
   if (G_UNLIKELY (val != AVTP_CVF_FORMAT_RFC)) {
     GST_DEBUG_OBJECT (avtpcvfdepay,
-        "Unexpected AVTP header format %ld, expected %d", val,
+        "Unexpected AVTP header format %" G_GUINT64_FORMAT ", expected %d", val,
         AVTP_CVF_FORMAT_RFC);
     goto end;
   }
@@ -359,7 +361,7 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   g_assert (r == 0);
   if (G_UNLIKELY (val != AVTP_CVF_FORMAT_SUBTYPE_H264)) {
     GST_DEBUG_OBJECT (avtpcvfdepay,
-        "Unsupported AVTP header format subtype %ld", val);
+        "Unsupported AVTP header format subtype %" G_GUINT64_FORMAT, val);
     goto end;
   }
 
@@ -367,8 +369,9 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   g_assert (r == 0);
   if (G_UNLIKELY (map->size < sizeof (*pdu) + val)) {
     GST_DEBUG_OBJECT (avtpcvfdepay,
-        "AVTP packet size %ld too small, expected at least %" G_GUINT64_FORMAT,
-        map->size - AVTP_CVF_H264_HEADER_SIZE, sizeof (*pdu) + val);
+        "AVTP packet size %" G_GSIZE_FORMAT " too small, expected at least %"
+        G_GUINT64_FORMAT, map->size - AVTP_CVF_H264_HEADER_SIZE,
+        sizeof (*pdu) + val);
     goto end;
   }
 
@@ -449,8 +452,8 @@ gst_avtp_cvf_depay_internal_push (GstAvtpCvfDepay * avtpcvfdepay,
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (avtpcvfdepay,
-      "Adding buffer of size %" G_GUINT64_FORMAT " (nalu size %"
-      G_GUINT64_FORMAT ") to out_buffer", gst_buffer_get_size (buffer),
+      "Adding buffer of size %" G_GSIZE_FORMAT " (nalu size %"
+      G_GSIZE_FORMAT ") to out_buffer", gst_buffer_get_size (buffer),
       gst_buffer_get_size (buffer) - sizeof (guint32));
 
   if (avtpcvfdepay->out_buffer) {
@@ -571,7 +574,7 @@ gst_avtp_cvf_depay_handle_fu_a (GstAvtpCvfDepay * avtpcvfdepay,
   if (G_UNLIKELY (map->size - AVTP_CVF_H264_HEADER_SIZE < 2)) {
     GST_ERROR_OBJECT (avtpcvfdepay,
         "Buffer too small to contain fragment headers, size: %"
-        G_GUINT64_FORMAT, map->size - AVTP_CVF_H264_HEADER_SIZE);
+        G_GSIZE_FORMAT, map->size - AVTP_CVF_H264_HEADER_SIZE);
     ret = gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
     goto end;
   }
