@@ -1029,8 +1029,8 @@ if build_gstgl
     description : 'Streaming media framework, OpenGL plugins libraries',
   )
 
-  pkgconfig.generate(gstgl,
-    libraries : [gstgl, gl_dep],
+  pkgconfig.generate(
+    libraries : [gstgl, gl_lib_deps],
     subdirs : pkgconfig_subdirs,
     name : 'gstreamer-gl-prototypes-1.0',
     description : 'Streaming media framework, OpenGL plugins libraries (OpenGL Prototypes)',
