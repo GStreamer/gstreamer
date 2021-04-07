@@ -63,6 +63,8 @@
 #include "gstvideocrop.h"
 #include "gstvideocropelements.h"
 #include "gstaspectratiocrop.h"
+/* include private header which contains the supported formats */
+#include "gstvideocrop-private.h"
 
 #include <string.h>
 
@@ -75,17 +77,6 @@ enum
   PROP_TOP,
   PROP_BOTTOM
 };
-
-/* we support the same caps as aspectratiocrop (sync changes) */
-#define VIDEO_CROP_CAPS                                \
-  GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR, "    \
-      "RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, YUY2, Y444, " \
-      "Y42B, Y41B, YVYU, UYVY, I420, YV12, RGB16, RGB15, "  \
-      "GRAY8, NV12, NV21, GRAY16_LE, GRAY16_BE }") "; "     \
-  "video/x-raw(ANY), "                                      \
-      "width = " GST_VIDEO_SIZE_RANGE ", "                  \
-      "height = " GST_VIDEO_SIZE_RANGE ", "                 \
-      "framerate = " GST_VIDEO_FPS_RANGE
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
