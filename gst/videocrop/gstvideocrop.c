@@ -341,10 +341,15 @@ gst_video_crop_transform_planar (GstVideoCrop * vcrop,
     guint subsampled_crop_left, subsampled_crop_top;
     guint copy_width;
     gint i;
+    gsize bytes_per_pixel;
 
     /* plane */
     plane_in = GST_VIDEO_FRAME_PLANE_DATA (in_frame, p);
     plane_out = GST_VIDEO_FRAME_PLANE_DATA (out_frame, p);
+
+    /* To support > 8bit, we need to add a byte-multiplier that specifies
+     * how many bytes are used per pixel value */
+    bytes_per_pixel = GST_VIDEO_FRAME_COMP_PSTRIDE (in_frame, p);
 
     /* apply crop top/left
      * crop_top and crop_left have to be rounded down to the corresponding
@@ -361,8 +366,9 @@ gst_video_crop_transform_planar (GstVideoCrop * vcrop,
         subsampled_crop_top) * GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, p);
     plane_in +=
         GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (format_info, p,
-        subsampled_crop_left);
-    copy_width = (guint) GST_VIDEO_FRAME_COMP_WIDTH (out_frame, p);
+        subsampled_crop_left) * bytes_per_pixel;
+    copy_width = GST_VIDEO_FRAME_COMP_WIDTH (out_frame, p) * bytes_per_pixel;
+
 
     for (i = 0; i < GST_VIDEO_FRAME_COMP_HEIGHT (out_frame, p); ++i) {
       memcpy (plane_out, plane_in, copy_width);
@@ -821,9 +827,28 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
         }
         break;
       case GST_VIDEO_FORMAT_I420:
+      case GST_VIDEO_FORMAT_I420_10BE:
+      case GST_VIDEO_FORMAT_I420_10LE:
+      case GST_VIDEO_FORMAT_I420_12BE:
+      case GST_VIDEO_FORMAT_I420_12LE:
+      case GST_VIDEO_FORMAT_A420:
+      case GST_VIDEO_FORMAT_A420_10BE:
+      case GST_VIDEO_FORMAT_A420_10LE:
       case GST_VIDEO_FORMAT_YV12:
       case GST_VIDEO_FORMAT_Y444:
+      case GST_VIDEO_FORMAT_Y444_10BE:
+      case GST_VIDEO_FORMAT_Y444_10LE:
+      case GST_VIDEO_FORMAT_Y444_12BE:
+      case GST_VIDEO_FORMAT_Y444_12LE:
+      case GST_VIDEO_FORMAT_A444_10BE:
+      case GST_VIDEO_FORMAT_A444_10LE:
       case GST_VIDEO_FORMAT_Y42B:
+      case GST_VIDEO_FORMAT_I422_10BE:
+      case GST_VIDEO_FORMAT_I422_10LE:
+      case GST_VIDEO_FORMAT_A422_10BE:
+      case GST_VIDEO_FORMAT_A422_10LE:
+      case GST_VIDEO_FORMAT_I422_12BE:
+      case GST_VIDEO_FORMAT_I422_12LE:
       case GST_VIDEO_FORMAT_Y41B:
         crop->packing = VIDEO_CROP_PIXEL_FORMAT_PLANAR;
         break;

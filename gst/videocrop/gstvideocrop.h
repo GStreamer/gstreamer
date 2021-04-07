@@ -23,7 +23,6 @@
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_VIDEO_CROP \
   (gst_video_crop_get_type())
 #define GST_VIDEO_CROP(obj) \
@@ -34,12 +33,20 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_CROP))
 #define GST_IS_VIDEO_CROP_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_CROP))
-
-typedef enum {
-  VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE = 0,  /* RGBx, AYUV */
-  VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX,     /* UYVY, YVYU */
-  VIDEO_CROP_PIXEL_FORMAT_PLANAR,             /* I420, YV12, Y444 */
-  VIDEO_CROP_PIXEL_FORMAT_SEMI_PLANAR         /* NV12, NV21 */
+    typedef enum
+{
+  /* RGB (+ variants), ARGB (+ variants), AYUV, GRAY */
+  VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE = 0,
+  /* YVYU, YUY2, UYVY */
+  VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX,
+  /* I420, A420, YV12, Y444, Y42B, Y41B,
+   * I420_10BE, A420_10BE, Y444_10BE, A444_10BE, I422_10BE, A422_10BE,
+   * I420_10LE, A420_10LE, Y444_10LE, A444_10LE, I422_10LE, A422_10LE,
+   * I420_12BE, Y444_12BE, I422_12BE,
+   * I420_12LE, Y444_12LE, I422_12LE */
+  VIDEO_CROP_PIXEL_FORMAT_PLANAR,
+  /* NV12, NV21 */
+  VIDEO_CROP_PIXEL_FORMAT_SEMI_PLANAR
 } VideoCropPixelFormat;
 
 typedef struct _GstVideoCropImageDetails GstVideoCropImageDetails;
@@ -51,7 +58,7 @@ struct _GstVideoCrop
 {
   GstVideoFilter parent;
 
-  /*< private >*/
+  /*< private > */
   gint prop_left;
   gint prop_right;
   gint prop_top;
@@ -66,7 +73,7 @@ struct _GstVideoCrop
   gint crop_top;
   gint crop_bottom;
 
-  VideoCropPixelFormat  packing;
+  VideoCropPixelFormat packing;
   gint macro_y_off;
 
   gboolean raw_caps;
@@ -80,6 +87,4 @@ struct _GstVideoCropClass
 GType gst_video_crop_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_VIDEO_CROP_H__ */
-
