@@ -254,6 +254,9 @@ audioringbuffer_thread_func (GstAudioRingBuffer * buf)
               GST_DEBUG_FUNCPTR_NAME (writefunc),
               (errno > 1 ? g_strerror (errno) : "unknown"), left, written);
           break;
+        } else if (written == 0 && G_UNLIKELY (g_atomic_int_get (&buf->state) !=
+                GST_AUDIO_RING_BUFFER_STATE_STARTED)) {
+          break;
         }
         left -= written;
         readptr += written;

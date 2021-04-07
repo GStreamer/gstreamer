@@ -1089,6 +1089,10 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
         goto write_error;
       }
       continue;
+    } else if (err == 0 && alsa->hw_support_pause) {
+      /* We might be already paused, if so, just bail */
+      if (snd_pcm_state (alsa->handle) == SND_PCM_STATE_PAUSED)
+        break;
     }
 
     ptr += snd_pcm_frames_to_bytes (alsa->handle, err);
