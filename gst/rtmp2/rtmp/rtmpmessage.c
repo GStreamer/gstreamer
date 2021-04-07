@@ -413,7 +413,7 @@ gst_rtmp_message_new_protocol_control (GstRtmpProtocolControl * pc)
   data = g_malloc (size);
   GST_WRITE_UINT32_BE (data, pc->param);
   if (pc_has_param2 (pc->type)) {
-    GST_WRITE_UINT32_BE (data + 4, pc->param2);
+    GST_WRITE_UINT8 (data + 4, pc->param2);
   }
 
   return gst_rtmp_message_new_wrapped (pc->type,
