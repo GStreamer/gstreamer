@@ -5412,7 +5412,10 @@ not_negotiated:
   }
 sample_error:
   {
-    GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL), ("Failed to push sample."));
+    /* Only post an error message for actual errors that are not flushing */
+    if (pad->flow_status < GST_FLOW_OK && pad->flow_status != GST_FLOW_FLUSHING)
+      GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+          ("Failed to push sample."));
     return pad->flow_status;
   }
 }
