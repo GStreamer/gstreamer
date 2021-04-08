@@ -96,8 +96,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define gst_rtp_h265_depay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpH265Depay, gst_rtp_h265_depay,
-    GST_TYPE_RTP_BASE_DEPAYLOAD);
+G_DEFINE_TYPE_WITH_CODE (GstRtpH265Depay, gst_rtp_h265_depay,
+    GST_TYPE_RTP_BASE_DEPAYLOAD, GST_DEBUG_CATEGORY_INIT (rtph265depay_debug,
+        "rtph265depay", 0, "H265 Video RTP Depayloader"));
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtph265depay, "rtph265depay",
     GST_RANK_SECONDARY, GST_TYPE_RTP_H265_DEPAY, rtp_element_init (plugin));
 

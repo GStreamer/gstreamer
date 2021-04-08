@@ -50,8 +50,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define gst_rtp_sv3v_depay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpSV3VDepay, gst_rtp_sv3v_depay,
-    GST_TYPE_RTP_BASE_DEPAYLOAD);
+G_DEFINE_TYPE_WITH_CODE (GstRtpSV3VDepay, gst_rtp_sv3v_depay,
+    GST_TYPE_RTP_BASE_DEPAYLOAD, GST_DEBUG_CATEGORY_INIT (rtpsv3vdepay_debug,
+        "rtpsv3vdepay", 0, "RTP SV3V depayloader"));
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtpsv3vdepay, "rtpsv3vdepay",
     GST_RANK_SECONDARY, GST_TYPE_RTP_SV3V_DEPAY, rtp_element_init (plugin));
 
