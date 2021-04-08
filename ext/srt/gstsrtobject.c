@@ -1678,7 +1678,7 @@ gst_srt_object_write_to_callers (GstSRTObject * srtobject,
     gssize len = 0;
     const guint8 *msg = mapinfo->data;
     gint sent;
-    gint payload_size, optlen = 1;
+    gint payload_size, optlen = sizeof (payload_size);
 
     SRTCaller *caller = callers->data;
     callers = callers->next;
@@ -1736,7 +1736,7 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
   gssize len = 0;
   gint poll_timeout;
   const guint8 *msg = mapinfo->data;
-  gint payload_size, optlen = 1;
+  gint payload_size, optlen = sizeof (payload_size);
   gboolean wait_for_connection;
 
   GST_OBJECT_LOCK (srtobject->element);
