@@ -14,6 +14,7 @@ from scripts.common import get_meson
 SCRIPTDIR = os.path.normpath(os.path.dirname(__file__))
 # Force a checkout to happen and throw away local changes
 FORCE_CHECKOUT = False
+CI = os.environ.get('CI', False)
 
 
 def manifest_get_commits(manifest):
@@ -83,21 +84,35 @@ def check_repo_status(repo_name, worktree_dir):
                                     branch_message[0].strip(), repo_status(commit_message)))
     return True
 
+def fatal_git_fetches(repo_dir):
+    '''
+    When running on the CI, we usually have a cache, in which case we don't
+    want the git update to be fatal since we don't want our CI to fail when
+    there's downtime on external repos.
+    '''
+    if not CI:
+        return True
+    remote = git("remote", "get-url", "origin", repository_path=repo_dir)
+    if 'gitlab.freedesktop.org' in remote:
+        return True
+    return False
+
 def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=[], recurse_i=0, status=False):
     if status:
       return check_repo_status(repo_name, repo_dir)
     revision = ensure_revision_if_necessary(repo_dir, revision)
     git("config", "rebase.autoStash", "true", repository_path=repo_dir)
+    fatal = fatal_git_fetches(repo_dir)
     try:
         if revision:
             print("Checking out %s in %s" % (revision, repo_name))
-            git("fetch", *fetch_args, repository_path=repo_dir)
+            git("fetch", *fetch_args, repository_path=repo_dir, fatal=fatal)
             checkout_args = ["--force"] if FORCE_CHECKOUT else []
             checkout_args += ["--detach", revision]
             git("checkout", *checkout_args, repository_path=repo_dir)
         else:
             print("Updating branch %s in %s" % (get_branch_name(repo_dir), repo_name))
-            git("pull", "--rebase", repository_path=repo_dir)
+            git("pull", "--rebase", repository_path=repo_dir, fatal=fatal)
         git("submodule", "update", repository_path=repo_dir)
     except Exception as e:
         out = getattr(e, "output", b"").decode()

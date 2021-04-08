@@ -113,10 +113,17 @@ class Colors:
 
 
 
-def git(*args, repository_path='.'):
-    return subprocess.check_output(["git"] + list(args), cwd=repository_path,
-                                   stdin=subprocess.DEVNULL,
-                                   stderr=subprocess.STDOUT).decode()
+def git(*args, repository_path='.', fatal=True):
+    try:
+        ret = subprocess.check_output(["git"] + list(args), cwd=repository_path,
+                                      stdin=subprocess.DEVNULL,
+                                      stderr=subprocess.STDOUT).decode()
+    except subprocess.CalledProcessError as e:
+        if fatal:
+            raise e
+        print("Non-fatal error running git {}:\n{}".format(' '.join(args), e))
+        return None
+    return ret
 
 def accept_command(commands):
     """Search @commands and returns the first found absolute path."""
