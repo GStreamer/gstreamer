@@ -186,7 +186,7 @@ ges_title_source_create_source (GESTrackElement * object)
   const gchar *bg_props[] = { "pattern", "foreground-color", NULL };
   const gchar *text_props[] = { "text", "font-desc", "valignment", "halignment",
     "color", "xpos", "ypos", "x-absolute", "y-absolute", "outline-color",
-    "shaded-background",
+    "shaded-background", "draw-shadow",
     "text-x", "text-y", "text-width", "text-height", NULL
   };
 
