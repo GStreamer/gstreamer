@@ -51,6 +51,7 @@ struct _GstVp9Decoder
 
   /*< protected >*/
   GstVideoCodecState * input_state;
+  gboolean parse_compressed_headers;
 
   /*< private >*/
   GstVp9DecoderPrivate *priv;

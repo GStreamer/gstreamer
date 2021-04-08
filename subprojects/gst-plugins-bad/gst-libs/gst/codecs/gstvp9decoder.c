@@ -339,13 +339,26 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     goto error;
   }
 
-  pres = gst_vp9_stateful_parser_parse_frame_header (priv->parser, &frame_hdr,
-      map.data, map.size);
+  pres =
+      gst_vp9_stateful_parser_parse_uncompressed_frame_header (priv->parser,
+      &frame_hdr, map.data, map.size);
 
   if (pres != GST_VP9_PARSER_OK) {
     GST_ERROR_OBJECT (self, "Failed to parsing frame header");
     ret = GST_FLOW_ERROR;
     goto unmap_and_error;
+  }
+
+  if (self->parse_compressed_headers && !frame_hdr.show_existing_frame) {
+    pres =
+        gst_vp9_stateful_parser_parse_compressed_frame_header (priv->parser,
+        &frame_hdr, map.data + frame_hdr.frame_header_length_in_bytes,
+        map.size);
+
+    if (pres != GST_VP9_PARSER_OK) {
+      GST_ERROR_OBJECT (self, "Failed to parse the compressed frame header");
+      goto unmap_and_error;
+    }
   }
 
   if (frame_hdr.show_existing_frame) {

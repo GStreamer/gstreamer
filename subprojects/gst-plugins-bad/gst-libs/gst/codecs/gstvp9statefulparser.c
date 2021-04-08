@@ -149,6 +149,550 @@ ensure_debug_category (void)
 #define CHECK_ALLOWED(val, min, max) \
   CHECK_ALLOWED_WITH_DEBUG (G_STRINGIFY (val), val, min, max)
 
+typedef struct _Vp9BoolDecoder
+{
+  guint64 value;
+  guint32 range;
+  guint32 bits_left;
+  gint count_to_fill;
+  GstBitReader *bit_reader;
+  gboolean out_of_bits;
+} Vp9BoolDecoder;
+
+/* how much to shift to get range > 128 */
+const static guint8 bool_shift_table[256] = {
+  0, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3,
+  3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+};
+
+static const guint8 inv_map_table[255] = {
+  7, 20, 33, 46, 59, 72, 85, 98, 111, 124, 137, 150, 163, 176,
+  189, 202, 215, 228, 241, 254, 1, 2, 3, 4, 5, 6, 8, 9,
+  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24,
+  25, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37, 38, 39,
+  40, 41, 42, 43, 44, 45, 47, 48, 49, 50, 51, 52, 53, 54,
+  55, 56, 57, 58, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+  70, 71, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
+  86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 99, 100,
+  101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 112, 113, 114, 115,
+  116, 117, 118, 119, 120, 121, 122, 123, 125, 126, 127, 128, 129, 130,
+  131, 132, 133, 134, 135, 136, 138, 139, 140, 141, 142, 143, 144, 145,
+  146, 147, 148, 149, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160,
+  161, 162, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+  177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 190, 191,
+  192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 203, 204, 205, 206,
+  207, 208, 209, 210, 211, 212, 213, 214, 216, 217, 218, 219, 220, 221,
+  222, 223, 224, 225, 226, 227, 229, 230, 231, 232, 233, 234, 235, 236,
+  237, 238, 239, 240, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251,
+  252, 253, 253,
+};
+
+static void
+fill_bool (Vp9BoolDecoder * bd)
+{
+  guint max_bits_to_read;
+  guint bits_to_read;
+  guint64 data;
+
+  if (G_UNLIKELY (bd->bits_left < bd->count_to_fill)) {
+    GST_ERROR
+        ("Invalid VP9 bitstream: the boolean decoder ran out of bits to read");
+    bd->out_of_bits = TRUE;
+    return;
+  }
+
+  max_bits_to_read =
+      8 * (sizeof (bd->value) - sizeof (guint8)) + bd->count_to_fill;
+  bits_to_read = MIN (max_bits_to_read, bd->bits_left);
+
+  data =
+      gst_bit_reader_get_bits_uint64_unchecked (bd->bit_reader, bits_to_read);
+
+  bd->value |= data << (max_bits_to_read - bits_to_read);
+  bd->count_to_fill -= bits_to_read;
+  bd->bits_left -= bits_to_read;
+}
+
+static gboolean
+read_bool (Vp9BoolDecoder * bd, guint8 probability)
+{
+  guint64 split;
+  guint64 big_split;
+  guint count;
+  gboolean bit;
+
+  if (bd->count_to_fill > 0)
+    fill_bool (bd);
+
+  split = 1 + (((bd->range - 1) * probability) >> 8);
+  big_split = split << 8 * (sizeof (bd->value) - sizeof (guint8));
+
+  if (bd->value < big_split) {
+    bd->range = split;
+    bit = FALSE;
+  } else {
+    bd->range -= split;
+    bd->value -= big_split;
+    bit = TRUE;
+  }
+
+  count = bool_shift_table[bd->range];
+  bd->range <<= count;
+  bd->value <<= count;
+  bd->count_to_fill += count;
+
+  return bit;
+}
+
+static guint
+read_literal (Vp9BoolDecoder * bd, guint n)
+{
+  guint ret = 0;
+  guint i;
+
+  for (i = 0; G_UNLIKELY (!bd->out_of_bits) && i < n; i++) {
+    ret = 2 * ret + read_bool (bd, 128);
+  }
+
+  return ret;
+}
+
+static GstVp9ParserResult
+init_bool (Vp9BoolDecoder * bd, GstBitReader * br, guint size_in_bytes)
+{
+  gboolean marker_bit;
+
+  if (size_in_bytes < 1)
+    GST_ERROR ("VP9 Boolean Decoder has no bits to read");
+
+  if ((gst_bit_reader_get_pos (br) % 8) != 0)
+    GST_ERROR ("VP9 Boolean Decoder was passed an unaligned buffer");
+
+  bd->value = 0;
+  bd->range = 255;
+  bd->bits_left = 8 * size_in_bytes;
+  bd->bit_reader = br;
+  bd->count_to_fill = 8;
+  bd->out_of_bits = FALSE;
+
+  marker_bit = read_literal (bd, 1);
+  if (marker_bit != 0) {
+    GST_ERROR ("Marker bit should be zero was %d", marker_bit);
+    return GST_VP9_PARSER_BROKEN_DATA;
+  }
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+exit_bool (Vp9BoolDecoder * bd)
+{
+  guint8 padding;
+  guint8 bits = bd->bits_left;
+  guint8 n;
+
+  while (bits) {
+    n = MIN (bits, 8);
+    padding = gst_bit_reader_get_bits_uint32_unchecked (bd->bit_reader, n);
+    if (padding != 0 || (n < 8 && (padding & 0xe0) == 0xc0)) {
+      GST_ERROR
+          ("Invalid padding at end of frame. Total padding bits is %d and the wrong byte is: %x",
+          bd->bits_left, padding);
+      return GST_VP9_PARSER_BROKEN_DATA;
+    }
+    bits -= n;
+  }
+
+  return GST_VP9_PARSER_OK;
+}
+
+static guint
+decode_term_subexp (Vp9BoolDecoder * bd)
+{
+  guint8 bit;
+  guint v;
+  /* only coded if update_prob is set */
+  gboolean prob_is_coded_in_bitstream;
+  guint delta;
+
+  prob_is_coded_in_bitstream = read_bool (bd, 252);
+  if (!prob_is_coded_in_bitstream)
+    return 0;
+
+  bit = read_literal (bd, 1);
+  if (bit == 0) {
+    delta = read_literal (bd, 4);
+    goto end;
+  }
+
+  bit = read_literal (bd, 1);
+  if (bit == 0) {
+    delta = read_literal (bd, 4) + 16;
+    goto end;
+  }
+
+  bit = read_literal (bd, 1);
+  if (bit == 0) {
+    delta = read_literal (bd, 5) + 32;
+    goto end;
+  }
+
+  v = read_literal (bd, 7);
+  if (v < 65) {
+    delta = v + 64;
+    goto end;
+  }
+
+  bit = read_literal (bd, 1);
+  delta = (v << 1) - 1 + bit;
+end:
+  return inv_map_table[delta];
+}
+
+static guint8
+read_mv_prob (Vp9BoolDecoder * bd)
+{
+  gboolean update_mv_prob;
+  guint8 mv_prob;
+  guint8 prob = 0;
+
+  update_mv_prob = read_bool (bd, 252);
+  if (update_mv_prob) {
+    mv_prob = read_literal (bd, 7);
+    prob = (mv_prob << 1) | 1;
+  }
+
+  return prob;
+}
+
+static GstVp9ParserResult
+parse_mv_probs (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  guint i, j, k;
+
+  for (j = 0; j < GST_VP9_MV_JOINTS - 1; j++)
+    hdr->delta_probabilities.mv.joint[j] = read_mv_prob (bd);
+
+  for (i = 0; i < 2; i++) {
+    hdr->delta_probabilities.mv.sign[i] = read_mv_prob (bd);
+
+    for (j = 0; j < GST_VP9_MV_CLASSES - 1; j++)
+      hdr->delta_probabilities.mv.klass[i][j] = read_mv_prob (bd);
+
+    hdr->delta_probabilities.mv.class0_bit[i] = read_mv_prob (bd);
+
+    for (j = 0; j < GST_VP9_MV_OFFSET_BITS; j++)
+      hdr->delta_probabilities.mv.bits[i][j] = read_mv_prob (bd);
+  }
+
+  for (i = 0; i < 2; i++) {
+    for (j = 0; j < GST_VP9_CLASS0_SIZE; j++)
+      for (k = 0; k < GST_VP9_MV_FR_SIZE - 1; k++)
+        hdr->delta_probabilities.mv.class0_fr[i][j][k] = read_mv_prob (bd);
+
+    for (k = 0; k < GST_VP9_MV_FR_SIZE - 1; k++)
+      hdr->delta_probabilities.mv.fr[i][k] = read_mv_prob (bd);
+  }
+
+  if (hdr->allow_high_precision_mv) {
+    for (i = 0; i < 2; i++) {
+      hdr->delta_probabilities.mv.class0_hp[i] = read_mv_prob (bd);
+      hdr->delta_probabilities.mv.hp[i] = read_mv_prob (bd);
+    }
+
+  }
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_partition_probs (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  guint i, j;
+
+  for (i = 0; i < GST_VP9_PARTITION_CONTEXTS; i++)
+    for (j = 0; j < GST_VP9_PARTITION_TYPES - 1; j++)
+      hdr->delta_probabilities.partition[i][j] = decode_term_subexp (bd);
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_y_mode_probs (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  guint i, j;
+
+  for (i = 0; i < GST_VP9_BLOCK_SIZE_GROUPS; i++)
+    for (j = 0; j < GST_VP9_INTRA_MODES - 1; j++)
+      hdr->delta_probabilities.y_mode[i][j] = decode_term_subexp (bd);
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_frame_reference_mode_probs (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  guint i;
+
+  if (hdr->reference_mode == GST_VP9_REFERENCE_MODE_SELECT)
+    for (i = 0; i < GST_VP9_COMP_MODE_CONTEXTS; i++)
+      hdr->delta_probabilities.comp_mode[i] = decode_term_subexp (bd);
+
+  if (hdr->reference_mode != GST_VP9_REFERENCE_MODE_COMPOUND_REFERENCE)
+    for (i = 0; i < GST_VP9_REF_CONTEXTS; i++) {
+      hdr->delta_probabilities.single_ref[i][0] = decode_term_subexp (bd);
+      hdr->delta_probabilities.single_ref[i][1] = decode_term_subexp (bd);
+    }
+
+  if (hdr->reference_mode != GST_VP9_REFERENCE_MODE_SINGLE_REFERENCE)
+    for (i = 0; i < GST_VP9_REF_CONTEXTS; i++)
+      hdr->delta_probabilities.comp_ref[i] = decode_term_subexp (bd);
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_frame_reference (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  gboolean compound_ref_allowed = FALSE;
+  guint8 non_single_reference;
+  guint8 reference_select;
+  guint i;
+
+  for (i = GST_VP9_REF_FRAME_LAST; i < GST_VP9_REFS_PER_FRAME; i++)
+    if (hdr->ref_frame_sign_bias[i + 1] !=
+        hdr->ref_frame_sign_bias[GST_VP9_REF_FRAME_LAST])
+      compound_ref_allowed = TRUE;
+
+  if (compound_ref_allowed) {
+    non_single_reference = read_literal (bd, 1);
+    if (!non_single_reference)
+      hdr->reference_mode = GST_VP9_REFERENCE_MODE_SINGLE_REFERENCE;
+    else {
+      reference_select = read_literal (bd, 1);
+      if (!reference_select)
+        hdr->reference_mode = GST_VP9_REFERENCE_MODE_COMPOUND_REFERENCE;
+      else
+        hdr->reference_mode = GST_VP9_REFERENCE_MODE_SELECT;
+    }
+  } else
+    hdr->reference_mode = GST_VP9_REFERENCE_MODE_SINGLE_REFERENCE;
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_is_inter_probs (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  guint i;
+
+  for (i = 0; i < GST_VP9_IS_INTER_CONTEXTS; i++)
+    hdr->delta_probabilities.is_inter[i] = decode_term_subexp (bd);
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_interp_filter_probs (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  guint i, j;
+
+  for (i = 0; i < GST_VP9_INTERP_FILTER_CONTEXTS; i++)
+    for (j = 0; j < GST_VP9_SWITCHABLE_FILTERS - 1; j++)
+      hdr->delta_probabilities.interp_filter[i][j] = decode_term_subexp (bd);
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_inter_mode_probs (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  guint i, j;
+
+  for (i = 0; i < GST_VP9_INTER_MODE_CONTEXTS; i++)
+    for (j = 0; j < GST_VP9_INTER_MODES - 1; j++)
+      hdr->delta_probabilities.inter_mode[i][j] = decode_term_subexp (bd);
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_skip_probs (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  guint i;
+
+  for (i = 0; i < GST_VP9_SKIP_CONTEXTS; i++)
+    hdr->delta_probabilities.skip[i] = decode_term_subexp (bd);
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_coef_probs (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  GstVp9TxSize tx_size, max_tx_size;
+  guint8 i, j, k, l, m;
+  guint8 update_probs;
+
+  static const guint8 tx_mode_to_biggest_tx_size[GST_VP9_TX_MODES] = {
+    GST_VP9_TX_4x4,
+    GST_VP9_TX_8x8,
+    GST_VP9_TX_16x16,
+    GST_VP9_TX_32x32,
+    GST_VP9_TX_32x32,
+  };
+
+  max_tx_size = tx_mode_to_biggest_tx_size[hdr->tx_mode];
+  for (tx_size = GST_VP9_TX_4x4; tx_size <= max_tx_size; tx_size++) {
+    update_probs = read_literal (bd, 1);
+    if (update_probs) {
+      for (i = 0; i < 2; i++)
+        for (j = 0; j < 2; j++)
+          for (k = 0; k < 6; k++)
+            for (l = 0; l < ((k == 0) ? 3 : 6); l++)
+              for (m = 0; m < 3; m++)
+                hdr->delta_probabilities.coef[tx_size][i][j][k][l][m] =
+                    decode_term_subexp (bd);
+    }
+  }
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_tx_mode_probs (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  guint i, j;
+
+  for (i = 0; i < GST_VP9_TX_SIZE_CONTEXTS; i++)
+    for (j = 0; j < GST_VP9_TX_SIZES - 3; j++)
+      hdr->delta_probabilities.tx_probs_8x8[i][j] = decode_term_subexp (bd);
+
+  for (i = 0; i < GST_VP9_TX_SIZE_CONTEXTS; i++)
+    for (j = 0; j < GST_VP9_TX_SIZES - 2; j++)
+      hdr->delta_probabilities.tx_probs_16x16[i][j] = decode_term_subexp (bd);
+
+  for (i = 0; i < GST_VP9_TX_SIZE_CONTEXTS; i++)
+    for (j = 0; j < GST_VP9_TX_SIZES - 1; j++)
+      hdr->delta_probabilities.tx_probs_32x32[i][j] = decode_term_subexp (bd);
+
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_tx_mode (GstVp9FrameHeader * hdr, Vp9BoolDecoder * bd)
+{
+  guint8 tx_mode;
+  guint8 tx_mode_select;
+
+  if (hdr->lossless_flag) {
+    hdr->tx_mode = GST_VP9_TX_MODE_ONLY_4x4;
+    return GST_VP9_PARSER_OK;
+  }
+
+  tx_mode = read_literal (bd, 2);
+  if (tx_mode == GST_VP9_TX_MODE_ALLOW_32x32) {
+    tx_mode_select = read_literal (bd, 1);
+    tx_mode += tx_mode_select;
+  }
+
+  hdr->tx_mode = tx_mode;
+  return GST_VP9_PARSER_OK;
+}
+
+static GstVp9ParserResult
+parse_compressed_header (GstVp9StatefulParser * self, GstVp9FrameHeader * hdr,
+    GstBitReader * br)
+{
+  GstVp9ParserResult rst;
+  gboolean frame_is_intra_only;
+  Vp9BoolDecoder bd;
+
+  /* consume trailing bits */
+  while (gst_bit_reader_get_pos (br) & 0x7)
+    gst_bit_reader_get_bits_uint8_unchecked (br, 1);
+
+  rst = init_bool (&bd, br, hdr->header_size_in_bytes);
+  if (rst != GST_VP9_PARSER_OK) {
+    GST_ERROR ("Failed to init the boolean decoder.");
+    return rst;
+  }
+
+  rst = parse_tx_mode (hdr, &bd);
+  if (rst != GST_VP9_PARSER_OK)
+    return rst;
+
+  if (hdr->tx_mode == GST_VP9_TX_MODE_SELECT) {
+    rst = parse_tx_mode_probs (hdr, &bd);
+    if (rst != GST_VP9_PARSER_OK)
+      return rst;
+  }
+
+  rst = parse_coef_probs (hdr, &bd);
+  if (rst != GST_VP9_PARSER_OK)
+    return rst;
+
+  rst = parse_skip_probs (hdr, &bd);
+  if (rst != GST_VP9_PARSER_OK)
+    return rst;
+
+  frame_is_intra_only = (hdr->frame_type == GST_VP9_KEY_FRAME
+      || hdr->intra_only);
+
+  if (!frame_is_intra_only) {
+    rst = parse_inter_mode_probs (hdr, &bd);
+    if (rst != GST_VP9_PARSER_OK)
+      return rst;
+
+    if (hdr->interpolation_filter == GST_VP9_INTERPOLATION_FILTER_SWITCHABLE) {
+      rst = parse_interp_filter_probs (hdr, &bd);
+      if (rst != GST_VP9_PARSER_OK)
+        return rst;
+    }
+
+    rst = parse_is_inter_probs (hdr, &bd);
+    if (rst != GST_VP9_PARSER_OK)
+      return rst;
+
+    rst = parse_frame_reference (hdr, &bd);
+    if (rst != GST_VP9_PARSER_OK)
+      return rst;
+
+    rst = parse_frame_reference_mode_probs (hdr, &bd);
+    if (rst != GST_VP9_PARSER_OK)
+      return rst;
+
+    rst = parse_y_mode_probs (hdr, &bd);
+    if (rst != GST_VP9_PARSER_OK)
+      return rst;
+
+    rst = parse_partition_probs (hdr, &bd);
+    if (rst != GST_VP9_PARSER_OK)
+      return rst;
+
+    rst = parse_mv_probs (hdr, &bd);
+    if (rst != GST_VP9_PARSER_OK)
+      return rst;
+  }
+
+  rst = exit_bool (&bd);
+  if (rst != GST_VP9_PARSER_OK) {
+    GST_ERROR ("The boolean decoder did not exit cleanly.");
+    return rst;
+  }
+
+  return GST_VP9_PARSER_OK;
+}
+
 static const gint16 dc_qlookup[256] = {
   4, 8, 8, 9, 10, 11, 12, 12,
   13, 14, 15, 16, 17, 18, 19, 19,
@@ -753,7 +1297,6 @@ parse_segmentation_params (GstBitReader * br, GstVp9SegmentationParams * params)
       VP9_READ_BIT (params->feature_enabled[i][GST_VP9_SEG_SEG_LVL_SKIP]);
     }
   }
-
   return GST_VP9_PARSER_OK;
 }
 
@@ -878,7 +1421,42 @@ gst_vp9_stateful_parser_free (GstVp9StatefulParser * parser)
 }
 
 /**
- * gst_vp9_stateful_parser_parse_frame_header:
+ * gst_vp9_stateful_parser_parse_compressed_frame_header:
+ * @parser: The #GstVp9StatefulParser
+ * @header: The #GstVp9FrameHeader to fill
+ * @data: The data to parse
+ * @size: The size of the @data to parse
+ *
+ * Parses the compressed information in the VP9 bitstream contained in @data,
+ * and fills in @header with the parsed values.
+ * The @size argument represent the whole frame size.
+ *
+ * Returns: a #GstVp9ParserResult
+ *
+ * Since: 1.20
+ */
+
+GstVp9ParserResult
+gst_vp9_stateful_parser_parse_compressed_frame_header (GstVp9StatefulParser *
+    parser, GstVp9FrameHeader * header, const guint8 * data, gsize size)
+{
+  GstVp9ParserResult rst = GST_VP9_PARSER_OK;
+  GstBitReader bit_reader;
+  GstBitReader *br = &bit_reader;
+
+  gst_bit_reader_init (br, data, size);
+
+  rst = parse_compressed_header (parser, header, br);
+  if (rst != GST_VP9_PARSER_OK) {
+    GST_ERROR ("Failed to parse the compressed header");
+    return GST_VP9_PARSER_ERROR;
+  }
+
+  return rst;
+}
+
+/**
+ * gst_vp9_stateful_parser_parse_uncompressed_frame_header:
  * @parser: The #GstVp9StatefulParser
  * @header: The #GstVp9FrameHeader to fill
  * @data: The data to parse
@@ -892,8 +1470,8 @@ gst_vp9_stateful_parser_free (GstVp9StatefulParser * parser)
  * Since: 1.20
  */
 GstVp9ParserResult
-gst_vp9_stateful_parser_parse_frame_header (GstVp9StatefulParser * parser,
-    GstVp9FrameHeader * header, const guint8 * data, gsize size)
+gst_vp9_stateful_parser_parse_uncompressed_frame_header (GstVp9StatefulParser *
+    parser, GstVp9FrameHeader * header, const guint8 * data, gsize size)
 {
   GstBitReader bit_reader;
   GstBitReader *br = &bit_reader;
@@ -1088,6 +1666,7 @@ gst_vp9_stateful_parser_parse_frame_header (GstVp9StatefulParser * parser,
   }
 
   header->frame_header_length_in_bytes = (gst_bit_reader_get_pos (br) + 7) / 8;
+
 
   return GST_VP9_PARSER_OK;
 }

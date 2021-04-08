@@ -29,6 +29,8 @@ typedef struct _GstVp9StatefulParser        GstVp9StatefulParser;
 typedef struct _GstVp9LoopFilterParams      GstVp9LoopFilterParams;
 typedef struct _GstVp9QuantizationParams    GstVp9QuantizationParams;
 typedef struct _GstVp9SegmentationParams    GstVp9SegmentationParams;
+typedef struct _GstVp9MvDeltaProbs          GstVp9MvDeltaProbs;
+typedef struct _GstVp9DeltaProbabilities    GstVp9DeltaProbabilities;
 typedef struct _GstVp9FrameHeader           GstVp9FrameHeader;
 
 /**
@@ -75,6 +77,263 @@ typedef struct _GstVp9FrameHeader           GstVp9FrameHeader;
  * Since: 1.20
  */
 #define GST_VP9_SEG_LVL_MAX 4
+/**
+ * GST_VP9_TX_SIZE_CONTEXTS:
+ *
+ * Number of contexts for transform size
+ *
+ * Since: 1.20
+ */
+#define GST_VP9_TX_SIZE_CONTEXTS 2
+
+/**
+ * GST_VP9_TX_SIZES:
+ *
+ * Number of values for tx_size
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_TX_SIZES 4
+
+/**
+ * GST_VP9_SKIP_CONTEXTS:
+ *
+ * Number of contexts for decoding skip
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_SKIP_CONTEXTS 3
+
+/**
+ * GST_VP9_INTER_MODE_CONTEXTS:
+ *
+ * Number of contexts for inter_mode
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_INTER_MODE_CONTEXTS 7
+
+/**
+ * GST_VP9_INTER_MODES:
+ *
+ * Number of values for inter_mode
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_INTER_MODES 4
+
+/**
+ * GST_VP9_INTERP_FILTER_CONTEXTS:
+ *
+ * Number of contexts for interp_filter
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_INTERP_FILTER_CONTEXTS 4
+
+/**
+ * GST_VP9_SWITCHABLE_FILTERS:
+ *
+ * Number of contexts for interp_filter
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_SWITCHABLE_FILTERS 3
+
+
+/**
+ * GST_VP9_IS_INTER_CONTEXTS:
+ *
+ * Number of contexts for interp_filter
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_IS_INTER_CONTEXTS 4
+
+/**
+ * GST_VP9_COMP_MODE_CONTEXTS:
+ *
+ * Number of contexts for comp_mode
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_COMP_MODE_CONTEXTS 5
+
+/**
+ * GST_VP9_REF_CONTEXTS:
+ *
+ * Number of contexts for single_ref and comp_ref
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_REF_CONTEXTS 5
+
+/**
+ * GST_VP9_BLOCK_SIZE_GROUPS:
+ *
+ * Number of contexts when decoding intra_mode
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_BLOCK_SIZE_GROUPS 4
+
+/**
+ * GST_VP9_INTRA_MODES:
+ *
+ * Number of values for intra_mode
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_INTRA_MODES 10
+
+/**
+ * GST_VP9_PARTITION_CONTEXTS:
+ *
+ * Number of contexts when decoding partition
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_PARTITION_CONTEXTS 16
+
+/**
+ * GST_VP9_PARTITION_TYPES:
+ *
+ * Number of values for partition
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_PARTITION_TYPES 4
+
+/**
+ * GST_VP9_MV_JOINTS:
+ *
+ * Number of values for partition
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_MV_JOINTS 4
+
+/**
+ * GST_VP9_MV_CLASSES:
+ *
+ * Number of values for mv_class
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_MV_CLASSES 11
+
+/**
+ * GST_VP9_MV_OFFSET_BITS:
+ *
+ * Maximum number of bits for decoding motion vectors
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_MV_OFFSET_BITS 10
+
+/**
+ * GST_VP9_CLASS0_SIZE:
+ *
+ * Number of values for mv_classO_bit
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_CLASS0_SIZE 2
+
+/**
+ * GST_VP9_MV_FR_SIZE:
+ *
+ * Number of values that can be decoded for mv_fr
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_MV_FR_SIZE 4
+
+/**
+ * GST_VP9_TX_MODES:
+ *
+ * Number of values for tx_mode
+ *
+ * Since: 1.20
+ *
+ */
+#define GST_VP9_TX_MODES 5
+
+/**
+ * GstVp9TxMode:
+ * @GST_VP9_TX_MODE_ONLY_4x4: Only 4x4
+ * @GST_VP9_TX_MODE_ALLOW_8x8: Allow 8x8
+ * @GST_VP9_TX_MODE_ALLOW_16x16: Allow 16x16
+ * @GST_VP9_TX_MODE_ALLOW_32x32: Allow 32x32
+ * @GST_VP9_TX_MODE_SELECT: The choice is specified explicitly for each block
+ *
+ * TxMode: Specifies how the transform size is determined
+ *
+ * Since: 1.20
+ */
+typedef enum
+{
+  GST_VP9_TX_MODE_ONLY_4x4 = 0,
+  GST_VP9_TX_MODE_ALLOW_8x8 = 1,
+  GST_VP9_TX_MODE_ALLOW_16x16 = 2,
+  GST_VP9_TX_MODE_ALLOW_32x32 = 3,
+  GST_VP9_TX_MODE_SELECT = 4,
+
+} GstVp9TxMode;
+
+/**
+ * GstVp9ReferenceMode:
+ * @GST_VP9_REFERENCE_MODE_SINGLE_REFERENCE: Indicates that all the inter blocks use only a single reference frame
+ * @GST_VP9_REFERENCE_MODE_COMPOUND_REFERENCE: Requires all the inter blocks to use compound mode
+ * @GST_VP9_REFERENCE_MODE_SELECT: Allows each individual inter block to select between single and compound prediction modes
+ *
+ * Reference modes: Specify the type of inter prediction to be used
+ *
+ * Since: 1.20
+ */
+typedef enum
+{
+  GST_VP9_REFERENCE_MODE_SINGLE_REFERENCE = 0,
+  GST_VP9_REFERENCE_MODE_COMPOUND_REFERENCE = 1,
+  GST_VP9_REFERENCE_MODE_SELECT = 2,
+} GstVp9ReferenceMode;
+
+/**
+ * GstVp9TxSize:
+ * @GST_VP9_TX_4x4: 4x4
+ * @GST_VP9_TX_8x8: 8x8
+ * @GST_VP9_TX_16x16: 16x16
+ * @GST_VP9_TX_32x32: 32x32
+ *
+ * TxSize: Specifies the transform size
+ *
+ * Since: 1.20
+ */
+typedef enum
+{
+  GST_VP9_TX_4x4 = 0,
+  GST_VP9_TX_8x8 = 1,
+  GST_VP9_TX_16x16 = 2,
+  GST_VP9_TX_32x32 = 3,
+} GstVp9TxSize;
 
 /**
  * GstVp9LoopFilterParams:
@@ -180,6 +439,59 @@ struct _GstVp9SegmentationParams
 };
 
 /**
+ * GstVp9MvDeltaProbs:
+ *
+ * Stores motion vectors probabilities updates. This is from the spec
+ * and can be used as a binary.
+ *
+ * Since: 1.20
+ */
+struct _GstVp9MvDeltaProbs
+{
+  /*< private >*/
+  guint8 joint[GST_VP9_MV_JOINTS - 1];
+  guint8 sign[2];
+  guint8 klass[2][GST_VP9_MV_CLASSES - 1];
+  guint8 class0_bit[2];
+  guint8 bits[2][GST_VP9_MV_OFFSET_BITS];
+  guint8 class0_fr[2][GST_VP9_CLASS0_SIZE][GST_VP9_MV_FR_SIZE - 1];
+  guint8 fr[2][GST_VP9_MV_FR_SIZE - 1];
+  guint8 class0_hp[2];
+  guint8 hp[2];
+};
+
+
+/**
+ * GstVp9DeltaProbabilities:
+ *
+ * Stores probabilities updates. This is from the spec
+ * and can be used as a binary.
+ *
+ * Since: 1.20
+ */
+struct _GstVp9DeltaProbabilities
+{
+  /*< private >*/
+  guint8 tx_probs_8x8[GST_VP9_TX_SIZE_CONTEXTS][GST_VP9_TX_SIZES - 3];
+  guint8 tx_probs_16x16[GST_VP9_TX_SIZE_CONTEXTS][GST_VP9_TX_SIZES - 2];
+  guint8 tx_probs_32x32[GST_VP9_TX_SIZE_CONTEXTS][GST_VP9_TX_SIZES - 1];
+  guint8 coef[4][2][2][6][6][3];
+  guint8 skip[GST_VP9_SKIP_CONTEXTS];
+  guint8 inter_mode[GST_VP9_INTER_MODE_CONTEXTS][GST_VP9_INTER_MODES - 1];
+    guint8
+      interp_filter[GST_VP9_INTERP_FILTER_CONTEXTS][GST_VP9_SWITCHABLE_FILTERS
+      - 1];
+  guint8 is_inter[GST_VP9_IS_INTER_CONTEXTS];
+  guint8 comp_mode[GST_VP9_COMP_MODE_CONTEXTS];
+  guint8 single_ref[GST_VP9_REF_CONTEXTS][2];
+  guint8 comp_ref[GST_VP9_REF_CONTEXTS];
+  guint8 y_mode[GST_VP9_BLOCK_SIZE_GROUPS][GST_VP9_INTRA_MODES - 1];
+  guint8 partition[GST_VP9_PARTITION_CONTEXTS][GST_VP9_PARTITION_TYPES - 1];
+  GstVp9MvDeltaProbs mv;
+};
+
+
+/**
  * GstVp9FrameHeader:
  * @profile: encoded profile
  * @bit_depth: encoded bit depth
@@ -225,8 +537,35 @@ struct _GstVp9SegmentationParams
  * @segmentation_params: a #GstVp9SegmentationParams
  * @tile_cols_log2: specifies the base 2 logarithm of the width of each tile
  * @tile_rows_log2: specifies the base 2 logarithm of the height of each tile
+ * @tx_mode: specifies how the transform size is determined
+ * @reference_mode: is a derived syntax element that specifies the type of
+ *   inter prediction to be used
+ * @delta_probabilities: modification to the probabilities encoded in the
+ *   bitstream
  * @lossless_flag: lossless mode decode
  * @frame_header_length_in_bytes: length of uncompressed header
+ *
+ * Since: 1.20
+ */
+/**
+ * GstVp9FrameHeader.tx_mode:
+ *
+ * Specifies how the transform size is determined.
+ *
+ * Since: 1.20
+ */
+/**
+ * GstVp9FrameHeader.reference_mode:
+ * 
+ * Is a derived syntax element that specifies the type of
+ * inter prediction to be used.
+ *
+ * Since: 1.20
+ */
+/**
+ * GstVp9FrameHeader.delta_probabilities:
+ * 
+ * Modification to the probabilities encoded in the bitstream.
  *
  * Since: 1.20
  */
@@ -268,6 +607,11 @@ struct _GstVp9FrameHeader
   guint8 tile_rows_log2;
 
   guint16 header_size_in_bytes;
+
+  /* compressed header */
+  GstVp9TxMode tx_mode;
+  GstVp9ReferenceMode reference_mode;
+  GstVp9DeltaProbabilities delta_probabilities;
 
   /* calculated values */
   guint8 lossless_flag;
@@ -312,10 +656,16 @@ GST_CODECS_API
 void                    gst_vp9_stateful_parser_free               (GstVp9StatefulParser * parser);
 
 GST_CODECS_API
-GstVp9ParserResult      gst_vp9_stateful_parser_parse_frame_header (GstVp9StatefulParser * parser,
-                                                                    GstVp9FrameHeader * header,
-                                                                    const guint8 * data,
-                                                                    gsize size);
+GstVp9ParserResult      gst_vp9_stateful_parser_parse_compressed_frame_header (GstVp9StatefulParser * parser,
+                                                                               GstVp9FrameHeader * header,
+                                                                               const guint8 * data,
+                                                                               gsize size);
+
+GST_CODECS_API
+GstVp9ParserResult      gst_vp9_stateful_parser_parse_uncompressed_frame_header (GstVp9StatefulParser * parser,
+                                                                                 GstVp9FrameHeader * header,
+                                                                                 const guint8 * data,
+                                                                                 gsize size);
 
 /* Util methods */
 GST_CODECS_API
