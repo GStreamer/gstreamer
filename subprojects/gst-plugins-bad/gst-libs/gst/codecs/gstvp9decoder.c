@@ -433,7 +433,7 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
   } else {
     picture = gst_vp9_picture_new ();
     picture->frame_hdr = frame_hdr;
-
+    picture->system_frame_number = frame->system_frame_number;
     picture->data = map.data;
     picture->size = map.size;
 
