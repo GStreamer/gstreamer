@@ -96,6 +96,24 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstV4l2CodecMpeg2Dec,
         "V4L2 stateless mpeg2 decoder"));
 #define parent_class gst_v4l2_codec_mpeg2_dec_parent_class
 
+static guint
+gst_v4l2_codec_mpeg2_dec_get_preferred_output_delay (GstMpeg2Decoder * decoder,
+    gboolean is_live)
+{
+  GstV4l2CodecMpeg2Dec *self = GST_V4L2_CODEC_MPEG2_DEC (decoder);
+  guint delay;
+
+  if (is_live)
+    delay = 0;
+  else
+    /* Just one for now, perhaps we can make this configurable in the future. */
+    delay = 1;
+
+  gst_v4l2_decoder_set_render_delay (self->decoder, delay);
+
+  return delay;
+}
+
 static gboolean
 gst_v4l2_codec_mpeg2_dec_open (GstVideoDecoder * decoder)
 {
@@ -319,7 +337,8 @@ gst_v4l2_codec_mpeg2_dec_decide_allocation (GstVideoDecoder * decoder,
 
   min = MAX (2, min);
   /* note the dpb size is fixed at 2 */
-  num_bitstream = 2;
+  num_bitstream = 1 +
+      MAX (1, gst_v4l2_decoder_get_render_delay (self->decoder));
 
   self->sink_allocator = gst_v4l2_codec_allocator_new (self->decoder,
       GST_PAD_SINK, num_bitstream);
@@ -1020,6 +1039,8 @@ gst_v4l2_codec_mpeg2_dec_subclass_init (GstV4l2CodecMpeg2DecClass * klass,
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_mpeg2_dec_decode_slice);
   mpeg2decoder_class->end_picture =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_mpeg2_dec_end_picture);
+  mpeg2decoder_class->get_preferred_output_delay =
+      GST_DEBUG_FUNCPTR (gst_v4l2_codec_mpeg2_dec_get_preferred_output_delay);
 
   klass->device = device;
   gst_v4l2_decoder_install_properties (gobject_class, PROP_LAST, device);
