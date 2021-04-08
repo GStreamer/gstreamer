@@ -29,6 +29,7 @@
 #include <config.h>
 #endif
 
+#include <gst/base/base.h>
 #include "gstmpeg2decoder.h"
 
 GST_DEBUG_CATEGORY (gst_mpeg2_decoder_debug);
@@ -258,12 +259,26 @@ struct _GstMpeg2DecoderPrivate
   GstMpeg2Picture *current_picture;
   GstVideoCodecFrame *current_frame;
   GstMpeg2Picture *first_field;
+
+  guint preferred_output_delay;
+  /* for delayed output */
+  GstQueueArray *output_queue;
+  /* used for low-latency vs. high throughput mode decision */
+  gboolean is_live;
 };
 
 #define UPDATE_FLOW_RETURN(ret,new_ret) G_STMT_START { \
   if (*(ret) == GST_FLOW_OK) \
     *(ret) = new_ret; \
 } G_STMT_END
+
+typedef struct
+{
+  GstVideoCodecFrame *frame;
+  GstMpeg2Picture *picture;
+  GstMpeg2Decoder *self;
+} GstMpeg2DecoderOutputFrame;
+
 
 #define parent_class gst_mpeg2_decoder_parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstMpeg2Decoder, gst_mpeg2_decoder,
@@ -283,6 +298,11 @@ static GstFlowReturn gst_mpeg2_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static void gst_mpeg2_decoder_do_output_picture (GstMpeg2Decoder * self,
     GstMpeg2Picture * picture, GstFlowReturn * ret);
+static void gst_mpeg2_decoder_clear_output_frame (GstMpeg2DecoderOutputFrame *
+    output_frame);
+static void gst_mpeg2_decoder_drain_output_queue (GstMpeg2Decoder *
+    self, guint num, GstFlowReturn * ret);
+
 
 static void
 gst_mpeg2_decoder_class_init (GstMpeg2DecoderClass * klass)
@@ -326,6 +346,11 @@ gst_mpeg2_decoder_start (GstVideoDecoder * decoder)
   priv->profile = -1;
   priv->progressive = TRUE;
 
+  priv->output_queue =
+      gst_queue_array_new_for_struct (sizeof (GstMpeg2DecoderOutputFrame), 1);
+  gst_queue_array_set_clear_func (priv->output_queue,
+      (GDestroyNotify) gst_mpeg2_decoder_clear_output_frame);
+
   return TRUE;
 }
 
@@ -337,6 +362,7 @@ gst_mpeg2_decoder_stop (GstVideoDecoder * decoder)
 
   g_clear_pointer (&self->input_state, gst_video_codec_state_unref);
   g_clear_pointer (&priv->dpb, gst_mpeg2_dpb_free);
+  gst_queue_array_free (priv->output_queue);
 
   return TRUE;
 }
@@ -347,6 +373,7 @@ gst_mpeg2_decoder_set_format (GstVideoDecoder * decoder,
 {
   GstMpeg2Decoder *self = GST_MPEG2_DECODER (decoder);
   GstMpeg2DecoderPrivate *priv = self->priv;
+  GstQuery *query;
 
   GST_DEBUG_OBJECT (decoder, "Set format");
 
@@ -357,6 +384,11 @@ gst_mpeg2_decoder_set_format (GstVideoDecoder * decoder,
 
   priv->width = GST_VIDEO_INFO_WIDTH (&state->info);
   priv->height = GST_VIDEO_INFO_HEIGHT (&state->info);
+
+  query = gst_query_new_latency ();
+  if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (self), query))
+    gst_query_parse_latency (query, &priv->is_live, NULL, NULL);
+  gst_query_unref (query);
 
   return TRUE;
 }
@@ -373,6 +405,8 @@ gst_mpeg2_decoder_drain (GstVideoDecoder * decoder)
     gst_mpeg2_decoder_do_output_picture (self, picture, &ret);
   }
 
+  gst_mpeg2_decoder_drain_output_queue (self, 0, &ret);
+  gst_queue_array_clear (priv->output_queue);
   gst_mpeg2_dpb_clear (priv->dpb);
 
   return ret;
@@ -391,6 +425,7 @@ gst_mpeg2_decoder_flush (GstVideoDecoder * decoder)
   GstMpeg2DecoderPrivate *priv = self->priv;
 
   gst_mpeg2_dpb_clear (priv->dpb);
+  gst_queue_array_clear (priv->output_queue);
   priv->state &= GST_MPEG2_DECODER_STATE_VALID_SEQ_HEADERS;
   priv->pic_hdr = PIC_HDR_INIT;
   priv->pic_ext = PIC_HDR_EXT_INIT;
@@ -702,20 +737,27 @@ gst_mpeg2_decoder_handle_picture (GstMpeg2Decoder * decoder,
   /* 6.1.1.6: Conversely if no sequence_xxx_extension() occurs between
      the first sequence_header() and the first picture_header() then
      sequence_xxx_extension() shall not occur in the bitstream. */
-  if (priv->seq_changed && klass->new_sequence) {
+  if (priv->seq_changed) {
     GstFlowReturn ret;
 
-    priv->seq_changed = FALSE;
-    ret = klass->new_sequence (decoder, &priv->seq_hdr,
-        _seq_ext_is_valid (&priv->seq_ext) ? &priv->seq_ext : NULL,
-        _seq_display_ext_is_valid (&priv->seq_display_ext) ?
-        &priv->seq_display_ext : NULL,
-        _seq_scalable_ext_is_valid (&priv->seq_scalable_ext) ?
-        &priv->seq_scalable_ext : NULL);
+    if (klass->get_preferred_output_delay)
+      priv->preferred_output_delay =
+          klass->get_preferred_output_delay (decoder, priv->is_live);
 
-    if (ret != GST_FLOW_OK) {
-      GST_WARNING_OBJECT (decoder, "new sequence error");
-      return ret;
+    priv->seq_changed = FALSE;
+
+    if (klass->new_sequence) {
+      ret = klass->new_sequence (decoder, &priv->seq_hdr,
+          _seq_ext_is_valid (&priv->seq_ext) ? &priv->seq_ext : NULL,
+          _seq_display_ext_is_valid (&priv->seq_display_ext) ?
+          &priv->seq_display_ext : NULL,
+          _seq_scalable_ext_is_valid (&priv->seq_scalable_ext) ?
+          &priv->seq_scalable_ext : NULL);
+
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (decoder, "new sequence error");
+        return ret;
+      }
     }
   }
 
@@ -1044,9 +1086,9 @@ static void
 gst_mpeg2_decoder_do_output_picture (GstMpeg2Decoder * decoder,
     GstMpeg2Picture * to_output, GstFlowReturn * ret)
 {
-  GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
   GstVideoCodecFrame *frame = NULL;
-  GstFlowReturn flow_ret = GST_FLOW_OK;
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpeg2DecoderOutputFrame output_frame;
 
   g_assert (ret != NULL);
 
@@ -1065,15 +1107,12 @@ gst_mpeg2_decoder_do_output_picture (GstMpeg2Decoder * decoder,
     return;
   }
 
-  g_assert (klass->output_picture);
-  GST_LOG_OBJECT (decoder,
-      "Output picture %p (frame_num %d, poc %d, pts: %" GST_TIME_FORMAT
-      "), from DPB",
-      to_output, to_output->system_frame_number, to_output->pic_order_cnt,
-      GST_TIME_ARGS (frame->pts));
-  flow_ret = klass->output_picture (decoder, frame, to_output);
-
-  UPDATE_FLOW_RETURN (ret, flow_ret);
+  output_frame.frame = frame;
+  output_frame.picture = to_output;
+  output_frame.self = decoder;
+  gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
+  gst_mpeg2_decoder_drain_output_queue (decoder, priv->preferred_output_delay,
+      ret);
 }
 
 static GstFlowReturn
@@ -1111,6 +1150,21 @@ gst_mpeg2_decoder_output_current_picture (GstMpeg2Decoder * decoder)
   }
 
   return ret;
+}
+
+static void
+gst_mpeg2_decoder_clear_output_frame (GstMpeg2DecoderOutputFrame * output_frame)
+{
+  if (!output_frame)
+    return;
+
+  if (output_frame->frame) {
+    gst_video_decoder_release_frame (GST_VIDEO_DECODER (output_frame->self),
+        output_frame->frame);
+    output_frame->frame = NULL;
+  }
+
+  gst_mpeg2_picture_clear (&output_frame->picture);
 }
 
 static GstFlowReturn
@@ -1198,5 +1252,33 @@ failed:
     priv->current_frame = NULL;
 
     return ret;
+  }
+}
+
+static void
+gst_mpeg2_decoder_drain_output_queue (GstMpeg2Decoder * self, guint num,
+    GstFlowReturn * ret)
+{
+  GstMpeg2DecoderPrivate *priv = self->priv;
+  GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (self);
+  GstFlowReturn flow_ret;
+
+  g_assert (klass->output_picture);
+
+  while (gst_queue_array_get_length (priv->output_queue) > num) {
+    GstMpeg2DecoderOutputFrame *output_frame = (GstMpeg2DecoderOutputFrame *)
+        gst_queue_array_pop_head_struct (priv->output_queue);
+    GST_LOG_OBJECT (self,
+        "Output picture %p (frame_num %d, poc %d, pts: %" GST_TIME_FORMAT
+        "), from DPB",
+        output_frame->picture, output_frame->picture->system_frame_number,
+        output_frame->picture->pic_order_cnt,
+        GST_TIME_ARGS (output_frame->frame->pts));
+
+    flow_ret =
+        klass->output_picture (self, output_frame->frame,
+        output_frame->picture);
+
+    UPDATE_FLOW_RETURN (ret, flow_ret);
   }
 }
