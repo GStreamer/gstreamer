@@ -94,8 +94,6 @@ static GstFlowReturn gst_vp9_decoder_drain (GstVideoDecoder * decoder);
 static GstFlowReturn gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 
-static GstVp9Picture *gst_vp9_decoder_duplicate_picture_default (GstVp9Decoder *
-    decoder, GstVideoCodecFrame * frame, GstVp9Picture * picture);
 
 static void
 gst_vp9_decoder_class_init (GstVp9DecoderClass * klass)
@@ -110,9 +108,6 @@ gst_vp9_decoder_class_init (GstVp9DecoderClass * klass)
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_vp9_decoder_drain);
   decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_vp9_decoder_handle_frame);
-
-  klass->duplicate_picture =
-      GST_DEBUG_FUNCPTR (gst_vp9_decoder_duplicate_picture_default);
 }
 
 static void
@@ -245,18 +240,6 @@ gst_vp9_decoder_drain (GstVideoDecoder * decoder)
   return GST_FLOW_OK;
 }
 
-static GstVp9Picture *
-gst_vp9_decoder_duplicate_picture_default (GstVp9Decoder * decoder,
-    GstVideoCodecFrame * frame, GstVp9Picture * picture)
-{
-  GstVp9Picture *new_picture;
-
-  new_picture = gst_vp9_picture_new ();
-  new_picture->frame_hdr = picture->frame_hdr;
-
-  return new_picture;
-}
-
 static GstFlowReturn
 gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
@@ -338,7 +321,16 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
       goto unmap_and_error;
     }
 
-    g_assert (klass->duplicate_picture);
+    /* If not implemented by subclass, we can just drop this picture
+     * since this frame header indicates the frame index to be duplicated
+     * and also this frame header doesn't affect reference management */
+    if (!klass->duplicate_picture) {
+      gst_buffer_unmap (in_buf, &map);
+      GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
+
+      gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+    }
+
     pic_to_dup = priv->dpb->pic_list[frame_hdr.frame_to_show_map_idx];
     picture = klass->duplicate_picture (self, frame, pic_to_dup);
 
