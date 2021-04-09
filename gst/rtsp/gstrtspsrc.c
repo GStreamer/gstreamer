@@ -2973,7 +2973,15 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstObject * parent,
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      res = gst_rtspsrc_perform_seek (src, event);
+    {
+      guint32 seqnum = gst_event_get_seqnum (event);
+      if (seqnum == src->seek_seqnum) {
+        GST_LOG_OBJECT (pad, "Drop duplicated SEEK event seqnum %"
+            G_GUINT32_FORMAT, seqnum);
+      } else {
+        res = gst_rtspsrc_perform_seek (src, event);
+      }
+    }
       forward = FALSE;
       break;
     case GST_EVENT_QOS:
