@@ -3168,8 +3168,7 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstObject * parent,
 
       gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
       if (format == GST_FORMAT_TIME) {
-        gboolean seekable =
-            src->cur_protocols != GST_RTSP_LOWER_TRANS_UDP_MCAST;
+        gboolean seekable = TRUE;
         GstClockTime start = 0, duration = src->segment.duration;
 
         /* seeking without duration is unlikely */
