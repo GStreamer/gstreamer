@@ -2852,7 +2852,6 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   /* configure the seek parameters in the seeksegment. We will then have the
    * right values in the segment to perform the seek */
   GST_DEBUG_OBJECT (src, "configuring seek");
-  seeksegment.duration = GST_CLOCK_TIME_NONE;
   rate_change_same_direction = (rate * seeksegment.rate) > 0;
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
