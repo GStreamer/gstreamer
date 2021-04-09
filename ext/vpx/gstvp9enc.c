@@ -63,6 +63,8 @@
 #include <string.h>
 
 #include "gstvpxelements.h"
+#include "gstvpxenums.h"
+#include "gstvpx-enumtypes.h"
 #include "gstvp8utils.h"
 #include "gstvp9enc.h"
 
@@ -72,7 +74,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vp9enc_debug);
 #define DEFAULT_TILE_COLUMNS 6
 #define DEFAULT_TILE_ROWS 0
 #define DEFAULT_ROW_MT 0
-#define DEFAULT_AQ_MODE 0
+#define DEFAULT_AQ_MODE GST_VPX_AQ_OFF
 #define DEFAULT_FRAME_PARALLEL_DECODING TRUE
 
 enum
@@ -189,10 +191,11 @@ gst_vp9_enc_class_init (GstVP9EncClass * klass)
    * Since: 1.20
    */
   g_object_class_install_property (gobject_class, PROP_AQ_MODE,
-      g_param_spec_int ("aq-mode", "Adaptive Quantization Mode",
-          "0: off (default), 1: variance 2: complexity, 3: cyclic refresh, 4: equator360",
-          0, 4, DEFAULT_AQ_MODE,
+      g_param_spec_enum ("aq-mode", "Adaptive Quantization Mode",
+          "Which adaptive quantization mode should be used",
+          GST_TYPE_VPXAQ, DEFAULT_AQ_MODE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  gst_type_mark_as_plugin_api (GST_TYPE_VPXAQ, 0);
 
   /**
    * GstVP9Enc:frame-parallel-decoding:
@@ -310,7 +313,7 @@ gst_vp9_enc_set_property (GObject * object, guint prop_id,
       }
       break;
     case PROP_AQ_MODE:
-      gst_vp9_enc->aq_mode = g_value_get_int (value);
+      gst_vp9_enc->aq_mode = g_value_get_enum (value);
       if (gst_vpx_enc->inited) {
         status = vpx_codec_control (&gst_vpx_enc->encoder, VP9E_SET_AQ_MODE,
             gst_vp9_enc->aq_mode);
@@ -362,7 +365,7 @@ gst_vp9_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, gst_vp9_enc->row_mt);
       break;
     case PROP_AQ_MODE:
-      g_value_set_int (value, gst_vp9_enc->aq_mode);
+      g_value_set_enum (value, gst_vp9_enc->aq_mode);
       break;
     case PROP_FRAME_PARALLEL_DECODING:
       g_value_set_boolean (value, gst_vp9_enc->frame_parallel_decoding);
