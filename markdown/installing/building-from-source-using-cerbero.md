@@ -223,6 +223,31 @@ $ ./cerbero-uninstalled -c config/cross-win-arm64.cbc -v uwp package gstreamer-1
 $ ./cerbero-uninstalled -c config/cross-uwp-universal.cbc package gstreamer-1.0
 ```
 
+## Tips for CI setup
+
+Cerbero can split its bootstrap and package commands into stages which can be
+useful for CI setups. For example, you might want to do any system setup (such
+as installing packages) and also fetch all sources to cache them when building
+your CI image:
+
+```sh
+$ ./cerbero-uninstalled fetch-bootstrap
+$ ./cerbero-uninstalled fetch-package gstreamer-1.0
+# This will use "sudo"
+$ ./cerbero-uninstalled bootstrap --system=yes --toolchains=no --build-tools=no --offline
+```
+
+Then inside your CI job, you will not need root for the remaining steps:
+
+```sh
+$ ./cerbero-uninstalled bootstrap --system=no --toolchains=yes --build-tools=yes --offline
+# When building a non-tagged commit, this will update the git repos for all gstreamer recipes
+$ ./cerbero-uninstalled fetch-package gstreamer-1.0
+$ ./cerbero-uninstalled package gstreamer-1.0 --offline
+```
+
+For more inspiration, see [GStreamer's GitLab CI setup](https://gitlab.freedesktop.org/gstreamer/gst-ci).
+
 ## Enabling Optional Features with Variants
 
 Cerbero controls optional and platform-specific features with `variants`. You
