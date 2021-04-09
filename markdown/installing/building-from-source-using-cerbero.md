@@ -61,10 +61,25 @@ To build GStreamer using Cerbero, you first need to download **Cerbero**:
 $ git clone https://gitlab.freedesktop.org/gstreamer/cerbero
 ```
 
+This will build the latest unreleased GStreamer code.
+
 Despite the presence of `setup.py` this tool does not need installation. It is
 invoked via the `cerbero-uninstalled` script, which should be invoked as
 `./cerbero-uninstalled`, or you can create an alias to it in your `.bashrc`
 file.
+
+You can build a specific release by checking out that tag, for example `git
+checkout 1.18.4`. Building a release tag will cause Cerbero to use the release
+tarballs instead of git repositories when fetching gstreamer recipes for
+building.
+
+You can also build the latest unreleased 'stable branch' code, for instance for
+1.18 you'd do: `git checkout 1.18`, or `git clone -b 1.18 [...]`, which will
+fetch the corresponding stable branches when building gstreamer recipes.
+
+You can also use git worktrees, which may be more convenient when building
+several different versions of gstreamer since the build artefacts always go
+into the `build` directory inside the git repository.
 
 ## Bootstrap to setup environment
 
