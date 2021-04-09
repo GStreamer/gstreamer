@@ -3186,7 +3186,9 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstObject * parent,
           }
         }
 
-        GST_LOG_OBJECT (src, "seekable : %d", seekable);
+        GST_LOG_OBJECT (src, "seekable: %d, duration: %" GST_TIME_FORMAT
+            ", src->seekable: %f", seekable,
+            GST_TIME_ARGS (src->segment.duration), src->seekable);
 
         gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, start,
             duration);
@@ -7713,6 +7715,12 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
    * don't update duration in that case */
   if (update_duration && seconds != -1) {
     segment->duration = seconds;
+    GST_DEBUG_OBJECT (src, "set duration from range as %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (seconds));
+  } else {
+    GST_DEBUG_OBJECT (src, "not updating existing duration %" GST_TIME_FORMAT
+        " from range %" GST_TIME_FORMAT, GST_TIME_ARGS (segment->duration),
+        GST_TIME_ARGS (seconds));
   }
 
   if (segment->rate > 0.0)
