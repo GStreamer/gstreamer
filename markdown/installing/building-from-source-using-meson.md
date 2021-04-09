@@ -7,18 +7,27 @@ authors:
 ...
 
 
-# Building from source using meson
+# Building from source using Meson
+
+**If you just want to use GStreamer, please visit [the download page](https://gstreamer.freedesktop.org/download/).
+We provide pre-built binaries for Windows, macOS, Android, and iOS**.
 
 This is the recommended setup for developers who want to work on the GStreamer
-code itself and/or modify it, or application developers who wish to try a
+code itself and/or modify it, or application developers who wish to quickly try a
 feature which isn't yet in a released version of GStreamer.
 
-Note: This only applies to linux, Windows and MacOS development. For Android and
-iOS development, please refer to [Building using
-Cerbero](installing/building-from-source-using-cerbero.md).
+Note: This only applies for doing GStreamer development on Linux, Windows and
+macOS. If you:
 
+1. Want to do GStreamer development for Android, iOS, or UWP, or
+1. Have to build GStreamer packages for distribution or deployment, or
+1. Need plugins with external dependencies without Meson ports
 
-## What are meson and gst-build ?
+Please refer to [Building using Cerbero](installing/building-from-source-using-cerbero.md),
+which can be used to build a specific GStreamer release or to build unreleased
+GStreamer code.
+
+## What are meson and gst-build?
 
 The [Meson build system][meson] is a portable build system which is fast and
 meant to be more user friendly than alternatives. It generates build
