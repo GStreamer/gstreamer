@@ -2847,7 +2847,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 
   /* copy segment, we need this because we still need the old
    * segment when we close the current segment. */
-  memcpy (&seeksegment, &src->segment, sizeof (GstSegment));
+  seeksegment = src->segment;
 
   /* configure the seek parameters in the seeksegment. We will then have the
    * right values in the segment to perform the seek */
@@ -2889,7 +2889,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   }
 
   /* now we did the seek and can activate the new segment values */
-  memcpy (&src->segment, &seeksegment, sizeof (GstSegment));
+  src->segment = seeksegment;
 
   /* if we're doing a segment seek, post a SEGMENT_START message */
   if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
@@ -8745,7 +8745,7 @@ restart:
       break;
   }
 
-  memcpy (&src->out_segment, segment, sizeof (GstSegment));
+  src->out_segment = *segment;
 
   if (src->clip_out_segment) {
     /* Only clip the output segment when the server has answered with valid
