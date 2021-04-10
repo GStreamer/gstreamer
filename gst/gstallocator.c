@@ -143,6 +143,31 @@ G_DEFINE_BOXED_TYPE (GstAllocationParams, gst_allocation_params,
     (GBoxedFreeFunc) gst_allocation_params_free);
 
 /**
+ * gst_allocation_params_new:
+ *
+ * Create a new #GstAllocationParams on the heap.  This function is for
+ * use in GStreamer language bindings.  In your own code, you can just
+ * declare a #GstAllocationParams on the stack or in a struct, and
+ * call gst_allocation_params_init() to initialize it.
+ *
+ * You do not need to call gst_allocation_params_init() on the instance
+ * returned by this function.
+ *
+ * Returns: (transfer full) (not nullable): a new #GstAllocationParams
+ *
+ * Since: 1.20
+ */
+GstAllocationParams *
+gst_allocation_params_new (void)
+{
+  /* Call new() and then init(), rather than calling new0(), in case
+   * init() ever changes to something other than a memset(). */
+  GstAllocationParams *result = g_slice_new (GstAllocationParams);
+  gst_allocation_params_init (result);
+  return result;
+}
+
+/**
  * gst_allocation_params_init:
  * @params: a #GstAllocationParams
  *
