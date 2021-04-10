@@ -1308,6 +1308,7 @@ on_publish_or_play_status (const gchar * command_name, GPtrArray * args,
     }
   } else {
     if (g_strcmp0 (code, "NetStream.Play.Start") == 0 ||
+        g_strcmp0 (code, "NetStream.Play.PublishNotify") == 0 ||
         g_strcmp0 (code, "NetStream.Play.Reset") == 0) {
       GST_INFO ("play success: %s", info_dump->str);
       g_task_return_boolean (task, TRUE);
