@@ -524,7 +524,7 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
         const GValue *val;
         const gchar *uri = NULL;
         gchar *nptr;
-        guint64 ext_id;
+        guint ext_id;
         GstRTPHeaderExtension *ext = NULL;
 
         errno = 0;
@@ -571,7 +571,7 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
               }
               break;
             } else {
-              GST_DEBUG_OBJECT (filter, "extension id %" G_GUINT64_FORMAT
+              GST_DEBUG_OBJECT (filter, "extension id %u"
                   "was replaced with a different extension uri "
                   "original:\'%s' vs \'%s\'", ext_id,
                   gst_rtp_header_extension_get_uri (ext), uri);
@@ -586,20 +586,20 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 
         /* if no extension, attempt to request one */
         if (!ext) {
-          GST_DEBUG_OBJECT (filter, "requesting extension for id %"
-              G_GUINT64_FORMAT " and uri %s", ext_id, uri);
+          GST_DEBUG_OBJECT (filter, "requesting extension for id %u"
+              " and uri %s", ext_id, uri);
           g_signal_emit (filter,
               gst_rtp_base_depayload_signals[SIGNAL_REQUEST_EXTENSION], 0,
               ext_id, uri, &ext);
           GST_DEBUG_OBJECT (filter, "request returned extension %p \'%s\' "
-              "for id %" G_GUINT64_FORMAT " and uri %s", ext,
+              "for id %u and uri %s", ext,
               ext ? GST_OBJECT_NAME (ext) : "", ext_id, uri);
 
           /* We require the caller to set the appropriate extension if it's required */
           if (ext && gst_rtp_header_extension_get_id (ext) != ext_id) {
             g_warning ("\'request-extension\' signal provided an rtp header "
                 "extension for uri \'%s\' that does not match the requested "
-                "extension id %" G_GUINT64_FORMAT, uri, ext_id);
+                "extension id %u", uri, ext_id);
             gst_clear_object (&ext);
           }
 
