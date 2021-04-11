@@ -134,7 +134,7 @@ struct _GstGLBufferAllocatorClass
 /**
  * GST_TYPE_GL_BUFFER:
  *
- * Since: 1.18.3
+ * Since: 1.20
  */
 #define GST_TYPE_GL_BUFFER (gst_gl_buffer_get_type())
 GST_GL_API

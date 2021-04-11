@@ -62,7 +62,7 @@ struct _GstGLMemoryPBO
 /**
  * GST_TYPE_GL_MEMORY_PBO
  *
- * Since: 1.18.3
+ * Since: 1.20
  */
 #define GST_TYPE_GL_MEMORY_PBO (gst_gl_memory_pbo_get_type())
 GST_GL_API

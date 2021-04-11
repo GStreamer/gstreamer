@@ -68,7 +68,7 @@ struct _GstGLMemoryEGL
 /**
  * GST_TYPE_GL_MEMORY_EGL:
  *
- * Since: 1.18.3
+ * Since: 1.20
  */
 #define GST_TYPE_GL_MEMORY_EGL (gst_gl_memory_egl_get_type())
 GST_GL_API
