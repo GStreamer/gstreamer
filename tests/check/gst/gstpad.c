@@ -169,14 +169,9 @@ GST_START_TEST (test_get_allowed_caps)
 {
   GstPad *src, *sink;
   GstCaps *caps, *gotcaps;
-  GstBuffer *buffer;
   GstPadLinkReturn plr;
 
   ASSERT_CRITICAL (gst_pad_get_allowed_caps (NULL));
-
-  buffer = gst_buffer_new ();
-  ASSERT_CRITICAL (gst_pad_get_allowed_caps ((GstPad *) buffer));
-  gst_buffer_unref (buffer);
 
   src = gst_pad_new ("src", GST_PAD_SRC);
   fail_if (src == NULL);
