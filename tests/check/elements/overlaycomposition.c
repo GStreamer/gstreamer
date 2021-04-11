@@ -51,6 +51,14 @@
   "height = (int) 240, " \
   "framerate = (fraction) 30/1"
 
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+#define GST_READ_UINT32_NATIVE(data) GST_READ_UINT32_BE(data)
+#define GST_WRITE_UINT32_NATIVE(data,val) GST_WRITE_UINT32_BE(data,val)
+#else
+#define GST_READ_UINT32_NATIVE(data) GST_READ_UINT32_LE(data)
+#define GST_WRITE_UINT32_NATIVE(data,val) GST_WRITE_UINT32_LE(data,val)
+#endif
+
 static GstBuffer *
 create_video_frame (void)
 {
@@ -64,7 +72,7 @@ create_video_frame (void)
 
   gst_buffer_map (buffer, &map, GST_MAP_READWRITE);
   for (i = 0; i < map.size; i += 4)
-    GST_WRITE_UINT32_LE (map.data + i, 0xff000000);
+    GST_WRITE_UINT32_NATIVE (map.data + i, 0xff000000);
   gst_buffer_unmap (buffer, &map);
 
   return buffer;
@@ -83,7 +91,7 @@ create_overlay_frame (guint32 color)
 
   gst_buffer_map (buffer, &map, GST_MAP_READWRITE);
   for (i = 0; i < map.size; i += 4)
-    GST_WRITE_UINT32_LE (map.data + i, color);
+    GST_WRITE_UINT32_NATIVE (map.data + i, color);
   gst_buffer_unmap (buffer, &map);
 
   return buffer;
@@ -157,7 +165,8 @@ GST_START_TEST (render_fallback)
 
   for (y = 0; y < VIDEO_HEIGHT; y++) {
     for (x = 0; x < VIDEO_WIDTH; x++) {
-      guint32 val = GST_READ_UINT32_LE (map.data + y * VIDEO_WIDTH * 4 + x * 4);
+      guint32 val =
+          GST_READ_UINT32_NATIVE (map.data + y * VIDEO_WIDTH * 4 + x * 4);
       guint32 expected_val;
 
       if ((x >= 32 && x < 48) && (y >= 32 && y < 48)) {
@@ -226,7 +235,8 @@ GST_START_TEST (render_fallback_2)
 
   for (y = 0; y < VIDEO_HEIGHT; y++) {
     for (x = 0; x < VIDEO_WIDTH; x++) {
-      guint32 val = GST_READ_UINT32_LE (map.data + y * VIDEO_WIDTH * 4 + x * 4);
+      guint32 val =
+          GST_READ_UINT32_NATIVE (map.data + y * VIDEO_WIDTH * 4 + x * 4);
       guint32 expected_val;
 
       if ((x >= 32 && x < 48) && (y >= 32 && y < 48)) {
@@ -300,7 +310,8 @@ GST_START_TEST (render_meta)
 
   for (y = 0; y < VIDEO_HEIGHT; y++) {
     for (x = 0; x < VIDEO_WIDTH; x++) {
-      guint32 val = GST_READ_UINT32_LE (map.data + y * VIDEO_WIDTH * 4 + x * 4);
+      guint32 val =
+          GST_READ_UINT32_NATIVE (map.data + y * VIDEO_WIDTH * 4 + x * 4);
       guint32 expected_val = 0xff000000;
 
       fail_unless (val == expected_val, "Expected %08x but got %08x at (%u,%u)",
