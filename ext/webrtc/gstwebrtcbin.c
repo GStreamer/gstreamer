@@ -3540,25 +3540,19 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
            * that we cannot actually support */
           if (trans_caps) {
             answer_caps = gst_caps_intersect (offer_caps, trans_caps);
-            if (answer_caps && !gst_caps_is_empty (answer_caps)) {
-              GST_LOG_OBJECT (webrtc,
-                  "found compatible transceiver %" GST_PTR_FORMAT
-                  " for offer media %u", rtp_trans, i);
-              if (trans_caps)
-                gst_caps_unref (trans_caps);
-              break;
-            } else {
-              if (answer_caps) {
-                gst_caps_unref (answer_caps);
-                answer_caps = NULL;
+            gst_caps_unref (trans_caps);
+            if (answer_caps) {
+              if (!gst_caps_is_empty (answer_caps)) {
+                GST_LOG_OBJECT (webrtc,
+                    "found compatible transceiver %" GST_PTR_FORMAT
+                    " for offer media %u", rtp_trans, i);
+                break;
               }
-              if (trans_caps)
-                gst_caps_unref (trans_caps);
-              rtp_trans = NULL;
+              gst_caps_unref (answer_caps);
+              answer_caps = NULL;
             }
-          } else {
-            rtp_trans = NULL;
           }
+          rtp_trans = NULL;
         }
       }
 
