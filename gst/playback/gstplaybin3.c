@@ -516,6 +516,8 @@ struct _GstPlayBin3
   GSequence *velements;         /* a list of GstAVElements for video stream */
 
   guint64 ring_buffer_max_size; /* 0 means disabled */
+
+  gboolean is_live;             /* Whether our current group is live */
 };
 
 struct _GstPlayBin3Class
@@ -1386,6 +1388,8 @@ gst_play_bin3_init (GstPlayBin3 * playbin)
 
   playbin->multiview_mode = GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE;
   playbin->multiview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+
+  playbin->is_live = FALSE;
 }
 
 static void
@@ -2314,8 +2318,8 @@ gst_play_bin3_send_event (GstElement * element, GstEvent * event)
       group->selected_stream_types =
           get_stream_type_for_event (group->collection, event);
       playbin->selected_stream_types =
-          playbin->groups[0].selected_stream_types | playbin->
-          groups[1].selected_stream_types;
+          playbin->groups[0].selected_stream_types | playbin->groups[1].
+          selected_stream_types;
       if (playbin->active_stream_types != playbin->selected_stream_types)
         reconfigure_output (playbin);
     }
@@ -2433,8 +2437,8 @@ do_stream_selection (GstPlayBin3 * playbin, GstSourceGroup * group)
   group->selected_stream_types = chosen_stream_types;
   /* Update global selected_stream_types */
   playbin->selected_stream_types =
-      playbin->groups[0].selected_stream_types | playbin->
-      groups[1].selected_stream_types;
+      playbin->groups[0].selected_stream_types | playbin->groups[1].
+      selected_stream_types;
   if (playbin->active_stream_types != playbin->selected_stream_types)
     reconfigure_output (playbin);
 }
@@ -2459,6 +2463,7 @@ static void
 gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
 {
   GstPlayBin3 *playbin = GST_PLAY_BIN3 (bin);
+  gboolean do_reset_time = FALSE;
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_START) {
     GstSourceGroup *group = NULL, *other_group = NULL;
@@ -2559,11 +2564,21 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
 
       gst_object_unref (collection);
     }
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_RESET_TIME) {
+    if (playbin->is_live && GST_STATE_TARGET (playbin) == GST_STATE_PLAYING) {
+      do_reset_time = TRUE;
+    }
   }
 
 beach:
   if (msg)
     GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
+
+  if (do_reset_time) {
+    /* If we are live, sample a new base_time immediately */
+    gst_element_change_state (GST_ELEMENT (playbin),
+        GST_STATE_CHANGE_PAUSED_TO_PLAYING);
+  }
 }
 
 static void
@@ -4658,8 +4673,8 @@ deactivate_group (GstPlayBin3 * playbin, GstSourceGroup * group)
   group->selected_stream_types = 0;
   /* Update global selected_stream_types */
   playbin->selected_stream_types =
-      playbin->groups[0].selected_stream_types | playbin->
-      groups[1].selected_stream_types;
+      playbin->groups[0].selected_stream_types | playbin->groups[1].
+      selected_stream_types;
   if (playbin->active_stream_types != playbin->selected_stream_types)
     reconfigure_output (playbin);
 
@@ -4973,6 +4988,7 @@ gst_play_bin3_change_state (GstElement * element, GstStateChange transition)
       /* FIXME Release audio device when we implement that */
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      playbin->is_live = FALSE;
       save_current_group (playbin);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -5021,6 +5037,9 @@ gst_play_bin3_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
+
+  if (GST_STATE_TRANSITION_NEXT (transition) == GST_STATE_PAUSED)
+    playbin->is_live = ret == GST_STATE_CHANGE_NO_PREROLL;
 
   if (ret == GST_STATE_CHANGE_NO_PREROLL)
     do_async_done (playbin);
