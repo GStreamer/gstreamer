@@ -159,12 +159,13 @@ _on_answer_set (GstPromise * promise, gpointer user_data)
   GstElement *answerer = TEST_GET_ANSWERER (t);
 
   g_mutex_lock (&t->lock);
-  if (++t->answer_set_count >= 2 && t->on_answer_set) {
-    t->on_answer_set (t, answerer, promise, t->answer_set_data);
+  if (++t->answer_set_count >= 2) {
+    if (t->on_answer_set)
+      t->on_answer_set (t, answerer, promise, t->answer_set_data);
+    if (t->state == STATE_ANSWER_CREATED)
+      t->state = STATE_ANSWER_SET;
+    g_cond_broadcast (&t->cond);
   }
-  if (t->state == STATE_ANSWER_CREATED)
-    t->state = STATE_ANSWER_SET;
-  g_cond_broadcast (&t->cond);
   gst_promise_unref (promise);
   g_mutex_unlock (&t->lock);
 }
@@ -232,12 +233,13 @@ _on_offer_set (GstPromise * promise, gpointer user_data)
   GstElement *offeror = TEST_GET_OFFEROR (t);
 
   g_mutex_lock (&t->lock);
-  if (++t->offer_set_count >= 2 && t->on_offer_set) {
-    t->on_offer_set (t, offeror, promise, t->offer_set_data);
+  if (++t->offer_set_count >= 2) {
+    if (t->on_offer_set)
+      t->on_offer_set (t, offeror, promise, t->offer_set_data);
+    if (t->state == STATE_OFFER_CREATED)
+      t->state = STATE_OFFER_SET;
+    g_cond_broadcast (&t->cond);
   }
-  if (t->state == STATE_OFFER_CREATED)
-    t->state = STATE_OFFER_SET;
-  g_cond_broadcast (&t->cond);
   gst_promise_unref (promise);
   g_mutex_unlock (&t->lock);
 }
