@@ -66,7 +66,6 @@ struct _GstFFMpegVidDec
   enum AVDiscard skip_frame;
   gint lowres;
   gboolean direct_rendering;
-  gboolean debug_mv;
   int max_threads;
   gboolean output_corrupt;
   guint thread_type;

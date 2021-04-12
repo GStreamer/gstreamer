@@ -40,7 +40,6 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 #define DEFAULT_LOWRES			0
 #define DEFAULT_SKIPFRAME		0
 #define DEFAULT_DIRECT_RENDERING	TRUE
-#define DEFAULT_DEBUG_MV		FALSE
 #define DEFAULT_MAX_THREADS		0
 #define DEFAULT_OUTPUT_CORRUPT		TRUE
 #define REQUIRED_POOL_MAX_BUFFERS       32
@@ -266,10 +265,13 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
       g_param_spec_boolean ("direct-rendering", "Direct Rendering",
           "Enable direct rendering", DEFAULT_DIRECT_RENDERING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_DEBUG_MV,
       g_param_spec_boolean ("debug-mv", "Debug motion vectors",
-          "Whether libav should print motion vectors on top of the image",
-          DEFAULT_DEBUG_MV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Whether to print motion vectors on top of the image "
+          "(deprecated, non-functional)", FALSE,
+          G_PARAM_DEPRECATED | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
   g_object_class_install_property (gobject_class, PROP_OUTPUT_CORRUPT,
       g_param_spec_boolean ("output-corrupt", "Output corrupt buffers",
           "Whether libav should output frames even if corrupted",
@@ -319,7 +321,6 @@ gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
   ffmpegdec->opened = FALSE;
   ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
-  ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
   ffmpegdec->max_threads = DEFAULT_MAX_THREADS;
   ffmpegdec->output_corrupt = DEFAULT_OUTPUT_CORRUPT;
   ffmpegdec->thread_type = DEFAULT_THREAD_TYPE;
@@ -536,10 +537,6 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   /* for slow cpus */
   ffmpegdec->context->lowres = ffmpegdec->lowres;
   ffmpegdec->context->skip_frame = ffmpegdec->skip_frame;
-
-  /* ffmpeg can draw motion vectors on top of the image (not every decoder
-   * supports it) */
-  ffmpegdec->context->debug_mv = ffmpegdec->debug_mv;
 
   if (ffmpegdec->thread_type) {
     GST_DEBUG_OBJECT (ffmpegdec, "Use requested thread type 0x%x",
@@ -2298,10 +2295,11 @@ gst_ffmpegviddec_set_property (GObject * object,
     case PROP_DIRECT_RENDERING:
       ffmpegdec->direct_rendering = g_value_get_boolean (value);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_DEBUG_MV:
-      ffmpegdec->debug_mv = ffmpegdec->context->debug_mv =
-          g_value_get_boolean (value);
+      /* non-functional */
       break;
+#endif
     case PROP_MAX_THREADS:
       ffmpegdec->max_threads = g_value_get_int (value);
       break;
@@ -2333,9 +2331,11 @@ gst_ffmpegviddec_get_property (GObject * object,
     case PROP_DIRECT_RENDERING:
       g_value_set_boolean (value, ffmpegdec->direct_rendering);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_DEBUG_MV:
-      g_value_set_boolean (value, ffmpegdec->context->debug_mv);
+      g_value_set_boolean (value, FALSE);
       break;
+#endif
     case PROP_MAX_THREADS:
       g_value_set_int (value, ffmpegdec->max_threads);
       break;
