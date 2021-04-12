@@ -465,6 +465,8 @@ struct _GstPlayBin
   guint64 ring_buffer_max_size; /* 0 means disabled */
 
   GList *contexts;
+
+  gboolean is_live;
 };
 
 struct _GstPlayBinClass
@@ -1628,6 +1630,8 @@ gst_play_bin_finalize (GObject * object)
   g_rec_mutex_clear (&playbin->lock);
   g_mutex_clear (&playbin->dyn_lock);
   g_mutex_clear (&playbin->elements_lock);
+
+  playbin->is_live = FALSE;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2877,6 +2881,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
 {
   GstPlayBin *playbin = GST_PLAY_BIN (bin);
   GstSourceGroup *group;
+  gboolean do_reset_time = FALSE;
 
   if (gst_is_missing_plugin_message (msg)) {
     gchar *detail;
@@ -3085,10 +3090,20 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
     gst_message_parse_have_context (msg, &context);
     gst_play_bin_update_context (playbin, context);
     gst_context_unref (context);
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_RESET_TIME) {
+    if (playbin->is_live && GST_STATE_TARGET (playbin) == GST_STATE_PLAYING) {
+      do_reset_time = TRUE;
+    }
   }
 
   if (msg)
     GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
+
+  if (do_reset_time) {
+    /* If we are live, sample a new base_time immediately */
+    gst_element_change_state (GST_ELEMENT (playbin),
+        GST_STATE_CHANGE_PAUSED_TO_PLAYING);
+  }
 }
 
 static void
@@ -5848,6 +5863,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       /* FIXME Release audio device when we implement that */
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      playbin->is_live = FALSE;
       save_current_group (playbin);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -5930,6 +5946,9 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
+
+  if (GST_STATE_TRANSITION_NEXT (transition) == GST_STATE_PAUSED)
+    playbin->is_live = ret == GST_STATE_CHANGE_NO_PREROLL;
 
   if (ret == GST_STATE_CHANGE_NO_PREROLL)
     do_async_done (playbin);
