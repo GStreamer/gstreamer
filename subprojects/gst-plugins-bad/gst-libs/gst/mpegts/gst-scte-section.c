@@ -385,7 +385,7 @@ _parse_sit (GstMpegtsSection * section)
     default:
       GST_WARNING ("Unknown SCTE splice command type (0x%02x) !",
           sit->splice_command_type);
-      goto done;
+      break;;
   }
 
   /* descriptors */
@@ -653,7 +653,6 @@ _packetize_sit (GstMpegtsSection * section)
   }
 
   switch (sit->splice_command_type) {
-    case GST_MTS_SCTE_SPLICE_COMMAND_SCHEDULE:
     case GST_MTS_SCTE_SPLICE_COMMAND_PRIVATE:
       GST_WARNING ("SCTE command not supported");
       return FALSE;
@@ -681,12 +680,18 @@ _packetize_sit (GstMpegtsSection * section)
       }
       /* Add at least 5 bytes for common fields */
       command_length += 5;
-      if (!event->splice_immediate_flag) {
-        if (event->program_splice_time_specified)
-          command_length += 5;
-        else
-          command_length += 1;
+      if (event->insert_event) {
+        if (!event->splice_immediate_flag) {
+          if (event->program_splice_time_specified)
+            command_length += 5;
+          else
+            command_length += 1;
+        }
+      } else {
+        /* Schedule events, 4 bytes for utc_splice_time */
+        command_length += 4;
       }
+
       if (event->duration_flag)
         command_length += 5;
     }
@@ -764,19 +769,26 @@ _packetize_sit (GstMpegtsSection * section)
       *data++ = (event->out_of_network_indicator << 7) |
           (event->program_splice_flag << 6) |
           (event->duration_flag << 5) |
-          (event->splice_immediate_flag << 4) | 0x0f;
-      if (!event->splice_immediate_flag) {
-        /* program_splice_time_specified : 1bit
-         * reserved : 6/7 bit */
-        if (!event->program_splice_time_specified)
-          *data++ = 0x7f;
-        else {
-          /* time : 33bit */
-          *data++ = 0xf2 | ((event->program_splice_time >> 32) & 0x1);
-          GST_WRITE_UINT32_BE (data, event->program_splice_time & 0xffffffff);
-          data += 4;
+          (event->insert_event ? (event->splice_immediate_flag << 4) : 0) |
+          0x0f;
+      if (event->insert_event) {
+        if (!event->splice_immediate_flag) {
+          /* program_splice_time_specified : 1bit
+           * reserved : 6/7 bit */
+          if (!event->program_splice_time_specified)
+            *data++ = 0x7f;
+          else {
+            /* time : 33bit */
+            *data++ = 0xf2 | ((event->program_splice_time >> 32) & 0x1);
+            GST_WRITE_UINT32_BE (data, event->program_splice_time & 0xffffffff);
+            data += 4;
+          }
         }
+      } else {
+        GST_WRITE_UINT32_BE (data, event->utc_splice_time);
+        data += 4;
       }
+
       if (event->duration_flag) {
         *data = event->break_duration_auto_return ? 0xfe : 0x7e;
         *data++ |= (event->break_duration >> 32) & 0x1;
