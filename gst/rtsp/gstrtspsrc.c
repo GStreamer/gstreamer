@@ -2856,11 +2856,6 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
-  /* figure out the last position we need to play. If it's configured (stop !=
-   * -1), use that, else we play until the total duration of the file */
-  if ((stop = seeksegment.stop) == -1)
-    stop = seeksegment.duration;
-
   /* if we were playing, pause first */
   playing = (src->state == GST_RTSP_STATE_PLAYING);
   if (playing) {
@@ -2896,10 +2891,6 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
         gst_message_new_segment_start (GST_OBJECT_CAST (src),
             src->segment.format, src->segment.position));
   }
-
-  /* now create the newsegment */
-  GST_DEBUG_OBJECT (src, "Creating newsegment from %" G_GINT64_FORMAT
-      " to %" G_GINT64_FORMAT, src->segment.position, stop);
 
   /* mark discont when needed */
   if (!(rate_change_only && rate_change_same_direction)) {
