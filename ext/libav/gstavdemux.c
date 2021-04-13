@@ -483,7 +483,11 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment * segment)
     GST_LOG_OBJECT (demux, "keyframeidx: %d", keyframeidx);
 
     if (keyframeidx >= 0) {
+#if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(58,78,0)
+      fftarget = avformat_index_get_entry (stream, keyframeidx)->timestamp;
+#else
       fftarget = stream->index_entries[keyframeidx].timestamp;
+#endif
       target = gst_ffmpeg_time_ff_to_gst (fftarget, stream->time_base);
 
       GST_LOG_OBJECT (demux,
