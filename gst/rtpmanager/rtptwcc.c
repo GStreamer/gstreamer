@@ -696,14 +696,14 @@ static guint
 _parse_run_length_chunk (GstBitReader * reader, GArray * twcc_packets,
     guint16 seqnum_offset, guint remaining_packets)
 {
-  guint run_length;
+  guint16 run_length;
   guint8 status_code;
   guint i;
 
   gst_bit_reader_get_bits_uint8 (reader, &status_code, 2);
+  gst_bit_reader_get_bits_uint16 (reader, &run_length, 13);
 
-  run_length = *(guint16 *) reader->data & ~0xE0;       /* mask out the 3 last bits */
-  run_length = MIN (remaining_packets, GST_READ_UINT16_BE (&run_length));
+  run_length = MIN (remaining_packets, run_length);
 
   for (i = 0; i < run_length; i++) {
     _add_twcc_packet (twcc_packets, seqnum_offset + i, status_code);
