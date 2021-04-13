@@ -118,10 +118,12 @@ struct _GstMpegtsSCTESpliceEvent {
   gboolean out_of_network_indicator;
   gboolean program_splice_flag;	  /* NOTE: Only program splice are supported */
   gboolean duration_flag;
-  gboolean splice_immediate_flag; /* Only valid for insert_event */
 
-  gboolean program_splice_time_specified;
-  guint64 program_splice_time;
+  gboolean splice_immediate_flag; /* Only valid for insert_event */
+  gboolean program_splice_time_specified; /* Only valid for insert_event */
+  guint64 program_splice_time; /* Only valid for insert_event */
+
+  guint32 utc_splice_time; /* Only valid for !insert_event (schedule) */
 
   gboolean break_duration_auto_return;
   guint64 break_duration;

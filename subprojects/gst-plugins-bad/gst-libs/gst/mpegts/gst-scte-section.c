@@ -83,11 +83,17 @@ _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
     event->out_of_network_indicator = *data >> 7;
     event->program_splice_flag = (*data >> 6) & 0x01;
     event->duration_flag = (*data >> 5) & 0x01;
-    event->splice_immediate_flag = (*data >> 4) & 0x01;
+
+    if (insert_event)
+      event->splice_immediate_flag = (*data >> 4) & 0x01;
+
     GST_LOG ("out_of_network_indicator:%d", event->out_of_network_indicator);
     GST_LOG ("program_splice_flag:%d", event->program_splice_flag);
     GST_LOG ("duration_flag:%d", event->duration_flag);
-    GST_LOG ("splice_immediate_flag:%d", event->splice_immediate_flag);
+
+    if (insert_event)
+      GST_LOG ("splice_immediate_flag:%d", event->splice_immediate_flag);
+
     data += 1;
 
     if (event->program_splice_flag == 0) {
@@ -95,7 +101,7 @@ _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
       goto error;
     }
 
-    if (event->splice_immediate_flag == 0) {
+    if (insert_event && event->splice_immediate_flag == 0) {
       event->program_splice_time_specified = *data >> 7;
       if (event->program_splice_time_specified) {
         event->program_splice_time = ((guint64) (*data & 0x01)) << 32;
@@ -107,6 +113,10 @@ _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
             GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (event->program_splice_time)));
       } else
         data += 1;
+    } else if (!insert_event) {
+      event->utc_splice_time = GST_READ_UINT32_BE (data);
+      GST_LOG ("utc_splice_time %u", event->utc_splice_time);
+      data += 4;
     }
 
     if (event->duration_flag) {
@@ -255,6 +265,21 @@ _parse_sit (GstMpegtsSection * section)
         data += 4;
       } else
         data += 1;
+    }
+      break;
+    case GST_MTS_SCTE_SPLICE_COMMAND_SCHEDULE:
+    {
+      guint i;
+      guint splice_count = *data;
+      data += 1;
+
+      for (i = 0; i < splice_count; i++) {
+        GstMpegtsSCTESpliceEvent *event =
+            _parse_splice_event (&data, end, FALSE);
+        if (event == NULL)
+          goto error;
+        g_ptr_array_add (sit->splices, event);
+      }
     }
       break;
     case GST_MTS_SCTE_SPLICE_COMMAND_INSERT:
@@ -419,6 +444,7 @@ gst_mpegts_scte_splice_in_new (guint32 event_id, GstClockTime splice_time)
 
   sit->splice_command_type = GST_MTS_SCTE_SPLICE_COMMAND_INSERT;
   event->splice_event_id = event_id;
+  event->insert_event = TRUE;
   if (splice_time == G_MAXUINT64) {
     event->splice_immediate_flag = TRUE;
   } else {
@@ -457,6 +483,7 @@ gst_mpegts_scte_splice_out_new (guint32 event_id, GstClockTime splice_time,
   sit->splice_command_type = GST_MTS_SCTE_SPLICE_COMMAND_INSERT;
   event->splice_event_id = event_id;
   event->out_of_network_indicator = TRUE;
+  event->insert_event = TRUE;
   if (splice_time == G_MAXUINT64) {
     event->splice_immediate_flag = TRUE;
   } else {
