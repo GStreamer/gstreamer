@@ -57,7 +57,7 @@ G_DEFINE_BOXED_TYPE (GstMpegtsSCTESpliceEvent, gst_mpegts_scte_splice_event,
     (GFreeFunc) _gst_mpegts_scte_splice_event_free);
 
 static GstMpegtsSCTESpliceEvent *
-_parse_slice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
+_parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
 {
   GstMpegtsSCTESpliceEvent *event = g_slice_new0 (GstMpegtsSCTESpliceEvent);
   guint8 *data = *orig_data;
@@ -259,7 +259,7 @@ _parse_sit (GstMpegtsSection * section)
       break;
     case GST_MTS_SCTE_SPLICE_COMMAND_INSERT:
     {
-      GstMpegtsSCTESpliceEvent *event = _parse_slice_event (&data, end, TRUE);
+      GstMpegtsSCTESpliceEvent *event = _parse_splice_event (&data, end, TRUE);
       if (event == NULL)
         goto error;
       g_ptr_array_add (sit->splices, event);
