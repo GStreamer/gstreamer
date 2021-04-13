@@ -43,18 +43,89 @@
 static GstMpegtsSCTESpliceEvent *
 _gst_mpegts_scte_splice_event_copy (GstMpegtsSCTESpliceEvent * event)
 {
-  return g_slice_dup (GstMpegtsSCTESpliceEvent, event);
+  GstMpegtsSCTESpliceEvent *copy =
+      g_slice_dup (GstMpegtsSCTESpliceEvent, event);
+
+  copy->components = g_ptr_array_ref (event->components);
+
+  return copy;
 }
 
 static void
 _gst_mpegts_scte_splice_event_free (GstMpegtsSCTESpliceEvent * event)
 {
+  g_ptr_array_unref (event->components);
   g_slice_free (GstMpegtsSCTESpliceEvent, event);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsSCTESpliceEvent, gst_mpegts_scte_splice_event,
     (GBoxedCopyFunc) _gst_mpegts_scte_splice_event_copy,
     (GFreeFunc) _gst_mpegts_scte_splice_event_free);
+
+static GstMpegtsSCTESpliceComponent *
+_gst_mpegts_scte_splice_component_copy (GstMpegtsSCTESpliceComponent *
+    component)
+{
+  return g_slice_dup (GstMpegtsSCTESpliceComponent, component);
+}
+
+static void
+_gst_mpegts_scte_splice_component_free (GstMpegtsSCTESpliceComponent *
+    component)
+{
+  g_slice_free (GstMpegtsSCTESpliceComponent, component);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegtsSCTESpliceComponent,
+    gst_mpegts_scte_splice_component,
+    (GBoxedCopyFunc) _gst_mpegts_scte_splice_component_copy,
+    (GFreeFunc) _gst_mpegts_scte_splice_component_free);
+
+static GstMpegtsSCTESpliceComponent *
+_parse_splice_component (GstMpegtsSCTESpliceEvent * event, guint8 ** orig_data,
+    guint8 * end)
+{
+  GstMpegtsSCTESpliceComponent *component =
+      g_slice_new0 (GstMpegtsSCTESpliceComponent);
+  guint8 *data = *orig_data;
+
+  if (data + 1 + 6 > end)
+    goto error;
+
+  component->tag = *data;
+  data += 1;
+
+  if (event->insert_event && event->splice_immediate_flag == 0) {
+    component->splice_time_specified = *data >> 7;
+    if (component->splice_time_specified) {
+      component->splice_time = ((guint64) (*data & 0x01)) << 32;
+      data += 1;
+      component->splice_time += GST_READ_UINT32_BE (data);
+      data += 4;
+      GST_LOG ("component %u splice_time %" G_GUINT64_FORMAT " (%"
+          GST_TIME_FORMAT ")", component->tag, component->splice_time,
+          GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (component->splice_time)));
+    } else {
+      data += 1;
+    }
+  } else if (!event->insert_event) {
+    component->utc_splice_time = GST_READ_UINT32_BE (data);
+    GST_LOG ("component %u utc_splice_time %u", component->tag,
+        component->utc_splice_time);
+    data += 4;
+  }
+
+  *orig_data = data;
+
+  return component;
+
+error:
+  {
+    if (event)
+      _gst_mpegts_scte_splice_event_free (event);
+    return NULL;
+  }
+}
 
 static GstMpegtsSCTESpliceEvent *
 _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
@@ -65,6 +136,9 @@ _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
   /* Note : +6 is because of the final descriptor_loop_length and CRC */
   if (data + 5 + 6 > end)
     goto error;
+
+  event->components = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_scte_splice_component_free);
 
   event->insert_event = insert_event;
   event->splice_event_id = GST_READ_UINT32_BE (data);
@@ -97,26 +171,36 @@ _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
     data += 1;
 
     if (event->program_splice_flag == 0) {
-      GST_ERROR ("Component splice flag not supported !");
-      goto error;
-    }
+      guint component_count = *data;
+      guint i;
 
-    if (insert_event && event->splice_immediate_flag == 0) {
-      event->program_splice_time_specified = *data >> 7;
-      if (event->program_splice_time_specified) {
-        event->program_splice_time = ((guint64) (*data & 0x01)) << 32;
-        data += 1;
-        event->program_splice_time += GST_READ_UINT32_BE (data);
+      data += 1;
+
+      for (i = 0; i < component_count; i++) {
+        GstMpegtsSCTESpliceComponent *component =
+            _parse_splice_component (event, &data, end);
+        if (component == NULL)
+          goto error;
+        g_ptr_array_add (event->components, component);
+      }
+    } else {
+      if (insert_event && event->splice_immediate_flag == 0) {
+        event->program_splice_time_specified = *data >> 7;
+        if (event->program_splice_time_specified) {
+          event->program_splice_time = ((guint64) (*data & 0x01)) << 32;
+          data += 1;
+          event->program_splice_time += GST_READ_UINT32_BE (data);
+          data += 4;
+          GST_LOG ("program_splice_time %" G_GUINT64_FORMAT " (%"
+              GST_TIME_FORMAT ")", event->program_splice_time,
+              GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (event->program_splice_time)));
+        } else
+          data += 1;
+      } else if (!insert_event) {
+        event->utc_splice_time = GST_READ_UINT32_BE (data);
+        GST_LOG ("utc_splice_time %u", event->utc_splice_time);
         data += 4;
-        GST_LOG ("program_splice_time %" G_GUINT64_FORMAT " (%" GST_TIME_FORMAT
-            ")", event->program_splice_time,
-            GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (event->program_splice_time)));
-      } else
-        data += 1;
-    } else if (!insert_event) {
-      event->utc_splice_time = GST_READ_UINT32_BE (data);
-      GST_LOG ("utc_splice_time %u", event->utc_splice_time);
-      data += 4;
+      }
     }
 
     if (event->duration_flag) {
@@ -513,8 +597,31 @@ gst_mpegts_scte_splice_event_new (void)
 
   /* Non-0 Default values */
   event->program_splice_flag = TRUE;
+  event->components = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_scte_splice_component_free);
+
 
   return event;
+}
+
+/**
+ * gst_mpegts_scte_splice_component_new:
+ * tag: the elementary PID stream identifier
+ *
+ * Allocates and initializes a #GstMpegtsSCTESpliceComponent.
+ *
+ * Returns: (transfer full): A newly allocated #GstMpegtsSCTESpliceComponent
+ * Since: 1.20
+ */
+GstMpegtsSCTESpliceComponent *
+gst_mpegts_scte_splice_component_new (guint8 tag)
+{
+  GstMpegtsSCTESpliceComponent *component =
+      g_slice_new0 (GstMpegtsSCTESpliceComponent);
+
+  component->tag = tag;
+
+  return component;
 }
 
 static gboolean

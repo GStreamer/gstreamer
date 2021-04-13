@@ -103,6 +103,18 @@ typedef enum {
 
 } GstMpegtsSectionSCTETableID;
 
+#define GST_TYPE_MPEGTS_SCTE_SPLICE_COMPONENT (gst_mpegts_scte_splice_component_get_type())
+typedef struct _GstMpegtsSCTESpliceComponent GstMpegtsSCTESpliceComponent;
+
+struct _GstMpegtsSCTESpliceComponent {
+  guint8 tag;
+
+  gboolean splice_time_specified; /* Only valid for insert_event */
+  guint64 splice_time; /* Only valid for insert_event */
+
+  guint32 utc_splice_time; /* Only valid for !insert_event (schedule) */
+};
+
 /* Splice Information Table (SIT) */
 #define GST_TYPE_MPEGTS_SCTE_SPLICE_EVENT (gst_mpegts_scte_splice_event_get_type())
 typedef struct _GstMpegtsSCTESpliceEvent GstMpegtsSCTESpliceEvent;
@@ -116,14 +128,17 @@ struct _GstMpegtsSCTESpliceEvent {
 
   /* If splice_event_cancel_indicator == 0 */
   gboolean out_of_network_indicator;
-  gboolean program_splice_flag;	  /* NOTE: Only program splice are supported */
+  gboolean program_splice_flag;
   gboolean duration_flag;
 
   gboolean splice_immediate_flag; /* Only valid for insert_event */
-  gboolean program_splice_time_specified; /* Only valid for insert_event */
-  guint64 program_splice_time; /* Only valid for insert_event */
 
-  guint32 utc_splice_time; /* Only valid for !insert_event (schedule) */
+  gboolean program_splice_time_specified; /* Only valid for insert_event && program_splice */
+  guint64 program_splice_time; /* Only valid for insert_event && program_splice */
+
+  guint32 utc_splice_time; /* Only valid for !insert_event (schedule) && program_splice */
+
+  GPtrArray *components; /* Only valid for !program_splice */
 
   gboolean break_duration_auto_return;
   guint64 break_duration;
@@ -218,6 +233,12 @@ const GstMpegtsSCTESIT *gst_mpegts_section_get_scte_sit (GstMpegtsSection *secti
 
 GST_MPEGTS_API
 GstMpegtsSection *gst_mpegts_section_from_scte_sit (GstMpegtsSCTESIT * sit, guint16 pid);
+
+GST_MPEGTS_API
+GType gst_mpegts_scte_splice_component_get_type (void);
+
+GST_MPEGTS_API
+GstMpegtsSCTESpliceComponent *gst_mpegts_scte_splice_component_new (guint8 tag);
 
 
 G_END_DECLS
