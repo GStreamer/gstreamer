@@ -2749,9 +2749,9 @@ GST_START_TEST (test_twcc_header_and_run_length)
   fail_unless_equals_int (0x20, fci_data[8] & 0x60);
 
   /* packets in run_length */
-  run_length = *((guint16 *) & fci_data[8]);
-  run_length = run_length & ~0xE0;      /* mask out the 3 last bits */
-  fail_unless_equals_int (td->num_packets, GST_READ_UINT16_BE (&run_length));
+  run_length = GST_READ_UINT16_BE (&fci_data[8]);
+  run_length = run_length & ~0xE000;    /* mask out the upper 3 status bits */
+  fail_unless_equals_int (td->num_packets, run_length);
 
   /* first recv-delta always 0 */
   fail_unless_equals_int (0, fci_data[10]);
