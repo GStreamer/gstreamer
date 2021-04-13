@@ -70,6 +70,7 @@ typedef struct {
  * @address: address of the sender of the packet
  * @current_time: current time according to the system clock
  * @running_time: time of a packet as buffer running_time
+ * @arrival_time: time of arrival of a packet
  * @ntpnstime: time of a packet NTP time in nanoseconds
  * @header_len: number of overhead bytes per packet
  * @bytes: bytes of the packet including lowlevel overhead
@@ -92,6 +93,7 @@ typedef struct {
   GSocketAddress *address;
   GstClockTime  current_time;
   GstClockTime  running_time;
+  GstClockTime  arrival_time;
   guint64       ntpnstime;
   guint         header_len;
   guint         bytes;

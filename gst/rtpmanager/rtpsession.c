@@ -2172,9 +2172,11 @@ update_packet_info (RTPSession * sess, RTPPacketInfo * pinfo,
     res =
         gst_buffer_list_foreach (list, (GstBufferListFunc) update_packet,
         pinfo);
+    pinfo->arrival_time = GST_CLOCK_TIME_NONE;
   } else {
     GstBuffer *buffer = GST_BUFFER_CAST (data);
     res = update_packet (&buffer, 0, pinfo);
+    pinfo->arrival_time = GST_BUFFER_DTS (buffer);
   }
 
   return res;

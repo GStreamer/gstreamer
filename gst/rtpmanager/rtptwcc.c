@@ -159,7 +159,11 @@ recv_packet_init (RecvPacket * packet, guint16 seqnum, RTPPacketInfo * pinfo)
 {
   memset (packet, 0, sizeof (RecvPacket));
   packet->seqnum = seqnum;
-  packet->ts = pinfo->running_time;
+
+  if (GST_CLOCK_TIME_IS_VALID (pinfo->arrival_time))
+    packet->ts = pinfo->arrival_time;
+  else
+    packet->ts = pinfo->current_time;
 }
 
 static guint8
@@ -784,7 +788,7 @@ rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc, RTPPacketInfo * pinfo)
 
   GST_LOG ("Receive: twcc-seqnum: %u, pt: %u, marker: %d, ts: %"
       GST_TIME_FORMAT, seqnum, pinfo->pt, pinfo->marker,
-      GST_TIME_ARGS (pinfo->running_time));
+      GST_TIME_ARGS (pinfo->arrival_time));
 
   if (!pinfo->marker)
     twcc->packet_count_no_marker++;
@@ -841,7 +845,7 @@ static void
 sent_packet_init (SentPacket * packet, guint16 seqnum, RTPPacketInfo * pinfo)
 {
   packet->seqnum = seqnum;
-  packet->ts = pinfo->running_time;
+  packet->ts = pinfo->current_time;
   packet->size = pinfo->payload_len;
   packet->pt = pinfo->pt;
   packet->remote_ts = GST_CLOCK_TIME_NONE;
@@ -864,8 +868,9 @@ rtp_twcc_manager_send_packet (RTPTWCCManager * twcc, RTPPacketInfo * pinfo)
   g_array_append_val (twcc->sent_packets, packet);
 
 
-  GST_LOG ("Send: twcc-seqnum: %u, pt: %u, marker: %d, ts: %" GST_TIME_FORMAT,
-      seqnum, pinfo->pt, pinfo->marker, GST_TIME_ARGS (pinfo->running_time));
+  GST_LOG ("Send: twcc-seqnum: %u, pt: %u, marker: %d, ts: %"
+      GST_TIME_FORMAT, seqnum, pinfo->pt, pinfo->marker,
+      GST_TIME_ARGS (pinfo->current_time));
 }
 
 static void
