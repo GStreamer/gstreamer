@@ -2901,6 +2901,7 @@ GST_START_TEST (test_renego_data_channel_add_stream)
   /* negotiate an data channel and then renegotiate to add a av stream */
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
+  t->on_data_channel = NULL;
   t->on_pad_added = _pad_added_fakesink;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -2966,6 +2967,7 @@ GST_START_TEST (test_renego_stream_data_channel_add_stream)
   /* Negotiate a stream and a data channel, then renogotiate with a new stream */
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
+  t->on_data_channel = NULL;
   t->on_pad_added = _pad_added_fakesink;
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
