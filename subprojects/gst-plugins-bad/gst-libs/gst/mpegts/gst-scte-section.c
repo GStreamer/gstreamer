@@ -674,22 +674,45 @@ _packetize_sit (GstMpegtsSection * section)
     /* There is at least 5 bytes */
     command_length += 5;
     if (!event->splice_event_cancel_indicator) {
-      if (!event->program_splice_flag) {
-        GST_WARNING ("Only SCTE program splices are supported");
-        return FALSE;
-      }
       /* Add at least 5 bytes for common fields */
       command_length += 5;
-      if (event->insert_event) {
-        if (!event->splice_immediate_flag) {
-          if (event->program_splice_time_specified)
-            command_length += 5;
-          else
-            command_length += 1;
+
+      if (event->program_splice_flag) {
+        if (event->insert_event) {
+          if (!event->splice_immediate_flag) {
+            if (event->program_splice_time_specified)
+              command_length += 5;
+            else
+              command_length += 1;
+          }
+        } else {
+          /* Schedule events, 4 bytes for utc_splice_time */
+          command_length += 4;
         }
       } else {
-        /* Schedule events, 4 bytes for utc_splice_time */
-        command_length += 4;
+        guint j;
+
+        /* component_count */
+        command_length += 1;
+
+        for (j = 0; j < event->components->len; j++) {
+          GstMpegtsSCTESpliceComponent *component =
+              g_ptr_array_index (event->components, j);
+
+          /* component_tag */
+          command_length += 1;
+          if (event->insert_event) {
+            if (!event->splice_immediate_flag) {
+              if (component->splice_time_specified)
+                command_length += 5;
+              else
+                command_length += 1;
+            }
+          } else {
+            /* utc_splice_time */
+            command_length += 4;
+          }
+        }
       }
 
       if (event->duration_flag)
@@ -771,22 +794,54 @@ _packetize_sit (GstMpegtsSection * section)
           (event->duration_flag << 5) |
           (event->insert_event ? (event->splice_immediate_flag << 4) : 0) |
           0x0f;
-      if (event->insert_event) {
-        if (!event->splice_immediate_flag) {
-          /* program_splice_time_specified : 1bit
-           * reserved : 6/7 bit */
-          if (!event->program_splice_time_specified)
-            *data++ = 0x7f;
-          else {
-            /* time : 33bit */
-            *data++ = 0xf2 | ((event->program_splice_time >> 32) & 0x1);
-            GST_WRITE_UINT32_BE (data, event->program_splice_time & 0xffffffff);
+      if (event->program_splice_flag) {
+        if (event->insert_event) {
+          if (!event->splice_immediate_flag) {
+            /* program_splice_time_specified : 1bit
+             * reserved : 6/7 bit */
+            if (!event->program_splice_time_specified)
+              *data++ = 0x7f;
+            else {
+              /* time : 33bit */
+              *data++ = 0xf2 | ((event->program_splice_time >> 32) & 0x1);
+              GST_WRITE_UINT32_BE (data,
+                  event->program_splice_time & 0xffffffff);
+              data += 4;
+            }
+          }
+        } else {
+          GST_WRITE_UINT32_BE (data, event->utc_splice_time);
+          data += 4;
+        }
+      } else {
+        guint j;
+
+        *data++ = event->components->len & 0xff;
+
+        for (j = 0; j < event->components->len; j++) {
+          GstMpegtsSCTESpliceComponent *component =
+              g_ptr_array_index (event->components, j);
+
+          *data++ = component->tag;
+
+          if (event->insert_event) {
+            if (!event->splice_immediate_flag) {
+              /* program_splice_time_specified : 1bit
+               * reserved : 6/7 bit */
+              if (!component->splice_time_specified)
+                *data++ = 0x7f;
+              else {
+                /* time : 33bit */
+                *data++ = 0xf2 | ((component->splice_time >> 32) & 0x1);
+                GST_WRITE_UINT32_BE (data, component->splice_time & 0xffffffff);
+                data += 4;
+              }
+            }
+          } else {
+            GST_WRITE_UINT32_BE (data, component->utc_splice_time);
             data += 4;
           }
         }
-      } else {
-        GST_WRITE_UINT32_BE (data, event->utc_splice_time);
-        data += 4;
       }
 
       if (event->duration_flag) {
