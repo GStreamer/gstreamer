@@ -1471,14 +1471,12 @@ avtpcvfdepay_suite (void)
 {
   Suite *s = suite_create ("avtpcvfdepay");
   TCase *tc_chain = tcase_create ("general");
+  TCase *tc_slow = tcase_create ("slow");
 
   suite_add_tcase (s, tc_chain);
-  /* 'fragmented_big' may take some time to run, so give it a bit more time */
-  tcase_set_timeout (tc_chain, 10);
   tcase_add_test (tc_chain, test_depayloader_single);
   tcase_add_test (tc_chain, test_depayloader_multiple_single);
   tcase_add_test (tc_chain, test_depayloader_fragmented);
-  tcase_add_test (tc_chain, test_depayloader_fragmented_big);
   tcase_add_test (tc_chain, test_depayloader_single_and_fragmented);
   tcase_add_test (tc_chain, test_depayloader_property);
   tcase_add_test (tc_chain, test_depayloader_lost_packet);
@@ -1492,6 +1490,11 @@ avtpcvfdepay_suite (void)
   tcase_add_test (tc_chain, test_depayloader_fragmented_two_start_eos);
   tcase_add_test (tc_chain, test_depayloader_multiple_lost_eos);
   tcase_add_test (tc_chain, test_depayloader_fragment_and_single);
+
+  suite_add_tcase (s, tc_slow);
+  /* 'fragmented_big' may take some time to run, so give it a bit more time */
+  tcase_set_timeout (tc_slow, 20);
+  tcase_add_test (tc_slow, test_depayloader_fragmented_big);
 
   return s;
 }
