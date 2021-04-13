@@ -159,7 +159,6 @@ typedef struct _GstMpegtsSCTESIT GstMpegtsSCTESIT;
 
 struct _GstMpegtsSCTESIT
 {
-  /* Encryption not supported for now */
   gboolean encrypted_packet;
   guint8   encryption_algorithm;
 
@@ -168,6 +167,11 @@ struct _GstMpegtsSCTESIT
   guint16  tier;
 
   guint16  splice_command_length;
+
+  /* When encrypted, or when encountering an unknown command type,
+   * we may still want to pass the sit through */
+  gboolean fully_parsed;
+
   GstMpegtsSCTESpliceCommandType splice_command_type;
 
   /* For time_signal commands */

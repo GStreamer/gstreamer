@@ -184,6 +184,8 @@ _parse_sit (GstMpegtsSection * section)
 
   sit = g_slice_new0 (GstMpegtsSCTESIT);
 
+  sit->fully_parsed = FALSE;
+
   data = section->data;
   end = data + section->section_length;
 
@@ -220,15 +222,21 @@ _parse_sit (GstMpegtsSection * section)
   if (sit->splice_command_length == 0xfff)
     sit->splice_command_length = 0;
   GST_LOG ("command length %d", sit->splice_command_length);
-  sit->splice_command_type = *data;
-  data += 1;
+
+  if (sit->encrypted_packet) {
+    GST_LOG ("Encrypted SIT, parsed partially");
+    goto done;
+  }
 
   if (sit->splice_command_length
-      && (data + sit->splice_command_length > end - 4)) {
+      && (data + sit->splice_command_length > end - 5)) {
     GST_WARNING ("PID %d invalid SCTE SIT splice command length %d",
         section->pid, sit->splice_command_length);
     goto error;
   }
+
+  sit->splice_command_type = *data;
+  data += 1;
 
   sit->splices = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_scte_splice_event_free);
@@ -264,9 +272,9 @@ _parse_sit (GstMpegtsSection * section)
     }
       break;
     default:
-      GST_ERROR ("Unknown SCTE splice command type (0x%02x) !",
+      GST_WARNING ("Unknown SCTE splice command type (0x%02x) !",
           sit->splice_command_type);
-      goto error;
+      goto done;
   }
 
   /* descriptors */
@@ -280,7 +288,6 @@ _parse_sit (GstMpegtsSection * section)
   }
   data += tmp;
 
-
   GST_DEBUG ("%p - %p", data, end);
   if (data != end - 4) {
     GST_WARNING ("PID %d invalid SIT parsed %d length %d",
@@ -288,13 +295,18 @@ _parse_sit (GstMpegtsSection * section)
     goto error;
   }
 
+  sit->fully_parsed = TRUE;
+
+done:
   return sit;
 
 error:
-  if (sit)
+  if (sit) {
     _gst_mpegts_scte_sit_free (sit);
+    sit = NULL;
+  }
 
-  return NULL;
+  goto done;
 }
 
 /**
@@ -337,6 +349,7 @@ gst_mpegts_scte_sit_new (void)
 
   /* Set all default values (which aren't already 0/NULL) */
   sit->tier = 0xfff;
+  sit->fully_parsed = TRUE;
 
   sit->splices = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_scte_splice_event_free);
@@ -491,6 +504,11 @@ _packetize_sit (GstMpegtsSection * section)
 
   if (sit == NULL)
     return FALSE;
+
+  if (sit->fully_parsed == FALSE) {
+    GST_WARNING ("Attempted to packetize an incompletely parsed SIT");
+    return FALSE;
+  }
 
   /* Skip cases we don't handle for now */
   if (sit->encrypted_packet) {
