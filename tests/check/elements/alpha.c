@@ -87,6 +87,13 @@ create_caps_rgba32 (void)
   return caps;
 }
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define RGBA(r,g,b,a) (guint32)(((r&0xff)<<24)|((g&0xff)<<16)|((b&0xff)<<8)|(a&0xff))
+#else
+#define RGBA(r,g,b,a) (guint32)(((a&0xff)<<24)|((b&0xff)<<16)|((g&0xff)<<8)|(r&0xff))
+#endif
+#define RGB(r,g,b) RGBA(r,g,b,0xff)
+
 static GstBuffer *
 create_buffer_rgba32 (FillColor color)
 {
@@ -99,9 +106,9 @@ create_buffer_rgba32 (FillColor color)
   int i;
 
   if (color == FILL_GREEN)
-    rgba_col = 0xff00ff00;      /* GREEN */
+    rgba_col = RGB (0, 255, 0); /* GREEN */
   else
-    rgba_col = 0xffff0000;      /* BLUE */
+    rgba_col = RGB (0, 0, 255); /* BLUE */
 
   for (i = 0; i < HEIGHT * WIDTH; i++)
     rgba32[i] = rgba_col;
