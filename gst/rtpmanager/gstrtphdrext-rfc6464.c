@@ -233,16 +233,13 @@ gst_rtp_header_extension_rfc6464_write (GstRTPHeaderExtension * ext,
   GST_LOG_OBJECT (ext, "writing ext (level: %d voice: %d)", meta->level,
       meta->voice_activity);
 
+  /* Both one & two byte use the same format, the second byte being padding */
+  data[0] = (meta->level & 0x7F) | (meta->voice_activity << 7);
   if (write_flags & GST_RTP_HEADER_EXTENSION_ONE_BYTE) {
-    *data = (meta->level & 0x7F) | (meta->voice_activity << 7);
     return 1;
-  } else {
-    guint16 payload;
-
-    payload = ((meta->level & 0x7F) | (meta->voice_activity << 7)) << 8;
-    GST_WRITE_UINT16_LE (data, payload);
-    return 2;
   }
+  data[1] = 0;
+  return 2;
 }
 
 static gboolean
@@ -250,21 +247,15 @@ gst_rtp_header_extension_rfc6464_read (GstRTPHeaderExtension * ext,
     GstRTPHeaderExtensionFlags read_flags, const guint8 * data, gsize size,
     GstBuffer * buffer)
 {
-  guint8 val;
   guint8 level;
   gboolean voice_activity;
 
   g_return_val_if_fail (read_flags &
       gst_rtp_header_extension_rfc6464_get_supported_flags (ext), -1);
 
-  if (read_flags & GST_RTP_HEADER_EXTENSION_ONE_BYTE) {
-    val = data[0];
-  } else {
-    val = *((guint16 *) data) >> 8;
-  }
-
-  level = val & 0x7F;
-  voice_activity = (val & 0x80) >> 7;
+  /* Both one & two byte use the same format, the second byte being padding */
+  level = data[0] & 0x7F;
+  voice_activity = (data[0] & 0x80) >> 7;
 
   GST_LOG_OBJECT (ext, "reading ext (level: %d voice: %d)", level,
       voice_activity);
