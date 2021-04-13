@@ -215,10 +215,10 @@ GST_START_TEST (test_shm_live)
   g_signal_emit_by_name (sink, "pull-sample", &sample);
   gst_sample_unref (sample);
 
-  state_res = gst_element_set_state (consumer, GST_STATE_NULL);
+  state_res = gst_element_set_state (producer, GST_STATE_NULL);
   fail_unless (state_res != GST_STATE_CHANGE_FAILURE);
 
-  state_res = gst_element_set_state (producer, GST_STATE_NULL);
+  state_res = gst_element_set_state (consumer, GST_STATE_NULL);
   fail_unless (state_res != GST_STATE_CHANGE_FAILURE);
 
   gst_object_unref (consumer);
