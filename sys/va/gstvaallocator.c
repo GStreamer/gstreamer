@@ -1389,7 +1389,6 @@ _va_copy (GstMemory * mem, gssize offset, gssize size)
       copy = gst_va_allocator_alloc (mem->allocator);
       if (!copy) {
         GST_WARNING ("failed to allocate new memory");
-        gst_memory_unmap (mem, &sinfo);
         return NULL;
       }
     } else {
