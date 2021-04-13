@@ -38,6 +38,8 @@
  * This contains the %GstMpegtsSection relevent to SCTE specifications.
  */
 
+/* TODO: port to gst_bit_reader / gst_bit_writer */
+
 /* Splice Information Table (SIT) */
 
 static GstMpegtsSCTESpliceEvent *
