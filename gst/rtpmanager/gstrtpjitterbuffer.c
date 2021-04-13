@@ -234,6 +234,8 @@ enum
 } G_STMT_END
 
 #define JBUF_WAIT_EVENT(priv,label) G_STMT_START {       \
+  if (G_UNLIKELY (priv->srcresult != GST_FLOW_OK))       \
+    goto label;                                          \
   GST_DEBUG ("waiting event");                           \
   (priv)->waiting_event = TRUE;                          \
   g_cond_wait (&(priv)->jbuf_event, &(priv)->jbuf_lock); \
@@ -250,6 +252,8 @@ enum
 } G_STMT_END
 
 #define JBUF_WAIT_QUERY(priv,label) G_STMT_START {       \
+  if (G_UNLIKELY (priv->srcresult != GST_FLOW_OK))       \
+    goto label;                                          \
   GST_DEBUG ("waiting query");                           \
   (priv)->waiting_query = TRUE;                          \
   g_cond_wait (&(priv)->jbuf_query, &(priv)->jbuf_lock); \
