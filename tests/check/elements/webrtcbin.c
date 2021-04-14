@@ -62,6 +62,7 @@ struct test_webrtc;
 struct test_webrtc
 {
   GList *harnesses;
+  GstTestClock *test_clock;
   GThread *thread;
   GMainLoop *loop;
   GstBus *bus1;
@@ -538,6 +539,8 @@ test_webrtc_new (void)
   g_mutex_init (&ret->lock);
   g_cond_init (&ret->cond);
 
+  ret->test_clock = GST_TEST_CLOCK (gst_test_clock_new ());
+
   ret->thread = g_thread_new ("test-webrtc", (GThreadFunc) _bus_thread, ret);
 
   g_mutex_lock (&ret->lock);
@@ -552,6 +555,9 @@ test_webrtc_new (void)
   ret->webrtc1 = gst_element_factory_make ("webrtcbin", NULL);
   ret->webrtc2 = gst_element_factory_make ("webrtcbin", NULL);
   fail_unless (ret->webrtc1 != NULL && ret->webrtc2 != NULL);
+
+  gst_element_set_clock (ret->webrtc1, GST_CLOCK (ret->test_clock));
+  gst_element_set_clock (ret->webrtc2, GST_CLOCK (ret->test_clock));
 
   gst_element_set_bus (ret->webrtc1, ret->bus1);
   gst_element_set_bus (ret->webrtc2, ret->bus2);
@@ -616,6 +622,8 @@ test_webrtc_free (struct test_webrtc *t)
   g_mutex_unlock (&t->lock);
 
   g_thread_join (t->thread);
+
+  g_object_unref (t->test_clock);
 
   gst_bus_remove_watch (t->bus1);
   gst_bus_remove_watch (t->bus2);
