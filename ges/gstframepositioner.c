@@ -288,7 +288,7 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
   reposition_properties (pos, old_track_width, old_track_height);
 
 done:
-  GST_DEBUG_OBJECT (caps, "setting caps");
+  GST_DEBUG_OBJECT (pos, "setting caps %" GST_PTR_FORMAT, caps);
 
   g_object_set (pos->capsfilter, "caps", caps, NULL);
 
