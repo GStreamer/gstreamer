@@ -85,6 +85,7 @@
 #include <glib.h>
 
 #include "gstrtpdtmfsrc.h"
+#include <gst/base/gstbitwriter.h>
 
 #define GST_RTP_DTMF_TYPE_EVENT  1
 #define DEFAULT_PTIME            40     /* ms */
@@ -537,8 +538,6 @@ gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc * dtmfsrc,
   /* Only the very first packet gets a marker */
   if (dtmfsrc->first_packet) {
     gst_rtp_buffer_set_marker (rtpbuf, TRUE);
-  } else if (dtmfsrc->last_packet) {
-    dtmfsrc->payload->e = 1;
   }
 
   dtmfsrc->seqnum++;
@@ -552,10 +551,12 @@ static GstBuffer *
 gst_rtp_dtmf_src_create_next_rtp_packet (GstRTPDTMFSrc * dtmfsrc)
 {
   GstBuffer *buf;
-  GstRTPDTMFPayload *payload;
   GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
+  GstBitWriter bitwriter;
+  guint8 *payload;
+  guint8 end = dtmfsrc->last_packet ? 0x02 : 0;
 
-  buf = gst_rtp_buffer_new_allocate (sizeof (GstRTPDTMFPayload), 0, 0);
+  buf = gst_rtp_buffer_new_allocate (4, 0, 0);
 
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtpbuffer);
 
@@ -569,12 +570,14 @@ gst_rtp_dtmf_src_create_next_rtp_packet (GstRTPDTMFSrc * dtmfsrc)
     GST_BUFFER_DURATION (buf) = dtmfsrc->ptime * GST_MSECOND;
   GST_BUFFER_PTS (buf) = dtmfsrc->timestamp;
 
-  payload = (GstRTPDTMFPayload *) gst_rtp_buffer_get_payload (&rtpbuffer);
+  payload = gst_rtp_buffer_get_payload (&rtpbuffer);
 
-  /* copy payload and convert to network-byte order */
-  memmove (payload, dtmfsrc->payload, sizeof (GstRTPDTMFPayload));
-
-  payload->duration = g_htons (payload->duration);
+  memset (payload, 0, 4);
+  gst_bit_writer_init_with_data (&bitwriter, payload, 4, FALSE);
+  gst_bit_writer_put_bits_uint8 (&bitwriter, dtmfsrc->payload->event, 8);
+  gst_bit_writer_put_bits_uint8 (&bitwriter, end, 2);
+  gst_bit_writer_put_bits_uint8 (&bitwriter, dtmfsrc->payload->volume, 6);
+  gst_bit_writer_put_bits_uint16 (&bitwriter, dtmfsrc->payload->duration, 16);
 
   if (dtmfsrc->redundancy_count <= 1 && dtmfsrc->last_packet) {
     GstClockTime inter_digit_interval = MIN_INTER_DIGIT_INTERVAL;
