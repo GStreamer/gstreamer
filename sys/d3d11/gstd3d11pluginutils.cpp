@@ -888,7 +888,7 @@ error:
   {
     guint i;
     for (i = 0; i < num_mapped; i++) {
-      GstMemory *mem = gst_buffer_peek_memory (buffer, num_mapped);
+      GstMemory *mem = gst_buffer_peek_memory (buffer, i);
       gst_memory_unmap (mem, &info[i]);
     }
 
