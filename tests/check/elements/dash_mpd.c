@@ -6193,8 +6193,8 @@ GST_START_TEST (dash_mpdparser_check_mpd_client_set_methods)
       "url", "TestBaseURL",
       "service-location", "TestServiceLocation",
       "byte-range", "TestByteRange", NULL);
-  period_id = gst_mpd_client_set_period_node (second_mpdclient, (gchar *) "TestId", "start", 60000,     // ms
-      "duration", 40000, "bitstream-switching", 1, NULL);
+  period_id = gst_mpd_client_set_period_node (second_mpdclient, (gchar *) "TestId", "start", (guint64) 60000,   // ms
+      "duration", (guint64) 40000, "bitstream-switching", 1, NULL);
   adaptation_set_id =
       gst_mpd_client_set_adaptation_set_node (second_mpdclient, period_id, 9,
       "content-type", "video", "mime-type", "video", NULL);
