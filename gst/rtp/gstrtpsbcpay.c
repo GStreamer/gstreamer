@@ -34,42 +34,6 @@
 #define DEFAULT_MIN_FRAMES 0
 #define RTP_SBC_HEADER_TOTAL (12 + RTP_SBC_PAYLOAD_HEADER_SIZE)
 
-/* BEGIN: Packing for rtp_payload */
-#ifdef _MSC_VER
-#pragma pack(push, 1)
-#endif
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-/* FIXME: this seems all a bit over the top for a single byte.. */
-struct rtp_payload
-{
-  guint8 frame_count:4;
-  guint8 rfa0:1;
-  guint8 is_last_fragment:1;
-  guint8 is_first_fragment:1;
-  guint8 is_fragmented:1;
-}
-#elif G_BYTE_ORDER == G_BIG_ENDIAN
-struct rtp_payload
-{
-  guint8 is_fragmented:1;
-  guint8 is_first_fragment:1;
-  guint8 is_last_fragment:1;
-  guint8 rfa0:1;
-  guint8 frame_count:4;
-}
-#else
-#error "Unknown byte order"
-#endif
-
-#ifdef _MSC_VER
-;
-#pragma pack(pop)
-#else
-__attribute__ ((packed));
-#endif
-/* END: Packing for rtp_payload */
-
 enum
 {
   PROP_0,
@@ -182,7 +146,6 @@ gst_rtp_sbc_pay_drain_buffers (GstRtpSBCPay * sbcpay)
   guint8 *payload_data;
   guint frame_count;
   guint payload_length;
-  struct rtp_payload *payload;
   GstFlowReturn res;
 
   if (sbcpay->frame_length == 0) {
@@ -214,9 +177,8 @@ gst_rtp_sbc_pay_drain_buffers (GstRtpSBCPay * sbcpay)
 
     /* write header and copy data into payload */
     payload_data = gst_rtp_buffer_get_payload (&rtp);
-    payload = (struct rtp_payload *) payload_data;
-    memset (payload, 0, sizeof (struct rtp_payload));
-    payload->frame_count = frame_count;
+    /* upper 3 fragment bits not used, ref A2DP v13, 4.3.4 */
+    payload_data[0] = frame_count & 0x0f;
 
     gst_rtp_buffer_unmap (&rtp);
 
