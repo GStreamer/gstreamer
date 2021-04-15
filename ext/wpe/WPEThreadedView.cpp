@@ -66,8 +66,13 @@ static WPEContextThread *s_view = NULL;
 
 WPEContextThread& WPEContextThread::singleton()
 {
-    if (!s_view)
+    static gsize initialized = 0;
+
+    if (g_once_init_enter (&initialized)) {
         s_view = new WPEContextThread;
+
+        g_once_init_leave (&initialized, 1);
+    }
 
     return *s_view;
 }
