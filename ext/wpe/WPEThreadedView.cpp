@@ -509,14 +509,10 @@ void WPEView::loadData(GBytes* bytes)
 
 void WPEView::setDrawBackground(gboolean drawsBackground)
 {
-#if WEBKIT_CHECK_VERSION(2, 24, 0)
     GST_DEBUG("%s background rendering", drawsBackground ? "Enabling" : "Disabling");
     WebKitColor color;
     webkit_color_parse(&color, drawsBackground ? "white" : "transparent");
     webkit_web_view_set_background_color(webkit.view, &color);
-#else
-    GST_FIXME("webkit_web_view_set_background_color is not implemented in WPE %u.%u. Please upgrade to 2.24", webkit_get_major_version(), webkit_get_minor_version());
-#endif
 }
 
 void WPEView::releaseImage(gpointer imagePointer)
