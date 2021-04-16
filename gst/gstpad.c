@@ -723,9 +723,8 @@ gst_pad_dispose (GObject * object)
 
   GST_OBJECT_LOCK (pad);
   remove_events (pad);
-  GST_OBJECT_UNLOCK (pad);
-
   g_hook_list_clear (&pad->probes);
+  GST_OBJECT_UNLOCK (pad);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
