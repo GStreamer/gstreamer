@@ -954,6 +954,7 @@ gst_xv_image_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   } else {
     GstVideoFrame src, dest;
     GstBufferPoolAcquireParams params = { 0, };
+    GstVideoCropMeta *crop_meta;
 
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
@@ -997,6 +998,15 @@ gst_xv_image_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
     gst_video_frame_unmap (&dest);
     gst_video_frame_unmap (&src);
+
+    if ((crop_meta = gst_buffer_get_video_crop_meta (buf))) {
+      GstVideoCropMeta *dmeta = gst_buffer_add_video_crop_meta (to_put);
+
+      dmeta->x = crop_meta->x;
+      dmeta->y = crop_meta->y;
+      dmeta->width = crop_meta->width;
+      dmeta->height = crop_meta->height;
+    }
   }
 
   if (!gst_xv_image_sink_xvimage_put (xvimagesink, to_put))
@@ -1100,6 +1110,10 @@ gst_xv_image_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     if (pool == NULL)
       goto no_pool;
   }
+
+  /* update info since allocation frame's wxh might differ from the
+   * negotiation ones */
+  xvimagesink->info = info;
 
   /* we need at least 2 buffer because we hold on to the last one */
   gst_query_add_allocation_pool (query, pool, size, 2, 0);
