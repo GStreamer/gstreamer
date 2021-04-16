@@ -2946,8 +2946,8 @@ gst_rtsp_media_seek_trickmode (GstRTSPMedia * media,
       }
     }
 
-    if (start == current_position && stop_type == GST_SEEK_TYPE_NONE &&
-        !force_seek) {
+    if (!force_seek && start == current_position &&
+        (stop_type == GST_SEEK_TYPE_NONE || stop == priv->range_stop)) {
       GST_DEBUG ("no position change, no flags set by caller, so not seeking");
       res = TRUE;
     } else {
