@@ -2783,10 +2783,14 @@ gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
          * be pushed for sure) or we are not buffering. If we are buffering,
          * the pipeline waits to unblock downstream until our queue fills up
          * completely, which can not happen if we block on the query..
-         * Therefore we only potentially block when we are not buffering. */
+         * Therefore we only potentially block when we are not buffering.
+         *
+         * Update: Edward Hervey 2021: Realistically when posting buffering
+         * messages there are no safe places where we can block and forward a
+         * serialized query due to the potential of causing deadlocks. We
+         * therefore refuse any serialized queries in such cases. */
         GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->sinkresult, out_flushing);
-        if (QUEUE_IS_USING_QUEUE (queue) && (gst_queue2_is_empty (queue)
-                || !queue->use_buffering)) {
+        if (QUEUE_IS_USING_QUEUE (queue) && !queue->use_buffering) {
           if (!g_atomic_int_get (&queue->downstream_may_block)) {
             gst_queue2_locked_enqueue (queue, query,
                 GST_QUEUE2_ITEM_TYPE_QUERY);
@@ -2805,7 +2809,7 @@ gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
           }
         } else {
           GST_DEBUG_OBJECT (queue,
-              "refusing query, we are not using the queue");
+              "refusing query, we are not using the queue or we are posting buffering messages");
           res = FALSE;
         }
         GST_QUEUE2_MUTEX_UNLOCK (queue);
