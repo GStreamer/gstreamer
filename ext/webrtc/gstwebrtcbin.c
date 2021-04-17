@@ -1893,6 +1893,7 @@ _create_transport_channel (GstWebRTCBin * webrtc, guint session_id)
 {
   GstWebRTCDTLSTransport *transport;
   TransportStream *ret;
+  gchar *pad_name;
 
   /* FIXME: how to parametrize the sender and the receiver */
   ret = transport_stream_new (webrtc, session_id);
@@ -1908,6 +1909,22 @@ _create_transport_channel (GstWebRTCBin * webrtc, guint session_id)
   if (webrtc->priv->tos_attached)
     gst_webrtc_bin_attach_probe_to_ice_sink (webrtc, transport->transport);
 
+  gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->send_bin));
+  gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->receive_bin));
+  g_ptr_array_add (webrtc->priv->transports, ret);
+
+  pad_name = g_strdup_printf ("recv_rtcp_sink_%u", ret->session_id);
+  if (!gst_element_link_pads (GST_ELEMENT (ret->receive_bin), "rtcp_src",
+          GST_ELEMENT (webrtc->rtpbin), pad_name))
+    g_warn_if_reached ();
+  g_free (pad_name);
+
+  pad_name = g_strdup_printf ("send_rtcp_src_%u", ret->session_id);
+  if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
+          GST_ELEMENT (ret->send_bin), "rtcp_sink"))
+    g_warn_if_reached ();
+  g_free (pad_name);
+
   GST_TRACE_OBJECT (webrtc,
       "Create transport %" GST_PTR_FORMAT " for session %u", ret, session_id);
 
@@ -1918,30 +1935,11 @@ static TransportStream *
 _get_or_create_rtp_transport_channel (GstWebRTCBin * webrtc, guint session_id)
 {
   TransportStream *ret;
-  gchar *pad_name;
 
   ret = _find_transport_for_session (webrtc, session_id);
 
-  if (!ret) {
+  if (!ret)
     ret = _create_transport_channel (webrtc, session_id);
-    gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->send_bin));
-    gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->receive_bin));
-    g_ptr_array_add (webrtc->priv->transports, ret);
-
-    pad_name = g_strdup_printf ("recv_rtcp_sink_%u", ret->session_id);
-    if (!gst_element_link_pads (GST_ELEMENT (ret->receive_bin), "rtcp_src",
-            GST_ELEMENT (webrtc->rtpbin), pad_name))
-      g_warn_if_reached ();
-    g_free (pad_name);
-
-    pad_name = g_strdup_printf ("send_rtcp_src_%u", ret->session_id);
-    if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
-            GST_ELEMENT (ret->send_bin), "rtcp_sink"))
-      g_warn_if_reached ();
-    if (webrtc->priv->tos_attached)
-      gst_webrtc_bin_attach_tos_to_session (webrtc, ret->session_id);
-    g_free (pad_name);
-  }
 
   gst_element_sync_state_with_parent (GST_ELEMENT (ret->send_bin));
   gst_element_sync_state_with_parent (GST_ELEMENT (ret->receive_bin));
@@ -2157,12 +2155,8 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
 
     stream = _find_transport_for_session (webrtc, session_id);
 
-    if (!stream) {
+    if (!stream)
       stream = _create_transport_channel (webrtc, session_id);
-      gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (stream->send_bin));
-      gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (stream->receive_bin));
-      g_ptr_array_add (webrtc->priv->transports, stream);
-    }
 
     webrtc->priv->data_channel_transport = stream;
 
