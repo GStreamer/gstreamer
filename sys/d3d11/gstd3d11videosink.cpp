@@ -19,18 +19,16 @@
  */
 
 /**
- * SECTION:element-d3d11videosinkelement
- * @title: d3d11videosinkelement
+ * SECTION:element-d3d11videosink
+ * @title: d3d11videosink
  *
- * Direct3D11 based video render element. This element allows only Direct3D11
- * textures as a input. Use #d3d11videosink instead which is a convenient
- * wrapper of #d3d11videosinkelement with #d3d11upload.
+ * Direct3D11 based video render element
  *
  * ## Example launch line
  * ```
- * gst-launch-1.0 videotestsrc ! d3d11upload ! d3d11videosinkelement
+ * gst-launch-1.0 videotestsrc ! d3d11upload ! d3d11videosink
  * ```
- * This pipeline will display test video stream on screen via d3d11videosinkelement
+ * This pipeline will display test video stream on screen via d3d11videosink
  *
  * Since: 1.18
  *
@@ -91,6 +89,11 @@ static GstStaticCaps pad_template_caps =
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES
     (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY ","
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+        GST_D3D11_SINK_FORMATS) ";"
+    GST_VIDEO_CAPS_MAKE (GST_D3D11_SINK_FORMATS) "; "
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+    (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
         GST_D3D11_SINK_FORMATS));
 
 GST_DEBUG_CATEGORY (d3d11_video_sink_debug);
@@ -121,13 +124,10 @@ struct _GstD3D11VideoSink
   gboolean pending_render_rect;
 
   GstBufferPool *fallback_pool;
-  gboolean can_convert;
   gboolean have_video_processor;
   gboolean processor_in_use;
 
   /* For drawing on user texture */
-  GstD3D11VideoSinkCallbacks callbacks;
-  gpointer user_data;
   gboolean drawing;
   GstBuffer *current_buffer;
   GRecMutex draw_lock;
@@ -230,8 +230,8 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
    * GstD3D11VideoSink:draw-on-shared-texture:
    *
    * Instruct the sink to draw on a shared texture provided by user.
-   * User must watch #d3d11videosinkelement::begin-draw signal and should call
-   * #d3d11videosinkelement::draw method on the #d3d11videosinkelement::begin-draw
+   * User must watch #d3d11videosink::begin-draw signal and should call
+   * #d3d11videosink::draw method on the #d3d11videosink::begin-draw
    * signal handler.
    *
    * Currently supported formats for user texture are:
@@ -257,11 +257,11 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
 
   /**
    * GstD3D11VideoSink::begin-draw:
-   * @videosink: the #d3d11videosinkelement
+   * @videosink: the #d3d11videosink
    *
    * Emitted when sink has a texture to draw. Application needs to invoke
-   * #d3d11videosinkelement::draw action signal before returning from
-   * #d3d11videosinkelement::begin-draw signal handler.
+   * #d3d11videosink::draw action signal before returning from
+   * #d3d11videosink::begin-draw signal handler.
    *
    * Since: 1.20
    */
@@ -272,7 +272,7 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
 
   /**
    * GstD3D11VideoSink::draw:
-   * @videosink: the #d3d11videosinkelement
+   * @videosink: the #d3d11videosink
    * @shard_handle: a pointer to HANDLE
    * @texture_misc_flags: a D3D11_RESOURCE_MISC_FLAG value
    * @acquire_key: a key value used for IDXGIKeyedMutex::AcquireSync
@@ -446,93 +446,42 @@ gst_d3d11_video_sink_set_context (GstElement * element, GstContext * context)
 }
 
 static GstCaps *
-gst_d3d11_video_sink_get_supported_caps (GstD3D11VideoSink * self,
-    D3D11_FORMAT_SUPPORT flags)
-{
-  GstD3D11Device *device;
-  ID3D11Device *d3d11_device;
-  HRESULT hr;
-  guint i;
-  GValue v_list = G_VALUE_INIT;
-  GstCaps *supported_caps;
-  static const GstVideoFormat format_list[] = {
-    GST_VIDEO_FORMAT_BGRA,
-    GST_VIDEO_FORMAT_RGBA,
-    GST_VIDEO_FORMAT_RGB10A2_LE,
-    GST_VIDEO_FORMAT_VUYA,
-    GST_VIDEO_FORMAT_NV12,
-    GST_VIDEO_FORMAT_P010_10LE,
-    GST_VIDEO_FORMAT_P016_LE,
-    GST_VIDEO_FORMAT_I420,
-    GST_VIDEO_FORMAT_I420_10LE,
-  };
-
-  device = self->device;
-
-  d3d11_device = gst_d3d11_device_get_device_handle (device);
-  g_value_init (&v_list, GST_TYPE_LIST);
-
-  for (i = 0; i < G_N_ELEMENTS (format_list); i++) {
-    UINT format_support = 0;
-    GstVideoFormat format;
-    const GstD3D11Format *d3d11_format;
-
-    d3d11_format = gst_d3d11_device_format_from_gst (device, format_list[i]);
-    if (!d3d11_format || d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN)
-      continue;
-
-    format = d3d11_format->format;
-    hr = d3d11_device->CheckFormatSupport (d3d11_format->dxgi_format,
-        &format_support);
-
-    if (SUCCEEDED (hr) && ((format_support & flags) == flags)) {
-      GValue v_str = G_VALUE_INIT;
-      g_value_init (&v_str, G_TYPE_STRING);
-
-      GST_LOG_OBJECT (self, "d3d11 device can support %s with flags 0x%x",
-          gst_video_format_to_string (format), flags);
-      g_value_set_string (&v_str, gst_video_format_to_string (format));
-      gst_value_list_append_and_take_value (&v_list, &v_str);
-    }
-  }
-
-  supported_caps = gst_caps_new_simple ("video/x-raw",
-      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-  gst_caps_set_value (supported_caps, "format", &v_list);
-  g_value_unset (&v_list);
-
-  gst_caps_set_features_simple (supported_caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
-
-  return supported_caps;
-}
-
-static GstCaps *
 gst_d3d11_video_sink_get_caps (GstBaseSink * sink, GstCaps * filter)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
   GstCaps *caps = NULL;
 
-  if (self->device && !self->can_convert) {
-    GstCaps *overlaycaps;
-    GstCapsFeatures *features;
+  caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
 
-    caps = gst_d3d11_video_sink_get_supported_caps (self,
-        (D3D11_FORMAT_SUPPORT) (D3D11_FORMAT_SUPPORT_TEXTURE2D |
-            D3D11_FORMAT_SUPPORT_DISPLAY));
-    overlaycaps = gst_caps_copy (caps);
-    features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
-        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
-    gst_caps_set_features_simple (overlaycaps, features);
-    gst_caps_append (caps, overlaycaps);
+  if (self->device) {
+    gboolean is_hardware = FALSE;
+
+    g_object_get (self->device, "hardware", &is_hardware, NULL);
+
+    /* In case of WARP device, conversion via shader would be inefficient than
+     * upstream videoconvert. Allow native formats in this case */
+    if (!is_hardware) {
+      GValue format_list = G_VALUE_INIT;
+      GValue format = G_VALUE_INIT;
+
+      g_value_init (&format_list, GST_TYPE_LIST);
+      g_value_init (&format, G_TYPE_STRING);
+
+      g_value_set_string (&format, "RGBA");
+      gst_value_list_append_and_take_value (&format_list, &format);
+
+      format = G_VALUE_INIT;
+      g_value_init (&format, G_TYPE_STRING);
+      g_value_set_string (&format, "BGRA");
+      gst_value_list_append_and_take_value (&format_list, &format);
+
+      caps = gst_caps_make_writable (caps);
+      gst_caps_set_value (caps, "format", &format_list);
+      g_value_unset (&format_list);
+    }
   }
 
-  if (!caps)
-    caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
-
-  if (caps && filter) {
+  if (filter) {
     GstCaps *isect;
     isect = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (caps);
@@ -735,7 +684,6 @@ static gboolean
 gst_d3d11_video_sink_start (GstBaseSink * sink)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
-  gboolean is_hardware = TRUE;
 
   GST_DEBUG_OBJECT (self, "Start");
 
@@ -743,15 +691,6 @@ gst_d3d11_video_sink_start (GstBaseSink * sink)
           &self->device)) {
     GST_ERROR_OBJECT (sink, "Cannot create d3d11device");
     return FALSE;
-  }
-
-  g_object_get (self->device, "hardware", &is_hardware, NULL);
-
-  if (!is_hardware) {
-    GST_WARNING_OBJECT (self, "D3D11 device is running on software emulation");
-    self->can_convert = FALSE;
-  } else {
-    self->can_convert = TRUE;
   }
 
   return TRUE;
@@ -886,22 +825,54 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
   size = info.size;
 
   if (need_pool) {
-    GstD3D11AllocationParams *d3d11_params;
+    GstCapsFeatures *features;
+    GstStructure *config;
+    gboolean is_d3d11 = false;
 
-    GST_DEBUG_OBJECT (self, "create new pool");
+    features = gst_caps_get_features (caps, 0);
+    if (features
+        && gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
+      GST_DEBUG_OBJECT (self, "upstream support d3d11 memory");
+      pool = gst_d3d11_buffer_pool_new (self->device);
+      is_d3d11 = true;
+    } else {
+      pool = gst_video_buffer_pool_new ();
+    }
 
-    d3d11_params = gst_d3d11_allocation_params_new (self->device, &info,
-        (GstD3D11AllocationFlags) 0, D3D11_BIND_SHADER_RESOURCE);
-    pool = gst_d3d11_buffer_pool_new_with_options (self->device, caps,
-        d3d11_params, 2, 0);
-    gst_d3d11_allocation_params_free (d3d11_params);
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-    if (!pool) {
-      GST_ERROR_OBJECT (self, "Failed to create buffer pool");
+    /* d3d11 pool does not support video alignment */
+    if (!is_d3d11) {
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    }
+
+    size = GST_VIDEO_INFO_SIZE (&info);
+    if (is_d3d11) {
+      GstD3D11AllocationParams *d3d11_params;
+
+      d3d11_params =
+          gst_d3d11_allocation_params_new (self->device,
+          &info, (GstD3D11AllocationFlags) 0, D3D11_BIND_SHADER_RESOURCE);
+
+      gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
+      gst_d3d11_allocation_params_free (d3d11_params);
+    }
+
+    gst_buffer_pool_config_set_params (config, caps, (guint) size, 2, 0);
+
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      GST_ERROR_OBJECT (pool, "Couldn't set config");
+      gst_object_unref (pool);
+
       return FALSE;
     }
 
-    size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
+    if (is_d3d11)
+      size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
   }
 
   /* We need at least 2 buffers because we hold on to the last one for redrawing
@@ -1130,12 +1101,8 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
     GST_LOG_OBJECT (self, "Begin drawing");
 
     /* Application should call draw method on this callback */
-    if (self->callbacks.begin_draw) {
-      self->callbacks.begin_draw (self, self->user_data);
-    } else {
-      g_signal_emit (self, gst_d3d11_video_sink_signals[SIGNAL_BEGIN_DRAW], 0,
-          NULL);
-    }
+    g_signal_emit (self, gst_d3d11_video_sink_signals[SIGNAL_BEGIN_DRAW], 0,
+        NULL);
 
     GST_LOG_OBJECT (self, "End drawing");
     self->drawing = FALSE;
@@ -1319,25 +1286,4 @@ gst_d3d11_video_sink_draw_action (GstD3D11VideoSink * self,
   g_rec_mutex_unlock (&self->draw_lock);
 
   return ret == GST_FLOW_OK;
-}
-
-void
-gst_d3d11_video_sink_set_callbacks (GstD3D11VideoSink * videosink,
-    GstD3D11VideoSinkCallbacks * callbacks, gpointer user_data)
-{
-  g_return_if_fail (GST_IS_D3D11_VIDEO_SINK (videosink));
-
-  videosink->callbacks = *callbacks;
-  videosink->user_data = user_data;
-}
-
-gboolean
-gst_d3d11_video_sink_draw (GstD3D11VideoSink * videosink,
-    gpointer shared_handle, guint texture_misc_flags, guint64 acquire_key,
-    guint64 release_key)
-{
-  g_return_val_if_fail (GST_IS_D3D11_VIDEO_SINK (videosink), FALSE);
-
-  return gst_d3d11_video_sink_draw_action (videosink, shared_handle,
-      texture_misc_flags, acquire_key, release_key);
 }

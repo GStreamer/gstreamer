@@ -40,14 +40,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstD3D11VideoSink GstD3D11VideoSink;
 typedef struct _GstD3D11VideoSinkClass GstD3D11VideoSinkClass;
-
-typedef struct
-{
-  void  (*begin_draw)   (GstD3D11VideoSink * videosink,
-                         gpointer user_data);
-
-} GstD3D11VideoSinkCallbacks;
-
 struct _GstD3D11VideoSinkClass
 {
   GstVideoSinkClass parent_class;
@@ -64,19 +56,6 @@ struct _GstD3D11VideoSinkClass
 };
 
 GType gst_d3d11_video_sink_get_type (void);
-
-/* Internal methods, called by d3d11videosinkbin */
-void
-gst_d3d11_video_sink_set_callbacks (GstD3D11VideoSink * videosink,
-                                    GstD3D11VideoSinkCallbacks * callbacks,
-                                    gpointer user_data);
-
-gboolean
-gst_d3d11_video_sink_draw (GstD3D11VideoSink * videosink,
-                           gpointer shared_handle,
-                           guint texture_misc_flags,
-                           guint64 acquire_key,
-                           guint64 release_key);
 
 G_END_DECLS
 

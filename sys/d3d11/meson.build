@@ -11,7 +11,6 @@ d3d11_sources = [
   'gstd3d11upload.cpp',
   'gstd3d11videoprocessor.cpp',
   'gstd3d11videosink.cpp',
-  'gstd3d11videosinkbin.cpp',
   'gstd3d11window.cpp',
   'gstd3d11window_dummy.cpp',
   'plugin.c',

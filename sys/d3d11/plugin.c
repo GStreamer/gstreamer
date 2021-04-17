@@ -27,7 +27,6 @@
 #include "gstd3d11upload.h"
 #include "gstd3d11download.h"
 #include "gstd3d11convert.h"
-#include "gstd3d11videosinkbin.h"
 #include "gstd3d11shader.h"
 #include "gstd3d11compositor.h"
 #include "gstd3d11compositorbin.h"
@@ -214,10 +213,7 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin,
       "d3d11scale", GST_RANK_NONE, GST_TYPE_D3D11_SCALE);
   gst_element_register (plugin,
-      "d3d11videosinkelement", GST_RANK_NONE, GST_TYPE_D3D11_VIDEO_SINK);
-
-  gst_element_register (plugin,
-      "d3d11videosink", video_sink_rank, GST_TYPE_D3D11_VIDEO_SINK_BIN);
+      "d3d11videosink", video_sink_rank, GST_TYPE_D3D11_VIDEO_SINK);
 
   gst_element_register (plugin,
       "d3d11compositorelement", GST_RANK_NONE, GST_TYPE_D3D11_COMPOSITOR);
