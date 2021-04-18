@@ -442,12 +442,24 @@ done:
 }
 
 static void
-gst_webrtc_vad_post_message (GstWebrtcDsp *self, GstClockTime timestamp,
+gst_webrtc_vad_post_activity (GstWebrtcDsp *self, GstBuffer *buffer,
     gboolean stream_has_voice)
 {
+  GstClockTime timestamp = GST_BUFFER_PTS (buffer);
   GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (self);
   GstStructure *s;
   GstClockTime stream_time;
+  GstAudioLevelMeta *meta;
+  guint8 level;
+
+  level = self->apm->level_estimator ()->RMS ();
+  meta = gst_buffer_get_audio_level_meta (buffer);
+  if (meta) {
+    meta->voice_activity = stream_has_voice;
+    meta->level = level;
+  } else {
+    gst_buffer_add_audio_level_meta (buffer, level, stream_has_voice);
+  }
 
   stream_time = gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
       timestamp);
@@ -502,7 +514,7 @@ gst_webrtc_dsp_process_stream (GstWebrtcDsp * self,
       gboolean stream_has_voice = apm->voice_detection ()->stream_has_voice ();
 
       if (stream_has_voice != self->stream_has_voice)
-        gst_webrtc_vad_post_message (self, GST_BUFFER_PTS (buffer), stream_has_voice);
+        gst_webrtc_vad_post_activity (self, buffer, stream_has_voice);
 
       self->stream_has_voice = stream_has_voice;
     }
@@ -716,6 +728,7 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
     apm->voice_detection ()->set_likelihood (self->voice_detection_likelihood);
     apm->voice_detection ()->set_frame_size_ms (
         self->voice_detection_frame_size_ms);
+    apm->level_estimator ()->Enable (true);
   }
 
   GST_OBJECT_UNLOCK (self);
