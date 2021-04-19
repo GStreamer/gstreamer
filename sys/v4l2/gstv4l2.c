@@ -58,6 +58,9 @@
 #include "gstv4l2vp9enc.h"
 #include "gstv4l2transform.h"
 
+GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
+#define GST_CAT_DEFAULT v4l2_debug
+
 #ifdef GST_V4L2_ENABLE_PROBE
 /* This is a minimalist probe, for speed, we only enumerate formats */
 static GstCaps *
@@ -123,6 +126,8 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
   gint video_fd = -1;
   struct v4l2_capability vcap;
   guint32 device_caps;
+
+  v4l2_element_init (plugin);
 
   GST_DEBUG ("Probing devices");
 
