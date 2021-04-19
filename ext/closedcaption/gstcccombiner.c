@@ -1496,7 +1496,7 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
    * Since: 1.20
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_SCHEDULE, g_param_spec_uint ("max-scheduled",
+      PROP_MAX_SCHEDULED, g_param_spec_uint ("max-scheduled",
           "Max Scheduled",
           "Maximum number of buffers to queue for scheduling", 0, G_MAXUINT,
           DEFAULT_MAX_SCHEDULED,
