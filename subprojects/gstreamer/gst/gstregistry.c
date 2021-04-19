@@ -1222,6 +1222,10 @@ skip_directory (const gchar * parent_path, const gchar * dirent)
   if (g_str_has_prefix (dirent, "hotdoc-private-"))
     return TRUE;
 
+  /* gst-integration-testsuites can end up with many log files */
+  if (strcmp (dirent, "gst-integration-testsuites") == 0)
+    return TRUE;
+
   /* Rust build dirs which may contain artefacts we should skip, can be
    * /target/{debug,release} or /target/{arch}/{debug,release} */
   target = strstr (parent_path, "/target/");
