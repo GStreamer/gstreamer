@@ -2876,6 +2876,11 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   /* PLAY will add the range header now. */
   src->need_range = TRUE;
 
+  /* If an accurate seek was requested, we want to clip the segment we
+   * output in ONVIF mode to the requested bounds */
+  src->clip_out_segment = ! !(flags & GST_SEEK_FLAG_ACCURATE);
+  src->seek_seqnum = gst_event_get_seqnum (event);
+
   /* prepare for streaming again */
   if (flush) {
     /* if we started flush, we stop now */
@@ -2927,11 +2932,6 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     else if (flags & GST_SEEK_FLAG_KEY_UNIT && flags & GST_SEEK_FLAG_SNAP_AFTER)
       seek_style = "Next";
   }
-
-  /* If an accurate seek was requested, we want to clip the segment we
-   * output in ONVIF mode to the requested bounds */
-  src->clip_out_segment = ! !(flags & GST_SEEK_FLAG_ACCURATE);
-  src->seek_seqnum = gst_event_get_seqnum (event);
 
   if (playing)
     gst_rtspsrc_play (src, &seeksegment, FALSE, seek_style);
