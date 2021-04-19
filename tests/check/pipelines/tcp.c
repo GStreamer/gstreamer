@@ -54,6 +54,7 @@ typedef struct
 static void
 symmetry_test_setup (SymmetryTest * st, GstElement * sink, GstElement * src)
 {
+  GstStateChangeReturn ret;
   GstCaps *caps;
   st->sink = sink;
   g_object_set (sink, "sync", FALSE, NULL);
@@ -80,8 +81,13 @@ symmetry_test_setup (SymmetryTest * st, GstElement * sink, GstElement * src)
   fail_unless (gst_element_link_many (st->src, GST_ELEMENT (st->src_sink),
           NULL));
 
-  gst_element_set_state (GST_ELEMENT (st->sink_pipeline), GST_STATE_PLAYING);
-  gst_element_set_state (GST_ELEMENT (st->src_pipeline), GST_STATE_PLAYING);
+  ret =
+      gst_element_set_state (GST_ELEMENT (st->sink_pipeline),
+      GST_STATE_PLAYING);
+  fail_if (ret == GST_STATE_CHANGE_FAILURE);
+  ret =
+      gst_element_set_state (GST_ELEMENT (st->src_pipeline), GST_STATE_PLAYING);
+  fail_if (ret == GST_STATE_CHANGE_FAILURE);
 }
 
 static void
