@@ -3796,8 +3796,13 @@ collect_index_table_segments (GstMXFDemux * demux)
           }
 
           index->offset = offset;
-          index->keyframe = ! !(segment->index_entries[i].flags & 0x80)
-              || (segment->index_entries[i].key_frame_offset == 0);
+          /* EG41-2004 Table 9: 0x80 = Random access */
+          /* random_access is more reliable to determine if the index is
+           * a key-frame than checking the keyframe_offset or the frame type flag.
+           * See https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/merge_requests/2173#note_900580
+           * for more details.
+           */
+          index->keyframe = ! !(segment->index_entries[i].flags & 0x80);
           index->dts = pts_i;
         }
       }
