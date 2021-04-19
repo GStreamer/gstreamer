@@ -21,6 +21,7 @@
 #define __GST_TCP_ELEMENTS_H__
 
 #include <gst/gst.h>
+#include <gio/gio.h>
 
 #define TCP_HIGHEST_PORT        65535
 #define TCP_DEFAULT_HOST        "localhost"
@@ -37,6 +38,11 @@ GST_ELEMENT_REGISTER_DECLARE (tcpserversink);
 GST_ELEMENT_REGISTER_DECLARE (tcpserversrc);
 GST_ELEMENT_REGISTER_DECLARE (multifdsink);
 GST_ELEMENT_REGISTER_DECLARE (multisocketsink);
+
+G_GNUC_INTERNAL GList *    tcp_get_addresses (GstElement * obj, const char *host,
+                                              GCancellable * cancellable, GError ** err);
+G_GNUC_INTERNAL GSocket *  tcp_create_socket (GstElement * obj, GList ** iter,
+                                              guint16 port, GSocketAddress ** saddr, GError ** err);
 
 G_END_DECLS
 

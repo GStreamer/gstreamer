@@ -26,6 +26,7 @@
 #include "gsttcpelements.h"
 
 GST_DEBUG_CATEGORY (tcp_debug);
+#define GST_CAT_DEFAULT tcp_debug
 
 void
 tcp_element_init (GstPlugin * plugin)
@@ -35,4 +36,76 @@ tcp_element_init (GstPlugin * plugin)
     GST_DEBUG_CATEGORY_INIT (tcp_debug, "tcp", 0, "TCP calls");
     g_once_init_leave (&res, TRUE);
   }
+}
+
+GList *
+tcp_get_addresses (GstElement * obj, const char *host,
+    GCancellable * cancellable, GError ** err)
+{
+  GList *addrs = NULL;
+  GInetAddress *addr;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (obj), NULL);
+  g_return_val_if_fail (host != NULL, NULL);
+  g_return_val_if_fail (err == NULL || *err == NULL, NULL);
+
+  /* look up name if we need to */
+  addr = g_inet_address_new_from_string (host);
+  if (addr) {
+    addrs = g_list_append (addrs, addr);
+  } else {
+    GResolver *resolver = g_resolver_get_default ();
+
+    GST_DEBUG_OBJECT (obj, "Looking up IP address(es) for host '%s'", host);
+    addrs = g_resolver_lookup_by_name (resolver, host, cancellable, err);
+    g_object_unref (resolver);
+  }
+
+  return addrs;
+}
+
+/*
+ * Loops over available addresses until successfully creates a socket
+ * 
+ * iter: updated to contain current list position or NULL if finished
+ * saddr: contains current address is successful
+ */
+GSocket *
+tcp_create_socket (GstElement * obj, GList ** iter, guint16 port,
+    GSocketAddress ** saddr, GError ** err)
+{
+  GSocket *sock = NULL;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (obj), NULL);
+  g_return_val_if_fail (iter != NULL, NULL);
+  g_return_val_if_fail (saddr != NULL, NULL);
+  g_return_val_if_fail (err == NULL || *err == NULL, NULL);
+
+  *saddr = NULL;
+  while (*iter) {
+    GInetAddress *addr = G_INET_ADDRESS ((*iter)->data);
+
+#ifndef GST_DISABLE_GST_DEBUG
+    {
+      gchar *ip = g_inet_address_to_string (addr);
+      GST_DEBUG_OBJECT (obj, "Trying IP address %s", ip);
+      g_free (ip);
+    }
+#endif
+    /* update iter in case we get called again */
+    *iter = (*iter)->next;
+    g_clear_error (err);
+
+    *saddr = g_inet_socket_address_new (addr, port);
+    sock =
+        g_socket_new (g_socket_address_get_family (*saddr),
+        G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, err);
+    if (sock)
+      break;
+
+    /* release and try next... */
+    g_clear_object (saddr);
+  }
+
+  return sock;
 }
