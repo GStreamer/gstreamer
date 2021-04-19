@@ -296,43 +296,24 @@ gst_tcp_server_sink_init_send (GstMultiHandleSink * parent)
 {
   GstTCPServerSink *this = GST_TCP_SERVER_SINK (parent);
   GError *err = NULL;
-  GInetAddress *addr;
+  GList *addrs;
+  GList *cur_addr;
   GSocketAddress *saddr;
-  GResolver *resolver;
   gint bound_port;
 
-  /* look up name if we need to */
-  addr = g_inet_address_new_from_string (this->host);
-  if (!addr) {
-    GList *results;
+  addrs =
+      tcp_get_addresses (GST_ELEMENT (this), this->host,
+      this->element.cancellable, &err);
+  if (!addrs)
+    goto name_resolve;
 
-    resolver = g_resolver_get_default ();
-
-    results =
-        g_resolver_lookup_by_name (resolver, this->host,
-        this->element.cancellable, &err);
-    if (!results)
-      goto name_resolve;
-    addr = G_INET_ADDRESS (g_object_ref (results->data));
-
-    g_resolver_free_addresses (results);
-    g_object_unref (resolver);
-  }
-#ifndef GST_DISABLE_GST_DEBUG
-  {
-    gchar *ip = g_inet_address_to_string (addr);
-
-    GST_DEBUG_OBJECT (this, "IP address for host %s is %s", this->host, ip);
-    g_free (ip);
-  }
-#endif
-  saddr = g_inet_socket_address_new (addr, this->server_port);
-  g_object_unref (addr);
-
-  /* create the server listener socket */
+  /* iterate over addresses until one works */
+  cur_addr = addrs;
   this->server_socket =
-      g_socket_new (g_socket_address_get_family (saddr), G_SOCKET_TYPE_STREAM,
-      G_SOCKET_PROTOCOL_TCP, &err);
+      tcp_create_socket (GST_ELEMENT (this), &cur_addr, this->server_port,
+      &saddr, &err);
+  g_list_free_full (addrs, g_object_unref);
+
   if (!this->server_socket)
     goto no_socket;
 
@@ -387,19 +368,17 @@ no_socket:
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
         ("Failed to create socket: %s", err->message));
     g_clear_error (&err);
-    g_object_unref (saddr);
     return FALSE;
   }
 name_resolve:
   {
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-      GST_DEBUG_OBJECT (this, "Cancelled name resolval");
+      GST_DEBUG_OBJECT (this, "Cancelled name resolution");
     } else {
       GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
           ("Failed to resolve host '%s': %s", this->host, err->message));
     }
     g_clear_error (&err);
-    g_object_unref (resolver);
     return FALSE;
   }
 bind_failed:
