@@ -1257,10 +1257,15 @@ gst_v4l2_subscribe_event (GstV4l2Object * v4l2object, guint32 event, guint32 id)
   /* ERRORS */
 failed:
   {
-    if (errno != ENOTTY)
+    if (errno == ENOTTY || errno == EINVAL) {
+      GST_DEBUG_OBJECT (v4l2object->dbg_obj,
+          "Cannot subscribe to '%s' event: %s",
+          gst_v4l2_event_to_string (event), "not supported");
+    } else {
       GST_ERROR_OBJECT (v4l2object->dbg_obj,
           "Cannot subscribe to '%s' event: %s",
           gst_v4l2_event_to_string (event), g_strerror (errno));
+    }
     return FALSE;
   }
 }
