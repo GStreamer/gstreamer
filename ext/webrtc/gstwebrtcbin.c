@@ -1545,7 +1545,7 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
         GST_LOG_OBJECT (webrtc, "Using peer query caps: %" GST_PTR_FORMAT,
             caps);
 
-        if (!gst_caps_is_fixed (caps) || gst_caps_is_equal_fixed (caps, filter)
+        if (!gst_caps_is_fixed (caps) || gst_caps_is_equal (caps, filter)
             || gst_caps_is_empty (caps) || gst_caps_is_any (caps)) {
           gst_caps_unref (caps);
           caps = NULL;
