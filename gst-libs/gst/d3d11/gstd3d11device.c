@@ -494,7 +494,19 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
   priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_B8G8R8A8_UNORM;
   n_formats++;
 
+  /* Identical to BGRA, but alpha will be ignored */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_BGRx;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
+  priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_B8G8R8A8_UNORM;
+  n_formats++;
+
   priv->format_table[n_formats].format = GST_VIDEO_FORMAT_RGBA;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+  priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+  n_formats++;
+
+  /* Identical to RGBA, but alpha will be ignored */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_RGBx;
   priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
   priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_R8G8B8A8_UNORM;
   n_formats++;

@@ -187,7 +187,7 @@ GST_START_TEST (test_d3d11_color_convert_yuv_rgb)
     "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE"
   };
   const gchar *out_format_list[] = {
-    "BGRA", "RGBA", "RGB10A2_LE",
+    "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
   };
 
 
@@ -210,7 +210,7 @@ GST_END_TEST;
 GST_START_TEST (test_d3d11_color_convert_rgb_yuv)
 {
   const gchar *in_format_list[] = {
-    "BGRA", "RGBA", "RGB10A2_LE",
+    "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
   };
   const gchar *out_format_list[] = {
     "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE"
@@ -232,7 +232,7 @@ GST_END_TEST;
 GST_START_TEST (test_d3d11_color_convert_rgb_rgb)
 {
   const gchar *format_list[] = {
-    "BGRA", "RGBA", "RGB10A2_LE",
+    "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
   };
 
   gint i, j;
@@ -278,7 +278,7 @@ GST_START_TEST (test_d3d11_color_convert_packed_yuv_rgb)
     "YUY2", "UYVY", "VYUY", "Y210", "Y410",
   };
   const gchar *out_format_list[] = {
-    "BGRA", "RGBA", "RGB10A2_LE",
+    "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
   };
 
   gint i, j;
