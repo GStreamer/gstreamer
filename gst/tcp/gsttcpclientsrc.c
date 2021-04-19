@@ -47,7 +47,6 @@
 #include "gsttcpelements.h"
 #include "gsttcpclientsrc.h"
 #include "gsttcpsrcstats.h"
-#include "gsttcp.h"
 
 GST_DEBUG_CATEGORY_STATIC (tcpclientsrc_debug);
 #define GST_CAT_DEFAULT tcpclientsrc_debug

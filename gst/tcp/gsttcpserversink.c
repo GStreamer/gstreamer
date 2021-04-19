@@ -40,7 +40,6 @@
 #include <gst/gst-i18n-plugin.h>
 #include <string.h>             /* memset */
 
-#include "gsttcp.h"
 #include "gsttcpelements.h"
 #include "gsttcpserversink.h"
 

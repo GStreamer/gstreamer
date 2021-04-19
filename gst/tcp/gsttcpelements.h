@@ -22,6 +22,10 @@
 
 #include <gst/gst.h>
 
+#define TCP_HIGHEST_PORT        65535
+#define TCP_DEFAULT_HOST        "localhost"
+#define TCP_DEFAULT_PORT        4953
+
 G_BEGIN_DECLS
 
 G_GNUC_INTERNAL void tcp_element_init (GstPlugin * plugin);

@@ -28,8 +28,6 @@
 
 G_END_DECLS
 
-#include "gsttcp.h"
-
 #define GST_TYPE_TCP_SERVER_SRC \
   (gst_tcp_server_src_get_type())
 #define GST_TCP_SERVER_SRC(obj) \

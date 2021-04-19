@@ -27,8 +27,6 @@
 
 #include <gio/gio.h>
 
-#include "gsttcp.h"
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_TCP_CLIENT_SINK \

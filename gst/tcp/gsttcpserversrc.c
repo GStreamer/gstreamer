@@ -41,7 +41,6 @@
 #endif
 
 #include <gst/gst-i18n-plugin.h>
-#include "gsttcp.h"
 #include "gsttcpelements.h"
 #include "gsttcpsrcstats.h"
 #include "gsttcpserversrc.h"

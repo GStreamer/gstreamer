@@ -53,7 +53,6 @@
 #include <gst/net/gstnetcontrolmessagemeta.h>
 #include "gsttcpelements.h"
 #include "gstsocketsrc.h"
-#include "gsttcp.h"
 
 GST_DEBUG_CATEGORY_STATIC (socketsrc_debug);
 #define GST_CAT_DEFAULT socketsrc_debug
