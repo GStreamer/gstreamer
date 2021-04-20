@@ -2563,6 +2563,9 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   frame->distance_from_sync = priv->distance_from_sync;
   priv->distance_from_sync++;
 
+  /* We need a writable buffer for the metadata changes below */
+  frame->output_buffer = gst_buffer_make_writable (frame->output_buffer);
+
   GST_BUFFER_PTS (frame->output_buffer) = frame->pts;
   GST_BUFFER_DTS (frame->output_buffer) = frame->dts;
   GST_BUFFER_DURATION (frame->output_buffer) = frame->duration;
@@ -2708,6 +2711,9 @@ gst_video_encoder_finish_subframe (GstVideoEncoder * encoder,
   }
 
   gst_video_encoder_infer_dts_unlocked (encoder, frame);
+
+  /* We need a writable buffer for the metadata changes below */
+  subframe_buffer = gst_buffer_make_writable (subframe_buffer);
 
   GST_BUFFER_PTS (subframe_buffer) = frame->pts;
   GST_BUFFER_DTS (subframe_buffer) = frame->dts;
