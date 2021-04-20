@@ -1003,7 +1003,7 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
                 frame_info.sLayerInfo[i].pNalLengthInByte[j]);
           }
         }
-        headers = g_list_append (headers, gst_buffer_ref (hdr));
+        headers = g_list_append (headers, hdr);    /* take ownership of hdr */
     }
     gst_buffer_fill (frame->output_buffer, buf_length, frame_info.sLayerInfo[i].pBsBuf, layer_size);
     buf_length += layer_size;
