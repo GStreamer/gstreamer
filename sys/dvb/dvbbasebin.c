@@ -751,7 +751,7 @@ dvb_base_bin_request_new_pad (GstElement * element,
   if (name == NULL)
     name = GST_PAD_TEMPLATE_NAME_TEMPLATE (templ);
 
-  pad = gst_element_get_request_pad (dvbbasebin->tsparse, name);
+  pad = gst_element_request_pad_simple (dvbbasebin->tsparse, name);
   if (pad == NULL)
     return NULL;
 

@@ -598,10 +598,10 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     video_recording_tee = gst_element_factory_make ("tee", "video_rec_tee");
     gst_bin_add (GST_BIN_CAST (self), video_recording_tee);     /* TODO check returns */
     self->video_tee_vf_pad =
-        gst_element_get_request_pad (video_recording_tee, "src_%u");
+        gst_element_request_pad_simple (video_recording_tee, "src_%u");
     self->video_tee_sink =
         gst_element_get_static_pad (video_recording_tee, "sink");
-    tee_pad = gst_element_get_request_pad (video_recording_tee, "src_%u");
+    tee_pad = gst_element_request_pad_simple (video_recording_tee, "src_%u");
     gst_ghost_pad_set_target (GST_GHOST_PAD (self->vidsrc), tee_pad);
     gst_object_unref (tee_pad);
 

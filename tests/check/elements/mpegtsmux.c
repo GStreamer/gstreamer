@@ -71,7 +71,7 @@ setup_src_pad (GstElement * element,
   fail_if (srcpad == NULL, "Could not create a srcpad");
 
   if (!(sinkpad = gst_element_get_static_pad (element, sinkname)))
-    sinkpad = gst_element_get_request_pad (element, sinkname);
+    sinkpad = gst_element_request_pad_simple (element, sinkname);
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
   /* we can't test the reference count of the sinkpad here because it's either
@@ -95,7 +95,7 @@ teardown_src_pad (GstElement * element, const gchar * sinkname)
 
   /* clean up floating src pad */
   if (!(sinkpad = gst_element_get_static_pad (element, sinkname)))
-    sinkpad = gst_element_get_request_pad (element, sinkname);
+    sinkpad = gst_element_request_pad_simple (element, sinkname);
   srcpad = gst_pad_get_peer (sinkpad);
 
   gst_pad_unlink (srcpad, sinkpad);

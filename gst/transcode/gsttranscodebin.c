@@ -841,7 +841,7 @@ gst_transcode_bin_request_pad (GstElement * element, GstPadTemplate * temp,
 {
   GstTranscodeBin *self = (GstTranscodeBin *) element;
   GstPad *gpad, *decodebin_pad =
-      gst_element_get_request_pad (self->decodebin, "sink_%u");
+      gst_element_request_pad_simple (self->decodebin, "sink_%u");
 
   if (!decodebin_pad) {
     GST_ERROR_OBJECT (element,

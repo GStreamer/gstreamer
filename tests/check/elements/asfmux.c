@@ -66,7 +66,7 @@ setup_src_pad (GstElement * element,
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
 
   if (!(sinkpad = gst_element_get_static_pad (element, sinkname)))
-    sinkpad = gst_element_get_request_pad (element, sinkname);
+    sinkpad = gst_element_request_pad_simple (element, sinkname);
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
   /* references are owned by: 1) us, 2) asfmux, 3) collect pads */
@@ -90,7 +90,7 @@ teardown_src_pad (GstElement * element, const gchar * sinkname)
   /* clean up floating src pad */
   padname = g_strdup_printf (sinkname, 1);
   if (!(sinkpad = gst_element_get_static_pad (element, padname)))
-    sinkpad = gst_element_get_request_pad (element, padname);
+    sinkpad = gst_element_request_pad_simple (element, padname);
   g_free (padname);
 
   fail_if (sinkpad == NULL, "sinkpad is null");

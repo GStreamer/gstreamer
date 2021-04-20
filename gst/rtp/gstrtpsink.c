@@ -253,7 +253,7 @@ gst_rtp_sink_request_new_pad (GstElement * element,
     return NULL;
 
   GST_RTP_SINK_LOCK (self);
-  pad = gst_element_get_request_pad (self->rtpbin, "send_rtp_sink_%u");
+  pad = gst_element_request_pad_simple (self->rtpbin, "send_rtp_sink_%u");
   GST_RTP_SINK_UNLOCK (self);
 
   g_return_val_if_fail (pad != NULL, NULL);

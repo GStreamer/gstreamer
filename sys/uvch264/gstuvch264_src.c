@@ -2816,8 +2816,8 @@ gst_uvc_h264_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       }
       if (!gst_element_link (self->v4l2_src, tee))
         goto error_remove_all;
-      vf_pad = gst_element_get_request_pad (tee, "src_%u");
-      vid_pad = gst_element_get_request_pad (tee, "src_%u");
+      vf_pad = gst_element_request_pad_simple (tee, "src_%u");
+      vid_pad = gst_element_request_pad_simple (tee, "src_%u");
     }
       break;
   }

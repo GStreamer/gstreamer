@@ -272,7 +272,7 @@ src_pad_added_cb (GstElement * src, GstPad * pad, GstUriTranscodeBin * self)
   sinkpad = gst_element_get_static_pad (self->transcodebin, "sink");
 
   if (gst_pad_is_linked (sinkpad))
-    sinkpad = gst_element_get_request_pad (self->transcodebin, "sink_%u");
+    sinkpad = gst_element_request_pad_simple (self->transcodebin, "sink_%u");
 
   if (sinkpad) {
     GST_DEBUG_OBJECT (self,

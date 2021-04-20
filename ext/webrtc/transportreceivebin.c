@@ -324,7 +324,7 @@ transport_receive_bin_constructed (GObject * object)
   gst_object_unref (pad);
 
   /* expose data_src */
-  pad = gst_element_get_request_pad (receive->stream->transport->dtlssrtpdec,
+  pad = gst_element_request_pad_simple (receive->stream->transport->dtlssrtpdec,
       "data_src");
   ghost = gst_ghost_pad_new ("data_src", pad);
   gst_element_add_pad (GST_ELEMENT (receive), ghost);

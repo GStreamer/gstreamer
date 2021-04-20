@@ -1266,7 +1266,7 @@ GST_START_TEST (test_no_nice_elements_request_pad)
 
   t->bus_message = NULL;
 
-  pad = gst_element_get_request_pad (t->webrtc1, "sink_0");
+  pad = gst_element_request_pad_simple (t->webrtc1, "sink_0");
   fail_unless (pad == NULL);
 
   test_webrtc_wait_for_answer_error_eos (t);
@@ -3422,7 +3422,7 @@ GST_START_TEST (test_reject_request_pad)
   test_validate_sdp (t, &offer, &answer);
 
   /* This should fail because the direction is wrong */
-  pad = gst_element_get_request_pad (t->webrtc1, "sink_0");
+  pad = gst_element_request_pad_simple (t->webrtc1, "sink_0");
   fail_unless (pad == NULL);
 
   g_object_set (trans, "direction",
@@ -3445,7 +3445,7 @@ GST_START_TEST (test_reject_request_pad)
   gst_caps_unref (caps);
 
   /* This should succeed and give us sink_0 */
-  pad = gst_element_get_request_pad (t->webrtc1, "sink_0");
+  pad = gst_element_request_pad_simple (t->webrtc1, "sink_0");
   fail_unless (pad != NULL);
 
   g_object_get (pad, "transceiver", &trans2, NULL);

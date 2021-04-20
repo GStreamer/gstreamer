@@ -402,7 +402,7 @@ gst_dtls_srtp_enc_request_new_pad (GstElement * element,
     gst_bin_add (GST_BIN (self), clocksync);
     gst_element_sync_state_with_parent (clocksync);
 
-    target_pad = gst_element_get_request_pad (self->srtp_enc, name);
+    target_pad = gst_element_request_pad_simple (self->srtp_enc, name);
     g_return_val_if_fail (target_pad, NULL);
 
     srtp_src_name = g_strdup_printf ("rtp_src_%d", pad_n);
@@ -417,7 +417,7 @@ gst_dtls_srtp_enc_request_new_pad (GstElement * element,
     GST_LOG_OBJECT (self, "added rtp sink pad");
   } else if (templ == gst_element_class_get_pad_template (klass,
           "rtcp_sink_%d")) {
-    target_pad = gst_element_get_request_pad (self->srtp_enc, name);
+    target_pad = gst_element_request_pad_simple (self->srtp_enc, name);
     g_return_val_if_fail (target_pad, NULL);
 
     sscanf (GST_PAD_NAME (target_pad), "rtcp_sink_%d", &pad_n);
@@ -432,7 +432,8 @@ gst_dtls_srtp_enc_request_new_pad (GstElement * element,
     GST_LOG_OBJECT (self, "added rtcp sink pad");
   } else if (templ == gst_element_class_get_pad_template (klass, "data_sink")) {
     g_return_val_if_fail (self->bin.dtls_element, NULL);
-    target_pad = gst_element_get_request_pad (self->bin.dtls_element, "sink");
+    target_pad =
+        gst_element_request_pad_simple (self->bin.dtls_element, "sink");
 
     ghost_pad = add_ghost_pad (element, name, target_pad, templ);
 

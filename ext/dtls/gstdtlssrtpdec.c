@@ -321,7 +321,7 @@ gst_dtls_srtp_dec_request_new_pad (GstElement * element,
   if (templ == gst_element_class_get_pad_template (klass, "data_src")) {
     GstPad *target_pad;
 
-    target_pad = gst_element_get_request_pad (self->bin.dtls_element, "src");
+    target_pad = gst_element_request_pad_simple (self->bin.dtls_element, "src");
 
     ghost_pad = gst_ghost_pad_new_from_template (name, target_pad, templ);
     gst_object_unref (target_pad);

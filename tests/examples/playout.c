@@ -824,7 +824,7 @@ playout_app_activate_item (PlayoutItem * item)
   /* Hook up to mixers and remove the probes blocking the pads */
   if (item->audio_pad) {
     GST_DEBUG ("%s: hooking up audio pad to mixer", item->fn);
-    sinkpad = gst_element_get_request_pad (app->audio_mixer, "sink_%u");
+    sinkpad = gst_element_request_pad_simple (app->audio_mixer, "sink_%u");
     gst_pad_link (item->audio_pad, sinkpad);
 
     segment_time = playout_item_pad_get_segment_time (item->audio_pad);
@@ -857,7 +857,7 @@ playout_app_activate_item (PlayoutItem * item)
 
   if (item->video_pad) {
     GST_DEBUG ("%s: hooking up video pad to mixer", item->fn);
-    sinkpad = gst_element_get_request_pad (app->video_mixer, "sink_%u");
+    sinkpad = gst_element_request_pad_simple (app->video_mixer, "sink_%u");
 
     /* Get new height/width/xpos/ypos such that the video scales up or down to
      * fit within the output video size without any cropping */

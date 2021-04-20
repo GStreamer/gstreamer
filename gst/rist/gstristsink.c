@@ -259,7 +259,7 @@ gst_rist_sink_add_bond (GstRistSink * sink)
     gst_element_add_pad (sink->rtxbin, pad);
 
     g_snprintf (name, 32, "send_rtp_sink_%u", bond->session);
-    pad = gst_element_get_request_pad (sink->rtpbin, name);
+    pad = gst_element_request_pad_simple (sink->rtpbin, name);
     gst_object_unref (pad);
   }
 
@@ -761,7 +761,7 @@ gst_rist_sink_start (GstRistSink * sink)
     g_object_unref (session);
 
     g_snprintf (name, 32, "src_%u", bond->session);
-    pad = gst_element_get_request_pad (sink->dispatcher, name);
+    pad = gst_element_request_pad_simple (sink->dispatcher, name);
     gst_element_link_pads (sink->dispatcher, name, bond->rtx_queue, "sink");
     gst_object_unref (pad);
 

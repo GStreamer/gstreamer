@@ -107,7 +107,7 @@ GST_START_TEST (captions_and_eos)
 
   h = gst_harness_new_with_padnames ("cccombiner", "sink", "src");
   h2 = gst_harness_new_with_element (h->element, NULL, NULL);
-  caption_pad = gst_element_get_request_pad (h->element, "caption");
+  caption_pad = gst_element_request_pad_simple (h->element, "caption");
   gst_harness_add_element_sink_pad (h2, caption_pad);
   gst_object_unref (caption_pad);
 

@@ -147,22 +147,22 @@ GST_START_TEST (test_data_transfer)
 
   gst_element_set_state (c_enc, GST_STATE_PAUSED);
 
-  target = gst_element_get_request_pad (c_dec, "src");
+  target = gst_element_request_pad_simple (c_dec, "src");
   ghost = gst_ghost_pad_new ("src", target);
   gst_element_add_pad (s_bin, ghost);
   gst_object_unref (target);
 
-  target = gst_element_get_request_pad (s_enc, "sink");
+  target = gst_element_request_pad_simple (s_enc, "sink");
   ghost = gst_ghost_pad_new ("sink", target);
   gst_element_add_pad (s_bin, ghost);
   gst_object_unref (target);
 
-  target = gst_element_get_request_pad (s_dec, "src");
+  target = gst_element_request_pad_simple (s_dec, "src");
   ghost = gst_ghost_pad_new ("src", target);
   gst_element_add_pad (c_bin, ghost);
   gst_object_unref (target);
 
-  target = gst_element_get_request_pad (c_enc, "sink");
+  target = gst_element_request_pad_simple (c_enc, "sink");
   ghost = gst_ghost_pad_new ("sink", target);
   gst_element_add_pad (c_bin, ghost);
   gst_object_unref (target);

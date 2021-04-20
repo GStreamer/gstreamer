@@ -3924,7 +3924,7 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
   } else {
     gchar *pad_name = g_strdup_printf ("sink_%u", pad->trans->mline);
     GstPad *funnel_sinkpad =
-        gst_element_get_request_pad (webrtc->rtpfunnel, pad_name);
+        gst_element_request_pad_simple (webrtc->rtpfunnel, pad_name);
 
     gst_ghost_pad_set_target (GST_GHOST_PAD (pad), funnel_sinkpad);
 
@@ -4592,7 +4592,7 @@ _connect_rtpfunnel (GstWebRTCBin * webrtc, guint session_id)
   queue_srcpad = gst_element_get_static_pad (queue, "src");
 
   pad_name = g_strdup_printf ("send_rtp_sink_%d", session_id);
-  rtp_sink = gst_element_get_request_pad (webrtc->rtpbin, pad_name);
+  rtp_sink = gst_element_request_pad_simple (webrtc->rtpbin, pad_name);
   g_free (pad_name);
   gst_pad_link (queue_srcpad, rtp_sink);
   gst_object_unref (queue_srcpad);

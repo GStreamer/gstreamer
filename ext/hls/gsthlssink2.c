@@ -523,7 +523,7 @@ gst_hls_sink2_request_new_pad (GstElement * element, GstPadTemplate * templ,
   is_audio = strcmp (templ->name_template, "audio") == 0;
 
   peer =
-      gst_element_get_request_pad (sink->splitmuxsink,
+      gst_element_request_pad_simple (sink->splitmuxsink,
       is_audio ? "audio_0" : "video");
   if (!peer)
     return NULL;

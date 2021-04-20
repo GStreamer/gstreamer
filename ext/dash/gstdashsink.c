@@ -804,7 +804,7 @@ gst_dash_sink_request_new_pad (GstElement * element, GstPadTemplate * templ,
     goto done;
   }
 
-  peer = gst_element_get_request_pad (stream->splitmuxsink, split_pad_name);
+  peer = gst_element_request_pad_simple (stream->splitmuxsink, split_pad_name);
   if (!peer) {
     GST_ERROR_OBJECT (sink, "Unable to request pad name %s", split_pad_name);
     return NULL;
