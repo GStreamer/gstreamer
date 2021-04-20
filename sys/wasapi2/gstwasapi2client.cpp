@@ -1040,7 +1040,6 @@ gst_wasapi2_util_parse_waveformatex (WAVEFORMATEXTENSIBLE * format,
     GstCaps * template_caps, GstCaps ** out_caps,
     GstAudioChannelPosition ** out_positions)
 {
-  int ii;
   const gchar *afmt;
   guint64 channel_mask;
 
@@ -1069,18 +1068,14 @@ gst_wasapi2_util_parse_waveformatex (WAVEFORMATEXTENSIBLE * format,
   channel_mask =
       gst_wasapi_util_waveformatex_to_channel_mask (format, out_positions);
 
-  for (ii = 0; ii < gst_caps_get_size (*out_caps); ii++) {
-    GstStructure *s = gst_caps_get_structure (*out_caps, ii);
+  gst_caps_set_simple (*out_caps,
+      "format", G_TYPE_STRING, afmt,
+      "channels", G_TYPE_INT, format->Format.nChannels,
+      "rate", G_TYPE_INT, format->Format.nSamplesPerSec, NULL);
 
-    gst_structure_set (s,
-        "format", G_TYPE_STRING, afmt,
-        "channels", G_TYPE_INT, format->Format.nChannels,
-        "rate", G_TYPE_INT, format->Format.nSamplesPerSec, NULL);
-
-    if (channel_mask) {
-      gst_structure_set (s,
-          "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
-    }
+  if (channel_mask) {
+    gst_caps_set_simple (*out_caps,
+        "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
   }
 
   return TRUE;
