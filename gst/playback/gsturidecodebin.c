@@ -1683,7 +1683,7 @@ remove_decoders (GstURIDecodeBin * bin, gboolean force)
 
       gst_element_set_state (decoder, GST_STATE_READY);
       /* add it to our list of pending decodebins */
-      g_object_ref (decoder);
+      gst_object_ref (decoder);
       gst_bin_remove (GST_BIN_CAST (bin), decoder);
       /* restore some properties we might have changed */
       g_object_set (decoder, "sink-caps", NULL, NULL);
