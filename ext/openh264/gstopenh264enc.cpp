@@ -811,6 +811,8 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.sSpatialLayers[0].iSpatialBitrate = enc_params.iTargetBitrate;
   enc_params.sSpatialLayers[0].iMaxSpatialBitrate = enc_params.iMaxBitrate;
 
+  gst_clear_caps (&allowed_caps);
+
   if (openh264enc->slice_mode == GST_OPENH264_SLICE_MODE_N_SLICES) {
     if (openh264enc->num_slices == 1)
       slice_mode = SM_SINGLE_SLICE;
@@ -1050,7 +1052,7 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
                 frame_info.sLayerInfo[i].pNalLengthInByte[j]);
           }
         }
-        headers = g_list_append (headers, gst_buffer_ref (hdr));
+        headers = g_list_append (headers, hdr);    /* take ownership of hdr */
     }
     gst_buffer_fill (frame->output_buffer, buf_length, frame_info.sLayerInfo[i].pBsBuf, layer_size);
     buf_length += layer_size;
