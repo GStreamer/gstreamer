@@ -47,6 +47,9 @@
 #include "asfheaders.h"
 #include "asfpacket.h"
 
+GST_DEBUG_CATEGORY (asfdemux_dbg);
+#define GST_CAT_DEFAULT asfdemux_dbg
+
 static GstStaticPadTemplate gst_asf_demux_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -76,8 +79,6 @@ GST_STATIC_PAD_TEMPLATE ("video_%u",
 #define gst_asf_get_flow_name(flow)    \
   (flow == ASF_FLOW_NEED_MORE_DATA) ?  \
   "need-more-data" : gst_flow_get_name (flow)
-
-GST_DEBUG_CATEGORY (asfdemux_dbg);
 
 static void gst_asf_demux_finalize (GObject * object);
 static GstStateChangeReturn gst_asf_demux_change_state (GstElement * element,
@@ -850,12 +851,21 @@ gst_asf_demux_handle_src_event (GstPad * pad, GstObject * parent,
 {
   GstASFDemux *demux;
   gboolean ret;
+  guint32 seqnum;
 
   demux = GST_ASF_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       GST_LOG_OBJECT (pad, "seek event");
+      seqnum = gst_event_get_seqnum (event);
+      if (demux->segment_seqnum == seqnum) {
+        GST_LOG_OBJECT (pad,
+            "Drop duplicated SEEK event seqnum %" G_GUINT32_FORMAT, seqnum);
+        gst_event_unref (event);
+        ret = TRUE;
+        break;
+      }
       ret = gst_asf_demux_handle_seek_event (demux, event);
       gst_event_unref (event);
       break;
@@ -1785,7 +1795,6 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
       demux->taglist = NULL;
 
       demux->need_newsegment = FALSE;
-      demux->segment_seqnum = 0;
       demux->segment_running = TRUE;
     }
 
