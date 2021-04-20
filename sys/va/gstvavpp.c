@@ -643,7 +643,7 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   GstBufferPool *pool = NULL, *other_pool = NULL;
   GstCaps *outcaps = NULL;
   GstStructure *config;
-  GstVideoInfo alloc_info;
+  GstVideoInfo vinfo;
   guint min, max, size = 0, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
   gboolean update_pool, update_allocator, has_videometa, copy_frames;
 
@@ -651,6 +651,11 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 
   gst_allocation_params_init (&other_params);
   gst_allocation_params_init (&params);
+
+  if (!gst_video_info_from_caps (&vinfo, outcaps)) {
+    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, outcaps);
+    return FALSE;
+  }
 
   if (gst_query_get_n_allocation_params (query) > 0) {
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &other_params);
@@ -679,10 +684,6 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 
     update_pool = TRUE;
   } else {
-    GstVideoInfo vinfo;
-
-    gst_video_info_init (&vinfo);
-    gst_video_info_from_caps (&vinfo, outcaps);
     size = GST_VIDEO_INFO_SIZE (&vinfo);
     min = 1;
     max = 0;
@@ -709,13 +710,12 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   else
     gst_query_add_allocation_param (query, allocator, &params);
 
-  alloc_info = self->out_info;
   if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
-    gst_va_dmabuf_allocator_get_format (allocator, &alloc_info, NULL);
+    gst_va_dmabuf_allocator_get_format (allocator, &vinfo, NULL);
   } else if (GST_IS_VA_ALLOCATOR (allocator)) {
-    gst_va_allocator_get_format (allocator, &alloc_info, NULL);
+    gst_va_allocator_get_format (allocator, &vinfo, NULL);
   }
-  self->srcpad_info = alloc_info;
+  self->srcpad_info = vinfo;
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
