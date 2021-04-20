@@ -101,7 +101,9 @@ struct _GstURIDecodeBin
   GstElement *queue;
   GstElement *typefind;
   guint have_type_id;           /* have-type signal id from typefind */
+  /* without holding ref */
   GSList *decodebins;
+  /* Holding strong reference to decodebin */
   GSList *pending_decodebins;
   GHashTable *streams;
   guint numpads;
@@ -1690,8 +1692,6 @@ remove_decoders (GstURIDecodeBin * bin, gboolean force)
       caps = DEFAULT_CAPS;
       g_object_set (decoder, "caps", caps, NULL);
       gst_caps_unref (caps);
-      /* make it freshly floating again */
-      g_object_force_floating (G_OBJECT (decoder));
 
       bin->pending_decodebins =
           g_slist_prepend (bin->pending_decodebins, decoder);
@@ -1810,6 +1810,7 @@ static GstElement *
 make_decoder (GstURIDecodeBin * decoder)
 {
   GstElement *decodebin;
+  gboolean unref_dbin = FALSE;
 
   /* re-use pending decodebin */
   if (decoder->pending_decodebins) {
@@ -1818,6 +1819,7 @@ make_decoder (GstURIDecodeBin * decoder)
     decodebin = (GstElement *) first->data;
     decoder->pending_decodebins =
         g_slist_delete_link (decoder->pending_decodebins, first);
+    unref_dbin = TRUE;
   } else {
     GST_LOG_OBJECT (decoder, "making new decodebin");
 
@@ -1900,6 +1902,11 @@ make_decoder (GstURIDecodeBin * decoder)
   gst_bin_add (GST_BIN_CAST (decoder), decodebin);
 
   decoder->decodebins = g_slist_prepend (decoder->decodebins, decodebin);
+  /* Unref if this decodebin came from our pending_decodebins,
+   * since we were holding strong reference to decodebin and gst_bin_add()
+   * will increase refcount */
+  if (unref_dbin)
+    gst_object_unref (decodebin);
 
   return decodebin;
 
