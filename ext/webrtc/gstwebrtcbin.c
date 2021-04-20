@@ -1955,34 +1955,33 @@ _on_data_channel_ready_state (WebRTCDataChannel * channel,
     GParamSpec * pspec, GstWebRTCBin * webrtc)
 {
   GstWebRTCDataChannelState ready_state;
-  guint i;
 
   g_object_get (channel, "ready-state", &ready_state, NULL);
 
   if (ready_state == GST_WEBRTC_DATA_CHANNEL_STATE_OPEN) {
-    gboolean found = FALSE;
+    gboolean found;
 
-    for (i = 0; i < webrtc->priv->pending_data_channels->len; i++) {
-      WebRTCDataChannel *c;
-
-      c = g_ptr_array_index (webrtc->priv->pending_data_channels, i);
-      if (c == channel) {
-        found = TRUE;
-        g_ptr_array_remove_index (webrtc->priv->pending_data_channels, i);
-        break;
-      }
-    }
+    found = g_ptr_array_remove (webrtc->priv->pending_data_channels, channel);
     if (found == FALSE) {
       GST_FIXME_OBJECT (webrtc, "Received open for unknown data channel");
       return;
     }
 
-    g_ptr_array_add (webrtc->priv->data_channels, channel);
+    g_ptr_array_add (webrtc->priv->data_channels, gst_object_ref (channel));
 
     gst_webrtc_bin_update_sctp_priority (webrtc);
 
     g_signal_emit (webrtc, gst_webrtc_bin_signals[ON_DATA_CHANNEL_SIGNAL], 0,
-        gst_object_ref (channel));
+        channel);
+  } else if (ready_state == GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED) {
+    gboolean found;
+
+    found = g_ptr_array_remove (webrtc->priv->pending_data_channels, channel)
+        || g_ptr_array_remove (webrtc->priv->data_channels, channel);
+
+    if (found == FALSE) {
+      GST_FIXME_OBJECT (webrtc, "Received close for unknown data channel");
+    }
   }
 }
 

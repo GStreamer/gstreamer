@@ -51,6 +51,7 @@ struct _WebRTCDataChannel
   gboolean                          opened;
   gulong                            src_probe;
   GError                           *stored_error;
+  gboolean                          peer_closed;
 
   gpointer                          _padding[GST_PADDING];
 };

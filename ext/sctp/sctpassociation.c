@@ -234,7 +234,7 @@ gst_sctp_association_init (GstSctpAssociation * self)
 
   self->state = GST_SCTP_ASSOCIATION_STATE_NEW;
 
-  self->use_sock_stream = FALSE;
+  self->use_sock_stream = TRUE;
 
   usrsctp_register_address ((void *) self);
 }
@@ -546,6 +546,7 @@ gst_sctp_association_reset_stream (GstSctpAssociation * self, guint16 stream_id)
 
   length = (socklen_t) (sizeof (struct sctp_reset_streams) + sizeof (guint16));
   srs = (struct sctp_reset_streams *) g_malloc0 (length);
+  srs->srs_assoc_id = SCTP_ALL_ASSOC;
   srs->srs_flags = SCTP_STREAM_RESET_OUTGOING;
   srs->srs_number_streams = 1;
   srs->srs_stream_list[0] = stream_id;

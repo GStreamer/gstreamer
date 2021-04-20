@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 enum
 {
   SIGNAL_0,
-  ON_RESET_STREAM_SIGNAL,
+  ON_STREAM_RESET_SIGNAL,
   LAST_SIGNAL,
 };
 
@@ -102,7 +102,7 @@ _emit_stream_reset (GstWebRTCSCTPTransport * sctp, gpointer user_data)
   guint stream_id = GPOINTER_TO_UINT (user_data);
 
   g_signal_emit (sctp,
-      gst_webrtc_sctp_transport_signals[ON_RESET_STREAM_SIGNAL], 0, stream_id);
+      gst_webrtc_sctp_transport_signals[ON_STREAM_RESET_SIGNAL], 0, stream_id);
 }
 
 static void
@@ -215,6 +215,7 @@ gst_webrtc_sctp_transport_constructed (GObject * object)
   sctp->sctpenc =
       g_object_ref_sink (gst_element_factory_make ("sctpenc", NULL));
   g_object_set (sctp->sctpenc, "sctp-association-id", association_id, NULL);
+  g_object_set (sctp->sctpenc, "use-sock-stream", TRUE, NULL);
 
   g_signal_connect (sctp->sctpdec, "pad-removed",
       G_CALLBACK (_on_sctp_dec_pad_removed), sctp);
@@ -264,11 +265,11 @@ gst_webrtc_sctp_transport_class_init (GstWebRTCSCTPTransportClass * klass)
           0, G_MAXUINT16, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstWebRTCSCTPTransport::reset-stream:
+   * GstWebRTCSCTPTransport::stream-reset:
    * @object: the #GstWebRTCSCTPTransport
    * @stream_id: the SCTP stream that was reset
    */
-  gst_webrtc_sctp_transport_signals[ON_RESET_STREAM_SIGNAL] =
+  gst_webrtc_sctp_transport_signals[ON_STREAM_RESET_SIGNAL] =
       g_signal_new ("stream-reset", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
 }
