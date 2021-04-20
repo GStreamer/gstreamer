@@ -257,7 +257,7 @@ decodebin_pad_added_cb (GstElement * dbin, GstPad * pad, MyDataStruct * data)
   if (sink_pad) {
     GstPad *playsink_pad;
 
-    playsink_pad = gst_element_get_request_pad (data->playsink, sink_pad);
+    playsink_pad = gst_element_request_pad_simple (data->playsink, sink_pad);
     if (playsink_pad)
       gst_pad_link (pad, playsink_pad);
   }
@@ -325,7 +325,7 @@ main (int argc, gchar ** argv)
       data->other_src = g_list_append (data->other_src, new_src);
       gst_bin_add ((GstBin *) data->pipeline, new_src);
       src_pad = gst_element_get_static_pad (new_src, "src");
-      sink_pad = gst_element_get_request_pad (data->decodebin, "sink_%u");
+      sink_pad = gst_element_request_pad_simple (data->decodebin, "sink_%u");
       if (gst_pad_link (src_pad, sink_pad) != GST_PAD_LINK_OK) {
         g_printf ("Could not link new source to decodebin : %s\n", argv[i]);
         return 1;

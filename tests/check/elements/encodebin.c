@@ -385,7 +385,7 @@ GST_START_TEST (test_encodebin_sink_pads_dynamic)
   gst_object_unref (srcpad);
 
   /* Check if the audio sink pad can be requested */
-  sinkpad = gst_element_get_request_pad (ebin, "audio_0");
+  sinkpad = gst_element_request_pad_simple (ebin, "audio_0");
   fail_unless (sinkpad != NULL);
   _caps_match (sinkpad, "audio/x-raw;audio/x-vorbis");
   gst_element_release_request_pad (ebin, sinkpad);
@@ -474,12 +474,12 @@ GST_START_TEST (test_encodebin_sink_pads_multiple_dynamic)
   gst_object_unref (srcpad);
 
   /* Check if the audio sink pad was properly created */
-  sinkpadvorbis = gst_element_get_request_pad (ebin, "audio_0");
+  sinkpadvorbis = gst_element_request_pad_simple (ebin, "audio_0");
   _caps_match (sinkpadvorbis, "audio/x-raw;audio/x-vorbis");
   fail_unless (sinkpadvorbis != NULL);
 
   /* Check if the video sink pad was properly created */
-  sinkpadtheora = gst_element_get_request_pad (ebin, "video_1");
+  sinkpadtheora = gst_element_request_pad_simple (ebin, "video_1");
   _caps_match (sinkpadtheora, "video/x-raw;video/x-theora");
   fail_unless (sinkpadtheora != NULL);
 
@@ -619,7 +619,7 @@ GST_START_TEST (test_encodebin_render_audio_only_static)
   fail_unless (gst_element_link_many (audiotestsrc, ebin, fakesink, NULL));
 
   /* Requesting a new pad should fail */
-  ASSERT_CRITICAL (gst_element_get_request_pad (ebin, "audio_0"));
+  ASSERT_CRITICAL (gst_element_request_pad_simple (ebin, "audio_0"));
 
   sinkcaps = gst_caps_new_empty_simple ("audio/x-raw");
   g_signal_emit_by_name (ebin, "request-pad", sinkcaps, &sinkpad);
@@ -683,7 +683,7 @@ GST_START_TEST (test_encodebin_render_audio_dynamic)
   srcpad = gst_element_get_static_pad (audiotestsrc, "src");
   fail_unless (srcpad != NULL);
 
-  sinkpad = gst_element_get_request_pad (ebin, "audio_0");
+  sinkpad = gst_element_request_pad_simple (ebin, "audio_0");
   fail_unless (sinkpad != NULL);
   _caps_match (sinkpad, "audio/x-raw;audio/x-vorbis");
 
@@ -815,7 +815,7 @@ GST_START_TEST (test_encodebin_render_audio_video_dynamic)
   fail_unless (gst_element_link (ebin, fakesink));
 
   srcpad = gst_element_get_static_pad (audiotestsrc, "src");
-  sinkpad1 = gst_element_get_request_pad (ebin, "audio_0");
+  sinkpad1 = gst_element_request_pad_simple (ebin, "audio_0");
   fail_unless (srcpad != NULL);
   fail_unless (sinkpad1 != NULL);
   _caps_match (sinkpad1, "audio/x-raw;audio/x-vorbis");
@@ -823,7 +823,7 @@ GST_START_TEST (test_encodebin_render_audio_video_dynamic)
   gst_object_unref (srcpad);
 
   srcpad = gst_element_get_static_pad (videotestsrc, "src");
-  sinkpad2 = gst_element_get_request_pad (ebin, "video_1");
+  sinkpad2 = gst_element_request_pad_simple (ebin, "video_1");
   _caps_match (sinkpad2, "video/x-raw;video/x-theora");
   fail_unless_equals_int (gst_pad_link (srcpad, sinkpad2), GST_PAD_LINK_OK);
   gst_object_unref (srcpad);

@@ -3515,7 +3515,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
   /* get sinkpad for the new stream */
   if (combine->combiner) {
-    if ((sinkpad = gst_element_get_request_pad (combine->combiner, "sink_%u"))) {
+    if ((sinkpad =
+            gst_element_request_pad_simple (combine->combiner, "sink_%u"))) {
 
       GST_DEBUG_OBJECT (playbin, "got pad %s:%s from combiner",
           GST_DEBUG_PAD_NAME (sinkpad));

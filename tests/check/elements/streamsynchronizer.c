@@ -196,7 +196,7 @@ GST_START_TEST (test_basic)
   synchr = gst_element_factory_make ("streamsynchronizer", NULL);
 
   /* Get sinkpad/srcpad */
-  sinkpad = gst_element_get_request_pad (synchr, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (synchr, "sink_%u");
   fail_unless (sinkpad != NULL);
   srcpad = get_other_pad (sinkpad);
   fail_unless (srcpad != NULL);

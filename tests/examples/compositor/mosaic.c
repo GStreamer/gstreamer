@@ -50,7 +50,8 @@ _pad_added_cb (GstElement * decodebin, GstPad * pad, VideoInfo * info)
 {
   GstStructure *converter_config;
   GstPad *sinkpad =
-      gst_element_get_request_pad (GST_ELEMENT (info->compositor), "sink_%u");
+      gst_element_request_pad_simple (GST_ELEMENT (info->compositor),
+      "sink_%u");
 
   converter_config = gst_structure_new ("GstVideoConverter",
       GST_VIDEO_CONVERTER_OPT_THREADS, G_TYPE_UINT, 0,

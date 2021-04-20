@@ -176,14 +176,14 @@ make_pipeline (void)
 
     gst_bin_add (GST_BIN (result), encoder);
 
-    srcpad = gst_element_get_request_pad (outputselect, "src_%u");
+    srcpad = gst_element_request_pad_simple (outputselect, "src_%u");
     sinkpad = gst_element_get_static_pad (encoder, "sink");
     gst_pad_link (srcpad, sinkpad);
     gst_object_unref (srcpad);
     gst_object_unref (sinkpad);
 
     srcpad = gst_element_get_static_pad (encoder, "src");
-    sinkpad = gst_element_get_request_pad (inputselect, "sink_%u");
+    sinkpad = gst_element_request_pad_simple (inputselect, "sink_%u");
     gst_pad_link (srcpad, sinkpad);
     gst_object_unref (srcpad);
     gst_object_unref (sinkpad);

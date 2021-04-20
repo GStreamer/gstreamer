@@ -48,7 +48,8 @@ static void
 _pad_added_cb (GstElement * decodebin, GstPad * pad, VideoInfo * info)
 {
   GstPad *sinkpad =
-      gst_element_get_request_pad (GST_ELEMENT (info->compositor), "sink_%u");
+      gst_element_request_pad_simple (GST_ELEMENT (info->compositor),
+      "sink_%u");
   GstControlSource *control_source;
   gboolean is_last = info->z_order == 1;
 

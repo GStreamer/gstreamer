@@ -384,10 +384,10 @@ GST_START_TEST (test_request_pad_cleanup)
   GstPad *pad;
 
   oggmux = gst_element_factory_make ("oggmux", NULL);
-  pad = gst_element_get_request_pad (oggmux, "video_%u");
+  pad = gst_element_request_pad_simple (oggmux, "video_%u");
   fail_unless (pad != NULL);
   gst_object_unref (pad);
-  pad = gst_element_get_request_pad (oggmux, "audio_%u");
+  pad = gst_element_request_pad_simple (oggmux, "audio_%u");
   fail_unless (pad != NULL);
   gst_object_unref (pad);
   gst_object_unref (oggmux);

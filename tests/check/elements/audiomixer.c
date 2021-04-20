@@ -738,7 +738,7 @@ GST_START_TEST (test_remove_pad)
   fail_unless (res == TRUE, NULL);
 
   /* create an unconnected sinkpad in audiomixer */
-  pad = gst_element_get_request_pad (audiomixer, "sink_%u");
+  pad = gst_element_request_pad_simple (audiomixer, "sink_%u");
   fail_if (pad == NULL, NULL);
 
   srcpad = gst_element_get_static_pad (audiomixer, "src");
@@ -842,7 +842,7 @@ GST_START_TEST (test_clip)
 
   /* create an unconnected sinkpad in audiomixer, should also automatically activate
    * the pad */
-  sinkpad = gst_element_get_request_pad (audiomixer, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (audiomixer, "sink_%u");
   fail_if (sinkpad == NULL, NULL);
 
   gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
@@ -1226,7 +1226,7 @@ run_sync_test (SendBuffersFunction send_buffers,
 
   /* create an unconnected sinkpad in audiomixer, should also automatically activate
    * the pad */
-  sinkpad1 = gst_element_get_request_pad (audiomixer, "sink_%u");
+  sinkpad1 = gst_element_request_pad_simple (audiomixer, "sink_%u");
   fail_if (sinkpad1 == NULL, NULL);
 
   queue1_sinkpad = gst_element_get_static_pad (queue1, "sink");
@@ -1234,7 +1234,7 @@ run_sync_test (SendBuffersFunction send_buffers,
   fail_unless (gst_pad_link (pad, sinkpad1) == GST_PAD_LINK_OK);
   gst_object_unref (pad);
 
-  sinkpad2 = gst_element_get_request_pad (audiomixer, "sink_%u");
+  sinkpad2 = gst_element_request_pad_simple (audiomixer, "sink_%u");
   fail_if (sinkpad2 == NULL, NULL);
 
   queue2_sinkpad = gst_element_get_static_pad (queue2, "sink");
@@ -1573,13 +1573,13 @@ GST_START_TEST (test_segment_base_handling)
   fail_unless (gst_element_link (mix, sink));
 
   srcpad = gst_element_get_static_pad (src1, "src");
-  sinkpad = gst_element_get_request_pad (mix, "sink_1");
+  sinkpad = gst_element_request_pad_simple (mix, "sink_1");
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
   gst_object_unref (sinkpad);
   gst_object_unref (srcpad);
 
   srcpad = gst_element_get_static_pad (src2, "src");
-  sinkpad = gst_element_get_request_pad (mix, "sink_2");
+  sinkpad = gst_element_request_pad_simple (mix, "sink_2");
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
   /* set a pad offset of another 5 seconds */
   gst_pad_set_offset (sinkpad, 5 * GST_SECOND);
@@ -1647,7 +1647,7 @@ GST_START_TEST (test_sinkpad_property_controller)
   fail_unless (gst_element_link (mix, sink));
 
   srcpad = gst_element_get_static_pad (src1, "src");
-  sinkpad = gst_element_get_request_pad (mix, "sink_0");
+  sinkpad = gst_element_request_pad_simple (mix, "sink_0");
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
   set_pad_volume_fade (sinkpad, 0, 0, 1.0, 2.0);
   gst_object_unref (sinkpad);
@@ -1748,7 +1748,7 @@ GST_START_TEST (test_change_output_caps)
   state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
-  sinkpad = gst_element_get_request_pad (audiomixer, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (audiomixer, "sink_%u");
   fail_if (sinkpad == NULL, NULL);
 
   gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
@@ -1857,7 +1857,7 @@ GST_START_TEST (test_change_output_caps_mid_output_buffer)
   state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
-  sinkpad = gst_element_get_request_pad (audiomixer, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (audiomixer, "sink_%u");
   fail_if (sinkpad == NULL, NULL);
 
   gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));

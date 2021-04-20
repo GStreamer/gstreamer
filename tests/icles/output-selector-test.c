@@ -124,7 +124,7 @@ main (gint argc, gchar * argv[])
 
   /* link output 1 */
   sinkpad = gst_element_get_static_pad (c1, "sink");
-  osel_src1 = gst_element_get_request_pad (osel, "src_%u");
+  osel_src1 = gst_element_request_pad_simple (osel, "src_%u");
   if (gst_pad_link (osel_src1, sinkpad) != GST_PAD_LINK_OK) {
     g_print ("linking output 1 converter failed\n");
     return -1;
@@ -138,7 +138,7 @@ main (gint argc, gchar * argv[])
 
   /* link output 2 */
   sinkpad = gst_element_get_static_pad (c2, "sink");
-  osel_src2 = gst_element_get_request_pad (osel, "src_%u");
+  osel_src2 = gst_element_request_pad_simple (osel, "src_%u");
   if (gst_pad_link (osel_src2, sinkpad) != GST_PAD_LINK_OK) {
     g_print ("linking output 2 converter failed\n");
     return -1;

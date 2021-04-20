@@ -80,7 +80,7 @@ add_source (gdouble freq, gfloat pos)
   gst_element_add_pad (info->bin, info->bin_srcpad);
 
   /* get new pad from adder, adder will now wait for data on this pad */
-  info->adder_sinkpad = gst_element_get_request_pad (adder, "sink_%u");
+  info->adder_sinkpad = gst_element_request_pad_simple (adder, "sink_%u");
 
   /* link inside the bin */
   gst_pad_link (info->src_srcpad, info->fx_sinkpad);

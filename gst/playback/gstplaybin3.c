@@ -2901,7 +2901,7 @@ combiner_control_pad (GstPlayBin3 * playbin, GstSourceCombine * combine,
 
   if (combine->combiner) {
     GstPad *sinkpad =
-        gst_element_get_request_pad (combine->combiner, "sink_%u");
+        gst_element_request_pad_simple (combine->combiner, "sink_%u");
 
     if (sinkpad == NULL)
       goto request_pad_failed;

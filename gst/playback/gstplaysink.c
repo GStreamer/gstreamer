@@ -3360,7 +3360,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       GstIterator *it;
 
       playsink->video_sinkpad_stream_synchronizer =
-          gst_element_get_request_pad (GST_ELEMENT_CAST
+          gst_element_request_pad_simple (GST_ELEMENT_CAST
           (playsink->stream_synchronizer), "sink_%u");
       it = gst_pad_iterate_internal_links
           (playsink->video_sinkpad_stream_synchronizer);
@@ -3572,7 +3572,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       GstIterator *it;
 
       playsink->audio_sinkpad_stream_synchronizer =
-          gst_element_get_request_pad (GST_ELEMENT_CAST
+          gst_element_request_pad_simple (GST_ELEMENT_CAST
           (playsink->stream_synchronizer), "sink_%u");
       it = gst_pad_iterate_internal_links
           (playsink->audio_sinkpad_stream_synchronizer);
@@ -3627,7 +3627,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       GST_DEBUG_OBJECT (playsink, "adding audio chain");
       if (playsink->audio_tee_asrc == NULL) {
         playsink->audio_tee_asrc =
-            gst_element_get_request_pad (playsink->audio_tee, "src_%u");
+            gst_element_request_pad_simple (playsink->audio_tee, "src_%u");
       }
 
       sinkpad = playsink->audio_ssync_queue_sinkpad;
@@ -3704,7 +3704,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
         activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
         if (playsink->audio_tee_vissrc == NULL) {
           playsink->audio_tee_vissrc =
-              gst_element_get_request_pad (playsink->audio_tee, "src_%u");
+              gst_element_request_pad_simple (playsink->audio_tee, "src_%u");
         }
         gst_pad_link_full (playsink->audio_tee_vissrc,
             playsink->vischain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
@@ -3781,7 +3781,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
         GValue item = { 0, };
 
         playsink->text_sinkpad_stream_synchronizer =
-            gst_element_get_request_pad (GST_ELEMENT_CAST
+            gst_element_request_pad_simple (GST_ELEMENT_CAST
             (playsink->stream_synchronizer), "sink_%u");
         it = gst_pad_iterate_internal_links
             (playsink->text_sinkpad_stream_synchronizer);

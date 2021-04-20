@@ -344,7 +344,7 @@ GST_START_TEST (test_caps_query)
   res = gst_element_link (capsfilter, sink);
   fail_unless (res == TRUE, NULL);
 
-  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (compositor, "sink_%u");
 
   state_res = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_if (state_res == GST_STATE_CHANGE_FAILURE);
@@ -418,7 +418,7 @@ GST_START_TEST (test_caps_query_interlaced)
   gst_bin_add_many (GST_BIN (pipeline), compositor, sink, NULL);
   res = gst_element_link (compositor, sink);
   fail_unless (res == TRUE, NULL);
-  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (compositor, "sink_%u");
 
   state_res = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_if (state_res == GST_STATE_CHANGE_FAILURE);
@@ -445,7 +445,7 @@ GST_START_TEST (test_caps_query_interlaced)
 
   /* now recheck the interlace-mode */
   gst_object_unref (sinkpad);
-  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (compositor, "sink_%u");
   caps = gst_pad_query_caps (sinkpad, NULL);
   fail_if (gst_caps_can_intersect (caps, caps_interleaved));
   fail_unless (gst_caps_can_intersect (caps, caps_progressive));
@@ -509,7 +509,7 @@ run_late_caps_query_test (GstCaps * input_caps, GstCaps * output_allowed_caps,
   res = gst_element_link (capsfilter, sink);
   fail_unless (res == TRUE, NULL);
 
-  sinkpad1 = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad1 = gst_element_request_pad_simple (compositor, "sink_%u");
   srcpad1 = gst_pad_new ("src1", GST_PAD_SRC);
   fail_unless (gst_pad_link (srcpad1, sinkpad1) == GST_PAD_LINK_OK);
   gst_pad_set_active (srcpad1, TRUE);
@@ -531,7 +531,7 @@ run_late_caps_query_test (GstCaps * input_caps, GstCaps * output_allowed_caps,
           create_video_buffer (input_caps, 1)) == GST_FLOW_OK);
 
   /* now comes the second pad */
-  sinkpad2 = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad2 = gst_element_request_pad_simple (compositor, "sink_%u");
   srcpad2 = gst_pad_new ("src2", GST_PAD_SRC);
   fail_unless (gst_pad_link (srcpad2, sinkpad2) == GST_PAD_LINK_OK);
   gst_pad_set_active (srcpad2, TRUE);
@@ -615,7 +615,7 @@ run_late_caps_set_test (GstCaps * first_caps, GstCaps * expected_query_caps,
   gst_message_unref (msg);
 
   /* try to set the second caps */
-  sinkpad_2 = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad_2 = gst_element_request_pad_simple (compositor, "sink_%u");
   caps = gst_pad_query_caps (sinkpad_2, NULL);
   fail_unless (gst_caps_is_subset (expected_query_caps, caps));
   gst_caps_unref (caps);
@@ -1002,7 +1002,7 @@ GST_START_TEST (test_remove_pad)
   fail_unless (res == TRUE, NULL);
 
   /* create an unconnected sinkpad in compositor */
-  pad = gst_element_get_request_pad (compositor, "sink_%u");
+  pad = gst_element_request_pad_simple (compositor, "sink_%u");
   fail_if (pad == NULL, NULL);
 
   srcpad = gst_element_get_static_pad (compositor, "src");
@@ -1122,7 +1122,7 @@ GST_START_TEST (test_clip)
 
   /* create an unconnected sinkpad in compositor, should also automatically activate
    * the pad */
-  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (compositor, "sink_%u");
   fail_if (sinkpad == NULL, NULL);
 
   gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
@@ -1432,13 +1432,13 @@ GST_START_TEST (test_segment_base_handling)
   fail_unless (gst_element_link (mix, sink));
 
   srcpad = gst_element_get_static_pad (src1, "src");
-  sinkpad = gst_element_get_request_pad (mix, "sink_1");
+  sinkpad = gst_element_request_pad_simple (mix, "sink_1");
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
   gst_object_unref (sinkpad);
   gst_object_unref (srcpad);
 
   srcpad = gst_element_get_static_pad (src2, "src");
-  sinkpad = gst_element_get_request_pad (mix, "sink_2");
+  sinkpad = gst_element_request_pad_simple (mix, "sink_2");
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
   gst_pad_set_offset (sinkpad, 5 * GST_SECOND);
   gst_object_unref (sinkpad);
@@ -1552,7 +1552,7 @@ _test_obscured (const gchar * caps_str, gint xpos0, gint ypos0, gint width0,
   fail_unless (gst_element_link (out_cfilter, sink));
 
   srcpad = gst_element_get_static_pad (cfilter0, "src");
-  sinkpad = gst_element_get_request_pad (mix, "sink_0");
+  sinkpad = gst_element_request_pad_simple (mix, "sink_0");
   g_object_set (sinkpad, "xpos", xpos0, "ypos", ypos0, "width", width0,
       "height", height0, "alpha", alpha0, NULL);
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
@@ -1562,7 +1562,7 @@ _test_obscured (const gchar * caps_str, gint xpos0, gint ypos0, gint width0,
   gst_object_unref (srcpad);
 
   srcpad = gst_element_get_static_pad (cfilter1, "src");
-  sinkpad = gst_element_get_request_pad (mix, "sink_1");
+  sinkpad = gst_element_request_pad_simple (mix, "sink_1");
   g_object_set (sinkpad, "xpos", xpos1, "ypos", ypos1, "width", width1,
       "height", height1, "alpha", alpha1, NULL);
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
@@ -1752,7 +1752,7 @@ _link_videotestsrc_with_compositor (GstElement * src, GstElement * compositor,
   GstPadLinkReturn link_res;
 
   srcpad = gst_element_get_static_pad (src, "src");
-  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (compositor, "sink_%u");
   /* When "repeat-after-eos" is set, compositor will keep sending the last buffer even
    * after EOS, so we will receive more buffers than we sent. */
   g_object_set (sinkpad, "repeat-after-eos", repeat_after_eos, NULL);
@@ -1909,8 +1909,8 @@ GST_START_TEST (test_pad_z_order)
   GST_INFO ("preparing test");
 
   compositor = gst_element_factory_make ("compositor", NULL);
-  sinkpad1 = gst_element_get_request_pad (compositor, "sink_%u");
-  sinkpad2 = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad1 = gst_element_request_pad_simple (compositor, "sink_%u");
+  sinkpad2 = gst_element_request_pad_simple (compositor, "sink_%u");
 
   /* Pads requested later have a higher z-order than earlier ones by default */
   g_object_get (sinkpad1, "zorder", &zorder1, NULL);
@@ -1927,7 +1927,7 @@ GST_START_TEST (test_pad_z_order)
   ck_assert_ptr_eq (sinkpads->next->data, sinkpad1);
 
   /* Get a new pad, which should be the highest pad now */
-  sinkpad3 = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad3 = gst_element_request_pad_simple (compositor, "sink_%u");
   sinkpads = GST_ELEMENT (compositor)->sinkpads;
   ck_assert_ptr_eq (sinkpads->data, sinkpad2);
   ck_assert_ptr_eq (sinkpads->next->data, sinkpad1);
@@ -1956,10 +1956,10 @@ GST_START_TEST (test_pad_numbering)
   GST_INFO ("preparing test");
 
   mixer = gst_element_factory_make ("compositor", NULL);
-  sinkpad1 = gst_element_get_request_pad (mixer, "sink_%u");
-  sinkpad2 = gst_element_get_request_pad (mixer, "sink_7");
-  sinkpad3 = gst_element_get_request_pad (mixer, "sink_1");
-  sinkpad4 = gst_element_get_request_pad (mixer, "sink_%u");
+  sinkpad1 = gst_element_request_pad_simple (mixer, "sink_%u");
+  sinkpad2 = gst_element_request_pad_simple (mixer, "sink_7");
+  sinkpad3 = gst_element_request_pad_simple (mixer, "sink_1");
+  sinkpad4 = gst_element_request_pad_simple (mixer, "sink_%u");
 
   ck_assert_str_eq (GST_PAD_NAME (sinkpad1), "sink_0");
   ck_assert_str_eq (GST_PAD_NAME (sinkpad2), "sink_7");
@@ -2059,7 +2059,7 @@ run_test_start_time (gboolean first, gboolean drop, gboolean unlinked)
   res = gst_element_link (compositor, appsink);
   ck_assert_msg (res == TRUE, "Could not link compositor with appsink");
   srcpad = gst_element_get_static_pad (src, "src");
-  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (compositor, "sink_%u");
   link_res = gst_pad_link (srcpad, sinkpad);
   ck_assert_msg (GST_PAD_LINK_SUCCESSFUL (link_res), "videotestsrc -> "
       "compositor pad  link failed: %i", link_res);
@@ -2067,7 +2067,7 @@ run_test_start_time (gboolean first, gboolean drop, gboolean unlinked)
   gst_object_unref (srcpad);
 
   if (unlinked) {
-    sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+    sinkpad = gst_element_request_pad_simple (compositor, "sink_%u");
     gst_object_unref (sinkpad);
   }
 

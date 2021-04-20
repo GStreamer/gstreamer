@@ -749,7 +749,8 @@ src_pad_added_cb (GstElement * element, GstPad * pad,
   }
 
   if (sinkpad == NULL)
-    sinkpad = gst_element_get_request_pad (uridecodebin->decodebin, "sink_%u");
+    sinkpad =
+        gst_element_request_pad_simple (uridecodebin->decodebin, "sink_%u");
 
   if (sinkpad) {
     GST_DEBUG_OBJECT (uridecodebin,

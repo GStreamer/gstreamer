@@ -74,7 +74,7 @@ add_source (gdouble freq, gfloat pos)
   info->fx_sinkpad = gst_element_get_static_pad (info->fx, "sink");
 
   /* get new pad from adder, adder will now wait for data on this pad */
-  info->adder_sinkpad = gst_element_get_request_pad (adder, "sink_%u");
+  info->adder_sinkpad = gst_element_request_pad_simple (adder, "sink_%u");
 
   /* link src to fx and fx to adder */
   gst_pad_link (info->fx_srcpad, info->adder_sinkpad);

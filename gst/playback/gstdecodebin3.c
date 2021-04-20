@@ -2019,7 +2019,7 @@ create_new_slot (GstDecodebin3 * dbin, GstStreamType type)
   slot->id = dbin->slot_id++;
 
   slot->type = type;
-  slot->sink_pad = gst_element_get_request_pad (dbin->multiqueue, "sink_%u");
+  slot->sink_pad = gst_element_request_pad_simple (dbin->multiqueue, "sink_%u");
   if (slot->sink_pad == NULL)
     goto fail;
 
