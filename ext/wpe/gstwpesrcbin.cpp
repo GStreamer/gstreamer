@@ -36,12 +36,15 @@
 
 #include "gstwpesrcbin.h"
 #include "gstwpevideosrc.h"
-#include "gstwpe-private.h"
+#include "gstwpe.h"
 #include "WPEThreadedView.h"
 
 #include <gst/allocators/allocators.h>
 #include <gst/base/gstflowcombiner.h>
 #include <wpe/extensions/audio.h>
+
+#include <sys/mman.h>
+#include <unistd.h>
 
 G_DEFINE_TYPE (GstWpeAudioPad, gst_wpe_audio_pad, GST_TYPE_GHOST_PAD);
 
@@ -106,6 +109,11 @@ GST_DEBUG_CATEGORY_EXTERN (wpe_src_debug);
 G_DEFINE_TYPE_WITH_CODE (GstWpeSrc, gst_wpe_src, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_wpe_src_uri_handler_init));
 
+/**
+ * GstWpeSrc!video
+ *
+ * Since: 1.20
+  */
 static GstStaticPadTemplate video_src_factory =
 GST_STATIC_PAD_TEMPLATE ("video", GST_PAD_SRC, GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("video/x-raw(memory:GLMemory), "
@@ -125,6 +133,14 @@ GST_STATIC_PAD_TEMPLATE ("video", GST_PAD_SRC, GST_PAD_SOMETIMES,
 #endif
                      ));
 
+/**
+ * GstWpeSrc!audio_%u
+ *
+ * Each audio stream in the renderer web page will expose the and `audio_%u`
+ * #GstPad.
+ *
+ * Since: 1.20
+  */
 static GstStaticPadTemplate audio_src_factory =
 GST_STATIC_PAD_TEMPLATE ("audio_%u", GST_PAD_SRC, GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ( \
@@ -149,18 +165,15 @@ gst_wpe_src_chain_buffer (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   return result;
 }
 
-static void
-on_audio_receiver_handle_start(void* data, uint32_t id, int32_t channels, const char* format, int32_t sampleRate)
+void
+gst_wpe_src_new_audio_stream(GstWpeSrc *src, guint32 id, GstCaps *caps, const gchar *stream_id)
 {
-  GstWpeSrc* src = GST_WPE_SRC (data);
   GstWpeAudioPad *audio_pad;
   GstPad *pad;
   gchar *name;
   GstEvent *stream_start;
   GstSegment segment;
-  GstCaps *caps;
 
-  GST_DEBUG_OBJECT (src, "Exposing audio pad for stream %u", id);
   name = g_strdup_printf ("audio_%u", id);
   audio_pad = gst_wpe_audio_pad_new (name);
   pad = GST_PAD_CAST (audio_pad);
@@ -170,19 +183,13 @@ on_audio_receiver_handle_start(void* data, uint32_t id, int32_t channels, const 
   gst_element_add_pad (GST_ELEMENT_CAST (src), pad);
   gst_flow_combiner_add_pad (src->flow_combiner, pad);
 
-  name = gst_pad_create_stream_id_printf(pad, GST_ELEMENT_CAST (src), "%03u", id);
-  stream_start = gst_event_new_stream_start (name);
-  gst_pad_push_event (pad, stream_start);
-  g_free (name);
+  GST_DEBUG_OBJECT (src, "Adding pad: %" GST_PTR_FORMAT, pad);
 
-  caps = gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING, format,
-    "rate", G_TYPE_INT, sampleRate,
-    "channels", G_TYPE_INT, channels,
-    "channel-mask", GST_TYPE_BITMASK, gst_audio_channel_get_fallback_mask (channels),
-    "layout", G_TYPE_STRING, "interleaved", NULL);
+  stream_start = gst_event_new_stream_start (stream_id);
+  gst_pad_push_event (pad, stream_start);
+
   gst_audio_info_from_caps (&audio_pad->info, caps);
   gst_pad_push_event (pad, gst_event_new_caps (caps));
-  gst_caps_unref (caps);
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
   gst_pad_push_event (pad, gst_event_new_segment (&segment));
@@ -190,23 +197,40 @@ on_audio_receiver_handle_start(void* data, uint32_t id, int32_t channels, const 
   g_hash_table_insert (src->audio_src_pads, GUINT_TO_POINTER (id), audio_pad);
 }
 
-static void
-on_audio_receiver_handle_packet(void* data, struct wpe_audio_packet_export* packet_export, uint32_t id, int32_t fd, uint32_t size)
+void
+gst_wpe_src_set_audio_shm (GstWpeSrc* src, GUnixFDList *fds, guint32 id)
 {
-  GstWpeSrc* src = GST_WPE_SRC (data);
+  gint fd;
   GstWpeAudioPad *audio_pad = GST_WPE_AUDIO_PAD (g_hash_table_lookup (src->audio_src_pads, GUINT_TO_POINTER (id)));
-  GstPad *pad = GST_PAD_CAST (audio_pad);
+
+  g_return_if_fail (GST_IS_WPE_SRC (src));
+  g_return_if_fail (fds);
+  g_return_if_fail (g_unix_fd_list_get_length (fds) == 1);
+  g_return_if_fail (audio_pad->fd <= 0);
+
+  fd = g_unix_fd_list_get (fds, 0, NULL);
+  g_return_if_fail (fd >= 0);
+
+  if (audio_pad->fd > 0)
+    close(audio_pad->fd);
+
+  audio_pad->fd = dup(fd);
+}
+
+void
+gst_wpe_src_push_audio_buffer (GstWpeSrc* src, guint32 id, guint64 size)
+{
+  GstWpeAudioPad *audio_pad = GST_WPE_AUDIO_PAD (g_hash_table_lookup (src->audio_src_pads, GUINT_TO_POINTER (id)));
   GstBuffer *buffer;
   GstClock *clock;
 
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (fd >= 0);
+  g_return_if_fail (audio_pad->fd > 0);
 
-  GST_TRACE_OBJECT (pad, "Handling incoming audio packet");
-  buffer = gst_buffer_new ();
+  GST_TRACE_OBJECT (audio_pad, "Handling incoming audio packet");
 
-  GstMemory *mem = gst_fd_allocator_alloc (src->fd_allocator, dup (fd), size, GST_FD_MEMORY_FLAG_KEEP_MAPPED);
-  gst_buffer_append_memory (buffer, mem);
+  gpointer data = mmap (0, size, PROT_READ, MAP_PRIVATE, audio_pad->fd, 0);
+  buffer = gst_buffer_new_wrapped (g_memdup(data, size), size);
+  munmap (data, size);
   gst_buffer_add_audio_meta (buffer, &audio_pad->info, size, NULL);
 
   clock = gst_element_get_clock (GST_ELEMENT_CAST (src));
@@ -231,30 +255,33 @@ on_audio_receiver_handle_packet(void* data, struct wpe_audio_packet_export* pack
     audio_pad->discont_pending = FALSE;
   }
 
-  gst_flow_combiner_update_pad_flow (src->flow_combiner, pad, gst_pad_push (pad, buffer));
-  wpe_audio_packet_export_release (packet_export);
-  close (fd);
+  gst_flow_combiner_update_pad_flow (src->flow_combiner, GST_PAD (audio_pad),
+    gst_pad_push (GST_PAD_CAST (audio_pad), buffer));
 }
 
 static void
-on_audio_receiver_handle_stop(void* data, uint32_t id)
+gst_wpe_src_remove_audio_pad (GstWpeSrc *src, GstPad *pad)
 {
-  GstWpeSrc* src = GST_WPE_SRC (data);
-  GstWpeAudioPad *audio_pad = GST_WPE_AUDIO_PAD (g_hash_table_lookup (src->audio_src_pads, GUINT_TO_POINTER (id)));
-  GstPad *pad = GST_PAD_CAST (audio_pad);
+  GST_DEBUG_OBJECT (src, "Removing pad: %" GST_PTR_FORMAT, pad);
+  gst_element_remove_pad (GST_ELEMENT_CAST (src), pad);
+  gst_flow_combiner_remove_pad (src->flow_combiner, pad);
+}
+
+void
+gst_wpe_src_stop_audio_stream(GstWpeSrc* src, guint32 id)
+{
+  GstPad *pad = GST_PAD (g_hash_table_lookup (src->audio_src_pads, GUINT_TO_POINTER (id)));
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_INFO_OBJECT(pad, "Stopping");
   gst_pad_push_event (pad, gst_event_new_eos ());
-  gst_element_remove_pad (GST_ELEMENT_CAST (src), pad);
-  gst_flow_combiner_remove_pad (src->flow_combiner, pad);
+  gst_wpe_src_remove_audio_pad (src, pad);
   g_hash_table_remove (src->audio_src_pads, GUINT_TO_POINTER (id));
 }
 
-static void
-on_audio_receiver_handle_pause(void* data, uint32_t id)
+void
+gst_wpe_src_pause_audio_stream(GstWpeSrc* src, guint32 id)
 {
-  GstWpeSrc* src = GST_WPE_SRC (data);
   GstWpeAudioPad *audio_pad = GST_WPE_AUDIO_PAD (g_hash_table_lookup (src->audio_src_pads, GUINT_TO_POINTER (id)));
   GstPad *pad = GST_PAD_CAST (audio_pad);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -264,26 +291,6 @@ on_audio_receiver_handle_pause(void* data, uint32_t id)
 
   audio_pad->discont_pending = TRUE;
 }
-
-static void
-on_audio_receiver_handle_resume(void* data, uint32_t id)
-{
-  GstWpeSrc* src = GST_WPE_SRC (data);
-  GstWpeAudioPad *audio_pad = GST_WPE_AUDIO_PAD (g_hash_table_lookup (src->audio_src_pads, GUINT_TO_POINTER (id)));
-  GstPad *pad = GST_PAD_CAST (audio_pad);
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  GST_INFO_OBJECT(pad, "Resuming");
-}
-
-
-static const struct wpe_audio_receiver audio_receiver = {
-  .handle_start = on_audio_receiver_handle_start,
-  .handle_packet = on_audio_receiver_handle_packet,
-  .handle_stop = on_audio_receiver_handle_stop,
-  .handle_pause = on_audio_receiver_handle_pause,
-  .handle_resume = on_audio_receiver_handle_resume
-};
 
 static void
 gst_wpe_src_load_bytes (GstWpeVideoSrc * src, GBytes * bytes)
@@ -366,9 +373,14 @@ static gchar *
 gst_wpe_src_get_uri (GstURIHandler * handler)
 {
   GstWpeSrc *src = GST_WPE_SRC (handler);
-  const gchar *location;
+  gchar *location;
+  gchar *res;
+
   g_object_get (src->video_src, "location", &location, NULL);
-  return g_strdup_printf ("wpe://%s", location);
+  res = g_strdup_printf ("wpe://%s", location);
+  g_free (location);
+
+  return res;
 }
 
 static gboolean
@@ -403,8 +415,14 @@ gst_wpe_src_init (GstWpeSrc * src)
   src->audio_src_pads = g_hash_table_new (g_direct_hash, g_direct_equal);
   src->flow_combiner = gst_flow_combiner_new ();
   src->video_src = gst_element_factory_make ("wpevideosrc", NULL);
+}
 
-  gst_wpe_video_src_register_audio_receiver (src->video_src, &audio_receiver, src);
+static gboolean
+gst_wpe_audio_remove_audio_pad  (gint32  *id, GstPad *pad, GstWpeSrc  *self)
+{
+  gst_wpe_src_remove_audio_pad (self, pad);
+
+  return TRUE;
 }
 
 static GstStateChangeReturn
@@ -418,6 +436,7 @@ gst_wpe_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
   case GST_STATE_CHANGE_PAUSED_TO_READY:{
+    g_hash_table_foreach_remove (src->audio_src_pads, (GHRFunc) gst_wpe_audio_remove_audio_pad, src);
     gst_flow_combiner_reset (src->flow_combiner);
     break;
   }
@@ -459,7 +478,8 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class, "WPE source",
-      "Source/Video/Audio", "Creates a video stream from a WPE browser",
+      "Source/Video/Audio", "Creates Audio/Video streams from a web"
+      " page using WPE web engine",
       "Philippe Normand <philn@igalia.com>, Žan Doberšek "
       "<zdobersek@igalia.com>");
 

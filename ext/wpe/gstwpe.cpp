@@ -65,19 +65,32 @@
 
 #include "gstwpevideosrc.h"
 #include "gstwpesrcbin.h"
+#include "gstwpe.h"
+
+static gchar *extension_path = NULL;
 
 GST_DEBUG_CATEGORY (wpe_video_src_debug);
 GST_DEBUG_CATEGORY (wpe_view_debug);
 GST_DEBUG_CATEGORY (wpe_src_debug);
 
+const gchar *gst_wpe_get_extension_path (void)
+{
+  return extension_path;
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gboolean result;
+  gchar *dirname = g_path_get_dirname (gst_plugin_get_filename (plugin));
+
   GST_DEBUG_CATEGORY_INIT (wpe_video_src_debug, "wpevideosrc", 0, "WPE Video Source");
   GST_DEBUG_CATEGORY_INIT (wpe_view_debug, "wpeview", 0, "WPE Threaded View");
   GST_DEBUG_CATEGORY_INIT (wpe_src_debug, "wpesrc", 0, "WPE Source");
 
-  gboolean result = gst_element_register (plugin, "wpevideosrc", GST_RANK_NONE,
+  extension_path = g_build_filename (dirname, "wpe-extension", NULL);
+  g_free (dirname);
+  result = gst_element_register (plugin, "wpevideosrc", GST_RANK_NONE,
       GST_TYPE_WPE_VIDEO_SRC);
   result &= gst_element_register(plugin, "wpesrc", GST_RANK_NONE, GST_TYPE_WPE_SRC);
   return result;

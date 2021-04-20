@@ -22,6 +22,8 @@
 #endif
 
 #include "WPEThreadedView.h"
+#include "gstwpe.h"
+#include "gstwpesrcbin.h"
 
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gsteglimage.h>
@@ -165,6 +167,56 @@ gpointer WPEContextThread::s_viewThread(gpointer data)
     return nullptr;
 }
 
+#ifdef G_OS_UNIX
+static void
+initialize_web_extensions (WebKitWebContext *context)
+{
+    webkit_web_context_set_web_extensions_directory (context, gst_wpe_get_extension_path ());
+}
+
+static gboolean
+webkit_extension_msg_received (WebKitWebContext  *context,
+               WebKitUserMessage *message,
+               GstWpeSrc           *src)
+{
+    const gchar *name = webkit_user_message_get_name (message);
+    GVariant *params = webkit_user_message_get_parameters (message);
+    gboolean res = TRUE;
+
+    if (!g_strcmp0(name, "gstwpe.new_stream")) {
+        guint32 id = g_variant_get_uint32 (g_variant_get_child_value (params, 0));
+        const gchar *capsstr = g_variant_get_string (g_variant_get_child_value (params, 1), NULL);
+        GstCaps *caps = gst_caps_from_string (capsstr);
+        const gchar *stream_id = g_variant_get_string (g_variant_get_child_value (params, 2), NULL);
+        gst_wpe_src_new_audio_stream(src, id, caps, stream_id);
+        gst_caps_unref (caps);
+    } else if (!g_strcmp0(name, "gstwpe.set_shm")) {
+        auto fdlist = webkit_user_message_get_fd_list (message);
+        gint id = g_variant_get_uint32 (g_variant_get_child_value (params, 0));
+        gst_wpe_src_set_audio_shm (src, fdlist, id);
+    } else if (!g_strcmp0(name, "gstwpe.new_buffer")) {
+        guint32 id = g_variant_get_uint32 (g_variant_get_child_value (params, 0));
+        guint64 size = g_variant_get_uint64 (g_variant_get_child_value (params, 1));
+        gst_wpe_src_push_audio_buffer (src, id, size);
+
+        webkit_user_message_send_reply(message, webkit_user_message_new ("gstwpe.buffer_processed", NULL));
+    } else if (!g_strcmp0(name, "gstwpe.pause")) {
+        guint32 id = g_variant_get_uint32 (params);
+
+        gst_wpe_src_pause_audio_stream (src, id);
+    } else if (!g_strcmp0(name, "gstwpe.stop")) {
+        guint32 id = g_variant_get_uint32 (params);
+
+        gst_wpe_src_stop_audio_stream (src, id);
+    } else {
+        res = FALSE;
+        g_error("Unknown event: %s", name);
+    }
+
+    return res;
+}
+#endif
+
 WPEView* WPEContextThread::createWPEView(GstWpeVideoSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
 {
     GST_DEBUG("context %p display %p, size (%d,%d)", context, display, width, height);
@@ -179,13 +231,11 @@ WPEView* WPEContextThread::createWPEView(GstWpeVideoSrc* src, GstGLContext* cont
 
     WPEView* view = nullptr;
     dispatch([&]() mutable {
-        if (!glib.web_context) {
-            auto* manager = webkit_website_data_manager_new_ephemeral();
-            glib.web_context = webkit_web_context_new_with_website_data_manager(manager);
-            g_object_unref(manager);
-        }
+        auto* manager = webkit_website_data_manager_new_ephemeral();
+        auto web_context = webkit_web_context_new_with_website_data_manager(manager);
+        g_object_unref(manager);
 
-        view = new WPEView(glib.web_context, src, context, display, width, height);
+        view = new WPEView(web_context, src, context, display, width, height);
     });
 
     if (view && view->hasUri()) {
@@ -233,6 +283,26 @@ static void s_loadProgressChaned(GObject* object, GParamSpec*, gpointer data)
 
 WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
 {
+#ifdef G_OS_UNIX
+{
+        GstObject *parent = gst_object_get_parent (GST_OBJECT (src));
+
+        if (parent && GST_IS_WPE_SRC (parent)) {
+            audio.init_ext_sigid = g_signal_connect (web_context,
+                              "initialize-web-extensions",
+                              G_CALLBACK (initialize_web_extensions),
+                              NULL);
+            audio.extension_msg_sigid = g_signal_connect (web_context,
+                                "user-message-received",
+                                G_CALLBACK (webkit_extension_msg_received),
+                                parent);
+            GST_INFO_OBJECT (parent, "Enabled audio");
+        }
+
+        gst_clear_object (&parent);
+}
+#endif // G_OS_UNIX
+
     g_mutex_init(&threading.ready_mutex);
     g_cond_init(&threading.ready_cond);
     threading.ready = FALSE;
@@ -352,6 +422,15 @@ WPEView::~WPEView()
         gst_buffer_unref (shm_pending);
     if (shm_committed)
         gst_buffer_unref (shm_committed);
+
+    if (audio.init_ext_sigid) {
+        WebKitWebContext* web_context = webkit_web_view_get_context (webkit.view);
+
+        g_signal_handler_disconnect(web_context, audio.init_ext_sigid);
+        g_signal_handler_disconnect(web_context, audio.extension_msg_sigid);
+        audio.init_ext_sigid = 0;
+        audio.extension_msg_sigid = 0;
+    }
 
     WPEContextThread::singleton().dispatch([&]() {
         if (webkit.view) {
@@ -521,11 +600,6 @@ void WPEView::setDrawBackground(gboolean drawsBackground)
     WebKitColor color;
     webkit_color_parse(&color, drawsBackground ? "white" : "transparent");
     webkit_web_view_set_background_color(webkit.view, &color);
-}
-
-void WPEView::registerAudioReceiver(const struct wpe_audio_receiver* audioReceiver, gpointer userData)
-{
-    wpe_audio_register_receiver(audioReceiver, userData);
 }
 
 void WPEView::releaseImage(gpointer imagePointer)

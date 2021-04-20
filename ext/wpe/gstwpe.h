@@ -21,4 +21,4 @@
 
 #include <gst/gst.h>
 
-void gst_wpe_video_src_register_audio_receiver(GstElement*, const struct wpe_audio_receiver*, gpointer);
+const gchar *gst_wpe_get_extension_path (void);

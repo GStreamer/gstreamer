@@ -23,6 +23,10 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
+#ifdef G_OS_UNIX
+#include <gio/gunixfdlist.h>
+#endif
+
 G_BEGIN_DECLS
 
 GType gst_wpe_audio_pad_get_type(void);
@@ -43,6 +47,7 @@ struct _GstWpeAudioPad
   GstAudioInfo     info;
   GstClockTime     buffer_time;
   gboolean         discont_pending;
+  gint fd;
 };
 
 struct _GstWpeAudioPadClass
@@ -66,5 +71,11 @@ struct _GstWpeSrcClass
 };
 
 GType gst_wpe_src_get_type (void);
+
+void gst_wpe_src_new_audio_stream(GstWpeSrc *src, guint32 id, GstCaps *caps, const gchar *stream_id);
+void gst_wpe_src_set_audio_shm (GstWpeSrc* src, GUnixFDList *fds, guint32 id);
+void gst_wpe_src_push_audio_buffer (GstWpeSrc* src, guint32 id, guint64 size);
+void gst_wpe_src_pause_audio_stream (GstWpeSrc* src, guint32 id);
+void gst_wpe_src_stop_audio_stream (GstWpeSrc* src, guint32 id);
 
 G_END_DECLS

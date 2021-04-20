@@ -75,7 +75,6 @@
 
 /*
  * TODO:
- * - Audio support (requires an AudioSession implementation in WebKit and a WPEBackend-fdo API for it)
  * - DMABuf support (requires changes in WPEBackend-fdo to expose DMABuf planes and fds)
  * - Custom EGLMemory allocator
  * - Better navigation events handling (would require a new GstNavigation API)
@@ -86,7 +85,6 @@
 #endif
 
 #include "gstwpevideosrc.h"
-#include "gstwpe-private.h"
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gstglmemoryegl.h>
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
@@ -129,8 +127,6 @@ struct _GstWpeVideoSrc
   gint64 n_frames;              /* total frames sent */
 
   WPEView *view;
-  const struct wpe_audio_receiver *audio_receiver;
-  gpointer audio_receiver_data;
 
   GMutex lock;
 };
@@ -299,11 +295,6 @@ gst_wpe_video_src_start (GstWpeVideoSrc * src)
 
   if (created_view) {
     src->n_frames = 0;
-    if (src->audio_receiver) {
-      src->view->registerAudioReceiver(src->audio_receiver, src->audio_receiver_data);
-      src->audio_receiver = NULL,
-      src->audio_receiver_data = NULL;
-    }
   }
   WPE_UNLOCK (src);
   return TRUE;
@@ -743,17 +734,4 @@ gst_wpe_video_src_class_init (GstWpeVideoSrcClass * klass)
       static_cast < GSignalFlags > (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
       G_CALLBACK (gst_wpe_video_src_load_bytes), NULL, NULL, NULL,
       G_TYPE_NONE, 1, G_TYPE_BYTES);
-}
-
-void
-gst_wpe_video_src_register_audio_receiver(GstElement* video_src, const struct wpe_audio_receiver* receiver, gpointer user_data)
-{
-  GstWpeVideoSrc* src = GST_WPE_VIDEO_SOURCE(video_src);
-
-  if (!src->view) {
-    src->audio_receiver = receiver;
-    src->audio_receiver_data = user_data;
-    return;
-  }
-  src->view->registerAudioReceiver(receiver, user_data);
 }
