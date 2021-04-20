@@ -41,6 +41,7 @@
 #include <locale>
 #include <codecvt>
 
+/* *INDENT-OFF* */
 using namespace ABI::Windows::ApplicationModel::Core;
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Foundation::Collections;
@@ -57,11 +58,14 @@ GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_client_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_client_debug
 
 G_END_DECLS
+/* *INDENT-ON* */
 
 static void
 gst_wasapi2_client_on_device_activated (GstWasapi2Client * client,
     IAudioClient3 * audio_client);
 
+
+/* *INDENT-OFF* */
 class GstWasapiDeviceActivator
     : public RuntimeClass<RuntimeClassFlags<ClassicCom>, FtmBase,
         IActivateAudioInterfaceCompletionHandler>
@@ -205,7 +209,7 @@ private:
   GWeakRef listener_;
   ComPtr<ICoreDispatcher> dispatcher_;
 };
-
+/* *INDENT-ON* */
 typedef enum
 {
   GST_WASAPI2_CLIENT_ACTIVATE_FAILED = -1,
@@ -305,8 +309,7 @@ static gboolean
 gst_wasapi2_client_main_loop_running_cb (GstWasapi2Client * self);
 
 #define gst_wasapi2_client_parent_class parent_class
-G_DEFINE_TYPE (GstWasapi2Client,
-    gst_wasapi2_client, GST_TYPE_OBJECT);
+G_DEFINE_TYPE (GstWasapi2Client, gst_wasapi2_client, GST_TYPE_OBJECT);
 
 static void
 gst_wasapi2_client_class_init (GstWasapi2ClientClass * klass)
@@ -371,7 +374,9 @@ static void
 gst_wasapi2_client_constructed (GObject * object)
 {
   GstWasapi2Client *self = GST_WASAPI2_CLIENT (object);
+  /* *INDENT-OFF* */
   ComPtr<GstWasapiDeviceActivator> activator;
+  /* *INDENT-ON* */
 
   /* Create a new thread to ensure that COM thread can be MTA thread.
    * We cannot ensure whether CoInitializeEx() was called outside of here for
@@ -520,7 +525,7 @@ gst_wasapi2_client_on_device_activated (GstWasapi2Client * self,
 
   g_mutex_lock (&self->init_lock);
   if (audio_client) {
-    audio_client->AddRef();
+    audio_client->AddRef ();
     self->audio_client = audio_client;
     self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_DONE;
   } else {
@@ -531,6 +536,7 @@ gst_wasapi2_client_on_device_activated (GstWasapi2Client * self,
   g_mutex_unlock (&self->init_lock);
 }
 
+/* *INDENT-OFF* */
 static std::string
 convert_wstring_to_string (const std::wstring &wstr)
 {
@@ -573,17 +579,20 @@ gst_wasapi2_client_get_default_device_id (GstWasapi2Client * self)
 
   return ret;
 }
+/* *INDENT-ON* */
 
 static gboolean
 gst_wasapi2_client_activate_async (GstWasapi2Client * self,
     GstWasapiDeviceActivator * activator)
 {
-  HRESULT hr;
+  /* *INDENT-OFF* */
   ComPtr<IDeviceInformationStatics> device_info_static;
   ComPtr<IAsyncOperation<DeviceInformationCollection*>> async_op;
   ComPtr<IVectorView<DeviceInformation*>> device_list;
   HStringReference hstr_device_info =
       HStringReference(RuntimeClass_Windows_Devices_Enumeration_DeviceInformation);
+  /* *INDENT-ON* */
+  HRESULT hr;
   DeviceClass device_class;
   unsigned int count = 0;
   gint device_index = 0;
@@ -596,8 +605,9 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
 
   GST_INFO_OBJECT (self,
       "requested device info, device-class: %s, device: %s, device-index: %d",
-       self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE ? "capture" :
-       "render", GST_STR_NULL (self->device_id), self->device_index);
+      self->device_class ==
+      GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE ? "capture" : "render",
+      GST_STR_NULL (self->device_id), self->device_index);
 
   if (self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE) {
     device_class = DeviceClass::DeviceClass_AudioCapture;
@@ -624,7 +634,7 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
    * See https://docs.microsoft.com/en-us/windows/win32/coreaudio/automatic-stream-routing
    */
   if (self->device_id &&
-      g_ascii_strcasecmp (self->device_id, default_device_id.c_str()) == 0) {
+      g_ascii_strcasecmp (self->device_id, default_device_id.c_str ()) == 0) {
     GST_DEBUG_OBJECT (self, "Default device was requested");
     use_default_device = TRUE;
   } else if (self->device_index < 0 && !self->device_id) {
@@ -646,7 +656,7 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
     goto activate;
   }
 
-  hr = GetActivationFactory (hstr_device_info.Get(), &device_info_static);
+  hr = GetActivationFactory (hstr_device_info.Get (), &device_info_static);
   if (!gst_wasapi2_result (hr))
     goto failed;
 
@@ -655,7 +665,9 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
   if (!gst_wasapi2_result (hr))
     goto failed;
 
+  /* *INDENT-OFF* */
   hr = SyncWait<DeviceInformationCollection*>(async_op.Get ());
+  /* *INDENT-ON* */
   if (!gst_wasapi2_result (hr))
     goto failed;
 
@@ -686,7 +698,9 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
   /* zero is for default device */
   device_index = 1;
   for (unsigned int i = 0; i < count; i++) {
+    /* *INDENT-OFF* */
     ComPtr<IDeviceInformation> device_info;
+    /* *INDENT-ON* */
     HString id;
     HString name;
     boolean b_value;
@@ -709,16 +723,16 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
 
     /* To ensure device id and device name are available,
      * will query this later again once target device is determined */
-    hr = device_info->get_Id (id.GetAddressOf());
+    hr = device_info->get_Id (id.GetAddressOf ());
     if (!gst_wasapi2_result (hr))
       continue;
 
-    if (!id.IsValid()) {
+    if (!id.IsValid ()) {
       GST_WARNING_OBJECT (self, "Device index %d has invalid id", i);
       continue;
     }
 
-    hr = device_info->get_Name (name.GetAddressOf());
+    hr = device_info->get_Name (name.GetAddressOf ());
     if (!gst_wasapi2_result (hr))
       continue;
 
@@ -740,7 +754,7 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
     }
 
     GST_DEBUG_OBJECT (self, "device [%d] id: %s, name: %s",
-        device_index, cur_device_id.c_str(), cur_device_name.c_str());
+        device_index, cur_device_id.c_str (), cur_device_name.c_str ());
 
     if (self->device_id &&
         g_ascii_strcasecmp (self->device_id, cur_device_id.c_str ()) == 0) {
@@ -774,7 +788,7 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
 activate:
   /* fill device id and name */
   g_free (self->device_id);
-  self->device_id = g_strdup (target_device_id.c_str());
+  self->device_id = g_strdup (target_device_id.c_str ());
 
   g_free (self->device_name);
   self->device_name = g_strdup (target_device_name.c_str ());
@@ -825,10 +839,13 @@ gst_wasapi2_client_thread_func (GstWasapi2Client * self)
   RoInitializeWrapper initialize (RO_INIT_MULTITHREADED);
   GSource *source;
   HRESULT hr;
+  /* *INDENT-OFF* */
   ComPtr<GstWasapiDeviceActivator> activator;
 
   hr = MakeAndInitialize<GstWasapiDeviceActivator> (&activator,
       self, self->dispatcher);
+  /* *INDENT-ON* */
+
   if (!gst_wasapi2_result (hr)) {
     GST_ERROR_OBJECT (self, "Could not create activator object");
     self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_FAILED;
@@ -867,7 +884,7 @@ run_loop:
      * Explicitly disable mute for later use of this audio device
      * by other application. Otherwise users would blame GStreamer
      * if we close audio device with muted state */
-    self->audio_volume->SetMute(FALSE, nullptr);
+    self->audio_volume->SetMute (FALSE, nullptr);
     self->audio_volume->Release ();
     self->audio_volume = NULL;
   }
@@ -914,8 +931,7 @@ gst_waveformatex_to_audio_format (WAVEFORMATEXTENSIBLE * format)
     if (IsEqualGUID (format->SubFormat, KSDATAFORMAT_SUBTYPE_PCM)) {
       fmt = gst_audio_format_build_integer (TRUE, G_LITTLE_ENDIAN,
           format->Format.wBitsPerSample, format->Samples.wValidBitsPerSample);
-    } else if (IsEqualGUID (format->SubFormat,
-            KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)) {
+    } else if (IsEqualGUID (format->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)) {
       if (format->Format.wBitsPerSample == 32
           && format->Samples.wValidBitsPerSample == 32)
         fmt = GST_AUDIO_FORMAT_F32LE;
@@ -1222,8 +1238,7 @@ gst_wasapi2_client_initialize_audio_client (GstWasapi2Client * self,
   hr = audio_client->Initialize (AUDCLNT_SHAREMODE_SHARED, stream_flags,
       device_buffer_duration,
       /* This must always be 0 in shared mode */
-      0,
-      self->mix_format, nullptr);
+      0, self->mix_format, nullptr);
   if (!gst_wasapi2_result (hr)) {
     GST_WARNING_OBJECT (self, "Couldn't initialize audioclient");
     return FALSE;
@@ -1237,14 +1252,16 @@ gst_wasapi2_client_initialize_audio_client (GstWasapi2Client * self,
 }
 
 gboolean
-gst_wasapi2_client_open (GstWasapi2Client * client, GstAudioRingBufferSpec * spec,
-    GstAudioRingBuffer * buf)
+gst_wasapi2_client_open (GstWasapi2Client * client,
+    GstAudioRingBufferSpec * spec, GstAudioRingBuffer * buf)
 {
   HRESULT hr;
   REFERENCE_TIME latency_rt;
   guint bpf, rate;
   IAudioClient3 *audio_client;
+  /* *INDENT-OFF* */
   ComPtr<ISimpleAudioVolume> audio_volume;
+  /* *INDENT-ON* */
   gboolean initialized = FALSE;
 
   g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), FALSE);
@@ -1325,7 +1342,9 @@ gst_wasapi2_client_open (GstWasapi2Client * client, GstAudioRingBufferSpec * spe
     return FALSE;
 
   if (client->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER) {
+    /* *INDENT-OFF* */
     ComPtr<IAudioRenderClient> render_client;
+    /* *INDENT-ON* */
 
     hr = audio_client->GetService (IID_PPV_ARGS (&render_client));
     if (!gst_wasapi2_result (hr))
@@ -1333,7 +1352,9 @@ gst_wasapi2_client_open (GstWasapi2Client * client, GstAudioRingBufferSpec * spe
 
     client->audio_render_client = render_client.Detach ();
   } else {
+    /* *INDENT-OFF* */
     ComPtr<IAudioCaptureClient> capture_client;
+    /* *INDENT-ON* */
 
     hr = audio_client->GetService (IID_PPV_ARGS (&capture_client));
     if (!gst_wasapi2_result (hr))
@@ -1355,7 +1376,7 @@ gst_wasapi2_client_open (GstWasapi2Client * client, GstAudioRingBufferSpec * spe
    * Explicitly disable mute so that ensure we can produce or play audio
    * regardless of previous status
    */
-  client->audio_volume->SetMute(FALSE, nullptr);
+  client->audio_volume->SetMute (FALSE, nullptr);
 
   gst_audio_ring_buffer_set_channel_positions (buf, client->positions);
 
@@ -1654,7 +1675,7 @@ gst_wasapi2_client_write (GstWasapi2Client * client, gpointer data,
   have_frames = length / (mix_format->nBlockAlign);
 
   /* In shared mode we can write parts of the buffer, so only wait
-    * in case we can't write anything */
+   * in case we can't write anything */
   can_frames = gst_wasapi2_client_get_can_frames (client);
   if (can_frames < 0) {
     GST_ERROR_OBJECT (client, "Error getting frames to write to");
@@ -1844,21 +1865,23 @@ gst_wasapi2_client_ensure_activation (GstWasapi2Client * client)
 static HRESULT
 find_dispatcher (ICoreDispatcher ** dispatcher)
 {
+  /* *INDENT-OFF* */
   HStringReference hstr_core_app =
       HStringReference(RuntimeClass_Windows_ApplicationModel_Core_CoreApplication);
+  ComPtr<ICoreApplication> core_app;
+  ComPtr<ICoreApplicationView> core_app_view;
+  ComPtr<ICoreWindow> core_window;
+  /* *INDENT-ON* */
   HRESULT hr;
 
-  ComPtr<ICoreApplication> core_app;
-  hr = GetActivationFactory (hstr_core_app.Get(), &core_app);
+  hr = GetActivationFactory (hstr_core_app.Get (), &core_app);
   if (FAILED (hr))
     return hr;
 
-  ComPtr<ICoreApplicationView> core_app_view;
   hr = core_app->GetCurrentView (&core_app_view);
   if (FAILED (hr))
     return hr;
 
-  ComPtr<ICoreWindow> core_window;
   hr = core_app_view->get_CoreWindow (&core_window);
   if (FAILED (hr))
     return hr;
@@ -1872,7 +1895,9 @@ gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
     gpointer dispatcher)
 {
   GstWasapi2Client *self;
+  /* *INDENT-OFF* */
   ComPtr<ICoreDispatcher> core_dispatcher;
+  /* *INDENT-ON* */
   /* Multiple COM init is allowed */
   RoInitializeWrapper init_wrapper (RO_INIT_MULTITHREADED);
 
