@@ -3789,7 +3789,7 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
     }
   }
   name = g_strdup_printf ("rtcp_sink_%d", session);
-  pad = gst_element_get_request_pad (stream->srtpenc, name);
+  pad = gst_element_request_pad_simple (stream->srtpenc, name);
   g_free (name);
   gst_object_unref (pad);
 
@@ -4059,10 +4059,10 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
     /* we stream directly to the manager, get some pads. Each RTSP stream goes
      * into a separate RTP session. */
     name = g_strdup_printf ("recv_rtp_sink_%u", stream->id);
-    stream->channelpad[0] = gst_element_get_request_pad (src->manager, name);
+    stream->channelpad[0] = gst_element_request_pad_simple (src->manager, name);
     g_free (name);
     name = g_strdup_printf ("recv_rtcp_sink_%u", stream->id);
-    stream->channelpad[1] = gst_element_get_request_pad (src->manager, name);
+    stream->channelpad[1] = gst_element_request_pad_simple (src->manager, name);
     g_free (name);
 
     /* now configure the bandwidth in the manager */
@@ -4248,7 +4248,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
 
     /* get session RTCP pad */
     name = g_strdup_printf ("send_rtcp_src_%u", stream->id);
-    pad = gst_element_get_request_pad (src->manager, name);
+    pad = gst_element_request_pad_simple (src->manager, name);
     g_free (name);
 
     /* and link */
@@ -4639,7 +4639,7 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
 
     /* get session RTCP pad */
     name = g_strdup_printf ("send_rtcp_src_%u", stream->id);
-    pad = gst_element_get_request_pad (src->manager, name);
+    pad = gst_element_request_pad_simple (src->manager, name);
     g_free (name);
 
     /* and link */

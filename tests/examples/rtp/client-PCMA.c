@@ -197,21 +197,21 @@ main (int argc, char *argv[])
 
   /* now link all to the rtpbin, start by getting an RTP sinkpad for session 0 */
   srcpad = gst_element_get_static_pad (rtpsrc, "src");
-  sinkpad = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_0");
+  sinkpad = gst_element_request_pad_simple (rtpbin, "recv_rtp_sink_0");
   lres = gst_pad_link (srcpad, sinkpad);
   g_assert (lres == GST_PAD_LINK_OK);
   gst_object_unref (srcpad);
 
   /* get an RTCP sinkpad in session 0 */
   srcpad = gst_element_get_static_pad (rtcpsrc, "src");
-  sinkpad = gst_element_get_request_pad (rtpbin, "recv_rtcp_sink_0");
+  sinkpad = gst_element_request_pad_simple (rtpbin, "recv_rtcp_sink_0");
   lres = gst_pad_link (srcpad, sinkpad);
   g_assert (lres == GST_PAD_LINK_OK);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
 
   /* get an RTCP srcpad for sending RTCP back to the sender */
-  srcpad = gst_element_get_request_pad (rtpbin, "send_rtcp_src_0");
+  srcpad = gst_element_request_pad_simple (rtpbin, "send_rtcp_src_0");
   sinkpad = gst_element_get_static_pad (rtcpsink, "sink");
   lres = gst_pad_link (srcpad, sinkpad);
   g_assert (lres == GST_PAD_LINK_OK);

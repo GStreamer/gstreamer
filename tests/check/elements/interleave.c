@@ -70,11 +70,11 @@ GST_START_TEST (test_request_pads)
   interleave = gst_element_factory_make ("interleave", NULL);
   fail_unless (interleave != NULL);
 
-  pad1 = gst_element_get_request_pad (interleave, "sink_%u");
+  pad1 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (pad1 != NULL);
   fail_unless_equals_string (GST_OBJECT_NAME (pad1), "sink_0");
 
-  pad2 = gst_element_get_request_pad (interleave, "sink_%u");
+  pad2 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (pad2 != NULL);
   fail_unless_equals_string (GST_OBJECT_NAME (pad2), "sink_1");
 
@@ -163,11 +163,11 @@ GST_START_TEST (test_interleave_2ch)
   queue = gst_element_factory_make ("queue", "queue");
   fail_unless (queue != NULL);
 
-  sink0 = gst_element_get_request_pad (interleave, "sink_%u");
+  sink0 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (sink0 != NULL);
   fail_unless_equals_string (GST_OBJECT_NAME (sink0), "sink_0");
 
-  sink1 = gst_element_get_request_pad (interleave, "sink_%u");
+  sink1 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (sink1 != NULL);
   fail_unless_equals_string (GST_OBJECT_NAME (sink1), "sink_1");
 
@@ -294,11 +294,11 @@ GST_START_TEST (test_interleave_2ch_1eos)
   queue = gst_element_factory_make ("queue", "queue");
   fail_unless (queue != NULL);
 
-  sink0 = gst_element_get_request_pad (interleave, "sink_%u");
+  sink0 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (sink0 != NULL);
   fail_unless_equals_string (GST_OBJECT_NAME (sink0), "sink_0");
 
-  sink1 = gst_element_get_request_pad (interleave, "sink_%u");
+  sink1 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (sink1 != NULL);
   fail_unless_equals_string (GST_OBJECT_NAME (sink1), "sink_1");
 
@@ -564,13 +564,13 @@ test_interleave_2ch_pipeline (gboolean interleaved)
   fail_unless (interleave != NULL);
   gst_bin_add (GST_BIN (pipeline), gst_object_ref (interleave));
 
-  sinkpad0 = gst_element_get_request_pad (interleave, "sink_%u");
+  sinkpad0 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (sinkpad0 != NULL);
   tmp = gst_element_get_static_pad (src1, "src");
   fail_unless (gst_pad_link (tmp, sinkpad0) == GST_PAD_LINK_OK);
   gst_object_unref (tmp);
 
-  sinkpad1 = gst_element_get_request_pad (interleave, "sink_%u");
+  sinkpad1 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (sinkpad1 != NULL);
   tmp = gst_element_get_static_pad (src2, "src");
   tmp2 = gst_element_get_static_pad (queue, "sink");
@@ -659,13 +659,13 @@ GST_START_TEST (test_interleave_2ch_pipeline_input_chanpos)
   g_object_set (interleave, "channel-positions-from-input", TRUE, NULL);
   gst_bin_add (GST_BIN (pipeline), gst_object_ref (interleave));
 
-  sinkpad0 = gst_element_get_request_pad (interleave, "sink_%u");
+  sinkpad0 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (sinkpad0 != NULL);
   tmp = gst_element_get_static_pad (src1, "src");
   fail_unless (gst_pad_link (tmp, sinkpad0) == GST_PAD_LINK_OK);
   gst_object_unref (tmp);
 
-  sinkpad1 = gst_element_get_request_pad (interleave, "sink_%u");
+  sinkpad1 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (sinkpad1 != NULL);
   tmp = gst_element_get_static_pad (src2, "src");
   tmp2 = gst_element_get_static_pad (queue, "sink");
@@ -756,13 +756,13 @@ GST_START_TEST (test_interleave_2ch_pipeline_custom_chanpos)
   g_value_array_free (arr);
   gst_bin_add (GST_BIN (pipeline), gst_object_ref (interleave));
 
-  sinkpad0 = gst_element_get_request_pad (interleave, "sink_%u");
+  sinkpad0 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (sinkpad0 != NULL);
   tmp = gst_element_get_static_pad (src1, "src");
   fail_unless (gst_pad_link (tmp, sinkpad0) == GST_PAD_LINK_OK);
   gst_object_unref (tmp);
 
-  sinkpad1 = gst_element_get_request_pad (interleave, "sink_%u");
+  sinkpad1 = gst_element_request_pad_simple (interleave, "sink_%u");
   fail_unless (sinkpad1 != NULL);
   tmp = gst_element_get_static_pad (src2, "src");
   tmp2 = gst_element_get_static_pad (queue, "sink");

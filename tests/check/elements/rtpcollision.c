@@ -215,7 +215,7 @@ GST_START_TEST (test_master_ssrc_collision)
 
   /* setup rtcp link */
   srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
-  rtcp_sinkpad = gst_element_get_request_pad (rtpsession, "recv_rtcp_sink");
+  rtcp_sinkpad = gst_element_request_pad_simple (rtpsession, "recv_rtcp_sink");
   fail_unless (gst_pad_link (srcpad, rtcp_sinkpad) == GST_PAD_LINK_OK, NULL);
   gst_object_unref (rtcp_sinkpad);
   res = gst_pad_set_active (srcpad, TRUE);
@@ -230,7 +230,7 @@ GST_START_TEST (test_master_ssrc_collision)
 
   fake_udp_sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   gst_pad_set_chain_function (fake_udp_sinkpad, fake_udp_sink_chain_func);
-  rtcp_srcpad = gst_element_get_request_pad (rtpsession, "send_rtcp_src");
+  rtcp_srcpad = gst_element_request_pad_simple (rtpsession, "send_rtcp_src");
   fail_unless (gst_pad_link (rtcp_srcpad, fake_udp_sinkpad) == GST_PAD_LINK_OK,
       NULL);
   gst_object_unref (rtcp_srcpad);
@@ -391,7 +391,7 @@ GST_START_TEST (test_rtx_ssrc_collision)
 
   /* setup rtcp link */
   srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
-  rtcp_sinkpad = gst_element_get_request_pad (rtpsession, "recv_rtcp_sink");
+  rtcp_sinkpad = gst_element_request_pad_simple (rtpsession, "recv_rtcp_sink");
   fail_unless (gst_pad_link (srcpad, rtcp_sinkpad) == GST_PAD_LINK_OK, NULL);
   gst_object_unref (rtcp_sinkpad);
   res = gst_pad_set_active (srcpad, TRUE);
@@ -406,7 +406,7 @@ GST_START_TEST (test_rtx_ssrc_collision)
 
   fake_udp_sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   gst_pad_set_chain_function (fake_udp_sinkpad, fake_udp_sink_chain_func);
-  rtcp_srcpad = gst_element_get_request_pad (rtpsession, "send_rtcp_src");
+  rtcp_srcpad = gst_element_request_pad_simple (rtpsession, "send_rtcp_src");
   fail_unless (gst_pad_link (rtcp_srcpad, fake_udp_sinkpad) == GST_PAD_LINK_OK,
       NULL);
   gst_object_unref (rtcp_srcpad);

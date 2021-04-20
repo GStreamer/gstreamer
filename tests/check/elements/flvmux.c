@@ -94,7 +94,7 @@ mux_pcm_audio (guint num_buffers, guint repeat)
   fail_unless (gst_element_link (flvmux, sink));
 
   /* now link the elements */
-  sinkpad = gst_element_get_request_pad (flvmux, "audio");
+  sinkpad = gst_element_request_pad_simple (flvmux, "audio");
   fail_unless (sinkpad != NULL, "Could not get audio request pad");
 
   srcpad = gst_element_get_static_pad (conv, "src");

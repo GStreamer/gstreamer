@@ -3862,7 +3862,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
   gst_object_unref (sinkpad);
   gst_object_unref (srcpad);
 
-  sinkpad = gst_element_get_request_pad (stream->buffer, "sink_rtcp");
+  sinkpad = gst_element_request_pad_simple (stream->buffer, "sink_rtcp");
   if (sinkpad) {
     GST_DEBUG_OBJECT (rtpbin, "linking jitterbuffer RTCP");
     padname = g_strdup_printf ("rtcp_src_%u", ssrc);
@@ -3941,7 +3941,7 @@ complete_session_sink (GstRtpBin * rtpbin, GstRtpBinSession * session)
 
   /* get recv_rtp pad and store */
   session->recv_rtp_sink =
-      gst_element_get_request_pad (session->session, "recv_rtp_sink");
+      gst_element_request_pad_simple (session->session, "recv_rtp_sink");
   if (session->recv_rtp_sink == NULL)
     goto pad_failed;
 
@@ -4208,7 +4208,7 @@ complete_session_fec (GstRtpBin * rtpbin, GstRtpBinSession * session,
 
   GST_DEBUG_OBJECT (rtpbin, "getting FEC sink pad");
   padname = g_strdup_printf ("fec_%u", fec_idx);
-  ret = gst_element_get_request_pad (session->fec_decoder, padname);
+  ret = gst_element_request_pad_simple (session->fec_decoder, padname);
   g_free (padname);
 
   if (ret == NULL)
@@ -4242,7 +4242,7 @@ complete_session_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session,
   /* get recv_rtp pad and store */
   GST_DEBUG_OBJECT (rtpbin, "getting RTCP sink pad");
   session->recv_rtcp_sink =
-      gst_element_get_request_pad (session->session, "recv_rtcp_sink");
+      gst_element_request_pad_simple (session->session, "recv_rtcp_sink");
   if (session->recv_rtcp_sink == NULL)
     goto pad_failed;
 
@@ -4623,7 +4623,7 @@ setup_aux_sender_fold (const GValue * item, GValue * result, gpointer user_data)
 
   /* get send_rtp pad and store */
   newsess->send_rtp_sink =
-      gst_element_get_request_pad (newsess->session, "send_rtp_sink");
+      gst_element_request_pad_simple (newsess->session, "send_rtp_sink");
   if (newsess->send_rtp_sink == NULL)
     goto pad_failed;
 
@@ -4847,7 +4847,7 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   } else {
     /* get send_rtp pad and store */
     session->send_rtp_sink =
-        gst_element_get_request_pad (session->session, "send_rtp_sink");
+        gst_element_request_pad_simple (session->session, "send_rtp_sink");
     if (session->send_rtp_sink == NULL)
       goto pad_failed;
 
@@ -5002,7 +5002,7 @@ create_send_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
 
   /* get rtcp_src pad and store */
   session->send_rtcp_src =
-      gst_element_get_request_pad (session->session, "send_rtcp_src");
+      gst_element_request_pad_simple (session->session, "send_rtcp_src");
   if (session->send_rtcp_src == NULL)
     goto pad_failed;
 

@@ -34,7 +34,7 @@ GST_START_TEST (test_pads)
 
   element = gst_element_factory_make ("rtpsession", NULL);
 
-  pad = gst_element_get_request_pad (element, "recv_rtcp_sink");
+  pad = gst_element_request_pad_simple (element, "recv_rtcp_sink");
   gst_object_unref (pad);
   gst_object_unref (element);
 }
@@ -52,7 +52,7 @@ GST_START_TEST (test_cleanup_send)
 
   while (count--) {
     /* request session 0 */
-    rtp_sink = gst_element_get_request_pad (rtpbin, "send_rtp_sink_0");
+    rtp_sink = gst_element_request_pad_simple (rtpbin, "send_rtp_sink_0");
     fail_unless (rtp_sink != NULL);
     ASSERT_OBJECT_REFCOUNT (rtp_sink, "rtp_sink", 2);
 
@@ -67,7 +67,7 @@ GST_START_TEST (test_cleanup_send)
     g_object_unref (session);
 
     /* get the send RTCP pad too */
-    rtcp_src = gst_element_get_request_pad (rtpbin, "send_rtcp_src_0");
+    rtcp_src = gst_element_request_pad_simple (rtpbin, "send_rtcp_src_0");
     fail_unless (rtcp_src != NULL);
     ASSERT_OBJECT_REFCOUNT (rtcp_src, "rtcp_src", 2);
 
@@ -272,7 +272,7 @@ GST_START_TEST (test_cleanup_recv)
 
   while (count--) {
     /* request session 0 */
-    rtp_sink = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_0");
+    rtp_sink = gst_element_request_pad_simple (rtpbin, "recv_rtp_sink_0");
     fail_unless (rtp_sink != NULL);
     ASSERT_OBJECT_REFCOUNT (rtp_sink, "rtp_sink", 2);
 
@@ -343,7 +343,7 @@ GST_START_TEST (test_cleanup_recv2)
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   /* request session 0 */
-  rtp_sink = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_0");
+  rtp_sink = gst_element_request_pad_simple (rtpbin, "recv_rtp_sink_0");
   fail_unless (rtp_sink != NULL);
   ASSERT_OBJECT_REFCOUNT (rtp_sink, "rtp_sink", 2);
 
@@ -409,17 +409,17 @@ GST_START_TEST (test_request_pad_by_template_name)
   GstPad *rtp_sink1, *rtp_sink2, *rtp_sink3;
 
   rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
-  rtp_sink1 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_%u");
+  rtp_sink1 = gst_element_request_pad_simple (rtpbin, "recv_rtp_sink_%u");
   fail_unless (rtp_sink1 != NULL);
   fail_unless_equals_string (GST_PAD_NAME (rtp_sink1), "recv_rtp_sink_0");
   ASSERT_OBJECT_REFCOUNT (rtp_sink1, "rtp_sink1", 2);
 
-  rtp_sink2 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_%u");
+  rtp_sink2 = gst_element_request_pad_simple (rtpbin, "recv_rtp_sink_%u");
   fail_unless (rtp_sink2 != NULL);
   fail_unless_equals_string (GST_PAD_NAME (rtp_sink2), "recv_rtp_sink_1");
   ASSERT_OBJECT_REFCOUNT (rtp_sink2, "rtp_sink2", 2);
 
-  rtp_sink3 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_%u");
+  rtp_sink3 = gst_element_request_pad_simple (rtpbin, "recv_rtp_sink_%u");
   fail_unless (rtp_sink3 != NULL);
   fail_unless_equals_string (GST_PAD_NAME (rtp_sink3), "recv_rtp_sink_2");
   ASSERT_OBJECT_REFCOUNT (rtp_sink3, "rtp_sink3", 2);
@@ -487,7 +487,7 @@ GST_START_TEST (test_encoder)
   id = g_signal_connect (rtpbin, "request-rtp-encoder", (GCallback) encoder_cb,
       bin);
 
-  rtp_sink1 = gst_element_get_request_pad (rtpbin, "send_rtp_sink_2");
+  rtp_sink1 = gst_element_request_pad_simple (rtpbin, "send_rtp_sink_2");
   fail_unless (rtp_sink1 != NULL);
   fail_unless_equals_string (GST_PAD_NAME (rtp_sink1), "send_rtp_sink_2");
   ASSERT_OBJECT_REFCOUNT (rtp_sink1, "rtp_sink1", 2);
@@ -497,7 +497,7 @@ GST_START_TEST (test_encoder)
   id = g_signal_connect (rtpbin, "request-rtp-encoder", (GCallback) encoder_cb2,
       bin);
 
-  rtp_sink2 = gst_element_get_request_pad (rtpbin, "send_rtp_sink_3");
+  rtp_sink2 = gst_element_request_pad_simple (rtpbin, "send_rtp_sink_3");
   fail_unless (rtp_sink2 != NULL);
 
   /* remove the session */
@@ -547,12 +547,12 @@ GST_START_TEST (test_decoder)
   id = g_signal_connect (rtpbin, "request-rtp-decoder", (GCallback) decoder_cb,
       NULL);
 
-  rtp_sink1 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_2");
+  rtp_sink1 = gst_element_request_pad_simple (rtpbin, "recv_rtp_sink_2");
   fail_unless (rtp_sink1 != NULL);
   fail_unless_equals_string (GST_PAD_NAME (rtp_sink1), "recv_rtp_sink_2");
   ASSERT_OBJECT_REFCOUNT (rtp_sink1, "rtp_sink1", 2);
 
-  rtp_sink2 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_3");
+  rtp_sink2 = gst_element_request_pad_simple (rtpbin, "recv_rtp_sink_3");
   fail_unless (rtp_sink2 != NULL);
 
   g_signal_handler_disconnect (rtpbin, id);
@@ -609,7 +609,7 @@ GST_START_TEST (test_aux_sender)
   id = g_signal_connect (rtpbin, "request-aux-sender",
       (GCallback) aux_sender_cb, aux_sender);
 
-  rtp_sink1 = gst_element_get_request_pad (rtpbin, "send_rtp_sink_2");
+  rtp_sink1 = gst_element_request_pad_simple (rtpbin, "send_rtp_sink_2");
   fail_unless (rtp_sink1 != NULL);
   fail_unless_equals_string (GST_PAD_NAME (rtp_sink1), "send_rtp_sink_2");
   ASSERT_OBJECT_REFCOUNT (rtp_sink1, "rtp_sink1", 2);
@@ -624,7 +624,7 @@ GST_START_TEST (test_aux_sender)
   fail_unless (rtp_src != NULL);
   gst_object_unref (rtp_src);
 
-  rtcp_src = gst_element_get_request_pad (rtpbin, "send_rtcp_src_1");
+  rtcp_src = gst_element_request_pad_simple (rtpbin, "send_rtcp_src_1");
   fail_unless (rtcp_src != NULL);
   gst_element_release_request_pad (rtpbin, rtcp_src);
   gst_object_unref (rtcp_src);
@@ -684,15 +684,15 @@ GST_START_TEST (test_aux_receiver)
   id = g_signal_connect (rtpbin, "request-aux-receiver",
       (GCallback) aux_receiver_cb, NULL);
 
-  rtp_sink1 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_2");
+  rtp_sink1 = gst_element_request_pad_simple (rtpbin, "recv_rtp_sink_2");
   fail_unless (rtp_sink1 != NULL);
 
-  rtp_sink2 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_1");
+  rtp_sink2 = gst_element_request_pad_simple (rtpbin, "recv_rtp_sink_1");
   fail_unless (rtp_sink2 != NULL);
 
   g_signal_handler_disconnect (rtpbin, id);
 
-  rtcp_sink = gst_element_get_request_pad (rtpbin, "recv_rtcp_sink_1");
+  rtcp_sink = gst_element_request_pad_simple (rtpbin, "recv_rtcp_sink_1");
   fail_unless (rtcp_sink != NULL);
   gst_element_release_request_pad (rtpbin, rtcp_sink);
   gst_object_unref (rtcp_sink);
@@ -737,8 +737,9 @@ GST_START_TEST (test_sender_eos)
   gst_test_clock_set_time (tclock, 0);
 
   rtpsession = gst_element_factory_make ("rtpsession", NULL);
-  send_rtp_sink = gst_element_get_request_pad (rtpsession, "send_rtp_sink");
-  recv_rtcp_sink = gst_element_get_request_pad (rtpsession, "recv_rtcp_sink");
+  send_rtp_sink = gst_element_request_pad_simple (rtpsession, "send_rtp_sink");
+  recv_rtcp_sink =
+      gst_element_request_pad_simple (rtpsession, "recv_rtcp_sink");
 
 
   rtp_sink = gst_check_setup_sink_pad_by_name (rtpsession, &recv_tmpl,

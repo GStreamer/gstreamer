@@ -3106,7 +3106,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
     /* Have a muxer pad name */
     if (!(muxpad = gst_element_get_static_pad (splitmux->muxer, muxer_padname))) {
       if ((muxpad =
-              gst_element_get_request_pad (splitmux->muxer, muxer_padname)))
+              gst_element_request_pad_simple (splitmux->muxer, muxer_padname)))
         muxer_is_requestpad = TRUE;
     }
     g_free ((gchar *) muxer_padname);

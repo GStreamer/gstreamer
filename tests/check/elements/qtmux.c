@@ -124,7 +124,7 @@ setup_src_pad (GstElement * element,
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
 
   if (!(sinkpad = gst_element_get_static_pad (element, sinkname)))
-    sinkpad = gst_element_get_request_pad (element, sinkname);
+    sinkpad = gst_element_request_pad_simple (element, sinkname);
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
   /* references are owned by: 1) us, 2) qtmux */

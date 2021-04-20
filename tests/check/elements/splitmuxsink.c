@@ -559,7 +559,7 @@ GST_START_TEST (test_splitmuxsink_reuse_simple)
   GstPad *pad;
 
   sink = gst_element_factory_make ("splitmuxsink", NULL);
-  pad = gst_element_get_request_pad (sink, "video");
+  pad = gst_element_request_pad_simple (sink, "video");
   fail_unless (pad != NULL);
   g_object_set (sink, "location", "/dev/null", NULL);
 
@@ -598,13 +598,13 @@ GST_START_TEST (test_splitmuxsink_muxer_pad_map)
   g_object_set (sink, "muxer", muxer, "muxer-pad-map", pad_map, NULL);
   gst_structure_free (pad_map);
 
-  pad1 = gst_element_get_request_pad (sink, "video");
+  pad1 = gst_element_request_pad_simple (sink, "video");
   fail_unless (g_str_equal ("video", GST_PAD_NAME (pad1)));
   muxpad = gst_element_get_static_pad (muxer, "video_100");
   fail_unless (muxpad != NULL);
   gst_object_unref (muxpad);
 
-  pad2 = gst_element_get_request_pad (sink, "audio_0");
+  pad2 = gst_element_request_pad_simple (sink, "audio_0");
   fail_unless (g_str_equal ("audio_0", GST_PAD_NAME (pad2)));
   muxpad = gst_element_get_static_pad (muxer, "audio_101");
   fail_unless (muxpad != NULL);

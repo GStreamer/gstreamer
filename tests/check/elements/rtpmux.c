@@ -123,9 +123,9 @@ test_basic (const gchar * elem_name, const gchar * sink2, int count,
 
   rtpmux = gst_check_setup_element (elem_name);
 
-  reqpad1 = gst_element_get_request_pad (rtpmux, "sink_1");
+  reqpad1 = gst_element_request_pad_simple (rtpmux, "sink_1");
   fail_unless (reqpad1 != NULL);
-  reqpad2 = gst_element_get_request_pad (rtpmux, sink2);
+  reqpad2 = gst_element_request_pad_simple (rtpmux, sink2);
   fail_unless (reqpad2 != NULL);
   sink = gst_check_setup_sink_pad_by_name (rtpmux, &sinktemplate, "src");
 
