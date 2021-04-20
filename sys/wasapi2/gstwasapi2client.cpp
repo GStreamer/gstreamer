@@ -984,17 +984,36 @@ static struct
   {SPEAKER_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}
 };
 
+static DWORD default_ch_masks[] = {
+  0,
+  KSAUDIO_SPEAKER_MONO,
+  /* 2ch */
+  KSAUDIO_SPEAKER_STEREO,
+  /* 2.1ch */
+  /* KSAUDIO_SPEAKER_3POINT0 ? */
+  KSAUDIO_SPEAKER_2POINT1,
+  /* 4ch */
+  /* KSAUDIO_SPEAKER_3POINT1 or KSAUDIO_SPEAKER_SURROUND ? */
+  KSAUDIO_SPEAKER_QUAD,
+  /* 5ch */
+  KSAUDIO_SPEAKER_5POINT0,
+  /* 5.1ch */
+  KSAUDIO_SPEAKER_5POINT1,
+  /* 7ch */
+  KSAUDIO_SPEAKER_7POINT0,
+  /* 7.1ch */
+  KSAUDIO_SPEAKER_7POINT1,
+};
+
 /* Parse WAVEFORMATEX to get the gstreamer channel mask, and the wasapi channel
  * positions so GstAudioRingbuffer can reorder the audio data to match the
  * gstreamer channel order. */
 static guint64
-gst_wasapi_util_waveformatex_to_channel_mask (WAVEFORMATEXTENSIBLE * format,
-    GstAudioChannelPosition ** out_position)
+gst_wasapi2_util_waveformatex_to_channel_mask (WORD nChannels,
+    DWORD dwChannelMask, GstAudioChannelPosition ** out_position)
 {
   int ii, ch;
   guint64 mask = 0;
-  WORD nChannels = format->Format.nChannels;
-  DWORD dwChannelMask = format->dwChannelMask;
   GstAudioChannelPosition *pos = NULL;
 
   pos = g_new (GstAudioChannelPosition, nChannels);
@@ -1041,7 +1060,9 @@ gst_wasapi2_util_parse_waveformatex (WAVEFORMATEXTENSIBLE * format,
     GstAudioChannelPosition ** out_positions)
 {
   const gchar *afmt;
-  guint64 channel_mask;
+  guint64 channel_mask = 0;
+  DWORD dwChannelMask = 0;
+  WORD nChannels;
 
   *out_caps = NULL;
 
@@ -1064,9 +1085,25 @@ gst_wasapi2_util_parse_waveformatex (WAVEFORMATEXTENSIBLE * format,
 
   *out_caps = gst_caps_copy (template_caps);
 
-  /* This will always return something that might be usable */
+  nChannels = format->Format.nChannels;
+  if (format->Format.wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+    dwChannelMask = format->dwChannelMask;
+  }
+
+  if (nChannels > 2 && !dwChannelMask) {
+    GST_WARNING ("Unknown channel mask value for %d channel stream",
+        format->Format.nChannels);
+    if (nChannels >= G_N_ELEMENTS (default_ch_masks)) {
+      GST_ERROR ("To may channels %d", nChannels);
+      return FALSE;
+    }
+
+    dwChannelMask = default_ch_masks[nChannels];
+  }
+
   channel_mask =
-      gst_wasapi_util_waveformatex_to_channel_mask (format, out_positions);
+      gst_wasapi2_util_waveformatex_to_channel_mask (nChannels,
+      dwChannelMask, out_positions);
 
   gst_caps_set_simple (*out_caps,
       "format", G_TYPE_STRING, afmt,
