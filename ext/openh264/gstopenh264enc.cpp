@@ -1042,8 +1042,13 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
           if (j > 0)
             nal_offset = nal_offset + frame_info.sLayerInfo[i].pNalLengthInByte[j-1];
           nal_type = ((* (frame_info.sLayerInfo[i].pBsBuf + nal_offset + 4)) & 0x1f);
-          if (nal_type == NAL_SPS || nal_type == NAL_PPS)
-            gst_buffer_fill (hdr, nal_offset, frame_info.sLayerInfo[i].pBsBuf, frame_info.sLayerInfo[i].pNalLengthInByte[j]);
+          /* Note: This only works if SPS/PPS are the first two NALs in which case
+           * nal_offset is the same for both the output and the bitstream buffer */
+          if (nal_type == NAL_SPS || nal_type == NAL_PPS) {
+            gst_buffer_fill (hdr, nal_offset,
+                frame_info.sLayerInfo[i].pBsBuf + nal_offset,
+                frame_info.sLayerInfo[i].pNalLengthInByte[j]);
+          }
         }
         headers = g_list_append (headers, gst_buffer_ref (hdr));
     }
