@@ -346,7 +346,7 @@ add_peer_to_pipeline (const gchar * peer_id, gboolean offer)
 
   srcpad = gst_element_get_static_pad (q, "src");
   g_assert_nonnull (srcpad);
-  sinkpad = gst_element_get_request_pad (webrtc, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (webrtc, "sink_%u");
   g_assert_nonnull (sinkpad);
   ret = gst_pad_link (srcpad, sinkpad);
   g_assert_cmpint (ret, ==, GST_PAD_LINK_OK);
@@ -355,7 +355,7 @@ add_peer_to_pipeline (const gchar * peer_id, gboolean offer)
 
   tee = gst_bin_get_by_name (GST_BIN (pipeline), "audiotee");
   g_assert_nonnull (tee);
-  srcpad = gst_element_get_request_pad (tee, "src_%u");
+  srcpad = gst_element_request_pad_simple (tee, "src_%u");
   g_assert_nonnull (srcpad);
   gst_object_unref (tee);
   sinkpad = gst_element_get_static_pad (q, "sink");
