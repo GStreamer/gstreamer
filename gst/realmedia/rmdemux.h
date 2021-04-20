@@ -103,6 +103,7 @@ struct _GstRMDemux {
 
   guint offset;
   gboolean seekable;
+  guint32 seek_seqnum;
 
   GstRMDemuxState state;
   GstRMDemuxLoopState loop_state;
