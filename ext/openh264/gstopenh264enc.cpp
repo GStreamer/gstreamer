@@ -885,7 +885,6 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
   gfloat fps;
   gint i, j;
   gsize buf_length = 0;
-  GList* headers = NULL;
 
   GST_OBJECT_LOCK (openh264enc);
 
@@ -1034,33 +1033,9 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
     for (j = 0; j < frame_info.sLayerInfo[i].iNalCount; j++) {
       layer_size += frame_info.sLayerInfo[i].pNalLengthInByte[j];
     }
-    /* detect header with NON_VIDEO_CODING_LAYER and fill headers list */
-    if (frame_info.sLayerInfo[i].uiLayerType == NON_VIDEO_CODING_LAYER) {
-        int nal_type;
-        gint nal_offset = 0;
-        GstBuffer* hdr = gst_buffer_new_and_alloc (layer_size);
-        GST_BUFFER_FLAG_SET (hdr, GST_BUFFER_FLAG_HEADER);
-        for (j = 0; j < frame_info.sLayerInfo[i].iNalCount; j++) {
-          if (j > 0)
-            nal_offset = nal_offset + frame_info.sLayerInfo[i].pNalLengthInByte[j-1];
-          nal_type = ((* (frame_info.sLayerInfo[i].pBsBuf + nal_offset + 4)) & 0x1f);
-          /* Note: This only works if SPS/PPS are the first two NALs in which case
-           * nal_offset is the same for both the output and the bitstream buffer */
-          if (nal_type == NAL_SPS || nal_type == NAL_PPS) {
-            gst_buffer_fill (hdr, nal_offset,
-                frame_info.sLayerInfo[i].pBsBuf + nal_offset,
-                frame_info.sLayerInfo[i].pNalLengthInByte[j]);
-          }
-        }
-        headers = g_list_append (headers, hdr);    /* take ownership of hdr */
-    }
     gst_buffer_fill (frame->output_buffer, buf_length, frame_info.sLayerInfo[i].pBsBuf, layer_size);
     buf_length += layer_size;
   }
-
-  /*Set headers from the frame_info*/
-  if (headers)
-    gst_video_encoder_set_headers (encoder, headers);
 
   GST_LOG_OBJECT (openh264enc, "openh264 picture %scoded OK!",
       (ret != cmResultSuccess) ? "NOT " : "");
