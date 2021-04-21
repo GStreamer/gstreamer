@@ -156,8 +156,8 @@ _create_issues (GstValidateRunner * runner)
 
   srcpad1 = gst_element_get_static_pad (src1, "src");
   srcpad2 = gst_element_get_static_pad (src2, "src");
-  funnel_sink1 = gst_element_get_request_pad (fakemixer, "sink_%u");
-  funnel_sink2 = gst_element_get_request_pad (fakemixer, "sink_%u");
+  funnel_sink1 = gst_element_request_pad_simple (fakemixer, "sink_%u");
+  funnel_sink2 = gst_element_request_pad_simple (fakemixer, "sink_%u");
   sinkpad = gst_element_get_static_pad (sink, "sink");
 
   fail_unless (gst_element_link (fakemixer, sink));

@@ -399,10 +399,10 @@ GST_START_TEST (issue_concatenation)
   srcpad_monitor1 = g_object_get_data (G_OBJECT (srcpad1), "validate-monitor");
   srcpad2 = gst_element_get_static_pad (src2, "src");
   srcpad_monitor2 = g_object_get_data (G_OBJECT (srcpad2), "validate-monitor");
-  fakemixer_sink1 = gst_element_get_request_pad (fakemixer, "sink_%u");
+  fakemixer_sink1 = gst_element_request_pad_simple (fakemixer, "sink_%u");
   fakemixer_sink_monitor1 =
       g_object_get_data (G_OBJECT (fakemixer_sink1), "validate-monitor");
-  fakemixer_sink2 = gst_element_get_request_pad (fakemixer, "sink_%u");
+  fakemixer_sink2 = gst_element_request_pad_simple (fakemixer, "sink_%u");
   fakemixer_sink_monitor2 =
       g_object_get_data (G_OBJECT (fakemixer_sink2), "validate-monitor");
   sinkpad = gst_element_get_static_pad (sink, "sink");
