@@ -301,12 +301,16 @@ gst_tcp_client_sink_start (GstBaseSink * bsink)
 
   cur_addr = addrs;
   while (cur_addr) {
+    /* clean up from possible previous iterations */
+    g_clear_error (&err);
+    g_clear_object (&this->socket);
+
     /* iterate over addresses until one works */
     this->socket =
         tcp_create_socket (GST_ELEMENT (this), &cur_addr, this->port, &saddr,
         &err);
     if (!this->socket)
-      break;
+      goto no_socket;
 
     GST_DEBUG_OBJECT (this, "opened sending client socket");
 
@@ -315,17 +319,17 @@ gst_tcp_client_sink_start (GstBaseSink * bsink)
       break;
 
     /* failed to connect, release and try next address... */
-    g_clear_object (&this->socket);
     g_clear_object (&saddr);
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+      goto connect_failed;
   }
-  g_list_free_full (addrs, g_object_unref);
-  if (!this->socket)
-    goto no_socket;
 
-  /* we should only have a valid saddr if connect was successful */
-  if (!saddr)
+  /* final connect attempt failed */
+  if (err)
     goto connect_failed;
 
+  GST_DEBUG_OBJECT (this, "connected to %s:%d", this->host, this->port);
+  g_list_free_full (g_steal_pointer (&addrs), g_object_unref);
   g_object_unref (saddr);
 
   GST_OBJECT_FLAG_SET (this, GST_TCP_CLIENT_SINK_OPEN);
@@ -333,13 +337,7 @@ gst_tcp_client_sink_start (GstBaseSink * bsink)
   this->data_written = 0;
 
   return TRUE;
-no_socket:
-  {
-    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
-        ("Failed to create socket: %s", err->message));
-    g_clear_error (&err);
-    return FALSE;
-  }
+
 name_resolve:
   {
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
@@ -351,8 +349,17 @@ name_resolve:
     g_clear_error (&err);
     return FALSE;
   }
+no_socket:
+  {
+    g_list_free_full (g_steal_pointer (&addrs), g_object_unref);
+    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
+        ("Failed to create socket: %s", err->message));
+    g_clear_error (&err);
+    return FALSE;
+  }
 connect_failed:
   {
+    g_list_free_full (g_steal_pointer (&addrs), g_object_unref);
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       GST_DEBUG_OBJECT (this, "Cancelled connecting");
     } else {

@@ -92,9 +92,10 @@ tcp_create_socket (GstElement * obj, GList ** iter, guint16 port,
       g_free (ip);
     }
 #endif
+    /* clean up from possible previous iterations */
+    g_clear_error (err);
     /* update iter in case we get called again */
     *iter = (*iter)->next;
-    g_clear_error (err);
 
     *saddr = g_inet_socket_address_new (addr, port);
     sock =

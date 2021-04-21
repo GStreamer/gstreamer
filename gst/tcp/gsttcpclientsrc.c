@@ -420,51 +420,49 @@ gst_tcp_client_src_start (GstBaseSrc * bsrc)
   if (!addrs)
     goto name_resolve;
 
+  /* create receiving client socket */
+  GST_DEBUG_OBJECT (src, "opening receiving client socket to %s:%d",
+      src->host, src->port);
+
   cur_addr = addrs;
   while (cur_addr) {
+    /* clean up from possible previous iterations */
+    g_clear_error (&err);
+    g_clear_object (&src->socket);
+
     /* iterate over addresses until one works */
     src->socket =
         tcp_create_socket (GST_ELEMENT (src), &cur_addr, src->port, &saddr,
         &err);
     if (!src->socket)
-      break;
-
-    /* create receiving client socket */
-    GST_DEBUG_OBJECT (src, "opening receiving client socket to %s:%d",
-        src->host, src->port);
+      goto no_socket;
 
     g_socket_set_timeout (src->socket, src->timeout);
 
     GST_DEBUG_OBJECT (src, "opened receiving client socket");
-    GST_OBJECT_FLAG_SET (src, GST_TCP_CLIENT_SRC_OPEN);
 
     /* connect to server */
     if (g_socket_connect (src->socket, saddr, src->cancellable, &err))
       break;
 
     /* failed to connect, release and try next address... */
-    g_clear_object (&src->socket);
     g_clear_object (&saddr);
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+      goto connect_failed;
   }
-  g_list_free_full (addrs, g_object_unref);
-  if (!src->socket)
-    goto no_socket;
 
-  /* we should only have a valid saddr if connect was successful */
-  if (!saddr)
+  /* final connect attempt failed */
+  if (err)
     goto connect_failed;
 
-  g_object_unref (saddr);
+  GST_DEBUG_OBJECT (src, "connected to %s:%d", src->host, src->port);
+  g_list_free_full (g_steal_pointer (&addrs), g_object_unref);
+  g_clear_object (&saddr);
+
+  GST_OBJECT_FLAG_SET (src, GST_TCP_CLIENT_SRC_OPEN);
 
   return TRUE;
 
-no_socket:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-        ("Failed to create socket: %s", err->message));
-    g_clear_error (&err);
-    return FALSE;
-  }
 name_resolve:
   {
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
@@ -476,8 +474,17 @@ name_resolve:
     g_clear_error (&err);
     return FALSE;
   }
+no_socket:
+  {
+    g_list_free_full (g_steal_pointer (&addrs), g_object_unref);
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("Failed to create socket: %s", err->message));
+    g_clear_error (&err);
+    return FALSE;
+  }
 connect_failed:
   {
+    g_list_free_full (g_steal_pointer (&addrs), g_object_unref);
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       GST_DEBUG_OBJECT (src, "Cancelled connecting");
     } else {
@@ -486,6 +493,8 @@ connect_failed:
               err->message));
     }
     g_clear_error (&err);
+    /* pretend we opened ok for proper cleanup to happen */
+    GST_OBJECT_FLAG_SET (src, GST_TCP_CLIENT_SRC_OPEN);
     gst_tcp_client_src_stop (GST_BASE_SRC (src));
     return FALSE;
   }
