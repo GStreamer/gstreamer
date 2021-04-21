@@ -2841,7 +2841,7 @@ request_rtp_encoder (GstElement * rtpbin, guint session, GstRTSPStream * stream)
   oldenc = priv->srtpenc;
   enc = get_rtp_encoder (stream, session);
   name = g_strdup_printf ("rtp_sink_%d", session);
-  pad = gst_element_get_request_pad (enc, name);
+  pad = gst_element_request_pad_simple (enc, name);
   g_free (name);
   gst_object_unref (pad);
 
@@ -2869,7 +2869,7 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
   oldenc = priv->srtpenc;
   enc = get_rtp_encoder (stream, session);
   name = g_strdup_printf ("rtcp_sink_%d", session);
-  pad = gst_element_get_request_pad (enc, name);
+  pad = gst_element_request_pad_simple (enc, name);
   g_free (name);
   gst_object_unref (pad);
 
@@ -3263,7 +3263,7 @@ create_and_plug_queue_to_unlinked_stream (GstRTSPStream * stream,
   gst_bin_add (priv->joined_bin, *queue);
 
   /* link tee to queue */
-  tee_pad = gst_element_get_request_pad (tee, "src_%u");
+  tee_pad = gst_element_request_pad_simple (tee, "src_%u");
   queue_pad = gst_element_get_static_pad (*queue, "sink");
   gst_pad_link (tee_pad, queue_pad);
   gst_object_unref (queue_pad);
@@ -3425,7 +3425,7 @@ plug_udp_sink (GstRTSPStream * stream, GstElement * sink_to_plug,
     GST_DEBUG_OBJECT (stream, "creating first stream");
 
     /* no need to add queues */
-    tee_pad = gst_element_get_request_pad (priv->tee[index], "src_%u");
+    tee_pad = gst_element_request_pad_simple (priv->tee[index], "src_%u");
     sink_pad = gst_element_get_static_pad (sink_to_plug, "sink");
     gst_pad_link (tee_pad, sink_pad);
     gst_object_unref (tee_pad);
@@ -3474,7 +3474,7 @@ plug_tcp_sink (GstRTSPStream * stream, guint index)
     GstPad *sink_pad;
 
     /* no need to add queues */
-    tee_pad = gst_element_get_request_pad (priv->tee[index], "src_%u");
+    tee_pad = gst_element_request_pad_simple (priv->tee[index], "src_%u");
     sink_pad = gst_element_get_static_pad (priv->appsink[index], "sink");
     gst_pad_link (tee_pad, sink_pad);
     gst_object_unref (tee_pad);
@@ -3657,7 +3657,7 @@ plug_src (GstRTSPStream * stream, GstBin * bin, GstElement * src,
   }
 
   /* and link to the funnel */
-  selpad = gst_element_get_request_pad (funnel, "sink_%u");
+  selpad = gst_element_request_pad_simple (funnel, "sink_%u");
   gst_pad_link (pad, selpad);
   if (id != 0)
     gst_pad_remove_probe (pad, id);
@@ -3945,7 +3945,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
   if (priv->srcpad) {
     /* get a pad for sending RTP */
     name = g_strdup_printf ("send_rtp_sink_%u", idx);
-    priv->send_rtp_sink = gst_element_get_request_pad (rtpbin, name);
+    priv->send_rtp_sink = gst_element_request_pad_simple (rtpbin, name);
     g_free (name);
 
     /* link the RTP pad to the session manager, it should not really fail unless
@@ -3964,17 +3964,17 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     g_signal_connect (rtpbin, "on-npt-stop", (GCallback) on_npt_stop, stream);
 
     name = g_strdup_printf ("recv_rtp_sink_%u", idx);
-    priv->recv_sink[0] = gst_element_get_request_pad (rtpbin, name);
+    priv->recv_sink[0] = gst_element_request_pad_simple (rtpbin, name);
     g_free (name);
   }
 
   if (priv->enable_rtcp) {
     name = g_strdup_printf ("send_rtcp_src_%u", idx);
-    priv->send_src[1] = gst_element_get_request_pad (rtpbin, name);
+    priv->send_src[1] = gst_element_request_pad_simple (rtpbin, name);
     g_free (name);
 
     name = g_strdup_printf ("recv_rtcp_sink_%u", idx);
-    priv->recv_sink[1] = gst_element_get_request_pad (rtpbin, name);
+    priv->recv_sink[1] = gst_element_request_pad_simple (rtpbin, name);
     g_free (name);
   }
 
