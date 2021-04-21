@@ -56,6 +56,7 @@ enum
   PROP_DIRECTION,
   PROP_MLINE,
   PROP_MID,
+  PROP_CURRENT_DIRECTION,
   PROP_STOPPED,                 // FIXME
 };
 
@@ -107,6 +108,9 @@ gst_webrtc_rtp_transceiver_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DIRECTION:
       g_value_set_enum (value, webrtc->direction);
+      break;
+    case PROP_CURRENT_DIRECTION:
+      g_value_set_enum (value, webrtc->current_direction);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -224,6 +228,24 @@ gst_webrtc_rtp_transceiver_class_init (GstWebRTCRTPTransceiverClass * klass)
           " local or remote description has been applied, or if its associated"
           " m-line is rejected by either a remote offer or any answer.",
           NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebRTCRTPTransceiver:current-direction:
+   *
+   * The transceiver's current directionality, or none if the
+   * transceiver is stopped or has never participated in an exchange
+   * of offers and answers. To change the transceiver's
+   * directionality, set the value of the direction property.
+   *
+   * Since: 1.20
+   **/
+  g_object_class_install_property (gobject_class,
+      PROP_DIRECTION,
+      g_param_spec_enum ("current-direction", "Current Direction",
+          "Transceiver current direction",
+          GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
+          GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
 }
 
