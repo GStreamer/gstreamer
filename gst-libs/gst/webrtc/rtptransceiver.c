@@ -57,6 +57,7 @@ enum
   PROP_MLINE,
   PROP_MID,
   PROP_CURRENT_DIRECTION,
+  PROP_KIND,
   PROP_STOPPED,                 // FIXME
 };
 
@@ -111,6 +112,9 @@ gst_webrtc_rtp_transceiver_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CURRENT_DIRECTION:
       g_value_set_enum (value, webrtc->current_direction);
+      break;
+    case PROP_KIND:
+      g_value_set_enum (value, webrtc->kind);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -247,6 +251,19 @@ gst_webrtc_rtp_transceiver_class_init (GstWebRTCRTPTransceiverClass * klass)
           GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstWebRTCRTPTransceiver:kind:
+   *
+   * The kind of media this transceiver transports
+   *
+   * Since: 1.20
+   **/
+  g_object_class_install_property (gobject_class,
+      PROP_KIND,
+      g_param_spec_enum ("kind", "Media Kind",
+          "Kind of media this transceiver transports",
+          GST_TYPE_WEBRTC_KIND, GST_WEBRTC_KIND_UNKNOWN,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
