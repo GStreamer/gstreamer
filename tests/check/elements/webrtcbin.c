@@ -1569,14 +1569,15 @@ GST_END_TEST;
 GST_START_TEST (test_add_transceiver)
 {
   struct test_webrtc *t = test_webrtc_new ();
-  GstWebRTCRTPTransceiverDirection direction;
+  GstWebRTCRTPTransceiverDirection direction, trans_direction;
   GstWebRTCRTPTransceiver *trans;
 
   direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV;
   g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, NULL,
       &trans);
   fail_unless (trans != NULL);
-  fail_unless_equals_int (direction, trans->direction);
+  g_object_get (trans, "direction", &trans_direction, NULL);
+  fail_unless_equals_int (direction, trans_direction);
 
   gst_object_unref (trans);
 
@@ -1707,7 +1708,8 @@ GST_START_TEST (test_recvonly_sendonly)
   fail_unless (transceivers != NULL);
   fail_unless_equals_int (transceivers->len, 2);
   trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 1);
-  trans->direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  g_object_set (trans, "direction",
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY, NULL);
 
   g_array_unref (transceivers);
 
@@ -2778,6 +2780,7 @@ GST_START_TEST (test_dual_audio)
   GstHarness *h;
   GstWebRTCRTPTransceiver *trans;
   GArray *transceivers;
+  guint mline;
 
   /* test that each mline gets a unique transceiver even with the same caps */
 
@@ -2798,11 +2801,13 @@ GST_START_TEST (test_dual_audio)
 
   trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 0);
   fail_unless (trans != NULL);
-  fail_unless_equals_int (trans->mline, 0);
+  g_object_get (trans, "mlineindex", &mline, NULL);
+  fail_unless_equals_int (mline, 0);
 
   trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 1);
   fail_unless (trans != NULL);
-  fail_unless_equals_int (trans->mline, 1);
+  g_object_get (trans, "mlineindex", &mline, NULL);
+  fail_unless_equals_int (mline, 1);
 
   g_array_unref (transceivers);
   test_webrtc_free (t);
@@ -3613,8 +3618,7 @@ GST_START_TEST (test_reject_request_pad)
   pad = gst_element_request_pad (t->webrtc1, templ, "sink_0", caps);
   fail_unless (pad == NULL);
 
-  gst_caps_unref (trans->codec_preferences);
-  trans->codec_preferences = NULL;
+  g_object_set (trans, "codec-preferences", NULL, NULL);
 
   /* This should fail because the kind doesn't match */
   pad = gst_element_request_pad (t->webrtc1, templ, "sink_0", caps);
