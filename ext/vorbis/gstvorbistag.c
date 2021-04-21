@@ -59,8 +59,8 @@
 #include "gstvorbistag.h"
 
 
-GST_DEBUG_CATEGORY_EXTERN (vorbisparse_debug);
-#define GST_CAT_DEFAULT vorbisparse_debug
+GST_DEBUG_CATEGORY_STATIC (vorbistag_debug);
+#define GST_CAT_DEFAULT vorbistag_debug
 
 static GstFlowReturn gst_vorbis_tag_parse_packet (GstVorbisParse * parse,
     GstBuffer * buffer);
@@ -69,7 +69,9 @@ static GstFlowReturn gst_vorbis_tag_parse_packet (GstVorbisParse * parse,
 G_DEFINE_TYPE_WITH_CODE (GstVorbisTag, gst_vorbis_tag,
     GST_TYPE_VORBIS_PARSE, G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vorbistag, "vorbistag",
-    GST_RANK_NONE, GST_TYPE_VORBIS_TAG, vorbis_element_init (plugin));
+    GST_RANK_NONE, GST_TYPE_VORBIS_TAG,
+    GST_DEBUG_CATEGORY_INIT (vorbistag_debug, "vorbistag", 0,
+        "vorbis tagging element"); vorbis_element_init (plugin));
 
 static void
 gst_vorbis_tag_class_init (GstVorbisTagClass * klass)

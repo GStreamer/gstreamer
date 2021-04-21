@@ -55,7 +55,7 @@
 #include "gstvorbiselements.h"
 #include "gstvorbiscommon.h"
 
-GST_DEBUG_CATEGORY_EXTERN (vorbisenc_debug);
+GST_DEBUG_CATEGORY_STATIC (vorbisenc_debug);
 #define GST_CAT_DEFAULT vorbisenc_debug
 
 static GstStaticPadTemplate vorbis_enc_src_factory =
@@ -110,7 +110,10 @@ static void gst_vorbis_enc_flush (GstAudioEncoder * vorbisenc);
 G_DEFINE_TYPE_WITH_CODE (GstVorbisEnc, gst_vorbis_enc,
     GST_TYPE_AUDIO_ENCODER, G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vorbisenc, "vorbisenc",
-    GST_RANK_PRIMARY, GST_TYPE_VORBISENC, vorbis_element_init (plugin));
+    GST_RANK_PRIMARY, GST_TYPE_VORBISENC,
+    GST_DEBUG_CATEGORY_INIT (vorbisenc_debug, "vorbisenc", 0,
+        "vorbis encoding element");
+    vorbis_element_init (plugin));
 
 static void
 gst_vorbis_enc_class_init (GstVorbisEncClass * klass)

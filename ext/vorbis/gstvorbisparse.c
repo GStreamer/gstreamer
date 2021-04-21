@@ -56,7 +56,7 @@
 #include "gstvorbiselements.h"
 #include "gstvorbisparse.h"
 
-GST_DEBUG_CATEGORY_EXTERN (vorbisparse_debug);
+GST_DEBUG_CATEGORY_STATIC (vorbisparse_debug);
 #define GST_CAT_DEFAULT vorbisparse_debug
 
 static GstStaticPadTemplate vorbis_parse_sink_factory =
@@ -76,7 +76,10 @@ GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_vorbis_parse_parent_class parent_class
 G_DEFINE_TYPE (GstVorbisParse, gst_vorbis_parse, GST_TYPE_ELEMENT);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vorbisparse, "vorbisparse",
-    GST_RANK_NONE, GST_TYPE_VORBIS_PARSE, vorbis_element_init (plugin));
+    GST_RANK_NONE, GST_TYPE_VORBIS_PARSE,
+    GST_DEBUG_CATEGORY_INIT (vorbisparse_debug, "vorbisparse", 0,
+        "vorbis parsing element");
+    vorbis_element_init (plugin));
 
 static GstFlowReturn vorbis_parse_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
