@@ -51,11 +51,11 @@ enum
 enum
 {
   PROP_0,
-  PROP_MID,
   PROP_SENDER,
   PROP_RECEIVER,
   PROP_DIRECTION,
   PROP_MLINE,
+  PROP_MID,
   PROP_STOPPED,                 // FIXME
 };
 
@@ -93,6 +93,9 @@ gst_webrtc_rtp_transceiver_get_property (GObject * object, guint prop_id,
   GstWebRTCRTPTransceiver *webrtc = GST_WEBRTC_RTP_TRANSCEIVER (object);
 
   switch (prop_id) {
+    case PROP_MID:
+      g_value_set_string (value, webrtc->mid);
+      break;
     case PROP_SENDER:
       g_value_set_object (value, webrtc->sender);
       break;
@@ -199,6 +202,29 @@ gst_webrtc_rtp_transceiver_class_init (GstWebRTCRTPTransceiverClass * klass)
           GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
           GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebRTCRTPTransceiver:mid:
+   *
+   * The media ID of the m-line associated with this transceiver. This
+   * association is established, when possible, whenever either a
+   * local or remote description is applied. This field is null if
+   * neither a local or remote description has been applied, or if its
+   * associated m-line is rejected by either a remote offer or any
+   * answer.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_MID,
+      g_param_spec_string ("mid", "Media ID",
+          "The media ID of the m-line associated with this transceiver. This "
+          " association is established, when possible, whenever either a local"
+          " or remote description is applied. This field is null if neither a"
+          " local or remote description has been applied, or if its associated"
+          " m-line is rejected by either a remote offer or any answer.",
+          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
 }
 
 static void
