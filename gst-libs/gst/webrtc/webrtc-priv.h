@@ -128,6 +128,37 @@ struct _GstWebRTCRTPSenderClass
 GST_WEBRTC_API
 GstWebRTCRTPSender *        gst_webrtc_rtp_sender_new                   (void);
 
+/**
+ * GstWebRTCRTPReceiver:
+ * @transport: The transport for RTP packets
+ *
+ * An object to track the receiving aspect of the stream
+ *
+ * Mostly matches the WebRTC RTCRtpReceiver interface.
+ *
+ * Since: 1.16
+ */
+struct _GstWebRTCRTPReceiver
+{
+  GstObject                          parent;
+
+  /* The MediStreamTrack is represented by the stream and is output into @transport as necessary */
+  GstWebRTCDTLSTransport            *transport;
+
+  gpointer                          _padding[GST_PADDING];
+};
+
+struct _GstWebRTCRTPReceiverClass
+{
+  GstObjectClass            parent_class;
+
+  gpointer                  _padding[GST_PADDING];
+};
+
+GST_WEBRTC_API
+GstWebRTCRTPReceiver *      gst_webrtc_rtp_receiver_new                 (void);
+
+
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_PRIV_H__ */

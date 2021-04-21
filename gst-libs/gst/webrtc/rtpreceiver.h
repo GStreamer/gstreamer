@@ -24,6 +24,8 @@
 #include <gst/webrtc/webrtc_fwd.h>
 #include <gst/webrtc/dtlstransport.h>
 
+#include "webrtc-priv.h"
+
 G_BEGIN_DECLS
 
 GST_WEBRTC_API
@@ -34,36 +36,6 @@ GType gst_webrtc_rtp_receiver_get_type(void);
 #define GST_WEBRTC_RTP_RECEIVER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_WEBRTC_RTP_RECEIVER,GstWebRTCRTPReceiverClass))
 #define GST_IS_WEBRTC_RTP_RECEIVER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_WEBRTC_RTP_RECEIVER))
 #define GST_WEBRTC_RTP_RECEIVER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_WEBRTC_RTP_RECEIVER,GstWebRTCRTPReceiverClass))
-
-/**
- * GstWebRTCRTPReceiver:
- * @transport: The transport for RTP packets
- *
- * An object to track the receiving aspect of the stream
- *
- * Mostly matches the WebRTC RTCRtpReceiver interface.
- *
- * Since: 1.16
- */
-struct _GstWebRTCRTPReceiver
-{
-  GstObject                          parent;
-
-  /* The MediStreamTrack is represented by the stream and is output into @transport as necessary */
-  GstWebRTCDTLSTransport            *transport;
-
-  gpointer                          _padding[GST_PADDING];
-};
-
-struct _GstWebRTCRTPReceiverClass
-{
-  GstObjectClass            parent_class;
-
-  gpointer                  _padding[GST_PADDING];
-};
-
-GST_WEBRTC_API
-GstWebRTCRTPReceiver *      gst_webrtc_rtp_receiver_new                 (void);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCRTPReceiver, gst_object_unref)
 
