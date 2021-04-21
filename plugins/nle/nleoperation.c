@@ -639,7 +639,7 @@ get_request_sink_pad (NleOperation * operation)
     if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SINK) &&
         (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_REQUEST)) {
       pad =
-          gst_element_get_request_pad (operation->element,
+          gst_element_request_pad_simple (operation->element,
           GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
       if (pad)
         break;

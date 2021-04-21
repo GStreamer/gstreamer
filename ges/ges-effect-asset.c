@@ -177,7 +177,7 @@ request_pad (GstElement * element, GstPadDirection direction)
     if ((GST_PAD_TEMPLATE_DIRECTION (templ) == direction) &&
         (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_REQUEST)) {
       pad =
-          gst_element_get_request_pad (element,
+          gst_element_request_pad_simple (element,
           GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
       if (pad)
         break;

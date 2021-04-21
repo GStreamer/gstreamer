@@ -87,7 +87,7 @@ B. Goals
   ...
 
   vsrcpad = gst_element_get_src_pad(source, "src1");
-  vsinkpad = gst_element_get_request_pad (encbin, "video_%d");
+  vsinkpad = gst_element_request_pad_simple (encbin, "video_%d");
   gst_pad_link(vsrcpad, vsinkpad);
 
   ...

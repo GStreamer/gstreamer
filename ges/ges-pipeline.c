@@ -849,14 +849,14 @@ _link_track (GESPipeline * self, GESTrack * track)
 
     /* Request a sinkpad from playsink */
     if (G_UNLIKELY (!(sinkpad =
-                gst_element_get_request_pad (self->priv->playsink,
+                gst_element_request_pad_simple (self->priv->playsink,
                     sinkpad_name)))) {
       GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
           (NULL), ("Could not get a pad from playsink for %s", sinkpad_name));
       goto error;
     }
 
-    tmppad = gst_element_get_request_pad (chain->tee, "src_%u");
+    tmppad = gst_element_request_pad_simple (chain->tee, "src_%u");
     lret = gst_pad_link_full (tmppad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
     if (G_UNLIKELY (lret != GST_PAD_LINK_OK)) {
       gst_object_unref (tmppad);
@@ -912,7 +912,7 @@ _link_track (GESPipeline * self, GESTrack * track)
       GST_INFO_OBJECT (track, "Linked to %" GST_PTR_FORMAT, sinkpad);
     }
 
-    tmppad = gst_element_get_request_pad (chain->tee, "src_%u");
+    tmppad = gst_element_request_pad_simple (chain->tee, "src_%u");
     if (G_UNLIKELY (gst_pad_link_full (tmppad, chain->encodebinpad,
                 GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
       GST_ERROR_OBJECT (self, "Couldn't link track pad to encodebin");

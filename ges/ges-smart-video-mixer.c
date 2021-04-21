@@ -190,7 +190,7 @@ ges_smart_mixer_get_mixer_pad (GESSmartMixer * self, GstPad ** mixerpad)
   PadInfos *info;
   GstPad *sinkpad;
 
-  sinkpad = gst_element_get_request_pad (GST_ELEMENT (self), "sink_%u");
+  sinkpad = gst_element_request_pad_simple (GST_ELEMENT (self), "sink_%u");
 
   if (sinkpad == NULL)
     return NULL;

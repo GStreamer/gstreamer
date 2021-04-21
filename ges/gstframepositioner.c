@@ -87,7 +87,8 @@ gst_compositor_operator_get_type_and_default_value (int *default_operator_value)
   GstElement *compositor =
       gst_element_factory_create (ges_get_compositor_factory (), NULL);
 
-  GstPad *compositorPad = gst_element_get_request_pad (compositor, "sink_%u");
+  GstPad *compositorPad =
+      gst_element_request_pad_simple (compositor, "sink_%u");
 
   GParamSpec *pspec =
       g_object_class_find_property (G_OBJECT_GET_CLASS (compositorPad),
