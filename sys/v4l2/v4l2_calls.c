@@ -926,7 +926,7 @@ gst_v4l2_get_attribute (GstV4l2Object * v4l2object,
   /* ERRORS */
 ctrl_failed:
   {
-    GST_WARNING_OBJECT (v4l2object,
+    GST_WARNING_OBJECT (v4l2object->dbg_obj,
         _("Failed to get value for control %d on device '%s'."),
         attribute_num, v4l2object->videodev);
     return FALSE;
