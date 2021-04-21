@@ -52,6 +52,7 @@ struct _GstFramePositioner
   guint zorder;
   gdouble width;
   gdouble height;
+  gint operator;
   gint natural_width;
   gint natural_height;
   gint track_width;
@@ -81,6 +82,7 @@ struct _GstFramePositionerMeta {
   gint height;
   gint width;
   guint zorder;
+  gint operator;
 };
 
 G_GNUC_INTERNAL void ges_frame_positioner_set_source_and_filter (GstFramePositioner *pos,

@@ -115,7 +115,7 @@ ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
   GESTrackElement *trksrc = GES_TRACK_ELEMENT (self);
   GstElement *positioner, *videoflip, *capsfilter;
   const gchar *positioner_props[]
-  = { "alpha", "posx", "posy", "width", "height", NULL };
+  = { "alpha", "posx", "posy", "width", "height", "operator", NULL };
   const gchar *videoflip_props[] = { "video-direction", NULL };
 
   g_ptr_array_add (elements, gst_element_factory_make ("queue", NULL));

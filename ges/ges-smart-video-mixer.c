@@ -238,7 +238,8 @@ set_pad_properties_from_positioner_meta (GstPad * mixer_pad, GstSample * sample,
   }
 
   g_object_set (mixer_pad, "xpos", meta->posx, "ypos",
-      meta->posy, "width", meta->width, "height", meta->height, NULL);
+      meta->posy, "width", meta->width, "height", meta->height,
+      "operator", meta->operator, NULL);
 }
 
 /****************************************************

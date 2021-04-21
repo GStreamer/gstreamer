@@ -26,6 +26,7 @@
 #include <gst/video/video.h>
 
 #include "gstframepositioner.h"
+#include "ges-internal.h"
 
 GST_DEBUG_CATEGORY_STATIC (_framepositioner);
 #undef GST_CAT_DEFAULT
@@ -57,6 +58,7 @@ enum
   PROP_ZORDER,
   PROP_WIDTH,
   PROP_HEIGHT,
+  PROP_OPERATOR,
   PROP_LAST,
 };
 
@@ -78,6 +80,29 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 G_DEFINE_TYPE (GstFramePositioner, gst_frame_positioner,
     GST_TYPE_BASE_TRANSFORM);
+
+static GType
+gst_compositor_operator_get_type_and_default_value (int *default_operator_value)
+{
+  GstElement *compositor =
+      gst_element_factory_create (ges_get_compositor_factory (), NULL);
+
+  GstPad *compositorPad = gst_element_get_request_pad (compositor, "sink_%u");
+
+  GParamSpec *pspec =
+      g_object_class_find_property (G_OBJECT_GET_CLASS (compositorPad),
+      "operator");
+
+  *default_operator_value =
+      g_value_get_enum (g_param_spec_get_default_value (pspec));
+  g_return_val_if_fail (pspec, G_TYPE_NONE);
+
+  gst_element_release_request_pad (compositor, compositorPad);
+  gst_object_unref (compositorPad);
+  gst_object_unref (compositor);
+
+  return pspec->value_type;
+}
 
 static void
 _weak_notify_cb (GstFramePositioner * pos, GObject * old)
@@ -426,6 +451,11 @@ gst_frame_positioner_dispose (GObject * object)
 static void
 gst_frame_positioner_class_init (GstFramePositionerClass * klass)
 {
+  int default_operator_value;
+  GType operator_gtype =
+      gst_compositor_operator_get_type_and_default_value
+      (&default_operator_value);
+
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
@@ -501,6 +531,17 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
       g_param_spec_int ("height", "height", "height of the source", 0,
       MAX_PIXELS, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE);
 
+  /**
+   * gesframepositioner:operator:
+   *
+   * The blending operator for the source.
+   */
+  properties[PROP_OPERATOR] =
+      g_param_spec_enum ("operator", "Operator",
+      "Blending operator to use for blending this pad over the previous ones",
+      operator_gtype, default_operator_value,
+      (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
@@ -518,6 +559,7 @@ gst_frame_positioner_init (GstFramePositioner * framepositioner)
   framepositioner->zorder = 0;
   framepositioner->width = 0;
   framepositioner->height = 0;
+  framepositioner->operator = 1;
   framepositioner->fps_n = -1;
   framepositioner->fps_d = -1;
   framepositioner->track_width = 0;
@@ -570,6 +612,11 @@ gst_frame_positioner_set_property (GObject * object, guint property_id,
       gst_frame_positioner_update_properties (framepositioner, track_mixing,
           0, 0);
       break;
+    case PROP_OPERATOR:
+      framepositioner->operator = g_value_get_enum (value);
+      gst_frame_positioner_update_properties (framepositioner, track_mixing,
+          0, 0);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -615,6 +662,9 @@ gst_frame_positioner_get_property (GObject * object, guint property_id,
         g_value_set_int (value, real_height);
       }
       break;
+    case PROP_OPERATOR:
+      g_value_set_enum (value, pos->operator);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -655,13 +705,17 @@ static gboolean
 gst_frame_positioner_meta_init (GstMeta * meta, gpointer params,
     GstBuffer * buffer)
 {
+  int default_operator_value;
   GstFramePositionerMeta *smeta;
 
   smeta = (GstFramePositionerMeta *) meta;
 
+  gst_compositor_operator_get_type_and_default_value (&default_operator_value);
+
   smeta->alpha = 0.0;
   smeta->posx = smeta->posy = smeta->height = smeta->width = 0;
   smeta->zorder = 0;
+  smeta->operator = default_operator_value;
 
   return TRUE;
 }
@@ -685,6 +739,7 @@ gst_frame_positioner_meta_transform (GstBuffer * dest, GstMeta * meta,
     dmeta->width = smeta->width;
     dmeta->height = smeta->height;
     dmeta->zorder = smeta->zorder;
+    dmeta->operator = smeta->operator;
   }
 
   return TRUE;
@@ -712,6 +767,7 @@ gst_frame_positioner_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   meta->width = round (framepositioner->width);
   meta->height = round (framepositioner->height);
   meta->zorder = framepositioner->zorder;
+  meta->operator = framepositioner->operator;
   GST_OBJECT_UNLOCK (framepositioner);
 
   return GST_FLOW_OK;
