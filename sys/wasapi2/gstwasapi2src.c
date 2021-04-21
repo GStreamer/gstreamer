@@ -327,11 +327,16 @@ gst_wasapi2_src_open_unlocked (GstAudioSrc * asrc)
 {
   GstWasapi2Src *self = GST_WASAPI2_SRC (asrc);
 
+  gst_clear_object (&self->client);
+
   self->client =
       gst_wasapi2_client_new (GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE,
       self->low_latency, -1, self->device_id, self->dispatcher);
 
-  return ! !self->client;
+  if (!self->client)
+    return FALSE;
+
+  return TRUE;
 }
 
 static gboolean
@@ -377,6 +382,7 @@ gst_wasapi2_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   GstWasapi2Src *self = GST_WASAPI2_SRC (asrc);
   GstAudioBaseSrc *bsrc = GST_AUDIO_BASE_SRC (asrc);
   gboolean ret = FALSE;
+  HRESULT hr;
 
   GST_WASAPI2_SRC_LOCK (self);
   if (!self->client && !gst_wasapi2_src_open_unlocked (asrc)) {
@@ -389,7 +395,8 @@ gst_wasapi2_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
     goto done;
   }
 
-  if (!gst_wasapi2_client_open (self->client, spec, bsrc->ringbuffer)) {
+  hr = gst_wasapi2_client_open (self->client, spec, bsrc->ringbuffer);
+  if (!gst_wasapi2_result (hr)) {
     GST_ERROR_OBJECT (self, "Couldn't open audio client");
     goto done;
   }
@@ -439,6 +446,8 @@ gst_wasapi2_src_read (GstAudioSrc * asrc, gpointer data, guint length,
     GstClockTime * timestamp)
 {
   GstWasapi2Src *self = GST_WASAPI2_SRC (asrc);
+  HRESULT hr;
+  guint read_len = 0;
 
   if (!self->client) {
     GST_ERROR_OBJECT (self, "No audio client was configured");
@@ -446,7 +455,8 @@ gst_wasapi2_src_read (GstAudioSrc * asrc, gpointer data, guint length,
   }
 
   if (!self->started) {
-    if (!gst_wasapi2_client_start (self->client)) {
+    HRESULT hr = gst_wasapi2_client_start (self->client);
+    if (!gst_wasapi2_result (hr)) {
       GST_ERROR_OBJECT (self, "Failed to re-start client");
       return -1;
     }
@@ -454,18 +464,32 @@ gst_wasapi2_src_read (GstAudioSrc * asrc, gpointer data, guint length,
     self->started = TRUE;
   }
 
-  return gst_wasapi2_client_read (self->client, data, length);
+  hr = gst_wasapi2_client_read (self->client, data, length, &read_len);
+  if (!gst_wasapi2_result (hr)) {
+    GST_WARNING_OBJECT (self, "Failed to read data");
+    return -1;
+  }
+
+  return read_len;
 }
 
 static guint
 gst_wasapi2_src_delay (GstAudioSrc * asrc)
 {
   GstWasapi2Src *self = GST_WASAPI2_SRC (asrc);
+  guint32 delay;
+  HRESULT hr;
 
   if (!self->client)
     return 0;
 
-  return gst_wasapi2_client_delay (self->client);
+  hr = gst_wasapi2_client_delay (self->client, &delay);
+  if (!gst_wasapi2_result (hr)) {
+    GST_WARNING_OBJECT (self, "Failed to get delay");
+    return 0;
+  }
+
+  return delay;
 }
 
 static void
@@ -492,7 +516,8 @@ gst_wasapi2_src_set_mute (GstWasapi2Src * self, gboolean mute)
   self->mute_changed = TRUE;
 
   if (self->client) {
-    if (!gst_wasapi2_client_set_mute (self->client, mute)) {
+    HRESULT hr = gst_wasapi2_client_set_mute (self->client, mute);
+    if (FAILED (hr)) {
       GST_INFO_OBJECT (self, "Couldn't set mute");
     } else {
       self->mute_changed = FALSE;
@@ -514,7 +539,8 @@ gst_wasapi2_src_get_mute (GstWasapi2Src * self)
   mute = self->mute;
 
   if (self->client) {
-    if (!gst_wasapi2_client_get_mute (self->client, &mute)) {
+    HRESULT hr = gst_wasapi2_client_get_mute (self->client, &mute);
+    if (FAILED (hr)) {
       GST_INFO_OBJECT (self, "Couldn't get mute state");
     } else {
       self->mute = mute;
@@ -540,7 +566,9 @@ gst_wasapi2_src_set_volume (GstWasapi2Src * self, gdouble volume)
   self->volume_changed = TRUE;
 
   if (self->client) {
-    if (!gst_wasapi2_client_set_volume (self->client, (gfloat) self->volume)) {
+    HRESULT hr =
+        gst_wasapi2_client_set_volume (self->client, (gfloat) self->volume);
+    if (FAILED (hr)) {
       GST_INFO_OBJECT (self, "Couldn't set volume");
     } else {
       self->volume_changed = FALSE;
@@ -562,7 +590,8 @@ gst_wasapi2_src_get_volume (GstWasapi2Src * self)
   volume = (gfloat) self->volume;
 
   if (self->client) {
-    if (!gst_wasapi2_client_get_volume (self->client, &volume)) {
+    HRESULT hr = gst_wasapi2_client_get_volume (self->client, &volume);
+    if (FAILED (hr)) {
       GST_INFO_OBJECT (self, "Couldn't get volume");
     } else {
       self->volume = volume;

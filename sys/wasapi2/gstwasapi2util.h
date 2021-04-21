@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <windows.h>
+#include <audioclient.h>
 
 G_BEGIN_DECLS
 

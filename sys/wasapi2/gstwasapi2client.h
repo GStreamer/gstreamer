@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
+#include "gstwasapi2util.h"
 
 G_BEGIN_DECLS
 
@@ -40,34 +41,37 @@ G_DECLARE_FINAL_TYPE (GstWasapi2Client,
 
 GstCaps * gst_wasapi2_client_get_caps (GstWasapi2Client * client);
 
-gboolean  gst_wasapi2_client_open     (GstWasapi2Client * client,
+HRESULT   gst_wasapi2_client_open     (GstWasapi2Client * client,
                                        GstAudioRingBufferSpec * spec,
                                        GstAudioRingBuffer * buf);
 
-gboolean  gst_wasapi2_client_start    (GstWasapi2Client * client);
+HRESULT   gst_wasapi2_client_start    (GstWasapi2Client * client);
 
-gboolean  gst_wasapi2_client_stop     (GstWasapi2Client * client);
+HRESULT   gst_wasapi2_client_stop     (GstWasapi2Client * client);
 
-gint      gst_wasapi2_client_read     (GstWasapi2Client * client,
+HRESULT   gst_wasapi2_client_read     (GstWasapi2Client * client,
                                        gpointer data,
-                                       guint length);
+                                       guint length,
+                                       guint * read_length);
 
-gint      gst_wasapi2_client_write    (GstWasapi2Client * client,
+HRESULT   gst_wasapi2_client_write    (GstWasapi2Client * client,
                                        gpointer data,
-                                       guint length);
+                                       guint length,
+                                       guint * write_length);
 
-guint     gst_wasapi2_client_delay    (GstWasapi2Client * client);
+HRESULT   gst_wasapi2_client_delay  (GstWasapi2Client * client,
+                                       guint32 * delay);
 
-gboolean  gst_wasapi2_client_set_mute  (GstWasapi2Client * client,
+HRESULT   gst_wasapi2_client_set_mute  (GstWasapi2Client * client,
                                         gboolean mute);
 
-gboolean  gst_wasapi2_client_get_mute  (GstWasapi2Client * client,
+HRESULT   gst_wasapi2_client_get_mute  (GstWasapi2Client * client,
                                         gboolean * mute);
 
-gboolean  gst_wasapi2_client_set_volume (GstWasapi2Client * client,
+HRESULT   gst_wasapi2_client_set_volume (GstWasapi2Client * client,
                                          gfloat volume);
 
-gboolean  gst_wasapi2_client_get_volume (GstWasapi2Client * client,
+HRESULT   gst_wasapi2_client_get_volume (GstWasapi2Client * client,
                                          gfloat * volume);
 
 gboolean gst_wasapi2_client_ensure_activation (GstWasapi2Client * client);
