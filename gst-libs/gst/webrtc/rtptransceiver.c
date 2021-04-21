@@ -58,6 +58,7 @@ enum
   PROP_MID,
   PROP_CURRENT_DIRECTION,
   PROP_KIND,
+  PROP_CODEC_PREFERENCES,
   PROP_STOPPED,                 // FIXME
 };
 
@@ -81,6 +82,9 @@ gst_webrtc_rtp_transceiver_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DIRECTION:
       webrtc->direction = g_value_get_enum (value);
+      break;
+    case PROP_CODEC_PREFERENCES:
+      gst_caps_replace (&webrtc->codec_preferences, g_value_get_boxed (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -115,6 +119,9 @@ gst_webrtc_rtp_transceiver_get_property (GObject * object, guint prop_id,
       break;
     case PROP_KIND:
       g_value_set_enum (value, webrtc->kind);
+      break;
+    case PROP_CODEC_PREFERENCES:
+      gst_value_set_caps (value, webrtc->codec_preferences);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -264,6 +271,19 @@ gst_webrtc_rtp_transceiver_class_init (GstWebRTCRTPTransceiverClass * klass)
           "Kind of media this transceiver transports",
           GST_TYPE_WEBRTC_KIND, GST_WEBRTC_KIND_UNKNOWN,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebRTCRTPTransceiver:codec-preferences:
+   *
+   * Caps representing the codec preferences.
+   *
+   * Since: 1.20
+   **/
+  g_object_class_install_property (gobject_class,
+      PROP_CODEC_PREFERENCES,
+      g_param_spec_boxed ("codec-preferences", "Codec Preferences",
+          "Caps representing the codec preferences.",
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
