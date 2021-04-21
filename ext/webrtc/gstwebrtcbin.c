@@ -31,6 +31,8 @@
 #include "webrtcdatachannel.h"
 #include "sctptransport.h"
 
+#include "gst/webrtc/webrtc-priv.h"
+
 #include <gst/rtp/rtp.h>
 
 #include <stdio.h>

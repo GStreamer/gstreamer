@@ -86,6 +86,48 @@ struct _GstWebRTCRTPTransceiverClass
   gpointer              _padding[GST_PADDING];
 };
 
+/**
+ * GstWebRTCRTPSender:
+ * @transport: The transport for RTP packets
+ * @send_encodings: Unused
+ * @priority: The priority of the stream (Since: 1.20)
+ *
+ * An object to track the sending aspect of the stream
+ *
+ * Mostly matches the WebRTC RTCRtpSender interface.
+ *
+ * Since: 1.16
+ */
+/**
+ * GstWebRTCRTPSender.priority:
+ *
+ * The priority of the stream
+ *
+ * Since: 1.20
+ */
+struct _GstWebRTCRTPSender
+{
+  GstObject                          parent;
+
+  /* The MediStreamTrack is represented by the stream and is output into @transport as necessary */
+  GstWebRTCDTLSTransport            *transport;
+
+  GArray                            *send_encodings;
+  GstWebRTCPriorityType              priority;
+
+  gpointer                          _padding[GST_PADDING];
+};
+
+struct _GstWebRTCRTPSenderClass
+{
+  GstObjectClass        parent_class;
+
+  gpointer              _padding[GST_PADDING];
+};
+
+GST_WEBRTC_API
+GstWebRTCRTPSender *        gst_webrtc_rtp_sender_new                   (void);
+
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_PRIV_H__ */
