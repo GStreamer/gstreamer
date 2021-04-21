@@ -259,22 +259,34 @@ create_receiver_entry (SoupWebsocketConnection * connection)
       &transceivers);
   g_assert (transceivers != NULL && transceivers->len > 1);
   trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 0);
-  trans->direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  g_object_set (trans, "direction",
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY, NULL);
   if (video_priority) {
     GstWebRTCPriorityType priority;
 
     priority = _priority_from_string (video_priority);
-    if (priority)
-      gst_webrtc_rtp_sender_set_priority (trans->sender, priority);
+    if (priority) {
+      GstWebRTCRTPSender *sender;
+
+      g_object_get (trans, "sender", &sender, NULL);
+      gst_webrtc_rtp_sender_set_priority (sender, priority);
+      g_object_unref (sender);
+    }
   }
   trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 1);
-  trans->direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  g_object_set (trans, "direction",
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY, NULL);
   if (audio_priority) {
     GstWebRTCPriorityType priority;
 
     priority = _priority_from_string (audio_priority);
-    if (priority)
-      gst_webrtc_rtp_sender_set_priority (trans->sender, priority);
+    if (priority) {
+      GstWebRTCRTPSender *sender;
+
+      g_object_get (trans, "sender", &sender, NULL);
+      gst_webrtc_rtp_sender_set_priority (sender, priority);
+      g_object_unref (sender);
+    }
   }
   g_array_unref (transceivers);
 
