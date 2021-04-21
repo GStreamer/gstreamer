@@ -125,14 +125,14 @@ GST_START_TEST (test_overlay_position)
   gst_element_link (overlay, sink);
 
   srcpad = gst_element_get_static_pad (filter1, "src");
-  sinkpad = gst_element_get_request_pad (overlay, "sink_0");
+  sinkpad = gst_element_request_pad_simple (overlay, "sink_0");
   g_object_set (sinkpad, "xpos", 0, "ypos", 0, "alpha", 1.0, NULL);
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (sinkpad);
   gst_object_unref (srcpad);
 
   srcpad = gst_element_get_static_pad (filter2, "src");
-  sinkpad = gst_element_get_request_pad (overlay, "sink_1");
+  sinkpad = gst_element_request_pad_simple (overlay, "sink_1");
   g_object_set (sinkpad, "xpos", 10, "ypos", 10, "alpha", 1.0, NULL);
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (sinkpad);
