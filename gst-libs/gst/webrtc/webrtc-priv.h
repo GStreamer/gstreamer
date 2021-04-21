@@ -199,6 +199,38 @@ void            gst_webrtc_ice_transport_selected_pair_change       (GstWebRTCIC
 GST_WEBRTC_API
 void            gst_webrtc_ice_transport_new_candidate              (GstWebRTCICETransport * ice, guint stream_id, GstWebRTCICEComponent component, gchar * attr);
 
+/**
+ * GstWebRTCDTLSTransport:
+ */
+struct _GstWebRTCDTLSTransport
+{
+  GstObject                          parent;
+
+  GstWebRTCICETransport             *transport;
+  GstWebRTCDTLSTransportState        state;
+
+  gboolean                           client;
+  guint                              session_id;
+  GstElement                        *dtlssrtpenc;
+  GstElement                        *dtlssrtpdec;
+
+  gpointer                          _padding[GST_PADDING];
+};
+
+struct _GstWebRTCDTLSTransportClass
+{
+  GstObjectClass               parent_class;
+
+  gpointer                  _padding[GST_PADDING];
+};
+
+GST_WEBRTC_API
+GstWebRTCDTLSTransport *    gst_webrtc_dtls_transport_new               (guint session_id);
+
+GST_WEBRTC_API
+void                        gst_webrtc_dtls_transport_set_transport     (GstWebRTCDTLSTransport * transport,
+                                                                         GstWebRTCICETransport * ice);
+
 
 G_END_DECLS
 
