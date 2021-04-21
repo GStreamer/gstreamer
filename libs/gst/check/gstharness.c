@@ -361,7 +361,8 @@ gst_harness_negotiate (GstHarness * h)
     gst_harness_decide_allocation (h, caps);
     gst_caps_unref (caps);
   } else {
-    GST_FIXME_OBJECT (h, "Cannot negotiate allocation because caps is not set");
+    GST_FIXME_OBJECT (h->srcpad,
+        "Cannot negotiate allocation because caps is not set");
   }
 }
 
