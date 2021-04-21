@@ -22,6 +22,7 @@
 
 #include "fwd.h"
 #include <gst/webrtc/rtptransceiver.h>
+#include "gst/webrtc/webrtc-priv.h"
 #include "transportstream.h"
 
 G_BEGIN_DECLS
