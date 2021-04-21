@@ -36,69 +36,6 @@ GType gst_webrtc_data_channel_get_type(void);
 #define GST_IS_WEBRTC_DATA_CHANNEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_WEBRTC_DATA_CHANNEL))
 #define GST_WEBRTC_DATA_CHANNEL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_WEBRTC_DATA_CHANNEL,GstWebRTCDataChannelClass))
 
-#define GST_WEBRTC_DATA_CHANNEL_LOCK(channel) g_mutex_lock(&((GstWebRTCDataChannel *)(channel))->lock)
-#define GST_WEBRTC_DATA_CHANNEL_UNLOCK(channel) g_mutex_unlock(&((GstWebRTCDataChannel *)(channel))->lock)
-
-/**
- * GstWebRTCDataChannel:
- *
- * Since: 1.18
- */
-struct _GstWebRTCDataChannel
-{
-  GObject                           parent;
-
-  GMutex                            lock;
-
-  gchar                            *label;
-  gboolean                          ordered;
-  guint                             max_packet_lifetime;
-  guint                             max_retransmits;
-  gchar                            *protocol;
-  gboolean                          negotiated;
-  gint                              id;
-  GstWebRTCPriorityType             priority;
-  GstWebRTCDataChannelState         ready_state;
-  guint64                           buffered_amount;
-  guint64                           buffered_amount_low_threshold;
-
-  gpointer                         _padding[GST_PADDING];
-};
-
-/**
- * GstWebRTCDataChannelClass:
- *
- * Since: 1.18
- */
-struct _GstWebRTCDataChannelClass
-{
-  GObjectClass        parent_class;
-
-  void              (*send_data)   (GstWebRTCDataChannel * channel, GBytes *data);
-  void              (*send_string) (GstWebRTCDataChannel * channel, const gchar *str);
-  void              (*close)       (GstWebRTCDataChannel * channel);
-
-  gpointer           _padding[GST_PADDING];
-};
-
-GST_WEBRTC_API
-void gst_webrtc_data_channel_on_open (GstWebRTCDataChannel * channel);
-
-GST_WEBRTC_API
-void gst_webrtc_data_channel_on_close (GstWebRTCDataChannel * channel);
-
-GST_WEBRTC_API
-void gst_webrtc_data_channel_on_error (GstWebRTCDataChannel * channel, GError * error);
-
-GST_WEBRTC_API
-void gst_webrtc_data_channel_on_message_data (GstWebRTCDataChannel * channel, GBytes * data);
-
-GST_WEBRTC_API
-void gst_webrtc_data_channel_on_message_string (GstWebRTCDataChannel * channel, const gchar * str);
-
-GST_WEBRTC_API
-void gst_webrtc_data_channel_on_buffered_amount_low (GstWebRTCDataChannel * channel);
-
 GST_WEBRTC_API
 void gst_webrtc_data_channel_send_data (GstWebRTCDataChannel * channel, GBytes * data);
 

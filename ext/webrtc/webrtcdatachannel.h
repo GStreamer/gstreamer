@@ -26,6 +26,8 @@
 #include <gst/webrtc/datachannel.h>
 #include "sctptransport.h"
 
+#include "gst/webrtc/webrtc-priv.h"
+
 G_BEGIN_DECLS
 
 GType webrtc_data_channel_get_type(void);
