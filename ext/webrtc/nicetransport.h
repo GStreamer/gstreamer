@@ -26,6 +26,8 @@
 #include <gst/webrtc/webrtc.h>
 #include "gstwebrtcice.h"
 
+#include "gst/webrtc/webrtc-priv.h"
+
 G_BEGIN_DECLS
 
 GType gst_webrtc_nice_transport_get_type(void);
