@@ -140,10 +140,10 @@ int main(int argc, char *argv[]) {
   }
 
   /* Manually link the Tee, which has "Request" pads */
-  tee_audio_pad = gst_element_get_request_pad (tee, "src_%u");
+  tee_audio_pad = gst_element_request_pad_simple (tee, "src_%u");
   g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (tee_audio_pad));
   queue_audio_pad = gst_element_get_static_pad (audio_queue, "sink");
-  tee_video_pad = gst_element_get_request_pad (tee, "src_%u");
+  tee_video_pad = gst_element_request_pad_simple (tee, "src_%u");
   g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (tee_video_pad));
   queue_video_pad = gst_element_get_static_pad (video_queue, "sink");
   if (gst_pad_link (tee_audio_pad, queue_audio_pad) != GST_PAD_LINK_OK ||
@@ -260,10 +260,10 @@ comment says).
 
 ``` c
 /* Manually link the Tee, which has "Request" pads */
-tee_audio_pad = gst_element_get_request_pad (tee, "src_%u");
+tee_audio_pad = gst_element_request_pad_simple (tee, "src_%u");
 g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (tee_audio_pad));
 queue_audio_pad = gst_element_get_static_pad (audio_queue, "sink");
-tee_video_pad = gst_element_get_request_pad (tee, "src_%u");
+tee_video_pad = gst_element_request_pad_simple (tee, "src_%u");
 g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (tee_video_pad));
 queue_video_pad = gst_element_get_static_pad (video_queue, "sink");
 if (gst_pad_link (tee_audio_pad, queue_audio_pad) != GST_PAD_LINK_OK ||
@@ -283,7 +283,7 @@ provided.
 In the documentation for the `tee` element we see that it has two pad
 templates named “sink” (for its sink Pads) and “src_%u” (for the Request
 Pads). We request two Pads from the tee (for the
-audio and video branches) with `gst_element_get_request_pad()`.
+audio and video branches) with `gst_element_request_pad_simple()`.
 
 We then obtain the Pads from the downstream elements to which these
 Request Pads need to be linked. These are normal Always Pads, so we
@@ -319,7 +319,7 @@ it still needs to be unreferenced (freed) with `gst_object_unref()`.
     `queue` elements.
 
   - What is a Request Pad and how to link elements with request pads,
-    with `gst_element_get_request_pad()`, `gst_pad_link()` and
+    with `gst_element_request_pad_simple()`, `gst_pad_link()` and
      `gst_element_release_request_pad()`.
 
   - How to have the same stream available in different branches by using

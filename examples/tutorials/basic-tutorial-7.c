@@ -55,11 +55,11 @@ main (int argc, char *argv[])
   }
 
   /* Manually link the Tee, which has "Request" pads */
-  tee_audio_pad = gst_element_get_request_pad (tee, "src_%u");
+  tee_audio_pad = gst_element_request_pad_simple (tee, "src_%u");
   g_print ("Obtained request pad %s for audio branch.\n",
       gst_pad_get_name (tee_audio_pad));
   queue_audio_pad = gst_element_get_static_pad (audio_queue, "sink");
-  tee_video_pad = gst_element_get_request_pad (tee, "src_%u");
+  tee_video_pad = gst_element_request_pad_simple (tee, "src_%u");
   g_print ("Obtained request pad %s for video branch.\n",
       gst_pad_get_name (tee_video_pad));
   queue_video_pad = gst_element_get_static_pad (video_queue, "sink");

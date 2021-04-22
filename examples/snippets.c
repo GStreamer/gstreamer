@@ -23,7 +23,7 @@ some_function (GstElement * tee)
   GstPad *pad;
   gchar *name;
 
-  pad = gst_element_get_request_pad (tee, "src%d");
+  pad = gst_element_request_pad_simple (tee, "src%d");
   name = gst_pad_get_name (pad);
   g_print ("A new pad %s was created\n", name);
   g_free (name);

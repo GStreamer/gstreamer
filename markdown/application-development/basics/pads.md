@@ -127,7 +127,7 @@ from a “tee” element:
 
 {{ snippets.c#some_function }}
 
-The `gst_element_get_request_pad ()` method can be used to get a pad
+The `gst_element_request_pad_simple ()` method can be used to get a pad
 from the element based on the name of the pad template. It is also
 possible to request a pad that is compatible with another pad template.
 This is very useful if you want to link an element to a multiplexer

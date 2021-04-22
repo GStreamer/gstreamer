@@ -67,7 +67,7 @@ g_object_set (encbin, "profile", "N900/H264 HQ", NULL);
 gst_element_link (encbin, filesink);
 
 vsrcpad = gst_element_get_src_pad (source, "src1");
-vsinkpad = gst_element_get_request_pad (encbin, "video\_%u");
+vsinkpad = gst_element_request_pad_simple (encbin, "video\_%u");
 gst_pad_link (vsrcpad, vsinkpad);
 ```
 
