@@ -1428,7 +1428,7 @@ gen_source_element (GstURISourceBin * urisrc)
   if (IS_BLACKLISTED_URI (urisrc->uri))
     goto uri_blacklisted;
 
-  source = gst_element_make_from_uri (GST_URI_SRC, urisrc->uri, "source", &err);
+  source = gst_element_make_from_uri (GST_URI_SRC, urisrc->uri, NULL, &err);
   if (!source)
     goto no_source;
 
