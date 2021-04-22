@@ -36,6 +36,8 @@
 
 #include <gst/base/base.h>
 
+#define IMAGE_MINSZ 4096
+
 GST_DEBUG_CATEGORY (v4l2_decoder_debug);
 #define GST_CAT_DEFAULT v4l2_decoder_debug
 
@@ -324,8 +326,9 @@ gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 pix_fmt,
         },
   };
   gint ret;
+
   /* Using raw image size for now, it is guarantied to be large enough */
-  gsize sizeimage = (width * height * pixel_bitdepth) / 8;
+  gsize sizeimage = MAX (IMAGE_MINSZ, (width * height * pixel_bitdepth) / 8);
 
   if (self->mplane)
     format.fmt.pix_mp.plane_fmt[0].sizeimage = sizeimage;
