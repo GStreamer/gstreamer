@@ -4037,7 +4037,7 @@ _add_ice_candidates_from_sdp (GstWebRTCBin * webrtc, gint mlineindex,
       if (stream == NULL)
         stream = _find_ice_stream_for_session (webrtc, mlineindex);
       if (stream == NULL) {
-        GST_WARNING_OBJECT (webrtc,
+        GST_DEBUG_OBJECT (webrtc,
             "Unknown mline %u, dropping ICE candidates from SDP", mlineindex);
         return;
       }
