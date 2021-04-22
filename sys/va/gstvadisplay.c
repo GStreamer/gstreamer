@@ -443,7 +443,7 @@ bail:
 }
 
 GstVaImplementation
-gst_va_display_get_implemenation (GstVaDisplay * self)
+gst_va_display_get_implementation (GstVaDisplay * self)
 {
   GstVaDisplayPrivate *priv;
 

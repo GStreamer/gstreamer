@@ -57,12 +57,12 @@ GArray *              gst_va_display_get_profiles         (GstVaDisplay * self,
                                                            guint32 codec,
                                                            VAEntrypoint entrypoint);
 GArray *              gst_va_display_get_image_formats    (GstVaDisplay * self);
-GstVaImplementation   gst_va_display_get_implemenation    (GstVaDisplay * self);
+GstVaImplementation   gst_va_display_get_implementation   (GstVaDisplay * self);
 
 static inline gboolean
 gst_va_display_is_implementation (GstVaDisplay * self, GstVaImplementation impl)
 {
-  return (gst_va_display_get_implemenation (self) == impl);
+  return (gst_va_display_get_implementation (self) == impl);
 }
 
 G_END_DECLS
