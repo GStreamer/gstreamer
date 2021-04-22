@@ -1038,8 +1038,11 @@ void                    gst_element_no_more_pads        (GstElement *element);
 GST_API
 GstPad*                 gst_element_get_static_pad      (GstElement *element, const gchar *name);
 
-GST_API
+GST_API G_DEPRECATED_FOR(gst_element_request_pad_simple)
 GstPad*                 gst_element_get_request_pad     (GstElement *element, const gchar *name);
+
+GST_API
+GstPad*                 gst_element_request_pad_simple  (GstElement *element, const gchar *name);
 
 GST_API
 GstPad*                 gst_element_request_pad         (GstElement *element, GstPadTemplate *templ,

@@ -388,7 +388,7 @@ _chain_data_init (ChainData * data, GstElement * agg, ...)
   g_free (pad_name);
   gst_pad_set_active (data->srcpad, TRUE);
   data->aggregator = agg;
-  data->sinkpad = gst_element_get_request_pad (agg, "sink_%u");
+  data->sinkpad = gst_element_request_pad_simple (agg, "sink_%u");
   fail_unless (GST_IS_PAD (data->sinkpad));
   fail_unless (gst_pad_link (data->srcpad, data->sinkpad) == GST_PAD_LINK_OK);
 

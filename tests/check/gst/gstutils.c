@@ -984,12 +984,12 @@ GST_START_TEST (test_pad_proxy_query_caps_aggregation)
   tee = gst_element_factory_make ("tee", "tee");
 
   sink1 = gst_element_factory_make ("fakesink", "sink1");
-  tee_src1 = gst_element_get_request_pad (tee, "src_%u");
+  tee_src1 = gst_element_request_pad_simple (tee, "src_%u");
   sink1_sink = gst_element_get_static_pad (sink1, "sink");
   fail_unless_equals_int (gst_pad_link (tee_src1, sink1_sink), GST_PAD_LINK_OK);
 
   sink2 = gst_element_factory_make ("fakesink", "sink2");
-  tee_src2 = gst_element_get_request_pad (tee, "src_%u");
+  tee_src2 = gst_element_request_pad_simple (tee, "src_%u");
   sink2_sink = gst_element_get_static_pad (sink2, "sink");
   fail_unless_equals_int (gst_pad_link (tee_src2, sink2_sink), GST_PAD_LINK_OK);
 

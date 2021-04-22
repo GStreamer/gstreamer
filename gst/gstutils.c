@@ -1825,7 +1825,7 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
   if (srcpadname) {
     /* name specified, look it up */
     if (!(srcpad = gst_element_get_static_pad (src, srcpadname))) {
-      if ((srcpad = gst_element_get_request_pad (src, srcpadname)))
+      if ((srcpad = gst_element_request_pad_simple (src, srcpadname)))
         srcrequest = TRUE;
     }
     if (!srcpad) {
@@ -1864,7 +1864,7 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
   if (destpadname) {
     /* name specified, look it up */
     if (!(destpad = gst_element_get_static_pad (dest, destpadname))) {
-      if ((destpad = gst_element_get_request_pad (dest, destpadname)))
+      if ((destpad = gst_element_request_pad_simple (dest, destpadname)))
         destrequest = TRUE;
     }
     if (!destpad) {
@@ -2324,14 +2324,14 @@ gst_element_unlink_pads (GstElement * src, const gchar * srcpadname,
 
   /* obtain the pads requested */
   if (!(srcpad = gst_element_get_static_pad (src, srcpadname)))
-    if ((srcpad = gst_element_get_request_pad (src, srcpadname)))
+    if ((srcpad = gst_element_request_pad_simple (src, srcpadname)))
       srcrequest = TRUE;
   if (srcpad == NULL) {
     GST_WARNING_OBJECT (src, "source element has no pad \"%s\"", srcpadname);
     return;
   }
   if (!(destpad = gst_element_get_static_pad (dest, destpadname)))
-    if ((destpad = gst_element_get_request_pad (dest, destpadname)))
+    if ((destpad = gst_element_request_pad_simple (dest, destpadname)))
       destrequest = TRUE;
   if (destpad == NULL) {
     GST_WARNING_OBJECT (dest, "destination element has no pad \"%s\"",

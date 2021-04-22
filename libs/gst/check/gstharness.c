@@ -540,7 +540,7 @@ gst_harness_link_element_srcpad (GstHarness * h,
       element_srcpad_name);
   GstPadLinkReturn link;
   if (srcpad == NULL)
-    srcpad = gst_element_get_request_pad (h->element, element_srcpad_name);
+    srcpad = gst_element_request_pad_simple (h->element, element_srcpad_name);
   g_assert (srcpad);
   link = gst_pad_link (srcpad, h->sinkpad);
   g_assert_cmpint (link, ==, GST_PAD_LINK_OK);
@@ -559,7 +559,7 @@ gst_harness_link_element_sinkpad (GstHarness * h,
       element_sinkpad_name);
   GstPadLinkReturn link;
   if (sinkpad == NULL)
-    sinkpad = gst_element_get_request_pad (h->element, element_sinkpad_name);
+    sinkpad = gst_element_request_pad_simple (h->element, element_sinkpad_name);
   g_assert (sinkpad);
   link = gst_pad_link (h->srcpad, sinkpad);
   g_assert_cmpint (link, ==, GST_PAD_LINK_OK);

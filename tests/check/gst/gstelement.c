@@ -729,7 +729,7 @@ GST_START_TEST (test_request_pad_templates)
     pad_name = (const gchar *) key;
     templ_name = (const gchar *) value;
 
-    pad = gst_element_get_request_pad (GST_ELEMENT (test), pad_name);
+    pad = gst_element_request_pad_simple (GST_ELEMENT (test), pad_name);
     fail_unless (pad != NULL);
     gst_element_release_request_pad (GST_ELEMENT (test), pad);
     gst_object_unref (pad);
@@ -748,7 +748,7 @@ GST_START_TEST (test_request_pad_templates)
   while (item) {
     pad_name = (const gchar *) (item->data);
     item = g_slist_next (item);
-    pad = gst_element_get_request_pad (GST_ELEMENT (test), pad_name);
+    pad = gst_element_request_pad_simple (GST_ELEMENT (test), pad_name);
     fail_unless (pad == NULL);
   }
 

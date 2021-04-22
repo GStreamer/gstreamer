@@ -152,7 +152,7 @@ static gboolean gst_element_default_query (GstElement * element,
     GstQuery * query);
 
 static GstPadTemplate
-    * gst_element_class_get_request_pad_template (GstElementClass *
+    * gst_element_class_request_pad_simple_template (GstElementClass *
     element_class, const gchar * name);
 
 static void gst_element_call_async_func (gpointer data, gpointer user_data);
@@ -1167,8 +1167,31 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
   return newpad;
 }
 
+#ifndef GST_REMOVE_DEPRECATED
 /**
  * gst_element_get_request_pad:
+ * @element: a #GstElement to find a request pad of.
+ * @name: the name of the request #GstPad to retrieve.
+ *
+ * The name of this function is confusing to people learning GStreamer.
+ * gst_element_request_pad_simple() aims at making it more explicit it is
+ * a simplified gst_element_request_pad().
+ *
+ * Deprecated: 1.20: Prefer using gst_element_request_pad_simple() which
+ * provides the exact same functionality.
+ *
+ * Returns: (transfer full) (nullable): requested #GstPad if found,
+ *     otherwise %NULL.  Release after usage.
+ */
+GstPad *
+gst_element_get_request_pad (GstElement * element, const gchar * name)
+{
+  return gst_element_request_pad_simple (element, name);
+}
+#endif
+
+/**
+ * gst_element_request_pad_simple:
  * @element: a #GstElement to find a request pad of.
  * @name: the name of the request #GstPad to retrieve.
  *
@@ -1180,11 +1203,18 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * gst_element_request_pad() if the pads should have a specific name (e.g.
  * @name is "src_1" instead of "src_\%u").
  *
+ * Note that this function was introduced in GStreamer 1.20 in order to provide
+ * a better name to gst_element_get_request_pad(). Prior to 1.20, users
+ * should use gst_element_get_request_pad() which provides the same
+ * functionality.
+ *
  * Returns: (transfer full) (nullable): requested #GstPad if found,
  *     otherwise %NULL.  Release after usage.
+ *
+ * Since: 1.20
  */
 GstPad *
-gst_element_get_request_pad (GstElement * element, const gchar * name)
+gst_element_request_pad_simple (GstElement * element, const gchar * name)
 {
   GstPadTemplate *templ = NULL;
   GstPad *pad;
@@ -1198,7 +1228,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
 
   class = GST_ELEMENT_GET_CLASS (element);
 
-  templ = gst_element_class_get_request_pad_template (class, name);
+  templ = gst_element_class_request_pad_simple_template (class, name);
   if (templ) {
     req_name = strstr (name, "%") ? NULL : name;
     templ_found = TRUE;
@@ -1811,7 +1841,7 @@ gst_element_get_pad_template (GstElement * element, const gchar * name)
 }
 
 static GstPadTemplate *
-gst_element_class_get_request_pad_template (GstElementClass *
+gst_element_class_request_pad_simple_template (GstElementClass *
     element_class, const gchar * name)
 {
   GstPadTemplate *tmpl;

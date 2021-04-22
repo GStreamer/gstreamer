@@ -836,7 +836,7 @@ setup_src_pad (GstElement * element,
   GstPad *srcpad, *sinkpad;
 
   srcpad = gst_pad_new_from_static_template (tmpl, "src");
-  sinkpad = gst_element_get_request_pad (element, name);
+  sinkpad = gst_element_request_pad_simple (element, name);
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_pad_set_event_function (srcpad, src_event);

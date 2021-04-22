@@ -42,7 +42,7 @@ setup_multiqueue (GstElement * pipe, GstElement * inputs[],
     GstPad *srcpad = NULL;
 
     /* create multiqueue sink (and source) pad */
-    sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+    sinkpad = gst_element_request_pad_simple (mq, "sink_%u");
     fail_unless (sinkpad != NULL,
         "failed to create multiqueue request pad #%u", i);
 
@@ -67,7 +67,7 @@ setup_multiqueue (GstElement * pipe, GstElement * inputs[],
 
       /* only the sink pads are by request, the source pads are sometimes pads,
        * so this should return NULL */
-      srcpad = gst_element_get_request_pad (mq, "src_%u");
+      srcpad = gst_element_request_pad_simple (mq, "src_%u");
       fail_unless (srcpad == NULL);
 
       g_snprintf (padname, sizeof (padname), "src_%u", i);
@@ -194,21 +194,21 @@ GST_START_TEST (test_request_pads)
 
   mq = gst_element_factory_make ("multiqueue", NULL);
 
-  sink1 = gst_element_get_request_pad (mq, "foo_%u");
+  sink1 = gst_element_request_pad_simple (mq, "foo_%u");
   fail_unless (sink1 == NULL,
       "Expected NULL pad, as there is no request pad template for 'foo_%%u'");
 
-  sink1 = gst_element_get_request_pad (mq, "src_%u");
+  sink1 = gst_element_request_pad_simple (mq, "src_%u");
   fail_unless (sink1 == NULL,
       "Expected NULL pad, as there is no request pad template for 'src_%%u'");
 
-  sink1 = gst_element_get_request_pad (mq, "sink_%u");
+  sink1 = gst_element_request_pad_simple (mq, "sink_%u");
   fail_unless (sink1 != NULL);
   fail_unless (GST_IS_PAD (sink1));
   fail_unless (GST_PAD_IS_SINK (sink1));
   GST_LOG ("Got pad %s:%s", GST_DEBUG_PAD_NAME (sink1));
 
-  sink2 = gst_element_get_request_pad (mq, "sink_%u");
+  sink2 = gst_element_request_pad_simple (mq, "sink_%u");
   fail_unless (sink2 != NULL);
   fail_unless (GST_IS_PAD (sink2));
   fail_unless (GST_PAD_IS_SINK (sink2));
@@ -251,21 +251,21 @@ GST_START_TEST (test_request_pads_named)
 
   mq = gst_element_factory_make ("multiqueue", NULL);
 
-  sink1 = gst_element_get_request_pad (mq, "sink_1");
+  sink1 = gst_element_request_pad_simple (mq, "sink_1");
   fail_unless (sink1 != NULL);
   fail_unless (GST_IS_PAD (sink1));
   fail_unless (GST_PAD_IS_SINK (sink1));
   fail_unless_equals_string (GST_PAD_NAME (sink1), "sink_1");
   GST_LOG ("Got pad %s:%s", GST_DEBUG_PAD_NAME (sink1));
 
-  sink3 = gst_element_get_request_pad (mq, "sink_3");
+  sink3 = gst_element_request_pad_simple (mq, "sink_3");
   fail_unless (sink3 != NULL);
   fail_unless (GST_IS_PAD (sink3));
   fail_unless (GST_PAD_IS_SINK (sink3));
   fail_unless_equals_string (GST_PAD_NAME (sink3), "sink_3");
   GST_LOG ("Got pad %s:%s", GST_DEBUG_PAD_NAME (sink3));
 
-  sink2 = gst_element_get_request_pad (mq, "sink_2");
+  sink2 = gst_element_request_pad_simple (mq, "sink_2");
   fail_unless (sink2 != NULL);
   fail_unless (GST_IS_PAD (sink2));
   fail_unless (GST_PAD_IS_SINK (sink2));
@@ -273,7 +273,7 @@ GST_START_TEST (test_request_pads_named)
   GST_LOG ("Got pad %s:%s", GST_DEBUG_PAD_NAME (sink2));
 
   /* This gets us the first unused id, sink0 */
-  sink4 = gst_element_get_request_pad (mq, "sink_%u");
+  sink4 = gst_element_request_pad_simple (mq, "sink_%u");
   fail_unless (sink4 != NULL);
   fail_unless (GST_IS_PAD (sink4));
   fail_unless (GST_PAD_IS_SINK (sink4));
@@ -431,7 +431,7 @@ construct_n_pads (GstElement * mq, struct PadData *pad_data, gint n_pads,
     g_free (name);
     gst_pad_set_query_function (inpad, mq_dummypad_query);
 
-    mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+    mq_sinkpad = gst_element_request_pad_simple (mq, "sink_%u");
     fail_unless (mq_sinkpad != NULL);
     fail_unless (gst_pad_link (inpad, mq_sinkpad) == GST_PAD_LINK_OK);
 
@@ -749,7 +749,7 @@ GST_START_TEST (test_sparse_stream)
     g_free (name);
     gst_pad_set_query_function (inputpads[i], mq_dummypad_query);
 
-    mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+    mq_sinkpad = gst_element_request_pad_simple (mq, "sink_%u");
     fail_unless (mq_sinkpad != NULL);
     fail_unless (gst_pad_link (inputpads[i], mq_sinkpad) == GST_PAD_LINK_OK);
 
@@ -950,7 +950,7 @@ GST_START_TEST (test_initial_fill_above_high_threshold)
   inputpad = gst_pad_new ("dummysrc", GST_PAD_SRC);
   gst_pad_set_query_function (inputpad, mq_dummypad_query);
 
-  mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+  mq_sinkpad = gst_element_request_pad_simple (mq, "sink_%u");
   fail_unless (mq_sinkpad != NULL);
   fail_unless (gst_pad_link (inputpad, mq_sinkpad) == GST_PAD_LINK_OK);
 
@@ -1038,7 +1038,7 @@ GST_START_TEST (test_watermark_and_fill_level)
   inputpad = gst_pad_new ("dummysrc", GST_PAD_SRC);
   gst_pad_set_query_function (inputpad, mq_dummypad_query);
 
-  mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+  mq_sinkpad = gst_element_request_pad_simple (mq, "sink_%u");
   fail_unless (mq_sinkpad != NULL);
   fail_unless (gst_pad_link (inputpad, mq_sinkpad) == GST_PAD_LINK_OK);
 
@@ -1136,7 +1136,7 @@ GST_START_TEST (test_high_threshold_change)
   inputpad = gst_pad_new ("dummysrc", GST_PAD_SRC);
   gst_pad_set_query_function (inputpad, mq_dummypad_query);
 
-  mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+  mq_sinkpad = gst_element_request_pad_simple (mq, "sink_%u");
   fail_unless (mq_sinkpad != NULL);
   fail_unless (gst_pad_link (inputpad, mq_sinkpad) == GST_PAD_LINK_OK);
 
@@ -1231,7 +1231,7 @@ GST_START_TEST (test_low_threshold_change)
   inputpad = gst_pad_new ("dummysrc", GST_PAD_SRC);
   gst_pad_set_query_function (inputpad, mq_dummypad_query);
 
-  mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+  mq_sinkpad = gst_element_request_pad_simple (mq, "sink_%u");
   fail_unless (mq_sinkpad != NULL);
   fail_unless (gst_pad_link (inputpad, mq_sinkpad) == GST_PAD_LINK_OK);
 
@@ -1319,7 +1319,7 @@ GST_START_TEST (test_limit_changes)
   inputpad = gst_pad_new ("dummysrc", GST_PAD_SRC);
   gst_pad_set_query_function (inputpad, mq_dummypad_query);
 
-  mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+  mq_sinkpad = gst_element_request_pad_simple (mq, "sink_%u");
   fail_unless (mq_sinkpad != NULL);
   fail_unless (gst_pad_link (inputpad, mq_sinkpad) == GST_PAD_LINK_OK);
 
@@ -1440,7 +1440,7 @@ GST_START_TEST (test_buffering_with_none_pts)
   outputpad = gst_pad_new ("dummysink", GST_PAD_SINK);
   gst_pad_set_chain_function (outputpad, pad_chain_block);
   gst_pad_set_event_function (outputpad, pad_event_always_ok);
-  mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+  mq_sinkpad = gst_element_request_pad_simple (mq, "sink_%u");
   mq_srcpad = gst_element_get_static_pad (mq, "src_0");
   fail_unless (mq_sinkpad != NULL);
   fail_unless (gst_pad_link (inputpad, mq_sinkpad) == GST_PAD_LINK_OK);
@@ -1536,7 +1536,7 @@ GST_START_TEST (test_initial_events_nodelay)
 
     inputpad = gst_pad_new ("dummysrc", GST_PAD_SRC);
 
-    mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
+    mq_sinkpad = gst_element_request_pad_simple (mq, "sink_%u");
     fail_unless (mq_sinkpad != NULL);
     fail_unless (gst_pad_link (inputpad, mq_sinkpad) == GST_PAD_LINK_OK);
 
@@ -1641,7 +1641,7 @@ GST_START_TEST (test_stream_status_messages)
 
   gst_bin_add (GST_BIN (pipe), mq);
 
-  pad = gst_element_get_request_pad (mq, "sink_%u");
+  pad = gst_element_request_pad_simple (mq, "sink_%u");
   gst_object_unref (pad);
 
   gst_element_set_state (pipe, GST_STATE_PAUSED);
@@ -1649,7 +1649,7 @@ GST_START_TEST (test_stream_status_messages)
   check_for_stream_status_msg (pipe, mq, GST_STREAM_STATUS_TYPE_CREATE);
   check_for_stream_status_msg (pipe, mq, GST_STREAM_STATUS_TYPE_ENTER);
 
-  pad = gst_element_get_request_pad (mq, "sink_%u");
+  pad = gst_element_request_pad_simple (mq, "sink_%u");
   gst_object_unref (pad);
 
   check_for_stream_status_msg (pipe, mq, GST_STREAM_STATUS_TYPE_CREATE);

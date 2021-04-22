@@ -44,11 +44,11 @@ setup_test_objects (struct TestData *td, GstPadChainFunction chain_func)
   td->funnelsrc = gst_element_get_static_pad (td->funnel, "src");
   fail_unless (td->funnelsrc != NULL);
 
-  td->funnelsink11 = gst_element_get_request_pad (td->funnel, "sink_11");
+  td->funnelsink11 = gst_element_request_pad_simple (td->funnel, "sink_11");
   fail_unless (td->funnelsink11 != NULL);
   fail_unless (!strcmp (GST_OBJECT_NAME (td->funnelsink11), "sink_11"));
 
-  td->funnelsink22 = gst_element_get_request_pad (td->funnel, "sink_22");
+  td->funnelsink22 = gst_element_request_pad_simple (td->funnel, "sink_22");
   fail_unless (td->funnelsink22 != NULL);
   fail_unless (!strcmp (GST_OBJECT_NAME (td->funnelsink22), "sink_22"));
 
@@ -197,7 +197,7 @@ GST_START_TEST (test_funnel_eos)
   gst_object_unref (td.funnelsink11);
   fail_unless (num_eos == 2);
 
-  td.funnelsink11 = gst_element_get_request_pad (td.funnel, "sink_11");
+  td.funnelsink11 = gst_element_request_pad_simple (td.funnel, "sink_11");
   fail_unless (td.funnelsink11 != NULL);
   fail_unless (!strcmp (GST_OBJECT_NAME (td.funnelsink11), "sink_11"));
 
@@ -214,7 +214,7 @@ GST_START_TEST (test_funnel_eos)
   fail_unless (num_eos == 2);
 
   /* send only eos to check, it handles empty streams */
-  td.funnelsink11 = gst_element_get_request_pad (td.funnel, "sink_11");
+  td.funnelsink11 = gst_element_request_pad_simple (td.funnel, "sink_11");
   fail_unless (td.funnelsink11 != NULL);
   fail_unless (!strcmp (GST_OBJECT_NAME (td.funnelsink11), "sink_11"));
 
@@ -235,7 +235,7 @@ GST_START_TEST (test_funnel_eos)
   gst_object_unref (td.funnelsink11);
   fail_unless (num_eos == 3);
 
-  td.funnelsink11 = gst_element_get_request_pad (td.funnel, "sink_11");
+  td.funnelsink11 = gst_element_request_pad_simple (td.funnel, "sink_11");
   fail_unless (td.funnelsink11 != NULL);
   fail_unless (!strcmp (GST_OBJECT_NAME (td.funnelsink11), "sink_11"));
 

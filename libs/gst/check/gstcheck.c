@@ -596,7 +596,7 @@ gst_check_setup_src_pad_by_name_from_template (GstElement * element,
 
   sinkpad = gst_element_get_static_pad (element, name);
   if (sinkpad == NULL)
-    sinkpad = gst_element_get_request_pad (element, name);
+    sinkpad = gst_element_request_pad_simple (element, name);
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
@@ -721,7 +721,7 @@ gst_check_setup_sink_pad_by_name_from_template (GstElement * element,
 
   srcpad = gst_element_get_static_pad (element, name);
   if (srcpad == NULL)
-    srcpad = gst_element_get_request_pad (element, name);
+    srcpad = gst_element_request_pad_simple (element, name);
   fail_if (srcpad == NULL, "Could not get source pad from %s",
       GST_ELEMENT_NAME (element));
   gst_pad_set_chain_function (sinkpad, gst_check_chain_func);

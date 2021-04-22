@@ -69,7 +69,7 @@ sink_do_reconfigure (App * app)
 
   for (i = 0; i < NUM_STREAM; i++) {
     sync_sinkpad[i] =
-        gst_element_get_request_pad (app->stream_synchronizer, "sink_%u");
+        gst_element_request_pad_simple (app->stream_synchronizer, "sink_%u");
     it = gst_pad_iterate_internal_links (sync_sinkpad[i]);
     g_assert (it);
     gst_iterator_next (it, &item);
@@ -210,7 +210,7 @@ main (gint argc, gchar * argv[])
 
   for (stream_cnt = 0; stream_cnt < NUM_STREAM; stream_cnt++) {
     funnel_sinkpad[stream_cnt] =
-        gst_element_get_request_pad (app->funnel, "sink_%u");
+        gst_element_request_pad_simple (app->funnel, "sink_%u");
     oggmux_srcpad[stream_cnt] =
         gst_element_get_static_pad (app->oggmux[stream_cnt], "src");
     gst_pad_link (oggmux_srcpad[stream_cnt], funnel_sinkpad[stream_cnt]);

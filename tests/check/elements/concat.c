@@ -120,13 +120,13 @@ GST_START_TEST (test_concat_simple_time)
   concat = gst_element_factory_make ("concat", NULL);
   fail_unless (concat != NULL);
 
-  sink1 = gst_element_get_request_pad (concat, "sink_%u");
+  sink1 = gst_element_request_pad_simple (concat, "sink_%u");
   fail_unless (sink1 != NULL);
 
-  sink2 = gst_element_get_request_pad (concat, "sink_%u");
+  sink2 = gst_element_request_pad_simple (concat, "sink_%u");
   fail_unless (sink2 != NULL);
 
-  sink3 = gst_element_get_request_pad (concat, "sink_%u");
+  sink3 = gst_element_request_pad_simple (concat, "sink_%u");
   fail_unless (sink3 != NULL);
 
   src = gst_element_get_static_pad (concat, "src");
@@ -242,13 +242,13 @@ GST_START_TEST (test_concat_simple_bytes)
   concat = gst_element_factory_make ("concat", NULL);
   fail_unless (concat != NULL);
 
-  sink1 = gst_element_get_request_pad (concat, "sink_%u");
+  sink1 = gst_element_request_pad_simple (concat, "sink_%u");
   fail_unless (sink1 != NULL);
 
-  sink2 = gst_element_get_request_pad (concat, "sink_%u");
+  sink2 = gst_element_request_pad_simple (concat, "sink_%u");
   fail_unless (sink2 != NULL);
 
-  sink3 = gst_element_get_request_pad (concat, "sink_%u");
+  sink3 = gst_element_request_pad_simple (concat, "sink_%u");
   fail_unless (sink3 != NULL);
 
   src = gst_element_get_static_pad (concat, "src");

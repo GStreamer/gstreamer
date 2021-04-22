@@ -85,7 +85,7 @@ setup_output_pad (GstElement * element, GstStaticPadTemplate * tmpl)
       GINT_TO_POINTER (probe_id));
 
   /* request src pad */
-  srcpad = gst_element_get_request_pad (element, "src_%u");
+  srcpad = gst_element_request_pad_simple (element, "src_%u");
   fail_if (srcpad == NULL, "Could not get source pad from %s",
       GST_ELEMENT_NAME (element));
 
@@ -303,7 +303,7 @@ setup_input_pad (GstElement * element)
   fail_if (input_pad == NULL, "Could not create a input_pad");
 
   /* request sink pad */
-  sinkpad = gst_element_get_request_pad (element, "sink_%u");
+  sinkpad = gst_element_request_pad_simple (element, "sink_%u");
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
 
