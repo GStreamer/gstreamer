@@ -200,7 +200,15 @@ gst_level_class_init (GstLevelClass * klass)
   trans_class->start = GST_DEBUG_FUNCPTR (gst_level_start);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_level_transform_ip);
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_level_sink_event);
-  trans_class->passthrough_on_same_caps = TRUE;
+}
+
+static void
+configure_passthrough (GstLevel * self)
+{
+  /* can't use passthrough if audio-level-meta is enabled as we need a
+   * writable buffer to add the meta. */
+  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self),
+      !self->audio_level_meta);
 }
 
 static void
@@ -224,6 +232,7 @@ gst_level_init (GstLevel * filter)
   filter->process = NULL;
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (filter), TRUE);
+  configure_passthrough (filter);
 }
 
 static void
@@ -277,6 +286,7 @@ gst_level_set_property (GObject * object, guint prop_id,
       break;
     case PROP_AUDIO_LEVEL_META:
       filter->audio_level_meta = g_value_get_boolean (value);
+      configure_passthrough (filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
