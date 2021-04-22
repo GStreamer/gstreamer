@@ -1630,6 +1630,8 @@ static gboolean
 analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
     gboolean * have_out, gboolean * is_dynamic, gboolean use_queue)
 {
+  GstElementClass *elemclass;
+  GList *walk;
   GstIterator *pads_iter;
   gboolean done = FALSE;
   gboolean res = TRUE;
@@ -1701,26 +1703,20 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
   gst_iterator_free (pads_iter);
   gst_caps_unref (rawcaps);
 
-  if (!*have_out) {
-    GstElementClass *elemclass;
-    GList *walk;
+  /* check for padtemplates that list SOMETIMES pads to check
+   * check if it is dynamic. */
+  elemclass = GST_ELEMENT_GET_CLASS (urisrc->source);
+  walk = gst_element_class_get_pad_template_list (elemclass);
+  while (walk != NULL) {
+    GstPadTemplate *templ;
 
-    /* element has no output pads, check for padtemplates that list SOMETIMES
-     * pads. */
-    elemclass = GST_ELEMENT_GET_CLASS (urisrc->source);
-
-    walk = gst_element_class_get_pad_template_list (elemclass);
-    while (walk != NULL) {
-      GstPadTemplate *templ;
-
-      templ = (GstPadTemplate *) walk->data;
-      if (GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) {
-        if (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_SOMETIMES)
-          *is_dynamic = TRUE;
-        break;
-      }
-      walk = g_list_next (walk);
+    templ = (GstPadTemplate *) walk->data;
+    if (GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) {
+      if (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_SOMETIMES)
+        *is_dynamic = TRUE;
+      break;
     }
+    walk = g_list_next (walk);
   }
 
   return res;
@@ -2164,62 +2160,70 @@ setup_source (GstURISourceBin * urisrc)
           urisrc->need_queue && urisrc->use_buffering))
     goto invalid_source;
 
-  if (is_raw) {
-    GST_DEBUG_OBJECT (urisrc, "Source provides all raw data");
-    /* source provides raw data, we added the pads and we can now signal a
-     * no_more pads because we are done. */
-    gst_element_no_more_pads (GST_ELEMENT_CAST (urisrc));
-    return TRUE;
-  }
-  if (!have_out && !is_dynamic) {
-    GST_DEBUG_OBJECT (urisrc, "Source has no output pads");
-    return TRUE;
-  }
-  if (is_dynamic) {
+  if (!is_dynamic) {
+    if (is_raw) {
+      GST_DEBUG_OBJECT (urisrc, "Source provides all raw data");
+      /* source provides raw data, we added the pads and we can now signal a
+       * no_more pads because we are done. */
+      gst_element_no_more_pads (GST_ELEMENT_CAST (urisrc));
+      return TRUE;
+    } else if (!have_out) {
+      GST_DEBUG_OBJECT (urisrc, "Source has no output pads");
+
+      return TRUE;
+    }
+  } else {
     GST_DEBUG_OBJECT (urisrc, "Source has dynamic output pads");
     /* connect a handler for the new-pad signal */
     urisrc->src_np_sig_id =
         g_signal_connect (urisrc->source, "pad-added",
         G_CALLBACK (source_new_pad), urisrc);
-  } else {
-    if (urisrc->is_stream) {
-      GST_DEBUG_OBJECT (urisrc, "Setting up streaming");
-      /* do the stream things here */
-      if (!setup_typefind (urisrc, NULL))
-        goto streaming_failed;
-    } else {
-      GstIterator *pads_iter;
-      gboolean done = FALSE;
-      pads_iter = gst_element_iterate_src_pads (urisrc->source);
-      while (!done) {
-        GValue item = { 0, };
-        GstPad *pad;
-
-        switch (gst_iterator_next (pads_iter, &item)) {
-          case GST_ITERATOR_ERROR:
-            GST_WARNING_OBJECT (urisrc,
-                "Error iterating pads on source element");
-            /* FALLTHROUGH */
-          case GST_ITERATOR_DONE:
-            done = TRUE;
-            break;
-          case GST_ITERATOR_RESYNC:
-            /* reset results and resync */
-            gst_iterator_resync (pads_iter);
-            break;
-          case GST_ITERATOR_OK:
-            pad = g_value_get_object (&item);
-            if (!setup_typefind (urisrc, pad)) {
-              gst_iterator_free (pads_iter);
-              goto streaming_failed;
-            }
-            g_value_reset (&item);
-            break;
-        }
-      }
-      gst_iterator_free (pads_iter);
-    }
   }
+
+  if (is_raw) {
+    GST_DEBUG_OBJECT (urisrc,
+        "Got raw srcpads on a dynamic source, using them as is.");
+
+    return TRUE;
+  } else if (urisrc->is_stream) {
+    GST_DEBUG_OBJECT (urisrc, "Setting up streaming");
+    /* do the stream things here */
+    if (!setup_typefind (urisrc, NULL))
+      goto streaming_failed;
+  } else {
+    GstIterator *pads_iter;
+    gboolean done = FALSE;
+
+    /* Expose all non-raw srcpads */
+    pads_iter = gst_element_iterate_src_pads (urisrc->source);
+    while (!done) {
+      GValue item = { 0, };
+      GstPad *pad;
+
+      switch (gst_iterator_next (pads_iter, &item)) {
+        case GST_ITERATOR_ERROR:
+          GST_WARNING_OBJECT (urisrc, "Error iterating pads on source element");
+          /* FALLTHROUGH */
+        case GST_ITERATOR_DONE:
+          done = TRUE;
+          break;
+        case GST_ITERATOR_RESYNC:
+          /* reset results and resync */
+          gst_iterator_resync (pads_iter);
+          break;
+        case GST_ITERATOR_OK:
+          pad = g_value_get_object (&item);
+          if (!setup_typefind (urisrc, pad)) {
+            gst_iterator_free (pads_iter);
+            goto streaming_failed;
+          }
+          g_value_reset (&item);
+          break;
+      }
+    }
+    gst_iterator_free (pads_iter);
+  }
+
   return TRUE;
 
   /* ERRORS */
