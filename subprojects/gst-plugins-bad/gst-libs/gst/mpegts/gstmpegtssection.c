@@ -1296,13 +1296,14 @@ gst_mpegts_section_packetize (GstMpegtsSection * section, gsize * output_size)
   guint8 *crc;
   g_return_val_if_fail (section != NULL, NULL);
   g_return_val_if_fail (output_size != NULL, NULL);
-  g_return_val_if_fail (section->packetizer != NULL, NULL);
 
   /* Section data has already been packetized */
   if (section->data) {
     *output_size = section->section_length;
     return section->data;
   }
+
+  g_return_val_if_fail (section->packetizer != NULL, NULL);
 
   if (!section->packetizer (section))
     return NULL;
