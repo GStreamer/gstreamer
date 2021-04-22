@@ -2007,7 +2007,7 @@ gst_v4l2_object_get_interlace_mode (enum v4l2_field field,
     case V4L2_FIELD_ANY:
       GST_ERROR
           ("Driver bug detected - check driver with v4l2-compliance from http://git.linuxtv.org/v4l-utils.git\n");
-      /* fallthrough */
+      return FALSE;
     case V4L2_FIELD_NONE:
       *interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
       return TRUE;
@@ -3477,6 +3477,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   enum v4l2_ycbcr_encoding matrix = 0;
   enum v4l2_xfer_func transfer = 0;
   GstStructure *s;
+  gboolean disable_interlacing = FALSE;
   gboolean disable_colorimetry = FALSE;
 
   g_return_val_if_fail (!v4l2object->skip_try_fmt_probes ||
@@ -3804,12 +3805,18 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   /* used to check colorimetry and interlace mode fields presence */
   s = gst_caps_get_structure (caps, 0);
 
-  if (!gst_v4l2_object_get_interlace_mode (format.fmt.pix.field,
-          &info.interlace_mode))
-    goto invalid_field;
-  if (gst_structure_has_field (s, "interlace-mode")) {
-    if (format.fmt.pix.field != field)
-      goto invalid_field;
+  if (gst_v4l2_object_get_interlace_mode (format.fmt.pix.field,
+          &info.interlace_mode)) {
+    if (gst_structure_has_field (s, "interlace-mode")) {
+      if (format.fmt.pix.field != field)
+        goto invalid_field;
+    }
+  } else {
+    /* The driver (or libv4l2) is miss-behaving, just ignore interlace-mode from
+     * the TRY_FMT */
+    disable_interlacing = TRUE;
+    if (gst_structure_has_field (s, "interlace-mode"))
+      gst_structure_remove_field (s, "interlace-mode");
   }
 
   if (gst_v4l2_object_get_colorspace (v4l2object, &format, &info.colorimetry)) {
@@ -3826,8 +3833,12 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   }
 
   /* In case we have skipped the try_fmt probes, we'll need to set the
-   * colorimetry back into the caps. */
+   * interlace-mode and colorimetry back into the caps. */
   if (v4l2object->skip_try_fmt_probes) {
+    if (!disable_interlacing && !gst_structure_has_field (s, "interlace-mode")) {
+      gst_structure_set (s, "interlace-mode", G_TYPE_STRING,
+          gst_video_interlace_mode_to_string (info.interlace_mode), NULL);
+    }
     if (!disable_colorimetry && !gst_structure_has_field (s, "colorimetry")) {
       gchar *str = gst_video_colorimetry_to_string (&info.colorimetry);
       gst_structure_set (s, "colorimetry", G_TYPE_STRING, str, NULL);
