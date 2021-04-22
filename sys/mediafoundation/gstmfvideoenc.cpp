@@ -293,6 +293,7 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     return FALSE;
   }
 
+#if GST_MF_HAVE_D3D11
   if (self->device_manager) {
     if (!gst_mf_transform_set_device_manager (self->transform,
         self->device_manager)) {
@@ -302,6 +303,7 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
       GST_DEBUG_OBJECT (self, "set device manager done");
     }
   }
+#endif
 
   hr = MFCreateMediaType (out_type.GetAddressOf ());
   if (!gst_mf_result (hr))
