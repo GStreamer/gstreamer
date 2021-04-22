@@ -479,7 +479,7 @@ gst_va_vpp_set_context (GstElement * element, GstContext * context)
 }
 
 static GstAllocator *
-_create_allocator (GstVaVpp * self, GstCaps * caps, guint usage_hint)
+_create_allocator (GstVaVpp * self, GstCaps * caps)
 {
   GstAllocator *allocator = NULL;
 
@@ -573,7 +573,7 @@ gst_va_vpp_propose_allocation (GstBaseTransform * trans,
     }
 
     if (!allocator) {
-      if (!(allocator = _create_allocator (self, caps, usage_hint)))
+      if (!(allocator = _create_allocator (self, caps)))
         return FALSE;
     }
 
@@ -694,7 +694,7 @@ gst_va_vpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     /* XXX(victor): VPP_WRITE uses a tiled drm modifier by iHD */
     if (gst_caps_is_dmabuf (outcaps) && GST_VIDEO_INFO_IS_RGB (&vinfo))
       usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
-    if (!(allocator = _create_allocator (self, outcaps, usage_hint)))
+    if (!(allocator = _create_allocator (self, outcaps)))
       return FALSE;
   }
 
@@ -1175,7 +1175,7 @@ _get_sinkpad_pool (GstVaVpp * self)
 
   size = GST_VIDEO_INFO_SIZE (&in_info);
 
-  allocator = _create_allocator (self, caps, usage_hint);
+  allocator = _create_allocator (self, caps);
 
   self->sinkpad_pool = _create_sinkpad_bufferpool (caps, size, 1, 0, usage_hint,
       allocator, &params);
