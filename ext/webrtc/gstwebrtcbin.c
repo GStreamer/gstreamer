@@ -55,6 +55,9 @@
 #define ICE_LOCK(w) (g_mutex_lock (ICE_GET_LOCK(w)))
 #define ICE_UNLOCK(w) (g_mutex_unlock (ICE_GET_LOCK(w)))
 
+#define DC_GET_LOCK(w) (&w->priv->dc_lock)
+#define DC_LOCK(w) (g_mutex_lock (DC_GET_LOCK(w)))
+#define DC_UNLOCK(w) (g_mutex_unlock (DC_GET_LOCK(w)))
 
 /* The extra time for the rtpstorage compared to the RTP jitterbuffer (in ms) */
 #define RTPSTORAGE_EXTRA_TIME (50)
@@ -579,6 +582,7 @@ data_channel_match_for_id (WebRTCDataChannel * channel, gint * id)
   return channel->parent.id == *id;
 }
 
+/* always called with dc_lock held */
 static WebRTCDataChannel *
 _find_data_channel_for_id (GstWebRTCBin * webrtc, gint id)
 {
@@ -1801,12 +1805,14 @@ gst_webrtc_bin_update_sctp_priority (GstWebRTCBin * webrtc)
   if (!webrtc->priv->sctp_transport)
     return;
 
+  DC_LOCK (webrtc);
   for (i = 0; i < webrtc->priv->data_channels->len; i++) {
     GstWebRTCDataChannel *channel
         = g_ptr_array_index (webrtc->priv->data_channels, i);
 
     sctp_priority = MAX (sctp_priority, channel->priority);
   }
+  DC_UNLOCK (webrtc);
 
   /* Default priority is low means DSCP field is left as 0 */
   if (sctp_priority == 0)
@@ -1961,13 +1967,16 @@ _on_data_channel_ready_state (WebRTCDataChannel * channel,
   if (ready_state == GST_WEBRTC_DATA_CHANNEL_STATE_OPEN) {
     gboolean found;
 
+    DC_LOCK (webrtc);
     found = g_ptr_array_remove (webrtc->priv->pending_data_channels, channel);
     if (found == FALSE) {
       GST_FIXME_OBJECT (webrtc, "Received open for unknown data channel");
+      DC_UNLOCK (webrtc);
       return;
     }
 
     g_ptr_array_add (webrtc->priv->data_channels, gst_object_ref (channel));
+    DC_UNLOCK (webrtc);
 
     gst_webrtc_bin_update_sctp_priority (webrtc);
 
@@ -1976,12 +1985,14 @@ _on_data_channel_ready_state (WebRTCDataChannel * channel,
   } else if (ready_state == GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED) {
     gboolean found;
 
+    DC_LOCK (webrtc);
     found = g_ptr_array_remove (webrtc->priv->pending_data_channels, channel)
         || g_ptr_array_remove (webrtc->priv->data_channels, channel);
 
     if (found == FALSE) {
       GST_FIXME_OBJECT (webrtc, "Received close for unknown data channel");
     }
+    DC_UNLOCK (webrtc);
   }
 }
 
@@ -1996,7 +2007,7 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
   if (sscanf (GST_PAD_NAME (pad), "src_%u", &stream_id) != 1)
     return;
 
-  PC_LOCK (webrtc);
+  DC_LOCK (webrtc);
   channel = _find_data_channel_for_id (webrtc, stream_id);
   if (!channel) {
     channel = g_object_new (WEBRTC_TYPE_DATA_CHANNEL, NULL);
@@ -2013,6 +2024,7 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
 
     g_ptr_array_add (webrtc->priv->pending_data_channels, channel);
   }
+  DC_UNLOCK (webrtc);
 
   g_signal_connect (channel, "notify::ready-state",
       G_CALLBACK (_on_data_channel_ready_state), webrtc);
@@ -2022,7 +2034,6 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
     GST_WARNING_OBJECT (channel, "Failed to link sctp pad %s with channel %"
         GST_PTR_FORMAT, GST_PAD_NAME (pad), channel);
   gst_object_unref (sink_pad);
-  PC_UNLOCK (webrtc);
 }
 
 static void
@@ -2036,9 +2047,9 @@ _on_sctp_state_notify (GstWebRTCSCTPTransport * sctp, GParamSpec * pspec,
   if (state == GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED) {
     int i;
 
-    PC_LOCK (webrtc);
     GST_DEBUG_OBJECT (webrtc, "SCTP association established");
 
+    DC_LOCK (webrtc);
     for (i = 0; i < webrtc->priv->data_channels->len; i++) {
       WebRTCDataChannel *channel;
 
@@ -2049,7 +2060,7 @@ _on_sctp_state_notify (GstWebRTCSCTPTransport * sctp, GParamSpec * pspec,
       if (!channel->parent.negotiated && !channel->opened)
         webrtc_data_channel_start_negotiation (channel);
     }
-    PC_UNLOCK (webrtc);
+    DC_UNLOCK (webrtc);
   }
 }
 
@@ -2152,7 +2163,6 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
   if (!webrtc->priv->data_channel_transport) {
     TransportStream *stream;
     GstWebRTCSCTPTransport *sctp_transport;
-    int i;
 
     stream = _find_transport_for_session (webrtc, session_id);
 
@@ -2201,14 +2211,6 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
             GST_ELEMENT (stream->send_bin), "data_sink"))
       g_warn_if_reached ();
 
-    for (i = 0; i < webrtc->priv->data_channels->len; i++) {
-      WebRTCDataChannel *channel;
-
-      channel = g_ptr_array_index (webrtc->priv->data_channels, i);
-
-      webrtc_data_channel_link_to_sctp (channel, webrtc->priv->sctp_transport);
-    }
-
     gst_element_sync_state_with_parent (GST_ELEMENT (stream->send_bin));
     gst_element_sync_state_with_parent (GST_ELEMENT (stream->receive_bin));
 
@@ -2226,6 +2228,7 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
     }
 
     webrtc->priv->sctp_transport = sctp_transport;
+
     gst_webrtc_bin_update_sctp_priority (webrtc);
   }
 
@@ -4502,6 +4505,7 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
           remote_port, NULL);
   }
 
+  DC_LOCK (webrtc);
   for (i = 0; i < webrtc->priv->data_channels->len; i++) {
     WebRTCDataChannel *channel;
 
@@ -4519,6 +4523,7 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
       webrtc_data_channel_start_negotiation (channel);
     }
   }
+  DC_UNLOCK (webrtc);
 
   stream->active = TRUE;
 
@@ -5650,6 +5655,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
     return NULL;
 
   PC_LOCK (webrtc);
+  DC_LOCK (webrtc);
   /* check if the id has been used already */
   if (id != -1) {
     WebRTCDataChannel *channel = _find_data_channel_for_id (webrtc, id);
@@ -5657,6 +5663,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
       GST_ELEMENT_WARNING (webrtc, LIBRARY, SETTINGS,
           ("Attempting to add a data channel with a duplicate ID: %i", id),
           NULL);
+      DC_UNLOCK (webrtc);
       PC_UNLOCK (webrtc);
       return NULL;
     }
@@ -5669,6 +5676,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
     if (id == -1) {
       GST_ELEMENT_WARNING (webrtc, RESOURCE, NOT_FOUND,
           ("%s", "Failed to generate an identifier for a data channel"), NULL);
+      DC_UNLOCK (webrtc);
       PC_UNLOCK (webrtc);
       return NULL;
     }
@@ -5679,25 +5687,31 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
       "max-retransmits", max_retransmits, "protocol", protocol,
       "negotiated", negotiated, "id", id, "priority", priority, NULL);
 
-  if (ret) {
-    gst_bin_add (GST_BIN (webrtc), ret->appsrc);
-    gst_bin_add (GST_BIN (webrtc), ret->appsink);
+  if (!ret) {
+    DC_UNLOCK (webrtc);
+    PC_UNLOCK (webrtc);
+    return ret;
+  }
 
-    gst_element_sync_state_with_parent (ret->appsrc);
-    gst_element_sync_state_with_parent (ret->appsink);
+  gst_bin_add (GST_BIN (webrtc), ret->appsrc);
+  gst_bin_add (GST_BIN (webrtc), ret->appsink);
 
-    ret = gst_object_ref (ret);
-    ret->webrtcbin = webrtc;
-    g_ptr_array_add (webrtc->priv->data_channels, ret);
-    gst_webrtc_bin_update_sctp_priority (webrtc);
-    webrtc_data_channel_link_to_sctp (ret, webrtc->priv->sctp_transport);
-    if (webrtc->priv->sctp_transport &&
-        webrtc->priv->sctp_transport->association_established
-        && !ret->parent.negotiated) {
-      webrtc_data_channel_start_negotiation (ret);
-    } else {
-      _update_need_negotiation (webrtc);
-    }
+  gst_element_sync_state_with_parent (ret->appsrc);
+  gst_element_sync_state_with_parent (ret->appsink);
+
+  ret = gst_object_ref (ret);
+  ret->webrtcbin = webrtc;
+  g_ptr_array_add (webrtc->priv->data_channels, ret);
+  DC_UNLOCK (webrtc);
+
+  gst_webrtc_bin_update_sctp_priority (webrtc);
+  webrtc_data_channel_link_to_sctp (ret, webrtc->priv->sctp_transport);
+  if (webrtc->priv->sctp_transport &&
+      webrtc->priv->sctp_transport->association_established
+      && !ret->parent.negotiated) {
+    webrtc_data_channel_start_negotiation (ret);
+  } else {
+    _update_need_negotiation (webrtc);
   }
 
   PC_UNLOCK (webrtc);
@@ -6756,6 +6770,7 @@ gst_webrtc_bin_finalize (GObject * object)
     gst_webrtc_session_description_free (webrtc->priv->last_generated_offer);
   webrtc->priv->last_generated_offer = NULL;
 
+  g_mutex_clear (DC_GET_LOCK (webrtc));
   g_mutex_clear (ICE_GET_LOCK (webrtc));
   g_mutex_clear (PC_GET_LOCK (webrtc));
   g_cond_clear (PC_GET_COND (webrtc));
@@ -7219,6 +7234,7 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
   g_cond_init (PC_GET_COND (webrtc));
 
   g_mutex_init (ICE_GET_LOCK (webrtc));
+  g_mutex_init (DC_GET_LOCK (webrtc));
 
   webrtc->rtpbin = _create_rtpbin (webrtc);
   gst_bin_add (GST_BIN (webrtc), webrtc->rtpbin);

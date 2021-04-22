@@ -100,6 +100,9 @@ struct _GstWebRTCBinPrivate
   /* list of data channels we've received a sctp stream for but no data
    * channel protocol for */
   GPtrArray *pending_data_channels;
+  /* dc_lock protects data_channels and pending_data_channels */
+  /* lock ordering is pc_lock first, then dc_lock */
+  GMutex dc_lock;
 
   guint jb_latency;
 
