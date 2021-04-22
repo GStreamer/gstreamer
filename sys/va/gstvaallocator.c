@@ -87,7 +87,8 @@ _create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
       .type = VASurfaceAttribMemoryType,
       .flags = VA_SURFACE_ATTRIB_SETTABLE,
       .value.type = VAGenericValueTypeInteger,
-      .value.value.i = ext_buf ? VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
+      .value.value.i = (ext_buf && ext_buf->num_buffers > 0)
+                               ? VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
                                : VA_SURFACE_ATTRIB_MEM_TYPE_VA,
     },
   };
@@ -636,6 +637,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
   GstVideoFormat format;
   VADRMPRIMESurfaceDescriptor desc = { 0, };
+  VASurfaceAttribExternalBuffers *extbuf = NULL, ext_buf;
   VASurfaceID surface;
   guint32 i, fourcc, rt_format, export_flags;
   GDestroyNotify buffer_destroy = NULL;
@@ -651,9 +653,25 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
     return FALSE;
   }
 
+  /* HACK(victor): disable tiling for i965 driver for RGB formats */
+  if (gst_va_display_is_implementation (self->display,
+          GST_VA_IMPLEMENTATION_INTEL_I965)
+      && GST_VIDEO_INFO_IS_RGB (&self->info)) {
+    /* *INDENT-OFF* */
+    ext_buf = (VASurfaceAttribExternalBuffers) {
+      .width = GST_VIDEO_INFO_WIDTH (&self->info),
+      .height = GST_VIDEO_INFO_HEIGHT (&self->info),
+      .num_planes = GST_VIDEO_INFO_N_PLANES (&self->info),
+      .pixel_format = fourcc,
+    };
+    /* *INDENT-ON* */
+
+    extbuf = &ext_buf;
+  }
+
   if (!_create_surfaces (self->display, rt_format, fourcc,
           GST_VIDEO_INFO_WIDTH (&self->info),
-          GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
+          GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, extbuf,
           &surface, 1))
     return FALSE;
 
