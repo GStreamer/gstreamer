@@ -393,21 +393,23 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContex
     threading.ready = FALSE;
 
     g_mutex_init(&images_mutex);
-    if (context)
-        gst.context = GST_GL_CONTEXT(gst_object_ref(context));
-    if (display) {
-        gst.display = GST_GL_DISPLAY(gst_object_ref(display));
-    }
+    if (g_strcmp0(g_getenv("LIBGL_ALWAYS_SOFTWARE"), "true")) {
+        if (context)
+            gst.context = GST_GL_CONTEXT(gst_object_ref(context));
+        if (display) {
+            gst.display = GST_GL_DISPLAY(gst_object_ref(display));
+        }
 
-    wpe.width = width;
-    wpe.height = height;
+        wpe.width = width;
+        wpe.height = height;
 
-    if (context && display) {
-      if (gst_gl_context_get_gl_platform(context) == GST_GL_PLATFORM_EGL) {
-        gst.display_egl = gst_gl_display_egl_from_gl_display (gst.display);
-      } else {
-        GST_DEBUG ("Available GStreamer GL Context is not EGL - not creating an EGL display from it");
-      }
+        if (context && display) {
+            if (gst_gl_context_get_gl_platform(context) == GST_GL_PLATFORM_EGL) {
+                gst.display_egl = gst_gl_display_egl_from_gl_display (gst.display);
+            } else {
+                GST_DEBUG ("Available GStreamer GL Context is not EGL - not creating an EGL display from it");
+            }
+        }
     }
 
     if (gst.display_egl) {
