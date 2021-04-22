@@ -18,16 +18,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#ifndef __GST_ALPHA_DECODE_BIN_H__
+#define __GST_ALPHA_DECODE_BIN_H__
 
 #include <gst/gst.h>
-
-#include "gstcodecalphademux.h"
-#include "gstalphacombine.h"
-#include "gstvp8alphadecodebin.h"
-#include "gstvp9alphadecodebin.h"
 
 /* When wrapping, use the original rank plus this offset. The ad-hoc rules is
  * that hardware implementation will use PRIMARY+1 or +2 to override the
@@ -35,23 +29,20 @@
  * This should also be small enough so that a marginal (64) or secondary
  * wrapper does not cross the PRIMARY line.
  */
-#define RANK_OFFSET 10
+#define GST_ALPHA_DECODE_BIN_RANK_OFFSET 10
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+G_BEGIN_DECLS
+
+#define GST_TYPE_ALPHA_DECODE_BIN (gst_alpha_decode_bin_get_type())
+G_DECLARE_DERIVABLE_TYPE (GstAlphaDecodeBin,
+    gst_alpha_decode_bin, GST, ALPHA_DECODE_BIN, GstBin);
+
+struct _GstAlphaDecodeBinClass
 {
-  gboolean ret = FALSE;
+  GstBinClass parent_class;
 
-  ret |= GST_ELEMENT_REGISTER (codec_alpha_demux, plugin);
-  ret |= GST_ELEMENT_REGISTER (alpha_combine, plugin);
-  ret |= GST_ELEMENT_REGISTER (vp8_alpha_decode_bin, plugin);
-  ret |= GST_ELEMENT_REGISTER (vp9_alpha_decode_bin, plugin);
+  const gchar *decoder_name;
+};
 
-  return ret;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    codecalpha,
-    "CODEC Alpha Utilities",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+G_END_DECLS
+#endif
