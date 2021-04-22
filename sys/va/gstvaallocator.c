@@ -1256,11 +1256,25 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
     goto success;
   }
 
-  /* On Gen7-Gen9 Intel graphics the memory is mappable but not
-   * cached, so normal memcpy() access is very slow to read, but it's
-   * ok for writing. So let's assume that users won't prefer
-   * direct-mapped memory if they request read access. */
-  use_derived = va_allocator->use_derived && !(flags & GST_MAP_READ);
+  switch (gst_va_display_get_implementation (display)) {
+    case GST_VA_IMPLEMENTATION_INTEL_IHD:
+      /* On Gen7+ Intel graphics the memory is mappable but not
+       * cached, so normal memcpy() access is very slow to read, but
+       * it's ok for writing. So let's assume that users won't prefer
+       * direct-mapped memory if they request read access. */
+      use_derived = va_allocator->use_derived && !(flags & GST_MAP_READ);
+      break;
+    case GST_VA_IMPLEMENTATION_INTEL_I965:
+      /* YUV derived images are tiled, so writing them is also
+       * problematic */
+      use_derived = va_allocator->use_derived && !((flags & GST_MAP_READ)
+          || ((flags & GST_MAP_WRITE)
+              && GST_VIDEO_INFO_IS_YUV (&va_allocator->derived_info)));
+      break;
+    default:
+      use_derived = va_allocator->use_derived;
+      break;
+  }
   if (use_derived)
     info = &va_allocator->derived_info;
   else
