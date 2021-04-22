@@ -102,6 +102,11 @@ struct _GstTSDemux
 
   /* Used when seeking for a keyframe to go backward in the stream */
   guint64 last_seek_offset;
+
+  /* The current difference between PES PTSs and our output running times,
+   * in the MPEG time domain. This is used for potentially updating
+   * SCTE 35 sections' pts_adjustment further down the line (eg mpegtsmux) */
+  guint64 mpeg_pts_offset;
 };
 
 struct _GstTSDemuxClass

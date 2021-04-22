@@ -479,6 +479,8 @@ gst_ts_demux_reset (MpegTSBase * base)
 
   demux->last_seek_offset = -1;
   demux->program_generation = 0;
+
+  demux->mpeg_pts_offset = 0;
 }
 
 static void
@@ -1080,25 +1082,6 @@ push_event (MpegTSBase * base, GstEvent * event)
   return TRUE;
 }
 
-static GstMpegtsSCTESpliceEvent *
-copy_splice (GstMpegtsSCTESpliceEvent * splice)
-{
-  return g_boxed_copy (GST_TYPE_MPEGTS_SCTE_SPLICE_EVENT, splice);
-}
-
-static GstMpegtsSCTESIT *
-deep_copy_sit (const GstMpegtsSCTESIT * sit)
-{
-  GstMpegtsSCTESIT *sit_copy = g_boxed_copy (GST_TYPE_MPEGTS_SCTE_SIT, sit);
-  GPtrArray *splices_copy =
-      g_ptr_array_copy (sit_copy->splices, (GCopyFunc) copy_splice, NULL);
-
-  g_ptr_array_unref (sit_copy->splices);
-  sit_copy->splices = splices_copy;
-
-  return sit_copy;
-}
-
 static void
 handle_psi (MpegTSBase * base, GstMpegtsSection * section)
 {
@@ -1123,47 +1106,57 @@ handle_psi (MpegTSBase * base, GstMpegtsSection * section)
      * times translated from local time to running time */
     if (forward) {
       GstEvent *event;
+      GstStructure *s;
+      GstStructure *rtime_map;
       GstClockTime pts;
       guint i = 0;
-      const GstMpegtsSCTESIT *sit = gst_mpegts_section_get_scte_sit (section);
-      GstMpegtsSCTESIT *sit_copy = deep_copy_sit (sit);
-      GstMpegtsSection *new_section;
+      GstMpegtsSection *new_section =
+          (GstMpegtsSection *) gst_mini_object_copy ((GstMiniObject *) section);
+      GstMpegtsSCTESIT *sit =
+          (GstMpegtsSCTESIT *) gst_mpegts_section_get_scte_sit (new_section);
 
-      if (sit_copy->splice_time_specified) {
-        pts =
-            mpegts_packetizer_pts_to_ts (base->packetizer,
-            MPEGTIME_TO_GSTTIME (sit_copy->splice_time +
-                sit_copy->pts_adjustment), demux->program->pcr_pid);
-        sit_copy->splice_time =
-            gst_segment_to_running_time (&base->out_segment, GST_FORMAT_TIME,
-            pts);
-      }
+      rtime_map = gst_structure_new_empty ("running-time-map");
 
-      for (i = 0; i < sit_copy->splices->len; i++) {
-        GstMpegtsSCTESpliceEvent *sevent =
-            g_ptr_array_index (sit_copy->splices, i);
-        if (sevent->program_splice_time_specified) {
+      if (sit->fully_parsed) {
+        if (sit->splice_time_specified) {
           pts =
               mpegts_packetizer_pts_to_ts (base->packetizer,
-              MPEGTIME_TO_GSTTIME (sevent->program_splice_time),
-              demux->program->pcr_pid);
-          sevent->program_splice_time =
+              MPEGTIME_TO_GSTTIME (sit->splice_time +
+                  sit->pts_adjustment), demux->program->pcr_pid);
+          gst_structure_set (rtime_map, "splice-time", G_TYPE_UINT64,
               gst_segment_to_running_time (&base->out_segment, GST_FORMAT_TIME,
-              pts);
-          if (sevent->duration_flag) {
-            sevent->break_duration =
-                MPEGTIME_TO_GSTTIME (sevent->break_duration);
+                  pts), NULL);
+        }
+
+        for (i = 0; i < sit->splices->len; i++) {
+          gchar *field_name;
+          GstMpegtsSCTESpliceEvent *sevent =
+              g_ptr_array_index (sit->splices, i);
+
+          if (sevent->program_splice_time_specified) {
+            pts =
+                mpegts_packetizer_pts_to_ts (base->packetizer,
+                MPEGTIME_TO_GSTTIME (sevent->program_splice_time +
+                    sit->pts_adjustment), demux->program->pcr_pid);
+            field_name =
+                g_strdup_printf ("event-%u-splice-time",
+                sevent->splice_event_id);
+            gst_structure_set (rtime_map, field_name, G_TYPE_UINT64,
+                gst_segment_to_running_time (&base->out_segment,
+                    GST_FORMAT_TIME, pts), NULL);
+            g_free (field_name);
           }
         }
       }
 
-      sit_copy->pts_adjustment = 0;
-
-      new_section = gst_mpegts_section_from_scte_sit (sit_copy, section->pid);
-
       event = gst_event_new_mpegts_section (new_section);
-
       gst_mpegts_section_unref (new_section);
+
+      s = gst_event_writable_structure (event);
+      gst_structure_set (s, "mpeg-pts-offset", G_TYPE_UINT64,
+          demux->mpeg_pts_offset, "running-time-map", GST_TYPE_STRUCTURE,
+          rtime_map, NULL);
+      gst_structure_free (rtime_map);
 
       push_event (base, event);
     }
@@ -2304,6 +2297,7 @@ gst_ts_demux_record_pts (GstTSDemux * demux, TSDemuxStream * stream,
     guint64 pts, guint64 offset)
 {
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
+  MpegTSBase *base = GST_MPEGTS_BASE (demux);
 
   stream->raw_pts = pts;
   if (pts == -1) {
@@ -2318,6 +2312,12 @@ gst_ts_demux_record_pts (GstTSDemux * demux, TSDemuxStream * stream,
   stream->pts =
       mpegts_packetizer_pts_to_ts (MPEG_TS_BASE_PACKETIZER (demux),
       MPEGTIME_TO_GSTTIME (pts), demux->program->pcr_pid);
+
+  if (base->out_segment.format == GST_FORMAT_TIME) {
+    demux->mpeg_pts_offset =
+        (GSTTIME_TO_MPEGTIME (gst_segment_to_running_time (&base->out_segment,
+                GST_FORMAT_TIME, stream->pts)) - pts) & 0x1ffffffff;
+  }
 
   GST_LOG ("pid 0x%04x Stored PTS %" G_GUINT64_FORMAT, bs->pid, stream->pts);
 
