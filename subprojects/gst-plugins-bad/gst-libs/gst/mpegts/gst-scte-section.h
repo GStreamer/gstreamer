@@ -185,10 +185,6 @@ struct _GstMpegtsSCTESIT
 
   guint16  splice_command_length;
 
-  /* When encrypted, or when encountering an unknown command type,
-   * we may still want to pass the sit through */
-  gboolean fully_parsed;
-
   GstMpegtsSCTESpliceCommandType splice_command_type;
 
   /* For time_signal commands */
@@ -198,6 +194,13 @@ struct _GstMpegtsSCTESIT
   GPtrArray *splices;
 
   GPtrArray *descriptors;
+
+  /* When encrypted, or when encountering an unknown command type,
+   * we may still want to pass the sit through */
+  gboolean fully_parsed;
+  /* When the SIT was constructed by the application, splice times
+   * are in running_time and must be translated before packetizing */
+  gboolean is_running_time;
 };
 
 GST_MPEGTS_API

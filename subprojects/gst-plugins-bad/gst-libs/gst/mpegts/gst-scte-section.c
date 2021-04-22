@@ -467,6 +467,8 @@ gst_mpegts_scte_sit_new (void)
   sit->descriptors = g_ptr_array_new_with_free_func ((GDestroyNotify)
       gst_mpegts_descriptor_free);
 
+  sit->is_running_time = TRUE;
+
   return sit;
 }
 
@@ -483,6 +485,9 @@ gst_mpegts_scte_null_new (void)
   GstMpegtsSCTESIT *sit = gst_mpegts_scte_sit_new ();
 
   sit->splice_command_type = GST_MTS_SCTE_SPLICE_COMMAND_NULL;
+
+  sit->is_running_time = TRUE;
+
   return sit;
 }
 
@@ -505,6 +510,8 @@ gst_mpegts_scte_cancel_new (guint32 event_id)
   event->splice_event_id = event_id;
   event->splice_event_cancel_indicator = TRUE;
   g_ptr_array_add (sit->splices, event);
+
+  sit->is_running_time = TRUE;
 
   return sit;
 }
@@ -538,6 +545,8 @@ gst_mpegts_scte_splice_in_new (guint32 event_id, GstClockTime splice_time)
     event->program_splice_time = splice_time;
   }
   g_ptr_array_add (sit->splices, event);
+
+  sit->is_running_time = TRUE;
 
   return sit;
 }
@@ -581,6 +590,8 @@ gst_mpegts_scte_splice_out_new (guint32 event_id, GstClockTime splice_time,
     event->break_duration = duration;
   }
   g_ptr_array_add (sit->splices, event);
+
+  sit->is_running_time = TRUE;
 
   return sit;
 }
