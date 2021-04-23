@@ -1556,7 +1556,7 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
 
   /* create our own pool */
   if (pool && use_d3d11_pool) {
-    if (!GST_D3D11_BUFFER_POOL (pool)) {
+    if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
       GST_DEBUG_OBJECT (videodec,
           "Downstream pool is not d3d11, will create new one");
       gst_clear_object (&pool);

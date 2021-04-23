@@ -1844,7 +1844,7 @@ gst_d3d11_compositor_decide_allocation (GstAggregator * aggregator,
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
   /* create our own pool */
-  if (pool && !GST_D3D11_BUFFER_POOL (pool)) {
+  if (pool && !GST_IS_D3D11_BUFFER_POOL (pool)) {
     gst_object_unref (pool);
     pool = NULL;
   }
