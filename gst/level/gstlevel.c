@@ -203,12 +203,13 @@ gst_level_class_init (GstLevelClass * klass)
 }
 
 static void
-configure_passthrough (GstLevel * self)
+configure_passthrough (GstLevel * self, gboolean audio_level_meta)
 {
   /* can't use passthrough if audio-level-meta is enabled as we need a
-   * writable buffer to add the meta. */
+   * writable buffer to add the meta.
+   * gst_base_transform_set_passthrough() takes the object lock internally. */
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self),
-      !self->audio_level_meta);
+      !audio_level_meta);
 }
 
 static void
@@ -232,7 +233,7 @@ gst_level_init (GstLevel * filter)
   filter->process = NULL;
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (filter), TRUE);
-  configure_passthrough (filter);
+  configure_passthrough (filter, filter->audio_level_meta);
 }
 
 static void
@@ -263,6 +264,8 @@ gst_level_set_property (GObject * object, guint prop_id,
 {
   GstLevel *filter = GST_LEVEL (object);
 
+  GST_OBJECT_LOCK (filter);
+
   switch (prop_id) {
     case PROP_POST_MESSAGES:
       /* fall-through */
@@ -271,8 +274,6 @@ gst_level_set_property (GObject * object, guint prop_id,
       break;
     case PROP_INTERVAL:
       filter->interval = g_value_get_uint64 (value);
-      /* Not exactly thread-safe, but property does not advertise that it
-       * can be changed at runtime anyway */
       if (GST_AUDIO_INFO_RATE (&filter->info)) {
         gst_level_recalc_interval_frames (filter);
       }
@@ -286,12 +287,16 @@ gst_level_set_property (GObject * object, guint prop_id,
       break;
     case PROP_AUDIO_LEVEL_META:
       filter->audio_level_meta = g_value_get_boolean (value);
-      configure_passthrough (filter);
+      GST_OBJECT_UNLOCK (filter);
+      configure_passthrough (filter, g_value_get_boolean (value));
+      GST_OBJECT_LOCK (filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void
@@ -299,6 +304,8 @@ gst_level_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstLevel *filter = GST_LEVEL (object);
+
+  GST_OBJECT_LOCK (filter);
 
   switch (prop_id) {
     case PROP_POST_MESSAGES:
@@ -322,6 +329,8 @@ gst_level_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  GST_OBJECT_UNLOCK (filter);
 }
 
 
@@ -410,6 +419,7 @@ gst_level_calculate_gdouble (gpointer data, guint num, guint channels,
 }
 */
 
+/* called with object lock */
 static void
 gst_level_recalc_interval_frames (GstLevel * level)
 {
@@ -443,6 +453,8 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 
   if (!gst_audio_info_from_caps (&info, in))
     return FALSE;
+
+  GST_OBJECT_LOCK (filter);
 
   switch (GST_AUDIO_INFO_FORMAT (&info)) {
     case GST_AUDIO_FORMAT_S8:
@@ -492,6 +504,7 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 
   gst_level_recalc_interval_frames (filter);
 
+  GST_OBJECT_UNLOCK (filter);
   return TRUE;
 }
 
@@ -628,6 +641,8 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   g_return_val_if_fail (num_int_samples % channels == 0, GST_FLOW_ERROR);
 
+  GST_OBJECT_LOCK (filter);
+
   if (GST_BUFFER_FLAG_IS_SET (in, GST_BUFFER_FLAG_DISCONT)) {
     filter->message_ts = GST_BUFFER_TIMESTAMP (in);
     filter->num_frames = 0;
@@ -720,9 +735,11 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
     gst_level_rtp_audio_level_meta (filter, in, -RMSdB);
   }
 
+  GST_OBJECT_UNLOCK (filter);
   return GST_FLOW_OK;
 }
 
+/* called with object lock */
 static void
 gst_level_post_message (GstLevel * filter)
 {
@@ -778,7 +795,9 @@ gst_level_post_message (GstLevel * filter)
       filter->last_peak[i] = 0.0;
     }
 
+    GST_OBJECT_UNLOCK (filter);
     gst_element_post_message (GST_ELEMENT (filter), m);
+    GST_OBJECT_LOCK (filter);
 
   }
   filter->num_frames -= frames;
@@ -792,7 +811,9 @@ gst_level_sink_event (GstBaseTransform * trans, GstEvent * event)
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     GstLevel *filter = GST_LEVEL (trans);
 
+    GST_OBJECT_LOCK (filter);
     gst_level_post_message (filter);
+    GST_OBJECT_UNLOCK (filter);
   }
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
