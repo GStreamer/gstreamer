@@ -120,7 +120,8 @@ static gboolean gst_d3d11_mpeg2_dec_decide_allocation (GstVideoDecoder *
     decoder, GstQuery * query);
 static gboolean gst_d3d11_mpeg2_dec_src_query (GstVideoDecoder * decoder,
     GstQuery * query);
-static gboolean gst_d3d11_mpeg2_dec_flush (GstVideoDecoder * decoder);
+static gboolean gst_d3d11_mpeg2_dec_sink_event (GstVideoDecoder * decoder,
+    GstEvent * event);
 
 /* GstMpeg2Decoder */
 static gboolean gst_d3d11_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
@@ -200,7 +201,8 @@ gst_d3d11_mpeg2_dec_class_init (GstD3D11Mpeg2DecClass * klass, gpointer data)
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_d3d11_mpeg2_dec_decide_allocation);
   decoder_class->src_query = GST_DEBUG_FUNCPTR (gst_d3d11_mpeg2_dec_src_query);
-  decoder_class->flush = GST_DEBUG_FUNCPTR (gst_d3d11_mpeg2_dec_flush);
+  decoder_class->sink_event =
+      GST_DEBUG_FUNCPTR (gst_d3d11_mpeg2_dec_sink_event);
 
   mpeg2decoder_class->new_sequence =
       GST_DEBUG_FUNCPTR (gst_d3d11_mpeg2_dec_new_sequence);
@@ -349,14 +351,23 @@ gst_d3d11_mpeg2_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 }
 
 static gboolean
-gst_d3d11_mpeg2_dec_flush (GstVideoDecoder * decoder)
+gst_d3d11_mpeg2_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
 {
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
 
-  if (self->d3d11_decoder)
-    gst_d3d11_decoder_flush (self->d3d11_decoder, decoder);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      if (self->d3d11_decoder)
+        gst_d3d11_decoder_set_flushing (self->d3d11_decoder, decoder, TRUE);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      if (self->d3d11_decoder)
+        gst_d3d11_decoder_set_flushing (self->d3d11_decoder, decoder, FALSE);
+    default:
+      break;
+  }
 
-  return GST_VIDEO_DECODER_CLASS (parent_class)->flush (decoder);
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
 }
 
 static gboolean
