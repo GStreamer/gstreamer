@@ -3380,7 +3380,8 @@ create_ui (PlaybackApp * app)
   } else {
     playbin = NULL;
   }
-
+  if (app->pipeline_type == 0)
+    gtk_window_set_title (GTK_WINDOW (app->window), app->current_path->data);
   /* do the packing stuff ... */
   gtk_window_set_default_size (GTK_WINDOW (app->window), 250, 96);
   /* FIXME: can we avoid this for audio only? */
