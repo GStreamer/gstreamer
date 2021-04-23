@@ -140,17 +140,29 @@ get_sockets (GstRTSPLowerTrans lower_transport, GSocketFamily socket_family)
   gst_object_unref (stream);
 }
 
-GST_START_TEST (test_get_sockets_udp)
+GST_START_TEST (test_get_sockets_udp_ipv4)
 {
   get_sockets (GST_RTSP_LOWER_TRANS_UDP, G_SOCKET_FAMILY_IPV4);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_get_sockets_udp_ipv6)
+{
   get_sockets (GST_RTSP_LOWER_TRANS_UDP, G_SOCKET_FAMILY_IPV6);
 }
 
 GST_END_TEST;
 
-GST_START_TEST (test_get_sockets_mcast)
+GST_START_TEST (test_get_sockets_mcast_ipv4)
 {
   get_sockets (GST_RTSP_LOWER_TRANS_UDP_MCAST, G_SOCKET_FAMILY_IPV4);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_get_sockets_mcast_ipv6)
+{
   get_sockets (GST_RTSP_LOWER_TRANS_UDP_MCAST, G_SOCKET_FAMILY_IPV6);
 }
 
@@ -641,15 +653,42 @@ GST_START_TEST (test_remove_transport_twice)
 
 GST_END_TEST;
 
+static gboolean
+is_ipv6_supported (void)
+{
+  GError *err = NULL;
+  GSocket *sock;
+
+  sock =
+      g_socket_new (G_SOCKET_FAMILY_IPV6, G_SOCKET_TYPE_DATAGRAM,
+      G_SOCKET_PROTOCOL_DEFAULT, &err);
+  if (sock) {
+    g_object_unref (sock);
+    return TRUE;
+  }
+
+  if (!g_error_matches (err, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+    GST_WARNING ("Unabled to create IPv6 socket: %s", err->message);
+  }
+  g_clear_error (&err);
+
+  return FALSE;
+}
+
 static Suite *
 rtspstream_suite (void)
 {
   Suite *s = suite_create ("rtspstream");
   TCase *tc = tcase_create ("general");
+  gboolean have_ipv6 = is_ipv6_supported ();
 
   suite_add_tcase (s, tc);
-  tcase_add_test (tc, test_get_sockets_udp);
-  tcase_add_test (tc, test_get_sockets_mcast);
+  tcase_add_test (tc, test_get_sockets_udp_ipv4);
+  tcase_add_test (tc, test_get_sockets_mcast_ipv4);
+  if (have_ipv6) {
+    tcase_add_test (tc, test_get_sockets_udp_ipv6);
+    tcase_add_test (tc, test_get_sockets_mcast_ipv6);
+  }
   tcase_add_test (tc, test_allocate_udp_ports_fail);
   tcase_add_test (tc, test_get_multicast_address);
   tcase_add_test (tc, test_multicast_address_and_unicast_udp);
