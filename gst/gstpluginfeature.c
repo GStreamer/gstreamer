@@ -124,6 +124,8 @@ gst_plugin_feature_load (GstPluginFeature * feature)
   else if (!real_feature->loaded)
     goto not_found;
 
+  GST_TRACER_PLUGIN_FEATURE_LOADED (real_feature);
+
   return real_feature;
 
   /* ERRORS */
