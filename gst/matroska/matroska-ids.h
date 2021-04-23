@@ -135,6 +135,7 @@
 #define GST_MATROSKA_ID_VIDEOFIELDORDER            0x9D
 /* semi-draft */
 #define GST_MATROSKA_ID_VIDEOSTEREOMODE            0x53B8
+#define GST_MATROSKA_ID_VIDEOALPHAMODE             0x53C0
 #define GST_MATROSKA_ID_VIDEOASPECTRATIOTYPE       0x54B3
 #define GST_MATROSKA_ID_VIDEOCOLOURSPACE           0x2EB524
 /* semi-draft */
@@ -637,6 +638,8 @@ typedef struct _GstMatroskaTrackVideoContext {
 
   GstVideoMultiviewMode multiview_mode;
   GstVideoMultiviewFlags multiview_flags;
+
+  gboolean alpha_mode;
 
   /* QoS */
   GstClockTime  earliest_time;

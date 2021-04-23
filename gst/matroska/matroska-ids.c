@@ -65,6 +65,7 @@ gst_matroska_track_init_video_context (GstMatroskaTrackContext ** p_context)
   video_context->earliest_time = GST_CLOCK_TIME_NONE;
   video_context->multiview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
   video_context->multiview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
+  video_context->alpha_mode = FALSE;
   video_context->colorimetry.range = GST_VIDEO_COLOR_RANGE_UNKNOWN;
   video_context->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
   video_context->colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;

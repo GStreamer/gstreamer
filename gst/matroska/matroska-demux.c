@@ -1123,6 +1123,22 @@ gst_matroska_demux_parse_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml,
               break;
             }
 
+            case GST_MATROSKA_ID_VIDEOALPHAMODE:
+            {
+              guint64 num;
+
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+                break;
+
+              GST_DEBUG_OBJECT (demux, "AlphaMode: %" G_GUINT64_FORMAT, num);
+
+              if (num == 1)
+                videocontext->alpha_mode = TRUE;
+              else
+                videocontext->alpha_mode = FALSE;
+              break;
+            }
+
             default:
               GST_WARNING_OBJECT (demux,
                   "Unknown TrackVideo subelement 0x%x - ignoring", id);
@@ -4982,7 +4998,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           GST_FIXME_OBJECT (demux, "Fix block additions with laced buffers");
 
         while ((blockadd = g_queue_pop_head (&additions))) {
-          if (blockadd->id == 1
+          GstMatroskaTrackVideoContext *videocontext =
+              (GstMatroskaTrackVideoContext *) stream;
+          if (blockadd->id == 1 && videocontext->alpha_mode
               && (!strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8)
                   || !strcmp (stream->codec_id,
                       GST_MATROSKA_CODEC_ID_VIDEO_VP9))) {
@@ -6577,9 +6595,13 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     *codec_name = g_strdup_printf ("Dirac");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8)) {
     caps = gst_caps_new_empty_simple ("video/x-vp8");
+    if (videocontext->alpha_mode)
+      gst_caps_set_simple (caps, "codec-alpha", G_TYPE_BOOLEAN, TRUE, NULL);
     *codec_name = g_strdup_printf ("On2 VP8");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP9)) {
     caps = gst_caps_new_empty_simple ("video/x-vp9");
+    if (videocontext->alpha_mode)
+      gst_caps_set_simple (caps, "codec-alpha", G_TYPE_BOOLEAN, TRUE, NULL);
     *codec_name = g_strdup_printf ("On2 VP9");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_AV1)) {
     caps = gst_caps_new_empty_simple ("video/x-av1");
