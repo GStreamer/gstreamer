@@ -1211,9 +1211,14 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
   n_pools = gst_query_get_n_allocation_pools (query);
   for (i = 0; i < n_pools; i++) {
     gst_query_parse_nth_allocation_pool (query, i, &pool, NULL, NULL, NULL);
-    if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
-      gst_object_unref (pool);
-      pool = NULL;
+    if (pool) {
+      if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
+        gst_clear_object (&pool);
+      } else {
+        GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
+        if (dpool->device != filter->device)
+          gst_clear_object (&pool);
+      }
     }
   }
 
@@ -1318,9 +1323,14 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-    if (pool && !GST_IS_D3D11_BUFFER_POOL (pool)) {
-      gst_object_unref (pool);
-      pool = NULL;
+    if (pool) {
+      if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
+        gst_clear_object (&pool);
+      } else {
+        GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
+        if (dpool->device != filter->device)
+          gst_clear_object (&pool);
+      }
     }
 
     update_pool = TRUE;

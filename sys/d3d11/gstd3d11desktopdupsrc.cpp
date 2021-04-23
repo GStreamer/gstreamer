@@ -352,10 +352,18 @@ gst_d3d11_desktop_dup_src_decide_allocation (GstBaseSrc * bsrc,
     update_pool = FALSE;
   }
 
-  if (!pool || !GST_IS_D3D11_BUFFER_POOL (pool)) {
-    gst_clear_object (&pool);
-    pool = gst_d3d11_buffer_pool_new (self->device);
+  if (pool) {
+    if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
+      gst_clear_object (&pool);
+    } else {
+      GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
+      if (dpool->device != self->device)
+        gst_clear_object (&pool);
+    }
   }
+
+  if (!pool)
+    pool = gst_d3d11_buffer_pool_new (self->device);
 
   config = gst_buffer_pool_get_config (pool);
 
