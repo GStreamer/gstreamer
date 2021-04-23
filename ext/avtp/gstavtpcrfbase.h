@@ -75,8 +75,6 @@ struct _GstAvtpCrfBaseClass
 {
   GstBaseTransformClass parent_class;
 
-  GstPadEventFunction sink_event;
-
   gpointer _gst_reserved[GST_PADDING];
 };
 
