@@ -402,16 +402,25 @@ ges_smart_mixer_constructed (GObject * obj)
 {
   GstPad *pad;
   GstElement *identity, *videoconvert;
-
   GESSmartMixer *self = GES_SMART_MIXER (obj);
   gchar *cname = g_strdup_printf ("%s-compositor", GST_OBJECT_NAME (self));
+  GstElement *mixer;
 
   self->mixer =
       gst_element_factory_create (ges_get_compositor_factory (), cname);
   g_free (cname);
-  g_object_set (self->mixer, "background", 1, "emit-signals", TRUE, NULL);
-  g_signal_connect (self->mixer, "samples-selected",
+
+  if (GST_IS_BIN (self->mixer)) {
+    g_object_get (self->mixer, "mixer", &mixer, NULL);
+    g_assert (mixer);
+  } else {
+    mixer = gst_object_ref (self->mixer);
+  }
+
+  g_object_set (mixer, "background", 1, "emit-signals", TRUE, NULL);
+  g_signal_connect (mixer, "samples-selected",
       G_CALLBACK (ges_smart_mixer_samples_selected_cb), self);
+  gst_object_unref (mixer);
 
   /* See https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/310 */
   GST_FIXME ("Stop dropping allocation query when it is not required anymore.");

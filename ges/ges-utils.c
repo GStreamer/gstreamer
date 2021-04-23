@@ -137,6 +137,7 @@ find_compositor (GstPluginFeature * feature, gpointer udata)
   gboolean res = FALSE;
   const gchar *klass;
   GstPluginFeature *loaded_feature = NULL;
+  GstElement *elem = NULL;
 
   if (G_UNLIKELY (!GST_IS_ELEMENT_FACTORY (feature)))
     return FALSE;
@@ -153,9 +154,48 @@ find_compositor (GstPluginFeature * feature, gpointer udata)
     return FALSE;
   }
 
-  res =
-      g_type_is_a (gst_element_factory_get_element_type (GST_ELEMENT_FACTORY
-          (loaded_feature)), GST_TYPE_AGGREGATOR);
+  /* Some hardware compositor elements (d3d11compositor for example) consist of
+   * bin with internal mixer elements */
+  if (g_type_is_a (gst_element_factory_get_element_type (GST_ELEMENT_FACTORY
+              (loaded_feature)), GST_TYPE_BIN)) {
+    GParamSpec *pspec;
+    GstElement *mixer = NULL;
+
+    elem =
+        gst_element_factory_create (GST_ELEMENT_FACTORY_CAST (loaded_feature),
+        NULL);
+
+    /* Checks whether this element has mixer property and the internal element
+     * is aggregator subclass */
+    if (!elem) {
+      GST_ERROR ("Could not create element from factory %" GST_PTR_FORMAT,
+          feature);
+      goto done;
+    }
+
+    pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (elem), "mixer");
+    if (!pspec)
+      goto done;
+
+    if (!g_type_is_a (pspec->value_type, GST_TYPE_ELEMENT))
+      goto done;
+
+    g_object_get (elem, "mixer", &mixer, NULL);
+    if (!mixer)
+      goto done;
+
+    if (GST_IS_AGGREGATOR (mixer))
+      res = TRUE;
+
+    gst_object_unref (mixer);
+  } else {
+    res =
+        g_type_is_a (gst_element_factory_get_element_type (GST_ELEMENT_FACTORY
+            (loaded_feature)), GST_TYPE_AGGREGATOR);
+  }
+
+done:
+  gst_clear_object (&elem);
   gst_object_unref (loaded_feature);
   return res;
 }
