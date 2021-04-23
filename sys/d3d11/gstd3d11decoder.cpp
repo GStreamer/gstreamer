@@ -1360,8 +1360,7 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
     GST_INFO_OBJECT (videodec, "Frame size changed, do renegotiate");
 
     gst_video_info_set_format (&decoder->output_info,
-        GST_VIDEO_INFO_FORMAT (&decoder->info),
-        display_width, display_height);
+        GST_VIDEO_INFO_FORMAT (&decoder->info), display_width, display_height);
     GST_VIDEO_INFO_INTERLACE_MODE (&decoder->output_info) =
         GST_VIDEO_INFO_INTERLACE_MODE (&decoder->info);
 
@@ -1372,7 +1371,7 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
   }
 
   if (gst_d3d11_decoder_can_direct_render (decoder, videodec, decoder_buffer,
-      display_width, display_height)) {
+          display_width, display_height)) {
     GstMemory *mem;
 
     mem = gst_buffer_peek_memory (decoder_buffer, 0);
