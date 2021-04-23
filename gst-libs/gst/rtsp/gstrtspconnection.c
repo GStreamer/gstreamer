@@ -799,6 +799,22 @@ gst_rtsp_connection_set_accept_certificate_func (GstRTSPConnection * conn,
   conn->accept_certificate_destroy_notify = destroy_notify;
 }
 
+static gchar *
+get_tunneled_connection_uri_strdup (GstRTSPUrl * url, guint16 port)
+{
+  const gchar *pre_host = "";
+  const gchar *post_host = "";
+
+  if (url->family == GST_RTSP_FAM_INET6) {
+    pre_host = "[";
+    post_host = "]";
+  }
+
+  return g_strdup_printf ("http://%s%s%s:%d%s%s%s", pre_host, url->host,
+      post_host, port, url->abspath, url->query ? "?" : "",
+      url->query ? url->query : "");
+}
+
 static GstRTSPResult
 setup_tunneling (GstRTSPConnection * conn, gint64 timeout, gchar * uri,
     GstRTSPMessage * response)
@@ -870,8 +886,7 @@ setup_tunneling (GstRTSPConnection * conn, gint64 timeout, gchar * uri,
     conn->remote_ip = g_strdup (value);
   }
 
-  connection_uri = g_strdup_printf ("http://%s:%d%s%s%s", url->host, url_port,
-      url->abspath, url->query ? "?" : "", url->query ? url->query : "");
+  connection_uri = get_tunneled_connection_uri_strdup (url, url_port);
 
   /* connect to the host/port */
   if (conn->proxy_host) {
@@ -1024,8 +1039,7 @@ gst_rtsp_connection_connect_with_response_usec (GstRTSPConnection * conn,
   gst_rtsp_url_get_port (url, &url_port);
 
   if (conn->tunneled) {
-    connection_uri = g_strdup_printf ("http://%s:%d%s%s%s", url->host, url_port,
-        url->abspath, url->query ? "?" : "", url->query ? url->query : "");
+    connection_uri = get_tunneled_connection_uri_strdup (url, url_port);
   } else {
     connection_uri = gst_rtsp_url_get_request_uri (url);
   }
