@@ -68,14 +68,14 @@ static GstStaticPadTemplate gst_frame_positioner_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw")
+    GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
 static GstStaticPadTemplate gst_frame_positioner_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw")
+    GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
 G_DEFINE_TYPE (GstFramePositioner, gst_frame_positioner,
@@ -262,13 +262,12 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
   if (pos->capsfilter == NULL)
     return;
 
+  caps = gst_caps_from_string ("video/x-raw(ANY)");
+
   if (pos->track_width && pos->track_height &&
       (!track_mixing || !pos->scale_in_compositor)) {
-    caps =
-        gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
+    gst_caps_set_simple (caps, "width", G_TYPE_INT,
         pos->track_width, "height", G_TYPE_INT, pos->track_height, NULL);
-  } else {
-    caps = gst_caps_new_empty_simple ("video/x-raw");
   }
 
   if (pos->fps_n != -1)
