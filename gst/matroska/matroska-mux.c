@@ -3637,11 +3637,12 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
         GST_CLOCK_TIME_IS_VALID (collect_pad->end_ts)) {
       collected_duration =
           GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
-      GST_DEBUG_OBJECT (collect_pad,
+      GST_DEBUG_OBJECT (collect_pad->collect.pad,
           "final track duration: %" GST_TIME_FORMAT,
           GST_TIME_ARGS (collected_duration));
     } else {
-      GST_WARNING_OBJECT (collect_pad, "unable to get final track duration");
+      GST_WARNING_OBJECT (collect_pad->collect.pad,
+          "unable to get final track duration");
     }
     if (GST_CLOCK_TIME_IS_VALID (collected_duration) &&
         duration < collected_duration)
