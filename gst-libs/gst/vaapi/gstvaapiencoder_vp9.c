@@ -33,6 +33,8 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+#define MAX_TILE_WIDTH_B64 64
+
 /* Define default rate control mode ("constant-qp") */
 #define DEFAULT_RATECONTROL GST_VAAPI_RATECONTROL_CQP
 
@@ -356,6 +358,7 @@ fill_picture (GstVaapiEncoderVP9 * encoder,
   VAEncPictureParameterBufferVP9 *const pic_param = picture->param;
   guint i, last_idx = 0, gf_idx = 0, arf_idx = 0;
   guint8 refresh_frame_flags = 0;
+  gint sb_cols = 0, min_log2_tile_columns = 0;
 
   memset (pic_param, 0, sizeof (VAEncPictureParameterBufferVP9));
 
@@ -398,6 +401,14 @@ fill_picture (GstVaapiEncoderVP9 * encoder,
     pic_param->ref_flags.bits.ref_arf_idx = arf_idx;
     pic_param->refresh_frame_flags = refresh_frame_flags;
   }
+
+  /* Maximum width of a tile in units of superblocks is MAX_TILE_WIDTH_B64(64).
+   * When the width is enough to partition more than MAX_TILE_WIDTH_B64(64) superblocks,
+   * we need multi tiles to handle it.*/
+  sb_cols = (pic_param->frame_width_src + 63) / 64;
+  while ((MAX_TILE_WIDTH_B64 << min_log2_tile_columns) < sb_cols)
+    ++min_log2_tile_columns;
+  pic_param->log2_tile_columns = min_log2_tile_columns;
 
   pic_param->luma_ac_qindex = encoder->yac_qi;
   pic_param->luma_dc_qindex_delta = 1;
