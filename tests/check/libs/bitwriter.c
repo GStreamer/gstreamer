@@ -29,6 +29,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbitwriter.h>
 #include <gst/base/gstbitreader.h>
+#include "gst/glib-compat-private.h"
 
 GST_START_TEST (test_initialization)
 {
@@ -76,7 +77,7 @@ GST_START_TEST (test_data)
   fail_unless (gst_bit_writer_put_bits_uint64 (&writer, 0x45, 48));
   fail_unless_equals_int (gst_bit_writer_get_remaining (&writer), 2048 - 71);
   fail_unless (gst_bit_writer_align_bytes (&writer, 0));
-  data = g_memdup (sdata, sizeof (sdata));
+  data = g_memdup2 (sdata, sizeof (sdata));
   fail_unless (gst_bit_writer_put_bytes (&writer, data, sizeof (sdata)));
 
   gst_bit_reader_init (&reader, gst_bit_writer_get_data (&writer), 256);

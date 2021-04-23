@@ -27,6 +27,7 @@
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbytewriter.h>
+#include "gst/glib-compat-private.h"
 
 GST_START_TEST (test_initialization)
 {
@@ -42,7 +43,7 @@ GST_START_TEST (test_initialization)
           (&writer)), 0);
   gst_byte_writer_reset (&writer);
 
-  data = g_memdup (sdata, sizeof (sdata));
+  data = g_memdup2 (sdata, sizeof (sdata));
   gst_byte_writer_init_with_data (&writer, data, sizeof (sdata), FALSE);
   fail_unless_equals_int (gst_byte_writer_get_pos (&writer), 0);
   fail_unless_equals_int (gst_byte_writer_get_size (&writer), 0);
@@ -56,7 +57,7 @@ GST_START_TEST (test_initialization)
   g_free (data);
   data = tmp = NULL;
 
-  data = g_memdup (sdata, sizeof (sdata));
+  data = g_memdup2 (sdata, sizeof (sdata));
   gst_byte_writer_init_with_data (&writer, data, sizeof (sdata), TRUE);
   fail_unless_equals_int (gst_byte_writer_get_pos (&writer), 0);
   fail_unless_equals_int (gst_byte_writer_get_size (&writer), sizeof (sdata));

@@ -27,6 +27,8 @@
 #define GST_BIT_WRITER_DISABLE_INLINES
 #include "gstbitwriter.h"
 
+#include "gst/glib-compat-private.h"
+
 /**
  * SECTION:gstbitwriter
  * @title: GstBitWriter
@@ -200,7 +202,7 @@ gst_bit_writer_reset_and_get_data (GstBitWriter * bitwriter)
 
   data = bitwriter->data;
   if (bitwriter->owned)
-    data = g_memdup (data, bitwriter->bit_size >> 3);
+    data = g_memdup2 (data, bitwriter->bit_size >> 3);
   gst_bit_writer_reset (bitwriter);
 
   return data;
@@ -232,7 +234,7 @@ gst_bit_writer_reset_and_get_buffer (GstBitWriter * bitwriter)
   /* we cannot rely on buffers allocated externally, thus let's dup
    * the data */
   if (data && !bitwriter->owned)
-    data = g_memdup (data, size);
+    data = g_memdup2 (data, size);
 
   buffer = gst_buffer_new ();
   if (data != NULL) {

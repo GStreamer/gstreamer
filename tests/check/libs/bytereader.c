@@ -27,6 +27,7 @@
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbytereader.h>
+#include "gst/glib-compat-private.h"
 
 #ifndef fail_unless_equals_int64
 #define fail_unless_equals_int64(a, b)					\
@@ -574,7 +575,7 @@ GST_START_TEST (test_scan)
     gint found;
 
     /* dup so valgrind can detect out of bounds access more easily */
-    m = g_memdup (sync_data, sizeof (sync_data));
+    m = g_memdup2 (sync_data, sizeof (sync_data));
     gst_byte_reader_init (&reader, m, sizeof (sync_data));
 
     found = gst_byte_reader_masked_scan_uint32_peek (&reader, 0xffffff00,
