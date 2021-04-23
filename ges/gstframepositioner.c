@@ -553,13 +553,16 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
 static void
 gst_frame_positioner_init (GstFramePositioner * framepositioner)
 {
+  int default_operator_value;
+  gst_compositor_operator_get_type_and_default_value (&default_operator_value);
+
   framepositioner->alpha = 1.0;
   framepositioner->posx = 0.0;
   framepositioner->posy = 0.0;
   framepositioner->zorder = 0;
   framepositioner->width = 0;
   framepositioner->height = 0;
-  framepositioner->operator = 1;
+  framepositioner->operator = default_operator_value;
   framepositioner->fps_n = -1;
   framepositioner->fps_d = -1;
   framepositioner->track_width = 0;
