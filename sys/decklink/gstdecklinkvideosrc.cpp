@@ -666,6 +666,7 @@ gst_decklink_video_src_start (GstDecklinkVideoSrc * self)
   self->skipped_last = 0;
   self->skip_from_timestamp = GST_CLOCK_TIME_NONE;
   self->skip_to_timestamp = GST_CLOCK_TIME_NONE;
+  self->aspect_ratio_flag = -1;
 
   return TRUE;
 }
@@ -1014,6 +1015,8 @@ extract_vbi_line (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
           continue;
         }
 
+        self->aspect_ratio_flag = (gstanc.data[0] >> 2) & 0x1;
+
         afd = (GstVideoAFDValue) ((gstanc.data[0] >> 3) & 0xf);
         is_letterbox = ((gstanc.data[3] >> 4) & 0x3) == 0;
         bar1 = GST_READ_UINT16_BE (&gstanc.data[4]);
@@ -1246,8 +1249,54 @@ retry:
   // If we're not flushing, we should have a valid frame from the queue
   g_assert (f.frame != NULL);
 
+  // Create output buffer
+  f.frame->GetBytes ((gpointer *) & data);
+  data_size = f.frame->GetHeight() * f.frame->GetRowBytes();
+
+  vf = (VideoFrame *) g_malloc0 (sizeof (VideoFrame));
+
+  *buffer =
+      gst_buffer_new_wrapped_full ((GstMemoryFlags) GST_MEMORY_FLAG_READONLY,
+      (gpointer) data, data_size, 0, data_size, vf,
+      (GDestroyNotify) video_frame_free);
+
+  vf->frame = f.frame;
+  f.frame->AddRef ();
+  vf->input = self->input->input;
+  vf->input->AddRef ();
+
+  // If we have a format that supports VANC and we are asked to extract CC,
+  // then do it here.
+  if ((self->output_cc || self->output_afd_bar)
+      && self->signal_state != SIGNAL_STATE_LOST)
+    extract_vbi (self, buffer, vf);
+
   if (!gst_pad_has_current_caps (GST_BASE_SRC_PAD (self))) {
     caps_changed = TRUE;
+  }
+  // If there was AFD information with the aspect ratio flag set and the mode
+  // is auto then we have to switch from normal NTSC/PAL to the widescreen
+  // variants
+  if (self->aspect_ratio_flag == 1 && self->mode == GST_DECKLINK_MODE_AUTO) {
+    switch (f.mode) {
+      case GST_DECKLINK_MODE_NTSC:
+        f.mode = GST_DECKLINK_MODE_NTSC_WIDESCREEN;
+        break;
+      case GST_DECKLINK_MODE_NTSC_P:
+        f.mode = GST_DECKLINK_MODE_NTSC_P_WIDESCREEN;
+        break;
+      case GST_DECKLINK_MODE_NTSC2398:
+        f.mode = GST_DECKLINK_MODE_NTSC2398_WIDESCREEN;
+        break;
+      case GST_DECKLINK_MODE_PAL:
+        f.mode = GST_DECKLINK_MODE_PAL_WIDESCREEN;
+        break;
+      case GST_DECKLINK_MODE_PAL_P:
+        f.mode = GST_DECKLINK_MODE_PAL_P_WIDESCREEN;
+        break;
+      default:
+        break;
+    }
   }
 
   if (self->caps_mode != f.mode) {
@@ -1263,6 +1312,7 @@ retry:
           ("Invalid mode in captured frame"),
           ("Mode set to %d but captured %d", self->caps_mode, f.mode));
       capture_frame_clear (&f);
+      gst_clear_buffer (buffer);
       return GST_FLOW_NOT_NEGOTIATED;
     }
   }
@@ -1279,6 +1329,7 @@ retry:
           ("Invalid pixel format in captured frame"),
           ("Format set to %d but captured %d", self->caps_format, f.format));
       capture_frame_clear (&f);
+      gst_clear_buffer (buffer);
       return GST_FLOW_NOT_NEGOTIATED;
     }
   }
@@ -1327,27 +1378,6 @@ retry:
       self->anc_width = 0;
     }
   }
-
-  f.frame->GetBytes ((gpointer *) & data);
-  data_size = self->info.size;
-
-  vf = (VideoFrame *) g_malloc0 (sizeof (VideoFrame));
-
-  *buffer =
-      gst_buffer_new_wrapped_full ((GstMemoryFlags) GST_MEMORY_FLAG_READONLY,
-      (gpointer) data, data_size, 0, data_size, vf,
-      (GDestroyNotify) video_frame_free);
-
-  vf->frame = f.frame;
-  f.frame->AddRef ();
-  vf->input = self->input->input;
-  vf->input->AddRef ();
-
-  // If we have a format that supports VANC and we are asked to extract CC,
-  // then do it here.
-  if ((self->output_cc || self->output_afd_bar)
-      && self->signal_state != SIGNAL_STATE_LOST)
-    extract_vbi (self, buffer, vf);
 
   if (f.no_signal)
     GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_GAP);
