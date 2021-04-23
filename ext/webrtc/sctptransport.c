@@ -62,12 +62,11 @@ struct task
   GDestroyNotify notify;
 };
 
-static GstStructure *
+static void
 _execute_task (GstWebRTCBin * webrtc, struct task *task)
 {
   if (task->func)
     task->func (task->sctp, task->user_data);
-  return NULL;
 }
 
 static void
