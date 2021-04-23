@@ -93,16 +93,21 @@ gst_compositor_operator_get_type_and_default_value (int *default_operator_value)
   GParamSpec *pspec =
       g_object_class_find_property (G_OBJECT_GET_CLASS (compositorPad),
       "operator");
+  GType ret = 0;
 
-  *default_operator_value =
-      g_value_get_enum (g_param_spec_get_default_value (pspec));
-  g_return_val_if_fail (pspec, G_TYPE_NONE);
+  if (pspec) {
+    *default_operator_value =
+        g_value_get_enum (g_param_spec_get_default_value (pspec));
+    g_return_val_if_fail (pspec, G_TYPE_NONE);
+
+    ret = pspec->value_type;
+  }
 
   gst_element_release_request_pad (compositor, compositorPad);
   gst_object_unref (compositorPad);
   gst_object_unref (compositor);
 
-  return pspec->value_type;
+  return ret;
 }
 
 static void
@@ -451,10 +456,11 @@ gst_frame_positioner_dispose (GObject * object)
 static void
 gst_frame_positioner_class_init (GstFramePositionerClass * klass)
 {
-  int default_operator_value;
+  int default_operator_value = 0;
   GType operator_gtype =
       gst_compositor_operator_get_type_and_default_value
       (&default_operator_value);
+  guint n_pspecs = PROP_LAST;
 
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseTransformClass *base_transform_class =
@@ -536,13 +542,18 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
    *
    * The blending operator for the source.
    */
-  properties[PROP_OPERATOR] =
-      g_param_spec_enum ("operator", "Operator",
-      "Blending operator to use for blending this pad over the previous ones",
-      operator_gtype, default_operator_value,
-      (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  if (operator_gtype) {
+    properties[PROP_OPERATOR] =
+        g_param_spec_enum ("operator", "Operator",
+        "Blending operator to use for blending this pad over the previous ones",
+        operator_gtype, default_operator_value,
+        (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+            GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS));
+  } else {
+    n_pspecs--;
+  }
 
-  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
+  g_object_class_install_properties (gobject_class, n_pspecs, properties);
 
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "frame positioner", "Metadata",
@@ -708,7 +719,7 @@ static gboolean
 gst_frame_positioner_meta_init (GstMeta * meta, gpointer params,
     GstBuffer * buffer)
 {
-  int default_operator_value;
+  int default_operator_value = 0;
   GstFramePositionerMeta *smeta;
 
   smeta = (GstFramePositionerMeta *) meta;
