@@ -41,6 +41,8 @@ struct _GstVulkanImageBufferPoolPrivate
   GstCaps *caps;
   gboolean raw_caps;
   GstVideoInfo v_info;
+  VkImageUsageFlags usage;
+  VkMemoryPropertyFlags mem_props;
 };
 
 static void gst_vulkan_image_buffer_pool_finalize (GObject * object);
@@ -55,6 +57,41 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanImageBufferPool, gst_vulkan_image_buffer_pool,
     GST_TYPE_BUFFER_POOL, G_ADD_PRIVATE (GstVulkanImageBufferPool)
     GST_DEBUG_CATEGORY_INIT (GST_CAT_VULKAN_IMAGE_BUFFER_POOL,
         "vulkanimagebufferpool", 0, "Vulkan Image Buffer Pool"));
+
+/**
+ * gst_vulkan_image_buffer_pool_config_set_allocation_params:
+ * @config: the #GstStructure with the pool's configuration.
+ * @usage: The Vulkan image usage flags.
+ * @mem_properties: Vulkan memory property flags.
+ *
+ * Sets the @usage and @mem_properties of the images to setup.
+ *
+ * Since: 1.24
+ */
+void
+gst_vulkan_image_buffer_pool_config_set_allocation_params (GstStructure *
+    config, VkImageUsageFlags usage, VkMemoryPropertyFlags mem_properties)
+{
+  /* assumption: G_TYPE_UINT is compatible with uint32_t (VkFlags) */
+  gst_structure_set (config, "usage", G_TYPE_UINT, usage, "memory-properties",
+      G_TYPE_UINT, mem_properties, NULL);
+}
+
+static inline gboolean
+gst_vulkan_image_buffer_pool_config_get_allocation_params (GstStructure *
+    config, VkImageUsageFlags * usage, VkMemoryPropertyFlags * mem_props)
+{
+  if (!gst_structure_get_uint (config, "usage", usage)) {
+    *usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+        | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
+        | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+  }
+
+  if (!gst_structure_get_uint (config, "memory-properties", mem_props))
+    *mem_props = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+  return TRUE;
+}
 
 static gboolean
 gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
@@ -88,6 +125,9 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   priv->raw_caps = features == NULL || gst_caps_features_is_equal (features,
       GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY);
 
+  gst_vulkan_image_buffer_pool_config_get_allocation_params (config,
+      &priv->usage, &priv->mem_props);
+
   /* get the size of the buffer to allocate */
   priv->v_info.size = 0;
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
@@ -104,11 +144,7 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 
     img_mem = (GstVulkanImageMemory *)
         gst_vulkan_image_memory_alloc (vk_pool->device, vk_format, width,
-        height, tiling,
-        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
-        VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        height, tiling, priv->usage, priv->mem_props);
 
     priv->v_info.offset[i] = priv->v_info.size;
     priv->v_info.size += img_mem->requirements.size;
@@ -165,13 +201,8 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
     mem = gst_vulkan_image_memory_alloc (vk_pool->device,
         vk_format, GST_VIDEO_INFO_COMP_WIDTH (&priv->v_info, i),
-        GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i), tiling,
-        /* FIXME: choose from outside */
-        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
-        VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
-        /* FIXME: choose from outside */
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i), tiling, priv->usage,
+        priv->mem_props);
     if (!mem) {
       gst_buffer_unref (buf);
       goto mem_create_failed;
