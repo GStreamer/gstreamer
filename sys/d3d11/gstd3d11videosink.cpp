@@ -111,6 +111,8 @@ struct _GstD3D11VideoSink
 
   guintptr window_id;
 
+  gboolean caps_updated;
+
   /* properties */
   gint adapter;
   gboolean force_aspect_ratio;
@@ -495,13 +497,27 @@ static gboolean
 gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
+
+  GST_DEBUG_OBJECT (self, "set caps %" GST_PTR_FORMAT, caps);
+
+  /* We will update window on show_frame() */
+  self->caps_updated = TRUE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
+{
   gint video_width, video_height;
   gint video_par_n, video_par_d;        /* video's PAR */
   gint display_par_n = 1, display_par_d = 1;    /* display's PAR */
   guint num, den;
   GError *error = NULL;
 
-  GST_DEBUG_OBJECT (self, "set caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (self, "Updating window with caps %" GST_PTR_FORMAT, caps);
+
+  self->caps_updated = FALSE;
 
   if (!gst_d3d11_video_sink_prepare_window (self))
     goto no_window;
@@ -524,7 +540,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
           video_height, video_par_n, video_par_d, display_par_n, display_par_d))
     goto no_disp_ratio;
 
-  GST_DEBUG_OBJECT (sink,
+  GST_DEBUG_OBJECT (self,
       "video width/height: %dx%d, calculated display ratio: %d/%d format: %s",
       video_width, video_height, num, den,
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&self->info)));
@@ -634,25 +650,25 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   /* ERRORS */
 invalid_format:
   {
-    GST_DEBUG_OBJECT (sink,
+    GST_DEBUG_OBJECT (self,
         "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 no_window:
   {
-    GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, (NULL),
+    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND, (NULL),
         ("Failed to open window."));
     return FALSE;
   }
 no_disp_ratio:
   {
-    GST_ELEMENT_ERROR (sink, CORE, NEGOTIATION, (NULL),
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (NULL),
         ("Error calculating the output display ratio of the video."));
     return FALSE;
   }
 no_display_size:
   {
-    GST_ELEMENT_ERROR (sink, CORE, NEGOTIATION, (NULL),
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (NULL),
         ("Error calculating the output display ratio of the video."));
     return FALSE;
   }
@@ -1043,6 +1059,21 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   ID3D11Device *device_handle =
       gst_d3d11_device_get_device_handle (self->device);
   ID3D11ShaderResourceView *view[GST_VIDEO_MAX_PLANES];
+
+  if (self->caps_updated || !self->window) {
+    GstCaps *caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (sink));
+    gboolean update_ret;
+
+    /* shouldn't happen */
+    if (!caps)
+      return GST_FLOW_NOT_NEGOTIATED;
+
+    update_ret = gst_d3d11_video_sink_update_window (self, caps);
+    gst_caps_unref (caps);
+
+    if (!update_ret)
+      return GST_FLOW_NOT_NEGOTIATED;
+  }
 
   if (!gst_d3d11_buffer_can_access_device (buf, device_handle)) {
     GST_LOG_OBJECT (self, "Need fallback buffer");
