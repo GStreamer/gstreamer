@@ -351,6 +351,9 @@ if need_api_opengl != 'no' or need_platform_glx != 'no'
   opengl_includes = ''
   if host_system == 'darwin'
     opengl_includes += '''
+#if !defined(MAC_OS_X_VERSION_MAX_ALLOWED) || MAC_OS_X_VERSION_MAX_ALLOWED >= 1014
+# define GL_SILENCE_DEPRECATION
+#endif
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/gl.h>
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070

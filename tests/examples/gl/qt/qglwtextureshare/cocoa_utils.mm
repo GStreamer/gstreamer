@@ -19,6 +19,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#if !defined(MAC_OS_X_VERSION_MAX_ALLOWED) || MAC_OS_X_VERSION_MAX_ALLOWED >= 1014
+# define GL_SILENCE_DEPRECATION
+#endif
+
 #import <Cocoa/Cocoa.h>
 void *qt_current_nsopengl_context()
 {
