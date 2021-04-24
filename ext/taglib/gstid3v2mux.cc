@@ -391,8 +391,15 @@ add_id3v2frame_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
         GST_DEBUG ("Injecting ID3v2.%u frame %u/%u of length %" G_GSIZE_FORMAT " and type %"
             GST_PTR_FORMAT, version, i, num_tags, map.size, s);
 
+#if TAGLIB_MAJOR_VERSION > 1 || (TAGLIB_MAJOR_VERSION == 1 && TAGLIB_MINOR_VERSION >= 5)
+        ID3v2::Header header;
+        header.setMajorVersion (version);
+        frame = factory->createFrame (ByteVector ((const char *) map.data,
+                map.size), &header);
+#else
         frame = factory->createFrame (ByteVector ((const char *) map.data,
                 map.size), (TagLib::uint) version);
+#endif
         if (frame)
           id3v2tag->addFrame (frame);
 
@@ -586,7 +593,13 @@ add_uri_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
 
       g_free (data);
 
+#if TAGLIB_MAJOR_VERSION > 1 || (TAGLIB_MAJOR_VERSION == 1 && TAGLIB_MINOR_VERSION >= 5)
+      ID3v2::Header header;
+      header.setMajorVersion (4);
+      frame = factory->createFrame (bytes, &header);
+#else
       frame = factory->createFrame (bytes, (TagLib::uint) 4);
+#endif
       if (frame) {
         id3v2tag->addFrame (frame);
 
