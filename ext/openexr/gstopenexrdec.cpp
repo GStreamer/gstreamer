@@ -29,6 +29,7 @@
 
 #include <ImfRgbaFile.h>
 #include <ImfIO.h>
+#include <ImfInt64.h>
 using namespace Imf;
 using namespace Imath;
 
