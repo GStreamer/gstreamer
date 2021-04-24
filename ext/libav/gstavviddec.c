@@ -790,7 +790,8 @@ gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
 
   /* Remember pool size so we can detect changes */
   ffmpegdec->pool_width = picture->width;
-  ffmpegdec->pool_height = picture->height;
+  ffmpegdec->pool_height =
+      MAX (picture->height, ffmpegdec->context->coded_height);
   ffmpegdec->pool_format = picture->format;
   ffmpegdec->pool_info = info;
 }
@@ -2203,7 +2204,9 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
             gst_object_unref (ffmpegdec->internal_pool);
           ffmpegdec->internal_pool = gst_object_ref (pool);
           ffmpegdec->pool_width = GST_VIDEO_INFO_WIDTH (&state->info);
-          ffmpegdec->pool_height = GST_VIDEO_INFO_HEIGHT (&state->info);
+          ffmpegdec->pool_height =
+              MAX (GST_VIDEO_INFO_HEIGHT (&state->info),
+              ffmpegdec->context->coded_height);
           ffmpegdec->pool_info = state->info;
           gst_structure_free (config);
           goto done;
