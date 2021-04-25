@@ -1355,6 +1355,50 @@ GST_START_TEST (test_no_fractional_lost_event_durations)
 
 GST_END_TEST;
 
+GST_START_TEST (test_late_lost_with_same_pts)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstClockTime dts, now;
+  guint latency_ms = 40;
+  guint16 seqnum;
+  guint rtp_ts;
+
+  g_object_set (h->element, "do-lost", TRUE, NULL);
+  seqnum = construct_deterministic_initial_state (h, latency_ms);
+
+  dts = seqnum * TEST_BUF_DURATION;
+  rtp_ts = seqnum * TEST_RTP_TS_DURATION;
+
+  /* set the time on the clock one buffer-length after the
+     length of the jitterbuffer */
+  now = dts + latency_ms * GST_MSECOND + TEST_BUF_DURATION;
+  gst_test_clock_set_time (GST_TEST_CLOCK (GST_ELEMENT_CLOCK (h->element)),
+      now);
+
+  /* now two buffers arrive, same arrival time (in the past, must
+     have spent a lot of time from udpsrc to jitterbuffer!),
+     with the same rtptimestamp (typical of videobuffers),
+     with a gap in between them */
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h,
+          generate_test_buffer_full (dts, seqnum, rtp_ts)));
+
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h,
+          generate_test_buffer_full (dts, seqnum + 2, rtp_ts)));
+
+  /* the lost event is generated immediately since we are already
+     too late to wait for anything */
+  verify_lost_event (h, seqnum + 1, dts, 0);
+  gst_buffer_unref (gst_harness_pull (h));
+  gst_buffer_unref (gst_harness_pull (h));
+
+  /* verify that we have pulled out all waiting buffers and events */
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+  fail_unless_equals_int (0, gst_harness_events_in_queue (h));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
 
 static void
 gst_test_clock_set_time_and_process (GstTestClock * testclock,
@@ -3316,7 +3360,7 @@ rtpjitterbuffer_suite (void)
       test_loss_equidistant_spacing_with_parameter_packets);
   tcase_add_loop_test (tc_chain, test_no_fractional_lost_event_durations, 0,
       G_N_ELEMENTS (no_fractional_lost_event_durations_input));
-
+  tcase_add_test (tc_chain, test_late_lost_with_same_pts);
 
   tcase_add_test (tc_chain, test_rtx_expected_next);
   tcase_add_test (tc_chain, test_rtx_not_bursting_requests);

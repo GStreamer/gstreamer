@@ -2498,7 +2498,7 @@ gst_rtp_jitter_buffer_handle_missing_packets (GstRtpJitterBuffer * jitterbuffer,
       guint lost_packets;
       GstClockTime lost_duration;
       GstClockTimeDiff gap_time;
-      guint saveable_packets;
+      guint saveable_packets = 0;
       GstClockTime saveable_duration;
 
       /* gap time represents the total duration of all missing packets */
@@ -2506,7 +2506,9 @@ gst_rtp_jitter_buffer_handle_missing_packets (GstRtpJitterBuffer * jitterbuffer,
 
       /* based on the estimated packet duration, we
          can figure out how many packets we could possibly save */
-      saveable_packets = offset / est_pkt_duration;
+      if (est_pkt_duration)
+        saveable_packets = offset / est_pkt_duration;
+
       /* and say that the amount of lost packet is the sequence-number
          gap minus these saveable packets, but at least 1 */
       lost_packets = MAX (1, (gint) gap - (gint) saveable_packets);
