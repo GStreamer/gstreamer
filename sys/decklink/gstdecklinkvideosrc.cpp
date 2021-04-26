@@ -1010,7 +1010,7 @@ extract_vbi_line (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
             "Adding AFD/Bar meta to buffer for line %u", field2_offset + line);
         GST_MEMDUMP_OBJECT (self, "AFD/Bar", gstanc.data, gstanc.data_count);
 
-        if (gstanc.data_count < 16) {
+        if (gstanc.data_count < 8) {
           GST_WARNING_OBJECT (self, "AFD/Bar data too small");
           continue;
         }
