@@ -989,11 +989,20 @@ if build_gstgl
     command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
   gen_sources = [gl_enumtypes_h]
 
+  common_args = gst_plugins_base_args + gl_cpp_args + ['-DBUILDING_GST_GL']
+
+  # We have custom_target() that generate headers in the current build dir,
+  # but with implicit_include_directories: false, meson >= 0.58.0 won't include
+  # it by default. We cannot use include_directories('.') here because it would
+  # also include current source dir which is what we want to avoid because
+  # case-insensitive FS would include gst-libs/gl/egl/egl.h as EGL/egl.h.
+  common_args += '-I@0@'.format(meson.current_build_dir())
+
   gstgl = library('gstgl-' + api_version,
     gl_sources, gl_egl_sources, gl_x11_sources, gl_wayland_sources, gl_priv_sources, gl_enumtypes_c, gl_enumtypes_h,
-    c_args : gst_plugins_base_args + gl_cpp_args + ['-DBUILDING_GST_GL'],
-    cpp_args : gst_plugins_base_args + gl_cpp_args + ['-DBUILDING_GST_GL'],
-    objc_args : gst_plugins_base_args + gl_cpp_args + gl_objc_args + ['-DBUILDING_GST_GL'],
+    c_args : common_args,
+    cpp_args : common_args,
+    objc_args : common_args + gl_objc_args,
     include_directories : [configinc, libsinc, gl_includes],
     version : libversion,
     soversion : soversion,
