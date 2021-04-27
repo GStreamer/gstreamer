@@ -307,7 +307,7 @@ gst_play_audio_info_class_init (GstPlayAudioInfoClass * klass)
  * gst_play_audio_info_get_language:
  * @info: a #GstPlayAudioInfo
  *
- * Returns: the language of the stream, or NULL if unknown.
+ * Returns (nullable): the language of the stream, or NULL if unknown.
  * Since: 1.20
  */
 const gchar *

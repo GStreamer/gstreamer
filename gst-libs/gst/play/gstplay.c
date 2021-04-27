@@ -3339,7 +3339,7 @@ gst_play_get_media_info (GstPlay * self)
  *
  * A Function to get current audio #GstPlayAudioInfo instance.
  *
- * Returns: (transfer full): current audio track.
+ * Returns: (transfer full) (nullable): current audio track.
  *
  * The caller should free it with g_object_unref()
  * Since: 1.20
@@ -3372,7 +3372,7 @@ gst_play_get_current_audio_track (GstPlay * self)
  *
  * A Function to get current video #GstPlayVideoInfo instance.
  *
- * Returns: (transfer full): current video track.
+ * Returns: (transfer full) (nullable): current video track.
  *
  * The caller should free it with g_object_unref()
  * Since: 1.20
@@ -3405,7 +3405,7 @@ gst_play_get_current_video_track (GstPlay * self)
  *
  * A Function to get current subtitle #GstPlaySubtitleInfo instance.
  *
- * Returns: (transfer full): current subtitle track.
+ * Returns: (transfer full) (nullable): current subtitle track.
  *
  * The caller should free it with g_object_unref()
  * Since: 1.20
@@ -3651,7 +3651,7 @@ gst_play_set_subtitle_track_enabled (GstPlay * self, gboolean enabled)
 /**
  * gst_play_set_visualization:
  * @play: #GstPlay instance
- * @name: visualization element obtained from
+ * @name (nullable): visualization element obtained from
  * #gst_play_visualizations_get()
  *
  * Returns: %TRUE if the visualizations was set correctly. Otherwise,
@@ -3692,7 +3692,8 @@ error_no_element:
  * gst_play_get_current_visualization:
  * @play: #GstPlay instance
  *
- * Returns: (transfer full): Name of the currently enabled visualization.
+ * Returns: (transfer full) (nullable): Name of the currently enabled
+ *   visualization.
  *   g_free() after usage.
  * Since: 1.20
  */
@@ -4440,7 +4441,7 @@ gst_play_config_get_seek_accurate (const GstStructure * config)
  * - pixel-aspect-ratio of type GST_TYPE_FRACTION
  *  Except for GST_PLAY_THUMBNAIL_RAW_NATIVE format, if no config is set, pixel-aspect-ratio would be 1/1
  *
- * Returns: (transfer full):  Current video snapshot sample or %NULL on failure
+ * Returns: (transfer full) (nullable):  Current video snapshot sample or %NULL on failure
  *
  * Since: 1.20
  */
