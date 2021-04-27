@@ -426,7 +426,7 @@ GstRTSPClient
    are called by this object.
 
 GstRTSPContext
- - Helper structure contaning the current state of the request
+ - Helper structure containing the current state of the request
    handled by the client.
 
 
