@@ -102,6 +102,7 @@ typedef struct
 
   GstPlayTrickMode trick_mode;
   gdouble rate;
+  gdouble start_position;
 } GstPlay;
 
 static gboolean quiet = FALSE;
@@ -151,7 +152,7 @@ gst_play_printf (const gchar * format, ...)
 static GstPlay *
 play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
     gboolean gapless, gdouble initial_volume, gboolean verbose,
-    const gchar * flags_string, gboolean use_playbin3)
+    const gchar * flags_string, gboolean use_playbin3, gdouble start_position)
 {
   GstElement *sink, *playbin;
   GstPlay *play;
@@ -251,7 +252,7 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
 
   play->rate = 1.0;
   play->trick_mode = GST_PLAY_TRICK_MODE_NONE;
-
+  play->start_position = start_position;
   return play;
 }
 
@@ -356,6 +357,11 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
         gst_print ("New plugins installed, trying again...\n");
         --play->cur_idx;
         play_next (play);
+      }
+      if (play->start_position > 0.0) {
+        play_do_seek (play, play->start_position * GST_SECOND,
+            play->rate, play->trick_mode);
+        play->start_position = 0;
       }
       break;
     case GST_MESSAGE_BUFFERING:{
@@ -1469,6 +1475,7 @@ main (int argc, char **argv)
   gboolean gapless = FALSE;
   gboolean shuffle = FALSE;
   gdouble volume = -1;
+  gdouble start_position = 0;
   gchar **filenames = NULL;
   gchar *audio_sink = NULL;
   gchar *video_sink = NULL;
@@ -1500,6 +1507,8 @@ main (int argc, char **argv)
         N_("Disable interactive control via the keyboard"), NULL},
     {"volume", 0, 0, G_OPTION_ARG_DOUBLE, &volume,
         N_("Volume"), NULL},
+    {"start-position", 's', 0, G_OPTION_ARG_DOUBLE, &start_position,
+        N_("Start position in seconds."), NULL},
     {"playlist", 0, 0, G_OPTION_ARG_FILENAME, &playlist_file,
         N_("Playlist file containing input media files"), NULL},
     {"instant-rate-changes", 'i', 0, G_OPTION_ARG_NONE, &instant_rate_changes,
@@ -1626,7 +1635,7 @@ main (int argc, char **argv)
 
   /* prepare */
   play = play_new (uris, audio_sink, video_sink, gapless, volume, verbose,
-      flags, use_playbin3);
+      flags, use_playbin3, start_position);
 
   if (play == NULL) {
     gst_printerr
