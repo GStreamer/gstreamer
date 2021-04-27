@@ -725,7 +725,7 @@ gst_player_seek (GstPlayer * self, GstClockTime position)
  *
  * Gets the URI of the currently-playing stream.
  *
- * Returns: (transfer full): a string containing the URI of the
+ * Returns: (transfer full) (nullable): a string containing the URI of the
  * currently-playing stream. g_free() after usage.
  */
 gchar *
@@ -778,7 +778,7 @@ gst_player_set_subtitle_uri (GstPlayer * self, const gchar * suburi)
  *
  * current subtitle URI
  *
- * Returns: (transfer full): URI of the current external subtitle.
+ * Returns: (transfer full) (nullable): URI of the current external subtitle.
  *   g_free() after usage.
  */
 gchar *
@@ -860,8 +860,8 @@ gst_player_get_volume (GstPlayer * self)
  *
  * Sets the volume level of the stream as a percentage between 0 and 1.
  *
- * This volume is a linear factor. For showing the volume in a GUI it 
- * might make sense to first convert from a different format. Volume sliders 
+ * This volume is a linear factor. For showing the volume in a GUI it
+ * might make sense to first convert from a different format. Volume sliders
  * should usually use a cubic volume. See gst_stream_volume_convert_volume().
  */
 void
@@ -955,7 +955,7 @@ gst_player_get_media_info (GstPlayer * self)
  *
  * A Function to get current audio #GstPlayerAudioInfo instance.
  *
- * Returns: (transfer full): current audio track.
+ * Returns: (transfer full) (nullable): current audio track.
  *
  * The caller should free it with g_object_unref()
  */
@@ -981,7 +981,7 @@ gst_player_get_current_audio_track (GstPlayer * self)
  *
  * A Function to get current video #GstPlayerVideoInfo instance.
  *
- * Returns: (transfer full): current video track.
+ * Returns: (transfer full) (nullable): current video track.
  *
  * The caller should free it with g_object_unref()
  */
@@ -1007,7 +1007,7 @@ gst_player_get_current_video_track (GstPlayer * self)
  *
  * A Function to get current subtitle #GstPlayerSubtitleInfo instance.
  *
- * Returns: (transfer full): current subtitle track.
+ * Returns: (transfer full) (nullable): current subtitle track.
  *
  * The caller should free it with g_object_unref()
  */
@@ -1126,7 +1126,7 @@ gst_player_set_subtitle_track_enabled (GstPlayer * self, gboolean enabled)
 /**
  * gst_player_set_visualization:
  * @player: #GstPlayer instance
- * @name: visualization element obtained from
+ * @name (nullable): visualization element obtained from
  * #gst_player_visualizations_get()
  *
  * Returns: %TRUE if the visualizations was set correctly. Otherwise,
@@ -1144,7 +1144,8 @@ gst_player_set_visualization (GstPlayer * self, const gchar * name)
  * gst_player_get_current_visualization:
  * @player: #GstPlayer instance
  *
- * Returns: (transfer full): Name of the currently enabled visualization.
+ * Returns: (transfer full) (nullable): Name of the currently enabled
+ *   visualization.
  *   g_free() after usage.
  */
 gchar *
@@ -1724,7 +1725,7 @@ gst_player_config_get_seek_accurate (const GstStructure * config)
  * - pixel-aspect-ratio of type GST_TYPE_FRACTION
  *  Except for GST_PLAYER_THUMBNAIL_RAW_NATIVE format, if no config is set, pixel-aspect-ratio would be 1/1
  *
- * Returns: (transfer full):  Current video snapshot sample or %NULL on failure
+ * Returns: (transfer full) (nullable):  Current video snapshot sample or %NULL on failure
  *
  * Since: 1.12
  */

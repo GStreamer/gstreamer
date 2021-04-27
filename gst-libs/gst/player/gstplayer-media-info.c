@@ -275,7 +275,7 @@ gst_player_audio_info_class_init (GstPlayerAudioInfoClass * klass)
  * gst_player_audio_info_get_language:
  * @info: a #GstPlayerAudioInfo
  *
- * Returns: the language of the stream, or NULL if unknown.
+ * Returns (nullable): the language of the stream, or NULL if unknown.
  */
 const gchar *
 gst_player_audio_info_get_language (const GstPlayerAudioInfo * info)
