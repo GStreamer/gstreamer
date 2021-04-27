@@ -380,7 +380,7 @@ layer_object_removed_cb (GESLayer * layer, GESClip * clip, App * app)
   GST_INFO ("layer clip removed cb %p %p %p", layer, clip, app);
 
   if (!find_row_for_object (GTK_LIST_STORE (app->model), &iter, clip)) {
-    g_print ("clip deleted but we don't own it");
+    gst_print ("clip deleted but we don't own it");
     return;
   }
   app->n_objects--;
@@ -446,11 +446,11 @@ project_bus_message_cb (GstBus * bus, GstMessage * message,
 {
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
-      g_printerr ("ERROR\n");
+      gst_printerr ("ERROR\n");
       g_main_loop_quit (mainloop);
       break;
     case GST_MESSAGE_EOS:
-      g_printerr ("Done\n");
+      gst_printerr ("Done\n");
       g_main_loop_quit (mainloop);
       break;
     default:
@@ -466,7 +466,7 @@ bus_message_cb (GstBus * bus, GstMessage * message, App * app)
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
-      g_print ("ERROR\n");
+      gst_print ("ERROR\n");
       break;
     case GST_MESSAGE_EOS:
       gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_READY);

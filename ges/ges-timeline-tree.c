@@ -183,11 +183,11 @@ static gboolean
 print_node (GNode * node, gpointer unused_data)
 {
   if (G_NODE_IS_ROOT (node)) {
-    g_print ("Timeline: %p\n", node->data);
+    gst_print ("Timeline: %p\n", node->data);
     return FALSE;
   }
 
-  g_print ("%*c- %" GES_FORMAT " - layer %" G_GINT32_FORMAT "\n",
+  gst_print ("%*c- %" GES_FORMAT " - layer %" G_GINT32_FORMAT "\n",
       2 * g_node_depth (node), ' ', GES_ARGS (node->data),
       ges_timeline_element_get_layer_priority (node->data));
 

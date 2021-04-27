@@ -50,7 +50,7 @@ main (gint argc, gchar * argv[])
     ges_layer_add_asset (layer, asset, i * 1000, 0,
         1000, GES_TRACK_TYPE_UNKNOWN);
   end = gst_util_get_timestamp ();
-  g_print ("%" GST_TIME_FORMAT " - adding %d clip to the timeline\n",
+  gst_print ("%" GST_TIME_FORMAT " - adding %d clip to the timeline\n",
       GST_TIME_ARGS (end - start), i);
 
   start_ripple = gst_util_get_timestamp ();
@@ -63,7 +63,7 @@ main (gint argc, gchar * argv[])
     min_rippling_time = MIN (min_rippling_time, end - start);
   }
   end_ripple = gst_util_get_timestamp ();
-  g_print ("%" GST_TIME_FORMAT " - rippling %d times, max: %"
+  gst_print ("%" GST_TIME_FORMAT " - rippling %d times, max: %"
       GST_TIME_FORMAT " min: %" GST_TIME_FORMAT "\n",
       GST_TIME_ARGS (end_ripple - start_ripple), i - 1,
       GST_TIME_ARGS (max_rippling_time), GST_TIME_ARGS (min_rippling_time));
@@ -82,7 +82,7 @@ main (gint argc, gchar * argv[])
     min_rippling_time = MIN (min_rippling_time, end - start);
   }
   end_ripple = gst_util_get_timestamp ();
-  g_print ("%" GST_TIME_FORMAT " - rippling %d times, max: %"
+  gst_print ("%" GST_TIME_FORMAT " - rippling %d times, max: %"
       GST_TIME_FORMAT " min: %" GST_TIME_FORMAT " (with auto-transition on)\n",
       GST_TIME_ARGS (end_ripple - start_ripple), i - 1,
       GST_TIME_ARGS (max_rippling_time), GST_TIME_ARGS (min_rippling_time));
@@ -90,7 +90,7 @@ main (gint argc, gchar * argv[])
   start = gst_util_get_timestamp ();
   gst_object_unref (timeline);
   end = gst_util_get_timestamp ();
-  g_print ("%" GST_TIME_FORMAT " - freeing the timeline\n",
+  gst_print ("%" GST_TIME_FORMAT " - freeing the timeline\n",
       GST_TIME_ARGS (end - start));
 
   return 0;

@@ -633,12 +633,12 @@ ges_uri_clip_asset_is_image (GESUriClipAsset * self)
  *
  *   filesource_asset = ges_uri_clip_asset_finish (res, &error);
  *   if (filesource_asset) {
- *    g_print ("The file: %s is usable as a FileSource, it is%s an image and lasts %" GST_TIME_FORMAT,
+ *    gst_print ("The file: %s is usable as a FileSource, it is%s an image and lasts %" GST_TIME_FORMAT,
  *        ges_asset_get_id (GES_ASSET (filesource_asset))
  *        ges_uri_clip_asset_is_image (filesource_asset) ? "" : " not",
  *        GST_TIME_ARGS (ges_uri_clip_asset_get_duration (filesource_asset));
  *   } else {
- *    g_print ("The file: %s is *not* usable as a FileSource because: %s",
+ *    gst_print ("The file: %s is *not* usable as a FileSource because: %s",
  *        ges_asset_get_id (source), error->message);
  *   }
  *

@@ -533,16 +533,16 @@ _set_rendering_details (GESLauncher * self)
         return FALSE;
       }
 
-      g_print ("\nEncoding details:\n");
-      g_print ("================\n");
+      gst_print ("\nEncoding details:\n");
+      gst_print ("================\n");
 
-      g_print ("  -> Output file: %s\n", opts->outputuri);
-      g_print ("  -> Profile:%s\n",
+      gst_print ("  -> Output file: %s\n", opts->outputuri);
+      gst_print ("  -> Profile:%s\n",
           smart_profile ?
           " (selected from input files format for efficient smart rendering" :
           "");
       describe_encoding_profile (prof);
-      g_print ("\n");
+      gst_print ("\n");
 
       ges_project_add_encoding_profile (proj, prof);
     }
@@ -576,7 +576,7 @@ _track_set_mixing (GESTrack * track, GESLauncherParsedOptions * opts)
   if (opts->disable_mixing || opts->smartrender)
     ges_track_set_mixing (track, FALSE);
   if (!opts->disable_mixing && opts->smartrender && !printed_mixing_disabled) {
-    g_print ("**Mixing is disabled for smart rendering to work**\n");
+    gst_print ("**Mixing is disabled for smart rendering to work**\n");
     printed_mixing_disabled = TRUE;
   }
 }
@@ -667,7 +667,7 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
       g_application_quit (G_APPLICATION (self));
     }
 
-    g_print ("\nSaving project to %s\n", uri);
+    gst_print ("\nSaving project to %s\n", uri);
     ges_project_save (project, timeline, uri, NULL, TRUE, &error);
     g_free (uri);
 
@@ -847,7 +847,7 @@ bus_message_cb (GstBus * bus, GstMessage * message, GESLauncher * self)
 static gboolean
 intr_handler (GESLauncher * self)
 {
-  g_print ("interrupt received.\n");
+  gst_print ("interrupt received.\n");
 
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (self->priv->pipeline),
       GST_DEBUG_GRAPH_SHOW_ALL, "ges-launch.interrupted");
@@ -976,7 +976,7 @@ _create_pipeline (GESLauncher * self, const gchar * serialized_timeline)
 
   /* Timeline creation */
   if (opts->load_path) {
-    g_printf ("Loading project from : %s\n", opts->load_path);
+    gst_print ("Loading project from : %s\n", opts->load_path);
 
     if (!(uri = ensure_uri (opts->load_path))) {
       g_error ("couldn't create uri for '%s'", opts->load_path);
@@ -1339,7 +1339,7 @@ _local_command_line (GApplication * application, gchar ** arguments[],
 
   if (!opts->load_path && !opts->scenario && !opts->testfile
       && !opts->list_transitions && (argc <= 1)) {
-    g_printf ("%s", g_option_context_get_help (ctx, TRUE, NULL));
+    gst_print ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
     *exit_status = 1;
     goto done;

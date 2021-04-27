@@ -38,7 +38,7 @@ _print_position (GstElement * pipeline)
     gst_element_query_duration (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
         &duration);
 
-    g_print ("<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
+    gst_print ("<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
         "/>\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
   }
 

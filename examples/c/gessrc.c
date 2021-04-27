@@ -28,11 +28,11 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
 {
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
-      g_printerr ("Got error message on the bus\n");
+      gst_printerr ("Got error message on the bus\n");
       g_main_loop_quit (mainloop);
       break;
     case GST_MESSAGE_EOS:
-      g_print ("Done\n");
+      gst_print ("Done\n");
       g_main_loop_quit (mainloop);
       break;
     default:
@@ -60,7 +60,7 @@ main (int argc, char **argv)
   GstClockTime start = 0;
 
   if (argc < 2) {
-    g_print ("Usage: %s <list of files>\n", argv[0]);
+    gst_print ("Usage: %s <list of files>\n", argv[0]);
     return -1;
   }
 
@@ -85,7 +85,7 @@ main (int argc, char **argv)
     clip = GES_CLIP (ges_uri_clip_new (uri));
 
     if (!clip) {
-      g_printerr ("Could not create clip for file: %s\n", argv[i]);
+      gst_printerr ("Could not create clip for file: %s\n", argv[i]);
       g_free (uri);
       goto err;
     }

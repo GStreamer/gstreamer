@@ -264,39 +264,39 @@ print_timeline (GESTimeline * timeline)
 {
   GList *layer, *clip, *clips, *group;
 
-  g_printerr
+  gst_printerr
       ("\n\n=========================== GESTimeline: %p ==================\n",
       timeline);
   for (layer = timeline->layers; layer; layer = layer->next) {
     clips = ges_layer_get_clips (layer->data);
 
-    g_printerr ("layer %04d: ", ges_layer_get_priority (layer->data));
+    gst_printerr ("layer %04d: ", ges_layer_get_priority (layer->data));
     for (clip = clips; clip; clip = clip->next) {
-      g_printerr ("{ %s [ %" G_GUINT64_FORMAT "(%" G_GUINT64_FORMAT ") %"
+      gst_printerr ("{ %s [ %" G_GUINT64_FORMAT "(%" G_GUINT64_FORMAT ") %"
           G_GUINT64_FORMAT "] } ", GES_TIMELINE_ELEMENT_NAME (clip->data),
           GES_TIMELINE_ELEMENT_START (clip->data),
           GES_TIMELINE_ELEMENT_INPOINT (clip->data),
           GES_TIMELINE_ELEMENT_END (clip->data));
     }
     if (layer->next)
-      g_printerr ("\n--------------------------------------------------\n");
+      gst_printerr ("\n--------------------------------------------------\n");
 
     g_list_free_full (clips, gst_object_unref);
   }
 
   if (ges_timeline_get_groups (timeline)) {
-    g_printerr ("\n--------------------------------------------------\n");
-    g_printerr ("\nGROUPS:");
-    g_printerr ("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    gst_printerr ("\n--------------------------------------------------\n");
+    gst_printerr ("\nGROUPS:");
+    gst_printerr ("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
   }
 
   for (group = ges_timeline_get_groups (timeline); group; group = group->next) {
-    g_printerr ("%" GES_FORMAT ": ", GES_ARGS (group->data));
+    gst_printerr ("%" GES_FORMAT ": ", GES_ARGS (group->data));
     for (clip = GES_CONTAINER_CHILDREN (group->data); clip; clip = clip->next)
-      g_printerr ("[ %s ]", GES_TIMELINE_ELEMENT_NAME (clip->data));
+      gst_printerr ("[ %s ]", GES_TIMELINE_ELEMENT_NAME (clip->data));
   }
 
-  g_printerr
+  gst_printerr
       ("\n=====================================================================\n");
 }
 

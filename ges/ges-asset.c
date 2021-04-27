@@ -70,7 +70,7 @@
  *
  *    // Print some infos about the formatter GESAsset
  *    for (tmp = formatter_assets; tmp; tmp = tmp->next) {
- *      g_print ("Name of the formatter: %s, file extension it produces: %s",
+ *      gst_print ("Name of the formatter: %s, file extension it produces: %s",
  *        ges_meta_container_get_string (
  *          GES_META_CONTAINER (tmp->data), GES_META_FORMATTER_NAME),
  *        ges_meta_container_get_string (
@@ -1364,10 +1364,10 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
  *
  *   asset = ges_asset_request_finish (res, &error);
  *   if (asset) {
- *    g_print ("The file: %s is usable as a GESUriClip",
+ *    gst_print ("The file: %s is usable as a GESUriClip",
  *        ges_asset_get_id (asset));
  *   } else {
- *    g_print ("The file: %s is *not* usable as a GESUriClip because: %s",
+ *    gst_print ("The file: %s is *not* usable as a GESUriClip because: %s",
  *        ges_asset_get_id (source), error->message);
  *   }
  *

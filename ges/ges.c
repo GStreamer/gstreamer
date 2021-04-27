@@ -268,7 +268,7 @@ parse_goption_arg (const gchar * s_opt,
     const gchar * arg, gpointer data, GError ** err)
 {
   if (g_strcmp0 (s_opt, "--ges-version") == 0) {
-    g_print ("GStreamer Editing Services version %s\n", PACKAGE_VERSION);
+    gst_print ("GStreamer Editing Services version %s\n", PACKAGE_VERSION);
     exit (0);
   } else if (g_strcmp0 (s_opt, "--ges-sample-paths") == 0) {
     ges_add_missing_uri_relocation_uri (arg, FALSE);

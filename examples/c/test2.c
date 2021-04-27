@@ -31,7 +31,7 @@ main (int argc, gchar ** argv)
   guint i;
 
   if (argc < 2) {
-    g_print ("Usage: %s <list of audio files>\n", argv[0]);
+    gst_print ("Usage: %s <list of audio files>\n", argv[0]);
     return -1;
   }
 
@@ -58,7 +58,7 @@ main (int argc, gchar ** argv)
   if (!ges_timeline_add_track (timeline, tracka))
     return -1;
 
-  /* Here we've finished initializing our timeline, we're 
+  /* Here we've finished initializing our timeline, we're
    * ready to start using it... by solely working with the layer ! */
 
   for (i = 1; i < argc; i++, offset += GST_SECOND) {

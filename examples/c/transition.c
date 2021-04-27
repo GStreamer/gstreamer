@@ -76,7 +76,7 @@ print_transition_data (GESClip * tr)
 
   g_object_get (nleobj, "start", &start, "duration", &duration,
       "priority", &priority, "name", &name, NULL);
-  g_print ("nleobject for %s: %f %f %d\n", name,
+  gst_print ("nleobject for %s: %f %f %d\n", name,
       ((gfloat) start) / GST_SECOND,
       ((gfloat) duration) / GST_SECOND, priority);
 
@@ -128,7 +128,7 @@ make_timeline (gchar * nick, gdouble tdur, gchar * patha, gfloat adur,
   g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srcb);
 
   if (tduration != 0) {
-    g_print ("creating transition at %" GST_TIME_FORMAT " of %f duration (%"
+    gst_print ("creating transition at %" GST_TIME_FORMAT " of %f duration (%"
         GST_TIME_FORMAT ")\n", GST_TIME_ARGS (tstart), tdur,
         GST_TIME_ARGS (tduration));
     if (!(tr = ges_transition_clip_new_for_nick (nick)))
@@ -172,14 +172,14 @@ main (int argc, char **argv)
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
-    g_print ("Error initializing %s\n", err->message);
+    gst_print ("Error initializing %s\n", err->message);
     g_option_context_free (ctx);
     g_clear_error (&err);
     exit (1);
   }
 
   if (argc < 4) {
-    g_print ("%s", g_option_context_get_help (ctx, TRUE, NULL));
+    gst_print ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     exit (0);
   }
 

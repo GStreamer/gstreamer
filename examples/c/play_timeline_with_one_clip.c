@@ -10,7 +10,7 @@ main (int argc, char **argv)
   GESTimeline *timeline;
 
   if (argc == 1) {
-    g_printerr ("Usage: play_timeline_with_one_clip file:///clip/uri\n");
+    gst_printerr ("Usage: play_timeline_with_one_clip file:///clip/uri\n");
 
     return 1;
   }
@@ -26,7 +26,8 @@ main (int argc, char **argv)
     GESClip *clip = GES_CLIP (ges_uri_clip_new (argv[1]));
 
     if (clip == NULL) {
-      g_printerr ("%s can not be used, make sure it is a supported media file",
+      gst_printerr
+          ("%s can not be used, make sure it is a supported media file",
           argv[1]);
 
       return 1;

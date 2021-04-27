@@ -112,19 +112,19 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
 {
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
-      g_print ("ERROR\n");
+      gst_print ("ERROR\n");
       g_main_loop_quit (mainloop);
       break;
     case GST_MESSAGE_EOS:
       if (repeat > 0) {
-        g_print ("Looping again\n");
+        gst_print ("Looping again\n");
         /* No need to change state before */
         gst_element_seek_simple (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
             GST_SEEK_FLAG_FLUSH, 0);
         gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
         repeat -= 1;
       } else {
-        g_print ("Done\n");
+        gst_print ("Done\n");
         g_main_loop_quit (mainloop);
       }
       break;
@@ -150,7 +150,7 @@ main (int argc, gchar ** argv)
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
-    g_print ("Error initializing: %s\n", err->message);
+    gst_print ("Error initializing: %s\n", err->message);
     g_option_context_free (ctx);
     g_clear_error (&err);
     exit (1);
@@ -170,7 +170,7 @@ main (int argc, gchar ** argv)
   /* Play the pipeline */
   mainloop = g_main_loop_new (NULL, FALSE);
 
-  g_print ("thumbnailing every 1 seconds\n");
+  gst_print ("thumbnailing every 1 seconds\n");
   g_timeout_add (1000, thumbnail_cb, pipeline);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
@@ -179,7 +179,7 @@ main (int argc, gchar ** argv)
 
   if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-    g_print ("Failed to start the encoding\n");
+    gst_print ("Failed to start the encoding\n");
     return 1;
   }
   g_main_loop_run (mainloop);

@@ -23,7 +23,7 @@
 GstEncodingProfile *make_encoding_profile (gchar * audio, gchar * container);
 
 /* This example will take a series of files and create a audio-only timeline
- * containing the first second of each file and render it to the output uri 
+ * containing the first second of each file and render it to the output uri
  * using ogg/vorbis */
 
 /* make_encoding_profile
@@ -79,7 +79,7 @@ main (int argc, gchar ** argv)
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
-    g_printerr ("Error initializing: %s\n", err->message);
+    gst_printerr ("Error initializing: %s\n", err->message);
     g_option_context_free (ctx);
     g_clear_error (&err);
     return -1;
@@ -87,7 +87,7 @@ main (int argc, gchar ** argv)
   g_option_context_free (ctx);
 
   if (argc < 3) {
-    g_print ("Usage: %s <output uri> <list of audio files>\n", argv[0]);
+    gst_print ("Usage: %s <output uri> <list of audio files>\n", argv[0]);
     return -1;
   }
 
@@ -114,7 +114,7 @@ main (int argc, gchar ** argv)
   if (!ges_timeline_add_track (timeline, tracka))
     return -1;
 
-  /* Here we've finished initializing our timeline, we're 
+  /* Here we've finished initializing our timeline, we're
    * ready to start using it... by solely working with the layer ! */
 
   for (i = 2; i < argc; i++) {
@@ -147,7 +147,7 @@ main (int argc, gchar ** argv)
   } else if (g_file_test (argv[1], G_FILE_TEST_EXISTS)) {
     output_uri = gst_filename_to_uri (argv[1], NULL);
   } else {
-    g_printerr ("Unrecognised command line argument '%s'.\n"
+    gst_printerr ("Unrecognised command line argument '%s'.\n"
         "Please pass an URI or file as argument!\n", argv[1]);
     return -1;
   }

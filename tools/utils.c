@@ -207,7 +207,7 @@ print_enum (GType enum_type)
   guint i;
 
   for (i = 0; i < enum_class->n_values; i++) {
-    g_printf ("%s\n", enum_class->values[i].value_nick);
+    gst_print ("%s\n", enum_class->values[i].value_nick);
   }
 
   g_type_class_unref (enum_class);
@@ -246,9 +246,9 @@ ges_print (GstDebugColorFlags c, gboolean err, gboolean nline,
     g_string_append (str, clear);
 
   if (err)
-    g_printerr ("%s", str->str);
+    gst_printerr ("%s", str->str);
   else
-    g_print ("%s", str->str);
+    gst_print ("%s", str->str);
 
   g_string_free (str, TRUE);
 }
@@ -333,13 +333,13 @@ print_profile (GstEncodingProfile * profile, const gchar * prefix)
     capsdesc = gst_caps_to_string (format);
 
   if (GST_IS_ENCODING_CONTAINER_PROFILE (profile)) {
-    g_print ("%s> %s %s: %s%s%s%s\n", prefix,
+    gst_print ("%s> %s %s: %s%s%s%s\n", prefix,
         get_type_icon (profile),
         capsdesc, name ? name : "",
         desc ? " (" : "", desc ? desc : "", desc ? ")" : "");
 
   } else {
-    g_print ("%s%s %s%s%s%s%s%s", prefix, get_type_icon (profile),
+    gst_print ("%s%s %s%s%s%s%s%s", prefix, get_type_icon (profile),
         name ? name : capsdesc, desc ? ": " : "", desc ? desc : "",
         name ? " (" : "", name ? capsdesc : "", name ? ")" : "");
 
@@ -353,10 +353,10 @@ print_profile (GstEncodingProfile * profile, const gchar * prefix)
         GstVideoInfo info;
 
         if (gst_video_info_from_caps (&info, caps)) {
-          g_print (" (%dx%d", info.width, info.height);
+          gst_print (" (%dx%d", info.width, info.height);
           if (info.fps_n)
-            g_print ("@%d/%dfps", info.fps_n, info.fps_d);
-          g_print (")");
+            gst_print ("@%d/%dfps", info.fps_n, info.fps_d);
+          gst_print (")");
         }
         gst_caps_unref (caps);
       }
@@ -370,13 +370,13 @@ print_profile (GstEncodingProfile * profile, const gchar * prefix)
         GstAudioInfo info;
 
         if (gst_caps_is_fixed (caps) && gst_audio_info_from_caps (&info, caps))
-          g_print (" (%d channels @ %dhz)", info.channels, info.rate);
+          gst_print (" (%d channels @ %dhz)", info.channels, info.rate);
         gst_caps_unref (caps);
       }
     }
 
 
-    g_print ("\n");
+    gst_print ("\n");
   }
 
   gst_caps_unref (format);
@@ -449,17 +449,17 @@ print_timeline (GESTimeline * timeline)
     return;
 
   uri = ges_command_line_formatter_get_timeline_uri (timeline);
-  g_print ("\nTimeline description: `%s`\n", &uri[5]);
+  gst_print ("\nTimeline description: `%s`\n", &uri[5]);
   g_free (uri);
-  g_print ("====================\n\n");
+  gst_print ("====================\n\n");
   for (layer = timeline->layers; layer; layer = layer->next) {
     clips = ges_layer_get_clips (layer->data);
 
     if (!clips)
       continue;
 
-    g_printerr ("  layer %d: \n", ges_layer_get_priority (layer->data));
-    g_printerr ("  --------\n");
+    gst_printerr ("  layer %d: \n", ges_layer_get_priority (layer->data));
+    gst_printerr ("  --------\n");
     for (clip = clips; clip; clip = clip->next) {
       gchar *name;
 
@@ -475,20 +475,20 @@ print_timeline (GESTimeline * timeline)
       } else {
         name = g_strdup (GES_TIMELINE_ELEMENT_NAME (clip->data));
       }
-      g_print ("    - %s\n        start=%" GST_TIME_FORMAT,
+      gst_print ("    - %s\n        start=%" GST_TIME_FORMAT,
           name, GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (clip->data)));
       g_free (name);
       if (GES_TIMELINE_ELEMENT_INPOINT (clip->data))
-        g_print (" inpoint=%" GST_TIME_FORMAT,
+        gst_print (" inpoint=%" GST_TIME_FORMAT,
             GST_TIME_ARGS (GES_TIMELINE_ELEMENT_INPOINT (clip->data)));
-      g_print (" duration=%" GST_TIME_FORMAT "\n",
+      gst_print (" duration=%" GST_TIME_FORMAT "\n",
           GST_TIME_ARGS (GES_TIMELINE_ELEMENT_END (clip->data)));
     }
     if (layer->next)
-      g_printerr ("\n");
+      gst_printerr ("\n");
 
     g_list_free_full (clips, gst_object_unref);
   }
 
-  g_print ("\n");
+  gst_print ("\n");
 }

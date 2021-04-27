@@ -85,7 +85,7 @@ main (int argc, char **argv)
 
 
   if (argc < 3) {
-    g_print ("Usage: %s <output uri> <list of files>\n", argv[0]);
+    gst_print ("Usage: %s <output uri> <list of files>\n", argv[0]);
     return -1;
   }
 
@@ -131,11 +131,11 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
 {
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
-      g_print ("ERROR\n");
+      gst_print ("ERROR\n");
       g_main_loop_quit (mainloop);
       break;
     case GST_MESSAGE_EOS:
-      g_print ("Done\n");
+      gst_print ("Done\n");
       g_main_loop_quit (mainloop);
       break;
     default:

@@ -56,14 +56,14 @@ main (int argc, gchar ** argv)
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
-    g_print ("Error initializing %s\n", err->message);
+    gst_print ("Error initializing %s\n", err->message);
     g_option_context_free (ctx);
     g_clear_error (&err);
     exit (1);
   }
 
   if (argc == 1) {
-    g_print ("%s", g_option_context_get_help (ctx, TRUE, NULL));
+    gst_print ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     exit (0);
   }
   g_option_context_free (ctx);
