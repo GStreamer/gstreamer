@@ -328,6 +328,8 @@ gst_d3d11_deinterlace_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf);
 static gboolean gst_d3d11_deinterlace_sink_event (GstBaseTransform * trans,
     GstEvent * event);
+static void gst_d3d11_deinterlace_before_transform (GstBaseTransform * trans,
+    GstBuffer * buffer);
 
 static void
 gst_d3d11_deinterlace_class_init (GstD3D11DeinterlaceClass * klass,
@@ -413,6 +415,8 @@ gst_d3d11_deinterlace_class_init (GstD3D11DeinterlaceClass * klass,
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d11_deinterlace_transform);
   trans_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_d3d11_deinterlace_sink_event);
+  trans_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_d3d11_deinterlace_before_transform);
 
   klass->adapter = cdata->adapter;
   klass->device_id = cdata->device_id;
@@ -1827,6 +1831,68 @@ gst_d3d11_deinterlace_sink_event (GstBaseTransform * trans, GstEvent * event)
   }
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
+}
+
+static void
+gst_d3d11_deinterlace_before_transform (GstBaseTransform * trans,
+    GstBuffer * buffer)
+{
+  GstD3D11Deinterlace *self = GST_D3D11_DEINTERLACE (trans);
+  GstD3D11DeinterlaceClass *klass = GST_D3D11_DEINTERLACE_GET_CLASS (self);
+  GstD3D11Memory *dmem;
+  GstMemory *mem;
+  GstCaps *in_caps = NULL;
+  GstCaps *out_caps = NULL;
+  guint adapter = 0;
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  if (!gst_is_d3d11_memory (mem)) {
+    GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL), ("Invalid memory"));
+    return;
+  }
+
+  dmem = GST_D3D11_MEMORY_CAST (mem);
+  /* Same device, nothing to do */
+  if (dmem->device == self->device)
+    return;
+
+  g_object_get (dmem->device, "adapter", &adapter, NULL);
+  /* We have per-GPU deinterlace elements because of different capability
+   * per GPU. so, cannot accept other GPU at the moment */
+  if (adapter != klass->adapter)
+    return;
+
+  GST_INFO_OBJECT (self, "Updating device %" GST_PTR_FORMAT " -> %"
+      GST_PTR_FORMAT, self->device, dmem->device);
+
+  /* Drain buffers before updating device */
+  gst_d3d11_deinterlace_drain (self);
+
+  gst_object_unref (self->device);
+  self->device = (GstD3D11Device *) gst_object_ref (dmem->device);
+
+  in_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SINK_PAD (trans));
+  if (!in_caps) {
+    GST_WARNING_OBJECT (self, "sinkpad has null caps");
+    goto out;
+  }
+
+  out_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SRC_PAD (trans));
+  if (!out_caps) {
+    GST_WARNING_OBJECT (self, "Has no configured output caps");
+    goto out;
+  }
+
+  gst_d3d11_deinterlace_set_caps (trans, in_caps, out_caps);
+
+  /* Mark reconfigure so that we can update pool */
+  gst_base_transform_reconfigure_src (trans);
+
+out:
+  gst_clear_caps (&in_caps);
+  gst_clear_caps (&out_caps);
+
+  return;
 }
 
 /* FIXME: might be job of basetransform */

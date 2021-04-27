@@ -1312,10 +1312,12 @@ static gboolean gst_d3d11_compositor_decide_allocation (GstAggregator *
     aggregator, GstQuery * query);
 static gboolean gst_d3d11_compositor_sink_event (GstAggregator * agg,
     GstAggregatorPad * pad, GstEvent * event);
-
 static GstFlowReturn
 gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
     GstBuffer * outbuf);
+static GstFlowReturn
+gst_d3d11_compositor_create_output_buffer (GstVideoAggregator * vagg,
+    GstBuffer ** outbuffer);
 
 #define gst_d3d11_compositor_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstD3D11Compositor, gst_d3d11_compositor,
@@ -1372,6 +1374,8 @@ gst_d3d11_compositor_class_init (GstD3D11CompositorClass * klass)
 
   vagg_class->aggregate_frames =
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_aggregate_frames);
+  vagg_class->create_output_buffer =
+      GST_DEBUG_FUNCPTR (gst_d3d11_compositor_create_output_buffer);
 
   caps = gst_d3d11_get_updated_template_caps (&pad_template_caps);
   gst_element_class_add_pad_template (element_class,
@@ -1519,6 +1523,21 @@ could_not_create:
   }
 }
 
+static gboolean
+gst_d3d11_compositor_pad_clear_resource (GstD3D11Compositor * self,
+    GstD3D11CompositorPad * cpad, gpointer user_data)
+{
+  gst_clear_buffer (&cpad->fallback_buf);
+  if (cpad->fallback_pool) {
+    gst_buffer_pool_set_active (cpad->fallback_pool, FALSE);
+    gst_clear_object (&cpad->fallback_pool);
+  }
+  g_clear_pointer (&cpad->convert, gst_d3d11_converter_free);
+  GST_D3D11_CLEAR_COM (cpad->blend);
+
+  return TRUE;
+}
+
 static void
 gst_d3d11_compositor_release_pad (GstElement * element, GstPad * pad)
 {
@@ -1530,13 +1549,7 @@ gst_d3d11_compositor_release_pad (GstElement * element, GstPad * pad)
   gst_child_proxy_child_removed (GST_CHILD_PROXY (self), G_OBJECT (pad),
       GST_OBJECT_NAME (pad));
 
-  gst_clear_buffer (&cpad->fallback_buf);
-  if (cpad->fallback_pool) {
-    gst_buffer_pool_set_active (cpad->fallback_pool, FALSE);
-    gst_clear_object (&cpad->fallback_pool);
-  }
-  g_clear_pointer (&cpad->convert, gst_d3d11_converter_free);
-  GST_D3D11_CLEAR_COM (cpad->blend);
+  gst_d3d11_compositor_pad_clear_resource (self, cpad, NULL);
 
   GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
 }
@@ -2254,4 +2267,110 @@ done:
   gst_clear_buffer (&self->fallback_buf);
 
   return ret;
+}
+
+typedef struct
+{
+  /* without holding ref */
+  GstD3D11Device *other_device;
+  gboolean have_same_device;
+} DeviceCheckData;
+
+static gboolean
+gst_d3d11_compositor_check_device_update (GstElement * agg,
+    GstVideoAggregatorPad * vpad, DeviceCheckData * data)
+{
+  GstD3D11Compositor *self = GST_D3D11_COMPOSITOR (agg);
+  GstBuffer *buf;
+  GstMemory *mem;
+  GstD3D11Memory *dmem;
+  gboolean update_device = FALSE;
+
+  buf = gst_video_aggregator_pad_get_current_buffer (vpad);
+  if (!buf)
+    return TRUE;
+
+  mem = gst_buffer_peek_memory (buf, 0);
+  /* FIXME: we should be able to accept non-d3d11 memory later once
+   * we remove intermediate elements (d3d11upload and d3d11colorconvert)
+   */
+  if (!gst_is_d3d11_memory (mem)) {
+    GST_ELEMENT_ERROR (agg, CORE, FAILED, (NULL), ("Invalid memory"));
+    return FALSE;
+  }
+
+  dmem = GST_D3D11_MEMORY_CAST (mem);
+
+  /* We can use existing device */
+  if (dmem->device == self->device) {
+    data->have_same_device = TRUE;
+    return FALSE;
+  }
+
+  if (self->adapter < 0) {
+    update_device = TRUE;
+  } else {
+    guint adapter = 0;
+
+    g_object_get (dmem->device, "adapter", &adapter, NULL);
+    /* The same GPU as what user wanted, update */
+    if (adapter == (guint) self->adapter)
+      update_device = TRUE;
+  }
+
+  if (!update_device)
+    return TRUE;
+
+  data->other_device = dmem->device;
+
+  /* Keep iterate since there might be one buffer which holds the same device
+   * as ours */
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_d3d11_compositor_create_output_buffer (GstVideoAggregator * vagg,
+    GstBuffer ** outbuffer)
+{
+  GstD3D11Compositor *self = GST_D3D11_COMPOSITOR (vagg);
+  DeviceCheckData data;
+
+  /* Check whether there is at least one sinkpad which holds d3d11 buffer
+   * with compatible device, and if not, update our device */
+  data.other_device = NULL;
+  data.have_same_device = FALSE;
+
+  gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg),
+      (GstElementForeachPadFunc) gst_d3d11_compositor_check_device_update,
+      &data);
+
+  if (data.have_same_device || !data.other_device)
+    goto done;
+
+  /* Clear all device dependent resources */
+  gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg),
+      (GstElementForeachPadFunc) gst_d3d11_compositor_pad_clear_resource, NULL);
+
+  gst_clear_buffer (&self->fallback_buf);
+  if (self->fallback_pool) {
+    gst_buffer_pool_set_active (self->fallback_pool, FALSE);
+    gst_clear_object (&self->fallback_pool);
+  }
+  g_clear_pointer (&self->checker_background, gst_d3d11_quad_free);
+
+  GST_INFO_OBJECT (self, "Updating device %" GST_PTR_FORMAT " -> %"
+      GST_PTR_FORMAT, self->device, data.other_device);
+  gst_object_unref (self->device);
+  self->device = (GstD3D11Device *) gst_object_ref (data.other_device);
+
+  /* We cannot call gst_aggregator_negotiate() here, since GstVideoAggregator
+   * is holding GST_VIDEO_AGGREGATOR_LOCK() already.
+   * Mark reconfigure and do reconfigure later */
+  gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (vagg));
+
+  return GST_AGGREGATOR_FLOW_NEED_DATA;
+
+done:
+  return GST_VIDEO_AGGREGATOR_CLASS (parent_class)->create_output_buffer (vagg,
+      outbuffer);
 }

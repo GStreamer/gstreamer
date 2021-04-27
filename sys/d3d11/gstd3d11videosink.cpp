@@ -1049,6 +1049,48 @@ error:
   return FALSE;
 }
 
+static void
+gst_d3d11_video_sink_check_device_update (GstD3D11VideoSink * self,
+    GstBuffer * buf)
+{
+  GstMemory *mem;
+  GstD3D11Memory *dmem;
+  gboolean update_device = FALSE;
+
+  /* We have configured window already, cannot update device */
+  if (self->window)
+    return;
+
+  mem = gst_buffer_peek_memory (buf, 0);
+  if (!gst_is_d3d11_memory (mem))
+    return;
+
+  dmem = GST_D3D11_MEMORY_CAST (mem);
+  /* Same device, nothing to do */
+  if (dmem->device == self->device)
+    return;
+
+  if (self->adapter < 0) {
+    update_device = TRUE;
+  } else {
+    guint adapter = 0;
+
+    g_object_get (dmem->device, "adapter", &adapter, NULL);
+    /* The same GPU as what user wanted, update */
+    if (adapter == (guint) self->adapter)
+      update_device = TRUE;
+  }
+
+  if (!update_device)
+    return;
+
+  GST_INFO_OBJECT (self, "Updating device %" GST_PTR_FORMAT " -> %"
+      GST_PTR_FORMAT, self->device, dmem->device);
+
+  gst_object_unref (self->device);
+  self->device = (GstD3D11Device *) gst_object_ref (dmem->device);
+}
+
 static GstFlowReturn
 gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 {
@@ -1059,6 +1101,8 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   ID3D11Device *device_handle =
       gst_d3d11_device_get_device_handle (self->device);
   ID3D11ShaderResourceView *view[GST_VIDEO_MAX_PLANES];
+
+  gst_d3d11_video_sink_check_device_update (self, buf);
 
   if (self->caps_updated || !self->window) {
     GstCaps *caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (sink));
