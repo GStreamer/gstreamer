@@ -361,7 +361,7 @@ replay_bin_sink_probe (GstPad * pad, GstPadProbeInfo * info,
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_SEEK:
-        /* Ideally this shouldn't happen because we are responsing
+        /* Ideally this shouldn't happen because we are responding
          * seeking query with non-seekable */
         GST_DEBUG_OBJECT (pad, "Drop seek event");
         ret = GST_PAD_PROBE_DROP;
@@ -496,7 +496,7 @@ pad_added_cb (GstElement * dbin, GstPad * pad, GstReplayBin * self)
   /* block data for initial segment seeking */
   bin_pad = g_new0 (GstReplayBinPad, 1);
 
-  /* Move owenership of pad to this struct */
+  /* Move ownership of pad to this struct */
   bin_pad->srcpad = gst_object_ref (dpad);
   bin_pad->block_id =
       gst_pad_add_probe (dpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
@@ -697,7 +697,7 @@ gst_rtsp_media_factory_replay_class_init (GstRTSPMediaFactoryReplayClass
 
   g_object_class_install_property (gobject_class, PROP_NUM_LOOPS,
       g_param_spec_int64 ("num-loops", "Num Loops",
-          "The number of loops (-1 = infiniate)", -1, G_MAXINT64,
+          "The number of loops (-1 = infinite)", -1, G_MAXINT64,
           DEFAULT_NUM_LOOPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   mf_class->create_element =
@@ -866,7 +866,7 @@ main (int argc, char *argv[])
   gint64 num_loops = -1;
   GOptionEntry options[] = {
     {"num-loops", 0, 0, G_OPTION_ARG_INT64, &num_loops,
-        "The number of loops (default = -1, infinate)", NULL},
+        "The number of loops (default = -1, infinite)", NULL},
     {NULL}
   };
 
