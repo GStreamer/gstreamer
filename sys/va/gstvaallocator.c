@@ -1271,6 +1271,12 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
           || ((flags & GST_MAP_WRITE)
               && GST_VIDEO_INFO_IS_YUV (&va_allocator->derived_info)));
       break;
+    case GST_VA_IMPLEMENTATION_MESA_GALLIUM:
+      /* Reading RGB derived images, with non-standard resolutions,
+       * looks like tiled too. TODO(victor): fill a bug in Mesa. */
+      use_derived = va_allocator->use_derived && !((flags & GST_MAP_READ)
+          && GST_VIDEO_INFO_IS_RGB (&va_allocator->derived_info));
+      break;
     default:
       use_derived = va_allocator->use_derived;
       break;
