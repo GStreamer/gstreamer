@@ -661,6 +661,17 @@ private:
       return GST_FLOW_ERROR;
     }
 
+    HDESK hdesk = OpenInputDesktop (0, FALSE, GENERIC_ALL);
+    if (hdesk) {
+      if (!SetThreadDesktop (hdesk)) {
+        GST_WARNING ("SetThreadDesktop() failed, error %lu", GetLastError());
+      }
+
+      CloseDesktop (hdesk);
+    } else {
+      GST_WARNING ("OpenInputDesktop() failed, error %lu", GetLastError());
+    }
+
     /* FIXME: Use DuplicateOutput1 to avoid potentail color conversion */
     hr = output1->DuplicateOutput(d3d11_device.Get(), &dupl_);
     if (!gst_d3d11_result (hr, device)) {
