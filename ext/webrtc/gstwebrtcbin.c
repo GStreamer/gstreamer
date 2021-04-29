@@ -1590,9 +1590,8 @@ _add_supported_attributes_to_caps (GstWebRTCBin * webrtc,
 
     if (!gst_structure_has_field (s, "rtcp-fb-nack-pli"))
       gst_structure_set (s, "rtcp-fb-nack-pli", G_TYPE_BOOLEAN, TRUE, NULL);
-    /* FIXME: is this needed? */
-    /*if (!gst_structure_has_field (s, "rtcp-fb-transport-cc"))
-       gst_structure_set (s, "rtcp-fb-nack-pli", G_TYPE_BOOLEAN, TRUE, NULL); */
+    if (!gst_structure_has_field (s, "rtcp-fb-transport-cc"))
+      gst_structure_set (s, "rtcp-fb-transport-cc", G_TYPE_BOOLEAN, TRUE, NULL);
 
     /* FIXME: codec-specific parameters? */
   }
