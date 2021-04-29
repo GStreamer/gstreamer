@@ -140,7 +140,6 @@ HRESULT SystemTransitionsExpectedErrors[] = {
 HRESULT CreateDuplicationExpectedErrors[] = {
   DXGI_ERROR_DEVICE_REMOVED,
   static_cast<HRESULT>(E_ACCESSDENIED),
-  DXGI_ERROR_UNSUPPORTED,
   DXGI_ERROR_SESSION_DISCONNECTED,
   S_OK
 };
@@ -678,6 +677,17 @@ private:
       if (hr == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE) {
         GST_ERROR ("Hit the max allowed number of Desktop Duplication session");
         return GST_FLOW_ERROR;
+      }
+
+      /* Seems to be one limitation of Desktop Duplication API design
+       * See
+       * https://docs.microsoft.com/en-US/troubleshoot/windows-client/shell-experience/error-when-dda-capable-app-is-against-gpu
+       */
+      if (hr == DXGI_ERROR_UNSUPPORTED) {
+        GST_WARNING ("IDXGIOutput1::DuplicateOutput returned "
+            "DXGI_ERROR_UNSUPPORTED, possiblely application is run against a "
+            "discrete GPU");
+        return GST_D3D11_DESKTOP_DUP_FLOW_UNSUPPORTED;
       }
 
       return gst_d3d11_desktop_dup_return_from_hr (d3d11_device.Get(), hr,

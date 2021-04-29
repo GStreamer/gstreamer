@@ -401,6 +401,7 @@ static gboolean
 gst_d3d11_desktop_dup_src_start (GstBaseSrc * bsrc)
 {
   GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
+  GstFlowReturn ret;
 
   /* FIXME: this element will use only the first adapter, but
    * this might cause issue in case of multi-gpu environment and
@@ -415,18 +416,42 @@ gst_d3d11_desktop_dup_src_start (GstBaseSrc * bsrc)
   }
 
   self->dupl = gst_d3d11_desktop_dup_new (self->device, self->monitor_index);
-  if (!self->dupl) {
-    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-        ("Failed to prepare duplication for output index %d",
-            self->monitor_index), (NULL));
+  if (!self->dupl)
+    goto error;
 
-    return FALSE;
+  /* Check if we can open device */
+  ret = gst_d3d11_desktop_dup_prepare (self->dupl);
+  switch (ret) {
+    case GST_D3D11_DESKTOP_DUP_FLOW_EXPECTED_ERROR:
+    case GST_FLOW_OK:
+      break;
+    case GST_D3D11_DESKTOP_DUP_FLOW_UNSUPPORTED:
+      goto unsupported;
+    default:
+      goto error;
   }
 
   self->last_frame_no = -1;
   self->min_latency = self->max_latency = GST_CLOCK_TIME_NONE;
 
   return TRUE;
+
+error:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+        ("Failed to prepare duplication for output index %d",
+            self->monitor_index), (NULL));
+  }
+  return FALSE;
+
+unsupported:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
+        ("Failed to prepare duplication for output index %d",
+            self->monitor_index),
+        ("Try run the application on the integrated GPU"));
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -515,6 +540,8 @@ gst_d3d11_desktop_dup_src_fill (GstPushSrc * pushsrc, GstBuffer * buffer)
   gboolean update_latency = FALSE;
   guint64 next_frame_no;
   gboolean draw_mouse;
+  /* Just magic number... */
+  gint unsupported_retry_count = 100;
 
   if (!self->dupl) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
@@ -633,6 +660,17 @@ again:
 
   if (ret == GST_D3D11_DESKTOP_DUP_FLOW_EXPECTED_ERROR) {
     GST_WARNING_OBJECT (self, "Got expected error, try again");
+    gst_clear_object (&clock);
+    goto again;
+  } else if (ret == GST_D3D11_DESKTOP_DUP_FLOW_UNSUPPORTED) {
+    GST_WARNING_OBJECT (self, "Got DXGI_ERROR_UNSUPPORTED error");
+    unsupported_retry_count--;
+
+    if (unsupported_retry_count < 0) {
+      ret = GST_FLOW_ERROR;
+      goto out;
+    }
+
     gst_clear_object (&clock);
     goto again;
   }
