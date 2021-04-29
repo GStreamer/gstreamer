@@ -548,13 +548,17 @@ typedef struct _AtomTREF
 
 /*
  * used for both STCO and CO64
- * if used as STCO, entries should be truncated to use only 32bits
+ * The table will be written out as STCO automatically when
+ * the offsets being written will fit in a 32-bit table,
+ * otherwise it is written as CO64
  */
 typedef struct _AtomSTCO64
 {
   AtomFull header;
   /* Global offset to add to entries when serialising */
   guint32 chunk_offset;
+  /* Maximum offset stored in the table */
+  guint64 max_offset;
   ATOM_ARRAY (guint64) entries;
 } AtomSTCO64;
 
