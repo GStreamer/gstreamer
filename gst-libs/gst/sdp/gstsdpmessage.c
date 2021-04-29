@@ -3767,7 +3767,7 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
   gchar *tmp;
   gint caps_pt, caps_rate;
   guint n_fields, j;
-  gboolean first, nack, nack_pli, ccm_fir;
+  gboolean first, nack, nack_pli, ccm_fir, transport_cc;
   GString *fmtp;
   GstStructure *s;
 
@@ -3830,6 +3830,15 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
       gst_sdp_media_add_attribute (media, "rtcp-fb", tmp);
       g_free (tmp);
       GST_DEBUG ("adding rtcp-fb-ccm-fir to pt=%d", caps_pt);
+    }
+  }
+
+  if (gst_structure_get_boolean (s, "rtcp-fb-transport-cc", &transport_cc)) {
+    if (transport_cc) {
+      tmp = g_strdup_printf ("%d transport-cc", caps_pt);
+      gst_sdp_media_add_attribute (media, "rtcp-fb", tmp);
+      g_free (tmp);
+      GST_DEBUG ("adding rtcp-fb-transport-cc to pt=%d", caps_pt);
     }
   }
 
