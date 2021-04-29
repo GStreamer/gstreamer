@@ -696,7 +696,7 @@ class GstValidateLaunchTest(GstValidateTest):
                  media_descriptor=None, duration=0, hard_timeout=None,
                  extra_env_variables=None, expected_issues=None):
 
-        extra_env_variables = extra_env_variables or {}
+        self.extra_env_variables = extra_env_variables or {}
 
         if scenario:
             duration = scenario.get_duration()
@@ -732,7 +732,7 @@ class GstValidateMediaCheckTest(GstValidateTest):
                  uri, minfo_path, timeout=DEFAULT_TIMEOUT,
                  extra_env_variables=None,
                  expected_issues=None):
-        extra_env_variables = extra_env_variables or {}
+        self.extra_env_variables = extra_env_variables or {}
 
         super(
             GstValidateMediaCheckTest, self).__init__(GstValidateBaseTestManager.MEDIA_CHECK_COMMAND, classname,
@@ -764,7 +764,7 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
                  expected_issues=None):
         Loggable.__init__(self)
 
-        extra_env_variables = extra_env_variables or {}
+        self.extra_env_variables = extra_env_variables or {}
 
         file_dur = int(media_descriptor.get_duration()) / GST_SECOND
         if not media_descriptor.get_num_tracks("video"):

@@ -871,6 +871,10 @@ class GstValidateTest(Test):
                                               extra_env_variables=extra_env_variables,
                                               expected_issues=expected_issues,
                                               workdir=workdir)
+        if media_descriptor and media_descriptor.get_media_filepath():
+            config_file = os.path.join(media_descriptor.get_media_filepath() + '.config')
+            if os.path.isfile(config_file):
+                self.add_validate_config(config_file, extra_env_variables)
 
         if scenario is None or scenario.name.lower() == "none":
             self.scenario = None
