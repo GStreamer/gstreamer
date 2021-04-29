@@ -634,16 +634,16 @@ integration testsuites fedora:
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-examples|gst-omx|gstreamer-sharp|gst-plugins-rs)$/'
 
-# gstreamer-full
+# gstreamer-full:
+# introspection has been disabled as the static build does not support it.
+# See https://gitlab.freedesktop.org/gstreamer/gst-build/-/issues/162
 gstreamer-full:
   extends: 'build static fedora x86_64'
   stage: integrate
   variables:
     MESON_ARGS: >
       --default-library=static
-      -Dauto_features=disabled
-      -Dgstreamer:check=enabled
-      -Dtests=enabled
+      -Dintrospection=disabled
       $MESON_GST_WERROR
   rules:
     - if: '$CI_PROJECT_NAME =~ /^(gst-build|gst-ci)$/'
