@@ -557,7 +557,8 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
 /* https://www.w3.org/TR/webrtc-stats/#candidatepair-dict* */
 static gchar *
 _get_stats_from_ice_transport (GstWebRTCBin * webrtc,
-    GstWebRTCICETransport * transport, GstStructure * s)
+    GstWebRTCICETransport * transport, const GstStructure * twcc_stats,
+    GstStructure * s)
 {
   GstStructure *stats;
   gchar *id;
@@ -615,6 +616,14 @@ _get_stats_from_ice_transport (GstWebRTCBin * webrtc,
 };
 */
 
+  /* XXX: these stats are at the rtp session level but there isn't a specific
+   * stats structure for that. The RTCIceCandidatePairStats is the closest with
+   * the 'availableIncomingBitrate' and 'availableOutgoingBitrate' fields
+   */
+  if (twcc_stats)
+    gst_structure_set (stats, "gst-twcc-stats", GST_TYPE_STRUCTURE, twcc_stats,
+        NULL);
+
   gst_structure_set (s, id, GST_TYPE_STRUCTURE, stats, NULL);
   gst_structure_free (stats);
 
@@ -624,7 +633,8 @@ _get_stats_from_ice_transport (GstWebRTCBin * webrtc,
 /* https://www.w3.org/TR/webrtc-stats/#dom-rtctransportstats */
 static gchar *
 _get_stats_from_dtls_transport (GstWebRTCBin * webrtc,
-    GstWebRTCDTLSTransport * transport, GstStructure * s)
+    GstWebRTCDTLSTransport * transport, const GstStructure * twcc_stats,
+    GstStructure * s)
 {
   GstStructure *stats;
   gchar *id;
@@ -672,7 +682,9 @@ _get_stats_from_dtls_transport (GstWebRTCBin * webrtc,
   gst_structure_set (s, id, GST_TYPE_STRUCTURE, stats, NULL);
   gst_structure_free (stats);
 
-  ice_id = _get_stats_from_ice_transport (webrtc, transport->transport, s);
+  ice_id =
+      _get_stats_from_ice_transport (webrtc, transport->transport, twcc_stats,
+      s);
   g_free (ice_id);
 
   return id;
@@ -685,7 +697,8 @@ _get_stats_from_transport_channel (GstWebRTCBin * webrtc,
 {
   GstWebRTCDTLSTransport *transport;
   GObject *rtp_session;
-  GstStructure *rtp_stats;
+  GObject *gst_rtp_session;
+  GstStructure *rtp_stats, *twcc_stats;
   GValueArray *source_stats;
   gchar *transport_id;
   double ts;
@@ -700,6 +713,9 @@ _get_stats_from_transport_channel (GstWebRTCBin * webrtc,
   g_signal_emit_by_name (webrtc->rtpbin, "get-internal-session",
       stream->session_id, &rtp_session);
   g_object_get (rtp_session, "stats", &rtp_stats, NULL);
+  g_signal_emit_by_name (webrtc->rtpbin, "get-session",
+      stream->session_id, &gst_rtp_session);
+  g_object_get (gst_rtp_session, "twcc-stats", &twcc_stats, NULL);
 
   gst_structure_get (rtp_stats, "source-stats", G_TYPE_VALUE_ARRAY,
       &source_stats, NULL);
@@ -709,7 +725,8 @@ _get_stats_from_transport_channel (GstWebRTCBin * webrtc,
       "transport %" GST_PTR_FORMAT, stream, rtp_session, source_stats->n_values,
       transport);
 
-  transport_id = _get_stats_from_dtls_transport (webrtc, transport, s);
+  transport_id =
+      _get_stats_from_dtls_transport (webrtc, transport, twcc_stats, s);
 
   /* construct stats objects */
   for (i = 0; i < source_stats->n_values; i++) {
@@ -732,7 +749,10 @@ _get_stats_from_transport_channel (GstWebRTCBin * webrtc,
   }
 
   g_object_unref (rtp_session);
+  g_object_unref (gst_rtp_session);
   gst_structure_free (rtp_stats);
+  if (twcc_stats)
+    gst_structure_free (twcc_stats);
   g_value_array_free (source_stats);
   g_free (transport_id);
 }
