@@ -110,6 +110,7 @@ ensure_data (GstMsdkSystemMemory * mem)
       mem->surface->Data.Pitch = mem->destination_pitches[0];
       break;
     case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
       mem->surface->Data.B = mem->cached_data[0];
       mem->surface->Data.G = mem->surface->Data.B + 1;
       mem->surface->Data.R = mem->surface->Data.B + 2;

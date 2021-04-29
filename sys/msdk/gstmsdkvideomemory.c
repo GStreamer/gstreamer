@@ -239,6 +239,7 @@ gst_video_meta_map_msdk_memory (GstVideoMeta * meta, guint plane,
 
   switch (meta->format) {
     case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
       *data = mem->surface->Data.B + offset;
       break;
 
