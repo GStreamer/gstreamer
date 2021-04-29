@@ -850,6 +850,9 @@ atom_co64_init (AtomSTCO64 * co64)
   guint8 flags[3] = { 0, 0, 0 };
 
   atom_full_init (&co64->header, FOURCC_stco, 0, 0, 0, flags);
+
+  co64->chunk_offset = 0;
+  co64->max_offset = 0;
   atom_array_init (&co64->entries, 256);
 }
 
@@ -2418,7 +2421,17 @@ atom_stco64_copy_data (AtomSTCO64 * stco64, guint8 ** buffer, guint64 * size,
 {
   guint64 original_offset = *offset;
   guint i;
-  gboolean trunc_to_32 = stco64->header.header.type == FOURCC_stco;
+
+  /* If any (mdat-relative) offset will by over 32-bits when converted to an
+   * absolute file offset then we need to write a 64-bit co64 atom, otherwise
+   * we can write a smaller stco 32-bit table */
+  gboolean write_stco64 =
+      (stco64->max_offset + stco64->chunk_offset) > G_MAXUINT32;
+
+  if (write_stco64)
+    stco64->header.header.type = FOURCC_co64;
+  else
+    stco64->header.header.type = FOURCC_stco;
 
   if (!atom_full_copy_data (&stco64->header, buffer, size, offset)) {
     return 0;
@@ -2434,10 +2447,10 @@ atom_stco64_copy_data (AtomSTCO64 * stco64, guint8 ** buffer, guint64 * size,
     guint64 value =
         atom_array_index (&stco64->entries, i) + stco64->chunk_offset;
 
-    if (trunc_to_32) {
-      prop_copy_uint32 ((guint32) value, buffer, size, offset);
-    } else {
+    if (write_stco64) {
       prop_copy_uint64 (value, buffer, size, offset);
+    } else {
+      prop_copy_uint32 ((guint32) value, buffer, size, offset);
     }
   }
 
@@ -3163,8 +3176,8 @@ atom_stco64_add_entry (AtomSTCO64 * stco64, guint64 entry)
     return FALSE;
 
   atom_array_append (&stco64->entries, entry, 256);
-  if (entry > G_MAXUINT32)
-    stco64->header.header.type = FOURCC_co64;
+  if (entry > stco64->max_offset)
+    stco64->max_offset = entry;
 
   return TRUE;
 }
