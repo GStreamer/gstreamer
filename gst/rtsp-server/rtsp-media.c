@@ -130,7 +130,6 @@ struct _GstRTSPMediaPrivate
   /* the pipeline for the media */
   GstElement *pipeline;
   GSource *source;
-  guint id;
   GstRTSPThread *thread;
   GList *pending_pipeline_elements;
 
@@ -3793,7 +3792,7 @@ default_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   g_source_set_callback (priv->source, (GSourceFunc) bus_message,
       g_object_ref (media), (GDestroyNotify) watch_destroyed);
 
-  priv->id = g_source_attach (priv->source, context);
+  g_source_attach (priv->source, context);
 
   /* add stuff to the bin */
   gst_bin_add (GST_BIN (priv->pipeline), priv->rtpbin);
@@ -4016,9 +4015,17 @@ finish_unprepare (GstRTSPMedia * media)
 
   /* the source has the last ref to the media */
   if (priv->source) {
+    GstBus *bus;
+
+    GST_DEBUG ("removing bus watch");
+    bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (priv->pipeline));
+    gst_bus_remove_watch (bus);
+    gst_object_unref (bus);
+
     GST_DEBUG ("destroy source");
     g_source_destroy (priv->source);
     g_source_unref (priv->source);
+    priv->source = NULL;
   }
   if (priv->thread) {
     GST_DEBUG ("stop thread");
