@@ -248,6 +248,9 @@ libraries_map = {
 }
 
 if get_option('default_library') == 'static'
+  if not get_option('introspection').disabled()
+    error('GObject Introspection is not supported in static builds. Please use -Dintrospection=disabled')
+  endif
   # Generate a .c file which declare and register all built plugins
   plugins_names = []
   foreach plugin: all_plugins
