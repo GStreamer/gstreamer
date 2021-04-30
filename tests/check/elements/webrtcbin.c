@@ -3880,6 +3880,43 @@ GST_START_TEST (test_force_second_media)
 
 GST_END_TEST;
 
+GST_START_TEST (test_codec_preferences_caps)
+{
+  GstHarness *h;
+  GstPad *pad;
+  GstWebRTCRTPTransceiver *trans;
+  GstCaps *caps, *caps2;
+
+  h = gst_harness_new_with_padnames ("webrtcbin", "sink_0", NULL);
+  pad = gst_element_get_static_pad (h->element, "sink_0");
+
+  g_object_get (pad, "transceiver", &trans, NULL);
+
+  caps = gst_caps_from_string ("application/x-rtp, media=video,"
+      "encoding-name=VP8, payload=115; application/x-rtp, media=video,"
+      " encoding-name=H264, payload=104");
+  g_object_set (trans, "codec-preferences", caps, NULL);
+
+  caps2 = gst_pad_query_caps (pad, NULL);
+  fail_unless (gst_caps_is_equal (caps, caps2));
+  gst_caps_unref (caps2);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string (VP8_RTP_CAPS (115));
+  fail_unless (gst_pad_query_accept_caps (pad, caps));
+  gst_harness_set_src_caps (h, g_steal_pointer (&caps));
+
+  caps = gst_caps_from_string (VP8_RTP_CAPS (99));
+  fail_unless (!gst_pad_query_accept_caps (pad, caps));
+  gst_caps_unref (caps);
+
+  gst_object_unref (pad);
+  gst_object_unref (trans);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -3927,6 +3964,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_reject_create_offer);
     tcase_add_test (tc, test_reject_set_description);
     tcase_add_test (tc, test_force_second_media);
+    tcase_add_test (tc, test_codec_preferences_caps);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);

@@ -310,6 +310,80 @@ gst_webrtcbin_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return gst_pad_event_default (pad, parent, event);
 }
 
+static gboolean
+gst_webrtcbin_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstWebRTCBinPad *wpad = GST_WEBRTC_BIN_PAD (pad);
+  gboolean ret = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
+      GST_OBJECT_LOCK (wpad->trans);
+      if (wpad->trans->codec_preferences) {
+        GstCaps *caps;
+
+        gst_query_parse_accept_caps (query, &caps);
+
+        gst_query_set_accept_caps_result (query,
+            gst_caps_can_intersect (caps, wpad->trans->codec_preferences));
+        ret = TRUE;
+      }
+      GST_OBJECT_UNLOCK (wpad->trans);
+      break;
+
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *codec_preferences = NULL;
+
+      GST_OBJECT_LOCK (wpad->trans);
+      if (wpad->trans->codec_preferences)
+        codec_preferences = gst_caps_ref (wpad->trans->codec_preferences);
+      GST_OBJECT_UNLOCK (wpad->trans);
+
+      if (codec_preferences) {
+        GstCaps *filter = NULL;
+        GstCaps *filter_prefs = NULL;
+        GstPad *target;
+
+        gst_query_parse_caps (query, &filter);
+
+        if (filter) {
+          filter_prefs = gst_caps_intersect_full (filter, codec_preferences,
+              GST_CAPS_INTERSECT_FIRST);
+          gst_caps_unref (codec_preferences);
+        } else {
+          filter_prefs = codec_preferences;
+        }
+
+        target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
+        if (target) {
+          GstCaps *result;
+
+          result = gst_pad_query_caps (target, filter_prefs);
+          gst_query_set_caps_result (query, result);
+          gst_caps_unref (result);
+
+          gst_object_unref (target);
+        } else {
+          gst_query_set_caps_result (query, filter_prefs);
+        }
+
+        gst_caps_unref (filter_prefs);
+        ret = TRUE;
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  if (ret)
+    return TRUE;
+
+  return gst_pad_query_default (pad, parent, query);
+}
+
+
 static void
 gst_webrtc_bin_pad_init (GstWebRTCBinPad * pad)
 {
@@ -334,6 +408,7 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
   gst_object_unref (template);
 
   gst_pad_set_event_function (GST_PAD (pad), gst_webrtcbin_sink_event);
+  gst_pad_set_query_function (GST_PAD (pad), gst_webrtcbin_sink_query);
 
   GST_DEBUG_OBJECT (pad, "new visible pad with direction %s",
       direction == GST_PAD_SRC ? "src" : "sink");
