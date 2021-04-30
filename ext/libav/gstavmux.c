@@ -908,6 +908,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
         (!strncmp (in_plugin->name, "ffmetadata", 10)) ||
         (!strncmp (in_plugin->name, "srt", 3)) ||
         (!strncmp (in_plugin->name, "scc", 3)) ||
+        !strcmp (in_plugin->name, "ttml") ||
         !strcmp (in_plugin->name, "segment") ||
         !strcmp (in_plugin->name, "stream_segment,ssegment") ||
         !strcmp (in_plugin->name, "jacosub") ||
