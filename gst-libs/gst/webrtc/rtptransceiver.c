@@ -81,10 +81,14 @@ gst_webrtc_rtp_transceiver_set_property (GObject * object, guint prop_id,
       webrtc->mline = g_value_get_uint (value);
       break;
     case PROP_DIRECTION:
+      GST_OBJECT_LOCK (webrtc);
       webrtc->direction = g_value_get_enum (value);
+      GST_OBJECT_UNLOCK (webrtc);
       break;
     case PROP_CODEC_PREFERENCES:
+      GST_OBJECT_LOCK (webrtc);
       gst_caps_replace (&webrtc->codec_preferences, g_value_get_boxed (value));
+      GST_OBJECT_UNLOCK (webrtc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -112,7 +116,9 @@ gst_webrtc_rtp_transceiver_get_property (GObject * object, guint prop_id,
       g_value_set_uint (value, webrtc->mline);
       break;
     case PROP_DIRECTION:
+      GST_OBJECT_LOCK (webrtc);
       g_value_set_enum (value, webrtc->direction);
+      GST_OBJECT_UNLOCK (webrtc);
       break;
     case PROP_CURRENT_DIRECTION:
       g_value_set_enum (value, webrtc->current_direction);
@@ -121,7 +127,9 @@ gst_webrtc_rtp_transceiver_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, webrtc->kind);
       break;
     case PROP_CODEC_PREFERENCES:
+      GST_OBJECT_LOCK (webrtc);
       gst_value_set_caps (value, webrtc->codec_preferences);
+      GST_OBJECT_UNLOCK (webrtc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
