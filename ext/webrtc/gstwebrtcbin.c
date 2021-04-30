@@ -1580,6 +1580,7 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
 {
   WebRTCTransceiver *trans = (WebRTCTransceiver *) rtp_trans;
   GstCaps *ret = NULL;
+  GstCaps *codec_preferences = NULL;
   GstWebRTCBinPad *pad = NULL;
   GST_LOG_OBJECT (webrtc, "retrieving codec preferences from %" GST_PTR_FORMAT,
       trans);
@@ -1589,23 +1590,18 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
     if (rtp_trans->codec_preferences) {
       GST_LOG_OBJECT (webrtc, "Using codec preferences: %" GST_PTR_FORMAT,
           rtp_trans->codec_preferences);
-      ret = gst_caps_ref (rtp_trans->codec_preferences);
+      codec_preferences = gst_caps_ref (rtp_trans->codec_preferences);
     }
     GST_OBJECT_UNLOCK (rtp_trans);
 
-    if (ret)
-      return ret;
+    pad = _find_pad_for_transceiver (webrtc, direction, rtp_trans);
   }
 
   /* try to find a pad */
-  if (!trans
-      || !(pad = _find_pad_for_transceiver (webrtc, direction, rtp_trans)))
+  if (!pad)
     pad = _find_pad_for_mline (webrtc, direction, media_idx);
 
-  if (!pad) {
-    if (trans && trans->last_configured_caps)
-      ret = gst_caps_ref (trans->last_configured_caps);
-  } else {
+  if (pad) {
     GstCaps *caps = NULL;
 
     if (pad->received_caps) {
@@ -1635,6 +1631,22 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
       }
       gst_caps_unref (filter);
     }
+
+    if (caps && codec_preferences) {
+      GstCaps *intersection;
+
+      intersection = gst_caps_intersect_full (codec_preferences, caps,
+          GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+
+      if (gst_caps_is_empty (intersection)) {
+        caps = NULL;
+        gst_caps_unref (intersection);
+      } else {
+        caps = intersection;
+      }
+    }
+
     if (caps) {
       if (trans)
         gst_caps_replace (&trans->last_configured_caps, caps);
@@ -1643,7 +1655,15 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
     }
 
     gst_object_unref (pad);
+  } else {
+    if (codec_preferences)
+      ret = gst_caps_ref (codec_preferences);
+    else if (trans && trans->last_configured_caps)
+      ret = gst_caps_ref (trans->last_configured_caps);
   }
+
+  if (codec_preferences)
+    gst_caps_unref (codec_preferences);
 
   if (!ret)
     GST_DEBUG_OBJECT (trans, "Could not find caps for mline %u", media_idx);
