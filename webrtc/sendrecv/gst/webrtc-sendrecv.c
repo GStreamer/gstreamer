@@ -8,6 +8,7 @@
  */
 #include <gst/gst.h>
 #include <gst/sdp/sdp.h>
+#include <gst/rtp/rtp.h>
 
 #define GST_USE_UNSTABLE_API
 #include <gst/webrtc/webrtc.h>
@@ -38,6 +39,9 @@ enum AppState
   PEER_CALL_STOPPED,
   PEER_CALL_ERROR,
 };
+
+#define GST_CAT_DEFAULT webrtc_sendrecv_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static GMainLoop *loop;
 static GstElement *pipe1, *webrtc1 = NULL;
@@ -372,6 +376,53 @@ on_ice_gathering_state_notify (GstElement * webrtcbin, GParamSpec * pspec,
   gst_print ("ICE gathering state changed to %s\n", new_state);
 }
 
+static gboolean webrtcbin_get_stats (GstElement * webrtcbin);
+
+static gboolean
+on_webrtcbin_stat (GQuark field_id, const GValue * value, gpointer unused)
+{
+  if (GST_VALUE_HOLDS_STRUCTURE (value)) {
+    GST_DEBUG ("stat: \'%s\': %" GST_PTR_FORMAT, g_quark_to_string (field_id),
+        gst_value_get_structure (value));
+  } else {
+    GST_FIXME ("unknown field \'%s\' value type: \'%s\'",
+        g_quark_to_string (field_id), g_type_name (G_VALUE_TYPE (value)));
+  }
+
+  return TRUE;
+}
+
+static void
+on_webrtcbin_get_stats (GstPromise * promise, GstElement * webrtcbin)
+{
+  const GstStructure *stats;
+
+  g_return_if_fail (gst_promise_wait (promise) == GST_PROMISE_RESULT_REPLIED);
+
+  stats = gst_promise_get_reply (promise);
+  gst_structure_foreach (stats, on_webrtcbin_stat, NULL);
+
+  g_timeout_add (100, (GSourceFunc) webrtcbin_get_stats, webrtcbin);
+}
+
+static gboolean
+webrtcbin_get_stats (GstElement * webrtcbin)
+{
+  GstPromise *promise;
+
+  promise =
+      gst_promise_new_with_change_func (
+      (GstPromiseChangeFunc) on_webrtcbin_get_stats, webrtcbin, NULL);
+
+  GST_TRACE ("emitting get-stats on %" GST_PTR_FORMAT, webrtcbin);
+  g_signal_emit_by_name (webrtcbin, "get-stats", NULL, promise);
+  gst_promise_unref (promise);
+
+  return G_SOURCE_REMOVE;
+}
+
+#define RTP_TWCC_URI "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+
 static gboolean
 start_pipeline (gboolean create_offer)
 {
@@ -381,9 +432,16 @@ start_pipeline (gboolean create_offer)
   pipe1 =
       gst_parse_launch ("webrtcbin bundle-policy=max-bundle name=sendrecv "
       STUN_SERVER
-      "videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! vp8enc deadline=1 ! rtpvp8pay ! "
+      "videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! "
+      /* increase the default keyframe distance, browsers have really long
+       * periods between keyframes and rely on PLI events on packet loss to
+       * fix corrupted video.
+       */
+      "vp8enc deadline=1 keyframe-max-dist=2000 ! "
+      /* picture-id-mode=15-bit seems to make TWCC stats behave better */
+      "rtpvp8pay name=videopay picture-id-mode=15-bit ! "
       "queue ! " RTP_CAPS_VP8 "96 ! sendrecv. "
-      "audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay ! "
+      "audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay name=audiopay ! "
       "queue ! " RTP_CAPS_OPUS "97 ! sendrecv. ", &error);
 
   if (error) {
@@ -394,6 +452,35 @@ start_pipeline (gboolean create_offer)
 
   webrtc1 = gst_bin_get_by_name (GST_BIN (pipe1), "sendrecv");
   g_assert_nonnull (webrtc1);
+
+  if (remote_is_offerer) {
+    /* XXX: this will fail when the remote offers twcc as the extension id
+     * cannot currently be negotiated when receiving an offer.
+     */
+    GST_FIXME ("Need to implement header extension negotiation when "
+        "reciving a remote offers");
+  } else {
+    GstElement *videopay, *audiopay;
+    GstRTPHeaderExtension *video_twcc, *audio_twcc;
+
+    videopay = gst_bin_get_by_name (GST_BIN (pipe1), "videopay");
+    g_assert_nonnull (videopay);
+    video_twcc = gst_rtp_header_extension_create_from_uri (RTP_TWCC_URI);
+    g_assert_nonnull (video_twcc);
+    gst_rtp_header_extension_set_id (video_twcc, 1);
+    g_signal_emit_by_name (videopay, "add-extension", video_twcc);
+    g_clear_object (&video_twcc);
+    g_clear_object (&videopay);
+
+    audiopay = gst_bin_get_by_name (GST_BIN (pipe1), "audiopay");
+    g_assert_nonnull (audiopay);
+    audio_twcc = gst_rtp_header_extension_create_from_uri (RTP_TWCC_URI);
+    g_assert_nonnull (audio_twcc);
+    gst_rtp_header_extension_set_id (audio_twcc, 1);
+    g_signal_emit_by_name (audiopay, "add-extension", audio_twcc);
+    g_clear_object (&audio_twcc);
+    g_clear_object (&audiopay);
+  }
 
   /* This is the gstwebrtc entry point where we create the offer and so on. It
    * will be called when the pipeline goes to PLAYING. */
@@ -425,6 +512,8 @@ start_pipeline (gboolean create_offer)
       pipe1);
   /* Lifetime is the same as the pipeline itself */
   gst_object_unref (webrtc1);
+
+  g_timeout_add (100, (GSourceFunc) webrtcbin_get_stats, webrtc1);
 
   gst_print ("Starting pipeline\n");
   ret = gst_element_set_state (GST_ELEMENT (pipe1), GST_STATE_PLAYING);
@@ -831,6 +920,9 @@ main (int argc, char *argv[])
     gst_printerr ("Error initializing: %s\n", error->message);
     return -1;
   }
+
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "webrtc-sendrecv", 0,
+      "WebRTC Sending and Receiving example");
 
   if (!check_plugins ()) {
     goto out;
