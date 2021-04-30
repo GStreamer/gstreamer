@@ -239,17 +239,26 @@ def get_subprocess_env(options, gst_version):
 
     env["CURRENT_GST"] = os.path.normpath(SCRIPTDIR)
     env["GST_VERSION"] = gst_version
-    env["GST_VALIDATE_SCENARIOS_PATH"] = os.path.normpath(
-        "%s/subprojects/gst-devtools/validate/data/scenarios" % SCRIPTDIR)
+    prepend_env_var (env, "GST_VALIDATE_SCENARIOS_PATH", os.path.normpath(
+        "%s/subprojects/gst-devtools/validate/data/scenarios" % SCRIPTDIR),
+        options.sysroot)
     env["GST_VALIDATE_PLUGIN_PATH"] = os.path.normpath(
         "%s/subprojects/gst-devtools/validate/plugins" % options.builddir)
-    env["GST_VALIDATE_APPS_DIR"] = os.path.normpath(
-        "%s/subprojects/gst-editing-services/tests/validate" % SCRIPTDIR)
+    prepend_env_var (env, "GST_VALIDATE_APPS_DIR", os.path.normpath(
+        "%s/subprojects/gst-editing-services/tests/validate" % SCRIPTDIR),
+        options.sysroot)
     env["GST_ENV"] = 'gst-' + gst_version
     env["GST_REGISTRY"] = os.path.normpath(options.builddir + "/registry.dat")
     prepend_env_var(env, "PATH", os.path.normpath(
         "%s/subprojects/gst-devtools/validate/tools" % options.builddir),
         options.sysroot)
+
+    prepend_env_var (env, "GST_VALIDATE_SCENARIOS_PATH", os.path.normpath(
+        "%s/subprojects/gst-examples/webrtc/check/validate/scenarios" %
+        SCRIPTDIR), options.sysroot)
+    prepend_env_var (env, "GST_VALIDATE_APPS_DIR", os.path.normpath(
+        "%s/subprojects/gst-examples/webrtc/check/validate/apps" %
+        SCRIPTDIR), options.sysroot)
 
     if options.wine:
         return get_wine_subprocess_env(options, env)
