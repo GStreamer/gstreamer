@@ -452,8 +452,36 @@
                         "type": "GstCaps",
                         "writable": true
                     },
+                    "current-level-buffers": {
+                        "blurb": "The number of currently queued buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
                     "current-level-bytes": {
                         "blurb": "The number of currently queued bytes",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
+                    "current-level-time": {
+                        "blurb": "The amount of currently queued time",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
@@ -528,6 +556,20 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "max-buffers": {
+                        "blurb": "The maximum number of buffers to queue internally (0 = unlimited)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
                     "max-bytes": {
                         "blurb": "The maximum number of bytes to queue internally (0 = unlimited)",
                         "conditionally-available": false,
@@ -554,6 +596,20 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gint64",
+                        "writable": true
+                    },
+                    "max-time": {
+                        "blurb": "The maximum amount of time to queue internally (0 = unlimited)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
                         "writable": true
                     },
                     "min-latency": {

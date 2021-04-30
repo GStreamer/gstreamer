@@ -155,6 +155,24 @@ GST_APP_API
 guint64          gst_app_src_get_current_level_bytes (GstAppSrc *appsrc);
 
 GST_APP_API
+void             gst_app_src_set_max_buffers           (GstAppSrc *appsrc, guint64 max);
+
+GST_APP_API
+guint64          gst_app_src_get_max_buffers           (GstAppSrc *appsrc);
+
+GST_APP_API
+guint64          gst_app_src_get_current_level_buffers (GstAppSrc *appsrc);
+
+GST_APP_API
+void             gst_app_src_set_max_time            (GstAppSrc *appsrc, GstClockTime max);
+
+GST_APP_API
+GstClockTime     gst_app_src_get_max_time            (GstAppSrc *appsrc);
+
+GST_APP_API
+GstClockTime     gst_app_src_get_current_level_time  (GstAppSrc *appsrc);
+
+GST_APP_API
 void             gst_app_src_set_latency             (GstAppSrc *appsrc, guint64 min, guint64 max);
 
 GST_APP_API
