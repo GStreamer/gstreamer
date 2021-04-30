@@ -470,6 +470,7 @@ gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
     } else {
       gst_caps_replace (&caps, alpha_only_caps);
     }
+    gst_caps_unref (alpha_only_caps);
   }
 
   caps = gst_caps_make_writable (caps);
