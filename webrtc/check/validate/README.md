@@ -14,4 +14,4 @@ testing framework.
 
 # Run the tests
 
-`GST_VALIDATE_APPS_DIR=/path/to/gstwebrtc-demos/check/validate/apps/ GST_VALIDATE_SCENARIOS_PATH=/path/to/gstwebrtc-demos/check/validate/scenarios/ gst-validate-launcher --testsuites-dir /path/to/gstwebrtc-demos/check/validate/testsuites/ webrtc`
+`GST_VALIDATE_APPS_DIR=/path/to/gst-examples/webrtc/check/validate/apps/ GST_VALIDATE_SCENARIOS_PATH=/path/to/gst-examples/webrtc/check/validate/scenarios/ gst-validate-launcher --testsuites-dir /path/to/gst-examples/webrtc/check/validate/testsuites/ webrtc`
