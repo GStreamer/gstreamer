@@ -295,20 +295,20 @@ _setup_test (GstElement * pipeline, gdouble rate)
   nle_source =
       audiotest_bin_src ("nle_source", 3 * GST_SECOND, 4 * GST_SECOND, 3,
       FALSE);
-  g_object_set (nle_source, "inpoint", 7 * GST_SECOND, NULL);
+  g_object_set (nle_source, "inpoint", (guint64) 7 * GST_SECOND, NULL);
   src = _get_source (nle_source);
   g_object_set (src, "name", "middle-source", NULL);
 
   nle_prev =
       audiotest_bin_src ("nle_previous", 0 * GST_SECOND, 3 * GST_SECOND, 2,
       FALSE);
-  g_object_set (nle_prev, "inpoint", 99 * GST_SECOND, NULL);
+  g_object_set (nle_prev, "inpoint", (guint64) 99 * GST_SECOND, NULL);
   prev = _get_source (nle_prev);
   g_object_set (src, "name", "previous-source", NULL);
 
   nle_post =
       audiotest_bin_src ("post", 7 * GST_SECOND, 5 * GST_SECOND, 2, FALSE);
-  g_object_set (nle_post, "inpoint", 20 * GST_SECOND, NULL);
+  g_object_set (nle_post, "inpoint", (guint64) 20 * GST_SECOND, NULL);
   post = _get_source (nle_post);
   g_object_set (src, "name", "post-source", NULL);
 
@@ -325,7 +325,7 @@ _setup_test (GstElement * pipeline, gdouble rate)
    * duration */
   nle_identity =
       new_operation ("nle_identity", "identity", 0, 12 * GST_SECOND, 1);
-  g_object_set (nle_identity, "inpoint", 5 * GST_SECOND, NULL);
+  g_object_set (nle_identity, "inpoint", (guint64) 5 * GST_SECOND, NULL);
   fail_unless (g_list_length (GST_BIN_CHILDREN (nle_oper)) == 1);
   identity = GST_ELEMENT (GST_BIN_CHILDREN (nle_identity)->data);
 

@@ -53,7 +53,7 @@ GST_START_TEST (test_layer_properties)
   fail_unless (clip != NULL);
 
   /* Set some properties */
-  g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 51,
+  g_object_set (clip, "start", (guint64) 42, "duration", (gint64) 51,
       "in-point", (guint64) 12, NULL);
   assert_equals_uint64 (_START (clip), 42);
   assert_equals_uint64 (_DURATION (clip), 51);
@@ -144,9 +144,9 @@ GST_START_TEST (test_layer_priorities)
   fail_unless (clip2 != NULL);
   fail_unless (clip3 != NULL);
 
-  g_object_set (clip1, "start", 0, "duration", 10, NULL);
-  g_object_set (clip2, "start", 10, "duration", 10, NULL);
-  g_object_set (clip3, "start", 20, "duration", 10, NULL);
+  g_object_set (clip1, "start", (guint64) 0, "duration", (gint64) 10, NULL);
+  g_object_set (clip2, "start", (guint64) 10, "duration", (gint64) 10, NULL);
+  g_object_set (clip3, "start", (guint64) 20, "duration", (gint64) 10, NULL);
 
   /* Add objects to the timeline */
   fail_unless (ges_layer_add_clip (layer1, clip1));
@@ -1606,7 +1606,7 @@ GST_START_TEST (test_layer_get_clips_in_interval)
 
   clip = (GESClip *) ges_test_clip_new ();
   fail_unless (clip != NULL);
-  g_object_set (clip, "start", 10, "duration", 30, NULL);
+  g_object_set (clip, "start", (guint64) 10, "duration", (gint64) 30, NULL);
   assert_equals_uint64 (_START (clip), 10);
   assert_equals_uint64 (_DURATION (clip), 30);
 
@@ -1662,7 +1662,7 @@ GST_START_TEST (test_layer_get_clips_in_interval)
   /* Multiple intersecting clips */
   clip2 = (GESClip *) ges_test_clip_new ();
   fail_unless (clip2 != NULL);
-  g_object_set (clip2, "start", 50, "duration", 10, NULL);
+  g_object_set (clip2, "start", (guint64) 50, "duration", (gint64) 10, NULL);
   assert_equals_uint64 (_START (clip2), 50);
   assert_equals_uint64 (_DURATION (clip2), 10);
 
@@ -1670,7 +1670,7 @@ GST_START_TEST (test_layer_get_clips_in_interval)
 
   clip3 = (GESClip *) ges_test_clip_new ();
   fail_unless (clip3 != NULL);
-  g_object_set (clip3, "start", 0, "duration", 5, NULL);
+  g_object_set (clip3, "start", (guint64) 0, "duration", (gint64) 5, NULL);
   assert_equals_uint64 (_START (clip3), 0);
   assert_equals_uint64 (_DURATION (clip3), 5);
 
