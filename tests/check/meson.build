@@ -104,10 +104,10 @@ if gstvalidate_dep.found()
 
     if is_validatetest
       testfile = meson.current_source_dir() / 'scenarios' / scenario + '.validatetest'
-      test(scenario, ges_launch, env: env, args: ['--set-test-file', testfile, '--mute'])
+      test(scenario, ges_launch, env: env, args: ['--no-interactive', '--set-test-file', testfile, '--mute'])
     else
       scenario_file = meson.current_source_dir() / 'scenarios' / scenario + '.scenario'
-      test(scenario, ges_launch, env: env, args: ['--set-scenario', scenario_file])
+      test(scenario, ges_launch, env: env, args: ['--no-interactive', '--set-scenario', scenario_file])
     endif
 
   endforeach
