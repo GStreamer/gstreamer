@@ -367,11 +367,15 @@ GES_START_VALIDATE_ACTION (_edit)
   REPORT_UNLESS (element, beach, "Could not find element %s", element_name);
 
   if (!_get_clocktime (action->structure, "position", &position, &fposition)) {
-    fposition = 0;
-    if (!gst_structure_get_int (action->structure, "source-frame",
-            (gint *) & fposition)
-        && !gst_structure_get_int64 (action->structure, "source-frame",
-            &fposition)) {
+    gint pos;
+    gint64 pos64;
+
+    if (gst_structure_get_int (action->structure, "source-frame", &pos)) {
+      fposition = pos;
+    } else if (gst_structure_get_int64 (action->structure, "source-frame",
+            &pos64)) {
+      fposition = pos64;
+    } else {
       gchar *structstr = gst_structure_to_string (action->structure);
 
       GST_VALIDATE_REPORT_ACTION (scenario, action,
