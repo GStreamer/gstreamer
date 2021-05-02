@@ -556,6 +556,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "leaky-type": {
+                        "blurb": "Whether to drop buffers once the internal queue is full",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "GstAppLeakyType",
+                        "writable": true
+                    },
                     "max-buffers": {
                         "blurb": "The maximum number of buffers to queue internally (0 = unlimited)",
                         "conditionally-available": false,
