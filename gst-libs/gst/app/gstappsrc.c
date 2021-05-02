@@ -2003,16 +2003,24 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
 flushing:
   {
     GST_DEBUG_OBJECT (appsrc, "refuse buffer %p, we are flushing", buffer);
-    if (steal_ref)
-      gst_buffer_unref (buffer);
+    if (steal_ref) {
+      if (buflist)
+        gst_buffer_list_unref (buflist);
+      else
+        gst_buffer_unref (buffer);
+    }
     g_mutex_unlock (&priv->mutex);
     return GST_FLOW_FLUSHING;
   }
 eos:
   {
     GST_DEBUG_OBJECT (appsrc, "refuse buffer %p, we are EOS", buffer);
-    if (steal_ref)
-      gst_buffer_unref (buffer);
+    if (steal_ref) {
+      if (buflist)
+        gst_buffer_list_unref (buflist);
+      else
+        gst_buffer_unref (buffer);
+    }
     g_mutex_unlock (&priv->mutex);
     return GST_FLOW_EOS;
   }
