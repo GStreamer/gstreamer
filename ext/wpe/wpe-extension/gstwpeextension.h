@@ -23,3 +23,4 @@
 void gst_wpe_extension_send_message (WebKitUserMessage *msg, GCancellable *cancellable, GAsyncReadyCallback cb, gpointer udata);
 
 G_DECLARE_FINAL_TYPE (GstWpeAudioSink, gst_wpe_audio_sink, GST, WPE_AUDIO_SINK, GstBaseSink);
+G_DECLARE_FINAL_TYPE (GstWpeBusMsgForwarder, gst_wpe_bus_msg_forwarder, GST, WPE_BUS_MSG_FORWARDER, GstTracer);

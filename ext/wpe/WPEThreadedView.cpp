@@ -174,6 +174,87 @@ initialize_web_extensions (WebKitWebContext *context)
     webkit_web_context_set_web_extensions_directory (context, gst_wpe_get_extension_path ());
 }
 
+static void
+webkit_extension_gerror_msg_received (GstWpeSrc *src, GVariant *params)
+{
+    GstMessage *message;
+    const gchar *message_type, *src_path, *error_domain, *msg, *debug_str, *details_str;
+    guint32 error_code;
+
+    g_variant_get (params, "(sssusss)",
+       &message_type,
+       &src_path,
+       &error_domain,
+       &error_code,
+       &msg,
+       &debug_str,
+       &details_str
+    );
+
+    GError *error = g_error_new(g_quark_from_string(error_domain), error_code, "%s", msg);
+    GstStructure *details = (details_str[0] != '\0') ? gst_structure_new_from_string(details_str) : NULL;
+    gchar * our_message = g_strdup_printf(
+        "`%s` posted from %s running inside the web page",
+        debug_str, src_path
+    );
+
+    if (!details)
+        details = gst_structure_new_empty("wpesrcdetails");
+    gst_structure_set(details,
+                      "wpesrc_original_src_path", G_TYPE_STRING, src_path,
+                      NULL);
+
+    if (!g_strcmp0(message_type, "error")) {
+        message =
+            gst_message_new_error_with_details(GST_OBJECT(src), error,
+                                               our_message, details);
+    } else if (!g_strcmp0(message_type, "warning")) {
+        message =
+            gst_message_new_warning_with_details(GST_OBJECT(src), error,
+                                                 our_message, details);
+    } else {
+        message =
+            gst_message_new_info_with_details(GST_OBJECT(src), error, our_message, details);
+    }
+
+    g_free (our_message);
+    gst_element_post_message(GST_ELEMENT(src), message);
+    g_error_free(error);
+}
+
+static void
+webkit_extension_bus_message_received (GstWpeSrc *src, GVariant *params)
+{
+    GstStructure *structure;
+    const gchar *message_type, *src_name, *src_type, *src_path, *struct_str;
+
+    g_variant_get (params, "(sssss)",
+       &message_type,
+       &src_name,
+       &src_type,
+       &src_path,
+       &struct_str
+    );
+
+    structure = (struct_str[0] != '\0') ? gst_structure_new_from_string(struct_str) : NULL;
+    if (!structure)
+    {
+        if (struct_str[0] != '\0')
+            GST_ERROR_OBJECT(src, "Could not deserialize: %s", struct_str);
+        structure = gst_structure_new_empty("wpesrc");
+    }
+
+    gst_structure_set(structure,
+                      "wpesrc_original_message_type", G_TYPE_STRING, message_type,
+                      "wpesrc_original_src_name", G_TYPE_STRING, src_name,
+                      "wpesrc_original_src_type", G_TYPE_STRING, src_type,
+                      "wpesrc_original_src_path", G_TYPE_STRING, src_path,
+                      NULL);
+
+    gst_element_post_message(GST_ELEMENT(src), gst_message_new_custom(GST_MESSAGE_ELEMENT,
+                                                                      GST_OBJECT(src), structure));
+}
+
 static gboolean
 webkit_extension_msg_received (WebKitWebContext  *context,
                WebKitUserMessage *message,
@@ -208,6 +289,10 @@ webkit_extension_msg_received (WebKitWebContext  *context,
         guint32 id = g_variant_get_uint32 (params);
 
         gst_wpe_src_stop_audio_stream (src, id);
+    } else if (!g_strcmp0(name, "gstwpe.bus_gerror_message")) {
+        webkit_extension_gerror_msg_received (src, params);
+    } else if (!g_strcmp0(name, "gstwpe.bus_message")) {
+        webkit_extension_bus_message_received (src, params);
     } else {
         res = FALSE;
         g_error("Unknown event: %s", name);
