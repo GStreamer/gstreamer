@@ -129,7 +129,7 @@ QtGLVideoItem::QtGLVideoItem()
 
   g_mutex_init (&this->priv->lock);
 
-  this->priv->display = gst_qt_get_gl_display();
+  this->priv->display = gst_qt_get_gl_display(TRUE);
 
   connect(this, SIGNAL(windowChanged(QQuickWindow*)), this,
           SLOT(handleWindowChanged(QQuickWindow*)));

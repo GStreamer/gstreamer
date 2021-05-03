@@ -60,9 +60,10 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 G_LOCK_DEFINE_STATIC (display_lock);
 static GWeakRef qt_display;
+static gboolean sink_retrieved = FALSE;
 
 GstGLDisplay *
-gst_qt_get_gl_display ()
+gst_qt_get_gl_display (gboolean sink)
 {
   GstGLDisplay *display = NULL;
   QGuiApplication *app = static_cast<QGuiApplication *> (QCoreApplication::instance ());
@@ -80,9 +81,14 @@ gst_qt_get_gl_display ()
   /* XXX: this assumes that only one display will ever be created by Qt */
   display = static_cast<GstGLDisplay *>(g_weak_ref_get (&qt_display));
   if (display) {
-    GST_INFO ("returning previously created display");
-    G_UNLOCK (display_lock);
-    return display;
+    if (sink_retrieved) {
+      GST_INFO ("returning previously created display");
+      G_UNLOCK (display_lock);
+      return display;
+    } else if (sink) {
+      sink_retrieved = sink;
+    }
+    gst_clear_object (&display);
   }
 
   GST_INFO ("QGuiApplication::instance()->platformName() %s", app->platformName().toUtf8().data());

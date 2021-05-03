@@ -468,7 +468,7 @@ gst_qt_overlay_change_state (GstElement * element,
         return GST_STATE_CHANGE_FAILURE;
       }
 
-      display = gst_qt_get_gl_display ();
+      display = gst_qt_get_gl_display (FALSE);
 
       if (display != filter->display)
         /* always propagate. The application may need to choose between window

@@ -117,7 +117,7 @@ QtGLWindow::QtGLWindow ( QWindow * parent, QQuickWindow *src ) :
   g_mutex_init (&this->priv->lock);
   g_cond_init (&this->priv->update_cond);
 
-  this->priv->display = gst_qt_get_gl_display();
+  this->priv->display = gst_qt_get_gl_display(FALSE);
 
   connect (source, SIGNAL(beforeRendering()), this, SLOT(beforeRendering()), Qt::DirectConnection);
   connect (source, SIGNAL(afterRendering()), this, SLOT(afterRendering()), Qt::DirectConnection);
