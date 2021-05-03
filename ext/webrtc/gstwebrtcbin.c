@@ -467,7 +467,8 @@ enum
   PROP_BUNDLE_POLICY,
   PROP_ICE_TRANSPORT_POLICY,
   PROP_ICE_AGENT,
-  PROP_LATENCY
+  PROP_LATENCY,
+  PROP_SCTP_TRANSPORT,
 };
 
 static guint gst_webrtc_bin_signals[LAST_SIGNAL] = { 0 };
@@ -6914,6 +6915,9 @@ gst_webrtc_bin_get_property (GObject * object, guint prop_id,
     case PROP_LATENCY:
       g_value_set_uint (value, webrtc->priv->jb_latency);
       break;
+    case PROP_SCTP_TRANSPORT:
+      g_value_set_object (value, webrtc->priv->sctp_transport);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -7190,6 +7194,19 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
           "Default duration to buffer in the jitterbuffers (in ms)",
           0, G_MAXUINT, DEFAULT_JB_LATENCY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebRTCBin:sctp-transport:
+   *
+   * The WebRTC SCTP Transport
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_SCTP_TRANSPORT,
+      g_param_spec_object ("sctp-transport", "WebRTC SCTP Transport",
+          "The WebRTC SCTP Transport",
+          GST_TYPE_OBJECT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstWebRTCBin::create-offer:
