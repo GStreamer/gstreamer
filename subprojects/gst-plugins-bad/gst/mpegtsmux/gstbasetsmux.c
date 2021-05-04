@@ -1550,8 +1550,9 @@ deep_copy_sit (const GstMpegtsSCTESIT * sit)
  * to the application to ensure that that is the case.
  */
 static void
-handle_scte35_section (GstBaseTsMux * mux, GstMpegtsSection * section,
-    guint64 mpeg_pts_offset, GstStructure * rtime_map)
+handle_scte35_section (GstBaseTsMux * mux, GstEvent * event,
+    GstMpegtsSection * section, guint64 mpeg_pts_offset,
+    GstStructure * rtime_map)
 {
   GstMpegtsSCTESIT *sit;
   guint i;
@@ -1744,6 +1745,11 @@ handle_scte35_section (GstBaseTsMux * mux, GstMpegtsSection * section,
      * - Our own 1-hour offset
      */
     pts_adjust = sit->pts_adjustment + mpeg_pts_offset + TS_MUX_CLOCK_BASE;
+
+    /* Account for offsets potentially introduced between the demuxer and us */
+    pts_adjust +=
+        GSTTIME_TO_MPEGTIME (gst_event_get_running_time_offset (event));
+
     pts_adjust &= 0x1ffffffff;
     section_data = g_memdup (section->data, section->section_length);
     section_data[4] |= pts_adjust >> 32;
@@ -1790,7 +1796,7 @@ gst_base_ts_mux_send_event (GstElement * element, GstEvent * event)
     GST_DEBUG ("Received event with mpegts section");
 
     if (section->section_type == GST_MPEGTS_SECTION_SCTE_SIT) {
-      handle_scte35_section (mux, section, 0, NULL);
+      handle_scte35_section (mux, event, section, 0, NULL);
     } else {
       /* TODO: Check that the section type is supported */
       tsmux_add_mpegts_si_section (mux->tsmux, section);
@@ -1847,7 +1853,8 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
                 &rtime_map, NULL);
             gst_structure_get_uint64 (s, "mpeg-pts-offset", &mpeg_pts_offset);
 
-            handle_scte35_section (mux, section, mpeg_pts_offset, rtime_map);
+            handle_scte35_section (mux, event, section, mpeg_pts_offset,
+                rtime_map);
             if (rtime_map)
               gst_structure_free (rtime_map);
             mux->last_scte35_event_seqnum = gst_event_get_seqnum (event);
