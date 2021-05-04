@@ -172,6 +172,11 @@ GstSample *   gst_video_convert_sample       (GstSample     * sample,
                                               GstClockTime    timeout,
                                               GError       ** error);
 
+
+GST_VIDEO_API
+gboolean gst_video_orientation_from_tag (GstTagList * taglist,
+                                         GstVideoOrientationMethod * method);
+
 G_END_DECLS
 
 #include <gst/video/colorbalancechannel.h>
