@@ -654,10 +654,12 @@ gst_rtp_ext_list_filter (GstPluginFeature * feature, gpointer user_data)
 /**
  * gst_rtp_get_header_extension_list:
  *
- * Retrieve all the currently registered RTP header extensions
+ * Retrieve all the factories of the currently registered RTP header
+ * extensions.  Call gst_element_factory_create() with each factory to create
+ * the associated #GstRTPHeaderExtension.
  *
- * Returns: (transfer full) (element-type GstRTPHeaderExtension): a #GList of
- *     #GstRTPHeaderExtension. Use gst_plugin_feature_list_free() after use
+ * Returns: (transfer full) (element-type GstElementFactory): a #GList of
+ *     #GstElementFactory's. Use gst_plugin_feature_list_free() after use
  *
  * Since: 1.20
  */
