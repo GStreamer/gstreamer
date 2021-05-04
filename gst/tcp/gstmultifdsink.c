@@ -671,7 +671,7 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
 {
   gboolean more;
   gboolean flushing;
-  GstClockTime now;
+  GstClockTime now, now_monotonic;
   GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
   GstMultiHandleSinkClass *mhsinkclass =
       GST_MULTI_HANDLE_SINK_GET_CLASS (mhsink);
@@ -685,6 +685,7 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
     gint maxsize;
 
     now = g_get_real_time () * GST_USECOND;
+    now_monotonic = g_get_monotonic_time () * GST_USECOND;
 
     if (!mhclient->sending) {
       /* client is not working on a buffer */
@@ -811,6 +812,7 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
         /* update stats */
         mhclient->bytes_sent += wrote;
         mhclient->last_activity_time = now;
+        mhclient->last_activity_time_monotonic = now_monotonic;
         mhsink->bytes_served += wrote;
       }
     }
@@ -903,7 +905,7 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
     if (G_UNLIKELY (result == 0)) {
       GstClockTime now;
 
-      now = g_get_real_time () * GST_USECOND;
+      now = g_get_monotonic_time () * GST_USECOND;
 
       CLIENTS_LOCK (mhsink);
       for (clients = mhsink->clients; clients; clients = next) {
@@ -914,7 +916,7 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
         mhclient = (GstMultiHandleClient *) client;
         next = g_list_next (clients);
         if (mhsink->timeout > 0
-            && now - mhclient->last_activity_time > mhsink->timeout) {
+            && now - mhclient->last_activity_time_monotonic > mhsink->timeout) {
           mhclient->status = GST_CLIENT_STATUS_SLOW;
           gst_multi_handle_sink_remove_client_link (mhsink, clients);
         }

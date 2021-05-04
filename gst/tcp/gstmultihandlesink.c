@@ -543,9 +543,12 @@ gst_multi_handle_sink_client_init (GstMultiHandleClient * client,
 
   /* update start time */
   client->connect_time = g_get_real_time () * GST_USECOND;
+  client->connect_time_monotonic = g_get_monotonic_time () * GST_USECOND;
   client->disconnect_time = 0;
+  client->disconnect_time_monotonic = 0;
   /* set last activity time to connect time */
   client->last_activity_time = client->connect_time;
+  client->last_activity_time_monotonic = client->connect_time_monotonic;
 }
 
 static void
@@ -807,21 +810,28 @@ gst_multi_handle_sink_get_stats (GstMultiHandleSink * sink,
 
     result = gst_structure_new_empty ("multihandlesink-stats");
 
-    if (mhclient->disconnect_time == 0) {
-      interval = (g_get_real_time () * GST_USECOND) - mhclient->connect_time;
+    if (mhclient->disconnect_time_monotonic == 0) {
+      interval =
+          (g_get_monotonic_time () * GST_USECOND) -
+          mhclient->connect_time_monotonic;
     } else {
-      interval = mhclient->disconnect_time - mhclient->connect_time;
+      interval =
+          mhclient->disconnect_time_monotonic -
+          mhclient->connect_time_monotonic;
     }
 
     gst_structure_set (result,
         "bytes-sent", G_TYPE_UINT64, mhclient->bytes_sent,
         "connect-time", G_TYPE_UINT64, mhclient->connect_time,
-        "disconnect-time", G_TYPE_UINT64, mhclient->disconnect_time,
-        "connect-duration", G_TYPE_UINT64, interval,
-        "last-activity-time", G_TYPE_UINT64, mhclient->last_activity_time,
-        "buffers-dropped", G_TYPE_UINT64, mhclient->dropped_buffers,
-        "first-buffer-ts", G_TYPE_UINT64, mhclient->first_buffer_ts,
-        "last-buffer-ts", G_TYPE_UINT64, mhclient->last_buffer_ts, NULL);
+        "connect-time-monotonic", G_TYPE_UINT64,
+        mhclient->connect_time_monotonic, "disconnect-time", G_TYPE_UINT64,
+        mhclient->disconnect_time, "disconnect-time-monotonic", G_TYPE_UINT64,
+        mhclient->disconnect_time_monotonic, "connect-duration", G_TYPE_UINT64,
+        interval, "last-activity-time-monotonic", G_TYPE_UINT64,
+        mhclient->last_activity_time_monotonic, "buffers-dropped",
+        G_TYPE_UINT64, mhclient->dropped_buffers, "first-buffer-ts",
+        G_TYPE_UINT64, mhclient->first_buffer_ts, "last-buffer-ts",
+        G_TYPE_UINT64, mhclient->last_buffer_ts, NULL);
   }
 
 noclient:
@@ -891,6 +901,7 @@ gst_multi_handle_sink_remove_client_link (GstMultiHandleSink * sink,
   mhsinkclass->hash_removing (sink, mhclient);
 
   mhclient->disconnect_time = g_get_real_time () * GST_USECOND;
+  mhclient->disconnect_time_monotonic = g_get_monotonic_time () * GST_USECOND;
 
   /* free client buffers */
   g_slist_foreach (mhclient->sending, (GFunc) gst_mini_object_unref, NULL);
@@ -1652,7 +1663,7 @@ gst_multi_handle_sink_queue_buffer (GstMultiHandleSink * mhsink,
   }
 
   max_buffer_usage = 0;
-  now = g_get_real_time () * GST_USECOND;
+  now = g_get_monotonic_time () * GST_USECOND;
 
   /* now check for new or slow clients */
 restart:
@@ -1670,7 +1681,8 @@ restart:
     /* check hard max and timeout, remove client */
     if ((max_buffers > 0 && mhclient->bufpos >= max_buffers) ||
         (mhsink->timeout > 0
-            && now - mhclient->last_activity_time > mhsink->timeout)) {
+            && now - mhclient->last_activity_time_monotonic >
+            mhsink->timeout)) {
       /* remove client */
       GST_WARNING_OBJECT (sink, "%s client %p is too slow, removing",
           mhclient->debug, mhclient);
