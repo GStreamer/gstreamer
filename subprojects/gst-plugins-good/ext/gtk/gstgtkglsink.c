@@ -136,11 +136,14 @@ gst_gtk_gl_sink_set_property (GObject * object, guint prop_id,
 {
   switch (prop_id) {
     case PROP_ROTATE_METHOD:
-      gtk_gst_gl_widget_set_rotate_method (GTK_GST_GL_WIDGET
-          (gst_gtk_base_sink_acquire_widget (GST_GTK_BASE_SINK (object))),
+    {
+      GtkWidget *widget =
+          gst_gtk_base_sink_acquire_widget (GST_GTK_BASE_SINK (object));
+      gtk_gst_gl_widget_set_rotate_method (GTK_GST_GL_WIDGET (widget),
           g_value_get_enum (value), FALSE);
+      g_object_unref (widget);
       break;
-
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -154,11 +157,16 @@ gst_gtk_gl_sink_get_property (GObject * object, guint prop_id,
 {
   switch (prop_id) {
     case PROP_ROTATE_METHOD:
-      g_value_set_enum (value,
-          gtk_gst_gl_widget_get_rotate_method (GTK_GST_GL_WIDGET
-              (gst_gtk_base_sink_acquire_widget (GST_GTK_BASE_SINK (object)))));
-      break;
+    {
+      GtkWidget *widget =
+          gst_gtk_base_sink_acquire_widget (GST_GTK_BASE_SINK (object));
 
+      g_value_set_enum (value,
+          gtk_gst_gl_widget_get_rotate_method (GTK_GST_GL_WIDGET (widget)));
+      g_object_unref (widget);
+
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -454,6 +462,8 @@ gst_gtk_gl_sink_event (GstBaseSink * sink, GstEvent * event)
             (gst_gtk_base_sink_acquire_widget (GST_GTK_BASE_SINK (sink)));
 
         gtk_gst_gl_widget_set_rotate_method (widget, orientation, TRUE);
+
+        g_object_unref (widget);
       }
       break;
     default:

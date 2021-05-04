@@ -178,7 +178,7 @@ static GtkGstBaseWidget *
 gst_gtk_base_sink_get_widget (GstGtkBaseSink * gtk_sink)
 {
   if (gtk_sink->widget != NULL)
-    return gtk_sink->widget;
+    return g_object_ref (gtk_sink->widget);
 
   /* Ensure GTK is initialized, this has no side effect if it was already
    * initialized. Also, we do that lazily, so the application can be first */
@@ -211,7 +211,7 @@ gst_gtk_base_sink_get_widget (GstGtkBaseSink * gtk_sink)
   gtk_gst_base_widget_set_element (GTK_GST_BASE_WIDGET (gtk_sink->widget),
       GST_ELEMENT (gtk_sink));
 
-  return gtk_sink->widget;
+  return g_object_ref (gtk_sink->widget);
 }
 
 GtkWidget *
@@ -221,7 +221,7 @@ gst_gtk_base_sink_acquire_widget (GstGtkBaseSink * gtk_sink)
 
   GST_OBJECT_LOCK (gtk_sink);
   if (gtk_sink->widget != NULL)
-    widget = gtk_sink->widget;
+    widget = g_object_ref (gtk_sink->widget);
   GST_OBJECT_UNLOCK (gtk_sink);
 
   if (!widget)
@@ -241,7 +241,7 @@ gst_gtk_base_sink_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_WIDGET:
     {
-      g_value_set_object (value, gst_gtk_base_sink_acquire_widget (gtk_sink));
+      g_value_take_object (value, gst_gtk_base_sink_acquire_widget (gtk_sink));
       break;
     }
     case PROP_FORCE_ASPECT_RATIO:
