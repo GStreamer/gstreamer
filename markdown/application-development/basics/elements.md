@@ -329,9 +329,9 @@ GStreamer.
 
 By linking these three elements, we have created a very simple chain of
 elements. The effect of this will be that the output of the source
-element (“element1”) will be used as input for the filter-like element
-(“element2”). The filter-like element will do something with the data
-and send the result to the final sink element (“element3”).
+element will be used as input for the filter-like element. The filter-like
+element will do something with the data and send the result to the final
+sink element.
 
 Imagine the above graph as a simple Ogg/Vorbis audio decoder. The source
 is a disk source which reads the file from disc. The second element is a
