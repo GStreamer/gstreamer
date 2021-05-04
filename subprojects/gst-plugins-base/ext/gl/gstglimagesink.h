@@ -45,19 +45,6 @@ GST_DEBUG_CATEGORY_EXTERN (gst_debug_glimage_sink);
 #define GST_IS_GLIMAGE_SINK_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GLIMAGE_SINK))
 
-typedef enum
-{
-  GST_GL_ROTATE_METHOD_IDENTITY,
-  GST_GL_ROTATE_METHOD_90R,
-  GST_GL_ROTATE_METHOD_180,
-  GST_GL_ROTATE_METHOD_90L,
-  GST_GL_ROTATE_METHOD_FLIP_HORIZ,
-  GST_GL_ROTATE_METHOD_FLIP_VERT,
-  GST_GL_ROTATE_METHOD_FLIP_UL_LR,
-  GST_GL_ROTATE_METHOD_FLIP_UR_LL,
-  GST_GL_ROTATE_METHOD_AUTO,
-}GstGLRotateMethod;
-
 typedef struct _GstGLImageSink GstGLImageSink;
 typedef struct _GstGLImageSinkClass GstGLImageSinkClass;
 
@@ -139,8 +126,8 @@ struct _GstGLImageSink
     GstGLOverlayCompositor *overlay_compositor;
 
     /* current video flip method */
-    GstGLRotateMethod current_rotate_method;
-    GstGLRotateMethod rotate_method;
+    GstVideoOrientationMethod current_rotate_method;
+    GstVideoOrientationMethod rotate_method;
     const gfloat *transform_matrix;
 };
 
