@@ -41,7 +41,7 @@
 #define GST_CAT_DEFAULT gst_gl_video_flip_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define DEFAULT_METHOD GST_GL_VIDEO_FLIP_METHOD_IDENTITY
+#define DEFAULT_METHOD GST_VIDEO_ORIENTATION_IDENTITY
 
 enum
 {
@@ -72,18 +72,18 @@ static GstStaticPadTemplate _src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define GST_TYPE_GL_VIDEO_FLIP_METHOD (gst_video_flip_method_get_type())
 static const GEnumValue video_flip_methods[] = {
-  {GST_GL_VIDEO_FLIP_METHOD_IDENTITY, "Identity (no rotation)", "none"},
-  {GST_GL_VIDEO_FLIP_METHOD_90R, "Rotate clockwise 90 degrees", "clockwise"},
-  {GST_GL_VIDEO_FLIP_METHOD_180, "Rotate 180 degrees", "rotate-180"},
-  {GST_GL_VIDEO_FLIP_METHOD_90L, "Rotate counter-clockwise 90 degrees",
+  {GST_VIDEO_ORIENTATION_IDENTITY, "Identity (no rotation)", "none"},
+  {GST_VIDEO_ORIENTATION_90R, "Rotate clockwise 90 degrees", "clockwise"},
+  {GST_VIDEO_ORIENTATION_180, "Rotate 180 degrees", "rotate-180"},
+  {GST_VIDEO_ORIENTATION_90L, "Rotate counter-clockwise 90 degrees",
       "counterclockwise"},
-  {GST_GL_VIDEO_FLIP_METHOD_FLIP_HORIZ, "Flip horizontally", "horizontal-flip"},
-  {GST_GL_VIDEO_FLIP_METHOD_FLIP_VERT, "Flip vertically", "vertical-flip"},
-  {GST_GL_VIDEO_FLIP_METHOD_FLIP_UL_LR,
+  {GST_VIDEO_ORIENTATION_HORIZ, "Flip horizontally", "horizontal-flip"},
+  {GST_VIDEO_ORIENTATION_VERT, "Flip vertically", "vertical-flip"},
+  {GST_VIDEO_ORIENTATION_UL_LR,
       "Flip across upper left/lower right diagonal", "upper-left-diagonal"},
-  {GST_GL_VIDEO_FLIP_METHOD_FLIP_UR_LL,
+  {GST_VIDEO_ORIENTATION_UR_LL,
       "Flip across upper right/lower left diagonal", "upper-right-diagonal"},
-  {GST_GL_VIDEO_FLIP_METHOD_AUTO,
+  {GST_VIDEO_ORIENTATION_AUTO,
       "Select flip method based on image-orientation tag", "automatic"},
   {0, NULL, NULL},
 };

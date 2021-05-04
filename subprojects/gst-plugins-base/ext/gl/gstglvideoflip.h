@@ -22,6 +22,7 @@
 #define _GST_GL_VIDEO_FLIP_H_
 
 #include <gst/gl/gl.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -32,31 +33,6 @@ G_BEGIN_DECLS
 #define GST_IS_GL_VIDEO_FLIP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_VIDEO_FLIP))
 #define GST_GL_VIDEO_FLIP_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_VIDEO_FLIP,GstGLVideoFlipClass))
 
-/**
- * GstVideoFlipMethod:
- * @GST_GL_VIDEO_FLIP_METHOD_IDENTITY: Identity (no rotation)
- * @GST_GL_VIDEO_FLIP_METHOD_90R: Rotate clockwise 90 degrees
- * @GST_GL_VIDEO_FLIP_METHOD_180: Rotate 180 degrees
- * @GST_GL_VIDEO_FLIP_METHOD_90L: Rotate counter-clockwise 90 degrees
- * @GST_GL_VIDEO_FLIP_METHOD_FLIP_HORIZ: Flip horizontally
- * @GST_GL_VIDEO_FLIP_METHOD_FLIP_VERT: Flip vertically
- * @GST_GL_VIDEO_FLIP_METHOD_FLIP_UL_LR: Flip across upper left/lower right diagonal
- * @GST_GL_VIDEO_FLIP_METHOD_FLIP_UR_LL: Flip across upper right/lower left diagonal
- * @GST_GL_VIDEO_FLIP_METHOD_AUTO: Select flip method based on image-orientation tag
- *
- * The different flip methods.
- */
-typedef enum {
-  GST_GL_VIDEO_FLIP_METHOD_IDENTITY,
-  GST_GL_VIDEO_FLIP_METHOD_90R,
-  GST_GL_VIDEO_FLIP_METHOD_180,
-  GST_GL_VIDEO_FLIP_METHOD_90L,
-  GST_GL_VIDEO_FLIP_METHOD_FLIP_HORIZ,
-  GST_GL_VIDEO_FLIP_METHOD_FLIP_VERT,
-  GST_GL_VIDEO_FLIP_METHOD_FLIP_UL_LR,
-  GST_GL_VIDEO_FLIP_METHOD_FLIP_UR_LL,
-  GST_GL_VIDEO_FLIP_METHOD_AUTO,
-} GstGLVideoFlipMethod;
 
 typedef struct _GstGLVideoFlip GstGLVideoFlip;
 typedef struct _GstGLVideoFlipClass GstGLVideoFlipClass;
