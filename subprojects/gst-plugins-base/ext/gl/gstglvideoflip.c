@@ -433,35 +433,12 @@ _input_sink_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_TAG:{
         GstTagList *taglist;
-        gchar *orientation;
+        GstVideoOrientationMethod method;
 
         gst_event_parse_tag (event, &taglist);
 
-        if (gst_tag_list_get_string (taglist, "image-orientation",
-                &orientation)) {
-          if (!g_strcmp0 ("rotate-0", orientation))
-            gst_gl_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_IDENTITY,
-                TRUE);
-          else if (!g_strcmp0 ("rotate-90", orientation))
-            gst_gl_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_90R, TRUE);
-          else if (!g_strcmp0 ("rotate-180", orientation))
-            gst_gl_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_180, TRUE);
-          else if (!g_strcmp0 ("rotate-270", orientation))
-            gst_gl_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_90L, TRUE);
-          else if (!g_strcmp0 ("flip-rotate-0", orientation))
-            gst_gl_video_flip_set_method (vf,
-                GST_VIDEO_ORIENTATION_HORIZ, TRUE);
-          else if (!g_strcmp0 ("flip-rotate-90", orientation))
-            gst_gl_video_flip_set_method (vf,
-                GST_VIDEO_ORIENTATION_UR_LL, TRUE);
-          else if (!g_strcmp0 ("flip-rotate-180", orientation))
-            gst_gl_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_VERT, TRUE);
-          else if (!g_strcmp0 ("flip-rotate-270", orientation))
-            gst_gl_video_flip_set_method (vf,
-                GST_VIDEO_ORIENTATION_UL_LR, TRUE);
-
-          g_free (orientation);
-        }
+        if (gst_video_orientation_from_tag (taglist, &method))
+          gst_gl_video_flip_set_method (vf, method, TRUE);
         break;
       }
       case GST_EVENT_CAPS:{
