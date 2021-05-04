@@ -204,3 +204,36 @@ gst_video_alignment_reset (GstVideoAlignment * align)
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
     align->stride_align[i] = 0;
 }
+
+static const GEnumValue video_orientation_methods[] = {
+  {GST_VIDEO_ORIENTATION_IDENTITY, "Identity (no rotation)", "identity"},
+  {GST_VIDEO_ORIENTATION_90R, "Rotate clockwise 90 degrees", "90r"},
+  {GST_VIDEO_ORIENTATION_180, "Rotate 180 degrees", "180"},
+  {GST_VIDEO_ORIENTATION_90L, "Rotate counter-clockwise 90 degrees",
+      "90l"},
+  {GST_VIDEO_ORIENTATION_HORIZ, "Flip horizontally", "horiz"},
+  {GST_VIDEO_ORIENTATION_VERT, "Flip vertically", "vert"},
+  {GST_VIDEO_ORIENTATION_UL_LR,
+      "Flip across upper left/lower right diagonal", "ul-lr"},
+  {GST_VIDEO_ORIENTATION_UR_LL,
+      "Flip across upper right/lower left diagonal", "ur-ll"},
+  {GST_VIDEO_ORIENTATION_AUTO,
+      "Select rotate method based on image-orientation tag", "auto"},
+  {GST_VIDEO_ORIENTATION_CUSTOM,
+      "Current status depends on plugin internal setup", "custom"},
+  {0, NULL, NULL},
+};
+
+GType
+gst_video_orientation_method_get_type (void)
+{
+  static gsize video_orientation_method_type = 0;
+
+  if (g_once_init_enter (&video_orientation_method_type)) {
+    gsize res = g_enum_register_static ("GstVideoOrientationMethod",
+        video_orientation_methods);
+    g_once_init_leave (&video_orientation_method_type, res);
+  }
+
+  return (GType) video_orientation_method_type;
+}

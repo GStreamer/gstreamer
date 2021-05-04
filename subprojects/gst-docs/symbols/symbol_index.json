@@ -17217,7 +17217,6 @@
   "GstVideoOrientationInterface::set_hflip",
   "GstVideoOrientationInterface::set_vcenter",
   "GstVideoOrientationInterface::set_vflip",
-  "GstVideoOrientationMethod",
   "GstVideoOverlay",
   "GstVideoOverlayComposition",
   "GstVideoOverlayCompositionMeta",
