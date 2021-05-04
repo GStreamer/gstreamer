@@ -413,7 +413,7 @@ Those four states are:
   - `GST_STATE_PAUSED`: in this state, an element has opened the stream,
     but is not actively processing it. An element is allowed to modify a
     stream's position, read and process data and such to prepare for
-    playback as soon as state is changed to PLAYING, but it is *not*
+    playback as soon as state is changed to PAUSED, but it is *not*
     allowed to play the data which would make the clock run. In summary,
     PAUSED is the same as PLAYING but without a running clock.
 
