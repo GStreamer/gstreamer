@@ -3189,8 +3189,7 @@ gst_mxf_demux_loop (GstPad * pad)
     goto pause;
 
   /* check EOS condition */
-  if ((demux->segment.flags & GST_SEEK_FLAG_SEGMENT) &&
-      (demux->segment.stop != -1) &&
+  if ((demux->segment.stop != -1) &&
       (demux->segment.position >= demux->segment.stop)) {
     guint i;
     gboolean eos = TRUE;
