@@ -30,12 +30,12 @@
  * Control is given to the subclass when all pads have data.
  *
  *  * Base class for mixers and muxers. Subclasses should at least implement
- *    the #GstAggregatorClass.aggregate() virtual method.
+ *    the #GstAggregatorClass::aggregate virtual method.
  *
  *  * Installs a #GstPadChainFunction, a #GstPadEventFullFunction and a
  *    #GstPadQueryFunction to queue all serialized data packets per sink pad.
  *    Subclasses should not overwrite those, but instead implement
- *    #GstAggregatorClass.sink_event() and #GstAggregatorClass.sink_query() as
+ *    #GstAggregatorClass::sink_event and #GstAggregatorClass::sink_query as
  *    needed.
  *
  *  * When data is queued on all pads, the aggregate vmethod is called.
@@ -1282,7 +1282,7 @@ gst_aggregator_negotiate_unlocked (GstAggregator * self)
  *
  * Negotiates src pad caps with downstream elements.
  * Unmarks GST_PAD_FLAG_NEED_RECONFIGURE in any case. But marks it again
- * if #GstAggregatorClass.negotiate() fails.
+ * if #GstAggregatorClass::negotiate fails.
  *
  * Returns: %TRUE if the negotiation succeeded, else %FALSE.
  *
@@ -3664,7 +3664,7 @@ gst_aggregator_get_allocator (GstAggregator * self,
  * gst_aggregator_simple_get_next_time:
  * @self: A #GstAggregator
  *
- * This is a simple #GstAggregatorClass.get_next_time() implementation that
+ * This is a simple #GstAggregatorClass::get_next_time implementation that
  * just looks at the #GstSegment on the srcpad of the aggregator and bases
  * the next time on the running time there.
  *

@@ -1452,15 +1452,15 @@ done:
  * marked as needing reconfiguring. Unmarks GST_PAD_FLAG_NEED_RECONFIGURE in
  * any case. But marks it again if negotiation fails.
  *
- * Do not call this in the #GstBaseTransformClass.transform() or
- * #GstBaseTransformClass.transform_ip() vmethod. Call this in
- * #GstBaseTransformClass.submit_input_buffer(),
- * #GstBaseTransformClass.prepare_output_buffer() or in
- * #GstBaseTransformClass.generate_output() _before_ any output buffer is
+ * Do not call this in the #GstBaseTransformClass::transform or
+ * #GstBaseTransformClass::transform_ip vmethod. Call this in
+ * #GstBaseTransformClass::submit_input_buffer,
+ * #GstBaseTransformClass::prepare_output_buffer or in
+ * #GstBaseTransformClass::generate_output _before_ any output buffer is
  * allocated.
  *
  * It will be default be called when handling an ALLOCATION query or at the
- * very beginning of the default #GstBaseTransformClass.submit_input_buffer()
+ * very beginning of the default #GstBaseTransformClass::submit_input_buffer
  * implementation.
  *
  * Returns: %TRUE if the negotiation succeeded, else %FALSE.

@@ -47,10 +47,10 @@
  *
  * ## Set-up phase
  *
- *  * #GstBaseParse calls #GstBaseParseClass.start() to inform subclass
+ *  * #GstBaseParse calls #GstBaseParseClass::start to inform subclass
  *    that data processing is about to start now.
  *
- *  * #GstBaseParse class calls #GstBaseParseClass.set_sink_caps() to
+ *  * #GstBaseParse class calls #GstBaseParseClass::set_sink_caps to
  *    inform the subclass about incoming sinkpad caps. Subclass could
  *    already set the srcpad caps accordingly, but this might be delayed
  *    until calling gst_base_parse_finish_frame() with a non-queued frame.
@@ -69,11 +69,11 @@
  *    #GstAdapter.
  *
  *  * A buffer of (at least) min_frame_size bytes is passed to subclass
- *    with #GstBaseParseClass.handle_frame(). Subclass checks the contents
+ *    with #GstBaseParseClass::handle_frame. Subclass checks the contents
  *    and can optionally return #GST_FLOW_OK along with an amount of data
  *    to be skipped to find a valid frame (which will result in a
  *    subsequent DISCONT).  If, otherwise, the buffer does not hold a
- *    complete frame, #GstBaseParseClass.handle_frame() can merely return
+ *    complete frame, #GstBaseParseClass::handle_frame can merely return
  *    and will be called again when additional data is available.  In push
  *    mode this amounts to an additional input buffer (thus minimal
  *    additional latency), in pull mode this amounts to some arbitrary
@@ -88,7 +88,7 @@
  *    data while simultaneously providing custom output data.  Note that
  *    baseclass performs some processing (such as tracking overall consumed
  *    data rate versus duration) for each finished frame, but other state
- *    is only updated upon each call to #GstBaseParseClass.handle_frame()
+ *    is only updated upon each call to #GstBaseParseClass::handle_frame
  *    (such as tracking upstream input timestamp).
  *
  *    Subclass is also responsible for setting the buffer metadata
@@ -99,30 +99,30 @@
  *    duration obtained from configuration (see below), and offset
  *    if meaningful (in pull mode).
  *
- *    Note that #GstBaseParseClass.handle_frame() might receive any small
+ *    Note that #GstBaseParseClass::handle_frame might receive any small
  *    amount of input data when leftover data is being drained (e.g. at
  *    EOS).
  *
  *  * As part of finish frame processing, just prior to actually pushing
  *    the buffer in question, it is passed to
- *    #GstBaseParseClass.pre_push_frame() which gives subclass yet one last
+ *    #GstBaseParseClass::pre_push_frame which gives subclass yet one last
  *    chance to examine buffer metadata, or to send some custom (tag)
  *    events, or to perform custom (segment) filtering.
  *
  *  * During the parsing process #GstBaseParseClass will handle both srcpad
  *    and sinkpad events. They will be passed to subclass if
- *    #GstBaseParseClass.sink_event() or #GstBaseParseClass.src_event()
+ *    #GstBaseParseClass::sink_event or #GstBaseParseClass::src_event
  *    implementations have been provided.
  *
  * ## Shutdown phase
  *
- * * #GstBaseParse class calls #GstBaseParseClass.stop() to inform the
+ * * #GstBaseParse class calls #GstBaseParseClass::stop to inform the
  *   subclass that data parsing will be stopped.
  *
  * Subclass is responsible for providing pad template caps for source and
  * sink pads. The pads need to be named "sink" and "src". It also needs to
  * set the fixed caps on srcpad, when the format is ensured (e.g.  when
- * base class calls subclass' #GstBaseParseClass.set_sink_caps() function).
+ * base class calls subclass' #GstBaseParseClass::set_sink_caps function).
  *
  * This base class uses %GST_FORMAT_DEFAULT as a meaning of frames. So,
  * subclass conversion routine needs to know that conversion from
@@ -142,7 +142,7 @@
  * * Inform base class how big data chunks should be retrieved. This is
  *   done with gst_base_parse_set_min_frame_size() function.
  * * Examine data chunks passed to subclass with
- *   #GstBaseParseClass.handle_frame() and pass proper frame(s) to
+ *   #GstBaseParseClass::handle_frame and pass proper frame(s) to
  *   gst_base_parse_finish_frame(), and setting src pad caps and timestamps
  *   on frame.
  * * Provide conversion functions
@@ -158,7 +158,7 @@
  *   metadata (which will be taken from upstream as much as
  *   possible). Internally keeping track of frame durations and respective
  *   sizes that have been pushed provides #GstBaseParse with an estimated
- *   bitrate. A default #GstBaseParseClass.convert() (used if not
+ *   bitrate. A default #GstBaseParseClass::convert (used if not
  *   overridden) will then use these rates to perform obvious conversions.
  *   These rates are also used to update (estimated) duration at regular
  *   frame intervals.
@@ -1742,7 +1742,7 @@ gst_base_parse_src_event_default (GstBaseParse * parse, GstEvent * event)
  * @dest_format: #GstFormat defining the converted format.
  * @dest_value: (out): Pointer where the conversion result will be put.
  *
- * Default implementation of #GstBaseParseClass.convert().
+ * Default implementation of #GstBaseParseClass::convert.
  *
  * Returns: %TRUE if conversion was successful.
  */
@@ -4014,10 +4014,10 @@ gst_base_parse_set_syncable (GstBaseParse * parse, gboolean syncable)
  * Set if the nature of the format or configuration does not allow (much)
  * parsing, and the parser should operate in passthrough mode (which only
  * applies when operating in push mode). That is, incoming buffers are
- * pushed through unmodified, i.e. no #GstBaseParseClass.handle_frame()
- * will be invoked, but #GstBaseParseClass.pre_push_frame() will still be
+ * pushed through unmodified, i.e. no #GstBaseParseClass::handle_frame
+ * will be invoked, but #GstBaseParseClass::pre_push_frame will still be
  * invoked, so subclass can perform as much or as little is appropriate for
- * passthrough semantics in #GstBaseParseClass.pre_push_frame().
+ * passthrough semantics in #GstBaseParseClass::pre_push_frame.
  */
 void
 gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
