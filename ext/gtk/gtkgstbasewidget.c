@@ -335,13 +335,8 @@ gtk_gst_base_widget_button_event (GtkWidget * widget, GdkEventButton * event)
       const gchar *key_type =
           event->type ==
           GDK_BUTTON_PRESS ? "mouse-button-press" : "mouse-button-release";
-      gdouble x, y;
-
-      gtk_gst_base_widget_display_size_to_stream_size (base_widget, event->x,
-          event->y, &x, &y);
-
       gst_navigation_send_mouse_event (GST_NAVIGATION (element), key_type,
-          event->button, x, y);
+          event->button, event->x, event->y);
     }
     g_object_unref (element);
   }
@@ -357,13 +352,8 @@ gtk_gst_base_widget_motion_event (GtkWidget * widget, GdkEventMotion * event)
 
   if ((element = g_weak_ref_get (&base_widget->element))) {
     if (GST_IS_NAVIGATION (element)) {
-      gdouble x, y;
-
-      gtk_gst_base_widget_display_size_to_stream_size (base_widget, event->x,
-          event->y, &x, &y);
-
       gst_navigation_send_mouse_event (GST_NAVIGATION (element), "mouse-move",
-          0, x, y);
+          0, event->x, event->y);
     }
     g_object_unref (element);
   }
