@@ -2636,7 +2636,7 @@ _add_fingerprint_to_media (GstWebRTCDTLSTransport * transport,
 /* based off https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-18#section-5.2.1 */
 static gboolean
 sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
-    GstWebRTCRTPTransceiver * trans, GstWebRTCSDPType type, guint media_idx,
+    GstWebRTCRTPTransceiver * trans, guint media_idx,
     GString * bundled_mids, guint bundle_idx, gchar * bundle_ufrag,
     gchar * bundle_pwd, GArray * reserved_pts, GHashTable * all_mids,
     GError ** error)
@@ -2714,14 +2714,9 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
   gst_sdp_media_add_attribute (media, direction, "");
   g_free (direction);
 
-  if (type == GST_WEBRTC_SDP_TYPE_OFFER) {
-    caps = _find_codec_preferences (webrtc, trans, media_idx, error);
-    caps =
-        _add_supported_attributes_to_caps (webrtc, WEBRTC_TRANSCEIVER (trans),
-        caps);
-  } else {
-    g_assert_not_reached ();
-  }
+  caps = _find_codec_preferences (webrtc, trans, media_idx, error);
+  caps = _add_supported_attributes_to_caps (webrtc, WEBRTC_TRANSCEIVER (trans),
+      caps);
 
   if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps)) {
     GST_WARNING_OBJECT (webrtc, "no caps available for transceiver, skipping");
@@ -2746,7 +2741,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
     gst_caps_unref (format);
   }
 
-  if (type == GST_WEBRTC_SDP_TYPE_OFFER) {
+  {
     const GstStructure *s = gst_caps_get_structure (caps, 0);
     gint clockrate = -1;
     gint rtx_target_pt;
@@ -3229,9 +3224,9 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
     GST_LOG_OBJECT (webrtc, "adding transceiver %" GST_PTR_FORMAT " at media "
         "index %u", trans, media_idx);
 
-    if (sdp_media_from_transceiver (webrtc, &media, trans,
-            GST_WEBRTC_SDP_TYPE_OFFER, media_idx, bundled_mids, 0, bundle_ufrag,
-            bundle_pwd, reserved_pts, all_mids, error)) {
+    if (sdp_media_from_transceiver (webrtc, &media, trans, media_idx,
+            bundled_mids, 0, bundle_ufrag, bundle_pwd, reserved_pts, all_mids,
+            error)) {
       gst_sdp_message_add_media (ret, &media);
       media_idx++;
     } else {
