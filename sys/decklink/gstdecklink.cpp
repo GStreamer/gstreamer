@@ -991,7 +991,7 @@ public:
         GstClockTime stream_time, GstClockTime stream_duration,
         GstClockTime hardware_time, GstClockTime hardware_duration,
         gboolean no_signal) = NULL;
-    GstDecklinkModeEnum mode;
+    GstDecklinkModeEnum mode = GST_DECKLINK_MODE_AUTO;
     GstClockTime capture_time = GST_CLOCK_TIME_NONE;
     GstClockTime base_time = 0;
     gboolean no_signal = FALSE;
@@ -1009,7 +1009,9 @@ public:
       base_time = gst_element_get_base_time (videosrc);
       got_video_frame = m_input->got_video_frame;
     }
-    mode = gst_decklink_get_mode_enum_from_bmd (m_input->mode->mode);
+
+    if (m_input->mode)
+      mode = gst_decklink_get_mode_enum_from_bmd (m_input->mode->mode);
 
     if (m_input->audiosrc) {
       audiosrc = GST_ELEMENT_CAST (gst_object_ref (m_input->audiosrc));
