@@ -504,6 +504,7 @@ pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
 
     /* unref old pad, we reffed before */
     gst_object_unref (pad);
+    gst_caps_unref (caps);
 
     /* continue with new pad and caps */
     pad = gst_element_get_static_pad (convert, "src");
