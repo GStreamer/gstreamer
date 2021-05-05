@@ -91,6 +91,9 @@ void            gtk_gst_base_widget_finalize             (GObject * object);
 gboolean        gtk_gst_base_widget_set_format           (GtkGstBaseWidget * widget, GstVideoInfo * v_info);
 void            gtk_gst_base_widget_set_buffer           (GtkGstBaseWidget * widget, GstBuffer * buffer);
 void            gtk_gst_base_widget_set_element          (GtkGstBaseWidget * widget, GstElement * element);
+void            gtk_gst_base_widget_display_size_to_stream_size (GtkGstBaseWidget * base_widget,
+                                                                 gdouble x, gdouble y,
+                                                                 gdouble * stream_x, gdouble * stream_y);
 
 G_END_DECLS
 

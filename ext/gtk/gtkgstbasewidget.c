@@ -284,9 +284,9 @@ _fit_stream_to_allocated_size (GtkGstBaseWidget * base_widget,
   }
 }
 
-static void
-_display_size_to_stream_size (GtkGstBaseWidget * base_widget, gdouble x,
-    gdouble y, gdouble * stream_x, gdouble * stream_y)
+void
+gtk_gst_base_widget_display_size_to_stream_size (GtkGstBaseWidget * base_widget,
+    gdouble x, gdouble y, gdouble * stream_x, gdouble * stream_y)
 {
   gdouble stream_width, stream_height;
   GtkAllocation allocation;
@@ -337,7 +337,8 @@ gtk_gst_base_widget_button_event (GtkWidget * widget, GdkEventButton * event)
           GDK_BUTTON_PRESS ? "mouse-button-press" : "mouse-button-release";
       gdouble x, y;
 
-      _display_size_to_stream_size (base_widget, event->x, event->y, &x, &y);
+      gtk_gst_base_widget_display_size_to_stream_size (base_widget, event->x,
+          event->y, &x, &y);
 
       gst_navigation_send_mouse_event (GST_NAVIGATION (element), key_type,
           event->button, x, y);
@@ -358,7 +359,8 @@ gtk_gst_base_widget_motion_event (GtkWidget * widget, GdkEventMotion * event)
     if (GST_IS_NAVIGATION (element)) {
       gdouble x, y;
 
-      _display_size_to_stream_size (base_widget, event->x, event->y, &x, &y);
+      gtk_gst_base_widget_display_size_to_stream_size (base_widget, event->x,
+          event->y, &x, &y);
 
       gst_navigation_send_mouse_event (GST_NAVIGATION (element), "mouse-move",
           0, x, y);
