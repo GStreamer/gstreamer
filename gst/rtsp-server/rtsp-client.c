@@ -3010,7 +3010,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
           (gdouble) seekable / GST_SECOND);
 
     gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_MEDIA_PROPERTIES,
-        g_string_free (media_properties, FALSE));
+        media_properties->str);
+    g_string_free (media_properties, TRUE);
     /* TODO Check how Accept-Ranges should be filled */
     gst_rtsp_message_add_header (ctx->request, GST_RTSP_HDR_ACCEPT_RANGES,
         "npt, clock, smpte, clock");
