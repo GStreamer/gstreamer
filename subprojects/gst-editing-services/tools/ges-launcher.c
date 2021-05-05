@@ -1447,6 +1447,10 @@ ges_launcher_parse_options (GESLauncher * self,
           &opts->interactive,
         "Disable interactive control via the keyboard", NULL
     },
+    {"ignore-eos", 0, 0, G_OPTION_ARG_NONE,
+          &opts->ignore_eos,
+        "Ignore EOS.", NULL
+    },
     {NULL}
   };
 /*  *INDENT-ON* */
