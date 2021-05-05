@@ -1188,9 +1188,10 @@ on_sdp_media_payload_types (struct test_webrtc *t, GstElement * element,
     GstWebRTCSessionDescription * desc, gpointer user_data)
 {
   const GstSDPMedia *vmedia;
+  guint video_mline = GPOINTER_TO_UINT (user_data);
   guint j;
 
-  vmedia = gst_sdp_message_get_media (desc->sdp, 1);
+  vmedia = gst_sdp_message_get_media (desc->sdp, video_mline);
 
   for (j = 0; j < gst_sdp_media_attributes_len (vmedia); j++) {
     const GstSDPAttribute *attr = gst_sdp_media_get_attribute (vmedia, j);
@@ -1221,7 +1222,8 @@ GST_START_TEST (test_payload_types)
   guint media_format_count[] = { 1, 5, };
   VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
       media_format_count, &no_duplicate_payloads);
-  VAL_SDP_INIT (payloads, on_sdp_media_payload_types, NULL, &media_formats);
+  VAL_SDP_INIT (payloads, on_sdp_media_payload_types, GUINT_TO_POINTER (1),
+      &media_formats);
   VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (2), &payloads);
   const gchar *expected_offer_setup[] = { "actpass", "actpass" };
   VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup, &count);
@@ -3917,6 +3919,78 @@ GST_START_TEST (test_codec_preferences_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_codec_preferences_negotiation_sinkpad)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  guint media_format_count[] = { 1, };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, NULL);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (1),
+      &media_formats);
+  VAL_SDP_INIT (payloads2, on_sdp_media_payload_types, GUINT_TO_POINTER (0),
+      &count);
+  VAL_SDP_INIT (payloads, on_sdp_media_no_duplicate_payloads, NULL, &payloads2);
+  const gchar *expected_offer_setup[] = { "actpass", };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup,
+      &payloads);
+  const gchar *expected_answer_setup[] = { "active", };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
+      &payloads);
+  const gchar *expected_offer_direction[] = { "sendrecv", };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_direction[] = { "recvonly", };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+
+  GstPad *pad;
+  GstWebRTCRTPTransceiver *transceiver;
+  GstHarness *h;
+  GstCaps *caps;
+  GstPromise *promise;
+  GstPromiseResult res;
+  const GstStructure *s;
+  GError *error = NULL;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
+  pad = gst_element_get_static_pad (t->webrtc1, "sink_0");
+  g_object_get (pad, "transceiver", &transceiver, NULL);
+  caps = gst_caps_from_string (VP8_RTP_CAPS (115) ";" VP8_RTP_CAPS (97));
+  g_object_set (transceiver, "codec-preferences", caps, NULL);
+  gst_caps_unref (caps);
+  gst_object_unref (transceiver);
+  gst_object_unref (pad);
+
+  add_fake_video_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc1, "create-offer", NULL, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_unless (s != NULL);
+  fail_unless (gst_structure_has_name (s, "application/x-gstwebrtcbin-error"));
+  gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
+  fail_unless (g_error_matches (error, GST_WEBRTC_BIN_ERROR,
+          GST_WEBRTC_BIN_ERROR_CAPS_NEGOTIATION_FAILED));
+  g_clear_error (&error);
+  gst_promise_unref (promise);
+
+  caps = gst_caps_from_string (VP8_RTP_CAPS (97));
+  gst_harness_set_src_caps (h, caps);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -3965,6 +4039,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_reject_set_description);
     tcase_add_test (tc, test_force_second_media);
     tcase_add_test (tc, test_codec_preferences_caps);
+    tcase_add_test (tc, test_codec_preferences_negotiation_sinkpad);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
