@@ -4799,11 +4799,15 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       if (GST_CLOCK_TIME_IS_VALID (lace_time)) {
         GstClockTime last_stop_end;
 
-        /* Check if this stream is after segment stop */
-        if (GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop) &&
-            lace_time >= demux->common.segment.stop) {
+        /* Check if this stream is after segment stop,
+         * but only terminate if we hit the next keyframe,
+         * to make sure that all frames potentially inside the segment
+         * are available to the decoder for decoding / reordering.*/
+        if (!delta_unit && GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop)
+            && lace_time >= demux->common.segment.stop) {
           GST_DEBUG_OBJECT (demux,
-              "Stream %d after segment stop %" GST_TIME_FORMAT, stream->index,
+              "Stream %d lace time: %" GST_TIME_FORMAT " after segment stop: %"
+              GST_TIME_FORMAT, stream->index, GST_TIME_ARGS (lace_time),
               GST_TIME_ARGS (demux->common.segment.stop));
           gst_buffer_unref (sub);
           goto eos;
