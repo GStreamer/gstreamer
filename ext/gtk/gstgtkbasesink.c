@@ -283,6 +283,19 @@ gst_gtk_base_sink_navigation_send_event (GstNavigation * navigation,
   GstGtkBaseSink *sink = GST_GTK_BASE_SINK (navigation);
   GstEvent *event;
   GstPad *pad;
+  gdouble x, y;
+
+  if (gst_structure_get_double (structure, "pointer_x", &x) &&
+      gst_structure_get_double (structure, "pointer_y", &y)) {
+    GtkGstBaseWidget *widget = gst_gtk_base_sink_get_widget (sink);
+    gdouble stream_x, stream_y;
+
+    gtk_gst_base_widget_display_size_to_stream_size (widget,
+        x, y, &stream_x, &stream_y);
+    gst_structure_set (structure,
+        "pointer_x", G_TYPE_DOUBLE, (gdouble) stream_x,
+        "pointer_y", G_TYPE_DOUBLE, (gdouble) stream_y, NULL);
+  }
 
   event = gst_event_new_navigation (structure);
   pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink));
