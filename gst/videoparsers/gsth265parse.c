@@ -760,7 +760,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       break;
     case GST_H265_NAL_SPS:
       /* reset state, everything else is obsolete */
-      h265parse->state = 0;
+      h265parse->state &= GST_H265_PARSE_STATE_GOT_PPS;
 
       pres = gst_h265_parser_parse_sps (nalparser, nalu, &sps, TRUE);
 
