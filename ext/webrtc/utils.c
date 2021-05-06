@@ -229,4 +229,3 @@ webrtc_kind_from_caps (const GstCaps * caps)
 
   return GST_WEBRTC_KIND_UNKNOWN;
 }
-

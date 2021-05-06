@@ -1573,6 +1573,7 @@ static GstCaps *
 _add_supported_attributes_to_caps (GstWebRTCBin * webrtc,
     WebRTCTransceiver * trans, const GstCaps * caps)
 {
+  GstWebRTCKind kind;
   GstCaps *ret;
   guint i;
 
@@ -1581,6 +1582,7 @@ _add_supported_attributes_to_caps (GstWebRTCBin * webrtc,
 
   ret = gst_caps_make_writable (caps);
 
+  kind = webrtc_kind_from_caps (ret);
   for (i = 0; i < gst_caps_get_size (ret); i++) {
     GstStructure *s = gst_caps_get_structure (ret, i);
 
@@ -1588,7 +1590,8 @@ _add_supported_attributes_to_caps (GstWebRTCBin * webrtc,
       if (!gst_structure_has_field (s, "rtcp-fb-nack"))
         gst_structure_set (s, "rtcp-fb-nack", G_TYPE_BOOLEAN, TRUE, NULL);
 
-    if (!gst_structure_has_field (s, "rtcp-fb-nack-pli"))
+    if (kind == GST_WEBRTC_KIND_VIDEO
+        && !gst_structure_has_field (s, "rtcp-fb-nack-pli"))
       gst_structure_set (s, "rtcp-fb-nack-pli", G_TYPE_BOOLEAN, TRUE, NULL);
     if (!gst_structure_has_field (s, "rtcp-fb-transport-cc"))
       gst_structure_set (s, "rtcp-fb-transport-cc", G_TYPE_BOOLEAN, TRUE, NULL);
