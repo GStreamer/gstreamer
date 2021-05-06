@@ -1144,11 +1144,11 @@ gst_multi_queue_iterate_internal_links (GstPad * pad, GstObject * parent)
 
   srcpad = g_weak_ref_get (&squeue->srcpad);
   sinkpad = g_weak_ref_get (&squeue->sinkpad);
-  if (sinkpad == pad) {
+  if (sinkpad == pad && srcpad) {
     opad = srcpad;
     gst_clear_object (&sinkpad);
 
-  } else if (srcpad == pad) {
+  } else if (srcpad == pad && sinkpad) {
     opad = sinkpad;
     gst_clear_object (&srcpad);
 
