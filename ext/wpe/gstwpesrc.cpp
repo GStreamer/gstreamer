@@ -666,6 +666,8 @@ gst_wpe_src_finalize (GObject * object)
 {
   GstWpeSrc *src = GST_WPE_SRC (object);
 
+  g_free (src->location);
+  g_clear_pointer (&src->bytes, g_bytes_unref);
   g_mutex_clear (&src->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);

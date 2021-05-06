@@ -294,12 +294,14 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeSrc* src, GstGLContext* co
 
     gst_wpe_src_configure_web_view(src, webkit.view);
 
-    const gchar* location;
+    gchar* location;
     gboolean drawBackground = TRUE;
     g_object_get(src, "location", &location, "draw-background", &drawBackground, nullptr);
     setDrawBackground(drawBackground);
-    if (location)
+    if (location) {
         loadUriUnlocked(location);
+        g_free(location);
+    }
 }
 
 WPEView::~WPEView()
