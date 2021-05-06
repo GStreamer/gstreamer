@@ -264,6 +264,7 @@ gst_wpe_src_start (GstWpeSrc * src)
   GstGLDisplay *display = NULL;
   GstGLBaseSrc *base_src = GST_GL_BASE_SRC (src);
   gboolean created_view = FALSE;
+  GBytes *bytes;
 
   GST_INFO_OBJECT (src, "Starting up");
   WPE_LOCK (src);
@@ -292,10 +293,14 @@ gst_wpe_src_start (GstWpeSrc * src)
     return FALSE;
   }
 
-  if (src->bytes != NULL) {
-    src->view->loadData (src->bytes);
-    g_bytes_unref (src->bytes);
-    src->bytes = NULL;
+  GST_OBJECT_LOCK (src);
+  bytes = src->bytes;
+  src->bytes = NULL;
+  GST_OBJECT_UNLOCK (src);
+
+  if (bytes != NULL) {
+    src->view->loadData (bytes);
+    g_bytes_unref (bytes);
   }
 
   if (created_view) {
@@ -431,9 +436,11 @@ gst_wpe_src_load_bytes (GstWpeSrc * src, GBytes * bytes)
   if (src->view && GST_STATE (GST_ELEMENT_CAST (src)) > GST_STATE_NULL) {
     src->view->loadData (bytes);
   } else {
+    GST_OBJECT_LOCK (src);
     if (src->bytes)
       g_bytes_unref (src->bytes);
     src->bytes = g_bytes_ref (bytes);
+    GST_OBJECT_UNLOCK (src);
   }
 }
 
@@ -441,10 +448,13 @@ static gboolean
 gst_wpe_src_set_location (GstWpeSrc * src, const gchar * location,
     GError ** error)
 {
+  GST_OBJECT_LOCK (src);
   g_free (src->location);
   src->location = g_strdup (location);
+  GST_OBJECT_UNLOCK (src);
+
   if (src->view)
-    src->view->loadUri (src->location);
+    src->view->loadUri (location);
 
   return TRUE;
 }
@@ -452,9 +462,12 @@ gst_wpe_src_set_location (GstWpeSrc * src, const gchar * location,
 static void
 gst_wpe_src_set_draw_background (GstWpeSrc * src, gboolean draw_background)
 {
+  GST_OBJECT_LOCK (src);
+  src->draw_background = draw_background;
+  GST_OBJECT_UNLOCK (src);
+
   if (src->view)
     src->view->setDrawBackground (draw_background);
-  src->draw_background = draw_background;
 }
 
 static void
@@ -496,10 +509,14 @@ gst_wpe_src_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_LOCATION:
+      GST_OBJECT_LOCK (src);
       g_value_set_string (value, src->location);
+      GST_OBJECT_UNLOCK (src);
       break;
     case PROP_DRAW_BACKGROUND:
+      GST_OBJECT_LOCK (src);
       g_value_set_boolean (value, src->draw_background);
+      GST_OBJECT_UNLOCK (src);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -671,7 +688,13 @@ static gchar *
 gst_wpe_src_get_uri (GstURIHandler * handler)
 {
   GstWpeSrc *src = GST_WPE_SRC (handler);
-  return g_strdup_printf ("wpe://%s", src->location);
+  gchar *uri;
+
+  GST_OBJECT_LOCK (src);
+  uri = g_strdup_printf ("wpe://%s", src->location);
+  GST_OBJECT_UNLOCK (src);
+
+  return uri;
 }
 
 static gboolean
