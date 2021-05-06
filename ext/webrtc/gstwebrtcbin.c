@@ -1650,8 +1650,6 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
 
     if (pad->received_caps) {
       caps = gst_caps_ref (pad->received_caps);
-    } else if ((caps = gst_pad_get_current_caps (GST_PAD (pad)))) {
-      GST_LOG_OBJECT (webrtc, "Using current pad caps: %" GST_PTR_FORMAT, caps);
     } else {
       static GstStaticCaps static_filter =
           GST_STATIC_CAPS ("application/x-rtp, "
