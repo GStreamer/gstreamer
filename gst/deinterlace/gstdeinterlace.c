@@ -397,9 +397,9 @@ gst_deinterlace_set_method (GstDeinterlace * self, GstDeinterlaceMethods method)
 #if 0
     gst_child_proxy_child_removed (GST_OBJECT (self),
         GST_OBJECT (self->method));
+#endif
     gst_object_unparent (GST_OBJECT (self->method));
     self->method = NULL;
-#endif
   }
 
   method_type =
