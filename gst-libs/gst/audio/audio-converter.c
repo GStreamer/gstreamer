@@ -1434,12 +1434,14 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
 unpositioned:
   {
     GST_WARNING ("unpositioned channels");
+    g_clear_pointer (&config, gst_structure_free);
     return NULL;
   }
 
 invalid_mix_matrix:
   {
     GST_WARNING ("Invalid mix matrix");
+    g_clear_pointer (&config, gst_structure_free);
     return NULL;
   }
 }
