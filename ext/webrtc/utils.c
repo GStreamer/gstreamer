@@ -205,3 +205,28 @@ _rtp_caps_from_media (const GstSDPMedia * media)
 
   return ret;
 }
+
+GstWebRTCKind
+webrtc_kind_from_caps (const GstCaps * caps)
+{
+  GstStructure *s;
+  const gchar *media;
+
+  if (gst_caps_get_size (caps) == 0)
+    return GST_WEBRTC_KIND_UNKNOWN;
+
+  s = gst_caps_get_structure (caps, 0);
+
+  media = gst_structure_get_string (s, "media");
+  if (media == NULL)
+    return GST_WEBRTC_KIND_UNKNOWN;
+
+  if (!g_strcmp0 (media, "audio"))
+    return GST_WEBRTC_KIND_AUDIO;
+
+  if (!g_strcmp0 (media, "video"))
+    return GST_WEBRTC_KIND_VIDEO;
+
+  return GST_WEBRTC_KIND_UNKNOWN;
+}
+

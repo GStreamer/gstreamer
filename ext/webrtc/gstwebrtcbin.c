@@ -3235,35 +3235,11 @@ _media_add_rtx (GstSDPMedia * media, WebRTCTransceiver * trans,
   }
 }
 
-static GstWebRTCKind
-_kind_from_caps (const GstCaps * caps)
-{
-  GstStructure *s;
-  const gchar *media;
-
-  if (gst_caps_get_size (caps) == 0)
-    return GST_WEBRTC_KIND_UNKNOWN;
-
-  s = gst_caps_get_structure (caps, 0);
-
-  media = gst_structure_get_string (s, "media");
-  if (media == NULL)
-    return GST_WEBRTC_KIND_UNKNOWN;
-
-  if (!g_strcmp0 (media, "audio"))
-    return GST_WEBRTC_KIND_AUDIO;
-
-  if (!g_strcmp0 (media, "video"))
-    return GST_WEBRTC_KIND_VIDEO;
-
-  return GST_WEBRTC_KIND_UNKNOWN;
-}
-
 static gboolean
 _update_transceiver_kind_from_caps (GstWebRTCRTPTransceiver * trans,
     const GstCaps * caps)
 {
-  GstWebRTCKind kind = _kind_from_caps (caps);
+  GstWebRTCKind kind = webrtc_kind_from_caps (caps);
 
   if (trans->kind == kind)
     return TRUE;
@@ -3583,7 +3559,8 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       if (!_update_transceiver_kind_from_caps (rtp_trans, answer_caps))
         GST_WARNING_OBJECT (webrtc,
             "Trying to change transceiver %d kind from %d to %d",
-            rtp_trans->mline, rtp_trans->kind, _kind_from_caps (answer_caps));
+            rtp_trans->mline, rtp_trans->kind,
+            webrtc_kind_from_caps (answer_caps));
 
       if (!trans->do_nack) {
         answer_caps = gst_caps_make_writable (answer_caps);
@@ -5656,7 +5633,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
   if (webrtc->priv->sctp_transport) {
     /* Let transport be the connection's [[SctpTransport]] slot.
      *
-     * If the [[DataChannelId]] slot is not null, transport is in 
+     * If the [[DataChannelId]] slot is not null, transport is in
      * connected state and [[DataChannelId]] is greater or equal to the
      * transport's [[MaxChannels]] slot, throw an OperationError.
      */
@@ -6420,7 +6397,7 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
         }
 
         if (trans->kind != GST_WEBRTC_KIND_UNKNOWN) {
-          GstWebRTCKind kind = _kind_from_caps (caps);
+          GstWebRTCKind kind = webrtc_kind_from_caps (caps);
 
           if (trans->kind != kind) {
             GST_ERROR_OBJECT (element, "Tried to request a new sink pad %s for"
@@ -6440,7 +6417,7 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     guint i;
 
     if (caps)
-      kind = _kind_from_caps (caps);
+      kind = webrtc_kind_from_caps (caps);
 
     for (i = 0; i < webrtc->priv->transceivers->len; i++) {
       GstWebRTCRTPTransceiver *tmptrans =
