@@ -1147,42 +1147,31 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
 static GstIterator *
 gst_multi_queue_iterate_internal_links (GstPad * pad, GstObject * parent)
 {
+  GstSingleQueue *sq = GST_MULTIQUEUE_PAD (pad)->sq;
   GstIterator *it = NULL;
-  GstPad *opad, *sinkpad, *srcpad;
-  GstSingleQueue *squeue;
-  GstMultiQueue *mq = GST_MULTI_QUEUE (parent);
-  GValue val = { 0, };
+  GstPad *opad;
 
-  GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-  squeue = GST_MULTIQUEUE_PAD (pad)->sq;
-  if (!squeue)
-    goto out;
+  switch (GST_PAD_DIRECTION (pad)) {
+    case GST_PAD_SRC:
+      opad = g_weak_ref_get (&sq->sinkpad);
+      break;
 
-  srcpad = g_weak_ref_get (&squeue->srcpad);
-  sinkpad = g_weak_ref_get (&squeue->sinkpad);
-  if (sinkpad == pad && srcpad) {
-    opad = srcpad;
-    gst_clear_object (&sinkpad);
+    case GST_PAD_SINK:
+      opad = g_weak_ref_get (&sq->srcpad);
+      break;
 
-  } else if (srcpad == pad && sinkpad) {
-    opad = sinkpad;
-    gst_clear_object (&srcpad);
-
-  } else {
-    gst_clear_object (&srcpad);
-    gst_clear_object (&sinkpad);
-    goto out;
+    default:
+      g_return_val_if_reached (NULL);
   }
 
-  g_value_init (&val, GST_TYPE_PAD);
-  g_value_set_object (&val, opad);
-  it = gst_iterator_new_single (GST_TYPE_PAD, &val);
-  g_value_unset (&val);
+  if (opad) {
+    GValue val = G_VALUE_INIT;
 
-  gst_object_unref (opad);
-
-out:
-  GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+    g_value_init (&val, GST_TYPE_PAD);
+    g_value_take_object (&val, opad);
+    it = gst_iterator_new_single (GST_TYPE_PAD, &val);
+    g_value_unset (&val);
+  }
 
   return it;
 }
