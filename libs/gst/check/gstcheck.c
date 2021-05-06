@@ -1090,6 +1090,7 @@ gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
   g_timer_destroy (timer);
   g_free (xmlfilename);
   srunner_free (sr);
+  g_thread_pool_stop_unused_threads ();
   return nf;
 }
 
