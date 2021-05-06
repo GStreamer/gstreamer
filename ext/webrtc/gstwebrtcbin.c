@@ -3618,18 +3618,33 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
             gst_sdp_message_get_media (last_answer, i);
         const gchar *last_mid =
             gst_sdp_media_get_attribute_val (last_media, "mid");
+        GstCaps *current_caps;
 
         /* FIXME: assumes no shenanigans with recycling transceivers */
         g_assert (g_strcmp0 (mid, last_mid) == 0);
 
-        if (!answer_caps)
-          answer_caps = _find_codec_preferences (webrtc, rtp_trans, i, error);
+        current_caps = _find_codec_preferences (webrtc, rtp_trans, i, error);
         if (*error) {
           gst_caps_unref (offer_caps);
           goto rejected;
         }
-        if (!answer_caps)
-          answer_caps = _rtp_caps_from_media (last_media);
+        if (!current_caps)
+          current_caps = _rtp_caps_from_media (last_media);
+
+        if (current_caps) {
+          answer_caps = gst_caps_intersect (offer_caps, current_caps);
+          if (gst_caps_is_empty (answer_caps)) {
+            GST_WARNING_OBJECT (webrtc, "Caps from offer for m-line %d (%"
+                GST_PTR_FORMAT ") don't intersect with caps from codec"
+                " preferences and transceiver %" GST_PTR_FORMAT, i, offer_caps,
+                current_caps);
+            gst_caps_unref (current_caps);
+            gst_caps_unref (answer_caps);
+            gst_caps_unref (offer_caps);
+            goto rejected;
+          }
+          gst_caps_unref (current_caps);
+        }
 
         /* XXX: In theory we're meant to use the sendrecv formats for the
          * inactive direction however we don't know what that may be and would
