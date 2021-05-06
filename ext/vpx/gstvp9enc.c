@@ -312,10 +312,11 @@ gst_vp9_enc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static vpx_color_space_t
-gst_vp9_get_vpx_colorspace (GstVPXEnc * encoder, GstVideoColorimetry * cinfo,
+gst_vp9_get_vpx_colorspace (GstVPXEnc * encoder, GstVideoColorimetry * in_cinfo,
     GstVideoFormat format)
 {
   vpx_color_space_t colorspace = VPX_CS_UNKNOWN;
+  GstVideoColorimetry cinfo = *in_cinfo;
   gchar *colorimetry_str;
   guint i;
 
@@ -331,7 +332,9 @@ gst_vp9_get_vpx_colorspace (GstVPXEnc * encoder, GstVideoColorimetry * cinfo,
     GST_VIDEO_COLORIMETRY_BT2020, VPX_CS_BT_2020}
   };
 
-  colorimetry_str = gst_video_colorimetry_to_string (cinfo);
+  /* We support any range, all mapped CSC are by default reduced range. */
+  cinfo.range = GST_VIDEO_COLOR_RANGE_16_235;
+  colorimetry_str = gst_video_colorimetry_to_string (&cinfo);
 
   if (colorimetry_str != NULL) {
     for (i = 0; i < G_N_ELEMENTS (colorimetry_map); ++i) {
@@ -365,6 +368,17 @@ gst_vp9_get_vpx_colorspace (GstVPXEnc * encoder, GstVideoColorimetry * cinfo,
   return colorspace;
 }
 
+static gint
+gst_vp9_get_vpx_color_range (GstVideoColorimetry * colorimetry)
+{
+  if (colorimetry->range == GST_VIDEO_COLOR_RANGE_0_255)
+    /* Full range (0..255 or HBD equivalent) */
+    return 1;
+
+  /* Limited range (16..235 or HBD equivalent) */
+  return 0;
+}
+
 static gboolean
 gst_vp9_enc_configure_encoder (GstVPXEnc * encoder, GstVideoCodecState * state)
 {
@@ -378,6 +392,13 @@ gst_vp9_enc_configure_encoder (GstVPXEnc * encoder, GstVideoCodecState * state)
   if (status != VPX_CODEC_OK) {
     GST_WARNING_OBJECT (encoder,
         "Failed to set VP9E_SET_COLOR_SPACE: %s", gst_vpx_error_name (status));
+  }
+
+  status = vpx_codec_control (&encoder->encoder, VP9E_SET_COLOR_RANGE,
+      gst_vp9_get_vpx_color_range (&GST_VIDEO_INFO_COLORIMETRY (info)));
+  if (status != VPX_CODEC_OK) {
+    GST_WARNING_OBJECT (encoder,
+        "Failed to set VP9E_SET_COLOR_RANGE: %s", gst_vpx_error_name (status));
   }
 
   status =
