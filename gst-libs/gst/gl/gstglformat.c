@@ -200,6 +200,7 @@ gst_gl_format_from_video_info (GstGLContext * context,
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_A420:
       n_plane_components = 1;
       break;
     case GST_VIDEO_FORMAT_BGR10A2_LE:
