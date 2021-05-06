@@ -738,6 +738,7 @@ test_webrtc_wait_for_ice_connection (struct test_webrtc *t,
   g_mutex_unlock (&t->lock);
 }
 #endif
+
 static void
 _pad_added_fakesink (struct test_webrtc *t, GstElement * element,
     GstPad * pad, gpointer user_data)
@@ -3999,6 +4000,117 @@ GST_START_TEST (test_codec_preferences_negotiation_sinkpad)
 
 GST_END_TEST;
 
+
+static void
+add_audio_test_src_harness (GstHarness * h)
+{
+#define L16_CAPS "application/x-rtp, payload=11, media=audio," \
+      " encoding-name=L16, clock-rate=44100, ssrc=(uint)3484078952"
+  GstCaps *caps = gst_caps_from_string (L16_CAPS);
+  gst_harness_set_src_caps (h, caps);
+  gst_harness_add_src_parse (h, "audiotestsrc is-live=true ! rtpL16pay ! "
+      L16_CAPS " ! identity", TRUE);
+}
+
+static void
+_pad_added_harness (struct test_webrtc *t, GstElement * element,
+    GstPad * pad, gpointer user_data)
+{
+  GstHarness *h;
+  GstHarness **sink_harness = user_data;
+
+  if (GST_PAD_DIRECTION (pad) != GST_PAD_SRC)
+    return;
+
+  h = gst_harness_new_with_element (element, NULL, GST_OBJECT_NAME (pad));
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  if (sink_harness) {
+    *sink_harness = h;
+    g_cond_broadcast (&t->cond);
+  }
+}
+
+static void
+new_jitterbuffer_set_fast_start (GstElement * rtpbin,
+    GstElement * rtpjitterbuffer, guint session_id, guint ssrc,
+    gpointer user_data)
+{
+  g_object_set (rtpjitterbuffer, "faststart-min-packets", 1, NULL);
+}
+
+GST_START_TEST (test_codec_preferences_negotiation_srcpad)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  guint media_format_count[] = { 1, };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, NULL);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (1),
+      &media_formats);
+  VAL_SDP_INIT (payloads, on_sdp_media_no_duplicate_payloads, NULL, &count);
+  const gchar *expected_offer_setup[] = { "actpass", };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup,
+      &payloads);
+  const gchar *expected_answer_setup[] = { "active", };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
+      &payloads);
+  const gchar *expected_offer_direction[] = { "sendrecv", };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_direction[] = { "recvonly", };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+  VAL_SDP_INIT (answer_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (0), &count);
+  GstHarness *h;
+  GstHarness *sink_harness = NULL;
+  guint i;
+  GstElement *rtpbin2;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_harness;
+  t->pad_added_data = &sink_harness;
+
+  rtpbin2 = gst_bin_get_by_name (GST_BIN (t->webrtc2), "rtpbin");
+  fail_unless (rtpbin2 != NULL);
+  g_signal_connect (rtpbin2, "new-jitterbuffer",
+      G_CALLBACK (new_jitterbuffer_set_fast_start), NULL);
+  g_object_unref (rtpbin2);
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
+  add_audio_test_src_harness (h);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+
+  for (i = 0; i < 10; i++)
+    gst_harness_push_from_src (h);
+
+  g_mutex_lock (&t->lock);
+  while (sink_harness == NULL) {
+    gst_harness_push_from_src (h);
+    g_cond_wait_until (&t->cond, &t->lock, g_get_monotonic_time () + 5000);
+  }
+  g_mutex_unlock (&t->lock);
+  fail_unless (sink_harness->element == t->webrtc2);
+
+  gst_harness_set_sink_caps_str (sink_harness, OPUS_RTP_CAPS (100));
+
+  test_webrtc_reset_negotiation (t);
+  test_validate_sdp_full (t, &offer, &answer_non_reject, 0, FALSE);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -4048,6 +4160,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_force_second_media);
     tcase_add_test (tc, test_codec_preferences_caps);
     tcase_add_test (tc, test_codec_preferences_negotiation_sinkpad);
+    tcase_add_test (tc, test_codec_preferences_negotiation_srcpad);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
