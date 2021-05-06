@@ -1506,7 +1506,9 @@ setup_gamma_decode (GstVideoConverter * convert)
   func = convert->in_info.colorimetry.transfer;
 
   convert->gamma_dec.width = convert->current_width;
-  if (convert->current_bits == 8) {
+  if (convert->gamma_dec.gamma_table) {
+    GST_DEBUG ("gamma decode already set up");
+  } else if (convert->current_bits == 8) {
     GST_DEBUG ("gamma decode 8->16: %d", func);
     convert->gamma_dec.gamma_func = gamma_convert_u8_u16;
     t = convert->gamma_dec.gamma_table = g_malloc (sizeof (guint16) * 256);
@@ -1538,7 +1540,9 @@ setup_gamma_encode (GstVideoConverter * convert, gint target_bits)
   func = convert->out_info.colorimetry.transfer;
 
   convert->gamma_enc.width = convert->current_width;
-  if (target_bits == 8) {
+  if (convert->gamma_enc.gamma_table) {
+    GST_DEBUG ("gamma encode already set up");
+  } else if (target_bits == 8) {
     guint8 *t;
 
     GST_DEBUG ("gamma encode 16->8: %d", func);
