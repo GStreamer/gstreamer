@@ -20,26 +20,20 @@
 
 #pragma once
 
-#include <gst/gst.h>
+#include "gstvadisplay.h"
 
 G_BEGIN_DECLS
 
-#include <gst/va/gstvadisplay_drm.h>
+#define GST_TYPE_VA_DISPLAY_DRM            (gst_va_display_drm_get_type())
+#define GST_VA_DISPLAY_DRM(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VA_DISPLAY_DRM, GstVaDisplayDrm))
+#define GST_VA_DISPLAY_DRM_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VA_DISPLAY_DRM, GstVaDisplayDrmClass))
+#define GST_IS_VA_DISPLAY_DRM(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VA_DISPLAY_DRM))
+#define GST_IS_VA_DISPLAY_DRM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VA_DISPLAY_DRM))
+#define GST_VA_DISPLAY_DRM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VA_DISPLAY_DRM, GstVaDisplayDrmClass))
 
-#define GST_TYPE_VA_DEVICE    (gst_va_device_get_type())
-#define GST_IS_VA_DEVICE(obj) (GST_IS_MINI_OBJECT_TYPE((obj), GST_TYPE_VA_DEVICE))
-#define GST_VA_DEVICE(obj)    ((GstVaDevice *)(obj))
-
-typedef struct
-{
-  GstMiniObject mini_object;
-
-  GstVaDisplay *display;
-  gchar *render_device_path;
-} GstVaDevice;
-
-GType                 gst_va_device_get_type              (void);
-GList *               gst_va_device_find_devices          (void);
-void                  gst_va_device_list_free             (GList * devices);
+GST_VA_API
+GType                 gst_va_display_drm_get_type         (void);
+GST_VA_API
+GstVaDisplay *        gst_va_display_drm_new_from_path    (const gchar * path);
 
 G_END_DECLS

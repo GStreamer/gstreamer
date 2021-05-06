@@ -26,8 +26,9 @@
 
 #include "gstvaallocator.h"
 #include "gstvacaps.h"
-#include "gstvadisplay_wrapped.h"
+#include "gstvadisplay_priv.h"
 #include "gstvavideoformat.h"
+#include <gst/va/gstvadisplay_wrapped.h>
 
 struct _GstVaDecoder
 {

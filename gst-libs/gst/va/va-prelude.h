@@ -1,6 +1,5 @@
 /* GStreamer
- * Copyright (C) 2020 Igalia, S.L.
- *     Author: Víctor Jáquez <vjaquez@igalia.com>
+ * Copyright (C) 2021 GStreamer developers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,14 +19,12 @@
 
 #pragma once
 
-#include "gstvadisplay.h"
+#include <gst/gst.h>
 
-G_BEGIN_DECLS
-
-#define GST_TYPE_VA_DISPLAY_WRAPPED gst_va_display_wrapped_get_type()
-G_DECLARE_FINAL_TYPE (GstVaDisplayWrapped, gst_va_display_wrapped, GST,
-    VA_DISPLAY_WRAPPED, GstVaDisplay)
-
-GstVaDisplay *        gst_va_display_wrapped_new  (guintptr handle);
-
-G_END_DECLS
+#ifndef GST_VA_API
+# ifdef BUILDING_GST_VA
+#  define GST_VA_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_VA_API GST_API_IMPORT
+# endif
+#endif

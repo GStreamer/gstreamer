@@ -23,8 +23,7 @@
 #endif
 
 #include "gstvadisplay.h"
-#include "gstvaprofile.h"
-#include "gstvavideoformat.h"
+#include <va/va.h>
 
 GST_DEBUG_CATEGORY (gst_va_display_debug);
 #define GST_CAT_DEFAULT gst_va_display_debug
@@ -208,6 +207,15 @@ gst_va_display_init (GstVaDisplay * self)
   priv->impl = GST_VA_IMPLEMENTATION_INVALID;
 }
 
+/**
+ * gst_va_display_lock:
+ * @self: a #GstVaDisplay
+ *
+ * Lock the display. It will be used before we call the
+ * VA API functions to serialize the VA commands.
+ *
+ * Since: 1.20
+ **/
 void
 gst_va_display_lock (GstVaDisplay * self)
 {
@@ -220,6 +228,15 @@ gst_va_display_lock (GstVaDisplay * self)
   g_rec_mutex_lock (&priv->lock);
 }
 
+/**
+ * gst_va_display_unlock:
+ * @self: a #GstVaDisplay
+ *
+ * Unlock the display. It will be used after we call the
+ * VA API functions.
+ *
+ * Since: 1.20
+ **/
 void
 gst_va_display_unlock (GstVaDisplay * self)
 {
@@ -282,6 +299,8 @@ _va_info (gpointer object, const char *message)
  *
  * Returns: %TRUE if the VA driver can be initialized; %FALSE
  *     otherwise
+ *
+ * Since: 1.20
  **/
 gboolean
 gst_va_display_initialize (GstVaDisplay * self)
@@ -321,127 +340,37 @@ gst_va_display_initialize (GstVaDisplay * self)
   return TRUE;
 }
 
-VADisplay
+/**
+ * gst_va_display_get_va_dpy:
+ * @self: a #GstVaDisplay type display.
+ *
+ * Get the VA display handle of the @self.
+ *
+ * Returns: the VA display handle.
+ *
+ * Since: 1.20
+ */
+gpointer
 gst_va_display_get_va_dpy (GstVaDisplay * self)
 {
-  VADisplay dpy = 0;
+  VADisplay dpy;
 
-  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), 0);
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), NULL);
 
   g_object_get (self, "va-display", &dpy, NULL);
   return dpy;
 }
 
-GArray *
-gst_va_display_get_profiles (GstVaDisplay * self, guint32 codec,
-    VAEntrypoint entrypoint)
-{
-  GArray *ret = NULL;
-  VADisplay dpy;
-  VAEntrypoint *entrypoints;
-  VAProfile *profiles;
-  VAStatus status;
-  gint i, j, num_entrypoints = 0, num_profiles = 0;
-
-  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), NULL);
-
-  dpy = gst_va_display_get_va_dpy (self);
-
-  gst_va_display_lock (self);
-  num_profiles = vaMaxNumProfiles (dpy);
-  num_entrypoints = vaMaxNumEntrypoints (dpy);
-  gst_va_display_unlock (self);
-
-  profiles = g_new (VAProfile, num_profiles);
-  entrypoints = g_new (VAEntrypoint, num_entrypoints);
-
-  gst_va_display_lock (self);
-  status = vaQueryConfigProfiles (dpy, profiles, &num_profiles);
-  gst_va_display_unlock (self);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaQueryConfigProfile: %s", vaErrorStr (status));
-    goto bail;
-  }
-
-  for (i = 0; i < num_profiles; i++) {
-    if (codec != gst_va_profile_codec (profiles[i]))
-      continue;
-
-    gst_va_display_lock (self);
-    status = vaQueryConfigEntrypoints (dpy, profiles[i], entrypoints,
-        &num_entrypoints);
-    gst_va_display_unlock (self);
-    if (status != VA_STATUS_SUCCESS) {
-      GST_ERROR ("vaQueryConfigEntrypoints: %s", vaErrorStr (status));
-      goto bail;
-    }
-
-    for (j = 0; j < num_entrypoints; j++) {
-      if (entrypoints[j] == entrypoint) {
-        if (!ret)
-          ret = g_array_new (FALSE, FALSE, sizeof (VAProfile));
-        g_array_append_val (ret, profiles[i]);
-        break;
-      }
-    }
-  }
-
-bail:
-  g_free (entrypoints);
-  g_free (profiles);
-  return ret;
-}
-
-GArray *
-gst_va_display_get_image_formats (GstVaDisplay * self)
-{
-  GArray *ret = NULL;
-  GstVideoFormat format;
-  VADisplay dpy;
-  VAImageFormat *va_formats;
-  VAStatus status;
-  int i, max, num = 0;
-
-  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), NULL);
-
-  dpy = gst_va_display_get_va_dpy (self);
-
-  gst_va_display_lock (self);
-  max = vaMaxNumImageFormats (dpy);
-  gst_va_display_unlock (self);
-  if (max == 0)
-    return NULL;
-
-  va_formats = g_new (VAImageFormat, max);
-
-  gst_va_display_lock (self);
-  status = vaQueryImageFormats (dpy, va_formats, &num);
-  gst_va_display_unlock (self);
-
-  gst_va_video_format_fix_map (va_formats, num);
-
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaQueryImageFormats: %s", vaErrorStr (status));
-    goto bail;
-  }
-
-  ret = g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat), num);
-  for (i = 0; i < num; i++) {
-    format = gst_va_video_format_from_va_image_format (&va_formats[i]);
-    if (format != GST_VIDEO_FORMAT_UNKNOWN)
-      g_array_append_val (ret, format);
-  }
-
-  if (ret->len == 0) {
-    g_array_unref (ret);
-    ret = NULL;
-  }
-
-bail:
-  g_free (va_formats);
-  return ret;
-}
-
+/**
+ * gst_va_display_get_implementation:
+ * @self: a #GstVaDisplay type display.
+ *
+ * Get the the #GstVaImplementation type of @self.
+ *
+ * Returns: #GstVaImplementation.
+ *
+ * Since: 1.20
+ */
 GstVaImplementation
 gst_va_display_get_implementation (GstVaDisplay * self)
 {

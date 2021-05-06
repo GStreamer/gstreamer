@@ -29,6 +29,12 @@ struct _GstVaDisplayWrapped
   GstVaDisplay parent;
 };
 
+struct _GstVaDisplayWrappedClass
+{
+  /*< private > */
+  GstVaDisplayClass parent_class;
+};
+
 #define gst_va_display_wrapped_parent_class parent_class
 G_DEFINE_TYPE (GstVaDisplayWrapped, gst_va_display_wrapped,
     GST_TYPE_VA_DISPLAY);
@@ -51,6 +57,8 @@ gst_va_display_wrapped_init (GstVaDisplayWrapped * self)
  * VADisplay.
  *
  * Returns: a new #GstVaDisplay if @handle is valid, Otherwise %NULL.
+ *
+ * Since: 1.20
  **/
 GstVaDisplay *
 gst_va_display_wrapped_new (guintptr handle)

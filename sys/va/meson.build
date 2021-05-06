@@ -4,10 +4,8 @@ va_sources = [
   'gstvabasedec.c',
   'gstvacaps.c',
   'gstvadecoder.c',
-  'gstvadisplay.c',
-  'gstvadisplay_drm.c',
-  'gstvadisplay_wrapped.c',
   'gstvadevice.c',
+  'gstvadisplay_priv.c',
   'gstvafilter.c',
   'gstvah264dec.c',
   'gstvah265dec.c',
@@ -21,32 +19,22 @@ va_sources = [
   'gstvavpp.c'
 ]
 
-have_va = false
 va_option = get_option('va')
 if va_option.disabled() or host_system != 'linux'
   subdir_done()
 endif
 
-libva_req = ['>= 1.6']
-
-libva_dep = dependency('libva', version: libva_req, required: va_option)
-libva_drm_dep = dependency('libva-drm', version: libva_req, required: va_option)
-libgudev_dep = dependency('gudev-1.0', required: va_option)
-libdrm_dep = dependency('libdrm', required: false,
-			fallback: ['libdrm', 'ext_libdrm'])
+if not gstva_dep.found()
+  if va_option.enabled()
+    error('The va plugin was enabled explicity, but required dependencies were not found.')
+  endif
+  subdir_done()
+endif
 
 libva_av1_req = ['>= 1.8']
 libva_av1_dep = dependency('libva', version: libva_av1_req, required: va_option)
 if libva_av1_dep.found()
   va_sources += 'gstvaav1dec.c'
-endif
-
-have_va = libva_dep.found() and libva_drm_dep.found()
-if not (have_va and libgudev_dep.found())
-  if va_option.enabled()
-    error('The va plugin was enabled explicity, but required dependencies were not found.')
-  endif
-  subdir_done()
 endif
 
 cdata.set10('HAVE_LIBDRM', libdrm_dep.found())
@@ -61,7 +49,7 @@ gstva = library('gstva',
   va_sources,
   c_args : gst_plugins_bad_args + extra_c_args + gstva_cargs + ['-std=c99'],
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gstcodecs_dep, libva_dep, gstallocators_dep, libva_drm_dep, libgudev_dep, libdrm_dep] + extra_dep,
+  dependencies : [libva_dep, gstvideo_dep, gstcodecs_dep, gstallocators_dep, gstva_dep] + extra_dep,
   install : true,
   install_dir : plugins_install_dir,
 )

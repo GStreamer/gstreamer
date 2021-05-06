@@ -41,6 +41,12 @@ struct _GstVaDisplayDrm
   gint fd;
 };
 
+struct _GstVaDisplayDrmClass
+{
+  /*< private > */
+  GstVaDisplayClass parent_class;
+};
+
 GST_DEBUG_CATEGORY_EXTERN (gst_va_display_debug);
 #define GST_CAT_DEFAULT gst_va_display_debug
 
@@ -170,6 +176,8 @@ gst_va_display_drm_init (GstVaDisplayDrm * self)
  * Returns: a newly allocated #GstVaDisplay if the specified DRM
  *     render device could be opened and initialized; otherwise %NULL
  *     is returned.
+ *
+ * Since: 1.20
  **/
 GstVaDisplay *
 gst_va_display_drm_new_from_path (const gchar * path)

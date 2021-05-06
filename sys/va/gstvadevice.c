@@ -25,7 +25,6 @@
 #include "gstvadevice.h"
 
 #include <gudev/gudev.h>
-#include "gstvadisplay_drm.h"
 
 #define GST_CAT_DEFAULT gstva_debug
 GST_DEBUG_CATEGORY_EXTERN (gstva_debug);

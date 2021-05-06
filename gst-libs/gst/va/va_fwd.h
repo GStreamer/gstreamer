@@ -1,6 +1,5 @@
 /* GStreamer
- * Copyright (C) 2020 Igalia, S.L.
- *     Author: Víctor Jáquez <vjaquez@igalia.com>
+ * Copyright (C) 2021 GStreamer developers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,14 +19,17 @@
 
 #pragma once
 
-#include "gstvadisplay.h"
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VA_DISPLAY_DRM (gst_va_display_drm_get_type())
-G_DECLARE_FINAL_TYPE (GstVaDisplayDrm, gst_va_display_drm, GST, VA_DISPLAY_DRM,
-    GstVaDisplay)
+typedef struct _GstVaDisplay GstVaDisplay;
+typedef struct _GstVaDisplayClass GstVaDisplayClass;
 
-GstVaDisplay *        gst_va_display_drm_new_from_path    (const gchar * path);
+typedef struct _GstVaDisplayDrm GstVaDisplayDrm;
+typedef struct _GstVaDisplayDrmClass GstVaDisplayDrmClass;
+
+typedef struct _GstVaDisplayWrapped GstVaDisplayWrapped;
+typedef struct _GstVaDisplayWrappedClass GstVaDisplayWrappedClass;
 
 G_END_DECLS

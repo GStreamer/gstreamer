@@ -22,9 +22,9 @@
 #include "config.h"
 #endif
 
-#include "gstvadisplay_drm.h"
-#include "gstvadisplay_wrapped.h"
 #include "gstvautils.h"
+#include <gst/va/gstvadisplay_drm.h>
+#include <gst/va/gstvadisplay_wrapped.h>
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
@@ -164,7 +164,7 @@ gst_va_element_propagate_display_context (GstElement * element,
 
   _init_context_debug ();
 
-  ctxt = gst_context_new ("gst.va.display.handle", TRUE);
+  ctxt = gst_context_new (GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR, TRUE);
   gst_context_set_va_display (ctxt, display);
 
   GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
@@ -189,7 +189,7 @@ gst_va_ensure_element_data (gpointer element, const gchar * render_device_path,
   if (gst_va_display_found (element, g_atomic_pointer_get (display_ptr)))
     goto done;
 
-  _gst_context_query (element, "gst.va.display.handle");
+  _gst_context_query (element, GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR);
 
   /* Neighbour found and it updated the display */
   if (gst_va_display_found (element, g_atomic_pointer_get (display_ptr)))
@@ -222,7 +222,7 @@ gst_va_handle_set_context (GstElement * element, GstContext * context,
 
   context_type = gst_context_get_context_type (context);
 
-  if (g_strcmp0 (context_type, "gst.va.display.handle") == 0) {
+  if (g_strcmp0 (context_type, GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR) == 0) {
     type_name = G_OBJECT_TYPE_NAME (element);
     if (!gst_context_get_va_display (context, type_name, render_device_path,
             &display_replacement)) {
@@ -258,7 +258,8 @@ gst_va_handle_context_query (GstElement * element, GstQuery * query,
       "handle context query %" GST_PTR_FORMAT, query);
   gst_query_parse_context_type (query, &context_type);
 
-  if (!display || g_strcmp0 (context_type, "gst.va.display.handle") != 0)
+  if (!display
+      || g_strcmp0 (context_type, GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR) != 0)
     return FALSE;
 
   gst_query_parse_context (query, &old_ctxt);
@@ -266,7 +267,7 @@ gst_va_handle_context_query (GstElement * element, GstQuery * query,
   if (old_ctxt)
     ctxt = gst_context_copy (old_ctxt);
   else
-    ctxt = gst_context_new ("gst.va.display.handle", TRUE);
+    ctxt = gst_context_new (GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR, TRUE);
 
   gst_context_set_va_display (ctxt, display);
   gst_query_set_context (query, ctxt);

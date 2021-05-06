@@ -20,26 +20,13 @@
 
 #pragma once
 
-#include <gst/gst.h>
+#include <gst/va/gstvadisplay.h>
+#include <va/va.h>
 
 G_BEGIN_DECLS
-
-#include <gst/va/gstvadisplay_drm.h>
-
-#define GST_TYPE_VA_DEVICE    (gst_va_device_get_type())
-#define GST_IS_VA_DEVICE(obj) (GST_IS_MINI_OBJECT_TYPE((obj), GST_TYPE_VA_DEVICE))
-#define GST_VA_DEVICE(obj)    ((GstVaDevice *)(obj))
-
-typedef struct
-{
-  GstMiniObject mini_object;
-
-  GstVaDisplay *display;
-  gchar *render_device_path;
-} GstVaDevice;
-
-GType                 gst_va_device_get_type              (void);
-GList *               gst_va_device_find_devices          (void);
-void                  gst_va_device_list_free             (GList * devices);
+GArray *              gst_va_display_get_profiles         (GstVaDisplay * self,
+                                                           guint32 codec,
+                                                           VAEntrypoint entrypoint);
+GArray *              gst_va_display_get_image_formats    (GstVaDisplay * self);
 
 G_END_DECLS

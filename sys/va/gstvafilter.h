@@ -20,10 +20,10 @@
 
 #pragma once
 
-#include "gstvadisplay.h"
-
+#include <gst/va/gstvadisplay.h>
 #include <gst/video/video.h>
 
+#include <va/va.h>
 #include <va/va_vpp.h>
 
 G_BEGIN_DECLS

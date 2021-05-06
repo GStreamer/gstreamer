@@ -28,12 +28,12 @@
 
 #include <va/va_drmcommon.h>
 
-#include "gstvadisplay.h"
+#include "gstvadisplay_priv.h"
 #include "gstvaprofile.h"
 #include "gstvavideoformat.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_va_display_debug);
-#define GST_CAT_DEFAULT gst_va_display_debug
+GST_DEBUG_CATEGORY_EXTERN (gstva_debug);
+#define GST_CAT_DEFAULT gstva_debug
 
 static const guint va_rt_format_list[] = {
 #define R(name) G_PASTE (VA_RT_FORMAT_, name)

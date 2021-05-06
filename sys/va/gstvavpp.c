@@ -77,7 +77,7 @@
 
 #include "gstvaallocator.h"
 #include "gstvacaps.h"
-#include "gstvadisplay_drm.h"
+#include "gstvadisplay_priv.h"
 #include "gstvafilter.h"
 #include "gstvapool.h"
 #include "gstvautils.h"

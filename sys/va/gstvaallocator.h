@@ -21,9 +21,9 @@
 #pragma once
 
 #include <gst/allocators/allocators.h>
+#include <gst/va/gstvadisplay.h>
 #include <gst/video/video.h>
-
-#include "gstvadisplay.h"
+#include <va/va.h>
 
 G_BEGIN_DECLS
 
