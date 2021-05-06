@@ -374,8 +374,7 @@ gst_hls_sink2_reset (GstHlsSink2 * sink)
   if (sink->playlist)
     gst_m3u8_playlist_free (sink->playlist);
   sink->playlist =
-      gst_m3u8_playlist_new (GST_M3U8_PLAYLIST_VERSION, sink->playlist_length,
-      FALSE);
+      gst_m3u8_playlist_new (GST_M3U8_PLAYLIST_VERSION, sink->playlist_length);
 
   g_queue_foreach (&sink->old_locations, (GFunc) g_free, NULL);
   g_queue_clear (&sink->old_locations);

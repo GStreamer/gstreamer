@@ -213,8 +213,7 @@ gst_hls_sink_reset (GstHlsSink * sink)
   if (sink->playlist)
     gst_m3u8_playlist_free (sink->playlist);
   sink->playlist =
-      gst_m3u8_playlist_new (GST_M3U8_PLAYLIST_VERSION, sink->playlist_length,
-      FALSE);
+      gst_m3u8_playlist_new (GST_M3U8_PLAYLIST_VERSION, sink->playlist_length);
 
   sink->state = GST_M3U8_PLAYLIST_RENDER_INIT;
 }

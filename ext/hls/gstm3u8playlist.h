@@ -31,7 +31,6 @@ typedef struct _GstM3U8Playlist GstM3U8Playlist;
 struct _GstM3U8Playlist
 {
   guint version;
-  gboolean allow_cache;
   gint window_size;
   gint type;
   gboolean end_list;
@@ -49,9 +48,8 @@ typedef enum
 } GstM3U8PlaylistRenderState;
 
 
-GstM3U8Playlist * gst_m3u8_playlist_new (guint version, 
-				         guint window_size,
-					 gboolean allow_cache);
+GstM3U8Playlist * gst_m3u8_playlist_new (guint version,
+				         guint window_size);
 
 void              gst_m3u8_playlist_free (GstM3U8Playlist * playlist);
 

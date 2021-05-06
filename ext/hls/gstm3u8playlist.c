@@ -69,14 +69,13 @@ gst_m3u8_entry_free (GstM3U8Entry * entry)
 }
 
 GstM3U8Playlist *
-gst_m3u8_playlist_new (guint version, guint window_size, gboolean allow_cache)
+gst_m3u8_playlist_new (guint version, guint window_size)
 {
   GstM3U8Playlist *playlist;
 
   playlist = g_new0 (GstM3U8Playlist, 1);
   playlist->version = version;
   playlist->window_size = window_size;
-  playlist->allow_cache = allow_cache;
   playlist->type = GST_M3U8_PLAYLIST_TYPE_EVENT;
   playlist->end_list = FALSE;
   playlist->entries = g_queue_new ();
@@ -154,9 +153,6 @@ gst_m3u8_playlist_render (GstM3U8Playlist * playlist)
 
   g_string_append_printf (playlist_str, "#EXT-X-VERSION:%d\n",
       playlist->version);
-
-  g_string_append_printf (playlist_str, "#EXT-X-ALLOW-CACHE:%s\n",
-      playlist->allow_cache ? "YES" : "NO");
 
   g_string_append_printf (playlist_str, "#EXT-X-MEDIA-SEQUENCE:%d\n",
       playlist->sequence_number - playlist->entries->length);
