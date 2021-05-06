@@ -311,7 +311,7 @@ gst_vp9_enc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-gst_vp9_enc_configure_encoder (GstVPXEnc * encoder)
+gst_vp9_enc_configure_encoder (GstVPXEnc * encoder, GstVideoCodecState * state)
 {
   GstVP9Enc *vp9enc = GST_VP9_ENC (encoder);
   vpx_codec_err_t status;

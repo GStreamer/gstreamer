@@ -1977,7 +1977,7 @@ gst_vpx_enc_set_format (GstVideoEncoder * video_encoder,
   }
 
   if (vpx_enc_class->configure_encoder
-      && !vpx_enc_class->configure_encoder (encoder)) {
+      && !vpx_enc_class->configure_encoder (encoder, state)) {
     ret = FALSE;
     g_mutex_unlock (&encoder->encoder_lock);
     goto done;

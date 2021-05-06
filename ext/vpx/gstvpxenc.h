@@ -127,7 +127,7 @@ struct _GstVPXEncClass
   /*enabled scaling*/
   gboolean (*enable_scaling) (GstVPXEnc *enc);
   /*called from set_format with lock taken*/
-  gboolean (*configure_encoder) (GstVPXEnc *enc);
+  gboolean (*configure_encoder) (GstVPXEnc *enc, GstVideoCodecState *state);
   /*set image format info*/
   void (*set_image_format) (GstVPXEnc *enc, vpx_image_t *image);
   /*get new simple caps*/
