@@ -6412,28 +6412,47 @@ static void
 on_rtpbin_new_jitterbuffer (GstElement * rtpbin, GstElement * jitterbuffer,
     guint session_id, guint ssrc, GstWebRTCBin * webrtc)
 {
-  WebRTCTransceiver *trans;
+  TransportStream *stream;
   guint i;
 
-  trans = (WebRTCTransceiver *) _find_transceiver (webrtc, &session_id,
-      (FindTransceiverFunc) transceiver_match_for_mline);
+  PC_LOCK (webrtc);
+  GST_INFO_OBJECT (webrtc, "new jitterbuffer %" GST_PTR_FORMAT " for "
+      "session %u ssrc %u", jitterbuffer, session_id, ssrc);
 
-  if (trans) {
-    /* We don't set do-retransmission on rtpbin as we want per-session control */
-    g_object_set (jitterbuffer, "do-retransmission",
-        WEBRTC_TRANSCEIVER (trans)->do_nack, NULL);
+  if (!(stream = _find_transport_for_session (webrtc, session_id))) {
+    g_warn_if_reached ();
+    goto out;
+  }
 
-    for (i = 0; i < trans->stream->remote_ssrcmap->len; i++) {
-      SsrcMapItem *item = g_ptr_array_index (trans->stream->remote_ssrcmap, i);
+  /* XXX: this will fail with no ssrc in the remote sdp as used with e.g. simulcast
+   * newer SDP versions from chrome/firefox */
+  for (i = 0; i < stream->remote_ssrcmap->len; i++) {
+    SsrcMapItem *item = g_ptr_array_index (stream->remote_ssrcmap, i);
 
-      if (item->ssrc == ssrc) {
-        g_weak_ref_set (&item->rtpjitterbuffer, jitterbuffer);
+    if (item->ssrc == ssrc) {
+      GstWebRTCRTPTransceiver *trans;
+      gboolean do_nack;
+
+      trans = _find_transceiver_for_mline (webrtc, item->media_idx);
+      if (!trans) {
+        g_warn_if_reached ();
         break;
       }
+
+      do_nack = WEBRTC_TRANSCEIVER (trans)->do_nack;
+      /* We don't set do-retransmission on rtpbin as we want per-session control */
+      GST_LOG_OBJECT (webrtc, "setting do-nack=%s for transceiver %"
+          GST_PTR_FORMAT " with transport %" GST_PTR_FORMAT
+          " rtp session %u ssrc %u", do_nack ? "true" : "false", trans, stream,
+          session_id, ssrc);
+      g_object_set (jitterbuffer, "do-retransmission", do_nack, NULL);
+
+      g_weak_ref_set (&item->rtpjitterbuffer, jitterbuffer);
+      break;
     }
-  } else {
-    g_assert_not_reached ();
   }
+out:
+  PC_UNLOCK (webrtc);
 }
 
 static void
