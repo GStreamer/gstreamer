@@ -388,7 +388,7 @@ gst_util_uint64_mul_uint64 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
   b0.ll = (guint64) v.l.high * n.l.low;
 
   /* add the high word of a0 to the low words of a1 and b0 using c1 as
-   * scrach space to capture the carry.  the low word of the result becomes
+   * scratch space to capture the carry.  the low word of the result becomes
    * the final high word of c0 */
   c1->ll = (guint64) c0->l.high + a1.l.low + b0.l.low;
   c0->l.high = c1->l.low;
