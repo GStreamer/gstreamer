@@ -384,10 +384,6 @@ gst_svtav1enc_set_property (GObject * object, guint property_id,
     case PROP_QP_MIN:
       svtav1enc->svt_config->min_qp_allowed = g_value_get_uint (value);
       break;
-    case PROP_LOOKAHEAD:
-        svtav1enc->svt_config->look_ahead_distance =
-            (unsigned int)g_value_get_int(value);
-      break;
     case PROP_SCD:
       svtav1enc->svt_config->scene_change_detection =
           g_value_get_boolean (value);
@@ -456,9 +452,6 @@ gst_svtav1enc_get_property (GObject * object, guint property_id,
       break;
     case PROP_QP_MIN:
       g_value_set_uint (value, svtav1enc->svt_config->min_qp_allowed);
-      break;
-    case PROP_LOOKAHEAD:
-        g_value_set_int(value, (int)svtav1enc->svt_config->look_ahead_distance);
       break;
     case PROP_SCD:
       g_value_set_boolean (value,
@@ -564,15 +557,6 @@ gst_svtav1enc_configure_svt (GstSvtAv1Enc * svtav1enc)
 
   GST_LOG_OBJECT(svtav1enc, "width %d, height %d, framerate %d", svtav1enc->svt_config->source_width, svtav1enc->svt_config->source_height, svtav1enc->svt_config->frame_rate);
 
-  /* pick a default value for the look ahead distance
-   * in CQP mode:2*minigop+1. in VBR:  intra Period */
-  if (svtav1enc->svt_config->look_ahead_distance == (unsigned int) -1) {
-    svtav1enc->svt_config->look_ahead_distance =
-        (svtav1enc->svt_config->rate_control_mode == PROP_RC_MODE_VBR) ?
-        svtav1enc->svt_config->intra_period_length :
-        2 * (1 << svtav1enc->svt_config->hierarchical_levels) + 1;
-  }
-
   /* TODO: better handle HDR metadata when GStreamer will have such support
    * https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/400 */
   if (GST_VIDEO_INFO_COLORIMETRY (info).matrix == GST_VIDEO_COLOR_MATRIX_BT2020
@@ -618,7 +602,6 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->hierarchical_levels = PROP_HIERARCHICAL_LEVEL_DEFAULT;
   svt_config->pred_structure = PROP_PRED_STRUCTURE_DEFAULT;
   svt_config->scene_change_detection = PROP_SCD_DEFAULT;
-  svt_config->look_ahead_distance = (uint32_t)~0;
   svt_config->rate_control_mode = PROP_RC_MODE_DEFAULT; // todo: add CVBR
   svt_config->target_bit_rate = PROP_BITRATE_DEFAULT;
   svt_config->max_qp_allowed = PROP_QP_MAX_DEFAULT;
@@ -670,7 +653,6 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->enable_hme_level1_flag = FALSE;
   svt_config->enable_hme_level2_flag = FALSE;
   svt_config->ext_block_flag = FALSE;
-  svt_config->in_loop_me_flag = TRUE;
   svt_config->search_area_width = 16;
   svt_config->search_area_height = 7;
   svt_config->enable_hbd_mode_decision = 1;
@@ -1016,7 +998,7 @@ gst_svtav1enc_set_format (GstVideoEncoder * encoder,
   fps = fps > 120 ? 120 : fps;
   fps = fps < 24 ? 24 : fps;
 
-  min_latency_frames = svtav1enc->svt_config->look_ahead_distance + ((fps * 5) >> 2);
+  min_latency_frames =  ((fps * 5) >> 2);
 
   /* TODO: find a better value for max_latency */
   gst_video_encoder_set_latency (encoder,
