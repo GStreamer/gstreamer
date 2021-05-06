@@ -119,7 +119,8 @@ static void gst_vp9_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_vp9_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static gboolean gst_vp9_enc_configure_encoder (GstVPXEnc * encoder);
+static gboolean gst_vp9_enc_configure_encoder (GstVPXEnc * encoder,
+    GstVideoCodecState * state);
 
 #define DEFAULT_BITS_PER_PIXEL 0.0289
 
@@ -310,11 +311,74 @@ gst_vp9_enc_get_property (GObject * object, guint prop_id, GValue * value,
   g_mutex_unlock (&gst_vpx_enc->encoder_lock);
 }
 
+static vpx_color_space_t
+gst_vp9_get_vpx_colorspace (GstVPXEnc * encoder, GstVideoColorimetry * cinfo,
+    GstVideoFormat format)
+{
+  vpx_color_space_t colorspace = VPX_CS_UNKNOWN;
+  gchar *colorimetry_str;
+  guint i;
+
+  static const struct
+  {
+    const gchar *str;
+    vpx_color_space_t vpx_color_space;
+  } colorimetry_map[] = {
+    {
+    GST_VIDEO_COLORIMETRY_BT601, VPX_CS_BT_601}, {
+    GST_VIDEO_COLORIMETRY_BT709, VPX_CS_BT_709}, {
+    GST_VIDEO_COLORIMETRY_SMPTE240M, VPX_CS_SMPTE_240}, {
+    GST_VIDEO_COLORIMETRY_BT2020, VPX_CS_BT_2020}
+  };
+
+  colorimetry_str = gst_video_colorimetry_to_string (cinfo);
+
+  if (colorimetry_str != NULL) {
+    for (i = 0; i < G_N_ELEMENTS (colorimetry_map); ++i) {
+      if (g_strcmp0 (colorimetry_map[i].str, colorimetry_str) == 0) {
+        colorspace = colorimetry_map[i].vpx_color_space;
+        break;
+      }
+    }
+  }
+
+  if (colorspace == VPX_CS_UNKNOWN) {
+    if (format == GST_VIDEO_FORMAT_GBR
+        || format == GST_VIDEO_FORMAT_GBR_10BE
+        || format == GST_VIDEO_FORMAT_GBR_10LE
+        || format == GST_VIDEO_FORMAT_GBR_12BE
+        || format == GST_VIDEO_FORMAT_GBR_12LE) {
+      /* Currently has no effect because vp*enc elements only accept YUV video
+       * formats.
+       *
+       * FIXME: Support encoding GST_VIDEO_FORMAT_GBR and its high bits variants.
+       */
+      colorspace = VPX_CS_SRGB;
+    } else {
+      GST_WARNING_OBJECT (encoder, "Unsupported colorspace \"%s\"",
+          GST_STR_NULL (colorimetry_str));
+    }
+  }
+
+  g_free (colorimetry_str);
+
+  return colorspace;
+}
+
 static gboolean
 gst_vp9_enc_configure_encoder (GstVPXEnc * encoder, GstVideoCodecState * state)
 {
   GstVP9Enc *vp9enc = GST_VP9_ENC (encoder);
+  GstVideoInfo *info = &state->info;
   vpx_codec_err_t status;
+
+  status = vpx_codec_control (&encoder->encoder, VP9E_SET_COLOR_SPACE,
+      gst_vp9_get_vpx_colorspace (encoder, &GST_VIDEO_INFO_COLORIMETRY (info),
+          GST_VIDEO_INFO_FORMAT (info)));
+  if (status != VPX_CODEC_OK) {
+    GST_WARNING_OBJECT (encoder,
+        "Failed to set VP9E_SET_COLOR_SPACE: %s", gst_vpx_error_name (status));
+  }
 
   status =
       vpx_codec_control (&encoder->encoder, VP9E_SET_TILE_COLUMNS,
