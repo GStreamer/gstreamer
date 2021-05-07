@@ -14,6 +14,7 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
 #include <gst/video/video.h>
+#include <gst/va/gstvadisplay.h>
 
 #include <va/va_x11.h>
 
@@ -44,11 +45,11 @@ context_handler (GstBus * bus, GstMessage * msg, gpointer data)
 
   gst_println ("got need context %s", context_type);
 
-  if (g_strcmp0 (context_type, "gst.va.display.handle") == 0) {
+  if (g_strcmp0 (context_type, GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR) == 0) {
     GstContext *context;
     GstStructure *s;
 
-    context = gst_context_new ("gst.va.display.handle", TRUE);
+    context = gst_context_new (GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR, TRUE);
     s = gst_context_writable_structure (context);
     gst_structure_set (s, "va-display", G_TYPE_POINTER, app->va_dpy, NULL);
     gst_element_set_context (GST_ELEMENT (msg->src), context);

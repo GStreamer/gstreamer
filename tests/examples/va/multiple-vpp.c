@@ -4,6 +4,7 @@
 #include <gst/video/video.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 #include <gst/controller/gstdirectcontrolbinding.h>
+#include <gst/va/gstvadisplay.h>
 
 #define CHANGE_DIR_WITH_EVENT 0
 
@@ -53,7 +54,8 @@ context_handler (GstBus * bus, GstMessage * msg, gpointer data)
       if (context) {
         context_type = gst_context_get_context_type (context);
 
-        if (g_strcmp0 (context_type, "gst.va.display.handle") == 0) {
+        if (g_strcmp0 (context_type,
+                GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR) == 0) {
           const GstStructure *s = gst_context_get_structure (context);
           GstObject *display = NULL;
 
@@ -81,7 +83,7 @@ context_handler (GstBus * bus, GstMessage * msg, gpointer data)
     case GST_MESSAGE_NEED_CONTEXT:
       gst_message_parse_context_type (msg, &context_type);
 
-      if (g_strcmp0 (context_type, "gst.va.display.handle") == 0) {
+      if (g_strcmp0 (context_type, GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR) == 0) {
         GstContext *context;
         GstStructure *s;
 
@@ -96,7 +98,8 @@ context_handler (GstBus * bus, GstMessage * msg, gpointer data)
           return GST_BUS_DROP;
         }
 
-        context = gst_context_new ("gst.va.display.handle", TRUE);
+        context =
+            gst_context_new (GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR, TRUE);
         s = gst_context_writable_structure (context);
         gst_structure_set (s, "gst-display", GST_TYPE_OBJECT, app->display,
             NULL);

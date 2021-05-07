@@ -14,7 +14,6 @@ va_headers = [
 
 gstva_dep = dependency('', required : false)
 
-have_va = false
 va_option = get_option('va')
 if va_option.disabled() or host_system != 'linux'
   subdir_done()
@@ -27,8 +26,7 @@ libva_drm_dep = dependency('libva-drm', version: libva_req, required: va_option)
 libgudev_dep = dependency('gudev-1.0', required: va_option)
 libdrm_dep = dependency('libdrm', required: false, fallback: ['libdrm', 'ext_libdrm'])
 
-have_va = libva_dep.found() and libva_drm_dep.found()
-if not (have_va and libgudev_dep.found())
+if not (libva_dep.found() and libva_drm_dep.found() and libgudev_dep.found())
   if va_option.enabled()
     error('The va lib was enabled explicity, but required dependencies were not found.')
   endif
