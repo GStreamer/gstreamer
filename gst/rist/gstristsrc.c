@@ -1238,6 +1238,7 @@ gst_rist_src_finalize (GObject * object)
     RistReceiverBond *bond = g_ptr_array_index (src->bonds, i);
     g_free (bond->address);
     g_free (bond->multicast_iface);
+    g_clear_object (&bond->rtcp_send_addr);
     g_slice_free (RistReceiverBond, bond);
   }
   g_ptr_array_free (src->bonds, TRUE);
