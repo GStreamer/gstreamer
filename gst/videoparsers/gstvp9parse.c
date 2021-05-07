@@ -482,6 +482,7 @@ gst_vp9_parse_update_src_caps (GstVp9Parse * self, GstCaps * caps)
   gchar *colorimetry = NULL;
   const gchar *chroma_format = NULL;
   const gchar *profile = NULL;
+  gboolean codec_alpha_allowed = FALSE;
 
   if (!self->update_caps)
     return;
@@ -524,6 +525,10 @@ gst_vp9_parse_update_src_caps (GstVp9Parse * self, GstCaps * caps)
 
   if (s && gst_structure_has_field (s, "framerate")) {
     gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
+  }
+
+  if (s && gst_structure_has_field (s, "codec-alpha")) {
+    gst_structure_get_boolean (s, "codec-alpha", &codec_alpha_allowed);
   }
 
   if (fps_n > 0 && fps_d > 0) {
@@ -632,6 +637,9 @@ gst_vp9_parse_update_src_caps (GstVp9Parse * self, GstCaps * caps)
   profile = gst_vp9_parse_profile_to_string (self->profile);
   if (profile)
     gst_caps_set_simple (final_caps, "profile", G_TYPE_STRING, profile, NULL);
+
+  gst_caps_set_simple (final_caps, "codec-alpha", G_TYPE_BOOLEAN,
+      codec_alpha_allowed, NULL);
 
   src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (self));
 
