@@ -960,15 +960,17 @@ gst_download_buffer_close_temp_location_file (GstDownloadBuffer * dlbuf)
 
   GST_DEBUG_OBJECT (dlbuf, "closing sparse file");
 
+  gst_sparse_file_free (dlbuf->file);
+  dlbuf->file = NULL;
+  /* fd was closed by gst_sparse_file_free's fclose() */
+  dlbuf->temp_fd = -1;
+
   if (dlbuf->temp_remove) {
     if (remove (dlbuf->temp_location) < 0) {
       GST_WARNING_OBJECT (dlbuf, "Failed to remove temporary file %s: %s",
           dlbuf->temp_location, g_strerror (errno));
     }
   }
-  gst_sparse_file_free (dlbuf->file);
-  close (dlbuf->temp_fd);
-  dlbuf->file = NULL;
 }
 
 static void
