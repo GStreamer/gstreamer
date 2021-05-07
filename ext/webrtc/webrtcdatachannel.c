@@ -356,7 +356,7 @@ _close_procedure (WebRTCDataChannel * channel, gpointer user_data)
 }
 
 static void
-_on_sctp_stream_reset (GstWebRTCSCTPTransport * sctp, guint stream_id,
+_on_sctp_stream_reset (WebRTCSCTPTransport * sctp, guint stream_id,
     WebRTCDataChannel * channel)
 {
   if (channel->parent.id == stream_id) {
@@ -1003,7 +1003,7 @@ webrtc_data_channel_init (WebRTCDataChannel * channel)
 
 static void
 _data_channel_set_sctp_transport (WebRTCDataChannel * channel,
-    GstWebRTCSCTPTransport * sctp)
+    WebRTCSCTPTransport * sctp)
 {
   g_return_if_fail (GST_IS_WEBRTC_DATA_CHANNEL (channel));
   g_return_if_fail (GST_IS_WEBRTC_SCTP_TRANSPORT (sctp));
@@ -1026,7 +1026,7 @@ _data_channel_set_sctp_transport (WebRTCDataChannel * channel,
 
 void
 webrtc_data_channel_link_to_sctp (WebRTCDataChannel * channel,
-    GstWebRTCSCTPTransport * sctp_transport)
+    WebRTCSCTPTransport * sctp_transport)
 {
   if (sctp_transport && !channel->sctp_transport) {
     gint id;

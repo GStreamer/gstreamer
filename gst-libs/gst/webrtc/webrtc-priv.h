@@ -289,6 +289,27 @@ GST_WEBRTC_API
 void gst_webrtc_data_channel_on_buffered_amount_low (GstWebRTCDataChannel * channel);
 
 
+/**
+ * GstWebRTCSCTPTransport:
+ *
+ * Since: 1.20
+ */
+struct _GstWebRTCSCTPTransport
+{
+  GstObject                     parent;
+};
+
+/**
+ * GstWebRTCSCTPTransportClass:
+ *
+ * Since: 1.20
+ */
+struct _GstWebRTCSCTPTransportClass
+{
+  GstObjectClass                parent_class;
+};
+
+
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_PRIV_H__ */

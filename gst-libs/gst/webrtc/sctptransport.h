@@ -21,14 +21,13 @@
 #define __GST_WEBRTC_SCTP_TRANSPORT_H__
 
 #include <gst/gst.h>
-/* libnice */
-#include <agent.h>
-#include <gst/webrtc/webrtc.h>
-#include "gstwebrtcice.h"
+#include <gst/webrtc/webrtc_fwd.h>
 
 G_BEGIN_DECLS
 
+GST_WEBRTC_API
 GType gst_webrtc_sctp_transport_get_type(void);
+
 #define GST_TYPE_WEBRTC_SCTP_TRANSPORT            (gst_webrtc_sctp_transport_get_type())
 #define GST_WEBRTC_SCTP_TRANSPORT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WEBRTC_SCTP_TRANSPORT,GstWebRTCSCTPTransport))
 #define GST_IS_WEBRTC_SCTP_TRANSPORT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WEBRTC_SCTP_TRANSPORT))
@@ -36,34 +35,7 @@ GType gst_webrtc_sctp_transport_get_type(void);
 #define GST_IS_WEBRTC_SCTP_TRANSPORT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_WEBRTC_SCTP_TRANSPORT))
 #define GST_WEBRTC_SCTP_TRANSPORT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_WEBRTC_SCTP_TRANSPORT,GstWebRTCSCTPTransportClass))
 
-struct _GstWebRTCSCTPTransport
-{
-  GstObject                     parent;
-
-  GstWebRTCDTLSTransport       *transport;
-  GstWebRTCSCTPTransportState   state;
-  guint64                       max_message_size;
-  guint                         max_channels;
-
-  gboolean                      association_established;
-
-  gulong                        sctpdec_block_id;
-  GstElement                   *sctpdec;
-  GstElement                   *sctpenc;
-
-  GstWebRTCBin                 *webrtcbin;
-};
-
-struct _GstWebRTCSCTPTransportClass
-{
-  GstObjectClass                parent_class;
-};
-
-GstWebRTCSCTPTransport *    gst_webrtc_sctp_transport_new               (void);
-
-void
-gst_webrtc_sctp_transport_set_priority (GstWebRTCSCTPTransport *sctp,
-                                        GstWebRTCPriorityType priority);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCSCTPTransport, gst_object_unref)
 
 G_END_DECLS
 

@@ -24,7 +24,7 @@
 #include <gst/webrtc/webrtc_fwd.h>
 #include <gst/webrtc/dtlstransport.h>
 #include <gst/webrtc/datachannel.h>
-#include "sctptransport.h"
+#include "webrtcsctptransport.h"
 
 #include "gst/webrtc/webrtc-priv.h"
 
@@ -45,7 +45,7 @@ struct _WebRTCDataChannel
 {
   GstWebRTCDataChannel              parent;
 
-  GstWebRTCSCTPTransport           *sctp_transport;
+  WebRTCSCTPTransport              *sctp_transport;
   GstElement                       *appsrc;
   GstElement                       *appsink;
 
@@ -68,7 +68,7 @@ struct _WebRTCDataChannelClass
 void    webrtc_data_channel_start_negotiation   (WebRTCDataChannel       *channel);
 G_GNUC_INTERNAL
 void    webrtc_data_channel_link_to_sctp (WebRTCDataChannel                 *channel,
-                                          GstWebRTCSCTPTransport            *sctp_transport);
+                                          WebRTCSCTPTransport               *sctp_transport);
 
 G_END_DECLS
 

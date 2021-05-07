@@ -24,6 +24,7 @@
 #include "fwd.h"
 #include "gstwebrtcice.h"
 #include "transportstream.h"
+#include "webrtcsctptransport.h"
 
 G_BEGIN_DECLS
 
@@ -106,7 +107,7 @@ struct _GstWebRTCBinPrivate
 
   guint jb_latency;
 
-  GstWebRTCSCTPTransport *sctp_transport;
+  WebRTCSCTPTransport *sctp_transport;
   TransportStream *data_channel_transport;
 
   GstWebRTCICE *ice;

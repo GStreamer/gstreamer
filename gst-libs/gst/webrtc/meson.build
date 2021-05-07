@@ -6,6 +6,7 @@ webrtc_sources = [
   'rtpsender.c',
   'rtptransceiver.c',
   'datachannel.c',
+  'sctptransport.c',
 ]
 
 webrtc_headers = [
@@ -18,6 +19,7 @@ webrtc_headers = [
   'datachannel.h',
   'webrtc_fwd.h',
   'webrtc.h',
+  'sctptransport.h',
 ]
 
 webrtc_enumtypes_headers = [

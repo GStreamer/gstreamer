@@ -29,7 +29,7 @@
 #include "webrtcsdp.h"
 #include "webrtctransceiver.h"
 #include "webrtcdatachannel.h"
-#include "sctptransport.h"
+#include "webrtcsctptransport.h"
 
 #include "gst/webrtc/webrtc-priv.h"
 
@@ -1986,7 +1986,7 @@ gst_webrtc_bin_update_sctp_priority (GstWebRTCBin * webrtc)
   /* If one stream has a non-default priority, then everyone else does too */
   gst_webrtc_bin_attach_tos (webrtc);
 
-  gst_webrtc_sctp_transport_set_priority (webrtc->priv->sctp_transport,
+  webrtc_sctp_transport_set_priority (webrtc->priv->sctp_transport,
       sctp_priority);
 }
 
@@ -2201,7 +2201,7 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
 }
 
 static void
-_on_sctp_state_notify (GstWebRTCSCTPTransport * sctp, GParamSpec * pspec,
+_on_sctp_state_notify (WebRTCSCTPTransport * sctp, GParamSpec * pspec,
     GstWebRTCBin * webrtc)
 {
   GstWebRTCSCTPTransportState state;
@@ -2238,7 +2238,7 @@ _sctp_check_dtls_state_task (GstWebRTCBin * webrtc, gpointer unused)
   TransportStream *stream;
   GstWebRTCDTLSTransport *transport;
   GstWebRTCDTLSTransportState dtls_state;
-  GstWebRTCSCTPTransport *sctp_transport;
+  WebRTCSCTPTransport *sctp_transport;
 
   stream = webrtc->priv->data_channel_transport;
   transport = stream->transport;
@@ -2326,7 +2326,7 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
 {
   if (!webrtc->priv->data_channel_transport) {
     TransportStream *stream;
-    GstWebRTCSCTPTransport *sctp_transport;
+    WebRTCSCTPTransport *sctp_transport;
 
     stream = _find_transport_for_session (webrtc, session_id);
 
@@ -2336,7 +2336,7 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
     webrtc->priv->data_channel_transport = stream;
 
     if (!(sctp_transport = webrtc->priv->sctp_transport)) {
-      sctp_transport = gst_webrtc_sctp_transport_new ();
+      sctp_transport = webrtc_sctp_transport_new ();
       sctp_transport->transport =
           g_object_ref (webrtc->priv->data_channel_transport->transport);
       sctp_transport->webrtcbin = webrtc;

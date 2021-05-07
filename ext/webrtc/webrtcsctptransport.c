@@ -23,10 +23,10 @@
 
 #include <stdio.h>
 
-#include "sctptransport.h"
+#include "webrtcsctptransport.h"
 #include "gstwebrtcbin.h"
 
-#define GST_CAT_DEFAULT gst_webrtc_sctp_transport_debug
+#define GST_CAT_DEFAULT webrtc_sctp_transport_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 enum
@@ -45,18 +45,19 @@ enum
   PROP_MAX_CHANNELS,
 };
 
-static guint gst_webrtc_sctp_transport_signals[LAST_SIGNAL] = { 0 };
+static guint webrtc_sctp_transport_signals[LAST_SIGNAL] = { 0 };
 
-#define gst_webrtc_sctp_transport_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstWebRTCSCTPTransport, gst_webrtc_sctp_transport,
-    GST_TYPE_OBJECT, GST_DEBUG_CATEGORY_INIT (gst_webrtc_sctp_transport_debug,
+#define webrtc_sctp_transport_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (WebRTCSCTPTransport, webrtc_sctp_transport,
+    GST_TYPE_WEBRTC_SCTP_TRANSPORT,
+    GST_DEBUG_CATEGORY_INIT (webrtc_sctp_transport_debug,
         "webrtcsctptransport", 0, "webrtcsctptransport"););
 
-typedef void (*SCTPTask) (GstWebRTCSCTPTransport * sctp, gpointer user_data);
+typedef void (*SCTPTask) (WebRTCSCTPTransport * sctp, gpointer user_data);
 
 struct task
 {
-  GstWebRTCSCTPTransport *sctp;
+  WebRTCSCTPTransport *sctp;
   SCTPTask func;
   gpointer user_data;
   GDestroyNotify notify;
@@ -81,7 +82,7 @@ _free_task (struct task *task)
 }
 
 static void
-_sctp_enqueue_task (GstWebRTCSCTPTransport * sctp, SCTPTask func,
+_sctp_enqueue_task (WebRTCSCTPTransport * sctp, SCTPTask func,
     gpointer user_data, GDestroyNotify notify)
 {
   struct task *task = g_new0 (struct task, 1);
@@ -97,17 +98,17 @@ _sctp_enqueue_task (GstWebRTCSCTPTransport * sctp, SCTPTask func,
 }
 
 static void
-_emit_stream_reset (GstWebRTCSCTPTransport * sctp, gpointer user_data)
+_emit_stream_reset (WebRTCSCTPTransport * sctp, gpointer user_data)
 {
   guint stream_id = GPOINTER_TO_UINT (user_data);
 
   g_signal_emit (sctp,
-      gst_webrtc_sctp_transport_signals[ON_STREAM_RESET_SIGNAL], 0, stream_id);
+      webrtc_sctp_transport_signals[ON_STREAM_RESET_SIGNAL], 0, stream_id);
 }
 
 static void
 _on_sctp_dec_pad_removed (GstElement * sctpdec, GstPad * pad,
-    GstWebRTCSCTPTransport * sctp)
+    WebRTCSCTPTransport * sctp)
 {
   guint stream_id;
 
@@ -120,7 +121,7 @@ _on_sctp_dec_pad_removed (GstElement * sctpdec, GstPad * pad,
 
 static void
 _on_sctp_association_established (GstElement * sctpenc, gboolean established,
-    GstWebRTCSCTPTransport * sctp)
+    WebRTCSCTPTransport * sctp)
 {
   GST_OBJECT_LOCK (sctp);
   if (established)
@@ -133,21 +134,8 @@ _on_sctp_association_established (GstElement * sctpenc, gboolean established,
   g_object_notify (G_OBJECT (sctp), "state");
 }
 
-static void
-gst_webrtc_sctp_transport_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-//  GstWebRTCSCTPTransport *sctp = GST_WEBRTC_SCTP_TRANSPORT (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
 void
-gst_webrtc_sctp_transport_set_priority (GstWebRTCSCTPTransport * sctp,
+webrtc_sctp_transport_set_priority (WebRTCSCTPTransport * sctp,
     GstWebRTCPriorityType priority)
 {
   GstPad *pad;
@@ -161,10 +149,10 @@ gst_webrtc_sctp_transport_set_priority (GstWebRTCSCTPTransport * sctp,
 }
 
 static void
-gst_webrtc_sctp_transport_get_property (GObject * object, guint prop_id,
+webrtc_sctp_transport_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstWebRTCSCTPTransport *sctp = GST_WEBRTC_SCTP_TRANSPORT (object);
+  WebRTCSCTPTransport *sctp = WEBRTC_SCTP_TRANSPORT (object);
 
   switch (prop_id) {
     case PROP_TRANSPORT:
@@ -186,9 +174,9 @@ gst_webrtc_sctp_transport_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_webrtc_sctp_transport_finalize (GObject * object)
+webrtc_sctp_transport_finalize (GObject * object)
 {
-  GstWebRTCSCTPTransport *sctp = GST_WEBRTC_SCTP_TRANSPORT (object);
+  WebRTCSCTPTransport *sctp = WEBRTC_SCTP_TRANSPORT (object);
 
   g_signal_handlers_disconnect_by_data (sctp->sctpdec, sctp);
   g_signal_handlers_disconnect_by_data (sctp->sctpenc, sctp);
@@ -202,9 +190,9 @@ gst_webrtc_sctp_transport_finalize (GObject * object)
 }
 
 static void
-gst_webrtc_sctp_transport_constructed (GObject * object)
+webrtc_sctp_transport_constructed (GObject * object)
 {
-  GstWebRTCSCTPTransport *sctp = GST_WEBRTC_SCTP_TRANSPORT (object);
+  WebRTCSCTPTransport *sctp = WEBRTC_SCTP_TRANSPORT (object);
   guint association_id;
 
   association_id = g_random_int_range (0, G_MAXUINT16);
@@ -226,61 +214,38 @@ gst_webrtc_sctp_transport_constructed (GObject * object)
 }
 
 static void
-gst_webrtc_sctp_transport_class_init (GstWebRTCSCTPTransportClass * klass)
+webrtc_sctp_transport_class_init (WebRTCSCTPTransportClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gobject_class->constructed = gst_webrtc_sctp_transport_constructed;
-  gobject_class->get_property = gst_webrtc_sctp_transport_get_property;
-  gobject_class->set_property = gst_webrtc_sctp_transport_set_property;
-  gobject_class->finalize = gst_webrtc_sctp_transport_finalize;
+  gobject_class->constructed = webrtc_sctp_transport_constructed;
+  gobject_class->get_property = webrtc_sctp_transport_get_property;
+  gobject_class->finalize = webrtc_sctp_transport_finalize;
 
-  g_object_class_install_property (gobject_class,
-      PROP_TRANSPORT,
-      g_param_spec_object ("transport",
-          "WebRTC DTLS Transport",
-          "DTLS transport used for this SCTP transport",
-          GST_TYPE_WEBRTC_DTLS_TRANSPORT,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
-      PROP_STATE,
-      g_param_spec_enum ("state",
-          "WebRTC SCTP Transport state", "WebRTC SCTP Transport state",
-          GST_TYPE_WEBRTC_SCTP_TRANSPORT_STATE,
-          GST_WEBRTC_SCTP_TRANSPORT_STATE_NEW,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
-      PROP_MAX_MESSAGE_SIZE,
-      g_param_spec_uint64 ("max-message-size",
-          "Maximum message size",
-          "Maximum message size as reported by the transport", 0, G_MAXUINT64,
-          0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
-      PROP_MAX_CHANNELS,
-      g_param_spec_uint ("max-channels",
-          "Maximum number of channels", "Maximum number of channels",
-          0, G_MAXUINT16, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_override_property (gobject_class, PROP_TRANSPORT, "transport");
+  g_object_class_override_property (gobject_class, PROP_STATE, "state");
+  g_object_class_override_property (gobject_class,
+      PROP_MAX_MESSAGE_SIZE, "max-message-size");
+  g_object_class_override_property (gobject_class,
+      PROP_MAX_CHANNELS, "max-channels");
 
   /**
-   * GstWebRTCSCTPTransport::stream-reset:
-   * @object: the #GstWebRTCSCTPTransport
+   * WebRTCSCTPTransport::stream-reset:
+   * @object: the #WebRTCSCTPTransport
    * @stream_id: the SCTP stream that was reset
    */
-  gst_webrtc_sctp_transport_signals[ON_STREAM_RESET_SIGNAL] =
+  webrtc_sctp_transport_signals[ON_STREAM_RESET_SIGNAL] =
       g_signal_new ("stream-reset", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
 static void
-gst_webrtc_sctp_transport_init (GstWebRTCSCTPTransport * nice)
+webrtc_sctp_transport_init (WebRTCSCTPTransport * nice)
 {
 }
 
-GstWebRTCSCTPTransport *
-gst_webrtc_sctp_transport_new (void)
+WebRTCSCTPTransport *
+webrtc_sctp_transport_new (void)
 {
-  return g_object_new (GST_TYPE_WEBRTC_SCTP_TRANSPORT, NULL);
+  return g_object_new (TYPE_WEBRTC_SCTP_TRANSPORT, NULL);
 }
