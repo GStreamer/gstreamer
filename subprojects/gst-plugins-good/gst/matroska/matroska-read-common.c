@@ -591,10 +591,12 @@ gst_matroska_read_common_do_index_seek (GstMatroskaReadCommon * common,
   GArray *index;
 
   /* find entry just before or at the requested position */
-  if (track && track->index_table)
+  if (track && track->index_table) {
     index = track->index_table;
-  else
+  } else {
+    GST_DEBUG_OBJECT (common->sinkpad, "Missing track index table");
     index = common->index;
+  }
 
   if (!index || !index->len)
     return NULL;

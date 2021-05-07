@@ -3512,6 +3512,12 @@ gst_matroska_demux_update_tracks (GstMatroskaDemux * demux, GstEbmlRead * ebml)
         new_track->pad = old_track->pad;
         new_track->index = old_track->index;
         new_track->pos = old_track->pos;
+
+        /* If index table is empty, do not ref it, we will try to fallback
+         * to the generic one from read-common in such case */
+        if (old_track->index_table && old_track->index_table->len > 0)
+          new_track->index_table = g_array_ref (old_track->index_table);
+
         g_ptr_array_index (demux->common.src, old_track_index) = new_track;
         gst_pad_set_element_private (new_track->pad, new_track);
 
