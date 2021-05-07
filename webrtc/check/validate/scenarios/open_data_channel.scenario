@@ -18,6 +18,6 @@ wait-for-data-channel, which="$(negotiation_responder)", id="gstreamer";
 wait-for-data-channel, which="$(negotiation_initiator)", id="gstreamer";
 wait-for-data-channel-state, which="$(negotiation_initiator)", id="gstreamer", state="open";
 
-# only the browser closing works at the moment
-close-data-channel, which="remote", id="gstreamer"
-wait-for-data-channel-state, which="local", id="gstreamer", state="closed";
+# close the data channel
+close-data-channel, which="$(negotiation_initiator)", id="gstreamer"
+wait-for-data-channel-state, which="$(negotiation_responder)", id="gstreamer", state="closed";
