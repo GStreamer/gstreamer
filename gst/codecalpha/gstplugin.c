@@ -18,6 +18,25 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:plugin-codecalpha
+ *
+ * This plugin contains a set of utilities that helps handling alpha encoded
+ * streams as produced by some WebM streams using VP8/VP9. The elements are
+ * meant to be used in decoder wrappers which allows playbin to automatically
+ * handle these streams.
+ *
+ * `codecalphademux` will produce two streams out of a stream of buffers holding
+ * the #GstVideoCodecAlphaMeta. The presence of the meta is indicated by the
+ * usage of the field `codec-alpha=(boolean)true` in the caps. This is only
+ * applicable to VP8 and VP9 for now.
+ *
+ * Wrappers for vp8dec and vp9dec are available, allowing seamless support for
+ * these streams inside playbin (which is used by WebKit GTK and WPE).
+ *
+ * Since: 1.20
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
