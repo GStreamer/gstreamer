@@ -28,8 +28,8 @@
 
 #ifdef G_OS_WIN32
 #include <io.h>                 /* lseek, open, close, read */
-#undef lseek
-#define lseek _lseeki64
+#undef fseek
+#define fseek _fseeki64
 #undef off_t
 #define off_t guint64
 #else
@@ -38,7 +38,7 @@
 
 #ifdef HAVE_FSEEKO
 #define FSEEK_FILE(file,offset)  (fseeko (file, (off_t) offset, SEEK_SET) != 0)
-#elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
+#elif defined (G_OS_UNIX)
 #define FSEEK_FILE(file,offset)  (lseek (fileno (file), (off_t) offset, SEEK_SET) == (off_t) -1)
 #else
 #define FSEEK_FILE(file,offset)  (fseek (file, offset, SEEK_SET) != 0)
@@ -67,6 +67,7 @@ struct _GstSparseFile
   gint fd;
   FILE *file;
   gsize current_pos;
+  gboolean was_writing;
 
   GstSparseRange *ranges;
   guint n_ranges;
@@ -195,6 +196,7 @@ gst_sparse_file_clear (GstSparseFile * file)
   file->current_pos = 0;
   file->ranges = NULL;
   file->n_ranges = 0;
+  file->was_writing = FALSE;
 }
 
 /**
@@ -251,7 +253,10 @@ gst_sparse_file_write (GstSparseFile * file, gsize offset, gconstpointer data,
       GST_DEBUG ("seeking to %" G_GSIZE_FORMAT, offset);
       if (FSEEK_FILE (file->file, offset))
         goto error;
+    } else if (!file->was_writing) {
+      fflush (file->file);
     }
+    file->was_writing = TRUE;
     if (fwrite (data, count, 1, file->file) != 1)
       goto error;
   }
@@ -337,7 +342,10 @@ gst_sparse_file_read (GstSparseFile * file, gsize offset, gpointer data,
           file->current_pos, offset);
       if (FSEEK_FILE (file->file, offset))
         goto error;
+    } else if (file->was_writing) {
+      fflush (file->file);
     }
+    file->was_writing = FALSE;
     res = fread (data, 1, count, file->file);
     if (G_UNLIKELY (res < count))
       goto error;
