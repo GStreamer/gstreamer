@@ -868,7 +868,7 @@ read_error:
     gst_buffer_unmap (buf, &info);
     if (*buffer == NULL)
       gst_buffer_unref (buf);
-    return ret;
+    return GST_FLOW_ERROR;
   }
 }
 
