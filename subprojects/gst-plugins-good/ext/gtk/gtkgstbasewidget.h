@@ -47,6 +47,7 @@ struct _GtkGstBaseWidget
   /* properties */
   gboolean force_aspect_ratio;
   gint par_n, par_d;
+  gint video_par_n, video_par_d;
   gboolean ignore_alpha;
 
   gint display_width;

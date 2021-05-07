@@ -37,6 +37,8 @@ GST_DEBUG_CATEGORY (gst_debug_gtk_base_sink);
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
 #define DEFAULT_DISPLAY_PAR_N       0
 #define DEFAULT_DISPLAY_PAR_D       1
+#define DEFAULT_VIDEO_PAR_N         0
+#define DEFAULT_VIDEO_PAR_D         1
 #define DEFAULT_IGNORE_ALPHA        TRUE
 
 static void gst_gtk_base_sink_finalize (GObject * object);
@@ -68,6 +70,7 @@ enum
   PROP_WIDGET,
   PROP_FORCE_ASPECT_RATIO,
   PROP_PIXEL_ASPECT_RATIO,
+  PROP_VIDEO_ASPECT_RATIO_OVERRIDE,
   PROP_IGNORE_ALPHA,
 };
 
@@ -117,6 +120,21 @@ gst_gtk_base_sink_class_init (GstGtkBaseSinkClass * klass)
           0, G_MAXINT, G_MAXINT, 1, DEFAULT_DISPLAY_PAR_N,
           DEFAULT_DISPLAY_PAR_D, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstGtkBaseSink:video-aspect-ratio-override:
+   *
+   * The pixel aspect ratio of the video (0/1 = follow stream)
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_VIDEO_ASPECT_RATIO_OVERRIDE,
+      gst_param_spec_fraction ("video-aspect-ratio-override",
+          "Video Pixel Aspect Ratio",
+          "The pixel aspect ratio of the video (0/1 = follow stream)", 0,
+          G_MAXINT, G_MAXINT, 1, DEFAULT_VIDEO_PAR_N, DEFAULT_VIDEO_PAR_D,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_IGNORE_ALPHA,
       g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",
           "When enabled, alpha will be ignored and converted to black",
@@ -141,6 +159,8 @@ gst_gtk_base_sink_init (GstGtkBaseSink * gtk_sink)
   gtk_sink->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   gtk_sink->par_n = DEFAULT_DISPLAY_PAR_N;
   gtk_sink->par_d = DEFAULT_DISPLAY_PAR_D;
+  gtk_sink->video_par_n = DEFAULT_VIDEO_PAR_N;
+  gtk_sink->video_par_d = DEFAULT_VIDEO_PAR_D;
   gtk_sink->ignore_alpha = DEFAULT_IGNORE_ALPHA;
 }
 
@@ -200,6 +220,10 @@ gst_gtk_base_sink_get_widget (GstGtkBaseSink * gtk_sink)
   gtk_sink->bind_pixel_aspect_ratio =
       g_object_bind_property (gtk_sink, "pixel-aspect-ratio", gtk_sink->widget,
       "pixel-aspect-ratio", G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
+  gtk_sink->bind_video_aspect_ratio =
+      g_object_bind_property (gtk_sink, "video-aspect-ratio-override",
+      gtk_sink->widget, "video-aspect-ratio-override",
+      G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
   gtk_sink->bind_ignore_alpha =
       g_object_bind_property (gtk_sink, "ignore-alpha", gtk_sink->widget,
       "ignore-alpha", G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
@@ -253,6 +277,10 @@ gst_gtk_base_sink_get_property (GObject * object, guint prop_id,
     case PROP_PIXEL_ASPECT_RATIO:
       gst_value_set_fraction (value, gtk_sink->par_n, gtk_sink->par_d);
       break;
+    case PROP_VIDEO_ASPECT_RATIO_OVERRIDE:
+      gst_value_set_fraction (value, gtk_sink->video_par_n,
+          gtk_sink->video_par_d);
+      break;
     case PROP_IGNORE_ALPHA:
       g_value_set_boolean (value, gtk_sink->ignore_alpha);
       break;
@@ -275,6 +303,10 @@ gst_gtk_base_sink_set_property (GObject * object, guint prop_id,
     case PROP_PIXEL_ASPECT_RATIO:
       gtk_sink->par_n = gst_value_get_fraction_numerator (value);
       gtk_sink->par_d = gst_value_get_fraction_denominator (value);
+      break;
+    case PROP_VIDEO_ASPECT_RATIO_OVERRIDE:
+      gtk_sink->video_par_n = gst_value_get_fraction_numerator (value);
+      gtk_sink->video_par_d = gst_value_get_fraction_denominator (value);
       break;
     case PROP_IGNORE_ALPHA:
       gtk_sink->ignore_alpha = g_value_get_boolean (value);

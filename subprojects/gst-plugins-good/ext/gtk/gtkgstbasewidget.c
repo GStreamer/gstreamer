@@ -32,6 +32,8 @@ GST_DEBUG_CATEGORY (gst_debug_gtk_base_widget);
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
 #define DEFAULT_DISPLAY_PAR_N       0
 #define DEFAULT_DISPLAY_PAR_D       1
+#define DEFAULT_VIDEO_PAR_N         0
+#define DEFAULT_VIDEO_PAR_D         1
 #define DEFAULT_IGNORE_ALPHA        TRUE
 
 enum
@@ -40,6 +42,7 @@ enum
   PROP_FORCE_ASPECT_RATIO,
   PROP_PIXEL_ASPECT_RATIO,
   PROP_IGNORE_ALPHA,
+  PROP_VIDEO_ASPECT_RATIO_OVERRIDE,
 };
 
 static gboolean
@@ -55,8 +58,14 @@ _calculate_par (GtkGstBaseWidget * widget, GstVideoInfo * info)
   if (width == 0 || height == 0)
     return FALSE;
 
-  par_n = GST_VIDEO_INFO_PAR_N (info);
-  par_d = GST_VIDEO_INFO_PAR_D (info);
+  /* get video's PAR */
+  if (widget->video_par_n != 0 && widget->video_par_d != 0) {
+    par_n = widget->video_par_n;
+    par_d = widget->video_par_d;
+  } else {
+    par_n = GST_VIDEO_INFO_PAR_N (info);
+    par_d = GST_VIDEO_INFO_PAR_D (info);
+  }
 
   if (!par_n)
     par_n = 1;
@@ -214,6 +223,11 @@ gtk_gst_base_widget_set_property (GObject * object, guint prop_id,
       gtk_widget->par_d = gst_value_get_fraction_denominator (value);
       _update_par (gtk_widget);
       break;
+    case PROP_VIDEO_ASPECT_RATIO_OVERRIDE:
+      gtk_widget->video_par_n = gst_value_get_fraction_numerator (value);
+      gtk_widget->video_par_d = gst_value_get_fraction_denominator (value);
+      _update_par (gtk_widget);
+      break;
     case PROP_IGNORE_ALPHA:
       gtk_widget->ignore_alpha = g_value_get_boolean (value);
       break;
@@ -235,6 +249,10 @@ gtk_gst_base_widget_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PIXEL_ASPECT_RATIO:
       gst_value_set_fraction (value, gtk_widget->par_n, gtk_widget->par_d);
+      break;
+    case PROP_VIDEO_ASPECT_RATIO_OVERRIDE:
+      gst_value_set_fraction (value, gtk_widget->video_par_n,
+          gtk_widget->video_par_d);
       break;
     case PROP_IGNORE_ALPHA:
       g_value_set_boolean (value, gtk_widget->ignore_alpha);
@@ -458,6 +476,15 @@ gtk_gst_base_widget_class_init (GtkGstBaseWidgetClass * klass)
           DEFAULT_DISPLAY_PAR_D, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
 
+  g_object_class_install_property (gobject_klass,
+      PROP_VIDEO_ASPECT_RATIO_OVERRIDE,
+      gst_param_spec_fraction ("video-aspect-ratio-override",
+          "Video Pixel Aspect Ratio",
+          "The pixel aspect ratio of the video (0/1 = follow stream)", 0,
+          G_MAXINT, G_MAXINT, 1, DEFAULT_VIDEO_PAR_N, DEFAULT_VIDEO_PAR_D,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
+
   g_object_class_install_property (gobject_klass, PROP_IGNORE_ALPHA,
       g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",
           "When enabled, alpha will be ignored and converted to black",
@@ -484,6 +511,8 @@ gtk_gst_base_widget_init (GtkGstBaseWidget * widget)
   widget->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   widget->par_n = DEFAULT_DISPLAY_PAR_N;
   widget->par_d = DEFAULT_DISPLAY_PAR_D;
+  widget->video_par_n = DEFAULT_VIDEO_PAR_N;
+  widget->video_par_d = DEFAULT_VIDEO_PAR_D;
   widget->ignore_alpha = DEFAULT_IGNORE_ALPHA;
 
   gst_video_info_init (&widget->v_info);

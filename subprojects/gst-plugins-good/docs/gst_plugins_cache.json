@@ -7215,6 +7215,20 @@
                         "type": "GstFraction",
                         "writable": true
                     },
+                    "video-aspect-ratio-override": {
+                        "blurb": "The pixel aspect ratio of the video (0/1 = follow stream)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0/1",
+                        "max": "2147483647/1",
+                        "min": "0/2147483647",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstFraction",
+                        "writable": true
+                    },
                     "widget": {
                         "blurb": "The GtkWidget to place in the widget hierarchy (must only be get from the GTK main thread)",
                         "conditionally-available": false,
