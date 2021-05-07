@@ -35,8 +35,8 @@ GST_DEBUG_CATEGORY (gst_debug_gtk_base_sink);
 #define GST_CAT_DEFAULT gst_debug_gtk_base_sink
 
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
-#define DEFAULT_PAR_N               0
-#define DEFAULT_PAR_D               1
+#define DEFAULT_DISPLAY_PAR_N       0
+#define DEFAULT_DISPLAY_PAR_D       1
 #define DEFAULT_IGNORE_ALPHA        TRUE
 
 static void gst_gtk_base_sink_finalize (GObject * object);
@@ -113,8 +113,9 @@ gst_gtk_base_sink_class_init (GstGtkBaseSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_PIXEL_ASPECT_RATIO,
       gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
-          "The pixel aspect ratio of the device", DEFAULT_PAR_N, DEFAULT_PAR_D,
-          G_MAXINT, 1, 1, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "The pixel aspect ratio of the device", DEFAULT_DISPLAY_PAR_N,
+          DEFAULT_DISPLAY_PAR_D, G_MAXINT, 1, 1, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_IGNORE_ALPHA,
       g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",
@@ -138,8 +139,8 @@ static void
 gst_gtk_base_sink_init (GstGtkBaseSink * gtk_sink)
 {
   gtk_sink->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
-  gtk_sink->par_n = DEFAULT_PAR_N;
-  gtk_sink->par_d = DEFAULT_PAR_D;
+  gtk_sink->par_n = DEFAULT_DISPLAY_PAR_N;
+  gtk_sink->par_d = DEFAULT_DISPLAY_PAR_D;
   gtk_sink->ignore_alpha = DEFAULT_IGNORE_ALPHA;
 }
 

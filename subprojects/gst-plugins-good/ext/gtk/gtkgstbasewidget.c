@@ -30,8 +30,8 @@ GST_DEBUG_CATEGORY (gst_debug_gtk_base_widget);
 #define GST_CAT_DEFAULT gst_debug_gtk_base_widget
 
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
-#define DEFAULT_PAR_N               0
-#define DEFAULT_PAR_D               1
+#define DEFAULT_DISPLAY_PAR_N       0
+#define DEFAULT_DISPLAY_PAR_D       1
 #define DEFAULT_IGNORE_ALPHA        TRUE
 
 enum
@@ -454,8 +454,9 @@ gtk_gst_base_widget_class_init (GtkGstBaseWidgetClass * klass)
 
   g_object_class_install_property (gobject_klass, PROP_PIXEL_ASPECT_RATIO,
       gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
-          "The pixel aspect ratio of the device", DEFAULT_PAR_N, DEFAULT_PAR_D,
-          G_MAXINT, 1, 1, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "The pixel aspect ratio of the device", DEFAULT_DISPLAY_PAR_N,
+          DEFAULT_DISPLAY_PAR_D, G_MAXINT, 1, 1, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_IGNORE_ALPHA,
       g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",
@@ -481,8 +482,8 @@ gtk_gst_base_widget_init (GtkGstBaseWidget * widget)
   int event_mask;
 
   widget->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
-  widget->par_n = DEFAULT_PAR_N;
-  widget->par_d = DEFAULT_PAR_D;
+  widget->par_n = DEFAULT_DISPLAY_PAR_N;
+  widget->par_d = DEFAULT_DISPLAY_PAR_D;
   widget->ignore_alpha = DEFAULT_IGNORE_ALPHA;
 
   gst_video_info_init (&widget->v_info);
