@@ -1525,6 +1525,8 @@ gst_h264_decoder_drain_output_queue (GstH264Decoder * self, guint num)
   GstH264DecoderPrivate *priv = self->priv;
   GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
 
+  g_assert (klass->output_picture);
+
   while (gst_queue_array_get_length (priv->output_queue) > num) {
     GstH264DecoderOutputFrame *output_frame = (GstH264DecoderOutputFrame *)
         gst_queue_array_pop_head_struct (priv->output_queue);
