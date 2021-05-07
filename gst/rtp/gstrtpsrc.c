@@ -288,6 +288,8 @@ gst_rtp_src_finalize (GObject * gobject)
 
   g_free (self->multi_iface);
 
+  g_clear_object (&self->rtcp_send_addr);
+
   g_mutex_clear (&self->lock);
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
