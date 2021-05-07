@@ -170,6 +170,7 @@ gst_srt_sink_stop (GstBaseSink * bsink)
 {
   GstSRTSink *self = GST_SRT_SINK (bsink);
 
+  g_clear_pointer (&self->headers, gst_buffer_list_unref);
   gst_srt_object_close (self->srtobject);
 
   return TRUE;
