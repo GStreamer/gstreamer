@@ -555,7 +555,9 @@ _setup_global_motion_info (VADecPictureParameterBufferAV1 * pic_param,
   guint i, j;
 
   for (i = 0; i < 7; i++) {
-    pic_param->wm[i].wmtype =
+    /* assuming VAAV1TransformationType and GstAV1WarpModelType are
+     * equivalent */
+    pic_param->wm[i].wmtype = (VAAV1TransformationType)
         frame_header->global_motion_params.gm_type[GST_AV1_REF_LAST_FRAME + i];
 
     for (j = 0; j < 6; j++)
@@ -606,7 +608,6 @@ gst_va_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
       .color_range = seq_header->color_config.color_range,
       .subsampling_x = seq_header->color_config.subsampling_x,
       .subsampling_y = seq_header->color_config.subsampling_y,
-      .chroma_sample_position = 0,
       .film_grain_params_present = seq_header->film_grain_params_present,
     },
     .anchor_frames_num = 0,
@@ -687,15 +688,6 @@ gst_va_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
         frame_header->loop_filter_params.delta_lf_present,
       .log2_delta_lf_res = frame_header->loop_filter_params.delta_lf_res,
       .delta_lf_multi = frame_header->loop_filter_params.delta_lf_multi,
-    },
-    /* quantization */
-    .base_qindex = frame_header->quantization_params.base_q_idx,
-    .y_dc_delta_q = frame_header->quantization_params.delta_q_y_dc,
-    .u_dc_delta_q = frame_header->quantization_params.delta_q_u_dc,
-    .u_ac_delta_q = frame_header->quantization_params.delta_q_u_ac,
-    .v_dc_delta_q = frame_header->quantization_params.delta_q_v_dc,
-    .v_ac_delta_q = frame_header->quantization_params.delta_q_v_ac,
-    .mode_control_fields.bits = {
       .delta_q_present_flag =
         frame_header->quantization_params.delta_q_present,
       .log2_delta_q_res = frame_header->quantization_params.delta_q_res,
@@ -704,6 +696,13 @@ gst_va_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
       .reduced_tx_set_used = frame_header->reduced_tx_set,
       .skip_mode_present = frame_header->skip_mode_present,
     },
+    /* quantization */
+    .base_qindex = frame_header->quantization_params.base_q_idx,
+    .y_dc_delta_q = frame_header->quantization_params.delta_q_y_dc,
+    .u_dc_delta_q = frame_header->quantization_params.delta_q_u_dc,
+    .u_ac_delta_q = frame_header->quantization_params.delta_q_u_ac,
+    .v_dc_delta_q = frame_header->quantization_params.delta_q_v_dc,
+    .v_ac_delta_q = frame_header->quantization_params.delta_q_v_ac,
     /* loop restoration */
     .loop_restoration_fields.bits = {
       .yframe_restoration_type =
@@ -725,7 +724,7 @@ gst_va_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
   } else if (seq_header->bit_depth == 12) {
     pic_param.bit_depth_idx = 2;
   } else {
-    g_assert (0);
+    g_assert_not_reached ();
   }
 
   if (frame_header->film_grain_params.apply_grain) {
