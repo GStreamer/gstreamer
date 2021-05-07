@@ -68,7 +68,7 @@
  * If the #GstUDPSrc:timeout property is set to a value bigger than 0, udpsrc
  * will generate an element message named `GstUDPSrcTimeout`
  * if no data was received in the given timeout.
- * 
+ *
  * The message's structure contains one field:
  *
  * * #guint64 `timeout`: the timeout in microseconds that expired when waiting for data.
