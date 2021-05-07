@@ -42,6 +42,8 @@ enum
   PROP_IGNORE_ALPHA,
 };
 
+static void _update_par (GtkGstBaseWidget * widget);
+
 static void
 gtk_gst_base_widget_get_preferred_width (GtkWidget * widget, gint * min,
     gint * natural)
@@ -87,6 +89,7 @@ gtk_gst_base_widget_set_property (GObject * object, guint prop_id,
     case PROP_PIXEL_ASPECT_RATIO:
       gtk_widget->par_n = gst_value_get_fraction_numerator (value);
       gtk_widget->par_d = gst_value_get_fraction_denominator (value);
+      _update_par (gtk_widget);
       break;
     case PROP_IGNORE_ALPHA:
       gtk_widget->ignore_alpha = g_value_get_boolean (value);
@@ -129,6 +132,8 @@ _calculate_par (GtkGstBaseWidget * widget, GstVideoInfo * info)
 
   width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
+  if (width == 0 || height == 0)
+    return FALSE;
 
   par_n = GST_VIDEO_INFO_PAR_N (info);
   par_d = GST_VIDEO_INFO_PAR_D (info);
@@ -167,6 +172,9 @@ _apply_par (GtkGstBaseWidget * widget)
 
   width = GST_VIDEO_INFO_WIDTH (&widget->v_info);
   height = GST_VIDEO_INFO_HEIGHT (&widget->v_info);
+
+  if (!width || !height)
+    return;
 
   display_ratio_num = widget->display_ratio_num;
   display_ratio_den = widget->display_ratio_den;
@@ -215,6 +223,28 @@ _queue_draw (GtkGstBaseWidget * widget)
   GTK_GST_BASE_WIDGET_UNLOCK (widget);
 
   return G_SOURCE_REMOVE;
+}
+
+static void
+_update_par (GtkGstBaseWidget * widget)
+{
+  GTK_GST_BASE_WIDGET_LOCK (widget);
+  if (widget->pending_resize) {
+    GTK_GST_BASE_WIDGET_UNLOCK (widget);
+    return;
+  }
+
+  if (!_calculate_par (widget, &widget->v_info)) {
+    GTK_GST_BASE_WIDGET_UNLOCK (widget);
+    return;
+  }
+
+  widget->pending_resize = TRUE;
+  if (!widget->draw_id) {
+    widget->draw_id = g_idle_add_full (G_PRIORITY_HIGH_IDLE + 10,
+        (GSourceFunc) _queue_draw, widget, NULL);
+  }
+  GTK_GST_BASE_WIDGET_UNLOCK (widget);
 }
 
 static const gchar *
