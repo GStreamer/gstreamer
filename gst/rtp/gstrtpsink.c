@@ -239,7 +239,7 @@ gst_rtp_sink_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
   GstRtpSink *self = GST_RTP_SINK (element);
-  GstPad *pad = NULL;
+  GstPad *rpad, *pad = NULL;
 
   if (self->rtpbin == NULL) {
     GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN, (NULL),
@@ -251,7 +251,12 @@ gst_rtp_sink_request_new_pad (GstElement * element,
     return NULL;
 
   GST_RTP_SINK_LOCK (self);
-  pad = gst_element_get_request_pad (self->rtpbin, "send_rtp_sink_%u");
+  rpad = gst_element_get_request_pad (self->rtpbin, "send_rtp_sink_%u");
+  if (rpad) {
+    pad = gst_ghost_pad_new (GST_PAD_NAME (rpad), rpad);
+    gst_element_add_pad (element, pad);
+    gst_clear_object (&rpad);
+  }
   GST_RTP_SINK_UNLOCK (self);
 
   g_return_val_if_fail (pad != NULL, NULL);
