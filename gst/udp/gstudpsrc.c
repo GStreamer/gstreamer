@@ -1019,6 +1019,7 @@ receive_error:
   {
     gst_buffer_unmap (outbuf, &info);
     gst_memory_unmap (udpsrc->extra_mem, &extra_info);
+    g_clear_object (&saddr);
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_BUSY) ||
         g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       g_clear_error (&err);
@@ -1032,6 +1033,7 @@ receive_error:
   }
 skip_error:
   {
+    g_clear_object (&saddr);
     GST_ELEMENT_ERROR (udpsrc, STREAM, DECODE, (NULL),
         ("UDP buffer to small to skip header"));
     return GST_FLOW_ERROR;
