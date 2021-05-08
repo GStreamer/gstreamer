@@ -90,7 +90,7 @@ GstMsdkContext * gst_msdk_context_new_with_parent (GstMsdkContext * parent);
 mfxSession gst_msdk_context_get_session (GstMsdkContext * context);
 
 gpointer gst_msdk_context_get_handle (GstMsdkContext * context);
-gint gst_msdk_context_get_fd (GstMsdkContext * context);
+GstObject * gst_msdk_context_get_display (GstMsdkContext * context);
 
 /* GstMsdkContext contains mfxFrameAllocResponses,
  * if app calls MFXVideoCORE_SetFrameAllocator.

@@ -37,6 +37,7 @@
 #include <xf86drm.h>
 #include <va/va_drm.h>
 #include <gudev/gudev.h>
+#include <gst/va/gstvadisplay_drm.h>
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_msdkcontext);
@@ -54,8 +55,7 @@ struct _GstMsdkContextPrivate
   GList *child_session_list;
   GstMsdkContext *parent_context;
 #ifndef _WIN32
-  gint fd;
-  VADisplay dpy;
+  GstVaDisplay *display;
 #endif
 };
 
@@ -67,8 +67,8 @@ G_DEFINE_TYPE_WITH_CODE (GstMsdkContext, gst_msdk_context, GST_TYPE_OBJECT,
 
 #ifndef _WIN32
 
-static gint
-get_device_id (void)
+static char *
+get_device_path (void)
 {
   GUdevClient *client = NULL;
   GUdevEnumerator *e = NULL;
@@ -78,6 +78,7 @@ get_device_id (void)
   const gchar *devnode_files[2] = { "renderD[0-9]*", "card[0-9]*" };
   int fd = -1, i;
   const gchar *user_choice = g_getenv ("GST_MSDK_DRM_DEVICE");
+  gchar *ret_path = NULL;
 
   if (user_choice) {
     if (g_str_has_prefix (user_choice, "/dev/dri/"))
@@ -99,7 +100,12 @@ get_device_id (void)
       GST_ERROR ("The specified device isn't a valid drm device");
     }
 
-    return fd;
+    if (fd >= 0) {
+      ret_path = g_strdup (user_choice);
+      close (fd);
+    }
+
+    return ret_path;
   }
 
   client = g_udev_client_new (NULL);
@@ -131,6 +137,7 @@ get_device_id (void)
       if (fd < 0)
         continue;
       GST_DEBUG ("Opened the drm device node %s", devnode_path);
+      ret_path = g_strdup (devnode_path);
       break;
     }
 
@@ -141,42 +148,40 @@ get_device_id (void)
   }
 
 done:
+  if (fd >= 0)
+    close (fd);
+
   if (e)
     g_object_unref (e);
   if (client)
     g_object_unref (client);
 
-  return fd;
+  return ret_path;
 }
-
 
 static gboolean
 gst_msdk_context_use_vaapi (GstMsdkContext * context)
 {
-  gint fd;
-  gint maj_ver, min_ver;
+  char *path;
   VADisplay va_dpy = NULL;
-  VAStatus va_status;
+  GstVaDisplay *display_drm = NULL;
   mfxStatus status;
   GstMsdkContextPrivate *priv = context->priv;
 
-  fd = get_device_id ();
-  if (fd < 0) {
-    GST_WARNING ("Couldn't find a valid drm device node");
+  path = get_device_path ();
+  if (path == NULL) {
+    GST_ERROR ("Couldn't find a drm device node to open");
     return FALSE;
   }
 
-  va_dpy = vaGetDisplayDRM (fd);
-  if (!va_dpy) {
-    GST_ERROR ("Couldn't get a VA DRM display");
+  display_drm = gst_va_display_drm_new_from_path (path);
+  if (!display_drm) {
+    GST_ERROR ("Couldn't create a VA DRM display");
     goto failed;
   }
+  g_free (path);
 
-  va_status = vaInitialize (va_dpy, &maj_ver, &min_ver);
-  if (va_status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("Couldn't initialize VA DRM display");
-    goto failed;
-  }
+  va_dpy = gst_va_display_get_va_dpy (display_drm);
 
   status = MFXVideoCORE_SetHandle (priv->session.session, MFX_HANDLE_VA_DISPLAY,
       (mfxHDL) va_dpy);
@@ -186,15 +191,14 @@ gst_msdk_context_use_vaapi (GstMsdkContext * context)
     goto failed;
   }
 
-  priv->fd = fd;
-  priv->dpy = va_dpy;
+  priv->display = display_drm;
 
   return TRUE;
 
 failed:
-  if (va_dpy)
-    vaTerminate (va_dpy);
-  close (fd);
+  if (display_drm)
+    gst_object_unref (display_drm);
+
   return FALSE;
 }
 #endif
@@ -217,8 +221,6 @@ gst_msdk_context_open (GstMsdkContext * context, gboolean hardware,
     goto failed;
 
 #ifndef _WIN32
-  priv->fd = -1;
-
   if (hardware) {
     if (!gst_msdk_context_use_vaapi (context))
       goto failed;
@@ -277,10 +279,8 @@ gst_msdk_context_finalize (GObject * obj)
   g_mutex_clear (&priv->mutex);
 
 #ifndef _WIN32
-  if (priv->dpy)
-    vaTerminate (priv->dpy);
-  if (priv->fd >= 0)
-    close (priv->fd);
+  if (priv->display)
+    gst_object_unref (priv->display);
 #endif
 
 done:
@@ -395,8 +395,7 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
   parent_priv->child_session_list =
       g_list_prepend (parent_priv->child_session_list, priv->session.session);
 #ifndef _WIN32
-  priv->dpy = parent_priv->dpy;
-  priv->fd = parent_priv->fd;
+  priv->display = parent_priv->display;
 #endif
   priv->parent_context = gst_object_ref (parent);
 
@@ -413,20 +412,20 @@ gpointer
 gst_msdk_context_get_handle (GstMsdkContext * context)
 {
 #ifndef _WIN32
-  return context->priv->dpy;
+  return gst_va_display_get_va_dpy (context->priv->display);
 #else
   return NULL;
 #endif
 }
 
-gint
-gst_msdk_context_get_fd (GstMsdkContext * context)
+GstObject *
+gst_msdk_context_get_display (GstMsdkContext * context)
 {
 #ifndef _WIN32
-  return context->priv->fd;
-#else
-  return -1;
+  if (context->priv->display)
+    return gst_object_ref (GST_OBJECT_CAST (context->priv->display));
 #endif
+  return NULL;
 }
 
 static gint
