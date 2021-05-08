@@ -2016,6 +2016,50 @@ gst_msdkenc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
       query);
 }
 
+static gboolean
+gst_msdkenc_query (GstVideoEncoder * encoder, GstQuery * query,
+    GstPadDirection dir)
+{
+  GstMsdkEnc *thiz = GST_MSDKENC (encoder);
+  gboolean ret = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:{
+      GstMsdkContext *msdk_context = NULL;
+
+      gst_object_replace ((GstObject **) & msdk_context,
+          (GstObject *) thiz->context);
+      ret = gst_msdk_handle_context_query (GST_ELEMENT_CAST (encoder),
+          query, msdk_context);
+      gst_clear_object (&msdk_context);
+      break;
+    }
+    default:
+      if (dir == GST_PAD_SRC) {
+        ret =
+            GST_VIDEO_ENCODER_CLASS (parent_class)->src_query (encoder, query);
+      } else {
+        ret =
+            GST_VIDEO_ENCODER_CLASS (parent_class)->sink_query (encoder, query);
+      }
+      break;
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_msdkenc_src_query (GstVideoEncoder * encoder, GstQuery * query)
+{
+  return gst_msdkenc_query (encoder, query, GST_PAD_SRC);
+}
+
+static gboolean
+gst_msdkenc_sink_query (GstVideoEncoder * encoder, GstQuery * query)
+{
+  return gst_msdkenc_query (encoder, query, GST_PAD_SINK);
+}
+
 static void
 gst_msdkenc_dispose (GObject * object)
 {
@@ -2098,6 +2142,8 @@ gst_msdkenc_class_init (GstMsdkEncClass * klass)
   gstencoder_class->finish = GST_DEBUG_FUNCPTR (gst_msdkenc_finish);
   gstencoder_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_msdkenc_propose_allocation);
+  gstencoder_class->src_query = GST_DEBUG_FUNCPTR (gst_msdkenc_src_query);
+  gstencoder_class->sink_query = GST_DEBUG_FUNCPTR (gst_msdkenc_sink_query);
 
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
 }
