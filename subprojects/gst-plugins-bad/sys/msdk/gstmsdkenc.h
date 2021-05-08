@@ -133,6 +133,7 @@ struct _GstMsdkEnc
   GstVideoInfo aligned_info;
   gboolean use_video_memory;
   gboolean use_dmabuf;
+  gboolean use_va;
   gboolean initialized;
 
   /* element properties */

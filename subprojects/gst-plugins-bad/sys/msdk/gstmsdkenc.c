@@ -53,6 +53,7 @@
 
 #ifndef _WIN32
 #include "gstmsdkallocator_libva.h"
+#include "gstmsdk_va.h"
 #endif
 
 static inline void *
@@ -81,7 +82,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_MSDK_CAPS_STR
-        ("{ NV12, I420, YV12, YUY2, UYVY, BGRA }", "NV12"))
+        ("{ NV12, I420, YV12, YUY2, UYVY, BGRA }", "NV12") "; "
+        GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("NV12"))
     );
 
 #define PROP_HARDWARE_DEFAULT            TRUE
@@ -117,6 +119,8 @@ typedef struct
 {
   mfxFrameSurface1 *surface;
   GstBuffer *buf;
+  GstBuffer *buf_external;
+  VASurfaceID cache_surface;
 } MsdkSurface;
 
 void
@@ -954,6 +958,17 @@ gst_msdkenc_create_surface (mfxFrameSurface1 * surface, GstBuffer * buf)
 static void
 gst_msdkenc_free_surface (MsdkSurface * surface)
 {
+  if (surface->buf_external) {
+    GstMsdkMemoryID *msdk_mid = NULL;
+    mfxFrameSurface1 *mfx_surface = NULL;
+
+    mfx_surface = surface->surface;
+    msdk_mid = (GstMsdkMemoryID *) mfx_surface->Data.MemId;
+    *msdk_mid->surface = surface->cache_surface;
+
+    gst_buffer_unref (surface->buf_external);
+  }
+
   if (surface->buf)
     gst_buffer_unref (surface->buf);
 
@@ -1438,6 +1453,17 @@ done:
 }
 
 static gboolean
+sinkpad_is_va (GstMsdkEnc * thiz)
+{
+  GstCapsFeatures *const features =
+      gst_caps_get_features (thiz->input_state->caps, 0);
+  if (gst_caps_features_contains (features, "memory:VAMemory"))
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
 gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
 {
   GstMsdkEnc *thiz = GST_MSDKENC (encoder);
@@ -1460,6 +1486,8 @@ gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
    */
 #ifndef _WIN32
   thiz->use_video_memory = TRUE;
+  if (sinkpad_is_va (thiz))
+    thiz->use_va = TRUE;
 #else
   thiz->use_video_memory = FALSE;
 #endif
@@ -1476,7 +1504,8 @@ gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
    * based pipeline usage. Ideally we should have dmabuf support even with
    * raw-caps negotiation, but we don't have dmabuf-import support in msdk
    * plugin yet */
-  if (sinkpad_can_dmabuf (thiz)) {
+  /* If VA is set, we do not fallback to DMA. */
+  if (!thiz->use_va && sinkpad_can_dmabuf (thiz)) {
     thiz->input_state->caps = gst_caps_make_writable (thiz->input_state->caps);
     gst_caps_set_features (thiz->input_state->caps, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
@@ -1640,6 +1669,54 @@ import_dmabuf_to_msdk_surface (GstMsdkEnc * thiz, GstBuffer * buf,
 
   return TRUE;
 }
+
+static gboolean
+import_va_surface_to_msdk (GstMsdkEnc * thiz, GstBuffer * buf,
+    MsdkSurface * msdk_surface)
+{
+  GstVideoInfo vinfo;
+  GstVideoMeta *vmeta;
+  GstMsdkMemoryID *msdk_mid = NULL;
+  mfxFrameSurface1 *mfx_surface = NULL;
+  VASurfaceID surface;
+  gint i;
+
+  surface = gst_msdk_va_peek_buffer_surface (buf);
+  if (surface == VA_INVALID_SURFACE)
+    return FALSE;
+
+  vinfo = thiz->input_state->info;
+  /* Update offset/stride/size if there is VideoMeta attached to
+   * the buffer */
+  vmeta = gst_buffer_get_video_meta (buf);
+  if (vmeta) {
+    if (GST_VIDEO_INFO_FORMAT (&vinfo) != vmeta->format ||
+        GST_VIDEO_INFO_WIDTH (&vinfo) != vmeta->width ||
+        GST_VIDEO_INFO_HEIGHT (&vinfo) != vmeta->height ||
+        GST_VIDEO_INFO_N_PLANES (&vinfo) != vmeta->n_planes) {
+      GST_ERROR_OBJECT (thiz, "VideoMeta attached to buffer is not matching"
+          "the negotiated width/height/format");
+      return FALSE;
+    }
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vinfo); ++i) {
+      GST_VIDEO_INFO_PLANE_OFFSET (&vinfo, i) = vmeta->offset[i];
+      GST_VIDEO_INFO_PLANE_STRIDE (&vinfo, i) = vmeta->stride[i];
+    }
+    GST_VIDEO_INFO_SIZE (&vinfo) = gst_buffer_get_size (buf);
+  }
+
+  if (GST_VIDEO_INFO_SIZE (&vinfo) < GST_VIDEO_INFO_SIZE (&thiz->aligned_info))
+    return FALSE;
+
+  msdk_surface->buf_external = gst_buffer_ref (buf);
+
+  mfx_surface = msdk_surface->surface;
+  msdk_mid = (GstMsdkMemoryID *) mfx_surface->Data.MemId;
+
+  msdk_surface->cache_surface = *msdk_mid->surface;
+  *msdk_mid->surface = surface;
+  return TRUE;
+}
 #endif
 
 static MsdkSurface *
@@ -1668,6 +1745,13 @@ gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
     goto error;
 
 #ifndef _WIN32
+    /************** VA import *****************/
+  if (thiz->use_va) {
+    if (import_va_surface_to_msdk (thiz, inbuf, msdk_surface)) {
+      return msdk_surface;
+    }
+  }
+
   /************ dmabuf-import ************* */
   /* if upstream provided a dmabuf backed memory, but not an msdk
    * buffer, we could try to export the dmabuf to underlined vasurface */
