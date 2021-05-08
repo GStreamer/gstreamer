@@ -43,7 +43,7 @@ else
     endif
     subdir_done()
   endif
-  msdk_sources += ['msdk_libva.c', 'gstmsdkallocator_libva.c']
+  msdk_sources += ['msdk_libva.c', 'gstmsdkallocator_libva.c', 'gstmsdk_va.c']
 endif
 
 mfx_api = get_option('mfx_api')
