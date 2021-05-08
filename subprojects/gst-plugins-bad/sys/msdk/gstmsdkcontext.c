@@ -402,6 +402,62 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
   return obj;
 }
 
+GstMsdkContext *
+gst_msdk_context_new_with_va_display (GstObject * display_obj,
+    gboolean hardware, GstMsdkContextJobType job_type)
+{
+  GstMsdkContext *obj = NULL;
+
+#ifndef _WIN32
+  GstMsdkContextPrivate *priv;
+  mfxU16 codename;
+  mfxStatus status;
+  GstVaDisplay *va_display;
+
+  va_display = GST_VA_DISPLAY (display_obj);
+  if (!va_display)
+    return NULL;
+
+  obj = g_object_new (GST_TYPE_MSDK_CONTEXT, NULL);
+  if (!obj)
+    return NULL;
+
+  priv = obj->priv;
+  priv->display = g_object_ref (va_display);
+
+  priv->job_type = job_type;
+  priv->hardware = hardware;
+  priv->session =
+      msdk_open_session (hardware ? MFX_IMPL_HARDWARE_ANY : MFX_IMPL_SOFTWARE);
+  if (!priv->session.session) {
+    g_object_unref (obj);
+    return NULL;
+  }
+
+  if (hardware) {
+    status =
+        MFXVideoCORE_SetHandle (priv->session.session, MFX_HANDLE_VA_DISPLAY,
+        (mfxHDL) gst_va_display_get_va_dpy (priv->display));
+    if (status != MFX_ERR_NONE) {
+      GST_ERROR ("Setting VAAPI handle failed (%s)",
+          msdk_status_to_string (status));
+      g_object_unref (obj);
+      return NULL;
+    }
+  }
+
+  codename = msdk_get_platform_codename (priv->session.session);
+
+  if (codename != MFX_PLATFORM_UNKNOWN)
+    GST_INFO ("Detected MFX platform with device code %d", codename);
+  else
+    GST_WARNING ("Unknown MFX platform");
+
+#endif
+
+  return obj;
+}
+
 mfxSession
 gst_msdk_context_get_session (GstMsdkContext * context)
 {

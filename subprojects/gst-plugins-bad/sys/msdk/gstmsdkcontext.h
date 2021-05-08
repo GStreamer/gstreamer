@@ -87,6 +87,8 @@ GType gst_msdk_context_get_type (void);
 
 GstMsdkContext * gst_msdk_context_new (gboolean hardware, GstMsdkContextJobType job_type);
 GstMsdkContext * gst_msdk_context_new_with_parent (GstMsdkContext * parent);
+GstMsdkContext * gst_msdk_context_new_with_va_display (GstObject * display_obj,
+    gboolean hardware, GstMsdkContextJobType job_type);
 mfxSession gst_msdk_context_get_session (GstMsdkContext * context);
 
 gpointer gst_msdk_context_get_handle (GstMsdkContext * context);
