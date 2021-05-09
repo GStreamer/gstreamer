@@ -28,9 +28,6 @@
 
 #define GST_CAT_DEFAULT (base->debug_category)
 
-#define parent_class gst_va_base_dec_parent_class
-gpointer gst_va_base_dec_parent_class = NULL;
-
 static gboolean
 gst_va_base_dec_open (GstVideoDecoder * decoder)
 {
@@ -86,7 +83,8 @@ gst_va_base_dec_stop (GstVideoDecoder * decoder)
     gst_buffer_pool_set_active (base->other_pool, FALSE);
   gst_clear_object (&base->other_pool);
 
-  return GST_VIDEO_DECODER_CLASS (parent_class)->stop (decoder);
+  return GST_VIDEO_DECODER_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS
+      (decoder))->stop (decoder);
 }
 
 static GstCaps *
@@ -175,7 +173,8 @@ gst_va_base_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
       /* else jump to default */
     }
     default:
-      ret = GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
+      ret = GST_VIDEO_DECODER_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS
+          (decoder))->src_query (decoder, query);
       break;
   }
 
@@ -187,7 +186,8 @@ gst_va_base_dec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
 {
   if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT)
     return _query_context (GST_VA_BASE_DEC (decoder), query);
-  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_query (decoder, query);
+  return GST_VIDEO_DECODER_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS
+      (decoder))->sink_query (decoder, query);
 }
 
 static GstAllocator *
@@ -408,7 +408,8 @@ gst_va_base_dec_set_context (GstElement * element, GstContext * context)
   gst_clear_object (&old_display);
   gst_clear_object (&new_display);
 
-  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+  GST_ELEMENT_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS
+      (element))->set_context (element, context);
 }
 
 void
@@ -426,7 +427,7 @@ gst_va_base_dec_class_init (GstVaBaseDecClass * klass, GstVaCodecs codec,
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
-  gst_va_base_dec_parent_class = g_type_class_peek_parent (klass);
+  klass->parent_decoder_class = g_type_class_peek_parent (klass);
 
   klass->codec = codec;
   klass->render_device_path = g_strdup (render_device_path);

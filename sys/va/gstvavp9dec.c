@@ -73,9 +73,6 @@ struct _GstVaVp9Dec
   gboolean need_negotiation;
 };
 
-#define parent_class gst_va_base_dec_parent_class
-extern gpointer gst_va_base_dec_parent_class;
-
 /* *INDENT-OFF* */
 static const gchar *src_caps_str = GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory",
             "{ NV12 }") " ;" GST_VIDEO_CAPS_MAKE ("{ NV12 }");
@@ -520,14 +517,15 @@ gst_va_vp9_dec_negotiate (GstVideoDecoder * decoder)
   GST_INFO_OBJECT (self, "Negotiated caps %" GST_PTR_FORMAT,
       base->output_state->caps);
 
-  return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
+  return GST_VIDEO_DECODER_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS
+      (decoder))->negotiate (decoder);
 }
 
 static void
 gst_va_vp9_dec_dispose (GObject * object)
 {
   gst_va_base_dec_close (GST_VIDEO_DECODER (object));
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS (object))->dispose (object);
 }
 
 static void
