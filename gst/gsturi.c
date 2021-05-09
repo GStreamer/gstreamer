@@ -638,6 +638,8 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
   g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
   if (!gst_uri_is_valid (uri)) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        _("Invalid URI: %s"), uri);
     return NULL;
   }
 
@@ -809,6 +811,8 @@ gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri,
   g_return_val_if_fail (iface->set_uri != NULL, FALSE);
 
   if (!gst_uri_is_valid (uri)) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        _("Invalid URI: %s"), uri);
     return FALSE;
   }
 
