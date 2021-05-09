@@ -698,6 +698,7 @@ typedef struct _MultipleHttpRequestsContext
   GstElement *pipe;
   HttpSrcTestDownloader *downloader1;
   HttpSrcTestDownloader *downloader2;
+  gboolean started;
   gboolean failed;
 } MultipleHttpRequestsContext;
 
@@ -716,30 +717,43 @@ bus_message (GstBus * bus, GstMessage * msg, gpointer user_data)
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_STATE_CHANGED:
       gst_message_parse_state_changed (msg, NULL, &newstate, &pending);
-      if (newstate == GST_STATE_PLAYING && pending == GST_STATE_VOID_PENDING &&
-          GST_MESSAGE_SRC (msg) == GST_OBJECT (context->pipe)) {
-        GST_DEBUG ("Test ready to start");
-        start_next_download (context->downloader1);
-        if (context->downloader2)
-          start_next_download (context->downloader2);
-      } else if (newstate == GST_STATE_READY
-          && pending == GST_STATE_VOID_PENDING) {
-        if (GST_MESSAGE_SRC (msg) == GST_OBJECT (context->downloader1->bin)) {
-          if (++context->downloader1->count < 20) {
-            start_next_download (context->downloader1);
-          }
-        } else if (context->downloader2 && GST_MESSAGE_SRC (msg) ==
-            GST_OBJECT (context->downloader2->bin)) {
-          if (++context->downloader2->count < 20) {
+      if (pending == GST_STATE_VOID_PENDING) {
+        if (newstate == GST_STATE_PLAYING && !context->started &&
+            GST_MESSAGE_SRC (msg) == GST_OBJECT (context->pipe)) {
+          GST_DEBUG ("Test ready to start");
+          context->started = TRUE;
+          start_next_download (context->downloader1);
+          if (context->downloader2)
             start_next_download (context->downloader2);
+        } else if (newstate == GST_STATE_READY && context->started) {
+          if (GST_MESSAGE_SRC (msg) == GST_OBJECT (context->downloader1->bin)) {
+            if (++context->downloader1->count < 20) {
+              start_next_download (context->downloader1);
+            }
+          } else if (context->downloader2 && GST_MESSAGE_SRC (msg) ==
+              GST_OBJECT (context->downloader2->bin)) {
+            if (++context->downloader2->count < 20) {
+              start_next_download (context->downloader2);
+            }
           }
-        }
-        if (context->downloader1->count == 20 &&
-            (context->downloader2 == NULL
-                || context->downloader2->count == 20)) {
-          g_main_loop_quit (context->loop);
+          if (context->downloader1->count == 20 &&
+              (context->downloader2 == NULL
+                  || context->downloader2->count == 20)) {
+            g_main_loop_quit (context->loop);
+          }
+        } else if (newstate == GST_STATE_PAUSED && context->started) {
+          if (GST_MESSAGE_SRC (msg) == GST_OBJECT (context->downloader1->bin)) {
+            gst_element_set_state (context->downloader1->bin,
+                GST_STATE_PLAYING);
+          } else if (context->downloader2
+              && GST_MESSAGE_SRC (msg) ==
+              GST_OBJECT (context->downloader2->bin)) {
+            gst_element_set_state (context->downloader2->bin,
+                GST_STATE_PLAYING);
+          }
         }
       }
+
       break;
     case GST_MESSAGE_ERROR:
       debug = NULL;
@@ -781,6 +795,7 @@ GST_START_TEST (test_multiple_http_requests)
   guint watch_id;
   GstBus *bus;
 
+  context.started = FALSE;
   context.loop = g_main_loop_new (NULL, FALSE);
   context.downloader1 =
       test_curl_http_src_downloader_new ("bin1", 5 * G_USEC_PER_SEC / 1000);
@@ -844,6 +859,7 @@ GST_START_TEST (test_range_get)
   gulong probe_id;
   DataProbeResult dpr;
 
+  context.started = FALSE;
   context.loop = g_main_loop_new (NULL, FALSE);
   context.downloader1 =
       test_curl_http_src_downloader_new ("bin1", 5 * G_USEC_PER_SEC / 1000);
@@ -874,8 +890,8 @@ GST_START_TEST (test_range_get)
 
   g_main_loop_run (context.loop);
   fail_unless_equals_uint64 (dpr.received,
-      1 + context.downloader1->stop_position -
-      context.downloader1->start_position);
+      20 * (1 + context.downloader1->stop_position -
+          context.downloader1->start_position));
   g_source_remove (watch_id);
   gst_pad_remove_probe (src_pad, probe_id);
   gst_object_unref (src_pad);

@@ -495,6 +495,60 @@ gst_curl_http_src_class_init (GstCurlHttpSrcClass * klass)
 }
 
 static void
+gst_curl_http_src_reset (GstCurlHttpSrc * source)
+{
+  g_mutex_lock (&source->buffer_mutex);
+
+  source->transfer_begun = FALSE;
+  source->data_received = FALSE;
+  source->retries_remaining = source->total_retries;
+  source->content_size = 0;
+  source->request_position = 0;
+  source->stop_position = -1;
+  if (source->http_headers != NULL) {
+    gst_structure_free (source->http_headers);
+    source->http_headers = NULL;
+  }
+  if (source->curl_handle) {
+    gst_curl_http_src_destroy_easy_handle (source);
+    source->curl_handle = NULL;
+  }
+
+  g_mutex_unlock (&source->buffer_mutex);
+}
+
+static gboolean
+gst_curl_http_src_update_uri (GstCurlHttpSrc * source, const gchar * uri)
+{
+  gboolean changed = FALSE;
+  gboolean rc = TRUE;
+  GSTCURL_FUNCTION_ENTRY (source);
+
+  g_mutex_lock (&source->uri_mutex);
+  if (g_strcmp0 (source->uri, uri) != 0) {
+    if (source->uri) {
+      GST_DEBUG_OBJECT (source,
+          "URI already present as %s, updating to new URI %s", source->uri,
+          uri);
+      g_free (source->uri);
+    }
+    source->uri = g_strdup (uri);
+    if (source->uri == NULL)
+      rc = FALSE;
+    changed = TRUE;
+  }
+  g_mutex_unlock (&source->uri_mutex);
+
+  if (changed) {
+    gst_curl_http_src_wait_until_removed (source);
+    gst_curl_http_src_reset (source);
+  }
+
+  GSTCURL_FUNCTION_EXIT (source);
+  return rc;
+}
+
+static void
 gst_curl_http_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -503,10 +557,7 @@ gst_curl_http_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_URI:
-      g_mutex_lock (&source->uri_mutex);
-      g_free (source->uri);
-      source->uri = g_value_dup_string (value);
-      g_mutex_unlock (&source->uri_mutex);
+      gst_curl_http_src_update_uri (source, g_value_get_string (value));
       break;
     case PROP_USERNAME:
       g_free (source->username);
@@ -1682,30 +1733,16 @@ gst_curl_http_src_urihandler_set_uri (GstURIHandler * handler,
     const gchar * uri, GError ** error)
 {
   GstCurlHttpSrc *source = GST_CURLHTTPSRC (handler);
+  gboolean rc;
   GSTCURL_FUNCTION_ENTRY (source);
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), FALSE);
   g_return_val_if_fail (uri != NULL, FALSE);
 
-  g_mutex_lock (&source->uri_mutex);
-
-  if (source->uri != NULL) {
-    GST_DEBUG_OBJECT (source,
-        "URI already present as %s, updating to new URI %s", source->uri, uri);
-    g_free (source->uri);
-  }
-
-  source->uri = g_strdup (uri);
-  if (source->uri == NULL) {
-    g_mutex_unlock (&source->uri_mutex);
-    return FALSE;
-  }
-  source->retries_remaining = source->total_retries;
-
-  g_mutex_unlock (&source->uri_mutex);
+  rc = gst_curl_http_src_update_uri (source, uri);
 
   GSTCURL_FUNCTION_EXIT (source);
-  return TRUE;
+  return rc;
 }
 
 /*
