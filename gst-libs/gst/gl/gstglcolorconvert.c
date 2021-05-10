@@ -964,8 +964,9 @@ _init_supported_formats (GstGLContext * context, gboolean output,
 
   /* Always supported input formats or output with multiple draw buffers */
   if (!output || (!context || context->gl_vtable->DrawBuffers))
-    _append_value_string_list (supported_formats, "GBRA", "GBR", "Y444",
-        "I420", "YV12", "Y42B", "Y41B", "NV12", "NV21", "NV16", "NV61", NULL);
+    _append_value_string_list (supported_formats, "GBRA", "GBR", "RGBP", "BGRP",
+        "Y444", "I420", "YV12", "Y42B", "Y41B", "NV12", "NV21", "NV16", "NV61",
+        NULL);
 
   /* Requires reading from a RG/LA framebuffer... */
   if (!context || (USING_GLES3 (context) || USING_OPENGL (context)))
@@ -1468,6 +1469,8 @@ _is_planar_rgb (GstVideoFormat v_format)
 {
   switch (v_format) {
     case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_BGRP:
     case GST_VIDEO_FORMAT_GBR_10BE:
     case GST_VIDEO_FORMAT_GBR_10LE:
     case GST_VIDEO_FORMAT_GBRA:
@@ -1529,6 +1532,10 @@ _RGB_pixel_order (const gchar * expected, const gchar * wanted)
   } else if (strcmp (expect, "rgb10a2_le") == 0) {
     gchar *temp = expect;
     expect = g_strndup ("rgba", 4);
+    g_free (temp);
+  } else if (strcmp (expect, "rgbp") == 0 || strcmp (expect, "bgrp") == 0) {
+    gchar *temp = expect;
+    expect = g_strndup (temp, 3);
     g_free (temp);
   }
 
@@ -1645,6 +1652,8 @@ _get_n_textures (GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_BGRP:
       return 3;
     case GST_VIDEO_FORMAT_GBRA:
       return 4;

@@ -221,6 +221,8 @@ gst_gl_format_from_video_info (GstGLContext * context,
     case GST_VIDEO_FORMAT_Y412_BE:
       return GST_GL_RGBA16;
     case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_BGRP:
     case GST_VIDEO_FORMAT_GBRA:
       return GST_GL_R8;
     default:
