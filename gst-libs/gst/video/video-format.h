@@ -131,6 +131,8 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_Y412_LE: packed 4:4:4:4 YUV, 12 bits per channel(U-Y-V-A...) (Since: 1.18)
  * @GST_VIDEO_FORMAT_NV12_4L4: NV12 with 4x4 tiles in linear order (Since: 1.18)
  * @GST_VIDEO_FORMAT_NV12_32L32: NV12 with 32x32 tiles in linear order (Since: 1.18)
+ * @GST_VIDEO_FORMAT_RGBP: planar 4:4:4 RGB, 8 bits per channel (Since: 1.20)
+ * @GST_VIDEO_FORMAT_BGRP: planar 4:4:4 RGB, 8 bits per channel (Since: 1.20)
  *
  * Enum value describing the most common video formats.
  *
@@ -252,6 +254,23 @@ typedef enum {
    */
   GST_VIDEO_FORMAT_NV12_32L32,
 
+  /**
+   * GST_VIDEO_FORMAT_RGBP:
+   *
+   * Planar 4:4:4 RGB, R-G-B order
+   *
+   * Since: 1.20
+   */
+  GST_VIDEO_FORMAT_RGBP,
+
+  /**
+   * GST_VIDEO_FORMAT_BGRP:
+   *
+   * Planar 4:4:4 RGB, B-G-R order
+   *
+   * Since: 1.20
+   */
+  GST_VIDEO_FORMAT_BGRP,
 } GstVideoFormat;
 
 #define GST_VIDEO_MAX_PLANES 4
@@ -624,7 +643,7 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
     "GBR_12BE, Y444_12LE, GBR_12LE, I422_12BE, I422_12LE, Y212_BE, Y212_LE, I420_12BE, " \
     "I420_12LE, P012_BE, P012_LE, Y444_10BE, GBR_10BE, Y444_10LE, GBR_10LE, r210, " \
     "I422_10BE, I422_10LE, NV16_10LE32, Y210, v210, UYVP, I420_10BE, I420_10LE, " \
-    "P010_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, Y444, GBR, NV24, xBGR, BGRx, " \
+    "P010_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, Y444, GBR, RGBP, BGRP, NV24, xBGR, BGRx, " \
     "xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, " \
     "YV12, NV21, NV12, NV12_64Z32, NV12_4L4, NV12_32L32, Y41B, IYU1, YVU9, YUV9, RGB16, " \
     "BGR16, RGB15, BGR15, RGB8P, GRAY16_BE, GRAY16_LE, GRAY10_LE32, GRAY8 }"
@@ -636,7 +655,7 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
     "GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, " \
     "I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, r210, " \
     "I422_10LE, I422_10BE, NV16_10LE32, Y210, v210, UYVP, I420_10LE, I420_10BE, " \
-    "P010_10LE, NV12_10LE32, NV12_10LE40, P010_10BE, Y444, GBR, NV24, xBGR, BGRx, " \
+    "P010_10LE, NV12_10LE32, NV12_10LE40, P010_10BE, Y444, GBR, RGBP, BGRP, NV24, xBGR, BGRx, " \
     "xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, " \
     "YV12, NV21, NV12, NV12_64Z32, NV12_4L4, NV12_32L32, Y41B, IYU1, YVU9, YUV9, RGB16, " \
     "BGR16, RGB15, BGR15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8 }"

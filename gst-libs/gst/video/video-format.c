@@ -6279,6 +6279,66 @@ pack_Y412_LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+#define PACK_RGBP GST_VIDEO_FORMAT_ARGB, unpack_RGBP, 1, pack_RGBP
+static void
+unpack_RGBP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  const guint8 *restrict sr = GET_R_LINE (y);
+  const guint8 *restrict sg = GET_G_LINE (y);
+  const guint8 *restrict sb = GET_B_LINE (y);
+
+  sr += x;
+  sg += x;
+  sb += x;
+
+  video_orc_unpack_Y444 (dest, sr, sg, sb, width);
+}
+
+static void
+pack_RGBP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  guint8 *restrict dr = GET_R_LINE (y);
+  guint8 *restrict dg = GET_G_LINE (y);
+  guint8 *restrict db = GET_B_LINE (y);
+
+  video_orc_pack_Y444 (dr, dg, db, src, width);
+}
+
+#define PACK_BGRP GST_VIDEO_FORMAT_ARGB, unpack_BGRP, 1, pack_BGRP
+static void
+unpack_BGRP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  const guint8 *restrict sr = GET_R_LINE (y);
+  const guint8 *restrict sg = GET_G_LINE (y);
+  const guint8 *restrict sb = GET_B_LINE (y);
+
+  sr += x;
+  sg += x;
+  sb += x;
+
+  video_orc_unpack_Y444 (dest, sr, sg, sb, width);
+}
+
+static void
+pack_BGRP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  guint8 *restrict dr = GET_R_LINE (y);
+  guint8 *restrict dg = GET_G_LINE (y);
+  guint8 *restrict db = GET_B_LINE (y);
+
+  video_orc_pack_Y444 (dr, dg, db, src, width);
+}
+
 typedef struct
 {
   guint32 fourcc;
@@ -6334,6 +6394,7 @@ typedef struct
 #define PLANE021          3, { 0, 2, 1, 0 }
 #define PLANE201          3, { 2, 0, 1, 0 }
 #define PLANE2013         4, { 2, 0, 1, 3 }
+#define PLANE210          3, { 2, 1, 0, 0 }
 
 /* offsets */
 #define OFFS0             { 0, 0, 0, 0 }
@@ -6643,6 +6704,10 @@ static const VideoFormat formats[] = {
   MAKE_YUV_T_FORMAT (NV12_32L32, "raw video",
       GST_MAKE_FOURCC ('S', 'T', '1', '2'), DPTH888, PSTR122, PLANE011,
       OFFS001, SUB420, PACK_NV12_TILED, TILE_32x32 (LINEAR)),
+  MAKE_RGB_FORMAT (RGBP, "raw video", DPTH888, PSTR111, PLANE012, OFFS0, SUB444,
+      PACK_RGBP),
+  MAKE_RGB_FORMAT (BGRP, "raw video", DPTH888, PSTR111, PLANE210, OFFS0, SUB444,
+      PACK_BGRP),
 };
 
 static GstVideoFormat
