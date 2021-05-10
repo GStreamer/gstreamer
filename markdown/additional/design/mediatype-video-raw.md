@@ -1492,3 +1492,5 @@
           default rstride: width * 8
           default size:    rstride (image) * height
 ```
+- **"RGBP"** planar 4:4:4 RGB, R-G-B order, 8 bits per channel
+- **"BGRP"** planar 4:4:4 RGB, B-G-R order, 8 bits per channel
