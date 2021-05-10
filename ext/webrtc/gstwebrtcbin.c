@@ -7206,7 +7206,8 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       PROP_SCTP_TRANSPORT,
       g_param_spec_object ("sctp-transport", "WebRTC SCTP Transport",
           "The WebRTC SCTP Transport",
-          GST_TYPE_OBJECT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_WEBRTC_SCTP_TRANSPORT,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstWebRTCBin::create-offer:
