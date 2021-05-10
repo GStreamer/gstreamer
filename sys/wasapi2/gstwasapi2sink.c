@@ -31,11 +31,11 @@
  *
  * ## Example pipelines
  * |[
- * gst-launch-1.0 -v audiotestsrc samplesperbuffer=160 ! wasapi2sink
+ * gst-launch-1.0 -v audiotestsink samplesperbuffer=160 ! wasapi2sink
  * ]| Generate 20 ms buffers and render to the default audio device.
  *
  * |[
- * gst-launch-1.0 -v audiotestsrc samplesperbuffer=160 ! wasapi2sink low-latency=true
+ * gst-launch-1.0 -v audiotestsink samplesperbuffer=160 ! wasapi2sink low-latency=true
  * ]| Same as above, but with the minimum possible latency
  *
  */
@@ -45,7 +45,7 @@
 
 #include "gstwasapi2sink.h"
 #include "gstwasapi2util.h"
-#include "gstwasapi2client.h"
+#include "gstwasapi2ringbuffer.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_wasapi2_sink_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_sink_debug
@@ -59,9 +59,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 #define DEFAULT_MUTE          FALSE
 #define DEFAULT_VOLUME        1.0
 
-#define GST_WASAPI2_SINK_LOCK(s) g_mutex_lock(&(s)->lock)
-#define GST_WASAPI2_SINK_UNLOCK(s) g_mutex_unlock(&(s)->lock)
-
 enum
 {
   PROP_0,
@@ -74,11 +71,7 @@ enum
 
 struct _GstWasapi2Sink
 {
-  GstAudioSink parent;
-
-  GstWasapi2Client *client;
-  GstCaps *cached_caps;
-  gboolean started;
+  GstAudioBaseSink parent;
 
   /* properties */
   gchar *device_id;
@@ -89,30 +82,21 @@ struct _GstWasapi2Sink
 
   gboolean mute_changed;
   gboolean volume_changed;
-
-  /* to protect audioclient from set/get property */
-  GMutex lock;
 };
 
-static void gst_wasapi2_sink_dispose (GObject * object);
 static void gst_wasapi2_sink_finalize (GObject * object);
 static void gst_wasapi2_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_wasapi2_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstStateChangeReturn gst_wasapi2_sink_change_state (GstElement *
+    element, GstStateChange transition);
+
 static GstCaps *gst_wasapi2_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
-
-static gboolean gst_wasapi2_sink_prepare (GstAudioSink * asink,
-    GstAudioRingBufferSpec * spec);
-static gboolean gst_wasapi2_sink_unprepare (GstAudioSink * asink);
-static gboolean gst_wasapi2_sink_open (GstAudioSink * asink);
-static gboolean gst_wasapi2_sink_close (GstAudioSink * asink);
-static gint gst_wasapi2_sink_write (GstAudioSink * asink,
-    gpointer data, guint length);
-static guint gst_wasapi2_sink_delay (GstAudioSink * asink);
-static void gst_wasapi2_sink_reset (GstAudioSink * asink);
+static GstAudioRingBuffer *gst_wasapi2_sink_create_ringbuffer (GstAudioBaseSink
+    * sink);
 
 static void gst_wasapi2_sink_set_mute (GstWasapi2Sink * self, gboolean mute);
 static gboolean gst_wasapi2_sink_get_mute (GstWasapi2Sink * self);
@@ -120,7 +104,8 @@ static void gst_wasapi2_sink_set_volume (GstWasapi2Sink * self, gdouble volume);
 static gdouble gst_wasapi2_sink_get_volume (GstWasapi2Sink * self);
 
 #define gst_wasapi2_sink_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstWasapi2Sink, gst_wasapi2_sink, GST_TYPE_AUDIO_SINK,
+G_DEFINE_TYPE_WITH_CODE (GstWasapi2Sink, gst_wasapi2_sink,
+    GST_TYPE_AUDIO_BASE_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL));
 
 static void
@@ -129,9 +114,9 @@ gst_wasapi2_sink_class_init (GstWasapi2SinkClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseSinkClass *basesink_class = GST_BASE_SINK_CLASS (klass);
-  GstAudioSinkClass *audiosink_class = GST_AUDIO_SINK_CLASS (klass);
+  GstAudioBaseSinkClass *audiobasesink_class =
+      GST_AUDIO_BASE_SINK_CLASS (klass);
 
-  gobject_class->dispose = gst_wasapi2_sink_dispose;
   gobject_class->finalize = gst_wasapi2_sink_finalize;
   gobject_class->set_property = gst_wasapi2_sink_set_property;
   gobject_class->get_property = gst_wasapi2_sink_get_property;
@@ -184,15 +169,13 @@ gst_wasapi2_sink_class_init (GstWasapi2SinkClass * klass)
       "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>, "
       "Seungha Yang <seungha@centricular.com>");
 
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_wasapi2_sink_change_state);
+
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_wasapi2_sink_get_caps);
 
-  audiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_wasapi2_sink_prepare);
-  audiosink_class->unprepare = GST_DEBUG_FUNCPTR (gst_wasapi2_sink_unprepare);
-  audiosink_class->open = GST_DEBUG_FUNCPTR (gst_wasapi2_sink_open);
-  audiosink_class->close = GST_DEBUG_FUNCPTR (gst_wasapi2_sink_close);
-  audiosink_class->write = GST_DEBUG_FUNCPTR (gst_wasapi2_sink_write);
-  audiosink_class->delay = GST_DEBUG_FUNCPTR (gst_wasapi2_sink_delay);
-  audiosink_class->reset = GST_DEBUG_FUNCPTR (gst_wasapi2_sink_reset);
+  audiobasesink_class->create_ringbuffer =
+      GST_DEBUG_FUNCPTR (gst_wasapi2_sink_create_ringbuffer);
 
   GST_DEBUG_CATEGORY_INIT (gst_wasapi2_sink_debug, "wasapi2sink",
       0, "Windows audio session API sink");
@@ -204,21 +187,6 @@ gst_wasapi2_sink_init (GstWasapi2Sink * self)
   self->low_latency = DEFAULT_LOW_LATENCY;
   self->mute = DEFAULT_MUTE;
   self->volume = DEFAULT_VOLUME;
-
-  g_mutex_init (&self->lock);
-}
-
-static void
-gst_wasapi2_sink_dispose (GObject * object)
-{
-  GstWasapi2Sink *self = GST_WASAPI2_SINK (object);
-
-  GST_WASAPI2_SINK_LOCK (self);
-  gst_clear_object (&self->client);
-  gst_clear_caps (&self->cached_caps);
-  GST_WASAPI2_SINK_UNLOCK (self);
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -227,7 +195,6 @@ gst_wasapi2_sink_finalize (GObject * object)
   GstWasapi2Sink *self = GST_WASAPI2_SINK (object);
 
   g_free (self->device_id);
-  g_mutex_clear (&self->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -286,29 +253,58 @@ gst_wasapi2_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstStateChangeReturn
+gst_wasapi2_sink_change_state (GstElement * element, GstStateChange transition)
+{
+  GstWasapi2Sink *self = GST_WASAPI2_SINK (element);
+  GstAudioBaseSink *asink = GST_AUDIO_BASE_SINK_CAST (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* If we have pending volume/mute values to set, do here */
+      GST_OBJECT_LOCK (self);
+      if (asink->ringbuffer) {
+        GstWasapi2RingBuffer *ringbuffer =
+            GST_WASAPI2_RING_BUFFER (asink->ringbuffer);
+
+        if (self->volume_changed) {
+          gst_wasapi2_ring_buffer_set_volume (ringbuffer, self->volume);
+          self->volume_changed = FALSE;
+        }
+
+        if (self->mute_changed) {
+          gst_wasapi2_ring_buffer_set_mute (ringbuffer, self->mute);
+          self->mute_changed = FALSE;
+        }
+      }
+      GST_OBJECT_UNLOCK (self);
+      break;
+    default:
+      break;
+  }
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+}
+
 static GstCaps *
 gst_wasapi2_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 {
-  GstWasapi2Sink *self = GST_WASAPI2_SINK (bsink);
+  GstAudioBaseSink *asink = GST_AUDIO_BASE_SINK_CAST (bsink);
   GstCaps *caps = NULL;
 
-  /* In case of UWP, device activation might not be finished yet */
-  if (self->client && !gst_wasapi2_client_ensure_activation (self->client)) {
-    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
-        ("Failed to activate device"));
-    return NULL;
+  GST_OBJECT_LOCK (bsink);
+  if (asink->ringbuffer) {
+    GstWasapi2RingBuffer *ringbuffer =
+        GST_WASAPI2_RING_BUFFER (asink->ringbuffer);
+
+    gst_object_ref (ringbuffer);
+    GST_OBJECT_UNLOCK (bsink);
+
+    /* Get caps might be able to block if device is not activated yet */
+    caps = gst_wasapi2_ring_buffer_get_caps (ringbuffer);
+  } else {
+    GST_OBJECT_UNLOCK (bsink);
   }
-
-  if (self->client)
-    caps = gst_wasapi2_client_get_caps (self->client);
-
-  /* store one caps here so that we can return device caps even if
-   * audioclient was closed due to unprepare() */
-  if (!self->cached_caps && caps)
-    self->cached_caps = gst_caps_ref (caps);
-
-  if (!caps && self->cached_caps)
-    caps = gst_caps_ref (self->cached_caps);
 
   if (!caps)
     caps = gst_pad_get_pad_template_caps (bsink->sinkpad);
@@ -320,238 +316,81 @@ gst_wasapi2_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     caps = filtered;
   }
 
-  GST_DEBUG_OBJECT (self, "returning caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (bsink, "returning caps %" GST_PTR_FORMAT, caps);
 
   return caps;
 }
 
-static gboolean
-gst_wasapi2_sink_open_unlocked (GstAudioSink * asink)
+static GstAudioRingBuffer *
+gst_wasapi2_sink_create_ringbuffer (GstAudioBaseSink * sink)
 {
-  GstWasapi2Sink *self = GST_WASAPI2_SINK (asink);
+  GstWasapi2Sink *self = GST_WASAPI2_SINK (sink);
+  GstAudioRingBuffer *ringbuffer;
+  gchar *name;
 
-  gst_clear_object (&self->client);
+  name = g_strdup_printf ("%s-ringbuffer", GST_OBJECT_NAME (sink));
 
-  self->client =
-      gst_wasapi2_client_new (GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER,
-      self->low_latency, -1, self->device_id, self->dispatcher);
+  ringbuffer =
+      gst_wasapi2_ring_buffer_new (GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER,
+      self->low_latency, self->device_id, self->dispatcher, name);
 
-  if (!self->client)
-    return FALSE;
+  g_free (name);
 
-  return TRUE;
-}
-
-static gboolean
-gst_wasapi2_sink_open (GstAudioSink * asink)
-{
-  GstWasapi2Sink *self = GST_WASAPI2_SINK (asink);
-  gboolean ret;
-
-  GST_DEBUG_OBJECT (self, "Opening device");
-
-  GST_WASAPI2_SINK_LOCK (self);
-  ret = gst_wasapi2_sink_open_unlocked (asink);
-  GST_WASAPI2_SINK_UNLOCK (self);
-
-  if (!ret) {
-    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
-        ("Failed to open device"));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-gst_wasapi2_sink_close (GstAudioSink * asink)
-{
-  GstWasapi2Sink *self = GST_WASAPI2_SINK (asink);
-
-  GST_WASAPI2_SINK_LOCK (self);
-
-  gst_clear_object (&self->client);
-  gst_clear_caps (&self->cached_caps);
-  self->started = FALSE;
-
-  GST_WASAPI2_SINK_UNLOCK (self);
-
-  return TRUE;
-}
-
-static gboolean
-gst_wasapi2_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
-{
-  GstWasapi2Sink *self = GST_WASAPI2_SINK (asink);
-  GstAudioBaseSink *bsink = GST_AUDIO_BASE_SINK (asink);
-  gboolean ret = FALSE;
-  HRESULT hr;
-
-  GST_WASAPI2_SINK_LOCK (self);
-  if (!self->client && !gst_wasapi2_sink_open_unlocked (asink)) {
-    GST_ERROR_OBJECT (self, "No audio client was configured");
-    goto done;
-  }
-
-  if (!gst_wasapi2_client_ensure_activation (self->client)) {
-    GST_ERROR_OBJECT (self, "Couldn't activate audio device");
-    goto done;
-  }
-
-  hr = gst_wasapi2_client_open (self->client, spec, bsink->ringbuffer);
-  if (!gst_wasapi2_result (hr)) {
-    GST_ERROR_OBJECT (self, "Couldn't open audio client");
-    goto done;
-  }
-
-  /* Set mute and volume here again, maybe when "mute" property was set, audioclient
-   * might not be configured at that moment */
-  if (self->mute_changed) {
-    gst_wasapi2_client_set_mute (self->client, self->mute);
-    self->mute_changed = FALSE;
-  }
-
-  if (self->volume_changed) {
-    gst_wasapi2_client_set_volume (self->client, self->volume);
-    self->volume_changed = FALSE;
-  }
-
-  /* Will start IAudioClient on the first write request */
-  self->started = FALSE;
-  ret = TRUE;
-
-done:
-  GST_WASAPI2_SINK_UNLOCK (self);
-
-  return ret;
-}
-
-static gboolean
-gst_wasapi2_sink_unprepare (GstAudioSink * asink)
-{
-  GstWasapi2Sink *self = GST_WASAPI2_SINK (asink);
-
-  self->started = FALSE;
-
-  /* Will reopen device later prepare() */
-  GST_WASAPI2_SINK_LOCK (self);
-  if (self->client) {
-    gst_wasapi2_client_stop (self->client);
-    gst_clear_object (&self->client);
-  }
-  GST_WASAPI2_SINK_UNLOCK (self);
-
-  return TRUE;
-}
-
-static gint
-gst_wasapi2_sink_write (GstAudioSink * asink, gpointer data, guint length)
-{
-  GstWasapi2Sink *self = GST_WASAPI2_SINK (asink);
-  HRESULT hr;
-  guint write_len = 0;
-
-  if (!self->client) {
-    GST_ERROR_OBJECT (self, "No audio client was configured");
-    return -1;
-  }
-
-  if (!self->started) {
-    HRESULT hr = gst_wasapi2_client_start (self->client);
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR_OBJECT (self, "Failed to re-start client");
-      return -1;
-    }
-
-    self->started = TRUE;
-  }
-
-  hr = gst_wasapi2_client_write (self->client, data, length, &write_len);
-  if (!gst_wasapi2_result (hr)) {
-    GST_ERROR_OBJECT (self, "Failed to write");
-    return -1;
-  }
-
-  return (gint) write_len;
-}
-
-static guint
-gst_wasapi2_sink_delay (GstAudioSink * asink)
-{
-  GstWasapi2Sink *self = GST_WASAPI2_SINK (asink);
-  guint32 delay;
-  HRESULT hr;
-
-  if (!self->client)
-    return 0;
-
-  hr = gst_wasapi2_client_delay (self->client, &delay);
-  if (!gst_wasapi2_result (hr)) {
-    GST_WARNING_OBJECT (self, "Failed to get delay");
-    return 0;
-  }
-
-  return delay;
-}
-
-static void
-gst_wasapi2_sink_reset (GstAudioSink * asink)
-{
-  GstWasapi2Sink *self = GST_WASAPI2_SINK (asink);
-
-  GST_INFO_OBJECT (self, "reset called");
-
-  self->started = FALSE;
-
-  if (!self->client)
-    return;
-
-  gst_wasapi2_client_stop (self->client);
+  return ringbuffer;
 }
 
 static void
 gst_wasapi2_sink_set_mute (GstWasapi2Sink * self, gboolean mute)
 {
-  GST_WASAPI2_SINK_LOCK (self);
+  GstAudioBaseSink *bsink = GST_AUDIO_BASE_SINK_CAST (self);
+  HRESULT hr;
+
+  GST_OBJECT_LOCK (self);
 
   self->mute = mute;
   self->mute_changed = TRUE;
 
-  if (self->client) {
-    HRESULT hr = gst_wasapi2_client_set_mute (self->client, mute);
+  if (bsink->ringbuffer) {
+    GstWasapi2RingBuffer *ringbuffer =
+        GST_WASAPI2_RING_BUFFER (bsink->ringbuffer);
+
+    hr = gst_wasapi2_ring_buffer_set_mute (ringbuffer, mute);
+
     if (FAILED (hr)) {
       GST_INFO_OBJECT (self, "Couldn't set mute");
     } else {
       self->mute_changed = FALSE;
     }
-  } else {
-    GST_DEBUG_OBJECT (self, "audio client is not configured yet");
   }
 
-  GST_WASAPI2_SINK_UNLOCK (self);
+  GST_OBJECT_UNLOCK (self);
 }
 
 static gboolean
 gst_wasapi2_sink_get_mute (GstWasapi2Sink * self)
 {
+  GstAudioBaseSink *bsink = GST_AUDIO_BASE_SINK_CAST (self);
   gboolean mute;
+  HRESULT hr;
 
-  GST_WASAPI2_SINK_LOCK (self);
+  GST_OBJECT_LOCK (self);
 
   mute = self->mute;
 
-  if (self->client) {
-    HRESULT hr = gst_wasapi2_client_get_mute (self->client, &mute);
+  if (bsink->ringbuffer) {
+    GstWasapi2RingBuffer *ringbuffer =
+        GST_WASAPI2_RING_BUFFER (bsink->ringbuffer);
+
+    hr = gst_wasapi2_ring_buffer_get_mute (ringbuffer, &mute);
+
     if (FAILED (hr)) {
-      GST_INFO_OBJECT (self, "Couldn't get mute state");
+      GST_INFO_OBJECT (self, "Couldn't get mute");
     } else {
       self->mute = mute;
     }
-  } else {
-    GST_DEBUG_OBJECT (self, "audio client is not configured yet");
   }
 
-  GST_WASAPI2_SINK_UNLOCK (self);
+  GST_OBJECT_UNLOCK (self);
 
   return mute;
 }
@@ -559,7 +398,10 @@ gst_wasapi2_sink_get_mute (GstWasapi2Sink * self)
 static void
 gst_wasapi2_sink_set_volume (GstWasapi2Sink * self, gdouble volume)
 {
-  GST_WASAPI2_SINK_LOCK (self);
+  GstAudioBaseSink *bsink = GST_AUDIO_BASE_SINK_CAST (self);
+  HRESULT hr;
+
+  GST_OBJECT_LOCK (self);
 
   self->volume = volume;
   /* clip volume value */
@@ -567,42 +409,47 @@ gst_wasapi2_sink_set_volume (GstWasapi2Sink * self, gdouble volume)
   self->volume = MIN (1.0, self->volume);
   self->volume_changed = TRUE;
 
-  if (self->client) {
-    HRESULT hr =
-        gst_wasapi2_client_set_volume (self->client, (gfloat) self->volume);
+  if (bsink->ringbuffer) {
+    GstWasapi2RingBuffer *ringbuffer =
+        GST_WASAPI2_RING_BUFFER (bsink->ringbuffer);
+
+    hr = gst_wasapi2_ring_buffer_set_volume (ringbuffer, (gfloat) self->volume);
+
     if (FAILED (hr)) {
       GST_INFO_OBJECT (self, "Couldn't set volume");
     } else {
       self->volume_changed = FALSE;
     }
-  } else {
-    GST_DEBUG_OBJECT (self, "audio client is not configured yet");
   }
 
-  GST_WASAPI2_SINK_UNLOCK (self);
+  GST_OBJECT_UNLOCK (self);
 }
 
 static gdouble
 gst_wasapi2_sink_get_volume (GstWasapi2Sink * self)
 {
+  GstAudioBaseSink *bsink = GST_AUDIO_BASE_SINK_CAST (self);
   gfloat volume;
+  HRESULT hr;
 
-  GST_WASAPI2_SINK_LOCK (self);
+  GST_OBJECT_LOCK (self);
 
   volume = (gfloat) self->volume;
 
-  if (self->client) {
-    HRESULT hr = gst_wasapi2_client_get_volume (self->client, &volume);
+  if (bsink->ringbuffer) {
+    GstWasapi2RingBuffer *ringbuffer =
+        GST_WASAPI2_RING_BUFFER (bsink->ringbuffer);
+
+    hr = gst_wasapi2_ring_buffer_get_volume (ringbuffer, &volume);
+
     if (FAILED (hr)) {
-      GST_INFO_OBJECT (self, "Couldn't get volume");
+      GST_INFO_OBJECT (self, "Couldn't set volume");
     } else {
       self->volume = volume;
     }
-  } else {
-    GST_DEBUG_OBJECT (self, "audio client is not configured yet");
   }
 
-  GST_WASAPI2_SINK_UNLOCK (self);
+  GST_OBJECT_UNLOCK (self);
 
   volume = MAX (0.0, volume);
   volume = MIN (1.0, volume);

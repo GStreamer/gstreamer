@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <windows.h>
+#include <initguid.h>
 #include <audioclient.h>
 
 G_BEGIN_DECLS
@@ -34,6 +35,13 @@ G_BEGIN_DECLS
         "rate = " GST_AUDIO_RATE_RANGE ", " \
         "channels = " GST_AUDIO_CHANNELS_RANGE
 
+#define GST_WASAPI2_CLEAR_COM(obj) G_STMT_START { \
+    if (obj) { \
+      (obj)->Release (); \
+      (obj) = NULL; \
+    } \
+  } G_STMT_END
+
 gboolean  _gst_wasapi2_result (HRESULT hr,
                                GstDebugCategory * cat,
                                const gchar * file,
@@ -42,6 +50,16 @@ gboolean  _gst_wasapi2_result (HRESULT hr,
 
 #define gst_wasapi2_result(result) \
     _gst_wasapi2_result (result, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
+
+guint64       gst_wasapi2_util_waveformatex_to_channel_mask (WAVEFORMATEX * format,
+                                                             GstAudioChannelPosition ** out_position);
+
+const gchar * gst_wasapi2_util_waveformatex_to_audio_format (WAVEFORMATEX * format);
+
+gboolean      gst_wasapi2_util_parse_waveformatex (WAVEFORMATEX * format,
+                                                   GstCaps * template_caps,
+                                                   GstCaps ** out_caps,
+                                                   GstAudioChannelPosition ** out_positions);
 
 G_END_DECLS
 

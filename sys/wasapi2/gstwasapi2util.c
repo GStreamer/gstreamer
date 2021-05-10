@@ -25,9 +25,55 @@
 
 #include "gstwasapi2util.h"
 #include <audioclient.h>
+#include <mmdeviceapi.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_debug
+
+/* Desktop only defines */
+#ifndef KSAUDIO_SPEAKER_MONO
+#define KSAUDIO_SPEAKER_MONO            (SPEAKER_FRONT_CENTER)
+#endif
+#ifndef KSAUDIO_SPEAKER_1POINT1
+#define KSAUDIO_SPEAKER_1POINT1         (SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY)
+#endif
+#ifndef KSAUDIO_SPEAKER_STEREO
+#define KSAUDIO_SPEAKER_STEREO          (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT)
+#endif
+#ifndef KSAUDIO_SPEAKER_2POINT1
+#define KSAUDIO_SPEAKER_2POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_LOW_FREQUENCY)
+#endif
+#ifndef KSAUDIO_SPEAKER_3POINT0
+#define KSAUDIO_SPEAKER_3POINT0         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER)
+#endif
+#ifndef KSAUDIO_SPEAKER_3POINT1
+#define KSAUDIO_SPEAKER_3POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
+                                         SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY)
+#endif
+#ifndef KSAUDIO_SPEAKER_QUAD
+#define KSAUDIO_SPEAKER_QUAD            (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
+                                         SPEAKER_BACK_LEFT  | SPEAKER_BACK_RIGHT)
+#endif
+#define KSAUDIO_SPEAKER_SURROUND        (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
+                                         SPEAKER_FRONT_CENTER | SPEAKER_BACK_CENTER)
+#ifndef KSAUDIO_SPEAKER_5POINT0
+#define KSAUDIO_SPEAKER_5POINT0         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | \
+                                         SPEAKER_SIDE_LEFT  | SPEAKER_SIDE_RIGHT)
+#endif
+#define KSAUDIO_SPEAKER_5POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
+                                         SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY | \
+                                         SPEAKER_BACK_LEFT  | SPEAKER_BACK_RIGHT)
+#ifndef KSAUDIO_SPEAKER_7POINT0
+#define KSAUDIO_SPEAKER_7POINT0         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | \
+                                         SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | \
+                                         SPEAKER_SIDE_LEFT | SPEAKER_SIDE_RIGHT)
+#endif
+#ifndef KSAUDIO_SPEAKER_7POINT1
+#define KSAUDIO_SPEAKER_7POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
+                                         SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY | \
+                                         SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | \
+                                         SPEAKER_FRONT_LEFT_OF_CENTER | SPEAKER_FRONT_RIGHT_OF_CENTER)
+#endif
 
 /* *INDENT-OFF* */
 static struct
@@ -56,6 +102,27 @@ static struct
   {SPEAKER_TOP_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT},
   {SPEAKER_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER},
   {SPEAKER_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}
+};
+
+static DWORD default_ch_masks[] = {
+  0,
+  KSAUDIO_SPEAKER_MONO,
+  /* 2ch */
+  KSAUDIO_SPEAKER_STEREO,
+  /* 2.1ch */
+  /* KSAUDIO_SPEAKER_3POINT0 ? */
+  KSAUDIO_SPEAKER_2POINT1,
+  /* 4ch */
+  /* KSAUDIO_SPEAKER_3POINT1 or KSAUDIO_SPEAKER_SURROUND ? */
+  KSAUDIO_SPEAKER_QUAD,
+  /* 5ch */
+  KSAUDIO_SPEAKER_5POINT0,
+  /* 5.1ch */
+  KSAUDIO_SPEAKER_5POINT1,
+  /* 7ch */
+  KSAUDIO_SPEAKER_7POINT0,
+  /* 7.1ch */
+  KSAUDIO_SPEAKER_7POINT1,
 };
 /* *INDENT-ON* */
 
@@ -191,4 +258,174 @@ _gst_wasapi2_result (HRESULT hr, GstDebugCategory * cat, const gchar * file,
 #else
   return SUCCEEDED (hr);
 #endif
+}
+
+static void
+gst_wasapi_util_channel_position_all_none (guint channels,
+    GstAudioChannelPosition * position)
+{
+  guint i;
+
+  for (i = 0; i < channels; i++)
+    position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+}
+
+guint64
+gst_wasapi2_util_waveformatex_to_channel_mask (WAVEFORMATEX * format,
+    GstAudioChannelPosition ** out_position)
+{
+  guint i, ch;
+  guint64 mask = 0;
+  GstAudioChannelPosition *pos = NULL;
+  WORD nChannels = 0;
+  DWORD dwChannelMask = 0;
+
+  nChannels = format->nChannels;
+  if (format->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+    WAVEFORMATEXTENSIBLE *extensible = (WAVEFORMATEXTENSIBLE *) format;
+    dwChannelMask = extensible->dwChannelMask;
+  }
+
+  if (out_position)
+    *out_position = NULL;
+
+  if (nChannels > 2 && !dwChannelMask) {
+    GST_WARNING ("Unknown channel mask value for %d channel stream", nChannels);
+
+    if (nChannels >= G_N_ELEMENTS (default_ch_masks)) {
+      GST_ERROR ("To may channels %d", nChannels);
+      return 0;
+    }
+
+    dwChannelMask = default_ch_masks[nChannels];
+  }
+
+  pos = g_new (GstAudioChannelPosition, nChannels);
+  gst_wasapi_util_channel_position_all_none (nChannels, pos);
+
+  /* Too many channels, have to assume that they are all non-positional */
+  if (nChannels > G_N_ELEMENTS (wasapi_to_gst_pos)) {
+    GST_INFO ("Got too many (%i) channels, assuming non-positional", nChannels);
+    goto out;
+  }
+
+  /* Too many bits in the channel mask, and the bits don't match nChannels */
+  if (dwChannelMask >> (G_N_ELEMENTS (wasapi_to_gst_pos) + 1) != 0) {
+    GST_WARNING ("Too many bits in channel mask (%lu), assuming "
+        "non-positional", dwChannelMask);
+    goto out;
+  }
+
+  /* Map WASAPI's channel mask to Gstreamer's channel mask and positions.
+   * If the no. of bits in the mask > nChannels, we will ignore the extra. */
+  for (i = 0, ch = 0; i < G_N_ELEMENTS (wasapi_to_gst_pos) && ch < nChannels;
+      i++) {
+    if (!(dwChannelMask & wasapi_to_gst_pos[i].wasapi_pos))
+      /* no match, try next */
+      continue;
+    mask |= G_GUINT64_CONSTANT (1) << wasapi_to_gst_pos[i].gst_pos;
+    pos[ch++] = wasapi_to_gst_pos[i].gst_pos;
+  }
+
+  /* XXX: Warn if some channel masks couldn't be mapped? */
+
+  GST_DEBUG ("Converted WASAPI mask 0x%" G_GINT64_MODIFIER "x -> 0x%"
+      G_GINT64_MODIFIER "x", (guint64) dwChannelMask, (guint64) mask);
+
+out:
+  if (out_position) {
+    *out_position = pos;
+  } else {
+    g_free (pos);
+  }
+
+  return mask;
+}
+
+const gchar *
+gst_wasapi2_util_waveformatex_to_audio_format (WAVEFORMATEX * format)
+{
+  const gchar *fmt_str = NULL;
+  GstAudioFormat fmt = GST_AUDIO_FORMAT_UNKNOWN;
+
+  switch (format->wFormatTag) {
+    case WAVE_FORMAT_PCM:
+      fmt = gst_audio_format_build_integer (TRUE, G_LITTLE_ENDIAN,
+          format->wBitsPerSample, format->wBitsPerSample);
+      break;
+    case WAVE_FORMAT_IEEE_FLOAT:
+      if (format->wBitsPerSample == 32)
+        fmt = GST_AUDIO_FORMAT_F32LE;
+      else if (format->wBitsPerSample == 64)
+        fmt = GST_AUDIO_FORMAT_F64LE;
+      break;
+    case WAVE_FORMAT_EXTENSIBLE:
+    {
+      WAVEFORMATEXTENSIBLE *ex = (WAVEFORMATEXTENSIBLE *) format;
+      if (IsEqualGUID (&ex->SubFormat, &KSDATAFORMAT_SUBTYPE_PCM)) {
+        fmt = gst_audio_format_build_integer (TRUE, G_LITTLE_ENDIAN,
+            format->wBitsPerSample, ex->Samples.wValidBitsPerSample);
+      } else if (IsEqualGUID (&ex->SubFormat, &KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)) {
+        if (format->wBitsPerSample == 32
+            && ex->Samples.wValidBitsPerSample == 32)
+          fmt = GST_AUDIO_FORMAT_F32LE;
+        else if (format->wBitsPerSample == 64 &&
+            ex->Samples.wValidBitsPerSample == 64)
+          fmt = GST_AUDIO_FORMAT_F64LE;
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  if (fmt != GST_AUDIO_FORMAT_UNKNOWN)
+    fmt_str = gst_audio_format_to_string (fmt);
+
+  return fmt_str;
+}
+
+gboolean
+gst_wasapi2_util_parse_waveformatex (WAVEFORMATEX * format,
+    GstCaps * template_caps, GstCaps ** out_caps,
+    GstAudioChannelPosition ** out_positions)
+{
+  const gchar *afmt;
+  guint64 channel_mask;
+
+  *out_caps = NULL;
+
+  /* TODO: handle SPDIF and other encoded formats */
+
+  /* 1 or 2 channels <= 16 bits sample size OR
+   * 1 or 2 channels > 16 bits sample size or >2 channels */
+  if (format->wFormatTag != WAVE_FORMAT_PCM &&
+      format->wFormatTag != WAVE_FORMAT_IEEE_FLOAT &&
+      format->wFormatTag != WAVE_FORMAT_EXTENSIBLE)
+    /* Unhandled format tag */
+    return FALSE;
+
+  /* WASAPI can only tell us one canonical mix format that it will accept. The
+   * alternative is calling IsFormatSupported on all combinations of formats.
+   * Instead, it's simpler and faster to require conversion inside gstreamer */
+  afmt = gst_wasapi2_util_waveformatex_to_audio_format (format);
+  if (afmt == NULL)
+    return FALSE;
+
+  *out_caps = gst_caps_copy (template_caps);
+
+  channel_mask = gst_wasapi2_util_waveformatex_to_channel_mask (format,
+      out_positions);
+
+  gst_caps_set_simple (*out_caps,
+      "format", G_TYPE_STRING, afmt,
+      "channels", G_TYPE_INT, format->nChannels,
+      "rate", G_TYPE_INT, format->nSamplesPerSec, NULL);
+
+  if (channel_mask) {
+    gst_caps_set_simple (*out_caps,
+        "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
+  }
+
+  return TRUE;
 }

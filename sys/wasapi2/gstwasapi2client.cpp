@@ -41,51 +41,6 @@
 #include <locale>
 #include <codecvt>
 
-/* Desktop only defines */
-#ifndef KSAUDIO_SPEAKER_MONO
-#define KSAUDIO_SPEAKER_MONO            (SPEAKER_FRONT_CENTER)
-#endif
-#ifndef KSAUDIO_SPEAKER_1POINT1
-#define KSAUDIO_SPEAKER_1POINT1         (SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY)
-#endif
-#ifndef KSAUDIO_SPEAKER_STEREO
-#define KSAUDIO_SPEAKER_STEREO          (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT)
-#endif
-#ifndef KSAUDIO_SPEAKER_2POINT1
-#define KSAUDIO_SPEAKER_2POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_LOW_FREQUENCY)
-#endif
-#ifndef KSAUDIO_SPEAKER_3POINT0
-#define KSAUDIO_SPEAKER_3POINT0         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER)
-#endif
-#ifndef KSAUDIO_SPEAKER_3POINT1
-#define KSAUDIO_SPEAKER_3POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
-                                         SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY)
-#endif
-#ifndef KSAUDIO_SPEAKER_QUAD
-#define KSAUDIO_SPEAKER_QUAD            (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
-                                         SPEAKER_BACK_LEFT  | SPEAKER_BACK_RIGHT)
-#endif
-#define KSAUDIO_SPEAKER_SURROUND        (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
-                                         SPEAKER_FRONT_CENTER | SPEAKER_BACK_CENTER)
-#ifndef KSAUDIO_SPEAKER_5POINT0
-#define KSAUDIO_SPEAKER_5POINT0         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | \
-                                         SPEAKER_SIDE_LEFT  | SPEAKER_SIDE_RIGHT)
-#endif
-#define KSAUDIO_SPEAKER_5POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
-                                         SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY | \
-                                         SPEAKER_BACK_LEFT  | SPEAKER_BACK_RIGHT)
-#ifndef KSAUDIO_SPEAKER_7POINT0
-#define KSAUDIO_SPEAKER_7POINT0         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | \
-                                         SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | \
-                                         SPEAKER_SIDE_LEFT | SPEAKER_SIDE_RIGHT)
-#endif
-#ifndef KSAUDIO_SPEAKER_7POINT1
-#define KSAUDIO_SPEAKER_7POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
-                                         SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY | \
-                                         SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | \
-                                         SPEAKER_FRONT_LEFT_OF_CENTER | SPEAKER_FRONT_RIGHT_OF_CENTER)
-#endif
-
 /* *INDENT-OFF* */
 using namespace ABI::Windows::ApplicationModel::Core;
 using namespace ABI::Windows::Foundation;
@@ -107,8 +62,7 @@ G_END_DECLS
 
 static void
 gst_wasapi2_client_on_device_activated (GstWasapi2Client * client,
-    IAudioClient3 * audio_client);
-
+    IAudioClient * audio_client);
 
 /* *INDENT-OFF* */
 class GstWasapiDeviceActivator
@@ -150,7 +104,7 @@ public:
   STDMETHOD(ActivateCompleted)
   (IActivateAudioInterfaceAsyncOperation *async_op)
   {
-    ComPtr<IAudioClient3> audio_client;
+    ComPtr<IAudioClient> audio_client;
     HRESULT hr = S_OK;
     HRESULT hr_async_op = S_OK;
     ComPtr<IUnknown> audio_interface;
@@ -255,6 +209,7 @@ private:
   ComPtr<ICoreDispatcher> dispatcher_;
 };
 /* *INDENT-ON* */
+
 typedef enum
 {
   GST_WASAPI2_CLIENT_ACTIVATE_FAILED = -1,
@@ -270,46 +225,26 @@ enum
   PROP_DEVICE_NAME,
   PROP_DEVICE_INDEX,
   PROP_DEVICE_CLASS,
-  PROP_LOW_LATENCY,
   PROP_DISPATCHER,
 };
 
 #define DEFAULT_DEVICE_INDEX  -1
 #define DEFAULT_DEVICE_CLASS  GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE
-#define DEFAULT_LOW_LATENCY   FALSE
 
 struct _GstWasapi2Client
 {
   GstObject parent;
 
   GstWasapi2ClientDeviceClass device_class;
-  gboolean low_latency;
   gchar *device_id;
   gchar *device_name;
   gint device_index;
   gpointer dispatcher;
 
-  IAudioClient3 *audio_client;
-  IAudioCaptureClient *audio_capture_client;
-  IAudioRenderClient *audio_render_client;
-  ISimpleAudioVolume *audio_volume;
+  IAudioClient *audio_client;
   GstWasapiDeviceActivator *activator;
 
-  WAVEFORMATEX *mix_format;
   GstCaps *supported_caps;
-
-  HANDLE event_handle;
-  HANDLE cancellable;
-  gboolean opened;
-  gboolean running;
-
-  guint32 device_period;
-  guint32 buffer_frame_count;
-
-  GstAudioChannelPosition *positions;
-
-  /* Used for capture mode */
-  GstAdapter *adapter;
 
   GThread *thread;
   GMutex lock;
@@ -330,7 +265,7 @@ gst_wasapi2_client_device_class_get_type (void)
   static const GEnumValue types[] = {
     {GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE, "Capture", "capture"},
     {GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER, "Render", "render"},
-    {0, NULL, NULL}
+    {0, nullptr, nullptr}
   };
 
   if (g_once_init_enter (&class_type)) {
@@ -342,7 +277,6 @@ gst_wasapi2_client_device_class_get_type (void)
 }
 
 static void gst_wasapi2_client_constructed (GObject * object);
-static void gst_wasapi2_client_dispose (GObject * object);
 static void gst_wasapi2_client_finalize (GObject * object);
 static void gst_wasapi2_client_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -365,17 +299,16 @@ gst_wasapi2_client_class_init (GstWasapi2ClientClass * klass)
       G_PARAM_STATIC_STRINGS);
 
   gobject_class->constructed = gst_wasapi2_client_constructed;
-  gobject_class->dispose = gst_wasapi2_client_dispose;
   gobject_class->finalize = gst_wasapi2_client_finalize;
   gobject_class->get_property = gst_wasapi2_client_get_property;
   gobject_class->set_property = gst_wasapi2_client_set_property;
 
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
-          "WASAPI playback device as a GUID string", NULL, param_flags));
+          "WASAPI playback device as a GUID string", nullptr, param_flags));
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device Name",
-          "The human-readable device name", NULL, param_flags));
+          "The human-readable device name", nullptr, param_flags));
   g_object_class_install_property (gobject_class, PROP_DEVICE_INDEX,
       g_param_spec_int ("device-index", "Device Index",
           "The zero-based device index", -1, G_MAXINT, DEFAULT_DEVICE_INDEX,
@@ -384,10 +317,6 @@ gst_wasapi2_client_class_init (GstWasapi2ClientClass * klass)
       g_param_spec_enum ("device-class", "Device Class",
           "Device class", GST_TYPE_WASAPI2_CLIENT_DEVICE_CLASS,
           DEFAULT_DEVICE_CLASS, param_flags));
-  g_object_class_install_property (gobject_class, PROP_LOW_LATENCY,
-      g_param_spec_boolean ("low-latency", "Low latency",
-          "Optimize all settings for lowest latency. Always safe to enable.",
-          DEFAULT_LOW_LATENCY, param_flags));
   g_object_class_install_property (gobject_class, PROP_DISPATCHER,
       g_param_spec_pointer ("dispatcher", "Dispatcher",
           "ICoreDispatcher COM object to use", param_flags));
@@ -398,11 +327,6 @@ gst_wasapi2_client_init (GstWasapi2Client * self)
 {
   self->device_index = DEFAULT_DEVICE_INDEX;
   self->device_class = DEFAULT_DEVICE_CLASS;
-  self->low_latency = DEFAULT_LOW_LATENCY;
-
-  self->adapter = gst_adapter_new ();
-  self->event_handle = CreateEvent (NULL, FALSE, FALSE, NULL);
-  self->cancellable = CreateEvent (NULL, TRUE, FALSE, NULL);
 
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
@@ -438,13 +362,9 @@ gst_wasapi2_client_constructed (GObject * object)
 }
 
 static void
-gst_wasapi2_client_dispose (GObject * object)
+gst_wasapi2_client_finalize (GObject * object)
 {
   GstWasapi2Client *self = GST_WASAPI2_CLIENT (object);
-
-  GST_DEBUG_OBJECT (self, "dispose");
-
-  gst_clear_caps (&self->supported_caps);
 
   if (self->loop) {
     g_main_loop_quit (self->loop);
@@ -452,29 +372,15 @@ gst_wasapi2_client_dispose (GObject * object)
     g_main_context_unref (self->context);
     g_main_loop_unref (self->loop);
 
-    self->thread = NULL;
-    self->context = NULL;
-    self->loop = NULL;
+    self->thread = nullptr;
+    self->context = nullptr;
+    self->loop = nullptr;
   }
 
-  g_clear_object (&self->adapter);
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_wasapi2_client_finalize (GObject * object)
-{
-  GstWasapi2Client *self = GST_WASAPI2_CLIENT (object);
+  gst_clear_caps (&self->supported_caps);
 
   g_free (self->device_id);
   g_free (self->device_name);
-
-  g_free (self->positions);
-
-  CoTaskMemFree (self->mix_format);
-  CloseHandle (self->event_handle);
-  CloseHandle (self->cancellable);
 
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
@@ -503,9 +409,6 @@ gst_wasapi2_client_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DEVICE_CLASS:
       g_value_set_enum (value, self->device_class);
-      break;
-    case PROP_LOW_LATENCY:
-      g_value_set_boolean (value, self->low_latency);
       break;
     case PROP_DISPATCHER:
       g_value_set_pointer (value, self->dispatcher);
@@ -538,9 +441,6 @@ gst_wasapi2_client_set_property (GObject * object, guint prop_id,
       self->device_class =
           (GstWasapi2ClientDeviceClass) g_value_get_enum (value);
       break;
-    case PROP_LOW_LATENCY:
-      self->low_latency = g_value_get_boolean (value);
-      break;
     case PROP_DISPATCHER:
       self->dispatcher = g_value_get_pointer (value);
       break;
@@ -564,7 +464,7 @@ gst_wasapi2_client_main_loop_running_cb (GstWasapi2Client * self)
 
 static void
 gst_wasapi2_client_on_device_activated (GstWasapi2Client * self,
-    IAudioClient3 * audio_client)
+    IAudioClient * audio_client)
 {
   GST_INFO_OBJECT (self, "Device activated");
 
@@ -912,7 +812,7 @@ run_loop:
 
   source = g_idle_source_new ();
   g_source_set_callback (source,
-      (GSourceFunc) gst_wasapi2_client_main_loop_running_cb, self, NULL);
+      (GSourceFunc) gst_wasapi2_client_main_loop_running_cb, self, nullptr);
   g_source_attach (source, self->context);
   g_source_unref (source);
 
@@ -922,32 +822,7 @@ run_loop:
 
   g_main_context_pop_thread_default (self->context);
 
-  gst_wasapi2_client_stop (self);
-
-  if (self->audio_volume) {
-    /* this mute state seems to be global setting for this device
-     * Explicitly disable mute for later use of this audio device
-     * by other application. Otherwise users would blame GStreamer
-     * if we close audio device with muted state */
-    self->audio_volume->SetMute (FALSE, nullptr);
-    self->audio_volume->Release ();
-    self->audio_volume = NULL;
-  }
-
-  if (self->audio_render_client) {
-    self->audio_render_client->Release ();
-    self->audio_render_client = NULL;
-  }
-
-  if (self->audio_capture_client) {
-    self->audio_capture_client->Release ();
-    self->audio_capture_client = NULL;
-  }
-
-  if (self->audio_client) {
-    self->audio_client->Release ();
-    self->audio_client = NULL;
-  }
+  GST_WASAPI2_CLEAR_COM (self->audio_client);
 
   /* Reset explicitly to ensure that it happens before
    * RoInitializeWrapper dtor is called */
@@ -955,984 +830,46 @@ run_loop:
 
   GST_DEBUG_OBJECT (self, "Exit thread function");
 
-  return NULL;
-}
-
-static const gchar *
-gst_waveformatex_to_audio_format (WAVEFORMATEXTENSIBLE * format)
-{
-  const gchar *fmt_str = NULL;
-  GstAudioFormat fmt = GST_AUDIO_FORMAT_UNKNOWN;
-
-  if (format->Format.wFormatTag == WAVE_FORMAT_PCM) {
-    fmt = gst_audio_format_build_integer (TRUE, G_LITTLE_ENDIAN,
-        format->Format.wBitsPerSample, format->Format.wBitsPerSample);
-  } else if (format->Format.wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
-    if (format->Format.wBitsPerSample == 32)
-      fmt = GST_AUDIO_FORMAT_F32LE;
-    else if (format->Format.wBitsPerSample == 64)
-      fmt = GST_AUDIO_FORMAT_F64LE;
-  } else if (format->Format.wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
-    if (IsEqualGUID (format->SubFormat, KSDATAFORMAT_SUBTYPE_PCM)) {
-      fmt = gst_audio_format_build_integer (TRUE, G_LITTLE_ENDIAN,
-          format->Format.wBitsPerSample, format->Samples.wValidBitsPerSample);
-    } else if (IsEqualGUID (format->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)) {
-      if (format->Format.wBitsPerSample == 32
-          && format->Samples.wValidBitsPerSample == 32)
-        fmt = GST_AUDIO_FORMAT_F32LE;
-      else if (format->Format.wBitsPerSample == 64 &&
-          format->Samples.wValidBitsPerSample == 64)
-        fmt = GST_AUDIO_FORMAT_F64LE;
-    }
-  }
-
-  if (fmt != GST_AUDIO_FORMAT_UNKNOWN)
-    fmt_str = gst_audio_format_to_string (fmt);
-
-  return fmt_str;
-}
-
-static void
-gst_wasapi_util_channel_position_all_none (guint channels,
-    GstAudioChannelPosition * position)
-{
-  int ii;
-  for (ii = 0; ii < channels; ii++)
-    position[ii] = GST_AUDIO_CHANNEL_POSITION_NONE;
-}
-
-static struct
-{
-  guint64 wasapi_pos;
-  GstAudioChannelPosition gst_pos;
-} wasapi_to_gst_pos[] = {
-  {SPEAKER_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT},
-  {SPEAKER_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
-  {SPEAKER_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER},
-  {SPEAKER_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE1},
-  {SPEAKER_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT},
-  {SPEAKER_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
-  {SPEAKER_FRONT_LEFT_OF_CENTER,
-      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER},
-  {SPEAKER_FRONT_RIGHT_OF_CENTER,
-      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER},
-  {SPEAKER_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
-  /* Enum values diverge from this point onwards */
-  {SPEAKER_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT},
-  {SPEAKER_SIDE_RIGHT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT},
-  {SPEAKER_TOP_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_CENTER},
-  {SPEAKER_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT},
-  {SPEAKER_TOP_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER},
-  {SPEAKER_TOP_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT},
-  {SPEAKER_TOP_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT},
-  {SPEAKER_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER},
-  {SPEAKER_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}
-};
-
-static DWORD default_ch_masks[] = {
-  0,
-  KSAUDIO_SPEAKER_MONO,
-  /* 2ch */
-  KSAUDIO_SPEAKER_STEREO,
-  /* 2.1ch */
-  /* KSAUDIO_SPEAKER_3POINT0 ? */
-  KSAUDIO_SPEAKER_2POINT1,
-  /* 4ch */
-  /* KSAUDIO_SPEAKER_3POINT1 or KSAUDIO_SPEAKER_SURROUND ? */
-  KSAUDIO_SPEAKER_QUAD,
-  /* 5ch */
-  KSAUDIO_SPEAKER_5POINT0,
-  /* 5.1ch */
-  KSAUDIO_SPEAKER_5POINT1,
-  /* 7ch */
-  KSAUDIO_SPEAKER_7POINT0,
-  /* 7.1ch */
-  KSAUDIO_SPEAKER_7POINT1,
-};
-
-/* Parse WAVEFORMATEX to get the gstreamer channel mask, and the wasapi channel
- * positions so GstAudioRingbuffer can reorder the audio data to match the
- * gstreamer channel order. */
-static guint64
-gst_wasapi2_util_waveformatex_to_channel_mask (WORD nChannels,
-    DWORD dwChannelMask, GstAudioChannelPosition ** out_position)
-{
-  int ii, ch;
-  guint64 mask = 0;
-  GstAudioChannelPosition *pos = NULL;
-
-  pos = g_new (GstAudioChannelPosition, nChannels);
-  gst_wasapi_util_channel_position_all_none (nChannels, pos);
-
-  /* Too many channels, have to assume that they are all non-positional */
-  if (nChannels > G_N_ELEMENTS (wasapi_to_gst_pos)) {
-    GST_INFO ("Got too many (%i) channels, assuming non-positional", nChannels);
-    goto out;
-  }
-
-  /* Too many bits in the channel mask, and the bits don't match nChannels */
-  if (dwChannelMask >> (G_N_ELEMENTS (wasapi_to_gst_pos) + 1) != 0) {
-    GST_WARNING ("Too many bits in channel mask (%lu), assuming "
-        "non-positional", dwChannelMask);
-    goto out;
-  }
-
-  /* Map WASAPI's channel mask to Gstreamer's channel mask and positions.
-   * If the no. of bits in the mask > nChannels, we will ignore the extra. */
-  for (ii = 0, ch = 0; ii < G_N_ELEMENTS (wasapi_to_gst_pos) && ch < nChannels;
-      ii++) {
-    if (!(dwChannelMask & wasapi_to_gst_pos[ii].wasapi_pos))
-      /* no match, try next */
-      continue;
-    mask |= G_GUINT64_CONSTANT (1) << wasapi_to_gst_pos[ii].gst_pos;
-    pos[ch++] = wasapi_to_gst_pos[ii].gst_pos;
-  }
-
-  /* XXX: Warn if some channel masks couldn't be mapped? */
-
-  GST_DEBUG ("Converted WASAPI mask 0x%" G_GINT64_MODIFIER "x -> 0x%"
-      G_GINT64_MODIFIER "x", (guint64) dwChannelMask, (guint64) mask);
-
-out:
-  if (out_position)
-    *out_position = pos;
-  return mask;
-}
-
-static gboolean
-gst_wasapi2_util_parse_waveformatex (WAVEFORMATEXTENSIBLE * format,
-    GstCaps * template_caps, GstCaps ** out_caps,
-    GstAudioChannelPosition ** out_positions)
-{
-  const gchar *afmt;
-  guint64 channel_mask = 0;
-  DWORD dwChannelMask = 0;
-  WORD nChannels;
-
-  *out_caps = NULL;
-
-  /* TODO: handle SPDIF and other encoded formats */
-
-  /* 1 or 2 channels <= 16 bits sample size OR
-   * 1 or 2 channels > 16 bits sample size or >2 channels */
-  if (format->Format.wFormatTag != WAVE_FORMAT_PCM &&
-      format->Format.wFormatTag != WAVE_FORMAT_IEEE_FLOAT &&
-      format->Format.wFormatTag != WAVE_FORMAT_EXTENSIBLE)
-    /* Unhandled format tag */
-    return FALSE;
-
-  /* WASAPI can only tell us one canonical mix format that it will accept. The
-   * alternative is calling IsFormatSupported on all combinations of formats.
-   * Instead, it's simpler and faster to require conversion inside gstreamer */
-  afmt = gst_waveformatex_to_audio_format (format);
-  if (afmt == NULL)
-    return FALSE;
-
-  *out_caps = gst_caps_copy (template_caps);
-
-  nChannels = format->Format.nChannels;
-  if (format->Format.wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
-    dwChannelMask = format->dwChannelMask;
-  }
-
-  if (nChannels > 2 && !dwChannelMask) {
-    GST_WARNING ("Unknown channel mask value for %d channel stream",
-        format->Format.nChannels);
-    if (nChannels >= G_N_ELEMENTS (default_ch_masks)) {
-      GST_ERROR ("To may channels %d", nChannels);
-      return FALSE;
-    }
-
-    dwChannelMask = default_ch_masks[nChannels];
-  }
-
-  channel_mask =
-      gst_wasapi2_util_waveformatex_to_channel_mask (nChannels,
-      dwChannelMask, out_positions);
-
-  gst_caps_set_simple (*out_caps,
-      "format", G_TYPE_STRING, afmt,
-      "channels", G_TYPE_INT, format->Format.nChannels,
-      "rate", G_TYPE_INT, format->Format.nSamplesPerSec, NULL);
-
-  if (channel_mask) {
-    gst_caps_set_simple (*out_caps,
-        "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
-  }
-
-  return TRUE;
+  return nullptr;
 }
 
 GstCaps *
 gst_wasapi2_client_get_caps (GstWasapi2Client * client)
 {
-  WAVEFORMATEX *format = NULL;
+  WAVEFORMATEX *mix_format = nullptr;
   static GstStaticCaps static_caps = GST_STATIC_CAPS (GST_WASAPI2_STATIC_CAPS);
   GstCaps *scaps;
   HRESULT hr;
 
-  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), NULL);
+  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), nullptr);
 
   if (client->supported_caps)
     return gst_caps_ref (client->supported_caps);
 
   if (!client->audio_client) {
     GST_WARNING_OBJECT (client, "IAudioClient3 wasn't configured");
-    return NULL;
+    return nullptr;
   }
 
-  CoTaskMemFree (client->mix_format);
-  client->mix_format = nullptr;
-
-  g_clear_pointer (&client->positions, g_free);
-
-  hr = client->audio_client->GetMixFormat (&format);
-  if (!gst_wasapi2_result (hr))
-    return NULL;
+  hr = client->audio_client->GetMixFormat (&mix_format);
+  if (!gst_wasapi2_result (hr)) {
+    GST_WARNING_OBJECT (client, "Failed to get mix format");
+    return nullptr;
+  }
 
   scaps = gst_static_caps_get (&static_caps);
-  gst_wasapi2_util_parse_waveformatex ((WAVEFORMATEXTENSIBLE *) format,
-      scaps, &client->supported_caps, &client->positions);
+  gst_wasapi2_util_parse_waveformatex (mix_format,
+      scaps, &client->supported_caps, nullptr);
   gst_caps_unref (scaps);
 
-  client->mix_format = format;
+  CoTaskMemFree (mix_format);
 
   if (!client->supported_caps) {
     GST_ERROR_OBJECT (client, "No caps from subclass");
-    return NULL;
+    return nullptr;
   }
 
   return gst_caps_ref (client->supported_caps);
-}
-
-static HRESULT
-gst_wasapi2_client_initialize_audio_client3 (GstWasapi2Client * self)
-{
-  HRESULT hr = S_OK;
-  UINT32 default_period, fundamental_period, min_period, max_period;
-  /* AUDCLNT_STREAMFLAGS_NOPERSIST is not allowed for
-   * InitializeSharedAudioStream */
-  DWORD stream_flags = AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
-  WAVEFORMATEX *format = NULL;
-  UINT32 period;
-  IAudioClient3 *audio_client = self->audio_client;
-
-  hr = audio_client->GetSharedModeEnginePeriod (self->mix_format,
-      &default_period, &fundamental_period, &min_period, &max_period);
-  if (!gst_wasapi2_result (hr))
-    goto done;
-
-  GST_INFO_OBJECT (self, "Using IAudioClient3, default period %d frames, "
-      "fundamental period %d frames, minimum period %d frames, maximum period "
-      "%d frames", default_period, fundamental_period, min_period, max_period);
-
-  hr = audio_client->InitializeSharedAudioStream (stream_flags, min_period,
-      self->mix_format, nullptr);
-
-  if (!gst_wasapi2_result (hr)) {
-    GST_WARNING_OBJECT (self, "Failed to initialize IAudioClient3");
-    goto done;
-  }
-
-  /* query period again to be ensured */
-  hr = audio_client->GetCurrentSharedModeEnginePeriod (&format, &period);
-  if (!gst_wasapi2_result (hr)) {
-    GST_WARNING_OBJECT (self, "Failed to get current period");
-    goto done;
-  }
-
-  self->device_period = period;
-
-done:
-  CoTaskMemFree (format);
-
-  return hr;
-}
-
-static void
-gst_wasapi2_util_get_best_buffer_sizes (GstAudioRingBufferSpec * spec,
-    REFERENCE_TIME default_period, REFERENCE_TIME min_period,
-    REFERENCE_TIME * ret_period, REFERENCE_TIME * ret_buffer_duration)
-{
-  REFERENCE_TIME use_period, use_buffer;
-
-  /* Shared mode always runs at the default period, so if we want a larger
-   * period (for lower CPU usage), we do it as a multiple of that */
-  use_period = default_period;
-
-  /* Ensure that the period (latency_time) used is an integral multiple of
-   * either the default period or the minimum period */
-  use_period = use_period * MAX ((spec->latency_time * 10) / use_period, 1);
-
-  /* Ask WASAPI to create a software ringbuffer of at least this size; it may
-   * be larger so the actual buffer time may be different, which is why after
-   * initialization we read the buffer duration actually in-use and set
-   * segsize/segtotal from that. */
-  use_buffer = spec->buffer_time * 10;
-  /* Has to be at least twice the period */
-  if (use_buffer < 2 * use_period)
-    use_buffer = 2 * use_period;
-
-  *ret_period = use_period;
-  *ret_buffer_duration = use_buffer;
-}
-
-static HRESULT
-gst_wasapi2_client_initialize_audio_client (GstWasapi2Client * self,
-    GstAudioRingBufferSpec * spec)
-{
-  REFERENCE_TIME default_period, min_period;
-  REFERENCE_TIME device_period, device_buffer_duration;
-  guint rate;
-  DWORD stream_flags =
-      AUDCLNT_STREAMFLAGS_EVENTCALLBACK | AUDCLNT_STREAMFLAGS_NOPERSIST;
-  HRESULT hr;
-  IAudioClient3 *audio_client = self->audio_client;
-
-  hr = audio_client->GetDevicePeriod (&default_period, &min_period);
-  if (!gst_wasapi2_result (hr)) {
-    GST_WARNING_OBJECT (self, "Couldn't get device period info");
-    return hr;
-  }
-
-  GST_INFO_OBJECT (self, "wasapi2 default period: %" G_GINT64_FORMAT
-      ", min period: %" G_GINT64_FORMAT, default_period, min_period);
-
-  rate = GST_AUDIO_INFO_RATE (&spec->info);
-
-  if (self->low_latency) {
-    device_period = default_period;
-    /* this should be same as hnsPeriodicity
-     * when AUDCLNT_STREAMFLAGS_EVENTCALLBACK is used
-     * And in case of shared mode, hnsPeriodicity should be zero, so
-     * this value should be zero as well */
-    device_buffer_duration = 0;
-  } else {
-    /* Clamp values to integral multiples of an appropriate period */
-    gst_wasapi2_util_get_best_buffer_sizes (spec,
-        default_period, min_period, &device_period, &device_buffer_duration);
-  }
-
-  hr = audio_client->Initialize (AUDCLNT_SHAREMODE_SHARED, stream_flags,
-      device_buffer_duration,
-      /* This must always be 0 in shared mode */
-      0, self->mix_format, nullptr);
-  if (!gst_wasapi2_result (hr)) {
-    GST_WARNING_OBJECT (self, "Couldn't initialize audioclient");
-    return hr;
-  }
-
-  /* device_period can be a non-power-of-10 value so round while converting */
-  self->device_period =
-      gst_util_uint64_scale_round (device_period, rate * 100, GST_SECOND);
-
-  return S_OK;
-}
-
-HRESULT
-gst_wasapi2_client_open (GstWasapi2Client * client,
-    GstAudioRingBufferSpec * spec, GstAudioRingBuffer * buf)
-{
-  HRESULT hr = E_FAIL;
-  REFERENCE_TIME latency_rt;
-  guint bpf, rate;
-  IAudioClient3 *audio_client;
-  /* *INDENT-OFF* */
-  ComPtr<ISimpleAudioVolume> audio_volume;
-  /* *INDENT-ON* */
-
-  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), E_INVALIDARG);
-
-  /* FIXME: Once IAudioClient3 was initialized, we may need to re-open
-   * IAudioClient3 in order to handle audio format change */
-  if (client->opened) {
-    GST_INFO_OBJECT (client, "IAudioClient3 object is initialized already");
-    return S_OK;
-  }
-
-  audio_client = client->audio_client;
-
-  if (!audio_client) {
-    GST_ERROR_OBJECT (client, "IAudioClient3 object wasn't configured");
-    return E_FAIL;
-  }
-
-  if (!client->mix_format) {
-    GST_ERROR_OBJECT (client, "Unknown mix format");
-    return E_FAIL;
-  }
-
-  /* Only use audioclient3 when low-latency is requested because otherwise
-   * very slow machines and VMs with 1 CPU allocated will get glitches:
-   * https://bugzilla.gnome.org/show_bug.cgi?id=794497 */
-  if (client->low_latency)
-    hr = gst_wasapi2_client_initialize_audio_client3 (client);
-
-  /* Try again if IAudioClinet3 API is unavailable.
-   * NOTE: IAudioClinet3:: methods might not be available for default device
-   * NOTE: The default device is a special device which is needed for supporting
-   * automatic stream routing
-   * https://docs.microsoft.com/en-us/windows/win32/coreaudio/automatic-stream-routing
-   */
-  if (FAILED (hr))
-    hr = gst_wasapi2_client_initialize_audio_client (client, spec);
-
-  if (!gst_wasapi2_result (hr)) {
-    GST_ERROR_OBJECT (client, "Failed to initialize audioclient");
-    return hr;
-  }
-
-  bpf = GST_AUDIO_INFO_BPF (&spec->info);
-  rate = GST_AUDIO_INFO_RATE (&spec->info);
-
-  /* Total size in frames of the allocated buffer that we will read from */
-  hr = audio_client->GetBufferSize (&client->buffer_frame_count);
-  if (!gst_wasapi2_result (hr))
-    return hr;
-
-  GST_INFO_OBJECT (client, "buffer size is %i frames, device period is %i "
-      "frames, bpf is %i bytes, rate is %i Hz", client->buffer_frame_count,
-      client->device_period, bpf, rate);
-
-  /* Actual latency-time/buffer-time will be different now */
-  spec->segsize = client->device_period * bpf;
-
-  /* We need a minimum of 2 segments to ensure glitch-free playback */
-  spec->segtotal = MAX (client->buffer_frame_count * bpf / spec->segsize, 2);
-
-  GST_INFO_OBJECT (client, "segsize is %i, segtotal is %i", spec->segsize,
-      spec->segtotal);
-
-  /* Get WASAPI latency for logging */
-  hr = audio_client->GetStreamLatency (&latency_rt);
-  if (!gst_wasapi2_result (hr))
-    return hr;
-
-  GST_INFO_OBJECT (client, "wasapi2 stream latency: %" G_GINT64_FORMAT " (%"
-      G_GINT64_FORMAT " ms)", latency_rt, latency_rt / 10000);
-
-  /* Set the event handler which will trigger read/write */
-  hr = audio_client->SetEventHandle (client->event_handle);
-  if (!gst_wasapi2_result (hr))
-    return hr;
-
-  if (client->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER) {
-    /* *INDENT-OFF* */
-    ComPtr<IAudioRenderClient> render_client;
-    /* *INDENT-ON* */
-
-    hr = audio_client->GetService (IID_PPV_ARGS (&render_client));
-    if (!gst_wasapi2_result (hr))
-      return hr;
-
-    client->audio_render_client = render_client.Detach ();
-  } else {
-    /* *INDENT-OFF* */
-    ComPtr<IAudioCaptureClient> capture_client;
-    /* *INDENT-ON* */
-
-    hr = audio_client->GetService (IID_PPV_ARGS (&capture_client));
-    if (!gst_wasapi2_result (hr))
-      return hr;
-
-    client->audio_capture_client = capture_client.Detach ();
-  }
-
-  hr = audio_client->GetService (IID_PPV_ARGS (&audio_volume));
-  if (!gst_wasapi2_result (hr))
-    return hr;
-
-  client->audio_volume = audio_volume.Detach ();
-  client->audio_volume->SetMute (FALSE, nullptr);
-
-  gst_audio_ring_buffer_set_channel_positions (buf, client->positions);
-
-  client->opened = TRUE;
-
-  return S_OK;
-}
-
-/* Get the empty space in the buffer that we have to write to */
-static HRESULT
-gst_wasapi2_client_get_can_frames (GstWasapi2Client * self, guint32 * n_frames)
-{
-  HRESULT hr;
-  UINT32 n_frames_padding;
-  IAudioClient3 *audio_client = self->audio_client;
-
-  *n_frames = 0;
-
-  if (!audio_client) {
-    GST_WARNING_OBJECT (self, "IAudioClient3 wasn't configured");
-    return E_FAIL;
-  }
-
-  /* Frames the card hasn't rendered yet */
-  hr = audio_client->GetCurrentPadding (&n_frames_padding);
-  if (!gst_wasapi2_result (hr))
-    return hr;
-
-  GST_LOG_OBJECT (self, "%d unread frames (padding)", n_frames_padding);
-
-  /* We can write out these many frames */
-  *n_frames = self->buffer_frame_count - n_frames_padding;
-
-  return S_OK;
-}
-
-HRESULT
-gst_wasapi2_client_start (GstWasapi2Client * client)
-{
-  HRESULT hr;
-  IAudioClient3 *audio_client;
-  WAVEFORMATEX *mix_format;
-
-  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), E_INVALIDARG);
-
-  if (client->running) {
-    GST_WARNING_OBJECT (client, "IAudioClient3 is running already");
-    return S_OK;
-  }
-
-  audio_client = client->audio_client;
-  mix_format = client->mix_format;
-
-  if (!audio_client) {
-    GST_ERROR_OBJECT (client, "IAudioClient object wasn't configured");
-    return E_FAIL;
-  }
-
-  if (!mix_format) {
-    GST_ERROR_OBJECT (client, "Unknown MixFormat");
-    return E_FAIL;
-  }
-
-  if (client->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE &&
-      !client->audio_capture_client) {
-    GST_ERROR_OBJECT (client, "IAudioCaptureClient wasn't configured");
-    return E_FAIL;
-  }
-
-  if (client->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER &&
-      !client->audio_render_client) {
-    GST_ERROR_OBJECT (client, "IAudioRenderClient wasn't configured");
-    return E_FAIL;
-  }
-
-  ResetEvent (client->cancellable);
-
-  /* To avoid start-up glitches, before starting the streaming, we fill the
-   * buffer with silence as recommended by the documentation:
-   * https://msdn.microsoft.com/en-us/library/windows/desktop/dd370879%28v=vs.85%29.aspx */
-  if (client->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER) {
-    IAudioRenderClient *render_client = client->audio_render_client;
-    guint32 n_frames, len;
-    BYTE *dst = NULL;
-
-    hr = gst_wasapi2_client_get_can_frames (client, &n_frames);
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR_OBJECT (client,
-          "should have more than %i frames to write", n_frames);
-      return hr;
-    }
-
-    len = n_frames * mix_format->nBlockAlign;
-
-    hr = render_client->GetBuffer (n_frames, &dst);
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR_OBJECT (client, "Couldn't get buffer");
-      return hr;
-    }
-
-    GST_DEBUG_OBJECT (client, "pre-wrote %i bytes of silence", len);
-
-    hr = render_client->ReleaseBuffer (n_frames, AUDCLNT_BUFFERFLAGS_SILENT);
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR_OBJECT (client, "Couldn't release buffer");
-      return hr;
-    }
-  }
-
-  hr = audio_client->Start ();
-  if (!gst_wasapi2_result (hr)) {
-    GST_ERROR_OBJECT (client, "Couldn't start audio client");
-    return hr;
-  }
-
-  client->running = TRUE;
-  gst_adapter_clear (client->adapter);
-
-  return S_OK;
-}
-
-HRESULT
-gst_wasapi2_client_stop (GstWasapi2Client * client)
-{
-  HRESULT hr;
-  IAudioClient3 *audio_client;
-
-  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), E_INVALIDARG);
-
-  audio_client = client->audio_client;
-
-  if (!client->running) {
-    GST_DEBUG_OBJECT (client, "We are not running now");
-    return S_OK;
-  }
-
-  if (!client->audio_client) {
-    GST_ERROR_OBJECT (client, "IAudioClient3 object wasn't configured");
-    return E_FAIL;
-  }
-
-  client->running = FALSE;
-  SetEvent (client->cancellable);
-
-  hr = audio_client->Stop ();
-  if (!gst_wasapi2_result (hr))
-    return hr;
-
-  /* reset state for reuse case */
-  return audio_client->Reset ();
-}
-
-HRESULT
-gst_wasapi2_client_read (GstWasapi2Client * client, gpointer data, guint length,
-    guint * read_length)
-{
-  IAudioCaptureClient *capture_client;
-  WAVEFORMATEX *mix_format;
-  HRESULT hr;
-  BYTE *from = NULL;
-  guint wanted = length;
-  guint bpf;
-  DWORD flags;
-
-  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), E_INVALIDARG);
-  g_return_val_if_fail (client->audio_capture_client != NULL, E_INVALIDARG);
-  g_return_val_if_fail (client->mix_format != NULL, E_INVALIDARG);
-  g_return_val_if_fail (read_length != NULL, E_INVALIDARG);
-
-  *read_length = 0;
-
-  capture_client = client->audio_capture_client;
-  mix_format = client->mix_format;
-
-  if (!client->running) {
-    GST_ERROR_OBJECT (client, "client is not running now");
-    return E_FAIL;
-  }
-
-  /* If we've accumulated enough data, return it immediately */
-  if (gst_adapter_available (client->adapter) >= wanted) {
-    memcpy (data, gst_adapter_map (client->adapter, wanted), wanted);
-    gst_adapter_flush (client->adapter, wanted);
-    GST_DEBUG_OBJECT (client, "Adapter has enough data, returning %i", wanted);
-
-    *read_length = wanted;
-
-    return S_OK;
-  }
-
-  bpf = mix_format->nBlockAlign;
-
-  while (wanted > 0) {
-    DWORD dwWaitResult;
-    guint got_frames, avail_frames, n_frames, want_frames, read_len;
-    HANDLE event_handle[2];
-
-    event_handle[0] = client->event_handle;
-    event_handle[1] = client->cancellable;
-
-    /* Wait for data to become available */
-    dwWaitResult = WaitForMultipleObjects (2, event_handle, FALSE, INFINITE);
-    if (dwWaitResult != WAIT_OBJECT_0 && dwWaitResult != WAIT_OBJECT_0 + 1) {
-      GST_ERROR_OBJECT (client, "Error waiting for event handle: %x",
-          (guint) dwWaitResult);
-      return E_FAIL;
-    }
-
-    if (!client->running) {
-      GST_DEBUG_OBJECT (client, "Cancelled");
-      return S_OK;
-    }
-
-    hr = capture_client->GetBuffer (&from, &got_frames, &flags, nullptr,
-        nullptr);
-    if (!gst_wasapi2_result (hr)) {
-      if (hr == AUDCLNT_S_BUFFER_EMPTY) {
-        GST_INFO_OBJECT (client, "Client buffer is empty, retry");
-        return S_OK;
-      }
-
-      GST_ERROR_OBJECT (client, "Couldn't get buffer from capture client");
-      return hr;
-    }
-
-    if (got_frames == 0) {
-      GST_DEBUG_OBJECT (client, "No buffer to read");
-      capture_client->ReleaseBuffer (got_frames);
-      return S_OK;
-    }
-
-    if (G_UNLIKELY (flags != 0)) {
-      /* https://docs.microsoft.com/en-us/windows/win32/api/audioclient/ne-audioclient-_audclnt_bufferflags */
-      if (flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY)
-        GST_DEBUG_OBJECT (client, "WASAPI reported discontinuity (glitch?)");
-      if (flags & AUDCLNT_BUFFERFLAGS_TIMESTAMP_ERROR)
-        GST_DEBUG_OBJECT (client, "WASAPI reported a timestamp error");
-    }
-
-    /* Copy all the frames we got into the adapter, and then extract at most
-     * @wanted size of frames from it. This helps when ::GetBuffer returns more
-     * data than we can handle right now. */
-    {
-      GstBuffer *tmp = gst_buffer_new_allocate (NULL, got_frames * bpf, NULL);
-      /* If flags has AUDCLNT_BUFFERFLAGS_SILENT, we will ignore the actual
-       * data and write out silence, see:
-       * https://docs.microsoft.com/en-us/windows/win32/api/audioclient/ne-audioclient-_audclnt_bufferflags */
-      if (flags & AUDCLNT_BUFFERFLAGS_SILENT)
-        memset (from, 0, got_frames * bpf);
-      gst_buffer_fill (tmp, 0, from, got_frames * bpf);
-      gst_adapter_push (client->adapter, tmp);
-    }
-
-    /* Release all captured buffers; we copied them above */
-    hr = capture_client->ReleaseBuffer (got_frames);
-    from = NULL;
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR_OBJECT (client, "Failed to release buffer");
-      return hr;
-    }
-
-    want_frames = wanted / bpf;
-    avail_frames = gst_adapter_available (client->adapter) / bpf;
-
-    /* Only copy data that will fit into the allocated buffer of size @length */
-    n_frames = MIN (avail_frames, want_frames);
-    read_len = n_frames * bpf;
-
-    if (read_len == 0) {
-      GST_WARNING_OBJECT (client, "No data to read");
-      return S_OK;
-    }
-
-    GST_LOG_OBJECT (client, "frames captured: %d (%d bytes), "
-        "can read: %d (%d bytes), will read: %d (%d bytes), "
-        "adapter has: %d (%d bytes)", got_frames, got_frames * bpf, want_frames,
-        wanted, n_frames, read_len, avail_frames, avail_frames * bpf);
-
-    memcpy (data, gst_adapter_map (client->adapter, read_len), read_len);
-    gst_adapter_flush (client->adapter, read_len);
-    wanted -= read_len;
-  }
-
-  *read_length = length;
-
-  return S_OK;
-}
-
-HRESULT
-gst_wasapi2_client_write (GstWasapi2Client * client, gpointer data,
-    guint length, guint * write_length)
-{
-  IAudioRenderClient *render_client;
-  WAVEFORMATEX *mix_format;
-  HRESULT hr;
-  BYTE *dst = nullptr;
-  DWORD dwWaitResult;
-  guint can_frames, have_frames, n_frames, write_len = 0;
-
-  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), E_INVALIDARG);
-  g_return_val_if_fail (client->audio_render_client != NULL, E_INVALIDARG);
-  g_return_val_if_fail (client->mix_format != NULL, E_INVALIDARG);
-  g_return_val_if_fail (write_length != NULL, E_INVALIDARG);
-
-  *write_length = 0;
-
-  if (!client->running) {
-    GST_WARNING_OBJECT (client, "client is not running now");
-    return -1;
-  }
-
-  render_client = client->audio_render_client;
-  mix_format = client->mix_format;
-
-  /* We have N frames to be written out */
-  have_frames = length / (mix_format->nBlockAlign);
-
-  /* In shared mode we can write parts of the buffer, so only wait
-   * in case we can't write anything */
-  hr = gst_wasapi2_client_get_can_frames (client, &can_frames);
-  if (!gst_wasapi2_result (hr)) {
-    GST_ERROR_OBJECT (client, "Error getting frames to write to");
-    return hr;
-  }
-
-  if (can_frames == 0) {
-    HANDLE event_handle[2];
-
-    event_handle[0] = client->event_handle;
-    event_handle[1] = client->cancellable;
-
-    dwWaitResult = WaitForMultipleObjects (2, event_handle, FALSE, INFINITE);
-    if (dwWaitResult != WAIT_OBJECT_0 && dwWaitResult != WAIT_OBJECT_0 + 1) {
-      GST_ERROR_OBJECT (client, "Error waiting for event handle: %x",
-          (guint) dwWaitResult);
-      return E_FAIL;
-    }
-
-    if (!client->running) {
-      GST_DEBUG_OBJECT (client, "Cancelled");
-      return S_OK;
-    }
-
-    hr = gst_wasapi2_client_get_can_frames (client, &can_frames);
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR_OBJECT (client, "Error getting frames to write to");
-      return hr;
-    }
-  }
-
-  /* We will write out these many frames, and this much length */
-  n_frames = MIN (can_frames, have_frames);
-  write_len = n_frames * mix_format->nBlockAlign;
-
-  GST_LOG_OBJECT (client, "total: %d, have_frames: %d (%d bytes), "
-      "can_frames: %d, will write: %d (%d bytes)", client->buffer_frame_count,
-      have_frames, length, can_frames, n_frames, write_len);
-
-  hr = render_client->GetBuffer (n_frames, &dst);
-  if (!gst_wasapi2_result (hr)) {
-    GST_ERROR_OBJECT (client, "Couldn't get buffer from client");
-    return hr;
-  }
-
-  memcpy (dst, data, write_len);
-  hr = render_client->ReleaseBuffer (n_frames, 0);
-  if (!gst_wasapi2_result (hr)) {
-    GST_ERROR_OBJECT (client, "Failed to release buffer");
-    return hr;
-  }
-
-  *write_length = write_len;
-
-  return S_OK;
-}
-
-HRESULT
-gst_wasapi2_client_delay (GstWasapi2Client * client, guint32 * delay)
-{
-  IAudioClient3 *audio_client;
-
-  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), E_INVALIDARG);
-  g_return_val_if_fail (delay != nullptr, E_INVALIDARG);
-
-  *delay = 0;
-
-  audio_client = client->audio_client;
-  if (!audio_client) {
-    GST_WARNING_OBJECT (client, "IAudioClient3 wasn't configured");
-    return E_FAIL;
-  }
-
-  return audio_client->GetCurrentPadding (delay);
-}
-
-HRESULT
-gst_wasapi2_client_set_mute (GstWasapi2Client * client, gboolean mute)
-{
-  HRESULT hr;
-  ISimpleAudioVolume *audio_volume;
-
-  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), E_INVALIDARG);
-
-  audio_volume = client->audio_volume;
-
-  if (!audio_volume) {
-    GST_WARNING_OBJECT (client, "ISimpleAudioVolume object wasn't configured");
-    return E_FAIL;
-  }
-
-  hr = audio_volume->SetMute (mute, nullptr);
-  GST_DEBUG_OBJECT (client, "Set mute %s, hr: 0x%x",
-      mute ? "enabled" : "disabled", (gint) hr);
-
-  return hr;
-}
-
-HRESULT
-gst_wasapi2_client_get_mute (GstWasapi2Client * client, gboolean * mute)
-{
-  HRESULT hr;
-  ISimpleAudioVolume *audio_volume;
-  BOOL current_mute = FALSE;
-
-  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), E_INVALIDARG);
-  g_return_val_if_fail (mute != NULL, E_INVALIDARG);
-
-  audio_volume = client->audio_volume;
-
-  if (!audio_volume) {
-    GST_WARNING_OBJECT (client, "ISimpleAudioVolume object wasn't configured");
-    return E_FAIL;
-  }
-
-  hr = audio_volume->GetMute (&current_mute);
-  if (!gst_wasapi2_result (hr))
-    return hr;
-
-  *mute = (gboolean) current_mute;
-
-  return S_OK;
-}
-
-HRESULT
-gst_wasapi2_client_set_volume (GstWasapi2Client * client, gfloat volume)
-{
-  HRESULT hr;
-  ISimpleAudioVolume *audio_volume;
-
-  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), E_INVALIDARG);
-  g_return_val_if_fail (volume >= 0 && volume <= 1.0, E_INVALIDARG);
-
-  audio_volume = client->audio_volume;
-
-  if (!audio_volume) {
-    GST_WARNING_OBJECT (client, "ISimpleAudioVolume object wasn't configured");
-    return E_FAIL;
-  }
-
-  hr = audio_volume->SetMasterVolume (volume, nullptr);
-  GST_DEBUG_OBJECT (client, "Set volume %.2f hr: 0x%x", volume, (gint) hr);
-
-  return hr;
-}
-
-HRESULT
-gst_wasapi2_client_get_volume (GstWasapi2Client * client, gfloat * volume)
-{
-  HRESULT hr;
-  ISimpleAudioVolume *audio_volume;
-  float current_volume = FALSE;
-
-  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), E_INVALIDARG);
-  g_return_val_if_fail (volume != NULL, E_INVALIDARG);
-
-  audio_volume = client->audio_volume;
-
-  if (!audio_volume) {
-    GST_WARNING_OBJECT (client, "ISimpleAudioVolume object wasn't configured");
-    return E_FAIL;
-  }
-
-  hr = audio_volume->GetMasterVolume (&current_volume);
-  if (!gst_wasapi2_result (hr))
-    return hr;
-
-  *volume = current_volume;
-
-  return S_OK;
 }
 
 gboolean
@@ -1980,8 +917,7 @@ find_dispatcher (ICoreDispatcher ** dispatcher)
 
 GstWasapi2Client *
 gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
-    gboolean low_latency, gint device_index, const gchar * device_id,
-    gpointer dispatcher)
+    gint device_index, const gchar * device_id, gpointer dispatcher)
 {
   GstWasapi2Client *self;
   /* *INDENT-OFF* */
@@ -2007,9 +943,8 @@ gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
   }
 
   self = (GstWasapi2Client *) g_object_new (GST_TYPE_WASAPI2_CLIENT,
-      "device-class", device_class, "low-latency", low_latency,
-      "device-index", device_index, "device", device_id,
-      "dispatcher", dispatcher, NULL);
+      "device-class", device_class, "device-index", device_index,
+      "device", device_id, "dispatcher", dispatcher, nullptr);
 
   /* Reset explicitly to ensure that it happens before
    * RoInitializeWrapper dtor is called */
@@ -2017,10 +952,18 @@ gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
 
   if (self->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_FAILED) {
     gst_object_unref (self);
-    return NULL;
+    return nullptr;
   }
 
   gst_object_ref_sink (self);
 
   return self;
+}
+
+IAudioClient *
+gst_wasapi2_client_get_handle (GstWasapi2Client * client)
+{
+  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), nullptr);
+
+  return client->audio_client;
 }

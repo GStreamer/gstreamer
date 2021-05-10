@@ -4,6 +4,7 @@ wasapi2_sources = [
   'gstwasapi2util.c',
   'gstwasapi2client.cpp',
   'gstwasapi2device.c',
+  'gstwasapi2ringbuffer.cpp',
   'plugin.c',
 ]
 
@@ -26,7 +27,8 @@ ole32_dep = cc.find_library('ole32', required : get_option('wasapi2'))
 ksuser_dep = cc.find_library('ksuser', required : get_option('wasapi2'))
 runtimeobject_dep = cc.find_library('runtimeobject', required : get_option('wasapi2'))
 mmdeviceapi_dep = cc.find_library('mmdevapi', required : get_option('wasapi2'))
-wasapi2_dep = [ole32_dep, ksuser_dep, runtimeobject_dep, mmdeviceapi_dep]
+mfplat_dep = cc.find_library('mfplat', required : get_option('wasapi2'))
+wasapi2_dep = [ole32_dep, ksuser_dep, runtimeobject_dep, mmdeviceapi_dep, mfplat_dep]
 extra_args = []
 
 foreach dep: wasapi2_dep

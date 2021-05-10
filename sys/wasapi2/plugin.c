@@ -26,14 +26,23 @@
 #include "gstwasapi2sink.h"
 #include "gstwasapi2src.h"
 #include "gstwasapi2device.h"
+#include "gstwasapi2util.h"
+#include <mfapi.h>
 
 GST_DEBUG_CATEGORY (gst_wasapi2_debug);
 GST_DEBUG_CATEGORY (gst_wasapi2_client_debug);
+
+static void
+plugin_deinit (gpointer data)
+{
+  MFShutdown ();
+}
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GstRank rank = GST_RANK_SECONDARY;
+  HRESULT hr;
 
   /**
    * plugin-wasapi2:
@@ -41,6 +50,11 @@ plugin_init (GstPlugin * plugin)
    * Since: 1.18
    */
 
+  hr = MFStartup (MF_VERSION, MFSTARTUP_NOSOCKET);
+  if (!gst_wasapi2_result (hr)) {
+    GST_WARNING ("MFStartup failure, hr: 0x%x", hr);
+    return TRUE;
+  }
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
   /* If we are building for UWP, wasapi2 plugin should have the highest rank */
   rank = GST_RANK_PRIMARY + 1;
@@ -55,6 +69,10 @@ plugin_init (GstPlugin * plugin)
 
   gst_device_provider_register (plugin, "wasapi2deviceprovider",
       rank, GST_TYPE_WASAPI2_DEVICE_PROVIDER);
+
+  g_object_set_data_full (G_OBJECT (plugin),
+      "plugin-wasapi2-shutdown", "shutdown-data",
+      (GDestroyNotify) plugin_deinit);
 
   return TRUE;
 }

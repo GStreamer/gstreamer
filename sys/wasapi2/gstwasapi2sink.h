@@ -27,7 +27,7 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_WASAPI2_SINK (gst_wasapi2_sink_get_type ())
 G_DECLARE_FINAL_TYPE (GstWasapi2Sink,
-    gst_wasapi2_sink, GST, WASAPI2_SINK, GstAudioSink);
+    gst_wasapi2_sink, GST, WASAPI2_SINK, GstAudioBaseSink);
 
 G_END_DECLS
 

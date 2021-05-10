@@ -39,50 +39,16 @@ GType gst_wasapi2_client_device_class_get_type (void);
 G_DECLARE_FINAL_TYPE (GstWasapi2Client,
     gst_wasapi2_client, GST, WASAPI2_CLIENT, GstObject);
 
-GstCaps * gst_wasapi2_client_get_caps (GstWasapi2Client * client);
-
-HRESULT   gst_wasapi2_client_open     (GstWasapi2Client * client,
-                                       GstAudioRingBufferSpec * spec,
-                                       GstAudioRingBuffer * buf);
-
-HRESULT   gst_wasapi2_client_start    (GstWasapi2Client * client);
-
-HRESULT   gst_wasapi2_client_stop     (GstWasapi2Client * client);
-
-HRESULT   gst_wasapi2_client_read     (GstWasapi2Client * client,
-                                       gpointer data,
-                                       guint length,
-                                       guint * read_length);
-
-HRESULT   gst_wasapi2_client_write    (GstWasapi2Client * client,
-                                       gpointer data,
-                                       guint length,
-                                       guint * write_length);
-
-HRESULT   gst_wasapi2_client_delay  (GstWasapi2Client * client,
-                                       guint32 * delay);
-
-HRESULT   gst_wasapi2_client_set_mute  (GstWasapi2Client * client,
-                                        gboolean mute);
-
-HRESULT   gst_wasapi2_client_get_mute  (GstWasapi2Client * client,
-                                        gboolean * mute);
-
-HRESULT   gst_wasapi2_client_set_volume (GstWasapi2Client * client,
-                                         gfloat volume);
-
-HRESULT   gst_wasapi2_client_get_volume (GstWasapi2Client * client,
-                                         gfloat * volume);
-
-gboolean gst_wasapi2_client_ensure_activation (GstWasapi2Client * client);
-
 GstWasapi2Client * gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
-                                           gboolean low_latency,
                                            gint device_index,
                                            const gchar * device_id,
                                            gpointer dispatcher);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstWasapi2Client, gst_object_unref)
+gboolean           gst_wasapi2_client_ensure_activation (GstWasapi2Client * client);
+
+IAudioClient *     gst_wasapi2_client_get_handle (GstWasapi2Client * client);
+
+GstCaps *          gst_wasapi2_client_get_caps (GstWasapi2Client * client);
 
 G_END_DECLS
 

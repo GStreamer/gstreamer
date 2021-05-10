@@ -27,7 +27,7 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_WASAPI2_SRC (gst_wasapi2_src_get_type ())
 G_DECLARE_FINAL_TYPE (GstWasapi2Src,
-    gst_wasapi2_src, GST, WASAPI2_SRC, GstAudioSrc);
+    gst_wasapi2_src, GST, WASAPI2_SRC, GstAudioBaseSrc);
 
 G_END_DECLS
 
