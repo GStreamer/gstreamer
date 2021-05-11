@@ -160,6 +160,20 @@ ensure_data (GstMsdkSystemMemory * mem)
       mem->surface->Data.A = mem->surface->Data.U + 6;
       mem->surface->Data.Pitch = mem->destination_pitches[0];
       break;
+#if (MFX_VERSION >= 2004)
+    case GST_VIDEO_FORMAT_RGBP:
+      mem->surface->Data.Pitch = mem->destination_pitches[0];
+      mem->surface->Data.R = mem->cached_data[0];
+      mem->surface->Data.G = mem->cached_data[1];
+      mem->surface->Data.B = mem->cached_data[2];
+      break;
+    case GST_VIDEO_FORMAT_BGRP:
+      mem->surface->Data.Pitch = mem->destination_pitches[0];
+      mem->surface->Data.B = mem->cached_data[0];
+      mem->surface->Data.G = mem->cached_data[1];
+      mem->surface->Data.R = mem->cached_data[2];
+      break;
+#endif
 
     default:
       g_assert_not_reached ();
@@ -264,6 +278,14 @@ gst_msdk_system_memory_map_full (GstMemory * base_mem, GstMapInfo * info,
 #if (MFX_VERSION >= 1031)
     case MFX_FOURCC_Y416:
       return mem->surface->Data.U;      /* The first channel is U */
+#endif
+
+#if (MFX_VERSION >= 2004)
+    case MFX_FOURCC_RGBP:
+      return mem->surface->Data.R;
+
+    case MFX_FOURCC_BGRP:
+      return mem->surface->Data.B;
 #endif
 
     default:

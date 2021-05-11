@@ -75,6 +75,10 @@ static const struct map gst_msdk_video_format_to_mfx_map[] = {
   /* Y416 is used for 12bit 4:4:4:4 format in MSDK */
   GST_VIDEO_INFO_TO_MFX_MAP (Y412_LE, YUV444, Y416),
 #endif
+#if (MFX_VERSION >=2004)
+  GST_VIDEO_INFO_TO_MFX_MAP (RGBP, YUV444, RGBP),
+  GST_VIDEO_INFO_TO_MFX_MAP (BGRP, YUV444, BGRP),
+#endif
   {0, 0, 0}
 };
 

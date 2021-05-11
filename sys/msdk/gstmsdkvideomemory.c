@@ -332,6 +332,14 @@ gst_msdk_video_memory_map_full (GstMemory * base_mem, GstMapInfo * info,
       return mem->surface->Data.U;
 #endif
 
+#if (MFX_VERSION >= 2004)
+    case MFX_FOURCC_RGBP:
+      return mem->surface->Data.R;
+
+    case MFX_FOURCC_BGRP:
+      return mem->surface->Data.B;
+#endif
+
     default:
       return mem->surface->Data.Y;
   }

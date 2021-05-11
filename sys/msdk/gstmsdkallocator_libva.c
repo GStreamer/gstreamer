@@ -151,6 +151,12 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
       format = VA_RT_FORMAT_YUV444_12;
 #endif
 
+#if (MFX_VERSION >= 2004)
+    if (format == VA_RT_FORMAT_YUV444 && (va_fourcc == VA_FOURCC_RGBP
+            || va_fourcc == VA_FOURCC_BGRP))
+      format = VA_RT_FORMAT_RGBP;
+#endif
+
     va_status = vaCreateSurfaces (gst_msdk_context_get_handle (context),
         format,
         req->Info.Width, req->Info.Height, surfaces, surfaces_num, attribs,
@@ -437,6 +443,21 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         data->A = data->R + 3;
         break;
 
+#if (MFX_VERSION >= 2004)
+      case VA_FOURCC_RGBP:
+        data->Pitch = mem_id->image.pitches[0];
+        data->R = buf + mem_id->image.offsets[0];
+        data->G = buf + mem_id->image.offsets[1];
+        data->B = buf + mem_id->image.offsets[2];
+        break;
+      case VA_FOURCC_BGRP:
+        data->Pitch = mem_id->image.pitches[0];
+        data->B = buf + mem_id->image.offsets[0];
+        data->G = buf + mem_id->image.offsets[1];
+        data->R = buf + mem_id->image.offsets[2];
+        break;
+#endif
+
       default:
         g_assert_not_reached ();
         break;
@@ -618,6 +639,16 @@ gst_msdk_export_dmabuf_to_vasurface (GstMsdkContext * context,
     case GST_VIDEO_FORMAT_Y412_LE:
       va_chroma = VA_RT_FORMAT_YUV444_12;
       va_fourcc = VA_FOURCC_Y416;
+      break;
+#endif
+#if (MFX_VERSION >= 2004)
+    case GST_VIDEO_FORMAT_RGBP:
+      va_chroma = VA_RT_FORMAT_RGBP;
+      va_fourcc = VA_FOURCC_RGBP;
+      break;
+    case GST_VIDEO_FORMAT_BGRP:
+      va_chroma = VA_RT_FORMAT_RGBP;
+      va_fourcc = VA_FOURCC_BGRP;
       break;
 #endif
     default:
