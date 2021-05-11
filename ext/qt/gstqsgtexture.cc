@@ -114,7 +114,7 @@ GstQSGTexture::bind ()
   gboolean use_dummy_tex = TRUE;
 
   if (!this->qt_context_)
-    return;
+    goto out;
 
   if (!this->buffer_)
     goto out;
@@ -190,6 +190,7 @@ out:
     g_assert (this->dummy_tex_id_ != 0);
 
     funcs->glBindTexture (GL_TEXTURE_2D, this->dummy_tex_id_);
+    GST_LOG ("%p binding fallback dummy Qt texture %u", this, this->dummy_tex_id_);
   }
 }
 
