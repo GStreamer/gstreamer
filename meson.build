@@ -64,6 +64,10 @@ endif
 
 message('pygobject overrides directory = @0@'.format(pygi_override_dir))
 
+# libdir has to be built from pieces.
+libdir = get_option('prefix')+'/'+get_option('libdir')
+
+
 pylib_suffix = 'so'
 if host_machine.system() == 'windows'
   pylib_suffix = 'dll'
@@ -76,7 +80,7 @@ cdata.set('VERSION', '"@0@"'.format(gst_version))
 cdata.set('GST_PACKAGE_NAME', '"GStreamer Python"')
 cdata.set('PACKAGE_NAME', '"GStreamer Python"')
 cdata.set('GST_API_VERSION', '"@0@"'.format(api_version))
-cdata.set('PLUGINDIR', '"@0@/gstreamer-1.0"'.format(get_option('libdir')))
+cdata.set('PLUGINDIR', '"@0@/gstreamer-1.0"'.format(libdir))
 cdata.set('PY_LIB_LOC', '"@0@"'.format(pylib_loc))
 cdata.set('PY_ABI_FLAGS', '"@0@"'.format(python_abi_flags))
 cdata.set('PY_LIB_SUFFIX', '"@0@"'.format(pylib_suffix))
@@ -85,7 +89,7 @@ configure_file(output : 'config.h', configuration : cdata)
 configinc = include_directories('.')
 
 pkgconfig = import('pkgconfig')
-plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
+plugins_install_dir = join_paths(libdir, 'gstreamer-1.0')
 plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
 if get_option('default_library') == 'shared'
   # If we don't build static plugins there is no need to generate pc files
@@ -95,5 +99,5 @@ endif
 subdir('gi')
 subdir('plugin')
 subdir('testsuite')
-
+ 
 run_command(python, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
