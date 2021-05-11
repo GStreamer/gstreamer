@@ -454,9 +454,9 @@ gtk_gst_base_widget_class_init (GtkGstBaseWidgetClass * klass)
 
   g_object_class_install_property (gobject_klass, PROP_PIXEL_ASPECT_RATIO,
       gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
-          "The pixel aspect ratio of the device", DEFAULT_DISPLAY_PAR_N,
-          DEFAULT_DISPLAY_PAR_D, G_MAXINT, 1, 1, 1,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "The pixel aspect ratio of the device",
+          0, 1, G_MAXINT, G_MAXINT, DEFAULT_DISPLAY_PAR_N,
+          DEFAULT_DISPLAY_PAR_D, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_IGNORE_ALPHA,
       g_param_spec_boolean ("ignore-alpha", "Ignore Alpha",

@@ -7209,7 +7209,7 @@
                         "controllable": false,
                         "default": "0/1",
                         "max": "2147483647/1",
-                        "min": "0/1",
+                        "min": "0/2147483647",
                         "mutable": "null",
                         "readable": true,
                         "type": "GstFraction",
