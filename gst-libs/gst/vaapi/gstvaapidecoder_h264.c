@@ -46,6 +46,7 @@ typedef struct _GstVaapiFrameStore GstVaapiFrameStore;
 typedef struct _GstVaapiFrameStoreClass GstVaapiFrameStoreClass;
 typedef struct _GstVaapiParserInfoH264 GstVaapiParserInfoH264;
 typedef struct _GstVaapiPictureH264 GstVaapiPictureH264;
+typedef struct _GstVaapiStereo3DInfo GstVaapiStereo3DInfo;
 
 // Used for field_poc[]
 #define TOP_FIELD       0
@@ -461,6 +462,24 @@ gst_vaapi_frame_store_has_inter_view (GstVaapiFrameStore * fs)
         (GstVaapiMiniObject *)(new_fs))
 
 /* ------------------------------------------------------------------------- */
+/* --- H.264 3D Info                                                     --- */
+/* ------------------------------------------------------------------------- */
+/**
+ * GstVaapiStereo3DInfo:
+ * @mode: the #GstVideoMultiviewMode.
+ * @flags: the #GstVideoMultiviewFlags.
+ * @id: the id number.
+ * @repetition_period: 0 means once, 1 means always, >1 compare with poc.
+ */
+struct _GstVaapiStereo3DInfo
+{
+  GstVideoMultiviewMode mode;
+  GstVideoMultiviewFlags flags;
+  guint id;
+  guint repetition_period;
+};
+
+/* ------------------------------------------------------------------------- */
 /* --- H.264 Decoder                                                     --- */
 /* ------------------------------------------------------------------------- */
 
@@ -539,6 +558,8 @@ struct _GstVaapiDecoderH264Private
 
   gboolean force_low_latency;
   gboolean base_only;
+
+  GstVaapiStereo3DInfo stereo_info;
 };
 
 /**
@@ -1332,6 +1353,8 @@ gst_vaapi_decoder_h264_create (GstVaapiDecoder * base_decoder)
   priv->prev_pic_structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
   priv->progressive_sequence = TRUE;
   priv->top_field_first = FALSE;
+  priv->stereo_info.mode = GST_VIDEO_MULTIVIEW_MODE_MONO;
+  priv->stereo_info.flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
   return TRUE;
 }
 
@@ -1555,11 +1578,15 @@ ensure_context (GstVaapiDecoderH264 * decoder, GstH264SPS * sps)
   if (reset_context) {
     switch (num_views) {
       case 1:
-        /* Frame-packed mode details should be copied from the parser
-         * if we set NONE */
-        gst_vaapi_decoder_set_multiview_mode (base_decoder,
-            num_views, GST_VIDEO_MULTIVIEW_MODE_NONE,
-            GST_VIDEO_MULTIVIEW_FLAGS_NONE);
+        /* Frame-packed mode details should be used if we got */
+        if (priv->stereo_info.mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+          gst_vaapi_decoder_set_multiview_mode (base_decoder,
+              2, priv->stereo_info.mode, priv->stereo_info.flags);
+        } else {
+          gst_vaapi_decoder_set_multiview_mode (base_decoder,
+              num_views, GST_VIDEO_MULTIVIEW_MODE_NONE,
+              GST_VIDEO_MULTIVIEW_FLAGS_NONE);
+        }
         break;
       case 2:                  /* Assume stereo */
         if (profile == GST_VAAPI_PROFILE_H264_STEREO_HIGH) {
@@ -1964,6 +1991,132 @@ decode_pps (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
+static gboolean
+decode_sei_frame_packing (GstVaapiDecoderH264 * decoder,
+    const GstH264FramePacking * frame_packing)
+{
+  GstVaapiDecoderH264Private *const priv = &decoder->priv;
+  GstVideoMultiviewMode saved_mode = priv->stereo_info.mode;
+  GstVideoMultiviewFlags saved_flags = priv->stereo_info.flags;
+  gboolean left = TRUE;
+  gboolean frame_revert = FALSE;
+
+  /* Only IDs from 0->255 and 512->2^31-1 are valid. Ignore others */
+  if ((frame_packing->frame_packing_id >= 256 &&
+          frame_packing->frame_packing_id < 512) ||
+      (frame_packing->frame_packing_id >= (1U << 31)))
+    return FALSE;
+
+  if (frame_packing->frame_packing_cancel_flag) {
+    if (priv->stereo_info.id == frame_packing->frame_packing_id)
+      priv->stereo_info = (GstVaapiStereo3DInfo) {
+      GST_VIDEO_MULTIVIEW_MODE_MONO, GST_VIDEO_MULTIVIEW_FLAGS_NONE, 256, 0};
+    return TRUE;
+  }
+
+  if (frame_packing->frame_packing_repetition_period != 1) {
+    GST_WARNING ("SEI: repetition_period != 1 is not unsupported");
+    return FALSE;
+  }
+
+  if (frame_packing->frame_packing_type > GST_H264_FRAME_PACKING_NONE) {
+    GST_WARNING ("SEI: unsupported frame_packing_type %d",
+        frame_packing->frame_packing_type);
+    return FALSE;
+  }
+
+  if (frame_packing->content_interpretation_type >= 3) {
+    GST_WARNING ("SEI: unsupported content_interpretation_type %d",
+        frame_packing->frame_packing_type);
+    return FALSE;
+  }
+
+  /* TODO: frame frame0/1_grid_position_x/y are ignored now. */
+
+  priv->stereo_info = (GstVaapiStereo3DInfo) {
+  GST_VIDEO_MULTIVIEW_MODE_MONO, GST_VIDEO_MULTIVIEW_FLAGS_NONE, 256, 0};
+
+  switch (frame_packing->frame_packing_type) {
+    case GST_H264_FRAME_PACKING_CHECKERBOARD_INTERLEAVING:
+      priv->stereo_info.mode = GST_VIDEO_MULTIVIEW_MODE_CHECKERBOARD;
+      break;
+    case GST_H264_FRAME_PACKING_COLUMN_INTERLEAVING:
+      priv->stereo_info.mode = GST_VIDEO_MULTIVIEW_MODE_COLUMN_INTERLEAVED;
+      break;
+    case GST_H264_FRAME_PACKING_ROW_INTERLEAVING:
+      priv->stereo_info.mode = GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED;
+      break;
+    case GST_H264_FRAME_PACKING_SIDE_BY_SIDE:
+      if (frame_packing->quincunx_sampling_flag) {
+        priv->stereo_info.mode = GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE_QUINCUNX;
+      } else {
+        priv->stereo_info.mode = GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE;
+      }
+      break;
+    case GST_H264_FRMAE_PACKING_TOP_BOTTOM:
+      priv->stereo_info.mode = GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM;
+      break;
+    case GST_H264_FRAME_PACKING_TEMPORAL_INTERLEAVING:
+      priv->stereo_info.mode = GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME;
+      break;
+    default:
+      priv->stereo_info.mode = GST_VIDEO_MULTIVIEW_MODE_MONO;
+      break;
+  }
+
+  /* Spec does not describe multi-IDs case, we just keep one valid */
+  priv->stereo_info.id = frame_packing->frame_packing_id;
+  priv->stereo_info.repetition_period =
+      frame_packing->frame_packing_repetition_period;
+
+  if (frame_packing->content_interpretation_type == 2)
+    frame_revert = TRUE;
+
+  if (frame_packing->frame_packing_type ==
+      GST_H264_FRAME_PACKING_TEMPORAL_INTERLEAVING) {
+    if (frame_packing->current_frame_is_frame0_flag) {
+      left = TRUE;
+    } else {
+      left = FALSE;
+    }
+
+    if (frame_revert)
+      left = !left;
+  }
+
+  if (!left)
+    priv->stereo_info.flags |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+
+  if (frame_packing->frame_packing_type == GST_H264_FRAME_PACKING_SIDE_BY_SIDE
+      && frame_packing->spatial_flipping_flag) {
+    if (frame_packing->frame0_flipped_flag !=
+        ((priv->stereo_info.flags &
+                GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST) != 0)) {
+      priv->stereo_info.flags |= GST_VIDEO_MULTIVIEW_FLAGS_LEFT_FLOPPED;
+    } else {
+      priv->stereo_info.flags |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_FLOPPED;
+    }
+  }
+  if (frame_packing->frame_packing_type == GST_H264_FRMAE_PACKING_TOP_BOTTOM
+      && frame_packing->spatial_flipping_flag !=
+      ((priv->stereo_info.flags &
+              GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST) != 0)) {
+    if (frame_packing->frame0_flipped_flag) {
+      priv->stereo_info.flags |= GST_VIDEO_MULTIVIEW_FLAGS_LEFT_FLIPPED;
+    } else {
+      priv->stereo_info.flags |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_FLIPPED;
+    }
+  }
+
+  if (saved_mode != priv->stereo_info.mode
+      || saved_flags != priv->stereo_info.flags) {
+    gst_vaapi_decoder_set_multiview_mode (GST_VAAPI_DECODER_CAST (decoder),
+        2, priv->stereo_info.mode, priv->stereo_info.flags);
+  }
+
+  return TRUE;
+}
+
 static GstVaapiDecoderStatus
 decode_sei (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
 {
@@ -1984,6 +2137,9 @@ decode_sei (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
           priv->pic_structure = pic_timing->pic_struct;
         break;
       }
+      case GST_H264_SEI_FRAME_PACKING:
+        decode_sei_frame_packing (decoder, &sei->payload.frame_packing);
+        break;
       default:
         break;
     }
