@@ -368,7 +368,7 @@ video_format_is_packed (GstVideoFormat fmt)
 static gint
 get_num_formats (void)
 {
-  gint num_formats = 100;
+  gint num_formats = 200;
   fail_unless (gst_video_format_to_string (num_formats) == NULL);
   while (gst_video_format_to_string (num_formats) == NULL)
     --num_formats;
