@@ -7545,7 +7545,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Decoder/Audio",
+                "klass": "Codec/Decoder/Audio/Converter",
                 "long-name": "Opus audio decoder",
                 "pad-templates": {
                     "sink": {
