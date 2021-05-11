@@ -46,6 +46,9 @@
 #endif
 #include <locale.h>             /* for LC_ALL */
 #include "tools.h"
+#ifdef HAVE_WINMM
+#include <timeapi.h>
+#endif
 
 extern volatile gboolean glib_on_error_halt;
 
@@ -1030,6 +1033,43 @@ query_pipeline_position (gpointer user_data)
   return G_SOURCE_CONTINUE;
 }
 
+#ifdef HAVE_WINMM
+static guint
+enable_winmm_timer_resolution (void)
+{
+  TIMECAPS time_caps;
+  guint resolution = 0;
+  MMRESULT res;
+
+  res = timeGetDevCaps (&time_caps, sizeof (TIMECAPS));
+  if (res != TIMERR_NOERROR) {
+    g_warning ("timeGetDevCaps() returned non-zero code %d", res);
+    return 0;
+  }
+
+  resolution = MIN (MAX (time_caps.wPeriodMin, 1), time_caps.wPeriodMax);
+  res = timeBeginPeriod (resolution);
+  if (res != TIMERR_NOERROR) {
+    g_warning ("timeBeginPeriod() returned non-zero code %d", res);
+    return 0;
+  }
+
+  PRINT (_("Use Windows high-resolution clock, precision: %u ms\n"),
+      resolution);
+
+  return resolution;
+}
+
+static void
+clear_winmm_timer_resolution (guint resolution)
+{
+  if (resolution == 0)
+    return;
+
+  timeEndPeriod (resolution);
+}
+#endif
+
 int
 main (int argc, char *argv[])
 {
@@ -1092,6 +1132,9 @@ main (int argc, char *argv[])
   gulong deep_notify_id = 0;
   guint bus_watch_id = 0;
   GSource *position_source = NULL;
+#ifdef HAVE_WINMM
+  guint winmm_timer_resolution = 0;
+#endif
 
   free (malloc (8));            /* -lefence */
 
@@ -1174,6 +1217,23 @@ main (int argc, char *argv[])
       gst_bin_add (GST_BIN (real_pipeline), pipeline);
       pipeline = real_pipeline;
     }
+#ifdef HAVE_WINMM
+    /* Enable high-precision clock which will improve accuracy of various
+     * Windows timer APIs (e.g., Sleep()), and it will increase the precision
+     * of GstSystemClock as well
+     */
+
+    /* NOTE: Once timer resolution is updated via timeBeginPeriod(),
+     * application should undo it by calling timeEndPeriod()
+     *
+     * Prior to Windows 10, version 2004, timeBeginPeriod() affects global
+     * Windows setting (meaning that it will affect other processes),
+     * but starting with Windows 10, version 2004, this function no longer
+     * affects global timer resolution
+     */
+    winmm_timer_resolution = enable_winmm_timer_resolution ();
+#endif
+
     if (verbose) {
       deep_notify_id =
           gst_element_add_property_deep_notify_watch (pipeline, NULL, TRUE);
@@ -1285,6 +1345,11 @@ main (int argc, char *argv[])
 #endif
     g_source_remove (bus_watch_id);
     g_main_loop_unref (loop);
+
+#ifdef HAVE_WINMM
+    /* Undo timeBeginPeriod() if required */
+    clear_winmm_timer_resolution (winmm_timer_resolution);
+#endif
   }
 
   PRINT (_("Freeing pipeline ...\n"));
