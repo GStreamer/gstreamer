@@ -409,9 +409,33 @@ gst_qt_overlay_prepare_output_buffer (GstBaseTransform * btrans,
   GstGLMemory *out_mem;
   GstGLSyncMeta *sync_meta;
 
+  if (gst_buffer_n_memory (buffer) <= 0) {
+    GST_ELEMENT_ERROR (btrans, RESOURCE, NOT_FOUND,
+        (NULL), ("Buffer must have a memory object"));
+    return GST_FLOW_ERROR;
+  }
+
   if (qt_overlay->widget) {
-    qt_overlay->widget->setCaps (bfilter->in_caps); 
-    qt_overlay->widget->setBuffer (buffer);
+    GstMemory *mem;
+    GstGLMemory *gl_mem;
+
+    qt_overlay->widget->setCaps (bfilter->in_caps);
+
+    mem = gst_buffer_peek_memory (buffer, 0);
+    if (!gst_is_gl_memory (mem)) {
+      GST_ELEMENT_ERROR (btrans, RESOURCE, NOT_FOUND,
+          (NULL), ("Input memory must be a GstGLMemory"));
+      return GST_FLOW_ERROR;
+    }
+    gl_mem = (GstGLMemory *) mem;
+    if (!gst_gl_context_can_share (gl_mem->mem.context, bfilter->context)) {
+      GST_WARNING_OBJECT (bfilter, "Cannot use the current input texture "
+          "(input buffer GL context %" GST_PTR_FORMAT " cannot share "
+          "resources with the configured OpenGL context %" GST_PTR_FORMAT ")",
+          gl_mem->mem.context, bfilter->context);
+    } else {
+      qt_overlay->widget->setBuffer (buffer);
+    }
   }
 
   /* XXX: is this the correct ts to drive the animation */
