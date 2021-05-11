@@ -556,7 +556,6 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         self->format = spad->segment.format;
         GST_DEBUG_OBJECT (self, "Operating in %s format",
             gst_format_get_name (self->format));
-        g_mutex_unlock (&self->lock);
       } else if (self->format != spad->segment.format) {
         g_mutex_unlock (&self->lock);
         GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL),
@@ -564,15 +563,18 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
                 gst_format_get_name (self->format),
                 gst_format_get_name (spad->segment.format)));
         ret = FALSE;
-      } else {
-        g_mutex_unlock (&self->lock);
+        break;
       }
+
+      g_mutex_unlock (&self->lock);
 
       if (!gst_concat_pad_wait (spad, self)) {
         ret = FALSE;
       } else {
         GstSegment segment = spad->segment;
         GstEvent *topush;
+
+        g_mutex_lock (&self->lock);
 
         if (adjust_base) {
           /* We know no duration */
@@ -606,6 +608,8 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
         topush = gst_event_new_segment (&segment);
         gst_event_set_seqnum (topush, gst_event_get_seqnum (event));
+
+        g_mutex_unlock (&self->lock);
 
         gst_pad_push_event (self->srcpad, topush);
       }
