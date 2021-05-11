@@ -4,7 +4,7 @@ openaptx_sources = [
   'gstopenaptxenc.c',
 ]
 
-openaptx_dep = dependency('libopenaptx', version : '>= 0.2', required : get_option('openaptx'))
+openaptx_dep = dependency('libopenaptx', version : '== 0.2.0', required : get_option('openaptx'))
 
 if openaptx_dep.found()
   gstopenaptx = library('gstopenaptx',
