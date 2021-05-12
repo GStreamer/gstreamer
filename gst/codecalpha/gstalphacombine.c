@@ -86,6 +86,7 @@ struct _GstAlphaCombine
 
   /* protected by sink_pad stream lock */
   GstBuffer *last_alpha_buffer;
+  GstFlowReturn last_flow_ret;
 
   GMutex buffer_lock;
   GCond buffer_cond;
@@ -96,8 +97,6 @@ struct _GstAlphaCombine
   GstVideoInfo sink_vinfo;
   GstVideoInfo alpha_vinfo;
   GstVideoFormat src_format;
-
-  gboolean alpha_is_eos;
 };
 
 #define gst_alpha_combine_parent_class parent_class
@@ -153,7 +152,7 @@ gst_alpha_combine_reset (GstAlphaCombine * self)
 {
   gst_buffer_replace (&self->alpha_buffer, NULL);
   gst_buffer_replace (&self->last_alpha_buffer, NULL);
-  self->alpha_is_eos = FALSE;
+  self->last_flow_ret = GST_FLOW_OK;
 }
 
 /*
@@ -204,7 +203,7 @@ gst_alpha_combine_negotiate (GstAlphaCombine * self)
 }
 
 static GstFlowReturn
-gst_alpha_combine_pull_alpha_buffer (GstAlphaCombine * self,
+gst_alpha_combine_peek_alpha_buffer (GstAlphaCombine * self,
     GstBuffer ** alpha_buffer)
 {
   g_mutex_lock (&self->buffer_lock);
@@ -224,17 +223,14 @@ gst_alpha_combine_pull_alpha_buffer (GstAlphaCombine * self,
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  *alpha_buffer = self->alpha_buffer;
-  self->alpha_buffer = NULL;
-
-  g_cond_broadcast (&self->buffer_cond);
+  *alpha_buffer = gst_buffer_ref (self->alpha_buffer);
   g_mutex_unlock (&self->buffer_lock);
 
   if (GST_BUFFER_FLAG_IS_SET (*alpha_buffer, GST_BUFFER_FLAG_GAP)) {
     if (!self->last_alpha_buffer) {
       GST_ELEMENT_ERROR (self, STREAM, WRONG_TYPE,
           ("Cannot handle streams without an initial alpha buffer."), (NULL));
-      gst_buffer_replace (alpha_buffer, NULL);
+      gst_clear_buffer (alpha_buffer);
       return GST_FLOW_ERROR;
     }
 
@@ -245,9 +241,22 @@ gst_alpha_combine_pull_alpha_buffer (GstAlphaCombine * self,
   return GST_FLOW_OK;
 }
 
+static void
+gst_alpha_combine_pop_alpha_buffer (GstAlphaCombine * self,
+    GstFlowReturn flow_ret)
+{
+  g_mutex_lock (&self->buffer_lock);
+  self->last_flow_ret = flow_ret;
+  gst_clear_buffer (&self->alpha_buffer);
+  g_cond_broadcast (&self->buffer_cond);
+  g_mutex_unlock (&self->buffer_lock);
+}
+
 static GstFlowReturn
 gst_alpha_combine_push_alpha_buffer (GstAlphaCombine * self, GstBuffer * buffer)
 {
+  GstFlowReturn ret;
+
   g_mutex_lock (&self->buffer_lock);
 
   /* We wait for the alpha_buffer to be consumed and store the buffer for the
@@ -264,9 +273,10 @@ gst_alpha_combine_push_alpha_buffer (GstAlphaCombine * self, GstBuffer * buffer)
   self->alpha_buffer = buffer;
   GST_DEBUG_OBJECT (self, "Stored pending alpha buffer %p", buffer);
   g_cond_signal (&self->buffer_cond);
+  ret = self->last_flow_ret;
   g_mutex_unlock (&self->buffer_lock);
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static GstFlowReturn
@@ -282,7 +292,7 @@ gst_alpha_combine_sink_chain (GstPad * pad, GstObject * object,
   gint alpha_stride;
   GstBuffer *buffer;
 
-  ret = gst_alpha_combine_pull_alpha_buffer (self, &alpha_buffer);
+  ret = gst_alpha_combine_peek_alpha_buffer (self, &alpha_buffer);
   if (ret != GST_FLOW_OK)
     return ret;
 
@@ -335,7 +345,10 @@ gst_alpha_combine_sink_chain (GstPad * pad, GstObject * object,
   gst_buffer_unref (src_buffer);
   gst_buffer_unref (alpha_buffer);
 
-  return gst_pad_push (self->src_pad, buffer);
+  ret = gst_pad_push (self->src_pad, buffer);
+  gst_alpha_combine_pop_alpha_buffer (self, ret);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -343,11 +356,6 @@ gst_alpha_combine_alpha_chain (GstPad * pad, GstObject * object,
     GstBuffer * buffer)
 {
   GstAlphaCombine *self = GST_ALPHA_COMBINE (object);
-
-  if (self->alpha_is_eos) {
-    gst_buffer_unref (buffer);
-    return GST_FLOW_EOS;
-  }
 
   return gst_alpha_combine_push_alpha_buffer (self, buffer);
 }
@@ -461,7 +469,6 @@ gst_alpha_combine_alpha_event (GstPad * pad, GstObject * object,
       return TRUE;
     case GST_EVENT_EOS:
       gst_event_unref (event);
-      self->alpha_is_eos = TRUE;
       return TRUE;
     default:
       break;
