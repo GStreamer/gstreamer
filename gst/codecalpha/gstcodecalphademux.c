@@ -102,25 +102,46 @@ gst_codec_alpha_demux_chain (GstPad * pad, GstObject * object,
   GstClockTime pts = GST_BUFFER_PTS (buffer);
   GstClockTime duration = GST_BUFFER_DURATION (buffer);
   GstFlowReturn ret;
+  gboolean src_pad_eos, alpha_pad_eos;
 
   if (alpha_meta)
     alpha_buffer = gst_buffer_ref (alpha_meta->buffer);
 
-  ret = gst_flow_combiner_update_pad_flow (self->flow_combiner,
-      self->src_pad, gst_pad_push (self->src_pad, buffer));
+  /* To satisfy the alphacombine requirement, we need to push in pair here, so we
+   * can't just stop pushing at EOS. For this reason, remember if pad had a
+   * flow return of EOS and set it back if needed. */
+  src_pad_eos = (GST_PAD_LAST_FLOW_RETURN (self->src_pad) == GST_FLOW_EOS);
+  alpha_pad_eos = (GST_PAD_LAST_FLOW_RETURN (self->alpha_pad) == GST_FLOW_EOS);
+
+  if (src_pad_eos && alpha_pad_eos) {
+    gst_buffer_unref (alpha_buffer);
+    gst_buffer_unref (buffer);
+    return GST_FLOW_EOS;
+  }
+
+  ret = gst_pad_push (self->src_pad, buffer);
 
   /* we lost ownership here */
   buffer = NULL;
   alpha_meta = NULL;
 
-  if (alpha_buffer)
-    ret = gst_flow_combiner_update_pad_flow (self->flow_combiner,
-        self->alpha_pad, gst_pad_push (self->alpha_pad, alpha_buffer));
+  if (ret == GST_FLOW_OK && src_pad_eos)
+    gst_flow_combiner_update_pad_flow (self->flow_combiner, self->src_pad,
+        GST_FLOW_EOS);
   else
-    ret = gst_flow_combiner_update_pad_flow (self->flow_combiner,
-        self->alpha_pad, gst_pad_push_event (self->alpha_pad,
-            gst_event_new_gap (pts, duration)));
+    gst_flow_combiner_update_flow (self->flow_combiner, ret);
 
+  if (alpha_buffer)
+    ret = gst_pad_push (self->alpha_pad, alpha_buffer);
+  else
+    ret = gst_pad_push_event (self->alpha_pad,
+        gst_event_new_gap (pts, duration));
+
+  if (ret == GST_FLOW_OK && alpha_pad_eos)
+    ret = gst_flow_combiner_update_pad_flow (self->flow_combiner,
+        self->alpha_pad, GST_FLOW_EOS);
+  else
+    ret = gst_flow_combiner_update_flow (self->flow_combiner, ret);
 
   return ret;
 }
