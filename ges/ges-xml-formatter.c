@@ -944,7 +944,6 @@ _save_subproject_data (GESXmlFormatter * self, SubprojectData * subproj_data,
   gint line = 1, i;
   gboolean res = FALSE;
   gsize start = 0, end = 0;
-  gchar *subproject_content = NULL;
   gchar *xml = GES_BASE_XML_FORMATTER (self)->xmlcontent;
 
   for (i = 0; xml[i] != '\0'; i++) {
@@ -964,17 +963,12 @@ _save_subproject_data (GESXmlFormatter * self, SubprojectData * subproj_data,
   g_assert (start && end);
   size = (end - start);
 
-  subproject_content = g_malloc (sizeof (gchar) * size);
-  memcpy (subproject_content, &xml[start], end - start);
-  subproject_content[end - start] = '\0';
   GST_INFO_OBJECT (self, "Saving subproject %s from %d:%d(%" G_GSIZE_FORMAT
       ") to %d:%d(%" G_GSIZE_FORMAT ")",
       subproj_data->id, subproj_data->start_line, subproj_data->start_char,
       start, subproject_end_line, subproject_end_char, end);
 
-  res = g_file_set_contents (subproj_data->filename, subproject_content, -1,
-      error);
-  g_free (subproject_content);
+  res = g_file_set_contents (subproj_data->filename, &xml[start], size, error);
 
   return res;
 }
