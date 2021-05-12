@@ -786,7 +786,6 @@ gst_curl_http_src_init (GstCurlHttpSrc * source)
   source->connection_status = GSTCURL_NOT_CONNECTED;
 
   source->http_headers = NULL;
-  source->content_type = NULL;
   source->status_code = 0;
   source->reason_phrase = NULL;
   source->hdrs_updated = FALSE;

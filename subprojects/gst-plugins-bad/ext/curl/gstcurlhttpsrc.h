@@ -218,7 +218,6 @@ struct _GstCurlHttpSrc
    * Response Headers
    */
   GstStructure *http_headers;
-  gchar *content_type;
   guint status_code;
   gchar *reason_phrase;
   gboolean hdrs_updated;
