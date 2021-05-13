@@ -37,20 +37,12 @@
 gboolean
 openh264_element_init (GstPlugin * plugin)
 {
-  static gsize res = FALSE;
-
-  if (g_once_init_enter (&res)) {
-    gsize value;
-    OpenH264Version libver;
-    /* g_stCodecVersion is the version detected at build time as defined in the
-     * headers and WelsGetCodecVersion() is the version detected at runtime.
-     * This is a safeguard to avoid crashes since OpenH264  has been changing
-     * ABI without changing the SONAME.
-     */
-    libver = WelsGetCodecVersion ();
-    value = memcmp (&libver, &g_stCodecVersion, sizeof (libver)) == 0;
-    g_once_init_leave (&res, value);
-  }
-
-  return res;
+  OpenH264Version libver;
+  /* g_stCodecVersion is the version detected at build time as defined in the
+   * headers and WelsGetCodecVersion() is the version detected at runtime.
+   * This is a safeguard to avoid crashes since OpenH264  has been changing
+   * ABI without changing the SONAME.
+   */
+  libver = WelsGetCodecVersion ();
+  return (memcmp (&libver, &g_stCodecVersion, sizeof (libver)) == 0);
 }
