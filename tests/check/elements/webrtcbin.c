@@ -455,6 +455,14 @@ _bus_no_errors (struct test_webrtc *t, GstBus * bus, GstMessage * msg,
 {
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ERROR:{
+      GError *err = NULL;
+      gchar *dbg = NULL;
+
+      gst_message_parse_error (msg, &err, &dbg);
+      g_error ("ERROR from element %s: %s (Debugging info: %s)",
+          GST_OBJECT_NAME (msg->src), err->message, (dbg) ? dbg : "none");
+      g_error_free (err);
+      g_free (dbg);
       g_assert_not_reached ();
       break;
     }
