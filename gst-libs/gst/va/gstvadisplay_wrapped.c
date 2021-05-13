@@ -61,7 +61,7 @@ gst_va_display_wrapped_init (GstVaDisplayWrapped * self)
  * Since: 1.20
  **/
 GstVaDisplay *
-gst_va_display_wrapped_new (guintptr handle)
+gst_va_display_wrapped_new (gpointer handle)
 {
   GstVaDisplay *dpy;
 

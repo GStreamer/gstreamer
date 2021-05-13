@@ -315,7 +315,7 @@ gst_context_get_va_display (GstContext * context, const gchar * type_name,
    * VADisplay from users */
   if (!is_devnode
       && gst_structure_get (s, "va-display", G_TYPE_POINTER, &dpy, NULL)) {
-    if ((display = gst_va_display_wrapped_new ((guintptr) dpy)))
+    if ((display = gst_va_display_wrapped_new (dpy)))
       goto accept;
   }
 

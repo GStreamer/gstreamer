@@ -34,6 +34,6 @@ G_BEGIN_DECLS
 GST_VA_API
 GType                 gst_va_display_wrapped_get_type     (void);
 GST_VA_API
-GstVaDisplay *        gst_va_display_wrapped_new          (guintptr handle);
+GstVaDisplay *        gst_va_display_wrapped_new          (gpointer handle);
 
 G_END_DECLS
