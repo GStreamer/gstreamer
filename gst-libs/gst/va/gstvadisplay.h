@@ -60,6 +60,8 @@ typedef enum
  *
  * Check whether the display is the implementation of the specified
  * #GstVaImplementation type.
+ *
+ * Since: 1.20
  */
 #define GST_VA_DISPLAY_IS_IMPLEMENTATION(display, impl) \
   (gst_va_display_is_implementation (display, G_PASTE (GST_VA_IMPLEMENTATION_, impl)))
@@ -73,6 +75,7 @@ typedef enum
 
 /**
  * GstVaDisplay:
+ * @parent: parent #GstObject
  *
  * The common VA display object structure.
  *
@@ -80,24 +83,30 @@ typedef enum
  */
 struct _GstVaDisplay
 {
-  /*< private > */
   GstObject parent;
 };
 
 /**
  * GstVaDisplayClass:
+ * @parent_class: parent #GstObjectClass
  *
  * The common VA display object class structure.
- * @create_va_display: The function to create the real VA display.
  *
  * Since: 1.20
  */
 struct _GstVaDisplayClass
 {
-  /*< private > */
   GstObjectClass parent_class;
 
-  /*< public > */
+  /**
+   * GstVaDisplayClass::create_va_display:
+   * @self: a #GstVaDisplay instance
+   *
+   * This is called when the subclass has to create the internal
+   * VADisplay.
+   *
+   * Returns: The created VADisplay
+   */
   gpointer (*create_va_display) (GstVaDisplay * self);
 };
 

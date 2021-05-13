@@ -18,6 +18,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstvadisplaydrm
+ * @title: GstVaDisplayDrm
+ * @short_description: VADisplay from a DRM device
+ * @sources:
+ * - gstvadisplay_drm.h
+ *
+ * This is a #GstVaDisplay subclass to instantiate with DRM devices.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -33,17 +43,29 @@
 #include <xf86drm.h>
 #endif
 
+/**
+ * GstVaDisplayDrm:
+ * @parent: parent #GstVaDisplay
+ *
+ * Since: 1.20
+ */
 struct _GstVaDisplayDrm
 {
   GstVaDisplay parent;
 
+  /* <private> */
   gchar *path;
   gint fd;
 };
 
+/**
+ * GstVaDisplayDrmClass:
+ * @parent_class: parent #GstVaDisplayClass
+ *
+ * Since: 1.20
+ */
 struct _GstVaDisplayDrmClass
 {
-  /*< private > */
   GstVaDisplayClass parent_class;
 };
 
@@ -173,9 +195,9 @@ gst_va_display_drm_init (GstVaDisplayDrm * self)
  * Creates a new #GstVaDisplay from a DRM device . It will try to open
  * and operate the device in @path.
  *
- * Returns: a newly allocated #GstVaDisplay if the specified DRM
- *     render device could be opened and initialized; otherwise %NULL
- *     is returned.
+ * Returns: (transfer full): a newly allocated #GstVaDisplay if the
+ *     specified DRM render device could be opened and initialized;
+ *     otherwise %NULL is returned.
  *
  * Since: 1.20
  **/

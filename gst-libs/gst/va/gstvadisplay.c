@@ -18,6 +18,24 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstvadisplay
+ * @title: GstVaDisplay
+ * @short_description: Generic VADisplay wrapper.
+ * @sources:
+ * - gstvadisplay.h
+ *
+ * It is a generic wrapper for VADisplay. To create new instances
+ * subclasses are required, depending on the display type to use
+ * (v.gr. DRM, X11, Wayland, etc.).
+ *
+ * The purpose of this class is to be shared among pipelines via
+ * #GstContext so all the VA processing elements will use the same
+ * display entry. Application developers can create their own
+ * subclass, based on their display, and shared it via the synced bus
+ * message for the application.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
