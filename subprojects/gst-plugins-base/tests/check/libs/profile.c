@@ -34,6 +34,45 @@
 #include <unistd.h>             /* For R_OK etc. */
 #endif
 
+static GList *profile_file_names = NULL;
+
+static void remove_profile_files (void);
+static void remove_profile_file (const gchar * profile_file_name);
+static void create_profile_file (const gchar * profile_name,
+    const gchar * profile_file_name);
+
+
+static void
+remove_profile_files (void)
+{
+  GList *i;
+  for (i = profile_file_names; i != NULL; i = i->next) {
+    remove_profile_file (i->data);
+    g_free (i->data);
+  }
+  g_list_free (g_steal_pointer (&profile_file_names));
+}
+
+static gchar *
+generate_profile_name (void)
+{
+  return g_strdup_printf ("myponytarget-%" G_GUINT32_FORMAT,
+      (guint32) g_random_int ());
+}
+
+static gchar *
+build_profile_file_name (const gchar * profile_name)
+{
+  gchar *filename = g_strconcat (profile_name, ".gep", NULL);
+  gchar *profile_file_name =
+      g_build_filename (g_get_user_data_dir (), "gstreamer-1.0",
+      "encoding-profiles", "herding", filename, NULL);
+  g_free (filename);
+  profile_file_names =
+      g_list_append (profile_file_names, g_strdup (profile_file_name));
+  return profile_file_name;
+}
+
 static inline gboolean
 gst_caps_is_equal_unref (GstCaps * caps1, GstCaps * caps2)
 {
@@ -299,21 +338,21 @@ GST_START_TEST (test_saving_profile)
 {
   GstEncodingTarget *orig, *loaded = NULL;
   GstEncodingProfile *proforig, *profloaded;
+  gchar *profile_name;
   gchar *profile_file_name;
 
+  profile_name = generate_profile_name ();
+  profile_file_name = build_profile_file_name (profile_name);
+
   /* Create and store a target */
-  orig = create_saveload_target ("myponytarget2");
-  GST_DEBUG ("Saving target 'myponytarget2'");
+  orig = create_saveload_target (profile_name);
+  GST_DEBUG ("Saving target '%s'", profile_name);
   fail_unless (gst_encoding_target_save (orig, NULL));
 
   /* Check we can load it */
-  profile_file_name =
-      g_build_filename (g_get_user_data_dir (), "gstreamer-1.0",
-      "encoding-profiles", "herding", "myponytarget2.gep", NULL);
   GST_DEBUG ("Loading target from '%s'", profile_file_name);
   loaded = gst_encoding_target_load_from_file (profile_file_name, NULL);
   fail_unless (loaded != NULL);
-  g_free (profile_file_name);
 
   GST_DEBUG ("Checking targets are equal");
   /* Check targets are identical */
@@ -340,12 +379,16 @@ GST_START_TEST (test_saving_profile)
 
   gst_encoding_target_unref (orig);
   gst_encoding_target_unref (loaded);
+
+  remove_profile_file (profile_file_name);
+  g_free (profile_file_name);
+  g_free (profile_name);
 }
 
 GST_END_TEST;
 
 static void
-test_individual_target (GstEncodingTarget * target)
+test_individual_target (GstEncodingTarget * target, const gchar * profile_name)
 {
   GstEncodingProfile *prof;
   GstCaps *tmpcaps, *tmpcaps2;
@@ -354,7 +397,7 @@ test_individual_target (GstEncodingTarget * target)
   GST_DEBUG ("Checking the target properties");
   /* Check the target  */
   fail_unless_equals_string (gst_encoding_target_get_name (target),
-      "myponytarget");
+      profile_name);
   fail_unless_equals_string (gst_encoding_target_get_category (target),
       "herding");
   fail_unless_equals_string (gst_encoding_target_get_description (target),
@@ -410,6 +453,7 @@ test_individual_target (GstEncodingTarget * target)
 GST_START_TEST (test_loading_profile)
 {
   GstEncodingTarget *target;
+  gchar *profile_name;
   gchar *profile_file_name;
   GstEncodingProfile *profile;
   GstCaps *tmpcaps;
@@ -418,33 +462,32 @@ GST_START_TEST (test_loading_profile)
 
   gst_debug_set_threshold_for_name ("default", GST_LEVEL_NONE);
 
+  profile_name = generate_profile_name ();
+  profile_file_name = build_profile_file_name (profile_name);
+  create_profile_file (profile_name, profile_file_name);
+
   /* Test loading using short method and all arguments */
-  target = gst_encoding_target_load ("myponytarget", "herding", NULL);
+  target = gst_encoding_target_load (profile_name, "herding", NULL);
   fail_unless (target != NULL);
-  test_individual_target (target);
+  test_individual_target (target, profile_name);
   gst_encoding_target_unref (target);
 
   /* Test loading using short method and no category */
-  target = gst_encoding_target_load ("myponytarget", NULL, NULL);
+  target = gst_encoding_target_load (profile_name, NULL, NULL);
   fail_unless (target != NULL);
-  test_individual_target (target);
+  test_individual_target (target, profile_name);
   gst_encoding_target_unref (target);
 
   /* Test loading using fully specified path */
-  profile_file_name =
-      g_build_filename (g_get_user_data_dir (), "gstreamer-1.0",
-      "encoding-profiles", "herding", "myponytarget.gep", NULL);
-
   GST_DEBUG ("Loading target from '%s'", profile_file_name);
   target = gst_encoding_target_load_from_file (profile_file_name, NULL);
-  g_free (profile_file_name);
   fail_unless (target != NULL);
-  test_individual_target (target);
+  test_individual_target (target, profile_name);
   gst_encoding_target_unref (target);
 
   /* Test getting the profiles directly
    * First without category */
-  profile = gst_encoding_profile_find ("myponytarget", "pony", NULL);
+  profile = gst_encoding_profile_find (profile_name, "pony", NULL);
   fail_unless (profile != NULL);
   tmpcaps = gst_caps_from_string ("animal/x-pony");
   CHECK_PROFILE (profile, "pony", "I don't want a description !", tmpcaps, NULL,
@@ -453,7 +496,7 @@ GST_START_TEST (test_loading_profile)
   gst_encoding_profile_unref (profile);
 
   /* Then with a specific category */
-  profile = gst_encoding_profile_find ("myponytarget", "pony", "herding");
+  profile = gst_encoding_profile_find (profile_name, "pony", "herding");
   fail_unless (profile != NULL);
   tmpcaps = gst_caps_from_string ("animal/x-pony");
   CHECK_PROFILE (profile, "pony", "I don't want a description !", tmpcaps, NULL,
@@ -464,7 +507,7 @@ GST_START_TEST (test_loading_profile)
   /* For my next trick, I will need the assistance of a GValue */
   g_value_init (&strvalue, G_TYPE_STRING);
   g_value_init (&objectvalue, GST_TYPE_ENCODING_PROFILE);
-  g_value_set_static_string (&strvalue, "myponytarget/pony");
+  g_value_take_string (&strvalue, g_strconcat (profile_name, "/pony", NULL));
   fail_unless (g_value_transform (&strvalue, &objectvalue));
   profile = (GstEncodingProfile *) g_value_dup_object (&objectvalue);
   fail_if (profile == NULL);
@@ -477,10 +520,14 @@ GST_START_TEST (test_loading_profile)
   gst_encoding_profile_unref (profile);
 
   /* Let's go crazy for error detection */
-  fail_if (gst_encoding_profile_find ("myponytarget", "whales", NULL));
-  fail_if (gst_encoding_profile_find ("myponytarget", "whales", "herding"));
-  fail_if (gst_encoding_profile_find ("myponytarget", "", NULL));
+  fail_if (gst_encoding_profile_find (profile_name, "whales", NULL));
+  fail_if (gst_encoding_profile_find (profile_name, "whales", "herding"));
+  fail_if (gst_encoding_profile_find (profile_name, "", NULL));
   fail_if (gst_encoding_profile_find ("", "pony", NULL));
+
+  remove_profile_file (profile_file_name);
+  g_free (profile_file_name);
+  g_free (profile_name);
 }
 
 GST_END_TEST;
@@ -490,6 +537,12 @@ GST_START_TEST (test_target_list)
   GList *categories;
   GList *targets;
   GList *tmp;
+  gchar *profile_name;
+  gchar *profile_file_name;
+
+  profile_name = generate_profile_name ();
+  profile_file_name = build_profile_file_name (profile_name);
+  create_profile_file (profile_name, profile_file_name);
 
   /* Make sure we get our test category in the available categories */
   categories = gst_encoding_list_available_categories ();
@@ -504,7 +557,7 @@ GST_START_TEST (test_target_list)
   fail_if (targets == NULL);
   for (tmp = targets; tmp; tmp = tmp->next) {
     GstEncodingTarget *target = (GstEncodingTarget *) tmp->data;
-    if (!g_strcmp0 (gst_encoding_target_get_name (target), "myponytarget"))
+    if (!g_strcmp0 (gst_encoding_target_get_name (target), profile_name))
       break;
   }
   /* If tmp is NULL, it means we iterated the whole list without finding
@@ -518,7 +571,7 @@ GST_START_TEST (test_target_list)
   fail_if (targets == NULL);
   for (tmp = targets; tmp; tmp = tmp->next) {
     GstEncodingTarget *target = (GstEncodingTarget *) tmp->data;
-    if (!g_strcmp0 (gst_encoding_target_get_name (target), "myponytarget"))
+    if (!g_strcmp0 (gst_encoding_target_get_name (target), profile_name))
       break;
   }
   /* If tmp is NULL, it means we iterated the whole list without finding
@@ -526,14 +579,18 @@ GST_START_TEST (test_target_list)
   fail_if (tmp == NULL);
   g_list_foreach (targets, (GFunc) g_object_unref, NULL);
   g_list_free (targets);
+
+  remove_profile_file (profile_file_name);
+  g_free (profile_file_name);
+  g_free (profile_name);
 }
 
 GST_END_TEST;
 
 
-static const gchar *profile_string = "\
+#define PROFILE_STRING "\
 [GStreamer Encoding Target]\n\
-name=myponytarget\n\
+name=%s\n\
 category=herding\n\
 description=Plenty of pony glitter profiles\n\
 \n\
@@ -558,38 +615,32 @@ format=video/x-glitter,sparkling=True\n\
 restriction=video/x-raw,width=640,height=480,framerate=15/1\n\
 presence=0\n\
 variableframerate=true\n\
-";
+"
 
 static void
-remove_profile_file (void)
+remove_profile_file (const gchar * profile_file_name)
 {
-  gchar *profile_file_name;
+  GList *i;
 
-  profile_file_name =
-      g_build_filename (g_get_user_data_dir (), "gstreamer-1.0",
-      "encoding-profiles", "herding", "myponytarget.gep", NULL);
   g_unlink (profile_file_name);
-  g_free (profile_file_name);
-  profile_file_name =
-      g_build_filename (g_get_user_data_dir (), "gstreamer-1.0",
-      "encoding-profiles", "herding", "myponytarget2.gep", NULL);
-  g_unlink (profile_file_name);
-  g_free (profile_file_name);
+
+  i = g_list_find_custom (profile_file_names, profile_file_name,
+      (GCompareFunc) g_strcmp0);
+  if (i != NULL) {
+    g_free (i->data);
+    profile_file_names = g_list_delete_link (profile_file_names, i);
+  }
 }
 
 static void
-create_profile_file (void)
+create_profile_file (const gchar * profile_name,
+    const gchar * profile_file_name)
 {
-  gchar *profile_file_name;
   gchar *profile_dir;
+  gchar *content;
   GError *error = NULL;
 
-  profile_dir =
-      g_build_filename (g_get_user_data_dir (), "gstreamer-1.0",
-      "encoding-profiles", "herding", NULL);
-  profile_file_name =
-      g_build_filename (g_get_user_data_dir (), "gstreamer-1.0",
-      "encoding-profiles", "herding", "myponytarget.gep", NULL);
+  profile_dir = g_path_get_dirname (profile_file_name);
 
   /* on Windows it will ignore the mode anyway */
 #ifdef G_OS_WIN32
@@ -598,23 +649,12 @@ create_profile_file (void)
   g_mkdir_with_parents (profile_dir, S_IRUSR | S_IWUSR | S_IXUSR);
 #endif
 
-  if (!g_file_set_contents (profile_file_name, profile_string,
-          strlen (profile_string), &error))
+  content = g_strdup_printf (PROFILE_STRING, profile_name);
+  if (!g_file_set_contents (profile_file_name, content, -1, &error))
     GST_WARNING ("Couldn't write contents to file : %s", error->message);
+  g_clear_error (&error);
+  g_free (content);
   g_free (profile_dir);
-  g_free (profile_file_name);
-}
-
-static void
-test_setup (void)
-{
-  create_profile_file ();
-}
-
-static void
-test_teardown (void)
-{
-  remove_profile_file ();
 }
 
 GST_START_TEST (test_file_extension)
@@ -682,24 +722,36 @@ GST_START_TEST (test_file_extension)
 
 GST_END_TEST;
 
+static gboolean
+check_for_writeability (void)
+{
+  gboolean can_write = FALSE;
+  gchar *gst_dir =
+      g_build_filename (g_get_user_data_dir (), "gstreamer-1.0", NULL);
+#ifdef G_OS_UNIX
+  can_write = (g_access (gst_dir, R_OK | W_OK | X_OK) == 0);
+#else
+  if (g_mkdir_with_parents (gst_dir, 0775) != -1) {
+    /* dir created or already exists */
+    gchar *temp_filename = g_build_filename (gst_dir, ".tmpXXXXXX", NULL);
+    gint fd = g_mkstemp (temp_filename);
+    if (fd != -1) {
+      g_close (fd, NULL);
+      g_unlink (temp_filename);
+      can_write = TRUE;
+    }
+    g_free (temp_filename);
+  }
+#endif
+  g_free (gst_dir);
+  return can_write;
+}
+
 static Suite *
 profile_suite (void)
 {
   Suite *s = suite_create ("profile support library");
   TCase *tc_chain = tcase_create ("general");
-  gboolean can_write;
-
-  /* check if we can create profiles */
-#ifdef G_OS_UNIX
-  {
-    gchar *gst_dir =
-        g_build_filename (g_get_user_data_dir (), "gstreamer-1.0", NULL);
-    can_write = (g_access (gst_dir, R_OK | W_OK | X_OK) == 0);
-    g_free (gst_dir);
-  }
-#else
-  can_write = FALSE;            /* FIXME: fix can_write test on Windows */
-#endif
 
   gst_pb_utils_init ();
 
@@ -710,13 +762,14 @@ profile_suite (void)
   tcase_add_test (tc_chain, test_target_naming);
   tcase_add_test (tc_chain, test_target_profile);
   tcase_add_test (tc_chain, test_file_extension);
-  if (can_write) {
+  /* check if we can create profiles */
+  if (check_for_writeability ()) {
+    /* try to ensure test profile files are deleted */
+    atexit (remove_profile_files);
     tcase_add_test (tc_chain, test_loading_profile);
     tcase_add_test (tc_chain, test_saving_profile);
     tcase_add_test (tc_chain, test_target_list);
   }
-
-  tcase_add_unchecked_fixture (tc_chain, test_setup, test_teardown);
 
   return s;
 }
