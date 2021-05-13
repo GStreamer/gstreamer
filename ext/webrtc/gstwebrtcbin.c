@@ -3227,6 +3227,8 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
     if (sdp_media_from_transceiver (webrtc, &media, trans, media_idx,
             bundled_mids, 0, bundle_ufrag, bundle_pwd, reserved_pts, all_mids,
             error)) {
+      /* as per JSEP, a=rtcp-mux-only is only added for new streams */
+      gst_sdp_media_add_attribute (&media, "rtcp-mux-only", "");
       gst_sdp_message_add_media (ret, &media);
       media_idx++;
     } else {

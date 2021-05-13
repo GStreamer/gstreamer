@@ -691,6 +691,13 @@ gst_webrtc_ice_add_candidate (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
     }
   }
 
+  if (cand->component_id == 2) {
+    /* we only support rtcp-mux so rtcp candidates are useless for us */
+    GST_INFO_OBJECT (ice, "Dropping RTCP candidate %s", candidate);
+    nice_candidate_free (cand);
+    return;
+  }
+
   candidates = g_slist_append (candidates, cand);
 
   nice_agent_set_remote_candidates (ice->priv->nice_agent, item->nice_stream_id,
