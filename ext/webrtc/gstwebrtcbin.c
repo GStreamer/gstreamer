@@ -62,6 +62,8 @@
 /* The extra time for the rtpstorage compared to the RTP jitterbuffer (in ms) */
 #define RTPSTORAGE_EXTRA_TIME (50)
 
+#define DEFAULT_JB_LATENCY 200
+
 /**
  * SECTION: element-webrtcbin
  * title: webrtcbin
@@ -7111,7 +7113,8 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       PROP_LATENCY,
       g_param_spec_uint ("latency", "Latency",
           "Default duration to buffer in the jitterbuffers (in ms)",
-          0, G_MAXUINT, 200, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          0, G_MAXUINT, DEFAULT_JB_LATENCY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstWebRTCBin::create-offer:
@@ -7437,4 +7440,5 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
 
   /* we start off closed until we move to READY */
   webrtc->priv->is_closed = TRUE;
+  webrtc->priv->jb_latency = DEFAULT_JB_LATENCY;
 }
