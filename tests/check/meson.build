@@ -191,7 +191,7 @@ foreach group : [1, 2, 3, 4, 5, 6]
   env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', join_paths(gst_tag_dir, 'license-translations.dict'))
   env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
       'gst-plugins-base@' + meson.build_root())
-  env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
+  env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(vscale_test_name)))
   env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
 
   test(vscale_test_name, exe, env: env, timeout: 3 * 60)
