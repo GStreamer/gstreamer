@@ -3262,6 +3262,7 @@ gst_rtsp_client_sink_connect_to_server (GstRTSPClientSink * sink,
   sa = g_socket_get_remote_address (conn_socket, NULL);
   ia = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (sa));
 
+  g_free (sink->server_ip);
   sink->server_ip = g_inet_address_to_string (ia);
 
   g_object_unref (sa);
