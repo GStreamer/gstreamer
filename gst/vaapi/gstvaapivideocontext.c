@@ -64,6 +64,9 @@ gst_vaapi_video_context_set_display (GstContext * context,
   structure = gst_context_writable_structure (context);
   gst_structure_set (structure, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME,
       GST_TYPE_VAAPI_DISPLAY, display, NULL);
+  /* The outside user may access it as a generic Gobject. */
+  gst_structure_set (structure, "gst.vaapi.Display.GObject",
+      GST_TYPE_OBJECT, display, NULL);
 }
 
 GstContext *

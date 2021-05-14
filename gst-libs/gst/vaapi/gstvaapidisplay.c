@@ -86,6 +86,7 @@ enum
   PROP_SATURATION,
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
+  PROP_VA_DISPLAY,
 
   N_PROPERTIES
 };
@@ -1123,6 +1124,11 @@ gst_vaapi_display_get_property (GObject * object, guint property_id,
   GstVaapiDisplay *display = GST_VAAPI_DISPLAY (object);
   const GstVaapiProperty *prop;
 
+  if (property_id == PROP_VA_DISPLAY) {
+    g_value_set_pointer (value, gst_vaapi_display_get_display (display));
+    return;
+  }
+
   if (!ensure_properties (display))
     return;
 
@@ -1223,6 +1229,15 @@ gst_vaapi_display_class_init (GstVaapiDisplayClass * klass)
       g_param_spec_float (GST_VAAPI_DISPLAY_PROP_CONTRAST,
       "contrast",
       "The display contrast value", 0.0, 2.0, 1.0, G_PARAM_READWRITE);
+
+  /**
+   * GstVaapiDisplay:va-display:
+   *
+   * The VA display handle, expressed as a #VADisplay.
+   */
+  g_properties[PROP_VA_DISPLAY] =
+      g_param_spec_pointer ("va-display", "VADisplay",
+      "VA Display handler", G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, N_PROPERTIES, g_properties);
   gst_type_mark_as_plugin_api (gst_vaapi_display_type_get_type (), 0);
