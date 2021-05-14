@@ -1030,15 +1030,16 @@ static void
 copy_fields (GstInterlace * interlace, GstBuffer * dest, GstBuffer * src,
     int field_index)
 {
-  GstVideoInfo *info = &interlace->info;
+  GstVideoInfo *in_info = &interlace->info;
+  GstVideoInfo *out_info = &interlace->out_info;
   gint i, j, n_planes;
   guint8 *d, *s;
   GstVideoFrame dframe, sframe;
 
-  if (!gst_video_frame_map (&dframe, info, dest, GST_MAP_WRITE))
+  if (!gst_video_frame_map (&dframe, out_info, dest, GST_MAP_WRITE))
     goto dest_map_failed;
 
-  if (!gst_video_frame_map (&sframe, info, src, GST_MAP_READ))
+  if (!gst_video_frame_map (&sframe, in_info, src, GST_MAP_READ))
     goto src_map_failed;
 
   n_planes = GST_VIDEO_FRAME_N_PLANES (&dframe);
@@ -1253,6 +1254,8 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GstBuffer *output_buffer, *output_buffer2 = NULL;
     guint n_output_fields;
     gboolean interlaced = FALSE;
+    GstVideoInfo *in_info = &interlace->info;
+    GstVideoInfo *out_info = &interlace->out_info;
 
     GST_DEBUG ("have %d fields, %d current, %d stored",
         num_fields, current_fields, interlace->stored_fields);
@@ -1272,7 +1275,8 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         if (!output_buffer2)
           return GST_FLOW_ERROR;
       } else {
-        output_buffer = gst_buffer_new_and_alloc (gst_buffer_get_size (buffer));
+        output_buffer =
+            gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (out_info));
         /* take the first field from the stored frame */
         copy_fields (interlace, output_buffer, interlace->stored_frame,
             interlace->field_index);
@@ -1295,7 +1299,32 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         if (!output_buffer2)
           return GST_FLOW_ERROR;
       } else {
-        output_buffer = gst_buffer_copy (buffer);
+        GstVideoFrame dframe, sframe;
+
+        output_buffer =
+            gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (out_info));
+
+        if (!gst_video_frame_map (&dframe,
+                out_info, output_buffer, GST_MAP_WRITE)) {
+          GST_ELEMENT_ERROR (interlace, CORE, FAILED,
+              ("Failed to write map buffer"), ("Failed to map output buffer"));
+          gst_buffer_unref (output_buffer);
+          gst_buffer_unref (buffer);
+          return GST_FLOW_ERROR;
+        }
+
+        if (!gst_video_frame_map (&sframe, in_info, buffer, GST_MAP_READ)) {
+          GST_ELEMENT_ERROR (interlace, CORE, FAILED,
+              ("Failed to read map buffer"), ("Failed to map input buffer"));
+          gst_video_frame_unmap (&dframe);
+          gst_buffer_unref (output_buffer);
+          gst_buffer_unref (buffer);
+          return GST_FLOW_ERROR;
+        }
+
+        gst_video_frame_copy (&dframe, &sframe);
+        gst_video_frame_unmap (&dframe);
+        gst_video_frame_unmap (&sframe);
       }
 
       if (num_fields >= 3 && interlace->allow_rff) {
