@@ -121,7 +121,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanImageView, gst_vulkan_image_view_unref)
 
 GST_VULKAN_API
 GstVulkanImageView *    gst_vulkan_image_view_new           (GstVulkanImageMemory * image,
-                                                             VkImageViewCreateInfo * create_info);
+                                                             const VkImageViewCreateInfo * create_info);
 
 G_END_DECLS
 

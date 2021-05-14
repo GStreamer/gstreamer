@@ -96,7 +96,7 @@ gst_vulkan_image_view_free (GstVulkanImageView * view)
  */
 GstVulkanImageView *
 gst_vulkan_image_view_new (GstVulkanImageMemory * image,
-    VkImageViewCreateInfo * create_info)
+    const VkImageViewCreateInfo * create_info)
 {
   GstVulkanImageView *view;
   GError *error = NULL;
