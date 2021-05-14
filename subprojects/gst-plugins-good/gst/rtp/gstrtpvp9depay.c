@@ -35,6 +35,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp9_depay_debug);
 #define GST_CAT_DEFAULT gst_rtp_vp9_depay_debug
 
 static void gst_rtp_vp9_depay_dispose (GObject * object);
+static void gst_rtp_vp9_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_rtp_vp9_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 static GstBuffer *gst_rtp_vp9_depay_process (GstRTPBaseDepayload * depayload,
     GstRTPBuffer * rtp);
 static GstStateChangeReturn gst_rtp_vp9_depay_change_state (GstElement *
@@ -63,6 +67,16 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "media = (string) \"video\","
         "encoding-name = (string) { \"VP9\", \"VP9-DRAFT-IETF-01\" }"));
 
+#define DEFAULT_WAIT_FOR_KEYFRAME FALSE
+#define DEFAULT_REQUEST_KEYFRAME FALSE
+
+enum
+{
+  PROP_0,
+  PROP_WAIT_FOR_KEYFRAME,
+  PROP_REQUEST_KEYFRAME,
+};
+
 #define PICTURE_ID_NONE (UINT_MAX)
 #define IS_PICTURE_ID_15BITS(pid) (((guint)(pid) & 0x8000) != 0)
 
@@ -72,6 +86,8 @@ gst_rtp_vp9_depay_init (GstRtpVP9Depay * self)
   self->adapter = gst_adapter_new ();
   self->started = FALSE;
   self->inter_picture = FALSE;
+  self->wait_for_keyframe = DEFAULT_WAIT_FOR_KEYFRAME;
+  self->request_keyframe = DEFAULT_REQUEST_KEYFRAME;
 }
 
 static void
@@ -93,6 +109,34 @@ gst_rtp_vp9_depay_class_init (GstRtpVP9DepayClass * gst_rtp_vp9_depay_class)
       "Extracts VP9 video from RTP packets)", "Stian Selnes <stian@pexip.com>");
 
   object_class->dispose = gst_rtp_vp9_depay_dispose;
+  object_class->set_property = gst_rtp_vp9_depay_set_property;
+  object_class->get_property = gst_rtp_vp9_depay_get_property;
+
+  /**
+   * GstRtpVP9Depay:wait-for-keyframe:
+   *
+   * Wait for the next keyframe after packet loss
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (object_class, PROP_WAIT_FOR_KEYFRAME,
+      g_param_spec_boolean ("wait-for-keyframe", "Wait for Keyframe",
+          "Wait for the next keyframe after packet loss",
+          DEFAULT_WAIT_FOR_KEYFRAME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpVP9Depay:request-keyframe:
+   *
+   * Request new keyframe when packet loss is detected
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (object_class, PROP_REQUEST_KEYFRAME,
+      g_param_spec_boolean ("request-keyframe", "Request Keyframe",
+          "Request new keyframe when packet loss is detected",
+          DEFAULT_REQUEST_KEYFRAME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = gst_rtp_vp9_depay_change_state;
 
@@ -118,6 +162,45 @@ gst_rtp_vp9_depay_dispose (GObject * object)
   if (G_OBJECT_CLASS (gst_rtp_vp9_depay_parent_class)->dispose)
     G_OBJECT_CLASS (gst_rtp_vp9_depay_parent_class)->dispose (object);
 }
+
+static void
+gst_rtp_vp9_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpVP9Depay *self = GST_RTP_VP9_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_WAIT_FOR_KEYFRAME:
+      self->wait_for_keyframe = g_value_get_boolean (value);
+      break;
+    case PROP_REQUEST_KEYFRAME:
+      self->request_keyframe = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_vp9_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpVP9Depay *self = GST_RTP_VP9_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_WAIT_FOR_KEYFRAME:
+      g_value_set_boolean (value, self->wait_for_keyframe);
+      break;
+    case PROP_REQUEST_KEYFRAME:
+      g_value_set_boolean (value, self->request_keyframe);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 
 static gint
 picture_id_compare (guint16 id0, guint16 id1)
@@ -192,11 +275,13 @@ gst_rtp_vp9_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
   guint picture_id = PICTURE_ID_NONE;
   gboolean i_bit, p_bit, l_bit, f_bit, b_bit, e_bit, v_bit, d_bit = 0;
   gboolean is_start_of_picture;
+  gboolean flushed_adapter = FALSE;
 
   if (G_UNLIKELY (GST_BUFFER_IS_DISCONT (rtp->buffer))) {
     GST_LOG_OBJECT (self, "Discontinuity, flushing adapter");
     gst_adapter_clear (self->adapter);
     self->started = FALSE;
+    flushed_adapter = TRUE;
   }
 
   size = gst_rtp_buffer_get_payload_len (rtp);
@@ -338,10 +423,29 @@ gst_rtp_vp9_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
       GST_DEBUG_OBJECT (depay, "Incomplete frame, flushing adapter");
       gst_adapter_clear (self->adapter);
       self->started = FALSE;
+      flushed_adapter = TRUE;
     }
   }
 
   if (G_UNLIKELY (!self->started)) {
+    self->inter_picture = FALSE;
+
+    /* We have flushed the adapter and this packet does not
+     * start a keyframe, request one if needed */
+    if (flushed_adapter && (!b_bit || p_bit)) {
+      if (self->wait_for_keyframe) {
+        GST_DEBUG_OBJECT (self, "Waiting for keyframe after flushing adapter");
+        self->waiting_for_keyframe = TRUE;
+      }
+
+      if (self->request_keyframe) {
+        GST_DEBUG_OBJECT (self, "Requesting keyframe after flushing adapter");
+        gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD_SINKPAD (depay),
+            gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+                TRUE, 0));
+      }
+    }
+
     /* Check if this is the start of a VP9 layer frame, otherwise bail */
     if (!b_bit) {
       GST_DEBUG_OBJECT (depay,
@@ -359,7 +463,6 @@ gst_rtp_vp9_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
       self->stop_lost_events = FALSE;
     }
     self->started = TRUE;
-    self->inter_picture = FALSE;
   }
 
   payload = gst_rtp_buffer_get_payload_subbuffer (rtp, hdrsize, -1);
@@ -399,7 +502,7 @@ gst_rtp_vp9_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
     if (self->inter_picture) {
       GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
 
-      if (!self->caps_sent) {
+      if (self->waiting_for_keyframe) {
         gst_buffer_unref (out);
         out = NULL;
         GST_INFO_OBJECT (self, "Dropping inter-frame before intra-frame");
@@ -429,12 +532,13 @@ gst_rtp_vp9_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
         gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depay), srccaps);
         gst_caps_unref (srccaps);
 
-        self->caps_sent = TRUE;
         self->last_width = self->ss_width;
         self->last_height = self->ss_height;
         self->ss_width = 0;
         self->ss_height = 0;
       }
+
+      self->waiting_for_keyframe = FALSE;
     }
 
     if (picture_id != PICTURE_ID_NONE)
@@ -461,10 +565,10 @@ gst_rtp_vp9_depay_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       self->last_width = -1;
       self->last_height = -1;
-      self->caps_sent = FALSE;
       self->last_picture_id = PICTURE_ID_NONE;
       gst_event_replace (&self->last_lost_event, NULL);
       self->stop_lost_events = FALSE;
+      self->waiting_for_keyframe = TRUE;
       break;
     default:
       break;

@@ -61,7 +61,6 @@ struct _GstRtpVP9Depay
   gint last_height;
   guint last_picture_id;
   GstEvent *last_lost_event;
-  gboolean caps_sent;
   /* In between pictures, we might store GstRTPPacketLost events instead
    * of forwarding them immediately, we check upon reception of a new
    * picture id whether a gap was introduced, in which case we do forward
@@ -70,6 +69,12 @@ struct _GstRtpVP9Depay
    */
   gboolean stop_lost_events;
   gboolean inter_picture;
+
+  gboolean waiting_for_keyframe;
+
+  /* Properties */
+  gboolean wait_for_keyframe;
+  gboolean request_keyframe;
 };
 
 GType gst_rtp_vp9_depay_get_type (void);

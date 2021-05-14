@@ -16741,7 +16741,32 @@
                         "presence": "always"
                     }
                 },
-                "properties": {},
+                "properties": {
+                    "request-keyframe": {
+                        "blurb": "Request new keyframe when packet loss is detected",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "wait-for-keyframe": {
+                        "blurb": "Wait for the next keyframe after packet loss",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                },
                 "rank": "marginal"
             },
             "rtpvp9pay": {
