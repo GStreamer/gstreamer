@@ -116,8 +116,8 @@ gst_codec_alpha_demux_chain (GstPad * pad, GstObject * object,
   if (alpha_buffer) {
     ret = gst_pad_push (self->alpha_pad, alpha_buffer);
   } else {
-    ret = gst_pad_push_event (self->alpha_pad,
-        gst_event_new_gap (pts, duration));
+    gst_pad_push_event (self->alpha_pad, gst_event_new_gap (pts, duration));
+    ret = GST_PAD_LAST_FLOW_RETURN (self->alpha_pad);
   }
   ret = gst_flow_combiner_update_flow (self->flow_combiner, ret);
 
