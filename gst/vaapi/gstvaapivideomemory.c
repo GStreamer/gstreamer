@@ -378,6 +378,7 @@ gst_vaapi_video_memory_new (GstAllocator * base_allocator,
   mem->meta = meta ? gst_vaapi_video_meta_ref (meta) : NULL;
   mem->map_type = 0;
   mem->map_count = 0;
+  mem->map_surface_id = VA_INVALID_ID;
   mem->usage_flag = allocator->usage_flag;
   g_mutex_init (&mem->lock);
 
@@ -437,8 +438,9 @@ gst_vaapi_video_memory_map (GstMemory * base_mem, gsize maxsize, guint flags)
 
   g_mutex_lock (&mem->lock);
   if (mem->map_count == 0) {
-    switch (flags & GST_MAP_READWRITE) {
+    switch (flags & (GST_MAP_READWRITE | GST_MAP_VAAPI)) {
       case 0:
+      case GST_MAP_VAAPI:
         // No flags set: return a GstVaapiSurfaceProxy
         gst_vaapi_surface_proxy_replace (&mem->proxy,
             gst_vaapi_video_meta_get_surface_proxy (mem->meta));
@@ -462,7 +464,16 @@ gst_vaapi_video_memory_map (GstMemory * base_mem, gsize maxsize, guint flags)
     case GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE:
       if (!mem->proxy)
         goto error_no_surface_proxy;
-      data = mem->proxy;
+
+      if (flags == GST_MAP_VAAPI) {
+        mem->map_surface_id = GST_VAAPI_SURFACE_PROXY_SURFACE_ID (mem->proxy);
+        if (mem->map_surface_id == VA_INVALID_ID)
+          goto error_no_current_surface;
+
+        data = &mem->map_surface_id;
+      } else {
+        data = mem->proxy;
+      }
       break;
     case GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR:
       if (!mem->image)
@@ -515,6 +526,7 @@ gst_vaapi_video_memory_unmap_full (GstMemory * base_mem, GstMapInfo * info)
   if (mem->map_count == 1) {
     switch (mem->map_type) {
       case GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE:
+        mem->map_surface_id = VA_INVALID_ID;
         gst_vaapi_surface_proxy_replace (&mem->proxy, NULL);
         break;
       case GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_LINEAR:

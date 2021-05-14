@@ -128,6 +128,7 @@ struct _GstVaapiVideoMemory
   GstVaapiVideoMeta *meta;
   guint map_type;
   gint map_count;
+  VASurfaceID map_surface_id;
   GstVaapiImageUsageFlags usage_flag;
   GMutex lock;
 };
@@ -157,6 +158,7 @@ gst_vaapi_video_memory_sync (GstVaapiVideoMemory * mem);
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiVideoAllocator                                           --- */
 /* ------------------------------------------------------------------------ */
+#define GST_MAP_VAAPI (GST_MAP_FLAG_LAST << 1)
 
 #define GST_VAAPI_VIDEO_ALLOCATOR_CAST(allocator) \
   ((GstVaapiVideoAllocator *) (allocator))
