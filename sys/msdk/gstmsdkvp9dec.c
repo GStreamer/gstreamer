@@ -38,8 +38,6 @@
 #include "gstmsdkvp9dec.h"
 #include "gstmsdkvideomemory.h"
 
-#include <mfxvp9.h>
-
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp9dec_debug);
 #define GST_CAT_DEFAULT gst_msdkvp9dec_debug
 
