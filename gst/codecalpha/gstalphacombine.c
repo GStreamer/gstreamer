@@ -455,26 +455,17 @@ gst_alpha_combine_alpha_event (GstPad * pad, GstObject * object,
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
-      gboolean ret;
-
       gst_event_parse_caps (event, &caps);
-      ret = gst_alpha_combine_set_alpha_format (self, caps);
-      gst_event_unref (event);
-
-      return ret;
+      gst_alpha_combine_set_alpha_format (self, caps);
     }
-    case GST_EVENT_SEGMENT:
-      /* Passthrough the segment from the main stream and ignore this one */
-      gst_event_unref (event);
-      return TRUE;
-    case GST_EVENT_EOS:
-      gst_event_unref (event);
-      return TRUE;
     default:
       break;
   }
 
-  return gst_pad_event_default (pad, object, event);
+  /* Events are being duplicated, over both branches, so let's just drop this
+   * secondary stream and use the one from the main stream. */
+  gst_event_unref (event);
+  return TRUE;
 }
 
 static gboolean
@@ -589,11 +580,9 @@ gst_alpha_combine_init (GstAlphaCombine * self)
   g_cond_init (&self->buffer_cond);
 
   GST_PAD_SET_PROXY_SCHEDULING (self->sink_pad);
-  GST_PAD_SET_PROXY_SCHEDULING (self->alpha_pad);
   GST_PAD_SET_PROXY_SCHEDULING (self->src_pad);
 
   GST_PAD_SET_PROXY_ALLOCATION (self->sink_pad);
-  GST_PAD_SET_PROXY_ALLOCATION (self->alpha_pad);
 
   gst_pad_set_chain_function (self->sink_pad, gst_alpha_combine_sink_chain);
   gst_pad_set_chain_function (self->alpha_pad, gst_alpha_combine_alpha_chain);
