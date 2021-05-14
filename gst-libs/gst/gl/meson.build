@@ -309,7 +309,14 @@ endif
 # Desktop OpenGL checks
 gl_dep = unneeded_dep
 glx_dep = unneeded_dep
-if need_api_opengl != 'no' or need_platform_glx != 'no'
+
+# (GLVND) OpenGL (without GLX) headers and interface
+if need_api_opengl != 'no'
+  gl_dep = dependency('opengl', method: 'pkg-config', required : false)
+endif
+
+# non-GLVND aka Legacy OpenGL
+if need_api_opengl != 'no' and not gl_dep.found()
   if host_system == 'darwin'
     gl_dep = dependency('appleframeworks', modules : ['OpenGL'], required : false)
   else
@@ -336,20 +343,24 @@ if need_api_opengl != 'no' or need_platform_glx != 'no'
       gl_includes += [compat_includes]
     endif
   endif
+endif
 
-  if host_system == 'darwin'
-    glx_dep = cc.find_library('GL', required : false)
-  else
-    glx_dep = gl_dep
-  endif
+if need_platform_glx != 'no'
+  # (GLVND) GLX library and headers.
+  glx_dep = dependency('glx', method: 'pkg-config', required : false)
 
-  if need_api_opengl == 'no'
-    gl_dep = unneeded_dep
+  if not glx_dep.found()
+    if host_system == 'darwin'
+      glx_dep = cc.find_library('GL', required : false)
+    elif gl_dep.found()
+      glx_dep = gl_dep
+    elif need_platform_glx == 'yes'
+      error ('Could not find requested GLX library')
+    endif
   endif
-  if need_platform_glx == 'no'
-    glx_dep = unneeded_dep
-  endif
+endif
 
+if need_api_opengl != 'no'
   opengl_includes = ''
   if host_system == 'darwin'
     opengl_includes += '''
