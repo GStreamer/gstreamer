@@ -126,9 +126,8 @@ static gboolean gst_dxgi_screen_cap_src_stop (GstBaseSrc * bsrc);
 
 static gboolean gst_dxgi_screen_cap_src_unlock (GstBaseSrc * bsrc);
 
-static GstFlowReturn gst_dxgi_screen_cap_src_fill (GstPushSrc * pushsrc,
-    GstBuffer * buffer);
-
+static GstFlowReturn gst_dxgi_screen_cap_src_create (GstBaseSrc * pushsrc,
+    guint64 offset, guint length, GstBuffer ** buffer);
 
 static HMONITOR _get_hmonitor (GstDXGIScreenCapSrc * src);
 
@@ -139,12 +138,10 @@ gst_dxgi_screen_cap_src_class_init (GstDXGIScreenCapSrcClass * klass)
   GObjectClass *go_class;
   GstElementClass *e_class;
   GstBaseSrcClass *bs_class;
-  GstPushSrcClass *ps_class;
 
   go_class = G_OBJECT_CLASS (klass);
   e_class = GST_ELEMENT_CLASS (klass);
   bs_class = GST_BASE_SRC_CLASS (klass);
-  ps_class = GST_PUSH_SRC_CLASS (klass);
 
   go_class->set_property = gst_dxgi_screen_cap_src_set_property;
   go_class->get_property = gst_dxgi_screen_cap_src_get_property;
@@ -156,7 +153,7 @@ gst_dxgi_screen_cap_src_class_init (GstDXGIScreenCapSrcClass * klass)
   bs_class->stop = GST_DEBUG_FUNCPTR (gst_dxgi_screen_cap_src_stop);
   bs_class->unlock = GST_DEBUG_FUNCPTR (gst_dxgi_screen_cap_src_unlock);
   bs_class->fixate = GST_DEBUG_FUNCPTR (gst_dxgi_screen_cap_src_fixate);
-  ps_class->fill = GST_DEBUG_FUNCPTR (gst_dxgi_screen_cap_src_fill);
+  bs_class->create = GST_DEBUG_FUNCPTR (gst_dxgi_screen_cap_src_create);
 
   g_object_class_install_property (go_class, PROP_MONITOR,
       g_param_spec_int ("monitor", "Monitor",
@@ -442,12 +439,15 @@ gst_dxgi_screen_cap_src_unlock (GstBaseSrc * bsrc)
 }
 
 static GstFlowReturn
-gst_dxgi_screen_cap_src_fill (GstPushSrc * push_src, GstBuffer * buf)
+gst_dxgi_screen_cap_src_create (GstBaseSrc * base_src, guint64 offset,
+    guint length, GstBuffer ** buf)
 {
-  GstDXGIScreenCapSrc *src = GST_DXGI_SCREEN_CAP_SRC (push_src);
+  GstDXGIScreenCapSrc *src = GST_DXGI_SCREEN_CAP_SRC (base_src);
   GstClock *clock;
   GstClockTime buf_time, buf_dur;
   guint64 frame_number;
+  GstFlowReturn ret;
+  GstBuffer *buffer = NULL;
 
   if (G_UNLIKELY (!src->dxgi_capture)) {
     GST_DEBUG_OBJECT (src, "format wasn't negotiated before create function");
@@ -534,15 +534,40 @@ gst_dxgi_screen_cap_src_fill (GstPushSrc * push_src, GstBuffer * buf)
   }
 
   /* Get the latest desktop frame. */
-  if (dxgicap_acquire_next_frame (src->dxgi_capture, src->show_cursor, 0)) {
-    /* Copy the latest desktop frame to the video frame. */
-    if (dxgicap_copy_buffer (src->dxgi_capture, src->show_cursor,
-            &src->src_rect, &src->video_info, buf)) {
-      GST_BUFFER_TIMESTAMP (buf) = buf_time;
-      GST_BUFFER_DURATION (buf) = buf_dur;
-      return GST_FLOW_OK;
+  do {
+    ret = dxgicap_acquire_next_frame (src->dxgi_capture, src->show_cursor, 0);
+    if (ret == GST_DXGICAP_FLOW_RESOLUTION_CHANGE) {
+      GST_DEBUG_OBJECT (src, "Resolution change detected.");
+
+      if (!gst_base_src_negotiate (GST_BASE_SRC (src))) {
+        return GST_FLOW_NOT_NEGOTIATED;
+      }
     }
+  } while (ret == GST_DXGICAP_FLOW_RESOLUTION_CHANGE);
+
+  if (ret != GST_FLOW_OK) {
+    return ret;
   }
+
+  ret =
+      GST_BASE_SRC_CLASS (g_type_class_peek_parent (parent_class))->alloc
+      (base_src, offset, length, &buffer);
+  if (ret != GST_FLOW_OK) {
+    return ret;
+  }
+
+  /* Copy the latest desktop frame to the video frame. */
+  if (dxgicap_copy_buffer (src->dxgi_capture, src->show_cursor,
+          &src->src_rect, &src->video_info, buffer)) {
+    GST_BUFFER_TIMESTAMP (buffer) = buf_time;
+    GST_BUFFER_DURATION (buffer) = buf_dur;
+    *buf = buffer;
+
+    return GST_FLOW_OK;
+  }
+
+  gst_clear_buffer (&buffer);
+
   return GST_FLOW_ERROR;
 }
 

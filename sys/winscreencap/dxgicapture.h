@@ -56,6 +56,7 @@
     } \
   } G_STMT_END
 
+#define GST_DXGICAP_FLOW_RESOLUTION_CHANGE GST_FLOW_CUSTOM_SUCCESS_1
 
 typedef struct _GstDXGIScreenCapSrc GstDXGIScreenCapSrc;
 
@@ -69,7 +70,7 @@ void dxgicap_destory (DxgiCapture * _this);
 gboolean dxgicap_start (DxgiCapture * _this);
 void dxgicap_stop (DxgiCapture * _this);
 
-gint dxgicap_acquire_next_frame (DxgiCapture * _this, gboolean show_cursor,
+GstFlowReturn dxgicap_acquire_next_frame (DxgiCapture * _this, gboolean show_cursor,
     guint timeout);
 gboolean dxgicap_copy_buffer (DxgiCapture * _this, gboolean show_cursor,
     LPRECT src_rect, GstVideoInfo * video_info, GstBuffer * buf);

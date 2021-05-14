@@ -206,11 +206,12 @@ gst_dxgicap_shader_init (void)
   return ! !GstD3DCompileFunc;
 }
 
-static gboolean
+static GstFlowReturn
 initialize_output_duplication (DxgiCapture * self)
 {
   HDESK hdesk;
   HRESULT hr;
+  DXGI_OUTDUPL_DESC old_dupl_desc;
   GstDXGIScreenCapSrc *src = self->src;
 
   PTR_RELEASE (self->dxgi_dupl);
@@ -235,10 +236,29 @@ initialize_output_duplication (DxgiCapture * self)
     GST_WARNING_OBJECT (src, "IDXGIOutput1::DuplicateOutput() failed (%x): %s",
         (guint) hr, msg);
     g_free (msg);
-    return FALSE;
+    if (hr == E_ACCESSDENIED) {
+      /* Happens temporarily during resolution changes. */
+      return GST_FLOW_OK;
+    }
+    return GST_FLOW_ERROR;
   }
 
-  return TRUE;
+  old_dupl_desc = self->dupl_desc;
+  IDXGIOutputDuplication_GetDesc (self->dxgi_dupl, &self->dupl_desc);
+
+  if (self->readable_texture &&
+      (self->dupl_desc.ModeDesc.Width != old_dupl_desc.ModeDesc.Width ||
+          self->dupl_desc.ModeDesc.Height != old_dupl_desc.ModeDesc.Height ||
+          self->dupl_desc.Rotation != old_dupl_desc.Rotation)) {
+    PTR_RELEASE (self->readable_texture);
+    PTR_RELEASE (self->work_texture);
+
+    _setup_texture (self);
+
+    return GST_DXGICAP_FLOW_RESOLUTION_CHANGE;
+  }
+
+  return GST_FLOW_OK;
 }
 
 DxgiCapture *
@@ -314,11 +334,10 @@ dxgicap_new (HMONITOR monitor, GstDXGIScreenCapSrc * src)
 
   PTR_RELEASE (dxgi_factory1);
 
-  if (!initialize_output_duplication (self)) {
+  if (initialize_output_duplication (self) == GST_FLOW_ERROR) {
     goto new_error;
   }
 
-  IDXGIOutputDuplication_GetDesc (self->dxgi_dupl, &self->dupl_desc);
   self->pointer_buffer_capacity = INITIAL_POINTER_BUFFER_CAPACITY;
   self->pointer_buffer = g_malloc (self->pointer_buffer_capacity);
   if (NULL == self->pointer_buffer) {
@@ -451,11 +470,11 @@ dxgicap_stop (DxgiCapture * self)
   PTR_RELEASE (self->work_texture);
 }
 
-gboolean
+GstFlowReturn
 dxgicap_acquire_next_frame (DxgiCapture * self, gboolean show_cursor,
     guint timeout)
 {
-  gboolean ret = FALSE;
+  GstFlowReturn ret = GST_FLOW_ERROR;
   HRESULT hr;
   GstDXGIScreenCapSrc *src = self->src;
 
@@ -465,10 +484,8 @@ dxgicap_acquire_next_frame (DxgiCapture * self, gboolean show_cursor,
   if (!self->dxgi_dupl) {
     /* Desktop duplication interface became invalid due to desktop switch,
      * UAC prompt popping up, or similar event. Try to reinitialize. */
-    if (!initialize_output_duplication (self)) {
-      ret = TRUE;
-      goto end;
-    }
+    ret = initialize_output_duplication (self);
+    goto end;
   }
 
   /* Get the latest desktop frames. */
@@ -478,13 +495,13 @@ dxgicap_acquire_next_frame (DxgiCapture * self, gboolean show_cursor,
     /* In case of DXGI_ERROR_WAIT_TIMEOUT,
      * it has not changed from the last time. */
     GST_LOG_OBJECT (src, "DXGI_ERROR_WAIT_TIMEOUT");
-    ret = TRUE;
+    ret = GST_FLOW_OK;
     goto end;
   } else if (hr == DXGI_ERROR_ACCESS_LOST) {
     GST_LOG_OBJECT (src, "DXGI_ERROR_ACCESS_LOST; reinitializing output "
         "duplication...");
     PTR_RELEASE (self->dxgi_dupl);
-    ret = TRUE;
+    ret = GST_FLOW_OK;
     goto end;
   }
   HR_FAILED_GOTO (hr, IDXGIOutputDuplication::AcquireNextFrame, end);
@@ -524,12 +541,12 @@ dxgicap_acquire_next_frame (DxgiCapture * self, gboolean show_cursor,
       }
       HR_FAILED_GOTO (hr, IDXGIOutputDuplication::GetFramePointerShape, end);
       self->pointer_shape_info = pointer_shape_info;
-      ret = TRUE;
+      ret = GST_FLOW_OK;
     } else {
-      ret = TRUE;
+      ret = GST_FLOW_OK;
     }
   } else {
-    ret = TRUE;
+    ret = GST_FLOW_OK;
   }
 end:
   if (self->dxgi_dupl) {
