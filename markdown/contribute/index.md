@@ -426,28 +426,35 @@ applied to the `master` branch, and should obviously not have caused any known
 outstanding regressions. The only exception here are changes that do not apply
 to the `master` branch anymore.
 
+You do not need to create backport merge requests against stable branches.
+Backport merge requests for stable branches will be created automatically
+based on labels on `master` branch merge requests.
+
 Existing merge request against the `master` branch, including merged ones,
 that should be considered for backporting in the future should be labeled with
-the `Needs backport` label unless there is any specific urgency to get it
-backported. All merge requests with the [`Needs backport`][needs-backport]
+the `Needs backport` label and the label for the target stable branch
+(e.g. `1.18`). All merge requests with the [`Needs backport`][needs-backport]
 label will be regularly considered for backporting by GStreamer developers.
 
-### Creating a merge request for backports
+Changes that add API or change existing API will usually not be considered
+for backporting.
 
-When creating a merge request for backporting changes, include one or more
-changes in the merge request and ideally all from the [`Needs
-backport`][needs-backport] list after reviewing them and potentially fixing them
-to work cleanly with the stable branch.
+In case patches don't apply cleanly to the target stable branch, draft `WIP`
+merge requests will be created by the above-mentioned scripts. If that happens
+developers will have to backport the desired commits and resolve any cherry-pick
+conflicts manually. The result should then be pushed into the existing branch
+for the `WIP` backport merge request. Any GStreamer developer should be able
+to do this, and help in this area is always welcome. Please resolve the WIP/Draft
+status once all the relevant commits have been backported and assign the
+merge request to the merge bot for merging.
 
-If there are specific commits or areas of commits where further feedback is
-needed, please create a task list in the description of the merge request and
-@ the committer or whoever has knowledge about this commit.
-
-Add another task to the task list in the merge request's description for the
-module's maintainer(s) to confirm the merge and @ one or more maintainers.
-
-Only once the CI succeeded for the merge request and all tasks are solved,
-especially the confirmation from the maintainer(s), the merge request can be
-merged.
+There is also a [`Maybe backport` label][maybe-backport] which can be added
+if you're not sure if commits should be backported or not, or you want to
+revisit it later once the changes in question have seen some testing in the
+development branch. If you tag a merge request with `Maybe backport` it's
+usually useful to add a comment about why it's being tagged only as a maybe.
+That will make it easier for others to evaluate whether it should be backported
+or not later.
 
 [needs-backport]: https://gitlab.freedesktop.org/groups/gstreamer/-/merge_requests?state=merged&label_name[]=Needs%20backport
+[maybe-backport]: https://gitlab.freedesktop.org/groups/gstreamer/-/merge_requests?state=merged&label_name[]=Maybe%20backport
