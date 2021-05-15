@@ -222,17 +222,16 @@ Couple of additional points:
 
 ### How to Prepare a Merge Request for Submission
 
-If possible at all, you should prepare a merge request against a current git
-checkout, ideally against the tip of the master branch.  The gitlab merge request
-UI will contain information about whether the merge request can be applied to the
-current code. If a merge request was prepared against an old commit and
-does not apply any longer to master you may be asked to provide an updated
-branch to merge.
+Please prepare any merge request against a current git checkout, ideally against
+the tip of the master branch.  If a merge request is prepared against an old
+commit or older branch and can't easily be rebased you may be asked to rebase
+and update the branch on top of the master branch.
 
 If you have created a new plugin, please submit a merge request that adds it to
-the gst-plugins-bad module, including `meson.build` modifications, and all new files.
+the gst-plugins-bad module, including `meson.build` modifications, new files
+and documentation.
 
-#### Patch Format
+#### Preparation: create a personal fork of the git repository on GitLab
 
 The easiest way to create a merge request is to create one or more local commits
 for your changes in a branch in a local git repository. This should be a git
@@ -243,6 +242,8 @@ and should be accessible as
 <https://gitlab.freedesktop.org/$USERNAME/gstreamer>.
 You should clone this repository with valid ssh credentials to be able to
 automatically push code to your fork.
+
+#### Creating a branch for the merge request and adding commits to it
 
 Once you have a git repository with the original code in it, you should create a
 branch for your change. e.g. to create a branch and checkout:
@@ -316,6 +317,13 @@ header files, our header file indentation is free-form. If you build GStreamer
 from git, a local commit hook will be installed that checks if your commit
 conforms to the required style (also using GNU indent).
 
+Different versions of GNU indent may occasionally yield slightly different
+indentations. If that happens, please ignore any indentation changes in
+sections of code that your patch does not touch. You can do that by staging
+changes selectively via `git add -p`. You can bypass the local indentation
+check hook by using `git commit -n`, but it will still be checked again later
+when you submit your changes through GitLab for merging.
+
 [gst-indent]: https://gitlab.freedesktop.org/gstreamer/gstreamer/tree/master/tools/gst-indent
 [create-mr]: https://docs.gitlab.com/ee/gitlab-basics/add-merge-request.html
 
@@ -370,7 +378,10 @@ full issue URL at the end of the commit message.
     https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/123
 
 We do not use `Signed-off by:` lines in GStreamer, please create commits
-without those.
+without such lines.
+
+Please do not add references to private company-internal bug trackers or
+code repositories in commit messages.
 
 ### After Submitting your Merge Request
 
@@ -384,7 +395,7 @@ with the link to the issue.
 Most of all, please be patient.
 
 We try to review patches as quickly as possible, but there is such a high
-turnaround of issues, merge requests and feature requests that it is not always
+volume of issues, merge requests and feature requests that it is not always
 possible to tend to them all as quickly as we'd like. This is especially
 true for completely new plugins or new features.
 
@@ -396,6 +407,10 @@ If you do not get a response, this is usually not a sign of people *ignoring*
 the issue, but usually just means that it's fallen through the cracks or
 people have been busy with other things.
 
+Most GStreamer developers have a review workflow that's driven by e-mail or
+GitLab notifications, so posting a follow-up comment is the best way to draw
+attention to an issue or merge request.
+
 ### Updating Your Merge Request and Addressing Review Comments
 
 When someone reviews your changes, they may leave review comments for
@@ -404,18 +419,33 @@ a new "Discussion" which is basically a thread for each comment.
 
 When you believe that you have addressed the issue raised in a discussion,
 either by updating the code or answering the questions raised, you should
-"Resolve the Discussion" using the button.
+"Resolve the Discussion" using the button, ideally also leaving a comment
+saying so (e.g. "done", "fixed", "updated", "no longer needed" or such). The
+comment makes sure a notification e-mail is generated, which makes it easier
+for GStreamer developers to keep track of what's happening.
 
-This way it is easy to see for maintainers and for yourself what's left to do
-and if there are any open questions/issues.
+At the top of each merge request in GitLab is a tracker with the number of
+unresolved discussions. This way it's easy for maintainers (and yourself)
+to see what's left to do and if there are any open questions/issues.
 
 Whenever you have made changes to your patches locally you can just
-`git push -f your-personal-gitlab-fork your-branch` to your personal fork,
-and GitLab will pick up the changes automatically. You do _not_ need to submit
+`git push -f your-personal-gitlab-fork your-branch` to your personal fork.
+GitLab will then pick up the changes automatically. You do _not_ need to submit
 a new Merge Request whenever you make changes to an already-submitted patchset,
 and in fact you shouldn't do that because it means all the previous discussion
 context is lost and it's also not easy for reviewers to see what changed.
-Just update your existing branch.
+Just force-update your existing branch.
+
+You do not need to add individial "fixup commits" to your branch when you address
+issues raised. Instead just fix up the original commit(s) directly using
+`git rebase` etc. GitLab is able to track and show changes made between
+different revisions of a merge request branch, so just keep the branch always
+to the "latest clean version". See the [Rewriting History](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History)
+section of the [Pro Git book](https://git-scm.com/book/en/v2) for more details.
+
+GStreamer maintainers will typically receive e-mail notifications when you add
+a comment and when all oustanding discussions have been resolved. They may or
+may not receive e-mail notifications when you update the commits in your branch.
 
 # Workflows for GStreamer developers
 
