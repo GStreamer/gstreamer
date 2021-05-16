@@ -112,6 +112,9 @@ enum
   PROP_LAST
 };
 
+GST_DEBUG_CATEGORY_STATIC (base_text_overlay_debug);
+#define GST_CAT_DEFAULT base_text_overlay_debug
+
 #define VIDEO_FORMATS GST_VIDEO_OVERLAY_COMPOSITION_BLEND_FORMATS
 
 #define BASE_TEXT_OVERLAY_CAPS GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS)
@@ -344,6 +347,9 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+
+  GST_DEBUG_CATEGORY_INIT (base_text_overlay_debug, "basetextoverlay", 0,
+      "Base Text Overlay");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
