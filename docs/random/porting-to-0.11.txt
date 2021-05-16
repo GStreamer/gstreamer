@@ -1,5 +1,0 @@
-This guide has been renamed to porting-to-1.0.txt.
-
-The latest version can be found at:
-
-http://cgit.freedesktop.org/gstreamer/gstreamer/tree/docs/random/porting-to-1.0.txt
