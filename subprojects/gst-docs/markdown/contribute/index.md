@@ -333,6 +333,10 @@ the patch will still apply cleanly to the latest version in git. If you feel
 there are things to clean up, please submit the clean-ups as a separate patch
 that does not contain any functional changes.
 
+[create-mr]: https://docs.gitlab.com/ee/gitlab-basics/add-merge-request.html
+
+#### Coding Style
+
 Try to stick to the GStreamer indentation and coding style. There is a script
 called [`gst-indent`][gst-indent] which you can run over your `.c` or `.cpp`
 files if you want your code auto-indented before making the patch. The script
@@ -348,8 +352,29 @@ changes selectively via `git add -p`. You can bypass the local indentation
 check hook by using `git commit -n`, but it will still be checked again later
 when you submit your changes through GitLab for merging.
 
+We are working on making this less hasslesome.
+
 [gst-indent]: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/main/scripts/gst-indent-all
-[create-mr]: https://docs.gitlab.com/ee/gitlab-basics/add-merge-request.html
+
+Compiler requirements:
+ - we are targetting the C99 compiler and preprocesser feature subset
+   supported by gcc 5.4, clang and vs2017. Newer features can be
+   used conditionally as long as there is a suitable fallback. This is similar
+   to [GLib's compiler requirements](https://wiki.gnome.org/Projects/GLib/CompilerRequirements).
+
+Other style guidelines:
+ - do not use tabs for indentation in new code, not even in freeform header files
+ - do not use packed structures for parsing external data, instead use helper
+   APIs such as [GstByteReader][bytereader] and [GstBitReader][bitreader] for
+   data parsing
+ - from GStreamer 1.20 onwards you may in particular also
+   - use c++-style `// comments`
+   - declare variables inline (as opposed to only at the beginning of a block)
+   - use advanced/nicer struct initialisers
+
+[gst-indent]: https://gitlab.freedesktop.org/gstreamer/gstreamer/tree/master/tools/gst-indent
+[bitreader]: https://gstreamer.freedesktop.org/documentation/base/gstbitreader.html?gi-language=c#GstBitReader
+[bytereader]: https://gstreamer.freedesktop.org/documentation/base/gstbytereader.html?gi-language=c#GstByteReader
 
 ### Writing Good Commit Messages
 
