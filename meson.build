@@ -447,6 +447,8 @@ pkgconfig_variables = ['exec_prefix=${prefix}',
     'libexecdir=${prefix}/libexec']
 pkgconfig_subdirs = ['gstreamer-1.0']
 
+meson_pkg_config_file_fixup_script = find_program('scripts/meson-pkg-config-file-fixup.py')
+
 python3 = import('python').find_installation()
 subdir('gst-libs')
 subdir('gst')
@@ -482,6 +484,11 @@ pkgconfig.generate(
   name : 'gstreamer-plugins-base-1.0',
   description : 'Streaming media framework, base plugins libraries',
 )
+
+# Desperate times, desperate measures... fix up escaping of our variables
+run_command(meson_pkg_config_file_fixup_script,
+  'gstreamer-plugins-base-1.0', 'libraries',
+  check: true)
 
 if have_orcc
   update_orc_dist_files = find_program('scripts/update-orc-dist-files.py')

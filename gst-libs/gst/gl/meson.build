@@ -1058,6 +1058,11 @@ if build_gstgl
     description : 'Streaming media framework, OpenGL plugins libraries',
   )
 
+  # Desperate times, desperate measures... fix up escaping of our variables
+  run_command(meson_pkg_config_file_fixup_script,
+    'gstreamer-gl-1.0', 'gl_platforms', 'gl_winsys', 'gl_apis',
+    check: true)
+
   pkgconfig.generate(
     libraries : [gstgl, gl_lib_deps],
     subdirs : pkgconfig_subdirs,
