@@ -865,8 +865,7 @@ static VAProfile
 _get_profile (GstVaH265Dec * self, const GstH265SPS * sps, gint max_dpb_size)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (self);
-  GstH265Profile profile =
-      gst_h265_profile_tier_level_get_profile (&sps->profile_tier_level);
+  GstH265Profile profile = gst_h265_get_profile_from_sps ((GstH265SPS *) sps);
   VAProfile profiles[4];
   gint i = 0, j;
 
