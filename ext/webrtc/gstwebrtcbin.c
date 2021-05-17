@@ -4865,6 +4865,8 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
 
         _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, stream,
             trans, bundled, bundle_idx, error);
+        if (error && *error)
+          goto done;
       } else if (_message_media_is_datachannel (sdp->sdp, i)) {
         _update_data_channel_from_sdp_media (webrtc, sdp->sdp, i, stream,
             error);
