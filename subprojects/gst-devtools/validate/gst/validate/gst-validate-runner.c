@@ -445,6 +445,7 @@ gst_validate_runner_init (GstValidateRunner * runner)
 {
   runner->priv = gst_validate_runner_get_instance_private (runner);
 
+  g_mutex_init (&runner->priv->mutex);
   runner->priv->reports_by_type = g_hash_table_new (g_direct_hash,
       g_direct_equal);
 
