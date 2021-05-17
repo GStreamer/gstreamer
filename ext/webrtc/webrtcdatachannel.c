@@ -1020,7 +1020,6 @@ _data_channel_set_sctp_transport (WebRTCDataChannel * channel,
         channel);
     g_signal_connect (sctp, "notify::state", G_CALLBACK (_on_sctp_notify_state),
         channel);
-    _on_sctp_notify_state_unlocked (G_OBJECT (sctp), channel);
   }
   GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
 }
@@ -1043,6 +1042,8 @@ webrtc_data_channel_link_to_sctp (WebRTCDataChannel * channel,
               channel->sctp_transport->sctpenc, pad_name))
         g_warn_if_reached ();
       g_free (pad_name);
+
+      _on_sctp_notify_state_unlocked (G_OBJECT (sctp_transport), channel);
     }
   }
 }
