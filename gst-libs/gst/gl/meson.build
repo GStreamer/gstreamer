@@ -1042,13 +1042,16 @@ if build_gstgl
     # don't confuse EGL/egl.h with gst-libs/gl/egl/egl.h on case-insensitive file systems
     implicit_include_directories : false)
 
+  pkgconfig_gl_variables = [
+    'gl_platforms=' + ' '.join(enabled_gl_platforms),
+    'gl_winsys=' + ' '.join(enabled_gl_winsys),
+    'gl_apis=' + ' '.join(enabled_gl_apis),
+  ]
+
   pkgconfig.generate(gstgl,
     libraries : [gstvideo, gst_base_dep, gst_dep],
-    variables : pkgconfig_variables + [
-      'gl_platforms=' + ' '.join(enabled_gl_platforms),
-      'gl_winsys=' + ' '.join(enabled_gl_winsys),
-      'gl_apis=' + ' '.join(enabled_gl_apis),
-    ],
+    variables : pkgconfig_variables + pkgconfig_gl_variables,
+    uninstalled_variables : pkgconfig_gl_variables,
     subdirs : pkgconfig_subdirs,
     extra_cflags : ['-I${libdir}/gstreamer-1.0/include'],
     name : 'gstreamer-gl-1.0',

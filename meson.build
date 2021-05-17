@@ -469,11 +469,15 @@ base_libraries = ['allocators', 'app', 'audio', 'fft', 'pbutils', 'riff', 'rtp',
 if build_gstgl
   base_libraries += 'gl'
 endif
+
+pkgconfig_plugins_base_libs_variables = [
+  'libraries=' + ' '.join(base_libraries),
+]
+
 pkgconfig.generate(
   libraries : [gst_dep],
-  variables : pkgconfig_variables + [
-    'libraries=' + ' '.join(base_libraries),
-  ],
+  variables : pkgconfig_variables + pkgconfig_plugins_base_libs_variables,
+  uninstalled_variables : pkgconfig_plugins_base_libs_variables,
   subdirs : pkgconfig_subdirs,
   name : 'gstreamer-plugins-base-1.0',
   description : 'Streaming media framework, base plugins libraries',
