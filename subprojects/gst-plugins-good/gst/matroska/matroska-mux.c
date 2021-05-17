@@ -224,7 +224,7 @@ static GstStaticPadTemplate subtitlesink_templ =
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("subtitle/x-kate; "
         "text/x-raw, format=utf8; application/x-ssa; application/x-ass; "
-        "application/x-usf; subpicture/x-dvd; "
+        "application/x-usf; subpicture/x-dvd; subpicture/x-pgs; "
         "application/x-subtitle-unknown")
     );
 
@@ -2616,6 +2616,9 @@ gst_matroska_mux_subtitle_pad_setcaps (GstMatroskaMux * mux,
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_SUBTITLE_ASS);
   } else if (!strcmp (mimetype, "application/x-usf")) {
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_SUBTITLE_USF);
+  } else if (!strcmp (mimetype, "subpicture/x-pgs")) {
+    gst_matroska_mux_set_codec_id (context,
+        GST_MATROSKA_CODEC_ID_SUBTITLE_HDMVPGS);
   } else if (!strcmp (mimetype, "subpicture/x-dvd")) {
     gst_matroska_mux_set_codec_id (context,
         GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB);

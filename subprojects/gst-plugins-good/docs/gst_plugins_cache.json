@@ -9211,7 +9211,7 @@
                         "presence": "always"
                     },
                     "subtitle_%%u": {
-                        "caps": "subtitle/x-kate:\ntext/x-raw:\n         format: utf8\napplication/x-ssa:\napplication/x-ass:\napplication/x-usf:\nsubpicture/x-dvd:\napplication/x-subtitle-unknown:\n",
+                        "caps": "subtitle/x-kate:\ntext/x-raw:\n         format: utf8\napplication/x-ssa:\napplication/x-ass:\napplication/x-usf:\nsubpicture/x-dvd:\nsubpicture/x-pgs:\napplication/x-subtitle-unknown:\n",
                         "direction": "sink",
                         "presence": "request",
                         "type": "GstMatroskaMuxPad"
@@ -9415,7 +9415,7 @@
                         "presence": "always"
                     },
                     "subtitle_%%u": {
-                        "caps": "subtitle/x-kate:\ntext/x-raw:\n         format: utf8\napplication/x-ssa:\napplication/x-ass:\napplication/x-usf:\nsubpicture/x-dvd:\napplication/x-subtitle-unknown:\n",
+                        "caps": "subtitle/x-kate:\ntext/x-raw:\n         format: utf8\napplication/x-ssa:\napplication/x-ass:\napplication/x-usf:\nsubpicture/x-dvd:\nsubpicture/x-pgs:\napplication/x-subtitle-unknown:\n",
                         "direction": "sink",
                         "presence": "request",
                         "type": "GstMatroskaMuxPad"
