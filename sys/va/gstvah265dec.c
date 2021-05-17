@@ -760,6 +760,20 @@ gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
     }
     g_array_unref (ref_list);
 
+    /* 7.4.3.3.3, the current decoded picture is marked as "used for
+       long-term reference". Current picture is not in the DPB now. */
+    if (pps->pps_scc_extension_params.pps_curr_pic_ref_enabled_flag && i < 15) {
+      pic_param->base.ReferenceFrames[i].picture_id =
+          gst_va_decode_picture_get_surface (gst_h265_picture_get_user_data
+          (picture));
+      pic_param->base.ReferenceFrames[i].pic_order_cnt = picture->pic_order_cnt;
+      pic_param->base.ReferenceFrames[i].flags |=
+          VA_PICTURE_HEVC_LONG_TERM_REFERENCE;
+      pic_param->base.ReferenceFrames[i].flags |=
+          _find_frame_rps_type (decoder, picture);
+      i++;
+    }
+
     for (; i < 15; i++)
       _init_vaapi_pic (&pic_param->base.ReferenceFrames[i]);
   }
