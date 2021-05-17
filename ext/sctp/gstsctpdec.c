@@ -606,8 +606,11 @@ static void
 remove_pad (GstSctpDec * self, GstPad * pad)
 {
   stop_srcpad_task (pad);
+  GST_PAD_STREAM_LOCK (pad);
   gst_pad_set_active (pad, FALSE);
-  gst_element_remove_pad (GST_ELEMENT (self), pad);
+  if (gst_object_has_as_parent (GST_OBJECT (pad), GST_OBJECT (self)))
+    gst_element_remove_pad (GST_ELEMENT (self), pad);
+  GST_PAD_STREAM_UNLOCK (pad);
   GST_OBJECT_LOCK (self);
   gst_flow_combiner_remove_pad (self->flow_combiner, pad);
   GST_OBJECT_UNLOCK (self);
