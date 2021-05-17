@@ -179,6 +179,8 @@ static GstStaticPadTemplate audiosink_templ =
         COMMON_AUDIO_CAPS "; "
         "audio/x-eac3, "
         COMMON_AUDIO_CAPS "; "
+        "audio/x-true-hd, "
+        COMMON_AUDIO_CAPS "; "
         "audio/x-dts, "
         COMMON_AUDIO_CAPS "; "
         "audio/x-vorbis, "
@@ -2359,6 +2361,8 @@ gst_matroska_mux_audio_pad_setcaps (GstMatroskaMux * mux,
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_AC3);
   } else if (!strcmp (mimetype, "audio/x-eac3")) {
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_EAC3);
+  } else if (!strcmp (mimetype, "audio/x-true-hd")) {
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_TRUEHD);
   } else if (!strcmp (mimetype, "audio/x-dts")) {
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_DTS);
   } else if (!strcmp (mimetype, "audio/x-tta")) {
