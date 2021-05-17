@@ -80,7 +80,7 @@ enum
 #define PROP_DBLK_IDC_DEFAULT           0
 
 #define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, BGR10A2_LE, P010_10LE, VUYA"
-#define PROFILES    "main, main-10, main-444"
+#define PROFILES    "main, main-10, main-444, main-still-picture"
 #define COMMON_FORMAT "{ " RAW_FORMATS " }"
 #define PRFOLIE_STR   "{ " PROFILES " }"
 
@@ -308,6 +308,8 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
 
     if (!strcmp (h265enc->profile_name, "main-10"))
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
+    else if (!strcmp (h265enc->profile_name, "main-still-picture"))
+      encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAINSP;
     else if (!strcmp (h265enc->profile_name, "main-444") ||
         !strcmp (h265enc->profile_name, "main-422-10") ||
         !strcmp (h265enc->profile_name, "main-444-10") ||
