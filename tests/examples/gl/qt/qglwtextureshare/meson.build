@@ -15,7 +15,7 @@ qtwinsys_deps = []
 if enabled_gl_winsys.contains('x11') and enabled_gl_platforms.contains('glx')
   qt5x11extras = dependency('qt5', modules : ['X11Extras'], required : false)
   if qt5x11extras.found()
-    qtwinsys_deps += qt5x11extras
+    qtwinsys_deps += [qt5x11extras, glx_dep]
   else
     subdir_done()
   endif
