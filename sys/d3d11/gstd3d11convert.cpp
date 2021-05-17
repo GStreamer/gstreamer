@@ -1783,7 +1783,8 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     goto format_unknown;
   }
 
-  self->converter = gst_d3d11_converter_new (filter->device, in_info, out_info);
+  self->converter =
+      gst_d3d11_converter_new (filter->device, in_info, out_info, nullptr);
 
   if (!self->converter) {
     GST_ERROR_OBJECT (self, "couldn't set converter");

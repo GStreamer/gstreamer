@@ -734,7 +734,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   /* configure shader even if video processor is available for fallback */
   window->converter =
       gst_d3d11_converter_new (window->device, &window->info,
-      &window->render_info);
+      &window->render_info, nullptr);
 
   if (!window->converter) {
     GST_ERROR_OBJECT (window, "Cannot create converter");

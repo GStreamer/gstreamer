@@ -28,14 +28,18 @@ G_BEGIN_DECLS
 
 typedef struct _GstD3D11Converter GstD3D11Converter;
 
+/**
+ * GST_D3D11_CONVERTER_OPT_ALPHA_VALUE
+ *
+ * #G_TYPE_FLOAT, the alpha value color value to use.
+ * Default is 1.0
+ */
+#define GST_D3D11_CONVERTER_OPT_ALPHA_VALUE "GstD3D11Converter.alpha-value"
+
 GstD3D11Converter * gst_d3d11_converter_new  (GstD3D11Device * device,
                                               GstVideoInfo * in_info,
-                                              GstVideoInfo * out_info);
-
-GstD3D11Converter * gst_d3d11_converter_new_with_alpha (GstD3D11Device * device,
-                                                        GstVideoInfo * in_info,
-                                                        GstVideoInfo * out_info,
-                                                        gfloat alpha);
+                                              GstVideoInfo * out_info,
+                                              GstStructure * config);
 
 void                gst_d3d11_converter_free    (GstD3D11Converter * converter);
 
@@ -59,6 +63,9 @@ gboolean            gst_d3d11_converter_update_src_rect (GstD3D11Converter * con
 
 gboolean            gst_d3d11_converter_update_dest_rect (GstD3D11Converter * converter,
                                                           RECT * dest_rect);
+
+gboolean            gst_d3d11_converter_update_config    (GstD3D11Converter * converter,
+                                                          GstStructure * config);
 
 G_END_DECLS
 

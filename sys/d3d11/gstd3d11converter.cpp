@@ -50,6 +50,12 @@ typedef struct
 
 typedef struct
 {
+  FLOAT alpha_mul;
+  FLOAT padding[3];
+} AlphaConstBuffer;
+
+typedef struct
+{
   struct {
     FLOAT x;
     FLOAT y;
@@ -63,16 +69,24 @@ typedef struct
 
 typedef struct
 {
-  const gchar *constant_buffer;
+  gboolean has_transform;
+  gboolean has_alpha;
   const gchar *func;
 } PixelShaderTemplate;
 
-#define COLOR_TRANSFORM_COEFF \
-    "cbuffer PixelShaderColorTransform : register(b0)\n" \
-    "{\n" \
-    "  float3x4 trans_matrix;\n" \
-    "  float3 padding;\n" \
-    "};\n"
+static const gchar templ_color_transform_const_buffer[] =
+    "cbuffer PixelShaderColorTransform : register(b%u)\n"
+    "{\n"
+    "  float3x4 trans_matrix;\n"
+    "  float3 padding;\n"
+    "};";
+
+static const gchar templ_alpha_const_buffer[] =
+    "cbuffer AlphaConstBuffer : register(b%u)\n"
+    "{\n"
+    "  float alpha_mul;\n"
+    "  float3 padding;\n"
+    "};";
 
 #define HLSL_FUNC_YUV_TO_RGB \
     "float3 yuv_to_rgb (float3 yuv)\n" \
@@ -99,18 +113,18 @@ typedef struct
     "  float4 Plane_1: SV_TARGET1;"
 
 static const PixelShaderTemplate templ_REORDER =
-    { NULL, NULL };
+    { FALSE, TRUE, NULL };
 
 static const PixelShaderTemplate templ_YUV_to_RGB =
-    { COLOR_TRANSFORM_COEFF, HLSL_FUNC_YUV_TO_RGB };
+    { TRUE, FALSE, HLSL_FUNC_YUV_TO_RGB };
 
 static const PixelShaderTemplate templ_RGB_to_YUV =
-    { COLOR_TRANSFORM_COEFF, HLSL_FUNC_RGB_TO_YUV };
+    { TRUE, FALSE, HLSL_FUNC_RGB_TO_YUV };
 
 static const gchar templ_REORDER_BODY[] =
     "  float4 xyza;\n"
     "  xyza.xyz = shaderTexture[0].Sample(samplerState, input.Texture).xyz;\n"
-    "  xyza.a = shaderTexture[0].Sample(samplerState, input.Texture).a * %f;\n"
+    "  xyza.a = shaderTexture[0].Sample(samplerState, input.Texture).a * alpha_mul;\n"
     "  output.Plane_0 = xyza;\n";
 
 static const gchar templ_VUYA_to_RGB_BODY[] =
@@ -275,6 +289,7 @@ static const gchar templ_PACKED_YUV_TO_SEMI_PLANAR_CHROMA_BODY[] =
 static const gchar templ_pixel_shader[] =
     /* constant buffer */
     "%s\n"
+    "%s\n"
     "Texture2D shaderTexture[4];\n"
     "SamplerState samplerState;\n"
     "\n"
@@ -331,7 +346,7 @@ struct _GstD3D11Converter
   GstD3D11Device *device;
   GstVideoInfo in_info;
   GstVideoInfo out_info;
-  gfloat alpha;
+  gdouble alpha;
 
   const GstD3D11Format *in_d3d11_format;
   const GstD3D11Format *out_d3d11_format;
@@ -348,12 +363,31 @@ struct _GstD3D11Converter
   gint input_texture_width;
   gint input_texture_height;
   ID3D11Buffer *vertex_buffer;
+  ID3D11Buffer *alpha_const_buffer;
   gboolean update_vertex;
+  gboolean update_alpha;
 
   ID3D11SamplerState *linear_sampler;
 
   ConvertInfo convert_info;
+
+  GstStructure *config;
 };
+
+static gdouble
+get_opt_double (GstD3D11Converter * self, const gchar * opt, gdouble def)
+{
+  gdouble res;
+  if (!gst_structure_get_double (self->config, opt, &res))
+    res = def;
+
+  return res;
+}
+
+#define DEFAULT_OPT_ALPHA_VALUE 1.0
+
+#define GET_OPT_ALPHA_VALUE(c) get_opt_double(c, \
+    GST_D3D11_CONVERTER_OPT_ALPHA_VALUE, DEFAULT_OPT_ALPHA_VALUE);
 
 /* from video-converter.c */
 typedef struct
@@ -594,7 +628,7 @@ setup_convert_info_rgb_to_rgb (GstD3D11Converter * self,
   ConvertInfo *convert_info = &self->convert_info;
 
   convert_info->templ = &templ_REORDER;
-  convert_info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY, self->alpha);
+  convert_info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY);
   convert_info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   return TRUE;
@@ -847,7 +881,7 @@ setup_convert_info_vuya_to_vuya (GstD3D11Converter * self,
   info->templ = &templ_REORDER;
   info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
-  info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY, self->alpha);
+  info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY);
 
   return TRUE;
 }
@@ -1071,13 +1105,16 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   ComPtr<ID3D11VertexShader> vs;
   ComPtr<ID3D11InputLayout> layout;
   ComPtr<ID3D11SamplerState> linear_sampler;
-  ComPtr<ID3D11Buffer> const_buffer;
+  ComPtr<ID3D11Buffer> transform_const_buffer;
+  ComPtr<ID3D11Buffer> alpha_const_buffer;
   ComPtr<ID3D11Buffer> vertex_buffer;
   ComPtr<ID3D11Buffer> index_buffer;
   /* *INDENT-ON* */
   const guint index_count = 2 * 3;
   gint i;
   gboolean ret;
+  ID3D11Buffer *const_buffers[2] = { nullptr, nullptr };
+  guint num_const_buffers = 0;
 
   memset (&sampler_desc, 0, sizeof (sampler_desc));
   memset (input_desc, 0, sizeof (input_desc));
@@ -1105,14 +1142,32 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
     gchar *shader_code = NULL;
 
     if (convert_info->ps_body[i]) {
+      gchar *transform_const_buffer = nullptr;
+      gchar *alpha_const_buffer = nullptr;
+      guint register_idx = 0;
+
       g_assert (convert_info->ps_output[i] != NULL);
 
+      if (convert_info->templ->has_transform) {
+        transform_const_buffer =
+            g_strdup_printf (templ_color_transform_const_buffer, register_idx);
+        register_idx++;
+      }
+
+      if (convert_info->templ->has_alpha) {
+        alpha_const_buffer =
+            g_strdup_printf (templ_alpha_const_buffer, register_idx);
+        register_idx++;
+      }
+
       shader_code = g_strdup_printf (templ_pixel_shader,
-          convert_info->templ->constant_buffer ?
-          convert_info->templ->constant_buffer : "",
+          transform_const_buffer ? transform_const_buffer : "",
+          alpha_const_buffer ? alpha_const_buffer : "",
           convert_info->ps_output[i],
           convert_info->templ->func ? convert_info->templ->func : "",
           convert_info->ps_body[i]);
+      g_free (transform_const_buffer);
+      g_free (alpha_const_buffer);
 
       ret = gst_d3d11_create_pixel_shader (device, shader_code, &ps[i]);
       g_free (shader_code);
@@ -1122,8 +1177,10 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
     }
   }
 
-  if (convert_info->templ->constant_buffer) {
+  if (convert_info->templ->has_transform) {
     D3D11_BUFFER_DESC const_buffer_desc = { 0, };
+
+    G_STATIC_ASSERT (sizeof (PixelShaderColorTransform) % 16 == 0);
 
     const_buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
     const_buffer_desc.ByteWidth = sizeof (PixelShaderColorTransform);
@@ -1132,14 +1189,15 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
     const_buffer_desc.MiscFlags = 0;
     const_buffer_desc.StructureByteStride = 0;
 
-    hr = device_handle->CreateBuffer (&const_buffer_desc, NULL, &const_buffer);
+    hr = device_handle->CreateBuffer (&const_buffer_desc, nullptr,
+        &transform_const_buffer);
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Couldn't create constant buffer, hr: 0x%x", (guint) hr);
       return FALSE;
     }
 
     gst_d3d11_device_lock (device);
-    hr = context_handle->Map (const_buffer.Get (),
+    hr = context_handle->Map (transform_const_buffer.Get (),
         0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
     if (!gst_d3d11_result (hr, device)) {
@@ -1151,8 +1209,55 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
     memcpy (map.pData, &convert_info->transform,
         sizeof (PixelShaderColorTransform));
 
-    context_handle->Unmap (const_buffer.Get (), 0);
+    context_handle->Unmap (transform_const_buffer.Get (), 0);
     gst_d3d11_device_unlock (device);
+
+    const_buffers[num_const_buffers] = transform_const_buffer.Get ();
+    num_const_buffers++;
+  }
+
+  if (convert_info->templ->has_alpha) {
+    D3D11_BUFFER_DESC const_buffer_desc = { 0, };
+    AlphaConstBuffer *alpha_const;
+
+    G_STATIC_ASSERT (sizeof (AlphaConstBuffer) % 16 == 0);
+
+    const_buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+    const_buffer_desc.ByteWidth = sizeof (AlphaConstBuffer);
+    const_buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    const_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    const_buffer_desc.MiscFlags = 0;
+    const_buffer_desc.StructureByteStride = 0;
+
+    hr = device_handle->CreateBuffer (&const_buffer_desc,
+        nullptr, &alpha_const_buffer);
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR ("Couldn't create constant buffer, hr: 0x%x", (guint) hr);
+      return FALSE;
+    }
+
+    gst_d3d11_device_lock (device);
+    hr = context_handle->Map (alpha_const_buffer.Get (),
+        0, D3D11_MAP_WRITE_DISCARD, 0, &map);
+
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR ("Couldn't map constant buffer, hr: 0x%x", (guint) hr);
+      gst_d3d11_device_unlock (device);
+      return FALSE;
+    }
+
+    alpha_const = (AlphaConstBuffer *) map.pData;
+    memset (alpha_const, 0, sizeof (AlphaConstBuffer));
+    alpha_const->alpha_mul = (FLOAT) self->alpha;
+
+    context_handle->Unmap (alpha_const_buffer.Get (), 0);
+    gst_d3d11_device_unlock (device);
+
+    self->alpha_const_buffer = alpha_const_buffer.Get ();
+    /* We will hold this buffer and update later */
+    self->alpha_const_buffer->AddRef ();
+    const_buffers[num_const_buffers] = alpha_const_buffer.Get ();
+    num_const_buffers++;
   }
 
   input_desc[0].SemanticName = "POSITION";
@@ -1265,13 +1370,15 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
 
   self->quad[0] = gst_d3d11_quad_new (device,
       ps[0].Get (), vs.Get (), layout.Get (),
-      const_buffer.Get (), vertex_buffer.Get (), sizeof (VertexData),
+      const_buffers, num_const_buffers,
+      vertex_buffer.Get (), sizeof (VertexData),
       index_buffer.Get (), DXGI_FORMAT_R16_UINT, index_count);
 
   if (ps[1]) {
     self->quad[1] = gst_d3d11_quad_new (device,
         ps[1].Get (), vs.Get (), layout.Get (),
-        const_buffer.Get (), vertex_buffer.Get (), sizeof (VertexData),
+        const_buffers, num_const_buffers,
+        vertex_buffer.Get (), sizeof (VertexData),
         index_buffer.Get (), DXGI_FORMAT_R16_UINT, index_count);
   }
 
@@ -1299,9 +1406,28 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   return TRUE;
 }
 
-static GstD3D11Converter *
-gst_d3d11_converter_new_internal (GstD3D11Device * device,
-    GstVideoInfo * in_info, GstVideoInfo * out_info, gfloat alpha)
+static gboolean
+copy_config (GQuark field_id, const GValue * value, GstD3D11Converter * self)
+{
+  gst_structure_id_set_value (self->config, field_id, value);
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d11_converter_set_config (GstD3D11Converter * converter,
+    GstStructure * config)
+{
+  gst_structure_foreach (config, (GstStructureForeachFunc) copy_config,
+      converter);
+  gst_structure_free (config);
+
+  return TRUE;
+}
+
+GstD3D11Converter *
+gst_d3d11_converter_new (GstD3D11Device * device,
+    GstVideoInfo * in_info, GstVideoInfo * out_info, GstStructure * config)
 {
   const GstVideoInfo *unknown_info;
   const GstD3D11Format *in_d3d11_format;
@@ -1338,7 +1464,11 @@ gst_d3d11_converter_new_internal (GstD3D11Device * device,
 
   converter = g_new0 (GstD3D11Converter, 1);
   converter->device = (GstD3D11Device *) gst_object_ref (device);
-  converter->alpha = alpha;
+  converter->config = gst_structure_new_empty ("GstD3D11Converter-Config");
+  if (config)
+    gst_d3d11_converter_set_config (converter, config);
+
+  converter->alpha = GET_OPT_ALPHA_VALUE (converter);
 
   if (GST_VIDEO_INFO_IS_RGB (in_info)) {
     if (GST_VIDEO_INFO_IS_RGB (out_info)) {
@@ -1408,6 +1538,9 @@ format_unknown:
   {
     GST_ERROR ("%s couldn't be converted to d3d11 format",
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (unknown_info)));
+    if (config)
+      gst_structure_free (config);
+
     return NULL;
   }
 conversion_not_supported:
@@ -1418,23 +1551,6 @@ conversion_not_supported:
     gst_d3d11_converter_free (converter);
     return NULL;
   }
-}
-
-GstD3D11Converter *
-gst_d3d11_converter_new (GstD3D11Device * device,
-    GstVideoInfo * in_info, GstVideoInfo * out_info)
-{
-  return gst_d3d11_converter_new_internal (device, in_info, out_info, 1.0f);
-}
-
-GstD3D11Converter *
-gst_d3d11_converter_new_with_alpha (GstD3D11Device * device,
-    GstVideoInfo * in_info, GstVideoInfo * out_info, gfloat alpha)
-{
-  g_return_val_if_fail (alpha >= 0.0f, NULL);
-  g_return_val_if_fail (alpha <= 1.0f, NULL);
-
-  return gst_d3d11_converter_new_internal (device, in_info, out_info, alpha);
 }
 
 void
@@ -1453,8 +1569,13 @@ gst_d3d11_converter_free (GstD3D11Converter * converter)
 
   GST_D3D11_CLEAR_COM (converter->vertex_buffer);
   GST_D3D11_CLEAR_COM (converter->linear_sampler);
+  GST_D3D11_CLEAR_COM (converter->alpha_const_buffer);
 
   gst_clear_object (&converter->device);
+
+  if (converter->config)
+    gst_structure_free (converter->config);
+
   g_free (converter);
 }
 
@@ -1608,6 +1729,32 @@ gst_d3d11_converter_convert_unlocked (GstD3D11Converter * converter,
     }
   }
 
+  if (converter->update_alpha) {
+    D3D11_MAPPED_SUBRESOURCE map;
+    ID3D11DeviceContext *context_handle;
+    AlphaConstBuffer *alpha_const;
+    HRESULT hr;
+
+    g_assert (converter->alpha_const_buffer != nullptr);
+
+    context_handle =
+        gst_d3d11_device_get_device_context_handle (converter->device);
+
+    hr = context_handle->Map (converter->alpha_const_buffer,
+        0, D3D11_MAP_WRITE_DISCARD, 0, &map);
+
+    if (!gst_d3d11_result (hr, converter->device)) {
+      GST_ERROR ("Couldn't map constant buffer, hr: 0x%x", (guint) hr);
+      return FALSE;
+    }
+
+    alpha_const = (AlphaConstBuffer *) map.pData;
+    alpha_const->alpha_mul = (FLOAT) converter->alpha;
+
+    context_handle->Unmap (converter->alpha_const_buffer, 0);
+    converter->update_alpha = FALSE;
+  }
+
   ret = gst_d3d11_draw_quad_unlocked (converter->quad[0], converter->viewport,
       1, srv, converter->num_input_view, rtv, 1, blend, blend_factor,
       &converter->linear_sampler, 1);
@@ -1670,6 +1817,7 @@ gst_d3d11_converter_update_src_rect (GstD3D11Converter * converter,
   g_return_val_if_fail (converter != NULL, FALSE);
   g_return_val_if_fail (src_rect != NULL, FALSE);
 
+  gst_d3d11_device_lock (converter->device);
   if (converter->src_rect.left != src_rect->left ||
       converter->src_rect.top != src_rect->top ||
       converter->src_rect.right != src_rect->right ||
@@ -1679,6 +1827,7 @@ gst_d3d11_converter_update_src_rect (GstD3D11Converter * converter,
     /* vertex buffer will be updated on next convert() call */
     converter->update_vertex = TRUE;
   }
+  gst_d3d11_device_unlock (converter->device);
 
   return TRUE;
 }
@@ -1690,6 +1839,7 @@ gst_d3d11_converter_update_dest_rect (GstD3D11Converter * converter,
   g_return_val_if_fail (converter != NULL, FALSE);
   g_return_val_if_fail (dest_rect != NULL, FALSE);
 
+  gst_d3d11_device_lock (converter->device);
   if (converter->dest_rect.left != dest_rect->left ||
       converter->dest_rect.top != dest_rect->top ||
       converter->dest_rect.right != dest_rect->right ||
@@ -1699,6 +1849,32 @@ gst_d3d11_converter_update_dest_rect (GstD3D11Converter * converter,
     /* vertex buffer will be updated on next convert() call */
     converter->update_vertex = TRUE;
   }
+  gst_d3d11_device_unlock (converter->device);
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_converter_update_config (GstD3D11Converter * converter,
+    GstStructure * config)
+{
+  g_return_val_if_fail (converter != nullptr, FALSE);
+  g_return_val_if_fail (config != nullptr, FALSE);
+
+  gst_d3d11_device_lock (converter->device);
+  gst_d3d11_converter_set_config (converter, config);
+
+  /* Check whether options are updated or not */
+  if (converter->alpha_const_buffer) {
+    gdouble alpha = GET_OPT_ALPHA_VALUE (converter);
+
+    if (alpha != converter->alpha) {
+      GST_DEBUG ("Updating alpha %lf -> %lf", converter->alpha, alpha);
+      converter->alpha = alpha;
+      converter->update_alpha = TRUE;
+    }
+  }
+  gst_d3d11_device_unlock (converter->device);
 
   return TRUE;
 }

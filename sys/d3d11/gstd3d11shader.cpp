@@ -37,6 +37,9 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_shader_debug);
 G_END_DECLS
 /* *INDENT-ON* */
 
+/* too many const buffers doesn't make sense */
+#define MAX_CONST_BUFFERS 16
+
 static GModule *d3d_compiler_module = NULL;
 static pD3DCompile GstD3DCompileFunc = NULL;
 
@@ -237,7 +240,8 @@ struct _GstD3D11Quad
   ID3D11PixelShader *ps;
   ID3D11VertexShader *vs;
   ID3D11InputLayout *layout;
-  ID3D11Buffer *const_buffer;
+  ID3D11Buffer *const_buffer[MAX_CONST_BUFFERS];
+  guint num_const_buffers;
   ID3D11Buffer *vertex_buffer;
   guint vertex_stride;
   ID3D11Buffer *index_buffer;
@@ -253,7 +257,7 @@ struct _GstD3D11Quad
 GstD3D11Quad *
 gst_d3d11_quad_new (GstD3D11Device * device, ID3D11PixelShader * pixel_shader,
     ID3D11VertexShader * vertex_shader, ID3D11InputLayout * layout,
-    ID3D11Buffer * const_buffer,
+    ID3D11Buffer ** const_buffers, guint num_const_buffers,
     ID3D11Buffer * vertex_buffer, guint vertex_stride,
     ID3D11Buffer * index_buffer, DXGI_FORMAT index_format, guint index_count)
 {
@@ -263,6 +267,7 @@ gst_d3d11_quad_new (GstD3D11Device * device, ID3D11PixelShader * pixel_shader,
   g_return_val_if_fail (pixel_shader != NULL, NULL);
   g_return_val_if_fail (vertex_shader != NULL, NULL);
   g_return_val_if_fail (layout != NULL, NULL);
+  g_return_val_if_fail (num_const_buffers <= MAX_CONST_BUFFERS, NULL);
   g_return_val_if_fail (vertex_buffer != NULL, NULL);
   g_return_val_if_fail (vertex_stride > 0, NULL);
   g_return_val_if_fail (index_buffer != NULL, NULL);
@@ -286,9 +291,17 @@ gst_d3d11_quad_new (GstD3D11Device * device, ID3D11PixelShader * pixel_shader,
   vertex_buffer->AddRef ();
   index_buffer->AddRef ();
 
-  if (const_buffer) {
-    quad->const_buffer = const_buffer;
-    const_buffer->AddRef ();
+  if (num_const_buffers > 0) {
+    guint i;
+
+    g_assert (const_buffers);
+
+    for (i = 0; i < num_const_buffers; i++) {
+      quad->const_buffer[i] = const_buffers[i];
+      quad->const_buffer[i]->AddRef ();
+    }
+
+    quad->num_const_buffers = num_const_buffers;
   }
 
   return quad;
@@ -297,12 +310,15 @@ gst_d3d11_quad_new (GstD3D11Device * device, ID3D11PixelShader * pixel_shader,
 void
 gst_d3d11_quad_free (GstD3D11Quad * quad)
 {
+  guint i;
+
   g_return_if_fail (quad != NULL);
 
   GST_D3D11_CLEAR_COM (quad->ps);
   GST_D3D11_CLEAR_COM (quad->vs);
   GST_D3D11_CLEAR_COM (quad->layout);
-  GST_D3D11_CLEAR_COM (quad->const_buffer);
+  for (i = 0; i < quad->num_const_buffers; i++)
+    quad->const_buffer[i]->Release ();
   GST_D3D11_CLEAR_COM (quad->vertex_buffer);
   GST_D3D11_CLEAR_COM (quad->index_buffer);
 
@@ -364,8 +380,10 @@ gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
   context->PSSetShader (quad->ps, NULL, 0);
   context->RSSetViewports (num_viewport, viewport);
 
-  if (quad->const_buffer)
-    context->PSSetConstantBuffers (0, 1, &quad->const_buffer);
+  if (quad->num_const_buffers) {
+    context->PSSetConstantBuffers (0, quad->num_const_buffers,
+        quad->const_buffer);
+  }
 
   if (srv)
     context->PSSetShaderResources (0, num_srv, srv);

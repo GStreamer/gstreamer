@@ -176,7 +176,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
 
   window->converter =
       gst_d3d11_converter_new (window->device, &window->info,
-      &window->render_info);
+      &window->render_info, nullptr);
 
   if (!window->converter) {
     GST_ERROR_OBJECT (window, "Cannot create converter");

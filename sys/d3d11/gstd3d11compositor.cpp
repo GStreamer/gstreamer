@@ -1200,11 +1200,20 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
 #endif
 
   if (!cpad->convert || cpad->alpha_updated || self->reconfigured) {
+    GstStructure *config;
+
     if (cpad->convert)
       gst_d3d11_converter_free (cpad->convert);
+
+    config = gst_structure_new_empty ("config");
+    if (cpad->alpha <= 1.0) {
+      gst_structure_set (config, GST_D3D11_CONVERTER_OPT_ALPHA_VALUE,
+          G_TYPE_DOUBLE, cpad->alpha, nullptr);
+    }
+
     cpad->convert =
-        gst_d3d11_converter_new_with_alpha (self->device,
-        &pad->info, &vagg->info, cpad->alpha);
+        gst_d3d11_converter_new (self->device, &pad->info, &vagg->info, config);
+
     cpad->alpha_updated = FALSE;
     if (!cpad->convert) {
       GST_ERROR_OBJECT (pad, "Couldn't create converter");
@@ -2049,7 +2058,7 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self)
   context_handle->Unmap (index_buffer.Get (), 0);
 
   quad = gst_d3d11_quad_new (self->device,
-      ps.Get (), vs.Get (), layout.Get (), NULL,
+      ps.Get (), vs.Get (), layout.Get (), nullptr, 0,
       vertex_buffer.Get (), sizeof (VertexData), index_buffer.Get (),
       DXGI_FORMAT_R16_UINT, 6);
   if (!quad) {

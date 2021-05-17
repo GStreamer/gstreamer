@@ -285,7 +285,7 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   overlay->texture = texture.Detach ();
   overlay->srv = srv.Detach ();
   overlay->quad = gst_d3d11_quad_new (device,
-      self->ps, self->vs, self->layout, NULL,
+      self->ps, self->vs, self->layout, nullptr, 0,
       vertex_buffer.Get (), sizeof (VertexData),
       self->index_buffer, DXGI_FORMAT_R16_UINT, index_count);
 
