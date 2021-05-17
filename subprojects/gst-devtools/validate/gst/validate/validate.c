@@ -524,7 +524,6 @@ gst_validate_deinit (void)
   gst_validate_report_deinit ();
 
   g_mutex_unlock (&_gst_validate_registry_mutex);
-  g_mutex_clear (&_gst_validate_registry_mutex);
 }
 
 gboolean
