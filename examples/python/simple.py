@@ -31,21 +31,16 @@ from gi.repository import Gst, GES, GLib  # noqa
 class Simple:
     def __init__(self, uri):
         timeline = GES.Timeline.new_audio_video()
-        self.project = timeline.get_asset()
-
-        self.project.connect("asset-added", self._asset_added_cb)
-        self.project.connect("error-loading-asset", self._error_loading_asset_cb)
-        self.project.create_asset(uri, GES.UriClip)
-        self.layer = timeline.append_layer()
-        self._create_pipeline(timeline)
-        self.loop = GLib.MainLoop()
-
-    def _create_pipeline(self, timeline):
-        self.pipeline = GES.Pipeline()
-        self.pipeline.set_timeline(timeline)
-        bus = self.pipeline.get_bus()
+        layer = timeline.append_layer()
+        layer.add_clip(GES.UriClip.new(uri))
+        self.pipeline = pipeline = GES.Pipeline()
+        pipeline.set_timeline(timeline)
+        pipeline.set_state(Gst.State.PLAYING)
+        bus = pipeline.get_bus()
         bus.add_signal_watch()
         bus.connect("message", self.bus_message_cb)
+
+        self.loop = GLib.MainLoop()
 
     def bus_message_cb(self, unused_bus, message):
         if message.type == Gst.MessageType.EOS:
@@ -58,14 +53,6 @@ class Simple:
 
     def start(self):
         self.loop.run()
-
-    def _asset_added_cb(self, project, asset):
-        self.layer.add_asset(asset, 0, 0, Gst.SECOND * 5, GES.TrackType.UNKNOWN)
-        self.pipeline.set_state(Gst.State.PLAYING)
-
-    def _error_loading_asset_cb(self, project, error, asset_id, type):
-        print("Could not load asset %s: %s" % (asset_id, error))
-        self.loop.quit()
 
 if __name__ == "__main__":
     if len(os.sys.argv) != 2:
