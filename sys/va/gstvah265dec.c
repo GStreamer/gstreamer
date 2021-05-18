@@ -68,6 +68,14 @@ GST_DEBUG_CATEGORY_STATIC (gst_va_h265dec_debug);
 #define GST_VA_H265_DEC_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_FROM_INSTANCE (obj), GstVaH265DecClass))
 #define GST_VA_H265_DEC_CLASS(klass)   ((GstVaH265DecClass *) klass)
 
+struct slice
+{
+  guint8 *data;
+  guint size;
+
+  VASliceParameterBufferHEVC param;
+};
+
 typedef struct _GstVaH265Dec GstVaH265Dec;
 typedef struct _GstVaH265DecClass GstVaH265DecClass;
 
@@ -89,6 +97,8 @@ struct _GstVaH265Dec
   VAPictureParameterBufferHEVC pic_param;
   gint32 WpOffsetHalfRangeC;
 
+  struct slice prev_slice;
+
   gboolean need_negotiation;
 };
 
@@ -99,18 +109,87 @@ static const gchar *src_caps_str = GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VA
 
 static const gchar *sink_caps_str = "video/x-h265";
 
+static inline void
+_set_last_slice_flag (GstVaH265Dec * self)
+{
+  self->prev_slice.param.LongSliceFlags.fields.LastSliceOfPic = 1;
+}
+
+static void
+_replace_previous_slice (GstVaH265Dec * self, guint8 * data, guint size)
+{
+  struct slice *slice = &self->prev_slice;
+  gboolean do_reset = (slice->size < size);
+
+  if (!data || do_reset) {
+    g_clear_pointer (&slice->data, g_free);
+    slice->size = 0;
+  }
+
+  if (!data)
+    return;
+
+  if (do_reset) {
+    GST_LOG_OBJECT (self, "allocating slice data %u", size);
+    slice->data = g_malloc (size);
+  }
+
+  memcpy (slice->data, data, size);
+  slice->size = size;
+}
+
+static gboolean
+_submit_previous_slice (GstVaBaseDec * base, GstVaDecodePicture * va_pic)
+{
+  GstVaH265Dec *self = GST_VA_H265_DEC (base);
+  struct slice *slice;
+  gboolean ret;
+
+  slice = &self->prev_slice;
+  if (!slice->data && slice->size == 0)
+    return TRUE;
+  if (!slice->data || slice->size == 0)
+    return FALSE;
+
+  ret = gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice->param,
+      sizeof (slice->param), slice->data, slice->size);
+
+  return ret;
+}
+
 static gboolean
 gst_va_h265_dec_end_picture (GstH265Decoder * decoder, GstH265Picture * picture)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
   GstVaDecodePicture *va_pic;
+  gboolean ret;
 
   GST_LOG_OBJECT (base, "end picture %p, (poc %d)",
       picture, picture->pic_order_cnt);
 
   va_pic = gst_h265_picture_get_user_data (picture);
 
-  return gst_va_decoder_decode (base->decoder, va_pic);
+  _set_last_slice_flag (self);
+  ret = _submit_previous_slice (base, va_pic);
+
+  /* TODO(victor): optimization: this could be done at decoder's
+   * stop() vmethod */
+  _replace_previous_slice (self, NULL, 0);
+
+  if (!ret) {
+    GST_ERROR_OBJECT (self, "Failed to submit the previous slice");
+    return FALSE;
+  }
+
+  ret = gst_va_decoder_decode (base->decoder, va_pic);
+  if (!ret) {
+    GST_ERROR_OBJECT (self, "Failed at end picture %p, (poc %d)",
+        picture, picture->pic_order_cnt);
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -125,6 +204,7 @@ gst_va_h265_dec_output_picture (GstH265Decoder * decoder,
 
   if (self->last_ret != GST_FLOW_OK) {
     gst_h265_picture_unref (picture);
+    _replace_previous_slice (self, NULL, 0);
     gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
     return self->last_ret;
   }
@@ -342,11 +422,21 @@ gst_va_h265_dec_decode_slice (GstH265Decoder * decoder,
   GstH265SliceHdr *header = &slice->header;
   GstH265NalUnit *nalu = &slice->nalu;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
   GstVaDecodePicture *va_pic;
-  VASliceParameterBufferHEVC slice_param;
+  VASliceParameterBufferHEVC *slice_param;
+
+  va_pic = gst_h265_picture_get_user_data (picture);
+  if (!_submit_previous_slice (base, va_pic)) {
+    _replace_previous_slice (self, NULL, 0);
+    GST_ERROR_OBJECT (base, "Failed to submit previous slice buffers");
+    return FALSE;
+  }
+
+  slice_param = &self->prev_slice.param;
 
   /* *INDENT-OFF* */
-  slice_param = (VASliceParameterBufferHEVC) {
+  *slice_param = (VASliceParameterBufferHEVC) {
     .slice_data_size = nalu->size,
     .slice_data_offset = 0,
     .slice_data_flag = VA_SLICE_DATA_FLAG_ALL,
@@ -364,43 +454,36 @@ gst_va_h265_dec_decode_slice (GstH265Decoder * decoder,
     .num_entry_point_offsets = header->num_entry_point_offsets,
     .entry_offset_to_subset_array = 0, /* does not exist in spec */
     .slice_data_num_emu_prevn_bytes = header->n_emulation_prevention_bytes,
+    .LongSliceFlags.fields = {
+      .LastSliceOfPic = 0, /* the last one will be set on end_picture() */
+      .dependent_slice_segment_flag = header->dependent_slice_segment_flag,
+      .slice_type = header->type,
+      .color_plane_id = header->colour_plane_id,
+      .slice_sao_luma_flag = header->sao_luma_flag,
+      .slice_sao_chroma_flag = header->sao_chroma_flag,
+      .mvd_l1_zero_flag = header->mvd_l1_zero_flag,
+      .cabac_init_flag = header->cabac_init_flag,
+      .slice_temporal_mvp_enabled_flag = header->temporal_mvp_enabled_flag,
+      .slice_deblocking_filter_disabled_flag =
+          header->deblocking_filter_disabled_flag,
+      .collocated_from_l0_flag = header->collocated_from_l0_flag,
+      .slice_loop_filter_across_slices_enabled_flag =
+          header->loop_filter_across_slices_enabled_flag,
+    },
   };
   /* *INDENT-ON* */
 
-  /* FIXME to set this right, we'd need to delay writing this until we get
-   * called on end_picture(), which is all silly */
-  slice_param.LongSliceFlags.fields.LastSliceOfPic = 0;
-  slice_param.LongSliceFlags.fields.dependent_slice_segment_flag =
-      header->dependent_slice_segment_flag;
-  slice_param.LongSliceFlags.fields.slice_type = header->type;
-  slice_param.LongSliceFlags.fields.color_plane_id = header->colour_plane_id;
-  slice_param.LongSliceFlags.fields.slice_sao_luma_flag = header->sao_luma_flag;
-  slice_param.LongSliceFlags.fields.slice_sao_chroma_flag =
-      header->sao_chroma_flag;
-  slice_param.LongSliceFlags.fields.mvd_l1_zero_flag = header->mvd_l1_zero_flag;
-  slice_param.LongSliceFlags.fields.cabac_init_flag = header->cabac_init_flag;
-  slice_param.LongSliceFlags.fields.slice_temporal_mvp_enabled_flag =
-      header->temporal_mvp_enabled_flag;
-  slice_param.LongSliceFlags.fields.slice_deblocking_filter_disabled_flag =
-      header->deblocking_filter_disabled_flag;
-  slice_param.LongSliceFlags.fields.collocated_from_l0_flag =
-      header->collocated_from_l0_flag;
-  slice_param.LongSliceFlags.fields.
-      slice_loop_filter_across_slices_enabled_flag =
-      header->loop_filter_across_slices_enabled_flag;
-
-  _fill_ref_pic_list (decoder, picture, slice_param.RefPicList[0],
+  _fill_ref_pic_list (decoder, picture, slice_param->RefPicList[0],
       ref_pic_list0);
-  _fill_ref_pic_list (decoder, picture, slice_param.RefPicList[1],
+  _fill_ref_pic_list (decoder, picture, slice_param->RefPicList[1],
       ref_pic_list1);
 
-  _fill_pred_weight_table (GST_VA_H265_DEC (decoder), header, &slice_param);
+  _fill_pred_weight_table (GST_VA_H265_DEC (decoder), header, slice_param);
 
-  va_pic = gst_h265_picture_get_user_data (picture);
-
-  return gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice_param,
-      sizeof (slice_param), slice->nalu.data + slice->nalu.offset,
+  _replace_previous_slice (self, slice->nalu.data + slice->nalu.offset,
       slice->nalu.size);
+
+  return TRUE;
 }
 
 static gboolean
@@ -569,10 +652,10 @@ static gboolean
 gst_va_h265_dec_new_picture (GstH265Decoder * decoder,
     GstVideoCodecFrame * frame, GstH265Picture * picture)
 {
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
   GstVaDecodePicture *pic;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
 
   self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
   if (self->last_ret != GST_FLOW_OK)
@@ -902,7 +985,10 @@ gst_va_h265_dec_negotiate (GstVideoDecoder * decoder)
 static void
 gst_va_h265_dec_dispose (GObject * object)
 {
+  g_free (GST_VA_H265_DEC (object)->prev_slice.data);
+
   gst_va_base_dec_close (GST_VIDEO_DECODER (object));
+
   G_OBJECT_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS (object))->dispose (object);
 }
 
