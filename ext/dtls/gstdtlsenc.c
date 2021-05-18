@@ -565,6 +565,9 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL), ("%s", err->message));
         g_clear_error (&err);
         break;
+      case GST_FLOW_FLUSHING:
+        GST_INFO_OBJECT (self, "Flushing");
+        break;
       default:
         g_assert_not_reached ();
         break;
@@ -680,6 +683,8 @@ on_send_data (GstDtlsConnection * connection, gconstpointer data, gsize length,
   GST_TRACE_OBJECT (self, "send data: releasing lock");
 
   ret = self->src_ret == GST_FLOW_OK;
+  if (self->src_ret == GST_FLOW_FLUSHING)
+    gst_dtls_connection_set_flow_return (connection, self->src_ret);
   g_mutex_unlock (&self->queue_lock);
 
   return ret;
