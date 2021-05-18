@@ -483,7 +483,10 @@ gst_sctp_enc_release_pad (GstElement * element, GstPad * pad)
   if (self->sctp_association)
     gst_sctp_association_reset_stream (self->sctp_association, stream_id);
 
-  gst_element_remove_pad (element, pad);
+  GST_PAD_STREAM_LOCK (pad);
+  if (gst_object_has_as_parent (GST_OBJECT (pad), GST_OBJECT (element)))
+    gst_element_remove_pad (element, pad);
+  GST_PAD_STREAM_UNLOCK (pad);
 }
 
 static void
