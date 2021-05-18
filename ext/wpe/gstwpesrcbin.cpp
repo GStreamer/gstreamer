@@ -24,11 +24,45 @@
  * The wpesrc element is used to produce a video texture representing a web page
  * rendered off-screen by WPE.
  *
- * Starting from WPEBackend-FDO 1.6.x, software rendering support is available.
- * This features allows wpesrc to be used on machines without GPU, and/or for
- * testing purpose. To enable it, set the `LIBGL_ALWAYS_SOFTWARE=true`
- * environment variable and make sure `video/x-raw, format=BGRA` caps are
- * negotiated by the wpesrc element.
+ * Starting from WPEBackend-FDO 1.6.x, software rendering support is available. This
+ * features allows wpesrc to be used on machines without GPU, and/or for testing
+ * purpose. To enable it, set the `LIBGL_ALWAYS_SOFTWARE=true` environment
+ * variable and make sure `video/x-raw, format=BGRA` caps are negotiated by the
+ * wpesrc element.
+ *
+ * ## Example launch lines
+ *
+ * ### Show the GStreamer website homepage
+ *
+ * ```
+ * gst-launch-1.0 -v wpesrc location="https://gstreamer.freedesktop.org" ! queue ! glimagesink
+ * ```
+ *
+ * ### Save the first 50 video frames generated for the GStreamer website as PNG files in /tmp
+ *
+ * ```
+ * LIBGL_ALWAYS_SOFTWARE=true gst-launch-1.0 -v wpesrc num-buffers=50 location="https://gstreamer.freedesktop.org" ! videoconvert ! pngenc ! multifilesink location=/tmp/snapshot-%05d.png
+ * ```
+ *
+ *
+ * ### Show the GStreamer website homepage as played with GstPlayer in a GTK+ window
+ *
+ * ```
+ * gst-play-1.0 --videosink gtkglsink wpe://https://gstreamer.freedesktop.org
+ * ```
+ *
+ * ### Composite WPE with a video stream in a single OpenGL scene
+ *
+ * ```
+ * gst-launch-1.0  glvideomixer name=m sink_1::zorder=0 ! glimagesink wpesrc location="file:///home/phil/Downloads/plunk/index.html" draw-background=0 ! m. videotestsrc ! queue ! glupload ! glcolorconvert ! m.
+ * ```
+ *
+ *
+ * ### Composite WPE with a video stream, sink_0 pad properties have to match the video dimensions
+ *
+ * ```
+ * gst-launch-1.0 glvideomixer name=m sink_1::zorder=0 sink_0::height=818 sink_0::width=1920 ! gtkglsink wpesrc location="file:///home/phil/Downloads/plunk/index.html" draw-background=0 ! m. uridecodebin uri="http://192.168.1.44/Sintel.2010.1080p.mkv" name=d d. ! queue ! glupload ! glcolorconvert ! m.
+ * ```
  *
  * Additionally, any audio stream created by WPE is exposed as "sometimes" audio
  * source pads.
@@ -38,20 +72,22 @@
  * with the addition of the following fields into the GstMessage details (See
  * gst_message_parse_error_details(), gst_message_parse_warning_details() and
  * gst_message_parse_info_details()):
- *   * `wpesrc_original_src_path`: [Path](gst_object_get_path_string) of the
- *      original element posting the message
+ *
+ * * `wpesrc_original_src_path`: [Path](gst_object_get_path_string) of the
+ *   original element posting the message
  *
  * Other message types are posted as [element custom](gst_message_new_custom)
  * messages reusing the same GstStructure as the one from the message from the
  * message posted in the web page with the addition of the following fields:
- *    * `wpesrc_original_message_type`: Type of the original message from
- *      gst_message_type_get_name().
- *    * `wpesrc_original_src_name`: Name of the original element posting the
- *      message
- *    * `wpesrc_original_src_type`: Name of the GType of the original element
- *      posting the message
- *    * `wpesrc_original_src_path`: [Path](gst_object_get_path_string) of the
- *      original element positing the message
+ *
+ * * `wpesrc_original_message_type`: Type of the original message from
+ *    gst_message_type_get_name().
+ * * `wpesrc_original_src_name`: Name of the original element posting the
+ *   message
+ * * `wpesrc_original_src_type`: Name of the GType of the original element
+ *   posting the message
+ * * `wpesrc_original_src_path`: [Path](gst_object_get_path_string) of the
+ *   original element positing the message
  */
 
 #include "gstwpesrcbin.h"

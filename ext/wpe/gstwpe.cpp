@@ -17,46 +17,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/**
- * SECTION:element-wpesrc
- * @title: wpesrc
- *
- * The wpesrc element is used to produce a video texture representing a web page
- * rendered off-screen by WPE.
- *
- * Starting from WPEBackend-FDO 1.6.x, software rendering support is available. This
- * features allows wpesrc to be used on machines without GPU, and/or for testing
- * purpose. To enable it, set the `LIBGL_ALWAYS_SOFTWARE=true` environment
- * variable and make sure `video/x-raw, format=BGRA` caps are negotiated by the
- * wpesrc element.
- *
- * ## Example launch lines
- *
- * |[
- * gst-launch-1.0 -v wpesrc location="https://gstreamer.freedesktop.org" ! queue ! glimagesink
- * ]|
- * Shows the GStreamer website homepage
- *
- * |[
- * LIBGL_ALWAYS_SOFTWARE=true gst-launch-1.0 -v wpesrc num-buffers=50 location="https://gstreamer.freedesktop.org" ! videoconvert ! pngenc ! multifilesink location=/tmp/snapshot-%05d.png
- * ]|
- * Saves the first 50 video frames generated for the GStreamer website as PNG files in /tmp.
- *
- * |[
- * gst-play-1.0 --videosink gtkglsink wpe://https://gstreamer.freedesktop.org
- * ]|
- * Shows the GStreamer website homepage as played with GstPlayer in a GTK+ window.
- *
- * |[
- * gst-launch-1.0  glvideomixer name=m sink_1::zorder=0 ! glimagesink wpesrc location="file:///home/phil/Downloads/plunk/index.html" draw-background=0 ! m. videotestsrc ! queue ! glupload ! glcolorconvert ! m.
- * ]|
- * Composite WPE with a video stream in a single OpenGL scene.
- *
- * |[
- * gst-launch-1.0 glvideomixer name=m sink_1::zorder=0 sink_0::height=818 sink_0::width=1920 ! gtkglsink wpesrc location="file:///home/phil/Downloads/plunk/index.html" draw-background=0 ! m. uridecodebin uri="http://192.168.1.44/Sintel.2010.1080p.mkv" name=d d. ! queue ! glupload ! glcolorconvert ! m.
- * ]|
- * Composite WPE with a video stream, sink_0 pad properties have to match the video dimensions.
- */
 
 
 #ifdef HAVE_CONFIG_H
