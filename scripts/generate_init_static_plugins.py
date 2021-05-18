@@ -79,7 +79,7 @@ if __name__ == "__main__":
     plugins_declaration = []
     plugins_registration = []
 
-    if options.plugins is None:
+    if options.plugins is None or options.plugins.isspace():
         plugins = []
     else:
         plugins = options.plugins.split(';')
