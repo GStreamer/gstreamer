@@ -101,6 +101,7 @@ struct _GstDtlsConnectionPrivate
   GstDtlsConnectionSendCallback send_callback;
   gpointer send_callback_user_data;
   GDestroyNotify send_callback_destroy_notify;
+  GstFlowReturn syscall_flow_return;
 
   gboolean timeout_pending;
   GThreadPool *thread_pool;
@@ -600,6 +601,14 @@ gst_dtls_connection_set_send_callback (GstDtlsConnection * self,
   g_mutex_unlock (&priv->mutex);
 }
 
+void
+gst_dtls_connection_set_flow_return (GstDtlsConnection * self,
+    GstFlowReturn flow_ret)
+{
+  g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
+  self->priv->syscall_flow_return = flow_ret;
+}
+
 GstFlowReturn
 gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gsize len,
     gsize * written, GError ** err)
@@ -1002,13 +1011,19 @@ handle_error (GstDtlsConnection * self, int ret, GstResourceError error_type,
     case SSL_ERROR_WANT_WRITE:
       GST_LOG_OBJECT (self, "SSL wants write");
       return GST_FLOW_OK;
-    case SSL_ERROR_SYSCALL:
+    case SSL_ERROR_SYSCALL:{
+      GstFlowReturn rc = GST_FLOW_OK;
       /* OpenSSL shouldn't be making real system calls, so we can safely
        * ignore syscall errors. System interactions should happen through
        * our BIO.
        */
-      GST_DEBUG_OBJECT (self, "OpenSSL reported a syscall error, ignoring.");
-      return GST_FLOW_OK;
+      if (error_type == GST_RESOURCE_ERROR_WRITE) {
+        rc = self->priv->syscall_flow_return;
+      }
+      GST_DEBUG_OBJECT (self,
+          "OpenSSL reported a syscall error. flow_return=%i", rc);
+      return rc;
+    }
     default:
       if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED) {
         self->priv->connection_state = GST_DTLS_CONNECTION_STATE_FAILED;
@@ -1182,6 +1197,7 @@ bio_method_write (BIO * bio, const char *data, int size)
   gboolean ret = TRUE;
 
   GST_LOG_OBJECT (self, "BIO: writing %d", size);
+  self->priv->syscall_flow_return = GST_FLOW_OK;
 
   if (self->priv->send_callback)
     ret = self->priv->send_callback (self, data, size,

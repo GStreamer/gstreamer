@@ -119,6 +119,11 @@ typedef gboolean (*GstDtlsConnectionSendCallback) (GstDtlsConnection * connectio
 void gst_dtls_connection_set_send_callback(GstDtlsConnection *, GstDtlsConnectionSendCallback, gpointer, GDestroyNotify);
 
 /*
+ * Sets the GstFlowReturn that be returned from gst_dtls_connection_send() if callback returns FALSE
+ */
+void gst_dtls_connection_set_flow_return(GstDtlsConnection *, GstFlowReturn);
+
+/*
  * Processes data that has been received, the transformation is done in-place.
  *
  * Returns:
@@ -142,6 +147,7 @@ GstFlowReturn gst_dtls_connection_process(GstDtlsConnection *, gpointer ptr, gsi
  *     we received an EOS before.
  *   - GST_FLOW_ERROR + err if an error happened
  *   - GST_FLOW_OK + written >= 0 if processing was successful
+ *   - Any GstFlowReturn set with gst_dtls_connection_set_flow_return()
  */
 GstFlowReturn gst_dtls_connection_send(GstDtlsConnection *, gconstpointer ptr, gsize len, gsize *written, GError **err);
 
