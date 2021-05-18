@@ -107,25 +107,27 @@ typedef struct
 static inline guint
 _get_plane_width (const GstVideoInfo * info, guint plane)
 {
-  if (GST_VIDEO_INFO_IS_YUV (info))
-    /* For now component width and plane width are the same and the
-     * plane-component mapping matches
-     */
-    return GST_VIDEO_INFO_COMP_WIDTH (info, plane);
-  else                          /* RGB, GRAY */
+  if (GST_VIDEO_INFO_IS_YUV (info)) {
+    gint comp[GST_VIDEO_MAX_COMPONENTS];
+    gst_video_format_info_component (info->finfo, plane, comp);
+    return GST_VIDEO_INFO_COMP_WIDTH (info, comp[0]);
+  } else {
+    /* RGB, GRAY */
     return GST_VIDEO_INFO_WIDTH (info);
+  }
 }
 
 static inline guint
 _get_plane_height (const GstVideoInfo * info, guint plane)
 {
-  if (GST_VIDEO_INFO_IS_YUV (info))
-    /* For now component width and plane width are the same and the
-     * plane-component mapping matches
-     */
-    return GST_VIDEO_INFO_COMP_HEIGHT (info, plane);
-  else                          /* RGB, GRAY */
+  if (GST_VIDEO_INFO_IS_YUV (info)) {
+    gint comp[GST_VIDEO_MAX_COMPONENTS];
+    gst_video_format_info_component (info->finfo, plane, comp);
+    return GST_VIDEO_INFO_COMP_HEIGHT (info, comp[0]);
+  } else {
+    /* RGB, GRAY */
     return GST_VIDEO_INFO_HEIGHT (info);
+  }
 }
 
 static inline void

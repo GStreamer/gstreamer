@@ -1176,13 +1176,13 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
   if (plane_size) {
     for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
       if (i < GST_VIDEO_INFO_N_PLANES (info)) {
-        gint comps[GST_VIDEO_MAX_COMPONENTS];
+        gint comp[GST_VIDEO_MAX_COMPONENTS];
         guint plane_height;
 
         /* Convert plane index to component index */
-        gst_video_format_info_component (info->finfo, i, comps);
+        gst_video_format_info_component (info->finfo, i, comp);
         plane_height =
-            GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, comps[0],
+            GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, comp[0],
             GST_VIDEO_INFO_FIELD_HEIGHT (info));
         plane_size[i] = plane_height * GST_VIDEO_INFO_PLANE_STRIDE (info, i);
       } else {
@@ -1367,11 +1367,14 @@ gst_video_info_align_full (GstVideoInfo * info, GstVideoAlignment * align,
     GST_LOG ("left padding %u", align->padding_left);
     aligned = TRUE;
     for (i = 0; i < n_planes; i++) {
+      gint comp[GST_VIDEO_MAX_COMPONENTS];
       gint hedge;
 
       /* this is the amount of pixels to add as left padding */
-      hedge = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, i, align->padding_left);
-      hedge *= GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, i);
+      gst_video_format_info_component (vinfo, i, comp);
+      hedge = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, comp[0],
+          align->padding_left);
+      hedge *= GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, comp[0]);
 
       GST_LOG ("plane %d, padding %d, alignment %u", i, hedge,
           align->stride_align[i]);
@@ -1419,25 +1422,20 @@ gst_video_info_align_full (GstVideoInfo * info, GstVideoAlignment * align,
   info->height = height;
 
   for (i = 0; i < n_planes; i++) {
-    gint vedge, hedge, comp;
+    gint comp[GST_VIDEO_MAX_COMPONENTS];
+    gint vedge, hedge;
 
-    /* Find the component for this plane, FIXME, we assume the plane number and
-     * component number is the same for now, for scaling the dimensions this is
-     * currently true for all formats but it might not be when adding new
-     * formats. We might need to add a plane subsamling in the format info to
-     * make this more generic or maybe use a plane -> component mapping. */
-    comp = i;
-
+    gst_video_format_info_component (info->finfo, i, comp);
     hedge =
-        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, comp, align->padding_left);
+        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, comp[0], align->padding_left);
     vedge =
-        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, comp, align->padding_top);
+        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, comp[0], align->padding_top);
 
     GST_DEBUG ("plane %d: comp: %d, hedge %d vedge %d align %d stride %d", i,
-        comp, hedge, vedge, align->stride_align[i], info->stride[i]);
+        comp[0], hedge, vedge, align->stride_align[i], info->stride[i]);
 
     info->offset[i] += (vedge * info->stride[i]) +
-        (hedge * GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, comp));
+        (hedge * GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, comp[0]));
   }
 
   return TRUE;

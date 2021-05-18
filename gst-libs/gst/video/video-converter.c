@@ -5968,24 +5968,27 @@ convert_fill_border (GstVideoConverter * convert, GstVideoFrame * dest)
   n_planes = GST_VIDEO_FRAME_N_PLANES (dest);
 
   for (k = 0; k < n_planes; k++) {
+    gint comp[GST_VIDEO_MAX_COMPONENTS];
     gint i, out_x, out_y, out_width, out_height, pstride, pgroup;
     gint r_border, lb_width, rb_width;
     gint out_maxwidth, out_maxheight;
     gpointer borders;
 
-    out_x = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, k, convert->out_x);
-    out_y = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, k, convert->out_y);
-    out_width =
-        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, k, convert->out_width);
-    out_height =
-        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, k, convert->out_height);
-    out_maxwidth =
-        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, k, convert->out_maxwidth);
-    out_maxheight =
-        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, k,
+    gst_video_format_info_component (out_finfo, k, comp);
+    out_x = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, comp[0],
+        convert->out_x);
+    out_y = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, comp[0],
+        convert->out_y);
+    out_width = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, comp[0],
+        convert->out_width);
+    out_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, comp[0],
+        convert->out_height);
+    out_maxwidth = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, comp[0],
+        convert->out_maxwidth);
+    out_maxheight = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, comp[0],
         convert->out_maxheight);
 
-    pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, k);
+    pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, comp[0]);
 
     switch (GST_VIDEO_FORMAT_INFO_FORMAT (out_finfo)) {
       case GST_VIDEO_FORMAT_YUY2:
@@ -6806,45 +6809,49 @@ setup_scale (GstVideoConverter * convert)
     convert->fsplane[0] = 0;
   } else {
     for (i = 0; i < n_planes; i++) {
-      gint comp, n_comp, j, iw, ih, ow, oh, pstride;
+      gint out_comp[GST_VIDEO_MAX_COMPONENTS];
+      gint comp, j, iw, ih, ow, oh, pstride;
       gboolean need_v_scaler, need_h_scaler;
       GstStructure *config;
       gint resample_method;
 
-      n_comp = GST_VIDEO_FORMAT_INFO_N_COMPONENTS (in_finfo);
+      gst_video_format_info_component (out_finfo, i, out_comp);
+      ow = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, out_comp[0],
+          out_width);
+      oh = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, out_comp[0],
+          out_height);
+      pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, out_comp[0]);
 
       /* find the component in this plane and map it to the plane of
        * the source */
-      comp = -1;
-      for (j = 0; j < n_comp; j++) {
-        if (GST_VIDEO_FORMAT_INFO_PLANE (out_finfo, j) == i) {
-          comp = j;
-          break;
-        }
+      if (out_comp[0] < GST_VIDEO_FORMAT_INFO_N_COMPONENTS (in_finfo)) {
+        comp = out_comp[0];
+        iw = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, comp, in_width);
+        ih = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (in_finfo, comp, in_height);
+        convert->fin_x[i] = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, comp,
+            convert->in_x);
+        convert->fin_x[i] *= pstride;
+        convert->fin_y[i] = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (in_finfo, comp,
+            convert->in_y);
+      } else {
+        /* we will use a fill instead, setting the parameters to an invalid
+         * size to reduce confusion */
+        comp = -1;
+        iw = ih = -1;
+        convert->fin_x[i] = -1;
+        convert->fin_y[i] = -1;
       }
-
-      iw = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, i, in_width);
-      ih = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (in_finfo, i, in_height);
-      ow = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, i, out_width);
-      oh = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, i, out_height);
-
-      GST_DEBUG ("plane %d: %dx%d -> %dx%d", i, iw, ih, ow, oh);
 
       convert->fout_width[i] = ow;
       convert->fout_height[i] = oh;
 
-      pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (out_finfo, i);
-      convert->fin_x[i] =
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, i, convert->in_x);
-      convert->fin_x[i] *= pstride;
-      convert->fin_y[i] =
-          GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (in_finfo, i, convert->in_y);
-      convert->fout_x[i] =
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, i, convert->out_x);
+      convert->fout_x[i] = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo,
+          out_comp[0], convert->out_x);
       convert->fout_x[i] *= pstride;
-      convert->fout_y[i] =
-          GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo, i, convert->out_y);
+      convert->fout_y[i] = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo,
+          out_comp[0], convert->out_y);
 
+      GST_DEBUG ("plane %d: %dx%d -> %dx%d", i, iw, ih, ow, oh);
       GST_DEBUG ("plane %d: pstride %d", i, pstride);
       GST_DEBUG ("plane %d: in_x %d, in_y %d", i, convert->fin_x[i],
           convert->fin_y[i]);

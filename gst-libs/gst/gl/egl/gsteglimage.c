@@ -573,6 +573,7 @@ GstEGLImage *
 gst_egl_image_from_dmabuf (GstGLContext * context,
     gint dmabuf, const GstVideoInfo * in_info, gint plane, gsize offset)
 {
+  gint comp[GST_VIDEO_MAX_COMPONENTS];
   GstGLFormat format = 0;
   guintptr attribs[13];
   EGLImageKHR img;
@@ -580,16 +581,17 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
   gint fourcc;
   gint i;
 
+  gst_video_format_info_component (in_info->finfo, plane, comp);
   fourcc = _drm_rgba_fourcc_from_info (in_info, plane, &format);
   GST_DEBUG ("fourcc %.4s (%d) plane %d (%dx%d)",
       (char *) &fourcc, fourcc, plane,
-      GST_VIDEO_INFO_COMP_WIDTH (in_info, plane),
-      GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane));
+      GST_VIDEO_INFO_COMP_WIDTH (in_info, comp[0]),
+      GST_VIDEO_INFO_COMP_HEIGHT (in_info, comp[0]));
 
   attribs[atti++] = EGL_WIDTH;
-  attribs[atti++] = GST_VIDEO_INFO_COMP_WIDTH (in_info, plane);
+  attribs[atti++] = GST_VIDEO_INFO_COMP_WIDTH (in_info, comp[0]);
   attribs[atti++] = EGL_HEIGHT;
-  attribs[atti++] = GST_VIDEO_INFO_COMP_HEIGHT (in_info, plane);
+  attribs[atti++] = GST_VIDEO_INFO_COMP_HEIGHT (in_info, comp[0]);
   attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
   attribs[atti++] = fourcc;
   attribs[atti++] = EGL_DMA_BUF_PLANE0_FD_EXT;
@@ -597,7 +599,7 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
   attribs[atti++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
   attribs[atti++] = offset;
   attribs[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
-  attribs[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, plane);
+  attribs[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, comp[0]);
   attribs[atti] = EGL_NONE;
   g_assert (atti == G_N_ELEMENTS (attribs) - 1);
 

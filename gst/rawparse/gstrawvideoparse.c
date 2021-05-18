@@ -1165,10 +1165,12 @@ gst_raw_video_parse_update_info (GstRawVideoParseConfig * config)
     gint tile_height = 1 << GST_VIDEO_FORMAT_INFO_TILE_HS (info->finfo);
     last_plane_size = x_tiles * y_tiles * tile_width * tile_height;
   } else {
+    gint comp[GST_VIDEO_MAX_COMPONENTS];
+    gst_video_format_info_component (info->finfo, last_plane, comp);
     last_plane_size =
         GST_VIDEO_INFO_PLANE_STRIDE (info,
         last_plane) * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo,
-        last_plane, config->height);
+        comp[0], config->height);
   }
 
   GST_VIDEO_INFO_SIZE (info) = last_plane_offset + last_plane_size;

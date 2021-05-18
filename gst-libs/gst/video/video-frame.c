@@ -298,6 +298,7 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
   const GstVideoInfo *sinfo;
   GstVideoInfo *dinfo;
   const GstVideoFormatInfo *finfo;
+  gint comp[GST_VIDEO_MAX_COMPONENTS];
   guint8 *sp, *dp;
   guint w, h;
   gint ss, ds;
@@ -325,17 +326,16 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
     return TRUE;
   }
 
-  /* FIXME: assumes subsampling of component N is the same as plane N, which is
-   * currently true for all formats we have but it might not be in the future. */
+  gst_video_format_info_component (finfo, plane, comp);
   w = GST_VIDEO_FRAME_COMP_WIDTH (dest,
-      plane) * GST_VIDEO_FRAME_COMP_PSTRIDE (dest, plane);
+      comp[0]) * GST_VIDEO_FRAME_COMP_PSTRIDE (dest, comp[0]);
   /* FIXME: workaround for complex formats like v210, UYVP and IYU1 that have
    * pstride == 0 */
   if (w == 0)
     w = MIN (GST_VIDEO_INFO_PLANE_STRIDE (dinfo, plane),
         GST_VIDEO_INFO_PLANE_STRIDE (sinfo, plane));
 
-  h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, plane);
+  h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, comp[0]);
 
   ss = GST_VIDEO_INFO_PLANE_STRIDE (sinfo, plane);
   ds = GST_VIDEO_INFO_PLANE_STRIDE (dinfo, plane);
