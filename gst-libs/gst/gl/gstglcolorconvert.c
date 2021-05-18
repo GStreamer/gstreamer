@@ -333,6 +333,24 @@ static const struct shader_templ templ_SEMI_PLANAR_to_RGB =
     GST_GL_TEXTURE_TARGET_2D
   };
 
+static const gchar templ_AV12_to_RGB_BODY[] =
+    "vec4 rgba;\n"
+    "vec4 ayuv;\n"
+    /* FIXME: should get the sampling right... */
+    "ayuv.x=texture2D(Ytex, texcoord * tex_scale0).r;\n"
+    "ayuv.yz=texture2D(UVtex, texcoord * tex_scale1).rg;\n"
+    "ayuv.a=texture2D(Atex, texcoord * tex_scale2).r;\n"
+    "rgba.rgb = yuv_to_rgb (ayuv.xyz, offset, coeff1, coeff2, coeff3);\n"
+    "rgba.a = ayuv.a;\n" /* copy alpha as is */
+    "gl_FragColor=vec4(rgba.%c,rgba.%c,rgba.%c,rgba.%c);\n";
+
+static const struct shader_templ templ_AV12_to_RGB =
+  { NULL,
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, UVtex, Atex;\n",
+    { glsl_func_yuv_to_rgb, NULL, },
+    GST_GL_TEXTURE_TARGET_2D
+  };
+
   /* RGB to NV12/NV21/NV16/NV61 conversion */
   /* NV12/NV16: u, v
      NV21/NV61: v, u */
@@ -353,6 +371,28 @@ static const struct shader_templ templ_RGB_to_SEMI_PLANAR_YUV =
     { glsl_func_rgb_to_yuv, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
+
+static const gchar templ_RGB_to_AV12_BODY[] =
+    "vec4 texel, uv_texel;\n"
+    "vec4 ayuv;\n"
+    "texel = texture2D(tex, texcoord).%c%c%c%c;\n"
+    "uv_texel = texture2D(tex, texcoord * tex_scale0 * chroma_sampling).%c%c%c%c;\n"
+    "ayuv.x = rgb_to_yuv (texel.rgb, offset, coeff1, coeff2, coeff3).x;\n"
+    "ayuv.yz = rgb_to_yuv (uv_texel.rgb, offset, coeff1, coeff2, coeff3).yz;\n"
+    /* copy alpha as is */
+    "ayuv.a = texel.a;\n"
+    "gl_FragData[0] = vec4(ayuv.x, 0.0, 0.0, 1.0);\n"
+    "gl_FragData[1] = vec4(ayuv.y, ayuv.z, 0.0, 1.0);\n"
+    "gl_FragData[2] = vec4(ayuv.a, 0.0, 0.0, 1.0);\n";
+
+static const struct shader_templ templ_RGB_to_AV12 =
+  { NULL,
+    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n"
+    "uniform vec2 chroma_sampling;\n",
+    { glsl_func_rgb_to_yuv, NULL, },
+    GST_GL_TEXTURE_TARGET_2D
+  };
+
 
 /* YUY2:r,g,a
    UYVY:a,b,r */
@@ -988,7 +1028,7 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   if (!output || (!context || context->gl_vtable->DrawBuffers))
     _append_value_string_list (supported_formats, "GBRA", "GBR", "RGBP", "BGRP",
         "Y444", "I420", "YV12", "Y42B", "Y41B", "NV12", "NV21", "NV16", "NV61",
-        "A420", NULL);
+        "A420", "AV12", NULL);
 
   /* Requires reading from a RG/LA framebuffer... */
   if (!context || (USING_GLES3 (context) || USING_OPENGL (context)))
@@ -1676,6 +1716,7 @@ _get_n_textures (GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_GBR:
     case GST_VIDEO_FORMAT_RGBP:
     case GST_VIDEO_FORMAT_BGRP:
+    case GST_VIDEO_FORMAT_AV12:
       return 3;
     case GST_VIDEO_FORMAT_GBRA:
     case GST_VIDEO_FORMAT_A420:
@@ -1981,6 +2022,17 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         info->shader_tex_names[1] = "UVtex";
         break;
       }
+      case GST_VIDEO_FORMAT_AV12:
+      {
+        info->templ = &templ_AV12_to_RGB;
+        info->frag_body =
+            g_strdup_printf (templ_AV12_to_RGB_BODY,
+            pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
+        info->shader_tex_names[0] = "Ytex";
+        info->shader_tex_names[1] = "UVtex";
+        info->shader_tex_names[2] = "Atex";
+        break;
+      }
       case GST_VIDEO_FORMAT_NV21:
       case GST_VIDEO_FORMAT_NV61:
       {
@@ -2131,6 +2183,14 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       } else {
         info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
       }
+      break;
+    case GST_VIDEO_FORMAT_AV12:
+      info->templ = &templ_RGB_to_AV12,
+          info->frag_body = g_strdup_printf (templ_RGB_to_AV12_BODY,
+          pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
+          pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
+      info->out_n_textures = 3;
+      info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
       break;
     case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_NV61:
