@@ -353,10 +353,6 @@ gst_gl_context_new (GstGLDisplay * display)
   if (!context && (!user_choice || g_strstr_len (user_choice, 3, "glx")))
     context = GST_GL_CONTEXT (gst_gl_context_glx_new (display));
 #endif
-#if GST_GL_HAVE_PLATFORM_EGL
-  if (!context && (!user_choice || g_strstr_len (user_choice, 3, "egl")))
-    context = GST_GL_CONTEXT (gst_gl_context_egl_new (display));
-#endif
 #if GST_GL_HAVE_PLATFORM_WGL
   if (!context && (!user_choice || g_strstr_len (user_choice, 3, "wgl")))
     context = GST_GL_CONTEXT (gst_gl_context_wgl_new (display));
@@ -364,6 +360,10 @@ gst_gl_context_new (GstGLDisplay * display)
 #if GST_GL_HAVE_PLATFORM_EAGL
   if (!context && (!user_choice || g_strstr_len (user_choice, 4, "eagl")))
     context = GST_GL_CONTEXT (gst_gl_context_eagl_new (display));
+#endif
+#if GST_GL_HAVE_PLATFORM_EGL
+  if (!context && (!user_choice || g_strstr_len (user_choice, 3, "egl")))
+    context = GST_GL_CONTEXT (gst_gl_context_egl_new (display));
 #endif
 
   if (!context) {
