@@ -28,9 +28,9 @@ main (int argc, gchar ** argv)
   GOptionContext *ctx;
   GESPipeline *pipeline;
   GESTimeline *timeline;
-  GESTrack *tracka, *trackv;
-  GESLayer *layer1, *layer2;
+  GESLayer *layer1;
   GESUriClip *src;
+  gchar *uri;
   GMainLoop *mainloop;
 
   gint inpoint = 0, duration = 10;
@@ -72,32 +72,21 @@ main (int argc, gchar ** argv)
 
   /* Create an Audio/Video pipeline with two layers */
   pipeline = ges_pipeline_new ();
+  timeline = ges_timeline_new_audio_video ();
+  layer1 = ges_timeline_append_layer (timeline);
 
-  timeline = ges_timeline_new ();
-
-  tracka = GES_TRACK (ges_audio_track_new ());
-  trackv = GES_TRACK (ges_video_track_new ());
-
-  layer1 = ges_layer_new ();
-  layer2 = ges_layer_new ();
-  g_object_set (layer2, "priority", 1, NULL);
-
-  if (!ges_timeline_add_layer (timeline, layer1) ||
-      !ges_timeline_add_layer (timeline, layer2) ||
-      !ges_timeline_add_track (timeline, tracka) ||
-      !ges_timeline_add_track (timeline, trackv) ||
-      !ges_pipeline_set_timeline (pipeline, timeline))
+  if (!ges_pipeline_set_timeline (pipeline, timeline)) {
+    g_error ("Could not set timeline to pipeline");
     return -1;
-
-  if (1) {
-    gchar *uri = gst_filename_to_uri (argv[1], NULL);
-    /* Add the main audio/video file */
-    src = ges_uri_clip_new (uri);
-    g_free (uri);
-    g_object_set (src, "start", 0, "in-point", inpoint * GST_SECOND,
-        "duration", duration * GST_SECOND, "mute", mute, NULL);
-    ges_layer_add_clip (layer1, GES_CLIP (src));
   }
+
+  uri = gst_filename_to_uri (argv[1], NULL);
+  /* Add the main audio/video file */
+  src = ges_uri_clip_new (uri);
+  ges_layer_add_clip (layer1, GES_CLIP (src));
+  g_free (uri);
+  g_object_set (src, "start", 0, "in-point", inpoint * GST_SECOND,
+      "duration", duration * GST_SECOND, "mute", mute, NULL);
 
   /* Play the pipeline */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
