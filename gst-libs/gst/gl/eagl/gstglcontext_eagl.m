@@ -103,7 +103,13 @@ gst_gl_context_eagl_new (GstGLDisplay * display)
 {
   GstGLContextEagl *context;
 
-  /* there isn't actually a display type for eagl yet? */
+  if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_EAGL)
+      == GST_GL_DISPLAY_TYPE_NONE) {
+    GST_INFO ("Wrong display type %u for this window type %u", display->type,
+        GST_GL_DISPLAY_TYPE_EAGL);
+    return NULL;
+  }
+
   context = g_object_new (GST_TYPE_GL_CONTEXT_EAGL, NULL);
   gst_object_ref_sink (context);
 
