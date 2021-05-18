@@ -85,8 +85,8 @@ G_DEFINE_TYPE (GstKateParse, gst_kate_parse, GST_TYPE_ELEMENT);
 #define _do_init \
   kate_element_init (plugin); \
   GST_DEBUG_CATEGORY_INIT (gst_kateparse_debug, "kateparse", 0, "Kate parser");
-GST_ELEMENT_REGISTER_DEFINE (kateparse, "kateparse", GST_RANK_NONE,
-    GST_TYPE_KATE_PARSE);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (kateparse, "kateparse", GST_RANK_NONE,
+    GST_TYPE_KATE_PARSE, _do_init);
 
 static GstFlowReturn gst_kate_parse_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);

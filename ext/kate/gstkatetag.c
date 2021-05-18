@@ -100,8 +100,8 @@ G_DEFINE_TYPE_WITH_CODE (GstKateTag, gst_kate_tag, GST_TYPE_KATE_PARSE,
 #define _do_init \
   kate_element_init (plugin); \
   GST_DEBUG_CATEGORY_INIT (gst_katetag_debug, "katetag", 0, "Kate tagger");
-GST_ELEMENT_REGISTER_DEFINE (katetag, "katetag", GST_RANK_NONE,
-    GST_TYPE_KATE_TAG);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (katetag, "katetag", GST_RANK_NONE,
+    GST_TYPE_KATE_TAG, _do_init);
 
 static void
 gst_kate_tag_class_init (GstKateTagClass * klass)

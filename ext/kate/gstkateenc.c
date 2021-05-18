@@ -152,8 +152,8 @@ G_DEFINE_TYPE_WITH_CODE (GstKateEnc, gst_kate_enc, GST_TYPE_ELEMENT,
 #define _do_init \
   kate_element_init (plugin); \
   GST_DEBUG_CATEGORY_INIT (gst_kateenc_debug, "kateenc", 0, "Kate encoder");
-GST_ELEMENT_REGISTER_DEFINE (kateenc, "kateenc", GST_RANK_NONE,
-    GST_TYPE_KATE_ENC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (kateenc, "kateenc", GST_RANK_NONE,
+    GST_TYPE_KATE_ENC, _do_init);
 
 /* initialize the plugin's class */
 static void

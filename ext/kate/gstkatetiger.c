@@ -181,8 +181,8 @@ GST_BOILERPLATE (GstKateTiger, gst_kate_tiger, GstElement, GST_TYPE_ELEMENT);
   kate_element_init (plugin); \
   GST_DEBUG_CATEGORY_INIT (gst_katetiger_debug, "tiger", 0, \
         "Kate Tiger renderer");
-GST_ELEMENT_REGISTER_DEFINE (tiger, "tiger", GST_RANK_NONE,
-    GST_TYPE_KATE_TIGER);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (tiger, "tiger", GST_RANK_NONE,
+    GST_TYPE_KATE_TIGER, _do_init);
 
 static GType
 gst_kate_tiger_font_effect_get_type (void)

@@ -122,8 +122,8 @@ G_DEFINE_TYPE (GstKateDec, gst_kate_dec, GST_TYPE_ELEMENT);
 #define _do_init \
   kate_element_init (plugin); \
   GST_DEBUG_CATEGORY_INIT (gst_katedec_debug, "katedec", 0, "Kate decoder");
-GST_ELEMENT_REGISTER_DEFINE (katedec, "katedec", GST_RANK_PRIMARY,
-    GST_TYPE_KATE_DEC);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (katedec, "katedec", GST_RANK_PRIMARY,
+    GST_TYPE_KATE_DEC, _do_init);
 
 static void gst_kate_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
