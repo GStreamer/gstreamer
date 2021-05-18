@@ -42,8 +42,6 @@ struct _TransportSendBinDTLSContext {
   struct pad_block          *rtp_block;
   /* Block on the dtlssrtpenc RTCP sink pad, if any */
   struct pad_block          *rtcp_block;
-  /* Block on the nicesink sink pad, if any */
-  struct pad_block          *nice_block;
 };
 
 struct _TransportSendBin

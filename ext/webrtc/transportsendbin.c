@@ -188,7 +188,6 @@ transport_send_bin_change_state (GstElement * element,
       send->rtp_ctx.rtcp_block = block_peer_pad (elem, "rtcp_sink_0");
       /* unblock ice sink once a connection is made, this should also be automatic */
       elem = send->stream->transport->transport->sink;
-      send->rtp_ctx.nice_block = block_peer_pad (elem, "sink");
 
       TSB_UNLOCK (send);
       break;
@@ -292,29 +291,6 @@ done:
 }
 
 static void
-_on_notify_ice_connection_state (GstWebRTCICETransport * transport,
-    GParamSpec * pspec, TransportSendBin * send)
-{
-  GstWebRTCICEConnectionState state;
-
-  g_object_get (transport, "state", &state, NULL);
-
-  if (state == GST_WEBRTC_ICE_CONNECTION_STATE_CONNECTED ||
-      state == GST_WEBRTC_ICE_CONNECTION_STATE_COMPLETED) {
-    TSB_LOCK (send);
-    if (transport == send->stream->transport->transport) {
-      if (send->rtp_ctx.nice_block) {
-        GST_LOG_OBJECT (send, "Unblocking pad %" GST_PTR_FORMAT,
-            send->rtp_ctx.nice_block->pad);
-        _free_pad_block (send->rtp_ctx.nice_block);
-        send->rtp_ctx.nice_block = NULL;
-      }
-    }
-    TSB_UNLOCK (send);
-  }
-}
-
-static void
 tsb_setup_ctx (TransportSendBin * send, TransportSendBinDTLSContext * ctx,
     GstWebRTCDTLSTransport * transport)
 {
@@ -330,10 +306,6 @@ tsb_setup_ctx (TransportSendBin * send, TransportSendBinDTLSContext * ctx,
   g_signal_connect (dtlssrtpenc, "notify::is-client",
       G_CALLBACK (_on_notify_dtls_client_status), send);
   gst_bin_add (GST_BIN (send), GST_ELEMENT (dtlssrtpenc));
-
-  /* unblock ice sink once it signals a connection */
-  g_signal_connect (transport->transport, "notify::state",
-      G_CALLBACK (_on_notify_ice_connection_state), send);
   gst_bin_add (GST_BIN (send), GST_ELEMENT (nicesink));
 
   if (!gst_element_link_pads (GST_ELEMENT (dtlssrtpenc), "src", nicesink,
@@ -400,11 +372,6 @@ cleanup_ctx_blocks (TransportSendBinDTLSContext * ctx)
   if (ctx->rtcp_block) {
     _free_pad_block (ctx->rtcp_block);
     ctx->rtcp_block = NULL;
-  }
-
-  if (ctx->nice_block) {
-    _free_pad_block (ctx->nice_block);
-    ctx->nice_block = NULL;
   }
 }
 
