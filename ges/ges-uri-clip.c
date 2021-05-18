@@ -607,11 +607,15 @@ ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
 GESUriClip *
 ges_uri_clip_new (const gchar * uri)
 {
-  GESAsset *asset = GES_ASSET (ges_uri_clip_asset_request_sync (uri, NULL));
+  GError *err = NULL;
   GESUriClip *res = NULL;
+  GESAsset *asset = GES_ASSET (ges_uri_clip_asset_request_sync (uri, &err));
 
   if (asset) {
-    res = GES_URI_CLIP (ges_asset_extract (asset, NULL));
+    res = GES_URI_CLIP (ges_asset_extract (asset, &err));
+    if (!res && err)
+      GST_ERROR ("Could not analyze %s: %s", uri, err->message);
+
     gst_object_unref (asset);
   } else
     GST_ERROR ("Could not create asset for uri: %s", uri);
