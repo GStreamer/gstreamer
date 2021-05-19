@@ -538,21 +538,39 @@ check_property (GQuark field_id, GValue * expected_value, PropertyData * data)
   GstControlBinding *binding = NULL;
 
   if (!data->on_children) {
-    GParamSpec *pspec =
-        g_object_class_find_property (G_OBJECT_GET_CLASS (data->element),
-        property);
-    if (!pspec) {
-      GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
-          SCENARIO_ACTION_EXECUTION_ERROR,
-          "Could not get property %s on %" GES_FORMAT,
-          property, GES_ARGS (data->element));
-      data->res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    GObject *tmpobject, *object = g_object_ref (G_OBJECT (data->element));
+    gchar **object_prop_name = g_strsplit (property, "::", 2);
+    gint i = 0;
+    GParamSpec *pspec = NULL;
 
-      return FALSE;
+    while (TRUE) {
+      pspec =
+          g_object_class_find_property (G_OBJECT_GET_CLASS (object),
+          object_prop_name[i]);
+
+      if (!pspec) {
+        GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
+            SCENARIO_ACTION_EXECUTION_ERROR,
+            "Could not get property %s on %" GES_FORMAT,
+            object_prop_name[i], GES_ARGS (data->element));
+        data->res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+        g_strfreev (object_prop_name);
+
+        return FALSE;
+      }
+
+      if (!object_prop_name[++i])
+        break;
+
+      tmpobject = object;
+      g_object_get (tmpobject, pspec->name, &object, NULL);
+      g_object_unref (tmpobject);
     }
 
+    g_strfreev (object_prop_name);
     g_value_init (&cvalue, pspec->value_type);
-    g_object_get_property (G_OBJECT (data->element), property, &cvalue);
+    g_object_get_property (object, pspec->name, &cvalue);
+    g_object_unref (object);
     goto compare;
   }
 
@@ -589,7 +607,7 @@ check_property (GQuark field_id, GValue * expected_value, PropertyData * data)
       && !ges_timeline_element_get_child_property (data->element, property,
           &cvalue)) {
     GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
-        SCENARIO_ACTION_EXECUTION_ERROR, "Could not get property: %s:",
+        SCENARIO_ACTION_EXECUTION_ERROR, "Could not get child property: %s:",
         property);
     data->res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
 
@@ -621,7 +639,7 @@ compare:
 
     GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
         SCENARIO_ACTION_CHECK_ERROR,
-        "%s:%s expected value: '(%s)%s' different than observed: '(%s)%s'",
+        "%s::%s expected value: '(%s)%s' different than observed: '(%s)%s'",
         GES_TIMELINE_ELEMENT_NAME (data->element), property,
         G_VALUE_TYPE_NAME (observed_value), expected,
         G_VALUE_TYPE_NAME (expected_value), observed);
