@@ -165,12 +165,40 @@ gst_compositor_background_get_type (void)
   return compositor_background_type;
 }
 
+#define GST_TYPE_COMPOSITOR_SIZING_POLICY (gst_compositor_sizing_policy_get_type())
+static GType
+gst_compositor_sizing_policy_get_type (void)
+{
+  static GType sizing_policy_type = 0;
+
+  static const GEnumValue sizing_polices[] = {
+    {COMPOSITOR_SIZING_POLICY_NONE,
+        "None: Image is scaled to fill configured destination rectangle without "
+          "padding or keeping the aspect ratio", "none"},
+    {COMPOSITOR_SIZING_POLICY_KEEP_ASPECT_RATIO,
+          "Keep Aspect Ratio: Image is scaled to fit destination rectangle "
+          "specified by GstCompositorPad:{xpos, ypos, width, height} "
+          "with preserved aspect ratio. Resulting image will be centered in "
+          "the destination rectangle with padding if necessary",
+        "keep-aspect-ratio"},
+    {0, NULL, NULL},
+  };
+
+  if (!sizing_policy_type) {
+    sizing_policy_type =
+        g_enum_register_static ("GstCompositorSizingPolicy", sizing_polices);
+  }
+  return sizing_policy_type;
+}
+
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
 #define DEFAULT_PAD_WIDTH  -1
 #define DEFAULT_PAD_HEIGHT -1
 #define DEFAULT_PAD_ALPHA  1.0
 #define DEFAULT_PAD_OPERATOR COMPOSITOR_OPERATOR_OVER
+#define DEFAULT_PAD_SIZING_POLICY COMPOSITOR_SIZING_POLICY_NONE
+
 enum
 {
   PROP_PAD_0,
@@ -180,6 +208,7 @@ enum
   PROP_PAD_HEIGHT,
   PROP_PAD_ALPHA,
   PROP_PAD_OPERATOR,
+  PROP_PAD_SIZING_POLICY,
 };
 
 G_DEFINE_TYPE (GstCompositorPad, gst_compositor_pad,
@@ -209,6 +238,9 @@ gst_compositor_pad_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_OPERATOR:
       g_value_set_enum (value, pad->op);
+      break;
+    case PROP_PAD_SIZING_POLICY:
+      g_value_set_enum (value, pad->sizing_policy);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -247,6 +279,11 @@ gst_compositor_pad_set_property (GObject * object, guint prop_id,
       gst_video_aggregator_pad_set_needs_alpha (GST_VIDEO_AGGREGATOR_PAD (pad),
           pad->op == COMPOSITOR_OPERATOR_ADD);
       break;
+    case PROP_PAD_SIZING_POLICY:
+      pad->sizing_policy = g_value_get_enum (value);
+      gst_video_aggregator_convert_pad_update_conversion_info
+          (GST_VIDEO_AGGREGATOR_CONVERT_PAD (pad));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -255,18 +292,22 @@ gst_compositor_pad_set_property (GObject * object, guint prop_id,
 
 static void
 _mixer_pad_get_output_size (GstCompositor * comp, GstCompositorPad * comp_pad,
-    gint out_par_n, gint out_par_d, gint * width, gint * height)
+    gint out_par_n, gint out_par_d, gint * width, gint * height,
+    gint * x_offset, gint * y_offset)
 {
   GstVideoAggregatorPad *vagg_pad = GST_VIDEO_AGGREGATOR_PAD (comp_pad);
   gint pad_width, pad_height;
   guint dar_n, dar_d;
 
+  *x_offset = 0;
+  *y_offset = 0;
+  *width = 0;
+  *height = 0;
+
   /* FIXME: Anything better we can do here? */
   if (!vagg_pad->info.finfo
       || vagg_pad->info.finfo->format == GST_VIDEO_FORMAT_UNKNOWN) {
     GST_DEBUG_OBJECT (comp_pad, "Have no caps yet");
-    *width = 0;
-    *height = 0;
     return;
   }
 
@@ -286,32 +327,95 @@ _mixer_pad_get_output_size (GstCompositor * comp, GstCompositorPad * comp_pad,
         0 ? GST_VIDEO_INFO_HEIGHT (&vagg_pad->info) : comp_pad->height;
   }
 
-  if (pad_width == 0 || pad_height == 0) {
-    *width = 0;
-    *height = 0;
+  if (pad_width == 0 || pad_height == 0)
     return;
-  }
 
   if (!gst_video_calculate_display_ratio (&dar_n, &dar_d, pad_width, pad_height,
           GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
           GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d)) {
     GST_WARNING_OBJECT (comp_pad, "Cannot calculate display aspect ratio");
-    *width = *height = 0;
     return;
   }
+
   GST_LOG_OBJECT (comp_pad, "scaling %ux%u by %u/%u (%u/%u / %u/%u)", pad_width,
       pad_height, dar_n, dar_d, GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
       GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d);
 
-  /* Pick either height or width, whichever is an integer multiple of the
-   * display aspect ratio. However, prefer preserving the height to account
-   * for interlaced video. */
-  if (pad_height % dar_n == 0) {
-    pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
-  } else if (pad_width % dar_d == 0) {
-    pad_height = gst_util_uint64_scale_int (pad_width, dar_d, dar_n);
-  } else {
-    pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
+  switch (comp_pad->sizing_policy) {
+    case COMPOSITOR_SIZING_POLICY_NONE:
+      /* Pick either height or width, whichever is an integer multiple of the
+       * display aspect ratio. However, prefer preserving the height to account
+       * for interlaced video. */
+      if (pad_height % dar_n == 0) {
+        pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
+      } else if (pad_width % dar_d == 0) {
+        pad_height = gst_util_uint64_scale_int (pad_width, dar_d, dar_n);
+      } else {
+        pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
+      }
+      break;
+    case COMPOSITOR_SIZING_POLICY_KEEP_ASPECT_RATIO:
+    {
+      gint from_dar_n, from_dar_d, to_dar_n, to_dar_d, num, den;
+
+      /* Calculate DAR again with actual video size */
+      if (!gst_util_fraction_multiply (GST_VIDEO_INFO_WIDTH (&vagg_pad->info),
+              GST_VIDEO_INFO_HEIGHT (&vagg_pad->info),
+              GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
+              GST_VIDEO_INFO_PAR_D (&vagg_pad->info), &from_dar_n,
+              &from_dar_d)) {
+        from_dar_n = from_dar_d = -1;
+      }
+
+      if (!gst_util_fraction_multiply (pad_width, pad_height,
+              out_par_n, out_par_d, &to_dar_n, &to_dar_d)) {
+        to_dar_n = to_dar_d = -1;
+      }
+
+      if (from_dar_n != to_dar_n || from_dar_d != to_dar_d) {
+        /* Calculate new output resolution */
+        if (from_dar_n != -1 && from_dar_d != -1
+            && gst_util_fraction_multiply (from_dar_n, from_dar_d,
+                out_par_d, out_par_n, &num, &den)) {
+          GstVideoRectangle src_rect, dst_rect, rst_rect;
+
+          src_rect.h = gst_util_uint64_scale_int (pad_width, den, num);
+          if (src_rect.h == 0) {
+            pad_width = 0;
+            pad_height = 0;
+            break;
+          }
+
+          src_rect.x = src_rect.y = 0;
+          src_rect.w = pad_width;
+
+          dst_rect.x = dst_rect.y = 0;
+          dst_rect.w = pad_width;
+          dst_rect.h = pad_height;
+
+          /* Scale rect to be centered in destination rect */
+          gst_video_center_rect (&src_rect, &dst_rect, &rst_rect, TRUE);
+
+          GST_LOG_OBJECT (comp_pad,
+              "Re-calculated size %dx%d -> %dx%d (x-offset %d, y-offset %d)",
+              pad_width, pad_height, rst_rect.w, rst_rect.h, rst_rect.x,
+              rst_rect.h);
+
+          *x_offset = rst_rect.x;
+          *y_offset = rst_rect.y;
+          pad_width = rst_rect.w;
+          pad_height = rst_rect.h;
+        } else {
+          GST_WARNING_OBJECT (comp_pad, "Failed to calculate output size");
+
+          *x_offset = 0;
+          *y_offset = 0;
+          pad_width = 0;
+          pad_height = 0;
+        }
+      }
+      break;
+    }
   }
 
   *width = pad_width;
@@ -360,6 +464,7 @@ _pad_obscures_rectangle (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad,
   GstStructure *converter_config = NULL;
   gboolean fill_border = TRUE;
   guint32 border_argb = 0xff000000;
+  gint x_offset, y_offset;
 
   /* No buffer to obscure the rectangle with */
   if (!gst_video_aggregator_pad_has_current_buffer (pad))
@@ -391,7 +496,9 @@ _pad_obscures_rectangle (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad,
   /* Handle pixel and display aspect ratios to find the actual size */
   _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), cpad,
       GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info),
-      &(pad_rect.w), &(pad_rect.h));
+      &(pad_rect.w), &(pad_rect.h), &x_offset, &y_offset);
+  pad_rect.x += x_offset;
+  pad_rect.y += y_offset;
 
   if (!is_rectangle_contained (rect, pad_rect))
     return FALSE;
@@ -430,14 +537,15 @@ gst_compositor_pad_prepare_frame_start (GstVideoAggregatorPad * pad,
 
   _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), cpad,
       GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info),
-      &width, &height);
+      &width, &height, &cpad->x_offset, &cpad->y_offset);
 
   if (cpad->alpha == 0.0) {
     GST_DEBUG_OBJECT (pad, "Pad has alpha 0.0, not converting frame");
     return;
   }
 
-  frame_rect = clamp_rectangle (cpad->xpos, cpad->ypos, width, height,
+  frame_rect = clamp_rectangle (cpad->xpos + cpad->x_offset,
+      cpad->ypos + cpad->y_offset, width, height,
       GST_VIDEO_INFO_WIDTH (&vagg->info), GST_VIDEO_INFO_HEIGHT (&vagg->info));
 
   if (frame_rect.w == 0 || frame_rect.h == 0) {
@@ -476,6 +584,7 @@ gst_compositor_pad_create_conversion_info (GstVideoAggregatorConvertPad * pad,
 {
   GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
   gint width, height;
+  gint x_offset, y_offset;
 
   GST_VIDEO_AGGREGATOR_CONVERT_PAD_CLASS
       (gst_compositor_pad_parent_class)->create_conversion_info (pad, vagg,
@@ -485,7 +594,7 @@ gst_compositor_pad_create_conversion_info (GstVideoAggregatorConvertPad * pad,
 
   _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), cpad,
       GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info),
-      &width, &height);
+      &width, &height, &x_offset, &y_offset);
 
   /* The only thing that can change here is the width
    * and height, otherwise set_info would've been called */
@@ -551,11 +660,29 @@ gst_compositor_pad_class_init (GstCompositorPadClass * klass)
           GST_TYPE_COMPOSITOR_OPERATOR, DEFAULT_PAD_OPERATOR,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstCompositorPad:sizing-policy:
+   *
+   * Specifies sizing policy to use. Depending on selected sizing policy,
+   * scaled image might not fully cover the configured target rectangle area
+   * (e.g., "keep-aspect-ratio"). In that case, any uncovered area will be
+   * filled with background unless the uncovered area is drawn by other image.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_PAD_SIZING_POLICY,
+      g_param_spec_enum ("sizing-policy", "Sizing policy",
+          "Sizing policy to use for image scaling",
+          GST_TYPE_COMPOSITOR_SIZING_POLICY, DEFAULT_PAD_SIZING_POLICY,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
   vaggpadclass->prepare_frame_start =
       GST_DEBUG_FUNCPTR (gst_compositor_pad_prepare_frame_start);
 
   vaggcpadclass->create_conversion_info =
       GST_DEBUG_FUNCPTR (gst_compositor_pad_create_conversion_info);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_SIZING_POLICY, 0);
 }
 
 static void
@@ -567,6 +694,7 @@ gst_compositor_pad_init (GstCompositorPad * compo_pad)
   compo_pad->op = DEFAULT_PAD_OPERATOR;
   compo_pad->width = DEFAULT_PAD_WIDTH;
   compo_pad->height = DEFAULT_PAD_HEIGHT;
+  compo_pad->sizing_policy = DEFAULT_PAD_SIZING_POLICY;
 }
 
 
@@ -828,17 +956,22 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
     gint width, height;
     gint fps_n, fps_d;
     gdouble cur_fps;
+    gint x_offset;
+    gint y_offset;
 
     fps_n = GST_VIDEO_INFO_FPS_N (&vaggpad->info);
     fps_d = GST_VIDEO_INFO_FPS_D (&vaggpad->info);
     _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), compositor_pad, par_n,
-        par_d, &width, &height);
+        par_d, &width, &height, &x_offset, &y_offset);
 
     if (width == 0 || height == 0)
       continue;
 
-    this_width = width + MAX (compositor_pad->xpos, 0);
-    this_height = height + MAX (compositor_pad->ypos, 0);
+    /* {x,y}_offset represent padding size of each top and left area.
+     * To calculate total resolution, count bottom and right padding area
+     * as well here */
+    this_width = width + MAX (compositor_pad->xpos + 2 * x_offset, 0);
+    this_height = height + MAX (compositor_pad->ypos + 2 * y_offset, 0);
 
     if (best_width < this_width)
       best_width = this_width;
@@ -1178,7 +1311,8 @@ blend_pads (struct CompositeTask *comp)
 
   for (i = 0; i < comp->n_pads; i++) {
     composite (comp->pads_info[i].prepared_frame,
-        comp->pads_info[i].pad->xpos, comp->pads_info[i].pad->ypos,
+        comp->pads_info[i].pad->xpos + comp->pads_info[i].pad->x_offset,
+        comp->pads_info[i].pad->ypos + comp->pads_info[i].pad->y_offset,
         comp->pads_info[i].pad->alpha, comp->out_frame, comp->dst_line_start,
         comp->dst_line_end, comp->pads_info[i].blend_mode);
   }

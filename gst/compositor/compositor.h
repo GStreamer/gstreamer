@@ -77,6 +77,23 @@ typedef enum
   COMPOSITOR_OPERATOR_ADD,
 } GstCompositorOperator;
 
+/**
+ * GstCompositorSizingPolicy:
+ * @COMPOSITOR_SIZING_POLICY_NONE: Scaling image without padding
+ * @COMPOSITOR_SIZING_POLICY_KEEP_ASPECT_RATIO: Scaling image to fit destination
+ *    resolution with preserving aspect ratio. Resulting image will be centered
+ *    in the configured destination rectangle and it might have padding area
+ *    if aspect ratio of destination rectangle is different from that of
+ *    input image.
+ *
+ * Since: 1.20
+ */
+typedef enum
+{
+  COMPOSITOR_SIZING_POLICY_NONE,
+  COMPOSITOR_SIZING_POLICY_KEEP_ASPECT_RATIO,
+} GstCompositorSizingPolicy;
+
 /* copied from video-converter.c */
 typedef void (*GstParallelizedTaskFunc) (gpointer user_data);
 
@@ -140,8 +157,14 @@ struct _GstCompositorPad
   gint xpos, ypos;
   gint width, height;
   gdouble alpha;
+  GstCompositorSizingPolicy sizing_policy;
 
   GstCompositorOperator op;
+
+  /* offset values for xpos and ypos used when sizing-policy is equal to
+   * keep-aspect-ratio */
+  gint x_offset;
+  gint y_offset;
 };
 
 GST_ELEMENT_REGISTER_DECLARE (compositor);
