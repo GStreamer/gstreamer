@@ -47,9 +47,9 @@
 #include "gstalphacombine.h"
 
 
-#define SUPPORTED_SINK_FORMATS "{ I420 }"
+#define SUPPORTED_SINK_FORMATS "{ I420, NV12 }"
 #define SUPPORTED_ALPHA_FORMATS "{ GRAY8, I420, NV12 }"
-#define SUPPORTED_SRC_FORMATS "{ A420 }"
+#define SUPPORTED_SRC_FORMATS "{ A420, AV12 }"
 
 /* *INDENT-OFF* */
 struct {
@@ -69,7 +69,19 @@ struct {
     .sink = GST_VIDEO_FORMAT_I420,
     .alpha = GST_VIDEO_FORMAT_NV12,
     .src = GST_VIDEO_FORMAT_A420
-  }
+  }, {
+    .sink = GST_VIDEO_FORMAT_NV12,
+    .alpha = GST_VIDEO_FORMAT_NV12,
+    .src = GST_VIDEO_FORMAT_AV12,
+  }, {
+    .sink = GST_VIDEO_FORMAT_NV12,
+    .alpha = GST_VIDEO_FORMAT_GRAY8,
+    .src = GST_VIDEO_FORMAT_AV12
+ },{
+    .sink = GST_VIDEO_FORMAT_NV12,
+    .alpha = GST_VIDEO_FORMAT_I420,
+    .src = GST_VIDEO_FORMAT_AV12
+  },
 };
 /* *INDENT-ON* */
 
@@ -291,6 +303,7 @@ gst_alpha_combine_sink_chain (GstPad * pad, GstObject * object,
   gsize alpha_skip = 0;
   gint alpha_stride;
   GstBuffer *buffer;
+  guint alpha_plane_idx;
 
   ret = gst_alpha_combine_peek_alpha_buffer (self, &alpha_buffer);
   if (ret != GST_FLOW_OK)
@@ -332,10 +345,13 @@ gst_alpha_combine_sink_chain (GstPad * pad, GstObject * object,
 
   alpha_skip += gst_buffer_get_size (buffer);
   gst_buffer_append_memory (buffer, alpha_mem);
-  vmeta->offset[GST_VIDEO_COMP_A] = alpha_skip;
-  vmeta->stride[GST_VIDEO_COMP_A] = alpha_stride;
-  vmeta->format = GST_VIDEO_FORMAT_A420;
-  vmeta->n_planes = 4;
+
+  alpha_plane_idx = GST_VIDEO_INFO_N_PLANES (&self->sink_vinfo);
+  vmeta->offset[alpha_plane_idx] = alpha_skip;
+  vmeta->stride[alpha_plane_idx] = alpha_stride;
+
+  vmeta->format = self->src_format;
+  vmeta->n_planes = alpha_plane_idx + 1;
 
   /* Keep the origina GstBuffer alive to make this buffer pool friendly */
   gst_buffer_add_parent_buffer_meta (buffer, src_buffer);
@@ -363,16 +379,36 @@ gst_alpha_combine_alpha_chain (GstPad * pad, GstObject * object,
 static gboolean
 gst_alpha_combine_set_sink_format (GstAlphaCombine * self, GstCaps * caps)
 {
+  GstVideoFormat sink_format, src_format = GST_VIDEO_FORMAT_UNKNOWN;
   GstEvent *event;
+  gint i;
 
   if (!gst_video_info_from_caps (&self->sink_vinfo, caps)) {
     GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Invalid video format"), (NULL));
     return FALSE;
   }
 
-  caps = gst_caps_copy (caps);
+  sink_format = GST_VIDEO_INFO_FORMAT (&self->sink_vinfo);
 
-  gst_caps_set_simple (caps, "format", G_TYPE_STRING, "A420", NULL);
+  /* The sink format determin the src format, though we cannot fully validate
+   * the negotiation here, since we don't have the alpha format yet. */
+  for (i = 0; i < G_N_ELEMENTS (format_map); i++) {
+    if (format_map[i].sink == sink_format) {
+      src_format = format_map[i].src;
+      break;
+    }
+  }
+
+  if (src_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_ELEMENT_ERROR (self, STREAM, FORMAT, ("Unsupported formats."),
+        ("Sink format '%s' not supported.",
+            gst_video_format_to_string (sink_format)));
+    return FALSE;
+  }
+
+  caps = gst_caps_copy (caps);
+  gst_caps_set_simple (caps, "format", G_TYPE_STRING,
+      gst_video_format_to_string (src_format), NULL);
   event = gst_event_new_caps (caps);
   gst_caps_unref (caps);
 
