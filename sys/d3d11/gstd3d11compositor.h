@@ -79,6 +79,15 @@ typedef enum
 #define GST_TYPE_D3D11_COMPOSITOR_BACKGROUND (gst_d3d11_compositor_background_get_type())
 GType gst_d3d11_compositor_background_get_type (void);
 
+typedef enum
+{
+  GST_D3D11_COMPOSITOR_SIZING_POLICY_NONE,
+  GST_D3D11_COMPOSITOR_SIZING_POLICY_KEEP_ASPECT_RATIO,
+} GstD3D11CompositorSizingPolicy;
+
+#define GST_TYPE_D3D11_COMPOSITOR_SIZING_POLICY (gst_d3d11_compositor_sizing_policy_get_type())
+GType gst_d3d11_compositor_sizing_policy_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_COMPOSITOR_H__ */

@@ -236,6 +236,7 @@ enum
   PROP_INPUT_BLEND_FACTOR_GREEN,
   PROP_INPUT_BLEND_FACTOR_BLUE,
   PROP_INPUT_BLEND_FACTOR_ALPHA,
+  PROP_INPUT_SIZING_POLICY,
 };
 
 /* GstVideoAggregatorPad */
@@ -254,6 +255,7 @@ enum
 #define DEFAULT_INPUT_BLEND_SRC_ALPHA GST_D3D11_COMPOSITOR_BLEND_ONE
 #define DEFAULT_INPUT_BLEND_DEST_RGB GST_D3D11_COMPOSITOR_BLEND_INV_SRC_ALPHA
 #define DEFAULT_INPUT_BLEND_DEST_ALPHA GST_D3D11_COMPOSITOR_BLEND_INV_SRC_ALPHA
+#define DEFAULT_INPUT_SIZING_POLICY GST_D3D11_COMPOSITOR_SIZING_POLICY_NONE
 
 /**
  * GstD3D11CompositorBinInput:
@@ -428,6 +430,13 @@ gst_d3d11_compositor_bin_input_class_init (GstD3D11CompositorBinInputClass *
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
               G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_INPUT_SIZING_POLICY,
+      g_param_spec_enum ("sizing-policy", "Sizing policy",
+          "Sizing policy to use for image scaling",
+          GST_TYPE_D3D11_COMPOSITOR_SIZING_POLICY, DEFAULT_INPUT_SIZING_POLICY,
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
+
   pad_class->set_target =
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_bin_input_set_target);
 }
@@ -487,6 +496,7 @@ gst_d3d11_compositor_bin_input_set_target (GstD3D11CompositorBinPad * pad,
   ADD_BINDING (target, pad, "blend-factor-green");
   ADD_BINDING (target, pad, "blend-factor-blue");
   ADD_BINDING (target, pad, "blend-factor-alpha");
+  ADD_BINDING (target, pad, "sizing-policy");
 #undef ADD_BINDING
 }
 
