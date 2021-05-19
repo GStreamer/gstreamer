@@ -900,8 +900,7 @@ gst_video_aggregator_parallel_convert_pad_finalize (GObject * object)
     }
   }
 
-  return
-      G_OBJECT_CLASS
+  G_OBJECT_CLASS
       (gst_video_aggregator_parallel_convert_pad_parent_class)->finalize
       (object);
 }
