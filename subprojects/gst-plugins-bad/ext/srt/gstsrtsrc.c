@@ -110,10 +110,6 @@ gst_srt_src_start (GstBaseSrc * bsrc)
   GstSRTSrc *self = GST_SRT_SRC (bsrc);
   GError *error = NULL;
   gboolean ret = FALSE;
-  GstSRTConnectionMode connection_mode = GST_SRT_CONNECTION_MODE_NONE;
-
-  gst_structure_get_enum (self->srtobject->parameters, "mode",
-      GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode);
 
   ret = gst_srt_object_open (self->srtobject, self->cancellable, &error);
 
