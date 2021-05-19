@@ -282,7 +282,7 @@ _create_shader (GstGLColorBalance * balance)
   guint frag_i = 0;
 
   if (balance->shader)
-    gst_object_unref (balance->shader);
+    gst_clear_object (&balance->shader);
 
   if (filter->in_texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
     frags[frag_i++] = glsl_external_image_extension;
@@ -292,16 +292,20 @@ _create_shader (GstGLColorBalance * balance)
       GST_GLSL_VERSION_NONE,
       GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
 
-  /* Can support rectangle textures in the future if needed */
-  if (filter->in_texture_target == GST_GL_TEXTURE_TARGET_2D) {
-    frags[frag_i++] = glsl_2D_image_sampler;
-    frags[frag_i++] = frag_body =
-        g_strdup_printf (color_balance_frag_templ, "texture2D");
-  } else {
-    frags[frag_i++] = glsl_external_image_sampler;
-    frags[frag_i++] = frag_body =
-        g_strdup_printf (color_balance_frag_templ, "texture2D");
+  switch (filter->in_texture_target) {
+    case GST_GL_TEXTURE_TARGET_2D:
+      frags[frag_i++] = glsl_2D_image_sampler;
+      break;
+    case GST_GL_TEXTURE_TARGET_EXTERNAL_OES:
+      frags[frag_i++] = glsl_external_image_sampler;
+      break;
+    default:
+      GST_ERROR_OBJECT (balance, "Unsupported GstGLTextureTarget value: %d",
+          filter->in_texture_target);
+      return FALSE;
   }
+  frags[frag_i++] = frag_body =
+      g_strdup_printf (color_balance_frag_templ, "texture2D");
 
   g_assert (frag_i <= G_N_ELEMENTS (frags));
 
