@@ -173,6 +173,7 @@ transport_send_bin_change_state (GstElement * element,
       TSB_LOCK (send);
       gst_element_set_locked_state (send->rtp_ctx.dtlssrtpenc, TRUE);
       send->active = TRUE;
+      send->rtp_ctx.has_clientness = FALSE;
       TSB_UNLOCK (send);
       break;
     }
@@ -261,13 +262,31 @@ done:
 }
 
 static void
+maybe_start_enc (TransportSendBin * send)
+{
+  GstWebRTCICEConnectionState state;
+
+  if (!send->rtp_ctx.has_clientness) {
+    GST_LOG_OBJECT (send, "Can't start DTLS because doesn't know client-ness");
+    return;
+  }
+
+  g_object_get (send->stream->transport->transport, "state", &state, NULL);
+  if (state != GST_WEBRTC_ICE_CONNECTION_STATE_CONNECTED &&
+      state != GST_WEBRTC_ICE_CONNECTION_STATE_COMPLETED) {
+    GST_LOG_OBJECT (send, "Can't start DTLS yet because ICE is not connected.");
+    return;
+  }
+
+  gst_element_set_locked_state (send->rtp_ctx.dtlssrtpenc, FALSE);
+  gst_element_sync_state_with_parent (send->rtp_ctx.dtlssrtpenc);
+}
+
+static void
 _on_notify_dtls_client_status (GstElement * dtlssrtpenc,
     GParamSpec * pspec, TransportSendBin * send)
 {
-  TransportSendBinDTLSContext *ctx;
-  if (dtlssrtpenc == send->rtp_ctx.dtlssrtpenc)
-    ctx = &send->rtp_ctx;
-  else {
+  if (dtlssrtpenc != send->rtp_ctx.dtlssrtpenc) {
     GST_WARNING_OBJECT (send,
         "Received dtls-enc client mode for unknown element %" GST_PTR_FORMAT,
         dtlssrtpenc);
@@ -281,14 +300,25 @@ _on_notify_dtls_client_status (GstElement * dtlssrtpenc,
     goto done;
   }
 
+  send->rtp_ctx.has_clientness = TRUE;
   GST_DEBUG_OBJECT (send,
-      "DTLS-SRTP encoder configured. Unlocking it and changing state %"
-      GST_PTR_FORMAT, ctx->dtlssrtpenc);
-  gst_element_set_locked_state (ctx->dtlssrtpenc, FALSE);
-  gst_element_sync_state_with_parent (ctx->dtlssrtpenc);
+      "DTLS-SRTP encoder configured. Unlocking it and maybe changing state %"
+      GST_PTR_FORMAT, dtlssrtpenc);
+  maybe_start_enc (send);
+
 done:
   TSB_UNLOCK (send);
 }
+
+static void
+_on_notify_ice_connection_state (GstWebRTCICETransport * transport,
+    GParamSpec * pspec, TransportSendBin * send)
+{
+  TSB_LOCK (send);
+  maybe_start_enc (send);
+  TSB_UNLOCK (send);
+}
+
 
 static void
 tsb_setup_ctx (TransportSendBin * send, TransportSendBinDTLSContext * ctx,
@@ -305,6 +335,10 @@ tsb_setup_ctx (TransportSendBin * send, TransportSendBinDTLSContext * ctx,
   /* Bring the encoder up to current state only once the is-client prop is set */
   g_signal_connect (dtlssrtpenc, "notify::is-client",
       G_CALLBACK (_on_notify_dtls_client_status), send);
+  /* unblock ice sink once it signals a connection */
+  g_signal_connect (transport->transport, "notify::state",
+      G_CALLBACK (_on_notify_ice_connection_state), send);
+
   gst_bin_add (GST_BIN (send), GST_ELEMENT (dtlssrtpenc));
   gst_bin_add (GST_BIN (send), GST_ELEMENT (nicesink));
 

@@ -38,6 +38,8 @@ struct _TransportSendBinDTLSContext {
   GstElement *dtlssrtpenc;
   GstElement *nicesink;
 
+  gboolean has_clientness;
+
   /* Block on the dtlssrtpenc RTP sink pad, if any */
   struct pad_block          *rtp_block;
   /* Block on the dtlssrtpenc RTCP sink pad, if any */
