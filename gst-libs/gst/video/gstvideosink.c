@@ -93,50 +93,74 @@ static void gst_video_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
  * gst_video_sink_center_rect:
  * @src: the #GstVideoRectangle describing the source area
  * @dst: the #GstVideoRectangle describing the destination area
- * @result: a pointer to a #GstVideoRectangle which will receive the result area
+ * @result: (out caller-allocates): a pointer to a #GstVideoRectangle which will receive the result area
  * @scaling: a #gboolean indicating if scaling should be applied or not
  *
- * Takes @src rectangle and position it at the center of @dst rectangle with or
- * without @scaling. It handles clipping if the @src rectangle is bigger than
- * the @dst one and @scaling is set to FALSE.
+ * Deprecated: 1.20: Use gst_video_center_rect() instead.
  */
 void
 gst_video_sink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
     GstVideoRectangle * result, gboolean scaling)
 {
+  gst_video_center_rect (&src, &dst, result, scaling);
+}
+
+/**
+ * gst_video_center_rect:
+ * @src: a pointer to #GstVideoRectangle describing the source area
+ * @dst: a pointer to #GstVideoRectangle describing the destination area
+ * @result: (out caller-allocates): a pointer to a #GstVideoRectangle which will receive the result area
+ * @scaling: a #gboolean indicating if scaling should be applied or not
+ *
+ * Takes @src rectangle and position it at the center of @dst rectangle with or
+ * without @scaling. It handles clipping if the @src rectangle is bigger than
+ * the @dst one and @scaling is set to FALSE.
+ *
+ * Since: 1.20
+ */
+void
+gst_video_center_rect (const GstVideoRectangle * src,
+    const GstVideoRectangle * dst, GstVideoRectangle * result, gboolean scaling)
+{
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (dst != NULL);
   g_return_if_fail (result != NULL);
 
   if (!scaling) {
-    result->w = MIN (src.w, dst.w);
-    result->h = MIN (src.h, dst.h);
-    result->x = dst.x + (dst.w - result->w) / 2;
-    result->y = dst.y + (dst.h - result->h) / 2;
+    result->w = MIN (src->w, dst->w);
+    result->h = MIN (src->h, dst->h);
+    result->x = dst->x + (dst->w - result->w) / 2;
+    result->y = dst->y + (dst->h - result->h) / 2;
   } else {
     gdouble src_ratio, dst_ratio;
 
-    src_ratio = (gdouble) src.w / src.h;
-    dst_ratio = (gdouble) dst.w / dst.h;
+    g_return_if_fail (src->h != 0);
+    g_return_if_fail (dst->h != 0);
+
+    src_ratio = (gdouble) src->w / src->h;
+    dst_ratio = (gdouble) dst->w / dst->h;
 
     if (src_ratio > dst_ratio) {
-      result->w = dst.w;
-      result->h = dst.w / src_ratio;
-      result->x = dst.x;
-      result->y = dst.y + (dst.h - result->h) / 2;
+      result->w = dst->w;
+      result->h = dst->w / src_ratio;
+      result->x = dst->x;
+      result->y = dst->y + (dst->h - result->h) / 2;
     } else if (src_ratio < dst_ratio) {
-      result->w = dst.h * src_ratio;
-      result->h = dst.h;
-      result->x = dst.x + (dst.w - result->w) / 2;
-      result->y = dst.y;
+      result->w = dst->h * src_ratio;
+      result->h = dst->h;
+      result->x = dst->x + (dst->w - result->w) / 2;
+      result->y = dst->y;
     } else {
-      result->x = dst.x;
-      result->y = dst.y;
-      result->w = dst.w;
-      result->h = dst.h;
+      result->x = dst->x;
+      result->y = dst->y;
+      result->w = dst->w;
+      result->h = dst->h;
     }
   }
 
   GST_DEBUG ("source is %dx%d dest is %dx%d, result is %dx%d with x,y %dx%d",
-      src.w, src.h, dst.w, dst.h, result->w, result->h, result->x, result->y);
+      src->w, src->h, dst->w, dst->h,
+      result->w, result->h, result->x, result->y);
 }
 
 /* Initing stuff */
