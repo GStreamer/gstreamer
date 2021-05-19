@@ -617,10 +617,10 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   } \
   \
   /* adjust width/height if the src is bigger than dest */ \
-  if (xpos + src_width > dest_width) { \
+  if (xpos + b_src_width > dest_width) { \
     b_src_width = dest_width - xpos; \
   } \
-  if (ypos + src_height > dst_y_end) { \
+  if (ypos + b_src_height > dst_y_end) { \
     b_src_height = dst_y_end - ypos; \
   } \
   if (b_src_width < 0 || b_src_height < 0) { \
