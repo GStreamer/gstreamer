@@ -247,7 +247,7 @@ static GESCommandLineOption options[] = {
         "The type of the tracks where the clip should be used (audio or video or audio+video)."
       },
       {
-        "layer", "l", 0, NULL,
+        "layer", "l", G_TYPE_INT, NULL,
         "The priority of the layer into which the clip should be added."
       },
       {NULL, 0, 0, NULL, FALSE},

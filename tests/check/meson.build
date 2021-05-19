@@ -89,6 +89,7 @@ if gstvalidate_dep.found()
     'complex_effect_bin_desc': true,
     'check_keyframes_in_compositor_two_sources': true,
     'check-clip-positioning': true,
+    'set-layer-on-command-line': true,
   }
 
   foreach scenario, is_validatetest: scenarios

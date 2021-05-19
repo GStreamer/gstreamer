@@ -1,0 +1,11 @@
+meta, handles-states=true,
+    tool = "ges-launch-$(gst_api_version)",
+    handles-states=true,
+    args = {
+        +test-clip, blue, "d=0.5", "layer=0", "name=blue",
+        +test-clip, green, "d=0.5", "layer=1", "name=green",
+    }
+
+check-ges-properties, element-name=blue, layer::priority=0
+check-ges-properties, element-name=green, layer::priority=1
+stop

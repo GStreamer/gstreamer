@@ -88,9 +88,49 @@
   }                                                        \
 } G_STMT_END
 
+static gboolean
+_get_structure_value (GstStructure * structure, const gchar * field, GType type,
+    gpointer v)
+{
+  gboolean res = TRUE;
+  const gchar *value_str;
+  const GValue *value;
+  GValue nvalue = G_VALUE_INIT;
+
+  if (gst_structure_get (structure, field, type, v, NULL))
+    return res;
+
+  g_value_init (&nvalue, type);
+  value = gst_structure_get_value (structure, field);
+  if (!value)
+    goto fail;
+
+  if (g_value_transform (value, &nvalue))
+    goto set_and_get_value;
+
+  if (!G_VALUE_HOLDS_STRING (value))
+    goto fail;
+
+  value_str = g_value_get_string (value);
+  if (!gst_value_deserialize (&nvalue, value_str))
+    goto done;
+
+set_and_get_value:
+  gst_structure_set_value (structure, field, &nvalue);
+  gst_structure_get (structure, field, type, v, NULL);
+
+done:
+  g_value_reset (&nvalue);
+  return res;
+
+fail:
+  res = FALSE;
+  goto done;
+}
+
 #define TRY_GET(name, type, var, def) G_STMT_START {\
   g_assert (type != GST_TYPE_CLOCK_TIME);                      \
-  if (!gst_structure_get (structure, name, type, var, NULL))\
+  if (!_get_structure_value (structure, name, type, var))\
     *var = def;                                             \
 } G_STMT_END
 
