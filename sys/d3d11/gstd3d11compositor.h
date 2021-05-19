@@ -76,7 +76,7 @@ typedef enum
   GST_D3D11_COMPOSITOR_BACKGROUND_TRANSPARENT,
 } GstD3D11CompositorBackground;
 
-#define GST_TYPE_COMPOSITOR_BACKGROUND (gst_d3d11_compositor_background_get_type())
+#define GST_TYPE_D3D11_COMPOSITOR_BACKGROUND (gst_d3d11_compositor_background_get_type())
 GType gst_d3d11_compositor_background_get_type (void);
 
 G_END_DECLS

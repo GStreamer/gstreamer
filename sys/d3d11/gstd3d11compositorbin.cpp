@@ -665,7 +665,7 @@ gst_d3d11_compositor_bin_class_init (GstD3D11CompositorBinClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BACKGROUND,
       g_param_spec_enum ("background", "Background", "Background type",
-          GST_TYPE_COMPOSITOR_BACKGROUND,
+          GST_TYPE_D3D11_COMPOSITOR_BACKGROUND,
           DEFAULT_BACKGROUND,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 

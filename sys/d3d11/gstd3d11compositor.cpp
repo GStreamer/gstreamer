@@ -1346,7 +1346,7 @@ gst_d3d11_compositor_class_init (GstD3D11CompositorClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BACKGROUND,
       g_param_spec_enum ("background", "Background", "Background type",
-          GST_TYPE_COMPOSITOR_BACKGROUND,
+          GST_TYPE_D3D11_COMPOSITOR_BACKGROUND,
           DEFAULT_BACKGROUND,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -1391,7 +1391,7 @@ gst_d3d11_compositor_class_init (GstD3D11CompositorClass * klass)
       "Filter/Editor/Video/Compositor",
       "A Direct3D11 compositor", "Seungha Yang <seungha@centricular.com>");
 
-  gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_BACKGROUND,
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_BACKGROUND,
       (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_PAD,
       (GstPluginAPIFlags) 0);
