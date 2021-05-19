@@ -51,6 +51,7 @@ struct _GstSRTSrc {
   GCancellable *cancellable;
 
   guint32       next_pktseq;
+  gboolean      keep_listening;
 };
 
 struct _GstSRTSrcClass {

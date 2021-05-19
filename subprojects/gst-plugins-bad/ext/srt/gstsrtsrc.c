@@ -65,6 +65,11 @@ enum
   LAST_SIGNAL
 };
 
+enum
+{
+  PROP_KEEP_LISTENING = 128
+};
+
 static guint signals[LAST_SIGNAL] = { 0 };
 
 static void gst_srt_src_uri_handler_init (gpointer g_iface,
@@ -151,6 +156,7 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
   int64_t srt_time;
   SRT_MSGCTRL mctrl;
 
+retry:
   if (g_cancellable_is_cancelled (self->cancellable)) {
     ret = GST_FLOW_FLUSHING;
   }
@@ -202,8 +208,17 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
     g_clear_error (&err);
     goto out;
   } else if (recv_len == 0) {
-    ret = GST_FLOW_EOS;
-    goto out;
+    gst_srt_src_stop (GST_BASE_SRC (self));
+    if (self->keep_listening && gst_srt_src_start (GST_BASE_SRC (self))) {
+      /* FIXME: Should send GAP event(s) downstream */
+      gst_element_post_message (GST_ELEMENT_CAST (self),
+          gst_message_new_element (GST_OBJECT_CAST (self),
+              gst_structure_new_empty ("connection-removed")));
+      goto retry;
+    } else {
+      ret = GST_FLOW_EOS;
+      goto out;
+    }
   }
 
   /* Detect discontinuities */
@@ -311,7 +326,13 @@ gst_srt_src_set_property (GObject * object,
 
   if (!gst_srt_object_set_property_helper (self->srtobject, prop_id, value,
           pspec)) {
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    switch (prop_id) {
+      case PROP_KEEP_LISTENING:
+        self->keep_listening = g_value_get_boolean (value);
+        break;
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    }
   }
 }
 
@@ -323,7 +344,13 @@ gst_srt_src_get_property (GObject * object,
 
   if (!gst_srt_object_get_property_helper (self->srtobject, prop_id, value,
           pspec)) {
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    switch (prop_id) {
+      case PROP_KEEP_LISTENING:
+        g_value_set_boolean (value, self->keep_listening);
+        break;
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    }
   }
 }
 
@@ -421,6 +448,22 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
       2, G_TYPE_SOCKET_ADDRESS, G_TYPE_STRING);
 
   gst_srt_object_install_properties_helper (gobject_class);
+
+  /**
+   * GstSRTSrc:keep-listening:
+   *
+   * If FALSE, the element will return GST_FLOW_EOS when the remote client disconnects.
+   * If TRUE, the element will keep waiting for the client to reconnect. An element
+   * message named 'connection-removed' will be sent on disconnection.
+   *
+   * Since: 1.22
+   *
+   */
+  g_object_class_install_property (gobject_class, PROP_KEEP_LISTENING,
+      g_param_spec_boolean ("keep-listening",
+          "Keep listening",
+          "Toggle keep-listening for connection reuse",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
   gst_element_class_set_metadata (gstelement_class,
