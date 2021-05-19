@@ -222,7 +222,7 @@ gst_wpe_src_chain_buffer (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 }
 
 void
-gst_wpe_src_new_audio_stream(GstWpeSrc *src, guint32 id, GstCaps *caps, const gchar *stream_id)
+gst_wpe_src_new_audio_stream (GstWpeSrc *src, guint32 id, GstCaps *caps, const gchar *stream_id)
 {
   GstWpeAudioPad *audio_pad;
   GstPad *pad;
