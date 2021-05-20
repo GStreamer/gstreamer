@@ -164,7 +164,7 @@ gst_auto_video_convert_add_autoconvert (GstAutoVideoConvert * autovideoconvert)
     return TRUE;
 
   autovideoconvert->autoconvert =
-      gst_element_factory_make ("autoconvert", "autoconvertchild");
+      gst_element_factory_make ("autoconvert", NULL);
   if (!autovideoconvert->autoconvert) {
     GST_ERROR_OBJECT (autovideoconvert,
         "Could not create autoconvert instance");
