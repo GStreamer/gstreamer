@@ -24,6 +24,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gmodule.h>
 
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
@@ -468,14 +469,43 @@ gst_gl_context_wgl_check_feature (GstGLContext * context, const gchar * feature)
   return gst_gl_check_extension (feature, context_wgl->priv->wgl_exts);
 }
 
+static GOnce module_opengl_dll_gonce = G_ONCE_INIT;
+static GModule *module_opengl_dll;
+
+static gpointer
+load_opengl_dll_module (gpointer user_data)
+{
+#ifdef GST_GL_LIBGL_MODULE_NAME
+  module_opengl_dll =
+      g_module_open (GST_GL_LIBGL_MODULE_NAME, G_MODULE_BIND_LAZY);
+#else
+  if (g_strcmp0 (G_MODULE_SUFFIX, "dll") == 0)
+    module_opengl_dll = g_module_open ("opengl32.dll", G_MODULE_BIND_LAZY);
+
+  /* This automatically handles the suffix and even .la files */
+  if (!module_opengl_dll)
+    module_opengl_dll = g_module_open ("opengl32", G_MODULE_BIND_LAZY);
+#endif
+
+  return NULL;
+}
+
 gpointer
 gst_gl_context_wgl_get_proc_address (GstGLAPI gl_api, const gchar * name)
 {
   gpointer result;
 
-  if (!(result = gst_gl_context_default_get_proc_address (gl_api, name))) {
-    result = wglGetProcAddress ((LPCSTR) name);
+  if (gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)) {
+    g_once (&module_opengl_dll_gonce, load_opengl_dll_module, NULL);
+    if (module_opengl_dll)
+      g_module_symbol (module_opengl_dll, name, &result);
+
+    if (!result) {
+      result = wglGetProcAddress ((LPCSTR) name);
+    }
   }
+  if (!result)
+    result = gst_gl_context_default_get_proc_address (gl_api, name);
 
   return result;
 }
