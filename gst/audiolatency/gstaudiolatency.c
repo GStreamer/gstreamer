@@ -98,6 +98,8 @@ static gint64 gst_audiolatency_get_latency (GstAudioLatency * self);
 static gint64 gst_audiolatency_get_average_latency (GstAudioLatency * self);
 static GstFlowReturn gst_audiolatency_sink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
+static gboolean gst_audiolatency_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
 static GstPadProbeReturn gst_audiolatency_src_probe (GstPad * pad,
     GstPadProbeInfo * info, gpointer user_data);
 
@@ -186,6 +188,9 @@ gst_audiolatency_init (GstAudioLatency * self)
   self->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_audiolatency_sink_chain));
+  gst_pad_set_event_function (self->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_audiolatency_sink_event));
+
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   /* Setup srcpad */
@@ -421,6 +426,23 @@ gst_audiolatency_sink_chain (GstPad * pad, GstObject * parent,
 out:
   gst_buffer_unref (buffer);
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_audiolatency_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  switch (GST_EVENT_TYPE (event)) {
+      /* Drop below events. audiotestsrc will push its own event */
+    case GST_EVENT_STREAM_START:
+    case GST_EVENT_CAPS:
+    case GST_EVENT_SEGMENT:
+      gst_event_unref (event);
+      return TRUE;
+    default:
+      break;
+  }
+
+  return gst_pad_event_default (pad, parent, event);
 }
 
 /* Element registration */
