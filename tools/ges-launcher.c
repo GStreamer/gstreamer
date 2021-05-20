@@ -1007,13 +1007,10 @@ _create_pipeline (GESLauncher * self, const gchar * serialized_timeline)
    * our timeline in. */
 
   if (opts->mute) {
-    GstElement *sink = gst_element_factory_make ("fakesink", NULL);
-
-    g_object_set (sink, "sync", TRUE, NULL);
+    GstElement *sink = gst_element_factory_make ("fakeaudiosink", NULL);
     ges_pipeline_preview_set_audio_sink (self->priv->pipeline, sink);
 
-    sink = gst_element_factory_make ("fakesink", NULL);
-    g_object_set (sink, "sync", TRUE, NULL);
+    sink = gst_element_factory_make ("fakevideosink", NULL);
     ges_pipeline_preview_set_video_sink (self->priv->pipeline, sink);
   }
 
