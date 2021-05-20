@@ -232,8 +232,16 @@ gst_d3d11_allocation_params_init (GType type)
 
 /* GstD3D11Memory */
 #define GST_D3D11_MEMORY_GET_LOCK(m) (&(GST_D3D11_MEMORY_CAST(m)->priv->lock))
-#define GST_D3D11_MEMORY_LOCK(m) g_mutex_lock(GST_D3D11_MEMORY_GET_LOCK(m))
-#define GST_D3D11_MEMORY_UNLOCK(m) g_mutex_unlock(GST_D3D11_MEMORY_GET_LOCK(m))
+#define GST_D3D11_MEMORY_LOCK(m) G_STMT_START { \
+  GST_TRACE("Locking %p from thread %p", (m), g_thread_self()); \
+  g_mutex_lock(GST_D3D11_MEMORY_GET_LOCK(m)); \
+  GST_TRACE("Locked %p from thread %p", (m), g_thread_self()); \
+} G_STMT_END
+
+#define GST_D3D11_MEMORY_UNLOCK(m) G_STMT_START { \
+  GST_TRACE("Unlocking %p from thread %p", (m), g_thread_self()); \
+  g_mutex_unlock(GST_D3D11_MEMORY_GET_LOCK(m)); \
+} G_STMT_END
 
 struct _GstD3D11MemoryPrivate
 {
