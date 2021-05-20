@@ -1,5 +1,5 @@
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
-event caps: audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)1;
+event caps: audio/x-raw, channels=(int)1, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100;
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
 event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ description\=\(string\)\"audiotest\\\ wave\"\;";
 buffer: pts=0:00:00.000000000, dur=0:00:00.023219954, flags=discont
