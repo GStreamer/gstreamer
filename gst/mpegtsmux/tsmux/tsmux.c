@@ -757,6 +757,31 @@ tsmux_find_stream (TsMux * mux, guint16 pid)
   return found;
 }
 
+static gboolean
+tsmux_program_remove_stream (TsMuxProgram * program, TsMuxStream * stream)
+{
+  GArray *streams = program->streams;
+  TsMuxStream *s;
+  gint i;
+
+  i = stream->program_array_index;
+  g_return_val_if_fail (i >= 0, FALSE);
+
+  s = g_array_index (streams, TsMuxStream *, i);
+  g_return_val_if_fail (s == stream, FALSE);
+
+  g_array_remove_index (streams, i);
+
+  /* Correct indices of remaining streams, if any */
+  for (; i < streams->len; i++) {
+    s = g_array_index (streams, TsMuxStream *, i);
+    s->program_array_index -= 1;
+  }
+
+  return streams->len == 0;
+}
+
+
 gboolean
 tsmux_remove_stream (TsMux * mux, guint16 pid, TsMuxProgram * program)
 {
@@ -769,20 +794,16 @@ tsmux_remove_stream (TsMux * mux, guint16 pid, TsMuxProgram * program)
     TsMuxStream *stream = (TsMuxStream *) cur->data;
 
     if (tsmux_stream_get_pid (stream) == pid) {
-      if (program->streams->len == 1) {
-        tsmux_program_delete (mux, program);
-        ret = TRUE;
-      } else {
-        program->streams =
-            g_array_remove_index (program->streams,
-            stream->program_array_index);
-      }
-
+      ret = tsmux_program_remove_stream (program, stream);
       mux->streams = g_list_remove (mux->streams, stream);
       tsmux_stream_free (stream);
-      return ret;
+      break;
     }
   }
+
+  if (ret)
+    tsmux_program_delete (mux, program);
+
   return ret;
 }
 
