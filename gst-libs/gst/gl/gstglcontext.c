@@ -109,6 +109,8 @@ load_opengl_module (gpointer user_data)
    * Proper compilers will optimize away the strcmp */
   if (g_strcmp0 (G_MODULE_SUFFIX, "so") == 0)
     module_opengl = g_module_open ("libGL.so.1", G_MODULE_BIND_LAZY);
+  else if (g_strcmp0 (G_MODULE_SUFFIX, "dll") == 0)
+    module_opengl = g_module_open ("opengl32.dll", G_MODULE_BIND_LAZY);
 
   /* This automatically handles the suffix and even .la files */
   if (!module_opengl)
