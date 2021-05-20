@@ -135,7 +135,8 @@ static gboolean gst_auto_convert_internal_src_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 static gboolean gst_auto_convert_internal_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
-static GList * gst_auto_convert_get_or_load_factories (GstAutoConvert * autoconvert);
+static GList *gst_auto_convert_get_or_load_factories (GstAutoConvert *
+    autoconvert);
 
 static GQuark internal_srcpad_quark = 0;
 static GQuark internal_sinkpad_quark = 0;
@@ -179,6 +180,23 @@ gst_auto_convert_class_init (GstAutoConvertClass * klass)
           "GList of GstElementFactory objects to pick from (the element takes"
           " ownership of the list (NULL means it will go through all possible"
           " elements), can only be set once",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * autoconvert:factory-names:
+   *
+   * A #GstValueArray of factory names to use
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_FACTORY_NAMES,
+      gst_param_spec_array ("factory-names", "Factory names"
+          "Names of the Factories to use",
+          "Names of the GstElementFactory to be used to automatically plug"
+          " elements.",
+          g_param_spec_string ("factory-name", "Factory name",
+              "An element factory name", NULL,
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -248,11 +266,20 @@ gst_auto_convert_set_property (GObject * object,
       break;
     case PROP_FACTORIES:
     {
-      GList *factories = g_value_get_pointer (value);
+      GList *factories;
+      GstAutoConvertClass *klass = GST_AUTO_CONVERT_GET_CLASS (autoconvert);
 
+      if (klass->load_factories) {
+        g_warning ("'factories' on %s is not read-only",
+            G_OBJECT_TYPE_NAME (object));
+        break;
+      }
+
+      factories = g_value_get_pointer (value);
       GST_OBJECT_LOCK (object);
       if (!autoconvert->factories)
-        autoconvert->factories = g_list_copy_deep (factories, (GCopyFunc) gst_object_ref, NULL);
+        autoconvert->factories =
+            g_list_copy_deep (factories, (GCopyFunc) gst_object_ref, NULL);
       else
         GST_WARNING_OBJECT (object, "Can not reset factories after they"
             " have been set or auto-discovered");
@@ -261,15 +288,23 @@ gst_auto_convert_set_property (GObject * object,
     }
     case PROP_FACTORY_NAMES:
     {
+      GstAutoConvertClass *klass = GST_AUTO_CONVERT_GET_CLASS (autoconvert);
+
+      if (klass->load_factories) {
+        g_warning ("'factory-names' on %s is not read-only",
+            G_OBJECT_TYPE_NAME (object));
+        break;
+      }
+
       GST_OBJECT_LOCK (object);
       if (!autoconvert->factories) {
         gint i;
 
         for (i = 0; i < gst_value_array_get_size (value); i++) {
           const GValue *v = gst_value_array_get_value (value, i);
-          GstElementFactory *factory = (GstElementFactory*) gst_registry_find_feature (
-            gst_registry_get (), g_value_get_string (v), GST_TYPE_ELEMENT_FACTORY
-          );
+          GstElementFactory *factory = (GstElementFactory *)
+              gst_registry_find_feature (gst_registry_get (),
+              g_value_get_string (v), GST_TYPE_ELEMENT_FACTORY);
 
           if (!factory) {
             gst_element_post_message (GST_ELEMENT_CAST (autoconvert),
@@ -278,7 +313,8 @@ gst_auto_convert_set_property (GObject * object,
             continue;
           }
 
-          autoconvert->factories = g_list_append (autoconvert->factories, factory);
+          autoconvert->factories =
+              g_list_append (autoconvert->factories, factory);
         }
       } else {
         GST_WARNING_OBJECT (object, "Can not reset factories after they"
@@ -930,16 +966,24 @@ static GList *
 gst_auto_convert_get_or_load_factories (GstAutoConvert * autoconvert)
 {
   GList *all_factories;
+  GstAutoConvertClass *klass = GST_AUTO_CONVERT_GET_CLASS (autoconvert);
 
   GST_OBJECT_LOCK (autoconvert);
   if (autoconvert->factories)
     goto done;
+  GST_OBJECT_UNLOCK (autoconvert);
 
+  if (klass->load_factories) {
+    all_factories = klass->load_factories (autoconvert);
+  } else {
+    all_factories =
+        g_list_sort (gst_registry_feature_filter (gst_registry_get (),
+            gst_auto_convert_default_filter_func, FALSE, NULL),
+        (GCompareFunc) compare_ranks);
+  }
 
-  all_factories =
-      gst_registry_feature_filter (gst_registry_get (),
-      gst_auto_convert_default_filter_func, FALSE, NULL);
-  autoconvert->factories = g_list_sort (all_factories, (GCompareFunc) compare_ranks);
+  GST_OBJECT_LOCK (autoconvert);
+  autoconvert->factories = all_factories;
 
 done:
   GST_OBJECT_UNLOCK (autoconvert);
@@ -1167,7 +1211,6 @@ gst_auto_convert_getcaps (GstAutoConvert * autoconvert, GstCaps * filter,
             internal_sinkpad_quark);
 
       element_caps = gst_pad_peer_query_caps (internal_pad, filter);
-
       if (element_caps)
         caps = gst_caps_merge (caps, element_caps);
 

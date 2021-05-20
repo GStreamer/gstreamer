@@ -31,6 +31,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_AUTO_CONVERT 	        	(gst_auto_convert_get_type())
 #define GST_AUTO_CONVERT(obj)	                (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AUTO_CONVERT,GstAutoConvert))
 #define GST_AUTO_CONVERT_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AUTO_CONVERT,GstAutoConvertClass))
+#define GST_AUTO_CONVERT_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_AUTO_CONCERT, GstAutoConvertClass))
 #define GST_IS_AUTO_CONVERT(obj)              (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AUTO_CONVERT))
 #define GST_IS_AUTO_CONVERT_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AUTO_CONVERT))
 typedef struct _GstAutoConvert GstAutoConvert;
@@ -58,8 +59,11 @@ struct _GstAutoConvert
 struct _GstAutoConvertClass
 {
   GstBinClass parent_class;
+
+  GList* (*load_factories)(GstAutoConvert *autoconvert);
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAutoConvert, gst_object_unref)
 GType gst_auto_convert_get_type (void);
 GST_ELEMENT_REGISTER_DECLARE (autoconvert);
 
