@@ -138,13 +138,60 @@ validate_flow_format_segment (const GstSegment * segment,
   return segment_str;
 }
 
-static gboolean
-structure_only_given_keys (GQuark field_id, GValue * value,
-    gpointer _keys_to_print)
+typedef struct
 {
-  const gchar *const *keys_to_print = (const gchar * const *) _keys_to_print;
-  return (!keys_to_print
-      || g_strv_contains (keys_to_print, g_quark_to_string (field_id)));
+  GList *fields;
+
+  gchar **wanted_fields;
+  gchar **ignored_fields;
+} StructureValues;
+
+static gboolean
+structure_set_fields (GQuark field_id, GValue * value, StructureValues * data)
+{
+  const gchar *field = g_quark_to_string (field_id);
+
+  if (data->ignored_fields
+      && g_strv_contains ((const gchar **) data->ignored_fields, field))
+    return TRUE;
+
+  if (data->wanted_fields
+      && !g_strv_contains ((const gchar **) data->wanted_fields, field))
+    return TRUE;
+
+  data->fields = g_list_prepend (data->fields, (gchar *) field);
+
+  return TRUE;
+}
+
+static gchar *
+validate_flow_structure_to_string (const GstStructure * structure,
+    gchar ** wanted_fields, gchar ** ignored_fields)
+{
+  gchar *res;
+  GstStructure *nstructure;
+  StructureValues d = {
+    .fields = NULL,
+    .wanted_fields = wanted_fields,
+    .ignored_fields = ignored_fields,
+  };
+
+  gst_structure_foreach (structure,
+      (GstStructureForeachFunc) structure_set_fields, &d);
+  d.fields = g_list_sort (d.fields, (GCompareFunc) g_ascii_strcasecmp);
+  nstructure = gst_structure_new_empty (gst_structure_get_name (structure));
+  for (GList * tmp = d.fields; tmp; tmp = tmp->next) {
+    gchar *field = tmp->data;
+
+    gst_structure_set_value (nstructure, field,
+        gst_structure_get_value (structure, field));
+  }
+
+  g_list_free (d.fields);
+  res = gst_structure_to_string (nstructure);
+  gst_structure_free (nstructure);
+
+  return res;
 }
 
 static void
@@ -154,7 +201,7 @@ gpointer_free (gpointer pointer_location)
 }
 
 gchar *
-validate_flow_format_caps (const GstCaps * caps, gchar ** keys_to_print)
+validate_flow_format_caps (const GstCaps * caps, gchar ** wanted_fields)
 {
   guint i;
   GArray *structures_strv = g_array_new (TRUE, FALSE, sizeof (gchar *));
@@ -165,14 +212,11 @@ validate_flow_format_caps (const GstCaps * caps, gchar ** keys_to_print)
   /* A single GstCaps can contain several caps structures (although only one is
    * used in most cases). We will print them separated with spaces. */
   for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstStructure *structure =
-        gst_structure_copy (gst_caps_get_structure (caps, i));
-    gchar *structure_str;
-    gst_structure_filter_and_map_in_place (structure, structure_only_given_keys,
-        (gpointer) keys_to_print);
-    structure_str = gst_structure_to_string (structure);
+    gchar *structure_str =
+        validate_flow_structure_to_string (gst_caps_get_structure (caps, i),
+        wanted_fields, NULL);
+
     g_array_append_val (structures_strv, structure_str);
-    gst_structure_free (structure);
   }
 
   caps_str = g_strjoinv (" ", (gchar **) structures_strv->data);
@@ -382,28 +426,14 @@ validate_flow_format_event (GstEvent * event,
   } else if (!gst_event_get_structure (event)) {
     structure_string = g_strdup ("(no structure)");
   } else {
-    GstStructure *printable =
-        gst_structure_copy (gst_event_get_structure (event));
-
-    if (logged_fields) {
-      gst_structure_filter_and_map_in_place (printable,
-          (GstStructureFilterMapFunc) structure_only_given_keys, logged_fields);
-    } else {
-      if (ignored_fields) {
-        gint i = 0;
-        gchar *field;
-
-        for (field = ignored_fields[i]; field; field = ignored_fields[++i])
-          gst_structure_remove_field (printable, field);
-      }
-    }
-
-    structure_string = gst_structure_to_string (printable);
-    gst_structure_free (printable);
+    structure_string =
+        validate_flow_structure_to_string (gst_event_get_structure (event),
+        logged_fields, ignored_fields);
   }
 
   event_string = g_strdup_printf ("%s: %s", event_type, structure_string);
   g_strfreev (logged_fields);
+
   g_strfreev (ignored_fields);
   g_free (structure_string);
   return event_string;
