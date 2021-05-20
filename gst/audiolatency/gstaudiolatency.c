@@ -190,7 +190,8 @@ gst_audiolatency_init (GstAudioLatency * self)
 
   /* Setup srcpad */
   self->audiosrc = gst_element_factory_make ("audiotestsrc", NULL);
-  g_object_set (self->audiosrc, "wave", 8, "samplesperbuffer", 240, NULL);
+  g_object_set (self->audiosrc, "wave", 8, "samplesperbuffer", 240,
+      "is-live", TRUE, NULL);
   gst_bin_add (GST_BIN (self), self->audiosrc);
 
   templ = gst_static_pad_template_get (&src_template);
