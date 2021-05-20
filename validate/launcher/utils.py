@@ -658,16 +658,11 @@ def format_config_template(extra_data, config_text, test_name):
 
 
 def get_fakesink_for_media_type(media_type, needs_clock=False):
-    if media_type == "video":
-        if needs_clock:
-            return 'fakevideosink qos=true max-lateness=20000000'
+    extra = ""
+    if media_type == "video" and needs_clock:
+        extra = 'max-lateness=20000000'
 
-        return "fakevideosink sync=false"
-
-    if needs_clock:
-        return "fakesink sync=true"
-
-    return "fakesink"
+    return f"fake{media_type}sink sync={needs_clock} {extra}"
 
 
 class InvalidValueError(ValueError):
