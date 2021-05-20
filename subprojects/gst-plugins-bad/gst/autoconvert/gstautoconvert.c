@@ -40,6 +40,7 @@
 #endif
 
 #include "gstautoconvert.h"
+#include <gst/pbutils/pbutils.h>
 
 #include <string.h>
 
@@ -82,7 +83,8 @@ enum
 enum
 {
   PROP_0,
-  PROP_FACTORIES
+  PROP_FACTORIES,
+  PROP_FACTORY_NAMES,
 };
 
 static void gst_auto_convert_set_property (GObject * object,
@@ -90,6 +92,7 @@ static void gst_auto_convert_set_property (GObject * object,
 static void gst_auto_convert_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_auto_convert_dispose (GObject * object);
+static void gst_auto_convert_finalize (GObject * object);
 
 static GstElement *gst_auto_convert_get_subelement (GstAutoConvert *
     autoconvert);
@@ -132,13 +135,7 @@ static gboolean gst_auto_convert_internal_src_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 static gboolean gst_auto_convert_internal_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
-
-static GList *gst_auto_convert_load_factories (GstAutoConvert * autoconvert);
-static GstElement
-    * gst_auto_convert_get_or_make_element_from_factory (GstAutoConvert *
-    autoconvert, GstElementFactory * factory);
-static gboolean gst_auto_convert_activate_element (GstAutoConvert * autoconvert,
-    GstElement * element, GstCaps * caps);
+static GList * gst_auto_convert_get_or_load_factories (GstAutoConvert * autoconvert);
 
 static GQuark internal_srcpad_quark = 0;
 static GQuark internal_sinkpad_quark = 0;
@@ -171,6 +168,7 @@ gst_auto_convert_class_init (GstAutoConvertClass * klass)
       "Olivier Crete <olivier.crete@collabora.com>");
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_auto_convert_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_auto_convert_finalize);
 
   gobject_class->set_property = gst_auto_convert_set_property;
   gobject_class->get_property = gst_auto_convert_get_property;
@@ -224,17 +222,18 @@ gst_auto_convert_dispose (GObject * object)
   g_clear_object (&autoconvert->current_internal_srcpad);
   GST_AUTOCONVERT_UNLOCK (autoconvert);
 
-  for (;;) {
-    GList *factories = g_atomic_pointer_get (&autoconvert->factories);
-
-    if (g_atomic_pointer_compare_and_exchange (&autoconvert->factories,
-            factories, NULL)) {
-      gst_plugin_feature_list_free (factories);
-      break;
-    }
-  }
-
   G_OBJECT_CLASS (gst_auto_convert_parent_class)->dispose (object);
+}
+
+static void
+gst_auto_convert_finalize (GObject * object)
+{
+  GstAutoConvert *autoconvert = GST_AUTO_CONVERT (object);
+
+  if (autoconvert->factories)
+    gst_plugin_feature_list_free (autoconvert->factories);
+
+  G_OBJECT_CLASS (gst_auto_convert_parent_class)->finalize (object);
 }
 
 static void
@@ -248,19 +247,46 @@ gst_auto_convert_set_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     case PROP_FACTORIES:
-      if (g_atomic_pointer_get (&autoconvert->factories) == NULL) {
-        GList *factories = g_value_get_pointer (value);
-        factories = g_list_copy (factories);
-        if (g_atomic_pointer_compare_and_exchange (&autoconvert->factories,
-                (GList *) NULL, factories))
-          g_list_foreach (factories, (GFunc) g_object_ref, NULL);
-        else
-          g_list_free (factories);
+    {
+      GList *factories = g_value_get_pointer (value);
+
+      GST_OBJECT_LOCK (object);
+      if (!autoconvert->factories)
+        autoconvert->factories = g_list_copy_deep (factories, (GCopyFunc) gst_object_ref, NULL);
+      else
+        GST_WARNING_OBJECT (object, "Can not reset factories after they"
+            " have been set or auto-discovered");
+      GST_OBJECT_UNLOCK (object);
+      break;
+    }
+    case PROP_FACTORY_NAMES:
+    {
+      GST_OBJECT_LOCK (object);
+      if (!autoconvert->factories) {
+        gint i;
+
+        for (i = 0; i < gst_value_array_get_size (value); i++) {
+          const GValue *v = gst_value_array_get_value (value, i);
+          GstElementFactory *factory = (GstElementFactory*) gst_registry_find_feature (
+            gst_registry_get (), g_value_get_string (v), GST_TYPE_ELEMENT_FACTORY
+          );
+
+          if (!factory) {
+            gst_element_post_message (GST_ELEMENT_CAST (autoconvert),
+                gst_missing_element_message_new (GST_ELEMENT_CAST (autoconvert),
+                    g_value_get_string (v)));
+            continue;
+          }
+
+          autoconvert->factories = g_list_append (autoconvert->factories, factory);
+        }
       } else {
         GST_WARNING_OBJECT (object, "Can not reset factories after they"
             " have been set or auto-discovered");
       }
+      GST_OBJECT_UNLOCK (object);
       break;
+    }
   }
 }
 
@@ -275,9 +301,25 @@ gst_auto_convert_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     case PROP_FACTORIES:
-      g_value_set_pointer (value,
-          g_atomic_pointer_get (&autoconvert->factories));
+      GST_OBJECT_LOCK (object);
+      g_value_set_pointer (value, autoconvert->factories);
+      GST_OBJECT_UNLOCK (object);
       break;
+    case PROP_FACTORY_NAMES:
+    {
+      GList *tmp;
+
+      GST_OBJECT_LOCK (object);
+      for (tmp = autoconvert->factories; tmp; tmp = tmp->next) {
+        GValue factory = G_VALUE_INIT;
+
+        g_value_init (&factory, G_TYPE_STRING);
+        g_value_take_string (&factory, gst_object_get_name (tmp->data));
+        gst_value_array_append_and_take_value (value, &factory);
+      }
+      GST_OBJECT_UNLOCK (object);
+      break;
+    }
   }
 }
 
@@ -755,11 +797,7 @@ gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
   }
 
   other_caps = gst_pad_peer_query_caps (autoconvert->srcpad, NULL);
-
-  factories = g_atomic_pointer_get (&autoconvert->factories);
-
-  if (!factories)
-    factories = gst_auto_convert_load_factories (autoconvert);
+  factories = gst_auto_convert_get_or_load_factories (autoconvert);
 
   for (elem = factories; elem; elem = g_list_next (elem)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (elem->data);
@@ -816,7 +854,6 @@ get_out:
  * This function filters the pad pad templates, taking only transform element
  * (with one sink and one src pad)
  */
-
 static gboolean
 gst_auto_convert_default_filter_func (GstPluginFeature * feature,
     gpointer user_data)
@@ -890,24 +927,24 @@ compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 }
 
 static GList *
-gst_auto_convert_load_factories (GstAutoConvert * autoconvert)
+gst_auto_convert_get_or_load_factories (GstAutoConvert * autoconvert)
 {
   GList *all_factories;
+
+  GST_OBJECT_LOCK (autoconvert);
+  if (autoconvert->factories)
+    goto done;
+
 
   all_factories =
       gst_registry_feature_filter (gst_registry_get (),
       gst_auto_convert_default_filter_func, FALSE, NULL);
+  autoconvert->factories = g_list_sort (all_factories, (GCompareFunc) compare_ranks);
 
-  all_factories = g_list_sort (all_factories, (GCompareFunc) compare_ranks);
+done:
+  GST_OBJECT_UNLOCK (autoconvert);
 
-  g_assert (all_factories);
-
-  if (!g_atomic_pointer_compare_and_exchange (&autoconvert->factories,
-          (GList *) NULL, all_factories)) {
-    gst_plugin_feature_list_free (all_factories);
-  }
-
-  return g_atomic_pointer_get (&autoconvert->factories);
+  return autoconvert->factories;
 }
 
 /* In this case, we should almost always have an internal element, because
@@ -1090,11 +1127,7 @@ gst_auto_convert_getcaps (GstAutoConvert * autoconvert, GstCaps * filter,
     goto out;
   }
 
-  factories = g_atomic_pointer_get (&autoconvert->factories);
-
-  if (!factories)
-    factories = gst_auto_convert_load_factories (autoconvert);
-
+  factories = gst_auto_convert_get_or_load_factories (autoconvert);
   for (elem = factories; elem; elem = g_list_next (elem)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (elem->data);
     GstElement *element = NULL;
