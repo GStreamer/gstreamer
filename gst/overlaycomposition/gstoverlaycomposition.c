@@ -25,7 +25,7 @@
  *
  * ## Example code
  *
- * {{ ../../tests/examples/overlaycomposition/overlaycomposition.c[23:316] }}
+ * {{ ../../tests/examples/overlaycomposition/overlaycomposition.c[23:341] }}
  */
 
 #if HAVE_CONFIG_H
