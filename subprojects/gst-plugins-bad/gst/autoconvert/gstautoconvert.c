@@ -218,9 +218,11 @@ gst_auto_convert_dispose (GObject * object)
 {
   GstAutoConvert *autoconvert = GST_AUTO_CONVERT (object);
 
+  GST_AUTOCONVERT_LOCK (autoconvert);
   g_clear_object (&autoconvert->current_subelement);
   g_clear_object (&autoconvert->current_internal_sinkpad);
   g_clear_object (&autoconvert->current_internal_srcpad);
+  GST_AUTOCONVERT_UNLOCK (autoconvert);
 
   for (;;) {
     GList *factories = g_atomic_pointer_get (&autoconvert->factories);
@@ -716,6 +718,8 @@ gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
   GstCaps *other_caps = NULL;
   GList *factories;
   GstCaps *current_caps;
+  gboolean res = FALSE;
+  GstElement *current_subelement;
 
   g_return_val_if_fail (autoconvert != NULL, FALSE);
 
@@ -728,7 +732,8 @@ gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
     gst_caps_unref (current_caps);
   }
 
-  if (autoconvert->current_subelement) {
+  current_subelement = gst_auto_convert_get_subelement (autoconvert);
+  if (current_subelement) {
     if (gst_pad_peer_query_accept_caps (autoconvert->current_internal_srcpad,
             caps)) {
       /* If we can set the new caps on the current element,
@@ -788,23 +793,23 @@ gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
       continue;
 
     /* And make it the current child */
-    if (gst_auto_convert_activate_element (autoconvert, element, caps))
+    if (gst_auto_convert_activate_element (autoconvert, element, caps)) {
+      res = TRUE;
       break;
-    else
+    } else {
       gst_object_unref (element);
+    }
   }
 
 get_out:
-  if (other_caps)
-    gst_caps_unref (other_caps);
+  gst_clear_object (&current_subelement);
+  gst_clear_caps (&other_caps);
 
-  if (autoconvert->current_subelement) {
-    return TRUE;
-  } else {
+  if (!res)
     GST_WARNING_OBJECT (autoconvert,
-        "Could not find a matching element for caps");
-    return FALSE;
-  }
+        "Could not find a matching element for caps: %" GST_PTR_FORMAT, caps);
+
+  return res;
 }
 
 /*
