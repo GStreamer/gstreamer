@@ -39,7 +39,7 @@ test_simplest_full (void)
   check_start_stop_duration (comp, 0, 1 * GST_SECOND, 1 * GST_SECOND);
   ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
-  sink = gst_element_factory_make_or_warn ("fakesink", "sink");
+  sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
@@ -256,7 +256,7 @@ test_one_after_other_full (void)
 
   ASSERT_OBJECT_REFCOUNT (source2, "source2", 1);
 
-  sink = gst_element_factory_make_or_warn ("fakesink", "sink");
+  sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
@@ -459,7 +459,7 @@ test_one_under_another_full (void)
   check_start_stop_duration (comp, 0, 3 * GST_SECOND, 3 * GST_SECOND);
   gst_object_unref (source1);
 
-  sink = gst_element_factory_make_or_warn ("fakesink", "sink");
+  sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
@@ -613,7 +613,7 @@ test_one_bin_after_other_full (void)
 
   ASSERT_OBJECT_REFCOUNT (source1, "source1", 1);
 
-  sink = gst_element_factory_make_or_warn ("fakesink", "sink");
+  sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);

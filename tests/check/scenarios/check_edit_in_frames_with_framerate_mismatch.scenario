@@ -2,7 +2,7 @@ description, handles-states=true,
     ges-options={\
         --track-types, video,
         --disable-mixing,
-        "--videosink=fakesink"\
+        "--videosink=fakevideosink"\
     }
 
 add-clip, name=clip, asset-id="time-overlay,framerate=120/1", layer-priority=0, type=GESSourceClip, pattern=blue, duration=f240, inpoint=f100

@@ -35,7 +35,7 @@ fill_pipeline_and_check (GstElement * comp, GList * segments, GList * seeks)
   GList *ltofree = seeks;
 
   pipeline = gst_pipeline_new ("test_pipeline");
-  sink = gst_element_factory_make_or_warn ("fakesink", "sink");
+  sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);

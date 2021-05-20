@@ -283,7 +283,7 @@ _setup_test (GstElement * pipeline, gdouble rate)
   gst_element_set_state (comp, GST_STATE_READY);
 
   /* sink */
-  sink = gst_element_factory_make_or_warn ("fakesink", "sink");
+  sink = gst_element_factory_make_or_warn ("fakeaudiosink", "sink");
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
 
   gst_element_link (comp, sink);

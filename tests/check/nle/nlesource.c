@@ -24,7 +24,7 @@ GST_START_TEST (test_simple_videotestsrc)
   check_start_stop_duration (nlesource, 1 * GST_SECOND, 2 * GST_SECOND,
       1 * GST_SECOND);
 
-  sink = gst_element_factory_make_or_warn ("fakesink", "sink");
+  sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), nlesource, sink, NULL);
@@ -124,7 +124,7 @@ GST_START_TEST (test_videotestsrc_in_bin)
   if (nlesource == NULL)
     return;
 
-  sink = gst_element_factory_make_or_warn ("fakesink", "sink");
+  sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), nlesource, sink, NULL);
