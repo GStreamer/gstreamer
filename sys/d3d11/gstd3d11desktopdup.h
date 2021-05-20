@@ -28,6 +28,7 @@
 G_BEGIN_DECLS
 
 #define GST_D3D11_DESKTOP_DUP_FLOW_EXPECTED_ERROR GST_FLOW_CUSTOM_SUCCESS
+#define GST_D3D11_DESKTOP_DUP_FLOW_SIZE_CHANGED GST_FLOW_CUSTOM_SUCCESS_1
 #define GST_D3D11_DESKTOP_DUP_FLOW_UNSUPPORTED GST_FLOW_CUSTOM_ERROR
 
 #define GST_TYPE_D3D11_DESKTOP_DUP (gst_d3d11_desktop_dup_get_type())
@@ -39,8 +40,9 @@ GstD3D11DesktopDup *  gst_d3d11_desktop_dup_new (GstD3D11Device * device,
 
 GstFlowReturn   gst_d3d11_desktop_dup_prepare (GstD3D11DesktopDup * desktop);
 
-gboolean        gst_d3d11_desktop_dup_get_coordinates (GstD3D11DesktopDup * desktop,
-                                                       RECT * desktop_coordinates);
+gboolean        gst_d3d11_desktop_dup_get_size (GstD3D11DesktopDup * desktop,
+                                                guint * width,
+                                                guint * height);
 
 GstFlowReturn   gst_d3d11_desktop_dup_capture (GstD3D11DesktopDup * desktop,
                                                ID3D11Texture2D * texture,

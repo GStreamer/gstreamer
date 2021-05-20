@@ -23,14 +23,14 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/base/gstpushsrc.h>
+#include <gst/base/gstbasesrc.h>
 #include <gst/d3d11/gstd3d11.h>
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_D3D11_DESKTOP_DUP_SRC (gst_d3d11_desktop_dup_src_get_type())
 G_DECLARE_FINAL_TYPE (GstD3D11DesktopDupSrc, gst_d3d11_desktop_dup_src,
-    GST, D3D11_DESKTOP_DUP_SRC, GstPushSrc);
+    GST, D3D11_DESKTOP_DUP_SRC, GstBaseSrc);
 
 G_END_DECLS
 

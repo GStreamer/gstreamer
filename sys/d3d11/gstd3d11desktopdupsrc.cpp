@@ -71,7 +71,7 @@ GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
 
 struct _GstD3D11DesktopDupSrc
 {
-  GstPushSrc src;
+  GstBaseSrc src;
 
   guint64 last_frame_no;
   GstClockID clock_id;
@@ -113,12 +113,12 @@ static gboolean gst_d3d11_desktop_dup_src_unlock_stop (GstBaseSrc * bsrc);
 static gboolean
 gst_d3d11_desktop_dup_src_src_query (GstBaseSrc * bsrc, GstQuery * query);
 
-static GstFlowReturn gst_d3d11_desktop_dup_src_fill (GstPushSrc * pushsrc,
-    GstBuffer * buffer);
+static GstFlowReturn gst_d3d11_desktop_dup_src_create (GstBaseSrc * bsrc,
+    guint64 offset, guint size, GstBuffer ** buf);
 
 #define gst_d3d11_desktop_dup_src_parent_class parent_class
 G_DEFINE_TYPE (GstD3D11DesktopDupSrc, gst_d3d11_desktop_dup_src,
-    GST_TYPE_PUSH_SRC);
+    GST_TYPE_BASE_SRC);
 
 static void
 gst_d3d11_desktop_dup_src_class_init (GstD3D11DesktopDupSrcClass * klass)
@@ -126,7 +126,6 @@ gst_d3d11_desktop_dup_src_class_init (GstD3D11DesktopDupSrcClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseSrcClass *basesrc_class = GST_BASE_SRC_CLASS (klass);
-  GstPushSrcClass *pushsrc_class = GST_PUSH_SRC_CLASS (klass);
   GstCaps *caps;
 
   gobject_class->dispose = gst_d3d11_desktop_dup_src_dispose;
@@ -176,7 +175,7 @@ gst_d3d11_desktop_dup_src_class_init (GstD3D11DesktopDupSrcClass * klass)
   basesrc_class->query =
       GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_src_query);
 
-  pushsrc_class->fill = GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_fill);
+  basesrc_class->create = GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_create);
 }
 
 static void
@@ -259,21 +258,17 @@ gst_d3d11_desktop_dup_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
   GstCaps *caps = NULL;
   guint width, height;
-  RECT desktop_coordinates;
 
   if (!self->dupl) {
     GST_DEBUG_OBJECT (self, "Duplication object is not configured yet");
     return gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
   }
 
-  if (!gst_d3d11_desktop_dup_get_coordinates (self->dupl, &desktop_coordinates)) {
+  if (!gst_d3d11_desktop_dup_get_size (self->dupl, &width, &height)) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
         ("Cannot query supported resolution"), (NULL));
     return NULL;
   }
-
-  width = desktop_coordinates.right - desktop_coordinates.left;
-  height = desktop_coordinates.bottom - desktop_coordinates.top;
 
   caps =
       gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGRA",
@@ -520,9 +515,10 @@ gst_d3d11_desktop_dup_src_src_query (GstBaseSrc * bsrc, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_d3d11_desktop_dup_src_fill (GstPushSrc * pushsrc, GstBuffer * buffer)
+gst_d3d11_desktop_dup_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
+    GstBuffer ** buf)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (pushsrc);
+  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
   ID3D11Texture2D *texture;
   ID3D11RenderTargetView *rtv = NULL;
   gint fps_n, fps_d;
@@ -542,6 +538,7 @@ gst_d3d11_desktop_dup_src_fill (GstPushSrc * pushsrc, GstBuffer * buffer)
   gboolean draw_mouse;
   /* Just magic number... */
   gint unsupported_retry_count = 100;
+  GstBuffer *buffer = NULL;
 
   if (!self->dupl) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
@@ -630,6 +627,13 @@ again:
   self->last_frame_no = next_frame_no;
   GST_OBJECT_UNLOCK (self);
 
+  if (!buffer) {
+    ret =
+        GST_BASE_SRC_CLASS (parent_class)->alloc (bsrc, offset, size, &buffer);
+    if (ret != GST_FLOW_OK)
+      goto out;
+  }
+
   /* FIXME: handle fallback case
    * (e.g., texture belongs to other device, RTV is unavailable) */
   mem = gst_buffer_peek_memory (buffer, 0);
@@ -658,21 +662,34 @@ again:
   GST_BUFFER_PTS (buffer) = next_capture_ts;
   GST_BUFFER_DURATION (buffer) = dur;
 
-  if (ret == GST_D3D11_DESKTOP_DUP_FLOW_EXPECTED_ERROR) {
-    GST_WARNING_OBJECT (self, "Got expected error, try again");
-    gst_clear_object (&clock);
-    goto again;
-  } else if (ret == GST_D3D11_DESKTOP_DUP_FLOW_UNSUPPORTED) {
-    GST_WARNING_OBJECT (self, "Got DXGI_ERROR_UNSUPPORTED error");
-    unsupported_retry_count--;
+  switch (ret) {
+    case GST_D3D11_DESKTOP_DUP_FLOW_EXPECTED_ERROR:
+      GST_WARNING_OBJECT (self, "Got expected error, try again");
+      gst_clear_object (&clock);
+      goto again;
+    case GST_D3D11_DESKTOP_DUP_FLOW_UNSUPPORTED:
+      GST_WARNING_OBJECT (self, "Got DXGI_ERROR_UNSUPPORTED error");
+      unsupported_retry_count--;
 
-    if (unsupported_retry_count < 0) {
-      ret = GST_FLOW_ERROR;
-      goto out;
-    }
+      if (unsupported_retry_count < 0) {
+        ret = GST_FLOW_ERROR;
+        goto out;
+      }
+      gst_clear_object (&clock);
+      goto again;
+    case GST_D3D11_DESKTOP_DUP_FLOW_SIZE_CHANGED:
+      GST_INFO_OBJECT (self, "Size was changed, need negotiation");
+      gst_clear_buffer (&buffer);
+      gst_clear_object (&clock);
 
-    gst_clear_object (&clock);
-    goto again;
+      if (!gst_base_src_negotiate (bsrc)) {
+        GST_ERROR_OBJECT (self, "Failed to negotiate with new size");
+        ret = GST_FLOW_NOT_NEGOTIATED;
+        goto out;
+      }
+      goto again;
+    default:
+      break;
   }
 
   after_capture = gst_clock_get_time (clock);
@@ -698,6 +715,7 @@ again:
 
 out:
   gst_clear_object (&clock);
+  *buf = buffer;
 
   return ret;
 }

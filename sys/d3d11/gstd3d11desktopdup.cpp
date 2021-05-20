@@ -264,9 +264,12 @@ public:
   }
 
   GstFlowReturn
-  Init (GstD3D11Device * device, ID3D11Texture2D * texture, UINT monitor_index)
+  Init (GstD3D11Device * device, UINT monitor_index)
   {
     GstFlowReturn ret;
+    ID3D11Device *device_handle;
+    HRESULT hr;
+    D3D11_TEXTURE2D_DESC texture_desc = { 0, };
 
     if (!InitShader (device))
       return GST_FLOW_ERROR;
@@ -277,7 +280,28 @@ public:
 
     GST_INFO ("Init done");
 
-    shared_texture_ = texture;
+    device_handle = gst_d3d11_device_get_device_handle (device);
+
+    texture_desc.Width = output_desc_.ModeDesc.Width;
+    texture_desc.Height = output_desc_.ModeDesc.Height;
+    texture_desc.MipLevels = 1;
+    texture_desc.ArraySize = 1;
+    /* FIXME: we can support DXGI_FORMAT_R10G10B10A2_UNORM */
+    texture_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    texture_desc.SampleDesc.Count = 1;
+    texture_desc.Usage = D3D11_USAGE_DEFAULT;
+    texture_desc.BindFlags =
+        D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+    texture_desc.CPUAccessFlags = 0;
+    texture_desc.MiscFlags = 0;
+
+    hr = device_handle->CreateTexture2D (&texture_desc,
+        nullptr, &shared_texture_);
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (device, "Couldn't create texture, hr 0x%x", (guint) hr);
+      return GST_FLOW_ERROR;
+    }
+
     device_ = (GstD3D11Device *) gst_object_ref (device);
 
     return GST_FLOW_OK;
@@ -511,6 +535,23 @@ public:
     return true;
   }
 
+  void
+  CopyToTexture (ID3D11Texture2D * texture)
+  {
+    ID3D11DeviceContext *context_handle =
+        gst_d3d11_device_get_device_context_handle (device_);
+
+    context_handle->CopySubresourceRegion (texture, 0, 0, 0, 0,
+      shared_texture_.Get(), 0, nullptr);
+  }
+
+  void
+  GetSize (guint * width, guint * height)
+  {
+    *width = output_desc_.ModeDesc.Width;
+    *height = output_desc_.ModeDesc.Height;
+  }
+
 private:
   /* This method is not expected to be failed unless un-recoverable error case */
   bool
@@ -652,8 +693,6 @@ private:
           hr, EnumOutputsExpectedErrors);
     }
 
-    output->GetDesc(&output_desc_);
-
     hr = output.As (&output1);
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Couldn't get IDXGIOutput1 interface, hr 0x%x", (guint) hr);
@@ -693,6 +732,8 @@ private:
       return gst_d3d11_desktop_dup_return_from_hr (d3d11_device.Get(), hr,
           CreateDuplicationExpectedErrors);
     }
+
+    dupl_->GetDesc (&output_desc_);
 
     return GST_FLOW_OK;
   }
@@ -870,7 +911,7 @@ private:
   }
 
   void
-  SetMoveRect (RECT* SrcRect, RECT* DestRect, DXGI_OUTPUT_DESC* DeskDesc,
+  SetMoveRect (RECT* SrcRect, RECT* DestRect, DXGI_OUTDUPL_DESC* DeskDesc,
       DXGI_OUTDUPL_MOVE_RECT* MoveRect, INT TexWidth, INT TexHeight)
   {
     switch (DeskDesc->Rotation)
@@ -934,7 +975,7 @@ private:
 
   GstFlowReturn
   CopyMove (ID3D11Texture2D* SharedSurf, DXGI_OUTDUPL_MOVE_RECT* MoveBuffer,
-      UINT MoveCount,DXGI_OUTPUT_DESC* DeskDesc)
+      UINT MoveCount, DXGI_OUTDUPL_DESC* DeskDesc)
   {
     ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device_);
     ID3D11DeviceContext *device_context =
@@ -986,7 +1027,7 @@ private:
 
   void
   SetDirtyVert (VERTEX* Vertices, RECT* Dirty,
-      DXGI_OUTPUT_DESC* DeskDesc, D3D11_TEXTURE2D_DESC* FullDesc,
+      DXGI_OUTDUPL_DESC* DeskDesc, D3D11_TEXTURE2D_DESC* FullDesc,
       D3D11_TEXTURE2D_DESC* ThisDesc)
   {
     INT CenterX = FullDesc->Width / 2;
@@ -1119,7 +1160,7 @@ private:
 
   GstFlowReturn
   CopyDirty (ID3D11Texture2D* SrcSurface, ID3D11Texture2D* SharedSurf,
-      RECT* DirtyBuffer, UINT DirtyCount, DXGI_OUTPUT_DESC* DeskDesc)
+      RECT* DirtyBuffer, UINT DirtyCount, DXGI_OUTDUPL_DESC* DeskDesc)
   {
     D3D11_TEXTURE2D_DESC FullDesc;
     D3D11_TEXTURE2D_DESC ThisDesc;
@@ -1224,7 +1265,7 @@ private:
 
   GstFlowReturn
   ProcessFrame(ID3D11Texture2D * acquired_texture, ID3D11Texture2D* SharedSurf,
-      DXGI_OUTPUT_DESC* DeskDesc, UINT move_count, UINT dirty_count,
+      DXGI_OUTDUPL_DESC* DeskDesc, UINT move_count, UINT dirty_count,
       DXGI_OUTDUPL_FRAME_INFO * frame_info)
   {
     GstFlowReturn ret = GST_FLOW_OK;
@@ -1409,7 +1450,7 @@ private:
 
 private:
   PTR_INFO ptr_info_;
-  DXGI_OUTPUT_DESC output_desc_;
+  DXGI_OUTDUPL_DESC output_desc_;
   GstD3D11Device * device_;
 
   ComPtr<ID3D11Texture2D> shared_texture_;
@@ -1437,10 +1478,9 @@ struct _GstD3D11DesktopDup
   GstObject parent;
 
   GstD3D11Device *device;
-  guint width;
-  guint height;
+  guint cached_width;
+  guint cached_height;
 
-  ID3D11Texture2D *texture;
   D3D11DesktopDupObject *dupl_obj;
 
   gboolean primary;
@@ -1603,16 +1643,16 @@ gst_d3d11_desktop_dup_constructed (GObject * object)
     goto out;
   }
 
-  self->width =
+  self->cached_width =
       self->desktop_coordinates.right - self->desktop_coordinates.left;
-  self->height =
+  self->cached_height =
       self->desktop_coordinates.bottom - self->desktop_coordinates.top;
 
   GST_DEBUG_OBJECT (self,
       "Desktop coordinates left:top:right:bottom = %ld:%ld:%ld:%ld (%dx%d)",
       self->desktop_coordinates.left, self->desktop_coordinates.top,
       self->desktop_coordinates.right, self->desktop_coordinates.bottom,
-      self->width, self->height);
+      self->cached_width, self->cached_height);
 
   ret = TRUE;
 
@@ -1645,8 +1685,6 @@ gst_d3d11_desktop_dup_dispose (GObject * object)
 {
   GstD3D11DesktopDup *self = GST_D3D11_DESKTOP_DUP (object);
 
-  GST_D3D11_CLEAR_COM (self->texture);
-
   if (self->dupl_obj) {
     delete self->dupl_obj;
     self->dupl_obj = nullptr;
@@ -1665,44 +1703,6 @@ gst_d3d11_desktop_dup_finalize (GObject * object)
   g_rec_mutex_clear (&self->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static gboolean
-gst_d3d11_desktop_dup_setup_texture (GstD3D11DesktopDup * self)
-{
-  D3D11_TEXTURE2D_DESC texture_desc = { 0, };
-  ID3D11Device *device_handle;
-  HRESULT hr;
-  /* *INDENT-OFF* */
-  ComPtr<ID3D11Texture2D> texture;
-  /* *INDENT-ON* */
-
-  /* This texture is for copying/updating only updated region from previously
-   * captured frame (like a reference frame) */
-  device_handle = gst_d3d11_device_get_device_handle (self->device);
-
-  texture_desc.Width = self->width;
-  texture_desc.Height = self->height;
-  texture_desc.MipLevels = 1;
-  texture_desc.ArraySize = 1;
-  /* FIXME: we can support DXGI_FORMAT_R10G10B10A2_UNORM */
-  texture_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  texture_desc.SampleDesc.Count = 1;
-  texture_desc.Usage = D3D11_USAGE_DEFAULT;
-  texture_desc.BindFlags =
-      D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-  texture_desc.CPUAccessFlags = 0;
-  texture_desc.MiscFlags = 0;
-
-  hr = device_handle->CreateTexture2D (&texture_desc, nullptr, &texture);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't create texture, hr 0x%x", (guint) hr);
-    return FALSE;
-  }
-
-  self->texture = texture.Detach ();
-
-  return TRUE;
 }
 
 static void
@@ -1781,15 +1781,8 @@ gst_d3d11_desktop_dup_prepare (GstD3D11DesktopDup * desktop)
     return GST_FLOW_OK;
   }
 
-  if (!desktop->texture && !gst_d3d11_desktop_dup_setup_texture (desktop)) {
-    GST_ERROR_OBJECT (desktop, "Couldn't setup internal texture");
-    g_rec_mutex_unlock (&desktop->lock);
-    return GST_FLOW_ERROR;
-  }
-
   desktop->dupl_obj = new D3D11DesktopDupObject ();
-  ret = desktop->dupl_obj->Init (desktop->device, desktop->texture,
-      desktop->monitor_index);
+  ret = desktop->dupl_obj->Init (desktop->device, desktop->monitor_index);
   if (ret != GST_FLOW_OK) {
     GST_WARNING_OBJECT (desktop,
         "Couldn't prepare capturing, %sexpected failure",
@@ -1809,13 +1802,25 @@ gst_d3d11_desktop_dup_prepare (GstD3D11DesktopDup * desktop)
 }
 
 gboolean
-gst_d3d11_desktop_dup_get_coordinates (GstD3D11DesktopDup * desktop,
-    RECT * desktop_coordinates)
+gst_d3d11_desktop_dup_get_size (GstD3D11DesktopDup * desktop, guint * width,
+    guint * height)
 {
   g_return_val_if_fail (GST_IS_D3D11_DESKTOP_DUP (desktop), FALSE);
-  g_return_val_if_fail (desktop_coordinates != nullptr, FALSE);
+  g_return_val_if_fail (width != nullptr, FALSE);
+  g_return_val_if_fail (height != nullptr, FALSE);
 
-  *desktop_coordinates = desktop->desktop_coordinates;
+  g_rec_mutex_lock (&desktop->lock);
+  *width = 0;
+  *height = 0;
+
+  if (desktop->dupl_obj) {
+    desktop->dupl_obj->GetSize (&desktop->cached_width,
+        &desktop->cached_height);
+  }
+
+  *width = desktop->cached_width;
+  *height = desktop->cached_height;
+  g_rec_mutex_unlock (&desktop->lock);
 
   return TRUE;
 }
@@ -1826,7 +1831,8 @@ gst_d3d11_desktop_dup_capture (GstD3D11DesktopDup * desktop,
     gboolean draw_mouse)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  ID3D11DeviceContext *device_context_handle;
+  D3D11_TEXTURE2D_DESC desc;
+  guint width, height;
 
   g_return_val_if_fail (GST_IS_D3D11_DESKTOP_DUP (desktop), GST_FLOW_ERROR);
   g_return_val_if_fail (texture != nullptr, GST_FLOW_ERROR);
@@ -1839,6 +1845,18 @@ gst_d3d11_desktop_dup_capture (GstD3D11DesktopDup * desktop,
     GST_WARNING_OBJECT (desktop, "We are not prepared");
     g_rec_mutex_unlock (&desktop->lock);
     return ret;
+  }
+
+  gst_d3d11_desktop_dup_get_size (desktop, &width, &height);
+
+  texture->GetDesc (&desc);
+  if (desc.Width != width || desc.Height != height) {
+    GST_INFO_OBJECT (desktop,
+        "Different texture size, ours: %dx%d, external: %dx%d",
+        width, height, desc.Width, desc.Height);
+    g_rec_mutex_unlock (&desktop->lock);
+
+    return GST_D3D11_DESKTOP_DUP_FLOW_SIZE_CHANGED;
   }
 
   gst_d3d11_device_lock (desktop->device);
@@ -1863,10 +1881,7 @@ gst_d3d11_desktop_dup_capture (GstD3D11DesktopDup * desktop,
 
   GST_LOG_OBJECT (desktop, "Capture done");
 
-  device_context_handle =
-      gst_d3d11_device_get_device_context_handle (desktop->device);
-  device_context_handle->CopySubresourceRegion (texture, 0, 0, 0, 0,
-      desktop->texture, 0, nullptr);
+  desktop->dupl_obj->CopyToTexture (texture);
   if (draw_mouse)
     desktop->dupl_obj->DrawMouse (rtv);
   gst_d3d11_device_unlock (desktop->device);
