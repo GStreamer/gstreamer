@@ -681,6 +681,6 @@ gst_vaapioverlay_register (GstPlugin * plugin, GstVaapiDisplay * display)
     return FALSE;
   gst_vaapi_blend_replace (&blend, NULL);
 
-  return gst_element_register (plugin, "vaapioverlay",
-      GST_RANK_PRIMARY, GST_TYPE_VAAPI_OVERLAY);
+  return gst_element_register (plugin, "vaapioverlay", GST_RANK_NONE,
+      GST_TYPE_VAAPI_OVERLAY);
 }

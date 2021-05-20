@@ -207,7 +207,7 @@ plugin_init (GstPlugin * plugin)
     gst_vaapioverlay_register (plugin, display);
 
   gst_element_register (plugin, "vaapipostproc",
-      GST_RANK_PRIMARY, GST_TYPE_VAAPIPOSTPROC);
+      GST_RANK_NONE, GST_TYPE_VAAPIPOSTPROC);
 
   gst_element_register (plugin, "vaapidecodebin",
       GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
