@@ -7,7 +7,7 @@ gst_sdp_headers = [
 ]
 install_headers(gst_sdp_headers, subdir : 'gstreamer-1.0/gst/sdp/')
 
-rtsp_deps = [rtp_dep, gst_dep, gio_dep]
+sdp_deps = [rtp_dep, gst_dep, gio_dep]
 gst_sdp_sources = ['gstsdpmessage.c', 'gstmikey.c']
 gstsdp = library('gstsdp-@0@'.format(api_version),
   gst_sdp_sources,
@@ -17,7 +17,7 @@ gstsdp = library('gstsdp-@0@'.format(api_version),
   soversion : soversion,
   darwin_versions : osxversion,
   install : true,
-  dependencies : rtsp_deps,
+  dependencies : sdp_deps,
 )
 
 pkgconfig.generate(gstsdp,
@@ -41,7 +41,7 @@ if build_gir
     includes : ['Gst-1.0'],
     install : true,
     extra_args : gst_gir_extra_args,
-    dependencies : rtsp_deps
+    dependencies : sdp_deps
   )
 
   sdp_gen_sources += [sdp_gir]
@@ -49,7 +49,7 @@ endif
 
 sdp_dep = declare_dependency(link_with: gstsdp,
   include_directories : [libsinc],
-  dependencies : rtsp_deps,
+  dependencies : sdp_deps,
   sources: sdp_gen_sources)
 
 meson.override_dependency('gstreamer-sdp-1.0', sdp_dep)
