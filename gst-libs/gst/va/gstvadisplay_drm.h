@@ -31,6 +31,8 @@ G_BEGIN_DECLS
 #define GST_IS_VA_DISPLAY_DRM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VA_DISPLAY_DRM))
 #define GST_VA_DISPLAY_DRM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VA_DISPLAY_DRM, GstVaDisplayDrmClass))
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaDisplayDrm, gst_object_unref)
+
 GST_VA_API
 GType                 gst_va_display_drm_get_type         (void);
 GST_VA_API

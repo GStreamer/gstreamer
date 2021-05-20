@@ -73,6 +73,8 @@ typedef enum
 #define GST_IS_VA_DISPLAY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VA_DISPLAY))
 #define GST_VA_DISPLAY_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VA_DISPLAY, GstVaDisplayClass))
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaDisplay, gst_object_unref)
+
 /**
  * GstVaDisplay:
  * @parent: parent #GstObject
