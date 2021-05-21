@@ -110,6 +110,19 @@ static const gchar *src_caps_str = GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VA
 
 static const gchar *sink_caps_str = "video/x-h265";
 
+static gboolean
+_is_range_extension_profile (VAProfile profile)
+{
+  if (profile == VAProfileHEVCMain422_10
+      || profile == VAProfileHEVCMain444
+      || profile == VAProfileHEVCMain444_10
+      || profile == VAProfileHEVCMain12
+      || profile == VAProfileHEVCMain444_12
+      || profile == VAProfileHEVCMain422_12)
+    return TRUE;
+  return FALSE;
+}
+
 static inline void
 _set_last_slice_flag (GstVaH265Dec * self)
 {
@@ -145,6 +158,7 @@ _submit_previous_slice (GstVaBaseDec * base, GstVaDecodePicture * va_pic)
   GstVaH265Dec *self = GST_VA_H265_DEC (base);
   struct slice *slice;
   gboolean ret;
+  gsize param_size;
 
   slice = &self->prev_slice;
   if (!slice->data && slice->size == 0)
@@ -152,8 +166,10 @@ _submit_previous_slice (GstVaBaseDec * base, GstVaDecodePicture * va_pic)
   if (!slice->data || slice->size == 0)
     return FALSE;
 
+  param_size = _is_range_extension_profile (self->parent.profile) ?
+      sizeof (slice->param) : sizeof (slice->param.base);
   ret = gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice->param,
-      sizeof (slice->param.base), slice->data, slice->size);
+      param_size, slice->data, slice->size);
 
   return ret;
 }
@@ -316,6 +332,7 @@ _fill_pred_weight_table (GstVaH265Dec * self, GstH265SliceHdr * header,
   gint chroma_weight, chroma_log2_weight_denom;
   gint i, j;
   GstH265PPS *pps = header->pps;
+  gboolean is_rext = _is_range_extension_profile (self->parent.profile);
 
   if (GST_H265_IS_I_SLICE (header) ||
       (!pps->weighted_pred_flag && GST_H265_IS_P_SLICE (header)) ||
@@ -337,6 +354,11 @@ _fill_pred_weight_table (GstVaH265Dec * self, GstH265SliceHdr * header,
         header->pred_weight_table.delta_luma_weight_l0[i];
     slice_param->base.luma_offset_l0[i] =
         header->pred_weight_table.luma_offset_l0[i];
+
+    if (is_rext) {
+      slice_param->rext.luma_offset_l0[i] =
+          header->pred_weight_table.luma_offset_l0[i];
+    }
   }
 
   chroma_log2_weight_denom = slice_param->base.luma_log2_weight_denom +
@@ -364,6 +386,11 @@ _fill_pred_weight_table (GstVaH265Dec * self, GstH265SliceHdr * header,
       /* 7-56 */
       slice_param->base.ChromaOffsetL0[i][j] = CLAMP (chroma_offset,
           -self->WpOffsetHalfRangeC, self->WpOffsetHalfRangeC - 1);
+
+      if (is_rext) {
+        slice_param->rext.ChromaOffsetL0[i][j] =
+            slice_param->base.ChromaOffsetL0[i][j];
+      }
     }
   }
 
@@ -379,6 +406,11 @@ _fill_pred_weight_table (GstVaH265Dec * self, GstH265SliceHdr * header,
         header->pred_weight_table.delta_luma_weight_l1[i];
     slice_param->base.luma_offset_l1[i] =
         header->pred_weight_table.luma_offset_l1[i];
+
+    if (is_rext) {
+      slice_param->rext.luma_offset_l1[i] =
+          header->pred_weight_table.luma_offset_l1[i];
+    }
   }
 
   for (i = 0; i <= header->num_ref_idx_l1_active_minus1; i++) {
@@ -405,6 +437,10 @@ _fill_pred_weight_table (GstVaH265Dec * self, GstH265SliceHdr * header,
       slice_param->base.ChromaOffsetL1[i][j] = CLAMP (chroma_offset,
           -self->WpOffsetHalfRangeC, self->WpOffsetHalfRangeC - 1);
 
+      if (is_rext) {
+        slice_param->rext.ChromaOffsetL1[i][j] =
+            slice_param->base.ChromaOffsetL1[i][j];
+      }
     }
   }
 }
@@ -478,6 +514,20 @@ gst_va_h265_dec_decode_slice (GstH265Decoder * decoder,
   };
   /* *INDENT-ON* */
 
+  if (_is_range_extension_profile (base->profile)) {
+    /* *INDENT-OFF* */
+    slice_param->rext = (VASliceParameterBufferHEVCRext) {
+      .slice_ext_flags.bits = {
+        .cu_chroma_qp_offset_enabled_flag = header->cu_chroma_qp_offset_enabled_flag,
+        .use_integer_mv_flag = header->use_integer_mv_flag,
+      },
+      .slice_act_y_qp_offset = header->slice_act_y_qp_offset,
+      .slice_act_cb_qp_offset = header->slice_act_cb_qp_offset,
+      .slice_act_cr_qp_offset = header->slice_act_cr_qp_offset,
+    };
+    /* *INDENT-ON* */
+  }
+
   _fill_ref_pic_list (decoder, picture, slice_param->base.RefPicList[0],
       ref_pic_list0);
   _fill_ref_pic_list (decoder, picture, slice_param->base.RefPicList[1],
@@ -489,6 +539,44 @@ gst_va_h265_dec_decode_slice (GstH265Decoder * decoder,
       slice->nalu.size);
 
   return TRUE;
+}
+
+static void
+_fill_picture_range_ext_parameter (GstVaH265Dec * decoder,
+    GstH265SPS * sps, GstH265PPS * pps)
+{
+  VAPictureParameterBufferHEVCRext *pic_param = &decoder->pic_param.rext;
+
+  GstH265SPSExtensionParams *sps_ext = &sps->sps_extnsion_params;
+  GstH265PPSExtensionParams *pps_ext = &pps->pps_extension_params;
+
+  /* *INDENT-OFF* */
+  *pic_param = (VAPictureParameterBufferHEVCRext) {
+    .range_extension_pic_fields.bits = {
+      .transform_skip_rotation_enabled_flag = sps_ext->transform_skip_rotation_enabled_flag,
+      .transform_skip_context_enabled_flag = sps_ext->transform_skip_context_enabled_flag,
+      .implicit_rdpcm_enabled_flag = sps_ext->implicit_rdpcm_enabled_flag,
+      .explicit_rdpcm_enabled_flag = sps_ext->explicit_rdpcm_enabled_flag,
+      .extended_precision_processing_flag = sps_ext->extended_precision_processing_flag,
+      .intra_smoothing_disabled_flag = sps_ext->intra_smoothing_disabled_flag,
+      .high_precision_offsets_enabled_flag = sps_ext->high_precision_offsets_enabled_flag,
+      .persistent_rice_adaptation_enabled_flag = sps_ext->persistent_rice_adaptation_enabled_flag,
+      .cabac_bypass_alignment_enabled_flag = sps_ext->cabac_bypass_alignment_enabled_flag,
+      .cross_component_prediction_enabled_flag = pps_ext->cross_component_prediction_enabled_flag,
+      .chroma_qp_offset_list_enabled_flag = pps_ext->chroma_qp_offset_list_enabled_flag,
+    },
+    .diff_cu_chroma_qp_offset_depth = pps_ext->diff_cu_chroma_qp_offset_depth,
+    .chroma_qp_offset_list_len_minus1 = pps_ext->chroma_qp_offset_list_len_minus1,
+    .log2_sao_offset_scale_luma = pps_ext->log2_sao_offset_scale_luma,
+    .log2_sao_offset_scale_chroma = pps_ext->log2_sao_offset_scale_chroma,
+    .log2_max_transform_skip_block_size_minus2 = pps_ext->log2_max_transform_skip_block_size_minus2,
+  };
+  /* *INDENT-ON* */
+
+  memcpy (pic_param->cb_qp_offset_list, pps_ext->cb_qp_offset_list,
+      sizeof (pic_param->cb_qp_offset_list));
+  memcpy (pic_param->cr_qp_offset_list, pps_ext->cr_qp_offset_list,
+      sizeof (pic_param->cr_qp_offset_list));
 }
 
 static gboolean
@@ -503,6 +591,7 @@ gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
   GstH265ScalingList *scaling_list = NULL;
   VAIQMatrixBufferHEVC iq_matrix = { 0, };
   VAPictureParameterBufferHEVCExtension *pic_param = &self->pic_param;
+  gsize pic_param_size;
   guint i;
 
   va_pic = gst_h265_picture_get_user_data (picture);
@@ -585,6 +674,9 @@ gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
   };
   /* *INDENT-ON* */
 
+  if (_is_range_extension_profile (self->parent.profile))
+    _fill_picture_range_ext_parameter (self, sps, pps);
+
   for (i = 0; i <= pps->num_tile_columns_minus1; i++)
     pic_param->base.column_width_minus1[i] = pps->column_width_minus1[i];
 
@@ -606,8 +698,10 @@ gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
       _init_vaapi_pic (&pic_param->base.ReferenceFrames[i]);
   }
 
+  pic_param_size = _is_range_extension_profile (self->parent.profile) ?
+      sizeof (*pic_param) : sizeof (pic_param->base);
   if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
-          VAPictureParameterBufferType, pic_param, sizeof (pic_param->base)))
+          VAPictureParameterBufferType, pic_param, pic_param_size))
     return FALSE;
 
   if (pps->scaling_list_data_present_flag ||
