@@ -1199,7 +1199,7 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
   guint zorder = 0;
 #endif
 
-  if (!cpad->convert || cpad->alpha_updated || self->reconfigured) {
+  if (!cpad->convert || self->reconfigured) {
     GstStructure *config;
 
     if (cpad->convert)
@@ -1214,13 +1214,23 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
     cpad->convert =
         gst_d3d11_converter_new (self->device, &pad->info, &vagg->info, config);
 
-    cpad->alpha_updated = FALSE;
     if (!cpad->convert) {
       GST_ERROR_OBJECT (pad, "Couldn't create converter");
       return FALSE;
     }
 
     is_first = TRUE;
+  } else if (cpad->alpha_updated) {
+    GstStructure *config;
+
+    config = gst_structure_new_empty ("config");
+    if (cpad->alpha <= 1.0) {
+      gst_structure_set (config, GST_D3D11_CONVERTER_OPT_ALPHA_VALUE,
+          G_TYPE_DOUBLE, cpad->alpha, nullptr);
+    }
+
+    gst_d3d11_converter_update_config (cpad->convert, config);
+    cpad->alpha_updated = FALSE;
   }
 
   if (!cpad->blend || cpad->blend_desc_updated) {
