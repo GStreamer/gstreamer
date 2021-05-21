@@ -50,6 +50,8 @@ GST_DEBUG_CATEGORY (autoconvert_debug);
 #define GST_AUTOCONVERT_LOCK(ac) GST_OBJECT_LOCK (ac)
 #define GST_AUTOCONVERT_UNLOCK(ac) GST_OBJECT_UNLOCK (ac)
 
+#define SUPRESS_UNUSED_WARNING(a) (void)a
+
 /* elementfactory information */
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -57,18 +59,6 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
-
-static GstStaticPadTemplate sink_internal_template =
-GST_STATIC_PAD_TEMPLATE ("sink_internal",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
-
-static GstStaticPadTemplate src_internal_template =
-GST_STATIC_PAD_TEMPLATE ("src_internal",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
@@ -138,27 +128,96 @@ static gboolean gst_auto_convert_internal_src_query (GstPad * pad,
 static GList *gst_auto_convert_get_or_load_factories (GstAutoConvert *
     autoconvert);
 
-static GQuark internal_srcpad_quark = 0;
-static GQuark internal_sinkpad_quark = 0;
-static GQuark parent_quark = 0;
+G_DECLARE_FINAL_TYPE (GstAutoConvertPad, gst_auto_convert_pad, GST,
+    AUTO_CONVERT_PAD, GstPad);
+struct _GstAutoConvertPad
+{
+  GstPad parent;
+
+  GstAutoConvert *autoconvert;
+};
+G_DEFINE_TYPE (GstAutoConvertPad, gst_auto_convert_pad, GST_TYPE_PAD);
+
+static void
+gst_auto_convert_pad_class_init (GstAutoConvertPadClass * klass)
+{
+}
+
+static void
+gst_auto_convert_pad_init (GstAutoConvertPad * autoconvert)
+{
+  SUPRESS_UNUSED_WARNING (GST_IS_AUTO_CONVERT_PAD);
+}
 
 G_DEFINE_TYPE (GstAutoConvert, gst_auto_convert, GST_TYPE_BIN);
 GST_ELEMENT_REGISTER_DEFINE (autoconvert, "autoconvert",
     GST_RANK_NONE, GST_TYPE_AUTO_CONVERT);
+
+typedef struct
+{
+  gint refcount;
+
+  GstPad *sink;
+  GstPad *src;
+} InternalPads;
+
+static InternalPads *
+internal_pads_new (GstAutoConvert * autoconvert, const gchar * subelement_name)
+{
+  InternalPads *pads = g_new0 (InternalPads, 1);
+  gchar *name = g_strdup_printf ("internal_sink_%s", subelement_name);
+
+  pads->refcount = 1;
+  pads->sink = g_object_new (gst_auto_convert_pad_get_type (),
+      "name", name, "direction", GST_PAD_SINK, NULL);
+  g_free (name);
+  GST_AUTO_CONVERT_PAD (pads->sink)->autoconvert = autoconvert;
+
+  name = g_strdup_printf ("internal_src_%s", subelement_name);
+  pads->src = g_object_new (gst_auto_convert_pad_get_type (),
+      "name", name, "direction", GST_PAD_SRC, NULL);
+  g_free (name);
+  GST_AUTO_CONVERT_PAD (pads->src)->autoconvert = autoconvert;
+
+  return pads;
+}
+
+static void
+internal_pads_unref (InternalPads * pads)
+{
+  if (!g_atomic_int_dec_and_test (&pads->refcount))
+    return;
+
+  gst_clear_object (&pads->sink);
+  gst_clear_object (&pads->src);
+  g_free (pads);
+}
+
+static InternalPads *
+internal_pads_ref (InternalPads * pads)
+{
+  g_atomic_int_inc (&pads->refcount);
+
+  return pads;
+}
+
+static void
+gst_auto_convert_element_removed (GstBin * bin, GstElement * child)
+{
+  GstAutoConvert *autoconvert = GST_AUTO_CONVERT (bin);
+
+  g_hash_table_remove (autoconvert->elements, child);
+}
 
 static void
 gst_auto_convert_class_init (GstAutoConvertClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstBinClass *gstbin_class = (GstBinClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (autoconvert_debug, "autoconvert", 0,
       "Auto convert based on caps");
-
-  internal_srcpad_quark = g_quark_from_static_string ("internal_srcpad");
-  internal_sinkpad_quark = g_quark_from_static_string ("internal_sinkpad");
-  parent_quark = g_quark_from_static_string ("parent");
-
 
   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
@@ -173,6 +232,8 @@ gst_auto_convert_class_init (GstAutoConvertClass * klass)
 
   gobject_class->set_property = gst_auto_convert_set_property;
   gobject_class->get_property = gst_auto_convert_get_property;
+
+  gstbin_class->element_removed = gst_auto_convert_element_removed;
 
   g_object_class_install_property (gobject_class, PROP_FACTORIES,
       g_param_spec_pointer ("factories",
@@ -206,6 +267,8 @@ gst_auto_convert_init (GstAutoConvert * autoconvert)
   autoconvert->sinkpad =
       gst_pad_new_from_static_template (&sinktemplate, "sink");
   autoconvert->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
+  autoconvert->elements = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+      NULL, (GDestroyNotify) internal_pads_unref);
 
   gst_pad_set_chain_function (autoconvert->sinkpad,
       GST_DEBUG_FUNCPTR (gst_auto_convert_sink_chain));
@@ -250,6 +313,7 @@ gst_auto_convert_finalize (GObject * object)
 
   if (autoconvert->factories)
     gst_plugin_feature_list_free (autoconvert->factories);
+  g_hash_table_unref (autoconvert->elements);
 
   G_OBJECT_CLASS (gst_auto_convert_parent_class)->finalize (object);
 }
@@ -504,8 +568,7 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
     GstElementFactory * factory)
 {
   GstElement *element = NULL;
-  GstPad *internal_sinkpad = NULL;
-  GstPad *internal_srcpad = NULL;
+  InternalPads *pads;
   GstPad *sinkpad = NULL;
   GstPad *srcpad = NULL;
   GstPadLinkReturn padlinkret;
@@ -524,6 +587,9 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
     return NULL;
   }
 
+  pads = internal_pads_new (autoconvert, GST_OBJECT_NAME (element));
+  g_hash_table_insert (autoconvert->elements, element, pads);
+
   srcpad = get_pad_by_direction (element, GST_PAD_SRC);
   if (!srcpad) {
     GST_ERROR_OBJECT (autoconvert, "Could not find source in %s",
@@ -538,72 +604,43 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
     goto error;
   }
 
-  internal_sinkpad =
-      gst_pad_new_from_static_template (&sink_internal_template,
-      "sink_internal");
-  internal_srcpad =
-      gst_pad_new_from_static_template (&src_internal_template, "src_internal");
+  gst_pad_set_active (pads->sink, TRUE);
+  gst_pad_set_active (pads->src, TRUE);
 
-  if (!internal_sinkpad || !internal_srcpad) {
-    GST_ERROR_OBJECT (autoconvert, "Could not create internal pads");
-    if (internal_srcpad)
-      gst_object_unref (internal_srcpad);
-    if (internal_sinkpad)
-      gst_object_unref (internal_sinkpad);
-    goto error;
-  }
-
-  g_object_weak_ref (G_OBJECT (element), (GWeakNotify) gst_object_unref,
-      internal_sinkpad);
-  g_object_weak_ref (G_OBJECT (element), (GWeakNotify) gst_object_unref,
-      internal_srcpad);
-
-  gst_pad_set_active (internal_sinkpad, TRUE);
-  gst_pad_set_active (internal_srcpad, TRUE);
-
-  g_object_set_qdata (G_OBJECT (internal_srcpad), parent_quark, autoconvert);
-  g_object_set_qdata (G_OBJECT (internal_sinkpad), parent_quark, autoconvert);
-
-  gst_pad_set_chain_function (internal_sinkpad,
+  gst_pad_set_chain_function (pads->sink,
       GST_DEBUG_FUNCPTR (gst_auto_convert_internal_sink_chain));
-  gst_pad_set_chain_list_function (internal_sinkpad,
+  gst_pad_set_chain_list_function (pads->sink,
       GST_DEBUG_FUNCPTR (gst_auto_convert_internal_sink_chain_list));
-  gst_pad_set_event_function (internal_sinkpad,
+  gst_pad_set_event_function (pads->sink,
       GST_DEBUG_FUNCPTR (gst_auto_convert_internal_sink_event));
-  gst_pad_set_query_function (internal_sinkpad,
+  gst_pad_set_query_function (pads->sink,
       GST_DEBUG_FUNCPTR (gst_auto_convert_internal_sink_query));
 
-  gst_pad_set_event_function (internal_srcpad,
+  gst_pad_set_event_function (pads->src,
       GST_DEBUG_FUNCPTR (gst_auto_convert_internal_src_event));
-  gst_pad_set_query_function (internal_srcpad,
+  gst_pad_set_query_function (pads->src,
       GST_DEBUG_FUNCPTR (gst_auto_convert_internal_src_query));
 
-  padlinkret = gst_pad_link_full (internal_srcpad, sinkpad,
+  padlinkret = gst_pad_link_full (pads->src, sinkpad,
       GST_PAD_LINK_CHECK_NOTHING);
   if (GST_PAD_LINK_FAILED (padlinkret)) {
     GST_WARNING_OBJECT (autoconvert, "Could not links pad %s:%s to %s:%s"
         " for reason %d",
-        GST_DEBUG_PAD_NAME (internal_srcpad),
+        GST_DEBUG_PAD_NAME (pads->src),
         GST_DEBUG_PAD_NAME (sinkpad), padlinkret);
     goto error;
   }
 
-  padlinkret = gst_pad_link_full (srcpad, internal_sinkpad,
+  padlinkret = gst_pad_link_full (srcpad, pads->sink,
       GST_PAD_LINK_CHECK_NOTHING);
   if (GST_PAD_LINK_FAILED (padlinkret)) {
     GST_WARNING_OBJECT (autoconvert, "Could not links pad %s:%s to %s:%s"
         " for reason %d",
-        GST_DEBUG_PAD_NAME (internal_srcpad),
+        GST_DEBUG_PAD_NAME (pads->src),
         GST_DEBUG_PAD_NAME (sinkpad), padlinkret);
     goto error;
   }
 
-  g_object_set_qdata (G_OBJECT (element),
-      internal_srcpad_quark, internal_srcpad);
-  g_object_set_qdata (G_OBJECT (element),
-      internal_sinkpad_quark, internal_sinkpad);
-
-  /* Iffy */
   gst_element_sync_state_with_parent (element);
 
   /* Increment the reference count we will return to the caller */
@@ -716,20 +753,37 @@ sticky_event_push (GstPad * pad, GstEvent ** event, gpointer user_data)
   return TRUE;
 }
 
+static InternalPads *
+gst_auto_convert_get_element_internal_pads (GstAutoConvert * autoconvert,
+    GstElement * element)
+{
+  InternalPads *pads;
+
+  GST_OBJECT_LOCK (autoconvert);
+  pads = g_hash_table_lookup (autoconvert->elements, element);
+  if (pads)
+    pads = internal_pads_ref (pads);
+  GST_OBJECT_UNLOCK (autoconvert);
+
+
+  return pads;
+}
+
 static gboolean
 gst_auto_convert_activate_element (GstAutoConvert * autoconvert,
     GstElement * element, GstCaps * caps)
 {
-  GstPad *internal_srcpad = g_object_get_qdata (G_OBJECT (element),
-      internal_srcpad_quark);
-  GstPad *internal_sinkpad = g_object_get_qdata (G_OBJECT (element),
-      internal_sinkpad_quark);
+  InternalPads *pads =
+      gst_auto_convert_get_element_internal_pads (autoconvert, element);
+
+  g_assert (pads);
 
   if (caps) {
     /* check if the element can really accept said caps */
-    if (!gst_pad_peer_query_accept_caps (internal_srcpad, caps)) {
+    if (!gst_pad_peer_query_accept_caps (pads->src, caps)) {
       GST_DEBUG_OBJECT (autoconvert, "Could not set %s:%s to %"
-          GST_PTR_FORMAT, GST_DEBUG_PAD_NAME (internal_srcpad), caps);
+          GST_PTR_FORMAT, GST_DEBUG_PAD_NAME (pads->src), caps);
+      internal_pads_unref (pads);
       return FALSE;
     }
   }
@@ -738,9 +792,9 @@ gst_auto_convert_activate_element (GstAutoConvert * autoconvert,
   gst_object_replace ((GstObject **) & autoconvert->current_subelement,
       GST_OBJECT (element));
   gst_object_replace ((GstObject **) & autoconvert->current_internal_srcpad,
-      GST_OBJECT (internal_srcpad));
+      GST_OBJECT (pads->src));
   gst_object_replace ((GstObject **) & autoconvert->current_internal_sinkpad,
-      GST_OBJECT (internal_sinkpad));
+      GST_OBJECT (pads->sink));
   GST_AUTOCONVERT_UNLOCK (autoconvert);
 
   gst_pad_sticky_events_foreach (autoconvert->sinkpad, sticky_event_push,
@@ -752,6 +806,7 @@ gst_auto_convert_activate_element (GstAutoConvert * autoconvert,
       GST_OBJECT_NAME (GST_OBJECT (element)));
 
   gst_object_unref (element);
+  internal_pads_unref (pads);
 
   return TRUE;
 }
@@ -1176,7 +1231,7 @@ gst_auto_convert_getcaps (GstAutoConvert * autoconvert, GstCaps * filter,
     GstElementFactory *factory = GST_ELEMENT_FACTORY (elem->data);
     GstElement *element = NULL;
     GstCaps *element_caps;
-    GstPad *internal_pad = NULL;
+    InternalPads *pads;
 
     if (filter) {
       if (!factory_can_intersect (autoconvert, factory, dir, filter)) {
@@ -1203,14 +1258,11 @@ gst_auto_convert_getcaps (GstAutoConvert * autoconvert, GstCaps * filter,
       if (element == NULL)
         continue;
 
-      if (dir == GST_PAD_SINK)
-        internal_pad = g_object_get_qdata (G_OBJECT (element),
-            internal_srcpad_quark);
-      else
-        internal_pad = g_object_get_qdata (G_OBJECT (element),
-            internal_sinkpad_quark);
-
-      element_caps = gst_pad_peer_query_caps (internal_pad, filter);
+      pads = gst_auto_convert_get_element_internal_pads (autoconvert, element);
+      element_caps =
+          gst_pad_peer_query_caps ((dir ==
+              GST_PAD_SINK) ? pads->src : pads->sink, filter);
+      internal_pads_unref (pads);
       if (element_caps)
         caps = gst_caps_merge (caps, element_caps);
 
@@ -1319,9 +1371,7 @@ static GstFlowReturn
 gst_auto_convert_internal_sink_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
 {
-  GstAutoConvert *autoconvert =
-      GST_AUTO_CONVERT (g_object_get_qdata (G_OBJECT (pad),
-          parent_quark));
+  GstAutoConvert *autoconvert = GST_AUTO_CONVERT_PAD (pad)->autoconvert;
 
   return gst_pad_push (autoconvert->srcpad, buffer);
 }
@@ -1330,9 +1380,7 @@ static GstFlowReturn
 gst_auto_convert_internal_sink_chain_list (GstPad * pad, GstObject * parent,
     GstBufferList * list)
 {
-  GstAutoConvert *autoconvert =
-      GST_AUTO_CONVERT (g_object_get_qdata (G_OBJECT (pad),
-          parent_quark));
+  GstAutoConvert *autoconvert = GST_AUTO_CONVERT_PAD (pad)->autoconvert;
 
   return gst_pad_push_list (autoconvert->srcpad, list);
 }
@@ -1341,9 +1389,7 @@ static gboolean
 gst_auto_convert_internal_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
-  GstAutoConvert *autoconvert =
-      GST_AUTO_CONVERT (g_object_get_qdata (G_OBJECT (pad),
-          parent_quark));
+  GstAutoConvert *autoconvert = GST_AUTO_CONVERT_PAD (pad)->autoconvert;
   gboolean drop = FALSE;
 
   GST_AUTOCONVERT_LOCK (autoconvert);
@@ -1364,9 +1410,7 @@ static gboolean
 gst_auto_convert_internal_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
-  GstAutoConvert *autoconvert =
-      GST_AUTO_CONVERT (g_object_get_qdata (G_OBJECT (pad),
-          parent_quark));
+  GstAutoConvert *autoconvert = GST_AUTO_CONVERT_PAD (pad)->autoconvert;
 
   if (!gst_pad_peer_query (autoconvert->srcpad, query)) {
     switch (GST_QUERY_TYPE (query)) {
@@ -1399,9 +1443,7 @@ static gboolean
 gst_auto_convert_internal_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
-  GstAutoConvert *autoconvert =
-      GST_AUTO_CONVERT (g_object_get_qdata (G_OBJECT (pad),
-          parent_quark));
+  GstAutoConvert *autoconvert = GST_AUTO_CONVERT_PAD (pad)->autoconvert;
   gboolean drop = FALSE;
 
   GST_AUTOCONVERT_LOCK (autoconvert);
@@ -1423,9 +1465,7 @@ static gboolean
 gst_auto_convert_internal_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
-  GstAutoConvert *autoconvert =
-      GST_AUTO_CONVERT (g_object_get_qdata (G_OBJECT (pad),
-          parent_quark));
+  GstAutoConvert *autoconvert = GST_AUTO_CONVERT_PAD (pad)->autoconvert;
 
   return gst_pad_peer_query (autoconvert->sinkpad, query);
 }
