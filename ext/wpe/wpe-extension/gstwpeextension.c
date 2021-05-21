@@ -47,10 +47,6 @@ webkit_web_extension_initialize (WebKitWebExtension * extension)
       gst_wpe_audio_sink_get_type ());
   gst_object_unref (g_object_new (gst_wpe_bus_msg_forwarder_get_type (), NULL));
 
-  GST_INFO ("Mark processus as WebProcess");
-  if (!g_setenv ("GST_WPE_ID", "1", TRUE))
-    g_error ("Could not set GST_WPE_ID envvar\n");
-
   global_extension = extension;
   GST_INFO_OBJECT (global_extension, "Setting as global extension.");
 }
