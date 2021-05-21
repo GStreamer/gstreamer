@@ -88,10 +88,11 @@ render (GstBaseSink * sink, GstBuffer * buf)
 
     return GST_FLOW_ERROR;
   }
-#ifdef HAVE_MEMFD_CREATE
+
   if (!self->fdlist) {
     gint fds[1] = { -1 };
 
+#ifdef HAVE_MEMFD_CREATE
     fds[0] = memfd_create ("gstwpe-shm", MFD_CLOEXEC);
 #endif
 
