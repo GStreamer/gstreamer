@@ -350,6 +350,8 @@ struct _GstD3D11Converter
   ID3D11Buffer *vertex_buffer;
   gboolean update_vertex;
 
+  ID3D11SamplerState *linear_sampler;
+
   ConvertInfo convert_info;
 };
 
@@ -1068,7 +1070,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   ComPtr<ID3D11PixelShader> ps[CONVERTER_MAX_QUADS];
   ComPtr<ID3D11VertexShader> vs;
   ComPtr<ID3D11InputLayout> layout;
-  ComPtr<ID3D11SamplerState> sampler;
+  ComPtr<ID3D11SamplerState> linear_sampler;
   ComPtr<ID3D11Buffer> const_buffer;
   ComPtr<ID3D11Buffer> vertex_buffer;
   ComPtr<ID3D11Buffer> index_buffer;
@@ -1093,7 +1095,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   sampler_desc.MinLOD = 0;
   sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
 
-  hr = device_handle->CreateSamplerState (&sampler_desc, &sampler);
+  hr = device_handle->CreateSamplerState (&sampler_desc, &linear_sampler);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't create sampler state, hr: 0x%x", (guint) hr);
     return FALSE;
@@ -1262,13 +1264,13 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   gst_d3d11_device_unlock (device);
 
   self->quad[0] = gst_d3d11_quad_new (device,
-      ps[0].Get (), vs.Get (), layout.Get (), sampler.Get (), NULL, NULL,
+      ps[0].Get (), vs.Get (), layout.Get (),
       const_buffer.Get (), vertex_buffer.Get (), sizeof (VertexData),
       index_buffer.Get (), DXGI_FORMAT_R16_UINT, index_count);
 
   if (ps[1]) {
     self->quad[1] = gst_d3d11_quad_new (device,
-        ps[1].Get (), vs.Get (), layout.Get (), sampler.Get (), NULL, NULL,
+        ps[1].Get (), vs.Get (), layout.Get (),
         const_buffer.Get (), vertex_buffer.Get (), sizeof (VertexData),
         index_buffer.Get (), DXGI_FORMAT_R16_UINT, index_count);
   }
@@ -1291,6 +1293,8 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
 
   self->input_texture_width = GST_VIDEO_INFO_WIDTH (in_info);
   self->input_texture_height = GST_VIDEO_INFO_HEIGHT (in_info);
+
+  self->linear_sampler = linear_sampler.Detach ();
 
   return TRUE;
 }
@@ -1448,6 +1452,7 @@ gst_d3d11_converter_free (GstD3D11Converter * converter)
   }
 
   GST_D3D11_CLEAR_COM (converter->vertex_buffer);
+  GST_D3D11_CLEAR_COM (converter->linear_sampler);
 
   gst_clear_object (&converter->device);
   g_free (converter);
@@ -1604,7 +1609,8 @@ gst_d3d11_converter_convert_unlocked (GstD3D11Converter * converter,
   }
 
   ret = gst_d3d11_draw_quad_unlocked (converter->quad[0], converter->viewport,
-      1, srv, converter->num_input_view, rtv, 1, NULL, blend, blend_factor);
+      1, srv, converter->num_input_view, rtv, 1, blend, blend_factor,
+      &converter->linear_sampler, 1);
 
   if (!ret)
     return FALSE;
@@ -1613,7 +1619,7 @@ gst_d3d11_converter_convert_unlocked (GstD3D11Converter * converter,
     ret = gst_d3d11_draw_quad_unlocked (converter->quad[1],
         &converter->viewport[1], converter->num_output_view - 1,
         srv, converter->num_input_view, &rtv[1], converter->num_output_view - 1,
-        NULL, blend, blend_factor);
+        blend, blend_factor, &converter->linear_sampler, 1);
 
     if (!ret)
       return FALSE;

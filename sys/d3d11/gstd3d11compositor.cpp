@@ -2049,7 +2049,7 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self)
   context_handle->Unmap (index_buffer.Get (), 0);
 
   quad = gst_d3d11_quad_new (self->device,
-      ps.Get (), vs.Get (), layout.Get (), NULL, NULL, NULL, NULL,
+      ps.Get (), vs.Get (), layout.Get (), NULL,
       vertex_buffer.Get (), sizeof (VertexData), index_buffer.Get (),
       DXGI_FORMAT_R16_UINT, 6);
   if (!quad) {
@@ -2081,7 +2081,7 @@ gst_d3d11_compositor_draw_background_checker (GstD3D11Compositor * self,
   }
 
   return gst_d3d11_draw_quad_unlocked (self->checker_background,
-      &self->viewport, 1, NULL, 0, &rtv, 1, NULL, NULL, NULL);
+      &self->viewport, 1, NULL, 0, &rtv, 1, NULL, NULL, NULL, 0);
 }
 
 /* Must be called with d3d11 device lock */

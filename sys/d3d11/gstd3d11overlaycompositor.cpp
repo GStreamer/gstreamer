@@ -285,7 +285,7 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   overlay->texture = texture.Detach ();
   overlay->srv = srv.Detach ();
   overlay->quad = gst_d3d11_quad_new (device,
-      self->ps, self->vs, self->layout, self->sampler, self->blend, NULL, NULL,
+      self->ps, self->vs, self->layout, NULL,
       vertex_buffer.Get (), sizeof (VertexData),
       self->index_buffer, DXGI_FORMAT_R16_UINT, index_count);
 
@@ -637,7 +637,8 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
         (GstD3D11CompositionOverlay *) iter->data;
 
     ret = gst_d3d11_draw_quad_unlocked (overlay->quad,
-        &compositor->viewport, 1, &overlay->srv, 1, rtv, 1, NULL, NULL, NULL);
+        &compositor->viewport, 1, &overlay->srv, 1, rtv, 1,
+        compositor->blend, NULL, &compositor->sampler, 1);
 
     if (!ret)
       break;
