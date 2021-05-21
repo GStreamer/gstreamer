@@ -88,6 +88,12 @@
 GST_DEBUG_CATEGORY_STATIC (audio_aggregator_debug);
 #define GST_CAT_DEFAULT audio_aggregator_debug
 
+enum
+{
+  PROP_PAD_0,
+  PROP_PAD_QOS_MESSAGES,
+};
+
 struct _GstAudioAggregatorPadPrivate
 {
   /* All members are protected by the pad object lock */
@@ -112,6 +118,8 @@ struct _GstAudioAggregatorPadPrivate
 
   /* A new unhandled segment event has been received */
   gboolean new_segment;
+
+  gboolean qos_messages;        /* Property to decide to send QoS messages or not */
 };
 
 
@@ -136,13 +144,64 @@ gst_audio_aggregator_pad_finalize (GObject * object)
 }
 
 static void
+gst_audio_aggregator_pad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAudioAggregatorPad *pad = GST_AUDIO_AGGREGATOR_PAD (object);
+
+  switch (prop_id) {
+    case PROP_PAD_QOS_MESSAGES:
+      GST_OBJECT_LOCK (pad);
+      g_value_set_boolean (value, pad->priv->qos_messages);
+      GST_OBJECT_UNLOCK (pad);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_audio_aggregator_pad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAudioAggregatorPad *pad = GST_AUDIO_AGGREGATOR_PAD (object);
+
+  switch (prop_id) {
+    case PROP_PAD_QOS_MESSAGES:
+      GST_OBJECT_LOCK (pad);
+      pad->priv->qos_messages = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (pad);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_audio_aggregator_pad_class_init (GstAudioAggregatorPadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstAggregatorPadClass *aggpadclass = (GstAggregatorPadClass *) klass;
 
+  gobject_class->set_property = gst_audio_aggregator_pad_set_property;
+  gobject_class->get_property = gst_audio_aggregator_pad_get_property;
   gobject_class->finalize = gst_audio_aggregator_pad_finalize;
   aggpadclass->flush = GST_DEBUG_FUNCPTR (gst_audio_aggregator_pad_flush_pad);
+
+  /**
+   * GstAudioAggregatorPad:qos-messages:
+   *
+   * Emit QoS messages when dropping buffers.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_PAD_QOS_MESSAGES, g_param_spec_boolean ("qos-messages",
+          "Quality of Service Messages",
+          "Emit QoS messages when dropping buffers", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
