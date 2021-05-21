@@ -428,6 +428,13 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
   av1enc->tile_columns = DEFAULT_TILE_COLUMNS;
   av1enc->tile_rows = DEFAULT_TILE_ROWS;
 
+#ifdef FIXED_QP_OFFSET_COUNT
+  av1enc->aom_cfg.fixed_qp_offsets[0] = -1;
+  av1enc->aom_cfg.fixed_qp_offsets[1] = -1;
+  av1enc->aom_cfg.fixed_qp_offsets[2] = -1;
+  av1enc->aom_cfg.fixed_qp_offsets[3] = -1;
+  av1enc->aom_cfg.fixed_qp_offsets[4] = -1;
+#endif
   av1enc->aom_cfg.rc_dropframe_thresh = DEFAULT_DROP_FRAME;
   av1enc->aom_cfg.rc_resize_mode = DEFAULT_RESIZE_MODE;
   av1enc->aom_cfg.rc_resize_denominator = DEFAULT_RESIZE_DENOMINATOR;
