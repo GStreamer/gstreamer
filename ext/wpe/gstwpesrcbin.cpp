@@ -169,7 +169,7 @@ G_DEFINE_TYPE_WITH_CODE (GstWpeSrc, gst_wpe_src, GST_TYPE_BIN,
  * GstWpeSrc!video
  *
  * Since: 1.20
-  */
+ */
 static GstStaticPadTemplate video_src_factory =
 GST_STATIC_PAD_TEMPLATE ("video", GST_PAD_SRC, GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("video/x-raw(memory:GLMemory), "
@@ -194,7 +194,7 @@ GST_STATIC_PAD_TEMPLATE ("video", GST_PAD_SRC, GST_PAD_SOMETIMES,
  * #GstPad.
  *
  * Since: 1.20
-  */
+ */
 static GstStaticPadTemplate audio_src_factory =
 GST_STATIC_PAD_TEMPLATE ("audio_%u", GST_PAD_SRC, GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ( \

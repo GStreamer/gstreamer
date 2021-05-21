@@ -44,6 +44,7 @@ create_gerror_bus_msg (GstElement * element, GstMessage * message)
 {
   GError *error;
   gchar *debug_str, *details_structure, *src_path;
+  WebKitUserMessage *msg;
   const GstStructure *details = NULL;
 
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
@@ -60,7 +61,8 @@ create_gerror_bus_msg (GstElement * element, GstMessage * message)
   details_structure =
       details ? gst_structure_to_string (details) : g_strdup ("");
   src_path = gst_object_get_path_string (GST_MESSAGE_SRC (message));
-  return webkit_user_message_new ("gstwpe.bus_gerror_message",
+
+  msg = webkit_user_message_new ("gstwpe.bus_gerror_message",
       /* (message_type, src_path, error_domain, error_code, msg, debug_str, details_structure) */
       g_variant_new ("(sssusss)",
           gst_message_type_get_name (GST_MESSAGE_TYPE (message)),
@@ -69,6 +71,8 @@ create_gerror_bus_msg (GstElement * element, GstMessage * message)
           error->code, error->message, debug_str, details_structure)
       );
   g_free (src_path);
+
+  return msg;
 }
 
 /* Those types can't be deserialized on the receiver
