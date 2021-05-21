@@ -1533,7 +1533,7 @@ mergewl ayuv, ay, uv
 .temp 4 x
 .const 1 c128 128
 
-x4 subb x, ayuv, c128 
+x4 subb x, ayuv, c128
 splitlw wv, wy, x
 splitwb y, a, wy
 splitwb v, u, wv
@@ -1589,7 +1589,7 @@ x4 addb argb, x, c128
 .temp 4 x
 .const 1 c128 128
 
-x4 subb x, ayuv, c128 
+x4 subb x, ayuv, c128
 splitlw wv, wy, x
 splitwb y, a, wy
 splitwb v, u, wv
@@ -1646,7 +1646,7 @@ x4 addb bgra, x, c128
 .temp 4 x
 .const 1 c128 128
 
-x4 subb x, ayuv, c128 
+x4 subb x, ayuv, c128
 splitlw wv, wy, x
 splitwb y, a, wy
 splitwb v, u, wv
@@ -1702,7 +1702,7 @@ x4 addb argb, x, c128
 .temp 4 x
 .const 1 c128 128
 
-x4 subb x, ayuv, c128 
+x4 subb x, ayuv, c128
 splitlw wv, wy, x
 splitwb y, a, wy
 splitwb v, u, wv
