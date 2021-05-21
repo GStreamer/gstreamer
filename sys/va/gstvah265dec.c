@@ -123,6 +123,17 @@ _is_range_extension_profile (VAProfile profile)
   return FALSE;
 }
 
+static gboolean
+_is_screen_content_ext_profile (VAProfile profile)
+{
+  if (profile == VAProfileHEVCSccMain
+      || profile == VAProfileHEVCSccMain10
+      || profile == VAProfileHEVCSccMain444)
+    return TRUE;
+
+  return FALSE;
+}
+
 static inline void
 _set_last_slice_flag (GstVaH265Dec * self)
 {
@@ -166,7 +177,8 @@ _submit_previous_slice (GstVaBaseDec * base, GstVaDecodePicture * va_pic)
   if (!slice->data || slice->size == 0)
     return FALSE;
 
-  param_size = _is_range_extension_profile (self->parent.profile) ?
+  param_size = _is_range_extension_profile (self->parent.profile)
+      || _is_screen_content_ext_profile (self->parent.profile) ?
       sizeof (slice->param) : sizeof (slice->param.base);
   ret = gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice->param,
       param_size, slice->data, slice->size);
@@ -514,7 +526,8 @@ gst_va_h265_dec_decode_slice (GstH265Decoder * decoder,
   };
   /* *INDENT-ON* */
 
-  if (_is_range_extension_profile (base->profile)) {
+  if (_is_range_extension_profile (base->profile)
+      || _is_screen_content_ext_profile (base->profile)) {
     /* *INDENT-OFF* */
     slice_param->rext = (VASliceParameterBufferHEVCRext) {
       .slice_ext_flags.bits = {
@@ -577,6 +590,55 @@ _fill_picture_range_ext_parameter (GstVaH265Dec * decoder,
       sizeof (pic_param->cb_qp_offset_list));
   memcpy (pic_param->cr_qp_offset_list, pps_ext->cr_qp_offset_list,
       sizeof (pic_param->cr_qp_offset_list));
+}
+
+static void
+_fill_screen_content_ext_parameter (GstVaH265Dec * decoder,
+    GstH265SPS * sps, GstH265PPS * pps)
+{
+  VAPictureParameterBufferHEVCScc *pic_param = &decoder->pic_param.scc;
+  const GstH265PPSSccExtensionParams *pps_scc = &pps->pps_scc_extension_params;
+  const GstH265SPSSccExtensionParams *sps_scc = &sps->sps_scc_extension_params;
+  guint32 num_comps;
+  guint i, n;
+
+  /* *INDENT-OFF* */
+  *pic_param = (VAPictureParameterBufferHEVCScc) {
+    .screen_content_pic_fields.bits = {
+      .pps_curr_pic_ref_enabled_flag = pps_scc->pps_curr_pic_ref_enabled_flag,
+      .palette_mode_enabled_flag = sps_scc->palette_mode_enabled_flag,
+      .motion_vector_resolution_control_idc = sps_scc->motion_vector_resolution_control_idc,
+      .intra_boundary_filtering_disabled_flag = sps_scc->intra_boundary_filtering_disabled_flag,
+      .residual_adaptive_colour_transform_enabled_flag = pps_scc->residual_adaptive_colour_transform_enabled_flag,
+      .pps_slice_act_qp_offsets_present_flag = pps_scc->pps_slice_act_qp_offsets_present_flag,
+    },
+    .palette_max_size = sps_scc->palette_max_size,
+    .delta_palette_max_predictor_size = sps_scc->delta_palette_max_predictor_size,
+    .pps_act_y_qp_offset_plus5 = pps_scc->pps_act_y_qp_offset_plus5,
+    .pps_act_cb_qp_offset_plus5 = pps_scc->pps_act_cb_qp_offset_plus5,
+    .pps_act_cr_qp_offset_plus3 = pps_scc->pps_act_cr_qp_offset_plus3,
+  };
+  /* *INDENT-ON* */
+
+  /* firstly use the pps, then sps */
+  num_comps = sps->chroma_format_idc ? 3 : 1;
+
+  if (pps_scc->pps_palette_predictor_initializers_present_flag) {
+    pic_param->predictor_palette_size =
+        pps_scc->pps_num_palette_predictor_initializer;
+    for (n = 0; n < num_comps; n++)
+      for (i = 0; i < pps_scc->pps_num_palette_predictor_initializer; i++)
+        pic_param->predictor_palette_entries[n][i] =
+            (uint16_t) pps_scc->pps_palette_predictor_initializer[n][i];
+  } else if (sps_scc->sps_palette_predictor_initializers_present_flag) {
+    pic_param->predictor_palette_size =
+        sps_scc->sps_num_palette_predictor_initializer_minus1 + 1;
+    for (n = 0; n < num_comps; n++)
+      for (i = 0;
+          i < sps_scc->sps_num_palette_predictor_initializer_minus1 + 1; i++)
+        pic_param->predictor_palette_entries[n][i] =
+            (uint16_t) sps_scc->sps_palette_predictor_initializer[n][i];
+  }
 }
 
 static gboolean
@@ -674,8 +736,12 @@ gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
   };
   /* *INDENT-ON* */
 
-  if (_is_range_extension_profile (self->parent.profile))
+  if (_is_range_extension_profile (self->parent.profile)
+      || _is_screen_content_ext_profile (self->parent.profile)) {
     _fill_picture_range_ext_parameter (self, sps, pps);
+    if (_is_screen_content_ext_profile (self->parent.profile))
+      _fill_screen_content_ext_parameter (self, sps, pps);
+  }
 
   for (i = 0; i <= pps->num_tile_columns_minus1; i++)
     pic_param->base.column_width_minus1[i] = pps->column_width_minus1[i];
@@ -698,7 +764,8 @@ gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
       _init_vaapi_pic (&pic_param->base.ReferenceFrames[i]);
   }
 
-  pic_param_size = _is_range_extension_profile (self->parent.profile) ?
+  pic_param_size = _is_range_extension_profile (self->parent.profile)
+      || _is_screen_content_ext_profile (self->parent.profile) ?
       sizeof (*pic_param) : sizeof (pic_param->base);
   if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
           VAPictureParameterBufferType, pic_param, pic_param_size))
