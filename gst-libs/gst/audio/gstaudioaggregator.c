@@ -121,12 +121,6 @@ struct _GstAudioAggregatorPadPrivate
 G_DEFINE_TYPE_WITH_PRIVATE (GstAudioAggregatorPad, gst_audio_aggregator_pad,
     GST_TYPE_AGGREGATOR_PAD);
 
-enum
-{
-  PROP_PAD_0,
-  PROP_PAD_CONVERTER_CONFIG,
-};
-
 static GstFlowReturn
 gst_audio_aggregator_pad_flush_pad (GstAggregatorPad * aggpad,
     GstAggregator * aggregator);
@@ -182,6 +176,12 @@ gst_audio_aggregator_pad_flush_pad (GstAggregatorPad * aggpad,
 
   return GST_FLOW_OK;
 }
+
+enum
+{
+  PROP_CONVERT_PAD_0,
+  PROP_CONVERT_PAD_CONVERTER_CONFIG
+};
 
 struct _GstAudioAggregatorConvertPadPrivate
 {
@@ -307,7 +307,7 @@ gst_audio_aggregator_convert_pad_get_property (GObject * object, guint prop_id,
   GstAudioAggregatorConvertPad *pad = GST_AUDIO_AGGREGATOR_CONVERT_PAD (object);
 
   switch (prop_id) {
-    case PROP_PAD_CONVERTER_CONFIG:
+    case PROP_CONVERT_PAD_CONVERTER_CONFIG:
       GST_OBJECT_LOCK (pad);
       if (pad->priv->converter_config)
         g_value_set_boxed (value, pad->priv->converter_config);
@@ -326,7 +326,7 @@ gst_audio_aggregator_convert_pad_set_property (GObject * object, guint prop_id,
   GstAudioAggregatorConvertPad *pad = GST_AUDIO_AGGREGATOR_CONVERT_PAD (object);
 
   switch (prop_id) {
-    case PROP_PAD_CONVERTER_CONFIG:
+    case PROP_CONVERT_PAD_CONVERTER_CONFIG:
       GST_OBJECT_LOCK (pad);
       if (pad->priv->converter_config)
         gst_structure_free (pad->priv->converter_config);
@@ -351,7 +351,8 @@ gst_audio_aggregator_convert_pad_class_init (GstAudioAggregatorConvertPadClass *
   gobject_class->set_property = gst_audio_aggregator_convert_pad_set_property;
   gobject_class->get_property = gst_audio_aggregator_convert_pad_get_property;
 
-  g_object_class_install_property (gobject_class, PROP_PAD_CONVERTER_CONFIG,
+  g_object_class_install_property (gobject_class,
+      PROP_CONVERT_PAD_CONVERTER_CONFIG,
       g_param_spec_boxed ("converter-config", "Converter configuration",
           "A GstStructure describing the configuration that should be used "
           "when converting this pad's audio buffers",
