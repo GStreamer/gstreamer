@@ -170,8 +170,7 @@ set_caps (GstBaseSink * sink, GstCaps * caps)
   }
 
   self->caps = gst_caps_to_string (caps);
-  g_atomic_int_inc (&id);
-  self->id = g_atomic_int_get (&id);
+  self->id = g_atomic_int_add (&id, 1);
   stream_id = gst_pad_get_stream_id (GST_BASE_SINK_PAD (sink));
   gst_wpe_extension_send_message (webkit_user_message_new ("gstwpe.new_stream",
           g_variant_new ("(uss)", self->id, self->caps, stream_id)),
