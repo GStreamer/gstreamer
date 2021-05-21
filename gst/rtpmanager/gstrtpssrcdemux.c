@@ -516,21 +516,22 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux)
 }
 
 static void
+gst_rtp_ssrc_demux_pads_free (GstRtpSsrcDemuxPads * dpads)
+{
+  gst_pad_set_active (dpads->rtp_pad, FALSE);
+  gst_pad_set_active (dpads->rtcp_pad, FALSE);
+
+  gst_element_remove_pad (GST_PAD_PARENT (dpads->rtp_pad), dpads->rtp_pad);
+  gst_element_remove_pad (GST_PAD_PARENT (dpads->rtcp_pad), dpads->rtcp_pad);
+
+  g_free (dpads);
+}
+
+static void
 gst_rtp_ssrc_demux_reset (GstRtpSsrcDemux * demux)
 {
-  GSList *walk;
-
-  for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
-    GstRtpSsrcDemuxPads *dpads = (GstRtpSsrcDemuxPads *) walk->data;
-
-    gst_pad_set_active (dpads->rtp_pad, FALSE);
-    gst_pad_set_active (dpads->rtcp_pad, FALSE);
-
-    gst_element_remove_pad (GST_ELEMENT_CAST (demux), dpads->rtp_pad);
-    gst_element_remove_pad (GST_ELEMENT_CAST (demux), dpads->rtcp_pad);
-    g_free (dpads);
-  }
-  g_slist_free (demux->srcpads);
+  g_slist_free_full (demux->srcpads,
+      (GDestroyNotify) gst_rtp_ssrc_demux_pads_free);
   demux->srcpads = NULL;
 }
 
@@ -574,17 +575,11 @@ gst_rtp_ssrc_demux_clear_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
   demux->srcpads = g_slist_remove (demux->srcpads, dpads);
   GST_OBJECT_UNLOCK (demux);
 
-  gst_pad_set_active (dpads->rtp_pad, FALSE);
-  gst_pad_set_active (dpads->rtcp_pad, FALSE);
-
   g_signal_emit (G_OBJECT (demux),
       gst_rtp_ssrc_demux_signals[SIGNAL_REMOVED_SSRC_PAD], 0, ssrc,
       dpads->rtp_pad);
 
-  gst_element_remove_pad (GST_ELEMENT_CAST (demux), dpads->rtp_pad);
-  gst_element_remove_pad (GST_ELEMENT_CAST (demux), dpads->rtcp_pad);
-
-  g_free (dpads);
+  gst_rtp_ssrc_demux_pads_free (dpads);
 
   return;
 
