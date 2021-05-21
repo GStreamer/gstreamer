@@ -173,7 +173,7 @@ G_DEFINE_TYPE_WITH_CODE (GstWpeSrc, gst_wpe_src, GST_TYPE_BIN,
  * Since: 1.20
  */
 static GstStaticPadTemplate video_src_factory =
-GST_STATIC_PAD_TEMPLATE ("video", GST_PAD_SRC, GST_PAD_SOMETIMES,
+GST_STATIC_PAD_TEMPLATE ("video", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw(memory:GLMemory), "
                      "format = (string) RGBA, "
                      "width = " GST_VIDEO_SIZE_RANGE ", "
@@ -360,32 +360,7 @@ gst_wpe_src_load_bytes (GstWpeVideoSrc * src, GBytes * bytes)
 static void
 gst_wpe_src_set_location (GstWpeSrc * src, const gchar * location)
 {
-  GstPad *pad;
-  GstPad *ghost_pad;
-  GstProxyPad *proxy_pad;
-
   g_object_set (src->video_src, "location", location, NULL);
-
-  ghost_pad = gst_element_get_static_pad (GST_ELEMENT_CAST (src), "video");
-  if (GST_IS_PAD (ghost_pad)) {
-    gst_object_unref (ghost_pad);
-    return;
-  }
-
-  gst_bin_add (GST_BIN_CAST (src), src->video_src);
-
-  pad = gst_element_get_static_pad (GST_ELEMENT_CAST (src->video_src), "src");
-  ghost_pad = gst_ghost_pad_new_from_template ("video", pad,
-    gst_static_pad_template_get (&video_src_factory));
-  proxy_pad = gst_proxy_pad_get_internal (GST_PROXY_PAD (ghost_pad));
-  gst_pad_set_active (GST_PAD_CAST (proxy_pad), TRUE);
-
-  gst_element_add_pad (GST_ELEMENT_CAST (src), GST_PAD_CAST (ghost_pad));
-  gst_flow_combiner_add_pad (src->flow_combiner, GST_PAD_CAST (ghost_pad));
-  gst_pad_set_chain_function (GST_PAD_CAST (proxy_pad), gst_wpe_src_chain_buffer);
-
-  gst_object_unref (proxy_pad);
-  gst_object_unref (pad);
 }
 
 static void
@@ -463,6 +438,10 @@ gst_wpe_src_uri_handler_init (gpointer iface_ptr, gpointer data)
 static void
 gst_wpe_src_init (GstWpeSrc * src)
 {
+  GstPad *pad;
+  GstPad *ghost_pad;
+  GstProxyPad *proxy_pad;
+
   gst_bin_set_suppressed_flags (GST_BIN_CAST (src),
       static_cast<GstElementFlags>(GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK));
   GST_OBJECT_FLAG_SET (src, GST_ELEMENT_FLAG_SOURCE);
@@ -471,6 +450,21 @@ gst_wpe_src_init (GstWpeSrc * src)
   src->audio_src_pads = g_hash_table_new (g_direct_hash, g_direct_equal);
   src->flow_combiner = gst_flow_combiner_new ();
   src->video_src = gst_element_factory_make ("wpevideosrc", NULL);
+
+  gst_bin_add (GST_BIN_CAST (src), src->video_src);
+
+  pad = gst_element_get_static_pad (GST_ELEMENT_CAST (src->video_src), "src");
+  ghost_pad = gst_ghost_pad_new_from_template ("video", pad,
+    gst_static_pad_template_get (&video_src_factory));
+  proxy_pad = gst_proxy_pad_get_internal (GST_PROXY_PAD (ghost_pad));
+  gst_pad_set_active (GST_PAD_CAST (proxy_pad), TRUE);
+
+  gst_element_add_pad (GST_ELEMENT_CAST (src), GST_PAD_CAST (ghost_pad));
+  gst_flow_combiner_add_pad (src->flow_combiner, GST_PAD_CAST (ghost_pad));
+  gst_pad_set_chain_function (GST_PAD_CAST (proxy_pad), gst_wpe_src_chain_buffer);
+
+  gst_object_unref (proxy_pad);
+  gst_object_unref (pad);
 }
 
 static gboolean

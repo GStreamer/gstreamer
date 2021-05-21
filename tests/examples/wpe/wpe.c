@@ -80,16 +80,8 @@ _wpe_pad_added (GstElement * src, GstPad * new_pad, GstElement * pipe)
   gchar *name = gst_pad_get_name (new_pad);
   gchar *bin_name;
 
-  if (g_str_has_prefix (name, "audio")) {
-    out =
-        gst_parse_bin_from_description
-        ("audioresample ! audioconvert ! autoaudiosink", TRUE, NULL);
-  } else {
-    out =
-        gst_parse_bin_from_description
-        ("queue ! glcolorconvert ! gtkglsink enable-last-sample=0", TRUE, NULL);
-  }
-
+  out = gst_parse_bin_from_description
+      ("audioresample ! audioconvert ! autoaudiosink", TRUE, NULL);
   bin_name = g_strdup_printf ("%s-bin", name);
   g_free (name);
 
@@ -130,19 +122,22 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   loop = g_main_loop_new (NULL, FALSE);
-  pipe1 = gst_pipeline_new (NULL);
+  pipe1 =
+      gst_parse_launch
+      ("wpesrc name=wpesrc ! queue ! glcolorconvert ! gtkglsink enable-last-sample=0",
+      NULL);
   bus1 = gst_pipeline_get_bus (GST_PIPELINE (pipe1));
   gst_bus_add_watch (bus1, (GstBusFunc) _bus_watch, pipe1);
 
-  src = gst_element_factory_make ("wpesrc", NULL);
+  src = gst_bin_get_by_name (GST_BIN (pipe1), "wpesrc");
 
-  gst_bin_add (GST_BIN_CAST (pipe1), src);
   gst_element_set_state (GST_ELEMENT (pipe1), GST_STATE_READY);
 
   g_signal_connect (src, "pad-added", G_CALLBACK (_wpe_pad_added), pipe1);
   g_signal_connect (src, "pad-removed", G_CALLBACK (_wpe_pad_removed), pipe1);
 
   g_object_set (src, "location", argv[1], NULL);
+  gst_clear_object (&src);
 
   g_print ("Starting pipeline\n");
   gst_element_set_state (GST_ELEMENT (pipe1), GST_STATE_PLAYING);
