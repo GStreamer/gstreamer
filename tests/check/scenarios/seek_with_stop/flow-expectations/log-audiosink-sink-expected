@@ -1,5 +1,5 @@
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE;
-event caps: audio/x-raw, rate=(int)44100, format=(string)S32LE, channels=(int)2, layout=(string)interleaved, channel-mask=(bitmask)0x0000000000000003;
+event caps: audio/x-raw, channel-mask=(bitmask)0x0000000000000003, channels=(int)2, format=(string)S32LE, layout=(string)interleaved, rate=(int)44100;
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:01.000000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000
 buffer: pts=0:00:00.000000000, dur=0:00:00.010000000
 event flush-start: (no structure)

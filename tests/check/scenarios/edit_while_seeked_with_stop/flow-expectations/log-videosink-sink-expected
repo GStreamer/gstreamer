@@ -1,5 +1,5 @@
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE;
-event caps: video/x-raw, width=(int)1280, height=(int)720, framerate=(fraction)10/1, format=(string)I420, chroma-site=(string)mpeg2, colorimetry=(string)bt709;
+event caps: video/x-raw, chroma-site=(string)mpeg2, colorimetry=(string)bt709, format=(string)I420, framerate=(fraction)10/1, height=(int)720, width=(int)1280;
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:01.000000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=none
 buffer: pts=0:00:00.000000000, dur=0:00:00.100000000, meta=GstVideoMeta
 event flush-start: (no structure)
