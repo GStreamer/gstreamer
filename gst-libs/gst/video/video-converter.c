@@ -6595,6 +6595,10 @@ get_scale_format (GstVideoFormat format, gint plane)
     case GST_VIDEO_FORMAT_NV24:
       res = plane == 0 ? GST_VIDEO_FORMAT_GRAY8 : GST_VIDEO_FORMAT_NV12;
       break;
+    case GST_VIDEO_FORMAT_AV12:
+      res = (plane == 0
+          || plane == 2) ? GST_VIDEO_FORMAT_GRAY8 : GST_VIDEO_FORMAT_NV12;
+      break;
     case GST_VIDEO_FORMAT_UNKNOWN:
     case GST_VIDEO_FORMAT_ENCODED:
     case GST_VIDEO_FORMAT_v210:

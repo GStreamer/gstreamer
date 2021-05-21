@@ -104,6 +104,16 @@ select0wb v, vv
 select0lw ay, ayuv
 select1wb y, ay
 
+.function video_orc_pack_YA
+.dest 1 y guint8
+.dest 1 a guint8
+.source 4 ayuv guint8
+.temp 2 ay
+
+select0lw ay, ayuv
+select1wb y, ay
+select0wb a, ay
+
 .function video_orc_unpack_YUY2
 .dest 8 ayuv guint8
 .source 4 yuy2 guint8
@@ -444,6 +454,31 @@ x2 mergewl d, ay, uvuv
 
 x2 splitlw uvuv, ay, ayuv
 x2 select1wb y, ay
+select0lw uv, uvuv
+
+.function video_orc_unpack_AV12
+.dest 8 d guint8
+.source 2 y guint8
+.source 2 uv guint8
+.source 2 a guint8
+.temp 4 ay
+.temp 4 uvuv
+
+mergewl uvuv, uv, uv
+x2 mergebw ay, a, y
+x2 mergewl d, ay, uvuv
+
+.function video_orc_pack_AV12
+.dest 2 y guint8
+.dest 2 uv guint8
+.dest 2 a guint8
+.source 8 ayuv guint8
+.temp 4 ay
+.temp 4 uvuv
+
+x2 splitlw uvuv, ay, ayuv
+x2 select1wb y, ay
+x2 select0wb a, ay
 select0lw uv, uvuv
 
 .function video_orc_unpack_NV21
