@@ -88,6 +88,8 @@
  *   posting the message
  * * `wpesrc_original_src_path`: [Path](gst_object_get_path_string) of the
  *   original element positing the message
+ *
+ * Note: This feature will be disabled if you disable the tracer subsystem.
  */
 
 #include "gstwpesrcbin.h"
