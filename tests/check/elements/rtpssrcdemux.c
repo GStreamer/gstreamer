@@ -20,9 +20,21 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/gstrtcpbuffer.h>
+
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
+
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#else
+# define RUNNING_ON_VALGRIND 0
+#endif
 
 #define TEST_BUF_CLOCK_RATE 8000
 #define TEST_BUF_PT 0
@@ -67,6 +79,7 @@ create_buffer (guint seq_num, guint32 ssrc)
 
   return buf;
 }
+
 
 typedef struct
 {
@@ -158,11 +171,7 @@ GST_START_TEST (test_event_forwarding)
   gst_harness_push_event (ctx.rtcp_sink, gst_event_new_eos ());
 
   g_assert_cmpint (gst_harness_events_in_queue (ctx.rtp_src), ==, 0);
-  g_assert_cmpint (gst_harness_events_in_queue (ctx.rtcp_src), ==, 2);
-
-  event = gst_harness_pull_event (ctx.rtcp_src);
-  g_assert_cmpint (event->type, ==, GST_EVENT_STREAM_START);
-  gst_event_unref (event);
+  g_assert_cmpint (gst_harness_events_in_queue (ctx.rtcp_src), ==, 1);
 
   event = gst_harness_pull_event (ctx.rtcp_src);
   g_assert_cmpint (event->type, ==, GST_EVENT_EOS);
@@ -278,7 +287,7 @@ GST_START_TEST (test_rtpssrcdemux_max_streams)
 GST_END_TEST;
 
 static void
-new_rtcp_ssrc_pad_found (GstElement * element, G_GNUC_UNUSED guint ssrc,
+new_rtcp_ssrc_pad_found (GstElement * element, guint ssrc,
     G_GNUC_UNUSED GstPad * rtp_pad, GSList ** src_h)
 {
   GstHarness *h;
@@ -355,7 +364,94 @@ GST_START_TEST (test_rtpssrcdemux_invalid_rtcp)
 
 GST_END_TEST;
 
+static GstBuffer *
+generate_rtcp_sr_buffer (guint ssrc)
+{
+  GstBuffer *buf;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket packet;
 
+  buf = gst_rtcp_buffer_new (1000);
+  fail_unless (gst_rtcp_buffer_map (buf, GST_MAP_READWRITE, &rtcp));
+  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_SR, &packet));
+  gst_rtcp_packet_sr_set_sender_info (&packet, ssrc, 0, 0, 1, 1);
+  gst_rtcp_buffer_unmap (&rtcp);
+  return buf;
+}
+
+typedef struct
+{
+  GstHarness *rtp_h;
+  GstHarness *rtcp_h;
+} SimulCtx;
+
+static void
+_simul_ctx_new_ssrc_pad_cb (GstElement * element, guint ssrc,
+    GstPad * rtp_pad, SimulCtx * ctx)
+{
+  GstPad *rtcp_pad;
+  gchar *name;
+
+  gst_harness_add_element_src_pad (ctx->rtp_h, rtp_pad);
+
+  name = g_strdup_printf ("rtcp_src_%u", ssrc);
+  rtcp_pad = gst_element_get_static_pad (element, name);
+  gst_harness_add_element_src_pad (ctx->rtcp_h, rtcp_pad);
+  gst_object_unref (rtcp_pad);
+  g_free (name);
+}
+
+static gpointer
+_simul_ctx_push_rtp_buffers (gpointer user_data)
+{
+  SimulCtx *ctx = user_data;
+
+  gst_harness_set_src_caps_str (ctx->rtp_h, "application/x-rtp");
+  gst_harness_push (ctx->rtp_h, create_buffer (0, 1111));
+  return NULL;
+}
+
+static gpointer
+_simul_ctx_push_rtcp_buffers (gpointer user_data)
+{
+  SimulCtx *ctx = user_data;
+
+  g_usleep (10);
+  gst_harness_set_src_caps_str (ctx->rtcp_h, "application/x-rtcp");
+  gst_harness_push (ctx->rtcp_h, generate_rtcp_sr_buffer (1111));
+  return NULL;
+}
+
+GST_START_TEST (test_rtp_and_rtcp_arrives_simultaneously)
+{
+  guint r;
+  guint repeats = 1000;
+  if (RUNNING_ON_VALGRIND)
+    repeats = 2;
+
+  for (r = 0; r < repeats; r++) {
+    SimulCtx ctx;
+    GThread *t0, *t1;
+
+    ctx.rtp_h = gst_harness_new_with_padnames ("rtpssrcdemux", "sink", NULL);
+    ctx.rtcp_h =
+        gst_harness_new_with_element (ctx.rtp_h->element, "rtcp_sink", NULL);
+
+    g_signal_connect (ctx.rtp_h->element,
+        "new-ssrc-pad", (GCallback) _simul_ctx_new_ssrc_pad_cb, &ctx);
+
+    t0 = g_thread_new ("push rtp", _simul_ctx_push_rtp_buffers, &ctx);
+    t1 = g_thread_new ("push rtcp", _simul_ctx_push_rtcp_buffers, &ctx);
+
+    g_thread_join (t0);
+    g_thread_join (t1);
+
+    gst_harness_teardown (ctx.rtp_h);
+    gst_harness_teardown (ctx.rtcp_h);
+  }
+}
+
+GST_END_TEST;
 
 static Suite *
 rtpssrcdemux_suite (void)
@@ -370,6 +466,7 @@ rtpssrcdemux_suite (void)
   tcase_add_test (tc_chain, test_rtpssrcdemux_rtcp_app);
   tcase_add_test (tc_chain, test_rtpssrcdemux_invalid_rtp);
   tcase_add_test (tc_chain, test_rtpssrcdemux_invalid_rtcp);
+  tcase_add_test (tc_chain, test_rtp_and_rtcp_arrives_simultaneously);
 
   return s;
 }
