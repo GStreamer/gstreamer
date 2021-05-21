@@ -49,7 +49,7 @@ GST_ELEMENT_REGISTER_DEFINE (videoconvert, "videoconvert",
 static void
 gst_video_convert_class_init (GstVideoConvertClass * klass)
 {
-
+  ((GstVideoConvertScaleClass *) klass)->any_memory = TRUE;
 }
 
 static void

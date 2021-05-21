@@ -36,6 +36,8 @@ G_DECLARE_DERIVABLE_TYPE (GstVideoConvertScale, gst_video_convert_scale, GST, VI
 struct _GstVideoConvertScaleClass
 {
   GstVideoFilterClass parent;
+
+  gboolean any_memory;
 };
 
 /**

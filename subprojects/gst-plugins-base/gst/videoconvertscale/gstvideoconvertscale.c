@@ -617,6 +617,7 @@ static GstCaps *
 gst_video_convert_scale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
+  gint i;
   GstCaps *ret;
 
   GST_DEBUG_OBJECT (trans,
@@ -631,6 +632,28 @@ gst_video_convert_scale_transform_caps (GstBaseTransform * trans,
         gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (ret);
     ret = intersection;
+  }
+
+  if (GST_VIDEO_CONVERT_SCALE_GET_CLASS (trans)->any_memory)
+    return ret;
+
+  for (i = 0; i < gst_caps_get_size (ret); i++) {
+    gint j;
+    GstCapsFeatures *f = gst_caps_get_features (ret, i);
+
+    if (!f || gst_caps_features_is_any (f) ||
+        gst_caps_features_is_equal (f, GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
+      continue;
+
+    for (j = 0; j < gst_caps_features_get_size (f); j++) {
+      const gchar *feature = gst_caps_features_get_nth (f, j);
+
+      if (g_str_has_prefix (feature, "memory:")) {
+        GST_DEBUG_OBJECT (trans, "Can not work with memory `%s`", feature);
+        gst_caps_remove_structure (ret, i);
+        break;
+      }
+    }
   }
 
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);

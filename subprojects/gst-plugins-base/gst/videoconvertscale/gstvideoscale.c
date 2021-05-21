@@ -112,6 +112,8 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
   gobject_class->set_property = gst_video_scale_set_property;
   gobject_class->get_property = gst_video_scale_get_property;
 
+  ((GstVideoConvertScaleClass *) klass)->any_memory = TRUE;
+
   g_object_class_install_property (gobject_class, PROP_GAMMA_DECODE,
       g_param_spec_boolean ("gamma-decode", "Gamma Decode",
           "Decode gamma before scaling", DEFAULT_PROP_GAMMA_DECODE,
