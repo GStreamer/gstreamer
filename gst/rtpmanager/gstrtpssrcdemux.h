@@ -30,7 +30,6 @@
 
 typedef struct _GstRtpSsrcDemux GstRtpSsrcDemux;
 typedef struct _GstRtpSsrcDemuxClass GstRtpSsrcDemuxClass;
-typedef struct _GstRtpSsrcDemuxPad GstRtpSsrcDemuxPad;
 
 struct _GstRtpSsrcDemux
 {
