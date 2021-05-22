@@ -185,8 +185,6 @@ dnf debuginfo-install -y gtk3 \
     zip \
     zlib
 
-pip3 install meson==0.56.2 hotdoc
-
 # Install the dependencies of gstreamer
 dnf builddep -y gstreamer1 \
     gstreamer1-plugins-base \
@@ -200,8 +198,10 @@ dnf builddep -y gstreamer1 \
     gstreamer1-libav \
     gstreamer1-rtsp-server  \
     gstreamer1-vaapi \
-    python3-gstreamer1 \
-    -x meson
+    python3-gstreamer1
+
+dnf remove -y meson
+pip3 install meson==0.58.0 hotdoc
 
 # Remove gst-devel packages installed by builddep above
 dnf remove -y "gstreamer1*devel"
