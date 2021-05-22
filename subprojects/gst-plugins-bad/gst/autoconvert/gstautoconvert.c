@@ -436,7 +436,7 @@ gst_auto_convert_get_element_by_type (GstAutoConvert * autoconvert, GType type)
   GST_OBJECT_LOCK (autoconvert);
 
   for (item = bin->children; item; item = item->next) {
-    if (G_TYPE_CHECK_INSTANCE_TYPE (item->data, type)) {
+    if (G_OBJECT_TYPE(item->data) == type) {
       element = gst_object_ref (item->data);
       break;
     }
