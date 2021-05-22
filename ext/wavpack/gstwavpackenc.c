@@ -619,7 +619,7 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
           GstMapInfo map;
 
           gst_buffer_map (buffer, &map, GST_MAP_READ);
-          enc->first_block = g_memdup (map.data, map.size);
+          enc->first_block = g_memdup2 (map.data, map.size);
           enc->first_block_size = map.size;
           gst_buffer_unmap (buffer, &map);
         }

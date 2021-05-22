@@ -18,6 +18,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/check/check.h>
 #include <gst/check/gstharness.h>
@@ -25,9 +28,9 @@
 #define RTP_VP8_CAPS_STR \
   "application/x-rtp,media=video,encoding-name=VP8,clock-rate=90000,payload=96"
 
-#define gst_buffer_new_from_array(array) gst_buffer_new_wrapped (       \
-      g_memdup (vp8_bitstream_payload, sizeof (vp8_bitstream_payload)), \
-      sizeof (vp8_bitstream_payload))
+/* FIXME: array argument is unused! */
+#define gst_buffer_new_from_array(array) \
+  gst_buffer_new_memdup (vp8_bitstream_payload, sizeof (vp8_bitstream_payload))
 
 static guint8 intra_picid6336_seqnum0[] = {
   0x80, 0xe0, 0x00, 0x00, 0x9a, 0xbb, 0xe3, 0xb3, 0x8b, 0xe9, 0x1d, 0x61,
@@ -59,14 +62,14 @@ create_rtp_vp8_buffer_full (guint seqnum, guint picid, gint picid_bits,
 
   if (picid_bits == 0) {
     size = sizeof (intra_nopicid_seqnum0);
-    packet = g_memdup (intra_nopicid_seqnum0, size);
+    packet = g_memdup2 (intra_nopicid_seqnum0, size);
   } else if (picid_bits == 7) {
     size = sizeof (intra_picid24_seqnum0);
-    packet = g_memdup (intra_picid24_seqnum0, size);
+    packet = g_memdup2 (intra_picid24_seqnum0, size);
     packet[14] = picid & 0x7f;
   } else {
     size = sizeof (intra_picid6336_seqnum0);
-    packet = g_memdup (intra_picid6336_seqnum0, size);
+    packet = g_memdup2 (intra_picid6336_seqnum0, size);
     packet[14] = ((picid >> 8) & 0xff) | 0x80;
     packet[15] = (picid >> 0) & 0xff;
   }
@@ -165,8 +168,8 @@ GST_START_TEST (test_pay_no_meta)
   g_object_set (h->element, "picture-id-mode", test_data->pid,
       "picture-id-offset", 0x5A5A, NULL);
 
-  buffer = gst_buffer_new_wrapped (g_memdup (vp8_bitstream_payload,
-          sizeof (vp8_bitstream_payload)), sizeof (vp8_bitstream_payload));
+  buffer = gst_buffer_new_memdup (vp8_bitstream_payload,
+      sizeof (vp8_bitstream_payload));
 
   /* set droppable if N flag set */
   if ((test_data->vp8_payload_control_value & 0x20) != 0) {
@@ -276,8 +279,8 @@ GST_START_TEST (test_pay_with_meta)
       "picture-id-offset", 0x5A5A, NULL);
 
   /* Push a buffer in */
-  buffer = gst_buffer_new_wrapped (g_memdup (vp8_bitstream_payload,
-          sizeof (vp8_bitstream_payload)), sizeof (vp8_bitstream_payload));
+  buffer = gst_buffer_new_memdup (vp8_bitstream_payload,
+      sizeof (vp8_bitstream_payload));
   add_vp8_meta (buffer, test_data->use_temporal_scaling, test_data->y_flag,
       2, 255);
   /* set droppable if N flag set */

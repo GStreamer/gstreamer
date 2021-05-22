@@ -18,6 +18,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/check/check.h>
 #include <gst/app/app.h>
@@ -302,8 +305,7 @@ GST_START_TEST (test_rtph264depay_with_downstream_allocator)
       fail_unless (len >= 2 + packet_len);
 
       flow = gst_app_src_push_buffer (GST_APP_SRC (src),
-          gst_buffer_new_wrapped (g_memdup (pdata + 2, packet_len),
-              packet_len));
+          gst_buffer_new_memdup (pdata + 2, packet_len));
 
       fail_unless_equals_int (flow, GST_FLOW_OK);
 

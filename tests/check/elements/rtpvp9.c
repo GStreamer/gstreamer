@@ -18,6 +18,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/check/check.h>
 #include <gst/check/gstharness.h>
@@ -168,7 +171,7 @@ create_rtp_vp9_buffer_full (guint seqnum, guint picid, guint buffer_type,
          */
   };
   struct BufferTemplate *template = &templates[buffer_type];
-  guint8 *packet = g_memdup (template->template, template->size);
+  guint8 *packet = g_memdup2 (template->template, template->size);
   GstBuffer *ret;
 
   packet[2] = (seqnum >> 8) & 0xff;

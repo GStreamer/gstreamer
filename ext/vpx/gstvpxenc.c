@@ -2045,9 +2045,7 @@ gst_vpx_enc_process (GstVPXEnc * encoder)
     g_assert (frame != NULL);
 
     /* FIXME : It would be nice to avoid the memory copy ... */
-    buffer =
-        gst_buffer_new_wrapped (g_memdup (pkt->data.frame.buf,
-            pkt->data.frame.sz), pkt->data.frame.sz);
+    buffer = gst_buffer_new_memdup (pkt->data.frame.buf, pkt->data.frame.sz);
 
     user_data = vpx_enc_class->process_frame_user_data (encoder, frame);
     if (vpx_enc_class->get_frame_temporal_settings &&

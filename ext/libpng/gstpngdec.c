@@ -356,7 +356,7 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
         &icc_compression_type, &icc_profile, &icc_proflen);
 
     if ((ret & PNG_INFO_iCCP)) {
-      gpointer gst_icc_prof = g_memdup (icc_profile, icc_proflen);
+      gpointer gst_icc_prof = g_memdup2 (icc_profile, icc_proflen);
       GstBuffer *tagbuffer = NULL;
       GstSample *tagsample = NULL;
       GstTagList *taglist = NULL;

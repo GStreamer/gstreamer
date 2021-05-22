@@ -126,7 +126,7 @@ create_overlay_pixbuf (void)
 
   g_assert (pixdata_size == 24 + height * stride);
 
-  pixels_copy = g_memdup (pixdata + 24, height * stride);
+  pixels_copy = g_memdup2 (pixdata + 24, height * stride);
 
   pixbuf =
       gdk_pixbuf_new_from_data (pixels_copy, GDK_COLORSPACE_RGB, TRUE, 8,

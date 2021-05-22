@@ -17,6 +17,10 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 #include <gst/audio/audio.h>
@@ -701,7 +705,7 @@ rtp_h264depay_run (const gchar * stream_format)
   gst_harness_play (h);
 
   size = sizeof (h264_16x16_black_bs);
-  buf = gst_buffer_new_wrapped (g_memdup (h264_16x16_black_bs, size), size);
+  buf = gst_buffer_new_memdup (h264_16x16_black_bs, size);
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
 
@@ -1716,17 +1720,13 @@ test_rtp_opus_dtx (gboolean dtx)
       "application/x-rtp, media=audio, clock-rate=48000, encoding-name=OPUS, sprop-stereo=(string)0, encoding-params=(string)2, sprop-maxcapturerate=(string)48000, payload=96");
 
   /* push first opus frame */
-  buf =
-      gst_buffer_new_wrapped (g_memdup (opus_frame, sizeof (opus_frame)),
-      sizeof (opus_frame));
+  buf = gst_buffer_new_memdup (opus_frame, sizeof (opus_frame));
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   seq = pull_rtp_buffer (h, TRUE);
   expected_seq = seq + 1;
 
   /* push empty frame */
-  buf =
-      gst_buffer_new_wrapped (g_memdup (opus_empty, sizeof (opus_empty)),
-      sizeof (opus_empty));
+  buf = gst_buffer_new_memdup (opus_empty, sizeof (opus_empty));
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   if (dtx) {
     /* buffer is not transmitted if dtx is enabled */
@@ -1739,9 +1739,7 @@ test_rtp_opus_dtx (gboolean dtx)
   }
 
   /* push second opus frame */
-  buf =
-      gst_buffer_new_wrapped (g_memdup (opus_frame, sizeof (opus_frame)),
-      sizeof (opus_frame));
+  buf = gst_buffer_new_memdup (opus_frame, sizeof (opus_frame));
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   seq = pull_rtp_buffer (h, dtx);
   fail_unless_equals_int (seq, expected_seq);

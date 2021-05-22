@@ -18,11 +18,15 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/check/check.h>
 #include <gst/check/gstharness.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
-#define buffer_from_array(a) gst_buffer_new_wrapped (g_memdup (a, G_N_ELEMENTS (a)), G_N_ELEMENTS (a));
+#define buffer_from_array(a) gst_buffer_new_memdup (a, G_N_ELEMENTS (a))
 
 static guint8 opus_data[] = {
   0xf8, 0xb5, 0x0e, 0x7d, 0x91, 0xcc, 0x05, 0x82,
