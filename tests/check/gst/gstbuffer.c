@@ -923,6 +923,27 @@ GST_START_TEST (test_wrapped_bytes)
 
 GST_END_TEST;
 
+GST_START_TEST (test_new_copy)
+{
+  GstBuffer *buf;
+  GstMemory *mem;
+
+  buf = gst_buffer_new_copy (ro_memory, sizeof (ro_memory));
+
+  fail_if (gst_buffer_memcmp (buf, 0, ro_memory, sizeof (ro_memory)));
+  fail_unless_equals_int (gst_buffer_get_size (buf), sizeof (ro_memory));
+
+  /* the memory should be writable */
+  mem = gst_buffer_peek_memory (buf, 0);
+  fail_unless (gst_memory_is_writable (mem));
+  fail_unless (gst_buffer_is_writable (buf));
+  gst_buffer_memset (buf, 0, 0xaa, sizeof (ro_memory));
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_suite (void)
 {
@@ -948,6 +969,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_parent_buffer_meta);
   tcase_add_test (tc_chain, test_writable_memory);
   tcase_add_test (tc_chain, test_wrapped_bytes);
+  tcase_add_test (tc_chain, test_new_copy);
 
   return s;
 }
