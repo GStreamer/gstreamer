@@ -208,6 +208,10 @@ if gst_version_nano == 0
   endif
 endif
 
+if gmodule_dep.version().version_compare('< 2.67.4')
+  cdata.set('g_memdup2(ptr,sz)', '(G_LIKELY(((guint64)(sz)) < G_MAXUINT)) ? g_memdup(ptr,sz) : (g_abort(),NULL)')
+endif
+
 configure_file(output: 'config.h', configuration: cdata)
 
 python3 = import('python').find_installation()

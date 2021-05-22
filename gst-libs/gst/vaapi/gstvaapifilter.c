@@ -671,7 +671,7 @@ op_data_ensure_caps (GstVaapiFilterOpData * op_data, gpointer filter_caps,
       return FALSE;
   }
 
-  op_data->va_caps = g_memdup (filter_cap, op_data->va_cap_size * va_num_caps);
+  op_data->va_caps = g_memdup2 (filter_cap, op_data->va_cap_size * va_num_caps);
   if (!op_data->va_caps)
     return FALSE;
 
