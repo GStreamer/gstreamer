@@ -476,7 +476,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
       layer = ges_layer_new ();
       g_object_set (layer, "auto-transition", TRUE, "priority", prio, NULL);
       ges_timeline_add_layer (self->timeline, layer);
-      g_hash_table_insert (priv->layers_table, g_memdup (&prio,
+      g_hash_table_insert (priv->layers_table, g_memdup2 (&prio,
               sizeof (guint64)), layer);
     }
 
