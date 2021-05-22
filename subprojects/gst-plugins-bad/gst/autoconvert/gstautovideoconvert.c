@@ -61,6 +61,9 @@ gst_auto_video_convert_element_filter (GstPluginFeature * feature,
   if (!g_strcmp0 (GST_OBJECT_NAME (feature), "autovideoconvert"))
     return FALSE;
 
+  if (gst_plugin_feature_get_rank (feature) <= GST_RANK_NONE)
+    return FALSE;
+
   klass = gst_element_factory_get_metadata (GST_ELEMENT_FACTORY_CAST (feature),
       GST_ELEMENT_METADATA_KLASS);
   /* only select color space converter */
