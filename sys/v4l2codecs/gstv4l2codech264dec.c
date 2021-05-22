@@ -1404,8 +1404,10 @@ void
 gst_v4l2_codec_h264_dec_register (GstPlugin * plugin,
     GstV4l2CodecDevice * device, guint rank)
 {
-  gst_v4l2_decoder_register (plugin, GST_TYPE_V4L2_CODEC_H264_DEC,
+  gst_v4l2_decoder_register (plugin,
+      GST_TYPE_V4L2_CODEC_H264_DEC,
       (GClassInitFunc) gst_v4l2_codec_h264_dec_subclass_init,
+      gst_mini_object_ref (GST_MINI_OBJECT (device)),
       (GInstanceInitFunc) gst_v4l2_codec_h264_dec_subinit,
-      "v4l2sl%sh264dec", device, rank);
+      "v4l2sl%sh264dec", device, rank, NULL);
 }

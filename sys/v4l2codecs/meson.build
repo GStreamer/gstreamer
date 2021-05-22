@@ -7,6 +7,7 @@ v4l2codecs_sources = [
   'gstv4l2codecvp8dec.c',
   'gstv4l2decoder.c',
   'gstv4l2format.c',
+  'gstv4l2codecalphadecodebin.c',
 ]
 
 libgudev_dep = dependency('gudev-1.0', required: get_option('v4l2codecs'))
@@ -37,7 +38,8 @@ if have_v4l2 and libgudev_dep.found()
     c_args : gst_plugins_bad_args,
     cpp_args: gst_plugins_bad_args,
     include_directories : [configinc],
-    dependencies : [gstbase_dep, gstcodecs_dep, gstallocators_dep, libgudev_dep],
+    dependencies : [gstbase_dep, gstcodecs_dep, gstallocators_dep, libgudev_dep,
+                   gstpbutils_dep,],
     install : true,
     install_dir : plugins_install_dir,
   )

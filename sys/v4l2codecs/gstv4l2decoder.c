@@ -813,10 +813,27 @@ gst_v4l2_decoder_get_property (GObject * object, guint prop_id,
   }
 }
 
+/**
+ * gst_v4l2_decoder_register:
+ * @plugin: a #GstPlugin
+ * @dec_type: A #GType for the codec
+ * @class_init: The #GClassInitFunc for #dec_type
+ * @instance_init: The #GInstanceInitFunc for #dec_type
+ * @element_name_tmpl: A string to use for the first codec found and as a template for the next ones.
+ * @device: (transfer full) A #GstV4l2CodecDevice
+ * @rank: The rank to use for the element
+ * @class_data: (nullable) (transfer full) A #gpointer to pass as class_data, set to @device if null
+ * @element_name (nullable) (out) Sets the pointer to the new element name
+ *
+ * Registers a decoder element as a subtype of @dec_type for @plugin.
+ * Will create a different sub_types for each subsequent @decoder of the
+ * same type.
+ */
 void
 gst_v4l2_decoder_register (GstPlugin * plugin,
-    GType dec_type, GClassInitFunc class_init, GInstanceInitFunc instance_init,
-    const gchar * element_name_tmpl, GstV4l2CodecDevice * device, guint rank)
+    GType dec_type, GClassInitFunc class_init, gconstpointer class_data,
+    GInstanceInitFunc instance_init, const gchar * element_name_tmpl,
+    GstV4l2CodecDevice * device, guint rank, gchar ** element_name)
 {
   GTypeQuery type_query;
   GTypeInfo type_info = { 0, };
@@ -828,9 +845,11 @@ gst_v4l2_decoder_register (GstPlugin * plugin,
   type_info.class_size = type_query.class_size;
   type_info.instance_size = type_query.instance_size;
   type_info.class_init = class_init;
-  type_info.class_data = gst_mini_object_ref (GST_MINI_OBJECT (device));
+  type_info.class_data = class_data;
   type_info.instance_init = instance_init;
-  GST_MINI_OBJECT_FLAG_SET (device, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  if (class_data == device)
+    GST_MINI_OBJECT_FLAG_SET (device, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
   /* The first decoder to be registered should use a constant name, like
    * v4l2slvp8dec, for any additional decoders, we create unique names. Decoder
@@ -848,10 +867,16 @@ gst_v4l2_decoder_register (GstPlugin * plugin,
 
   subtype = g_type_register_static (dec_type, type_name, &type_info, 0);
 
-  if (!gst_element_register (plugin, type_name, rank, subtype))
+  if (!gst_element_register (plugin, type_name, rank, subtype)) {
     GST_WARNING ("Failed to register plugin '%s'", type_name);
+    g_free (type_name);
+    type_name = NULL;
+  }
 
-  g_free (type_name);
+  if (element_name)
+    *element_name = type_name;
+  else
+    g_free (type_name);
 }
 
 /*

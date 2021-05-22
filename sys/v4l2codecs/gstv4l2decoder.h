@@ -100,10 +100,12 @@ void              gst_v4l2_decoder_get_property (GObject * object, guint prop_id
 void              gst_v4l2_decoder_register (GstPlugin * plugin,
                                              GType dec_type,
                                              GClassInitFunc class_init,
+                                             gconstpointer class_data,
                                              GInstanceInitFunc instance_init,
                                              const gchar *element_name_tmpl,
                                              GstV4l2CodecDevice * device,
-                                             guint rank);
+                                             guint rank,
+                                             gchar ** element_name);
 
 GstV4l2Request   *gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self,
                                                   guint32 frame_num,

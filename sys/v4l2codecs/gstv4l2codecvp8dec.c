@@ -22,6 +22,7 @@
 #endif
 
 #include "gstv4l2codecallocator.h"
+#include "gstv4l2codecalphadecodebin.h"
 #include "gstv4l2codecpool.h"
 #include "gstv4l2codecvp8dec.h"
 #include "linux/vp8-ctrls.h"
@@ -39,6 +40,12 @@ static GstStaticPadTemplate sink_template =
 GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
     GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-vp8")
+    );
+
+static GstStaticPadTemplate alpha_template =
+GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
+    GST_PAD_SINK, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-vp8, codec-alpha = (boolean) true")
     );
 
 static GstStaticPadTemplate src_template =
@@ -848,12 +855,37 @@ gst_v4l2_codec_vp8_dec_subclass_init (GstV4l2CodecVp8DecClass * klass,
   gst_v4l2_decoder_install_properties (gobject_class, PROP_LAST, device);
 }
 
+static void gst_v4l2_codec_vp8_alpha_decode_bin_subclass_init
+    (GstV4l2CodecAlphaDecodeBinClass * klass, gchar * decoder_name)
+{
+  GstV4l2CodecAlphaDecodeBinClass *adbin_class =
+      (GstV4l2CodecAlphaDecodeBinClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) klass;
+
+  adbin_class->decoder_name = decoder_name;
+  gst_element_class_add_static_pad_template (element_class, &alpha_template);
+
+  gst_element_class_set_static_metadata (element_class,
+      "VP8 Alpha Decoder", "Codec/Decoder/Video",
+      "Wrapper bin to decode VP8 with alpha stream.",
+      "Daniel Almeida <daniel.almeida@collabora.com>");
+}
+
 void
 gst_v4l2_codec_vp8_dec_register (GstPlugin * plugin,
     GstV4l2CodecDevice * device, guint rank)
 {
+  gchar *element_name;
+
   gst_v4l2_decoder_register (plugin, GST_TYPE_V4L2_CODEC_VP8_DEC,
       (GClassInitFunc) gst_v4l2_codec_vp8_dec_subclass_init,
+      gst_mini_object_ref (GST_MINI_OBJECT (device)),
       (GInstanceInitFunc) gst_v4l2_codec_vp8_dec_subinit,
-      "v4l2sl%svp8dec", device, rank);
+      "v4l2sl%svp8dec", device, rank, &element_name);
+
+  if (element_name) {
+    gst_v4l2_codec_alpha_decode_bin_register (plugin,
+        (GClassInitFunc) gst_v4l2_codec_vp8_alpha_decode_bin_subclass_init,
+        element_name, "v4l2slvp8%salphadecodebin", device, rank);
+  }
 }
