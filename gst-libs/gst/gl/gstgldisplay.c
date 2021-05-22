@@ -316,14 +316,12 @@ gst_gl_display_type_from_environment (void)
       return GST_GL_DISPLAY_TYPE_EGL;
     } else if (g_strstr_len (env, 4, "winrt")) {
       return GST_GL_DISPLAY_TYPE_EGL;
+    } else {
+      return GST_GL_DISPLAY_TYPE_NONE;
     }
   }
 
-  if (platform && g_strstr_len (platform, 3, "egl")) {
-    return GST_GL_DISPLAY_TYPE_EGL;
-  }
-
-  return GST_GL_DISPLAY_TYPE_NONE;
+  return GST_GL_DISPLAY_TYPE_ANY;
 }
 
 static GstGLDisplay *
