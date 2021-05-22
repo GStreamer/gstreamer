@@ -18,6 +18,9 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "gstencoderbitrateprofilemanager.h"
 
@@ -95,7 +98,7 @@ gst_encoder_bitrate_profile_manager_add_profile (GstEncoderBitrateProfileManager
     * self, const gchar * profile_name,
     const GstEncoderBitrateTargetForPixelsMap * map)
 {
-  gint n_vals;
+  guint n_vals;
   GstEncoderBitrateProfile *profile;
 
   for (n_vals = 0;
@@ -107,7 +110,7 @@ gst_encoder_bitrate_profile_manager_add_profile (GstEncoderBitrateProfileManager
   profile->name = g_strdup (profile_name);
   profile->n_vals = n_vals;
   profile->map
-      = g_memdup (map, sizeof (GstEncoderBitrateTargetForPixelsMap) * n_vals);
+      = g_memdup2 (map, sizeof (GstEncoderBitrateTargetForPixelsMap) * n_vals);
   self->profiles = g_list_prepend (self->profiles, profile);
 }
 

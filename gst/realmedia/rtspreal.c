@@ -436,7 +436,7 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     if (strncmp (opaque_data, "MLTI", 4)) {
       GST_DEBUG_OBJECT (ctx, "no MLTI found, appending all");
       stream->type_specific_data_len = opaque_data_len;
-      stream->type_specific_data = g_memdup (opaque_data, opaque_data_len);
+      stream->type_specific_data = g_memdup2 (opaque_data, opaque_data_len);
       goto no_type_specific;
     }
     opaque_data += 4;
@@ -530,7 +530,7 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
       goto strange_opaque_data;
     }
     stream->type_specific_data =
-        g_memdup (opaque_data, stream->type_specific_data_len);
+        g_memdup2 (opaque_data, stream->type_specific_data_len);
 
   no_type_specific:
     size =

@@ -2458,15 +2458,18 @@ gst_asf_demux_get_buffer (GstBuffer ** p_buf, guint num_bytes_to_read,
 }
 
 static gboolean
-gst_asf_demux_get_bytes (guint8 ** p_buf, guint num_bytes_to_read,
+gst_asf_demux_get_bytes (guint8 ** p_buf, guint64 num_bytes_to_read,
     guint8 ** p_data, guint64 * p_size)
 {
   *p_buf = NULL;
 
+  if (num_bytes_to_read >= G_MAXUINT)
+    return FALSE;
+
   if (*p_size < num_bytes_to_read)
     return FALSE;
 
-  *p_buf = g_memdup (*p_data, num_bytes_to_read);
+  *p_buf = g_memdup2 (*p_data, num_bytes_to_read);
   *p_data += num_bytes_to_read;
   *p_size -= num_bytes_to_read;
   return TRUE;
