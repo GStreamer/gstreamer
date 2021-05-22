@@ -7,7 +7,7 @@ if not gstgl_dep.found()
 endif
 
 wpe_dep = dependency('wpe-webkit-1.0', version : '>= 2.28', required : get_option('wpe'))
-wpe_fdo_dep = dependency('wpebackend-fdo-1.0', required : get_option('wpe'))
+wpe_fdo_dep = dependency('wpebackend-fdo-1.0', version : '>= 1.8', required : get_option('wpe'))
 egl_dep = dependency('egl', required : get_option('wpe'))
 xkbcommon_dep = dependency('xkbcommon', version : '>= 0.8', required : get_option('wpe'))
 wl_server_dep = dependency('wayland-server', required : get_option('wpe'))

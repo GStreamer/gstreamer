@@ -33,20 +33,10 @@
 #include <cstdio>
 #include <mutex>
 
-#if ENABLE_SHM_BUFFER_SUPPORT
 #include <wpe/unstable/fdo-shm.h>
-#endif
 
 GST_DEBUG_CATEGORY_EXTERN (wpe_view_debug);
 #define GST_CAT_DEFAULT wpe_view_debug
-
-#if defined(WPE_FDO_CHECK_VERSION) && WPE_FDO_CHECK_VERSION(1, 3, 0)
-#define USE_DEPRECATED_FDO_EGL_IMAGE 0
-#define WPE_GLIB_SOURCE_PRIORITY G_PRIORITY_DEFAULT
-#else
-#define USE_DEPRECATED_FDO_EGL_IMAGE 1
-#define WPE_GLIB_SOURCE_PRIORITY -70
-#endif
 
 class GMutexHolder {
 public:
@@ -122,7 +112,7 @@ void WPEContextThread::dispatch(Function func)
         g_cond_signal(&view.threading.cond);
         return G_SOURCE_REMOVE;
     }, &payload, nullptr);
-    g_source_set_priority(source, WPE_GLIB_SOURCE_PRIORITY);
+    g_source_set_priority(source, G_PRIORITY_DEFAULT);
 
     {
         GMutexHolder lock(threading.mutex);
@@ -309,9 +299,7 @@ WPEView* WPEContextThread::createWPEView(GstWpeVideoSrc* src, GstGLContext* cont
     static std::once_flag s_loaderFlag;
     std::call_once(s_loaderFlag,
         [] {
-#if defined(WPE_BACKEND_CHECK_VERSION) && WPE_BACKEND_CHECK_VERSION(1, 2, 0)
             wpe_loader_init("libWPEBackend-fdo-1.0.so");
-#endif
         });
 
     WPEView* view = nullptr;
@@ -419,12 +407,8 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContex
         m_isValid = wpe_fdo_initialize_for_egl_display(eglDisplay);
         GST_DEBUG("FDO EGL display initialisation result: %d", m_isValid);
     } else {
-#if ENABLE_SHM_BUFFER_SUPPORT
         m_isValid = wpe_fdo_initialize_shm();
         GST_DEBUG("FDO SHM initialisation result: %d", m_isValid);
-#else
-        GST_WARNING("FDO SHM support is available only in WPEBackend-FDO 1.7.0");
-#endif
     }
     if (!m_isValid)
         return;
@@ -432,16 +416,12 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContex
     if (gst.display_egl) {
         wpe.exportable = wpe_view_backend_exportable_fdo_egl_create(&s_exportableEGLClient, this, wpe.width, wpe.height);
     } else {
-#if ENABLE_SHM_BUFFER_SUPPORT
         wpe.exportable = wpe_view_backend_exportable_fdo_create(&s_exportableClient, this, wpe.width, wpe.height);
-#endif
     }
 
     auto* wpeViewBackend = wpe_view_backend_exportable_fdo_get_view_backend(wpe.exportable);
     auto* viewBackend = webkit_web_view_backend_new(wpeViewBackend, (GDestroyNotify) wpe_view_backend_exportable_fdo_destroy, wpe.exportable);
-#if defined(WPE_BACKEND_CHECK_VERSION) && WPE_BACKEND_CHECK_VERSION(1, 1, 0)
     wpe_view_backend_add_activity_state(wpeViewBackend, wpe_view_activity_state_visible | wpe_view_activity_state_focused | wpe_view_activity_state_in_window);
-#endif
 
     webkit.view = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
         "web-context", web_context,
@@ -693,13 +673,8 @@ void WPEView::releaseImage(gpointer imagePointer)
 {
     s_view->dispatch([&]() {
         GST_TRACE("Dispatch release exported image %p", imagePointer);
-#if USE_DEPRECATED_FDO_EGL_IMAGE
-        wpe_view_backend_exportable_fdo_egl_dispatch_release_image(wpe.exportable,
-                                                                   static_cast<EGLImageKHR>(imagePointer));
-#else
         wpe_view_backend_exportable_fdo_egl_dispatch_release_exported_image(wpe.exportable,
                                                                             static_cast<struct wpe_fdo_egl_exported_image*>(imagePointer));
-#endif
     });
 }
 
@@ -713,12 +688,7 @@ void WPEView::handleExportedImage(gpointer image)
     ImageContext* imageContext = g_slice_new(ImageContext);
     imageContext->view = this;
     imageContext->image = static_cast<gpointer>(image);
-    EGLImageKHR eglImage;
-#if USE_DEPRECATED_FDO_EGL_IMAGE
-    eglImage = static_cast<EGLImageKHR>(image);
-#else
-    eglImage = wpe_fdo_egl_exported_image_get_egl_image(static_cast<struct wpe_fdo_egl_exported_image*>(image));
-#endif
+    EGLImageKHR eglImage = wpe_fdo_egl_exported_image_get_egl_image(static_cast<struct wpe_fdo_egl_exported_image*>(image));
 
     auto* gstImage = gst_egl_image_new_wrapped(gst.context, eglImage, GST_GL_RGBA, imageContext, s_releaseImage);
     {
@@ -732,7 +702,6 @@ void WPEView::handleExportedImage(gpointer image)
     }
 }
 
-#if ENABLE_SHM_BUFFER_SUPPORT
 struct SHMBufferContext {
     WPEView* view;
     struct wpe_fdo_shm_exported_buffer* buffer;
@@ -789,17 +758,8 @@ void WPEView::handleExportedBuffer(struct wpe_fdo_shm_exported_buffer* buffer)
         notifyLoadFinished();
     }
 }
-#endif
 
 struct wpe_view_backend_exportable_fdo_egl_client WPEView::s_exportableEGLClient = {
-#if USE_DEPRECATED_FDO_EGL_IMAGE
-    // export_egl_image
-    [](void* data, EGLImageKHR image) {
-        auto& view = *static_cast<WPEView*>(data);
-        view.handleExportedImage(static_cast<gpointer>(image));
-    },
-    nullptr, nullptr,
-#else
     // export_egl_image
     nullptr,
     [](void* data, struct wpe_fdo_egl_exported_image* image) {
@@ -807,12 +767,10 @@ struct wpe_view_backend_exportable_fdo_egl_client WPEView::s_exportableEGLClient
         view.handleExportedImage(static_cast<gpointer>(image));
     },
     nullptr,
-#endif // USE_DEPRECATED_FDO_EGL_IMAGE
     // padding
     nullptr, nullptr
 };
 
-#if ENABLE_SHM_BUFFER_SUPPORT
 struct wpe_view_backend_exportable_fdo_client WPEView::s_exportableClient = {
     nullptr,
     nullptr,
@@ -824,7 +782,6 @@ struct wpe_view_backend_exportable_fdo_client WPEView::s_exportableClient = {
     nullptr,
     nullptr,
 };
-#endif
 
 void WPEView::s_releaseImage(GstEGLImage* image, gpointer data)
 {

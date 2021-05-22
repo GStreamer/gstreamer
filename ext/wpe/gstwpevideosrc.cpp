@@ -137,16 +137,12 @@ struct _GstWpeVideoSrc
 #define gst_wpe_video_src_parent_class parent_class
 G_DEFINE_TYPE(GstWpeVideoSrc, gst_wpe_video_src, GST_TYPE_GL_BASE_SRC);
 
-#if ENABLE_SHM_BUFFER_SUPPORT
 #define WPE_RAW_CAPS "; video/x-raw, "          \
   "format = (string) BGRA, "                    \
   "width = " GST_VIDEO_SIZE_RANGE ", "          \
   "height = " GST_VIDEO_SIZE_RANGE ", "         \
   "framerate = " GST_VIDEO_FPS_RANGE ", "       \
   "pixel-aspect-ratio = (fraction)1/1"
-#else
-#define WPE_RAW_CAPS ""
-#endif
 
 #define WPE_BASIC_CAPS "video/x-raw(memory:GLMemory), " \
   "format = (string) RGBA, "                            \
@@ -588,23 +584,6 @@ gst_wpe_video_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       case GST_NAVIGATION_EVENT_MOUSE_SCROLL:
         if (gst_navigation_event_parse_mouse_scroll_event (event, &x, &y,
                 &delta_x, &delta_y)) {
-#if WPE_CHECK_VERSION(1, 6, 0)
-          struct wpe_input_axis_2d_event wpe_event;
-          if (delta_x) {
-            wpe_event.x_axis = delta_x;
-          } else {
-            wpe_event.y_axis = delta_y;
-          }
-          wpe_event.base.time =
-              GST_TIME_AS_MSECONDS (GST_EVENT_TIMESTAMP (event));
-          wpe_event.base.type =
-              static_cast < wpe_input_axis_event_type >
-              (wpe_input_axis_event_type_mask_2d |
-              wpe_input_axis_event_type_motion_smooth);
-          wpe_event.base.x = (int) x;
-          wpe_event.base.y = (int) y;
-          src->view->dispatchAxisEvent (wpe_event.base);
-#else
           struct wpe_input_axis_event wpe_event;
           if (delta_x) {
             wpe_event.axis = 1;
@@ -618,7 +597,6 @@ gst_wpe_video_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           wpe_event.x = (int) x;
           wpe_event.y = (int) y;
           src->view->dispatchAxisEvent (wpe_event);
-#endif
           ret = TRUE;
         }
         break;

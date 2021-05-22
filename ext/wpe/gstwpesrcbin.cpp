@@ -179,14 +179,12 @@ GST_STATIC_PAD_TEMPLATE ("video", GST_PAD_SRC, GST_PAD_SOMETIMES,
                      "framerate = " GST_VIDEO_FPS_RANGE ", "
                      "pixel-aspect-ratio = (fraction)1/1,"
                      "texture-target = (string)2D"
-#if ENABLE_SHM_BUFFER_SUPPORT
                      "; video/x-raw, "
                      "format = (string) BGRA, "
                      "width = " GST_VIDEO_SIZE_RANGE ", "
                      "height = " GST_VIDEO_SIZE_RANGE ", "
                      "framerate = " GST_VIDEO_FPS_RANGE ", "
                      "pixel-aspect-ratio = (fraction)1/1"
-#endif
                      ));
 
 /**
