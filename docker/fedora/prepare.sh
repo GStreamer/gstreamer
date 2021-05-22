@@ -213,8 +213,8 @@ rpm -i --reinstall *.rpm
 rm -f *.rpm
 
 # Install Rust
-RUSTUP_VERSION=1.21.1
-RUST_VERSION=1.44.1
+RUSTUP_VERSION=1.24.2
+RUST_VERSION=1.52.1
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 dnf install -y wget
