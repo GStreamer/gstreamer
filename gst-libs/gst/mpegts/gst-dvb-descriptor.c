@@ -204,7 +204,7 @@ gst_mpegts_descriptor_parse_dvb_stuffing (const GstMpegtsDescriptor *
 
   data = (guint8 *) descriptor->data + 2;
 
-  *stuffing_bytes = g_memdup (data, descriptor->length);
+  *stuffing_bytes = g_memdup2 (data, descriptor->length);
 
   return TRUE;
 }
@@ -600,7 +600,7 @@ _gst_mpegts_dvb_linkage_descriptor_copy (GstMpegtsDVBLinkageDescriptor * source)
       break;
   }
 
-  copy->private_data_bytes = g_memdup (source->private_data_bytes,
+  copy->private_data_bytes = g_memdup2 (source->private_data_bytes,
       source->private_data_length);
 
   return copy;
@@ -825,7 +825,7 @@ gst_mpegts_descriptor_parse_dvb_linkage (const GstMpegtsDescriptor * descriptor,
   }
 
   res->private_data_length = end - data;
-  res->private_data_bytes = g_memdup (data, res->private_data_length);
+  res->private_data_bytes = g_memdup2 (data, res->private_data_length);
 
   *desc = res;
 
@@ -2013,7 +2013,7 @@ gst_mpegts_descriptor_parse_dvb_private_data_specifier (const
   if (length && private_data) {
     *length = descriptor->length - 4;
 
-    *private_data = g_memdup (data + 4, *length);
+    *private_data = g_memdup2 (data + 4, *length);
   }
   return TRUE;
 }
@@ -2091,7 +2091,7 @@ _gst_mpegts_dvb_data_broadcast_descriptor_copy (GstMpegtsDataBroadcastDescriptor
 
   copy = g_slice_dup (GstMpegtsDataBroadcastDescriptor, source);
 
-  copy->selector_bytes = g_memdup (source->selector_bytes, source->length);
+  copy->selector_bytes = g_memdup2 (source->selector_bytes, source->length);
   copy->language_code = g_strdup (source->language_code);
   copy->text = g_strdup (source->text);
 
@@ -2145,7 +2145,7 @@ gst_mpegts_descriptor_parse_dvb_data_broadcast (const GstMpegtsDescriptor
   res->length = *data;
   data += 1;
 
-  res->selector_bytes = g_memdup (data, res->length);
+  res->selector_bytes = g_memdup2 (data, res->length);
   data += res->length;
 
   res->language_code = convert_lang_code (data);
@@ -2220,7 +2220,7 @@ gst_mpegts_descriptor_parse_dvb_data_broadcast_id (const GstMpegtsDescriptor
 
   *len = descriptor->length - 2;
 
-  *id_selector_bytes = g_memdup (data, *len);
+  *id_selector_bytes = g_memdup2 (data, *len);
 
   return TRUE;
 }

@@ -252,7 +252,7 @@ mxf_metadata_base_to_buffer (MXFMetadataBase * self, MXFPrimerPack * primer)
         mxf_primer_pack_add_mapping (primer, 0x0000, &t->ul);
         memcpy (tmp->data, t->data, t->size);
       } else {
-        tmp->data = g_memdup (t->data, t->size);
+        tmp->data = g_memdup2 (t->data, t->size);
       }
       tags = g_list_prepend (tags, tmp);
     }

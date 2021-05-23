@@ -673,7 +673,7 @@ new_packet_cb (guint8 * data, guint len, void *user_data)
 
   GST_LOG_OBJECT (mux, "Outputting a packet of length %d", len);
 
-  data = g_memdup (data, len);
+  data = g_memdup2 (data, len);
   buf = gst_buffer_new_wrapped (data, len);
 
   GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;

@@ -2127,7 +2127,7 @@ gst_curl_http_src_get_debug (CURL * handle, curl_infotype type, char *data,
   switch (type) {
     case CURLINFO_TEXT:
     case CURLINFO_HEADER_OUT:
-      msg = g_memdup (data, size);
+      msg = g_memdup2 (data, size);
       if (size > 0) {
         msg[size - 1] = '\0';
         g_strchomp (msg);

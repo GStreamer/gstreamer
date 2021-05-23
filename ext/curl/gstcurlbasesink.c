@@ -1092,7 +1092,7 @@ gst_curl_base_sink_debug_cb (CURL * handle, curl_infotype type, char *data,
     case CURLINFO_TEXT:
     case CURLINFO_HEADER_IN:
     case CURLINFO_HEADER_OUT:
-      msg = g_memdup (data, size);
+      msg = g_memdup2 (data, size);
       if (size > 0) {
         msg[size - 1] = '\0';
         g_strchomp (msg);

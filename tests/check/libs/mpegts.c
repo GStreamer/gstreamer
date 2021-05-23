@@ -16,6 +16,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/check/gstcheck.h>
 #include <gst/mpegts/mpegts.h>
@@ -509,7 +512,7 @@ GST_START_TEST (test_mpegts_atsc_stt)
   guint8 *data;
   GstDateTime *dt;
 
-  data = g_memdup (stt_data_check, 20);
+  data = g_memdup2 (stt_data_check, 20);
 
   section = gst_mpegts_section_new (0x1ffb, data, 20);
   stt = gst_mpegts_section_get_atsc_stt (section);

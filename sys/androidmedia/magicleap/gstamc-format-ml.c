@@ -251,7 +251,7 @@ gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
   }
 
   *size = buffer.length;
-  *data = (guint8 *) g_memdup (buffer.ptr, buffer.length);
+  *data = (guint8 *) g_memdup2 (buffer.ptr, buffer.length);
   MLMediaFormatKeyByteBufferRelease (format->handle, &buffer);
 
   return TRUE;

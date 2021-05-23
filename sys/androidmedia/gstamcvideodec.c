@@ -1811,7 +1811,7 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
     GstMapInfo cminfo;
 
     gst_buffer_map (state->codec_data, &cminfo, GST_MAP_READ);
-    codec_data = g_memdup (cminfo.data, cminfo.size);
+    codec_data = g_memdup2 (cminfo.data, cminfo.size);
     codec_data_size = cminfo.size;
 
     is_format_change |= (!self->codec_data

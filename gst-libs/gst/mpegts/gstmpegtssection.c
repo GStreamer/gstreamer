@@ -233,7 +233,7 @@ _gst_mpegts_section_copy (GstMpegtsSection * section)
   copy->last_section_number = section->last_section_number;
   copy->crc = section->crc;
 
-  copy->data = g_memdup (section->data, section->section_length);
+  copy->data = g_memdup2 (section->data, section->section_length);
   copy->section_length = section->section_length;
   /* Note: We do not copy the cached parsed item, it will be
    * reconstructed on that copy */

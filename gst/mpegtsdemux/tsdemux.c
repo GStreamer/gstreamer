@@ -825,7 +825,7 @@ scan_keyframe_h264 (TSDemuxStream * stream, const guint8 * data,
         " we will push later");
 
     h264infos->framedata.data =
-        g_memdup (frame_unit.data + frame_unit.sc_offset,
+        g_memdup2 (frame_unit.data + frame_unit.sc_offset,
         stream->current_size - frame_unit.sc_offset);
     h264infos->framedata.size = stream->current_size - frame_unit.sc_offset;
   }

@@ -21,6 +21,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 #include <stdlib.h>
@@ -1113,7 +1116,7 @@ section_start:
     /* Only do fast-path if we have enough byte */
     if (data + section_length <= packet->data_end) {
       if ((section =
-              gst_mpegts_section_new (packet->pid, g_memdup (data,
+              gst_mpegts_section_new (packet->pid, g_memdup2 (data,
                       section_length), section_length))) {
         GST_DEBUG ("PID 0x%04x Short section complete !", packet->pid);
         section->offset = packet->offset;

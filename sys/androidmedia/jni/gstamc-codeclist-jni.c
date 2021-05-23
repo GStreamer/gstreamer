@@ -438,7 +438,7 @@ gint *gst_amc_codec_capabilities_handle_get_color_formats
     goto done;
   }
 
-  ret = g_memdup (elems, sizeof (jint) * len);
+  ret = g_memdup2 (elems, sizeof (jint) * len);
   *length = len;
 
 done:

@@ -1656,7 +1656,7 @@ mxf_dms1_identification_handle_tag (MXFMetadataBase * metadata,
     memcpy (self->identifier_kind, tag_data, tag_size);
     GST_DEBUG ("  identifier kind = %s", self->identifier_kind);
   } else if (memcmp (tag_ul, &identifier_value_ul, 16) == 0) {
-    self->identifier_value = g_memdup (tag_data, tag_size);
+    self->identifier_value = g_memdup2 (tag_data, tag_size);
     self->identifier_value_length = tag_size;
     GST_DEBUG ("  identifier value length = %u", tag_size);
   } else if (memcmp (tag_ul, &identification_locator_ul, 16) == 0) {

@@ -914,7 +914,7 @@ gst_amc_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
     guint8 *data;
 
     gst_buffer_map (codec_data, &minfo, GST_MAP_READ);
-    data = g_memdup (minfo.data, minfo.size);
+    data = g_memdup2 (minfo.data, minfo.size);
     self->codec_datas = g_list_prepend (self->codec_datas, data);
     gst_amc_format_set_buffer (format, "csd-0", data, minfo.size, &err);
     if (err)
@@ -946,7 +946,7 @@ gst_amc_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 
       fname = g_strdup_printf ("csd-%d", j);
       gst_buffer_map (buf, &minfo, GST_MAP_READ);
-      data = g_memdup (minfo.data, minfo.size);
+      data = g_memdup2 (minfo.data, minfo.size);
       self->codec_datas = g_list_prepend (self->codec_datas, data);
       gst_amc_format_set_buffer (format, fname, data, minfo.size, &err);
       if (err)

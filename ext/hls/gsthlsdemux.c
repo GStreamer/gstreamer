@@ -1280,7 +1280,7 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
   g_free (hlsdemux_stream->current_key);
   hlsdemux_stream->current_key = g_strdup (file->key);
   g_free (hlsdemux_stream->current_iv);
-  hlsdemux_stream->current_iv = g_memdup (file->iv, sizeof (file->iv));
+  hlsdemux_stream->current_iv = g_memdup2 (file->iv, sizeof (file->iv));
 
   g_free (stream->fragment.uri);
   stream->fragment.uri = g_strdup (file->uri);

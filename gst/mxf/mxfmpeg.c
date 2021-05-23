@@ -1321,7 +1321,7 @@ mxf_mpeg_video_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
         codec_data = gst_value_get_buffer (v);
         gst_buffer_map ((GstBuffer *) codec_data, &map, GST_MAP_READ);
         t->size = map.size;
-        t->data = g_memdup (map.data, map.size);
+        t->data = g_memdup2 (map.data, map.size);
         gst_buffer_unmap ((GstBuffer *) codec_data, &map);
         memcpy (&t->ul, &sony_mpeg4_extradata, 16);
         mxf_local_tag_insert (t, &MXF_METADATA_BASE (ret)->other_tags);

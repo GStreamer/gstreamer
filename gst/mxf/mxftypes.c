@@ -1706,7 +1706,7 @@ mxf_local_tag_add_to_hash_table (const MXFPrimerPack * primer,
     local_tag = g_slice_new0 (MXFLocalTag);
     memcpy (&local_tag->ul, ul, sizeof (MXFUL));
     local_tag->size = tag_size;
-    local_tag->data = tag_size == 0 ? NULL : g_memdup (tag_data, tag_size);
+    local_tag->data = tag_size == 0 ? NULL : g_memdup2 (tag_data, tag_size);
     local_tag->g_slice = FALSE;
 
     g_hash_table_insert (*hash_table, &local_tag->ul, local_tag);

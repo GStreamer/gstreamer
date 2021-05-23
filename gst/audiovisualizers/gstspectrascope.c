@@ -188,7 +188,7 @@ gst_spectra_scope_render (GstAudioVisualizer * bscope, GstBuffer * audio,
 
   channels = GST_AUDIO_INFO_CHANNELS (&bscope->ainfo);
 
-  mono_adata = (gint16 *) g_memdup (amap.data, amap.size);
+  mono_adata = g_memdup2 (amap.data, amap.size);
 
   if (channels > 1) {
     guint ch = channels;

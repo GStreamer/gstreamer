@@ -475,7 +475,7 @@ gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
   gst_amc_buffer_get_position_and_limit (&buf, NULL, &position, &limit);
   *size = limit;
 
-  *data = g_memdup (*data + position, limit);
+  *data = g_memdup2 (*data + position, limit);
 
   ret = TRUE;
 

@@ -451,7 +451,7 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
   faad->samplerate = info->samplerate;
   faad->channels = info->channels;
   g_free (faad->channel_positions);
-  faad->channel_positions = g_memdup (info->channel_position, faad->channels);
+  faad->channel_positions = g_memdup2 (info->channel_position, faad->channels);
 
   faad->bps = 16 / 8;
 

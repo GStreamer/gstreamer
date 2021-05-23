@@ -329,7 +329,7 @@ gst_amf_node_get_string (const GstAmfNode * node, gsize * out_size)
 
   if (out_size) {
     *out_size = size;
-    return g_memdup (data, size);
+    return g_memdup2 (data, size);
   } else {
     return g_strndup (data, size);
   }
@@ -444,9 +444,9 @@ gst_amf_node_set_string (GstAmfNode * node, const gchar * value, gssize size)
 
   if (size < 0) {
     size = strlen (value);
-    copy = g_memdup (value, size + 1);
+    copy = g_memdup2 (value, size + 1);
   } else {
-    copy = g_memdup (value, size);
+    copy = g_memdup2 (value, size);
   }
 
   gst_amf_node_take_string (node, copy, size);

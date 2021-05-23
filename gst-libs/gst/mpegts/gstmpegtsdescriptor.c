@@ -700,7 +700,7 @@ _copy_descriptor (GstMpegtsDescriptor * desc)
   GstMpegtsDescriptor *copy;
 
   copy = g_slice_dup (GstMpegtsDescriptor, desc);
-  copy->data = g_memdup (desc->data, desc->length + 2);
+  copy->data = g_memdup2 (desc->data, desc->length + 2);
 
   return copy;
 }
@@ -788,7 +788,7 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
     desc->tag = *data++;
     desc->length = *data++;
     /* Copy the data now that we known the size */
-    desc->data = g_memdup (desc->data, desc->length + 2);
+    desc->data = g_memdup2 (desc->data, desc->length + 2);
     GST_LOG ("descriptor 0x%02x length:%d", desc->tag, desc->length);
     GST_MEMDUMP ("descriptor", desc->data + 2, desc->length);
     /* extended descriptors */

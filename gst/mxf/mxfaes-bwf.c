@@ -211,7 +211,7 @@ mxf_metadata_wave_audio_essence_descriptor_handle_tag (MXFMetadataBase *
           mxf_timestamp_to_string (&self->peak_envelope_timestamp, str));
       break;
     case 0x3d31:
-      self->peak_envelope_data = g_memdup (tag_data, tag_size);
+      self->peak_envelope_data = g_memdup2 (tag_data, tag_size);
       self->peak_envelope_data_length = tag_size;
       GST_DEBUG ("  peak evelope data size = %u",
           self->peak_envelope_data_length);
@@ -507,7 +507,7 @@ mxf_metadata_wave_audio_essence_descriptor_write_tags (MXFMetadataBase * m,
     t = g_slice_new0 (MXFLocalTag);
     memcpy (&t->ul, &peak_envelope_data_ul, 16);
     t->size = self->peak_envelope_data_length;
-    t->data = g_memdup (self->peak_envelope_data, t->size);
+    t->data = g_memdup2 (self->peak_envelope_data, t->size);
     mxf_primer_pack_add_mapping (primer, 0x3d31, &t->ul);
     ret = g_list_prepend (ret, t);
   }
