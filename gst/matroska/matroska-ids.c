@@ -189,7 +189,7 @@ gst_matroska_parse_xiph_stream_headers (gpointer codec_data,
     if (offset + length[i] > codec_data_size)
       goto error;
 
-    hdr = gst_buffer_new_wrapped (g_memdup (p + offset, length[i]), length[i]);
+    hdr = gst_buffer_new_memdup (p + offset, length[i]);
     gst_buffer_list_add (list, hdr);
 
     offset += length[i];
@@ -228,12 +228,11 @@ gst_matroska_parse_speex_stream_headers (gpointer codec_data,
 
   list = gst_buffer_list_new ();
 
-  hdr = gst_buffer_new_wrapped (g_memdup (pdata, 80), 80);
+  hdr = gst_buffer_new_memdup (pdata, 80);
   gst_buffer_list_add (list, hdr);
 
   if (codec_data_size > 80) {
-    hdr = gst_buffer_new_wrapped (g_memdup (pdata + 80, codec_data_size - 80),
-        codec_data_size - 80);
+    hdr = gst_buffer_new_memdup (pdata + 80, codec_data_size - 80);
     gst_buffer_list_add (list, hdr);
   }
 
@@ -262,9 +261,7 @@ gst_matroska_parse_opus_stream_headers (gpointer codec_data,
 
   list = gst_buffer_list_new ();
 
-  hdr =
-      gst_buffer_new_wrapped (g_memdup (pdata, codec_data_size),
-      codec_data_size);
+  hdr = gst_buffer_new_memdup (pdata, codec_data_size);
   gst_buffer_list_add (list, hdr);
 
   return list;
@@ -294,7 +291,7 @@ gst_matroska_parse_flac_stream_headers (gpointer codec_data,
 
   list = gst_buffer_list_new ();
 
-  hdr = gst_buffer_new_wrapped (g_memdup (pdata, 4), 4);
+  hdr = gst_buffer_new_memdup (pdata, 4);
   gst_buffer_list_add (list, hdr);
 
   /* skip fLaC marker */
@@ -312,7 +309,7 @@ gst_matroska_parse_flac_stream_headers (gpointer codec_data,
       return NULL;
     }
 
-    hdr = gst_buffer_new_wrapped (g_memdup (pdata + off, len + 4), len + 4);
+    hdr = gst_buffer_new_memdup (pdata + off, len + 4);
     gst_buffer_list_add (list, hdr);
 
     off += 4 + len;

@@ -3845,8 +3845,7 @@ gst_matroska_demux_add_mpeg_seq_header (GstElement * element,
 
     GST_DEBUG_OBJECT (element, "Prepending MPEG sequence header");
 
-    newbuf = gst_buffer_new_wrapped (g_memdup (seq_header, seq_header_len),
-        seq_header_len);
+    newbuf = gst_buffer_new_memdup (seq_header, seq_header_len);
 
     gst_buffer_copy_into (newbuf, *buf, GST_BUFFER_COPY_TIMESTAMPS |
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_MEMORY, 0,
@@ -6386,9 +6385,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       if (size > sizeof (gst_riff_strf_vids)) { /* some extra_data */
         gsize offset = sizeof (gst_riff_strf_vids);
 
-        buf =
-            gst_buffer_new_wrapped (g_memdup ((guint8 *) vids + offset,
-                size - offset), size - offset);
+        buf = gst_buffer_new_memdup ((guint8 *) vids + offset, size - offset);
       }
 
       if (riff_fourcc)
@@ -6470,7 +6467,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     if (data) {
       GstBuffer *priv;
 
-      priv = gst_buffer_new_wrapped (g_memdup (data, size), size);
+      priv = gst_buffer_new_memdup (data, size);
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
       gst_buffer_unref (priv);
 
@@ -6519,7 +6516,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       gst_codec_utils_h264_caps_set_level_and_profile (caps, data + 1,
           size - 1);
 
-      priv = gst_buffer_new_wrapped (g_memdup (data, size), size);
+      priv = gst_buffer_new_memdup (data, size);
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
       gst_buffer_unref (priv);
 
@@ -6539,7 +6536,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       gst_codec_utils_h265_caps_set_level_tier_and_profile (caps, data + 1,
           size - 1);
 
-      priv = gst_buffer_new_wrapped (g_memdup (data, size), size);
+      priv = gst_buffer_new_memdup (data, size);
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
       gst_buffer_unref (priv);
 
@@ -6578,9 +6575,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       subformat = GST_READ_UINT32_BE (data + 0x1a);
       rformat = GST_READ_UINT32_BE (data + 0x1e);
 
-      priv =
-          gst_buffer_new_wrapped (g_memdup (data + 0x1a, size - 0x1a),
-          size - 0x1a);
+      priv = gst_buffer_new_memdup (data + 0x1a, size - 0x1a);
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, "format",
           G_TYPE_INT, rformat, "subformat", G_TYPE_INT, subformat, NULL);
       gst_buffer_unref (priv);
@@ -6612,7 +6607,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     if (data) {
       GstBuffer *priv;
 
-      priv = gst_buffer_new_wrapped (g_memdup (data, size), size);
+      priv = gst_buffer_new_memdup (data, size);
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
       gst_buffer_unref (priv);
     } else {
@@ -7012,8 +7007,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       }
 
       tmp =
-          gst_buffer_new_wrapped (g_memdup (context->codec_priv,
-              context->codec_priv_size), context->codec_priv_size);
+          gst_buffer_new_memdup (context->codec_priv, context->codec_priv_size);
       caps = gst_codec_utils_opus_create_caps_from_header (tmp, NULL);
       gst_buffer_unref (tmp);
       *codec_name = g_strdup ("Opus");
@@ -7103,8 +7097,8 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
         if (freq_index == 15)
           explicit_freq_bytes = 3;
         GST_DEBUG ("obj_type = %u, freq_index = %u", obj_type, freq_index);
-        priv = gst_buffer_new_wrapped (g_memdup (context->codec_priv,
-                context->codec_priv_size), context->codec_priv_size);
+        priv = gst_buffer_new_memdup (context->codec_priv,
+            context->codec_priv_size);
         /* assume SBR if samplerate <= 24kHz */
         if (obj_type == 5 || (freq_index >= 6 && freq_index != 15) ||
             (context->codec_priv_size == (5 + explicit_freq_bytes))) {
@@ -7234,8 +7228,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
             G_TYPE_INT, leaf_size, "width", G_TYPE_INT, sample_width, NULL);
 
         if ((size - 78) >= extra_data_size) {
-          priv = gst_buffer_new_wrapped (g_memdup (data + 78, extra_data_size),
-              extra_data_size);
+          priv = gst_buffer_new_memdup (data + 78, extra_data_size);
           gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
           gst_buffer_unref (priv);
         }
@@ -7337,7 +7330,7 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
   if (data != NULL && size > 0) {
     GstBuffer *buf;
 
-    buf = gst_buffer_new_wrapped (g_memdup (data, size), size);
+    buf = gst_buffer_new_memdup (data, size);
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buf, NULL);
     gst_buffer_unref (buf);
   }

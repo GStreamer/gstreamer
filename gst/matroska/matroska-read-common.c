@@ -797,7 +797,7 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
 
   DEBUG_ELEMENT_STOP (common, ebml, "AttachedFile", ret);
 
-  if (filename && mimetype && data && datalen > 0) {
+  if (filename && mimetype && data && datalen > 0 && datalen < G_MAXUINT) {
     GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
     GstBuffer *tagbuffer = NULL;
     GstSample *tagsample = NULL;
@@ -843,7 +843,7 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
 
     /* if this failed create an attachment buffer */
     if (!tagbuffer) {
-      tagbuffer = gst_buffer_new_wrapped (g_memdup (data, datalen), datalen);
+      tagbuffer = gst_buffer_new_memdup (data, datalen);
 
       caps = gst_type_find_helper_for_buffer (NULL, tagbuffer, NULL);
       if (caps == NULL)
