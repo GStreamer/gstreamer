@@ -2096,9 +2096,7 @@ setup_opus_mapper (GstOggStream * pad, ogg_packet * packet)
   GST_INFO ("Opus has a pre-skip of %" G_GINT64_FORMAT " samples",
       -pad->granule_offset);
 
-  buffer =
-      gst_buffer_new_wrapped (g_memdup (packet->packet, packet->bytes),
-      packet->bytes);
+  buffer = gst_buffer_new_memdup (packet->packet, packet->bytes);
   pad->caps = gst_codec_utils_opus_create_caps_from_header (buffer, NULL);
   gst_buffer_unref (buffer);
 

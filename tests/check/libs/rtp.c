@@ -2058,8 +2058,7 @@ create_feedback_buffer (gboolean with_padding)
       0x00, 0x14, 0x00, 0x02,
     };
 
-    return gst_buffer_new_wrapped (g_memdup (transport_wide_cc_padding_buffer,
-            sizeof (transport_wide_cc_padding_buffer)),
+    return gst_buffer_new_memdup (transport_wide_cc_padding_buffer,
         sizeof (transport_wide_cc_padding_buffer));
   } else {
     guint8 transport_wide_cc_buffer[36] = {
@@ -2073,8 +2072,7 @@ create_feedback_buffer (gboolean with_padding)
       0x14, 0x14, 0x15, 0x29,
       0x18, 0x12, 0x15, 0x16,
     };
-    return gst_buffer_new_wrapped (g_memdup (transport_wide_cc_buffer,
-            sizeof (transport_wide_cc_buffer)),
+    return gst_buffer_new_memdup (transport_wide_cc_buffer,
         sizeof (transport_wide_cc_buffer));
   }
 }
@@ -2090,8 +2088,7 @@ create_remb_buffer ()
     0x00, 0x0b, 0xd0, 0x90,
   };
 
-  return gst_buffer_new_wrapped (g_memdup (remb_buffer, sizeof (remb_buffer)),
-      sizeof (remb_buffer));
+  return gst_buffer_new_memdup (remb_buffer, sizeof (remb_buffer));
 }
 
 static gboolean
