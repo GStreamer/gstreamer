@@ -837,7 +837,7 @@ gst_wavparse_labl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
 
   /* parse data */
   labl->cue_point_id = GST_READ_UINT32_LE (data);
-  labl->text = g_memdup (data + 4, size - 4);
+  labl->text = g_strndup ((const gchar *) data + 4, size - 4);
 
   wav->labls = g_list_append (wav->labls, labl);
 
@@ -866,7 +866,7 @@ gst_wavparse_note_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
 
   /* parse data */
   note->cue_point_id = GST_READ_UINT32_LE (data);
-  note->text = g_memdup (data + 4, size - 4);
+  note->text = g_strndup ((const gchar *) data + 4, size - 4);
 
   wav->notes = g_list_append (wav->notes, note);
 
