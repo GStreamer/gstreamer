@@ -3922,7 +3922,7 @@ qtdemux_parse_pssh (GstQTDemux * qtdemux, GNode * node)
 
   gst_qtdemux_append_protection_system_id (qtdemux, sysid_string);
 
-  pssh = gst_buffer_new_wrapped (g_memdup (node->data, pssh_size), pssh_size);
+  pssh = gst_buffer_new_memdup (node->data, pssh_size);
   GST_LOG_OBJECT (qtdemux, "cenc pssh size: %" G_GSIZE_FORMAT,
       gst_buffer_get_size (pssh));
 
@@ -5635,7 +5635,7 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
         goto invalid_cdat;
       }
       *cclen = atom_length - 8;
-      res = g_memdup (data + 8, *cclen);
+      res = g_memdup2 (data + 8, *cclen);
       break;
     default:
       /* Keep this here in case other closed caption formats are added */
@@ -9143,7 +9143,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     goto corrupt_file;
 
   /* copy atom data into a new buffer for later use */
-  stream->stts.data = g_memdup (stream->stts.data, stream->stts.size);
+  stream->stts.data = g_memdup2 (stream->stts.data, stream->stts.size);
 
   /* skip version + flags */
   if (!gst_byte_reader_skip (&stream->stts, 1 + 3) ||
@@ -9166,7 +9166,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
           ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
-    stream->stss.data = g_memdup (stream->stss.data, stream->stss.size);
+    stream->stss.data = g_memdup2 (stream->stss.data, stream->stss.size);
 
     /* skip version + flags */
     if (!gst_byte_reader_skip (&stream->stss, 1 + 3) ||
@@ -9184,7 +9184,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
             ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
       /* copy atom data into a new buffer for later use */
-      stream->stps.data = g_memdup (stream->stps.data, stream->stps.size);
+      stream->stps.data = g_memdup2 (stream->stps.data, stream->stps.size);
 
       /* skip version + flags */
       if (!gst_byte_reader_skip (&stream->stps, 1 + 3) ||
@@ -9208,7 +9208,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     goto no_samples;
 
   /* copy atom data into a new buffer for later use */
-  stream->stsz.data = g_memdup (stream->stsz.data, stream->stsz.size);
+  stream->stsz.data = g_memdup2 (stream->stsz.data, stream->stsz.size);
 
   /* skip version + flags */
   if (!gst_byte_reader_skip (&stream->stsz, 1 + 3) ||
@@ -9226,7 +9226,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     goto corrupt_file;
 
   /* copy atom data into a new buffer for later use */
-  stream->stsc.data = g_memdup (stream->stsc.data, stream->stsc.size);
+  stream->stsc.data = g_memdup2 (stream->stsc.data, stream->stsc.size);
 
   /* skip version + flags */
   if (!gst_byte_reader_skip (&stream->stsc, 1 + 3) ||
@@ -9253,7 +9253,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     goto corrupt_file;
 
   /* copy atom data into a new buffer for later use */
-  stream->stco.data = g_memdup (stream->stco.data, stream->stco.size);
+  stream->stco.data = g_memdup2 (stream->stco.data, stream->stco.size);
 
   /* skip version + flags */
   if (!gst_byte_reader_skip (&stream->stco, 1 + 3))
@@ -9286,7 +9286,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     GstByteReader cslg = GST_BYTE_READER_INIT (NULL, 0);
 
     /* copy atom data into a new buffer for later use */
-    stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);
+    stream->ctts.data = g_memdup2 (stream->ctts.data, stream->ctts.size);
 
     /* skip version + flags */
     if (!gst_byte_reader_skip (&stream->ctts, 1 + 3)
@@ -10374,8 +10374,7 @@ qtdemux_parse_protection_aavd (GstQTDemux * qtdemux,
     return FALSE;
   }
   adrm_size = QT_UINT32 (adrm->data);
-  adrm_buf =
-      gst_buffer_new_wrapped (g_memdup (adrm->data, adrm_size), adrm_size);
+  adrm_buf = gst_buffer_new_memdup (adrm->data, adrm_size);
 
   stream->protection_scheme_type = FOURCC_aavd;
 
@@ -10943,24 +10942,25 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           case 0:
             break;
           case 2:
-            palette_data = g_memdup (ff_qt_default_palette_2, palette_size);
+            palette_data = g_memdup2 (ff_qt_default_palette_2, palette_size);
             break;
           case 4:
-            palette_data = g_memdup (ff_qt_default_palette_4, palette_size);
+            palette_data = g_memdup2 (ff_qt_default_palette_4, palette_size);
             break;
           case 16:
             if (gray)
               palette_data =
-                  g_memdup (ff_qt_grayscale_palette_16, palette_size);
+                  g_memdup2 (ff_qt_grayscale_palette_16, palette_size);
             else
-              palette_data = g_memdup (ff_qt_default_palette_16, palette_size);
+              palette_data = g_memdup2 (ff_qt_default_palette_16, palette_size);
             break;
           case 256:
             if (gray)
               palette_data =
-                  g_memdup (ff_qt_grayscale_palette_256, palette_size);
+                  g_memdup2 (ff_qt_grayscale_palette_256, palette_size);
             else
-              palette_data = g_memdup (ff_qt_default_palette_256, palette_size);
+              palette_data =
+                  g_memdup2 (ff_qt_default_palette_256, palette_size);
             break;
           default:
             GST_ELEMENT_WARNING (qtdemux, STREAM, DEMUX,
@@ -13455,7 +13455,7 @@ qtdemux_parse_redirects (GstQTDemux * qtdemux)
           if (ref.location != NULL) {
             GST_INFO_OBJECT (qtdemux, "New location: %s", ref.location);
             redirects =
-                g_list_prepend (redirects, g_memdup (&ref, sizeof (ref)));
+                g_list_prepend (redirects, g_memdup2 (&ref, sizeof (ref)));
           } else {
             GST_WARNING_OBJECT (qtdemux,
                 "Failed to extract redirect location from rdrf atom");
@@ -13729,7 +13729,7 @@ parse_xiph_stream_headers (GstQTDemux * qtdemux, gpointer codec_data,
     if (offset + length[i] > codec_data_size)
       goto error;
 
-    hdr = gst_buffer_new_wrapped (g_memdup (p + offset, length[i]), length[i]);
+    hdr = gst_buffer_new_memdup (p + offset, length[i]);
     list = g_list_append (list, hdr);
 
     offset += length[i];
