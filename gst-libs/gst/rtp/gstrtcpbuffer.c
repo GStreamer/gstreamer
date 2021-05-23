@@ -84,7 +84,7 @@ gst_rtcp_buffer_new_take_data (gpointer data, guint len)
 GstBuffer *
 gst_rtcp_buffer_new_copy_data (gconstpointer data, guint len)
 {
-  return gst_rtcp_buffer_new_take_data (g_memdup (data, len), len);
+  return gst_rtcp_buffer_new_take_data (g_memdup2 (data, len), len);
 }
 
 static gboolean
@@ -1213,7 +1213,7 @@ gst_rtcp_packet_copy_profile_specific_ext (GstRTCPPacket * packet,
     if (data != NULL) {
       guint8 *ptr = packet->rtcp->map.data + packet->offset;
       ptr += ((packet->length + 1 - pse_len) * sizeof (guint32));
-      *data = g_memdup (ptr, pse_len * sizeof (guint32));
+      *data = g_memdup2 (ptr, pse_len * sizeof (guint32));
     }
 
     return TRUE;

@@ -420,7 +420,7 @@ push_buffer (GstAlsaMidiSrc * alsamidisrc, gpointer data, guint size,
   GST_BUFFER_DTS (buffer) = time;
   GST_BUFFER_PTS (buffer) = time;
 
-  local_data = g_memdup (data, size);
+  local_data = g_memdup2 (data, size);
 
   gst_buffer_append_memory (buffer,
       gst_memory_new_wrapped (0, local_data, size, 0, size, local_data,

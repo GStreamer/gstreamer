@@ -527,6 +527,10 @@ if gst_version_nano == 0
   endif
 endif
 
+if gio_dep.version().version_compare('< 2.67.4')
+  core_conf.set('g_memdup2(ptr,sz)', '(G_LIKELY(((guint64)(sz)) < G_MAXUINT)) ? g_memdup(ptr,sz) : (g_abort(),NULL)')
+endif
+
 # Use core_conf after all subdirs have set values
 configure_file(output : 'config.h', configuration : core_conf)
 

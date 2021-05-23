@@ -1031,7 +1031,7 @@ gst_buffer_add_video_caption_meta (GstBuffer * buffer,
   g_return_val_if_fail (meta != NULL, NULL);
 
   meta->caption_type = caption_type;
-  meta->data = g_memdup (data, size);
+  meta->data = g_memdup2 (data, size);
   meta->size = size;
 
   return meta;

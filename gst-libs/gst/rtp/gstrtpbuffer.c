@@ -184,7 +184,7 @@ gst_rtp_buffer_new_take_data (gpointer data, gsize len)
 GstBuffer *
 gst_rtp_buffer_new_copy_data (gconstpointer data, gsize len)
 {
-  return gst_rtp_buffer_new_take_data (g_memdup (data, len), len);
+  return gst_rtp_buffer_new_take_data (g_memdup2 (data, len), len);
 }
 
 /**

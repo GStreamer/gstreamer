@@ -87,7 +87,7 @@ _ogg_packet_copy (const ogg_packet * packet)
   ogg_packet *ret = g_slice_new (ogg_packet);
 
   *ret = *packet;
-  ret->packet = g_memdup (packet->packet, packet->bytes);
+  ret->packet = g_memdup2 (packet->packet, packet->bytes);
 
   return ret;
 }
@@ -105,9 +105,9 @@ gst_ogg_page_copy (ogg_page * page)
   ogg_page *p = g_slice_new (ogg_page);
 
   /* make a copy of the page */
-  p->header = g_memdup (page->header, page->header_len);
+  p->header = g_memdup2 (page->header, page->header_len);
   p->header_len = page->header_len;
-  p->body = g_memdup (page->body, page->body_len);
+  p->body = g_memdup2 (page->body, page->body_len);
   p->body_len = page->body_len;
 
   return p;

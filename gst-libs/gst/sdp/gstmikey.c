@@ -66,7 +66,7 @@ G_STMT_START {                    \
 #define INIT_MEMDUP(field, data, len)            \
 G_STMT_START {                                   \
   g_free ((field));                              \
-  (field) = g_memdup (data, len);                \
+  (field) = g_memdup2 (data, len);                \
 } G_STMT_END
 #define FREE_MEMDUP(field)                       \
 G_STMT_START {                                   \

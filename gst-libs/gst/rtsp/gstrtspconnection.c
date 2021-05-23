@@ -4519,7 +4519,7 @@ gst_rtsp_watch_write_serialized_messages (GstRTSPWatch * watch,
      * we don't own them here */
     if (local_message.body_data) {
       local_message.body_data =
-          g_memdup (local_message.body_data, local_message.body_data_size);
+          g_memdup2 (local_message.body_data, local_message.body_data_size);
     } else if (local_message.body_buffer) {
       gst_buffer_ref (local_message.body_buffer);
     }

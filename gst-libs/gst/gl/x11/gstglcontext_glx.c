@@ -512,7 +512,7 @@ fb_config_attributes_from_structure (GstStructure * config)
       None
     };
 
-    return g_memdup (attribs, sizeof (attribs));
+    return g_memdup2 (attribs, sizeof (attribs));
   }
 
   n = gst_structure_n_fields (config) * 2 + 1;
