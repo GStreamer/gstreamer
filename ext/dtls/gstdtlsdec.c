@@ -425,7 +425,7 @@ static void
 on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
     guint auth, GstDtlsDec * self)
 {
-  gpointer key_dup;
+  GstBuffer *new_decoder_key;
   gchar *key_str;
 
   g_return_if_fail (GST_IS_DTLS_DEC (self));
@@ -433,15 +433,12 @@ on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
   self->srtp_cipher = cipher;
   self->srtp_auth = auth;
 
-  key_dup = g_memdup (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
+  new_decoder_key = gst_buffer_new_copy (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
 
-  if (self->decoder_key) {
+  if (self->decoder_key)
     gst_buffer_unref (self->decoder_key);
-    self->decoder_key = NULL;
-  }
 
-  self->decoder_key =
-      gst_buffer_new_wrapped (key_dup, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
+  self->decoder_key = new_decoder_key;
 
   key_str = g_base64_encode (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
   GST_INFO_OBJECT (self, "received key: %s", key_str);

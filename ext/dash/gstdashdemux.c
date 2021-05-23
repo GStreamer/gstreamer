@@ -897,7 +897,7 @@ gst_dash_demux_send_content_protection_event (gpointer data, gpointer userdata)
   schemeIdUri = g_ascii_strdown (cp->schemeIdUri, -1);
   if (g_str_has_prefix (schemeIdUri, "urn:uuid:")) {
     pssi_len = strlen (cp->value);
-    pssi = gst_buffer_new_wrapped (g_memdup (cp->value, pssi_len), pssi_len);
+    pssi = gst_buffer_new_copy (cp->value, pssi_len);
     GST_LOG_OBJECT (stream, "Queuing Protection event on source pad");
     /* RFC 4122 states that the hex part of a UUID is in lower case,
      * but some streams seem to ignore this and use upper case for the

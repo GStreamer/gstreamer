@@ -398,8 +398,7 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   /* raw */
   if (transmux == 0) {
     GstBuffer *codec_data =
-        gst_buffer_new_wrapped (g_memdup (enc_info.confBuf, enc_info.confSize),
-        enc_info.confSize);
+        gst_buffer_new_copy (enc_info.confBuf, enc_info.confSize);
     gst_caps_set_simple (src_caps, "codec_data", GST_TYPE_BUFFER, codec_data,
         "stream-format", G_TYPE_STRING, "raw", NULL);
     gst_buffer_unref (codec_data);

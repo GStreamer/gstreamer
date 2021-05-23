@@ -754,8 +754,7 @@ gst_av1_enc_process (GstAV1Enc * encoder)
       }
 
       frame->output_buffer =
-          gst_buffer_new_wrapped (g_memdup (pkt->data.frame.buf,
-              pkt->data.frame.sz), pkt->data.frame.sz);
+          gst_buffer_new_copy (pkt->data.frame.buf, pkt->data.frame.sz);
 
       if ((pkt->data.frame.flags & AOM_FRAME_IS_DROPPABLE) != 0)
         GST_BUFFER_FLAG_SET (frame->output_buffer, GST_BUFFER_FLAG_DROPPABLE);

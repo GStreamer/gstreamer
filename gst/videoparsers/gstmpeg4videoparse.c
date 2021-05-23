@@ -304,7 +304,7 @@ gst_mpeg4vparse_process_config (GstMpeg4VParse * mp4vparse,
   if (mp4vparse->config != NULL)
     gst_buffer_unref (mp4vparse->config);
 
-  mp4vparse->config = gst_buffer_new_wrapped (g_memdup (data, size), size);
+  mp4vparse->config = gst_buffer_new_copy (data, size);
 
   /* trigger src caps update */
   mp4vparse->update_caps = TRUE;
