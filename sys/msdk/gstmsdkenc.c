@@ -105,6 +105,9 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 #define PROP_ADAPTIVE_I_DEFAULT          MFX_CODINGOPTION_OFF
 #define PROP_ADAPTIVE_B_DEFAULT          MFX_CODINGOPTION_OFF
 
+/* External coding properties */
+#define EC_PROPS_STRUCT_NAME             "props"
+
 #define gst_msdkenc_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkEnc, gst_msdkenc, GST_TYPE_VIDEO_ENCODER);
 
@@ -211,6 +214,124 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
       GST_ERROR ("Unsupported RateControl!");
       break;
   }
+}
+
+static gint16
+coding_option_get_value (const gchar * key, const gchar * nickname)
+{
+  if (!g_strcmp0 (nickname, "on")) {
+    return MFX_CODINGOPTION_ON;
+  } else if (!g_strcmp0 (nickname, "off")) {
+    return MFX_CODINGOPTION_OFF;
+  } else if (!g_strcmp0 (nickname, "auto")) {
+    return MFX_CODINGOPTION_UNKNOWN;
+  }
+
+  GST_ERROR ("\"%s\" illegal option \"%s\", set to \"off\"", key, nickname);
+
+  return MFX_CODINGOPTION_OFF;
+}
+
+static gboolean
+structure_transform (const GstStructure * src, GstStructure * dst)
+{
+  guint len;
+  GValue dst_value = G_VALUE_INIT;
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (src != NULL, FALSE);
+  g_return_val_if_fail (dst != NULL, FALSE);
+
+  len = gst_structure_n_fields (src);
+
+  for (guint i = 0; i < len; i++) {
+    const gchar *key = gst_structure_nth_field_name (src, i);
+    const GValue *src_value = gst_structure_get_value (src, key);
+
+    if (!gst_structure_has_field (dst, key)) {
+      GST_ERROR ("structure \"%s\" does not support \"%s\"",
+          gst_structure_get_name (dst), key);
+      ret = FALSE;
+      continue;
+    }
+
+    g_value_init (&dst_value, gst_structure_get_field_type (dst, key));
+
+    if (g_value_transform (src_value, &dst_value)) {
+      gst_structure_set_value (dst, key, &dst_value);
+    } else {
+      GST_ERROR ("\"%s\" transform %s to %s failed", key,
+          G_VALUE_TYPE_NAME (src_value), G_VALUE_TYPE_NAME (&dst_value));
+      ret = FALSE;
+    }
+
+    g_value_unset (&dst_value);
+  }
+
+  return ret;
+}
+
+/* Supported types: gchar*, gboolean, gint, guint, gfloat, gdouble */
+static gboolean
+structure_get_value (const GstStructure * s, const gchar * key, gpointer value)
+{
+  const GValue *gvalue = gst_structure_get_value (s, key);
+  if (!gvalue) {
+    GST_ERROR ("structure \"%s\" does not support \"%s\"",
+        gst_structure_get_name (s), key);
+    return FALSE;
+  }
+
+  switch (G_VALUE_TYPE (gvalue)) {
+    case G_TYPE_STRING:{
+      const gchar **val = (const gchar **) value;
+      *val = g_value_get_string (gvalue);
+      break;
+    }
+    case G_TYPE_BOOLEAN:{
+      gboolean *val = (gboolean *) value;
+      *val = g_value_get_boolean (gvalue);
+      break;
+    }
+    case G_TYPE_INT:{
+      gint *val = (gint *) value;
+      *val = g_value_get_int (gvalue);
+      break;
+    }
+    case G_TYPE_UINT:{
+      guint *val = (guint *) value;
+      *val = g_value_get_uint (gvalue);
+      break;
+    }
+    case G_TYPE_FLOAT:{
+      gfloat *val = (gfloat *) value;
+      *val = g_value_get_float (gvalue);
+      break;
+    }
+    case G_TYPE_DOUBLE:{
+      gdouble *val = (gdouble *) value;
+      *val = g_value_get_double (gvalue);
+      break;
+    }
+    default:
+      GST_ERROR ("\"%s\" unsupported type %s", key, G_VALUE_TYPE_NAME (gvalue));
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+ext_coding_props_get_value (GstMsdkEnc * thiz,
+    const gchar * key, gpointer value)
+{
+  gboolean ret;
+  if (!(ret = structure_get_value (thiz->ext_coding_props, key, value))) {
+    GST_ERROR_OBJECT (thiz, "structure \"%s\" failed to get value for \"%s\"",
+        gst_structure_get_name (thiz->ext_coding_props), key);
+  }
+
+  return ret;
 }
 
 void
@@ -1874,6 +1995,8 @@ gst_msdkenc_dispose (GObject * object)
   gst_clear_object (&thiz->msdk_converted_pool);
   gst_clear_object (&thiz->old_context);
 
+  gst_clear_structure (&thiz->ext_coding_props);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -1967,6 +2090,8 @@ gst_msdkenc_init (GstMsdkEnc * thiz)
   thiz->mbbrc = PROP_MBBRC_DEFAULT;
   thiz->adaptive_i = PROP_ADAPTIVE_I_DEFAULT;
   thiz->adaptive_b = PROP_ADAPTIVE_B_DEFAULT;
+
+  thiz->ext_coding_props = gst_structure_new (EC_PROPS_STRUCT_NAME, NULL);
 }
 
 /* gst_msdkenc_set_common_property:
@@ -2063,6 +2188,16 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
     case GST_MSDKENC_PROP_ADAPTIVE_B:
       thiz->adaptive_b = g_value_get_enum (value);
       break;
+    case GST_MSDKENC_PROP_EXT_CODING_PROPS:
+    {
+      const GstStructure *s = gst_value_get_structure (value);
+      const gchar *name = gst_structure_get_name (s);
+      gst_structure_set_name (thiz->ext_coding_props, name);
+      if (!structure_transform (s, thiz->ext_coding_props)) {
+        GST_ERROR_OBJECT (thiz, "failed to transform structure");
+      }
+      break;
+    }
     default:
       ret = FALSE;
       break;
@@ -2155,6 +2290,9 @@ gst_msdkenc_get_common_property (GObject * object, guint prop_id,
       break;
     case GST_MSDKENC_PROP_ADAPTIVE_B:
       g_value_set_enum (value, thiz->adaptive_b);
+      break;
+    case GST_MSDKENC_PROP_EXT_CODING_PROPS:
+      gst_value_set_structure (value, thiz->ext_coding_props);
       break;
     default:
       ret = FALSE;
@@ -2297,6 +2435,29 @@ gst_msdkenc_install_common_properties (GstMsdkEncClass * klass)
       "Adaptive B-Frame Insertion control",
       gst_msdkenc_adaptive_b_get_type (),
       PROP_ADAPTIVE_B_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstMsdkEnc:ext-coding-props
+   *
+   * The properties for the external coding.
+   *
+   * Supported properties:
+   * ```
+   * ```
+   *
+   * Example:
+   * ```
+   * ext-coding-props="props,"
+   * ```
+   *
+   * Since: 1.20
+   *
+   */
+  obj_properties[GST_MSDKENC_PROP_EXT_CODING_PROPS] =
+      g_param_spec_boxed ("ext-coding-props", "External coding properties",
+      "The properties for the external coding, refer to the hotdoc for the "
+      "supported properties",
+      GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class,
       GST_MSDKENC_PROP_MAX, obj_properties);

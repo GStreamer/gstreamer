@@ -83,6 +83,7 @@ enum
   GST_MSDKENC_PROP_MBBRC,
   GST_MSDKENC_PROP_ADAPTIVE_I,
   GST_MSDKENC_PROP_ADAPTIVE_B,
+  GST_MSDKENC_PROP_EXT_CODING_PROPS,
   GST_MSDKENC_PROP_MAX,
 };
 
@@ -157,6 +158,8 @@ struct _GstMsdkEnc
   gint16 mbbrc;
   gint16 adaptive_i;
   gint16 adaptive_b;
+
+  GstStructure *ext_coding_props;
 
   gboolean reconfig;
 
