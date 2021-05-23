@@ -930,7 +930,7 @@ gst_wavparse_adtl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
     ltag = GST_READ_UINT32_LE (data + offset);
     lsize = GST_READ_UINT32_LE (data + offset + 4);
 
-    if (lsize + 8 > size) {
+    if (lsize > (G_MAXUINT - 8) || lsize + 8 > size) {
       GST_WARNING_OBJECT (wav, "Invalid adtl size: %u + 8 > %u", lsize, size);
       return FALSE;
     }
