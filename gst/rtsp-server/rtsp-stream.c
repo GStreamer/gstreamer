@@ -5986,9 +5986,7 @@ handle_mikey_data (GstRTSPStream * stream, guint8 * data, gsize size)
   pkd = (const GstMIKEYPayloadKeyData *)
       gst_mikey_payload_kemac_get_sub (&kemac->pt, 0);
 
-  key =
-      gst_buffer_new_wrapped (g_memdup (pkd->key_data, pkd->key_len),
-      pkd->key_len);
+  key = gst_buffer_new_memdup (pkd->key_data, pkd->key_len);
 
   /* go over all crypto sessions and create the security policy for each
    * SSRC */
