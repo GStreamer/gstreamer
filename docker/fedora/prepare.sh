@@ -22,6 +22,7 @@ dnf install -y \
     aalib-devel \
     aom \
     bat \
+    intel-mediasdk-devel \
     libaom \
     libaom-devel \
     libcaca-devel \
