@@ -383,10 +383,12 @@ manifest:
     # to avoid wasting CI resources
     - if: '$CI_MERGE_REQUEST_ASSIGNEES != "gstreamer-merge-bot"'
       when: 'manual'
+      allow_failure: false
     # If this matches, it means the pipeline is running against either the main
     # or a stable branch, so make it manual
     - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: 'manual'
+      allow_failure: false
 
   stage: 'preparation'
   script:
