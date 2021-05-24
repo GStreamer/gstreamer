@@ -357,6 +357,9 @@ _pad_obscures_rectangle (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad,
 {
   GstVideoRectangle pad_rect;
   GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
+  GstStructure *converter_config = NULL;
+  gboolean fill_border = TRUE;
+  guint32 border_argb = 0xff000000;
 
   /* No buffer to obscure the rectangle with */
   if (!gst_video_aggregator_pad_has_current_buffer (pad))
@@ -367,6 +370,20 @@ _pad_obscures_rectangle (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad,
    * opaque, so assume it doesn't obscure
    */
   if (cpad->alpha != 1.0 || GST_VIDEO_INFO_HAS_ALPHA (&pad->info))
+    return FALSE;
+
+  /* If a converter-config is set and it is either configured to not fill any
+   * borders, or configured to use a non-opaque color, then we have to handle
+   * the pad as potentially containing transparency */
+  g_object_get (pad, "converter-config", &converter_config, NULL);
+  if (converter_config) {
+    gst_structure_get (converter_config, GST_VIDEO_CONVERTER_OPT_BORDER_ARGB,
+        G_TYPE_UINT, &border_argb, NULL);
+    gst_structure_get (converter_config, GST_VIDEO_CONVERTER_OPT_FILL_BORDER,
+        G_TYPE_BOOLEAN, &fill_border, NULL);
+  }
+  gst_clear_structure (&converter_config);
+  if (!fill_border || (border_argb & 0xff000000) != 0xff000000)
     return FALSE;
 
   pad_rect.x = cpad->xpos;
