@@ -1216,7 +1216,8 @@ gst_structure_get_value_as_string (GstStructure * structure,
 
 gchar *
 gst_validate_replace_variables_in_string (gpointer source,
-    GstStructure * local_vars, const gchar * in_string)
+    GstStructure * local_vars, const gchar * in_string,
+    GstValidateStructureResolveVariablesFlags flags)
 {
   gint varname_len;
   GMatchInfo *match_info = NULL;
@@ -1246,20 +1247,24 @@ gst_validate_replace_variables_in_string (gpointer source,
         if (local_vars)
           var_value = gst_structure_get_value_as_string (local_vars, varname);
 
-        if (!var_value)
+        if (!var_value
+            && !(flags & GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_LOCAL_ONLY))
           var_value = gst_structure_get_value_as_string (global_vars, varname);
+      }
 
-        if (!var_value) {
+      if (!var_value) {
+        if (!(flags & GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_FAILURE)) {
           gst_validate_error_structure (source,
               "Trying to use undefined variable `%s`.\n"
               "  Available vars:\n"
               "    - locals%s\n"
               "    - globals%s\n",
               varname, gst_structure_to_string (local_vars),
-              gst_structure_to_string (global_vars));
-
-          return NULL;
+              (flags & GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_LOCAL_ONLY) ?
+              ": unused" : gst_structure_to_string (global_vars));
         }
+
+        return NULL;
       }
 
       tmp = g_strdup_printf ("\\$\\(%s\\)", varname);
@@ -1290,6 +1295,7 @@ typedef struct
 {
   gpointer source;
   GstStructure *local_vars;
+  GstValidateStructureResolveVariablesFlags flags;
 } ReplaceData;
 
 static void
@@ -1354,22 +1360,24 @@ _structure_set_variables (GQuark field_id, GValue * value, ReplaceData * data)
 
   str =
       gst_validate_replace_variables_in_string (data->source, data->local_vars,
-      g_value_get_string (value));
+      g_value_get_string (value), data->flags);
   if (str) {
     g_value_set_string (value, str);
     g_free (str);
   }
 
-  _resolve_expression (data->source, value);
+  if (!(data->flags & GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_EXPRESSION))
+    _resolve_expression (data->source, value);
 
   return TRUE;
 }
 
 void
 gst_validate_structure_resolve_variables (gpointer source,
-    GstStructure * structure, GstStructure * local_variables)
+    GstStructure * structure, GstStructure * local_variables,
+    GstValidateStructureResolveVariablesFlags flags)
 {
-  ReplaceData d = { source ? source : structure, local_variables };
+  ReplaceData d = { source ? source : structure, local_variables, flags };
 
   gst_structure_filter_and_map_in_place (structure,
       (GstStructureFilterMapFunc) _structure_set_variables, &d);

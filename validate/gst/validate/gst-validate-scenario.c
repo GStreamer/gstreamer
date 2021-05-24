@@ -875,7 +875,7 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
     _update_well_known_vars (scenario);
     strval =
         gst_validate_replace_variables_in_string (action, scenario->priv->vars,
-        tmpvalue);
+        tmpvalue, GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_ALL);
     if (!strval)
       return FALSE;
 
@@ -3676,7 +3676,7 @@ gst_validate_action_setup_repeat (GstValidateScenario * scenario,
 
   repeat_expr = gst_validate_replace_variables_in_string (action,
       scenario->priv->vars, gst_structure_get_string (action->structure,
-          "repeat"));
+          "repeat"), GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_ALL);
   if (!repeat_expr) {
     gst_validate_error_structure (action, "Invalid value for 'repeat'");
     return FALSE;
@@ -3731,7 +3731,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
         GST_VALIDATE_ACTION_RANGE_NAME (action) : "repeat", G_TYPE_INT,
         action->repeat, NULL);
   gst_validate_structure_resolve_variables (action, action->structure,
-      scenario->priv->vars);
+      scenario->priv->vars, GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_ALL);
   for (i = 0; type->parameters[i].name; i++) {
     if (type->parameters[i].types
         && g_str_has_suffix (type->parameters[i].types, "(GstClockTime)"))

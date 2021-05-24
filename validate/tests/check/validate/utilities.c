@@ -8,7 +8,7 @@ GST_START_TEST (test_resolve_variables)
       gst_structure_from_string ("vars, a=(string)1, b=(string)2", NULL);
   GstStructure *s2 = gst_structure_from_string ("test, n=\"$(a)/$(b)\"", NULL);
 
-  gst_validate_structure_resolve_variables (NULL, s2, s1);
+  gst_validate_structure_resolve_variables (NULL, s2, s1, 0);
   fail_unless_equals_string (gst_structure_get_string (s2, "n"), "1/2");
   gst_structure_free (s1);
   gst_structure_free (s2);

@@ -202,11 +202,11 @@ create_config (const gchar * config)
       gst_structure_free (structure);
     } else if (!loaded_globals
         && gst_structure_has_name (structure, "set-globals")) {
-      gst_validate_structure_resolve_variables (NULL, structure, local_vars);
+      gst_validate_structure_resolve_variables (NULL, structure, local_vars, 0);
       gst_validate_set_globals (structure);
       gst_structure_free (structure);
     } else {
-      gst_validate_structure_resolve_variables (NULL, structure, local_vars);
+      gst_validate_structure_resolve_variables (NULL, structure, local_vars, 0);
       all_configs = g_list_append (all_configs, structure);
     }
   }
@@ -621,7 +621,7 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   gst_validate_scenario_check_and_set_needs_clock_sync (testfile_structs, &res);
 
   gst_validate_set_test_file_globals (res, testfile, use_fakesinks);
-  gst_validate_structure_resolve_variables (NULL, res, NULL);
+  gst_validate_structure_resolve_variables (NULL, res, NULL, 0);
 
   tool = gst_structure_get_string (res, "tool");
   if (!tool)
