@@ -9,6 +9,14 @@ if cc.get_id() == 'msvc'
       language : 'c')
 endif
 
+gst_version = meson.project_version()
+version_arr = gst_version.split('.')
+
+gst_version_major = version_arr[0].to_int()
+gst_version_minor = version_arr[1].to_int()
+
+gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
+
 glib_dep = dependency('glib-2.0', version: '>= 2.38',
     fallback: ['glib', 'libglib_dep'])
 gio_dep = dependency('gio-2.0',
@@ -18,16 +26,18 @@ gobject_dep = dependency('gobject-2.0', version: '>= 2.38',
 gmodule_dep = dependency('gmodule-2.0',
     fallback: ['glib', 'libgmodule_dep'])
 
-gst_dep = dependency('gstreamer-1.0',
+gst_dep = dependency('gstreamer-1.0', version: gst_req,
     fallback : ['gstreamer', 'gst_dep'])
-gstplay_dep = dependency('gstreamer-play-1.0', version: '>= 1.19.0.1',
+gstplay_dep = dependency('gstreamer-play-1.0', version: gst_req,
     fallback: ['gst-plugins-bad', 'gstplay_dep'])
-gsttag_dep = dependency('gstreamer-tag-1.0',
+gsttag_dep = dependency('gstreamer-tag-1.0', version: gst_req,
     fallback: ['gst-plugins-base', 'tag_dep'])
-gstwebrtc_dep = dependency('gstreamer-webrtc-1.0', version: '>= 1.14.0',
+gstwebrtc_dep = dependency('gstreamer-webrtc-1.0', version: gst_req,
     fallback: ['gst-plugins-bad', 'gstwebrtc_dep'])
-gstsdp_dep = dependency('gstreamer-webrtc-1.0',
-    fallback : ['gst-plugins-bad', 'gstwebrtc_dep'])
+gstsdp_dep = dependency('gstreamer-sdp-1.0', version : gst_req,
+    fallback : ['gst-plugins-base', 'sdp_dep'])
+gstrtp_dep = dependency('gstreamer-rtp-1.0', version : gst_req,
+    fallback : ['gst-plugins-base', 'rtp_dep'])
 
 subdir('playback')
 subdir('network')
