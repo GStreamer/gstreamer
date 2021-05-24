@@ -923,12 +923,12 @@ GST_START_TEST (test_wrapped_bytes)
 
 GST_END_TEST;
 
-GST_START_TEST (test_new_copy)
+GST_START_TEST (test_new_memdup)
 {
   GstBuffer *buf;
   GstMemory *mem;
 
-  buf = gst_buffer_new_copy (ro_memory, sizeof (ro_memory));
+  buf = gst_buffer_new_memdup (ro_memory, sizeof (ro_memory));
 
   fail_if (gst_buffer_memcmp (buf, 0, ro_memory, sizeof (ro_memory)));
   fail_unless_equals_int (gst_buffer_get_size (buf), sizeof (ro_memory));
@@ -969,7 +969,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_parent_buffer_meta);
   tcase_add_test (tc_chain, test_writable_memory);
   tcase_add_test (tc_chain, test_wrapped_bytes);
-  tcase_add_test (tc_chain, test_new_copy);
+  tcase_add_test (tc_chain, test_new_memdup);
 
   return s;
 }

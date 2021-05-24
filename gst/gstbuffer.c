@@ -1040,7 +1040,7 @@ gst_buffer_new_wrapped_bytes (GBytes * bytes)
 }
 
 /**
- * gst_buffer_new_copy:
+ * gst_buffer_new_memdup:
  * @data: (array length=size) (element-type guint8) (transfer none): data to copy into new buffer
  * @size: size of @data in bytes
  *
@@ -1051,7 +1051,7 @@ gst_buffer_new_wrapped_bytes (GBytes * bytes)
  * Since: 1.20
  */
 GstBuffer *
-gst_buffer_new_copy (gconstpointer data, gsize size)
+gst_buffer_new_memdup (gconstpointer data, gsize size)
 {
   gpointer data2 = g_memdup (data, size);
 

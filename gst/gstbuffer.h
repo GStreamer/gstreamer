@@ -319,7 +319,7 @@ GST_API
 GstBuffer * gst_buffer_new_wrapped_bytes   (GBytes * bytes);
 
 GST_API
-GstBuffer * gst_buffer_new_copy            (gconstpointer data, gsize size);
+GstBuffer * gst_buffer_new_memdup           (gconstpointer data, gsize size);
 
 /* memory blocks */
 
