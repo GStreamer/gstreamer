@@ -164,11 +164,10 @@ structure_set_fields (GQuark field_id, GValue * value, StructureValues * data)
   return TRUE;
 }
 
-static gchar *
-validate_flow_structure_to_string (const GstStructure * structure,
+static GstStructure *
+validate_flow_structure_cleanup (const GstStructure * structure,
     gchar ** wanted_fields, gchar ** ignored_fields)
 {
-  gchar *res;
   GstStructure *nstructure;
   StructureValues d = {
     .fields = NULL,
@@ -188,39 +187,31 @@ validate_flow_structure_to_string (const GstStructure * structure,
   }
 
   g_list_free (d.fields);
-  res = gst_structure_to_string (nstructure);
-  gst_structure_free (nstructure);
 
-  return res;
-}
-
-static void
-gpointer_free (gpointer pointer_location)
-{
-  g_free (*(void **) pointer_location);
+  return nstructure;
 }
 
 gchar *
 validate_flow_format_caps (const GstCaps * caps, gchar ** wanted_fields)
 {
   guint i;
-  GArray *structures_strv = g_array_new (TRUE, FALSE, sizeof (gchar *));
+  GstCaps *new_caps = gst_caps_new_empty ();
   gchar *caps_str;
-
-  g_array_set_clear_func (structures_strv, gpointer_free);
 
   /* A single GstCaps can contain several caps structures (although only one is
    * used in most cases). We will print them separated with spaces. */
   for (i = 0; i < gst_caps_get_size (caps); i++) {
-    gchar *structure_str =
-        validate_flow_structure_to_string (gst_caps_get_structure (caps, i),
+    GstStructure *structure =
+        validate_flow_structure_cleanup (gst_caps_get_structure (caps, i),
         wanted_fields, NULL);
 
-    g_array_append_val (structures_strv, structure_str);
+    gst_caps_append_structure_full (new_caps, structure,
+        gst_caps_features_copy (gst_caps_get_features (caps, i)));
   }
 
-  caps_str = g_strjoinv (" ", (gchar **) structures_strv->data);
-  g_array_free (structures_strv, TRUE);
+  caps_str = gst_caps_to_string (new_caps);
+  gst_caps_unref (new_caps);
+
   return caps_str;
 }
 
@@ -423,17 +414,22 @@ validate_flow_format_event (GstEvent * event,
     structure_string =
         validate_flow_format_caps (caps,
         logged_fields ? logged_fields : (gchar **) caps_properties);
+    /* FIXME: Remove spurious `;` and regenerate all the expectation files */
+    event_string = g_strdup_printf ("%s: %s;", event_type, structure_string);
+    goto done;
   } else if (!gst_event_get_structure (event)) {
     structure_string = g_strdup ("(no structure)");
   } else {
-    structure_string =
-        validate_flow_structure_to_string (gst_event_get_structure (event),
+    GstStructure *structure =
+        validate_flow_structure_cleanup (gst_event_get_structure (event),
         logged_fields, ignored_fields);
+    structure_string = gst_structure_to_string (structure);
+    gst_structure_free (structure);
   }
 
   event_string = g_strdup_printf ("%s: %s", event_type, structure_string);
+done:
   g_strfreev (logged_fields);
-
   g_strfreev (ignored_fields);
   g_free (structure_string);
   return event_string;
