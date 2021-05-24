@@ -581,7 +581,7 @@ gst_validate_has_colored_output (void)
 }
 
 /* Parse file that contains a list of GStructures */
-#define GST_STRUCT_LINE_CONTINUATION_CHARS ",{\\["
+#define GST_STRUCT_LINE_CONTINUATION_CHARS ",{\\[<"
 static GList *
 _file_get_structures (GFile * file, gchar ** err,
     GstValidateGetIncludePathsFunc get_include_paths_func)
