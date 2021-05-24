@@ -1711,7 +1711,7 @@ set_headers (GstBuffer ** buffer, guint idx, gpointer user_data)
   HeaderExt hdrext = { NULL, };
   GstRTPBuffer rtp = { NULL, };
 
-  if (!gst_rtp_buffer_map (*buffer, GST_MAP_WRITE, &rtp))
+  if (!gst_rtp_buffer_map (*buffer, GST_MAP_READWRITE, &rtp))
     goto map_failed;
 
   gst_rtp_buffer_set_ssrc (&rtp, data->ssrc);
