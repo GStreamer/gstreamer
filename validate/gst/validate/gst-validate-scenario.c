@@ -436,6 +436,7 @@ _action_copy (GstValidateAction * act)
       g_strdup (GST_VALIDATE_ACTION_FILENAME (act));
   GST_VALIDATE_ACTION_DEBUG (copy) = g_strdup (GST_VALIDATE_ACTION_DEBUG (act));
   GST_VALIDATE_ACTION_N_REPEATS (copy) = GST_VALIDATE_ACTION_N_REPEATS (act);
+  GST_VALIDATE_ACTION_RANGE_NAME (copy) = GST_VALIDATE_ACTION_RANGE_NAME (act);
 
   return copy;
 }
@@ -2431,7 +2432,7 @@ _foreach_find_iterator (GQuark field_id, GValue * value,
   if (!g_strcmp0 (g_quark_to_string (field_id), "actions"))
     return TRUE;
 
-  if (!GST_VALUE_HOLDS_INT_RANGE (value))
+  if (!GST_VALUE_HOLDS_INT_RANGE (value) && !GST_VALUE_HOLDS_ARRAY (value))
     return TRUE;
 
   if (GST_VALIDATE_ACTION_RANGE_NAME (action)) {
@@ -3815,11 +3816,41 @@ gst_validate_utils_get_structures (gpointer source,
   return res;
 }
 
+static GstValidateAction *
+gst_validate_create_subaction (GstValidateScenario * scenario,
+    GstStructure * lvariables, GstValidateAction * action,
+    GstStructure * nstruct, gint it, gint max)
+{
+  GstValidateAction *subaction;
+
+  subaction = gst_validate_action_new (scenario,
+      _find_action_type (gst_structure_get_name (nstruct)), nstruct, FALSE);
+  GST_VALIDATE_ACTION_RANGE_NAME (subaction) =
+      GST_VALIDATE_ACTION_RANGE_NAME (action);
+  GST_VALIDATE_ACTION_FILENAME (subaction) =
+      g_strdup (GST_VALIDATE_ACTION_FILENAME (action));
+  GST_VALIDATE_ACTION_DEBUG (subaction) =
+      g_strdup (GST_VALIDATE_ACTION_DEBUG (action));
+  GST_VALIDATE_ACTION_LINENO (subaction) = GST_VALIDATE_ACTION_LINENO (action);
+  subaction->repeat = it;
+  subaction->priv->subaction_level = action->priv->subaction_level + 1;
+  GST_VALIDATE_ACTION_N_REPEATS (subaction) = max;
+  gst_validate_structure_resolve_variables (subaction, subaction->structure,
+      lvariables,
+      GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_LOCAL_ONLY |
+      GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_FAILURE |
+      GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_EXPRESSION);
+  gst_structure_free (nstruct);
+
+  return subaction;
+}
+
 static GstValidateExecuteActionReturn
 gst_validate_foreach_prepare (GstValidateAction * action)
 {
   gint it, i;
   gint min = 0, max = 1, step = 1;
+  const GValue *it_array = NULL;
   GstValidateScenario *scenario;
   GList *actions, *tmp;
 
@@ -3838,19 +3869,25 @@ gst_validate_foreach_prepare (GstValidateAction * action)
     gst_validate_error_structure (action, "Missing range specifier field.");
 
   if (GST_VALIDATE_ACTION_RANGE_NAME (action)) {
-    const GValue *range = gst_structure_get_value (action->structure,
+    const GValue *it_value = gst_structure_get_value (action->structure,
         GST_VALIDATE_ACTION_RANGE_NAME (action));
-    min = gst_value_get_int_range_min (range);
-    max = gst_value_get_int_range_max (range);
-    step = gst_value_get_int_range_step (range);
 
-    if (min % step != 0)
-      gst_validate_error_structure (action,
-          "Range min[%d] must be a multiple of step[%d].", min, step);
+    if (GST_VALUE_HOLDS_INT_RANGE (it_value)) {
+      min = gst_value_get_int_range_min (it_value);
+      max = gst_value_get_int_range_max (it_value);
+      step = gst_value_get_int_range_step (it_value);
 
-    if (max % step != 0)
-      gst_validate_error_structure (action,
-          "Range max[%d] must be a multiple of step[%d].", max, step);
+      if (min % step != 0)
+        gst_validate_error_structure (action,
+            "Range min[%d] must be a multiple of step[%d].", min, step);
+
+      if (max % step != 0)
+        gst_validate_error_structure (action,
+            "Range max[%d] must be a multiple of step[%d].", max, step);
+    } else {
+      it_array = it_value;
+      max = gst_value_array_get_size (it_array);
+    }
   } else {
     min = action->repeat;
     max = action->repeat + 1;
@@ -3860,27 +3897,17 @@ gst_validate_foreach_prepare (GstValidateAction * action)
       "actions");
   i = g_list_index (scenario->priv->actions, action);
   for (it = min; it < max; it = it + step) {
+    GstStructure *lvariables = gst_structure_new_empty ("vars");
+
+    if (it_array)
+      gst_structure_set_value (lvariables,
+          GST_VALIDATE_ACTION_RANGE_NAME (action),
+          gst_value_array_get_value (it_array, it));
+
     for (tmp = actions; tmp; tmp = tmp->next) {
-      GstValidateAction *subaction;
-      GstStructure *nstruct = gst_structure_copy (tmp->data);
-
-      subaction = gst_validate_action_new (scenario,
-          _find_action_type (gst_structure_get_name (nstruct)), nstruct, FALSE);
-      GST_VALIDATE_ACTION_RANGE_NAME (subaction) =
-          GST_VALIDATE_ACTION_RANGE_NAME (action);
-      GST_VALIDATE_ACTION_FILENAME (subaction) =
-          g_strdup (GST_VALIDATE_ACTION_FILENAME (action));
-      GST_VALIDATE_ACTION_DEBUG (subaction) =
-          g_strdup (GST_VALIDATE_ACTION_DEBUG (action));
-      GST_VALIDATE_ACTION_LINENO (subaction) =
-          GST_VALIDATE_ACTION_LINENO (action);
-      subaction->repeat = it;
-      subaction->priv->subaction_level = action->priv->subaction_level + 1;
-      GST_VALIDATE_ACTION_N_REPEATS (subaction) = max;
-      scenario->priv->actions =
-          g_list_insert (scenario->priv->actions, subaction, i++);
-
-      gst_structure_free (nstruct);
+      scenario->priv->actions = g_list_insert (scenario->priv->actions,
+          gst_validate_create_subaction (scenario, lvariables, action,
+              gst_structure_copy (tmp->data), it, max), i++);
     }
   }
   g_list_free_full (actions, (GDestroyNotify) gst_structure_free);
@@ -7246,8 +7273,10 @@ register_action_types (void)
                 NULL },
             { NULL } }),
         "Run actions defined in the `actions` array the number of times specified\n"
-        " with a GstIntRange `i=[start, end, step]` parameter passed in, one and only\n"
-        " range is required as parameter.",
+        " with an iterator parameter passed in. The iterator can be\n"
+        " a range like :`i=[start, end, step]` or array of values\n"
+        " such as: `values=<value1, value2>`.\n"
+        "One and only iterator field is required as parameter.",
         GST_VALIDATE_ACTION_TYPE_NONE);
     type->prepare = gst_validate_foreach_prepare;
 
