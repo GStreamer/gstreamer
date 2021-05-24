@@ -427,22 +427,22 @@ gst_auto_convert_get_property (GObject * object,
 static GstElement *
 gst_auto_convert_get_element_by_type (GstAutoConvert * autoconvert, GType type)
 {
-  GList *item;
-  GstBin *bin = GST_BIN (autoconvert);
+  GList *item, *elements;
   GstElement *element = NULL;
 
   g_return_val_if_fail (type != 0, NULL);
 
-  GST_OBJECT_LOCK (autoconvert);
-
-  for (item = bin->children; item; item = item->next) {
-    if (G_OBJECT_TYPE(item->data) == type) {
+  GST_AUTOCONVERT_LOCK (autoconvert);
+  elements = g_hash_table_get_keys (autoconvert->elements);
+  for (item = elements; item; item = item->next) {
+    if (G_OBJECT_TYPE (item->data) == type) {
       element = gst_object_ref (item->data);
       break;
     }
   }
+  GST_AUTOCONVERT_UNLOCK (autoconvert);
 
-  GST_OBJECT_UNLOCK (autoconvert);
+  g_list_free (elements);
 
   return element;
 }
@@ -569,9 +569,6 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
 {
   GstElement *element = NULL;
   InternalPads *pads;
-  GstPad *sinkpad = NULL;
-  GstPad *srcpad = NULL;
-  GstPadLinkReturn padlinkret;
 
   GST_DEBUG_OBJECT (autoconvert, "Adding element %s to the autoconvert bin",
       gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
@@ -580,32 +577,8 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
   if (!element)
     return NULL;
 
-  if (!gst_bin_add (GST_BIN (autoconvert), element)) {
-    GST_ERROR_OBJECT (autoconvert, "Could not add element %s to the bin",
-        GST_OBJECT_NAME (element));
-    gst_object_unref (element);
-    return NULL;
-  }
-
   pads = internal_pads_new (autoconvert, GST_OBJECT_NAME (element));
   g_hash_table_insert (autoconvert->elements, element, pads);
-
-  srcpad = get_pad_by_direction (element, GST_PAD_SRC);
-  if (!srcpad) {
-    GST_ERROR_OBJECT (autoconvert, "Could not find source in %s",
-        GST_OBJECT_NAME (element));
-    goto error;
-  }
-
-  sinkpad = get_pad_by_direction (element, GST_PAD_SINK);
-  if (!sinkpad) {
-    GST_ERROR_OBJECT (autoconvert, "Could not find sink in %s",
-        GST_OBJECT_NAME (element));
-    goto error;
-  }
-
-  gst_pad_set_active (pads->sink, TRUE);
-  gst_pad_set_active (pads->src, TRUE);
 
   gst_pad_set_chain_function (pads->sink,
       GST_DEBUG_FUNCPTR (gst_auto_convert_internal_sink_chain));
@@ -621,47 +594,7 @@ gst_auto_convert_add_element (GstAutoConvert * autoconvert,
   gst_pad_set_query_function (pads->src,
       GST_DEBUG_FUNCPTR (gst_auto_convert_internal_src_query));
 
-  padlinkret = gst_pad_link_full (pads->src, sinkpad,
-      GST_PAD_LINK_CHECK_NOTHING);
-  if (GST_PAD_LINK_FAILED (padlinkret)) {
-    GST_WARNING_OBJECT (autoconvert, "Could not links pad %s:%s to %s:%s"
-        " for reason %d",
-        GST_DEBUG_PAD_NAME (pads->src),
-        GST_DEBUG_PAD_NAME (sinkpad), padlinkret);
-    goto error;
-  }
-
-  padlinkret = gst_pad_link_full (srcpad, pads->sink,
-      GST_PAD_LINK_CHECK_NOTHING);
-  if (GST_PAD_LINK_FAILED (padlinkret)) {
-    GST_WARNING_OBJECT (autoconvert, "Could not links pad %s:%s to %s:%s"
-        " for reason %d",
-        GST_DEBUG_PAD_NAME (pads->src),
-        GST_DEBUG_PAD_NAME (sinkpad), padlinkret);
-    goto error;
-  }
-
-  gst_element_sync_state_with_parent (element);
-
-  /* Increment the reference count we will return to the caller */
-  gst_object_ref (element);
-
-  /* unref sink and src pad */
-  gst_object_unref (srcpad);
-  gst_object_unref (sinkpad);
-  return element;
-
-error:
-  gst_element_set_locked_state (element, TRUE);
-  gst_element_set_state (element, GST_STATE_NULL);
-  gst_bin_remove (GST_BIN (autoconvert), element);
-
-  if (srcpad)
-    gst_object_unref (srcpad);
-  if (sinkpad)
-    gst_object_unref (sinkpad);
-
-  return NULL;
+  return gst_object_ref (element);
 }
 
 static GstElement *
@@ -773,6 +706,10 @@ static gboolean
 gst_auto_convert_activate_element (GstAutoConvert * autoconvert,
     GstElement * element, GstCaps * caps)
 {
+  gboolean res = TRUE;
+  GstPad *sinkpad = NULL, *srcpad = NULL;
+  GstPadLinkReturn padlinkret;
+  GstElement *current_subelement = NULL;
   InternalPads *pads =
       gst_auto_convert_get_element_internal_pads (autoconvert, element);
 
@@ -783,9 +720,59 @@ gst_auto_convert_activate_element (GstAutoConvert * autoconvert,
     if (!gst_pad_peer_query_accept_caps (pads->src, caps)) {
       GST_DEBUG_OBJECT (autoconvert, "Could not set %s:%s to %"
           GST_PTR_FORMAT, GST_DEBUG_PAD_NAME (pads->src), caps);
-      internal_pads_unref (pads);
-      return FALSE;
+      goto error;
     }
+  }
+
+  current_subelement = gst_auto_convert_get_subelement (autoconvert);
+  gst_element_set_locked_state (element, FALSE);
+  if (!gst_bin_add (GST_BIN (autoconvert), gst_object_ref (element))) {
+    GST_ERROR_OBJECT (autoconvert, "Could not add element %s to the bin",
+        GST_OBJECT_NAME (element));
+    goto error;
+  }
+
+  if (!gst_element_sync_state_with_parent (element)) {
+    GST_WARNING_OBJECT (autoconvert, "Could sync %" GST_PTR_FORMAT " state",
+        element);
+    goto error;
+  }
+
+  srcpad = get_pad_by_direction (element, GST_PAD_SRC);
+  if (!srcpad) {
+    GST_ERROR_OBJECT (autoconvert, "Could not find source in %s",
+        GST_OBJECT_NAME (element));
+    goto error;
+  }
+
+  sinkpad = get_pad_by_direction (element, GST_PAD_SINK);
+  if (!sinkpad) {
+    GST_ERROR_OBJECT (autoconvert, "Could not find sink in %s",
+        GST_OBJECT_NAME (element));
+    goto error;
+  }
+
+  gst_pad_set_active (pads->sink, TRUE);
+  gst_pad_set_active (pads->src, TRUE);
+
+  padlinkret = gst_pad_link_full (pads->src, sinkpad,
+      GST_PAD_LINK_CHECK_NOTHING);
+  if (GST_PAD_LINK_FAILED (padlinkret)) {
+    GST_WARNING_OBJECT (autoconvert, "Could not links pad %s:%s to %s:%s"
+        " for reason %d",
+        GST_DEBUG_PAD_NAME (pads->src),
+        GST_DEBUG_PAD_NAME (sinkpad), padlinkret);
+    goto error;
+  }
+
+  padlinkret = gst_pad_link_full (srcpad, pads->sink,
+      GST_PAD_LINK_CHECK_NOTHING);
+  if (GST_PAD_LINK_FAILED (padlinkret)) {
+    GST_WARNING_OBJECT (autoconvert, "Could not links pad %s:%s to %s:%s"
+        " for reason %d",
+        GST_DEBUG_PAD_NAME (pads->src),
+        GST_DEBUG_PAD_NAME (sinkpad), padlinkret);
+    goto error;
   }
 
   GST_AUTOCONVERT_LOCK (autoconvert);
@@ -797,6 +784,12 @@ gst_auto_convert_activate_element (GstAutoConvert * autoconvert,
       GST_OBJECT (pads->sink));
   GST_AUTOCONVERT_UNLOCK (autoconvert);
 
+  if (current_subelement) {
+    gst_element_set_locked_state (current_subelement, TRUE);
+    gst_element_set_state (current_subelement, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (autoconvert), current_subelement);
+  }
+
   gst_pad_sticky_events_foreach (autoconvert->sinkpad, sticky_event_push,
       autoconvert);
 
@@ -805,10 +798,24 @@ gst_auto_convert_activate_element (GstAutoConvert * autoconvert,
   GST_INFO_OBJECT (autoconvert, "Selected element %s",
       GST_OBJECT_NAME (GST_OBJECT (element)));
 
+done:
   gst_object_unref (element);
   internal_pads_unref (pads);
+  gst_clear_object (&srcpad);
+  gst_clear_object (&sinkpad);
+  gst_clear_object (&current_subelement);
 
-  return TRUE;
+  return res;
+
+error:
+  gst_element_set_locked_state (element, TRUE);
+  gst_element_set_state (element, GST_STATE_NULL);
+
+  if (GST_OBJECT_PARENT (element))
+    gst_bin_remove (GST_BIN (autoconvert), element);
+
+  res = FALSE;
+  goto done;
 }
 
 static GstIterator *
