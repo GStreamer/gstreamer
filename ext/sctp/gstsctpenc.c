@@ -896,7 +896,7 @@ on_sctp_packet_out (GstSctpAssociation * _association, const guint8 * buf,
   GST_DEBUG_OBJECT (self, "Received output packet of size %" G_GSIZE_FORMAT,
       length);
 
-  gstbuf = gst_buffer_new_copy (buf, length);
+  gstbuf = gst_buffer_new_memdup (buf, length);
 
   item = g_new0 (GstDataQueueItem, 1);
   item->object = GST_MINI_OBJECT (gstbuf);

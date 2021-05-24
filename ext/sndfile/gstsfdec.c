@@ -128,7 +128,7 @@ static sf_count_t
 gst_sf_vio_write (const void *ptr, sf_count_t count, void *user_data)
 {
   GstSFDec *self = GST_SF_DEC (user_data);
-  GstBuffer *buffer = gst_buffer_new_copy (ptr, count);
+  GstBuffer *buffer = gst_buffer_new_memdup (ptr, count);
 
   if (gst_pad_push (self->srcpad, buffer) == GST_FLOW_OK) {
     return count;

@@ -641,7 +641,8 @@ on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
   self->srtp_cipher = cipher;
   self->srtp_auth = auth;
 
-  new_encoder_key = gst_buffer_new_copy (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
+  new_encoder_key =
+      gst_buffer_new_memdup (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
 
   if (self->encoder_key)
     gst_buffer_unref (self->encoder_key);
@@ -665,7 +666,7 @@ on_send_data (GstDtlsConnection * connection, gconstpointer data, gsize length,
   GST_DEBUG_OBJECT (self, "sending data from %s with length %" G_GSIZE_FORMAT,
       self->connection_id, length);
 
-  buffer = data ? gst_buffer_new_copy (data, length) : NULL;
+  buffer = data ? gst_buffer_new_memdup (data, length) : NULL;
 
   GST_TRACE_OBJECT (self, "send data: acquiring lock");
   g_mutex_lock (&self->queue_lock);

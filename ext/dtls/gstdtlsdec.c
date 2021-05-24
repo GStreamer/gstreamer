@@ -433,7 +433,8 @@ on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
   self->srtp_cipher = cipher;
   self->srtp_auth = auth;
 
-  new_decoder_key = gst_buffer_new_copy (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
+  new_decoder_key =
+      gst_buffer_new_memdup (key, GST_DTLS_SRTP_MASTER_KEY_LENGTH);
 
   if (self->decoder_key)
     gst_buffer_unref (self->decoder_key);

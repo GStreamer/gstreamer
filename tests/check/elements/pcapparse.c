@@ -97,7 +97,7 @@ GST_START_TEST (test_parse_zerosize_frames)
 
   data_size = sizeof (zerosize_data);
 
-  in_buf = gst_buffer_new_copy (zerosize_data, data_size);
+  in_buf = gst_buffer_new_memdup (zerosize_data, data_size);
 
   gst_harness_push (h, in_buf);
   gst_harness_play (h);

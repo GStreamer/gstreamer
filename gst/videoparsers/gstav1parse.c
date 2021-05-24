@@ -802,7 +802,7 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
       _write_leb128 (size_data, &size_len, len);
 
       gst_adapter_push (self->cache_out,
-          gst_buffer_new_copy (size_data, size_len));
+          gst_buffer_new_memdup (size_data, size_len));
       gst_adapter_push (self->cache_out, buf);
     }
 
@@ -814,7 +814,7 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
       _write_leb128 (size_data, &size_len, len);
 
       gst_adapter_push (self->cache_out,
-          gst_buffer_new_copy (size_data, size_len));
+          gst_buffer_new_memdup (size_data, size_len));
       gst_adapter_push (self->cache_out, buf);
     }
   }
@@ -915,7 +915,7 @@ gst_av1_parse_convert_to_annexb (GstAV1Parse * self, GstAV1OBU * obu,
     /* frame_unit_size */
     _write_leb128 (size_data, &size_len, len2);
     gst_adapter_push (self->cache_out,
-        gst_buffer_new_copy (size_data, size_len));
+        gst_buffer_new_memdup (size_data, size_len));
 
     gst_adapter_push (self->cache_out, buf2);
   }
@@ -1002,7 +1002,7 @@ gst_av1_parse_cache_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
     g_assert (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B);
     gst_av1_parse_convert_to_annexb (self, obu, frame_complete);
   } else {
-    buf = gst_buffer_new_copy (data, size);
+    buf = gst_buffer_new_memdup (data, size);
     gst_adapter_push (self->cache_out, buf);
   }
 }

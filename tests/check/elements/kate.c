@@ -271,7 +271,7 @@ GST_START_TEST (test_kate_typefind)
   GstBuffer *buf;
   GstCaps *caps = NULL;
 
-  buf = gst_buffer_new_copy (kate_header_0x80, sizeof (kate_header_0x80));
+  buf = gst_buffer_new_memdup (kate_header_0x80, sizeof (kate_header_0x80));
   GST_BUFFER_OFFSET (buf) = 0;
 
   caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
@@ -343,7 +343,8 @@ GST_START_TEST (test_kate_identification_header)
   gst_check_setup_events (mydecsrcpad, katedec, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
-  inbuffer = gst_buffer_new_copy (kate_header_0x80, sizeof (kate_header_0x80));
+  inbuffer =
+      gst_buffer_new_memdup (kate_header_0x80, sizeof (kate_header_0x80));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -355,7 +356,8 @@ GST_START_TEST (test_kate_identification_header)
   gst_buffer_unref (inbuffer);
   fail_unless (g_list_length (buffers) == 0);
 
-  inbuffer = gst_buffer_new_copy (kate_header_0x81, sizeof (kate_header_0x81));
+  inbuffer =
+      gst_buffer_new_memdup (kate_header_0x81, sizeof (kate_header_0x81));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -487,7 +489,7 @@ GST_START_TEST (test_kate_encode_simple)
       "could not set to playing");
   bus = gst_bus_new ();
 
-  inbuffer = gst_buffer_new_copy (test_string, strlen (test_string) + 1);
+  inbuffer = gst_buffer_new_memdup (test_string, strlen (test_string) + 1);
 
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) =
       1 * GST_SECOND;
@@ -540,7 +542,7 @@ GST_START_TEST (test_kate_encode_spu)
       "could not set to playing");
   bus = gst_bus_new ();
 
-  inbuffer = gst_buffer_new_copy (kate_spu, sizeof (kate_spu));
+  inbuffer = gst_buffer_new_memdup (kate_spu, sizeof (kate_spu));
 
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) =
       1 * GST_SECOND;
@@ -657,17 +659,19 @@ test_kate_send_headers (GstElement * element, GstPad * pad)
   gst_caps_unref (caps);
 
   /* push headers */
-  inbuffer = gst_buffer_new_copy (kate_header_0x80, sizeof (kate_header_0x80));
+  inbuffer =
+      gst_buffer_new_memdup (kate_header_0x80, sizeof (kate_header_0x80));
   GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
   fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
 
-  inbuffer = gst_buffer_new_copy (kate_header_0x81, sizeof (kate_header_0x81));
+  inbuffer =
+      gst_buffer_new_memdup (kate_header_0x81, sizeof (kate_header_0x81));
   GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
   fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
 
   for (i = 2; i < 8; ++i) {
     inbuffer =
-        gst_buffer_new_copy (kate_header_0x8x, sizeof (kate_header_0x8x));
+        gst_buffer_new_memdup (kate_header_0x8x, sizeof (kate_header_0x8x));
     fail_if (gst_buffer_map (inbuffer, &info, GST_MAP_WRITE) != TRUE);
     info.data[0] = 0x80 | i;
     gst_buffer_unmap (inbuffer, &info);
@@ -675,7 +679,8 @@ test_kate_send_headers (GstElement * element, GstPad * pad)
     fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
   }
 
-  inbuffer = gst_buffer_new_copy (kate_header_0x88, sizeof (kate_header_0x88));
+  inbuffer =
+      gst_buffer_new_memdup (kate_header_0x88, sizeof (kate_header_0x88));
   GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
   fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
 }
@@ -697,7 +702,8 @@ GST_START_TEST (test_kate_parse)
   test_kate_send_headers (kateparse, myparsesrcpad);
 
   /* push a text packet */
-  inbuffer = gst_buffer_new_copy (kate_header_0x00, sizeof (kate_header_0x00));
+  inbuffer =
+      gst_buffer_new_memdup (kate_header_0x00, sizeof (kate_header_0x00));
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) =
       1 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = 5 * GST_SECOND;
@@ -705,7 +711,8 @@ GST_START_TEST (test_kate_parse)
   fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
 
   /* push a eos packet */
-  inbuffer = gst_buffer_new_copy (kate_header_0x7f, sizeof (kate_header_0x7f));
+  inbuffer =
+      gst_buffer_new_memdup (kate_header_0x7f, sizeof (kate_header_0x7f));
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) =
       6 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = 0;
