@@ -194,7 +194,7 @@ typedef struct
 typedef struct
 {
   guint8 size;
-  const guint8 *data;
+  guint offset;
 } RtpQuantTable;
 
 /*
@@ -469,7 +469,7 @@ gst_rtp_jpeg_pay_read_quant_table (GstBufferMemoryMap * memory,
     GST_LOG ("read quant table %d, tab_size %d, prec %02x", id, tab_size, prec);
 
     tables[id].size = tab_size;
-    tables[id].data = memory->data;
+    tables[id].offset = memory->offset;
 
     quant_size -= (tab_size + 1);
     if (!gst_buffer_memory_advance_bytes (memory, tab_size)) {
@@ -721,7 +721,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   RtpJpegHeader jpeg_header;
   RtpQuantHeader quant_header;
   RtpRestartMarkerHeader restart_marker_header;
-  RtpQuantTable tables[15] = { {0, NULL}, };
+  RtpQuantTable tables[15] = { {0, 0}, };
   CompInfo info[3] = { {0,}, };
   guint quant_data_size;
   guint mtu, max_payload_size;
@@ -930,10 +930,12 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
       for (i = 0; i < 2; i++) {
         guint qsize;
         guint qt;
+        gsize rc;
 
         qt = info[i].qt;
         qsize = tables[qt].size;
-        memcpy (payload, tables[qt].data, qsize);
+        rc = gst_buffer_extract (buffer, tables[qt].offset, payload, qsize);
+        g_assert (rc == qsize);
 
         GST_LOG_OBJECT (pay, "component %d using quant %d, size %d", i, qt,
             qsize);
