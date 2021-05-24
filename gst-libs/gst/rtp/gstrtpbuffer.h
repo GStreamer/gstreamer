@@ -136,6 +136,9 @@ GST_RTP_API
 gboolean        gst_rtp_buffer_set_extension_data    (GstRTPBuffer *rtp, guint16 bits, guint16 length);
 
 GST_RTP_API
+void            gst_rtp_buffer_remove_extension_data (GstRTPBuffer *rtp);
+
+GST_RTP_API
 guint32         gst_rtp_buffer_get_ssrc              (GstRTPBuffer *rtp);
 
 GST_RTP_API

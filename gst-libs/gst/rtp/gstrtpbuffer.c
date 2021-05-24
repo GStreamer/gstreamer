@@ -896,6 +896,37 @@ gst_rtp_buffer_set_extension_data (GstRTPBuffer * rtp, guint16 bits,
 }
 
 /**
+ * gst_rtp_buffer_remove_extension_data:
+ * @rtp: the RTP packet
+ *
+ * Unsets the extension bit of the RTP buffer and removes the extension header
+ * and data.
+ *
+ * If the RTP buffer has no header extension data, the action has no effect.
+ * The RTP buffer must be mapped READWRITE only once and the underlying
+ * GstBuffer must be writable.
+ *
+ * Since: 1.20
+ */
+void
+gst_rtp_buffer_remove_extension_data (GstRTPBuffer * rtp)
+{
+  g_return_if_fail (gst_buffer_is_writable (rtp->buffer));
+  g_return_if_fail (rtp->map[0].flags & GST_MAP_WRITE);
+
+  if (rtp->data[1] != NULL) {
+    GstBuffer *buf = rtp->buffer;
+
+    ensure_buffers (rtp);
+
+    GST_RTP_HEADER_EXTENSION (rtp->data[0]) = FALSE;
+    gst_rtp_buffer_unmap (rtp);
+    gst_buffer_remove_memory (buf, 1);
+    gst_rtp_buffer_map (buf, GST_MAP_READWRITE, rtp);
+  }
+}
+
+/**
  * gst_rtp_buffer_get_ssrc:
  * @rtp: the RTP packet
  *

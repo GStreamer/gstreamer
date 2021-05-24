@@ -2172,6 +2172,49 @@ GST_START_TEST (test_rtp_buffer_extlen_wraparound)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtp_buffer_remove_extension_data)
+{
+  GstBuffer *buf;
+  GstMapInfo info;
+  guint8 rtp_test_buffer[] = {
+    0x90, 0x7c, 0x18, 0xa6,     /* |V=2|P|X|CC|M|PT|sequence number| */
+    0x7a, 0x62, 0x17, 0x0f,     /* |timestamp| */
+    0x70, 0x23, 0x91, 0x38,     /* |synchronization source (SSRC) identifier| */
+    0xbe, 0xde, 0x00, 0x02,     /* |0xBE|0xDE|length=2| */
+    0x00, 0x00, 0x00, 0x00,     /* |0 (pad)|0 (pad)|0 (pad)|0 (pad)| */
+    0x00, 0x00, 0x00, 0x00,     /* |0 (pad)|0 (pad)|0 (pad)|0 (pad)| */
+    0xff, 0xff, 0xff, 0xff      /* |dummy payload| */
+  };
+
+  guint8 expected_result[] = {
+    0x80, 0x7c, 0x18, 0xa6,     /* |V=2|P|X|CC|M|PT|sequence number| */
+    0x7a, 0x62, 0x17, 0x0f,     /* |timestamp| */
+    0x70, 0x23, 0x91, 0x38,     /* |synchronization source (SSRC) identifier| */
+    0xff, 0xff, 0xff, 0xff      /* |dummy payload| */
+  };
+
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  buf = gst_buffer_new_and_alloc (sizeof (rtp_test_buffer));
+  gst_buffer_fill (buf, 0, rtp_test_buffer, sizeof (rtp_test_buffer));
+
+  fail_unless (gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp));
+
+  gst_rtp_buffer_remove_extension_data (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
+
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+
+  fail_unless_equals_int (info.size, sizeof (expected_result));
+  fail_unless_equals_int
+      (memcmp (info.data, expected_result, sizeof (expected_result)), 0);
+
+  gst_buffer_unmap (buf, &info);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_suite (void)
 {
@@ -2226,6 +2269,7 @@ rtp_suite (void)
 
   tcase_add_test (tc_chain, test_rtcp_compound_padding);
   tcase_add_test (tc_chain, test_rtp_buffer_extlen_wraparound);
+  tcase_add_test (tc_chain, test_rtp_buffer_remove_extension_data);
 
   return s;
 }
