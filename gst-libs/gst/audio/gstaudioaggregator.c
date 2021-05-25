@@ -119,6 +119,9 @@ struct _GstAudioAggregatorPadPrivate
   /* A new unhandled segment event has been received */
   gboolean new_segment;
 
+  guint64 processed;            /* Number of samples processed since the element came out of READY */
+  guint64 dropped;              /* Number of sampels dropped since the element came out of READY */
+
   gboolean qos_messages;        /* Property to decide to send QoS messages or not */
 };
 
@@ -219,6 +222,13 @@ gst_audio_aggregator_pad_init (GstAudioAggregatorPad * pad)
   pad->priv->discont_time = GST_CLOCK_TIME_NONE;
 }
 
+/* Must be called from srcpad thread or when it is stopped */
+static void
+gst_audio_aggregator_pad_reset_qos (GstAudioAggregatorPad * pad)
+{
+  pad->priv->dropped = 0;
+  pad->priv->processed = 0;
+}
 
 static GstFlowReturn
 gst_audio_aggregator_pad_flush_pad (GstAggregatorPad * aggpad,
@@ -231,6 +241,7 @@ gst_audio_aggregator_pad_flush_pad (GstAggregatorPad * aggpad,
   pad->priv->output_offset = pad->priv->next_offset = -1;
   pad->priv->discont_time = GST_CLOCK_TIME_NONE;
   gst_buffer_replace (&pad->priv->buffer, NULL);
+  gst_audio_aggregator_pad_reset_qos (pad);
   GST_OBJECT_UNLOCK (aggpad);
 
   return GST_FLOW_OK;
@@ -1314,6 +1325,7 @@ gst_audio_aggregator_sink_event (GstAggregator * agg,
 
         GST_OBJECT_LOCK (pad);
         pad->priv->new_segment = TRUE;
+        gst_audio_aggregator_pad_reset_qos (pad);
         GST_OBJECT_UNLOCK (pad);
       }
       GST_OBJECT_UNLOCK (agg);
@@ -1814,9 +1826,11 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
         diff = aagg->priv->offset - start_output_offset;
       }
 
+      pad->priv->dropped += MIN (diff, pad->priv->size);
       pad->priv->position += diff;
       if (pad->priv->position >= pad->priv->size) {
         /* Empty buffer, drop */
+        pad->priv->dropped += pad->priv->size;
         pad->priv->position = 0;
         pad->priv->size = 0;
         GST_DEBUG_OBJECT (pad,
@@ -1902,6 +1916,7 @@ gst_audio_aggregator_mix_buffer (GstAudioAggregator * aagg,
   if (pad_changed)
     return FALSE;
 
+  pad->priv->processed += overlap;
   pad->priv->position += overlap;
   pad->priv->output_offset += overlap;
 
@@ -2221,6 +2236,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
       if (pad->priv->position + diff > pad->priv->size)
         diff = pad->priv->size - pad->priv->position;
+      pad->priv->dropped += diff;
       pad->priv->position += diff;
       pad->priv->output_offset += diff;
 
