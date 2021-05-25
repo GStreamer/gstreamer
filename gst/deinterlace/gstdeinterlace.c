@@ -2539,11 +2539,18 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
   for (len = gst_caps_get_size (tmp2); len > 0; len--) {
     GstStructure *s = gst_caps_get_structure (tmp2, len - 1);
 
-    if (pad == self->sinkpad)
+    /* Drop fields which can be converted by us.
+     * Specifically "field-order" here.
+     * "field-order" with "progressive" and/or
+     * unspecified "interlace-mode" would cause negotiation issue */
+    gst_structure_remove_field (s, "field-order");
+
+    if (pad == self->sinkpad) {
       gst_structure_remove_field (s, "interlace-mode");
-    else
+    } else {
       gst_structure_set (s, "interlace-mode", G_TYPE_STRING, "progressive",
           NULL);
+    }
   }
 
   if (self->user_set_fields == GST_DEINTERLACE_ALL) {
