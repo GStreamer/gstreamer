@@ -932,9 +932,13 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
      * Interlaced feature and set interlace-mode=progressive */
     for (i = 0; i < gst_caps_get_size (icaps); ++i) {
       GstCapsFeatures *features;
+      GstStructure *s = gst_caps_get_structure (icaps, i);
 
       features = gst_caps_get_features (icaps, i);
       gst_caps_features_remove (features, GST_CAPS_FEATURE_FORMAT_INTERLACED);
+
+      /* Drop field-order field for sinkpad */
+      gst_structure_remove_field (s, "field-order");
     }
 
     gst_caps_set_simple (icaps, "interlace-mode", G_TYPE_STRING, "progressive",
