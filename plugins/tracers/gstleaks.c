@@ -730,6 +730,8 @@ gst_leaks_tracer_finalize (GObject * object)
   GHashTableIter iter;
   gpointer obj;
 
+  GST_DEBUG_OBJECT (self, "destroying tracer, checking for leaks");
+
   self->done = TRUE;
 
   /* Tracers are destroyed as part of gst_deinit() so now is a good time to
