@@ -980,17 +980,24 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
     icaps = gst_caps_merge (icaps, alternate);
   }
 
-  if (pattern == GST_INTERLACE_PATTERN_1_1) {
-    icaps =
-        gst_interlace_caps_double_framerate (icaps, (pad == interlace->srcpad),
-        FALSE);
-  } else if (pattern != GST_INTERLACE_PATTERN_2_2) {
-    GST_FIXME_OBJECT (interlace,
-        "Add calculations for telecine framerate conversions");
+  /* Drop framerate for sinkpad */
+  if (pad == interlace->sinkpad) {
     for (i = 0; i < gst_caps_get_size (icaps); ++i) {
       GstStructure *s = gst_caps_get_structure (icaps, i);
 
       gst_structure_remove_field (s, "framerate");
+    }
+  } else {
+    if (pattern == GST_INTERLACE_PATTERN_1_1) {
+      icaps = gst_interlace_caps_double_framerate (icaps, TRUE, FALSE);
+    } else if (pattern != GST_INTERLACE_PATTERN_2_2) {
+      GST_FIXME_OBJECT (interlace,
+          "Add calculations for telecine framerate conversions");
+      for (i = 0; i < gst_caps_get_size (icaps); ++i) {
+        GstStructure *s = gst_caps_get_structure (icaps, i);
+
+        gst_structure_remove_field (s, "framerate");
+      }
     }
   }
 
