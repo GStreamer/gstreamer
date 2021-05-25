@@ -28,6 +28,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video-prelude.h>
+#include <gst/video/video-hdr.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_VIDEO_CODEC_STATE \
@@ -47,6 +48,10 @@ typedef struct _GstVideoCodecFrame GstVideoCodecFrame;
  *     'codec_data' field of a stream, or NULL.
  * @allocation_caps: The #GstCaps for allocation query and pool
  *     negotiation. Since: 1.10
+ * @mastering_display_info: Mastering display color volume information
+ *     (HDR metadata) for the stream. Since: 1.20
+ * @content_light_level: Content light level information for the stream.
+ *     Since: 1.20
  *
  * Structure representing the state of an incoming or outgoing video
  * stream for encoders and decoders.
@@ -57,6 +62,20 @@ typedef struct _GstVideoCodecFrame GstVideoCodecFrame;
  * Decoders and encoders can set the downstream state, by using the
  * gst_video_decoder_set_output_state() or
  * gst_video_encoder_set_output_state() methods.
+ */
+/**
+ * GstVideoCodecState.mastering_display_info:
+ *
+ * Mastering display color volume information (HDR metadata) for the stream.
+ *
+ * Since: 1.20
+ */
+/**
+ * GstVideoCodecState.content_light_level:
+ *
+ * Content light level information for the stream.
+ *
+ * Since: 1.20
  */
 struct _GstVideoCodecState
 {
@@ -72,8 +91,11 @@ struct _GstVideoCodecState
 
   GstCaps *allocation_caps;
 
+  GstVideoMasteringDisplayInfo *mastering_display_info;
+  GstVideoContentLightLevel *content_light_level;
+
   /*< private >*/
-  gpointer padding[GST_PADDING_LARGE - 1];
+  gpointer padding[GST_PADDING_LARGE - 3];
 };
 
 /**
