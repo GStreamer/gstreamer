@@ -2936,6 +2936,11 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps,
     gst_caps_set_simple (srccaps, "interlace-mode", G_TYPE_STRING,
         "progressive", NULL);
 
+    {
+      GstStructure *s = gst_caps_get_structure (srccaps, 0);
+      gst_structure_remove_field (s, "field-order");
+    }
+
     gst_deinterlace_set_method (self, self->method_id);
     gst_deinterlace_method_setup (self->method, &self->vinfo);
   } else {
