@@ -54,6 +54,7 @@ struct _GstVideoEncoderTester
   gboolean send_headers;
   gboolean key_frame_sent;
   gboolean enable_step_by_step;
+  gboolean negotiate_in_set_format;
   GstVideoCodecFrame *last_frame;
 };
 
@@ -83,12 +84,19 @@ static gboolean
 gst_video_encoder_tester_set_format (GstVideoEncoder * enc,
     GstVideoCodecState * state)
 {
+  GstVideoEncoderTester *enc_tester = GST_VIDEO_ENCODER_TESTER (enc);
+
   GstVideoCodecState *res = gst_video_encoder_set_output_state (enc,
       gst_caps_new_simple ("video/x-test-custom", "width", G_TYPE_INT,
           480, "height", G_TYPE_INT, 360, NULL),
-      NULL);
+      state);
 
   gst_video_codec_state_unref (res);
+
+  if (enc_tester->negotiate_in_set_format) {
+    gst_video_encoder_negotiate (enc);
+  }
+
   return TRUE;
 }
 
@@ -1194,6 +1202,67 @@ GST_START_TEST (videoencoder_force_keyunit_min_interval)
 
 GST_END_TEST;
 
+GST_START_TEST (videoencoder_hdr_metadata)
+{
+  const gchar *mdi_str =
+      "35399:14599:8500:39850:6550:2300:15634:16450:10000000:1";
+  const gchar *cll_str = "1000:50";
+  gint i;
+
+  /* Check that HDR metadata get passed to src pad no matter if negotiate gets
+   * called from gst_video_encoder_finish_frame() or GstVideoEncoder::set_format
+   */
+  for (i = 1; i >= 0; --i) {
+    GstVideoMasteringDisplayInfo mdi;
+    GstVideoContentLightLevel cll;
+    GstSegment segment;
+    GstCaps *caps;
+    GstStructure *s;
+    const gchar *str;
+
+    setup_videoencodertester ();
+    GST_VIDEO_ENCODER_TESTER (enc)->negotiate_in_set_format = i;
+
+    gst_pad_set_active (mysrcpad, TRUE);
+    gst_element_set_state (enc, GST_STATE_PLAYING);
+    gst_pad_set_active (mysinkpad, TRUE);
+
+    fail_unless (gst_pad_push_event (mysrcpad,
+            gst_event_new_stream_start ("id")));
+
+    gst_video_mastering_display_info_from_string (&mdi, mdi_str);
+    gst_video_content_light_level_from_string (&cll, cll_str);
+
+    caps = create_test_caps ();
+    gst_video_mastering_display_info_add_to_caps (&mdi, caps);
+    gst_video_content_light_level_add_to_caps (&cll, caps);
+
+    fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
+    gst_caps_unref (caps);
+
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    fail_unless (gst_pad_push_event (mysrcpad,
+            gst_event_new_segment (&segment)));
+
+    gst_pad_push (mysrcpad, create_test_buffer (0));
+
+    caps = gst_pad_get_current_caps (mysinkpad);
+
+    s = gst_caps_get_structure (caps, 0);
+    fail_unless (str = gst_structure_get_string (s, "mastering-display-info"));
+    fail_unless_equals_string (str, mdi_str);
+
+    fail_unless (str = gst_structure_get_string (s, "content-light-level"));
+    fail_unless_equals_string (str, cll_str);
+
+    gst_caps_unref (caps);
+
+    cleanup_videoencodertest ();
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videoencoder_suite (void)
 {
@@ -1212,6 +1281,7 @@ gst_videoencoder_suite (void)
   tcase_add_test (tc, videoencoder_playback_events_subframes);
   tcase_add_test (tc, videoencoder_force_keyunit_handling);
   tcase_add_test (tc, videoencoder_force_keyunit_min_interval);
+  tcase_add_test (tc, videoencoder_hdr_metadata);
 
   return s;
 }
