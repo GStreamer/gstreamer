@@ -886,8 +886,12 @@ gst_v4l2_video_enc_decide_allocation (GstVideoEncoder *
    * more work to explicitly expressed the decoder / encoder latency. This
    * value will then become max latency, and the reported driver latency would
    * become the min latency. */
+  if (!GST_CLOCK_TIME_IS_VALID (self->v4l2capture->duration))
+    self->v4l2capture->duration = gst_util_uint64_scale_int (GST_SECOND, 1, 25);
   latency = self->v4l2capture->min_buffers * self->v4l2capture->duration;
   gst_video_encoder_set_latency (encoder, latency, latency);
+  GST_DEBUG_OBJECT (self, "Setting latency: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (latency));
 
 done:
   gst_video_codec_state_unref (state);
