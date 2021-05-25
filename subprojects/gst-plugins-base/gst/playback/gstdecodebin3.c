@@ -927,8 +927,11 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
       SELECTION_UNLOCK (dbin);
       gst_element_post_message (GST_ELEMENT_CAST (dbin), msg);
       update_requested_selection (dbin);
-    } else
+    } else {
+      if (collection)
+        gst_object_unref (collection);
       SELECTION_UNLOCK (dbin);
+    }
 
     gst_bin_remove (GST_BIN (dbin), input->parsebin);
     gst_element_set_state (input->parsebin, GST_STATE_NULL);
