@@ -2431,19 +2431,26 @@ static gboolean
 _foreach_find_iterator (GQuark field_id, GValue * value,
     GstValidateAction * action)
 {
-  if (!g_strcmp0 (g_quark_to_string (field_id), "actions"))
+  const gchar *field = g_quark_to_string (field_id);
+
+  if (!g_strcmp0 (field, "actions"))
     return TRUE;
 
-  if (!GST_VALUE_HOLDS_INT_RANGE (value) && !GST_VALUE_HOLDS_ARRAY (value))
+  if (!GST_VALUE_HOLDS_INT_RANGE (value) && !GST_VALUE_HOLDS_ARRAY (value)) {
+    gst_validate_error_structure (action,
+        "Unsupported iterator type `%s` for %s"
+        ". Only ranges (`[(int)start, (int)stop, [(int)step]]`) and arrays "
+        " (`<item1, item2>`) are supported", field, G_VALUE_TYPE_NAME (value));
     return TRUE;
+  }
 
   if (GST_VALIDATE_ACTION_RANGE_NAME (action)) {
-    gst_validate_error_structure (action, "Found several ranges in structure, "
-        "it is not supported");
+    gst_validate_error_structure (action, "Wrong iterator syntax, "
+        " only one iterator field is supported.");
     return FALSE;
   }
 
-  GST_VALIDATE_ACTION_RANGE_NAME (action) = g_quark_to_string (field_id);
+  GST_VALIDATE_ACTION_RANGE_NAME (action) = field;
   return TRUE;
 }
 
