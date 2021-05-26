@@ -635,6 +635,7 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
   EGLint egl_api = 0;
   EGLBoolean ret = EGL_FALSE;
   EGLint surface_type = EGL_WINDOW_BIT;
+  EGLint alpha_size = 1;
   GstGLWindow *window;
 
   window = gst_gl_context_get_window (GST_GL_CONTEXT (egl));
@@ -704,12 +705,6 @@ try_again:
     /* TODO: more values */
 #undef TRANSFORM_VALUE
   } else {
-#if defined(USE_EGL_RPI) && GST_GL_HAVE_WINDOW_WAYLAND
-    /* The configurations with a=0 seems to be buggy whereas
-     * it works when using dispmanx directly */
-    config_attrib[i++] = EGL_ALPHA_SIZE;
-    config_attrib[i++] = 1;
-#endif
     config_attrib[i++] = EGL_DEPTH_SIZE;
     config_attrib[i++] = 16;
     config_attrib[i++] = EGL_RED_SIZE;
@@ -718,6 +713,8 @@ try_again:
     config_attrib[i++] = 1;
     config_attrib[i++] = EGL_BLUE_SIZE;
     config_attrib[i++] = 1;
+    config_attrib[i++] = EGL_ALPHA_SIZE;
+    config_attrib[i++] = alpha_size;
   }
 
   config_attrib[i++] = EGL_NONE;
@@ -730,6 +727,12 @@ try_again:
     if (surface_type == EGL_PBUFFER_BIT) {
       surface_type = EGL_WINDOW_BIT;
       GST_TRACE_OBJECT (egl, "Retrying config with window bit");
+      goto try_again;
+    }
+
+    if (alpha_size == 1) {
+      alpha_size = 0;
+      GST_TRACE_OBJECT (egl, "Retrying config not forcing an alpha channel");
       goto try_again;
     }
   }
