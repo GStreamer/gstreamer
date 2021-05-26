@@ -29,6 +29,8 @@
 # include <valgrind/valgrind.h>
 #endif
 
+#include <gst/check/gstharness.h>
+
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstconsistencychecker.h>
 #include <gst/audio/audio.h>
@@ -2024,6 +2026,128 @@ GST_START_TEST (test_change_output_caps_mid_output_buffer)
 }
 
 GST_END_TEST;
+
+static void
+check_qos_message (GstMessage * msg, GstClockTime expected_timestamp,
+    GstClockTime expected_duration, guint64 expected_processed,
+    guint64 expected_dropped)
+{
+  gboolean live;
+  guint64 running_time, stream_time, timestamp, duration;
+  GstFormat format;
+  guint64 processed, dropped;
+
+  gst_message_parse_qos (msg, &live, &running_time, &stream_time,
+      &timestamp, &duration);
+  gst_message_parse_qos_stats (msg, &format, &processed, &dropped);
+
+  fail_unless_equals_uint64 (running_time, expected_timestamp);
+  fail_unless_equals_uint64 (stream_time, expected_timestamp);
+  fail_unless_equals_uint64 (timestamp, expected_timestamp);
+  fail_unless_equals_uint64 (duration, expected_duration);
+
+  fail_unless_equals_int64 (format, GST_FORMAT_DEFAULT);
+  fail_unless_equals_uint64 (processed, expected_processed);
+  fail_unless_equals_uint64 (dropped, expected_dropped);
+
+  gst_message_unref (msg);
+}
+
+GST_START_TEST (test_qos_message_live)
+{
+  GstBus *bus = gst_bus_new ();
+  GstHarness *h, *h2;
+  GstBuffer *b;
+  static const char *caps_str = "audio/x-raw, format=(string)S16LE, "
+      "rate=(int)1000, channels=(int)1, layout=(string)interleaved";
+  GstMessage *msg;
+  GstPad *pad;
+
+  h = gst_harness_new_with_padnames ("audiomixer", "sink_0", "src");
+  g_object_set (h->element, "output-buffer-duration", GST_SECOND, NULL);
+
+  pad = gst_element_get_static_pad (h->element, "sink_0");
+  g_object_set (pad, "qos-messages", TRUE, NULL);
+  gst_object_unref (pad);
+
+  h2 = gst_harness_new_with_element (h->element, "sink_1", NULL);
+  pad = gst_element_get_static_pad (h->element, "sink_1");
+  g_object_set (pad, "qos-messages", TRUE, NULL);
+  gst_object_unref (pad);
+
+  gst_element_set_bus (h->element, bus);
+  gst_harness_play (h);
+  gst_harness_play (h2);
+  gst_harness_set_caps_str (h, caps_str, caps_str);
+  gst_harness_set_src_caps_str (h2, caps_str);
+
+  /* Push in 1.5s of data on sink_0 and 4s on sink_1 */
+  gst_harness_push (h, new_buffer (3000, 0, 0, 1.5 * GST_SECOND, 0));
+  gst_harness_push (h2, new_buffer (10000, 0, 0, 5 * GST_SECOND, 0));
+
+  /* Pull a normal buffer at time 0 */
+  b = gst_harness_pull (h);
+  fail_unless_equals_int64 (GST_BUFFER_PTS (b), 0);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (b), GST_SECOND);
+  gst_buffer_unref (b);
+  msg = gst_bus_pop_filtered (bus, GST_MESSAGE_QOS);
+  fail_unless (msg == NULL);
+
+  gst_harness_crank_single_clock_wait (h);
+
+  /* Pull a buffer a time 1, the second half is faked data */
+  b = gst_harness_pull (h);
+  fail_unless_equals_int64 (GST_BUFFER_PTS (b), GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (b), GST_SECOND);
+  gst_buffer_unref (b);
+  msg = gst_bus_pop_filtered (bus, GST_MESSAGE_QOS);
+  fail_unless (msg == NULL);
+
+  /* Push a buffer thar partially overlaps, expect a QoS message */
+  b = gst_harness_push_and_pull (h, new_buffer (3000, 0, 1.5 * GST_SECOND,
+          1.5 * GST_SECOND, GST_BUFFER_FLAG_DISCONT));
+  fail_unless_equals_int64 (GST_BUFFER_PTS (b), 2 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (b), GST_SECOND);
+  gst_buffer_unref (b);
+
+  msg = gst_bus_pop_filtered (bus, GST_MESSAGE_QOS);
+  check_qos_message (msg, 1500 * GST_MSECOND, 500 * GST_MSECOND, 1500, 500);
+
+  /* Pull one buffer to get out the mixed data */
+  gst_harness_crank_single_clock_wait (h);
+  b = gst_harness_pull (h);
+  fail_unless_equals_int64 (GST_BUFFER_PTS (b), 3 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (b), GST_SECOND);
+  gst_buffer_unref (b);
+  msg = gst_bus_pop_filtered (bus, GST_MESSAGE_QOS);
+  fail_unless (msg == NULL);
+
+  /* Pull another buffer to move the time to 4s */
+  gst_harness_crank_single_clock_wait (h);
+  b = gst_harness_pull (h);
+  fail_unless_equals_int64 (GST_BUFFER_PTS (b), 4 * GST_SECOND);
+  fail_unless_equals_int64 (GST_BUFFER_DURATION (b), GST_SECOND);
+  gst_buffer_unref (b);
+  msg = gst_bus_pop_filtered (bus, GST_MESSAGE_QOS);
+  fail_unless (msg == NULL);
+
+  /* Push a buffer that totally overlaps, it should get dropped */
+  gst_harness_push (h, new_buffer (1000, 0, 3 * GST_SECOND,
+          500 * GST_MSECOND, 0));
+
+  /* Crank it to get the next one, and expect message from the dropped buffer */
+  gst_harness_crank_single_clock_wait (h);
+  msg = gst_bus_timed_pop_filtered (bus, GST_SECOND, GST_MESSAGE_QOS);
+  check_qos_message (msg, 3 * GST_SECOND, 500 * GST_MSECOND, 2500, 1000);
+
+  gst_element_set_bus (h->element, NULL);
+  gst_harness_teardown (h2);
+  gst_harness_teardown (h);
+  gst_object_unref (bus);
+}
+
+GST_END_TEST;
+
 static Suite *
 audiomixer_suite (void)
 {
@@ -2050,6 +2174,7 @@ audiomixer_suite (void)
   tcase_add_test (tc_chain, test_sync_unaligned);
   tcase_add_test (tc_chain, test_segment_base_handling);
   tcase_add_test (tc_chain, test_sinkpad_property_controller);
+  tcase_add_test (tc_chain, test_qos_message_live);
   tcase_add_checked_fixture (tc_chain, test_setup, test_teardown);
   tcase_add_test (tc_chain, test_change_output_caps);
   tcase_add_test (tc_chain, test_change_output_caps_mid_output_buffer);
