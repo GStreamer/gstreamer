@@ -826,28 +826,39 @@ static GstClockTime
 gst_system_clock_get_internal_time (GstClock * clock)
 {
   GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
+#if defined __APPLE__ || defined G_OS_WIN32
+  if (sysclock->priv->clock_type == GST_CLOCK_TYPE_REALTIME) {
+    gint64 rt_micros = g_get_real_time ();
+    // g_get_real_time returns microseconds but we need nanos, so we'll multiply by 1000
+    return ((guint64) rt_micros) * 1000;
+  } else
+#endif
 #if defined __APPLE__
-  uint64_t mach_t = mach_absolute_time ();
-  return gst_util_uint64_scale (mach_t, sysclock->priv->mach_timebase.numer,
-      sysclock->priv->mach_timebase.denom);
-#elif G_OS_WIN32
-  if (sysclock->priv->frequency.QuadPart != 0) {
-    LARGE_INTEGER now;
+  {
+    uint64_t mach_t = mach_absolute_time ();
+    return gst_util_uint64_scale (mach_t, sysclock->priv->mach_timebase.numer,
+        sysclock->priv->mach_timebase.denom);
+  }
+#elif defined G_OS_WIN32
+  {
+    if (sysclock->priv->frequency.QuadPart != 0) {
+      LARGE_INTEGER now;
 
-    /* we prefer the highly accurate performance counters on windows */
-    QueryPerformanceCounter (&now);
+      /* we prefer the highly accurate performance counters on windows */
+      QueryPerformanceCounter (&now);
 
-    return gst_util_uint64_scale (now.QuadPart,
-        GST_SECOND, sysclock->priv->frequency.QuadPart);
-  } else {
-    gint64 monotime;
+      return gst_util_uint64_scale (now.QuadPart,
+          GST_SECOND, sysclock->priv->frequency.QuadPart);
+    } else {
+      gint64 monotime;
 
-    monotime = g_get_monotonic_time ();
+      monotime = g_get_monotonic_time ();
 
-    return monotime * 1000;
+      return monotime * 1000;
+    }
   }
 #elif defined HAVE_POSIX_TIMERS && defined HAVE_CLOCK_GETTIME
-  clockid_t ptype;
+    clockid_t ptype;
   struct timespec ts;
 
   ptype = clock_type_to_posix_id (sysclock->priv->clock_type);
@@ -863,17 +874,27 @@ static guint64
 gst_system_clock_get_resolution (GstClock * clock)
 {
   GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
-#if defined __APPLE__
-  return gst_util_uint64_scale (GST_NSECOND,
-      sysclock->priv->mach_timebase.numer, sysclock->priv->mach_timebase.denom);
-#elif G_OS_WIN32
-  if (sysclock->priv->frequency.QuadPart != 0) {
-    return GST_SECOND / sysclock->priv->frequency.QuadPart;
-  } else {
+#if defined __APPLE__ || defined G_OS_WIN32
+  if (sysclock->priv->clock_type == GST_CLOCK_TYPE_REALTIME) {
     return 1 * GST_USECOND;
+  } else
+#endif
+#if defined __APPLE__
+  {
+    return gst_util_uint64_scale (GST_NSECOND,
+        sysclock->priv->mach_timebase.numer,
+        sysclock->priv->mach_timebase.denom);
+  }
+#elif defined G_OS_WIN32
+  {
+    if (sysclock->priv->frequency.QuadPart != 0) {
+      return GST_SECOND / sysclock->priv->frequency.QuadPart;
+    } else {
+      return 1 * GST_USECOND;
+    }
   }
 #elif defined(HAVE_POSIX_TIMERS) && defined(HAVE_CLOCK_GETTIME)
-  clockid_t ptype;
+    clockid_t ptype;
   struct timespec ts;
 
   ptype = clock_type_to_posix_id (sysclock->priv->clock_type);
@@ -883,7 +904,7 @@ gst_system_clock_get_resolution (GstClock * clock)
 
   return GST_TIMESPEC_TO_TIME (ts);
 #else
-  return 1 * GST_USECOND;
+    return 1 * GST_USECOND;
 #endif /* __APPLE__ */
 }
 
