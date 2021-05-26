@@ -79,7 +79,7 @@ create_gerror_bus_msg (GstElement * element, GstMessage * message)
 
 /* Those types can't be deserialized on the receiver
  * side, so we just ignore them for now */
-#define IS_UNDESERIALIZABLE_TYPE(value) \
+#define IS_NOT_DESERIALIZABLE_TYPE(value) \
   (g_type_is_a ((G_VALUE_TYPE (value)), G_TYPE_OBJECT)  || \
    g_type_is_a ((G_VALUE_TYPE (value)), G_TYPE_ERROR) || \
    g_type_is_a ((G_VALUE_TYPE (value)), GST_TYPE_CONTEXT) || \
@@ -89,7 +89,7 @@ static gboolean
 cleanup_structure (GQuark field_id, GValue * value, gpointer self)
 {
   /* We need soome API in core to make that happen cleanly */
-  if (IS_UNDESERIALIZABLE_TYPE (value)) {
+  if (IS_NOT_DESERIALIZABLE_TYPE (value)) {
     return FALSE;
   }
 
@@ -97,7 +97,7 @@ cleanup_structure (GQuark field_id, GValue * value, gpointer self)
     gint i;
 
     for (i = 0; i < gst_value_list_get_size (value); i++) {
-      if (IS_UNDESERIALIZABLE_TYPE (gst_value_list_get_value (value, i)))
+      if (IS_NOT_DESERIALIZABLE_TYPE (gst_value_list_get_value (value, i)))
         return FALSE;
     }
   }
@@ -106,7 +106,7 @@ cleanup_structure (GQuark field_id, GValue * value, gpointer self)
     gint i;
 
     for (i = 0; i < gst_value_array_get_size (value); i++) {
-      if (IS_UNDESERIALIZABLE_TYPE (gst_value_array_get_value (value, i)))
+      if (IS_NOT_DESERIALIZABLE_TYPE (gst_value_array_get_value (value, i)))
         return FALSE;
     }
   }
