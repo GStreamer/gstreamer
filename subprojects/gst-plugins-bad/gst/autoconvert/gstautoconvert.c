@@ -94,8 +94,6 @@ static GstPad *gst_auto_convert_get_internal_srcpad (GstAutoConvert *
 static GstIterator *gst_auto_convert_iterate_internal_links (GstPad * pad,
     GstObject * parent);
 
-static gboolean gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert,
-    GstCaps * caps);
 static GstCaps *gst_auto_convert_getcaps (GstAutoConvert * autoconvert,
     GstCaps * filter, GstPadDirection dir);
 static GstFlowReturn gst_auto_convert_sink_chain (GstPad * pad,
@@ -624,7 +622,7 @@ gst_auto_convert_get_or_make_element_from_factory (GstAutoConvert * autoconvert,
 /*
  * This function checks if there is one and only one pad template on the
  * factory that can accept the given caps. If there is one and only one,
- * it returns TRUE, otherwise, its FALSE
+ * it returns TRUE, FALSE otherwise
  */
 
 static gboolean
@@ -852,49 +850,62 @@ gst_auto_convert_iterate_internal_links (GstPad * pad, GstObject * parent)
  */
 
 static gboolean
-gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
+gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps,
+    gboolean check_downstream)
 {
   GList *elem;
   GstCaps *other_caps = NULL;
   GList *factories;
-  GstCaps *current_caps;
+  GstCaps *current_caps = NULL;
   gboolean res = FALSE;
-  GstElement *current_subelement;
+  GstElement *current_subelement = NULL;
 
   g_return_val_if_fail (autoconvert != NULL, FALSE);
 
-  current_caps = gst_pad_get_current_caps (autoconvert->sinkpad);
-  if (current_caps) {
-    if (gst_caps_is_equal_fixed (caps, current_caps)) {
-      gst_caps_unref (current_caps);
-      return TRUE;
-    }
-    gst_caps_unref (current_caps);
+  if (!check_downstream) {
+    current_caps = gst_pad_get_current_caps (autoconvert->sinkpad);
+
+    if (current_caps && gst_caps_is_equal_fixed (caps, current_caps))
+      goto get_out;
   }
 
+  if (check_downstream)
+    other_caps = gst_pad_peer_query_caps (autoconvert->srcpad, NULL);
   current_subelement = gst_auto_convert_get_subelement (autoconvert);
   if (current_subelement) {
     if (gst_pad_peer_query_accept_caps (autoconvert->current_internal_srcpad,
             caps)) {
-      /* If we can set the new caps on the current element,
-       * then we just get out
-       */
-      GST_DEBUG_OBJECT (autoconvert, "Could set %s:%s to %" GST_PTR_FORMAT,
-          GST_DEBUG_PAD_NAME (autoconvert->current_internal_srcpad), caps);
-      goto get_out;
-    } else {
-      /* If the current element doesn't work,
-       * then we remove the current element before finding a new one.
-       */
-      GST_AUTOCONVERT_LOCK (autoconvert);
-      g_clear_object (&autoconvert->current_subelement);
-      g_clear_object (&autoconvert->current_internal_sinkpad);
-      g_clear_object (&autoconvert->current_internal_srcpad);
-      GST_AUTOCONVERT_UNLOCK (autoconvert);
+
+      res = TRUE;
+      if (other_caps) {
+        GstElementFactory *factory =
+            gst_element_get_factory (current_subelement);
+
+        if (!factory_can_intersect (autoconvert, factory, GST_PAD_SRC,
+                other_caps)) {
+          GST_LOG_OBJECT (autoconvert,
+              "Factory %s does not accept src caps %" GST_PTR_FORMAT,
+              gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)),
+              other_caps);
+          res = FALSE;
+        }
+      }
+
+      if (res) {
+        /* If we can set the new caps on the current element,
+         * then we just get out
+         */
+        GST_DEBUG_OBJECT (autoconvert, "Could set %s:%s to %" GST_PTR_FORMAT,
+            GST_DEBUG_PAD_NAME (autoconvert->current_internal_srcpad), caps);
+        goto get_out;
+      }
     }
   }
 
-  other_caps = gst_pad_peer_query_caps (autoconvert->srcpad, NULL);
+  if (!check_downstream)
+    other_caps = gst_pad_peer_query_caps (autoconvert->srcpad, NULL);
+  /* We already queries downstream caps otherwise */
+
   factories = gst_auto_convert_get_or_load_factories (autoconvert);
 
   for (elem = factories; elem; elem = g_list_next (elem)) {
@@ -940,6 +951,7 @@ gst_auto_convert_sink_setcaps (GstAutoConvert * autoconvert, GstCaps * caps)
 get_out:
   gst_clear_object (&current_subelement);
   gst_clear_caps (&other_caps);
+  gst_clear_caps (&current_caps);
 
   if (!res)
     GST_WARNING_OBJECT (autoconvert,
@@ -1064,6 +1076,22 @@ gst_auto_convert_sink_chain (GstPad * pad, GstObject * parent,
   GstFlowReturn ret = GST_FLOW_NOT_NEGOTIATED;
   GstAutoConvert *autoconvert = GST_AUTO_CONVERT (parent);
 
+  if (gst_pad_check_reconfigure (autoconvert->srcpad)) {
+    GstCaps *sinkcaps = gst_pad_get_current_caps (pad);
+
+    GST_INFO_OBJECT (parent, "Needs reconfigure.");
+    /* if we need to reconfigure we pretend new caps arrived. This
+     * will reconfigure the transform with the new output format. */
+    if (sinkcaps
+        && !gst_auto_convert_sink_setcaps (autoconvert, sinkcaps, TRUE)) {
+      gst_clear_caps (&sinkcaps);
+      GST_ERROR_OBJECT (autoconvert, "Could not reconfigure.");
+
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+    gst_clear_caps (&sinkcaps);
+  }
+
   if (autoconvert->current_internal_srcpad) {
     ret = gst_pad_push (autoconvert->current_internal_srcpad, buffer);
     if (ret != GST_FLOW_OK)
@@ -1112,7 +1140,7 @@ gst_auto_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     GstCaps *caps;
 
     gst_event_parse_caps (event, &caps);
-    ret = gst_auto_convert_sink_setcaps (autoconvert, caps);
+    ret = gst_auto_convert_sink_setcaps (autoconvert, caps, FALSE);
     if (!ret) {
       gst_event_unref (event);
       return ret;
