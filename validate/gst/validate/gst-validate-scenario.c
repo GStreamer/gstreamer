@@ -523,6 +523,8 @@ gst_validate_action_new (GstValidateScenario * scenario,
 {
   GstValidateAction *action = g_slice_new0 (GstValidateAction);
 
+  g_assert (action_type);
+
   gst_validate_action_init (action);
   action->playback_time = GST_CLOCK_TIME_NONE;
   action->priv->timeout = GST_CLOCK_TIME_NONE;
@@ -3822,9 +3824,13 @@ gst_validate_create_subaction (GstValidateScenario * scenario,
     GstStructure * nstruct, gint it, gint max)
 {
   GstValidateAction *subaction;
+  GstValidateActionType *action_type =
+      _find_action_type (gst_structure_get_name (nstruct));
 
-  subaction = gst_validate_action_new (scenario,
-      _find_action_type (gst_structure_get_name (nstruct)), nstruct, FALSE);
+  if (!action_type)
+    gst_validate_error_structure (action,
+        "Unknown action type: '%s'", gst_structure_get_name (nstruct));
+  subaction = gst_validate_action_new (scenario, action_type, nstruct, FALSE);
   GST_VALIDATE_ACTION_RANGE_NAME (subaction) =
       GST_VALIDATE_ACTION_RANGE_NAME (action);
   GST_VALIDATE_ACTION_FILENAME (subaction) =
