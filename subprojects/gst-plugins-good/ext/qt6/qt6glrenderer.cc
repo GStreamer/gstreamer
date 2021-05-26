@@ -10,6 +10,8 @@
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QAnimationDriver>
+#include <QCoreApplication>
+#include <QEventLoop>
 
 #include <gst/gl/gl.h>
 #include "gstqt6gl.h"

@@ -9,6 +9,8 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLFramebufferObject>
 #include <QAnimationDriver>
+#include <QCoreApplication>
+#include <QEventLoop>
 
 #include <gst/gl/gl.h>
 #include "gstqtgl.h"
