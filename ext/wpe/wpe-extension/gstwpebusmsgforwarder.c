@@ -64,8 +64,10 @@ create_gerror_bus_msg (GstElement * element, GstMessage * message)
 
   msg = webkit_user_message_new ("gstwpe.bus_gerror_message",
       /* (message_type, src_path, error_domain, error_code, msg, debug_str, details_structure) */
-      g_variant_new ("(sssusss)",
-          gst_message_type_get_name (GST_MESSAGE_TYPE (message)),
+      g_variant_new ("(issssusss)",
+          GST_MESSAGE_TYPE (message),
+          GST_MESSAGE_SRC_NAME (message),
+          G_OBJECT_TYPE_NAME (GST_MESSAGE_SRC (message)),
           src_path,
           g_quark_to_string (error->domain),
           error->code, error->message, debug_str, details_structure)
@@ -144,8 +146,8 @@ gst_message_post_cb (GObject * object, GstClockTime ts, GstElement * element,
   } else {
     gchar *src_path = gst_object_get_path_string (GST_MESSAGE_SRC (message));
     msg = webkit_user_message_new ("gstwpe.bus_message",
-        g_variant_new ("(sssss)",
-            gst_message_type_get_name (GST_MESSAGE_TYPE (message)),
+        g_variant_new ("(issss)",
+            GST_MESSAGE_TYPE (message),
             GST_MESSAGE_SRC_NAME (message),
             G_OBJECT_TYPE_NAME (GST_MESSAGE_SRC (message)), src_path, str));
     g_free (src_path);

@@ -24,11 +24,11 @@
  * The wpesrc element is used to produce a video texture representing a web page
  * rendered off-screen by WPE.
  *
- * Starting from WPEBackend-FDO 1.6.x, software rendering support is available. This
- * features allows wpesrc to be used on machines without GPU, and/or for testing
- * purpose. To enable it, set the `LIBGL_ALWAYS_SOFTWARE=true` environment
- * variable and make sure `video/x-raw, format=BGRA` caps are negotiated by the
- * wpesrc element.
+ * Starting from WPEBackend-FDO 1.6.x, software rendering support is available.
+ * This features allows wpesrc to be used on machines without GPU, and/or for
+ * testing purpose. To enable it, set the `LIBGL_ALWAYS_SOFTWARE=true`
+ * environment variable and make sure `video/x-raw, format=BGRA` caps are
+ * negotiated by the wpesrc element.
  *
  * ## Example launch lines
  *
@@ -68,25 +68,16 @@
  * source pads.
  *
  * This source also relays GStreamer bus messages from the GStreamer pipelines
- * running inside the web pages. Error, warning and info messages are made ours
- * with the addition of the following fields into the GstMessage details (See
- * gst_message_parse_error_details(), gst_message_parse_warning_details() and
- * gst_message_parse_info_details()):
+ * running inside the web pages  as [element custom](gst_message_new_custom)
+ * messages which structure is called `WpeForwarded` and has the following
+ * fields:
  *
- * * `wpesrc_original_src_path`: [Path](gst_object_get_path_string) of the
- *   original element posting the message
- *
- * Other message types are posted as [element custom](gst_message_new_custom)
- * messages reusing the same GstStructure as the one from the message from the
- * message posted in the web page with the addition of the following fields:
- *
- * * `wpesrc_original_message_type`: Type of the original message from
- *    gst_message_type_get_name().
- * * `wpesrc_original_src_name`: Name of the original element posting the
+ * * `message`: The original #GstMessage
+ * * `wpesrc-original-src-name`: Name of the original element posting the
  *   message
- * * `wpesrc_original_src_type`: Name of the GType of the original element
+ * * `wpesrc-original-src-type`: Name of the GType of the original element
  *   posting the message
- * * `wpesrc_original_src_path`: [Path](gst_object_get_path_string) of the
+ * * `wpesrc-original-src-path`: [Path](gst_object_get_path_string) of the
  *   original element positing the message
  *
  * Note: This feature will be disabled if you disable the tracer subsystem.

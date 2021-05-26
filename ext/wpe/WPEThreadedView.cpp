@@ -167,12 +167,16 @@ initialize_web_extensions (WebKitWebContext *context)
 static void
 webkit_extension_gerror_msg_received (GstWpeSrc *src, GVariant *params)
 {
-    GstMessage *message;
-    const gchar *message_type, *src_path, *error_domain, *msg, *debug_str, *details_str;
+    GstStructure *structure;
+    GstMessage *forwarded;
+    const gchar *src_path, *src_type, *src_name, *error_domain, *msg, *debug_str, *details_str;
+    gint message_type;
     guint32 error_code;
 
-    g_variant_get (params, "(sssusss)",
+    g_variant_get (params, "(issssusss)",
        &message_type,
+       &src_type,
+       &src_name,
        &src_path,
        &error_domain,
        &error_code,
@@ -188,37 +192,44 @@ webkit_extension_gerror_msg_received (GstWpeSrc *src, GVariant *params)
         debug_str, src_path
     );
 
-    if (!details)
-        details = gst_structure_new_empty("wpesrcdetails");
-    gst_structure_set(details,
-                      "wpesrc_original_src_path", G_TYPE_STRING, src_path,
-                      NULL);
 
-    if (!g_strcmp0(message_type, "error")) {
-        message =
+    if (message_type == GST_MESSAGE_ERROR) {
+        forwarded =
             gst_message_new_error_with_details(GST_OBJECT(src), error,
                                                our_message, details);
-    } else if (!g_strcmp0(message_type, "warning")) {
-        message =
+    } else if (message_type == GST_MESSAGE_WARNING) {
+        forwarded =
             gst_message_new_warning_with_details(GST_OBJECT(src), error,
                                                  our_message, details);
     } else {
-        message =
+        forwarded =
             gst_message_new_info_with_details(GST_OBJECT(src), error, our_message, details);
     }
 
+    structure = gst_structure_new ("WpeForwarded",
+        "message", GST_TYPE_MESSAGE, forwarded,
+        "wpe-original-src-name", G_TYPE_STRING, src_name,
+        "wpe-original-src-type", G_TYPE_STRING, src_type,
+        "wpe-original-src-path", G_TYPE_STRING, src_path,
+        NULL
+    );
+
     g_free (our_message);
-    gst_element_post_message(GST_ELEMENT(src), message);
+    gst_element_post_message(GST_ELEMENT(src), gst_message_new_custom(GST_MESSAGE_ELEMENT,
+                                                                      GST_OBJECT(src), structure));
     g_error_free(error);
+    gst_message_unref (forwarded);
 }
 
 static void
 webkit_extension_bus_message_received (GstWpeSrc *src, GVariant *params)
 {
-    GstStructure *structure;
-    const gchar *message_type, *src_name, *src_type, *src_path, *struct_str;
+    GstStructure *original_structure, *structure;
+    const gchar *src_name, *src_type, *src_path, *struct_str;
+    GstMessageType message_type;
+    GstMessage *forwarded;
 
-    g_variant_get (params, "(sssss)",
+    g_variant_get (params, "(issss)",
        &message_type,
        &src_name,
        &src_type,
@@ -226,23 +237,29 @@ webkit_extension_bus_message_received (GstWpeSrc *src, GVariant *params)
        &struct_str
     );
 
-    structure = (struct_str[0] != '\0') ? gst_structure_new_from_string(struct_str) : NULL;
-    if (!structure)
+    original_structure = (struct_str[0] != '\0') ? gst_structure_new_from_string(struct_str) : NULL;
+    if (!original_structure)
     {
         if (struct_str[0] != '\0')
             GST_ERROR_OBJECT(src, "Could not deserialize: %s", struct_str);
-        structure = gst_structure_new_empty("wpesrc");
+        original_structure = gst_structure_new_empty("wpesrc");
+
     }
 
-    gst_structure_set(structure,
-                      "wpesrc_original_message_type", G_TYPE_STRING, message_type,
-                      "wpesrc_original_src_name", G_TYPE_STRING, src_name,
-                      "wpesrc_original_src_type", G_TYPE_STRING, src_type,
-                      "wpesrc_original_src_path", G_TYPE_STRING, src_path,
-                      NULL);
+    forwarded = gst_message_new_custom(message_type,
+        GST_OBJECT (src), original_structure);
+    structure = gst_structure_new ("WpeForwarded",
+        "message", GST_TYPE_MESSAGE, forwarded,
+        "wpe-original-src-name", G_TYPE_STRING, src_name,
+        "wpe-original-src-type", G_TYPE_STRING, src_type,
+        "wpe-original-src-path", G_TYPE_STRING, src_path,
+        NULL
+    );
 
     gst_element_post_message(GST_ELEMENT(src), gst_message_new_custom(GST_MESSAGE_ELEMENT,
                                                                       GST_OBJECT(src), structure));
+
+    gst_message_unref (forwarded);
 }
 
 static gboolean
