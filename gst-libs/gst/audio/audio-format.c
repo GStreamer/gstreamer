@@ -550,13 +550,15 @@ generate_raw_audio_formats (gpointer data)
   struct RawAudioFormats *all = g_new (struct RawAudioFormats, 1);
   gchar *tmp;
   guint i;
+  gboolean res G_GNUC_UNUSED;
 
   g_value_init (&list, GST_TYPE_LIST);
   /* Workaround a bug in our parser that would lead to segfaults
    * when deserializing container types using static strings,
    * see https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/446 */
   tmp = g_strdup (GST_AUDIO_FORMATS_ALL);
-  g_assert (gst_value_deserialize (&list, tmp));
+  res = gst_value_deserialize (&list, tmp);
+  g_assert (res);
   g_free (tmp);
 
   all->n = gst_value_list_get_size (&list);
