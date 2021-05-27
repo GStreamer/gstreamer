@@ -1669,13 +1669,12 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
       GST_DEBUG_OBJECT (pad, "Have discont. Expected %"
           G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
           pad->priv->next_offset, start_offset);
-    pad->priv->output_offset = -1;
     pad->priv->next_offset = end_offset;
   } else {
     pad->priv->next_offset += pad->priv->size;
   }
 
-  if (pad->priv->output_offset == -1) {
+  if (pad->priv->output_offset == -1 || discont) {
     GstClockTime start_running_time;
     GstClockTime end_running_time;
     GstClockTime segment_pos;
@@ -1711,7 +1710,6 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
       /* Outside output segment, drop */
       pad->priv->position = 0;
       pad->priv->size = 0;
-      pad->priv->output_offset = -1;
       GST_DEBUG_OBJECT (pad, "Buffer outside output segment");
       return FALSE;
     }
@@ -1723,14 +1721,16 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
     if (end_output_offset < aagg->priv->offset) {
       pad->priv->position = 0;
       pad->priv->size = 0;
-      pad->priv->output_offset = -1;
       GST_DEBUG_OBJECT (pad,
           "Buffer before segment or current position: %" G_GUINT64_FORMAT " < %"
           G_GINT64_FORMAT, end_output_offset, aagg->priv->offset);
       return FALSE;
     }
 
-    if (start_output_offset == -1 || start_output_offset < aagg->priv->offset) {
+    if (start_output_offset == -1 ||
+        start_output_offset < aagg->priv->offset ||
+        (pad->priv->output_offset != -1 &&
+            start_output_offset < pad->priv->output_offset)) {
       guint diff;
 
       if (start_output_offset == -1 && end_output_offset < pad->priv->size) {
@@ -1742,6 +1742,9 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
           diff = aagg->priv->offset - start_output_offset;
         else
           diff = 0;
+      } else if (pad->priv->output_offset != -1 &&
+          start_output_offset < pad->priv->output_offset) {
+        diff = pad->priv->output_offset - start_output_offset;
       } else {
         diff = aagg->priv->offset - start_output_offset;
       }
@@ -1751,7 +1754,6 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
         /* Empty buffer, drop */
         pad->priv->position = 0;
         pad->priv->size = 0;
-        pad->priv->output_offset = -1;
         GST_DEBUG_OBJECT (pad,
             "Buffer before segment or current position: %" G_GUINT64_FORMAT
             " < %" G_GINT64_FORMAT, end_output_offset, aagg->priv->offset);
@@ -1761,6 +1763,9 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
 
     if (start_output_offset == -1 || start_output_offset < aagg->priv->offset)
       pad->priv->output_offset = aagg->priv->offset;
+    else if (pad->priv->output_offset != -1)
+      pad->priv->output_offset = MAX (pad->priv->output_offset,
+          start_output_offset);
     else
       pad->priv->output_offset = start_output_offset;
 
