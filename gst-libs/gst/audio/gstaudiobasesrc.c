@@ -305,21 +305,26 @@ gst_audio_base_src_get_time (GstClock * clock, GstAudioBaseSrc * src)
   guint64 raw, samples;
   guint delay;
   GstClockTime result;
+  GstAudioRingBuffer *ringbuffer;
+  gint rate;
 
-  if (G_UNLIKELY (src->ringbuffer == NULL
-          || src->ringbuffer->spec.info.rate == 0))
+  ringbuffer = src->ringbuffer;
+  if (!ringbuffer)
     return GST_CLOCK_TIME_NONE;
 
-  raw = samples = gst_audio_ring_buffer_samples_done (src->ringbuffer);
+  rate = ringbuffer->spec.info.rate;
+  if (rate == 0)
+    return GST_CLOCK_TIME_NONE;
+
+  raw = samples = gst_audio_ring_buffer_samples_done (ringbuffer);
 
   /* the number of samples not yet processed, this is still queued in the
    * device (not yet read for capture). */
-  delay = gst_audio_ring_buffer_delay (src->ringbuffer);
+  delay = gst_audio_ring_buffer_delay (ringbuffer);
 
   samples += delay;
 
-  result = gst_util_uint64_scale_int (samples, GST_SECOND,
-      src->ringbuffer->spec.info.rate);
+  result = gst_util_uint64_scale_int (samples, GST_SECOND, rate);
 
   GST_DEBUG_OBJECT (src,
       "processed samples: raw %" G_GUINT64_FORMAT ", delay %u, real %"
