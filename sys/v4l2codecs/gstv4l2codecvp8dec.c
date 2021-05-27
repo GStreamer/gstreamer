@@ -872,10 +872,22 @@ static void gst_v4l2_codec_vp8_alpha_decode_bin_subclass_init
 }
 
 void
-gst_v4l2_codec_vp8_dec_register (GstPlugin * plugin,
+gst_v4l2_codec_vp8_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
     GstV4l2CodecDevice * device, guint rank)
 {
   gchar *element_name;
+  GstCaps *src_caps, *alpha_caps;
+
+  if (!gst_v4l2_decoder_set_sink_fmt (decoder, V4L2_PIX_FMT_VP8_FRAME,
+          320, 240, 8))
+    return;
+  src_caps = gst_v4l2_decoder_enum_src_formats (decoder);
+
+  if (gst_caps_is_empty (src_caps)) {
+    GST_WARNING ("Not registering VP8 decoder since it produces no "
+        "supported format");
+    goto done;
+  }
 
   gst_v4l2_decoder_register (plugin, GST_TYPE_V4L2_CODEC_VP8_DEC,
       (GClassInitFunc) gst_v4l2_codec_vp8_dec_subclass_init,
@@ -883,9 +895,18 @@ gst_v4l2_codec_vp8_dec_register (GstPlugin * plugin,
       (GInstanceInitFunc) gst_v4l2_codec_vp8_dec_subinit,
       "v4l2sl%svp8dec", device, rank, &element_name);
 
-  if (element_name) {
+  if (!element_name)
+    goto done;
+
+  alpha_caps = gst_caps_from_string ("video/x-raw,format={I420, NV12}");
+
+  if (gst_caps_can_intersect (src_caps, alpha_caps))
     gst_v4l2_codec_alpha_decode_bin_register (plugin,
         (GClassInitFunc) gst_v4l2_codec_vp8_alpha_decode_bin_subclass_init,
         element_name, "v4l2slvp8%salphadecodebin", device, rank);
-  }
+
+  gst_caps_unref (alpha_caps);
+
+done:
+  gst_caps_unref (src_caps);
 }

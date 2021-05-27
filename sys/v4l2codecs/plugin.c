@@ -50,12 +50,14 @@ register_video_decoder (GstPlugin * plugin, GstV4l2CodecDevice * device)
       case V4L2_PIX_FMT_H264_SLICE:
         GST_INFO_OBJECT (decoder, "Registering %s as H264 Decoder",
             device->name);
-        gst_v4l2_codec_h264_dec_register (plugin, device, GST_RANK_PRIMARY + 1);
+        gst_v4l2_codec_h264_dec_register (plugin, decoder, device,
+            GST_RANK_PRIMARY + 1);
         break;
       case V4L2_PIX_FMT_VP8_FRAME:
         GST_INFO_OBJECT (decoder, "Registering %s as VP8 Decoder",
             device->name);
-        gst_v4l2_codec_vp8_dec_register (plugin, device, GST_RANK_PRIMARY + 1);
+        gst_v4l2_codec_vp8_dec_register (plugin, decoder,
+            device, GST_RANK_PRIMARY + 1);
         break;
       default:
         GST_FIXME_OBJECT (decoder, "%" GST_FOURCC_FORMAT " is not supported.",

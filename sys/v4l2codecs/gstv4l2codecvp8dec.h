@@ -45,8 +45,9 @@ struct _GstV4l2CodecVp8DecClass
 
 GType gst_v4l2_codec_vp8_dec_get_type (void);
 void  gst_v4l2_codec_vp8_dec_register (GstPlugin * plugin,
-                                        GstV4l2CodecDevice * device,
-                                        guint rank);
+                                       GstV4l2Decoder * decoder,
+                                       GstV4l2CodecDevice * device,
+                                       guint rank);
 
 G_END_DECLS
 

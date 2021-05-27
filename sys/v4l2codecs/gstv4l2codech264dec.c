@@ -1401,13 +1401,29 @@ gst_v4l2_codec_h264_dec_subclass_init (GstV4l2CodecH264DecClass * klass,
 }
 
 void
-gst_v4l2_codec_h264_dec_register (GstPlugin * plugin,
+gst_v4l2_codec_h264_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
     GstV4l2CodecDevice * device, guint rank)
 {
+  GstCaps *src_caps;
+
+  if (!gst_v4l2_decoder_set_sink_fmt (decoder, V4L2_PIX_FMT_H264_SLICE,
+          320, 240, 8))
+    return;
+  src_caps = gst_v4l2_decoder_enum_src_formats (decoder);
+
+  if (gst_caps_is_empty (src_caps)) {
+    GST_WARNING ("Not registering H264 decoder since it produces no "
+        "supported format");
+    goto done;
+  }
+
   gst_v4l2_decoder_register (plugin,
       GST_TYPE_V4L2_CODEC_H264_DEC,
       (GClassInitFunc) gst_v4l2_codec_h264_dec_subclass_init,
       gst_mini_object_ref (GST_MINI_OBJECT (device)),
       (GInstanceInitFunc) gst_v4l2_codec_h264_dec_subinit,
       "v4l2sl%sh264dec", device, rank, NULL);
+
+done:
+  gst_caps_unref (src_caps);
 }

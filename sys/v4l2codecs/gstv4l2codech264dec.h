@@ -45,6 +45,7 @@ struct _GstV4l2CodecH264DecClass
 
 GType gst_v4l2_codec_h264_dec_get_type (void);
 void  gst_v4l2_codec_h264_dec_register (GstPlugin * plugin,
+                                        GstV4l2Decoder * decoder,
                                         GstV4l2CodecDevice * device,
                                         guint rank);
 
