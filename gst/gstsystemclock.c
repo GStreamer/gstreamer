@@ -386,7 +386,7 @@ static void gst_system_clock_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstClockTime gst_system_clock_get_internal_time (GstClock * clock);
-#if defined __APPLE__ || defined G_OS_WIN32
+#if !defined HAVE_POSIX_TIMERS || !defined HAVE_CLOCK_GETTIME
 static GstClockTime gst_system_clock_get_mono_time (GstSystemClock * clock);
 static GstClockTime gst_system_clock_get_real_time ();
 #endif
@@ -830,13 +830,7 @@ static GstClockTime
 gst_system_clock_get_internal_time (GstClock * clock)
 {
   GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
-#if defined __APPLE__ || defined G_OS_WIN32
-  if (sysclock->priv->clock_type == GST_CLOCK_TYPE_REALTIME) {
-    return gst_system_clock_get_real_time ();
-  } else {
-    return gst_system_clock_get_mono_time (sysclock);
-  }
-#elif defined HAVE_POSIX_TIMERS && defined HAVE_CLOCK_GETTIME
+#if defined HAVE_POSIX_TIMERS && defined HAVE_CLOCK_GETTIME
   // BSD and Linux' Posix timers and clock_gettime cover all of the different clock types
   // without need for special handling so we'll use those.
   clockid_t ptype;
@@ -848,10 +842,16 @@ gst_system_clock_get_internal_time (GstClock * clock)
     return GST_CLOCK_TIME_NONE;
 
   return GST_TIMESPEC_TO_TIME (ts);
-#endif /* __APPLE__ || G_OS_WIN32 */
+#else
+  if (sysclock->priv->clock_type == GST_CLOCK_TYPE_REALTIME) {
+    return gst_system_clock_get_real_time ();
+  } else {
+    return gst_system_clock_get_mono_time (sysclock);
+  }
+#endif /* !HAVE_POSIX_TIMERS || !HAVE_CLOCK_GETTIME */
 }
 
-#if defined __APPLE__ || defined G_OS_WIN32
+#if !defined HAVE_POSIX_TIMERS || !defined HAVE_CLOCK_GETTIME
 static GstClockTime
 gst_system_clock_get_real_time ()
 {
@@ -868,6 +868,7 @@ gst_system_clock_get_mono_time (GstSystemClock * sysclock)
   return gst_util_uint64_scale (mach_t, sysclock->priv->mach_timebase.numer,
       sysclock->priv->mach_timebase.denom);
 #else
+#if defined G_OS_WIN32
   if (sysclock->priv->frequency.QuadPart != 0) {
     LARGE_INTEGER now;
 
@@ -876,16 +877,18 @@ gst_system_clock_get_mono_time (GstSystemClock * sysclock)
 
     return gst_util_uint64_scale (now.QuadPart,
         GST_SECOND, sysclock->priv->frequency.QuadPart);
-  } else {
+  } else
+#endif /* G_OS_WIN32 */
+  {
     gint64 monotime;
 
     monotime = g_get_monotonic_time ();
 
     return monotime * 1000;
   }
-#endif
+#endif /* __APPLE__ */
 }
-#endif /* __APPLE__ || G_OS_WIN32 */
+#endif /* !HAVE_POSIX_TIMERS || !HAVE_CLOCK_GETTIME */
 
 static guint64
 gst_system_clock_get_resolution (GstClock * clock)
