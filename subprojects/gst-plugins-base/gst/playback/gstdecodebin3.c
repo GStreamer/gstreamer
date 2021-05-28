@@ -247,6 +247,7 @@ struct _GstDecodebin3
    * it has fully transitioned to active */
   gboolean selection_updated;
   /* End of variables protected by selection_lock */
+  gboolean upstream_selected;
 
   /* List of pending collections.
    * FIXME : Is this really needed ? */
@@ -288,6 +289,7 @@ struct _DecodebinInput
   GstPad *parsebin_sink;
 
   GstStreamCollection *collection;      /* Active collection */
+  gboolean upstream_selected;
 
   guint group_id;
 
@@ -1007,6 +1009,27 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
   GST_DEBUG_OBJECT (sinkpad, "event %" GST_PTR_FORMAT, event);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+    {
+      GstQuery *q = gst_query_new_selectable ();
+
+      /* Query whether upstream can handle stream selection or not */
+      if (gst_pad_peer_query (sinkpad, q)) {
+        gst_query_parse_selectable (q, &input->upstream_selected);
+        GST_DEBUG_OBJECT (sinkpad, "Upstream is selectable : %d",
+            input->upstream_selected);
+      } else {
+        input->upstream_selected = FALSE;
+        GST_DEBUG_OBJECT (sinkpad, "Upstream does not handle SELECTABLE query");
+      }
+      gst_query_unref (q);
+
+      /* FIXME : We force `decodebin3` to upstream selection mode if *any* of the
+         inputs is. This means things might break if there's a mix */
+      if (input->upstream_selected)
+        dbin->upstream_selected = TRUE;
+      break;
+    }
     case GST_EVENT_CAPS:
     {
       GST_DEBUG_OBJECT (sinkpad,
@@ -1057,6 +1080,7 @@ create_new_input (GstDecodebin3 * dbin, gboolean main)
     input->ghost_sink = gst_ghost_pad_new_no_target (pad_name, GST_PAD_SINK);
     g_free (pad_name);
   }
+  input->upstream_selected = FALSE;
   g_object_set_data (G_OBJECT (input->ghost_sink), "decodebin.input", input);
   gst_pad_set_event_function (input->ghost_sink,
       (GstPadEventFunction) sink_event_function);
@@ -1441,14 +1465,12 @@ stream_in_collection (GstDecodebin3 * dbin, gchar * sid)
 /* Call with INPUT_LOCK taken */
 static void
 handle_stream_collection (GstDecodebin3 * dbin,
-    GstStreamCollection * collection, GstElement * child)
+    GstStreamCollection * collection, DecodebinInput * input)
 {
 #ifndef GST_DISABLE_GST_DEBUG
   const gchar *upstream_id;
   guint i;
 #endif
-  DecodebinInput *input = find_message_parsebin (dbin, child);
-
   if (!input) {
     GST_DEBUG_OBJECT (dbin,
         "Couldn't find corresponding input, most likely shutting down");
@@ -1558,14 +1580,30 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
     case GST_MESSAGE_STREAM_COLLECTION:
     {
       GstStreamCollection *collection = NULL;
+      DecodebinInput *input;
+
+      INPUT_LOCK (dbin);
+      input =
+          find_message_parsebin (dbin,
+          (GstElement *) GST_MESSAGE_SRC (message));
+      if (input == NULL) {
+        GST_DEBUG_OBJECT (dbin,
+            "Couldn't find corresponding input, most likely shutting down");
+        INPUT_UNLOCK (dbin);
+        break;
+      }
+      if (input->upstream_selected) {
+        GST_DEBUG_OBJECT (dbin,
+            "Upstream handles selection, not using/forwarding collection");
+        INPUT_UNLOCK (dbin);
+        goto drop_message;
+      }
       gst_message_parse_stream_collection (message, &collection);
       if (collection) {
-        INPUT_LOCK (dbin);
-        handle_stream_collection (dbin, collection,
-            (GstElement *) GST_MESSAGE_SRC (message));
+        handle_stream_collection (dbin, collection, input);
         posting_collection = TRUE;
-        INPUT_UNLOCK (dbin);
       }
+      INPUT_UNLOCK (dbin);
 
       SELECTION_LOCK (dbin);
       if (dbin->collection) {
@@ -1617,6 +1655,14 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
   if (posting_collection) {
     /* Figure out a selection for that collection */
     update_requested_selection (dbin);
+  }
+
+  return;
+
+drop_message:
+  {
+    GST_DEBUG_OBJECT (bin, "dropping message");
+    gst_message_unref (message);
   }
 }
 
@@ -1702,7 +1748,7 @@ get_output_for_slot (MultiQueueSlot * slot)
 
   /* 3. In default mode check if we should expose */
   id_in_list = (gchar *) stream_in_list (dbin->requested_selection, stream_id);
-  if (id_in_list) {
+  if (id_in_list || dbin->upstream_selected) {
     /* Check if we can steal an existing output stream we could re-use.
      * that is:
      * * an output stream whose slot->stream is not in requested
@@ -2862,6 +2908,11 @@ ghost_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
       GList *streams = NULL;
       guint32 seqnum = gst_event_get_seqnum (event);
 
+      if (dbin->upstream_selected) {
+        GST_DEBUG_OBJECT (pad, "Letting select-streams event flow upstream");
+        break;
+      }
+
       SELECTION_LOCK (dbin);
       if (seqnum == dbin->select_streams_seqnum) {
         SELECTION_UNLOCK (dbin);
@@ -2906,9 +2957,11 @@ ghost_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
 static gboolean
 gst_decodebin3_send_event (GstElement * element, GstEvent * event)
 {
+  GstDecodebin3 *dbin = (GstDecodebin3 *) element;
+
   GST_DEBUG_OBJECT (element, "event %s", GST_EVENT_TYPE_NAME (event));
-  if (GST_EVENT_TYPE (event) == GST_EVENT_SELECT_STREAMS) {
-    GstDecodebin3 *dbin = (GstDecodebin3 *) element;
+  if (!dbin->upstream_selected
+      && GST_EVENT_TYPE (event) == GST_EVENT_SELECT_STREAMS) {
     GList *streams = NULL;
     guint32 seqnum = gst_event_get_seqnum (event);
 
@@ -3100,6 +3153,7 @@ gst_decodebin3_change_state (GstElement * element, GstStateChange transition)
       g_object_set (dbin->multiqueue, "min-interleave-time",
           dbin->default_mq_min_interleave, NULL);
       dbin->current_mq_min_interleave = dbin->default_mq_min_interleave;
+      dbin->upstream_selected = FALSE;
     }
       break;
     default:
