@@ -765,7 +765,7 @@ gst_d3d11_device_constructed (GObject * object)
       NULL, d3d11_flags, feature_levels, G_N_ELEMENTS (feature_levels),
       D3D11_SDK_VERSION, &priv->device, &selected_level, &priv->device_context);
 
-  if (!gst_d3d11_result (hr, NULL)) {
+  if (FAILED (hr)) {
     /* Retry if the system could not recognize D3D_FEATURE_LEVEL_11_1 */
     hr = D3D11CreateDevice ((IDXGIAdapter *) adapter, D3D_DRIVER_TYPE_UNKNOWN,
         NULL, d3d11_flags, &feature_levels[1],
@@ -786,7 +786,7 @@ gst_d3d11_device_constructed (GObject * object)
         D3D11_SDK_VERSION, &priv->device, &selected_level,
         &priv->device_context);
 
-    if (!gst_d3d11_result (hr, NULL)) {
+    if (FAILED (hr)) {
       /* Retry if the system could not recognize D3D_FEATURE_LEVEL_11_1 */
       hr = D3D11CreateDevice ((IDXGIAdapter *) adapter, D3D_DRIVER_TYPE_UNKNOWN,
           NULL, d3d11_flags, &feature_levels[1],
@@ -795,11 +795,12 @@ gst_d3d11_device_constructed (GObject * object)
     }
   }
 
-  if (gst_d3d11_result (hr, NULL)) {
+  if (SUCCEEDED (hr)) {
     GST_DEBUG_OBJECT (self, "Selected feature level 0x%x", selected_level);
   } else {
-    GST_WARNING_OBJECT (self,
-        "cannot create d3d11 device, hr: 0x%x", (guint) hr);
+    GST_INFO_OBJECT (self,
+        "cannot create d3d11 device for adapter index %d with flags 0x%x, "
+        "hr: 0x%x", priv->adapter, d3d11_flags, (guint) hr);
     goto error;
   }
 
