@@ -32,16 +32,17 @@ plugin_init (GstPlugin * plugin)
   gboolean ret = FALSE;
 
   ret |= GST_ELEMENT_REGISTER (checksumsink, plugin);
-  ret |= GST_ELEMENT_REGISTER (fpsdisplaysink, plugin);
   ret |= GST_ELEMENT_REGISTER (chopmydata, plugin);
+  ret |= GST_ELEMENT_REGISTER (clockselect, plugin);
   ret |= GST_ELEMENT_REGISTER (compare, plugin);
   ret |= GST_ELEMENT_REGISTER (debugspy, plugin);
-  ret |= GST_ELEMENT_REGISTER (watchdog, plugin);
   ret |= GST_ELEMENT_REGISTER (errorignore, plugin);
-  ret |= GST_ELEMENT_REGISTER (fakevideosink, plugin);
   ret |= GST_ELEMENT_REGISTER (fakeaudiosink, plugin);
+  ret |= GST_ELEMENT_REGISTER (fakevideosink, plugin);
+  ret |= GST_ELEMENT_REGISTER (fpsdisplaysink, plugin);
   ret |= GST_ELEMENT_REGISTER (testsrcbin, plugin);
-  ret |= GST_ELEMENT_REGISTER (clockselect, plugin);
+  ret |= GST_ELEMENT_REGISTER (videocodectestsink, plugin);
+  ret |= GST_ELEMENT_REGISTER (watchdog, plugin);
 
   return ret;
 }
