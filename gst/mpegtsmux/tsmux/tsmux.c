@@ -1369,7 +1369,7 @@ write_new_pcr (TsMux * mux, TsMuxStream * stream, gint64 cur_pcr,
         TSMUX_PACKET_FLAG_ADAPTATION | TSMUX_PACKET_FLAG_WRITE_PCR;
     stream->pi.pcr = cur_pcr;
 
-    if (stream->next_pcr != -1 && cur_pcr >= stream->next_pcr) {
+    if (mux->bitrate && stream->next_pcr != -1 && cur_pcr >= stream->next_pcr) {
       GST_WARNING ("Writing PCR %" G_GUINT64_FORMAT " missed the target %"
           G_GUINT64_FORMAT " by %f ms", cur_pcr, stream->next_pcr,
           (double) (cur_pcr - stream->next_pcr) / 27000.0);
