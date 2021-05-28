@@ -98,8 +98,11 @@ static GstStaticPadTemplate audio_template = GST_STATIC_PAD_TEMPLATE ("audio",
 
 #define gst_hls_sink2_parent_class parent_class
 G_DEFINE_TYPE (GstHlsSink2, gst_hls_sink2, GST_TYPE_BIN);
+#define _do_init \
+  hls_element_init (plugin); \
+  GST_DEBUG_CATEGORY_INIT (gst_hls_sink2_debug, "hlssink2", 0, "HlsSink2");
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (hlssink2, "hlssink2", GST_RANK_NONE,
-    GST_TYPE_HLS_SINK2, hls_element_init (plugin));
+    GST_TYPE_HLS_SINK2, _do_init);
 
 static void gst_hls_sink2_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
