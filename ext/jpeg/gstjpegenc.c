@@ -113,8 +113,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/jpeg, "
-        "width = (int) [ 16, 65535 ], "
-        "height = (int) [ 16, 65535 ], "
+        "width = (int) [ 1, 65535 ], "
+        "height = (int) [ 1, 65535 ], "
         "framerate = (fraction) [ 0/1, MAX ], "
         "sof-marker = (int) { 0, 1, 2, 4, 9 }")
     );

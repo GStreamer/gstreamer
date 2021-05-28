@@ -8606,7 +8606,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "image/jpeg:\n          width: [ 16, 65535 ]\n         height: [ 16, 65535 ]\n      framerate: [ 0/1, 2147483647/1 ]\n     sof-marker: { (int)0, (int)1, (int)2, (int)4, (int)9 }\n",
+                        "caps": "image/jpeg:\n          width: [ 1, 65535 ]\n         height: [ 1, 65535 ]\n      framerate: [ 0/1, 2147483647/1 ]\n     sof-marker: { (int)0, (int)1, (int)2, (int)4, (int)9 }\n",
                         "direction": "src",
                         "presence": "always"
                     }
