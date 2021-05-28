@@ -15,7 +15,7 @@ if openh264_dep.found()
     c_args : gst_plugins_bad_args,
     link_args : noseh_link_args,
     include_directories : [configinc],
-    dependencies : [gstvideo_dep, openh264_dep],
+    dependencies : [gstvideo_dep, openh264_dep, gstpbutils_dep, ],
     install : true,
     install_dir : plugins_install_dir,
   )

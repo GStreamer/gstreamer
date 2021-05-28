@@ -30,6 +30,7 @@
 #include "gstopenh264elements.h"
 #include "gstopenh264enc.h"
 
+#include <gst/pbutils/pbutils.h>
 #include <gst/gst.h>
 #include <gst/base/base.h>
 #include <gst/video/video.h>
@@ -684,6 +685,19 @@ gst_openh264enc_stop (GstVideoEncoder * encoder)
   return TRUE;
 }
 
+static guint8
+gst_openh264enc_get_level_from_caps (GstCaps *outcaps, GstCaps *allowed_caps)
+{
+  GstStructure *s = gst_caps_get_structure (outcaps, 0);
+  const gchar * level = gst_structure_get_string (gst_caps_get_structure (allowed_caps, 0), "level");
+
+  if (!level)
+    return LEVEL_UNKNOWN;
+
+  gst_structure_set (s, "level", G_TYPE_STRING, level, NULL);
+  return gst_codec_utils_h264_get_level_idc (level);
+}
+
 static EProfileIdc
 gst_openh264enc_get_profile_from_caps (GstCaps *outcaps, GstCaps *allowed_caps)
 {
@@ -790,6 +804,7 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
   enc_params.fMaxFrameRate = fps_n * 1.0 / fps_d;
   enc_params.iLoopFilterDisableIdc = openh264enc->deblocking_mode;
   enc_params.sSpatialLayers[0].uiProfileIdc = gst_openh264enc_get_profile_from_caps (outcaps, allowed_caps);
+  enc_params.sSpatialLayers[0].uiLevelIdc = (ELevelIdc) gst_openh264enc_get_level_from_caps (outcaps, allowed_caps);
   enc_params.sSpatialLayers[0].iVideoWidth = enc_params.iPicWidth;
   enc_params.sSpatialLayers[0].iVideoHeight = enc_params.iPicHeight;
   enc_params.sSpatialLayers[0].fFrameRate = fps_n * 1.0 / fps_d;
