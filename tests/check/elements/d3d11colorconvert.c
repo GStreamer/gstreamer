@@ -163,7 +163,7 @@ run_convert_pipelne (const gchar * in_format, const gchar * out_format)
 GST_START_TEST (test_d3d11_color_convert_yuv_yuv)
 {
   const gchar *format_list[] = {
-    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE"
+    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE", "YV12", "NV21"
   };
 
   gint i, j;
@@ -184,7 +184,7 @@ GST_END_TEST;
 GST_START_TEST (test_d3d11_color_convert_yuv_rgb)
 {
   const gchar *in_format_list[] = {
-    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE"
+    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE", "YV12", "NV21"
   };
   const gchar *out_format_list[] = {
     "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
@@ -213,7 +213,7 @@ GST_START_TEST (test_d3d11_color_convert_rgb_yuv)
     "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
   };
   const gchar *out_format_list[] = {
-    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE"
+    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE", "YV12", "NV21"
   };
 
   gint i, j;
@@ -256,7 +256,7 @@ GST_START_TEST (test_d3d11_color_convert_packed_yuv_yuv)
     "YUY2", "UYVY", "VYUY", "Y210", "Y410",
   };
   const gchar *out_format_list[] = {
-    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE"
+    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE", "YV12", "NV21"
   };
 
   gint i, j;

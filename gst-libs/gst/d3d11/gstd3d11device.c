@@ -90,6 +90,8 @@ enum
 #define DEFAULT_ADAPTER 0
 #define DEFAULT_CREATE_FLAGS 0
 
+#define GST_D3D11_N_FORMATS 18
+
 struct _GstD3D11DevicePrivate
 {
   guint adapter;
@@ -590,6 +592,13 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
   n_formats++;
 
+  /* no native format for NV21 */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_NV21;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R8G8_UNORM;
+  priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
+  n_formats++;
+
   priv->format_table[n_formats].format = GST_VIDEO_FORMAT_P010_10LE;
   priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
   priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16G16_UNORM;
@@ -614,6 +623,12 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
 
   /* YUV planar */
   priv->format_table[n_formats].format = GST_VIDEO_FORMAT_I420;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R8_UNORM;
+  priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R8_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_YV12;
   priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8_UNORM;
   priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R8_UNORM;
   priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R8_UNORM;
