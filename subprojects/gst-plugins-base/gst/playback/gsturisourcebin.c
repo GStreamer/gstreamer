@@ -143,6 +143,7 @@ struct _GstURISourceBin
 
   gboolean is_stream;
   gboolean is_adaptive;
+  gboolean demuxer_handles_buffering;   /* If TRUE: Don't use buffering elements */
   gboolean need_queue;
   guint64 buffer_duration;      /* When buffering, buffer duration (ns) */
   guint buffer_size;            /* When buffering, buffer size (bytes) */
@@ -494,6 +495,8 @@ gst_uri_source_bin_init (GstURISourceBin * urisrc)
   urisrc->low_watermark = DEFAULT_LOW_WATERMARK;
   urisrc->high_watermark = DEFAULT_HIGH_WATERMARK;
 
+  urisrc->demuxer_handles_buffering = FALSE;
+
   GST_OBJECT_FLAG_SET (urisrc,
       GST_ELEMENT_FLAG_SOURCE | GST_BIN_FLAG_STREAMS_AWARE);
   gst_bin_set_suppressed_flags (GST_BIN (urisrc),
@@ -709,6 +712,15 @@ pending_pad_blocked (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     GST_LOG_OBJECT (urisrc, "Pad %" GST_PTR_FORMAT " is linked to queue %"
         GST_PTR_FORMAT " on slot %p", pad, child_info->output_slot->queue,
         child_info->output_slot);
+    GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+    goto done;
+  }
+
+  /* If the demuxer handles buffering, we can expose it as-is */
+  if (urisrc->demuxer_handles_buffering) {
+    GstPad *ghostpad = create_output_pad (urisrc, pad);
+    GST_DEBUG_OBJECT (pad, "Demuxer handles buffering, exposing as-is");
+    expose_output_pad (urisrc, ghostpad);
     GST_URI_SOURCE_BIN_UNLOCK (urisrc);
     goto done;
   }
@@ -1796,6 +1808,7 @@ remove_demuxer (GstURISourceBin * bin)
     gst_element_set_state (bin->demuxer, GST_STATE_NULL);
     gst_bin_remove (GST_BIN_CAST (bin), bin->demuxer);
     bin->demuxer = NULL;
+    bin->demuxer_handles_buffering = FALSE;
   }
 }
 
@@ -1902,11 +1915,20 @@ handle_new_pad (GstURISourceBin * urisrc, GstPad * srcpad, GstCaps * caps)
   if (urisrc->is_adaptive) {
     GstPad *sinkpad;
     GstPadLinkReturn link_res;
+    GstQuery *query;
 
     urisrc->demuxer = make_demuxer (urisrc, caps);
     if (!urisrc->demuxer)
       goto no_demuxer;
     gst_bin_add (GST_BIN_CAST (urisrc), urisrc->demuxer);
+
+    /* Query the demuxer to see if it can handle buffering */
+    query = gst_query_new_buffering (GST_FORMAT_TIME);
+    urisrc->demuxer_handles_buffering =
+        gst_element_query (urisrc->demuxer, query);
+    gst_query_unref (query);
+    GST_DEBUG_OBJECT (urisrc, "Demuxer handles buffering : %d",
+        urisrc->demuxer_handles_buffering);
 
     sinkpad = gst_element_get_static_pad (urisrc->demuxer, "sink");
     if (sinkpad == NULL)
