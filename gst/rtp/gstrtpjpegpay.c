@@ -780,8 +780,9 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
       case JPEG_MARKER_SOS:
         sos_found = TRUE;
         GST_LOG_OBJECT (pay, "SOS found");
-        jpeg_header_size =
-            memory.offset + parse_mem_inc_offset_guint16 (&memory);
+        jpeg_header_size = memory.offset;
+        /* Do not re-combine into single statement with previous line! */
+        jpeg_header_size += parse_mem_inc_offset_guint16 (&memory);
         break;
       case JPEG_MARKER_EOI:
         GST_WARNING_OBJECT (pay, "EOI reached before SOS!");
