@@ -700,7 +700,8 @@ gst_raw_base_parse_convert (GstBaseParse * parse, GstFormat src_format,
     *dest_value = src_value;
   } else if ((src_format == GST_FORMAT_TIME || dest_format == GST_FORMAT_TIME)
       && gst_raw_base_parse_is_gstformat_supported (raw_base_parse, src_format)
-      && gst_raw_base_parse_is_gstformat_supported (raw_base_parse, src_format)) {
+      && gst_raw_base_parse_is_gstformat_supported (raw_base_parse,
+          dest_format)) {
     /* Perform conversions here if either the src or dest format
      * are GST_FORMAT_TIME and the other format is supported by
      * the subclass. This is because we perform TIME<->non-TIME
