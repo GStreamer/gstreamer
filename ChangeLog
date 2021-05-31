@@ -1,7 +1,486 @@
+=== release 1.19.1 ===
+
+2021-06-01 00:16:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.19.1
+
+2021-04-23 19:01:54 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapi.c:
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapi: Demote vaapidecodebin to rank NONE.
+	  One of the main reasons of vaapidecodebin was because it mitigated the
+	  possible surface exhaustion. But that problem is currently
+	  solved. Nowadays, vaapidecodebin brings more problems than it
+	  solves. Thus this patch demotes vaapidecodebin to NONE rank while
+	  bumping PRIMARY + 1 the most common decoders.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/426>
+
+2021-05-20 10:28:05 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapi.c:
+	* gst/vaapi/gstvaapioverlay.c:
+	  plugins: Demote rank of vaapipostproc and vaapioverlay.
+	  Since almost all video filters have rank NONE, these both elements
+	  should be NONE too.
+	  This is useful for autovideoconvert and other bins, and users might
+	  force to use these by setting the environment variable
+	  GST_PLUGIN_FEATURE_RANK.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/429>
+
+2021-04-21 10:55:45 +0200  François Laignel <fengalin@free.fr>
+
+	* tests/check/elements/vaapioverlay.c:
+	  Use gst_element_request_pad_simple...
+	  Instead of the deprecated gst_element_get_request_pad.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/425>
+
+2021-04-23 11:02:05 +0800  Zhang yuankun <yuankunx.zhang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: VP9: fix > 4k encode fail issue
+	  The VP9 spec defines the MAX_TILE_WIDTH_B64(64), which is the maximum
+	  width of a tile in units of superblocks. So the max width of one tile
+	  should not be larger than 64x64=4096. When the width exceeds 4k, we
+	  need to split it into multiple tiles in columns. The current vp9 encoder
+	  does not handle this correctly.
+	  The command such as:
+	  gst-launch-1.0 videotestsrc ! video/x-raw,width=7680,height=4320 ! \
+	  vaapivp9enc ! fakesink
+	  will crash.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/424>
+
+2021-04-02 15:43:45 +0800  Haihao Xiang <haihao.xiang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	  libs: display: drm: don't fallback to default device if explicitly specified device can't load/init
+	  Otherwise user will be misled that the specified device is using
+	  This fixes https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/issues/305
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/422>
+
+2021-03-22 13:41:13 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_objects.h:
+	  decoder: H265: Enable cu_qp_delta_enabled_flag when ROI
+	  If ROI is enabled, the CUs within the ROI region may have different
+	  QP from the other part of the picture. This needs us to enable the
+	  cu_qp_delta_enabled_flag even in the CQP mode.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/419>
+
+2021-03-19 17:42:36 +1100  Matthew Waters <matthew@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	* gst-libs/gst/vaapi/gstvaapicontext.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	* gst-libs/gst/vaapi/gstvaapiminiobject.c:
+	* gst-libs/gst/vaapi/gstvaapiminiobject.h:
+	* gst-libs/gst/vaapi/gstvaapitexture_glx.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.h:
+	* gst-libs/gst/vaapi/gstvaapivalue.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapisink.c:
+	* gst/vaapi/gstvaapisink.h:
+	* gst/vaapi/gstvaapivideocontext.c:
+	* gst/vaapi/gstvaapivideomemory.c:
+	* tests/internal/simple-decoder.c:
+	  gst: don't use volatile to mean atomic
+	  volatile is not sufficient to provide atomic guarantees and real atomics
+	  should be used instead.  GCC 11 has started warning about using volatile
+	  with atomic operations.
+	  https://gitlab.gnome.org/GNOME/glib/-/merge_requests/1719
+	  Discovered in https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/868
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/418>
+
+2021-02-24 17:41:02 +0100  Paul Goulpié <paul.goulpie@ubicast.eu>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  gstvaapiencoder_h264: add ENCODER_EXPOSURE on aud propertie
+	  forgot during the following mainline commit: https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/commit/bc2f8fd19e924aa0e193708307326acd037691ce#
+	  Signed-off-by: Paul Goulpié <paul.goulpie@ubicast.eu>
+
+2021-02-04 15:05:55 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  plugins: postproc: Fix a problem of propose_allocation when passthrough.
+	  We should query the downstream element to answer a precise allocation
+	  query when the passthrough mode is enabled.
+	  The current way still decides the allocation by the postproc itself. The
+	  pipeline such as:
+	  gst-launch-1.0 -v filesrc location=xxx.264 ! h264parse ! vaapih264dec ! \
+	  vaapipostproc ! fakevideosink silent=false sync=true
+	  will lose some info such as the GST_VIDEO_META_API_TYPE.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/413>
+
+2021-01-27 12:05:44 +0800  Haihao Xiang <haihao.xiang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.h:
+	* gst/vaapi/gstvaapivideocontext.c:
+	  libs: display: drm: support gst.vaapi.app.Display context for drm backend
+	  Attributes for drm backend:
+	  - va-display : ponter of VADisplay
+	  - drm-device-fd : the DRM device file descriptor
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/409>
+
+2021-01-13 14:43:20 +0800  Haihao Xiang <haihao.xiang@intel.com>
+
+	* docs/index.md:
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	  libs: display: drm: allow user specify a drm device via an env variable
+	  Currently the default drm device is always used on a system with
+	  multiple drm devices. This patch allows user to specify the required
+	  drm device via GST_VAAPI_DRM_DEVICE env variable
+	  Example:
+	  GST_VAAPI_DRM_DEVICE=/dev/dri/renderD129 gst-launch-1.0 videotestsrc !
+	  vaapih264enc ! fakesink
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/409>
+
+2021-01-25 14:45:47 +0800  Haihao Xiang <haihao.xiang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	  libs: display: drm: fix set_device_path_from_fd
+	  drmGetBusid() (GET_UNIQUE ioctl) won't return a valid bus id when
+	  drmSetInterfaceVersion() (SET_VERSION ioctl) hasn't been called(see[1]),
+	  so we can't get the right device path. Running test-display will get the
+	  error below:
+	  ** (test-display:18630): ERROR **: 10:26:00.434: could not create Gst/VA
+	  display
+	  Calling drmSetInterfaceVersion() before drmGetBusid() can't fix this
+	  issue because a special permission is required for SET_VERSION ioctl.
+	  This patch retrieves the device path from file descriptor via
+	  g_file_read_link()
+	  [1] https://github.com/torvalds/linux/blob/master/drivers/gpu/drm/drm_ioctl.c#L48-L104
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/412>
+
+2021-01-20 10:42:09 +0100  Rafał Dzięgiel <rafostar.github@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_glx.c:
+	  glx: Iterate over FBConfig and select 8 bit color size
+	  Texture upload mechanism used by gstreamer-vaapi relies on 8 bpc.
+	  In latest mesa versions the first fbconfig might not be 8 bit, so iterate
+	  over it to find the correct config with supported values.
+	  This also adds 8 bit alpha size to the framebuffer configuration which is
+	  required to get it working properly.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/410>
+
+2021-01-11 09:57:03 +0800  Ung, Teng En <teng.en.ung@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  vaapipostproc: fix code style.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/407>
+
+2020-12-21 05:42:00 +0000  Ung, Teng En <teng.en.ung@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay.h:
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	  vaapipostproc: Remove YUV to/from RGB color primary quirk since iHD driver has fixed in https://github.com/intel/media-driver/commit/a39fe9bc051a8c3efa8f35122a1585981ec7f816.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/407>
+
+2020-12-21 05:36:29 +0000  Ung, Teng En <teng.en.ung@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  vaapipostproc: Added gstreamer BT2020 color standard support.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/407>
+
+2021-01-09 16:05:48 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_av1.c:
+	  decoder: AV1: Fix a static analysis problem of update_state().
+	  No need to check the picture pointer after we have already dereferenced it.
+	  Fix: #298
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/408>
+
+2020-12-22 23:43:52 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_av1.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_objects.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_objects.h:
+	  libs: decoder: Add decode_with_surface_id for AV1 film_grain.
+	  The AV1 film_graim feature needs two surfaces the same time for
+	  decoding. One is for recon surface which will be used as reference
+	  later, and the other one is for display. The GstVaapiPicture should
+	  contain the surface for display, while the vaBeginPicture() need
+	  the recon surface as the target.
+	  We add a gst_vaapi_picture_decode_with_surface_id API to handle this
+	  kind of requirement.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/191>
+
+2020-08-27 21:46:41 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_av1.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_av1.h:
+	* gst-libs/gst/vaapi/gstvaapiprofile.c:
+	* gst-libs/gst/vaapi/gstvaapiprofile.h:
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	* gst-libs/gst/vaapi/meson.build:
+	* gst/vaapi/gstvaapidecode.c:
+	* meson.build:
+	  libs: decoder: AV1: Add the av1 decoder support.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/191>
+
+2020-08-27 21:39:35 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapicodec_objects.c:
+	* gst-libs/gst/vaapi/gstvaapicodec_objects.h:
+	* gst-libs/gst/vaapi/gstvaapidecoder_objects.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_objects.h:
+	  libs: codecobject: Add number of elements when create codec object.
+	  One slice data may need several slice parameter buffers at one time.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/191>
+
+2020-12-12 10:30:41 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapi: use gst_clear_object instead of g_clear_object
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/406>
+
+2020-12-08 13:34:35 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  plugins: encode: unlock the stream lock before _flush()
+	  The current encoder will hang when EOS comes. When we call the
+	  gst_vaapi_encoder_encode_and_queue(), we should release the stream
+	  lock, just like what we do in gst_vaapiencode_handle_frame().
+	  The deadlock happens when: The input thread holding the stream lock
+	  is using gst_vaapi_encoder_create_coded_buffer() to acquire a coded
+	  buffer, while the output thread which holding the coded buffer resource
+	  is acquiring the stream lock in _push_frame() to push the data to
+	  down stream element.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/404>
+
+2020-12-09 00:04:33 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: H264: Fix one assert in get_pending_reordered().
+	  gst_vaapi_encoder_h264_get_pending_reordered() does not consider the
+	  case for HIERARCHICAL_B mode. The pipeline:
+	  gst-launch-1.0  videotestsrc num-buffers=48 ! vaapih264enc prediction-type=2 \
+	  keyframe-period=32 ! fakesink
+	  get a assert:
+	  ERROR:../gst-libs/gst/vaapi/gstvaapiencoder_h264.c:1996:reflist1_init_hierarchical_b:
+	  assertion failed: (count != 0)
+	  The last few B frames are not fetched in correct order when HIERARCHICAL_B
+	  is enabled.
+	  We also fix a latent bug for normal mode. The g_queue_pop_tail() of B frames
+	  make the last several frames encoded in reverse order. The NAL of last few
+	  frames come in reverse order in the bit stream, though it can still output
+	  the correct image.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/405>
+
+2020-06-25 16:25:21 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.c:
+	  libs: encoder: H265: Add screen content coding extensions support.
+	  In scc mode, the I frame can ref to itself and it needs the L0 reference
+	  list enabled. So we should set the I frame to P_SLICE type. We do not need
+	  to change the ref_pic_list0/1 passed to VA driver, just need to enable the
+	  VAEncPictureParameterBufferHEVC->pps_curr_pic_ref_enabled_flag to notify
+	  the driver consider the current frame as reference. For bits conformance,
+	  the NumRpsCurrTempList0 should be incremented by one to include the current
+	  picture as the reference frame. We manually do it when packing the slice header.
+	  Command line like:
+	  gst-launch-1.0  videotestsrc num-buffers=10 ! \
+	  capsfilter caps=video/x-raw,format=NV12, framerate=30/1,width=640,height=360 ! \
+	  vaapih265enc ! capsfilter caps=video/x-h265,profile="{ (string)screen-extended-main }" ! \
+	  filesink location=out.265
+	  Can be used to specify that the encoder should use SCC profiles.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/379>
+
+2020-07-11 23:37:29 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_vp9.c:
+	  plugin: encode: vp9: Implement the set_config().
+	  We store the allowed profiles list to encoder in set_config().
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/380>
+
+2020-07-11 23:39:40 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode_vp9.c:
+	  plugin: encode: vp9: Add the profile into output caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/380>
+
+2020-07-11 23:27:21 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: vp9: no need to ensure_hw_profile.
+	  Once we decide the profile and can get the valid entrypoint for
+	  that profile, hw must already support this profile/entrypoint pair.
+	  No need to check it again in set_context_info().
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/380>
+
+2020-07-11 23:22:55 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: vp9: Improve the manner to decide the profile.
+	  We should decide the VP9 encoder's profile based on the chroma and
+	  depth of the input format, then make sure it is included in the
+	  allowed list.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/380>
+
+2020-07-11 23:17:02 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_vpx.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_vpx.h:
+	  libs: util: vpx: add get_chroma_format_idc for VP9
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/380>
+
+2020-07-11 23:09:59 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.h:
+	  libs: encoder: vp9: Add allowed_profiles.
+	  We need the allowed_profiles to store the allowed profiles in down
+	  stream's caps.
+	  Command line like:
+	  vaapivp9enc ! capsfilter caps=video/x-vp9,profile="{ (string)1, \
+	  (string)3 }"
+	  We need to store GST_VAAPI_PROFILE_VP9_1 and GST_VAAPI_PROFILE_VP9_3
+	  in this list.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/380>
+
+2020-11-30 18:00:30 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: H265: Fix a typo in scc reference setting.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/402>
+
+2020-07-17 18:00:30 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiprofile.c:
+	* gst-libs/gst/vaapi/gstvaapiprofile.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.c:
+	* gst-libs/gst/vaapi/video-format.c:
+	* gst/vaapi/gstvaapidecode.c:
+	  libs: decoder: H265: Add MAIN_422_12 profile supporting.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/390>
+
+2020-07-31 14:38:42 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiimage.c:
+	* gst-libs/gst/vaapi/video-format.c:
+	* gst-libs/gst/vaapi/video-format.h:
+	  video-format: Add Y212_LE format.
+	  It can be used as HEVC YUV_4:2:2 12bits stream's decoder output, and
+	  also can be used as the input format for encoding HEVC YUV_4:2:2 12bits
+	  stream.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/390>
+
+2020-07-30 23:21:06 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiprofile.c:
+	* gst-libs/gst/vaapi/gstvaapiprofile.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.c:
+	* gst-libs/gst/vaapi/video-format.c:
+	* gst/vaapi/gstvaapidecode.c:
+	  libs: decoder: H265: Add MAIN_444_12 profile supporting.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/390>
+
+2020-07-30 23:13:10 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiimage.c:
+	* gst-libs/gst/vaapi/video-format.c:
+	* gst-libs/gst/vaapi/video-format.h:
+	  video-format: Add Y412_LE format.
+	  It can be used as HEVC YUV_4:4:4 12bits stream's decoder output, and
+	  also can be used as the input format for encoding HEVC YUV_4:4:4 12bits
+	  stream.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/390>
+
+2020-09-17 16:47:43 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h265: fill missing predictor_palette_size field.
+	  The predictor_palette_size of VAPictureParameterBufferHEVCScc is
+	  forgotten and need to be filled when streams have palettes.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/396>
+
+2020-09-17 15:35:11 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.c:
+	  libs: utils: h265: Use get_profile_from_sps to get profile.
+	  We now use gst_h265_get_profile_from_sps() to replace the old way
+	  of gst_h265_profile_tier_level_get_profile() to get more precise
+	  profile. The new function consider the unstandard cases and give
+	  a more suitable profile decision.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/395>
+
+2020-10-19 13:46:44 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_vp9.c:
+	  libs: decoder: vp9: 0xff segment pred probs if no temporal update
+	  According to the spec (6.2.11 Segmentation params syntax)
+	  segmentation_pred_prob[i] ast to be 0xff if not temporal_update.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/400>
+
+2020-10-19 13:42:53 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_vp9.c:
+	  libs: decoder: vp9: avoid reference rewriting
+	  The removed code set all the reference frames to the current frame it is a key
+	  one, but later, all the reference frames were rewritten with the decoded picture
+	  buffers or VA_INVALID_SURFACE if they were not available.
+	  Basically, all this time the first reference frame assignment has been ignored,
+	  and it's not described by the spec, and this patch removes that code.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/400>
+
+2020-09-20 09:56:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  decoder: don't reply src caps query with allowed if pad is fixed
+	  If the pad is already fixed the caps query have to be reply with the
+	  current fixed caps. Otherwise the query has to be replied with the
+	  autogeneratd src caps.
+	  This path fix this by falling back to the normal caps query processing
+	  if the pad is already fixed. Otherwise it will fetch the allowed src
+	  pad caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/397>
+
+2020-09-15 00:11:30 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  plugins: decode: fix a DMA caps typo in ensure_allowed_srcpad_caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/392>
+
+2020-09-01 09:31:33 +0200  Marc Leeman <m.leeman@televic.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: when updating the caps, reset rotation
+	  When an element upstream changes settings (e.g. crop), new caps are sent
+	  to vaapisink. When vaapisink was rotating the image, it needs to
+	  re-evaluate if the sink needs to rotate the image.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/389>
+
+2020-09-08 17:31:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: include template from gst-ci master branch again
+
+2020-09-08 16:59:07 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.0 ===
 
 2020-09-08 00:09:51 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* .gitlab-ci.yml:
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
