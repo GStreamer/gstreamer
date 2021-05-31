@@ -1,7 +1,68 @@
+=== release 1.19.1 ===
+
+2021-06-01 00:16:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.19.1
+
+2020-11-04 18:48:13 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Enable some MSVC warnings for parity with GCC/Clang
+	  This makes it easier to do development with MSVC by making it warn
+	  on common issues that GCC/Clang error out for in our CI configuration.
+	  Continuation from https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/223
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-omx/-/merge_requests/75>
+
+2020-10-16 12:45:09 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* examples/egl/testegl.c:
+	* meson.build:
+	  meson: update glib minimum version to 2.56
+	  In order to support the symbol g_enum_to_string in various
+	  project using GStreamer ( gst-validate etc.), the glib minimum
+	  version should be 2.56.0.
+	  Remove compat code as glib requirement
+	  is now > 2.56
+	  Version used by Ubuntu 18.04 LTS
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-omx/-/merge_requests/74>
+
+2020-10-05 12:32:10 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: support interlace-mode=interleaved input
+	  interlace-mode=alternate is a special case of interlace-mode=interleaved
+	  where the fields are split using two different buffers.
+	  The Zynq decoder always produces alternate content and we
+	  used to assume that upstream will set interlace-mode=alternate in its
+	  caps as well.
+	  This is no longer the case as h265parse is now setting
+	  alternate-mode=interleaved on alternate content to not break compat with
+	  elements not supporting alternate.
+	  As a result the decoder now accept both 'interleaved' and 'alternate' on
+	  its input and ensures that its ouput has interlace-mode=alternate.
+	  Needed to fix https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/-/issues/825
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-omx/-/merge_requests/72>
+
+2020-09-08 17:31:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: include template from gst-ci master branch again
+
+2020-09-08 16:59:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.0 ===
 
 2020-09-08 00:10:02 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* .gitlab-ci.yml:
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
