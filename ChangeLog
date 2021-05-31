@@ -1,7 +1,274 @@
+=== release 1.19.1 ===
+
+2021-06-01 00:14:52 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.19.1
+
+2021-04-29 21:32:18 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Blacklist ttml subtitles
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/133>
+
+2021-04-24 10:04:23 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Take into account coded_height for pool
+	  Failure to do this would cause the decoders to constantly request a new
+	  bufferpool thinking the height had changed ... whereas it hadn't.
+	  Fixes #95
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/131>
+
+2021-04-13 00:45:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: deprecated debug-mv property to match deprecation in FFmpeg
+	  This has been unimplemented and non-functional for years
+	  and was deprecated with FFmpeg 4.4.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/126>
+
+2021-04-13 01:07:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: fix build with FFmpeg 4.4
+	  Direct access to avstream->index_entries was removed
+	  in favour of the newly added avformat_index_get_entry()
+	  and friends.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-libav/-/issues/85
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/127>
+
+2021-01-19 13:19:31 -0800  Nicholas Jackson <nicholas.jackson@zii.aero>
+
+	* ext/libav/gstavmux.c:
+	  avmux: fix segfault when a plugin's long_name is NULL
+	  Some plugins register an empty long_name field.  Check for this
+	  before calling strcmp to avoid a crash.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/114>
+
+2021-03-15 20:35:35 +0100  Jade Macho <nuda1998@gmail.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavcodecmap.c:
+	  Hook up audio/x-xma: xmaversion: [1,2] to AV_CODEC_ID_XMA[1,2]
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/124>
+
+2021-03-03 10:51:04 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Don't try converting channel layouts with more than 64 channels
+	  We only support up to 64 channels in GStreamer with a specific layout so
+	  it's safe to assume a NONE layout in this case.
+	  Also the arrays of channel positions are allocated everywhere with 64
+	  elements so don't try setting more than 64 to NONE as that will cause
+	  stack corruptions and similar memory safety issues.
+	  Thanks to Natalie Silvanovich for reporting this issue.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-libav/-/issues/92
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/120>
+
+2020-12-02 15:43:15 +1100  Matthew Waters <matthew@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: take the maximum of the height/coded_height
+	  Otherwise, some h.264 streams (particularly with cropping information)
+	  may cause memory corruption after a renegotiation to a smaller size when
+	  decoded and then ffmpeg writes past the end of the buffer.
+	  Fixes: https://gitlab.freedesktop.org/gstreamer/gst-libav/-/issues/80
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/110>
+
+2021-01-28 06:11:14 +0000  Matthew Waters <matthew@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  viddec: don't configure and incorrect buffer pool when receiving a gap event
+	  Scenario is this:
+	  1. libav receives enough data to want a buffer with get_buffer2()
+	  which wants a buffer pool with a certain format, say Y42B but does
+	  not negotiate and therefore GstVideoDecoder does not have any output
+	  state configured
+	  2. A gap event is received which GstVideoDecoder wants to forward.  It
+	  needs caps to forward the gap event so attempts to negotiate with some
+	  default information which chooses e.g. I420 and overwrites the
+	  previously configured bufferpool decided on by get_buffer2()
+	  3. There is a mismatch between what ensure_internal_pool() check for
+	  consistency and what decide_allocation() sets when overriding the
+	  internal pool with the downstream pool.
+	  4. FFMpeg then requests a Y42B buffer from an I420 pool and predictably
+	  crashes writing past the contents of the buffer
+	  This is fixed by keeping track of the internal pool states correctly.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/116>
+
+2021-01-29 14:02:42 +0200  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavviddec.c:
+	  avviddec: Support for alternate-field interlacing
+	  Not yet supported in FFmpeg, so we temporarily rely on the parser
+	  setting the correct buffer flags for us.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/115>
+
+2020-12-30 01:15:16 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Drain decoder on decoding failure
+	  ... and call finish_frame() so that baseclass can reset internal
+	  status. Otherwise baseclass will keep holding the status for
+	  decoding failed frame which will result in outputting buffer with
+	  wrong timestamp.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/112>
+
+2020-12-14 15:33:16 +1100  Jan Schmidt <jan@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavcodecmap.c:
+	  codec map: Add a mapping for the OKI ADPCM variant.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/111>
+
+2020-11-04 18:44:54 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Enable some MSVC warnings for parity with GCC/Clang
+	  This makes it easier to do development with MSVC by making it warn
+	  on common issues that GCC/Clang error out for in our CI configuration.
+	  Continuation from https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/223
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/109>
+
+2020-10-27 06:33:29 -0400  Arun Raghavan <arun@asymptotic.io>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Check planar-ness of frame rather than context
+	  The check seems to be to present to verify that the decoded frame
+	  matches the format we expect. The actual check for the layout of the
+	  frame was being performed against the context instead.
+	  The check fails at least for avdec_aptx_hd, where the AVCodecContext has
+	  the sample format set to AV_SAMPLE_FMT_NONE.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/107>
+
+2020-10-06 18:19:12 +0900  Seungha Yang <seungha@centricular.com>
+
+	* tests/check/elements/avaudenc.c:
+	* tests/check/elements/avvidenc.c:
+	* tests/check/meson.build:
+	  tests: Add audio/video encoder test
+	  Add simple encoder drain test case
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/100>
+
+2020-10-01 11:45:57 +0200  Edward Hervey <edward@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	* tests/check/meson.build:
+	* tests/meson.build:
+	  build: Re-enable unit tests
+	  Looks like they weren't ported when we switched to meson
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/100>
+
+2020-10-06 03:47:42 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavaudenc.h:
+	* ext/libav/gstavutils.h:
+	* ext/libav/gstavvidenc.c:
+	* ext/libav/gstavvidenc.h:
+	  avaudenc/avvidenc: Reopen encoding session if it's required
+	  Since the commit https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/22b25b3ea5c,
+	  ffmpeg will not clear draning flag for encoder by avcodec_flush_buffers() API
+	  by default. Allowed case is only if encoder has AV_CODEC_CAP_ENCODER_FLUSH
+	  capability flag. If it's not supported, we should re-open encoding
+	  session, otherwise ffmpeg encoder will keep returning AVERROR_EOF
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/99>
+
+2020-10-01 11:18:58 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Call avcodec_flush_buffers() after draining to allow accepting new input again
+	  This is already done in all other codec elements.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/97>
+
+2020-09-30 16:13:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  avauddec/audenc/videnc: Don't return GST_FLOW_EOS when draining
+	  Same behaviour as for avviddec now. FFmpeg will return AVERROR_EOF when it's
+	  completely drained but we should not return that here or otherwise
+	  upstream will receive EOS and not forward us more data.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/97>
+
+2020-09-16 03:13:09 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Don't return GST_FLOW_EOS from drain()/finish()
+	  AVERROR_EOF means that it's fully drained, but it doesn't
+	  mean that that end of stream.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/90>
+
+2020-09-15 02:12:23 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Ensure finish_subframe() and finish_frame() are paired
+	  audiodecoder baseclass implementation is expecting that
+	  finish_subframe() is followed by finish_frame() in order clear
+	  its internal state related to subframe.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/90>
+
+2020-09-14 14:30:35 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Forward flow returns from draining instead of assuming OK
+	  It might be useful for upstream to know that draining/finishing didn't
+	  succeed, and why.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/90>
+
+2020-09-14 14:24:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Forward flow returns from draining instead of assuming OK
+	  It might be useful for upstream to know that draining/finishing didn't
+	  succeed, and why.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/90>
+
+2020-09-09 08:55:28 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Avoid dropping non-OK flow return
+	  When sucessfully finishing out frames (or finishing configuration), we must make
+	  sure we don't override any failing GstFlowReturn that might have been detected
+	  previously.
+	  Failure to do this would result in not propagating not-linked, flushing,
+	  etc...
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/90>
+
+2016-09-26 20:06:54 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Enable 24 bit WMA Lossless decoding
+	  This now works with not so recent ffmpeg.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/88>
+
+2020-09-08 17:30:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: include template from gst-ci master branch again
+
+2020-09-08 16:58:56 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.0 ===
 
 2020-09-08 00:08:12 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* .gitlab-ci.yml:
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
