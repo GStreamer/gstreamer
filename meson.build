@@ -1,5 +1,5 @@
 project('All GStreamer modules', 'c',
-  version : '1.19.0.1',
+  version : '1.19.1',
   meson_version : '>= 0.54.0',
   default_options : ['buildtype=debugoptimized'])
 
