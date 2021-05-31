@@ -1,7 +1,284 @@
+=== release 1.19.1 ===
+
+2021-06-01 00:12:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* README:
+	* RELEASE:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.19.1
+
+2018-02-26 17:28:25 +0100  David Fernandez <d.fernandezlop@gmail.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/x264/gstx264enc.c:
+	  x264enc: Change accepted caps width and height from [16, MAX] to [1, MAX]
+	  There are cases where the video size might be less than 16x16.
+	  This change allows the x264 encoder to accept this cases.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/44>
+
+2021-04-20 18:48:38 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/realmedia/rmdemux.c:
+	* gst/realmedia/rmdemux.h:
+	  realmedia: Drop duplicate seek events.
+	  Also use seek seqnum for flush & segment events/messages.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/81>
+
+2021-04-20 18:47:31 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Drop duplicate seek events.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/81>
+
+2021-03-29 13:41:07 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* gst/xingmux/gstxingmux.c:
+	* gst/xingmux/gstxingmux.h:
+	* gst/xingmux/plugin.c:
+	  xingmux: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 13:39:20 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* gst/realmedia/pnmsrc.c:
+	* gst/realmedia/pnmsrc.h:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rademux.h:
+	* gst/realmedia/rdtdepay.c:
+	* gst/realmedia/rdtdepay.h:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rdtmanager.h:
+	* gst/realmedia/realmedia.c:
+	* gst/realmedia/rmdemux.c:
+	* gst/realmedia/rmdemux.h:
+	* gst/realmedia/rtspreal.c:
+	* gst/realmedia/rtspreal.h:
+	  realmedia: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 13:23:51 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	* gst/dvdsub/gstdvdsubdec.h:
+	* gst/dvdsub/gstdvdsubparse.c:
+	* gst/dvdsub/gstdvdsubparse.h:
+	  dvdsub: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 13:15:32 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.h:
+	  dvdlpcmdec: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 13:11:23 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* gst/asfdemux/gstasf.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	* gst/asfdemux/gstasfelement.c:
+	* gst/asfdemux/gstasfelements.h:
+	* gst/asfdemux/gstrtpasfdepay.c:
+	* gst/asfdemux/gstrtspwms.c:
+	* gst/asfdemux/meson.build:
+	  asfdemux: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 12:39:36 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 12:33:00 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/sidplay/gstsiddec.cc:
+	* ext/sidplay/gstsiddec.h:
+	  sidplay: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 12:31:26 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  mpeg2dec: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 12:28:28 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/dvdread/dvdreadsrc.c:
+	* ext/dvdread/dvdreadsrc.h:
+	  dvdread: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 12:28:04 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/cdio/gstcdio.c:
+	* ext/cdio/gstcdio.h:
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/cdio/gstcdiocddasrc.h:
+	  cdio: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 10:39:46 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/amrwbdec/amrwb.c:
+	* ext/amrwbdec/amrwbdec.c:
+	* ext/amrwbdec/amrwbdec.h:
+	  amrwbdec: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 10:38:07 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/amrnb/amrnb.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbdec.h:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrnb/amrnbenc.h:
+	  amrnb: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-29 10:37:26 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/a52dec/gsta52dec.h:
+	  a52dec: allow per feature registration
+	  Split plugin into features including
+	  dynamic types which can be indiviually
+	  registered during a static build.
+	  More details here:
+	  https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/199
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/661
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/79>
+
+2021-03-19 15:16:06 +1100  Matthew Waters <matthew@centricular.com>
+
+	* ext/x264/gstencoderbitrateprofilemanager.c:
+	  gst: don't use volatile to mean atomic
+	  volatile is not sufficient to provide atomic guarantees and real atomics
+	  should be used instead.  GCC 11 has started warning about using volatile
+	  with atomic operations.
+	  https://gitlab.gnome.org/GNOME/glib/-/merge_requests/1719
+	  Discovered in https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/868
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/78>
+
+2021-03-03 11:05:14 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Make sure we have enough data available when parsing audio/video packets
+	  Otherwise there will be out-of-bounds reads and potential crashes.
+	  Thanks to Natalie Silvanovich for reporting.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/issues/37
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/74>
+
+2020-11-04 18:44:07 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Enable some MSVC warnings for parity with GCC/Clang
+	  This makes it easier to do development with MSVC by making it warn
+	  on common issues that GCC/Clang error out for in our CI configuration.
+	  Continuation from https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/223
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/71>
+
+2020-10-31 04:52:14 +0900  Seungha Yang <seungha@centricular.com>
+
+	* tests/check/elements/mpeg2dec.c:
+	  tests: mpeg2dec: Don't expect BT601 color space
+	  If it's required, mpeg2dec should set it explicitly.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/70>
+
+2020-09-08 17:30:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: include template from gst-ci master branch again
+
+2020-09-08 16:58:40 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.0 ===
 
 2020-09-08 00:05:39 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* .gitlab-ci.yml:
 	* ChangeLog:
 	* NEWS:
 	* README:
