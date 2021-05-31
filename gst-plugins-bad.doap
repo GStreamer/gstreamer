@@ -35,6 +35,16 @@ real live maintainer, or some actual wide use.
 
  <release>
   <Version>
+   <revision>1.19.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2021-06-01</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.19.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.18.0</revision>
    <branch>master</branch>
    <name></name>
