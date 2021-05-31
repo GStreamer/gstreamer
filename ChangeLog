@@ -1,10 +1,408 @@
-=== release 1.18.0 ===
+=== release 1.19.1 ===
 
-2020-09-08 00:08:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+2021-06-01 00:15:08 +0100  Tim-Philipp Müller <tim@centricular.com>
 
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.19.1
+
+2021-05-24 18:58:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: use new gst_buffer_new_memdup()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/208>
+
+2021-05-04 20:47:18 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	  rtsp-media: fix leak when adding converter
+	  Free the previous caps before reusing the variable for the converter caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/204>
+
+2021-05-04 20:45:19 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: fix leak adding headers
+	  gst_rtsp_message_add_header() makes a copy of the header, instead
+	  of taking ownership.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/204>
+
+2021-04-21 10:43:41 +0200  François Laignel <fengalin@free.fr>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  Use gst_element_request_pad_simple...
+	  Instead of the deprecated gst_element_get_request_pad.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/195>
+
+2021-04-29 03:07:42 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Ensure the bus watch is removed during unprepare
+	  It's possible for the destruction of the source to be delayed.
+	  Instead of relying on the dispose() to remove the bus watch, do
+	  it ourselves.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/202>
+
+2021-04-27 09:22:21 +0200  Marc Leeman <m.leeman@televic.com>
+
+	* docs/README:
+	  docs: minor spelling correction in README
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/200>
+
+2021-04-27 09:05:39 +0200  Marc Leeman <m.leeman@televic.com>
+
+	* examples/test-replay-server.c:
+	  test-replay-server: minor spelling corrections
+	  Bumped on these while investigating the example code.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/200>
+
+2021-04-22 23:26:02 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* tests/check/gst/stream.c:
+	  tests: Don't fail tests if IPv6 not available.
+	  On computers with IPv6 disabled it shouldn't result in a test failure.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/196>
+
+2021-04-23 07:18:48 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Add one more case to seek avoidance
+	  This is an extension to the previous commit. There can also be cases where the
+	  start position is not specified, in those cases we should also avoid doing
+	  seeking unless it's forced.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/197>
+
+2021-04-16 14:35:02 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Improve skipping trickmode seek.
+	  We can also skip the seek if the end range is already
+	  correct.
+	  Avoids initial seek on play start if playing full stream.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/194>
+
+2021-03-19 10:36:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Don't run signal class handlers during the CLEANUP stage
+	  It's sufficient to run them during the FIRST stage instead of in both.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/193>
+
+2021-02-15 12:07:15 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/rtspclientsink.c:
+	  tests: rtspclientsink: fix some leaks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/190>
+
+2021-02-15 12:26:30 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: mark cached caps as maybe-leaked to make leaks tracer happy
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/190>
+
+2021-02-15 12:07:45 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/rtspclientsink.c:
+	  rtspclientsink: add unit test for potential shutdown deadlock
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/189>
+
+2021-02-15 12:01:34 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: fix deadlock on shutdown before preroll
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/issues/130
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/189>
+
+2021-02-01 12:16:46 +0100  Branko Subasic <branko@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: avoid deadlock in send_func
+	  Currently the send_func() runs in a thread of its own which is started
+	  the first time we enter handle_new_sample(). It runs in an outer loop
+	  until priv->continue_sending is FALSE, which happens when a TEARDOWN
+	  request is received. We use a local variable, cont, which is initialized
+	  to TRUE, meaning that we will always enter the outer loop, and at the
+	  end of the outer loop we assign it the value of priv->continue_sending.
+	  Within the outer loop there is an inner loop, where we wait to be
+	  signaled when there is more data to send. The inner loop is exited when
+	  priv->send_cookie has changed value, which it does when more data is
+	  available or when a TEARDOWN has been received.
+	  But if we get a TEARDOWN before send_func() is entered we will get stuck
+	  in the inner loop because no one will increase priv->session_cookie
+	  anymore.
+	  By not entering the outer loop in send_func() if priv->continue_sending
+	  is FALSE we make sure that we do not get stuck in send_func()'s inner
+	  loop should we receive a TEARDOWN before the send thread has started.
+	  Change-Id: I7338a0ea60ea435bb685f875965f5165839afa20
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/187>
+
+2021-01-22 08:58:23 +0100  Branko Subasic <branko@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: cleanup transports during TEARDOWN
+	  When tunneling RTP over RTSP the stream transports are stored in a hash
+	  table in the GstRTSPClientPrivate struct. They are used for, among other
+	  things, mapping channel id to stream transports when receiving data from
+	  the client. The stream tranports are created and added to the hash table
+	  in handle_setup_request(), but unfortuately they are not removed in
+	  handle_teardown_request(). This means that if the client sends data on
+	  the RTSP connection after it has sent the TEARDOWN, which is often the
+	  case when audio backchannel is enabled, handle_data() will still be able
+	  to map the channel to a session transport and pass the data along to it.
+	  Which eventually leads to a failing assert in gst_rtsp_stream_recv_rtp()
+	  because the stream is no longer joined to a bin.
+	  We avoid this by removing the stream transports from the hash table when
+	  we handle the TEARDOWN request.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/184>
+
+2020-12-15 11:07:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Add "update-sdp" signal that allows updating the SDP before sending it to the server
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/178>
+
+2020-12-23 13:54:54 -0500  John Lindgren <john.lindgren@avasure.com>
+
+	* tests/check/gst/client.c:
+	  Add test cases for mountpoint of '/'
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/168>
+
+2020-11-05 16:02:49 -0500  John Lindgren <john.lindgren@avasure.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	  Make a mount point of "/" work correctly.
+	  As far as I can tell, this is neither explicitly allowed nor
+	  forbidden by RFC 7826.
+	  Meanwhile, URLs such as rtsp://<IP>:554 or rtsp://<IP>:554/ are in
+	  use in the wild (presumably with non-GStreamer servers).
+	  GStreamer's prior behavior was confusing, in that
+	  gst_rtsp_mount_points_add_factory() would appear to accept a mount
+	  path of "" or "/", but later connection attempts would fail with a
+	  "media not found" error.
+	  This commit makes a mount path of "/" work for either form of URL,
+	  while an empty mount path ("") is rejected and logs a warning.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/168>
+
+2020-12-15 10:18:16 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Use proper types instead of G_TYPE_POINTER for the RTSP messages in the "handle-request" signal
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/177>
+
+2020-12-17 15:27:27 +0100  Tobias Ronge <tobiasr@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Only count senders when counting blocked streams
+	  Only sender streams sends the GstRTSPStreamBlocking message, so only
+	  these should be counted before setting media status to prepared.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/180>
+
+2020-10-21 15:38:43 +0200  Jimmi Holst Christensen <jimmi.christensen@aivero.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink add proper support for uri queries
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/166>
+
+2020-12-14 14:12:38 +1300  Lawrence Troup <lawrence.troup@teknique.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Only unref client watch context on finalize, to avoid deadlock
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/issues/127
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/176>
+
+2020-11-18 20:36:50 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: collect a clock_rate when blocking
+	  This lets us provide a clock_rate in a fashion similar to the
+	  other code paths in get_rtpinfo()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/174>
+
+2020-11-16 10:34:41 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Use guint64 for setting the size-time property on rtpstorage
+	  Otherwise this will cause memory corruption as the property expects a 64
+	  bit integer.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/169>
+
+2020-11-03 16:56:28 +0100  David Phung <davidph@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-media: Ignore GstRTSPStreamBlocking from incomplete streams
+	  To prevent cases with prerolling when the inactive stream prerolls first
+	  and the server proceeds without waiting for the active stream, we will
+	  ignore GstRTSPStreamBlocking messages from incomplete streams. When
+	  there are no complete streams (during DESCRIBE), we will listen to all
+	  streams.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/167>
+
+2020-10-28 21:48:06 +0100  Kristofer Björkström <kristofb@axis.com>
+
+	* tests/check/gst/media.c:
+	* tests/check/meson.build:
+	* tests/files/test.avi:
+	  media test: Add test for seeking one active stream with a demuxer
+	  Add another seek_one_active_stream test but with a demuxer. The demuxer
+	  will flush both streams in opposed to the existing test which only
+	  flushes the active stream. This will help exposing problems with the
+	  prerolling process after a flushing seek.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/167>
+
+2018-10-29 09:19:33 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* gst/rtsp-server/meson.build:
+	* meson.build:
+	* pkgconfig/gstreamer-rtsp-server-uninstalled.pc.in:
+	* pkgconfig/gstreamer-rtsp-server.pc.in:
+	* pkgconfig/meson.build:
+	  Meson: Use pkg-config generator
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/1>
+
+2020-10-19 11:25:25 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  meson: update glib minimum version to 2.56
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/164>
+
+2020-09-04 21:14:35 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/test-launch.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-server-internal.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/client.c:
+	  rtsp-media-factory: expose API to disable RTCP
+	  This is supported by the RFC, and can be useful on systems where
+	  allocating two consecutive ports is problematic, and RTCP is not
+	  necessary.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/159>
+
+2020-10-08 23:45:24 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* hooks/pre-commit.hook:
+	* meson.build:
+	  git: use our standard pre commit hook
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/162>
+
+2020-10-08 22:17:16 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: make use of blocked_running_time in query_position
+	  When blocking, the sink element will not have received a buffer
+	  yet and the position query will fail. Instead, we make use of
+	  the running time of the buffer we blocked on.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/160>
+
+2020-10-06 00:04:17 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: collect rtp info when blocking
+	  We don't unblock the stream anymore before replying to the
+	  play request (883ddc72bb5bc57c95a9e167814d1ac53fe1b443),
+	  so the sinks don't have a last-sample after potentially flush
+	  seeking. seek_trickmode waits for preroll however, which means
+	  the stream will block and wait for a first buffer. Subsequent
+	  calls to get_rtpinfo() can thus make use of the information.
+	  See https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/issues/115
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/160>
+
+2020-09-27 20:09:22 +0900  Seungha Yang <seungha@centricular.com>
+
+	* examples/meson.build:
+	* examples/test-replay-server.c:
+	* examples/test-replay-server.h:
+	  examples: Add an example for loop playback
+	  This demo example shows a way of file loop playback of a given source.
+	  Note that client seek request is not properly implemented yet.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/154>
+
+2020-09-28 22:03:47 +0200  David Phung <davidph@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Plug memory leak
+	  The get-storage signal of rtpbin increases the ref count of the storage.
+	  So we have to unref it after usage.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/155>
+
+2020-09-11 15:46:41 +0200  Guiqin Zou <guiqinzu@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Get rates only on sender streams
+	  When play a media with both sender and receiver stream, like ONVIF
+	  back channel audio in, gst_rtsp_media_get_rates call
+	  gst_rtsp_stream_get_rates for each stream to set the rates. But
+	  gst_rtsp_stream_get_rates return false for the receiver steam, which
+	  lead a g_assert crash.
+	  Instead to get rates on all streams, now just get rates on sender
+	  streams.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/150>
+
+2020-09-05 00:30:42 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-server-internal.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-media: set a 0 storage size for TCP receivers
+	  ulpfec correction is obviously useless when receiving a stream
+	  over TCP, and in TCP modes the rtp storage receives non
+	  timestamped buffers, causing it to queue buffers indefinitely,
+	  until the queue grows so large that sanity checks kick in and
+	  warnings start to get emitted.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/149>
+
+2020-08-21 03:02:40 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: preroll on gap events
+	  This allows negotiating a SDP with all streams present, but only
+	  start sending packets at some later point in time
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/146>
+
+2020-08-25 16:10:36 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: do not unblock on unsuspend
+	  rtsp_media_unsuspend() is called from handle_play_request()
+	  before sending the play response. Unblocking the streams here
+	  was causing data to be sent out before the client was ready
+	  to handle it, with obvious side effects such as initial packets
+	  getting discarded, causing decoding errors.
+	  Instead we can simply let the media streams be unblocked when
+	  the state of the media is set to PLAYING, which occurs after
+	  sending the play response.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/147>
+
+2020-09-08 17:30:49 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: include template from gst-ci master branch again
+
+2020-09-08 16:58:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
+=== release 1.18.0 ===
+
+2020-09-08 00:08:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-rtsp-server.doap:
 	* meson.build:
 	  Release 1.18.0
