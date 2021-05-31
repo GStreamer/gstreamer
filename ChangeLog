@@ -1,7 +1,417 @@
+=== release 1.19.1 ===
+
+2021-06-01 00:16:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-devtools.doap:
+	* meson.build:
+	  Release 1.19.1
+
+2021-05-25 21:25:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Error out on invalid 'foreach' iterator types
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/248>
+
+2021-05-25 21:00:09 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Handle unknown type in foreach types
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/248>
+
+2021-05-24 01:26:41 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate: Make array delemiter a line continuation char
+	  Making its usage more friendly
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/248>
+
+2021-05-24 01:20:47 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tests/launcher_tests/foreach_array.validatetest:
+	  validate:scenario: Allow iterating over arrays in `foreach`
+	  We used to only support ranges, but we want to allow iterating over
+	  values in an array too.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/248>
+
+2021-05-24 01:19:13 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-enums.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/gst/validate/validate.c:
+	* validate/tests/check/validate/utilities.c:
+	  validate: Add a flag to allow defining how to resolve variables in structs
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/248>
+
+2021-05-23 22:43:04 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/flow/formatting.c:
+	  validate:flow: Log caps features
+	  No reason not to use directy the GstCaps serialization function here
+	  This commits avoids needing regenerated all expectations to remove
+	  the `;` which is not generated anymore as it is simple and makes
+	  merging simpler.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/248>
+
+2021-05-20 16:43:25 +0100  Philippe Normand <philn@igalia.com>
+
+	* validate/launcher/utils.py:
+	  validate: launcher: Simplify fakesink handling
+	  Now the function returns either a fakeaudiosink or a fakevideosink, depending on
+	  the media type.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/246>
+
+2021-05-20 10:45:34 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/flow/formatting.c:
+	* validate/gst/validate/flow/formatting.h:
+	* validate/tests/launcher_tests/simple_repeat/flow-expectations/log-sink-sink-expected:
+	  validate:flow: Sort fields in serialized structures
+	  Otherwise change in element implementations could lead to meaningless
+	  breakages
+
+2021-01-12 15:38:03 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Allow forcing running action on idle from scenario file
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/235>
+
+2021-01-12 15:37:08 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tests/launcher_tests/run_command_with_envvars.validatetest:
+	  validate:scenario: Add a `run-command` action type
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/235>
+
+2021-01-12 15:36:05 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-monitor.c:
+	  validate:monitor: Only get_name on GstObject
+	  GObject don't have such method!
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/235>
+
+2021-04-29 10:09:05 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate: add config file support
+	  Each test can now use a config file for
+	  the given media file used to test.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/243>
+
+2021-04-21 13:54:38 +0200  François Laignel <fengalin@free.fr>
+
+	* validate/tests/check/validate/padmonitor.c:
+	* validate/tests/check/validate/reporting.c:
+	  Use gst_element_request_pad_simple...
+	  Instead of the deprecated gst_element_get_request_pad.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/241>
+
+2021-04-19 15:00:18 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/data/scenarios/seek_forward.scenario:
+	  scenario: Fix action variable name
+	  This was always meant to be `on-message=eos` (like in fast_forward.scenario)
+	  Fixes #58
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/240>
+
+2021-03-19 17:16:33 +1100  Matthew Waters <matthew@centricular.com>
+
+	* validate/tests/check/validate/test-utils.c:
+	  gst: don't use volatile to mean atomic
+	  volatile is not sufficient to provide atomic guarantees and real atomics
+	  should be used instead.  GCC 11 has started warning about using volatile
+	  with atomic operations.
+	  https://gitlab.gnome.org/GNOME/glib/-/merge_requests/1719
+	  Discovered in https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/868
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/238>
+
+2021-02-26 15:32:29 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* validate/data/bash-completion/completions/gst-validate-1.0:
+	  bash-completion: add gst-validate script
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/237>
+
+2021-01-30 10:01:54 -0600  Brady J. Garvin <bgarvin@cse.unl.edu>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Ensure a positive job count.
+	  The default number of jobs to use is half of the available cores
+	  rounded down, but in situations where only one core is available (such
+	  as under some VMs), this means that `gst-validate-launcher` defaults
+	  to using zero jobs, a case that the test-running code is not prepared
+	  to handle.
+	  This change makes the code match the documentation for the `--jobs` option,
+	  guards against negative values both in the default setting and in argument
+	  parsing, and introduces some defensive programming to prevent other situations
+	  where the code might try to use zero jobs.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/154>
+
+2021-01-08 08:38:12 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Plug a leak
+
+2021-01-05 10:06:40 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Do not check strv length on NULL pointers
+	  This is not legal
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/234>
+
+2020-12-15 18:18:29 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/validate.c:
+	* validate/tests/launcher_tests/foreach.validatetest:
+	* validate/tests/launcher_tests/foreach_deep.validatetest:
+	  validate: Allow using the new nested structure syntax
+	  And port the deeply nested tests we have
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/233>
+
+2020-12-15 18:18:29 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/validate.c:
+	  validate: Only consider the first pipeline when using test files
+	  And port the deeply nested tests we have
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/233>
+
+2020-12-15 18:18:29 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add missing GstValidateAction annotations
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/233>
+
+2020-12-15 18:15:50 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add an `expected-values` parameter to `wait, message-type=XX`
+	  Allowing more precise filtering of the message we are waiting for.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/233>
+
+2020-12-15 18:02:00 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: scenario: Add a GstValidateScenario::action-done signal
+	  Allowing application to know when a specific action is done.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/233>
+
+2020-12-15 18:00:58 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Enhance printing action execution information
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/233>
+
+2020-12-15 17:58:51 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	  validate: Add an API to get the bin monitor scenario
+	  This is useful for applications that use Validate directly.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/233>
+
+2020-12-10 16:26:15 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Ensure that messages are handled from the right thread
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/233>
+
+2020-11-29 10:05:36 +0000  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/org.freedesktop.GstDebugViewer.appdata.xml.in:
+	  debug-viewer: Make appdata valid again
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/229>
+
+2020-12-08 11:46:37 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Fix the refcount management for actions in structures
+	  Handling the refcounting the same whether the action is blocking or not
+	  as we were leaking a ref for non-blocking waits.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/231>
+
+2020-12-08 10:57:15 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Minor cleanup
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/231>
+
+2020-12-08 10:55:28 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Use gst_validate_action_*ref everywhere.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/231>
+
+2020-11-30 23:06:18 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add support to check properties of object properties
+	  And recursively
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/231>
+
+2020-11-06 12:43:57 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* validate/launcher/main.py:
+	  validate: add sync-version
+	  Be able by the command line to change the sync version
+	  which is usually the GST_VALIDATE_TESTSUITE_VERSION
+	  from the test suite
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/227>
+
+2020-11-19 22:41:40 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Add a 'non-blocking' flag to the `wait` signal
+	  This way we can execute actions that will lead to the signal
+	  emission later in the execution.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/228>
+
+2020-11-20 10:16:28 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate:scenario: Rename 'interlaced' action to 'non-blocking'
+	  It is a better and more understandable naming.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/228>
+
+2020-10-23 22:40:41 +0900  Seungha Yang <seungha@centricular.com>
+
+	* validate/gst-libs/gst/video/meson.build:
+	* validate/plugins/ssim/meson.build:
+	* validate/tools/meson.build:
+	  meson: Check cairo-png dependency
+	  Should check whether libpng dependent methods are available or not
+	  Fixes: https://gitlab.freedesktop.org/gstreamer/gst-build/-/issues/128
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/225>
+
+2020-11-04 18:49:03 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Enable some MSVC warnings for parity with GCC/Clang
+	  This makes it easier to do development with MSVC by making it warn
+	  on common issues that GCC/Clang error out for in our CI configuration.
+	  Continuation from https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/223
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/226>
+
+2020-10-16 12:49:02 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* meson.build:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	  meson: update glib minimum version to 2.56
+	  In order to support the symbol g_enum_to_string in various
+	  project using GStreamer ( gst-validate etc.), the glib minimum
+	  version should be 2.56.0.
+	  Remove compat code as glib requirement
+	  is now > 2.56
+	  Version used by Ubuntu 18.04 LTS
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/224>
+
+2020-03-22 09:51:40 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Bump hard timeouts for all transcodin tests
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/172>
+
+2020-03-21 11:57:51 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  launcher: Avoid variable framerate when encoding to theora
+	  It is not supported by theoraenc.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/172>
+
+2020-03-20 09:05:52 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Scale down even more to speed up encoding in VP9
+	  From 3min to 50secs to execute here.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/172>
+
+2020-03-19 18:48:08 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/meson.build:
+	  validate:transcoding: Port to GstTranscoder
+	  Remove flag to force EOS on sigintr, making it the only choice
+	  Also add support for variable framerate
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/172>
+
+2020-03-19 18:41:24 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/tests/check/validate/padmonitor.c:
+	  validate: Use pad.last_flowret instead of trying to compute it ourselves
+	  Which makes it more accurate
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/172>
+
+2020-03-19 18:26:58 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.c:
+	  report: Add a way to force backtraces on reports
+	  And stop report simple debug message
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/172>
+
+2020-03-17 12:19:46 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Add a way to define test timeout from dicts
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/172>
+
+2020-08-06 08:00:53 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* meson.build:
+	* validate/gst/validate/meson.build:
+	* validate/meson.build:
+	* validate/pkgconfig/gst-validate-uninstalled.pc.in:
+	* validate/pkgconfig/gst-validate.pc.in:
+	* validate/pkgconfig/meson.build:
+	  Meson: Use pkg-config generator
+
+2020-09-10 21:38:00 +0000  Jordan Petridis <jpetridis@gnome.org>
+
+	* validate/data/gstvalidate.supp:
+	  gstvalidate.supp: update location of gst.supp
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/221>
+
+2020-05-12 09:26:40 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-launcher.md:
+	  docs: Update gst-validate-launcher documentation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/193>
+
+2020-09-08 17:30:56 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: include template from gst-ci master branch again
+
+2020-09-08 16:59:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.0 ===
 
 2020-09-08 00:10:18 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* .gitlab-ci.yml:
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
