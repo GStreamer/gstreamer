@@ -192,9 +192,6 @@ GST_CODECS_API
 gint  gst_h265_dpb_get_size   (GstH265Dpb * dpb);
 
 GST_CODECS_API
-gboolean gst_h265_dpb_is_full (GstH265Dpb * dpb);
-
-GST_CODECS_API
 gboolean gst_h265_dpb_needs_bump (GstH265Dpb * dpb,
                                   guint max_num_reorder_pics,
                                   guint max_latency_increase,

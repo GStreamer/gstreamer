@@ -1628,13 +1628,6 @@ gst_h265_decoder_finish_picture (GstH265Decoder * self,
     gst_h265_decoder_do_output_picture (self, to_output);
   }
 
-  if (gst_h265_dpb_is_full (priv->dpb)) {
-    /* If we haven't managed to output anything to free up space in DPB
-     * to store this picture, it's an error in the stream */
-    GST_WARNING_OBJECT (self, "Could not free up space in DPB");
-    return FALSE;
-  }
-
   return TRUE;
 }
 

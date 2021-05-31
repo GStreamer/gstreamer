@@ -451,20 +451,6 @@ gst_h265_dpb_get_size (GstH265Dpb * dpb)
 }
 
 /**
- * gst_h265_dpb_is_full:
- * @dpb: a #GstH265Dpb
- *
- * Return: %TRUE if @dpb is full
- */
-gboolean
-gst_h265_dpb_is_full (GstH265Dpb * dpb)
-{
-  g_return_val_if_fail (dpb != NULL, -1);
-
-  return dpb->pic_list->len >= dpb->max_num_pics;
-}
-
-/**
  * gst_h265_dpb_get_picture:
  * @dpb: a #GstH265Dpb
  * @system_frame_number The system frame number
@@ -532,6 +518,16 @@ gst_h265_dpb_needs_bump (GstH265Dpb * dpb, guint max_num_reorder_pics,
 {
   g_return_val_if_fail (dpb != NULL, FALSE);
   g_assert (dpb->num_output_needed >= 0);
+
+  /* If DPB is full and there is no empty space to store current picture,
+   * need bumping.
+   * NOTE: current picture was added already by our decoding flow, so we
+   * need to do bumping until dpb->pic_list->len == dpb->max_num_pic
+   */
+  if (dpb->pic_list->len > dpb->max_num_pics) {
+    GST_TRACE ("No empty frame buffer, need bumping");
+    return TRUE;
+  }
 
   /* C.5.2.3 */
   if (dpb->num_output_needed > max_num_reorder_pics) {
