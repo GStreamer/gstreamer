@@ -1,7 +1,49 @@
+=== release 1.19.1 ===
+
+2021-06-01 00:16:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.19.1
+
+2021-05-11 17:14:41 -0400  Stirling Westrup <stirling.westrup@userful.com>
+
+	* meson.build:
+	  Fixed meson.build to correctly use libdir
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-python/-/merge_requests/45>
+
+2020-10-09 14:34:12 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* meson.build:
+	* plugin/meson.build:
+	  gstreamer-full: plugin can be registered statically.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-python/-/merge_requests/43>
+
+2020-10-08 12:56:10 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* meson.build:
+	  macOS: Fix plugin link with Python 3.8
+	  see: https://gitlab.freedesktop.org/gstreamer/gst-python/-/issues/28
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-python/-/merge_requests/42>
+
+2020-09-08 17:30:59 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: include template from gst-ci master branch again
+
+2020-09-08 16:59:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.0 ===
 
 2020-09-08 00:09:33 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* .gitlab-ci.yml:
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
