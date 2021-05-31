@@ -46,7 +46,7 @@ gst_wayland_display_handle_context_new (struct wl_display * display)
   GstContext *context =
       gst_context_new (GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE, TRUE);
   gst_structure_set (gst_context_writable_structure (context),
-      "handle", G_TYPE_POINTER, display, NULL);
+      "display", G_TYPE_POINTER, display, NULL);
   return context;
 }
 
@@ -59,8 +59,11 @@ gst_wayland_display_handle_context_get_handle (GstContext * context)
   g_return_val_if_fail (GST_IS_CONTEXT (context), NULL);
 
   s = gst_context_get_structure (context);
-  gst_structure_get (s, "handle", G_TYPE_POINTER, &display, NULL);
-  return display;
+  if (gst_structure_get (s, "display", G_TYPE_POINTER, &display, NULL))
+    return display;
+  if (gst_structure_get (s, "handle", G_TYPE_POINTER, &display, NULL))
+    return display;
+  return NULL;
 }
 
 
