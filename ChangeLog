@@ -1,7 +1,659 @@
+=== release 1.19.1 ===
+
+2021-06-01 00:16:05 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.19.1
+
+2021-05-18 11:42:22 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-uri-clip.c:
+	  uriclip: Add an error message when creating a clip failed
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/252>
+
+2021-05-18 11:31:19 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/c/simple1.c:
+	  examples: c: Sensibly simplify the simple example
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/252>
+
+2021-05-18 11:16:02 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/python/gst-player.py:
+	* examples/python/simple.py:
+	  examples: python: Simplify the simple example
+	  We shouldn't show assets usage in the simplest example we have
+	  as it is useful for more advanced use cases.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/252>
+
+2021-05-21 15:26:03 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/scenarios/check_keyframes_in_compositor_two_sources/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/complex_effect_bin_desc/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/edit_while_seeked_with_stop/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop.check_clock_sync/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-audiosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-videosink-sink-expected:
+	  tests: Update expectation files with sorted structure fields
+
+2021-05-20 16:47:41 +0100  Philippe Normand <philn@igalia.com>
+
+	* tests/check/ges/test-utils.c:
+	* tests/check/meson.build:
+	* tests/check/nle/complex.c:
+	* tests/check/nle/nlecomposition.c:
+	* tests/check/nle/nleoperation.c:
+	* tests/check/nle/nlesource.c:
+	* tests/check/nle/seek.c:
+	* tests/check/nle/simple.c:
+	* tests/check/nle/tempochange.c:
+	* tests/check/scenarios/check_edit_in_frames_with_framerate_mismatch.scenario:
+	* tests/check/scenarios/check_layer_activness_gaps.scenario:
+	  tests/check: Use fake{audio,video}sink
+	  The tests already depend on -bad, so this should be OK.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/254>
+
+2021-05-20 16:45:43 +0100  Philippe Normand <philn@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launcher: Switch to fake{audio,video}sink
+	  Simplifies the code a bit, though introducing runtime dependency on -bad.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/254>
+
+2021-05-18 21:31:38 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-structured-interface.c:
+	* tests/check/meson.build:
+	* tests/check/scenarios/set-layer-on-command-line.validatetest:
+	  structure-interface: Convert fields type as much as possible
+	  Since 60922c02889cf1ebcfaca4501936be689c342e01 we force string in the
+	  command line parser which broke setting layers on clips for example
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/253>
+
+2021-05-18 22:04:48 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Add support to check properties of object properties
+	  And recursively
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/253>
+
+2021-04-23 16:08:48 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-utils.c:
+	  smart-mixer: Add support for d3d11compositor and glvideomixer
+	  Some hardware compositor elements (d3d11compositor and glvideomixer)
+	  consist of wrapper bin with internal mixer element.
+	  So, we need special handling for such elements.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/242>
+
+2021-04-24 00:55:45 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ges/gstframepositioner.c:
+	  framepositioner: Install operator property only when compositor is used
+	  Other compositor/mixer elements might not have the property. For instance,
+	  d3d11compositor and glvideomixer define graphics API specific blending
+	  properties, instead of simple "operator" one.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/242>
+
+2021-05-12 17:43:46 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Write xml directly to file
+	  Skip allocation of temp buffer (which was undersized).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/250>
+
+2021-05-01 19:18:15 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* tests/check/meson.build:
+	  tests: Run ges-launch tests non-interactively
+	  It's not needed for the tests and fixes an occasional issue where
+	  the terminal is left in -echo mode.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/248>
+
+2021-02-24 23:49:06 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track-element.h:
+	  track-element: Fix and cleanup annotations
+	  Making the class subclass able by bindings
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/231>
+
+2021-02-24 23:37:28 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-audio-source.c:
+	* ges/ges-audio-source.h:
+	* ges/ges-audio-test-source.c:
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-image-source.c:
+	* ges/ges-multi-file-source.c:
+	* ges/ges-source.h:
+	* ges/ges-title-source.c:
+	* ges/ges-track-element.h:
+	* ges/ges-video-source.c:
+	* ges/ges-video-source.h:
+	* ges/ges-video-test-source.c:
+	* ges/ges-video-uri-source.c:
+	  ges: Move GESVideo/AudioSource::create_source to GESSource
+	  Deprecating the old variants which were not introspectable
+	  and cleaning a bit the API.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/231>
+
+2021-04-21 10:47:51 +0200  François Laignel <fengalin@free.fr>
+
+	* docs/design/encoding.txt:
+	* ges/ges-effect-asset.c:
+	* ges/ges-pipeline.c:
+	* ges/ges-smart-video-mixer.c:
+	* ges/gstframepositioner.c:
+	* plugins/nle/nleoperation.c:
+	  Use gst_element_request_pad_simple...
+	  Instead of the deprecated gst_element_get_request_pad.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/240>
+
+2021-04-28 00:57:35 +0900  Seungha Yang <seungha@centricular.com>
+
+	* examples/c/concatenate.c:
+	* examples/c/ges-ui.c:
+	* examples/c/gessrc.c:
+	* examples/c/multifilesrc.c:
+	* examples/c/overlays.c:
+	* examples/c/play_timeline_with_one_clip.c:
+	* examples/c/simple1.c:
+	* examples/c/test2.c:
+	* examples/c/test3.c:
+	* examples/c/test4.c:
+	* examples/c/text_properties.c:
+	* examples/c/thumbnails.c:
+	* examples/c/transition.c:
+	* ges/ges-asset.c:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges.c:
+	* tests/benchmarks/timeline.c:
+	* tests/check/ges/test-utils.c:
+	* tools/ges-launcher.c:
+	* tools/ges-validate.c:
+	* tools/utils.c:
+	  ges: Port to gst_print*
+	  Sync with gst-launch, as g_print* will print broken string on Windows.
+	  See also
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/258
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/245>
+
+2021-04-23 16:42:26 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ges/gstframepositioner.c:
+	  framepositioner: Allow ANY caps features
+	  framepositioner will not touch raw video data and therefore should
+	  be able to accept ANY caps features
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/243>
+
+2021-04-23 09:01:35 -0500  reed.lawrence <reed.lawrence@zenofchem.com>
+
+	* ges/gstframepositioner.c:
+	  gstframepositioner: fix operator magic number
+	  In gst_frame_positioner_init, there was the magic number 1
+	  when assigning the default value of the operator. Now it
+	  has the default value for the operator pulled from the
+	  compositor.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/241>
+
+2021-04-21 18:12:30 -0500  reed.lawrence <reed.lawrence@zenofchem.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-video-source.c:
+	* ges/gstframepositioner.c:
+	* ges/gstframepositioner.h:
+	  gstframepositioner: added 'operator' property
+	  The 'operator' property was added to gstframepositioner so that
+	  blending modes in the compositor could be accessed. This was done
+	  by accessing the pad of the compositor class, and referencing the
+	  'operator' property in that pad. Getters and Setters were also
+	  created so that the 'operator' could be accessed by software that
+	  is based on GES, such as Pitivi.
+	  Related to but does not close Issue
+	  https://gitlab.gnome.org/GNOME/pitivi/-/issues/2313
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/236>
+
+2021-04-14 12:58:30 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ges/gstframepositioner.c:
+	  framepositioner: Fix runtime warning
+	  GstCaps is not a GObject!
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/238>
+
+2021-04-08 15:35:30 -0500  Adam Leppky <aleppky2@huskers.unl.edu>
+
+	* ges/ges-title-source.c:
+	  titleclip: Expose draw-shadow child property
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/235>
+
+2021-03-19 17:21:01 +1100  Matthew Waters <matthew@centricular.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/gstframepositioner.c:
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nleobject.c:
+	  gst: don't use volatile to mean atomic
+	  volatile is not sufficient to provide atomic guarantees and real atomics
+	  should be used instead.  GCC 11 has started warning about using volatile
+	  with atomic operations.
+	  https://gitlab.gnome.org/GNOME/glib/-/merge_requests/1719
+	  Discovered in https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/868
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/234>
+
+2021-03-08 14:50:52 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.h:
+	  ges: doc: Fix wrong vmethod links
+
+2021-03-08 09:56:49 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-group.c:
+	  group: Use proper group constructor
+	  Otherwise we might en up having a group which is not backed by any asset
+	  leading to possible assertion as this should never happen (see
+	  https://gitlab.gnome.org/GNOME/pitivi/-/issues/2526)
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/232>
+
+2021-02-17 21:34:22 +1100  Jan Schmidt <jan@centricular.com>
+
+	* tests/check/scenarios/check_keyframes_in_compositor_two_sources.validatetest:
+	* tests/check/scenarios/check_keyframes_in_compositor_two_sources/flow-expectations/log-videosink-sink-expected:
+	  Update check_keyframes_in_compositor_two_sources
+	  Update the validate expectation for videoconvert caps changes in
+	  https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/-/merge_requests/1033
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/229>
+
+2021-01-19 11:00:22 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	  project: Plug a leak
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-19 10:29:09 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Properly report error parsing restriction caps
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 15:29:47 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/meson.build:
+	* tests/check/scenarios/check-clip-positioning.validatetest:
+	  test: Check clip positioning works when specifying track size
+	  Make use of the new 'timeline specification' support in .validatetest
+	  files.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 15:28:34 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  tools: Fix some naming
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 15:28:17 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  tools: Reindent options
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 15:27:30 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launch: Add encoding profiles to the project
+	  So it is serialized on `--save`
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 15:26:36 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	* tools/ges-validate.c:
+	* tools/ges-validate.h:
+	* tools/utils.c:
+	  validate: Handle passing timeline desc in .validatetest files
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 15:25:12 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesbasebin.c:
+	* plugins/ges/gesdemux.c:
+	  plugin: Fix `is-ges-timeline` registration
+	  We need to register it for all subclasses.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 15:23:13 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	  command-line-formatter: Stop uselessly looping over options
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 15:21:06 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-command-line-formatter.h:
+	* ges/ges-internal.h:
+	* ges/ges-xml-formatter.c:
+	* plugins/ges/gessrc.c:
+	* tools/utils.c:
+	  command-line-formatter: Add a way to format timelines using the format
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 15:03:20 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* plugins/ges/gessrc.c:
+	* tools/ges-launcher.c:
+	* tools/ges-launcher.h:
+	* tools/utils.c:
+	* tools/utils.h:
+	  ges: Use a `ges:` uri to define timeline from description
+	  This way the command line formatter actually uses an URI and not
+	  an ugly hack where were passing a random string instead of an URI.
+	  This also allows the `gessrc` element to handle timelines described
+	  in its URI meaning that you can now use, for example:
+	  gst-play-1.0 "ges:+test-clip blue d=4.0
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 09:27:31 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-structure-parser.c:
+	* ges/parse.l:
+	  ges: Add keyframe support to the command line formatter
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 09:25:11 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	* ges/ges-structured-interface.h:
+	* ges/ges-validate.c:
+	  structured-interface: Move set_control_source from ges-validate
+	  So it can be reused in the command line formatter.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 09:13:59 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-structured-interface.c:
+	  structured-interface: Factor out method to get element to set property
+	  Used to set properties or keyframes
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 08:49:20 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	  command-line-formatter: Reindent command line options array
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-15 08:47:10 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-xml-formatter.c:
+	  formatter: Use the new `GstEncodingProfile:element-properties` property
+	  Cleaning up the code and making everything simpler.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-14 08:05:59 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-validate.c:
+	  ges: Minor debug logging level and typo fixes
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-12 15:55:52 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-structure-parser.c:
+	* ges/ges-structured-interface.c:
+	* ges/ges-structured-interface.h:
+	* ges/parse.l:
+	* tools/ges-launcher.c:
+	  command-line-formatter: Add track management to timeline description
+	  Instead of having it all handled by the tool, this way we can
+	  set the restriction before clips are added to the timeline,
+	  leading to better behavior in term of video images placement
+	  in the scene.
+	  Without that we would have the clips positioned before setting the
+	  restriction caps which leads to weird behavior for the end users.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-13 15:18:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-source.c:
+	* ges/ges-video-test-source.c:
+	  test-source: Respect asset natural size
+	  We had cases where the frame positioner had the default natural size for
+	  video test sources instead of the user provided one.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/227>
+
+2021-01-29 20:42:26 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* tools/ges-launcher.c:
+	  ges-launcher: do not set rendering details too early
+	  It looks like the _set_rendering_details call is superfluous
+	  in _startup(), as it will get called in run_pipeline.
+	  The problem with calling it before timeline_set_user_options
+	  is that we are going to fail creating a smart profile if
+	  the user selected eg --track-types=video, as the get_smart_profile
+	  method compares the tracks in the asset with those on the timeline.
+	  Reproduce with a video-only clip:
+	  ges-launch-1.0 --track-types=video +clip file://$PWD/jelly.mp4 \
+	  inpoint=15.0 -o foo.mp4 --smart-rendering
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/228>
+
+2019-10-29 17:03:14 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-structure-parser.c:
+	* ges/ges-structure-parser.h:
+	* ges/ges-structured-interface.c:
+	* ges/parse.l:
+	  ges-structure-parser: force string types
+	  Force a string type for structure values obtained through parsing a
+	  serialized timeline by inserting a (string) specifier after a '=',
+	  rather than relying on gst_structure_from_string guessing the type.
+	  As such, the functions that extract clocktimes and properties are
+	  modified to accept string value types.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/123>
+
+2019-10-29 16:29:24 +0000  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	  command-line-formatter: fix typos
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/123>
+
+2019-10-18 23:23:10 +0100  Henry Wilkes <hwilkes@igalia.com>
+
+	* ges/ges-marker-list.c:
+	* tests/check/ges/markerlist.c:
+	  marker-list: made deserialize reverse of serialize
+	  Changed deserialize method to actually reverse the serialize method by
+	  removing the edge quote marks and reversing g_strescape.
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/452
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/123>
+
+2020-12-13 22:54:37 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-source.c:
+	* ges/ges-source.h:
+	* ges/ges-uri-source.c:
+	* ges/ges-uri-source.h:
+	* ges/ges-video-uri-source.c:
+	  uri-source: Respect stream-id even on streams muxed in raw
+	  The issue is that we rely on `decodebin::autoplug-select` to `SKIP`
+	  unwanted pads, that signal was first provided to select factories during
+	  autoplugin, not totally thought to avoid exposing pads. For streams
+	  muxed directly in raw, decodebin has nothing to plug after the demuxer
+	  and the pad is exposed right away, meaning that we do not have any
+	  chance to avoid that pad to be exposed. This patch takes that limitation
+	  into account and checks the stream ID of the pads exposed by decodebin
+	  before exposing them itself, so we end up using the right pad even if
+	  more are uselessly exposed by decodebin.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/126
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/222>
+
+2021-01-12 15:50:27 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-audio-track.c:
+	  audio-track: Respect track restrictions in our gaps
+	  Avoiding not negotiated errors in specific cases.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/225>
+
+2021-01-05 11:52:15 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launch: Ensure to add required ref to profiles from project
+	  We were unreffing something we were not owning
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/224>
+
+2020-11-02 22:18:24 +1100  Jan Schmidt <jan@centricular.com>
+
+	* tests/check/meson.build:
+	  tests: fix meson test env setup to make sure we use the right gst-plugin-scanner
+	  This is the same fix that was applied in gst-plugins-good in
+	  https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/merge_requests/603
+	  and fixes the testsuite running in gst-build.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/219>
+
+2020-09-04 10:27:05 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher-kb.c:
+	* tools/ges-launcher-kb.h:
+	* tools/ges-launcher.c:
+	* tools/ges-launcher.h:
+	* tools/meson.build:
+	  launch: Add an interactive mode where we can seek etc...
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/209>
+
+2020-11-04 18:47:28 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Enable some MSVC warnings for parity with GCC/Clang
+	  This makes it easier to do development with MSVC by making it warn
+	  on common issues that GCC/Clang error out for in our CI configuration.
+	  Continuation from https://gitlab.freedesktop.org/gstreamer/gst-build/-/merge_requests/223
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/220>
+
+2020-10-30 00:30:52 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ges/ges.c:
+	* tools/ges-launcher.c:
+	  init: Fix initialisation crash
+	  Fix a case where initialisation fails without setting
+	  the passed-in GError and the caller assumes it will be
+	  set, and add a guard to catch the condition in case it
+	  happens again in the future.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/217>
+
+2018-11-04 13:04:45 -0500  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* ges/meson.build:
+	* meson.build:
+	* pkgconfig/gst-editing-services-uninstalled.pc.in:
+	* pkgconfig/gst-editing-services.pc.in:
+	* pkgconfig/meson.build:
+	  Meson: Use pkg-config generator
+
+2020-10-18 16:08:36 +0200  Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
+	* tools/ges-launcher.c:
+	* tools/utils.c:
+	* tools/utils.h:
+	  utils.c: fix static build
+	  Static build fails since version 1.17.1 and
+	  https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/commit/1e488d4311420b5ca193155ad8ab05509c9a4a37
+	  on:
+	  FAILED: tools/ges-launch-1.0
+	  /srv/storage/autobuild/run/instance-2/output-1/host/bin/arm-linux-gcc  -o tools/ges-launch-1.0 tools/ges-launch-1.0.p/ges-validate.c.o tools/ges-launch-1.0.p/ges-launch.c.o tools/ges-launch-1.0.p/ges-launcher.c.o tools/ges-launch-1.0.p/utils.c.o -Wl,--as-needed -Wl,--no-undefined -Wl,-O1 -Wl,-Bsymbolic-functions -static -Wl,--start-group ges/libges-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstreamer-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgobject-2.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libglib-2.0.a -pthread /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libpcre.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libffi.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgmodule-2.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstbase-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstvideo-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstpbutils-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstaudio-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libz.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgsttag-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgstcontroller-1.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libgio-2.0.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libmount.a /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libblkid.a -lm -Wl,--end-group
+	  /srv/storage/autobuild/run/instance-2/output-1/host/opt/ext-toolchain/bin/../lib/gcc/arm-buildroot-linux-uclibcgnueabi/8.3.0/../../../../arm-buildroot-linux-uclibcgnueabi/bin/ld: /srv/storage/autobuild/run/instance-2/output-1/host/arm-buildroot-linux-uclibcgnueabi/sysroot/usr/lib/libc.a(err.os): in function `warn':
+	  err.c:(.text+0x1d8): multiple definition of `warn'; tools/ges-launch-1.0.p/utils.c.o:utils.c:(.text+0x9bc): first defined here
+	  So rename warn function to ges_warn
+	  Also prefix ok, print and printerr function by ges_ for consistancy and
+	  run gst-indent on tools/ges-launcher.c
+	  Fixes:
+	  - http://autobuild.buildroot.org/results/2a528a1185644f5b23d26eb3f2b342e99aa1e493
+	  Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/216>
+
+2020-10-18 20:11:33 +0200  Antonio Ospite <antonio.ospite@collabora.com>
+
+	* meson.build:
+	  meson: actually check glib dependency version
+	  Actually check the version constraint when looking for the glib
+	  dependency.
+	  The version check will make meson use the fallback dependency when the
+	  one from the system is not recent enough, and eventually make the build
+	  succeed even on some older systems like Ubuntu 16.04.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/212>
+
+2020-10-16 13:17:04 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ges/ges-asset.c:
+	* meson.build:
+	  meson: update glib minimum version to 2.56
+	  In order to support the symbol g_enum_to_string in various
+	  project using GStreamer ( gst-validate etc.), the glib minimum
+	  version should be 2.56.0.
+	  Remove compat code as glib requirement
+	  is now > 2.56
+	  Version used by Ubuntu 18.04 LTS
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/215>
+
+2020-09-03 23:32:23 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-auto-transition.c:
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline.c:
+	* ges/ges-uri-clip.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_assets.py:
+	* tests/check/python/test_timeline.py:
+	  ges: Do not recreate auto-transitions when changing clip assets
+	  Otherwise we loose the configuration of the auto transition, and
+	  it is not required at all in any case.
+	  Fixes https://gitlab.gnome.org/GNOME/pitivi/-/issues/2380
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/208>
+
+2020-09-08 11:39:10 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/meson.build:
+	  ges: Fix a copy/paste mistake in meson file
+	  Passed unnoticed because we built against GstValidate
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/issues/119
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/211>
+
+2020-09-03 21:15:16 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-transition.c:
+	* ges/ges-video-transition.h:
+	  video-transition: Make smpte props children properties
+	  And deprecate old style accessors.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/207>
+
+2020-09-08 17:30:53 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: include template from gst-ci master branch again
+
+2020-09-08 16:59:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.0 ===
 
 2020-09-08 00:09:25 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* .gitlab-ci.yml:
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
