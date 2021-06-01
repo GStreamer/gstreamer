@@ -292,6 +292,7 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_ONVIF_MODE FALSE
 #define DEFAULT_ONVIF_RATE_CONTROL TRUE
 #define DEFAULT_IS_LIVE TRUE
+#define DEFAULT_IGNORE_X_SERVER_REPLY FALSE
 
 enum
 {
@@ -339,7 +340,8 @@ enum
   PROP_TEARDOWN_TIMEOUT,
   PROP_ONVIF_MODE,
   PROP_ONVIF_RATE_CONTROL,
-  PROP_IS_LIVE
+  PROP_IS_LIVE,
+  PROP_IGNORE_X_SERVER_REPLY
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -1005,6 +1007,41 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_param_spec_boolean ("is-live", "Is live",
           "Whether to act as a live source",
           DEFAULT_IS_LIVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRTSPSrc:ignore-x-server-reply
+   *
+   * When connecting to an RTSP server in tunneled mode (HTTP) the server
+   * usually replies with an x-server-ip-address header. This contains the
+   * address of the intended streaming server. However some servers return an
+   * "invalid" address. Here follows two examples when it might happen.
+   *
+   * 1. A server uses Apache combined with a separate RTSP process to handle
+   *    HTTPS requests on port 443. In this case Apache handles TLS and
+   *    connects to the local RTSP server, which results in a local
+   *    address 127.0.0.1 or ::1 in the header reply. This address is
+   *    returned to the actual RTSP client in the header. The client will
+   *    receive this address and try to connect to it and fail.
+   *
+   * 2. The client uses an IPv6 link local address with a specified scope id
+   *    fe80::aaaa:bbbb:cccc:dddd%eth0 and connects via HTTP on port 80.
+   *    The RTSP server receives the connection and returns the address
+   *    in the x-server-ip-address header. The client will receive this
+   *    address and try to connect to it "as is" without the scope id and
+   *    fail.
+   *
+   * In the case of streaming data from RTSP servers like 1 and 2, it's
+   * useful to have the option to simply ignore the x-server-ip-address
+   * header reply and continue using the original address.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_IGNORE_X_SERVER_REPLY,
+      g_param_spec_boolean ("ignore-x-server-reply",
+          "Ignore x-server-ip-address",
+          "Whether to ignore the x-server-ip-address server header reply",
+          DEFAULT_IGNORE_X_SERVER_REPLY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRTSPSrc::handle-request:
@@ -1749,6 +1786,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_IS_LIVE:
       rtspsrc->is_live = g_value_get_boolean (value);
       break;
+    case PROP_IGNORE_X_SERVER_REPLY:
+      rtspsrc->ignore_x_server_reply = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1915,6 +1955,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_IS_LIVE:
       g_value_set_boolean (value, rtspsrc->is_live);
+      break;
+    case PROP_IGNORE_X_SERVER_REPLY:
+      g_value_set_boolean (value, rtspsrc->ignore_x_server_reply);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -5112,8 +5155,11 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
             accept_certificate_cb, src, NULL);
       }
 
-      if (info->url->transports & GST_RTSP_LOWER_TRANS_HTTP)
+      if (info->url->transports & GST_RTSP_LOWER_TRANS_HTTP) {
         gst_rtsp_connection_set_tunneled (info->connection, TRUE);
+        gst_rtsp_connection_set_ignore_x_server_reply (info->connection,
+            src->ignore_x_server_reply);
+      }
 
       if (src->proxy_host) {
         GST_DEBUG_OBJECT (src, "setting proxy %s:%d", src->proxy_host,

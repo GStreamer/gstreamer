@@ -19756,6 +19756,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "ignore-x-server-reply": {
+                        "blurb": "Whether to ignore the x-server-ip-address server header reply",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "is-live": {
                         "blurb": "Whether to act as a live source",
                         "conditionally-available": false,

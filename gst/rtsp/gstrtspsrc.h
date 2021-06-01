@@ -278,6 +278,7 @@ struct _GstRTSPSrc {
   gboolean          onvif_mode;
   gboolean          onvif_rate_control;
   gboolean          is_live;
+  gboolean          ignore_x_server_reply;
 
   /* state */
   GstRTSPState       state;
