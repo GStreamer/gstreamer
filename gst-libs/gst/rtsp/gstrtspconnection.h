@@ -235,6 +235,12 @@ void               gst_rtsp_connection_set_remember_session_id (GstRTSPConnectio
 GST_RTSP_API
 gboolean           gst_rtsp_connection_get_remember_session_id (GstRTSPConnection *conn);
 
+GST_RTSP_API
+void               gst_rtsp_connection_set_ignore_x_server_reply (GstRTSPConnection *conn, gboolean ignore);
+
+GST_RTSP_API
+gboolean           gst_rtsp_connection_get_ignore_x_server_reply (const GstRTSPConnection *conn);
+
 /* async IO */
 
 /**

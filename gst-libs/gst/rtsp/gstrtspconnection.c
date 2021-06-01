@@ -173,6 +173,7 @@ struct _GstRTSPConnection
 
   gchar tunnelid[TUNNELID_LEN];
   gboolean tunneled;
+  gboolean ignore_x_server_reply;
   GstRTSPTunnelState tstate;
 
   /* the remote and local ip */
@@ -878,7 +879,8 @@ setup_tunneling (GstRTSPConnection * conn, gint64 timeout, gchar * uri,
       response->type_data.response.code != GST_RTSP_STS_OK)
     goto wrong_result;
 
-  if (gst_rtsp_message_get_header (response, GST_RTSP_HDR_X_SERVER_IP_ADDRESS,
+  if (!conn->ignore_x_server_reply &&
+      gst_rtsp_message_get_header (response, GST_RTSP_HDR_X_SERVER_IP_ADDRESS,
           &value, 0) == GST_RTSP_OK) {
     g_free (url->host);
     url->host = g_strdup (value);
@@ -3461,6 +3463,45 @@ gst_rtsp_connection_get_tunnelid (const GstRTSPConnection * conn)
     return NULL;
 
   return conn->tunnelid;
+}
+
+/**
+ * gst_rtsp_connection_set_ignore_x_server_reply:
+ * @conn: a #GstRTSPConnection
+ * @ignore: %TRUE to ignore the x-server-ip-address header reply or %FALSE to
+ *          comply with it (%FALSE is the default).
+ *
+ * Set whether to ignore the x-server-ip-address header reply or not. If the
+ * header is ignored, the original address will be used instead.
+ *
+ * Since: 1.20
+ */
+void
+gst_rtsp_connection_set_ignore_x_server_reply (GstRTSPConnection * conn,
+    gboolean ignore)
+{
+  g_return_if_fail (conn != NULL);
+
+  conn->ignore_x_server_reply = ignore;
+}
+
+/**
+ * gst_rtsp_connection_get_ignore_x_server_reply:
+ * @conn: a #GstRTSPConnection
+ *
+ * Get the ignore_x_server_reply value.
+ *
+ * Returns: returns %TRUE if the x-server-ip-address header reply will be
+ *          ignored, else returns %FALSE
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_rtsp_connection_get_ignore_x_server_reply (const GstRTSPConnection * conn)
+{
+  g_return_val_if_fail (conn != NULL, FALSE);
+
+  return conn->ignore_x_server_reply;
 }
 
 /**
