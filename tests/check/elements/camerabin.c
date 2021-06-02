@@ -335,6 +335,7 @@ static GstFlowReturn
 gst_test_video_src_alloc (GstPushSrc * src, GstBuffer ** buf)
 {
   GstTestVideoSrc *self = GST_TEST_VIDEO_SRC (src);
+  GstVideoInfo vinfo;
   guint8 *data;
   gsize data_size;
 
@@ -344,7 +345,10 @@ gst_test_video_src_alloc (GstPushSrc * src, GstBuffer ** buf)
     self->caps = NULL;
   }
 
-  data_size = self->width * self->height * 3;   /* RGB size */
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_RGB, self->width,
+      self->height);
+
+  data_size = vinfo.size;
   data = g_malloc (data_size);
   *buf = gst_buffer_new_wrapped (data, data_size);
 
