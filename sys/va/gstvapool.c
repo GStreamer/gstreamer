@@ -119,10 +119,6 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
     width += video_align.padding_left + video_align.padding_right;
     height += video_align.padding_bottom + video_align.padding_top;
-
-    /* apply the alignment to the info */
-    if (!gst_video_info_align (&caps_info, &video_align))
-      goto failed_to_align;
   }
 
   /* update allocation info with aligned size */
@@ -200,11 +196,6 @@ wrong_caps:
   {
     GST_WARNING_OBJECT (vpool,
         "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-failed_to_align:
-  {
-    GST_WARNING_OBJECT (vpool, "Failed to align");
     return FALSE;
   }
 failed_allocator:
