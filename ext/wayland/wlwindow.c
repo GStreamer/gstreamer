@@ -289,7 +289,7 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
 
     /* Finally, commit the xdg_surface state as toplevel */
     window->configured = FALSE;
-    wl_surface_commit (window->video_surface);
+    wl_surface_commit (window->area_surface);
     wl_display_flush (display->display);
 
     g_mutex_lock (&window->configure_mutex);
