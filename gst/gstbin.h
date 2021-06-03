@@ -165,8 +165,7 @@ struct _GstBin {
  * to update the list of children in the bin.
  *
  * The #GstBinClass::handle_message method can be overridden to implement custom
- * message handling. handle_message takes ownership of the message, just like
- * gst_element_post_message().
+ * message handling.
  *
  * #GstBinClass::deep_element_added will be called when a new element has been
  * added to any bin inside this bin, so it will also be called if a new child
@@ -228,7 +227,7 @@ struct _GstBinClass {
   /**
    * GstBinClass::handle_message:
    * @bin: the #GstBin
-   * @message: the message to be handled
+   * @message: (transfer full): the message to be handled
    *
    * Method to handle a message from the children.
    */
