@@ -29,11 +29,15 @@
 #include <string.h>
 
 static GMainLoop *loop = NULL;
+static GMainLoop *pipeline_loop = NULL;
 static gboolean visible = FALSE;
 static gboolean test_reuse = FALSE;
 static HWND hwnd = NULL;
 static gboolean test_fullscreen = FALSE;
 static gboolean fullscreen = FALSE;
+static gchar *video_sink = NULL;
+static gboolean run_thread = FALSE;
+
 static LONG prev_style = 0;
 static RECT prev_rect = { 0, };
 
@@ -126,9 +130,12 @@ window_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
       hwnd = NULL;
 
-      if (loop) {
+      if (loop)
         g_main_loop_quit (loop);
-      }
+
+      if (pipeline_loop)
+        g_main_loop_quit (pipeline_loop);
+
       return 0;
     case WM_KEYUP:
       if (!test_fullscreen)
@@ -208,21 +215,97 @@ timeout_cb (gpointer user_data)
   return G_SOURCE_REMOVE;
 }
 
-gint
-main (gint argc, gchar ** argv)
+static gpointer
+pipeline_runner_func (gpointer user_data)
 {
   GstElement *pipeline, *src, *sink;
   GstStateChangeReturn sret;
+  gint num_repeat = 0;
+  GMainContext *context = NULL;
+  GMainLoop *this_loop;
+
+  if (run_thread) {
+    /* We are in runner thread, create our loop */
+    context = g_main_context_new ();
+    pipeline_loop = g_main_loop_new (context, FALSE);
+
+    g_main_context_push_thread_default (context);
+
+    this_loop = pipeline_loop;
+  } else {
+    this_loop = loop;
+  }
+
+  /* prepare the pipeline */
+  pipeline = gst_pipeline_new ("win32-overlay");
+  src = gst_element_factory_make ("videotestsrc", NULL);
+  sink = gst_element_factory_make (video_sink, NULL);
+
+  if (!sink) {
+    g_printerr ("%s element is not available\n", video_sink);
+    exit (1);
+  }
+
+  gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
+  gst_element_link (src, sink);
+
+  gst_bus_add_watch (GST_ELEMENT_BUS (pipeline), bus_msg, pipeline);
+
+  do {
+    gst_print ("Running loop %d\n", num_repeat++);
+
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (sink),
+        (guintptr) hwnd);
+
+    sret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    if (sret == GST_STATE_CHANGE_FAILURE) {
+      g_printerr ("Pipeline doesn't want to pause\n");
+      break;
+    } else {
+      /* add timer to repeat and reuse pipeline  */
+      if (test_reuse) {
+        GSource *timeout_source = g_timeout_source_new_seconds (3);
+
+        g_source_set_callback (timeout_source,
+            (GSourceFunc) timeout_cb, this_loop, NULL);
+        g_source_attach (timeout_source, NULL);
+        g_source_unref (timeout_source);
+      }
+
+      g_main_loop_run (this_loop);
+    }
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+
+    visible = FALSE;
+  } while (test_reuse);
+
+  gst_bus_remove_watch (GST_ELEMENT_BUS (pipeline));
+  gst_object_unref (pipeline);
+
+  if (run_thread) {
+    g_main_context_pop_thread_default (context);
+    g_main_context_unref (context);
+
+    g_main_loop_quit (loop);
+    g_main_loop_unref (pipeline_loop);
+  }
+
+  return NULL;
+}
+
+gint
+main (gint argc, gchar ** argv)
+{
   WNDCLASSEX wc = { 0, };
   HINSTANCE hinstance = GetModuleHandle (NULL);
   GIOChannel *msg_io_channel;
   GOptionContext *option_ctx;
   GError *error = NULL;
-  gchar *video_sink = NULL;
   gchar *title = NULL;
   RECT wr = { 0, 0, 320, 240 };
   gint exitcode = 0;
   gboolean ret;
+  GThread *thread = NULL;
   GOptionEntry options[] = {
     {"videosink", 0, 0, G_OPTION_ARG_STRING, &video_sink,
         "Video sink to use (default is glimagesink)", NULL}
@@ -234,9 +317,11 @@ main (gint argc, gchar ** argv)
         "Test full screen (borderless topmost) mode switching via "
           "\"SPACE\" key or \"right mouse button\" click", NULL}
     ,
+    {"run-thread", 0, 0, G_OPTION_ARG_NONE, &run_thread,
+        "Run pipeline from non-window thread", NULL}
+    ,
     {NULL}
   };
-  gint num_repeat = 0;
 
   option_ctx = g_option_context_new ("WIN32 video overlay example");
   g_option_context_add_main_entries (option_ctx, options, NULL);
@@ -276,58 +361,18 @@ main (gint argc, gchar ** argv)
   msg_io_channel = g_io_channel_win32_new_messages (0);
   g_io_add_watch (msg_io_channel, G_IO_IN, msg_cb, NULL);
 
-  /* prepare the pipeline */
-  pipeline = gst_pipeline_new ("win32-overlay");
-  src = gst_element_factory_make ("videotestsrc", NULL);
-  sink = gst_element_factory_make (video_sink, NULL);
-
-  if (!sink) {
-    g_printerr ("%s element is not available\n", video_sink);
-    exitcode = 1;
-
-    goto terminate;
+  if (run_thread) {
+    thread = g_thread_new ("pipeline-thread",
+        (GThreadFunc) pipeline_runner_func, NULL);
+    g_main_loop_run (loop);
+  } else {
+    pipeline_runner_func (NULL);
   }
-
-  gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
-  gst_element_link (src, sink);
-
-  gst_bus_add_watch (GST_ELEMENT_BUS (pipeline), bus_msg, pipeline);
-
-  do {
-    gst_print ("Running loop %d\n", num_repeat++);
-
-    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (sink),
-        (guintptr) hwnd);
-
-    sret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    if (sret == GST_STATE_CHANGE_FAILURE) {
-      g_printerr ("Pipeline doesn't want to pause\n");
-      break;
-    } else {
-      /* add timer to repeat and reuse pipeline  */
-      if (test_reuse) {
-        GSource *timeout_source = g_timeout_source_new_seconds (3);
-
-        g_source_set_callback (timeout_source,
-            (GSourceFunc) timeout_cb, loop, NULL);
-        g_source_attach (timeout_source, NULL);
-        g_source_unref (timeout_source);
-      }
-
-      g_main_loop_run (loop);
-    }
-    gst_element_set_state (pipeline, GST_STATE_NULL);
-
-    visible = FALSE;
-  } while (test_reuse);
-
-  gst_bus_remove_watch (GST_ELEMENT_BUS (pipeline));
 
 terminate:
   if (hwnd)
     DestroyWindow (hwnd);
 
-  gst_object_unref (pipeline);
   g_io_channel_unref (msg_io_channel);
   g_main_loop_unref (loop);
   g_free (title);
