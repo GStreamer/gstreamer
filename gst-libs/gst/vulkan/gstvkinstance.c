@@ -975,7 +975,15 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumeratePhysicalDevices") < 0)
     goto error;
-  g_assert (instance->n_physical_devices > 0);
+
+  if (instance->n_physical_devices == 0) {
+    GST_WARNING_OBJECT (instance, "No available physical device");
+    g_set_error_literal (error,
+        GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
+        "No available physical device");
+    goto error;
+  }
+
   instance->physical_devices =
       g_new0 (VkPhysicalDevice, instance->n_physical_devices);
   err =
