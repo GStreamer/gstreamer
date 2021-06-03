@@ -51,6 +51,7 @@ static const struct map gst_vaapi_mpeg2_level_map[] = {
   { GST_VAAPI_LEVEL_MPEG2_MAIN,         "main"          },
   { GST_VAAPI_LEVEL_MPEG2_HIGH_1440,    "high-1440"     },
   { GST_VAAPI_LEVEL_MPEG2_HIGH,         "high"          },
+  { GST_VAAPI_LEVEL_MPEG2_HIGHP,        "highP"         },
   { 0, NULL }
 /* *INDENT-ON* */
 };
@@ -67,6 +68,9 @@ static const GstVaapiMPEG2LevelLimits gst_vaapi_mpeg2_level_limits[] = {
     0x06,       1440,  1152,   60,  47001600,  60000,  7340032 },
   { GST_VAAPI_LEVEL_MPEG2_HIGH,
     0x04,       1920,  1152,   60,  62668800,  80000,  9781248 },
+  /* Amendment 3: New level for 1080@50p/60p */
+  { GST_VAAPI_LEVEL_MPEG2_HIGHP,
+    0x02,       1920,  1152,   60, 125337600,  80000,  9781248 },
   { 0, }
 };
 /* *INDENT-ON* */
@@ -215,7 +219,7 @@ gst_vaapi_utils_mpeg2_get_level_from_string (const gchar * str)
 const gchar *
 gst_vaapi_utils_mpeg2_get_level_string (GstVaapiLevelMPEG2 level)
 {
-  if (level < GST_VAAPI_LEVEL_MPEG2_LOW || level > GST_VAAPI_LEVEL_MPEG2_HIGH)
+  if (level < GST_VAAPI_LEVEL_MPEG2_LOW || level > GST_VAAPI_LEVEL_MPEG2_HIGHP)
     return NULL;
   return gst_vaapi_mpeg2_level_map[level - GST_VAAPI_LEVEL_MPEG2_LOW].name;
 }
@@ -225,7 +229,7 @@ gst_vaapi_utils_mpeg2_get_level_string (GstVaapiLevelMPEG2 level)
 const GstVaapiMPEG2LevelLimits *
 gst_vaapi_utils_mpeg2_get_level_limits (GstVaapiLevelMPEG2 level)
 {
-  if (level < GST_VAAPI_LEVEL_MPEG2_LOW || level > GST_VAAPI_LEVEL_MPEG2_HIGH)
+  if (level < GST_VAAPI_LEVEL_MPEG2_LOW || level > GST_VAAPI_LEVEL_MPEG2_HIGHP)
     return NULL;
   return &gst_vaapi_mpeg2_level_limits[level - GST_VAAPI_LEVEL_MPEG2_LOW];
 }

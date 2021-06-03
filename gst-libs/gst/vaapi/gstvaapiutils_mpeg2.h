@@ -33,6 +33,7 @@ G_BEGIN_DECLS
  * @GST_VAAPI_LEVEL_MPEG2_MAIN: Main level.
  * @GST_VAAPI_LEVEL_MPEG2_HIGH_1440: High-1440 level.
  * @GST_VAAPI_LEVEL_MPEG2_HIGH: High level.
+ * @GST_VAAPI_LEVEL_MPEG2_HIGHP: HighP level.
  *
  * The set of all levels for #GstVaapiLevelMPEG2.
  */
@@ -41,6 +42,7 @@ typedef enum {
   GST_VAAPI_LEVEL_MPEG2_MAIN,
   GST_VAAPI_LEVEL_MPEG2_HIGH_1440,
   GST_VAAPI_LEVEL_MPEG2_HIGH,
+  GST_VAAPI_LEVEL_MPEG2_HIGHP,
 } GstVaapiLevelMPEG2;
 
 /* Returns a relative score for the supplied GstVaapiProfile */
