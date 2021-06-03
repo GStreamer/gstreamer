@@ -258,7 +258,7 @@ gst_rtp_header_extension_get_max_size (GstRTPHeaderExtension * ext,
  * @write_flags: #GstRTPHeaderExtensionFlags for how the extension should
  *               be written
  * @output: output RTP #GstBuffer
- * @data: location to write the rtp header extension into
+ * @data: (array length=size): location to write the rtp header extension into
  * @size: size of @data
  *
  * Writes the RTP header extension to @data using information available from
@@ -293,7 +293,7 @@ gst_rtp_header_extension_write (GstRTPHeaderExtension * ext,
  * @ext: a #GstRTPHeaderExtension
  * @read_flags: #GstRTPHeaderExtensionFlags for how the extension should
  *               be written
- * @data: location to read the rtp header extension from
+ * @data: (array length=size): location to read the rtp header extension from
  * @size: size of @data
  * @buffer: a #GstBuffer to modify if necessary
  *
