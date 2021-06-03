@@ -141,6 +141,8 @@ QtGLVideoItem::QtGLVideoItem()
 
 QtGLVideoItem::~QtGLVideoItem()
 {
+  GstBuffer *tmp_buffer;
+
   /* Before destroying the priv info, make sure
    * no qmlglsink's will call in again, and that
    * any ongoing calls are done by invalidating the proxy
@@ -156,6 +158,15 @@ QtGLVideoItem::~QtGLVideoItem()
     gst_object_unref(this->priv->other_context);
   if (this->priv->display)
     gst_object_unref(this->priv->display);
+
+  while ((tmp_buffer = (GstBuffer*) g_queue_pop_head (&this->priv->potentially_unbound_buffers))) {
+    GST_TRACE ("old buffer %p should be unbound now, unreffing", tmp_buffer);
+    gst_buffer_unref (tmp_buffer);
+  }
+  while ((tmp_buffer = (GstBuffer*) g_queue_pop_head (&this->priv->bound_buffers))) {
+    GST_TRACE ("old buffer %p should be unbound now, unreffing", tmp_buffer);
+    gst_buffer_unref (tmp_buffer);
+  }
 
   gst_buffer_replace (&this->priv->buffer, NULL);
 
