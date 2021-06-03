@@ -674,7 +674,7 @@ gst_ffmpegvideodec_prepare_dr_pool (GstFFMpegVidDec * ffmpegdec,
   GstVideoAlignment align;
   GstAllocator *allocator = NULL;
   gint width, height;
-  gint linesize_align[4];
+  gint linesize_align[AV_NUM_DATA_POINTERS];
   gint i;
   gsize max_align;
 
