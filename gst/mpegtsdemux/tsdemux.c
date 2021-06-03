@@ -3122,16 +3122,30 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
       stream->seeked_dts = stream->dts;
       stream->needs_keyframe = FALSE;
     } else {
+      GList *tmp;
+      GST_DEBUG_OBJECT (stream->pad, "Rewinding after keyframe seek failure");
       base->seek_offset = demux->last_seek_offset - 200 * base->packetsize;
       if (demux->last_seek_offset < 200 * base->packetsize)
         base->seek_offset = 0;
       demux->last_seek_offset = base->seek_offset;
       mpegts_packetizer_flush (base->packetizer, FALSE);
+
+      /* Reset all streams accordingly */
+      for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
+        TSDemuxStream *cand = tmp->data;
+
+        GST_DEBUG_OBJECT (cand->pad, "Clearing stream");
+        cand->continuity_counter = CONTINUITY_UNSET;
+        cand->state = PENDING_PACKET_EMPTY;
+        if (cand->data)
+          g_free (cand->data);
+        cand->data = NULL;
+        cand->allocated_size = 0;
+        cand->current_size = 0;
+      }
       base->mode = BASE_MODE_SEEKING;
 
-      stream->continuity_counter = CONTINUITY_UNSET;
       res = GST_FLOW_REWINDING;
-      g_free (stream->data);
       goto beach;
     }
   } else {
@@ -3337,8 +3351,11 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
       FLAGS_HAS_PAYLOAD (packet->scram_afc_cc)) {
     /* Flush previous data */
     res = gst_ts_demux_push_pending_data (demux, stream, NULL);
-    /* Tell the data collecting to expect this header */
-    stream->state = PENDING_PACKET_HEADER;
+    if (res != GST_FLOW_REWINDING) {
+      /* Tell the data collecting to expect this header. We don't do this when
+       * rewinding since the states will have been resetted accordingly */
+      stream->state = PENDING_PACKET_HEADER;
+    }
   }
 
   if (packet->payload && (res == GST_FLOW_OK || res == GST_FLOW_NOT_LINKED)
