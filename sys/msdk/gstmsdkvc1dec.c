@@ -31,7 +31,21 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* sample pipeline: gst-launch-1.0 filesrc location=video.wmv ! asfdemux ! vc1parse !  msdkvc1dec ! videoconvert ! xvimagesink */
+/**
+ * SECTION: element-msdkvc1dec
+ * @title: msdkvc1dec
+ * @short_description: Intel MSDK VC1 decoder
+ *
+ * VC1/WMV video decoder based on Intel Media SDK
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=video.wmv ! asfdemux ! vc1parse ! msdkvc1dec ! videoconvert ! xvimagesink
+ * ```
+ *
+ * Since: 1.14
+ *
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>

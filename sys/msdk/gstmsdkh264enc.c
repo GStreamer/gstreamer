@@ -29,6 +29,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * SECTION: element-msdkh264enc
+ * @title: msdkh264enc
+ * @short_description: Intel MSDK H264 encoder
+ *
+ * H264 video encoder based on Intel Media SDK
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc num-buffers=90 ! msdkh264enc ! h264parse ! filesink location=output.h264
+ * ```
+ *
+ * Since: 1.12
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

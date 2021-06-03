@@ -31,6 +31,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * SECTION: element-msdkvp9dec
+ * @title: msdkvp9dec
+ * @short_description: Intel MSDK VP9 decoderr
+ *
+ * VP9 video decoder based on Intel Media SDK
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=sample.webm ! matroskademux ! msdkvp9dec ! glimagesink
+ * ```
+ *
+ * Since: 1.16
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

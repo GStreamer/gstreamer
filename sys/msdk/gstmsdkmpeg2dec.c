@@ -32,6 +32,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * SECTION: element-msdkmpeg2dec
+ * @title: msdkmpeg2dec
+ * @short_description: Intel MSDK MPEG2 decoder
+ *
+ * MPEG2 video decoder based on Intel Media SDK
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=sample.mpeg2 ! mpegvideoparse ! msdkmpeg2dec ! glimagesink
+ * ```
+ *
+ * Since: 1.14
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

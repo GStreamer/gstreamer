@@ -29,6 +29,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+ /**
+ * SECTION: element-msdkh264dec
+ * @title: msdkh264dec
+ * @short_description: Intel MSDK H264 decoder
+ *
+ * H264 video decoder based on Intel Media SDK
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=sample.h264 ! h264parse ! msdkh264dec ! glimagesink
+ * ```
+ *
+ * Since: 1.12
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

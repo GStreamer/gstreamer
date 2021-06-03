@@ -29,6 +29,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * SECTION: element-msdkmjpegdec
+ * @title: msdkmjpegdec
+ * @short_description: Intel MSDK MJPEG decoder
+ *
+ * MJPEG video decoder based on Intel Media SDK
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=sample.jpg ! jpegparse ! msdkmjpegdec ! glimagesink
+ * ```
+ *
+ * Since: 1.12
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

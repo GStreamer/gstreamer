@@ -29,6 +29,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * SECTION: element-msdkvp9enc
+ * @title: msdkvp9enc
+ * @short_description: Intel MSDK VP9 encoder
+ *
+ * VP9 video encoder based on Intel Media SDK
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc num-buffers=90 ! msdkvp9enc ! matroskamux ! filesink location=output.webm
+ * ```
+ *
+ * Since: 1.18
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

@@ -31,6 +31,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * SECTION: element-msdkvpp
+ * @title: msdkvpp
+ * @short_description: MSDK Video Postprocessor
+ *
+ * A MediaSDK Video Postprocessing Filter
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! msdkvpp ! glimagesink
+ * ```
+ *
+ * Since: 1.16
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

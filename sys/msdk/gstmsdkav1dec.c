@@ -29,6 +29,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+ /**
+ * SECTION: element-msdkav1dec
+ * @title: msdkav1dec
+ * @short_description: Intel MSDK AV1 decoder
+ *
+ * AV1 video decoder based on Intel Media SDK
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=sample.ivf ! ivfparse ! msdkav1dec ! glimagesink
+ * ```
+ *
+ * Since: 1.20
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

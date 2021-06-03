@@ -29,6 +29,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * SECTION: element-msdkmjpegenc
+ * @title: msdkmjpegenc
+ * @short_description: Intel MSDK MJPEG encoder
+ *
+ * MJPEG video encoder based on Intel Media SDK
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc num-buffers=1 ! msdkmjpegenc ! jpegparse ! filesink location=output.jpg
+ * ```
+ *
+ * Since: 1.12
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
