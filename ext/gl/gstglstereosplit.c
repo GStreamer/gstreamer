@@ -808,6 +808,7 @@ stereosplit_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_CAPS:
     {
       GstCaps *filter, *left, *right, *combined, *ret, *templ_caps;
+      gboolean result;
 
       gst_query_parse_caps (query, &filter);
 
@@ -856,11 +857,14 @@ stereosplit_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
           gst_caps_intersect_full (combined, templ_caps,
           GST_CAPS_INTERSECT_FIRST);
       gst_caps_unref (templ_caps);
+      gst_caps_unref (combined);
 
       GST_LOG_OBJECT (split, "Returning sink pad caps %" GST_PTR_FORMAT, ret);
 
       gst_query_set_caps_result (query, ret);
-      return !gst_caps_is_empty (ret);
+      result = !gst_caps_is_empty (ret);
+      gst_caps_unref (ret);
+      return result;
     }
     default:
       return gst_pad_query_default (pad, parent, query);

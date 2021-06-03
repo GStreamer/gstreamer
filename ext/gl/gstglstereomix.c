@@ -644,6 +644,7 @@ _negotiated_caps (GstAggregator * agg, GstCaps * caps)
       GST_GL_TEXTURE_TARGET_2D_STR, NULL);
 
   gst_gl_view_convert_set_caps (mix->viewconvert, in_caps, caps);
+  gst_caps_unref (in_caps);
 
   return TRUE;
 }
