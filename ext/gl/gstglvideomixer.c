@@ -881,7 +881,9 @@ gst_gl_video_mixer_release_pad (GstElement * element, GstPad * p)
   /* we call the base class first as this will remove the pad from
    * the aggregator, thus stopping misc callbacks from being called,
    * one of which (process_textures) will recreate the vertex_buffer
-   * if it is destroyed */
+   * if it is destroyed.  Calling the parent may release the last ref to the pad
+   * so we need to keep the pad alive for the follow up clean up */
+  gst_object_ref (pad);
   GST_ELEMENT_CLASS (g_type_class_peek_parent (G_OBJECT_GET_CLASS (element)))
       ->release_pad (element, p);
 
@@ -891,6 +893,7 @@ gst_gl_video_mixer_release_pad (GstElement * element, GstPad * p)
         _del_buffer, &pad->vertex_buffer);
     pad->vertex_buffer = 0;
   }
+  gst_object_unref (pad);
 }
 
 static void
