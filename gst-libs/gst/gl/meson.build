@@ -82,6 +82,7 @@ gl_headers = gir_gl_headers + [
 gl_prototype_headers = [
   'glprototypes/all_functions.h',
   'glprototypes/base.h',
+  'glprototypes/buffer_storage.h',
   'glprototypes/blending.h',
   'glprototypes/buffers.h',
   'glprototypes/debug.h',

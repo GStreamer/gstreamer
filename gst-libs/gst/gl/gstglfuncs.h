@@ -99,7 +99,7 @@ G_BEGIN_DECLS
 struct _GstGLFuncs
 {
 #include <gst/gl/glprototypes/all_functions.h>
-  gpointer padding[GST_PADDING_LARGE*6];
+  gpointer padding[GST_PADDING_LARGE*6-2];
 };
 
 #undef GST_GL_EXT_BEGIN
