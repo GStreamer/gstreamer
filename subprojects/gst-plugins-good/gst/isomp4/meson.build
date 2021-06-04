@@ -8,6 +8,7 @@ mp4_sources = [
   'qtdemux_lang.c',
   'qtdemux_tags.c',
   'qtdemux_tree.c',
+  'qtdemux-webvtt.c',
   'gstisoff.c',
   'gstqtmux.c',
   'gstqtmoovrecover.c',

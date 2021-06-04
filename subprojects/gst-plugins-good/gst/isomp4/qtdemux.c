@@ -70,6 +70,7 @@
 #include "qtpalette.h"
 #include "qtdemux_tags.h"
 #include "qtdemux_tree.h"
+#include "qtdemux-webvtt.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -5775,6 +5776,41 @@ gst_qtdemux_process_buffer_text (GstQTDemux * qtdemux, QtDemuxStream * stream,
   return buf;
 }
 
+/* WebVTT sample handling according to 14496-30 */
+static GstBuffer *
+gst_qtdemux_process_buffer_wvtt (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstBuffer * buf)
+{
+  GstBuffer *outbuf = NULL;
+  GstMapInfo map;
+
+  if (!gst_buffer_map (buf, &map, GST_MAP_READ)) {
+    g_assert_not_reached ();    /* The buffer must be mappable */
+  }
+
+  if (qtdemux_webvtt_is_empty (qtdemux, map.data, map.size)) {
+    GstEvent *gap = NULL;
+    /* Push a gap event */
+    stream->segment.position = GST_BUFFER_PTS (buf);
+    gap =
+        gst_event_new_gap (stream->segment.position, GST_BUFFER_DURATION (buf));
+    gst_pad_push_event (stream->pad, gap);
+
+    if (GST_BUFFER_DURATION_IS_VALID (buf))
+      stream->segment.position += GST_BUFFER_DURATION (buf);
+  } else {
+    outbuf =
+        qtdemux_webvtt_decode (qtdemux, GST_BUFFER_PTS (buf),
+        GST_BUFFER_DURATION (buf), map.data, map.size);
+    gst_buffer_copy_into (outbuf, buf, GST_BUFFER_COPY_METADATA, 0, -1);
+  }
+
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unref (buf);
+
+  return outbuf;
+}
+
 static GstFlowReturn
 gst_qtdemux_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     GstBuffer * buf)
@@ -6071,18 +6107,18 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   /* we're going to modify the metadata */
   buf = gst_buffer_make_writable (buf);
 
+  GST_BUFFER_DTS (buf) = dts;
+  GST_BUFFER_PTS (buf) = pts;
+  GST_BUFFER_DURATION (buf) = duration;
+  GST_BUFFER_OFFSET (buf) = -1;
+  GST_BUFFER_OFFSET_END (buf) = -1;
+
   if (G_UNLIKELY (stream->process_func))
     buf = stream->process_func (qtdemux, stream, buf);
 
   if (!buf) {
     goto exit;
   }
-
-  GST_BUFFER_DTS (buf) = dts;
-  GST_BUFFER_PTS (buf) = pts;
-  GST_BUFFER_DURATION (buf) = duration;
-  GST_BUFFER_OFFSET (buf) = -1;
-  GST_BUFFER_OFFSET_END (buf) = -1;
 
   if (!keyframe) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -6312,7 +6348,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
       /* Only send gap events on non-subtitle streams if lagging way behind. */
       if (stream->subtype == FOURCC_subp
-          || stream->subtype == FOURCC_text || stream->subtype == FOURCC_sbtl)
+          || stream->subtype == FOURCC_text || stream->subtype == FOURCC_sbtl ||
+          stream->subtype == FOURCC_wvtt)
         gap_threshold = 1 * GST_SECOND;
       else
         gap_threshold = 3 * GST_SECOND;
@@ -8854,7 +8891,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     GST_DEBUG_OBJECT (qtdemux, "stream type, not creating pad");
   } else if (stream->subtype == FOURCC_subp || stream->subtype == FOURCC_text
       || stream->subtype == FOURCC_sbtl || stream->subtype == FOURCC_subt
-      || stream->subtype == FOURCC_clcp) {
+      || stream->subtype == FOURCC_clcp || stream->subtype == FOURCC_wvtt) {
     gchar *name = g_strdup_printf ("subtitle_%u", qtdemux->n_sub_streams);
 
     stream->pad =
@@ -12829,7 +12866,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       entry->sampled = TRUE;
     } else if (stream->subtype == FOURCC_subp || stream->subtype == FOURCC_text
         || stream->subtype == FOURCC_sbtl || stream->subtype == FOURCC_subt
-        || stream->subtype == FOURCC_clcp) {
+        || stream->subtype == FOURCC_clcp || stream->subtype == FOURCC_wvtt) {
 
       entry->sampled = TRUE;
       entry->sparse = TRUE;
@@ -14991,6 +15028,22 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("XML subtitles");
       caps = gst_caps_new_empty_simple ("application/ttml+xml");
       break;
+    case FOURCC_wvtt:
+    {
+      GstBuffer *buffer;
+      const gchar *buf = "WEBVTT\n\n";
+
+      _codec ("WebVTT subtitles");
+      caps = gst_caps_new_empty_simple ("application/x-subtitle-vtt");
+      stream->process_func = gst_qtdemux_process_buffer_wvtt;
+
+      /* FIXME: Parse the vttC atom and get the entire WEBVTT header */
+      buffer = gst_buffer_new_and_alloc (8);
+      gst_buffer_fill (buffer, 0, buf, 8);
+      stream->buffers = g_slist_append (stream->buffers, buffer);
+
+      break;
+    }
     case FOURCC_c608:
       _codec ("CEA 608 Closed Caption");
       caps =

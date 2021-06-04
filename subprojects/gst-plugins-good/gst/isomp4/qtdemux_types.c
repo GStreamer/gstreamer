@@ -218,6 +218,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_pssh, "protection system specific header", 0},
   {FOURCC_tenc, "track encryption", 0},
   {FOURCC_stpp, "XML subtitle sample entry", 0},
+  {FOURCC_wvtt, "WebVTT subtitle sample entry", 0},
   {FOURCC_clcp, "Closed Caption", 0},
   {FOURCC_av01, "AV1 Sample Entry", 0},
   {FOURCC_av1C, "AV1 Codec Configuration", 0},
@@ -227,6 +228,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_av1M, "AV1 Metadata sample group entry", 0},
   {FOURCC_aavd, "AAX encrypted audio", 0},
   {FOURCC_adrm, "AAX DRM key data", 0},
+  {FOURCC_vttc, "VTTCueBox 14496-30", QT_FLAG_CONTAINER},
   {0, "unknown", 0,},
 };
 
