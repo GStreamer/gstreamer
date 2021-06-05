@@ -1521,6 +1521,14 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
       gst_h265_dpb_delete_unused (priv->dpb);
       while ((to_output = gst_h265_dpb_bump (priv->dpb, FALSE)) != NULL)
         gst_h265_decoder_do_output_picture (self, to_output);
+
+      if (gst_h265_dpb_get_size (priv->dpb) > 0) {
+        GST_WARNING_OBJECT (self, "IDR or BLA frame failed to clear the dpb, "
+            "there are still %d pictures in the dpb, last output poc is %d",
+            gst_h265_dpb_get_size (priv->dpb), priv->last_output_poc);
+      } else {
+        priv->last_output_poc = 0;
+      }
     }
   } else {
     gst_h265_dpb_delete_unused (priv->dpb);
