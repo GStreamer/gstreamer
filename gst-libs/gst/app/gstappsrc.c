@@ -2500,6 +2500,27 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
           priv->max_buffers, GST_TIME_ARGS (priv->queued_time),
           GST_TIME_ARGS (priv->max_time));
 
+      if (first) {
+        Callbacks *callbacks = NULL;
+        gboolean emit;
+
+        emit = priv->emit_signals;
+        if (priv->callbacks)
+          callbacks = callbacks_ref (priv->callbacks);
+        /* only signal on the first push */
+        g_mutex_unlock (&priv->mutex);
+
+        if (callbacks && callbacks->callbacks.enough_data)
+          callbacks->callbacks.enough_data (appsrc, callbacks->user_data);
+        else if (emit)
+          g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_ENOUGH_DATA], 0,
+              NULL);
+
+        g_clear_pointer (&callbacks, callbacks_unref);
+
+        g_mutex_lock (&priv->mutex);
+      }
+
       if (priv->leaky_type == GST_APP_LEAKY_TYPE_UPSTREAM) {
         priv->need_discont_upstream = TRUE;
         goto dropped;
@@ -2538,24 +2559,6 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
       }
 
       if (first) {
-        Callbacks *callbacks = NULL;
-        gboolean emit;
-
-        emit = priv->emit_signals;
-        if (priv->callbacks)
-          callbacks = callbacks_ref (priv->callbacks);
-        /* only signal on the first push */
-        g_mutex_unlock (&priv->mutex);
-
-        if (callbacks && callbacks->callbacks.enough_data)
-          callbacks->callbacks.enough_data (appsrc, callbacks->user_data);
-        else if (emit)
-          g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_ENOUGH_DATA], 0,
-              NULL);
-
-        g_clear_pointer (&callbacks, callbacks_unref);
-
-        g_mutex_lock (&priv->mutex);
         /* continue to check for flushing/eos after releasing the lock */
         first = FALSE;
         continue;
