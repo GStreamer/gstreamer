@@ -1217,11 +1217,19 @@ gst_d3d11_memory_get_processor_output_view (GstD3D11Memory * mem,
 }
 
 /* GstD3D11Allocator */
+struct _GstD3D11AllocatorPrivate
+{
+  GstMemoryCopyFunction fallback_copy;
+};
+
 #define gst_d3d11_allocator_parent_class alloc_parent_class
-G_DEFINE_TYPE (GstD3D11Allocator, gst_d3d11_allocator, GST_TYPE_ALLOCATOR);
+G_DEFINE_TYPE_WITH_PRIVATE (GstD3D11Allocator,
+    gst_d3d11_allocator, GST_TYPE_ALLOCATOR);
 
 static GstMemory *gst_d3d11_allocator_dummy_alloc (GstAllocator * allocator,
     gsize size, GstAllocationParams * params);
+static GstMemory *gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
+    GstD3D11Device * device, const D3D11_TEXTURE2D_DESC * desc);
 static void gst_d3d11_allocator_free (GstAllocator * allocator,
     GstMemory * mem);
 
@@ -1234,16 +1242,107 @@ gst_d3d11_allocator_class_init (GstD3D11AllocatorClass * klass)
   allocator_class->free = gst_d3d11_allocator_free;
 }
 
+static GstMemory *
+gst_d3d11_memory_copy (GstMemory * mem, gssize offset, gssize size)
+{
+  GstD3D11Allocator *alloc = GST_D3D11_ALLOCATOR (mem->allocator);
+  GstD3D11AllocatorPrivate *priv = alloc->priv;
+  GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
+  GstD3D11Memory *copy_dmem;
+  GstD3D11Device *device = dmem->device;
+  ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
+  ID3D11DeviceContext *device_context =
+      gst_d3d11_device_get_device_context_handle (device);
+  D3D11_TEXTURE2D_DESC dst_desc = { 0, };
+  D3D11_TEXTURE2D_DESC src_desc = { 0, };
+  GstMemory *copy = NULL;
+  GstMapInfo info;
+  HRESULT hr;
+  UINT bind_flags = 0;
+  UINT supported_flags = 0;
+
+  /* non-zero offset or different size is not supported */
+  if (offset != 0 || (size != -1 && size != mem->size)) {
+    GST_DEBUG_OBJECT (alloc, "Different size/offset, try fallback copy");
+    return priv->fallback_copy (mem, offset, size);
+  }
+
+  gst_d3d11_device_lock (device);
+  if (!gst_memory_map (mem, &info, GST_MAP_READ | GST_MAP_D3D11)) {
+    gst_d3d11_device_unlock (device);
+
+    GST_WARNING_OBJECT (alloc, "Failed to map memory, try fallback copy");
+
+    return priv->fallback_copy (mem, offset, size);
+  }
+
+  ID3D11Texture2D_GetDesc (dmem->priv->texture, &src_desc);
+  dst_desc.Width = src_desc.Width;
+  dst_desc.Height = src_desc.Height;
+  dst_desc.MipLevels = 1;
+  dst_desc.Format = src_desc.Format;
+  dst_desc.SampleDesc.Count = 1;
+  dst_desc.ArraySize = 1;
+  dst_desc.Usage = D3D11_USAGE_DEFAULT;
+
+  /* If supported, use bind flags for SRV/RTV */
+  hr = ID3D11Device_CheckFormatSupport (device_handle,
+      src_desc.Format, &supported_flags);
+  if (gst_d3d11_result (hr, device)) {
+    if ((supported_flags & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) ==
+        D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
+      bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+    }
+
+    if ((supported_flags & D3D11_FORMAT_SUPPORT_RENDER_TARGET) ==
+        D3D11_FORMAT_SUPPORT_RENDER_TARGET) {
+      bind_flags |= D3D11_BIND_RENDER_TARGET;
+    }
+  }
+
+  copy = gst_d3d11_allocator_alloc_internal (alloc, device, &dst_desc);
+  if (!copy) {
+    gst_memory_unmap (mem, &info);
+    gst_d3d11_device_unlock (device);
+
+    GST_WARNING_OBJECT (alloc,
+        "Failed to allocate new d3d11 map memory, try fallback copy");
+
+    return priv->fallback_copy (mem, offset, size);
+  }
+
+  copy_dmem = GST_D3D11_MEMORY_CAST (copy);
+  ID3D11DeviceContext_CopySubresourceRegion (device_context,
+      (ID3D11Resource *) copy_dmem->priv->texture, 0, 0, 0, 0,
+      (ID3D11Resource *) dmem->priv->texture, dmem->priv->subresource_index,
+      NULL);
+  copy->maxsize = copy->size = mem->maxsize;
+  gst_memory_unmap (mem, &info);
+  gst_d3d11_device_unlock (device);
+
+  /* newly allocated memory holds valid image data. We need download this
+   * pixel data into staging memory for CPU access */
+  GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
+
+  return copy;
+}
+
 static void
 gst_d3d11_allocator_init (GstD3D11Allocator * allocator)
 {
   GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+  GstD3D11AllocatorPrivate *priv;
+
+  priv = allocator->priv = gst_d3d11_allocator_get_instance_private (allocator);
 
   alloc->mem_type = GST_D3D11_MEMORY_NAME;
   alloc->mem_map_full = gst_d3d11_memory_map_full;
   alloc->mem_unmap_full = gst_d3d11_memory_unmap_full;
   alloc->mem_share = gst_d3d11_memory_share;
-  /* fallback copy */
+
+  /* Store pointer to default mem_copy method for fallback copy */
+  priv->fallback_copy = alloc->mem_copy;
+  alloc->mem_copy = gst_d3d11_memory_copy;
 
   GST_OBJECT_FLAG_SET (alloc, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }

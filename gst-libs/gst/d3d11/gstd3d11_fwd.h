@@ -67,6 +67,7 @@ typedef struct _GstD3D11MemoryPrivate GstD3D11MemoryPrivate;
 
 typedef struct _GstD3D11Allocator GstD3D11Allocator;
 typedef struct _GstD3D11AllocatorClass GstD3D11AllocatorClass;
+typedef struct _GstD3D11AllocatorPrivate GstD3D11AllocatorPrivate;
 
 typedef struct _GstD3D11PoolAllocator GstD3D11PoolAllocator;
 typedef struct _GstD3D11PoolAllocatorClass GstD3D11PoolAllocatorClass;

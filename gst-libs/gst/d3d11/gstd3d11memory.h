@@ -209,6 +209,8 @@ struct _GstD3D11Allocator
   GstAllocator allocator;
 
   /*< private >*/
+  GstD3D11AllocatorPrivate *priv;
+
   gpointer _gst_reserved[GST_PADDING];
 };
 
