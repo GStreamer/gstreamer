@@ -1210,6 +1210,8 @@ gst_wasapi2_client_initialize_audio_client3 (GstWasapi2Client * self)
 {
   HRESULT hr = S_OK;
   UINT32 default_period, fundamental_period, min_period, max_period;
+  /* AUDCLNT_STREAMFLAGS_NOPERSIST is not allowed for
+   * InitializeSharedAudioStream */
   DWORD stream_flags = AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
   WAVEFORMATEX *format = NULL;
   UINT32 period;
@@ -1282,7 +1284,8 @@ gst_wasapi2_client_initialize_audio_client (GstWasapi2Client * self,
   REFERENCE_TIME default_period, min_period;
   REFERENCE_TIME device_period, device_buffer_duration;
   guint rate;
-  DWORD stream_flags = AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
+  DWORD stream_flags =
+      AUDCLNT_STREAMFLAGS_EVENTCALLBACK | AUDCLNT_STREAMFLAGS_NOPERSIST;
   HRESULT hr;
   IAudioClient3 *audio_client = self->audio_client;
 
@@ -1440,14 +1443,6 @@ gst_wasapi2_client_open (GstWasapi2Client * client,
     return hr;
 
   client->audio_volume = audio_volume.Detach ();
-
-  /* this mute state seems to be global setting for this device
-   * but below documentation looks unclear why mute state is preserved
-   * even after process is terminated
-   * https://docs.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-isimpleaudiovolume-setmute
-   * Explicitly disable mute so that ensure we can produce or play audio
-   * regardless of previous status
-   */
   client->audio_volume->SetMute (FALSE, nullptr);
 
   gst_audio_ring_buffer_set_channel_positions (buf, client->positions);
