@@ -29,12 +29,12 @@
  *
  * ## Example pipelines
  * |[
- * gst-launch-1.0 -v wasapi2src ! fakesrc
- * ]| Capture from the default audio device and render to fakesrc.
+ * gst-launch-1.0 -v wasapi2src ! fakesink
+ * ]| Capture from the default audio device and render to fakesink.
  *
  * |[
- * gst-launch-1.0 -v wasapi2src low-latency=true ! fakesrc
- * ]| Capture from the default audio device with the minimum possible latency and render to fakesrc.
+ * gst-launch-1.0 -v wasapi2src low-latency=true ! fakesink
+ * ]| Capture from the default audio device with the minimum possible latency and render to fakesink.
  *
  */
 #ifdef HAVE_CONFIG_H
