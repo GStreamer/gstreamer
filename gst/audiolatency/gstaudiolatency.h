@@ -56,6 +56,7 @@ struct _GstAudioLatency
 
   /* properties */
   gboolean print_latency;
+  gint samples_per_buffer;
 };
 
 struct _GstAudioLatencyClass
