@@ -226,6 +226,10 @@ struct _GstBaseTransformClass {
   GstCaps*	(*transform_caps) (GstBaseTransform *trans,
                                    GstPadDirection direction,
                                    GstCaps *caps, GstCaps *filter);
+  /**
+   * GstBaseTransformClass::fixate_caps:
+   * @othercaps: (transfer full):
+   */
   GstCaps*	(*fixate_caps)	  (GstBaseTransform *trans,
                                    GstPadDirection direction, GstCaps *caps,
                                    GstCaps *othercaps);
@@ -266,7 +270,15 @@ struct _GstBaseTransformClass {
   gboolean      (*stop)         (GstBaseTransform *trans);
 
   /* sink and src pad event handlers */
+  /**
+   * GstBaseTransformClass::sink_event:
+   * @event: (transfer full):
+   */
   gboolean      (*sink_event)   (GstBaseTransform *trans, GstEvent *event);
+  /**
+   * GstBaseTransformClass::src_event:
+   * @event: (transfer full):
+   */
   gboolean      (*src_event)    (GstBaseTransform *trans, GstEvent *event);
 
   /**
