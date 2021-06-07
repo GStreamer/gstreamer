@@ -53,6 +53,9 @@
 #if GST_GL_HAVE_WINDOW_GBM
 #include "../gbm/gstglwindow_gbm_egl.h"
 #endif
+#if GST_GL_HAVE_WINDOW_VIV_FB
+#include "../viv-fb/gstglwindow_viv_fb_egl.h"
+#endif
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
 
@@ -1078,6 +1081,12 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 #if GST_GL_HAVE_WINDOW_GBM
     if (GST_IS_GL_WINDOW_GBM_EGL (context->window)) {
       gst_gl_window_gbm_egl_create_window ((GstGLWindowGBMEGL *)
+          context->window);
+    }
+#endif
+#if GST_GL_HAVE_WINDOW_VIV_FB
+    if (GST_IS_GL_WINDOW_VIV_FB_EGL (context->window)) {
+      gst_gl_window_viv_fb_egl_create_window ((GstGLWindowVivFBEGL *)
           context->window);
     }
 #endif

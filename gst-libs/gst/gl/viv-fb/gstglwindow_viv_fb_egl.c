@@ -130,21 +130,25 @@ gst_gl_window_viv_fb_egl_open (GstGLWindow * window, GError ** error)
     return FALSE;
   }
 
+  return GST_GL_WINDOW_CLASS (parent_class)->open (window, error);
+}
+
+void
+gst_gl_window_viv_fb_egl_create_window (GstGLWindowVivFBEGL * window_egl)
+{
   fbGetWindowGeometry (window_egl->win_id, NULL, NULL,
       &window_egl->window_width, &window_egl->window_height);
   window_egl->render_rectangle.x = 0;
   window_egl->render_rectangle.y = 0;
   window_egl->render_rectangle.w = window_egl->window_width;
   window_egl->render_rectangle.h = window_egl->window_height;
-  gst_gl_window_resize (window, window_egl->window_width,
+  gst_gl_window_resize (GST_GL_WINDOW (window_egl), window_egl->window_width,
       window_egl->window_height);
 
   GST_DEBUG
-      ("Opened Vivante FB display successfully, resolution is (%dx%d), display %p, window %p.",
-      window_egl->window_width, window_egl->window_height, (gpointer) display,
+      ("create viv-fb window, resolution is (%dx%d), window %p.",
+      window_egl->window_width, window_egl->window_height,
       (gpointer) window_egl->win_id);
-
-  return GST_GL_WINDOW_CLASS (parent_class)->open (window, error);
 }
 
 static guintptr

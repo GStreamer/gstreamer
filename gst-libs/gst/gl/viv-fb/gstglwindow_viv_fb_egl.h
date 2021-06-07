@@ -59,6 +59,7 @@ struct _GstGLWindowVivFBEGLClass {
 GType gst_gl_window_viv_fb_egl_get_type     (void);
 
 GstGLWindowVivFBEGL * gst_gl_window_viv_fb_egl_new  (GstGLDisplay * display);
+void gst_gl_window_viv_fb_egl_create_window (GstGLWindowVivFBEGL * window_egl);
 
 G_END_DECLS
 
