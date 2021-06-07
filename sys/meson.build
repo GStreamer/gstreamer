@@ -1,5 +1,6 @@
 subdir('androidmedia')
 subdir('applemedia')
+subdir('asio')
 subdir('bluez')
 subdir('d3d11')
 subdir('d3dvideosink')
