@@ -398,7 +398,7 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
   }
   gst_parse_unescape (pos);
 
-  if (GST_IS_CHILD_PROXY (element)) {
+  if (GST_IS_CHILD_PROXY (element) && strstr (value, "::") != NULL) {
     if (!gst_child_proxy_lookup (GST_CHILD_PROXY (element), value, &target, &pspec)) {
       /* do a delayed set */
       gst_parse_add_delayed_set (element, value, pos);
