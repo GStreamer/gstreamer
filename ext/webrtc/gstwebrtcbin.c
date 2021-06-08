@@ -3706,32 +3706,48 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
         g_assert (answer_caps != NULL);
       } else {
         /* if no transceiver, then we only receive that stream and respond with
-         * the exact same caps */
-        /* FIXME: how to validate that subsequent elements can actually receive
-         * this payload/format */
+         * the intersection with the transceivers codec preferences caps */
         answer_dir = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
-        answer_caps = gst_caps_ref (offer_caps);
-      }
-
-      if (gst_caps_is_empty (answer_caps)) {
-        GST_WARNING_OBJECT (webrtc, "Could not create caps for media");
-        if (rtp_trans)
-          gst_object_unref (rtp_trans);
-        gst_caps_unref (answer_caps);
-        gst_caps_unref (offer_caps);
-        goto rejected;
       }
 
       seen_transceivers = g_list_prepend (seen_transceivers, rtp_trans);
 
       if (!rtp_trans) {
+        GstCaps *trans_caps;
+
         trans = _create_webrtc_transceiver (webrtc, answer_dir, i);
         rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
 
         GST_LOG_OBJECT (webrtc, "Created new transceiver %" GST_PTR_FORMAT
             " for mline %u", trans, i);
+
+        trans_caps = _find_codec_preferences (webrtc, rtp_trans, i, error);
+        if (*error) {
+          gst_caps_unref (offer_caps);
+          goto rejected;
+        }
+
+        GST_TRACE_OBJECT (webrtc, "trying to compare %" GST_PTR_FORMAT
+            " and %" GST_PTR_FORMAT, offer_caps, trans_caps);
+
+        /* FIXME: technically this is a little overreaching as some fields we
+         * we can deal with not having and/or we may have unrecognized fields
+         * that we cannot actually support */
+        if (trans_caps) {
+          answer_caps = gst_caps_intersect (offer_caps, trans_caps);
+          gst_caps_unref (trans_caps);
+        } else {
+          answer_caps = gst_caps_ref (offer_caps);
+        }
       } else {
         trans = WEBRTC_TRANSCEIVER (rtp_trans);
+      }
+
+      if (gst_caps_is_empty (answer_caps)) {
+        GST_WARNING_OBJECT (webrtc, "Could not create caps for media");
+        gst_caps_unref (answer_caps);
+        gst_caps_unref (offer_caps);
+        goto rejected;
       }
 
       if (!_update_transceiver_kind_from_caps (rtp_trans, answer_caps))
