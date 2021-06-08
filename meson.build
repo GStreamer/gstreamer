@@ -148,6 +148,7 @@ if get_option('default_library') == 'shared'
 endif
 pkgconfig_subdirs = ['gstreamer-1.0']
 
+plugins_doc_dep = []
 plugins = []
 i18n = import('i18n')
 
