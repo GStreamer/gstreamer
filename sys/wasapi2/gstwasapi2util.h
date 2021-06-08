@@ -61,6 +61,8 @@ gboolean      gst_wasapi2_util_parse_waveformatex (WAVEFORMATEX * format,
                                                    GstCaps ** out_caps,
                                                    GstAudioChannelPosition ** out_positions);
 
+gchar *       gst_wasapi2_util_get_error_message  (HRESULT hr);
+
 G_END_DECLS
 
 #endif /* __GST_WASAPI_UTIL_H__ */

@@ -224,6 +224,20 @@ hresult_to_string_fallback (HRESULT hr)
   return s;
 }
 
+gchar *
+gst_wasapi2_util_get_error_message (HRESULT hr)
+{
+  gchar *error_text = NULL;
+
+  error_text = g_win32_error_message ((gint) hr);
+  if (!error_text || strlen (error_text) == 0) {
+    g_free (error_text);
+    error_text = g_strdup (hresult_to_string_fallback (hr));
+  }
+
+  return error_text;
+}
+
 gboolean
 _gst_wasapi2_result (HRESULT hr, GstDebugCategory * cat, const gchar * file,
     const gchar * function, gint line)

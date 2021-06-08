@@ -56,6 +56,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define DEFAULT_LOW_LATENCY   FALSE
 #define DEFAULT_MUTE          FALSE
 #define DEFAULT_VOLUME        1.0
+#define DEFAULT_LOOPBACK      FALSE
 
 enum
 {
@@ -65,6 +66,7 @@ enum
   PROP_MUTE,
   PROP_VOLUME,
   PROP_DISPATCHER,
+  PROP_LOOPBACK,
 };
 
 struct _GstWasapi2Src
@@ -77,6 +79,7 @@ struct _GstWasapi2Src
   gboolean mute;
   gdouble volume;
   gpointer dispatcher;
+  gboolean loopback;
 
   gboolean mute_changed;
   gboolean volume_changed;
@@ -157,6 +160,19 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
           "reference count management",
           GST_PARAM_MUTABLE_READY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstWasapi2Src:loopback:
+   *
+   * Open render device for loopback recording
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_LOOPBACK,
+      g_param_spec_boolean ("loopback", "Loopback recording",
+          "Open render device for loopback recording", DEFAULT_LOOPBACK,
+          GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (element_class, &src_template);
   gst_element_class_set_static_metadata (element_class, "Wasapi2Src",
       "Source/Audio/Hardware",
@@ -183,6 +199,7 @@ gst_wasapi2_src_init (GstWasapi2Src * self)
   self->mute = DEFAULT_MUTE;
   self->volume = DEFAULT_VOLUME;
   self->low_latency = DEFAULT_LOW_LATENCY;
+  self->loopback = DEFAULT_LOOPBACK;
 }
 
 static void
@@ -218,6 +235,9 @@ gst_wasapi2_src_set_property (GObject * object, guint prop_id,
     case PROP_DISPATCHER:
       self->dispatcher = g_value_get_pointer (value);
       break;
+    case PROP_LOOPBACK:
+      self->loopback = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -242,6 +262,9 @@ gst_wasapi2_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VOLUME:
       g_value_set_double (value, gst_wasapi2_src_get_volume (self));
+      break;
+    case PROP_LOOPBACK:
+      g_value_set_boolean (value, self->loopback);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -324,11 +347,16 @@ gst_wasapi2_src_create_ringbuffer (GstAudioBaseSrc * src)
   GstWasapi2Src *self = GST_WASAPI2_SRC (src);
   GstAudioRingBuffer *ringbuffer;
   gchar *name;
+  GstWasapi2ClientDeviceClass device_class =
+      GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE;
+
+  if (self->loopback)
+    device_class = GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE;
 
   name = g_strdup_printf ("%s-ringbuffer", GST_OBJECT_NAME (src));
 
   ringbuffer =
-      gst_wasapi2_ring_buffer_new (GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE,
+      gst_wasapi2_ring_buffer_new (device_class,
       self->low_latency, self->device_id, self->dispatcher, name);
   g_free (name);
 

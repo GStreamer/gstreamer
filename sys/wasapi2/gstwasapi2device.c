@@ -41,6 +41,7 @@ struct _GstWasapi2Device
 
   gchar *device_id;
   const gchar *factory_name;
+  GstWasapi2ClientDeviceClass device_class;
 };
 
 G_DEFINE_TYPE (GstWasapi2Device, gst_wasapi2_device, GST_TYPE_DEVICE);
@@ -95,6 +96,9 @@ gst_wasapi2_device_create_element (GstDevice * device, const gchar * name)
   elem = gst_element_factory_make (self->factory_name, name);
 
   g_object_set (elem, "device", self->device_id, NULL);
+
+  if (self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE)
+    g_object_set (elem, "loopback", TRUE, NULL);
 
   return elem;
 }
@@ -212,11 +216,24 @@ gst_wasapi2_device_provider_probe_internal (GstWasapi2DeviceProvider * self,
         "device.id", G_TYPE_STRING, device_id,
         "device.default", G_TYPE_BOOLEAN, i == 0,
         "wasapi2.device.description", G_TYPE_STRING, device_name, NULL);
+    switch (client_class) {
+      case GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE:
+        gst_structure_set (props,
+            "wasapi2.device.loopback", G_TYPE_BOOLEAN, FALSE, NULL);
+        break;
+      case GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE:
+        gst_structure_set (props,
+            "wasapi2.device.loopback", G_TYPE_BOOLEAN, TRUE, NULL);
+        break;
+      default:
+        break;
+    }
 
     device = g_object_new (GST_TYPE_WASAPI2_DEVICE, "device", device_id,
         "display-name", device_name, "caps", caps,
         "device-class", device_class, "properties", props, NULL);
     GST_WASAPI2_DEVICE (device)->factory_name = factory_name;
+    GST_WASAPI2_DEVICE (device)->device_class = client_class;
 
     *devices = g_list_append (*devices, device);
 
@@ -240,6 +257,8 @@ gst_wasapi2_device_provider_probe (GstDeviceProvider * provider)
 
   gst_wasapi2_device_provider_probe_internal (self,
       GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE, &devices);
+  gst_wasapi2_device_provider_probe_internal (self,
+      GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE, &devices);
   gst_wasapi2_device_provider_probe_internal (self,
       GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER, &devices);
 

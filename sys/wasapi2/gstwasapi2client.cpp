@@ -226,6 +226,7 @@ enum
   PROP_DEVICE_INDEX,
   PROP_DEVICE_CLASS,
   PROP_DISPATCHER,
+  PROP_CAN_AUTO_ROUTING,
 };
 
 #define DEFAULT_DEVICE_INDEX  -1
@@ -240,6 +241,7 @@ struct _GstWasapi2Client
   gchar *device_name;
   gint device_index;
   gpointer dispatcher;
+  gboolean can_auto_routing;
 
   IAudioClient *audio_client;
   GstWasapiDeviceActivator *activator;
@@ -265,6 +267,8 @@ gst_wasapi2_client_device_class_get_type (void)
   static const GEnumValue types[] = {
     {GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE, "Capture", "capture"},
     {GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER, "Render", "render"},
+    {GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE, "Loopback-Capture",
+        "loopback-capture"},
     {0, nullptr, nullptr}
   };
 
@@ -320,6 +324,10 @@ gst_wasapi2_client_class_init (GstWasapi2ClientClass * klass)
   g_object_class_install_property (gobject_class, PROP_DISPATCHER,
       g_param_spec_pointer ("dispatcher", "Dispatcher",
           "ICoreDispatcher COM object to use", param_flags));
+  g_object_class_install_property (gobject_class, PROP_CAN_AUTO_ROUTING,
+      g_param_spec_boolean ("auto-routing", "Auto Routing",
+          "Whether client can support automatic stream routing", FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void
@@ -327,6 +335,7 @@ gst_wasapi2_client_init (GstWasapi2Client * self)
 {
   self->device_index = DEFAULT_DEVICE_INDEX;
   self->device_class = DEFAULT_DEVICE_CLASS;
+  self->can_auto_routing = FALSE;
 
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
@@ -412,6 +421,9 @@ gst_wasapi2_client_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DISPATCHER:
       g_value_set_pointer (value, self->dispatcher);
+      break;
+    case PROP_CAN_AUTO_ROUTING:
+      g_value_set_boolean (value, self->can_auto_routing);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -739,6 +751,8 @@ activate:
   self->device_name = g_strdup (target_device_name.c_str ());
 
   self->device_index = device_index;
+  /* default device supports automatic stream routing */
+  self->can_auto_routing = use_default_device;
 
   hr = activator->ActivateDeviceAsync (target_device_id_wstring);
   if (!gst_wasapi2_result (hr)) {
