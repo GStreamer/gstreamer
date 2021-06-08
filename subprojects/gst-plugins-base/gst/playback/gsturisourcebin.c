@@ -144,6 +144,7 @@ struct _GstURISourceBin
   gboolean is_stream;
   gboolean is_adaptive;
   gboolean demuxer_handles_buffering;   /* If TRUE: Don't use buffering elements */
+  gboolean source_streams_aware;        /* if TRUE: Don't block output pads */
   gboolean need_queue;
   guint64 buffer_duration;      /* When buffering, buffer duration (ns) */
   guint buffer_size;            /* When buffering, buffer size (bytes) */
@@ -668,19 +669,30 @@ new_demuxer_pad_added_cb (GstElement * element, GstPad * pad,
   g_object_set_data_full (G_OBJECT (pad), "urisourcebin.srcpadinfo",
       info, (GDestroyNotify) free_child_src_pad_info);
 
-  GST_DEBUG_OBJECT (element, "new demuxer pad, name: <%s>. "
-      "Added as pending pad with caps %" GST_PTR_FORMAT,
-      GST_PAD_NAME (pad), info->cur_caps);
-
   GST_URI_SOURCE_BIN_LOCK (urisrc);
-  urisrc->pending_pads = g_list_prepend (urisrc->pending_pads, pad);
-  GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+  /* If the demuxer handles buffering and is streams-aware, we can expose it
+     as-is directly. We still add an event probe to deal with EOS */
+  if (urisrc->demuxer_handles_buffering && urisrc->source_streams_aware) {
+    GstPad *ghostpad = create_output_pad (urisrc, pad);
+    GST_DEBUG_OBJECT (element,
+        "New streams-aware demuxer pad %s:%s , exposing directly",
+        GST_DEBUG_PAD_NAME (pad));
+    expose_output_pad (urisrc, ghostpad);
+    GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+  } else {
+    GST_DEBUG_OBJECT (element, "new demuxer pad, name: <%s>. "
+        "Added as pending pad with caps %" GST_PTR_FORMAT,
+        GST_PAD_NAME (pad), info->cur_caps);
 
-  /* Block the pad. On the first data on that pad if it hasn't
-   * been linked to an output slot, we'll create one */
-  info->blocking_probe_id =
-      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-      pending_pad_blocked, urisrc, NULL);
+    urisrc->pending_pads = g_list_prepend (urisrc->pending_pads, pad);
+    GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+
+    /* Block the pad. On the first data on that pad if it hasn't
+     * been linked to an output slot, we'll create one */
+    info->blocking_probe_id =
+        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+        pending_pad_blocked, urisrc, NULL);
+  }
   info->event_probe_id =
       gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM |
       GST_PAD_PROBE_TYPE_EVENT_FLUSH, demux_pad_events, urisrc, NULL);
@@ -2640,6 +2652,12 @@ handle_message (GstBin * bin, GstMessage * msg)
       }
       break;
     }
+    case GST_MESSAGE_STREAM_COLLECTION:
+    {
+      GST_DEBUG_OBJECT (urisrc, "Source is streams-aware");
+      urisrc->source_streams_aware = TRUE;
+      break;
+    }
     case GST_MESSAGE_BUFFERING:
       handle_buffering_message (urisrc, msg);
       msg = NULL;
@@ -2965,6 +2983,7 @@ gst_uri_source_bin_change_state (GstElement * element,
           (GDestroyNotify) gst_message_unref);
       urisrc->buffering_status = NULL;
       urisrc->last_buffering_pct = -1;
+      urisrc->source_streams_aware = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_DEBUG ("ready to null");
