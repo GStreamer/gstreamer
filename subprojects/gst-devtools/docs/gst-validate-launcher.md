@@ -116,7 +116,7 @@ def setup_tests(test_manager, options):
 
     # Add scenarios
     scenarios = []
-    scenarios.append("play_5s")
+    scenarios.append("play_15s")
     scenarios.append("seek_backward")
     test_manager.set_scenarios(scenarios)
 
@@ -145,7 +145,7 @@ def setup_tests(test_manager, options):
 Once this is done, you've got a testsuite that will:
 
 -   Run playbin pipelines on `file.mp4`, `file1.mkv` and `file2.ogv`&gt;
-    executing `play_5s` and `seek_backward` scenarios
+    executing `play_15s` and `seek_backward` scenarios
 
 -   Transcode `file.mp4,` `file1.mkv` and `file2.ogv` to h264 and
     mp3 in a MP4 container
