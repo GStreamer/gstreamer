@@ -3718,6 +3718,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
         if (rtp_trans)
           gst_object_unref (rtp_trans);
         gst_caps_unref (answer_caps);
+        gst_caps_unref (offer_caps);
         goto rejected;
       }
 
@@ -3732,6 +3733,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       } else {
         trans = WEBRTC_TRANSCEIVER (rtp_trans);
       }
+
       if (!_update_transceiver_kind_from_caps (rtp_trans, answer_caps))
         GST_WARNING_OBJECT (webrtc,
             "Trying to change transceiver %d kind from %d to %d",
@@ -3774,6 +3776,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       if (answer_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE) {
         GST_WARNING_OBJECT (webrtc, "Could not intersect offer direction with "
             "transceiver direction");
+        gst_caps_unref (offer_caps);
         goto rejected;
       }
       _media_replace_direction (media, answer_dir);
