@@ -1501,7 +1501,7 @@ gst_app_src_update_queued_push (GstAppSrc * appsrc, GstMiniObject * item)
      * here. This is especially useful if this was the first buffer because
      * otherwise we would have to wait until it is actually unqueued to know
      * the queued duration */
-    if (gst_queue_array_get_length (priv->queue) == 1) {
+    if (priv->queued_buffers == 1) {
       if (priv->last_segment.stop != -1
           && start_buffer_ts > priv->last_segment.stop)
         start_buffer_ts = priv->last_segment.stop;
