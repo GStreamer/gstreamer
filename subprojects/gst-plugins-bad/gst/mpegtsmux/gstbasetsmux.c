@@ -1502,12 +1502,48 @@ copy_splice (GstMpegtsSCTESpliceEvent * splice)
   return g_boxed_copy (GST_TYPE_MPEGTS_SCTE_SPLICE_EVENT, splice);
 }
 
+static void
+free_splice (GstMpegtsSCTESpliceEvent * splice)
+{
+  return g_boxed_free (GST_TYPE_MPEGTS_SCTE_SPLICE_EVENT, splice);
+}
+
+/* FIXME: get rid of this when depending on glib >= 2.62 */
+
+static GPtrArray *
+_g_ptr_array_copy (GPtrArray * array,
+    GCopyFunc func, GFreeFunc free_func, gpointer user_data)
+{
+  GPtrArray *new_array;
+
+  g_return_val_if_fail (array != NULL, NULL);
+
+  new_array = g_ptr_array_new_with_free_func (free_func);
+
+  g_ptr_array_set_size (new_array, array->len);
+
+  if (func != NULL) {
+    guint i;
+
+    for (i = 0; i < array->len; i++)
+      new_array->pdata[i] = func (array->pdata[i], user_data);
+  } else if (array->len > 0) {
+    memcpy (new_array->pdata, array->pdata,
+        array->len * sizeof (*array->pdata));
+  }
+
+  new_array->len = array->len;
+
+  return new_array;
+}
+
 static GstMpegtsSCTESIT *
 deep_copy_sit (const GstMpegtsSCTESIT * sit)
 {
   GstMpegtsSCTESIT *sit_copy = g_boxed_copy (GST_TYPE_MPEGTS_SCTE_SIT, sit);
   GPtrArray *splices_copy =
-      g_ptr_array_copy (sit_copy->splices, (GCopyFunc) copy_splice, NULL);
+      _g_ptr_array_copy (sit_copy->splices, (GCopyFunc) copy_splice,
+      (GFreeFunc) free_splice, NULL);
 
   g_ptr_array_unref (sit_copy->splices);
   sit_copy->splices = splices_copy;
