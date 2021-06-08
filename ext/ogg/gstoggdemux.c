@@ -1611,6 +1611,10 @@ gst_ogg_demux_seek_back_after_push_duration_check_unlock (GstOggDemux * ogg)
     event = gst_event_new_seek (1.0, GST_FORMAT_BYTES,
         GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
         GST_SEEK_TYPE_SET, 1, GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
+    /* drop everything until this seek event completed.  We can't wait until the
+     * seek thread sets this because there would be race between receiving e.g.
+     * an EOS or any data and the seek thread actually picking up the seek. */
+    ogg->seek_event_drop_till = gst_event_get_seqnum (event);
   }
   gst_event_replace (&ogg->seek_event, event);
   gst_event_unref (event);
@@ -2510,6 +2514,7 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_EOS:
     {
+      gboolean drop = FALSE;
       GST_DEBUG_OBJECT (ogg, "got an EOS event");
       GST_PUSH_LOCK (ogg);
       if (ogg->push_state == PUSH_DURATION) {
@@ -2519,10 +2524,20 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           GST_DEBUG_OBJECT (ogg, "Error seeking back after duration check: %d",
               res);
         }
+        res = TRUE;
         break;
-      } else
+      } else {
+        if (ogg->seek_event_drop_till > 0) {
+          GST_DEBUG_OBJECT (ogg, "Dropping EOS (seqnum:%u) because we have "
+              "a pending seek (seqnum:%u)", gst_event_get_seqnum (event),
+              ogg->seek_event_drop_till);
+          drop = TRUE;
+        }
         GST_PUSH_UNLOCK (ogg);
-      res = gst_ogg_demux_send_event (ogg, event);
+        res = TRUE;
+      }
+      if (!drop)
+        res = gst_ogg_demux_send_event (ogg, event);
       if (ogg->current_chain == NULL) {
         GST_WARNING_OBJECT (ogg,
             "EOS while trying to retrieve chain, seeking disabled");
@@ -3723,6 +3738,7 @@ gst_ogg_demux_get_duration_push (GstOggDemux * ogg, int flags)
   sevent = gst_event_new_seek (1.0, GST_FORMAT_BYTES, flags, GST_SEEK_TYPE_SET,
       position, GST_SEEK_TYPE_SET, ogg->push_byte_length - 1);
   gst_event_replace (&ogg->seek_event, sevent);
+  ogg->seek_event_drop_till = gst_event_get_seqnum (sevent);
   gst_event_unref (sevent);
   g_mutex_lock (&ogg->seek_event_mutex);
   g_cond_broadcast (&ogg->seek_event_cond);
