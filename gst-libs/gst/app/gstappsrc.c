@@ -1391,18 +1391,22 @@ gst_app_src_update_queued_pop (GstAppSrc * appsrc, GstMiniObject * item,
   priv->queued_buffers -= n_buffers;
 
   /* Update time level if working on a TIME segment */
-  if (priv->current_segment.format == GST_FORMAT_TIME
+  if ((priv->current_segment.format == GST_FORMAT_TIME
+          || (priv->current_segment.format == GST_FORMAT_UNDEFINED
+              && priv->last_segment.format == GST_FORMAT_TIME))
       && end_buffer_ts != GST_CLOCK_TIME_NONE) {
+    const GstSegment *segment =
+        priv->current_segment.format ==
+        GST_FORMAT_TIME ? &priv->current_segment : &priv->last_segment;
+
     /* Clip to the current segment boundaries */
-    if (priv->current_segment.stop != -1
-        && end_buffer_ts > priv->current_segment.stop)
-      end_buffer_ts = priv->current_segment.stop;
-    else if (priv->current_segment.start > end_buffer_ts)
-      end_buffer_ts = priv->current_segment.start;
+    if (segment->stop != -1 && end_buffer_ts > segment->stop)
+      end_buffer_ts = segment->stop;
+    else if (segment->start > end_buffer_ts)
+      end_buffer_ts = segment->start;
 
     priv->last_out_running_time =
-        gst_segment_to_running_time (&priv->current_segment,
-        GST_FORMAT_TIME, end_buffer_ts);
+        gst_segment_to_running_time (segment, GST_FORMAT_TIME, end_buffer_ts);
 
     GST_TRACE_OBJECT (appsrc,
         "Last in running time %" GST_TIME_FORMAT ", last out running time %"
