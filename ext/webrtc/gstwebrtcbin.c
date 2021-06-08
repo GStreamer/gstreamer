@@ -3710,8 +3710,6 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
         answer_dir = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
       }
 
-      seen_transceivers = g_list_prepend (seen_transceivers, rtp_trans);
-
       if (!rtp_trans) {
         GstCaps *trans_caps;
 
@@ -3742,6 +3740,8 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       } else {
         trans = WEBRTC_TRANSCEIVER (rtp_trans);
       }
+
+      seen_transceivers = g_list_prepend (seen_transceivers, rtp_trans);
 
       if (gst_caps_is_empty (answer_caps)) {
         GST_WARNING_OBJECT (webrtc, "Could not create caps for media");
