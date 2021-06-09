@@ -302,6 +302,7 @@ gst_wasapi2_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 
     /* Get caps might be able to block if device is not activated yet */
     caps = gst_wasapi2_ring_buffer_get_caps (ringbuffer);
+    gst_object_unref (ringbuffer);
   } else {
     GST_OBJECT_UNLOCK (bsink);
   }
