@@ -39,6 +39,8 @@ struct _GstVaPool
   GstAllocator *allocator;
   gboolean force_videometa;
   gboolean add_videometa;
+  gint crop_left;
+  gint crop_top;
 
   gboolean starting;
 };
@@ -117,6 +119,11 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
     width += video_align.padding_left + video_align.padding_right;
     height += video_align.padding_bottom + video_align.padding_top;
+
+    if (video_align.padding_left > 0)
+      vpool->crop_left = video_align.padding_left;
+    if (video_align.padding_top > 0)
+      vpool->crop_top = video_align.padding_top;
   }
 
   /* update allocation info with aligned size */
@@ -208,14 +215,33 @@ gst_va_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     goto no_memory;
 
   if (vpool->add_videometa) {
-    /* GstVaAllocator may update offset/stride given the physical
-     * memory */
-    gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
-        GST_VIDEO_INFO_FORMAT (&vpool->caps_info),
-        GST_VIDEO_INFO_WIDTH (&vpool->caps_info),
-        GST_VIDEO_INFO_HEIGHT (&vpool->caps_info),
-        GST_VIDEO_INFO_N_PLANES (&vpool->caps_info),
-        vpool->alloc_info.offset, vpool->alloc_info.stride);
+    if (vpool->crop_left > 0 || vpool->crop_top > 0) {
+      GstVideoCropMeta *crop_meta;
+
+      /* For video crop, its video meta's width and height should be
+         the full size of uncropped resolution. */
+      gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+          GST_VIDEO_INFO_FORMAT (&vpool->alloc_info),
+          GST_VIDEO_INFO_WIDTH (&vpool->alloc_info),
+          GST_VIDEO_INFO_HEIGHT (&vpool->alloc_info),
+          GST_VIDEO_INFO_N_PLANES (&vpool->alloc_info),
+          vpool->alloc_info.offset, vpool->alloc_info.stride);
+
+      crop_meta = gst_buffer_add_video_crop_meta (buf);
+      crop_meta->x = vpool->crop_left;
+      crop_meta->y = vpool->crop_top;
+      crop_meta->width = GST_VIDEO_INFO_WIDTH (&vpool->caps_info);
+      crop_meta->height = GST_VIDEO_INFO_HEIGHT (&vpool->caps_info);
+    } else {
+      /* GstVaAllocator may update offset/stride given the physical
+       * memory */
+      gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+          GST_VIDEO_INFO_FORMAT (&vpool->caps_info),
+          GST_VIDEO_INFO_WIDTH (&vpool->caps_info),
+          GST_VIDEO_INFO_HEIGHT (&vpool->caps_info),
+          GST_VIDEO_INFO_N_PLANES (&vpool->caps_info),
+          vpool->alloc_info.offset, vpool->alloc_info.stride);
+    }
   }
 
   *buffer = buf;
