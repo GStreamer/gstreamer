@@ -41,7 +41,7 @@ plugin_deinit (gpointer data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstRank rank = GST_RANK_SECONDARY;
+  GstRank rank = GST_RANK_PRIMARY + 1;
   HRESULT hr;
 
   /**
@@ -55,10 +55,6 @@ plugin_init (GstPlugin * plugin)
     GST_WARNING ("MFStartup failure, hr: 0x%x", hr);
     return TRUE;
   }
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-  /* If we are building for UWP, wasapi2 plugin should have the highest rank */
-  rank = GST_RANK_PRIMARY + 1;
-#endif
 
   GST_DEBUG_CATEGORY_INIT (gst_wasapi2_debug, "wasapi2", 0, "wasapi2");
   GST_DEBUG_CATEGORY_INIT (gst_wasapi2_client_debug, "wasapi2client",
