@@ -85,6 +85,8 @@ gst_va_base_dec_stop (GstVideoDecoder * decoder)
     gst_buffer_pool_set_active (base->other_pool, FALSE);
   gst_clear_object (&base->other_pool);
 
+  g_clear_pointer (&base->convert, gst_video_converter_free);
+
   return GST_VIDEO_DECODER_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS
       (decoder))->stop (decoder);
 }
@@ -817,6 +819,66 @@ bail:
   gst_clear_caps (&preferred_caps);
 }
 
+static gboolean
+_copy_buffer_and_apply_video_crop (GstVaBaseDec * base,
+    GstVideoFrame * src_frame, GstVideoFrame * dest_frame,
+    GstVideoCropMeta * video_crop)
+{
+  GstVideoInfo dst_info = dest_frame->info;
+
+  dst_info.fps_n = src_frame->info.fps_n;
+  dst_info.fps_d = src_frame->info.fps_d;
+
+  if (base->convert) {
+    gboolean new_convert = FALSE;
+    gint x = 0, y = 0, width = 0, height = 0;
+    const GstStructure *config = gst_video_converter_get_config (base->convert);
+
+    if (!gst_structure_get_int (config, GST_VIDEO_CONVERTER_OPT_SRC_X, &x)
+        || !gst_structure_get_int (config, GST_VIDEO_CONVERTER_OPT_SRC_Y, &y)
+        || !gst_structure_get_int (config, GST_VIDEO_CONVERTER_OPT_SRC_WIDTH,
+            &width)
+        || !gst_structure_get_int (config, GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT,
+            &height))
+      new_convert = TRUE;
+
+    new_convert |= (video_crop->x != x);
+    new_convert |= (video_crop->y != y);
+    new_convert |= (video_crop->width != width);
+    new_convert |= (video_crop->height != height);
+
+    /* No need to check dest, it always has (0,0) -> (width, height) */
+
+    if (new_convert)
+      g_clear_pointer (&base->convert, gst_video_converter_free);
+  }
+
+  if (!base->convert) {
+    base->convert = gst_video_converter_new (&src_frame->info, &dst_info,
+        gst_structure_new ("options",
+            GST_VIDEO_CONVERTER_OPT_MATRIX_MODE,
+            GST_TYPE_VIDEO_MATRIX_MODE, GST_VIDEO_MATRIX_MODE_NONE,
+            GST_VIDEO_CONVERTER_OPT_SRC_X, G_TYPE_INT, video_crop->x,
+            GST_VIDEO_CONVERTER_OPT_SRC_Y, G_TYPE_INT, video_crop->y,
+            GST_VIDEO_CONVERTER_OPT_SRC_WIDTH, G_TYPE_INT, video_crop->width,
+            GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT, G_TYPE_INT, video_crop->height,
+            GST_VIDEO_CONVERTER_OPT_DEST_X, G_TYPE_INT, 0,
+            GST_VIDEO_CONVERTER_OPT_DEST_Y, G_TYPE_INT, 0,
+            GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, G_TYPE_INT, video_crop->width,
+            GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, G_TYPE_INT, video_crop->height,
+            NULL));
+
+    if (!base->convert) {
+      GST_WARNING_OBJECT (base, "failed to create a video convert");
+      return FALSE;
+    }
+  }
+
+  gst_video_converter_frame (base->convert, src_frame, dest_frame);
+
+  return TRUE;
+}
+
 gboolean
 gst_va_base_dec_copy_output_buffer (GstVaBaseDec * base,
     GstVideoCodecFrame * codec_frame)
@@ -825,7 +887,8 @@ gst_va_base_dec_copy_output_buffer (GstVaBaseDec * base,
   GstVideoFrame dest_frame;
   GstVideoInfo dest_vinfo;
   GstVideoInfo *src_vinfo;
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
+  GstVideoCropMeta *video_crop;
   GstFlowReturn ret;
 
   g_return_val_if_fail (base && base->output_state, FALSE);
@@ -843,25 +906,34 @@ gst_va_base_dec_copy_output_buffer (GstVaBaseDec * base,
   ret = gst_buffer_pool_acquire_buffer (base->other_pool, &buffer, NULL);
   if (ret != GST_FLOW_OK)
     goto fail;
-
   if (!gst_video_frame_map (&src_frame, src_vinfo, codec_frame->output_buffer,
           GST_MAP_READ))
     goto fail;
-
   if (!gst_video_frame_map (&dest_frame, &dest_vinfo, buffer, GST_MAP_WRITE)) {
     gst_video_frame_unmap (&src_frame);
     goto fail;
   }
 
-  /* gst_video_frame_copy can crop this, but does not know, so let
-   * make it think it's all right */
-  GST_VIDEO_INFO_WIDTH (&src_frame.info) = base->width;
-  GST_VIDEO_INFO_HEIGHT (&src_frame.info) = base->height;
+  video_crop = gst_buffer_get_video_crop_meta (codec_frame->output_buffer);
+  if (video_crop) {
+    if (!_copy_buffer_and_apply_video_crop (base,
+            &src_frame, &dest_frame, video_crop)) {
+      gst_video_frame_unmap (&src_frame);
+      gst_video_frame_unmap (&dest_frame);
+      GST_ERROR_OBJECT (base, "fail to apply the video crop.");
+      goto fail;
+    }
+  } else {
+    /* gst_video_frame_copy can crop this, but does not know, so let
+     * make it think it's all right */
+    GST_VIDEO_INFO_WIDTH (&src_frame.info) = base->width;
+    GST_VIDEO_INFO_HEIGHT (&src_frame.info) = base->height;
 
-  if (!gst_video_frame_copy (&dest_frame, &src_frame)) {
-    gst_video_frame_unmap (&src_frame);
-    gst_video_frame_unmap (&dest_frame);
-    goto fail;
+    if (!gst_video_frame_copy (&dest_frame, &src_frame)) {
+      gst_video_frame_unmap (&src_frame);
+      gst_video_frame_unmap (&dest_frame);
+      goto fail;
+    }
   }
 
   gst_video_frame_unmap (&src_frame);
@@ -872,6 +944,9 @@ gst_va_base_dec_copy_output_buffer (GstVaBaseDec * base,
   return TRUE;
 
 fail:
+  if (buffer)
+    gst_buffer_unref (buffer);
+
   GST_ERROR_OBJECT (base, "Failed copy output buffer.");
   return FALSE;
 }

@@ -76,6 +76,7 @@ struct _GstVaBaseDec
   gboolean copy_frames;
 
   gboolean apply_video_crop;
+  GstVideoConverter *convert;
 };
 
 struct _GstVaBaseDecClass
