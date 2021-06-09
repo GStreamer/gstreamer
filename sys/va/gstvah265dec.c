@@ -986,6 +986,7 @@ gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
   VAProfile profile;
   gint display_width;
   gint display_height;
+  gint padding_left, padding_right, padding_top, padding_bottom;
   guint rt_format;
   gboolean negotiation_needed = FALSE;
 
@@ -995,9 +996,14 @@ gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
   if (sps->conformance_window_flag) {
     display_width = sps->crop_rect_width;
     display_height = sps->crop_rect_height;
+    padding_left = sps->crop_rect_x;
+    padding_right = sps->width - sps->crop_rect_x - display_width;
+    padding_top = sps->crop_rect_y;
+    padding_bottom = sps->height - sps->crop_rect_y - display_height;
   } else {
     display_width = sps->width;
     display_height = sps->height;
+    padding_left = padding_right = padding_top = padding_bottom = 0;
   }
 
   profile = _get_profile (self, sps, max_dpb_size);
@@ -1035,9 +1041,19 @@ gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
       || base->height < self->coded_height;
   if (base->need_valign) {
     /* *INDENT-OFF* */
+    if (base->valign.padding_left != padding_left ||
+        base->valign.padding_right != padding_right ||
+        base->valign.padding_top != padding_top ||
+        base->valign.padding_bottom != padding_bottom) {
+      negotiation_needed = TRUE;
+      GST_INFO_OBJECT (self, "crop rect changed to (%d,%d)-->(%d,%d)",
+          padding_left, padding_top, padding_right, padding_bottom);
+    }
     base->valign = (GstVideoAlignment) {
-      .padding_bottom = self->coded_height - base->height,
-      .padding_left = self->coded_width - base->width,
+      .padding_left = padding_left,
+      .padding_right = padding_right,
+      .padding_top = padding_top,
+      .padding_bottom = padding_bottom,
     };
     /* *INDENT-ON* */
   }
