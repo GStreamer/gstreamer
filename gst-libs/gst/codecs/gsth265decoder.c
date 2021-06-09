@@ -54,6 +54,12 @@ struct _GstH265DecoderPrivate
 {
   gint width, height;
 
+  guint8 conformance_window_flag;
+  gint crop_rect_width;
+  gint crop_rect_height;
+  gint crop_rect_x;
+  gint crop_rect_y;
+
   /* input codec_data, if any */
   GstBuffer *codec_data;
   guint nal_length_size;
@@ -255,6 +261,25 @@ gst_h265_decoder_parse_vps (GstH265Decoder * self, GstH265NalUnit * nalu)
 }
 
 static gboolean
+gst_h265_decoder_is_crop_rect_changed (GstH265Decoder * self, GstH265SPS * sps)
+{
+  GstH265DecoderPrivate *priv = self->priv;
+
+  if (priv->conformance_window_flag != sps->conformance_window_flag)
+    return TRUE;
+  if (priv->crop_rect_width != sps->crop_rect_width)
+    return TRUE;
+  if (priv->crop_rect_height != sps->crop_rect_height)
+    return TRUE;
+  if (priv->crop_rect_x != sps->crop_rect_x)
+    return TRUE;
+  if (priv->crop_rect_y != sps->crop_rect_y)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
 gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
 {
   GstH265DecoderPrivate *priv = self->priv;
@@ -292,7 +317,8 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
       prev_max_dpb_size != max_dpb_size ||
       priv->field_seq_flag != field_seq_flag ||
       priv->progressive_source_flag != progressive_source_flag ||
-      priv->interlaced_source_flag != interlaced_source_flag) {
+      priv->interlaced_source_flag != interlaced_source_flag ||
+      gst_h265_decoder_is_crop_rect_changed (self, sps)) {
     GstH265DecoderClass *klass = GST_H265_DECODER_GET_CLASS (self);
 
     GST_DEBUG_OBJECT (self,
@@ -313,6 +339,11 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
 
     priv->width = sps->width;
     priv->height = sps->height;
+    priv->conformance_window_flag = sps->conformance_window_flag;
+    priv->crop_rect_width = sps->crop_rect_width;
+    priv->crop_rect_height = sps->crop_rect_height;
+    priv->crop_rect_x = sps->crop_rect_x;
+    priv->crop_rect_y = sps->crop_rect_y;
     priv->field_seq_flag = field_seq_flag;
     priv->progressive_source_flag = progressive_source_flag;
     priv->interlaced_source_flag = interlaced_source_flag;
