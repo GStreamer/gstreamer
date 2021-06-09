@@ -305,7 +305,7 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
       /* *INDENT-OFF* */
       base->valign = (GstVideoAlignment){
         .padding_bottom = self->max_height - base->height,
-        .padding_left = self->max_width - base->width,
+        .padding_right = self->max_width - base->width,
       };
       /* *INDENT-ON* */
     }
