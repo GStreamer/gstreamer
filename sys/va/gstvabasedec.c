@@ -53,6 +53,8 @@ gst_va_base_dec_open (GstVideoDecoder * decoder)
     ret = TRUE;
   }
 
+  base->apply_video_crop = FALSE;
+
   return ret;
 }
 
@@ -230,26 +232,215 @@ _create_other_pool (GstVaBaseDec * base, GstAllocator * allocator,
   base->other_pool = pool;
 }
 
+static gboolean
+_need_video_crop (GstVaBaseDec * base)
+{
+
+  if (base->need_valign &&
+      (base->valign.padding_left > 0 || base->valign.padding_top > 0))
+    return TRUE;
+
+  return FALSE;
+}
+
+/* This path for pool setting is a little complicated but not commonly
+   used. We deliberately separate it from the main path of pool setting. */
+static gboolean
+_decide_allocation_for_video_crop (GstVideoDecoder * decoder,
+    GstQuery * query, GstCaps * caps, const GstVideoInfo * info)
+{
+  GstAllocator *allocator = NULL, *other_allocator = NULL;
+  GstAllocationParams other_params, params;
+  gboolean update_pool = FALSE, update_allocator = FALSE;
+  GstBufferPool *pool = NULL, *other_pool = NULL;
+  guint size = 0, min, max;
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  gboolean ret = TRUE;
+  GstCaps *va_caps = NULL;
+
+  /* If others provide a valid allocator, just use it. */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    gst_query_parse_nth_allocation_param (query, 0, &other_allocator,
+        &other_params);
+    update_allocator = TRUE;
+  } else {
+    gst_allocation_params_init (&other_params);
+  }
+
+  /* If others provide a valid pool, just use it. */
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &other_pool, &size, &min,
+        &max);
+
+    min += base->min_buffers;
+    size = MAX (size, GST_VIDEO_INFO_SIZE (info));
+    update_pool = TRUE;
+  } else {
+    size = GST_VIDEO_INFO_SIZE (info);
+    min = base->min_buffers;
+    max = 0;
+  }
+
+  /* Ensure that the other pool is ready */
+  if (gst_caps_is_raw (caps)) {
+    if (GST_IS_VA_POOL (other_pool))
+      gst_clear_object (&other_pool);
+
+    if (!other_pool) {
+      if (other_allocator && (GST_IS_VA_DMABUF_ALLOCATOR (other_allocator)
+              || GST_IS_VA_ALLOCATOR (other_allocator)))
+        gst_clear_object (&other_allocator);
+
+      _create_other_pool (base, other_allocator, &other_params, caps, size);
+    } else {
+      gst_object_replace ((GstObject **) & base->other_pool,
+          (GstObject *) other_pool);
+    }
+  } else {
+    GstStructure *other_config;
+
+    if (!GST_IS_VA_POOL (other_pool))
+      gst_clear_object (&other_pool);
+
+    if (!other_pool)
+      other_pool = gst_va_pool_new ();
+
+    if (other_allocator && !(GST_IS_VA_DMABUF_ALLOCATOR (other_allocator)
+            || GST_IS_VA_ALLOCATOR (other_allocator)))
+      gst_clear_object (&other_allocator);
+
+    if (!other_allocator) {
+      other_allocator = _create_allocator (base, caps);
+      if (!other_allocator) {
+        ret = FALSE;
+        goto cleanup;
+      }
+    }
+
+    other_config = gst_buffer_pool_get_config (other_pool);
+
+    gst_buffer_pool_config_set_params (other_config, caps, size, min, max);
+    gst_buffer_pool_config_set_allocator (other_config, other_allocator,
+        &other_params);
+    /* Always support VideoMeta but no VideoCropMeta here. */
+    gst_buffer_pool_config_add_option (other_config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+    gst_buffer_pool_config_set_va_allocation_params (other_config, 0);
+
+    if (!gst_buffer_pool_set_config (other_pool, other_config)) {
+      ret = FALSE;
+      goto cleanup;
+    }
+
+    gst_object_replace ((GstObject **) & base->other_pool,
+        (GstObject *) other_pool);
+  }
+
+  /* Now setup the buffer pool for decoder */
+  pool = gst_va_pool_new ();
+
+  va_caps = gst_caps_copy (caps);
+  gst_caps_set_features_simple (va_caps,
+      gst_caps_features_from_string ("memory:VAMemory"));
+
+  if (!(allocator = _create_allocator (base, va_caps))) {
+    ret = FALSE;
+    goto cleanup;
+  }
+
+  gst_allocation_params_init (&params);
+
+  {
+    GstStructure *config = gst_buffer_pool_get_config (pool);
+
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+    gst_buffer_pool_config_set_allocator (config, allocator, &params);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+    if (_need_video_crop (base)) {
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+      gst_buffer_pool_config_set_video_alignment (config, &base->valign);
+    }
+
+    gst_buffer_pool_config_set_va_allocation_params (config,
+        VA_SURFACE_ATTRIB_USAGE_HINT_DECODER);
+
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      ret = FALSE;
+      goto cleanup;
+    }
+  }
+
+  if (update_allocator)
+    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+  else
+    gst_query_add_allocation_param (query, allocator, &params);
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  GST_WARNING_OBJECT (decoder, "We need to copy the output buffer manually "
+      "because of the top/left alignment, which may have low performance. "
+      "The element which supports VideoCropMeta such as 'vapostproc' can "
+      "avoid this.");
+  base->copy_frames = TRUE;
+  base->apply_video_crop = TRUE;
+
+cleanup:
+  if (ret != TRUE)
+    gst_clear_object (&base->other_pool);
+  gst_clear_object (&allocator);
+  gst_clear_object (&other_allocator);
+  gst_clear_object (&pool);
+  gst_clear_object (&other_pool);
+  gst_clear_caps (&va_caps);
+
+  return ret;
+}
+
 /* We only support system pool and va pool. For va pool, its allocator
  * should be va allocator or dma allocator.
  *   If output caps is memory:VAMemory, the pool should be a va pool
  *   with va allocator.
  *   If output caps is memory:DMABuf, the pool should be a va pool
  *   with dma allocator.
- *   If output caps is raw(system mem), the pool should be a va pool
- *   with va allocator as an internal pool. We need the other_pool,
- *   which is a system pool, to copy frames to system mem and output.
+ *   We may need the other_pool to copy the decoder picture to the
+ *   output buffer. We need to do this copy when:
+ *   1). The output caps is raw(system mem), but the downstream does
+ *   not support VideoMeta and the strides and offsets of the va pool
+ *   are different from the system memory pool, which means that the
+ *   gst_video_frame_map() can not map the buffer correctly. Then we
+ *   need a va pool with va allocator as an the internal pool and create
+ *   a system pool as the other_pool to copy frames to system mem and
+ *   output it.
+ *   2). The decoder has crop_top/left value > 0(e.g. the conformance
+ *   window in the H265). Which means that the real output picture
+ *   locates in the middle of the decoded buffer. If the downstream can
+ *   support VideoCropMeta, a VideoCropMeta is added to notify the
+ *   real picture's coordinate and size. But if not, we need to copy
+ *   it manually and the other_pool is needed. We always assume that
+ *   decoded picture starts from top-left corner, and so there is no
+ *   need to do this if crop_bottom/right value > 0.
  *
- * 1. get allocator in query
- *    1.1 if allocator is not ours and caps is raw, keep it for other_pool.
- * 2. get pool in query
- *    2.1 if pool is not va, downstream doesn't support video meta and
+ * 1. if crop_top/left value > 0 and the downstream does not support the
+ *    VideoCropMeta, we always have the other_pool to do the copy(The pool
+ *    may be provided by the downstream element, or created by ourself if
+ *    no suitable one found).
+ * 2. get allocator in query
+ *    2.1 if allocator is not ours and caps is raw, keep it for other_pool.
+ * 3. get pool in query
+ *    3.1 if pool is not va, downstream doesn't support video meta and
  *        caps are raw, keep it as other_pool.
- *    2.2 if there's no pool in query and and caps is raw, create other_pool
+ *    3.2 if there's no pool in query and and caps is raw, create other_pool
  *        as GstVideoPool with the non-va from query and query's params.
- * 3. create our allocator and pool if they aren't in query
- * 4. add or update pool and allocator in query
- * 5. set our custom pool configuration
+ * 4. create our allocator and pool if they aren't in query
+ * 5. add or update pool and allocator in query
+ * 6. set our custom pool configuration
  */
 static gboolean
 gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
@@ -261,7 +452,8 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstVideoInfo info;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   guint size = 0, min, max;
-  gboolean update_pool = FALSE, update_allocator = FALSE, has_videometa;
+  gboolean update_pool = FALSE, update_allocator = FALSE;
+  gboolean has_videometa, has_video_crop_meta;
   gboolean ret = TRUE;
 
   g_assert (base->min_buffers > 0);
@@ -273,6 +465,20 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 
   has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
+  has_video_crop_meta = has_videometa && gst_query_find_allocation_meta (query,
+      GST_VIDEO_CROP_META_API_TYPE, NULL);
+
+  /* 1. The output picture locates in the middle of the decoded buffer,
+     but the downstream element does not support VideoCropMeta, we
+     definitely need a copy.
+     2. Some codec such as H265, it does not clean the DPB when new SPS
+     comes. The new SPS may set the crop window to top-left corner and
+     so no video crop is needed here. But we may still have cached frames
+     in DPB which need a copy. */
+  if ((_need_video_crop (base) && !has_video_crop_meta) ||
+      base->apply_video_crop) {
+    return _decide_allocation_for_video_crop (decoder, query, caps, &info);
+  }
 
   if (gst_query_get_n_allocation_params (query) > 0) {
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &other_params);

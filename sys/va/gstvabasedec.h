@@ -74,6 +74,8 @@ struct _GstVaBaseDec
   GstVideoAlignment valign;
 
   gboolean copy_frames;
+
+  gboolean apply_video_crop;
 };
 
 struct _GstVaBaseDecClass
