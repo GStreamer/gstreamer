@@ -186,6 +186,8 @@ static gboolean gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
     GstAudioRingBufferSpec * spec);
 static gboolean gst_wasapi2_ring_buffer_release (GstAudioRingBuffer * buf);
 static gboolean gst_wasapi2_ring_buffer_start (GstAudioRingBuffer * buf);
+static gboolean gst_wasapi2_ring_buffer_resume (GstAudioRingBuffer * buf);
+static gboolean gst_wasapi2_ring_buffer_pause (GstAudioRingBuffer * buf);
 static gboolean gst_wasapi2_ring_buffer_stop (GstAudioRingBuffer * buf);
 static guint gst_wasapi2_ring_buffer_delay (GstAudioRingBuffer * buf);
 
@@ -213,7 +215,9 @@ gst_wasapi2_ring_buffer_class_init (GstWasapi2RingBufferClass * klass)
   ring_buffer_class->release =
       GST_DEBUG_FUNCPTR (gst_wasapi2_ring_buffer_release);
   ring_buffer_class->start = GST_DEBUG_FUNCPTR (gst_wasapi2_ring_buffer_start);
-  ring_buffer_class->resume = GST_DEBUG_FUNCPTR (gst_wasapi2_ring_buffer_start);
+  ring_buffer_class->resume =
+      GST_DEBUG_FUNCPTR (gst_wasapi2_ring_buffer_resume);
+  ring_buffer_class->pause = GST_DEBUG_FUNCPTR (gst_wasapi2_ring_buffer_pause);
   ring_buffer_class->stop = GST_DEBUG_FUNCPTR (gst_wasapi2_ring_buffer_stop);
   ring_buffer_class->delay = GST_DEBUG_FUNCPTR (gst_wasapi2_ring_buffer_delay);
 
@@ -589,8 +593,19 @@ gst_wasapi2_ring_buffer_write (GstWasapi2RingBuffer * self, gboolean preroll)
   while (can_write_bytes > 0) {
     if (!gst_audio_ring_buffer_prepare_read (ringbuffer,
             &segment, &readptr, &len)) {
-      GST_INFO_OBJECT (self, "No segment available");
-      return S_OK;
+      GST_INFO_OBJECT (self, "No segment available, fill silence");
+
+      /* This would be case where in the middle of PAUSED state change.
+       * Just fill silent buffer to avoid immediate I/O callback after
+       * we return here */
+      hr = render_client->GetBuffer (can_write, &data);
+      if (!gst_wasapi2_result (hr))
+        return hr;
+
+      hr = render_client->ReleaseBuffer (can_write, AUDCLNT_BUFFERFLAGS_SILENT);
+      /* for debugging */
+      gst_wasapi2_result (hr);
+      return hr;
     }
 
     len -= self->segoffset;
@@ -1097,13 +1112,15 @@ gst_wasapi2_ring_buffer_release (GstAudioRingBuffer * buf)
 }
 
 static gboolean
-gst_wasapi2_ring_buffer_start (GstAudioRingBuffer * buf)
+gst_wasapi2_ring_buffer_start_internal (GstWasapi2RingBuffer *self)
 {
-  GstWasapi2RingBuffer *self = GST_WASAPI2_RING_BUFFER (buf);
   IAudioClient *client_handle;
   HRESULT hr;
 
-  GST_DEBUG_OBJECT (self, "Start");
+  if (self->running) {
+    GST_INFO_OBJECT (self, "We are running already");
+    return TRUE;
+  }
 
   client_handle = gst_wasapi2_client_get_handle (self->client);
   self->is_first = TRUE;
@@ -1174,13 +1191,30 @@ error:
 }
 
 static gboolean
-gst_wasapi2_ring_buffer_stop (GstAudioRingBuffer * buf)
+gst_wasapi2_ring_buffer_start (GstAudioRingBuffer * buf)
 {
   GstWasapi2RingBuffer *self = GST_WASAPI2_RING_BUFFER (buf);
+
+  GST_DEBUG_OBJECT (self, "Start");
+
+  return gst_wasapi2_ring_buffer_start_internal (self);
+}
+
+static gboolean
+gst_wasapi2_ring_buffer_resume (GstAudioRingBuffer * buf)
+{
+  GstWasapi2RingBuffer *self = GST_WASAPI2_RING_BUFFER (buf);
+
+  GST_DEBUG_OBJECT (self, "Resume");
+
+  return gst_wasapi2_ring_buffer_start_internal (self);
+}
+
+static gboolean
+gst_wasapi2_ring_buffer_stop_internal (GstWasapi2RingBuffer *self)
+{
   IAudioClient *client_handle;
   HRESULT hr;
-
-  GST_DEBUG_OBJECT (buf, "Stop");
 
   if (!self->client) {
     GST_DEBUG_OBJECT (self, "No configured client");
@@ -1203,6 +1237,7 @@ gst_wasapi2_ring_buffer_stop (GstAudioRingBuffer * buf)
   /* Call reset for later reuse case */
   hr = client_handle->Reset ();
   self->expected_position = 0;
+  self->write_frame_offset = 0;
 
   if (self->loopback_client) {
     client_handle = gst_wasapi2_client_get_handle (self->loopback_client);
@@ -1216,6 +1251,26 @@ gst_wasapi2_ring_buffer_stop (GstAudioRingBuffer * buf)
   }
 
   return TRUE;
+}
+
+static gboolean
+gst_wasapi2_ring_buffer_stop (GstAudioRingBuffer * buf)
+{
+  GstWasapi2RingBuffer *self = GST_WASAPI2_RING_BUFFER (buf);
+
+  GST_DEBUG_OBJECT (buf, "Stop");
+
+  return gst_wasapi2_ring_buffer_stop_internal (self);
+}
+
+static gboolean
+gst_wasapi2_ring_buffer_pause (GstAudioRingBuffer * buf)
+{
+  GstWasapi2RingBuffer *self = GST_WASAPI2_RING_BUFFER (buf);
+
+  GST_DEBUG_OBJECT (buf, "Pause");
+
+  return gst_wasapi2_ring_buffer_stop_internal (self);
 }
 
 static guint
