@@ -617,14 +617,15 @@ gst_avwait_vsink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:{
-      const GstSegment *segment;
+      GstSegment segment;
       gboolean send_message = FALSE;
       gboolean segment_changed;
 
       g_mutex_lock (&self->mutex);
-      gst_event_parse_segment (event, &segment);
-      segment_changed = !gst_segment_is_equal (segment, &self->vsegment);
-      self->vsegment = *segment;
+      gst_event_copy_segment (event, &segment);
+      segment.position = self->vsegment.position;
+      segment_changed = !gst_segment_is_equal (&segment, &self->vsegment);
+      self->vsegment = segment;
       if (self->vsegment.format != GST_FORMAT_TIME) {
         GST_ERROR_OBJECT (self, "Invalid segment format");
         g_mutex_unlock (&self->mutex);
@@ -758,13 +759,14 @@ gst_avwait_asink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:{
-      const GstSegment *segment;
+      GstSegment segment;
       gboolean segment_changed;
 
       g_mutex_lock (&self->mutex);
-      gst_event_parse_segment (event, &segment);
-      segment_changed = !gst_segment_is_equal (segment, &self->asegment);
-      self->asegment = *segment;
+      gst_event_copy_segment (event, &segment);
+      segment.position = self->asegment.position;
+      segment_changed = !gst_segment_is_equal (&segment, &self->asegment);
+      self->asegment = segment;
 
       if (self->asegment.format != GST_FORMAT_TIME) {
         GST_ERROR_OBJECT (self, "Invalid segment format");
