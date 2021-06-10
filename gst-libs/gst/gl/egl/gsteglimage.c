@@ -599,7 +599,7 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
   attribs[atti++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
   attribs[atti++] = offset;
   attribs[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
-  attribs[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, comp[0]);
+  attribs[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, plane);
   attribs[atti] = EGL_NONE;
   g_assert (atti == G_N_ELEMENTS (attribs) - 1);
 
