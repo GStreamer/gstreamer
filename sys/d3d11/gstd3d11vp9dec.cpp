@@ -412,7 +412,7 @@ gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
   view_buffer = gst_d3d11_decoder_get_output_view_buffer (self->d3d11_decoder,
       GST_VIDEO_DECODER (decoder));
   if (!view_buffer) {
-    GST_ERROR_OBJECT (self, "No available output view buffer");
+    GST_DEBUG_OBJECT (self, "No available output view buffer");
     return FALSE;
   }
 

@@ -1178,8 +1178,13 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
   ret = gst_buffer_pool_acquire_buffer (decoder->internal_pool, &buf, NULL);
 
   if (ret != GST_FLOW_OK || !buf) {
-    GST_ERROR_OBJECT (videodec, "Couldn't get buffer from pool, ret %s",
-        gst_flow_get_name (ret));
+    if (ret != GST_FLOW_FLUSHING) {
+      GST_ERROR_OBJECT (videodec, "Couldn't get buffer from pool, ret %s",
+          gst_flow_get_name (ret));
+    } else {
+      GST_DEBUG_OBJECT (videodec, "We are flusing");
+    }
+
     return NULL;
   }
 
