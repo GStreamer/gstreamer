@@ -367,10 +367,11 @@ static int
 set_hwparams (GstAlsaSrc * alsa)
 {
   guint rrate;
-  gint err;
-  snd_pcm_hw_params_t *params;
+  gint err = 0;
+  snd_pcm_hw_params_t *params, *params_copy;
 
   snd_pcm_hw_params_malloc (&params);
+  snd_pcm_hw_params_malloc (&params_copy);
 
   /* choose all parameters */
   CHECK (snd_pcm_hw_params_any (alsa->handle, params), no_config);
@@ -413,77 +414,88 @@ set_hwparams (GstAlsaSrc * alsa)
     GST_DEBUG_OBJECT (alsa, "periods min %u, max %u", min, max);
   }
 #endif
+  /* Keep a copy of initial params struct that can be used later */
+  snd_pcm_hw_params_copy (params_copy, params);
   /* Following pulseaudio's approach in
    * https://gitlab.freedesktop.org/pulseaudio/pulseaudio/-/commit/557c4295107dc7374c850b0bd5331dd35e8fdd0f
    * we'll try various configuration to set the buffer time and period time as some
    * driver can be picky on the order of the calls.
    */
   if (alsa->period_time != -1 && alsa->buffer_time != -1) {
-    if ((snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
-                &alsa->buffer_time, NULL) >= 0)
-        && (snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
-                &alsa->period_time, NULL) >= 0)) {
-      GST_DEBUG_OBJECT (alsa, "buffer time %u period time %u set correctly",
-          alsa->buffer_time, alsa->period_time);
-      goto buffer_period_set;
-    }
     if ((snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
                 &alsa->period_time, NULL) >= 0)
         && (snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
                 &alsa->buffer_time, NULL) >= 0)) {
       GST_DEBUG_OBJECT (alsa, "period time %u buffer time %u set correctly",
           alsa->period_time, alsa->buffer_time);
-      goto buffer_period_set;
+      goto success;
+    }
+    /* Try the new order with previous params struct as current one might
+       have partial settings from the order that was tried unsuccessfully */
+    snd_pcm_hw_params_copy (params, params_copy);
+    if ((snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
+                &alsa->buffer_time, NULL) >= 0)
+        && (snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
+                &alsa->period_time, NULL) >= 0)) {
+      GST_DEBUG_OBJECT (alsa, "buffer time %u period time %u set correctly",
+          alsa->buffer_time, alsa->period_time);
+      goto success;
+    }
+  }
+  if (alsa->period_time != -1) {
+    snd_pcm_hw_params_copy (params, params_copy);
+    /* set the period time only */
+    if ((snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
+                &alsa->period_time, NULL) >= 0)) {
+      GST_DEBUG_OBJECT (alsa, "period time %u set correctly",
+          alsa->period_time);
+      goto success;
     }
   }
   if (alsa->buffer_time != -1) {
-    /* set the buffer time */
-    CHECK (snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
-            &alsa->buffer_time, NULL), buffer_time);
-    GST_DEBUG_OBJECT (alsa, "buffer time %u", alsa->buffer_time);
+    snd_pcm_hw_params_copy (params, params_copy);
+    /* set the buffer time only */
+    if ((snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
+                &alsa->buffer_time, NULL) >= 0)) {
+      GST_DEBUG_OBJECT (alsa, "buffer time %u set correctly",
+          alsa->buffer_time);
+      goto success;
+    }
   }
-  if (alsa->period_time != -1) {
-    /* set the period time */
-    CHECK (snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
-            &alsa->period_time, NULL), period_time);
-    GST_DEBUG_OBJECT (alsa, "period time %u", alsa->period_time);
-  }
+  /* Set nothing if all above failed */
+  snd_pcm_hw_params_copy (params, params_copy);
+  GST_DEBUG_OBJECT (alsa, "Not setting period time and buffer time");
 
-buffer_period_set:
+success:
   /* write the parameters to device */
   CHECK (snd_pcm_hw_params (alsa->handle, params), set_hw_params);
-
   CHECK (snd_pcm_hw_params_get_buffer_size (params, &alsa->buffer_size),
       buffer_size);
+  GST_DEBUG_OBJECT (alsa, "buffer size : %lu", alsa->buffer_size);
+  CHECK (snd_pcm_hw_params_get_period_size (params, &alsa->period_size,
+          NULL), period_size);
+  GST_DEBUG_OBJECT (alsa, "period size : %lu", alsa->period_size);
 
-  CHECK (snd_pcm_hw_params_get_period_size (params, &alsa->period_size, NULL),
-      period_size);
-
-  snd_pcm_hw_params_free (params);
-  return 0;
-
+  goto exit;
   /* ERRORS */
 no_config:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Broken configuration for recording: no configurations available: %s",
             snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+    goto exit;
   }
 wrong_access:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Access type not available for recording: %s", snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+    goto exit;
   }
 no_sample_format:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Sample format not available for recording: %s", snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+    goto exit;
   }
 no_channels:
   {
@@ -501,59 +513,43 @@ no_channels:
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, ("%s", msg),
         ("%s", snd_strerror (err)));
     g_free (msg);
-    snd_pcm_hw_params_free (params);
-    return err;
+    goto exit;
   }
 no_rate:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Rate %iHz not available for recording: %s",
             alsa->rate, snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+    goto exit;
   }
 rate_match:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Rate doesn't match (requested %iHz, get %iHz)", alsa->rate, err));
-    snd_pcm_hw_params_free (params);
-    return -EINVAL;
-  }
-buffer_time:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Unable to set buffer time %i for recording: %s",
-            alsa->buffer_time, snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+    err = -EINVAL;
+    goto exit;
   }
 buffer_size:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to get buffer size for recording: %s", snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
-  }
-period_time:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Unable to set period time %i for recording: %s", alsa->period_time,
-            snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+    goto exit;
   }
 period_size:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to get period size for recording: %s", snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+    goto exit;
   }
 set_hw_params:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set hw params for recording: %s", snd_strerror (err)));
+  }
+exit:
+  {
     snd_pcm_hw_params_free (params);
+    snd_pcm_hw_params_free (params_copy);
     return err;
   }
 }
