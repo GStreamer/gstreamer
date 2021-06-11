@@ -561,8 +561,7 @@ gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
    * each wayland resource we create as well as removing a race between
    * creation and the `wl_proxy_set_queue()` call. */
   window_egl->display.display = wl_proxy_create_wrapper (display->display);
-  window_egl->window.queue =
-      wl_display_create_queue (window_egl->display.display);
+  window_egl->window.queue = wl_display_create_queue (display->display);
 
   wl_proxy_set_queue ((struct wl_proxy *) window_egl->display.display,
       window_egl->window.queue);
