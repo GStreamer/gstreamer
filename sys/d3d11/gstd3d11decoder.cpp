@@ -84,6 +84,8 @@ DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_MPEG2_VLD, 0xee27417f, 0x5e28,
     0x4e65, 0xbe, 0xea, 0x1d, 0x26, 0xb5, 0x08, 0xad, 0xc9);
 DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_MPEG2and1_VLD, 0x86695f12, 0x340e,
     0x4f04, 0x9f, 0xd3, 0x92, 0x53, 0xdd, 0x32, 0x74, 0x60);
+DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_AV1_VLD_PROFILE0, 0xb8be4ccb,
+    0xcf53, 0x46ba, 0x8d, 0x59, 0xd6, 0xb8, 0xa6, 0xda, 0x5d, 0x2a);
 
 static const GUID *profile_h264_list[] = {
   &GST_GUID_D3D11_DECODER_PROFILE_H264_IDCT_FGT,
@@ -114,6 +116,11 @@ static const GUID *profile_vp9_10_list[] = {
 static const GUID *profile_mpeg2_list[] = {
   &GST_GUID_D3D11_DECODER_PROFILE_MPEG2_VLD,
   &GST_GUID_D3D11_DECODER_PROFILE_MPEG2and1_VLD
+};
+
+static const GUID *profile_av1_list[] = {
+  &GST_GUID_D3D11_DECODER_PROFILE_AV1_VLD_PROFILE0,
+  /* TODO: add more profile */
 };
 
 enum
@@ -544,6 +551,8 @@ gst_d3d11_codec_to_string (GstD3D11Codec codec)
       return "VP8";
     case GST_D3D11_CODEC_MPEG2:
       return "MPEG2";
+    case GST_D3D11_CODEC_AV1:
+      return "AV1";
     default:
       g_assert_not_reached ();
       break;
@@ -604,6 +613,10 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
         profile_list = profile_mpeg2_list;
         profile_size = G_N_ELEMENTS (profile_mpeg2_list);
       }
+      break;
+    case GST_D3D11_CODEC_AV1:
+      profile_list = profile_av1_list;
+      profile_size = G_N_ELEMENTS (profile_av1_list);
       break;
     default:
       break;
@@ -857,6 +870,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
    * But... where it is? */
   switch (self->codec) {
     case GST_D3D11_CODEC_H265:
+    case GST_D3D11_CODEC_AV1:
       /* See directx_va_Setup() impl. in vlc */
       if (vendor != GST_D3D11_DEVICE_VENDOR_XBOX)
         alignment = 128;
@@ -922,6 +936,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
       case GST_D3D11_CODEC_VP9:
       case GST_D3D11_CODEC_VP8:
       case GST_D3D11_CODEC_MPEG2:
+      case GST_D3D11_CODEC_AV1:
         if (config_list[i].ConfigBitstreamRaw == 1)
           best_config = &config_list[i];
         break;

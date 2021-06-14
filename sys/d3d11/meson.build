@@ -17,6 +17,7 @@ d3d11_sources = [
 ]
 
 d3d11_dec_sources = [
+  'gstd3d11av1dec.cpp',
   'gstd3d11decoder.cpp',
   'gstd3d11h264dec.cpp',
   'gstd3d11vp9dec.cpp',

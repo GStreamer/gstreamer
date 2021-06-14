@@ -36,6 +36,7 @@
 #include "gstd3d11vp9dec.h"
 #include "gstd3d11vp8dec.h"
 #include "gstd3d11mpeg2dec.h"
+#include "gstd3d11av1dec.h"
 #endif
 #ifdef HAVE_DXGI_DESKTOP_DUP
 #include "gstd3d11desktopdupsrc.h"
@@ -61,6 +62,7 @@ GST_DEBUG_CATEGORY (gst_d3d11_h265_dec_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_vp9_dec_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_vp8_dec_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_mpeg2_dec_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_av1_dec_debug);
 #endif
 
 #ifdef HAVE_DXGI_DESKTOP_DUP
@@ -113,6 +115,8 @@ plugin_init (GstPlugin * plugin)
         "d3d11vp8dec", 0, "Direct3D11 VP8 Decoder");
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_mpeg2_dec_debug,
         "d3d11mpeg2dec", 0, "Direct3D11 MPEG2 Decoder");
+    GST_DEBUG_CATEGORY_INIT (gst_d3d11_av1_dec_debug,
+        "d3d11av1dec", 0, "Direct3D11 AV1 Decoder");
   }
 #endif
 
@@ -166,6 +170,8 @@ plugin_init (GstPlugin * plugin)
         gst_d3d11_vp8_dec_register (plugin, device, decoder,
             GST_RANK_SECONDARY);
         gst_d3d11_mpeg2_dec_register (plugin, device, decoder,
+            GST_RANK_SECONDARY);
+        gst_d3d11_av1_dec_register (plugin, device, decoder,
             GST_RANK_SECONDARY);
       }
 
