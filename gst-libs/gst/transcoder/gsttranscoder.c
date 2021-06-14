@@ -245,6 +245,8 @@ gst_transcoder_dispose (GObject * object)
     gst_clear_object (&self->signal_adapter);
     gst_clear_object (&self->sync_signal_adapter);
     GST_OBJECT_UNLOCK (self);
+  } else {
+    GST_OBJECT_UNLOCK (self);
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
