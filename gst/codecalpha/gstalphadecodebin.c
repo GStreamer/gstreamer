@@ -138,6 +138,11 @@ gst_alpha_decode_bin_constructed (GObject * obj)
     goto cleanup;
   }
 
+  /* We disable QoS on decoders because we need to maintain frame pairing in
+   * order for alphacombine to work. */
+  g_object_set (decoder, "qos", FALSE, NULL);
+  g_object_set (alpha_decoder, "qos", FALSE, NULL);
+
   alphacombine = gst_element_factory_make ("alphacombine", NULL);
   if (!alphacombine) {
     priv->missing_element = "alphacombine";
