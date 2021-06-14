@@ -938,7 +938,7 @@ static void
 _error_cb (RunSyncData * data, GError * error, GstStructure * details)
 {
   if (data->error == NULL)
-    g_propagate_error (&data->error, error);
+    data->error = g_error_copy (error);
 
   if (data->loop) {
     g_main_loop_quit (data->loop);
@@ -990,7 +990,6 @@ gst_transcoder_run (GstTranscoder * self, GError ** error)
     if (error)
       g_propagate_error (error, data.error);
 
-    g_clear_error (&data.error);
     return FALSE;
   }
 
