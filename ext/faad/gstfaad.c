@@ -21,7 +21,7 @@
 /**
  * SECTION:element-faad
  * @title: faad
- * @seealso: faac
+ * @see_also: faac
  *
  * faad decodes AAC (MPEG-4 part 3) stream.
  *
