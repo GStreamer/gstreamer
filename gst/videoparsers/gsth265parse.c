@@ -1813,7 +1813,8 @@ get_compatible_profile_caps (GstH265SPS * sps, GstH265Profile profile)
     case GST_H265_PROFILE_MAIN_444_10:
     {
       /* A.3.7 */
-      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10);
+      profiles |=
+          profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10);
       break;
     }
     case GST_H265_PROFILE_HIGH_THROUGHPUT_444:
