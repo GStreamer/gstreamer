@@ -1750,8 +1750,13 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
     return priv->last_ret;
   }
 
-  gst_h265_decoder_finish_current_picture (self);
-  gst_video_codec_frame_unref (frame);
+  if (priv->current_picture) {
+    gst_h265_decoder_finish_current_picture (self);
+    gst_video_codec_frame_unref (frame);
+  } else {
+    /* This picture was dropped */
+    gst_video_decoder_release_frame (decoder, frame);
+  }
 
   return priv->last_ret;
 }
