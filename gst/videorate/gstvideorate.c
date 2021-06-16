@@ -1521,6 +1521,10 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       goto invalid_buffer;
   }
 
+  if (!gst_segment_clip (&videorate->segment, GST_FORMAT_TIME, in_ts,
+          GST_CLOCK_TIME_NONE, NULL, NULL))
+    goto outside_segment;
+
   /* get the time of the next expected buffer timestamp, we use this when the
    * next buffer has -1 as a timestamp */
   last_ts = videorate->last_ts;
@@ -1784,6 +1788,13 @@ invalid_buffer:
   {
     GST_WARNING_OBJECT (videorate,
         "Got buffer with GST_CLOCK_TIME_NONE timestamp, discarding it");
+    res = GST_BASE_TRANSFORM_FLOW_DROPPED;
+    goto done;
+  }
+
+outside_segment:
+  {
+    GST_WARNING_OBJECT (videorate, "Got buffer outide segment, discarding it");
     res = GST_BASE_TRANSFORM_FLOW_DROPPED;
     goto done;
   }
