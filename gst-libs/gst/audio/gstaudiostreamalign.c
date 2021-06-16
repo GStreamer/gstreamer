@@ -86,6 +86,8 @@ gst_audio_stream_align_new (gint rate, GstClockTime alignment_threshold,
   GstAudioStreamAlign *align;
 
   g_return_val_if_fail (rate != 0, NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (alignment_threshold), NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (discont_wait), NULL);
 
   align = g_new0 (GstAudioStreamAlign, 1);
   align->rate = rate;
@@ -193,6 +195,7 @@ gst_audio_stream_align_set_alignment_threshold (GstAudioStreamAlign *
     align, GstClockTime alignment_threshold)
 {
   g_return_if_fail (align != NULL);
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (alignment_threshold));
 
   align->alignment_threshold = alignment_threshold;
 }
@@ -230,6 +233,7 @@ gst_audio_stream_align_set_discont_wait (GstAudioStreamAlign * align,
     GstClockTime discont_wait)
 {
   g_return_if_fail (align != NULL);
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (discont_wait));
 
   align->discont_wait = discont_wait;
 }

@@ -685,6 +685,7 @@ gst_audio_base_sink_set_alignment_threshold (GstAudioBaseSink * sink,
     GstClockTime alignment_threshold)
 {
   g_return_if_fail (GST_IS_AUDIO_BASE_SINK (sink));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (alignment_threshold));
 
   GST_OBJECT_LOCK (sink);
   sink->priv->alignment_threshold = alignment_threshold;
@@ -725,6 +726,7 @@ gst_audio_base_sink_set_discont_wait (GstAudioBaseSink * sink,
     GstClockTime discont_wait)
 {
   g_return_if_fail (GST_IS_AUDIO_BASE_SINK (sink));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (discont_wait));
 
   GST_OBJECT_LOCK (sink);
   sink->priv->discont_wait = discont_wait;

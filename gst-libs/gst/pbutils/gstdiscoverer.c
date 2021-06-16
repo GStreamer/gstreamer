@@ -521,6 +521,8 @@ gst_discoverer_get_property (GObject * object, guint prop_id,
 static void
 gst_discoverer_set_timeout (GstDiscoverer * dc, GstClockTime timeout)
 {
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (timeout));
+
   GST_DEBUG_OBJECT (dc, "timeout : %" GST_TIME_FORMAT, GST_TIME_ARGS (timeout));
 
   /* FIXME : update current pending timeout if we're running */
@@ -2630,6 +2632,8 @@ GstDiscoverer *
 gst_discoverer_new (GstClockTime timeout, GError ** err)
 {
   GstDiscoverer *res;
+
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timeout), NULL);
 
   res = g_object_new (GST_TYPE_DISCOVERER, "timeout", timeout, NULL);
   if (res->priv->uridecodebin == NULL) {

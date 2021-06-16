@@ -3533,6 +3533,7 @@ void
 gst_audio_decoder_set_min_latency (GstAudioDecoder * dec, GstClockTime num)
 {
   g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (num));
 
   GST_OBJECT_LOCK (dec);
   dec->priv->latency = num;
@@ -3576,6 +3577,7 @@ void
 gst_audio_decoder_set_tolerance (GstAudioDecoder * dec, GstClockTime tolerance)
 {
   g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (tolerance));
 
   GST_OBJECT_LOCK (dec);
   dec->priv->tolerance = tolerance;

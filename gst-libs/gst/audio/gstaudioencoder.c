@@ -2544,6 +2544,7 @@ void
 gst_audio_encoder_set_tolerance (GstAudioEncoder * enc, GstClockTime tolerance)
 {
   g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (tolerance));
 
   GST_OBJECT_LOCK (enc);
   enc->priv->tolerance = tolerance;
