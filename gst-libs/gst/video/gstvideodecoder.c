@@ -1270,7 +1270,7 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       GstFlowReturn flow_ret = GST_FLOW_OK;
 
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-      flow_ret = gst_video_decoder_drain_out (decoder, TRUE);
+      flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       ret = (flow_ret == GST_FLOW_OK);
 
