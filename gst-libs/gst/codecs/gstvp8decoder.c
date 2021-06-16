@@ -169,6 +169,12 @@ gst_vp8_decoder_check_codec_change (GstVp8Decoder * self,
 
     priv->had_sequence = TRUE;
 
+    if (klass->get_preferred_output_delay)
+      priv->preferred_output_delay =
+          klass->get_preferred_output_delay (self, priv->is_live);
+    else
+      priv->preferred_output_delay = 0;
+
     if (klass->new_sequence)
       ret = klass->new_sequence (self, frame_hdr);
   }
@@ -337,10 +343,6 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
       "handle frame, PTS: %" GST_TIME_FORMAT ", DTS: %"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (in_buf)),
       GST_TIME_ARGS (GST_BUFFER_DTS (in_buf)));
-
-  if (klass->get_preferred_output_delay)
-    priv->preferred_output_delay =
-        klass->get_preferred_output_delay (self, priv->is_live);
 
   if (!gst_buffer_map (in_buf, &map, GST_MAP_READ)) {
     GST_ERROR_OBJECT (self, "Cannot map buffer");
