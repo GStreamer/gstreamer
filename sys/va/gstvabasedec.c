@@ -466,14 +466,27 @@ static GstVideoFormat
 _default_video_format_from_chroma (guint chroma_type)
 {
   switch (chroma_type) {
+      /* 4:2:0 */
     case VA_RT_FORMAT_YUV420:
-    case VA_RT_FORMAT_YUV422:
-    case VA_RT_FORMAT_YUV444:
       return GST_VIDEO_FORMAT_NV12;
     case VA_RT_FORMAT_YUV420_10:
-    case VA_RT_FORMAT_YUV422_10:
-    case VA_RT_FORMAT_YUV444_10:
       return GST_VIDEO_FORMAT_P010_10LE;
+    case VA_RT_FORMAT_YUV420_12:
+      return GST_VIDEO_FORMAT_P012_LE;
+      /* 4:2:2 */
+    case VA_RT_FORMAT_YUV422:
+      return GST_VIDEO_FORMAT_UYVY;
+    case VA_RT_FORMAT_YUV422_10:
+      return GST_VIDEO_FORMAT_Y210;
+    case VA_RT_FORMAT_YUV422_12:
+      return GST_VIDEO_FORMAT_Y212_LE;
+      /* 4:4:4 */
+    case VA_RT_FORMAT_YUV444:
+      return GST_VIDEO_FORMAT_VUYA;
+    case VA_RT_FORMAT_YUV444_10:
+      return GST_VIDEO_FORMAT_Y410;
+    case VA_RT_FORMAT_YUV444_12:
+      return GST_VIDEO_FORMAT_Y412_LE;
     default:
       return GST_VIDEO_FORMAT_UNKNOWN;
   }
