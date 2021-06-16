@@ -969,7 +969,7 @@ gst_gl_context_glx_request_config (GstGLContext * context,
 }
 
 gboolean
-gst_gl_context_glx_fill_info (GstGLContext * context)
+gst_gl_context_glx_fill_info (GstGLContext * context, GError ** error)
 {
   GLXContext glx_context = (GLXContext) gst_gl_context_get_gl_context (context);
   GstStructure *config;
@@ -980,7 +980,8 @@ gst_gl_context_glx_fill_info (GstGLContext * context)
   int attrs[3];
 
   if (!glx_context) {
-    GST_ERROR_OBJECT (context, "no GLX context");
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE, "No GLX context");
     return FALSE;
   }
 
@@ -988,6 +989,9 @@ gst_gl_context_glx_fill_info (GstGLContext * context)
 
   if (!glXQueryVersion (device, &glx_major, &glx_minor)) {
     GST_WARNING_OBJECT (context, "could not retrieve GLX version");
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE,
+        "could not retrieve GLX version");
     return FALSE;
   }
 
@@ -1000,6 +1004,9 @@ gst_gl_context_glx_fill_info (GstGLContext * context)
   if (Success != glXQueryContext (device, glx_context, GLX_FBCONFIG_ID,
           &fbconfig_id)) {
     GST_WARNING_OBJECT (context,
+        "could not retrieve fbconfig id from glx context");
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
         "could not retrieve fbconfig id from glx context");
     goto failure;
   }
@@ -1014,6 +1021,10 @@ gst_gl_context_glx_fill_info (GstGLContext * context)
     GST_WARNING_OBJECT (context,
         "could not retrieve fbconfig from its ID 0x%x. "
         "Wrong Display or Screen?", fbconfig_id);
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
+        "could not retrieve fbconfig from its ID 0x%x. "
+        "Wrong Display or Screen?", fbconfig_id);
     goto failure;
   }
 
@@ -1021,6 +1032,9 @@ gst_gl_context_glx_fill_info (GstGLContext * context)
   if (!config) {
     GST_WARNING_OBJECT (context, "could not transform fbconfig id 0x%x into "
         "GstStructure.", fbconfig_id);
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
+        "could not transform fbconfig id 0x%x into GstStructure.", fbconfig_id);
     goto failure;
   }
 

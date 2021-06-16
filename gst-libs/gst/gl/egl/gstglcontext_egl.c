@@ -1415,7 +1415,7 @@ gst_gl_context_egl_request_config (GstGLContext * context,
 }
 
 gboolean
-gst_gl_context_egl_fill_info (GstGLContext * context)
+gst_gl_context_egl_fill_info (GstGLContext * context, GError ** error)
 {
   EGLContext egl_context = (EGLContext) gst_gl_context_get_gl_context (context);
   GstGLDisplay *display_egl;
@@ -1426,7 +1426,8 @@ gst_gl_context_egl_fill_info (GstGLContext * context)
   int attrs[3];
 
   if (!egl_context) {
-    GST_ERROR_OBJECT (context, "no GLX context");
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE, "no EGL context");
     return FALSE;
   }
 
@@ -1437,6 +1438,10 @@ gst_gl_context_egl_fill_info (GstGLContext * context)
   if (EGL_TRUE != eglQueryContext (egl_display, egl_context, EGL_CONFIG_ID,
           &config_id)) {
     GST_WARNING_OBJECT (context,
+        "could not retrieve egl config id from egl context: %s",
+        gst_egl_get_error_string (eglGetError ()));
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
         "could not retrieve egl config id from egl context: %s",
         gst_egl_get_error_string (eglGetError ()));
     goto failure;
@@ -1451,6 +1456,10 @@ gst_gl_context_egl_fill_info (GstGLContext * context)
     GST_WARNING_OBJECT (context,
         "could not retrieve egl config from its ID 0x%x. "
         "Wrong EGLDisplay or context?", config_id);
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
+        "could not retrieve egl config from its ID 0x%x. "
+        "Wrong EGLDisplay or context?", config_id);
     goto failure;
   }
 
@@ -1458,6 +1467,9 @@ gst_gl_context_egl_fill_info (GstGLContext * context)
   if (!config) {
     GST_WARNING_OBJECT (context, "could not transform config id 0x%x into "
         "GstStructure", config_id);
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
+        "could not transform config id 0x%x into GstStructure", config_id);
     goto failure;
   }
 

@@ -92,7 +92,7 @@ G_GNUC_INTERNAL
 gpointer            gst_gl_context_egl_get_proc_address     (GstGLAPI gl_api, const gchar * name);
 
 G_GNUC_INTERNAL
-gboolean            gst_gl_context_egl_fill_info            (GstGLContext * context);
+gboolean            gst_gl_context_egl_fill_info            (GstGLContext * context, GError ** error);
 
 G_END_DECLS
 

@@ -1546,12 +1546,12 @@ gst_gl_context_fill_info (GstGLContext * context, GError ** error)
     /* XXX: vfunc? */
 #if GST_GL_HAVE_PLATFORM_GLX
     if (gst_gl_context_get_gl_platform (context) == GST_GL_PLATFORM_GLX
-        && !gst_gl_context_glx_fill_info (context))
+        && !gst_gl_context_glx_fill_info (context, error))
       goto failure;
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL
     if (gst_gl_context_get_gl_platform (context) == GST_GL_PLATFORM_EGL
-        && !gst_gl_context_egl_fill_info (context))
+        && !gst_gl_context_egl_fill_info (context, error))
       goto failure;
 #endif
   }
