@@ -3577,6 +3577,7 @@ gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
       break;
     }
     case GST_EVENT_FLUSH_STOP:
+    case GST_EVENT_SEGMENT_DONE:
       h264parse->dts = GST_CLOCK_TIME_NONE;
       h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
       h264parse->push_codec = TRUE;
