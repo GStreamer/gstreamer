@@ -279,7 +279,7 @@ gst_vp8_decoder_finish (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "finish");
 
-  gst_vp8_decoder_reset (self);
+  gst_vp8_decoder_drain_output_queue (GST_VP8_DECODER (decoder), 0);
 
   return GST_FLOW_OK;
 }
