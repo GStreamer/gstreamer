@@ -865,6 +865,14 @@ _get_rtformat (GstVaH265Dec * self, guint8 bit_depth_luma,
     guint8 chroma_format_idc)
 {
   switch (bit_depth_luma) {
+    case 12:
+      if (chroma_format_idc == 3)
+        return VA_RT_FORMAT_YUV444_12;
+      if (chroma_format_idc == 2)
+        return VA_RT_FORMAT_YUV422_12;
+      else
+        return VA_RT_FORMAT_YUV420_12;
+      break;
     case 10:
       if (chroma_format_idc == 3)
         return VA_RT_FORMAT_YUV444_10;
