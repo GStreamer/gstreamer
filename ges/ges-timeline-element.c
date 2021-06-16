@@ -1082,6 +1082,7 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
   GESTimelineElement *toplevel_container, *parent;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start), FALSE);
 
   if (self->start == start)
     return TRUE;
@@ -1437,6 +1438,7 @@ ges_timeline_element_ripple (GESTimelineElement * self, GstClockTime start)
   GESTimelineElementClass *klass;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start), FALSE);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -1467,6 +1469,7 @@ ges_timeline_element_ripple_end (GESTimelineElement * self, GstClockTime end)
   GESTimelineElementClass *klass;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (end), FALSE);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -1494,6 +1497,7 @@ ges_timeline_element_roll_start (GESTimelineElement * self, GstClockTime start)
   GESTimelineElementClass *klass;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start), FALSE);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -1521,6 +1525,7 @@ ges_timeline_element_roll_end (GESTimelineElement * self, GstClockTime end)
   GESTimelineElementClass *klass;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (end), FALSE);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -1548,6 +1553,7 @@ ges_timeline_element_trim (GESTimelineElement * self, GstClockTime start)
   GESTimelineElementClass *klass;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start), FALSE);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -2307,6 +2313,7 @@ ges_timeline_element_paste (GESTimelineElement * self,
 {
   GESTimelineElement *res;
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (paste_position), FALSE);
 
   if (!self->priv->copied_from) {
     GST_ERROR_OBJECT (self, "Is not being 'deeply' copied!");

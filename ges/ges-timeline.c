@@ -3029,6 +3029,7 @@ ges_timeline_set_snapping_distance (GESTimeline * timeline,
     GstClockTime snapping_distance)
 {
   g_return_if_fail (GES_IS_TIMELINE (timeline));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (snapping_distance));
   CHECK_THREAD (timeline);
 
   timeline->priv->snapping_distance = snapping_distance;
@@ -3199,6 +3200,7 @@ ges_timeline_paste_element (GESTimeline * timeline,
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (position), FALSE);
   CHECK_THREAD (timeline);
 
   element_class = GES_TIMELINE_ELEMENT_GET_CLASS (element);
