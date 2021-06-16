@@ -2226,8 +2226,9 @@ gst_harness_query_latency (GstHarness * h)
 void
 gst_harness_set_upstream_latency (GstHarness * h, GstClockTime latency)
 {
-  GstHarnessPrivate *priv = h->priv;
-  priv->latency_min = latency;
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (latency));
+
+  h->priv->latency_min = latency;
 }
 
 /**

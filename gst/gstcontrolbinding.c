@@ -260,6 +260,7 @@ gst_control_binding_sync_values (GstControlBinding * binding,
   gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_CONTROL_BINDING (binding), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
   if (binding->disabled)
     return TRUE;

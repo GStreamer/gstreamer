@@ -2354,6 +2354,8 @@ gst_message_new_reset_time (GstObject * src, GstClockTime running_time)
   GstMessage *message;
   GstStructure *structure;
 
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (running_time), NULL);
+
   structure = gst_structure_new_id (GST_QUARK (MESSAGE_RESET_TIME),
       GST_QUARK (RUNNING_TIME), G_TYPE_UINT64, running_time, NULL);
   message = gst_message_new_custom (GST_MESSAGE_RESET_TIME, src, structure);

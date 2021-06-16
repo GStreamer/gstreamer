@@ -1994,6 +1994,8 @@ gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
   gboolean ret = FALSE;
   GstIndexAssociation associations[2];
 
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (ts), FALSE);
+
   GST_LOG_OBJECT (parse, "Adding key=%d index entry %" GST_TIME_FORMAT
       " @ offset 0x%08" G_GINT64_MODIFIER "x", key, GST_TIME_ARGS (ts), offset);
 
@@ -4076,7 +4078,7 @@ void
 gst_base_parse_set_latency (GstBaseParse * parse, GstClockTime min_latency,
     GstClockTime max_latency)
 {
-  g_return_if_fail (min_latency != GST_CLOCK_TIME_NONE);
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (min_latency));
   g_return_if_fail (min_latency <= max_latency);
 
   GST_OBJECT_LOCK (parse);

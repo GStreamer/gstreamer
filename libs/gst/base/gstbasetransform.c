@@ -2696,6 +2696,7 @@ gst_base_transform_update_qos (GstBaseTransform * trans,
     gdouble proportion, GstClockTimeDiff diff, GstClockTime timestamp)
 {
   g_return_if_fail (GST_IS_BASE_TRANSFORM (trans));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp));
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, trans,
       "qos: proportion: %lf, diff %" G_GINT64_FORMAT ", timestamp %"

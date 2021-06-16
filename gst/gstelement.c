@@ -488,6 +488,7 @@ gst_element_set_base_time (GstElement * element, GstClockTime time)
   GstClockTime old;
 
   g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (time));
 
   GST_OBJECT_LOCK (element);
   old = element->base_time;

@@ -1518,6 +1518,8 @@ gst_event_new_latency (GstClockTime latency)
   GstEvent *event;
   GstStructure *structure;
 
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (latency), NULL);
+
   GST_CAT_INFO (GST_CAT_EVENT,
       "creating latency event %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
 

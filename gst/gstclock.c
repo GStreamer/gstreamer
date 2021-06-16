@@ -310,6 +310,8 @@ gboolean
 gst_clock_single_shot_id_reinit (GstClock * clock, GstClockID id,
     GstClockTime time)
 {
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (time), FALSE);
+
   return gst_clock_entry_reinit (clock, (GstClockEntry *) id, time,
       GST_CLOCK_TIME_NONE, GST_CLOCK_ENTRY_SINGLE);
 }
@@ -331,6 +333,9 @@ gboolean
 gst_clock_periodic_id_reinit (GstClock * clock, GstClockID id,
     GstClockTime start_time, GstClockTime interval)
 {
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start_time), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
+
   return gst_clock_entry_reinit (clock, (GstClockEntry *) id, start_time,
       interval, GST_CLOCK_ENTRY_PERIODIC);
 }
@@ -412,6 +417,7 @@ GstClockID
 gst_clock_new_single_shot_id (GstClock * clock, GstClockTime time)
 {
   g_return_val_if_fail (GST_IS_CLOCK (clock), NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (time), NULL);
 
   return gst_clock_entry_new (clock,
       time, GST_CLOCK_TIME_NONE, GST_CLOCK_ENTRY_SINGLE);
@@ -1147,6 +1153,8 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
   GstClockPrivate *priv;
 
   g_return_if_fail (GST_IS_CLOCK (clock));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (internal));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (external));
   g_return_if_fail (rate_num != GST_CLOCK_TIME_NONE);
   g_return_if_fail (rate_denom > 0 && rate_denom != GST_CLOCK_TIME_NONE);
 
@@ -1474,6 +1482,8 @@ gst_clock_add_observation_unapplied (GstClock * clock, GstClockTime slave,
   guint n;
 
   g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (slave), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (master), FALSE);
   g_return_val_if_fail (r_squared != NULL, FALSE);
 
   priv = clock->priv;

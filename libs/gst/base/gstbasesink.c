@@ -1327,6 +1327,7 @@ gst_base_sink_set_render_delay (GstBaseSink * sink, GstClockTime delay)
   GstClockTime old_render_delay;
 
   g_return_if_fail (GST_IS_BASE_SINK (sink));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (delay));
 
   GST_OBJECT_LOCK (sink);
   old_render_delay = sink->priv->render_delay;
