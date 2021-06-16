@@ -82,6 +82,31 @@ GST_DEBUG_CATEGORY (gst_msdkvp9dec_debug);
 GST_DEBUG_CATEGORY (gst_msdkvp9enc_debug);
 GST_DEBUG_CATEGORY (gst_msdkav1dec_debug);
 
+static void
+plugin_add_dependencies (GstPlugin * plugin)
+{
+#ifndef _WIN32
+  const gchar *env_vars[] = { "LIBVA_DRIVER_NAME", NULL };
+  const gchar *kernel_paths[] = { "/dev/dri", NULL };
+  const gchar *kernel_names[] = { "card", "render", NULL };
+
+  /* features get updated upon changes in /dev/dri/card* */
+  gst_plugin_add_dependency (plugin, NULL, kernel_paths, kernel_names,
+      GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX);
+
+  /* features get updated upon changes in VA environment variables */
+  gst_plugin_add_dependency (plugin, env_vars, NULL, NULL,
+      GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+
+  /* features get updated upon changes in default VA drivers
+   * directory */
+  gst_plugin_add_dependency_simple (plugin, "LIBVA_DRIVERS_PATH",
+      VA_DRIVERS_PATH, "_drv_video.so",
+      GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX |
+      GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY);
+#endif
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -113,8 +138,10 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_msdkvp9enc_debug, "msdkvp9enc", 0, "msdkvp9enc");
   GST_DEBUG_CATEGORY_INIT (gst_msdkav1dec_debug, "msdkav1dec", 0, "msdkav1dec");
 
+  plugin_add_dependencies (plugin);
+
   if (!msdk_is_available ())
-    return FALSE;
+    return TRUE;                /* return TRUE to avoid getting blacklisted */
 
   ret = gst_element_register (plugin, "msdkh264dec", GST_RANK_NONE,
       GST_TYPE_MSDKH264DEC);
