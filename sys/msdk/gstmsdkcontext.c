@@ -162,7 +162,7 @@ gst_msdk_context_use_vaapi (GstMsdkContext * context)
 
   fd = get_device_id ();
   if (fd < 0) {
-    GST_ERROR ("Couldn't find a drm device node to open");
+    GST_WARNING ("Couldn't find a valid drm device node");
     return FALSE;
   }
 
