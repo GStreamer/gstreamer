@@ -104,6 +104,10 @@ typedef struct
   guint32 body_sid;
   guint32 index_sid;
 
+  /* Greatest temporal offset value contained within offsets.
+   * Unsigned because the smallest value is 0 (no reordering)  */
+  guint max_temporal_offset;
+
   /* offsets indexed by DTS */
   GArray *offsets;
 } GstMXFDemuxIndexTable;

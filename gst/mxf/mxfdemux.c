@@ -1728,6 +1728,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   gboolean keyframe = TRUE;
   /* As in GstMXFDemuxIndex */
   guint64 pts = G_MAXUINT64, dts = G_MAXUINT64;
+  gint32 max_temporal_offset = 0;
 
   GST_DEBUG_OBJECT (demux,
       "Handling generic container essence element of size %" G_GSIZE_FORMAT
@@ -1858,6 +1859,19 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       }
     }
 
+    if (!index_table)
+      GST_DEBUG_OBJECT (demux,
+          "Couldn't find index table for body_sid:%d index_sid:%d",
+          etrack->body_sid, etrack->index_sid);
+    else {
+      GST_DEBUG_OBJECT (demux,
+          "Looking for position %" G_GINT64_FORMAT
+          " in index table of size %d (max temporal offset %u)",
+          etrack->position, index_table->offsets->len,
+          index_table->max_temporal_offset);
+      max_temporal_offset = index_table->max_temporal_offset;
+    }
+
     if (index_table && index_table->offsets->len > etrack->position) {
       GstMXFDemuxIndex *index =
           &g_array_index (index_table->offsets, GstMXFDemuxIndex,
@@ -1960,6 +1974,14 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
           gst_util_uint64_scale (pad->current_component_start_position *
           GST_SECOND, pad->material_track->edit_rate.d,
           pad->material_track->edit_rate.n);
+      /* We are dealing with reordered data, the PTS is shifted forward by the
+       * maximum temporal reordering (the DTS remain as-is). */
+      if (max_temporal_offset > 0)
+        GST_BUFFER_PTS (outbuf) +=
+            gst_util_uint64_scale (max_temporal_offset * GST_SECOND,
+            pad->current_essence_track->source_track->edit_rate.d,
+            pad->current_essence_track->source_track->edit_rate.n);
+
     } else {
       GST_BUFFER_PTS (outbuf) = GST_CLOCK_TIME_NONE;
     }
@@ -2017,7 +2039,26 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         gst_pad_push_event (GST_PAD_CAST (pad),
             gst_event_ref (demux->close_seg_event));
 
-      e = gst_event_new_segment (&demux->segment);
+      if (max_temporal_offset > 0) {
+        GstSegment shift_segment;
+        /* Handle maximum temporal offset. We are shifting all output PTS for
+         * this stream by the greatest temporal reordering that can occur. In
+         * order not to change the stream/running time we shift the segment
+         * start and stop values accordingly */
+        gst_segment_copy_into (&demux->segment, &shift_segment);
+        if (GST_CLOCK_TIME_IS_VALID (shift_segment.start))
+          shift_segment.start +=
+              gst_util_uint64_scale (max_temporal_offset * GST_SECOND,
+              pad->current_essence_track->source_track->edit_rate.d,
+              pad->current_essence_track->source_track->edit_rate.n);
+        if (GST_CLOCK_TIME_IS_VALID (shift_segment.stop))
+          shift_segment.stop +=
+              gst_util_uint64_scale (max_temporal_offset * GST_SECOND,
+              pad->current_essence_track->source_track->edit_rate.d,
+              pad->current_essence_track->source_track->edit_rate.n);
+        e = gst_event_new_segment (&shift_segment);
+      } else
+        e = gst_event_new_segment (&demux->segment);
       gst_event_set_seqnum (e, demux->seqnum);
       gst_pad_push_event (GST_PAD_CAST (pad), e);
       pad->need_segment = FALSE;
@@ -3756,6 +3797,7 @@ collect_index_table_segments (GstMXFDemux * demux)
       t = g_new0 (GstMXFDemuxIndexTable, 1);
       t->body_sid = segment->body_sid;
       t->index_sid = segment->index_sid;
+      t->max_temporal_offset = 0;
       t->offsets = g_array_new (FALSE, TRUE, sizeof (GstMXFDemuxIndex));
       demux->index_tables = g_list_prepend (demux->index_tables, t);
     }
@@ -3808,8 +3850,19 @@ collect_index_table_segments (GstMXFDemux * demux)
           gint8 temporal_offset = segment->index_entries[i].temporal_offset;
           guint64 pts_i = G_MAXUINT64;
 
-          if (temporal_offset > 0 ||
-              (temporal_offset < 0 && start + i >= -(gint) temporal_offset)) {
+          /* Store the highest reordering offset (to ensure we never output
+           * buffer with DTS greater than PTS) */
+          if (temporal_offset > (gint) t->max_temporal_offset) {
+            GST_LOG_OBJECT (demux,
+                "bodySID:%d indexSID:%d Stored new max temporal offset %d (was %d)",
+                t->body_sid, t->index_sid, temporal_offset,
+                t->max_temporal_offset);
+            t->max_temporal_offset = temporal_offset;
+          }
+
+          /* Fetch the matching entry in presentation order to store the pts (in
+           * edit units). */
+          if (temporal_offset >= 0 || (start + i >= -(gint) temporal_offset)) {
             pts_i = start + i + temporal_offset;
 
             if (t->offsets->len < pts_i)
@@ -3826,6 +3879,10 @@ collect_index_table_segments (GstMXFDemux * demux)
 
             index->pts = start + i;
           }
+
+          /* Fetch the matching entry in encoded/bitstream order to store all
+           * the other values related to the actual content (offset, flag, dts,
+           * ..) */
 
           index = &g_array_index (t->offsets, GstMXFDemuxIndex, start + i);
           if (!index->initialized) {
