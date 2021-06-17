@@ -490,7 +490,7 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     gboolean no_signal)
 {
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (element);
-  GstClockTime timestamp;
+  GstClockTime timestamp = GST_CLOCK_TIME_NONE;
 
   GST_LOG_OBJECT (self,
       "Got audio packet at %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT
@@ -510,8 +510,10 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     if (videosrc->first_time == GST_CLOCK_TIME_NONE)
       videosrc->first_time = stream_time;
 
-    if (videosrc->skip_first_time > 0
-        && stream_time - videosrc->first_time < videosrc->skip_first_time) {
+    if (GST_CLOCK_TIME_IS_VALID (videosrc->first_time) &&
+        GST_CLOCK_TIME_IS_VALID (stream_time) &&
+        videosrc->skip_first_time > 0 &&
+        stream_time - videosrc->first_time < videosrc->skip_first_time) {
       GST_DEBUG_OBJECT (self,
           "Skipping frame as requested: %" GST_TIME_FORMAT " < %"
           GST_TIME_FORMAT, GST_TIME_ARGS (stream_time),
@@ -522,7 +524,7 @@ gst_decklink_audio_src_got_packet (GstElement * element,
 
     if (videosrc->output_stream_time)
       timestamp = stream_time;
-    else
+    else if (GST_CLOCK_TIME_IS_VALID (stream_time))
       timestamp = gst_clock_adjust_with_calibration (NULL, stream_time,
           videosrc->current_time_mapping.xbase,
           videosrc->current_time_mapping.b, videosrc->current_time_mapping.num,
@@ -628,12 +630,33 @@ retry:
   sample_count = p.packet->GetSampleFrameCount ();
   data_size = self->info.bpf * sample_count;
 
-  if (p.timestamp == GST_CLOCK_TIME_NONE && self->next_offset == (guint64) - 1) {
-    GST_DEBUG_OBJECT (self,
-        "Got packet without timestamp before initial "
-        "timestamp after discont - dropping");
-    capture_packet_clear (&p);
-    goto retry;
+  timestamp = p.timestamp;
+
+  if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    if (self->next_offset == (guint64) - 1) {
+      GST_DEBUG_OBJECT (self,
+          "Got packet without timestamp before initial "
+          "timestamp after discont - dropping");
+      capture_packet_clear (&p);
+      goto retry;
+    } else {
+      GST_INFO_OBJECT (self, "Unknown timestamp value");
+
+      /* Likely the case where IDeckLinkInputCallback::VideoInputFrameArrived()
+       * didn't provide video frame, so no reference video stream timestamp
+       * is available. It can happen as per SDK documentation
+       * under the following circumstances:
+       * - On Intensity Pro with progressive NTSC only, every video frame will
+       *   have two audio packets.
+       * - With 3:2 pulldown there are five audio packets for each four
+       *   video frames.
+       * - If video processing is not fast enough, audio will still be delivered
+       *
+       * Assume there was no packet drop from previous valid packet, and use
+       * previously calculated expected timestamp here */
+      timestamp = gst_util_uint64_scale (self->next_offset,
+          GST_SECOND, self->info.rate);
+    }
   }
 
   ap = (AudioPacket *) g_malloc0 (sizeof (AudioPacket));
@@ -647,8 +670,6 @@ retry:
   p.packet->AddRef ();
   ap->input = self->input->input;
   ap->input->AddRef ();
-
-  timestamp = p.timestamp;
 
   // Jitter and discontinuity handling, based on audiobasesrc
   start_time = timestamp;
