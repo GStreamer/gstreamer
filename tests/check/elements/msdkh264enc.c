@@ -47,12 +47,11 @@ setup_element (const gchar * caps)
   GstCaps *srccaps = NULL;
   GstBus *bus = NULL;
 
+  element = gst_check_setup_element ("msdkh264enc");
   if (caps) {
     srccaps = gst_caps_from_string (caps);
     fail_unless (srccaps != NULL);
   }
-  element = gst_check_setup_element ("msdkh264enc");
-  fail_unless (element != NULL);
   srcpad = gst_check_setup_src_pad (element, &h264enc_srctemp);
   sinkpad = gst_check_setup_sink_pad (element, &h264enc_sinktemp);
   gst_pad_set_active (srcpad, TRUE);
@@ -66,12 +65,10 @@ setup_element (const gchar * caps)
           GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE,
       "could not set to playing");
 
-  if (srccaps)
-    gst_caps_unref (srccaps);
+  gst_caps_unref (srccaps);
 
   buffers = NULL;
   return element;
-
 }
 
 static void
@@ -151,11 +148,16 @@ static Suite *
 msdkh264enc_suite (void)
 {
   Suite *s = suite_create ("msdkh264enc");
-
   TCase *tc_chain = tcase_create ("general");
+  GstElementFactory *factory;
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, msdk_h264enc);
+
+  factory = gst_element_factory_find ("msdkh264enc");
+  if (factory) {
+    tcase_add_test (tc_chain, msdk_h264enc);
+    gst_object_unref (factory);
+  }
 
   return s;
 }
