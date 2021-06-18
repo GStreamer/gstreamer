@@ -643,6 +643,10 @@ gst_x265_enc_start (GstVideoEncoder * encoder)
 
   g_ptr_array_set_size (x265enc->peer_profiles, 0);
 
+  /* make sure that we have enough time for first DTS,
+     this is probably overkill for most streams */
+  gst_video_encoder_set_min_pts (encoder, GST_SECOND * 60 * 60 * 1000);
+
   return TRUE;
 }
 
