@@ -211,7 +211,7 @@ if __name__ == "__main__":
         repos_commits = {}
 
     revision, args = repos_commits.get('gst-build', [None, []])
-    if not update_repo('gst-build', SCRIPTDIR, None, options.no_interaction, args, status=options.status):
+    if not update_repo('gst-build', SCRIPTDIR, revision, options.no_interaction, args, status=options.status):
         exit(1)
     if not update_subprojects(options.manifest, options.no_interaction, status=options.status):
         exit(1)
