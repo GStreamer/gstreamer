@@ -56,7 +56,7 @@ static const gchar *RGB_FORMATS[] = {
 };
 
 static const gchar *PACKED_YUV_FORMATS[] = {
-  "YUY2", "UYVY", "VYUY", "Y210", "Y410",
+  "Y410",
 };
 
 static const gchar *GRAY_FORMATS[] = {

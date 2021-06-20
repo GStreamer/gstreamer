@@ -95,7 +95,7 @@ enum
 #define DEFAULT_ADAPTER 0
 #define DEFAULT_CREATE_FLAGS 0
 
-#define GST_D3D11_N_FORMATS 29
+#define GST_D3D11_N_FORMATS 25
 
 struct _GstD3D11DevicePrivate
 {
@@ -547,6 +547,20 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
   n_formats++;
 
+  /* FIXME: d3d11 sampler doesn't support packed-and-subsampled formats
+   * very well (and it's really poorly documented).
+   * As per observation, d3d11 samplers seems to be dropping the second
+   * Y componet from "Y0-U0-Y1-V0" pair which results in bad visual quality
+   * than 4:2:0 subsampled formats. We should revisit this later */
+
+  /* TODO: The best would be using d3d11 compute shader to handle this kinds of
+   * samples but comute shader is not implemented yet by us.
+   *
+   * Another simple approach is using d3d11 video processor,
+   * but capability will be very device dependent because it depends on
+   * GPU vendor's driver implementation, moreover, software fallback does
+   * not support d3d11 video processor. So it's not reliable in this case */
+#if 0
   /* NOTE: packted yuv 4:2:2 YUY2, UYVY, and VYUY formats are not natively
    * supported render target view formats
    * (i.e., cannot be output format of shader pipeline) */
@@ -586,6 +600,7 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
   else
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
   n_formats++;
+#endif
 
   priv->format_table[n_formats].format = GST_VIDEO_FORMAT_Y410;
   priv->format_table[n_formats].resource_format[0] =
