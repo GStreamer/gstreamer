@@ -36,6 +36,13 @@ void  gst_d3d11_device_dxgi_debug  (GstD3D11Device * device,
                                     const gchar * function,
                                     gint line);
 
+#define GST_D3D11_CLEAR_COM(obj) G_STMT_START { \
+    if (obj) { \
+      (obj)->Release (); \
+      (obj) = NULL; \
+    } \
+  } G_STMT_END
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_PRIVATE_H__ */

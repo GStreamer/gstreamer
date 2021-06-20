@@ -1,9 +1,9 @@
 d3d11_sources = [
-  'gstd3d11bufferpool.c',
-  'gstd3d11device.c',
-  'gstd3d11format.c',
-  'gstd3d11memory.c',
-  'gstd3d11utils.c',
+  'gstd3d11bufferpool.cpp',
+  'gstd3d11device.cpp',
+  'gstd3d11format.cpp',
+  'gstd3d11memory.cpp',
+  'gstd3d11utils.cpp',
 ]
 
 dxgi_headers = [
@@ -33,9 +33,12 @@ endif
 have_d3d11 = false
 extra_c_args = [
   '-DCOBJMACROS',
+]
+extra_comm_args = [
   '-DGST_USE_UNSTABLE_API',
   '-DBUILDING_GST_D3D11'
 ]
+
 have_dxgi_header = false
 have_d3d11_header = false
 have_d3d11sdk_h = false
@@ -162,11 +165,21 @@ endif
 
 # don't need to be defined in gstd3d11config.h since it's gstd3d11device internal
 if have_d3d11sdk_h
-  extra_c_args += ['-DHAVE_D3D11SDKLAYERS_H']
+  extra_comm_args += ['-DHAVE_D3D11SDKLAYERS_H']
 endif
 
 if have_dxgidebug_h
-  extra_c_args += ['-DHAVE_DXGIDEBUG_H']
+  extra_comm_args += ['-DHAVE_DXGIDEBUG_H']
+endif
+
+# MinGW 32bits compiler seems to be complaining about redundant-decls
+# when ComPtr is in use. Let's just disable the warning
+if cc.get_id() != 'msvc'
+  extra_args = cc.get_supported_arguments([
+    '-Wno-redundant-decls',
+  ])
+
+  extra_comm_args += extra_args
 endif
 
 configure_file(
@@ -176,7 +189,8 @@ configure_file(
 
 gstd3d11 = library('gstd3d11-' + api_version,
   d3d11_sources,
-  c_args : gst_plugins_bad_args + extra_c_args,
+  c_args : gst_plugins_bad_args + extra_c_args + extra_comm_args,
+  cpp_args : gst_plugins_bad_args + extra_comm_args,
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

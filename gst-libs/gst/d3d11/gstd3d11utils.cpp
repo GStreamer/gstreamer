@@ -204,8 +204,8 @@ gst_d3d11_handle_context_query (GstElement * element, GstQuery * query,
 static gboolean
 pad_query (const GValue * item, GValue * value, gpointer user_data)
 {
-  GstPad *pad = g_value_get_object (item);
-  GstQuery *query = user_data;
+  GstPad *pad = (GstPad *) g_value_get_object (item);
+  GstQuery *query = (GstQuery *) user_data;
   gboolean res;
 
   res = gst_pad_peer_query (pad, query);

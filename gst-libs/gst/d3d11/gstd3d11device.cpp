@@ -28,6 +28,7 @@
 #include "gstd3d11_private.h"
 #include "gstd3d11memory.h"
 #include <gmodule.h>
+#include <wrl.h>
 
 #include <windows.h>
 #include <versionhelpers.h>
@@ -46,6 +47,10 @@
  * To protect such object, callers need to make use of gst_d3d11_device_lock()
  * and gst_d3d11_device_unlock()
  */
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 
 #if HAVE_D3D11SDKLAYERS_H
 #include <d3d11sdklayers.h>
@@ -203,23 +208,24 @@ gst_d3d11_device_d3d11_debug (GstD3D11Device * device,
   SIZE_T msg_len = 0;
   HRESULT hr;
   UINT64 num_msg, i;
+  ID3D11InfoQueue *info_queue = priv->d3d11_info_queue;
 
-  if (!priv->d3d11_info_queue)
+  if (!info_queue)
     return;
 
-  num_msg = ID3D11InfoQueue_GetNumStoredMessages (priv->d3d11_info_queue);
+  num_msg = info_queue->GetNumStoredMessages ();
 
   for (i = 0; i < num_msg; i++) {
     GstDebugLevel level;
 
-    hr = ID3D11InfoQueue_GetMessage (priv->d3d11_info_queue, i, NULL, &msg_len);
+    hr = info_queue->GetMessage (i, NULL, &msg_len);
 
     if (FAILED (hr) || msg_len == 0) {
       return;
     }
 
     msg = (D3D11_MESSAGE *) g_alloca (msg_len);
-    hr = ID3D11InfoQueue_GetMessage (priv->d3d11_info_queue, i, msg, &msg_len);
+    hr = info_queue->GetMessage (i, msg, &msg_len);
 
     level = d3d11_message_severity_to_gst (msg->Severity);
     if (msg->Category == D3D11_MESSAGE_CATEGORY_STATE_CREATION &&
@@ -233,7 +239,7 @@ gst_d3d11_device_d3d11_debug (GstD3D11Device * device,
         G_OBJECT (device), "D3D11InfoQueue: %s", msg->pDescription);
   }
 
-  ID3D11InfoQueue_ClearStoredMessages (priv->d3d11_info_queue);
+  info_queue->ClearStoredMessages ();
 
   return;
 }
@@ -317,33 +323,31 @@ gst_d3d11_device_dxgi_debug (GstD3D11Device * device,
   SIZE_T msg_len = 0;
   HRESULT hr;
   UINT64 num_msg, i;
+  IDXGIInfoQueue *info_queue = priv->dxgi_info_queue;
 
-  if (!priv->dxgi_info_queue)
+  if (!info_queue)
     return;
 
-  num_msg = IDXGIInfoQueue_GetNumStoredMessages (priv->dxgi_info_queue,
-      DXGI_DEBUG_ALL);
+  num_msg = info_queue->GetNumStoredMessages (DXGI_DEBUG_ALL);
 
   for (i = 0; i < num_msg; i++) {
     GstDebugLevel level;
 
-    hr = IDXGIInfoQueue_GetMessage (priv->dxgi_info_queue,
-        DXGI_DEBUG_ALL, i, NULL, &msg_len);
+    hr = info_queue->GetMessage (DXGI_DEBUG_ALL, i, NULL, &msg_len);
 
     if (FAILED (hr) || msg_len == 0) {
       return;
     }
 
     msg = (DXGI_INFO_QUEUE_MESSAGE *) g_alloca (msg_len);
-    hr = IDXGIInfoQueue_GetMessage (priv->dxgi_info_queue,
-        DXGI_DEBUG_ALL, i, msg, &msg_len);
+    hr = info_queue->GetMessage (DXGI_DEBUG_ALL, i, msg, &msg_len);
 
     level = dxgi_info_queue_message_severity_to_gst (msg->Severity);
     gst_debug_log (gst_d3d11_debug_layer_debug, level, file, function, line,
         G_OBJECT (device), "DXGIInfoQueue: %s", msg->pDescription);
   }
 
-  IDXGIInfoQueue_ClearStoredMessages (priv->dxgi_info_queue, DXGI_DEBUG_ALL);
+  info_queue->ClearStoredMessages (DXGI_DEBUG_ALL);
 
   return;
 }
@@ -361,6 +365,11 @@ static void
 gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GParamFlags rw_construct_only_flags =
+      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY |
+      G_PARAM_STATIC_STRINGS);
+  GParamFlags readable_flags =
+      (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   gobject_class->set_property = gst_d3d11_device_set_property;
   gobject_class->get_property = gst_d3d11_device_get_property;
@@ -371,44 +380,38 @@ gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
   g_object_class_install_property (gobject_class, PROP_ADAPTER,
       g_param_spec_uint ("adapter", "Adapter",
           "DXGI Adapter index for creating device",
-          0, G_MAXUINT32, DEFAULT_ADAPTER,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+          0, G_MAXUINT32, DEFAULT_ADAPTER, rw_construct_only_flags));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
       g_param_spec_uint ("device-id", "Device Id",
-          "DXGI Device ID", 0, G_MAXUINT32, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          "DXGI Device ID", 0, G_MAXUINT32, 0, readable_flags));
 
   g_object_class_install_property (gobject_class, PROP_VENDOR_ID,
       g_param_spec_uint ("vendor-id", "Vendor Id",
-          "DXGI Vendor ID", 0, G_MAXUINT32, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          "DXGI Vendor ID", 0, G_MAXUINT32, 0, readable_flags));
 
   g_object_class_install_property (gobject_class, PROP_HARDWARE,
       g_param_spec_boolean ("hardware", "Hardware",
-          "Whether hardware device or not", TRUE,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          "Whether hardware device or not", TRUE, readable_flags));
 
   g_object_class_install_property (gobject_class, PROP_DESCRIPTION,
       g_param_spec_string ("description", "Description",
-          "Human readable device description", NULL,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          "Human readable device description", NULL, readable_flags));
 
   g_object_class_install_property (gobject_class, PROP_ALLOW_TEARING,
       g_param_spec_boolean ("allow-tearing", "Allow tearing",
           "Whether dxgi device supports allow-tearing feature or not", FALSE,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          readable_flags));
 
   g_object_class_install_property (gobject_class, PROP_CREATE_FLAGS,
       g_param_spec_uint ("create-flags", "Create flags",
           "D3D11_CREATE_DEVICE_FLAG flags used for D3D11CreateDevice",
-          0, G_MAXUINT32, DEFAULT_CREATE_FLAGS,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+          0, G_MAXUINT32, DEFAULT_CREATE_FLAGS, rw_construct_only_flags));
 
   g_object_class_install_property (gobject_class, PROP_ADAPTER_LUID,
       g_param_spec_int64 ("adapter-luid", "Adapter LUID",
           "DXGI Adapter LUID (Locally Unique Identifier) of created device",
-          0, G_MAXINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          0, G_MAXINT64, 0, readable_flags));
 
   gst_d3d11_memory_init_once ();
 }
@@ -418,7 +421,8 @@ gst_d3d11_device_init (GstD3D11Device * self)
 {
   GstD3D11DevicePrivate *priv;
 
-  priv = gst_d3d11_device_get_instance_private (self);
+  priv = (GstD3D11DevicePrivate *)
+      gst_d3d11_device_get_instance_private (self);
   priv->adapter = DEFAULT_ADAPTER;
 
   g_rec_mutex_init (&priv->extern_lock);
@@ -447,6 +451,19 @@ is_windows_8_or_greater (void)
   return ret;
 }
 
+inline D3D11_FORMAT_SUPPORT
+operator | (D3D11_FORMAT_SUPPORT lhs, D3D11_FORMAT_SUPPORT rhs)
+{
+  return static_cast < D3D11_FORMAT_SUPPORT > (static_cast < UINT >
+      (lhs) | static_cast < UINT > (rhs));
+}
+
+inline D3D11_FORMAT_SUPPORT
+operator |= (D3D11_FORMAT_SUPPORT lhs, D3D11_FORMAT_SUPPORT rhs)
+{
+  return lhs | rhs;
+}
+
 static gboolean
 can_support_format (GstD3D11Device * self, DXGI_FORMAT format,
     D3D11_FORMAT_SUPPORT extra_flags)
@@ -465,7 +482,7 @@ can_support_format (GstD3D11Device * self, DXGI_FORMAT format,
     return FALSE;
   }
 
-  hr = ID3D11Device_CheckFormatSupport (handle, format, &supported);
+  hr = handle->CheckFormatSupport (format, &supported);
   if (FAILED (hr)) {
     GST_DEBUG_OBJECT (self, "DXGI format %d is not supported by device",
         (guint) format);
@@ -648,8 +665,8 @@ gst_d3d11_device_constructed (GObject * object)
 {
   GstD3D11Device *self = GST_D3D11_DEVICE (object);
   GstD3D11DevicePrivate *priv = self->priv;
-  IDXGIAdapter1 *adapter = NULL;
-  IDXGIFactory1 *factory = NULL;
+  ComPtr < IDXGIAdapter1 > adapter;
+  ComPtr < IDXGIFactory1 > factory;
   HRESULT hr;
   UINT d3d11_flags = priv->create_flags;
 
@@ -676,16 +693,15 @@ gst_d3d11_device_constructed (GObject * object)
 
       GST_CAT_INFO_OBJECT (gst_d3d11_debug_layer_debug, self,
           "dxgi debug library was loaded");
-      hr = gst_d3d11_device_dxgi_get_device_interface (&IID_IDXGIDebug,
-          (void **) &debug);
+      hr = gst_d3d11_device_dxgi_get_device_interface (IID_PPV_ARGS (&debug));
 
       if (SUCCEEDED (hr)) {
         GST_CAT_INFO_OBJECT (gst_d3d11_debug_layer_debug, self,
             "IDXGIDebug interface available");
         priv->dxgi_debug = debug;
 
-        hr = gst_d3d11_device_dxgi_get_device_interface (&IID_IDXGIInfoQueue,
-            (void **) &info_queue);
+        hr = gst_d3d11_device_dxgi_get_device_interface (IID_PPV_ARGS
+            (&info_queue));
         if (SUCCEEDED (hr)) {
           GST_CAT_INFO_OBJECT (gst_d3d11_debug_layer_debug, self,
               "IDXGIInfoQueue interface available");
@@ -699,41 +715,33 @@ gst_d3d11_device_constructed (GObject * object)
   }
 #endif
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
-  hr = CreateDXGIFactory1 (&IID_IDXGIFactory5, (void **) &factory);
+  hr = CreateDXGIFactory1 (IID_PPV_ARGS (&factory));
   if (!gst_d3d11_result (hr, NULL)) {
-    GST_INFO_OBJECT (self, "IDXGIFactory5 was unavailable");
-    factory = NULL;
-  } else {
+    GST_ERROR_OBJECT (self, "cannot create dxgi factory, hr: 0x%x", (guint) hr);
+    goto out;
+  }
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
+  {
+    ComPtr < IDXGIFactory5 > factory5;
     BOOL allow_tearing;
 
-    hr = IDXGIFactory5_CheckFeatureSupport ((IDXGIFactory5 *) factory,
-        DXGI_FEATURE_PRESENT_ALLOW_TEARING, (void *) &allow_tearing,
-        sizeof (allow_tearing));
+    hr = factory.As (&factory5);
+    if (SUCCEEDED (hr)) {
+      hr = factory5->CheckFeatureSupport (DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+          (void *) &allow_tearing, sizeof (allow_tearing));
 
-    priv->allow_tearing = SUCCEEDED (hr) && allow_tearing;
-
-    hr = S_OK;
+      priv->allow_tearing = SUCCEEDED (hr) && allow_tearing;
+    }
   }
 #endif
 
-  if (!factory) {
-    hr = CreateDXGIFactory1 (&IID_IDXGIFactory1, (void **) &factory);
-  }
-
-  if (!gst_d3d11_result (hr, NULL)) {
-    GST_ERROR_OBJECT (self, "cannot create dxgi factory, hr: 0x%x", (guint) hr);
-    goto error;
-  }
-
-  if (IDXGIFactory1_EnumAdapters1 (factory, priv->adapter,
-          &adapter) == DXGI_ERROR_NOT_FOUND) {
+  if (factory->EnumAdapters1 (priv->adapter, &adapter) == DXGI_ERROR_NOT_FOUND) {
     GST_DEBUG_OBJECT (self, "No adapter for index %d", priv->adapter);
-    goto error;
+    goto out;
   } else {
     DXGI_ADAPTER_DESC1 desc;
 
-    hr = IDXGIAdapter1_GetDesc1 (adapter, &desc);
+    hr = adapter->GetDesc1 (&desc);
     if (SUCCEEDED (hr)) {
       gchar *description = NULL;
       gboolean is_hardware = FALSE;
@@ -746,7 +754,8 @@ gst_d3d11_device_constructed (GObject * object)
 
       adapter_luid = (((gint64) desc.AdapterLuid.HighPart) << 32) |
           ((gint64) desc.AdapterLuid.LowPart);
-      description = g_utf16_to_utf8 (desc.Description, -1, NULL, NULL, NULL);
+      description = g_utf16_to_utf8 ((gunichar2 *) desc.Description,
+          -1, NULL, NULL, NULL);
       GST_DEBUG_OBJECT (self,
           "adapter index %d: D3D11 device vendor-id: 0x%04x, device-id: 0x%04x, "
           "Flags: 0x%x, adapter-luid: %" G_GINT64_FORMAT ", %s",
@@ -776,13 +785,13 @@ gst_d3d11_device_constructed (GObject * object)
   }
 #endif
 
-  hr = D3D11CreateDevice ((IDXGIAdapter *) adapter, D3D_DRIVER_TYPE_UNKNOWN,
+  hr = D3D11CreateDevice (adapter.Get (), D3D_DRIVER_TYPE_UNKNOWN,
       NULL, d3d11_flags, feature_levels, G_N_ELEMENTS (feature_levels),
       D3D11_SDK_VERSION, &priv->device, &selected_level, &priv->device_context);
 
   if (FAILED (hr)) {
     /* Retry if the system could not recognize D3D_FEATURE_LEVEL_11_1 */
-    hr = D3D11CreateDevice ((IDXGIAdapter *) adapter, D3D_DRIVER_TYPE_UNKNOWN,
+    hr = D3D11CreateDevice (adapter.Get (), D3D_DRIVER_TYPE_UNKNOWN,
         NULL, d3d11_flags, &feature_levels[1],
         G_N_ELEMENTS (feature_levels) - 1, D3D11_SDK_VERSION, &priv->device,
         &selected_level, &priv->device_context);
@@ -796,14 +805,14 @@ gst_d3d11_device_constructed (GObject * object)
 
     d3d11_flags &= ~D3D11_CREATE_DEVICE_DEBUG;
 
-    hr = D3D11CreateDevice ((IDXGIAdapter *) adapter, D3D_DRIVER_TYPE_UNKNOWN,
+    hr = D3D11CreateDevice (adapter.Get (), D3D_DRIVER_TYPE_UNKNOWN,
         NULL, d3d11_flags, feature_levels, G_N_ELEMENTS (feature_levels),
         D3D11_SDK_VERSION, &priv->device, &selected_level,
         &priv->device_context);
 
     if (FAILED (hr)) {
       /* Retry if the system could not recognize D3D_FEATURE_LEVEL_11_1 */
-      hr = D3D11CreateDevice ((IDXGIAdapter *) adapter, D3D_DRIVER_TYPE_UNKNOWN,
+      hr = D3D11CreateDevice (adapter.Get (), D3D_DRIVER_TYPE_UNKNOWN,
           NULL, d3d11_flags, &feature_levels[1],
           G_N_ELEMENTS (feature_levels) - 1, D3D11_SDK_VERSION, &priv->device,
           &selected_level, &priv->device_context);
@@ -816,26 +825,24 @@ gst_d3d11_device_constructed (GObject * object)
     GST_INFO_OBJECT (self,
         "cannot create d3d11 device for adapter index %d with flags 0x%x, "
         "hr: 0x%x", priv->adapter, d3d11_flags, (guint) hr);
-    goto error;
+    goto out;
   }
 
-  priv->factory = factory;
+  priv->factory = factory.Detach ();
 
 #if HAVE_D3D11SDKLAYERS_H
   if ((d3d11_flags & D3D11_CREATE_DEVICE_DEBUG) == D3D11_CREATE_DEVICE_DEBUG) {
     ID3D11Debug *debug;
     ID3D11InfoQueue *info_queue;
 
-    hr = ID3D11Device_QueryInterface (priv->device,
-        &IID_ID3D11Debug, (void **) &debug);
+    hr = priv->device->QueryInterface (IID_PPV_ARGS (&debug));
 
     if (SUCCEEDED (hr)) {
       GST_CAT_INFO_OBJECT (gst_d3d11_debug_layer_debug, self,
           "D3D11Debug interface available");
       priv->d3d11_debug = debug;
 
-      hr = ID3D11Device_QueryInterface (priv->device,
-          &IID_ID3D11InfoQueue, (void **) &info_queue);
+      hr = priv->device->QueryInterface (IID_PPV_ARGS (&info_queue));
       if (SUCCEEDED (hr)) {
         GST_CAT_INFO_OBJECT (gst_d3d11_debug_layer_debug, self,
             "ID3D11InfoQueue interface available");
@@ -849,20 +856,9 @@ gst_d3d11_device_constructed (GObject * object)
    * might be added by us */
   priv->create_flags = d3d11_flags;
 
-  IDXGIAdapter1_Release (adapter);
   gst_d3d11_device_setup_format_table (self);
 
-  G_OBJECT_CLASS (parent_class)->constructed (object);
-
-  return;
-
-error:
-  if (factory)
-    IDXGIFactory1_Release (factory);
-
-  if (adapter)
-    IDXGIAdapter1_Release (adapter);
-
+out:
   G_OBJECT_CLASS (parent_class)->constructed (object);
 
   return;
@@ -934,60 +930,35 @@ gst_d3d11_device_dispose (GObject * object)
 
   GST_LOG_OBJECT (self, "dispose");
 
-  if (priv->video_device) {
-    ID3D11VideoDevice_Release (priv->video_device);
-    priv->video_device = NULL;
-  }
-
-  if (priv->video_context) {
-    ID3D11VideoContext_Release (priv->video_context);
-    priv->video_context = NULL;
-  }
-
-  if (priv->device) {
-    ID3D11Device_Release (priv->device);
-    priv->device = NULL;
-  }
-
-  if (priv->device_context) {
-    ID3D11DeviceContext_Release (priv->device_context);
-    priv->device_context = NULL;
-  }
-
-  if (priv->factory) {
-    IDXGIFactory1_Release (priv->factory);
-    priv->factory = NULL;
-  }
+  GST_D3D11_CLEAR_COM (priv->video_device);
+  GST_D3D11_CLEAR_COM (priv->video_context);
+  GST_D3D11_CLEAR_COM (priv->device);
+  GST_D3D11_CLEAR_COM (priv->device_context);
+  GST_D3D11_CLEAR_COM (priv->factory);
 #if HAVE_D3D11SDKLAYERS_H
   if (priv->d3d11_debug) {
-    ID3D11Debug_ReportLiveDeviceObjects (priv->d3d11_debug,
-        (D3D11_RLDO_FLAGS) GST_D3D11_RLDO_FLAGS);
-    ID3D11Debug_Release (priv->d3d11_debug);
-    priv->d3d11_debug = NULL;
+    priv->d3d11_debug->ReportLiveDeviceObjects ((D3D11_RLDO_FLAGS)
+        GST_D3D11_RLDO_FLAGS);
   }
+  GST_D3D11_CLEAR_COM (priv->d3d11_debug);
 
-  if (priv->d3d11_info_queue) {
+  if (priv->d3d11_info_queue)
     gst_d3d11_device_d3d11_debug (self, __FILE__, GST_FUNCTION, __LINE__);
 
-    ID3D11InfoQueue_Release (priv->d3d11_info_queue);
-    priv->d3d11_info_queue = NULL;
-  }
+  GST_D3D11_CLEAR_COM (priv->d3d11_info_queue);
 #endif
 
 #if HAVE_DXGIDEBUG_H
   if (priv->dxgi_debug) {
-    IDXGIDebug_ReportLiveObjects (priv->dxgi_debug, DXGI_DEBUG_ALL,
+    priv->dxgi_debug->ReportLiveObjects (DXGI_DEBUG_ALL,
         (DXGI_DEBUG_RLO_FLAGS) GST_D3D11_RLDO_FLAGS);
-    IDXGIDebug_Release (priv->dxgi_debug);
-    priv->dxgi_debug = NULL;
   }
+  GST_D3D11_CLEAR_COM (priv->dxgi_debug);
 
-  if (priv->dxgi_info_queue) {
+  if (priv->dxgi_info_queue)
     gst_d3d11_device_dxgi_debug (self, __FILE__, GST_FUNCTION, __LINE__);
 
-    IDXGIInfoQueue_Release (priv->dxgi_info_queue);
-    priv->dxgi_info_queue = NULL;
-  }
+  GST_D3D11_CLEAR_COM (priv->dxgi_info_queue);
 #endif
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -1024,7 +995,8 @@ gst_d3d11_device_new (guint adapter, guint flags)
   GstD3D11Device *device = NULL;
   GstD3D11DevicePrivate *priv;
 
-  device = g_object_new (GST_TYPE_D3D11_DEVICE, "adapter", adapter,
+  device = (GstD3D11Device *)
+      g_object_new (GST_TYPE_D3D11_DEVICE, "adapter", adapter,
       "create-flags", flags, NULL);
 
   priv = device->priv;
@@ -1120,10 +1092,11 @@ gst_d3d11_device_get_video_device_handle (GstD3D11Device * device)
   g_mutex_lock (&priv->resource_lock);
   if (!priv->video_device) {
     HRESULT hr;
+    ID3D11VideoDevice *video_device = NULL;
 
-    hr = ID3D11Device_QueryInterface (priv->device, &IID_ID3D11VideoDevice,
-        (void **) &priv->video_device);
-    gst_d3d11_result (hr, device);
+    hr = priv->device->QueryInterface (IID_PPV_ARGS (&video_device));
+    if (gst_d3d11_result (hr, device))
+      priv->video_device = video_device;
   }
   g_mutex_unlock (&priv->resource_lock);
 
@@ -1153,10 +1126,11 @@ gst_d3d11_device_get_video_context_handle (GstD3D11Device * device)
   g_mutex_lock (&priv->resource_lock);
   if (!priv->video_context) {
     HRESULT hr;
+    ID3D11VideoContext *video_context = NULL;
 
-    hr = ID3D11DeviceContext_QueryInterface (priv->device_context,
-        &IID_ID3D11VideoContext, (void **) &priv->video_context);
-    gst_d3d11_result (hr, device);
+    hr = priv->device_context->QueryInterface (IID_PPV_ARGS (&video_context));
+    if (gst_d3d11_result (hr, device))
+      priv->video_context = video_context;
   }
   g_mutex_unlock (&priv->resource_lock);
 
@@ -1224,7 +1198,7 @@ gst_d3d11_device_format_from_gst (GstD3D11Device * device,
     GstVideoFormat format)
 {
   GstD3D11DevicePrivate *priv;
-  gint i;
+  guint i;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 

@@ -94,7 +94,8 @@ gst_d3d11_buffer_pool_class_init (GstD3D11BufferPoolClass * klass)
 static void
 gst_d3d11_buffer_pool_init (GstD3D11BufferPool * self)
 {
-  self->priv = gst_d3d11_buffer_pool_get_instance_private (self);
+  self->priv = (GstD3D11BufferPoolPrivate *)
+      gst_d3d11_buffer_pool_get_instance_private (self);
 }
 
 static void
@@ -173,7 +174,8 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (!priv->d3d11_params) {
     /* allocate memory with resource format by default */
     priv->d3d11_params =
-        gst_d3d11_allocation_params_new (self->device, &info, 0, 0);
+        gst_d3d11_allocation_params_new (self->device,
+        &info, (GstD3D11AllocationFlags) 0, 0);
   }
 
   desc = priv->d3d11_params->desc;
@@ -336,7 +338,7 @@ gst_d3d11_buffer_pool_fill_buffer (GstD3D11BufferPool * self, GstBuffer * buf)
 {
   GstD3D11BufferPoolPrivate *priv = self->priv;
   GstFlowReturn ret = GST_FLOW_OK;
-  gint i;
+  guint i;
 
   for (i = 0; i < G_N_ELEMENTS (priv->alloc); i++) {
     GstMemory *mem = NULL;
@@ -512,10 +514,10 @@ gst_d3d11_buffer_pool_new (GstD3D11Device * device)
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
-  pool = g_object_new (GST_TYPE_D3D11_BUFFER_POOL, NULL);
+  pool = (GstD3D11BufferPool *) g_object_new (GST_TYPE_D3D11_BUFFER_POOL, NULL);
   gst_object_ref_sink (pool);
 
-  pool->device = gst_object_ref (device);
+  pool->device = (GstD3D11Device *) gst_object_ref (device);
 
   return GST_BUFFER_POOL_CAST (pool);
 }
