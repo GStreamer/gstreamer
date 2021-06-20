@@ -605,3 +605,26 @@ ges_meta_flag_get_type (void)
   g_once (&once, (GThreadFunc) register_ges_meta_flag, &id);
   return id;
 }
+
+static void
+register_ges_marker_flags (GType * id)
+{
+  static const GFlagsValue values[] = {
+    {C_ENUM (GES_MARKER_FLAG_NONE), "GES_MARKER_FLAG_NONE", "none"},
+    {C_ENUM (GES_MARKER_FLAG_SNAPPABLE), "GES_MARKER_FLAG_SNAPPABLE",
+        "snappable"},
+    {0, NULL, NULL}
+  };
+
+  *id = g_flags_register_static ("GESMarkerFlags", values);
+}
+
+GType
+ges_marker_flags_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_ges_marker_flags, &id);
+  return id;
+}

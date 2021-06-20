@@ -453,7 +453,6 @@ GST_START_TEST (test_marker_color)
 
 GST_END_TEST;
 
-
 static Suite *
 ges_suite (void)
 {

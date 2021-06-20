@@ -62,7 +62,7 @@ guint ges_marker_list_size (GESMarkerList * list);
 
 
 GES_API
-GList *ges_marker_list_get_markers (GESMarkerList *list);
+GList * ges_marker_list_get_markers (GESMarkerList *list);
 
 GES_API
 gboolean ges_marker_list_move (GESMarkerList *list, GESMarker *marker, GstClockTime position);

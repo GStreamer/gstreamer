@@ -586,10 +586,10 @@ G_GNUC_INTERNAL gchar *ges_test_source_asset_check_id         (GType type, const
                                                                GError **error);
 
 /*******************************
- * GESMarkerList serialization *
+ *        GESMarkerList        *
  *******************************/
 
-
+G_GNUC_INTERNAL GESMarker * ges_marker_list_get_closest (GESMarkerList *list, GstClockTime position);
 G_GNUC_INTERNAL gchar * ges_marker_list_serialize (const GValue * v);
 G_GNUC_INTERNAL gboolean ges_marker_list_deserialize (GValue *dest, const gchar *s);
 

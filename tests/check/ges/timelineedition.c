@@ -398,7 +398,7 @@ GST_START_TEST (test_snapping)
    *                        30-------+0-------------+
    * inpoints               5  clip  ||  clip2      |-------------+
    *                        +------- 62 -----------122  clip1     |
-   * time                                           +------------132 
+   * time                                           +------------132
    * Check that clip1 snaps with the end of clip2 */
   fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_NORMAL,
           GES_EDGE_NONE, 125) == TRUE);
@@ -1139,6 +1139,142 @@ GST_START_TEST (test_snapping_groups)
 
 GST_END_TEST;
 
+GST_START_TEST (test_marker_snapping)
+{
+  GESTrack *track;
+  GESTimeline *timeline;
+  GESTrackElement *trackelement1, *trackelement2;
+  GESContainer *clip1, *clip2;
+  GESLayer *layer;
+  GList *trackelements;
+  GESMarkerList *marker_list1, *marker_list2;
+
+  ges_init ();
+
+  track = GES_TRACK (ges_video_track_new ());
+  fail_unless (track != NULL);
+
+  timeline = ges_timeline_new ();
+  fail_unless (timeline != NULL);
+
+  fail_unless (ges_timeline_add_track (timeline, track));
+
+  clip1 = GES_CONTAINER (ges_test_clip_new ());
+  clip2 = GES_CONTAINER (ges_test_clip_new ());
+
+  fail_unless (clip1 && clip2);
+
+  /**
+   * Our timeline
+   * ------------
+   *               30
+   * markers  -----|----------------
+   *          |  clip1  ||  clip2  |
+   * time    20 ------- 50 ------ 110
+   *
+   */
+  g_object_set (clip1, "start", (guint64) 20, "duration", (guint64) 30,
+      "in-point", (guint64) 0, NULL);
+  g_object_set (clip2, "start", (guint64) 50, "duration", (guint64) 60,
+      "in-point", (guint64) 0, NULL);
+
+  fail_unless ((layer = ges_timeline_append_layer (timeline)) != NULL);
+  assert_equals_int (ges_layer_get_priority (layer), 0);
+
+  fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip1)));
+  fail_unless ((trackelements = GES_CONTAINER_CHILDREN (clip1)) != NULL);
+  fail_unless ((trackelement1 =
+          GES_TRACK_ELEMENT (trackelements->data)) != NULL);
+  fail_unless (ges_track_element_get_track (trackelement1) == track);
+
+  fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip2)));
+  fail_unless ((trackelements = GES_CONTAINER_CHILDREN (clip2)) != NULL);
+  fail_unless ((trackelement2 =
+          GES_TRACK_ELEMENT (trackelements->data)) != NULL);
+  fail_unless (ges_track_element_get_track (trackelement2) == track);
+
+  marker_list1 = ges_marker_list_new ();
+  g_object_set (marker_list1, "flags", GES_MARKER_FLAG_SNAPPABLE, NULL);
+  ges_marker_list_add (marker_list1, 10);
+  ges_marker_list_add (marker_list1, 20);
+  fail_unless (ges_meta_container_set_marker_list (GES_META_CONTAINER
+          (trackelement1), "ges-test", marker_list1));
+
+  /**
+   * Snapping clip2 to a marker on clip1
+   * ------------
+   *               30 40
+   * markers  -----|--|--
+   *          |  clip1  |
+   * time    20 ------ 50
+   *              -----------
+   *              |  clip2  |
+   *             30 ------ 90
+   */
+  g_object_set (timeline, "snapping-distance", (guint64) 3, NULL);
+  /* Move within 2 units of marker timestamp */
+  fail_unless (ges_container_edit (clip2, NULL, -1, GES_EDIT_MODE_NORMAL,
+          GES_EDGE_NONE, 32) == TRUE);
+  /* Clip nr. 2 should snap to marker at timestamp 30 */
+  DEEP_CHECK (clip1, 20, 0, 30);
+  DEEP_CHECK (clip2, 30, 0, 60);
+
+  /**
+   * Snapping clip1 to a marker on clip2
+   * ------------
+   *                           90
+   * markers                 --|--------
+   *                         |  clip1  |
+   * time                   80 ------ 110
+   * markers      ----------|--
+   *              |   clip2   |
+   *             30 -------- 90
+   */
+  marker_list2 = ges_marker_list_new ();
+  g_object_set (marker_list2, "flags", GES_MARKER_FLAG_SNAPPABLE, NULL);
+  ges_marker_list_add (marker_list2, 40);
+  ges_marker_list_add (marker_list2, 50);
+  fail_unless (ges_meta_container_set_marker_list (GES_META_CONTAINER
+          (trackelement2), "ges-test", marker_list2));
+
+  fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_NORMAL,
+          GES_EDGE_NONE, 77) == TRUE);
+  DEEP_CHECK (clip1, 80, 0, 30);
+  DEEP_CHECK (clip2, 30, 0, 60);
+
+  /**
+   * Checking if clip's own markers are properly ignored when snapping
+   * (moving clip1 close to where one of its markers is)
+   * ------------
+   *                     100     112     122
+   * markers              |     --|-------|--
+   *                old m.pos.  |   clip1   |
+   * time                      102 ------- 132
+   */
+  fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_NORMAL,
+          GES_EDGE_NONE, 102) == TRUE);
+  DEEP_CHECK (clip1, 102, 0, 30);
+  DEEP_CHECK (clip2, 30, 0, 60);
+
+  /**
+   * Checking if non-snappable marker lists are correctly ignored.
+   * (moving clip1 close to clip2's non-snappable marker)
+   */
+  g_object_set (marker_list2, "flags", GES_MARKER_FLAG_NONE, NULL);
+  fail_unless (ges_container_edit (clip1, NULL, -1, GES_EDIT_MODE_NORMAL,
+          GES_EDGE_NONE, 82) == TRUE);
+  DEEP_CHECK (clip1, 82, 0, 30);
+  DEEP_CHECK (clip2, 30, 0, 60);
+
+  g_object_unref (marker_list1);
+  g_object_unref (marker_list2);
+  check_destroyed (G_OBJECT (timeline), G_OBJECT (trackelement1),
+      trackelement2, clip1, clip2, layer, marker_list1, marker_list2, NULL);
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -1153,6 +1289,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_simple_triming);
   tcase_add_test (tc_chain, test_groups);
   tcase_add_test (tc_chain, test_snapping_groups);
+  tcase_add_test (tc_chain, test_marker_snapping);
 
   return s;
 }

@@ -564,6 +564,23 @@ const gchar * ges_edge_name (GESEdge edge);
 GES_API
 GType ges_edge_get_type (void);
 
+#define GES_TYPE_MARKER_FLAGS (ges_marker_flags_get_type ())
+
+GES_API
+GType ges_marker_flags_get_type (void);
+
+/**
+ * GESMarkerFlags:
+ * @GES_MARKER_FLAG_NONE: Marker does not serve any special purpose.
+ * @GES_MARKER_FLAG_SNAPPABLE: Marker can be a snapping target.
+ *
+ * Since: 1.20
+ */
+typedef enum {
+  GES_MARKER_FLAG_NONE = 0,
+  GES_MARKER_FLAG_SNAPPABLE = 1 << 0,
+} GESMarkerFlags;
+
 
 GES_API
 const gchar * ges_track_type_name (GESTrackType type);

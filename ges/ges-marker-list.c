@@ -53,12 +53,12 @@ G_DEFINE_TYPE_WITH_CODE (GESMarker, ges_marker, G_TYPE_OBJECT,
 
 enum
 {
-  PROP_0,
-  PROP_POSITION,
-  PROP_LAST
+  PROP_MARKER_0,
+  PROP_MARKER_POSITION,
+  PROP_MARKER_LAST
 };
 
-static GParamSpec *properties[PROP_LAST];
+static GParamSpec *marker_properties[PROP_MARKER_LAST];
 
 /* GObject Standard vmethods*/
 static void
@@ -68,7 +68,7 @@ ges_marker_get_property (GObject * object, guint property_id,
   GESMarker *marker = GES_MARKER (object);
 
   switch (property_id) {
-    case PROP_POSITION:
+    case PROP_MARKER_POSITION:
       g_value_set_uint64 (value, marker->position);
       break;
     default:
@@ -97,12 +97,12 @@ ges_marker_class_init (GESMarkerClass * klass)
    *
    * Since: 1.18
    */
-  properties[PROP_POSITION] =
+  marker_properties[PROP_MARKER_POSITION] =
       g_param_spec_uint64 ("position", "Position",
       "The position of the marker", 0, G_MAXUINT64,
       GST_CLOCK_TIME_NONE, G_PARAM_READABLE);
-  g_object_class_install_property (object_class, PROP_POSITION,
-      properties[PROP_POSITION]);
+  g_object_class_install_property (object_class, PROP_MARKER_POSITION,
+      marker_properties[PROP_MARKER_POSITION]);
 
 }
 
@@ -119,7 +119,17 @@ struct _GESMarkerList
 
   GSequence *markers;
   GHashTable *markers_iters;
+  GESMarkerFlags flags;
 };
+
+enum
+{
+  PROP_MARKER_LIST_0,
+  PROP_MARKER_LIST_FLAGS,
+  PROP_MARKER_LIST_LAST
+};
+
+static GParamSpec *list_properties[PROP_MARKER_LIST_LAST];
 
 enum
 {
@@ -132,6 +142,37 @@ enum
 static guint ges_marker_list_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE (GESMarkerList, ges_marker_list, G_TYPE_OBJECT);
+
+static void
+ges_marker_list_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GESMarkerList *self = GES_MARKER_LIST (object);
+
+  switch (property_id) {
+    case PROP_MARKER_LIST_FLAGS:
+      g_value_set_flags (value, self->flags);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+}
+
+static void
+ges_marker_list_set_property (GObject * object,
+    guint property_id, const GValue * value, GParamSpec * pspec)
+{
+  GESMarkerList *self = GES_MARKER_LIST (object);
+
+  switch (property_id) {
+    case PROP_MARKER_LIST_FLAGS:
+      self->flags = g_value_get_flags (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  }
+}
 
 static void
 remove_marker (gpointer data)
@@ -165,6 +206,23 @@ ges_marker_list_class_init (GESMarkerListClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->finalize = ges_marker_list_finalize;
+  object_class->get_property = ges_marker_list_get_property;
+  object_class->set_property = ges_marker_list_set_property;
+
+/**
+  * GESMarkerList:flags:
+  *
+  * Flags indicating how markers on the list should be treated.
+  *
+  * Since: 1.20
+  */
+  list_properties[PROP_MARKER_LIST_FLAGS] =
+      g_param_spec_flags ("flags", "Flags",
+      "Functionalities the marker list should be used for",
+      GES_TYPE_MARKER_FLAGS, GES_MARKER_FLAG_NONE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+  g_object_class_install_property (object_class, PROP_MARKER_LIST_FLAGS,
+      list_properties[PROP_MARKER_LIST_FLAGS]);
 
 /**
   * GESMarkerList::marker-added:
@@ -317,7 +375,6 @@ done:
   return ret;
 }
 
-
 /**
  * ges_marker_list_get_markers:
  *
@@ -347,6 +404,52 @@ ges_marker_list_get_markers (GESMarkerList * self)
   return ret;
 }
 
+/*
+ * ges_marker_list_get_closest:
+ * @position: The position which we want to find the closest marker to
+ *
+ * Returns: (transfer full): The marker found to be the closest
+ * to the given position. If two markers are at equal distance from position,
+ * the "earlier" one will be returned.
+ */
+GESMarker *
+ges_marker_list_get_closest (GESMarkerList * self, GstClockTime position)
+{
+  GESMarker *new_marker, *ret = NULL;
+  GstClockTime distance_next, distance_prev;
+  GSequenceIter *iter;
+
+  if (g_sequence_is_empty (self->markers))
+    goto done;
+
+  new_marker = (GESMarker *) g_object_new (GES_TYPE_MARKER, NULL);
+  new_marker->position = position;
+  iter = g_sequence_search (self->markers, new_marker, cmp_marker, NULL);
+  g_object_unref (new_marker);
+
+  if (g_sequence_iter_is_begin (iter)) {
+    /* We know the sequence isn't empty, this is safe */
+    ret = g_sequence_get (iter);
+  } else if (g_sequence_iter_is_end (iter)) {
+    /* We know the sequence isn't empty, this is safe */
+    ret = g_sequence_get (g_sequence_iter_prev (iter));
+  } else {
+    GESMarker *next_marker, *prev_marker;
+
+    prev_marker = g_sequence_get (g_sequence_iter_prev (iter));
+    next_marker = g_sequence_get (iter);
+
+    distance_next = next_marker->position - position;
+    distance_prev = position - prev_marker->position;
+
+    ret = distance_prev <= distance_next ? prev_marker : next_marker;
+  }
+
+done:
+  if (ret)
+    return g_object_ref (ret);
+  return NULL;
+}
 
 /**
  * ges_marker_list_move:
