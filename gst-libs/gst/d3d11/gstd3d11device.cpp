@@ -95,7 +95,7 @@ enum
 #define DEFAULT_ADAPTER 0
 #define DEFAULT_CREATE_FLAGS 0
 
-#define GST_D3D11_N_FORMATS 18
+#define GST_D3D11_N_FORMATS 29
 
 struct _GstD3D11DevicePrivate
 {
@@ -627,6 +627,18 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
     priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
   n_formats++;
 
+  /* P012 is identical to P016 from runtime point of view */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_P012_LE;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16G16_UNORM;
+  if (can_support_format (self, DXGI_FORMAT_P016,
+          D3D11_FORMAT_SUPPORT_RENDER_TARGET |
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE))
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_P016;
+  else
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
+  n_formats++;
+
   priv->format_table[n_formats].format = GST_VIDEO_FORMAT_P016_LE;
   priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
   priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16G16_UNORM;
@@ -655,6 +667,69 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
   priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
   priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16_UNORM;
   priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R16_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_I420_12LE;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R16_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_Y42B;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R8_UNORM;
+  priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R8_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_I422_10LE;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R16_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_I422_12LE;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R16_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_Y444;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R8_UNORM;
+  priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R8_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_Y444_10LE;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R16_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_Y444_12LE;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R16_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_Y444_16LE;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R16_UNORM;
+  n_formats++;
+
+  /* GRAY */
+  /* NOTE: To support conversion by using video processor,
+   * mark DXGI_FORMAT_{R8,R16}_UNORM formats as known dxgi_format.
+   * Otherwise, d3d11 elements will not try to use video processor for
+   * those formats */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_GRAY8;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8_UNORM;
+  priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_R8_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_GRAY16_LE;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_R16_UNORM;
   n_formats++;
 
   g_assert (n_formats == GST_D3D11_N_FORMATS);

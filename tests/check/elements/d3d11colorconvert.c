@@ -45,6 +45,24 @@ typedef struct _TestFrame
 static const guint8 rgba_reorder_data[] = { 0x49, 0x24, 0x72, 0xff };
 static const guint8 bgra_reorder_data[] = { 0x72, 0x24, 0x49, 0xff };
 
+static const gchar *YUV_FORMATS[] = {
+  "VUYA", "NV12", "P010_10LE", "P012_LE", "P016_LE", "I420", "I420_10LE",
+  "I420_12LE", "YV12", "NV21", "Y444", "Y444_10LE", "Y444_12LE", "Y444_16LE",
+  "Y42B", "I422_10LE", "I422_12LE",
+};
+
+static const gchar *RGB_FORMATS[] = {
+  "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
+};
+
+static const gchar *PACKED_YUV_FORMATS[] = {
+  "YUY2", "UYVY", "VYUY", "Y210", "Y410",
+};
+
+static const gchar *GRAY_FORMATS[] = {
+  "GRAY8", "GRAY16_LE"
+};
+
 static TestFrame test_rgba_reorder[] = {
   {1, 1, GST_VIDEO_FORMAT_RGBA, {(guint8 *) & rgba_reorder_data}},
   {1, 1, GST_VIDEO_FORMAT_BGRA, {(guint8 *) & bgra_reorder_data}},
@@ -102,7 +120,6 @@ GST_START_TEST (test_d3d11_color_convert_rgba_reorder)
 
 GST_END_TEST;
 
-#if RUN_VISUAL_TEST
 static gboolean
 bus_cb (GstBus * bus, GstMessage * message, gpointer data)
 {
@@ -162,19 +179,15 @@ run_convert_pipelne (const gchar * in_format, const gchar * out_format)
 
 GST_START_TEST (test_d3d11_color_convert_yuv_yuv)
 {
-  const gchar *format_list[] = {
-    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE", "YV12", "NV21"
-  };
-
   gint i, j;
 
-  for (i = 0; i < G_N_ELEMENTS (format_list); i++) {
-    for (j = 0; j < G_N_ELEMENTS (format_list); j++) {
+  for (i = 0; i < G_N_ELEMENTS (YUV_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (YUV_FORMATS); j++) {
       if (i == j)
         continue;
 
-      GST_DEBUG ("run conversion %s to %s", format_list[i], format_list[j]);
-      run_convert_pipelne (format_list[i], format_list[j]);
+      GST_DEBUG ("run conversion %s to %s", YUV_FORMATS[i], YUV_FORMATS[j]);
+      run_convert_pipelne (YUV_FORMATS[i], YUV_FORMATS[j]);
     }
   }
 }
@@ -183,24 +196,32 @@ GST_END_TEST;
 
 GST_START_TEST (test_d3d11_color_convert_yuv_rgb)
 {
-  const gchar *in_format_list[] = {
-    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE", "YV12", "NV21"
-  };
-  const gchar *out_format_list[] = {
-    "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
-  };
-
-
   gint i, j;
 
-  for (i = 0; i < G_N_ELEMENTS (in_format_list); i++) {
-    for (j = 0; j < G_N_ELEMENTS (out_format_list); j++) {
+  for (i = 0; i < G_N_ELEMENTS (YUV_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (RGB_FORMATS); j++) {
       if (i == j)
         continue;
 
-      GST_DEBUG ("run conversion %s to %s", in_format_list[i],
-          out_format_list[j]);
-      run_convert_pipelne (in_format_list[i], out_format_list[j]);
+      GST_DEBUG ("run conversion %s to %s", YUV_FORMATS[i], RGB_FORMATS[j]);
+      run_convert_pipelne (YUV_FORMATS[i], RGB_FORMATS[j]);
+    }
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_d3d11_color_convert_yuv_gray)
+{
+  gint i, j;
+
+  for (i = 0; i < G_N_ELEMENTS (YUV_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (GRAY_FORMATS); j++) {
+      if (i == j)
+        continue;
+
+      GST_DEBUG ("run conversion %s to %s", YUV_FORMATS[i], GRAY_FORMATS[j]);
+      run_convert_pipelne (YUV_FORMATS[i], GRAY_FORMATS[j]);
     }
   }
 }
@@ -209,20 +230,12 @@ GST_END_TEST;
 
 GST_START_TEST (test_d3d11_color_convert_rgb_yuv)
 {
-  const gchar *in_format_list[] = {
-    "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
-  };
-  const gchar *out_format_list[] = {
-    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE", "YV12", "NV21"
-  };
-
   gint i, j;
 
-  for (i = 0; i < G_N_ELEMENTS (in_format_list); i++) {
-    for (j = 0; j < G_N_ELEMENTS (out_format_list); j++) {
-      GST_DEBUG ("run conversion %s to %s", in_format_list[i],
-          out_format_list[j]);
-      run_convert_pipelne (in_format_list[i], out_format_list[j]);
+  for (i = 0; i < G_N_ELEMENTS (RGB_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (YUV_FORMATS); j++) {
+      GST_DEBUG ("run conversion %s to %s", RGB_FORMATS[i], YUV_FORMATS[j]);
+      run_convert_pipelne (RGB_FORMATS[i], YUV_FORMATS[j]);
     }
   }
 }
@@ -231,19 +244,29 @@ GST_END_TEST;
 
 GST_START_TEST (test_d3d11_color_convert_rgb_rgb)
 {
-  const gchar *format_list[] = {
-    "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
-  };
-
   gint i, j;
 
-  for (i = 0; i < G_N_ELEMENTS (format_list); i++) {
-    for (j = 0; j < G_N_ELEMENTS (format_list); j++) {
+  for (i = 0; i < G_N_ELEMENTS (RGB_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (RGB_FORMATS); j++) {
       if (i == j)
         continue;
 
-      GST_DEBUG ("run conversion %s to %s", format_list[i], format_list[j]);
-      run_convert_pipelne (format_list[i], format_list[j]);
+      GST_DEBUG ("run conversion %s to %s", RGB_FORMATS[i], RGB_FORMATS[j]);
+      run_convert_pipelne (RGB_FORMATS[i], RGB_FORMATS[j]);
+    }
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_d3d11_color_convert_rgb_gray)
+{
+  gint i, j;
+
+  for (i = 0; i < G_N_ELEMENTS (RGB_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (GRAY_FORMATS); j++) {
+      GST_DEBUG ("run conversion %s to %s", RGB_FORMATS[i], GRAY_FORMATS[j]);
+      run_convert_pipelne (RGB_FORMATS[i], GRAY_FORMATS[j]);
     }
   }
 }
@@ -252,20 +275,13 @@ GST_END_TEST;
 
 GST_START_TEST (test_d3d11_color_convert_packed_yuv_yuv)
 {
-  const gchar *in_format_list[] = {
-    "YUY2", "UYVY", "VYUY", "Y210", "Y410",
-  };
-  const gchar *out_format_list[] = {
-    "VUYA", "NV12", "P010_10LE", "P016_LE", "I420", "I420_10LE", "YV12", "NV21"
-  };
-
   gint i, j;
 
-  for (i = 0; i < G_N_ELEMENTS (in_format_list); i++) {
-    for (j = 0; j < G_N_ELEMENTS (out_format_list); j++) {
-      GST_DEBUG ("run conversion %s to %s", in_format_list[i],
-          out_format_list[j]);
-      run_convert_pipelne (in_format_list[i], out_format_list[j]);
+  for (i = 0; i < G_N_ELEMENTS (PACKED_YUV_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (YUV_FORMATS); j++) {
+      GST_DEBUG ("run conversion %s to %s", PACKED_YUV_FORMATS[i],
+          YUV_FORMATS[j]);
+      run_convert_pipelne (PACKED_YUV_FORMATS[i], YUV_FORMATS[j]);
     }
   }
 }
@@ -274,43 +290,84 @@ GST_END_TEST;
 
 GST_START_TEST (test_d3d11_color_convert_packed_yuv_rgb)
 {
-  const gchar *in_format_list[] = {
-    "YUY2", "UYVY", "VYUY", "Y210", "Y410",
-  };
-  const gchar *out_format_list[] = {
-    "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
-  };
-
   gint i, j;
 
-  for (i = 0; i < G_N_ELEMENTS (in_format_list); i++) {
-    for (j = 0; j < G_N_ELEMENTS (out_format_list); j++) {
-      GST_DEBUG ("run conversion %s to %s", in_format_list[i],
-          out_format_list[j]);
-      run_convert_pipelne (in_format_list[i], out_format_list[j]);
+  for (i = 0; i < G_N_ELEMENTS (PACKED_YUV_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (RGB_FORMATS); j++) {
+      GST_DEBUG ("run conversion %s to %s", PACKED_YUV_FORMATS[i],
+          RGB_FORMATS[j]);
+      run_convert_pipelne (PACKED_YUV_FORMATS[i], RGB_FORMATS[j]);
     }
   }
 }
 
 GST_END_TEST;
-#endif /* RUN_VISUAL_TEST */
+
+GST_START_TEST (test_d3d11_color_convert_packed_yuv_gray)
+{
+  gint i, j;
+
+  for (i = 0; i < G_N_ELEMENTS (PACKED_YUV_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (GRAY_FORMATS); j++) {
+      GST_DEBUG ("run conversion %s to %s", PACKED_YUV_FORMATS[i],
+          GRAY_FORMATS[j]);
+      run_convert_pipelne (PACKED_YUV_FORMATS[i], GRAY_FORMATS[j]);
+    }
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_d3d11_color_convert_gray_yuv)
+{
+  gint i, j;
+
+  for (i = 0; i < G_N_ELEMENTS (GRAY_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (YUV_FORMATS); j++) {
+      GST_DEBUG ("run conversion %s to %s", GRAY_FORMATS[i], YUV_FORMATS[j]);
+      run_convert_pipelne (GRAY_FORMATS[i], YUV_FORMATS[j]);
+    }
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_d3d11_color_convert_gray_rgb)
+{
+  gint i, j;
+
+  for (i = 0; i < G_N_ELEMENTS (GRAY_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (RGB_FORMATS); j++) {
+      GST_DEBUG ("run conversion %s to %s", GRAY_FORMATS[i], RGB_FORMATS[j]);
+      run_convert_pipelne (GRAY_FORMATS[i], RGB_FORMATS[j]);
+    }
+  }
+}
+
+GST_END_TEST;
 
 static Suite *
 d3d11colorconvert_suite (void)
 {
   Suite *s = suite_create ("d3d11colorconvert");
   TCase *tc_basic = tcase_create ("general");
+  const gchar *run_visual_test = g_getenv ("RUN_VISUAL_TEST");
 
   suite_add_tcase (s, tc_basic);
   tcase_add_test (tc_basic, test_d3d11_color_convert_rgba_reorder);
-#if RUN_VISUAL_TEST
-  tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_yuv);
-  tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_rgb);
-  tcase_add_test (tc_basic, test_d3d11_color_convert_rgb_yuv);
-  tcase_add_test (tc_basic, test_d3d11_color_convert_rgb_rgb);
-  tcase_add_test (tc_basic, test_d3d11_color_convert_packed_yuv_yuv);
-  tcase_add_test (tc_basic, test_d3d11_color_convert_packed_yuv_rgb);
-#endif
+  if (run_visual_test != NULL) {
+    tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_yuv);
+    tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_rgb);
+    tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_gray);
+    tcase_add_test (tc_basic, test_d3d11_color_convert_rgb_yuv);
+    tcase_add_test (tc_basic, test_d3d11_color_convert_rgb_rgb);
+    tcase_add_test (tc_basic, test_d3d11_color_convert_rgb_gray);
+    tcase_add_test (tc_basic, test_d3d11_color_convert_packed_yuv_yuv);
+    tcase_add_test (tc_basic, test_d3d11_color_convert_packed_yuv_rgb);
+    tcase_add_test (tc_basic, test_d3d11_color_convert_packed_yuv_gray);
+    tcase_add_test (tc_basic, test_d3d11_color_convert_gray_yuv);
+    tcase_add_test (tc_basic, test_d3d11_color_convert_gray_rgb);
+  }
 
   return s;
 }

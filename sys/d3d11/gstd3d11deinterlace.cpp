@@ -2368,6 +2368,14 @@ gst_d3d11_deinterlace_register (GstPlugin * plugin, GstD3D11Device * device,
       g_value_init (supported_formats, GST_TYPE_LIST);
     }
 
+    if (formats_to_check[i] == DXGI_FORMAT_P016) {
+      /* This is used for P012 as well */
+      g_value_init (&val, G_TYPE_STRING);
+      g_value_set_static_string (&val,
+          gst_video_format_to_string (GST_VIDEO_FORMAT_P012_LE));
+      gst_value_list_append_and_take_value (supported_formats, &val);
+    }
+
     g_value_init (&val, G_TYPE_STRING);
     g_value_set_static_string (&val, gst_video_format_to_string (format));
     gst_value_list_append_and_take_value (supported_formats, &val);
