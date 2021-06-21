@@ -2348,6 +2348,7 @@ eos:
     gst_element_post_message (GST_ELEMENT_CAST (sink),
         gst_message_new_eos (GST_OBJECT_CAST (sink)));
     GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
+    return;
   }
 flushing:
   {
