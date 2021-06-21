@@ -116,7 +116,7 @@ mxf_vanc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     return GST_FLOW_ERROR;
   }
 
-  if (gst_buffer_get_size (buffer) < 18) {
+  if (gst_buffer_get_size (buffer) < 2) {
     GST_ERROR ("Invalid VANC essence element size");
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
@@ -126,6 +126,24 @@ mxf_vanc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   gst_byte_reader_init (&reader, map.data, map.size);
 
   num_packets = gst_byte_reader_get_uint16_be_unchecked (&reader);
+  if (num_packets == 0) {
+    /* SMPTE 436-1:2013 5.5 The Number of VI Lines or ANC Packets Property
+     *
+     * One of the properties in the VI Element is the “Number of Lines” which is
+     * the number of the VI lines contained in this VI Element. This number can
+     * be zero if the current VI Element does not have any VI lines in the
+     * payload space. This capability can be used so every Content Package in a
+     * file can have a VI Element even if the video stream does not have VI
+     * lines with every frame (or field.)
+     *
+     * The same scheme can be used for ANC packets.
+     */
+
+    *outbuf = gst_buffer_new ();
+    GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_GAP);
+    ret = GST_FLOW_OK;
+    goto out;
+  }
   for (i = 0; i < num_packets; i++) {
     G_GNUC_UNUSED guint16 line_num;
     G_GNUC_UNUSED guint8 wrapping_type;
