@@ -305,10 +305,10 @@ impl App {
         let reply = match reply {
             Ok(Some(reply)) => reply,
             Ok(None) => {
-                bail!("Offer creation future got no reponse");
+                bail!("Offer creation future got no response");
             }
             Err(err) => {
-                bail!("Offer creation future got error reponse: {:?}", err);
+                bail!("Offer creation future got error response: {:?}", err);
             }
         };
 
@@ -351,10 +351,10 @@ impl App {
         let reply = match reply {
             Ok(Some(reply)) => reply,
             Ok(None) => {
-                bail!("Answer creation future got no reponse");
+                bail!("Answer creation future got no response");
             }
             Err(err) => {
-                bail!("Answer creation future got error reponse: {:?}", err);
+                bail!("Answer creation future got error response: {:?}", err);
             }
         };
 
