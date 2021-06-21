@@ -2689,15 +2689,12 @@ qtdemux_update_default_sample_cenc_settings (GstQTDemux * qtdemux,
     guint crypt_byte_block, guint skip_byte_block, guint8 constant_iv_size,
     const guint8 * constant_iv)
 {
-  const gchar *protection_scheme_type_mime =
-      protection_scheme_type ==
-      FOURCC_cbcs ? "application/x-cbcs" : "application/x-cenc";
   GstBuffer *kid_buf = gst_buffer_new_allocate (NULL, 16, NULL);
   gst_buffer_fill (kid_buf, 0, kid, 16);
   if (info->default_properties)
     gst_structure_free (info->default_properties);
   info->default_properties =
-      gst_structure_new (protection_scheme_type_mime,
+      gst_structure_new ("application/x-cenc",
       "iv_size", G_TYPE_UINT, iv_size,
       "encrypted", G_TYPE_BOOLEAN, (is_encrypted == 1),
       "kid", GST_TYPE_BUFFER, kid_buf, NULL);
@@ -2719,6 +2716,11 @@ qtdemux_update_default_sample_cenc_settings (GstQTDemux * qtdemux,
           NULL);
       gst_buffer_unref (constant_iv_buf);
     }
+    gst_structure_set (info->default_properties, "cipher-mode",
+        G_TYPE_STRING, "cbcs", NULL);
+  } else {
+    gst_structure_set (info->default_properties, "cipher-mode",
+        G_TYPE_STRING, "cenc", NULL);
   }
 }
 
@@ -3768,7 +3770,7 @@ qtdemux_gst_structure_free (GstStructure * gststructure)
 }
 
 /* Parses auxiliary information relating to samples protected using
- * Common Encryption (cenc and cbcs); the format of this information
+ * Common Encryption (cenc); the format of this information
  * is defined in ISO/IEC 23001-7. Returns TRUE if successful; FALSE
  * otherwise. */
 static gboolean
@@ -8394,13 +8396,13 @@ gst_qtdemux_configure_protected_caps (GstQTDemux * qtdemux,
   }
 
   s = gst_caps_get_structure (CUR_STREAM (stream)->caps, 0);
-  if (!gst_structure_has_name (s, "application/x-cenc")
-      && !gst_structure_has_name (s, "application/x-cbcs")) {
+  if (!gst_structure_has_name (s, "application/x-cenc")) {
     gst_structure_set (s,
         "original-media-type", G_TYPE_STRING, gst_structure_get_name (s), NULL);
-    gst_structure_set_name (s,
-        stream->protection_scheme_type ==
-        FOURCC_cbcs ? "application/x-cbcs" : "application/x-cenc");
+    gst_structure_set (s, "cipher-mode", G_TYPE_STRING,
+        (stream->protection_scheme_type == FOURCC_cbcs) ? "cbcs" : "cenc",
+        NULL);
+    gst_structure_set_name (s, "application/x-cenc");
   }
 
   if (qtdemux->protection_system_ids == NULL) {
