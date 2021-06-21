@@ -757,6 +757,13 @@ gst_mf_h265_enc_set_src_caps (GstMFVideoEnc * mfenc,
   gst_structure_set (s, "stream-format", G_TYPE_STRING, "byte-stream",
       "alignment", G_TYPE_STRING, "au", NULL);
 
+  if (GST_VIDEO_INFO_FORMAT (&mfenc->input_state->info) ==
+      GST_VIDEO_FORMAT_P010_10LE) {
+    gst_structure_set (s, "profile", G_TYPE_STRING, "main-10", NULL);
+  } else {
+    gst_structure_set (s, "profile", G_TYPE_STRING, "main", NULL);
+  }
+
   out_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self),
       out_caps, state);
 

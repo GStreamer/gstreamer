@@ -216,6 +216,7 @@ typedef struct _GstMFH264Enc
   guint qp_p;
   guint qp_b;
   guint max_num_ref;
+  gchar *profile_str;
 } GstMFH264Enc;
 
 typedef struct _GstMFH264EncClass
@@ -225,6 +226,7 @@ typedef struct _GstMFH264EncClass
 
 static GstElementClass *parent_class = NULL;
 
+static void gst_mf_h264_enc_finalize (GObject * object);
 static void gst_mf_h264_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_mf_h264_enc_set_property (GObject * object, guint prop_id,
@@ -247,6 +249,7 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
 
   parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
 
+  gobject_class->finalize = gst_mf_h264_enc_finalize;
   gobject_class->get_property = gst_mf_h264_enc_get_property;
   gobject_class->set_property = gst_mf_h264_enc_set_property;
 
@@ -538,6 +541,16 @@ gst_mf_h264_enc_init (GstMFH264Enc * self)
 }
 
 static void
+gst_mf_h264_enc_finalize (GObject * object)
+{
+  GstMFH264Enc *self = (GstMFH264Enc *) (object);
+
+  g_free (self->profile_str);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_mf_h264_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
@@ -761,9 +774,12 @@ gst_mf_h264_enc_set_option (GstMFVideoEnc * mfenc, GstVideoCodecState * state,
   GstMFVideoEncDeviceCaps *device_caps = &klass->device_caps;
   HRESULT hr;
   GstCaps *allowed_caps, *template_caps;
-  guint selected_profile = eAVEncH264VProfile_Main;
+  eAVEncH264VProfile selected_profile = eAVEncH264VProfile_Main;
   gint level_idc = -1;
   GstMFTransform *transform = mfenc->transform;
+
+  g_free (self->profile_str);
+  self->profile_str = g_strdup ("main");
 
   template_caps =
       gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (self));
@@ -788,12 +804,21 @@ gst_mf_h264_enc_set_option (GstMFVideoEnc * mfenc, GstVideoCodecState * state,
 
     profile = gst_structure_get_string (s, "profile");
     if (profile) {
-      if (!strcmp (profile, "baseline")) {
+      /* Although we are setting eAVEncH264VProfile_Base, actual profile
+       * chosen by MFT seems to be constrained-baseline */
+      if (strcmp (profile, "baseline") == 0 ||
+          strcmp (profile, "constrained-baseline") == 0) {
         selected_profile = eAVEncH264VProfile_Base;
+        g_free (self->profile_str);
+        self->profile_str = g_strdup (profile);
       } else if (g_str_has_prefix (profile, "high")) {
         selected_profile = eAVEncH264VProfile_High;
+        g_free (self->profile_str);
+        self->profile_str = g_strdup (profile);
       } else if (g_str_has_prefix (profile, "main")) {
         selected_profile = eAVEncH264VProfile_Main;
+        g_free (self->profile_str);
+        self->profile_str = g_strdup (profile);
       }
     }
 
@@ -992,7 +1017,8 @@ gst_mf_h264_enc_set_src_caps (GstMFVideoEnc * mfenc,
   s = gst_caps_get_structure (out_caps, 0);
 
   gst_structure_set (s, "stream-format", G_TYPE_STRING, "byte-stream",
-      "alignment", G_TYPE_STRING, "au", NULL);
+      "alignment", G_TYPE_STRING, "au", "profile",
+      G_TYPE_STRING, self->profile_str, NULL);
 
   out_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self),
       out_caps, state);

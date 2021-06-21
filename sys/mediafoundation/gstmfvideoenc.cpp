@@ -1535,6 +1535,13 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID &subtype,
         g_value_init (profiles, GST_TYPE_LIST);
       }
 
+      /* Add "constrained-baseline" in addition to "baseline" */
+      if (profile_str == "baseline") {
+        g_value_init (&profile_val, G_TYPE_STRING);
+        g_value_set_static_string (&profile_val, "constrained-baseline");
+        gst_value_list_append_and_take_value (profiles, &profile_val);
+      }
+
       g_value_init (&profile_val, G_TYPE_STRING);
       g_value_set_static_string (&profile_val, profile_str);
       gst_value_list_append_and_take_value (profiles, &profile_val);
