@@ -4074,6 +4074,7 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
   GstHarness *sink_harness = NULL;
   guint i;
   GstElement *rtpbin2;
+  GstBuffer *buf;
 
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
@@ -4107,6 +4108,13 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
   }
   g_mutex_unlock (&t->lock);
   fail_unless (sink_harness->element == t->webrtc2);
+
+  /* Get one buffer out, this makes sure the capsfilter is primed and
+   * avoids races.
+   */
+  buf = gst_harness_pull (sink_harness);
+  fail_unless (buf != NULL);
+  gst_buffer_unref (buf);
 
   gst_harness_set_sink_caps_str (sink_harness, OPUS_RTP_CAPS (100));
 
