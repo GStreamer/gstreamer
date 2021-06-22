@@ -920,7 +920,6 @@ static gboolean
 theora_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstTheoraDec *dec = GST_THEORA_DEC (decoder);
-  GstVideoCodecState *state;
   GstBufferPool *pool;
   guint size, min, max;
   GstStructure *config;
@@ -928,8 +927,6 @@ theora_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
           query))
     return FALSE;
-
-  state = gst_video_decoder_get_output_state (decoder);
 
   gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
@@ -965,7 +962,6 @@ theora_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
 
   gst_object_unref (pool);
-  gst_video_codec_state_unref (state);
 
   return TRUE;
 }
