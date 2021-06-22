@@ -393,8 +393,8 @@ was_added:
  *
  * Get the list of paths for the given registry.
  *
- * Returns: (transfer container) (element-type char*): A #GList of paths as
- *     strings. g_list_free after use.
+ * Returns: (transfer container) (element-type filename): A #GList of
+ *     paths as strings. g_list_free after use.
  *
  * MT safe.
  */

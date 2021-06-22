@@ -1054,7 +1054,7 @@ no_presets:
  *
  * Get a copy of preset names as a %NULL terminated string array.
  *
- * Returns: (transfer full) (array zero-terminated=1) (element-type gchar*):
+ * Returns: (transfer full) (array zero-terminated=1) (element-type utf8):
  *     list with names, use g_strfreev() after usage.
  */
 gchar **
@@ -1071,7 +1071,7 @@ gst_preset_get_preset_names (GstPreset * preset)
  *
  * Get a the names of the GObject properties that can be used for presets.
  *
- * Returns: (transfer full) (array zero-terminated=1) (element-type gchar*): an
+ * Returns: (transfer full) (array zero-terminated=1) (element-type utf8): an
  *   array of property names which should be freed with g_strfreev() after use.
  */
 gchar **
