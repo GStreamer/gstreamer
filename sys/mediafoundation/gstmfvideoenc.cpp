@@ -27,6 +27,7 @@
 #include <wrl.h>
 #include "gstmfvideobuffer.h"
 #include <string.h>
+#include <cmath>
 
 #if GST_MF_HAVE_D3D11
 #include <d3d10.h>
@@ -50,6 +51,7 @@ static void gst_mf_video_enc_set_context (GstElement * element,
     GstContext * context);
 static gboolean gst_mf_video_enc_open (GstVideoEncoder * enc);
 static gboolean gst_mf_video_enc_close (GstVideoEncoder * enc);
+static gboolean gst_mf_video_enc_start (GstVideoEncoder * enc);
 static gboolean gst_mf_video_enc_set_format (GstVideoEncoder * enc,
     GstVideoCodecState * state);
 static GstFlowReturn gst_mf_video_enc_handle_frame (GstVideoEncoder * enc,
@@ -79,6 +81,7 @@ gst_mf_video_enc_class_init (GstMFVideoEncClass * klass)
 
   videoenc_class->open = GST_DEBUG_FUNCPTR (gst_mf_video_enc_open);
   videoenc_class->close = GST_DEBUG_FUNCPTR (gst_mf_video_enc_close);
+  videoenc_class->start = GST_DEBUG_FUNCPTR (gst_mf_video_enc_start);
   videoenc_class->set_format = GST_DEBUG_FUNCPTR (gst_mf_video_enc_set_format);
   videoenc_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_mf_video_enc_handle_frame);
@@ -268,6 +271,16 @@ gst_mf_video_enc_close (GstVideoEncoder * enc)
 }
 
 static gboolean
+gst_mf_video_enc_start (GstVideoEncoder * enc)
+{
+  /* Media Foundation Transform will shift PTS in case that B-frame is enabled.
+   * We need to adjust DTS correspondingly */
+  gst_video_encoder_set_min_pts (enc, GST_SECOND * 60 * 60 * 1000);
+
+  return TRUE;
+}
+
+static gboolean
 gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 {
   GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
@@ -283,6 +296,10 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   GST_DEBUG_OBJECT (self, "Set format");
 
   gst_mf_video_enc_finish (enc);
+
+  self->mf_pts_offset = 0;
+  self->has_reorder_frame = FALSE;
+  self->last_ret = GST_FLOW_OK;
 
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
@@ -620,7 +637,7 @@ gst_mf_video_enc_frame_needs_copy (GstVideoFrame * vframe)
 
 typedef struct
 {
-  GstClockTime mf_pts;
+  LONGLONG mf_pts;
 } GstMFVideoEncFrameData;
 
 static gboolean
@@ -684,47 +701,46 @@ gst_mf_video_enc_process_input (GstMFVideoEnc * self,
 }
 
 static GstVideoCodecFrame *
-gst_mf_video_enc_find_output_frame (GstMFVideoEnc * self, UINT64 mf_dts,
-    UINT64 mf_pts)
+gst_mf_video_enc_find_output_frame (GstMFVideoEnc * self, LONGLONG mf_pts)
 {
   GList *l, *walk = gst_video_encoder_get_frames (GST_VIDEO_ENCODER (self));
   GstVideoCodecFrame *ret = NULL;
+  GstVideoCodecFrame *closest = NULL;
+  LONGLONG min_pts_abs_diff = 0;
 
   for (l = walk; l; l = l->next) {
     GstVideoCodecFrame *frame = (GstVideoCodecFrame *) l->data;
     GstMFVideoEncFrameData *data = (GstMFVideoEncFrameData *)
         gst_video_codec_frame_get_user_data (frame);
+    LONGLONG abs_diff;
 
     if (!data)
       continue;
 
-    if (mf_dts == data->mf_pts) {
+    if (mf_pts == data->mf_pts) {
       ret = frame;
       break;
     }
-  }
 
-  /* find target with pts */
-  if (!ret) {
-    for (l = walk; l; l = l->next) {
-      GstVideoCodecFrame *frame = (GstVideoCodecFrame *) l->data;
-      GstMFVideoEncFrameData *data = (GstMFVideoEncFrameData *)
-          gst_video_codec_frame_get_user_data (frame);
+    abs_diff = std::abs (mf_pts - data->mf_pts);
 
-      if (!data)
-        continue;
-
-      if (mf_pts == data->mf_pts) {
-        ret = frame;
-        break;
-      }
+    if (!closest || abs_diff < min_pts_abs_diff) {
+      closest = frame;
+      min_pts_abs_diff = abs_diff;
     }
   }
+
+  if (!ret && closest)
+    ret = closest;
 
   if (ret) {
     gst_video_codec_frame_ref (ret);
   } else {
-    /* just return the oldest one */
+    /* XXX: Shouldn't happen, but possible if no GstVideoCodecFrame holds
+     * user data for some reasons */
+    GST_WARNING_OBJECT (self,
+        "Failed to find closest GstVideoCodecFrame with MF pts %"
+        G_GINT64_FORMAT, mf_pts);
     ret = gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (self));
   }
 
@@ -745,9 +761,11 @@ gst_mf_video_enc_finish_sample (GstMFVideoEnc * self, IMFSample * sample)
   GstVideoCodecFrame *frame;
   LONGLONG sample_timestamp;
   LONGLONG sample_duration;
+  LONGLONG target_mf_pts;
+  UINT64 mf_dts;
   UINT32 keyframe = FALSE;
-  UINT64 mf_dts = GST_CLOCK_TIME_NONE;
   DWORD buffer_len;
+  GstClockTime pts, dts, duration;
 
   hr = sample->GetBufferByIndex (0, media_buffer.GetAddressOf ());
   if (!gst_mf_result (hr))
@@ -762,6 +780,7 @@ gst_mf_video_enc_finish_sample (GstMFVideoEnc * self, IMFSample * sample)
   media_buffer->Unlock ();
 
   sample->GetSampleTime (&sample_timestamp);
+  target_mf_pts = sample_timestamp;
   sample->GetSampleDuration (&sample_duration);
   sample->GetUINT32 (MFSampleExtension_CleanPoint, &keyframe);
 
@@ -771,29 +790,105 @@ gst_mf_video_enc_finish_sample (GstMFVideoEnc * self, IMFSample * sample)
     hr = S_OK;
   }
 
-  frame = gst_mf_video_enc_find_output_frame (self,
-      mf_dts, (UINT64) sample_timestamp);
+  pts = sample_timestamp * 100;
+  dts = mf_dts * 100;
+  duration = sample_duration * 100;
+
+  GST_LOG_OBJECT (self, "Finish sample, MF pts %" GST_TIME_FORMAT " MF dts %"
+      GST_TIME_FORMAT ", MF duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (pts), GST_TIME_ARGS (dts), GST_TIME_ARGS (duration));
+
+  /* NOTE: When B-frame is enabled, MFT shows following pattern
+   * (input timestamp starts from 1000:00:00.000000000, and 30fps)
+   *
+   * Frame-1: MF pts 0:00.033333300 MF dts 0:00.000000000
+   * Frame-2: MF pts 0:00.133333300 MF dts 0:00.033333300
+   * Frame-3: MF pts 0:00.066666600 MF dts 0:00.066666600
+   * Frame-4: MF pts 0:00.099999900 MF dts 0:00.100000000
+   *
+   * - Sounds MFT doesn't support negative timestamp, so PTS of each frame seems
+   *   to be shifthed
+   * - DTS is likely based on timestamp we've set to input sample,
+   *   but some frames has (especially Frame-4 case) unexpected PTS and
+   *   even PTS < DTS. That would be the result of PTS shifting
+   *
+   * To handle this case,
+   * - Calculate timestamp offset "Frame-1 PTS" - "Frame-1 DTS" (== duration),
+   *   and compensate PTS/DTS of each frame
+   * - Needs additional offset for DTS to compenstate GST/MF timescale difference
+   *   (MF uses 100ns timescale). So DTS offset should be "PTS offset + 100ns"
+   * - Find corresponding GstVideoCodecFrame by using compensated PTS.
+   *   Note that MFT doesn't support user-data for tracing input/output sample
+   *   pair. So, timestamp based lookup is the only way to map MF sample
+   *   and our GstVideoCodecFrame
+   */
+  if (self->has_reorder_frame) {
+    /* This would be the first frame */
+    if (self->mf_pts_offset == 0) {
+      LONGLONG mf_pts_offset = -1;
+      if (sample_timestamp > mf_dts) {
+        mf_pts_offset = sample_timestamp - mf_dts;
+        GST_DEBUG_OBJECT (self, "Calculates PTS offset using \"PTS - DTS\": %"
+            G_GINT64_FORMAT, mf_pts_offset);
+      } else if (sample_duration > 0) {
+        mf_pts_offset = sample_duration;
+        GST_DEBUG_OBJECT (self, "Calculates PTS offset using duration: %"
+            G_GINT64_FORMAT, mf_pts_offset);
+      } else {
+        GST_WARNING_OBJECT (self, "Cannot calculate PTS offset");
+      }
+
+      self->mf_pts_offset = mf_pts_offset;
+    }
+
+    if (self->mf_pts_offset > 0) {
+      target_mf_pts -= self->mf_pts_offset;
+
+      pts -= (self->mf_pts_offset * 100);
+      /* +1 to compensate timescale difference */
+      dts -= ((self->mf_pts_offset + 1) * 100);
+    }
+  }
+
+  frame = gst_mf_video_enc_find_output_frame (self, target_mf_pts);
 
   if (frame) {
     if (keyframe) {
       GST_DEBUG_OBJECT (self, "Keyframe pts %" GST_TIME_FORMAT,
           GST_TIME_ARGS (frame->pts));
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
-      GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
-    } else {
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }
 
-    frame->pts = sample_timestamp * 100;
-    frame->dts = mf_dts * 100;
-    frame->duration = sample_duration * 100;
     frame->output_buffer = buffer;
+
+    /* Update DTS only if B-frame was enabled, but use input frame pts as-is.
+     * Otherwise we will lost at most 100ns precision */
+    if (self->has_reorder_frame) {
+      frame->dts = dts;
+    } else {
+      frame->dts = frame->pts;
+    }
+
+    /* make sure PTS > DTS */
+    if (GST_CLOCK_TIME_IS_VALID (frame->pts) &&
+        GST_CLOCK_TIME_IS_VALID (frame->dts) &&
+        frame->pts < frame->dts) {
+      GST_WARNING_OBJECT (self, "Calculated DTS %" GST_TIME_FORMAT
+          " is larger than PTS %" GST_TIME_FORMAT, GST_TIME_ARGS (frame->pts),
+          GST_TIME_ARGS (frame->dts));
+
+      /* XXX: just set clock-time-none? */
+      frame->dts = frame->pts;
+    }
+
+    GST_LOG_OBJECT (self, "Frame pts %" GST_TIME_FORMAT ", Frame DTS %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->dts));
 
     res = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (self), frame);
   } else {
-    GST_BUFFER_DTS (buffer) = mf_dts * 100;
-    GST_BUFFER_PTS (buffer) = sample_timestamp * 100;
-    GST_BUFFER_DURATION (buffer) = sample_duration * 100;
+    GST_BUFFER_PTS (buffer) = pts;
+    GST_BUFFER_DTS (buffer) = dts;
+    GST_BUFFER_DURATION (buffer) = duration;
 
     if (keyframe) {
       GST_DEBUG_OBJECT (self, "Keyframe pts %" GST_TIME_FORMAT,
@@ -802,6 +897,9 @@ gst_mf_video_enc_finish_sample (GstMFVideoEnc * self, IMFSample * sample)
     } else {
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }
+
+    GST_LOG_OBJECT (self, "Buffer pts %" GST_TIME_FORMAT ", Buffer DTS %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (pts), GST_TIME_ARGS (dts));
 
     res = gst_pad_push (GST_VIDEO_ENCODER_SRC_PAD (self), buffer);
   }

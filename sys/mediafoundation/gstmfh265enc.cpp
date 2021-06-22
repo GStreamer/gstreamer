@@ -652,9 +652,13 @@ gst_mf_h265_enc_set_option (GstMFVideoEnc * mfenc, GstVideoCodecState * state,
     WARNING_HR (hr, CODECAPI_AVEncCommonQualityVsSpeed);
   }
 
+  mfenc->has_reorder_frame = FALSE;
   if (device_caps->bframes) {
     hr = gst_mf_transform_set_codec_api_uint32 (transform,
         &CODECAPI_AVEncMPVDefaultBPictureCount, self->bframes);
+    if (SUCCEEDED (hr) && self->bframes > 0)
+      mfenc->has_reorder_frame = TRUE;
+
     WARNING_HR (hr, CODECAPI_AVEncMPVDefaultBPictureCount);
   }
 
