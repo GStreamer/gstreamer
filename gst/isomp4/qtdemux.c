@@ -716,6 +716,13 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstObject * parent,
       GstFormat fmt;
       gboolean seekable;
 
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+
+      if (fmt == GST_FORMAT_BYTES) {
+        /* We always refuse BYTES seeks from downstream */
+        break;
+      }
+
       /* try upstream first */
       res = gst_pad_query_default (pad, parent, query);
 
@@ -1608,6 +1615,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
     case GST_EVENT_SEEK:
     {
       GstSeekFlags flags = 0;
+      GstFormat seek_format;
       gboolean instant_rate_change;
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -1617,7 +1625,8 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
 
       qtdemux->received_seek = TRUE;
 
-      gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
+      gst_event_parse_seek (event, NULL, &seek_format, &flags, NULL, NULL, NULL,
+          NULL);
       instant_rate_change = ! !(flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE);
 
       if (seqnum == qtdemux->segment_seqnum) {
@@ -1632,6 +1641,12 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (qtdemux,
             "let upstream handle seek for fragmented playback");
         goto upstream;
+      }
+
+      if (seek_format == GST_FORMAT_BYTES) {
+        GST_DEBUG_OBJECT (pad, "Rejecting seek request in bytes format");
+        gst_event_unref (event);
+        return FALSE;
       }
 
       gst_event_parse_seek_trickmode_interval (event,
