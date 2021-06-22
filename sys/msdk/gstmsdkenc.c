@@ -2054,6 +2054,8 @@ gst_msdkenc_class_init (GstMsdkEncClass * klass)
   klass->need_conversion = gst_msdkenc_need_conversion;
   klass->need_reconfig = gst_msdkenc_need_reconfig;
   klass->set_extra_params = gst_msdkenc_set_extra_params;
+  klass->qp_max = 51;
+  klass->qp_min = 0;
 
   gobject_class->dispose = gst_msdkenc_dispose;
 
@@ -2321,6 +2323,8 @@ gst_msdkenc_install_common_properties (GstMsdkEncClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GParamSpec *obj_properties[GST_MSDKENC_PROP_MAX] = { NULL, };
+  guint qp_range_max = klass->qp_max;
+  guint qp_range_min = klass->qp_min;
 
   obj_properties[GST_MSDKENC_PROP_HARDWARE] =
       g_param_spec_boolean ("hardware", "Hardware", "Enable hardware encoders",
@@ -2382,17 +2386,20 @@ gst_msdkenc_install_common_properties (GstMsdkEncClass * klass)
       g_param_spec_uint ("qpi", "QPI",
       "Constant quantizer for I frames (0 unlimited). Also used as "
       "ICQQuality or QVBRQuality for different RateControl methods",
-      0, 51, PROP_QPI_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      qp_range_min, qp_range_max, PROP_QPI_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_properties[GST_MSDKENC_PROP_QPP] =
       g_param_spec_uint ("qpp", "QPP",
       "Constant quantizer for P frames (0 unlimited)",
-      0, 51, PROP_QPP_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      qp_range_min, qp_range_max, PROP_QPP_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_properties[GST_MSDKENC_PROP_QPB] =
       g_param_spec_uint ("qpb", "QPB",
       "Constant quantizer for B frames (0 unlimited)",
-      0, 51, PROP_QPB_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      qp_range_min, qp_range_max, PROP_QPB_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_properties[GST_MSDKENC_PROP_GOP_SIZE] =
       g_param_spec_uint ("gop-size", "GOP Size", "GOP Size", 0,
