@@ -926,46 +926,59 @@ theora_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   guint size, min, max;
   GstStructure *config;
 
-  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
-          query))
-    return FALSE;
+  if ((dec->info.pic_width != dec->info.frame_width ||
+          dec->info.pic_height != dec->info.frame_height) &&
+      (gst_query_get_n_allocation_pools (query) > 0)) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
-  gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    if (pool) {
+      dec->can_crop = FALSE;
+      config = gst_buffer_pool_get_config (pool);
+      if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
+        gst_buffer_pool_config_add_option (config,
+            GST_BUFFER_POOL_OPTION_VIDEO_META);
+        dec->can_crop =
+            gst_query_find_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE,
+            NULL);
+      }
 
-  dec->can_crop = FALSE;
-  config = gst_buffer_pool_get_config (pool);
-  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-    dec->can_crop =
-        gst_query_find_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE,
-        NULL);
+      if (dec->can_crop) {
+        GstVideoInfo *info = &dec->uncropped_info;
+        GstCaps *caps;
+
+        GST_LOG_OBJECT (decoder,
+            "Using GstVideoCropMeta, uncropped wxh = %dx%d", info->width,
+            info->height);
+
+        gst_video_info_set_format (info, info->finfo->format,
+            dec->info.frame_width, dec->info.frame_height);
+
+        /* Calculate uncropped size */
+        size = MAX (size, info->size);
+        caps = gst_video_info_to_caps (info);
+        gst_buffer_pool_config_set_params (config, caps, size, min, max);
+        gst_caps_unref (caps);
+      }
+
+      if (gst_buffer_pool_set_config (pool, config)) {
+        gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+      } else {
+        GstVideoInfo *info = &dec->uncropped_info;
+
+        GST_DEBUG_OBJECT (dec, "ignoring unusable pool");
+
+        gst_query_remove_nth_allocation_pool (query, 0);
+        gst_video_info_set_format (info, info->finfo->format,
+            dec->info.pic_width, dec->info.pic_height);
+        dec->can_crop = FALSE;
+      }
+
+      gst_object_unref (pool);
+    }
   }
 
-  if (dec->can_crop) {
-    GstVideoInfo *info = &dec->uncropped_info;
-    GstCaps *caps;
-
-    GST_LOG_OBJECT (decoder, "Using GstVideoCropMeta, uncropped wxh = %dx%d",
-        info->width, info->height);
-
-    gst_video_info_set_format (info, info->finfo->format, dec->info.frame_width,
-        dec->info.frame_height);
-
-    /* Calculate uncropped size */
-    size = MAX (size, info->size);
-    caps = gst_video_info_to_caps (info);
-    gst_buffer_pool_config_set_params (config, caps, size, min, max);
-    gst_caps_unref (caps);
-  }
-
-  gst_buffer_pool_set_config (pool, config);
-
-  gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
-
-  gst_object_unref (pool);
-
-  return TRUE;
+  return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
+      query);
 }
 
 static void
