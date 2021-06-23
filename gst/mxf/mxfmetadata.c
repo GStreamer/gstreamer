@@ -3402,6 +3402,16 @@ mxf_metadata_source_clip_resolve (MXFMetadataBase * m, GHashTable * metadata)
   gchar str[96];
 #endif
 
+  if (mxf_umid_is_zero (&self->source_package_id)) {
+    /* S377-1:2019 B.10 Source Clip.
+     *
+     * SourcePackageID: The value shall be 32 zero valued bytes to terminate the
+     * source reference chain.  */
+    GST_LOG ("Skipping termination source package for source clip %s",
+        mxf_uuid_to_string (&MXF_METADATA_BASE (self)->instance_uid, str));
+    goto chain_up;
+  }
+
   g_hash_table_iter_init (&iter, metadata);
 
   while (g_hash_table_iter_next (&iter, NULL, (gpointer) & current)) {
@@ -3420,6 +3430,7 @@ mxf_metadata_source_clip_resolve (MXFMetadataBase * m, GHashTable * metadata)
         mxf_umid_to_string (&self->source_package_id, str));
   }
 
+chain_up:
   return
       MXF_METADATA_BASE_CLASS (mxf_metadata_source_clip_parent_class)->resolve
       (m, metadata);
