@@ -310,23 +310,43 @@ gst_clocksync_do_sync (GstClockSync * clocksync, GstClockTime running_time)
     GstClockReturn cret;
     GstClockTime timestamp;
     GstClockTimeDiff ts_offset = clocksync->ts_offset;
+    GstClockTimeDiff jitter;
 
     timestamp = running_time + GST_ELEMENT (clocksync)->base_time +
         clocksync->upstream_latency;
+
+    GST_DEBUG_OBJECT (clocksync,
+        "running time: %" GST_TIME_FORMAT " base time: %" GST_TIME_FORMAT
+        " upstream latency: %" GST_TIME_FORMAT, GST_TIME_ARGS (running_time),
+        GST_TIME_ARGS (GST_ELEMENT (clocksync)->base_time),
+        GST_TIME_ARGS (clocksync->upstream_latency));
+
+    GST_DEBUG_OBJECT (clocksync,
+        "Waiting for clock time %" GST_TIME_FORMAT " ts offset: %"
+        GST_STIME_FORMAT, GST_TIME_ARGS (timestamp),
+        GST_STIME_ARGS (ts_offset));
+
     if (ts_offset < 0) {
       ts_offset = -ts_offset;
       if (ts_offset < timestamp)
         timestamp -= ts_offset;
       else
         timestamp = 0;
-    } else
+    } else {
       timestamp += ts_offset;
+    }
+
+    GST_DEBUG_OBJECT (clocksync, "Offset clock time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
 
     /* save id if we need to unlock */
     clocksync->clock_id = gst_clock_new_single_shot_id (clock, timestamp);
     GST_OBJECT_UNLOCK (clocksync);
 
-    cret = gst_clock_id_wait (clocksync->clock_id, NULL);
+    cret = gst_clock_id_wait (clocksync->clock_id, &jitter);
+
+    GST_DEBUG_OBJECT (clocksync, "Clock returned %d, jitter %" GST_STIME_FORMAT,
+        cret, GST_STIME_ARGS (jitter));
 
     GST_OBJECT_LOCK (clocksync);
     if (clocksync->clock_id) {
