@@ -710,6 +710,8 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
       g_assert (vmeta->format == dec->output_state->info.finfo->format);
       g_assert (vmeta->width == dec->info.frame_width);
       g_assert (vmeta->height == dec->info.frame_height);
+      g_assert (gst_buffer_get_size (frame->output_buffer) >=
+          dec->uncropped_info.size);
 
       cmeta = gst_buffer_add_video_crop_meta (frame->output_buffer);
 
