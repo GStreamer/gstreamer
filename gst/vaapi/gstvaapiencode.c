@@ -558,28 +558,10 @@ set_codec_state (GstVaapiEncode * encode, GstVideoCodecState * state)
 }
 
 static gboolean
-gst_vaapiencode_drain (GstVaapiEncode * encode)
-{
-  GstVaapiEncoderStatus status;
-
-  if (!encode->encoder)
-    return TRUE;
-
-  GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
-  status = gst_vaapi_encoder_flush (encode->encoder);
-  GST_VIDEO_ENCODER_STREAM_LOCK (encode);
-
-  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-    return FALSE;
-  gst_vaapiencode_purge (encode);
-
-  return TRUE;
-}
-
-static gboolean
 gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
+  GstVaapiEncoderStatus status;
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
@@ -590,8 +572,13 @@ gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
           state->caps, NULL))
     return FALSE;
 
-  if (!gst_vaapiencode_drain (encode))
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
+  status = gst_vaapi_encoder_flush (encode->encoder);
+  GST_VIDEO_ENCODER_STREAM_LOCK (encode);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return FALSE;
+
+  gst_vaapiencode_purge (encode);
 
   if (encode->input_state)
     gst_video_codec_state_unref (encode->input_state);
@@ -745,13 +732,19 @@ static GstStateChangeReturn
 gst_vaapiencode_change_state (GstElement * element, GstStateChange transition)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (element);
+  GstVaapiEncoderStatus status;
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_pad_stop_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
 
-      if (!gst_vaapiencode_drain (encode))
-        goto drain_error;
+      status = gst_vaapi_encoder_flush (encode->encoder);
+      if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+        goto flush_error;
+
+      GST_VIDEO_ENCODER_STREAM_LOCK (encode);
+      gst_vaapiencode_purge (encode);
+      GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
       break;
     default:
       break;
@@ -760,9 +753,9 @@ gst_vaapiencode_change_state (GstElement * element, GstStateChange transition)
       GST_ELEMENT_CLASS (gst_vaapiencode_parent_class)->change_state (element,
       transition);
 
-drain_error:
+flush_error:
   {
-    GST_ERROR ("failed to drain pending encoded frames");
+    GST_ERROR ("failed to flush pending encoded frames");
     return GST_STATE_CHANGE_FAILURE;
   }
 }
@@ -808,14 +801,20 @@ static gboolean
 gst_vaapiencode_flush (GstVideoEncoder * venc)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
+  GstVaapiEncoderStatus status;
 
   if (!encode->encoder)
     return FALSE;
 
   GST_LOG_OBJECT (encode, "flushing");
 
-  if (!gst_vaapiencode_drain (encode))
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
+  status = gst_vaapi_encoder_flush (encode->encoder);
+  GST_VIDEO_ENCODER_STREAM_LOCK (encode);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return FALSE;
+
+  gst_vaapiencode_purge (encode);
 
   gst_vaapi_encoder_replace (&encode->encoder, NULL);
   if (!ensure_encoder (encode))
