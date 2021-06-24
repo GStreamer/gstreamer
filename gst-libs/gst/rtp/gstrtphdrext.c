@@ -39,6 +39,12 @@ GST_DEBUG_CATEGORY_STATIC (rtphderext_debug);
 
 #define MAX_RTP_EXT_ID 256
 
+typedef struct
+{
+  guint ext_id;
+  gboolean wants_update_non_rtp_src_caps;
+} GstRTPHeaderExtensionPrivate;
+
 /**
  * gst_rtp_hdrext_set_ntp_64:
  * @data: the data to write to
@@ -143,10 +149,11 @@ gst_rtp_hdrext_get_ntp_56 (gpointer data, guint size, guint64 * ntptime)
 }
 
 #define gst_rtp_header_extension_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstRTPHeaderExtension,
-    gst_rtp_header_extension, GST_TYPE_ELEMENT,
+G_DEFINE_TYPE_EXTENDED (GstRTPHeaderExtension, gst_rtp_header_extension,
+    GST_TYPE_ELEMENT, G_TYPE_FLAG_ABSTRACT,
+    G_ADD_PRIVATE (GstRTPHeaderExtension)
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "rtphdrext", 0,
-        "RTP Header Extensions");
+        "RTP Header Extensions")
     );
 
 /**
@@ -176,7 +183,10 @@ gst_rtp_header_extension_class_init (GstRTPHeaderExtensionClass * klass)
 static void
 gst_rtp_header_extension_init (GstRTPHeaderExtension * ext)
 {
-  ext->ext_id = G_MAXUINT32;
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
+
+  priv->ext_id = G_MAXUINT32;
 }
 
 /**
@@ -274,6 +284,8 @@ gst_rtp_header_extension_write (GstRTPHeaderExtension * ext,
     const GstBuffer * input_meta, GstRTPHeaderExtensionFlags write_flags,
     GstBuffer * output, guint8 * data, gsize size)
 {
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
   GstRTPHeaderExtensionClass *klass;
 
   g_return_val_if_fail (GST_IS_BUFFER (input_meta), -1);
@@ -281,7 +293,7 @@ gst_rtp_header_extension_write (GstRTPHeaderExtension * ext,
   g_return_val_if_fail (gst_buffer_is_writable (output), -1);
   g_return_val_if_fail (data != NULL, -1);
   g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), -1);
-  g_return_val_if_fail (ext->ext_id <= MAX_RTP_EXT_ID, -1);
+  g_return_val_if_fail (priv->ext_id <= MAX_RTP_EXT_ID, -1);
   klass = GST_RTP_HEADER_EXTENSION_GET_CLASS (ext);
   g_return_val_if_fail (klass->write != NULL, -1);
 
@@ -308,13 +320,15 @@ gst_rtp_header_extension_read (GstRTPHeaderExtension * ext,
     GstRTPHeaderExtensionFlags read_flags, const guint8 * data, gsize size,
     GstBuffer * buffer)
 {
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
   GstRTPHeaderExtensionClass *klass;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (gst_buffer_is_writable (buffer), FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
   g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), FALSE);
-  g_return_val_if_fail (ext->ext_id <= MAX_RTP_EXT_ID, FALSE);
+  g_return_val_if_fail (priv->ext_id <= MAX_RTP_EXT_ID, FALSE);
   klass = GST_RTP_HEADER_EXTENSION_GET_CLASS (ext);
   g_return_val_if_fail (klass->read != NULL, FALSE);
 
@@ -332,9 +346,12 @@ gst_rtp_header_extension_read (GstRTPHeaderExtension * ext,
 guint
 gst_rtp_header_extension_get_id (GstRTPHeaderExtension * ext)
 {
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
+
   g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), 0);
 
-  return ext->ext_id;
+  return priv->ext_id;
 }
 
 /**
@@ -349,10 +366,13 @@ gst_rtp_header_extension_get_id (GstRTPHeaderExtension * ext)
 void
 gst_rtp_header_extension_set_id (GstRTPHeaderExtension * ext, guint ext_id)
 {
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
+
   g_return_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext));
   g_return_if_fail (ext_id < MAX_RTP_EXT_ID);
 
-  ext->ext_id = ext_id;
+  priv->ext_id = ext_id;
 }
 
 /**
@@ -374,6 +394,8 @@ gboolean
 gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
     const GstCaps * caps)
 {
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
   GstRTPHeaderExtensionClass *klass;
   GstStructure *structure;
   gchar *field_name;
@@ -381,13 +403,13 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
   g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), FALSE);
-  g_return_val_if_fail (ext->ext_id <= MAX_RTP_EXT_ID, FALSE);
+  g_return_val_if_fail (priv->ext_id <= MAX_RTP_EXT_ID, FALSE);
   klass = GST_RTP_HEADER_EXTENSION_GET_CLASS (ext);
   g_return_val_if_fail (klass->set_attributes_from_caps != NULL, FALSE);
 
   structure = gst_caps_get_structure (caps, 0);
   g_return_val_if_fail (structure != NULL, FALSE);
-  field_name = g_strdup_printf ("extmap-%u", ext->ext_id);
+  field_name = g_strdup_printf ("extmap-%u", priv->ext_id);
   g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
   g_free (field_name);
 
@@ -410,9 +432,12 @@ gboolean
 gst_rtp_header_extension_wants_update_non_rtp_src_caps (GstRTPHeaderExtension *
     ext)
 {
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
+
   g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), FALSE);
 
-  return ext->wants_update_non_rtp_src_caps;
+  return priv->wants_update_non_rtp_src_caps;
 }
 
 /**
@@ -432,9 +457,12 @@ gst_rtp_header_extension_wants_update_non_rtp_src_caps (GstRTPHeaderExtension *
 void gst_rtp_header_extension_set_wants_update_non_rtp_src_caps
     (GstRTPHeaderExtension * ext, gboolean state)
 {
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
+
   g_return_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext));
 
-  ext->wants_update_non_rtp_src_caps = state;
+  priv->wants_update_non_rtp_src_caps = state;
 }
 
 /**
@@ -453,11 +481,13 @@ gboolean
 gst_rtp_header_extension_set_non_rtp_sink_caps (GstRTPHeaderExtension * ext,
     const GstCaps * caps)
 {
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
   GstRTPHeaderExtensionClass *klass;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), FALSE);
-  g_return_val_if_fail (ext->ext_id <= MAX_RTP_EXT_ID, FALSE);
+  g_return_val_if_fail (priv->ext_id <= MAX_RTP_EXT_ID, FALSE);
   klass = GST_RTP_HEADER_EXTENSION_GET_CLASS (ext);
 
   if (klass->set_non_rtp_sink_caps) {
@@ -483,15 +513,17 @@ gboolean
 gst_rtp_header_extension_update_non_rtp_src_caps (GstRTPHeaderExtension * ext,
     GstCaps * caps)
 {
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
   GstRTPHeaderExtensionClass *klass;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (gst_caps_is_writable (caps), FALSE);
   g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), FALSE);
-  g_return_val_if_fail (ext->ext_id <= MAX_RTP_EXT_ID, FALSE);
+  g_return_val_if_fail (priv->ext_id <= MAX_RTP_EXT_ID, FALSE);
   klass = GST_RTP_HEADER_EXTENSION_GET_CLASS (ext);
 
-  ext->wants_update_non_rtp_src_caps = FALSE;
+  priv->wants_update_non_rtp_src_caps = FALSE;
 
   if (klass->update_non_rtp_src_caps) {
     return klass->update_non_rtp_src_caps (ext, caps);
@@ -520,12 +552,14 @@ gboolean
 gst_rtp_header_extension_set_caps_from_attributes (GstRTPHeaderExtension * ext,
     GstCaps * caps)
 {
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
   GstRTPHeaderExtensionClass *klass;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (gst_caps_is_writable (caps), FALSE);
   g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), FALSE);
-  g_return_val_if_fail (ext->ext_id <= MAX_RTP_EXT_ID, FALSE);
+  g_return_val_if_fail (priv->ext_id <= MAX_RTP_EXT_ID, FALSE);
   klass = GST_RTP_HEADER_EXTENSION_GET_CLASS (ext);
   g_return_val_if_fail (klass->set_caps_from_attributes != NULL, FALSE);
 
@@ -543,10 +577,13 @@ gst_rtp_header_extension_set_caps_from_attributes (GstRTPHeaderExtension * ext,
 gchar *
 gst_rtp_header_extension_get_sdp_caps_field_name (GstRTPHeaderExtension * ext)
 {
-  g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), NULL);
-  g_return_val_if_fail (ext->ext_id <= MAX_RTP_EXT_ID, NULL);
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
 
-  return g_strdup_printf ("extmap-%u", ext->ext_id);
+  g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), NULL);
+  g_return_val_if_fail (priv->ext_id <= MAX_RTP_EXT_ID, NULL);
+
+  return g_strdup_printf ("extmap-%u", priv->ext_id);
 }
 
 /**

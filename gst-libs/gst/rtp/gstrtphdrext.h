@@ -116,9 +116,6 @@ struct _GstRTPHeaderExtension
 {
   GstElement parent;
 
-  guint ext_id;
-  gboolean wants_update_non_rtp_src_caps;
-
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
