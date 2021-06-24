@@ -944,7 +944,7 @@ gst_base_src_new_segment (GstBaseSrc * src, const GstSegment * segment)
   src->priv->segment_pending = TRUE;
   src->priv->segment_seqnum = gst_util_seqnum_next ();
 
-  GST_DEBUG_OBJECT (src, "Starting new segment %" GST_PTR_FORMAT, segment);
+  GST_DEBUG_OBJECT (src, "Starting new segment %" GST_SEGMENT_FORMAT, segment);
 
   GST_OBJECT_UNLOCK (src);
 
