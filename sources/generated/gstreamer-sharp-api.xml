@@ -31296,25 +31296,9 @@
       <member cname="GST_WEBRTC_STATS_CERTIFICATE" name="Certificate" value="14" />
     </enum>
     <object name="WebRTCDTLSTransport" cname="GstWebRTCDTLSTransport" opaque="false" hidden="false" parent="GstObject">
-      <class_struct cname="GstWebRTCDTLSTransportClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
-          <warning>missing glib:type-name</warning>
-        </field>
-        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
-      </class_struct>
+      <class_struct cname="GstWebRTCDTLSTransportClass" />
       <method name="GetType" cname="gst_webrtc_dtls_transport_get_type" shared="true">
         <return-type type="GType" />
-      </method>
-      <constructor cname="gst_webrtc_dtls_transport_new">
-        <parameters>
-          <parameter name="session_id" type="guint" />
-        </parameters>
-      </constructor>
-      <method name="SetTransport" cname="gst_webrtc_dtls_transport_set_transport">
-        <return-type type="void" />
-        <parameters>
-          <parameter name="ice" type="GstWebRTCICETransport*" />
-        </parameters>
       </method>
       <property name="Certificate" cname="certificate" type="gchar*" readable="true" writeable="true" construct="false" construct-only="false" />
       <property name="Client" cname="client" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" />
@@ -31322,63 +31306,13 @@
       <property name="SessionId" cname="session-id" type="guint" readable="true" writeable="true" construct="false" construct-only="true" />
       <property name="State" cname="state" type="GstWebRTCDTLSTransportState" readable="true" writeable="false" construct="false" construct-only="false" />
       <property name="Transport" cname="transport" type="GstWebRTCICETransport*" readable="true" writeable="false" construct="false" construct-only="false" />
-      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstObject*" hidden="true" />
-      <field cname="transport" access="public" writeable="false" readable="true" is_callback="false" name="TransportField" type="GstWebRTCICETransport*" />
-      <field cname="state" access="public" writeable="false" readable="true" is_callback="false" name="StateField" type="GstWebRTCDTLSTransportState" />
-      <field cname="client" access="public" writeable="false" readable="true" is_callback="false" name="ClientField" type="gboolean" />
-      <field cname="session_id" access="public" writeable="false" readable="true" is_callback="false" name="SessionIdField" type="guint" />
-      <field cname="dtlssrtpenc" access="public" writeable="false" readable="true" is_callback="false" name="Dtlssrtpenc" type="GstElement*" />
-      <field cname="dtlssrtpdec" access="public" writeable="false" readable="true" is_callback="false" name="Dtlssrtpdec" type="GstElement*" />
-      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
-    <object name="WebRTCDataChannel" cname="GstWebRTCDataChannel" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GObject" version="1.18">
-      <class_struct cname="GstWebRTCDataChannelClass" version="1.18">
-        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
-          <warning>missing glib:type-name</warning>
-        </field>
-        <method signal_vm="send_data" />
-        <method signal_vm="send_string" />
-        <method signal_vm="close" />
-        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
-      </class_struct>
+    <object name="WebRTCDataChannel" cname="GstWebRTCDataChannel" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstWebRTCDataChannelClass" />
       <method name="GetType" cname="gst_webrtc_data_channel_get_type" shared="true">
         <return-type type="GType" />
       </method>
       <method name="Close" cname="gst_webrtc_data_channel_close">
-        <return-type type="void" />
-        <parameters />
-      </method>
-      <method name="OnBufferedAmountLow" cname="gst_webrtc_data_channel_on_buffered_amount_low">
-        <return-type type="void" />
-        <parameters />
-      </method>
-      <method name="OnClose" cname="gst_webrtc_data_channel_on_close">
-        <return-type type="void" />
-        <parameters />
-      </method>
-      <method name="OnError" cname="gst_webrtc_data_channel_on_error">
-        <return-type type="void" />
-        <parameters>
-          <parameter name="error" type="GError*" owned="true">
-            <warning>missing glib:type-name</warning>
-          </parameter>
-        </parameters>
-      </method>
-      <method name="OnMessageData" cname="gst_webrtc_data_channel_on_message_data">
-        <return-type type="void" />
-        <parameters>
-          <parameter allow-none="1" name="data" type="GBytes*">
-            <warning>missing glib:type-name</warning>
-          </parameter>
-        </parameters>
-      </method>
-      <method name="OnMessageString" cname="gst_webrtc_data_channel_on_message_string">
-        <return-type type="void" />
-        <parameters>
-          <parameter allow-none="1" name="str" type="const-gchar*" />
-        </parameters>
-      </method>
-      <method name="OnOpen" cname="gst_webrtc_data_channel_on_open">
         <return-type type="void" />
         <parameters />
       </method>
@@ -31407,66 +31341,46 @@
       <property name="Priority" cname="priority" type="GstWebRTCPriorityType" readable="true" writeable="true" construct="false" construct-only="true" />
       <property name="Protocol" cname="protocol" type="gchar*" readable="true" writeable="true" construct="false" construct-only="true" />
       <property name="ReadyState" cname="ready-state" type="GstWebRTCDataChannelState" readable="true" writeable="false" construct="false" construct-only="false" />
-      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*" hidden="true" />
-      <field cname="lock" access="public" writeable="false" readable="true" is_callback="false" name="Lock" type="GMutex*" />
-      <field cname="label" access="public" writeable="false" readable="true" is_callback="false" name="LabelField" type="gchar*" />
-      <field cname="ordered" access="public" writeable="false" readable="true" is_callback="false" name="OrderedField" type="gboolean" />
-      <field cname="max_packet_lifetime" access="public" writeable="false" readable="true" is_callback="false" name="MaxPacketLifetimeField" type="guint" />
-      <field cname="max_retransmits" access="public" writeable="false" readable="true" is_callback="false" name="MaxRetransmitsField" type="guint" />
-      <field cname="protocol" access="public" writeable="false" readable="true" is_callback="false" name="ProtocolField" type="gchar*" />
-      <field cname="negotiated" access="public" writeable="false" readable="true" is_callback="false" name="NegotiatedField" type="gboolean" />
-      <field cname="id" access="public" writeable="false" readable="true" is_callback="false" name="IdField" type="gint" />
-      <field cname="priority" access="public" writeable="false" readable="true" is_callback="false" name="PriorityField" type="GstWebRTCPriorityType" />
-      <field cname="ready_state" access="public" writeable="false" readable="true" is_callback="false" name="ReadyStateField" type="GstWebRTCDataChannelState" />
-      <field cname="buffered_amount" access="public" writeable="false" readable="true" is_callback="false" name="BufferedAmountField" type="guint64" />
-      <field cname="buffered_amount_low_threshold" access="public" writeable="false" readable="true" is_callback="false" name="BufferedAmountLowThresholdField" type="guint64" />
-      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
-      <signal name="CloseEvent" cname="close" when="last" field_name="close">
+      <signal name="CloseEvent" cname="close" when="last">
         <return-type type="void" />
         <parameters />
         <warning>Signal renamed because of existing method with same name</warning>
       </signal>
-      <signal name="OnBufferedAmountLowEvent" cname="on-buffered-amount-low" when="last">
+      <signal name="OnBufferedAmountLow" cname="on-buffered-amount-low" when="last">
         <return-type type="void" />
         <parameters />
-        <warning>Signal renamed because of existing method with same name</warning>
       </signal>
-      <signal name="OnCloseEvent" cname="on-close" when="last" hidden="true">
+      <signal name="OnClose" cname="on-close" when="last" hidden="true">
         <return-type type="void" />
         <parameters />
-        <warning>Signal renamed because of existing method with same name</warning>
       </signal>
-      <signal name="OnErrorEvent" cname="on-error" when="last">
+      <signal name="OnError" cname="on-error" when="last">
         <return-type type="void" />
         <parameters>
           <parameter name="error" type="GError*">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
-        <warning>Signal renamed because of existing method with same name</warning>
       </signal>
-      <signal name="OnMessageDataEvent" cname="on-message-data" when="last">
+      <signal name="OnMessageData" cname="on-message-data" when="last">
         <return-type type="void" />
         <parameters>
           <parameter allow-none="1" name="data" type="GBytes*">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
-        <warning>Signal renamed because of existing method with same name</warning>
       </signal>
-      <signal name="OnMessageStringEvent" cname="on-message-string" when="last">
+      <signal name="OnMessageString" cname="on-message-string" when="last">
         <return-type type="void" />
         <parameters>
           <parameter allow-none="1" name="data" type="const-gchar*" />
         </parameters>
-        <warning>Signal renamed because of existing method with same name</warning>
       </signal>
-      <signal name="OnOpenEvent" cname="on-open" when="last">
+      <signal name="OnOpen" cname="on-open" when="last">
         <return-type type="void" />
         <parameters />
-        <warning>Signal renamed because of existing method with same name</warning>
       </signal>
-      <signal name="SendDataEvent" cname="send-data" when="last" field_name="send_data">
+      <signal name="SendDataEvent" cname="send-data" when="last">
         <return-type type="void" />
         <parameters>
           <parameter allow-none="1" name="data" type="GBytes*">
@@ -31475,7 +31389,7 @@
         </parameters>
         <warning>Signal renamed because of existing method with same name</warning>
       </signal>
-      <signal name="SendStringEvent" cname="send-string" when="last" field_name="send_string">
+      <signal name="SendStringEvent" cname="send-string" when="last">
         <return-type type="void" />
         <parameters>
           <parameter allow-none="1" name="data" type="const-gchar*" />
@@ -31484,55 +31398,13 @@
       </signal>
     </object>
     <object name="WebRTCICETransport" cname="GstWebRTCICETransport" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject">
-      <class_struct cname="GstWebRTCICETransportClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
-          <warning>missing glib:type-name</warning>
-        </field>
-        <method vm="gather_candidates" />
-        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
-      </class_struct>
+      <class_struct cname="GstWebRTCICETransportClass" />
       <method name="GetType" cname="gst_webrtc_ice_transport_get_type" shared="true">
         <return-type type="GType" />
-      </method>
-      <virtual_method name="GatherCandidates" cname="gather_candidates">
-        <return-type type="gboolean" />
-        <parameters />
-      </virtual_method>
-      <method name="ConnectionStateChange" cname="gst_webrtc_ice_transport_connection_state_change">
-        <return-type type="void" />
-        <parameters>
-          <parameter name="new_state" type="GstWebRTCICEConnectionState" />
-        </parameters>
-      </method>
-      <method name="GatheringStateChange" cname="gst_webrtc_ice_transport_gathering_state_change">
-        <return-type type="void" />
-        <parameters>
-          <parameter name="new_state" type="GstWebRTCICEGatheringState" />
-        </parameters>
-      </method>
-      <method name="NewCandidate" cname="gst_webrtc_ice_transport_new_candidate">
-        <return-type type="void" />
-        <parameters>
-          <parameter name="stream_id" type="guint" />
-          <parameter name="component" type="GstWebRTCICEComponent" />
-          <parameter name="attr" type="const-gchar*" />
-        </parameters>
-      </method>
-      <method name="SelectedPairChange" cname="gst_webrtc_ice_transport_selected_pair_change">
-        <return-type type="void" />
-        <parameters />
       </method>
       <property name="Component" cname="component" type="GstWebRTCICEComponent" readable="true" writeable="true" construct="false" construct-only="true" />
       <property name="GatheringState" cname="gathering-state" type="GstWebRTCICEGatheringState" readable="true" writeable="false" construct="false" construct-only="false" />
       <property name="State" cname="state" type="GstWebRTCICEConnectionState" readable="true" writeable="false" construct="false" construct-only="false" />
-      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstObject*" hidden="true" />
-      <field cname="role" access="public" writeable="false" readable="true" is_callback="false" name="Role" type="GstWebRTCICERole" />
-      <field cname="component" access="public" writeable="false" readable="true" is_callback="false" name="ComponentField" type="GstWebRTCICEComponent" />
-      <field cname="state" access="public" writeable="false" readable="true" is_callback="false" name="StateField" type="GstWebRTCICEConnectionState" />
-      <field cname="gathering_state" access="public" writeable="false" readable="true" is_callback="false" name="GatheringStateField" type="GstWebRTCICEGatheringState" />
-      <field cname="src" access="public" writeable="false" readable="true" is_callback="false" name="Src" type="GstElement*" />
-      <field cname="sink" access="public" writeable="false" readable="true" is_callback="false" name="Sink" type="GstElement*" />
-      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
       <signal name="OnNewCandidate" cname="on-new-candidate" when="last">
         <return-type type="void" />
         <parameters>
@@ -31544,32 +31416,18 @@
         <parameters />
       </signal>
     </object>
-    <object name="WebRTCRTPReceiver" cname="GstWebRTCRTPReceiver" opaque="false" hidden="false" parent="GstObject" version="1.16">
-      <class_struct cname="GstWebRTCRTPReceiverClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
-          <warning>missing glib:type-name</warning>
-        </field>
-        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
-      </class_struct>
+    <object name="WebRTCRTPReceiver" cname="GstWebRTCRTPReceiver" opaque="false" hidden="false" parent="GstObject">
+      <class_struct cname="GstWebRTCRTPReceiverClass" />
       <method name="GetType" cname="gst_webrtc_rtp_receiver_get_type" shared="true">
         <return-type type="GType" />
       </method>
-      <constructor cname="gst_webrtc_rtp_receiver_new" disable_void_ctor="" />
-      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstObject*" hidden="true" />
-      <field cname="transport" access="public" writeable="false" readable="true" is_callback="false" name="Transport" type="GstWebRTCDTLSTransport*" />
-      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
+      <property name="Transport" cname="transport" type="GstWebRTCDTLSTransport*" readable="true" writeable="false" construct="false" construct-only="false" version="1.20" />
     </object>
-    <object name="WebRTCRTPSender" cname="GstWebRTCRTPSender" opaque="false" hidden="false" parent="GstObject" version="1.16">
-      <class_struct cname="GstWebRTCRTPSenderClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
-          <warning>missing glib:type-name</warning>
-        </field>
-        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
-      </class_struct>
+    <object name="WebRTCRTPSender" cname="GstWebRTCRTPSender" opaque="false" hidden="false" parent="GstObject">
+      <class_struct cname="GstWebRTCRTPSenderClass" />
       <method name="GetType" cname="gst_webrtc_rtp_sender_get_type" shared="true">
         <return-type type="GType" />
       </method>
-      <constructor cname="gst_webrtc_rtp_sender_new" disable_void_ctor="" />
       <method name="SetPriority" cname="gst_webrtc_rtp_sender_set_priority" version="1.20">
         <return-type type="void" />
         <parameters>
@@ -31577,39 +31435,21 @@
         </parameters>
       </method>
       <property name="Priority" cname="priority" type="GstWebRTCPriorityType" readable="true" writeable="true" construct="false" construct-only="false" version="1.20" />
-      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstObject*" hidden="true" />
-      <field cname="transport" access="public" writeable="false" readable="true" is_callback="false" name="Transport" type="GstWebRTCDTLSTransport*" />
-      <field cname="send_encodings" access="public" writeable="false" readable="true" is_callback="false" name="SendEncodings" type="GArray*" array="true" null_term_array="true" />
-      <field cname="priority" access="public" writeable="false" readable="true" is_callback="false" name="PriorityField" type="GstWebRTCPriorityType" />
-      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
+      <property name="Transport" cname="transport" type="GstWebRTCDTLSTransport*" readable="true" writeable="false" construct="false" construct-only="false" version="1.20" />
     </object>
-    <object name="WebRTCRTPTransceiver" cname="GstWebRTCRTPTransceiver" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject" version="1.16">
-      <class_struct cname="GstWebRTCRTPTransceiverClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
-          <warning>missing glib:type-name</warning>
-        </field>
-        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
-      </class_struct>
+    <object name="WebRTCRTPTransceiver" cname="GstWebRTCRTPTransceiver" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject">
+      <class_struct cname="GstWebRTCRTPTransceiverClass" />
       <method name="GetType" cname="gst_webrtc_rtp_transceiver_get_type" shared="true">
         <return-type type="GType" />
       </method>
+      <property name="CodecPreferences" cname="codec-preferences" type="GstCaps*" readable="true" writeable="true" construct="false" construct-only="false" version="1.20" />
+      <property name="CurrentDirection" cname="current-direction" type="GstWebRTCRTPTransceiverDirection" readable="true" writeable="false" construct="false" construct-only="false" version="1.20" />
       <property name="Direction" cname="direction" type="GstWebRTCRTPTransceiverDirection" readable="true" writeable="true" construct="false" construct-only="false" version="1.18" />
+      <property name="Kind" cname="kind" type="GstWebRTCKind" readable="true" writeable="false" construct="false" construct-only="false" version="1.20" />
+      <property name="Mid" cname="mid" type="gchar*" readable="true" writeable="false" construct="false" construct-only="false" version="1.20" />
       <property name="Mlineindex" cname="mlineindex" type="guint" readable="true" writeable="true" construct="false" construct-only="true" />
       <property name="Receiver" cname="receiver" type="GstWebRTCRTPReceiver*" readable="true" writeable="true" construct="false" construct-only="true" />
       <property name="Sender" cname="sender" type="GstWebRTCRTPSender*" readable="true" writeable="true" construct="false" construct-only="true" />
-      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstObject*" hidden="true" />
-      <field cname="mline" access="public" writeable="false" readable="true" is_callback="false" name="Mline" type="guint" />
-      <field cname="mid" access="public" writeable="false" readable="true" is_callback="false" name="Mid" type="gchar*" />
-      <field cname="stopped" access="public" writeable="false" readable="true" is_callback="false" name="Stopped" type="gboolean" />
-      <field cname="sender" access="public" writeable="false" readable="true" is_callback="false" name="SenderField" type="GstWebRTCRTPSender*" />
-      <field cname="receiver" access="public" writeable="false" readable="true" is_callback="false" name="ReceiverField" type="GstWebRTCRTPReceiver*" />
-      <field cname="direction" access="public" writeable="false" readable="true" is_callback="false" name="DirectionField" type="GstWebRTCRTPTransceiverDirection" />
-      <field cname="current_direction" access="public" writeable="false" readable="true" is_callback="false" name="CurrentDirection" type="GstWebRTCRTPTransceiverDirection" />
-      <field cname="codec_preferences" access="public" writeable="false" readable="true" is_callback="false" name="CodecPreferences" type="GstCaps*">
-        <warning>missing glib:type-name</warning>
-      </field>
-      <field cname="kind" access="public" writeable="false" readable="true" is_callback="false" name="Kind" type="GstWebRTCKind" />
-      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <boxed name="WebRTCSessionDescription" cname="GstWebRTCSessionDescription" opaque="false" hidden="false">
       <method name="GetType" cname="gst_webrtc_session_description_get_type" shared="true">

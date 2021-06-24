@@ -13,16 +13,9 @@ namespace Gst.WebRTC {
 
 		public WebRTCRTPSender (IntPtr raw) : base(raw) {}
 
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_webrtc_rtp_sender_new();
-
-		public WebRTCRTPSender () : base (IntPtr.Zero)
+		protected WebRTCRTPSender() : base(IntPtr.Zero)
 		{
-			if (GetType () != typeof (WebRTCRTPSender)) {
-				CreateNativeObject (new string [0], new GLib.Value[0]);
-				return;
-			}
-			Raw = gst_webrtc_rtp_sender_new();
+			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
 		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -41,21 +34,13 @@ namespace Gst.WebRTC {
 			}
 		}
 
+		[GLib.Property ("transport")]
 		public Gst.WebRTC.WebRTCDTLSTransport Transport {
 			get {
-				unsafe {
-					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("transport"));
-					return GLib.Object.GetObject((*raw_ptr)) as Gst.WebRTC.WebRTCDTLSTransport;
-				}
-			}
-		}
-
-		public Gst.WebRTC.WebRTCPriorityType PriorityField {
-			get {
-				unsafe {
-					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("priority"));
-					return (Gst.WebRTC.WebRTCPriorityType) (*raw_ptr);
-				}
+				GLib.Value val = GetProperty ("transport");
+				Gst.WebRTC.WebRTCDTLSTransport ret = (Gst.WebRTC.WebRTCDTLSTransport) val;
+				val.Dispose ();
+				return ret;
 			}
 		}
 
@@ -65,16 +50,7 @@ namespace Gst.WebRTC {
 		static public new GLib.AbiStruct class_abi {
 			get {
 				if (_class_abi == null)
-					_class_abi = new GLib.AbiStruct (new List<GLib.AbiField>{ 
-						new GLib.AbiField("_padding"
-							, Gst.Object.class_abi.Fields
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, null
-							, null
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-					});
+					_class_abi = new GLib.AbiStruct (Gst.Object.class_abi.Fields);
 
 				return _class_abi;
 			}
@@ -105,50 +81,10 @@ namespace Gst.WebRTC {
 		static public new GLib.AbiStruct abi_info {
 			get {
 				if (_abi_info == null)
-					_abi_info = new GLib.AbiStruct (new List<GLib.AbiField>{ 
-						new GLib.AbiField("transport"
-							, Gst.Object.abi_info.Fields
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // transport
-							, null
-							, "send_encodings"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("send_encodings"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // send_encodings
-							, "transport"
-							, "priority"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("priority"
-							, -1
-							, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.WebRTC.WebRTCPriorityType))) // priority
-							, "send_encodings"
-							, "_padding"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCRTPSender_priorityAlign), "priority")
-							, 0
-							),
-						new GLib.AbiField("_padding"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, "priority"
-							, null
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-					});
+					_abi_info = new GLib.AbiStruct (Gst.Object.abi_info.Fields);
 
 				return _abi_info;
 			}
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCRTPSender_priorityAlign
-		{
-			sbyte f1;
-			private Gst.WebRTC.WebRTCPriorityType priority;
 		}
 
 

@@ -133,121 +133,23 @@ namespace Gst.WebRTC {
 			}
 		}
 
-		public GLib.Mutex Lock {
-			get {
-				unsafe {
-					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("lock"));
-					return new GLib.Mutex((*raw_ptr));
-				}
-			}
-		}
-
-		public string LabelField {
-			get {
-				unsafe {
-					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("label"));
-					return GLib.Marshaller.Utf8PtrToString ((*raw_ptr));
-				}
-			}
-		}
-
-		public bool OrderedField {
-			get {
-				unsafe {
-					bool* raw_ptr = (bool*)(((byte*)Handle) + abi_info.GetFieldOffset("ordered"));
-					return (*raw_ptr);
-				}
-			}
-		}
-
-		public uint MaxPacketLifetimeField {
-			get {
-				unsafe {
-					uint* raw_ptr = (uint*)(((byte*)Handle) + abi_info.GetFieldOffset("max_packet_lifetime"));
-					return (*raw_ptr);
-				}
-			}
-		}
-
-		public uint MaxRetransmitsField {
-			get {
-				unsafe {
-					uint* raw_ptr = (uint*)(((byte*)Handle) + abi_info.GetFieldOffset("max_retransmits"));
-					return (*raw_ptr);
-				}
-			}
-		}
-
-		public string ProtocolField {
-			get {
-				unsafe {
-					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("protocol"));
-					return GLib.Marshaller.Utf8PtrToString ((*raw_ptr));
-				}
-			}
-		}
-
-		public bool NegotiatedField {
-			get {
-				unsafe {
-					bool* raw_ptr = (bool*)(((byte*)Handle) + abi_info.GetFieldOffset("negotiated"));
-					return (*raw_ptr);
-				}
-			}
-		}
-
-		public int IdField {
-			get {
-				unsafe {
-					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("id"));
-					return (*raw_ptr);
-				}
-			}
-		}
-
-		public Gst.WebRTC.WebRTCPriorityType PriorityField {
-			get {
-				unsafe {
-					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("priority"));
-					return (Gst.WebRTC.WebRTCPriorityType) (*raw_ptr);
-				}
-			}
-		}
-
-		public Gst.WebRTC.WebRTCDataChannelState ReadyStateField {
-			get {
-				unsafe {
-					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("ready_state"));
-					return (Gst.WebRTC.WebRTCDataChannelState) (*raw_ptr);
-				}
-			}
-		}
-
-		public ulong BufferedAmountField {
-			get {
-				unsafe {
-					ulong* raw_ptr = (ulong*)(((byte*)Handle) + abi_info.GetFieldOffset("buffered_amount"));
-					return (*raw_ptr);
-				}
-			}
-		}
-
-		public ulong BufferedAmountLowThresholdField {
-			get {
-				unsafe {
-					ulong* raw_ptr = (ulong*)(((byte*)Handle) + abi_info.GetFieldOffset("buffered_amount_low_threshold"));
-					return (*raw_ptr);
-				}
-			}
-		}
-
-		[GLib.Signal("on-buffered-amount-low")]
-		public event System.EventHandler OnBufferedAmountLowEvent {
+		[GLib.Signal("on-error")]
+		public event Gst.WebRTC.OnErrorHandler OnError {
 			add {
-				this.AddSignalHandler ("on-buffered-amount-low", value);
+				this.AddSignalHandler ("on-error", value, typeof (Gst.WebRTC.OnErrorArgs));
 			}
 			remove {
-				this.RemoveSignalHandler ("on-buffered-amount-low", value);
+				this.RemoveSignalHandler ("on-error", value);
+			}
+		}
+
+		[GLib.Signal("send-string")]
+		public event Gst.WebRTC.SendStringEventHandler SendStringEvent {
+			add {
+				this.AddSignalHandler ("send-string", value, typeof (Gst.WebRTC.SendStringEventArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("send-string", value);
 			}
 		}
 
@@ -258,26 +160,6 @@ namespace Gst.WebRTC {
 			}
 			remove {
 				this.RemoveSignalHandler ("send-data", value);
-			}
-		}
-
-		[GLib.Signal("on-message-string")]
-		public event Gst.WebRTC.OnMessageStringEventHandler OnMessageStringEvent {
-			add {
-				this.AddSignalHandler ("on-message-string", value, typeof (Gst.WebRTC.OnMessageStringEventArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("on-message-string", value);
-			}
-		}
-
-		[GLib.Signal("on-open")]
-		public event System.EventHandler OnOpenEvent {
-			add {
-				this.AddSignalHandler ("on-open", value);
-			}
-			remove {
-				this.RemoveSignalHandler ("on-open", value);
 			}
 		}
 
@@ -292,73 +174,83 @@ namespace Gst.WebRTC {
 		}
 
 		[GLib.Signal("on-message-data")]
-		public event Gst.WebRTC.OnMessageDataEventHandler OnMessageDataEvent {
+		public event Gst.WebRTC.OnMessageDataHandler OnMessageData {
 			add {
-				this.AddSignalHandler ("on-message-data", value, typeof (Gst.WebRTC.OnMessageDataEventArgs));
+				this.AddSignalHandler ("on-message-data", value, typeof (Gst.WebRTC.OnMessageDataArgs));
 			}
 			remove {
 				this.RemoveSignalHandler ("on-message-data", value);
 			}
 		}
 
-		[GLib.Signal("send-string")]
-		public event Gst.WebRTC.SendStringEventHandler SendStringEvent {
+		[GLib.Signal("on-buffered-amount-low")]
+		public event System.EventHandler OnBufferedAmountLow {
 			add {
-				this.AddSignalHandler ("send-string", value, typeof (Gst.WebRTC.SendStringEventArgs));
+				this.AddSignalHandler ("on-buffered-amount-low", value);
 			}
 			remove {
-				this.RemoveSignalHandler ("send-string", value);
+				this.RemoveSignalHandler ("on-buffered-amount-low", value);
 			}
 		}
 
-		[GLib.Signal("on-error")]
-		public event Gst.WebRTC.OnErrorEventHandler OnErrorEvent {
+		[GLib.Signal("on-open")]
+		public event System.EventHandler OnOpen {
 			add {
-				this.AddSignalHandler ("on-error", value, typeof (Gst.WebRTC.OnErrorEventArgs));
+				this.AddSignalHandler ("on-open", value);
 			}
 			remove {
-				this.RemoveSignalHandler ("on-error", value);
+				this.RemoveSignalHandler ("on-open", value);
 			}
 		}
 
-		static OnBufferedAmountLowEventNativeDelegate OnBufferedAmountLowEvent_cb_delegate;
-		static OnBufferedAmountLowEventNativeDelegate OnBufferedAmountLowEventVMCallback {
+		[GLib.Signal("on-message-string")]
+		public event Gst.WebRTC.OnMessageStringHandler OnMessageString {
+			add {
+				this.AddSignalHandler ("on-message-string", value, typeof (Gst.WebRTC.OnMessageStringArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("on-message-string", value);
+			}
+		}
+
+		static CloseEventNativeDelegate CloseEvent_cb_delegate;
+		static CloseEventNativeDelegate CloseEventVMCallback {
 			get {
-				if (OnBufferedAmountLowEvent_cb_delegate == null)
-					OnBufferedAmountLowEvent_cb_delegate = new OnBufferedAmountLowEventNativeDelegate (OnBufferedAmountLowEvent_cb);
-				return OnBufferedAmountLowEvent_cb_delegate;
+				if (CloseEvent_cb_delegate == null)
+					CloseEvent_cb_delegate = new CloseEventNativeDelegate (CloseEvent_cb);
+				return CloseEvent_cb_delegate;
 			}
 		}
 
-		static void OverrideOnBufferedAmountLowEvent (GLib.GType gtype)
+		static void OverrideCloseEvent (GLib.GType gtype)
 		{
-			OverrideOnBufferedAmountLowEvent (gtype, OnBufferedAmountLowEventVMCallback);
+			OverrideCloseEvent (gtype, CloseEventVMCallback);
 		}
 
-		static void OverrideOnBufferedAmountLowEvent (GLib.GType gtype, OnBufferedAmountLowEventNativeDelegate callback)
+		static void OverrideCloseEvent (GLib.GType gtype, CloseEventNativeDelegate callback)
 		{
-			OverrideVirtualMethod (gtype, "on-buffered-amount-low", callback);
+			OverrideVirtualMethod (gtype, "close", callback);
 		}
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void OnBufferedAmountLowEventNativeDelegate (IntPtr inst);
+		delegate void CloseEventNativeDelegate (IntPtr inst);
 
-		static void OnBufferedAmountLowEvent_cb (IntPtr inst)
+		static void CloseEvent_cb (IntPtr inst)
 		{
 			try {
 				WebRTCDataChannel __obj = GLib.Object.GetObject (inst, false) as WebRTCDataChannel;
-				__obj.OnOnBufferedAmountLowEvent ();
+				__obj.OnCloseEvent ();
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
 		}
 
-		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideOnBufferedAmountLowEvent")]
-		protected virtual void OnOnBufferedAmountLowEvent ()
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideCloseEvent")]
+		protected virtual void OnCloseEvent ()
 		{
-			InternalOnBufferedAmountLowEvent ();
+			InternalCloseEvent ();
 		}
 
-		private void InternalOnBufferedAmountLowEvent ()
+		private void InternalCloseEvent ()
 		{
 			GLib.Value ret = GLib.Value.Empty;
 			GLib.ValueArray inst_and_params = new GLib.ValueArray (1);
@@ -370,44 +262,93 @@ namespace Gst.WebRTC {
 				v.Dispose ();
 		}
 
-		static OnErrorEventNativeDelegate OnErrorEvent_cb_delegate;
-		static OnErrorEventNativeDelegate OnErrorEventVMCallback {
+		static OnBufferedAmountLowNativeDelegate OnBufferedAmountLow_cb_delegate;
+		static OnBufferedAmountLowNativeDelegate OnBufferedAmountLowVMCallback {
 			get {
-				if (OnErrorEvent_cb_delegate == null)
-					OnErrorEvent_cb_delegate = new OnErrorEventNativeDelegate (OnErrorEvent_cb);
-				return OnErrorEvent_cb_delegate;
+				if (OnBufferedAmountLow_cb_delegate == null)
+					OnBufferedAmountLow_cb_delegate = new OnBufferedAmountLowNativeDelegate (OnBufferedAmountLow_cb);
+				return OnBufferedAmountLow_cb_delegate;
 			}
 		}
 
-		static void OverrideOnErrorEvent (GLib.GType gtype)
+		static void OverrideOnBufferedAmountLow (GLib.GType gtype)
 		{
-			OverrideOnErrorEvent (gtype, OnErrorEventVMCallback);
+			OverrideOnBufferedAmountLow (gtype, OnBufferedAmountLowVMCallback);
 		}
 
-		static void OverrideOnErrorEvent (GLib.GType gtype, OnErrorEventNativeDelegate callback)
+		static void OverrideOnBufferedAmountLow (GLib.GType gtype, OnBufferedAmountLowNativeDelegate callback)
 		{
-			OverrideVirtualMethod (gtype, "on-error", callback);
+			OverrideVirtualMethod (gtype, "on-buffered-amount-low", callback);
 		}
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void OnErrorEventNativeDelegate (IntPtr inst, IntPtr error);
+		delegate void OnBufferedAmountLowNativeDelegate (IntPtr inst);
 
-		static void OnErrorEvent_cb (IntPtr inst, IntPtr error)
+		static void OnBufferedAmountLow_cb (IntPtr inst)
 		{
 			try {
 				WebRTCDataChannel __obj = GLib.Object.GetObject (inst, false) as WebRTCDataChannel;
-				__obj.OnOnErrorEvent (error);
+				__obj.OnOnBufferedAmountLow ();
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
 		}
 
-		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideOnErrorEvent")]
-		protected virtual void OnOnErrorEvent (IntPtr error)
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideOnBufferedAmountLow")]
+		protected virtual void OnOnBufferedAmountLow ()
 		{
-			InternalOnErrorEvent (error);
+			InternalOnBufferedAmountLow ();
 		}
 
-		private void InternalOnErrorEvent (IntPtr error)
+		private void InternalOnBufferedAmountLow ()
+		{
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (1);
+			GLib.Value[] vals = new GLib.Value [1];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
+		}
+
+		static OnErrorNativeDelegate OnError_cb_delegate;
+		static OnErrorNativeDelegate OnErrorVMCallback {
+			get {
+				if (OnError_cb_delegate == null)
+					OnError_cb_delegate = new OnErrorNativeDelegate (OnError_cb);
+				return OnError_cb_delegate;
+			}
+		}
+
+		static void OverrideOnError (GLib.GType gtype)
+		{
+			OverrideOnError (gtype, OnErrorVMCallback);
+		}
+
+		static void OverrideOnError (GLib.GType gtype, OnErrorNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "on-error", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void OnErrorNativeDelegate (IntPtr inst, IntPtr error);
+
+		static void OnError_cb (IntPtr inst, IntPtr error)
+		{
+			try {
+				WebRTCDataChannel __obj = GLib.Object.GetObject (inst, false) as WebRTCDataChannel;
+				__obj.OnOnError (error);
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideOnError")]
+		protected virtual void OnOnError (IntPtr error)
+		{
+			InternalOnError (error);
+		}
+
+		private void InternalOnError (IntPtr error)
 		{
 			GLib.Value ret = GLib.Value.Empty;
 			GLib.ValueArray inst_and_params = new GLib.ValueArray (2);
@@ -421,44 +362,44 @@ namespace Gst.WebRTC {
 				v.Dispose ();
 		}
 
-		static OnMessageDataEventNativeDelegate OnMessageDataEvent_cb_delegate;
-		static OnMessageDataEventNativeDelegate OnMessageDataEventVMCallback {
+		static OnMessageDataNativeDelegate OnMessageData_cb_delegate;
+		static OnMessageDataNativeDelegate OnMessageDataVMCallback {
 			get {
-				if (OnMessageDataEvent_cb_delegate == null)
-					OnMessageDataEvent_cb_delegate = new OnMessageDataEventNativeDelegate (OnMessageDataEvent_cb);
-				return OnMessageDataEvent_cb_delegate;
+				if (OnMessageData_cb_delegate == null)
+					OnMessageData_cb_delegate = new OnMessageDataNativeDelegate (OnMessageData_cb);
+				return OnMessageData_cb_delegate;
 			}
 		}
 
-		static void OverrideOnMessageDataEvent (GLib.GType gtype)
+		static void OverrideOnMessageData (GLib.GType gtype)
 		{
-			OverrideOnMessageDataEvent (gtype, OnMessageDataEventVMCallback);
+			OverrideOnMessageData (gtype, OnMessageDataVMCallback);
 		}
 
-		static void OverrideOnMessageDataEvent (GLib.GType gtype, OnMessageDataEventNativeDelegate callback)
+		static void OverrideOnMessageData (GLib.GType gtype, OnMessageDataNativeDelegate callback)
 		{
 			OverrideVirtualMethod (gtype, "on-message-data", callback);
 		}
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void OnMessageDataEventNativeDelegate (IntPtr inst, IntPtr data);
+		delegate void OnMessageDataNativeDelegate (IntPtr inst, IntPtr data);
 
-		static void OnMessageDataEvent_cb (IntPtr inst, IntPtr data)
+		static void OnMessageData_cb (IntPtr inst, IntPtr data)
 		{
 			try {
 				WebRTCDataChannel __obj = GLib.Object.GetObject (inst, false) as WebRTCDataChannel;
-				__obj.OnOnMessageDataEvent (new GLib.Bytes(data));
+				__obj.OnOnMessageData (new GLib.Bytes(data));
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
 		}
 
-		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideOnMessageDataEvent")]
-		protected virtual void OnOnMessageDataEvent (GLib.Bytes data)
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideOnMessageData")]
+		protected virtual void OnOnMessageData (GLib.Bytes data)
 		{
-			InternalOnMessageDataEvent (data);
+			InternalOnMessageData (data);
 		}
 
-		private void InternalOnMessageDataEvent (GLib.Bytes data)
+		private void InternalOnMessageData (GLib.Bytes data)
 		{
 			GLib.Value ret = GLib.Value.Empty;
 			GLib.ValueArray inst_and_params = new GLib.ValueArray (2);
@@ -472,44 +413,44 @@ namespace Gst.WebRTC {
 				v.Dispose ();
 		}
 
-		static OnMessageStringEventNativeDelegate OnMessageStringEvent_cb_delegate;
-		static OnMessageStringEventNativeDelegate OnMessageStringEventVMCallback {
+		static OnMessageStringNativeDelegate OnMessageString_cb_delegate;
+		static OnMessageStringNativeDelegate OnMessageStringVMCallback {
 			get {
-				if (OnMessageStringEvent_cb_delegate == null)
-					OnMessageStringEvent_cb_delegate = new OnMessageStringEventNativeDelegate (OnMessageStringEvent_cb);
-				return OnMessageStringEvent_cb_delegate;
+				if (OnMessageString_cb_delegate == null)
+					OnMessageString_cb_delegate = new OnMessageStringNativeDelegate (OnMessageString_cb);
+				return OnMessageString_cb_delegate;
 			}
 		}
 
-		static void OverrideOnMessageStringEvent (GLib.GType gtype)
+		static void OverrideOnMessageString (GLib.GType gtype)
 		{
-			OverrideOnMessageStringEvent (gtype, OnMessageStringEventVMCallback);
+			OverrideOnMessageString (gtype, OnMessageStringVMCallback);
 		}
 
-		static void OverrideOnMessageStringEvent (GLib.GType gtype, OnMessageStringEventNativeDelegate callback)
+		static void OverrideOnMessageString (GLib.GType gtype, OnMessageStringNativeDelegate callback)
 		{
 			OverrideVirtualMethod (gtype, "on-message-string", callback);
 		}
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void OnMessageStringEventNativeDelegate (IntPtr inst, IntPtr data);
+		delegate void OnMessageStringNativeDelegate (IntPtr inst, IntPtr data);
 
-		static void OnMessageStringEvent_cb (IntPtr inst, IntPtr data)
+		static void OnMessageString_cb (IntPtr inst, IntPtr data)
 		{
 			try {
 				WebRTCDataChannel __obj = GLib.Object.GetObject (inst, false) as WebRTCDataChannel;
-				__obj.OnOnMessageStringEvent (GLib.Marshaller.Utf8PtrToString (data));
+				__obj.OnOnMessageString (GLib.Marshaller.Utf8PtrToString (data));
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
 		}
 
-		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideOnMessageStringEvent")]
-		protected virtual void OnOnMessageStringEvent (string data)
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideOnMessageString")]
+		protected virtual void OnOnMessageString (string data)
 		{
-			InternalOnMessageStringEvent (data);
+			InternalOnMessageString (data);
 		}
 
-		private void InternalOnMessageStringEvent (string data)
+		private void InternalOnMessageString (string data)
 		{
 			GLib.Value ret = GLib.Value.Empty;
 			GLib.ValueArray inst_and_params = new GLib.ValueArray (2);
@@ -523,44 +464,44 @@ namespace Gst.WebRTC {
 				v.Dispose ();
 		}
 
-		static OnOpenEventNativeDelegate OnOpenEvent_cb_delegate;
-		static OnOpenEventNativeDelegate OnOpenEventVMCallback {
+		static OnOpenNativeDelegate OnOpen_cb_delegate;
+		static OnOpenNativeDelegate OnOpenVMCallback {
 			get {
-				if (OnOpenEvent_cb_delegate == null)
-					OnOpenEvent_cb_delegate = new OnOpenEventNativeDelegate (OnOpenEvent_cb);
-				return OnOpenEvent_cb_delegate;
+				if (OnOpen_cb_delegate == null)
+					OnOpen_cb_delegate = new OnOpenNativeDelegate (OnOpen_cb);
+				return OnOpen_cb_delegate;
 			}
 		}
 
-		static void OverrideOnOpenEvent (GLib.GType gtype)
+		static void OverrideOnOpen (GLib.GType gtype)
 		{
-			OverrideOnOpenEvent (gtype, OnOpenEventVMCallback);
+			OverrideOnOpen (gtype, OnOpenVMCallback);
 		}
 
-		static void OverrideOnOpenEvent (GLib.GType gtype, OnOpenEventNativeDelegate callback)
+		static void OverrideOnOpen (GLib.GType gtype, OnOpenNativeDelegate callback)
 		{
 			OverrideVirtualMethod (gtype, "on-open", callback);
 		}
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void OnOpenEventNativeDelegate (IntPtr inst);
+		delegate void OnOpenNativeDelegate (IntPtr inst);
 
-		static void OnOpenEvent_cb (IntPtr inst)
+		static void OnOpen_cb (IntPtr inst)
 		{
 			try {
 				WebRTCDataChannel __obj = GLib.Object.GetObject (inst, false) as WebRTCDataChannel;
-				__obj.OnOnOpenEvent ();
+				__obj.OnOnOpen ();
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
 		}
 
-		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideOnOpenEvent")]
-		protected virtual void OnOnOpenEvent ()
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideOnOpen")]
+		protected virtual void OnOnOpen ()
 		{
-			InternalOnOpenEvent ();
+			InternalOnOpen ();
 		}
 
-		private void InternalOnOpenEvent ()
+		private void InternalOnOpen ()
 		{
 			GLib.Value ret = GLib.Value.Empty;
 			GLib.ValueArray inst_and_params = new GLib.ValueArray (1);
@@ -588,12 +529,8 @@ namespace Gst.WebRTC {
 
 		static void OverrideSendDataEvent (GLib.GType gtype, SendDataEventNativeDelegate callback)
 		{
-			unsafe {
-				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("send_data"));
-				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
-			}
+			OverrideVirtualMethod (gtype, "send-data", callback);
 		}
-
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate void SendDataEventNativeDelegate (IntPtr inst, IntPtr data);
 
@@ -615,14 +552,16 @@ namespace Gst.WebRTC {
 
 		private void InternalSendDataEvent (GLib.Bytes data)
 		{
-			SendDataEventNativeDelegate unmanaged = null;
-			unsafe {
-				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("send_data"));
-				unmanaged = (SendDataEventNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(SendDataEventNativeDelegate));
-			}
-			if (unmanaged == null) return;
-
-			unmanaged (this.Handle, data == null ? IntPtr.Zero : data.Handle);
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (2);
+			GLib.Value[] vals = new GLib.Value [2];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (data);
+			inst_and_params.Append (vals [1]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
 		}
 
 		static SendStringEventNativeDelegate SendStringEvent_cb_delegate;
@@ -641,12 +580,8 @@ namespace Gst.WebRTC {
 
 		static void OverrideSendStringEvent (GLib.GType gtype, SendStringEventNativeDelegate callback)
 		{
-			unsafe {
-				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("send_string"));
-				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
-			}
+			OverrideVirtualMethod (gtype, "send-string", callback);
 		}
-
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate void SendStringEventNativeDelegate (IntPtr inst, IntPtr data);
 
@@ -668,69 +603,16 @@ namespace Gst.WebRTC {
 
 		private void InternalSendStringEvent (string data)
 		{
-			SendStringEventNativeDelegate unmanaged = null;
-			unsafe {
-				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("send_string"));
-				unmanaged = (SendStringEventNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(SendStringEventNativeDelegate));
-			}
-			if (unmanaged == null) return;
-
-			IntPtr native_data = GLib.Marshaller.StringToPtrGStrdup (data);
-			unmanaged (this.Handle, native_data);
-			GLib.Marshaller.Free (native_data);
-		}
-
-		static CloseEventNativeDelegate CloseEvent_cb_delegate;
-		static CloseEventNativeDelegate CloseEventVMCallback {
-			get {
-				if (CloseEvent_cb_delegate == null)
-					CloseEvent_cb_delegate = new CloseEventNativeDelegate (CloseEvent_cb);
-				return CloseEvent_cb_delegate;
-			}
-		}
-
-		static void OverrideCloseEvent (GLib.GType gtype)
-		{
-			OverrideCloseEvent (gtype, CloseEventVMCallback);
-		}
-
-		static void OverrideCloseEvent (GLib.GType gtype, CloseEventNativeDelegate callback)
-		{
-			unsafe {
-				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("close"));
-				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
-			}
-		}
-
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void CloseEventNativeDelegate (IntPtr inst);
-
-		static void CloseEvent_cb (IntPtr inst)
-		{
-			try {
-				WebRTCDataChannel __obj = GLib.Object.GetObject (inst, false) as WebRTCDataChannel;
-				__obj.OnCloseEvent ();
-			} catch (Exception e) {
-				GLib.ExceptionManager.RaiseUnhandledException (e, false);
-			}
-		}
-
-		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCDataChannel), ConnectionMethod="OverrideCloseEvent")]
-		protected virtual void OnCloseEvent ()
-		{
-			InternalCloseEvent ();
-		}
-
-		private void InternalCloseEvent ()
-		{
-			CloseEventNativeDelegate unmanaged = null;
-			unsafe {
-				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("close"));
-				unmanaged = (CloseEventNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(CloseEventNativeDelegate));
-			}
-			if (unmanaged == null) return;
-
-			unmanaged (this.Handle);
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (2);
+			GLib.Value[] vals = new GLib.Value [2];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (data);
+			inst_and_params.Append (vals [1]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
 		}
 
 
@@ -739,40 +621,7 @@ namespace Gst.WebRTC {
 		static public new GLib.AbiStruct class_abi {
 			get {
 				if (_class_abi == null)
-					_class_abi = new GLib.AbiStruct (new List<GLib.AbiField>{ 
-						new GLib.AbiField("send_data"
-							, GLib.Object.class_abi.Fields
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // send_data
-							, null
-							, "send_string"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("send_string"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // send_string
-							, "send_data"
-							, "close"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("close"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // close
-							, "send_string"
-							, "_padding"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("_padding"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, "close"
-							, null
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-					});
+					_class_abi = new GLib.AbiStruct (GLib.Object.class_abi.Fields);
 
 				return _class_abi;
 			}
@@ -797,58 +646,6 @@ namespace Gst.WebRTC {
 
 		public void Close() {
 			gst_webrtc_data_channel_close(Handle);
-		}
-
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_webrtc_data_channel_on_buffered_amount_low(IntPtr raw);
-
-		public void OnBufferedAmountLow() {
-			gst_webrtc_data_channel_on_buffered_amount_low(Handle);
-		}
-
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_webrtc_data_channel_on_close(IntPtr raw);
-
-		public void OnClose() {
-			gst_webrtc_data_channel_on_close(Handle);
-		}
-
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_webrtc_data_channel_on_error(IntPtr raw, IntPtr error);
-
-		public void OnError(IntPtr error) {
-			gst_webrtc_data_channel_on_error(Handle, error);
-		}
-
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_webrtc_data_channel_on_message_data(IntPtr raw, IntPtr data);
-
-		public void OnMessageData(GLib.Bytes data) {
-			gst_webrtc_data_channel_on_message_data(Handle, data == null ? IntPtr.Zero : data.Handle);
-		}
-
-		public void OnMessageData() {
-			OnMessageData (null);
-		}
-
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_webrtc_data_channel_on_message_string(IntPtr raw, IntPtr str);
-
-		public void OnMessageString(string str) {
-			IntPtr native_str = GLib.Marshaller.StringToPtrGStrdup (str);
-			gst_webrtc_data_channel_on_message_string(Handle, native_str);
-			GLib.Marshaller.Free (native_str);
-		}
-
-		public void OnMessageString() {
-			OnMessageString (null);
-		}
-
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_webrtc_data_channel_on_open(IntPtr raw);
-
-		public void OnOpen() {
-			gst_webrtc_data_channel_on_open(Handle);
 		}
 
 		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -886,178 +683,10 @@ namespace Gst.WebRTC {
 		static public new GLib.AbiStruct abi_info {
 			get {
 				if (_abi_info == null)
-					_abi_info = new GLib.AbiStruct (new List<GLib.AbiField>{ 
-						new GLib.AbiField("lock"
-							, GLib.Object.abi_info.Fields
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // lock
-							, null
-							, "label"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("label"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // label
-							, "lock"
-							, "ordered"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("ordered"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(bool)) // ordered
-							, "label"
-							, "max_packet_lifetime"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDataChannel_orderedAlign), "ordered")
-							, 0
-							),
-						new GLib.AbiField("max_packet_lifetime"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(uint)) // max_packet_lifetime
-							, "ordered"
-							, "max_retransmits"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDataChannel_max_packet_lifetimeAlign), "max_packet_lifetime")
-							, 0
-							),
-						new GLib.AbiField("max_retransmits"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(uint)) // max_retransmits
-							, "max_packet_lifetime"
-							, "protocol"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDataChannel_max_retransmitsAlign), "max_retransmits")
-							, 0
-							),
-						new GLib.AbiField("protocol"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // protocol
-							, "max_retransmits"
-							, "negotiated"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("negotiated"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(bool)) // negotiated
-							, "protocol"
-							, "id"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDataChannel_negotiatedAlign), "negotiated")
-							, 0
-							),
-						new GLib.AbiField("id"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(int)) // id
-							, "negotiated"
-							, "priority"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDataChannel_idAlign), "id")
-							, 0
-							),
-						new GLib.AbiField("priority"
-							, -1
-							, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.WebRTC.WebRTCPriorityType))) // priority
-							, "id"
-							, "ready_state"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDataChannel_priorityAlign), "priority")
-							, 0
-							),
-						new GLib.AbiField("ready_state"
-							, -1
-							, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.WebRTC.WebRTCDataChannelState))) // ready_state
-							, "priority"
-							, "buffered_amount"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDataChannel_ready_stateAlign), "ready_state")
-							, 0
-							),
-						new GLib.AbiField("buffered_amount"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(ulong)) // buffered_amount
-							, "ready_state"
-							, "buffered_amount_low_threshold"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDataChannel_buffered_amountAlign), "buffered_amount")
-							, 0
-							),
-						new GLib.AbiField("buffered_amount_low_threshold"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(ulong)) // buffered_amount_low_threshold
-							, "buffered_amount"
-							, "_padding"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDataChannel_buffered_amount_low_thresholdAlign), "buffered_amount_low_threshold")
-							, 0
-							),
-						new GLib.AbiField("_padding"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, "buffered_amount_low_threshold"
-							, null
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-					});
+					_abi_info = new GLib.AbiStruct (GLib.Object.abi_info.Fields);
 
 				return _abi_info;
 			}
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDataChannel_orderedAlign
-		{
-			sbyte f1;
-			private bool ordered;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDataChannel_max_packet_lifetimeAlign
-		{
-			sbyte f1;
-			private uint max_packet_lifetime;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDataChannel_max_retransmitsAlign
-		{
-			sbyte f1;
-			private uint max_retransmits;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDataChannel_negotiatedAlign
-		{
-			sbyte f1;
-			private bool negotiated;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDataChannel_idAlign
-		{
-			sbyte f1;
-			private int id;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDataChannel_priorityAlign
-		{
-			sbyte f1;
-			private Gst.WebRTC.WebRTCPriorityType priority;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDataChannel_ready_stateAlign
-		{
-			sbyte f1;
-			private Gst.WebRTC.WebRTCDataChannelState ready_state;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDataChannel_buffered_amountAlign
-		{
-			sbyte f1;
-			private ulong buffered_amount;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDataChannel_buffered_amount_low_thresholdAlign
-		{
-			sbyte f1;
-			private ulong buffered_amount_low_threshold;
 		}
 
 

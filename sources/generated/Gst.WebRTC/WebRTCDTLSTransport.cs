@@ -13,20 +13,9 @@ namespace Gst.WebRTC {
 
 		public WebRTCDTLSTransport (IntPtr raw) : base(raw) {}
 
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_webrtc_dtls_transport_new(uint session_id);
-
-		public WebRTCDTLSTransport (uint session_id) : base (IntPtr.Zero)
+		protected WebRTCDTLSTransport() : base(IntPtr.Zero)
 		{
-			if (GetType () != typeof (WebRTCDTLSTransport)) {
-				var vals = new List<GLib.Value> ();
-				var names = new List<string> ();
-				names.Add ("session_id");
-				vals.Add (new GLib.Value (session_id));
-				CreateNativeObject (names.ToArray (), vals.ToArray ());
-				return;
-			}
-			Raw = gst_webrtc_dtls_transport_new(session_id);
+			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
 		[GLib.Property ("certificate")]
@@ -89,9 +78,6 @@ namespace Gst.WebRTC {
 			}
 		}
 
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_webrtc_dtls_transport_set_transport(IntPtr raw, IntPtr ice);
-
 		[GLib.Property ("transport")]
 		public Gst.WebRTC.WebRTCICETransport Transport {
 			get {
@@ -99,63 +85,6 @@ namespace Gst.WebRTC {
 				Gst.WebRTC.WebRTCICETransport ret = (Gst.WebRTC.WebRTCICETransport) val;
 				val.Dispose ();
 				return ret;
-			}
-			set  {
-				gst_webrtc_dtls_transport_set_transport(Handle, value == null ? IntPtr.Zero : value.Handle);
-			}
-		}
-
-		public Gst.WebRTC.WebRTCICETransport TransportField {
-			get {
-				unsafe {
-					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("transport"));
-					return GLib.Object.GetObject((*raw_ptr)) as Gst.WebRTC.WebRTCICETransport;
-				}
-			}
-		}
-
-		public Gst.WebRTC.WebRTCDTLSTransportState StateField {
-			get {
-				unsafe {
-					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("state"));
-					return (Gst.WebRTC.WebRTCDTLSTransportState) (*raw_ptr);
-				}
-			}
-		}
-
-		public bool ClientField {
-			get {
-				unsafe {
-					bool* raw_ptr = (bool*)(((byte*)Handle) + abi_info.GetFieldOffset("client"));
-					return (*raw_ptr);
-				}
-			}
-		}
-
-		public uint SessionIdField {
-			get {
-				unsafe {
-					uint* raw_ptr = (uint*)(((byte*)Handle) + abi_info.GetFieldOffset("session_id"));
-					return (*raw_ptr);
-				}
-			}
-		}
-
-		public Gst.Element Dtlssrtpenc {
-			get {
-				unsafe {
-					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("dtlssrtpenc"));
-					return GLib.Object.GetObject((*raw_ptr)) as Gst.Element;
-				}
-			}
-		}
-
-		public Gst.Element Dtlssrtpdec {
-			get {
-				unsafe {
-					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("dtlssrtpdec"));
-					return GLib.Object.GetObject((*raw_ptr)) as Gst.Element;
-				}
 			}
 		}
 
@@ -165,16 +94,7 @@ namespace Gst.WebRTC {
 		static public new GLib.AbiStruct class_abi {
 			get {
 				if (_class_abi == null)
-					_class_abi = new GLib.AbiStruct (new List<GLib.AbiField>{ 
-						new GLib.AbiField("_padding"
-							, Gst.Object.class_abi.Fields
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, null
-							, null
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-					});
+					_class_abi = new GLib.AbiStruct (Gst.Object.class_abi.Fields);
 
 				return _class_abi;
 			}
@@ -205,88 +125,10 @@ namespace Gst.WebRTC {
 		static public new GLib.AbiStruct abi_info {
 			get {
 				if (_abi_info == null)
-					_abi_info = new GLib.AbiStruct (new List<GLib.AbiField>{ 
-						new GLib.AbiField("transport"
-							, Gst.Object.abi_info.Fields
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // transport
-							, null
-							, "state"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("state"
-							, -1
-							, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.WebRTC.WebRTCDTLSTransportState))) // state
-							, "transport"
-							, "client"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDTLSTransport_stateAlign), "state")
-							, 0
-							),
-						new GLib.AbiField("client"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(bool)) // client
-							, "state"
-							, "session_id"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDTLSTransport_clientAlign), "client")
-							, 0
-							),
-						new GLib.AbiField("session_id"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(uint)) // session_id
-							, "client"
-							, "dtlssrtpenc"
-							, (long) Marshal.OffsetOf(typeof(GstWebRTCDTLSTransport_session_idAlign), "session_id")
-							, 0
-							),
-						new GLib.AbiField("dtlssrtpenc"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // dtlssrtpenc
-							, "session_id"
-							, "dtlssrtpdec"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("dtlssrtpdec"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // dtlssrtpdec
-							, "dtlssrtpenc"
-							, "_padding"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("_padding"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, "dtlssrtpdec"
-							, null
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-					});
+					_abi_info = new GLib.AbiStruct (Gst.Object.abi_info.Fields);
 
 				return _abi_info;
 			}
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDTLSTransport_stateAlign
-		{
-			sbyte f1;
-			private Gst.WebRTC.WebRTCDTLSTransportState state;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDTLSTransport_clientAlign
-		{
-			sbyte f1;
-			private bool client;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstWebRTCDTLSTransport_session_idAlign
-		{
-			sbyte f1;
-			private uint session_id;
 		}
 
 

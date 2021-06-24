@@ -13,24 +13,18 @@ namespace Gst.WebRTC {
 
 		public WebRTCRTPReceiver (IntPtr raw) : base(raw) {}
 
-		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_webrtc_rtp_receiver_new();
-
-		public WebRTCRTPReceiver () : base (IntPtr.Zero)
+		protected WebRTCRTPReceiver() : base(IntPtr.Zero)
 		{
-			if (GetType () != typeof (WebRTCRTPReceiver)) {
-				CreateNativeObject (new string [0], new GLib.Value[0]);
-				return;
-			}
-			Raw = gst_webrtc_rtp_receiver_new();
+			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("transport")]
 		public Gst.WebRTC.WebRTCDTLSTransport Transport {
 			get {
-				unsafe {
-					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("transport"));
-					return GLib.Object.GetObject((*raw_ptr)) as Gst.WebRTC.WebRTCDTLSTransport;
-				}
+				GLib.Value val = GetProperty ("transport");
+				Gst.WebRTC.WebRTCDTLSTransport ret = (Gst.WebRTC.WebRTCDTLSTransport) val;
+				val.Dispose ();
+				return ret;
 			}
 		}
 
@@ -40,16 +34,7 @@ namespace Gst.WebRTC {
 		static public new GLib.AbiStruct class_abi {
 			get {
 				if (_class_abi == null)
-					_class_abi = new GLib.AbiStruct (new List<GLib.AbiField>{ 
-						new GLib.AbiField("_padding"
-							, Gst.Object.class_abi.Fields
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, null
-							, null
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-					});
+					_class_abi = new GLib.AbiStruct (Gst.Object.class_abi.Fields);
 
 				return _class_abi;
 			}
@@ -80,24 +65,7 @@ namespace Gst.WebRTC {
 		static public new GLib.AbiStruct abi_info {
 			get {
 				if (_abi_info == null)
-					_abi_info = new GLib.AbiStruct (new List<GLib.AbiField>{ 
-						new GLib.AbiField("transport"
-							, Gst.Object.abi_info.Fields
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // transport
-							, null
-							, "_padding"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("_padding"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
-							, "transport"
-							, null
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-					});
+					_abi_info = new GLib.AbiStruct (Gst.Object.abi_info.Fields);
 
 				return _abi_info;
 			}
