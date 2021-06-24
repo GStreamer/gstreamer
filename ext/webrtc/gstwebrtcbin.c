@@ -4872,6 +4872,8 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
       } else if (_message_media_is_datachannel (sdp->sdp, i)) {
         _update_data_channel_from_sdp_media (webrtc, sdp->sdp, i, stream,
             error);
+        if (error && *error)
+          goto done;
       } else {
         GST_ERROR_OBJECT (webrtc, "Unknown media type in SDP at index %u", i);
       }
