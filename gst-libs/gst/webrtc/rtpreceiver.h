@@ -24,8 +24,6 @@
 #include <gst/webrtc/webrtc_fwd.h>
 #include <gst/webrtc/dtlstransport.h>
 
-#include "webrtc-priv.h"
-
 G_BEGIN_DECLS
 
 GST_WEBRTC_API

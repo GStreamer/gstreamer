@@ -31,6 +31,7 @@
 #endif
 
 #include "rtpreceiver.h"
+#include "webrtc-priv.h"
 
 #define GST_CAT_DEFAULT gst_webrtc_rtp_receiver_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);

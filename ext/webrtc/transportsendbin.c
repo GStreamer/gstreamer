@@ -23,6 +23,7 @@
 
 #include "transportsendbin.h"
 #include "utils.h"
+#include "gst/webrtc/webrtc-priv.h"
 
 /*
  *           ,--------------transport_send_%u-------- ---,

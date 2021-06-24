@@ -27,6 +27,7 @@
 #include "gstwebrtcice.h"
 #include "gstwebrtcbin.h"
 #include "utils.h"
+#include "gst/webrtc/webrtc-priv.h"
 
 #define transport_stream_parent_class parent_class
 G_DEFINE_TYPE (TransportStream, transport_stream, GST_TYPE_OBJECT);
