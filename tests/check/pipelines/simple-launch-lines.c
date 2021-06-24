@@ -103,31 +103,31 @@ GST_START_TEST (test_2_elements)
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED |
       GST_MESSAGE_STREAM_STATUS | GST_MESSAGE_ASYNC_DONE |
-      GST_MESSAGE_STREAM_START, GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_STREAM_START | GST_MESSAGE_LATENCY, GST_MESSAGE_UNKNOWN);
 
   s = "fakesrc can-activate-push=true ! fakesink can-activate-pull=false";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED |
       GST_MESSAGE_STREAM_STATUS | GST_MESSAGE_ASYNC_DONE |
-      GST_MESSAGE_STREAM_START, GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_STREAM_START | GST_MESSAGE_LATENCY, GST_MESSAGE_UNKNOWN);
 
   s = "fakesrc can-activate-push=false num-buffers=10 ! fakesink can-activate-pull=true";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED |
       GST_MESSAGE_STREAM_STATUS | GST_MESSAGE_ASYNC_DONE |
-      GST_MESSAGE_STREAM_START, GST_MESSAGE_EOS);
+      GST_MESSAGE_STREAM_START | GST_MESSAGE_LATENCY, GST_MESSAGE_EOS);
 
   s = "fakesrc can-activate-push=true num-buffers=10 ! fakesink can-activate-pull=false";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED |
       GST_MESSAGE_STREAM_STATUS | GST_MESSAGE_ASYNC_DONE |
-      GST_MESSAGE_STREAM_START, GST_MESSAGE_EOS);
+      GST_MESSAGE_STREAM_START | GST_MESSAGE_LATENCY, GST_MESSAGE_EOS);
 
   s = "fakesrc can-activate-push=false ! fakesink can-activate-pull=false";
   ASSERT_CRITICAL (run_pipeline (setup_pipeline (s), s,
           GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED |
           GST_MESSAGE_STREAM_STATUS | GST_MESSAGE_ASYNC_DONE |
-          GST_MESSAGE_STREAM_START, GST_MESSAGE_UNKNOWN));
+          GST_MESSAGE_STREAM_START | GST_MESSAGE_LATENCY, GST_MESSAGE_UNKNOWN));
 }
 
 GST_END_TEST;

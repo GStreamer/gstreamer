@@ -42,7 +42,22 @@ pop_async_done (GstBus * bus)
 }
 
 static void
-pop_messages (GstBus * bus, int count)
+pop_latency (GstBus * bus)
+{
+  GstMessage *message;
+
+  GST_DEBUG ("popping async-done message");
+  message = gst_bus_poll (bus, GST_MESSAGE_LATENCY, -1);
+
+  fail_unless (message && GST_MESSAGE_TYPE (message)
+      == GST_MESSAGE_LATENCY, "did not get GST_MESSAGE_LATENCY");
+
+  gst_message_unref (message);
+  GST_DEBUG ("popped message");
+}
+
+static void
+pop_state_changed (GstBus * bus, int count)
 {
   GstMessage *message;
 
@@ -561,7 +576,7 @@ GST_START_TEST (test_message_state_changed_children)
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 2);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);
 
-  pop_messages (bus, 3);
+  pop_state_changed (bus, 3);
   fail_if (gst_bus_have_pending (bus), "unexpected pending messages");
 
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
@@ -599,18 +614,19 @@ GST_START_TEST (test_message_state_changed_children)
   ASSERT_OBJECT_REFCOUNT (src, "src", 4);
   /* refcount can be 4 if the bin is still processing the async_done message of
    * the sink. */
-  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 3);
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 4);
   /* 3 or 4 is valid, because the pipeline might still be posting 
    * its state_change message */
   ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "pipeline", 3, 4);
 
-  pop_messages (bus, 3);
+  pop_state_changed (bus, 3);
   pop_async_done (bus);
+  pop_latency (bus);
   fail_if ((gst_bus_pop (bus)) != NULL);
 
-  ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "bus", 2, 3);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
-  ASSERT_OBJECT_REFCOUNT (sink, "sink", 2);
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 3);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   /* change state to PLAYING, spawning three messages */
@@ -632,7 +648,7 @@ GST_START_TEST (test_message_state_changed_children)
   ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 4);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 3);
 
-  pop_messages (bus, 3);
+  pop_state_changed (bus, 3);
   fail_if ((gst_bus_pop (bus)) != NULL);
 
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
@@ -650,10 +666,10 @@ GST_START_TEST (test_message_state_changed_children)
   /* each object is referenced by two messages, the source also has the
    * stream-status message referencing it */
   ASSERT_OBJECT_REFCOUNT (src, "src", 4);
-  ASSERT_OBJECT_REFCOUNT (sink, "sink", 3);
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 3, 4);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 3);
 
-  pop_messages (bus, 6);
+  pop_state_changed (bus, 6);
   fail_if ((gst_bus_pop (bus)) != NULL);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
@@ -706,8 +722,9 @@ GST_START_TEST (test_watch_for_state_change)
       GST_CLOCK_TIME_NONE);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
-  pop_messages (bus, 6);
+  pop_state_changed (bus, 6);
   pop_async_done (bus);
+  pop_latency (bus);
 
   fail_unless (gst_bus_have_pending (bus) == FALSE,
       "Unexpected messages on bus");
@@ -715,15 +732,17 @@ GST_START_TEST (test_watch_for_state_change)
   ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
-  pop_messages (bus, 3);
+  pop_state_changed (bus, 3);
 
   /* this one might return either SUCCESS or ASYNC, likely SUCCESS */
   ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
   gst_element_get_state (GST_ELEMENT (bin), NULL, NULL, GST_CLOCK_TIME_NONE);
 
-  pop_messages (bus, 3);
-  if (ret == GST_STATE_CHANGE_ASYNC)
+  pop_state_changed (bus, 3);
+  if (ret == GST_STATE_CHANGE_ASYNC) {
     pop_async_done (bus);
+    pop_latency (bus);
+  }
 
   fail_unless (gst_bus_have_pending (bus) == FALSE,
       "Unexpected messages on bus");
@@ -932,7 +951,7 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
   ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_READY, GST_STATE_PAUSED, 107);
 #else
 
-  pop_messages (bus, 2);        /* pop remaining ready => paused messages off the bus */
+  pop_state_changed (bus, 2);   /* pop remaining ready => paused messages off the bus */
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_READY, GST_STATE_PAUSED,
       108);
   pop_async_done (bus);
@@ -953,8 +972,8 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
   fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to READY failed");
 
   /* TODO: do we need to check downwards state change order as well? */
-  pop_messages (bus, 4);        /* pop playing => paused messages off the bus */
-  pop_messages (bus, 4);        /* pop paused => ready messages off the bus */
+  pop_state_changed (bus, 4);   /* pop playing => paused messages off the bus */
+  pop_state_changed (bus, 4);   /* pop paused => ready messages off the bus */
 
   while (GST_OBJECT_REFCOUNT_VALUE (pipeline) > 1)
     THREAD_SWITCH ();
@@ -1037,7 +1056,7 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_READY, GST_STATE_PAUSED, 206);
   ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_READY, GST_STATE_PAUSED, 207);
 #else
-  pop_messages (bus, 2);        /* pop remaining ready => paused messages off the bus */
+  pop_state_changed (bus, 2);   /* pop remaining ready => paused messages off the bus */
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_READY, GST_STATE_PAUSED,
       208);
   pop_async_done (bus);
@@ -1057,8 +1076,8 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to READY failed");
 
   /* TODO: do we need to check downwards state change order as well? */
-  pop_messages (bus, 4);        /* pop playing => paused messages off the bus */
-  pop_messages (bus, 4);        /* pop paused => ready messages off the bus */
+  pop_state_changed (bus, 4);   /* pop playing => paused messages off the bus */
+  pop_state_changed (bus, 4);   /* pop paused => ready messages off the bus */
 
   GST_DEBUG ("waiting for pipeline to reach refcount 1");
   while (GST_OBJECT_REFCOUNT_VALUE (pipeline) > 1)

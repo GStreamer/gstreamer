@@ -1769,6 +1769,9 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
             next, pending, GST_STATE_VOID_PENDING));
   }
 
+  gst_element_post_message (GST_ELEMENT_CAST (basesink),
+      gst_message_new_latency (GST_OBJECT_CAST (basesink)));
+
   GST_STATE_BROADCAST (basesink);
 
   return TRUE;
@@ -1797,6 +1800,9 @@ nothing_pending:
     /* we can report latency queries now */
     basesink->priv->have_latency = TRUE;
     GST_OBJECT_UNLOCK (basesink);
+
+    gst_element_post_message (GST_ELEMENT_CAST (basesink),
+        gst_message_new_latency (GST_OBJECT_CAST (basesink)));
     return TRUE;
   }
 stopping_unlocked:
@@ -5693,6 +5699,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
             gst_message_new_async_start (GST_OBJECT_CAST (basesink)));
       } else {
         priv->have_latency = TRUE;
+        gst_element_post_message (GST_ELEMENT_CAST (basesink),
+            gst_message_new_latency (GST_OBJECT_CAST (basesink)));
       }
       GST_BASE_SINK_PREROLL_UNLOCK (basesink);
       break;
