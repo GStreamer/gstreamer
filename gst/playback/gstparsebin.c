@@ -3884,6 +3884,7 @@ guess_stream_type_from_caps (GstCaps * caps)
     return GST_STREAM_TYPE_AUDIO;
   if (g_str_has_prefix (name, "text/") ||
       g_str_has_prefix (name, "subpicture/") ||
+      g_str_has_prefix (name, "subtitle/") ||
       g_str_has_prefix (name, "closedcaption/"))
     return GST_STREAM_TYPE_TEXT;
 
