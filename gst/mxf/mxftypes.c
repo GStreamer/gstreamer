@@ -1184,19 +1184,19 @@ mxf_index_table_segment_parse (const MXFUL * ul,
           segment->delta_entries[i].pos_table_index = GST_READ_UINT8 (tag_data);
           tag_data += 1;
           tag_size -= 1;
-          GST_DEBUG ("    pos table index = %d",
+          GST_DEBUG ("     pos table index = %d",
               segment->delta_entries[i].pos_table_index);
 
           segment->delta_entries[i].slice = GST_READ_UINT8 (tag_data);
           tag_data += 1;
           tag_size -= 1;
-          GST_DEBUG ("    slice = %u", segment->delta_entries[i].slice);
+          GST_DEBUG ("     slice = %u", segment->delta_entries[i].slice);
 
           segment->delta_entries[i].element_delta =
               GST_READ_UINT32_BE (tag_data);
           tag_data += 4;
           tag_size -= 4;
-          GST_DEBUG ("    element delta = %u",
+          GST_DEBUG ("     element delta = %u",
               segment->delta_entries[i].element_delta);
         }
         break;
@@ -1236,22 +1236,26 @@ mxf_index_table_segment_parse (const MXFUL * ul,
           entry->temporal_offset = GST_READ_UINT8 (tag_data);
           tag_data += 1;
           tag_size -= 1;
-          GST_DEBUG ("    temporal offset = %d", entry->temporal_offset);
+          GST_DEBUG ("     temporal offset = %d", entry->temporal_offset);
 
           entry->key_frame_offset = GST_READ_UINT8 (tag_data);
           tag_data += 1;
           tag_size -= 1;
-          GST_DEBUG ("    keyframe offset = %d", entry->key_frame_offset);
+          GST_DEBUG ("     keyframe offset = %d", entry->key_frame_offset);
 
           entry->flags = GST_READ_UINT8 (tag_data);
           tag_data += 1;
           tag_size -= 1;
-          GST_DEBUG ("    flags = 0x%02x", entry->flags);
+          GST_DEBUG ("     flags = 0x%02x (%s%s%s%s)", entry->flags,
+              entry->flags & 0x80 ? "Random-Access " : "",
+              entry->flags & 0x40 ? "Sequence-Header " : "",
+              entry->flags & 0x20 ? "Forward-Prediction " : "",
+              entry->flags & 0x10 ? "Backward-Prediction " : "");
 
           entry->stream_offset = GST_READ_UINT64_BE (tag_data);
           tag_data += 8;
           tag_size -= 8;
-          GST_DEBUG ("    stream offset = %" G_GUINT64_FORMAT,
+          GST_DEBUG ("     stream offset = %" G_GUINT64_FORMAT,
               entry->stream_offset);
 
           entry->slice_offset = g_new0 (guint32, segment->slice_count);
@@ -1259,7 +1263,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
             entry->slice_offset[j] = GST_READ_UINT32_BE (tag_data);
             tag_data += 4;
             tag_size -= 4;
-            GST_DEBUG ("    slice %u offset = %u", j, entry->slice_offset[j]);
+            GST_DEBUG ("     slice %u offset = %u", j, entry->slice_offset[j]);
           }
 
           entry->pos_table = g_new0 (MXFFraction, segment->pos_table_count);
@@ -1268,7 +1272,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
               goto error;
             tag_data += 8;
             tag_size -= 8;
-            GST_DEBUG ("    pos table %u = %d/%d", j, entry->pos_table[j].n,
+            GST_DEBUG ("     pos table %u = %d/%d", j, entry->pos_table[j].n,
                 entry->pos_table[j].d);
           }
         }
