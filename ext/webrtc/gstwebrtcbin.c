@@ -4045,37 +4045,39 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
 /*
  * Not-bundle case:
  *
- * ,-------------------------webrtcbin-------------------------,
- * ;                                                           ;
- * ;          ,-------rtpbin-------,   ,--transport_send_%u--, ;
- * ;          ;    send_rtp_src_%u o---o rtp_sink            ; ;
- * ;          ;                    ;   ;                     ; ;
- * ;          ;   send_rtcp_src_%u o---o rtcp_sink           ; ;
- * ; sink_%u  ;                    ;   '---------------------' ;
- * o----------o send_rtp_sink_%u   ;                           ;
- * ;          '--------------------'                           ;
- * '--------------------- -------------------------------------'
+ * ,--------------------------------------------webrtcbin-------------------------,
+ * ;                                                                              ;
+ * ;                             ,-------rtpbin-------,   ,--transport_send_%u--, ;
+ * ;                             ;    send_rtp_src_%u o---o rtp_sink            ; ;
+ * ;         ,---clocksync---,   ;                    ;   ;                     ; ;
+ * ;         ;               ;   ;   send_rtcp_src_%u o---o rtcp_sink           ; ;
+ * ; sink_%u ;               ;   ;                    ;   '---------------------' ;
+ * o---------o sink      src o---o send_rtp_sink_%u   ;                           ;
+ * ;         '---------------'   '--------------------'                           ;
+ * '------------------------------------------------------------------------------'
  */
 
 /*
  * Bundle case:
- * ,--------------------------------webrtcbin--------------------------------,
- * ;                                                                         ;
- * ;                        ,-------rtpbin-------,   ,--transport_send_%u--, ;
- * ;                        ;    send_rtp_src_%u o---o rtp_sink            ; ;
- * ;                        ;                    ;   ;                     ; ;
- * ;                        ;   send_rtcp_src_%u o---o rtcp_sink           ; ;
- * ; sink_%u ,---funnel---, ;                    ;   '---------------------' ;
- * o---------o sink_%u    ; ;                    ;                           ;
- * ; sink_%u ;        src o-o send_rtp_sink_%u   ;                           ;
- * o---------o sink_%u    ; ;                    ;                           ;
- * ;         '------------' '--------------------'                           ;
- * '-------------------------------------------------------------------------'
+ * ,-----------------------------------------------------webrtcbin--------------------------------,
+ * ;                                                                                              ;
+ * ;                                             ,-------rtpbin-------,   ,--transport_send_%u--, ;
+ * ;                                             ;    send_rtp_src_%u o---o rtp_sink            ; ;
+ * ;                                             ;                    ;   ;                     ; ;
+ * ; sink_%u  ,---clocksync---,   ,---funnel---, ;   send_rtcp_src_%u o---o rtcp_sink           ; ;
+ * o----------o sink      src o---o sink_%u    ; ;                    ;   '---------------------' ;
+ * ;          '---------------'   ;            ; ;                    ;                           ;
+ * ;                              ;        src o-o send_rtp_sink_%u   ;                           ;
+ * ; sink_%u  ,---clocksync---,   ;            ; ;                    ;                           ;
+ * o----------o sink      src o---o sink%u     ; '--------------------'                           ;
+ * ;          '---------------'   '------------'                                                  ;
+ * '----------------------------------------------------------------------------------------------'
  */
   GstPadTemplate *rtp_templ;
-  GstPad *rtp_sink;
+  GstPad *rtp_sink, *sinkpad, *srcpad;
   gchar *pad_name;
   WebRTCTransceiver *trans;
+  GstElement *clocksync;
 
   g_return_val_if_fail (pad->trans != NULL, NULL);
 
@@ -4084,6 +4086,14 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
   GST_INFO_OBJECT (pad, "linking input stream %u", pad->trans->mline);
 
   g_assert (trans->stream);
+
+  clocksync = gst_element_factory_make ("clocksync", NULL);
+  g_object_set (clocksync, "sync", TRUE, NULL);
+  gst_bin_add (GST_BIN (webrtc), clocksync);
+  gst_element_sync_state_with_parent (clocksync);
+
+  srcpad = gst_element_get_static_pad (clocksync, "src");
+  sinkpad = gst_element_get_static_pad (clocksync, "sink");
 
   if (!webrtc->rtpfunnel) {
     rtp_templ =
@@ -4095,8 +4105,10 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
     rtp_sink =
         gst_element_request_pad (webrtc->rtpbin, rtp_templ, pad_name, NULL);
     g_free (pad_name);
-    gst_ghost_pad_set_target (GST_GHOST_PAD (pad), rtp_sink);
+    gst_pad_link (srcpad, rtp_sink);
     gst_object_unref (rtp_sink);
+
+    gst_ghost_pad_set_target (GST_GHOST_PAD (pad), sinkpad);
 
     pad_name = g_strdup_printf ("send_rtp_src_%u", pad->trans->mline);
     if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
@@ -4108,11 +4120,15 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
     GstPad *funnel_sinkpad =
         gst_element_request_pad_simple (webrtc->rtpfunnel, pad_name);
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD (pad), funnel_sinkpad);
+    gst_pad_link (srcpad, funnel_sinkpad);
+    gst_ghost_pad_set_target (GST_GHOST_PAD (pad), sinkpad);
 
     g_free (pad_name);
     gst_object_unref (funnel_sinkpad);
   }
+
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
 
   gst_element_sync_state_with_parent (GST_ELEMENT (trans->stream->send_bin));
 
