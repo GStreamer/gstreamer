@@ -187,8 +187,8 @@ gst_rtp_header_extension_twcc_write (GstRTPHeaderExtension * ext,
     goto map_failed;
 
   /* if there already is a twcc-seqnum inside the packet */
-  if (gst_rtp_buffer_get_extension_onebyte_header (&rtp, ext->ext_id, 0,
-          &ext_data, &ext_size)) {
+  if (gst_rtp_buffer_get_extension_onebyte_header (&rtp,
+          gst_rtp_header_extension_get_id (ext), 0, &ext_data, &ext_size)) {
     if (ext_size < gst_rtp_header_extension_twcc_get_max_size (ext, NULL))
       goto existing_too_small;
 
