@@ -893,22 +893,22 @@ on_sdp_media_direction (struct test_webrtc *t, GstElement * element,
           fail_unless (have_direction == FALSE,
               "duplicate/multiple directions for media %u", j);
           have_direction = TRUE;
-          fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
+          fail_unless_equals_string (attr->key, expected_directions[i]);
         } else if (g_strcmp0 (attr->key, "sendonly") == 0) {
           fail_unless (have_direction == FALSE,
               "duplicate/multiple directions for media %u", j);
           have_direction = TRUE;
-          fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
+          fail_unless_equals_string (attr->key, expected_directions[i]);
         } else if (g_strcmp0 (attr->key, "recvonly") == 0) {
           fail_unless (have_direction == FALSE,
               "duplicate/multiple directions for media %u", j);
           have_direction = TRUE;
-          fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
+          fail_unless_equals_string (attr->key, expected_directions[i]);
         } else if (g_strcmp0 (attr->key, "sendrecv") == 0) {
           fail_unless (have_direction == FALSE,
               "duplicate/multiple directions for media %u", j);
           have_direction = TRUE;
-          fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
+          fail_unless_equals_string (attr->key, expected_directions[i]);
         }
       }
       fail_unless (have_direction, "no direction attribute in media %u", i);
@@ -973,7 +973,7 @@ on_sdp_media_setup (struct test_webrtc *t, GstElement * element,
         fail_unless (have_setup == FALSE,
             "duplicate/multiple setup for media %u", j);
         have_setup = TRUE;
-        fail_unless (g_strcmp0 (attr->value, expected_setup[i]) == 0);
+        fail_unless_equals_string (attr->value, expected_setup[i]);
       }
     }
     fail_unless (have_setup, "no setup attribute in media %u", i);
