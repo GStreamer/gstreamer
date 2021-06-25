@@ -212,7 +212,7 @@ webrtc_kind_from_caps (const GstCaps * caps)
   GstStructure *s;
   const gchar *media;
 
-  if (gst_caps_get_size (caps) == 0)
+  if (!caps || gst_caps_get_size (caps) == 0)
     return GST_WEBRTC_KIND_UNKNOWN;
 
   s = gst_caps_get_structure (caps, 0);

@@ -2025,7 +2025,8 @@ gst_webrtc_bin_attach_tos (GstWebRTCBin * webrtc)
 
 static WebRTCTransceiver *
 _create_webrtc_transceiver (GstWebRTCBin * webrtc,
-    GstWebRTCRTPTransceiverDirection direction, guint mline)
+    GstWebRTCRTPTransceiverDirection direction, guint mline, GstWebRTCKind kind,
+    GstCaps * codec_preferences)
 {
   WebRTCTransceiver *trans;
   GstWebRTCRTPTransceiver *rtp_trans;
@@ -2038,6 +2039,9 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc,
   rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
   rtp_trans->direction = direction;
   rtp_trans->mline = mline;
+  rtp_trans->kind = kind;
+  rtp_trans->codec_preferences =
+      codec_preferences ? gst_caps_ref (codec_preferences) : NULL;
   /* FIXME: We don't support stopping transceiver yet so they're always not stopped */
   rtp_trans->stopped = FALSE;
 
@@ -3712,8 +3716,14 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
       if (!rtp_trans) {
         GstCaps *trans_caps;
+        GstWebRTCKind kind = GST_WEBRTC_KIND_UNKNOWN;
 
-        trans = _create_webrtc_transceiver (webrtc, answer_dir, i);
+        if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0)
+          kind = GST_WEBRTC_KIND_AUDIO;
+        else
+          kind = GST_WEBRTC_KIND_VIDEO;
+
+        trans = _create_webrtc_transceiver (webrtc, answer_dir, i, kind, NULL);
         rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
 
         GST_LOG_OBJECT (webrtc, "Created new transceiver %" GST_PTR_FORMAT
@@ -4859,10 +4869,10 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
     } else {
       if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0 ||
           g_strcmp0 (gst_sdp_media_get_media (media), "video") == 0) {
+        GstWebRTCKind kind = GST_WEBRTC_KIND_UNKNOWN;
+
         /* No existing transceiver, find an unused one */
         if (!trans) {
-          GstWebRTCKind kind;
-
           if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0)
             kind = GST_WEBRTC_KIND_AUDIO;
           else
@@ -4879,7 +4889,7 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
          * a default value when the transceiver is created internally */
         if (!trans) {
           WebRTCTransceiver *t = _create_webrtc_transceiver (webrtc,
-              _get_direction_from_media (media), i);
+              _get_direction_from_media (media), i, kind, NULL);
           webrtc_transceiver_set_transport (t, stream);
           trans = GST_WEBRTC_RTP_TRANSCEIVER (t);
         }
@@ -5678,24 +5688,17 @@ gst_webrtc_bin_add_transceiver (GstWebRTCBin * webrtc,
     GstWebRTCRTPTransceiverDirection direction, GstCaps * caps)
 {
   WebRTCTransceiver *trans;
-  GstWebRTCRTPTransceiver *rtp_trans;
 
   g_return_val_if_fail (direction != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE,
       NULL);
 
   PC_LOCK (webrtc);
 
-  trans = _create_webrtc_transceiver (webrtc, direction, -1);
+  trans =
+      _create_webrtc_transceiver (webrtc, direction, -1,
+      webrtc_kind_from_caps (caps), caps);
   GST_LOG_OBJECT (webrtc,
       "Created new unassociated transceiver %" GST_PTR_FORMAT, trans);
-
-  rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
-  if (caps) {
-    GST_OBJECT_LOCK (trans);
-    rtp_trans->codec_preferences = gst_caps_ref (caps);
-    GST_OBJECT_UNLOCK (trans);
-    _update_transceiver_kind_from_caps (rtp_trans, caps);
-  }
 
   PC_UNLOCK (webrtc);
 
@@ -6631,8 +6634,7 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     GstWebRTCKind kind = GST_WEBRTC_KIND_UNKNOWN;
     guint i;
 
-    if (caps)
-      kind = webrtc_kind_from_caps (caps);
+    kind = webrtc_kind_from_caps (caps);
 
     for (i = 0; i < webrtc->priv->transceivers->len; i++) {
       GstWebRTCRTPTransceiver *tmptrans =
@@ -6677,16 +6679,20 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   if (!trans) {
     trans = GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
-            GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV, -1));
+            GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV, -1,
+            webrtc_kind_from_caps (caps), NULL));
     GST_LOG_OBJECT (webrtc, "Created new transceiver %" GST_PTR_FORMAT, trans);
   } else {
     GST_LOG_OBJECT (webrtc, "Using existing transceiver %" GST_PTR_FORMAT
         " for mline %u", trans, serial);
+    if (caps) {
+      if (!_update_transceiver_kind_from_caps (trans, caps))
+        GST_WARNING_OBJECT (webrtc,
+            "Trying to change transceiver %d kind from %d to %d",
+            serial, trans->kind, webrtc_kind_from_caps (caps));
+    }
   }
   pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, trans, serial);
-
-  if (caps)
-    _update_transceiver_kind_from_caps (trans, caps);
 
   pad->block_id = gst_pad_add_probe (GST_PAD (pad), GST_PAD_PROBE_TYPE_BLOCK |
       GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
