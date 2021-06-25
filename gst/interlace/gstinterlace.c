@@ -1467,7 +1467,7 @@ gst_interlace_set_property (GObject * object,
         g_mutex_unlock (&interlace->lock);
       } else {
         g_mutex_unlock (&interlace->lock);
-        gst_pad_push_event (interlace->srcpad, gst_event_new_reconfigure ());
+        gst_pad_push_event (interlace->sinkpad, gst_event_new_reconfigure ());
       }
       break;
     }
