@@ -1581,7 +1581,8 @@ chain_convert_to_RGB (GstVideoConverter * convert, GstLineCache * prev,
   if (do_gamma) {
     gint scale;
 
-    if (!convert->unpack_rgb) {
+    /* Set up conversion matrices if needed, but only for the first thread */
+    if (idx == 0 && !convert->unpack_rgb) {
       color_matrix_set_identity (&convert->to_RGB_matrix);
       compute_matrix_to_RGB (convert, &convert->to_RGB_matrix);
 
@@ -1833,8 +1834,10 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
       convert->current_bits = MAX (convert->in_bits, convert->out_bits);
 
       do_conversion = TRUE;
-      if (!same_matrix || !same_primaries)
-        prepare_matrix (convert, &convert->convert_matrix);
+      if (!same_matrix || !same_primaries) {
+        if (idx == 0)
+          prepare_matrix (convert, &convert->convert_matrix);
+      }
       if (convert->in_bits == convert->out_bits)
         pass_alloc = TRUE;
     } else
@@ -1848,7 +1851,8 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
     if (same_primaries) {
       do_conversion = FALSE;
     } else {
-      prepare_matrix (convert, &convert->convert_matrix);
+      if (idx == 0)
+        prepare_matrix (convert, &convert->convert_matrix);
       convert->in_bits = convert->out_bits = 16;
       pass_alloc = TRUE;
       do_conversion = TRUE;
@@ -1970,7 +1974,7 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev,
     convert->current_bits = convert->pack_bits;
     convert->current_pstride = convert->current_bits >> 1;
 
-    if (!convert->pack_rgb) {
+    if (idx == 0 && !convert->pack_rgb) {
       color_matrix_set_identity (&convert->to_YUV_matrix);
       compute_matrix_to_YUV (convert, &convert->to_YUV_matrix, FALSE);
 
