@@ -36,6 +36,7 @@
 
 #define OPUS_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=OPUS,media=audio,clock-rate=48000,ssrc=(uint)3384078950"
 #define VP8_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=VP8,media=video,clock-rate=90000,ssrc=(uint)3484078950"
+#define H264_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=H264,media=video,clock-rate=90000,ssrc=(uint)3484078951"
 
 #define TEST_IS_OFFER_ELEMENT(t, e) ((((t)->offerror == 1 && (e) == (t)->webrtc1) || ((t)->offerror == 2 && (e) == (t)->webrtc2)) ? TRUE : FALSE)
 #define TEST_GET_OFFEROR(t) (TEST_IS_OFFER_ELEMENT(t, t->webrtc1) ? (t)->webrtc1 : t->webrtc2)
@@ -1224,6 +1225,8 @@ on_sdp_media_payload_types (struct test_webrtc *t, GstElement * element,
         fail_unless_equals_string (attr->value, "99 rtx/90000");
       } else if (g_str_has_prefix (attr->value, "100")) {
         fail_unless_equals_string (attr->value, "100 rtx/90000");
+      } else if (g_str_has_prefix (attr->value, "101")) {
+        fail_unless_equals_string (attr->value, "101 H264/90000");
       }
     }
   }
@@ -4126,6 +4129,104 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
 
 GST_END_TEST;
 
+static void
+_on_new_transceiver_codec_preferences_h264 (GstElement * webrtcbin,
+    GstWebRTCRTPTransceiver * trans, gpointer * user_data)
+{
+  GstCaps *caps;
+
+  caps = gst_caps_from_string ("application/x-rtp,encoding-name=(string)H264");
+  g_object_set (trans, "codec-preferences", caps, NULL);
+  gst_caps_unref (caps);
+}
+
+static void
+on_sdp_media_payload_types_only_h264 (struct test_webrtc *t,
+    GstElement * element, GstWebRTCSessionDescription * desc,
+    gpointer user_data)
+{
+  const GstSDPMedia *vmedia;
+  guint video_mline = GPOINTER_TO_UINT (user_data);
+  guint j;
+
+  vmedia = gst_sdp_message_get_media (desc->sdp, video_mline);
+
+  for (j = 0; j < gst_sdp_media_attributes_len (vmedia); j++) {
+    const GstSDPAttribute *attr = gst_sdp_media_get_attribute (vmedia, j);
+
+    if (!g_strcmp0 (attr->key, "rtpmap")) {
+      fail_unless_equals_string (attr->value, "101 H264/90000");
+    }
+  }
+}
+
+
+GST_START_TEST (test_codec_preferences_in_on_new_transceiver)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstWebRTCRTPTransceiverDirection direction;
+  GstWebRTCRTPTransceiver *trans;
+  VAL_SDP_INIT (no_duplicate_payloads, on_sdp_media_no_duplicate_payloads,
+      NULL, NULL);
+  guint offer_media_format_count[] = { 2 };
+  guint answer_media_format_count[] = { 1 };
+  VAL_SDP_INIT (offer_media_formats, on_sdp_media_count_formats,
+      offer_media_format_count, &no_duplicate_payloads);
+  VAL_SDP_INIT (answer_media_formats, on_sdp_media_count_formats,
+      answer_media_format_count, &no_duplicate_payloads);
+  VAL_SDP_INIT (offer_count, _count_num_sdp_media, GUINT_TO_POINTER (1),
+      &offer_media_formats);
+  VAL_SDP_INIT (answer_count, _count_num_sdp_media, GUINT_TO_POINTER (1),
+      &answer_media_formats);
+  VAL_SDP_INIT (offer_payloads, on_sdp_media_payload_types,
+      GUINT_TO_POINTER (0), &offer_count);
+  VAL_SDP_INIT (answer_payloads, on_sdp_media_payload_types_only_h264,
+      GUINT_TO_POINTER (0), &answer_count);
+  const gchar *expected_offer_setup[] = { "actpass", };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup,
+      &offer_payloads);
+  const gchar *expected_answer_setup[] = { "active", };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
+      &answer_payloads);
+  const gchar *expected_offer_direction[] = { "sendonly", };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_direction[] = { "recvonly", };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+  GstCaps *caps;
+  GstHarness *h;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  /* setup sendonly transceiver with VP8 and H264 */
+  caps = gst_caps_from_string (VP8_RTP_CAPS (97) ";" H264_RTP_CAPS (101));
+  direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
+      &trans);
+  gst_caps_unref (caps);
+  fail_unless (trans != NULL);
+  gst_object_unref (trans);
+
+  /* setup recvonly peer */
+  h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
+  add_fake_video_src_harness (h, 101);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  /* connect to "on-new-transceiver" to set codec-preferences to H264 */
+  g_signal_connect (t->webrtc2, "on-new-transceiver",
+      G_CALLBACK (_on_new_transceiver_codec_preferences_h264), NULL);
+
+  /* Answer SDP should now have H264 only. Without the codec-preferences it
+   * would only have VP8 because that comes first in the SDP */
+
+  test_validate_sdp (t, &offer, &answer);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
 
 static Suite *
 webrtcbin_suite (void)
@@ -4177,6 +4278,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_codec_preferences_caps);
     tcase_add_test (tc, test_codec_preferences_negotiation_sinkpad);
     tcase_add_test (tc, test_codec_preferences_negotiation_srcpad);
+    tcase_add_test (tc, test_codec_preferences_in_on_new_transceiver);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
