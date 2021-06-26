@@ -266,7 +266,7 @@ gst_gl_memory_egl_allocator_init (GstGLMemoryEGLAllocator * allocator)
 void
 gst_gl_memory_egl_init_once (void)
 {
-  static volatile gsize _init = 0;
+  static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
     gst_gl_memory_init_once ();
