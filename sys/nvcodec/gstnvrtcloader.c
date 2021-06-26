@@ -26,6 +26,9 @@
 
 #include <gmodule.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gst_nvcodec_debug);
+#define GST_CAT_DEFAULT gst_nvcodec_debug
+
 #ifndef G_OS_WIN32
 #define NVRTC_LIBNAME "libnvrtc.so"
 #else
@@ -80,14 +83,33 @@ gst_nvrtc_load_library (void)
   if (!module) {
 #ifndef G_OS_WIN32
     filename = g_strdup (NVRTC_LIBNAME);
-#else
-    /* (major version * 1000) + (minor version * 10) */
-    filename = g_strdup_printf (NVRTC_LIBNAME, cuda_version / 1000,
-        (cuda_version % 1000) / 10);
-#endif
-
-    module = g_module_open (filename, G_MODULE_BIND_LAZY);
     fname = filename;
+    module = g_module_open (filename, G_MODULE_BIND_LAZY);
+#else
+    /* XXX: On Windows, minor version of nvrtc library might not be exactly
+     * same as CUDA library */
+    {
+      gint cuda_major_version = cuda_version / 1000;
+      gint cuda_minor_version = (cuda_version % 1000) / 10;
+      gint minor_version;
+
+      for (minor_version = cuda_minor_version; minor_version >= 0;
+          minor_version--) {
+        g_free (filename);
+        filename = g_strdup_printf (NVRTC_LIBNAME, cuda_major_version,
+            minor_version);
+        fname = filename;
+
+        module = g_module_open (filename, G_MODULE_BIND_LAZY);
+        if (module) {
+          GST_INFO ("%s is available", filename);
+          break;
+        }
+
+        GST_DEBUG ("Couldn't open library %s", filename);
+      }
+    }
+#endif
   }
 
   if (module == NULL) {
