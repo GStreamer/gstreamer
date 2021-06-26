@@ -953,10 +953,18 @@ static const struct
 static VAProfile
 _get_profile (GstVaH265Dec * self, const GstH265SPS * sps, gint max_dpb_size)
 {
+  GstH265Decoder *h265_decoder = GST_H265_DECODER (self);
   GstVaBaseDec *base = GST_VA_BASE_DEC (self);
   GstH265Profile profile = gst_h265_get_profile_from_sps ((GstH265SPS *) sps);
   VAProfile profiles[4];
   gint i = 0, j;
+
+  /* 1. The profile directly specified by the SPS should always be the
+     first choice. It is the exact one.
+     2. The profile in the input caps may contain the compatible profile
+     chosen by the upstream element. Upstream element such as the parse
+     may already decide the best compatible profile for us. We also need
+     to consider it as a choice. */
 
   for (j = 0; j < G_N_ELEMENTS (profile_map); j++) {
     if (profile_map[j].profile == profile) {
@@ -965,7 +973,30 @@ _get_profile (GstVaH265Dec * self, const GstH265SPS * sps, gint max_dpb_size)
     }
   }
 
-  /* TODO Special cases here */
+  if (h265_decoder->input_state->caps
+      && gst_caps_is_fixed (h265_decoder->input_state->caps)) {
+    GstH265Profile compatible_profile = GST_H265_PROFILE_INVALID;
+    GstStructure *structure;
+    const gchar *profile_str;
+
+    structure = gst_caps_get_structure (h265_decoder->input_state->caps, 0);
+
+    profile_str = gst_structure_get_string (structure, "profile");
+    if (profile_str)
+      compatible_profile = gst_h265_profile_from_string (profile_str);
+
+    if (compatible_profile != profile) {
+      GST_INFO_OBJECT (self, "The upstream set the compatible profile %s, "
+          "also consider it as a candidate.", profile_str);
+
+      for (j = 0; j < G_N_ELEMENTS (profile_map); j++) {
+        if (profile_map[j].profile == compatible_profile) {
+          profiles[i++] = profile_map[j].va_profile;
+          break;
+        }
+      }
+    }
+  }
 
   for (j = 0; j < i && j < G_N_ELEMENTS (profiles); j++) {
     if (gst_va_decoder_has_profile (base->decoder, profiles[j]))
