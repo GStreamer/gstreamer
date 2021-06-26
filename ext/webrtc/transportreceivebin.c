@@ -112,11 +112,27 @@ void
 transport_receive_bin_set_receive_state (TransportReceiveBin * receive,
     ReceiveState state)
 {
+  GstWebRTCICEConnectionState icestate;
 
   g_mutex_lock (&receive->pad_block_lock);
   if (receive->receive_state != state) {
-    GST_DEBUG_OBJECT (receive, "changing receive state to %s",
+    GST_DEBUG_OBJECT (receive, "Requested change of receive state to %s",
         _receive_state_to_string (state));
+  }
+
+  receive->receive_state = state;
+
+  g_object_get (receive->stream->transport->transport, "state", &icestate,
+      NULL);
+  if (state == RECEIVE_STATE_PASS) {
+    if (icestate == GST_WEBRTC_ICE_CONNECTION_STATE_CONNECTED ||
+        icestate == GST_WEBRTC_ICE_CONNECTION_STATE_COMPLETED) {
+      GST_LOG_OBJECT (receive, "Unblocking nicesrc because ICE is connected.");
+    } else {
+      GST_LOG_OBJECT (receive, "Can't unblock nicesrc yet because ICE "
+          "is not connected, it is %d", icestate);
+      state = RECEIVE_STATE_BLOCK;
+    }
   }
 
   if (state == RECEIVE_STATE_PASS) {
@@ -151,8 +167,14 @@ transport_receive_bin_set_receive_state (TransportReceiveBin * receive,
       }
     }
   }
-  receive->receive_state = state;
   g_mutex_unlock (&receive->pad_block_lock);
+}
+
+static void
+_on_notify_ice_connection_state (GstWebRTCICETransport * transport,
+    GParamSpec * pspec, TransportReceiveBin * receive)
+{
+  transport_receive_bin_set_receive_state (receive, receive->receive_state);
 }
 
 static void
@@ -330,6 +352,9 @@ transport_receive_bin_constructed (GObject * object)
   ghost = gst_ghost_pad_new ("data_src", pad);
   gst_element_add_pad (GST_ELEMENT (receive), ghost);
   gst_object_unref (pad);
+
+  g_signal_connect_after (receive->stream->transport->transport,
+      "notify::state", G_CALLBACK (_on_notify_ice_connection_state), receive);
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
