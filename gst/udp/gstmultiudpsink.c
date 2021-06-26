@@ -42,6 +42,8 @@
 #include <sys/socket.h>
 #endif
 
+#include <gio/gnetworking.h>
+
 #include "gst/net/net.h"
 #include "gst/glib-compat-private.h"
 
@@ -1341,10 +1343,9 @@ gst_multiudpsink_start (GstBaseSink * bsink)
   }
 #ifdef SO_SNDBUF
   {
-    socklen_t len;
-    gint sndsize, ret;
+    gint sndsize;
+    GError *opt_err = NULL;
 
-    len = sizeof (sndsize);
     if (sink->buffer_size != 0) {
       sndsize = sink->buffer_size;
 
@@ -1354,24 +1355,22 @@ gst_multiudpsink_start (GstBaseSink * bsink)
        * Linux. */
 
       if (sink->used_socket) {
-        ret =
-            setsockopt (g_socket_get_fd (sink->used_socket), SOL_SOCKET,
-            SO_SNDBUF, (void *) &sndsize, len);
-        if (ret != 0) {
+        if (!g_socket_set_option (sink->used_socket, SOL_SOCKET, SO_SNDBUF,
+                sndsize, &opt_err)) {
           GST_ELEMENT_WARNING (sink, RESOURCE, SETTINGS, (NULL),
-              ("Could not create a buffer of requested %d bytes, %d: %s",
-                  sndsize, ret, g_strerror (errno)));
+              ("Could not create a buffer of requested %d bytes (%s)",
+                  sndsize, opt_err->message));
+          g_clear_error (&opt_err);
         }
       }
 
       if (sink->used_socket_v6) {
-        ret =
-            setsockopt (g_socket_get_fd (sink->used_socket_v6), SOL_SOCKET,
-            SO_SNDBUF, (void *) &sndsize, len);
-        if (ret != 0) {
+        if (!g_socket_set_option (sink->used_socket_v6, SOL_SOCKET, SO_SNDBUF,
+                sndsize, &opt_err)) {
           GST_ELEMENT_WARNING (sink, RESOURCE, SETTINGS, (NULL),
-              ("Could not create a buffer of requested %d bytes, %d: %s",
-                  sndsize, ret, g_strerror (errno)));
+              ("Could not create a buffer of requested %d bytes (%s)",
+                  sndsize, opt_err->message));
+          g_clear_error (&opt_err);
         }
       }
     }
@@ -1380,23 +1379,21 @@ gst_multiudpsink_start (GstBaseSink * bsink)
      * value we set because the kernel allocates extra memory for metadata.
      * The default on Linux is about 100K (which is about 50K without metadata) */
     if (sink->used_socket) {
-      ret =
-          getsockopt (g_socket_get_fd (sink->used_socket), SOL_SOCKET,
-          SO_SNDBUF, (void *) &sndsize, &len);
-      if (ret == 0)
+      if (g_socket_get_option (sink->used_socket, SOL_SOCKET, SO_SNDBUF,
+              &sndsize, NULL)) {
         GST_DEBUG_OBJECT (sink, "have UDP buffer of %d bytes", sndsize);
-      else
+      } else {
         GST_DEBUG_OBJECT (sink, "could not get UDP buffer size");
+      }
     }
 
     if (sink->used_socket_v6) {
-      ret =
-          getsockopt (g_socket_get_fd (sink->used_socket_v6), SOL_SOCKET,
-          SO_SNDBUF, (void *) &sndsize, &len);
-      if (ret == 0)
+      if (g_socket_get_option (sink->used_socket_v6, SOL_SOCKET, SO_SNDBUF,
+              &sndsize, NULL)) {
         GST_DEBUG_OBJECT (sink, "have UDPv6 buffer of %d bytes", sndsize);
-      else
+      } else {
         GST_DEBUG_OBJECT (sink, "could not get UDPv6 buffer size");
+      }
     }
   }
 #endif
