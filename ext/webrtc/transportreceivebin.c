@@ -136,6 +136,8 @@ transport_receive_bin_set_receive_state (TransportReceiveBin * receive,
   }
 
   if (state == RECEIVE_STATE_PASS) {
+    g_object_set (receive->queue, "leaky", 0, NULL);
+
     if (receive->rtp_block)
       _free_pad_block (receive->rtp_block);
     receive->rtp_block = NULL;
@@ -145,6 +147,7 @@ transport_receive_bin_set_receive_state (TransportReceiveBin * receive,
     receive->rtcp_block = NULL;
   } else {
     g_assert (state == RECEIVE_STATE_BLOCK);
+    g_object_set (receive->queue, "leaky", 2, NULL);
     if (receive->rtp_block == NULL) {
       GstWebRTCDTLSTransport *transport;
       GstElement *dtlssrtpdec;
@@ -297,7 +300,7 @@ transport_receive_bin_constructed (GObject * object)
   TransportReceiveBin *receive = TRANSPORT_RECEIVE_BIN (object);
   GstWebRTCDTLSTransport *transport;
   GstPad *ghost, *pad;
-  GstElement *capsfilter, *queue;
+  GstElement *capsfilter;
   GstCaps *caps;
 
   g_return_if_fail (receive->stream);
@@ -311,18 +314,20 @@ transport_receive_bin_constructed (GObject * object)
   g_object_set (capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
 
-  queue = gst_element_factory_make ("queue", NULL);
+  receive->queue = gst_element_factory_make ("queue", NULL);
   /* FIXME: make this configurable? */
-  g_object_set (queue, "leaky", 2, "max-size-time", (guint64) 0,
+  g_object_set (receive->queue, "leaky", 2, "max-size-time", (guint64) 0,
       "max-size-buffers", 0, "max-size-bytes", 5 * 1024 * 1024, NULL);
-  g_signal_connect (queue, "overrun", G_CALLBACK (rtp_queue_overrun), receive);
+  g_signal_connect (receive->queue, "overrun", G_CALLBACK (rtp_queue_overrun),
+      receive);
 
-  gst_bin_add (GST_BIN (receive), GST_ELEMENT (queue));
+  gst_bin_add (GST_BIN (receive), GST_ELEMENT (receive->queue));
   gst_bin_add (GST_BIN (receive), GST_ELEMENT (capsfilter));
-  if (!gst_element_link_pads (capsfilter, "src", queue, "sink"))
+  if (!gst_element_link_pads (capsfilter, "src", receive->queue, "sink"))
     g_warn_if_reached ();
 
-  if (!gst_element_link_pads (queue, "src", transport->dtlssrtpdec, "sink"))
+  if (!gst_element_link_pads (receive->queue, "src", transport->dtlssrtpdec,
+          "sink"))
     g_warn_if_reached ();
 
   gst_bin_add (GST_BIN (receive), GST_ELEMENT (transport->transport->src));

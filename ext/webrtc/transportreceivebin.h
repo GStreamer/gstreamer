@@ -52,6 +52,7 @@ struct _TransportReceiveBin
   struct pad_block          *rtcp_block;
   GMutex                     pad_block_lock;
   ReceiveState               receive_state;
+  GstElement                *queue;
 };
 
 struct _TransportReceiveBinClass
