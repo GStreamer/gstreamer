@@ -1850,6 +1850,106 @@ get_compatible_profile_caps (GstH265SPS * sps, GstH265Profile profile)
           (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14);
       break;
     }
+      /* All the -intra profiles can map to non-intra profiles, except
+         the monochrome case for main and main-10. */
+    case GST_H265_PROFILE_MAIN_INTRA:
+    {
+      if (sps->chroma_format_idc == 1) {
+        profiles |= profile_to_flag (GST_H265_PROFILE_MAIN);
+
+        /* Add all main compatible profiles without monochrome. */
+        /* A.3.3 */
+        profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_10);
+
+        /* A.3.5 */
+        profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_10);
+        profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_12);
+
+        /* A.3.7 */
+        profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN);
+        profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10);
+        profiles |=
+            profile_to_flag
+            (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444);
+        profiles |=
+            profile_to_flag
+            (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10);
+        profiles |=
+            profile_to_flag
+            (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14);
+
+        /* G.11.1.1 */
+        profiles |= profile_to_flag (GST_H265_PROFILE_MULTIVIEW_MAIN);
+
+        /* H.11.1.1 */
+        profiles |= profile_to_flag (GST_H265_PROFILE_SCALABLE_MAIN);
+        profiles |= profile_to_flag (GST_H265_PROFILE_SCALABLE_MAIN_10);
+
+        /* I.11.1.1 */
+        profiles |= profile_to_flag (GST_H265_PROFILE_3D_MAIN);
+      }
+
+      /* Add all main compatible profiles with monochrome. */
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_12);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_10);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_12);
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444);
+      profiles |=
+          profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10);
+      break;
+    }
+    case GST_H265_PROFILE_MAIN_10_INTRA:
+    {
+      if (sps->chroma_format_idc == 1) {
+        profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_10);
+
+        /* Add all main-10 compatible profiles without monochrome. */
+        /* A.3.5 */
+        profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_10);
+        profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_12);
+
+        /* A.3.7 */
+        profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10);
+
+        /* H.11.1.1 */
+        profiles |= profile_to_flag (GST_H265_PROFILE_SCALABLE_MAIN_10);
+      }
+
+      /* Add all main-10 compatible profiles with monochrome. */
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_12);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_10);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_12);
+      break;
+    }
+    case GST_H265_PROFILE_MAIN_12_INTRA:
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_12);
+      break;
+    case GST_H265_PROFILE_MAIN_422_10_INTRA:
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_10);
+      break;
+    case GST_H265_PROFILE_MAIN_422_12_INTRA:
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_12);
+      break;
+    case GST_H265_PROFILE_MAIN_444_INTRA:
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444);
+
+      /* Add all main444 compatible profiles. */
+      /* A.3.7 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444);
+      profiles |=
+          profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10);
+      break;
+    case GST_H265_PROFILE_MAIN_444_10_INTRA:
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_10);
+
+      /* Add all main444-10 compatible profiles. */
+      /* A.3.7 */
+      profiles |=
+          profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10);
+      break;
+    case GST_H265_PROFILE_MAIN_444_12_INTRA:
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_12);
+      break;
     default:
       break;
   }
