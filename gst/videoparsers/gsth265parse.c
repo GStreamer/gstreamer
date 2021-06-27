@@ -1982,6 +1982,22 @@ get_compatible_profile_caps (GstH265SPS * sps, GstH265Profile profile)
   return caps;
 }
 
+static void
+fix_invalid_profile (GstH265Parse * h265parse, GstCaps * caps, GstH265SPS * sps)
+{
+  /* HACK: This is a work-around to identify some main profile streams
+   * having wrong profile_idc. There are some wrongly encoded main profile
+   * streams which doesn't have any of the profile_idc values mentioned in
+   * Annex-A. Just assuming them as MAIN profile for now if they meet the
+   * A.3.2 requirement. */
+  if (sps->chroma_format_idc == 1 && sps->bit_depth_luma_minus8 == 0 &&
+      sps->bit_depth_chroma_minus8 == 0 && sps->sps_extension_flag == 0) {
+    gst_caps_set_simple (caps, "profile", G_TYPE_STRING, "main", NULL);
+    GST_WARNING_OBJECT (h265parse,
+        "Wrong profile_idc = 0, setting it as main profile !!");
+  }
+}
+
 /* if downstream didn't support the exact profile indicated in sps header,
  * check for the compatible profiles also */
 static void
@@ -1989,6 +2005,9 @@ ensure_caps_profile (GstH265Parse * h265parse, GstCaps * caps, GstH265SPS * sps,
     GstH265Profile profile)
 {
   GstCaps *peer_caps, *compat_caps;
+
+  if (profile == GST_H265_PROFILE_INVALID)
+    fix_invalid_profile (h265parse, caps, sps);
 
   peer_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h265parse));
   if (!peer_caps || !gst_caps_can_intersect (caps, peer_caps)) {
