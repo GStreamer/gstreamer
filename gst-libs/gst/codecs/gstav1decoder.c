@@ -275,7 +275,7 @@ gst_av1_decoder_process_sequence (GstAV1Decoder * self, GstAV1OBU * obu)
       gst_av1_decoder_profile_to_string (priv->profile),
       gst_av1_decoder_profile_to_string (seq_header.seq_profile),
       priv->max_width, priv->max_height, seq_header.max_frame_width_minus_1 + 1,
-      seq_header.max_frame_width_minus_1 + 1);
+      seq_header.max_frame_height_minus_1 + 1);
 
   if (!klass->new_sequence (self, &seq_header)) {
     GST_ERROR_OBJECT (self, "subclass does not want accept new sequence");
