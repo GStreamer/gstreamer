@@ -4449,7 +4449,7 @@ gst_av1_parse_tile_group (GstAV1Parser * parser, GstBitReader * br,
       if (retval != GST_AV1_PARSER_OK)
         goto error;
       tile_size = tile_size_minus_1 + 1;
-      sz -= tile_size - parser->state.tile_size_bytes;
+      sz -= (tile_size + parser->state.tile_size_bytes);
     }
 
     tile_group->entry[tile_num].tile_size = tile_size;
