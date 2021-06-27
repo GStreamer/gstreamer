@@ -361,6 +361,8 @@ gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
 
     picture->system_frame_number = priv->current_frame->system_frame_number;
     picture->frame_hdr = *frame_header;
+    picture->frame_hdr.render_width = ref_picture->frame_hdr.render_width;
+    picture->frame_hdr.render_height = ref_picture->frame_hdr.render_height;
     priv->current_picture = picture;
   } else {
     picture = gst_av1_picture_new ();
