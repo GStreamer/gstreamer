@@ -42,23 +42,53 @@
 
 #include <gst/webrtc/webrtc-enumtypes.h>
 
+/**
+ * GstWebRTCDTLSTransport:
+ */
 typedef struct _GstWebRTCDTLSTransport GstWebRTCDTLSTransport;
 typedef struct _GstWebRTCDTLSTransportClass GstWebRTCDTLSTransportClass;
 
+/**
+ * GstWebRTCICETransport:
+ */
 typedef struct _GstWebRTCICETransport GstWebRTCICETransport;
 typedef struct _GstWebRTCICETransportClass GstWebRTCICETransportClass;
 
+/**
+ * GstWebRTCRTPReceiver:
+ *
+ * An object to track the receiving aspect of the stream
+ *
+ * Mostly matches the WebRTC RTCRtpReceiver interface.
+ */
 typedef struct _GstWebRTCRTPReceiver GstWebRTCRTPReceiver;
 typedef struct _GstWebRTCRTPReceiverClass GstWebRTCRTPReceiverClass;
 
+/**
+ * GstWebRTCRTPSender:
+ *
+ * An object to track the sending aspect of the stream
+ *
+ * Mostly matches the WebRTC RTCRtpSender interface.
+ */
 typedef struct _GstWebRTCRTPSender GstWebRTCRTPSender;
 typedef struct _GstWebRTCRTPSenderClass GstWebRTCRTPSenderClass;
 
 typedef struct _GstWebRTCSessionDescription GstWebRTCSessionDescription;
 
+/**
+ * GstWebRTCRTPTransceiver:
+ *
+ * Mostly matches the WebRTC RTCRtpTransceiver interface.
+ */
 typedef struct _GstWebRTCRTPTransceiver GstWebRTCRTPTransceiver;
 typedef struct _GstWebRTCRTPTransceiverClass GstWebRTCRTPTransceiverClass;
 
+/**
+ * GstWebRTCDataChannel:
+ *
+ * Since: 1.18
+ */
 typedef struct _GstWebRTCDataChannel GstWebRTCDataChannel;
 typedef struct _GstWebRTCDataChannelClass GstWebRTCDataChannelClass;
 

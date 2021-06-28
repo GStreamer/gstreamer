@@ -49,8 +49,6 @@ G_BEGIN_DECLS
  * @kind: Type of media (Since: 1.20)
  *
  * Mostly matches the WebRTC RTCRtpTransceiver interface.
- *
- * Since: 1.16
  */
 /**
  * GstWebRTCRTPTransceiver.kind:
@@ -95,8 +93,6 @@ struct _GstWebRTCRTPTransceiverClass
  * An object to track the sending aspect of the stream
  *
  * Mostly matches the WebRTC RTCRtpSender interface.
- *
- * Since: 1.16
  */
 /**
  * GstWebRTCRTPSender.priority:
@@ -135,8 +131,6 @@ GstWebRTCRTPSender *        gst_webrtc_rtp_sender_new                   (void);
  * An object to track the receiving aspect of the stream
  *
  * Mostly matches the WebRTC RTCRtpReceiver interface.
- *
- * Since: 1.16
  */
 struct _GstWebRTCRTPReceiver
 {
