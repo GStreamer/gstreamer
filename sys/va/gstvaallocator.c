@@ -505,21 +505,19 @@ gst_va_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (gmem->allocator);
   VASurfaceID surface = gst_va_memory_get_surface (gmem);
+  guint64 *drm_mod;
+
+  drm_mod = gst_mini_object_get_qdata (GST_MINI_OBJECT (gmem),
+      gst_va_drm_mod_quark ());
+
+  /* 0 is DRM_FORMAT_MOD_LINEAR, we do not include its header now. */
+  if (*drm_mod != 0) {
+    GST_ERROR_OBJECT (self, "Failed to map the dmabuf because the modifier "
+        "is: %#lx, which is not linear.", *drm_mod);
+    return NULL;
+  }
 
   _sync_surface (self->display, surface);
-
-  /* @TODO: if mapping with flag GST_MAP_VASURFACE return the
-   * VA_SURFACE_ID.
-   * if mapping and drm_modifers are not lineal, use vaDeriveImage */
-#ifndef GST_DISABLE_GST_DEBUG
-  {
-    guint64 *drm_mod;
-
-    drm_mod = gst_mini_object_get_qdata (GST_MINI_OBJECT (gmem),
-        gst_va_drm_mod_quark ());
-    GST_TRACE_OBJECT (self, "DRM modifiers: %#lx", *drm_mod);
-  }
-#endif
 
   return self->parent_map (gmem, maxsize, flags);
 }
