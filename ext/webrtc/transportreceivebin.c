@@ -96,7 +96,7 @@ pad_block (GstPad * pad, GstPadProbeInfo * info, TransportReceiveBin * receive)
    * them. Sticky events would be forwarded again later once we unblock
    * and we don't want to forward them here already because that might
    * cause a spurious GST_FLOW_FLUSHING */
-  if (GST_IS_EVENT (info->data))
+  if (GST_IS_EVENT (info->data) || GST_IS_QUERY (info->data))
     return GST_PAD_PROBE_DROP;
 
   /* But block on any actual data-flow so we don't accidentally send that
@@ -294,6 +294,18 @@ rtp_queue_overrun (GstElement * queue, TransportReceiveBin * receive)
   GST_WARNING_OBJECT (receive, "Internal receive queue overrun. Dropping data");
 }
 
+static GstPadProbeReturn
+drop_serialized_queries (GstPad * pad, GstPadProbeInfo * info,
+    TransportReceiveBin * receive)
+{
+  GstQuery *query = GST_PAD_PROBE_INFO_QUERY (info);
+
+  if (GST_QUERY_IS_SERIALIZED (query))
+    return GST_PAD_PROBE_DROP;
+  else
+    return GST_PAD_PROBE_PASS;
+}
+
 static void
 transport_receive_bin_constructed (GObject * object)
 {
@@ -320,6 +332,11 @@ transport_receive_bin_constructed (GObject * object)
       "max-size-buffers", 0, "max-size-bytes", 5 * 1024 * 1024, NULL);
   g_signal_connect (receive->queue, "overrun", G_CALLBACK (rtp_queue_overrun),
       receive);
+
+  pad = gst_element_get_static_pad (receive->queue, "sink");
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM,
+      (GstPadProbeCallback) drop_serialized_queries, receive, NULL);
+  gst_object_unref (pad);
 
   gst_bin_add (GST_BIN (receive), GST_ELEMENT (receive->queue));
   gst_bin_add (GST_BIN (receive), GST_ELEMENT (capsfilter));
