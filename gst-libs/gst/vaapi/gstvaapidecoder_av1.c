@@ -372,9 +372,10 @@ av1_fill_film_grain_info (VADecPictureParameterBufferAV1 * pic_param,
 {
   guint i;
 
-  if (!frame_header->film_grain_params.apply_grain)
+  if (!frame_header->film_grain_params.apply_grain) {
+    memset (&pic_param->film_grain_info, 0, sizeof (VAFilmGrainStructAV1));
     return;
-
+  }
 #define COPY_FILM_GRAIN_FIELD(FP) \
     pic_param->SUB_FIELD.FP = (frame_header)->film_grain_params.FP
 #define SUB_FIELD film_grain_info.film_grain_info_fields.bits
