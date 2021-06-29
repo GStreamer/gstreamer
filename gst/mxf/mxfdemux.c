@@ -3935,6 +3935,11 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       &start_type, &start, &stop_type, &stop);
   seqnum = gst_event_get_seqnum (event);
 
+  if (seqnum == demux->seqnum) {
+    GST_DEBUG_OBJECT (demux, "Already handled requested seek");
+    return TRUE;
+  }
+
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
