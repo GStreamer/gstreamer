@@ -1192,6 +1192,12 @@ gst_mf_video_enc_handle_frame (GstVideoEncoder * enc,
   GstFlowReturn ret = GST_FLOW_OK;
   ComPtr<IMFSample> sample;
 
+  if (self->last_ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (self, "Last return was %s", gst_flow_get_name (ret));
+    ret = self->last_ret;
+    goto done;
+  }
+
 #if GST_MF_HAVE_D3D11
   if (self->mf_allocator &&
       !gst_mf_video_enc_create_input_sample_d3d11 (self, frame, &sample)) {
@@ -1202,7 +1208,8 @@ gst_mf_video_enc_handle_frame (GstVideoEncoder * enc,
 
   if (!sample && !gst_mf_video_enc_create_input_sample (self, frame, &sample)) {
     GST_ERROR_OBJECT (self, "Failed to create IMFSample");
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 
   if (!gst_mf_video_enc_process_input (self, frame, sample.Get ())) {
@@ -1266,7 +1273,7 @@ gst_mf_video_enc_flush (GstVideoEncoder * enc)
   GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
 
   if (!self->transform)
-    return TRUE;
+    goto out;
 
   /* Unlock while flushing, while flushing, new sample callback might happen */
   if (self->async_mft)
@@ -1276,6 +1283,9 @@ gst_mf_video_enc_flush (GstVideoEncoder * enc)
 
   if (self->async_mft)
     GST_VIDEO_ENCODER_STREAM_LOCK (enc);
+
+out:
+  self->last_ret = GST_FLOW_OK;
 
   return TRUE;
 }
