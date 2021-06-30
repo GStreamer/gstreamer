@@ -6860,7 +6860,19 @@ gst_qt_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
       /* find stream data */
       g_assert (qtmux_pad->set_caps);
 
-      ret = qtmux_pad->set_caps (qtmux_pad, caps);
+      /* depending on codec (h264/h265 for example), muxer will append a new
+       * stsd entry per set_caps(), but it's not ideal if referenced fields
+       * in caps is not updated from previous one.
+       * Each set_caps() implementation can be more enhanced
+       * so that we can avoid duplicated atoms though, this identical caps
+       * case is one we can skip obviously */
+      if (qtmux_pad->configured_caps &&
+          gst_caps_is_equal (qtmux_pad->configured_caps, caps)) {
+        GST_DEBUG_OBJECT (qtmux_pad, "Ignore duplicated caps %" GST_PTR_FORMAT,
+            caps);
+      } else {
+        ret = qtmux_pad->set_caps (qtmux_pad, caps);
+      }
 
       if (ret)
         gst_caps_replace (&qtmux_pad->configured_caps, caps);
