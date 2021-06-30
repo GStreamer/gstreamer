@@ -1137,7 +1137,7 @@ gst_vp9_get_qindex (const GstVp9SegmentationParams * segmentation_params,
 
   if (gst_vp9_seg_feature_active (segmentation_params, segment_id,
           GST_VP9_SEG_LVL_ALT_Q)) {
-    guint data =
+    gint data =
         segmentation_params->feature_data[segment_id][GST_VP9_SEG_LVL_ALT_Q];
 
     if (!segmentation_params->segmentation_abs_or_delta_update)
