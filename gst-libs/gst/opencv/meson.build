@@ -29,6 +29,7 @@ if opencv_dep.found()
     opencv_sources,
     c_args : gst_plugins_bad_args + ['-DBUILDING_GST_OPENCV'],
     cpp_args : gst_plugins_bad_args + gstopencv_cargs + ['-DBUILDING_GST_OPENCV'],
+    override_options : ['cpp_std=c++11'],
     include_directories : [configinc, libsinc],
     version : libversion,
     soversion : soversion,
