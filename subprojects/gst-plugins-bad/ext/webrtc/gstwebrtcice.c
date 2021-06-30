@@ -848,6 +848,164 @@ gst_webrtc_ice_set_tos (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
   nice_agent_set_stream_tos (ice->priv->nice_agent, item->nice_stream_id, tos);
 }
 
+static const gchar *
+_relay_type_to_string (GstUri * turn_server)
+{
+  const gchar *scheme;
+  const gchar *transport;
+
+  if (!turn_server)
+    return "none";
+
+  scheme = gst_uri_get_scheme (turn_server);
+  transport = gst_uri_get_query_value (turn_server, "transport");
+
+  if (g_strcmp0 (scheme, "turns") == 0) {
+    return "tls";
+  } else if (g_strcmp0 (scheme, "turn") == 0) {
+    if (!transport || g_strcmp0 (transport, "udp") == 0)
+      return "udp";
+    if (!transport || g_strcmp0 (transport, "tcp") == 0)
+      return "tcp";
+  }
+
+  return "none";
+}
+
+static gchar *
+_get_server_url (GstWebRTCICE * ice, NiceCandidate * cand)
+{
+  switch (cand->type) {
+    case NICE_CANDIDATE_TYPE_RELAYED:
+      return g_strdup (gst_uri_get_host (ice->turn_server));
+    case NICE_CANDIDATE_TYPE_SERVER_REFLEXIVE:
+      return g_strdup (gst_uri_get_host (ice->stun_server));
+    default:
+      return g_strdup ("");
+  }
+}
+
+/* TODO: replace it with nice_candidate_type_to_string()
+ * when it's ready for use
+ * https://libnice.freedesktop.org/libnice/NiceCandidate.html#nice-candidate-type-to-string
+ */
+static const gchar *
+_candidate_type_to_string (NiceCandidateType type)
+{
+  switch (type) {
+    case NICE_CANDIDATE_TYPE_HOST:
+      return "host";
+    case NICE_CANDIDATE_TYPE_SERVER_REFLEXIVE:
+      return "srflx";
+    case NICE_CANDIDATE_TYPE_PEER_REFLEXIVE:
+      return "prflx";
+    case NICE_CANDIDATE_TYPE_RELAYED:
+      return "relay";
+    default:
+      g_assert_not_reached ();
+      return NULL;
+  }
+}
+
+static void
+_populate_candidate_stats (GstWebRTCICE * ice, NiceCandidate * cand,
+    GstWebRTCICEStream * stream, GstWebRTCICECandidateStats * stats,
+    gboolean is_local)
+{
+  gchar ipaddr[INET6_ADDRSTRLEN];
+
+  g_assert (cand != NULL);
+
+  nice_address_to_string (&cand->addr, ipaddr);
+  stats->port = nice_address_get_port (&cand->addr);
+  stats->ipaddr = g_strdup (ipaddr);
+  stats->stream_id = stream->stream_id;
+  stats->type = _candidate_type_to_string (cand->type);
+  stats->prio = cand->priority;
+  stats->proto =
+      cand->transport == NICE_CANDIDATE_TRANSPORT_UDP ? "udp" : "tcp";
+  if (is_local) {
+    if (cand->type == NICE_CANDIDATE_TYPE_RELAYED)
+      stats->relay_proto = _relay_type_to_string (ice->turn_server);
+    stats->url = _get_server_url (ice, cand);
+  }
+}
+
+static void
+_populate_candidate_list_stats (GstWebRTCICE * ice, GSList * cands,
+    GstWebRTCICEStream * stream, GArray * result, gboolean is_local)
+{
+  GSList *item;
+
+  for (item = cands; item != NULL; item = item->next) {
+    GstWebRTCICECandidateStats stats;
+    NiceCandidate *c = item->data;
+    _populate_candidate_stats (ice, c, stream, &stats, is_local);
+    g_array_append_val (result, stats);
+  }
+}
+
+GArray *
+gst_webrtc_ice_get_local_candidates (GstWebRTCICE * ice,
+    GstWebRTCICEStream * stream)
+{
+  GSList *cands = NULL;
+
+  GArray *result =
+      g_array_new (FALSE, TRUE, sizeof (GstWebRTCICECandidateStats));
+
+  cands = nice_agent_get_local_candidates (ice->priv->nice_agent,
+      stream->stream_id, NICE_COMPONENT_TYPE_RTP);
+
+  _populate_candidate_list_stats (ice, cands, stream, result, TRUE);
+  g_slist_free_full (cands, (GDestroyNotify) nice_candidate_free);
+
+  return result;
+}
+
+GArray *
+gst_webrtc_ice_get_remote_candidates (GstWebRTCICE * ice,
+    GstWebRTCICEStream * stream)
+{
+  GSList *cands = NULL;
+
+  GArray *result =
+      g_array_new (FALSE, TRUE, sizeof (GstWebRTCICECandidateStats));
+
+  cands = nice_agent_get_remote_candidates (ice->priv->nice_agent,
+      stream->stream_id, NICE_COMPONENT_TYPE_RTP);
+
+  _populate_candidate_list_stats (ice, cands, stream, result, FALSE);
+  g_slist_free_full (cands, (GDestroyNotify) nice_candidate_free);
+
+  return result;
+}
+
+gboolean
+gst_webrtc_ice_get_selected_pair (GstWebRTCICE * ice,
+    GstWebRTCICEStream * stream, GstWebRTCICECandidateStats ** local_stats,
+    GstWebRTCICECandidateStats ** remote_stats)
+{
+  NiceCandidate *local_cand = NULL;
+  NiceCandidate *remote_cand = NULL;
+
+  if (stream) {
+    if (nice_agent_get_selected_pair (ice->priv->nice_agent, stream->stream_id,
+            NICE_COMPONENT_TYPE_RTP, &local_cand, &remote_cand)) {
+      *local_stats = g_new0 (GstWebRTCICECandidateStats, 1);
+      _populate_candidate_stats (ice, local_cand, stream, *local_stats, TRUE);
+
+      *remote_stats = g_new0 (GstWebRTCICECandidateStats, 1);
+      _populate_candidate_stats (ice, remote_cand, stream, *remote_stats,
+          FALSE);
+
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 static void
 _clear_ice_stream (struct NiceStreamItem *item)
 {

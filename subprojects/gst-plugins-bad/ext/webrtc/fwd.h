@@ -57,6 +57,8 @@ typedef struct _TransportReceiveBinClass TransportReceiveBinClass;
 typedef struct _WebRTCTransceiver WebRTCTransceiver;
 typedef struct _WebRTCTransceiverClass WebRTCTransceiverClass;
 
+typedef struct _GstWebRTCICECandidateStats GstWebRTCICECandidateStats;
+
 G_END_DECLS
 
 #endif /* __WEBRTC_FWD_H__ */

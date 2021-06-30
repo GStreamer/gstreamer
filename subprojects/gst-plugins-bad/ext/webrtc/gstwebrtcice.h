@@ -56,6 +56,18 @@ struct _GstWebRTCICE
   guint                             max_rtp_port;
 };
 
+struct _GstWebRTCICECandidateStats
+{
+  gchar                            *ipaddr;
+  guint                             port;
+  guint                             stream_id;
+  const gchar                      *type;
+  const gchar                      *proto;
+  const gchar                      *relay_proto;
+  guint                             prio;
+  gchar                            *url;
+};
+
 struct _GstWebRTCICEClass
 {
   GstObjectClass            parent_class;
@@ -107,6 +119,15 @@ void                        gst_webrtc_ice_set_on_ice_candidate     (GstWebRTCIC
 void                        gst_webrtc_ice_set_tos                  (GstWebRTCICE * ice,
                                                                      GstWebRTCICEStream * stream,
                                                                      guint tos);
+
+GArray *                    gst_webrtc_ice_get_local_candidates     (GstWebRTCICE * ice,
+                                                                     GstWebRTCICEStream * stream);
+GArray *                    gst_webrtc_ice_get_remote_candidates    (GstWebRTCICE * ice,
+                                                                     GstWebRTCICEStream * stream);
+gboolean                    gst_webrtc_ice_get_selected_pair        (GstWebRTCICE * ice,
+                                                                     GstWebRTCICEStream * stream,
+                                                                     GstWebRTCICECandidateStats ** local_stats,
+                                                                     GstWebRTCICECandidateStats ** remote_stats);
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_ICE_H__ */

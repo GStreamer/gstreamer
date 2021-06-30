@@ -26,6 +26,7 @@
 
 #include "gstwebrtcstats.h"
 #include "gstwebrtcbin.h"
+#include "icestream.h"
 #include "transportstream.h"
 #include "transportreceivebin.h"
 #include "utils.h"
@@ -564,67 +565,138 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
   }
 }
 
-/* https://www.w3.org/TR/webrtc-stats/#candidatepair-dict* */
+/* https://www.w3.org/TR/webrtc-stats/#icecandidate-dict* */
 static gchar *
-_get_stats_from_ice_transport (GstWebRTCBin * webrtc,
-    GstWebRTCICETransport * transport, const GstStructure * twcc_stats,
-    GstStructure * s)
+_get_stats_from_ice_candidates (GstWebRTCBin * webrtc,
+    GstWebRTCICECandidateStats * can, const gchar * transport_id,
+    const gchar * candidate_tag, GstStructure * s)
 {
   GstStructure *stats;
+  GstWebRTCStatsType type;
   gchar *id;
   double ts;
 
   gst_structure_get_double (s, "timestamp", &ts);
 
+  id = g_strdup_printf ("ice-candidate-%s_%u_%s_%u", candidate_tag,
+      can->stream_id, can->ipaddr, can->port);
+  stats = gst_structure_new_empty (id);
+
+  if (strcmp (candidate_tag, "local")) {
+    type = GST_WEBRTC_STATS_LOCAL_CANDIDATE;
+  } else if (strcmp (candidate_tag, "remote")) {
+    type = GST_WEBRTC_STATS_REMOTE_CANDIDATE;
+  } else {
+    GST_WARNING_OBJECT (webrtc, "Invalid ice candidate tag: %s", candidate_tag);
+    return NULL;
+  }
+  _set_base_stats (stats, type, ts, id);
+
+  /* RTCIceCandidateStats
+     DOMString           transportId;
+     DOMString           address;
+     long                port;
+     DOMString           protocol;
+     RTCIceCandidateType candidateType;
+     long                priority;
+     DOMString           url;
+     DOMString           relayProtocol;
+   */
+
+  if (transport_id)
+    gst_structure_set (stats, "transport-id", G_TYPE_STRING, transport_id,
+        NULL);
+  gst_structure_set (stats, "address", G_TYPE_STRING, can->ipaddr, NULL);
+  gst_structure_set (stats, "port", G_TYPE_UINT, can->port, NULL);
+  gst_structure_set (stats, "candidate-type", G_TYPE_STRING, can->type, NULL);
+  gst_structure_set (stats, "priority", G_TYPE_UINT, can->prio, NULL);
+  gst_structure_set (stats, "protocol", G_TYPE_STRING, can->proto, NULL);
+  if (can->relay_proto)
+    gst_structure_set (stats, "relay-protocol", G_TYPE_STRING, can->relay_proto,
+        NULL);
+  if (can->url)
+    gst_structure_set (stats, "url", G_TYPE_STRING, can->url, NULL);
+
+  gst_structure_set (s, id, GST_TYPE_STRUCTURE, stats, NULL);
+  gst_structure_free (stats);
+
+  return id;
+}
+
+/* https://www.w3.org/TR/webrtc-stats/#candidatepair-dict* */
+static gchar *
+_get_stats_from_ice_transport (GstWebRTCBin * webrtc,
+    GstWebRTCICETransport * transport, GstWebRTCICEStream * stream,
+    const GstStructure * twcc_stats, const gchar * transport_id,
+    GstStructure * s)
+{
+  GstStructure *stats;
+  gchar *id;
+  gchar *local_cand_id = NULL, *remote_cand_id = NULL;
+  double ts;
+  GstWebRTCICECandidateStats *local_cand = NULL, *remote_cand = NULL;
+
+  gst_structure_get_double (s, "timestamp", &ts);
+
   id = g_strdup_printf ("ice-candidate-pair_%s", GST_OBJECT_NAME (transport));
   stats = gst_structure_new_empty (id);
-  _set_base_stats (stats, GST_WEBRTC_STATS_TRANSPORT, ts, id);
+  _set_base_stats (stats, GST_WEBRTC_STATS_CANDIDATE_PAIR, ts, id);
 
-/* XXX: RTCIceCandidatePairStats
-    DOMString                     transportId;
-    DOMString                     localCandidateId;
-    DOMString                     remoteCandidateId;
-    RTCStatsIceCandidatePairState state;
-    unsigned long long            priority;
-    boolean                       nominated;
-    unsigned long                 packetsSent;
-    unsigned long                 packetsReceived;
-    unsigned long long            bytesSent;
-    unsigned long long            bytesReceived;
-    DOMHighResTimeStamp           lastPacketSentTimestamp;
-    DOMHighResTimeStamp           lastPacketReceivedTimestamp;
-    DOMHighResTimeStamp           firstRequestTimestamp;
-    DOMHighResTimeStamp           lastRequestTimestamp;
-    DOMHighResTimeStamp           lastResponseTimestamp;
-    double                        totalRoundTripTime;
-    double                        currentRoundTripTime;
-    double                        availableOutgoingBitrate;
-    double                        availableIncomingBitrate;
-    unsigned long                 circuitBreakerTriggerCount;
-    unsigned long long            requestsReceived;
-    unsigned long long            requestsSent;
-    unsigned long long            responsesReceived;
-    unsigned long long            responsesSent;
-    unsigned long long            retransmissionsReceived;
-    unsigned long long            retransmissionsSent;
-    unsigned long long            consentRequestsSent;
-    DOMHighResTimeStamp           consentExpiredTimestamp;
-*/
+  /* RTCIceCandidatePairStats
+     DOMString                     transportId;
+     DOMString                     localCandidateId;
+     DOMString                     remoteCandidateId;
 
-/* XXX: RTCIceCandidateStats
-    DOMString           transportId;
-    boolean             isRemote;
-    RTCNetworkType      networkType;
-    DOMString           ip;
-    long                port;
-    DOMString           protocol;
-    RTCIceCandidateType candidateType;
-    long                priority;
-    DOMString           url;
-    DOMString           relayProtocol;
-    boolean             deleted = false;
-};
-*/
+     XXX: To be added:
+
+     RTCStatsIceCandidatePairState state;
+     boolean                       nominated;
+     unsigned long                 packetsSent;
+     unsigned long                 packetsReceived;
+     unsigned long long            bytesSent;
+     unsigned long long            bytesReceived;
+     DOMHighResTimeStamp           lastPacketSentTimestamp;
+     DOMHighResTimeStamp           lastPacketReceivedTimestamp;
+     DOMHighResTimeStamp           firstRequestTimestamp;
+     DOMHighResTimeStamp           lastRequestTimestamp;
+     DOMHighResTimeStamp           lastResponseTimestamp;
+     double                        totalRoundTripTime;
+     double                        currentRoundTripTime;
+     double                        availableOutgoingBitrate;
+     double                        availableIncomingBitrate;
+     unsigned long                 circuitBreakerTriggerCount;
+     unsigned long long            requestsReceived;
+     unsigned long long            requestsSent;
+     unsigned long long            responsesReceived;
+     unsigned long long            responsesSent;
+     unsigned long long            retransmissionsReceived;
+     unsigned long long            retransmissionsSent;
+     unsigned long long            consentRequestsSent;
+     DOMHighResTimeStamp           consentExpiredTimestamp;
+     unsigned long                 packetsDiscardedOnSend;
+     unsigned long long            bytesDiscardedOnSend;
+     unsigned long long            requestBytesSent;
+     unsigned long long            consentRequestBytesSent;
+     unsigned long long            responseBytesSent;
+   */
+
+  if (gst_webrtc_ice_get_selected_pair (webrtc->priv->ice, stream,
+          &local_cand, &remote_cand)) {
+    local_cand_id =
+        _get_stats_from_ice_candidates (webrtc, local_cand, transport_id,
+        "local", s);
+    remote_cand_id =
+        _get_stats_from_ice_candidates (webrtc, remote_cand, transport_id,
+        "remote", s);
+
+    gst_structure_set (stats, "local-candidate-id", G_TYPE_STRING,
+        local_cand_id, NULL);
+    gst_structure_set (stats, "remote-candidate-id", G_TYPE_STRING,
+        remote_cand_id, NULL);
+  } else
+    GST_INFO_OBJECT (webrtc,
+        "No selected ICE candidate pair was found for transport %s",
+        GST_OBJECT_NAME (transport));
 
   /* XXX: these stats are at the rtp session level but there isn't a specific
    * stats structure for that. The RTCIceCandidatePairStats is the closest with
@@ -635,6 +707,20 @@ _get_stats_from_ice_transport (GstWebRTCBin * webrtc,
         NULL);
 
   gst_structure_set (s, id, GST_TYPE_STRUCTURE, stats, NULL);
+
+  g_free (local_cand_id);
+  g_free (remote_cand_id);
+
+  if (local_cand) {
+    g_free (local_cand->ipaddr);
+    g_free (local_cand->url);
+  }
+  if (remote_cand)
+    g_free (remote_cand->ipaddr);
+
+  g_free (local_cand);
+  g_free (remote_cand);
+
   gst_structure_free (stats);
 
   return id;
@@ -643,8 +729,8 @@ _get_stats_from_ice_transport (GstWebRTCBin * webrtc,
 /* https://www.w3.org/TR/webrtc-stats/#dom-rtctransportstats */
 static gchar *
 _get_stats_from_dtls_transport (GstWebRTCBin * webrtc,
-    GstWebRTCDTLSTransport * transport, const GstStructure * twcc_stats,
-    GstStructure * s)
+    GstWebRTCDTLSTransport * transport, GstWebRTCICEStream * stream,
+    const GstStructure * twcc_stats, GstStructure * s)
 {
   GstStructure *stats;
   gchar *id;
@@ -677,25 +763,17 @@ _get_stats_from_dtls_transport (GstWebRTCBin * webrtc,
     DOMString issuerCertificateId;
 */
 
-/* XXX: RTCIceCandidateStats
-    DOMString           transportId;
-    boolean             isRemote;
-    DOMString           ip;
-    long                port;
-    DOMString           protocol;
-    RTCIceCandidateType candidateType;
-    long                priority;
-    DOMString           url;
-    boolean             deleted = false;
-*/
+  ice_id =
+      _get_stats_from_ice_transport (webrtc, transport->transport, stream,
+      twcc_stats, id, s);
+  if (ice_id) {
+    gst_structure_set (stats, "selected-candidate-pair-id", G_TYPE_STRING,
+        ice_id, NULL);
+    g_free (ice_id);
+  }
 
   gst_structure_set (s, id, GST_TYPE_STRUCTURE, stats, NULL);
   gst_structure_free (stats);
-
-  ice_id =
-      _get_stats_from_ice_transport (webrtc, transport->transport, twcc_stats,
-      s);
-  g_free (ice_id);
 
   return id;
 }
@@ -879,7 +957,7 @@ _get_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad, GstStructure * s)
 
   ts_stats.transport_id =
       _get_stats_from_dtls_transport (webrtc, ts_stats.stream->transport,
-      twcc_stats, s);
+      GST_WEBRTC_ICE_STREAM (ts_stats.stream->stream), twcc_stats, s);
 
   GST_DEBUG_OBJECT (webrtc, "retrieving rtp stream stats from transport %"
       GST_PTR_FORMAT " rtp session %" GST_PTR_FORMAT " with %u rtp sources, "

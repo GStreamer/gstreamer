@@ -1559,6 +1559,29 @@ validate_remote_outbound_rtp_stats (const GstStructure * s,
   g_free (local_id);
 }
 
+static void
+validate_candidate_stats (const GstStructure * s, const GstStructure * stats)
+{
+  guint port;
+  guint64 priority;
+  gchar *address, *candidateType, *protocol;
+
+  fail_unless (gst_structure_get (s, "address", G_TYPE_STRING, &address, NULL));
+  fail_unless (gst_structure_get (s, "port", G_TYPE_UINT, &port, NULL));
+  fail_unless (gst_structure_get (s, "candidate-type", G_TYPE_STRING,
+          &candidateType, NULL));
+  fail_unless (gst_structure_get (s, "priority", G_TYPE_UINT64, &priority,
+          NULL));
+  fail_unless (gst_structure_get (s, "protocol", G_TYPE_STRING, &protocol,
+          NULL));
+
+  fail_unless (strcmp (protocol, "udp") || strcmp (protocol, "tcp"));
+
+  g_free (address);
+  g_free (candidateType);
+  g_free (protocol);
+}
+
 static gboolean
 validate_stats_foreach (GQuark field_id, const GValue * value,
     const GstStructure * stats)
@@ -1592,7 +1615,9 @@ validate_stats_foreach (GQuark field_id, const GValue * value,
   } else if (type == GST_WEBRTC_STATS_TRANSPORT) {
   } else if (type == GST_WEBRTC_STATS_CANDIDATE_PAIR) {
   } else if (type == GST_WEBRTC_STATS_LOCAL_CANDIDATE) {
+    validate_candidate_stats (s, stats);
   } else if (type == GST_WEBRTC_STATS_REMOTE_CANDIDATE) {
+    validate_candidate_stats (s, stats);
   } else if (type == GST_WEBRTC_STATS_CERTIFICATE) {
   } else {
     g_assert_not_reached ();
@@ -1641,6 +1666,53 @@ GST_START_TEST (test_session_stats)
 
   test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
 
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_stats_with_stream)
+{
+  struct test_webrtc *t = create_audio_test ();
+  GstPromise *p;
+  GstCaps *caps;
+  GstPad *pad;
+
+  /* test that the stats generated with stream are sane */
+
+  t->on_offer_created = NULL;
+  t->on_answer_created = NULL;
+  t->on_negotiation_needed = NULL;
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
+  test_webrtc_create_offer (t);
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+
+  /* set caps for webrtcbin sink to validate codec stats */
+  caps = gst_caps_from_string (OPUS_RTP_CAPS (96));
+  pad = gst_element_get_static_pad (t->webrtc1, "sink_0");
+  gst_pad_set_caps (pad, caps);
+  gst_caps_unref (caps);
+
+  test_webrtc_wait_for_answer_error_eos (t);
+  fail_unless (t->state == STATE_ANSWER_SET);
+
+  p = gst_promise_new_with_change_func (_on_stats, t, NULL);
+  g_signal_emit_by_name (t->webrtc1, "get-stats", NULL, p);
+  p = gst_promise_new_with_change_func (_on_stats, t, NULL);
+  g_signal_emit_by_name (t->webrtc2, "get-stats", NULL, p);
+
+  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+
+  gst_object_unref (pad);
   test_webrtc_free (t);
 }
 
@@ -5260,6 +5332,7 @@ webrtcbin_suite (void)
   if (nicesrc && nicesink && dtlssrtpenc && dtlssrtpdec) {
     tcase_add_test (tc, test_sdp_no_media);
     tcase_add_test (tc, test_session_stats);
+    tcase_add_test (tc, test_stats_with_stream);
     tcase_add_test (tc, test_audio);
     tcase_add_test (tc, test_ice_port_restriction);
     tcase_add_test (tc, test_audio_video);
