@@ -334,6 +334,37 @@ gst_dash_sink_stream_from_splitmuxsink (GList * streams, GstElement * element)
   return NULL;
 }
 
+static gchar *
+gst_dash_sink_stream_get_next_name (GList * streams, GstDashSinkStreamType type)
+{
+  GList *l;
+  guint count = 0;
+  GstDashSinkStream *stream = NULL;
+  gchar *name = NULL;
+
+  for (l = streams; l != NULL; l = l->next) {
+    stream = l->data;
+    if (stream->type == type)
+      count++;
+  }
+
+  switch (type) {
+    case DASH_SINK_STREAM_TYPE_VIDEO:
+      name = g_strdup_printf ("video_%d", count);
+      break;
+    case DASH_SINK_STREAM_TYPE_AUDIO:
+      name = g_strdup_printf ("audio_%d", count);
+      break;
+    case DASH_SINK_STREAM_TYPE_SUBTITLE:
+      name = g_strdup_printf ("sub_%d", count);
+      break;
+    default:
+      name = g_strdup_printf ("unknown_%d", count);
+  }
+
+  return name;
+}
+
 static void
 gst_dash_sink_stream_free (gpointer s)
 {
@@ -936,7 +967,13 @@ gst_dash_sink_request_new_pad (GstElement * element, GstPadTemplate * templ,
     stream->adaptation_set_id = ADAPTATION_SET_ID_SUBTITLE;
   }
 
-  stream->representation_id = g_strdup (pad_name);
+  if (pad_name)
+    stream->representation_id = g_strdup (pad_name);
+  else
+    stream->representation_id =
+        gst_dash_sink_stream_get_next_name (sink->streams, stream->type);
+
+
   stream->mimetype = g_strdup (dash_muxer_list[sink->muxer].mimetype);
 
 
