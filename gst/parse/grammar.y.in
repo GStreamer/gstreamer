@@ -566,10 +566,11 @@ static void gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 		               link->all_pads ? "all pads" : "one pad",
                	   PRETTY_PAD_NAME_ARGS (src, link->src_pad),
                    PRETTY_PAD_NAME_ARGS (link->sink, link->sink_pad));
-    g_signal_handler_disconnect (src, link->no_more_pads_signal_id);
     /* releases 'link' */
-    if (!link->all_pads)
+    if (!link->all_pads) {
+      g_signal_handler_disconnect (src, link->no_more_pads_signal_id);
       g_signal_handler_disconnect (src, link->pad_added_signal_id);
+    }
   }
 }
 
