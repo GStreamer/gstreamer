@@ -1628,6 +1628,30 @@ GST_START_TEST (test_get_transceivers)
 
 GST_END_TEST;
 
+static void
+on_sdp_media_check_mid (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  const char **mid = user_data;
+  guint i;
+
+  for (i = 0; i < gst_sdp_message_medias_len (desc->sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
+    gboolean seen_mid = FALSE;
+    guint j;
+
+    for (j = 0; j < gst_sdp_media_attributes_len (media); j++) {
+      const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, j);
+
+      if (g_strcmp0 (attr->key, "mid") == 0) {
+        fail_unless (!seen_mid);
+        seen_mid = TRUE;
+        fail_unless_equals_string (attr->value, mid[i]);
+      }
+    }
+  }
+}
+
 GST_START_TEST (test_add_recvonly_transceiver)
 {
   struct test_webrtc *t = test_webrtc_new ();
@@ -1640,11 +1664,12 @@ GST_START_TEST (test_add_recvonly_transceiver)
       media_format_count, &no_duplicate_payloads);
   VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (1),
       &media_formats);
+  const char *expected_mid[] = { "gst", };
+  VAL_SDP_INIT (mid, on_sdp_media_check_mid, expected_mid, &count);
   const gchar *expected_offer_setup[] = { "actpass", };
-  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup, &count);
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup, &mid);
   const gchar *expected_answer_setup[] = { "active", };
-  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
-      &count);
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup, &mid);
   const gchar *expected_offer_direction[] = { "recvonly", };
   VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
       &offer_setup);
@@ -1661,7 +1686,7 @@ GST_START_TEST (test_add_recvonly_transceiver)
   t->on_pad_added = _pad_added_fakesink;
 
   /* setup recvonly transceiver */
-  caps = gst_caps_from_string (OPUS_RTP_CAPS (96));
+  caps = gst_caps_from_string (OPUS_RTP_CAPS (96) ", a-mid=(string)gst");
   direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
   g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
       &trans);
@@ -4425,6 +4450,69 @@ GST_START_TEST (test_renego_rtx)
 
 GST_END_TEST;
 
+GST_START_TEST (test_bundle_mid_header_extension)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstWebRTCRTPTransceiverDirection direction;
+  GstWebRTCRTPTransceiver *trans;
+  VAL_SDP_INIT (no_duplicate_payloads, on_sdp_media_no_duplicate_payloads,
+      NULL, NULL);
+  guint media_format_count[] = { 1, 1, };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, &no_duplicate_payloads);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (1),
+      &media_formats);
+  const char *expected_mid[] = { "gst", };
+  VAL_SDP_INIT (mid, on_sdp_media_check_mid, expected_mid, &count);
+  const gchar *expected_offer_setup[] = { "actpass", };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup, &mid);
+  const gchar *expected_answer_setup[] = { "active", };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup, &mid);
+  const gchar *expected_offer_direction[] = { "recvonly", };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_direction[] = { "sendonly", };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+  GstCaps *caps;
+  GstHarness *h;
+  guint mline;
+  char *trans_mid;
+
+  /* add a transceiver that will only receive an opus stream and check that
+   * the created offer is marked as recvonly */
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  /* setup recvonly transceiver */
+  caps = gst_caps_from_string (OPUS_RTP_CAPS (96) ", a-mid=(string)gst");
+  direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
+  g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
+      &trans);
+  gst_caps_unref (caps);
+  fail_unless (trans != NULL);
+  g_object_get (trans, "mlineindex", &mline, NULL);
+  fail_unless_equals_int (mline, -1);
+
+  /* setup sendonly peer */
+  h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
+  add_fake_audio_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  g_object_get (trans, "mlineindex", &mline, "mid", &trans_mid, NULL);
+  fail_unless_equals_int (mline, 0);
+  fail_unless_equals_string (trans_mid, "gst");
+  g_clear_pointer (&trans_mid, g_free);
+  gst_object_unref (trans);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -4480,6 +4568,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_codec_preferences_incompatible_extmaps);
     tcase_add_test (tc, test_codec_preferences_invalid_extmap);
     tcase_add_test (tc, test_renego_rtx);
+    tcase_add_test (tc, test_bundle_mid_header_extension);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);

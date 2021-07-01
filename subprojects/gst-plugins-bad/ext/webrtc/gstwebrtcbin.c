@@ -2974,7 +2974,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
    * multiple dtls fingerprints https://tools.ietf.org/html/draft-ietf-mmusic-4572-update-05
    */
   GstSDPMessage *last_offer = _get_latest_self_generated_sdp (webrtc);
-  gchar *direction, *sdp_mid, *ufrag, *pwd;
+  gchar *direction, *ufrag, *pwd, *mid;
   gboolean bundle_only;
   GstCaps *caps;
   GstStructure *extmap;
@@ -3156,17 +3156,34 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
   /* Some identifier; we also add the media name to it so it's identifiable */
   if (trans->mid) {
     gst_sdp_media_add_attribute (media, "mid", trans->mid);
+    mid = g_strdup (trans->mid);
   } else {
-    /* Make sure to avoid mid collisions */
-    while (TRUE) {
-      sdp_mid = g_strdup_printf ("%s%u", gst_sdp_media_get_media (media),
-          webrtc->priv->media_counter++);
-      if (g_hash_table_contains (all_mids, (gpointer) sdp_mid)) {
-        g_free (sdp_mid);
-      } else {
-        gst_sdp_media_add_attribute (media, "mid", sdp_mid);
-        g_hash_table_insert (all_mids, sdp_mid, NULL);
-        break;
+    const GstStructure *s = gst_caps_get_structure (caps, 0);
+
+    mid = g_strdup (gst_structure_get_string (s, "a-mid"));
+
+    if (mid) {
+      if (g_hash_table_contains (all_mids, (gpointer) mid)) {
+        g_set_error (error, GST_WEBRTC_ERROR,
+            GST_WEBRTC_ERROR_INTERNAL_FAILURE,
+            "Cannot re-use mid \'%s\' from the caps in m= line %u that has "
+            "already been used for a previous m= line in the SDP", mid,
+            media_idx);
+        return FALSE;
+      }
+      g_hash_table_insert (all_mids, g_strdup (mid), NULL);
+    } else {
+      /* Make sure to avoid mid collisions */
+      while (TRUE) {
+        mid = g_strdup_printf ("%s%u", gst_sdp_media_get_media (media),
+            webrtc->priv->media_counter++);
+        if (g_hash_table_contains (all_mids, (gpointer) mid)) {
+          g_free (mid);
+        } else {
+          gst_sdp_media_add_attribute (media, "mid", mid);
+          g_hash_table_insert (all_mids, g_strdup (mid), NULL);
+          break;
+        }
       }
     }
   }
@@ -3190,11 +3207,11 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
   }
 
   if (bundled_mids) {
-    const gchar *mid = gst_sdp_media_get_attribute_val (media, "mid");
-
     g_assert (mid);
     g_string_append_printf (bundled_mids, " %s", mid);
   }
+
+  g_clear_pointer (&mid, g_free);
 
   gst_caps_unref (caps);
 
@@ -4155,12 +4172,13 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
             rtp_trans->mline, rtp_trans->kind,
             webrtc_kind_from_caps (answer_caps));
 
-      if (!trans->do_nack) {
-        answer_caps = gst_caps_make_writable (answer_caps);
-        for (k = 0; k < gst_caps_get_size (answer_caps); k++) {
-          GstStructure *s = gst_caps_get_structure (answer_caps, k);
+      answer_caps = gst_caps_make_writable (answer_caps);
+      for (k = 0; k < gst_caps_get_size (answer_caps); k++) {
+        GstStructure *s = gst_caps_get_structure (answer_caps, k);
+        /* taken from the offer sdp already and already intersected above */
+        gst_structure_remove_field (s, "a-mid");
+        if (!trans->do_nack)
           gst_structure_remove_fields (s, "rtcp-fb-nack", NULL);
-        }
       }
 
       gst_sdp_media_set_media_from_caps (answer_caps, media);
