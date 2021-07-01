@@ -2642,6 +2642,7 @@ gst_base_ts_mux_find_best_pad (GstAggregator * aggregator,
     GstBaseTsMuxPad *tpad = GST_BASE_TS_MUX_PAD (l->data);
     GstAggregatorPad *apad = GST_AGGREGATOR_PAD_CAST (tpad);
     GstBuffer *buffer;
+    GstClockTime ts;
 
     buffer = gst_aggregator_pad_peek_buffer (apad);
     if (!buffer) {
@@ -2652,15 +2653,20 @@ gst_base_ts_mux_find_best_pad (GstAggregator * aggregator,
       }
       continue;
     }
-    if (best_ts == GST_CLOCK_TIME_NONE) {
+
+    ts = GST_BUFFER_DTS_OR_PTS (buffer);
+    if (!GST_CLOCK_TIME_IS_VALID (ts)) {
+      GST_WARNING_OBJECT (apad, "Buffer has no timestamp: %" GST_PTR_FORMAT,
+          buffer);
       best = tpad;
-      best_ts = GST_BUFFER_DTS_OR_PTS (buffer);
-    } else if (GST_BUFFER_DTS_OR_PTS (buffer) != GST_CLOCK_TIME_NONE) {
-      GstClockTime t = GST_BUFFER_DTS_OR_PTS (buffer);
-      if (t < best_ts) {
-        best = tpad;
-        best_ts = t;
-      }
+      best_ts = ts;
+      gst_buffer_unref (buffer);
+      break;
+    }
+
+    if (!GST_CLOCK_TIME_IS_VALID (best_ts) || ts < best_ts) {
+      best = tpad;
+      best_ts = ts;
     }
     gst_buffer_unref (buffer);
   }
