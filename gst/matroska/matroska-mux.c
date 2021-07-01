@@ -3593,7 +3593,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     gst_ebml_write_seek (ebml, my_pos);
   }
 
-  if (tags != NULL || toc_has_tags) {
+  if (mux->tags_pos != 0 || toc_has_tags) {
     gst_ebml_replace_uint (ebml, mux->seekhead_pos + 144,
         mux->tags_pos - mux->segment_master);
   } else {
