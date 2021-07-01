@@ -169,6 +169,11 @@ typedef struct {
 
   guint32 n_index_entries;
   MXFIndexEntry *index_entries;
+
+  /* Computed fields (i.e. not present in file) */
+
+  /* Initial essence offset covered by this segment */
+  guint64 segment_start_offset;
 } MXFIndexTableSegment;
 
 #define GST_TAG_MXF_UMID "mxf-umid"

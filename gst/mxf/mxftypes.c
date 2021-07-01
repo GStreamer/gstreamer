@@ -1285,6 +1285,21 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         break;
     }
   }
+
+  /* If edit unit byte count is 0 there *must* be entries */
+  if (segment->edit_unit_byte_count == 0 && segment->n_index_entries == 0) {
+    GST_WARNING
+        ("Invalid IndexTableSegment, No entries and no specified edit unit byte count");
+    goto error;
+  }
+
+  /* Compute initial essence offset */
+  if (segment->edit_unit_byte_count)
+    segment->segment_start_offset =
+        segment->index_start_position * segment->edit_unit_byte_count;
+  else
+    segment->segment_start_offset = segment->index_entries[0].stream_offset;
+
   return TRUE;
 
 error:

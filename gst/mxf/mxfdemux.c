@@ -206,6 +206,7 @@ gst_mxf_demux_reset_linked_metadata (GstMXFDemux * demux)
         &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
 
     track->source_package = NULL;
+    track->delta_id = -1;
     track->source_track = NULL;
   }
 
@@ -288,7 +289,8 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
 
     for (l = demux->index_tables; l; l = l->next) {
       GstMXFDemuxIndexTable *t = l->data;
-      g_array_free (t->offsets, TRUE);
+      g_array_free (t->segments, TRUE);
+      g_array_free (t->reverse_temporal_offsets, TRUE);
       g_free (t);
     }
     g_list_free (demux->index_tables);
@@ -508,6 +510,7 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
   GHashTableIter iter;
   MXFMetadataBase *m = NULL;
   GstStructure *structure;
+  guint i;
 
   g_rw_lock_writer_lock (&demux->metadata_lock);
 
@@ -550,6 +553,23 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
       structure, NULL);
 
   gst_structure_free (structure);
+
+  /* Check for quirks */
+  for (i = 0; i < demux->preface->n_identifications; i++) {
+    MXFMetadataIdentification *identification =
+        demux->preface->identifications[i];
+
+    GST_DEBUG_OBJECT (demux, "product:'%s' company:'%s'",
+        identification->product_name, identification->company_name);
+    if (!g_strcmp0 (identification->product_name, "MXFTk Advanced") &&
+        !g_strcmp0 (identification->company_name, "OpenCube") &&
+        identification->product_version.major <= 2 &&
+        identification->product_version.minor <= 0) {
+      GST_WARNING_OBJECT (demux,
+          "Setting up quirk for misuse of temporal_order field");
+      demux->temporal_order_misuse = TRUE;
+    }
+  }
 
   g_rw_lock_writer_unlock (&demux->metadata_lock);
 
@@ -788,6 +808,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
 
       etrack->source_package = NULL;
       etrack->source_track = NULL;
+      etrack->delta_id = -1;
 
       if (!track->parent.sequence) {
         GST_WARNING_OBJECT (demux, "Source track has no sequence");
@@ -902,6 +923,26 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
         }
       }
 
+      /* FIXME : We really should just abort/ignore the stream completely if we
+       * don't have a handler for it */
+      if (etrack->handler != NULL)
+        etrack->wrapping = etrack->handler->get_track_wrapping (track);
+      else
+        etrack->wrapping = MXF_ESSENCE_WRAPPING_UNKNOWN_WRAPPING;
+
+      if (package->is_interleaved) {
+        GST_DEBUG_OBJECT (demux,
+            "track comes from interleaved source package with %d track(s), setting delta_id to -1",
+            package->parent.n_tracks);
+        if (etrack->wrapping != MXF_ESSENCE_WRAPPING_FRAME_WRAPPING) {
+          GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
+              ("Non-frame-wrapping is not allowed in interleaved File Package."));
+          return GST_FLOW_ERROR;
+        }
+        etrack->delta_id = MXF_INDEX_DELTA_ID_UNKNOWN;
+      } else {
+        etrack->delta_id = MXF_INDEX_DELTA_ID_UNKNOWN;
+      }
       etrack->source_package = package;
       etrack->source_track = track;
       continue;
@@ -1715,6 +1756,613 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
   return ret;
 }
 
+/*
+ * Find the partition containing the stream offset of the given track
+ * */
+static GstMXFDemuxPartition *
+get_partition_for_stream_offset (GstMXFDemux * demux,
+    GstMXFDemuxEssenceTrack * etrack, guint64 stream_offset)
+{
+  GList *tmp;
+  GstMXFDemuxPartition *offset_partition = NULL, *next_partition = NULL;
+
+  for (tmp = demux->partitions; tmp; tmp = tmp->next) {
+    GstMXFDemuxPartition *partition = tmp->data;
+
+    if (!next_partition && offset_partition)
+      next_partition = partition;
+
+    if (partition->partition.body_sid != etrack->body_sid)
+      continue;
+    if (partition->partition.body_offset > stream_offset)
+      break;
+
+    offset_partition = partition;
+    next_partition = NULL;
+  }
+
+  if (offset_partition
+      && stream_offset < offset_partition->partition.body_offset)
+    return NULL;
+
+  /* Are we overriding into the next partition ? */
+  if (next_partition) {
+    guint64 partition_essence_size =
+        next_partition->partition.this_partition -
+        offset_partition->partition.this_partition +
+        offset_partition->essence_container_offset;
+    guint64 in_partition =
+        stream_offset - offset_partition->partition.body_offset;
+    if (in_partition >= partition_essence_size) {
+      GST_WARNING_OBJECT (demux,
+          "stream_offset %" G_GUINT64_FORMAT
+          " in track body_sid:% index_sid:%d leaks into next unrelated partition (body_sid:%d / index_sid:%d)",
+          stream_offset, etrack->body_sid, etrack->index_sid,
+          next_partition->partition.body_sid,
+          next_partition->partition.index_sid);
+      return NULL;
+    }
+  }
+  return offset_partition;
+}
+
+static GstMXFDemuxIndexTable *
+get_track_index_table (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack)
+{
+  GList *l;
+
+  /* Look in the indextables */
+  for (l = demux->index_tables; l; l = l->next) {
+    GstMXFDemuxIndexTable *tmp = l->data;
+
+    if (tmp->body_sid == etrack->body_sid
+        && tmp->index_sid == etrack->index_sid) {
+      return tmp;
+    }
+  }
+
+  return NULL;
+}
+
+static guint32
+get_track_max_temporal_offset (GstMXFDemux * demux,
+    GstMXFDemuxEssenceTrack * etrack)
+{
+  GstMXFDemuxIndexTable *table;
+
+  if (etrack->intra_only)
+    return 0;
+
+  table = get_track_index_table (demux, etrack);
+
+  if (table)
+    return table->max_temporal_offset;
+  return 0;
+}
+
+static guint64
+find_offset (GArray * offsets, gint64 * position, gboolean keyframe)
+{
+  GstMXFDemuxIndex *idx;
+  guint64 current_offset = -1;
+  gint64 current_position = *position;
+
+  if (!offsets || offsets->len <= *position)
+    return -1;
+
+  idx = &g_array_index (offsets, GstMXFDemuxIndex, *position);
+  if (idx->offset != 0 && (!keyframe || idx->keyframe)) {
+    current_offset = idx->offset;
+  } else if (idx->offset != 0) {
+    current_position--;
+    while (current_position >= 0) {
+      GST_LOG ("current_position %" G_GINT64_FORMAT, current_position);
+      idx = &g_array_index (offsets, GstMXFDemuxIndex, current_position);
+      if (idx->offset == 0) {
+        GST_LOG ("breaking offset 0");
+        break;
+      } else if (!idx->keyframe) {
+        current_position--;
+        continue;
+      } else {
+        GST_LOG ("Breaking found offset");
+        current_offset = idx->offset;
+        break;
+      }
+    }
+  }
+
+  if (current_offset == -1)
+    return -1;
+
+  *position = current_position;
+  return current_offset;
+}
+
+/**
+ * find_edit_entry:
+ * @demux: The demuxer
+ * @etrack: The target essence track
+ * @position: An edit unit position
+ * @keyframe: if TRUE search for supporting keyframe
+ * @entry: (out): Will be filled with the matching entry information
+ *
+ * Finds the edit entry of @etrack for the given edit unit @position and fill
+ * @entry with the information about that edit entry. If @keyframe is TRUE, the
+ * supporting entry (i.e. keyframe) for the given position will be searched for.
+ *
+ * For frame-wrapped contents, the returned offset will be the position of the
+ * KLV of the content. For clip-wrapped content, the returned offset will be the
+ * position of the essence (i.e. without KLV header) and the entry will specify
+ * the size (in bytes).
+ *
+ * The returned entry will also specify the duration (in edit units) of the
+ * content, which can be different from 1 for special cases (such as raw audio
+ * where multiple samples could be aggregated).
+ *
+ * Returns: TRUE if the entry was found and @entry was properly filled, else
+ * FALSE.
+ */
+static gboolean
+find_edit_entry (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
+    gint64 position, gboolean keyframe, GstMXFDemuxIndex * entry)
+{
+  GstMXFDemuxIndexTable *index_table = NULL;
+  guint i;
+  MXFIndexTableSegment *segment = NULL;
+  GstMXFDemuxPartition *offset_partition = NULL;
+  guint64 stream_offset = G_MAXUINT64, absolute_offset;
+
+  GST_DEBUG_OBJECT (demux,
+      "track %d body_sid:%d index_sid:%d delta_id:%d position:%" G_GINT64_FORMAT
+      " keyframe:%d", etrack->track_id, etrack->body_sid,
+      etrack->index_sid, etrack->delta_id, position, keyframe);
+
+  /* Default values */
+  entry->duration = 1;
+  /* By default every entry is a keyframe unless specified otherwise */
+  entry->keyframe = TRUE;
+
+  /* Look in the track offsets */
+  if (etrack->offsets && etrack->offsets->len > position) {
+    if (find_offset (etrack->offsets, &position, keyframe) != -1) {
+      *entry = g_array_index (etrack->offsets, GstMXFDemuxIndex, position);
+      GST_LOG_OBJECT (demux, "Found entry in track offsets");
+      return TRUE;
+    } else
+      GST_LOG_OBJECT (demux, "Didn't find entry in track offsets");
+  }
+
+  /* Look in the indextables */
+  index_table = get_track_index_table (demux, etrack);
+
+  if (!index_table) {
+    GST_DEBUG_OBJECT (demux,
+        "Couldn't find index table for body_sid:%d index_sid:%d",
+        etrack->body_sid, etrack->index_sid);
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (demux,
+      "Looking for position %" G_GINT64_FORMAT
+      " in index table (max temporal offset %u)",
+      etrack->position, index_table->max_temporal_offset);
+
+  /* Searching for a position in index tables works in 3 steps:
+   *
+   * 1. Figure out the table segment containing that position
+   * 2. Figure out the "stream offset" (and additional flags/timing) of that
+   *    position from the table segment.
+   * 3. Figure out the "absolute offset" of that "stream offset" using partitions
+   */
+
+search_in_segment:
+
+  /* Find matching index segment */
+  GST_DEBUG_OBJECT (demux, "Look for entry in %d segments",
+      index_table->segments->len);
+  for (i = 0; i < index_table->segments->len; i++) {
+    MXFIndexTableSegment *cand =
+        &g_array_index (index_table->segments, MXFIndexTableSegment, i);
+    if (position >= cand->index_start_position && (cand->index_duration == 0
+            || position <
+            (cand->index_start_position + cand->index_duration))) {
+      GST_DEBUG_OBJECT (demux,
+          "Entry is in Segment #%d , start: %" G_GINT64_FORMAT " , duration: %"
+          G_GINT64_FORMAT, i, cand->index_start_position, cand->index_duration);
+      segment = cand;
+      break;
+    }
+  }
+  if (!segment) {
+    GST_DEBUG_OBJECT (demux,
+        "Didn't find index table segment for position %" G_GINT64_FORMAT,
+        position);
+    return FALSE;
+  }
+
+  /* Were we asked for a keyframe ? */
+  if (keyframe) {
+    if (segment->edit_unit_byte_count && !segment->n_index_entries) {
+      GST_LOG_OBJECT (demux,
+          "Index table without entries, directly using requested position for keyframe search");
+    } else {
+      gint64 candidate;
+      GST_LOG_OBJECT (demux, "keyframe search");
+      /* Search backwards for keyframe */
+      for (candidate = position; candidate >= segment->index_start_position;
+          candidate--) {
+        MXFIndexEntry *segment_index_entry =
+            &segment->index_entries[candidate - segment->index_start_position];
+
+        /* Match */
+        if (segment_index_entry->flags & 0x80) {
+          GST_LOG_OBJECT (demux, "Found keyframe at position %" G_GINT64_FORMAT,
+              candidate);
+          position = candidate;
+          break;
+        }
+
+        /* If a keyframe offset is specified and valid, use that */
+        if (segment_index_entry->key_frame_offset
+            && !(segment_index_entry->flags & 0x08)) {
+          GST_DEBUG_OBJECT (demux, "Using keyframe offset %d",
+              segment_index_entry->key_frame_offset);
+          position = candidate + segment_index_entry->key_frame_offset;
+          if (position < segment->index_start_position) {
+            GST_DEBUG_OBJECT (demux, "keyframe info is in previous segment");
+            goto search_in_segment;
+          }
+          break;
+        }
+
+        /* If we reached the beginning, use that */
+        if (candidate == 0) {
+          GST_LOG_OBJECT (demux,
+              "Reached position 0 while searching for keyframe");
+          position = 0;
+          break;
+        }
+
+        /* If we looped past the beginning of this segment, go to the previous one */
+        if (candidate == segment->index_start_position) {
+          position = candidate - 1;
+          GST_LOG_OBJECT (demux, "Looping with new position %" G_GINT64_FORMAT,
+              position);
+          goto search_in_segment;
+        }
+
+        /* loop back to check previous entry */
+      }
+    }
+  }
+
+  /* Figure out the stream offset (also called "body offset" in specification) */
+  if (segment->edit_unit_byte_count && !segment->n_index_entries) {
+    /* Constant entry table. */
+    stream_offset = position * segment->edit_unit_byte_count;
+    if (etrack->delta_id >= 0) {
+      MXFDeltaEntry *delta_entry = &segment->delta_entries[etrack->delta_id];
+      GST_LOG_OBJECT (demux,
+          "Using delta %d pos_table_index:%d slice:%u element_delta:%u",
+          etrack->delta_id, delta_entry->pos_table_index, delta_entry->slice,
+          delta_entry->element_delta);
+      stream_offset += delta_entry->element_delta;
+      entry->size = segment->edit_unit_byte_count;
+    }
+  } else if (segment->n_index_entries) {
+    MXFIndexEntry *segment_index_entry;
+    MXFDeltaEntry *delta_entry = NULL;
+    g_assert (position <=
+        segment->index_start_position + segment->n_index_entries);
+    segment_index_entry =
+        &segment->index_entries[position - segment->index_start_position];
+    stream_offset = segment_index_entry->stream_offset;
+
+    if (segment->n_delta_entries > 0)
+      delta_entry = &segment->delta_entries[etrack->delta_id];
+
+    if (delta_entry) {
+      GST_LOG_OBJECT (demux,
+          "Using delta %d pos_table_index:%d slice:%u element_delta:%u",
+          etrack->delta_id, delta_entry->pos_table_index, delta_entry->slice,
+          delta_entry->element_delta);
+
+      /* Apply offset from slice/delta if needed */
+      if (delta_entry->slice)
+        stream_offset +=
+            segment_index_entry->slice_offset[delta_entry->slice - 1];
+      stream_offset += delta_entry->element_delta;
+      if (delta_entry->pos_table_index == -1) {
+        entry->keyframe = (segment_index_entry->flags & 0x80) == 0x80;
+      }
+      /* FIXME : Handle fractional offset position (delta_entry->pos_table_offset > 0) */
+    }
+
+    /* Apply reverse temporal reordering if present */
+    if (index_table->reordered_delta_entry == etrack->delta_id) {
+      if (position >= index_table->reverse_temporal_offsets->len) {
+        GST_WARNING_OBJECT (demux,
+            "Can't apply temporal offset for position %" G_GINT64_FORMAT
+            " (max:%d)", position, index_table->reverse_temporal_offsets->len);
+      }
+      if (demux->temporal_order_misuse) {
+        GST_DEBUG_OBJECT (demux, "Handling temporal order misuse");
+        entry->pts = position + segment_index_entry->temporal_offset;
+      } else {
+        entry->pts =
+            position + g_array_index (index_table->reverse_temporal_offsets,
+            gint8, position);
+        GST_LOG_OBJECT (demux,
+            "Applied temporal offset. dts:%" G_GINT64_FORMAT " pts:%"
+            G_GINT64_FORMAT, position, entry->pts);
+      }
+    } else
+      entry->pts = position;
+  } else {
+    /* Note : This should have been handled in the parser */
+    GST_WARNING_OBJECT (demux,
+        "Can't handle index tables without entries nor constant edit unit byte count");
+    return FALSE;
+  }
+
+  /* Find the partition containing the stream offset for this track */
+  offset_partition =
+      get_partition_for_stream_offset (demux, etrack, stream_offset);
+
+  if (!offset_partition) {
+    GST_WARNING_OBJECT (demux,
+        "Couldn't find matching partition for stream offset %" G_GUINT64_FORMAT,
+        stream_offset);
+    return FALSE;
+  }
+
+  /* Convert stream offset to absolute offset using matching partition */
+  absolute_offset =
+      offset_partition->partition.this_partition +
+      offset_partition->essence_container_offset + (stream_offset -
+      offset_partition->partition.body_offset);
+
+  GST_LOG_OBJECT (demux,
+      "track %d position:%" G_GINT64_FORMAT " stream_offset %" G_GUINT64_FORMAT
+      " matches to absolute offset %" G_GUINT64_FORMAT, etrack->track_id,
+      position, stream_offset, absolute_offset);
+  entry->initialized = TRUE;
+  entry->offset = absolute_offset;
+  entry->dts = position;
+
+  return TRUE;
+}
+
+/**
+ * find_entry_for_offset:
+ * @demux: The demuxer
+ * @etrack: The target essence track
+ * @offset: An absolute byte offset (excluding run_in)
+ * @entry: (out): Will be filled with the matching entry information
+ *
+ * Find the entry located at the given absolute byte offset.
+ *
+ * Note: the offset requested should be in the current partition !
+ *
+ * Returns: TRUE if the entry was found and @entry was properly filled, else
+ * FALSE.
+ */
+static gboolean
+find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
+    guint64 offset, GstMXFDemuxIndex * retentry)
+{
+  GstMXFDemuxIndexTable *index_table = get_track_index_table (demux, etrack);
+  guint i;
+  MXFIndexTableSegment *index_segment = NULL;
+  GstMXFDemuxPartition *partition = demux->current_partition;
+  guint64 original_offset = offset;
+  guint64 cp_offset = 0;        /* Offset in Content Package */
+  MXFIndexEntry *index_entry = NULL;
+  MXFDeltaEntry *delta_entry = NULL;
+  gint64 position = 0;
+
+  GST_DEBUG_OBJECT (demux,
+      "track %d body_sid:%d index_sid:%d offset:%" G_GUINT64_FORMAT,
+      etrack->track_id, etrack->body_sid, etrack->index_sid, offset);
+
+  /* Default value */
+  retentry->duration = 1;
+  retentry->keyframe = TRUE;
+
+  /* Index-less search */
+  if (etrack->offsets) {
+    for (i = 0; i < etrack->offsets->len; i++) {
+      GstMXFDemuxIndex *idx =
+          &g_array_index (etrack->offsets, GstMXFDemuxIndex, i);
+
+      if (idx->initialized && idx->offset != 0 && idx->offset == offset) {
+        *retentry = *idx;
+        GST_DEBUG_OBJECT (demux,
+            "Found in track index. Position:%" G_GINT64_FORMAT, idx->dts);
+        return TRUE;
+      }
+    }
+  }
+
+  /* Actual index search */
+  if (!index_table || !index_table->segments->len) {
+    GST_WARNING_OBJECT (demux, "No index table or entries to search in");
+    return FALSE;
+  }
+
+  if (!partition) {
+    GST_WARNING_OBJECT (demux, "No current partition for search");
+    return FALSE;
+  }
+
+  /* Searching for a stream position from an absolute offset works in 3 steps:
+   *
+   * 1. Convert the absolute offset to a "stream offset" based on the partition
+   *    information.
+   * 2. Find the segment for that "stream offset"
+   * 3. Match the entry within that segment
+   */
+
+  /* Convert to stream offset */
+  GST_LOG_OBJECT (demux,
+      "offset %" G_GUINT64_FORMAT " this_partition:%" G_GUINT64_FORMAT
+      " essence_container_offset:%" G_GINT64_FORMAT " partition body offset %"
+      G_GINT64_FORMAT, offset, partition->partition.this_partition,
+      partition->essence_container_offset, partition->partition.body_offset);
+  offset =
+      offset - partition->partition.this_partition -
+      partition->essence_container_offset + partition->partition.body_offset;
+
+  GST_LOG_OBJECT (demux, "stream offset %" G_GUINT64_FORMAT, offset);
+
+  /* Find the segment that covers the given stream offset (the highest one that
+   * covers that offset) */
+  for (i = index_table->segments->len - 1; i >= 0; i--) {
+    index_segment =
+        &g_array_index (index_table->segments, MXFIndexTableSegment, i);
+    GST_DEBUG_OBJECT (demux,
+        "Checking segment #%d (essence_offset %" G_GUINT64_FORMAT ")", i,
+        index_segment->segment_start_offset);
+    /* Not in the right segment yet */
+    if (offset >= index_segment->segment_start_offset) {
+      GST_LOG_OBJECT (demux, "Found");
+      break;
+    }
+  }
+  if (!index_segment) {
+    GST_WARNING_OBJECT (demux,
+        "Couldn't find index table segment for given offset");
+    return FALSE;
+  }
+
+  /* In the right segment, figure out:
+   * * the offset in the content package,
+   * * the position in edit units
+   * * the matching entry (if the table has entries)
+   */
+  if (index_segment->edit_unit_byte_count) {
+    cp_offset = offset % index_segment->edit_unit_byte_count;
+    position = offset / index_segment->edit_unit_byte_count;
+    /* Boundary check */
+    if ((position < index_segment->index_start_position)
+        || (index_segment->index_duration
+            && position >
+            (index_segment->index_start_position +
+                index_segment->index_duration))) {
+      GST_WARNING_OBJECT (demux,
+          "Invalid offset, exceeds table segment limits");
+      return FALSE;
+    }
+      retentry->size = index_segment->edit_unit_byte_count;
+  } else {
+    /* Find the content package entry containing this offset */
+    guint cpidx;
+    for (cpidx = 0; cpidx < index_segment->n_index_entries; cpidx++) {
+      index_entry = &index_segment->index_entries[cpidx];
+      GST_DEBUG_OBJECT (demux,
+          "entry #%u offset:%" G_GUINT64_FORMAT " stream_offset:%"
+          G_GUINT64_FORMAT, cpidx, offset, index_entry->stream_offset);
+      if (index_entry->stream_offset == offset) {
+        index_entry = &index_segment->index_entries[cpidx];
+        /* exactly on the entry */
+        cp_offset = offset - index_entry->stream_offset;
+        position = index_segment->index_start_position + cpidx;
+        break;
+      }
+      if (index_entry->stream_offset > offset && cpidx > 0) {
+        index_entry = &index_segment->index_entries[cpidx - 1];
+        /* One too far, result is in previous entry */
+        cp_offset = offset - index_entry->stream_offset;
+        position = index_segment->index_start_position + cpidx - 1;
+        break;
+      }
+    }
+    if (cpidx == index_segment->n_index_entries) {
+      GST_WARNING_OBJECT (demux,
+          "offset exceeds maximum number of entries in table segment");
+      return FALSE;
+    }
+  }
+
+  /* If the track comes from an interleaved essence container and doesn't have a
+   * delta_id set, figure it out now */
+  if (G_UNLIKELY (etrack->delta_id == MXF_INDEX_DELTA_ID_UNKNOWN)) {
+    guint delta;
+    GST_DEBUG_OBJECT (demux,
+        "Unknown delta_id for track. Attempting to resolve it");
+
+    if (index_segment->n_delta_entries == 0) {
+      /* No delta entries, nothing we can do about this */
+      GST_DEBUG_OBJECT (demux, "Index table has no delta entries, ignoring");
+      etrack->delta_id = MXF_INDEX_DELTA_ID_IGNORE;
+    } else if (!index_entry) {
+      for (delta = 0; delta < index_segment->n_delta_entries; delta++) {
+        /* No entry, therefore no slices */
+        GST_LOG_OBJECT (demux,
+            "delta #%d offset %" G_GUINT64_FORMAT " cp_offs:%" G_GUINT64_FORMAT
+            " element_delta:%u", delta, offset, cp_offset,
+            index_segment->delta_entries[delta].element_delta);
+        if (cp_offset == index_segment->delta_entries[delta].element_delta) {
+          GST_DEBUG_OBJECT (demux, "Matched to delta %d", delta);
+          etrack->delta_id = delta;
+          delta_entry = &index_segment->delta_entries[delta];
+          break;
+        }
+      }
+    } else {
+      for (delta = 0; delta < index_segment->n_delta_entries; delta++) {
+        guint64 delta_offs = 0;
+        /* If we are not in the first slice, take that offset into account */
+        if (index_segment->delta_entries[delta].slice)
+          delta_offs =
+              index_entry->slice_offset[index_segment->
+              delta_entries[delta].slice - 1];
+        /* Add the offset for this delta */
+        delta_offs += index_segment->delta_entries[delta].element_delta;
+        if (cp_offset == delta_offs) {
+          GST_DEBUG_OBJECT (demux, "Matched to delta %d", delta);
+          etrack->delta_id = delta;
+          delta_entry = &index_segment->delta_entries[delta];
+          break;
+        }
+      }
+
+    }
+    /* If we didn't managed to match, ignore it from now on */
+    if (etrack->delta_id == MXF_INDEX_DELTA_ID_UNKNOWN) {
+      GST_WARNING_OBJECT (demux,
+          "Couldn't match delta id, ignoring it from now on");
+      etrack->delta_id = MXF_INDEX_DELTA_ID_IGNORE;
+    }
+  } else if (index_segment->n_delta_entries > 0) {
+    delta_entry = &index_segment->delta_entries[etrack->delta_id];
+  }
+
+  if (index_entry && delta_entry && delta_entry->pos_table_index == -1) {
+    retentry->keyframe = (index_entry->flags & 0x80) == 0x80;
+    if (!demux->temporal_order_misuse)
+      retentry->pts =
+          position + g_array_index (index_table->reverse_temporal_offsets,
+          gint8, position);
+    else
+      retentry->pts = position + index_entry->temporal_offset;
+    GST_LOG_OBJECT (demux,
+        "Applied temporal offset. dts:%" G_GINT64_FORMAT " pts:%"
+        G_GINT64_FORMAT, position, retentry->pts);
+  } else
+    retentry->pts = position;
+
+  /* FIXME : check if position and cp_offs matches the table */
+  GST_LOG_OBJECT (demux, "Found in index table. position:%" G_GINT64_FORMAT,
+      position);
+  retentry->initialized = TRUE;
+  retentry->offset = original_offset;
+  retentry->dts = position;
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     const MXFUL * key, GstBuffer * buffer, gboolean peek)
@@ -1725,10 +2373,10 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   GstBuffer *inbuf = NULL;
   GstBuffer *outbuf = NULL;
   GstMXFDemuxEssenceTrack *etrack = NULL;
-  gboolean keyframe = TRUE;
   /* As in GstMXFDemuxIndex */
-  guint64 pts = G_MAXUINT64, dts = G_MAXUINT64;
+  guint64 pts = G_MAXUINT64;
   gint32 max_temporal_offset = 0;
+  GstMXFDemuxIndex index_entry = { 0, };
 
   GST_DEBUG_OBJECT (demux,
       "Handling generic container essence element of size %" G_GSIZE_FORMAT
@@ -1760,6 +2408,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     return GST_FLOW_ERROR;
   }
 
+  /* Identify and fetch the essence track */
   track_number = GST_READ_UINT32_BE (&key->u[12]);
 
   for (i = 0; i < demux->essence_tracks->len; i++) {
@@ -1779,37 +2428,56 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     return GST_FLOW_OK;
   }
 
+  GST_DEBUG_OBJECT (demux,
+      "Handling generic container essence (track %d , number: 0x%08x)",
+      etrack->track_id, track_number);
+
+  /* Fetch the current entry.
+   *
+   * 1. If we don't have a current position, use find_entry_for_offset()
+   * 2. If we do have a position, use find_edit_entry()
+   *
+   * 3. If we are dealing with frame-wrapped content, pull the corresponding
+   *    data from upstream (because it wasn't provided). If we didn't find an
+   *    entry, error out because we can't deal with a frame-wrapped stream
+   *    without index.
+   */
+
+  /* Update the track position (in case of resyncs) */
   if (etrack->position == -1) {
     GST_DEBUG_OBJECT (demux,
         "Unknown essence track position, looking into index");
-    if (etrack->offsets) {
-      for (i = 0; i < etrack->offsets->len; i++) {
-        GstMXFDemuxIndex *idx =
-            &g_array_index (etrack->offsets, GstMXFDemuxIndex, i);
-
-        if (idx->initialized && idx->offset != 0
-            && idx->offset == demux->offset - demux->run_in) {
-          etrack->position = i;
-          break;
-        }
-      }
-    }
-
-    if (etrack->position == -1) {
+    if (!find_entry_for_offset (demux, etrack, demux->offset - demux->run_in,
+            &index_entry)) {
       GST_WARNING_OBJECT (demux, "Essence track position not in index");
       return GST_FLOW_OK;
     }
-  }
-
-  if (etrack->offsets && etrack->offsets->len > etrack->position) {
-    GstMXFDemuxIndex *index =
-        &g_array_index (etrack->offsets, GstMXFDemuxIndex, etrack->position);
-    if (index->initialized && index->offset != 0)
-      keyframe = index->keyframe;
-    if (index->initialized && index->pts != G_MAXUINT64)
-      pts = index->pts;
-    if (index->initialized && index->dts != G_MAXUINT64)
-      dts = index->dts;
+    /* Update track position */
+    etrack->position = index_entry.dts;
+  } else if (etrack->delta_id == -1) {
+    GST_DEBUG_OBJECT (demux,
+        "Unknown essence track delta_id, looking into index");
+    if (!find_entry_for_offset (demux, etrack, demux->offset - demux->run_in,
+            &index_entry)) {
+      /* Non-fatal, fallback to legacy mode */
+      GST_WARNING_OBJECT (demux, "Essence track position not in index");
+    } else if (etrack->position != index_entry.dts) {
+      GST_ERROR_OBJECT (demux,
+          "track position doesn't match %" G_GINT64_FORMAT " entry dts %"
+          G_GINT64_FORMAT, etrack->position, index_entry.dts);
+      return GST_FLOW_ERROR;
+    }
+  } else {
+    if (!find_edit_entry (demux, etrack, etrack->position, FALSE, &index_entry,
+            FALSE)) {
+      /* FIXME : Error out if using non-frame-wrapping */
+      GST_DEBUG_OBJECT (demux, "Couldn't find entry");
+    } else if (index_entry.offset != demux->offset) {
+      GST_ERROR_OBJECT (demux,
+          "demux offset doesn't match %" G_GINT64_FORMAT " entry offset %"
+          G_GUINT64_FORMAT, demux->offset, index_entry.offset);
+      return GST_FLOW_ERROR;
+    }
   }
 
   /* Create subbuffer to be able to change metadata */
@@ -1817,7 +2485,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0,
       gst_buffer_get_size (buffer));
 
-  if (!keyframe)
+  if (index_entry.initialized && !index_entry.keyframe)
     GST_BUFFER_FLAG_SET (inbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   if (etrack->handle_func) {
@@ -1841,84 +2509,27 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     return ret;
   }
 
-  if (outbuf)
-    keyframe = !GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+  if (!index_entry.initialized) {
+    /* This can happen when doing scanning without entry tables */
+    index_entry.duration = 1;
+    index_entry.offset = demux->offset - demux->run_in;
+    index_entry.dts = etrack->position;
+    index_entry.pts = etrack->intra_only ? etrack->position : G_MAXUINT64;
+    index_entry.keyframe =
+        !GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+    index_entry.initialized = TRUE;
+    GST_DEBUG_OBJECT (demux,
+        "Storing newly discovered information on track %d. dts: %"
+        G_GINT64_FORMAT " offset:%" G_GUINT64_FORMAT " keyframe:%d",
+        etrack->track_id, index_entry.dts, index_entry.offset,
+        index_entry.keyframe);
 
-  /* Prefer keyframe information from index tables over everything else */
-  if (demux->index_tables) {
-    GList *l;
-    GstMXFDemuxIndexTable *index_table = NULL;
+    if (!etrack->offsets)
+      etrack->offsets = g_array_new (FALSE, TRUE, sizeof (GstMXFDemuxIndex));
 
-    for (l = demux->index_tables; l; l = l->next) {
-      GstMXFDemuxIndexTable *tmp = l->data;
-
-      if (tmp->body_sid == etrack->body_sid
-          && tmp->index_sid == etrack->index_sid) {
-        index_table = tmp;
-        break;
-      }
-    }
-
-    if (!index_table)
-      GST_DEBUG_OBJECT (demux,
-          "Couldn't find index table for body_sid:%d index_sid:%d",
-          etrack->body_sid, etrack->index_sid);
-    else {
-      GST_DEBUG_OBJECT (demux,
-          "Looking for position %" G_GINT64_FORMAT
-          " in index table of size %d (max temporal offset %u)",
-          etrack->position, index_table->offsets->len,
-          index_table->max_temporal_offset);
-      max_temporal_offset = index_table->max_temporal_offset;
-    }
-
-    if (index_table && index_table->offsets->len > etrack->position) {
-      GstMXFDemuxIndex *index =
-          &g_array_index (index_table->offsets, GstMXFDemuxIndex,
-          etrack->position);
-      if (index->initialized && index->offset != 0) {
-        keyframe = index->keyframe;
-
-        if (outbuf) {
-          if (keyframe)
-            GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-          else
-            GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-        }
-      }
-
-      if (index->initialized && index->pts != G_MAXUINT64)
-        pts = index->pts;
-      if (index->initialized && index->dts != G_MAXUINT64)
-        dts = index->dts;
-    }
-  }
-
-  if (!etrack->offsets)
-    etrack->offsets = g_array_new (FALSE, TRUE, sizeof (GstMXFDemuxIndex));
-
-  {
-    if (etrack->offsets->len > etrack->position) {
-      GstMXFDemuxIndex *index =
-          &g_array_index (etrack->offsets, GstMXFDemuxIndex, etrack->position);
-
-      index->offset = demux->offset - demux->run_in;
-      index->initialized = TRUE;
-      index->pts = pts;
-      index->dts = dts;
-      index->keyframe = keyframe;
-    } else if (etrack->position < G_MAXINT) {
-      GstMXFDemuxIndex index;
-
-      index.offset = demux->offset - demux->run_in;
-      index.initialized = TRUE;
-      index.pts = pts;
-      index.dts = dts;
-      index.keyframe = keyframe;
-      if (etrack->offsets->len < etrack->position)
-        g_array_set_size (etrack->offsets, etrack->position + 1);
-      g_array_insert_val (etrack->offsets, etrack->position, index);
-    }
+    /* We only ever append to the track offset entry. */
+    g_assert (etrack->position <= etrack->offsets->len);
+    g_array_insert_val (etrack->offsets, etrack->position, index_entry);
   }
 
   if (peek)
@@ -1932,6 +2543,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   inbuf = outbuf;
   outbuf = NULL;
 
+  max_temporal_offset = get_track_max_temporal_offset (demux, etrack);
+
   for (i = 0; i < demux->src->len; i++) {
     GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
 
@@ -1939,12 +2552,15 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       continue;
 
     if (pad->eos) {
-      GST_DEBUG_OBJECT (demux, "Pad is already EOS");
+      GST_DEBUG_OBJECT (pad, "Pad is already EOS");
       continue;
     }
 
     if (etrack->position != pad->current_essence_track_position) {
-      GST_DEBUG_OBJECT (demux, "Not at current component's position");
+      GST_DEBUG_OBJECT (pad,
+          "Not at current component's position (track:%" G_GINT64_FORMAT
+          " essence:%" G_GINT64_FORMAT ")", etrack->position,
+          pad->current_essence_track_position);
       continue;
     }
 
@@ -1953,7 +2569,10 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
       if (earliest && earliest != pad && earliest->position < pad->position &&
           pad->position - earliest->position > demux->max_drift) {
-        GST_DEBUG_OBJECT (demux, "Pad is too far ahead of time");
+        GST_DEBUG_OBJECT (pad,
+            "Pad is too far ahead of time (%" GST_TIME_FORMAT " vs earliest:%"
+            GST_TIME_FORMAT ")", GST_TIME_ARGS (earliest->position),
+            GST_TIME_ARGS (pad->position));
         continue;
       }
     }
@@ -1962,6 +2581,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     outbuf =
         gst_buffer_copy_region (inbuf, GST_BUFFER_COPY_ALL, 0,
         gst_buffer_get_size (inbuf));
+
+    pts = index_entry.pts;
 
     GST_BUFFER_DTS (outbuf) = pad->position;
     if (etrack->intra_only) {
@@ -2072,7 +2693,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     pad->position += GST_BUFFER_DURATION (outbuf);
     pad->current_material_track_position++;
 
-    GST_DEBUG_OBJECT (demux,
+    GST_DEBUG_OBJECT (pad,
         "Pushing buffer of size %" G_GSIZE_FORMAT " for track %u: pts %"
         GST_TIME_FORMAT " dts %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT
         " position %" G_GUINT64_FORMAT, gst_buffer_get_size (outbuf),
@@ -2103,7 +2724,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     }
     outbuf = NULL;
     ret = gst_flow_combiner_update_flow (demux->flowcombiner, ret);
-    GST_LOG_OBJECT (demux, "combined return %s", gst_flow_get_name (ret));
+    GST_LOG_OBJECT (pad, "combined return %s", gst_flow_get_name (ret));
 
     if (pad->position > demux->segment.position)
       demux->segment.position = pad->position;
@@ -2140,7 +2761,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     if (ret == GST_FLOW_EOS) {
       GstEvent *e;
 
-      GST_DEBUG_OBJECT (demux, "EOS for track");
+      GST_DEBUG_OBJECT (pad, "EOS for track");
       pad->eos = TRUE;
       e = gst_event_new_eos ();
       gst_event_set_seqnum (e, demux->seqnum);
@@ -2164,6 +2785,16 @@ out:
   return ret;
 }
 
+/*
+ * Called when analyzing the (RIP) Random Index Pack.
+ *
+ * FIXME : If a file doesn't have a RIP, we should iterate the partition headers
+ * to collect as much information as possible.
+ *
+ * This function collects as much information as possible from the partition headers:
+ * * Store partition information in the list of partitions
+ * * Handle any index table segment present
+ */
 static void
 read_partition_header (GstMXFDemux * demux)
 {
@@ -2329,6 +2960,37 @@ gst_mxf_demux_handle_random_index_pack (GstMXFDemux * demux, const MXFUL * key,
   return GST_FLOW_OK;
 }
 
+static gint
+compare_index_table_segment (MXFIndexTableSegment * sa,
+    MXFIndexTableSegment * sb)
+{
+  if (mxf_uuid_is_equal (&sa->instance_id, &sb->instance_id))
+    return 0;
+  if (sa->body_sid != sb->body_sid)
+    return (sa->body_sid < sb->body_sid) ? -1 : 1;
+  if (sa->index_sid != sb->index_sid)
+    return (sa->index_sid < sb->index_sid) ? -1 : 1;
+  /* Finally sort by index start position */
+  if (sa->index_start_position < sb->index_start_position)
+    return -1;
+  return (sa->index_start_position != sb->index_start_position);
+}
+
+#if !GLIB_CHECK_VERSION(2, 62, 0)
+static gboolean
+has_table_segment (GArray * segments, MXFIndexTableSegment * target)
+{
+  guint i;
+  for (i = 0; i < segments->len; i++) {
+    MXFIndexTableSegment *cand =
+        &g_array_index (segments, MXFIndexTableSegment, i);
+    if (mxf_uuid_is_equal (&cand->instance_id, &target->instance_id))
+      return TRUE;
+  }
+  return FALSE;
+}
+#endif
+
 static GstFlowReturn
 gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux,
     const MXFUL * key, GstBuffer * buffer, guint64 offset)
@@ -2336,6 +2998,7 @@ gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux,
   MXFIndexTableSegment *segment;
   GstMapInfo map;
   gboolean ret;
+  GList *tmp;
 
   GST_DEBUG_OBJECT (demux,
       "Handling index table segment of size %" G_GSIZE_FORMAT " at offset %"
@@ -2353,12 +3016,39 @@ gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux,
     return GST_FLOW_ERROR;
   }
 
+  /* Drop it if we already saw it. Ideally we should be able to do this before
+     parsing (by checking instance UID) */
+  if (g_list_find_custom (demux->pending_index_table_segments, segment,
+          (GCompareFunc) compare_index_table_segment)) {
+    GST_DEBUG_OBJECT (demux, "Already in pending list");
+    g_free (segment);
+    return GST_FLOW_OK;
+  }
+  for (tmp = demux->index_tables; tmp; tmp = tmp->next) {
+    GstMXFDemuxIndexTable *table = (GstMXFDemuxIndexTable *) tmp->data;
+#if !GLIB_CHECK_VERSION (2, 62, 0)
+    if (has_table_segment (table->segments, segment)) {
+#else
+    if (g_array_binary_search (table->segments, segment,
+            (GCompareFunc) compare_index_table_segment, NULL)) {
+#endif
+      GST_DEBUG_OBJECT (demux, "Already handled");
+      g_free (segment);
+      return GST_FLOW_OK;
+    }
+  }
+
   demux->pending_index_table_segments =
-      g_list_prepend (demux->pending_index_table_segments, segment);
+      g_list_insert_sorted (demux->pending_index_table_segments, segment,
+      (GCompareFunc) compare_index_table_segment);
 
   return GST_FLOW_OK;
 }
 
+/*
+ * FIXME : Make outbuf optional in cases where we are only interested in getting
+ * the key and length.
+ */
 static GstFlowReturn
 gst_mxf_demux_pull_klv_packet (GstMXFDemux * demux, guint64 offset, MXFUL * key,
     GstBuffer ** outbuf, guint * read)
@@ -2757,10 +3447,14 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
   } else if (mxf_is_descriptive_metadata (key)) {
     ret = gst_mxf_demux_handle_descriptive_metadata (demux, key, buffer);
   } else if (mxf_is_generic_container_system_item (key)) {
+    if (demux->pending_index_table_segments)
+      collect_index_table_segments (demux);
     ret =
         gst_mxf_demux_handle_generic_container_system_item (demux, key, buffer);
   } else if (mxf_is_generic_container_essence_element (key) ||
       mxf_is_avid_essence_container_essence_element (key)) {
+    if (demux->pending_index_table_segments)
+      collect_index_table_segments (demux);
     ret =
         gst_mxf_demux_handle_generic_container_essence_element (demux, key,
         buffer, peek);
@@ -2835,42 +3529,6 @@ gst_mxf_demux_set_partition_for_offset (GstMXFDemux * demux, guint64 offset)
 }
 
 static guint64
-find_offset (GArray * offsets, gint64 * position, gboolean keyframe)
-{
-  GstMXFDemuxIndex *idx;
-  guint64 current_offset = -1;
-  gint64 current_position = *position;
-
-  if (!offsets || offsets->len <= *position)
-    return -1;
-
-  idx = &g_array_index (offsets, GstMXFDemuxIndex, *position);
-  if (idx->offset != 0 && (!keyframe || idx->keyframe)) {
-    current_offset = idx->offset;
-  } else if (idx->offset != 0) {
-    current_position--;
-    while (current_position >= 0) {
-      idx = &g_array_index (offsets, GstMXFDemuxIndex, current_position);
-      if (idx->offset == 0) {
-        break;
-      } else if (!idx->keyframe) {
-        current_position--;
-        continue;
-      } else {
-        current_offset = idx->offset;
-        break;
-      }
-    }
-  }
-
-  if (current_offset == -1)
-    return -1;
-
-  *position = current_position;
-  return current_offset;
-}
-
-static guint64
 find_closest_offset (GArray * offsets, gint64 * position, gboolean keyframe)
 {
   GstMXFDemuxIndex *idx;
@@ -2906,176 +3564,158 @@ gst_mxf_demux_find_essence_element (GstMXFDemux * demux,
   GstMXFDemuxPartition *old_partition = demux->current_partition;
   gint i;
   guint64 offset;
-  gint64 requested_position = *position;
-  GstMXFDemuxIndexTable *index_table = NULL;
+  gint64 requested_position = *position, index_start_position;
+  GstMXFDemuxIndex index_entry = { 0, };
 
   GST_DEBUG_OBJECT (demux, "Trying to find essence element %" G_GINT64_FORMAT
-      " of track %u with body_sid %u (keyframe %d)", *position,
+      " of track 0x%08x with body_sid %u (keyframe %d)", *position,
       etrack->track_number, etrack->body_sid, keyframe);
 
-  if (demux->index_tables) {
-    GList *l;
-
-    for (l = demux->index_tables; l; l = l->next) {
-      GstMXFDemuxIndexTable *tmp = l->data;
-
-      if (tmp->body_sid == etrack->body_sid
-          && tmp->index_sid == etrack->index_sid) {
-        index_table = tmp;
-        break;
-      }
-    }
+  /* Get entry from index table if present */
+  if (find_edit_entry (demux, etrack, *position, keyframe, &index_entry)) {
+    GST_DEBUG_OBJECT (demux,
+        "Got position %" G_GINT64_FORMAT " at offset %" G_GUINT64_FORMAT,
+        index_entry.dts, index_entry.offset);
+    *position = index_entry.dts;
+    return index_entry.offset;
   }
 
-from_index:
+  GST_DEBUG_OBJECT (demux, "Not found in index table");
+
+  /* Fallback to track offsets */
+
+  if (!demux->random_access) {
+    /* Best effort for push mode */
+    offset = find_closest_offset (etrack->offsets, position, keyframe);
+    if (offset != -1)
+      GST_DEBUG_OBJECT (demux,
+          "Starting with edit unit %" G_GINT64_FORMAT " for %" G_GINT64_FORMAT
+          " in generated index at offset %" G_GUINT64_FORMAT, *position,
+          requested_position, offset);
+    return offset;
+  }
 
   if (etrack->duration > 0 && *position >= etrack->duration) {
     GST_WARNING_OBJECT (demux, "Position after end of essence track");
     return -1;
   }
 
-  /* First try to find an offset in our index */
-  offset = find_offset (etrack->offsets, position, keyframe);
+from_track_offset:
+
+  index_start_position = *position;
+
+  demux->offset = demux->run_in;
+
+  offset = find_closest_offset (etrack->offsets, &index_start_position, FALSE);
   if (offset != -1) {
+    demux->offset = offset + demux->run_in;
     GST_DEBUG_OBJECT (demux,
-        "Found edit unit %" G_GINT64_FORMAT " for %" G_GINT64_FORMAT
-        " in generated index at offset %" G_GUINT64_FORMAT, *position,
-        requested_position, offset);
-    return offset;
+        "Starting with edit unit %" G_GINT64_FORMAT " for %" G_GINT64_FORMAT
+        " in generated index at offset %" G_GUINT64_FORMAT,
+        index_start_position, requested_position, offset);
+  } else {
+    index_start_position = -1;
   }
 
-  GST_DEBUG_OBJECT (demux, "Not found in index");
-  if (!demux->random_access) {
-    offset = find_closest_offset (etrack->offsets, position, keyframe);
-    if (offset != -1) {
-      GST_DEBUG_OBJECT (demux,
-          "Starting with edit unit %" G_GINT64_FORMAT " for %" G_GINT64_FORMAT
-          " in generated index at offset %" G_GUINT64_FORMAT, *position,
-          requested_position, offset);
-      return offset;
-    }
+  gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
 
-    if (index_table) {
-      offset = find_closest_offset (index_table->offsets, position, keyframe);
-      if (offset != -1) {
-        GST_DEBUG_OBJECT (demux,
-            "Starting with edit unit %" G_GINT64_FORMAT " for %" G_GINT64_FORMAT
-            " in index at offset %" G_GUINT64_FORMAT, *position,
-            requested_position, offset);
-        return offset;
-      }
-    }
-  } else if (demux->random_access) {
-    gint64 index_start_position = *position;
+  for (i = 0; i < demux->essence_tracks->len; i++) {
+    GstMXFDemuxEssenceTrack *t =
+        &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
 
-    demux->offset = demux->run_in;
-
-    offset =
-        find_closest_offset (etrack->offsets, &index_start_position, FALSE);
-    if (offset != -1) {
-      demux->offset = offset + demux->run_in;
-      GST_DEBUG_OBJECT (demux,
-          "Starting with edit unit %" G_GINT64_FORMAT " for %" G_GINT64_FORMAT
-          " in generated index at offset %" G_GUINT64_FORMAT,
-          index_start_position, requested_position, offset);
-    } else {
-      index_start_position = -1;
-    }
-
-    if (index_table) {
-      gint64 tmp_position = *position;
-
-      offset = find_closest_offset (index_table->offsets, &tmp_position, TRUE);
-      if (offset != -1 && tmp_position > index_start_position) {
-        demux->offset = offset + demux->run_in;
-        index_start_position = tmp_position;
-        GST_DEBUG_OBJECT (demux,
-            "Starting with edit unit %" G_GINT64_FORMAT " for %" G_GINT64_FORMAT
-            " in index at offset %" G_GUINT64_FORMAT, index_start_position,
-            requested_position, offset);
-      }
-    }
-
-    gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
-
-    for (i = 0; i < demux->essence_tracks->len; i++) {
-      GstMXFDemuxEssenceTrack *t =
-          &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
-
-      if (index_start_position != -1 && t == etrack)
-        t->position = index_start_position;
-      else
-        t->position = (demux->offset == demux->run_in) ? 0 : -1;
-    }
-
-    /* Else peek at all essence elements and complete our
-     * index until we find the requested element
-     */
-    while (ret == GST_FLOW_OK) {
-      GstBuffer *buffer = NULL;
-      MXFUL key;
-      guint read = 0;
-
-      ret =
-          gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
-          &read);
-
-      if (ret == GST_FLOW_EOS) {
-        for (i = 0; i < demux->essence_tracks->len; i++) {
-          GstMXFDemuxEssenceTrack *t =
-              &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack,
-              i);
-
-          if (t->position > 0)
-            t->duration = t->position;
-        }
-        /* For the searched track this is really our position */
-        etrack->duration = etrack->position;
-
-        for (i = 0; i < demux->src->len; i++) {
-          GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
-
-          if (!p->eos
-              && p->current_essence_track_position >=
-              p->current_essence_track->duration) {
-            GstEvent *e;
-
-            p->eos = TRUE;
-            e = gst_event_new_eos ();
-            gst_event_set_seqnum (e, demux->seqnum);
-            gst_pad_push_event (GST_PAD_CAST (p), e);
-          }
-        }
-      }
-
-      if (G_UNLIKELY (ret != GST_FLOW_OK) && etrack->position <= *position) {
-        demux->offset = old_offset;
-        demux->current_partition = old_partition;
-        break;
-      } else if (G_UNLIKELY (ret == GST_FLOW_OK)) {
-        ret = gst_mxf_demux_handle_klv_packet (demux, &key, buffer, TRUE);
-        gst_buffer_unref (buffer);
-      }
-
-      /* If we found the position read it from the index again */
-      if (((ret == GST_FLOW_OK && etrack->position == *position + 2) ||
-              (ret == GST_FLOW_EOS && etrack->position == *position + 1))
-          && etrack->offsets && etrack->offsets->len > *position
-          && g_array_index (etrack->offsets, GstMXFDemuxIndex,
-              *position).offset != 0) {
-        GST_DEBUG_OBJECT (demux, "Found at offset %" G_GUINT64_FORMAT,
-            demux->offset);
-        demux->offset = old_offset;
-        demux->current_partition = old_partition;
-        goto from_index;
-      }
-      demux->offset += read;
-    }
-    demux->offset = old_offset;
-    demux->current_partition = old_partition;
-
-    GST_DEBUG_OBJECT (demux, "Not found in this file");
+    if (index_start_position != -1 && t == etrack)
+      t->position = index_start_position;
+    else
+      t->position = (demux->offset == demux->run_in) ? 0 : -1;
+    GST_LOG_OBJECT (demux, "Setting track %d position to %" G_GINT64_FORMAT,
+        t->track_id, t->position);
   }
+
+  /* Else peek at all essence elements and complete our
+   * index until we find the requested element
+   */
+  while (ret == GST_FLOW_OK) {
+    GstBuffer *buffer = NULL;
+    MXFUL key;
+    guint read = 0;
+
+    GST_LOG_OBJECT (demux, "Pulling from offset %" G_GINT64_FORMAT,
+        demux->offset);
+    ret =
+        gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
+        &read);
+
+    if (ret == GST_FLOW_EOS) {
+      /* Handle EOS */
+      for (i = 0; i < demux->essence_tracks->len; i++) {
+        GstMXFDemuxEssenceTrack *t =
+            &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack,
+            i);
+
+        if (t->position > 0)
+          t->duration = t->position;
+      }
+      /* For the searched track this is really our position */
+      etrack->duration = etrack->position;
+
+      for (i = 0; i < demux->src->len; i++) {
+        GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+
+        if (!p->eos
+            && p->current_essence_track_position >=
+            p->current_essence_track->duration) {
+          GstEvent *e;
+
+          p->eos = TRUE;
+          e = gst_event_new_eos ();
+          gst_event_set_seqnum (e, demux->seqnum);
+          gst_pad_push_event (GST_PAD_CAST (p), e);
+        }
+      }
+    }
+
+    GST_LOG_OBJECT (demux,
+        "pulling gave flow:%s track->position:%" G_GINT64_FORMAT,
+        gst_flow_get_name (ret), etrack->position);
+    if (G_UNLIKELY (ret != GST_FLOW_OK) && etrack->position <= *position) {
+      demux->offset = old_offset;
+      demux->current_partition = old_partition;
+      break;
+    } else if (G_UNLIKELY (ret == GST_FLOW_OK)) {
+      ret = gst_mxf_demux_handle_klv_packet (demux, &key, buffer, TRUE);
+      gst_buffer_unref (buffer);
+    }
+
+    GST_LOG_OBJECT (demux,
+        "Handling gave flow:%s track->position:%" G_GINT64_FORMAT
+        " looking for %" G_GINT64_FORMAT, gst_flow_get_name (ret),
+        etrack->position, *position);
+
+    /* If we found the position read it from the index again */
+    if (((ret == GST_FLOW_OK && etrack->position == *position + 1) ||
+            (ret == GST_FLOW_EOS && etrack->position == *position + 1))
+        && etrack->offsets && etrack->offsets->len > *position
+        && g_array_index (etrack->offsets, GstMXFDemuxIndex,
+            *position).offset != 0) {
+      GST_DEBUG_OBJECT (demux, "Found at offset %" G_GUINT64_FORMAT,
+          demux->offset);
+      demux->offset = old_offset;
+      demux->current_partition = old_partition;
+      if (find_edit_entry (demux, etrack, *position, keyframe, &index_entry)) {
+        GST_DEBUG_OBJECT (demux,
+            "Got position %" G_GINT64_FORMAT " at offset %" G_GUINT64_FORMAT,
+            index_entry.dts, index_entry.offset);
+        *position = index_entry.dts;
+        return index_entry.offset;
+      }
+      goto from_track_offset;
+    }
+    demux->offset += read;
+  }
+  demux->offset = old_offset;
+  demux->current_partition = old_partition;
+
+  GST_DEBUG_OBJECT (demux, "Not found in this file");
 
   return -1;
 }
@@ -3758,30 +4398,46 @@ collect_index_table_segments (GstMXFDemux * demux)
   guint64 old_offset = demux->offset;
   GstMXFDemuxPartition *old_partition = demux->current_partition;
 
-  if (!demux->random_index_pack)
-    return;
+  /* This function can also be called when a RIP is not present. This can happen
+   * if index table segments were discovered while scanning the file */
+  if (demux->random_index_pack) {
+    for (i = 0; i < demux->random_index_pack->len; i++) {
+      MXFRandomIndexPackEntry *e =
+          &g_array_index (demux->random_index_pack, MXFRandomIndexPackEntry, i);
 
-  for (i = 0; i < demux->random_index_pack->len; i++) {
-    MXFRandomIndexPackEntry *e =
-        &g_array_index (demux->random_index_pack, MXFRandomIndexPackEntry, i);
+      if (e->offset < demux->run_in) {
+        GST_ERROR_OBJECT (demux, "Invalid random index pack entry");
+        return;
+      }
 
-    if (e->offset < demux->run_in) {
-      GST_ERROR_OBJECT (demux, "Invalid random index pack entry");
-      return;
+      demux->offset = e->offset;
+      read_partition_header (demux);
     }
 
-    demux->offset = e->offset;
-    read_partition_header (demux);
+    demux->offset = old_offset;
+    demux->current_partition = old_partition;
   }
 
-  demux->offset = old_offset;
-  demux->current_partition = old_partition;
+  if (demux->pending_index_table_segments == NULL) {
+    GST_DEBUG_OBJECT (demux, "No pending index table segments to collect");
+    return;
+  }
+
+  GST_LOG_OBJECT (demux, "Collecting pending index table segments");
 
   for (l = demux->pending_index_table_segments; l; l = l->next) {
     MXFIndexTableSegment *segment = l->data;
     GstMXFDemuxIndexTable *t = NULL;
     GList *k;
-    guint64 start, end;
+    guint didx;
+#ifndef GST_DISABLE_GST_DEBUG
+    gchar str[48];
+#endif
+
+    GST_LOG_OBJECT (demux,
+        "Collecting from segment bodySID:%d indexSID:%d instance_id: %s",
+        segment->body_sid, segment->index_sid,
+        mxf_uuid_to_string (&segment->instance_id, str));
 
     for (k = demux->index_tables; k; k = k->next) {
       GstMXFDemuxIndexTable *tmp = k->data;
@@ -3798,122 +4454,91 @@ collect_index_table_segments (GstMXFDemux * demux)
       t->body_sid = segment->body_sid;
       t->index_sid = segment->index_sid;
       t->max_temporal_offset = 0;
-      t->offsets = g_array_new (FALSE, TRUE, sizeof (GstMXFDemuxIndex));
+      t->segments = g_array_new (FALSE, TRUE, sizeof (MXFIndexTableSegment));
+      g_array_set_clear_func (t->segments,
+          (GDestroyNotify) mxf_index_table_segment_reset);
+      t->reordered_delta_entry = -1;
+      t->reverse_temporal_offsets = g_array_new (FALSE, TRUE, 1);
       demux->index_tables = g_list_prepend (demux->index_tables, t);
     }
 
-    start = segment->index_start_position;
-    end = start + segment->index_duration;
-    if (end > G_MAXINT / sizeof (GstMXFDemuxIndex)) {
-      demux->index_tables = g_list_remove (demux->index_tables, t);
-      g_array_free (t->offsets, TRUE);
-      g_free (t);
-      continue;
+    /* Store index segment */
+    g_array_append_val (t->segments, *segment);
+
+    /* Check if temporal reordering tables should be pre-calculated */
+    for (didx = 0; didx < segment->n_delta_entries; didx++) {
+      MXFDeltaEntry *delta = &segment->delta_entries[didx];
+      if (delta->pos_table_index == -1) {
+        if (t->reordered_delta_entry != -1 && didx != t->reordered_delta_entry)
+          GST_WARNING_OBJECT (demux,
+              "Index Table specifies more than one stream using temporal reordering (%d and %d)",
+              didx, t->reordered_delta_entry);
+        else
+          t->reordered_delta_entry = didx;
+      } else if (delta->pos_table_index > 0)
+        GST_WARNING_OBJECT (delta,
+            "Index Table uses fractional offset, please file a bug");
     }
 
-    if (t->offsets->len < end)
-      g_array_set_size (t->offsets, end);
+  }
 
-    for (i = 0; i < segment->n_index_entries && start + i < t->offsets->len;
-        i++) {
-      guint64 offset = segment->index_entries[i].stream_offset;
-      GList *m;
-      GstMXFDemuxPartition *offset_partition = NULL, *next_partition = NULL;
+  /* Handle temporal offset if present and needed */
+  for (l = demux->index_tables; l; l = l->next) {
+    GstMXFDemuxIndexTable *table = l->data;
+    guint segidx;
 
-      for (m = demux->partitions; m; m = m->next) {
-        GstMXFDemuxPartition *partition = m->data;
+    /* No reordered entries, skip */
+    if (table->reordered_delta_entry == -1)
+      continue;
 
-        if (!next_partition && offset_partition)
-          next_partition = partition;
+    GST_DEBUG_OBJECT (demux,
+        "bodySID:%d indexSID:%d Calculating reverse temporal offset table",
+        table->body_sid, table->index_sid);
 
-        if (partition->partition.body_sid != t->body_sid)
-          continue;
-        if (partition->partition.body_offset > offset)
-          break;
+    for (segidx = 0; segidx < table->segments->len; segidx++) {
+      MXFIndexTableSegment *s =
+          &g_array_index (table->segments, MXFIndexTableSegment, segidx);
+      guint start = s->index_start_position;
+      guint stop =
+          s->index_duration ? start + s->index_duration : start +
+          s->n_index_entries;
+      guint entidx = 0;
 
-        offset_partition = partition;
-        next_partition = NULL;
-      }
+      if (stop > table->reverse_temporal_offsets->len)
+        g_array_set_size (table->reverse_temporal_offsets, stop);
 
-      if (offset_partition && offset >= offset_partition->partition.body_offset) {
-        offset =
-            offset_partition->partition.this_partition +
-            offset_partition->essence_container_offset + (offset -
-            offset_partition->partition.body_offset);
-
-        if (next_partition
-            && offset >= next_partition->partition.this_partition) {
+      for (entidx = 0; entidx < s->n_index_entries; entidx++) {
+        MXFIndexEntry *entry = &s->index_entries[entidx];
+        gint8 offs = -entry->temporal_offset;
+        /* Check we don't exceed boundaries */
+        if ((start + entidx + entry->temporal_offset) < 0 ||
+            (start + entidx + entry->temporal_offset) >
+            table->reverse_temporal_offsets->len) {
           GST_ERROR_OBJECT (demux,
-              "Invalid index table segment going into next unrelated partition");
+              "Temporal offset exceeds boundaries. entry:%d offset:%d max:%d",
+              start + entidx, entry->temporal_offset,
+              table->reverse_temporal_offsets->len);
         } else {
-          GstMXFDemuxIndex *index;
-          gint8 temporal_offset = segment->index_entries[i].temporal_offset;
-          guint64 pts_i = G_MAXUINT64;
-
-          /* Store the highest reordering offset (to ensure we never output
-           * buffer with DTS greater than PTS) */
-          if (temporal_offset > (gint) t->max_temporal_offset) {
+          /* Applying the temporal offset gives us the entry that should contain this PTS.
+           * We store the reverse temporal offset on that entry, i.e. the value it should apply
+           * to go from DTS to PTS. (i.e. entry.pts = entry.dts + rto[idx]) */
+          g_array_index (table->reverse_temporal_offsets, gint8,
+              start + entidx + entry->temporal_offset) = offs;
+          if (entry->temporal_offset > (gint) table->max_temporal_offset) {
             GST_LOG_OBJECT (demux,
-                "bodySID:%d indexSID:%d Stored new max temporal offset %d (was %d)",
-                t->body_sid, t->index_sid, temporal_offset,
-                t->max_temporal_offset);
-            t->max_temporal_offset = temporal_offset;
+                "Updating max temporal offset to %d (was %d)",
+                entry->temporal_offset, table->max_temporal_offset);
+            table->max_temporal_offset = entry->temporal_offset;
           }
-
-          /* Fetch the matching entry in presentation order to store the pts (in
-           * edit units). */
-          if (temporal_offset >= 0 || (start + i >= -(gint) temporal_offset)) {
-            pts_i = start + i + temporal_offset;
-
-            if (t->offsets->len < pts_i)
-              g_array_set_size (t->offsets, pts_i + 1);
-
-            index = &g_array_index (t->offsets, GstMXFDemuxIndex, pts_i);
-            if (!index->initialized) {
-              index->initialized = TRUE;
-              index->offset = 0;
-              index->pts = G_MAXUINT64;
-              index->dts = G_MAXUINT64;
-              index->keyframe = FALSE;
-            }
-
-            index->pts = start + i;
-          }
-
-          /* Fetch the matching entry in encoded/bitstream order to store all
-           * the other values related to the actual content (offset, flag, dts,
-           * ..) */
-
-          index = &g_array_index (t->offsets, GstMXFDemuxIndex, start + i);
-          if (!index->initialized) {
-            index->initialized = TRUE;
-            index->offset = 0;
-            index->pts = G_MAXUINT64;
-            index->dts = G_MAXUINT64;
-            index->keyframe = FALSE;
-          }
-
-          index->offset = offset;
-          /* EG41-2004 Table 9: 0x80 = Random access */
-          /* random_access is more reliable to determine if the index is
-           * a key-frame than checking the keyframe_offset or the frame type flag.
-           * See https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/merge_requests/2173#note_900580
-           * for more details.
-           */
-          index->keyframe = ! !(segment->index_entries[i].flags & 0x80);
-          index->dts = pts_i;
         }
       }
     }
   }
 
-  for (l = demux->pending_index_table_segments; l; l = l->next) {
-    MXFIndexTableSegment *s = l->data;
-    mxf_index_table_segment_reset (s);
-    g_free (s);
-  }
-  g_list_free (demux->pending_index_table_segments);
+  g_list_free_full (demux->pending_index_table_segments, g_free);
   demux->pending_index_table_segments = NULL;
+
+  GST_DEBUG_OBJECT (demux, "Done collecting segments");
 }
 
 static gboolean
