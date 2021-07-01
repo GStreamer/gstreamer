@@ -69,6 +69,7 @@ struct _GstVaVp9DecClass
 struct _GstVaVp9Dec
 {
   GstVaBaseDec parent;
+  GstVp9Segmentation segmentation[GST_VP9_MAX_SEGMENTS];
 
   gboolean need_negotiation;
 };
@@ -311,26 +312,14 @@ _fill_param (GstVp9Decoder * decoder, GstVp9Picture * picture, GstVp9Dpb * dpb)
       VAPictureParameterBufferType, &pic_param, sizeof (pic_param));
 }
 
-static inline gboolean
-_fill_slice (GstVp9Decoder * decoder, GstVp9Picture * picture)
+static void
+_update_segmentation (GstVaVp9Dec * self, GstVp9FrameHeader * header)
 {
-  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-  GstVaDecodePicture *va_pic;
-  const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
-  const GstVp9LoopFilterParams *lfp = &frame_hdr->loop_filter_params;
-  const GstVp9QuantizationParams *qp = &frame_hdr->quantization_params;
-  const GstVp9SegmentationParams *sp = &frame_hdr->segmentation_params;
+  const GstVp9LoopFilterParams *lfp = &header->loop_filter_params;
+  const GstVp9QuantizationParams *qp = &header->quantization_params;
+  const GstVp9SegmentationParams *sp = &header->segmentation_params;
   guint8 n_shift = lfp->loop_filter_level >> 5;
-  VASliceParameterBufferVP9 slice_param;
   guint i;
-
-  /* *INDENT-OFF* */
-  slice_param = (VASliceParameterBufferVP9) {
-    .slice_data_size = picture->size,
-    .slice_data_offset = 0,
-    .slice_data_flag = VA_SLICE_DATA_FLAG_ALL,
-  };
-  /* *INDENT-ON* */
 
   for (i = 0; i < GST_VP9_MAX_SEGMENTS; i++) {
     gint16 luma_dc_quant_scale;
@@ -339,18 +328,17 @@ _fill_slice (GstVp9Decoder * decoder, GstVp9Picture * picture)
     gint16 chroma_ac_quant_scale;
     guint8 qindex;
     guint8 lvl_lookup[GST_VP9_MAX_REF_LF_DELTAS][GST_VP9_MAX_MODE_LF_DELTAS];
-    guint lvl_seg = lfp->loop_filter_level;
+    gint lvl_seg = lfp->loop_filter_level;
 
     /* 8.6.1 Dequantization functions */
     qindex = gst_vp9_get_qindex (sp, qp, i);
     luma_dc_quant_scale =
-        gst_vp9_get_dc_quant (qindex, qp->delta_q_y_dc, frame_hdr->bit_depth);
-    luma_ac_quant_scale =
-        gst_vp9_get_ac_quant (qindex, 0, frame_hdr->bit_depth);
+        gst_vp9_get_dc_quant (qindex, qp->delta_q_y_dc, header->bit_depth);
+    luma_ac_quant_scale = gst_vp9_get_ac_quant (qindex, 0, header->bit_depth);
     chroma_dc_quant_scale =
-        gst_vp9_get_dc_quant (qindex, qp->delta_q_uv_dc, frame_hdr->bit_depth);
+        gst_vp9_get_dc_quant (qindex, qp->delta_q_uv_dc, header->bit_depth);
     chroma_ac_quant_scale =
-        gst_vp9_get_ac_quant (qindex, qp->delta_q_uv_ac, frame_hdr->bit_depth);
+        gst_vp9_get_ac_quant (qindex, qp->delta_q_uv_ac, header->bit_depth);
 
     if (!lfp->loop_filter_level) {
       memset (lvl_lookup, 0, sizeof (lvl_lookup));
@@ -370,9 +358,11 @@ _fill_slice (GstVp9Decoder * decoder, GstVp9Picture * picture)
         memset (lvl_lookup, lvl_seg, sizeof (lvl_lookup));
       } else {
         guint8 ref, mode;
-        guint intra_lvl = lvl_seg +
-            (((guint) lfp->loop_filter_ref_deltas[GST_VP9_REF_FRAME_INTRA]) <<
-            n_shift);
+        gint intra_lvl = lvl_seg +
+            (lfp->loop_filter_ref_deltas[GST_VP9_REF_FRAME_INTRA] << n_shift);
+
+        memcpy (lvl_lookup, self->segmentation[i].filter_level,
+            sizeof (lvl_lookup));
 
         lvl_lookup[GST_VP9_REF_FRAME_INTRA][0] =
             CLAMP (intra_lvl, 0, GST_VP9_MAX_LOOP_FILTER);
@@ -388,24 +378,61 @@ _fill_slice (GstVp9Decoder * decoder, GstVp9Picture * picture)
     }
 
     /* *INDENT-OFF* */
-    slice_param.seg_param[i] = (VASegmentParameterVP9) {
-        .segment_flags.fields = {
-            .segment_reference_enabled =
-                sp->feature_enabled[i][GST_VP9_SEG_LVL_REF_FRAME],
-            .segment_reference =
-                sp->feature_data[i][GST_VP9_SEG_LVL_REF_FRAME],
-            .segment_reference_skipped =
-                sp->feature_enabled[i][GST_VP9_SEG_SEG_LVL_SKIP],
-         },
+    self->segmentation[i] = (GstVp9Segmentation) {
+      .luma_dc_quant_scale = luma_dc_quant_scale,
+      .luma_ac_quant_scale = luma_ac_quant_scale,
+      .chroma_dc_quant_scale = chroma_dc_quant_scale,
+      .chroma_ac_quant_scale = chroma_ac_quant_scale,
 
-        .luma_dc_quant_scale = luma_dc_quant_scale,
-        .luma_ac_quant_scale = luma_ac_quant_scale,
-        .chroma_dc_quant_scale = chroma_dc_quant_scale,
-        .chroma_ac_quant_scale = chroma_ac_quant_scale,
+      .reference_frame_enabled = sp->feature_enabled[i][GST_VP9_SEG_LVL_REF_FRAME],
+      .reference_frame = sp->feature_data[i][GST_VP9_SEG_LVL_REF_FRAME],
+      .reference_skip = sp->feature_enabled[i][GST_VP9_SEG_SEG_LVL_SKIP],
     };
     /* *INDENT-ON* */
 
-    memcpy (slice_param.seg_param[i].filter_level, lvl_lookup,
+    memcpy (self->segmentation[i].filter_level, lvl_lookup,
+        sizeof (lvl_lookup));
+  }
+}
+
+static inline gboolean
+_fill_slice (GstVp9Decoder * decoder, GstVp9Picture * picture)
+{
+  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVaVp9Dec *self = GST_VA_VP9_DEC (decoder);
+  GstVaDecodePicture *va_pic;
+  const GstVp9Segmentation *seg;
+  VASliceParameterBufferVP9 slice_param;
+  guint i;
+
+  _update_segmentation (self, &picture->frame_hdr);
+
+  /* *INDENT-OFF* */
+  slice_param = (VASliceParameterBufferVP9) {
+    .slice_data_size = picture->size,
+    .slice_data_offset = 0,
+    .slice_data_flag = VA_SLICE_DATA_FLAG_ALL,
+  };
+  /* *INDENT-ON* */
+
+  for (i = 0; i < GST_VP9_MAX_SEGMENTS; i++) {
+    seg = &self->segmentation[i];
+
+    /* *INDENT-OFF* */
+    slice_param.seg_param[i] = (VASegmentParameterVP9) {
+      .segment_flags.fields = {
+        .segment_reference_enabled = seg->reference_frame_enabled,
+        .segment_reference = seg->reference_frame,
+        .segment_reference_skipped = seg->reference_skip,
+      },
+      .luma_dc_quant_scale = seg->luma_dc_quant_scale,
+      .luma_ac_quant_scale = seg->luma_ac_quant_scale,
+      .chroma_dc_quant_scale = seg->chroma_dc_quant_scale,
+      .chroma_ac_quant_scale = seg->chroma_ac_quant_scale,
+     };
+     /* *INDENT-ON* */
+
+    memcpy (slice_param.seg_param[i].filter_level, seg->filter_level,
         sizeof (slice_param.seg_param[i].filter_level));
   }
 
@@ -413,7 +440,6 @@ _fill_slice (GstVp9Decoder * decoder, GstVp9Picture * picture)
 
   return gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice_param,
       sizeof (slice_param), (gpointer) picture->data, picture->size);
-
 }
 
 static gboolean
