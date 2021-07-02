@@ -555,6 +555,14 @@ _drm_rgba_fourcc_from_info (const GstVideoInfo * info, int plane,
       *out_format = GST_GL_RG16;
       return rg16_fourcc;
 
+    case GST_VIDEO_FORMAT_Y212_LE:
+      *out_format = GST_GL_RG16;
+      return DRM_FORMAT_GR1616;
+
+    case GST_VIDEO_FORMAT_Y212_BE:
+      *out_format = GST_GL_RG16;
+      return DRM_FORMAT_RG1616;
+
     default:
       GST_ERROR ("Unsupported format for DMABuf.");
       return -1;
