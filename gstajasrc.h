@@ -64,6 +64,7 @@ struct _GstAjaSrc {
   NTV2Channel channel;
   GstAjaAudioSystem audio_system_setting;
   GstAjaVideoFormat video_format_setting;
+  GstAjaSdiMode sdi_mode;
   GstAjaInputSource input_source;
   GstAjaAudioSource audio_source;
   GstAjaTimecodeIndex timecode_index;
@@ -73,6 +74,7 @@ struct _GstAjaSrc {
 
   NTV2AudioSystem audio_system;
   NTV2VideoFormat video_format;
+  bool quad_mode;
   NTV2VANCMode vanc_mode;
   NTV2InputSource configured_input_source;
   NTV2TCIndex tc_index;

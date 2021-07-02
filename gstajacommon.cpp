@@ -27,37 +27,161 @@
 #include "gstajacommon.h"
 
 GST_DEBUG_CATEGORY_STATIC(gst_aja_debug);
+
 #define GST_CAT_DEFAULT gst_aja_debug
 
-static const NTV2VideoFormat supported_video_formats[] = {
-    NTV2_FORMAT_1080i_5000,   NTV2_FORMAT_1080i_5994,
-    NTV2_FORMAT_1080i_6000,   NTV2_FORMAT_720p_5994,
-    NTV2_FORMAT_720p_6000,    NTV2_FORMAT_1080p_2997,
-    NTV2_FORMAT_1080p_3000,   NTV2_FORMAT_1080p_2500,
-    NTV2_FORMAT_1080p_2398,   NTV2_FORMAT_1080p_2400,
-    NTV2_FORMAT_720p_5000,    NTV2_FORMAT_720p_2398,
-    NTV2_FORMAT_720p_2500,    NTV2_FORMAT_1080p_5000_A,
-    NTV2_FORMAT_1080p_5994_A, NTV2_FORMAT_1080p_6000_A,
-    NTV2_FORMAT_625_5000,     NTV2_FORMAT_525_5994,
-    NTV2_FORMAT_525_2398,     NTV2_FORMAT_525_2400};
+typedef struct {
+  GstAjaVideoFormat gst_format;
+  NTV2VideoFormat aja_format;
+  NTV2VideoFormat quad_format;
+} FormatMapEntry;
+
+static const FormatMapEntry format_map[] = {
+    {GST_AJA_VIDEO_FORMAT_1080i_5000, NTV2_FORMAT_1080i_5000,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_1080i_5994, NTV2_FORMAT_1080i_5994,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_1080i_6000, NTV2_FORMAT_1080i_6000,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_720p_5994, NTV2_FORMAT_720p_5994,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_720p_6000, NTV2_FORMAT_720p_6000,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_1080p_2997, NTV2_FORMAT_1080p_2997,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_1080p_3000, NTV2_FORMAT_1080p_3000,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_1080p_2500, NTV2_FORMAT_1080p_2500,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_1080p_2398, NTV2_FORMAT_1080p_2398,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_1080p_2400, NTV2_FORMAT_1080p_2400,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_720p_5000, NTV2_FORMAT_720p_5000,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_720p_2398, NTV2_FORMAT_720p_2398,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_720p_5000, NTV2_FORMAT_720p_2500,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_1080p_3000, NTV2_FORMAT_1080p_5000_A,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_1080p_5994_A, NTV2_FORMAT_1080p_5994_A,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_1080p_6000_A, NTV2_FORMAT_1080p_6000_A,
+     NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_625_5000, NTV2_FORMAT_625_5000, NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_525_5994, NTV2_FORMAT_525_5994, NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_525_2398, NTV2_FORMAT_525_2398, NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_525_2400, NTV2_FORMAT_525_2400, NTV2_FORMAT_UNKNOWN},
+    {GST_AJA_VIDEO_FORMAT_2160p_2398, NTV2_FORMAT_3840x2160p_2398,
+     NTV2_FORMAT_4x1920x1080p_2398},
+    {GST_AJA_VIDEO_FORMAT_2160p_2400, NTV2_FORMAT_3840x2160p_2400,
+     NTV2_FORMAT_4x1920x1080p_2400},
+    {GST_AJA_VIDEO_FORMAT_2160p_2500, NTV2_FORMAT_3840x2160p_2500,
+     NTV2_FORMAT_4x1920x1080p_2500},
+    {GST_AJA_VIDEO_FORMAT_2160p_2997, NTV2_FORMAT_3840x2160p_2997,
+     NTV2_FORMAT_4x1920x1080p_2997},
+    {GST_AJA_VIDEO_FORMAT_2160p_3000, NTV2_FORMAT_3840x2160p_3000,
+     NTV2_FORMAT_4x1920x1080p_3000},
+    {GST_AJA_VIDEO_FORMAT_2160p_5000, NTV2_FORMAT_3840x2160p_5000,
+     NTV2_FORMAT_4x1920x1080p_5000},
+    {GST_AJA_VIDEO_FORMAT_2160p_5994, NTV2_FORMAT_3840x2160p_5994,
+     NTV2_FORMAT_4x1920x1080p_5994},
+    {GST_AJA_VIDEO_FORMAT_2160p_6000, NTV2_FORMAT_3840x2160p_6000,
+     NTV2_FORMAT_4x1920x1080p_6000},
+    {GST_AJA_VIDEO_FORMAT_4320p_2398, NTV2_FORMAT_UNKNOWN,
+     NTV2_FORMAT_4x3840x2160p_2398},
+    {GST_AJA_VIDEO_FORMAT_4320p_2400, NTV2_FORMAT_UNKNOWN,
+     NTV2_FORMAT_4x3840x2160p_2400},
+    {GST_AJA_VIDEO_FORMAT_4320p_2500, NTV2_FORMAT_UNKNOWN,
+     NTV2_FORMAT_4x3840x2160p_2500},
+    {GST_AJA_VIDEO_FORMAT_4320p_2997, NTV2_FORMAT_UNKNOWN,
+     NTV2_FORMAT_4x3840x2160p_2997},
+    {GST_AJA_VIDEO_FORMAT_4320p_3000, NTV2_FORMAT_UNKNOWN,
+     NTV2_FORMAT_4x3840x2160p_3000},
+    {GST_AJA_VIDEO_FORMAT_4320p_5000, NTV2_FORMAT_UNKNOWN,
+     NTV2_FORMAT_4x3840x2160p_5000},
+    {GST_AJA_VIDEO_FORMAT_4320p_5994, NTV2_FORMAT_UNKNOWN,
+     NTV2_FORMAT_4x3840x2160p_5994},
+    {GST_AJA_VIDEO_FORMAT_4320p_6000, NTV2_FORMAT_UNKNOWN,
+     NTV2_FORMAT_4x3840x2160p_6000},
+};
 
 GstCaps *gst_ntv2_supported_caps(NTV2DeviceID device_id) {
   GstCaps *caps = gst_caps_new_empty();
 
-  for (gsize i = 0; i < G_N_ELEMENTS(supported_video_formats); i++) {
-    NTV2VideoFormat format = supported_video_formats[i];
+  for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
+    const FormatMapEntry &format = format_map[i];
 
-    if (device_id == DEVICE_ID_INVALID ||
-        ::NTV2DeviceCanDoVideoFormat(device_id, format)) {
-      gst_caps_append(caps, gst_ntv2_video_format_to_caps(format));
+    if (device_id == DEVICE_ID_INVALID) {
+      gst_caps_append(caps, gst_aja_video_format_to_caps(format.gst_format));
+    } else {
+      if ((format.aja_format != NTV2_FORMAT_UNKNOWN &&
+           ::NTV2DeviceCanDoVideoFormat(device_id, format.aja_format)) ||
+          (format.quad_format != NTV2_FORMAT_UNKNOWN &&
+           ::NTV2DeviceCanDoVideoFormat(device_id, format.quad_format))) {
+        gst_caps_append(caps, gst_aja_video_format_to_caps(format.gst_format));
+      }
     }
   }
 
   return caps;
 }
 
+GstCaps *gst_aja_video_format_to_caps(GstAjaVideoFormat format) {
+  const FormatMapEntry *entry = NULL;
+
+  for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
+    const FormatMapEntry &tmp = format_map[i];
+
+    if (tmp.gst_format == format) {
+      entry = &tmp;
+      break;
+    }
+  }
+  g_assert(entry != NULL);
+
+  if (entry->aja_format != NTV2_FORMAT_UNKNOWN)
+    return gst_ntv2_video_format_to_caps(entry->aja_format);
+  if (entry->quad_format != NTV2_FORMAT_UNKNOWN)
+    return gst_ntv2_video_format_to_caps(entry->quad_format);
+
+  g_assert_not_reached();
+}
+
+bool gst_video_info_from_aja_video_format(GstVideoInfo *info,
+                                          GstAjaVideoFormat format) {
+  const FormatMapEntry *entry = NULL;
+
+  for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
+    const FormatMapEntry &tmp = format_map[i];
+
+    if (tmp.gst_format == format) {
+      entry = &tmp;
+      break;
+    }
+  }
+  g_assert(entry != NULL);
+
+  if (entry->aja_format != NTV2_FORMAT_UNKNOWN)
+    return gst_video_info_from_ntv2_video_format(info, entry->aja_format);
+  if (entry->quad_format != NTV2_FORMAT_UNKNOWN)
+    return gst_video_info_from_ntv2_video_format(info, entry->quad_format);
+
+  g_assert_not_reached();
+}
+
 GstCaps *gst_ntv2_video_format_to_caps(NTV2VideoFormat format) {
   GstVideoInfo info;
+
+  if (!gst_video_info_from_ntv2_video_format(&info, format)) return NULL;
+
+  return gst_video_info_to_caps(&info);
+}
+
+bool gst_video_info_from_ntv2_video_format(GstVideoInfo *info,
+                                           NTV2VideoFormat format) {
+  if (format == NTV2_FORMAT_UNKNOWN) return false;
 
   guint width = ::GetDisplayWidth(format);
   guint height = ::GetDisplayHeight(format);
@@ -65,47 +189,124 @@ GstCaps *gst_ntv2_video_format_to_caps(NTV2VideoFormat format) {
   guint fps_n, fps_d;
   ::GetFramesPerSecond(fps, fps_n, fps_d);
 
-  gst_video_info_set_format(&info, GST_VIDEO_FORMAT_v210, width, height);
-  info.fps_n = fps_n;
-  info.fps_d = fps_d;
+  gst_video_info_set_format(info, GST_VIDEO_FORMAT_v210, width, height);
+  info->fps_n = fps_n;
+  info->fps_d = fps_d;
   if (NTV2_IS_525_FORMAT(format)) {
-    info.par_n = 10;
-    info.par_d = 11;
+    info->par_n = 10;
+    info->par_d = 11;
   } else if (NTV2_IS_625_FORMAT(format)) {
-    info.par_n = 12;
-    info.par_d = 11;
+    info->par_n = 12;
+    info->par_d = 11;
   }
-  info.interlace_mode = !::IsProgressiveTransport(format)
-                            ? GST_VIDEO_INTERLACE_MODE_INTERLEAVED
-                            : GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  info->interlace_mode = !::IsProgressiveTransport(format)
+                             ? GST_VIDEO_INTERLACE_MODE_INTERLEAVED
+                             : GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
-  return gst_video_info_to_caps(&info);
+  return true;
 }
 
-NTV2VideoFormat gst_ntv2_video_format_from_caps(GstCaps *caps) {
+NTV2VideoFormat gst_ntv2_video_format_from_caps(const GstCaps *caps,
+                                                bool quad) {
   GstVideoInfo info;
 
   if (!gst_video_info_from_caps(&info, caps)) return NTV2_FORMAT_UNKNOWN;
 
-  for (gsize i = 0; i < G_N_ELEMENTS(supported_video_formats); i++) {
-    NTV2VideoFormat format = supported_video_formats[i];
+  for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
+    const FormatMapEntry &format = format_map[i];
+    NTV2VideoFormat f = !quad ? format.aja_format : format.quad_format;
 
-    guint width = ::GetDisplayWidth(format);
-    guint height = ::GetDisplayHeight(format);
-    NTV2FrameRate fps = ::GetNTV2FrameRateFromVideoFormat(format);
+    if (f == NTV2_FORMAT_UNKNOWN) continue;
+
+    guint width = ::GetDisplayWidth(f);
+    guint height = ::GetDisplayHeight(f);
+    NTV2FrameRate fps = ::GetNTV2FrameRateFromVideoFormat(f);
     guint fps_n, fps_d;
     ::GetFramesPerSecond(fps, fps_n, fps_d);
 
     if (width == (guint)info.width && height == (guint)info.height &&
         (guint)info.fps_n == fps_n && (guint)info.fps_d == fps_d &&
-        ((!::IsProgressiveTransport(format) &&
+        ((!::IsProgressiveTransport(f) &&
           info.interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED) ||
-         (::IsProgressiveTransport(format) &&
+         (::IsProgressiveTransport(f) &&
           info.interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)))
-      return format;
+      return f;
   }
 
   return NTV2_FORMAT_UNKNOWN;
+}
+
+GstAjaVideoFormat gst_aja_video_format_from_caps(const GstCaps *caps) {
+  GstVideoInfo info;
+
+  if (!gst_video_info_from_caps(&info, caps))
+    return GST_AJA_VIDEO_FORMAT_INVALID;
+
+  for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
+    const FormatMapEntry &format = format_map[i];
+    NTV2VideoFormat f = (format.aja_format != NTV2_FORMAT_UNKNOWN)
+                            ? format.aja_format
+                            : format.quad_format;
+
+    if (f == NTV2_FORMAT_UNKNOWN) continue;
+
+    guint width = ::GetDisplayWidth(f);
+    guint height = ::GetDisplayHeight(f);
+    NTV2FrameRate fps = ::GetNTV2FrameRateFromVideoFormat(f);
+    guint fps_n, fps_d;
+    ::GetFramesPerSecond(fps, fps_n, fps_d);
+
+    if (width == (guint)info.width && height == (guint)info.height &&
+        (guint)info.fps_n == fps_n && (guint)info.fps_d == fps_d &&
+        ((!::IsProgressiveTransport(f) &&
+          info.interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED) ||
+         (::IsProgressiveTransport(f) &&
+          info.interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)))
+      return format.gst_format;
+  }
+
+  return GST_AJA_VIDEO_FORMAT_INVALID;
+}
+
+GstAjaVideoFormat gst_aja_video_format_from_ntv2_format(
+    NTV2VideoFormat format) {
+  if (format == NTV2_FORMAT_UNKNOWN) return GST_AJA_VIDEO_FORMAT_INVALID;
+
+  for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
+    const FormatMapEntry &entry = format_map[i];
+    if (entry.aja_format == format || entry.quad_format == format)
+      return entry.gst_format;
+  }
+
+  return GST_AJA_VIDEO_FORMAT_INVALID;
+}
+
+NTV2VideoFormat gst_ntv2_video_format_from_aja_format(GstAjaVideoFormat format,
+                                                      bool quad) {
+  if (format == GST_AJA_VIDEO_FORMAT_INVALID) return NTV2_FORMAT_UNKNOWN;
+
+  for (gsize i = 0; i < G_N_ELEMENTS(format_map); i++) {
+    const FormatMapEntry &entry = format_map[i];
+    if (entry.gst_format == format) {
+      if (!quad && entry.aja_format != NTV2_FORMAT_UNKNOWN)
+        return entry.aja_format;
+      if (quad && entry.quad_format != NTV2_FORMAT_UNKNOWN)
+        return entry.quad_format;
+    }
+  }
+
+  return NTV2_FORMAT_UNKNOWN;
+}
+
+bool gst_ntv2_video_format_is_quad(NTV2VideoFormat format) {
+  return (format >= NTV2_FORMAT_FIRST_4K_DEF_FORMAT &&
+          format < NTV2_FORMAT_END_4K_DEF_FORMATS) ||
+         (format >= NTV2_FORMAT_FIRST_4K_DEF_FORMAT2 &&
+          format < NTV2_FORMAT_END_4K_DEF_FORMATS2) ||
+         (format >= NTV2_FORMAT_FIRST_UHD2_DEF_FORMAT &&
+          format < NTV2_FORMAT_END_UHD2_DEF_FORMATS) ||
+         (format >= NTV2_FORMAT_FIRST_UHD2_FULL_DEF_FORMAT &&
+          format < NTV2_FORMAT_END_UHD2_FULL_DEF_FORMATS);
 }
 
 GType gst_aja_audio_meta_api_get_type(void) {
@@ -498,6 +699,22 @@ GType gst_aja_input_source_get_type(void) {
   return (GType)id;
 }
 
+GType gst_aja_sdi_mode_get_type(void) {
+  static gsize id = 0;
+  static const GEnumValue modes[] = {
+      {GST_AJA_SDI_MODE_SINGLE_LINK, "single-link", "Single Link"},
+      {GST_AJA_SDI_MODE_QUAD_LINK_SQD, "quad-link-sqd", "Quad Link SQD"},
+      {GST_AJA_SDI_MODE_QUAD_LINK_TSI, "quad-link-tsi", "Quad Link TSI"},
+      {0, NULL, NULL}};
+
+  if (g_once_init_enter(&id)) {
+    GType tmp = g_enum_register_static("GstAjaSdiMode", modes);
+    g_once_init_leave(&id, tmp);
+  }
+
+  return (GType)id;
+}
+
 GType gst_aja_video_format_get_type(void) {
   static gsize id = 0;
   static const GEnumValue modes[] = {
@@ -522,6 +739,22 @@ GType gst_aja_video_format_get_type(void) {
       {GST_AJA_VIDEO_FORMAT_525_5994, "525-5994", "525 5994"},
       {GST_AJA_VIDEO_FORMAT_525_2398, "525-2398", "525 2398"},
       {GST_AJA_VIDEO_FORMAT_525_2400, "525-2400", "525 2400"},
+      {GST_AJA_VIDEO_FORMAT_2160p_2398, "2160p-2398", "2160p 2398"},
+      {GST_AJA_VIDEO_FORMAT_2160p_2400, "2160p-2400", "2160p 2400"},
+      {GST_AJA_VIDEO_FORMAT_2160p_2500, "2160p-2500", "2160p 2500"},
+      {GST_AJA_VIDEO_FORMAT_2160p_2997, "2160p-2997", "2160p 2997"},
+      {GST_AJA_VIDEO_FORMAT_2160p_3000, "2160p-3000", "2160p 3000"},
+      {GST_AJA_VIDEO_FORMAT_2160p_5000, "2160p-5000", "2160p 5000"},
+      {GST_AJA_VIDEO_FORMAT_2160p_5994, "2160p-5994", "2160p 5994"},
+      {GST_AJA_VIDEO_FORMAT_2160p_6000, "2160p-6000", "2160p 6000"},
+      {GST_AJA_VIDEO_FORMAT_4320p_2398, "4320p-2398", "4320p 2398"},
+      {GST_AJA_VIDEO_FORMAT_4320p_2400, "4320p-2400", "4320p 2400"},
+      {GST_AJA_VIDEO_FORMAT_4320p_2500, "4320p-2500", "4320p 2500"},
+      {GST_AJA_VIDEO_FORMAT_4320p_2997, "4320p-2997", "4320p 2997"},
+      {GST_AJA_VIDEO_FORMAT_4320p_3000, "4320p-3000", "4320p 3000"},
+      {GST_AJA_VIDEO_FORMAT_4320p_5000, "4320p-5000", "4320p 5000"},
+      {GST_AJA_VIDEO_FORMAT_4320p_5994, "4320p-5994", "4320p 5994"},
+      {GST_AJA_VIDEO_FORMAT_4320p_6000, "4320p-6000", "4320p 6000"},
       {0, NULL, NULL}};
 
   if (g_once_init_enter(&id)) {

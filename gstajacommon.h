@@ -54,13 +54,6 @@ G_GNUC_INTERNAL
 GstAjaAudioMeta *gst_buffer_add_aja_audio_meta(GstBuffer *buffer,
                                                GstBuffer *audio_buffer);
 
-G_GNUC_INTERNAL
-GstCaps *gst_ntv2_supported_caps(NTV2DeviceID device_id);
-G_GNUC_INTERNAL
-GstCaps *gst_ntv2_video_format_to_caps(NTV2VideoFormat format);
-G_GNUC_INTERNAL
-NTV2VideoFormat gst_ntv2_video_format_from_caps(GstCaps *caps);
-
 typedef struct {
   CNTV2Card *device;
 } GstAjaDevice;
@@ -178,6 +171,17 @@ G_GNUC_INTERNAL
 GType gst_aja_input_source_get_type(void);
 
 typedef enum {
+  GST_AJA_SDI_MODE_SINGLE_LINK,
+  GST_AJA_SDI_MODE_QUAD_LINK_SQD,
+  GST_AJA_SDI_MODE_QUAD_LINK_TSI,
+} GstAjaSdiMode;
+
+#define GST_TYPE_AJA_SDI_MODE (gst_aja_sdi_mode_get_type())
+G_GNUC_INTERNAL
+GType gst_aja_sdi_mode_get_type(void);
+
+typedef enum {
+  GST_AJA_VIDEO_FORMAT_INVALID = -1,
   // TODO: Implement: GST_AJA_VIDEO_FORMAT_AUTO,
   GST_AJA_VIDEO_FORMAT_1080i_5000,
   GST_AJA_VIDEO_FORMAT_1080i_5994,
@@ -199,6 +203,22 @@ typedef enum {
   GST_AJA_VIDEO_FORMAT_525_5994,
   GST_AJA_VIDEO_FORMAT_525_2398,
   GST_AJA_VIDEO_FORMAT_525_2400,
+  GST_AJA_VIDEO_FORMAT_2160p_2398,
+  GST_AJA_VIDEO_FORMAT_2160p_2400,
+  GST_AJA_VIDEO_FORMAT_2160p_2500,
+  GST_AJA_VIDEO_FORMAT_2160p_2997,
+  GST_AJA_VIDEO_FORMAT_2160p_3000,
+  GST_AJA_VIDEO_FORMAT_2160p_5000,
+  GST_AJA_VIDEO_FORMAT_2160p_5994,
+  GST_AJA_VIDEO_FORMAT_2160p_6000,
+  GST_AJA_VIDEO_FORMAT_4320p_2398,
+  GST_AJA_VIDEO_FORMAT_4320p_2400,
+  GST_AJA_VIDEO_FORMAT_4320p_2500,
+  GST_AJA_VIDEO_FORMAT_4320p_2997,
+  GST_AJA_VIDEO_FORMAT_4320p_3000,
+  GST_AJA_VIDEO_FORMAT_4320p_5000,
+  GST_AJA_VIDEO_FORMAT_4320p_5994,
+  GST_AJA_VIDEO_FORMAT_4320p_6000,
 } GstAjaVideoFormat;
 
 #define GST_TYPE_AJA_VIDEO_FORMAT (gst_aja_video_format_get_type())
@@ -238,3 +258,31 @@ class ShmMutexLocker {
   ShmMutexLocker();
   ~ShmMutexLocker();
 };
+
+G_GNUC_INTERNAL
+GstCaps *gst_ntv2_supported_caps(NTV2DeviceID device_id);
+
+G_GNUC_INTERNAL
+GstCaps *gst_ntv2_video_format_to_caps(NTV2VideoFormat format);
+G_GNUC_INTERNAL
+bool gst_video_info_from_ntv2_video_format(GstVideoInfo *info,
+                                           NTV2VideoFormat format);
+G_GNUC_INTERNAL
+NTV2VideoFormat gst_ntv2_video_format_from_caps(const GstCaps *caps, bool quad);
+
+G_GNUC_INTERNAL
+GstCaps *gst_aja_video_format_to_caps(GstAjaVideoFormat format);
+G_GNUC_INTERNAL
+bool gst_video_info_from_aja_video_format(GstVideoInfo *info,
+                                          GstAjaVideoFormat format);
+G_GNUC_INTERNAL
+GstAjaVideoFormat gst_aja_video_format_from_caps(const GstCaps *caps);
+
+G_GNUC_INTERNAL
+GstAjaVideoFormat gst_aja_video_format_from_ntv2_format(NTV2VideoFormat format);
+G_GNUC_INTERNAL
+NTV2VideoFormat gst_ntv2_video_format_from_aja_format(GstAjaVideoFormat format,
+                                                      bool quad);
+
+G_GNUC_INTERNAL
+bool gst_ntv2_video_format_is_quad(NTV2VideoFormat format);

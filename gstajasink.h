@@ -73,11 +73,13 @@ struct _GstAjaSink {
 
   GstAjaAudioSystem audio_system_setting;
   GstAjaOutputDestination output_destination;
+  GstAjaSdiMode sdi_mode;
   GstAjaTimecodeIndex timecode_index;
   GstAjaReferenceSource reference_source;
 
   NTV2AudioSystem audio_system;
   NTV2VideoFormat video_format;
+  bool quad_mode;
   NTV2VANCMode vanc_mode;
   guint32 f2_start_line;
   NTV2TCIndexes *tc_indexes;
