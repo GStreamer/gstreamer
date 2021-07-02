@@ -34,7 +34,7 @@ enum CheckConversionFlags
   FLAG_SEND_EOS = 1,
 };
 
-GST_START_TEST (cdp_requires_framerate)
+GST_START_TEST (cdp_requires_valid_framerate)
 {
   GstHarness *h;
   GstBuffer *buffer;
@@ -74,7 +74,17 @@ GST_START_TEST (cdp_requires_framerate)
   gst_harness_set_src_caps_str (h,
       "closedcaption/x-cea-708,format=(string)cc_data,framerate=(fraction)30/1");
 
-  fail_unless_equals_int (gst_harness_push (h, buffer), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_ref (buffer)),
+      GST_FLOW_OK);
+
+  /* Then try with an invalid CDP framerate, this should fail */
+  gst_harness_set_sink_caps_str (h,
+      "closedcaption/x-cea-708,format=(string)cdp");
+  gst_harness_set_src_caps_str (h,
+      "closedcaption/x-cea-708,format=(string)cc_data,framerate=(fraction)29/1");
+
+  fail_unless_equals_int (gst_harness_push (h, buffer),
+      GST_FLOW_NOT_NEGOTIATED);
 
   gst_harness_teardown (h);
 }
@@ -960,7 +970,7 @@ ccextractor_suite (void)
 
   suite_add_tcase (s, tc);
 
-  tcase_add_test (tc, cdp_requires_framerate);
+  tcase_add_test (tc, cdp_requires_valid_framerate);
   tcase_add_test (tc, framerate_passthrough);
   tcase_add_test (tc, framerate_changes);
   tcase_add_test (tc, framerate_invalid_format);

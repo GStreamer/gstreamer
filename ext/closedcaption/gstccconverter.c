@@ -138,6 +138,9 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
 
   templ = gst_pad_get_pad_template_caps (base->srcpad);
 
+  GST_DEBUG_OBJECT (self, "direction %s from caps %" GST_PTR_FORMAT,
+      direction == GST_PAD_SRC ? "src" : "sink", caps);
+
   res = gst_caps_new_empty ();
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
@@ -312,9 +315,13 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
           /* There's an intersection between the framerates so we can convert
            * into CDP with exactly those framerates */
           cdp_framerate = gst_structure_get_value (t, "framerate");
-          gst_caps_set_value (tmp, "framerate", cdp_framerate);
+          if (gst_value_intersect (NULL, cdp_framerate, framerate)) {
+            gst_caps_set_value (tmp, "framerate", cdp_framerate);
 
-          res = gst_caps_merge (res, tmp);
+            res = gst_caps_merge (res, tmp);
+          } else {
+            gst_clear_caps (&tmp);
+          }
         }
         /* We can always convert CEA708 to all non-CDP formats */
         if (framerate) {
