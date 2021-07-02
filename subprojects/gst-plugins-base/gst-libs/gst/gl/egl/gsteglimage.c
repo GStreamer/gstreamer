@@ -464,10 +464,12 @@ _drm_rgba_fourcc_from_info (const GstVideoInfo * info, int plane,
   const gint rgba_fourcc = DRM_FORMAT_ABGR8888;
   const gint rgb_fourcc = DRM_FORMAT_BGR888;
   const gint rg_fourcc = DRM_FORMAT_GR88;
+  const gint rg16_fourcc = DRM_FORMAT_GR1616;
 #else
   const gint rgba_fourcc = DRM_FORMAT_RGBA8888;
   const gint rgb_fourcc = DRM_FORMAT_RGB888;
   const gint rg_fourcc = DRM_FORMAT_RG88;
+  const gint rg16_fourcc = DRM_FORMAT_RG1616;
 #endif
 
   GST_DEBUG ("Getting DRM fourcc for %s plane %i",
@@ -548,6 +550,10 @@ _drm_rgba_fourcc_from_info (const GstVideoInfo * info, int plane,
     case GST_VIDEO_FORMAT_AV12:
       *out_format = plane == 1 ? GST_GL_RED : GST_GL_RG;
       return plane == 1 ? rg_fourcc : DRM_FORMAT_R8;
+
+    case GST_VIDEO_FORMAT_Y210:
+      *out_format = GST_GL_RG16;
+      return rg16_fourcc;
 
     default:
       GST_ERROR ("Unsupported format for DMABuf.");
