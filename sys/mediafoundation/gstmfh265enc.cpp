@@ -144,7 +144,7 @@ typedef struct _GstMFH265Enc
 {
   GstMFVideoEnc parent;
 
-  /* properteies */
+  /* properties */
   guint bitrate;
 
   /* device dependent properties */

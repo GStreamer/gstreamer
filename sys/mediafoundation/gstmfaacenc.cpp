@@ -62,7 +62,7 @@ typedef struct _GstMFAacEnc
 {
   GstMFAudioEnc parent;
 
-  /* properteies */
+  /* properties */
   guint bitrate;
 } GstMFAacEnc;
 

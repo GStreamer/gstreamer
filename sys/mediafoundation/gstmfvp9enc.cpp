@@ -124,7 +124,7 @@ typedef struct _GstMFVP9Enc
 {
   GstMFVideoEnc parent;
 
-  /* properteies */
+  /* properties */
   guint bitrate;
 
   /* device dependent properties */
