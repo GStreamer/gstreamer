@@ -27,6 +27,7 @@
 #include "gstmfutils.h"
 #include <wrl.h>
 
+/* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
 G_BEGIN_DECLS
@@ -80,6 +81,7 @@ static struct
   {MFVideoFormat_VP90, "video/x-vp9"},
   {MFVideoFormat_MJPG, "image/jpeg"},
 };
+/* *INDENT-ON* */
 
 GstVideoFormat
 gst_mf_video_subtype_to_video_format (const GUID * subtype)
@@ -395,178 +397,178 @@ _gst_mf_result (HRESULT hr, GstDebugCategory * cat, const gchar * file,
 } G_STMT_END
 
 static const gchar *
-gst_mf_guid_to_static_string (const GUID& guid)
+gst_mf_guid_to_static_string (const GUID & guid)
 {
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_MAJOR_TYPE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_MAJOR_TYPE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_SUBTYPE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_ALL_SAMPLES_INDEPENDENT);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_FIXED_SIZE_SAMPLES);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_COMPRESSED);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_SAMPLE_SIZE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_WRAPPED_TYPE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_NUM_CHANNELS);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_SAMPLES_PER_SECOND);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_FLOAT_SAMPLES_PER_SECOND);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_AVG_BYTES_PER_SECOND);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_BLOCK_ALIGNMENT);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_BITS_PER_SAMPLE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_VALID_BITS_PER_SAMPLE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_SAMPLES_PER_BLOCK);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_CHANNEL_MASK);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_FOLDDOWN_MATRIX);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_WMADRC_PEAKREF);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_WMADRC_PEAKTARGET);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_WMADRC_AVGREF);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_WMADRC_AVGTARGET);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AUDIO_PREFER_WAVEFORMATEX);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AAC_PAYLOAD_TYPE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AAC_AUDIO_PROFILE_LEVEL_INDICATION);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_FRAME_SIZE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_FRAME_RATE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_FRAME_RATE_RANGE_MAX);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_FRAME_RATE_RANGE_MIN);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_PIXEL_ASPECT_RATIO);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_DRM_FLAGS);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_PAD_CONTROL_FLAGS);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_SOURCE_CONTENT_HINT);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_VIDEO_CHROMA_SITING);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_INTERLACE_MODE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_TRANSFER_FUNCTION);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_VIDEO_PRIMARIES);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_YUV_MATRIX);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_VIDEO_LIGHTING);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_VIDEO_NOMINAL_RANGE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_GEOMETRIC_APERTURE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_MINIMUM_DISPLAY_APERTURE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_PAN_SCAN_APERTURE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_PAN_SCAN_ENABLED);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AVG_BITRATE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AVG_BIT_ERROR_RATE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_MAX_KEYFRAME_SPACING);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_DEFAULT_STRIDE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_PALETTE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_USER_DATA);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_MPEG_START_TIME_CODE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_MPEG2_PROFILE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_MPEG2_LEVEL);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_MPEG2_FLAGS);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_MPEG_SEQUENCE_HEADER);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_DV_AAUX_SRC_PACK_0);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_DV_AAUX_CTRL_PACK_0);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_DV_AAUX_SRC_PACK_1);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_DV_AAUX_CTRL_PACK_1);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_DV_VAUX_SRC_PACK);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_DV_VAUX_CTRL_PACK);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_IMAGE_LOSS_TOLERANT);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_MPEG4_SAMPLE_DESCRIPTION);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_MPEG4_CURRENT_SAMPLE_ENTRY);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_MAJOR_TYPE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_MAJOR_TYPE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_SUBTYPE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_ALL_SAMPLES_INDEPENDENT);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_FIXED_SIZE_SAMPLES);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_COMPRESSED);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_SAMPLE_SIZE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_WRAPPED_TYPE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_NUM_CHANNELS);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_SAMPLES_PER_SECOND);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_FLOAT_SAMPLES_PER_SECOND);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_AVG_BYTES_PER_SECOND);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_BLOCK_ALIGNMENT);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_BITS_PER_SAMPLE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_VALID_BITS_PER_SAMPLE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_SAMPLES_PER_BLOCK);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_CHANNEL_MASK);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_FOLDDOWN_MATRIX);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_WMADRC_PEAKREF);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_WMADRC_PEAKTARGET);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_WMADRC_AVGREF);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_WMADRC_AVGTARGET);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AUDIO_PREFER_WAVEFORMATEX);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AAC_PAYLOAD_TYPE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AAC_AUDIO_PROFILE_LEVEL_INDICATION);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_FRAME_SIZE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_FRAME_RATE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_FRAME_RATE_RANGE_MAX);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_FRAME_RATE_RANGE_MIN);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_PIXEL_ASPECT_RATIO);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_DRM_FLAGS);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_PAD_CONTROL_FLAGS);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_SOURCE_CONTENT_HINT);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_VIDEO_CHROMA_SITING);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_INTERLACE_MODE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_TRANSFER_FUNCTION);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_VIDEO_PRIMARIES);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_YUV_MATRIX);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_VIDEO_LIGHTING);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_VIDEO_NOMINAL_RANGE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_GEOMETRIC_APERTURE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_MINIMUM_DISPLAY_APERTURE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_PAN_SCAN_APERTURE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_PAN_SCAN_ENABLED);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AVG_BITRATE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AVG_BIT_ERROR_RATE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_MAX_KEYFRAME_SPACING);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_DEFAULT_STRIDE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_PALETTE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_USER_DATA);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_MPEG_START_TIME_CODE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_MPEG2_PROFILE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_MPEG2_LEVEL);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_MPEG2_FLAGS);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_MPEG_SEQUENCE_HEADER);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_DV_AAUX_SRC_PACK_0);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_DV_AAUX_CTRL_PACK_0);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_DV_AAUX_SRC_PACK_1);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_DV_AAUX_CTRL_PACK_1);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_DV_VAUX_SRC_PACK);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_DV_VAUX_CTRL_PACK);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_IMAGE_LOSS_TOLERANT);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_MPEG4_SAMPLE_DESCRIPTION);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_MPEG4_CURRENT_SAMPLE_ENTRY);
 
-  GST_MF_IF_EQUAL_RETURN(guid, MFMediaType_Audio);
-  GST_MF_IF_EQUAL_RETURN(guid, MFMediaType_Video);
-  GST_MF_IF_EQUAL_RETURN(guid, MFMediaType_Protected);
-  GST_MF_IF_EQUAL_RETURN(guid, MFMediaType_SAMI);
-  GST_MF_IF_EQUAL_RETURN(guid, MFMediaType_Script);
-  GST_MF_IF_EQUAL_RETURN(guid, MFMediaType_Image);
-  GST_MF_IF_EQUAL_RETURN(guid, MFMediaType_HTML);
-  GST_MF_IF_EQUAL_RETURN(guid, MFMediaType_Binary);
-  GST_MF_IF_EQUAL_RETURN(guid, MFMediaType_FileTransfer);
+  GST_MF_IF_EQUAL_RETURN (guid, MFMediaType_Audio);
+  GST_MF_IF_EQUAL_RETURN (guid, MFMediaType_Video);
+  GST_MF_IF_EQUAL_RETURN (guid, MFMediaType_Protected);
+  GST_MF_IF_EQUAL_RETURN (guid, MFMediaType_SAMI);
+  GST_MF_IF_EQUAL_RETURN (guid, MFMediaType_Script);
+  GST_MF_IF_EQUAL_RETURN (guid, MFMediaType_Image);
+  GST_MF_IF_EQUAL_RETURN (guid, MFMediaType_HTML);
+  GST_MF_IF_EQUAL_RETURN (guid, MFMediaType_Binary);
+  GST_MF_IF_EQUAL_RETURN (guid, MFMediaType_FileTransfer);
 
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_AI44);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_ARGB32);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_AYUV);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_DV25);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_DV50);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_DVH1);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_DVSD);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_DVSL);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_H264);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_H265);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_HEVC);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_HEVC_ES);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_I420);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_IYUV);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_M4S2);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_MJPG);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_MP43);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_MP4S);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_MP4V);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_MPG1);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_MSS1);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_MSS2);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_NV11);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_NV12);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_P010);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_P016);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_P210);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_P216);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_RGB24);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_RGB32);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_RGB555);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_RGB565);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_RGB8);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_UYVY);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_v210);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_v410);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_VP80);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_VP90);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_WMV1);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_WMV2);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_WMV3);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_WVC1);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_Y210);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_Y216);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_Y410);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_Y416);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_Y41P);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_Y41T);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_YUY2);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_YV12);
-  GST_MF_IF_EQUAL_RETURN(guid, MFVideoFormat_YVYU);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_AI44);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_ARGB32);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_AYUV);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_DV25);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_DV50);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_DVH1);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_DVSD);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_DVSL);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_H264);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_H265);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_HEVC);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_HEVC_ES);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_I420);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_IYUV);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_M4S2);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_MJPG);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_MP43);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_MP4S);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_MP4V);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_MPG1);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_MSS1);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_MSS2);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_NV11);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_NV12);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_P010);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_P016);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_P210);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_P216);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_RGB24);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_RGB32);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_RGB555);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_RGB565);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_RGB8);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_UYVY);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_v210);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_v410);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_VP80);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_VP90);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_WMV1);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_WMV2);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_WMV3);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_WVC1);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_Y210);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_Y216);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_Y410);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_Y416);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_Y41P);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_Y41T);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_YUY2);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_YV12);
+  GST_MF_IF_EQUAL_RETURN (guid, MFVideoFormat_YVYU);
 
   /* WAVE_FORMAT_PCM */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_PCM);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_PCM);
   /* WAVE_FORMAT_IEEE_FLOAT */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_Float);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_Float);
   /* WAVE_FORMAT_DTS */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_DTS);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_DTS);
   /* WAVE_FORMAT_DOLBY_AC3_SPDIF */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_Dolby_AC3_SPDIF);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_Dolby_AC3_SPDIF);
   /* WAVE_FORMAT_DRM */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_DRM);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_DRM);
   /* WAVE_FORMAT_WMAUDIO2 */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_WMAudioV8);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_WMAudioV8);
   /* WAVE_FORMAT_WMAUDIO3 */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_WMAudioV9);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_WMAudioV9);
   /* WAVE_FORMAT_WMAUDIO_LOSSLESS */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_WMAudio_Lossless);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_WMAudio_Lossless);
   /* WAVE_FORMAT_WMASPDIF */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_WMASPDIF);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_WMASPDIF);
   /* WAVE_FORMAT_WMAVOICE9 */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_MSP1);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_MSP1);
   /* WAVE_FORMAT_MPEGLAYER3 */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_MP3);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_MP3);
   /* WAVE_FORMAT_MPEG */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_MPEG);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_MPEG);
   /* WAVE_FORMAT_MPEG_HEAAC */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_AAC);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_AAC);
   /* WAVE_FORMAT_MPEG_ADTS_AAC */
-  GST_MF_IF_EQUAL_RETURN(guid, MFAudioFormat_ADTS);
+  GST_MF_IF_EQUAL_RETURN (guid, MFAudioFormat_ADTS);
 
 #if GST_MF_WINAPI_DESKTOP
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_CUSTOM_VIDEO_PRIMARIES);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_AM_FORMAT_TYPE);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_ARBITRARY_HEADER);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_ARBITRARY_FORMAT);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_ORIGINAL_4CC);
-  GST_MF_IF_EQUAL_RETURN(guid, MF_MT_ORIGINAL_WAVE_FORMAT_TAG);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_CUSTOM_VIDEO_PRIMARIES);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_AM_FORMAT_TYPE);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_ARBITRARY_HEADER);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_ARBITRARY_FORMAT);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_ORIGINAL_4CC);
+  GST_MF_IF_EQUAL_RETURN (guid, MF_MT_ORIGINAL_WAVE_FORMAT_TAG);
 #endif
 
   return NULL;
 }
 
 static gchar *
-gst_mf_guid_to_string (const GUID& guid)
+gst_mf_guid_to_string (const GUID & guid)
 {
   const gchar *str = NULL;
   HRESULT hr;
@@ -589,14 +591,14 @@ gst_mf_guid_to_string (const GUID& guid)
   ret = g_strdup_printf
       ("%8.8x-%4.4x-%4.4x-%2.2x%2.2x-%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x",
       (guint) guid.Data1, (guint) guid.Data2, (guint) guid.Data3,
-        guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
-        guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
+      guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
+      guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
 
   return ret;
 }
 
 static gchar *
-gst_mf_attribute_value_to_string (const GUID& guid, const PROPVARIANT& var)
+gst_mf_attribute_value_to_string (const GUID & guid, const PROPVARIANT & var)
 {
   if (IsEqualGUID (guid, MF_MT_FRAME_RATE) ||
       IsEqualGUID (guid, MF_MT_FRAME_RATE_RANGE_MAX) ||
@@ -605,7 +607,7 @@ gst_mf_attribute_value_to_string (const GUID& guid, const PROPVARIANT& var)
       IsEqualGUID (guid, MF_MT_PIXEL_ASPECT_RATIO)) {
     UINT32 high = 0, low = 0;
 
-    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+    Unpack2UINT32AsUINT64 (var.uhVal.QuadPart, &high, &low);
     return g_strdup_printf ("%dx%d", high, low);
   }
 
@@ -639,8 +641,8 @@ gst_mf_attribute_value_to_string (const GUID& guid, const PROPVARIANT& var)
 
 static void
 gst_mf_dump_attribute_value_by_index (IMFAttributes * attr, const gchar * msg,
-    guint index, GstDebugLevel level, GstDebugCategory * cat, const gchar * file,
-    const gchar * function, gint line)
+    guint index, GstDebugLevel level, GstDebugCategory * cat,
+    const gchar * file, const gchar * function, gint line)
 {
   gchar *guid_name = NULL;
   gchar *value = NULL;
@@ -648,9 +650,9 @@ gst_mf_dump_attribute_value_by_index (IMFAttributes * attr, const gchar * msg,
   HRESULT hr;
 
   PROPVARIANT var;
-  PropVariantInit(&var);
+  PropVariantInit (&var);
 
-  hr = attr->GetItemByIndex(index, &guid, &var);
+  hr = attr->GetItemByIndex (index, &guid, &var);
   if (!gst_mf_result (hr))
     goto done;
 
@@ -663,11 +665,10 @@ gst_mf_dump_attribute_value_by_index (IMFAttributes * attr, const gchar * msg,
     goto done;
 
   gst_debug_log (cat, level, file, function, line,
-        NULL, "%s attribute %d, %s: %s", msg ? msg : "", index, guid_name,
-        value);
+      NULL, "%s attribute %d, %s: %s", msg ? msg : "", index, guid_name, value);
 
 done:
-  PropVariantClear(&var);
+  PropVariantClear (&var);
   g_free (guid_name);
   g_free (value);
 }

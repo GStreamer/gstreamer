@@ -31,6 +31,7 @@
 #include <string.h>
 #include <wrl.h>
 
+/* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
 G_BEGIN_DECLS
@@ -254,6 +255,7 @@ private:
 
   bool running_;
 };
+/* *INDENT-ON* */
 
 enum
 {
@@ -277,7 +279,7 @@ struct _GstMFTransform
 
   IMFActivate *activate;
   IMFTransform *transform;
-  ICodecAPI * codec_api;
+  ICodecAPI *codec_api;
   GstMFTransformAsyncCallback *callback_object;
 
   GQueue *output_queue;
@@ -340,7 +342,7 @@ gst_mf_transform_class_init (GstMFTransformClass * klass)
       g_param_spec_pointer ("enum-params", "Enum Params",
           "GstMFTransformEnumParams for MFTEnumEx",
           (GParamFlags) (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
-          G_PARAM_STATIC_STRINGS)));
+              G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_D3D11_AWARE,
       g_param_spec_boolean ("d3d11-aware", "D3D11 Aware",
           "Whether Direct3D11 supports Direct3D11", FALSE,
@@ -378,7 +380,7 @@ gst_mf_transform_constructed (GObject * object)
 }
 
 static void
-gst_mf_transform_clear_enum_params (GstMFTransformEnumParams *params)
+gst_mf_transform_clear_enum_params (GstMFTransformEnumParams * params)
 {
   g_free (params->input_typeinfo);
   params->input_typeinfo = NULL;
@@ -508,7 +510,7 @@ gst_mf_transform_thread_func (GstMFTransform * self)
 #if GST_MF_HAVE_D3D11
   if (GstMFTEnum2Func && self->enum_params.adapter_luid &&
       (self->enum_params.enum_flags & MFT_ENUM_FLAG_HARDWARE) != 0) {
-    ComPtr<IMFAttributes> attr;
+    ComPtr < IMFAttributes > attr;
     LUID luid;
 
     hr = MFCreateAttributes (&attr, 1);
@@ -524,7 +526,7 @@ gst_mf_transform_thread_func (GstMFTransform * self)
     luid.LowPart = (DWORD) (self->enum_params.adapter_luid & 0xffffffff);
     luid.HighPart = (LONG) (self->enum_params.adapter_luid >> 32);
 
-    hr = attr->SetBlob (GST_GUID_MFT_ENUM_ADAPTER_LUID, (BYTE *) &luid,
+    hr = attr->SetBlob (GST_GUID_MFT_ENUM_ADAPTER_LUID, (BYTE *) & luid,
         sizeof (LUID));
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (self, "Couldn't set MFT_ENUM_ADAPTER_LUID");
@@ -564,7 +566,7 @@ gst_mf_transform_thread_func (GstMFTransform * self)
     devices[i]->Release ();
 
   hr = self->activate->GetAllocatedString (MFT_FRIENDLY_NAME_Attribute,
-    &name, NULL);
+      &name, NULL);
 
   if (gst_mf_result (hr)) {
     self->device_name = g_utf16_to_utf8 ((const gunichar2 *) name,
@@ -576,7 +578,7 @@ gst_mf_transform_thread_func (GstMFTransform * self)
 
   CoTaskMemFree (devices);
 
-  self->hardware = ! !(self->enum_params.enum_flags & MFT_ENUM_FLAG_HARDWARE);
+  self->hardware = !!(self->enum_params.enum_flags & MFT_ENUM_FLAG_HARDWARE);
   self->initialized = TRUE;
 
 run_loop:
@@ -620,11 +622,10 @@ gst_mf_transform_process_output (GstMFTransform * self)
 
   if ((out_stream_info.dwFlags & (MFT_OUTPUT_STREAM_PROVIDES_SAMPLES |
               MFT_OUTPUT_STREAM_CAN_PROVIDE_SAMPLES)) == 0) {
-    ComPtr<IMFMediaBuffer> buffer;
-    ComPtr<IMFSample> new_sample;
+    ComPtr < IMFMediaBuffer > buffer;
+    ComPtr < IMFSample > new_sample;
 
-    hr = MFCreateMemoryBuffer (out_stream_info.cbSize,
-        buffer.GetAddressOf ());
+    hr = MFCreateMemoryBuffer (out_stream_info.cbSize, buffer.GetAddressOf ());
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (self, "Couldn't create memory buffer");
       return GST_FLOW_ERROR;
@@ -653,7 +654,7 @@ gst_mf_transform_process_output (GstMFTransform * self)
     GST_LOG_OBJECT (self, "Need more input data");
     ret = GST_MF_TRANSFORM_FLOW_NEED_DATA;
   } else if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
-    ComPtr<IMFMediaType> output_type;
+    ComPtr < IMFMediaType > output_type;
 
     GST_DEBUG_OBJECT (self, "Stream change, set output type again");
 
@@ -686,7 +687,7 @@ gst_mf_transform_process_output (GstMFTransform * self)
 done:
   if (ret != GST_FLOW_OK) {
     if (out_data.pSample)
-      out_data.pSample->Release();
+      out_data.pSample->Release ();
 
     return ret;
   }
@@ -709,8 +710,7 @@ done:
 
 /* Must be called with event_lock */
 static gboolean
-gst_mf_transform_process_input_sync (GstMFTransform * self,
-    IMFSample * sample)
+gst_mf_transform_process_input_sync (GstMFTransform * self, IMFSample * sample)
 {
   HRESULT hr;
 
@@ -723,8 +723,7 @@ gst_mf_transform_process_input_sync (GstMFTransform * self,
 }
 
 gboolean
-gst_mf_transform_process_input (GstMFTransform * object,
-    IMFSample * sample)
+gst_mf_transform_process_input (GstMFTransform * object, IMFSample * sample)
 {
   HRESULT hr;
   gboolean ret = FALSE;
@@ -792,8 +791,7 @@ done:
 }
 
 GstFlowReturn
-gst_mf_transform_get_output (GstMFTransform * object,
-    IMFSample ** sample)
+gst_mf_transform_get_output (GstMFTransform * object, IMFSample ** sample)
 {
   GstFlowReturn ret;
 
@@ -916,7 +914,7 @@ gst_mf_transform_open_internal (GstMFTransformOpenData * data)
   }
 
   if (object->hardware) {
-    ComPtr<IMFAttributes> attr;
+    ComPtr < IMFAttributes > attr;
     UINT32 supports_d3d11 = 0;
 
     hr = object->transform->GetAttributes (attr.GetAddressOf ());
@@ -1085,8 +1083,7 @@ gst_mf_transform_event_type_to_string (MediaEventType event)
 }
 
 static HRESULT
-gst_mf_transform_on_event (MediaEventType event,
-    GstMFTransform * self)
+gst_mf_transform_on_event (MediaEventType event, GstMFTransform * self)
 {
   GST_TRACE_OBJECT (self, "Have event %s (%d)",
       gst_mf_transform_event_type_to_string (event), (gint) event);
@@ -1142,8 +1139,7 @@ gst_mf_transform_get_codec_api_handle (GstMFTransform * object)
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), NULL);
 
   if (!object->codec_api) {
-    GST_WARNING_OBJECT (object,
-        "ICodecAPI is not configured, open MFT first");
+    GST_WARNING_OBJECT (object, "ICodecAPI is not configured, open MFT first");
     return NULL;
   }
 
@@ -1409,4 +1405,3 @@ gst_mf_transform_set_codec_api_boolean (GstMFTransform * object,
 
   return gst_mf_result (hr);
 }
-

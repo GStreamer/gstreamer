@@ -20,6 +20,7 @@
 #include "gstmfvideobuffer.h"
 #include <string.h>
 
+/* *INDENT-OFF* */
 G_BEGIN_DECLS
 
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_video_buffer_debug);
@@ -504,3 +505,5 @@ IGstMFVideoBuffer::ContiguousCopyFrom (const BYTE * src_buffer,
 
   return S_OK;
 }
+
+/* *INDENT-ON* */

@@ -26,7 +26,9 @@
 #include <wrl.h>
 #include <string.h>
 
+/* *INDENT-OFF* */
 using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY (gst_mf_audio_enc_debug);
 #define GST_CAT_DEFAULT gst_mf_audio_enc_debug
@@ -35,14 +37,14 @@ GST_DEBUG_CATEGORY (gst_mf_audio_enc_debug);
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstMFAudioEnc, gst_mf_audio_enc,
     GST_TYPE_AUDIO_ENCODER,
     GST_DEBUG_CATEGORY_INIT (gst_mf_audio_enc_debug, "mfaudioenc", 0,
-      "mfaudioenc"));
+        "mfaudioenc"));
 
 static gboolean gst_mf_audio_enc_open (GstAudioEncoder * enc);
 static gboolean gst_mf_audio_enc_close (GstAudioEncoder * enc);
 static gboolean gst_mf_audio_enc_set_format (GstAudioEncoder * enc,
     GstAudioInfo * info);
 static GstFlowReturn gst_mf_audio_enc_handle_frame (GstAudioEncoder * enc,
-    GstBuffer *buffer);
+    GstBuffer * buffer);
 static GstFlowReturn gst_mf_audio_enc_drain (GstAudioEncoder * enc);
 static void gst_mf_audio_enc_flush (GstAudioEncoder * enc);
 
@@ -56,8 +58,7 @@ gst_mf_audio_enc_class_init (GstMFAudioEncClass * klass)
   audioenc_class->set_format = GST_DEBUG_FUNCPTR (gst_mf_audio_enc_set_format);
   audioenc_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_mf_audio_enc_handle_frame);
-  audioenc_class->flush =
-      GST_DEBUG_FUNCPTR (gst_mf_audio_enc_flush);
+  audioenc_class->flush = GST_DEBUG_FUNCPTR (gst_mf_audio_enc_flush);
 
   gst_type_mark_as_plugin_api (GST_TYPE_MF_AUDIO_ENC, (GstPluginAPIFlags) 0);
 }
@@ -112,8 +113,8 @@ gst_mf_audio_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 {
   GstMFAudioEnc *self = GST_MF_AUDIO_ENC (enc);
   GstMFAudioEncClass *klass = GST_MF_AUDIO_ENC_GET_CLASS (enc);
-  ComPtr<IMFMediaType> in_type;
-  ComPtr<IMFMediaType> out_type;
+  ComPtr < IMFMediaType > in_type;
+  ComPtr < IMFMediaType > out_type;
 
   GST_DEBUG_OBJECT (self, "Set format");
 
@@ -130,7 +131,7 @@ gst_mf_audio_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     return FALSE;
   }
 
-  gst_mf_dump_attributes (out_type.Get(), "Set output type", GST_LEVEL_DEBUG);
+  gst_mf_dump_attributes (out_type.Get (), "Set output type", GST_LEVEL_DEBUG);
 
   if (!gst_mf_transform_set_output_type (self->transform, out_type.Get ())) {
     GST_ERROR_OBJECT (self, "Couldn't set output type");
@@ -143,7 +144,7 @@ gst_mf_audio_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     return FALSE;
   }
 
-  gst_mf_dump_attributes (in_type.Get(), "Set input type", GST_LEVEL_DEBUG);
+  gst_mf_dump_attributes (in_type.Get (), "Set input type", GST_LEVEL_DEBUG);
 
   if (!gst_mf_transform_set_input_type (self->transform, in_type.Get ())) {
     GST_ERROR_OBJECT (self, "Couldn't set input media type");
@@ -175,8 +176,8 @@ static gboolean
 gst_mf_audio_enc_process_input (GstMFAudioEnc * self, GstBuffer * buffer)
 {
   HRESULT hr;
-  ComPtr<IMFSample> sample;
-  ComPtr<IMFMediaBuffer> media_buffer;
+  ComPtr < IMFSample > sample;
+  ComPtr < IMFMediaBuffer > media_buffer;
   BYTE *data;
   gboolean res = FALSE;
   GstMapInfo info;
@@ -244,8 +245,8 @@ gst_mf_audio_enc_process_output (GstMFAudioEnc * self)
   GstMFAudioEncClass *klass = GST_MF_AUDIO_ENC_GET_CLASS (self);
   HRESULT hr;
   BYTE *data;
-  ComPtr<IMFMediaBuffer> media_buffer;
-  ComPtr<IMFSample> sample;
+  ComPtr < IMFMediaBuffer > media_buffer;
+  ComPtr < IMFSample > sample;
   GstBuffer *buffer;
   GstFlowReturn res = GST_FLOW_ERROR;
   DWORD buffer_len;
@@ -273,8 +274,7 @@ gst_mf_audio_enc_process_output (GstMFAudioEnc * self)
 }
 
 static GstFlowReturn
-gst_mf_audio_enc_handle_frame (GstAudioEncoder * enc,
-    GstBuffer *buffer)
+gst_mf_audio_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 {
   GstMFAudioEnc *self = GST_MF_AUDIO_ENC (enc);
   GstFlowReturn ret;

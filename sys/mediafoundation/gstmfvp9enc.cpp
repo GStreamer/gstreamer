@@ -39,7 +39,9 @@
 #include "gstmfvp9enc.h"
 #include <wrl.h>
 
+/* *INDENT-OFF* */
 using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY (gst_mf_vp9_enc_debug);
 #define GST_CAT_DEFAULT gst_mf_vp9_enc_debug
@@ -178,7 +180,7 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
             "Rate Control Mode",
             GST_TYPE_MF_VP9_ENC_RC_MODE, DEFAULT_RC_MODE,
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+                G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     /* NOTE: documentation will be done by only for default device */
     if (cdata->is_default) {
@@ -194,7 +196,7 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
             "(0 = MFT default)", 0, (G_MAXUINT >> 10),
             DEFAULT_MAX_BITRATE,
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+                G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
   if (device_caps->quality_vs_speed) {
@@ -204,7 +206,7 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
             "[34, 66]: Medium complexity, [67, 100]: High complexity", 0, 100,
             DEFAULT_QUALITY_VS_SPEED,
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+                G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
   if (device_caps->gop_size) {
@@ -215,7 +217,7 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
             "produce only one keyframe at the beginning (-1 for automatic)",
             -1, G_MAXINT, DEFAULT_GOP_SIZE,
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+                G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
   if (device_caps->threads) {
@@ -225,7 +227,7 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
             "(0 = MFT default)", 0, 16,
             DEFAULT_THREADS,
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+                G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
   if (device_caps->content_type) {
@@ -234,7 +236,7 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
             "Indicates the type of video content",
             GST_TYPE_MF_VP9_ENC_CONTENT_TYPE, DEFAULT_CONTENT_TYPE,
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+                G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     /* NOTE: documentation will be done by only for default device */
     if (cdata->is_default) {
@@ -249,7 +251,7 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
             "Enable low latency encoding",
             DEFAULT_LOW_LATENCY,
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+                G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
   g_object_class_install_property (gobject_class, PROP_D3D11_AWARE,
@@ -264,13 +266,13 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
             "DXGI Adapter index for creating device",
             0, G_MAXUINT32, device_caps->adapter,
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-            G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+                G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   }
 
   long_name = g_strdup_printf ("Media Foundation %s", cdata->device_name);
   classification = g_strdup_printf ("Codec/Encoder/Video%s",
       (cdata->enum_flags & MFT_ENUM_FLAG_HARDWARE) == MFT_ENUM_FLAG_HARDWARE ?
-          "/Hardware" : "");
+      "/Hardware" : "");
   gst_element_class_set_metadata (element_class, long_name,
       classification,
       "Microsoft Media Foundation VP9 Encoder",
@@ -467,8 +469,7 @@ gst_mf_vp9_enc_set_option (GstMFVideoEnc * mfenc, GstVideoCodecState * state,
 
   if (device_caps->quality_vs_speed) {
     hr = gst_mf_transform_set_codec_api_uint32 (transform,
-        &CODECAPI_AVEncCommonQualityVsSpeed,
-        self->quality_vs_speed);
+        &CODECAPI_AVEncCommonQualityVsSpeed, self->quality_vs_speed);
     WARNING_HR (hr, CODECAPI_AVEncCommonQualityVsSpeed);
   }
 

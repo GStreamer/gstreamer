@@ -31,6 +31,7 @@
 #include <vector>
 #include <algorithm>
 
+/* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
 G_BEGIN_DECLS
@@ -39,6 +40,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_mf_source_object_debug);
 #define GST_CAT_DEFAULT gst_mf_source_object_debug
 
 G_END_DECLS
+/* *INDENT-ON* */
 
 typedef struct _GstMFStreamMediaType
 {
@@ -96,14 +98,14 @@ static void gst_mf_source_reader_constructed (GObject * object);
 static void gst_mf_source_reader_finalize (GObject * object);
 
 static gboolean gst_mf_source_reader_start (GstMFSourceObject * object);
-static gboolean gst_mf_source_reader_stop  (GstMFSourceObject * object);
+static gboolean gst_mf_source_reader_stop (GstMFSourceObject * object);
 static GstFlowReturn gst_mf_source_reader_fill (GstMFSourceObject * object,
     GstBuffer * buffer);
 static GstFlowReturn gst_mf_source_reader_create (GstMFSourceObject * object,
     GstBuffer ** buffer);
 static gboolean gst_mf_source_reader_unlock (GstMFSourceObject * object);
 static gboolean gst_mf_source_reader_unlock_stop (GstMFSourceObject * object);
-static GstCaps * gst_mf_source_reader_get_caps (GstMFSourceObject * object);
+static GstCaps *gst_mf_source_reader_get_caps (GstMFSourceObject * object);
 static gboolean gst_mf_source_reader_set_caps (GstMFSourceObject * object,
     GstCaps * caps);
 static void
@@ -176,7 +178,7 @@ gst_mf_enum_media_type_from_source_reader (IMFSourceReader * source_reader,
   gint i, j;
   HRESULT hr;
   GList *list = NULL;
-  std::vector<std::string> unhandled_caps;
+  std::vector < std::string > unhandled_caps;
 
   g_return_val_if_fail (source_reader != NULL, FALSE);
   g_return_val_if_fail (media_types != NULL, FALSE);
@@ -190,7 +192,7 @@ gst_mf_enum_media_type_from_source_reader (IMFSourceReader * source_reader,
      */
     i = MF_SOURCE_READER_FIRST_VIDEO_STREAM;
     for (j = 0;; j++) {
-      ComPtr<IMFMediaType> media_type;
+      ComPtr < IMFMediaType > media_type;
 
       hr = source_reader->GetNativeMediaType (i, j, &media_type);
 
@@ -210,10 +212,10 @@ gst_mf_enum_media_type_from_source_reader (IMFSourceReader * source_reader,
         name = gst_structure_get_name (s);
         if (name != "video/x-raw" && name != "image/jpeg") {
           auto it =
-              std::find(unhandled_caps.begin(), unhandled_caps.end(), name);
-          if (it == unhandled_caps.end()) {
-            GST_FIXME ("Skip not supported format %s", name.c_str());
-            unhandled_caps.push_back(name);
+              std::find (unhandled_caps.begin (), unhandled_caps.end (), name);
+          if (it == unhandled_caps.end ()) {
+            GST_FIXME ("Skip not supported format %s", name.c_str ());
+            unhandled_caps.push_back (name);
           }
           gst_caps_unref (caps);
           continue;
@@ -247,7 +249,7 @@ done:
   list = g_list_reverse (list);
   *media_types = list;
 
-  return ! !list;
+  return !!list;
 }
 
 static void
@@ -280,9 +282,9 @@ gst_mf_source_reader_open (GstMFSourceReader * self, IMFActivate * activate)
 {
   GList *iter;
   HRESULT hr;
-  ComPtr<IMFSourceReader> reader;
-  ComPtr<IMFMediaSource> source;
-  ComPtr<IMFAttributes> attr;
+  ComPtr < IMFSourceReader > reader;
+  ComPtr < IMFMediaSource > source;
+  ComPtr < IMFAttributes > attr;
 
   hr = activate->ActivateObject (IID_IMFMediaSource, (void **) &source);
   if (!gst_mf_result (hr))
@@ -443,7 +445,7 @@ gst_mf_source_reader_read_sample (GstMFSourceReader * self)
   GstMFSourceReaderSample reader_sample;
 
   hr = self->reader->ReadSample (type->stream_index, 0, NULL, &stream_flags,
-    NULL, &sample);
+      NULL, &sample);
 
   if (!gst_mf_result (hr)) {
     GST_ERROR_OBJECT (self, "Failed to read sample");
@@ -538,7 +540,7 @@ gst_mf_source_reader_fill (GstMFSourceObject * object, GstBuffer * buffer)
 {
   GstMFSourceReader *self = GST_MF_SOURCE_READER (object);
   GstFlowReturn ret = GST_FLOW_OK;
-  ComPtr<IMFMediaBuffer> media_buffer;
+  ComPtr < IMFMediaBuffer > media_buffer;
   GstVideoFrame frame;
   BYTE *data;
   gint i, j;
@@ -601,7 +603,7 @@ gst_mf_source_reader_create (GstMFSourceObject * object, GstBuffer ** buffer)
 {
   GstMFSourceReader *self = GST_MF_SOURCE_READER (object);
   GstFlowReturn ret = GST_FLOW_OK;
-  ComPtr<IMFMediaBuffer> media_buffer;
+  ComPtr < IMFMediaBuffer > media_buffer;
   HRESULT hr;
   BYTE *data;
   DWORD len = 0;
@@ -820,7 +822,7 @@ gst_mf_source_enum_device_activate (GstMFSourceReader * self,
 {
   HRESULT hr;
   GList *ret = NULL;
-  ComPtr<IMFAttributes> attr;
+  ComPtr < IMFAttributes > attr;
   IMFActivate **devices = NULL;
   UINT32 i, count = 0;
 
@@ -854,9 +856,9 @@ gst_mf_source_enum_device_activate (GstMFSourceReader * self,
 
     switch (source_type) {
       case GST_MF_SOURCE_TYPE_VIDEO:
-        hr = activate->GetAllocatedString (
-            MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
-            &name, &name_len);
+        hr = activate->GetAllocatedString
+            (MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK, &name,
+            &name_len);
         break;
       default:
         g_assert_not_reached ();
@@ -890,7 +892,7 @@ done:
 
   *device_sources = ret;
 
-  return ! !ret;
+  return !!ret;
 }
 
 static void
