@@ -715,29 +715,10 @@ gst_mf_aac_enc_plugin_init (GstPlugin * plugin, guint rank)
   output_type.guidSubtype = MFAudioFormat_AAC;
 
   enum_params.category = MFT_CATEGORY_AUDIO_ENCODER;
-  enum_params.enum_flags = (MFT_ENUM_FLAG_HARDWARE | MFT_ENUM_FLAG_ASYNCMFT |
+  enum_params.enum_flags = (MFT_ENUM_FLAG_SYNCMFT |
       MFT_ENUM_FLAG_SORTANDFILTER | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
   enum_params.output_typeinfo = &output_type;
 
-  /* register hardware encoders first (likey no hardware audio encoder) */
-  i = 0;
-  do {
-    enum_params.device_index = i++;
-    transform = gst_mf_transform_new (&enum_params);
-    do_next = TRUE;
-
-    if (!transform) {
-      do_next = FALSE;
-    } else {
-      gst_mf_aac_enc_plugin_init_internal (plugin, rank, transform,
-          enum_params.device_index, enum_params.enum_flags);
-      gst_clear_object (&transform);
-    }
-  } while (do_next);
-
-  /* register software encoders */
-  enum_params.enum_flags = (MFT_ENUM_FLAG_SYNCMFT |
-      MFT_ENUM_FLAG_SORTANDFILTER | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
   i = 0;
   do {
     enum_params.device_index = i++;
