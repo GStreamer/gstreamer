@@ -905,8 +905,7 @@ gst_mf_transform_open_internal (GstMFTransformOpenData * data)
   data->ret = FALSE;
 
   gst_mf_transform_close (object);
-  hr = object->activate->ActivateObject (IID_IMFTransform,
-      (void **) &object->transform);
+  hr = object->activate->ActivateObject (IID_PPV_ARGS (&object->transform));
 
   if (!gst_mf_result (hr)) {
     GST_WARNING_OBJECT (object, "Couldn't open MFT");
@@ -955,8 +954,7 @@ gst_mf_transform_open_internal (GstMFTransformOpenData * data)
     object->output_id = 0;
   }
 
-  hr = object->transform->QueryInterface (IID_ICodecAPI,
-      (void **) &object->codec_api);
+  hr = object->transform->QueryInterface (IID_PPV_ARGS (&object->codec_api));
   if (!gst_mf_result (hr)) {
     GST_WARNING_OBJECT (object, "ICodecAPI is unavailable");
   }

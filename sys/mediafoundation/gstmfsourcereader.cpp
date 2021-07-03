@@ -286,7 +286,7 @@ gst_mf_source_reader_open (GstMFSourceReader * self, IMFActivate * activate)
   ComPtr < IMFMediaSource > source;
   ComPtr < IMFAttributes > attr;
 
-  hr = activate->ActivateObject (IID_IMFMediaSource, (void **) &source);
+  hr = activate->ActivateObject (IID_PPV_ARGS (&source));
   if (!gst_mf_result (hr))
     return FALSE;
 
