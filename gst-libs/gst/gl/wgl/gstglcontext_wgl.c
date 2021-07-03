@@ -493,7 +493,7 @@ load_opengl_dll_module (gpointer user_data)
 gpointer
 gst_gl_context_wgl_get_proc_address (GstGLAPI gl_api, const gchar * name)
 {
-  gpointer result;
+  gpointer result = NULL;
 
   if (gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)) {
     g_once (&module_opengl_dll_gonce, load_opengl_dll_module, NULL);
