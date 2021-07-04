@@ -105,6 +105,11 @@ typedef struct _GstD3D11Vp9Dec
 
   GstD3D11Device *device;
   GstD3D11Decoder *d3d11_decoder;
+
+  /* To calculate use_prev_in_find_mv_refs */
+  guint last_frame_width;
+  guint last_frame_height;
+  gboolean last_show_frame;
 } GstD3D11Vp9Dec;
 
 typedef struct _GstD3D11Vp9DecClass
@@ -399,6 +404,9 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
     return FALSE;
   }
 
+  /* Will be updated per decode_picture */
+  self->last_frame_width = self->last_frame_height = 0;
+
   return TRUE;
 }
 
@@ -433,6 +441,9 @@ gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   GstBuffer *view_buffer;
   GstVp9Picture *new_picture;
+
+  /* This method is called when show_frame == FALSE */
+  self->last_show_frame = FALSE;
 
   view_buffer = (GstBuffer *) gst_vp9_picture_get_user_data (picture);
 
@@ -628,6 +639,12 @@ gst_d3d11_vp9_dec_copy_loop_filter_params (GstD3D11Vp9Dec * self,
   params->sharpness_level = lfp->loop_filter_sharpness;
   params->mode_ref_delta_enabled = lfp->loop_filter_delta_enabled;
   params->mode_ref_delta_update = lfp->loop_filter_delta_update;
+  params->use_prev_in_find_mv_refs =
+      self->last_show_frame &&
+      frame_hdr->width == self->last_frame_width &&
+      frame_hdr->height == self->last_frame_height &&
+      !frame_hdr->error_resilient_mode &&
+      !(frame_hdr->frame_type == GST_VP9_KEY_FRAME || frame_hdr->intra_only);
 
   G_STATIC_ASSERT (G_N_ELEMENTS (params->ref_deltas) ==
       G_N_ELEMENTS (lfp->loop_filter_ref_deltas));
@@ -872,6 +889,10 @@ gst_d3d11_vp9_dec_submit_picture_data (GstD3D11Vp9Dec * self,
     buffer_offset += bytes_to_copy;
     is_first = FALSE;
   }
+
+  self->last_frame_width = params->width;
+  self->last_frame_height = params->height;
+  self->last_show_frame = TRUE;
 
   return TRUE;
 
