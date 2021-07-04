@@ -851,11 +851,8 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
   vendor = gst_d3d11_get_device_vendor (self->device);
   switch (vendor) {
     case GST_D3D11_DEVICE_VENDOR_XBOX:
-    case GST_D3D11_DEVICE_VENDOR_QUALCOMM:
       /* FIXME: Need to figure out Xbox device's behavior
        * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1312
-       *
-       * Qualcomm driver seems to be buggy in zero-copy scenario
        */
       self->can_direct_rendering = FALSE;
       break;
