@@ -2247,6 +2247,8 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m, GHashTable * metadata)
 
   d = MXF_METADATA_FILE_DESCRIPTOR (current);
 
+  self->is_interleaved = MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (self->descriptor);
+
   for (i = 0; i < package->n_tracks; i++) {
     if (!package->tracks[i])
       continue;

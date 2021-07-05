@@ -677,6 +677,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
       i++) {
     MXFMetadataEssenceContainerData *edata;
     MXFMetadataSourcePackage *package;
+    MXFFraction common_rate = { 0, 0 };
 
     if (demux->preface->content_storage->essence_container_data[i] == NULL)
       continue;
@@ -712,6 +713,34 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
       if (track->edit_rate.n <= 0 || track->edit_rate.d <= 0) {
         GST_WARNING_OBJECT (demux, "Invalid edit rate");
         continue;
+      }
+
+      if (package->is_interleaved) {
+        /*
+         * S377-1:2019 "9.4.2 The MXF timing model"
+         *
+         * The value of Edit Rate shall be identical for every timeline Essence
+         * Track of the Top-Level File Package.
+         *
+         * The value of Edit Rate of the timeline Essence Tracks of one
+         * Top-Level File Package need not match the Edit Rate of the Essence
+         * Tracks of the other Top-Level File Packages.
+         *
+         * S377-1:2019 "9.5.5 Top-Level File Packages"
+         *
+         *12. All Essence Tracks of a Top-Level File Package **shall** have the
+         *    same value of Edit Rate. All other Tracks of a Top-Level File
+         *    Package **should** have the same value of Edit Rate as the
+         *    Essence Tracks.
+         */
+        if (common_rate.n == 0 && common_rate.d == 0) {
+          common_rate = track->edit_rate;
+        } else if (common_rate.n * track->edit_rate.d !=
+            common_rate.d * track->edit_rate.n) {
+          GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
+              ("Interleaved File Package doesn't have identical edit rate on all tracks."));
+          return GST_FLOW_ERROR;
+        }
       }
 
       for (k = 0; k < demux->essence_tracks->len; k++) {

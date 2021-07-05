@@ -509,6 +509,9 @@ struct _MXFMetadataSourcePackage
   MXFMetadataGenericDescriptor *descriptor;
 
   gboolean top_level;
+
+  /* TRUE if descriptor is multi-descriptor, i.e. content is interleaved */
+  gboolean is_interleaved;
 };
 
 typedef enum {
