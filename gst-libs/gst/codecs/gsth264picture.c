@@ -991,6 +991,22 @@ gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,
       }
       picture->mem_mgmt_5 = TRUE;
       picture->frame_num = 0;
+      /* When the current picture includes a memory management control operation
+         equal to 5, after the decoding of the current picture, tempPicOrderCnt
+         is set equal to PicOrderCnt( CurrPic ), TopFieldOrderCnt of the current
+         picture (if any) is set equal to TopFieldOrderCnt - tempPicOrderCnt,
+         and BottomFieldOrderCnt of the current picture (if any) is set equal to
+         BottomFieldOrderCnt - tempPicOrderCnt. */
+      if (picture->field == GST_H264_PICTURE_FIELD_TOP_FIELD) {
+        picture->top_field_order_cnt = picture->pic_order_cnt = 0;
+      } else if (picture->field == GST_H264_PICTURE_FIELD_BOTTOM_FIELD) {
+        picture->bottom_field_order_cnt = picture->pic_order_cnt = 0;
+      } else {
+        picture->top_field_order_cnt -= picture->pic_order_cnt;
+        picture->bottom_field_order_cnt -= picture->pic_order_cnt;
+        picture->pic_order_cnt = MIN (picture->top_field_order_cnt,
+            picture->bottom_field_order_cnt);
+      }
       break;
     case 6:
       /* 8.2.5.4.6 Replace long term reference pictures with current picture.
