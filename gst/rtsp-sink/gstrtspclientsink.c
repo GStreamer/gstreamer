@@ -4580,6 +4580,11 @@ gst_rtsp_client_sink_record (GstRTSPClientSink * sink, gboolean async)
 
   gst_rtsp_client_sink_set_state (sink, GST_STATE_PLAYING);
   sink->state = GST_RTSP_STATE_PLAYING;
+  for (walk = sink->contexts; walk; walk = g_list_next (walk)) {
+    GstRTSPStreamContext *context = (GstRTSPStreamContext *) walk->data;
+
+    gst_rtsp_stream_unblock_rtcp (context->stream);
+  }
 
   /* clean up any messages */
   gst_rtsp_message_unset (&request);

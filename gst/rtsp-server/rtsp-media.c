@@ -4683,6 +4683,21 @@ preroll_failed:
   }
 }
 
+static void
+gst_rtsp_media_unblock_rtcp (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  guint i;
+
+  priv = media->priv;
+  g_mutex_lock (&priv->lock);
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+    gst_rtsp_stream_unblock_rtcp (stream);
+  }
+  g_mutex_unlock (&priv->lock);
+}
+
 /**
  * gst_rtsp_media_unsuspend:
  * @media: a #GstRTSPMedia
@@ -4711,6 +4726,7 @@ gst_rtsp_media_unsuspend (GstRTSPMedia * media)
   }
 
 done:
+  gst_rtsp_media_unblock_rtcp (media);
   g_rec_mutex_unlock (&priv->state_lock);
 
   return TRUE;

@@ -224,6 +224,12 @@ struct _GstRTSPStreamPrivate
 
   /* Whether we should send and receive RTCP */
   gboolean enable_rtcp;
+
+  /* blocking early rtcp packets */
+  GstPad *block_early_rtcp_pad;
+  gulong block_early_rtcp_probe;
+  GstPad *block_early_rtcp_pad_ipv6;
+  gulong block_early_rtcp_probe_ipv6;
 };
 
 #define DEFAULT_CONTROL         NULL
@@ -347,6 +353,10 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
   priv->ptmap = g_hash_table_new_full (NULL, NULL, NULL,
       (GDestroyNotify) gst_caps_unref);
   priv->send_pool = NULL;
+  priv->block_early_rtcp_pad = NULL;
+  priv->block_early_rtcp_probe = 0;
+  priv->block_early_rtcp_pad_ipv6 = NULL;
+  priv->block_early_rtcp_probe_ipv6 = 0;
 }
 
 typedef struct _UdpClientAddrInfo UdpClientAddrInfo;
@@ -430,6 +440,18 @@ gst_rtsp_stream_finalize (GObject * obj)
 
   g_mutex_clear (&priv->send_lock);
   g_cond_clear (&priv->send_cond);
+
+  if (priv->block_early_rtcp_probe != 0) {
+    gst_pad_remove_probe
+        (priv->block_early_rtcp_pad, priv->block_early_rtcp_probe);
+    gst_object_unref (priv->block_early_rtcp_pad);
+  }
+
+  if (priv->block_early_rtcp_probe_ipv6 != 0) {
+    gst_pad_remove_probe
+        (priv->block_early_rtcp_pad_ipv6, priv->block_early_rtcp_probe_ipv6);
+    gst_object_unref (priv->block_early_rtcp_pad_ipv6);
+  }
 
   G_OBJECT_CLASS (gst_rtsp_stream_parent_class)->finalize (obj);
 }
@@ -3755,6 +3777,15 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
         g_object_set (priv->udpsrc_v4[i], "caps", rtp_caps, NULL);
       } else {
         g_object_set (priv->udpsrc_v4[i], "caps", rtcp_caps, NULL);
+
+        /* block early rtcp packets, pipeline not ready */
+        g_assert (priv->block_early_rtcp_pad == NULL);
+        priv->block_early_rtcp_pad = gst_element_get_static_pad
+            (priv->udpsrc_v4[i], "src");
+        priv->block_early_rtcp_probe = gst_pad_add_probe
+            (priv->block_early_rtcp_pad,
+            GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER, NULL, NULL,
+            NULL);
       }
 
       plug_src (stream, bin, priv->udpsrc_v4[i], priv->funnel[i]);
@@ -3770,6 +3801,15 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
         g_object_set (priv->udpsrc_v6[i], "caps", rtp_caps, NULL);
       } else {
         g_object_set (priv->udpsrc_v6[i], "caps", rtcp_caps, NULL);
+
+        /* block early rtcp packets, pipeline not ready */
+        g_assert (priv->block_early_rtcp_pad_ipv6 == NULL);
+        priv->block_early_rtcp_pad_ipv6 = gst_element_get_static_pad
+            (priv->udpsrc_v6[i], "src");
+        priv->block_early_rtcp_probe_ipv6 = gst_pad_add_probe
+            (priv->block_early_rtcp_pad_ipv6,
+            GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER, NULL, NULL,
+            NULL);
       }
 
       plug_src (stream, bin, priv->udpsrc_v6[i], priv->funnel[i]);
@@ -6289,4 +6329,38 @@ gst_rtsp_stream_get_rate_control (GstRTSPStream * stream)
   g_mutex_unlock (&stream->priv->lock);
 
   return ret;
+}
+
+/**
+ * gst_rtsp_stream_unblock_rtcp:
+ *
+ * Remove blocking probe from the RTCP source. When creating an UDP source for
+ * RTCP it is initially blocked until this function is called.
+ * This functions should be called once the pipeline is ready for handling RTCP
+ * packets.
+ *
+ * Since: 1.20
+ */
+void
+gst_rtsp_stream_unblock_rtcp (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  if (priv->block_early_rtcp_probe != 0) {
+    gst_pad_remove_probe
+        (priv->block_early_rtcp_pad, priv->block_early_rtcp_probe);
+    priv->block_early_rtcp_probe = 0;
+    gst_object_unref (priv->block_early_rtcp_pad);
+    priv->block_early_rtcp_pad = NULL;
+  }
+  if (priv->block_early_rtcp_probe_ipv6 != 0) {
+    gst_pad_remove_probe
+        (priv->block_early_rtcp_pad_ipv6, priv->block_early_rtcp_probe_ipv6);
+    priv->block_early_rtcp_probe_ipv6 = 0;
+    gst_object_unref (priv->block_early_rtcp_pad_ipv6);
+    priv->block_early_rtcp_pad_ipv6 = NULL;
+  }
+  g_mutex_unlock (&priv->lock);
 }
