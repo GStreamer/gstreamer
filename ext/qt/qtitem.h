@@ -98,7 +98,7 @@ private Q_SLOTS:
     void onSceneGraphInvalidated();
 
 protected:
-    QSGNode * updatePaintNode (QSGNode * oldNode, UpdatePaintNodeData * updatePaintNodeData);
+    QSGNode * updatePaintNode (QSGNode * oldNode, UpdatePaintNodeData * updatePaintNodeData) override;
     void wheelEvent(QWheelEvent *) override;
     void hoverEnterEvent(QHoverEvent *) override;
     void hoverLeaveEvent (QHoverEvent *) override;
