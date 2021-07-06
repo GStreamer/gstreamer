@@ -259,8 +259,10 @@ IGstMFVideoBuffer::Lock (BYTE ** buffer, DWORD * max_length,
 
   GST_TRACE ("%p", this);
 
-  if (locked_)
-    return MF_E_INVALIDREQUEST;
+  if (locked_) {
+    GST_LOG ("%p, Already locked", this);
+    return S_OK;
+  }
 
   locked_ = true;
 
@@ -273,7 +275,7 @@ IGstMFVideoBuffer::Lock (BYTE ** buffer, DWORD * max_length,
   if (!contiguous_data_)
     contiguous_data_ = (BYTE *) g_malloc0 (contiguous_len_);
 
-  ContiguousCopyTo (contiguous_data_, contiguous_len_);
+  ContiguousCopyToUnlocked (contiguous_data_, contiguous_len_);
   *buffer = contiguous_data_;
 
 done:
@@ -292,16 +294,20 @@ IGstMFVideoBuffer::Unlock (void)
 
   GST_TRACE ("%p", this);
 
-  if (!locked_)
-    return MF_E_INVALIDREQUEST;
+  if (!locked_) {
+    GST_LOG ("%p, No previous Lock call", this);
+    return S_OK;
+  }
 
   locked_ = false;
 
-  if (contiguous_)
+  if (contiguous_) {
+    GST_TRACE ("%p, Have configured contiguous data", this);
     return S_OK;
+  }
 
   /* copy back to original data */
-  ContiguousCopyFrom (contiguous_data_, contiguous_len_);
+  ContiguousCopyFromUnlocked (contiguous_data_, contiguous_len_);
 
   return S_OK;
 }
@@ -309,9 +315,11 @@ IGstMFVideoBuffer::Unlock (void)
 STDMETHODIMP
 IGstMFVideoBuffer::GetCurrentLength (DWORD * length)
 {
+  std::lock_guard<std::mutex> lock(lock_);
+
   *length = current_len_;
 
-  GST_TRACE ("%p", this);
+  GST_TRACE ("%p, %d", this, current_len_);
 
   return S_OK;
 }
@@ -319,10 +327,15 @@ IGstMFVideoBuffer::GetCurrentLength (DWORD * length)
 STDMETHODIMP
 IGstMFVideoBuffer::SetCurrentLength (DWORD length)
 {
+  std::lock_guard<std::mutex> lock(lock_);
+
   GST_TRACE ("%p %d", this, length);
 
-  if (length > contiguous_len_)
+  if (length > contiguous_len_) {
+    GST_LOG ("%p, Requested length %d is larger than contiguous_len %d",
+        this, length, contiguous_len_);
     return E_INVALIDARG;
+  }
 
   current_len_ = length;
 
@@ -332,6 +345,8 @@ IGstMFVideoBuffer::SetCurrentLength (DWORD length)
 STDMETHODIMP
 IGstMFVideoBuffer::GetMaxLength (DWORD * length)
 {
+  std::lock_guard<std::mutex> lock(lock_);
+
   GST_TRACE ("%p", this);
 
   *length = contiguous_len_;
@@ -347,8 +362,10 @@ IGstMFVideoBuffer::Lock2D (BYTE ** buffer, LONG * pitch)
 
   GST_TRACE ("%p", this);
 
-  if (locked_)
+  if (locked_) {
+    GST_LOG ("%p, Already locked", this);
     return MF_E_INVALIDREQUEST;
+  }
 
   locked_ = true;
 
@@ -365,8 +382,10 @@ IGstMFVideoBuffer::Unlock2D (void)
 
   GST_TRACE ("%p", this);
 
-  if (!locked_)
-    return MF_E_INVALIDREQUEST;
+  if (!locked_) {
+    GST_LOG ("%p, No previous Lock2D call", this);
+    return S_OK;
+  }
 
   locked_ = false;
 
@@ -381,8 +400,10 @@ IGstMFVideoBuffer::GetScanline0AndPitch (BYTE ** buffer, LONG * pitch)
   GST_TRACE ("%p", this);
 
   /* Lock2D must be called before */
-  if (!locked_)
+  if (!locked_) {
+    GST_LOG ("%p, Invalid call, Lock2D must be called before", this);
     return ERROR_INVALID_FUNCTION;
+  }
 
   *buffer = data_;
   *pitch = GST_VIDEO_INFO_PLANE_STRIDE (info_, 0);
@@ -393,6 +414,8 @@ IGstMFVideoBuffer::GetScanline0AndPitch (BYTE ** buffer, LONG * pitch)
 STDMETHODIMP
 IGstMFVideoBuffer::IsContiguousFormat (BOOL * contiguous)
 {
+  std::lock_guard<std::mutex> lock(lock_);
+
   GST_TRACE ("%p", this);
 
   *contiguous = contiguous_;
@@ -403,6 +426,8 @@ IGstMFVideoBuffer::IsContiguousFormat (BOOL * contiguous)
 STDMETHODIMP
 IGstMFVideoBuffer::GetContiguousLength (DWORD * length)
 {
+  std::lock_guard<std::mutex> lock(lock_);
+
   GST_TRACE ("%p", this);
 
   *length = contiguous_len_;
@@ -412,6 +437,26 @@ IGstMFVideoBuffer::GetContiguousLength (DWORD * length)
 
 STDMETHODIMP
 IGstMFVideoBuffer::ContiguousCopyTo (BYTE * dest_buffer,
+    DWORD dest_buffer_length)
+{
+  std::lock_guard<std::mutex> lock(lock_);
+
+  return ContiguousCopyToUnlocked (dest_buffer, dest_buffer_length);
+}
+
+STDMETHODIMP
+IGstMFVideoBuffer::ContiguousCopyFrom (const BYTE * src_buffer,
+    DWORD src_buffer_length)
+{
+  std::lock_guard<std::mutex> lock(lock_);
+
+  GST_TRACE ("%p", this);
+
+  return ContiguousCopyFromUnlocked (src_buffer, src_buffer_length);
+}
+
+HRESULT
+IGstMFVideoBuffer::ContiguousCopyToUnlocked (BYTE * dest_buffer,
     DWORD dest_buffer_length)
 {
   GST_TRACE ("%p", this);
@@ -449,8 +494,8 @@ IGstMFVideoBuffer::ContiguousCopyTo (BYTE * dest_buffer,
   return S_OK;
 }
 
-STDMETHODIMP
-IGstMFVideoBuffer::ContiguousCopyFrom (const BYTE * src_buffer,
+HRESULT
+IGstMFVideoBuffer::ContiguousCopyFromUnlocked (const BYTE * src_buffer,
     DWORD src_buffer_length)
 {
   gint offset;

@@ -98,6 +98,10 @@ private:
   HRESULT InitializeWrapped (GstVideoInfo * info,
                              BYTE * data,
                              DWORD length);
+  HRESULT ContiguousCopyToUnlocked (BYTE * dest_buffer,
+                                    DWORD dest_buffer_length);
+  HRESULT ContiguousCopyFromUnlocked (const BYTE * src_buffer,
+                                      DWORD src_buffer_length);
 
 private:
   ULONG ref_count_;
