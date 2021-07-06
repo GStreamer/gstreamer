@@ -77,6 +77,7 @@ option('wayland', type : 'feature', value : 'auto', description : 'Wayland plugi
 option('x11', type : 'feature', value : 'auto', description : 'X11 support in Vulkan, GL and rfb plugins')
 
 # Feature options for plugins that need external deps
+option('aes', type : 'feature', value : 'auto', description : 'AES encryption/decryption plugin')
 option('aom', type : 'feature', value : 'auto', description : 'AOM AV1 video codec plugin')
 option('avtp', type : 'feature', value : 'auto', description : 'Audio/Video Transport Protocol (AVTP) plugin')
 option('androidmedia', type : 'feature', value : 'auto', description : 'Video capture and codec plugins for Android')

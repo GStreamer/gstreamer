@@ -1,3 +1,4 @@
+subdir('aes')
 subdir('assrender')
 subdir('aom')
 subdir('avtp')
