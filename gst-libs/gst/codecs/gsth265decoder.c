@@ -178,6 +178,8 @@ gst_h265_decoder_init (GstH265Decoder * self)
 
   self->priv = priv = gst_h265_decoder_get_instance_private (self);
 
+  priv->last_output_poc = G_MININT32;
+
   priv->ref_pic_list_tmp = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH265Picture *), 32);
   priv->ref_pic_list0 = g_array_sized_new (FALSE, TRUE,
@@ -1507,7 +1509,7 @@ gst_h265_decoder_clear_dpb (GstH265Decoder * self, gboolean flush)
   }
 
   gst_h265_dpb_clear (priv->dpb);
-  priv->last_output_poc = 0;
+  priv->last_output_poc = G_MININT32;
 }
 
 static gboolean
@@ -1520,7 +1522,7 @@ gst_h265_decoder_drain_internal (GstH265Decoder * self)
     gst_h265_decoder_do_output_picture (self, picture);
 
   gst_h265_dpb_clear (priv->dpb);
-  priv->last_output_poc = 0;
+  priv->last_output_poc = G_MININT32;
 
   return TRUE;
 }
@@ -1558,7 +1560,7 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
             "there are still %d pictures in the dpb, last output poc is %d",
             gst_h265_dpb_get_size (priv->dpb), priv->last_output_poc);
       } else {
-        priv->last_output_poc = 0;
+        priv->last_output_poc = G_MININT32;
       }
     }
   } else {
