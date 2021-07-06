@@ -1423,7 +1423,11 @@ restart:
         now_gst = 0;
 
       GST_BUFFER_PTS(video_buffer) = now_gst;
+      GST_BUFFER_DURATION(video_buffer) = gst_util_uint64_scale(
+          GST_SECOND, self->configured_info.fps_d, self->configured_info.fps_n);
       GST_BUFFER_PTS(audio_buffer) = now_gst;
+      GST_BUFFER_DURATION(audio_buffer) = gst_util_uint64_scale(
+          GST_SECOND, self->configured_info.fps_d, self->configured_info.fps_n);
 
       // TODO: Drift detection and compensation
 
