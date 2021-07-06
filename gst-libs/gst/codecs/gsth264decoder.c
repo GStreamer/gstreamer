@@ -235,6 +235,8 @@ gst_h264_decoder_init (GstH264Decoder * self)
 
   self->priv = priv = gst_h264_decoder_get_instance_private (self);
 
+  priv->last_output_poc = G_MININT32;
+
   priv->ref_pic_list_p0 = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
   g_array_set_clear_func (priv->ref_pic_list_p0,
@@ -372,7 +374,7 @@ gst_h264_decoder_clear_dpb (GstH264Decoder * self, gboolean flush)
   gst_queue_array_clear (priv->output_queue);
   gst_h264_decoder_clear_ref_pic_lists (self);
   gst_h264_dpb_clear (priv->dpb);
-  priv->last_output_poc = 0;
+  priv->last_output_poc = G_MININT32;
 }
 
 static gboolean
@@ -1643,7 +1645,7 @@ gst_h264_decoder_drain_internal (GstH264Decoder * self)
   gst_h264_decoder_drain_output_queue (self, 0);
 
   gst_h264_dpb_clear (priv->dpb);
-  priv->last_output_poc = 0;
+  priv->last_output_poc = G_MININT32;
 
   return TRUE;
 }
