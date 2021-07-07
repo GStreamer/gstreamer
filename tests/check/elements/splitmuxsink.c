@@ -433,6 +433,43 @@ GST_START_TEST (test_splitmuxsink)
 
 GST_END_TEST;
 
+GST_START_TEST (test_splitmuxsink_clean_failure)
+{
+  GstMessage *msg;
+  GstElement *pipeline;
+  GstElement *sink, *fakesink;
+
+  /* This pipeline has a small time cutoff - it should start a new file
+   * every GOP, ie 1 second */
+  pipeline =
+      gst_parse_launch
+      ("videotestsrc horizontal-speed=2 is-live=true ! video/x-raw,width=80,height=64,framerate=5/1 ! videoconvert !"
+      " queue ! theoraenc keyframe-force=5 ! splitmuxsink name=splitsink "
+      " max-size-time=1000000 max-size-bytes=1000000 muxer=oggmux", NULL);
+  fail_if (pipeline == NULL);
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (sink == NULL);
+
+  fakesink = gst_element_factory_make ("fakesink", "fakesink-fail");
+  fail_if (fakesink == NULL);
+
+  /* Trigger an error on READY->PAUSED */
+  g_object_set (fakesink, "state-error", 2, NULL);
+  g_object_set (sink, "sink", fakesink, NULL);
+  gst_object_unref (sink);
+
+  msg = run_pipeline (pipeline);
+
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
+  gst_message_unref (msg);
+
+  fail_unless (gst_element_set_state (pipeline,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_splitmuxsink_multivid)
 {
   GstMessage *msg;
@@ -807,6 +844,7 @@ splitmuxsink_suite (void)
     tcase_add_checked_fixture (tc_chain, tempdir_setup, tempdir_cleanup);
 
     tcase_add_test (tc_chain, test_splitmuxsink);
+    tcase_add_test (tc_chain, test_splitmuxsink_clean_failure);
 
     if (have_matroska && have_vorbis) {
       tcase_add_checked_fixture (tc_chain_complex, tempdir_setup,
