@@ -2205,7 +2205,11 @@ do_times:
   rstop = gst_segment_to_running_time (segment, format, cstop);
 
   /* In reverse playback, play from stop to start */
-  if (segment->rate < 0.0 && GST_CLOCK_TIME_IS_VALID (rstop)) {
+  if (segment->rate < 0.0 && GST_CLOCK_TIME_IS_VALID (rstop)
+      /* FIXME: Current stepping implemenation expects unmodified rstart/rstop
+       * for reverse playback. Don't swap those values when stepping
+       * unless stepping code is updated as such */
+      && !step->valid) {
     GstClockTime tmp = rstart;
     rstart = rstop;
     rstop = tmp;
