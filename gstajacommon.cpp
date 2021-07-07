@@ -174,7 +174,24 @@ GstCaps *gst_ntv2_supported_caps(NTV2DeviceID device_id) {
            ::NTV2DeviceCanDoVideoFormat(device_id, format.aja_format)) ||
           (format.quad_format != NTV2_FORMAT_UNKNOWN &&
            ::NTV2DeviceCanDoVideoFormat(device_id, format.quad_format))) {
-        gst_caps_append(caps, gst_aja_video_format_to_caps(format.gst_format));
+        GstCaps *tmp = gst_aja_video_format_to_caps(format.gst_format);
+
+        // Widescreen PAL/NTSC
+        if (format.gst_format == GST_AJA_VIDEO_FORMAT_525_2398 ||
+            format.gst_format == GST_AJA_VIDEO_FORMAT_525_2400 ||
+            format.gst_format == GST_AJA_VIDEO_FORMAT_525_5994) {
+          GstCaps *tmp2 = gst_caps_copy(tmp);
+          gst_caps_set_simple(tmp2, "pixel-aspect-ratio", GST_TYPE_FRACTION, 40,
+                              33, NULL);
+          gst_caps_append(tmp, tmp2);
+        } else if (format.gst_format == GST_AJA_VIDEO_FORMAT_625_5000) {
+          GstCaps *tmp2 = gst_caps_copy(tmp);
+          gst_caps_set_simple(tmp2, "pixel-aspect-ratio", GST_TYPE_FRACTION, 16,
+                              11, NULL);
+          gst_caps_append(tmp, tmp2);
+        }
+
+        gst_caps_append(caps, tmp);
       }
     }
   }

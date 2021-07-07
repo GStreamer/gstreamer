@@ -1406,6 +1406,8 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
   //
   // See AJA SDK support ticket #4844.
   guint32 n_vanc_packets = anc_packets.CountAncillaryData();
+  bool aspect_ratio_flag = false;
+  bool have_afd_bar = false;
   for (guint32 i = 0; i < n_vanc_packets; i++) {
     AJAAncillaryData *packet = anc_packets.GetAncillaryDataAtIndex(i);
 
@@ -1413,13 +1415,45 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
         packet->GetSID() == AJAAncillaryData_CEA708_SID &&
         packet->GetPayloadData() && packet->GetPayloadByteCount() &&
         AJA_SUCCESS(packet->ParsePayloadData())) {
+      GST_TRACE_OBJECT(
+          self, "Found CEA708 CDP VANC of %" G_GSIZE_FORMAT " bytes at line %u",
+          packet->GetPayloadByteCount(), packet->GetLocationLineNumber());
       gst_buffer_add_video_caption_meta(
           *buffer, GST_VIDEO_CAPTION_TYPE_CEA708_CDP, packet->GetPayloadData(),
           packet->GetPayloadByteCount());
+    } else if (packet->GetDID() == 0x41 && packet->GetSID() == 0x05 &&
+               packet->GetPayloadData() && packet->GetPayloadByteCount() == 8) {
+      const guint8 *data = packet->GetPayloadData();
+
+      have_afd_bar = true;
+      aspect_ratio_flag = (data[0] >> 2) & 0x1;
+
+      GstVideoAFDValue afd = (GstVideoAFDValue)((data[0] >> 3) & 0xf);
+      gboolean is_letterbox = ((data[3] >> 4) & 0x3) == 0;
+      guint16 bar1 = GST_READ_UINT16_BE(&data[4]);
+      guint16 bar2 = GST_READ_UINT16_BE(&data[6]);
+
+      GST_TRACE_OBJECT(self,
+                       "Found AFD/Bar VANC at line %u: AR %u, AFD %u, "
+                       "letterbox %u, bar1 %u, bar2 %u",
+                       packet->GetLocationLineNumber(), aspect_ratio_flag, afd,
+                       is_letterbox, bar1, bar2);
+
+      const NTV2Standard standard(
+          ::GetNTV2StandardFromVideoFormat(item.detected_format));
+      const NTV2SmpteLineNumber smpte_line_num_info =
+          ::GetSmpteLineNumber(standard);
+      bool field2 =
+          packet->GetLocationLineNumber() >
+          smpte_line_num_info.GetLastLine(
+              smpte_line_num_info.firstFieldTop ? NTV2_FIELD0 : NTV2_FIELD1);
+
+      gst_buffer_add_video_afd_meta(*buffer, field2 ? 1 : 0,
+                                    GST_VIDEO_AFD_SPEC_SMPTE_ST2016_1, afd);
+      gst_buffer_add_video_bar_meta(*buffer, field2 ? 1 : 0, is_letterbox, bar1,
+                                    bar2);
     }
   }
-
-  // TODO: Add AFD/Bar meta
 
   bool caps_changed = false;
 
@@ -1464,6 +1498,17 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
           break;
       }
 
+      if (!have_afd_bar && vpid.GetImageAspect16x9()) aspect_ratio_flag = true;
+
+      // Widescreen PAL/NTSC
+      if (aspect_ratio_flag && info.height == 486) {
+        info.par_n = 40;
+        info.par_d = 33;
+      } else if (aspect_ratio_flag && info.height == 576) {
+        info.par_n = 16;
+        info.par_d = 11;
+      }
+
       if (!gst_pad_has_current_caps(GST_BASE_SRC_PAD(self)) ||
           !gst_video_info_is_equal(&info, &self->current_info)) {
         self->current_info = info;
@@ -1474,6 +1519,15 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
     GstVideoInfo info;
 
     if (gst_video_info_from_ntv2_video_format(&info, item.detected_format)) {
+      // Widescreen PAL/NTSC
+      if (aspect_ratio_flag && info.height == 486) {
+        info.par_n = 40;
+        info.par_d = 33;
+      } else if (aspect_ratio_flag && info.height == 576) {
+        info.par_n = 16;
+        info.par_d = 11;
+      }
+
       if (!gst_pad_has_current_caps(GST_BASE_SRC_PAD(self)) ||
           !gst_video_info_is_equal(&info, &self->current_info)) {
         self->current_info = info;
@@ -1481,6 +1535,16 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
       }
     } else if (!gst_pad_has_current_caps(GST_BASE_SRC_PAD(self))) {
       self->current_info = self->configured_info;
+
+      // Widescreen PAL/NTSC
+      if (aspect_ratio_flag && self->current_info.height == 486) {
+        self->current_info.par_n = 40;
+        self->current_info.par_d = 33;
+      } else if (aspect_ratio_flag && self->current_info.height == 576) {
+        self->current_info.par_n = 16;
+        self->current_info.par_d = 11;
+      }
+
       caps_changed = true;
     }
   }
