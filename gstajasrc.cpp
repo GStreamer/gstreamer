@@ -24,6 +24,7 @@
 #include <ajaanc/includes/ancillarydata_cea708.h>
 #include <ajaanc/includes/ancillarylist.h>
 #include <ajantv2/includes/ntv2rp188.h>
+#include <ajantv2/includes/ntv2vpid.h>
 
 #include "gstajacommon.h"
 #include "gstajasrc.h"
@@ -72,6 +73,9 @@ typedef struct {
   GstBuffer *audio_buffer;
   GstBuffer *anc_buffer, *anc_buffer2;
   NTV2_RP188 tc;
+
+  NTV2VideoFormat detected_format;
+  guint32 vpid;
 } QueueItem;
 
 static void gst_aja_src_set_property(GObject *object, guint property_id,
@@ -447,10 +451,8 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
       }
     }
 
-    gst_clear_caps(&self->configured_caps);
     gst_video_info_from_ntv2_video_format(&self->configured_info,
                                           self->video_format);
-    self->configured_caps = gst_video_info_to_caps(&self->configured_info);
 
     if (self->quad_mode) {
       if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
@@ -995,9 +997,6 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
     self->device->device->SetEmbeddedAudioClock(
         ::NTV2_EMBEDDED_AUDIO_CLOCK_VIDEO_INPUT, self->audio_system);
 
-    gst_caps_set_simple(self->configured_caps, "audio-channels", G_TYPE_INT,
-                        self->configured_audio_channels, NULL);
-
     NTV2ReferenceSource reference_source;
     switch (self->reference_source) {
       case GST_AJA_REFERENCE_SOURCE_AUTO:
@@ -1137,7 +1136,8 @@ static gboolean gst_aja_src_stop(GstAjaSrc *self) {
   }
 
   GST_OBJECT_LOCK(self);
-  gst_clear_caps(&self->configured_caps);
+  memset(&self->current_info, 0, sizeof(self->current_info));
+  memset(&self->configured_info, 0, sizeof(self->configured_info));
   self->configured_audio_channels = 0;
   GST_OBJECT_UNLOCK(self);
 
@@ -1243,12 +1243,12 @@ static gboolean gst_aja_src_query(GstBaseSrc *bsrc, GstQuery *query) {
 
   switch (GST_QUERY_TYPE(query)) {
     case GST_QUERY_LATENCY: {
-      if (self->configured_caps) {
+      if (self->current_info.finfo &&
+          self->current_info.finfo->format != GST_VIDEO_FORMAT_UNKNOWN) {
         GstClockTime min, max;
 
-        min = gst_util_uint64_scale_ceil(GST_SECOND,
-                                         3 * self->configured_info.fps_d,
-                                         self->configured_info.fps_n);
+        min = gst_util_uint64_scale_ceil(
+            GST_SECOND, 3 * self->current_info.fps_d, self->current_info.fps_n);
         max = self->queue_size * min;
 
         gst_query_set_latency(query, TRUE, min, max);
@@ -1421,8 +1421,77 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
 
   // TODO: Add AFD/Bar meta
 
-  if (!gst_pad_has_current_caps(GST_BASE_SRC_PAD(self))) {
-    gst_base_src_set_caps(GST_BASE_SRC_CAST(self), self->configured_caps);
+  bool caps_changed = false;
+
+  CNTV2VPID vpid(item.vpid);
+  if (vpid.IsValid()) {
+    GstVideoInfo info;
+
+    if (gst_video_info_from_ntv2_video_format(&info, item.detected_format)) {
+      switch (vpid.GetTransferCharacteristics()) {
+        default:
+        case NTV2_VPID_TC_SDR_TV:
+          // SDR is the default, do nothing here.
+          break;
+        case NTV2_VPID_TC_HLG:
+          info.colorimetry.transfer = GST_VIDEO_TRANSFER_ARIB_STD_B67;
+          break;
+        case NTV2_VPID_TC_PQ:
+          info.colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE2084;
+          break;
+      }
+
+      switch (vpid.GetColorimetry()) {
+        case NTV2_VPID_Color_Rec709:
+          info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+          info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+          break;
+        case NTV2_VPID_Color_UHDTV:
+          info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+          info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+          break;
+        default:
+          // Default handling
+          break;
+      }
+
+      switch (vpid.GetRGBRange()) {
+        case NTV2_VPID_Range_Full:
+          info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+          break;
+        case NTV2_VPID_Range_Narrow:
+          info.colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+          break;
+      }
+
+      if (!gst_pad_has_current_caps(GST_BASE_SRC_PAD(self)) ||
+          !gst_video_info_is_equal(&info, &self->current_info)) {
+        self->current_info = info;
+        caps_changed = true;
+      }
+    }
+  } else {
+    GstVideoInfo info;
+
+    if (gst_video_info_from_ntv2_video_format(&info, item.detected_format)) {
+      if (!gst_pad_has_current_caps(GST_BASE_SRC_PAD(self)) ||
+          !gst_video_info_is_equal(&info, &self->current_info)) {
+        self->current_info = info;
+        caps_changed = true;
+      }
+    } else if (!gst_pad_has_current_caps(GST_BASE_SRC_PAD(self))) {
+      self->current_info = self->configured_info;
+      caps_changed = true;
+    }
+  }
+
+  if (caps_changed) {
+    GstCaps *caps = gst_video_info_to_caps(&self->current_info);
+    gst_caps_set_simple(caps, "audio-channels", G_TYPE_INT,
+                        self->configured_audio_channels, NULL);
+    GST_DEBUG_OBJECT(self, "Configuring caps %" GST_PTR_FORMAT, caps);
+    gst_base_src_set_caps(GST_BASE_SRC_CAST(self), caps);
+    gst_caps_unref(caps);
   }
 
   return flow_ret;
@@ -1516,6 +1585,15 @@ restart:
     NTV2VideoFormat current_video_format =
         self->device->device->GetInputVideoFormat(
             self->configured_input_source);
+
+    ULWord vpid_a = 0;
+    ULWord vpid_b = 0;
+    self->device->device->ReadSDIInVPID(self->channel, vpid_a, vpid_b);
+
+    GST_DEBUG_OBJECT(self,
+                     "Detected input video format %u with VPID %08x / %08x",
+                     current_video_format, vpid_a, vpid_b);
+
     NTV2VideoFormat effective_video_format = self->video_format;
     // Can't call this unconditionally as it also maps e.g. 3840x2160p to 1080p
     if (self->quad_mode) {
@@ -1729,13 +1807,18 @@ restart:
 
       // TODO: Drift detection and compensation
 
-      QueueItem item = {.type = QUEUE_ITEM_TYPE_FRAME,
-                        .capture_time = now_gst,
-                        .video_buffer = video_buffer,
-                        .audio_buffer = audio_buffer,
-                        .anc_buffer = anc_buffer,
-                        .anc_buffer2 = anc_buffer2,
-                        .tc = time_code};
+      QueueItem item = {
+          .type = QUEUE_ITEM_TYPE_FRAME,
+          .capture_time = now_gst,
+          .video_buffer = video_buffer,
+          .audio_buffer = audio_buffer,
+          .anc_buffer = anc_buffer,
+          .anc_buffer2 = anc_buffer2,
+          .tc = time_code,
+          .detected_format =
+              (self->quad_mode ? ::GetQuadSizedVideoFormat(current_video_format)
+                               : current_video_format),
+          .vpid = vpid_a};
 
       while (gst_queue_array_get_length(self->queue) >= self->queue_size) {
         QueueItem *tmp =

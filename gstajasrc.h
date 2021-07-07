@@ -79,8 +79,9 @@ struct _GstAjaSrc {
   NTV2InputSource configured_input_source;
   NTV2TCIndex tc_index;
 
-  GstCaps *configured_caps;
-  GstVideoInfo configured_info;
+  GstVideoInfo configured_info;  // Based on properties
+  GstVideoInfo current_info;     // Based on properties + stream metadata
+
   gint configured_audio_channels;
 
   AJAThread *capture_thread;
