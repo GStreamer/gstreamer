@@ -603,7 +603,7 @@ gst_mf_source_reader_set_caps (GstMFSourceObject * object, GstCaps * caps)
 
   for (iter = self->media_types; iter; iter = g_list_next (iter)) {
     GstMFStreamMediaType *minfo = (GstMFStreamMediaType *) iter->data;
-    if (gst_caps_is_subset (minfo->caps, caps)) {
+    if (gst_caps_can_intersect (minfo->caps, caps)) {
       best_type = minfo;
       break;
     }
