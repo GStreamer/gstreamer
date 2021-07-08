@@ -1002,7 +1002,7 @@ static const struct ColorPropertiesMap
   /* *INDENT-ON* */
 
 static guint8
-_get_chroma_siting (GstVideoInfo * info)
+_get_chroma_siting (GstVideoChromaSite chrome_site)
 {
   /* *INDENT-OFF* */
   static const struct ChromaSiteMap {
@@ -1031,7 +1031,7 @@ _get_chroma_siting (GstVideoInfo * info)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (chroma_site_map); i++) {
-    if (GST_VIDEO_INFO_CHROMA_SITE (info) == chroma_site_map[i].gst)
+    if (chrome_site == chroma_site_map[i].gst)
       return chroma_site_map[i].va;
   }
 
@@ -1039,7 +1039,7 @@ _get_chroma_siting (GstVideoInfo * info)
 }
 
 static guint8
-_get_color_range (GstVideoInfo * info)
+_get_color_range (GstVideoColorRange range)
 {
   /* *INDENT-OFF* */
   static const struct ColorRangeMap {
@@ -1054,68 +1054,72 @@ _get_color_range (GstVideoInfo * info)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (color_range_map); i++) {
-    if (GST_VIDEO_INFO_COLORIMETRY (info).range == color_range_map[i].gst)
+    if (range == color_range_map[i].gst)
       return color_range_map[i].va;
   }
 
   return VA_SOURCE_RANGE_UNKNOWN;
 }
 
-static guint8
-_get_color_matrix (GstVideoInfo * info)
+static VAProcColorStandardType
+_gst_video_colorimetry_to_va (const GstVideoColorimetry * const colorimetry)
 {
-  /* From ITU H.273, section 8.3, table 4 */
-  /* *INDENT-OFF* */
-  static const struct ColorMatrixMap {
-    GstVideoColorMatrix gst;
-    guint8 va;
-  } color_matrix_map[] = {
-    { GST_VIDEO_COLOR_MATRIX_FCC, 4 },
-    { GST_VIDEO_COLOR_MATRIX_BT709, 1 },
-    { GST_VIDEO_COLOR_MATRIX_BT601, 5 },
-    { GST_VIDEO_COLOR_MATRIX_SMPTE240M, 7 },
-    { GST_VIDEO_COLOR_MATRIX_BT2020, 9 },
-   };
-  /* *INDENT-ON* */
-  guint i;
+  if (!colorimetry
+      || colorimetry->primaries == GST_VIDEO_COLOR_PRIMARIES_UNKNOWN)
+    return VAProcColorStandardNone;
 
-  for (i = 0; i < G_N_ELEMENTS (color_matrix_map); i++) {
-    if (GST_VIDEO_INFO_COLORIMETRY (info).matrix == color_matrix_map[i].gst)
-      return color_matrix_map[i].va;
-  }
+  if (gst_video_colorimetry_matches (colorimetry, GST_VIDEO_COLORIMETRY_BT709))
+    return VAProcColorStandardBT709;
 
-  return 0;
+  /* NOTE: VAProcColorStandardBT2020 in VAAPI is the same as
+   * GST_VIDEO_COLORIMETRY_BT2020_10 in gstreamer. */
+  if (gst_video_colorimetry_matches (colorimetry,
+          GST_VIDEO_COLORIMETRY_BT2020_10) ||
+      gst_video_colorimetry_matches (colorimetry, GST_VIDEO_COLORIMETRY_BT2020))
+    return VAProcColorStandardBT2020;
+
+  if (gst_video_colorimetry_matches (colorimetry, GST_VIDEO_COLORIMETRY_BT601))
+    return VAProcColorStandardBT601;
+
+  if (gst_video_colorimetry_matches (colorimetry,
+          GST_VIDEO_COLORIMETRY_SMPTE240M))
+    return VAProcColorStandardSMPTE240M;
+
+  if (gst_video_colorimetry_matches (colorimetry, GST_VIDEO_COLORIMETRY_SRGB))
+    return VAProcColorStandardSRGB;
+
+  return VAProcColorStandardNone;
 }
 
 static void
 _config_color_properties (VAProcColorStandardType * std,
-    VAProcColorProperties * props, GstVideoInfo * info,
+    VAProcColorProperties * props, const GstVideoInfo * info,
     VAProcColorStandardType * standards, guint32 num_standards)
 {
   GstVideoColorimetry colorimetry = GST_VIDEO_INFO_COLORIMETRY (info);
-  VAProcColorStandardType best = VAProcColorStandardNone;
-  guint i, j;
+  VAProcColorStandardType best;
+  gboolean has_explicit;
+  guint i, j, k;
   gint score, bestscore = -1, worstscore;
-  gint8 matrix = _get_color_matrix (info);
 
-  /* we prefer VAProcColorStandardExplicit */
+  best = _gst_video_colorimetry_to_va (&colorimetry);
+
+  has_explicit = FALSE;
   for (i = 0; i < num_standards; i++) {
-    if (standards[i] == VAProcColorStandardExplicit) {
+    /* Find the exact match standard. */
+    if (standards[i] != VAProcColorStandardNone && standards[i] == best)
+      break;
 
-      *std = VAProcColorStandardExplicit;
+    if (standards[i] == VAProcColorStandardExplicit)
+      has_explicit = TRUE;
+  }
 
-      /* *INDENT-OFF* */
-      *props = (VAProcColorProperties) {
-        .chroma_sample_location = _get_chroma_siting (info),
-        .color_range = _get_color_range (info),
-        .colour_primaries = colorimetry.primaries,
-        .transfer_characteristics = colorimetry.transfer,
-        .matrix_coefficients = matrix,
-      };
-      /* *INDENT-ON* */
-
-      return;
-    }
+  if (i < num_standards) {
+    *std = best;
+    goto set_properties;
+  } else if (has_explicit) {
+    *std = VAProcColorStandardExplicit;
+    goto set_properties;
   }
 
   worstscore = 4 * (colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_UNKNOWN
@@ -1132,6 +1136,8 @@ _config_color_properties (VAProcColorStandardType * std,
     return;
   }
 
+  best = VAProcColorStandardNone;
+  k = -1;
   for (i = 0; i < num_standards; i++) {
     for (j = 0; j < G_N_ELEMENTS (color_properties_map); j++) {
       if (color_properties_map[j].standard != standards[i])
@@ -1140,7 +1146,7 @@ _config_color_properties (VAProcColorStandardType * std,
       score = 0;
       if (colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_UNKNOWN
           && colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_RGB)
-        score += 4 * (matrix != color_properties_map[j].matrix);
+        score += 4 * (colorimetry.matrix != color_properties_map[j].matrix);
       if (colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN)
         score += 2 * (colorimetry.transfer != color_properties_map[j].transfer);
       if (colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN)
@@ -1149,15 +1155,30 @@ _config_color_properties (VAProcColorStandardType * std,
       if (score < worstscore && (bestscore == -1 || score < bestscore)) {
         bestscore = score;
         best = color_properties_map[j].standard;
+        k = j;
       }
     }
   }
 
-  *std = best;
+  if (best != VAProcColorStandardNone) {
+    *std = best;
+    colorimetry.matrix = color_properties_map[k].matrix;
+    colorimetry.transfer = color_properties_map[k].transfer;
+    colorimetry.primaries = color_properties_map[k].primaries;
+  }
+
+set_properties:
   /* *INDENT-OFF* */
   *props = (VAProcColorProperties) {
-    .chroma_sample_location = _get_chroma_siting (info),
-    .color_range = _get_color_range (info),
+    .chroma_sample_location =
+        _get_chroma_siting (GST_VIDEO_INFO_CHROMA_SITE (info)),
+    .color_range = _get_color_range (colorimetry.range),
+    .colour_primaries =
+        gst_video_color_primaries_to_iso (colorimetry.primaries),
+    .transfer_characteristics =
+        gst_video_transfer_function_to_iso (colorimetry.transfer),
+    .matrix_coefficients =
+        gst_video_color_matrix_to_iso (colorimetry.matrix),
   };
   /* *INDENT-ON* */
 }
