@@ -203,27 +203,10 @@ namespace Gst {
 			gst_poll_free (raw);
 		}
 
-		class FinalizerInfo {
-			IntPtr handle;
-
-			public FinalizerInfo (IntPtr handle)
-			{
-				this.handle = handle;
+		protected override Action<IntPtr> DisposeUnmanagedFunc {
+			get {
+				return gst_poll_free;
 			}
-
-			public bool Handler ()
-			{
-				gst_poll_free (handle);
-				return false;
-			}
-		}
-
-		~Poll ()
-		{
-			if (!Owned)
-				return;
-			FinalizerInfo info = new FinalizerInfo (Handle);
-			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
 		}
 
 

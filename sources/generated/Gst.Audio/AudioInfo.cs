@@ -197,27 +197,10 @@ namespace Gst.Audio {
 			gst_audio_info_free (raw);
 		}
 
-		class FinalizerInfo {
-			IntPtr handle;
-
-			public FinalizerInfo (IntPtr handle)
-			{
-				this.handle = handle;
+		protected override Action<IntPtr> DisposeUnmanagedFunc {
+			get {
+				return gst_audio_info_free;
 			}
-
-			public bool Handler ()
-			{
-				gst_audio_info_free (handle);
-				return false;
-			}
-		}
-
-		~AudioInfo ()
-		{
-			if (!Owned)
-				return;
-			FinalizerInfo info = new FinalizerInfo (Handle);
-			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
 		}
 
 

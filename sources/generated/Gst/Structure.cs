@@ -631,27 +631,10 @@ namespace Gst {
 			gst_structure_free (raw);
 		}
 
-		class FinalizerInfo {
-			IntPtr handle;
-
-			public FinalizerInfo (IntPtr handle)
-			{
-				this.handle = handle;
+		protected override Action<IntPtr> DisposeUnmanagedFunc {
+			get {
+				return gst_structure_free;
 			}
-
-			public bool Handler ()
-			{
-				gst_structure_free (handle);
-				return false;
-			}
-		}
-
-		~Structure ()
-		{
-			if (!Owned)
-				return;
-			FinalizerInfo info = new FinalizerInfo (Handle);
-			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
 		}
 
 

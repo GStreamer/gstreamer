@@ -459,27 +459,10 @@ namespace Gst {
 			}
 		}
 
-		class FinalizerInfo {
-			IntPtr handle;
-
-			public FinalizerInfo (IntPtr handle)
-			{
-				this.handle = handle;
+		protected override Action<IntPtr> DisposeUnmanagedFunc {
+			get {
+				return gst_caps_unref;
 			}
-
-			public bool Handler ()
-			{
-				gst_caps_unref (handle);
-				return false;
-			}
-		}
-
-		~Caps ()
-		{
-			if (!Owned)
-				return;
-			FinalizerInfo info = new FinalizerInfo (Handle);
-			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
 		}
 
 

@@ -39,27 +39,10 @@ namespace Gst.Audio {
 			gst_audio_quantize_free (raw);
 		}
 
-		class FinalizerInfo {
-			IntPtr handle;
-
-			public FinalizerInfo (IntPtr handle)
-			{
-				this.handle = handle;
+		protected override Action<IntPtr> DisposeUnmanagedFunc {
+			get {
+				return gst_audio_quantize_free;
 			}
-
-			public bool Handler ()
-			{
-				gst_audio_quantize_free (handle);
-				return false;
-			}
-		}
-
-		~AudioQuantize ()
-		{
-			if (!Owned)
-				return;
-			FinalizerInfo info = new FinalizerInfo (Handle);
-			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
 		}
 
 

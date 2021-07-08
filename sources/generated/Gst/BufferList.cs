@@ -132,27 +132,10 @@ namespace Gst {
 			}
 		}
 
-		class FinalizerInfo {
-			IntPtr handle;
-
-			public FinalizerInfo (IntPtr handle)
-			{
-				this.handle = handle;
+		protected override Action<IntPtr> DisposeUnmanagedFunc {
+			get {
+				return gst_buffer_list_unref;
 			}
-
-			public bool Handler ()
-			{
-				gst_buffer_list_unref (handle);
-				return false;
-			}
-		}
-
-		~BufferList ()
-		{
-			if (!Owned)
-				return;
-			FinalizerInfo info = new FinalizerInfo (Handle);
-			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
 		}
 
 
