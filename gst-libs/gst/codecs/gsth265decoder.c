@@ -415,7 +415,7 @@ gst_h265_decoder_parse_sei (GstH265Decoder * self, GstH265NalUnit * nalu)
 {
   GstH265DecoderPrivate *priv = self->priv;
   GstH265ParserResult pres;
-  GArray *messages;
+  GArray *messages = NULL;
   guint i;
 
   pres = gst_h265_parser_parse_sei (priv->parser, nalu, &messages);
@@ -424,6 +424,7 @@ gst_h265_decoder_parse_sei (GstH265Decoder * self, GstH265NalUnit * nalu)
 
     /* XXX: Ignore error from SEI parsing, it might be malformed bitstream,
      * or our fault. But shouldn't be critical  */
+    g_clear_pointer (&messages, g_array_unref);
     return TRUE;
   }
 
