@@ -905,6 +905,88 @@ GST_START_TEST (test_event_paused)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reverse_stepping)
+{
+  GstElement *pipeline;
+  GstStateChangeReturn state_ret;
+  GstState state = GST_STATE_NULL;
+  gboolean ret;
+  GstEvent *event;
+  GstAppSink *sink;
+  GstSample *sample;
+  GstBuffer *buffer;
+  GstClockTime running_time;
+
+  pipeline =
+      gst_parse_launch ("videotestsrc name=src ! video/x-raw,framerate=1/1 "
+      "! appsink name=sink max-buffers=1", NULL);
+  fail_unless (pipeline != NULL);
+
+  sink = (GstAppSink *) gst_bin_get_by_name (GST_BIN (pipeline), "sink");
+  fail_unless (sink != NULL);
+
+  /* Pause and ensure preroll */
+  state_ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+
+  state_ret =
+      gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (state == GST_STATE_PAUSED);
+
+  ret = gst_element_seek (pipeline, -1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_NONE,
+      -1, GST_SEEK_TYPE_SET, 10 * GST_SECOND);
+  fail_unless (ret != FALSE);
+
+  state_ret =
+      gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (state == GST_STATE_PAUSED);
+
+  sample = gst_app_sink_pull_preroll (sink);
+  fail_unless (GST_IS_SAMPLE (sample));
+  buffer = gst_sample_get_buffer (sample);
+  fail_unless (GST_IS_BUFFER (buffer));
+
+  /* start running time */
+  running_time = GST_BUFFER_PTS (buffer);
+  gst_sample_unref (sample);
+
+  do {
+    /* timestamp of new preroll buffer should be
+     * "previous running time - buffer duration"
+     */
+    running_time -= GST_SECOND;
+    event = gst_event_new_step (GST_FORMAT_BUFFERS, 1, 1.0, TRUE, FALSE);
+    ret = gst_element_send_event (pipeline, event);
+    fail_unless (ret);
+    state_ret =
+        gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
+    fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS);
+    fail_unless (state == GST_STATE_PAUSED);
+
+    sample = gst_app_sink_pull_preroll (sink);
+    /* EOS */
+    if (!sample)
+      break;
+
+    fail_unless (GST_IS_SAMPLE (sample));
+    buffer = gst_sample_get_buffer (sample);
+    fail_unless (GST_IS_BUFFER (buffer));
+    fail_unless_equals_uint64 (running_time, GST_BUFFER_PTS (buffer));
+    gst_sample_unref (sample);
+  } while (sample);
+
+  state_ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (sink);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 appsink_suite (void)
 {
@@ -929,6 +1011,8 @@ appsink_suite (void)
   tcase_add_test (tc_chain, test_event_callback);
   tcase_add_test (tc_chain, test_event_signals);
   tcase_add_test (tc_chain, test_event_paused);
+  tcase_add_test (tc_chain, test_reverse_stepping);
+
   return s;
 }
 
