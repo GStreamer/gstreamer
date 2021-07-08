@@ -888,21 +888,23 @@ gst_dash_demux_send_content_protection_event (gpointer data, gpointer userdata)
   GstBuffer *pssi;
   glong pssi_len;
   gchar *schemeIdUri;
+  GstPad *pad = GST_ADAPTIVE_DEMUX_STREAM_PAD (stream);
 
   if (cp->schemeIdUri == NULL)
     return;
 
-  GST_TRACE_OBJECT (stream, "check schemeIdUri %s", cp->schemeIdUri);
+  GST_TRACE_OBJECT (pad, "check schemeIdUri %s", cp->schemeIdUri);
   /* RFC 2141 states: The leading "urn:" sequence is case-insensitive */
   schemeIdUri = g_ascii_strdown (cp->schemeIdUri, -1);
   if (g_str_has_prefix (schemeIdUri, "urn:uuid:")) {
     pssi_len = strlen (cp->value);
     pssi = gst_buffer_new_memdup (cp->value, pssi_len);
-    GST_LOG_OBJECT (stream, "Queuing Protection event on source pad");
     /* RFC 4122 states that the hex part of a UUID is in lower case,
      * but some streams seem to ignore this and use upper case for the
      * protection system ID */
     event = gst_event_new_protection (cp->schemeIdUri + 9, pssi, "dash/mpd");
+    GST_LOG_OBJECT (pad,
+        "Queueing protection event %" GST_PTR_FORMAT " on source pad", event);
     gst_adaptive_demux_stream_queue_event ((GstAdaptiveDemuxStream *) stream,
         event);
     gst_buffer_unref (pssi);
