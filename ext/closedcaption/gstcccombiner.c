@@ -331,7 +331,7 @@ make_padding (GstCCCombiner * self, const GstVideoTimeCode * tc, guint field)
   switch (self->caption_type) {
     case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
     {
-      const guint8 cc_data[6] = { 0xf8, 0x80, 0x80, 0xf9, 0x80, 0x80 };
+      const guint8 cc_data[6] = { 0xfc, 0x80, 0x80, 0xf9, 0x80, 0x80 };
 
       ret = make_cdp (self, cc_data, 6, self->cdp_fps_entry, tc);
       break;
