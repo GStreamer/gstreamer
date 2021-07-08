@@ -3311,7 +3311,9 @@ create_muxer (GstSplitMuxSink * splitmux)
     if ((!splitmux->async_finalize && provided_muxer == NULL) ||
         (splitmux->async_finalize && splitmux->muxer_factory == NULL)) {
       if ((splitmux->muxer =
-              create_element (splitmux, DEFAULT_MUXER, "muxer", FALSE)) == NULL)
+              create_element (splitmux,
+                  splitmux->muxer_factory ? splitmux->
+                  muxer_factory : DEFAULT_MUXER, "muxer", FALSE)) == NULL)
         goto fail;
     } else if (splitmux->async_finalize) {
       if ((splitmux->muxer =
