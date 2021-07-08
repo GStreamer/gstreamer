@@ -687,7 +687,7 @@ gst_mf_capture_winrt_set_caps (GstMFSourceObject * object, GstCaps * caps)
   }
 
   for (const auto& iter: desc_list) {
-    if (gst_caps_is_subset (iter.caps_, caps)) {
+    if (gst_caps_can_intersect (iter.caps_, caps)) {
       target_caps = gst_caps_ref (iter.caps_);
       self->capture->SetMediaDescription(iter);
       break;
