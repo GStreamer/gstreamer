@@ -168,8 +168,7 @@ gst_play_signal_adapter_emit (GstPlaySignalAdapter * self,
       GstPlayMediaInfo *media_info;
       gst_structure_get (message_data, GST_PLAY_MESSAGE_DATA_MEDIA_INFO,
           GST_TYPE_PLAY_MEDIA_INFO, &media_info, NULL);
-      g_signal_emit (self, signals[SIGNAL_VIDEO_DIMENSIONS_CHANGED], 0,
-          media_info);
+      g_signal_emit (self, signals[SIGNAL_MEDIA_INFO_UPDATED], 0, media_info);
       g_object_unref (media_info);
       break;
     }
