@@ -96,10 +96,9 @@ The last command creates two files: `gstmyfilter.c` and `gstmyfilter.h`.
 > It is recommended that you create a copy of the `gst-plugin` directory
 > before continuing.
 
-Now one needs to adjust the `meson.build` to use the new filenames and run
-`meson build` from the parent directory to bootstrap the build
-environment. After that, the project can be built and installed using the well
-known `ninja -C build` commands.
+Now one needs to run `meson build` from the parent directory to bootstrap the
+build environment. After that, the project can be built and installed using the
+well known `ninja -C build` commands.
 
 > **Note**
 >
