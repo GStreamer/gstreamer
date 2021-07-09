@@ -354,6 +354,7 @@ GST_START_TEST (test_serialize_deserialize_in_value)
   GList *markers;
   guint64 position;
   GValue val1 = G_VALUE_INIT, val2 = G_VALUE_INIT;
+  GESMarkerFlags flags;
 
   ges_init ();
 
@@ -361,6 +362,7 @@ GST_START_TEST (test_serialize_deserialize_in_value)
   g_value_init (&val2, GES_TYPE_MARKER_LIST);
 
   markerlist1 = ges_marker_list_new ();
+  g_object_set (markerlist1, "flags", GES_MARKER_FLAG_SNAPPABLE, NULL);
   marker = ges_marker_list_add (markerlist1, 0);
   fail_unless (ges_meta_container_set_string (GES_META_CONTAINER (marker),
           "str-val", test_string));
@@ -384,6 +386,9 @@ GST_START_TEST (test_serialize_deserialize_in_value)
 
   markerlist2 = GES_MARKER_LIST (g_value_get_object (&val2));
   ASSERT_OBJECT_REFCOUNT (markerlist2, "GValue", 1);
+
+  g_object_get (markerlist2, "flags", &flags, NULL);
+  fail_unless (flags == GES_MARKER_FLAG_SNAPPABLE);
 
   fail_unless_equals_int (ges_marker_list_size (markerlist2), 2);
   markers = ges_marker_list_get_markers (markerlist2);

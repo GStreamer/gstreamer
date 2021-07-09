@@ -497,19 +497,21 @@ ges_marker_list_deserialize (GValue * dest, const gchar * s)
   gboolean ret = FALSE;
   GstCaps *caps = NULL;
   GESMarkerList *list = ges_marker_list_new ();
-  guint i, l;
-  gsize len;
+  guint caps_len, i = 0;
+  gsize string_len;
   gchar *escaped, *caps_str;
+  GstStructure *data_s;
+  gint flags;
 
-  len = strlen (s);
-  if (G_UNLIKELY (*s != '"' || len < 2 || s[len - 1] != '"')) {
+  string_len = strlen (s);
+  if (G_UNLIKELY (*s != '"' || string_len < 2 || s[string_len - 1] != '"')) {
     /* "\"" is not an accepted string, so len must be at least 2 */
     GST_ERROR ("Failed deserializing marker list: expected string to start "
         "and end with '\"'");
     goto done;
   }
   escaped = g_strdup (s + 1);
-  escaped[len - 2] = '\0';
+  escaped[string_len - 2] = '\0';
   /* removed trailing '"' */
   caps_str = g_strcompress (escaped);
   g_free (escaped);
@@ -521,19 +523,30 @@ ges_marker_list_deserialize (GValue * dest, const gchar * s)
     goto done;
   }
 
-  l = gst_caps_get_size (caps);
-  if (l == 0) {
+  caps_len = gst_caps_get_size (caps);
+  if (G_UNLIKELY (caps_len == 0)) {
     GST_DEBUG ("Got empty caps: %s", s);
-
     goto done;
   }
 
-  if (G_UNLIKELY (l % 2)) {
-    GST_ERROR ("Failed deserializing marker list: expected evenly-sized caps");
-    goto done;
+  data_s = gst_caps_get_structure (caps, i);
+  if (gst_structure_has_name (data_s, "marker-list-flags")) {
+    if (!gst_structure_get_int (data_s, "flags", &flags)) {
+      GST_ERROR_OBJECT (dest,
+          "Failed deserializing marker list: unexpected structure %"
+          GST_PTR_FORMAT, data_s);
+      goto done;
+    }
+
+    list->flags = flags;
+    i += 1;
   }
 
-  for (i = 0; i < l - 1; i += 2) {
+  if (G_UNLIKELY ((caps_len - i) % 2)) {
+    GST_ERROR ("Failed deserializing marker list: incomplete marker caps");
+  }
+
+  for (; i < caps_len - 1; i += 2) {
     const GstStructure *pos_s = gst_caps_get_structure (caps, i);
     const GstStructure *meta_s = gst_caps_get_structure (caps, i + 1);
     GstClockTime position;
@@ -560,7 +573,6 @@ ges_marker_list_deserialize (GValue * dest, const gchar * s)
     ges_meta_container_add_metas_from_string (GES_META_CONTAINER (marker),
         metas);
     g_free (metas);
-
   }
 
   ret = TRUE;
@@ -584,12 +596,16 @@ ges_marker_list_serialize (const GValue * v)
   GSequenceIter *iter;
   GstCaps *caps = gst_caps_new_empty ();
   gchar *caps_str, *escaped, *res;
+  GstStructure *s;
+
+  s = gst_structure_new ("marker-list-flags", "flags", G_TYPE_INT,
+      list->flags, NULL);
+  gst_caps_append_structure (caps, s);
 
   iter = g_sequence_get_begin_iter (list->markers);
 
   while (!g_sequence_iter_is_end (iter)) {
     GESMarker *marker = (GESMarker *) g_sequence_get (iter);
-    GstStructure *s;
     gchar *metas;
 
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (marker));
