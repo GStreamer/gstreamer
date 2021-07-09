@@ -35,8 +35,8 @@
 
 #define parent_class ges_xml_formatter_parent_class
 #define API_VERSION 0
-#define MINOR_VERSION 7
-#define VERSION 0.7
+#define MINOR_VERSION 8
+#define VERSION 0.8
 
 #define COLLECT_STR_OPT (G_MARKUP_COLLECT_STRING | G_MARKUP_COLLECT_OPTIONAL)
 
@@ -722,14 +722,15 @@ _parse_source (GMarkupParseContext * context, const gchar * element_name,
     GESXmlFormatter * self, GError ** error)
 {
   GstStructure *children_props = NULL, *props = NULL;
-  const gchar *track_id = NULL, *children_properties = NULL, *properties = NULL;
+  const gchar *track_id = NULL, *children_properties = NULL, *properties =
+      NULL, *metadatas = NULL;
 
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error,
           G_MARKUP_COLLECT_STRING, "track-id", &track_id,
           COLLECT_STR_OPT, "children-properties", &children_properties,
           COLLECT_STR_OPT, "properties", &properties,
-          G_MARKUP_COLLECT_INVALID)) {
+          COLLECT_STR_OPT, "metadatas", &metadatas, G_MARKUP_COLLECT_INVALID)) {
     return;
   }
 
@@ -746,7 +747,7 @@ _parse_source (GMarkupParseContext * context, const gchar * element_name,
   }
 
   ges_base_xml_formatter_add_source (GES_BASE_XML_FORMATTER (self), track_id,
-      children_props, props);
+      children_props, props, metadatas);
 
 done:
   if (children_props)
@@ -1619,7 +1620,7 @@ _save_source (GESXmlFormatter * self, GString * str,
 {
   gint index, n_props;
   gboolean serialize;
-  gchar *properties;
+  gchar *properties, *metas;
 
   if (!GES_IS_SOURCE (element))
     return;
@@ -1647,6 +1648,10 @@ _save_source (GESXmlFormatter * self, GString * str,
     g_string_append_printf (str, "properties='%s' ", properties);
   }
   g_free (properties);
+
+  metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (element));
+  g_string_append_printf (str, "metadatas='%s' ", metas);
+  g_free (metas);
 
   _save_children_properties (str, element, depth);
   append_escaped (str, g_markup_printf_escaped (">\n"), depth);

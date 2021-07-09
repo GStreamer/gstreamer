@@ -1109,7 +1109,7 @@ done:
 void
 ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
     const gchar * track_id, GstStructure * children_properties,
-    GstStructure * properties)
+    GstStructure * properties, const gchar * metadatas)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
   GESTrackElement *element = NULL;
@@ -1138,6 +1138,10 @@ ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
   if (children_properties)
     gst_structure_foreach (children_properties,
         (GstStructureForeachFunc) _set_child_property, element);
+
+  if (metadatas)
+    ges_meta_container_add_metas_from_string (GES_META_CONTAINER
+        (element), metadatas);
 }
 
 void
