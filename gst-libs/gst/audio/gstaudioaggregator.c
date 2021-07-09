@@ -105,7 +105,8 @@ struct _GstAudioAggregatorPadPrivate
                                    of this input_buffer would be placed. */
 
   guint64 next_offset;          /* Next expected sample offset relative to
-                                   pad.segment.start */
+                                   pad.segment.start. This is -1 when resyncing is
+                                   needed, e.g. because of a previous discont. */
 
   /* Last time we noticed a discont */
   GstClockTime discont_time;
@@ -1669,7 +1670,7 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
       GST_DEBUG_OBJECT (pad, "Have discont. Expected %"
           G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
           pad->priv->next_offset, start_offset);
-    pad->priv->next_offset = end_offset;
+    pad->priv->next_offset = -1;
   } else {
     pad->priv->next_offset += pad->priv->size;
   }
@@ -1750,6 +1751,8 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
       }
 
       pad->priv->position += diff;
+      if (start_output_offset != -1)
+        start_output_offset += diff;
       if (pad->priv->position >= pad->priv->size) {
         /* Empty buffer, drop */
         pad->priv->position = 0;
@@ -1761,13 +1764,13 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
       }
     }
 
-    if (start_output_offset == -1 || start_output_offset < aagg->priv->offset)
+    if (start_output_offset == -1)
       pad->priv->output_offset = aagg->priv->offset;
-    else if (pad->priv->output_offset != -1)
-      pad->priv->output_offset = MAX (pad->priv->output_offset,
-          start_output_offset);
     else
       pad->priv->output_offset = start_output_offset;
+
+    if (pad->priv->next_offset == -1)
+      pad->priv->next_offset = end_offset;
 
     GST_DEBUG_OBJECT (pad,
         "Buffer resynced: Pad offset %" G_GUINT64_FORMAT
