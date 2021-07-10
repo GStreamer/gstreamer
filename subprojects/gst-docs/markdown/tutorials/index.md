@@ -32,6 +32,9 @@ any other required files like makefiles or project files) is
 distributed with GStreamer, as explained in the installation
 instructions.
 
+Source code for tutorials in Rust are available [here](https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/-/tree/master/tutorials/src/bin)
+
+
 ### A short note on GObject and GLib
 
 GStreamer is built on top of the `GObject` (for object orientation) and
