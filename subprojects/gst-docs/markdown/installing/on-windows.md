@@ -51,10 +51,14 @@ There are 3 sets of files in GStreamer binaries:
     alongside your application (see [Windows
     deployment](deploying/windows.md)).
 
-Get  **the Runtime and Development files** installers appropriate for
+Get both **the Runtime and Development** installers appropriate for
 your architecture from here:
 
-[https://gstreamer.freedesktop.org/data/pkg/windows/](https://gstreamer.freedesktop.org/data/pkg/windows/)
+[GStreamer download page](https://gstreamer.freedesktop.org/download/)
+
+If in doubt, download the 64-bit MSVC packages:
+- Runtime installer: e.g. `gstreamer-1.0-msvc-x86_64-{VERSION}.msi`
+- Development files installer: e.g. `gstreamer-1.0-devel-msvc-x86_64-{VERSION}.msi`
 
 Execute the installers and choose an installation folder. The suggested
 default is usually OK.
@@ -70,6 +74,10 @@ It is the application's responsibility to ensure that, at runtime,
 GStreamer can access its libraries and plugins. It can be done by adding
 `%GSTREAMER_ROOT_X86%\bin` to the `PATH` environment variable, or
 by running the application from this same folder.
+
+How to do this:
+Windows start icon > Search "environment variables" > Edit the system environment variables (will open System Properties) 
+> Environment Variables > System variables > Variable :Path > Edit > New > Paste "C:\gstreamer\1.0\msvc_x86_64\bin" > OK
 
 At runtime, GStreamer will look for its plugins in the following folders:
 
