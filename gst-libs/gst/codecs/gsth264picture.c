@@ -587,7 +587,15 @@ gst_h264_dpb_get_picture (GstH264Dpb * dpb, guint32 system_frame_number)
   return NULL;
 }
 
-static gboolean
+/**
+ * gst_h264_dpb_has_empty_frame_buffer:
+ * @dpb: a #GstH264Dpb
+ *
+ * Returns: %TRUE if @dpb still has empty frame buffers.
+ *
+ * Since: 1.20
+ */
+gboolean
 gst_h264_dpb_has_empty_frame_buffer (GstH264Dpb * dpb)
 {
   if (!dpb->interlaced) {

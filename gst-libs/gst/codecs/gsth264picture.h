@@ -279,6 +279,9 @@ GST_CODECS_API
 gint  gst_h264_dpb_get_size   (GstH264Dpb * dpb);
 
 GST_CODECS_API
+gboolean gst_h264_dpb_has_empty_frame_buffer   (GstH264Dpb * dpb);
+
+GST_CODECS_API
 gboolean gst_h264_dpb_needs_bump (GstH264Dpb * dpb,
                                   guint32 max_num_reorder_frames,
                                   gboolean low_latency);
