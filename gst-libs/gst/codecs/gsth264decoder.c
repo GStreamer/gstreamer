@@ -776,15 +776,7 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
     }
 
     gst_h264_dpb_delete_unused (priv->dpb);
-    if (gst_h264_dpb_get_interlaced (priv->dpb)) {
-      GstH264Picture *other_field =
-          gst_h264_decoder_split_frame (self, picture);
 
-      gst_h264_dpb_add (priv->dpb, picture);
-      gst_h264_dpb_add (priv->dpb, other_field);
-    } else {
-      gst_h264_dpb_add (priv->dpb, picture);
-    }
     while (gst_h264_dpb_needs_bump (priv->dpb, picture, FALSE)) {
       GstH264Picture *to_output;
 
@@ -796,6 +788,17 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
       }
 
       gst_h264_decoder_do_output_picture (self, to_output);
+    }
+
+    /* the picture is short term ref, add to DPB. */
+    if (gst_h264_dpb_get_interlaced (priv->dpb)) {
+      GstH264Picture *other_field =
+          gst_h264_decoder_split_frame (self, picture);
+
+      gst_h264_dpb_add (priv->dpb, picture);
+      gst_h264_dpb_add (priv->dpb, other_field);
+    } else {
+      gst_h264_dpb_add (priv->dpb, picture);
     }
 
     unused_short_term_frame_num++;
@@ -1838,33 +1841,13 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
     gst_video_decoder_release_frame (decoder, frame);
   }
 
-  /* Split frame into top/bottom field pictures for reference picture marking
-   * process. Even if current picture has field_pic_flag equal to zero,
-   * if next picture is a field picture, complementary field pair of reference
-   * frame should have individual pic_num and long_term_pic_num.
-   */
-  if (gst_h264_dpb_get_interlaced (priv->dpb) &&
-      GST_H264_PICTURE_IS_FRAME (picture)) {
-    GstH264Picture *other_field = gst_h264_decoder_split_frame (self, picture);
-
-    gst_h264_dpb_add (priv->dpb, picture);
-    if (!other_field) {
-      GST_WARNING_OBJECT (self,
-          "Couldn't split frame into complementary field pair");
-      /* Keep decoding anyway... */
-    } else {
-      gst_h264_dpb_add (priv->dpb, other_field);
-    }
-  } else {
-    gst_h264_dpb_add (priv->dpb, picture);
+  /* C.4.4 */
+  if (picture->mem_mgmt_5) {
+    GST_TRACE_OBJECT (self, "Memory management type 5, drain the DPB");
+    gst_h264_decoder_drain_internal (self);
   }
 
-  GST_LOG_OBJECT (self,
-      "Finishing picture %p (frame_num %d, poc %d), entries in DPB %d",
-      picture, picture->frame_num, picture->pic_order_cnt,
-      gst_h264_dpb_get_size (priv->dpb));
-
-  while (gst_h264_dpb_needs_bump (priv->dpb, picture, priv->is_live)) {
+  while (gst_h264_dpb_needs_bump (priv->dpb, picture, FALSE)) {
     GstH264Picture *to_output;
 
     to_output = gst_h264_dpb_bump (priv->dpb, FALSE);
@@ -1876,6 +1859,53 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
 
     gst_h264_decoder_do_output_picture (self, to_output);
   }
+
+  /* Add a ref to avoid the case of directly outputed and destroyed. */
+  gst_h264_picture_ref (picture);
+
+  /* C.4.5.1, C.4.5.2
+     - If the current decoded picture is the second field of a complementary
+     reference field pair, add to DPB.
+     C.4.5.1
+     For A reference decoded picture, the "bumping" process is invoked
+     repeatedly until there is an empty frame buffer, then add to DPB:
+     C.4.5.2
+     For a non-reference decoded picture, if there is empty frame buffer
+     after bumping the smaller POC, add to DPB.
+     Otherwise, output directly. */
+  if (picture->second_field || picture->ref
+      || gst_h264_dpb_has_empty_frame_buffer (priv->dpb)) {
+    /* Split frame into top/bottom field pictures for reference picture marking
+     * process. Even if current picture has field_pic_flag equal to zero,
+     * if next picture is a field picture, complementary field pair of reference
+     * frame should have individual pic_num and long_term_pic_num.
+     */
+    if (gst_h264_dpb_get_interlaced (priv->dpb) &&
+        GST_H264_PICTURE_IS_FRAME (picture)) {
+      GstH264Picture *other_field =
+          gst_h264_decoder_split_frame (self, picture);
+
+      gst_h264_dpb_add (priv->dpb, picture);
+      if (!other_field) {
+        GST_WARNING_OBJECT (self,
+            "Couldn't split frame into complementary field pair");
+        /* Keep decoding anyway... */
+      } else {
+        gst_h264_dpb_add (priv->dpb, other_field);
+      }
+    } else {
+      gst_h264_dpb_add (priv->dpb, picture);
+    }
+  } else {
+    gst_h264_decoder_do_output_picture (self, picture);
+  }
+
+  GST_LOG_OBJECT (self,
+      "Finishing picture %p (frame_num %d, poc %d), entries in DPB %d",
+      picture, picture->frame_num, picture->pic_order_cnt,
+      gst_h264_dpb_get_size (priv->dpb));
+
+  gst_h264_picture_unref (picture);
 
   return TRUE;
 }
