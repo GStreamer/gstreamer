@@ -62,6 +62,7 @@ base_tests = [
   [['elements/viewfinderbin.c']],
   [['elements/vp9parse.c'], false, [gstcodecparsers_dep]],
   [['elements/av1parse.c'], false, [gstcodecparsers_dep]],
+  [['elements/wasapi.c'], host_machine.system() != 'windows', ],
   [['elements/wasapi2.c'], host_machine.system() != 'windows', ],
   [['libs/h264parser.c'], false, [gstcodecparsers_dep]],
   [['libs/h265parser.c'], false, [gstcodecparsers_dep]],
