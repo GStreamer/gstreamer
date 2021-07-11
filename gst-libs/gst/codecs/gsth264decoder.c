@@ -785,8 +785,7 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
     } else {
       gst_h264_dpb_add (priv->dpb, picture);
     }
-    while (gst_h264_dpb_needs_bump (priv->dpb, priv->max_num_reorder_frames,
-            FALSE)) {
+    while (gst_h264_dpb_needs_bump (priv->dpb, picture, FALSE)) {
       GstH264Picture *to_output;
 
       to_output = gst_h264_dpb_bump (priv->dpb, FALSE);
@@ -1865,8 +1864,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
       picture, picture->frame_num, picture->pic_order_cnt,
       gst_h264_dpb_get_size (priv->dpb));
 
-  while (gst_h264_dpb_needs_bump (priv->dpb, priv->max_num_reorder_frames,
-          priv->is_live)) {
+  while (gst_h264_dpb_needs_bump (priv->dpb, picture, priv->is_live)) {
     GstH264Picture *to_output;
 
     to_output = gst_h264_dpb_bump (priv->dpb, FALSE);

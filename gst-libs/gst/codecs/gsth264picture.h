@@ -283,7 +283,7 @@ gboolean gst_h264_dpb_has_empty_frame_buffer   (GstH264Dpb * dpb);
 
 GST_CODECS_API
 gboolean gst_h264_dpb_needs_bump (GstH264Dpb * dpb,
-                                  guint32 max_num_reorder_frames,
+                                  GstH264Picture * to_insert,
                                   gboolean low_latency);
 
 GST_CODECS_API

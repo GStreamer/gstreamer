@@ -277,6 +277,10 @@ gst_h264_dpb_add (GstH264Dpb * dpb, GstH264Picture * picture)
   }
 
   g_array_append_val (dpb->pic_list, picture);
+
+  if (dpb->pic_list->len > dpb->max_num_frames * (dpb->interlaced + 1))
+    GST_ERROR ("DPB size is %d, exceed the max size %d",
+        dpb->pic_list->len, dpb->max_num_frames);
 }
 
 /**
@@ -599,7 +603,7 @@ gboolean
 gst_h264_dpb_has_empty_frame_buffer (GstH264Dpb * dpb)
 {
   if (!dpb->interlaced) {
-    if (dpb->pic_list->len <= dpb->max_num_frames)
+    if (dpb->pic_list->len < dpb->max_num_frames)
       return TRUE;
   } else {
     gint i;
@@ -616,7 +620,7 @@ gst_h264_dpb_has_empty_frame_buffer (GstH264Dpb * dpb)
         count++;
     }
 
-    if (count <= dpb->max_num_frames)
+    if (count < dpb->max_num_frames)
       return TRUE;
   }
 
@@ -665,7 +669,7 @@ gst_h264_dpb_get_lowest_output_needed_picture (GstH264Dpb * dpb,
 /**
  * gst_h264_dpb_needs_bump:
  * @dpb: a #GstH264Dpb
- * @max_num_reorder_frames: allowed max_num_reorder_frames as specified by sps
+ * @to_insert: the current #GstH264Picture to insert to dpb.
  * @low_latency: %TRUE if low-latency bumping is required
  *
  * Returns: %TRUE if bumping is required
@@ -673,76 +677,56 @@ gst_h264_dpb_get_lowest_output_needed_picture (GstH264Dpb * dpb,
  * Since: 1.20
  */
 gboolean
-gst_h264_dpb_needs_bump (GstH264Dpb * dpb, guint32 max_num_reorder_frames,
+gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
     gboolean low_latency)
 {
-  GstH264Picture *current_picture;
+  GstH264Picture *picture = NULL;
+  gint32 lowest_poc;
 
   g_return_val_if_fail (dpb != NULL, FALSE);
   g_assert (dpb->num_output_needed >= 0);
 
-  /* Empty so nothing to bump */
-  if (dpb->pic_list->len == 0 || dpb->num_output_needed == 0)
-    return FALSE;
-
   /* FIXME: Need to revisit for intelaced decoding */
 
-  /* Case 1)
-   * C.4.2 Decoding of gaps in frame_num and storage of "non-existing" pictures
-   * C.4.5.1 Storage and marking of a reference decoded picture into the DPB
-   * C.4.5.2 Storage and marking of a non-reference decoded picture into the DPB
-   *
-   * In summary, if DPB is full and there is no empty space to store current
-   * picture, need bumping.
-   * NOTE: current picture was added already by our decoding flow, So we need to
-   * do bumping until dpb->pic_list->len == dpb->max_num_pic
-   */
-  if (!gst_h264_dpb_has_empty_frame_buffer (dpb)) {
-    GST_TRACE ("No empty frame buffer, need bumping");
+  if (low_latency) {
+    /* TODO: */
+  }
+
+  /* C.4.5.3: The "bumping" process is invoked in the following cases.
+     - There is no empty frame buffer and a empty frame buffer is needed
+     for storage of an inferred "non-existing" frame.
+     - There is no empty frame buffer and an empty frame buffer is needed
+     for storage of a decoded (non-IDR) reference picture.
+     - There is no empty frame buffer and the current picture is a non-
+     reference picture that is not the second field of a complementary
+     non-reference field pair and there are pictures in the DPB that are
+     marked as "needed for output" that precede the current non-reference
+     picture in output order. */
+  if (gst_h264_dpb_has_empty_frame_buffer (dpb)) {
+    GST_TRACE ("DPB has empty frame buffer, no need bumping.");
+    return FALSE;
+  }
+
+  if (to_insert->ref != GST_H264_PICTURE_REF_NONE) {
+    GST_TRACE ("No empty frame buffer for ref frame, need bumping.");
     return TRUE;
   }
 
-  if (dpb->num_output_needed > max_num_reorder_frames) {
-    GST_TRACE
-        ("not outputted frames (%d) > max_num_reorder_frames (%d), need bumping",
-        dpb->num_output_needed, max_num_reorder_frames);
+  lowest_poc = G_MAXINT32;
+  gst_h264_dpb_get_lowest_output_needed_picture (dpb, &picture);
+  if (picture) {
+    lowest_poc = picture->pic_order_cnt;
+    gst_h264_picture_unref (picture);
+  }
 
+  if (to_insert->pic_order_cnt > lowest_poc) {
+    GST_TRACE ("No empty frame buffer, lowest poc %d < current poc %d,"
+        " need bumping.", lowest_poc, to_insert->pic_order_cnt);
     return TRUE;
   }
 
-  current_picture =
-      g_array_index (dpb->pic_list, GstH264Picture *, dpb->pic_list->len - 1);
-
-  if (current_picture->needed_for_output && current_picture->idr &&
-      !current_picture->dec_ref_pic_marking.no_output_of_prior_pics_flag) {
-    GST_TRACE ("IDR with no_output_of_prior_pics_flag == 0, need bumping");
-    return TRUE;
-  }
-
-  if (current_picture->needed_for_output && current_picture->mem_mgmt_5) {
-    GST_TRACE ("Memory management type 5, need bumping");
-    return TRUE;
-  }
-
-  /* HACK: Not all streams have PicOrderCnt increment by 2, but in practice this
-   * condition can be used */
-  if (low_latency && dpb->last_output_poc != G_MININT32) {
-    GstH264Picture *picture = NULL;
-    gint32 lowest_poc = G_MININT32;
-
-    gst_h264_dpb_get_lowest_output_needed_picture (dpb, &picture);
-    if (picture) {
-      lowest_poc = picture->pic_order_cnt;
-      gst_h264_picture_unref (picture);
-    }
-
-    if (lowest_poc != G_MININT32 && lowest_poc > dpb->last_output_poc
-        && abs (lowest_poc - dpb->last_output_poc) <= 2) {
-      GST_TRACE ("bumping for low-latency, lowest-poc: %d, last-output-poc: %d",
-          lowest_poc, dpb->last_output_poc);
-      return TRUE;
-    }
-  }
+  GST_TRACE ("No empty frame buffer, but lowest poc %d > current poc %d,"
+      " no need bumping.", lowest_poc, to_insert->pic_order_cnt);
 
   return FALSE;
 }
