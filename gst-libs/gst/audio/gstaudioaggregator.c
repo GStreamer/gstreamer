@@ -1671,6 +1671,9 @@ gst_audio_aggregator_pad_enqueue_qos_message (GstAudioAggregatorPad * pad,
   guint64 processed, dropped;
   GstMessage *msg;
 
+  if (!pad->priv->qos_messages)
+    return running_time;
+
   if (GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (pad)->convert_buffer)
     rate_input = GST_AUDIO_INFO_RATE (&srcpad->info);
   else
@@ -1911,7 +1914,7 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
       }
 
       pad->priv->dropped += MIN (diff, pad->priv->size);
-      if (diff != 0 && pad->priv->qos_messages) {
+      if (diff != 0) {
         GstClockTime rt;
 
         rt = gst_audio_aggregator_pad_enqueue_qos_message (pad, aagg, diff);
@@ -2332,7 +2335,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
       if (pad->priv->position + diff > pad->priv->size)
         diff = pad->priv->size - pad->priv->position;
       pad->priv->dropped += diff;
-      if (diff != 0 && pad->priv->qos_messages) {
+      if (diff != 0) {
         GstClockTime rt;
 
         rt = gst_audio_aggregator_pad_enqueue_qos_message (pad, aagg, diff);
