@@ -1560,7 +1560,7 @@ struct _GstAV1FrameHeaderOBU {
   guint32 ref_order_hint[GST_AV1_NUM_REF_FRAMES];
   gboolean allow_intrabc;
   gboolean frame_refs_short_signaling;
-  guint8 last_frame_idx;
+  gint8 last_frame_idx;
   gint8 gold_frame_idx;
   gint8 ref_frame_idx[GST_AV1_REFS_PER_FRAME];
   gboolean allow_high_precision_mv;
