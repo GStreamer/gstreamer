@@ -691,7 +691,6 @@ parse_segmentation_params (GstBitReader * br, GstVp9SegmentationParams * params)
   params->segmentation_update_map = 0;
   params->segmentation_update_data = 0;
   params->segmentation_temporal_update = 0;
-  params->segmentation_abs_or_delta_update = 0;
 
   VP9_READ_BIT (params->segmentation_enabled);
   if (!params->segmentation_enabled)
