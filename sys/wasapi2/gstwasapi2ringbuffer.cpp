@@ -1112,7 +1112,7 @@ gst_wasapi2_ring_buffer_release (GstAudioRingBuffer * buf)
 }
 
 static gboolean
-gst_wasapi2_ring_buffer_start_internal (GstWasapi2RingBuffer *self)
+gst_wasapi2_ring_buffer_start_internal (GstWasapi2RingBuffer * self)
 {
   IAudioClient *client_handle;
   HRESULT hr;
@@ -1211,7 +1211,7 @@ gst_wasapi2_ring_buffer_resume (GstAudioRingBuffer * buf)
 }
 
 static gboolean
-gst_wasapi2_ring_buffer_stop_internal (GstWasapi2RingBuffer *self)
+gst_wasapi2_ring_buffer_stop_internal (GstWasapi2RingBuffer * self)
 {
   IAudioClient *client_handle;
   HRESULT hr;
