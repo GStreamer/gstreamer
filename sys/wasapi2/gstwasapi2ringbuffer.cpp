@@ -165,6 +165,7 @@ struct _GstWasapi2RingBuffer
   guint64 expected_position;
   gboolean is_first;
   gboolean running;
+  gboolean opened;
   UINT32 buffer_size;
   UINT32 loopback_buffer_size;
 
@@ -174,6 +175,8 @@ struct _GstWasapi2RingBuffer
   GMutex volume_lock;
   gboolean mute_changed;
   gboolean volume_changed;
+
+  GstCaps *supported_caps;
 };
 
 static void gst_wasapi2_ring_buffer_constructed (GObject * object);
@@ -228,6 +231,8 @@ gst_wasapi2_ring_buffer_class_init (GstWasapi2RingBufferClass * klass)
 static void
 gst_wasapi2_ring_buffer_init (GstWasapi2RingBuffer * self)
 {
+  self->opened = FALSE;
+
   self->volume = 1.0f;
   self->mute = FALSE;
 
@@ -289,6 +294,7 @@ gst_wasapi2_ring_buffer_dispose (GObject * object)
 
   gst_clear_object (&self->client);
   gst_clear_object (&self->loopback_client);
+  gst_clear_caps (&self->supported_caps);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -371,6 +377,11 @@ gst_wasapi2_ring_buffer_open_device (GstAudioRingBuffer * buf)
 
   GST_DEBUG_OBJECT (self, "Open");
 
+  if (self->opened) {
+    GST_DEBUG_OBJECT (self, "Already opened");
+    return TRUE;
+  }
+
   self->client = gst_wasapi2_client_new (self->device_class,
       -1, self->device_id, self->dispatcher);
   if (!self->client) {
@@ -398,11 +409,11 @@ gst_wasapi2_ring_buffer_open_device (GstAudioRingBuffer * buf)
 }
 
 static gboolean
-gst_wasapi2_ring_buffer_close_device (GstAudioRingBuffer * buf)
+gst_wasapi2_ring_buffer_close_device_internal (GstAudioRingBuffer * buf)
 {
   GstWasapi2RingBuffer *self = GST_WASAPI2_RING_BUFFER (buf);
 
-  GST_DEBUG_OBJECT (self, "Close");
+  GST_DEBUG_OBJECT (self, "Close device");
 
   if (self->running)
     gst_wasapi2_ring_buffer_stop (buf);
@@ -418,6 +429,22 @@ gst_wasapi2_ring_buffer_close_device (GstAudioRingBuffer * buf)
 
   gst_clear_object (&self->client);
   gst_clear_object (&self->loopback_client);
+
+  self->opened = FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_wasapi2_ring_buffer_close_device (GstAudioRingBuffer * buf)
+{
+  GstWasapi2RingBuffer *self = GST_WASAPI2_RING_BUFFER (buf);
+
+  GST_DEBUG_OBJECT (self, "Close");
+
+  gst_wasapi2_ring_buffer_close_device_internal (buf);
+
+  gst_clear_caps (&self->supported_caps);
 
   return TRUE;
 }
@@ -945,6 +972,9 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
 
   GST_DEBUG_OBJECT (buf, "Acquire");
 
+  if (!self->opened && !gst_wasapi2_ring_buffer_open_device (buf))
+    return FALSE;
+
   if (self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE) {
     if (!gst_wasapi2_ring_buffer_prepare_loopback_client (self)) {
       GST_ERROR_OBJECT (self, "Failed to prepare loopback client");
@@ -1107,6 +1137,9 @@ gst_wasapi2_ring_buffer_release (GstAudioRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "Release");
 
   g_clear_pointer (&buf->memory, g_free);
+
+  /* IAudioClient handle is not reusable once it's initialized */
+  gst_wasapi2_ring_buffer_close_device_internal (buf);
 
   return TRUE;
 }
@@ -1323,6 +1356,9 @@ gst_wasapi2_ring_buffer_get_caps (GstWasapi2RingBuffer * buf)
 {
   g_return_val_if_fail (GST_IS_WASAPI2_RING_BUFFER (buf), nullptr);
 
+  if (buf->supported_caps)
+    return gst_caps_ref (buf->supported_caps);
+
   if (!buf->client)
     return nullptr;
 
@@ -1331,7 +1367,11 @@ gst_wasapi2_ring_buffer_get_caps (GstWasapi2RingBuffer * buf)
     return nullptr;
   }
 
-  return gst_wasapi2_client_get_caps (buf->client);
+  buf->supported_caps = gst_wasapi2_client_get_caps (buf->client);
+  if (buf->supported_caps)
+    return gst_caps_ref (buf->supported_caps);
+
+  return nullptr;
 }
 
 HRESULT
