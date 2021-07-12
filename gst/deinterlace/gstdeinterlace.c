@@ -3002,7 +3002,7 @@ invalid_caps:
   }
 set_caps_failed:
   {
-    GST_ERROR_OBJECT (pad, "Failed to set caps: %" GST_PTR_FORMAT, srccaps);
+    GST_INFO_OBJECT (pad, "Failed to set caps: %" GST_PTR_FORMAT, srccaps);
     if (peercaps)
       gst_caps_unref (peercaps);
     gst_caps_unref (srccaps);
