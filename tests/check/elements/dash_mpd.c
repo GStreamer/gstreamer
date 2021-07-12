@@ -1392,6 +1392,7 @@ GST_START_TEST
 
   gboolean ret;
   GstMPDClient *mpdclient = gst_mpd_client_new ();
+  gchar *str;
 
   ret = gst_mpd_client_parse (mpdclient, xml, (gint) strlen (xml));
   assert_equals_int (ret, TRUE);
@@ -1402,12 +1403,75 @@ GST_START_TEST
   contentProtection =
       (GstMPDDescriptorTypeNode *) representationBase->ContentProtection->data;
   assert_equals_string (contentProtection->schemeIdUri, "TestSchemeIdUri");
-  assert_equals_string (contentProtection->value, "TestValue");
+
+  /* We can't do a simple compare of value (which should be an XML dump
+     of the ContentProtection element), because the whitespace
+     formatting from xmlDump might differ between versions of libxml */
+  str = strstr (contentProtection->value, "<ContentProtection");
+  fail_if (str == NULL);
+  str = strstr (contentProtection->value, "value=\"TestValue\"");
+  fail_if (str == NULL);
+  str = strstr (contentProtection->value, "</ContentProtection>");
+  fail_if (str == NULL);
 
   gst_mpd_client_free (mpdclient);
 }
 
 GST_END_TEST;
+
+/*
+ * Test parsing Period AdaptationSet RepresentationBase ContentProtection
+ * with custom ContentProtection content.
+ */
+GST_START_TEST
+    (dash_mpdparser_period_adaptationSet_representationBase_contentProtection_with_content)
+{
+  GstMPDPeriodNode *periodNode;
+  GstMPDAdaptationSetNode *adaptationSet;
+  GstMPDRepresentationBaseNode *representationBase;
+  GstMPDDescriptorTypeNode *contentProtection;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "     customns=\"foo\""
+      "  <Period>"
+      "    <AdaptationSet>"
+      "      <ContentProtection schemeIdUri=\"TestSchemeIdUri\">"
+      "        <customns:bar>Hello world</customns:bar>"
+      "      </ContentProtection></AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GstMPDClient *mpdclient = gst_mpd_client_new ();
+  gchar *str;
+
+  ret = gst_mpd_client_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  periodNode = (GstMPDPeriodNode *) mpdclient->mpd_root_node->Periods->data;
+  adaptationSet = (GstMPDAdaptationSetNode *) periodNode->AdaptationSets->data;
+  representationBase = GST_MPD_REPRESENTATION_BASE_NODE (adaptationSet);
+  contentProtection =
+      (GstMPDDescriptorTypeNode *) representationBase->ContentProtection->data;
+  assert_equals_string (contentProtection->schemeIdUri, "TestSchemeIdUri");
+
+  /* We can't do a simple compare of value (which should be an XML dump
+     of the ContentProtection element), because the whitespace
+     formatting from xmlDump might differ between versions of libxml */
+  str = strstr (contentProtection->value, "<ContentProtection");
+  fail_if (str == NULL);
+  str =
+      strstr (contentProtection->value,
+      "<customns:bar>Hello world</customns:bar>");
+  fail_if (str == NULL);
+  str = strstr (contentProtection->value, "</ContentProtection>");
+  fail_if (str == NULL);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
 
 /*
  * Test parsing ContentProtection element that has no value attribute
@@ -6388,6 +6452,8 @@ dash_suite (void)
   tcase_add_test (tc_simpleMPD, dash_mpdparser_contentProtection_no_value);
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_contentProtection_no_value_no_encoding);
+  tcase_add_test (tc_simpleMPD,
+      dash_mpdparser_period_adaptationSet_representationBase_contentProtection_with_content);
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_accessibility);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_period_adaptationSet_role);

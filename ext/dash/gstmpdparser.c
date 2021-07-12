@@ -503,35 +503,14 @@ error:
 static void
 gst_mpdparser_parse_content_protection_node (GList ** list, xmlNode * a_node)
 {
-  gchar *value = NULL;
-  if (gst_xml_helper_get_prop_string (a_node, "value", &value)) {
-    if (!g_strcmp0 (value, "MSPR 2.0")) {
-      xmlNode *cur_node;
-      for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
-        if (cur_node->type == XML_ELEMENT_NODE) {
-          if (xmlStrcmp (cur_node->name, (xmlChar *) "pro") == 0) {
-            GstMPDDescriptorTypeNode *new_descriptor;
-            new_descriptor = gst_mpd_descriptor_type_node_new ((const gchar *)
-                cur_node->name);
-            *list = g_list_append (*list, new_descriptor);
+  GstMPDDescriptorTypeNode *new_descriptor;
+  new_descriptor = gst_mpd_descriptor_type_node_new ((const gchar *)
+      a_node->name);
+  *list = g_list_append (*list, new_descriptor);
 
-            gst_xml_helper_get_prop_string_stripped (a_node, "schemeIdUri",
-                &new_descriptor->schemeIdUri);
-
-            gst_xml_helper_get_node_content (cur_node, &new_descriptor->value);
-            goto beach;
-          }
-        }
-      }
-    } else {
-      gst_mpdparser_parse_descriptor_type (list, a_node);
-    }
-  } else {
-    gst_mpdparser_parse_descriptor_type (list, a_node);
-  }
-beach:
-  if (value)
-    g_free (value);
+  gst_xml_helper_get_prop_string_stripped (a_node, "schemeIdUri",
+      &new_descriptor->schemeIdUri);
+  gst_xml_helper_get_node_as_string (a_node, &new_descriptor->value);
 }
 
 static void
