@@ -276,7 +276,7 @@ gst_wpe_src_push_audio_buffer (GstWpeSrc* src, guint32 id, guint64 size)
   GST_TRACE_OBJECT (audio_pad, "Handling incoming audio packet");
 
   gpointer data = mmap (0, size, PROT_READ, MAP_PRIVATE, audio_pad->fd, 0);
-  buffer = gst_buffer_new_wrapped (g_memdup(data, size), size);
+  buffer = gst_buffer_new_memdup (data, size);
   munmap (data, size);
   gst_buffer_add_audio_meta (buffer, &audio_pad->info, size, NULL);
 
