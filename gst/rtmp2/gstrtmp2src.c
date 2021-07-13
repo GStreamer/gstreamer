@@ -691,11 +691,14 @@ gst_rtmp2_src_create (GstBaseSrc * src, guint64 offset, guint size,
   return GST_FLOW_OK;
 
 out:
-  g_mutex_unlock (&self->lock);
   if (timeout) {
     g_source_destroy (timeout);
     g_source_unref (timeout);
   }
+  /* Keep the unlock after the destruction of the timeout source to workaround
+   * https://gitlab.gnome.org/GNOME/glib/-/issues/803
+   */
+  g_mutex_unlock (&self->lock);
 
   return ret;
 }
