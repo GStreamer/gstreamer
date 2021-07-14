@@ -29,7 +29,8 @@
 typedef enum {
   MXF_ESSENCE_WRAPPING_FRAME_WRAPPING,
   MXF_ESSENCE_WRAPPING_CLIP_WRAPPING,
-  MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING
+  MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING,
+  MXF_ESSENCE_WRAPPING_UNKNOWN_WRAPPING
 } MXFEssenceWrapping;
 
 typedef GstFlowReturn (*MXFEssenceElementHandleFunc) (const MXFUL *key, GstBuffer *buffer, GstCaps *caps, MXFMetadataTimelineTrack *track, gpointer mapping_data, GstBuffer **outbuf);

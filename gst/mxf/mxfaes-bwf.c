@@ -1122,7 +1122,8 @@ mxf_is_aes_bwf_essence_track (const MXFMetadataTimelineTrack * track)
         (key->u[14] == 0x01 ||
             key->u[14] == 0x02 ||
             key->u[14] == 0x03 ||
-            key->u[14] == 0x04 || key->u[14] == 0x08 || key->u[14] == 0x09))
+            key->u[14] == 0x04 || key->u[14] == 0x08 || key->u[14] == 0x09 ||
+            key->u[14] == 0x0a || key->u[14] == 0x0b))
       return TRUE;
   }
 
@@ -1160,8 +1161,12 @@ mxf_aes_bwf_get_track_wrapping (const MXFMetadataTimelineTrack * track)
         break;
       case 0x08:
       case 0x09:
-      default:
+      case 0x0a:
+      case 0x0b:
         return MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING;
+      default:
+        GST_WARNING ("Unknown frame wrapping");
+        return MXF_ESSENCE_WRAPPING_UNKNOWN_WRAPPING;
         break;
     }
   }
@@ -1437,7 +1442,8 @@ mxf_aes_bwf_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
             descriptor[i])
         && (track->parent.descriptor[i]->essence_container.u[14] == 0x01
             || track->parent.descriptor[i]->essence_container.u[14] == 0x02
-            || track->parent.descriptor[i]->essence_container.u[14] == 0x08)) {
+            || track->parent.descriptor[i]->essence_container.u[14] == 0x08
+            || track->parent.descriptor[i]->essence_container.u[14] == 0x0a)) {
       s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
           descriptor[i];
       bwf = TRUE;
@@ -1447,7 +1453,8 @@ mxf_aes_bwf_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
             descriptor[i])
         && (track->parent.descriptor[i]->essence_container.u[14] == 0x03
             || track->parent.descriptor[i]->essence_container.u[14] == 0x04
-            || track->parent.descriptor[i]->essence_container.u[14] == 0x09)) {
+            || track->parent.descriptor[i]->essence_container.u[14] == 0x09
+            || track->parent.descriptor[i]->essence_container.u[14] == 0x0b)) {
 
       s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
           descriptor[i];
