@@ -297,7 +297,8 @@ gst_vp9_parse_process_frame (GstVp9Parse * self, GstVp9FrameHdr * frame_hdr)
   gint width, height;
 
   /* the resolution might be varying. Update our status per key frame */
-  if (frame_hdr->frame_type != GST_VP9_KEY_FRAME) {
+  if (frame_hdr->frame_type != GST_VP9_KEY_FRAME ||
+      frame_hdr->show_existing_frame) {
     return TRUE;
   }
 
