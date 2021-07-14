@@ -508,6 +508,7 @@ gst_va_vp9_dec_negotiate (GstVideoDecoder * decoder)
   GstVaVp9Dec *self = GST_VA_VP9_DEC (decoder);
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
   GstVp9Decoder *vp9dec = GST_VP9_DECODER (decoder);
+  gboolean need_open;
 
   /* Ignore downstream renegotiation request. */
   if (!self->need_negotiation)
@@ -515,16 +516,42 @@ gst_va_vp9_dec_negotiate (GstVideoDecoder * decoder)
 
   self->need_negotiation = FALSE;
 
-  if (gst_va_decoder_is_open (base->decoder)
-      && !gst_va_decoder_close (base->decoder))
-    return FALSE;
+  need_open = TRUE;
+  /* The driver for VP9 should have the ability to handle the dynamical
+     resolution changes. So if only the resolution changes, we should not
+     re-create the config and context. */
+  if (gst_va_decoder_is_open (base->decoder)) {
+    VAProfile cur_profile;
+    guint cur_rtformat;
+    gint cur_width, cur_height;
 
-  if (!gst_va_decoder_open (base->decoder, base->profile, base->rt_format))
-    return FALSE;
+    if (!gst_va_decoder_get_config (base->decoder, &cur_profile,
+            &cur_rtformat, &cur_width, &cur_height))
+      return FALSE;
 
-  if (!gst_va_decoder_set_format (base->decoder, base->width, base->height,
-          NULL))
-    return FALSE;
+    if (base->profile == cur_profile && base->rt_format == cur_rtformat) {
+      if (!gst_va_decoder_change_resolution (base->decoder, base->width,
+              base->height))
+        return FALSE;
+
+      GST_INFO_OBJECT (self, "dynamical resolution changes from %dx%d to"
+          " %dx%d", cur_width, cur_height, base->width, base->height);
+
+      need_open = FALSE;
+    } else {
+      if (!gst_va_decoder_close (base->decoder))
+        return FALSE;
+    }
+  }
+
+  if (need_open) {
+    if (!gst_va_decoder_open (base->decoder, base->profile, base->rt_format))
+      return FALSE;
+
+    if (!gst_va_decoder_set_format (base->decoder, base->width, base->height,
+            NULL))
+      return FALSE;
+  }
 
   if (base->output_state)
     gst_video_codec_state_unref (base->output_state);
