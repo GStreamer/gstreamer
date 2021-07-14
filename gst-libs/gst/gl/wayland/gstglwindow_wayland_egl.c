@@ -469,6 +469,11 @@ gst_gl_window_wayland_egl_close (GstGLWindow * gl_window)
 
   destroy_surfaces (window_egl);
 
+  /* As we are about to destroy the wl_source, we need to ensure everything
+   * has been sent synchronously, otherwise we will be leaking surfaces on
+   * server, leaving the window visible and unrefreshed on screen. */
+  wl_display_flush (GST_GL_DISPLAY_WAYLAND (gl_window->display)->display);
+
   g_source_destroy (window_egl->wl_source);
   g_source_unref (window_egl->wl_source);
   window_egl->wl_source = NULL;
