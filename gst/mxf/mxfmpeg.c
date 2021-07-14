@@ -590,6 +590,11 @@ static const guint8 sony_mpeg4_extradata[] = {
 
 /* RP224 */
 
+static const MXFUL video_mpeg_compression = { {
+        0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x01, 0x02, 0x02,
+    0x01,}
+};
+
 static const MXFUL sound_essence_compression_ac3 = { {
         0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x02, 0x02, 0x02,
     0x03, 0x02, 0x01, 0x00}
@@ -634,13 +639,16 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   GstCaps *caps = NULL;
   const gchar *codec_name = NULL;
   MXFMPEGEssenceType t, *mdata;
+  gchar str[48];
 
   *mapping_data = g_malloc (sizeof (MXFMPEGEssenceType));
   mdata = (MXFMPEGEssenceType *) * mapping_data;
 
   /* SMPTE RP224 */
   if (p) {
-    if (mxf_ul_is_zero (&p->picture_essence_coding)) {
+    if (mxf_ul_is_zero (&p->picture_essence_coding) ||
+        mxf_ul_is_equal (&p->picture_essence_coding,
+            &p->parent.essence_container)) {
       GST_WARNING ("No picture essence coding defined, assuming MPEG2");
       caps =
           gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
@@ -649,19 +657,10 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       t = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2;
       memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
       *intra_only = FALSE;
-    } else if (p->picture_essence_coding.u[0] != 0x06
-        || p->picture_essence_coding.u[1] != 0x0e
-        || p->picture_essence_coding.u[2] != 0x2b
-        || p->picture_essence_coding.u[3] != 0x34
-        || p->picture_essence_coding.u[4] != 0x04
-        || p->picture_essence_coding.u[5] != 0x01
-        || p->picture_essence_coding.u[6] != 0x01
-        || p->picture_essence_coding.u[8] != 0x04
-        || p->picture_essence_coding.u[9] != 0x01
-        || p->picture_essence_coding.u[10] != 0x02
-        || p->picture_essence_coding.u[11] != 0x02
-        || p->picture_essence_coding.u[12] != 0x01) {
-      GST_ERROR ("No MPEG picture essence coding");
+    } else if (!mxf_ul_is_subclass (&video_mpeg_compression,
+            &p->picture_essence_coding)) {
+      GST_ERROR ("Not MPEG picture essence coding %s",
+          mxf_ul_to_string (&p->picture_essence_coding, str));
       caps = NULL;
     } else if (p->picture_essence_coding.u[13] >= 0x01 &&
         p->picture_essence_coding.u[13] <= 0x08) {
