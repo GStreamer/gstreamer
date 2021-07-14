@@ -48,6 +48,9 @@ gboolean              gst_va_decoder_set_format           (GstVaDecoder * self,
                                                            gint coded_width,
                                                            gint coded_height,
                                                            GArray * surfaces);
+gboolean              gst_va_decoder_change_resolution    (GstVaDecoder * self,
+                                                           gint coded_width,
+                                                           gint coded_height);
 GstCaps *             gst_va_decoder_get_srcpad_caps      (GstVaDecoder * self);
 GstCaps *             gst_va_decoder_get_sinkpad_caps     (GstVaDecoder * self);
 gboolean              gst_va_decoder_has_profile          (GstVaDecoder * self,
@@ -92,5 +95,10 @@ gboolean              gst_va_decoder_format_changed       (GstVaDecoder * decode
                                                            guint new_rtformat,
                                                            gint new_width,
                                                            gint new_height);
+gboolean              gst_va_decoder_get_config           (GstVaDecoder * decoder,
+                                                           VAProfile * profile,
+                                                           guint * rt_format,
+                                                           gint * width,
+                                                           gint * height);
 
 G_END_DECLS

@@ -346,6 +346,34 @@ gst_va_decoder_set_format (GstVaDecoder * self, gint coded_width,
   return TRUE;
 }
 
+gboolean
+gst_va_decoder_change_resolution (GstVaDecoder * self, gint coded_width,
+    gint coded_height)
+{
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+
+  if (!gst_va_decoder_is_open (self)) {
+    GST_ERROR_OBJECT (self, "decoder has not been opened yet");
+    return FALSE;
+  }
+
+  GST_OBJECT_LOCK (self);
+  if (self->context == VA_INVALID_ID) {
+    GST_OBJECT_UNLOCK (self);
+    GST_INFO_OBJECT (self, "decoder does not have a format");
+    return FALSE;
+  }
+  GST_OBJECT_UNLOCK (self);
+
+
+  GST_OBJECT_LOCK (self);
+  self->coded_width = coded_width;
+  self->coded_height = coded_height;
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
 static gboolean
 _get_codec_caps (GstVaDecoder * self)
 {
@@ -778,4 +806,25 @@ gst_va_decoder_format_changed (GstVaDecoder * decoder, VAProfile new_profile,
   return !(decoder->profile == new_profile &&
       decoder->rt_format == new_rtformat &&
       decoder->coded_width == new_width && decoder->coded_height == new_height);
+}
+
+gboolean
+gst_va_decoder_get_config (GstVaDecoder * decoder, VAProfile * profile,
+    guint * rt_format, gint * width, gint * height)
+{
+  g_return_val_if_fail (decoder, FALSE);
+
+  if (!gst_va_decoder_is_open (decoder))
+    return FALSE;
+
+  if (profile)
+    *profile = decoder->profile;
+  if (rt_format)
+    *rt_format = decoder->rt_format;
+  if (width)
+    *width = decoder->coded_width;
+  if (height)
+    *height = decoder->coded_height;
+
+  return TRUE;
 }
