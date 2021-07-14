@@ -271,6 +271,9 @@ gst_gl_window_x11_close (GstGLWindow * window)
       XUnmapWindow (window_x11->device, window_x11->internal_win_id);
 
       XDestroyWindow (window_x11->device, window_x11->internal_win_id);
+
+      /* Ensure everything is sent immediatly */
+      XSync (window_x11->device, FALSE);
     }
     XFree (window_x11->visual_info);
 
