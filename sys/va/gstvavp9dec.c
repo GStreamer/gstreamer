@@ -189,6 +189,27 @@ gst_va_vp9_new_sequence (GstVp9Decoder * decoder,
 }
 
 static gboolean
+_check_resolution_change (GstVaVp9Dec * self, GstVp9Picture * picture)
+{
+  GstVaBaseDec *base = GST_VA_BASE_DEC (self);
+  const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
+
+  if ((base->width != frame_hdr->width) || base->height != frame_hdr->height) {
+    base->width = frame_hdr->width;
+    base->height = frame_hdr->height;
+
+    self->need_negotiation = TRUE;
+    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
+      GST_ERROR_OBJECT (self, "Resolution changes, but failed to"
+          " negotiate with downstream");
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_va_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture)
 {
@@ -197,6 +218,9 @@ gst_va_vp9_dec_new_picture (GstVp9Decoder * decoder,
   GstVaDecodePicture *pic;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+
+  if (!_check_resolution_change (self, picture))
+    return FALSE;
 
   ret = gst_video_decoder_allocate_output_frame (vdec, frame);
   if (ret != GST_FLOW_OK)
@@ -485,6 +509,9 @@ gst_va_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
 {
   GstVaDecodePicture *va_pic, *va_dup;
   GstVp9Picture *new_picture;
+
+  if (!_check_resolution_change (GST_VA_VP9_DEC (decoder), picture))
+    return NULL;
 
   va_pic = gst_vp9_picture_get_user_data (picture);
   va_dup = gst_va_decode_picture_dup (va_pic);
