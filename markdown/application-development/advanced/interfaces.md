@@ -9,7 +9,7 @@ properties as a simple way for applications and elements to interact. This
 method suffices for simple getters and setters, but fails for anything more
 complicated. For more complex use cases, GStreamer uses interfaces based on the
 `GObject`
-[`GTypeInterface`](http://library.gnome.org/devel/gobject/stable/gtype-non-instantiable-classed.html)
+[`GTypeInterface`](http://library.gnome.org/devel/gobject/stable/gtype-non-instantiatable-classed.html)
 type.
 
 This text is meant to be introductory and does not include source code examples.
