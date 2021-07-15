@@ -1118,7 +1118,7 @@ handle_psi (MpegTSBase * base, GstMpegtsSection * section)
     GList *tmp;
     gboolean forward = FALSE;
 
-    if (demux->send_scte35_events) {
+    if (demux->send_scte35_events && demux->program) {
       for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
         TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
 
