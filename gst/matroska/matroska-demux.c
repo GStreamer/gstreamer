@@ -4611,6 +4611,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     gboolean delta_unit = FALSE;
     guint64 duration = 0;
     gint64 lace_time = 0;
+    gboolean keep_seek_start = TRUE;
     GstEvent *protect_event;
 
     stream = g_ptr_array_index (demux->common.src, stream_num);
@@ -4639,6 +4640,15 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     }
 
     /* need to refresh segment info ASAP */
+    if (GST_CLOCK_TIME_IS_VALID (lace_time)
+        && GST_CLOCK_TIME_IS_VALID (demux->stream_start_time)
+        && lace_time < demux->stream_start_time) {
+      keep_seek_start =
+          (demux->common.segment.start > demux->stream_start_time);
+      demux->stream_start_time = lace_time;
+      demux->need_segment = TRUE;
+    }
+
     if (GST_CLOCK_TIME_IS_VALID (lace_time) && demux->need_segment) {
       GstSegment *segment = &demux->common.segment;
       guint64 clace_time;
@@ -4651,10 +4661,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             GST_TIME_ARGS (lace_time));
       }
       clace_time = MAX (lace_time, demux->stream_start_time);
-      if (GST_CLOCK_TIME_IS_VALID (demux->common.segment.position) &&
-          demux->common.segment.position != 0) {
-        GST_DEBUG_OBJECT (demux,
-            "using stored seek position %" GST_TIME_FORMAT,
+      if (keep_seek_start
+          && GST_CLOCK_TIME_IS_VALID (demux->common.segment.position)
+          && demux->common.segment.position != 0) {
+        GST_DEBUG_OBJECT (demux, "using stored seek position %" GST_TIME_FORMAT,
             GST_TIME_ARGS (demux->common.segment.position));
         clace_time = demux->common.segment.position;
       }
