@@ -853,7 +853,7 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
         /* Only relevant in alternate and mixed mode, no need to look at the caps */
         if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
                 GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
-          if (GST_VIDEO_BUFFER_IS_TOP_FIELD (self->current_video_buffer)) {
+          if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
             dequeue_caption (self, tc, 0);
           }
         } else {
@@ -867,11 +867,12 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
         if (self->progressive) {
           dequeue_caption (self, tc, 0);
         } else if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
-                GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
+                GST_VIDEO_BUFFER_FLAG_INTERLACED) &&
+            GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
+                GST_VIDEO_BUFFER_FLAG_ONEFIELD)) {
           if (GST_VIDEO_BUFFER_IS_TOP_FIELD (self->current_video_buffer)) {
             dequeue_caption (self, tc, 0);
-          }
-          if (GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
+          } else {
             dequeue_caption (self, tc, 1);
           }
         } else {
@@ -886,7 +887,7 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
           dequeue_caption (self, tc, 0);
         } else if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
                 GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
-          if (GST_VIDEO_BUFFER_IS_TOP_FIELD (self->current_video_buffer)) {
+          if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
             dequeue_caption (self, tc, 0);
           }
         } else {
