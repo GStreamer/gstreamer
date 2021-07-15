@@ -1528,11 +1528,19 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
 
   for (i = 0; i < info_size / sizeof (MFT_REGISTER_TYPE_INFO); i++) {
     GstVideoFormat format;
+    const GstVideoFormatInfo *format_info;
     GValue val = G_VALUE_INIT;
 
     format = gst_mf_video_subtype_to_video_format (&infos[i].guidSubtype);
     if (format == GST_VIDEO_FORMAT_UNKNOWN)
       continue;
+
+    format_info = gst_video_format_get_info (format);
+    if (GST_VIDEO_FORMAT_INFO_IS_RGB (format_info)) {
+      GST_DEBUG_OBJECT (transform, "Skip %s format",
+          GST_VIDEO_FORMAT_INFO_NAME (format_info));
+      continue;
+    }
 
     if (!supported_formats) {
       supported_formats = g_new0 (GValue, 1);
