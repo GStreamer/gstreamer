@@ -8,10 +8,10 @@ if sdl_dep.found() and have_sdl_gl
   executable('sdlshare',
     'sdlshare.c',
     install: false,
-    dependencies : [gst_base_dep, gstgl_dep, sdl_dep, gl_dep])
+    dependencies : [gst_base_dep, gstgl_dep, sdl_dep, gl_dep, glx_dep])
 
   executable('sdlshare2',
     'sdlshare2.c',
     install: false,
-    dependencies : [gst_base_dep, gstgl_dep, sdl_dep, gl_dep])
+    dependencies : [gst_base_dep, gstgl_dep, sdl_dep, gl_dep, glx_dep])
 endif
