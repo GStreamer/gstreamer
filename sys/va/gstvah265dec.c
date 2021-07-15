@@ -381,7 +381,7 @@ _fill_pred_weight_table (GstVaH265Dec * self, GstH265SliceHdr * header,
       continue;
 
     for (j = 0; j < 2; j++) {
-      gint8 delta_chroma_offset_l0 =
+      gint16 delta_chroma_offset_l0 =
           header->pred_weight_table.delta_chroma_offset_l0[i][j];
       gint chroma_offset;
 
@@ -430,7 +430,7 @@ _fill_pred_weight_table (GstVaH265Dec * self, GstH265SliceHdr * header,
       continue;
 
     for (j = 0; j < 2; j++) {
-      gint8 delta_chroma_offset_l1 =
+      gint16 delta_chroma_offset_l1 =
           header->pred_weight_table.delta_chroma_offset_l1[i][j];
       gint chroma_offset;
 
