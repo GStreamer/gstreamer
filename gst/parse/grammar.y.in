@@ -398,7 +398,7 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
   }
   gst_parse_unescape (pos);
 
-  if (GST_IS_CHILD_PROXY (element)) {
+  if (GST_IS_CHILD_PROXY (element) && strstr (value, "::")) {
     if (!gst_child_proxy_lookup (GST_CHILD_PROXY (element), value, &target, &pspec)) {
       /* do a delayed set */
       gst_parse_add_delayed_set (element, value, pos);
@@ -408,6 +408,12 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
     if (pspec != NULL) {
       target = G_OBJECT (g_object_ref (element));
       GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, target, "found %s property", value);
+    } else if (GST_IS_CHILD_PROXY (element)) {
+      /* https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/832 made it
+       * a hard error to try and set a top-level property that doesn't exist on a bin,
+       * but here in 1.18 we just want to output a debug ERROR but not fail */
+      GST_ERROR("No property \"%s\" in element \"%s\" that is a child proxy. This will be a hard error in 1.20",
+          value, GST_ELEMENT_NAME (element));
     } else {
       SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
           _("no property \"%s\" in element \"%s\""), value, \
