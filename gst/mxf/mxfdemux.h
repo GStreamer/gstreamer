@@ -49,6 +49,24 @@ typedef struct _GstMXFDemuxClass GstMXFDemuxClass;
 typedef struct _GstMXFDemuxPad GstMXFDemuxPad;
 typedef struct _GstMXFDemuxPadClass GstMXFDemuxPadClass;
 
+
+/*
+ * GstMXFKLV is used to pass around information about a KLV.
+ *
+ * It optionally contains the content of the klv (data field).
+ */
+typedef struct {
+  MXFUL key;
+  guint64 offset;               /* absolute offset of K */
+  gsize length;                 /* Size of data (i.e. V) */
+  guint64 data_offset;          /* relative offset of data (i.e. size of 'KL') */
+  GstBuffer *data;              /* Can be NULL in pull-mode. */
+
+  /* For partial reads (ex: clip/custom wrapping essence), the amount of data
+   * already consumed within. If 0, all of length+data_offset was consumed */
+  guint64 consumed;
+} GstMXFKLV;
+
 typedef struct _GstMXFDemuxPartition GstMXFDemuxPartition;
 typedef struct _GstMXFDemuxEssenceTrack GstMXFDemuxEssenceTrack;
 
