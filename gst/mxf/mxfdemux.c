@@ -4165,6 +4165,126 @@ gst_mxf_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   return ret;
 }
 
+/* Given a stream time for an output pad, figure out:
+ * * The Essence track for that stream time
+ * * The position on that track
+ */
+static gboolean
+gst_mxf_demux_pad_to_track_and_position (GstMXFDemux * demux,
+    GstMXFDemuxPad * pad, GstClockTime streamtime,
+    GstMXFDemuxEssenceTrack ** etrack, gint64 * position)
+{
+  gint64 material_position;
+  guint64 sum = 0;
+  guint i;
+  MXFMetadataSourceClip *clip = NULL;
+  gchar str[96];
+
+  /* Convert to material position */
+  material_position =
+      gst_util_uint64_scale (streamtime, pad->material_track->edit_rate.n,
+      pad->material_track->edit_rate.d * GST_SECOND);
+
+  GST_DEBUG_OBJECT (pad,
+      "streamtime %" GST_TIME_FORMAT " position %" G_GINT64_FORMAT,
+      GST_TIME_ARGS (streamtime), material_position);
+
+
+  /* Find sequence component covering that position */
+  for (i = 0; i < pad->material_track->parent.sequence->n_structural_components;
+      i++) {
+    clip =
+        MXF_METADATA_SOURCE_CLIP (pad->material_track->parent.sequence->
+        structural_components[i]);
+    GST_LOG_OBJECT (pad,
+        "clip %d start_position:%" G_GINT64_FORMAT " duration %"
+        G_GINT64_FORMAT, clip->source_track_id, clip->start_position,
+        clip->parent.duration);
+    if (clip->parent.duration <= 0)
+      break;
+    if ((sum + clip->parent.duration) > material_position)
+      break;
+    sum += clip->parent.duration;
+  }
+
+  if (i == pad->material_track->parent.sequence->n_structural_components) {
+    GST_WARNING_OBJECT (pad, "Requested position beyond the last clip");
+    /* Outside of current components. Setting to the end of the last clip */
+    material_position = sum;
+    sum -= clip->parent.duration;
+  }
+
+  GST_DEBUG_OBJECT (pad, "Looking for essence track for track_id:%d umid:%s",
+      clip->source_track_id, mxf_umid_to_string (&clip->source_package_id,
+          str));
+
+  /* Get the corresponding essence track for the given source package and stream id */
+  for (i = 0; i < demux->essence_tracks->len; i++) {
+    GstMXFDemuxEssenceTrack *track =
+        &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
+    GST_LOG_OBJECT (pad,
+        "Looking at essence track body_sid:%d index_sid:%d",
+        track->body_sid, track->index_sid);
+    if (clip->source_track_id == 0 || (track->track_id == clip->source_track_id
+            && mxf_umid_is_equal (&clip->source_package_id,
+                &track->source_package_uid))) {
+      GST_DEBUG_OBJECT (pad,
+          "Found matching essence track body_sid:%d index_sid:%d",
+          track->body_sid, track->index_sid);
+      *etrack = track;
+      *position = material_position - sum;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/* Given a track+position for a given pad, figure out the resulting stream time */
+static gboolean
+gst_mxf_demux_pad_get_stream_time (GstMXFDemux * demux,
+    GstMXFDemuxPad * pad, GstMXFDemuxEssenceTrack * etrack,
+    gint64 position, GstClockTime * stream_time)
+{
+  guint i;
+  guint64 sum = 0;
+  MXFMetadataSourceClip *clip = NULL;
+
+  /* Find the component for that */
+  /* Find sequence component covering that position */
+  for (i = 0; i < pad->material_track->parent.sequence->n_structural_components;
+      i++) {
+    clip =
+        MXF_METADATA_SOURCE_CLIP (pad->material_track->parent.sequence->
+        structural_components[i]);
+    GST_LOG_OBJECT (pad,
+        "clip %d start_position:%" G_GINT64_FORMAT " duration %"
+        G_GINT64_FORMAT, clip->source_track_id, clip->start_position,
+        clip->parent.duration);
+    if (etrack->track_id == clip->source_track_id
+        && mxf_umid_is_equal (&clip->source_package_id,
+            &etrack->source_package_uid)) {
+      /* This is the clip */
+      break;
+    }
+    /* Fetch in the next one */
+    sum += clip->parent.duration;
+  }
+
+  /* Theoretically impossible */
+  if (i == pad->material_track->parent.sequence->n_structural_components) {
+    /* Outside of current components ?? */
+    return FALSE;
+  }
+
+  *stream_time =
+      gst_util_uint64_scale (position + sum,
+      pad->material_track->edit_rate.d * GST_SECOND,
+      pad->material_track->edit_rate.n);
+
+  return TRUE;
+}
+
 static void
 gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
     GstClockTime start)
@@ -4565,6 +4685,8 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
     return TRUE;
   }
 
+  GST_DEBUG_OBJECT (demux, "Seek %" GST_PTR_FORMAT, event);
+
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
@@ -4573,8 +4695,6 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
 
   flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
-
-  keyunit_ts = start;
 
   if (!demux->index_table_segments_collected) {
     collect_index_table_segments (demux);
@@ -4617,12 +4737,11 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       start_type, start, stop_type, stop, &update);
 
-  GST_DEBUG_OBJECT (demux, "segment configured %" GST_SEGMENT_FORMAT,
-      &seeksegment);
+  GST_DEBUG_OBJECT (demux,
+      "segment initially configured to %" GST_SEGMENT_FORMAT, &seeksegment);
 
+  /* Initialize and reset ourselves if needed */
   if (flush || seeksegment.position != demux->segment.position) {
-    guint64 new_offset = -1;
-
     if (!demux->metadata_resolved || demux->update_metadata) {
       if (gst_mxf_demux_resolve_references (demux) != GST_FLOW_OK ||
           gst_mxf_demux_update_tracks (demux) != GST_FLOW_OK) {
@@ -4630,19 +4749,70 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       }
     }
 
+  }
+
+  keyunit_ts = seeksegment.position;
+
+  /* Do a first round without changing positions. This is needed to figure out
+   * the supporting keyframe position (if any) */
+  for (i = 0; i < demux->src->len; i++) {
+    GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+    GstMXFDemuxEssenceTrack *etrack;
+    gint64 track_pos, seeked_pos;
+
+    /* Get track and track position for requested time, handles out of bound internally */
+    if (!gst_mxf_demux_pad_to_track_and_position (demux, p,
+            seeksegment.position, &etrack, &track_pos))
+      goto invalid_position;
+
+    GST_LOG_OBJECT (p,
+        "track %d (body_sid:%d index_sid:%d), position %" G_GINT64_FORMAT,
+        etrack->track_id, etrack->body_sid, etrack->index_sid, track_pos);
+
+    /* Find supporting keyframe entry */
+    seeked_pos = track_pos;
+    if (gst_mxf_demux_find_essence_element (demux, etrack, &seeked_pos,
+            TRUE) == -1) {
+      /* Couldn't find entry, ignore */
+      break;
+    }
+
+    GST_LOG_OBJECT (p,
+        "track %d (body_sid:%d index_sid:%d), position %" G_GINT64_FORMAT
+        " entry position %" G_GINT64_FORMAT, etrack->track_id, etrack->body_sid,
+        etrack->index_sid, track_pos, seeked_pos);
+
+    if (seeked_pos != track_pos) {
+      GstClockTime stream_time;
+      if (!gst_mxf_demux_pad_get_stream_time (demux, p, etrack, seeked_pos,
+              &stream_time))
+        goto invalid_position;
+      GST_LOG_OBJECT (p, "Need to seek to stream time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (stream_time));
+      keyunit_ts = MIN (seeksegment.position, stream_time);
+    }
+  }
+
+  if (keyframe && keyunit_ts != seeksegment.position) {
+    GST_INFO_OBJECT (demux, "key unit seek, adjusting segment start to "
+        "%" GST_TIME_FORMAT, GST_TIME_ARGS (keyunit_ts));
+    gst_segment_do_seek (&seeksegment, rate, format, flags,
+        start_type, keyunit_ts, stop_type, stop, &update);
+  }
+
+  /* Finally set the position to the calculated position */
+  if (flush || keyunit_ts != demux->segment.position) {
+    guint64 new_offset = -1;
+
     /* Do the actual seeking */
     for (i = 0; i < demux->src->len; i++) {
-      MXFMetadataTrackType track_type = MXF_METADATA_TRACK_UNKNOWN;
       GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
       gint64 position;
       guint64 off;
 
-      if (p->material_track != NULL)
-        track_type = p->material_track->parent.type;
-
       /* Reset EOS flag on all pads */
       p->eos = FALSE;
-      gst_mxf_demux_pad_set_position (demux, p, start);
+      gst_mxf_demux_pad_set_position (demux, p, seeksegment.position);
 
       /* we always want to send data starting with a key unit */
       position = p->current_essence_track_position;
@@ -4671,11 +4841,6 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
               p->current_essence_track->source_track->edit_rate.n);
         }
         p->current_essence_track_position = position;
-
-        /* FIXME: what about DV + MPEG-TS container essence tracks? */
-        if (track_type == MXF_METADATA_TRACK_PICTURE_ESSENCE) {
-          keyunit_ts = MIN (p->position, keyunit_ts);
-        }
       }
       p->discont = TRUE;
     }
@@ -4708,13 +4873,6 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
     /* Close the current segment for a linear playback */
     demux->close_seg_event = gst_event_new_segment (&demux->segment);
     gst_event_set_seqnum (demux->close_seg_event, demux->seqnum);
-  }
-
-  if (keyframe && keyunit_ts != start) {
-    GST_INFO_OBJECT (demux, "key unit seek, adjusting segment start to "
-        "%" GST_TIME_FORMAT, GST_TIME_ARGS (keyunit_ts));
-    gst_segment_do_seek (&seeksegment, rate, format, flags,
-        start_type, keyunit_ts, stop_type, stop, &update);
   }
 
   /* Ok seek succeeded, take the newly configured segment */
@@ -4768,6 +4926,23 @@ unresolved_metadata:
         (GstTaskFunction) gst_mxf_demux_loop, demux->sinkpad, NULL);
     GST_PAD_STREAM_UNLOCK (demux->sinkpad);
     GST_WARNING_OBJECT (demux, "metadata can't be resolved");
+    return FALSE;
+  }
+
+invalid_position:
+  {
+    if (flush) {
+      GstEvent *e;
+
+      /* Stop flushing, the sinks are at time 0 now */
+      e = gst_event_new_flush_stop (TRUE);
+      gst_event_set_seqnum (e, seqnum);
+      gst_mxf_demux_push_src_event (demux, e);
+    }
+    gst_pad_start_task (demux->sinkpad,
+        (GstTaskFunction) gst_mxf_demux_loop, demux->sinkpad, NULL);
+    GST_PAD_STREAM_UNLOCK (demux->sinkpad);
+    GST_WARNING_OBJECT (demux, "Requested seek position is not valid");
     return FALSE;
   }
 }
