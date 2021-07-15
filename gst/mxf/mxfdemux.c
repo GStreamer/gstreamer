@@ -980,6 +980,148 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
   return GST_FLOW_OK;
 }
 
+static MXFMetadataEssenceContainerData *
+essence_container_for_source_package (MXFMetadataContentStorage * storage,
+    MXFMetadataSourcePackage * package)
+{
+  guint i;
+
+  for (i = 0; i < storage->n_essence_container_data; i++) {
+    MXFMetadataEssenceContainerData *cont = storage->essence_container_data[i];
+    if (cont && cont->linked_package == package)
+      return cont;
+  }
+
+  return NULL;
+}
+
+static void
+gst_mxf_demux_show_topology (GstMXFDemux * demux)
+{
+  GList *material_packages = NULL;
+  GList *file_packages = NULL;
+  GList *tmp;
+  MXFMetadataContentStorage *storage = demux->preface->content_storage;
+  guint i;
+  gchar str[96];
+
+  /* Show the topology starting from the preface */
+  GST_DEBUG_OBJECT (demux, "Topology");
+
+  for (i = 0; i < storage->n_packages; i++) {
+    MXFMetadataGenericPackage *pack = storage->packages[i];
+    if (MXF_IS_METADATA_MATERIAL_PACKAGE (pack))
+      material_packages = g_list_append (material_packages, pack);
+    else if (MXF_IS_METADATA_SOURCE_PACKAGE (pack))
+      file_packages = g_list_append (file_packages, pack);
+    else
+      GST_DEBUG_OBJECT (demux, "Unknown package type");
+  }
+
+  GST_DEBUG_OBJECT (demux, "Number of Material Package (i.e. output) : %d",
+      g_list_length (material_packages));
+  for (tmp = material_packages; tmp; tmp = tmp->next) {
+    MXFMetadataMaterialPackage *pack = (MXFMetadataMaterialPackage *) tmp->data;
+    GST_DEBUG_OBJECT (demux, "  Package with %d tracks , UID:%s",
+        pack->n_tracks, mxf_umid_to_string (&pack->package_uid, str));
+    for (i = 0; i < pack->n_tracks; i++) {
+      MXFMetadataTrack *track = pack->tracks[i];
+      if (track == NULL) {
+        GST_DEBUG_OBJECT (demux, "    Unknown/Unhandled track UUID %s",
+            mxf_uuid_to_string (&pack->tracks_uids[i], str));
+      } else if (MXF_IS_METADATA_TIMELINE_TRACK (track)) {
+        MXFMetadataTimelineTrack *mtrack = (MXFMetadataTimelineTrack *) track;
+        GST_DEBUG_OBJECT (demux,
+            "    Timeline Track id:%d number:0x%08x name:`%s` edit_rate:%d/%d origin:%"
+            G_GINT64_FORMAT, track->track_id, track->track_number,
+            track->track_name, mtrack->edit_rate.n, mtrack->edit_rate.d,
+            mtrack->origin);
+      } else {
+        GST_DEBUG_OBJECT (demux,
+            "    Non-Timeline-Track id:%d number:0x%08x name:`%s`",
+            track->track_id, track->track_number, track->track_name);
+      }
+      if (track) {
+        MXFMetadataSequence *sequence = track->sequence;
+        guint si;
+        GST_DEBUG_OBJECT (demux,
+            "      Sequence duration:%" G_GINT64_FORMAT
+            " n_structural_components:%d", sequence->duration,
+            sequence->n_structural_components);
+        for (si = 0; si < sequence->n_structural_components; si++) {
+          MXFMetadataStructuralComponent *comp =
+              sequence->structural_components[si];
+          GST_DEBUG_OBJECT (demux,
+              "        Component #%d duration:%" G_GINT64_FORMAT, si,
+              comp->duration);
+          if (MXF_IS_METADATA_SOURCE_CLIP (comp)) {
+            MXFMetadataSourceClip *clip = (MXFMetadataSourceClip *) comp;
+            GST_DEBUG_OBJECT (demux,
+                "          Clip start_position:%" G_GINT64_FORMAT
+                " source_track_id:%d source_package_id:%s",
+                clip->start_position, clip->source_track_id,
+                mxf_umid_to_string (&clip->source_package_id, str));
+          }
+        }
+
+      }
+    }
+  }
+
+  GST_DEBUG_OBJECT (demux, "Number of File Packages (i.e. input) : %d",
+      g_list_length (file_packages));
+  for (tmp = file_packages; tmp; tmp = tmp->next) {
+    MXFMetadataMaterialPackage *pack = (MXFMetadataMaterialPackage *) tmp->data;
+    MXFMetadataSourcePackage *src = (MXFMetadataSourcePackage *) pack;
+    MXFMetadataEssenceContainerData *econt =
+        essence_container_for_source_package (storage, src);
+    GST_DEBUG_OBJECT (demux,
+        "  Package (body_sid:%d index_sid:%d top_level:%d) with %d tracks , UID:%s",
+        econt->body_sid, econt->index_sid, src->top_level, pack->n_tracks,
+        mxf_umid_to_string (&pack->package_uid, str));
+    GST_DEBUG_OBJECT (demux, "    Package descriptor : %s",
+        g_type_name (G_OBJECT_TYPE (src->descriptor)));
+    for (i = 0; i < pack->n_tracks; i++) {
+      MXFMetadataTrack *track = pack->tracks[i];
+      MXFMetadataSequence *sequence = track->sequence;
+      guint di, si;
+      if (MXF_IS_METADATA_TIMELINE_TRACK (track)) {
+        MXFMetadataTimelineTrack *mtrack = (MXFMetadataTimelineTrack *) track;
+        GST_DEBUG_OBJECT (demux,
+            "    Timeline Track id:%d number:0x%08x name:`%s` edit_rate:%d/%d origin:%"
+            G_GINT64_FORMAT, track->track_id, track->track_number,
+            track->track_name, mtrack->edit_rate.n, mtrack->edit_rate.d,
+            mtrack->origin);
+      } else {
+        GST_DEBUG_OBJECT (demux,
+            "    Non-Timeline-Track id:%d number:0x%08x name:`%s` type:0x%x",
+            track->track_id, track->track_number, track->track_name,
+            track->type);
+      }
+      for (di = 0; di < track->n_descriptor; di++) {
+        MXFMetadataFileDescriptor *desc = track->descriptor[di];
+        GST_DEBUG_OBJECT (demux, "      Descriptor %s %s",
+            g_type_name (G_OBJECT_TYPE (desc)),
+            mxf_ul_to_string (&desc->essence_container, str));
+      }
+      GST_DEBUG_OBJECT (demux,
+          "      Sequence duration:%" G_GINT64_FORMAT
+          " n_structural_components:%d", sequence->duration,
+          sequence->n_structural_components);
+      for (si = 0; si < sequence->n_structural_components; si++) {
+        MXFMetadataStructuralComponent *comp =
+            sequence->structural_components[si];
+        GST_DEBUG_OBJECT (demux,
+            "        Component #%d duration:%" G_GINT64_FORMAT, si,
+            comp->duration);
+      }
+    }
+  }
+
+  g_list_free (material_packages);
+  g_list_free (file_packages);
+}
+
 static GstFlowReturn
 gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 {
@@ -993,6 +1135,8 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
   g_rw_lock_writer_lock (&demux->metadata_lock);
   GST_DEBUG_OBJECT (demux, "Updating tracks");
+
+  gst_mxf_demux_show_topology (demux);
 
   if ((ret = gst_mxf_demux_update_essence_tracks (demux)) != GST_FLOW_OK) {
     goto error;
