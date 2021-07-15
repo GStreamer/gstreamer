@@ -377,7 +377,8 @@ compare_segments (GstValidateMediaDescriptor * ref,
   CHECK_SEGMENT_FIELD (start, "%" G_GUINT64_FORMAT);
   CHECK_SEGMENT_FIELD (stop, "%" G_GUINT64_FORMAT);
   CHECK_SEGMENT_FIELD (time, "%" G_GUINT64_FORMAT);
-  CHECK_SEGMENT_FIELD (position, "%" G_GUINT64_FORMAT);
+  /* We do not compare segment position since it's a field for usage only within the element */
+  /* CHECK_SEGMENT_FIELD (position, "%" G_GUINT64_FORMAT); */
   CHECK_SEGMENT_FIELD (duration, "%" G_GUINT64_FORMAT);
 
   return TRUE;
