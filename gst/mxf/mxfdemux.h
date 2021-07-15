@@ -67,6 +67,13 @@ typedef struct {
   guint64 consumed;
 } GstMXFKLV;
 
+
+typedef enum {
+  GST_MXF_DEMUX_STATE_UNKNOWN,	/* Still looking for run-in/klv */
+  GST_MXF_DEMUX_STATE_KLV,	/* Next read/fetch is a KLV */
+  GST_MXF_DEMUX_STATE_ESSENCE	/* Next read/fetch is within a KLV (i.e. non-frame-wrapped) */
+} GstMXFDemuxState;
+
 typedef struct _GstMXFDemuxPartition GstMXFDemuxPartition;
 typedef struct _GstMXFDemuxEssenceTrack GstMXFDemuxEssenceTrack;
 
@@ -75,9 +82,19 @@ struct _GstMXFDemuxPartition
   MXFPartitionPack partition;
   MXFPrimerPack primer;
   gboolean parsed_metadata;
-  /* Relative offset at which essence starts within this partition.*/
+
+  /* Relative offset at which essence starts within this partition.
+   *
+   * For Frame wrapping, the position of the first KLV
+   * For Clip/Custom wrapping, the position of the first byte of essence in the KLV
+   **/
   guint64 essence_container_offset;
 
+  /* If the partition contains a single essence track, point to it */
+  GstMXFDemuxEssenceTrack *single_track;
+
+  /* For clip-based wrapping, the essence KLV */
+  GstMXFKLV clip_klv;
 };
 
 #define MXF_INDEX_DELTA_ID_UNKNOWN -1
@@ -121,6 +138,10 @@ struct _GstMXFDemuxEssenceTrack
 
   MXFEssenceWrapping wrapping;
 
+  /* Minimum number of edit unit to send in one go.
+   * Default : 1
+   * Used for raw audio track */
+  guint min_edit_units;
 };
 
 typedef struct
@@ -217,6 +238,8 @@ struct _GstMXFDemux
   GPtrArray *src;
 
   /* < private > */
+  GstMXFDemuxState state;
+
   gboolean have_group_id;
   guint group_id;
 
@@ -260,6 +283,7 @@ struct _GstMXFDemux
   MXFMetadataPreface *preface;
   GHashTable *metadata;
 
+  /* Current Material Package */
   MXFUMID current_package_uid;
   MXFMetadataGenericPackage *current_package;
   gchar *current_package_string;
