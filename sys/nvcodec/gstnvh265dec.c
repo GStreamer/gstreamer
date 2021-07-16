@@ -740,7 +740,7 @@ gst_nv_h265_dec_start_picture (GstH265Decoder * decoder,
       slice_header->short_term_ref_pic_set_size;
   h265_params->NumDeltaPocsOfRefRpsIdx =
       slice_header->short_term_ref_pic_sets.NumDeltaPocsOfRefRpsIdx;
-  h265_params->NumPocTotalCurr = decoder->NumPocTotalCurr;
+  h265_params->NumPocTotalCurr = decoder->NumPicTotalCurr;
   h265_params->NumPocStCurrBefore = decoder->NumPocStCurrBefore;
   h265_params->NumPocStCurrAfter = decoder->NumPocStCurrAfter;
   h265_params->NumPocLtCurr = decoder->NumPocLtCurr;

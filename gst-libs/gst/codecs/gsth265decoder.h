@@ -64,7 +64,7 @@ struct _GstH265Decoder
   guint NumPocStFoll;
   guint NumPocLtCurr;
   guint NumPocLtFoll;
-  guint NumPocTotalCurr;
+  guint NumPicTotalCurr;
 
   /*< private >*/
   GstH265DecoderPrivate *priv;

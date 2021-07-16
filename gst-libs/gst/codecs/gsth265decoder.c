@@ -492,7 +492,7 @@ gst_h265_decoder_process_ref_pic_lists (GstH265Decoder * self,
 
   /* NumRpsCurrTempList0 */
   num_tmp_refs = MAX (slice->header.num_ref_idx_l0_active_minus1 + 1,
-      slice->header.NumPocTotalCurr);
+      self->NumPicTotalCurr);
 
   while (tmp_refs->len < num_tmp_refs) {
     for (i = 0; i < self->NumPocStCurrBefore && tmp_refs->len < num_tmp_refs;
@@ -542,7 +542,7 @@ gst_h265_decoder_process_ref_pic_lists (GstH265Decoder * self,
 
   /* NumRpsCurrTempList1 */
   num_tmp_refs = MAX (slice->header.num_ref_idx_l1_active_minus1 + 1,
-      slice->header.NumPocTotalCurr);
+      self->NumPicTotalCurr);
 
   while (tmp_refs->len < num_tmp_refs) {
     for (i = 0; i < self->NumPocStCurrAfter && tmp_refs->len < num_tmp_refs;
@@ -1405,7 +1405,7 @@ gst_h265_decoder_prepare_rps (GstH265Decoder * self, const GstH265Slice * slice,
         numtotalcurr++;
     }
 
-    self->NumPocTotalCurr = numtotalcurr;
+    self->NumPicTotalCurr = numtotalcurr;
 
     /* The variable DeltaPocMsbCycleLt[i] is derived as follows: (7-38) */
     for (i = 0; i < num_lt_pics; i++) {
@@ -1442,7 +1442,7 @@ gst_h265_decoder_prepare_rps (GstH265Decoder * self, const GstH265Slice * slice,
   GST_LOG_OBJECT (self, "NumPocStFoll:       %d", self->NumPocStFoll);
   GST_LOG_OBJECT (self, "NumPocLtCurr:       %d", self->NumPocLtCurr);
   GST_LOG_OBJECT (self, "NumPocLtFoll:       %d", self->NumPocLtFoll);
-  GST_LOG_OBJECT (self, "NumPocTotalCurr:    %d", self->NumPocTotalCurr);
+  GST_LOG_OBJECT (self, "NumPicTotalCurr:    %d", self->NumPicTotalCurr);
 
   /* the derivation process for the RPS and the picture marking */
   gst_h265_decoder_derive_and_mark_rps (self, picture,
