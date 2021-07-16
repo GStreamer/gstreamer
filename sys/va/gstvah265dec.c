@@ -754,9 +754,16 @@ gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
   /* reference frames */
   {
     GArray *ref_list = gst_h265_dpb_get_pictures_all (dpb);
-    for (i = 0; i < 15 && i < ref_list->len; i++) {
-      GstH265Picture *pic = g_array_index (ref_list, GstH265Picture *, i);
-      _fill_vaapi_pic (decoder, &pic_param->base.ReferenceFrames[i], pic);
+    guint j;
+
+    i = 0;
+    for (j = 0; j < 15 && j < ref_list->len; j++) {
+      GstH265Picture *pic = g_array_index (ref_list, GstH265Picture *, j);
+
+      if (pic->ref) {
+        _fill_vaapi_pic (decoder, &pic_param->base.ReferenceFrames[i], pic);
+        i++;
+      }
     }
     g_array_unref (ref_list);
 
