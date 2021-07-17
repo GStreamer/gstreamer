@@ -354,8 +354,10 @@ gst_va_decoder_set_frame_size (GstVaDecoder * self, gint coded_width,
       coded_height, NULL);
 }
 
+/* This function is only used by codecs where frame size can change
+ * without a context reset, as for example VP9 */
 gboolean
-gst_va_decoder_change_resolution (GstVaDecoder * self, gint coded_width,
+gst_va_decoder_update_frame_size (GstVaDecoder * self, gint coded_width,
     gint coded_height)
 {
   g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
@@ -368,7 +370,7 @@ gst_va_decoder_change_resolution (GstVaDecoder * self, gint coded_width,
   GST_OBJECT_LOCK (self);
   if (self->context == VA_INVALID_ID) {
     GST_OBJECT_UNLOCK (self);
-    GST_INFO_OBJECT (self, "decoder does not have a format");
+    GST_INFO_OBJECT (self, "decoder does not have a context");
     return FALSE;
   }
   GST_OBJECT_UNLOCK (self);

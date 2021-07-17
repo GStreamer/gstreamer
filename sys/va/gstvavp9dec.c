@@ -557,7 +557,7 @@ gst_va_vp9_dec_negotiate (GstVideoDecoder * decoder)
       return FALSE;
 
     if (base->profile == cur_profile && base->rt_format == cur_rtformat) {
-      if (!gst_va_decoder_change_resolution (base->decoder, base->width,
+      if (!gst_va_decoder_update_frame_size (base->decoder, base->width,
               base->height))
         return FALSE;
 

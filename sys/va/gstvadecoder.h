@@ -52,7 +52,7 @@ gboolean              gst_va_decoder_set_frame_size_with_surfaces
 gboolean              gst_va_decoder_set_frame_size       (GstVaDecoder * self,
                                                            gint coded_width,
                                                            gint coded_height);
-gboolean              gst_va_decoder_change_resolution    (GstVaDecoder * self,
+gboolean              gst_va_decoder_update_frame_size    (GstVaDecoder * self,
                                                            gint coded_width,
                                                            gint coded_height);
 GstCaps *             gst_va_decoder_get_srcpad_caps      (GstVaDecoder * self);
