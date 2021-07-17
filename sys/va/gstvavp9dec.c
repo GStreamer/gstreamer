@@ -200,9 +200,13 @@ _check_resolution_change (GstVaVp9Dec * self, GstVp9Picture * picture)
 
     self->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
-      GST_ERROR_OBJECT (self, "Resolution changes, but failed to"
+      GST_ERROR_OBJECT (self, "Resolution changed, but failed to"
           " negotiate with downstream");
       return FALSE;
+
+      /* @TODO: if negotiation fails, decoder should resize output
+       * frame. For that we would need an auxiliar allocator, and
+       * later use GstVaFilter or GstVideoConverter. */
     }
   }
 
@@ -544,9 +548,9 @@ gst_va_vp9_dec_negotiate (GstVideoDecoder * decoder)
   self->need_negotiation = FALSE;
 
   need_open = TRUE;
-  /* The driver for VP9 should have the ability to handle the dynamical
-     resolution changes. So if only the resolution changes, we should not
-     re-create the config and context. */
+  /* VP9 profile entry should have the ability to handle dynamical
+   * resolution changes. If only the resolution changes, we should not
+   * re-create the config and context. */
   if (gst_va_decoder_is_open (base->decoder)) {
     VAProfile cur_profile;
     guint cur_rtformat;
