@@ -47,12 +47,12 @@ struct _GstMsdkContextPrivate
   MsdkSession session;
   GList *cached_alloc_responses;
   gboolean hardware;
-  gboolean is_joined;
   gboolean has_frame_allocator;
   GstMsdkContextJobType job_type;
   gint shared_async_depth;
   GMutex mutex;
   GList *child_session_list;
+  GstMsdkContext *parent_context;
 #ifndef _WIN32
   gint fd;
   VADisplay dpy;
@@ -267,9 +267,10 @@ gst_msdk_context_finalize (GObject * obj)
   GstMsdkContextPrivate *priv = context->priv;
 
   /* child sessions will be closed when the parent session is closed */
-  if (priv->is_joined)
+  if (priv->parent_context) {
+    gst_object_unref (priv->parent_context);
     goto done;
-  else
+  } else
     g_list_free_full (priv->child_session_list, release_child_session);
 
   msdk_close_session (&priv->session);
@@ -389,7 +390,6 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
   /* Set loader to NULL for child session */
   priv->session.loader = NULL;
   priv->session.session = child_msdk_session.session;
-  priv->is_joined = TRUE;
   priv->hardware = parent_priv->hardware;
   priv->job_type = parent_priv->job_type;
   parent_priv->child_session_list =
@@ -398,6 +398,7 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
   priv->dpy = parent_priv->dpy;
   priv->fd = parent_priv->fd;
 #endif
+  priv->parent_context = gst_object_ref (parent);
 
   return obj;
 }
