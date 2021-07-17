@@ -44,10 +44,14 @@ gboolean              gst_va_decoder_open                 (GstVaDecoder * self,
                                                            guint rt_format);
 gboolean              gst_va_decoder_close                (GstVaDecoder * self);
 gboolean              gst_va_decoder_is_open              (GstVaDecoder * self);
-gboolean              gst_va_decoder_set_format           (GstVaDecoder * self,
+gboolean              gst_va_decoder_set_frame_size_with_surfaces
+                                                          (GstVaDecoder * self,
                                                            gint coded_width,
                                                            gint coded_height,
                                                            GArray * surfaces);
+gboolean              gst_va_decoder_set_frame_size       (GstVaDecoder * self,
+                                                           gint coded_width,
+                                                           gint coded_height);
 gboolean              gst_va_decoder_change_resolution    (GstVaDecoder * self,
                                                            gint coded_width,
                                                            gint coded_height);

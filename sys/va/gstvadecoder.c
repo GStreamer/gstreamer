@@ -296,8 +296,8 @@ gst_va_decoder_close (GstVaDecoder * self)
 }
 
 gboolean
-gst_va_decoder_set_format (GstVaDecoder * self, gint coded_width,
-    gint coded_height, GArray * surfaces)
+gst_va_decoder_set_frame_size_with_surfaces (GstVaDecoder * self,
+    gint coded_width, gint coded_height, GArray * surfaces)
 {
   VAContextID context;
   VADisplay dpy;
@@ -310,7 +310,7 @@ gst_va_decoder_set_format (GstVaDecoder * self, gint coded_width,
   GST_OBJECT_LOCK (self);
   if (self->context != VA_INVALID_ID) {
     GST_OBJECT_UNLOCK (self);
-    GST_INFO_OBJECT (self, "decoder already has a format");
+    GST_INFO_OBJECT (self, "decoder already has a context");
     return TRUE;
   }
   GST_OBJECT_UNLOCK (self);
@@ -344,6 +344,14 @@ gst_va_decoder_set_format (GstVaDecoder * self, gint coded_width,
   GST_OBJECT_UNLOCK (self);
 
   return TRUE;
+}
+
+gboolean
+gst_va_decoder_set_frame_size (GstVaDecoder * self, gint coded_width,
+    gint coded_height)
+{
+  return gst_va_decoder_set_frame_size_with_surfaces (self, coded_width,
+      coded_height, NULL);
 }
 
 gboolean

@@ -815,8 +815,8 @@ gst_va_h264_dec_negotiate (GstVideoDecoder * decoder)
   if (!gst_va_decoder_open (base->decoder, base->profile, base->rt_format))
     return FALSE;
 
-  if (!gst_va_decoder_set_format (base->decoder, self->coded_width,
-          self->coded_height, NULL))
+  if (!gst_va_decoder_set_frame_size (base->decoder, self->coded_width,
+          self->coded_height))
     return FALSE;
 
   if (base->output_state)
