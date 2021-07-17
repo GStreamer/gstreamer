@@ -716,6 +716,29 @@ gst_va_decoder_config_is_equal (GstVaDecoder * self, VAProfile new_profile,
   return ret;
 }
 
+gboolean
+gst_va_decoder_get_config (GstVaDecoder * self, VAProfile * profile,
+    guint * rt_format, gint * width, gint * height)
+{
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+
+  if (!gst_va_decoder_is_open (self))
+    return FALSE;
+
+  GST_OBJECT_LOCK (self);
+  if (profile)
+    *profile = self->profile;
+  if (rt_format)
+    *rt_format = self->rt_format;
+  if (width)
+    *width = self->coded_width;
+  if (height)
+    *height = self->coded_height;
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
 static gboolean
 _destroy_buffers (GstVaDecodePicture * pic)
 {
@@ -823,25 +846,4 @@ gst_va_decode_picture_dup (GstVaDecodePicture * pic)
   /* dups only need gstbuffer */
   dup->gstbuffer = gst_buffer_ref (pic->gstbuffer);
   return dup;
-}
-
-gboolean
-gst_va_decoder_get_config (GstVaDecoder * decoder, VAProfile * profile,
-    guint * rt_format, gint * width, gint * height)
-{
-  g_return_val_if_fail (decoder, FALSE);
-
-  if (!gst_va_decoder_is_open (decoder))
-    return FALSE;
-
-  if (profile)
-    *profile = decoder->profile;
-  if (rt_format)
-    *rt_format = decoder->rt_format;
-  if (width)
-    *width = decoder->coded_width;
-  if (height)
-    *height = decoder->coded_height;
-
-  return TRUE;
 }

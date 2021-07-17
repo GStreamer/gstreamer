@@ -91,6 +91,11 @@ gboolean              gst_va_decoder_config_is_equal      (GstVaDecoder * decode
                                                            guint new_rtformat,
                                                            gint new_width,
                                                            gint new_height);
+gboolean              gst_va_decoder_get_config           (GstVaDecoder * decoder,
+                                                           VAProfile * profile,
+                                                           guint * rt_format,
+                                                           gint * width,
+                                                           gint * height);
 
 GstVaDecodePicture *  gst_va_decode_picture_new           (GstVaDecoder * self,
                                                            GstBuffer * buffer);
@@ -98,11 +103,5 @@ VASurfaceID           gst_va_decode_picture_get_surface   (GstVaDecodePicture * 
 VASurfaceID           gst_va_decode_picture_get_aux_surface (GstVaDecodePicture * pic);
 void                  gst_va_decode_picture_free          (GstVaDecodePicture * pic);
 GstVaDecodePicture *  gst_va_decode_picture_dup           (GstVaDecodePicture * pic);
-
-gboolean              gst_va_decoder_get_config           (GstVaDecoder * decoder,
-                                                           VAProfile * profile,
-                                                           guint * rt_format,
-                                                           gint * width,
-                                                           gint * height);
 
 G_END_DECLS
