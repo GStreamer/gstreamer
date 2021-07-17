@@ -252,7 +252,7 @@ gst_va_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
   if (rt_format == 0)
     return FALSE;
 
-  if (gst_va_decoder_format_changed (base->decoder, profile,
+  if (!gst_va_decoder_config_is_equal (base->decoder, profile,
           rt_format, width, height)) {
     base->profile = profile;
     base->rt_format = rt_format;

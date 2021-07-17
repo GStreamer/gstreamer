@@ -165,7 +165,7 @@ gst_va_vp8_dec_new_sequence (GstVp8Decoder * decoder,
   /* VP8 always use 8 bits 4:2:0 */
   rt_format = VA_RT_FORMAT_YUV420;
 
-  if (gst_va_decoder_format_changed (base->decoder, profile,
+  if (!gst_va_decoder_config_is_equal (base->decoder, profile,
           rt_format, frame_hdr->width, frame_hdr->height)) {
     base->profile = profile;
     base->width = frame_hdr->width;

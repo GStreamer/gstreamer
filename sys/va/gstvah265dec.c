@@ -1053,7 +1053,7 @@ gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
   if (rt_format == 0)
     return FALSE;
 
-  if (gst_va_decoder_format_changed (base->decoder, profile,
+  if (!gst_va_decoder_config_is_equal (base->decoder, profile,
           rt_format, sps->width, sps->height)) {
     base->profile = profile;
     base->rt_format = rt_format;

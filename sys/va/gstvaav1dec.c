@@ -103,7 +103,7 @@ gst_va_av1_dec_negotiate (GstVideoDecoder * decoder)
   self->need_negotiation = FALSE;
 
   /* Do not re-create the context if only the frame size changes */
-  if (gst_va_decoder_format_changed (base->decoder, base->profile,
+  if (!gst_va_decoder_config_is_equal (base->decoder, base->profile,
           base->rt_format, self->max_width, self->max_height)) {
     if (gst_va_decoder_is_open (base->decoder)
         && !gst_va_decoder_close (base->decoder))
@@ -265,7 +265,7 @@ gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
 
   self->seq = *seq_hdr;
 
-  if (gst_va_decoder_format_changed (base->decoder, profile,
+  if (!gst_va_decoder_config_is_equal (base->decoder, profile,
           rt_format, seq_hdr->max_frame_width_minus_1 + 1,
           seq_hdr->max_frame_height_minus_1 + 1)) {
     base->profile = profile;

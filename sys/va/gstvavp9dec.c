@@ -166,7 +166,7 @@ gst_va_vp9_new_sequence (GstVp9Decoder * decoder,
   if (rt_format == 0)
     return FALSE;
 
-  if (gst_va_decoder_format_changed (base->decoder, profile,
+  if (!gst_va_decoder_config_is_equal (base->decoder, profile,
           rt_format, frame_hdr->width, frame_hdr->height)) {
     base->profile = profile;
     base->width = frame_hdr->width;
