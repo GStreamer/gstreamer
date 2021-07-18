@@ -77,7 +77,7 @@ const gpointer        gst_va_filter_get_filter_caps       (GstVaFilter * self,
 guint32               gst_va_filter_get_mem_types         (GstVaFilter * self);
 GArray *              gst_va_filter_get_surface_formats   (GstVaFilter * self);
 GstCaps *             gst_va_filter_get_caps              (GstVaFilter * self);
-gboolean              gst_va_filter_set_formats           (GstVaFilter * self,
+gboolean              gst_va_filter_set_video_info        (GstVaFilter * self,
                                                            GstVideoInfo * in_info,
                                                            GstVideoInfo * out_info);
 gboolean              gst_va_filter_add_filter_buffer     (GstVaFilter * self,

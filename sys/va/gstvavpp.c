@@ -849,8 +849,8 @@ gst_va_vpp_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   self->in_info = in_info;
   self->out_info = out_info;
 
-  self->negotiated =
-      gst_va_filter_set_formats (self->filter, &self->in_info, &self->out_info);
+  self->negotiated = gst_va_filter_set_video_info (self->filter, &self->in_info,
+      &self->out_info);
 
   if (self->negotiated)
     gst_va_vpp_update_passthrough (self, FALSE);
