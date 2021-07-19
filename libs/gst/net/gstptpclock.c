@@ -772,6 +772,7 @@ select_best_master_clock (PtpDomainData * domain, GstClockTime now)
     if (!best || compare_announce_message (msg, best) < 0)
       best = msg;
   }
+  g_clear_pointer (&qualified_messages, g_list_free);
 
   if (domain->have_master_clock
       && compare_clock_identity (&domain->master_clock_identity,
