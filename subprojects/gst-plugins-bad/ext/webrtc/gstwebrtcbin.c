@@ -2976,6 +2976,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
   GstSDPMessage *last_offer = _get_latest_self_generated_sdp (webrtc);
   gchar *direction, *ufrag, *pwd, *mid;
   gboolean bundle_only;
+  guint rtp_session_idx;
   GstCaps *caps;
   GstStructure *extmap;
   int i;
@@ -2984,6 +2985,8 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
     return FALSE;
 
   g_assert (trans->mline == -1 || trans->mline == media_idx);
+
+  rtp_session_idx = bundled_mids ? bundle_idx : media_idx;
 
   bundle_only = bundled_mids && bundle_idx != media_idx
       && webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE;
@@ -3196,9 +3199,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
     if (!trans->sender->transport) {
       TransportStream *item;
 
-      item =
-          _get_or_create_transport_stream (webrtc,
-          bundled_mids ? bundle_idx : media_idx, FALSE);
+      item = _get_or_create_transport_stream (webrtc, rtp_session_idx, FALSE);
 
       webrtc_transceiver_set_transport (WEBRTC_TRANSCEIVER (trans), item);
     }
@@ -5126,6 +5127,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
 
   if (new_dir != prev_dir) {
     gchar *prev_dir_s, *new_dir_s;
+    guint rtp_session_id = bundled ? bundle_idx : media_idx;
 
     prev_dir_s =
         _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
@@ -5166,6 +5168,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
         new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV) {
       GstWebRTCBinPad *pad =
           _find_pad_for_transceiver (webrtc, GST_PAD_SINK, rtp_trans);
+
       if (pad) {
         GST_DEBUG_OBJECT (webrtc, "found existing send pad %" GST_PTR_FORMAT
             " for transceiver %" GST_PTR_FORMAT, pad, trans);
@@ -5197,13 +5200,11 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
           TransportStream *item;
 
           item =
-              _get_or_create_transport_stream (webrtc,
-              bundled ? bundle_idx : media_idx, FALSE);
+              _get_or_create_transport_stream (webrtc, rtp_session_id, FALSE);
           webrtc_transceiver_set_transport (trans, item);
         }
 
-        _connect_output_stream (webrtc, trans->stream,
-            bundled ? bundle_idx : media_idx);
+        _connect_output_stream (webrtc, trans->stream, rtp_session_id);
         /* delay adding the pad until rtpbin creates the recv output pad
          * to ghost to so queries/events travel through the pipeline correctly
          * as soon as the pad is added */
@@ -5931,10 +5932,11 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     const GstSDPMedia *media = gst_sdp_message_get_media (sd->sdp->sdp, i);
     gchar *ufrag, *pwd;
     TransportStream *item;
+    guint rtp_session_id = bundled ? bundle_idx : i;
 
     item =
-        _get_or_create_transport_stream (webrtc, bundled ? bundle_idx : i,
-        _message_media_is_datachannel (sd->sdp->sdp, bundled ? bundle_idx : i));
+        _get_or_create_transport_stream (webrtc, rtp_session_id,
+        _message_media_is_datachannel (sd->sdp->sdp, rtp_session_id));
 
     if (sd->source == SDP_REMOTE) {
       guint j;
