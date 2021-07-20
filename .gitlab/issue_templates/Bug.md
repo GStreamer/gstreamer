@@ -10,12 +10,12 @@
 
 #### Setup
 - **Operating System:**
-- **Device:** Computer / Tablet / Mobile <!-- Delete as appropriate !-->
+- **Device:** Computer / Tablet / Mobile / Virtual Machine <!-- Delete as appropriate !-->
 - **GStreamer Version:**
 - **Command line:**
 
 ### Steps to reproduce the bug
-<!-- please fill in exact steps which reproduce the bug on your system or a fresh image, for example: -->
+<!-- please fill in exact steps which reproduce the bug on your system, for example: -->
 1. open terminal
 2. type `command`
 
