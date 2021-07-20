@@ -640,10 +640,6 @@ _roundtrip_async (GstGLWindow * window)
 static void
 gst_gl_window_wayland_egl_show (GstGLWindow * window)
 {
-  GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-
-  create_surfaces (window_egl);
-
   gst_gl_window_send_message (window, (GstGLWindowCB) _roundtrip_async, window);
 }
 
