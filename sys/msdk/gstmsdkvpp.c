@@ -867,9 +867,10 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   mfxFrameInfo *in_info = NULL;
   MsdkSurface *in_surface = NULL;
   MsdkSurface *out_surface = NULL;
+  GstBuffer *outbuf_new = NULL;
   gboolean locked_by_others;
+  gboolean create_new_surface = FALSE;
 
-  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   free_unlocked_msdk_surfaces (thiz);
 
   in_surface = get_msdk_surface_from_input_buffer (thiz, inbuf);
@@ -882,6 +883,13 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     return GST_FLOW_ERROR;
   }
   locked_by_others = ! !in_surface->surface->Data.Locked;
+
+  /* always convert timestamp of input surface as msdk timestamp */
+  if (inbuf->pts == GST_CLOCK_TIME_NONE)
+    in_surface->surface->Data.TimeStamp = MFX_TIMESTAMP_UNKNOWN;
+  else
+    in_surface->surface->Data.TimeStamp =
+        gst_util_uint64_scale_round (inbuf->pts, 90000, GST_SECOND);
 
   if (gst_msdk_is_msdk_buffer (outbuf)) {
     out_surface = g_slice_new0 (MsdkSurface);
@@ -912,11 +920,18 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       status =
           MFXVideoVPP_RunFrameVPPAsync (session, in_surface->surface,
           out_surface->surface, NULL, &sync_point);
+      timestamp = out_surface->surface->Data.TimeStamp;
+
       if (status != MFX_WRN_DEVICE_BUSY)
         break;
       /* If device is busy, wait 1ms and retry, as per MSDK's recommendation */
       g_usleep (1000);
-    };
+    }
+
+    if (timestamp == MFX_TIMESTAMP_UNKNOWN)
+      timestamp = GST_CLOCK_TIME_NONE;
+    else
+      timestamp = gst_util_uint64_scale_round (timestamp, GST_SECOND, 90000);
 
     if (status == MFX_WRN_INCOMPATIBLE_VIDEO_PARAM)
       GST_WARNING_OBJECT (thiz, "VPP returned: %s",
@@ -937,16 +952,29 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
         MFXVideoCORE_SyncOperation (session, sync_point,
             300000) != MFX_ERR_NONE)
       GST_WARNING_OBJECT (thiz, "failed to do sync operation");
+    /* push new output buffer forward after sync operation */
+    if (create_new_surface) {
+      create_new_surface = FALSE;
+      ret = gst_pad_push (GST_BASE_TRANSFORM_SRC_PAD (trans), outbuf_new);
+      if (ret != GST_FLOW_OK)
+        goto error_push_buffer;
+    }
 
     /* More than one output buffers are generated */
     if (status == MFX_ERR_MORE_SURFACE) {
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-      GST_BUFFER_DURATION (outbuf) = thiz->buffer_duration;
-      timestamp += thiz->buffer_duration;
-      ret = gst_pad_push (GST_BASE_TRANSFORM_SRC_PAD (trans), outbuf);
-      if (ret != GST_FLOW_OK)
-        goto error_push_buffer;
-      outbuf = create_output_buffer (thiz);
+      outbuf_new = create_output_buffer (thiz);
+      GST_BUFFER_TIMESTAMP (outbuf_new) = timestamp;
+      GST_BUFFER_DURATION (outbuf_new) = thiz->buffer_duration;
+
+      if (gst_msdk_is_msdk_buffer (outbuf_new)) {
+        release_out_surface (thiz, out_surface);
+        out_surface = g_slice_new0 (MsdkSurface);
+        out_surface->surface = gst_msdk_get_surface_from_buffer (outbuf_new);
+        create_new_surface = TRUE;
+      } else {
+        GST_ERROR_OBJECT (thiz, "Failed to get msdk outsurface!");
+        goto vpp_error;
+      }
     } else {
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
       GST_BUFFER_DURATION (outbuf) = thiz->buffer_duration;
@@ -1175,8 +1203,10 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
           || GST_VIDEO_INFO_FPS_D (&thiz->sinkpad_info) !=
           GST_VIDEO_INFO_FPS_D (&thiz->srcpad_info))) {
     thiz->flags |= GST_MSDK_FLAG_FRC;
-    /* So far this is the only algorithm which is working somewhat good */
-    thiz->frc_algm = MFX_FRCALGM_PRESERVE_TIMESTAMP;
+    /* manually set distributed timestamp as frc algorithm
+     * as it is more resonable for framerate conversion
+     */
+    thiz->frc_algm = MFX_FRCALGM_DISTRIBUTED_TIMESTAMP;
   }
 
   /* work-around to avoid zero fps in msdk structure */
