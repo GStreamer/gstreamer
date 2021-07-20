@@ -108,6 +108,7 @@ struct _GstH264Dpb
   GArray *pic_list;
   gint max_num_frames;
   gint num_output_needed;
+  guint32 max_num_reorder_frames;
   gint32 last_output_poc;
 
   gboolean interlaced;
@@ -237,6 +238,24 @@ gst_h264_dpb_clear (GstH264Dpb * dpb)
 
   g_array_set_size (dpb->pic_list, 0);
   gst_h264_dpb_init (dpb);
+}
+
+/**
+ * gst_h264_dpb_set_max_num_reorder_frames:
+ * @dpb: a #GstH264Dpb
+ * @max_num_reorder_frames: the max number of reorder frames, which
+ * should not exceed the max size of DPB.
+ *
+ * Since: 1.20
+ */
+void
+gst_h264_dpb_set_max_num_reorder_frames (GstH264Dpb * dpb,
+    guint32 max_num_reorder_frames)
+{
+  g_return_if_fail (dpb != NULL);
+  g_return_if_fail (max_num_reorder_frames <= dpb->max_num_frames);
+
+  dpb->max_num_reorder_frames = max_num_reorder_frames;
 }
 
 /**

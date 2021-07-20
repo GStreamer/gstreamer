@@ -109,7 +109,6 @@ struct _GstH264DecoderPrivate
   gint max_frame_num;
   gint max_pic_num;
   gint max_long_term_frame_idx;
-  gsize max_num_reorder_frames;
 
   gint prev_frame_num;
   gint prev_ref_frame_num;
@@ -1915,20 +1914,22 @@ gst_h264_decoder_update_max_num_reorder_frames (GstH264Decoder * self,
     GstH264SPS * sps)
 {
   GstH264DecoderPrivate *priv = self->priv;
+  gsize max_num_reorder_frames = 0;
 
   if (sps->vui_parameters_present_flag
       && sps->vui_parameters.bitstream_restriction_flag) {
-    priv->max_num_reorder_frames = sps->vui_parameters.num_reorder_frames;
-    if (priv->max_num_reorder_frames >
-        gst_h264_dpb_get_max_num_frames (priv->dpb)) {
+    max_num_reorder_frames = sps->vui_parameters.num_reorder_frames;
+    if (max_num_reorder_frames > gst_h264_dpb_get_max_num_frames (priv->dpb)) {
       GST_WARNING
           ("max_num_reorder_frames present, but larger than MaxDpbFrames (%d > %d)",
-          (gint) priv->max_num_reorder_frames,
+          (gint) max_num_reorder_frames,
           gst_h264_dpb_get_max_num_frames (priv->dpb));
 
-      priv->max_num_reorder_frames = 0;
+      max_num_reorder_frames = 0;
       return FALSE;
     }
+
+    gst_h264_dpb_set_max_num_reorder_frames (priv->dpb, max_num_reorder_frames);
 
     return TRUE;
   }
@@ -1943,16 +1944,17 @@ gst_h264_decoder_update_max_num_reorder_frames (GstH264Decoder * self,
       case 110:
       case 122:
       case 244:
-        priv->max_num_reorder_frames = 0;
+        max_num_reorder_frames = 0;
         break;
       default:
-        priv->max_num_reorder_frames =
-            gst_h264_dpb_get_max_num_frames (priv->dpb);
+        max_num_reorder_frames = gst_h264_dpb_get_max_num_frames (priv->dpb);
         break;
     }
   } else {
-    priv->max_num_reorder_frames = gst_h264_dpb_get_max_num_frames (priv->dpb);
+    max_num_reorder_frames = gst_h264_dpb_get_max_num_frames (priv->dpb);
   }
+
+  gst_h264_dpb_set_max_num_reorder_frames (priv->dpb, max_num_reorder_frames);
 
   return TRUE;
 }
