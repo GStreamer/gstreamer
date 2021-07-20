@@ -227,11 +227,11 @@ void gst_h264_dpb_set_interlaced      (GstH264Dpb * dpb,
                                        gboolean interlaced);
 
 GST_CODECS_API
-gboolean gst_h264_dpb_get_interlaced  (GstH264Dpb * dpb);
-
-GST_CODECS_API
 void gst_h264_dpb_set_max_num_reorder_frames (GstH264Dpb * dpb,
                                               guint32 max_num_reorder_frames);
+
+GST_CODECS_API
+gboolean gst_h264_dpb_get_interlaced  (GstH264Dpb * dpb);
 
 GST_CODECS_API
 void  gst_h264_dpb_free             (GstH264Dpb * dpb);
@@ -295,6 +295,10 @@ gboolean gst_h264_dpb_needs_bump (GstH264Dpb * dpb,
 GST_CODECS_API
 GstH264Picture * gst_h264_dpb_bump (GstH264Dpb * dpb,
                                     gboolean drain);
+
+GST_CODECS_API
+void gst_h264_dpb_set_last_output (GstH264Dpb * dpb,
+                                   GstH264Picture * picture);
 
 GST_CODECS_API
 gboolean         gst_h264_dpb_perform_memory_management_control_operation (GstH264Dpb * dpb,

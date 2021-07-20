@@ -1846,7 +1846,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
     gst_h264_decoder_drain_internal (self);
   }
 
-  while (gst_h264_dpb_needs_bump (priv->dpb, picture, FALSE)) {
+  while (gst_h264_dpb_needs_bump (priv->dpb, picture, priv->is_live)) {
     GstH264Picture *to_output;
 
     to_output = gst_h264_dpb_bump (priv->dpb, FALSE);
@@ -1897,6 +1897,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
     }
   } else {
     gst_h264_decoder_do_output_picture (self, picture);
+    gst_h264_dpb_set_last_output (priv->dpb, picture);
   }
 
   GST_LOG_OBJECT (self,

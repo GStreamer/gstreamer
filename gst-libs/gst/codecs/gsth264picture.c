@@ -110,6 +110,7 @@ struct _GstH264Dpb
   gint num_output_needed;
   guint32 max_num_reorder_frames;
   gint32 last_output_poc;
+  gboolean last_output_non_ref;
 
   gboolean interlaced;
 };
@@ -119,6 +120,7 @@ gst_h264_dpb_init (GstH264Dpb * dpb)
 {
   dpb->num_output_needed = 0;
   dpb->last_output_poc = G_MININT32;
+  dpb->last_output_non_ref = FALSE;
 }
 
 /**
@@ -300,6 +302,13 @@ gst_h264_dpb_add (GstH264Dpb * dpb, GstH264Picture * picture)
   if (dpb->pic_list->len > dpb->max_num_frames * (dpb->interlaced + 1))
     GST_ERROR ("DPB size is %d, exceed the max size %d",
         dpb->pic_list->len, dpb->max_num_frames);
+
+  /* The IDR frame or mem_mgmt_5 */
+  if (picture->pic_order_cnt == 0) {
+    GST_TRACE ("last_output_poc reset because of IDR or mem_mgmt_5");
+    dpb->last_output_poc = G_MININT32;
+    dpb->last_output_non_ref = FALSE;
+  }
 }
 
 /**
@@ -701,16 +710,124 @@ gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
 {
   GstH264Picture *picture = NULL;
   gint32 lowest_poc;
+  gboolean is_ref_picture;
+  gint lowest_index;
 
   g_return_val_if_fail (dpb != NULL, FALSE);
   g_assert (dpb->num_output_needed >= 0);
 
-  /* FIXME: Need to revisit for intelaced decoding */
-
-  if (low_latency) {
-    /* TODO: */
+  lowest_poc = G_MAXINT32;
+  is_ref_picture = FALSE;
+  lowest_index = gst_h264_dpb_get_lowest_output_needed_picture (dpb, &picture);
+  if (lowest_index >= 0) {
+    lowest_poc = picture->pic_order_cnt;
+    is_ref_picture = picture->ref_pic;
+    gst_h264_picture_unref (picture);
+  } else {
+    goto normal_bump;
   }
 
+  if (low_latency) {
+    /* If low latency, we should not wait for the DPB becoming full.
+       We try to bump the picture as soon as possible without the
+       frames disorder. The policy is from the safe to some risk. */
+
+    /* Do not support interlaced mode. */
+    if (gst_h264_dpb_get_interlaced (dpb))
+      goto normal_bump;
+
+    /* Equal to normal bump. */
+    if (!gst_h264_dpb_has_empty_frame_buffer (dpb))
+      goto normal_bump;
+
+    /* 7.4.1.2.2: The values of picture order count for the coded pictures
+       in consecutive access units in decoding order containing non-reference
+       pictures shall be non-decreasing. Safe. */
+    if (dpb->last_output_non_ref && !is_ref_picture) {
+      g_assert (dpb->last_output_poc < G_MAXINT32);
+      GST_TRACE ("Continuous non-reference frame poc: %d -> %d,"
+          " bumping for low-latency.", dpb->last_output_poc, lowest_poc);
+      return TRUE;
+    }
+
+    /* num_reorder_frames indicates the maximum number of frames, that
+       precede any frame in the coded video sequence in decoding order
+       and follow it in output order. Safe. */
+    if (lowest_index >= dpb->max_num_reorder_frames) {
+      guint i, need_output;
+
+      need_output = 0;
+      for (i = 0; i < lowest_index; i++) {
+        GstH264Picture *p = g_array_index (dpb->pic_list, GstH264Picture *, i);
+        if (p->needed_for_output)
+          need_output++;
+      }
+
+      if (need_output >= dpb->max_num_reorder_frames) {
+        GST_TRACE ("frame with lowest poc %d has %d precede frame, already"
+            " satisfy num_reorder_frames %d, bumping for low-latency.",
+            dpb->last_output_poc, lowest_index, dpb->max_num_reorder_frames);
+        return TRUE;
+      }
+    }
+
+    /* Bump leading picture with the negative POC if already found positive
+       POC. It's even impossible to insert another negative POC after the
+       positive POCs. Almost safe. */
+    if (lowest_poc < 0 && to_insert->pic_order_cnt > 0) {
+      GST_TRACE ("The negative poc %d, bumping for low-latency.", lowest_poc);
+      return TRUE;
+    }
+
+    /* There may be leading frames with negative POC following the IDR
+       frame in decoder order, so when IDR comes, we need to check the
+       following pictures. In most cases, leading pictures are in increasing
+       POC order. Bump and should be safe. */
+    if (lowest_poc == 0 && gst_h264_dpb_get_size (dpb) <= 1) {
+      if (to_insert->pic_order_cnt > lowest_poc) {
+        GST_TRACE ("The IDR or mem_mgmt_5 frame, bumping for low-latency.");
+        return TRUE;
+      }
+
+      GST_TRACE ("The IDR or mem_mgmt_5 frame is not the first frame.");
+      goto normal_bump;
+    }
+
+    /* When non-ref frame has the lowest POC, it's unlike to insert another
+       ref frame with very small POC. Bump and should be safe. */
+    if (!is_ref_picture) {
+      GST_TRACE ("non ref with lowest-poc: %d bumping for low-latency",
+          lowest_poc);
+      return TRUE;
+    }
+
+    /* When insert non-ref frame with bigger POC, it's unlike to insert
+       another ref frame with very small POC. Bump and should be safe. */
+    if (!to_insert->ref_pic && lowest_poc < to_insert->pic_order_cnt) {
+      GST_TRACE ("lowest-poc: %d < to insert non ref pic: %d, bumping "
+          "for low-latency", lowest_poc, to_insert->pic_order_cnt);
+      return TRUE;
+    }
+
+    /* PicOrderCnt increment by <=2. Not all streams meet this, but in
+       practice this condition can be used.
+       For stream with 2 poc increment like:
+       0(IDR), 2(P), 4(P), 6(P), 12(P), 8(B), 10(B)....
+       This can work well, but for streams with 1 poc increment like:
+       0(IDR), 2(P), 4(P), 1(B), 3(B) ...
+       This can cause picture disorder. Most stream in practice has the
+       2 poc increment, but this may have risk and be careful. */
+#if 0
+    if (lowest_poc > dpb->last_output_poc
+        && lowest_poc - dpb->last_output_poc <= 2) {
+      GST_TRACE ("lowest-poc: %d, last-output-poc: %d, bumping for"
+          " low-latency", lowest_poc, dpb->last_output_poc);
+      return TRUE;
+    }
+#endif
+  }
+
+normal_bump:
   /* C.4.5.3: The "bumping" process is invoked in the following cases.
      - There is no empty frame buffer and a empty frame buffer is needed
      for storage of an inferred "non-existing" frame.
@@ -729,13 +846,6 @@ gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
   if (to_insert->ref_pic) {
     GST_TRACE ("No empty frame buffer for ref frame, need bumping.");
     return TRUE;
-  }
-
-  lowest_poc = G_MAXINT32;
-  gst_h264_dpb_get_lowest_output_needed_picture (dpb, &picture);
-  if (picture) {
-    lowest_poc = picture->pic_order_cnt;
-    gst_h264_picture_unref (picture);
   }
 
   if (to_insert->pic_order_cnt > lowest_poc) {
@@ -816,8 +926,29 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
   }
 
   dpb->last_output_poc = picture->pic_order_cnt;
+  dpb->last_output_non_ref = !picture->ref_pic;
 
   return picture;
+}
+
+/**
+ * gst_h264_dpb_set_last_output:
+ * @dpb: a #GstH264Dpb
+ * @picture: a #GstH264Picture of the last output.
+ *
+ * Notify the DPB that @picture is output directly without storing
+ * in the DPB.
+ *
+ * Since: 1.20
+ */
+void
+gst_h264_dpb_set_last_output (GstH264Dpb * dpb, GstH264Picture * picture)
+{
+  g_return_if_fail (dpb != NULL);
+  g_return_if_fail (GST_IS_H264_PICTURE (picture));
+
+  dpb->last_output_poc = picture->pic_order_cnt;
+  dpb->last_output_non_ref = !picture->ref_pic;
 }
 
 static gint
