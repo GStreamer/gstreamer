@@ -143,6 +143,8 @@ struct _GstH264Picture
   gboolean idr;
   gint idr_pic_id;
   GstH264PictureReference ref;
+  /* Whether a reference picture. */
+  gboolean ref_pic;
   gboolean needed_for_output;
   gboolean mem_mgmt_5;
 

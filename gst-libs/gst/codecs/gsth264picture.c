@@ -707,7 +707,7 @@ gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
     return FALSE;
   }
 
-  if (to_insert->ref != GST_H264_PICTURE_REF_NONE) {
+  if (to_insert->ref_pic) {
     GST_TRACE ("No empty frame buffer for ref frame, need bumping.");
     return TRUE;
   }
@@ -1055,7 +1055,13 @@ gst_h264_picture_set_reference (GstH264Picture * picture,
   g_return_if_fail (picture != NULL);
 
   picture->ref = reference;
+  if (reference > GST_H264_PICTURE_REF_NONE)
+    picture->ref_pic = TRUE;
 
-  if (other_field && picture->other_field)
+  if (other_field && picture->other_field) {
     picture->other_field->ref = reference;
+
+    if (reference > GST_H264_PICTURE_REF_NONE)
+      picture->other_field->ref_pic = TRUE;
+  }
 }

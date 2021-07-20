@@ -2199,6 +2199,7 @@ gst_h264_decoder_init_gap_picture (GstH264Decoder * self,
   picture->frame_num = picture->pic_num = frame_num;
   picture->dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag = FALSE;
   picture->ref = GST_H264_PICTURE_REF_SHORT_TERM;
+  picture->ref_pic = TRUE;
   picture->dec_ref_pic_marking.long_term_reference_flag = FALSE;
   picture->field = GST_H264_PICTURE_FIELD_FRAME;
 
