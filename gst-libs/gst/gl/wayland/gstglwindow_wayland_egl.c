@@ -614,8 +614,11 @@ gst_gl_window_wayland_egl_set_window_handle (GstGLWindow * window,
   GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
   struct wl_surface *surface = (struct wl_surface *) handle;
 
-  /* already set the NULL handle */
-  if (surface == NULL && window_egl->window.foreign_surface == NULL)
+  /* Don't unparent if the window handle haven't changed or both were %NULL.
+   * We have to do that, since GstGLContextEGL will not recreate its
+   * EGLNativeWindowSurface, which will lead to crash with some Mesa driver
+   * version, or errors otherwise. */
+  if (window_egl->window.foreign_surface == surface)
     return;
 
   /* unparent */
