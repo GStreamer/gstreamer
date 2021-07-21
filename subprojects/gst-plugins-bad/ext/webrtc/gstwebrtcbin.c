@@ -610,7 +610,7 @@ _find_transceiver (GstWebRTCBin * webrtc, gconstpointer data,
 }
 
 static gboolean
-match_for_mid (GstWebRTCRTPTransceiver * trans, const gchar * mid)
+transceiver_match_for_mid (GstWebRTCRTPTransceiver * trans, const gchar * mid)
 {
   return g_strcmp0 (trans->mid, mid) == 0;
 }
@@ -635,6 +635,20 @@ _find_transceiver_for_mline (GstWebRTCBin * webrtc, guint mlineindex)
   GST_TRACE_OBJECT (webrtc,
       "Found transceiver %" GST_PTR_FORMAT " for mlineindex %u", trans,
       mlineindex);
+
+  return trans;
+}
+
+static GstWebRTCRTPTransceiver *
+_find_transceiver_for_mid (GstWebRTCBin * webrtc, const char *mid)
+{
+  GstWebRTCRTPTransceiver *trans;
+
+  trans = _find_transceiver (webrtc, mid,
+      (FindTransceiverFunc) transceiver_match_for_mid);
+
+  GST_TRACE_OBJECT (webrtc, "Found transceiver %" GST_PTR_FORMAT " for "
+      "mid %s", trans, mid);
 
   return trans;
 }
@@ -4022,9 +4036,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       offer_caps = _rtp_caps_from_media (offer_media);
 
       if (last_answer && i < gst_sdp_message_medias_len (last_answer)
-          && (rtp_trans =
-              _find_transceiver (webrtc, mid,
-                  (FindTransceiverFunc) match_for_mid))) {
+          && (rtp_trans = _find_transceiver_for_mid (webrtc, mid))) {
         const GstSDPMedia *last_media =
             gst_sdp_message_get_media (last_answer, i);
         const gchar *last_mid =
@@ -4436,9 +4448,7 @@ _find_transceiver_for_sdp_media (GstWebRTCBin * webrtc,
     const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, i);
 
     if (g_strcmp0 (attr->key, "mid") == 0) {
-      if ((ret =
-              _find_transceiver (webrtc, attr->value,
-                  (FindTransceiverFunc) match_for_mid)))
+      if ((ret = _find_transceiver_for_mid (webrtc, attr->value)))
         goto out;
     }
   }
