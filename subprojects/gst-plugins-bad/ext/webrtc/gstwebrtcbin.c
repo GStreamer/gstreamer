@@ -2218,6 +2218,7 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc,
     GstWebRTCRTPTransceiverDirection direction, guint mline, GstWebRTCKind kind,
     GstCaps * codec_preferences)
 {
+  char *dir_str = gst_webrtc_rtp_transceiver_direction_to_string (direction);
   WebRTCTransceiver *trans;
   GstWebRTCRTPTransceiver *rtp_trans;
   GstWebRTCRTPSender *sender;
@@ -2235,6 +2236,10 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc,
   /* FIXME: We don't support stopping transceiver yet so they're always not stopped */
   rtp_trans->stopped = FALSE;
 
+  GST_LOG_OBJECT (webrtc, "created new transceiver %" GST_PTR_FORMAT " with "
+      "direction %s (%d), mline %u, kind %s (%d)", rtp_trans, dir_str,
+      direction, mline, gst_webrtc_kind_to_string (kind), kind);
+
   g_signal_connect_object (sender, "notify::priority",
       G_CALLBACK (gst_webrtc_bin_attach_tos), webrtc, G_CONNECT_SWAPPED);
 
@@ -2245,6 +2250,8 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc,
 
   g_signal_emit (webrtc, gst_webrtc_bin_signals[ON_NEW_TRANSCEIVER_SIGNAL],
       0, trans);
+
+  g_free (dir_str);
 
   return trans;
 }
@@ -3474,10 +3481,9 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
             if (wtrans->mline_locked && trans->mline != media_idx) {
               g_set_error (error, GST_WEBRTC_ERROR,
                   GST_WEBRTC_ERROR_INTERNAL_FAILURE,
-                  "Previous negotiatied transceiver %"
-                  GST_PTR_FORMAT " with mid %s was in mline %d but transceiver"
-                  " has locked mline %u", trans, trans->mid, media_idx,
-                  trans->mline);
+                  "Previous negotiatied transceiver <%s> with mid %s was in "
+                  "mline %d but transceiver has locked mline %u",
+                  GST_OBJECT_NAME (trans), trans->mid, media_idx, trans->mline);
               goto cancel_offer;
             }
 
@@ -3626,8 +3632,8 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
           g_set_error (error, GST_WEBRTC_ERROR,
               GST_WEBRTC_ERROR_INTERNAL_FAILURE,
-              "Tranceiver %" GST_PTR_FORMAT " with mid %s has locked mline %d"
-              " but the whole offer only has %u sections", trans, trans->mid,
+              "Tranceiver <%s> with mid %s has locked mline %d but the offer "
+              "only has %u sections", GST_OBJECT_NAME (trans), trans->mid,
               trans->mline, media_idx);
           goto cancel_offer;
         }
@@ -4179,11 +4185,15 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
         goto rejected;
       }
 
-      if (!_update_transceiver_kind_from_caps (rtp_trans, answer_caps))
+      if (!_update_transceiver_kind_from_caps (rtp_trans, answer_caps)) {
+        GstWebRTCKind caps_kind = webrtc_kind_from_caps (answer_caps);
+
         GST_WARNING_OBJECT (webrtc,
-            "Trying to change transceiver %d kind from %d to %d",
-            rtp_trans->mline, rtp_trans->kind,
-            webrtc_kind_from_caps (answer_caps));
+            "Trying to change kind of transceiver %" GST_PTR_FORMAT
+            " at m-line %d from %s (%d) to %s (%d)", trans, rtp_trans->mline,
+            gst_webrtc_kind_to_string (rtp_trans->kind), rtp_trans->kind,
+            gst_webrtc_kind_to_string (caps_kind), caps_kind);
+      }
 
       answer_caps = gst_caps_make_writable (answer_caps);
       for (k = 0; k < gst_caps_get_size (answer_caps); k++) {
@@ -5042,15 +5052,15 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
 
   if (!g_strcmp0 (gst_sdp_media_get_media (media), "audio")) {
     if (rtp_trans->kind == GST_WEBRTC_KIND_VIDEO)
-      GST_FIXME_OBJECT (webrtc,
-          "Updating video transceiver to audio, which isn't fully supported.");
+      GST_FIXME_OBJECT (webrtc, "Updating video transceiver %" GST_PTR_FORMAT
+          " to audio, which isn't fully supported.", rtp_trans);
     rtp_trans->kind = GST_WEBRTC_KIND_AUDIO;
   }
 
   if (!g_strcmp0 (gst_sdp_media_get_media (media), "video")) {
     if (rtp_trans->kind == GST_WEBRTC_KIND_AUDIO)
-      GST_FIXME_OBJECT (webrtc,
-          "Updating audio transceiver to video, which isn't fully supported.");
+      GST_FIXME_OBJECT (webrtc, "Updating audio transceiver %" GST_PTR_FORMAT
+          " to video, which isn't fully supported.", rtp_trans);
     rtp_trans->kind = GST_WEBRTC_KIND_VIDEO;
   }
 
@@ -5628,19 +5638,25 @@ check_locked_mlines (GstWebRTCBin * webrtc, GstWebRTCSessionDescription * sdp,
     if (rtp_trans->kind != GST_WEBRTC_KIND_UNKNOWN) {
       if (!g_strcmp0 (gst_sdp_media_get_media (media), "audio") &&
           rtp_trans->kind != GST_WEBRTC_KIND_AUDIO) {
+        char *trans_kind = gst_webrtc_kind_to_string (rtp_trans->kind);
         g_set_error (error, GST_WEBRTC_ERROR,
             GST_WEBRTC_ERROR_INTERNAL_FAILURE,
-            "m-line %d was locked to audio, but SDP has %s media", i,
+            "m-line %d with transceiver <%s> was locked to %s, but SDP has "
+            "%s media", i, GST_OBJECT_NAME (rtp_trans), trans_kind,
             gst_sdp_media_get_media (media));
+        g_free (trans_kind);
         return FALSE;
       }
 
       if (!g_strcmp0 (gst_sdp_media_get_media (media), "video") &&
           rtp_trans->kind != GST_WEBRTC_KIND_VIDEO) {
+        char *trans_kind = gst_webrtc_kind_to_string (rtp_trans->kind);
         g_set_error (error, GST_WEBRTC_ERROR,
             GST_WEBRTC_ERROR_INTERNAL_FAILURE,
-            "m-line %d was locked to video, but SDP has %s media", i,
+            "m-line %d with transceiver <%s> was locked to %s, but SDP has "
+            "%s media", i, GST_OBJECT_NAME (rtp_trans), trans_kind,
             gst_sdp_media_get_media (media));
+        g_free (trans_kind);
         return FALSE;
       }
     }
@@ -6659,7 +6675,7 @@ on_rtpbin_request_pt_map (GstElement * rtpbin, guint session_id, guint pt,
   if ((ret = transport_stream_get_caps_for_pt (stream, pt)))
     gst_caps_ref (ret);
 
-  GST_TRACE_OBJECT (webrtc, "Found caps %" GST_PTR_FORMAT " for pt %d in "
+  GST_DEBUG_OBJECT (webrtc, "Found caps %" GST_PTR_FORMAT " for pt %d in "
       "session %d", ret, pt, session_id);
 
   return ret;
@@ -7234,10 +7250,15 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     GST_LOG_OBJECT (webrtc, "Using existing transceiver %" GST_PTR_FORMAT
         " for mline %u", trans, serial);
     if (caps) {
-      if (!_update_transceiver_kind_from_caps (trans, caps))
+      if (!_update_transceiver_kind_from_caps (trans, caps)) {
+        GstWebRTCKind caps_kind = webrtc_kind_from_caps (caps);
+
         GST_WARNING_OBJECT (webrtc,
-            "Trying to change transceiver %d kind from %d to %d",
-            serial, trans->kind, webrtc_kind_from_caps (caps));
+            "Trying to change kind of transceiver %" GST_PTR_FORMAT
+            " at m-line %d from %s (%d) to %s (%d)", trans, serial,
+            gst_webrtc_kind_to_string (trans->kind), trans->kind,
+            gst_webrtc_kind_to_string (caps_kind), caps_kind);
+      }
     }
   }
   pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, trans, serial);

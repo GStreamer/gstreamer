@@ -3912,9 +3912,8 @@ GST_START_TEST (test_reject_create_offer)
   gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
   fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
           GST_WEBRTC_ERROR_INTERNAL_FAILURE));
-  fail_unless (g_str_match_string
-      ("has locked mline 1 but the whole offer only has 0 sections",
-          error->message, FALSE));
+  fail_unless_equals_string (error->message,
+      "Tranceiver <webrtctransceiver0> with mid (null) has locked mline 1 but the offer only has 0 sections");
   g_clear_error (&error);
   gst_promise_unref (promise);
 
@@ -3986,9 +3985,9 @@ GST_START_TEST (test_reject_set_description)
   gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
   fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
           GST_WEBRTC_ERROR_INTERNAL_FAILURE));
-  fail_unless (g_str_match_string
-      ("m-line 0 was locked to audio, but SDP has audio media", error->message,
-          FALSE));
+  fail_unless_equals_string
+      (error->message,
+      "m-line 0 with transceiver <webrtctransceiver1> was locked to video, but SDP has audio media");
 
   g_clear_error (&error);
   fail_unless (s != NULL);
@@ -4186,9 +4185,9 @@ GST_START_TEST (test_codec_preferences_negotiation_sinkpad)
   gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
   fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
           GST_WEBRTC_ERROR_INTERNAL_FAILURE));
-  fail_unless (g_str_match_string
+  fail_unless_equals_string
       ("Caps negotiation on pad sink_0 failed against codec preferences",
-          error->message, FALSE));
+      error->message);
   g_clear_error (&error);
   gst_promise_unref (promise);
 

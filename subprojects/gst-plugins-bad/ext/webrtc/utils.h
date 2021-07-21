@@ -67,6 +67,9 @@ GstCaps *               _rtp_caps_from_media        (const GstSDPMedia * media);
 G_GNUC_INTERNAL
 GstWebRTCKind           webrtc_kind_from_caps       (const GstCaps * caps);
 
+#define gst_webrtc_kind_to_string(kind) _enum_value_to_string(GST_TYPE_WEBRTC_KIND, kind)
+#define gst_webrtc_rtp_transceiver_direction_to_string(dir) _enum_value_to_string(GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION, dir)
+
 G_END_DECLS
 
 #endif /* __WEBRTC_UTILS_H__ */
