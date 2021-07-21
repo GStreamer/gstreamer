@@ -290,8 +290,12 @@ gst_qt_src_query (GstBaseSrc * bsrc, GstQuery * query)
         return FALSE;
 
       if (!qt_src->display && !qt_src->qt_context) {
-        qt_src->display = qt_window_get_display (qt_src->window);
-        qt_src->qt_context = qt_window_get_qt_context (qt_src->window);
+        if (!qt_src->display)
+          qt_src->display = qt_window_get_display (qt_src->window);
+        if (!qt_src->qt_context)
+          qt_src->qt_context = qt_window_get_qt_context (qt_src->window);
+        if (!qt_src->context)
+          qt_src->context = qt_window_get_context (qt_src->window);
       }
 
       if (gst_gl_handle_context_query ((GstElement *) qt_src, query,
@@ -365,6 +369,9 @@ gst_qt_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   }
 
   if (!qt_src->context && !_find_local_gl_context (qt_src))
+    return FALSE;
+
+  if (!qt_window_set_context (qt_src->window, qt_src->context))
     return FALSE;
 
   if (!pool) {
@@ -532,6 +539,7 @@ gst_qt_src_start (GstBaseSrc * basesrc)
 
   qt_src->display = qt_window_get_display (qt_src->window);
   qt_src->qt_context = qt_window_get_qt_context (qt_src->window);
+  qt_src->context = qt_window_get_context (qt_src->window);
 
   if (!qt_src->display || !qt_src->qt_context) {
     GST_ERROR_OBJECT (qt_src,

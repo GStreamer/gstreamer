@@ -70,6 +70,7 @@ struct _QtGLWindowPrivate
 
   GstGLDisplay *display;
   GstGLContext *other_context;
+  GstGLContext *context;
 
   GLuint fbo;
 
@@ -141,6 +142,8 @@ QtGLWindow::~QtGLWindow()
     gst_object_unref(this->priv->other_context);
   if (this->priv->display)
     gst_object_unref(this->priv->display);
+  if (this->priv->context)
+    gst_object_unref(this->priv->context);
   g_free (this->priv);
   this->priv = NULL;
 }
@@ -189,6 +192,7 @@ QtGLWindow::afterRendering()
   guint width, height;
   const GstGLFuncs *gl;
   GLuint dst_tex;
+  GstGLSyncMeta *sync_meta;
 
   g_mutex_lock (&this->priv->lock);
 
@@ -253,6 +257,14 @@ QtGLWindow::afterRendering()
     gl->CopyTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, width, height, 0);
   }
 
+  if (this->priv->context) {
+    sync_meta = gst_buffer_get_gl_sync_meta (this->priv->buffer);
+    if (!sync_meta) {
+      sync_meta = gst_buffer_add_gl_sync_meta (this->priv->context, this->priv->buffer);
+    }
+    gst_gl_sync_meta_set_sync_point (sync_meta, context);
+  }
+
   GST_DEBUG ("rendering finished");
 
 errors:
@@ -293,7 +305,7 @@ QtGLWindow::onSceneGraphInitialized()
       this->source->openglContext ());
 
   this->priv->initted = gst_qt_get_gl_wrapcontext (this->priv->display,
-      &this->priv->other_context, NULL);
+      &this->priv->other_context, &this->priv->context);
 
   if (this->priv->initted && this->priv->other_context) {
     const GstGLFuncs *gl;
@@ -359,6 +371,30 @@ qt_window_get_display (QtGLWindow * qt_window)
     return NULL;
 
   return (GstGLDisplay *) gst_object_ref (qt_window->priv->display);
+}
+
+GstGLContext *
+qt_window_get_context (QtGLWindow * qt_window)
+{
+  g_return_val_if_fail (qt_window != NULL, NULL);
+
+  if (!qt_window->priv->context)
+    return NULL;
+
+  return (GstGLContext *) gst_object_ref (qt_window->priv->context);
+}
+
+gboolean
+qt_window_set_context (QtGLWindow * qt_window, GstGLContext * context)
+{
+  g_return_val_if_fail (qt_window != NULL, FALSE);
+
+  if (qt_window->priv->context && qt_window->priv->context != context)
+    return FALSE;
+
+  gst_object_replace ((GstObject **) &qt_window->priv->context, (GstObject *) context);
+
+  return TRUE;
 }
 
 gboolean
