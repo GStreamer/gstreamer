@@ -1022,6 +1022,16 @@ create_audio_test (void)
   return t;
 }
 
+static void
+on_new_transceiver_expected_kind (GstWebRTCBin * webrtc,
+    GstWebRTCRTPTransceiver * trans, gpointer user_data)
+{
+  GstWebRTCKind kind, expected = GPOINTER_TO_UINT (user_data);
+
+  g_object_get (trans, "kind", &kind, NULL);
+  fail_unless_equals_int (kind, expected);
+}
+
 GST_START_TEST (test_audio)
 {
   struct test_webrtc *t = create_audio_test ();
@@ -1043,9 +1053,17 @@ GST_START_TEST (test_audio)
   const gchar *expected_answer_direction[] = { "recvonly", };
   VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
       &answer_setup);
+  GstWebRTCKind expected_kind = GST_WEBRTC_KIND_AUDIO;
 
   /* check that a single stream connection creates the associated number
    * of media sections */
+
+  g_signal_connect (t->webrtc1, "on-new-transceiver",
+      G_CALLBACK (on_new_transceiver_expected_kind),
+      GUINT_TO_POINTER (expected_kind));
+  g_signal_connect (t->webrtc2, "on-new-transceiver",
+      G_CALLBACK (on_new_transceiver_expected_kind),
+      GUINT_TO_POINTER (expected_kind));
 
   test_validate_sdp (t, &offer, &answer);
   test_webrtc_free (t);
