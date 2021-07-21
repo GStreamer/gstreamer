@@ -35,8 +35,8 @@
 #include "../../../ext/webrtc/utils.c"
 
 #define OPUS_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=OPUS,media=audio,clock-rate=48000,ssrc=(uint)3384078950"
-#define VP8_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=VP8,media=video,clock-rate=90000,ssrc=(uint)3484078950"
-#define H264_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=H264,media=video,clock-rate=90000,ssrc=(uint)3484078951"
+#define VP8_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=VP8,media=video,clock-rate=90000,ssrc=(uint)3484078951"
+#define H264_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=H264,media=video,clock-rate=90000,ssrc=(uint)3484078952"
 
 #define TEST_IS_OFFER_ELEMENT(t, e) ((((t)->offerror == 1 && (e) == (t)->webrtc1) || ((t)->offerror == 2 && (e) == (t)->webrtc2)) ? TRUE : FALSE)
 #define TEST_GET_OFFEROR(t) (TEST_IS_OFFER_ELEMENT(t, t->webrtc1) ? (t)->webrtc1 : t->webrtc2)
@@ -982,20 +982,24 @@ on_sdp_media_setup (struct test_webrtc *t, GstElement * element,
 }
 
 static void
-add_fake_audio_src_harness (GstHarness * h, gint pt)
+add_fake_audio_src_harness (GstHarness * h, gint pt, guint ssrc)
 {
   GstCaps *caps = gst_caps_from_string (OPUS_RTP_CAPS (pt));
   GstStructure *s = gst_caps_get_structure (caps, 0);
+  if (ssrc != 0)
+    gst_structure_set (s, "ssrc", G_TYPE_UINT, ssrc, NULL);
   gst_structure_set (s, "payload", G_TYPE_INT, pt, NULL);
   gst_harness_set_src_caps (h, caps);
   gst_harness_add_src_parse (h, "fakesrc is-live=true", TRUE);
 }
 
 static void
-add_fake_video_src_harness (GstHarness * h, gint pt)
+add_fake_video_src_harness (GstHarness * h, gint pt, guint ssrc)
 {
   GstCaps *caps = gst_caps_from_string (VP8_RTP_CAPS (pt));
   GstStructure *s = gst_caps_get_structure (caps, 0);
+  if (ssrc != 0)
+    gst_structure_set (s, "ssrc", G_TYPE_UINT, ssrc, NULL);
   gst_structure_set (s, "payload", G_TYPE_INT, pt, NULL);
   gst_harness_set_src_caps (h, caps);
   gst_harness_add_src_parse (h, "fakesrc is-live=true", TRUE);
@@ -1012,7 +1016,7 @@ create_audio_test (void)
   t->on_pad_added = _pad_added_fakesink;
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   return t;
@@ -1128,7 +1132,7 @@ create_audio_video_test (void)
   GstHarness *h;
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
-  add_fake_video_src_harness (h, 97);
+  add_fake_video_src_harness (h, 97, 0xBEEFDEAD);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   return t;
@@ -1192,7 +1196,7 @@ GST_START_TEST (test_media_direction)
   /* check the default media directions for transceivers */
 
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer, &answer);
@@ -1696,7 +1700,7 @@ GST_START_TEST (test_add_recvonly_transceiver)
 
   /* setup sendonly peer */
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
   test_validate_sdp (t, &offer, &answer);
 
@@ -1740,6 +1744,7 @@ GST_START_TEST (test_recvonly_sendonly)
 
   /* setup recvonly transceiver */
   caps = gst_caps_from_string (OPUS_RTP_CAPS (96));
+  gst_caps_set_simple (caps, "ssrc", G_TYPE_UINT, 0xDEADBEEF, NULL);
   direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
   g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
       &trans);
@@ -1749,7 +1754,7 @@ GST_START_TEST (test_recvonly_sendonly)
 
   /* setup sendonly stream */
   h = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xBEEFDEAD);
   t->harnesses = g_list_prepend (t->harnesses, h);
   g_signal_emit_by_name (t->webrtc1, "get-transceivers", &transceivers);
   fail_unless (transceivers != NULL);
@@ -1762,7 +1767,7 @@ GST_START_TEST (test_recvonly_sendonly)
 
   /* setup sendonly peer */
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer, &answer);
@@ -2789,7 +2794,7 @@ GST_START_TEST (test_duplicate_nego)
   t->negotiation_data = &negotiation_flag;
 
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer, &answer);
@@ -2832,11 +2837,11 @@ GST_START_TEST (test_dual_audio)
   /* test that each mline gets a unique transceiver even with the same caps */
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xBEEFDEAD);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   t->on_negotiation_needed = NULL;
@@ -3018,13 +3023,13 @@ GST_START_TEST (test_renego_add_stream)
 
   /* negotiate an AV stream and then renegotiate an extra stream */
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer, &answer);
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_2", NULL);
-  add_fake_audio_src_harness (h, 98);
+  add_fake_audio_src_harness (h, 98, 0xBEEFFFFF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   media_formats.next = &renego_fingerprint;
@@ -3074,7 +3079,7 @@ GST_START_TEST (test_renego_stream_add_data_channel)
 
   /* negotiate an AV stream and then renegotiate a data channel */
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer, &answer);
@@ -3144,7 +3149,7 @@ GST_START_TEST (test_renego_data_channel_add_stream)
   test_validate_sdp_full (t, &offer, &answer, 0, FALSE);
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
-  add_fake_audio_src_harness (h, 97);
+  add_fake_audio_src_harness (h, 97, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   media_formats.next = &renego_fingerprint;
@@ -3200,7 +3205,7 @@ GST_START_TEST (test_renego_stream_data_channel_add_stream)
   t->on_pad_added = _pad_added_fakesink;
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 97);
+  add_fake_audio_src_harness (h, 97, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -3214,7 +3219,7 @@ GST_START_TEST (test_renego_stream_data_channel_add_stream)
   test_validate_sdp_full (t, &offer, &answer, 0, FALSE);
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_2", NULL);
-  add_fake_audio_src_harness (h, 97);
+  add_fake_audio_src_harness (h, 97, 0xBEEFDEAD);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   media_formats.next = &renego_fingerprint;
@@ -3293,13 +3298,13 @@ GST_START_TEST (test_bundle_renego_add_stream)
 
   /* negotiate an AV stream and then renegotiate an extra stream */
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer, &answer);
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_2", NULL);
-  add_fake_audio_src_harness (h, 98);
+  add_fake_audio_src_harness (h, 98, 0xBEEFFFFF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   offer_setup.next = &offer_bundle_only_sdp;
@@ -3373,13 +3378,13 @@ GST_START_TEST (test_bundle_max_compat_max_bundle_renego_add_stream)
 
   /* negotiate an AV stream and then renegotiate an extra stream */
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer, &answer);
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_2", NULL);
-  add_fake_audio_src_harness (h, 98);
+  add_fake_audio_src_harness (h, 98, 0xBEEFFFFF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   media_formats.next = &bundle_sdp;
@@ -3421,7 +3426,7 @@ GST_START_TEST (test_renego_transceiver_set_direction)
 
   /* negotiate an AV stream and then change the transceiver direction */
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer, &answer);
@@ -3602,7 +3607,7 @@ GST_START_TEST (test_bundle_codec_preferences_rtx_no_duplicate_payloads)
 
   /* setup sendonly peer */
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_video_src_harness (h, 96);
+  add_fake_video_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
   test_validate_sdp (t, &offer, &answer);
 
@@ -3782,7 +3787,7 @@ GST_START_TEST (test_reject_request_pad)
   fail_unless (trans != NULL);
 
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_video_src_harness (h, 96);
+  add_fake_video_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer, &answer);
@@ -3876,7 +3881,7 @@ GST_START_TEST (test_reject_create_offer)
 
   /* setup sendonly peer */
   h = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   /* Check that if there is no 0, we can't create an offer with a hole */
@@ -3896,7 +3901,7 @@ GST_START_TEST (test_reject_create_offer)
   gst_promise_unref (promise);
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_%u", NULL);
-  add_fake_video_src_harness (h, 97);
+  add_fake_video_src_harness (h, 97, 0xBEEFDEAD);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   /* Adding a second sink, which will fill m-line 0, should fix it */
@@ -3926,7 +3931,7 @@ GST_START_TEST (test_reject_set_description)
 
   /* setup peer 1 */
   h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   /* Create a second side with specific video caps */
@@ -4040,7 +4045,7 @@ GST_START_TEST (test_force_second_media)
 
   /* setup peer */
   h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   /* Create a second side with specific video caps */
@@ -4052,7 +4057,7 @@ GST_START_TEST (test_force_second_media)
   fail_unless (pad != NULL);
   h = gst_harness_new_with_element (t->webrtc2, GST_PAD_NAME (pad), NULL);
   gst_object_unref (pad);
-  add_fake_video_src_harness (h, 97);
+  add_fake_video_src_harness (h, 97, 0xBEEFDEAD);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer_count, &answer_count);
@@ -4151,7 +4156,7 @@ GST_START_TEST (test_codec_preferences_negotiation_sinkpad)
   gst_object_unref (transceiver);
   gst_object_unref (pad);
 
-  add_fake_video_src_harness (h, 96);
+  add_fake_video_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   promise = gst_promise_new ();
@@ -4181,14 +4186,24 @@ GST_END_TEST;
 
 
 static void
-add_audio_test_src_harness (GstHarness * h)
+add_audio_test_src_harness (GstHarness * h, guint ssrc)
 {
 #define L16_CAPS "application/x-rtp, payload=11, media=audio," \
       " encoding-name=L16, clock-rate=44100, ssrc=(uint)3484078952"
   GstCaps *caps = gst_caps_from_string (L16_CAPS);
-  gst_harness_set_src_caps (h, caps);
+  GstElement *capsfilter;
+  if (ssrc != 0) {
+    gst_caps_set_simple (caps, "ssrc", G_TYPE_UINT, ssrc, NULL);
+  }
   gst_harness_add_src_parse (h, "audiotestsrc is-live=true ! rtpL16pay ! "
-      L16_CAPS " ! identity", TRUE);
+      "capsfilter name=capsfilter ! identity", TRUE);
+  capsfilter =
+      gst_bin_get_by_name (GST_BIN (h->src_harness->element), "capsfilter");
+  g_object_set (G_OBJECT (capsfilter), "caps", caps, NULL);
+  gst_harness_set_src_caps (h, caps);
+  caps = NULL;
+  gst_clear_object (&capsfilter);
+#undef L16_CAPS
 }
 
 static void
@@ -4259,7 +4274,7 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
   g_object_unref (rtpbin2);
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
-  add_audio_test_src_harness (h);
+  add_audio_test_src_harness (h, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer, &answer);
@@ -4380,7 +4395,7 @@ GST_START_TEST (test_codec_preferences_in_on_new_transceiver)
 
   /* setup recvonly peer */
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_video_src_harness (h, 101);
+  add_fake_video_src_harness (h, 101, 0);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   /* connect to "on-new-transceiver" to set codec-preferences to H264 */
@@ -4497,7 +4512,7 @@ GST_START_TEST (test_bundle_mid_header_extension)
 
   /* setup sendonly peer */
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
+  add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   test_validate_sdp (t, &offer, &answer);
