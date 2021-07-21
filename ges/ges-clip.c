@@ -3480,6 +3480,7 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
     GESTrackElement *copy, *orig = tmp->data;
     GESTrack *track = ges_track_element_get_track (orig);
     GESAutoTransition *trans;
+    gchar *meta;
 
     copy = ges_clip_copy_track_element_into (new_object, orig, new_inpoint);
 
@@ -3489,6 +3490,10 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
     if (track)
       g_hash_table_insert (track_for_copy, gst_object_ref (copy),
           gst_object_ref (track));
+
+    meta = ges_meta_container_metas_to_string (GES_META_CONTAINER (orig));
+    ges_meta_container_add_metas_from_string (GES_META_CONTAINER (copy), meta);
+    g_free (meta);
 
     trans = timeline ?
         ges_timeline_get_auto_transition_at_edge (timeline, orig,

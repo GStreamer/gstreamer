@@ -475,6 +475,7 @@ GST_START_TEST (test_split_object)
       *splittrackelement;
   guint32 priority1, priority2, effect_priority1, effect_priority2;
   guint selection_called = 0;
+  const gchar *meta;
 
   ges_init ();
 
@@ -502,6 +503,9 @@ GST_START_TEST (test_split_object)
   fail_unless (trackelement1 != NULL);
   fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement1) ==
       GES_TIMELINE_ELEMENT (clip));
+  ges_meta_container_set_string (GES_META_CONTAINER (trackelement1), "test_key",
+      "test_value");
+
   trackelement2 = GES_CONTAINER_CHILDREN (clip)->next->data;
   fail_unless (trackelement2 != NULL);
   fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement2) ==
@@ -633,6 +637,9 @@ GST_START_TEST (test_split_object)
   assert_equals_int (GES_TIMELINE_ELEMENT_PRIORITY (splittrackelement),
       priority1 + 3);
   fail_unless (GES_TIMELINE_ELEMENT_PRIORITY (trackelement1) == priority2);
+  meta = ges_meta_container_get_string (GES_META_CONTAINER (splittrackelement),
+      "test_key");
+  fail_unless_equals_string (meta, "test_value");
 
   fail_unless (splittrackelement != trackelement1);
   fail_unless (splittrackelement != trackelement2);
