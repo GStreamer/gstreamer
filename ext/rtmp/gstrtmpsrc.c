@@ -31,11 +31,21 @@
  * This plugin reads data from a local or remote location specified
  * by an URI. This location can be specified using any protocol supported by
  * the RTMP library, i.e. rtmp, rtmpt, rtmps, rtmpe, rtmfp, rtmpte and rtmpts.
+ * The URL/location can contain extra connection or session parameters
+ * for librtmp, such as 'flashver=version'. See the librtmp documentation
+ * for more detail. Of particular interest can be setting `live=1` to certain
+ * RTMP streams that don't seem to be playing otherwise.
+
  *
  * ## Example launch lines
  * |[
  * gst-launch-1.0 -v rtmpsrc location=rtmp://somehost/someurl ! fakesink
  * ]| Open an RTMP location and pass its content to fakesink.
+ * 
+ * |[
+ * gst-launch-1.0 rtmpsrc location="rtmp://somehost/someurl live=1" ! fakesink
+ * ]| Open an RTMP location and pass its content to fakesink while passing the
+ * live=1 flag to librtmp
  *
  */
 
