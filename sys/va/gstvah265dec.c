@@ -869,9 +869,12 @@ error:
 
 static guint
 _get_rtformat (GstVaH265Dec * self, guint8 bit_depth_luma,
-    guint8 chroma_format_idc)
+    guint8 bit_depth_chroma, guint8 chroma_format_idc)
 {
-  switch (bit_depth_luma) {
+  guint8 bit_num = MAX (bit_depth_luma, bit_depth_chroma);
+
+  switch (bit_num) {
+    case 11:
     case 12:
       if (chroma_format_idc == 3)
         return VA_RT_FORMAT_YUV444_12;
@@ -880,6 +883,7 @@ _get_rtformat (GstVaH265Dec * self, guint8 bit_depth_luma,
       else
         return VA_RT_FORMAT_YUV420_12;
       break;
+    case 9:
     case 10:
       if (chroma_format_idc == 3)
         return VA_RT_FORMAT_YUV444_10;
@@ -898,7 +902,8 @@ _get_rtformat (GstVaH265Dec * self, guint8 bit_depth_luma,
       break;
     default:
       GST_ERROR_OBJECT (self, "Unsupported chroma format: %d "
-          "(with depth luma: %d)", chroma_format_idc, bit_depth_luma);
+          "(with depth luma: %d, with depth chroma: %d)",
+          chroma_format_idc, bit_depth_luma, bit_depth_chroma);
       return 0;
   }
 }
@@ -1049,7 +1054,7 @@ gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
     return FALSE;
 
   rt_format = _get_rtformat (self, sps->bit_depth_luma_minus8 + 8,
-      sps->chroma_format_idc);
+      sps->bit_depth_chroma_minus8 + 8, sps->chroma_format_idc);
   if (rt_format == 0)
     return FALSE;
 
