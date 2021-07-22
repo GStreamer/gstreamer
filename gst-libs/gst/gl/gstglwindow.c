@@ -127,6 +127,7 @@ enum
   EVENT_MOUSE_SIGNAL,
   EVENT_KEY_SIGNAL,
   EVENT_SCROLL_SIGNAL,
+  WINDOW_HANDLE_CHANGED_SIGNAL,
   LAST_SIGNAL
 };
 
@@ -252,6 +253,22 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 4, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE,
       G_TYPE_DOUBLE);
+
+  /**
+   * GstGLWindow::window-handle-changed:
+   * @object: the #GstGLWindow
+   *
+   * Will be emitted when the window handle has been set into the native
+   * implementation, but before the context is re-activated. By using this
+   * signal, elements can refresh associated resource without relying on
+   * direct handle comparision.
+   *
+   * Since: 1.20
+   */
+  gst_gl_window_signals[WINDOW_HANDLE_CHANGED_SIGNAL] =
+      g_signal_new ("window-handle_changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 0);
 
   _init_debug ();
 }
@@ -380,6 +397,12 @@ _set_window_handle_cb (GstSetWindowHandleCb * data)
   }
 
   window_class->set_window_handle (data->window, data->handle);
+
+  /* Let's assume users don't call this without a new handle, this is the
+   * safest since we don't know the nature of the handle and direct
+   * comparision might not be safe */
+  g_signal_emit (data->window,
+      gst_gl_window_signals[WINDOW_HANDLE_CHANGED_SIGNAL], 0, NULL);
 
   /* reactivate */
   if (context && thread)
