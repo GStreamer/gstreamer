@@ -67,6 +67,7 @@ struct _GstGLContextEGL
 
   /* Cached handle */
   guintptr window_handle;
+  gulong window_handle_signal;
 
   GstStructure *requested_config;
 };

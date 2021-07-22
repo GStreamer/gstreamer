@@ -832,6 +832,18 @@ _create_context_with_flags (GstGLContextEGL * egl, EGLContext share_context,
       attribs);
 }
 
+static void
+gst_gl_context_egl_window_handle_changed_cb (GstGLContextEGL * egl,
+    GstGLWindow * window)
+{
+  if (egl->egl_surface != EGL_NO_SURFACE) {
+    if (!eglDestroySurface (egl->egl_display, egl->egl_surface))
+      GST_WARNING_OBJECT (egl, "Failed to destroy old window surface: %s",
+          gst_egl_get_error_string (eglGetError ()));
+    egl->egl_surface = EGL_NO_SURFACE;
+  }
+}
+
 static gboolean
 gst_gl_context_egl_create_context (GstGLContext * context,
     GstGLAPI gl_api, GstGLContext * other_context, GError ** error)
@@ -1112,8 +1124,6 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     egl->egl_surface =
         eglCreateWindowSurface (egl->egl_display, egl->egl_config,
         (EGLNativeWindowType) window_handle, attrs);
-    /* Store window handle for later comparison */
-    egl->window_handle = window_handle;
   } else if (!gst_gl_check_extension ("EGL_KHR_surfaceless_context",
           egl->egl_exts)) {
     EGLint surface_attrib[7];
@@ -1152,8 +1162,12 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   egl->egl_major = egl_major;
   egl->egl_minor = egl_minor;
 
-  if (window)
+  if (window) {
+    egl->window_handle_signal = g_signal_connect_swapped (window,
+        "window-handle-changed",
+        G_CALLBACK (gst_gl_context_egl_window_handle_changed_cb), egl);
     gst_object_unref (window);
+  }
 
   return TRUE;
 
@@ -1168,8 +1182,15 @@ static void
 gst_gl_context_egl_destroy_context (GstGLContext * context)
 {
   GstGLContextEGL *egl;
+  GstGLWindow *window;
 
   egl = GST_GL_CONTEXT_EGL (context);
+  window = gst_gl_context_get_window (context);
+
+  if (window && egl->window_handle_signal) {
+    g_signal_handler_disconnect (window, egl->window_handle_signal);
+    egl->window_handle_signal = 0;
+  }
 
   gst_gl_context_egl_activate (context, FALSE);
 
@@ -1182,7 +1203,6 @@ gst_gl_context_egl_destroy_context (GstGLContext * context)
     eglDestroyContext (egl->egl_display, egl->egl_context);
     egl->egl_context = NULL;
   }
-  egl->window_handle = 0;
 
   eglReleaseThread ();
 
@@ -1212,7 +1232,7 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
       handle = gst_gl_window_get_window_handle (window);
       gst_object_unref (window);
     }
-    if (handle && handle != egl->window_handle) {
+    if (handle && (egl->egl_surface == EGL_NO_SURFACE)) {
 #if GST_GL_HAVE_WINDOW_WINRT && defined (EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER)
       const EGLint attrs[] = {
         /* EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER is an optimization that can
@@ -1226,15 +1246,6 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
       GST_DEBUG_OBJECT (context,
           "Handle changed (have:%p, now:%p), switching surface",
           (void *) egl->window_handle, (void *) handle);
-      if (egl->egl_surface) {
-        result = eglDestroySurface (egl->egl_display, egl->egl_surface);
-        egl->egl_surface = EGL_NO_SURFACE;
-        if (!result) {
-          GST_ERROR_OBJECT (context, "Failed to destroy old window surface: %s",
-              gst_egl_get_error_string (eglGetError ()));
-          goto done;
-        }
-      }
       egl->egl_surface =
           eglCreateWindowSurface (egl->egl_display, egl->egl_config,
           (EGLNativeWindowType) handle, attrs);
