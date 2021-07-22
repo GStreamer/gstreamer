@@ -227,6 +227,10 @@ gst_va_h265_dec_output_picture (GstH265Decoder * decoder,
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
+  GstVaDecodePicture *va_pic;
+
+  va_pic = gst_h265_picture_get_user_data (picture);
+  g_assert (va_pic->gstbuffer);
 
   GST_LOG_OBJECT (self,
       "Outputting picture %p (poc %d)", picture, picture->pic_order_cnt);
@@ -237,6 +241,8 @@ gst_va_h265_dec_output_picture (GstH265Decoder * decoder,
     gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
     return self->last_ret;
   }
+
+  gst_buffer_replace (&frame->output_buffer, va_pic->gstbuffer);
 
   if (base->copy_frames)
     gst_va_base_dec_copy_output_buffer (base, frame);
@@ -842,13 +848,18 @@ gst_va_h265_dec_new_picture (GstH265Decoder * decoder,
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
   GstVaDecodePicture *pic;
+  GstBuffer *output_buffer;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
 
-  self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
-  if (self->last_ret != GST_FLOW_OK)
+  output_buffer = gst_video_decoder_allocate_output_buffer (vdec);
+  if (!output_buffer) {
+    self->last_ret = GST_FLOW_ERROR;
     goto error;
+  }
+  self->last_ret = GST_FLOW_OK;
 
-  pic = gst_va_decode_picture_new (base->decoder, frame->output_buffer);
+  pic = gst_va_decode_picture_new (base->decoder, output_buffer);
+  gst_buffer_unref (output_buffer);
 
   gst_h265_picture_set_user_data (picture, pic,
       (GDestroyNotify) gst_va_decode_picture_free);
