@@ -2261,6 +2261,7 @@ check_pending_buffers (GstTSDemux * demux)
   guint64 offset = 0;
   GList *tmp;
   gboolean have_only_sparse = TRUE;
+  gboolean exceeded_threshold = FALSE;
 
   /* 0. Do we only have sparse stream */
   for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
@@ -2282,12 +2283,38 @@ check_pending_buffers (GstTSDemux * demux)
         have_observation = TRUE;
         break;
       }
+      /* 1.2 Check if we exceeded the maximum threshold of pending data */
+      if (tmpstream->pending && (tmpstream->raw_dts != -1
+              || tmpstream->raw_pts != -1)) {
+        PendingBuffer *pend = tmpstream->pending->data;
+        guint64 lastval =
+            tmpstream->raw_dts != -1 ? tmpstream->raw_dts : tmpstream->raw_pts;
+        guint64 firstval = pend->dts != -1 ? pend->dts : pend->pts;
+        GstClockTime dur;
+        g_assert (firstval != -1);
+        dur = MPEGTIME_TO_GSTTIME (lastval - firstval);
+        GST_DEBUG_OBJECT (tmpstream->pad,
+            "Pending content duration: %" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
+        if (dur > 500 * GST_MSECOND) {
+          exceeded_threshold = TRUE;
+          break;
+        }
+      }
     }
   }
 
-  /* 2. If we don't have a valid value yet, break out */
-  if (have_observation == FALSE)
-    return FALSE;
+  if (have_observation == FALSE) {
+    /* 2. If we don't have a valid value yet, break out */
+    if (!exceeded_threshold)
+      return FALSE;
+
+    /* Except if we've exceed the maximum amount of pending buffers, in which
+     * case we ignore PCR from now on */
+    GST_DEBUG_OBJECT (demux,
+        "Saw more than 500ms of data without PCR. Ignoring PCR from now on");
+    GST_MPEGTS_BASE (demux)->ignore_pcr = TRUE;
+    demux->program->pcr_pid = 0x1fff;
+  }
 
   /* 3. Go over all streams that have current/pending data */
   for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
