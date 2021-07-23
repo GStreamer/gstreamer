@@ -228,8 +228,11 @@ GstQSGTexture::textureSize () const
 bool
 GstQSGTexture::hasAlphaChannel () const
 {
-  /* FIXME: support RGB textures */
-  return true;
+  const bool has_alpha = GST_VIDEO_FORMAT_INFO_HAS_ALPHA(this->v_info.finfo);
+
+  GST_LOG ("%p get has alpha channel %u", this, has_alpha);
+
+  return has_alpha;
 }
 
 /* can be called from any thread */
