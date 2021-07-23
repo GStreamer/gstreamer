@@ -8,6 +8,7 @@ debugutilsbad_sources = [
   'gstdebugspy.c',
   'gsterrorignore.c',
   'gstfakeaudiosink.c',
+  'gstfakesinkutils.c',
   'gstfakevideosink.c',
   'gsttestsrcbin.c',
   'gstvideocodectestsink.c',

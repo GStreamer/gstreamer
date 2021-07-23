@@ -39,6 +39,7 @@
 
 #include "gstdebugutilsbadelements.h"
 #include "gstfakevideosink.h"
+#include "gstfakesinkutils.h"
 
 #include <gst/video/video.h>
 
@@ -126,112 +127,6 @@ gst_fake_video_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   return TRUE;
 }
 
-/* TODO complete the types and make this an utility */
-static void
-gst_fake_video_sink_proxy_properties (GstFakeVideoSink * self,
-    GstElement * child)
-{
-  static gsize initialized = 0;
-
-  if (g_once_init_enter (&initialized)) {
-    GObjectClass *object_class;
-    GParamSpec **properties;
-    guint n_properties, i;
-
-    object_class = G_OBJECT_CLASS (GST_FAKE_VIDEO_SINK_GET_CLASS (self));
-    properties = g_object_class_list_properties (G_OBJECT_GET_CLASS (child),
-        &n_properties);
-
-    /**
-     * GstFakeVideoSink:allocation-meta-flags
-     *
-     * Control the behaviour of the sink allocation query handler.
-     *
-     * Since: 1.18
-     */
-    g_object_class_install_property (object_class, PROP_ALLOCATION_META_FLAGS,
-        g_param_spec_flags ("allocation-meta-flags", "Flags",
-            "Flags to control behaviour",
-            GST_TYPE_FAKE_VIDEO_SINK_ALLOCATION_META_FLAGS,
-            ALLOCATION_META_DEFAULT_FLAGS,
-            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-
-    for (i = 0; i < n_properties; i++) {
-      guint property_id = i + PROP_LAST;
-
-      if (properties[i]->owner_type != G_OBJECT_TYPE (child) &&
-          properties[i]->owner_type != GST_TYPE_BASE_SINK)
-        continue;
-
-      if (G_IS_PARAM_SPEC_BOOLEAN (properties[i])) {
-        GParamSpecBoolean *prop = G_PARAM_SPEC_BOOLEAN (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_boolean (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->default_value, properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_INT (properties[i])) {
-        GParamSpecInt *prop = G_PARAM_SPEC_INT (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_int (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->minimum, prop->maximum, prop->default_value,
-                properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_UINT (properties[i])) {
-        GParamSpecUInt *prop = G_PARAM_SPEC_UINT (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_uint (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->minimum, prop->maximum, prop->default_value,
-                properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_INT64 (properties[i])) {
-        GParamSpecInt64 *prop = G_PARAM_SPEC_INT64 (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_int64 (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->minimum, prop->maximum, prop->default_value,
-                properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_UINT64 (properties[i])) {
-        GParamSpecUInt64 *prop = G_PARAM_SPEC_UINT64 (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_uint64 (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->minimum, prop->maximum, prop->default_value,
-                properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_ENUM (properties[i])) {
-        GParamSpecEnum *prop = G_PARAM_SPEC_ENUM (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_enum (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                properties[i]->value_type, prop->default_value,
-                properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_STRING (properties[i])) {
-        GParamSpecString *prop = G_PARAM_SPEC_STRING (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_string (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->default_value, properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_BOXED (properties[i])) {
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_boxed (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                properties[i]->value_type, properties[i]->flags));
-      }
-    }
-
-    g_free (properties);
-    g_once_init_leave (&initialized, 1);
-  }
-}
-
 static void
 gst_fake_video_sink_init (GstFakeVideoSink * self)
 {
@@ -262,7 +157,7 @@ gst_fake_video_sink_init (GstFakeVideoSink * self)
 
     self->child = child;
 
-    gst_fake_video_sink_proxy_properties (self, child);
+    gst_fake_sink_proxy_properties (GST_ELEMENT_CAST (self), child, PROP_LAST);
   } else {
     g_warning ("Check your GStreamer installation, "
         "core element 'fakesink' is missing.");
@@ -318,6 +213,20 @@ gst_fake_video_sink_class_init (GstFakeVideoSinkClass * klass)
   gst_element_class_set_static_metadata (element_class, "Fake Video Sink",
       "Video/Sink", "Fake video display that allows zero-copy",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
+
+  /**
+   * GstFakeVideoSink:allocation-meta-flags
+   *
+   * Control the behaviour of the sink allocation query handler.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (object_class, PROP_ALLOCATION_META_FLAGS,
+      g_param_spec_flags ("allocation-meta-flags", "Flags",
+          "Flags to control behaviour",
+          GST_TYPE_FAKE_VIDEO_SINK_ALLOCATION_META_FLAGS,
+          ALLOCATION_META_DEFAULT_FLAGS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_type_mark_as_plugin_api (GST_TYPE_FAKE_VIDEO_SINK_ALLOCATION_META_FLAGS,
       0);

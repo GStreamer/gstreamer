@@ -39,6 +39,7 @@
 
 #include "gstdebugutilsbadelements.h"
 #include "gstfakeaudiosink.h"
+#include "gstfakesinkutils.h"
 
 #include <gst/audio/audio.h>
 
@@ -60,97 +61,6 @@ G_DEFINE_TYPE_WITH_CODE (GstFakeAudioSink, gst_fake_audio_sink, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL););
 GST_ELEMENT_REGISTER_DEFINE (fakeaudiosink, "fakeaudiosink",
     GST_RANK_NONE, gst_fake_audio_sink_get_type ());
-
-/* TODO complete the types and make this an utility */
-static void
-gst_fake_audio_sink_proxy_properties (GstFakeAudioSink * self,
-    GstElement * child)
-{
-  static gsize initialized = 0;
-
-  if (g_once_init_enter (&initialized)) {
-    GObjectClass *object_class;
-    GParamSpec **properties;
-    guint n_properties, i;
-
-    object_class = G_OBJECT_CLASS (GST_FAKE_AUDIO_SINK_GET_CLASS (self));
-    properties = g_object_class_list_properties (G_OBJECT_GET_CLASS (child),
-        &n_properties);
-
-    for (i = 0; i < n_properties; i++) {
-      guint property_id = i + PROP_LAST;
-
-      if (properties[i]->owner_type != G_OBJECT_TYPE (child) &&
-          properties[i]->owner_type != GST_TYPE_BASE_SINK)
-        continue;
-
-      if (G_IS_PARAM_SPEC_BOOLEAN (properties[i])) {
-        GParamSpecBoolean *prop = G_PARAM_SPEC_BOOLEAN (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_boolean (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->default_value, properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_INT (properties[i])) {
-        GParamSpecInt *prop = G_PARAM_SPEC_INT (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_int (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->minimum, prop->maximum, prop->default_value,
-                properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_UINT (properties[i])) {
-        GParamSpecUInt *prop = G_PARAM_SPEC_UINT (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_uint (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->minimum, prop->maximum, prop->default_value,
-                properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_INT64 (properties[i])) {
-        GParamSpecInt64 *prop = G_PARAM_SPEC_INT64 (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_int64 (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->minimum, prop->maximum, prop->default_value,
-                properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_UINT64 (properties[i])) {
-        GParamSpecUInt64 *prop = G_PARAM_SPEC_UINT64 (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_uint64 (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->minimum, prop->maximum, prop->default_value,
-                properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_ENUM (properties[i])) {
-        GParamSpecEnum *prop = G_PARAM_SPEC_ENUM (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_enum (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                properties[i]->value_type, prop->default_value,
-                properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_STRING (properties[i])) {
-        GParamSpecString *prop = G_PARAM_SPEC_STRING (properties[i]);
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_string (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                prop->default_value, properties[i]->flags));
-      } else if (G_IS_PARAM_SPEC_BOXED (properties[i])) {
-        g_object_class_install_property (object_class, property_id,
-            g_param_spec_boxed (g_param_spec_get_name (properties[i]),
-                g_param_spec_get_nick (properties[i]),
-                g_param_spec_get_blurb (properties[i]),
-                properties[i]->value_type, properties[i]->flags));
-      }
-    }
-
-    g_free (properties);
-    g_once_init_leave (&initialized, 1);
-  }
-}
 
 static void
 gst_fake_audio_sink_init (GstFakeAudioSink * self)
@@ -179,7 +89,7 @@ gst_fake_audio_sink_init (GstFakeAudioSink * self)
 
     self->child = child;
 
-    gst_fake_audio_sink_proxy_properties (self, child);
+    gst_fake_sink_proxy_properties (GST_ELEMENT_CAST (self), child, PROP_LAST);
   } else {
     g_warning ("Check your GStreamer installation, "
         "core element 'fakesink' is missing.");
