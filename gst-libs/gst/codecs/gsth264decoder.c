@@ -2619,7 +2619,8 @@ construct_ref_field_pic_lists_b (GstH264Decoder * self,
   /* First sort ascending, this will put [1] in right place and finish
    * [2]. */
   print_ref_pic_list_b (self, priv->ref_frame_list_0_short_term, 0);
-  g_array_sort (priv->ref_pic_list_b0, (GCompareFunc) poc_asc_compare);
+  g_array_sort (priv->ref_frame_list_0_short_term,
+      (GCompareFunc) poc_asc_compare);
   print_ref_pic_list_b (self, priv->ref_frame_list_0_short_term, 0);
 
   /* Find first with POC > current_picture's POC to get first element
