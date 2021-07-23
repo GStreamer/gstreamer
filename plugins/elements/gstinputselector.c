@@ -913,7 +913,6 @@ gst_input_selector_cleanup_old_cached_buffers (GstInputSelector * sel,
   GST_DEBUG_OBJECT (sel, "Cleaning up old cached buffers");
   for (walk = GST_ELEMENT_CAST (sel)->sinkpads; walk; walk = g_list_next (walk)) {
     GstSelectorPad *selpad;
-    GstSegment *seg;
     GstSelectorPadCachedBuffer *cached_buffer;
     GSList *maybe_remove;
     guint queue_position;
@@ -922,13 +921,12 @@ gst_input_selector_cleanup_old_cached_buffers (GstInputSelector * sel,
     if (!selpad->cached_buffers)
       continue;
 
-    seg = &selpad->segment;
-
     maybe_remove = NULL;
     queue_position = 0;
     while ((cached_buffer = g_queue_peek_nth (selpad->cached_buffers,
                 queue_position))) {
       GstBuffer *buffer = cached_buffer->buffer;
+      GstSegment *seg = &cached_buffer->segment;
       GstClockTime running_time;
       GSList *l;
 
