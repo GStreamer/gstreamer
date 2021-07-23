@@ -602,13 +602,21 @@ _get_profile (GstVaH264Dec * self, const GstH264SPS * sps, gint max_dpb_size)
 
   switch (sps->profile_idc) {
     case GST_H264_PROFILE_BASELINE:
-      /* A.2 compliant */
+    {
+      GstH264DecoderCompliance compliance = GST_H264_DECODER_COMPLIANCE_STRICT;
+
+      g_object_get (G_OBJECT (self), "compliance", &compliance, NULL);
+
+      /* A.2 compliant or not strict */
       if (sps->constraint_set0_flag || sps->constraint_set1_flag
-          || sps->constraint_set2_flag) {
+          || sps->constraint_set2_flag
+          || compliance != GST_H264_DECODER_COMPLIANCE_STRICT) {
         profiles[i++] = VAProfileH264ConstrainedBaseline;
         profiles[i++] = VAProfileH264Main;
       }
+
       break;
+    }
     case GST_H264_PROFILE_EXTENDED:
       if (sps->constraint_set1_flag) {  /* A.2.2 (main profile) */
         profiles[i++] = VAProfileH264Main;
