@@ -2473,7 +2473,8 @@ split_ref_pic_list_b (GstH264Decoder * self, GArray * ref_pic_list_b,
 }
 
 static void
-print_ref_pic_list_b (GstH264Decoder * self, GArray * ref_list_b, gint index)
+print_ref_pic_list_b (GstH264Decoder * self, GArray * ref_list_b,
+    const gchar * name)
 {
 #ifndef GST_DISABLE_GST_DEBUG
   GString *str;
@@ -2493,7 +2494,7 @@ print_ref_pic_list_b (GstH264Decoder * self, GArray * ref_list_b, gint index)
       g_string_append_printf (str, "|%il", ref->long_term_pic_num);
   }
 
-  GST_DEBUG_OBJECT (self, "ref_pic_list_b%i: %s| curr %i", index, str->str,
+  GST_DEBUG_OBJECT (self, "%s: %s| curr %i", name, str->str,
       self->priv->current_picture->pic_order_cnt);
   g_string_free (str, TRUE);
 #endif
@@ -2524,9 +2525,9 @@ construct_ref_pic_lists_b (GstH264Decoder * self,
 
   /* First sort ascending, this will put [1] in right place and finish
    * [2]. */
-  print_ref_pic_list_b (self, priv->ref_pic_list_b0, 0);
+  print_ref_pic_list_b (self, priv->ref_pic_list_b0, "ref_pic_list_b0");
   g_array_sort (priv->ref_pic_list_b0, (GCompareFunc) poc_asc_compare);
-  print_ref_pic_list_b (self, priv->ref_pic_list_b0, 0);
+  print_ref_pic_list_b (self, priv->ref_pic_list_b0, "ref_pic_list_b0");
 
   /* Find first with POC > current_picture's POC to get first element
    * in [2]... */
@@ -2586,8 +2587,8 @@ construct_ref_pic_lists_b (GstH264Decoder * self,
     list[1] = pic;
   }
 
-  print_ref_pic_list_b (self, priv->ref_pic_list_b0, 0);
-  print_ref_pic_list_b (self, priv->ref_pic_list_b1, 1);
+  print_ref_pic_list_b (self, priv->ref_pic_list_b0, "ref_pic_list_b0");
+  print_ref_pic_list_b (self, priv->ref_pic_list_b1, "ref_pic_list_b1");
 }
 
 static void
@@ -2618,10 +2619,12 @@ construct_ref_field_pic_lists_b (GstH264Decoder * self,
 
   /* First sort ascending, this will put [1] in right place and finish
    * [2]. */
-  print_ref_pic_list_b (self, priv->ref_frame_list_0_short_term, 0);
+  print_ref_pic_list_b (self, priv->ref_frame_list_0_short_term,
+      "ref_frame_list_0_short_term");
   g_array_sort (priv->ref_frame_list_0_short_term,
       (GCompareFunc) poc_asc_compare);
-  print_ref_pic_list_b (self, priv->ref_frame_list_0_short_term, 0);
+  print_ref_pic_list_b (self, priv->ref_frame_list_0_short_term,
+      "ref_frame_list_0_short_term");
 
   /* Find first with POC > current_picture's POC to get first element
    * in [2]... */
@@ -2686,8 +2689,8 @@ construct_ref_field_pic_lists_b (GstH264Decoder * self,
     list[1] = pic;
   }
 
-  print_ref_pic_list_b (self, priv->ref_pic_list_b0, 0);
-  print_ref_pic_list_b (self, priv->ref_pic_list_b1, 1);
+  print_ref_pic_list_b (self, priv->ref_pic_list_b0, "ref_pic_list_b0");
+  print_ref_pic_list_b (self, priv->ref_pic_list_b1, "ref_pic_list_b1");
 
   /* Clear temporary lists, now pictures are owned by ref_pic_list_b0
    * and ref_pic_list_b1 */
