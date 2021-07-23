@@ -291,6 +291,24 @@ gst_vp9_parse_negotiate (GstVp9Parse * self, GstVp9ParseAligment in_align,
 }
 
 static gboolean
+gst_vp9_parse_is_info_valid (GstVp9Parse * self)
+{
+  if (self->width <= 0 || self->height <= 0)
+    return FALSE;
+
+  if (self->subsampling_x < 0 || self->subsampling_y < 0)
+    return FALSE;
+
+  if (self->profile == GST_VP9_PROFILE_UNDEFINED)
+    return FALSE;
+
+  if (self->bit_depth < (GstVp9BitDepth) GST_VP9_BIT_DEPTH_8)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_vp9_parse_process_frame (GstVp9Parse * self, GstVp9FrameHdr * frame_hdr)
 {
   GstVp9Parser *parser = self->parser;
@@ -299,7 +317,9 @@ gst_vp9_parse_process_frame (GstVp9Parse * self, GstVp9FrameHdr * frame_hdr)
   /* the resolution might be varying. Update our status per key frame */
   if (frame_hdr->frame_type != GST_VP9_KEY_FRAME ||
       frame_hdr->show_existing_frame) {
-    return TRUE;
+    /* Need to continue to get some valid info. */
+    if (gst_vp9_parse_is_info_valid (self))
+      return TRUE;
   }
 
   width = frame_hdr->width;
