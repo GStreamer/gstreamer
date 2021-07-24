@@ -1393,8 +1393,7 @@ _create_pipeline_buffer (GstVaFilter * self, GstVaSample * src,
 }
 
 gboolean
-gst_va_filter_convert_surface (GstVaFilter * self, GstVaSample * src,
-    GstVaSample * dst)
+gst_va_filter_process (GstVaFilter * self, GstVaSample * src, GstVaSample * dst)
 {
   VABufferID buffer, *filters = NULL;
   VADisplay dpy;

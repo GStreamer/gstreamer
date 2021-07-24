@@ -85,7 +85,7 @@ gboolean              gst_va_filter_add_filter_buffer     (GstVaFilter * self,
                                                            gsize size,
                                                            guint num);
 gboolean              gst_va_filter_drop_filter_buffers   (GstVaFilter * self);
-gboolean              gst_va_filter_convert_surface       (GstVaFilter * self,
+gboolean              gst_va_filter_process               (GstVaFilter * self,
                                                            GstVaSample * src,
                                                            GstVaSample * dest);
 

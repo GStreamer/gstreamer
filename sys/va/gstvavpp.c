@@ -1303,7 +1303,7 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   };
   /* *INDENT-ON* */
 
-  if (!gst_va_filter_convert_surface (self->filter, &src, &dst)) {
+  if (!gst_va_filter_process (self->filter, &src, &dst)) {
     gst_buffer_set_flags (outbuf, GST_BUFFER_FLAG_CORRUPTED);
   }
 
