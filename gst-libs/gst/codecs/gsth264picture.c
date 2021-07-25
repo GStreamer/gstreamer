@@ -301,7 +301,7 @@ gst_h264_dpb_add (GstH264Dpb * dpb, GstH264Picture * picture)
 
   if (dpb->pic_list->len > dpb->max_num_frames * (dpb->interlaced + 1))
     GST_ERROR ("DPB size is %d, exceed the max size %d",
-        dpb->pic_list->len, dpb->max_num_frames);
+        dpb->pic_list->len, dpb->max_num_frames * (dpb->interlaced + 1));
 
   /* The IDR frame or mem_mgmt_5 */
   if (picture->pic_order_cnt == 0) {
