@@ -123,6 +123,8 @@ gst_mxf_demux_pad_init (GstMXFDemuxPad * pad)
   pad->current_material_track_position = 0;
 }
 
+#define DEFAULT_MAX_DRIFT 100 * GST_MSECOND
+
 enum
 {
   PROP_0,
@@ -2720,7 +2722,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     }
 
     if (!etrack) {
-      GST_WARNING_OBJECT (demux,
+      GST_DEBUG_OBJECT (demux,
           "No essence track for this essence element found");
       return GST_FLOW_OK;
     }
@@ -4233,7 +4235,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
       guint64 offset;
       gint64 position;
 
-      GST_WARNING_OBJECT (demux,
+      GST_DEBUG_OBJECT (demux,
           "Found synchronization issue -- trying to solve");
 
       position = earliest->current_essence_track_position;
@@ -6005,7 +6007,7 @@ gst_mxf_demux_class_init (GstMXFDemuxClass * klass)
   g_object_class_install_property (gobject_class, PROP_MAX_DRIFT,
       g_param_spec_uint64 ("max-drift", "Maximum drift",
           "Maximum number of nanoseconds by which tracks can differ",
-          100 * GST_MSECOND, G_MAXUINT64, 500 * GST_MSECOND,
+          100 * GST_MSECOND, G_MAXUINT64, DEFAULT_MAX_DRIFT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_STRUCTURE,
@@ -6043,7 +6045,7 @@ gst_mxf_demux_init (GstMXFDemux * demux)
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
-  demux->max_drift = 500 * GST_MSECOND;
+  demux->max_drift = DEFAULT_MAX_DRIFT;
 
   demux->adapter = gst_adapter_new ();
   demux->flowcombiner = gst_flow_combiner_new ();
