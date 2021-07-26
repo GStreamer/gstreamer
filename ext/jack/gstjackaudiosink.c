@@ -949,9 +949,13 @@ gst_jack_audio_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   if (!sink->caps) {
     sink->caps = gst_caps_new_simple ("audio/x-raw",
         "format", G_TYPE_STRING, GST_JACK_FORMAT_STR,
-        "layout", G_TYPE_STRING, "interleaved",
-        "rate", G_TYPE_INT, rate,
-        "channels", GST_TYPE_INT_RANGE, min, max, NULL);
+        "layout", G_TYPE_STRING, "interleaved", "rate", G_TYPE_INT, rate, NULL);
+    if (min == max) {
+      gst_caps_set_simple (sink->caps, "channels", G_TYPE_INT, min, NULL);
+    } else {
+      gst_caps_set_simple (sink->caps,
+          "channels", GST_TYPE_INT_RANGE, min, max, NULL);
+    }
   }
   GST_INFO_OBJECT (sink, "returning caps %" GST_PTR_FORMAT, sink->caps);
 
