@@ -476,7 +476,7 @@
       <member cname="GST_DEBUG_GRAPH_SHOW_STATES" name="States" value="8" />
       <member cname="GST_DEBUG_GRAPH_SHOW_ALL" name="All" value="15" />
       <member cname="GST_DEBUG_GRAPH_SHOW_FULL_PARAMS" name="FullParams" value="16" />
-      <member cname="GST_DEBUG_GRAPH_SHOW_VERBOSE" name="Verbose" value="-1" />
+      <member cname="GST_DEBUG_GRAPH_SHOW_VERBOSE" name="Verbose" value="4294967295" />
     </enum>
     <enum name="ElementFlags" cname="GstElementFlags" type="flags" gtype="gst_element_flags_get_type">
       <member cname="GST_ELEMENT_FLAG_LOCKED_STATE" name="LockedState" value="16" />
@@ -518,7 +518,7 @@
       <member cname="GST_MEMORY_FLAG_LAST" name="Last" value="1048576" />
     </enum>
     <enum name="MessageType" cname="GstMessageType" type="flags" gtype="gst_message_type_get_type">
-      <member cname="GST_MESSAGE_UNKNOWN" name="Unknown" value="0U" />
+      <member cname="GST_MESSAGE_UNKNOWN" name="Unknown" value="0" />
       <member cname="GST_MESSAGE_EOS" name="Eos" value="1" />
       <member cname="GST_MESSAGE_ERROR" name="Error" value="2" />
       <member cname="GST_MESSAGE_WARNING" name="Warning" value="4" />

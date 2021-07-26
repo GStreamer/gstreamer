@@ -11,7 +11,7 @@ namespace Gst {
 	[GLib.GType (typeof (Gst.MessageTypeGType))]
 	public enum MessageType : uint {
 
-		Unknown = 0U,
+		Unknown = 0,
 		Eos = 1,
 		Error = 2,
 		Warning = 4,

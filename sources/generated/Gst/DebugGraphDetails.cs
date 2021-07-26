@@ -17,7 +17,7 @@ namespace Gst {
 		States = 8,
 		All = 15,
 		FullParams = 16,
-		Verbose = -1,
+		Verbose = 4294967295,
 	}
 
 	internal class DebugGraphDetailsGType {

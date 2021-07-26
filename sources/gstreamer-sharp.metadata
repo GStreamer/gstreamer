@@ -162,7 +162,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<add-node path="/api/namespace[@name='Gst']">
 		<class name="Debug" cname="GstDebug" disable_void_ctor="1"/>
 	</add-node>
-	<attr path="/api/namespace/enum[@cname='GstDebugGraphDetails']/member[@cname='GST_DEBUG_GRAPH_SHOW_VERBOSE']" name="value">-1</attr>
 	<move-node path="/api/namespace//object[@name='Global']//method[starts-with(@cname, 'gst_debug')]">/api/namespace/class[@cname='GstDebug']</move-node>
 
 	<add-node path="/api/namespace[@name='Gst']">
@@ -287,8 +286,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='pull-sample']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='pull-preroll']" name="hidden">true</attr>
 
-	<!-- MessageType should be uint -->
-	<attr path="//enum[@name='MessageType']/member[@cname='GST_MESSAGE_UNKNOWN']" name="value">0U</attr>
 	<!-- Extract is manually bound -->
 	<attr path="//method[@cname='gst_buffer_extract']" name="hidden">true</attr>
 	<attr path="//method[@cname='gst_buffer_extract_dup']" name="hidden">true</attr>
