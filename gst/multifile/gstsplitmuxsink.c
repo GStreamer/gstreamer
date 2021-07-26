@@ -1946,6 +1946,8 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         "Shutdown requested. Aborting fragment switch.");
     GST_SPLITMUX_LOCK (splitmux);
     GST_SPLITMUX_STATE_UNLOCK (splitmux);
+    gst_object_unref (muxer);
+    gst_object_unref (sink);
     return GST_FLOW_FLUSHING;
   }
 
@@ -2092,6 +2094,9 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   return GST_FLOW_OK;
 
 fail:
+  gst_object_unref (sink);
+  gst_object_unref (muxer);
+
   GST_SPLITMUX_LOCK (splitmux);
   GST_SPLITMUX_STATE_UNLOCK (splitmux);
   GST_ELEMENT_ERROR (splitmux, RESOURCE, SETTINGS,
@@ -2101,6 +2106,8 @@ fail:
 fail_output:
   GST_ELEMENT_ERROR (splitmux, RESOURCE, SETTINGS,
       ("Could not start new output sink"), NULL);
+  gst_object_unref (sink);
+  gst_object_unref (muxer);
 
   GST_SPLITMUX_LOCK (splitmux);
   GST_SPLITMUX_STATE_UNLOCK (splitmux);
@@ -2110,6 +2117,8 @@ fail_output:
 fail_muxer:
   GST_ELEMENT_ERROR (splitmux, RESOURCE, SETTINGS,
       ("Could not start new muxer"), NULL);
+  gst_object_unref (sink);
+  gst_object_unref (muxer);
 
   GST_SPLITMUX_LOCK (splitmux);
   GST_SPLITMUX_STATE_UNLOCK (splitmux);
