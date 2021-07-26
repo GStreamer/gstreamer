@@ -2314,6 +2314,7 @@ check_pending_buffers (GstTSDemux * demux)
         "Saw more than 500ms of data without PCR. Ignoring PCR from now on");
     GST_MPEGTS_BASE (demux)->ignore_pcr = TRUE;
     demux->program->pcr_pid = 0x1fff;
+    g_object_notify (G_OBJECT (demux), "ignore-pcr");
   }
 
   /* 3. Go over all streams that have current/pending data */
