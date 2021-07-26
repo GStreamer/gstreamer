@@ -85,4 +85,4 @@ static gboolean gst_jack_ring_buffer_pause(GstAudioRingBuffer * buf);
 static gboolean gst_jack_ring_buffer_stop(GstAudioRingBuffer * buf);
 static guint gst_jack_ring_buffer_delay(GstAudioRingBuffer * buf);
 
-#endif 
+#endif

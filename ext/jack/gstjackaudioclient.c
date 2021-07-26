@@ -409,11 +409,11 @@ gst_jack_audio_unref_connection (GstJackAudioConnection * conn)
     /* don't use conn->lock here. two reasons:
      *
      *  1) its not necessary: jack_deactivate() will not return until the JACK thread
-     *      associated with this connection is cleaned up by a thread join, hence 
+     *      associated with this connection is cleaned up by a thread join, hence
      *      no more callbacks can occur or be in progress.
      *
      * 2) it would deadlock anyway, because jack_deactivate() will sleep
-     *      waiting for the JACK thread, and can thus cause deadlock in 
+     *      waiting for the JACK thread, and can thus cause deadlock in
      *      jack_process_cb()
      */
     GST_INFO ("deactivate jack_client %p", conn->client);
@@ -581,7 +581,7 @@ gst_jack_audio_client_get_client (GstJackAudioClient * client)
 {
   g_return_val_if_fail (client != NULL, NULL);
 
-  /* no lock needed, the connection and the client does not change 
+  /* no lock needed, the connection and the client does not change
    * once the client is created. */
   return client->conn->client;
 }

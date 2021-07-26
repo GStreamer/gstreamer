@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-typedef enum 
+typedef enum
 {
   GST_JACK_CLIENT_SOURCE,
   GST_JACK_CLIENT_SINK
