@@ -80,6 +80,8 @@ typedef enum
 
 struct _GstH264DecoderPrivate
 {
+  GstH264DecoderCompliance compliance;
+
   gint width, height;
 
   /* input codec_data, if any */
@@ -210,6 +212,84 @@ static GstH264Picture *gst_h264_decoder_new_field_picture (GstH264Decoder *
 static void
 gst_h264_decoder_clear_output_frame (GstH264DecoderOutputFrame * output_frame);
 
+enum
+{
+  PROP_0,
+  PROP_COMPLIANCE,
+};
+
+/**
+ * gst_h264_decoder_compliance_get_type:
+ *
+ * Get the compliance type of the h264 decoder.
+ *
+ * Since: 1.20
+ */
+GType
+gst_h264_decoder_compliance_get_type (void)
+{
+  static gsize h264_decoder_compliance_type = 0;
+  static const GEnumValue compliances[] = {
+    {GST_H264_DECODER_COMPLIANCE_AUTO, "GST_H264_DECODER_COMPLIANCE_AUTO",
+        "auto"},
+    {GST_H264_DECODER_COMPLIANCE_STRICT, "GST_H264_DECODER_COMPLIANCE_STRICT",
+        "strict"},
+    {GST_H264_DECODER_COMPLIANCE_NORMAL, "GST_H264_DECODER_COMPLIANCE_NORMAL",
+        "normal"},
+    {GST_H264_DECODER_COMPLIANCE_FLEXIBLE,
+        "GST_H264_DECODER_COMPLIANCE_FLEXIBLE", "flexible"},
+    {0, NULL, NULL},
+  };
+
+
+  if (g_once_init_enter (&h264_decoder_compliance_type)) {
+    GType _type;
+
+    _type = g_enum_register_static ("GstH264DecoderCompliance", compliances);
+    g_once_init_leave (&h264_decoder_compliance_type, _type);
+  }
+
+  return (GType) h264_decoder_compliance_type;
+}
+
+static void
+gst_h264_decoder_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstH264Decoder *self = GST_H264_DECODER (object);
+  GstH264DecoderPrivate *priv = self->priv;
+
+  switch (property_id) {
+    case PROP_COMPLIANCE:
+      GST_OBJECT_LOCK (self);
+      g_value_set_enum (value, priv->compliance);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_h264_decoder_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstH264Decoder *self = GST_H264_DECODER (object);
+  GstH264DecoderPrivate *priv = self->priv;
+
+  switch (property_id) {
+    case PROP_COMPLIANCE:
+      GST_OBJECT_LOCK (self);
+      priv->compliance = g_value_get_enum (value);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+}
+
 static void
 gst_h264_decoder_class_init (GstH264DecoderClass * klass)
 {
@@ -217,6 +297,8 @@ gst_h264_decoder_class_init (GstH264DecoderClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->finalize = GST_DEBUG_FUNCPTR (gst_h264_decoder_finalize);
+  object_class->get_property = gst_h264_decoder_get_property;
+  object_class->set_property = gst_h264_decoder_set_property;
 
   decoder_class->start = GST_DEBUG_FUNCPTR (gst_h264_decoder_start);
   decoder_class->stop = GST_DEBUG_FUNCPTR (gst_h264_decoder_stop);
@@ -226,6 +308,22 @@ gst_h264_decoder_class_init (GstH264DecoderClass * klass)
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_h264_decoder_drain);
   decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_h264_decoder_handle_frame);
+
+  /**
+   * GstH264Decoder:compliance:
+   *
+   * The compliance controls the behavior of the decoder to handle some
+   * subtle cases and contexts, such as the low-latency DPB bumping or
+   * mapping the baseline profile as the constrained-baseline profile,
+   * etc.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (object_class, PROP_COMPLIANCE,
+      g_param_spec_enum ("compliance", "Decoder Compliance",
+          "The decoder's behavior in compliance with the h264 spec.",
+          GST_TYPE_H264_DECODER_COMPLIANCE, GST_H264_DECODER_COMPLIANCE_AUTO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 }
 
 static void

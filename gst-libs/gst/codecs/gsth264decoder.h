@@ -36,6 +36,49 @@ G_BEGIN_DECLS
 #define GST_IS_H264_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_H264_DECODER))
 #define GST_H264_DECODER_CAST(obj)       ((GstH264Decoder*)obj)
 
+/**
+ * GstH264DecoderCompliance:
+ * @GST_H264_DECODER_COMPLIANCE_AUTO: The decoder behavior is
+ *     automatically choosen.
+ * @GST_H264_DECODER_COMPLIANCE_STRICT: The decoder behavior strictly
+ *     conforms to the SPEC. All the decoder behaviors conform to the
+ *     SPEC, not including any nonstandard behavior which is not
+ *     mentioned in the SPEC.
+ * @GST_H264_DECODER_COMPLIANCE_NORMAL: The decoder behavior normally
+ *     conforms to the SPEC. Most behaviors conform to the SPEC but
+ *     including some nonstandard features which are widely used or
+ *     often used in the industry practice. This meets the request of
+ *     real streams and usages, but may not 100% conform to the
+ *     SPEC. It has very low risk. E.g., we will output pictures
+ *     without waiting DPB being full for the lower latency, which may
+ *     cause B frame disorder when there are reference frames with
+ *     smaller POC after it in decoder order. And the baseline profile
+ *     may be mapped to the constrained-baseline profile, but it may
+ *     have problems when a real baseline stream comes with FMO or
+ *     ASO.
+ * @GST_H264_DECODER_COMPLIANCE_FLEXIBLE: The decoder behavior
+ *     flexibly conforms to the SPEC. It uses the nonstandard features
+ *     more aggressively in order to get better performance(for
+ *     example, lower latency). It may change the result of the
+ *     decoder and should be used carefully. Besides including all
+ *     risks in *normal* mode, it has more risks, such as frames
+ *     disorder when reference frames POC decrease in decoder order.
+ *
+ * Since: 1.20
+ */
+typedef enum
+{
+  GST_H264_DECODER_COMPLIANCE_AUTO,
+  GST_H264_DECODER_COMPLIANCE_STRICT,
+  GST_H264_DECODER_COMPLIANCE_NORMAL,
+  GST_H264_DECODER_COMPLIANCE_FLEXIBLE
+} GstH264DecoderCompliance;
+
+#define GST_TYPE_H264_DECODER_COMPLIANCE (gst_h264_decoder_compliance_get_type())
+
+GST_CODECS_API
+GType gst_h264_decoder_compliance_get_type (void);
+
 typedef struct _GstH264Decoder GstH264Decoder;
 typedef struct _GstH264DecoderClass GstH264DecoderClass;
 typedef struct _GstH264DecoderPrivate GstH264DecoderPrivate;
@@ -65,6 +108,7 @@ struct _GstH264Decoder
  */
 struct _GstH264DecoderClass
 {
+  /*< private >*/
   GstVideoDecoderClass parent_class;
 
   /**
