@@ -435,7 +435,9 @@ gst_jack_ring_buffer_acquire (GstAudioRingBuffer * buf,
       (GST_SECOND / GST_USECOND), rate * bpf);
   /* segtotal based on buffer-time latency */
   spec->segtotal = spec->buffer_time / spec->latency_time;
-  if (spec->segtotal < 2) {
+
+  /* Use small period when low-latency is enabled regardless of buffer-time */
+  if (spec->segtotal < 2 || sink->low_latency) {
     spec->segtotal = 2;
     spec->buffer_time = spec->latency_time * spec->segtotal;
   }
@@ -685,6 +687,7 @@ enum
 #define DEFAULT_PROP_CLIENT_NAME	NULL
 #define DEFAULT_PROP_PORT_PATTERN      	NULL
 #define DEFAULT_PROP_TRANSPORT	GST_JACK_TRANSPORT_AUTONOMOUS
+#define DEFAULT_PROP_LOW_LATENCY  FALSE
 
 enum
 {
@@ -695,6 +698,7 @@ enum
   PROP_CLIENT_NAME,
   PROP_PORT_PATTERN,
   PROP_TRANSPORT,
+  PROP_LOW_LATENCY,
   PROP_LAST
 };
 
@@ -786,6 +790,23 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
           GST_TYPE_JACK_TRANSPORT, DEFAULT_PROP_TRANSPORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstJackAudioSink:low-latency:
+   *
+   * Optimize all settings for lowest latency. When enabled,
+   * #GstAudioBaseSink:buffer-time and #GstAudioBaseSink:latency-time will be
+   * ignored.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_LOW_LATENCY,
+      g_param_spec_boolean ("low-latency", "Low latency",
+          "Optimize all settings for lowest latency. When enabled, "
+          "\"buffer-time\" and \"latency-time\" will be ignored",
+          DEFAULT_PROP_LOW_LATENCY,
+          GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (gstelement_class, "Audio Sink (Jack)",
       "Sink/Audio", "Output audio to a JACK server",
       "Wim Taymans <wim.taymans@gmail.com>");
@@ -816,6 +837,7 @@ gst_jack_audio_sink_init (GstJackAudioSink * sink)
   sink->buffers = NULL;
   sink->client_name = g_strdup (DEFAULT_PROP_CLIENT_NAME);
   sink->transport = DEFAULT_PROP_TRANSPORT;
+  sink->low_latency = DEFAULT_PROP_LOW_LATENCY;
 }
 
 static void
@@ -871,6 +893,9 @@ gst_jack_audio_sink_set_property (GObject * object, guint prop_id,
     case PROP_TRANSPORT:
       sink->transport = g_value_get_flags (value);
       break;
+    case PROP_LOW_LATENCY:
+      sink->low_latency = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -903,6 +928,9 @@ gst_jack_audio_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_TRANSPORT:
       g_value_set_flags (value, sink->transport);
+      break;
+    case PROP_LOW_LATENCY:
+      g_value_set_boolean (value, sink->low_latency);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

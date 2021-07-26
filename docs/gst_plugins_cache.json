@@ -8344,6 +8344,18 @@
                         "type": "GstJackConnect",
                         "writable": true
                     },
+                    "low-latency": {
+                        "blurb": "Optimize all settings for lowest latency. When enabled, \"buffer-time\" and \"latency-time\" will be ignored",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "port-pattern": {
                         "blurb": "A pattern to select which ports to connect to (NULL = first physical ports)",
                         "conditionally-available": false,
@@ -8439,6 +8451,18 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "GstJackConnect",
+                        "writable": true
+                    },
+                    "low-latency": {
+                        "blurb": "Optimize all settings for lowest latency. When enabled, \"buffer-time\" and \"latency-time\" will be ignored",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "port-pattern": {
