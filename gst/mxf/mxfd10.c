@@ -64,7 +64,7 @@ mxf_is_d10_essence_track (const MXFMetadataTimelineTrack * track)
     if (mxf_is_generic_container_essence_container_label (key) &&
         key->u[12] == 0x02 && key->u[13] == 0x01 &&
         (key->u[14] >= 0x01 && key->u[14] <= 0x06) &&
-        (key->u[15] == 0x01 || key->u[15] == 0x02))
+        (key->u[15] == 0x01 || key->u[15] == 0x02 || key->u[15] == 0x7f))
       return TRUE;
   }
 
