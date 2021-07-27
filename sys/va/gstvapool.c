@@ -343,3 +343,26 @@ gst_va_pool_requires_video_meta (GstBufferPool * pool)
 {
   return GST_VA_POOL (pool)->force_videometa;
 }
+
+GstBufferPool *
+gst_va_pool_new_with_config (GstCaps * caps, guint size, guint min_buffers,
+    guint max_buffers, guint usage_hint, GstAllocator * allocator,
+    GstAllocationParams * alloc_params)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+
+  pool = gst_va_pool_new ();
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
+      max_buffers);
+  gst_buffer_pool_config_set_va_allocation_params (config, usage_hint);
+  gst_buffer_pool_config_set_allocator (config, allocator, alloc_params);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  if (!gst_buffer_pool_set_config (pool, config))
+    gst_clear_object (&pool);
+
+  return pool;
+}
