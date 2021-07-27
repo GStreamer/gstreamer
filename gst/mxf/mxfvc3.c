@@ -89,8 +89,8 @@ mxf_vc3_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   *outbuf = buffer;
 
   /* SMPTE 2019-4 6.1 */
-  if (key->u[12] != 0x15 || (key->u[14] != 0x05 && key->u[14] != 0x0C
-          && key->u[14] != 0x0D)) {
+  if (key->u[12] != 0x15 || (key->u[14] != 0x05 && key->u[14] != 0x06
+          && key->u[14] != 0x0C && key->u[14] != 0x0D)) {
     GST_ERROR ("Invalid VC-3 essence element");
     return GST_FLOW_ERROR;
   }
