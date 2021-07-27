@@ -1233,12 +1233,10 @@ read_rtp_header_extensions (GstRTPBaseDepayload * depayload,
       }
 
       if (ext) {
-        GST_OBJECT_LOCK (ext);
         if (!gst_rtp_header_extension_read (ext, ext_flags, &pdata[offset],
                 read_len, output)) {
           GST_WARNING_OBJECT (depayload, "RTP header extension (%s) could "
               "not read payloaded data", GST_OBJECT_NAME (ext));
-          GST_OBJECT_UNLOCK (ext);
           gst_object_unref (ext);
           goto out;
         }
@@ -1247,7 +1245,6 @@ read_rtp_header_extensions (GstRTPBaseDepayload * depayload,
           needs_src_caps_update = TRUE;
         }
 
-        GST_OBJECT_UNLOCK (ext);
         gst_object_unref (ext);
       }
       GST_OBJECT_UNLOCK (depayload);
