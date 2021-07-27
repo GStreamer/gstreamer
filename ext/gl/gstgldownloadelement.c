@@ -1228,11 +1228,17 @@ gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
 {
   GstGLDownloadElement *dl = GST_GL_DOWNLOAD_ELEMENT (bt);
   GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (bt);
+  GstGLContext *context = GST_GL_BASE_FILTER (bt)->context;
+  GstGLSyncMeta *in_sync_meta;
   gint i, n;
 
   *outbuf = inbuf;
 
   (void) bclass;
+
+  in_sync_meta = gst_buffer_get_gl_sync_meta (inbuf);
+  if (in_sync_meta)
+    gst_gl_sync_meta_wait (in_sync_meta, context);
 
 #if GST_GL_HAVE_PLATFORM_EGL && defined(HAVE_NVMM)
   if (dl->mode == GST_GL_DOWNLOAD_MODE_NVMM) {
@@ -1283,19 +1289,13 @@ gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
     GstBuffer *buffer = _try_export_dmabuf (dl, inbuf);
 
     if (buffer) {
-      GstGLContext *context = GST_GL_BASE_FILTER (bt)->context;
-      GstGLSyncMeta *in_sync_meta;
-
-      in_sync_meta = gst_buffer_get_gl_sync_meta (inbuf);
-      if (in_sync_meta)
-        gst_gl_sync_meta_wait (in_sync_meta, context);
-
-      if (GST_BASE_TRANSFORM_GET_CLASS (bt)->copy_metadata)
+      if (GST_BASE_TRANSFORM_GET_CLASS (bt)->copy_metadata) {
         if (!GST_BASE_TRANSFORM_GET_CLASS (bt)->copy_metadata (bt, inbuf,
                 buffer)) {
           GST_ELEMENT_WARNING (GST_ELEMENT (bt), STREAM, NOT_IMPLEMENTED,
               ("could not copy metadata"), (NULL));
         }
+      }
 
       *outbuf = buffer;
     } else {
