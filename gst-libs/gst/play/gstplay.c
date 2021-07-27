@@ -102,7 +102,7 @@ static const gchar *_config_quark_strings[] = {
   "accurate-seek",
 };
 
-GQuark _config_quark_table[CONFIG_QUARK_MAX];
+static GQuark _config_quark_table[CONFIG_QUARK_MAX];
 
 #define CONFIG_QUARK(q) _config_quark_table[CONFIG_QUARK_##q]
 
