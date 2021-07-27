@@ -32,7 +32,16 @@
 #undef VK_USE_PLATFORM_MACOS_MVK
 #undef VK_USE_PLATFORM_IOS_MVK
 #include <MoltenVK/vk_mvk_moltenvk.h>
+/* MoltenVK uses some enums/typedefs that are only available in newer macOS/iOS
+ * versions. At time of writing:
+ *  - MTLTextureSwizzle
+ *  - MTLTextureSwizzleChannels
+ *  - MTLMultisampleDepthResolveFilter
+ */
+#pragma clang diagnostic push
+#pragma clang diagnostic warning "-Wunguarded-availability-new"
 #include <MoltenVK/mvk_datatypes.h>
+#pragma clang diagnostic pop
 /* silence macro redefinition warnings */
 #undef VK_USE_PLATFORM_MACOS_MVK
 #undef VK_USE_PLATFORM_IOS_MVK
@@ -210,7 +219,7 @@ _create_vulkan_memory (GstAppleCoreVideoPixelBuffer * gpixbuf,
   IOSurfaceRef surface = CVPixelBufferGetIOSurface (pixel_buf);
   GstVideoTextureCacheVulkan *cache_vulkan =
       GST_VIDEO_TEXTURE_CACHE_VULKAN (cache);
-  MTLPixelFormat fmt = video_info_to_metal_format (info, plane);
+  MTLPixelFormat fmt = (MTLPixelFormat) video_info_to_metal_format (info, plane);
 
   CFRetain (pixel_buf);
   mem = gst_io_surface_vulkan_memory_wrapped (cache_vulkan->device,
@@ -292,7 +301,7 @@ gst_io_surface_vulkan_memory_set_surface (GstIOSurfaceVulkanMemory * memory,
     texture_data->texture = (__bridge_retained gpointer) texture;
 
     VkResult err = vkSetMTLTextureMVK (memory->vulkan_mem.image, texture);
-    GST_DEBUG ("bound texture %p to image %"GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT": 0x%x",
+    GST_DEBUG ("bound texture %p to image %" GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT ": 0x%x",
                texture, memory->vulkan_mem.image, err);
 
     vk_mem->user_data = texture_data;
