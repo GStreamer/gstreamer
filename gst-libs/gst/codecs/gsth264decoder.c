@@ -91,6 +91,9 @@ struct _GstH264DecoderPrivate
   GstH264DecoderAlign align;
   GstH264NalParser *parser;
   GstH264Dpb *dpb;
+  /* Cache last field which can not enter the DPB, should be a non ref */
+  GstH264Picture *last_field;
+
   GstFlowReturn last_ret;
   /* used for low-latency vs. high throughput mode decision */
   gboolean is_live;
@@ -305,6 +308,7 @@ gst_h264_decoder_reset (GstH264Decoder * self)
   g_clear_pointer (&self->input_state, gst_video_codec_state_unref);
   g_clear_pointer (&priv->parser, gst_h264_nal_parser_free);
   g_clear_pointer (&priv->dpb, gst_h264_dpb_free);
+  gst_h264_picture_clear (&priv->last_field);
 
   priv->width = 0;
   priv->height = 0;
@@ -372,6 +376,7 @@ gst_h264_decoder_clear_dpb (GstH264Decoder * self, gboolean flush)
 
   gst_queue_array_clear (priv->output_queue);
   gst_h264_decoder_clear_ref_pic_lists (self);
+  gst_h264_picture_clear (&priv->last_field);
   gst_h264_dpb_clear (priv->dpb);
   priv->last_output_poc = G_MININT32;
 }
@@ -710,6 +715,67 @@ gst_h264_decoder_split_frame (GstH264Decoder * self, GstH264Picture * picture)
   other_field->system_frame_number = picture->system_frame_number;
 
   return other_field;
+}
+
+static gboolean
+output_picture_directly (GstH264Decoder * self, GstH264Picture * picture)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+  GstH264Picture *out_pic = NULL;
+  gboolean ret = TRUE;
+
+  if (!gst_h264_dpb_get_interlaced (priv->dpb)) {
+    g_assert (priv->last_field == NULL);
+    out_pic = g_steal_pointer (&picture);
+    ret = TRUE;
+    goto output;
+  }
+
+  if (priv->last_field == NULL) {
+    if (picture->second_field) {
+      GST_WARNING ("Set the last output %p poc:%d, without first field",
+          picture, picture->pic_order_cnt);
+
+      ret = FALSE;
+      goto output;
+    }
+
+    /* Just cache the first field. */
+    priv->last_field = g_steal_pointer (&picture);
+    ret = TRUE;
+  } else {
+    if (!picture->second_field || !picture->other_field
+        || picture->other_field != priv->last_field) {
+      GST_WARNING ("The last field %p poc:%d is not the pair of the "
+          "current field %p poc:%d",
+          priv->last_field, priv->last_field->pic_order_cnt,
+          picture, picture->pic_order_cnt);
+
+      gst_h264_picture_clear (&priv->last_field);
+      ret = FALSE;
+      goto output;
+    }
+
+    GST_TRACE ("Pair the last field %p poc:%d and the current"
+        " field %p poc:%d",
+        priv->last_field, priv->last_field->pic_order_cnt,
+        picture, picture->pic_order_cnt);
+
+    out_pic = priv->last_field;
+    priv->last_field = NULL;
+    /* Link each field. */
+    out_pic->other_field = picture;
+  }
+
+output:
+  if (out_pic) {
+    gst_h264_dpb_set_last_output (priv->dpb, out_pic);
+    gst_h264_decoder_do_output_picture (self, out_pic);
+  }
+
+  gst_h264_picture_clear (&picture);
+
+  return ret;
 }
 
 static gboolean
@@ -1645,6 +1711,7 @@ gst_h264_decoder_drain_internal (GstH264Decoder * self)
 
   gst_h264_decoder_drain_output_queue (self, 0);
 
+  gst_h264_picture_clear (&priv->last_field);
   gst_h264_dpb_clear (priv->dpb);
   priv->last_output_poc = G_MININT32;
 
@@ -1807,6 +1874,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
 {
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
   GstH264DecoderPrivate *priv = self->priv;
+  gboolean ret = TRUE;
 
   /* Finish processing the picture.
    * Start by storing previous picture data for later use */
@@ -1872,8 +1940,9 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
      For a non-reference decoded picture, if there is empty frame buffer
      after bumping the smaller POC, add to DPB.
      Otherwise, output directly. */
-  if (picture->second_field || picture->ref
-      || gst_h264_dpb_has_empty_frame_buffer (priv->dpb)) {
+  if ((picture->second_field && picture->other_field
+          && picture->other_field->ref)
+      || picture->ref || gst_h264_dpb_has_empty_frame_buffer (priv->dpb)) {
     /* Split frame into top/bottom field pictures for reference picture marking
      * process. Even if current picture has field_pic_flag equal to zero,
      * if next picture is a field picture, complementary field pair of reference
@@ -1896,8 +1965,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
       gst_h264_dpb_add (priv->dpb, picture);
     }
   } else {
-    gst_h264_decoder_do_output_picture (self, picture);
-    gst_h264_dpb_set_last_output (priv->dpb, picture);
+    ret = output_picture_directly (self, picture);
   }
 
   GST_LOG_OBJECT (self,
@@ -1907,7 +1975,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
 
   gst_h264_picture_unref (picture);
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
