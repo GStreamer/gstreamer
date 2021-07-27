@@ -450,7 +450,7 @@ schedule_cdp (GstCCCombiner * self, const GstVideoTimeCode * tc,
       guint8 cc_type = cc_data[i * 3] & 0x03;
 
       if (!cc_valid)
-        break;
+        continue;
 
       if (cc_type == 0x00 || cc_type == 0x01) {
         if (cc_data[i * 3 + 1] != 0x80 || cc_data[i * 3 + 2] != 0x80) {
