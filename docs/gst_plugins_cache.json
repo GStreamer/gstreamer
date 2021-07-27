@@ -8356,6 +8356,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "port-names": {
+                        "blurb": "Comma-separated list of port name including \"client_name:\" prefix",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
                     "port-pattern": {
                         "blurb": "A pattern to select which ports to connect to (NULL = first physical ports)",
                         "conditionally-available": false,
@@ -8465,6 +8477,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "port-names": {
+                        "blurb": "Comma-separated list of port name including \"client_name:\" prefix",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
                     "port-pattern": {
                         "blurb": "A pattern to select which ports to connect to (NULL = first physical ports)",
                         "conditionally-available": false,
@@ -8525,6 +8549,11 @@
                         "desc": "Automatically connect ports to as many physical ports as possible",
                         "name": "auto-forced",
                         "value": "2"
+                    },
+                    {
+                        "desc": "Connect ports to explicitly requested physical ports",
+                        "name": "explicit",
+                        "value": "3"
                     }
                 ]
             },

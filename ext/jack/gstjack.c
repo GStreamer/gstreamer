@@ -37,6 +37,9 @@ gst_jack_connect_get_type (void)
       {GST_JACK_CONNECT_AUTO_FORCED,
             "Automatically connect ports to as many physical ports as possible",
           "auto-forced"},
+      {GST_JACK_CONNECT_EXPLICIT,
+            "Connect ports to explicitly requested physical ports",
+          "explicit"},
       {0, NULL, NULL},
     };
     GType tmp = g_enum_register_static ("GstJackConnect", jack_connect_enums);

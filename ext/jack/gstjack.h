@@ -45,7 +45,17 @@ GST_ELEMENT_REGISTER_DECLARE (jackaudiosink);
 typedef enum {
   GST_JACK_CONNECT_NONE,
   GST_JACK_CONNECT_AUTO,
-  GST_JACK_CONNECT_AUTO_FORCED
+  GST_JACK_CONNECT_AUTO_FORCED,
+
+  /**
+   * GstJackConnect::explicit
+   *
+   * In this mode, the element will try to connect to explicitly requested
+   * port specified by "port-names".
+   *
+   * Since: 1.20
+   */
+  GST_JACK_CONNECT_EXPLICIT,
 } GstJackConnect;
 
 /**

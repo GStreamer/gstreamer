@@ -56,6 +56,10 @@ gboolean              gst_jack_audio_client_set_active     (GstJackAudioClient *
 
 GstState              gst_jack_audio_client_get_transport_state (GstJackAudioClient *client);
 
+gchar **              gst_jack_audio_client_get_port_names_from_string (jack_client_t *jclient,
+                                                                        const gchar   *port_names,
+                                                                        gint port_flags);
+
 G_END_DECLS
 
 #endif /* __GST_JACK_AUDIO_CLIENT_H__ */

@@ -635,3 +635,54 @@ gst_jack_audio_client_get_transport_state (GstJackAudioClient * client)
   client->conn->transport_state = GST_STATE_VOID_PENDING;
   return state;
 }
+
+/**
+ * gst_jack_audio_client_get_port_names_from_string:
+ * @jclient: a jack_client_t handle
+ * @port_names: comma-separated jack port name(s)
+ * @port_flags: JackPortFlags
+ *
+ * Returns: a newly-allocated %NULL-terminated array of strings or %NULL
+ *   if @port_names contains invalid port name. Use g_strfreev() to free it.
+ */
+gchar **
+gst_jack_audio_client_get_port_names_from_string (jack_client_t * jclient,
+    const gchar * port_names, gint port_flags)
+{
+  gchar **p = NULL;
+  guint i, len;
+
+  g_return_val_if_fail (jclient != NULL, NULL);
+
+  if (!port_names)
+    return NULL;
+
+  p = g_strsplit (port_names, ",", 0);
+  len = g_strv_length (p);
+
+  if (len < 1)
+    goto invalid;
+
+  for (i = 0; i < len; i++) {
+    jack_port_t *port = jack_port_by_name (jclient, p[i]);
+    int flags;
+
+    if (!port) {
+      GST_WARNING ("Couldn't get jack port by name %s", p[i]);
+      goto invalid;
+    }
+
+    flags = jack_port_flags (port);
+    if ((flags & port_flags) != port_flags) {
+      GST_WARNING ("Port flags 0x%x doesn't match expected flags 0x%x",
+          flags, port_flags);
+      goto invalid;
+    }
+  }
+
+  return p;
+
+invalid:
+  g_strfreev (p);
+  return NULL;
+}
