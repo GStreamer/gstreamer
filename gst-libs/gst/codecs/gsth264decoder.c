@@ -778,6 +778,28 @@ output:
   return ret;
 }
 
+static void
+add_picture_to_dpb (GstH264Decoder * self, GstH264Picture * picture)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+
+  if (!gst_h264_dpb_get_interlaced (priv->dpb)) {
+    g_assert (priv->last_field == NULL);
+    gst_h264_dpb_add (priv->dpb, picture);
+    return;
+  }
+
+  /* The first field of the last picture may not be able to enter the
+     DPB if it is a non ref, but if the second field enters the DPB, we
+     need to add both of them. */
+  if (priv->last_field && picture->other_field == priv->last_field) {
+    gst_h264_dpb_add (priv->dpb, priv->last_field);
+    priv->last_field = NULL;
+  }
+
+  gst_h264_dpb_add (priv->dpb, picture);
+}
+
 static gboolean
 gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
 {
@@ -860,10 +882,10 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
       GstH264Picture *other_field =
           gst_h264_decoder_split_frame (self, picture);
 
-      gst_h264_dpb_add (priv->dpb, picture);
-      gst_h264_dpb_add (priv->dpb, other_field);
+      add_picture_to_dpb (self, picture);
+      add_picture_to_dpb (self, other_field);
     } else {
-      gst_h264_dpb_add (priv->dpb, picture);
+      add_picture_to_dpb (self, picture);
     }
 
     unused_short_term_frame_num++;
@@ -1953,16 +1975,16 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
       GstH264Picture *other_field =
           gst_h264_decoder_split_frame (self, picture);
 
-      gst_h264_dpb_add (priv->dpb, picture);
+      add_picture_to_dpb (self, picture);
       if (!other_field) {
         GST_WARNING_OBJECT (self,
             "Couldn't split frame into complementary field pair");
         /* Keep decoding anyway... */
       } else {
-        gst_h264_dpb_add (priv->dpb, other_field);
+        add_picture_to_dpb (self, other_field);
       }
     } else {
-      gst_h264_dpb_add (priv->dpb, picture);
+      add_picture_to_dpb (self, picture);
     }
   } else {
     ret = output_picture_directly (self, picture);
