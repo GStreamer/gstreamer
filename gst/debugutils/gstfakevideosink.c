@@ -128,6 +128,18 @@ gst_fake_video_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static void
+gst_fake_video_sink_proxy_properties (GstFakeVideoSink * self,
+    GstElement * child)
+{
+  static gsize initialized = 0;
+
+  if (g_once_init_enter (&initialized)) {
+    gst_fake_sink_proxy_properties (GST_ELEMENT_CAST (self), child, PROP_LAST);
+    g_once_init_leave (&initialized, 1);
+  }
+}
+
+static void
 gst_fake_video_sink_init (GstFakeVideoSink * self)
 {
   GstElement *child;
@@ -157,7 +169,7 @@ gst_fake_video_sink_init (GstFakeVideoSink * self)
 
     self->child = child;
 
-    gst_fake_sink_proxy_properties (GST_ELEMENT_CAST (self), child, PROP_LAST);
+    gst_fake_video_sink_proxy_properties (self, child);
   } else {
     g_warning ("Check your GStreamer installation, "
         "core element 'fakesink' is missing.");
