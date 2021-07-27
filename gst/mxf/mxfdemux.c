@@ -4027,6 +4027,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
 {
   GstMXFKLV klv;
   GstFlowReturn ret = GST_FLOW_OK;
+  gboolean force_switch = FALSE;
 
   if (demux->src->len > 0) {
     if (!gst_mxf_demux_get_earliest_pad (demux)) {
@@ -4045,6 +4046,15 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
         gst_mxf_demux_handle_generic_container_essence_element (demux,
         &demux->current_partition->clip_klv, FALSE);
     gst_mxf_demux_consume_klv (demux, &demux->current_partition->clip_klv);
+    if (ret == GST_FLOW_OK
+        && demux->current_partition->single_track->position >=
+        demux->current_partition->single_track->duration) {
+      /* We are done with the contents of this clip/custom wrapping, force the
+       * switch to the next non-EOS track */
+      GST_DEBUG_OBJECT (demux, "Single track EOS, switch");
+      force_switch = TRUE;
+    }
+
   } else {
 
     ret = gst_mxf_demux_peek_klv_packet (demux, demux->offset, &klv);
@@ -4230,8 +4240,9 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
       && demux->essence_tracks->len > 0) {
     GstMXFDemuxPad *earliest = NULL;
     /* We allow time drifts of at most 500ms */
-    while ((earliest = gst_mxf_demux_get_earliest_pad (demux)) &&
-        demux->segment.position - earliest->position > demux->max_drift) {
+    while ((earliest = gst_mxf_demux_get_earliest_pad (demux)) && (force_switch
+            || demux->segment.position - earliest->position >
+            demux->max_drift)) {
       guint64 offset;
       gint64 position;
 
