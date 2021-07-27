@@ -911,8 +911,8 @@ gst_h264_decoder_init_current_picture (GstH264Decoder * self)
   /* If the slice header indicates we will have to perform reference marking
    * process after this picture is decoded, store required data for that
    * purpose */
-  if (priv->current_slice.header.
-      dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag) {
+  if (priv->current_slice.header.dec_ref_pic_marking.
+      adaptive_ref_pic_marking_mode_flag) {
     priv->current_picture->dec_ref_pic_marking =
         priv->current_slice.header.dec_ref_pic_marking;
   }
@@ -1018,55 +1018,77 @@ gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
 {
   GstH264DecoderPrivate *priv = self->priv;
   const GstH264SliceHdr *slice_hdr = &slice->header;
-  GstH264Picture *prev_picture;
-  GArray *pictures;
+  GstH264Picture *prev_field;
+  gboolean in_dpb;
 
   *first_field = NULL;
+  prev_field = NULL;
+  in_dpb = FALSE;
+  if (gst_h264_dpb_get_interlaced (priv->dpb)) {
+    if (priv->last_field) {
+      prev_field = priv->last_field;
+      in_dpb = FALSE;
+    } else if (gst_h264_dpb_get_size (priv->dpb) > 0) {
+      GstH264Picture *prev_picture;
+      GArray *pictures;
 
-  /* DPB is empty, must be the first field */
-  if (gst_h264_dpb_get_size (priv->dpb) == 0)
-    return TRUE;
+      pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
+      prev_picture =
+          g_array_index (pictures, GstH264Picture *, pictures->len - 1);
+      g_array_unref (pictures); /* prev_picture should be held */
 
-  pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
-  prev_picture = g_array_index (pictures, GstH264Picture *, pictures->len - 1);
-  g_array_unref (pictures);     /* prev_picture should be hold */
+      /* Previous picture was a field picture. */
+      if (!GST_H264_PICTURE_IS_FRAME (prev_picture)
+          && !prev_picture->other_field) {
+        prev_field = prev_picture;
+        in_dpb = TRUE;
+      }
+    }
+  } else {
+    g_assert (priv->last_field == NULL);
+  }
 
   /* This is not a field picture */
   if (!slice_hdr->field_pic_flag) {
-    /* Check whether the last picture is complete or not */
-    if (!GST_H264_PICTURE_IS_FRAME (prev_picture) && !prev_picture->other_field) {
-      GST_WARNING_OBJECT (self, "Previous picture %p (poc %d) is not complete",
-          prev_picture, prev_picture->pic_order_cnt);
+    if (!prev_field)
+      return TRUE;
 
-      /* FIXME: implement fill gap field picture */
-      return FALSE;
-    }
-
-    return TRUE;
+    GST_WARNING_OBJECT (self, "Previous picture %p (poc %d) is not complete",
+        prev_field, prev_field->pic_order_cnt);
+    goto error;
   }
 
-  /* Previous picture was not a field picture or complete already */
-  if (GST_H264_PICTURE_IS_FRAME (prev_picture) || prev_picture->other_field)
+  /* OK, this is the first field. */
+  if (!prev_field)
     return TRUE;
 
-  if (prev_picture->frame_num == slice_hdr->frame_num) {
+  if (prev_field->frame_num != slice_hdr->frame_num) {
+    GST_WARNING_OBJECT (self, "Previous picture %p (poc %d) is not complete",
+        prev_field, prev_field->pic_order_cnt);
+    goto error;
+  } else {
     GstH264PictureField current_field = slice_hdr->bottom_field_flag ?
         GST_H264_PICTURE_FIELD_BOTTOM_FIELD : GST_H264_PICTURE_FIELD_TOP_FIELD;
 
-    if (current_field == prev_picture->field) {
+    if (current_field == prev_field->field) {
       GST_WARNING_OBJECT (self,
           "Currnet picture and previous picture have identical field %d",
           current_field);
-
-      /* FIXME: implement fill gap field picture */
-      return FALSE;
+      goto error;
     }
-
-    *first_field = gst_h264_picture_ref (prev_picture);
-    return TRUE;
   }
 
+  *first_field = gst_h264_picture_ref (prev_field);
   return TRUE;
+
+error:
+  if (!in_dpb) {
+    gst_h264_picture_clear (&priv->last_field);
+  } else {
+    /* FIXME: implement fill gap field picture if it is already in DPB */
+  }
+
+  return FALSE;
 }
 
 static gboolean
