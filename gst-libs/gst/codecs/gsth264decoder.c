@@ -82,6 +82,7 @@ struct _GstH264DecoderPrivate
 {
   GstH264DecoderCompliance compliance;
 
+  guint8 profile_idc;
   gint width, height;
 
   /* input codec_data, if any */
@@ -408,6 +409,7 @@ gst_h264_decoder_reset (GstH264Decoder * self)
   g_clear_pointer (&priv->dpb, gst_h264_dpb_free);
   gst_h264_picture_clear (&priv->last_field);
 
+  priv->profile_idc = 0;
   priv->width = 0;
   priv->height = 0;
   priv->nal_length_size = 4;
@@ -962,7 +964,8 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
 
     gst_h264_dpb_delete_unused (priv->dpb);
 
-    while (gst_h264_dpb_needs_bump (priv->dpb, picture, FALSE)) {
+    while (gst_h264_dpb_needs_bump (priv->dpb, picture,
+            GST_H264_DPB_BUMP_NORMAL_LATENCY)) {
       GstH264Picture *to_output;
 
       to_output = gst_h264_dpb_bump (priv->dpb, FALSE);
@@ -2010,6 +2013,37 @@ gst_h264_decoder_reference_picture_marking (GstH264Decoder * self,
   return gst_h264_decoder_sliding_window_picture_marking (self, picture);
 }
 
+static GstH264DpbBumpMode
+get_bump_level (GstH264Decoder * self)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+
+  /* User set the mode explicitly. */
+  switch (priv->compliance) {
+    case GST_H264_DECODER_COMPLIANCE_STRICT:
+      return GST_H264_DPB_BUMP_NORMAL_LATENCY;
+    case GST_H264_DECODER_COMPLIANCE_NORMAL:
+      return GST_H264_DPB_BUMP_LOW_LATENCY;
+    case GST_H264_DECODER_COMPLIANCE_FLEXIBLE:
+      return GST_H264_DPB_BUMP_VERY_LOW_LATENCY;
+    default:
+      break;
+  }
+
+  /* GST_H264_DECODER_COMPLIANCE_AUTO case. */
+
+  if (priv->is_live) {
+    /* The baseline and constrained-baseline profiles do not have B frames
+       and do not use the picture reorder, safe to use the higher bump level. */
+    if (priv->profile_idc == GST_H264_PROFILE_BASELINE)
+      return GST_H264_DPB_BUMP_VERY_LOW_LATENCY;
+
+    return GST_H264_DPB_BUMP_LOW_LATENCY;
+  }
+
+  return GST_H264_DPB_BUMP_NORMAL_LATENCY;
+}
+
 static gboolean
 gst_h264_decoder_finish_picture (GstH264Decoder * self,
     GstH264Picture * picture)
@@ -2017,6 +2051,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
   GstH264DecoderPrivate *priv = self->priv;
   gboolean ret = TRUE;
+  GstH264DpbBumpMode bump_level;
 
   /* Finish processing the picture.
    * Start by storing previous picture data for later use */
@@ -2056,7 +2091,8 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
     gst_h264_decoder_drain_internal (self);
   }
 
-  while (gst_h264_dpb_needs_bump (priv->dpb, picture, priv->is_live)) {
+  bump_level = get_bump_level (self);
+  while (gst_h264_dpb_needs_bump (priv->dpb, picture, bump_level)) {
     GstH264Picture *to_output;
 
     to_output = gst_h264_dpb_bump (priv->dpb, FALSE);
@@ -2392,6 +2428,7 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
       return FALSE;
     }
 
+    priv->profile_idc = sps->profile_idc;
     priv->width = sps->width;
     priv->height = sps->height;
 
