@@ -60,7 +60,7 @@ static void	InitDeckLinkAPI (void)
 	libraryHandle = dlopen(kDeckLinkAPI_Name, RTLD_NOW|RTLD_GLOBAL);
 	if (!libraryHandle)
 	{
-		fprintf(stderr, "%s\n", dlerror());
+		// fprintf(stderr, "%s\n", dlerror());
 		return;
 	}
 
