@@ -60,8 +60,6 @@
  *
  * + deinterlacing
  * + HDR tone mapping
- * + colorimetry
- * + cropping
  */
 
 #ifdef HAVE_CONFIG_H
@@ -105,7 +103,6 @@ struct _GstVaVpp
   GstVaBaseTransform parent;
 
   gboolean rebuild_filters;
-  gboolean forward_crop;
   guint op_flags;
 
   /* filters */
@@ -311,8 +308,6 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
   _update_properties_unlocked (self);
   GST_OBJECT_UNLOCK (object);
 
-  /* no reconfig here because it's done in
-   * _update_properties_unlocked() */
   gst_va_vpp_update_passthrough (self, FALSE);
 }
 
@@ -374,23 +369,12 @@ static gboolean
 gst_va_vpp_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
-  GstVaVpp *self = GST_VA_VPP (trans);
+  /* if we are not passthrough, we can handle crop meta */
+  if (decide_query)
+    gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
-  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-          decide_query, query)) {
-    self->forward_crop = FALSE;
-    return FALSE;
-  }
-
-  self->forward_crop =
-      (gst_query_find_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE,
-          NULL)
-      && gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL));
-
-
-  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
-
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
+      decide_query, query);
 }
 
 static void
@@ -621,6 +605,7 @@ gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
   GstVaVpp *self = GST_VA_VPP (trans);
   GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (self);
   GstClockTime ts, stream_time;
+  gboolean is_passthrough;
 
   ts = GST_BUFFER_TIMESTAMP (inbuf);
   stream_time =
@@ -631,24 +616,20 @@ gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (self), stream_time);
 
+  gst_va_vpp_rebuild_filters (self);
+  gst_va_vpp_update_passthrough (self, TRUE);
+
+  /* cropping is only enabled if vapostproc is not in passthrough */
+  is_passthrough = gst_base_transform_is_passthrough (trans);
   GST_OBJECT_LOCK (self);
-  if (gst_buffer_get_video_crop_meta (inbuf)) {
-    /* enable cropping if either already do operations on frame or
-     * downstream doesn't support cropping */
-    if (self->op_flags == 0 && self->forward_crop) {
-      self->op_flags &= ~VPP_CONVERT_CROP;
-    } else {
-      self->op_flags |= VPP_CONVERT_CROP;
-    }
+  if (!is_passthrough && gst_buffer_get_video_crop_meta (inbuf)) {
+    self->op_flags |= VPP_CONVERT_CROP;
   } else {
     self->op_flags &= ~VPP_CONVERT_CROP;
   }
   gst_va_filter_enable_cropping (btrans->filter,
       (self->op_flags & VPP_CONVERT_CROP));
   GST_OBJECT_UNLOCK (self);
-
-  gst_va_vpp_rebuild_filters (self);
-  gst_va_vpp_update_passthrough (self, TRUE);
 }
 
 static GstFlowReturn
@@ -1598,7 +1579,6 @@ _get_scale_factor (GstVaVpp * self, gdouble * w_factor, gdouble * h_factor)
       break;
   }
 
-  /* TODO: add cropping factor */
   *w_factor = GST_VIDEO_INFO_WIDTH (&btrans->out_info);
   *w_factor /= w;
 
@@ -1675,7 +1655,7 @@ gst_va_vpp_src_event (GstBaseTransform * trans, GstEvent * event)
         new_x *= w_factor;
         new_y *= h_factor;
 
-        /* TODO: crop compensation */
+        /* crop compensation is done by videocrop */
 
         GST_TRACE_OBJECT (self, "from %fx%f to %fx%f", x, y, new_x, new_y);
         gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, new_x,
@@ -1731,8 +1711,6 @@ gst_va_vpp_sink_event (GstBaseTransform * trans, GstEvent * event)
       _update_properties_unlocked (self);
       GST_OBJECT_UNLOCK (self);
 
-      /* no reconfig here because it's done in
-       * _update_properties_unlocked */
       gst_va_vpp_update_passthrough (self, FALSE);
 
       break;
