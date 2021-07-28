@@ -698,7 +698,7 @@ gst_h264_dpb_get_lowest_output_needed_picture (GstH264Dpb * dpb,
  * gst_h264_dpb_needs_bump:
  * @dpb: a #GstH264Dpb
  * @to_insert: the current #GstH264Picture to insert to dpb.
- * @low_latency: %TRUE if low-latency bumping is required
+ * @latency_mode: The required #GstH264DpbBumpMode for bumping.
  *
  * Returns: %TRUE if bumping is required
  *
@@ -706,7 +706,7 @@ gst_h264_dpb_get_lowest_output_needed_picture (GstH264Dpb * dpb,
  */
 gboolean
 gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
-    gboolean low_latency)
+    GstH264DpbBumpMode latency_mode)
 {
   GstH264Picture *picture = NULL;
   gint32 lowest_poc;
@@ -727,7 +727,7 @@ gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
     goto normal_bump;
   }
 
-  if (low_latency) {
+  if (latency_mode >= GST_H264_DPB_BUMP_LOW_LATENCY) {
     /* If low latency, we should not wait for the DPB becoming full.
        We try to bump the picture as soon as possible without the
        frames disorder. The policy is from the safe to some risk. */
@@ -809,22 +809,22 @@ gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
       return TRUE;
     }
 
-    /* PicOrderCnt increment by <=2. Not all streams meet this, but in
-       practice this condition can be used.
-       For stream with 2 poc increment like:
-       0(IDR), 2(P), 4(P), 6(P), 12(P), 8(B), 10(B)....
-       This can work well, but for streams with 1 poc increment like:
-       0(IDR), 2(P), 4(P), 1(B), 3(B) ...
-       This can cause picture disorder. Most stream in practice has the
-       2 poc increment, but this may have risk and be careful. */
-#if 0
-    if (lowest_poc > dpb->last_output_poc
-        && lowest_poc - dpb->last_output_poc <= 2) {
-      GST_TRACE ("lowest-poc: %d, last-output-poc: %d, bumping for"
-          " low-latency", lowest_poc, dpb->last_output_poc);
-      return TRUE;
+    if (latency_mode >= GST_H264_DPB_BUMP_VERY_LOW_LATENCY) {
+      /* PicOrderCnt increment by <=2. Not all streams meet this, but in
+         practice this condition can be used.
+         For stream with 2 poc increment like:
+         0(IDR), 2(P), 4(P), 6(P), 12(P), 8(B), 10(B)....
+         This can work well, but for streams with 1 poc increment like:
+         0(IDR), 2(P), 4(P), 1(B), 3(B) ...
+         This can cause picture disorder. Most stream in practice has the
+         2 poc increment, but this may have risk and be careful. */
+      if (lowest_poc > dpb->last_output_poc
+          && lowest_poc - dpb->last_output_poc <= 2) {
+        GST_TRACE ("lowest-poc: %d, last-output-poc: %d, diff <= 2, "
+            "bumping for very-low-latency", lowest_poc, dpb->last_output_poc);
+        return TRUE;
+      }
     }
-#endif
   }
 
 normal_bump:

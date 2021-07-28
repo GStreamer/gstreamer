@@ -164,6 +164,21 @@ struct _GstH264Picture
   GDestroyNotify notify;
 };
 
+/**
+ * GstH264DpbBumpMode:
+ * @GST_H264_DPB_BUMP_NORMAL_LATENCY: No latency requirement for DBP bumping.
+ * @GST_H264_DPB_BUMP_LOW_LATENCY: Low-latency requirement for DBP bumping.
+ * @GST_H264_DPB_BUMP_VERY_LOW_LATENCY: Very low-latency requirement for DBP bumping.
+ *
+ * Since: 1.20
+ */
+typedef enum
+{
+  GST_H264_DPB_BUMP_NORMAL_LATENCY,
+  GST_H264_DPB_BUMP_LOW_LATENCY,
+  GST_H264_DPB_BUMP_VERY_LOW_LATENCY
+} GstH264DpbBumpMode;
+
 GST_CODECS_API
 GType gst_h264_picture_get_type (void);
 
@@ -290,7 +305,7 @@ gboolean gst_h264_dpb_has_empty_frame_buffer   (GstH264Dpb * dpb);
 GST_CODECS_API
 gboolean gst_h264_dpb_needs_bump (GstH264Dpb * dpb,
                                   GstH264Picture * to_insert,
-                                  gboolean low_latency);
+                                  GstH264DpbBumpMode latency_mode);
 
 GST_CODECS_API
 GstH264Picture * gst_h264_dpb_bump (GstH264Dpb * dpb,
