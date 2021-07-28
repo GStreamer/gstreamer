@@ -967,6 +967,8 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   GstVideoCodecFrame *frame;
   const mpeg2_picture_t *picture;
   gboolean key_frame = FALSE;
+  gboolean bidirect_frame = FALSE;
+  gboolean closed_gop = FALSE;
 
   GST_DEBUG_OBJECT (mpeg2dec,
       "fbuf:%p display_picture:%p current_picture:%p fbuf->id:%d",
@@ -981,6 +983,9 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
     goto no_frame;
   picture = info->display_picture;
   key_frame = (picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I;
+  bidirect_frame =
+      (picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_B;
+  closed_gop = (info->gop->flags & GOP_FLAG_CLOSED_GOP);
 
   GST_DEBUG_OBJECT (mpeg2dec, "picture flags: %d, type: %d, keyframe: %d",
       picture->flags, picture->flags & PIC_MASK_CODING_TYPE, key_frame);
@@ -999,11 +1004,14 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
     return ret;
   }
 
+  /* Skip B-frames if GOP is not closed and waiting for the first keyframe. */
   if (mpeg2dec->discont_state != MPEG2DEC_DISC_NONE) {
-    GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, discont state %d",
-        mpeg2dec->discont_state);
-    ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
-    return ret;
+    if (bidirect_frame && !closed_gop) {
+      GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, discont state %d",
+          mpeg2dec->discont_state);
+      ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
+      return ret;
+    }
   }
 
   /* do cropping if the target region is smaller than the input one */
