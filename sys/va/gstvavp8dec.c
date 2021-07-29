@@ -227,7 +227,7 @@ _fill_quant_matrix (GstVp8Decoder * decoder, GstVp8Picture * picture,
   GstVp8Segmentation *const seg = &parser->segmentation;
   VAIQMatrixBufferVP8 iq_matrix = { };
   const gint8 QI_MAX = 127;
-  gint8 qi, qi_base;
+  gint16 qi, qi_base;
   gint i;
 
   /* Fill in VAIQMatrixBufferVP8 */
