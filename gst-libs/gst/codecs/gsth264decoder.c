@@ -724,7 +724,7 @@ output_picture_directly (GstH264Decoder * self, GstH264Picture * picture)
   GstH264Picture *out_pic = NULL;
   gboolean ret = TRUE;
 
-  if (!gst_h264_dpb_get_interlaced (priv->dpb)) {
+  if (GST_H264_PICTURE_IS_FRAME (picture)) {
     g_assert (priv->last_field == NULL);
     out_pic = g_steal_pointer (&picture);
     ret = TRUE;
