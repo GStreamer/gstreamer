@@ -1146,6 +1146,16 @@ build cerbero cross-macos universal:
   extends:
     - '.cerbero'
     - '.cerbero cross-macos universal'
+  script:
+    # We have build-tools that have fixed paths pointing to the upstream
+    # repository.  We need to point
+    - pwd
+    - mkdir -p "../../gstreamer"
+    - ln -sf "$(pwd)" "../../gstreamer/cerbero"
+    - mkdir -p "../../${CI_PROJECT_NAMESPACE}"
+    - ln -sf "$(pwd)" "../../${CI_PROJECT_NAMESPACE}/cerbero"
+
+    - ./cerbero_setup.sh cerbero_deps_script
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gst-sharp|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
