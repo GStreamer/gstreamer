@@ -1,4 +1,4 @@
 [wrap-git]
 directory=gtk-sharp
 url=https://github.com/GLibSharp/GtkSharp.git
-revision=master
+revision=tags/3.22.1
