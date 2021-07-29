@@ -727,12 +727,18 @@ parse_segmentation_params (GstBitReader * br, GstVp9SegmentationParams * params)
 
     for (i = 0; i < GST_VP9_MAX_SEGMENTS; i++) {
       VP9_READ_BIT (params->feature_enabled[i][GST_VP9_SEG_LVL_ALT_Q]);
-      if (params->feature_enabled[i][GST_VP9_SEG_LVL_ALT_Q])
+      if (params->feature_enabled[i][GST_VP9_SEG_LVL_ALT_Q]) {
         VP9_READ_SIGNED_16 (params->feature_data[i][GST_VP9_SEG_LVL_ALT_Q], 8);
+      } else {
+        params->feature_data[i][GST_VP9_SEG_LVL_ALT_Q] = 0;
+      }
 
       VP9_READ_BIT (params->feature_enabled[i][GST_VP9_SEG_LVL_ALT_L]);
-      if (params->feature_enabled[i][GST_VP9_SEG_LVL_ALT_L])
+      if (params->feature_enabled[i][GST_VP9_SEG_LVL_ALT_L]) {
         VP9_READ_SIGNED_8 (params->feature_data[i][GST_VP9_SEG_LVL_ALT_L], 6);
+      } else {
+        params->feature_data[i][GST_VP9_SEG_LVL_ALT_L] = 0;
+      }
 
       VP9_READ_BIT (params->feature_enabled[i][GST_VP9_SEG_LVL_REF_FRAME]);
       if (params->feature_enabled[i][GST_VP9_SEG_LVL_REF_FRAME]) {
@@ -740,6 +746,8 @@ parse_segmentation_params (GstBitReader * br, GstVp9SegmentationParams * params)
 
         VP9_READ_UINT8 (val, 2);
         params->feature_data[i][GST_VP9_SEG_LVL_REF_FRAME] = val;
+      } else {
+        params->feature_data[i][GST_VP9_SEG_LVL_REF_FRAME] = 0;
       }
 
       VP9_READ_BIT (params->feature_enabled[i][GST_VP9_SEG_SEG_LVL_SKIP]);
