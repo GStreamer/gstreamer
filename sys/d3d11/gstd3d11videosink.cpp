@@ -1270,52 +1270,13 @@ gst_d3d11_video_sink_navigation_send_event (GstNavigation * navigation,
     GstStructure * structure)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (navigation);
-  gboolean handled = FALSE;
-  GstEvent *event = NULL;
-  GstVideoRectangle src = { 0, };
-  GstVideoRectangle dst = { 0, };
-  GstVideoRectangle result;
-  gdouble x, y, xscale = 1.0, yscale = 1.0;
+  GstEvent *event = gst_event_new_navigation (structure);
 
-  if (!self->window) {
-    gst_structure_free (structure);
-    return;
-  }
-
-  if (self->force_aspect_ratio) {
-    /* We get the frame position using the calculated geometry from _setcaps
-       that respect pixel aspect ratios */
-    src.w = GST_VIDEO_SINK_WIDTH (self);
-    src.h = GST_VIDEO_SINK_HEIGHT (self);
-    dst.w = self->render_rect.w;
-    dst.h = self->render_rect.h;
-
-    gst_video_sink_center_rect (src, dst, &result, TRUE);
-    result.x += self->render_rect.x;
-    result.y += self->render_rect.y;
-  } else {
-    memcpy (&result, &self->render_rect, sizeof (GstVideoRectangle));
-  }
-
-  xscale = (gdouble) GST_VIDEO_INFO_WIDTH (&self->info) / result.w;
-  yscale = (gdouble) GST_VIDEO_INFO_HEIGHT (&self->info) / result.h;
-
-  /* Converting pointer coordinates to the non scaled geometry */
-  if (gst_structure_get_double (structure, "pointer_x", &x)) {
-    x = MIN (x, result.x + result.w);
-    x = MAX (x - result.x, 0);
-    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
-        (gdouble) x * xscale, NULL);
-  }
-  if (gst_structure_get_double (structure, "pointer_y", &y)) {
-    y = MIN (y, result.y + result.h);
-    y = MAX (y - result.y, 0);
-    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
-        (gdouble) y * yscale, NULL);
-  }
-
-  event = gst_event_new_navigation (structure);
+  /* TODO: add support for translating native coordinate and video coordinate
+   * when force-aspect-ratio is set */
   if (event) {
+    gboolean handled;
+
     gst_event_ref (event);
     handled = gst_pad_push_event (GST_VIDEO_SINK_PAD (self), event);
 
