@@ -16,5 +16,6 @@ endif
 
 subdir('qmloverlay')
 subdir('qmlsink')
+subdir('qmlsink-multisink')
 subdir('qmlsink-dynamically-added')
 subdir('qmlsrc')
