@@ -119,16 +119,16 @@ gst_qt_get_gl_display (gboolean sink)
   if (QString::fromUtf8("eglfs") == app->platformName()) {
 #if GST_GL_HAVE_WINDOW_VIV_FB
     /* FIXME: Could get the display directly from Qt like this
-      QPlatformNativeInterface *native =
-          QGuiApplication::platformNativeInterface();
-      EGLDisplay egl_display = (EGLDisplay)
-          native->nativeResourceForWindow("egldisplay", NULL);
-
-      However we seem to have no way for getting the EGLNativeDisplayType, aka
-      native_display, via public API. As such we have to assume that display 0
-      is always used. Only way around that is parsing the index the same way as
-      Qt does in QEGLDeviceIntegration::fbDeviceName(), so let's do that.
-    */
+     * QPlatformNativeInterface *native =
+     *     QGuiApplication::platformNativeInterface();
+     * EGLDisplay egl_display = (EGLDisplay)
+     *     native->nativeResourceForWindow("egldisplay", NULL);
+     *
+     * However we seem to have no way for getting the EGLNativeDisplayType, aka
+     * native_display, via public API. As such we have to assume that display 0
+     * is always used. Only way around that is parsing the index the same way as
+     * Qt does in QEGLDeviceIntegration::fbDeviceName(), so let's do that.
+     */
     const gchar *fb_dev;
     gint disp_idx = 0;
 
@@ -182,20 +182,10 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
   GstGLPlatform G_GNUC_UNUSED platform = (GstGLPlatform) 0;
   GstGLAPI G_GNUC_UNUSED gl_api;
   guintptr G_GNUC_UNUSED gl_handle;
-  GError *error = NULL;
+  GstGLContext *current;
+  GError *error;
 
   g_return_val_if_fail (display != NULL && wrap_glcontext != NULL, FALSE);
-
-  /* see if we already have a current GL context in GStreamer for this thread */
-  {
-    GstGLContext *current = gst_gl_context_get_current ();
-    if (current) {
-      if (current->display == display) {
-        *wrap_glcontext = static_cast<GstGLContext *> (gst_object_ref (current));
-        return TRUE;
-      }
-    }
-  }
 
 #if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
   if (GST_IS_GL_DISPLAY_X11 (display)) {
@@ -237,61 +227,69 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
 
   gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
   gl_handle = gst_gl_context_get_current_gl_context (platform);
-  if (gl_handle)
-    *wrap_glcontext =
-        gst_gl_context_new_wrapped (display, gl_handle,
-        platform, gl_api);
 
-  if (!*wrap_glcontext) {
-    GST_ERROR ("cannot wrap qt OpenGL context");
-    return FALSE;
+  /* see if we already have a current GL context in GStreamer for this thread */
+  current = gst_gl_context_get_current ();
+  if (current && current->display == display) {
+    /* just use current context we found */
+    *wrap_glcontext = static_cast<GstGLContext *> (gst_object_ref (current));
   }
+  else {
+    if (gl_handle)
+      *wrap_glcontext =
+          gst_gl_context_new_wrapped (display, gl_handle,
+          platform, gl_api);
 
-  gst_gl_context_activate(*wrap_glcontext, TRUE);
-  if (!gst_gl_context_fill_info (*wrap_glcontext, &error)) {
-    GST_ERROR ("failed to retrieve qt context info: %s", error->message);
-    gst_object_unref (*wrap_glcontext);
-    *wrap_glcontext = NULL;
-    return FALSE;
-  } else {
+    if (!*wrap_glcontext) {
+      GST_ERROR ("cannot wrap qt OpenGL context");
+      return FALSE;
+    }
+
+    gst_gl_context_activate(*wrap_glcontext, TRUE);
+    if (!gst_gl_context_fill_info (*wrap_glcontext, &error)) {
+      GST_ERROR ("failed to retrieve qt context info: %s", error->message);
+      gst_clear_object (wrap_glcontext);
+      return FALSE;
+    }
+
     gst_gl_display_filter_gl_api (display, gst_gl_context_get_gl_api (*wrap_glcontext));
-#if GST_GL_HAVE_WINDOW_WIN32 && GST_GL_HAVE_PLATFORM_WGL && defined (HAVE_QT_WIN32)  
-    g_return_val_if_fail (context != NULL, FALSE);
-
-    G_STMT_START {
-      /* If there's no wglCreateContextAttribsARB() support, then we would fallback to
-       * wglShareLists() which will fail with ERROR_BUSY (0xaa) if either of the GL
-       * contexts are current in any other thread.
-       *
-       * The workaround here is to temporarily disable Qt's GL context while we
-       * set up our own.
-       *
-       * Sometimes wglCreateContextAttribsARB()
-       * exists, but isn't functional (some Intel drivers), so it's easiest to do this
-       * unconditionally.
-       */
-
-      /* retrieve Qt's GL device context as current device context */
-      HDC device = wglGetCurrentDC ();
-
-      wglMakeCurrent (device, 0);
-
-      *context = gst_gl_context_new (display);
-
-      if (!gst_gl_context_create (*context, *wrap_glcontext, &error)) {
-        GST_ERROR ("failed to create shared GL context: %s", error->message);
-        gst_object_unref (*context);
-        *context = NULL;
-        gst_object_unref (*wrap_glcontext);
-        *wrap_glcontext = NULL;
-        wglMakeCurrent (device, (HGLRC) gl_handle);
-        return FALSE;
-      }
-      wglMakeCurrent (device, (HGLRC) gl_handle);
-    } G_STMT_END;
-#endif
     gst_gl_context_activate (*wrap_glcontext, FALSE);
   }
+
+#if GST_GL_HAVE_WINDOW_WIN32 && GST_GL_HAVE_PLATFORM_WGL && defined (HAVE_QT_WIN32)
+  g_return_val_if_fail (context != NULL, FALSE);
+
+  G_STMT_START {
+    /* If there's no wglCreateContextAttribsARB() support, then we would fallback to
+     * wglShareLists() which will fail with ERROR_BUSY (0xaa) if either of the GL
+     * contexts are current in any other thread.
+     *
+     * The workaround here is to temporarily disable Qt's GL context while we
+     * set up our own.
+     *
+     * Sometimes wglCreateContextAttribsARB()
+     * exists, but isn't functional (some Intel drivers), so it's easiest to do this
+     * unconditionally.
+     */
+
+    /* retrieve Qt's GL device context as current device context */
+    HDC device = wglGetCurrentDC ();
+
+    *context = gst_gl_context_new (display);
+
+    wglMakeCurrent (NULL, NULL);
+    if (!gst_gl_context_create (*context, *wrap_glcontext, &error)) {
+      GST_ERROR ("failed to create shared GL context: %s", error->message);
+      gst_clear_object (wrap_glcontext);
+      gst_clear_object (context);
+    }
+    wglMakeCurrent (device, (HGLRC) gl_handle);
+
+    if (!*context)
+      return FALSE;
+
+  } G_STMT_END;
+#endif
 
   return TRUE;
 }
