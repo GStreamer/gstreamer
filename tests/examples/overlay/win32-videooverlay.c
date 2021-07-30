@@ -41,7 +41,7 @@ static gboolean run_thread = FALSE;
 static LONG prev_style = 0;
 static RECT prev_rect = { 0, };
 
-#define DEFAULT_VIDEO_SINK "glimagesink"
+#define DEFAULT_VIDEO_SINK "d3d11videosink"
 
 static gboolean
 get_monitor_size (RECT * rect)
