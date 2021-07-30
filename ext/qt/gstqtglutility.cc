@@ -179,9 +179,9 @@ gboolean
 gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
     GstGLContext **wrap_glcontext, GstGLContext **context)
 {
-  GstGLPlatform platform = (GstGLPlatform) 0;
-  GstGLAPI gl_api;
-  guintptr gl_handle;
+  GstGLPlatform G_GNUC_UNUSED platform = (GstGLPlatform) 0;
+  GstGLAPI G_GNUC_UNUSED gl_api;
+  guintptr G_GNUC_UNUSED gl_handle;
   GError *error = NULL;
 
   g_return_val_if_fail (display != NULL && wrap_glcontext != NULL, FALSE);
@@ -247,10 +247,6 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
     return FALSE;
   }
 
-  (void) platform;
-  (void) gl_api;
-  (void) gl_handle;
-
   gst_gl_context_activate(*wrap_glcontext, TRUE);
   if (!gst_gl_context_fill_info (*wrap_glcontext, &error)) {
     GST_ERROR ("failed to retrieve qt context info: %s", error->message);
@@ -263,9 +259,6 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
     g_return_val_if_fail (context != NULL, FALSE);
 
     G_STMT_START {
-      GstGLWindow *window;
-      HDC device;
-
       /* If there's no wglCreateContextAttribsARB() support, then we would fallback to
        * wglShareLists() which will fail with ERROR_BUSY (0xaa) if either of the GL
        * contexts are current in any other thread.
@@ -277,12 +270,14 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
        * exists, but isn't functional (some Intel drivers), so it's easiest to do this
        * unconditionally.
        */
-      *context = gst_gl_context_new (display);
-      window = gst_gl_context_get_window (*context);
-      device = (HDC) gst_gl_window_get_display (window);
+
+      /* retrieve Qt's GL device context as current device context */
+      HDC device = wglGetCurrentDC ();
 
       wglMakeCurrent (device, 0);
-      gst_object_unref (window);
+
+      *context = gst_gl_context_new (display);
+
       if (!gst_gl_context_create (*context, *wrap_glcontext, &error)) {
         GST_ERROR ("failed to create shared GL context: %s", error->message);
         gst_object_unref (*context);
