@@ -113,10 +113,9 @@ private:
     QPointF mapPointToStreamSize(QPointF);
 
     void sendMouseEvent(QMouseEvent * event, const gchar * type);
-    QSize m_viewportSize;
-    bool m_openGlContextInitialized;
-    bool m_hovering;
-    uint32_t m_mousePressedButton;
+
+    quint32 mousePressedButton;
+    bool mouseHovering;
 
     QSharedPointer<QtGLVideoItemInterface> proxy;
 };

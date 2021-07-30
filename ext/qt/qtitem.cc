@@ -97,7 +97,7 @@ QtGLVideoItem::QtGLVideoItem()
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "qtglwidget", 0, "Qt GL Widget");
     g_once_init_leave (&_debug, 1);
   }
-  this->m_openGlContextInitialized = false;
+
   this->setFlag (QQuickItem::ItemHasContents, true);
 
   this->priv = g_new0 (QtGLVideoItemPrivate, 1);
@@ -105,6 +105,8 @@ QtGLVideoItem::QtGLVideoItem()
   this->priv->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   this->priv->par_n = DEFAULT_PAR_N;
   this->priv->par_d = DEFAULT_PAR_D;
+
+  this->priv->initted = FALSE;
 
   g_mutex_init (&this->priv->lock);
 
@@ -196,7 +198,7 @@ QtGLVideoItem::getForceAspectRatio()
 bool
 QtGLVideoItem::itemInitialized()
 {
-  return m_openGlContextInitialized;
+  return this->priv->initted;
 }
 
 QSGNode *
@@ -206,9 +208,8 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
   GstBuffer *old_buffer;
   gboolean was_bound = FALSE;
 
-  if (!m_openGlContextInitialized) {
+  if (!this->priv->initted)
     return oldNode;
-  }
 
   QSGSimpleTextureNode *texNode = static_cast<QSGSimpleTextureNode *> (oldNode);
   GstVideoRectangle src, dst, result;
@@ -378,22 +379,23 @@ QtGLVideoItem::wheelEvent(QWheelEvent * event)
 void
 QtGLVideoItem::hoverEnterEvent(QHoverEvent *)
 {
-  m_hovering = true;
+  mouseHovering = true;
 }
 
 void
 QtGLVideoItem::hoverLeaveEvent(QHoverEvent *)
 {
-  m_hovering = false;
+  mouseHovering = false;
 }
 
 void
 QtGLVideoItem::hoverMoveEvent(QHoverEvent * event)
 {
-  if (!m_hovering)
+  if (!mouseHovering)
     return;
 
-  int button = !!m_mousePressedButton;
+  quint32 button = !!mousePressedButton;
+
   g_mutex_lock (&this->priv->lock);
   if (event->pos() != event->oldPos()) {
     QPointF pos = mapPointToStreamSize(event->pos());
@@ -411,7 +413,8 @@ QtGLVideoItem::hoverMoveEvent(QHoverEvent * event)
 void
 QtGLVideoItem::sendMouseEvent(QMouseEvent * event, const gchar * type)
 {
-  int button = 0;
+  quint32 button = 0;
+
   switch (event->button()) {
   case Qt::LeftButton:
     button = 1;
@@ -422,7 +425,9 @@ QtGLVideoItem::sendMouseEvent(QMouseEvent * event, const gchar * type)
   default:
     break;
   }
-  m_mousePressedButton = button;
+
+  mousePressedButton = button;
+
   g_mutex_lock (&this->priv->lock);
 
   QPointF pos = mapPointToStreamSize(event->pos());
@@ -462,7 +467,6 @@ _reset (QtGLVideoItem * qt_item)
   gst_caps_replace (&qt_item->priv->caps, NULL);
 
   qt_item->priv->negotiated = FALSE;
-  qt_item->priv->initted = FALSE;
 
   while ((tmp_buffer = (GstBuffer*) g_queue_pop_head (&qt_item->priv->potentially_unbound_buffers))) {
     GST_TRACE ("old buffer %p should be unbound now, unreffing", tmp_buffer);
@@ -528,7 +532,7 @@ QtGLVideoItem::onSceneGraphInitialized ()
     return;
   }
 
-  m_openGlContextInitialized = gst_qt_get_gl_wrapcontext (this->priv->display,
+  this->priv->initted = gst_qt_get_gl_wrapcontext (this->priv->display,
       &this->priv->other_context, &this->priv->context);
 
   GST_DEBUG ("%p created wrapped GL context %" GST_PTR_FORMAT, this,
@@ -610,6 +614,7 @@ QtGLVideoItem::handleWindowChanged(QQuickWindow *win)
     connect(win, SIGNAL(sceneGraphInvalidated()), this, SLOT(onSceneGraphInvalidated()), Qt::DirectConnection);
   } else {
     this->priv->qt_context = NULL;
+	this->priv->initted = FALSE;
   }
 }
 
