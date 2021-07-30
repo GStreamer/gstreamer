@@ -45,16 +45,18 @@ GstQSGTexture::GstQSGTexture ()
     g_once_init_leave (&_debug, 1);
   }
 
+  g_weak_ref_init (&this->qt_context_ref_, NULL);
   gst_video_info_init (&this->v_info);
+
   this->buffer_ = NULL;
   this->buffer_was_bound = FALSE;
-  this->qt_context_ = NULL;
   this->sync_buffer_ = gst_buffer_new ();
   this->dummy_tex_id_ = 0;
 }
 
 GstQSGTexture::~GstQSGTexture ()
 {
+  g_weak_ref_clear (&this->qt_context_ref_);
   gst_buffer_replace (&this->buffer_, NULL);
   gst_buffer_replace (&this->sync_buffer_, NULL);
   this->buffer_was_bound = FALSE;
@@ -83,7 +85,8 @@ GstQSGTexture::setBuffer (GstBuffer * buffer)
     return FALSE;
 
   this->buffer_was_bound = FALSE;
-  this->qt_context_ = gst_gl_context_get_current ();
+
+  g_weak_ref_set (&this->qt_context_ref_, gst_gl_context_get_current ());
 
   return TRUE;
 }
@@ -107,13 +110,14 @@ void
 GstQSGTexture::bind ()
 {
   const GstGLFuncs *gl;
-  GstGLContext *context;
+  GstGLContext *context, *qt_context;
   GstGLSyncMeta *sync_meta;
   GstMemory *mem;
   guint tex_id;
   gboolean use_dummy_tex = TRUE;
 
-  if (!GST_IS_GL_CONTEXT(this->qt_context_))
+  qt_context = GST_GL_CONTEXT (g_weak_ref_get (&this->qt_context_ref_));
+  if (!qt_context)
     goto out;
 
   if (!this->buffer_)
@@ -125,8 +129,7 @@ GstQSGTexture::bind ()
   if (!this->mem_)
     goto out;
 
-  g_assert (this->qt_context_);
-  gl = this->qt_context_->gl_vtable;
+  gl = qt_context->gl_vtable;
 
   /* FIXME: should really lock the memory to prevent write access */
   if (!gst_video_frame_map (&this->v_frame, &this->v_info, this->buffer_,
@@ -146,7 +149,7 @@ GstQSGTexture::bind ()
 
   gst_gl_sync_meta_set_sync_point (sync_meta, context);
 
-  gst_gl_sync_meta_wait (sync_meta, this->qt_context_);
+  gst_gl_sync_meta_wait (sync_meta, qt_context);
 
   tex_id = *(guint *) this->v_frame.data[0];
   GST_LOG ("%p binding Qt texture %u", this, tex_id);
@@ -162,6 +165,8 @@ GstQSGTexture::bind ()
   this->buffer_was_bound = TRUE;
 
 out:
+  gst_clear_object (&qt_context);
+
   if (G_UNLIKELY (use_dummy_tex)) {
     QOpenGLContext *qglcontext = QOpenGLContext::currentContext ();
     QOpenGLFunctions *funcs = qglcontext->functions ();

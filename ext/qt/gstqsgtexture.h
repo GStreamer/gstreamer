@@ -51,7 +51,7 @@ private:
     GstBuffer * buffer_;
     gboolean buffer_was_bound;
     GstBuffer * sync_buffer_;
-    GstGLContext * qt_context_;
+    GWeakRef qt_context_ref_;
     GstMemory * mem_;
     GLuint dummy_tex_id_;
     GstVideoInfo v_info;
