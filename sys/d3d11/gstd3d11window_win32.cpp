@@ -43,6 +43,7 @@ G_LOCK_DEFINE_STATIC (create_lock);
 #define WM_GST_D3D11_FULLSCREEN (WM_USER + 1)
 #define WM_GST_D3D11_CONSTRUCT_INTERNAL_WINDOW (WM_USER + 2)
 #define WM_GST_D3D11_DESTROY_INTERNAL_WINDOW (WM_USER + 3)
+#define WM_GST_D3D11_MOVE_WINDOW (WM_USER + 4)
 
 static LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
@@ -85,10 +86,14 @@ struct _GstD3D11WindowWin32
 
   /* atomic */
   gint pending_fullscreen_count;
+  gint pending_move_window;
 
   /* fullscreen related */
   RECT restore_rect;
   LONG restore_style;
+
+  /* Handle set_render_rectangle */
+  GstVideoRectangle render_rect;
 };
 
 #define gst_d3d11_window_win32_parent_class parent_class
@@ -122,6 +127,9 @@ static void
 gst_d3d11_window_win32_on_resize (GstD3D11Window * window,
     guint width, guint height);
 static void gst_d3d11_window_win32_unprepare (GstD3D11Window * window);
+static void
+gst_d3d11_window_win32_set_render_rectangle (GstD3D11Window * window,
+    const GstVideoRectangle * rect);
 
 static void
 gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
@@ -145,6 +153,8 @@ gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_on_resize);
   window_class->unprepare =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_unprepare);
+  window_class->set_render_rectangle =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_set_render_rectangle);
 }
 
 static void
@@ -237,6 +247,37 @@ gst_d3d11_window_win32_unprepare (GstD3D11Window * window)
   if (self->main_context) {
     g_main_context_unref (self->main_context);
     self->main_context = NULL;
+  }
+}
+
+static void
+gst_d3d11_window_win32_set_render_rectangle (GstD3D11Window * window,
+    const GstVideoRectangle * rect)
+{
+  GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
+
+  if (self->external_hwnd && self->internal_hwnd) {
+    g_atomic_int_add (&self->pending_move_window, 1);
+    self->render_rect = *rect;
+
+    if (self->internal_hwnd_thread == g_thread_self ()) {
+      /* We are on message pumping thread already, handle this synchroniously */
+      SendMessage (self->internal_hwnd, WM_GST_D3D11_MOVE_WINDOW, 0, 0);
+    } else {
+      /* Post message to message pumping thread. Handling HWND specific message
+       * on message pumping thread is not a worst idea in generall */
+      PostMessage (self->internal_hwnd, WM_GST_D3D11_MOVE_WINDOW, 0, 0);
+    }
+  } else {
+    /* XXX: Not sure what's expected behavior if we are drawing on internal
+     * HWND but user wants to specify rectangle.
+     *
+     * - Should we move window to corresponding desktop coordinates ?
+     * - Or should crop correspondingly by modifying viewport of
+     *   render target view of swapchian's backbuffer or so ?
+     * - Or should we ignore set_render_rectangle if we are drawing on
+     *   internal HWND without external HWND ?
+     */
   }
 }
 
@@ -661,6 +702,27 @@ gst_d3d11_window_win32_handle_window_proc (GstD3D11WindowWin32 * self,
                 GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY)
             == GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY)
           gst_d3d11_window_win32_change_fullscreen_mode_internal (self);
+      }
+      break;
+    case WM_GST_D3D11_MOVE_WINDOW:
+      if (g_atomic_int_get (&self->pending_move_window)) {
+        g_atomic_int_set (&self->pending_move_window, 0);
+
+        if (self->internal_hwnd && self->external_hwnd) {
+          if (self->render_rect.w < 0 || self->render_rect.h < 0) {
+            RECT rect;
+
+            /* Reset render rect and back to full-size window */
+            if (GetClientRect (self->external_hwnd, &rect)) {
+              MoveWindow (self->internal_hwnd, 0, 0,
+                  rect.right - rect.left, rect.bottom - rect.top, FALSE);
+            }
+          } else {
+            MoveWindow (self->internal_hwnd, self->render_rect.x,
+                self->render_rect.y, self->render_rect.w, self->render_rect.h,
+                FALSE);
+          }
+        }
       }
       break;
     default:

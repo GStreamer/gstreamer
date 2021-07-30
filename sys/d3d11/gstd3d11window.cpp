@@ -784,12 +784,17 @@ gst_d3d11_window_show (GstD3D11Window * window)
 }
 
 void
-gst_d3d11_window_set_render_rectangle (GstD3D11Window * window, gint x, gint y,
-    gint width, gint height)
+gst_d3d11_window_set_render_rectangle (GstD3D11Window * window,
+    const GstVideoRectangle * rect)
 {
+  GstD3D11WindowClass *klass;
+
   g_return_if_fail (GST_IS_D3D11_WINDOW (window));
 
-  /* TODO: resize window and view */
+  klass = GST_D3D11_WINDOW_GET_CLASS (window);
+
+  if (klass->set_render_rectangle)
+    klass->set_render_rectangle (window, rect);
 }
 
 static gboolean

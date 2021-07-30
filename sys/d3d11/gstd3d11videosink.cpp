@@ -579,18 +579,16 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
     goto no_display_size;
 
   GST_OBJECT_LOCK (self);
-  if (!self->pending_render_rect) {
-    self->render_rect.x = 0;
-    self->render_rect.y = 0;
-    self->render_rect.w = GST_VIDEO_SINK_WIDTH (self);
-    self->render_rect.h = GST_VIDEO_SINK_HEIGHT (self);
-  }
+  if (self->pending_render_rect) {
+    GstVideoRectangle rect = self->render_rect;
 
-  gst_d3d11_window_set_render_rectangle (self->window,
-      self->render_rect.x, self->render_rect.y, self->render_rect.w,
-      self->render_rect.h);
-  self->pending_render_rect = FALSE;
-  GST_OBJECT_UNLOCK (self);
+    self->pending_render_rect = FALSE;
+    GST_OBJECT_UNLOCK (self);
+
+    gst_d3d11_window_set_render_rectangle (self->window, &rect);
+  } else {
+    GST_OBJECT_UNLOCK (self);
+  }
 
   self->have_video_processor = FALSE;
   if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
@@ -1223,15 +1221,25 @@ gst_d3d11_video_sink_set_render_rectangle (GstVideoOverlay * overlay, gint x,
 
   GST_OBJECT_LOCK (self);
   if (self->window) {
-    gst_d3d11_window_set_render_rectangle (self->window, x, y, width, height);
+    GstVideoRectangle rect;
+
+    rect.x = x;
+    rect.y = y;
+    rect.w = width;
+    rect.h = height;
+
+    self->render_rect = rect;
+    GST_OBJECT_UNLOCK (self);
+
+    gst_d3d11_window_set_render_rectangle (self->window, &rect);
   } else {
     self->render_rect.x = x;
     self->render_rect.y = y;
     self->render_rect.w = width;
     self->render_rect.h = height;
     self->pending_render_rect = TRUE;
+    GST_OBJECT_UNLOCK (self);
   }
-  GST_OBJECT_UNLOCK (self);
 }
 
 static void

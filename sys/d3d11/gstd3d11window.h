@@ -167,6 +167,9 @@ struct _GstD3D11WindowClass
 
   gboolean      (*release_shared_handle)  (GstD3D11Window * window,
                                            GstD3D11WindowSharedHandleData * data);
+
+  void          (*set_render_rectangle)   (GstD3D11Window * window,
+                                           const GstVideoRectangle * rect);
 };
 
 GType         gst_d3d11_window_get_type             (void);
@@ -174,8 +177,7 @@ GType         gst_d3d11_window_get_type             (void);
 void          gst_d3d11_window_show                 (GstD3D11Window * window);
 
 void          gst_d3d11_window_set_render_rectangle (GstD3D11Window * window,
-                                                     gint x, gint y,
-                                                     gint width, gint height);
+                                                     const GstVideoRectangle * rect);
 
 gboolean      gst_d3d11_window_prepare              (GstD3D11Window * window,
                                                      guint display_width,
