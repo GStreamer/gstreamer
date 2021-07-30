@@ -29,7 +29,6 @@
 #include "gstqsgtexture.h"
 #include "gstqtglutility.h"
 
-#include <QtCore/QRunnable>
 #include <QtCore/QMutexLocker>
 #include <QtCore/QPointer>
 #include <QtGui/QGuiApplication>
@@ -89,27 +88,6 @@ struct _QtGLVideoItemPrivate
    * way to reliably "try wait" on a fence */
   GQueue potentially_unbound_buffers;
 };
-
-class InitializeSceneGraph : public QRunnable
-{
-public:
-  InitializeSceneGraph(QtGLVideoItem *item);
-  void run();
-
-private:
-  QPointer<QtGLVideoItem> item_;
-};
-
-InitializeSceneGraph::InitializeSceneGraph(QtGLVideoItem *item) :
-  item_(item)
-{
-}
-
-void InitializeSceneGraph::run()
-{
-  if(item_)
-    item_->onSceneGraphInitialized();
-}
 
 QtGLVideoItem::QtGLVideoItem()
 {
@@ -625,7 +603,7 @@ QtGLVideoItem::handleWindowChanged(QQuickWindow *win)
 {
   if (win) {
     if (win->isSceneGraphInitialized())
-      win->scheduleRenderJob(new InitializeSceneGraph(this), QQuickWindow::BeforeSynchronizingStage);
+      win->scheduleRenderJob(new RenderJob(std::bind(&QtGLVideoItem::onSceneGraphInitialized, this)), QQuickWindow::BeforeSynchronizingStage);
     else
       connect(win, SIGNAL(sceneGraphInitialized()), this, SLOT(onSceneGraphInitialized()), Qt::DirectConnection);
 

@@ -60,8 +60,6 @@ private:
     QMutex lock;
 };
 
-class InitializeSceneGraph;
-
 class QtGLVideoItem : public QQuickItem, protected QOpenGLFunctions
 {
     Q_OBJECT
@@ -108,7 +106,6 @@ protected:
 
 private:
 
-    friend class InitializeSceneGraph;
     void setViewportSize(const QSize &size);
     void shareContext();
 

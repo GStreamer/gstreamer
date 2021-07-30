@@ -31,8 +31,6 @@
 
 typedef struct _QtGLWindowPrivate QtGLWindowPrivate;
 
-class InitQtGLContext;
-
 class QtGLWindow : public QQuickWindow, protected QOpenGLFunctions
 {
     Q_OBJECT
@@ -52,7 +50,6 @@ private Q_SLOTS:
     void aboutToQuit();
 
 private:
-    friend class InitQtGLContext;
     QQuickWindow * source;
     QScopedPointer<QOpenGLFramebufferObject> fbo;
 };

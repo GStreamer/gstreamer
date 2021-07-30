@@ -25,8 +25,20 @@
 #include <gst/gl/gl.h>
 
 #include <QVariant>
+#include <QRunnable>
 
 G_BEGIN_DECLS
+
+struct RenderJob : public QRunnable {
+    using Callable = std::function<void()>;
+
+    explicit RenderJob(Callable c) : _c(c) { }
+
+    void run() { _c(); }
+
+private:
+    Callable _c;
+};
 
 GstGLDisplay * gst_qt_get_gl_display (gboolean sink);
 gboolean       gst_qt_get_gl_wrapcontext (GstGLDisplay * display,

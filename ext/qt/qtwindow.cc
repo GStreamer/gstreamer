@@ -31,7 +31,6 @@
 #include "gstqtglutility.h"
 
 #include <QtCore/QDateTime>
-#include <QtCore/QRunnable>
 #include <QtGui/QGuiApplication>
 #include <QtQuick/QQuickWindow>
 #include <QOpenGLFramebufferObject>
@@ -80,26 +79,6 @@ struct _QtGLWindowPrivate
   quint64 stop;
 };
 
-class InitQtGLContext : public QRunnable
-{
-public:
-  InitQtGLContext(QtGLWindow *window);
-  void run();
-
-private:
-  QtGLWindow *window_;
-};
-
-InitQtGLContext::InitQtGLContext(QtGLWindow *window) :
-  window_(window)
-{
-}
-
-void InitQtGLContext::run()
-{
-  window_->onSceneGraphInitialized();
-}
-
 QtGLWindow::QtGLWindow ( QWindow * parent, QQuickWindow *src ) :
   QQuickWindow( parent ), source (src)
 {
@@ -124,7 +103,7 @@ QtGLWindow::QtGLWindow ( QWindow * parent, QQuickWindow *src ) :
   connect (source, SIGNAL(afterRendering()), this, SLOT(afterRendering()), Qt::DirectConnection);
   connect (app, SIGNAL(aboutToQuit()), this, SLOT(aboutToQuit()), Qt::DirectConnection);
   if (source->isSceneGraphInitialized())
-    source->scheduleRenderJob(new InitQtGLContext(this), QQuickWindow::BeforeSynchronizingStage);
+    source->scheduleRenderJob(new RenderJob(std::bind(&QtGLWindow::onSceneGraphInitialized, this)), QQuickWindow::BeforeSynchronizingStage);
   else
     connect (source, SIGNAL(sceneGraphInitialized()), this, SLOT(onSceneGraphInitialized()), Qt::DirectConnection);
 
