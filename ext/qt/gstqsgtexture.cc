@@ -113,7 +113,7 @@ GstQSGTexture::bind ()
   guint tex_id;
   gboolean use_dummy_tex = TRUE;
 
-  if (!this->qt_context_)
+  if (!GST_IS_GL_CONTEXT(this->qt_context_))
     goto out;
 
   if (!this->buffer_)
