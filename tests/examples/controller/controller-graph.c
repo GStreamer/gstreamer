@@ -88,7 +88,7 @@ on_graph_draw (GtkWidget * widget, cairo_t * cr, gpointer user_data)
   ts = G_GUINT64_CONSTANT (0);
   for (i = 0; i < G_N_ELEMENTS (yval); i++) {
     cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
-    cairo_arc (cr, x + ts, y + yval[i] * h, 3.0, 0.0, 2 * M_PI);
+    cairo_arc (cr, x + ts, y + yval[i] * h, 3.0, 0.0, 2 * G_PI);
     cairo_stroke_preserve (cr);
     cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
     cairo_fill (cr);
