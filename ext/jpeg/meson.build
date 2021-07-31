@@ -5,7 +5,8 @@ jpeg_sources = [
   'gstjpegdec.c',
 ]
 
-jpeglib = dependency('libjpeg', required : get_option('jpeg'))
+jpeglib = dependency('libjpeg', required : get_option('jpeg'),
+  fallback: ['libjpeg-turbo', 'jpeg_dep'])
 
 if jpeglib.found()
   gstjpeg = library('gstjpeg',
