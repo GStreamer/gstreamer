@@ -87,6 +87,7 @@ subprojects/pixman
 subprojects/webrtc-audio-processing
 subprojects/dv
 subprojects/opus
+subprojects/libjpeg-turbo-*
 prefix/
 pygobject
 .gdbinit
