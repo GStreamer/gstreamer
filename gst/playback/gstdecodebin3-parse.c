@@ -553,6 +553,10 @@ parsebin_pending_event_probe (GstPad * pad, GstPadProbeInfo * info,
       SELECTION_UNLOCK (dbin);
     }
       break;
+    case GST_EVENT_GAP:
+      /* Let gaps through to the buffer probe, as they should cause unblocking */
+      ret = GST_PAD_PROBE_PASS;
+      break;
     default:
       break;
   }
@@ -580,7 +584,8 @@ parsebin_pad_added_cb (GstElement * demux, GstPad * pad, DecodebinInput * input)
       (GstPadProbeCallback) parsebin_pending_event_probe, ppad, NULL);
   ppad->buffer_probe =
       gst_pad_add_probe (pad,
-      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER,
+      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       (GstPadProbeCallback) parsebin_buffer_probe, input, NULL);
 
   input->pending_pads = g_list_append (input->pending_pads, ppad);
