@@ -707,6 +707,7 @@ gst_identity_update_last_message_for_buffer (GstIdentity * identity,
       GST_BUFFER_FLAGS (buf), flag_str, meta_str ? meta_str : "none", buf);
   g_free (flag_str);
   g_free (meta_str);
+  GST_TRACE_OBJECT (identity, "%s", identity->last_message);
 
   GST_OBJECT_UNLOCK (identity);
 
