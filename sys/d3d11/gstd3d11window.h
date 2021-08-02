@@ -187,8 +187,7 @@ gboolean      gst_d3d11_window_prepare              (GstD3D11Window * window,
                                                      GError ** error);
 
 GstFlowReturn gst_d3d11_window_render               (GstD3D11Window * window,
-                                                     GstBuffer * buffer,
-                                                     GstVideoRectangle * src_rect);
+                                                     GstBuffer * buffer);
 
 GstFlowReturn gst_d3d11_window_render_on_shared_handle (GstD3D11Window * window,
                                                         GstBuffer * buffer,

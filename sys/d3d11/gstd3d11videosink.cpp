@@ -1094,7 +1094,6 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstVideoRectangle rect = { 0, };
   GstBuffer *fallback_buf = NULL;
   ID3D11Device *device_handle =
       gst_d3d11_device_get_device_handle (self->device);
@@ -1162,10 +1161,6 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 
   gst_d3d11_window_show (self->window);
 
-  /* FIXME: add support crop meta */
-  rect.w = self->video_width;
-  rect.h = self->video_height;
-
   if (self->draw_on_shared_texture) {
     g_rec_mutex_lock (&self->draw_lock);
     self->current_buffer = fallback_buf ? fallback_buf : buf;
@@ -1183,7 +1178,7 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
     g_rec_mutex_unlock (&self->draw_lock);
   } else {
     ret = gst_d3d11_window_render (self->window,
-        fallback_buf ? fallback_buf : buf, &rect);
+        fallback_buf ? fallback_buf : buf);
   }
 
   gst_clear_buffer (&fallback_buf);
@@ -1248,11 +1243,7 @@ gst_d3d11_video_sink_expose (GstVideoOverlay * overlay)
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (overlay);
 
   if (self->window && self->window->swap_chain) {
-    GstVideoRectangle rect = { 0, };
-    rect.w = GST_VIDEO_SINK_WIDTH (self);
-    rect.h = GST_VIDEO_SINK_HEIGHT (self);
-
-    gst_d3d11_window_render (self->window, NULL, &rect);
+    gst_d3d11_window_render (self->window, NULL);
   }
 }
 

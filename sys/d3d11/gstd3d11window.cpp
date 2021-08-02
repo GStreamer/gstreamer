@@ -953,24 +953,25 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
 }
 
 GstFlowReturn
-gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer,
-    GstVideoRectangle * rect)
+gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer)
 {
   GstMemory *mem;
   GstFlowReturn ret;
 
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), GST_FLOW_ERROR);
-  g_return_val_if_fail (rect != NULL, GST_FLOW_ERROR);
 
-  mem = gst_buffer_peek_memory (buffer, 0);
-  if (!gst_is_d3d11_memory (mem)) {
-    GST_ERROR_OBJECT (window, "Invalid buffer");
+  if (buffer) {
+    mem = gst_buffer_peek_memory (buffer, 0);
+    if (!gst_is_d3d11_memory (mem)) {
+      GST_ERROR_OBJECT (window, "Invalid buffer");
 
-    return GST_FLOW_ERROR;
+      return GST_FLOW_ERROR;
+    }
   }
 
   gst_d3d11_device_lock (window->device);
-  gst_buffer_replace (&window->cached_buffer, buffer);
+  if (buffer)
+    gst_buffer_replace (&window->cached_buffer, buffer);
 
   ret = gst_d3d111_window_present (window, window->cached_buffer,
       window->pov, window->rtv);
