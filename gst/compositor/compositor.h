@@ -134,6 +134,9 @@ struct _GstCompositor
    */
   gboolean zero_size_is_unscaled;
 
+  /* Max num of allowed for blending/rendering threads  */
+  guint max_threads;
+
   /* The 'blend' compositing function does not preserve the alpha value of the
    * background, while 'overlay' does; i.e., COMPOSITOR_OPERATOR_ADD is the
    * same as COMPOSITOR_OPERATOR_OVER when using the 'blend' BlendFunction. */

@@ -1875,6 +1875,20 @@
                         "type": "GstCompositorBackground",
                         "writable": true
                     },
+                    "max-threads": {
+                        "blurb": "Maximum number of blending/rendering worker threads to spawn (0 = auto)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
                     "zero-size-is-unscaled": {
                         "blurb": "If TRUE, then input video is unscaled in that dimension if width or height is 0 (for backwards compatibility)",
                         "conditionally-available": false,

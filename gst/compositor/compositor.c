@@ -701,11 +701,14 @@ gst_compositor_pad_init (GstCompositorPad * compo_pad)
 /* GstCompositor */
 #define DEFAULT_BACKGROUND COMPOSITOR_BACKGROUND_CHECKER
 #define DEFAULT_ZERO_SIZE_IS_UNSCALED TRUE
+#define DEFAULT_MAX_THREADS 0
+
 enum
 {
   PROP_0,
   PROP_BACKGROUND,
   PROP_ZERO_SIZE_IS_UNSCALED,
+  PROP_MAX_THREADS,
 };
 
 static void
@@ -720,6 +723,9 @@ gst_compositor_get_property (GObject * object,
       break;
     case PROP_ZERO_SIZE_IS_UNSCALED:
       g_value_set_boolean (value, self->zero_size_is_unscaled);
+      break;
+    case PROP_MAX_THREADS:
+      g_value_set_uint (value, self->max_threads);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -739,6 +745,9 @@ gst_compositor_set_property (GObject * object,
       break;
     case PROP_ZERO_SIZE_IS_UNSCALED:
       self->zero_size_is_unscaled = g_value_get_boolean (value);
+      break;
+    case PROP_MAX_THREADS:
+      self->max_threads = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1166,7 +1175,11 @@ _negotiated_caps (GstAggregator * agg, GstCaps * caps)
     return FALSE;
   }
 
-  n_threads = g_get_num_processors ();
+  if (compositor->max_threads == 0)
+    n_threads = g_get_num_processors ();
+  else
+    n_threads = compositor->max_threads;
+
   /* Magic number of 200 lines */
   if (GST_VIDEO_INFO_HEIGHT (&v_info) / n_threads < 200)
     n_threads = (GST_VIDEO_INFO_HEIGHT (&v_info) + 199) / 200;
@@ -1574,6 +1587,20 @@ gst_compositor_class_init (GstCompositorClass * klass)
           DEFAULT_ZERO_SIZE_IS_UNSCALED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * compositor:max-threads:
+   *
+   * Maximum number of blending/rendering worker threads to spawn (0 = auto)
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_THREADS,
+      g_param_spec_uint ("max-threads", "Max Threads",
+          "Maximum number of blending/rendering worker threads to spawn "
+          "(0 = auto)", 0, G_MAXINT, DEFAULT_MAX_THREADS,
+          GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &src_factory, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
@@ -1595,6 +1622,7 @@ gst_compositor_init (GstCompositor * self)
   /* initialize variables */
   self->background = DEFAULT_BACKGROUND;
   self->zero_size_is_unscaled = DEFAULT_ZERO_SIZE_IS_UNSCALED;
+  self->max_threads = DEFAULT_MAX_THREADS;
 }
 
 /* GstChildProxy implementation */
