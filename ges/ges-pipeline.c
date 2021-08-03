@@ -1228,6 +1228,7 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
 
     /* Disable render bin */
     GST_DEBUG ("Disabling rendering bin");
+    ges_timeline_thaw_commit (pipeline->priv->timeline);
     gst_object_ref (pipeline->priv->encodebin);
     gst_object_ref (pipeline->priv->urisink);
     gst_bin_remove_many (GST_BIN_CAST (pipeline),
@@ -1249,7 +1250,8 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
       (mode & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER))) {
     /* Adding render bin */
     GST_DEBUG ("Adding render bin");
-
+    /* in render mode the commit needs to be locked, see #136 */
+    ges_timeline_freeze_commit (pipeline->priv->timeline);
     if (G_UNLIKELY (pipeline->priv->urisink == NULL)) {
       GST_ERROR_OBJECT (pipeline, "Output URI not set !");
       return FALSE;

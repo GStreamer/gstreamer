@@ -126,6 +126,10 @@ GES_API
 gboolean ges_timeline_commit (GESTimeline * timeline);
 GES_API
 gboolean ges_timeline_commit_sync (GESTimeline * timeline);
+GES_API
+void ges_timeline_freeze_commit (GESTimeline * timeline);
+GES_API
+void ges_timeline_thaw_commit (GESTimeline * timeline);
 
 GES_API
 GstClockTime ges_timeline_get_duration (GESTimeline *timeline);

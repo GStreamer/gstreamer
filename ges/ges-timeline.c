@@ -225,6 +225,8 @@ struct _GESTimelinePrivate
   /* For ges_timeline_commit_sync */
   GMutex commited_lock;
   GCond commited_cond;
+  gboolean commit_frozen;
+  gboolean commit_delayed;
 
   GThread *valid_thread;
   gboolean disposed;
@@ -2784,6 +2786,12 @@ ges_timeline_commit_unlocked (GESTimeline * timeline)
   GList *tmp;
   gboolean res = TRUE;
 
+  if (timeline->priv->commit_frozen) {
+    GST_DEBUG_OBJECT (timeline, "commit locked");
+    timeline->priv->commit_delayed = TRUE;
+    return res;
+  }
+
   GST_DEBUG_OBJECT (timeline, "commiting changes");
 
   timeline_tree_create_transitions (timeline->priv->tree,
@@ -2930,6 +2938,51 @@ ges_timeline_commit_sync (GESTimeline * timeline)
   UNLOCK_DYN (timeline);
 
   return ret;
+}
+
+/**
+ * ges_timeline_freeze_commit:
+ * @timeline: The #GESTimeline
+ *
+ * Freezes the timeline from being committed. This is usually needed while the
+ * timeline is being rendered to ensure that not change to the timeline are
+ * taken into account during that moment. Once the rendering is done, you
+ * should call #ges_timeline_thaw_commit so that comiting becomes possible
+ * again and any call to `commit()` that happened during the rendering is
+ * actually taken into account.
+ *
+ * Since: 1.20
+ *
+ */
+void
+ges_timeline_freeze_commit (GESTimeline * timeline)
+{
+  LOCK_DYN (timeline);
+  timeline->priv->commit_frozen = TRUE;
+  UNLOCK_DYN (timeline);
+}
+
+/**
+ * ges_timeline_thaw_commit:
+ * @timeline: The #GESTimeline
+ *
+ * Thaw the timeline so that comiting becomes possible
+ * again and any call to `commit()` that happened during the rendering is
+ * actually taken into account.
+ *
+ * Since: 1.20
+ *
+ */
+void
+ges_timeline_thaw_commit (GESTimeline * timeline)
+{
+  LOCK_DYN (timeline);
+  timeline->priv->commit_frozen = FALSE;
+  UNLOCK_DYN (timeline);
+  if (timeline->priv->commit_delayed) {
+    ges_timeline_commit (timeline);
+    timeline->priv->commit_delayed = FALSE;
+  }
 }
 
 /**
