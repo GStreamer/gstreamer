@@ -148,9 +148,10 @@ webrtc_transceiver_finalize (GObject * object)
 {
   WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (object);
 
-  if (trans->stream)
-    gst_object_unref (trans->stream);
-  trans->stream = NULL;
+  gst_clear_object (&trans->stream);
+  gst_clear_object (&trans->ulpfecdec);
+  gst_clear_object (&trans->ulpfecenc);
+  gst_clear_object (&trans->redenc);
 
   if (trans->local_rtx_ssrc_map)
     gst_structure_free (trans->local_rtx_ssrc_map);

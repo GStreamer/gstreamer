@@ -4371,6 +4371,60 @@ GST_START_TEST (test_codec_preferences_in_on_new_transceiver)
 
 GST_END_TEST;
 
+GST_START_TEST (test_renego_rtx)
+{
+  struct test_webrtc *t = create_audio_video_test ();
+  VAL_SDP_INIT (no_duplicate_payloads, on_sdp_media_no_duplicate_payloads,
+      NULL, NULL);
+  guint media_format_count[] = { 1, 1 };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, &no_duplicate_payloads);
+  VAL_SDP_INIT (count_media, _count_num_sdp_media, GUINT_TO_POINTER (2),
+      &media_formats);
+  VAL_SDP_INIT (payloads, on_sdp_media_payload_types,
+      GUINT_TO_POINTER (1), &count_media);
+  const gchar *expected_offer_direction[] = { "sendrecv", "sendrecv", };
+  VAL_SDP_INIT (offer_direction, on_sdp_media_direction,
+      expected_offer_direction, &payloads);
+  const gchar *expected_answer_direction[] = { "recvonly", "recvonly", };
+  VAL_SDP_INIT (answer_direction, on_sdp_media_direction,
+      expected_answer_direction, &payloads);
+  const gchar *expected_offer_setup[] = { "actpass", "actpass", };
+  VAL_SDP_INIT (offer, on_sdp_media_setup, expected_offer_setup,
+      &offer_direction);
+  const gchar *expected_answer_setup[] = { "active", "active", };
+  VAL_SDP_INIT (answer, on_sdp_media_setup, expected_answer_setup,
+      &answer_direction);
+  GstWebRTCRTPTransceiver *trans;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_reset_negotiation (t);
+
+  g_signal_emit_by_name (t->webrtc1, "get-transceiver", 1, &trans);
+  g_object_set (trans, "do-nack", TRUE, "fec-type",
+      GST_WEBRTC_FEC_TYPE_ULP_RED, NULL);
+  g_clear_object (&trans);
+
+  g_signal_emit_by_name (t->webrtc2, "get-transceiver", 1, &trans);
+  g_object_set (trans, "do-nack", TRUE, "fec-type",
+      GST_WEBRTC_FEC_TYPE_ULP_RED, NULL);
+  g_clear_object (&trans);
+
+  /* adding RTX/RED/FEC increases the number of media formats */
+  media_format_count[1] = 5;
+
+  test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -4425,6 +4479,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_codec_preferences_no_duplicate_extmaps);
     tcase_add_test (tc, test_codec_preferences_incompatible_extmaps);
     tcase_add_test (tc, test_codec_preferences_invalid_extmap);
+    tcase_add_test (tc, test_renego_rtx);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);

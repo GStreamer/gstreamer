@@ -67,6 +67,9 @@ struct _TransportStream
 
   GstElement               *rtxsend;
   GstElement               *rtxreceive;
+
+  GstElement               *reddec;
+  GList                    *fecdecs;
 };
 
 struct _TransportStreamClass

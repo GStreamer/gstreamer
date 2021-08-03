@@ -59,7 +59,7 @@ transport_stream_get_pt (TransportStream * stream, const gchar * encoding_name,
     guint media_idx)
 {
   guint i;
-  gint ret = 0;
+  gint ret = -1;
 
   for (i = 0; i < stream->ptmap->len; i++) {
     PtMapItem *item = &g_array_index (stream->ptmap, PtMapItem, i);
@@ -165,25 +165,14 @@ transport_stream_dispose (GObject * object)
 {
   TransportStream *stream = TRANSPORT_STREAM (object);
 
-  if (stream->send_bin)
-    gst_object_unref (stream->send_bin);
-  stream->send_bin = NULL;
-
-  if (stream->receive_bin)
-    gst_object_unref (stream->receive_bin);
-  stream->receive_bin = NULL;
-
-  if (stream->transport)
-    gst_object_unref (stream->transport);
-  stream->transport = NULL;
-
-  if (stream->rtxsend)
-    gst_object_unref (stream->rtxsend);
-  stream->rtxsend = NULL;
-
-  if (stream->rtxreceive)
-    gst_object_unref (stream->rtxreceive);
-  stream->rtxreceive = NULL;
+  gst_clear_object (&stream->send_bin);
+  gst_clear_object (&stream->receive_bin);
+  gst_clear_object (&stream->transport);
+  gst_clear_object (&stream->rtxsend);
+  gst_clear_object (&stream->rtxreceive);
+  gst_clear_object (&stream->reddec);
+  g_list_free_full (stream->fecdecs, (GDestroyNotify) gst_object_unref);
+  stream->fecdecs = NULL;
 
   GST_OBJECT_PARENT (object) = NULL;
 
