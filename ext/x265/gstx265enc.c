@@ -986,8 +986,7 @@ gst_x265_enc_init_encoder_locked (GstX265Enc * encoder)
 
   encoder->x265enc = encoder->api->encoder_open (&encoder->x265param);
   if (!encoder->x265enc) {
-    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
-        ("Can not initialize x265 encoder."), (NULL));
+    GST_ERROR_OBJECT (encoder, "Can not open x265 encoder.");
     return FALSE;
   }
 
@@ -1011,6 +1010,10 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
   GST_OBJECT_LOCK (encoder);
   result = gst_x265_enc_init_encoder_locked (encoder);
   GST_OBJECT_UNLOCK (encoder);
+
+  if (!result)
+    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
+        ("Can not initialize x265 encoder."), (NULL));
 
   return result;
 }
