@@ -603,18 +603,22 @@ QtGLVideoItemInterface::initWinSys ()
 }
 
 void
-QtGLVideoItem::handleWindowChanged(QQuickWindow *win)
+QtGLVideoItem::handleWindowChanged (QQuickWindow * win)
 {
   if (win) {
-    if (win->isSceneGraphInitialized())
-      win->scheduleRenderJob(new RenderJob(std::bind(&QtGLVideoItem::onSceneGraphInitialized, this)), QQuickWindow::BeforeSynchronizingStage);
+    if (win->isSceneGraphInitialized ())
+      win->scheduleRenderJob (new RenderJob (std::
+              bind (&QtGLVideoItem::onSceneGraphInitialized, this)),
+          QQuickWindow::BeforeSynchronizingStage);
     else
-      connect(win, SIGNAL(sceneGraphInitialized()), this, SLOT(onSceneGraphInitialized()), Qt::DirectConnection);
+      connect (win, SIGNAL (sceneGraphInitialized ()), this,
+          SLOT (onSceneGraphInitialized ()), Qt::DirectConnection);
 
-    connect(win, SIGNAL(sceneGraphInvalidated()), this, SLOT(onSceneGraphInvalidated()), Qt::DirectConnection);
+    connect (win, SIGNAL (sceneGraphInvalidated ()), this,
+        SLOT (onSceneGraphInvalidated ()), Qt::DirectConnection);
   } else {
     this->priv->qt_context = NULL;
-	this->priv->initted = FALSE;
+    this->priv->initted = FALSE;
   }
 }
 
