@@ -83,6 +83,9 @@
  * up to this size */
 #define MAX_PES_PAYLOAD (32 * 1024 * 1024)
 
+/* enable ignore-pcr if no PCR is seen within this milliseconds interval */
+#define IGNORE_PCR_THRESHOLD (1000 * GST_MSECOND)
+
 GST_DEBUG_CATEGORY_STATIC (ts_demux_debug);
 #define GST_CAT_DEFAULT ts_demux_debug
 
@@ -2653,7 +2656,7 @@ check_pending_buffers (GstTSDemux * demux)
         dur = MPEGTIME_TO_GSTTIME (lastval - firstval);
         GST_DEBUG_OBJECT (tmpstream->pad,
             "Pending content duration: %" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
-        if (dur > 500 * GST_MSECOND) {
+        if (dur > IGNORE_PCR_THRESHOLD) {
           exceeded_threshold = TRUE;
           break;
         }
@@ -2669,7 +2672,8 @@ check_pending_buffers (GstTSDemux * demux)
     /* Except if we've exceed the maximum amount of pending buffers, in which
      * case we ignore PCR from now on */
     GST_DEBUG_OBJECT (demux,
-        "Saw more than 500ms of data without PCR. Ignoring PCR from now on");
+        "Saw more than %" GST_TIME_FORMAT " of data without PCR. "
+        "Ignoring PCR from now on", GST_TIME_ARGS (IGNORE_PCR_THRESHOLD));
     GST_MPEGTS_BASE (demux)->ignore_pcr = TRUE;
     demux->program->pcr_pid = 0x1fff;
     g_object_notify (G_OBJECT (demux), "ignore-pcr");
