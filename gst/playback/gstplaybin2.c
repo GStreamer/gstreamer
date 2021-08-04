@@ -332,6 +332,7 @@ struct _GstSourceGroup
   gulong pad_removed_id;
   gulong no_more_pads_id;
   gulong notify_source_id;
+  gulong source_setup_id;
   gulong drained_id;
   gulong autoplug_factories_id;
   gulong autoplug_select_id;
@@ -5254,9 +5255,17 @@ notify_source_cb (GstElement * uridecodebin, GParamSpec * pspec,
   GST_OBJECT_UNLOCK (playbin);
 
   g_object_notify (G_OBJECT (playbin), "source");
+}
 
-  g_signal_emit (playbin, gst_play_bin_signals[SIGNAL_SOURCE_SETUP],
-      0, playbin->source);
+static void
+source_setup_cb (GstElement * uridecodebin, GstElement * source,
+    GstSourceGroup * group)
+{
+  GstPlayBin *playbin;
+
+  playbin = group->playbin;
+
+  g_signal_emit (playbin, gst_play_bin_signals[SIGNAL_SOURCE_SETUP], 0, source);
 }
 
 /* must be called with the group lock */
@@ -5394,6 +5403,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
       G_CALLBACK (no_more_pads_cb), group);
   group->notify_source_id = g_signal_connect (uridecodebin, "notify::source",
       G_CALLBACK (notify_source_cb), group);
+  group->source_setup_id = g_signal_connect (uridecodebin, "source-setup",
+      G_CALLBACK (source_setup_cb), group);
 
   /* we have 1 pending no-more-pads */
   group->pending = 1;
@@ -5573,6 +5584,7 @@ error_cleanup:
       REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
       REMOVE_SIGNAL (group->uridecodebin, group->no_more_pads_id);
       REMOVE_SIGNAL (group->uridecodebin, group->notify_source_id);
+      REMOVE_SIGNAL (group->uridecodebin, group->source_setup_id);
       REMOVE_SIGNAL (group->uridecodebin, group->drained_id);
       REMOVE_SIGNAL (group->uridecodebin, group->autoplug_factories_id);
       REMOVE_SIGNAL (group->uridecodebin, group->autoplug_select_id);
@@ -5661,6 +5673,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
     REMOVE_SIGNAL (group->uridecodebin, group->no_more_pads_id);
     REMOVE_SIGNAL (group->uridecodebin, group->notify_source_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->source_setup_id);
     REMOVE_SIGNAL (group->uridecodebin, group->drained_id);
     REMOVE_SIGNAL (group->uridecodebin, group->autoplug_factories_id);
     REMOVE_SIGNAL (group->uridecodebin, group->autoplug_select_id);

@@ -1350,21 +1350,6 @@ gen_source_element (GstURIDecodeBin * decoder)
 
   GST_LOG_OBJECT (decoder, "found source type %s", G_OBJECT_TYPE_NAME (source));
 
-  decoder->is_stream = IS_STREAM_URI (decoder->uri);
-
-  query = gst_query_new_scheduling ();
-  if (gst_element_query (source, query)) {
-    gst_query_parse_scheduling (query, &flags, NULL, NULL, NULL);
-    if ((flags & GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED))
-      decoder->is_stream = TRUE;
-  }
-  gst_query_unref (query);
-
-  GST_LOG_OBJECT (decoder, "source is stream: %d", decoder->is_stream);
-
-  decoder->need_queue = IS_QUEUE_URI (decoder->uri);
-  GST_LOG_OBJECT (decoder, "source needs queue: %d", decoder->need_queue);
-
   source_class = G_OBJECT_GET_CLASS (source);
 
   pspec = g_object_class_find_property (source_class, "connection-speed");
@@ -1411,6 +1396,25 @@ gen_source_element (GstURIDecodeBin * decoder)
         "setting subtitle-encoding=%s to source element", decoder->encoding);
     g_object_set (source, "subtitle-encoding", decoder->encoding, NULL);
   }
+
+  g_signal_emit (decoder, gst_uri_decode_bin_signals[SIGNAL_SOURCE_SETUP],
+      0, source);
+
+  decoder->is_stream = IS_STREAM_URI (decoder->uri);
+
+  query = gst_query_new_scheduling ();
+  if (gst_element_query (source, query)) {
+    gst_query_parse_scheduling (query, &flags, NULL, NULL, NULL);
+    if ((flags & GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED))
+      decoder->is_stream = TRUE;
+  }
+  gst_query_unref (query);
+
+  GST_LOG_OBJECT (decoder, "source is stream: %d", decoder->is_stream);
+
+  decoder->need_queue = IS_QUEUE_URI (decoder->uri);
+  GST_LOG_OBJECT (decoder, "source needs queue: %d", decoder->need_queue);
+
   return source;
 
   /* ERRORS */
@@ -2261,9 +2265,6 @@ setup_source (GstURIDecodeBin * decoder)
 
   /* notify of the new source used */
   g_object_notify (G_OBJECT (decoder), "source");
-
-  g_signal_emit (decoder, gst_uri_decode_bin_signals[SIGNAL_SOURCE_SETUP],
-      0, decoder->source);
 
   if (is_live_source (decoder->source))
     decoder->is_stream = FALSE;
