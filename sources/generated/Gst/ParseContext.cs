@@ -60,27 +60,10 @@ namespace Gst {
 			gst_parse_context_free (raw);
 		}
 
-		class FinalizerInfo {
-			IntPtr handle;
-
-			public FinalizerInfo (IntPtr handle)
-			{
-				this.handle = handle;
+		protected override Action<IntPtr> DisposeUnmanagedFunc {
+			get {
+				return gst_parse_context_free;
 			}
-
-			public bool Handler ()
-			{
-				gst_parse_context_free (handle);
-				return false;
-			}
-		}
-
-		~ParseContext ()
-		{
-			if (!Owned)
-				return;
-			FinalizerInfo info = new FinalizerInfo (Handle);
-			GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
 		}
 
 
