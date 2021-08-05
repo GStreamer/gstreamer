@@ -97,11 +97,14 @@ def fatal_git_fetches(repo_dir):
         return True
     return False
 
-def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=[], recurse_i=0, status=False):
+def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=None, recurse_i=0, status=False):
     if status:
       return check_repo_status(repo_name, repo_dir)
     revision = ensure_revision_if_necessary(repo_dir, revision)
     git("config", "rebase.autoStash", "true", repository_path=repo_dir)
+
+    fetch_args = fetch_args if fetch_args is None else []
+    fetch_args.append('--tags')
     fatal = fatal_git_fetches(repo_dir)
     try:
         if revision:
