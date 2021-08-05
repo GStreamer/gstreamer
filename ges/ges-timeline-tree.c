@@ -464,12 +464,16 @@ find_marker_snap (const GESMetaContainer * container, const gchar * key,
   GESMarkerList *marker_list;
   GESMarker *marker;
   GESMarkerFlags flags;
-  gpointer gvalue = g_value_get_object (value);
+  GObject *obj;
 
-  if (!GES_IS_MARKER_LIST (gvalue))
+  if (!G_VALUE_HOLDS_OBJECT (value))
     return;
 
-  marker_list = GES_MARKER_LIST (gvalue);
+  obj = g_value_get_object (value);
+  if (!GES_IS_MARKER_LIST (obj))
+    return;
+
+  marker_list = GES_MARKER_LIST (obj);
 
   g_object_get (marker_list, "flags", &flags, NULL);
   if (!(flags & GES_MARKER_FLAG_SNAPPABLE))
