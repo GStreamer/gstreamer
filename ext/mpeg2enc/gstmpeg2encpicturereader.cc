@@ -61,6 +61,7 @@ GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams & strm)
   const GValue *par_val;
   y4m_ratio_t fps;
   y4m_ratio_t par;
+  const gchar *interlace_mode;
 
   if (!gst_structure_get_int (structure, "width", &width))
     width = -1;
@@ -90,7 +91,24 @@ GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams & strm)
   strm.horizontal_size = width;
   strm.vertical_size = height;
 
-  strm.interlacing_code = Y4M_ILACE_NONE;
+  interlace_mode = gst_structure_get_string (structure, "interlace-mode");
+
+  if (!g_strcmp0(interlace_mode, "interleaved")) {
+    const gchar *field_order = gst_structure_get_string(structure, "field-order");
+
+    if (!g_strcmp0(field_order, "bottom-field-first")) {
+      strm.interlacing_code = Y4M_ILACE_BOTTOM_FIRST;
+    } else if (!g_strcmp0(field_order, "top-field-first")) {
+      strm.interlacing_code = Y4M_ILACE_TOP_FIRST;
+    } else {
+      GST_WARNING ("No field-order in caps, assuming top field first");
+      strm.interlacing_code = Y4M_ILACE_TOP_FIRST;
+    }
+  } else if (!g_strcmp0(interlace_mode, "mixed")) {
+    strm.interlacing_code = Y4M_ILACE_MIXED;
+  } else {
+    strm.interlacing_code = Y4M_ILACE_NONE;
+  }
 
   strm.aspect_ratio_code = mpeg_guess_mpeg_aspect_code (2, par,
       strm.horizontal_size, strm.vertical_size);
