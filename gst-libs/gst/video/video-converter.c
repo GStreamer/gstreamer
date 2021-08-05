@@ -5919,6 +5919,175 @@ convert_I420_pack_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
 }
 
 static void
+convert_A420_pack_ARGB_task (FConvertTask * task)
+{
+  gint i;
+  gpointer d[GST_VIDEO_MAX_PLANES];
+
+  d[0] = FRAME_GET_LINE (task->dest, 0);
+  d[0] =
+      (guint8 *) d[0] +
+      task->out_x * GST_VIDEO_FORMAT_INFO_PSTRIDE (task->dest->info.finfo, 0);
+
+  for (i = task->height_0; i < task->height_1; i++) {
+    guint8 *sy, *su, *sv, *sa;
+
+    sy = FRAME_GET_Y_LINE (task->src, i + task->in_y);
+    sy += task->in_x;
+    su = FRAME_GET_U_LINE (task->src, (i + task->in_y) >> 1);
+    su += (task->in_x >> 1);
+    sv = FRAME_GET_V_LINE (task->src, (i + task->in_y) >> 1);
+    sv += (task->in_x >> 1);
+    sa = FRAME_GET_A_LINE (task->src, i + task->in_y);
+    sa += task->in_x;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    video_orc_convert_A420_ARGB (task->tmpline, sy, su, sv, sa,
+        task->data->im[0][0], task->data->im[0][2],
+        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+        task->width);
+#else
+    video_orc_convert_A420_BGRA (task->tmpline, sy, su, sv, sa,
+        task->data->im[0][0], task->data->im[0][2],
+        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+        task->width);
+#endif
+
+    task->dest->info.finfo->pack_func (task->dest->info.finfo,
+        (GST_VIDEO_FRAME_IS_INTERLACED (task->dest) ?
+            GST_VIDEO_PACK_FLAG_INTERLACED :
+            GST_VIDEO_PACK_FLAG_NONE),
+        task->tmpline, 0, d, task->dest->info.stride,
+        task->dest->info.chroma_site, i + task->out_y, task->width);
+  }
+}
+
+static void
+convert_A420_pack_ARGB (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
+{
+  int i;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
+  MatrixData *data = &convert->convert_matrix;
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
+
+    tasks[i].width = width;
+    tasks[i].data = data;
+    tasks[i].in_x = convert->in_x;
+    tasks[i].in_y = convert->in_y;
+    tasks[i].out_x = convert->out_x;
+    tasks[i].out_y = convert->out_y;
+    tasks[i].tmpline = convert->tmpline[i];
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (height, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_A420_pack_ARGB_task,
+      (gpointer) tasks_p);
+
+  convert_fill_border (convert, dest);
+}
+
+static void
+convert_A420_BGRA_task (FConvertTask * task)
+{
+  gint i;
+
+  for (i = task->height_0; i < task->height_1; i++) {
+    guint8 *sy, *su, *sv, *sa, *d;
+
+    d = FRAME_GET_LINE (task->dest, i + task->out_y);
+    d += (task->out_x * 4);
+    sy = FRAME_GET_Y_LINE (task->src, i + task->in_y);
+    sy += task->in_x;
+    su = FRAME_GET_U_LINE (task->src, (i + task->in_y) >> 1);
+    su += (task->in_x >> 1);
+    sv = FRAME_GET_V_LINE (task->src, (i + task->in_y) >> 1);
+    sv += (task->in_x >> 1);
+    sa = FRAME_GET_A_LINE (task->src, i + task->in_y);
+    sa += task->in_x;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    video_orc_convert_A420_BGRA (d, sy, su, sv, sa,
+        task->data->im[0][0], task->data->im[0][2],
+        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+        task->width);
+#else
+    video_orc_convert_A420_ARGB (d, sy, su, sv, sa,
+        task->data->im[0][0], task->data->im[0][2],
+        task->data->im[2][1], task->data->im[1][1], task->data->im[1][2],
+        task->width);
+#endif
+  }
+}
+
+static void
+convert_A420_BGRA (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
+{
+  int i;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
+  MatrixData *data = &convert->convert_matrix;
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
+
+    tasks[i].width = width;
+    tasks[i].data = data;
+    tasks[i].in_x = convert->in_x;
+    tasks[i].in_y = convert->in_y;
+    tasks[i].out_x = convert->out_x;
+    tasks[i].out_y = convert->out_y;
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (height, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_A420_BGRA_task, (gpointer) tasks_p);
+
+  convert_fill_border (convert, dest);
+}
+
+static void
 memset_u24 (guint8 * data, guint8 col[3], unsigned int n)
 {
   unsigned int i;
@@ -7370,6 +7539,28 @@ static const VideoTransform transforms[] = {
   {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_RGB16, FALSE, TRUE, TRUE, TRUE,
       TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I420_pack_ARGB},
   {GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_BGR16, FALSE, TRUE, TRUE, TRUE,
+      TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I420_pack_ARGB},
+
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_ABGR, FALSE, TRUE, TRUE, TRUE,
+      TRUE, TRUE, FALSE, FALSE, 0, 0, convert_A420_pack_ARGB},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_RGBA, FALSE, TRUE, TRUE, TRUE,
+      TRUE, TRUE, FALSE, FALSE, 0, 0, convert_A420_pack_ARGB},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_BGRA, FALSE, TRUE, TRUE, TRUE,
+      TRUE, TRUE, FALSE, FALSE, 0, 0, convert_A420_BGRA},
+  /* A420 to non-alpha RGB formats, reuse I420_* method */
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_BGRx, FALSE, TRUE, TRUE, TRUE,
+      TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I420_BGRA},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_xBGR, FALSE, TRUE, TRUE, TRUE,
+      TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I420_pack_ARGB},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_RGBx, FALSE, TRUE, TRUE, TRUE,
+      TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I420_pack_ARGB},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_RGB, FALSE, TRUE, TRUE, TRUE,
+      TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I420_pack_ARGB},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_BGR, FALSE, TRUE, TRUE, TRUE,
+      TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I420_pack_ARGB},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_RGB15, FALSE, TRUE, TRUE, TRUE,
+      TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I420_pack_ARGB},
+  {GST_VIDEO_FORMAT_A420, GST_VIDEO_FORMAT_BGR16, FALSE, TRUE, TRUE, TRUE,
       TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I420_pack_ARGB},
 
   /* scalers */
