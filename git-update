@@ -61,7 +61,7 @@ def update_subprojects(manifest, no_interaction=False, status=False):
             continue
 
         revision, args = repos_commits.get(repo_name, [None, []])
-        if not update_repo(repo_name, repo_dir, revision, no_interaction, args, status=status):
+        if not update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=args, status=status):
           return False
 
     return True
@@ -103,7 +103,7 @@ def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=None, 
     revision = ensure_revision_if_necessary(repo_dir, revision)
     git("config", "rebase.autoStash", "true", repository_path=repo_dir)
 
-    fetch_args = fetch_args if fetch_args is None else []
+    fetch_args = fetch_args if fetch_args is not None else []
     fetch_args.append('--tags')
     fatal = fatal_git_fetches(repo_dir)
     try:
@@ -142,7 +142,7 @@ def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=None, 
 
             if recurse_i < 3:
                 return update_repo(repo_name, repo_dir, revision, no_interaction,
-                                    recurse_i + 1)
+                                    recurse_i=recurse_i + 1)
             return False
         else:
             print("\nCould not rebase %s, please fix and try again."
@@ -214,7 +214,7 @@ if __name__ == "__main__":
         repos_commits = {}
 
     revision, args = repos_commits.get('gst-build', [None, []])
-    if not update_repo('gst-build', SCRIPTDIR, revision, options.no_interaction, args, status=options.status):
+    if not update_repo('gst-build', SCRIPTDIR, revision, options.no_interaction, fetch_args=args, status=options.status):
         exit(1)
     if not update_subprojects(options.manifest, options.no_interaction, status=options.status):
         exit(1)
