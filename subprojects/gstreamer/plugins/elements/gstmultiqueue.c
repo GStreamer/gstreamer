@@ -1295,6 +1295,7 @@ gst_multi_queue_change_state (GstElement * element, GstStateChange transition)
         sq->last_query = FALSE;
         g_cond_signal (&sq->query_handled);
       }
+      mqueue->interleave_incomplete = FALSE;
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
       break;
     }
@@ -1569,6 +1570,7 @@ calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
 {
   GstClockTimeDiff low, high;
   GstClockTime interleave, other_interleave = 0;
+  gboolean some_inactive = FALSE;
   GList *tmp;
 
   low = high = GST_CLOCK_STIME_NONE;
@@ -1579,16 +1581,12 @@ calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
     /* Ignore sparse streams for interleave calculation */
     if (oq->is_sparse)
       continue;
-    /* If a stream is not active yet (hasn't received any buffers), set
-     * a maximum interleave to allow it to receive more data */
+
+    /* If some streams aren't active yet (haven't received any buffers), we will
+     * grow interleave accordingly */
     if (!oq->active) {
-      GST_LOG_OBJECT (mq,
-          "queue %d is not active yet, forcing interleave to 5s", oq->id);
-      mq->interleave = 5 * GST_SECOND;
-      /* Update max-size time */
-      mq->max_size.time = mq->interleave;
-      SET_CHILD_PROPERTY (mq, time);
-      goto beach;
+      some_inactive = TRUE;
+      continue;
     }
 
     /* Calculate within each streaming thread */
@@ -1598,7 +1596,8 @@ calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
       continue;
     }
 
-    if (GST_CLOCK_STIME_IS_VALID (oq->cached_sinktime)) {
+    /* If the stream isn't EOS, update the low/high input value */
+    if (GST_CLOCK_STIME_IS_VALID (oq->cached_sinktime) && !oq->is_eos) {
       if (low == GST_CLOCK_STIME_NONE || oq->cached_sinktime < low)
         low = oq->cached_sinktime;
       if (high == GST_CLOCK_STIME_NONE || oq->cached_sinktime > high)
@@ -1612,6 +1611,7 @@ calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
   }
 
   if (GST_CLOCK_STIME_IS_VALID (low) && GST_CLOCK_STIME_IS_VALID (high)) {
+    gboolean do_update = high == low;
     interleave = high - low;
     /* Padding of interleave and minimum value */
     interleave = (150 * interleave / 100) + mq->min_interleave_time;
@@ -1620,11 +1620,28 @@ calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
 
     interleave = MAX (interleave, other_interleave);
 
+    /* Progressively grow up the interleave up to 5s if some streams were inactive */
+    if (some_inactive && interleave <= mq->interleave) {
+      interleave = MIN (5 * GST_SECOND, mq->interleave + 100 * GST_MSECOND);
+      do_update = TRUE;
+    }
+
+    /* We force the interleave update if:
+     * * the interleave was previously set while some streams were not active
+     *   yet but they now all are
+     * * OR the interleave was previously based on all streams being active
+     *   whereas some now aren't
+     */
+    if (mq->interleave_incomplete != some_inactive)
+      do_update = TRUE;
+
+    mq->interleave_incomplete = some_inactive;
+
     /* Update the stored interleave if:
      * * No data has arrived yet (high == low)
      * * Or it went higher
      * * Or it went lower and we've gone past the previous interleave needed */
-    if (high == low || interleave > mq->interleave ||
+    if (do_update || interleave > mq->interleave ||
         ((mq->last_interleave_update + (2 * MIN (GST_SECOND,
                         mq->interleave)) < low)
             && interleave < (mq->interleave * 3 / 4))) {
@@ -1637,7 +1654,6 @@ calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
     }
   }
 
-beach:
   GST_DEBUG_OBJECT (mq,
       "low:%" GST_STIME_FORMAT " high:%" GST_STIME_FORMAT " interleave:%"
       GST_TIME_FORMAT " mq->interleave:%" GST_TIME_FORMAT

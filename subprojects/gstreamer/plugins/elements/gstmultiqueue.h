@@ -85,6 +85,7 @@ struct _GstMultiQueue {
 
   GstClockTime interleave;	/* Input interleave */
   GstClockTimeDiff last_interleave_update;
+  gboolean interleave_incomplete; /* TRUE if not all streams were active */
 
   GstClockTime unlinked_cache_time;
 };
