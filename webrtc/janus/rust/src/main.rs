@@ -21,7 +21,6 @@
 #![recursion_limit = "256"]
 
 use anyhow::bail;
-use gst::gst_element_error;
 use gst::prelude::*;
 use std::sync::{Arc, Weak};
 
@@ -77,7 +76,7 @@ impl App {
             .downcast::<gst::Pipeline>()
             .expect("Couldn't downcast pipeline");
 
-        let bus = pipeline.get_bus().unwrap();
+        let bus = pipeline.bus().unwrap();
         let app = App(Arc::new(AppInner { pipeline }));
 
         let app_weak = app.downgrade();
@@ -99,14 +98,14 @@ impl App {
         match message.view() {
             MessageView::Error(err) => bail!(
                 "Error from element {}: {} ({})",
-                err.get_src()
-                    .map(|s| String::from(s.get_path_string()))
+                err.src()
+                    .map(|s| String::from(s.path_string()))
                     .unwrap_or_else(|| String::from("None")),
-                err.get_error(),
-                err.get_debug().unwrap_or_else(|| String::from("None")),
+                err.error(),
+                err.debug().unwrap_or_else(|| String::from("None")),
             ),
             MessageView::Warning(warning) => {
-                println!("Warning: \"{}\"", warning.get_debug().unwrap());
+                println!("Warning: \"{}\"", warning.debug().unwrap());
             }
             _ => (),
         }
@@ -121,7 +120,7 @@ impl App {
         self.pipeline.call_async(|pipeline| {
             // If this fails, post an error on the bus so we exit
             if pipeline.set_state(gst::State::Playing).is_err() {
-                gst_element_error!(
+                gst::element_error!(
                     pipeline,
                     gst::LibraryError::Failed,
                     ("Failed to set pipeline to Playing")
