@@ -6321,12 +6321,22 @@ gst_qt_mux_video_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
             "output might not play in Apple QuickTime (try global-headers?)");
     }
   } else if (strcmp (mimetype, "video/x-h264") == 0) {
+    const gchar *stream_format;
+
     if (!codec_data) {
       GST_WARNING_OBJECT (qtmux, "no codec_data in h264 caps");
       goto refuse_caps;
     }
 
-    entry.fourcc = FOURCC_avc1;
+    stream_format = gst_structure_get_string (structure, "stream-format");
+
+    if (!g_strcmp0 (stream_format, "avc")) {
+      entry.fourcc = FOURCC_avc1;
+    } else if (!g_strcmp0 (stream_format, "avc3")) {
+      entry.fourcc = FOURCC_avc3;
+    } else {
+      g_assert_not_reached ();
+    }
 
     ext_atom = build_btrt_extension (0, qtpad->avg_bitrate, qtpad->max_bitrate);
     if (ext_atom != NULL)

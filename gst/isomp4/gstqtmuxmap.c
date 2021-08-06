@@ -60,7 +60,7 @@
 
 #define H264_CAPS \
   "video/x-h264, " \
-  "stream-format = (string) avc, " \
+  "stream-format = (string) { avc, avc3 }, " \
   "alignment = (string) au, " \
   COMMON_VIDEO_CAPS
 
