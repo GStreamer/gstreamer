@@ -4020,7 +4020,7 @@ atom_trak_add_video_entry (AtomTRAK * trak, AtomsContext * context,
     mp4v->temporal_quality = 512;
   }
 
-  stsd->entries = g_list_append (stsd->entries, mp4v);
+  stsd->entries = g_list_prepend (stsd->entries, mp4v);
   stsd->n_entries++;
   return mp4v;
 }
