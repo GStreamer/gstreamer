@@ -3257,6 +3257,21 @@ check_for_stall (GstHarness * h, BufferArrayCtx * bufs, guint num_bufs)
   buffer_array_push (h, array, base_seqnum, base_rtptime);
   g_array_unref (array);
 
+  {
+    gint64 start_time = g_get_monotonic_time ();
+    gint64 timeout_s = 30;
+    while (gst_harness_buffers_in_queue (h) <= in_queue) {
+
+      gint64 duration_s =
+          (g_get_monotonic_time () - start_time) / G_USEC_PER_SEC;
+      if (duration_s > timeout_s)
+        break;
+
+      g_usleep (G_USEC_PER_SEC / 100);
+    }
+  }
+
+
   /* we expect at least some of those buffers to come through */
   return gst_harness_buffers_in_queue (h) > in_queue;
 }
@@ -3324,6 +3339,27 @@ GST_START_TEST (test_reset_using_rtx_packets_does_not_stall)
 
   g_object_set (h->element, "latency", 400,
       "do-retransmission", TRUE, "do-lost", TRUE, "max-misorder-time", 1, NULL);
+  fail_unless (check_for_stall (h, bufs, G_N_ELEMENTS (bufs)));
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_gap_using_rtx_does_not_stall)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+
+  BufferArrayCtx bufs[] = {
+    /* *INDENT-OFF* */
+    { 201, -1440, FALSE, 185591 },
+    { 265,     1, FALSE,      0 },
+    /* *INDENT-ON* */
+  };
+
+  g_object_set (h->element, "do-lost", TRUE,
+      "do-retransmission", TRUE,
+      "rtx-next-seqnum", FALSE, "rtx-delay-reorder", 0, NULL);
+
   fail_unless (check_for_stall (h, bufs, G_N_ELEMENTS (bufs)));
   gst_harness_teardown (h);
 }
@@ -3405,6 +3441,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_reset_timers_does_not_stall);
   tcase_add_test (tc_chain, test_multiple_lost_do_not_stall);
   tcase_add_test (tc_chain, test_reset_using_rtx_packets_does_not_stall);
+  tcase_add_test (tc_chain, test_gap_using_rtx_does_not_stall);
 
 
   return s;
