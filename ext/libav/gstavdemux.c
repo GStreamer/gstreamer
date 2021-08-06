@@ -2107,6 +2107,11 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     /* Set the rank of demuxers known to work to MARGINAL.
      * Set demuxers for which we already have another implementation to NONE
      * Set All others to NONE*/
+    /**
+     * element-avdemux_xwma
+     *
+     * Since: 1.20
+     */
     if (!strcmp (in_plugin->name, "wsvqa") ||
         !strcmp (in_plugin->name, "wsaud") ||
         !strcmp (in_plugin->name, "wc3movie") ||
@@ -2134,6 +2139,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "daud") ||
         !strcmp (in_plugin->name, "avs") ||
         !strcmp (in_plugin->name, "aiff") ||
+        !strcmp (in_plugin->name, "xwma") ||
         !strcmp (in_plugin->name, "4xm") ||
         !strcmp (in_plugin->name, "yuv4mpegpipe") ||
         !strcmp (in_plugin->name, "pva") ||
