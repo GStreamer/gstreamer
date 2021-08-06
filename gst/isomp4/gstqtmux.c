@@ -6872,6 +6872,14 @@ gst_qt_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
             caps);
       } else {
         ret = qtmux_pad->set_caps (qtmux_pad, caps);
+
+        GST_OBJECT_LOCK (qtmux);
+        if (qtmux->current_pad == qtmux_pad) {
+          qtmux->current_chunk_offset = -1;
+          qtmux->current_chunk_size = 0;
+          qtmux->current_chunk_duration = 0;
+        }
+        GST_OBJECT_UNLOCK (qtmux);
       }
 
       if (ret)
