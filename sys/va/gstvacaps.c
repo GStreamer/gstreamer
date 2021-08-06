@@ -385,6 +385,49 @@ gst_va_create_coded_caps (GstVaDisplay * display, VAProfile profile,
   return caps;
 }
 
+static GstCaps *
+_regroup_raw_caps (GstCaps * caps)
+{
+  GstCaps *sys_caps, *va_caps, *dma_caps, *tmp;
+  guint size, i;
+
+  if (gst_caps_is_any (caps) || gst_caps_is_empty (caps))
+    return caps;
+
+  size = gst_caps_get_size (caps);
+  if (size <= 1)
+    return caps;
+
+  /* We need to simplify caps by features. */
+  sys_caps = gst_caps_new_empty ();
+  va_caps = gst_caps_new_empty ();
+  dma_caps = gst_caps_new_empty ();
+  for (i = 0; i < size; i++) {
+    GstCapsFeatures *ft;
+
+    tmp = gst_caps_copy_nth (caps, i);
+    ft = gst_caps_get_features (tmp, 0);
+    if (gst_caps_features_contains (ft, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+      dma_caps = gst_caps_merge (dma_caps, tmp);
+    } else if (gst_caps_features_contains (ft, "memory:VAMemory")) {
+      va_caps = gst_caps_merge (va_caps, tmp);
+    } else {
+      sys_caps = gst_caps_merge (sys_caps, tmp);
+    }
+  }
+
+  sys_caps = gst_caps_simplify (sys_caps);
+  va_caps = gst_caps_simplify (va_caps);
+  dma_caps = gst_caps_simplify (dma_caps);
+
+  sys_caps = gst_caps_merge (sys_caps, va_caps);
+  sys_caps = gst_caps_merge (sys_caps, dma_caps);
+
+  gst_caps_unref (caps);
+
+  return sys_caps;
+}
+
 gboolean
 gst_va_caps_from_profiles (GstVaDisplay * display, GArray * profiles,
     VAEntrypoint entrypoint, GstCaps ** codedcaps_ptr, GstCaps ** rawcaps_ptr)
@@ -472,7 +515,7 @@ gst_va_caps_from_profiles (GstVaDisplay * display, GArray * profiles,
     gst_caps_replace (&codedcaps, NULL);
 
   if ((ret = codedcaps && rawcaps)) {
-    rawcaps = gst_caps_simplify (rawcaps);
+    rawcaps = _regroup_raw_caps (rawcaps);
     codedcaps = gst_caps_simplify (codedcaps);
 
     if (rawcaps_ptr)
