@@ -1,4 +1,4 @@
 [wrap-git]
 url=https://gitlab.gnome.org/GNOME/pango.git
 push-url=git@gitlab.gnome.org:GNOME/pango.git
-revision=master
+revision=1.48.7
