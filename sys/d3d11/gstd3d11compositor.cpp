@@ -370,7 +370,7 @@ gst_d3d11_compositor_sizing_policy_get_type (void)
   if (!sizing_policy_type) {
     sizing_policy_type =
         g_enum_register_static ("GstD3D11CompositorSizingPolicy",
-            sizing_polices);
+        sizing_polices);
   }
   return sizing_policy_type;
 }
