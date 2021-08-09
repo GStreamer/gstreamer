@@ -114,9 +114,9 @@ static GstStaticPadTemplate videosink_templ =
         "mpegversion = (int) { 1, 2, 4 }, "
         "systemstream = (boolean) false, "
         COMMON_VIDEO_CAPS "; "
-        "video/x-h264, stream-format=avc, alignment=au, "
+        "video/x-h264, stream-format = (string) { avc, avc3 }, alignment=au, "
         COMMON_VIDEO_CAPS "; "
-        "video/x-h265, stream-format=hvc1, alignment=au, "
+        "video/x-h265, stream-format = (string) { hvc1, hev1 }, alignment=au, "
         COMMON_VIDEO_CAPS "; "
         "video/x-divx, "
         COMMON_VIDEO_CAPS "; "
@@ -961,6 +961,63 @@ gst_matroska_mux_set_codec_id (GstMatroskaTrackContext * context,
   context->codec_id = g_strdup (id);
 }
 
+static gboolean
+check_field (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  GstStructure *structure = (GstStructure *) user_data;
+  const gchar *name = gst_structure_get_name (structure);
+
+  if ((g_strcmp0 (name, "video/x-h264") == 0 &&
+          !g_strcmp0 (gst_structure_get_string (structure, "stream-format"),
+              "avc3")) || (g_strcmp0 (name, "video/x-h265") == 0
+          && !g_strcmp0 (gst_structure_get_string (structure, "stream-format"),
+              "hev1"))
+      ) {
+    /* While in theory, matroska only supports avc1 / hvc1, and doesn't support codec_data
+     * changes, in practice most decoders will use in-band SPS / PPS (avc3 / hev1), if the
+     * input stream is avc3 / hev1 we let the new codec_data slide to support "smart" encoding.
+     *
+     * We don't warn here as we already warned elsewhere.
+     */
+    if (field_id == g_quark_from_static_string ("codec_data")) {
+      return FALSE;
+    } else if (field_id == g_quark_from_static_string ("tier")) {
+      return FALSE;
+    } else if (field_id == g_quark_from_static_string ("profile")) {
+      return FALSE;
+    } else if (field_id == g_quark_from_static_string ("level")) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
+check_new_caps (GstCaps * old_caps, GstCaps * new_caps)
+{
+  GstStructure *old_s, *new_s;
+  gboolean ret;
+
+  old_caps = gst_caps_copy (old_caps);
+  new_caps = gst_caps_copy (new_caps);
+
+  new_s = gst_caps_get_structure (new_caps, 0);
+  old_s = gst_caps_get_structure (old_caps, 0);
+
+  gst_structure_filter_and_map_in_place (new_s,
+      (GstStructureFilterMapFunc) check_field, new_s);
+  gst_structure_filter_and_map_in_place (old_s,
+      (GstStructureFilterMapFunc) check_field, old_s);
+
+  ret = gst_caps_is_subset (new_caps, old_caps);
+
+  gst_caps_unref (new_caps);
+  gst_caps_unref (old_caps);
+
+  return ret;
+}
+
 /**
  * gst_matroska_mux_video_pad_setcaps:
  * @pad: Pad which got the caps.
@@ -991,7 +1048,7 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
 
   if ((old_caps = gst_pad_get_current_caps (pad))) {
     if (mux->state >= GST_MATROSKA_MUX_STATE_HEADER
-        && !gst_caps_is_subset (caps, old_caps)) {
+        && !check_new_caps (old_caps, caps)) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
           ("Caps changes are not supported by Matroska\nCurrent: `%"
               GST_PTR_FORMAT "`\nNew: `%" GST_PTR_FORMAT "`", old_caps, caps));
@@ -1231,6 +1288,13 @@ skip_details:
     gst_matroska_mux_set_codec_id (context,
         GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AVC);
     gst_matroska_mux_free_codec_priv (context);
+
+    if (!g_strcmp0 (gst_structure_get_string (structure, "stream-format"),
+            "avc3")) {
+      GST_WARNING_OBJECT (mux,
+          "avc3 is not officially supported, only use this format for smart encoding");
+    }
+
     /* Create avcC header */
     if (codec_buf != NULL) {
       context->codec_priv_size = gst_buffer_get_size (codec_buf);
@@ -1241,6 +1305,13 @@ skip_details:
     gst_matroska_mux_set_codec_id (context,
         GST_MATROSKA_CODEC_ID_VIDEO_MPEGH_HEVC);
     gst_matroska_mux_free_codec_priv (context);
+
+    if (!g_strcmp0 (gst_structure_get_string (structure, "stream-format"),
+            "hev1")) {
+      GST_WARNING_OBJECT (mux,
+          "hev1 is not officially supported, only use this format for smart encoding");
+    }
+
     /* Create hvcC header */
     if (codec_buf != NULL) {
       context->codec_priv_size = gst_buffer_get_size (codec_buf);
