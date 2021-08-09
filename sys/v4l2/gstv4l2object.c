@@ -2229,8 +2229,9 @@ gst_v4l2_object_get_streamparm (GstV4l2Object * v4l2object, GstVideoInfo * info)
     GST_WARNING_OBJECT (v4l2object->dbg_obj, "VIDIOC_G_PARM failed");
     return FALSE;
   }
-  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
-      || v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
+  if ((streamparm.parm.capture.timeperframe.numerator != 0)
+      && (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
+          || v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)) {
     GST_VIDEO_INFO_FPS_N (info) =
         streamparm.parm.capture.timeperframe.denominator;
     GST_VIDEO_INFO_FPS_D (info) =
@@ -4239,7 +4240,8 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
 
   gst_v4l2_object_get_colorspace (v4l2object, &fmt, &info->colorimetry);
   gst_v4l2_object_get_streamparm (v4l2object, info);
-  if ((info->fps_n == 0) && (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
+  if ((info->fps_n == 0 && v4l2object->info.fps_d != 0)
+      && (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
           || v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)) {
     info->fps_d = v4l2object->info.fps_d;
     info->fps_n = v4l2object->info.fps_n;
