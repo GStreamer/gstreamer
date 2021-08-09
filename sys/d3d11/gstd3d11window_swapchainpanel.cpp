@@ -359,7 +359,7 @@ create_swap_chain_for_composition (GstD3D11WindowSwapChainPanel * self,
   IDXGISwapChain1 *swap_chain = NULL;
   ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
   IDXGIFactory1 *factory = gst_d3d11_device_get_dxgi_factory_handle (device);
-  IDXGIFactory2 *factory2 = NULL;
+  ComPtr < IDXGIFactory2 > factory2;
 
   hr = factory->QueryInterface (IID_PPV_ARGS (&factory2));
   if (!gst_d3d11_result (hr, device)) {
@@ -368,7 +368,7 @@ create_swap_chain_for_composition (GstD3D11WindowSwapChainPanel * self,
   }
 
   gst_d3d11_device_lock (device);
-  hr = factory2->CreateSwapChainForComposition ((IUnknown *) device_handle,
+  hr = factory2->CreateSwapChainForComposition (device_handle,
       desc, output, &swap_chain);
   gst_d3d11_device_unlock (device);
 
@@ -377,8 +377,6 @@ create_swap_chain_for_composition (GstD3D11WindowSwapChainPanel * self,
         (guint) hr);
     swap_chain = NULL;
   }
-
-  factory2->Release ();
 
   return swap_chain;
 }

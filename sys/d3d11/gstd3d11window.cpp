@@ -311,7 +311,7 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
     goto done;
   }
 
-  hr = swap_chain->GetBuffer (0, IID_ID3D11Texture2D, (void **) &backbuffer);
+  hr = swap_chain->GetBuffer (0, IID_PPV_ARGS (&backbuffer));
   if (!gst_d3d11_result (hr, window->device)) {
     GST_ERROR_OBJECT (window,
         "Cannot get backbuffer from swapchain, hr: 0x%x", (guint) hr);
@@ -349,8 +349,7 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
       "New client area %dx%d, render rect x: %d, y: %d, %dx%d",
       desc.Width, desc.Height, rst_rect.x, rst_rect.y, rst_rect.w, rst_rect.h);
 
-  hr = device_handle->CreateRenderTargetView ((ID3D11Resource *) backbuffer,
-      NULL, &window->rtv);
+  hr = device_handle->CreateRenderTargetView (backbuffer, NULL, &window->rtv);
   if (!gst_d3d11_result (hr, window->device)) {
     GST_ERROR_OBJECT (window, "Cannot create render target view, hr: 0x%x",
         (guint) hr);
@@ -365,7 +364,7 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
     pov_desc.Texture2D.MipSlice = 0;
 
     if (!gst_d3d11_video_processor_create_output_view (window->processor,
-            &pov_desc, (ID3D11Resource *) backbuffer, &window->pov))
+            &pov_desc, backbuffer, &window->pov))
       goto done;
   }
 
@@ -586,11 +585,10 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
 
     if (gst_video_mastering_display_info_from_caps (&minfo, caps) &&
         gst_video_content_light_level_from_caps (&cll, caps)) {
-      IDXGISwapChain4 *swapchain4 = NULL;
+      ComPtr < IDXGISwapChain4 > swapchain4;
       HRESULT hr;
 
-      hr = window->swap_chain->QueryInterface (IID_IDXGISwapChain4,
-          (void **) &swapchain4);
+      hr = window->swap_chain->QueryInterface (IID_PPV_ARGS (&swapchain4));
       if (gst_d3d11_result (hr, window->device)) {
         GST_DEBUG_OBJECT (window, "Have HDR metadata, set to DXGI swapchain");
 
@@ -604,8 +602,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
         } else {
           have_hdr10 = TRUE;
         }
-
-        swapchain4->Release ();
       }
     }
   }
@@ -626,16 +622,15 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
 
 #if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
   {
-    IDXGISwapChain3 *swapchain3 = NULL;
+    ComPtr < IDXGISwapChain3 > swapchain3;
     HRESULT hr;
 
-    hr = window->swap_chain->QueryInterface (IID_IDXGISwapChain3,
-        (void **) &swapchain3);
+    hr = window->swap_chain->QueryInterface (IID_PPV_ARGS (&swapchain3));
 
     if (gst_d3d11_result (hr, window->device)) {
       chosen_colorspace =
           gst_d3d11_find_swap_chain_color_space (&window->render_info,
-          swapchain3, have_hdr10);
+          swapchain3.Get (), have_hdr10);
       if (chosen_colorspace) {
         native_colorspace_type =
             (DXGI_COLOR_SPACE_TYPE) chosen_colorspace->dxgi_color_space_type;
@@ -658,8 +653,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
           window->render_info.colorimetry.matrix = chosen_colorspace->matrix;
         }
       }
-
-      swapchain3->Release ();
     }
   }
 #endif

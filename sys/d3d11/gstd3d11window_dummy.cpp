@@ -319,8 +319,7 @@ gst_d3d11_window_dummy_setup_fallback_texture (GstD3D11Window * window,
     pov_desc.Texture2D.MipSlice = 0;
 
     if (!gst_d3d11_video_processor_create_output_view (window->processor,
-            &pov_desc, (ID3D11Resource *) self->fallback_texture,
-            &self->fallback_pov)) {
+            &pov_desc, self->fallback_texture, &self->fallback_pov)) {
       GST_ERROR_OBJECT (window,
           "ID3D11VideoProcessorOutputView is unavailable");
       gst_d3d11_window_dummy_clear_resources (self);
@@ -386,7 +385,7 @@ gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
       pov_desc.Texture2D.MipSlice = 0;
 
       if (!gst_d3d11_video_processor_create_output_view (window->processor,
-          &pov_desc, (ID3D11Resource *) texture, &pov)) {
+          &pov_desc, texture, &pov)) {
         GST_WARNING_OBJECT (window,
             "ID3D11VideoProcessorOutputView is unavailable");
       }

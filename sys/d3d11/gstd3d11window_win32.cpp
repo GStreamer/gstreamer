@@ -25,8 +25,11 @@
 #endif
 
 #include "gstd3d11window_win32.h"
+#include <wrl.h>
 
 /* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+
 G_BEGIN_DECLS
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
@@ -533,7 +536,7 @@ gst_d3d11_window_win32_change_fullscreen_mode_internal (GstD3D11WindowWin32 *
 
     ShowWindow (hwnd, SW_NORMAL);
   } else {
-    IDXGIOutput *output;
+    ComPtr < IDXGIOutput > output;
     DXGI_OUTPUT_DESC output_desc;
     IDXGISwapChain *swap_chain = window->swap_chain;
 
@@ -553,7 +556,6 @@ gst_d3d11_window_win32_change_fullscreen_mode_internal (GstD3D11WindowWin32 *
 
     swap_chain->GetContainingOutput (&output);
     output->GetDesc (&output_desc);
-    output->Release ();
 
     SetWindowPos (hwnd, HWND_TOPMOST,
         output_desc.DesktopCoordinates.left,
@@ -839,10 +841,10 @@ static void
 gst_d3d11_window_win32_disable_alt_enter (GstD3D11WindowWin32 * self,
     GstD3D11Device * device, IDXGISwapChain * swap_chain, HWND hwnd)
 {
-  IDXGIFactory1 *factory = NULL;
+  ComPtr < IDXGIFactory1 > factory;
   HRESULT hr;
 
-  hr = swap_chain->GetParent (IID_IDXGIFactory1, (void **) &factory);
+  hr = swap_chain->GetParent (IID_PPV_ARGS (&factory));
   if (!gst_d3d11_result (hr, device) || !factory) {
     GST_WARNING_OBJECT (self,
         "Cannot get parent dxgi factory for swapchain %p, hr: 0x%x",
@@ -855,8 +857,6 @@ gst_d3d11_window_win32_disable_alt_enter (GstD3D11WindowWin32 * self,
     GST_WARNING_OBJECT (self,
         "MakeWindowAssociation failure, hr: 0x%x", (guint) hr);
   }
-
-  factory->Release ();
 }
 
 static IDXGISwapChain *
@@ -869,7 +869,7 @@ create_swap_chain (GstD3D11WindowWin32 * self, GstD3D11Device * device,
   IDXGIFactory1 *factory = gst_d3d11_device_get_dxgi_factory_handle (device);
 
   gst_d3d11_device_lock (device);
-  hr = factory->CreateSwapChain ((IUnknown *) device_handle, desc, &swap_chain);
+  hr = factory->CreateSwapChain (device_handle, desc, &swap_chain);
   gst_d3d11_device_unlock (device);
 
   if (!gst_d3d11_result (hr, device)) {
@@ -891,7 +891,7 @@ create_swap_chain_for_hwnd (GstD3D11WindowWin32 * self, GstD3D11Device * device,
   IDXGISwapChain1 *swap_chain = NULL;
   ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
   IDXGIFactory1 *factory = gst_d3d11_device_get_dxgi_factory_handle (device);
-  IDXGIFactory2 *factory2 = NULL;
+  ComPtr < IDXGIFactory2 > factory2;
 
   hr = factory->QueryInterface (IID_PPV_ARGS (&factory2));
   if (!gst_d3d11_result (hr, device)) {
@@ -900,9 +900,8 @@ create_swap_chain_for_hwnd (GstD3D11WindowWin32 * self, GstD3D11Device * device,
   }
 
   gst_d3d11_device_lock (device);
-  hr = factory2->CreateSwapChainForHwnd (
-      (IUnknown *) device_handle, hwnd, desc, fullscreen_desc,
-      output, &swap_chain);
+  hr = factory2->CreateSwapChainForHwnd (device_handle, hwnd, desc,
+      fullscreen_desc, output, &swap_chain);
   gst_d3d11_device_unlock (device);
 
   if (!gst_d3d11_result (hr, device)) {
@@ -910,8 +909,6 @@ create_swap_chain_for_hwnd (GstD3D11WindowWin32 * self, GstD3D11Device * device,
         (guint) hr);
     swap_chain = NULL;
   }
-
-  factory2->Release ();
 
   return swap_chain;
 }
@@ -951,8 +948,7 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
     desc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
     desc1.Flags = swapchain_flags;
 
-    new_swapchain = (IDXGISwapChain *)
-        create_swap_chain_for_hwnd (self, device,
+    new_swapchain = create_swap_chain_for_hwnd (self, device,
         self->internal_hwnd, &desc1, NULL, NULL);
 
     if (!new_swapchain) {
