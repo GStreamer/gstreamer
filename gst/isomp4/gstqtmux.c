@@ -5740,8 +5740,17 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
 
   if (g_strcmp0 (name, "video/x-h264") == 0 ||
       g_strcmp0 (name, "video/x-h265") == 0) {
-    /* we support muxing multiple codec_data structures */
+    /* We support muxing multiple codec_data structures, and the new SPS
+     * will contain updated tier / level / profiles, which means we do
+     * not need to fail renegotiation when those change.
+     */
     if (g_strcmp0 (g_quark_to_string (field_id), "codec_data") == 0) {
+      return TRUE;
+    } else if (g_strcmp0 (g_quark_to_string (field_id), "tier") == 0) {
+      return TRUE;
+    } else if (g_strcmp0 (g_quark_to_string (field_id), "level") == 0) {
+      return TRUE;
+    } else if (g_strcmp0 (g_quark_to_string (field_id), "profile") == 0) {
       return TRUE;
     }
   }
