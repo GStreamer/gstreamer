@@ -26,6 +26,7 @@ G_BEGIN_DECLS
 
 gboolean              gst_va_vpp_register                 (GstPlugin * plugin,
                                                            GstVaDevice * device,
+							   gboolean has_colorbalance,
                                                            guint rank);
 
 G_END_DECLS

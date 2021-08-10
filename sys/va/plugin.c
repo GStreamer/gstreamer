@@ -27,15 +27,16 @@
 #include "config.h"
 #endif
 
+#include "gstvaav1dec.h"
 #include "gstvacaps.h"
 #include "gstvadevice.h"
+#include "gstvafilter.h"
 #include "gstvah264dec.h"
 #include "gstvah265dec.h"
 #include "gstvampeg2dec.h"
 #include "gstvaprofile.h"
 #include "gstvavp8dec.h"
 #include "gstvavp9dec.h"
-#include "gstvaav1dec.h"
 #include "gstvavpp.h"
 
 #define GST_CAT_DEFAULT gstva_debug
@@ -188,7 +189,22 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
 static void
 plugin_register_vpp (GstPlugin * plugin, GstVaDevice * device)
 {
-  if (!gst_va_vpp_register (plugin, device, GST_RANK_NONE))
+  GstVaFilter *filter;
+  gboolean has_colorbalance;
+
+  has_colorbalance = FALSE;
+  filter = gst_va_filter_new (device->display);
+  if (gst_va_filter_open (filter)) {
+    has_colorbalance =
+        gst_va_filter_has_filter (filter, VAProcFilterColorBalance);
+  } else {
+    GST_WARNING ("Failed open VA filter");
+    gst_object_unref (filter);
+    return;
+  }
+  gst_object_unref (filter);
+
+  if (!gst_va_vpp_register (plugin, device, has_colorbalance, GST_RANK_NONE))
     GST_WARNING ("Failed to register postproc: %s", device->render_device_path);
 }
 

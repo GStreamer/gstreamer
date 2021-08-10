@@ -1893,7 +1893,8 @@ _register_debug_category (gpointer data)
 }
 
 gboolean
-gst_va_vpp_register (GstPlugin * plugin, GstVaDevice * device, guint rank)
+gst_va_vpp_register (GstPlugin * plugin, GstVaDevice * device,
+    gboolean has_colorbalance, guint rank)
 {
   static GOnce debug_once = G_ONCE_INIT;
   GType type;
@@ -1940,14 +1941,9 @@ gst_va_vpp_register (GstPlugin * plugin, GstVaDevice * device, guint rank)
   type = g_type_register_static (GST_TYPE_VA_BASE_TRANSFORM, type_name,
       &type_info, 0);
 
-  {
-    GstVaFilter *filter = gst_va_filter_new (device->display);
-    if (gst_va_filter_open (filter)
-        && gst_va_filter_has_filter (filter, VAProcFilterColorBalance)) {
-      const GInterfaceInfo info = { gst_va_vpp_colorbalance_init, NULL, NULL };
-      g_type_add_interface_static (type, GST_TYPE_COLOR_BALANCE, &info);
-    }
-    gst_object_unref (filter);
+  if (has_colorbalance) {
+    const GInterfaceInfo info = { gst_va_vpp_colorbalance_init, NULL, NULL };
+    g_type_add_interface_static (type, GST_TYPE_COLOR_BALANCE, &info);
   }
 
   ret = gst_element_register (plugin, feature_name, rank, type);
