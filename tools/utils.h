@@ -51,6 +51,7 @@ typedef struct
 
   gboolean ignore_eos;
   gboolean interactive;
+  gboolean forward_tags;
 } GESLauncherParsedOptions;
 
 gchar * sanitize_timeline_description (gchar **args, GESLauncherParsedOptions *opts);

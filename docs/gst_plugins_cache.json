@@ -139,6 +139,18 @@
                     }
                 },
                 "properties": {
+                    "drop-tags": {
+                        "blurb": "Whether the composition should drop tags from its children",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "id": {
                         "blurb": "The stream-id of the composition",
                         "conditionally-available": false,

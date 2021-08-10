@@ -357,6 +357,39 @@ _set_restriction_caps (GESTimeline * timeline, GESLauncherParsedOptions * opts)
 }
 
 static void
+_set_track_forward_tags (const GValue * item, gpointer unused)
+{
+  GstElement *comp = g_value_get_object (item);
+
+  g_object_set (comp, "drop-tags", FALSE, NULL);
+}
+
+static void
+_set_tracks_forward_tags (GESTimeline * timeline,
+    GESLauncherParsedOptions * opts)
+{
+  GList *tmp, *tracks;
+
+  if (!opts->forward_tags)
+    return;
+
+  tracks = ges_timeline_get_tracks (timeline);
+
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    GstIterator *it =
+        gst_bin_iterate_all_by_element_factory_name (GST_BIN (tmp->data),
+        "nlecomposition");
+
+    gst_iterator_foreach (it,
+        (GstIteratorForeachFunction) _set_track_forward_tags, NULL);
+    gst_iterator_free (it);
+  }
+
+  g_list_free_full (tracks, gst_object_unref);
+
+}
+
+static void
 _check_has_audio_video (GESLauncher * self, gint * n_audio, gint * n_video)
 {
   GList *tmp, *tracks = ges_timeline_get_tracks (self->priv->timeline);
@@ -547,8 +580,8 @@ _set_rendering_details (GESLauncher * self)
   }
 
   proj =
-      GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->
-              priv->timeline)));
+      GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->priv->
+              timeline)));
 
   /* Setup profile/encoding if needed */
   if (opts->outputuri) {
@@ -747,6 +780,8 @@ retry:
   } else {
     _set_restriction_caps (timeline, opts);
   }
+
+  _set_tracks_forward_tags (timeline, opts);
 
   return TRUE;
 }
@@ -987,8 +1022,8 @@ _save_timeline (GESLauncher * self)
   if (opts->embed_nesteds) {
     GList *tmp, *assets;
     GESProject *proj =
-        GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->priv->
-                timeline)));
+        GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->
+                priv->timeline)));
 
     assets = ges_project_list_assets (proj, GES_TYPE_URI_CLIP);
     for (tmp = assets; tmp; tmp = tmp->next) {
@@ -1239,6 +1274,9 @@ ges_launcher_get_rendering_option_group (GESLauncherParsedOptions * opts)
           "of the rendered output. This will have no effect if no outputuri "
           "has been specified.",
         "<clip-name>"},
+    {"forward-tags", 0, 0, G_OPTION_ARG_NONE, &opts->forward_tags,
+          "Forward tags from input files to the output",
+        NULL},
     {"smart-rendering", 0, 0, G_OPTION_ARG_NONE, &opts->smartrender,
           "Avoid reencoding when rendering. This option implies --disable-mixing.",
         NULL},

@@ -50,8 +50,11 @@ enum
 {
   PROP_0,
   PROP_ID,
+  PROP_DROP_TAGS,
   PROP_LAST,
 };
+
+#define DEFAULT_DROP_TAGS TRUE
 
 /* Properties from NleObject */
 enum
@@ -204,7 +207,9 @@ struct _NleCompositionPrivate
 
   guint seek_seqnum;
 
+  /* Both protected with object lock */
   gchar *id;
+  gboolean drop_tags;
 };
 
 #define ACTION_CALLBACK(__action) (((GCClosure*) (__action))->callback)
@@ -1041,6 +1046,11 @@ nle_composition_get_property (GObject * object, guint property_id,
       g_value_set_string (value, comp->priv->id);
       GST_OBJECT_UNLOCK (comp);
       break;
+    case PROP_DROP_TAGS:
+      GST_OBJECT_LOCK (comp);
+      g_value_set_boolean (value, comp->priv->drop_tags);
+      GST_OBJECT_UNLOCK (comp);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (comp, property_id, pspec);
   }
@@ -1057,6 +1067,11 @@ nle_composition_set_property (GObject * object, guint property_id,
       GST_OBJECT_LOCK (comp);
       g_free (comp->priv->id);
       comp->priv->id = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (comp);
+      break;
+    case PROP_DROP_TAGS:
+      GST_OBJECT_LOCK (comp);
+      comp->priv->drop_tags = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (comp);
       break;
     default:
@@ -1114,6 +1129,20 @@ nle_composition_class_init (NleCompositionClass * klass)
       g_param_spec_string ("id", "Id", "The stream-id of the composition",
       NULL,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT);
+
+  /**
+   * NleComposition:drop-tags:
+   *
+   * Whether the composition should drop tags from its children
+   *
+   * Since: 1.20
+   */
+  properties[PROP_DROP_TAGS] =
+      g_param_spec_boolean ("drop-tags", "Drop tags",
+      "Whether the composition should drop tags from its children",
+      DEFAULT_DROP_TAGS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT |
+      GST_PARAM_MUTABLE_PLAYING);
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   _signals[COMMITED_SIGNAL] =
@@ -1168,6 +1197,7 @@ nle_composition_init (NleComposition * comp)
 
   priv->id = gst_pad_create_stream_id (NLE_OBJECT_SRC (comp),
       GST_ELEMENT (comp), NULL);
+  priv->drop_tags = DEFAULT_DROP_TAGS;
   priv->nle_event_pad_func = GST_PAD_EVENTFUNC (NLE_OBJECT_SRC (comp));
   gst_pad_set_event_function (NLE_OBJECT_SRC (comp),
       GST_DEBUG_FUNCPTR (nle_composition_event_handler));
@@ -1490,7 +1520,10 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
       break;
     case GST_EVENT_TAG:
       GST_DEBUG_OBJECT (comp, "Dropping tag: %" GST_PTR_FORMAT, info->data);
-      retval = GST_PAD_PROBE_DROP;
+      GST_OBJECT_LOCK (comp);
+      if (comp->priv->drop_tags)
+        retval = GST_PAD_PROBE_DROP;
+      GST_OBJECT_UNLOCK (comp);
       break;
     case GST_EVENT_EOS:
     {
