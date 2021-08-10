@@ -86,32 +86,28 @@ static gchar **_plugin_loading_whitelist;       /* NULL */
 /* static variables for segfault handling of plugin loading */
 static char *_gst_plugin_fault_handler_filename = NULL;
 
-/* list of valid licenses.
- * One of these must be specified or the plugin won't be loaded
- * Please file a bug to request any additional license be added.
- *
- * GPL: http://www.gnu.org/copyleft/gpl.html
- * LGPL: http://www.gnu.org/copyleft/lesser.html
- * QPL: http://www.trolltech.com/licenses/qpl.html
- * MPL: http://www.opensource.org/licenses/mozilla1.1.php
- * MIT/X11: http://www.opensource.org/licenses/mit-license.php
+/* List of known licenses:
+ * GPL: https://opensource.org/licenses/gpl-license
+ * LGPL: https://opensource.org/licenses/lgpl-license
+ * QPL: https://opensource.org/licenses/QPL-1.0
+ * MPL: https://opensource.org/licenses/MPL-1.1
+ * MPL-2.0: https://opensource.org/licenses/MPL-2.0
+ * MIT/X11: https://opensource.org/licenses/MIT
  * 3-clause BSD: https://opensource.org/licenses/BSD-3-Clause
  * Zero-Clause BSD: https://opensource.org/licenses/0BSD
+ * FIXME: update to use SPDX identifiers, or just remove entirely
  */
-static const gchar valid_licenses[] = "LGPL\000"        /* GNU Lesser General Public License */
+static const gchar known_licenses[] = "LGPL\000"        /* GNU Lesser General Public License */
     "GPL\000"                   /* GNU General Public License */
     "QPL\000"                   /* Trolltech Qt Public License */
     "GPL/QPL\000"               /* Combi-license of GPL + QPL */
     "MPL\000"                   /* MPL 1.1 license */
+    "MPL-2.0\000"               /* MPL 2.0 license */
     "BSD\000"                   /* 3-clause BSD license */
     "MIT/X11\000"               /* MIT/X11 license */
     "0BSD\000"                  /* Zero-Clause BSD */
     "Proprietary\000"           /* Proprietary license */
     GST_LICENSE_UNKNOWN;        /* some other license */
-
-static const guint8 valid_licenses_idx[] = { 0, 5, 9, 13, 21, 25, 29, 37, 42,
-  54
-};
 
 static GstPlugin *gst_plugin_register_func (GstPlugin * plugin,
     const GstPluginDesc * desc, gpointer user_data);
@@ -462,12 +458,13 @@ priv_gst_plugin_loading_get_whitelist_hash (void)
 static gboolean
 gst_plugin_check_license (const gchar * license)
 {
-  gint i;
+  const gchar *l, *end = known_licenses + sizeof (known_licenses);
 
-  for (i = 0; i < G_N_ELEMENTS (valid_licenses_idx); ++i) {
-    if (strcmp (license, valid_licenses + valid_licenses_idx[i]) == 0)
+  for (l = known_licenses; l < end; l += strlen (l) + 1) {
+    if (strcmp (license, l) == 0)
       return TRUE;
   }
+
   return FALSE;
 }
 
@@ -505,9 +502,9 @@ gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc,
 
   if (!gst_plugin_check_license (desc->license)) {
     if (GST_CAT_DEFAULT)
-      GST_WARNING ("plugin \"%s\" has invalid license \"%s\", not loading",
+      GST_WARNING ("plugin \"%s\" has unknown license \"%s\"",
           GST_STR_NULL (plugin->filename), desc->license);
-    return NULL;
+    /* We still want to load the plugin, it's not our job to validate licenses */
   }
 
   if (GST_CAT_DEFAULT)
