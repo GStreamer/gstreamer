@@ -1178,7 +1178,6 @@ _capsfilter_force_format (GstPad * pad,
     GParamSpec * arg G_GNUC_UNUSED, StreamGroup * sgroup)
 {
   GstCaps *caps;
-  GstStructure *structure;
   GstElement *parent =
       GST_ELEMENT_CAST (gst_object_get_parent (GST_OBJECT (pad)));
 
@@ -1190,15 +1189,37 @@ _capsfilter_force_format (GstPad * pad,
   g_object_get (pad, "caps", &caps, NULL);
   caps = gst_caps_copy (caps);
 
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_remove_field (structure, "streamheader");
   GST_INFO_OBJECT (pad, "Forcing caps to %" GST_PTR_FORMAT, caps);
   if (parent == sgroup->outfilter || parent == sgroup->smart_capsfilter) {
     /* outfilter and the smart encoder internal capsfilter need to always be
      * in sync so the caps match between the two */
     if (sgroup->smart_capsfilter) {
-      gst_structure_remove_field (structure, "codec_data");
-      /* The smart encoder handles codec_data itself */
+      GstStructure *structure = gst_caps_get_structure (caps, 0);
+
+      /* Pick a stream format that allows for in-band SPS updates, and remove
+       * restrictions on fields that can be updated by codec_data or in-band SPS
+       */
+      if (gst_structure_has_name (structure, "video/x-h264")) {
+        gst_structure_set (structure, "stream-format",
+            G_TYPE_STRING, "avc3", NULL);
+
+        gst_structure_remove_fields (structure, "codec_data", "profile",
+            "level", NULL);
+      } else if (gst_structure_has_name (structure, "video/x-h265")) {
+        gst_structure_set (structure, "stream-format",
+            G_TYPE_STRING, "hev1", NULL);
+
+        gst_structure_remove_fields (structure, "codec_data", "tier", "profile",
+            "level", NULL);
+      }
+
+      /* For VP8 / VP9, streamheader in the caps is informative, and
+       * not actually used by muxers, we can allow it to change */
+      if (gst_structure_has_name (structure, "video/x-vp8") ||
+          gst_structure_has_name (structure, "video/x-vp9")) {
+        gst_structure_remove_field (structure, "streamheader");
+      }
+
       g_object_set (sgroup->smart_capsfilter, "caps", caps, NULL);
 
       g_signal_handler_disconnect (sgroup->smart_capsfilter->sinkpads->data,
@@ -1293,10 +1314,12 @@ setup_smart_encoder (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
   GstElement *sinkelement, *convert = NULL;
   GstElement *smartencoder = g_object_new (GST_TYPE_SMART_ENCODER, NULL);
   GstPad *srcpad = gst_element_get_static_pad (smartencoder, "src");
-  GstCaps *format = gst_encoding_profile_get_format (sprof);
+  GstCaps *format =
+      gst_caps_make_writable (gst_encoding_profile_get_format (sprof));
   GstCaps *tmpcaps = gst_pad_query_caps (srcpad, NULL);
   const gboolean native_video =
       ! !(ebin->flags & GST_ENCODEBIN_FLAG_NO_VIDEO_CONVERSION);
+  GstStructure *structure = gst_caps_get_structure (format, 0);
 
   /* Check if stream format is compatible */
   if (!gst_caps_can_intersect (tmpcaps, format)) {
@@ -1315,6 +1338,29 @@ setup_smart_encoder (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
   parser = _get_parser (ebin, sprof, encoder);
   sgroup->smart_capsfilter = gst_element_factory_make ("capsfilter", NULL);
   reencoder_bin = gst_bin_new (NULL);
+
+  /* Pick a stream format that allows for in-band SPS updates, and remove
+   * restrictions on fields that can be updated by codec_data or in-band SPS
+   */
+  if (gst_structure_has_name (structure, "video/x-h264")) {
+    gst_structure_set (structure, "stream-format", G_TYPE_STRING, "avc3", NULL);
+
+    gst_structure_remove_fields (structure, "codec_data", "profile",
+        "level", NULL);
+  } else if (gst_structure_has_name (structure, "video/x-h265")) {
+    gst_structure_set (structure, "stream-format", G_TYPE_STRING, "hev1", NULL);
+
+    gst_structure_remove_fields (structure, "codec_data", "tier", "profile",
+        "level", NULL);
+  }
+
+  /* For VP8 / VP9, streamheader in the caps is informative, and
+   * not actually used by muxers, we can allow it to change */
+  if (gst_structure_has_name (structure, "video/x-vp8") ||
+      gst_structure_has_name (structure, "video/x-vp9")) {
+    gst_structure_remove_field (structure, "streamheader");
+  }
+
   g_object_set (sgroup->smart_capsfilter, "caps", format, NULL);
 
   gst_bin_add_many (GST_BIN (reencoder_bin),
@@ -1564,8 +1610,8 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
 
   /* Expose input queue or identity sink pad as ghostpad */
   sinkpad =
-      gst_element_get_static_pad (sgroup->identity ? sgroup->
-      identity : sgroup->inqueue, "sink");
+      gst_element_get_static_pad (sgroup->identity ? sgroup->identity : sgroup->
+      inqueue, "sink");
   if (sinkpadname == NULL) {
     gchar *pname =
         g_strdup_printf ("%s_%u", gst_encoding_profile_get_type_nick (sprof),

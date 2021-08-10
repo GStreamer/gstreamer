@@ -45,7 +45,8 @@ struct _GstSmartEncoder {
   GstSegment internal_segment;
   GstClockTime last_dts;
 
-  GstCaps *last_caps;
+  GstCaps *original_caps;
+  gboolean push_original_caps;
   GstEvent *segment_event;
   GstEvent *stream_start_event;
 
