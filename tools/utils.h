@@ -38,6 +38,7 @@ typedef struct
   gchar *format;
   gchar *outputuri;
   gchar *encoding_profile;
+  gchar *profile_from;
   gchar *videosink;
   gchar *audiosink;
   gboolean list_transitions;

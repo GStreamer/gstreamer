@@ -388,24 +388,92 @@ sort_encoding_profiles (gconstpointer a, gconstpointer b)
   return 1;
 }
 
-static GstEncodingProfile *
-get_smart_profile (GESLauncher * self)
+static GList *
+_timeline_assets (GESLauncher * self)
 {
-  gint n_audio, n_video;
-  GList *tmp, *assets = NULL, *possible_profiles = NULL;
-  GstEncodingProfile *res = NULL;
+  GList *tmp, *assets = NULL;
 
-  _check_has_audio_video (self, &n_audio, &n_video);
   for (tmp = self->priv->timeline->layers; tmp; tmp = tmp->next) {
     GList *tclip, *clips = ges_layer_get_clips (tmp->data);
 
     for (tclip = clips; tclip; tclip = tclip->next) {
-      if (GES_IS_URI_CLIP (tclip->data))
+      if (GES_IS_URI_CLIP (tclip->data)) {
         assets =
             g_list_append (assets, ges_extractable_get_asset (tclip->data));
+      }
     }
     g_list_free_full (clips, gst_object_unref);
   }
+
+  return assets;
+}
+
+static GESAsset *
+_asset_for_named_clip (GESLauncher * self, const gchar * name)
+{
+  GList *tmp;
+  GESAsset *ret = NULL;
+
+  for (tmp = self->priv->timeline->layers; tmp; tmp = tmp->next) {
+    GList *tclip, *clips = ges_layer_get_clips (tmp->data);
+
+    for (tclip = clips; tclip; tclip = tclip->next) {
+      if (GES_IS_URI_CLIP (tclip->data) &&
+          !g_strcmp0 (name, ges_timeline_element_get_name (tclip->data))) {
+        ret = ges_extractable_get_asset (tclip->data);
+        break;
+      }
+    }
+
+    g_list_free_full (clips, gst_object_unref);
+
+    if (ret)
+      break;
+  }
+
+  return ret;
+}
+
+static GstEncodingProfile *
+_get_profile_from (GESLauncher * self)
+{
+  GESAsset *asset =
+      _asset_for_named_clip (self, self->priv->parsed_options.profile_from);
+  GstDiscovererInfo *info;
+  GstEncodingProfile *prof;
+
+  g_assert (asset);
+
+  info = ges_uri_clip_asset_get_info (GES_URI_CLIP_ASSET (asset));
+  prof = gst_encoding_profile_from_discoverer (info);
+
+  return prof;
+}
+
+static GstEncodingProfile *
+get_smart_profile (GESLauncher * self)
+{
+  gint n_audio, n_video;
+  GList *tmp, *assets, *possible_profiles = NULL;
+  GstEncodingProfile *res = NULL;
+
+  if (self->priv->parsed_options.profile_from) {
+    GESAsset *asset =
+        _asset_for_named_clip (self, self->priv->parsed_options.profile_from);
+    GstDiscovererInfo *info;
+    GstEncodingProfile *prof;
+
+    g_assert (asset);
+
+    info = ges_uri_clip_asset_get_info (GES_URI_CLIP_ASSET (asset));
+    prof = gst_encoding_profile_from_discoverer (info);
+
+    return prof;
+  }
+
+  _check_has_audio_video (self, &n_audio, &n_video);
+
+  assets = _timeline_assets (self);
 
   for (tmp = assets; tmp; tmp = tmp->next) {
     GESAsset *asset = tmp->data;
@@ -503,7 +571,9 @@ _set_rendering_details (GESLauncher * self)
 
     if (!prof) {
       if (opts->format == NULL) {
-        if (opts->smartrender)
+        if (opts->profile_from)
+          prof = _get_profile_from (self);
+        else if (opts->smartrender)
           prof = get_smart_profile (self);
         if (prof)
           smart_profile = TRUE;
@@ -591,6 +661,46 @@ _timeline_set_user_options (GESLauncher * self, GESTimeline * timeline,
   gboolean has_audio = FALSE, has_video = FALSE;
   GESLauncherParsedOptions *opts = &self->priv->parsed_options;
 
+  if (self->priv->parsed_options.profile_from) {
+    GList *tmp, *tracks;
+    GList *audio_streams, *video_streams;
+    GESAsset *asset =
+        _asset_for_named_clip (self, self->priv->parsed_options.profile_from);
+    GstDiscovererInfo *info;
+    guint i;
+
+    if (!asset) {
+      ges_printerr
+          ("\nERROR: can't create profile from named clip, no such clip %s\n\n",
+          self->priv->parsed_options.profile_from);
+      return FALSE;
+    }
+
+    tracks = ges_timeline_get_tracks (self->priv->timeline);
+
+    for (tmp = tracks; tmp; tmp = tmp->next) {
+      ges_timeline_remove_track (timeline, tmp->data);
+    }
+
+    g_list_free_full (tracks, gst_object_unref);
+
+    info = ges_uri_clip_asset_get_info (GES_URI_CLIP_ASSET (asset));
+
+    audio_streams = gst_discoverer_info_get_audio_streams (info);
+    video_streams = gst_discoverer_info_get_video_streams (info);
+
+    for (i = 0; i < g_list_length (audio_streams); i++) {
+      ges_timeline_add_track (timeline, GES_TRACK (ges_audio_track_new ()));
+    }
+
+    for (i = 0; i < g_list_length (video_streams); i++) {
+      ges_timeline_add_track (timeline, GES_TRACK (ges_video_track_new ()));
+    }
+
+    gst_discoverer_stream_info_list_free (audio_streams);
+    gst_discoverer_stream_info_list_free (video_streams);
+  }
+
 retry:
   for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
 
@@ -600,13 +710,17 @@ retry:
       has_audio = TRUE;
 
     _track_set_mixing (tmp->data, opts);
-    if (!(GES_TRACK (tmp->data)->type & opts->track_types)) {
-      ges_timeline_remove_track (timeline, tmp->data);
-      goto retry;
+
+    if (!self->priv->parsed_options.profile_from) {
+      if (!(GES_TRACK (tmp->data)->type & opts->track_types)) {
+        ges_timeline_remove_track (timeline, tmp->data);
+        goto retry;
+      }
     }
   }
 
-  if ((opts->scenario || opts->testfile) && !load_path) {
+  if ((opts->scenario || opts->testfile) && !load_path
+      && !self->priv->parsed_options.profile_from) {
     if (!has_video && opts->track_types & GES_TRACK_TYPE_VIDEO) {
       trackv = GES_TRACK (ges_video_track_new ());
 
@@ -981,6 +1095,9 @@ _create_pipeline (GESLauncher * self, const gchar * serialized_timeline)
 
   self->priv->pipeline = ges_pipeline_new ();
 
+  if (opts->outputuri)
+    ges_pipeline_set_mode (self->priv->pipeline, 0);
+
   if (!_create_timeline (self, serialized_timeline, uri, opts->scenario
           || opts->testfile)) {
     GST_ERROR ("Could not create the timeline");
@@ -1117,6 +1234,11 @@ ges_launcher_get_rendering_option_group (GESLauncherParsedOptions * opts)
           "See ges-launch-1.0 help profile for more information. "
           "This will have no effect if no outputuri has been specified.",
         "<profile-name>"},
+    {"profile-from", 0, 0, G_OPTION_ARG_STRING, &opts->profile_from,
+          "Use clip with name <clip-name> to determine the topology and profile "
+          "of the rendered output. This will have no effect if no outputuri "
+          "has been specified.",
+        "<clip-name>"},
     {"smart-rendering", 0, 0, G_OPTION_ARG_NONE, &opts->smartrender,
           "Avoid reencoding when rendering. This option implies --disable-mixing.",
         NULL},
@@ -1505,6 +1627,7 @@ _finalize (GObject * object)
   g_free (opts->outputuri);
   g_free (opts->format);
   g_free (opts->encoding_profile);
+  g_free (opts->profile_from);
   g_free (opts->videosink);
   g_free (opts->audiosink);
   g_free (opts->video_track_caps);
