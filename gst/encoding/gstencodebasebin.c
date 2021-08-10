@@ -1196,16 +1196,19 @@ _capsfilter_force_format (GstPad * pad,
     if (sgroup->smart_capsfilter) {
       GstStructure *structure = gst_caps_get_structure (caps, 0);
 
-      /* Pick a stream format that allows for in-band SPS updates, and remove
-       * restrictions on fields that can be updated by codec_data or in-band SPS
+      /* Pick a stream format that allows for in-band SPS updates if none
+       * specified by the user, and remove restrictions on fields that can be
+       * updated by codec_data or in-band SPS
        */
-      if (gst_structure_has_name (structure, "video/x-h264")) {
+      if (gst_structure_has_name (structure, "video/x-h264") &&
+          !gst_structure_has_field (structure, "stream_format")) {
         gst_structure_set (structure, "stream-format",
             G_TYPE_STRING, "avc3", NULL);
 
         gst_structure_remove_fields (structure, "codec_data", "profile",
             "level", NULL);
-      } else if (gst_structure_has_name (structure, "video/x-h265")) {
+      } else if (gst_structure_has_name (structure, "video/x-h265") &&
+          !gst_structure_has_field (structure, "stream_format")) {
         gst_structure_set (structure, "stream-format",
             G_TYPE_STRING, "hev1", NULL);
 
