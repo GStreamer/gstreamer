@@ -440,7 +440,8 @@ get_smart_profile (GESLauncher * self)
     gst_discoverer_stream_info_list_free (audio_streams);
     gst_discoverer_stream_info_list_free (video_streams);
   }
-  g_list_free_full (assets, gst_object_unref);
+
+  g_list_free (assets);
 
   if (possible_profiles) {
     possible_profiles = g_list_sort (possible_profiles, sort_encoding_profiles);
