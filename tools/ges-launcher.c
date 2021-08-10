@@ -1374,9 +1374,8 @@ ges_launcher_parse_options (GESLauncher * self,
           "scenarios, " "and --inspect-action-type.",
         "<scenario_name>"
     },
-    {"disable-validate", 'n', 0, G_OPTION_ARG_NONE, &opts->disable_validate,
-          "Do not run inside GstValidate.",
-        "<scenario_name>"
+    {"enable-validate", 0, 0, G_OPTION_ARG_NONE, &opts->enable_validate,
+          "Run inside GstValidate.", NULL,
     },
 #endif
     {
@@ -1386,6 +1385,7 @@ ges_launcher_parse_options (GESLauncher * self,
           G_OPTION_ARG_NONE,
           &opts->embed_nesteds,
           "Embed nested timelines when saving.",
+          NULL,
     },
     {"no-interactive", 0, G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,
           &opts->interactive,
@@ -1436,6 +1436,9 @@ ges_launcher_parse_options (GESLauncher * self,
 
   if (err)
     g_propagate_error (error, err);
+
+  opts->enable_validate |= opts->testfile || opts->scenario
+      || g_getenv ("GST_VALIDATE_SCENARIO");
 
   if (owns_ctx) {
     g_option_context_free (ctx);

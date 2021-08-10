@@ -112,7 +112,7 @@ if gstvalidate_dep.found()
     endif
 
   endforeach
-  test('simple_playback_test', ges_launch, env: env, args: ['+test-clip', 'blue', 'd=0.1', '--disable-validate', '--videosink=fakevideosink', '--audiosink=fakeaudiosink'])
+  test('simple_playback_test', ges_launch, env: env, args: ['+test-clip', 'blue', 'd=0.1', '--videosink=fakevideosink', '--audiosink=fakeaudiosink'])
 endif
 
 if build_gir

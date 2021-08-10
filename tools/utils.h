@@ -47,7 +47,7 @@ typedef struct
   gchar *video_track_caps;
   gchar *audio_track_caps;
   gboolean embed_nesteds;
-  gboolean disable_validate;
+  gboolean enable_validate;
 
   gboolean ignore_eos;
   gboolean interactive;

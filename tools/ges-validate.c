@@ -125,10 +125,7 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
 
-  if (opts->disable_validate) {
-    if (opts->scenario)
-      g_error ("Trying to run scenario: %s but validate is deactivated",
-          opts->scenario);
+  if (!opts->enable_validate) {
     opts->needs_set_state = TRUE;
     g_object_set_data (G_OBJECT (pipeline), "pposition-id",
         GUINT_TO_POINTER (g_timeout_add (200,
