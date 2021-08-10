@@ -505,9 +505,9 @@ gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc,
 
   if (!gst_plugin_check_license (desc->license)) {
     if (GST_CAT_DEFAULT)
-      GST_WARNING ("plugin \"%s\" has invalid license \"%s\", not loading",
+      GST_WARNING ("plugin \"%s\" has unknown license \"%s\"",
           GST_STR_NULL (plugin->filename), desc->license);
-    return NULL;
+    /* We still want to load the plugin, it's not our job to validate licenses */
   }
 
   if (GST_CAT_DEFAULT)
