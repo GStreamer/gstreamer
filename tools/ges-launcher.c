@@ -692,11 +692,15 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
     self->priv->seenerrors = TRUE;
     g_application_quit (G_APPLICATION (self));
   }
-  _timeline_set_user_options (self, timeline, project_uri);
-  if (project_uri) {
+
+  if (!_timeline_set_user_options (self, timeline, project_uri)) {
+    g_error ("Failed to set user options on timeline\n");
+  } else if (project_uri) {
     if (!_set_rendering_details (self))
       g_error ("Failed to setup rendering details\n");
   }
+
+  print_timeline (self->priv->timeline);
 
   g_free (project_uri);
 
@@ -947,22 +951,12 @@ _run_pipeline (GESLauncher * self)
       g_error ("Failed to setup rendering details\n");
       return FALSE;
     }
-
-    print_timeline (self->priv->timeline);
   }
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (self->priv->pipeline));
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), self);
 
-  if (!opts->load_path) {
-    if (opts->needs_set_state
-        && gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
-            GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-      g_error ("Failed to start the pipeline\n");
-      return FALSE;
-    }
-  }
   g_application_hold (G_APPLICATION (self));
 
   return TRUE;
