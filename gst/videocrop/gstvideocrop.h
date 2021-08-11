@@ -33,7 +33,10 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_CROP))
 #define GST_IS_VIDEO_CROP_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_CROP))
-    typedef enum
+
+GST_ELEMENT_REGISTER_DECLARE (videocrop);
+
+typedef enum
 {
   /* RGB (+ variants), ARGB (+ variants), AYUV, GRAY */
   VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE = 0,

@@ -61,13 +61,14 @@
 #include <gst/video/video.h>
 
 #include "gstvideocrop.h"
-#include "gstvideocropelements.h"
 #include "gstaspectratiocrop.h"
 /* include private header which contains the supported formats */
 #include "gstvideocrop-private.h"
 
 #include <string.h>
 
+GST_DEBUG_CATEGORY_STATIC (videocrop_debug);
+#define GST_CAT_DEFAULT videocrop_debug
 
 enum
 {
@@ -92,8 +93,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_video_crop_parent_class parent_class
 G_DEFINE_TYPE (GstVideoCrop, gst_video_crop, GST_TYPE_VIDEO_FILTER);
-GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (videocrop, "videocrop", GST_RANK_NONE,
-    GST_TYPE_VIDEO_CROP, videocrop_element_init (plugin));
+GST_ELEMENT_REGISTER_DEFINE (videocrop, "videocrop", GST_RANK_NONE,
+    GST_TYPE_VIDEO_CROP);
 
 static void gst_video_crop_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -231,6 +232,8 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
 static void
 gst_video_crop_init (GstVideoCrop * vcrop)
 {
+  GST_DEBUG_CATEGORY_INIT (videocrop_debug, "videocrop", 0, "videocrop");
+
   vcrop->crop_right = 0;
   vcrop->crop_left = 0;
   vcrop->crop_top = 0;

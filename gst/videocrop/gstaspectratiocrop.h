@@ -35,6 +35,8 @@ G_BEGIN_DECLS
 #define GST_IS_ASPECT_RATIO_CROP_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ASPECT_RATIO_CROP))
 
+GST_ELEMENT_REGISTER_DECLARE (aspectratiocrop);
+
 typedef struct _GstAspectRatioCrop GstAspectRatioCrop;
 typedef struct _GstAspectRatioCropClass GstAspectRatioCropClass;
 

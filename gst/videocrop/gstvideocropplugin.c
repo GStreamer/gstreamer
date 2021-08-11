@@ -22,7 +22,8 @@
 #include "config.h"
 #endif
 
-#include "gstvideocropelements.h"
+#include "gstaspectratiocrop.h"
+#include "gstvideocrop.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
