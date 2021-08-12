@@ -1218,7 +1218,51 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
         cr_h = GST_ROUND_UP_2 (cr_h);
       info->size = info->offset[1] + info->stride[0] * cr_h;
       break;
+    case GST_VIDEO_FORMAT_NV12_8L128:
+    {
+      gint ws = GST_VIDEO_FORMAT_INFO_TILE_WS (info->finfo);
+      gint hs = GST_VIDEO_FORMAT_INFO_TILE_HS (info->finfo);
+      gint ALIGN_W = 1 << ws;
+      gint ALIGN_H = 1 << hs;
 
+      if (GST_VIDEO_INFO_IS_INTERLACED (info))
+        ALIGN_H = (ALIGN_H << 1);
+      info->stride[0] =
+          GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_N (width, ALIGN_W) >> ws,
+          GST_ROUND_UP_N (height, ALIGN_H) >> hs);
+      info->stride[1] =
+          GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_N (width, ALIGN_W) >> ws,
+          GST_ROUND_UP_N (height, ALIGN_H << 1) >> (hs + 1));
+      info->offset[0] = 0;
+      info->offset[1] =
+          GST_ROUND_UP_N (width, ALIGN_W) * GST_ROUND_UP_N (height, ALIGN_H);
+      cr_h = GST_ROUND_UP_N (height, ALIGN_H << 1) / 2;
+      info->size = info->offset[1] + GST_ROUND_UP_N (width, ALIGN_W) * cr_h;
+      break;
+    }
+    case GST_VIDEO_FORMAT_NV12_10BE_8L128:
+    {
+      gint ws = GST_VIDEO_FORMAT_INFO_TILE_WS (info->finfo);
+      gint hs = GST_VIDEO_FORMAT_INFO_TILE_HS (info->finfo);
+      gint ALIGN_W = 1 << ws;
+      gint ALIGN_H = 1 << hs;
+      gint stride = GST_ROUND_UP_8 (width * 10) >> 3;
+
+      if (GST_VIDEO_INFO_IS_INTERLACED (info))
+        ALIGN_H = (ALIGN_H << 1);
+      info->stride[0] =
+          GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_N (stride, ALIGN_W) >> ws,
+          GST_ROUND_UP_N (height, ALIGN_H) >> hs);
+      info->stride[1] =
+          GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_N (stride, ALIGN_W) >> ws,
+          GST_ROUND_UP_N (height, ALIGN_H << 1) >> (hs + 1));
+      info->offset[0] = 0;
+      info->offset[1] =
+          GST_ROUND_UP_N (stride, ALIGN_W) * GST_ROUND_UP_N (height, ALIGN_H);
+      cr_h = GST_ROUND_UP_N (height, ALIGN_H << 1) / 2;
+      info->size = info->offset[1] + GST_ROUND_UP_N (stride, ALIGN_W) * cr_h;
+      break;
+    }
     case GST_VIDEO_FORMAT_ENCODED:
       break;
     case GST_VIDEO_FORMAT_UNKNOWN:

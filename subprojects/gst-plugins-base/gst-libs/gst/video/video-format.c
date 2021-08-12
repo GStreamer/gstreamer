@@ -6767,6 +6767,145 @@ pack_BGRP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   video_orc_pack_Y444 (dr, dg, db, src, width);
 }
 
+#define PACK_NV12_10BE_8L128  GST_VIDEO_FORMAT_AYUV64, unpack_NV12_10BE_8L128, 1, pack_NV12_10BE_8L128
+#define GST_SET_U8_BITS(__pdata, __val, __mask, __shift)  \
+  *(guint8 *)(__pdata) = (guint8)(((*(guint8 *)(__pdata)) & (~((__mask) << (__shift)))) | (((__val) & (__mask)) << (__shift)))
+#define GST_GET_U8_BITS(__pdata, __mask, __shift)   (((*(guint8 *)(__pdata)) >> (__shift)) & (__mask))
+
+static void
+get_tile_NV12_10BE (const gint bit_depth,
+    gint ts, gint ws, gint hs, gint ty, gint y, gint x,
+    const gpointer data, const gint stride,
+    gpointer restrict pdata[2], gint bits[2], guint16 mask[2])
+{
+  gint bit_index = bit_depth * x;
+  gint line_size = GST_VIDEO_TILE_X_TILES (stride) << ts;
+  gint tile_size = 1 << ts;
+  gint tile_width = 1 << ws;
+  gint pos[2];
+  gsize offset;
+  gint i;
+
+  pos[0] = bit_index / 8;
+  bits[0] = 8 - (bit_index % 8);
+  if (bits[0] > bit_depth)
+    bits[0] = bit_depth;
+  bits[1] = bit_depth > bits[0] ? (bit_depth - bits[0]) : 0;
+  pos[1] = bits[1] ? (pos[0] + 1) : 0;
+  mask[0] = (1 << bits[0]) - 1;
+  mask[1] = (1 << bits[1]) - 1;
+
+  for (i = 0; i < 2; i++) {
+    offset =
+        line_size * ty + tile_size * (pos[i] >> ws) + tile_width * y +
+        (pos[i] % tile_width);
+    pdata[i] = ((guint8 *) data) + offset;
+  }
+}
+
+static void
+unpack_NV12_10BE_8L128 (const GstVideoFormatInfo * info,
+    GstVideoPackFlags flags, gpointer dest,
+    const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  const gint bit_depth = 10;
+  guint16 *restrict d = dest;
+  gint ws, hs, ts;
+  gint ty, uv_ty, uv_y;
+  guint16 Y = 0, U = 0, V = 0;
+  gpointer restrict pdata[2];
+  gint bits[2];
+  guint16 mask[2];
+  int i;
+  int j;
+
+  ws = GST_VIDEO_FORMAT_INFO_TILE_WS (info);
+  hs = GST_VIDEO_FORMAT_INFO_TILE_HS (info);
+  ts = ws + hs;
+  ty = y >> hs;
+  y = y & ((1 << hs) - 1);
+  uv_ty = ty >> 1;
+  uv_y = (((ty % 2) << hs) + y) / 2;
+
+  for (i = 0; i < width; i++) {
+    j = x + i;
+
+    get_tile_NV12_10BE (bit_depth, ts, ws, hs, ty, y, j,
+        data[0], stride[0], pdata, bits, mask);
+    Y = (GST_GET_U8_BITS (pdata[0], mask[0], 0) << bits[1]) |
+        GST_GET_U8_BITS (pdata[1], mask[1], 8 - bits[1]);
+
+    if ((i == 0) && (j % 2))
+      j--;
+    if (j % 2 == 0) {
+      get_tile_NV12_10BE (bit_depth, ts, ws, hs, uv_ty, uv_y, j,
+          data[1], stride[1], pdata, bits, mask);
+      U = (GST_GET_U8_BITS (pdata[0], mask[0], 0) << bits[1]) |
+          GST_GET_U8_BITS (pdata[1], mask[1], 8 - bits[1]);
+
+      get_tile_NV12_10BE (bit_depth, ts, ws, hs, uv_ty, uv_y, j + 1,
+          data[1], stride[1], pdata, bits, mask);
+      V = (GST_GET_U8_BITS (pdata[0], mask[0], 0) << bits[1]) |
+          GST_GET_U8_BITS (pdata[1], mask[1], 8 - bits[1]);
+    }
+
+    d[0] = 0xffff;
+    d[1] = Y << 6;
+    d[2] = U << 6;
+    d[3] = V << 6;
+    d += 4;
+  }
+}
+
+static void
+pack_NV12_10BE_8L128 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  const guint16 *restrict s = src;
+  const gint bit_depth = 10;
+  gint ws, hs, ts;
+  gint ty, uv_ty, uv_y;
+  guint16 Y, U, V;
+  gpointer restrict pdata[2];
+  gint bits[2];
+  guint16 mask[2];
+  int i;
+
+  ws = GST_VIDEO_FORMAT_INFO_TILE_WS (info);
+  hs = GST_VIDEO_FORMAT_INFO_TILE_HS (info);
+  ts = ws + hs;
+  ty = y >> hs;
+  y = y & ((1 << hs) - 1);
+  uv_ty = ty >> 1;
+  uv_y = (((ty % 2) << hs) + y) / 2;
+
+  for (i = 0; i < width; i++) {
+    Y = s[i * 4 + 1] >> 6;
+    U = s[i * 4 + 2] >> 6;
+    V = s[i * 4 + 3] >> 6;
+
+    get_tile_NV12_10BE (bit_depth, ts, ws, hs, ty, y, i,
+        data[0], stride[0], pdata, bits, mask);
+    GST_SET_U8_BITS (pdata[0], Y >> bits[1], mask[0], 0);
+    GST_SET_U8_BITS (pdata[1], Y & mask[1], mask[1], 8 - bits[1]);
+
+    if ((y % 2 == 0) && (i % 2 == 0)) {
+      get_tile_NV12_10BE (bit_depth, ts, ws, hs, uv_ty, uv_y, i,
+          data[1], stride[1], pdata, bits, mask);
+      GST_SET_U8_BITS (pdata[0], U >> bits[1], mask[0], 0);
+      GST_SET_U8_BITS (pdata[1], U & mask[1], mask[1], 8 - bits[1]);
+
+      get_tile_NV12_10BE (bit_depth, ts, ws, hs, uv_ty, uv_y, i + 1,
+          data[1], stride[1], pdata, bits, mask);
+      GST_SET_U8_BITS (pdata[0], V >> bits[1], mask[0], 0);
+      GST_SET_U8_BITS (pdata[1], V & mask[1], mask[1], 8 - bits[1]);
+    }
+  }
+}
+
 typedef struct
 {
   guint32 fourcc;
@@ -6865,6 +7004,7 @@ typedef struct
 #define TILE_16x32(mode) GST_VIDEO_TILE_MODE_ ##mode, 4, 5
 #define TILE_32x32(mode) GST_VIDEO_TILE_MODE_ ##mode, 5, 5
 #define TILE_64x32(mode) GST_VIDEO_TILE_MODE_ ##mode, 6, 5
+#define TILE_8x128(mode) GST_VIDEO_TILE_MODE_ ##mode, 3, 7
 
 #define MAKE_YUV_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack ) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV, depth, pstride, plane, offs, sub, pack } }
@@ -7165,6 +7305,12 @@ static const VideoFormat formats[] = {
   MAKE_YUV_ST_FORMAT (NV12_16L32S, "raw video",
       GST_MAKE_FOURCC ('M', 'M', '2', '1'), DPTH888, PSTR122, PLANE011,
       OFFS001, SUB420, PACK_NV12_TILED, TILE_16x32 (LINEAR)),
+  MAKE_YUV_T_FORMAT (NV12_8L128, "raw video",
+      GST_MAKE_FOURCC ('N', 'A', '1', '2'), DPTH888, PSTR122, PLANE011,
+      OFFS001, SUB420, PACK_NV12_TILED, TILE_8x128 (LINEAR)),
+  MAKE_YUV_T_FORMAT (NV12_10BE_8L128, "raw video",
+      GST_MAKE_FOURCC ('N', 'T', '1', '2'), DPTH10_10_10, PSTR122, PLANE011,
+      OFFS001, SUB420, PACK_NV12_10BE_8L128, TILE_8x128 (LINEAR)),
 };
 
 static GstVideoFormat

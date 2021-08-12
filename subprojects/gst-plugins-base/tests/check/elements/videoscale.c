@@ -127,6 +127,8 @@ check_pad_template (GstPadTemplate * tmpl)
         case GST_VIDEO_FORMAT_NV12_4L4:
         case GST_VIDEO_FORMAT_NV12_32L32:
         case GST_VIDEO_FORMAT_NV12_16L32S:
+        case GST_VIDEO_FORMAT_NV12_8L128:
+        case GST_VIDEO_FORMAT_NV12_10BE_8L128:
           GST_LOG ("Ignoring lack of support for format %s", fmt_str);
           break;
         default:
