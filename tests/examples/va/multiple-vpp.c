@@ -158,15 +158,26 @@ message_handler (GstBus * bus, GstMessage * msg, gpointer data)
 }
 
 static void
-config_vpp (GstElement * vpp)
+config_simple (struct _app *app)
 {
   GParamSpec *pspec;
-  GObjectClass *g_class = G_OBJECT_GET_CLASS (vpp);
+  GObjectClass *g_class = G_OBJECT_GET_CLASS (app->vpp);
   const static gchar *props[] = { "brightness", "hue", "saturation",
     "contrast"
   };
   gfloat max;
   guint i;
+
+  if (camera && (pspec = g_object_class_find_property (g_class, "skin-tone"))) {
+    if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_BOOLEAN) {
+      g_object_set (app->vpp, "skin-tone", TRUE, NULL);
+    } else {
+      max = ((GParamSpecFloat *) pspec)->maximum;
+      g_object_set (app->vpp, "skin-tone", max, NULL);
+    }
+
+    return;
+  }
 
   for (i = 0; i < G_N_ELEMENTS (props); i++) {
     pspec = g_object_class_find_property (g_class, props[i]);
@@ -174,7 +185,7 @@ config_vpp (GstElement * vpp)
       continue;
 
     max = ((GParamSpecFloat *) pspec)->maximum;
-    g_object_set (vpp, props[i], max, NULL);
+    g_object_set (app->vpp, props[i], max, NULL);
   }
 }
 
@@ -208,7 +219,7 @@ build_pipeline (struct _app *app)
 
   app->vpp = gst_bin_get_by_name (GST_BIN (app->pipeline), "vpp");
   if (!randomcb && !randomdir && !randomsharpen && !randomcrop)
-    config_vpp (app->vpp);
+    config_simple (app);
 
   app->crop = gst_bin_get_by_name (GST_BIN (app->pipeline), "crop");
 
