@@ -884,6 +884,12 @@ fit_and_scale_cc_data (GstCCConverter * self,
     if (tc && tc->config.fps_n != 0)
       interpolate_time_code_with_framerate (self, tc, out_fps_entry->fps_n,
           out_fps_entry->fps_d, 1, 1, &self->current_output_timecode);
+
+    self->scratch_ccp_len = 0;
+    self->scratch_cea608_1_len = 0;
+    self->scratch_cea608_2_len = 0;
+    self->input_frames = 0;
+    self->output_frames = 0;
   } else {
     int input_frame_n, input_frame_d, output_frame_n, output_frame_d;
     int output_time_cmp, scale_n, scale_d, rate_cmp;
