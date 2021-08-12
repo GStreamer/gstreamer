@@ -13,18 +13,21 @@ static gboolean camera = FALSE;
 static gboolean randomcb = FALSE;
 static gboolean randomdir = FALSE;
 static gboolean randomsharpen = FALSE;
+static gboolean randomcrop = FALSE;
 
 static GOptionEntry entries[] = {
   {"num-buffers", 'n', 0, G_OPTION_ARG_INT, &num_buffers,
       "Number of buffers (<= 0 : forever)", "N"},
-  {"camera", 'c', 0, G_OPTION_ARG_NONE, &camera, "Use v4l2src as video source",
-      NULL},
+  {"camera", 'c', 0, G_OPTION_ARG_NONE, &camera,
+      "Use default v4l2src as video source", NULL},
   {"random-cb", 'r', 0, G_OPTION_ARG_NONE, &randomcb,
       "Change colorbalance randomly every second (if supported)", NULL},
   {"random-dir", 'd', 0, G_OPTION_ARG_NONE, &randomdir,
       "Change video direction randomly every second (if supported)", NULL},
   {"random-sharpen", 's', 0, G_OPTION_ARG_NONE, &randomsharpen,
-      "Change sharpen filter randombly every second (if supported)", NULL},
+      "Change sharpen filter randomly every second (if supported)", NULL},
+  {"random-crop", 'p', 0, G_OPTION_ARG_NONE, &randomcrop,
+      "Change cropping randomly every 150 miliseconds", NULL},
   {NULL},
 };
 
@@ -34,10 +37,12 @@ struct _app
   GstObject *display;
   GstElement *pipeline;
   GstElement *vpp;
-  GstElement *caps;
+  GstElement *crop;
   GMutex mutex;
 
   GstControlSource *sharpen;
+  gint right, left, top, bottom;
+  gint ldir, rdir, tdir, bdir;
 };
 
 static GstBusSyncReply
@@ -183,7 +188,7 @@ build_pipeline (struct _app *app)
   const gchar *source = camera ? "v4l2src" : "videotestsrc";
 
   g_string_printf (cmd, "%s name=src ! tee name=t "
-      "t. ! queue ! vapostproc name=vpp ! capsfilter name=caps ! "
+      "t. ! queue ! videocrop name=crop ! vapostproc name=vpp ! "
       "fpsdisplaysink video-sink=autovideosink "
       "t. ! queue ! vapostproc ! timeoverlay ! autovideosink", source);
 
@@ -202,10 +207,10 @@ build_pipeline (struct _app *app)
   }
 
   app->vpp = gst_bin_get_by_name (GST_BIN (app->pipeline), "vpp");
-  if (!randomcb && !randomdir && !randomsharpen)
+  if (!randomcb && !randomdir && !randomsharpen && !randomcrop)
     config_vpp (app->vpp);
 
-  app->caps = gst_bin_get_by_name (GST_BIN (app->pipeline), "caps");
+  app->crop = gst_bin_get_by_name (GST_BIN (app->pipeline), "crop");
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (app->pipeline));
   gst_bus_set_sync_handler (bus, context_handler, app, NULL);
@@ -309,6 +314,41 @@ change_sharpen_randomly (gpointer data)
 }
 
 static gboolean
+change_crop_randomly (gpointer data)
+{
+  struct _app *app = data;
+
+  g_object_set (app->crop, "bottom", app->bottom, "top", app->top, "left",
+      app->left, "right", app->right, NULL);
+
+  app->top += app->tdir;
+  if (app->top >= 80)
+    app->tdir = -10;
+  else if (app->top < 10)
+    app->tdir = 10;
+
+  app->bottom += app->bdir;
+  if (app->bottom >= 60)
+    app->bdir = -10;
+  else if (app->bottom < 10)
+    app->bdir = 10;
+
+  app->left += app->ldir;
+  if (app->left >= 100)
+    app->ldir = -10;
+  else if (app->left < 10)
+    app->ldir = 10;
+
+  app->right += app->rdir;
+  if (app->right >= 80)
+    app->rdir = -10;
+  else if (app->right < 10)
+    app->rdir = 10;
+
+  return G_SOURCE_CONTINUE;
+}
+
+static gboolean
 parse_arguments (int *argc, char ***argv)
 {
   GOptionContext *ctxt;
@@ -368,6 +408,11 @@ main (int argc, char **argv)
     g_timeout_add_seconds (1, change_sharpen_randomly, &app);
   }
 
+  if (randomcrop) {
+    app.bdir = app.ldir = app.rdir = app.tdir = 10;
+    g_timeout_add (150, change_crop_randomly, &app);
+  }
+
   gst_element_set_state (app.pipeline, GST_STATE_PLAYING);
 
   g_main_loop_run (app.loop);
@@ -382,10 +427,10 @@ main (int argc, char **argv)
 
   ret = EXIT_SUCCESS;
 
-  gst_clear_object (&app.caps);
   gst_clear_object (&app.vpp);
   gst_clear_object (&app.pipeline);
   gst_clear_object (&app.sharpen);
+  gst_clear_object (&app.crop);
 
 gst_failed:
   g_mutex_clear (&app.mutex);
