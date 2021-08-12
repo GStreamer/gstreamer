@@ -116,6 +116,7 @@ struct _GstMatroskaMux {
 
   /* earliest timestamp (time, ns) if offsetting to zero */
   gboolean       offset_to_zero;
+  guint64        cluster_timestamp_offset;
   guint64        earliest_time;
   /* length, position (time, ns) */
   guint64        duration;

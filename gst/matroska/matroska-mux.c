@@ -76,6 +76,7 @@ enum
   PROP_MAX_CLUSTER_DURATION,
   PROP_OFFSET_TO_ZERO,
   PROP_CREATION_TIME,
+  PROP_CLUSTER_TIMESTAMP_OFFSET,
 };
 
 #define  DEFAULT_DOCTYPE_VERSION         2
@@ -86,6 +87,7 @@ enum
 #define  DEFAULT_MIN_CLUSTER_DURATION    500 * GST_MSECOND
 #define  DEFAULT_MAX_CLUSTER_DURATION    65535 * GST_MSECOND
 #define  DEFAULT_OFFSET_TO_ZERO          FALSE
+#define  DEFAULT_CLUSTER_TIMESTAMP_OFFSET 0
 
 /* WAVEFORMATEX is gst_riff_strf_auds + an extra guint16 extension size */
 #define WAVEFORMATEX_SIZE  (2 + sizeof (gst_riff_strf_auds))
@@ -380,6 +382,20 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
           " NULL means that the current time will be used.",
           G_TYPE_DATE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMatroskaMux:cluster-timestamp-offset:
+   *
+   * An offset to add to all clusters/blocks (in nanoseconds)
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_CLUSTER_TIMESTAMP_OFFSET,
+      g_param_spec_uint64 ("cluster-timestamp-offset",
+          "Cluster timestamp offset",
+          "An offset to add to all clusters/blocks (in nanoseconds)", 0,
+          G_MAXUINT64, DEFAULT_CLUSTER_TIMESTAMP_OFFSET,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_change_state);
   gstelement_class->request_new_pad =
@@ -508,6 +524,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux, gpointer g_class)
   mux->time_scale = DEFAULT_TIMECODESCALE;
   mux->min_cluster_duration = DEFAULT_MIN_CLUSTER_DURATION;
   mux->max_cluster_duration = DEFAULT_MAX_CLUSTER_DURATION;
+  mux->cluster_timestamp_offset = DEFAULT_CLUSTER_TIMESTAMP_OFFSET;
 
   /* initialize internal variables */
   mux->index = NULL;
@@ -3915,6 +3932,10 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     }
   }
 
+  /* From this point on we use the buffer_timestamp to do cluster and other
+   * related arithmetic, so apply the timestamp offset if we have one */
+  buffer_timestamp += mux->cluster_timestamp_offset;
+
   is_audio_only = (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_AUDIO) &&
       (mux->num_streams == 1);
   is_min_duration_reached = (mux->min_cluster_duration == 0
@@ -4303,6 +4324,9 @@ gst_matroska_mux_set_property (GObject * object,
       g_clear_pointer (&mux->creation_time, g_date_time_unref);
       mux->creation_time = g_value_dup_boxed (value);
       break;
+    case PROP_CLUSTER_TIMESTAMP_OFFSET:
+      mux->cluster_timestamp_offset = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -4345,6 +4369,9 @@ gst_matroska_mux_get_property (GObject * object,
       break;
     case PROP_CREATION_TIME:
       g_value_set_boxed (value, mux->creation_time);
+      break;
+    case PROP_CLUSTER_TIMESTAMP_OFFSET:
+      g_value_set_uint64 (value, mux->cluster_timestamp_offset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

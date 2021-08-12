@@ -9120,6 +9120,20 @@
                     }
                 },
                 "properties": {
+                    "cluster-timestamp-offset": {
+                        "blurb": "An offset to add to all clusters/blocks (in nanoseconds)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
                     "creation-time": {
                         "blurb": "Date and time of creation. This will be used for the DateUTC field. NULL means that the current time will be used.",
                         "conditionally-available": false,
