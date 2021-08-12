@@ -3720,14 +3720,18 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
         if (g_strcmp0 (gst_sdp_media_get_media (offer_media), "audio") == 0)
           kind = GST_WEBRTC_KIND_AUDIO;
-        else
+        else if (g_strcmp0 (gst_sdp_media_get_media (offer_media),
+                "video") == 0)
           kind = GST_WEBRTC_KIND_VIDEO;
+        else
+          GST_LOG_OBJECT (webrtc, "Unknown media kind %s",
+              GST_STR_NULL (gst_sdp_media_get_media (offer_media)));
 
         trans = _create_webrtc_transceiver (webrtc, answer_dir, i, kind, NULL);
         rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
 
         GST_LOG_OBJECT (webrtc, "Created new transceiver %" GST_PTR_FORMAT
-            " for mline %u", trans, i);
+            " for mline %u with media kind %d", trans, i, kind);
 
         trans_caps = _find_codec_preferences (webrtc, rtp_trans, i, error);
         if (*error) {
@@ -4891,8 +4895,11 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
         if (!trans) {
           if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0)
             kind = GST_WEBRTC_KIND_AUDIO;
-          else
+          else if (g_strcmp0 (gst_sdp_media_get_media (media), "video") == 0)
             kind = GST_WEBRTC_KIND_VIDEO;
+          else
+            GST_LOG_OBJECT (webrtc, "Unknown media kind %s",
+                GST_STR_NULL (gst_sdp_media_get_media (media)));
 
           trans = _find_transceiver (webrtc, GINT_TO_POINTER (kind),
               (FindTransceiverFunc) _find_compatible_unassociated_transceiver);
