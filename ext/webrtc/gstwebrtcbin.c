@@ -3718,7 +3718,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
         GstCaps *trans_caps;
         GstWebRTCKind kind = GST_WEBRTC_KIND_UNKNOWN;
 
-        if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0)
+        if (g_strcmp0 (gst_sdp_media_get_media (offer_media), "audio") == 0)
           kind = GST_WEBRTC_KIND_AUDIO;
         else
           kind = GST_WEBRTC_KIND_VIDEO;
