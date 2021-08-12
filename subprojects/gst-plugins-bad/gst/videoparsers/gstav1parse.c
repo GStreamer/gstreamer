@@ -122,6 +122,7 @@ struct _GstAV1Parse
   gboolean discont;
   gboolean header;
   gboolean keyframe;
+  gboolean show_frame;
 };
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -284,6 +285,7 @@ gst_av1_parse_reset (GstAV1Parse * self)
   self->discont = TRUE;
   self->header = FALSE;
   self->keyframe = FALSE;
+  self->show_frame = FALSE;
   self->last_parsed_offset = 0;
   self->highest_spatial_id = 0;
   g_clear_pointer (&self->colorimetry, g_free);
@@ -839,6 +841,14 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
     if (frame_finished)
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_MARKER);
 
+    if (self->align == GST_AV1_PARSE_ALIGN_FRAME) {
+      if (!self->show_frame) {
+        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
+      } else {
+        GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
+      }
+    }
+
     gst_buffer_replace (&frame->out_buffer, buf);
     gst_buffer_unref (buf);
 
@@ -1178,6 +1188,8 @@ gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
 
     if (res != GST_AV1_PARSER_OK)
       GST_WARNING_OBJECT (self, "update frame get result %d", res);
+
+    self->show_frame = fh->show_frame || fh->show_existing_frame;
 
     if (fh->show_existing_frame)
       *frame_complete = TRUE;
@@ -1644,6 +1656,7 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
     self->last_parsed_offset = 0;
     self->header = FALSE;
     self->keyframe = FALSE;
+    self->show_frame = FALSE;
   } else {
     GST_LOG_OBJECT (self, "resuming frame parsing");
   }
