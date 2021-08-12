@@ -85,11 +85,11 @@ gst_qt_get_gl_display (gboolean sink)
       GST_INFO ("returning previously created display");
       G_UNLOCK (display_lock);
       return display;
-    } else if (sink) {
-      sink_retrieved = sink;
     }
     gst_clear_object (&display);
   }
+  if (sink)
+    sink_retrieved = sink;
 
   GST_INFO ("QGuiApplication::instance()->platformName() %s", app->platformName().toUtf8().data());
 
