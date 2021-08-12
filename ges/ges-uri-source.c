@@ -107,8 +107,8 @@ autoplug_select_cb (GstElement * bin, GstPad * pad, GstCaps * caps,
   if (downstream_caps && gst_caps_can_intersect (downstream_caps, caps)) {
     if (wanted) {
       res = GST_AUTOPLUG_SELECT_EXPOSE;
-      GST_INFO_OBJECT (self, "Exposing %" GST_PTR_FORMAT " with stream id: %s",
-          caps, stream_id);
+      GST_INFO_OBJECT (self->element,
+          "Exposing %" GST_PTR_FORMAT " with stream id: %s", caps, stream_id);
     } else {
       res = GST_AUTOPLUG_SELECT_SKIP;
       GST_DEBUG_OBJECT (self->element, "Totally skipping %s", stream_id);
