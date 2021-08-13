@@ -133,6 +133,9 @@
 #include "gstutils.h"
 #include "gstversion.h"
 
+/* For g_memdup2 */
+#include "glib-compat-private.h"
+
 GType _gst_buffer_type = 0;
 
 /* info->size will be sizeof(FooMeta) which contains a GstMeta at the beginning
@@ -1053,7 +1056,7 @@ gst_buffer_new_wrapped_bytes (GBytes * bytes)
 GstBuffer *
 gst_buffer_new_memdup (gconstpointer data, gsize size)
 {
-  gpointer data2 = g_memdup (data, size);
+  gpointer data2 = g_memdup2 (data, size);
 
   return gst_buffer_new_wrapped_full (0, data2, size, 0, size, data2, g_free);
 }
