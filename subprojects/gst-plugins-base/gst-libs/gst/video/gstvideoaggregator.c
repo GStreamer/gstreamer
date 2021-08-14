@@ -1745,6 +1745,10 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
     gboolean is_eos;
 
     bpad = GST_AGGREGATOR_PAD (pad);
+
+    if (gst_aggregator_pad_is_inactive (bpad))
+      continue;
+
     GST_OBJECT_LOCK (bpad);
     segment = bpad->segment;
     GST_OBJECT_UNLOCK (bpad);

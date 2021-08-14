@@ -544,6 +544,9 @@ gst_compositor_pad_prepare_frame_start (GstVideoAggregatorPad * pad,
     return;
   }
 
+  if (gst_aggregator_pad_is_inactive (GST_AGGREGATOR_PAD (pad)))
+    return;
+
   frame_rect = clamp_rectangle (cpad->xpos + cpad->x_offset,
       cpad->ypos + cpad->y_offset, width, height,
       GST_VIDEO_INFO_WIDTH (&vagg->info), GST_VIDEO_INFO_HEIGHT (&vagg->info));
@@ -709,6 +712,7 @@ enum
   PROP_BACKGROUND,
   PROP_ZERO_SIZE_IS_UNSCALED,
   PROP_MAX_THREADS,
+  PROP_IGNORE_INACTIVE_PADS,
 };
 
 static void
@@ -726,6 +730,10 @@ gst_compositor_get_property (GObject * object,
       break;
     case PROP_MAX_THREADS:
       g_value_set_uint (value, self->max_threads);
+      break;
+    case PROP_IGNORE_INACTIVE_PADS:
+      g_value_set_boolean (value,
+          gst_aggregator_get_ignore_inactive_pads (GST_AGGREGATOR (object)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -748,6 +756,10 @@ gst_compositor_set_property (GObject * object,
       break;
     case PROP_MAX_THREADS:
       self->max_threads = g_value_get_uint (value);
+      break;
+    case PROP_IGNORE_INACTIVE_PADS:
+      gst_aggregator_set_ignore_inactive_pads (GST_AGGREGATOR (object),
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -967,6 +979,9 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
     gdouble cur_fps;
     gint x_offset;
     gint y_offset;
+
+    if (gst_aggregator_pad_is_inactive (GST_AGGREGATOR_PAD (vaggpad)))
+      continue;
 
     fps_n = GST_VIDEO_INFO_FPS_N (&vaggpad->info);
     fps_d = GST_VIDEO_INFO_FPS_D (&vaggpad->info);
@@ -1217,6 +1232,9 @@ _should_draw_background (GstVideoAggregator * vagg)
   /* Check if the background is completely obscured by a pad
    * TODO: Also skip if it's obscured by a combination of pads */
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
+    if (gst_aggregator_pad_is_inactive (GST_AGGREGATOR_PAD (l->data)))
+      continue;
+
     if (_pad_obscures_rectangle (vagg, l->data, bg_rect)) {
       draw = FALSE;
       break;
@@ -1610,6 +1628,26 @@ gst_compositor_class_init (GstCompositorClass * klass)
       "Filter/Editor/Video/Compositor",
       "Composite multiple video streams", "Wim Taymans <wim@fluendo.com>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  /**
+   * compositor:ignore-inactive-pads:
+   *
+   * Don't wait for inactive pads when live. An inactive pad
+   * is a pad that hasn't yet received a buffer, but that has
+   * been waited on at least once.
+   *
+   * The purpose of this property is to avoid aggregating on
+   * timeout when new pads are requested in advance of receiving
+   * data flow, for example the user may decide to connect it later,
+   * but wants to configure it already.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_IGNORE_INACTIVE_PADS, g_param_spec_boolean ("ignore-inactive-pads",
+          "Ignore inactive pads",
+          "Avoid timing out waiting for inactive pads", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_PAD, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_COMPOSITOR_OPERATOR, 0);

@@ -537,6 +537,7 @@ enum
   PROP_ALIGNMENT_THRESHOLD,
   PROP_DISCONT_WAIT,
   PROP_OUTPUT_BUFFER_DURATION_FRACTION,
+  PROP_IGNORE_INACTIVE_PADS,
 };
 
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstAudioAggregator, gst_audio_aggregator,
@@ -697,6 +698,27 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
           "Window of time in nanoseconds to wait before "
           "creating a discontinuity", 0,
           G_MAXUINT64 - 1, DEFAULT_DISCONT_WAIT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
+
+  /**
+   * GstAudioAggregator:ignore-inactive-pads:
+   *
+   * Don't wait for inactive pads when live. An inactive pad
+   * is a pad that hasn't yet received a buffer, but that has
+   * been waited on at least once.
+   *
+   * The purpose of this property is to avoid aggregating on
+   * timeout when new pads are requested in advance of receiving
+   * data flow, for example the user may decide to connect it later,
+   * but wants to configure it already.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_IGNORE_INACTIVE_PADS, g_param_spec_boolean ("ignore-inactive-pads",
+          "Ignore inactive pads",
+          "Avoid timing out waiting for inactive pads", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -763,6 +785,10 @@ gst_audio_aggregator_set_property (GObject * object, guint prop_id,
       g_object_notify (object, "output-buffer-duration");
       gst_audio_aggregator_recalculate_latency (aagg);
       break;
+    case PROP_IGNORE_INACTIVE_PADS:
+      gst_aggregator_set_ignore_inactive_pads (GST_AGGREGATOR (object),
+          g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -790,6 +816,10 @@ gst_audio_aggregator_get_property (GObject * object, guint prop_id,
     case PROP_OUTPUT_BUFFER_DURATION_FRACTION:
       gst_value_set_fraction (value, aagg->priv->output_buffer_duration_n,
           aagg->priv->output_buffer_duration_d);
+      break;
+    case PROP_IGNORE_INACTIVE_PADS:
+      g_value_set_boolean (value,
+          gst_aggregator_get_ignore_inactive_pads (GST_AGGREGATOR (object)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2271,6 +2301,9 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     gboolean pad_eos = gst_aggregator_pad_is_eos (aggpad);
     GstBuffer *input_buffer;
 
+    if (gst_aggregator_pad_is_inactive (aggpad))
+      continue;
+
     if (!pad_eos)
       is_eos = FALSE;
 
@@ -2381,6 +2414,9 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     GstAudioAggregatorPad *pad = (GstAudioAggregatorPad *) iter->data;
     GstAggregatorPad *aggpad = (GstAggregatorPad *) iter->data;
 
+    if (gst_aggregator_pad_is_inactive (aggpad))
+      continue;
+
     GST_OBJECT_LOCK (pad);
 
     if (pad->priv->buffer && pad->priv->output_offset >= aagg->priv->offset
@@ -2431,6 +2467,9 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     GST_OBJECT_LOCK (agg);
     for (iter = GST_ELEMENT (agg)->sinkpads; iter; iter = iter->next) {
       GstAudioAggregatorPad *pad = GST_AUDIO_AGGREGATOR_PAD (iter->data);
+
+      if (gst_aggregator_pad_is_inactive (GST_AGGREGATOR_PAD (pad)))
+        continue;
 
       max_offset = MAX ((gint64) max_offset, (gint64) pad->priv->output_offset);
     }

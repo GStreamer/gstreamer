@@ -1875,6 +1875,18 @@
                         "type": "GstCompositorBackground",
                         "writable": true
                     },
+                    "ignore-inactive-pads": {
+                        "blurb": "Avoid timing out waiting for inactive pads",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "max-threads": {
                         "blurb": "Maximum number of blending/rendering worker threads to spawn (0 = auto)",
                         "conditionally-available": false,
