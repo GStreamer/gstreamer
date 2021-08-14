@@ -2167,22 +2167,11 @@ create_stream_profile_recurse (GstEncodingProfile * toplevel,
   caps = gst_discoverer_stream_info_get_caps (sinfo);
 
   /* Should unify this with copy_and_clean_caps() */
+  caps = gst_caps_make_writable (caps);
   s = gst_caps_get_structure (caps, 0);
-  if (gst_structure_has_field (s, "codec_data")
-      || gst_structure_has_field (s, "streamheader")
-      || gst_structure_has_field (s, "parsed")
-      || gst_structure_has_field (s, "framed")
-      || gst_structure_has_field (s, "stream-format")
-      || gst_structure_has_field (s, "alignment")) {
-    caps = gst_caps_make_writable (caps);
-    s = gst_caps_get_structure (caps, 0);
-    gst_structure_remove_field (s, "codec_data");
-    gst_structure_remove_field (s, "streamheader");
-    gst_structure_remove_field (s, "parsed");
-    gst_structure_remove_field (s, "framed");
-    gst_structure_remove_field (s, "stream-format");
-    gst_structure_remove_field (s, "alignment");
-  }
+
+  gst_structure_remove_fields (s, "codec_data", "streamheader", "parsed",
+      "framed", "stream-format", "alignment", "tier", "level", "profile", NULL);
 
   GST_LOG ("Stream: %" GST_PTR_FORMAT, caps);
   if (GST_IS_DISCOVERER_AUDIO_INFO (sinfo)) {
