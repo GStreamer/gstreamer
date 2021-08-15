@@ -1509,8 +1509,10 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
     soup_message_disable_feature (src->msg, SOUP_TYPE_COOKIE_JAR);
   }
 
-  if (!src->compress)
-    soup_message_disable_feature (src->msg, SOUP_TYPE_CONTENT_DECODER);
+  if (!src->compress) {
+    soup_message_headers_append (src->msg->request_headers, "Accept-Encoding",
+        "identity");
+  }
 
   soup_message_set_flags (src->msg, SOUP_MESSAGE_OVERWRITE_CHUNKS |
       (src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
