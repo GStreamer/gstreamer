@@ -344,7 +344,7 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
 
   va_caps = gst_caps_copy (caps);
   gst_caps_set_features_simple (va_caps,
-      gst_caps_features_from_string ("memory:VAMemory"));
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
 
   if (!(allocator = _create_allocator (base, va_caps))) {
     ret = FALSE;
@@ -749,7 +749,7 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
     if (gst_caps_features_is_any (features))
       continue;
 
-    if (gst_caps_features_contains (features, "memory:VAMemory")) {
+    if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA)) {
       preferred_caps = gst_caps_new_full (gst_structure_copy (structure), NULL);
       gst_caps_set_features_simple (preferred_caps,
           gst_caps_features_copy (features));

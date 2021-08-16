@@ -56,6 +56,13 @@ typedef enum
 #define GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR "gst.va.display.handle"
 
 /**
+ * GST_CAPS_FEATURE_MEMORY_VA:
+ *
+ * Since: 1.20
+ */
+#define GST_CAPS_FEATURE_MEMORY_VA "memory:VAMemory"
+
+/**
  * GST_VA_DISPLAY_IS_IMPLEMENTATION: (skip)
  *
  * Check whether the display is the implementation of the specified

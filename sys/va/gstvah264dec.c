@@ -90,8 +90,10 @@ struct _GstVaH264Dec
 };
 
 /* *INDENT-OFF* */
-static const gchar *src_caps_str = GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory",
-            "{ NV12, P010_10LE }") " ;" GST_VIDEO_CAPS_MAKE ("{ NV12, P010_10LE }");
+static const gchar *src_caps_str =
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VA,
+        "{ NV12, P010_10LE }") " ;"
+    GST_VIDEO_CAPS_MAKE ("{ NV12, P010_10LE }");
 /* *INDENT-ON* */
 
 static const gchar *sink_caps_str = "video/x-h264";

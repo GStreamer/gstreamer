@@ -76,8 +76,10 @@ struct _GstVaVp8Dec
 };
 
 /* *INDENT-OFF* */
-static const gchar *src_caps_str = GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory",
-            "{ NV12 }") " ;" GST_VIDEO_CAPS_MAKE ("{ NV12 }");
+static const gchar *src_caps_str =
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VA,
+        "{ NV12 }") " ;"
+    GST_VIDEO_CAPS_MAKE ("{ NV12 }");
 /* *INDENT-ON* */
 
 static const gchar *sink_caps_str = "video/x-vp8";

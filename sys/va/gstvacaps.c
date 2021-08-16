@@ -209,7 +209,7 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
 
   if (mem_type & VA_SURFACE_ATTRIB_MEM_TYPE_VA) {
     feature_caps = gst_caps_copy (base_caps);
-    features = gst_caps_features_from_string ("memory:VAMemory");
+    features = gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA);
     gst_caps_set_features_simple (feature_caps, features);
     caps = gst_caps_merge (caps, feature_caps);
   }
@@ -409,7 +409,7 @@ _regroup_raw_caps (GstCaps * caps)
     ft = gst_caps_get_features (tmp, 0);
     if (gst_caps_features_contains (ft, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
       dma_caps = gst_caps_merge (dma_caps, tmp);
-    } else if (gst_caps_features_contains (ft, "memory:VAMemory")) {
+    } else if (gst_caps_features_contains (ft, GST_CAPS_FEATURE_MEMORY_VA)) {
       va_caps = gst_caps_merge (va_caps, tmp);
     } else {
       sys_caps = gst_caps_merge (sys_caps, tmp);
@@ -553,7 +553,7 @@ gst_caps_is_dmabuf (GstCaps * caps)
 gboolean
 gst_caps_is_vamemory (GstCaps * caps)
 {
-  return _caps_is (caps, "memory:VAMemory");
+  return _caps_is (caps, GST_CAPS_FEATURE_MEMORY_VA);
 }
 
 gboolean
