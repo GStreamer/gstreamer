@@ -20,15 +20,15 @@ RUN git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/cerb
     cd cerbero && \
       echo "local_sources=\"/cerbero/cerbero-sources\"" >> localconf.cbc && \
       echo "home_dir=\"/cerbero/cerbero-build\"" >> localconf.cbc && \
-      ./cerbero-uninstalled -t -c localconf.cbc fetch-bootstrap && \
-      ./cerbero-uninstalled -t -c localconf.cbc fetch-package gstreamer-1.0 && \
+      ./cerbero-uninstalled -t -c localconf.cbc fetch-bootstrap --jobs=4 && \
+      ./cerbero-uninstalled -t -c localconf.cbc fetch-package --jobs=4 gstreamer-1.0 && \
       ./cerbero-uninstalled -t -c localconf.cbc bootstrap -y --build-tools=no --toolchains=no && \
-      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc fetch-bootstrap && \
-      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc fetch-package gstreamer-1.0 && \
-      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc fetch-bootstrap && \
-      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc fetch-package gstreamer-1.0 && \
-      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc fetch-bootstrap && \
-      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc fetch-package gstreamer-1.0 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc fetch-bootstrap --jobs=4 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc fetch-package --jobs=4 gstreamer-1.0 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc fetch-bootstrap --jobs=4 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc fetch-package --jobs=4 gstreamer-1.0 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc fetch-bootstrap --jobs=4 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc fetch-package --jobs=4 gstreamer-1.0 && \
       cd .. && \
     rm -rf /cerbero/cerbero-build/{dist,logs,sources} && \
     rm -f /cerbero/cerbero-build/{linux,windows,android}*.cache && \

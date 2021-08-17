@@ -120,8 +120,8 @@ cerbero_script() {
     show_ccache_sum
 
     $CERBERO $CERBERO_ARGS show-config
-    $CERBERO $CERBERO_ARGS fetch-bootstrap
-    $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
+    $CERBERO $CERBERO_ARGS fetch-bootstrap --jobs=4
+    $CERBERO $CERBERO_ARGS fetch-package --jobs=4 --deps gstreamer-1.0
     du -sch "${CERBERO_SOURCES}" || true
 
     $CERBERO $CERBERO_ARGS fetch-cache --branch "${GST_UPSTREAM_BRANCH}"
@@ -141,8 +141,8 @@ cerbero_deps_script() {
     show_ccache_sum
 
     $CERBERO $CERBERO_ARGS show-config
-    $CERBERO $CERBERO_ARGS fetch-bootstrap
-    $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
+    $CERBERO $CERBERO_ARGS fetch-bootstrap --jobs=4
+    $CERBERO $CERBERO_ARGS fetch-package --jobs=4 --deps gstreamer-1.0
     $CERBERO $CERBERO_ARGS bootstrap --offline --system=no
     $CERBERO $CERBERO_ARGS build-deps --offline \
         gstreamer-1.0 gst-plugins-base-1.0 gst-plugins-good-1.0 \
