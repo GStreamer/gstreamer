@@ -339,8 +339,8 @@ ensure_context (GstBaseTransform * trans)
   GstMsdkVPP *thiz = GST_MSDKVPP (trans);
 
   if (!gst_msdkvpp_context_prepare (thiz)) {
-    if (!gst_msdk_context_ensure_context (GST_ELEMENT_CAST (thiz),
-            thiz->hardware, GST_MSDK_JOB_VPP))
+    if (!gst_msdk_ensure_new_context (GST_ELEMENT_CAST (thiz),
+            thiz->hardware, GST_MSDK_JOB_VPP, &thiz->context))
       return FALSE;
     GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT,
         thiz->context);
@@ -1645,6 +1645,12 @@ gst_msdkvpp_set_context (GstElement * element, GstContext * context)
   GstMsdkVPP *thiz = GST_MSDKVPP (element);
 
   if (gst_msdk_context_get_context (context, &msdk_context)) {
+    gst_object_replace ((GstObject **) & thiz->context,
+        (GstObject *) msdk_context);
+    gst_object_unref (msdk_context);
+  } else if (gst_msdk_context_from_external_display (context,
+          thiz->hardware, 0 /* GST_MSDK_JOB_VPP will be set later */ ,
+          &msdk_context)) {
     gst_object_replace ((GstObject **) & thiz->context,
         (GstObject *) msdk_context);
     gst_object_unref (msdk_context);

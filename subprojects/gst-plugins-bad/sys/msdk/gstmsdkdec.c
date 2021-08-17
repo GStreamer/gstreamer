@@ -312,6 +312,12 @@ gst_msdkdec_set_context (GstElement * element, GstContext * context)
     gst_object_replace ((GstObject **) & thiz->context,
         (GstObject *) msdk_context);
     gst_object_unref (msdk_context);
+  } else if (gst_msdk_context_from_external_display (context,
+          thiz->hardware, 0 /* GST_MSDK_JOB_DECODER will be set later */ ,
+          &msdk_context)) {
+    gst_object_replace ((GstObject **) & thiz->context,
+        (GstObject *) msdk_context);
+    gst_object_unref (msdk_context);
   }
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
@@ -829,8 +835,8 @@ gst_msdkdec_start (GstVideoDecoder * decoder)
   GstMsdkDec *thiz = GST_MSDKDEC (decoder);
 
   if (!gst_msdkdec_context_prepare (thiz)) {
-    if (!gst_msdk_context_ensure_context (GST_ELEMENT_CAST (thiz),
-            thiz->hardware, GST_MSDK_JOB_DECODER))
+    if (!gst_msdk_ensure_new_context (GST_ELEMENT_CAST (thiz),
+            thiz->hardware, GST_MSDK_JOB_DECODER, &thiz->context))
       return FALSE;
     GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT,
         thiz->context);
