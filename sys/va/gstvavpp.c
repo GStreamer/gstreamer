@@ -398,6 +398,7 @@ gst_va_vpp_update_properties (GstVaBaseTransform * btrans)
 {
   GstVaVpp *self = GST_VA_VPP (btrans);
 
+  gst_va_vpp_rebuild_filters (self);
   _update_properties_unlocked (self);
 }
 
