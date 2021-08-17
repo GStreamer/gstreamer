@@ -1468,6 +1468,33 @@ gst_msdkvpp_stop (GstBaseTransform * trans)
   return TRUE;
 }
 
+static gboolean
+gst_msdkvpp_query (GstBaseTransform * trans, GstPadDirection direction,
+    GstQuery * query)
+{
+  GstMsdkVPP *thiz = GST_MSDKVPP (trans);
+  gboolean ret = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:{
+      GstMsdkContext *msdk_context = NULL;
+
+      gst_object_replace ((GstObject **) & msdk_context,
+          (GstObject *) thiz->context);
+      ret = gst_msdk_handle_context_query (GST_ELEMENT_CAST (trans),
+          query, msdk_context);
+      gst_clear_object (&msdk_context);
+      break;
+    }
+    default:
+      ret = GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans,
+          direction, query);
+      break;
+  }
+
+  return ret;
+}
+
 static void
 gst_msdkvpp_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1701,6 +1728,7 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       GST_DEBUG_FUNCPTR (gst_msdkvpp_decide_allocation);
   trans_class->prepare_output_buffer =
       GST_DEBUG_FUNCPTR (gst_msdkvpp_prepare_output_buffer);
+  trans_class->query = GST_DEBUG_FUNCPTR (gst_msdkvpp_query);
 
   obj_properties[PROP_HARDWARE] =
       g_param_spec_boolean ("hardware", "Hardware", "Enable hardware VPP",
