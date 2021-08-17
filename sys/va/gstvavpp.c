@@ -1878,7 +1878,7 @@ gst_va_vpp_init (GTypeInstance * instance, gpointer g_class)
 static gpointer
 _register_debug_category (gpointer data)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_va_vpp_debug, "vavpp", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_va_vpp_debug, "vapostproc", 0,
       "VA Video Postprocessor");
 
 #define D(type) \
