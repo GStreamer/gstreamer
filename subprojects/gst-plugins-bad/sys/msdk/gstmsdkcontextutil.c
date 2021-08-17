@@ -218,3 +218,69 @@ gst_msdk_context_from_external_display (GstContext * context, gboolean hardware,
 
   return FALSE;
 }
+
+gboolean
+gst_msdk_handle_context_query (GstElement * element, GstQuery * query,
+    GstMsdkContext * msdk_context)
+{
+  const gchar *context_type;
+  GstContext *ctxt, *old_ctxt;
+  gboolean ret = FALSE;
+
+  _init_context_debug ();
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
+  g_return_val_if_fail (!msdk_context
+      || GST_IS_MSDK_CONTEXT (msdk_context), FALSE);
+
+  GST_CAT_LOG_OBJECT (GST_CAT_CONTEXT, element,
+      "handle context query %" GST_PTR_FORMAT, query);
+
+  if (!msdk_context)
+    return FALSE;
+
+  gst_query_parse_context_type (query, &context_type);
+
+  gst_query_parse_context (query, &old_ctxt);
+  if (old_ctxt)
+    ctxt = gst_context_copy (old_ctxt);
+  else
+    ctxt = gst_context_new (context_type, TRUE);
+
+#ifndef _WIN32
+  if (g_strcmp0 (context_type, GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR) == 0) {
+    GstStructure *s;
+    GstObject *display = gst_msdk_context_get_display (msdk_context);
+
+    if (display) {
+      GST_CAT_LOG (GST_CAT_CONTEXT,
+          "setting GstVaDisplay (%" GST_PTR_FORMAT ") on context (%"
+          GST_PTR_FORMAT ")", display, ctxt);
+
+      s = gst_context_writable_structure (ctxt);
+      gst_structure_set (s, "gst-display", GST_TYPE_OBJECT, display, NULL);
+      /* Structure hold one ref */
+      gst_object_unref (display);
+      ret = TRUE;
+    }
+  } else
+#endif
+  if (g_strcmp0 (context_type, GST_MSDK_CONTEXT_TYPE_NAME) == 0) {
+    GstStructure *s;
+
+    s = gst_context_writable_structure (ctxt);
+    GST_CAT_LOG (GST_CAT_CONTEXT,
+        "setting GstMsdkContext (%" GST_PTR_FORMAT ") on context (%"
+        GST_PTR_FORMAT ")", msdk_context, ctxt);
+    gst_structure_set (s, GST_MSDK_CONTEXT_TYPE_NAME, GST_TYPE_MSDK_CONTEXT,
+        msdk_context, NULL);
+    ret = TRUE;
+  }
+
+  if (ret)
+    gst_query_set_context (query, ctxt);
+
+  gst_context_unref (ctxt);
+  return ret;
+}
