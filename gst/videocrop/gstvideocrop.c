@@ -802,9 +802,11 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
     GST_LOG_OBJECT (crop, "incaps = %" GST_PTR_FORMAT ", outcaps = %"
         GST_PTR_FORMAT, in, out);
 
-  features = gst_caps_get_features (in, 0);
-  crop->raw_caps = gst_caps_features_is_equal (features,
-      GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY);
+  if (in) {
+    features = gst_caps_get_features (in, 0);
+    crop->raw_caps = gst_caps_features_is_equal (features,
+        GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY);
+  }
 
   if (!crop->raw_caps)
     goto beach;

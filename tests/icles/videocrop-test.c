@@ -156,6 +156,7 @@ video_crop_get_test_caps (GstElement * videocrop)
         FRAMERATE, 1, NULL);
     gst_structure_remove_field (new_structure, "width");
     gst_structure_remove_field (new_structure, "height");
+    gst_structure_remove_field (new_structure, "format");
     gst_caps_append_structure (single_caps, new_structure);
 
     /* should be fixed without width/height */
