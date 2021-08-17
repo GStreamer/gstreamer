@@ -180,6 +180,29 @@ int main(int argc, char *argv[]) {
 }
 ```
 
+
+> ![information] If you need help to compile this code, refer to the
+> **Building the tutorials** section for your platform: [Mac] or
+> [Windows] or use this specific command on Linux:
+>
+> `` gcc playback-tutorial-3.c -o playback-tutorial-3 `pkg-config --cflags --libs gstreamer-1.0 gstreamer-audio-1.0` ``
+>
+> If you need help to run this code, refer to the **Running the
+> tutorials** section for your platform: [Mac OS X], [Windows][1], for
+> [iOS] or for [android].
+>
+> This tutorial opens a window and displays a movie, with accompanying
+> audio. The media is fetched from the Internet, so the window might
+> take a few seconds to appear, depending on your connection
+> speed. In the console window, you should see a message indicating
+> where the media is being stored, and a text graph representing the
+> downloaded portions and the current position. A buffering message
+> appears whenever buffering is required, which might never happen is
+> your network connection is fast enough
+>
+> Required libraries: `gstreamer-1.0` `gstreamer-audio-1.0`
+
+
 To use an `appsrc` as the source for the pipeline, simply instantiate a
 `playbin` and set its URI to `appsrc://`
 
