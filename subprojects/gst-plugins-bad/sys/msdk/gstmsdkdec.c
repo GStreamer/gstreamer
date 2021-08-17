@@ -1722,6 +1722,50 @@ gst_msdkdec_finish (GstVideoDecoder * decoder)
   return gst_msdkdec_drain (decoder);
 }
 
+static gboolean
+gst_msdkdec_query (GstVideoDecoder * decoder, GstQuery * query,
+    GstPadDirection dir)
+{
+  GstMsdkDec *thiz = GST_MSDKDEC (decoder);
+  gboolean ret = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:{
+      GstMsdkContext *msdk_context = NULL;
+
+      gst_object_replace ((GstObject **) & msdk_context,
+          (GstObject *) thiz->context);
+      ret = gst_msdk_handle_context_query (GST_ELEMENT_CAST (decoder),
+          query, msdk_context);
+      gst_clear_object (&msdk_context);
+      break;
+    }
+    default:
+      if (dir == GST_PAD_SRC) {
+        ret =
+            GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
+      } else {
+        ret =
+            GST_VIDEO_DECODER_CLASS (parent_class)->sink_query (decoder, query);
+      }
+      break;
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_msdkdec_src_query (GstVideoDecoder * decoder, GstQuery * query)
+{
+  return gst_msdkdec_query (decoder, query, GST_PAD_SRC);
+}
+
+static gboolean
+gst_msdkdec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
+{
+  return gst_msdkdec_query (decoder, query, GST_PAD_SINK);
+}
+
 static void
 gst_msdkdec_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
@@ -1880,6 +1924,8 @@ gst_msdkdec_class_init (GstMsdkDecClass * klass)
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_msdkdec_drain);
   decoder_class->transform_meta =
       GST_DEBUG_FUNCPTR (gst_msdkdec_transform_meta);
+  decoder_class->src_query = GST_DEBUG_FUNCPTR (gst_msdkdec_src_query);
+  decoder_class->sink_query = GST_DEBUG_FUNCPTR (gst_msdkdec_sink_query);
 
   klass->post_configure = GST_DEBUG_FUNCPTR (gst_msdkdec_post_configure);
   klass->preinit_decoder = GST_DEBUG_FUNCPTR (gst_msdkdec_preinit_decoder);
