@@ -57,6 +57,7 @@ enum {
   PROP_REFERENCE_SOURCE,
   PROP_QUEUE_SIZE,
   PROP_CAPTURE_CPU_CORE,
+  PROP_SIGNAL,
 };
 
 typedef enum {
@@ -205,6 +206,13 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
                         G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property(
+      gobject_class, PROP_SIGNAL,
+      g_param_spec_boolean(
+          "signal", "Input signal available",
+          "True if there is a valid input signal available", FALSE,
+          (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
   element_class->change_state = GST_DEBUG_FUNCPTR(gst_aja_src_change_state);
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR(gst_aja_src_get_caps);
@@ -334,6 +342,9 @@ void gst_aja_src_get_property(GObject *object, guint property_id, GValue *value,
       break;
     case PROP_CAPTURE_CPU_CORE:
       g_value_set_uint(value, self->capture_cpu_core);
+      break;
+    case PROP_SIGNAL:
+      g_value_set_boolean(value, self->signal);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -1144,6 +1155,7 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
   GST_DEBUG_OBJECT(self, "Starting");
 
   self->video_format = NTV2_FORMAT_UNKNOWN;
+  self->signal = FALSE;
 
   self->capture_thread = new AJAThread();
   self->capture_thread->Attach(capture_thread_func, self);
@@ -1208,6 +1220,11 @@ static gboolean gst_aja_src_stop(GstAjaSrc *self) {
   }
 
   self->video_format = NTV2_FORMAT_UNKNOWN;
+
+  if (self->signal) {
+    self->signal = FALSE;
+    g_object_notify(G_OBJECT(self), "signal");
+  }
 
   GST_DEBUG_OBJECT(self, "Stopped");
 
@@ -1676,6 +1693,10 @@ restart:
                               ("No input source was detected"));
           have_signal = FALSE;
         }
+        if (self->signal) {
+          self->signal = FALSE;
+          g_object_notify(G_OBJECT(self), "signal");
+        }
         self->device->device->WaitForInputVerticalInterrupt(self->channel);
         continue;
       }
@@ -1726,6 +1747,10 @@ restart:
                             ("No input source was detected"));
         have_signal = FALSE;
       }
+      if (self->signal) {
+        self->signal = FALSE;
+        g_object_notify(G_OBJECT(self), "signal");
+      }
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
@@ -1756,6 +1781,10 @@ restart:
                             ("Different input source (%s) was detected",
                              current_string.c_str()));
         have_signal = FALSE;
+      }
+      if (self->signal) {
+        self->signal = FALSE;
+        g_object_notify(G_OBJECT(self), "signal");
       }
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
@@ -1818,6 +1847,10 @@ restart:
         GST_ELEMENT_INFO(GST_ELEMENT(self), RESOURCE, READ,
                          ("Signal recovered"), ("Input source detected"));
         have_signal = TRUE;
+      }
+      if (!self->signal) {
+        self->signal = TRUE;
+        g_object_notify(G_OBJECT(self), "signal");
       }
 
       iterations_without_frame = 0;
@@ -1993,6 +2026,10 @@ restart:
           GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ,
                               ("Signal lost"), ("No frames captured"));
           have_signal = FALSE;
+        }
+        if (self->signal) {
+          self->signal = FALSE;
+          g_object_notify(G_OBJECT(self), "signal");
         }
       }
 

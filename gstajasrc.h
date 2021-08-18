@@ -71,6 +71,7 @@ struct _GstAjaSrc {
   GstAjaReferenceSource reference_source;
   guint queue_size;
   guint capture_cpu_core;
+  gboolean signal;
 
   NTV2AudioSystem audio_system;
   NTV2VideoFormat video_format;
