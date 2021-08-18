@@ -4460,6 +4460,8 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
         GST_DEBUG_FUNCPTR_NAME (chainlistfunc), gst_flow_get_name (ret));
   }
 
+  pad->ABI.abi.last_flowret = ret;
+
   RELEASE_PARENT (parent);
 
   GST_PAD_STREAM_UNLOCK (pad);
@@ -4471,6 +4473,7 @@ flushing:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "chaining, but pad was flushing");
+    pad->ABI.abi.last_flowret = GST_FLOW_FLUSHING;
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
@@ -4479,6 +4482,7 @@ flushing:
 eos:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "chaining, but pad was EOS");
+    pad->ABI.abi.last_flowret = GST_FLOW_EOS;
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
@@ -4488,6 +4492,7 @@ wrong_mode:
   {
     g_critical ("chain on pad %s:%s but it was not in push mode",
         GST_DEBUG_PAD_NAME (pad));
+    pad->ABI.abi.last_flowret = GST_FLOW_ERROR;
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
@@ -4498,8 +4503,6 @@ probe_handled:
   /* PASSTHROUGH */
 probe_stopped:
   {
-    GST_OBJECT_UNLOCK (pad);
-    GST_PAD_STREAM_UNLOCK (pad);
     /* We unref the buffer, except if the probe handled it (CUSTOM_SUCCESS_1) */
     if (!handled)
       gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
@@ -4514,11 +4517,15 @@ probe_stopped:
         GST_DEBUG_OBJECT (pad, "an error occurred %s", gst_flow_get_name (ret));
         break;
     }
+    pad->ABI.abi.last_flowret = ret;
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
     return ret;
   }
 no_parent:
   {
     GST_DEBUG_OBJECT (pad, "No parent when chaining %" GST_PTR_FORMAT, data);
+    pad->ABI.abi.last_flowret = GST_FLOW_FLUSHING;
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
@@ -4526,6 +4533,7 @@ no_parent:
   }
 no_function:
   {
+    pad->ABI.abi.last_flowret = GST_FLOW_NOT_SUPPORTED;
     RELEASE_PARENT (parent);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     g_critical ("chain on pad %s:%s but it has no chainfunction",
