@@ -1567,6 +1567,7 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   AUTOCIRCULATE_TRANSFER transfer;
   guint64 frames_dropped_last = G_MAXUINT64;
   gboolean have_signal = TRUE;
+  guint iterations_without_frame = 0;
 
   if (self->capture_cpu_core != G_MAXUINT) {
     cpu_set_t mask;
@@ -1755,6 +1756,8 @@ restart:
       GstMapInfo anc_map2 = GST_MAP_INFO_INIT;
       AUTOCIRCULATE_TRANSFER transfer;
 
+      iterations_without_frame = 0;
+
       if (gst_buffer_pool_acquire_buffer(self->buffer_pool, &video_buffer,
                                          NULL) != GST_FLOW_OK) {
         GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
@@ -1914,7 +1917,23 @@ restart:
 
     } else {
       g_mutex_unlock(&self->queue_lock);
+
+      // If we don't have a frame for 32 iterations (512ms) then consider
+      // this as signal loss too even if the driver still reports the
+      // expected mode above
+      if (have_signal && iterations_without_frame < 32) {
+        iterations_without_frame++;
+      } else {
+        frames_dropped_last = G_MAXUINT64;
+        if (have_signal) {
+          GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ,
+                              ("Signal lost"), ("No frames captured"));
+          have_signal = FALSE;
+        }
+      }
+
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
+
       g_mutex_lock(&self->queue_lock);
     }
   }
