@@ -1713,12 +1713,6 @@ restart:
       continue;
     }
 
-    if (!have_signal) {
-      GST_ELEMENT_INFO(GST_ELEMENT(self), RESOURCE, READ, ("Signal recovered"),
-                       ("Input source detected"));
-      have_signal = TRUE;
-    }
-
     AUTOCIRCULATE_STATUS status;
 
     self->device->device->AutoCirculateGetStatus(self->channel, status);
@@ -1770,6 +1764,12 @@ restart:
       GstMapInfo anc_map = GST_MAP_INFO_INIT;
       GstMapInfo anc_map2 = GST_MAP_INFO_INIT;
       AUTOCIRCULATE_TRANSFER transfer;
+
+      if (!have_signal) {
+        GST_ELEMENT_INFO(GST_ELEMENT(self), RESOURCE, READ, ("Signal recovered"),
+                         ("Input source detected"));
+        have_signal = TRUE;
+      }
 
       iterations_without_frame = 0;
 
