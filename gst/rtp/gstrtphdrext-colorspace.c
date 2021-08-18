@@ -95,7 +95,7 @@ gst_rtp_header_extension_colorspace_get_max_size (GstRTPHeaderExtension * ext,
       GST_RTP_HDREXT_COLORSPACE_SIZE;
 }
 
-static gsize
+static gssize
 gst_rtp_header_extension_colorspace_write (GstRTPHeaderExtension * ext,
     const GstBuffer * input_meta, GstRTPHeaderExtensionFlags write_flags,
     GstBuffer * output, guint8 * data, gsize size)

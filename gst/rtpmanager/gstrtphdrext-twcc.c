@@ -57,7 +57,7 @@ static GstRTPHeaderExtensionFlags
 gst_rtp_header_extension_twcc_get_supported_flags (GstRTPHeaderExtension * ext);
 static gsize gst_rtp_header_extension_twcc_get_max_size (GstRTPHeaderExtension *
     ext, const GstBuffer * buffer);
-static gsize gst_rtp_header_extension_twcc_write (GstRTPHeaderExtension * ext,
+static gssize gst_rtp_header_extension_twcc_write (GstRTPHeaderExtension * ext,
     const GstBuffer * input_meta, GstRTPHeaderExtensionFlags write_flags,
     GstBuffer * output, guint8 * data, gsize size);
 static gboolean gst_rtp_header_extension_twcc_read (GstRTPHeaderExtension * ext,
@@ -167,7 +167,7 @@ gst_rtp_header_extension_twcc_get_max_size (GstRTPHeaderExtension * ext,
   return 2;
 }
 
-static gsize
+static gssize
 gst_rtp_header_extension_twcc_write (GstRTPHeaderExtension * ext,
     const GstBuffer * input_meta, GstRTPHeaderExtensionFlags write_flags,
     GstBuffer * output, guint8 * data, gsize size)

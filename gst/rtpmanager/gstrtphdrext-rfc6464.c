@@ -213,7 +213,7 @@ gst_rtp_header_extension_rfc6464_set_caps_from_attributes (GstRTPHeaderExtension
   return TRUE;
 }
 
-static gsize
+static gssize
 gst_rtp_header_extension_rfc6464_write (GstRTPHeaderExtension * ext,
     const GstBuffer * input_meta, GstRTPHeaderExtensionFlags write_flags,
     GstBuffer * output, guint8 * data, gsize size)
