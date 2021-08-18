@@ -1265,6 +1265,11 @@ retry:
   vf->input = self->input->input;
   vf->input->AddRef ();
 
+  // Reset aspect ratio flag if the mode has changed. The new mode might not
+  // have AFD/Bar VANC.
+  if (self->caps_mode != f.mode) {
+    self->aspect_ratio_flag = -1;
+  }
   // If we have a format that supports VANC and we are asked to extract CC,
   // then do it here.
   if ((self->output_cc || self->output_afd_bar)
@@ -1277,22 +1282,33 @@ retry:
   // If there was AFD information with the aspect ratio flag set and the mode
   // is auto then we have to switch from normal NTSC/PAL to the widescreen
   // variants
-  if (self->aspect_ratio_flag == 1 && self->mode == GST_DECKLINK_MODE_AUTO) {
+  if (self->aspect_ratio_flag != -1 && self->mode == GST_DECKLINK_MODE_AUTO) {
     switch (f.mode) {
       case GST_DECKLINK_MODE_NTSC:
-        f.mode = GST_DECKLINK_MODE_NTSC_WIDESCREEN;
+        f.mode =
+            self->aspect_ratio_flag ==
+            1 ? GST_DECKLINK_MODE_NTSC_WIDESCREEN : GST_DECKLINK_MODE_NTSC;
         break;
       case GST_DECKLINK_MODE_NTSC_P:
-        f.mode = GST_DECKLINK_MODE_NTSC_P_WIDESCREEN;
+        f.mode =
+            self->aspect_ratio_flag ==
+            1 ? GST_DECKLINK_MODE_NTSC_P_WIDESCREEN : GST_DECKLINK_MODE_NTSC_P;
         break;
       case GST_DECKLINK_MODE_NTSC2398:
-        f.mode = GST_DECKLINK_MODE_NTSC2398_WIDESCREEN;
+        f.mode =
+            self->aspect_ratio_flag ==
+            1 ? GST_DECKLINK_MODE_NTSC2398_WIDESCREEN :
+            GST_DECKLINK_MODE_NTSC2398;
         break;
       case GST_DECKLINK_MODE_PAL:
-        f.mode = GST_DECKLINK_MODE_PAL_WIDESCREEN;
+        f.mode =
+            self->aspect_ratio_flag ==
+            1 ? GST_DECKLINK_MODE_PAL_WIDESCREEN : GST_DECKLINK_MODE_PAL;
         break;
       case GST_DECKLINK_MODE_PAL_P:
-        f.mode = GST_DECKLINK_MODE_PAL_P_WIDESCREEN;
+        f.mode =
+            self->aspect_ratio_flag ==
+            1 ? GST_DECKLINK_MODE_PAL_P_WIDESCREEN : GST_DECKLINK_MODE_PAL_P;
         break;
       default:
         break;
