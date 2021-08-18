@@ -214,7 +214,7 @@ gst_rtp_header_extension_twcc_write (GstRTPHeaderExtension * ext,
 map_failed:
   {
     GST_ERROR ("failed to map buffer %p", output);
-    return 0;
+    return -1;
   }
 
 existing_too_small:
