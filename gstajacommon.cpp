@@ -789,7 +789,7 @@ GType gst_aja_sdi_mode_get_type(void) {
 GType gst_aja_video_format_get_type(void) {
   static gsize id = 0;
   static const GEnumValue modes[] = {
-      // TODO: Implement: {GST_AJA_VIDEO_FORMAT_AUTO, "auto", "Autodetect"},
+      {GST_AJA_VIDEO_FORMAT_AUTO, "auto", "Auto detect format"},
       {GST_AJA_VIDEO_FORMAT_1080i_5000, "1080i-5000", "1080i 5000"},
       {GST_AJA_VIDEO_FORMAT_1080i_5994, "1080i-5994", "1080i 5994"},
       {GST_AJA_VIDEO_FORMAT_1080i_6000, "1080i-6000", "1080i 6000"},

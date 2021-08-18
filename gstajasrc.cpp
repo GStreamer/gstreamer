@@ -34,7 +34,6 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_src_debug);
 
 #define DEFAULT_DEVICE_IDENTIFIER ("0")
 #define DEFAULT_CHANNEL (::NTV2_CHANNEL1)
-// TODO: GST_AJA_VIDEO_FORMAT_AUTO
 #define DEFAULT_VIDEO_FORMAT (GST_AJA_VIDEO_FORMAT_1080i_5000)
 #define DEFAULT_AUDIO_SYSTEM (GST_AJA_AUDIO_SYSTEM_AUTO)
 #define DEFAULT_INPUT_SOURCE (GST_AJA_INPUT_SOURCE_AUTO)
@@ -93,7 +92,6 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer);
 
 static gboolean gst_aja_src_open(GstAjaSrc *src);
 static gboolean gst_aja_src_close(GstAjaSrc *src);
-static gboolean gst_aja_src_start(GstAjaSrc *src);
 static gboolean gst_aja_src_stop(GstAjaSrc *src);
 
 static GstStateChangeReturn gst_aja_src_change_state(GstElement *element,
@@ -250,6 +248,8 @@ static void gst_aja_src_init(GstAjaSrc *self) {
       gst_queue_array_new_for_struct(sizeof(QueueItem), self->queue_size);
   gst_base_src_set_live(GST_BASE_SRC_CAST(self), TRUE);
   gst_base_src_set_format(GST_BASE_SRC_CAST(self), GST_FORMAT_TIME);
+
+  self->video_format = NTV2_FORMAT_UNKNOWN;
 }
 
 void gst_aja_src_set_property(GObject *object, guint property_id,
@@ -412,13 +412,9 @@ static gboolean gst_aja_src_close(GstAjaSrc *self) {
   return TRUE;
 }
 
-static gboolean gst_aja_src_start(GstAjaSrc *self) {
+// Must be called with ShmMutexLocker
+static gboolean gst_aja_src_configure(GstAjaSrc *self) {
   GST_DEBUG_OBJECT(self, "Starting");
-
-  {
-    // Make sure to globally lock here as the routing settings and others are
-    // global shared state
-    ShmMutexLocker locker;
 
 #define NEEDS_QUAD_MODE(self)                           \
   (self->sdi_mode == GST_AJA_SDI_MODE_QUAD_LINK_SQD ||  \
@@ -426,638 +422,676 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
    (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 && \
     self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4))
 
-    self->quad_mode = NEEDS_QUAD_MODE(self);
-    self->video_format = gst_ntv2_video_format_from_aja_format(
-        self->video_format_setting, self->quad_mode);
+  self->quad_mode = NEEDS_QUAD_MODE(self);
 
 #undef NEEDS_QUAD_MODE
 
-    if (self->video_format == NTV2_FORMAT_UNKNOWN) {
-      GST_ERROR_OBJECT(self, "Unsupported mode");
-      return FALSE;
+  self->device->device->AutoCirculateStop(self->channel);
+  if (self->quad_mode) {
+    for (int i = 1; i < 4; i++) {
+      self->device->device->AutoCirculateStop((NTV2Channel)(self->channel + i));
     }
+  }
 
-    if (!::NTV2DeviceCanDoVideoFormat(self->device_id, self->video_format)) {
-      GST_ERROR_OBJECT(self, "Device does not support mode %d",
-                       (int)self->video_format);
-      return FALSE;
-    }
+  if (self->buffer_pool) {
+    gst_buffer_pool_set_active(self->buffer_pool, FALSE);
+    gst_clear_object(&self->buffer_pool);
+  }
 
-    if (self->quad_mode) {
-      if (self->channel != ::NTV2_CHANNEL1 &&
-          self->channel != ::NTV2_CHANNEL5) {
-        GST_ERROR_OBJECT(self, "Quad modes require channels 1 or 5");
+  if (self->audio_buffer_pool) {
+    gst_buffer_pool_set_active(self->audio_buffer_pool, FALSE);
+    gst_clear_object(&self->audio_buffer_pool);
+  }
+
+  if (self->anc_buffer_pool) {
+    gst_buffer_pool_set_active(self->anc_buffer_pool, FALSE);
+    gst_clear_object(&self->anc_buffer_pool);
+  }
+
+  NTV2VANCMode vanc_mode;
+  NTV2InputSource input_source;
+  NTV2OutputCrosspointID input_source_id;
+  switch (self->input_source) {
+    case GST_AJA_INPUT_SOURCE_AUTO:
+      input_source = ::NTV2ChannelToInputSource(self->channel);
+      input_source_id = ::GetSDIInputOutputXptFromChannel(self->channel, false);
+      vanc_mode = ::NTV2DeviceCanDoCustomAnc(self->device_id)
+                      ? ::NTV2_VANCMODE_OFF
+                      : ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_ANALOG1:
+      input_source = ::NTV2_INPUTSOURCE_ANALOG1;
+      input_source_id = ::NTV2_XptAnalogIn;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_HDMI1:
+      input_source = ::NTV2_INPUTSOURCE_HDMI1;
+      input_source_id = ::NTV2_XptHDMIIn1;
+      vanc_mode = ::NTV2_VANCMODE_OFF;
+      break;
+    case GST_AJA_INPUT_SOURCE_HDMI2:
+      input_source = ::NTV2_INPUTSOURCE_HDMI2;
+      input_source_id = ::NTV2_XptHDMIIn2;
+      vanc_mode = ::NTV2_VANCMODE_OFF;
+      break;
+    case GST_AJA_INPUT_SOURCE_HDMI3:
+      input_source = ::NTV2_INPUTSOURCE_HDMI3;
+      input_source_id = ::NTV2_XptHDMIIn3;
+      vanc_mode = ::NTV2_VANCMODE_OFF;
+      break;
+    case GST_AJA_INPUT_SOURCE_HDMI4:
+      input_source = ::NTV2_INPUTSOURCE_HDMI4;
+      input_source_id = ::NTV2_XptHDMIIn4;
+      vanc_mode = ::NTV2_VANCMODE_OFF;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI1:
+      input_source = ::NTV2_INPUTSOURCE_SDI1;
+      input_source_id = ::NTV2_XptSDIIn1;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI2:
+      input_source = ::NTV2_INPUTSOURCE_SDI2;
+      input_source_id = ::NTV2_XptSDIIn2;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI3:
+      input_source = ::NTV2_INPUTSOURCE_SDI3;
+      input_source_id = ::NTV2_XptSDIIn3;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI4:
+      input_source = ::NTV2_INPUTSOURCE_SDI4;
+      input_source_id = ::NTV2_XptSDIIn4;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI5:
+      input_source = ::NTV2_INPUTSOURCE_SDI5;
+      input_source_id = ::NTV2_XptSDIIn5;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI6:
+      input_source = ::NTV2_INPUTSOURCE_SDI6;
+      input_source_id = ::NTV2_XptSDIIn6;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI7:
+      input_source = ::NTV2_INPUTSOURCE_SDI7;
+      input_source_id = ::NTV2_XptSDIIn7;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    case GST_AJA_INPUT_SOURCE_SDI8:
+      input_source = ::NTV2_INPUTSOURCE_SDI8;
+      input_source_id = ::NTV2_XptSDIIn8;
+      vanc_mode = ::NTV2_VANCMODE_TALL;
+      break;
+    default:
+      g_assert_not_reached();
+      break;
+  }
+
+  self->configured_input_source = input_source;
+
+  self->vanc_mode = vanc_mode;
+
+  if (!self->device->device->EnableChannel(self->channel)) {
+    GST_ERROR_OBJECT(self, "Failed to enable channel");
+    return FALSE;
+  }
+
+  if (self->quad_mode) {
+    for (int i = 1; i < 4; i++) {
+      if (!self->device->device->EnableChannel(
+              (NTV2Channel)(self->channel + i))) {
+        GST_ERROR_OBJECT(self, "Failed to enable channel");
         return FALSE;
       }
     }
+  }
 
-    gst_video_info_from_ntv2_video_format(&self->configured_info,
-                                          self->video_format);
+  self->device->device->EnableInputInterrupt(self->channel);
+  self->device->device->SubscribeInputVerticalEvent(self->channel);
 
-    if (self->quad_mode) {
-      if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
-          self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4) {
-        self->device->device->SetQuadQuadFrameEnable(false, self->channel);
-        self->device->device->SetQuadQuadSquaresEnable(false, self->channel);
-        self->device->device->Set4kSquaresEnable(true, self->channel);
-        self->device->device->SetTsiFrameEnable(true, self->channel);
-      } else {
-        switch (self->sdi_mode) {
-          case GST_AJA_SDI_MODE_SINGLE_LINK:
-            g_assert_not_reached();
-            break;
-          case GST_AJA_SDI_MODE_QUAD_LINK_SQD:
-            if (self->configured_info.height > 2160) {
-              self->device->device->Set4kSquaresEnable(false, self->channel);
-              self->device->device->SetTsiFrameEnable(false, self->channel);
-              self->device->device->SetQuadQuadFrameEnable(true, self->channel);
-              self->device->device->SetQuadQuadSquaresEnable(true,
-                                                             self->channel);
-            } else {
-              self->device->device->SetQuadQuadFrameEnable(false,
-                                                           self->channel);
-              self->device->device->SetQuadQuadSquaresEnable(false,
-                                                             self->channel);
-              self->device->device->Set4kSquaresEnable(true, self->channel);
-              self->device->device->SetTsiFrameEnable(false, self->channel);
-            }
-            break;
-          case GST_AJA_SDI_MODE_QUAD_LINK_TSI:
-            if (self->configured_info.height > 2160) {
-              self->device->device->Set4kSquaresEnable(false, self->channel);
-              self->device->device->SetTsiFrameEnable(false, self->channel);
-              self->device->device->SetQuadQuadFrameEnable(true, self->channel);
-              self->device->device->SetQuadQuadSquaresEnable(false,
-                                                             self->channel);
-            } else {
-              self->device->device->SetQuadQuadFrameEnable(false,
-                                                           self->channel);
-              self->device->device->SetQuadQuadSquaresEnable(false,
-                                                             self->channel);
-              self->device->device->Set4kSquaresEnable(false, self->channel);
-              self->device->device->SetTsiFrameEnable(true, self->channel);
-            }
-            break;
-        }
-      }
-    } else {
-      self->device->device->Set4kSquaresEnable(false, self->channel);
-      self->device->device->SetTsiFrameEnable(false, self->channel);
-      self->device->device->SetQuadQuadFrameEnable(false, self->channel);
-      self->device->device->SetQuadQuadSquaresEnable(false, self->channel);
+  if (self->video_format_setting == GST_AJA_VIDEO_FORMAT_AUTO) {
+    self->device->device->WaitForInputVerticalInterrupt(self->channel, 10);
+    self->video_format = self->device->device->GetInputVideoFormat(
+        self->configured_input_source);
+    if (self->video_format == NTV2_FORMAT_UNKNOWN) {
+      GST_ERROR_OBJECT(self, "Input video format not detected");
+      return TRUE;
     }
+    std::string configured_string = NTV2VideoFormatToString(self->video_format);
+    GST_DEBUG_OBJECT(self, "Detected input video format %s (%d)",
+                     configured_string.c_str(), (int)self->video_format);
+  } else {
+    self->video_format = gst_ntv2_video_format_from_aja_format(
+        self->video_format_setting, self->quad_mode);
+  }
 
-    self->device->device->SetMode(self->channel, NTV2_MODE_CAPTURE, false);
-    if (self->quad_mode) {
-      for (int i = 1; i < 4; i++)
-        self->device->device->SetMode((NTV2Channel)(self->channel + i),
-                                      NTV2_MODE_CAPTURE, false);
-    }
+  if (self->video_format == NTV2_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT(self, "Unsupported mode");
+    return FALSE;
+  }
 
-    GST_DEBUG_OBJECT(self, "Configuring video format %d on channel %d",
-                     (int)self->video_format, (int)self->channel);
-    self->device->device->SetVideoFormat(self->video_format, false, false,
-                                         self->channel);
+  if (!::NTV2DeviceCanDoVideoFormat(self->device_id, self->video_format)) {
+    GST_ERROR_OBJECT(self, "Device does not support mode %d",
+                     (int)self->video_format);
+    return FALSE;
+  }
 
-    if (!::NTV2DeviceCanDoFrameBufferFormat(self->device_id,
-                                            ::NTV2_FBF_10BIT_YCBCR)) {
-      GST_ERROR_OBJECT(self, "Device does not support frame buffer format %d",
-                       (int)::NTV2_FBF_10BIT_YCBCR);
+  if (self->quad_mode) {
+    if (self->channel != ::NTV2_CHANNEL1 && self->channel != ::NTV2_CHANNEL5) {
+      GST_ERROR_OBJECT(self, "Quad modes require channels 1 or 5");
       return FALSE;
     }
-    self->device->device->SetFrameBufferFormat(self->channel,
-                                               ::NTV2_FBF_10BIT_YCBCR);
-    if (self->quad_mode) {
-      for (int i = 1; i < 4; i++)
-        self->device->device->SetFrameBufferFormat(
-            (NTV2Channel)(self->channel + i), ::NTV2_FBF_10BIT_YCBCR);
-    }
+  }
 
-    self->device->device->DMABufferAutoLock(false, true, 0);
+  gst_video_info_from_ntv2_video_format(&self->configured_info,
+                                        self->video_format);
 
-    if (::NTV2DeviceHasBiDirectionalSDI(self->device_id)) {
-      self->device->device->SetSDITransmitEnable(self->channel, false);
-      if (self->quad_mode) {
-        for (int i = 1; i < 4; i++)
-          self->device->device->SetSDITransmitEnable(
-              (NTV2Channel)(self->channel + i), false);
-      }
-    }
-
-    // Always use the framebuffer associated with the channel
-    NTV2InputCrosspointID framebuffer_id =
-        ::GetFrameBufferInputXptFromChannel(self->channel, false);
-
-    NTV2VANCMode vanc_mode;
-    NTV2InputSource input_source;
-    NTV2OutputCrosspointID input_source_id;
-    switch (self->input_source) {
-      case GST_AJA_INPUT_SOURCE_AUTO:
-        input_source = ::NTV2ChannelToInputSource(self->channel);
-        input_source_id =
-            ::GetSDIInputOutputXptFromChannel(self->channel, false);
-        vanc_mode = ::NTV2DeviceCanDoCustomAnc(self->device_id)
-                        ? ::NTV2_VANCMODE_OFF
-                        : ::NTV2_VANCMODE_TALL;
-        break;
-      case GST_AJA_INPUT_SOURCE_ANALOG1:
-        input_source = ::NTV2_INPUTSOURCE_ANALOG1;
-        input_source_id = ::NTV2_XptAnalogIn;
-        vanc_mode = ::NTV2_VANCMODE_TALL;
-        break;
-      case GST_AJA_INPUT_SOURCE_HDMI1:
-        input_source = ::NTV2_INPUTSOURCE_HDMI1;
-        input_source_id = ::NTV2_XptHDMIIn1;
-        vanc_mode = ::NTV2_VANCMODE_OFF;
-        break;
-      case GST_AJA_INPUT_SOURCE_HDMI2:
-        input_source = ::NTV2_INPUTSOURCE_HDMI2;
-        input_source_id = ::NTV2_XptHDMIIn2;
-        vanc_mode = ::NTV2_VANCMODE_OFF;
-        break;
-      case GST_AJA_INPUT_SOURCE_HDMI3:
-        input_source = ::NTV2_INPUTSOURCE_HDMI3;
-        input_source_id = ::NTV2_XptHDMIIn3;
-        vanc_mode = ::NTV2_VANCMODE_OFF;
-        break;
-      case GST_AJA_INPUT_SOURCE_HDMI4:
-        input_source = ::NTV2_INPUTSOURCE_HDMI4;
-        input_source_id = ::NTV2_XptHDMIIn4;
-        vanc_mode = ::NTV2_VANCMODE_OFF;
-        break;
-      case GST_AJA_INPUT_SOURCE_SDI1:
-        input_source = ::NTV2_INPUTSOURCE_SDI1;
-        input_source_id = ::NTV2_XptSDIIn1;
-        vanc_mode = ::NTV2_VANCMODE_TALL;
-        break;
-      case GST_AJA_INPUT_SOURCE_SDI2:
-        input_source = ::NTV2_INPUTSOURCE_SDI2;
-        input_source_id = ::NTV2_XptSDIIn2;
-        vanc_mode = ::NTV2_VANCMODE_TALL;
-        break;
-      case GST_AJA_INPUT_SOURCE_SDI3:
-        input_source = ::NTV2_INPUTSOURCE_SDI3;
-        input_source_id = ::NTV2_XptSDIIn3;
-        vanc_mode = ::NTV2_VANCMODE_TALL;
-        break;
-      case GST_AJA_INPUT_SOURCE_SDI4:
-        input_source = ::NTV2_INPUTSOURCE_SDI4;
-        input_source_id = ::NTV2_XptSDIIn4;
-        vanc_mode = ::NTV2_VANCMODE_TALL;
-        break;
-      case GST_AJA_INPUT_SOURCE_SDI5:
-        input_source = ::NTV2_INPUTSOURCE_SDI5;
-        input_source_id = ::NTV2_XptSDIIn5;
-        vanc_mode = ::NTV2_VANCMODE_TALL;
-        break;
-      case GST_AJA_INPUT_SOURCE_SDI6:
-        input_source = ::NTV2_INPUTSOURCE_SDI6;
-        input_source_id = ::NTV2_XptSDIIn6;
-        vanc_mode = ::NTV2_VANCMODE_TALL;
-        break;
-      case GST_AJA_INPUT_SOURCE_SDI7:
-        input_source = ::NTV2_INPUTSOURCE_SDI7;
-        input_source_id = ::NTV2_XptSDIIn7;
-        vanc_mode = ::NTV2_VANCMODE_TALL;
-        break;
-      case GST_AJA_INPUT_SOURCE_SDI8:
-        input_source = ::NTV2_INPUTSOURCE_SDI8;
-        input_source_id = ::NTV2_XptSDIIn8;
-        vanc_mode = ::NTV2_VANCMODE_TALL;
-        break;
-      default:
-        g_assert_not_reached();
-        break;
-    }
-
-    self->configured_input_source = input_source;
-
-    self->vanc_mode = vanc_mode;
-
-    const NTV2Standard standard(
-        ::GetNTV2StandardFromVideoFormat(self->video_format));
-    self->device->device->SetStandard(standard, self->channel);
-    if (self->quad_mode) {
-      for (int i = 1; i < 4; i++)
-        self->device->device->SetStandard(standard,
-                                          (NTV2Channel)(self->channel + i));
-    }
-
-    const NTV2FrameGeometry geometry =
-        ::GetNTV2FrameGeometryFromVideoFormat(self->video_format);
-
-    self->vanc_mode =
-        ::HasVANCGeometries(geometry) ? vanc_mode : ::NTV2_VANCMODE_OFF;
-    if (self->vanc_mode == ::NTV2_VANCMODE_OFF) {
-      self->device->device->SetFrameGeometry(geometry, false, self->channel);
-      self->device->device->SetVANCMode(self->vanc_mode, self->channel);
-
-      if (self->quad_mode) {
-        for (int i = 1; i < 4; i++) {
-          self->device->device->SetFrameGeometry(
-              geometry, false, (NTV2Channel)(self->channel + i));
-          self->device->device->SetVANCMode(self->vanc_mode,
-                                            (NTV2Channel)(self->channel + i));
-        }
-      }
+  if (self->quad_mode) {
+    if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
+        self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4) {
+      self->device->device->SetQuadQuadFrameEnable(false, self->channel);
+      self->device->device->SetQuadQuadSquaresEnable(false, self->channel);
+      self->device->device->Set4kSquaresEnable(true, self->channel);
+      self->device->device->SetTsiFrameEnable(true, self->channel);
     } else {
-      const NTV2FrameGeometry vanc_geometry =
-          ::GetVANCFrameGeometry(geometry, self->vanc_mode);
-
-      self->device->device->SetFrameGeometry(vanc_geometry, false,
-                                             self->channel);
-      self->device->device->SetVANCMode(self->vanc_mode, self->channel);
-
-      if (self->quad_mode) {
-        for (int i = 1; i < 4; i++) {
-          self->device->device->SetFrameGeometry(
-              vanc_geometry, false, (NTV2Channel)(self->channel + i));
-          self->device->device->SetVANCMode(self->vanc_mode,
-                                            (NTV2Channel)(self->channel + i));
-        }
-      }
-    }
-
-    CNTV2SignalRouter router;
-
-    self->device->device->GetRouting(router);
-
-    // Need to remove old routes for the output and framebuffer we're going to
-    // use
-    NTV2ActualConnections connections = router.GetConnections();
-
-    if (self->quad_mode) {
-      if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
-          self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4) {
-        // Need to disconnect the 4 inputs corresponding to this channel from
-        // their framebuffers/muxers, and muxers from their framebuffers
-        for (auto iter = connections.begin(); iter != connections.end();
-             iter++) {
-          if (iter->first == NTV2_XptFrameBuffer1Input ||
-              iter->first == NTV2_XptFrameBuffer1BInput ||
-              iter->first == NTV2_XptFrameBuffer2Input ||
-              iter->first == NTV2_XptFrameBuffer2BInput ||
-              iter->second == NTV2_Xpt425Mux1AYUV ||
-              iter->second == NTV2_Xpt425Mux1BYUV ||
-              iter->second == NTV2_Xpt425Mux2AYUV ||
-              iter->second == NTV2_Xpt425Mux2BYUV ||
-              iter->first == NTV2_Xpt425Mux1AInput ||
-              iter->first == NTV2_Xpt425Mux1BInput ||
-              iter->first == NTV2_Xpt425Mux2AInput ||
-              iter->first == NTV2_Xpt425Mux2BInput ||
-              iter->second == NTV2_XptHDMIIn1 ||
-              iter->second == NTV2_XptHDMIIn1Q2 ||
-              iter->second == NTV2_XptHDMIIn1Q3 ||
-              iter->second == NTV2_XptHDMIIn1Q4)
-            router.RemoveConnection(iter->first, iter->second);
-        }
-      } else if (self->channel == NTV2_CHANNEL1) {
-        for (auto iter = connections.begin(); iter != connections.end();
-             iter++) {
-          if (iter->first == NTV2_XptFrameBuffer1Input ||
-              iter->first == NTV2_XptFrameBuffer1BInput ||
-              iter->first == NTV2_XptFrameBuffer1DS2Input ||
-              iter->first == NTV2_XptFrameBuffer2Input ||
-              iter->first == NTV2_XptFrameBuffer2BInput ||
-              iter->first == NTV2_XptFrameBuffer2DS2Input ||
-              iter->second == NTV2_Xpt425Mux1AYUV ||
-              iter->second == NTV2_Xpt425Mux1BYUV ||
-              iter->second == NTV2_Xpt425Mux2AYUV ||
-              iter->second == NTV2_Xpt425Mux2BYUV ||
-              iter->first == NTV2_Xpt425Mux1AInput ||
-              iter->first == NTV2_Xpt425Mux1BInput ||
-              iter->first == NTV2_Xpt425Mux2AInput ||
-              iter->first == NTV2_Xpt425Mux2BInput ||
-              iter->second == NTV2_XptSDIIn1 ||
-              iter->second == NTV2_XptSDIIn2 ||
-              iter->second == NTV2_XptSDIIn3 ||
-              iter->second == NTV2_XptSDIIn4 ||
-              iter->second == NTV2_XptSDIIn1DS2 ||
-              iter->second == NTV2_XptSDIIn2DS2 ||
-              iter->first == NTV2_XptFrameBuffer1Input ||
-              iter->first == NTV2_XptFrameBuffer2Input ||
-              iter->first == NTV2_XptFrameBuffer3Input ||
-              iter->first == NTV2_XptFrameBuffer4Input)
-            router.RemoveConnection(iter->first, iter->second);
-        }
-      } else if (self->channel == NTV2_CHANNEL5) {
-        for (auto iter = connections.begin(); iter != connections.end();
-             iter++) {
-          if (iter->first == NTV2_XptFrameBuffer5Input ||
-              iter->first == NTV2_XptFrameBuffer5BInput ||
-              iter->first == NTV2_XptFrameBuffer5DS2Input ||
-              iter->first == NTV2_XptFrameBuffer6Input ||
-              iter->first == NTV2_XptFrameBuffer6BInput ||
-              iter->first == NTV2_XptFrameBuffer6DS2Input ||
-              iter->second == NTV2_Xpt425Mux3AYUV ||
-              iter->second == NTV2_Xpt425Mux3BYUV ||
-              iter->second == NTV2_Xpt425Mux4AYUV ||
-              iter->second == NTV2_Xpt425Mux4BYUV ||
-              iter->first == NTV2_Xpt425Mux3AInput ||
-              iter->first == NTV2_Xpt425Mux3BInput ||
-              iter->first == NTV2_Xpt425Mux4AInput ||
-              iter->first == NTV2_Xpt425Mux4BInput ||
-              iter->second == NTV2_XptSDIIn5 ||
-              iter->second == NTV2_XptSDIIn6 ||
-              iter->second == NTV2_XptSDIIn7 ||
-              iter->second == NTV2_XptSDIIn8 ||
-              iter->second == NTV2_XptSDIIn5DS2 ||
-              iter->second == NTV2_XptSDIIn6DS2 ||
-              iter->first == NTV2_XptFrameBuffer5Input ||
-              iter->first == NTV2_XptFrameBuffer6Input ||
-              iter->first == NTV2_XptFrameBuffer7Input ||
-              iter->first == NTV2_XptFrameBuffer8Input)
-            router.RemoveConnection(iter->first, iter->second);
-        }
-      } else {
-        g_assert_not_reached();
-      }
-    } else {
-      for (auto iter = connections.begin(); iter != connections.end(); iter++) {
-        if (iter->first == framebuffer_id || iter->second == input_source_id)
-          router.RemoveConnection(iter->first, iter->second);
-
-        if (((input_source_id == NTV2_XptSDIIn6 ||
-              input_source_id == NTV2_XptSDIIn8) &&
-             iter->first == NTV2_XptFrameBuffer6BInput) ||
-            ((input_source_id == NTV2_XptSDIIn5 ||
-              input_source_id == NTV2_XptSDIIn6) &&
-             iter->first == NTV2_XptFrameBuffer5BInput) ||
-            ((input_source_id == NTV2_XptSDIIn4 ||
-              input_source_id == NTV2_XptSDIIn2) &&
-             iter->first == NTV2_XptFrameBuffer2BInput) ||
-            ((input_source_id == NTV2_XptSDIIn1 ||
-              input_source_id == NTV2_XptSDIIn2) &&
-             iter->first == NTV2_XptFrameBuffer1BInput))
-          router.RemoveConnection(iter->first, iter->second);
-      }
-    }
-
-    if (self->quad_mode) {
-      if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
-          self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4) {
-        input_source_id = NTV2_Xpt425Mux1AYUV;
-      } else if (self->sdi_mode == GST_AJA_SDI_MODE_QUAD_LINK_TSI &&
-                 !NTV2_IS_QUAD_QUAD_HFR_VIDEO_FORMAT(self->video_format) &&
-                 !NTV2_IS_QUAD_QUAD_FORMAT(self->video_format)) {
-        if (self->channel == NTV2_CHANNEL1)
-          input_source_id = NTV2_Xpt425Mux1AYUV;
-        else if (self->channel == NTV2_CHANNEL5)
-          input_source_id = NTV2_Xpt425Mux3AYUV;
-        else
+      switch (self->sdi_mode) {
+        case GST_AJA_SDI_MODE_SINGLE_LINK:
           g_assert_not_reached();
+          break;
+        case GST_AJA_SDI_MODE_QUAD_LINK_SQD:
+          if (self->configured_info.height > 2160) {
+            self->device->device->Set4kSquaresEnable(false, self->channel);
+            self->device->device->SetTsiFrameEnable(false, self->channel);
+            self->device->device->SetQuadQuadFrameEnable(true, self->channel);
+            self->device->device->SetQuadQuadSquaresEnable(true, self->channel);
+          } else {
+            self->device->device->SetQuadQuadFrameEnable(false, self->channel);
+            self->device->device->SetQuadQuadSquaresEnable(false,
+                                                           self->channel);
+            self->device->device->Set4kSquaresEnable(true, self->channel);
+            self->device->device->SetTsiFrameEnable(false, self->channel);
+          }
+          break;
+        case GST_AJA_SDI_MODE_QUAD_LINK_TSI:
+          if (self->configured_info.height > 2160) {
+            self->device->device->Set4kSquaresEnable(false, self->channel);
+            self->device->device->SetTsiFrameEnable(false, self->channel);
+            self->device->device->SetQuadQuadFrameEnable(true, self->channel);
+            self->device->device->SetQuadQuadSquaresEnable(false,
+                                                           self->channel);
+          } else {
+            self->device->device->SetQuadQuadFrameEnable(false, self->channel);
+            self->device->device->SetQuadQuadSquaresEnable(false,
+                                                           self->channel);
+            self->device->device->Set4kSquaresEnable(false, self->channel);
+            self->device->device->SetTsiFrameEnable(true, self->channel);
+          }
+          break;
       }
     }
+  } else {
+    self->device->device->Set4kSquaresEnable(false, self->channel);
+    self->device->device->SetTsiFrameEnable(false, self->channel);
+    self->device->device->SetQuadQuadFrameEnable(false, self->channel);
+    self->device->device->SetQuadQuadSquaresEnable(false, self->channel);
+  }
 
-    GST_DEBUG_OBJECT(self, "Creating connection %d - %d", framebuffer_id,
-                     input_source_id);
-    router.AddConnection(framebuffer_id, input_source_id);
+  self->device->device->SetMode(self->channel, NTV2_MODE_CAPTURE, false);
+  if (self->quad_mode) {
+    for (int i = 1; i < 4; i++)
+      self->device->device->SetMode((NTV2Channel)(self->channel + i),
+                                    NTV2_MODE_CAPTURE, false);
+  }
+
+  std::string configured_string = NTV2VideoFormatToString(self->video_format);
+  GST_DEBUG_OBJECT(self, "Configuring video format %s (%d) on channel %d",
+                   configured_string.c_str(), (int)self->video_format,
+                   (int)self->channel);
+  self->device->device->SetVideoFormat(self->video_format, false, false,
+                                       self->channel);
+
+  if (!::NTV2DeviceCanDoFrameBufferFormat(self->device_id,
+                                          ::NTV2_FBF_10BIT_YCBCR)) {
+    GST_ERROR_OBJECT(self, "Device does not support frame buffer format %d",
+                     (int)::NTV2_FBF_10BIT_YCBCR);
+    return FALSE;
+  }
+  self->device->device->SetFrameBufferFormat(self->channel,
+                                             ::NTV2_FBF_10BIT_YCBCR);
+  if (self->quad_mode) {
+    for (int i = 1; i < 4; i++)
+      self->device->device->SetFrameBufferFormat(
+          (NTV2Channel)(self->channel + i), ::NTV2_FBF_10BIT_YCBCR);
+  }
+
+  self->device->device->DMABufferAutoLock(false, true, 0);
+
+  if (::NTV2DeviceHasBiDirectionalSDI(self->device_id)) {
+    self->device->device->SetSDITransmitEnable(self->channel, false);
+    if (self->quad_mode) {
+      for (int i = 1; i < 4; i++)
+        self->device->device->SetSDITransmitEnable(
+            (NTV2Channel)(self->channel + i), false);
+    }
+  }
+
+  // Always use the framebuffer associated with the channel
+  NTV2InputCrosspointID framebuffer_id =
+      ::GetFrameBufferInputXptFromChannel(self->channel, false);
+
+  const NTV2Standard standard(
+      ::GetNTV2StandardFromVideoFormat(self->video_format));
+  self->device->device->SetStandard(standard, self->channel);
+  if (self->quad_mode) {
+    for (int i = 1; i < 4; i++)
+      self->device->device->SetStandard(standard,
+                                        (NTV2Channel)(self->channel + i));
+  }
+
+  const NTV2FrameGeometry geometry =
+      ::GetNTV2FrameGeometryFromVideoFormat(self->video_format);
+
+  self->vanc_mode =
+      ::HasVANCGeometries(geometry) ? vanc_mode : ::NTV2_VANCMODE_OFF;
+  if (self->vanc_mode == ::NTV2_VANCMODE_OFF) {
+    self->device->device->SetFrameGeometry(geometry, false, self->channel);
+    self->device->device->SetVANCMode(self->vanc_mode, self->channel);
 
     if (self->quad_mode) {
-      if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
-          self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4) {
-        router.AddConnection(NTV2_XptFrameBuffer1BInput, NTV2_Xpt425Mux1BYUV);
-        router.AddConnection(NTV2_XptFrameBuffer2Input, NTV2_Xpt425Mux2AYUV);
-        router.AddConnection(NTV2_XptFrameBuffer2BInput, NTV2_Xpt425Mux2BYUV);
+      for (int i = 1; i < 4; i++) {
+        self->device->device->SetFrameGeometry(
+            geometry, false, (NTV2Channel)(self->channel + i));
+        self->device->device->SetVANCMode(self->vanc_mode,
+                                          (NTV2Channel)(self->channel + i));
+      }
+    }
+  } else {
+    const NTV2FrameGeometry vanc_geometry =
+        ::GetVANCFrameGeometry(geometry, self->vanc_mode);
 
-        router.AddConnection(NTV2_Xpt425Mux1AInput, NTV2_XptHDMIIn1);
-        router.AddConnection(NTV2_Xpt425Mux1BInput, NTV2_XptHDMIIn1Q2);
-        router.AddConnection(NTV2_Xpt425Mux2AInput, NTV2_XptHDMIIn1Q3);
-        router.AddConnection(NTV2_Xpt425Mux2BInput, NTV2_XptHDMIIn1Q4);
-      } else {
-        if (self->sdi_mode == GST_AJA_SDI_MODE_QUAD_LINK_TSI) {
-          if (NTV2_IS_QUAD_QUAD_HFR_VIDEO_FORMAT(self->video_format)) {
-            if (self->channel == NTV2_CHANNEL1) {
-              router.AddConnection(NTV2_XptFrameBuffer1DS2Input,
-                                   NTV2_XptSDIIn2);
-              router.AddConnection(NTV2_XptFrameBuffer2Input, NTV2_XptSDIIn3);
-              router.AddConnection(NTV2_XptFrameBuffer2DS2Input,
-                                   NTV2_XptSDIIn4);
-            } else if (self->channel == NTV2_CHANNEL5) {
-              router.AddConnection(NTV2_XptFrameBuffer5DS2Input,
-                                   NTV2_XptSDIIn6);
-              router.AddConnection(NTV2_XptFrameBuffer5Input, NTV2_XptSDIIn7);
-              router.AddConnection(NTV2_XptFrameBuffer6DS2Input,
-                                   NTV2_XptSDIIn8);
-            } else {
-              g_assert_not_reached();
-            }
-          } else if (NTV2_IS_QUAD_QUAD_FORMAT(self->video_format)) {
-            if (self->channel == NTV2_CHANNEL1) {
-              router.AddConnection(NTV2_XptFrameBuffer1DS2Input,
-                                   NTV2_XptSDIIn1DS2);
-              router.AddConnection(NTV2_XptFrameBuffer2Input, NTV2_XptSDIIn2);
-              router.AddConnection(NTV2_XptFrameBuffer2DS2Input,
-                                   NTV2_XptSDIIn2DS2);
-            } else if (self->channel == NTV2_CHANNEL5) {
-              router.AddConnection(NTV2_XptFrameBuffer5DS2Input,
-                                   NTV2_XptSDIIn5DS2);
-              router.AddConnection(NTV2_XptFrameBuffer5Input, NTV2_XptSDIIn6);
-              router.AddConnection(NTV2_XptFrameBuffer6DS2Input,
-                                   NTV2_XptSDIIn6DS2);
-            } else {
-              g_assert_not_reached();
-            }
-            // FIXME: Need special handling of NTV2_IS_4K_HFR_VIDEO_FORMAT for
-            // TSI?
+    self->device->device->SetFrameGeometry(vanc_geometry, false, self->channel);
+    self->device->device->SetVANCMode(self->vanc_mode, self->channel);
+
+    if (self->quad_mode) {
+      for (int i = 1; i < 4; i++) {
+        self->device->device->SetFrameGeometry(
+            vanc_geometry, false, (NTV2Channel)(self->channel + i));
+        self->device->device->SetVANCMode(self->vanc_mode,
+                                          (NTV2Channel)(self->channel + i));
+      }
+    }
+  }
+
+  CNTV2SignalRouter router;
+
+  self->device->device->GetRouting(router);
+
+  // Need to remove old routes for the output and framebuffer we're going to
+  // use
+  NTV2ActualConnections connections = router.GetConnections();
+
+  if (self->quad_mode) {
+    if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
+        self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4) {
+      // Need to disconnect the 4 inputs corresponding to this channel from
+      // their framebuffers/muxers, and muxers from their framebuffers
+      for (auto iter = connections.begin(); iter != connections.end(); iter++) {
+        if (iter->first == NTV2_XptFrameBuffer1Input ||
+            iter->first == NTV2_XptFrameBuffer1BInput ||
+            iter->first == NTV2_XptFrameBuffer2Input ||
+            iter->first == NTV2_XptFrameBuffer2BInput ||
+            iter->second == NTV2_Xpt425Mux1AYUV ||
+            iter->second == NTV2_Xpt425Mux1BYUV ||
+            iter->second == NTV2_Xpt425Mux2AYUV ||
+            iter->second == NTV2_Xpt425Mux2BYUV ||
+            iter->first == NTV2_Xpt425Mux1AInput ||
+            iter->first == NTV2_Xpt425Mux1BInput ||
+            iter->first == NTV2_Xpt425Mux2AInput ||
+            iter->first == NTV2_Xpt425Mux2BInput ||
+            iter->second == NTV2_XptHDMIIn1 ||
+            iter->second == NTV2_XptHDMIIn1Q2 ||
+            iter->second == NTV2_XptHDMIIn1Q3 ||
+            iter->second == NTV2_XptHDMIIn1Q4)
+          router.RemoveConnection(iter->first, iter->second);
+      }
+    } else if (self->channel == NTV2_CHANNEL1) {
+      for (auto iter = connections.begin(); iter != connections.end(); iter++) {
+        if (iter->first == NTV2_XptFrameBuffer1Input ||
+            iter->first == NTV2_XptFrameBuffer1BInput ||
+            iter->first == NTV2_XptFrameBuffer1DS2Input ||
+            iter->first == NTV2_XptFrameBuffer2Input ||
+            iter->first == NTV2_XptFrameBuffer2BInput ||
+            iter->first == NTV2_XptFrameBuffer2DS2Input ||
+            iter->second == NTV2_Xpt425Mux1AYUV ||
+            iter->second == NTV2_Xpt425Mux1BYUV ||
+            iter->second == NTV2_Xpt425Mux2AYUV ||
+            iter->second == NTV2_Xpt425Mux2BYUV ||
+            iter->first == NTV2_Xpt425Mux1AInput ||
+            iter->first == NTV2_Xpt425Mux1BInput ||
+            iter->first == NTV2_Xpt425Mux2AInput ||
+            iter->first == NTV2_Xpt425Mux2BInput ||
+            iter->second == NTV2_XptSDIIn1 || iter->second == NTV2_XptSDIIn2 ||
+            iter->second == NTV2_XptSDIIn3 || iter->second == NTV2_XptSDIIn4 ||
+            iter->second == NTV2_XptSDIIn1DS2 ||
+            iter->second == NTV2_XptSDIIn2DS2 ||
+            iter->first == NTV2_XptFrameBuffer1Input ||
+            iter->first == NTV2_XptFrameBuffer2Input ||
+            iter->first == NTV2_XptFrameBuffer3Input ||
+            iter->first == NTV2_XptFrameBuffer4Input)
+          router.RemoveConnection(iter->first, iter->second);
+      }
+    } else if (self->channel == NTV2_CHANNEL5) {
+      for (auto iter = connections.begin(); iter != connections.end(); iter++) {
+        if (iter->first == NTV2_XptFrameBuffer5Input ||
+            iter->first == NTV2_XptFrameBuffer5BInput ||
+            iter->first == NTV2_XptFrameBuffer5DS2Input ||
+            iter->first == NTV2_XptFrameBuffer6Input ||
+            iter->first == NTV2_XptFrameBuffer6BInput ||
+            iter->first == NTV2_XptFrameBuffer6DS2Input ||
+            iter->second == NTV2_Xpt425Mux3AYUV ||
+            iter->second == NTV2_Xpt425Mux3BYUV ||
+            iter->second == NTV2_Xpt425Mux4AYUV ||
+            iter->second == NTV2_Xpt425Mux4BYUV ||
+            iter->first == NTV2_Xpt425Mux3AInput ||
+            iter->first == NTV2_Xpt425Mux3BInput ||
+            iter->first == NTV2_Xpt425Mux4AInput ||
+            iter->first == NTV2_Xpt425Mux4BInput ||
+            iter->second == NTV2_XptSDIIn5 || iter->second == NTV2_XptSDIIn6 ||
+            iter->second == NTV2_XptSDIIn7 || iter->second == NTV2_XptSDIIn8 ||
+            iter->second == NTV2_XptSDIIn5DS2 ||
+            iter->second == NTV2_XptSDIIn6DS2 ||
+            iter->first == NTV2_XptFrameBuffer5Input ||
+            iter->first == NTV2_XptFrameBuffer6Input ||
+            iter->first == NTV2_XptFrameBuffer7Input ||
+            iter->first == NTV2_XptFrameBuffer8Input)
+          router.RemoveConnection(iter->first, iter->second);
+      }
+    } else {
+      g_assert_not_reached();
+    }
+  } else {
+    for (auto iter = connections.begin(); iter != connections.end(); iter++) {
+      if (iter->first == framebuffer_id || iter->second == input_source_id)
+        router.RemoveConnection(iter->first, iter->second);
+
+      if (((input_source_id == NTV2_XptSDIIn6 ||
+            input_source_id == NTV2_XptSDIIn8) &&
+           iter->first == NTV2_XptFrameBuffer6BInput) ||
+          ((input_source_id == NTV2_XptSDIIn5 ||
+            input_source_id == NTV2_XptSDIIn6) &&
+           iter->first == NTV2_XptFrameBuffer5BInput) ||
+          ((input_source_id == NTV2_XptSDIIn4 ||
+            input_source_id == NTV2_XptSDIIn2) &&
+           iter->first == NTV2_XptFrameBuffer2BInput) ||
+          ((input_source_id == NTV2_XptSDIIn1 ||
+            input_source_id == NTV2_XptSDIIn2) &&
+           iter->first == NTV2_XptFrameBuffer1BInput))
+        router.RemoveConnection(iter->first, iter->second);
+    }
+  }
+
+  if (self->quad_mode) {
+    if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
+        self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4) {
+      input_source_id = NTV2_Xpt425Mux1AYUV;
+    } else if (self->sdi_mode == GST_AJA_SDI_MODE_QUAD_LINK_TSI &&
+               !NTV2_IS_QUAD_QUAD_HFR_VIDEO_FORMAT(self->video_format) &&
+               !NTV2_IS_QUAD_QUAD_FORMAT(self->video_format)) {
+      if (self->channel == NTV2_CHANNEL1)
+        input_source_id = NTV2_Xpt425Mux1AYUV;
+      else if (self->channel == NTV2_CHANNEL5)
+        input_source_id = NTV2_Xpt425Mux3AYUV;
+      else
+        g_assert_not_reached();
+    }
+  }
+
+  GST_DEBUG_OBJECT(self, "Creating connection %d - %d", framebuffer_id,
+                   input_source_id);
+  router.AddConnection(framebuffer_id, input_source_id);
+
+  if (self->quad_mode) {
+    if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
+        self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4) {
+      router.AddConnection(NTV2_XptFrameBuffer1BInput, NTV2_Xpt425Mux1BYUV);
+      router.AddConnection(NTV2_XptFrameBuffer2Input, NTV2_Xpt425Mux2AYUV);
+      router.AddConnection(NTV2_XptFrameBuffer2BInput, NTV2_Xpt425Mux2BYUV);
+
+      router.AddConnection(NTV2_Xpt425Mux1AInput, NTV2_XptHDMIIn1);
+      router.AddConnection(NTV2_Xpt425Mux1BInput, NTV2_XptHDMIIn1Q2);
+      router.AddConnection(NTV2_Xpt425Mux2AInput, NTV2_XptHDMIIn1Q3);
+      router.AddConnection(NTV2_Xpt425Mux2BInput, NTV2_XptHDMIIn1Q4);
+    } else {
+      if (self->sdi_mode == GST_AJA_SDI_MODE_QUAD_LINK_TSI) {
+        if (NTV2_IS_QUAD_QUAD_HFR_VIDEO_FORMAT(self->video_format)) {
+          if (self->channel == NTV2_CHANNEL1) {
+            router.AddConnection(NTV2_XptFrameBuffer1DS2Input, NTV2_XptSDIIn2);
+            router.AddConnection(NTV2_XptFrameBuffer2Input, NTV2_XptSDIIn3);
+            router.AddConnection(NTV2_XptFrameBuffer2DS2Input, NTV2_XptSDIIn4);
+          } else if (self->channel == NTV2_CHANNEL5) {
+            router.AddConnection(NTV2_XptFrameBuffer5DS2Input, NTV2_XptSDIIn6);
+            router.AddConnection(NTV2_XptFrameBuffer5Input, NTV2_XptSDIIn7);
+            router.AddConnection(NTV2_XptFrameBuffer6DS2Input, NTV2_XptSDIIn8);
           } else {
-            if (self->channel == NTV2_CHANNEL1) {
-              router.AddConnection(NTV2_XptFrameBuffer1BInput,
-                                   NTV2_Xpt425Mux1BYUV);
-              router.AddConnection(NTV2_XptFrameBuffer2Input,
-                                   NTV2_Xpt425Mux2AYUV);
-              router.AddConnection(NTV2_XptFrameBuffer2BInput,
-                                   NTV2_Xpt425Mux2BYUV);
-
-              router.AddConnection(NTV2_Xpt425Mux1AInput, NTV2_XptSDIIn1);
-              router.AddConnection(NTV2_Xpt425Mux1BInput, NTV2_XptSDIIn2);
-              router.AddConnection(NTV2_Xpt425Mux2AInput, NTV2_XptSDIIn3);
-              router.AddConnection(NTV2_Xpt425Mux2BInput, NTV2_XptSDIIn4);
-            } else if (self->channel == NTV2_CHANNEL5) {
-              router.AddConnection(NTV2_XptFrameBuffer5BInput,
-                                   NTV2_Xpt425Mux3BYUV);
-              router.AddConnection(NTV2_XptFrameBuffer6Input,
-                                   NTV2_Xpt425Mux4AYUV);
-              router.AddConnection(NTV2_XptFrameBuffer6BInput,
-                                   NTV2_Xpt425Mux4BYUV);
-
-              router.AddConnection(NTV2_Xpt425Mux3AInput, NTV2_XptSDIIn5);
-              router.AddConnection(NTV2_Xpt425Mux3BInput, NTV2_XptSDIIn6);
-              router.AddConnection(NTV2_Xpt425Mux4AInput, NTV2_XptSDIIn7);
-              router.AddConnection(NTV2_Xpt425Mux4BInput, NTV2_XptSDIIn8);
-            } else {
-              g_assert_not_reached();
-            }
+            g_assert_not_reached();
           }
+        } else if (NTV2_IS_QUAD_QUAD_FORMAT(self->video_format)) {
+          if (self->channel == NTV2_CHANNEL1) {
+            router.AddConnection(NTV2_XptFrameBuffer1DS2Input,
+                                 NTV2_XptSDIIn1DS2);
+            router.AddConnection(NTV2_XptFrameBuffer2Input, NTV2_XptSDIIn2);
+            router.AddConnection(NTV2_XptFrameBuffer2DS2Input,
+                                 NTV2_XptSDIIn2DS2);
+          } else if (self->channel == NTV2_CHANNEL5) {
+            router.AddConnection(NTV2_XptFrameBuffer5DS2Input,
+                                 NTV2_XptSDIIn5DS2);
+            router.AddConnection(NTV2_XptFrameBuffer5Input, NTV2_XptSDIIn6);
+            router.AddConnection(NTV2_XptFrameBuffer6DS2Input,
+                                 NTV2_XptSDIIn6DS2);
+          } else {
+            g_assert_not_reached();
+          }
+          // FIXME: Need special handling of NTV2_IS_4K_HFR_VIDEO_FORMAT for
+          // TSI?
         } else {
           if (self->channel == NTV2_CHANNEL1) {
-            router.AddConnection(NTV2_XptFrameBuffer2Input, NTV2_XptSDIIn2);
-            router.AddConnection(NTV2_XptFrameBuffer3Input, NTV2_XptSDIIn3);
-            router.AddConnection(NTV2_XptFrameBuffer4Input, NTV2_XptSDIIn4);
+            router.AddConnection(NTV2_XptFrameBuffer1BInput,
+                                 NTV2_Xpt425Mux1BYUV);
+            router.AddConnection(NTV2_XptFrameBuffer2Input,
+                                 NTV2_Xpt425Mux2AYUV);
+            router.AddConnection(NTV2_XptFrameBuffer2BInput,
+                                 NTV2_Xpt425Mux2BYUV);
+
+            router.AddConnection(NTV2_Xpt425Mux1AInput, NTV2_XptSDIIn1);
+            router.AddConnection(NTV2_Xpt425Mux1BInput, NTV2_XptSDIIn2);
+            router.AddConnection(NTV2_Xpt425Mux2AInput, NTV2_XptSDIIn3);
+            router.AddConnection(NTV2_Xpt425Mux2BInput, NTV2_XptSDIIn4);
           } else if (self->channel == NTV2_CHANNEL5) {
-            router.AddConnection(NTV2_XptFrameBuffer6Input, NTV2_XptSDIIn6);
-            router.AddConnection(NTV2_XptFrameBuffer7Input, NTV2_XptSDIIn7);
-            router.AddConnection(NTV2_XptFrameBuffer8Input, NTV2_XptSDIIn8);
+            router.AddConnection(NTV2_XptFrameBuffer5BInput,
+                                 NTV2_Xpt425Mux3BYUV);
+            router.AddConnection(NTV2_XptFrameBuffer6Input,
+                                 NTV2_Xpt425Mux4AYUV);
+            router.AddConnection(NTV2_XptFrameBuffer6BInput,
+                                 NTV2_Xpt425Mux4BYUV);
+
+            router.AddConnection(NTV2_Xpt425Mux3AInput, NTV2_XptSDIIn5);
+            router.AddConnection(NTV2_Xpt425Mux3BInput, NTV2_XptSDIIn6);
+            router.AddConnection(NTV2_Xpt425Mux4AInput, NTV2_XptSDIIn7);
+            router.AddConnection(NTV2_Xpt425Mux4BInput, NTV2_XptSDIIn8);
           } else {
             g_assert_not_reached();
           }
         }
+      } else {
+        if (self->channel == NTV2_CHANNEL1) {
+          router.AddConnection(NTV2_XptFrameBuffer2Input, NTV2_XptSDIIn2);
+          router.AddConnection(NTV2_XptFrameBuffer3Input, NTV2_XptSDIIn3);
+          router.AddConnection(NTV2_XptFrameBuffer4Input, NTV2_XptSDIIn4);
+        } else if (self->channel == NTV2_CHANNEL5) {
+          router.AddConnection(NTV2_XptFrameBuffer6Input, NTV2_XptSDIIn6);
+          router.AddConnection(NTV2_XptFrameBuffer7Input, NTV2_XptSDIIn7);
+          router.AddConnection(NTV2_XptFrameBuffer8Input, NTV2_XptSDIIn8);
+        } else {
+          g_assert_not_reached();
+        }
       }
     }
+  }
 
-    {
-      std::stringstream os;
-      CNTV2SignalRouter oldRouter;
-      self->device->device->GetRouting(oldRouter);
-      oldRouter.Print(os);
-      GST_DEBUG_OBJECT(self, "Previous routing:\n%s", os.str().c_str());
-    }
-    self->device->device->ApplySignalRoute(router, true);
-    {
-      std::stringstream os;
-      CNTV2SignalRouter currentRouter;
-      self->device->device->GetRouting(currentRouter);
-      currentRouter.Print(os);
-      GST_DEBUG_OBJECT(self, "New routing:\n%s", os.str().c_str());
-    }
+  {
+    std::stringstream os;
+    CNTV2SignalRouter oldRouter;
+    self->device->device->GetRouting(oldRouter);
+    oldRouter.Print(os);
+    GST_DEBUG_OBJECT(self, "Previous routing:\n%s", os.str().c_str());
+  }
+  self->device->device->ApplySignalRoute(router, true);
+  {
+    std::stringstream os;
+    CNTV2SignalRouter currentRouter;
+    self->device->device->GetRouting(currentRouter);
+    currentRouter.Print(os);
+    GST_DEBUG_OBJECT(self, "New routing:\n%s", os.str().c_str());
+  }
 
-    switch (self->audio_system_setting) {
-      case GST_AJA_AUDIO_SYSTEM_1:
+  switch (self->audio_system_setting) {
+    case GST_AJA_AUDIO_SYSTEM_1:
+      self->audio_system = ::NTV2_AUDIOSYSTEM_1;
+      break;
+    case GST_AJA_AUDIO_SYSTEM_2:
+      self->audio_system = ::NTV2_AUDIOSYSTEM_2;
+      break;
+    case GST_AJA_AUDIO_SYSTEM_3:
+      self->audio_system = ::NTV2_AUDIOSYSTEM_3;
+      break;
+    case GST_AJA_AUDIO_SYSTEM_4:
+      self->audio_system = ::NTV2_AUDIOSYSTEM_4;
+      break;
+    case GST_AJA_AUDIO_SYSTEM_5:
+      self->audio_system = ::NTV2_AUDIOSYSTEM_5;
+      break;
+    case GST_AJA_AUDIO_SYSTEM_6:
+      self->audio_system = ::NTV2_AUDIOSYSTEM_6;
+      break;
+    case GST_AJA_AUDIO_SYSTEM_7:
+      self->audio_system = ::NTV2_AUDIOSYSTEM_7;
+      break;
+    case GST_AJA_AUDIO_SYSTEM_8:
+      self->audio_system = ::NTV2_AUDIOSYSTEM_8;
+      break;
+    case GST_AJA_AUDIO_SYSTEM_AUTO:
+      self->audio_system = ::NTV2_AUDIOSYSTEM_1;
+      if (::NTV2DeviceGetNumAudioSystems(self->device_id) > 1)
+        self->audio_system = ::NTV2ChannelToAudioSystem(self->channel);
+      if (!::NTV2DeviceCanDoFrameStore1Display(self->device_id))
         self->audio_system = ::NTV2_AUDIOSYSTEM_1;
-        break;
-      case GST_AJA_AUDIO_SYSTEM_2:
-        self->audio_system = ::NTV2_AUDIOSYSTEM_2;
-        break;
-      case GST_AJA_AUDIO_SYSTEM_3:
-        self->audio_system = ::NTV2_AUDIOSYSTEM_3;
-        break;
-      case GST_AJA_AUDIO_SYSTEM_4:
-        self->audio_system = ::NTV2_AUDIOSYSTEM_4;
-        break;
-      case GST_AJA_AUDIO_SYSTEM_5:
-        self->audio_system = ::NTV2_AUDIOSYSTEM_5;
-        break;
-      case GST_AJA_AUDIO_SYSTEM_6:
-        self->audio_system = ::NTV2_AUDIOSYSTEM_6;
-        break;
-      case GST_AJA_AUDIO_SYSTEM_7:
-        self->audio_system = ::NTV2_AUDIOSYSTEM_7;
-        break;
-      case GST_AJA_AUDIO_SYSTEM_8:
-        self->audio_system = ::NTV2_AUDIOSYSTEM_8;
-        break;
-      case GST_AJA_AUDIO_SYSTEM_AUTO:
-        self->audio_system = ::NTV2_AUDIOSYSTEM_1;
-        if (::NTV2DeviceGetNumAudioSystems(self->device_id) > 1)
-          self->audio_system = ::NTV2ChannelToAudioSystem(self->channel);
-        if (!::NTV2DeviceCanDoFrameStore1Display(self->device_id))
-          self->audio_system = ::NTV2_AUDIOSYSTEM_1;
-        break;
-      default:
-        g_assert_not_reached();
-        break;
-    }
+      break;
+    default:
+      g_assert_not_reached();
+      break;
+  }
 
-    GST_DEBUG_OBJECT(self, "Using audio system %d", self->audio_system);
+  GST_DEBUG_OBJECT(self, "Using audio system %d", self->audio_system);
 
-    NTV2AudioSource audio_source;
-    switch (self->audio_source) {
-      case GST_AJA_AUDIO_SOURCE_EMBEDDED:
-        audio_source = ::NTV2_AUDIO_EMBEDDED;
-        break;
-      case GST_AJA_AUDIO_SOURCE_AES:
-        audio_source = ::NTV2_AUDIO_AES;
-        break;
-      case GST_AJA_AUDIO_SOURCE_ANALOG:
-        audio_source = ::NTV2_AUDIO_ANALOG;
-        break;
-      case GST_AJA_AUDIO_SOURCE_HDMI:
-        audio_source = ::NTV2_AUDIO_HDMI;
-        break;
-      case GST_AJA_AUDIO_SOURCE_MIC:
-        audio_source = ::NTV2_AUDIO_MIC;
-        break;
-      default:
-        g_assert_not_reached();
-        break;
-    }
+  NTV2AudioSource audio_source;
+  switch (self->audio_source) {
+    case GST_AJA_AUDIO_SOURCE_EMBEDDED:
+      audio_source = ::NTV2_AUDIO_EMBEDDED;
+      break;
+    case GST_AJA_AUDIO_SOURCE_AES:
+      audio_source = ::NTV2_AUDIO_AES;
+      break;
+    case GST_AJA_AUDIO_SOURCE_ANALOG:
+      audio_source = ::NTV2_AUDIO_ANALOG;
+      break;
+    case GST_AJA_AUDIO_SOURCE_HDMI:
+      audio_source = ::NTV2_AUDIO_HDMI;
+      break;
+    case GST_AJA_AUDIO_SOURCE_MIC:
+      audio_source = ::NTV2_AUDIO_MIC;
+      break;
+    default:
+      g_assert_not_reached();
+      break;
+  }
 
-    self->device->device->SetAudioSystemInputSource(
-        self->audio_system, audio_source,
-        ::NTV2InputSourceToEmbeddedAudioInput(input_source));
-    self->configured_audio_channels =
-        ::NTV2DeviceGetMaxAudioChannels(self->device_id);
-    self->device->device->SetNumberAudioChannels(
-        self->configured_audio_channels, self->audio_system);
-    self->device->device->SetAudioRate(::NTV2_AUDIO_48K, self->audio_system);
-    self->device->device->SetAudioBufferSize(::NTV2_AUDIO_BUFFER_BIG,
-                                             self->audio_system);
-    self->device->device->SetAudioLoopBack(::NTV2_AUDIO_LOOPBACK_OFF,
+  self->device->device->SetAudioSystemInputSource(
+      self->audio_system, audio_source,
+      ::NTV2InputSourceToEmbeddedAudioInput(input_source));
+  self->configured_audio_channels =
+      ::NTV2DeviceGetMaxAudioChannels(self->device_id);
+  self->device->device->SetNumberAudioChannels(self->configured_audio_channels,
+                                               self->audio_system);
+  self->device->device->SetAudioRate(::NTV2_AUDIO_48K, self->audio_system);
+  self->device->device->SetAudioBufferSize(::NTV2_AUDIO_BUFFER_BIG,
                                            self->audio_system);
-    self->device->device->SetEmbeddedAudioClock(
-        ::NTV2_EMBEDDED_AUDIO_CLOCK_VIDEO_INPUT, self->audio_system);
+  self->device->device->SetAudioLoopBack(::NTV2_AUDIO_LOOPBACK_OFF,
+                                         self->audio_system);
+  self->device->device->SetEmbeddedAudioClock(
+      ::NTV2_EMBEDDED_AUDIO_CLOCK_VIDEO_INPUT, self->audio_system);
 
-    NTV2ReferenceSource reference_source;
-    switch (self->reference_source) {
-      case GST_AJA_REFERENCE_SOURCE_AUTO:
-        reference_source = ::NTV2InputSourceToReferenceSource(input_source);
-        break;
-      case GST_AJA_REFERENCE_SOURCE_EXTERNAL:
-        reference_source = ::NTV2_REFERENCE_EXTERNAL;
-        break;
-      case GST_AJA_REFERENCE_SOURCE_FREERUN:
-        reference_source = ::NTV2_REFERENCE_FREERUN;
-        break;
-      case GST_AJA_REFERENCE_SOURCE_INPUT_1:
-        reference_source = ::NTV2_REFERENCE_INPUT1;
-        break;
-      case GST_AJA_REFERENCE_SOURCE_INPUT_2:
-        reference_source = ::NTV2_REFERENCE_INPUT2;
-        break;
-      case GST_AJA_REFERENCE_SOURCE_INPUT_3:
-        reference_source = ::NTV2_REFERENCE_INPUT3;
-        break;
-      case GST_AJA_REFERENCE_SOURCE_INPUT_4:
-        reference_source = ::NTV2_REFERENCE_INPUT4;
-        break;
-      case GST_AJA_REFERENCE_SOURCE_INPUT_5:
-        reference_source = ::NTV2_REFERENCE_INPUT5;
-        break;
-      case GST_AJA_REFERENCE_SOURCE_INPUT_6:
-        reference_source = ::NTV2_REFERENCE_INPUT6;
-        break;
-      case GST_AJA_REFERENCE_SOURCE_INPUT_7:
-        reference_source = ::NTV2_REFERENCE_INPUT7;
-        break;
-      case GST_AJA_REFERENCE_SOURCE_INPUT_8:
-        reference_source = ::NTV2_REFERENCE_INPUT8;
-        break;
-      default:
-        g_assert_not_reached();
-        break;
-    }
-    GST_DEBUG_OBJECT(self, "Configuring reference source %d",
-                     (int)reference_source);
+  NTV2ReferenceSource reference_source;
+  switch (self->reference_source) {
+    case GST_AJA_REFERENCE_SOURCE_AUTO:
+      reference_source = ::NTV2InputSourceToReferenceSource(input_source);
+      break;
+    case GST_AJA_REFERENCE_SOURCE_EXTERNAL:
+      reference_source = ::NTV2_REFERENCE_EXTERNAL;
+      break;
+    case GST_AJA_REFERENCE_SOURCE_FREERUN:
+      reference_source = ::NTV2_REFERENCE_FREERUN;
+      break;
+    case GST_AJA_REFERENCE_SOURCE_INPUT_1:
+      reference_source = ::NTV2_REFERENCE_INPUT1;
+      break;
+    case GST_AJA_REFERENCE_SOURCE_INPUT_2:
+      reference_source = ::NTV2_REFERENCE_INPUT2;
+      break;
+    case GST_AJA_REFERENCE_SOURCE_INPUT_3:
+      reference_source = ::NTV2_REFERENCE_INPUT3;
+      break;
+    case GST_AJA_REFERENCE_SOURCE_INPUT_4:
+      reference_source = ::NTV2_REFERENCE_INPUT4;
+      break;
+    case GST_AJA_REFERENCE_SOURCE_INPUT_5:
+      reference_source = ::NTV2_REFERENCE_INPUT5;
+      break;
+    case GST_AJA_REFERENCE_SOURCE_INPUT_6:
+      reference_source = ::NTV2_REFERENCE_INPUT6;
+      break;
+    case GST_AJA_REFERENCE_SOURCE_INPUT_7:
+      reference_source = ::NTV2_REFERENCE_INPUT7;
+      break;
+    case GST_AJA_REFERENCE_SOURCE_INPUT_8:
+      reference_source = ::NTV2_REFERENCE_INPUT8;
+      break;
+    default:
+      g_assert_not_reached();
+      break;
+  }
+  GST_DEBUG_OBJECT(self, "Configuring reference source %d",
+                   (int)reference_source);
 
-    self->device->device->SetReference(reference_source);
+  self->device->device->SetReference(reference_source);
 
-    switch (self->timecode_index) {
-      case GST_AJA_TIMECODE_INDEX_VITC:
-        self->tc_index = ::NTV2InputSourceToTimecodeIndex(input_source, false);
-        break;
-      case GST_AJA_TIMECODE_INDEX_ATC_LTC:
-        self->tc_index = ::NTV2InputSourceToTimecodeIndex(input_source, true);
-        break;
-      case GST_AJA_TIMECODE_INDEX_LTC1:
-        self->tc_index = ::NTV2_TCINDEX_LTC1;
-        break;
-      case GST_AJA_TIMECODE_INDEX_LTC2:
-        self->tc_index = ::NTV2_TCINDEX_LTC2;
-        break;
-      default:
-        g_assert_not_reached();
-        break;
-    }
+  switch (self->timecode_index) {
+    case GST_AJA_TIMECODE_INDEX_VITC:
+      self->tc_index = ::NTV2InputSourceToTimecodeIndex(input_source, false);
+      break;
+    case GST_AJA_TIMECODE_INDEX_ATC_LTC:
+      self->tc_index = ::NTV2InputSourceToTimecodeIndex(input_source, true);
+      break;
+    case GST_AJA_TIMECODE_INDEX_LTC1:
+      self->tc_index = ::NTV2_TCINDEX_LTC1;
+      break;
+    case GST_AJA_TIMECODE_INDEX_LTC2:
+      self->tc_index = ::NTV2_TCINDEX_LTC2;
+      break;
+    default:
+      g_assert_not_reached();
+      break;
   }
 
   guint video_buffer_size = ::GetVideoActiveSize(
@@ -1100,6 +1134,17 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
     gst_buffer_pool_set_active(self->anc_buffer_pool, TRUE);
   }
 
+  gst_element_post_message(GST_ELEMENT_CAST(self),
+                           gst_message_new_latency(GST_OBJECT_CAST(self)));
+
+  return TRUE;
+}
+
+static gboolean gst_aja_src_start(GstAjaSrc *self) {
+  GST_DEBUG_OBJECT(self, "Starting");
+
+  self->video_format = NTV2_FORMAT_UNKNOWN;
+
   self->capture_thread = new AJAThread();
   self->capture_thread->Attach(capture_thread_func, self);
   self->capture_thread->SetPriority(AJA_ThreadPriority_High);
@@ -1110,9 +1155,6 @@ static gboolean gst_aja_src_start(GstAjaSrc *self) {
   self->flushing = FALSE;
   g_cond_signal(&self->queue_cond);
   g_mutex_unlock(&self->queue_lock);
-
-  gst_element_post_message(GST_ELEMENT_CAST(self),
-                           gst_message_new_latency(GST_OBJECT_CAST(self)));
 
   return TRUE;
 }
@@ -1164,6 +1206,8 @@ static gboolean gst_aja_src_stop(GstAjaSrc *self) {
     gst_buffer_pool_set_active(self->anc_buffer_pool, FALSE);
     gst_clear_object(&self->anc_buffer_pool);
   }
+
+  self->video_format = NTV2_FORMAT_UNKNOWN;
 
   GST_DEBUG_OBJECT(self, "Stopped");
 
@@ -1597,53 +1641,6 @@ restart:
   GST_DEBUG_OBJECT(self, "Starting capture");
   g_mutex_unlock(&self->queue_lock);
 
-  // TODO: Wait for stable input signal
-
-  if (!self->device->device->EnableChannel(self->channel)) {
-    GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
-                      ("Failed to enable channel"));
-    goto out;
-  }
-
-  if (self->quad_mode) {
-    for (int i = 1; i < 4; i++) {
-      if (!self->device->device->EnableChannel(
-              (NTV2Channel)(self->channel + i))) {
-        GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
-                          ("Failed to enable channel"));
-        goto out;
-      }
-    }
-  }
-
-  {
-    // Make sure to globally lock here as the routing settings and others are
-    // global shared state
-    ShmMutexLocker locker;
-
-    self->device->device->AutoCirculateStop(self->channel);
-    if (self->quad_mode) {
-      for (int i = 1; i < 4; i++) {
-        self->device->device->AutoCirculateStop(
-            (NTV2Channel)(self->channel + i));
-      }
-    }
-
-    self->device->device->EnableInputInterrupt(self->channel);
-    self->device->device->SubscribeInputVerticalEvent(self->channel);
-    if (!self->device->device->AutoCirculateInitForInput(
-            self->channel, self->queue_size / 2, self->audio_system,
-            AUTOCIRCULATE_WITH_RP188 |
-                (self->vanc_mode == ::NTV2_VANCMODE_OFF ? AUTOCIRCULATE_WITH_ANC
-                                                        : 0),
-            1)) {
-      GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
-                        ("Failed to initialize autocirculate"));
-      goto out;
-    }
-    self->device->device->AutoCirculateStart(self->channel);
-  }
-
   gst_clear_object(&clock);
   clock = gst_element_get_clock(GST_ELEMENT_CAST(self));
 
@@ -1652,6 +1649,51 @@ restart:
 
   g_mutex_lock(&self->queue_lock);
   while (self->playing && !self->shutdown) {
+    // If we don't have a video format configured, configure the device now
+    // and potentially auto-detect the video format
+    if (self->video_format == NTV2_FORMAT_UNKNOWN) {
+      // Make sure to globally lock here as the routing settings and others are
+      // global shared state
+      ShmMutexLocker locker;
+
+      // Don't keep queue locked while configuring as this might take a while
+      g_mutex_unlock(&self->queue_lock);
+
+      if (!gst_aja_src_configure(self)) {
+        g_mutex_lock(&self->queue_lock);
+        GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
+                          ("Failed to configure device"));
+        goto out;
+      }
+      g_mutex_lock(&self->queue_lock);
+
+      if (self->video_format == ::NTV2_FORMAT_UNKNOWN) {
+        GST_DEBUG_OBJECT(self, "No signal, waiting");
+        frames_dropped_last = G_MAXUINT64;
+        if (have_signal) {
+          GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ,
+                              ("Signal lost"),
+                              ("No input source was detected"));
+          have_signal = FALSE;
+        }
+        self->device->device->WaitForInputVerticalInterrupt(self->channel);
+        continue;
+      }
+
+      if (!self->device->device->AutoCirculateInitForInput(
+              self->channel, self->queue_size / 2, self->audio_system,
+              AUTOCIRCULATE_WITH_RP188 | (self->vanc_mode == ::NTV2_VANCMODE_OFF
+                                              ? AUTOCIRCULATE_WITH_ANC
+                                              : 0),
+              1)) {
+        GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
+                          ("Failed to initialize autocirculate"));
+        goto out;
+      }
+
+      self->device->device->AutoCirculateStart(self->channel);
+    }
+
     // Check for valid signal first
     NTV2VideoFormat current_video_format =
         self->device->device->GetInputVideoFormat(
@@ -1673,6 +1715,9 @@ restart:
     }
 
     if (current_video_format == ::NTV2_FORMAT_UNKNOWN) {
+      if (self->video_format_setting == GST_AJA_VIDEO_FORMAT_AUTO)
+        self->video_format = NTV2_FORMAT_UNKNOWN;
+
       GST_DEBUG_OBJECT(self, "No signal, waiting");
       g_mutex_unlock(&self->queue_lock);
       frames_dropped_last = G_MAXUINT64;
@@ -1686,7 +1731,11 @@ restart:
       continue;
     } else if (current_video_format != effective_video_format &&
                current_video_format != self->video_format) {
-      // TODO: Handle GST_AJA_VIDEO_FORMAT_AUTO here
+      // Try reconfiguring with the newly detected video format
+      if (self->video_format_setting == GST_AJA_VIDEO_FORMAT_AUTO) {
+        self->video_format = NTV2_FORMAT_UNKNOWN;
+        continue;
+      }
 
       std::string current_string =
           NTV2VideoFormatToString(current_video_format);
@@ -1766,8 +1815,8 @@ restart:
       AUTOCIRCULATE_TRANSFER transfer;
 
       if (!have_signal) {
-        GST_ELEMENT_INFO(GST_ELEMENT(self), RESOURCE, READ, ("Signal recovered"),
-                         ("Input source detected"));
+        GST_ELEMENT_INFO(GST_ELEMENT(self), RESOURCE, READ,
+                         ("Signal recovered"), ("Input source detected"));
         have_signal = TRUE;
       }
 
