@@ -1687,16 +1687,25 @@ restart:
     } else if (current_video_format != effective_video_format &&
                current_video_format != self->video_format) {
       // TODO: Handle GST_AJA_VIDEO_FORMAT_AUTO here
+
+      std::string current_string =
+          NTV2VideoFormatToString(current_video_format);
+      std::string configured_string =
+          NTV2VideoFormatToString(self->video_format);
+      std::string effective_string =
+          NTV2VideoFormatToString(effective_video_format);
+
       GST_DEBUG_OBJECT(self,
-                       "Different input format %u than configured %u "
-                       "(effective %u), waiting",
-                       current_video_format, self->video_format,
-                       effective_video_format);
+                       "Different input format %s than configured %s "
+                       "(effective %s), waiting",
+                       current_string.c_str(), configured_string.c_str(),
+                       effective_string.c_str());
       g_mutex_unlock(&self->queue_lock);
       frames_dropped_last = G_MAXUINT64;
       if (have_signal) {
         GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
-                            ("Different input source was detected"));
+                            ("Different input source (%s) was detected",
+                             current_string.c_str()));
         have_signal = FALSE;
       }
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
