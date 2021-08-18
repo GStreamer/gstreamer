@@ -219,6 +219,7 @@ gst_rtp_header_extension_rfc6464_write (GstRTPHeaderExtension * ext,
     GstBuffer * output, guint8 * data, gsize size)
 {
   GstAudioLevelMeta *meta;
+  guint level;
 
   g_return_val_if_fail (size >=
       gst_rtp_header_extension_rfc6464_get_max_size (ext, NULL), -1);
@@ -231,10 +232,11 @@ gst_rtp_header_extension_rfc6464_write (GstRTPHeaderExtension * ext,
     return 0;
   }
 
-  if (meta->level > 127) {
-    GST_WARNING_OBJECT (ext, "level from meta is higher than 127: %d",
+  level = meta->level;
+  if (level > 127) {
+    GST_LOG_OBJECT (ext, "level from meta is higher than 127: %d, cropping",
         meta->level);
-    return -1;
+    level = 127;
   }
 
   GST_LOG_OBJECT (ext, "writing ext (level: %d voice: %d)", meta->level,
