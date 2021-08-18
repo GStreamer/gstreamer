@@ -892,7 +892,7 @@ GType gst_aja_timecode_index_get_type(void) {
   static gsize id = 0;
   static const GEnumValue modes[] = {
       {GST_AJA_TIMECODE_INDEX_VITC, "vitc", "Embedded SDI VITC"},
-      {GST_AJA_TIMECODE_INDEX_VITC, "atc-ltc", "Embedded SDI ATC LTC"},
+      {GST_AJA_TIMECODE_INDEX_ATC_LTC, "atc-ltc", "Embedded SDI ATC LTC"},
       {GST_AJA_TIMECODE_INDEX_LTC1, "ltc-1", "Analog LTC 1"},
       {GST_AJA_TIMECODE_INDEX_LTC2, "ltc-2", "Analog LTC 2"},
       {0, NULL, NULL}};
