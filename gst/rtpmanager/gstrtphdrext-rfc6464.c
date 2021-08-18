@@ -23,10 +23,17 @@
  * if their `auto-header-extension` property is enabled, if the extension
  * is part of the RTP caps.
  *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 pulsesrc ! level audio-level-meta=true ! audiconvert !
+ *   rtpL16pay ! application/x-rtp,
+ *     extmap-1=(string)\< \"\", urn:ietf:params:rtp-hdrext:ssrc-audio-level,
+ *     \"vad=on\" \> ! udpsink
+ * ]|
+ *
  * Since: 1.20
  *
  */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
