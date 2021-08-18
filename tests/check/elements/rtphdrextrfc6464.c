@@ -24,6 +24,7 @@
 #include <gst/rtp/rtp.h>
 #include <gst/sdp/gstsdpmessage.h>
 #include <gst/audio/audio.h>
+#include <gst/check/gstharness.h>
 
 #define URN "urn:ietf:params:rtp-hdrext:ssrc-audio-level"
 
@@ -270,6 +271,38 @@ GST_START_TEST (rtprfc6464_no_meta)
 
 GST_END_TEST;
 
+GST_START_TEST (rtprfc6464_payloader_depayloader)
+{
+  GstHarness *h;
+  GstBuffer *b;
+  GstFlowReturn fret;
+  GstAudioLevelMeta *meta;
+
+  h = gst_harness_new_parse ("rtpL16pay ! "
+      "application/x-rtp, extmap-1=(string)< \"\", " URN " , \"vad=on\" >"
+      " ! rtpL16depay");
+
+  gst_harness_set_src_caps_str (h, "audio/x-raw, rate=44100, channels=1,"
+      " layout=interleaved, format=S16BE");
+
+  b = gst_buffer_new_allocate (NULL, 100, NULL);
+  gst_buffer_add_audio_level_meta (b, 12, TRUE);
+  fret = gst_harness_push (h, b);
+  fail_unless (fret == GST_FLOW_OK);
+
+  b = gst_harness_pull (h);
+  meta = gst_buffer_get_audio_level_meta (b);
+
+  fail_unless (meta != NULL);
+  fail_unless (meta->level == 12);
+  fail_unless (meta->voice_activity == TRUE);
+
+  gst_buffer_unref (b);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtprfc6464_suite (void)
 {
@@ -282,6 +315,7 @@ rtprfc6464_suite (void)
   tcase_add_test (tc_chain, rtprfc6464_one_byte);
   tcase_add_test (tc_chain, rtprfc6464_two_bytes);
   tcase_add_test (tc_chain, rtprfc6464_no_meta);
+  tcase_add_test (tc_chain, rtprfc6464_payloader_depayloader);
 
   return s;
 }
