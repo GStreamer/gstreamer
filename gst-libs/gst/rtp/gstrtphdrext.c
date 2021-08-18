@@ -279,7 +279,7 @@ gst_rtp_header_extension_get_max_size (GstRTPHeaderExtension * ext,
  *
  * Since: 1.20
  */
-gsize
+gssize
 gst_rtp_header_extension_write (GstRTPHeaderExtension * ext,
     const GstBuffer * input_meta, GstRTPHeaderExtensionFlags write_flags,
     GstBuffer * output, guint8 * data, gsize size)

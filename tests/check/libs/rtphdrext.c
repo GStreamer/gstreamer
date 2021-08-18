@@ -35,7 +35,8 @@ GST_START_TEST (rtp_header_ext_write)
   GstRTPHeaderExtension *dummy;
   GstBuffer *buffer;
   guint8 *data;
-  gsize size, written;
+  gsize size;
+  gssize written;
 
   dummy = rtp_dummy_hdr_ext_new ();
   gst_rtp_header_extension_set_id (dummy, 1);

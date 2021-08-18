@@ -1641,7 +1641,7 @@ write_header_extension (GstRTPHeaderExtension * ext, gpointer user_data)
   gsize remaining =
       hdr->allocated_size - hdr->written_size - hdr->hdr_unit_size;
   gsize offset = hdr->written_size + hdr->hdr_unit_size;
-  gsize written;
+  gssize written;
   guint ext_id;
 
   if (hdr->abort)

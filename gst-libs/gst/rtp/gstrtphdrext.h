@@ -159,7 +159,7 @@ struct _GstRTPHeaderExtensionClass
   gsize                 (*get_max_size)             (GstRTPHeaderExtension * ext,
                                                      const GstBuffer * input_meta);
 
-  gsize                 (*write)                    (GstRTPHeaderExtension * ext,
+  gssize                (*write)                    (GstRTPHeaderExtension * ext,
                                                      const GstBuffer * input_meta,
                                                      GstRTPHeaderExtensionFlags write_flags,
                                                      GstBuffer * output,
@@ -210,7 +210,7 @@ GST_RTP_API
 void                gst_rtp_header_extension_set_id             (GstRTPHeaderExtension * ext,
                                                                  guint ext_id);
 GST_RTP_API
-gsize               gst_rtp_header_extension_write              (GstRTPHeaderExtension * ext,
+gssize              gst_rtp_header_extension_write              (GstRTPHeaderExtension * ext,
                                                                  const GstBuffer * input_meta,
                                                                  GstRTPHeaderExtensionFlags write_flags,
                                                                  GstBuffer * output,

@@ -74,7 +74,7 @@ static GstRTPHeaderExtensionFlags
 gst_rtp_dummy_hdr_ext_get_supported_flags (GstRTPHeaderExtension * ext);
 static gsize gst_rtp_dummy_hdr_ext_get_max_size (GstRTPHeaderExtension * ext,
     const GstBuffer * input_meta);
-static gsize gst_rtp_dummy_hdr_ext_write (GstRTPHeaderExtension * ext,
+static gssize gst_rtp_dummy_hdr_ext_write (GstRTPHeaderExtension * ext,
     const GstBuffer * input_meta, GstRTPHeaderExtensionFlags write_flags,
     GstBuffer * output, guint8 * data, gsize size);
 static gboolean gst_rtp_dummy_hdr_ext_read (GstRTPHeaderExtension * ext,
@@ -168,7 +168,7 @@ gst_rtp_dummy_hdr_ext_get_max_size (GstRTPHeaderExtension * ext,
 
 #define TEST_DATA_BYTE 0x9d
 
-static gsize
+static gssize
 gst_rtp_dummy_hdr_ext_write (GstRTPHeaderExtension * ext,
     const GstBuffer * input_meta, GstRTPHeaderExtensionFlags write_flags,
     GstBuffer * output, guint8 * data, gsize size)
