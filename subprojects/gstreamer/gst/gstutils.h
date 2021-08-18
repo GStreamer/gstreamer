@@ -1258,6 +1258,20 @@ guint         gst_util_floor_log2               (guint32 v);
 GST_API
 gint          gst_util_filename_compare        (const gchar *a, const gchar *b);
 
+/**
+ * GstCallAsyncFunc:
+ * @user_data: Data passed in the function where that callback has been passed
+ *
+ * Callback prototype used in #gst_call_async
+ *
+ * Since: 1.28
+ */
+typedef void  (*GstCallAsyncFunc)               (gpointer user_data);
+
+GST_API
+void          gst_call_async                    (GstCallAsyncFunc func,
+                                                 gpointer user_data);
+
 G_END_DECLS
 
 #endif /* __GST_UTILS_H__ */

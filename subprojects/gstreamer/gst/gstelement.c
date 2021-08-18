@@ -152,13 +152,8 @@ static GstPadTemplate
     * gst_element_class_request_pad_simple_template (GstElementClass *
     element_class, const gchar * name);
 
-static void gst_element_call_async_func (gpointer data, gpointer user_data);
-
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };
-
-static GMutex _element_pool_lock;
-static GThreadPool *gst_element_pool = NULL;
 
 /* this is used in gstelementfactory.c:gst_element_register() */
 GQuark __gst_elementclass_factory = 0;
@@ -197,24 +192,6 @@ gst_element_get_type (void)
     g_once_init_leave (&gst_element_type, _type);
   }
   return gst_element_type;
-}
-
-static GThreadPool *
-gst_element_setup_thread_pool (void)
-{
-  GError *err = NULL;
-  GThreadPool *pool;
-
-  GST_DEBUG ("creating element thread pool");
-  pool =
-      g_thread_pool_new ((GFunc) gst_element_call_async_func, NULL, -1, FALSE,
-      &err);
-  if (err != NULL) {
-    g_critical ("could not alloc threadpool %s", err->message);
-    g_clear_error (&err);
-  }
-
-  return pool;
 }
 
 static void
@@ -3815,26 +3792,6 @@ gst_element_remove_property_notify_watch (GstElement * element, gulong watch_id)
   g_signal_handler_disconnect (element, watch_id);
 }
 
-typedef struct
-{
-  GstElement *element;
-  GstElementCallAsyncFunc func;
-  gpointer user_data;
-  GDestroyNotify destroy_notify;
-} GstElementCallAsyncData;
-
-static void
-gst_element_call_async_func (gpointer data, gpointer user_data)
-{
-  GstElementCallAsyncData *async_data = data;
-
-  async_data->func (async_data->element, async_data->user_data);
-  if (async_data->destroy_notify)
-    async_data->destroy_notify (async_data->user_data);
-  gst_object_unref (async_data->element);
-  g_free (async_data);
-}
-
 /**
  * gst_element_call_async:
  * @element: a #GstElement
@@ -3859,32 +3816,10 @@ void
 gst_element_call_async (GstElement * element, GstElementCallAsyncFunc func,
     gpointer user_data, GDestroyNotify destroy_notify)
 {
-  GstElementCallAsyncData *async_data;
-
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  async_data = g_new0 (GstElementCallAsyncData, 1);
-  async_data->element = gst_object_ref (element);
-  async_data->func = func;
-  async_data->user_data = user_data;
-  async_data->destroy_notify = destroy_notify;
-
-  g_mutex_lock (&_element_pool_lock);
-  if (G_UNLIKELY (gst_element_pool == NULL))
-    gst_element_pool = gst_element_setup_thread_pool ();
-  g_thread_pool_push ((GThreadPool *) gst_element_pool, async_data, NULL);
-  g_mutex_unlock (&_element_pool_lock);
-}
-
-void
-_priv_gst_element_cleanup (void)
-{
-  g_mutex_lock (&_element_pool_lock);
-  if (gst_element_pool) {
-    g_thread_pool_free ((GThreadPool *) gst_element_pool, FALSE, TRUE);
-    gst_element_pool = NULL;
-  }
-  g_mutex_unlock (&_element_pool_lock);
+  _priv_gst_object_call_async (GST_OBJECT_CAST (element), (GFunc) func,
+      user_data, destroy_notify);
 }
 
 /**

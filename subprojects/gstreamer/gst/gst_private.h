@@ -144,8 +144,12 @@ G_GNUC_INTERNAL  void  _priv_gst_caps_cleanup (void);
 G_GNUC_INTERNAL  void  _priv_gst_debug_cleanup (void);
 G_GNUC_INTERNAL  void  _priv_gst_meta_cleanup (void);
 
+G_GNUC_INTERNAL  void  _priv_gst_object_call_async (GstObject * object,
+                                                    GFunc func,
+                                                    gpointer user_data,
+                                                    GDestroyNotify notify);
 /* called from gst_task_cleanup_all(). */
-G_GNUC_INTERNAL  void  _priv_gst_element_cleanup (void);
+G_GNUC_INTERNAL  void  _priv_gst_thread_pool_cleanup (void);
 
 /* Private registry functions */
 G_GNUC_INTERNAL

@@ -48,6 +48,8 @@
 #include "glib-compat-private.h"
 #include <math.h>
 
+G_LOCK_DEFINE_STATIC (thread_pool_lock);
+static GThreadPool *gst_async_call_pool = NULL;
 
 static void
 gst_util_dump_mem_offset (const guchar * mem, guint size, guint offset)
@@ -5024,4 +5026,99 @@ gst_util_filename_compare (const gchar * a, const gchar * b)
   g_free (b_utf8);
 
   return ret;
+}
+
+typedef struct
+{
+  GstObject *object;
+  GstCallAsyncFunc func;
+  gpointer user_data;
+  GDestroyNotify notify;
+} GstCallAsyncData;
+
+static void
+gst_call_async_func (gpointer data, gpointer user_data)
+{
+  GstCallAsyncData *async_data = data;
+
+  if (async_data->object) {
+    GstObjectCallAsyncFunc func = (GstObjectCallAsyncFunc) async_data->func;
+    (*func) (async_data->object, async_data->user_data);
+  } else {
+    async_data->func (async_data->user_data);
+  }
+
+  if (async_data->notify)
+    async_data->notify (async_data->user_data);
+  gst_clear_object (&async_data->object);
+  g_free (async_data);
+}
+
+static GThreadPool *
+gst_setup_thread_pool (void)
+{
+  GError *err = NULL;
+  GThreadPool *pool;
+
+  GST_DEBUG ("creating element thread pool");
+  pool = g_thread_pool_new ((GFunc) gst_call_async_func, NULL, -1, FALSE, &err);
+  if (err != NULL) {
+    g_critical ("could not alloc threadpool %s", err->message);
+    g_clear_error (&err);
+  }
+
+  return pool;
+}
+
+static void
+gst_call_async_internal (GstObject * object, GstCallAsyncFunc func,
+    gpointer user_data, GDestroyNotify notify)
+{
+  GstCallAsyncData *data;
+
+  data = g_new0 (GstCallAsyncData, 1);
+  if (object)
+    data->object = gst_object_ref (object);
+  data->func = func;
+  data->user_data = user_data;
+  data->notify = notify;
+
+  G_LOCK (thread_pool_lock);
+  if (!gst_async_call_pool)
+    gst_async_call_pool = gst_setup_thread_pool ();
+  g_thread_pool_push (gst_async_call_pool, data, NULL);
+  G_UNLOCK (thread_pool_lock);
+}
+
+/**
+ * gst_call_async:
+ * @func: (scope async): function to call asynchronously from another thread
+ * @user_data: data to pass to @func
+ *
+ * Calls @func from another thread and passes @user_data to it.
+ *
+ * Since: 1.28
+ */
+void
+gst_call_async (GstCallAsyncFunc func, gpointer user_data)
+{
+  gst_call_async_internal (NULL, func, user_data, NULL);
+}
+
+void
+_priv_gst_object_call_async (GstObject * object, GFunc func,
+    gpointer user_data, GDestroyNotify notify)
+{
+  gst_call_async_internal (object, (GstCallAsyncFunc) func, user_data, notify);
+}
+
+void
+_priv_gst_thread_pool_cleanup (void)
+{
+  G_LOCK (thread_pool_lock);
+  if (gst_async_call_pool) {
+    g_thread_pool_free (gst_async_call_pool, FALSE, TRUE);
+    gst_async_call_pool = NULL;
+  }
+  G_UNLOCK (thread_pool_lock);
 }

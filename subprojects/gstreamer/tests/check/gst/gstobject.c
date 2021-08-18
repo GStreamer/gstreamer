@@ -616,6 +616,63 @@ GST_START_TEST (test_fake_object_has_as_ancestor)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GMutex lock;
+  GCond cond;
+  GThread *caller_thread;
+
+  gint called;
+} CallAsyncData;
+
+static void
+call_async_func (GstObject * object, gpointer user_data)
+{
+  CallAsyncData *data;
+
+  fail_unless (GST_IS_OBJECT (object));
+
+  data = (CallAsyncData *) user_data;
+
+  fail_unless (g_thread_self () != data->caller_thread);
+
+  g_mutex_lock (&data->lock);
+  assert_equals_int (data->called, 0);
+  data->called++;
+  g_cond_signal (&data->cond);
+  g_mutex_unlock (&data->lock);
+}
+
+GST_START_TEST (test_call_async)
+{
+  GstObject *object;
+  CallAsyncData *data;
+
+  object = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_unless (object);
+
+  data = g_new0 (CallAsyncData, 1);
+  g_mutex_init (&data->lock);
+  g_cond_init (&data->cond);
+  data->caller_thread = g_thread_self ();
+
+  gst_object_call_async (object, call_async_func, data);
+  g_mutex_lock (&data->lock);
+  while (!data->called)
+    g_cond_wait (&data->cond, &data->lock);
+  g_mutex_unlock (&data->lock);
+
+  assert_equals_int (data->called, 1);
+
+  g_mutex_clear (&data->lock);
+  g_cond_clear (&data->cond);
+  g_free (data);
+
+  gst_object_unref (object);
+}
+
+GST_END_TEST;
+
 /* test: try renaming a parented object, make sure it fails */
 
 static Suite *
@@ -644,6 +701,8 @@ gst_object_suite (void)
 
   tcase_add_test (tc_chain, test_fake_object_has_as_ancestor);
   //tcase_add_checked_fixture (tc_chain, setup, teardown);
+
+  tcase_add_test (tc_chain, test_call_async);
 
   return s;
 }

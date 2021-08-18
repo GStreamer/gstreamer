@@ -2026,6 +2026,53 @@ GST_START_TEST (test_mark_as_plugin_api)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GMutex lock;
+  GCond cond;
+  GThread *caller_thread;
+
+  gint called;
+} CallAsyncData;
+
+static void
+call_async_func (gpointer user_data)
+{
+  CallAsyncData *data = (CallAsyncData *) user_data;
+
+  fail_unless (g_thread_self () != data->caller_thread);
+
+  g_mutex_lock (&data->lock);
+  assert_equals_int (data->called, 0);
+  data->called++;
+  g_cond_signal (&data->cond);
+  g_mutex_unlock (&data->lock);
+}
+
+GST_START_TEST (test_call_async)
+{
+  CallAsyncData *data;
+
+  data = g_new0 (CallAsyncData, 1);
+  g_mutex_init (&data->lock);
+  g_cond_init (&data->cond);
+  data->caller_thread = g_thread_self ();
+
+  gst_call_async (call_async_func, data);
+  g_mutex_lock (&data->lock);
+  while (!data->called)
+    g_cond_wait (&data->cond, &data->lock);
+  g_mutex_unlock (&data->lock);
+
+  assert_equals_int (data->called, 1);
+
+  g_mutex_clear (&data->lock);
+  g_cond_clear (&data->cond);
+  g_free (data);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_utils_suite (void)
 {
@@ -2068,6 +2115,7 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_regression);
 
   tcase_add_test (tc_chain, test_mark_as_plugin_api);
+  tcase_add_test (tc_chain, test_call_async);
 
   tcase_add_test (tc_chain, test_ceil_log2);
 
