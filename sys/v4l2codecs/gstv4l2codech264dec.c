@@ -488,8 +488,8 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
 static guint
 get_slice_header_bit_size (GstH264Slice * slice)
 {
-  return 8 * slice->nalu.header_bytes
-      + slice->header.header_size - slice->header.n_emulation_prevention_bytes;
+  return 8 * slice->nalu.header_bytes + slice->header.header_size
+      - 8 * slice->header.n_emulation_prevention_bytes;
 }
 
 static void
