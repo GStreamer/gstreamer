@@ -1668,13 +1668,13 @@ restart:
     if (current_video_format == ::NTV2_FORMAT_UNKNOWN) {
       GST_DEBUG_OBJECT(self, "No signal, waiting");
       g_mutex_unlock(&self->queue_lock);
-      self->device->device->WaitForInputVerticalInterrupt(self->channel);
       frames_dropped_last = G_MAXUINT64;
       if (have_signal) {
         GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
                             ("No input source was detected"));
         have_signal = FALSE;
       }
+      self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
     } else if (current_video_format != effective_video_format &&
@@ -1686,13 +1686,13 @@ restart:
                        current_video_format, self->video_format,
                        effective_video_format);
       g_mutex_unlock(&self->queue_lock);
-      self->device->device->WaitForInputVerticalInterrupt(self->channel);
       frames_dropped_last = G_MAXUINT64;
       if (have_signal) {
         GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
                             ("Different input source was detected"));
         have_signal = FALSE;
       }
+      self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
     }
