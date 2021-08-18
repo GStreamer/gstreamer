@@ -1622,6 +1622,12 @@ restart:
     ShmMutexLocker locker;
 
     self->device->device->AutoCirculateStop(self->channel);
+    if (self->quad_mode) {
+      for (int i = 1; i < 4; i++) {
+        self->device->device->AutoCirculateStop(
+            (NTV2Channel)(self->channel + i));
+      }
+    }
 
     self->device->device->EnableInputInterrupt(self->channel);
     self->device->device->SubscribeInputVerticalEvent(self->channel);
