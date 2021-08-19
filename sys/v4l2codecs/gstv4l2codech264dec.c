@@ -530,13 +530,11 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
     GstH264SliceHdr * slice_hdr, GstH264Picture * picture, GstH264Dpb * dpb)
 {
   GArray *refs = gst_h264_dpb_get_pictures_all (dpb);
-  gint i;
+  gint i, entry_id = 0;
 
   /* *INDENT-OFF* */
   self->decode_params = (struct v4l2_ctrl_h264_decode_params) {
     .nal_ref_idc = picture->nal_ref_idc,
-    .top_field_order_cnt = picture->top_field_order_cnt,
-    .bottom_field_order_cnt = picture->bottom_field_order_cnt,
     .frame_num = slice_hdr->frame_num,
     .idr_pic_id = slice_hdr->idr_pic_id,
     .pic_order_cnt_lsb = slice_hdr->pic_order_cnt_lsb,
@@ -551,28 +549,38 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
              (slice_hdr->bottom_field_flag ? V4L2_H264_DECODE_PARAM_FLAG_BOTTOM_FIELD : 0),
   };
 
+  switch (picture->field) {
+    case GST_H264_PICTURE_FIELD_FRAME:
+      self->decode_params.top_field_order_cnt = picture->top_field_order_cnt;
+      self->decode_params.bottom_field_order_cnt =
+        picture->bottom_field_order_cnt;
+      break;
+    case GST_H264_PICTURE_FIELD_TOP_FIELD:
+      self->decode_params.top_field_order_cnt = picture->top_field_order_cnt;
+      self->decode_params.bottom_field_order_cnt = 0;
+      break;
+    case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
+      self->decode_params.top_field_order_cnt = 0;
+      self->decode_params.bottom_field_order_cnt =
+          picture->bottom_field_order_cnt;
+      break;
+  }
+
   for (i = 0; i < refs->len; i++) {
     GstH264Picture *ref_pic = g_array_index (refs, GstH264Picture *, i);
     gint pic_num = ref_pic->pic_num;
-    guchar dpb_ref = 0;
+    struct v4l2_h264_dpb_entry *entry;
 
-    /* Unwrap pic_num */
-    if (pic_num < 0)
-      pic_num += slice_hdr->max_pic_num;
+    /* Skip non-reference as they are not useful to decoding */
+    if (!GST_H264_PICTURE_IS_REF (ref_pic))
+      continue;
 
-    switch (ref_pic->field) {
-    case GST_H264_PICTURE_FIELD_FRAME:
-      dpb_ref = V4L2_H264_FRAME_REF;
-      break;
-    case GST_H264_PICTURE_FIELD_TOP_FIELD:
-      dpb_ref = V4L2_H264_TOP_FIELD_REF;
-      break;
-    case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
-      dpb_ref = V4L2_H264_BOTTOM_FIELD_REF;
-      break;
-    }
+    /* The second field picture will be handled differently */
+    if (ref_pic->second_field)
+      continue;
 
-    self->decode_params.dpb[i] = (struct v4l2_h264_dpb_entry) {
+    entry = &self->decode_params.dpb[entry_id++];
+    *entry = (struct v4l2_h264_dpb_entry) {
       /*
        * The reference is multiplied by 1000 because it's wassed as micro
        * seconds and this TS is nanosecond.
@@ -580,15 +588,42 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
       .reference_ts = (guint64) ref_pic->system_frame_number * 1000,
       .frame_num = ref_pic->frame_num,
       .pic_num = pic_num,
-      .top_field_order_cnt = ref_pic->pic_order_cnt,
-      .bottom_field_order_cnt = ref_pic->bottom_field_order_cnt,
       .flags = V4L2_H264_DPB_ENTRY_FLAG_VALID
-          | (GST_H264_PICTURE_IS_REF (ref_pic) ?
-              V4L2_H264_DPB_ENTRY_FLAG_ACTIVE : 0)
-          | (GST_H264_PICTURE_IS_LONG_TERM_REF (ref_pic) ?
-              V4L2_H264_DPB_ENTRY_FLAG_LONG_TERM : 0),
-      .fields = dpb_ref,
+          | (GST_H264_PICTURE_IS_REF (ref_pic) ? V4L2_H264_DPB_ENTRY_FLAG_ACTIVE : 0)
+          | (GST_H264_PICTURE_IS_LONG_TERM_REF (ref_pic) ? V4L2_H264_DPB_ENTRY_FLAG_LONG_TERM : 0),
     };
+
+    switch (ref_pic->field) {
+      case GST_H264_PICTURE_FIELD_FRAME:
+        entry->top_field_order_cnt = ref_pic->top_field_order_cnt;
+        entry->bottom_field_order_cnt = ref_pic->bottom_field_order_cnt;
+        entry->fields = V4L2_H264_FRAME_REF;
+        break;
+      case GST_H264_PICTURE_FIELD_TOP_FIELD:
+        entry->top_field_order_cnt = ref_pic->top_field_order_cnt;
+        entry->fields = V4L2_H264_TOP_FIELD_REF;
+
+        if (ref_pic->other_field) {
+          entry->bottom_field_order_cnt =
+              ref_pic->other_field->bottom_field_order_cnt;
+          entry->fields |= V4L2_H264_BOTTOM_FIELD_REF;
+        } else {
+          entry->flags |= V4L2_H264_DPB_ENTRY_FLAG_FIELD;
+        }
+        break;
+      case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
+        entry->bottom_field_order_cnt = ref_pic->bottom_field_order_cnt;
+        entry->fields = V4L2_H264_BOTTOM_FIELD_REF;
+
+        if (ref_pic->other_field) {
+          entry->top_field_order_cnt =
+            ref_pic->other_field->top_field_order_cnt;
+          entry->fields |= V4L2_H264_TOP_FIELD_REF;
+        } else {
+          entry->flags |= V4L2_H264_DPB_ENTRY_FLAG_FIELD;
+        }
+        break;
+    }
   }
   /* *INDENT-ON* */
 
@@ -704,6 +739,10 @@ lookup_dpb_index (struct v4l2_h264_dpb_entry dpb[16], GstH264Picture * ref_pic)
   if (!ref_pic)
     return 0xff;
 
+  /* DPB entries only stores first field in a merged fashion */
+  if (ref_pic->second_field && ref_pic->other_field)
+    ref_pic = ref_pic->other_field;
+
   ref_ts = (guint64) ref_pic->system_frame_number * 1000;
   for (i = 0; i < 16; i++) {
     if (dpb[i].flags & V4L2_H264_DPB_ENTRY_FLAG_ACTIVE
@@ -714,15 +753,33 @@ lookup_dpb_index (struct v4l2_h264_dpb_entry dpb[16], GstH264Picture * ref_pic)
   return 0xff;
 }
 
+static guint
+_get_v4l2_fields_ref (GstH264Picture * ref_pic, gboolean merge)
+{
+  if (merge && ref_pic->other_field)
+    return V4L2_H264_FRAME_REF;
+
+  switch (ref_pic->field) {
+    case GST_H264_PICTURE_FIELD_FRAME:
+      return V4L2_H264_FRAME_REF;
+      break;
+    case GST_H264_PICTURE_FIELD_TOP_FIELD:
+      return V4L2_H264_TOP_FIELD_REF;
+      break;
+    case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
+      return V4L2_H264_BOTTOM_FIELD_REF;
+      break;
+  }
+
+  return V4L2_H264_FRAME_REF;
+}
+
 static void
 gst_v4l2_codec_h264_dec_fill_references (GstV4l2CodecH264Dec * self,
-    GArray * ref_pic_list0, GArray * ref_pic_list1)
+    gboolean cur_is_frame, GArray * ref_pic_list0, GArray * ref_pic_list1)
 {
   struct v4l2_ctrl_h264_slice_params *slice_params;
-  gint i, fields = V4L2_H264_FRAME_REF;
-
-  if (self->interlaced)
-    fields = 0;
+  gint i;
 
   slice_params = &g_array_index (self->slice_params,
       struct v4l2_ctrl_h264_slice_params, 0);
@@ -737,7 +794,8 @@ gst_v4l2_codec_h264_dec_fill_references (GstV4l2CodecH264Dec * self,
         g_array_index (ref_pic_list0, GstH264Picture *, i);
     slice_params->ref_pic_list0[i].index =
         lookup_dpb_index (self->decode_params.dpb, ref_pic);
-    slice_params->ref_pic_list0[i].fields = fields;
+    slice_params->ref_pic_list0[i].fields =
+        _get_v4l2_fields_ref (ref_pic, cur_is_frame);
   }
 
   for (i = 0; i < ref_pic_list1->len; i++) {
@@ -745,7 +803,8 @@ gst_v4l2_codec_h264_dec_fill_references (GstV4l2CodecH264Dec * self,
         g_array_index (ref_pic_list1, GstH264Picture *, i);
     slice_params->ref_pic_list1[i].index =
         lookup_dpb_index (self->decode_params.dpb, ref_pic);
-    slice_params->ref_pic_list1[i].fields = fields;
+    slice_params->ref_pic_list1[i].fields =
+        _get_v4l2_fields_ref (ref_pic, cur_is_frame);
   }
 }
 
@@ -1182,8 +1241,8 @@ gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
 
     gst_v4l2_codec_h264_dec_fill_slice_params (self, slice);
     gst_v4l2_codec_h264_dec_fill_pred_weight (self, &slice->header);
-    gst_v4l2_codec_h264_dec_fill_references (self, ref_pic_list0,
-        ref_pic_list1);
+    gst_v4l2_codec_h264_dec_fill_references (self,
+        GST_H264_PICTURE_IS_FRAME (picture), ref_pic_list0, ref_pic_list1);
   }
 
   bitstream_data = self->bitstream_map.data + self->bitstream_map.size;
