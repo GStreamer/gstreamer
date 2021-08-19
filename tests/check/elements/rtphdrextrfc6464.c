@@ -303,6 +303,52 @@ GST_START_TEST (rtprfc6464_payloader_depayloader)
 
 GST_END_TEST;
 
+
+GST_START_TEST (rtprfc6464_payloader_api)
+{
+  GstHarness *h;
+  GstRTPHeaderExtension *ext;
+  GstBuffer *b;
+  GstFlowReturn fret;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint8 *data;
+  guint size;
+  guint8 level;
+  gboolean voice_activity;
+
+  h = gst_harness_new ("rtpL16pay");
+  gst_harness_set_src_caps_str (h, "audio/x-raw, rate=44100, channels=1,"
+      " layout=interleaved, format=S16BE");
+
+  ext = gst_rtp_header_extension_create_from_uri (URN);
+  gst_rtp_header_extension_set_id (ext, 2);
+  fail_unless (ext);
+  g_signal_emit_by_name (h->element, "add-extension", ext);
+
+  b = gst_buffer_new_allocate (NULL, 100, NULL);
+  gst_buffer_add_audio_level_meta (b, 12, TRUE);
+  fret = gst_harness_push (h, b);
+  fail_unless (fret == GST_FLOW_OK);
+
+  b = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (b, GST_MAP_READ, &rtp));
+  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 2, 0,
+          (gpointer *) & data, &size));
+  fail_unless (size == 1);
+  level = data[0] & 0x7F;
+  voice_activity = (data[0] & 0x80) >> 7;
+  fail_unless (level == 12);
+  fail_unless (voice_activity == TRUE);
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (b);
+
+  gst_object_unref (ext);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 rtprfc6464_suite (void)
 {
@@ -316,6 +362,7 @@ rtprfc6464_suite (void)
   tcase_add_test (tc_chain, rtprfc6464_two_bytes);
   tcase_add_test (tc_chain, rtprfc6464_no_meta);
   tcase_add_test (tc_chain, rtprfc6464_payloader_depayloader);
+  tcase_add_test (tc_chain, rtprfc6464_payloader_api);
 
   return s;
 }
