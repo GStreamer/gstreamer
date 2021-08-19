@@ -48,23 +48,35 @@ static struct
   const gchar *caps_string;
   GstVideoFormat format;
 } raw_video_format_map[] = {
+  /* NOTE: when adding new format, gst_mf_update_video_info_with_stride() must
+   * be updated as well */
   {MFVideoFormat_RGB32,  MAKE_RAW_FORMAT_CAPS ("BGRx"),  GST_VIDEO_FORMAT_BGRx},
   {MFVideoFormat_ARGB32, MAKE_RAW_FORMAT_CAPS ("BGRA"),  GST_VIDEO_FORMAT_BGRA},
-  {MFVideoFormat_RGB24,  MAKE_RAW_FORMAT_CAPS ("BGR"),   GST_VIDEO_FORMAT_BGR},
-  {MFVideoFormat_RGB555, MAKE_RAW_FORMAT_CAPS ("RGB15"), GST_VIDEO_FORMAT_RGB15},
   {MFVideoFormat_RGB565, MAKE_RAW_FORMAT_CAPS ("RGB16"), GST_VIDEO_FORMAT_RGB16},
-  {MFVideoFormat_AYUV,   MAKE_RAW_FORMAT_CAPS ("VUYA"),  GST_VIDEO_FORMAT_VUYA},
+  {MFVideoFormat_RGB555, MAKE_RAW_FORMAT_CAPS ("RGB15"), GST_VIDEO_FORMAT_RGB15},
+  {MFVideoFormat_RGB24,  MAKE_RAW_FORMAT_CAPS ("BGR"),   GST_VIDEO_FORMAT_BGR},
+
+  /* packed YUV */
   {MFVideoFormat_YUY2,   MAKE_RAW_FORMAT_CAPS ("YUY2"),  GST_VIDEO_FORMAT_YUY2},
   {MFVideoFormat_YVYU,   MAKE_RAW_FORMAT_CAPS ("YVYU"),  GST_VIDEO_FORMAT_YVYU},
   {MFVideoFormat_UYVY,   MAKE_RAW_FORMAT_CAPS ("UYVY"),  GST_VIDEO_FORMAT_UYVY},
+  {MFVideoFormat_AYUV,   MAKE_RAW_FORMAT_CAPS ("VUYA"),  GST_VIDEO_FORMAT_VUYA},
+
+  /* semi-planar */
   {MFVideoFormat_NV12,   MAKE_RAW_FORMAT_CAPS ("NV12"),  GST_VIDEO_FORMAT_NV12},
-  {MFVideoFormat_YV12,   MAKE_RAW_FORMAT_CAPS ("YV12"),  GST_VIDEO_FORMAT_YV12},
-  {MFVideoFormat_I420,   MAKE_RAW_FORMAT_CAPS ("I420"),  GST_VIDEO_FORMAT_I420},
-  {MFVideoFormat_IYUV,   MAKE_RAW_FORMAT_CAPS ("I420"),  GST_VIDEO_FORMAT_I420},
   {MFVideoFormat_P010,   MAKE_RAW_FORMAT_CAPS ("P010_10LE"),  GST_VIDEO_FORMAT_P010_10LE},
   {MFVideoFormat_P016,   MAKE_RAW_FORMAT_CAPS ("P016_LE"),  GST_VIDEO_FORMAT_P016_LE},
+
+  /* planar */
+  {MFVideoFormat_I420,   MAKE_RAW_FORMAT_CAPS ("I420"),  GST_VIDEO_FORMAT_I420},
+  {MFVideoFormat_IYUV,   MAKE_RAW_FORMAT_CAPS ("I420"),  GST_VIDEO_FORMAT_I420},
+  {MFVideoFormat_YV12,   MAKE_RAW_FORMAT_CAPS ("YV12"),  GST_VIDEO_FORMAT_YV12},
+
+  /* complex format */
   {MFVideoFormat_v210,   MAKE_RAW_FORMAT_CAPS ("v210"),  GST_VIDEO_FORMAT_v210},
   {MFVideoFormat_v216,   MAKE_RAW_FORMAT_CAPS ("v216"),  GST_VIDEO_FORMAT_v216},
+
+  /* gray */
   {MFVideoFormat_Y16,    MAKE_RAW_FORMAT_CAPS ("GRAY16_LE"),  GST_VIDEO_FORMAT_GRAY16_LE},
 };
 
@@ -357,6 +369,105 @@ gst_mf_media_type_release (IMFMediaType * media_type)
 {
   if (media_type)
     media_type->Release ();
+}
+
+gboolean
+gst_mf_update_video_info_with_stride (GstVideoInfo * info, gint stride)
+{
+  guint width, height, cr_h;
+
+  g_return_val_if_fail (info != nullptr, FALSE);
+  g_return_val_if_fail (stride > 0, FALSE);
+  g_return_val_if_fail (GST_VIDEO_INFO_FORMAT (info)
+      != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+
+  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_ENCODED)
+    return TRUE;
+
+  width = GST_VIDEO_INFO_WIDTH (info);
+  height = GST_VIDEO_INFO_HEIGHT (info);
+
+  /* copied from video-info */
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+      /* RGB */
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_BGR15:
+    case GST_VIDEO_FORMAT_BGR:
+      info->stride[0] = stride;
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
+      /* packed YUV */
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_VUYA:
+      info->stride[0] = stride;
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
+      /* semi-planar */
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P016_LE:
+      if (height % 2) {
+        GST_ERROR ("Height must be even number");
+        return FALSE;
+      }
+
+      cr_h = height / 2;
+
+      info->stride[0] = stride;
+      info->stride[1] = info->stride[0];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * height;
+      info->size = info->offset[1] + info->stride[0] * cr_h;
+      break;
+      /* planar */
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      if (stride % 2) {
+        GST_ERROR ("Stride must be even number");
+        return FALSE;
+      }
+
+      if (height % 2) {
+        GST_ERROR ("Height must be even number");
+        return FALSE;
+      }
+
+      cr_h = height / 2;
+
+      info->stride[0] = stride;
+      info->stride[1] = stride / 2;
+      info->stride[2] = info->stride[1];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * height;
+      info->offset[2] = info->offset[1] + info->stride[1] * cr_h;
+      info->size = info->offset[2] + info->stride[2] * cr_h;
+      break;
+      /* complex */
+    case GST_VIDEO_FORMAT_v210:
+    case GST_VIDEO_FORMAT_v216:
+      info->stride[0] = stride;
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
+      /* gray */
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+      info->stride[0] = stride;
+      info->offset[0] = 0;
+      info->size = info->stride[0] * height;
+      break;
+    default:
+      GST_ERROR ("Unhandled format %s",
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+      return FALSE;
+  }
+
+  return TRUE;
 }
 
 gboolean
