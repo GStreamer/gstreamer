@@ -1216,7 +1216,37 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
     GstH264Picture * picture)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
-  return gst_v4l2_codec_h264_dec_submit_bitstream (self, picture, 0);
+  guint flags = 0;
+
+  /* Hold on the output frame if this is first field of a pair */
+  if (picture->field != GST_H264_PICTURE_FIELD_FRAME && !picture->second_field)
+    flags = V4L2_BUF_FLAG_M2M_HOLD_CAPTURE_BUF;
+
+  return gst_v4l2_codec_h264_dec_submit_bitstream (self, picture, flags);
+}
+
+static gboolean
+gst_v4l2_codec_h264_dec_new_field_picture (GstH264Decoder * decoder,
+    const GstH264Picture * first_field, GstH264Picture * second_field)
+{
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+  GstV4l2Request *request =
+      gst_h264_picture_get_user_data ((GstH264Picture *) first_field);
+
+  if (!request) {
+    GST_WARNING_OBJECT (self,
+        "First picture does not have an associated request");
+    return TRUE;
+  }
+
+  GST_DEBUG_OBJECT (self, "Assigned request %p to second field.", request);
+
+  /* Associate the previous request with the new picture so that
+   * submit_bitstream can create sub-request */
+  gst_h264_picture_set_user_data (second_field, gst_v4l2_request_ref (request),
+      (GDestroyNotify) gst_v4l2_request_unref);
+
+  return TRUE;
 }
 
 static guint
@@ -1393,6 +1423,8 @@ gst_v4l2_codec_h264_dec_subclass_init (GstV4l2CodecH264DecClass * klass,
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_decode_slice);
   h264decoder_class->end_picture =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_end_picture);
+  h264decoder_class->new_field_picture =
+      GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_new_field_picture);
   h264decoder_class->get_preferred_output_delay =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_get_preferred_output_delay);
 
