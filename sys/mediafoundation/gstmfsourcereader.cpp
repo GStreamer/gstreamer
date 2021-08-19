@@ -85,6 +85,8 @@ struct _GstMFSourceReader
   GstMFStreamMediaType *cur_type;
   GstVideoInfo info;
 
+  gboolean top_down_image;
+
   gboolean flushing;
 };
 
@@ -394,12 +396,38 @@ gst_mf_source_reader_start (GstMFSourceObject * object)
   }
 
   type = self->cur_type;
+  self->top_down_image = TRUE;
 
   if (GST_VIDEO_INFO_FORMAT (&self->info) != GST_VIDEO_FORMAT_ENCODED) {
-    hr = type->media_type->SetUINT32 (MF_MT_DEFAULT_STRIDE,
-        GST_VIDEO_INFO_PLANE_STRIDE (&self->info, 0));
-    if (!gst_mf_result (hr))
-      return FALSE;
+    UINT32 stride;
+    INT32 actual_stride = GST_VIDEO_INFO_PLANE_STRIDE (&self->info, 0);
+
+    /* This MF_MT_DEFAULT_STRIDE uses UINT32 type but actual value is
+     * INT32, which can be negative in case of RGB image, and negative means
+     * its stored as bottom-up manner */
+    hr = type->media_type->GetUINT32 (MF_MT_DEFAULT_STRIDE, &stride);
+    if (gst_mf_result (hr)) {
+      actual_stride = (INT32) stride;
+      if (actual_stride < 0) {
+        if (!GST_VIDEO_INFO_IS_RGB (&self->info)) {
+          GST_ERROR_OBJECT (self,
+              "Bottom-up image is allowed only for RGB format");
+          return FALSE;
+        }
+
+        GST_DEBUG_OBJECT (self,
+            "Detected bottom-up image, stride %d", actual_stride);
+
+        self->top_down_image = FALSE;
+      }
+    } else {
+      /* If MF_MT_DEFAULT_STRIDE attribute is not specified, we can use our
+       * value */
+      type->media_type->SetUINT32 (MF_MT_DEFAULT_STRIDE,
+          (UINT32) actual_stride);
+    }
+    gst_mf_update_video_info_with_stride (&self->info,
+        std::abs (actual_stride));
   }
 
   hr = self->reader->SetStreamSelection (type->stream_index, TRUE);
@@ -568,23 +596,47 @@ gst_mf_source_reader_fill (GstMFSourceObject * object, GstBuffer * buffer)
     return GST_FLOW_ERROR;
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->info); i++) {
+  if (!self->top_down_image) {
     guint8 *src, *dst;
     gint src_stride, dst_stride;
-    gint width;
+    gint width, height;
 
-    src = data + GST_VIDEO_INFO_PLANE_OFFSET (&self->info, i);
-    dst = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame, i);
+    /* must be single plane RGB */
+    width = GST_VIDEO_INFO_COMP_WIDTH (&self->info, 0)
+        * GST_VIDEO_INFO_COMP_PSTRIDE (&self->info, 0);
+    height = GST_VIDEO_INFO_HEIGHT (&self->info);
 
-    src_stride = GST_VIDEO_INFO_PLANE_STRIDE (&self->info, i);
-    dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, i);
-    width = GST_VIDEO_INFO_COMP_WIDTH (&self->info, i)
-        * GST_VIDEO_INFO_COMP_PSTRIDE (&self->info, i);
+    src_stride = GST_VIDEO_INFO_PLANE_STRIDE (&self->info, 0);
+    dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
 
-    for (j = 0; j < GST_VIDEO_INFO_COMP_HEIGHT (&self->info, i); j++) {
+    /* This is bottom up image, should copy lines in reverse order */
+    src = data + src_stride * (height - 1);
+    dst = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+
+    for (j = 0; j < height; j++) {
       memcpy (dst, src, width);
-      src += src_stride;
+      src -= src_stride;
       dst += dst_stride;
+    }
+  } else {
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->info); i++) {
+      guint8 *src, *dst;
+      gint src_stride, dst_stride;
+      gint width;
+
+      src = data + GST_VIDEO_INFO_PLANE_OFFSET (&self->info, i);
+      dst = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame, i);
+
+      src_stride = GST_VIDEO_INFO_PLANE_STRIDE (&self->info, i);
+      dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, i);
+      width = GST_VIDEO_INFO_COMP_WIDTH (&self->info, i)
+          * GST_VIDEO_INFO_COMP_PSTRIDE (&self->info, i);
+
+      for (j = 0; j < GST_VIDEO_INFO_COMP_HEIGHT (&self->info, i); j++) {
+        memcpy (dst, src, width);
+        src += src_stride;
+        dst += dst_stride;
+      }
     }
   }
 
