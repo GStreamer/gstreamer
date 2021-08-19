@@ -2970,11 +2970,9 @@ atom_mvex_copy_data (AtomMVEX * mvex, guint8 ** buffer, guint64 * size,
     return 0;
   }
 
-  if (mvex->mehd.fragment_duration > 0) {
-    /* only write mehd if we have anything extra to add */
-    if (!atom_mehd_copy_data (&mvex->mehd, buffer, size, offset)) {
-      return 0;
-    }
+  /* only write mehd if we have anything extra to add */
+  if (!atom_mehd_copy_data (&mvex->mehd, buffer, size, offset)) {
+    return 0;
   }
 
   walker = g_list_first (mvex->trexs);
