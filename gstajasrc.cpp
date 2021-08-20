@@ -1288,6 +1288,32 @@ static GstCaps *gst_aja_src_get_caps(GstBaseSrc *bsrc, GstCaps *filter) {
     caps = gst_pad_get_pad_template_caps(GST_BASE_SRC_PAD(self));
   }
 
+  // Intersect with the configured video format if any to constrain the caps
+  // further.
+  if (self->video_format_setting != GST_AJA_VIDEO_FORMAT_AUTO) {
+    GstCaps *configured_caps =
+        gst_aja_video_format_to_caps(self->video_format_setting);
+
+    if (configured_caps) {
+      GstCaps *tmp;
+
+      // Remove pixel-aspect-ratio from the configured caps to allow for both
+      // widescreen and non-widescreen PAL/NTSC. It's added back by the
+      // template caps above when intersecting.
+      guint n = gst_caps_get_size(configured_caps);
+      for (guint i = 0; i < n; i++) {
+        GstStructure *s = gst_caps_get_structure(configured_caps, i);
+
+        gst_structure_remove_fields(s, "pixel-aspect-ratio", NULL);
+      }
+
+      tmp = gst_caps_intersect(caps, configured_caps);
+      gst_caps_unref(caps);
+      gst_caps_unref(configured_caps);
+      caps = tmp;
+    }
+  }
+
   if (filter) {
     GstCaps *tmp =
         gst_caps_intersect_full(filter, caps, GST_CAPS_INTERSECT_FIRST);
