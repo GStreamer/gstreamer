@@ -37,7 +37,7 @@
  *  * Add more interpolation method and make it selectable,
  *    currently default bi-linear interpolation only
  *  * Add fast-path for conversion like videoconvert
- *  * Full colorimetiry and chroma-siting support
+ *  * Full colorimetry and chroma-siting support
  *  * cropping, and x, y position support
  */
 
@@ -110,7 +110,7 @@ static const gchar READ_CHROMA_FROM_SEMI_PLANAR[] =
 /**
  * read_chroma:
  * @tex1: a CUDA texture object representing a chroma planar plane
- * @tex2: a CUDA texture object representing the orher planar plane
+ * @tex2: a CUDA texture object representing the other planar plane
  * @x: the x coordinate to read data from @tex1 and @tex2
  * @y: the y coordinate to read data from @tex1 and @tex2
  *
@@ -133,8 +133,8 @@ static const gchar READ_CHROMA_FROM_PLANAR[] =
  * @dst2: dummy
  * @u: a pixel value to write @dst1
  * @v: a pixel value to write @dst1
- * @x: the x coordinate to wrtie data into @tex1
- * @x: the y coordinate to wrtie data into @tex1
+ * @x: the x coordinate to write data into @tex1
+ * @x: the y coordinate to write data into @tex1
  * @pstride: the pixel stride of @dst1
  * @mask: bitmask to be applied to high bitdepth plane
  *
@@ -160,8 +160,8 @@ static const gchar WRITE_CHROMA_TO_SEMI_PLANAR[] =
  * @dst2: a CUDA global memory pointing to a the other planar chroma plane
  * @u: a pixel value to write @dst1
  * @v: a pixel value to write @dst1
- * @x: the x coordinate to wrtie data into @tex1
- * @x: the y coordinate to wrtie data into @tex1
+ * @x: the x coordinate to write data into @tex1
+ * @x: the y coordinate to write data into @tex1
  * @pstride: the pixel stride of @dst1
  * @mask: bitmask to be applied to high bitdepth plane
  *

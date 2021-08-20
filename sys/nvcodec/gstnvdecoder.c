@@ -717,7 +717,7 @@ gst_nv_decoder_copy_frame_to_system (GstNvDecoder * decoder,
   }
 
   if (!gst_cuda_context_push (decoder->context)) {
-    GST_ERROR_OBJECT (decoder, "Failed to pust CUDA context");
+    GST_ERROR_OBJECT (decoder, "Failed to push CUDA context");
     gst_video_frame_unmap (&video_frame);
     return FALSE;
   }
@@ -788,7 +788,7 @@ gst_nv_decoder_copy_frame_to_cuda (GstNvDecoder * decoder,
   }
 
   if (!gst_cuda_context_push (decoder->context)) {
-    GST_ERROR_OBJECT (decoder, "Failed to pust CUDA context");
+    GST_ERROR_OBJECT (decoder, "Failed to push CUDA context");
     return FALSE;
   }
 

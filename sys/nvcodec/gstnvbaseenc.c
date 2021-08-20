@@ -1908,7 +1908,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
       }
 
       resource->nv_resource.version =
-          gst_nvenc_get_registure_resource_version ();
+          gst_nvenc_get_register_resource_version ();
       resource->nv_resource.resourceType =
           NV_ENC_INPUT_RESOURCE_TYPE_CUDADEVICEPTR;
       resource->nv_resource.width = input_width;
@@ -2049,7 +2049,7 @@ register_cuda_resource (GstGLContext * context,
     gl_buf_obj = gl_mem->pbo;
 
     GST_LOG_OBJECT (nvenc,
-        "registure glbuffer %d to CUDA resource", gl_buf_obj->id);
+        "register glbuffer %d to CUDA resource", gl_buf_obj->id);
 
     if (gst_cuda_graphics_resource_register_gl_buffer (resource,
             gl_buf_obj->id, CU_GRAPHICS_REGISTER_FLAGS_NONE)) {

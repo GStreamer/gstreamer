@@ -76,7 +76,7 @@ guint32                 gst_nvenc_get_lock_input_buffer_version (void);
 
 guint32                 gst_nvenc_get_map_input_resource_version (void);
 
-guint32                 gst_nvenc_get_registure_resource_version (void);
+guint32                 gst_nvenc_get_register_resource_version (void);
 
 guint32                 gst_nvenc_get_stat_version (void);
 

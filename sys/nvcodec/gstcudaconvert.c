@@ -114,9 +114,9 @@ gst_cuda_convert_caps_remove_format_info (GstCaps * caps)
  * PAL            1      3       2     6     4       6      7      8      9      0    10
  * GRAY           1      4       3     2     1       5      6      7      8      9    0
  *
- * PAL or GRAY are never prefered, if we can we would convert to PAL instead
+ * PAL or GRAY are never preferred, if we can we would convert to PAL instead
  * of GRAY, though
- * less subsampling is prefered and if any, preferably horizontal
+ * less subsampling is preferred and if any, preferably horizontal
  * We would like to keep the alpha, even if we would need to to colorspace conversion
  * or lose depth.
  */

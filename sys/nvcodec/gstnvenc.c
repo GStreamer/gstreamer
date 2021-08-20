@@ -1091,7 +1091,7 @@ gst_nvenc_get_map_input_resource_version (void)
 }
 
 guint32
-gst_nvenc_get_registure_resource_version (void)
+gst_nvenc_get_register_resource_version (void)
 {
   /* NV_ENC_REGISTER_RESOURCE_VER == NVENCAPI_STRUCT_VERSION(3) */
   return GST_NVENCAPI_STRUCT_VERSION (3, gst_nvenc_api_version);

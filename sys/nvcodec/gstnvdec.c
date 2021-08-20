@@ -1075,7 +1075,7 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
       gst_buffer_replace (&nvdec->codec_data, codec_data);
     }
 
-    /* For all CODEC we get completre picture ... */
+    /* For all CODEC we get complete picture ... */
     nvdec->recv_complete_picture = TRUE;
 
     /* Except for JPEG, for which it depends on the caps */
