@@ -1341,8 +1341,6 @@ done:
 static gboolean
 _structure_set_variables (GQuark field_id, GValue * value, ReplaceData * data)
 {
-  gchar *str;
-
   if (field_id == filename_quark || field_id == debug_quark
       || field_id == debug_quark)
     return TRUE;
@@ -1360,12 +1358,17 @@ _structure_set_variables (GQuark field_id, GValue * value, ReplaceData * data)
   if (!G_VALUE_HOLDS_STRING (value))
     return TRUE;
 
-  str =
-      gst_validate_replace_variables_in_string (data->source, data->local_vars,
-      g_value_get_string (value));
-  if (str) {
-    g_value_set_string (value, str);
-    g_free (str);
+  if (!_variables_regex)
+    _variables_regex = g_regex_new ("\\$\\((\\w+)\\)", 0, 0, NULL);
+
+  /* Don't replace string contents unless really needed */
+  if (g_regex_match (_variables_regex, g_value_get_string (value), 0, NULL)) {
+    gchar *str = gst_validate_replace_variables_in_string (data->source,
+        data->local_vars, g_value_get_string (value));
+    if (str) {
+      g_value_set_string (value, str);
+      g_free (str);
+    }
   }
 
   _resolve_expression (data->source, value);
