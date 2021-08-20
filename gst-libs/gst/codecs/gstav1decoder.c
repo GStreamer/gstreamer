@@ -52,6 +52,18 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstAV1Decoder, gst_av1_decoder,
     GST_DEBUG_CATEGORY_INIT (gst_av1_decoder_debug, "av1decoder", 0,
         "AV1 Video Decoder"));
 
+static gint
+_floor_log2 (guint32 x)
+{
+  gint s = 0;
+
+  while (x != 0) {
+    x = x >> 1;
+    s++;
+  }
+  return s - 1;
+}
+
 static gboolean gst_av1_decoder_start (GstVideoDecoder * decoder);
 static gboolean gst_av1_decoder_stop (GstVideoDecoder * decoder);
 static gboolean gst_av1_decoder_set_format (GstVideoDecoder * decoder,
@@ -591,9 +603,19 @@ out:
   if (ret == GST_FLOW_OK) {
     if (priv->current_picture->frame_hdr.show_frame ||
         priv->current_picture->frame_hdr.show_existing_frame) {
-      g_assert (klass->output_picture);
-      /* transfer ownership of frame and picture */
-      ret = klass->output_picture (self, frame, priv->current_picture);
+      /* Only output one frame with the highest spatial id from each TU
+       * when there are multiple spatial layers.
+       */
+      if (priv->parser->state.operating_point_idc &&
+          obu.header.obu_spatial_id <
+          _floor_log2 (priv->parser->state.operating_point_idc >> 8)) {
+        gst_av1_picture_unref (priv->current_picture);
+        gst_video_decoder_release_frame (decoder, frame);
+      } else {
+        g_assert (klass->output_picture);
+        /* transfer ownership of frame and picture */
+        ret = klass->output_picture (self, frame, priv->current_picture);
+      }
     } else {
       GST_LOG_OBJECT (self, "Decode only picture %p", priv->current_picture);
       GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
