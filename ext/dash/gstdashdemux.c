@@ -3605,7 +3605,7 @@ gst_dash_demux_poll_ntp_server (GstDashDemuxClockDrift * clock_drift,
   if (!clock_drift->ntp_clock) {
     GResolver *resolver;
     GList *inet_addrs;
-    GError *err;
+    GError *err = NULL;
     gchar *ip_addr;
 
     resolver = g_resolver_get_default ();
