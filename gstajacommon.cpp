@@ -244,10 +244,21 @@ bool gst_video_info_from_aja_video_format(GstVideoInfo *info,
 
 GstCaps *gst_ntv2_video_format_to_caps(NTV2VideoFormat format) {
   GstVideoInfo info;
+  GstCaps *caps;
 
   if (!gst_video_info_from_ntv2_video_format(&info, format)) return NULL;
 
-  return gst_video_info_to_caps(&info);
+  caps = gst_video_info_to_caps(&info);
+  if (!caps) return caps;
+
+  guint n = gst_caps_get_size(caps);
+  for (guint i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure(caps, i);
+
+    gst_structure_remove_fields(s, "chroma-site", "colorimetry", NULL);
+  }
+
+  return caps;
 }
 
 bool gst_video_info_from_ntv2_video_format(GstVideoInfo *info,
