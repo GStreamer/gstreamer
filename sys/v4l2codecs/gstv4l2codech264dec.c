@@ -631,9 +631,9 @@ gst_v4l2_codec_h264_dec_fill_pred_weight (GstV4l2CodecH264Dec * self,
     return;
 
   for (i = 0; i <= slice_hdr->num_ref_idx_l1_active_minus1; i++) {
-    self->pred_weight.weight_factors[0].luma_weight[i] =
+    self->pred_weight.weight_factors[1].luma_weight[i] =
         slice_hdr->pred_weight_table.luma_weight_l1[i];
-    self->pred_weight.weight_factors[0].luma_offset[i] =
+    self->pred_weight.weight_factors[1].luma_offset[i] =
         slice_hdr->pred_weight_table.luma_offset_l1[i];
   }
 
