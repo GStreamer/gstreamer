@@ -541,6 +541,7 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     case GST_EVENT_SEGMENT:{
+      guint32 seqnum = gst_event_get_seqnum (event);
       /* Drop segment event, we create our own one */
       gst_event_copy_segment (event, &spad->segment);
       gst_event_replace (&event, NULL);
@@ -608,7 +609,7 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           }
         }
         event = gst_event_new_segment (&segment);
-        gst_event_set_seqnum (event, gst_event_get_seqnum (event));
+        gst_event_set_seqnum (event, seqnum);
 
         g_mutex_unlock (&self->lock);
       }
