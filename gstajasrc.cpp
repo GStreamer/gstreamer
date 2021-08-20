@@ -1096,9 +1096,11 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
       break;
     case GST_AJA_TIMECODE_INDEX_LTC1:
       self->tc_index = ::NTV2_TCINDEX_LTC1;
+      self->device->device->SetLTCInputEnable(true);
       break;
     case GST_AJA_TIMECODE_INDEX_LTC2:
       self->tc_index = ::NTV2_TCINDEX_LTC2;
+      self->device->device->SetLTCInputEnable(true);
       break;
     default:
       g_assert_not_reached();
