@@ -412,7 +412,7 @@ static gboolean gst_aja_audio_meta_transform(GstBuffer *dest, GstMeta *meta,
   if (GST_META_TRANSFORM_IS_COPY(type)) {
     smeta = (GstAjaAudioMeta *)meta;
 
-    GST_DEBUG("copy AJA audio metadata");
+    GST_TRACE("copy AJA audio metadata");
     dmeta = gst_buffer_add_aja_audio_meta(dest, smeta->buffer);
     if (!dmeta) return FALSE;
   } else {
@@ -506,7 +506,7 @@ static GstAjaMemory *_aja_memory_new_block(GstAjaAllocator *alloc,
   mem = (GstAjaMemory *)g_slice_alloc(sizeof(GstAjaMemory));
 
   data = (guint8 *)AJAMemory::AllocateAligned(maxsize, 4096);
-  GST_DEBUG_OBJECT(alloc, "Allocated %" G_GSIZE_FORMAT " at %p", maxsize, data);
+  GST_TRACE_OBJECT(alloc, "Allocated %" G_GSIZE_FORMAT " at %p", maxsize, data);
   if (!alloc->device->device->DMABufferLock((ULWord *)data, maxsize, true)) {
     GST_WARNING_OBJECT(alloc, "Failed to pre-lock memory");
   }
@@ -575,7 +575,7 @@ static void gst_aja_allocator_free(GstAllocator *alloc, GstMemory *mem) {
   if (!mem->parent) {
     GstAjaAllocator *aja_alloc = GST_AJA_ALLOCATOR(alloc);
 
-    GST_DEBUG_OBJECT(alloc, "Freeing memory at %p", dmem->data);
+    GST_TRACE_OBJECT(alloc, "Freeing memory at %p", dmem->data);
     aja_alloc->device->device->DMABufferUnlock((ULWord *)dmem->data,
                                                mem->maxsize);
     AJAMemory::FreeAligned(dmem->data);

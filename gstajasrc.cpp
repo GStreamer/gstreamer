@@ -1442,7 +1442,7 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
     {
       std::stringstream os;
       os << rp188;
-      GST_DEBUG_OBJECT(self, "Adding timecode %s", os.str().c_str());
+      GST_TRACE_OBJECT(self, "Adding timecode %s", os.str().c_str());
     }
 
     guint hours, minutes, seconds, frames;
@@ -1654,6 +1654,8 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
     gst_caps_unref(caps);
   }
 
+  GST_TRACE_OBJECT(self, "Outputting buffer %" GST_PTR_FORMAT, *buffer);
+
   return flow_ret;
 }
 
@@ -1759,7 +1761,7 @@ restart:
     ULWord vpid_b = 0;
     self->device->device->ReadSDIInVPID(self->channel, vpid_a, vpid_b);
 
-    GST_DEBUG_OBJECT(self,
+    GST_TRACE_OBJECT(self,
                      "Detected input video format %u with VPID %08x / %08x",
                      current_video_format, vpid_a, vpid_b);
 
