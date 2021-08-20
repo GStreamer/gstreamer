@@ -665,18 +665,6 @@ rtp_twcc_manager_send_packet (RTPTWCCManager * twcc,
       seqnum, pinfo->marker, GST_TIME_ARGS (pinfo->running_time));
 }
 
-void
-rtp_twcc_manager_set_send_packet_ts (RTPTWCCManager * twcc,
-    guint packet_id, GstClockTime ts)
-{
-  SentPacket *pkt = NULL;
-  pkt = &g_array_index (twcc->sent_packets, SentPacket, packet_id);
-  if (pkt) {
-    pkt->socket_ts = ts;
-    GST_DEBUG ("assigning: pkt-id: %u to packet: %u", packet_id, pkt->seqnum);
-  }
-}
-
 static void
 _add_twcc_packet (GArray * twcc_packets, guint16 seqnum, guint status)
 {

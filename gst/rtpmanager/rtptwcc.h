@@ -60,8 +60,6 @@ gboolean rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc,
 
 void rtp_twcc_manager_send_packet (RTPTWCCManager * twcc,
     guint16 seqnum, RTPPacketInfo * pinfo);
-void rtp_twcc_manager_set_send_packet_ts (RTPTWCCManager * twcc,
-    guint packet_id, GstClockTime ts);
 
 GstBuffer * rtp_twcc_manager_get_feedback (RTPTWCCManager * twcc,
     guint32 sender_ssrc);
