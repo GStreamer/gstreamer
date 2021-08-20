@@ -1438,6 +1438,13 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
           (GstVideoTimeCodeFlags)(flags | GST_VIDEO_TIME_CODE_FLAGS_INTERLACED);
 
     CRP188 rp188(item.tc, tc_format);
+
+    {
+      std::stringstream os;
+      os << rp188;
+      GST_DEBUG_OBJECT(self, "Adding timecode %s", os.str().c_str());
+    }
+
     guint hours, minutes, seconds, frames;
     rp188.GetRP188Hrs(hours);
     rp188.GetRP188Mins(minutes);
