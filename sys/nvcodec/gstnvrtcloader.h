@@ -25,15 +25,12 @@
 
 G_BEGIN_DECLS
 
-G_GNUC_INTERNAL
 gboolean gst_nvrtc_load_library (void);
 
-G_GNUC_INTERNAL
 nvrtcResult NvrtcCompileProgram (nvrtcProgram prog,
                                  int numOptions,
                                  const char** options);
 
-G_GNUC_INTERNAL
 nvrtcResult NvrtcCreateProgram  (nvrtcProgram* prog,
                                  const char* src,
                                  const char* name,
@@ -41,22 +38,17 @@ nvrtcResult NvrtcCreateProgram  (nvrtcProgram* prog,
                                  const char** headers,
                                  const char** includeNames);
 
-G_GNUC_INTERNAL
 nvrtcResult NvrtcDestroyProgram (nvrtcProgram* prog);
 
-G_GNUC_INTERNAL
 nvrtcResult NvrtcGetPTX         (nvrtcProgram prog,
                                  char* ptx);
 
-G_GNUC_INTERNAL
 nvrtcResult NvrtcGetPTXSize     (nvrtcProgram prog,
                                  size_t* ptxSizeRet);
 
-G_GNUC_INTERNAL
 nvrtcResult NvrtcGetProgramLog (nvrtcProgram prog,
                                 char* log);
 
-G_GNUC_INTERNAL
 nvrtcResult NvrtcGetProgramLogSize (nvrtcProgram prog,
                                     size_t* logSizeRet);
 

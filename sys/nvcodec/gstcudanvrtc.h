@@ -26,7 +26,6 @@
 
 G_BEGIN_DECLS
 
-G_GNUC_INTERNAL
 gchar *   gst_cuda_nvrtc_compile (const gchar * source);
 
 G_END_DECLS

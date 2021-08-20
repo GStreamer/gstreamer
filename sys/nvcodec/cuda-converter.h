@@ -32,15 +32,12 @@ typedef struct _GstCudaConverter GstCudaConverter;
     "{ I420, YV12, NV12, NV21, P010_10LE, P016_LE, I420_10LE, Y444, Y444_16LE, " \
     "BGRA, RGBA, RGBx, BGRx, ARGB, ABGR, RGB, BGR, BGR10A2_LE, RGB10A2_LE }"
 
-G_GNUC_INTERNAL
 GstCudaConverter *    gst_cuda_converter_new           (GstVideoInfo * in_info,
                                                         GstVideoInfo * out_info,
                                                         GstCudaContext * cuda_ctx);
 
-G_GNUC_INTERNAL
 void                 gst_cuda_converter_free           (GstCudaConverter * convert);
 
-G_GNUC_INTERNAL
 gboolean             gst_cuda_converter_frame          (GstCudaConverter * convert,
                                                         const GstCudaMemory * src,
                                                         GstVideoInfo * in_info,
@@ -48,7 +45,6 @@ gboolean             gst_cuda_converter_frame          (GstCudaConverter * conve
                                                         GstVideoInfo * out_info,
                                                         CUstream cuda_stream);
 
-G_GNUC_INTERNAL
 gboolean             gst_cuda_converter_frame_unlocked (GstCudaConverter * convert,
                                                         const GstCudaMemory * src,
                                                         GstVideoInfo * in_info,

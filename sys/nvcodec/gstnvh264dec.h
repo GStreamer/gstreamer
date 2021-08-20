@@ -33,10 +33,8 @@ G_BEGIN_DECLS
 typedef struct _GstNvH264Dec GstNvH264Dec;
 typedef struct _GstNvH264DecClass GstNvH264DecClass;
 
-G_GNUC_INTERNAL
 GType gst_nv_h264_dec_get_type (void);
 
-G_GNUC_INTERNAL
 void gst_nv_h264_dec_register (GstPlugin * plugin,
                                guint device_id,
                                guint rank,

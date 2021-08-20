@@ -182,7 +182,6 @@ typedef struct {
                                   NV_ENC_CONFIG * config);
 } GstNvBaseEncClass;
 
-G_GNUC_INTERNAL
 GType gst_nv_base_enc_get_type (void);
 
 GType gst_nv_base_enc_register                (const char * codec,

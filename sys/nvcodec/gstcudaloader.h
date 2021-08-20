@@ -26,150 +26,113 @@
 
 G_BEGIN_DECLS
 
-G_GNUC_INTERNAL
 gboolean gst_cuda_load_library (void);
 
 /* cuda.h */
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuInit             (unsigned int Flags);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuGetErrorName     (CUresult error,
                                      const char **pStr);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuGetErrorString   (CUresult error,
                                      const char **pStr);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuCtxCreate        (CUcontext * pctx,
                                      unsigned int flags,
                                      CUdevice dev);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuCtxDestroy       (CUcontext ctx);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuCtxPopCurrent    (CUcontext * pctx);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuCtxPushCurrent   (CUcontext ctx);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuCtxEnablePeerAccess (CUcontext peerContext,
                                              unsigned int Flags);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuCtxDisablePeerAccess (CUcontext peerContext);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuGraphicsMapResources     (unsigned int count,
                                              CUgraphicsResource * resources,
                                              CUstream hStream);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuGraphicsUnmapResources   (unsigned int count,
                                              CUgraphicsResource * resources,
                                              CUstream hStream);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuGraphicsSubResourceGetMappedArray    (CUarray * pArray,
                                                          CUgraphicsResource resource,
                                                          unsigned int arrayIndex,
                                                          unsigned int mipLevel);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuGraphicsResourceGetMappedPointer     (CUdeviceptr * pDevPtr,
                                                          size_t * pSize,
                                                          CUgraphicsResource resource);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuGraphicsUnregisterResource           (CUgraphicsResource resource);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuMemAlloc         (CUdeviceptr * dptr,
                                      unsigned int bytesize);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuMemAllocPitch    (CUdeviceptr * dptr,
                                      size_t * pPitch,
                                      size_t WidthInBytes,
                                      size_t Height,
                                      unsigned int ElementSizeBytes);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuMemAllocHost     (void **pp,
                                      unsigned int bytesize);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuMemcpy2D         (const CUDA_MEMCPY2D * pCopy);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuMemcpy2DAsync    (const CUDA_MEMCPY2D *pCopy, CUstream hStream);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuMemFree          (CUdeviceptr dptr);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuMemFreeHost      (void *p);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuStreamCreate     (CUstream *phStream,
                                      unsigned int Flags);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuStreamDestroy    (CUstream hStream);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuStreamSynchronize (CUstream hStream);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuDeviceGet        (CUdevice * device,
                                      int ordinal);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuDeviceGetCount   (int *count);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuDeviceGetName    (char *name,
                                      int len,
                                      CUdevice dev);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuDeviceGetAttribute (int *pi,
                                        CUdevice_attribute attrib,
                                        CUdevice dev);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuDeviceCanAccessPeer (int *canAccessPeer,
                                         CUdevice dev,
                                         CUdevice peerDev);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuDriverGetVersion   (int * driverVersion);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuModuleLoadData     (CUmodule* module,
                                        const void *image);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuModuleUnload      (CUmodule module);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuModuleGetFunction  (CUfunction* hfunc,
                                        CUmodule hmod,
                                        const char* name);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuTexObjectCreate    (CUtexObject *pTexObject,
                                        const CUDA_RESOURCE_DESC *pResDesc,
                                        const CUDA_TEXTURE_DESC *pTexDesc,
                                        const CUDA_RESOURCE_VIEW_DESC *pResViewDesc);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuTexObjectDestroy   (CUtexObject texObject);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuLaunchKernel       (CUfunction f,
                                        unsigned int gridDimX,
                                        unsigned int gridDimY,
@@ -183,22 +146,18 @@ CUresult CUDAAPI CuLaunchKernel       (CUfunction f,
                                        void **extra);
 
 /* cudaGL.h */
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuGraphicsGLRegisterImage  (CUgraphicsResource * pCudaResource,
                                              unsigned int image,
                                              unsigned int target,
                                              unsigned int Flags);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuGraphicsGLRegisterBuffer (CUgraphicsResource * pCudaResource,
                                              unsigned int buffer,
                                              unsigned int Flags);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuGraphicsResourceSetMapFlags (CUgraphicsResource resource,
                                                 unsigned int flags);
 
-G_GNUC_INTERNAL
 CUresult CUDAAPI CuGLGetDevices (unsigned int * pCudaDeviceCount,
                                  CUdevice * pCudaDevices,
                                  unsigned int cudaDeviceCount,

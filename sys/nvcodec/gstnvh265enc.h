@@ -37,7 +37,6 @@ typedef struct {
   GstNvBaseEncClass video_encoder_class;
 } GstNvH265EncClass;
 
-G_GNUC_INTERNAL
 void gst_nv_h265_enc_register (GstPlugin * plugin,
                                guint device_id,
                                guint rank,

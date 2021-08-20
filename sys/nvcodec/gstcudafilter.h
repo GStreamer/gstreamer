@@ -24,7 +24,6 @@
 
 G_BEGIN_DECLS
 
-G_GNUC_INTERNAL
 void gst_cuda_filter_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
