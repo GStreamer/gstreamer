@@ -1702,8 +1702,14 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
   }
 
   gst_buffer_pool_set_config (pool, config);
-  if (use_d3d11_pool)
-    size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
+  if (use_d3d11_pool) {
+    /* d3d11 buffer pool will update buffer size based on allocated texture,
+     * get size from config again */
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config,
+        nullptr, &size, nullptr, nullptr);
+    gst_structure_free (config);
+  }
 
   if (n > 0)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);

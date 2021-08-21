@@ -307,10 +307,8 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     priv->offset[1] = priv->stride[0] * desc[0].Height;
   }
 
-  self->buffer_size = offset;
-
   gst_buffer_pool_config_set_params (config,
-      caps, self->buffer_size, min_buffers, max_buffers);
+      caps, offset, min_buffers, max_buffers);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config) && ret;
 

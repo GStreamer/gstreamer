@@ -1955,6 +1955,7 @@ gst_d3d11_compositor_propose_allocation (GstAggregator * aggregator,
 
   if (gst_query_get_n_allocation_pools (query) == 0) {
     GstD3D11AllocationParams *d3d11_params;
+    GstStructure *config;
 
     d3d11_params = gst_d3d11_allocation_params_new (self->device, &info,
         (GstD3D11AllocationFlags) 0, D3D11_BIND_SHADER_RESOURCE);
@@ -1968,8 +1969,12 @@ gst_d3d11_compositor_propose_allocation (GstAggregator * aggregator,
       return FALSE;
     }
 
-    /* d3d11 buffer pool might update buffer size by self */
-    size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
+    /* d3d11 buffer pool will update buffer size based on allocated texture,
+     * get size from config again */
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config,
+        nullptr, &size, nullptr, nullptr);
+    gst_structure_free (config);
 
     gst_query_add_allocation_pool (query, pool, size, 0, 0);
     gst_object_unref (pool);
@@ -2042,8 +2047,12 @@ gst_d3d11_compositor_decide_allocation (GstAggregator * aggregator,
   gst_d3d11_allocation_params_free (d3d11_params);
 
   gst_buffer_pool_set_config (pool, config);
-  /* d3d11 buffer pool might update buffer size by self */
-  size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
+
+  /* d3d11 buffer pool will update buffer size based on allocated texture,
+   * get size from config again */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
+  gst_structure_free (config);
 
   if (n > 0)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);

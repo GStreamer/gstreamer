@@ -1252,7 +1252,12 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
   gst_query_add_allocation_meta (query,
       GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
 
-  size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
+  /* d3d11 buffer pool will update buffer size based on allocated texture,
+   * get size from config again */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
+  gst_structure_free (config);
+
   gst_query_add_allocation_pool (query, pool, size, 0, 0);
 
   gst_object_unref (pool);
@@ -1359,7 +1364,11 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
   gst_buffer_pool_set_config (pool, config);
 
-  size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
+  /* d3d11 buffer pool will update buffer size based on allocated texture,
+   * get size from config again */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
+  gst_structure_free (config);
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);

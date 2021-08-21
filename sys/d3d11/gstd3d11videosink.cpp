@@ -885,8 +885,14 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
       return FALSE;
     }
 
-    if (is_d3d11)
-      size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
+    if (is_d3d11) {
+      /* d3d11 buffer pool will update buffer size based on allocated texture,
+       * get size from config again */
+      config = gst_buffer_pool_get_config (pool);
+      gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr,
+          nullptr);
+      gst_structure_free (config);
+    }
   }
 
   /* We need at least 2 buffers because we hold on to the last one for redrawing

@@ -378,9 +378,11 @@ gst_d3d11_desktop_dup_src_decide_allocation (GstBaseSrc * bsrc,
 
   gst_buffer_pool_set_config (pool, config);
 
-  /* buffer size might be recalculated by pool depending on
-   * device's stride/padding constraints */
-  size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
+  /* d3d11 buffer pool will update buffer size based on allocated texture,
+   * get size from config again */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
+  gst_structure_free (config);
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);

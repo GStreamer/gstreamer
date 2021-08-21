@@ -295,9 +295,13 @@ gst_d3d11_download_propose_allocation (GstBaseTransform * trans,
 
     gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
-    /* d3d11 buffer pool might update buffer size by self */
     if (is_d3d11) {
-      size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
+      /* d3d11 buffer pool will update buffer size based on allocated texture,
+       * get size from config again */
+      config = gst_buffer_pool_get_config (pool);
+      gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr,
+          nullptr);
+      gst_structure_free (config);
     }
 
     gst_query_add_allocation_pool (query, pool, size, 0, 0);

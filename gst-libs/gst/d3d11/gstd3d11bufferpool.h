@@ -41,9 +41,6 @@ struct _GstD3D11BufferPool
 
   GstD3D11Device *device;
 
-  /* re-calculated buffer size based on d3d11 pitch and stride */
-  guint buffer_size;
-
   /*< private >*/
   GstD3D11BufferPoolPrivate *priv;
 
