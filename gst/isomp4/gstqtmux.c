@@ -6215,7 +6215,7 @@ gst_qt_mux_video_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
     mp4v->horizontal_resolution = 72 << 16;
     mp4v->vertical_resolution = 72 << 16;
     mp4v->depth = (entry.fourcc == FOURCC_ap4h
-        || entry.fourcc == FOURCC_ap4x) ? 32 : 24;
+        || entry.fourcc == FOURCC_ap4x) ? (depth > 0 ? depth : 32) : 24;
 
     /* Set compressor name, required by some software */
     switch (entry.fourcc) {
