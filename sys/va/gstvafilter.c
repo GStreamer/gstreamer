@@ -1219,37 +1219,6 @@ gst_va_filter_set_video_info (GstVaFilter * self, GstVideoInfo * in_info,
   return TRUE;
 }
 
-static gboolean
-_destroy_filters_unlocked (GstVaFilter * self)
-{
-  VABufferID buffer;
-  VADisplay dpy;
-  VAStatus status;
-  gboolean ret = TRUE;
-  guint i;
-
-  GST_TRACE_OBJECT (self, "Destroying %u filter buffers", self->filters->len);
-
-  dpy = gst_va_display_get_va_dpy (self->display);
-
-  for (i = 0; i < self->filters->len; i++) {
-    buffer = g_array_index (self->filters, VABufferID, i);
-
-    gst_va_display_lock (self->display);
-    status = vaDestroyBuffer (dpy, buffer);
-    gst_va_display_unlock (self->display);
-    if (status != VA_STATUS_SUCCESS) {
-      ret = FALSE;
-      GST_WARNING_OBJECT (self, "Failed to destroy filter buffer: %s",
-          vaErrorStr (status));
-    }
-  }
-
-  self->filters = g_array_set_size (self->filters, 0);
-
-  return ret;
-}
-
 gboolean
 gst_va_filter_add_filter_buffer (GstVaFilter * self, gpointer data, gsize size,
     guint num)
@@ -1283,6 +1252,37 @@ gst_va_filter_add_filter_buffer (GstVaFilter * self, gpointer data, gsize size,
   GST_OBJECT_UNLOCK (self);
 
   return TRUE;
+}
+
+static gboolean
+_destroy_filters_unlocked (GstVaFilter * self)
+{
+  VABufferID buffer;
+  VADisplay dpy;
+  VAStatus status;
+  gboolean ret = TRUE;
+  guint i;
+
+  GST_TRACE_OBJECT (self, "Destroying %u filter buffers", self->filters->len);
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+
+  for (i = 0; i < self->filters->len; i++) {
+    buffer = g_array_index (self->filters, VABufferID, i);
+
+    gst_va_display_lock (self->display);
+    status = vaDestroyBuffer (dpy, buffer);
+    gst_va_display_unlock (self->display);
+    if (status != VA_STATUS_SUCCESS) {
+      ret = FALSE;
+      GST_WARNING_OBJECT (self, "Failed to destroy filter buffer: %s",
+          vaErrorStr (status));
+    }
+  }
+
+  self->filters = g_array_set_size (self->filters, 0);
+
+  return ret;
 }
 
 gboolean
