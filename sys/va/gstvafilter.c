@@ -1219,6 +1219,43 @@ gst_va_filter_set_video_info (GstVaFilter * self, GstVideoInfo * in_info,
   return TRUE;
 }
 
+static gboolean
+_query_pipeline_caps (GstVaFilter * self, VAProcPipelineCaps * caps)
+{
+  VABufferID *filters = NULL;
+  VADisplay dpy;
+  VAStatus status;
+  guint32 num_filters = 0;
+
+  GST_OBJECT_LOCK (self);
+  if (self->filters) {
+    g_array_ref (self->filters);
+    num_filters = self->filters->len;
+    filters = (num_filters > 0) ? (VABufferID *) self->filters->data : NULL;
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+
+  gst_va_display_lock (self->display);
+  status = vaQueryVideoProcPipelineCaps (dpy, self->context, filters,
+      num_filters, caps);
+  gst_va_display_unlock (self->display);
+
+  GST_OBJECT_LOCK (self);
+  if (self->filters)
+    g_array_unref (self->filters);
+  GST_OBJECT_UNLOCK (self);
+
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaQueryVideoProcPipelineCaps: %s",
+        vaErrorStr (status));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 gboolean
 gst_va_filter_add_filter_buffer (GstVaFilter * self, gpointer data, gsize size,
     guint num)
@@ -1395,12 +1432,11 @@ _create_pipeline_buffer (GstVaFilter * self, GstVaSample * src,
 gboolean
 gst_va_filter_process (GstVaFilter * self, GstVaSample * src, GstVaSample * dst)
 {
-  VABufferID buffer, *filters = NULL;
+  VABufferID buffer;
   VADisplay dpy;
   VAProcPipelineCaps pipeline_caps = { 0, };
   VAStatus status;
   gboolean ret = FALSE;
-  guint32 num_filters = 0;
 
   g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
   g_return_val_if_fail (src && GST_IS_BUFFER (src->buffer), FALSE);
@@ -1413,29 +1449,13 @@ gst_va_filter_process (GstVaFilter * self, GstVaSample * src, GstVaSample * dst)
           && _fill_va_sample (self, dst, GST_PAD_SRC)))
     return FALSE;
 
-  GST_OBJECT_LOCK (self);
-
-  if (self->filters) {
-    g_array_ref (self->filters);
-    num_filters = self->filters->len;
-    filters = (num_filters > 0) ? (VABufferID *) self->filters->data : NULL;
-  }
-  GST_OBJECT_UNLOCK (self);
-
-  dpy = gst_va_display_get_va_dpy (self->display);
-
-  gst_va_display_lock (self->display);
-  status = vaQueryVideoProcPipelineCaps (dpy, self->context, filters,
-      num_filters, &pipeline_caps);
-  gst_va_display_unlock (self->display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR_OBJECT (self, "vaQueryVideoProcPipelineCaps: %s",
-        vaErrorStr (status));
+  if (!_query_pipeline_caps (self, &pipeline_caps))
     return FALSE;
-  }
 
   if (!_create_pipeline_buffer (self, src, dst, &buffer))
     return FALSE;
+
+  dpy = gst_va_display_get_va_dpy (self->display);
 
   gst_va_display_lock (self->display);
   status = vaBeginPicture (dpy, self->context, dst->surface);
@@ -1465,9 +1485,6 @@ gst_va_filter_process (GstVaFilter * self, GstVaSample * src, GstVaSample * dst)
 
 bail:
   GST_OBJECT_LOCK (self);
-  if (self->filters)
-    g_array_unref (self->filters);
-
   gst_va_display_lock (self->display);
   status = vaDestroyBuffer (dpy, buffer);
   gst_va_display_unlock (self->display);
