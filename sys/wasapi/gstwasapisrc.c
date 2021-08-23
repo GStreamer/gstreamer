@@ -199,7 +199,7 @@ gst_wasapi_src_init (GstWasapiSrc * self)
   self->loopback_event_handle = CreateEvent (NULL, FALSE, FALSE, NULL);
   self->loopback_cancellable = CreateEvent (NULL, TRUE, FALSE, NULL);
 
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
+  self->enumerator = gst_mm_device_enumerator_new ();
 }
 
 static void
@@ -247,6 +247,8 @@ gst_wasapi_src_dispose (GObject * object)
     self->loopback_cancellable = NULL;
   }
 
+  gst_clear_object (&self->enumerator);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -257,8 +259,6 @@ gst_wasapi_src_finalize (GObject * object)
 
   CoTaskMemFree (self->mix_format);
   self->mix_format = NULL;
-
-  CoUninitialize ();
 
   g_clear_pointer (&self->cached_caps, gst_caps_unref);
   g_clear_pointer (&self->positions, g_free);
@@ -426,7 +426,7 @@ gst_wasapi_src_open (GstAudioSrc * asrc)
    * even if the old device was unplugged. We need to handle this somehow.
    * For example, perhaps we should automatically switch to the new device if
    * the default device is changed and a device isn't explicitly selected. */
-  if (!gst_wasapi_util_get_device (GST_ELEMENT (self),
+  if (!gst_wasapi_util_get_device (self->enumerator,
           self->loopback ? eRender : eCapture, self->role, self->device_strid,
           &device)
       || !gst_wasapi_util_get_audio_client (GST_ELEMENT (self),
@@ -447,7 +447,7 @@ gst_wasapi_src_open (GstAudioSrc * asrc)
    * we will keep pusing silence data to into wasapi client so that make audio
    * client report audio data in any case
    */
-  if (!gst_wasapi_util_get_device (GST_ELEMENT (self),
+  if (!gst_wasapi_util_get_device (self->enumerator,
           eRender, self->role, self->device_strid, &loopback_device)
       || !gst_wasapi_util_get_audio_client (GST_ELEMENT (self),
           loopback_device, &self->loopback_client)) {
@@ -604,8 +604,6 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   guint bpf, rate, devicep_frames, buffer_frames;
   HRESULT hr;
 
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
-
   if (gst_wasapi_src_can_audioclient3 (self)) {
     if (!gst_wasapi_util_initialize_audioclient3 (GST_ELEMENT (self), spec,
             (IAudioClient3 *) self->client, self->mix_format, self->low_latency,
@@ -743,8 +741,6 @@ gst_wasapi_src_unprepare (GstAudioSrc * asrc)
   }
 
   self->client_clock_freq = 0;
-
-  CoUninitialize ();
 
   return TRUE;
 }

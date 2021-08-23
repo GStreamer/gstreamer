@@ -40,6 +40,8 @@ struct _GstWasapiSink
 {
   GstAudioSink parent;
 
+  GstMMDeviceEnumerator *enumerator;
+
   IMMDevice *device;
   IAudioClient *client;
   IAudioRenderClient *render_client;

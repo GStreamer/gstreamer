@@ -305,39 +305,29 @@ gst_wasapi_util_hresult_to_string (HRESULT hr)
   return error_text;
 }
 
-static IMMDeviceEnumerator *
-gst_wasapi_util_get_device_enumerator (GstObject * self)
-{
-  HRESULT hr;
-  IMMDeviceEnumerator *enumerator = NULL;
-
-  hr = CoCreateInstance (&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
-      &IID_IMMDeviceEnumerator, (void **) &enumerator);
-  HR_FAILED_RET (hr, CoCreateInstance (MMDeviceEnumerator), NULL);
-
-  return enumerator;
-}
-
 gboolean
-gst_wasapi_util_get_devices (GstObject * self, gboolean active,
-    GList ** devices)
+gst_wasapi_util_get_devices (GstMMDeviceEnumerator * self,
+    gboolean active, GList ** devices)
 {
   gboolean res = FALSE;
   static GstStaticCaps scaps = GST_STATIC_CAPS (GST_WASAPI_STATIC_CAPS);
   DWORD dwStateMask = active ? DEVICE_STATE_ACTIVE : DEVICE_STATEMASK_ALL;
   IMMDeviceCollection *device_collection = NULL;
-  IMMDeviceEnumerator *enumerator = NULL;
+  IMMDeviceEnumerator *enum_handle = NULL;
   const gchar *device_class, *element_name;
   guint ii, count;
   HRESULT hr;
 
   *devices = NULL;
 
-  enumerator = gst_wasapi_util_get_device_enumerator (self);
-  if (!enumerator)
+  if (!self)
     return FALSE;
 
-  hr = IMMDeviceEnumerator_EnumAudioEndpoints (enumerator, eAll, dwStateMask,
+  enum_handle = gst_mm_device_enumerator_get_handle (self);
+  if (!enum_handle)
+    return FALSE;
+
+  hr = IMMDeviceEnumerator_EnumAudioEndpoints (enum_handle, eAll, dwStateMask,
       &device_collection);
   HR_FAILED_GOTO (hr, IMMDeviceEnumerator::EnumAudioEndpoints, err);
 
@@ -459,8 +449,6 @@ gst_wasapi_util_get_devices (GstObject * self, gboolean active,
   res = TRUE;
 
 err:
-  if (enumerator)
-    IUnknown_Release (enumerator);
   if (device_collection)
     IUnknown_Release (device_collection);
   return res;
@@ -533,24 +521,28 @@ out:
 }
 
 gboolean
-gst_wasapi_util_get_device (GstElement * self,
+gst_wasapi_util_get_device (GstMMDeviceEnumerator * self,
     gint data_flow, gint role, const wchar_t * device_strid,
     IMMDevice ** ret_device)
 {
   gboolean res = FALSE;
   HRESULT hr;
-  IMMDeviceEnumerator *enumerator = NULL;
+  IMMDeviceEnumerator *enum_handle = NULL;
   IMMDevice *device = NULL;
 
-  if (!(enumerator = gst_wasapi_util_get_device_enumerator (GST_OBJECT (self))))
-    goto beach;
+  if (!self)
+    return FALSE;
+
+  enum_handle = gst_mm_device_enumerator_get_handle (self);
+  if (!enum_handle)
+    return FALSE;
 
   if (!device_strid) {
-    hr = IMMDeviceEnumerator_GetDefaultAudioEndpoint (enumerator, data_flow,
+    hr = IMMDeviceEnumerator_GetDefaultAudioEndpoint (enum_handle, data_flow,
         role, &device);
     HR_FAILED_GOTO (hr, IMMDeviceEnumerator::GetDefaultAudioEndpoint, beach);
   } else {
-    hr = IMMDeviceEnumerator_GetDevice (enumerator, device_strid, &device);
+    hr = IMMDeviceEnumerator_GetDevice (enum_handle, device_strid, &device);
     if (hr != S_OK) {
       gchar *msg = gst_wasapi_util_hresult_to_string (hr);
       GST_ERROR_OBJECT (self, "IMMDeviceEnumerator::GetDevice (%S) failed"
@@ -568,9 +560,6 @@ gst_wasapi_util_get_device (GstElement * self,
 beach:
   if (device != NULL)
     IUnknown_Release (device);
-
-  if (enumerator != NULL)
-    IUnknown_Release (enumerator);
 
   return res;
 }

@@ -40,6 +40,8 @@ struct _GstWasapiSrc
 {
   GstAudioSrc parent;
 
+  GstMMDeviceEnumerator *enumerator;
+
   IMMDevice *device;
   IAudioClient *client;
   IAudioClock *client_clock;

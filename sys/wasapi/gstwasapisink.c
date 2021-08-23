@@ -180,7 +180,7 @@ gst_wasapi_sink_init (GstWasapiSink * self)
   self->cancellable = CreateEvent (NULL, TRUE, FALSE, NULL);
   self->client_needs_restart = FALSE;
 
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
+  self->enumerator = gst_mm_device_enumerator_new ();
 }
 
 static void
@@ -208,6 +208,8 @@ gst_wasapi_sink_dispose (GObject * object)
     self->render_client = NULL;
   }
 
+  gst_clear_object (&self->enumerator);
+
   G_OBJECT_CLASS (gst_wasapi_sink_parent_class)->dispose (object);
 }
 
@@ -218,8 +220,6 @@ gst_wasapi_sink_finalize (GObject * object)
 
   CoTaskMemFree (self->mix_format);
   self->mix_format = NULL;
-
-  CoUninitialize ();
 
   if (self->cached_caps != NULL) {
     gst_caps_unref (self->cached_caps);
@@ -412,7 +412,7 @@ gst_wasapi_sink_open (GstAudioSink * asink)
    * even if the old device was unplugged. We need to handle this somehow.
    * For example, perhaps we should automatically switch to the new device if
    * the default device is changed and a device isn't explicitly selected. */
-  if (!gst_wasapi_util_get_device (GST_ELEMENT (self), eRender,
+  if (!gst_wasapi_util_get_device (self->enumerator, eRender,
           self->role, self->device_strid, &device)
       || !gst_wasapi_util_get_audio_client (GST_ELEMENT (self),
           device, &client)) {
@@ -484,8 +484,6 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   REFERENCE_TIME latency_rt;
   guint bpf, rate, devicep_frames;
   HRESULT hr;
-
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
 
   if (!self->client) {
     GST_DEBUG_OBJECT (self, "no IAudioClient, creating a new one");
@@ -607,8 +605,6 @@ gst_wasapi_sink_unprepare (GstAudioSink * asink)
     IUnknown_Release (self->render_client);
     self->render_client = NULL;
   }
-
-  CoUninitialize ();
 
   return TRUE;
 }

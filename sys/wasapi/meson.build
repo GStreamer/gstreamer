@@ -1,4 +1,5 @@
 wasapi_sources = [
+  'gstmmdeviceenumerator.cpp',
   'gstwasapi.c',
   'gstwasapisrc.c',
   'gstwasapisink.c',
@@ -30,6 +31,7 @@ if ole32_dep.found() and ksuser_dep.found() and have_audioclient_h
   gstwasapi = library('gstwasapi',
     wasapi_sources,
     c_args : gst_plugins_bad_args + wasapi_args,
+    cpp_args: gst_plugins_bad_args,
     include_directories : [configinc],
     dependencies : [gstaudio_dep, ole32_dep, ksuser_dep],
     install : true,
