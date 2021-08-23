@@ -91,6 +91,8 @@ os.symlink(os.path.join('@1@', 'subprojects', '@0@'),
 if build_system == 'windows'
   subproject('win-flex-bison-binaries')
   subproject('win-nasm')
+elif build_system == 'darwin'
+  subproject('macos-bison-binary')
 endif
 
 orc_subproject = subproject('orc', required: get_option('orc'))
