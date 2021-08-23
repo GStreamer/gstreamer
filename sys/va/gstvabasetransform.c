@@ -787,10 +787,10 @@ gst_va_base_transform_import_buffer (GstVaBaseTransform * self,
   if (!copied)
     goto invalid_buffer;
 
-  /* strictly speaking this is not needed but let's play safe */
-  if (!gst_buffer_copy_into (buffer, inbuf, GST_BUFFER_COPY_FLAGS |
-          GST_BUFFER_COPY_TIMESTAMPS, 0, -1))
-    return GST_FLOW_ERROR;
+  /* copy metadata, default implemenation of baseclass will copy everything
+   * what we need */
+  GST_BASE_TRANSFORM_CLASS (parent_class)->copy_metadata
+      (GST_BASE_TRANSFORM_CAST (self), inbuf, buffer);
 
   *buf = buffer;
 
