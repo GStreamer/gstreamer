@@ -701,8 +701,7 @@ gst_va_vpp_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
   else if (gst_meta_api_type_has_tag (info->api, META_TAG_VIDEO))
     return TRUE;
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans, outbuf,
-      meta, inbuf);
+  return FALSE;
 }
 
 /* Remove all the info for the cases when we can actually convert:
