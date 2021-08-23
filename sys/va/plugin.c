@@ -29,6 +29,7 @@
 
 #include "gstvaav1dec.h"
 #include "gstvacaps.h"
+#include "gstvadeinterlace.h"
 #include "gstvadevice.h"
 #include "gstvafilter.h"
 #include "gstvah264dec.h"
@@ -190,13 +191,16 @@ static void
 plugin_register_vpp (GstPlugin * plugin, GstVaDevice * device)
 {
   GstVaFilter *filter;
-  gboolean has_colorbalance;
+  gboolean has_colorbalance, has_deinterlace;
 
   has_colorbalance = FALSE;
+  has_deinterlace = FALSE;
   filter = gst_va_filter_new (device->display);
   if (gst_va_filter_open (filter)) {
     has_colorbalance =
         gst_va_filter_has_filter (filter, VAProcFilterColorBalance);
+    has_deinterlace =
+        gst_va_filter_has_filter (filter, VAProcFilterDeinterlacing);
   } else {
     GST_WARNING ("Failed open VA filter");
     gst_object_unref (filter);
@@ -206,6 +210,13 @@ plugin_register_vpp (GstPlugin * plugin, GstVaDevice * device)
 
   if (!gst_va_vpp_register (plugin, device, has_colorbalance, GST_RANK_NONE))
     GST_WARNING ("Failed to register postproc: %s", device->render_device_path);
+
+  if (has_deinterlace) {
+    if (!gst_va_deinterlace_register (plugin, device, GST_RANK_NONE)) {
+      GST_WARNING ("Failed to register deinterlace: %s",
+          device->render_device_path);
+    }
+  }
 }
 
 static inline void
