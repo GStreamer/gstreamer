@@ -14328,12 +14328,24 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps =
           gst_caps_new_simple ("video/x-prores", "variant", G_TYPE_STRING,
           "4444", NULL);
+
+      /* 24 bits per sample = an alpha channel is coded but image is always opaque */
+      if (entry->bits_per_sample > 0) {
+        gst_caps_set_simple (caps, "depth", G_TYPE_INT, entry->bits_per_sample,
+            NULL);
+      }
       break;
     case FOURCC_ap4x:
       _codec ("Apple ProRes 4444 XQ");
       caps =
           gst_caps_new_simple ("video/x-prores", "variant", G_TYPE_STRING,
           "4444xq", NULL);
+
+      /* 24 bits per sample = an alpha channel is coded but image is always opaque */
+      if (entry->bits_per_sample > 0) {
+        gst_caps_set_simple (caps, "depth", G_TYPE_INT, entry->bits_per_sample,
+            NULL);
+      }
       break;
     case FOURCC_cfhd:
       _codec ("GoPro CineForm");
