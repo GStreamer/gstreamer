@@ -1371,8 +1371,10 @@ cleanup_hook (GstPad * pad, GHook * hook)
   GST_DEBUG_OBJECT (pad,
       "cleaning up hook %lu with flags %08x", hook->hook_id, hook->flags);
 
-  if (!G_HOOK_IS_VALID (hook))
+  if (!G_HOOK_IS_VALID (hook)) {
+    /* We've already destroyed this hook */
     return;
+  }
 
   type = (hook->flags) >> G_HOOK_FLAG_USER_SHIFT;
 
@@ -1492,6 +1494,9 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
       gst_object_ref (pad);
       pad->priv->idle_running++;
 
+      /* Ref the hook, it could be destroyed by the callback or concurrently */
+      g_hook_ref (&pad->probes, hook);
+
       /* the pad is idle now, we can signal the idle callback now */
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
           "pad is idle, trigger idle callback");
@@ -1523,6 +1528,7 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
           GST_DEBUG_OBJECT (pad, "probe returned %d", ret);
           break;
       }
+      g_hook_unref (&pad->probes, hook);
       pad->priv->idle_running--;
       if (pad->priv->idle_running == 0) {
         GST_PAD_BLOCK_BROADCAST (pad);
