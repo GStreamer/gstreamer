@@ -191,10 +191,6 @@
 #define EGL_YUV_NARROW_RANGE_EXT 0x3283
 #endif
 
-#if !GST_GL_HAVE_EGLUINT64KHR
-typedef khronos_uint64_t EGLuint64KHR;
-#endif
-
 GST_DEFINE_MINI_OBJECT_TYPE (GstEGLImage, gst_egl_image);
 
 #ifndef GST_DISABLE_GST_DEBUG
