@@ -34,7 +34,7 @@
  * @title: msdkav1dec
  * @short_description: Intel MSDK AV1 decoder
  *
- * AV1 video decoder based on Intel Media SDK
+ * AV1 video decoder based on Intel MFX
  *
  * ## Example launch line
  * ```
@@ -118,7 +118,7 @@ gst_msdkav1dec_class_init (GstMsdkAV1DecClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK AV1 decoder",
       "Codec/Decoder/Video/Hardware",
-      "AV1 video decoder based on Intel Media SDK",
+      "AV1 video decoder based on " MFX_API_SDK,
       "Haihao Xiang <haihao.xiang@intel.com>");
 
   gst_element_class_add_static_pad_template (element_class, &sink_factory);

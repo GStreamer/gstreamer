@@ -291,7 +291,7 @@ msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
   mfxSession session = NULL;
   mfxInitParam init_par = { impl, *pver };
 
-  GST_INFO ("Use the Intel Media SDK to create MFX session");
+  GST_INFO ("Use the " MFX_API_SDK " to create MFX session");
 
 #if (MFX_VERSION >= 1025)
   init_par.GPUCopy = 1;

@@ -384,7 +384,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
       FrameInfo.ChromaFormat : MFX_CHROMAFORMAT_YUV420;
 
   session = gst_msdk_context_get_session (thiz->context);
-  /* validate parameters and allow the Media SDK to make adjustments */
+  /* validate parameters and allow MFX to make adjustments */
   status = MFXVideoDECODE_Query (session, &thiz->param, &thiz->param);
   if (status < MFX_ERR_NONE) {
     GST_ERROR_OBJECT (thiz, "Video Decode Query failed (%s)",

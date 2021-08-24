@@ -1228,7 +1228,7 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
     thiz->param.ExtParam = thiz->extra_params;
   }
 
-  /* validate parameters and allow the Media SDK to make adjustments */
+  /* validate parameters and allow MFX to make adjustments */
   status = MFXVideoVPP_Query (session, &thiz->param, &thiz->param);
   if (status < MFX_ERR_NONE) {
     GST_ERROR_OBJECT (thiz, "Video VPP Query failed (%s)",
@@ -1674,10 +1674,10 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       &gst_msdkvpp_sink_factory);
 
   gst_element_class_set_static_metadata (element_class,
-      "MSDK Video Postprocessor",
+      "Intel MSDK Video Postprocessor",
       "Filter/Converter/Video;Filter/Converter/Video/Scaler;"
       "Filter/Effect/Video;Filter/Effect/Video/Deinterlace",
-      "A MediaSDK Video Postprocessing Filter",
+      "Video Postprocessing Filter based on " MFX_API_SDK,
       "Sreerenj Balachandrn <sreerenj.balachandran@intel.com>");
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_msdkvpp_start);

@@ -575,7 +575,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
         break;
     }
 
-    /* validate parameters and allow the Media SDK to make adjustments */
+    /* validate parameters and allow MFX to make adjustments */
     status = MFXVideoVPP_Query (session, &thiz->vpp_param, &thiz->vpp_param);
     if (status < MFX_ERR_NONE) {
       GST_ERROR_OBJECT (thiz, "Video VPP Query failed (%s)",
@@ -738,7 +738,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
     thiz->param.ExtParam = thiz->extra_params;
   }
 
-  /* validate parameters and allow the Media SDK to make adjustments */
+  /* validate parameters and allow MFX to make adjustments */
   status = MFXVideoENCODE_Query (session, &thiz->param, &thiz->param);
   if (status < MFX_ERR_NONE) {
     GST_ERROR_OBJECT (thiz, "Video Encode Query failed (%s)",

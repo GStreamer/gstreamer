@@ -59,6 +59,12 @@ static const char MFX_PLUGINID_VP9E_HW;
 static const char MFX_PLUGINID_VP9D_HW;
 #endif
 
+#if (MFX_VERSION >= 2000)
+#define MFX_API_SDK  "Intel(R) oneVPL"
+#else
+#define MFX_API_SDK  "Intel(R) Media SDK"
+#endif
+
 G_BEGIN_DECLS
 
 #define GST_MSDK_CAPS_MAKE(format) \

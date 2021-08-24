@@ -34,7 +34,7 @@
  * @title: msdkh264enc
  * @short_description: Intel MSDK H264 encoder
  *
- * H264 video encoder based on Intel Media SDK
+ * H264 video encoder based on Intel MFX
  *
  * ## Example launch line
  * ```
@@ -807,7 +807,7 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H264 encoder", "Codec/Encoder/Video/Hardware",
-      "H264 video encoder based on Intel Media SDK",
+      "H264 video encoder based on " MFX_API_SDK,
       "Josep Torra <jtorra@oblong.com>");
   gst_element_class_add_static_pad_template (element_class, &src_factory);
 }

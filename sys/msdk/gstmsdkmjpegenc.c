@@ -34,7 +34,7 @@
  * @title: msdkmjpegenc
  * @short_description: Intel MSDK MJPEG encoder
  *
- * MJPEG video encoder based on Intel Media SDK
+ * MJPEG video encoder based on Intel MFX
  *
  * ## Example launch line
  * ```
@@ -193,7 +193,7 @@ gst_msdkmjpegenc_class_init (GstMsdkMJPEGEncClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK MJPEG encoder",
       "Codec/Encoder/Video/Hardware",
-      "MJPEG video encoder based on Intel Media SDK",
+      "MJPEG video encoder based on " MFX_API_SDK,
       "Scott D Phillips <scott.d.phillips@intel.com>");
 
   gst_element_class_add_static_pad_template (element_class, &src_factory);

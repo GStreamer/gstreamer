@@ -37,7 +37,7 @@
  * @title: msdkmpeg2dec
  * @short_description: Intel MSDK MPEG2 decoder
  *
- * MPEG2 video decoder based on Intel Media SDK
+ * MPEG2 video decoder based on Intel MFX
  *
  * ## Example launch line
  * ```
@@ -145,7 +145,7 @@ gst_msdkmpeg2dec_class_init (GstMsdkMPEG2DecClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK MPEG2 decoder",
       "Codec/Decoder/Video/Hardware",
-      "MPEG2 video decoder based on Intel Media SDK",
+      "MPEG2 video decoder based on " MFX_API_SDK,
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 
   gst_msdkdec_prop_install_output_oder_property (gobject_class);

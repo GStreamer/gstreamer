@@ -34,7 +34,7 @@
   * @title: msdkh265dec
   * @short_description: Intel MSDK H265 decoder
   *
-  * H265 video decoder based on Intel Media SDK
+  * H265 video decoder based on Intel MFX
   *
   * ## Example launch line
   * ```
@@ -193,7 +193,7 @@ gst_msdkh265dec_class_init (GstMsdkH265DecClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H265 decoder",
       "Codec/Decoder/Video/Hardware",
-      "H265 video decoder based on Intel Media SDK",
+      "H265 video decoder based on " MFX_API_SDK,
       "Scott D Phillips <scott.d.phillips@intel.com>");
 
   gst_msdkdec_prop_install_output_oder_property (gobject_class);
