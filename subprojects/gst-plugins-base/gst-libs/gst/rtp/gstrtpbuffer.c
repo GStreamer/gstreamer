@@ -833,6 +833,8 @@ ensure_buffers (GstRTPBuffer * rtp)
  * extension header. If the existing extension data is not large enough, it will
  * be made larger.
  *
+ * Will also shorten the extension data from 1.20.
+ *
  * Returns: True if done.
  */
 gboolean
@@ -880,6 +882,15 @@ gst_rtp_buffer_set_extension_data (GstRTPBuffer * rtp, guint16 bits,
     /* map new */
     gst_memory_map (mem, &rtp->map[1], GST_MAP_READWRITE);
     gst_memory_ref (mem);
+    rtp->data[1] = rtp->map[1].data;
+    rtp->size[1] = rtp->map[1].size;
+  } else if (min_size < rtp->size[1]) {
+    GstMemory *mem = rtp->map[1].memory;
+
+    gst_memory_ref (mem);
+    gst_buffer_unmap (rtp->buffer, &rtp->map[1]);
+    gst_memory_resize (mem, 0, min_size);
+    gst_memory_map (mem, &rtp->map[1], GST_MAP_READWRITE);
     rtp->data[1] = rtp->map[1].data;
     rtp->size[1] = rtp->map[1].size;
   }
