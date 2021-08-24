@@ -1075,12 +1075,18 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
     if (err < 0) {
       GST_DEBUG_OBJECT (asink, "Write error: %s (%d)", snd_strerror (err), err);
       if (err == -EAGAIN) {
-        continue;
+        /* will continue out of the if/else group */
       } else if (err == -ENODEV) {
         goto device_disappeared;
       } else if (xrun_recovery (alsa, alsa->handle, err) < 0) {
         goto write_error;
       }
+
+      /* Unlock so that _reset() can run and break an otherwise infinit loop
+       * here */
+      GST_ALSA_SINK_UNLOCK (asink);
+      g_thread_yield ();
+      GST_ALSA_SINK_LOCK (asink);
       continue;
     } else if (err == 0 && alsa->hw_support_pause) {
       /* We might be already paused, if so, just bail */
