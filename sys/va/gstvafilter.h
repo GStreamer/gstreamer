@@ -61,6 +61,12 @@ struct _GstVaSample
   GstBuffer *buffer;
   guint32 flags;
 
+  /* references for (de)interlacing */
+  VASurfaceID *forward_references;
+  guint num_forward_references;
+  VASurfaceID *backward_references;
+  guint num_backward_references;
+
   /*< private >*/
   VASurfaceID surface;
   VARectangle rect;
