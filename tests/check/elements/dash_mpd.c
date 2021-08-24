@@ -51,6 +51,9 @@
 
 #include <gst/check/gstcheck.h>
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
 GST_DEBUG_CATEGORY (gst_dash_demux_debug);
 
 /*
@@ -1434,7 +1437,7 @@ GST_START_TEST
       "<?xml version=\"1.0\"?>"
       "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
-      "     customns=\"foo\""
+      "     xmlns:customns=\"foo\""
       "  <Period>"
       "    <AdaptationSet>"
       "      <ContentProtection schemeIdUri=\"TestSchemeIdUri\">"
@@ -1573,6 +1576,93 @@ GST_START_TEST (dash_mpdparser_contentProtection_no_value_no_encoding)
   assert_equals_string (contentProtection->schemeIdUri,
       "urn:uuid:5e629af5-38da-4063-8977-97ffbd9902d4");
   fail_if (contentProtection->value == NULL);
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
+ * Test parsing Period AdaptationSet RepresentationBase ContentProtection
+ * attributes
+ */
+GST_START_TEST
+    (dash_mpdparser_period_adaptationSet_representationBase_contentProtection_xml_namespaces)
+{
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" minBufferTime=\"PT1.500S\""
+      "  type=\"static\" mediaPresentationDuration=\"PT0H24M28.000S\""
+      "  maxSegmentDuration=\"PT0H0M4.000S\""
+      "  profiles=\"urn:mpeg:dash:profile:isoff-live:2011,http://dashif.org/guidelines/dash264\""
+      "  xmlns:cenc=\"urn:mpeg:cenc:2013\" xmlns:clearkey=\"http://dashif.org/guidelines/clearKey\">"
+      "  <Period>" "    <AdaptationSet>"
+      "      <ContentProtection schemeIdUri=\"urn:mpeg:dash:mp4protection:2011\""
+      "        value=\"cenc\" cenc:default_KID=\"33969335-53A5-4E78-BA99-9054CD1B2871\">"
+      "      </ContentProtection>"
+      "      <ContentProtection value=\"ClearKey1.0\""
+      "        schemeIdUri=\"urn:uuid:e2719d58-a985-b3c9-781a-b030af78d30e\">"
+      "        <clearkey:Laurl Lic_type=\"EME-1.0\">https://drm.test.example/AcquireLicense</clearkey:Laurl>"
+      "      </ContentProtection></AdaptationSet></Period></MPD>";
+  GstMPDPeriodNode *periodNode;
+  GstMPDAdaptationSetNode *adaptationSet;
+  GstMPDRepresentationBaseNode *representationBase;
+  GstMPDDescriptorTypeNode *contentProtection;
+  gboolean ret;
+  GstMPDClient *mpdclient = gst_mpd_client_new ();
+  xmlDocPtr doc;
+  xmlNode *root_element = NULL, *node;
+  xmlChar *property = NULL;
+
+  ret = gst_mpd_client_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  periodNode = (GstMPDPeriodNode *) mpdclient->mpd_root_node->Periods->data;
+  adaptationSet = (GstMPDAdaptationSetNode *) periodNode->AdaptationSets->data;
+  representationBase = GST_MPD_REPRESENTATION_BASE_NODE (adaptationSet);
+  assert_equals_int (g_list_length (representationBase->ContentProtection), 2);
+  contentProtection = (GstMPDDescriptorTypeNode *)
+      g_list_nth_data (representationBase->ContentProtection, 0);
+  assert_equals_string (contentProtection->schemeIdUri,
+      "urn:mpeg:dash:mp4protection:2011");
+
+  contentProtection = (GstMPDDescriptorTypeNode *)
+      g_list_nth_data (representationBase->ContentProtection, 1);
+  assert_equals_string (contentProtection->schemeIdUri,
+      "urn:uuid:e2719d58-a985-b3c9-781a-b030af78d30e");
+
+  /* We can't do a simple string compare of value, because the whitespace
+     formatting from xmlDump might differ between versions of libxml */
+  LIBXML_TEST_VERSION;
+  doc =
+      xmlReadMemory (contentProtection->value,
+      strlen (contentProtection->value), "ContentProtection.xml", NULL,
+      XML_PARSE_NONET);
+  fail_if (!doc);
+  root_element = xmlDocGetRootElement (doc);
+  fail_if (root_element->type != XML_ELEMENT_NODE);
+  fail_if (xmlStrcmp (root_element->name,
+          (xmlChar *) "ContentProtection") != 0);
+  fail_if ((property =
+          xmlGetNoNsProp (root_element, (const xmlChar *) "value")) == NULL);
+  fail_if (xmlStrcmp (property, (xmlChar *) "ClearKey1.0") != 0);
+  xmlFree (property);
+  fail_if ((property =
+          xmlGetNoNsProp (root_element,
+              (const xmlChar *) "schemeIdUri")) == NULL);
+  assert_equals_string ((const gchar *) property,
+      "urn:uuid:e2719d58-a985-b3c9-781a-b030af78d30e");
+  xmlFree (property);
+
+  for (node = root_element->children; node; node = node->next) {
+    if (node->type == XML_ELEMENT_NODE)
+      break;
+  }
+  assert_equals_string ((const gchar *) node->name, "Laurl");
+  assert_equals_string ((const gchar *) node->children->content,
+      "https://drm.test.example/AcquireLicense");
+
+  xmlFreeDoc (doc);
+
   gst_mpd_client_free (mpdclient);
 }
 
@@ -6454,6 +6544,8 @@ dash_suite (void)
       dash_mpdparser_contentProtection_no_value_no_encoding);
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_representationBase_contentProtection_with_content);
+  tcase_add_test (tc_simpleMPD,
+      dash_mpdparser_period_adaptationSet_representationBase_contentProtection_xml_namespaces);
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_adaptationSet_accessibility);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_period_adaptationSet_role);

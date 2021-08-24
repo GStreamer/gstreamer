@@ -975,11 +975,24 @@ gst_xml_helper_get_node_as_string (xmlNode * a_node, gchar ** content)
   gboolean exists = FALSE;
   const char *txt_encoding;
   xmlOutputBufferPtr out_buf;
+  xmlNode *ncopy = NULL;
 
   txt_encoding = (const char *) a_node->doc->encoding;
   out_buf = xmlAllocOutputBuffer (NULL);
   g_assert (out_buf != NULL);
-  xmlNodeDumpOutput (out_buf, a_node->doc, a_node, 0, 0, txt_encoding);
+
+  /* Need to make a copy of XML element so that it includes namespaces
+     in the output, so that the resulting string can be parsed by an XML parser
+     that is namespace aware.
+     Use extended=1 for recursive copy (properties, namespaces and children) */
+  ncopy = xmlDocCopyNode (a_node, a_node->doc, 1);
+
+  if (!ncopy) {
+    GST_WARNING ("Failed to clone XML node");
+    goto done;
+  }
+  xmlNodeDumpOutput (out_buf, ncopy->doc, ncopy, 0, 0, txt_encoding);
+
   (void) xmlOutputBufferFlush (out_buf);
 #ifdef LIBXML2_NEW_BUFFER
   if (xmlOutputBufferGetSize (out_buf) > 0) {
@@ -999,6 +1012,8 @@ gst_xml_helper_get_node_as_string (xmlNode * a_node, gchar ** content)
     exists = TRUE;
   }
 #endif // LIBXML2_NEW_BUFFER
+  xmlFreeNode (ncopy);
+done:
   (void) xmlOutputBufferClose (out_buf);
 
   if (exists) {
