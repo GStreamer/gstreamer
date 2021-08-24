@@ -1375,6 +1375,48 @@ _query_pipeline_caps (GstVaFilter * self, GArray * filters,
 }
 
 gboolean
+gst_va_filter_add_deinterlace_buffer (GstVaFilter * self,
+    VAProcDeinterlacingType method, guint32 * forward, guint32 * backward)
+{
+  GArray *filters = NULL;
+  VAProcFilterParameterBufferDeinterlacing params = {
+    .type = VAProcFilterDeinterlacing,
+    .algorithm = method,
+  };
+  VAProcPipelineCaps pipeline_caps = { 0, };
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+
+  if (!gst_va_filter_is_open (self))
+    return FALSE;
+
+  if (!(method != VAProcDeinterlacingNone
+          && method != VAProcDeinterlacingCount))
+    return FALSE;
+
+  if (!gst_va_filter_add_filter_buffer (self, &params, sizeof (params), 1))
+    return FALSE;
+
+  GST_OBJECT_LOCK (self);
+  if (self->filters)
+    filters = g_array_ref (self->filters);
+  GST_OBJECT_UNLOCK (self);
+  ret = _query_pipeline_caps (self, filters, &pipeline_caps);
+  if (filters)
+    g_array_unref (filters);
+  if (!ret)
+    return FALSE;
+
+  if (forward)
+    *forward = pipeline_caps.num_forward_references;
+  if (backward)
+    *backward = pipeline_caps.num_backward_references;
+
+  return TRUE;
+}
+
+gboolean
 gst_va_filter_add_filter_buffer (GstVaFilter * self, gpointer data, gsize size,
     guint num)
 {
