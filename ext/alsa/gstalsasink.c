@@ -1072,9 +1072,8 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
       GST_DELAY_SINK_UNLOCK (asink);
     }
 
-    GST_DEBUG_OBJECT (asink, "written %d frames out of %d", err, cptr);
     if (err < 0) {
-      GST_DEBUG_OBJECT (asink, "Write error: %s", snd_strerror (err));
+      GST_DEBUG_OBJECT (asink, "Write error: %s (%d)", snd_strerror (err), err);
       if (err == -EAGAIN) {
         continue;
       } else if (err == -ENODEV) {
@@ -1089,6 +1088,7 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
         break;
     }
 
+    GST_DEBUG_OBJECT (asink, "written %d frames out of %d", err, cptr);
     ptr += snd_pcm_frames_to_bytes (alsa->handle, err);
     cptr -= err;
   }
