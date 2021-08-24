@@ -72,6 +72,8 @@ def stringify(o):
     raise AssertionError('Object {!r} must be a string or a list'.format(o))
 
 def prepend_env_var(env, var, value, sysroot):
+    if var is None:
+        return
     if value.startswith(sysroot):
         value = value[len(sysroot):]
     # Try not to exceed maximum length limits for env vars on Windows
@@ -275,7 +277,8 @@ def get_subprocess_env(options, gst_version):
     if os.name == 'nt':
         lib_path_envvar = 'PATH'
     elif platform.system() == 'Darwin':
-        lib_path_envvar = 'DYLD_LIBRARY_PATH'
+        # RPATH is sufficient on macOS, and DYLD_LIBRARY_PATH can cause issues with dynamic linker path priority
+        lib_path_envvar = None
     else:
         lib_path_envvar = 'LD_LIBRARY_PATH'
 
