@@ -477,6 +477,37 @@ GST_START_TEST (test_manifest_typefinding)
 
 GST_END_TEST;
 
+GST_START_TEST (test_webvtt)
+{
+  GstTypeFindProbability prob;
+  const gchar *media_type;
+  GstCaps *caps;
+  guint8 webvtt[] = {
+    'W', 'E', 'B', 'V', 'T', 'T', '\n', '\n'
+  };
+  guint8 webvtt_with_bom[] = {
+    0xef, 0xbb, 0xbf, 'W', 'E', 'B', 'V', 'T', 'T', '\n', '\n'
+  };
+
+  prob = 0;
+  caps = typefind_data (webvtt, sizeof (webvtt), &prob);
+  fail_unless (caps != NULL);
+  media_type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  fail_unless_equals_string (media_type, "application/x-subtitle-vtt");
+  fail_unless_equals_int (prob, GST_TYPE_FIND_MAXIMUM);
+  gst_caps_unref (caps);
+
+  prob = 0;
+  caps = typefind_data (webvtt_with_bom, sizeof (webvtt_with_bom), &prob);
+  fail_unless (caps != NULL);
+  media_type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  fail_unless_equals_string (media_type, "application/x-subtitle-vtt");
+  fail_unless_equals_int (prob, GST_TYPE_FIND_MAXIMUM);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 typefindfunctions_suite (void)
 {
@@ -494,6 +525,7 @@ typefindfunctions_suite (void)
   tcase_add_test (tc_chain, test_random_data);
   tcase_add_test (tc_chain, test_hls_m3u8);
   tcase_add_test (tc_chain, test_manifest_typefinding);
+  tcase_add_test (tc_chain, test_webvtt);
 
   return s;
 }
