@@ -629,7 +629,7 @@ rtp_session_class_init (RTPSessionClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * RTPSession::twcc-feedback-interval:
+   * RTPSession:twcc-feedback-interval:
    *
    * The interval to send TWCC reports on.
    * This overrides the default behavior of sending reports
