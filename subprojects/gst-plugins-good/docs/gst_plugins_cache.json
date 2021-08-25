@@ -17473,6 +17473,36 @@
                 },
                 "rank": "marginal"
             },
+            "rtphdrextmid": {
+                "RTP-Header-Extension-URI": "urn:ietf:params:rtp-hdrext:sdes:mid",
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "Extends RTP packets to add or retrieve a Media Identification (MID) value as specified in RFC8843",
+                "hierarchy": [
+                    "GstRTPHeaderExtensionMid",
+                    "GstRTPHeaderExtension",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Network/Extension/RTPHeader",
+                "long-name": "RTP BUNDLE MID Header Extension",
+                "properties": {
+                    "mid": {
+                        "blurb": "The Media Identification (MID) value last read or to write from/to RTP buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "marginal"
+            },
             "rtphdrexttwcc": {
                 "RTP-Header-Extension-URI": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
                 "author": "Matthew Waters <matthew@centricular.com>",

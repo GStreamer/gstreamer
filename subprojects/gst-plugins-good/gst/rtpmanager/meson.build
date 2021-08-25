@@ -5,6 +5,7 @@ rtpmanager_sources = [
   'gstrtpjitterbuffer.c',
   'gstrtphdrext-twcc.c',
   'gstrtphdrext-clientaudiolevel.c',
+  'gstrtphdrext-mid.c',
   'gstrtpmux.c',
   'gstrtpptdemux.c',
   'gstrtprtxqueue.c',
