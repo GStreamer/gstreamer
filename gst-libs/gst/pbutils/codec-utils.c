@@ -818,6 +818,58 @@ gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
   return (level != NULL && profile != NULL);
 }
 
+/**
+ * gst_codec_utils_h264_get_profile_flags_level:
+ * @codec_data: H264 AVCC extradata
+ * @len: lenth of @codec_data
+ * @profile: return location for h264 profile_idc or %NULL
+ * @flags: return location for h264 constraint set flags or %NULL
+ * @level: return location h264 level_idc or %NULL
+ *
+ * Parses profile, flags, and level from a H264 AVCC extradata/sequence_header.
+ * These are most commonly retrieved from a video/x-h264 caps with a codec_data
+ * buffer.
+ * The format of H264 AVCC extradata/sequence_header is documented in the
+ * ITU-T H.264 specification section 7.3.2.1.1 as well as in ISO/IEC 14496-15
+ * section 5.3.3.1.2.
+ *
+ * Returns: %TRUE on success, %FALSE on failure
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_codec_utils_h264_get_profile_flags_level (const guint8 * codec_data,
+    guint len, guint8 * profile, guint8 * flags, guint8 * level)
+{
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (codec_data != NULL, FALSE);
+
+  if (len < 7) {
+    GST_WARNING ("avc codec data is too small");
+    goto done;
+  }
+  if (codec_data[0] != 1) {
+    GST_WARNING ("failed to parse avc codec version, must be 1");
+    goto done;
+  }
+
+  if (profile) {
+    *profile = codec_data[1];
+  }
+  if (flags) {
+    *flags = codec_data[2];
+  }
+  if (level) {
+    *level = codec_data[3];
+  }
+
+  ret = TRUE;
+
+done:
+  return ret;
+}
+
 /* forked from gsth265parse.c */
 typedef struct
 {

@@ -68,6 +68,13 @@ gboolean      gst_codec_utils_h264_caps_set_level_and_profile (GstCaps      * ca
                                                                const guint8 * sps,
                                                                guint          len);
 
+GST_PBUTILS_API
+gboolean      gst_codec_utils_h264_get_profile_flags_level (const guint8 * codecs_data,
+                                                            guint len,
+                                                            guint8 * profile,
+                                                            guint8 * flags,
+                                                            guint8 * level);
+
 /* H.265 */
 
 GST_PBUTILS_API

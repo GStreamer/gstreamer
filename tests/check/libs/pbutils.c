@@ -994,6 +994,47 @@ GST_START_TEST (test_pb_utils_h264_profiles)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pb_utils_h264_get_profile_flags_level)
+{
+  gboolean ret = FALSE;
+  guint codec_data_len = 7;
+  guint8 codec_data[] = { 0x01, 0x64, 0x00, 0x32, 0x00, 0x00, 0x00 };
+  guint8 codec_data_bad_version[] =
+      { 0x00, 0x64, 0x00, 0x32, 0x00, 0x00, 0x00 };
+  guint8 profile;
+  guint8 flags;
+  guint8 level;
+
+  /* happy path */
+  ret =
+      gst_codec_utils_h264_get_profile_flags_level (codec_data, codec_data_len,
+      &profile, &flags, &level);
+  fail_unless (ret == TRUE);
+  fail_unless (profile == 0x64);
+  fail_unless (flags == 0x00);
+  fail_unless (level == 0x32);
+
+  /* happy path, return locations null */
+  ret =
+      gst_codec_utils_h264_get_profile_flags_level (codec_data, codec_data_len,
+      NULL, NULL, NULL);
+  fail_unless (ret == TRUE);
+
+  /* data too short */
+  ret =
+      gst_codec_utils_h264_get_profile_flags_level (codec_data, 6, &profile,
+      &flags, &level);
+  fail_unless (ret == FALSE);
+
+  /* wrong codec version */
+  ret =
+      gst_codec_utils_h264_get_profile_flags_level (codec_data_bad_version,
+      codec_data_len, &profile, &flags, &level);
+  fail_unless (ret == FALSE);
+}
+
+GST_END_TEST;
+
 #define PROFILE_TIER_LEVEL_LEN 11
 
 static void
@@ -1318,6 +1359,7 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_versions);
   tcase_add_test (tc_chain, test_pb_utils_aac_get_profile);
   tcase_add_test (tc_chain, test_pb_utils_h264_profiles);
+  tcase_add_test (tc_chain, test_pb_utils_h264_get_profile_flags_level);
   tcase_add_test (tc_chain, test_pb_utils_h265_profiles);
   return s;
 }
