@@ -17503,6 +17503,66 @@
                 },
                 "rank": "marginal"
             },
+            "rtphdrextrepairedstreamid": {
+                "RTP-Header-Extension-URI": "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id",
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "Extends RTP packets to add or retrieve a RepairedStreamId (RID) value as specified in RFC8852",
+                "hierarchy": [
+                    "GstRTPHeaderExtensionRepairedStreamId",
+                    "GstRTPHeaderExtension",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Network/Extension/RTPHeader",
+                "long-name": "RTP Header Extension Repaired RFC8852 Stream ID",
+                "properties": {
+                    "rid": {
+                        "blurb": "The RepairedRtpStreamId (RID) value last read or to write from/to RTP buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "marginal"
+            },
+            "rtphdrextstreamid": {
+                "RTP-Header-Extension-URI": "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "Extends RTP packets to add or retrieve a RtpStreamId (RID) value as specified in RFC8852",
+                "hierarchy": [
+                    "GstRTPHeaderExtensionStreamId",
+                    "GstRTPHeaderExtension",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Network/Extension/RTPHeader",
+                "long-name": "RTP Header Extension RFC8852 Stream ID",
+                "properties": {
+                    "rid": {
+                        "blurb": "The RtpStreamId (RID) value last read or to write from/to RTP buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "marginal"
+            },
             "rtphdrexttwcc": {
                 "RTP-Header-Extension-URI": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
                 "author": "Matthew Waters <matthew@centricular.com>",
