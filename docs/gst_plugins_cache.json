@@ -19106,6 +19106,20 @@
                         "readable": true,
                         "type": "GstStructure",
                         "writable": false
+                    },
+                    "twcc-feedback-interval": {
+                        "blurb": "The interval to send TWCC reports on",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
                     }
                 },
                 "signals": {
