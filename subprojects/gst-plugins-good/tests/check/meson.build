@@ -74,6 +74,7 @@ good_tests = [
   [ 'elements/rtpcollision' ],
   [ 'elements/rtpfunnel' ],
   [ 'elements/rtphdrextclientaudiolevel', false, [gstsdp_dep, gstaudio_dep] ],
+  [ 'elements/rtphdrextsdes', false, [gstrtp_dep, gstsdp_dep] ],
   [ 'elements/rtpjitterbuffer' ],
   [ 'elements/rtpjpeg' ],
 
