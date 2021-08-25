@@ -152,6 +152,11 @@ gboolean  gst_codec_utils_opus_parse_header (GstBuffer * header,
                                              guint16   * pre_skip,
                                              gint16    * output_gain);
 
+/* General */
+GST_PBUTILS_API
+gchar * gst_codec_utils_caps_get_mime_codec (GstCaps * caps);
+
+
 G_END_DECLS
 
 #endif /* __GST_PB_UTILS_CODEC_UTILS_H__ */

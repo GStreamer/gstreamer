@@ -2257,3 +2257,178 @@ done:
 
   return ret;
 }
+
+static gboolean
+h264_caps_structure_get_profile_flags_level (GstStructure * caps_st,
+    guint8 * profile, guint8 * flags, guint8 * level)
+{
+  const GValue *codec_data_value = NULL;
+  GstBuffer *codec_data = NULL;
+  GstMapInfo map;
+  gboolean ret = FALSE;
+
+  codec_data_value = gst_structure_get_value (caps_st, "codec_data");
+  if (!codec_data_value) {
+    GST_DEBUG
+        ("video/x-h264 pad did not have codec_data set, cannot parse profile, flags and level");
+    return FALSE;
+  } else {
+    guint8 *data = NULL;
+    gsize size;
+
+    codec_data = gst_value_get_buffer (codec_data_value);
+    if (!gst_buffer_map (codec_data, &map, GST_MAP_READ)) {
+      return FALSE;
+    }
+    data = map.data;
+    size = map.size;
+
+    if (!gst_codec_utils_h264_get_profile_flags_level (data, (guint) size,
+            profile, flags, level)) {
+      GST_WARNING
+          ("Failed to parse profile, flags and level from h264 codec data");
+      goto done;
+    }
+  }
+
+  ret = TRUE;
+
+done:
+  gst_buffer_unmap (codec_data, &map);
+
+  return ret;
+}
+
+static gboolean
+aac_caps_structure_get_audio_object_type (GstStructure * caps_st,
+    guint8 * audio_object_type)
+{
+  gboolean ret = FALSE;
+  const GValue *codec_data_value = NULL;
+  GstBuffer *codec_data = NULL;
+  GstMapInfo map;
+  guint8 *data = NULL;
+  gsize size;
+  GstBitReader br;
+
+  codec_data_value = gst_structure_get_value (caps_st, "codec_data");
+  if (!codec_data_value) {
+    GST_DEBUG
+        ("audio/mpeg pad did not have codec_data set, cannot parse audio object type");
+    return FALSE;
+  }
+
+  codec_data = gst_value_get_buffer (codec_data_value);
+  if (!gst_buffer_map (codec_data, &map, GST_MAP_READ)) {
+    return FALSE;
+  }
+  data = map.data;
+  size = map.size;
+
+  if (size < 2) {
+    GST_WARNING ("aac codec data is too small");
+    goto done;
+  }
+
+  gst_bit_reader_init (&br, data, size);
+  ret = gst_codec_utils_aac_get_audio_object_type (&br, audio_object_type);
+
+done:
+  gst_buffer_unmap (codec_data, &map);
+
+  return ret;
+}
+
+/**
+ * gst_codec_utils_caps_get_mime_codec:
+ * @caps: A #GstCaps to convert to mime codec
+ *
+ * Converts @caps to a RFC 6381 compatible codec string if possible.
+ *
+ * Useful for providing the 'codecs' field inside the 'Content-Type' HTTP
+ * header for containerized formats, such as mp4 or matroska.
+ *
+ * Returns: (transfer full): a RFC 6381 compatible codec string or %NULL
+ *
+ * Since: 1.20
+ */
+gchar *
+gst_codec_utils_caps_get_mime_codec (GstCaps * caps)
+{
+  gchar *mime_codec = NULL;
+  GstStructure *caps_st = NULL;
+  const gchar *media_type = NULL;
+
+  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
+
+  caps_st = gst_caps_get_structure (caps, 0);
+  if (caps_st == NULL) {
+    GST_WARNING ("Failed to get structure from caps");
+    goto done;
+  }
+
+  media_type = gst_structure_get_name (caps_st);
+
+  if (g_strcmp0 (media_type, "video/x-h264") == 0) {
+    /* avc1.AABBCC
+     *   AA = profile
+     *   BB = constraint set flags
+     *   CC = level
+     */
+    guint8 profile = 0;
+    guint8 flags = 0;
+    guint8 level = 0;
+
+    if (!h264_caps_structure_get_profile_flags_level (caps_st, &profile, &flags,
+            &level)) {
+      GST_DEBUG
+          ("h264 caps did not contain 'codec_data', cannot determine detailed codecs info");
+      mime_codec = g_strdup ("avc1");
+    } else {
+      mime_codec = g_strdup_printf ("avc1.%02X%02X%02X", profile, flags, level);
+    }
+  } else if (g_strcmp0 (media_type, "video/x-h265") == 0) {
+    /* TODO: this simple "hev1" is not complete and should contain more info
+     * similar to how avc1 does.
+     * However, as of writing there are no browsers that support h265 and the
+     * format of how to describe h265 codec info is badly documented.
+     * Examples exist online, but no public documentation seem to exist,
+     * however the paywalled ISO/IEC 14496-15 has it. */
+    mime_codec = g_strdup ("hev1");
+  } else if (g_strcmp0 (media_type, "video/x-av1") == 0) {
+    /* TODO: Some browsers won't play the video unless more codec information is
+     * available in the mime codec for av1. This is documented in
+     * https://aomediacodec.github.io/av1-isobmff/#codecsparam */
+    mime_codec = g_strdup ("av01");
+  } else if (g_strcmp0 (media_type, "video/x-vp8") == 0) {
+    /* TODO: most browsers won't play the video unless more codec information is
+     * available in the mime codec for vp8. */
+    mime_codec = g_strdup ("vp08");
+  } else if (g_strcmp0 (media_type, "video/x-vp9") == 0) {
+    /* TODO: most browsers won't play the video unless more codec information is
+     * available in the mime codec for vp9. This is documented in
+     * https://www.webmproject.org/vp9/mp4/ */
+    mime_codec = g_strdup ("vp09");
+  } else if (g_strcmp0 (media_type, "audio/mpeg") == 0) {
+    guint8 audio_object_type = 0;
+    if (aac_caps_structure_get_audio_object_type (caps_st, &audio_object_type)) {
+      mime_codec = g_strdup_printf ("mp4a.40.%u", audio_object_type);
+    } else {
+      mime_codec = g_strdup ("mp4a.40");
+    }
+  } else if (g_strcmp0 (media_type, "audio/x-opus") == 0) {
+    mime_codec = g_strdup ("opus");
+  } else if (g_strcmp0 (media_type, "audio/x-mulaw") == 0) {
+    mime_codec = g_strdup ("ulaw");
+  } else if (g_strcmp0 (media_type, "audio/x-adpcm") == 0) {
+    if (g_strcmp0 (gst_structure_get_string (caps_st, "layout"), "g726") == 0) {
+      mime_codec = g_strdup ("g726");
+    }
+  } else if (g_strcmp0 (media_type, "audio/x-raw") == 0) {
+    mime_codec = g_strdup ("raw");
+  }
+
+done:
+  return mime_codec;
+}

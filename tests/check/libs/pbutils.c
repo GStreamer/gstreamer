@@ -1343,6 +1343,124 @@ GST_START_TEST (test_pb_utils_h265_profiles)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pb_utils_caps_get_mime_codec)
+{
+  GstCaps *caps = NULL;
+  gchar *mime_codec = NULL;
+  GstBuffer *buffer = NULL;
+  guint8 *codec_data = NULL;
+  gsize codec_data_len;
+
+  /* h264 without codec data */
+  caps = gst_caps_new_empty_simple ("video/x-h264");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "avc1");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* h264 with codec data */
+  codec_data_len = sizeof (guint8) * 7;
+  codec_data = g_malloc0 (codec_data_len);
+  codec_data[0] = 0x01;
+  codec_data[1] = 0x64;
+  codec_data[2] = 0x00;
+  codec_data[3] = 0x32;
+  /* seven bytes is the minumum for a valid h264 codec_data, but in
+   * gst_codec_utils_h264_get_profile_flags_level we only parse the first four
+   * bytes */
+  buffer = gst_buffer_new_wrapped (codec_data, codec_data_len);
+  caps =
+      gst_caps_new_simple ("video/x-h264", "codec_data", GST_TYPE_BUFFER,
+      buffer, NULL);
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "avc1.640032");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+  gst_buffer_unref (buffer);
+
+  /* h265 */
+  caps = gst_caps_new_empty_simple ("video/x-h265");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "hev1");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* av1 */
+  caps = gst_caps_new_empty_simple ("video/x-av1");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "av01");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* vp8 */
+  caps = gst_caps_new_empty_simple ("video/x-vp8");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "vp08");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* vp9 */
+  caps = gst_caps_new_empty_simple ("video/x-vp9");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "vp09");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* aac without codec data */
+  caps = gst_caps_new_empty_simple ("audio/mpeg");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "mp4a.40");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* aac with codec data */
+  codec_data_len = sizeof (guint8) * 2;
+  codec_data = g_malloc0 (codec_data_len);
+  codec_data[0] = 0x11;
+  codec_data[1] = 0x88;
+  buffer = gst_buffer_new_wrapped (codec_data, codec_data_len);
+  caps =
+      gst_caps_new_simple ("audio/mpeg", "codec_data", GST_TYPE_BUFFER, buffer,
+      NULL);
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "mp4a.40.2");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+  gst_buffer_unref (buffer);
+
+  /* opus */
+  caps = gst_caps_new_empty_simple ("audio/x-opus");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "opus");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* mulaw */
+  caps = gst_caps_new_empty_simple ("audio/x-mulaw");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "ulaw");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* g726 */
+  caps =
+      gst_caps_new_simple ("audio/x-adpcm", "layout", G_TYPE_STRING, "g726",
+      NULL);
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "g726");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* raw */
+  caps = gst_caps_new_empty_simple ("audio/x-raw");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "raw");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 libgstpbutils_suite (void)
 {
@@ -1361,6 +1479,7 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_h264_profiles);
   tcase_add_test (tc_chain, test_pb_utils_h264_get_profile_flags_level);
   tcase_add_test (tc_chain, test_pb_utils_h265_profiles);
+  tcase_add_test (tc_chain, test_pb_utils_caps_get_mime_codec);
   return s;
 }
 
