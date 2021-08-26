@@ -3,7 +3,6 @@ include:
 
 stages:
   - 'build docker'
-  - 'build docker stage 2'
   - 'preparation'
   - 'pre-build'
   - 'build'
@@ -381,7 +380,7 @@ windows amd64 docker:
       }
 
 .windows rust docker build:
-  stage: 'build docker stage 2'
+  stage: 'build docker'
   needs:
     - job: 'windows amd64 docker'
       artifacts: false
