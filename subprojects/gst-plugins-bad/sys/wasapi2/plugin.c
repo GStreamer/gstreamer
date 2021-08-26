@@ -63,8 +63,7 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin, "wasapi2sink", rank, GST_TYPE_WASAPI2_SINK);
   gst_element_register (plugin, "wasapi2src", rank, GST_TYPE_WASAPI2_SRC);
 
-  gst_device_provider_register (plugin, "wasapi2deviceprovider",
-      rank, GST_TYPE_WASAPI2_DEVICE_PROVIDER);
+  gst_wasapi2_device_provider_register (plugin, rank);
 
   g_object_set_data_full (G_OBJECT (plugin),
       "plugin-wasapi2-shutdown", "shutdown-data",

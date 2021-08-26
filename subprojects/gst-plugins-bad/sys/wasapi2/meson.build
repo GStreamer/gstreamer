@@ -29,7 +29,7 @@ runtimeobject_dep = cc.find_library('runtimeobject', required : get_option('wasa
 mmdeviceapi_dep = cc.find_library('mmdevapi', required : get_option('wasapi2'))
 mfplat_dep = cc.find_library('mfplat', required : get_option('wasapi2'))
 wasapi2_dep = [ole32_dep, ksuser_dep, runtimeobject_dep, mmdeviceapi_dep, mfplat_dep]
-extra_args = []
+extra_args = ['-DGST_USE_UNSTABLE_API']
 
 foreach dep: wasapi2_dep
   if not dep.found()
@@ -116,12 +116,20 @@ if not building_for_win10
   extra_args += ['-DWINVER=0x0A00', '-D_WIN32_WINNT=0x0A00', '-DNTDDI_VERSION=WDK_NTDDI_VERSION']
 endif
 
+if not gstwinrt_dep.found()
+  if wasapi2_option.enabled()
+    error('wasapi2 plugin was enabled explicitly, but GstWinRt library is unavailable')
+  else
+    subdir_done()
+  endif
+endif
+
 gstwasapi2 = library('gstwasapi2',
   wasapi2_sources,
   c_args : gst_plugins_bad_args + ['-DCOBJMACROS'] + extra_args,
   cpp_args : gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
-  dependencies : [gstaudio_dep] + wasapi2_dep,
+  dependencies : [gstaudio_dep, gstwinrt_dep] + wasapi2_dep,
   install : true,
   install_dir : plugins_install_dir)
 pkgconfig.generate(gstwasapi2, install_dir : plugins_pkgconfig_install_dir)

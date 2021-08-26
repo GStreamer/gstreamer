@@ -25,6 +25,7 @@
 #include "gstwasapi2device.h"
 #include "gstwasapi2client.h"
 #include "gstwasapi2util.h"
+#include <gst/winrt/gstwinrt.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_debug
@@ -135,33 +136,128 @@ gst_wasapi2_device_set_property (GObject * object, guint prop_id,
   }
 }
 
-struct _GstWasapi2DeviceProvider
+typedef struct _GstWasapi2DeviceProvider
 {
   GstDeviceProvider parent;
-};
 
-G_DEFINE_TYPE (GstWasapi2DeviceProvider, gst_wasapi2_device_provider,
-    GST_TYPE_DEVICE_PROVIDER);
+  GstWinRTDeviceWatcher *watcher;
+
+  GMutex lock;
+  GCond cond;
+
+  gboolean enum_completed;
+} GstWasapi2DeviceProvider;
+
+typedef struct _GstWasapi2DeviceProviderClass
+{
+  GstDeviceProviderClass parent_class;
+
+  GstWinRTDeviceClass winrt_device_class;
+} GstWasapi2DeviceProviderClass;
+
+static GstDeviceProviderClass *parent_class = NULL;
+
+#define GST_WASAPI2_DEVICE_PROVIDER(object) \
+    ((GstWasapi2DeviceProvider *) (object))
+#define GST_WASAPI2_DEVICE_PROVIDER_GET_CLASS(object) \
+    (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstWasapi2DeviceProviderClass))
+
+static void gst_wasapi2_device_provider_dispose (GObject * object);
+static void gst_wasapi2_device_provider_finalize (GObject * object);
 
 static GList *gst_wasapi2_device_provider_probe (GstDeviceProvider * provider);
+static gboolean
+gst_wasapi2_device_provider_start (GstDeviceProvider * provider);
+static void gst_wasapi2_device_provider_stop (GstDeviceProvider * provider);
 
 static void
-gst_wasapi2_device_provider_class_init (GstWasapi2DeviceProviderClass * klass)
+gst_wasapi2_device_provider_device_added (GstWinRTDeviceWatcher * watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformation * info,
+    gpointer user_data);
+static void
+gst_wasapi2_device_provider_device_updated (GstWinRTDeviceWatcher * watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate *
+    info_update, gpointer user_data);
+static void gst_wasapi2_device_provider_device_removed (GstWinRTDeviceWatcher *
+    watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate *
+    info_update, gpointer user_data);
+static void
+gst_wasapi2_device_provider_device_enum_completed (GstWinRTDeviceWatcher *
+    watcher, gpointer user_data);
+
+static void
+gst_wasapi2_device_provider_class_init (GstWasapi2DeviceProviderClass * klass,
+    gpointer data)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstDeviceProviderClass *provider_class = GST_DEVICE_PROVIDER_CLASS (klass);
 
-  provider_class->probe = GST_DEBUG_FUNCPTR (gst_wasapi2_device_provider_probe);
+  gobject_class->dispose = gst_wasapi2_device_provider_dispose;
+  gobject_class->finalize = gst_wasapi2_device_provider_finalize;
 
-  gst_device_provider_class_set_static_metadata (provider_class,
-      "WASAPI (Windows Audio Session API) Device Provider",
-      "Source/Sink/Audio", "List WASAPI source and sink devices",
-      "Nirbheek Chauhan <nirbheek@centricular.com>, "
-      "Seungha Yang <seungha@centricular.com>");
+  provider_class->probe = GST_DEBUG_FUNCPTR (gst_wasapi2_device_provider_probe);
+  provider_class->start = GST_DEBUG_FUNCPTR (gst_wasapi2_device_provider_start);
+  provider_class->stop = GST_DEBUG_FUNCPTR (gst_wasapi2_device_provider_stop);
+
+  parent_class = (GstDeviceProviderClass *) g_type_class_peek_parent (klass);
+
+  klass->winrt_device_class = (GstWinRTDeviceClass) GPOINTER_TO_INT (data);
+  if (klass->winrt_device_class == GST_WINRT_DEVICE_CLASS_AUDIO_CAPTURE) {
+    gst_device_provider_class_set_static_metadata (provider_class,
+        "WASAPI (Windows Audio Session API) Capture Device Provider",
+        "Source/Audio", "List WASAPI source devices",
+        "Nirbheek Chauhan <nirbheek@centricular.com>, "
+        "Seungha Yang <seungha@centricular.com>");
+  } else {
+    gst_device_provider_class_set_static_metadata (provider_class,
+        "WASAPI (Windows Audio Session API) Render and Loopback Capture Device Provider",
+        "Source/Sink/Audio", "List WASAPI loop back source and sink devices",
+        "Nirbheek Chauhan <nirbheek@centricular.com>, "
+        "Seungha Yang <seungha@centricular.com>");
+  }
 }
 
 static void
-gst_wasapi2_device_provider_init (GstWasapi2DeviceProvider * provider)
+gst_wasapi2_device_provider_init (GstWasapi2DeviceProvider * self)
 {
+  GstWasapi2DeviceProviderClass *klass =
+      GST_WASAPI2_DEVICE_PROVIDER_GET_CLASS (self);
+  GstWinRTDeviceWatcherCallbacks callbacks;
+
+  g_mutex_init (&self->lock);
+  g_cond_init (&self->cond);
+
+  callbacks.added = gst_wasapi2_device_provider_device_added;
+  callbacks.updated = gst_wasapi2_device_provider_device_updated;
+  callbacks.removed = gst_wasapi2_device_provider_device_removed;
+  callbacks.enumeration_completed =
+      gst_wasapi2_device_provider_device_enum_completed;
+
+  self->watcher =
+      gst_winrt_device_watcher_new (klass->winrt_device_class,
+      &callbacks, self);
+}
+
+static void
+gst_wasapi2_device_provider_dispose (GObject * object)
+{
+  GstWasapi2DeviceProvider *self = GST_WASAPI2_DEVICE_PROVIDER (object);
+
+  gst_clear_object (&self->watcher);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_wasapi2_device_provider_finalize (GObject * object)
+{
+  GstWasapi2DeviceProvider *self = GST_WASAPI2_DEVICE_PROVIDER (object);
+
+  g_mutex_clear (&self->lock);
+  g_cond_clear (&self->cond);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -253,14 +349,247 @@ static GList *
 gst_wasapi2_device_provider_probe (GstDeviceProvider * provider)
 {
   GstWasapi2DeviceProvider *self = GST_WASAPI2_DEVICE_PROVIDER (provider);
+  GstWasapi2DeviceProviderClass *klass =
+      GST_WASAPI2_DEVICE_PROVIDER_GET_CLASS (self);
   GList *devices = NULL;
 
-  gst_wasapi2_device_provider_probe_internal (self,
-      GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE, &devices);
-  gst_wasapi2_device_provider_probe_internal (self,
-      GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE, &devices);
-  gst_wasapi2_device_provider_probe_internal (self,
-      GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER, &devices);
+  if (klass->winrt_device_class == GST_WINRT_DEVICE_CLASS_AUDIO_CAPTURE) {
+    gst_wasapi2_device_provider_probe_internal (self,
+        GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE, &devices);
+  } else {
+    gst_wasapi2_device_provider_probe_internal (self,
+        GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE, &devices);
+    gst_wasapi2_device_provider_probe_internal (self,
+        GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER, &devices);
+  }
 
   return devices;
+}
+
+static gboolean
+gst_wasapi2_device_provider_start (GstDeviceProvider * provider)
+{
+  GstWasapi2DeviceProvider *self = GST_WASAPI2_DEVICE_PROVIDER (provider);
+  GList *devices = NULL;
+  GList *iter;
+
+  if (!self->watcher) {
+    GST_ERROR_OBJECT (self, "DeviceWatcher object wasn't configured");
+    return FALSE;
+  }
+
+  self->enum_completed = FALSE;
+
+  if (!gst_winrt_device_watcher_start (self->watcher))
+    return FALSE;
+
+  /* Wait for initial enumeration to be completed */
+  g_mutex_lock (&self->lock);
+  while (!self->enum_completed)
+    g_cond_wait (&self->cond, &self->lock);
+
+  devices = gst_wasapi2_device_provider_probe (provider);
+  if (devices) {
+    for (iter = devices; iter; iter = g_list_next (iter)) {
+      gst_device_provider_device_add (provider, GST_DEVICE (iter->data));
+    }
+
+    g_list_free (devices);
+  }
+  g_mutex_unlock (&self->lock);
+
+  return TRUE;
+}
+
+static void
+gst_wasapi2_device_provider_stop (GstDeviceProvider * provider)
+{
+  GstWasapi2DeviceProvider *self = GST_WASAPI2_DEVICE_PROVIDER (provider);
+
+  if (self->watcher)
+    gst_winrt_device_watcher_stop (self->watcher);
+}
+
+static gboolean
+gst_wasapi2_device_is_in_list (GList * list, GstDevice * device)
+{
+  GList *iter;
+  GstStructure *s;
+  const gchar *device_id;
+  gboolean found = FALSE;
+
+  s = gst_device_get_properties (device);
+  g_assert (s);
+
+  device_id = gst_structure_get_string (s, "device.id");
+  g_assert (device_id);
+
+  for (iter = list; iter; iter = g_list_next (iter)) {
+    GstStructure *other_s;
+    const gchar *other_id;
+
+    other_s = gst_device_get_properties (GST_DEVICE (iter->data));
+    g_assert (other_s);
+
+    other_id = gst_structure_get_string (other_s, "device.id");
+    g_assert (other_id);
+
+    if (g_ascii_strcasecmp (device_id, other_id) == 0) {
+      found = TRUE;
+    }
+
+    gst_structure_free (other_s);
+    if (found)
+      break;
+  }
+
+  gst_structure_free (s);
+
+  return found;
+}
+
+static void
+gst_wasapi2_device_provider_update_devices (GstWasapi2DeviceProvider * self)
+{
+  GstDeviceProvider *provider = GST_DEVICE_PROVIDER_CAST (self);
+  GList *prev_devices = NULL;
+  GList *new_devices = NULL;
+  GList *to_add = NULL;
+  GList *to_remove = NULL;
+  GList *iter;
+
+  GST_OBJECT_LOCK (self);
+  prev_devices = g_list_copy_deep (provider->devices,
+      (GCopyFunc) gst_object_ref, NULL);
+  GST_OBJECT_UNLOCK (self);
+
+  new_devices = gst_wasapi2_device_provider_probe (provider);
+
+  /* Ownership of GstDevice for gst_device_provider_device_add()
+   * and gst_device_provider_device_remove() is a bit complicated.
+   * Remove floating reference here for things to be clear */
+  for (iter = new_devices; iter; iter = g_list_next (iter))
+    gst_object_ref_sink (iter->data);
+
+  /* Check newly added devices */
+  for (iter = new_devices; iter; iter = g_list_next (iter)) {
+    if (!gst_wasapi2_device_is_in_list (prev_devices, GST_DEVICE (iter->data))) {
+      to_add = g_list_prepend (to_add, gst_object_ref (iter->data));
+    }
+  }
+
+  /* Check removed device */
+  for (iter = prev_devices; iter; iter = g_list_next (iter)) {
+    if (!gst_wasapi2_device_is_in_list (new_devices, GST_DEVICE (iter->data))) {
+      to_remove = g_list_prepend (to_remove, gst_object_ref (iter->data));
+    }
+  }
+
+  for (iter = to_remove; iter; iter = g_list_next (iter))
+    gst_device_provider_device_remove (provider, GST_DEVICE (iter->data));
+
+  for (iter = to_add; iter; iter = g_list_next (iter))
+    gst_device_provider_device_add (provider, GST_DEVICE (iter->data));
+
+  if (prev_devices)
+    g_list_free_full (prev_devices, (GDestroyNotify) gst_object_unref);
+
+  if (to_add)
+    g_list_free_full (to_add, (GDestroyNotify) gst_object_unref);
+
+  if (to_remove)
+    g_list_free_full (to_remove, (GDestroyNotify) gst_object_unref);
+}
+
+static void
+gst_wasapi2_device_provider_device_added (GstWinRTDeviceWatcher * watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformation * info,
+    gpointer user_data)
+{
+  GstWasapi2DeviceProvider *self = GST_WASAPI2_DEVICE_PROVIDER (user_data);
+
+  if (self->enum_completed)
+    gst_wasapi2_device_provider_update_devices (self);
+}
+
+static void
+gst_wasapi2_device_provider_device_removed (GstWinRTDeviceWatcher * watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate *
+    info_update, gpointer user_data)
+{
+  GstWasapi2DeviceProvider *self = GST_WASAPI2_DEVICE_PROVIDER (user_data);
+
+  if (self->enum_completed)
+    gst_wasapi2_device_provider_update_devices (self);
+}
+
+static void
+gst_wasapi2_device_provider_device_updated (GstWinRTDeviceWatcher * watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate * info,
+    gpointer user_data)
+{
+  GstWasapi2DeviceProvider *self = GST_WASAPI2_DEVICE_PROVIDER (user_data);
+
+  gst_wasapi2_device_provider_update_devices (self);
+}
+
+static void
+gst_wasapi2_device_provider_device_enum_completed (GstWinRTDeviceWatcher *
+    watcher, gpointer user_data)
+{
+  GstWasapi2DeviceProvider *self = GST_WASAPI2_DEVICE_PROVIDER (user_data);
+
+  g_mutex_lock (&self->lock);
+  GST_DEBUG_OBJECT (self, "Enumeration completed");
+  self->enum_completed = TRUE;
+  g_cond_signal (&self->cond);
+  g_mutex_unlock (&self->lock);
+}
+
+static void
+gst_wasapi2_device_provider_register_internal (GstPlugin * plugin,
+    guint rank, GstWinRTDeviceClass winrt_device_class)
+{
+  GType type;
+  const gchar *type_name = NULL;
+  const gchar *feature_name = NULL;
+  GTypeInfo type_info = {
+    sizeof (GstWasapi2DeviceProviderClass),
+    NULL,
+    NULL,
+    (GClassInitFunc) gst_wasapi2_device_provider_class_init,
+    NULL,
+    NULL,
+    sizeof (GstWasapi2DeviceProvider),
+    0,
+    (GInstanceInitFunc) gst_wasapi2_device_provider_init,
+  };
+
+  type_info.class_data = GINT_TO_POINTER (winrt_device_class);
+
+  if (winrt_device_class == GST_WINRT_DEVICE_CLASS_AUDIO_CAPTURE) {
+    type_name = "GstWasapi2CaputreDeviceProvider";
+    feature_name = "wasapi2capturedeviceprovider";
+  } else if (winrt_device_class == GST_WINRT_DEVICE_CLASS_AUDIO_RENDER) {
+    type_name = "GstWasapi2RenderDeviceProvider";
+    feature_name = "wasapi2renderdeviceprovider";
+  } else {
+    g_assert_not_reached ();
+    return;
+  }
+
+  type = g_type_register_static (GST_TYPE_DEVICE_PROVIDER,
+      type_name, &type_info, (GTypeFlags) 0);
+
+  if (!gst_device_provider_register (plugin, feature_name, rank, type))
+    GST_WARNING ("Failed to register provider '%s'", type_name);
+}
+
+void
+gst_wasapi2_device_provider_register (GstPlugin * plugin, guint rank)
+{
+  gst_wasapi2_device_provider_register_internal (plugin, rank,
+      GST_WINRT_DEVICE_CLASS_AUDIO_CAPTURE);
+  gst_wasapi2_device_provider_register_internal (plugin, rank,
+      GST_WINRT_DEVICE_CLASS_AUDIO_RENDER);
 }

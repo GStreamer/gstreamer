@@ -25,12 +25,10 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_WASAPI2_DEVICE (gst_wasapi2_device_get_type())
-#define GST_TYPE_WASAPI2_DEVICE_PROVIDER (gst_wasapi2_device_provider_get_type())
-
 G_DECLARE_FINAL_TYPE (GstWasapi2Device, gst_wasapi2_device,
     GST, WASAPI2_DEVICE, GstDevice);
-G_DECLARE_FINAL_TYPE (GstWasapi2DeviceProvider, gst_wasapi2_device_provider,
-    GST, WASAPI2_DEVICE_PROVIDER, GstDeviceProvider);
+
+void gst_wasapi2_device_provider_register (GstPlugin * plugin, guint rank);
 
 G_END_DECLS
 
