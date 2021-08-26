@@ -92,17 +92,21 @@ enum
 #define DEFAULT_LTC_QUEUE 100
 
 static GstStaticPadTemplate gst_timecodestamper_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, framerate=[1/2147483647, 2147483647/1]")
+    GST_STATIC_CAPS ("video/x-raw, framerate=[1/2147483647, 2147483647/1]; "
+        "closedcaption/x-cea-608, framerate=[1/2147483647, 2147483647/1]; "
+        "closedcaption/x-cea-708, framerate=[1/2147483647, 2147483647/1]; ")
     );
 
 static GstStaticPadTemplate gst_timecodestamper_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, framerate=[1/2147483647, 2147483647/1]")
+    GST_STATIC_CAPS ("video/x-raw, framerate=[1/2147483647, 2147483647/1]; "
+        "closedcaption/x-cea-608, framerate=[1/2147483647, 2147483647/1]; "
+        "closedcaption/x-cea-708, framerate=[1/2147483647, 2147483647/1]; ")
     );
 
 static GstStaticPadTemplate gst_timecodestamper_ltc_template =
@@ -507,8 +511,8 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
 
       if (timecodestamper->ltc_internal_tc) {
         if (timecodestamper->ltc_internal_tc->config.latest_daily_jam) {
-          g_date_time_unref (timecodestamper->ltc_internal_tc->config.
-              latest_daily_jam);
+          g_date_time_unref (timecodestamper->ltc_internal_tc->
+              config.latest_daily_jam);
         }
         timecodestamper->ltc_internal_tc->config.latest_daily_jam =
             g_date_time_ref (timecodestamper->ltc_daily_jam);
@@ -632,7 +636,9 @@ gst_timecodestamper_stop (GstBaseTransform * trans)
   g_mutex_unlock (&timecodestamper->mutex);
 #endif
 
-  gst_video_info_init (&timecodestamper->vinfo);
+  timecodestamper->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  timecodestamper->fps_n = 0;
+  timecodestamper->fps_d = 1;
 
   if (timecodestamper->internal_tc != NULL) {
     gst_video_time_code_free (timecodestamper->internal_tc);
@@ -691,14 +697,18 @@ gst_timecodestamper_stop (GstBaseTransform * trans)
 static gboolean
 gst_timecodestamper_start (GstBaseTransform * trans)
 {
-#if HAVE_LTC
   GstTimeCodeStamper *timecodestamper = GST_TIME_CODE_STAMPER (trans);
 
+#if HAVE_LTC
   g_mutex_lock (&timecodestamper->mutex);
   timecodestamper->video_flushing = FALSE;
   timecodestamper->video_eos = FALSE;
   g_mutex_unlock (&timecodestamper->mutex);
 #endif
+
+  timecodestamper->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  timecodestamper->fps_n = 0;
+  timecodestamper->fps_d = 1;
 
   return TRUE;
 }
@@ -707,9 +717,8 @@ gst_timecodestamper_start (GstBaseTransform * trans)
 static void
 gst_timecodestamper_update_drop_frame (GstTimeCodeStamper * timecodestamper)
 {
-  if (timecodestamper->drop_frame && timecodestamper->vinfo.fps_d == 1001 &&
-      (timecodestamper->vinfo.fps_n == 30000 ||
-          timecodestamper->vinfo.fps_n == 60000)) {
+  if (timecodestamper->drop_frame && timecodestamper->fps_d == 1001 &&
+      (timecodestamper->fps_n == 30000 || timecodestamper->fps_n == 60000)) {
     if (timecodestamper->internal_tc)
       timecodestamper->internal_tc->config.flags |=
           GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
@@ -756,7 +765,7 @@ gst_timecodestamper_update_drop_frame (GstTimeCodeStamper * timecodestamper)
 
 static void
 gst_timecodestamper_update_timecode_framerate (GstTimeCodeStamper *
-    timecodestamper, const GstVideoInfo * vinfo, GstVideoTimeCode * timecode,
+    timecodestamper, gint fps_n, gint fps_d, GstVideoTimeCode * timecode,
     gboolean is_ltc)
 {
   guint64 nframes;
@@ -767,13 +776,11 @@ gst_timecodestamper_update_timecode_framerate (GstTimeCodeStamper *
   if (!timecode)
     return;
 
-  if (timecodestamper->vinfo.interlace_mode !=
-      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
+  if (timecodestamper->interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
     tc_flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
 
-  if (timecodestamper->drop_frame && timecodestamper->vinfo.fps_d == 1001 &&
-      (timecodestamper->vinfo.fps_n == 30000 ||
-          timecodestamper->vinfo.fps_n == 60000))
+  if (timecodestamper->drop_frame && timecodestamper->fps_d == 1001 &&
+      (timecodestamper->fps_n == 30000 || timecodestamper->fps_n == 60000))
     tc_flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
 
   /* If this is an LTC timecode and we have no framerate yet in there then
@@ -782,19 +789,17 @@ gst_timecodestamper_update_timecode_framerate (GstTimeCodeStamper *
     nframes = gst_video_time_code_frames_since_daily_jam (timecode);
     time =
         gst_util_uint64_scale (nframes,
-        GST_SECOND * timecodestamper->vinfo.fps_d,
-        timecodestamper->vinfo.fps_n);
+        GST_SECOND * timecodestamper->fps_d, timecodestamper->fps_n);
     jam =
-        timecode->config.latest_daily_jam ? g_date_time_ref (timecode->
-        config.latest_daily_jam) : NULL;
+        timecode->config.latest_daily_jam ? g_date_time_ref (timecode->config.
+        latest_daily_jam) : NULL;
     gst_video_time_code_clear (timecode);
-    gst_video_time_code_init (timecode, timecodestamper->vinfo.fps_n,
-        timecodestamper->vinfo.fps_d, jam, tc_flags, 0, 0, 0, 0, 0);
+    gst_video_time_code_init (timecode, timecodestamper->fps_n,
+        timecodestamper->fps_d, jam, tc_flags, 0, 0, 0, 0, 0);
     if (jam)
       g_date_time_unref (jam);
 
-    nframes =
-        gst_util_uint64_scale (time, vinfo->fps_n, GST_SECOND * vinfo->fps_d);
+    nframes = gst_util_uint64_scale (time, fps_n, GST_SECOND * fps_d);
     gst_video_time_code_add_frames (timecode, nframes);
   }
 }
@@ -802,18 +807,17 @@ gst_timecodestamper_update_timecode_framerate (GstTimeCodeStamper *
 /* Must be called with object lock */
 static gboolean
 gst_timecodestamper_update_framerate (GstTimeCodeStamper * timecodestamper,
-    const GstVideoInfo * vinfo)
+    gint fps_n, gint fps_d)
 {
   /* Nothing changed */
-  if (vinfo->fps_n == timecodestamper->vinfo.fps_n &&
-      vinfo->fps_d == timecodestamper->vinfo.fps_d)
+  if (fps_n == timecodestamper->fps_n && fps_d == timecodestamper->fps_d)
     return FALSE;
 
-  gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
+  gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
       timecodestamper->internal_tc, FALSE);
-  gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
+  gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
       timecodestamper->last_tc, FALSE);
-  gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
+  gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
       timecodestamper->rtc_tc, FALSE);
 
 #if HAVE_LTC
@@ -823,11 +827,11 @@ gst_timecodestamper_update_framerate (GstTimeCodeStamper * timecodestamper,
     for (l = timecodestamper->ltc_current_tcs.head; l; l = l->next) {
       TimestampedTimecode *tc = l->data;
 
-      gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
-          &tc->timecode, TRUE);
+      gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n,
+          fps_d, &tc->timecode, TRUE);
     }
   }
-  gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
+  gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
       timecodestamper->ltc_internal_tc, FALSE);
 #endif
 
@@ -866,27 +870,42 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
-      GstVideoInfo info;
       gboolean latency_changed;
+      const gchar *interlace_mode;
+      GstStructure *s;
+      gint fps_n, fps_d;
 
       GST_OBJECT_LOCK (timecodestamper);
       gst_event_parse_caps (event, &caps);
-      if (!gst_video_info_from_caps (&info, caps)) {
+
+      s = gst_caps_get_structure (caps, 0);
+
+      if (!gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)) {
+        GST_ERROR_OBJECT (timecodestamper, "Expected framerate in caps");
         GST_OBJECT_UNLOCK (timecodestamper);
         gst_event_unref (event);
         return FALSE;
       }
-      if (info.fps_n == 0) {
-        GST_WARNING_OBJECT (timecodestamper,
+
+      if (fps_n == 0) {
+        GST_ERROR_OBJECT (timecodestamper,
             "Non-constant frame rate found. Refusing to create a timecode");
         GST_OBJECT_UNLOCK (timecodestamper);
         gst_event_unref (event);
         return FALSE;
       }
 
+      if ((interlace_mode = gst_structure_get_string (s, "interlace-mode"))) {
+        timecodestamper->interlace_mode =
+            gst_video_interlace_mode_from_string (interlace_mode);
+      }
+
       latency_changed =
-          gst_timecodestamper_update_framerate (timecodestamper, &info);
-      timecodestamper->vinfo = info;
+          gst_timecodestamper_update_framerate (timecodestamper, fps_n, fps_d);
+
+      timecodestamper->fps_n = fps_n;
+      timecodestamper->fps_d = fps_d;
+
       GST_OBJECT_UNLOCK (timecodestamper);
 
       if (latency_changed)
@@ -955,11 +974,10 @@ gst_timecodestamper_src_event (GstBaseTransform * trans, GstEvent * event)
       }
 
       GST_OBJECT_LOCK (timecodestamper);
-      if (timecodestamper->vinfo.fps_d && timecodestamper->vinfo.fps_n) {
+      if (timecodestamper->fps_d && timecodestamper->fps_n) {
         timecodestamper->prev_seek_seqnum = GST_EVENT_SEQNUM (event);
         timecodestamper->seeked_frames = gst_util_uint64_scale (start,
-            timecodestamper->vinfo.fps_n,
-            timecodestamper->vinfo.fps_d * GST_SECOND);
+            timecodestamper->fps_n, timecodestamper->fps_d * GST_SECOND);
       }
       GST_OBJECT_UNLOCK (timecodestamper);
       break;
@@ -996,7 +1014,7 @@ gst_timecodestamper_query (GstBaseTransform * trans,
           gst_pad_query_default (GST_BASE_TRANSFORM_SRC_PAD (trans),
           GST_OBJECT_CAST (trans), query);
       g_mutex_lock (&timecodestamper->mutex);
-      if (res && timecodestamper->vinfo.fps_n && timecodestamper->vinfo.fps_d) {
+      if (res && timecodestamper->fps_n && timecodestamper->fps_d) {
         gst_query_parse_latency (query, &live, &min_latency, &max_latency);
         if (live && timecodestamper->ltcpad) {
           /* Introduce additional LTC for waiting for LTC timecodes. The
@@ -1086,7 +1104,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstVideoTimeCodeFlags tc_flags = 0;
 
-  if (timecodestamper->vinfo.fps_n == 0 || timecodestamper->vinfo.fps_d == 0
+  if (timecodestamper->fps_n == 0 || timecodestamper->fps_d == 0
       || !GST_BUFFER_PTS_IS_VALID (buffer)) {
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_NEGOTIATED;
@@ -1140,13 +1158,11 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
   /* Update all our internal timecodes as needed */
   GST_OBJECT_LOCK (timecodestamper);
 
-  if (timecodestamper->vinfo.interlace_mode !=
-      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
+  if (timecodestamper->interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
     tc_flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
 
-  if (timecodestamper->drop_frame && timecodestamper->vinfo.fps_d == 1001 &&
-      (timecodestamper->vinfo.fps_n == 30000 ||
-          timecodestamper->vinfo.fps_n == 60000))
+  if (timecodestamper->drop_frame && timecodestamper->fps_d == 1001 &&
+      (timecodestamper->fps_n == 30000 || timecodestamper->fps_n == 60000))
     tc_flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
 
   /* If we don't have an internal timecode yet then either a new one was just
@@ -1162,8 +1178,8 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     timecodestamper->reset_internal_tc_from_seek = FALSE;
     if (timecodestamper->set_internal_tc) {
       timecodestamper->internal_tc =
-          gst_video_time_code_new (timecodestamper->vinfo.fps_n,
-          timecodestamper->vinfo.fps_d,
+          gst_video_time_code_new (timecodestamper->fps_n,
+          timecodestamper->fps_d,
           timecodestamper->set_internal_tc->config.latest_daily_jam, tc_flags,
           timecodestamper->set_internal_tc->hours,
           timecodestamper->set_internal_tc->minutes,
@@ -1172,8 +1188,8 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
           timecodestamper->set_internal_tc->field_count);
     } else {
       timecodestamper->internal_tc =
-          gst_video_time_code_new (timecodestamper->vinfo.fps_n,
-          timecodestamper->vinfo.fps_d, dt_frame, tc_flags, 0, 0, 0, 0, 0);
+          gst_video_time_code_new (timecodestamper->fps_n,
+          timecodestamper->fps_d, dt_frame, tc_flags, 0, 0, 0, 0, 0);
       if (timecodestamper->seeked_frames > 0) {
         GST_DEBUG_OBJECT (timecodestamper,
             "Adding %" G_GINT64_FORMAT " frames that were seeked",
@@ -1249,8 +1265,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     /* Create timecode for the current frame time */
     memset (&rtc_timecode_now, 0, sizeof (rtc_timecode_now));
     gst_video_time_code_init_from_date_time_full (&rtc_timecode_now,
-        timecodestamper->vinfo.fps_n, timecodestamper->vinfo.fps_d, dt_frame,
-        tc_flags, 0);
+        timecodestamper->fps_n, timecodestamper->fps_d, dt_frame, tc_flags, 0);
 
     tc_str = gst_video_time_code_to_string (&rtc_timecode_now);
     dt_str = g_date_time_format (dt_frame, "%F %R %z");
@@ -1318,7 +1333,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     gboolean updated_internal = FALSE;
 
     frame_duration = gst_util_uint64_scale_int_ceil (GST_SECOND,
-        timecodestamper->vinfo.fps_d, timecodestamper->vinfo.fps_n);
+        timecodestamper->fps_d, timecodestamper->fps_n);
 
     g_mutex_lock (&timecodestamper->mutex);
 
@@ -1400,13 +1415,12 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
        * done yet */
       if (ltc_tc->timecode.config.fps_d == 0) {
         gint fps_n_div =
-            ((gdouble) timecodestamper->vinfo.fps_n) /
-            timecodestamper->vinfo.fps_d > 30 ? 2 : 1;
+            ((gdouble) timecodestamper->fps_n) /
+            timecodestamper->fps_d > 30 ? 2 : 1;
 
         ltc_tc->timecode.config.flags = tc_flags;
-        ltc_tc->timecode.config.fps_n =
-            timecodestamper->vinfo.fps_n / fps_n_div;
-        ltc_tc->timecode.config.fps_d = timecodestamper->vinfo.fps_d;
+        ltc_tc->timecode.config.fps_n = timecodestamper->fps_n / fps_n_div;
+        ltc_tc->timecode.config.fps_d = timecodestamper->fps_d;
       }
 
       tc_str = gst_video_time_code_to_string (&ltc_tc->timecode);
@@ -1512,8 +1526,8 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
       tc = timecodestamper->internal_tc;
       break;
     case GST_TIME_CODE_STAMPER_SOURCE_ZERO:
-      tc = gst_video_time_code_new (timecodestamper->vinfo.fps_n,
-          timecodestamper->vinfo.fps_d, NULL, tc_flags, 0, 0, 0, 0, 0);
+      tc = gst_video_time_code_new (timecodestamper->fps_n,
+          timecodestamper->fps_d, NULL, tc_flags, 0, 0, 0, 0, 0);
       free_tc = TRUE;
       break;
     case GST_TIME_CODE_STAMPER_SOURCE_LAST_KNOWN:
@@ -1524,8 +1538,8 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     case GST_TIME_CODE_STAMPER_SOURCE_LAST_KNOWN_OR_ZERO:
       tc = timecodestamper->last_tc;
       if (!tc) {
-        tc = gst_video_time_code_new (timecodestamper->vinfo.fps_n,
-            timecodestamper->vinfo.fps_d, NULL, tc_flags, 0, 0, 0, 0, 0);
+        tc = gst_video_time_code_new (timecodestamper->fps_n,
+            timecodestamper->fps_d, NULL, tc_flags, 0, 0, 0, 0, 0);
         free_tc = TRUE;
       }
       break;
@@ -1535,8 +1549,8 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
         tc = timecodestamper->ltc_internal_tc;
 #endif
       if (!tc) {
-        tc = gst_video_time_code_new (timecodestamper->vinfo.fps_n,
-            timecodestamper->vinfo.fps_d, NULL, tc_flags, 0, 0, 0, 0, 0);
+        tc = gst_video_time_code_new (timecodestamper->fps_n,
+            timecodestamper->fps_d, NULL, tc_flags, 0, 0, 0, 0, 0);
         free_tc = TRUE;
       }
       break;
@@ -1603,8 +1617,8 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
         gst_segment_to_stream_time (&vfilter->segment, GST_FORMAT_TIME,
         GST_BUFFER_PTS (buffer));
     duration =
-        gst_util_uint64_scale_int (GST_SECOND, timecodestamper->vinfo.fps_d,
-        timecodestamper->vinfo.fps_n);
+        gst_util_uint64_scale_int (GST_SECOND, timecodestamper->fps_d,
+        timecodestamper->fps_n);
     s = gst_structure_new ("timecodestamper", "timestamp", G_TYPE_UINT64,
         GST_BUFFER_PTS (buffer), "stream-time", G_TYPE_UINT64, stream_time,
         "running-time", G_TYPE_UINT64, running_time, "duration",
@@ -1797,9 +1811,9 @@ gst_timecodestamper_ltcpad_chain (GstPad * pad,
     GST_OBJECT_LOCK (timecodestamper);
     /* This is only for initialization and needs to be somewhat close to the
      * real value. It will be tracked automatically afterwards */
-    if (timecodestamper->vinfo.fps_n) {
+    if (timecodestamper->fps_n) {
       samples_per_frame = timecodestamper->ainfo.rate *
-          timecodestamper->vinfo.fps_d / timecodestamper->vinfo.fps_n;
+          timecodestamper->fps_d / timecodestamper->fps_n;
     }
     GST_OBJECT_UNLOCK (timecodestamper);
 
