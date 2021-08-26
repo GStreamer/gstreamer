@@ -50,6 +50,7 @@ enum
   PROP_IGNORE_ERROR,
   PROP_IGNORE_NOTLINKED,
   PROP_IGNORE_NOTNEGOTIATED,
+  PROP_IGNORE_EOS,
   PROP_CONVERT_TO
 };
 
@@ -122,6 +123,16 @@ gst_error_ignore_class_init (GstErrorIgnoreClass * klass)
           "Whether to ignore GST_FLOW_NOT_NEGOTIATED",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstErrorIgnore:ignore-eos:
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (object_class, PROP_IGNORE_EOS,
+      g_param_spec_boolean ("ignore-eos",
+          "Ignore GST_FLOW_EOS", "Whether to ignore GST_FLOW_EOS",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (object_class, PROP_CONVERT_TO,
       g_param_spec_enum ("convert-to", "GstFlowReturn to convert to",
           "Which GstFlowReturn value we should convert to when ignoring",
@@ -153,6 +164,7 @@ gst_error_ignore_init (GstErrorIgnore * self)
   self->ignore_error = TRUE;
   self->ignore_notlinked = FALSE;
   self->ignore_notnegotiated = TRUE;
+  self->ignore_eos = FALSE;
   self->convert_to = GST_FLOW_NOT_LINKED;
 }
 
@@ -171,6 +183,9 @@ gst_error_ignore_set_property (GObject * object, guint prop_id,
       break;
     case PROP_IGNORE_NOTNEGOTIATED:
       self->ignore_notnegotiated = g_value_get_boolean (value);
+      break;
+    case PROP_IGNORE_EOS:
+      self->ignore_eos = g_value_get_boolean (value);
       break;
     case PROP_CONVERT_TO:
       self->convert_to = g_value_get_enum (value);
@@ -196,6 +211,9 @@ gst_error_ignore_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_IGNORE_NOTNEGOTIATED:
       g_value_set_boolean (value, self->ignore_notnegotiated);
+      break;
+    case PROP_IGNORE_EOS:
+      g_value_set_boolean (value, self->ignore_eos);
       break;
     case PROP_CONVERT_TO:
       g_value_set_enum (value, self->convert_to);
@@ -246,6 +264,7 @@ gst_error_ignore_sink_chain (GstPad * pad, GstObject * parent,
 
   if ((ret == GST_FLOW_ERROR && self->ignore_error) ||
       (ret == GST_FLOW_NOT_LINKED && self->ignore_notlinked) ||
+      (ret == GST_FLOW_EOS && self->ignore_eos) ||
       (ret == GST_FLOW_NOT_NEGOTIATED && self->ignore_notnegotiated))
     return self->convert_to;
   else
