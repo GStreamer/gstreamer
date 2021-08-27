@@ -71,7 +71,7 @@ def checkout_worktree(repo_name, repo_dir, worktree_dir, branch, new_branch, for
 
         return False
 
-    commit_message = git("show", "--shortstat", repository_path=repo_dir).split("\n")
+    commit_message = git("show", "--format=medium", "--shortstat", repository_path=repo_dir).split("\n")
     print(u"  -> %s%s%s - %s" % (Colors.HEADER, repo_dir, Colors.ENDC,
                                     commit_message[4].strip()))
     return True
