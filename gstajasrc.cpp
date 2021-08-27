@@ -2139,6 +2139,13 @@ out : {
   self->device->device->AutoCirculateStop(self->channel);
   self->device->device->UnsubscribeInputVerticalEvent(self->channel);
   self->device->device->DisableInputInterrupt(self->channel);
+
+  self->device->device->DisableChannel(self->channel);
+  if (self->quad_mode) {
+    for (int i = 1; i < 4; i++) {
+      self->device->device->DisableChannel((NTV2Channel)(self->channel + i));
+    }
+  }
 }
 
   if (!self->playing && !self->shutdown) goto restart;

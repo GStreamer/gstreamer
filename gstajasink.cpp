@@ -684,20 +684,6 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
                    (int)reference_source);
   self->device->device->SetFramePulseReference(reference_source);
 
-  if (!self->device->device->EnableChannel(self->channel)) {
-    GST_ERROR_OBJECT(self, "Failed to enable channel");
-    return FALSE;
-  }
-  if (self->quad_mode) {
-    for (int i = 1; i < 4; i++) {
-      if (!self->device->device->EnableChannel(
-              (NTV2Channel)(self->channel + i))) {
-        GST_ERROR_OBJECT(self, "Failed to enable channel");
-        return FALSE;
-      }
-    }
-  }
-
   self->device->device->DMABufferAutoLock(false, true, 0);
 
   if (::NTV2DeviceHasBiDirectionalSDI(self->device_id))
@@ -1725,6 +1711,26 @@ restart:
 
     self->device->device->AutoCirculateStop(self->channel);
 
+    if (!self->device->device->EnableChannel(self->channel)) {
+      GST_ERROR_OBJECT(self, "Failed to enable channel");
+      g_mutex_lock(&self->queue_lock);
+      GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
+                        ("Failed to configure device"));
+      goto out;
+    }
+    if (self->quad_mode) {
+      for (int i = 1; i < 4; i++) {
+        if (!self->device->device->EnableChannel(
+                (NTV2Channel)(self->channel + i))) {
+          GST_ERROR_OBJECT(self, "Failed to enable channel");
+          g_mutex_lock(&self->queue_lock);
+          GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
+                            ("Failed to configure device"));
+          goto out;
+        }
+      }
+    }
+
     self->device->device->EnableOutputInterrupt(self->channel);
     self->device->device->SubscribeOutputVerticalEvent(self->channel);
 
@@ -2007,6 +2013,13 @@ out : {
   self->device->device->AutoCirculateStop(self->channel);
   self->device->device->UnsubscribeOutputVerticalEvent(self->channel);
   self->device->device->DisableOutputInterrupt(self->channel);
+
+  self->device->device->DisableChannel(self->channel);
+  if (self->quad_mode) {
+    for (int i = 1; i < 4; i++) {
+      self->device->device->DisableChannel((NTV2Channel)(self->channel + i));
+    }
+  }
 }
 
   if ((!self->playing || self->draining) && !self->shutdown) goto restart;
