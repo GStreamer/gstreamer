@@ -17,6 +17,7 @@ mf_sources = [
 
 mf_desktop_sources = [
   'gstmfsourcereader.cpp',
+  'gstwin32devicewatcher.cpp',
 ]
 
 mf_app_sources = [
@@ -117,8 +118,16 @@ if not winapi_desktop and not winapi_app
 endif
 
 if winapi_app
+  if not gstwinrt_dep.found()
+    if mf_option.enabled()
+      error('The mediafoundation plugin was enabled explicitly, but GstWinRt library is unavailable')
+    else
+      subdir_done()
+    endif
+  endif
+
   mf_sources += mf_app_sources
-  mf_lib_deps += [runtimeobject_lib]
+  mf_lib_deps += [runtimeobject_lib, gstwinrt_dep]
 endif
 
 if winapi_desktop

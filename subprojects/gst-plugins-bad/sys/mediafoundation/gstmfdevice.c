@@ -29,6 +29,22 @@
 
 #include "gstmfdevice.h"
 
+#if GST_MF_WINAPI_DESKTOP
+#include "gstwin32devicewatcher.h"
+
+#ifndef INITGUID
+#include <initguid.h>
+#endif
+
+#include <dbt.h>
+DEFINE_GUID (GST_KSCATEGORY_CAPTURE, 0x65E8773DL, 0x8F56,
+    0x11D0, 0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96);
+#endif
+
+#if GST_MF_WINAPI_APP
+#include <gst/winrt/gstwinrt.h>
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_debug);
 #define GST_CAT_DEFAULT gst_mf_debug
 
@@ -136,12 +152,52 @@ gst_mf_device_set_property (GObject * object, guint prop_id,
 struct _GstMFDeviceProvider
 {
   GstDeviceProvider parent;
+
+  GstObject *watcher;
+
+  GMutex lock;
+  GCond cond;
+
+  gboolean enum_completed;
 };
 
 G_DEFINE_TYPE (GstMFDeviceProvider, gst_mf_device_provider,
     GST_TYPE_DEVICE_PROVIDER);
 
+static void gst_mf_device_provider_dispose (GObject * object);
+static void gst_mf_device_provider_finalize (GObject * object);
+
 static GList *gst_mf_device_provider_probe (GstDeviceProvider * provider);
+static gboolean gst_mf_device_provider_start (GstDeviceProvider * provider);
+static void gst_mf_device_provider_stop (GstDeviceProvider * provider);
+
+#if GST_MF_WINAPI_DESKTOP
+static gboolean gst_mf_device_provider_start_win32 (GstDeviceProvider * self);
+static void gst_mf_device_provider_device_changed (GstWin32DeviceWatcher *
+    watcher, WPARAM wparam, LPARAM lparam, gpointer user_data);
+#endif
+
+#if GST_MF_WINAPI_APP
+static gboolean gst_mf_device_provider_start_winrt (GstDeviceProvider * self);
+static void
+gst_mf_device_provider_device_added (GstWinRTDeviceWatcher * watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformation * info,
+    gpointer user_data);
+static void
+gst_mf_device_provider_device_updated (GstWinRTDeviceWatcher * watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate *
+    info_update, gpointer user_data);
+static void gst_mf_device_provider_device_removed (GstWinRTDeviceWatcher *
+    watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate *
+    info_update, gpointer user_data);
+static void
+gst_mf_device_provider_device_enum_completed (GstWinRTDeviceWatcher *
+    watcher, gpointer user_data);
+#endif
+
+static void
+gst_mf_device_provider_on_device_updated (GstMFDeviceProvider * self);
 
 static void
 gst_mf_device_provider_class_init (GstMFDeviceProviderClass * klass)
@@ -149,6 +205,8 @@ gst_mf_device_provider_class_init (GstMFDeviceProviderClass * klass)
   GstDeviceProviderClass *provider_class = GST_DEVICE_PROVIDER_CLASS (klass);
 
   provider_class->probe = GST_DEBUG_FUNCPTR (gst_mf_device_provider_probe);
+  provider_class->start = GST_DEBUG_FUNCPTR (gst_mf_device_provider_start);
+  provider_class->stop = GST_DEBUG_FUNCPTR (gst_mf_device_provider_stop);
 
   gst_device_provider_class_set_static_metadata (provider_class,
       "Media Foundation Device Provider",
@@ -157,8 +215,54 @@ gst_mf_device_provider_class_init (GstMFDeviceProviderClass * klass)
 }
 
 static void
-gst_mf_device_provider_init (GstMFDeviceProvider * provider)
+gst_mf_device_provider_init (GstMFDeviceProvider * self)
 {
+#if GST_MF_WINAPI_DESKTOP
+  GstWin32DeviceWatcherCallbacks win32_callbacks;
+
+  win32_callbacks.device_changed = gst_mf_device_provider_device_changed;
+  self->watcher = (GstObject *)
+      gst_win32_device_watcher_new (DBT_DEVTYP_DEVICEINTERFACE,
+      &GST_KSCATEGORY_CAPTURE, &win32_callbacks, self);
+#endif
+#if GST_MF_WINAPI_APP
+  if (!self->watcher) {
+    GstWinRTDeviceWatcherCallbacks winrt_callbacks;
+    winrt_callbacks.added = gst_mf_device_provider_device_added;
+    winrt_callbacks.updated = gst_mf_device_provider_device_updated;
+    winrt_callbacks.removed = gst_mf_device_provider_device_removed;
+    winrt_callbacks.enumeration_completed =
+        gst_mf_device_provider_device_enum_completed;
+
+    self->watcher = (GstObject *)
+        gst_winrt_device_watcher_new (GST_WINRT_DEVICE_CLASS_VIDEO_CAPTURE,
+        &winrt_callbacks, self);
+  }
+#endif
+
+  g_mutex_init (&self->lock);
+  g_cond_init (&self->cond);
+}
+
+static void
+gst_mf_device_provider_dispose (GObject * object)
+{
+  GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (object);
+
+  gst_clear_object (&self->watcher);
+
+  G_OBJECT_CLASS (gst_mf_device_provider_parent_class)->dispose (object);
+}
+
+static void
+gst_mf_device_provider_finalize (GObject * object)
+{
+  GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (object);
+
+  g_mutex_clear (&self->lock);
+  g_cond_clear (&self->cond);
+
+  G_OBJECT_CLASS (gst_mf_device_provider_parent_class)->finalize (object);
 }
 
 static GList *
@@ -223,3 +327,264 @@ gst_mf_device_provider_probe (GstDeviceProvider * provider)
 
   return list;
 }
+
+#if GST_MF_WINAPI_DESKTOP
+static gboolean
+gst_mf_device_provider_start_win32 (GstDeviceProvider * provider)
+{
+  GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (provider);
+  GstWin32DeviceWatcher *watcher;
+  GList *devices = NULL;
+  GList *iter;
+
+  if (!GST_IS_WIN32_DEVICE_WATCHER (self->watcher))
+    return FALSE;
+
+  GST_DEBUG_OBJECT (self, "Starting Win32 watcher");
+
+  watcher = GST_WIN32_DEVICE_WATCHER (self->watcher);
+
+  devices = gst_mf_device_provider_probe (provider);
+  if (devices) {
+    for (iter = devices; iter; iter = g_list_next (iter)) {
+      gst_device_provider_device_add (provider, GST_DEVICE (iter->data));
+    }
+
+    g_list_free (devices);
+  }
+
+  return gst_win32_device_watcher_start (watcher);
+}
+#endif
+
+#if GST_MF_WINAPI_APP
+static gboolean
+gst_mf_device_provider_start_winrt (GstDeviceProvider * provider)
+{
+  GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (provider);
+  GstWinRTDeviceWatcher *watcher;
+  GList *devices = NULL;
+  GList *iter;
+
+  if (!GST_IS_WINRT_DEVICE_WATCHER (self->watcher))
+    return FALSE;
+
+  GST_DEBUG_OBJECT (self, "Starting WinRT watcher");
+  watcher = GST_WINRT_DEVICE_WATCHER (self->watcher);
+
+  self->enum_completed = FALSE;
+
+  if (!gst_winrt_device_watcher_start (watcher))
+    return FALSE;
+
+  /* Wait for initial enumeration to be completed */
+  g_mutex_lock (&self->lock);
+  while (!self->enum_completed)
+    g_cond_wait (&self->cond, &self->lock);
+
+  devices = gst_mf_device_provider_probe (provider);
+  if (devices) {
+    for (iter = devices; iter; iter = g_list_next (iter)) {
+      gst_device_provider_device_add (provider, GST_DEVICE (iter->data));
+    }
+
+    g_list_free (devices);
+  }
+  g_mutex_unlock (&self->lock);
+
+  return TRUE;
+}
+#endif
+
+static gboolean
+gst_mf_device_provider_start (GstDeviceProvider * provider)
+{
+  GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (provider);
+  gboolean ret = FALSE;
+
+  if (!self->watcher) {
+    GST_ERROR_OBJECT (self, "DeviceWatcher object wasn't configured");
+    return FALSE;
+  }
+#if GST_MF_WINAPI_DESKTOP
+  ret = gst_mf_device_provider_start_win32 (provider);
+#endif
+
+#if GST_MF_WINAPI_APP
+  if (!ret)
+    ret = gst_mf_device_provider_start_winrt (provider);
+#endif
+
+  return ret;
+}
+
+static void
+gst_mf_device_provider_stop (GstDeviceProvider * provider)
+{
+  GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (provider);
+
+  if (self->watcher) {
+#if GST_MF_WINAPI_DESKTOP
+    if (GST_IS_WIN32_DEVICE_WATCHER (self->watcher)) {
+      gst_win32_device_watcher_stop (GST_WIN32_DEVICE_WATCHER (self->watcher));
+    }
+#endif
+#if GST_MF_WINAPI_APP
+    if (GST_IS_WINRT_DEVICE_WATCHER (self->watcher)) {
+      gst_winrt_device_watcher_stop (GST_WINRT_DEVICE_WATCHER (self->watcher));
+    }
+#endif
+  }
+}
+
+static gboolean
+gst_mf_device_is_in_list (GList * list, GstDevice * device)
+{
+  GList *iter;
+  GstStructure *s;
+  const gchar *device_id;
+  gboolean found = FALSE;
+
+  s = gst_device_get_properties (device);
+  g_assert (s);
+
+  device_id = gst_structure_get_string (s, "device.path");
+  g_assert (device_id);
+
+  for (iter = list; iter; iter = g_list_next (iter)) {
+    GstStructure *other_s;
+    const gchar *other_id;
+
+    other_s = gst_device_get_properties (GST_DEVICE (iter->data));
+    g_assert (other_s);
+
+    other_id = gst_structure_get_string (other_s, "device.path");
+    g_assert (other_id);
+
+    if (g_ascii_strcasecmp (device_id, other_id) == 0) {
+      found = TRUE;
+    }
+
+    gst_structure_free (other_s);
+    if (found)
+      break;
+  }
+
+  gst_structure_free (s);
+
+  return found;
+}
+
+static void
+gst_mf_device_provider_update_devices (GstMFDeviceProvider * self)
+{
+  GstDeviceProvider *provider = GST_DEVICE_PROVIDER_CAST (self);
+  GList *prev_devices = NULL;
+  GList *new_devices = NULL;
+  GList *to_add = NULL;
+  GList *to_remove = NULL;
+  GList *iter;
+
+  GST_OBJECT_LOCK (self);
+  prev_devices = g_list_copy_deep (provider->devices,
+      (GCopyFunc) gst_object_ref, NULL);
+  GST_OBJECT_UNLOCK (self);
+
+  new_devices = gst_mf_device_provider_probe (provider);
+
+  /* Ownership of GstDevice for gst_device_provider_device_add()
+   * and gst_device_provider_device_remove() is a bit complicated.
+   * Remove floating reference here for things to be clear */
+  for (iter = new_devices; iter; iter = g_list_next (iter))
+    gst_object_ref_sink (iter->data);
+
+  /* Check newly added devices */
+  for (iter = new_devices; iter; iter = g_list_next (iter)) {
+    if (!gst_mf_device_is_in_list (prev_devices, GST_DEVICE (iter->data))) {
+      to_add = g_list_prepend (to_add, gst_object_ref (iter->data));
+    }
+  }
+
+  /* Check removed device */
+  for (iter = prev_devices; iter; iter = g_list_next (iter)) {
+    if (!gst_mf_device_is_in_list (new_devices, GST_DEVICE (iter->data))) {
+      to_remove = g_list_prepend (to_remove, gst_object_ref (iter->data));
+    }
+  }
+
+  for (iter = to_remove; iter; iter = g_list_next (iter))
+    gst_device_provider_device_remove (provider, GST_DEVICE (iter->data));
+
+  for (iter = to_add; iter; iter = g_list_next (iter))
+    gst_device_provider_device_add (provider, GST_DEVICE (iter->data));
+
+  if (prev_devices)
+    g_list_free_full (prev_devices, (GDestroyNotify) gst_object_unref);
+
+  if (to_add)
+    g_list_free_full (to_add, (GDestroyNotify) gst_object_unref);
+
+  if (to_remove)
+    g_list_free_full (to_remove, (GDestroyNotify) gst_object_unref);
+}
+
+#if GST_MF_WINAPI_DESKTOP
+static void
+gst_mf_device_provider_device_changed (GstWin32DeviceWatcher * watcher,
+    WPARAM wparam, LPARAM lparam, gpointer user_data)
+{
+  GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (user_data);
+
+  if (wparam == DBT_DEVICEARRIVAL || wparam == DBT_DEVICEREMOVECOMPLETE) {
+    gst_mf_device_provider_update_devices (self);
+  }
+}
+#endif
+
+#if GST_MF_WINAPI_APP
+static void
+gst_mf_device_provider_device_added (GstWinRTDeviceWatcher * watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformation * info,
+    gpointer user_data)
+{
+  GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (user_data);
+
+  if (self->enum_completed)
+    gst_mf_device_provider_update_devices (self);
+}
+
+static void
+gst_mf_device_provider_device_removed (GstWinRTDeviceWatcher * watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate *
+    info_update, gpointer user_data)
+{
+  GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (user_data);
+
+  if (self->enum_completed)
+    gst_mf_device_provider_update_devices (self);
+}
+
+
+static void
+gst_mf_device_provider_device_updated (GstWinRTDeviceWatcher * watcher,
+    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate *
+    info_update, gpointer user_data)
+{
+  GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (user_data);
+
+  gst_mf_device_provider_update_devices (self);
+}
+
+static void
+gst_mf_device_provider_device_enum_completed (GstWinRTDeviceWatcher *
+    watcher, gpointer user_data)
+{
+  GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (user_data);
+
+  g_mutex_lock (&self->lock);
+  GST_DEBUG_OBJECT (self, "Enumeration completed");
+  self->enum_completed = TRUE;
+  g_cond_signal (&self->cond);
+  g_mutex_unlock (&self->lock);
+}
+#endif
