@@ -3169,7 +3169,7 @@ gst_h264_create_sei_memory_internal (guint8 nal_prefix_size,
         have_written_data = TRUE;
         break;
       case GST_H264_SEI_MASTERING_DISPLAY_COLOUR_VOLUME:
-        GST_DEBUG ("Wrtiting \"Mastering display colour volume\"");
+        GST_DEBUG ("Writing \"Mastering display colour volume\"");
         if (!gst_h264_write_sei_mastering_display_colour_volume (&nw,
                 &msg->payload.mastering_display_colour_volume)) {
           GST_WARNING ("Failed to write \"Mastering display colour volume\"");
