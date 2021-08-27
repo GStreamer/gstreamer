@@ -589,7 +589,7 @@ static void gst_aja_allocator_finalize(GObject *alloc) {
 
   GST_DEBUG_OBJECT(alloc, "Freeing allocator");
 
-  gst_aja_device_unref(aja_alloc->device);
+  gst_aja_ntv2_device_unref(aja_alloc->device);
 
   G_OBJECT_CLASS(gst_aja_allocator_parent_class)->finalize(alloc);
 }
@@ -617,11 +617,11 @@ static void gst_aja_allocator_init(GstAjaAllocator *aja_alloc) {
   alloc->mem_share = (GstMemoryShareFunction)_aja_memory_share;
 }
 
-GstAllocator *gst_aja_allocator_new(GstAjaDevice *device) {
+GstAllocator *gst_aja_allocator_new(GstAjaNtv2Device *device) {
   GstAjaAllocator *alloc =
       (GstAjaAllocator *)g_object_new(GST_TYPE_AJA_ALLOCATOR, NULL);
 
-  alloc->device = gst_aja_device_ref(device);
+  alloc->device = gst_aja_ntv2_device_ref(device);
 
   GST_DEBUG_OBJECT(alloc, "Creating allocator for device %d",
                    device->device->GetIndexNumber());
@@ -629,7 +629,7 @@ GstAllocator *gst_aja_allocator_new(GstAjaDevice *device) {
   return GST_ALLOCATOR(alloc);
 }
 
-GstAjaDevice *gst_aja_device_obtain(const gchar *device_identifier) {
+GstAjaNtv2Device *gst_aja_ntv2_device_obtain(const gchar *device_identifier) {
   CNTV2Device *device = new CNTV2Device();
 
   if (!CNTV2DeviceScanner::GetFirstDeviceFromArgument(device_identifier,
@@ -638,19 +638,19 @@ GstAjaDevice *gst_aja_device_obtain(const gchar *device_identifier) {
     return NULL;
   }
 
-  GstAjaDevice *dev = g_atomic_rc_box_new0(GstAjaDevice);
+  GstAjaNtv2Device *dev = g_atomic_rc_box_new0(GstAjaNtv2Device);
   dev->device = device;
 
   return dev;
 }
 
-GstAjaDevice *gst_aja_device_ref(GstAjaDevice *device) {
-  return (GstAjaDevice *)g_atomic_rc_box_acquire(device);
+GstAjaNtv2Device *gst_aja_ntv2_device_ref(GstAjaNtv2Device *device) {
+  return (GstAjaNtv2Device *)g_atomic_rc_box_acquire(device);
 }
 
-void gst_aja_device_unref(GstAjaDevice *device) {
+void gst_aja_ntv2_device_unref(GstAjaNtv2Device *device) {
   g_atomic_rc_box_release_full(device, [](gpointer data) {
-    GstAjaDevice *dev = (GstAjaDevice *)data;
+    GstAjaNtv2Device *dev = (GstAjaNtv2Device *)data;
 
     delete dev->device;
   });

@@ -56,7 +56,7 @@ struct _GstAjaSink {
   GCond drain_cond;
   gboolean flushing;
 
-  GstAjaDevice *device;
+  GstAjaNtv2Device *device;
   NTV2DeviceID device_id;
   GstAllocator *allocator;
 

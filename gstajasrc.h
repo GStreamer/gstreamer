@@ -52,7 +52,7 @@ struct _GstAjaSrc {
   gboolean shutdown;
   gboolean flushing;
 
-  GstAjaDevice *device;
+  GstAjaNtv2Device *device;
   NTV2DeviceID device_id;
   GstAllocator *allocator;
   GstBufferPool *buffer_pool;

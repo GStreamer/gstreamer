@@ -326,14 +326,14 @@ static gboolean gst_aja_sink_open(GstAjaSink *self) {
 
   g_assert(self->device == NULL);
 
-  self->device = gst_aja_device_obtain(self->device_identifier);
+  self->device = gst_aja_ntv2_device_obtain(self->device_identifier);
   if (!self->device) {
     GST_ERROR_OBJECT(self, "Failed to open device");
     return FALSE;
   }
 
   if (!self->device->device->IsDeviceReady(false)) {
-    g_clear_pointer(&self->device, gst_aja_device_unref);
+    g_clear_pointer(&self->device, gst_aja_ntv2_device_unref);
     return FALSE;
   }
 
@@ -371,7 +371,7 @@ static gboolean gst_aja_sink_open(GstAjaSink *self) {
 
 static gboolean gst_aja_sink_close(GstAjaSink *self) {
   gst_clear_object(&self->allocator);
-  g_clear_pointer(&self->device, gst_aja_device_unref);
+  g_clear_pointer(&self->device, gst_aja_ntv2_device_unref);
   self->device_id = DEVICE_ID_INVALID;
 
   GST_DEBUG_OBJECT(self, "Closed device");

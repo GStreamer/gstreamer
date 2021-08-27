@@ -56,14 +56,14 @@ GstAjaAudioMeta *gst_buffer_add_aja_audio_meta(GstBuffer *buffer,
 
 typedef struct {
   CNTV2Card *device;
-} GstAjaDevice;
+} GstAjaNtv2Device;
 
 G_GNUC_INTERNAL
-GstAjaDevice *gst_aja_device_obtain(const gchar *device_identifier);
+GstAjaNtv2Device *gst_aja_ntv2_device_obtain(const gchar *device_identifier);
 G_GNUC_INTERNAL
-GstAjaDevice *gst_aja_device_ref(GstAjaDevice *device);
+GstAjaNtv2Device *gst_aja_ntv2_device_ref(GstAjaNtv2Device *device);
 G_GNUC_INTERNAL
-void gst_aja_device_unref(GstAjaDevice *device);
+void gst_aja_ntv2_device_unref(GstAjaNtv2Device *device);
 
 #define GST_AJA_ALLOCATOR_MEMTYPE "aja"
 
@@ -85,7 +85,7 @@ typedef struct _GstAjaAllocatorClass GstAjaAllocatorClass;
 struct _GstAjaAllocator {
   GstAllocator allocator;
 
-  GstAjaDevice *device;
+  GstAjaNtv2Device *device;
 };
 
 struct _GstAjaAllocatorClass {
@@ -95,7 +95,7 @@ struct _GstAjaAllocatorClass {
 G_GNUC_INTERNAL
 GType gst_aja_allocator_get_type(void);
 G_GNUC_INTERNAL
-GstAllocator *gst_aja_allocator_new(GstAjaDevice *device);
+GstAllocator *gst_aja_allocator_new(GstAjaNtv2Device *device);
 
 typedef enum {
   GST_AJA_AUDIO_SYSTEM_AUTO,

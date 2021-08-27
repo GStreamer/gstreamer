@@ -230,7 +230,7 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
   gst_caps_unref(templ_caps);
 
   gst_element_class_set_static_metadata(
-      element_class, "AJA audio/video src", "Audio/Video/Src",
+      element_class, "AJA audio/video src", "Audio/Video/Source",
       "Captures audio/video frames with AJA devices",
       "Sebastian Dröge <sebastian@centricular.com>");
 
@@ -370,14 +370,14 @@ static gboolean gst_aja_src_open(GstAjaSrc *self) {
 
   g_assert(self->device == NULL);
 
-  self->device = gst_aja_device_obtain(self->device_identifier);
+  self->device = gst_aja_ntv2_device_obtain(self->device_identifier);
   if (!self->device) {
     GST_ERROR_OBJECT(self, "Failed to open device");
     return FALSE;
   }
 
   if (!self->device->device->IsDeviceReady(false)) {
-    g_clear_pointer(&self->device, gst_aja_device_unref);
+    g_clear_pointer(&self->device, gst_aja_ntv2_device_unref);
     return FALSE;
   }
 
@@ -415,7 +415,7 @@ static gboolean gst_aja_src_open(GstAjaSrc *self) {
 
 static gboolean gst_aja_src_close(GstAjaSrc *self) {
   gst_clear_object(&self->allocator);
-  g_clear_pointer(&self->device, gst_aja_device_unref);
+  g_clear_pointer(&self->device, gst_aja_ntv2_device_unref);
   self->device_id = DEVICE_ID_INVALID;
 
   GST_DEBUG_OBJECT(self, "Closed device");
@@ -1561,7 +1561,11 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
       switch (vpid.GetTransferCharacteristics()) {
         default:
         case NTV2_VPID_TC_SDR_TV:
-          // SDR is the default, do nothing here.
+          if (info.height < 720) {
+            info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT601;
+          } else {
+            info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+          }
           break;
         case NTV2_VPID_TC_HLG:
           info.colorimetry.transfer = GST_VIDEO_TRANSFER_ARIB_STD_B67;
