@@ -353,6 +353,7 @@ QtGLVideoItem::mapPointToStreamSize(QPointF pos)
 
   stream_y = CLAMP(stream_y, 0., stream_height);
   GST_TRACE ("transform %fx%f into %fx%f", x, y, stream_x, stream_y);
+
   return QPointF(stream_x, stream_y);
 }
 
@@ -397,6 +398,13 @@ QtGLVideoItem::hoverMoveEvent(QHoverEvent * event)
   quint32 button = !!mousePressedButton;
 
   g_mutex_lock (&this->priv->lock);
+
+  /* can't do anything when we don't have input format */
+  if (!this->priv->negotiated) {
+    g_mutex_unlock (&this->priv->lock);
+    return;
+  }
+
   if (event->pos() != event->oldPos()) {
     QPointF pos = mapPointToStreamSize(event->pos());
     GstElement *element = GST_ELEMENT_CAST (g_weak_ref_get (&this->priv->sink));
@@ -429,6 +437,12 @@ QtGLVideoItem::sendMouseEvent(QMouseEvent * event, const gchar * type)
   mousePressedButton = button;
 
   g_mutex_lock (&this->priv->lock);
+
+  /* can't do anything when we don't have input format */
+  if (!this->priv->negotiated) {
+    g_mutex_unlock (&this->priv->lock);
+    return;
+  }
 
   QPointF pos = mapPointToStreamSize(event->pos());
   gchar* event_type = g_strconcat ("mouse-button-", type, NULL);
