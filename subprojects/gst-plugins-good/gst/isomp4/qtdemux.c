@@ -5669,10 +5669,67 @@ invalid_cdat:
   return NULL;
 }
 
-/* the input buffer metadata must be writable,
+/* Handle Closed Caption sample buffers.
+ * The input buffer metadata must be writable,
  * but time/duration etc not yet set and need not be preserved */
 static GstBuffer *
-gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
+gst_qtdemux_process_buffer_clcp (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstBuffer * buf)
+{
+  GstMapInfo map;
+  guint8 *cc;
+  gsize cclen = 0;
+
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+
+  /* empty buffer is sent to terminate previous subtitle */
+  if (map.size <= 2) {
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_unref (buf);
+    return NULL;
+  }
+
+  /* For closed caption, we need to extract the information from the
+   * [cdat],[cdt2] or [ccdp] atom */
+  cc = extract_cc_from_data (stream, map.data, map.size, &cclen);
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unref (buf);
+  if (cc) {
+    buf = _gst_buffer_new_wrapped (cc, cclen, g_free);
+  } else {
+    /* Conversion failed or there's nothing */
+    buf = NULL;
+  }
+  return buf;
+}
+
+/* DVD subpicture specific sample handling.
+ * the input buffer metadata must be writable,
+ * but time/duration etc not yet set and need not be preserved */
+static GstBuffer *
+gst_qtdemux_process_buffer_dvd (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstBuffer * buf)
+{
+  /* send a one time dvd clut event */
+  if (stream->pending_event && stream->pad)
+    gst_pad_push_event (stream->pad, stream->pending_event);
+  stream->pending_event = NULL;
+
+  /* empty buffer is sent to terminate previous subtitle */
+  if (gst_buffer_get_size (buf) <= 2) {
+    gst_buffer_unref (buf);
+    return NULL;
+  }
+
+  /* That's all the processing needed for subpictures */
+  return buf;
+}
+
+/* Timed text formats
+ * the input buffer metadata must be writable,
+ * but time/duration etc not yet set and need not be preserved */
+static GstBuffer *
+gst_qtdemux_process_buffer_text (GstQTDemux * qtdemux, QtDemuxStream * stream,
     GstBuffer * buf)
 {
   GstMapInfo map;
@@ -5680,16 +5737,8 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   gchar *str;
 
   /* not many cases for now */
-  if (G_UNLIKELY (CUR_STREAM (stream)->fourcc == FOURCC_mp4s)) {
-    /* send a one time dvd clut event */
-    if (stream->pending_event && stream->pad)
-      gst_pad_push_event (stream->pad, stream->pending_event);
-    stream->pending_event = NULL;
-  }
-
-  if (G_UNLIKELY (stream->subtype != FOURCC_text
-          && stream->subtype != FOURCC_sbtl &&
-          stream->subtype != FOURCC_subp && stream->subtype != FOURCC_clcp)) {
+  if (G_UNLIKELY (stream->subtype != FOURCC_text &&
+          stream->subtype != FOURCC_sbtl)) {
     return buf;
   }
 
@@ -5700,28 +5749,6 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return NULL;
-  }
-  if (stream->subtype == FOURCC_subp) {
-    /* That's all the processing needed for subpictures */
-    gst_buffer_unmap (buf, &map);
-    return buf;
-  }
-
-  if (stream->subtype == FOURCC_clcp) {
-    guint8 *cc;
-    gsize cclen = 0;
-    /* For closed caption, we need to extract the information from the
-     * [cdat],[cdt2] or [ccdp] atom */
-    cc = extract_cc_from_data (stream, map.data, map.size, &cclen);
-    gst_buffer_unmap (buf, &map);
-    gst_buffer_unref (buf);
-    if (cc) {
-      buf = _gst_buffer_new_wrapped (cc, cclen, g_free);
-    } else {
-      /* Conversion failed or there's nothing */
-      buf = NULL;
-    }
-    return buf;
   }
 
   nsize = GST_READ_UINT16_BE (map.data);
@@ -14947,7 +14974,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case FOURCC_mp4s:
       _codec ("DVD subtitle");
       caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
-      stream->process_func = gst_qtdemux_process_buffer;
+      stream->process_func = gst_qtdemux_process_buffer_dvd;
       break;
     case FOURCC_text:
       _codec ("Quicktime timed text");
@@ -14958,7 +14985,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
           "utf8", NULL);
       /* actual text piece needs to be extracted */
-      stream->process_func = gst_qtdemux_process_buffer;
+      stream->process_func = gst_qtdemux_process_buffer_text;
       break;
     case FOURCC_stpp:
       _codec ("XML subtitles");
@@ -14969,7 +14996,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps =
           gst_caps_new_simple ("closedcaption/x-cea-608", "format",
           G_TYPE_STRING, "s334-1a", NULL);
-      stream->process_func = gst_qtdemux_process_buffer;
+      stream->process_func = gst_qtdemux_process_buffer_clcp;
       stream->need_split = TRUE;
       break;
     case FOURCC_c708:
@@ -14977,7 +15004,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps =
           gst_caps_new_simple ("closedcaption/x-cea-708", "format",
           G_TYPE_STRING, "cdp", NULL);
-      stream->process_func = gst_qtdemux_process_buffer;
+      stream->process_func = gst_qtdemux_process_buffer_clcp;
       break;
 
     default:
