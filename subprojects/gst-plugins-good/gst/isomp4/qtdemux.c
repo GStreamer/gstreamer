@@ -1849,7 +1849,7 @@ _create_stream (GstQTDemux * demux, guint32 track_id)
   stream->discont = TRUE;
   /* we enable clipping for raw audio/video streams */
   stream->need_clip = FALSE;
-  stream->need_process = FALSE;
+  stream->process_func = NULL;
   stream->segment_index = -1;
   stream->time_position = 0;
   stream->sample_index = -1;
@@ -6044,8 +6044,8 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   /* we're going to modify the metadata */
   buf = gst_buffer_make_writable (buf);
 
-  if (G_UNLIKELY (stream->need_process))
-    buf = gst_qtdemux_process_buffer (qtdemux, stream, buf);
+  if (G_UNLIKELY (stream->process_func))
+    buf = stream->process_func (qtdemux, stream, buf);
 
   if (!buf) {
     goto exit;
@@ -14947,7 +14947,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case FOURCC_mp4s:
       _codec ("DVD subtitle");
       caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
-      stream->need_process = TRUE;
+      stream->process_func = gst_qtdemux_process_buffer;
       break;
     case FOURCC_text:
       _codec ("Quicktime timed text");
@@ -14958,7 +14958,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
           "utf8", NULL);
       /* actual text piece needs to be extracted */
-      stream->need_process = TRUE;
+      stream->process_func = gst_qtdemux_process_buffer;
       break;
     case FOURCC_stpp:
       _codec ("XML subtitles");
@@ -14969,7 +14969,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps =
           gst_caps_new_simple ("closedcaption/x-cea-608", "format",
           G_TYPE_STRING, "s334-1a", NULL);
-      stream->need_process = TRUE;
+      stream->process_func = gst_qtdemux_process_buffer;
       stream->need_split = TRUE;
       break;
     case FOURCC_c708:
@@ -14977,7 +14977,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps =
           gst_caps_new_simple ("closedcaption/x-cea-708", "format",
           G_TYPE_STRING, "cdp", NULL);
-      stream->need_process = TRUE;
+      stream->process_func = gst_qtdemux_process_buffer;
       break;
 
     default:

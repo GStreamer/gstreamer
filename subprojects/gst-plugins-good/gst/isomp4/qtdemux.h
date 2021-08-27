@@ -55,6 +55,8 @@ typedef struct _QtDemuxSegment QtDemuxSegment;
 typedef struct _QtDemuxRandomAccessEntry QtDemuxRandomAccessEntry;
 typedef struct _QtDemuxStreamStsdEntry QtDemuxStreamStsdEntry;
 
+typedef GstBuffer * (*QtDemuxProcessFunc)(GstQTDemux * qtdemux, QtDemuxStream * stream, GstBuffer * buf);
+
 enum QtDemuxState
 {
   QTDEMUX_STATE_INITIAL,        /* Initial state (haven't got the header yet) */
@@ -391,8 +393,10 @@ struct _QtDemuxStream
    * data */
   gboolean need_clip;
 
-  /* buffer needs some custom processing, e.g. subtitles */
-  gboolean need_process;
+  /* If the buffer needs some custom processing, e.g. subtitles, pass them
+   * through this function */
+  QtDemuxProcessFunc process_func;
+
   /* buffer needs potentially be split, e.g. CEA608 subtitles */
   gboolean need_split;
 
