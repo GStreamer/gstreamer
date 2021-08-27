@@ -70,6 +70,7 @@ struct _GstAjaSrc {
   GstAjaTimecodeIndex timecode_index;
   GstAjaReferenceSource reference_source;
   guint queue_size;
+  guint start_frame, end_frame;
   guint capture_cpu_core;
   gboolean signal;
 

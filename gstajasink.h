@@ -69,6 +69,7 @@ struct _GstAjaSink {
   gchar *device_identifier;
   NTV2Channel channel;
   guint queue_size;
+  guint start_frame, end_frame;
   guint output_cpu_core;
 
   GstAjaAudioSystem audio_system_setting;

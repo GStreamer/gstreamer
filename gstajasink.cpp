@@ -39,6 +39,8 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_sink_debug);
 #define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_VITC)
 #define DEFAULT_REFERENCE_SOURCE (GST_AJA_REFERENCE_SOURCE_AUTO)
 #define DEFAULT_QUEUE_SIZE (16)
+#define DEFAULT_START_FRAME (0)
+#define DEFAULT_END_FRAME (0)
 #define DEFAULT_OUTPUT_CPU_CORE (G_MAXUINT)
 
 enum {
@@ -51,6 +53,8 @@ enum {
   PROP_TIMECODE_INDEX,
   PROP_REFERENCE_SOURCE,
   PROP_QUEUE_SIZE,
+  PROP_START_FRAME,
+  PROP_END_FRAME,
   PROP_OUTPUT_CPU_CORE,
 };
 
@@ -136,6 +140,24 @@ static void gst_aja_sink_class_init(GstAjaSinkClass *klass) {
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property(
+      gobject_class, PROP_START_FRAME,
+      g_param_spec_uint(
+          "start-frame", "Start Frame",
+          "Start frame buffer to be used for output (auto if same number as "
+          "end-frame).",
+          0, G_MAXINT, DEFAULT_START_FRAME,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property(
+      gobject_class, PROP_END_FRAME,
+      g_param_spec_uint(
+          "end-frame", "End Frame",
+          "End frame buffer to be used for output (auto if same number as "
+          "start-frame).",
+          0, G_MAXINT, DEFAULT_END_FRAME,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property(
       gobject_class, PROP_AUDIO_SYSTEM,
       g_param_spec_enum(
           "audio-system", "Audio System", "Audio system to use",
@@ -217,14 +239,14 @@ static void gst_aja_sink_init(GstAjaSink *self) {
   self->device_identifier = g_strdup(DEFAULT_DEVICE_IDENTIFIER);
   self->channel = DEFAULT_CHANNEL;
   self->queue_size = DEFAULT_QUEUE_SIZE;
+  self->start_frame = DEFAULT_START_FRAME;
+  self->end_frame = DEFAULT_END_FRAME;
   self->audio_system_setting = DEFAULT_AUDIO_SYSTEM;
   self->output_destination = DEFAULT_OUTPUT_DESTINATION;
   self->timecode_index = DEFAULT_TIMECODE_INDEX;
   self->reference_source = DEFAULT_REFERENCE_SOURCE;
   self->output_cpu_core = DEFAULT_OUTPUT_CPU_CORE;
 
-  gst_base_sink_set_render_delay(GST_BASE_SINK(self),
-                                 (self->queue_size / 2) * GST_SECOND / 30);
   self->queue =
       gst_queue_array_new_for_struct(sizeof(QueueItem), self->queue_size);
 }
@@ -243,6 +265,12 @@ void gst_aja_sink_set_property(GObject *object, guint property_id,
       break;
     case PROP_QUEUE_SIZE:
       self->queue_size = g_value_get_uint(value);
+      break;
+    case PROP_START_FRAME:
+      self->start_frame = g_value_get_uint(value);
+      break;
+    case PROP_END_FRAME:
+      self->end_frame = g_value_get_uint(value);
       break;
     case PROP_AUDIO_SYSTEM:
       self->audio_system_setting = (GstAjaAudioSystem)g_value_get_enum(value);
@@ -282,6 +310,12 @@ void gst_aja_sink_get_property(GObject *object, guint property_id,
       break;
     case PROP_QUEUE_SIZE:
       g_value_set_uint(value, self->queue_size);
+      break;
+    case PROP_START_FRAME:
+      g_value_set_uint(value, self->start_frame);
+      break;
+    case PROP_END_FRAME:
+      g_value_set_uint(value, self->end_frame);
       break;
     case PROP_AUDIO_SYSTEM:
       g_value_set_enum(value, self->audio_system_setting);
@@ -565,13 +599,6 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
 
   self->quad_mode = quad_mode;
   self->video_format = video_format;
-
-  // Configure render delay based on the framerate and queue size
-  gst_base_sink_set_render_delay(
-      GST_BASE_SINK(self),
-      gst_util_uint64_scale(self->queue_size / 2,
-                            self->configured_info.fps_d * GST_SECOND,
-                            self->configured_info.fps_n));
 
   g_assert(self->device != NULL);
 
@@ -1700,12 +1727,39 @@ restart:
 
     self->device->device->EnableOutputInterrupt(self->channel);
     self->device->device->SubscribeOutputVerticalEvent(self->channel);
+
+    guint16 start_frame = self->start_frame;
+    guint16 end_frame = self->end_frame;
+
+    if (start_frame == end_frame) {
+      guint16 num_frames = ::NTV2DeviceGetNumberFrameBuffers(self->device_id);
+      guint16 num_channels = ::NTV2DeviceGetNumFrameStores(self->device_id);
+
+      start_frame = self->channel * (num_frames / num_channels);
+      end_frame = ((self->channel + 1) * (num_frames / num_channels)) - 1;
+
+      // Don't configure too many frames here. It needs to be in relation to
+      // our input queue.
+      end_frame = MIN(start_frame + self->queue_size / 2, end_frame);
+    }
+
+    GST_DEBUG_OBJECT(
+        self, "Configuring channel %u with start frame %u and end frame %u",
+        self->channel, start_frame, end_frame);
+
+    // Configure render delay based on the framerate and queue size
+    gst_base_sink_set_render_delay(
+        GST_BASE_SINK(self),
+        gst_util_uint64_scale(end_frame - start_frame + 1,
+                              self->configured_info.fps_d * GST_SECOND,
+                              self->configured_info.fps_n));
+
     if (!self->device->device->AutoCirculateInitForOutput(
-            self->channel, self->queue_size / 2, self->audio_system,
+            self->channel, 0, self->audio_system,
             AUTOCIRCULATE_WITH_RP188 |
                 (self->vanc_mode == ::NTV2_VANCMODE_OFF ? AUTOCIRCULATE_WITH_ANC
                                                         : 0),
-            1)) {
+            1, start_frame, end_frame)) {
       GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
                         ("Failed to initialize autocirculate"));
       goto out;
