@@ -3385,6 +3385,7 @@ gst_element_dispose (GObject * object)
   gst_object_replace ((GstObject **) clock_p, NULL);
   gst_object_replace ((GstObject **) bus_p, NULL);
   g_list_free_full (element->contexts, (GDestroyNotify) gst_context_unref);
+  element->contexts = NULL;
   GST_OBJECT_UNLOCK (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "%p parent class dispose",
