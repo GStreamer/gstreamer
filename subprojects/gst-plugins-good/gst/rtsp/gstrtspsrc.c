@@ -6698,7 +6698,10 @@ gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
             gst_rtspsrc_try_send (src, conninfo, request, response,
                 &int_code)) < 0)
       goto error;
-
+    
+    if(int_code == 501){
+	    int_code=200;
+    }
     switch (int_code) {
       case GST_RTSP_STS_UNAUTHORIZED:
       case GST_RTSP_STS_NOT_FOUND:
@@ -8852,7 +8855,7 @@ restart:
       gst_rtspsrc_parse_range (src, hval, segment, FALSE);
 
     /* assume 1.0 rate now, overwrite when the SCALE or SPEED headers are present. */
-    segment->rate = 1.0;
+    //segment->rate = 1.0;
 
     /* parse Speed header. This is the intended playback rate of the stream
      * and should be put in the NEWSEGMENT rate field. */
@@ -8861,7 +8864,7 @@ restart:
       segment->rate = gst_rtspsrc_get_float (hval);
     } else if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SCALE,
             &hval, 0) == GST_RTSP_OK) {
-      segment->rate = gst_rtspsrc_get_float (hval);
+      //segment->rate = gst_rtspsrc_get_float (hval);
     }
 
     /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
