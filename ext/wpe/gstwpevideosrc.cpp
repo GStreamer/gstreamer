@@ -134,6 +134,9 @@ struct _GstWpeVideoSrc
 #define WPE_LOCK(o) g_mutex_lock(&(o)->lock)
 #define WPE_UNLOCK(o) g_mutex_unlock(&(o)->lock)
 
+GST_DEBUG_CATEGORY_EXTERN (wpe_video_src_debug);
+#define GST_CAT_DEFAULT wpe_video_src_debug
+
 #define gst_wpe_video_src_parent_class parent_class
 G_DEFINE_TYPE(GstWpeVideoSrc, gst_wpe_video_src, GST_TYPE_GL_BASE_SRC);
 
