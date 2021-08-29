@@ -97,6 +97,7 @@
 #define DEFAULT_HEIGHT 1080
 #define DEFAULT_FPS_N 30
 #define DEFAULT_FPS_D 1
+#define DEFAULT_DRAW_BACKGROUND TRUE
 
 enum
 {
@@ -636,7 +637,7 @@ gst_wpe_video_src_init (GstWpeVideoSrc * src)
   gst_pad_set_event_function (pad, gst_wpe_video_src_event);
   gst_object_unref (pad);
 
-  src->draw_background = TRUE;
+  src->draw_background = DEFAULT_DRAW_BACKGROUND;
 
   gst_base_src_set_live (GST_BASE_SRC_CAST (src), TRUE);
 
@@ -675,7 +676,7 @@ gst_wpe_video_src_class_init (GstWpeVideoSrcClass * klass)
           "", (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_DRAW_BACKGROUND,
       g_param_spec_boolean ("draw-background", "Draws the background",
-          "Whether to draw the WebView background", TRUE,
+          "Whether to draw the WebView background", DEFAULT_DRAW_BACKGROUND,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (gstelement_class,
