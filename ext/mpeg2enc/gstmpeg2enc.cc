@@ -161,7 +161,6 @@ gst_mpeg2enc_finalize (GObject * object)
 
   delete enc->options;
 
-  g_queue_free (enc->frames);
   g_mutex_clear (&enc->tlock);
   g_cond_clear (&enc->cond);
 
@@ -176,7 +175,6 @@ gst_mpeg2enc_init (GstMpeg2enc * enc)
 
   g_mutex_init (&enc->tlock);
   g_cond_init (&enc->cond);
-  enc->frames = g_queue_new ();
   enc->started = FALSE;
 
   gst_pad_set_activatemode_function (GST_VIDEO_ENCODER_SRC_PAD (enc),
@@ -214,13 +212,14 @@ gst_mpeg2enc_src_activate_mode (GstPad * pad, GstObject * parent,
 static void
 gst_mpeg2enc_reset (GstMpeg2enc * enc)
 {
-  GstVideoCodecFrame *frame;
-
   enc->eos = FALSE;
   enc->srcresult = GST_FLOW_OK;
 
   /* in case of error'ed ending */
-  while ((frame = (GstVideoCodecFrame *) g_queue_pop_head (enc->frames)));
+  if (enc->pending_frame) {
+    gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (enc), enc->pending_frame);
+    enc->pending_frame = NULL;
+  }
 
   if (enc->encoder) {
     delete enc->encoder;
@@ -527,7 +526,7 @@ gst_mpeg2enc_sink_event (GstVideoEncoder * video_encoder, GstEvent * event)
        * though this is no guarantee as to when the encoder is done with it */
       if (GST_EVENT_IS_SERIALIZED (event)) {
         GST_MPEG2ENC_MUTEX_LOCK (enc);
-        while (g_queue_get_length (enc->frames))
+        while (enc->pending_frame != NULL)
           GST_MPEG2ENC_WAIT (enc);
         GST_MPEG2ENC_MUTEX_UNLOCK (enc);
       }
@@ -676,21 +675,31 @@ gst_mpeg2enc_handle_frame (GstVideoEncoder *video_encoder, GstVideoCodecFrame *f
     goto ignore;
   GST_DEBUG_OBJECT (video_encoder, "handle_frame: flow OK");
 
-  g_queue_push_tail (enc->frames, frame);
+  /* If the encoder is busy with a previous frame still, wait
+   * for it to be done */
+  if (enc->pending_frame != NULL) {
+    do {
+      GST_VIDEO_ENCODER_STREAM_UNLOCK (enc);
+      GST_MPEG2ENC_WAIT (enc);
+      GST_VIDEO_ENCODER_STREAM_LOCK (enc);
+
+      /* Re-check the srcresult, since we waited */
+      if (G_UNLIKELY (enc->srcresult != GST_FLOW_OK))
+        goto ignore;
+    } while (enc->pending_frame != NULL);
+  }
 
   /* frame will be released by task */
+  enc->pending_frame = frame;
 
-  if (g_queue_get_length (enc->frames) > 0 && !enc->started) {
+  if (!enc->started) {
     GST_DEBUG_OBJECT (video_encoder, "handle_frame: START task");
     gst_pad_start_task (video_encoder->srcpad, (GstTaskFunction) gst_mpeg2enc_loop, enc, NULL);
     enc->started = TRUE;
-
   }
 
   /* things look good, now inform the encoding task that a frame is ready */
-  if (enc->started)
-    GST_MPEG2ENC_SIGNAL (enc);
-
+  GST_MPEG2ENC_SIGNAL (enc);
   GST_MPEG2ENC_MUTEX_UNLOCK (enc);
 
   return GST_FLOW_OK;

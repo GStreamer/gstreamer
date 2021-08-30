@@ -135,7 +135,7 @@ bool
   GST_MPEG2ENC_MUTEX_LOCK (enc);
 
   /* hang around until the element provides us with a buffer */
-  while (!(inframe = (GstVideoCodecFrame *)g_queue_pop_head (enc->frames))) {
+  while (enc->pending_frame == NULL) {
     if (enc->eos) {
       GST_MPEG2ENC_MUTEX_UNLOCK (enc);
       /* inform the mpeg encoding loop that it can give up */
@@ -144,7 +144,9 @@ bool
     GST_MPEG2ENC_WAIT (enc);
   }
 
+  inframe = enc->pending_frame;
   gst_video_frame_map (&vframe, &enc->input_state->info, inframe->input_buffer, GST_MAP_READ);
+  enc->pending_frame = NULL;
 
   frame = GST_VIDEO_FRAME_COMP_DATA (&vframe, 0);
   s = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 0);

@@ -85,13 +85,11 @@ typedef struct _GstMpeg2enc {
   gboolean eos;
   /* flowreturn obtained by encoding task */
   GstFlowReturn srcresult;
-  /* frames for input */
-  GQueue *frames;
 
   gboolean started;
 
   GstVideoCodecState *input_state;
-
+  GstVideoCodecFrame *pending_frame;
 } GstMpeg2enc;
 
 typedef struct _GstMpeg2encClass {
