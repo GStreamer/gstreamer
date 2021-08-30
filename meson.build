@@ -59,6 +59,13 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
   endif
 endif
 
+# Ensure that MSVC interprets all source code as UTF-8
+if cc.get_id() == 'msvc'
+  add_global_arguments(
+      cc.get_supported_arguments(['/utf-8']), # set the input encoding to utf-8
+      language: ['c', 'cpp'])
+endif
+
 # Ordered list of subprojects (dict has no ordering guarantees)
 subprojects = [
   ['gstreamer', {'build-hotdoc': true}],
