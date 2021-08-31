@@ -900,6 +900,26 @@ add_picture_to_dpb (GstH264Decoder * self, GstH264Picture * picture)
   gst_h264_dpb_add (priv->dpb, picture);
 }
 
+static void
+_bump_dpb (GstH264Decoder * self, GstH264DpbBumpMode bump_level,
+    GstH264Picture * current_picture)
+{
+  GstH264DecoderPrivate *priv = self->priv;
+
+  while (gst_h264_dpb_needs_bump (priv->dpb, current_picture, bump_level)) {
+    GstH264Picture *to_output;
+
+    to_output = gst_h264_dpb_bump (priv->dpb, FALSE);
+
+    if (!to_output) {
+      GST_WARNING_OBJECT (self, "Bumping is needed but no picture to output");
+      break;
+    }
+
+    gst_h264_decoder_do_output_picture (self, to_output);
+  }
+}
+
 static gboolean
 gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
 {
@@ -964,19 +984,7 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
 
     gst_h264_dpb_delete_unused (priv->dpb);
 
-    while (gst_h264_dpb_needs_bump (priv->dpb, picture,
-            GST_H264_DPB_BUMP_NORMAL_LATENCY)) {
-      GstH264Picture *to_output;
-
-      to_output = gst_h264_dpb_bump (priv->dpb, FALSE);
-
-      if (!to_output) {
-        GST_WARNING_OBJECT (self, "Bumping is needed but no picture to output");
-        break;
-      }
-
-      gst_h264_decoder_do_output_picture (self, to_output);
-    }
+    _bump_dpb (self, GST_H264_DPB_BUMP_NORMAL_LATENCY, picture);
 
     /* the picture is short term ref, add to DPB. */
     if (gst_h264_dpb_get_interlaced (priv->dpb)) {
@@ -2051,7 +2059,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
   GstH264DecoderPrivate *priv = self->priv;
   gboolean ret = TRUE;
-  GstH264DpbBumpMode bump_level;
+  GstH264DpbBumpMode bump_level = get_bump_level (self);
 
   /* Finish processing the picture.
    * Start by storing previous picture data for later use */
@@ -2091,19 +2099,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
     gst_h264_decoder_drain_internal (self);
   }
 
-  bump_level = get_bump_level (self);
-  while (gst_h264_dpb_needs_bump (priv->dpb, picture, bump_level)) {
-    GstH264Picture *to_output;
-
-    to_output = gst_h264_dpb_bump (priv->dpb, FALSE);
-
-    if (!to_output) {
-      GST_WARNING_OBJECT (self, "Bumping is needed but no picture to output");
-      break;
-    }
-
-    gst_h264_decoder_do_output_picture (self, to_output);
-  }
+  _bump_dpb (self, bump_level, picture);
 
   /* Add a ref to avoid the case of directly outputed and destroyed. */
   gst_h264_picture_ref (picture);
@@ -2152,6 +2148,11 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
       gst_h264_dpb_get_size (priv->dpb));
 
   gst_h264_picture_unref (picture);
+
+  /* For the live mode, we try to bump here to avoid waiting
+     for another decoding circle. */
+  if (priv->is_live && priv->compliance != GST_H264_DECODER_COMPLIANCE_STRICT)
+    _bump_dpb (self, bump_level, NULL);
 
   return ret;
 }
