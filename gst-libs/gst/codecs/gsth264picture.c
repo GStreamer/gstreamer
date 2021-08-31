@@ -774,7 +774,7 @@ gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
     /* Bump leading picture with the negative POC if already found positive
        POC. It's even impossible to insert another negative POC after the
        positive POCs. Almost safe. */
-    if (lowest_poc < 0 && to_insert->pic_order_cnt > 0) {
+    if (to_insert && to_insert->pic_order_cnt > 0 && lowest_poc < 0) {
       GST_TRACE ("The negative poc %d, bumping for low-latency.", lowest_poc);
       return TRUE;
     }
@@ -784,7 +784,7 @@ gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
        following pictures. In most cases, leading pictures are in increasing
        POC order. Bump and should be safe. */
     if (lowest_poc == 0 && gst_h264_dpb_get_size (dpb) <= 1) {
-      if (to_insert->pic_order_cnt > lowest_poc) {
+      if (to_insert && to_insert->pic_order_cnt > lowest_poc) {
         GST_TRACE ("The IDR or mem_mgmt_5 frame, bumping for low-latency.");
         return TRUE;
       }
@@ -803,7 +803,8 @@ gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
 
     /* When insert non-ref frame with bigger POC, it's unlike to insert
        another ref frame with very small POC. Bump and should be safe. */
-    if (!to_insert->ref_pic && lowest_poc < to_insert->pic_order_cnt) {
+    if (to_insert && !to_insert->ref_pic
+        && lowest_poc < to_insert->pic_order_cnt) {
       GST_TRACE ("lowest-poc: %d < to insert non ref pic: %d, bumping "
           "for low-latency", lowest_poc, to_insert->pic_order_cnt);
       return TRUE;
@@ -843,12 +844,12 @@ normal_bump:
     return FALSE;
   }
 
-  if (to_insert->ref_pic) {
+  if (to_insert && to_insert->ref_pic) {
     GST_TRACE ("No empty frame buffer for ref frame, need bumping.");
     return TRUE;
   }
 
-  if (to_insert->pic_order_cnt > lowest_poc) {
+  if (to_insert && to_insert->pic_order_cnt > lowest_poc) {
     GST_TRACE ("No empty frame buffer, lowest poc %d < current poc %d,"
         " need bumping.", lowest_poc, to_insert->pic_order_cnt);
     return TRUE;
