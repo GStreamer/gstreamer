@@ -1651,6 +1651,9 @@ write_header_extension (GstRTPHeaderExtension * ext, gpointer user_data)
       hdr->payload->priv->input_meta_buffer, hdr->flags, hdr->output,
       &hdr->data[offset], remaining);
 
+  GST_TRACE_OBJECT (hdr->payload, "extension %" GST_PTR_FORMAT " wrote %"
+      G_GSIZE_FORMAT, ext, written);
+
   if (written == 0) {
     /* extension wrote no data */
     return;

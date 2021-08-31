@@ -111,9 +111,7 @@ gst_rtp_dummy_pay_handle_buffer (GstRTPBasePayload * pay, GstBuffer * buffer)
 {
   GstBuffer *paybuffer;
 
-  GST_LOG ("payloading buffer pts=%" GST_TIME_FORMAT " offset=%"
-      G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
-      GST_BUFFER_OFFSET (buffer));
+  GST_LOG ("payloading %" GST_PTR_FORMAT, buffer);
 
   if (!gst_pad_has_current_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (pay))) {
     if (!gst_rtp_base_payload_set_outcaps (GST_RTP_BASE_PAYLOAD (pay),
@@ -132,9 +130,7 @@ gst_rtp_dummy_pay_handle_buffer (GstRTPBasePayload * pay, GstBuffer * buffer)
 
   gst_buffer_append (paybuffer, buffer);
 
-  GST_LOG ("payloaded buffer pts=%" GST_TIME_FORMAT " offset=%"
-      G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (paybuffer)),
-      GST_BUFFER_OFFSET (paybuffer));
+  GST_LOG ("payloaded %" GST_PTR_FORMAT, paybuffer);
 
   if (GST_BUFFER_PTS (paybuffer) < BUFFER_BEFORE_LIST) {
     return gst_rtp_base_payload_push (pay, paybuffer);
@@ -342,7 +338,7 @@ static void
 push_buffer_full (State * state, GstFlowReturn expected,
     const gchar * field, ...)
 {
-  GstBuffer *buf = gst_rtp_buffer_new_allocate (0, 0, 0);
+  GstBuffer *buf = gst_buffer_new_allocate (0, 0, 0);
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   gboolean mapped = FALSE;
   va_list var_args;
@@ -478,6 +474,10 @@ validate_buffer_valist (GstBuffer * buf, const gchar * field, va_list var_args)
       } else {
         fail_if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT));
       }
+    } else if (!g_strcmp0 (field, "size")) {
+      gsize expected_size = va_arg (var_args, gsize);
+      fail_unless_equals_int64 ((guint64) expected_size,
+          gst_buffer_get_size (buf));
     } else {
       if (!mapped) {
         gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
@@ -503,6 +503,17 @@ validate_buffer_valist (GstBuffer * buf, const gchar * field, va_list var_args)
         guint csrc_count = va_arg (var_args, guint);
         fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (&rtp),
             csrc_count);
+      } else if (!g_strcmp0 (field, "ext-data")) {
+        guint expected_bits = va_arg (var_args, guint) & 0xFFFF;
+        gsize expected_size = va_arg (var_args, gsize);
+        gpointer data;
+        guint word_len;
+        guint16 ext_bits;
+        gst_rtp_buffer_get_extension_data (&rtp, &ext_bits, &data, &word_len);
+        GST_MEMDUMP ("ext data", data, word_len * 4);
+        fail_unless_equals_int (expected_bits, ext_bits);
+        fail_unless_equals_int64 ((guint64) expected_size,
+            (guint64) word_len * 4);
       } else {
         fail ("test cannot validate unknown buffer field '%s'", field);
       }
@@ -2261,6 +2272,44 @@ GST_START_TEST (rtp_base_payload_extensions_in_output_caps)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (rtp_base_payload_extensions_shrink_ext_data)
+{
+  GstRTPHeaderExtension *ext;
+  State *state;
+
+  state = create_payloader ("application/x-rtp", &sinktmpl, NULL);
+  ext = rtp_dummy_hdr_ext_new ();
+  GST_RTP_DUMMY_HDR_EXT (ext)->supported_flags =
+      GST_RTP_HEADER_EXTENSION_ONE_BYTE;
+  GST_RTP_DUMMY_HDR_EXT (ext)->max_size = 5;
+  gst_rtp_header_extension_set_id (ext, 1);
+
+  g_signal_emit_by_name (state->element, "add-extension", ext);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (1);
+
+  validate_buffer (0, "pts", 0 * GST_SECOND, "size", (gsize) 20, "ext-data",
+      (guint) 0xBEDE, (gsize) 4, NULL);
+
+  validate_events_received (3);
+
+  validate_normal_start_events (0);
+
+  fail_unless_equals_int (GST_RTP_DUMMY_HDR_EXT (ext)->write_count, 1);
+  gst_object_unref (ext);
+  ext = NULL;
+
+  destroy_payloader (state);
+}
+
+GST_END_TEST;
 static Suite *
 rtp_basepayloading_suite (void)
 {
@@ -2310,6 +2359,7 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_payload_caps_request);
   tcase_add_test (tc_chain, rtp_base_payload_caps_request_ignored);
   tcase_add_test (tc_chain, rtp_base_payload_extensions_in_output_caps);
+  tcase_add_test (tc_chain, rtp_base_payload_extensions_shrink_ext_data);
 
   return s;
 }
