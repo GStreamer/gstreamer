@@ -575,6 +575,28 @@ get_registration_from_descriptors (GPtrArray * descriptors)
   return 0;
 }
 
+static gboolean
+find_registration_in_descriptors (GPtrArray * descriptors,
+    guint32 registration_id)
+{
+
+  guint i, nb_desc;
+
+  if (!descriptors)
+    return FALSE;
+
+  nb_desc = descriptors->len;
+  for (i = 0; i < nb_desc; i++) {
+    GstMpegtsDescriptor *desc = g_ptr_array_index (descriptors, i);
+    if (desc->tag == GST_MTS_DESC_REGISTRATION) {
+      guint32 reg_desc = GST_READ_UINT32_BE (desc->data + 2);
+      if (reg_desc == registration_id)
+        return TRUE;
+    }
+  }
+  return FALSE;
+}
+
 static MpegTSBaseStream *
 mpegts_base_program_add_stream (MpegTSBase * base,
     MpegTSBaseProgram * program, guint16 pid, guint8 stream_type,
@@ -763,10 +785,8 @@ _stream_is_private_section (const GstMpegtsPMT * pmt,
       return TRUE;
     case GST_MPEGTS_STREAM_TYPE_SCTE_SIT:
     {
-      guint32 registration_id =
-          get_registration_from_descriptors (pmt->descriptors);
       /* Not a private section stream */
-      if (registration_id != DRF_ID_CUEI)
+      if (!find_registration_in_descriptors (pmt->descriptors, DRF_ID_CUEI))
         return FALSE;
       return TRUE;
     }
