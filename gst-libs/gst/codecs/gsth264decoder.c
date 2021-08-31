@@ -2181,9 +2181,19 @@ gst_h264_decoder_update_max_num_reorder_frames (GstH264Decoder * self,
     return TRUE;
   }
 
-  /* max_num_reorder_frames not present, infer from profile/constraints
-   * (see VUI semantics in spec) */
-  if (sps->constraint_set3_flag) {
+  if (priv->compliance == GST_H264_DECODER_COMPLIANCE_STRICT) {
+    gst_h264_dpb_set_max_num_reorder_frames (priv->dpb,
+        gst_h264_dpb_get_max_num_frames (priv->dpb));
+    return TRUE;
+  }
+
+  /* max_num_reorder_frames not present, infer it from profile/constraints. */
+  if (sps->profile_idc == 66 || sps->profile_idc == 83) {
+    /* baseline, constrained baseline and scalable-baseline profiles
+       only contain I/P frames. */
+    max_num_reorder_frames = 0;
+  } else if (sps->constraint_set3_flag) {
+    /* constraint_set3_flag may mean the -intra only profile. */
     switch (sps->profile_idc) {
       case 44:
       case 86:
