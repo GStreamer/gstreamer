@@ -204,7 +204,14 @@ if __name__ == "__main__":
 
     if options.manifest:
         meson = get_meson()
-        targets_s = subprocess.check_output(meson + ['subprojects', 'download'])
+        try:
+            targets_s = subprocess.check_output(meson + ['subprojects', 'download'], shell=False, universal_newlines=True)
+        except subprocess.CalledProcessError as err:
+            print(f"Subproject download Failed")
+            print(f"Output: {err.output}")
+            print(f"Exit code: {err.returncode}")
+            exit(err.returncode)
+
         repos_commits = manifest_get_commits(options.manifest)
         FORCE_CHECKOUT = True
     else:
