@@ -308,15 +308,15 @@ QtGLVideoItem::fitStreamToAllocatedSize(GstVideoRectangle * result)
 
     dst.x = 0;
     dst.y = 0;
-    dst.w = size().width();
-    dst.h = size().height();
+    dst.w = width();
+    dst.h = height();
 
     gst_video_sink_center_rect (src, dst, result, TRUE);
   } else {
     result->x = 0;
     result->y = 0;
-    result->w = size().width();
-    result->h = size().height();
+    result->w = width();
+    result->h = height();
   }
 }
 
