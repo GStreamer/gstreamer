@@ -126,18 +126,74 @@ typedef enum
  *
  * Different types of SDES content.
  */
+/**
+ * GST_RTCP_SDES_H323_CADDR:
+ *
+ * H.323 callable address
+ *
+ * Since: 1.20:
+ */
+/**
+ * GST_RTCP_SDES_APSI:
+ *
+ * Application Specific Identifier (RFC6776)
+ *
+ * Since: 1.20:
+ */
+/**
+ * GST_RTCP_SDES_RGRP:
+ *
+ * Reporting Group Identifier (RFC8861)
+ *
+ * Since: 1.20:
+ */
+/**
+ * GST_RTCP_SDES_RTP_STREAM_ID:
+ *
+ * RtpStreamId SDES item (RFC8852).
+ *
+ * Since: 1.20:
+ */
+/**
+ * GST_RTCP_SDES_REPAIRED_RTP_STREAM_ID:
+ *
+ * RepairedRtpStreamId SDES item (RFC8852).
+ *
+ * Since: 1.20:
+ */
+/**
+ * GST_RTCP_SDES_CCID:
+ *
+ * CLUE CaptId (RFC8849)
+ *
+ * Since: 1.20:
+ */
+/**
+ * GST_RTCP_SDES_MID:
+ *
+ * MID SDES item (RFC8843).
+ *
+ * Since: 1.20:
+ */
 typedef enum
 {
-  GST_RTCP_SDES_INVALID  = -1,
-  GST_RTCP_SDES_END      = 0,
-  GST_RTCP_SDES_CNAME    = 1,
-  GST_RTCP_SDES_NAME     = 2,
-  GST_RTCP_SDES_EMAIL    = 3,
-  GST_RTCP_SDES_PHONE    = 4,
-  GST_RTCP_SDES_LOC      = 5,
-  GST_RTCP_SDES_TOOL     = 6,
-  GST_RTCP_SDES_NOTE     = 7,
-  GST_RTCP_SDES_PRIV     = 8
+  GST_RTCP_SDES_INVALID                 = -1,
+  GST_RTCP_SDES_END                     = 0,
+  GST_RTCP_SDES_CNAME                   = 1,
+  GST_RTCP_SDES_NAME                    = 2,
+  GST_RTCP_SDES_EMAIL                   = 3,
+  GST_RTCP_SDES_PHONE                   = 4,
+  GST_RTCP_SDES_LOC                     = 5,
+  GST_RTCP_SDES_TOOL                    = 6,
+  GST_RTCP_SDES_NOTE                    = 7,
+  GST_RTCP_SDES_PRIV                    = 8,
+  GST_RTCP_SDES_H323_CADDR              = 9,
+  GST_RTCP_SDES_APSI                    = 10,
+  GST_RTCP_SDES_RGRP                    = 11,
+  GST_RTCP_SDES_RTP_STREAM_ID           = 12,
+  GST_RTCP_SDES_REPAIRED_RTP_STREAM_ID  = 13,
+  GST_RTCP_SDES_CCID                    = 14,
+  GST_RTCP_SDES_MID                     = 15,
 } GstRTCPSDESType;
 
 /**

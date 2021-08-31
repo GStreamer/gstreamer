@@ -2211,6 +2211,27 @@ gst_rtcp_sdes_type_to_name (GstRTCPSDESType type)
     case GST_RTCP_SDES_PRIV:
       result = "priv";
       break;
+    case GST_RTCP_SDES_H323_CADDR:
+      result = "h323-caddr";
+      break;
+    case GST_RTCP_SDES_APSI:
+      result = "apsi";
+      break;
+    case GST_RTCP_SDES_RGRP:
+      result = "rgrp";
+      break;
+    case GST_RTCP_SDES_REPAIRED_RTP_STREAM_ID:
+      result = "repaired-rtp-stream-id";
+      break;
+    case GST_RTCP_SDES_CCID:
+      result = "ccid";
+      break;
+    case GST_RTCP_SDES_RTP_STREAM_ID:
+      result = "rtp-stream-id";
+      break;
+    case GST_RTCP_SDES_MID:
+      result = "mid";
+      break;
     default:
       result = NULL;
       break;
@@ -2254,6 +2275,27 @@ gst_rtcp_sdes_name_to_type (const gchar * name)
 
   if (strcmp ("note", name) == 0)
     return GST_RTCP_SDES_NOTE;
+
+  if (strcmp ("h323-caddr", name) == 0)
+    return GST_RTCP_SDES_H323_CADDR;
+
+  if (strcmp ("apsi", name) == 0)
+    return GST_RTCP_SDES_APSI;
+
+  if (strcmp ("rgrp", name) == 0)
+    return GST_RTCP_SDES_RGRP;
+
+  if (strcmp ("rtp-stream-id", name) == 0)
+    return GST_RTCP_SDES_RTP_STREAM_ID;
+
+  if (strcmp ("repaired-rtp-stream-id", name) == 0)
+    return GST_RTCP_SDES_REPAIRED_RTP_STREAM_ID;
+
+  if (strcmp ("ccid", name) == 0)
+    return GST_RTCP_SDES_CCID;
+
+  if (strcmp ("mid", name) == 0)
+    return GST_RTCP_SDES_MID;
 
   return GST_RTCP_SDES_PRIV;
 }

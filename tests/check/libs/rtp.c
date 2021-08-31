@@ -689,6 +689,25 @@ GST_START_TEST (test_rtp_seqnum_compare)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtcp_sdes_type)
+{
+  GstRTCPSDESType i;
+
+  for (i = 1; i < GST_RTCP_SDES_MID; i++) {
+    GstRTCPSDESType sdes_type;
+    const char *sdes_name;
+
+    sdes_name = gst_rtcp_sdes_type_to_name (i);
+    GST_DEBUG ("%u (0x%x) -> \'%s\'", i, i, sdes_name);
+    fail_unless (sdes_name != NULL);
+    sdes_type = gst_rtcp_sdes_name_to_type (sdes_name);
+
+    fail_unless_equals_int (sdes_type, i);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_rtcp_buffer)
 {
   GstBuffer *buf;
@@ -2229,6 +2248,7 @@ rtp_suite (void)
   //tcase_add_test (tc_chain, test_rtp_buffer_list_set_extension);
   tcase_add_test (tc_chain, test_rtp_seqnum_compare);
 
+  tcase_add_test (tc_chain, test_rtcp_sdes_type);
   tcase_add_test (tc_chain, test_rtcp_buffer);
   tcase_add_test (tc_chain, test_rtcp_reduced_buffer);
   tcase_add_test (tc_chain, test_rtcp_validate_with_padding);
