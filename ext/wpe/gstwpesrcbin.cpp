@@ -51,6 +51,8 @@
  * gst-play-1.0 --videosink gtkglsink wpe://https://gstreamer.freedesktop.org
  * ```
  *
+ * The `web://` URI protocol is also supported, as an alias to `wpe://`. Since: 1.20
+ *
  * ### Composite WPE with a video stream in a single OpenGL scene
  *
  * ```
@@ -132,6 +134,7 @@ struct _GstWpeSrc
   GstElement *video_src;
   GHashTable *audio_src_pads;
   GstFlowCombiner *flow_combiner;
+  gchar *uri;
 };
 
 enum
@@ -374,7 +377,7 @@ gst_wpe_src_uri_get_type (GType)
 static const gchar *const *
 gst_wpe_src_get_protocols (GType)
 {
-  static const char *protocols[] = { "wpe", NULL };
+  static const char *protocols[] = { "wpe", "web", NULL };
   return protocols;
 }
 
@@ -382,14 +385,8 @@ static gchar *
 gst_wpe_src_get_uri (GstURIHandler * handler)
 {
   GstWpeSrc *src = GST_WPE_SRC (handler);
-  gchar *location;
-  gchar *res;
 
-  g_object_get (src->video_src, "location", &location, NULL);
-  res = g_strdup_printf ("wpe://%s", location);
-  g_free (location);
-
-  return res;
+  return g_strdup (src->uri);
 }
 
 static gboolean
@@ -398,6 +395,10 @@ gst_wpe_src_set_uri (GstURIHandler * handler, const gchar * uri,
 {
   GstWpeSrc *src = GST_WPE_SRC (handler);
 
+  if (src->uri) {
+    g_free (src->uri);
+  }
+  src->uri = g_strdup (uri);
   gst_wpe_src_set_location(src, uri + 6);
   return TRUE;
 }
@@ -476,15 +477,16 @@ gst_wpe_src_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
-gst_wpe_src_dispose (GObject *object)
+gst_wpe_src_finalize (GObject *object)
 {
     GstWpeSrc *src = GST_WPE_SRC (object);
 
     g_hash_table_unref (src->audio_src_pads);
     gst_flow_combiner_free (src->flow_combiner);
     gst_object_unref (src->fd_allocator);
+    g_free (src->uri);
 
-    GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+    GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
 static void
@@ -495,7 +497,7 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
 
   gobject_class->set_property = gst_wpe_src_set_property;
   gobject_class->get_property = gst_wpe_src_get_property;
-  gobject_class->dispose = gst_wpe_src_dispose;
+  gobject_class->finalize = gst_wpe_src_finalize;
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "location", "The URL to display", "",
