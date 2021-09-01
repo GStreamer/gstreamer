@@ -269,7 +269,6 @@ gst_wpe_src_push_audio_buffer (GstWpeSrc* src, guint32 id, guint64 size)
 {
   GstWpeAudioPad *audio_pad = GST_WPE_AUDIO_PAD (g_hash_table_lookup (src->audio_src_pads, GUINT_TO_POINTER (id)));
   GstBuffer *buffer;
-  GstClock *clock;
 
   g_return_if_fail (audio_pad->fd > 0);
 
@@ -280,21 +279,9 @@ gst_wpe_src_push_audio_buffer (GstWpeSrc* src, guint32 id, guint64 size)
   munmap (data, size);
   gst_buffer_add_audio_meta (buffer, &audio_pad->info, size, NULL);
 
-  clock = gst_element_get_clock (GST_ELEMENT_CAST (src));
-  if (clock) {
-    GstClockTime now;
-    GstClockTime base_time = gst_element_get_base_time (GST_ELEMENT_CAST (src));
-
-    now = gst_clock_get_time (clock);
-    if (now > base_time)
-      now -= base_time;
-    else
-      now = 0;
-    gst_object_unref (clock);
-
-    audio_pad->buffer_time = now;
-    GST_BUFFER_DTS (buffer) = audio_pad->buffer_time;
-  }
+  audio_pad->buffer_time = gst_element_get_current_running_time (GST_ELEMENT (src));
+  GST_BUFFER_DTS (buffer) = audio_pad->buffer_time;
+  GST_BUFFER_PTS (buffer) = audio_pad->buffer_time;
 
   GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
   if (audio_pad->discont_pending) {
