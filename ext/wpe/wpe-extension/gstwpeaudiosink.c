@@ -186,11 +186,28 @@ unlock (GstBaseSink * sink)
   GstWpeAudioSink *self = GST_WPE_AUDIO_SINK (sink);
 
   g_cancellable_cancel (self->cancellable);
+
+  return TRUE;
+}
+
+static gboolean
+unlock_stop (GstBaseSink * sink)
+{
+  GstWpeAudioSink *self = GST_WPE_AUDIO_SINK (sink);
+  GCancellable *cancellable = self->cancellable;
+
+  self->cancellable = g_cancellable_new ();
+  g_object_unref (cancellable);
+
+  return TRUE;
+}
+
+static void
+_cancelled_cb (GCancellable * _cancellable, GstWpeAudioSink * self)
+{
   g_mutex_lock (&self->buf_lock);
   g_cond_broadcast (&self->buf_cond);
   g_mutex_unlock (&self->buf_lock);
-
-  return TRUE;
 }
 
 static gboolean
@@ -205,7 +222,7 @@ stop (GstBaseSink * sink)
   }
 
   /* Stop processing and claim buffers back */
-  unlock (sink);
+  g_cancellable_cancel (self->cancellable);
 
   GST_DEBUG_OBJECT (sink, "Stopping %d", self->id);
   gst_wpe_extension_send_message (webkit_user_message_new ("gstwpe.stop",
@@ -220,9 +237,22 @@ change_state (GstElement * element, GstStateChange transition)
   GstWpeAudioSink *self = GST_WPE_AUDIO_SINK (element);
 
   switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    {
+      if (g_cancellable_is_cancelled (self->cancellable)) {
+        GCancellable *cancellable = self->cancellable;
+        self->cancellable = g_cancellable_new ();
+
+        g_object_unref (cancellable);
+      }
+      break;
+    }
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      g_cancellable_cancel (self->cancellable);
+
       gst_wpe_extension_send_message (webkit_user_message_new ("gstwpe.pause",
-              g_variant_new_uint32 (self->id)), self->cancellable, NULL, NULL);
+              g_variant_new_uint32 (self->id)), NULL, NULL, NULL);
+
       break;
     default:
       break;
@@ -250,6 +280,8 @@ gst_wpe_audio_sink_init (GstWpeAudioSink * self)
   g_return_if_fail (pad_template != NULL);
 
   self->cancellable = g_cancellable_new ();
+  g_cancellable_connect (self->cancellable,
+      G_CALLBACK (_cancelled_cb), self, NULL);
 }
 
 static void
@@ -273,6 +305,7 @@ gst_wpe_audio_sink_class_init (GstWpeAudioSinkClass * klass)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (change_state);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (stop);
   gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (unlock);
+  gstbasesink_class->unlock_stop = GST_DEBUG_FUNCPTR (unlock_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (render);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (set_caps);
 }
