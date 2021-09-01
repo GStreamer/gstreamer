@@ -1528,14 +1528,14 @@ validate_outbound_rtp_stats (const GstStructure * s, const GstStructure * stats)
           &packets_sent, NULL));
   fail_unless (gst_structure_get (s, "bytes-sent", G_TYPE_UINT64, &bytes_sent,
           NULL));
-  fail_unless (gst_structure_get (s, "remote-id", G_TYPE_STRING, &remote_id,
-          NULL));
-  fail_unless (gst_structure_get (stats, remote_id, GST_TYPE_STRUCTURE, &remote,
-          NULL));
-  fail_unless (remote != NULL);
+  if (gst_structure_get (s, "remote-id", G_TYPE_STRING, &remote_id, NULL)) {
+    fail_unless (gst_structure_get (stats, remote_id, GST_TYPE_STRUCTURE,
+            &remote, NULL));
+    fail_unless (remote != NULL);
 
-  gst_structure_free (remote);
-  g_free (remote_id);
+    gst_structure_free (remote);
+    g_free (remote_id);
+  }
 }
 
 static void
@@ -1703,7 +1703,7 @@ GST_START_TEST (test_stats_with_stream)
   gst_caps_unref (caps);
 
   test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless (t->state == STATE_ANSWER_SET);
+  test_webrtc_signal_state (t, STATE_ANSWER_SET);
 
   p = gst_promise_new_with_change_func (_on_stats, t, NULL);
   g_signal_emit_by_name (t->webrtc1, "get-stats", NULL, p);
