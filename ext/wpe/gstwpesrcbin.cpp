@@ -107,7 +107,7 @@ gst_wpe_audio_pad_init (GstWpeAudioPad * pad)
 {
   gst_audio_info_init (&pad->info);
   pad->discont_pending = FALSE;
-  pad->buffer_time = GST_CLOCK_TIME_NONE;
+  pad->buffer_time = 0;
 }
 
 static GstWpeAudioPad *
