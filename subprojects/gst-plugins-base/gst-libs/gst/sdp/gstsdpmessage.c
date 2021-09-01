@@ -3991,6 +3991,52 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
       continue;
     }
 
+    /* rid values */
+    if (g_str_has_prefix (fname, "rid-")) {
+      const char *rid_id = &fname[strlen ("rid-")];
+      const GValue *arr;
+
+      if (!rid_id || !*rid_id)
+        continue;
+
+      if ((fval = gst_structure_get_string (s, fname))) {
+        char *rid_val = g_strdup_printf ("%s %s", rid_id, fval);
+        gst_sdp_media_add_attribute (media, "rid", rid_val);
+        g_free (rid_val);
+      } else if ((arr = gst_structure_get_value (s, fname))
+          && GST_VALUE_HOLDS_ARRAY (arr)
+          && gst_value_array_get_size (arr) > 1) {
+        const gchar *direction, *param;
+        GString *str;
+        guint i, n;
+
+        str = g_string_new (NULL);
+
+        g_string_append_printf (str, "%s ", rid_id);
+
+        n = gst_value_array_get_size (arr);
+        for (i = 0; i < n; i++) {
+          const GValue *val = gst_value_array_get_value (arr, i);
+          if (i == 0) {
+            direction = g_value_get_string (val);
+            g_string_append_printf (str, "%s", direction);
+          } else {
+            param = g_value_get_string (val);
+            if (i == 1)
+              g_string_append_c (str, ' ');
+            else
+              g_string_append_c (str, ';');
+            g_string_append_printf (str, "%s", param);
+          }
+        }
+        gst_sdp_media_add_attribute (media, "rid", str->str);
+        g_string_free (str, TRUE);
+      } else {
+        GST_WARNING ("caps field %s is an unsupported format", fname);
+      }
+      continue;
+    }
+
     if ((fval = gst_structure_get_string (s, fname))) {
 
       /* "profile" is our internal representation of the notion of
@@ -4170,6 +4216,8 @@ sdp_add_attributes_to_caps (GArray * attributes, GstCaps * caps)
         continue;
       if (!strcmp (key, "extmap"))
         continue;
+      if (!strcmp (key, "rid"))
+        continue;
 
       /* string must be valid UTF8 */
       if (!g_utf8_validate (attr->value, -1, NULL))
@@ -4295,6 +4343,138 @@ gst_sdp_media_add_extmap_attributes (GArray * attributes, GstCaps * caps)
   return GST_SDP_OK;
 }
 
+/* parses RID SDP attributes (RFC8851) into caps */
+static GstSDPResult
+gst_sdp_media_add_rid_attributes (GArray * attributes, GstCaps * caps)
+{
+  const gchar *rid;
+  char *p, *to_free;
+  guint i;
+  GstStructure *s;
+
+  g_return_val_if_fail (attributes != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), GST_SDP_EINVAL);
+  g_return_val_if_fail (gst_caps_is_writable (caps), GST_SDP_EINVAL);
+
+  s = gst_caps_get_structure (caps, 0);
+
+  for (i = 0; i < attributes->len; i++) {
+    GstSDPAttribute *attr;
+    const char *direction, *params, *id;
+    const char *tmp;
+
+    attr = &g_array_index (attributes, GstSDPAttribute, i);
+    if (strcmp (attr->key, "rid") != 0)
+      continue;
+
+    rid = attr->value;
+
+    /* p is now of the format id dir ;-separated-params */
+    to_free = p = g_strdup (rid);
+
+    PARSE_STRING (p, " ", id);
+    if (id == NULL || *id == '\0') {
+      GST_ERROR ("Invalid rid \'%s\'", to_free);
+      goto next;
+    }
+    tmp = id;
+    while (*tmp && (*tmp == '-' || *tmp == '_' || g_ascii_isalnum (*tmp)))
+      tmp++;
+    if (*tmp != '\0') {
+      GST_ERROR ("Invalid rid-id \'%s\'", id);
+      goto next;
+    }
+
+    SKIP_SPACES (p);
+
+    PARSE_STRING (p, " ", direction);
+    if (direction == NULL || *direction == '\0') {
+      direction = p;
+      params = NULL;
+    } else {
+      SKIP_SPACES (p);
+
+      params = p;
+    }
+
+    if (direction == NULL || *direction == '\0'
+        || (g_strcmp0 (direction, "send") != 0
+            && g_strcmp0 (direction, "recv") != 0)) {
+      GST_ERROR ("Invalid rid direction \'%s\'", p);
+      goto next;
+    }
+
+    if (params && *params != '\0') {
+      GValue arr = G_VALUE_INIT;
+      GValue val = G_VALUE_INIT;
+      gchar *key;
+#if !defined(GST_DISABLE_DEBUG)
+      GString *debug_params = g_string_new (NULL);
+      int i = 0;
+#endif
+
+      key = g_strdup_printf ("rid-%s", id);
+
+      g_value_init (&arr, GST_TYPE_ARRAY);
+      g_value_init (&val, G_TYPE_STRING);
+
+      g_value_set_string (&val, direction);
+      gst_value_array_append_and_take_value (&arr, &val);
+      val = (GValue) G_VALUE_INIT;
+
+      while (*p) {
+        const char *param;
+        gboolean done = FALSE;
+
+        PARSE_STRING (p, ";", param);
+
+        if (param) {
+        } else if (*p) {
+          param = p;
+          done = TRUE;
+        } else {
+          break;
+        }
+
+        g_value_init (&val, G_TYPE_STRING);
+        g_value_set_string (&val, param);
+        gst_value_array_append_and_take_value (&arr, &val);
+        val = (GValue) G_VALUE_INIT;
+#if !defined(GST_DISABLE_DEBUG)
+        if (i++ > 0)
+          g_string_append_c (debug_params, ',');
+        g_string_append (debug_params, param);
+#endif
+
+        if (done)
+          break;
+      }
+
+      gst_structure_take_value (s, key, &arr);
+      arr = (GValue) G_VALUE_INIT;
+#if !defined(GST_DISABLE_DEBUG)
+      {
+        char *debug_str = g_string_free (debug_params, FALSE);
+        GST_DEBUG ("adding caps: %s=<%s,%s>", key, direction, debug_str);
+        g_free (debug_str);
+      }
+#endif
+      g_free (key);
+    } else {
+      gchar *key;
+
+      key = g_strdup_printf ("rid-%s", id);
+      gst_structure_set (s, key, G_TYPE_STRING, direction, NULL);
+      GST_DEBUG ("adding caps: %s=%s", key, direction);
+      g_free (key);
+    }
+
+  next:
+    g_clear_pointer (&to_free, g_free);
+  }
+  return GST_SDP_OK;
+}
+
 /**
  * gst_sdp_message_attributes_to_caps:
  * @msg: a #GstSDPMessage
@@ -4369,6 +4549,11 @@ gst_sdp_media_attributes_to_caps (const GstSDPMedia * media, GstCaps * caps)
   if (res == GST_SDP_OK) {
     /* parse media extmap field */
     res = gst_sdp_media_add_extmap_attributes (media->attributes, caps);
+  }
+
+  if (res == GST_SDP_OK) {
+    /* parse media rid fields */
+    res = gst_sdp_media_add_rid_attributes (media->attributes, caps);
   }
 
 done:
