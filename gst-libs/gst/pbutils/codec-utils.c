@@ -2348,6 +2348,8 @@ done:
  * Useful for providing the 'codecs' field inside the 'Content-Type' HTTP
  * header for containerized formats, such as mp4 or matroska.
  *
+ * Registered codecs can be found at http://mp4ra.org/#/codecs
+ *
  * Returns: (transfer full): a RFC 6381 compatible codec string or %NULL
  *
  * Since: 1.20
@@ -2410,6 +2412,8 @@ gst_codec_utils_caps_get_mime_codec (GstCaps * caps)
      * available in the mime codec for vp9. This is documented in
      * https://www.webmproject.org/vp9/mp4/ */
     mime_codec = g_strdup ("vp09");
+  } else if (g_strcmp0 (media_type, "image/jpeg") == 0) {
+    mime_codec = g_strdup ("mjpg");
   } else if (g_strcmp0 (media_type, "audio/mpeg") == 0) {
     guint8 audio_object_type = 0;
     if (aac_caps_structure_get_audio_object_type (caps_st, &audio_object_type)) {

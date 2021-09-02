@@ -1406,6 +1406,13 @@ GST_START_TEST (test_pb_utils_caps_get_mime_codec)
   g_free (mime_codec);
   gst_caps_unref (caps);
 
+  /* mjpeg */
+  caps = gst_caps_new_empty_simple ("image/jpeg");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "mjpg");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
   /* aac without codec data */
   caps = gst_caps_new_empty_simple ("audio/mpeg");
   mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
