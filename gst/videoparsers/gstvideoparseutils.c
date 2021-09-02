@@ -142,7 +142,11 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
       }
       switch (user_data_type_code) {
         case A53_USER_DATA_TYPE_CODE_CC_DATA:
-          if (gst_byte_reader_get_remaining (br) < 7) {
+          /* 1 (cc count byte) +
+           * 1 (reserved byte, 0xff) +
+           * 1 (marker_bits, 0xff)
+           */
+          if (gst_byte_reader_get_remaining (br) < 3) {
             GST_WARNING_OBJECT (elt,
                 "Closed caption data packet too short, ignoring");
             break;
