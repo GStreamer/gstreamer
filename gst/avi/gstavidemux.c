@@ -1965,37 +1965,36 @@ gst_avi_demux_check_caps (GstAviDemux * avi, GstAviStream * stream,
       gst_structure_remove_field (s, "palette_data");
       return caps;
     }
-  } else if (!gst_structure_has_name (s, "video/x-h264")) {
-    return caps;
-  }
+  } else if (gst_structure_has_name (s, "video/x-h264")) {
+    GST_DEBUG_OBJECT (avi, "checking caps %" GST_PTR_FORMAT, caps);
 
-  GST_DEBUG_OBJECT (avi, "checking caps %" GST_PTR_FORMAT, caps);
+    /* some muxers put invalid bytestream stuff in h264 extra data */
+    val = gst_structure_get_value (s, "codec_data");
+    if (val && (buf = gst_value_get_buffer (val))) {
+      guint8 *data;
+      gint size;
+      GstMapInfo map;
 
-  /* some muxers put invalid bytestream stuff in h264 extra data */
-  val = gst_structure_get_value (s, "codec_data");
-  if (val && (buf = gst_value_get_buffer (val))) {
-    guint8 *data;
-    gint size;
-    GstMapInfo map;
+      gst_buffer_map (buf, &map, GST_MAP_READ);
+      data = map.data;
+      size = map.size;
+      if (size >= 4) {
+        guint32 h = GST_READ_UINT32_BE (data);
 
-    gst_buffer_map (buf, &map, GST_MAP_READ);
-    data = map.data;
-    size = map.size;
-    if (size >= 4) {
-      guint32 h = GST_READ_UINT32_BE (data);
-      gst_buffer_unmap (buf, &map);
-      if (h == 0x01) {
-        /* can hardly be valid AVC codec data */
-        GST_DEBUG_OBJECT (avi,
-            "discarding invalid codec_data containing byte-stream");
-        /* so do not pretend to downstream that it is packetized avc */
-        gst_structure_remove_field (s, "codec_data");
-        /* ... but rather properly parsed bytestream */
-        gst_structure_set (s, "stream-format", G_TYPE_STRING, "byte-stream",
-            "alignment", G_TYPE_STRING, "au", NULL);
+        gst_buffer_unmap (buf, &map);
+        if (h == 0x01 || (h >> 8) == 0x01) {
+          /* can hardly be valid AVC codec data */
+          GST_DEBUG_OBJECT (avi,
+              "discarding invalid codec_data containing byte-stream");
+          /* so do not pretend to downstream that it is packetized avc */
+          gst_structure_remove_field (s, "codec_data");
+          /* ... but rather properly parsed bytestream */
+          gst_structure_set (s, "stream-format", G_TYPE_STRING, "byte-stream",
+              "alignment", G_TYPE_STRING, "au", NULL);
+        }
+      } else {
+        gst_buffer_unmap (buf, &map);
       }
-    } else {
-      gst_buffer_unmap (buf, &map);
     }
   }
 
