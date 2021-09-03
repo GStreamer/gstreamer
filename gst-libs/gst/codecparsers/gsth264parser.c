@@ -723,7 +723,7 @@ gst_h264_slice_parse_dec_ref_pic_marking (GstH264SliceHdr * slice,
 
       dec_ref_pic_m->n_ref_pic_marking = 0;
       while (1) {
-        READ_UE (nr, mem_mgmt_ctrl_op);
+        READ_UE_MAX (nr, mem_mgmt_ctrl_op, 6);
         if (mem_mgmt_ctrl_op == 0)
           break;
 
