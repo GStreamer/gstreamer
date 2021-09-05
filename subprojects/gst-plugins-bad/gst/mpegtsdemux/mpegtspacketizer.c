@@ -285,6 +285,7 @@ mpegts_packetizer_init (MpegTSPacketizer2 * packetizer)
   packetizer->pcr_discont_threshold = GST_SECOND;
   packetizer->last_pts = GST_CLOCK_TIME_NONE;
   packetizer->last_dts = GST_CLOCK_TIME_NONE;
+  packetizer->extra_shift = 0;
 }
 
 static void
@@ -2277,7 +2278,7 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
         GST_TIME_ARGS (pcrtable->base_pcrtime),
         GST_TIME_ARGS (pcrtable->base_time),
         GST_TIME_ARGS (pcrtable->pcroffset));
-    res = pts + pcrtable->pcroffset;
+    res = pts + pcrtable->pcroffset + packetizer->extra_shift;
 
     /* Don't return anything if we differ too much against last seen PCR */
     if (G_UNLIKELY (pcr_pid != 0x1fff &&

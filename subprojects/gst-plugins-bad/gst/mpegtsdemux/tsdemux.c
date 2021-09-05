@@ -1051,6 +1051,16 @@ push_event (MpegTSBase * base, GstEvent * event)
   gboolean early_ret = FALSE;
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+    if (base->segment.format == GST_FORMAT_TIME && base->ignore_pcr) {
+      /* Shift start/stop values by 2s */
+      base->packetizer->extra_shift = 2 * GST_SECOND;
+      if (GST_CLOCK_TIME_IS_VALID (base->segment.start))
+        base->segment.start += 2 * GST_SECOND;
+      if (GST_CLOCK_TIME_IS_VALID (base->segment.stop))
+        base->segment.stop += 2 * GST_SECOND;
+      if (GST_CLOCK_TIME_IS_VALID (base->segment.position))
+        base->segment.position += 2 * GST_SECOND;
+    }
     GST_DEBUG_OBJECT (base, "Ignoring segment event (recreated later)");
     gst_event_unref (event);
     return TRUE;

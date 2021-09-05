@@ -287,6 +287,10 @@ struct _MpegTSPacketizer2 {
   /* PTS/DTS of last buffer */
   GstClockTime last_pts;
   GstClockTime last_dts;
+
+  /* Extra time offset to handle values before initial PCR.
+   * This will be added to all converted timestamps */
+  GstClockTime extra_shift;
 };
 
 struct _MpegTSPacketizer2Class {
