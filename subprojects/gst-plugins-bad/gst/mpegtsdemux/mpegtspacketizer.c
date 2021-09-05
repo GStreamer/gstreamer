@@ -2280,20 +2280,21 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
     res = pts + pcrtable->pcroffset;
 
     /* Don't return anything if we differ too much against last seen PCR */
-    /* FIXME : Ideally we want to figure out whether we have a wraparound or
-     * a reset so we can provide actual values.
-     * That being said, this will only happen for the small interval of time
-     * where PTS/DTS are wrapping just before we see the first reset/wrap PCR
-     */
     if (G_UNLIKELY (pcr_pid != 0x1fff &&
             ABSDIFF (res, pcrtable->last_pcrtime) > 15 * GST_SECOND))
       res = GST_CLOCK_TIME_NONE;
     else {
       GstClockTime tmp = pcrtable->base_time + pcrtable->skew;
-      if (tmp + res >= pcrtable->base_pcrtime)
+      if (tmp + res >= pcrtable->base_pcrtime) {
         res += tmp - pcrtable->base_pcrtime;
-      else
+      } else if (ABSDIFF (tmp + res + PCR_GST_MAX_VALUE,
+              pcrtable->base_pcrtime) < PCR_GST_MAX_VALUE / 2) {
+        /* Handle wrapover */
+        res += tmp + PCR_GST_MAX_VALUE - pcrtable->base_pcrtime;
+      } else {
+        /* Fallback for values that differ way too much */
         res = GST_CLOCK_TIME_NONE;
+      }
     }
   } else if (packetizer->calculate_offset && pcrtable->groups) {
     gint64 refpcr = G_MAXINT64, refpcroffset;
