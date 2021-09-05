@@ -1822,6 +1822,10 @@ apply_gap (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
       timestamp += duration;
     }
 
+    GST_DEBUG_OBJECT (mq, "queue %d, %s position updated to %" GST_TIME_FORMAT,
+        sq->id, segment == &sq->sink_segment ? "sink" : "src",
+        GST_TIME_ARGS (timestamp));
+
     segment->position = timestamp;
 
     if (segment == &sq->sink_segment)
@@ -1883,6 +1887,14 @@ get_running_time (GstSegment * segment, GstMiniObject * object, gboolean end)
         time =
             my_segment_to_running_time ((GstSegment *) new_segment,
             new_segment->start);
+      }
+    } else if (GST_EVENT_TYPE (event) == GST_EVENT_GAP) {
+      GstClockTime ts, dur;
+      gst_event_parse_gap (event, &ts, &dur);
+      if (GST_CLOCK_TIME_IS_VALID (ts)) {
+        if (GST_CLOCK_TIME_IS_VALID (dur))
+          ts += dur;
+        time = my_segment_to_running_time (segment, ts);
       }
     }
   }
