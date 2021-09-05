@@ -2334,10 +2334,22 @@ gst_ts_demux_record_pts (GstTSDemux * demux, TSDemuxStream * stream,
       mpegts_packetizer_pts_to_ts (MPEG_TS_BASE_PACKETIZER (demux),
       MPEGTIME_TO_GSTTIME (pts), demux->program->pcr_pid);
 
-  if (base->out_segment.format == GST_FORMAT_TIME) {
+  if (base->out_segment.format == GST_FORMAT_TIME)
     demux->mpeg_pts_offset =
         (GSTTIME_TO_MPEGTIME (gst_segment_to_running_time (&base->out_segment,
                 GST_FORMAT_TIME, stream->pts)) - pts) & 0x1ffffffff;
+
+  /* Sanity check, some stream have completely different PTS vs DTS. If that
+   * happens we only keep the DTS */
+  if (GST_CLOCK_TIME_IS_VALID (stream->pts) &&
+      GST_CLOCK_TIME_IS_VALID (stream->dts) &&
+      ABSDIFF (stream->pts, stream->dts) > 5 * GST_SECOND) {
+    GST_WARNING ("pid 0x%04x PTS %" GST_TIME_FORMAT
+        " differs too much against DTS %" GST_TIME_FORMAT ", discarding it",
+        bs->pid, GST_TIME_ARGS (stream->pts), GST_TIME_ARGS (stream->dts));
+    stream->raw_pts = stream->raw_dts;
+    stream->pts = stream->dts;
+    return;
   }
 
   GST_LOG ("pid 0x%04x Stored PTS %" G_GUINT64_FORMAT, bs->pid, stream->pts);
