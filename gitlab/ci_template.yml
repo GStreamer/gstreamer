@@ -1155,7 +1155,7 @@ build cerbero cross-macos universal:
     - mkdir -p "../../${CI_PROJECT_NAMESPACE}"
     - ln -sf "$(pwd)" "../../${CI_PROJECT_NAMESPACE}/cerbero"
 
-    - ./cerbero_setup.sh cerbero_deps_script
+    - ./cerbero_setup.sh cerbero_script
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gst-sharp|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
