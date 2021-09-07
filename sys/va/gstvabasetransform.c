@@ -43,6 +43,13 @@ struct _GstVaBaseTransformPrivate
   GstBufferPool *sinkpad_pool;
 };
 
+/**
+ * GstVaBaseTransform:
+ *
+ * A base class implementation for VA-API filters.
+ *
+ * Since: 1.20
+ */
 #define gst_va_base_transform_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVaBaseTransform, gst_va_base_transform,
     GST_TYPE_BASE_TRANSFORM, G_ADD_PRIVATE (GstVaBaseTransform)
@@ -583,6 +590,8 @@ gst_va_base_transform_class_init (GstVaBaseTransformClass * klass)
       GST_DEBUG_FUNCPTR (gst_va_base_transform_set_context);
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_va_base_transform_change_state);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VA_BASE_TRANSFORM, 0);
 }
 
 GstAllocator *
