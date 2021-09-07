@@ -41,6 +41,8 @@ subprojects/gstreamer-sharp
 subprojects/gstreamer-vaapi
 subprojects/glib
 subprojects/glib-networking
+subprojects/gobject-introspection
+subprojects/gobject-introspection.wrap
 subprojects/gl-headers
 subprojects/bindinator
 subprojects/dssim
@@ -66,6 +68,8 @@ subprojects/avtp
 subprojects/graphene
 subprojects/libmicrodns
 subprojects/libpsl
+subprojects/googletest-*
+subprojects/gtest.wrap
 prefix/
 pygobject
 .gdbinit
