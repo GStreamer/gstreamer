@@ -58,7 +58,6 @@
 
 /* ToDo:
  *
- * + deinterlacing
  * + HDR tone mapping
  */
 

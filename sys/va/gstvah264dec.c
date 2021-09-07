@@ -41,7 +41,6 @@
 
 /* ToDo:
  *
- * + interlaced streams
  * + mutiview and stereo profiles
  */
 
