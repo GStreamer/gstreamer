@@ -167,6 +167,9 @@ struct _GstRTSPConnection
   GSocket *read_socket;
   GSocket *write_socket;
   GSocket *socket0, *socket1;
+  gboolean read_socket_used;
+  gboolean write_socket_used;
+  GMutex socket_use_mutex;
   gboolean manual_http;
   gboolean may_cancel;
   GCancellable *cancellable;
@@ -478,6 +481,9 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   newconn->socket0 = socket;
   newconn->stream0 = stream;
   newconn->write_socket = newconn->read_socket = newconn->socket0;
+  newconn->read_socket_used = FALSE;
+  newconn->write_socket_used = FALSE;
+  g_mutex_init (&newconn->socket_use_mutex);
   newconn->input_stream = g_io_stream_get_input_stream (stream);
   newconn->output_stream = g_io_stream_get_output_stream (stream);
   newconn->control_stream = NULL;
@@ -1074,6 +1080,8 @@ gst_rtsp_connection_connect_with_response_usec (GstRTSPConnection * conn,
   /* this is our read socket */
   conn->read_socket = conn->socket0;
   conn->write_socket = conn->socket0;
+  conn->read_socket_used = FALSE;
+  conn->write_socket_used = FALSE;
   conn->input_stream = g_io_stream_get_input_stream (conn->stream0);
   conn->output_stream = g_io_stream_get_output_stream (conn->stream0);
   conn->control_stream = NULL;
@@ -1632,6 +1640,74 @@ read_line (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size,
   return GST_RTSP_OK;
 }
 
+static void
+set_read_socket_timeout (GstRTSPConnection * conn, gint64 timeout)
+{
+  GstClockTime to_nsecs;
+  guint to_secs;
+
+  g_mutex_lock (&conn->socket_use_mutex);
+
+  g_assert (!conn->read_socket_used);
+  conn->read_socket_used = TRUE;
+
+  to_nsecs = timeout * 1000;
+  to_secs = (to_nsecs + GST_SECOND - 1) / GST_SECOND;
+
+  if (to_secs > g_socket_get_timeout (conn->read_socket)) {
+    g_socket_set_timeout (conn->read_socket, to_secs);
+  }
+
+  g_mutex_unlock (&conn->socket_use_mutex);
+}
+
+static void
+set_write_socket_timeout (GstRTSPConnection * conn, gint64 timeout)
+{
+  GstClockTime to_nsecs;
+  guint to_secs;
+
+  g_mutex_lock (&conn->socket_use_mutex);
+
+  g_assert (!conn->write_socket_used);
+  conn->write_socket_used = TRUE;
+
+  to_nsecs = timeout * 1000;
+  to_secs = (to_nsecs + GST_SECOND - 1) / GST_SECOND;
+
+  if (to_secs > g_socket_get_timeout (conn->write_socket)) {
+    g_socket_set_timeout (conn->write_socket, to_secs);
+  }
+
+  g_mutex_unlock (&conn->socket_use_mutex);
+}
+
+static void
+clear_read_socket_timeout (GstRTSPConnection * conn)
+{
+  g_mutex_lock (&conn->socket_use_mutex);
+
+  conn->read_socket_used = FALSE;
+  if (conn->read_socket != conn->write_socket || !conn->write_socket_used) {
+    g_socket_set_timeout (conn->read_socket, 0);
+  }
+
+  g_mutex_unlock (&conn->socket_use_mutex);
+}
+
+static void
+clear_write_socket_timeout (GstRTSPConnection * conn)
+{
+  g_mutex_lock (&conn->socket_use_mutex);
+
+  conn->write_socket_used = FALSE;
+  if (conn->write_socket != conn->read_socket || !conn->read_socket_used) {
+    g_socket_set_timeout (conn->write_socket, 0);
+  }
+
+  g_mutex_unlock (&conn->socket_use_mutex);
+}
+
 /**
  * gst_rtsp_connection_write_usec:
  * @conn: a #GstRTSPConnection
@@ -1655,7 +1731,6 @@ gst_rtsp_connection_write_usec (GstRTSPConnection * conn, const guint8 * data,
     guint size, gint64 timeout)
 {
   guint offset;
-  GstClockTime to;
   GstRTSPResult res;
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
@@ -1664,13 +1739,13 @@ gst_rtsp_connection_write_usec (GstRTSPConnection * conn, const guint8 * data,
 
   offset = 0;
 
-  to = timeout * 1000;
+  set_write_socket_timeout (conn, timeout);
 
-  g_socket_set_timeout (conn->write_socket, (to + GST_SECOND - 1) / GST_SECOND);
   res =
       write_bytes (conn->output_stream, data, &offset, size, TRUE,
       conn->cancellable);
-  g_socket_set_timeout (conn->write_socket, 0);
+
+  clear_write_socket_timeout (conn);
 
   return res;
 }
@@ -1855,7 +1930,6 @@ GstRTSPResult
 gst_rtsp_connection_send_messages_usec (GstRTSPConnection * conn,
     GstRTSPMessage * messages, guint n_messages, gint64 timeout)
 {
-  GstClockTime to;
   GstRTSPResult res;
   GstRTSPSerializedMessage *serialized_messages;
   GOutputVector *vectors;
@@ -1977,13 +2051,13 @@ gst_rtsp_connection_send_messages_usec (GstRTSPConnection * conn,
   }
 
   /* write request: this is synchronous */
-  to = timeout * 1000;
+  set_write_socket_timeout (conn, timeout);
 
-  g_socket_set_timeout (conn->write_socket, (to + GST_SECOND - 1) / GST_SECOND);
   res =
       writev_bytes (conn->output_stream, vectors, n_vectors, &bytes_written,
       TRUE, conn->cancellable);
-  g_socket_set_timeout (conn->write_socket, 0);
+
+  clear_write_socket_timeout (conn);
 
   g_assert (bytes_written == bytes_to_write || res != GST_RTSP_OK);
 
@@ -2630,7 +2704,6 @@ gst_rtsp_connection_read_usec (GstRTSPConnection * conn, guint8 * data,
     guint size, gint64 timeout)
 {
   guint offset;
-  GstClockTime to;
   GstRTSPResult res;
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
@@ -2643,11 +2716,11 @@ gst_rtsp_connection_read_usec (GstRTSPConnection * conn, guint8 * data,
   offset = 0;
 
   /* configure timeout if any */
-  to = timeout * 1000;
+  set_read_socket_timeout (conn, timeout);
 
-  g_socket_set_timeout (conn->read_socket, (to + GST_SECOND - 1) / GST_SECOND);
   res = read_bytes (conn, data, &offset, size, TRUE);
-  g_socket_set_timeout (conn->read_socket, 0);
+
+  clear_read_socket_timeout (conn);
 
   return res;
 }
@@ -2712,19 +2785,18 @@ gst_rtsp_connection_receive_usec (GstRTSPConnection * conn,
 {
   GstRTSPResult res;
   GstRTSPBuilder builder;
-  GstClockTime to;
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (message != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (conn->read_socket != NULL, GST_RTSP_EINVAL);
 
   /* configure timeout if any */
-  to = timeout * 1000;
+  set_read_socket_timeout (conn, timeout);
 
-  g_socket_set_timeout (conn->read_socket, (to + GST_SECOND - 1) / GST_SECOND);
   memset (&builder, 0, sizeof (GstRTSPBuilder));
   res = build_next (&builder, message, conn, TRUE);
-  g_socket_set_timeout (conn->read_socket, 0);
+
+  clear_read_socket_timeout (conn);
 
   if (G_UNLIKELY (res != GST_RTSP_OK))
     goto read_error;
@@ -2822,6 +2894,8 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
 
   conn->write_socket = NULL;
   conn->read_socket = NULL;
+  conn->write_socket_used = FALSE;
+  conn->read_socket_used = FALSE;
   conn->tunneled = FALSE;
   conn->tstate = TUNNEL_STATE_NONE;
   conn->ctxp = NULL;
