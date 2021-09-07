@@ -689,6 +689,15 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
             common_flags));
   }
 
+  /**
+   * GstVaPostProc:disable-passthrough:
+   *
+   * If set to %TRUE the filter will not enable passthrough mode, thus
+   * each frame will be processed. It's useful for cropping, for
+   * example.
+   *
+   * Since: 1.20
+   */
   g_object_class_install_property (klass,
       GST_VA_FILTER_PROP_DISABLE_PASSTHROUGH,
       g_param_spec_boolean ("disable-passthrough", "Disable Passthrough",
