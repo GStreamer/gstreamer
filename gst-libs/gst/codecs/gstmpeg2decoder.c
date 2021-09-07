@@ -404,21 +404,27 @@ gst_mpeg2_decoder_set_latency (GstMpeg2Decoder * decoder)
 {
   GstCaps *caps;
   GstClockTime min, max;
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
   GstStructure *structure;
   gint fps_d = 1, fps_n = 0;
 
-  caps = gst_pad_get_current_caps (GST_VIDEO_DECODER_SRC_PAD (decoder));
-  if (!caps)
-    return;
-
-  structure = gst_caps_get_structure (caps, 0);
-  if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
-    if (fps_n == 0) {
-      /* variable framerate: see if we have a max-framerate */
-      gst_structure_get_fraction (structure, "max-framerate", &fps_n, &fps_d);
+  if (priv->tsg.fps_d > 0 && priv->tsg.fps_n > 0) {
+    fps_n = priv->tsg.fps_n;
+    fps_d = priv->tsg.fps_d;
+  } else {
+    caps = gst_pad_get_current_caps (GST_VIDEO_DECODER_SINK_PAD (decoder));
+    if (caps) {
+      structure = gst_caps_get_structure (caps, 0);
+      if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+        if (fps_n == 0) {
+          /* variable framerate: see if we have a max-framerate */
+          gst_structure_get_fraction (structure, "max-framerate", &fps_n,
+              &fps_d);
+        }
+      }
+      gst_caps_unref (caps);
     }
   }
-  gst_caps_unref (caps);
 
   /* if no fps or variable, then 25/1 */
   if (fps_n == 0) {
