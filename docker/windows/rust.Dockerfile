@@ -6,7 +6,7 @@ ARG BASE_IMAGE="inavlid.gstreamer.freedesktop.org/invalid"
 FROM $BASE_IMAGE
 
 ARG DEFAULT_BRANCH="master"
-ARG RUST_VERSION="invalid"
+ARG RUST_VERSION="1.52.1"
 
 COPY install_gst.ps1 C:\
 RUN C:\install_gst.ps1

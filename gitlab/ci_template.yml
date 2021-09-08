@@ -28,7 +28,7 @@ variables:
   MANIFEST_TAG: '2020-10-22.0'
   TEST_MANIFEST_TAG: '2020-10-22.0'
   INDENT_TAG: '2020-10-22.0'
-  WINDOWS_TAG: "2021-08-24.0"
+  WINDOWS_TAG: "2021-07-12.0"
 
   GST_UPSTREAM_REPO: 'gstreamer/gst-ci'
 
@@ -50,15 +50,8 @@ variables:
   INDENT_IMAGE:   "$CI_REGISTRY_IMAGE/$INDENT_AMD64_SUFFIX:$INDENT_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$GST_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
-
-  RUST_MINIMUM_VERSION: '1.54.0'
-  RUST_LATEST_VERSION: '1.54.0'
-
-  WINDOWS_RUST_MINIMUM_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_RUST_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH-rust-$RUST_MINIMUM_VERSION"
-  WINDOWS_RUST_MINIMUM_UPSTREAM_IMAGE: "$CI_REGISTRY/$GST_UPSTREAM_REPO/$WINDOWS_RUST_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH-rust-$RUST_MINIMUM_VERSION"
-
-  WINDOWS_RUST_LATEST_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_RUST_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH-rust-$RUST_LATEST_VERSION"
-  WINDOWS_RUST_LATEST_UPSTREAM_IMAGE: "$CI_REGISTRY/$GST_UPSTREAM_REPO/$WINDOWS_RUST_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH-rust-$RUST_LATEST_VERSION"
+  WINDOWS_RUST_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_RUST_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
+  WINDOWS_RUST_UPSTREAM_IMAGE: "$CI_REGISTRY/$GST_UPSTREAM_REPO/$WINDOWS_RUST_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
   # Current windows image doesn't seem to be able to spawn procceses for reason,
   # use a different image until this is debuged
@@ -353,6 +346,8 @@ windows amd64 docker:
   stage: "build docker"
   variables:
     GIT_STRATEGY: fetch
+    REPO_SUFFIX: "$WINDOWS_AMD64_SUFFIX"
+    TAG: "$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
     # Unlike the buildah/linux jobs, this file
     # needs to be relative to docker/windows/ subdir
@@ -380,13 +375,15 @@ windows amd64 docker:
         Exit 1
       }
 
-.windows rust docker build:
+windows rust amd64 docker:
   stage: 'build docker stage 2'
   needs:
     - job: 'windows amd64 docker'
       artifacts: false
   variables:
     GIT_STRATEGY: 'fetch'
+    REPO_SUFFIX: "$WINDOWS_RUST_AMD64_SUFFIX"
+    TAG: "$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
     # Unlike the buildah/linux jobs, this file
     # needs to be relative to docker/windows/ subdir
@@ -401,32 +398,19 @@ windows amd64 docker:
     - '1809'
   script:
     # We need to pass an array and to resolve the env vars, so we can't use a variable:
-    - $DOCKER_BUILD_ARGS = @("--build-arg", "DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH", "--build-arg", "BASE_IMAGE=$WINDOWS_IMAGE", "--build-arg", "RUST_VERSION=$RUST_VERSION")
+    - $DOCKER_BUILD_ARGS = @("--build-arg", "DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH", "--build-arg", "BASE_IMAGE=$WINDOWS_IMAGE")
 
     - $env:WINDOWS_CONTAINER_SCRIPT_PATH = "$env:CI_PROJECT_DIR\container.ps1"
     - echo "Fetching $env:WINDOWS_CONTAINER_SCRIPT_URL"
     - Invoke-WebRequest -Uri $env:WINDOWS_CONTAINER_SCRIPT_URL -OutFile $env:WINDOWS_CONTAINER_SCRIPT_PATH
 
-    - "& $env:WINDOWS_CONTAINER_SCRIPT_PATH $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD $RUST_IMAGE $RUST_UPSTREAM_IMAGE $DOCKERFILE"
+    - "& $env:WINDOWS_CONTAINER_SCRIPT_PATH $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD $WINDOWS_RUST_IMAGE $WINDOWS_RUST_UPSTREAM_IMAGE $DOCKERFILE"
     - |
       if (!($?)) {
         echo "Failed to build the image"
         Exit 1
       }
 
-windows rust amd64 docker latest stable:
-  extends: '.windows rust docker build'
-  variables:
-    RUST_IMAGE: !reference [variables, "WINDOWS_RUST_LATEST_IMAGE"]
-    RUST_UPSTREAM_IMAGE: !reference [variables, "WINDOWS_RUST_LATEST_UPSTREAM_IMAGE"]
-    RUST_VERSION: !reference [variables, "RUST_LATEST_VERSION"]
-
-windows rust amd64 docker minimum supported version:
-  extends: '.windows rust docker build'
-  variables:
-    RUST_IMAGE: !reference [variables, "WINDOWS_RUST_MINIMUM_IMAGE"]
-    RUST_UPSTREAM_IMAGE: !reference [variables, "WINDOWS_RUST_MINIMUM_UPSTREAM_IMAGE"]
-    RUST_VERSION: !reference [variables, "RUST_MINIMUM_VERSION"]
 
 #
 # Job to create the manifest.xml to used for our builds
