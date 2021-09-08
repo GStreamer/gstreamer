@@ -1,3 +1,44 @@
+=== release 1.18.5 ===
+
+2021-09-08 20:03:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.18.5
+
+2021-04-20 18:48:38 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/realmedia/rmdemux.c:
+	* gst/realmedia/rmdemux.h:
+	  realmedia: Drop duplicate seek events.
+	  Also use seek seqnum for flush & segment events/messages.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/82>
+
+2021-04-20 18:47:31 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Drop duplicate seek events.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/82>
+
+2021-03-19 15:16:06 +1100  Matthew Waters <matthew@centricular.com>
+
+	* ext/x264/gstencoderbitrateprofilemanager.c:
+	  gst: don't use volatile to mean atomic
+	  volatile is not sufficient to provide atomic guarantees and real atomics
+	  should be used instead.  GCC 11 has started warning about using volatile
+	  with atomic operations.
+	  https://gitlab.gnome.org/GNOME/glib/-/merge_requests/1719
+	  Discovered in https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/868
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/80>
+
+2021-03-15 19:49:08 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.4 ===
 
 2021-03-15 17:48:47 +0000  Tim-Philipp Müller <tim@centricular.com>
