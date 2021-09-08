@@ -2,13 +2,13 @@ GStreamer 1.18 Release Notes
 
 GStreamer 1.18.0 was originally released on 8 September 2020.
 
-The latest bug-fix release in the 1.18 series is 1.18.4 and was released
-on 15 March 2021.
+The latest bug-fix release in the 1.18 series is 1.18.5 and was released
+on 8 September 2021.
 
 See https://gstreamer.freedesktop.org/releases/1.18/ for the latest
 version of this document.
 
-Last updated: Monday 15 March 2021, 13:00 UTC (log)
+Last updated: Wednesday 8 September 2021, 11:00 UTC (log)
 
 Introduction
 
@@ -2102,7 +2102,10 @@ Possibly Breaking Changes
 
 Known Issues
 
--   None in particular
+-   GStreamer 1.18 versions <= 1.18.4 would fail to build on Linux with
+    Meson 0.58 due to an issue with the include directories. Either
+    apply the patch or build with an older Meson version (<= 0.57) until
+    there is a GStreamer 1.18.5 release that includes the fix.
 
 Contributors
 
@@ -2879,6 +2882,307 @@ List of merge requests and issues fixed in 1.18.4
 -   List of Merge Requests applied in 1.18.4
 -   List of Issues fixed in 1.18.4
 
+1.18.5
+
+The fifth 1.18 bug-fix release (1.18.5) was released on 8 September
+2021.
+
+This release only contains bugfixes and security fixes and it should be
+safe to update from 1.18.x.
+
+Highlighted bugfixes in 1.18.5
+
+-   basesink: fix reverse frame stepping
+-   downloadbuffer/sparsefile: several fixes for win32
+-   systemclock: Update monotonic reference time when re-scheduling,
+    fixes high CPU usage with gnome-music when pausing playback
+-   audioaggregator: fix glitches when resyncing on discont
+-   compositor: Fix NV12 blend operation
+-   rtspconnection: Add IPv6 support for tunneled mode
+-   avidemux: fix playback of some H.264-in-AVI streams
+-   jpegdec: Fix crash when interlaced field height is not DCT block
+    size aligned
+-   qmlglsink: Keep old buffers around a bit longer if they were bound
+    by QML
+-   qml: qtitem: don’t potentially leak a large number of buffers
+-   rtpjpegpay: fix image corruption when compiled with MSVC on Windows
+-   rtspsrc: seeking improvements
+-   rtpjitterbuffer: Avoid generation of invalid timestamps
+-   rtspsrc: Fix behaviour of select-streams, new-manager,
+    request-rtcp-key and before-send signals with GLib >= 2.62
+-   multiudpsink: Fix broken SO_SNDBUF get/set on Windows
+-   openh264enc: fix broken sps/pps header generation and some minor
+    leaks
+-   mpeg2enc: fix interlace-mode detection and unbound memory usage if
+    encoder can’t keep up
+-   mfvideosrc: Fix for negative MF stride and for negotiation when
+    interlace-mode is specified
+-   tsdemux: fix seek-with-stop regression and decoding errors after
+    seeking with dvdlpcmdec
+-   rtsp-server: seek handling improvements
+-   gst-libav: fix build (and other issues) with ffmpeg 4.4
+-   cerbero: spandsp: Fix build error with Visual Studio 2019
+-   win32 packages: Fix hang in GLib when G_SLICE environment variable
+    is set
+
+gstreamer
+
+-   aggregator: Release the SRC lock while querying latency
+-   aggregator: Release pads’ peeked buffer when removing the pad or
+    finalizing it
+-   basesink: Don’t swap rstart/rstop when stepping
+-   basesrc: Print segments with GST_SEGMENT_FORMAT and not
+    GST_PTR_FORMAT
+-   childproxy: init value in gst_child_proxy_get_property() if needed
+-   clocksync: Fix providing system clock by default
+-   concat: Properly propagate seqnum of segment events
+-   concat: adjust running time offsets on downstream events
+-   concat: fix locking in SEGMENT event handler
+-   downloadbuffer/sparsefile: several fixes for win32
+-   element: NULL the lists of contexts in dispose()
+-   multiqueue: Use running time of gap events for wakeups.
+-   multiqueue: Ensure peer pad exists when iterating internal links
+-   pad: Keep IDLE probe hook alive during immediate callback
+-   pad: Ensure last flow return is set on sink pads in push mode
+-   pad: Don’t spam the debug log at INFO level when default-chaining a
+    buffer list
+-   pad: clear probes holding mutex
+-   parse-launch: Fix a critical when using the : operator.
+-   parse-launch: Don’t do delayed property setting for top-level
+    properties.
+-   plugin: load plugins with unknown license strings
+-   ptpclock: Don’t leak the GList
+-   queue2: Refuse all serialized queries when posting buffering
+    messages
+-   systemclock: Update monotonic reference time when re-scheduling
+-   High CPU usage in 1.18 (but not master) when pausing playback in
+    gnome-music
+-   Don’t use volatile to mean atomic (fixes compiler warnings with
+    gcc 11)
+
+gst-plugins-base
+
+-   appsrc: Don’t leak buffer list while wrongly unreffing buffer on
+    EOS/flushing
+-   audioaggregator: Don’t overwrite already written samples
+-   audioaggregator: Resync on the next buffer when dropping a buffer on
+    discont resyncing
+-   audiobasesink: Fix of double lock release
+-   audioaggregator: Don’t overwrite already written samples
+-   audiobasesrc: Fix divide by zero assertion
+-   clockoverlay: Fix broken string formatting by strftime() on Windows
+-   compositor: Fix NV12 blend operation
+-   giosrc: Don’t leak scheme string in gst_gio_src_query()
+-   giobasesink: Handle incomplete writes in gst_gio_base_sink_render()
+-   gl/wayland: Use consistent wl_display when creating work queue for
+    proxy wrapper
+-   gl: Fix build when Meson >= 0.58.0rc1
+-   gl/wayland: provide a dummy global_remove function
+-   playbin2: fix base_time selection when flush seeking live (such as
+    with RTSP)
+-   rtspconnection: Add IPv6 support for tunneled mode
+-   rtspconnection: Consistently translate GIOError to GstRTSPResult
+    (for rtspsrc)
+-   rawbaseparse: check destination format correctly
+-   uridecodebin: Don’t force floating reference for future reusable
+    decodebin
+-   parsebin: Put stream flags in GstStream
+-   splitmuxsink: always use factory property when set
+-   video-converter: Set up matrix tables only once.
+-   videoscale: Performance degradation from 1.16.2 -> 1.18.4
+-   videotestsrc: Fix a leak when computing alpha caps
+-   audio/video-converter: Plug some minor leaks
+-   audio,video-format: Make generate_raw_formats idempotent for
+    assertions
+-   Don’t use volatile to mean atomic (fixes compiler warnings with
+    gcc 11)
+-   Fix build issue on MinGW64
+
+gst-plugins-good
+
+-   avidemux: Also detect 0x000001 as H264 byte-stream start code in
+    codec_data
+-   deinterlace: Plug a method subobject leak
+-   deinterlace: Drop field-order field if outputting progressive
+-   jpegdec: Fix crash when interlaced field height is not DCT block
+    size aligned
+-   qmlglsink: Keep old buffers around a bit longer if they were bound
+    by QML
+-   qml: qtitem: don’t potentially leak a large number of buffers
+-   qtdemux: Force stream-start push when re-using EOS’d streams
+-   qtmux: for Apple ProRes, allow overriding pixel bit depth, e.g. when
+    exporting an opaque image, yet with alpha.
+-   qtmux: Make sure to write 64-bit STCO table when needed.
+-   rtpjpegpay: fix image corruption when compiled with MSVC on Windows
+-   rtpptdemux: Remove pads also in PAUSED->READY
+-   rtph265depay: update codec_data in caps regardless of format
+-   rtspsrc: Do not overwrite the known duration after a seek
+-   rtspsrc: De-dup seek event seqnums to avoid multiple seeks
+-   rtspsrc: Fix race saving seek event seqnum
+-   rtspsrc: Using multicast UDP has no relation to seekability, also
+    add some logging
+-   rtpjitterbuffer: Fix parsing of the mediaclk:direct= field
+-   rtpjitterbuffer: Avoid generation of invalid timestamps
+-   rtpjitterbuffer: Check srcresult before waiting on the condition
+    variable too
+-   rtpjitterbuffer: More logging when calculating rfc7273 timestamps
+-   rtspsrc: Fix more signals
+-   rtspsrc: Fix accumulation of before-send signal return values
+-   souphttpsrc: Always use the content decoder but set
+    `Accept-Encoding:…
+-   udpsrc: Plug leaks of saddr in error cases
+-   multiudpsink: Fix broken SO_SNDBUF get/set on Windows
+-   v4l2object: Add interlace-mode back to caps for camera
+-   v4l2object: Use default colorimetry if that in caps is unknown
+-   V4l2object: Avoid colorimetry mismatch for streams with invalid
+    colorimetry
+-   v4l2object: Add support for hdr10 stream playback
+-   wavparse: adtl/note/labl chunk parsing fixes
+-   Don’t use volatile to mean atomic (fixes compiler warnings with
+    gcc 11)
+-   1.18.4: build fails with glib 2.67.6 and gcc-11: argument 2 of
+    ‘__atomic_load’ must not be a pointer to a ‘volatile’ type
+
+gst-plugins-bad
+
+-   audiolatency: Use live mode audiotestsrc
+-   audiolatency: Handle audio buffers with invalid duration
+-   ccconverter: fix framerate caps negotiation from non-cdp to cdp
+-   dashdemux: Properly initalize GError, remove duplicate logging call
+-   dashdemux: Log protection events on corresponding pad
+-   dashdemux: fix dash_mpdparser_check_mpd_client_set_methods unit test
+-   h264parse,h265parse: Push parameter set NAL units again per
+    segment-done
+-   h265parse: Fix a typo in get_compatible_profile_caps()
+-   h265parse: don’t invalidate the last PPS when parsing a new SPS
+-   h264parse: improve PPS handling
+-   h2645parser: Catch overflows in AVC/HEVC NAL unit length
+    calculations
+-   interlace: Don’t set field-order field for progressive caps, fixes
+    negotiation issues
+-   interlace: Fix too small buffer size error
+-   jpegparse: Don’t generate timestamp for 0/1 framerates
+-   opencv: fix build error on macOS
+-   openexr: Fix build with OpenEXR 3
+-   openh264enc: fix broken sps/pps header generation and some minor
+    leaks
+-   mpeg2enc: fix interlace-mode detection on input video
+-   mpeg2enc: Only allow 1 pending frame for encoding (fixes unbound
+    memory usage in case encoder can’t keep up with input)
+-   mfvideoenc: Don’t pass 0/1 framerate to MFT
+-   mfvideosrc: Fix for negative MF stride
+-   mfvideosrc: Fix negotiation when interlace-mode is specified
+-   mxfvanc: Handle empty ANC essence
+-   rtmp2src: workaround a GLib race when destroying a
+    GMainContext/GSource
+-   rtpsrc: Plug leak of rtcp_send_addr and fix setting URI back to NULL
+-   rtpsink: Return proper pad from _request_new_pad()
+-   rist: Plug leak of rtcp_send_addr
+-   rtmp2: Use correct size of write macro for param2.
+-   rtmp2/connection: Separate inner from outer cancelling
+-   tsmux: When selecting random PIDs, name the pads according to those
+    PIDs
+-   tsmux: Recheck existing pad PIDs when requesting a new pad with a
+    random pid
+-   tsdemux: fix seek with stop regression
+-   tsdemux: Clear all streams when rewinding, fixes the case where the
+    demuxer sends out partial invalid data downstream after a seek which
+    causes some decoders (such as dvdlpmdec) to error out
+-   v4l2slh264dec: Fix slice header bit size calculation
+-   videoparseutils: Fix for wrong CEA708 minimum size check
+-   waylandsink: Fix for missing initial configure
+-   wpe: Make threaded view singleton creation thread safe
+-   x265: Fix a deadlock when failing to create the x265enc
+-   Don’t use volatile to mean atomic (fixes compiler warnings with
+    gcc 11)
+
+gst-plugins-ugly
+
+-   asfdemux/realmedia: Drop duplicate seek events
+-   Don’t use volatile to mean atomic (fixes compiler warnings with
+    gcc 11)
+
+gst-libav
+
+-   avmux: Blacklist ttml subtitles (fixes crash with ffmpeg >= 4.4)
+-   avmux: fix segfault when a plugin’s long_name is NULL
+-   avviddec: Fix size of linesize parameter
+-   avviddec: Take into account coded_height for pool
+-   avdemux: fix build with FFmpeg 4.4
+
+gst-rtsp-server
+
+-   rtsp-media: Ensure the bus watch is removed during unprepare
+-   rtsp-media: Add one more case to seek avoidance
+-   rtsp-media: Improve skipping trickmode seek
+-   Fix a few memory leaks
+
+gstreamer-vaapi
+
+-   plugins: Demote rank of vaapipostproc and vaapioverlay to match
+    other filters
+-   Don’t use volatile to mean atomic (fixes compiler warnings with
+    gcc 11)
+
+gst-editing-services
+
+-   xml-formatter: Fix allocation size of buffer
+-   framepositioner: Fix runtime warning
+-   Don’t use volatile to mean atomic (fixes compiler warnings with
+    gcc 11)
+
+gst-devtools
+
+-   scenario: Fix EOS handling in seek_forward.scenario
+-   validate-utils: Only modify structure fields that really need
+    updates
+-   Don’t use volatile to mean atomic (fixes compiler warnings with
+    gcc 11)
+
+gst-integration-testsuites
+
+-   validate: Update interlace_deinterlace_alternate to remove
+    field-order from expected caps
+
+gst-build
+
+-   git-update: Make fetching of external repos non-fatal on the CI
+-   gst-env: Windows: Fix looking for cmd_or_ps.ps1 in the wrong
+    directory
+-   Pin gst-plugins-rs subproject to 0.7 branch
+
+Cerbero build tool and packaging changes in 1.18.5
+
+-   cerbero: Add a dotted progress bar for urllib downloads
+-   libunwind: make sure all pkgconfig files get included in the devel
+    package
+-   openssl.recipe: Bump to 1.1.1k
+-   glib: Fix hang on Windows when G_SLICE env is configured
+-   utils: Support latest Debian release names
+-   enums: generate fedora version strings automatically
+-   Rework cmake build system
+-   spandsp: Fix build error with Visual Studio 2019
+
+Contributors to 1.18.5
+
+Alba Mendez, Andoni Morales Alastruey, Antonio Rojas, Bartłomiej
+Kurzeja, Binh Truong, Daniel Knobe, Doug Nazar, Edward Hervey, He
+Junyan, Hou Qi, Jan Alexander Steffens (heftig), Jan Schmidt, Marijn
+Suijten, Mathieu Duponchelle, Matthew Waters, Michael Olbrich, Miguel
+Paris, Nicholas Jackson, Nicolas Dufresne, Nirbheek Chauhan, Olivier
+Crête, Per Förlin, Philippe Normand, Robin Burchell, Ruslan Khamidullin,
+Scott Moreau, Sebastian Dröge, Sergei Kovalev, Seungha Yang, Stéphane
+Cerveau, Steve McDaniel, Thibault Saunier, Tim-Philipp Müller, Víctor
+Manuel Jáquez Leal, Xavier Claessens, Youngsoo Lee,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.18.5
+
+-   List of Merge Requests applied in 1.18.5
+-   List of Issues fixed in 1.18.5
+
 Schedule for 1.20
 
 Our next major feature release will be 1.20, and 1.19 will be the
@@ -2886,9 +3190,9 @@ unstable development version leading up to the stable 1.20 release. The
 development of 1.19/1.20 will happen in the git master branch.
 
 The plan for the 1.20 development cycle is yet to be confirmed, but it
-is now expected that feature freeze will take place some time in April
-2021, with the first 1.20 stable release hopefully around April/May
-2021.
+is now expected that feature freeze will take place some time in
+September/October 2021, with the first 1.20 stable release hopefully
+towards the end of October 2021.
 
 1.20 will be backwards-compatible to the stable 1.18, 1.16, 1.14, 1.12,
 1.10, 1.8, 1.6, 1.4, 1.2 and 1.0 release series.

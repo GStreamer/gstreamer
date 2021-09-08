@@ -1,3 +1,60 @@
+=== release 1.18.5 ===
+
+2021-09-08 20:04:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.18.5
+
+2021-04-29 21:32:18 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Blacklist ttml subtitles
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/140>
+
+2021-06-03 06:01:30 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Fix size of linesize parameter
+	  Although avcodec_align_dimensions2() only copies 4 ints, it expects
+	  a buffer of at least AV_NUM_DATA_POINTERS (8) ints.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/136>
+
+2021-04-24 10:04:23 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Take into account coded_height for pool
+	  Failure to do this would cause the decoders to constantly request a new
+	  bufferpool thinking the height had changed ... whereas it hadn't.
+	  Fixes #95
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/132>
+
+2021-04-13 01:07:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: fix build with FFmpeg 4.4
+	  Direct access to avstream->index_entries was removed
+	  in favour of the newly added avformat_index_get_entry()
+	  and friends.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-libav/-/issues/85
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/129>
+
+2021-01-19 13:19:31 -0800  Nicholas Jackson <nicholas.jackson@zii.aero>
+
+	* ext/libav/gstavmux.c:
+	  avmux: fix segfault when a plugin's long_name is NULL
+	  Some plugins register an empty long_name field.  Check for this
+	  before calling strcmp to avoid a crash.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/128>
+
+2021-03-15 19:49:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.4 ===
 
 2021-03-15 17:49:43 +0000  Tim-Philipp Müller <tim@centricular.com>
