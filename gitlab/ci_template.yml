@@ -3,6 +3,7 @@ include:
 
 stages:
   - 'build docker'
+  - 'build docker stage 2'
   - 'preparation'
   - 'pre-build'
   - 'build'
@@ -38,6 +39,7 @@ variables:
   TEST_MANIFEST_AMD64_SUFFIX: 'amd64/test-manifest'
   INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
   WINDOWS_AMD64_SUFFIX: 'amd64/windows'
+  WINDOWS_RUST_AMD64_SUFFIX: 'amd64/windows-rust'
 
   FEDORA_IMAGE:   "$CI_REGISTRY_IMAGE/$FEDORA_AMD64_SUFFIX:$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
   FEDORA_DOCS_IMAGE: "registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:2020-07-03.0-master"
@@ -48,6 +50,8 @@ variables:
   INDENT_IMAGE:   "$CI_REGISTRY_IMAGE/$INDENT_AMD64_SUFFIX:$INDENT_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$GST_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
+  WINDOWS_RUST_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_RUST_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
+  WINDOWS_RUST_UPSTREAM_IMAGE: "$CI_REGISTRY/$GST_UPSTREAM_REPO/$WINDOWS_RUST_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
   # Current windows image doesn't seem to be able to spawn procceses for reason,
   # use a different image until this is debuged
@@ -57,7 +61,9 @@ variables:
 
   # Can't use $CI_* variables since we use this template in all repos, not just gst-ci
   CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/cerbero_setup.sh"
-  WINDOWS_CONTAINER_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/docker/windows/container.ps1"
+  # FIXME: fix the file path url to point to the upstram once merged
+  # WINDOWS_CONTAINER_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/docker/windows/container.ps1"
+  WINDOWS_CONTAINER_SCRIPT_URL: "https://gitlab.freedesktop.org/alatiera/gst-ci/raw/alatiera/windows-rs-wip/docker/windows/container.ps1"
 
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
@@ -349,12 +355,15 @@ windows amd64 docker:
     #
     # We also don't need a CONTEXT_DIR var as its also
     # hardcoded to be docker/windows/
-    DOCKERFILE: "Dockerfile"
+    DOCKERFILE: "docker/windows/Dockerfile"
   tags:
     - windows
     - shell
     - "1809"
   script:
+    # We need to pass an array and to resolve the env vars, so we can't use a variable:
+    - $DOCKER_BUILD_ARGS = @("--build-arg", "DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH")
+
     - $env:WINDOWS_CONTAINER_SCRIPT_PATH = "$env:CI_PROJECT_DIR\container.ps1"
     - echo "Fetching $env:WINDOWS_CONTAINER_SCRIPT_URL"
     - Invoke-WebRequest -Uri $env:WINDOWS_CONTAINER_SCRIPT_URL -OutFile $env:WINDOWS_CONTAINER_SCRIPT_PATH
@@ -365,6 +374,43 @@ windows amd64 docker:
         echo "Failed to build the image"
         Exit 1
       }
+
+windows rust amd64 docker:
+  stage: 'build docker stage 2'
+  needs:
+    - job: 'windows amd64 docker'
+      artifacts: false
+  variables:
+    GIT_STRATEGY: 'fetch'
+    REPO_SUFFIX: "$WINDOWS_RUST_AMD64_SUFFIX"
+    TAG: "$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
+
+    # Unlike the buildah/linux jobs, this file
+    # needs to be relative to docker/windows/ subdir
+    # as it makes life easier in the powershell script
+    #
+    # We also don't need a CONTEXT_DIR var as its also
+    # hardcoded to be docker/windows/
+    DOCKERFILE: 'docker/windows/rust.Dockerfile'
+  tags:
+    - 'windows'
+    - 'shell'
+    - '1809'
+  script:
+    # We need to pass an array and to resolve the env vars, so we can't use a variable:
+    - $DOCKER_BUILD_ARGS = @("--build-arg", "DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH", "--build-arg", "BASE_IMAGE=$WINDOWS_IMAGE")
+
+    - $env:WINDOWS_CONTAINER_SCRIPT_PATH = "$env:CI_PROJECT_DIR\container.ps1"
+    - echo "Fetching $env:WINDOWS_CONTAINER_SCRIPT_URL"
+    - Invoke-WebRequest -Uri $env:WINDOWS_CONTAINER_SCRIPT_URL -OutFile $env:WINDOWS_CONTAINER_SCRIPT_PATH
+
+    - "& $env:WINDOWS_CONTAINER_SCRIPT_PATH $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD $WINDOWS_RUST_IMAGE $WINDOWS_RUST_UPSTREAM_IMAGE $DOCKERFILE"
+    - |
+      if (!($?)) {
+        echo "Failed to build the image"
+        Exit 1
+      }
+
 
 #
 # Job to create the manifest.xml to used for our builds
