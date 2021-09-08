@@ -704,11 +704,12 @@ gst_h264_slice_parse_dec_ref_pic_marking (GstH264SliceHdr * slice,
     GstH264NalUnit * nalu, NalReader * nr)
 {
   GstH264DecRefPicMarking *dec_ref_pic_m;
-  guint start_pos;
+  guint start_pos, start_epb;
 
   GST_DEBUG ("parsing \"Decoded reference picture marking\"");
 
   start_pos = nal_reader_get_pos (nr);
+  start_epb = nal_reader_get_epb_count (nr);
 
   dec_ref_pic_m = &slice->dec_ref_pic_marking;
 
@@ -753,7 +754,8 @@ gst_h264_slice_parse_dec_ref_pic_marking (GstH264SliceHdr * slice,
     }
   }
 
-  dec_ref_pic_m->bit_size = nal_reader_get_pos (nr) - start_pos;
+  dec_ref_pic_m->bit_size = (nal_reader_get_pos (nr) - start_pos) -
+      (8 * (nal_reader_get_epb_count (nr) - start_epb));
 
   return TRUE;
 
@@ -2228,7 +2230,7 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
   gint pps_id;
   GstH264PPS *pps;
   GstH264SPS *sps;
-  guint start_pos;
+  guint start_pos, start_epb;
 
   memset (slice, 0, sizeof (*slice));
 
@@ -2304,6 +2306,7 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
     READ_UE_MAX (&nr, slice->idr_pic_id, G_MAXUINT16);
 
   start_pos = nal_reader_get_pos (&nr);
+  start_epb = nal_reader_get_epb_count (&nr);
 
   if (sps->pic_order_cnt_type == 0) {
     READ_UINT16 (&nr, slice->pic_order_cnt_lsb,
@@ -2319,7 +2322,8 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
       READ_SE (&nr, slice->delta_pic_order_cnt[1]);
   }
 
-  slice->pic_order_cnt_bit_size = nal_reader_get_pos (&nr) - start_pos;
+  slice->pic_order_cnt_bit_size = (nal_reader_get_pos (&nr) - start_pos) -
+      (8 * (nal_reader_get_epb_count (&nr) - start_epb));
 
   if (pps->redundant_pic_cnt_present_flag)
     READ_UE_MAX (&nr, slice->redundant_pic_cnt, G_MAXINT8);
