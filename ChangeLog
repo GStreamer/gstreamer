@@ -1,3 +1,52 @@
+=== release 1.18.5 ===
+
+2021-09-08 20:05:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.18.5
+
+2021-03-08 14:50:52 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.h:
+	  ges: doc: Fix wrong vmethod links
+
+2021-05-12 17:43:46 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Write xml directly to file
+	  Skip allocation of temp buffer (which was undersized).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/251>
+
+2021-04-14 12:58:30 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ges/gstframepositioner.c:
+	  framepositioner: Fix runtime warning
+	  GstCaps is not a GObject!
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/239>
+
+2021-03-19 17:21:01 +1100  Matthew Waters <matthew@centricular.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/gstframepositioner.c:
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nleobject.c:
+	  gst: don't use volatile to mean atomic
+	  volatile is not sufficient to provide atomic guarantees and real atomics
+	  should be used instead.  GCC 11 has started warning about using volatile
+	  with atomic operations.
+	  https://gitlab.gnome.org/GNOME/glib/-/merge_requests/1719
+	  Discovered in https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/868
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/237>
+
+2021-03-15 19:49:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.4 ===
 
 2021-03-15 17:50:04 +0000  Tim-Philipp Müller <tim@centricular.com>
