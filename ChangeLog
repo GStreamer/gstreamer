@@ -1,3 +1,48 @@
+=== release 1.18.5 ===
+
+2021-09-08 20:05:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-devtools.doap:
+	* meson.build:
+	  Release 1.18.5
+
+2021-04-19 15:00:18 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/data/scenarios/seek_forward.scenario:
+	  scenario: Fix action variable name
+	  This was always meant to be `on-message=eos` (like in fast_forward.scenario)
+	  Fixes #58
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/254>
+
+2021-08-20 09:22:28 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate-utils: Only modify structure fields that really need updates
+	  This avoids memory corruption in users of that structure which
+	  were (rightfullly) assuming static fields (such as name) wouldn't
+	  change. Without this, they would be using strings which will have been freed in
+	  the meantime.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/253>
+
+2021-03-19 17:16:33 +1100  Matthew Waters <matthew@centricular.com>
+
+	* validate/tests/check/validate/test-utils.c:
+	  gst: don't use volatile to mean atomic
+	  volatile is not sufficient to provide atomic guarantees and real atomics
+	  should be used instead.  GCC 11 has started warning about using volatile
+	  with atomic operations.
+	  https://gitlab.gnome.org/GNOME/glib/-/merge_requests/1719
+	  Discovered in https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/868
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/239>
+
+2021-03-15 19:49:44 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.4 ===
 
 2021-03-15 17:50:33 +0000  Tim-Philipp Müller <tim@centricular.com>
