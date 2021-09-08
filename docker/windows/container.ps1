@@ -13,6 +13,8 @@ $registry_user_image = $args[3]
 $registry_central_image = $args[4]
 $dockerfile = $args[5]
 
+Set-Location -Path ".\docker\windows"
+
 docker --config "windows-docker.conf" login -u "$registry_username" -p "$registry_password" "$registry_uri"
 if (!$?) {
   Write-Host "docker login failed to $registry_uri"
@@ -43,7 +45,7 @@ if ($?) {
 }
 
 Write-Host "No image found at $registry_user_image or $registry_central_image; rebuilding"
-docker --config "windows-docker.conf" build $DOCKER_BUILD_ARGS --no-cache -t "$registry_user_image" -f "$dockerfile" "./docker/windows"
+docker --config "windows-docker.conf" build --no-cache -t "$registry_user_image" -f "$dockerfile" .
 if (!$?) {
   Write-Host "Container build failed"
   docker --config "windows-docker.conf" logout "$registry_uri"
