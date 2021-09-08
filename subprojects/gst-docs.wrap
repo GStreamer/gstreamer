@@ -2,4 +2,4 @@
 directory=gst-docs
 url=https://gitlab.freedesktop.org/gstreamer/gst-docs.git
 push-url=git@gitlab.freedesktop.org:gstreamer/gst-docs.git
-revision=1.18
+revision=1.18.5

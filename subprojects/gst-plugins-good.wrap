@@ -2,4 +2,4 @@
 directory=gst-plugins-good
 url=https://gitlab.freedesktop.org/gstreamer/gst-plugins-good.git
 push-url=git@gitlab.freedesktop.org:gstreamer/gst-plugins-good.git
-revision=1.18
+revision=1.18.5

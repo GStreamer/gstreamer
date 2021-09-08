@@ -2,4 +2,4 @@
 directory=gstreamer-vaapi
 url=https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi.git
 push-url=git@gitlab.freedesktop.org:gstreamer/gstreamer-vaapi.git
-revision=1.18
+revision=1.18.5
