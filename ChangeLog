@@ -1,3 +1,62 @@
+=== release 1.18.5 ===
+
+2021-09-08 20:04:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.18.5
+
+2021-05-04 20:47:18 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	  rtsp-media: fix leak when adding converter
+	  Free the previous caps before reusing the variable for the converter caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/205>
+
+2021-05-04 20:45:19 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: fix leak adding headers
+	  gst_rtsp_message_add_header() makes a copy of the header, instead
+	  of taking ownership.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/205>
+
+2021-04-29 03:07:42 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Ensure the bus watch is removed during unprepare
+	  It's possible for the destruction of the source to be delayed.
+	  Instead of relying on the dispose() to remove the bus watch, do
+	  it ourselves.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/203>
+
+2021-04-23 07:18:48 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Add one more case to seek avoidance
+	  This is an extension to the previous commit. There can also be cases where the
+	  start position is not specified, in those cases we should also avoid doing
+	  seeking unless it's forced.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/199>
+
+2021-04-16 14:35:02 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Improve skipping trickmode seek.
+	  We can also skip the seek if the end range is already
+	  correct.
+	  Avoids initial seek on play start if playing full stream.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/198>
+
+2021-03-15 19:49:29 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.18.4 ===
 
 2021-03-15 17:49:53 +0000  Tim-Philipp Müller <tim@centricular.com>
@@ -5,6 +64,7 @@
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-rtsp-server.doap:
 	* meson.build:
 	  Release 1.18.4
