@@ -1,3 +1,58 @@
+=== release 1.18.5 ===
+
+2021-09-08 20:05:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.18.5
+
+2021-05-20 10:28:05 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapi.c:
+	* gst/vaapi/gstvaapioverlay.c:
+	  plugins: Demote rank of vaapipostproc and vaapioverlay.
+	  Since almost all video filters have rank NONE, these both elements
+	  should be NONE too.
+	  This is useful for autovideoconvert and other bins, and users might
+	  force to use these by setting the environment variable
+	  GST_PLUGIN_FEATURE_RANK.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/430>
+
+2021-03-19 17:42:36 +1100  Matthew Waters <matthew@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	* gst-libs/gst/vaapi/gstvaapicontext.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	* gst-libs/gst/vaapi/gstvaapiminiobject.c:
+	* gst-libs/gst/vaapi/gstvaapiminiobject.h:
+	* gst-libs/gst/vaapi/gstvaapitexture_glx.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.h:
+	* gst-libs/gst/vaapi/gstvaapivalue.c:
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapisink.c:
+	* gst/vaapi/gstvaapisink.h:
+	* gst/vaapi/gstvaapivideocontext.c:
+	* gst/vaapi/gstvaapivideomemory.c:
+	* tests/internal/simple-decoder.c:
+	  gst: don't use volatile to mean atomic
+	  volatile is not sufficient to provide atomic guarantees and real atomics
+	  should be used instead.  GCC 11 has started warning about using volatile
+	  with atomic operations.
+	  https://gitlab.gnome.org/GNOME/glib/-/merge_requests/1719
+	  Discovered in https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/868
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/423>
+
+2021-03-15 19:49:39 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.18.4 ===
 
 2021-03-15 17:50:17 +0000  Tim-Philipp Müller <tim@centricular.com>
