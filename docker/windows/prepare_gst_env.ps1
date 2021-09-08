@@ -23,6 +23,7 @@ if (!$?) {
 Remove-Item -Force 'C:/gst-build/subprojects/*.wrap'
 Remove-Item -Recurse -Force 'C:/gst-build/subprojects/win-nasm'
 Remove-Item -Recurse -Force 'C:/gst-build/subprojects/win-flex-bison-binaries'
+Remove-Item -Recurse -Force 'C:/gst-build/subprojects/macos-bison-binary'
 
 Move-Item C:\gst-build\subprojects C:\subprojects
 Remove-Item -Recurse -Force C:\gst-build
