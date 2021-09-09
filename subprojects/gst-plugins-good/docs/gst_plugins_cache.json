@@ -18375,7 +18375,26 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "signals": {
+                    "add-extension": {
+                        "action": true,
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstRTPHeaderExtension"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "clear-extensions": {
+                        "action": true,
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    }
+                }
             },
             "rtprtxsend": {
                 "author": "Julien Isorce <julien.isorce@collabora.co.uk>",
@@ -18492,7 +18511,26 @@
                         "writable": true
                     }
                 },
-                "rank": "none"
+                "rank": "none",
+                "signals": {
+                    "add-extension": {
+                        "action": true,
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstRTPHeaderExtension"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "clear-extensions": {
+                        "action": true,
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    }
+                }
             },
             "rtpsession": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>",

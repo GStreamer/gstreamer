@@ -25,7 +25,7 @@
 #define __GST_RTP_RTX_RECEIVE_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/rtp.h>
 
 G_BEGIN_DECLS
 typedef struct _GstRtpRtxReceive GstRtpRtxReceive;
@@ -69,6 +69,11 @@ struct _GstRtpRtxReceive
   guint num_rtx_assoc_packets;
 
   GstClockTime last_time;
+
+  GstRTPHeaderExtension *rid_stream;
+  GstRTPHeaderExtension *rid_repaired;
+
+  GstBuffer *dummy_writable;
 };
 
 struct _GstRtpRtxReceiveClass

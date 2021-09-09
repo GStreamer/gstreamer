@@ -25,7 +25,7 @@
 #define __GST_RTP_RTX_SEND_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/rtp.h>
 #include <gst/base/gstdataqueue.h>
 
 G_BEGIN_DECLS
@@ -77,6 +77,12 @@ struct _GstRtpRtxSend
   /* statistics */
   guint num_rtx_requests;
   guint num_rtx_packets;
+
+  /* list of relevant RTP Header Extensions */
+  GstRTPHeaderExtension *rid_stream;
+  GstRTPHeaderExtension *rid_repaired;
+
+  GstBuffer *dummy_writable;
 };
 
 struct _GstRtpRtxSendClass

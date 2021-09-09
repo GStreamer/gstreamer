@@ -20,7 +20,7 @@
  */
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
-#include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/rtp.h>
 
 #define verify_buf(buf, is_rtx, expected_ssrc, expted_pt, expected_seqnum)       \
   G_STMT_START {                                                                 \
@@ -93,6 +93,20 @@ compare_rtp_packets (GstBuffer * a, GstBuffer * b)
   fail_unless_equals_int (memcmp (gst_rtp_buffer_get_payload (&rtp_a),
           gst_rtp_buffer_get_payload (&rtp_b),
           gst_rtp_buffer_get_payload_len (&rtp_a)), 0);
+
+  if (gst_rtp_buffer_get_extension (&rtp_a)) {
+    guint16 ext_bits_a, ext_bits_b;
+    guint8 *ext_data_a, *ext_data_b;
+    guint wordlen_a, wordlen_b;
+
+    fail_unless_equals_int (TRUE, gst_rtp_buffer_get_extension_data (&rtp_a,
+            &ext_bits_a, (gpointer) & ext_data_a, &wordlen_a));
+    fail_unless_equals_int (TRUE, gst_rtp_buffer_get_extension_data (&rtp_b,
+            &ext_bits_b, (gpointer) & ext_data_b, &wordlen_b));
+    fail_unless_equals_int (ext_bits_a, ext_bits_b);
+    fail_unless_equals_int (wordlen_a, wordlen_b);
+    fail_unless_equals_int (0, memcmp (ext_data_a, ext_data_b, wordlen_a * 4));
+  }
 
   gst_rtp_buffer_unmap (&rtp_a);
   gst_rtp_buffer_unmap (&rtp_b);
@@ -913,6 +927,132 @@ GST_START_TEST (test_rtxsender_clock_rate_map)
 
 GST_END_TEST;
 
+#define RTPHDREXT_STREAM_ID GST_RTP_HDREXT_BASE "sdes:rtp-stream-id"
+#define RTPHDREXT_REPAIRED_STREAM_ID GST_RTP_HDREXT_BASE "sdes:repaired-rtp-stream-id"
+
+GST_START_TEST (test_rtxsend_header_extensions)
+{
+  const guint packets_num = 5;
+  guint master_ssrc = 1234567;
+  guint master_pt = 96;
+  guint rtx_pt = 99;
+  GstStructure *pt_map;
+  GstBuffer *inbufs[5];
+  GstHarness *hrecv = gst_harness_new ("rtprtxreceive");
+  GstHarness *hsend = gst_harness_new ("rtprtxsend");
+  GstRTPHeaderExtension *send_stream_id, *send_repaired_stream_id;
+  GstRTPHeaderExtension *recv_stream_id, *recv_repaired_stream_id;
+  guint stream_hdr_id = 1, repaired_hdr_id = 2;
+  gint i;
+
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      "96", G_TYPE_UINT, rtx_pt, NULL);
+  g_object_set (hrecv->element, "payload-type-map", pt_map, NULL);
+  g_object_set (hsend->element, "payload-type-map", pt_map, NULL);
+
+  gst_harness_set_src_caps_str (hsend, "application/x-rtp, "
+      "media = (string)video, payload = (int)96, "
+      "ssrc = (uint)1234567, clock-rate = (int)90000, "
+      "encoding-name = (string)RAW");
+  gst_harness_set_src_caps_str (hrecv, "application/x-rtp, "
+      "media = (string)video, payload = (int)96, "
+      "ssrc = (uint)1234567, clock-rate = (int)90000, "
+      "encoding-name = (string)RAW");
+
+  send_stream_id =
+      gst_rtp_header_extension_create_from_uri (RTPHDREXT_STREAM_ID);
+  gst_rtp_header_extension_set_id (send_stream_id, stream_hdr_id);
+  g_object_set (send_stream_id, "rid", "0", NULL);
+  fail_unless (send_stream_id != NULL);
+  g_signal_emit_by_name (hsend->element, "add-extension", send_stream_id);
+  gst_clear_object (&send_stream_id);
+
+  send_repaired_stream_id =
+      gst_rtp_header_extension_create_from_uri (RTPHDREXT_REPAIRED_STREAM_ID);
+  g_object_set (send_repaired_stream_id, "rid", "0", NULL);
+  gst_rtp_header_extension_set_id (send_repaired_stream_id, repaired_hdr_id);
+  fail_unless (send_repaired_stream_id != NULL);
+  g_signal_emit_by_name (hsend->element, "add-extension",
+      send_repaired_stream_id);
+  gst_clear_object (&send_repaired_stream_id);
+
+  recv_stream_id =
+      gst_rtp_header_extension_create_from_uri (RTPHDREXT_STREAM_ID);
+  gst_rtp_header_extension_set_id (recv_stream_id, stream_hdr_id);
+  fail_unless (recv_stream_id != NULL);
+  g_signal_emit_by_name (hrecv->element, "add-extension", recv_stream_id);
+  gst_clear_object (&recv_stream_id);
+
+  recv_repaired_stream_id =
+      gst_rtp_header_extension_create_from_uri (RTPHDREXT_REPAIRED_STREAM_ID);
+  gst_rtp_header_extension_set_id (recv_repaired_stream_id, repaired_hdr_id);
+  fail_unless (recv_repaired_stream_id != NULL);
+  g_signal_emit_by_name (hrecv->element, "add-extension",
+      recv_repaired_stream_id);
+  gst_clear_object (&recv_repaired_stream_id);
+
+  /* Push 'packets_num' packets through rtxsend to rtxreceive */
+  for (i = 0; i < packets_num; ++i) {
+    GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+    inbufs[i] = create_rtp_buffer (master_ssrc, master_pt, 100 + i);
+    fail_unless (gst_rtp_buffer_map (inbufs[i], GST_MAP_READWRITE, &rtp));
+    fail_unless (gst_rtp_buffer_add_extension_onebyte_header (&rtp,
+            stream_hdr_id, "0", 1));
+    gst_rtp_buffer_unmap (&rtp);
+    gst_harness_push (hsend, gst_buffer_ref (inbufs[i]));
+    gst_harness_push (hrecv, gst_harness_pull (hsend));
+    pull_and_verify (hrecv, FALSE, master_ssrc, master_pt, 100 + i);
+  }
+
+  /* Getting rid of reconfigure event. Preparation before the next step */
+  gst_event_unref (gst_harness_pull_upstream_event (hrecv));
+  fail_unless_equals_int (gst_harness_upstream_events_in_queue (hrecv), 0);
+
+  /* Push 'packets_num' RTX events through rtxreceive to rtxsend.
+     Push RTX packets from rtxsend to rtxreceive and
+     check that the packet produced out of RTX packet is the same
+     as an original packet */
+  for (i = 0; i < packets_num; ++i) {
+    GstBuffer *outbuf;
+    gst_harness_push_upstream_event (hrecv,
+        create_rtx_event (master_ssrc, master_pt, 100 + i));
+    gst_harness_push_upstream_event (hsend,
+        gst_harness_pull_upstream_event (hrecv));
+    gst_harness_push (hrecv, gst_harness_pull (hsend));
+
+    outbuf = gst_harness_pull (hrecv);
+    compare_rtp_packets (inbufs[i], outbuf);
+    gst_buffer_unref (inbufs[i]);
+    gst_buffer_unref (outbuf);
+  }
+
+  /* Check RTX stats */
+  {
+    guint rtx_requests;
+    guint rtx_packets;
+    guint rtx_assoc_packets;
+    g_object_get (G_OBJECT (hsend->element),
+        "num-rtx-requests", &rtx_requests,
+        "num-rtx-packets", &rtx_packets, NULL);
+    fail_unless_equals_int (rtx_packets, packets_num);
+    fail_unless_equals_int (rtx_requests, packets_num);
+
+    g_object_get (G_OBJECT (hrecv->element),
+        "num-rtx-requests", &rtx_requests,
+        "num-rtx-packets", &rtx_packets,
+        "num-rtx-assoc-packets", &rtx_assoc_packets, NULL);
+    fail_unless_equals_int (rtx_packets, packets_num);
+    fail_unless_equals_int (rtx_requests, packets_num);
+    fail_unless_equals_int (rtx_assoc_packets, packets_num);
+  }
+
+  gst_structure_free (pt_map);
+  gst_harness_teardown (hrecv);
+  gst_harness_teardown (hsend);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtprtx_suite (void)
 {
@@ -938,6 +1078,7 @@ rtprtx_suite (void)
   tcase_add_test (tc_chain, test_rtxqueue_max_size_packets);
   tcase_add_test (tc_chain, test_rtxqueue_max_size_time);
   tcase_add_test (tc_chain, test_rtxsender_clock_rate_map);
+  tcase_add_test (tc_chain, test_rtxsend_header_extensions);
 
   return s;
 }

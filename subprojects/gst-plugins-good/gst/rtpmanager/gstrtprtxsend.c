@@ -41,7 +41,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/rtp/gstrtpbuffer.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -65,6 +64,20 @@ enum
   PROP_NUM_RTX_PACKETS,
   PROP_CLOCK_RATE_MAP,
 };
+
+enum
+{
+  SIGNAL_0,
+  SIGNAL_ADD_EXTENSION,
+  SIGNAL_CLEAR_EXTENSIONS,
+  LAST_SIGNAL
+};
+
+static guint gst_rtp_rtx_send_signals[LAST_SIGNAL] = { 0, };
+
+#define RTPHDREXT_BUNDLE_MID GST_RTP_HDREXT_BASE "sdes:mid"
+#define RTPHDREXT_STREAM_ID GST_RTP_HDREXT_BASE "sdes:rtp-stream-id"
+#define RTPHDREXT_REPAIRED_STREAM_ID GST_RTP_HDREXT_BASE "sdes:repaired-rtp-stream-id"
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -102,6 +115,40 @@ static void gst_rtp_rtx_send_set_property (GObject * object, guint prop_id,
 static void gst_rtp_rtx_send_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_rtp_rtx_send_finalize (GObject * object);
+
+static void
+gst_rtp_rtx_send_add_extension (GstRtpRtxSend * rtx,
+    GstRTPHeaderExtension * ext)
+{
+  g_return_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext));
+  g_return_if_fail (gst_rtp_header_extension_get_id (ext) > 0);
+
+  GST_OBJECT_LOCK (rtx);
+  if (g_strcmp0 (gst_rtp_header_extension_get_uri (ext),
+          RTPHDREXT_STREAM_ID) == 0) {
+    gst_clear_object (&rtx->rid_stream);
+    rtx->rid_stream = gst_object_ref (ext);
+  } else if (g_strcmp0 (gst_rtp_header_extension_get_uri (ext),
+          RTPHDREXT_REPAIRED_STREAM_ID) == 0) {
+    gst_clear_object (&rtx->rid_repaired);
+    rtx->rid_repaired = gst_object_ref (ext);
+  } else {
+    g_warning ("rtprtxsend (%s) doesn't know how to deal with the "
+        "RTP Header Extension with URI \'%s\'", GST_OBJECT_NAME (rtx),
+        gst_rtp_header_extension_get_uri (ext));
+  }
+  /* XXX: check for other duplicate ids? */
+  GST_OBJECT_UNLOCK (rtx);
+}
+
+static void
+gst_rtp_rtx_send_clear_extensions (GstRtpRtxSend * rtx)
+{
+  GST_OBJECT_LOCK (rtx);
+  gst_clear_object (&rtx->rid_stream);
+  gst_clear_object (&rtx->rid_repaired);
+  GST_OBJECT_UNLOCK (rtx);
+}
 
 G_DEFINE_TYPE_WITH_CODE (GstRtpRtxSend, gst_rtp_rtx_send, GST_TYPE_ELEMENT,
     GST_DEBUG_CATEGORY_INIT (gst_rtp_rtx_send_debug, "rtprtxsend", 0,
@@ -258,6 +305,38 @@ gst_rtp_rtx_send_class_init (GstRtpRtxSendClass * klass)
           "Map of payload types to their clock rates",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * rtprtxsend::add-extension:
+   *
+   * Add @ext as an extension for writing part of an RTP header extension onto
+   * outgoing RTP packets.  Currently only supports using the following
+   * extension URIs. All other RTP header extensions are copied as-is.
+   *   - "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id": will be removed
+   *   - "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id": will be
+   *     written instead of the "rtp-stream-id" header extension.
+   *
+   * Since: 1.22
+   */
+  gst_rtp_rtx_send_signals[SIGNAL_ADD_EXTENSION] =
+      g_signal_new_class_handler ("add-extension", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_CALLBACK (gst_rtp_rtx_send_add_extension), NULL, NULL, NULL,
+      G_TYPE_NONE, 1, GST_TYPE_RTP_HEADER_EXTENSION);
+
+  /**
+   * rtprtxsend::clear-extensions:
+   * @object: the #GstRTPBasePayload
+   *
+   * Clear all RTP header extensions used by this rtprtxsend.
+   *
+   * Since: 1.22
+   */
+  gst_rtp_rtx_send_signals[SIGNAL_CLEAR_EXTENSIONS] =
+      g_signal_new_class_handler ("clear-extensions", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_CALLBACK (gst_rtp_rtx_send_clear_extensions), NULL, NULL, NULL,
+      G_TYPE_NONE, 0);
+
   gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
   gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
@@ -298,6 +377,11 @@ gst_rtp_rtx_send_finalize (GObject * object)
   if (rtx->clock_rate_map_structure)
     gst_structure_free (rtx->clock_rate_map_structure);
   g_object_unref (rtx->queue);
+
+  gst_clear_object (&rtx->rid_stream);
+  gst_clear_object (&rtx->rid_repaired);
+
+  gst_clear_buffer (&rtx->dummy_writable);
 
   G_OBJECT_CLASS (gst_rtp_rtx_send_parent_class)->finalize (object);
 }
@@ -341,6 +425,8 @@ gst_rtp_rtx_send_init (GstRtpRtxSend * rtx)
 
   rtx->max_size_time = DEFAULT_MAX_SIZE_TIME;
   rtx->max_size_packets = DEFAULT_MAX_SIZE_PACKETS;
+
+  rtx->dummy_writable = gst_buffer_new ();
 }
 
 static gboolean
@@ -422,6 +508,162 @@ gst_rtp_rtx_send_get_ssrc_data (GstRtpRtxSend * rtx, guint32 ssrc)
   return data;
 }
 
+static GstMemory *
+rewrite_header_extensions (GstRtpRtxSend * rtx, GstRTPBuffer * rtp)
+{
+  gsize out_size = rtp->size[1] + 32;
+  guint16 bit_pattern;
+  guint8 *pdata;
+  guint wordlen;
+  GstMemory *mem;
+  GstMapInfo map;
+
+  mem = gst_allocator_alloc (NULL, out_size, NULL);
+
+  gst_memory_map (mem, &map, GST_MAP_READWRITE);
+
+  if (gst_rtp_buffer_get_extension_data (rtp, &bit_pattern, (gpointer) & pdata,
+          &wordlen)) {
+    GstRTPHeaderExtensionFlags ext_flags = 0;
+    gsize bytelen = wordlen * 4;
+    guint hdr_unit_bytes;
+    gsize read_offset = 0, write_offset = 4;
+
+    if (bit_pattern == 0xBEDE) {
+      /* one byte extensions */
+      hdr_unit_bytes = 1;
+      ext_flags |= GST_RTP_HEADER_EXTENSION_ONE_BYTE;
+    } else if (bit_pattern >> 4 == 0x100) {
+      /* two byte extensions */
+      hdr_unit_bytes = 2;
+      ext_flags |= GST_RTP_HEADER_EXTENSION_TWO_BYTE;
+    } else {
+      GST_DEBUG_OBJECT (rtx, "unknown extension bit pattern 0x%02x%02x",
+          bit_pattern >> 8, bit_pattern & 0xff);
+      goto copy_as_is;
+    }
+
+    GST_WRITE_UINT16_BE (map.data, bit_pattern);
+
+    while (TRUE) {
+      guint8 read_id, read_len;
+
+      if (read_offset + hdr_unit_bytes >= bytelen)
+        /* not enough remaning data */
+        break;
+
+      if (ext_flags & GST_RTP_HEADER_EXTENSION_ONE_BYTE) {
+        read_id = GST_READ_UINT8 (pdata + read_offset) >> 4;
+        read_len = (GST_READ_UINT8 (pdata + read_offset) & 0x0F) + 1;
+        read_offset += 1;
+
+        if (read_id == 0)
+          /* padding */
+          continue;
+
+        if (read_id == 15)
+          /* special id for possible future expansion */
+          break;
+      } else {
+        read_id = GST_READ_UINT8 (pdata + read_offset);
+        read_offset += 1;
+
+        if (read_id == 0)
+          /* padding */
+          continue;
+
+        read_len = GST_READ_UINT8 (pdata + read_offset);
+        read_offset += 1;
+      }
+      GST_TRACE_OBJECT (rtx, "found rtp header extension with id %u and "
+          "length %u", read_id, read_len);
+
+      /* Ignore extension headers where the size does not fit */
+      if (read_offset + read_len > bytelen) {
+        GST_WARNING_OBJECT (rtx, "Extension length extends past the "
+            "size of the extension data");
+        break;
+      }
+
+      /* rewrite the rtp-stream-id into a repaired-stream-id */
+      if (rtx->rid_stream
+          && read_id == gst_rtp_header_extension_get_id (rtx->rid_stream)) {
+        if (!gst_rtp_header_extension_read (rtx->rid_stream, ext_flags,
+                &pdata[read_offset], read_len, rtx->dummy_writable)) {
+          GST_WARNING_OBJECT (rtx, "RTP header extension (%s) could "
+              "not read payloaded data", GST_OBJECT_NAME (rtx->rid_stream));
+          goto copy_as_is;
+        }
+        if (rtx->rid_repaired) {
+          guint8 write_id = gst_rtp_header_extension_get_id (rtx->rid_repaired);
+          gsize written;
+          char *rid;
+
+          g_object_get (rtx->rid_stream, "rid", &rid, NULL);
+          g_object_set (rtx->rid_repaired, "rid", rid, NULL);
+          g_clear_pointer (&rid, g_free);
+
+          written =
+              gst_rtp_header_extension_write (rtx->rid_repaired, rtp->buffer,
+              ext_flags, rtx->dummy_writable,
+              &map.data[write_offset + hdr_unit_bytes],
+              map.size - write_offset - hdr_unit_bytes);
+          GST_TRACE_OBJECT (rtx->rid_repaired, "wrote %" G_GSIZE_FORMAT,
+              written);
+          if (written <= 0) {
+            GST_WARNING_OBJECT (rtx, "Failed to rewrite RID for RTX");
+            goto copy_as_is;
+          } else {
+            if (ext_flags & GST_RTP_HEADER_EXTENSION_ONE_BYTE) {
+              map.data[write_offset] =
+                  ((write_id & 0x0F) << 4) | ((written - 1) & 0x0F);
+            } else if (ext_flags & GST_RTP_HEADER_EXTENSION_TWO_BYTE) {
+              map.data[write_offset] = write_id & 0xFF;
+              map.data[write_offset + 1] = written & 0xFF;
+            } else {
+              g_assert_not_reached ();
+              goto copy_as_is;
+            }
+            write_offset += written + hdr_unit_bytes;
+          }
+        }
+      } else {
+        /* TODO: may need to write mid at different times to the original
+         * buffer to account for the difference in timing of acknowledgement
+         * of the rtx ssrc from the original ssrc.  This may add extra data to
+         * the header extension space that needs to be accounted for.
+         */
+        memcpy (&map.data[write_offset],
+            &map.data[read_offset - hdr_unit_bytes], read_len + hdr_unit_bytes);
+        write_offset += read_len + hdr_unit_bytes;
+      }
+
+      read_offset += read_len;
+    }
+
+    /* subtract the ext header */
+    wordlen = write_offset / 4 + ((write_offset % 4) ? 1 : 0);
+
+    /* wordlen in the ext data doesn't include the 4-byte header */
+    GST_WRITE_UINT16_BE (map.data + 2, wordlen - 1);
+
+    if (wordlen * 4 > write_offset)
+      memset (&map.data[write_offset], 0, wordlen * 4 - write_offset);
+
+    GST_MEMDUMP_OBJECT (rtx, "generated ext data", map.data, wordlen * 4);
+  } else {
+  copy_as_is:
+    wordlen = rtp->size[1] / 4;
+    memcpy (map.data, rtp->data[1], rtp->size[1]);
+    GST_LOG_OBJECT (rtx, "copying data as-is");
+  }
+
+  gst_memory_unmap (mem, &map);
+  gst_memory_resize (mem, 0, wordlen * 4);
+
+  return mem;
+}
+
 /* Copy fixed header and extension. Add OSN before to copy payload
  * Copy memory to avoid to manually copy each rtp buffer field.
  */
@@ -462,10 +704,7 @@ gst_rtp_rtx_buffer_new (GstRtpRtxSend * rtx, GstBuffer * buffer)
 
   /* copy extension if any */
   if (rtp.size[1]) {
-    mem = gst_allocator_alloc (NULL, rtp.size[1], NULL);
-    gst_memory_map (mem, &map, GST_MAP_WRITE);
-    memcpy (map.data, rtp.data[1], rtp.size[1]);
-    gst_memory_unmap (mem, &map);
+    mem = rewrite_header_extensions (rtx, &rtp);
     gst_buffer_append_memory (new_buffer, mem);
   }
 
