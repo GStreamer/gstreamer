@@ -23,7 +23,7 @@ GST_GL_EXT_BEGIN (buffer_storage,
                   GST_GL_API_GLES2,
                   4, 4,
                   255, 255,
-                  "EXT\0", /* XXX: GL_ARB_buffer_storage advertisement seems to be broken in Mesa */
+                  "EXT\0ARB:\0", /* ARB version doesn't have function suffixes */
                   "buffer_storage\0")
 GST_GL_EXT_FUNCTION (void, BufferStorage,
                      (GLenum target, GLsizeiptr, const void * data, GLbitfield flags))
