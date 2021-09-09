@@ -2066,7 +2066,7 @@ main (int argc, char *argv[])
     {"no-colors", '\0', G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,
           &colored_output,
           N_
-          ("Disable colors in output. You can also achieve the same by setting"
+          ("Disable colors in output. You can also achieve the same by setting "
               "'GST_INSPECT_NO_COLORS' environment variable to any value."),
         NULL},
     {"sort", '\0', G_OPTION_ARG_NONE, G_OPTION_ARG_CALLBACK, &_parse_sort_type,
