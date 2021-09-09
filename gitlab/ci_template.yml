@@ -67,9 +67,7 @@ variables:
 
   # Can't use $CI_* variables since we use this template in all repos, not just gst-ci
   CERBERO_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/cerbero_setup.sh"
-  # FIXME: fix the file path url to point to the upstram once merged
-  # WINDOWS_CONTAINER_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/docker/windows/container.ps1"
-  WINDOWS_CONTAINER_SCRIPT_URL: "https://gitlab.freedesktop.org/alatiera/gst-ci/raw/alatiera/windows-rs-wip/docker/windows/container.ps1"
+  WINDOWS_CONTAINER_SCRIPT_URL: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/docker/windows/container.ps1"
 
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
