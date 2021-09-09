@@ -87,4 +87,6 @@ GstFlowReturn         gst_va_base_transform_import_buffer (GstVaBaseTransform * 
                                                            GstBuffer * inbuf,
                                                            GstBuffer ** buf);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaBaseTransform, gst_object_unref)
+
 G_END_DECLS
