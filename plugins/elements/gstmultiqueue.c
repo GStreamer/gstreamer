@@ -1388,7 +1388,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush,
     gst_segment_init (&sq->sink_segment, GST_FORMAT_TIME);
     gst_segment_init (&sq->src_segment, GST_FORMAT_TIME);
     sq->has_src_segment = FALSE;
-    /* All pads start off not-linked for a smooth kick-off */
+    /* All pads start off OK for a smooth kick-off */
     sq->srcresult = GST_FLOW_OK;
     sq->pushed = FALSE;
     sq->cur_time = 0;
