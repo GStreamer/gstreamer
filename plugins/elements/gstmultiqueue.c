@@ -2972,14 +2972,14 @@ compute_high_id (GstMultiQueue * mq)
     GST_LOG_OBJECT (mq, "inspecting sq:%d , nextid:%d, oldid:%d, srcresult:%s",
         sq->id, sq->nextid, sq->oldid, gst_flow_get_name (sq->srcresult));
 
-    if (sq->srcresult == GST_FLOW_NOT_LINKED) {
-      /* No need to consider queues which are not waiting */
-      if (sq->nextid == 0) {
-        GST_LOG_OBJECT (mq, "sq:%d is not waiting - ignoring", sq->id);
-        gst_object_unref (srcpad);
-        continue;
-      }
+    /* No need to consider queues which are not waiting */
+    if (sq->nextid == 0) {
+      GST_LOG_OBJECT (mq, "sq:%d is not waiting - ignoring", sq->id);
+      gst_object_unref (srcpad);
+      continue;
+    }
 
+    if (sq->srcresult == GST_FLOW_NOT_LINKED) {
       if (sq->nextid < lowest)
         lowest = sq->nextid;
     } else if (!GST_PAD_IS_EOS (srcpad) && sq->srcresult != GST_FLOW_EOS) {
