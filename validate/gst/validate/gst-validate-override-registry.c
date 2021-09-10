@@ -395,7 +395,7 @@ gst_validate_override_registry_preload (void)
 
   for (tmp = overrides; tmp; tmp = tmp->next)
     _add_override_from_struct (tmp->data);
-  g_list_free_full (overrides, (GDestroyNotify) gst_structure_free);
+  g_list_free (overrides);
 
   sos = g_getenv ("GST_VALIDATE_OVERRIDE");
   if (!sos) {
