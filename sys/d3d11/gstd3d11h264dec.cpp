@@ -79,14 +79,8 @@
 #include <d3d9.h>
 #include <dxva.h>
 
-/* *INDENT-OFF* */
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_h264_dec_debug);
 #define GST_CAT_DEFAULT gst_d3d11_h264_dec_debug
-
-G_END_DECLS
-/* *INDENT-ON* */
 
 enum
 {

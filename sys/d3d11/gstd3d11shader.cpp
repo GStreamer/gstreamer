@@ -28,14 +28,10 @@
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
-
-G_BEGIN_DECLS
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_shader_debug);
 #define GST_CAT_DEFAULT gst_d3d11_shader_debug
-
-G_END_DECLS
-/* *INDENT-ON* */
 
 /* too many const buffers doesn't make sense */
 #define MAX_CONST_BUFFERS 16

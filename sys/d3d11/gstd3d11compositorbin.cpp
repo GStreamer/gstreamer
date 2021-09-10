@@ -47,14 +47,8 @@
 #include "gstd3d11compositor.h"
 #include "gstd3d11pluginutils.h"
 
-/* *INDENT-OFF* */
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_compositor_debug);
 #define GST_CAT_DEFAULT gst_d3d11_compositor_debug
-
-G_END_DECLS
-/* *INDENT-ON* */
 
 /****************************
  * GstD3D11CompositorBinPad *

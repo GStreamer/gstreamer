@@ -41,12 +41,8 @@ using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows::UI;
 using namespace ABI::Windows::Foundation;
 
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
 #define GST_CAT_DEFAULT gst_d3d11_window_debug
-
-G_END_DECLS
 
 /* timeout to wait busy UI thread */
 #define DEFAULT_ASYNC_TIMEOUT (10 * 1000)

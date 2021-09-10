@@ -42,15 +42,11 @@
 #include <wrl.h>
 #include <string.h>
 
-/* *INDENT-OFF* */
-using namespace Microsoft::WRL;
-
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_deinterlace_debug);
 #define GST_CAT_DEFAULT gst_d3d11_deinterlace_debug
 
-G_END_DECLS
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
 /* Deinterlacing Methods:

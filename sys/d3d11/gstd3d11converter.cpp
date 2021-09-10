@@ -28,15 +28,11 @@
 #include <wrl.h>
 #include <string.h>
 
-/* *INDENT-OFF* */
-using namespace Microsoft::WRL;
-
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_converter_debug);
 #define GST_CAT_DEFAULT gst_d3d11_converter_debug
 
-G_END_DECLS
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
 #define CONVERTER_MAX_QUADS 2

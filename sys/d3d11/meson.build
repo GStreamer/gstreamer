@@ -13,7 +13,7 @@ d3d11_sources = [
   'gstd3d11videosink.cpp',
   'gstd3d11window.cpp',
   'gstd3d11window_dummy.cpp',
-  'plugin.c',
+  'plugin.cpp',
 ]
 
 d3d11_dec_sources = [
@@ -26,8 +26,8 @@ d3d11_dec_sources = [
   'gstd3d11vp8dec.cpp',
 ]
 
-extra_c_args = ['-DCOBJMACROS', '-DGST_USE_UNSTABLE_API']
-extra_cpp_args = ['-DGST_USE_UNSTABLE_API']
+extra_c_args = ['-DCOBJMACROS']
+extra_args = ['-DGST_USE_UNSTABLE_API']
 extra_dep = []
 
 d3d11_option = get_option('d3d11')
@@ -58,7 +58,7 @@ endif
 # d3d11 video api uses dxva structure for decoding, and dxva.h needs d3d9 types
 if cc.has_header('dxva.h') and cc.has_header('d3d9.h')
   d3d11_sources += d3d11_dec_sources
-  extra_c_args += ['-DHAVE_DXVA_H']
+  extra_args += ['-DHAVE_DXVA_H']
   extra_dep += [gstcodecs_dep]
   has_decoder = true
 endif
@@ -83,13 +83,13 @@ if d3d11_winapi_desktop
   if d3d11_conf.get('GST_D3D11_DXGI_HEADER_VERSION') >= 6
     # Desktop Duplication API is unavailable for UWP
     # and MinGW is not supported due to some missing headers
-    extra_c_args += ['-DHAVE_DXGI_DESKTOP_DUP']
+    extra_args += ['-DHAVE_DXGI_DESKTOP_DUP']
     d3d11_sources += ['gstd3d11desktopdup.cpp', 'gstd3d11desktopdupsrc.cpp']
     message('Enable D3D11 Desktop Duplication API')
   endif
   # multimedia clock is desktop only API
   if has_decoder and winmm_lib.found() and cc.has_header('timeapi.h')
-    extra_cpp_args += ['-DHAVE_WINMM']
+    extra_args += ['-DHAVE_WINMM']
     extra_dep += [winmm_lib]
   endif
 endif
@@ -97,24 +97,23 @@ endif
 # need dxgi1_5.h for HDR10 processing and d3d11_4.h for ID3D11VideoContext2 interface
 if d3d11_conf.get('GST_D3D11_DXGI_HEADER_VERSION') >= 5 and d3d11_conf.get('GST_D3D11_HEADER_VERSION') >= 4
   d3d11_sources += ['gstd3d11deinterlace.cpp']
-  extra_c_args += ['-DHAVE_D3D11_VIDEO_PROC']
+  extra_args += ['-DHAVE_D3D11_VIDEO_PROC']
 endif
 
 # MinGW 32bits compiler seems to be complaining about redundant-decls
 # when ComPtr is in use. Let's just disable the warning
 if cc.get_id() != 'msvc'
-  extra_args = cc.get_supported_arguments([
+  extra_mingw_args = cc.get_supported_arguments([
     '-Wno-redundant-decls',
   ])
 
-  extra_c_args += extra_args
-  extra_cpp_args += extra_args
+  extra_args += extra_mingw_args
 endif
 
 gstd3d11 = library('gstd3d11',
   d3d11_sources,
-  c_args : gst_plugins_bad_args + extra_c_args,
-  cpp_args: gst_plugins_bad_args + extra_cpp_args,
+  c_args : gst_plugins_bad_args + extra_c_args + extra_args,
+  cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
   dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, gstcontroller_dep, gstd3d11_dep] + extra_dep,
   install : true,

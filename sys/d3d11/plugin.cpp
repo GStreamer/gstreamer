@@ -138,7 +138,7 @@ plugin_init (GstPlugin * plugin)
       break;
 
     device_handle = gst_d3d11_device_get_device_handle (device);
-    feature_level = ID3D11Device_GetFeatureLevel (device_handle);
+    feature_level = device_handle->GetFeatureLevel ();
 
     if (feature_level > max_feature_level)
       max_feature_level = feature_level;

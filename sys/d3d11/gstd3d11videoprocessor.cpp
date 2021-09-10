@@ -26,14 +26,8 @@
 
 #include <string.h>
 
-/* *INDENT-OFF* */
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_video_processor_debug);
 #define GST_CAT_DEFAULT gst_d3d11_video_processor_debug
-
-G_END_DECLS
-/* *INDENT-ON* */
 
 #if (GST_D3D11_HEADER_VERSION >= 1 && GST_D3D11_DXGI_HEADER_VERSION >= 4)
 #define HAVE_VIDEO_CONTEXT_ONE

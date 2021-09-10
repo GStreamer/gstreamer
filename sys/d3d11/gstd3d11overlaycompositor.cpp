@@ -26,15 +26,12 @@
 #include "gstd3d11pluginutils.h"
 #include <wrl.h>
 
-/* *INDENT-OFF* */
-using namespace Microsoft::WRL;
-
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_overlay_compositor_debug);
 #define GST_CAT_DEFAULT gst_d3d11_overlay_compositor_debug
 
-G_END_DECLS
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+
 typedef struct
 {
   struct {

@@ -29,14 +29,10 @@
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
-
-G_BEGIN_DECLS
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
 #define GST_CAT_DEFAULT gst_d3d11_window_debug
-
-G_END_DECLS
-/* *INDENT-ON* */
 
 G_LOCK_DEFINE_STATIC (create_lock);
 

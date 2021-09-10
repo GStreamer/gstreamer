@@ -27,14 +27,8 @@
 #include <windows.h>
 #include <versionhelpers.h>
 
-/* *INDENT-OFF* */
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_plugin_utils_debug);
 #define GST_CAT_DEFAULT gst_d3d11_plugin_utils_debug
-
-G_END_DECLS
-/* *INDENT-ON* */
 
 /* Max Texture Dimension for feature level 11_0 ~ 12_1 */
 static guint _gst_d3d11_texture_max_dimension = 16384;

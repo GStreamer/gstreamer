@@ -49,6 +49,9 @@
 #include <d3d9.h>
 #include <dxva.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_av1_dec_debug);
+#define GST_CAT_DEFAULT gst_d3d11_av1_dec_debug
+
 /* Might not be defined in dxva.h, copied from DXVA AV1 spec available at
  * https://www.microsoft.com/en-us/download/confirmation.aspx?id=101577
  * and modified with "GST_" prefix
@@ -346,16 +349,6 @@ typedef struct _GST_DXVA_Tile_AV1
 } GST_DXVA_Tile_AV1;
 
 #pragma pack(pop)
-
-/* *INDENT-OFF* */
-
-G_BEGIN_DECLS
-
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_av1_dec_debug);
-#define GST_CAT_DEFAULT gst_d3d11_av1_dec_debug
-
-G_END_DECLS
-/* *INDENT-ON* */
 
 enum
 {
