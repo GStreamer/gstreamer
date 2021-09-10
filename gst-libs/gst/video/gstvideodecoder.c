@@ -5164,18 +5164,18 @@ gst_video_decoder_request_sync_point (GstVideoDecoder * dec,
       (priv->min_force_key_unit_interval != GST_CLOCK_TIME_NONE &&
           (priv->last_force_key_unit_time == GST_CLOCK_TIME_NONE
               || (priv->last_force_key_unit_time +
-                  priv->min_force_key_unit_interval >= frame->deadline)))) {
+                  priv->min_force_key_unit_interval <= frame->deadline)))) {
     GST_DEBUG_OBJECT (dec,
-        "Requesting a new key-unit for frame with PTS %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (frame->pts));
+        "Requesting a new key-unit for frame with deadline %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (frame->deadline));
     fku =
         gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE, FALSE,
         0);
     priv->last_force_key_unit_time = frame->deadline;
   } else {
     GST_DEBUG_OBJECT (dec,
-        "Can't request a new key-unit for frame with PTS %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (frame->pts));
+        "Can't request a new key-unit for frame with deadline %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (frame->deadline));
   }
   priv->request_sync_point_flags |= flags;
   /* We don't know yet the frame number of the sync point so set it to a
