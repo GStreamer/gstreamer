@@ -344,8 +344,22 @@ struct _GstVideoDecoderClass
                                    GstVideoCodecFrame *frame,
                                    GstMeta * meta);
 
+  /**
+   * GstVideoDecoderClass::handle_missing_data:
+   * @decoder: The #GstVideoDecoder
+   * @timestamp: Timestamp of the missing data
+   * @duration: Duration of the missing data
+   *
+   * Returns: %TRUE if the decoder should be drained afterwards.
+   *
+   * Since: 1.20
+   */
+  gboolean      (*handle_missing_data) (GstVideoDecoder *decoder,
+                                        GstClockTime timestamp,
+                                        GstClockTime duration);
+
   /*< private >*/
-  gpointer padding[GST_PADDING_LARGE-6];
+  gpointer padding[GST_PADDING_LARGE-7];
 };
 
 /**

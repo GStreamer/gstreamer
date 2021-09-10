@@ -90,7 +90,11 @@ video_mkenum_headers = [
   'video-resampler.h',
   'video-scaler.h',
   'video-tile.h',
+  'gstvideometa.h',
   'gstvideotimecode.h',
+  'gstvideoutils.h',
+  'gstvideoencoder.h',
+  'gstvideodecoder.h',
   'colorbalance.h',
   'navigation.h',
 ]
