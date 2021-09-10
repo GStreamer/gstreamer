@@ -353,6 +353,12 @@ gst_rtp_opus_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GST_BUFFER_DURATION (outbuf) = duration;
 
   if (self->marker) {
+    GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+    gst_rtp_buffer_map (outbuf, GST_MAP_READWRITE, &rtp);
+    gst_rtp_buffer_set_marker (&rtp, TRUE);
+    gst_rtp_buffer_unmap (&rtp);
+
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
     self->marker = FALSE;
   }
