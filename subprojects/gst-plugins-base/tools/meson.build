@@ -25,29 +25,38 @@ if host_system == 'windows'
   endif
 endif
 
-executable('gst-device-monitor-@0@'.format(api_version),
-  'gst-device-monitor.c',
-  install: true,
-  c_args : gst_plugins_base_args + ['-DG_LOG_DOMAIN="gst-device-monitor-@0@"'.format(api_version)],
-  include_directories: [configinc],
-  dependencies : tool_deps,
-)
-install_man('gst-device-monitor-@0@.1'.format(api_version))
+  gst_tools = {
+    'gst-device-monitor': {
+      'files': files('gst-device-monitor.c'),
+      'deps': tool_deps,
+      'man_page': files('gst-device-monitor-@0@.1'.format(api_version))
+    },
+    'gst-discoverer': {
+      'files': files('gst-discoverer.c'),
+      'deps': tool_deps,
+      'man_page': files('gst-discoverer-@0@.1'.format(api_version))
+    },
+    'gst-play': {
+      'files': files('gst-play.c', 'gst-play-kb.c'),
+      'deps': tool_deps,
+      'man_page': files('gst-play-@0@.1'.format(api_version))
+    },
+  }
 
-executable('gst-discoverer-@0@'.format(api_version),
-  'gst-discoverer.c',
-  install: true,
-  c_args : gst_plugins_base_args + ['-DG_LOG_DOMAIN="gst-discoverer-@0@"'.format(api_version)],
-  include_directories: [configinc],
-  dependencies : tool_deps,
-)
-install_man('gst-discoverer-@0@.1'.format(api_version))
+if not get_option('tools').disabled()
+  foreach tool, data: gst_tools
+    exe_name = '@0@-@1@'.format(tool, api_version)
+    executable(exe_name,
+      data.get('files'),
+      install: true,
+      include_directories : [configinc],
+      dependencies : data.get('deps'),
+      c_args: data.get('extra_c_args', []) + gst_plugins_base_args + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],
+    )
 
-executable('gst-play-@0@'.format(api_version),
-  'gst-play.c', 'gst-play-kb.c',
-  install: true,
-  c_args : gst_plugins_base_args + ['-DG_LOG_DOMAIN="gst-play-@0@"'.format(api_version)] + extra_args,
-  include_directories: [configinc],
-  dependencies : tool_deps + [libm] + extra_deps,
-)
-install_man('gst-play-@0@.1'.format(api_version))
+    if data.has_key('man_page')
+      install_man(data.get('man_page'))
+    endif
+  endforeach
+
+endif

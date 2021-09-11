@@ -1,3 +1,7 @@
+# If tools are disabled, we still allow building them against gst-full
+# later, so populate the gst_tools dictionary in any case.
+gst_tools = {}
+
 tools = ['gst-inspect', 'gst-stats', 'gst-typefind']
 
 extra_launch_dep = []
@@ -26,14 +30,25 @@ foreach tool : tools
     extra_c_args += extra_launch_arg
   endif
 
-  executable(exe_name,
-    src_file,
-    install: true,
-    include_directories : [configinc],
-    dependencies : [glib_dep, gobject_dep, gmodule_dep, mathlib, gst_dep] + extra_deps,
-    c_args: gst_c_args + extra_c_args + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],
-  )
+  man_page = files('@0@-1.0.1'.format(tool))
+  if not get_option('tools').disabled()
+    executable(exe_name,
+      src_file,
+      install: true,
+      include_directories : [configinc],
+      dependencies : [glib_dep, gobject_dep, gmodule_dep, mathlib, gst_dep] + extra_deps,
+      c_args: gst_c_args + extra_c_args + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],
+    )
 
-  man_page = '@0@-1.0.1'.format(tool)
-  install_man(man_page)
+    install_man(man_page)
+  endif
+
+  gst_tools += {tool:
+    {
+      'files': files(src_file),
+      'deps': [glib_dep, gobject_dep, gmodule_dep, mathlib, gst_dep] + extra_deps,
+      'extra_c_args': extra_c_args,
+      'man_page': man_page,
+    }
+  }
 endforeach

@@ -1,33 +1,24 @@
-executable('gst-validate-' + apiversion,
-           'gst-validate.c',
-            install: true,
-            include_directories : inc_dirs,
-            dependencies : validate_dep,
-            c_args : [gst_c_args] + ['-DG_LOG_DOMAIN="gst-validate-@0@"'.format(apiversion)],
-          )
+gst_tools = {
+  'gst-validate': {
+    'files': files('gst-validate.c'),
+    'deps': [validate_dep, gio_dep],
+  },
+  'gst-validate-media-check': {
+    'files': files('gst-validate-media-check.c'),
+    'deps': [validate_dep, gio_dep],
+  },
+}
 
-gst_transcoder_dep = dependency('gstreamer-transcoder-' + apiversion, version : gst_req,
-    fallback : ['gst-plugins-bad', 'gst_transcoder_dep'], required: false)
-
-if gst_transcoder_dep.found()
-  executable('gst-validate-transcoding-' + apiversion,
-             'gst-validate-transcoding.c',
-             install: true,
-             include_directories : inc_dirs,
-             dependencies : [validate_dep, gst_transcoder_dep],
-             c_args : [gst_c_args] + ['-DG_LOG_DOMAIN="gst-validate-transcoding-@0@"'.format(apiversion)],
-            )
+if validate_video_dep.found()
+  gst_tools +=  {
+    'gst-validate-images-check': {
+      'files': files('gst-validate-images-check.c'),
+      'deps': [validate_dep, validate_video_dep, gio_dep],
+    },
+  }
 else
-  warning('Can not build gst-validate-transcoding-' + apiversion)
+    message('Can not build gst-validate-images-check' + apiversion)
 endif
-
-executable('gst-validate-media-check-' + apiversion,
-           'gst-validate-media-check.c',
-            install: true,
-            include_directories : inc_dirs,
-            dependencies : validate_dep,
-            c_args : [gst_c_args] + ['-DG_LOG_DOMAIN="gst-validate-media-check-@0@"'.format(apiversion)],
-        )
 
 rtsp_server_dep = dependency('gstreamer-rtsp-server-' + apiversion,
   fallback: ['gst-rtsp-server', 'gst_rtsp_server_dep'],
@@ -35,23 +26,43 @@ rtsp_server_dep = dependency('gstreamer-rtsp-server-' + apiversion,
   required: false)
 
 if rtsp_server_dep.found()
-    executable('gst-validate-rtsp-server-' + apiversion,
-               'gst-validate-rtsp-server.c',
-               install: true,
-               include_directories: inc_dirs,
-               dependencies : [rtsp_server_dep, validate_dep],
-               c_args: [gst_c_args] + ['-DG_LOG_DOMAIN="gst-validate-rtsp-server-@0@"'.format(apiversion)],
-    )
+    gst_tools += {'gst-validate-rtsp-server': {
+        'files': files('gst-validate-rtsp-server.c'),
+        'deps': [validate_dep, rtsp_server_dep, gio_dep],
+      }
+    }
+else
+    message('Can not build gst-validate-rtsp-server-' + apiversion)
 endif
 
-if validate_video_dep.found()
-    executable('gst-validate-images-check-' + apiversion,
-               'gst-validate-images-check.c',
-                install: true,
-                include_directories : inc_dirs,
-                dependencies : [validate_dep, validate_video_dep],
-                c_args : [gst_c_args] + ['-DG_LOG_DOMAIN="gst-validate-images-check-@0@"'.format(apiversion)]
-            )
+gst_transcoder_dep = dependency('gstreamer-transcoder-' + apiversion, version : gst_req,
+    fallback : ['gst-plugins-bad', 'gst_transcoder_dep'], required: false)
+if gst_transcoder_dep.found()
+    gst_tools += {'gst-validate-transcoding': {
+        'files': files('gst-validate-transcoding.c'),
+        'deps': [validate_dep, gst_transcoder_dep, gio_dep],
+      }
+    }
+else
+  message('Can not build gst-validate-transcoding-' + apiversion)
+endif
+
+if not get_option('tools').disabled()
+
+  foreach tool, data: gst_tools
+    if data.has_key('config_data')
+    else
+      exe_name = '@0@-@1@'.format(tool, apiversion)
+      executable(
+        exe_name,
+        data.get('files'),
+        install: true,
+        include_directories : inc_dirs,
+        dependencies : data.get('deps'),
+        c_args : [gst_c_args] + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],
+      )
+    endif
+  endforeach
 endif
 
 tmpconf = configuration_data()

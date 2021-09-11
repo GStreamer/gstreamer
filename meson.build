@@ -7,6 +7,7 @@ project('gstreamer-full', 'c',
                      # when it's no longer necessary.
                      'cpp_std=c++14'])
 
+apiversion = '1.0'
 gst_version = '>= @0@'.format(meson.project_version())
 
 build_system = build_machine.system()
@@ -76,9 +77,16 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
       language: ['c', 'cpp'])
 endif
 
+building_full = get_option('default_library') == 'static'
+tools_option = 'tools=auto'
+if building_full and not get_option('tools').disabled()
+  # Do not build subprojects tools when we build them against gst-full
+  tools_option = 'tools=disabled'
+endif
+
 # Ordered list of subprojects (dict has no ordering guarantees)
 subprojects = [
-  ['gstreamer', {'build-hotdoc': true}],
+  ['gstreamer', {'build-hotdoc': true, 'subproject_options': [tools_option]}],
   ['gst-plugins-base', {'option': get_option('base'), 'build-hotdoc': true}],
   ['gst-plugins-good', {'option': get_option('good'), 'build-hotdoc': true}],
   ['libnice', { 'option': get_option('libnice'), 'match_gst_version': false}],
@@ -86,9 +94,9 @@ subprojects = [
   ['gst-plugins-ugly', { 'option': get_option('ugly'), 'build-hotdoc': true}],
   ['gst-libav', { 'option': get_option('libav'), 'build-hotdoc': true}],
   ['gst-rtsp-server', { 'option': get_option('rtsp_server'), 'build-hotdoc': true}],
-  ['gst-devtools', { 'option': get_option('devtools'), 'build-hotdoc': true }],
+  ['gst-devtools', { 'option': get_option('devtools'), 'build-hotdoc': true, 'subproject_options': [tools_option]}],
   ['gst-integration-testsuites', { 'option': get_option('devtools') }],
-  ['gst-editing-services', { 'option': get_option('ges'), 'build-hotdoc': true}],
+  ['gst-editing-services', { 'option': get_option('ges'), 'build-hotdoc': true, 'subproject_options': [tools_option]}],
   ['gstreamer-vaapi', { 'option': get_option('vaapi'), 'build-hotdoc': true}],
   ['gst-omx', { 'option': get_option('omx'), 'build-hotdoc': true}],
   ['gstreamer-sharp', { 'option': get_option('sharp') }],
@@ -126,6 +134,7 @@ subprojects_names = []
 plugins_doc_caches = []
 orc_update_targets = []
 all_plugins = []
+all_tools = {}
 # Using a list and not a dict to keep the ordering to build the chain of `gir`
 # dependencies
 all_libraries = []
@@ -136,22 +145,24 @@ foreach sp : subprojects
   sysdep = build_infos.get('sysdep', '')
   sysdep_version = build_infos.get('sysdep_version', '')
   match_gst_version = build_infos.get('match_gst_version', true)
+  default_options =  build_infos.get('subproject_options', [])
 
   if match_gst_version
-    subproj = subproject(project_name, version: gst_version, required: is_required)
+    subproj = subproject(project_name, version: gst_version, required: is_required, default_options: default_options)
   elif sysdep != ''
-      sysdep_dep = dependency(sysdep, version: sysdep_version, required: false)
+      sysdep_dep = dependency(sysdep, version: sysdep_version, required: false, default_options: default_options)
       if not sysdep_dep.found()
-        subproj = subproject(project_name, required: is_required)
+        subproj = subproject(project_name, required: is_required, default_options: default_options)
       endif
   else
-    subproj = subproject(project_name, required: is_required)
+    subproj = subproject(project_name, required: is_required, default_options: default_options)
   endif
 
   if subproj.found()
     plugins = subproj.get_variable('plugins', [])
     all_plugins += plugins
     all_libraries += subproj.get_variable('libraries', [])
+    all_tools += subproj.get_variable('gst_tools', {})
 
     orc_update_targets += subproj.get_variable('orc_update_targets', [])
 
@@ -250,7 +261,16 @@ configure_file(
              all_plugins_paths]
 )
 
-if get_option('default_library') == 'static'
+if building_full
+  cdata = configuration_data()
+  cdata.set_quoted('GST_API_VERSION', apiversion)
+  cdata.set_quoted('GETTEXT_PACKAGE', 'gstreamer-full-1.0')
+  cdata.set_quoted('PACKAGE_VERSION', gst_version)
+  cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
+  configure_file(output : 'config.h', configuration : cdata)
+  configinc = include_directories('.')
+  gst_c_args = ['-DHAVE_CONFIG_H']
+
   # Generate a .c file which declare and register all built plugins
   plugins_names = []
   foreach plugin: all_plugins
@@ -279,6 +299,7 @@ if get_option('default_library') == 'static'
 
   # Get a list of libraries that needs to be exposed in the ABI.
   exposed_libs = []
+  exposed_deps = []
   exposed_girs = []
   incdir_deps = []
   wanted_libs = ['gstreamer-1.0'] + get_option('gst-full-libraries')
@@ -290,6 +311,7 @@ if get_option('default_library') == 'static'
 
     if pkg_name in wanted_libs or all_libs
       if lib_def.has_key('lib')
+        exposed_deps += dependency(pkg_name)
         incdir_deps += dependency(pkg_name).partial_dependency(includes: true, sources: true)
         exposed_libs += [lib_def['lib']]
       endif
@@ -375,6 +397,33 @@ if get_option('default_library') == 'static'
     libraries_private: gst_full_libs_private,
     subdirs : 'gstreamer-1.0')
   meson.override_dependency('gstreamer-full-1.0', gst_full_dep)
+
+  if not get_option('tools').disabled()
+    foreach tool, data: all_tools
+      exe_name = '@0@-@1@'.format(tool, apiversion)
+      extra_args = data.get('extra_c_args', [])
+      sources = data.get('files')
+      deps = []
+      foreach d : data.get('deps', [])
+        if d not in exposed_deps
+          deps += d
+        endif
+      endforeach
+
+      executable(exe_name,
+        sources,
+        install: true,
+        include_directories : [configinc],
+        dependencies : [gst_full_dep] + deps,
+        c_args: extra_args + gst_c_args + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],
+      )
+
+      if data.has_key('man_page')
+        install_man(data.get('man_page'))
+      endif
+
+    endforeach
+  endif
 endif
 
 message('Building subprojects: ' + ', '.join(subprojects_names))
@@ -402,5 +451,5 @@ if orc_subproject.found() and orc_update_targets.length() > 0
 endif
 
 summary({
-  'gstreamer-full': get_option('default_library') == 'static',
+  'gstreamer-full': building_full,
 }, section: 'Build options', bool_yn: true, list_sep: '  ')

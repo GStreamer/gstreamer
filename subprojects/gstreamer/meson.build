@@ -610,9 +610,7 @@ libraries = []
 subdir('gst')
 subdir('libs')
 subdir('plugins')
-if not get_option('tools').disabled()
-  subdir('tools')
-endif
+subdir('tools')
 subdir('tests')
 subdir('data')
 subdir('docs')

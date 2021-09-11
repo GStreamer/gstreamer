@@ -16,6 +16,7 @@ option('rs', type : 'feature', value : 'disabled')
 option('gst-examples', type : 'feature', value : 'auto', description : 'Build gst-examples')
 option('tls', type : 'feature', value : 'auto', description : 'TLS support using glib-networking')
 option('qt5', type : 'feature', value : 'auto', description : 'Qt5 Support')
+option('tools', type : 'feature', value : 'auto', yield : true, description : 'Build command line tools')
 
 # Other options
 option('custom_subprojects', type : 'string', value : '', description : 'Comma-separated project names')
@@ -46,3 +47,6 @@ option('nls', type : 'feature', value : 'auto', description : 'Enable native lan
 option('orc', type : 'feature', value : 'auto', description : 'Enable Optimized Inner Loop Runtime Compiler')
 option('doc', type : 'feature', value : 'auto', description : 'Generate API documentation with hotdoc')
 option('gtk_doc', type : 'feature', value : 'disabled', description : 'Generate API documentation with gtk-doc')
+
+option('package-origin', type : 'string', value : 'Unknown package origin', yield : true,
+       description : 'package origin URL to use in plugins')

@@ -13,3 +13,4 @@ option('nls', type : 'feature', value : 'auto', yield: true,
        description : 'Enable native language support (translations)')
 option('doc', type : 'feature', value : 'auto', yield: true,
        description: 'Enable documentation.')
+option('tools', type : 'feature', value : 'auto', yield : true)

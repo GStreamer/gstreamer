@@ -477,9 +477,7 @@ subdir('gst-libs')
 subdir('gst')
 subdir('ext')
 subdir('sys')
-if not get_option('tools').disabled()
-  subdir('tools')
-endif
+subdir('tools')
 subdir('tests')
 
 # xgettext is optional (on Windows for instance)

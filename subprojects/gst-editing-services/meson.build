@@ -271,9 +271,8 @@ libraries = []
 
 subdir('ges')
 subdir('plugins')
-if not get_option('tools').disabled()
-  subdir('tools')
-endif
+subdir('tools')
+
 subdir('tests')
 if not get_option('examples').disabled()
   subdir('examples')

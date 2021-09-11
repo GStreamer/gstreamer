@@ -11,5 +11,5 @@ option('tests', type : 'feature', value : 'auto', yield : true)
 option('doc', type : 'feature', value : 'auto', yield: true,
        description: 'Enable documentation.')
 option('package-origin', type : 'string',
-       value : 'https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/issues',
+       value : 'Unknown package origin',
        yield : true, description : 'package origin URL to use in plugins')
