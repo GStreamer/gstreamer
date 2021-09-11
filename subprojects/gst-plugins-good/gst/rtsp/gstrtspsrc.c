@@ -2931,6 +2931,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   }
   if(playing)
   {
+    GST_INFO_OBJECT (src, "closing connection and doing pause");
     gst_rtspsrc_close (src, FALSE, TRUE);
     gst_rtspsrc_pause (src, FALSE);
     src->state = GST_RTSP_STATE_SEEKING;
