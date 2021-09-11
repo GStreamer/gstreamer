@@ -6623,6 +6623,19 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       GST_WARNING ("No AV1 codec data found!");
     }
     *codec_name = g_strdup_printf ("AOM AV1");
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_FFV1)) {
+    caps =
+        gst_caps_new_simple ("video/x-ffv", "ffvversion", G_TYPE_INT, 1, NULL);
+    if (data) {
+      GstBuffer *priv;
+
+      priv = gst_buffer_new_memdup (data, size);
+      gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
+      gst_buffer_unref (priv);
+    } else {
+      GST_WARNING ("No FFV1 codec data found!");
+    }
+    *codec_name = g_strdup_printf ("FFMpeg v1");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_PRORES)) {
     guint32 fourcc;
     const gchar *variant, *variant_descr = "";

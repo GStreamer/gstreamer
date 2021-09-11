@@ -146,7 +146,8 @@ static GstStaticPadTemplate videosink_templ =
         "video/x-prores, "
         COMMON_VIDEO_CAPS "; "
         "video/x-wmv, " "wmvversion = (int) [ 1, 3 ], " COMMON_VIDEO_CAPS "; "
-        "video/x-av1, " COMMON_VIDEO_CAPS)
+        "video/x-av1, " COMMON_VIDEO_CAPS ";"
+        "video/x-ffv, ffversion = (int) 1, " COMMON_VIDEO_CAPS)
     );
 
 #define COMMON_AUDIO_CAPS \
@@ -1341,6 +1342,12 @@ skip_details:
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_AV1);
     gst_matroska_mux_free_codec_priv (context);
     /* Create av1C header */
+    if (codec_buf != NULL)
+      gst_buffer_extract_dup (codec_buf, 0, gst_buffer_get_size (codec_buf),
+          &context->codec_priv, &context->codec_priv_size);
+  } else if (!strcmp (mimetype, "video/x-ffv")) {
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_FFV1);
+    gst_matroska_mux_free_codec_priv (context);
     if (codec_buf != NULL)
       gst_buffer_extract_dup (codec_buf, 0, gst_buffer_get_size (codec_buf),
           &context->codec_priv, &context->codec_priv_size);
