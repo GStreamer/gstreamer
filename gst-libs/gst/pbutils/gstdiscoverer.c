@@ -539,9 +539,17 @@ _event_probe (GstPad * pad, GstPadProbeInfo * info, PrivateStream * ps)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:{
       GstTagList *tl = NULL, *tmp;
+      GstTagScope scope;
 
       gst_event_parse_tag (event, &tl);
+      scope = gst_tag_list_get_scope (tl);
       GST_DEBUG_OBJECT (pad, "tags %" GST_PTR_FORMAT, tl);
+
+      if (scope != GST_TAG_SCOPE_STREAM) {
+        GST_DEBUG_OBJECT (pad, "Ignoring non-stream tags");
+        break;
+      }
+
       DISCO_LOCK (ps->dc);
       /* If preroll is complete, drop these tags - the collected information is
        * possibly already being processed and adding more tags would be racy */
@@ -1703,10 +1711,19 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
 
     case GST_MESSAGE_TAG:
     {
-      GstTagList *tl, *tmp;
+      GstTagList *tl, *tmp = NULL;
+      GstTagScope scope;
 
       gst_message_parse_tag (msg, &tl);
+      scope = gst_tag_list_get_scope (tl);
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "Got tags %" GST_PTR_FORMAT, tl);
+
+      if (scope != GST_TAG_SCOPE_GLOBAL) {
+        GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "Ignoring non-global tags");
+        gst_tag_list_unref (tl);
+        break;
+      }
+
       /* Merge with current tags */
       tmp =
           gst_tag_list_merge (dc->priv->current_info->tags, tl,
