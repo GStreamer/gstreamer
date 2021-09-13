@@ -139,7 +139,14 @@ gir_init_section = [ '--add-init-section=' + \
     'ges_init();', '--quiet']
 
 has_python = false
-if build_gir
+static_build = get_option('default_library') == 'static'
+if static_build
+  if get_option('python').enabled()
+    error('Want to build python based modules but it is not supported while static building')
+  else
+    message('Disabling python support as it is not supported on static builds')
+  endif
+elif build_gir
   pymod = import('python')
   python = pymod.find_installation(required: get_option('python'))
   if python.found()
@@ -254,7 +261,6 @@ pkgconfig = import('pkgconfig')
 pkgconfig_subdirs = ['gstreamer-1.0']
 
 configinc = include_directories('.')
-static_build = get_option('default_library') == 'static'
 libraries = []
 
 subdir('ges')
