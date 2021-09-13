@@ -582,6 +582,107 @@ gst_validate_get_test_file_scenario (GList ** structs,
   return TRUE;
 }
 
+#if !GLIB_CHECK_VERSION(2,58,0)
+
+/* Copied from https://gitlab.gnome.org/GNOME/glib/-/blob/main/glib/gfileutils.c#L2736 */
+static gchar *
+g_canonicalize_filename (const gchar * filename, const gchar * relative_to)
+{
+  gchar *canon, *start, *p, *q;
+  guint i;
+
+  g_return_val_if_fail (relative_to == NULL
+      || g_path_is_absolute (relative_to), NULL);
+
+  if (!g_path_is_absolute (filename)) {
+    gchar *cwd_allocated = NULL;
+    const gchar *cwd;
+
+    if (relative_to != NULL)
+      cwd = relative_to;
+    else
+      cwd = cwd_allocated = g_get_current_dir ();
+
+    canon = g_build_filename (cwd, filename, NULL);
+    g_free (cwd_allocated);
+  } else {
+    canon = g_strdup (filename);
+  }
+
+  start = (char *) g_path_skip_root (canon);
+
+  if (start == NULL) {
+    /* This shouldn't really happen, as g_get_current_dir() should
+       return an absolute pathname, but bug 573843 shows this is
+       not always happening */
+    g_free (canon);
+    return g_build_filename (G_DIR_SEPARATOR_S, filename, NULL);
+  }
+
+  /* POSIX allows double slashes at the start to
+   * mean something special (as does windows too).
+   * So, "//" != "/", but more than two slashes
+   * is treated as "/".
+   */
+  i = 0;
+  for (p = start - 1; (p >= canon) && G_IS_DIR_SEPARATOR (*p); p--)
+    i++;
+  if (i > 2) {
+    i -= 1;
+    start -= i;
+    memmove (start, start + i, strlen (start + i) + 1);
+  }
+
+  /* Make sure we're using the canonical dir separator */
+  p++;
+  while (p < start && G_IS_DIR_SEPARATOR (*p))
+    *p++ = G_DIR_SEPARATOR;
+
+  p = start;
+  while (*p != 0) {
+    if (p[0] == '.' && (p[1] == 0 || G_IS_DIR_SEPARATOR (p[1]))) {
+      memmove (p, p + 1, strlen (p + 1) + 1);
+    } else if (p[0] == '.' && p[1] == '.' && (p[2] == 0
+            || G_IS_DIR_SEPARATOR (p[2]))) {
+      q = p + 2;
+      /* Skip previous separator */
+      p = p - 2;
+      if (p < start)
+        p = start;
+      while (p > start && !G_IS_DIR_SEPARATOR (*p))
+        p--;
+      if (G_IS_DIR_SEPARATOR (*p))
+        *p++ = G_DIR_SEPARATOR;
+      memmove (p, q, strlen (q) + 1);
+    } else {
+      /* Skip until next separator */
+      while (*p != 0 && !G_IS_DIR_SEPARATOR (*p))
+        p++;
+
+      if (*p != 0) {
+        /* Canonicalize one separator */
+        *p++ = G_DIR_SEPARATOR;
+      }
+    }
+
+    /* Remove additional separators */
+    q = p;
+    while (*q && G_IS_DIR_SEPARATOR (*q))
+      q++;
+
+    if (p != q)
+      memmove (p, q, strlen (q) + 1);
+  }
+
+  /* Remove trailing slashes */
+  if (p > start && G_IS_DIR_SEPARATOR (*(p - 1)))
+    *(p - 1) = 0;
+
+  return canon;
+}
+
+#endif
+
 /* Only the first monitor pipeline will be used */
 GstStructure *
 gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
@@ -593,13 +694,16 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   if (global_testfile)
     gst_validate_abort ("A testfile was already loaded: %s", global_testfile);
 
+  global_testfile = g_canonicalize_filename (testfile, NULL);
+
   gst_validate_set_globals (NULL);
-  gst_validate_structure_set_variables_from_struct_file (NULL, testfile);
+  gst_validate_structure_set_variables_from_struct_file (NULL, global_testfile);
   testfile_structs =
-      gst_validate_utils_structs_parse_from_filename (testfile, NULL, NULL);
+      gst_validate_utils_structs_parse_from_filename (global_testfile, NULL,
+      NULL);
 
   if (!testfile_structs)
-    gst_validate_abort ("Could not load test file: %s", testfile);
+    gst_validate_abort ("Could not load test file: %s", global_testfile);
 
   res = testfile_structs->data;
   if (gst_structure_has_name (testfile_structs->data, "set-globals")) {
@@ -608,7 +712,7 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
     if (!testfile_structs->next)
       gst_validate_abort
           ("Only one `set-globals` structure in %s, nothing to test here.",
-          testfile);
+          global_testfile);
     res = testfile_structs->next->data;
   }
 
@@ -620,7 +724,7 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   register_action_types ();
   gst_validate_scenario_check_and_set_needs_clock_sync (testfile_structs, &res);
 
-  gst_validate_set_test_file_globals (res, testfile, use_fakesinks);
+  gst_validate_set_test_file_globals (res, global_testfile, use_fakesinks);
   gst_validate_structure_resolve_variables (NULL, res, NULL, 0);
 
   tool = gst_structure_get_string (res, "tool");
@@ -630,8 +734,7 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   if (g_strcmp0 (tool, g_get_prgname ()))
     gst_validate_abort
         ("Validate test file: '%s' was made to be run with '%s' not '%s'",
-        testfile, tool, g_get_prgname ());
-  global_testfile = g_strdup (testfile);
+        global_testfile, tool, g_get_prgname ());
 
   return res;
 }
