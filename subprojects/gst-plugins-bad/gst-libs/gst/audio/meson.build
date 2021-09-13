@@ -21,13 +21,7 @@ pkgconfig.generate(gstbadaudio,
   name : 'gstreamer-bad-audio-1.0',
   description : 'Bad audio library for GStreamer elements',
 )
-
-gstbadaudio_dep = declare_dependency(link_with : gstbadaudio,
-  include_directories : [libsinc],
-  dependencies : [gstaudio_dep, gstbase_dep])
-
-meson.override_dependency('gstreamer-bad-audio-1.0', gstbadaudio_dep)
-
+gen_sources = []
 if build_gir
   audio_gir = gnome.generate_gir(gstbadaudio,
     sources : badaudio_sources + badaudio_headers,
@@ -41,4 +35,12 @@ if build_gir
     extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
     dependencies : [gstbase_dep, gstaudio_dep]
   )
+  gen_sources += audio_gir
 endif
+
+gstbadaudio_dep = declare_dependency(link_with : gstbadaudio,
+  include_directories : [libsinc],
+  sources: gen_sources,
+  dependencies : [gstaudio_dep, gstbase_dep])
+
+meson.override_dependency(pkg_name, gstbadaudio_dep)
