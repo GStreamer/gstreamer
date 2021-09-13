@@ -8,6 +8,7 @@ gst_version = '>= @0@'.format(meson.project_version())
 build_system = build_machine.system()
 cc = meson.get_compiler('c')
 
+gnome = import('gnome')
 pkgconfig = import('pkgconfig')
 python3 = import('python').find_installation()
 # Ensure that we're not being run from inside the gst-uninstalled env
@@ -112,6 +113,7 @@ subprojects_names = []
 plugins_doc_caches = []
 orc_update_targets = []
 all_plugins = []
+all_libraries = []
 foreach sp : subprojects
   project_name = sp[0]
   build_infos = sp[1]
@@ -134,6 +136,7 @@ foreach sp : subprojects
   if subproj.found()
     plugins = subproj.get_variable('plugins', [])
     all_plugins += plugins
+    all_libraries += subproj.get_variable('libraries', [])
 
     orc_update_targets += subproj.get_variable('orc_update_targets', [])
 
@@ -225,45 +228,7 @@ configure_file(
              all_plugins_paths]
 )
 
-# FIXME: Create a 'libraries' list in each subproject like we do for 'plugins'
-libraries_map = {
-  # name: [subproject_name, variable_name]
-  'gstreamer': ['gstreamer', 'libgst'],
-  'base': ['gstreamer', 'gst_base'],
-  'check': ['gstreamer', 'gst_check'],
-  'controller': ['gstreamer', 'gst_controller'],
-  'net': ['gstreamer', 'gst_net'],
-
-  'allocators': ['gst-plugins-base', 'gstallocators'],
-  'app': ['gst-plugins-base', 'gstapp'],
-  'audio': ['gst-plugins-base', 'gstaudio'],
-  'fft': ['gst-plugins-base', 'gstfft'],
-  'pbutils': ['gst-plugins-base', 'pbutils'],
-  'riff': ['gst-plugins-base', 'gstriff'],
-  'rtp': ['gst-plugins-base', 'gst_rtp'],
-  'rtsp': ['gst-plugins-base', 'gst_rtsp'],
-  'sdp': ['gst-plugins-base', 'gstsdp'],
-  'tag': ['gst-plugins-base', 'gsttag'],
-  'video': ['gst-plugins-base', 'gstvideo'],
-  'gl': ['gst-plugins-base', 'gstgl'],
-
-  'bad-audio': ['gst-plugins-bad', 'gstbadaudio'],
-  'bad-transcoder': ['gst-plugins-bad', 'gst_transcoder'],
-  'codecparsers': ['gst-plugins-bad', 'gstcodecparsers'],
-  'insertbin': ['gst-plugins-bad', 'gstinsertbin'],
-  'mpegts': ['gst-plugins-bad', 'gstmpegts'],
-  'player': ['gst-plugins-bad', 'gstplayer'],
-  'sctp': ['gst-plugins-bad', 'libgstsctp'],
-  'webrtc': ['gst-plugins-bad', 'gstwebrtc'],
-  'vulkan': ['gst-plugins-bad', 'gstvulkan'],
-
-  'rtsp-server': ['gst-rtsp-server', 'gst_rtsp_server'],
-}
-
 if get_option('default_library') == 'static'
-  if not get_option('introspection').disabled()
-    error('GObject Introspection is not supported in static builds. Please use -Dintrospection=disabled')
-  endif
   # Generate a .c file which declare and register all built plugins
   plugins_names = []
   foreach plugin: all_plugins
@@ -292,12 +257,25 @@ if get_option('default_library') == 'static'
 
   # Get a list of libraries that needs to be exposed in the ABI.
   exposed_libs = []
+  exposed_girs = []
   incdir_deps = []
-  foreach name : get_option('gst-full-libraries') + ['gstreamer']
-    info = libraries_map[name]
-    exposed_libs += subproject(info[0]).get_variable(info[1])
-    depname = name == 'gstreamer' ? 'gstreamer-1.0' : 'gstreamer-@0@-1.0'.format(name)
-    incdir_deps += dependency(depname).partial_dependency(includes: true, sources: true)
+  wanted_libs = ['gstreamer-1.0'] + get_option('gst-full-libraries')
+  all_libs = '*' in wanted_libs
+
+  foreach pkgname_library : all_libraries
+    pkg_name = pkgname_library[0]
+    lib_def = pkgname_library[1]
+
+    if pkg_name in wanted_libs or all_libs
+      if lib_def.has_key('lib')
+        incdir_deps += dependency(pkg_name).partial_dependency(includes: true, sources: true)
+        exposed_libs += [lib_def['lib']]
+      endif
+
+      if lib_def.has_key('gir')
+        exposed_girs += lib_def['gir']
+      endif
+    endif
   endforeach
 
   # glib and gobject are part of our public API. If we are using glib from the
@@ -347,10 +325,29 @@ if get_option('default_library') == 'static'
     dependencies : incdir_deps + glib_deps,
     include_directories: include_directories('.')
   )
+
   gst_full_libs_private = cc.get_supported_link_arguments(['-Wl,--undefined=gst_init_static_plugins'])
   if gst_full_libs_private == []
     warning('The compiler does not support `-Wl,--undefined` linker flag. The method `gst_init_static_plugins` might be dropped during the link stage of an application using libgstreamer-full-1.0.a, preventing plugins registration.')
   endif
+
+  if not get_option('introspection').disabled()
+    built_girs = {}
+    foreach gir: exposed_girs
+      includes = []
+      foreach include: gir.get('includes', [])
+        includes += [built_girs.get(include, include)]
+      endforeach
+
+      gir += {
+        'includes': includes,
+        'extra_args': gir.get('extra_args', []) + ['--add-include-path=' + meson.current_build_dir()],
+        'install': true,
+      }
+      built_girs += {gir.get('namespace') + '-' + gir.get('nsversion'): gnome.generate_gir(gstfull, kwargs: gir)[0]}
+    endforeach
+  endif
+
   pkgconfig.generate(gstfull,
     requires: glib_deps,
     libraries_private: gst_full_libs_private,
