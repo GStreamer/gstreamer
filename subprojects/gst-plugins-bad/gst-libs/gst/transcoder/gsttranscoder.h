@@ -7,8 +7,8 @@
 
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
-#include "transcoder-prelude.h"
-#include "transcoder-enumtypes.h"
+#include <gst/transcoder/transcoder-prelude.h>
+#include <gst/transcoder/transcoder-enumtypes.h>
 
 G_BEGIN_DECLS
 
