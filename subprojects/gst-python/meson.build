@@ -98,4 +98,6 @@ endif
 
 subdir('gi')
 subdir('plugin')
-subdir('testsuite')
+if not get_option('tests').disabled()
+  subdir('testsuite')
+endif
