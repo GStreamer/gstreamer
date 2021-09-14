@@ -12730,32 +12730,46 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           {
             /* mp4a atom withtout ESDS; Attempt to build codec data from atom */
             gint len = QT_UINT32 (stsd_entry_data);
+            guint16 sound_version = 0;
+            /* FIXME: Can this be determined somehow? There doesn't seem to be
+             * anything in mp4a atom that specifis compression */
+            gint profile = 2;
+            guint16 channels = entry->n_channels;
+            guint32 time_scale = (guint32) entry->rate;
+            gint sample_rate_index = -1;
 
             if (len >= 34) {
-              guint16 sound_version = QT_UINT16 (stsd_entry_data + 16);
+              sound_version = QT_UINT16 (stsd_entry_data + 16);
 
               if (sound_version == 1) {
-                guint16 channels = QT_UINT16 (stsd_entry_data + 24);
-                guint32 time_scale = QT_UINT32 (stsd_entry_data + 30);
-                guint8 codec_data[2];
-                GstBuffer *buf;
-                gint profile = 2;       /* FIXME: Can this be determined somehow? There doesn't seem to be anything in mp4a atom that specifis compression */
-
-                gint sample_rate_index =
-                    gst_codec_utils_aac_get_index_from_sample_rate (time_scale);
-
-                /* build AAC codec data */
-                codec_data[0] = profile << 3;
-                codec_data[0] |= ((sample_rate_index >> 1) & 0x7);
-                codec_data[1] = (sample_rate_index & 0x01) << 7;
-                codec_data[1] |= (channels & 0xF) << 3;
-
-                buf = gst_buffer_new_and_alloc (2);
-                gst_buffer_fill (buf, 0, codec_data, 2);
-                gst_caps_set_simple (entry->caps,
-                    "codec_data", GST_TYPE_BUFFER, buf, NULL);
-                gst_buffer_unref (buf);
+                channels = QT_UINT16 (stsd_entry_data + 24);
+                time_scale = QT_UINT32 (stsd_entry_data + 30);
+              } else {
+                GST_FIXME_OBJECT (qtdemux, "Unhandled mp4a atom version %d",
+                    sound_version);
               }
+            } else {
+              GST_DEBUG_OBJECT (qtdemux, "Too small stsd entry data len %d",
+                  len);
+            }
+
+            sample_rate_index =
+                gst_codec_utils_aac_get_index_from_sample_rate (time_scale);
+            if (sample_rate_index >= 0 && channels > 0) {
+              guint8 codec_data[2];
+              GstBuffer *buf;
+
+              /* build AAC codec data */
+              codec_data[0] = profile << 3;
+              codec_data[0] |= ((sample_rate_index >> 1) & 0x7);
+              codec_data[1] = (sample_rate_index & 0x01) << 7;
+              codec_data[1] |= (channels & 0xF) << 3;
+
+              buf = gst_buffer_new_and_alloc (2);
+              gst_buffer_fill (buf, 0, codec_data, 2);
+              gst_caps_set_simple (entry->caps,
+                  "codec_data", GST_TYPE_BUFFER, buf, NULL);
+              gst_buffer_unref (buf);
             }
             break;
           }
