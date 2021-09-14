@@ -1,7 +1,9 @@
 {
   global:
-    gst_*;
+    ges_*;
+    GES_*;
     GST_*;
+    gst_*;
     _gst_*;
     g_*;
     glib_*;
