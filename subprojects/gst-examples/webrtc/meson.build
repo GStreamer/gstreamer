@@ -27,4 +27,6 @@ subdir('signalling')
 subdir('sendonly')
 subdir('sendrecv')
 
-subdir('check')
+if not get_option('tests').disabled()
+    subdir('check')
+endif
