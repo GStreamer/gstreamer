@@ -18,12 +18,11 @@ nalutils_dep = gstcodecparsers_dep.partial_dependency (compile_args: true, inclu
 enable_gst_play_tests = get_option('gst_play_tests')
 libsoup_dep = dependency('libsoup-2.4', version : '>=2.48', required : enable_gst_play_tests,
   fallback : ['libsoup', 'libsoup_dep'])
-aes_dep = dependency('openssl', required : false)
 
 # name, condition when to skip the test and extra dependencies
 base_tests = [
-  [['elements/aesenc.c'], false, [aes_dep]],
-  [['elements/aesdec.c'], false, [aes_dep]],
+  [['elements/aesenc.c'], not aes_dep.found(), [aes_dep]],
+  [['elements/aesdec.c'], not aes_dep.found(), [aes_dep]],
   [['elements/aiffparse.c']],
   [['elements/asfmux.c']],
   [['elements/autoconvert.c']],

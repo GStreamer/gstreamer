@@ -5,11 +5,6 @@ aes_sources = [
   'gstaesdec.c',
 ]
 
-aes_option = get_option('aes')
-if aes_option.disabled()
-  subdir_done()
-endif
-
 aes_cargs = []
 aes_dep = dependency('openssl', required : get_option('aes'))
 if aes_dep.found()
