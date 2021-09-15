@@ -57,6 +57,7 @@ GST_DEBUG_CATEGORY (gst_d3d11_video_processor_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_compositor_debug);
 
 #ifdef HAVE_DXVA_H
+GST_DEBUG_CATEGORY (gst_d3d11_decoder_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_h264_dec_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_h265_dec_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_vp9_dec_debug);
@@ -105,6 +106,8 @@ plugin_init (GstPlugin * plugin)
 #ifdef HAVE_DXVA_H
   /* DXVA2 API is availble since Windows 8 */
   if (gst_d3d11_is_windows_8_or_greater ()) {
+    GST_DEBUG_CATEGORY_INIT (gst_d3d11_decoder_debug,
+        "d3d11decoder", 0, "Direct3D11 Video Decoder object");
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_h264_dec_debug,
         "d3d11h264dec", 0, "Direct3D11 H.264 Video Decoder");
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_vp9_dec_debug,
@@ -145,38 +148,18 @@ plugin_init (GstPlugin * plugin)
 
 #ifdef HAVE_DXVA_H
     /* DXVA2 API is availble since Windows 8 */
-    if (gst_d3d11_is_windows_8_or_greater ()) {
-      GstD3D11Decoder *decoder = NULL;
-      gboolean legacy;
-      gboolean hardware;
+    if (gst_d3d11_is_windows_8_or_greater () &&
+        gst_d3d11_device_get_video_device_handle (device)) {
+      gboolean legacy = gst_d3d11_decoder_util_is_legacy_device (device);
 
-      g_object_get (device, "hardware", &hardware, NULL);
-      if (!hardware)
-        goto done;
-
-      decoder = gst_d3d11_decoder_new (device);
-      if (!decoder)
-        goto done;
-
-      legacy = gst_d3d11_decoder_util_is_legacy_device (device);
-
-      gst_d3d11_h264_dec_register (plugin,
-          device, decoder, GST_RANK_SECONDARY, legacy);
+      gst_d3d11_h264_dec_register (plugin, device, GST_RANK_SECONDARY, legacy);
       if (!legacy) {
-        gst_d3d11_h265_dec_register (plugin, device, decoder,
-            GST_RANK_SECONDARY);
-        gst_d3d11_vp9_dec_register (plugin, device, decoder,
-            GST_RANK_SECONDARY);
-        gst_d3d11_vp8_dec_register (plugin, device, decoder,
-            GST_RANK_SECONDARY);
-        gst_d3d11_mpeg2_dec_register (plugin, device, decoder,
-            GST_RANK_SECONDARY);
-        gst_d3d11_av1_dec_register (plugin, device, decoder,
-            GST_RANK_SECONDARY);
+        gst_d3d11_h265_dec_register (plugin, device, GST_RANK_SECONDARY);
+        gst_d3d11_vp9_dec_register (plugin, device, GST_RANK_SECONDARY);
+        gst_d3d11_vp8_dec_register (plugin, device, GST_RANK_SECONDARY);
+        gst_d3d11_mpeg2_dec_register (plugin, device, GST_RANK_SECONDARY);
+        gst_d3d11_av1_dec_register (plugin, device, GST_RANK_SECONDARY);
       }
-
-    done:
-      gst_clear_object (&decoder);
     }
 #endif
 

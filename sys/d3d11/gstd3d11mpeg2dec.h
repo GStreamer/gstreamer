@@ -26,7 +26,6 @@ G_BEGIN_DECLS
 
 void  gst_d3d11_mpeg2_dec_register (GstPlugin * plugin,
                                     GstD3D11Device * device,
-                                    GstD3D11Decoder * decoder,
                                     guint rank);
 
 G_END_DECLS
