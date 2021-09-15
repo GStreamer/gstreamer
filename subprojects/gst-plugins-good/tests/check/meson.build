@@ -73,7 +73,7 @@ good_tests = [
   [ 'elements/rtpbin_buffer_list' ],
   [ 'elements/rtpcollision' ],
   [ 'elements/rtpfunnel' ],
-  [ 'elements/rtphdrextrfc6464', false, [gstsdp_dep, gstaudio_dep] ],
+  [ 'elements/rtphdrextclientaudiolevel', false, [gstsdp_dep, gstaudio_dep] ],
   [ 'elements/rtpjitterbuffer' ],
   [ 'elements/rtpjpeg' ],
 

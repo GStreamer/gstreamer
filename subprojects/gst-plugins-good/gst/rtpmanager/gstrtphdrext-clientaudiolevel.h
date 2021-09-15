@@ -13,20 +13,20 @@
  * Library General Public License for more
  */
 
-#ifndef __GST_RTPHDREXT_RFC6464_H__
-#define __GST_RTPHDREXT_RFC6464_H__
+#ifndef __GST_RTPHDREXT_CLIENT_AUDIO_LEVEL_H__
+#define __GST_RTPHDREXT_CLIENT_AUDIO_LEVEL_H__
 
 #include <gst/gst.h>
 #include <gst/rtp/gstrtphdrext.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RTP_HEADER_EXTENSION_RFC6464 (gst_rtp_header_extension_rfc6464_get_type())
+#define GST_TYPE_RTP_HEADER_EXTENSION_CLIENT_AUDIO_LEVEL (gst_rtp_header_extension_client_audio_level_get_type())
 
-G_DECLARE_FINAL_TYPE (GstRTPHeaderExtensionRfc6464, gst_rtp_header_extension_rfc6464, GST, RTP_HEADER_EXTENSION_RFC6464, GstRTPHeaderExtension)
+G_DECLARE_FINAL_TYPE (GstRTPHeaderExtensionClientAudioLevel, gst_rtp_header_extension_client_audio_level, GST, RTP_HEADER_EXTENSION_CLIENT_AUDIO_LEVEL, GstRTPHeaderExtension)
 
-GST_ELEMENT_REGISTER_DECLARE (rtphdrextrfc6464);
+GST_ELEMENT_REGISTER_DECLARE (rtphdrextclientaudiolevel);
 
 G_END_DECLS
 
-#endif /* __GST_RTPHDREXT_RFC6464_H__ */
+#endif /* __GST_RTPHDREXT_CLIENT_AUDIO_LEVEL_H__ */

@@ -17162,12 +17162,12 @@
                 },
                 "rank": "none"
             },
-            "rtphdrextrfc6464": {
+            "rtphdrextclientaudiolevel": {
                 "RTP-Header-Extension-URI": "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
                 "author": "Guillaume Desmottes <guillaume.desmottes@collabora.com>",
                 "description": "Client-to-Mixer Audio Level Indication (RFC6464) RTP Header Extension",
                 "hierarchy": [
-                    "GstRTPHeaderExtensionRfc6464",
+                    "GstRTPHeaderExtensionClientAudioLevel",
                     "GstRTPHeaderExtension",
                     "GstElement",
                     "GstObject",

@@ -98,7 +98,7 @@ check_caps (GstRTPHeaderExtension * ext, gboolean vad)
   gst_caps_unref (caps);
 }
 
-GST_START_TEST (rtprfc6464_sdp)
+GST_START_TEST (rtphdrext_client_audio_level_sdp)
 {
   GstRTPHeaderExtension *ext;
   GstCaps *caps;
@@ -140,7 +140,7 @@ GST_START_TEST (rtprfc6464_sdp)
 
 GST_END_TEST;
 
-GST_START_TEST (rtprfc6464_one_byte)
+GST_START_TEST (rtphdrext_client_audio_level_one_byte)
 {
   GstRTPHeaderExtension *ext;
   GstRTPHeaderExtensionFlags flags;
@@ -188,7 +188,7 @@ GST_START_TEST (rtprfc6464_one_byte)
 
 GST_END_TEST;
 
-GST_START_TEST (rtprfc6464_two_bytes)
+GST_START_TEST (rtphdrext_client_audio_level_two_bytes)
 {
   GstRTPHeaderExtension *ext;
   GstRTPHeaderExtensionFlags flags;
@@ -236,7 +236,7 @@ GST_START_TEST (rtprfc6464_two_bytes)
 
 GST_END_TEST;
 
-GST_START_TEST (rtprfc6464_no_meta)
+GST_START_TEST (rtphdrext_client_audio_level_no_meta)
 {
   GstRTPHeaderExtension *ext;
   GstBuffer *buffer;
@@ -271,7 +271,7 @@ GST_START_TEST (rtprfc6464_no_meta)
 
 GST_END_TEST;
 
-GST_START_TEST (rtprfc6464_payloader_depayloader)
+GST_START_TEST (rtphdrext_client_audio_level_payloader_depayloader)
 {
   GstHarness *h;
   GstBuffer *b;
@@ -304,7 +304,7 @@ GST_START_TEST (rtprfc6464_payloader_depayloader)
 GST_END_TEST;
 
 
-GST_START_TEST (rtprfc6464_payloader_api)
+GST_START_TEST (rtphdrext_client_audio_level_payloader_api)
 {
   GstHarness *h;
   GstRTPHeaderExtension *ext;
@@ -350,21 +350,21 @@ GST_END_TEST;
 
 
 static Suite *
-rtprfc6464_suite (void)
+rtphdrext_client_audio_level_suite (void)
 {
-  Suite *s = suite_create ("rtprfc6464");
+  Suite *s = suite_create ("rtphdrext_client_audio_level");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
 
-  tcase_add_test (tc_chain, rtprfc6464_sdp);
-  tcase_add_test (tc_chain, rtprfc6464_one_byte);
-  tcase_add_test (tc_chain, rtprfc6464_two_bytes);
-  tcase_add_test (tc_chain, rtprfc6464_no_meta);
-  tcase_add_test (tc_chain, rtprfc6464_payloader_depayloader);
-  tcase_add_test (tc_chain, rtprfc6464_payloader_api);
+  tcase_add_test (tc_chain, rtphdrext_client_audio_level_sdp);
+  tcase_add_test (tc_chain, rtphdrext_client_audio_level_one_byte);
+  tcase_add_test (tc_chain, rtphdrext_client_audio_level_two_bytes);
+  tcase_add_test (tc_chain, rtphdrext_client_audio_level_no_meta);
+  tcase_add_test (tc_chain, rtphdrext_client_audio_level_payloader_depayloader);
+  tcase_add_test (tc_chain, rtphdrext_client_audio_level_payloader_api);
 
   return s;
 }
 
-GST_CHECK_MAIN (rtprfc6464)
+GST_CHECK_MAIN (rtphdrext_client_audio_level)
