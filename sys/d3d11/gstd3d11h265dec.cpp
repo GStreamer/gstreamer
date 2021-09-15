@@ -52,14 +52,6 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_h265_dec_debug);
 #define GST_CAT_DEFAULT gst_d3d11_h265_dec_debug
 
-enum
-{
-  PROP_0,
-  PROP_ADAPTER,
-  PROP_DEVICE_ID,
-  PROP_VENDOR_ID,
-};
-
 typedef struct _GstD3D11H265Dec
 {
   GstH265Decoder parent;
@@ -95,9 +87,7 @@ typedef struct _GstD3D11H265Dec
 typedef struct _GstD3D11H265DecClass
 {
   GstH265DecoderClass parent_class;
-  guint adapter;
-  guint device_id;
-  guint vendor_id;
+  GstD3D11DecoderSubClassData class_data;
 } GstD3D11H265DecClass;
 
 static GstElementClass *parent_class = NULL;
@@ -153,49 +143,17 @@ gst_d3d11_h265_dec_class_init (GstD3D11H265DecClass * klass, gpointer data)
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstH265DecoderClass *h265decoder_class = GST_H265_DECODER_CLASS (klass);
   GstD3D11DecoderClassData *cdata = (GstD3D11DecoderClassData *) data;
-  gchar *long_name;
 
   gobject_class->get_property = gst_d3d11_h265_dec_get_property;
   gobject_class->dispose = gst_d3d11_h265_dec_dispose;
 
-  g_object_class_install_property (gobject_class, PROP_ADAPTER,
-      g_param_spec_uint ("adapter", "Adapter",
-          "DXGI Adapter index for creating device",
-          0, G_MAXUINT32, cdata->adapter,
-          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
-      g_param_spec_uint ("device-id", "Device Id",
-          "DXGI Device ID", 0, G_MAXUINT32, 0,
-          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (gobject_class, PROP_VENDOR_ID,
-      g_param_spec_uint ("vendor-id", "Vendor Id",
-          "DXGI Vendor ID", 0, G_MAXUINT32, 0,
-          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
-
-  parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
-
-  klass->adapter = cdata->adapter;
-  klass->device_id = cdata->device_id;
-  klass->vendor_id = cdata->vendor_id;
-
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_h265_dec_set_context);
 
-  long_name = g_strdup_printf ("Direct3D11/DXVA H.265 %s Decoder",
-      cdata->description);
-  gst_element_class_set_metadata (element_class, long_name,
-      "Codec/Decoder/Video/Hardware",
-      "A Direct3D11/DXVA H.265 video decoder",
+  parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
+  gst_d3d11_decoder_class_data_fill_subclass_data (cdata, &klass->class_data);
+  gst_d3d11_decoder_proxy_class_init (element_class, cdata,
       "Seungha Yang <seungha.yang@navercorp.com>");
-  g_free (long_name);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
-  gst_d3d11_decoder_class_data_free (cdata);
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_d3d11_h265_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_d3d11_h265_dec_close);
@@ -230,21 +188,9 @@ gst_d3d11_h265_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstD3D11H265DecClass *klass = GST_D3D11_H265_DEC_GET_CLASS (object);
+  GstD3D11DecoderSubClassData *cdata = &klass->class_data;
 
-  switch (prop_id) {
-    case PROP_ADAPTER:
-      g_value_set_uint (value, klass->adapter);
-      break;
-    case PROP_DEVICE_ID:
-      g_value_set_uint (value, klass->device_id);
-      break;
-    case PROP_VENDOR_ID:
-      g_value_set_uint (value, klass->vendor_id);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+  gst_d3d11_decoder_proxy_get_property (object, prop_id, value, pspec, cdata);
 }
 
 static void
@@ -265,8 +211,9 @@ gst_d3d11_h265_dec_set_context (GstElement * element, GstContext * context)
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (element);
   GstD3D11H265DecClass *klass = GST_D3D11_H265_DEC_GET_CLASS (self);
+  GstD3D11DecoderSubClassData *cdata = &klass->class_data;
 
-  gst_d3d11_handle_set_context (element, context, klass->adapter,
+  gst_d3d11_handle_set_context (element, context, cdata->adapter,
       &self->device);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
@@ -277,8 +224,9 @@ gst_d3d11_h265_dec_open (GstVideoDecoder * decoder)
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
   GstD3D11H265DecClass *klass = GST_D3D11_H265_DEC_GET_CLASS (self);
+  GstD3D11DecoderSubClassData *cdata = &klass->class_data;
 
-  if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), klass->adapter,
+  if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), cdata->adapter,
           &self->device)) {
     GST_ERROR_OBJECT (self, "Cannot create d3d11device");
     return FALSE;
@@ -1527,7 +1475,8 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   gst_caps_unref (src_caps_copy);
 
   type_info.class_data =
-      gst_d3d11_decoder_class_data_new (device, sink_caps, src_caps);
+      gst_d3d11_decoder_class_data_new (device, GST_D3D11_CODEC_H265,
+      sink_caps, src_caps);
 
   type_name = g_strdup ("GstD3D11H265Dec");
   feature_name = g_strdup ("d3d11h265dec");

@@ -55,6 +55,7 @@
 #include "gstd3d11converter.h"
 #include "gstd3d11pluginutils.h"
 #include <string.h>
+#include <string>
 
 #ifdef HAVE_WINMM
 #include <timeapi.h>
@@ -1941,6 +1942,22 @@ gst_d3d11_decoder_supports_resolution (GstD3D11Decoder * decoder,
   return TRUE;
 }
 
+enum
+{
+  PROP_DECODER_ADAPTER = 1,
+  PROP_DECODER_DEVICE_ID,
+  PROP_DECODER_VENDOR_ID,
+};
+
+struct _GstD3D11DecoderClassData
+{
+  GstD3D11DecoderSubClassData subclass_data;
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+  gchar *description;
+  GstD3D11Codec codec;
+};
+
 /**
  * gst_d3d11_decoder_class_data_new:
  * @device: (transfer none): a #GstD3D11Device
@@ -1952,7 +1969,7 @@ gst_d3d11_decoder_supports_resolution (GstD3D11Decoder * decoder,
  * Returns: (transfer full): the new #GstD3D11DecoderClassData
  */
 GstD3D11DecoderClassData *
-gst_d3d11_decoder_class_data_new (GstD3D11Device * device,
+gst_d3d11_decoder_class_data_new (GstD3D11Device * device, GstD3D11Codec codec,
     GstCaps * sink_caps, GstCaps * src_caps)
 {
   GstD3D11DecoderClassData *ret;
@@ -1963,13 +1980,16 @@ gst_d3d11_decoder_class_data_new (GstD3D11Device * device,
 
   ret = g_new0 (GstD3D11DecoderClassData, 1);
 
+  ret->codec = codec;
+
   /* class data will be leaked if the element never gets instantiated */
   GST_MINI_OBJECT_FLAG_SET (sink_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   GST_MINI_OBJECT_FLAG_SET (src_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
-  g_object_get (device, "adapter", &ret->adapter,
-      "device-id", &ret->device_id, "vendor-id", &ret->vendor_id,
-      "description", &ret->description, NULL);
+  g_object_get (device, "adapter", &ret->subclass_data.adapter,
+      "device-id", &ret->subclass_data.device_id,
+      "vendor-id", &ret->subclass_data.vendor_id,
+      "description", &ret->description, nullptr);
   ret->sink_caps = sink_caps;
   ret->src_caps = src_caps;
 
@@ -1977,6 +1997,16 @@ gst_d3d11_decoder_class_data_new (GstD3D11Device * device,
 }
 
 void
+gst_d3d11_decoder_class_data_fill_subclass_data (GstD3D11DecoderClassData *
+    data, GstD3D11DecoderSubClassData * subclass_data)
+{
+  g_return_if_fail (data != nullptr);
+  g_return_if_fail (subclass_data != nullptr);
+
+  *subclass_data = data->subclass_data;
+}
+
+static void
 gst_d3d11_decoder_class_data_free (GstD3D11DecoderClassData * data)
 {
   if (!data)
@@ -1986,4 +2016,70 @@ gst_d3d11_decoder_class_data_free (GstD3D11DecoderClassData * data)
   gst_clear_caps (&data->src_caps);
   g_free (data->description);
   g_free (data);
+}
+
+void
+gst_d3d11_decoder_proxy_class_init (GstElementClass * klass,
+    GstD3D11DecoderClassData * data, const gchar * author)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstD3D11DecoderSubClassData *cdata = &data->subclass_data;
+  std::string long_name;
+  std::string description;
+  const gchar *codec_name;
+
+  g_object_class_install_property (gobject_class, PROP_DECODER_ADAPTER,
+      g_param_spec_uint ("adapter", "Adapter",
+          "DXGI Adapter index for creating device",
+          0, G_MAXUINT32, cdata->adapter,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_DECODER_DEVICE_ID,
+      g_param_spec_uint ("device-id", "Device Id",
+          "DXGI Device ID", 0, G_MAXUINT32, 0,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (gobject_class, PROP_DECODER_VENDOR_ID,
+      g_param_spec_uint ("vendor-id", "Vendor Id",
+          "DXGI Vendor ID", 0, G_MAXUINT32, 0,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
+  codec_name = gst_d3d11_codec_to_string (data->codec);
+  long_name = "Direct3D11/DXVA " + std::string (codec_name) + " " +
+      std::string (data->description) + " Decoder";
+  description = "Direct3D11/DXVA based " + std::string (codec_name) +
+      " video decoder";
+
+  gst_element_class_set_metadata (klass, long_name.c_str (),
+      "Codec/Decoder/Video/Hardware", description.c_str (), author);
+
+  gst_element_class_add_pad_template (klass,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          data->sink_caps));
+  gst_element_class_add_pad_template (klass,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          data->src_caps));
+
+  gst_d3d11_decoder_class_data_free (data);
+}
+
+void
+gst_d3d11_decoder_proxy_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec,
+    GstD3D11DecoderSubClassData * subclass_data)
+{
+  switch (prop_id) {
+    case PROP_DECODER_ADAPTER:
+      g_value_set_uint (value, subclass_data->adapter);
+      break;
+    case PROP_DECODER_DEVICE_ID:
+      g_value_set_uint (value, subclass_data->device_id);
+      break;
+    case PROP_DECODER_VENDOR_ID:
+      g_value_set_uint (value, subclass_data->vendor_id);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }

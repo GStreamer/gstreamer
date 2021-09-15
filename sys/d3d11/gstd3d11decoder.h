@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstD3D11Decoder,
     gst_d3d11_decoder, GST, D3D11_DECODER, GstObject);
 
-typedef struct _GstD3D11DecoderPrivate GstD3D11DecoderPrivate;
+typedef struct _GstD3D11DecoderClassData GstD3D11DecoderClassData;
 
 typedef enum
 {
@@ -48,13 +48,10 @@ typedef enum
 
 typedef struct
 {
-  GstCaps *sink_caps;
-  GstCaps *src_caps;
   guint adapter;
   guint device_id;
   guint vendor_id;
-  gchar *description;
-} GstD3D11DecoderClassData;
+} GstD3D11DecoderSubClassData;
 
 GstD3D11Decoder * gst_d3d11_decoder_new (GstD3D11Device * device);
 
@@ -130,11 +127,23 @@ gboolean          gst_d3d11_decoder_supports_resolution (GstD3D11Decoder * decod
                                                          guint width,
                                                          guint height);
 
-GstD3D11DecoderClassData * gst_d3d11_decoder_class_data_new (GstD3D11Device * device,
-                                                             GstCaps * sink_caps,
-                                                             GstCaps * src_caps);
+GstD3D11DecoderClassData *  gst_d3d11_decoder_class_data_new  (GstD3D11Device * device,
+                                                               GstD3D11Codec codec,
+                                                               GstCaps * sink_caps,
+                                                               GstCaps * src_caps);
 
-void              gst_d3d11_decoder_class_data_free (GstD3D11DecoderClassData * data);
+void  gst_d3d11_decoder_class_data_fill_subclass_data (GstD3D11DecoderClassData * data,
+                                                       GstD3D11DecoderSubClassData * subclass_data);
+
+void  gst_d3d11_decoder_proxy_class_init              (GstElementClass * klass,
+                                                       GstD3D11DecoderClassData * data,
+                                                       const gchar * author);
+
+void  gst_d3d11_decoder_proxy_get_property            (GObject * object,
+                                                       guint prop_id,
+                                                       GValue * value,
+                                                       GParamSpec * pspec,
+                                                       GstD3D11DecoderSubClassData * subclass_data);
 
 G_END_DECLS
 
