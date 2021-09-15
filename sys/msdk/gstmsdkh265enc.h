@@ -71,6 +71,7 @@ struct _GstMsdkH265Enc
   guint dblk_idc;
 
   mfxExtHEVCTiles ext_tiles;
+  mfxExtHEVCParam ext_param;
   /* roi[0] for current ROI and roi[1] for previous ROI */
   mfxExtEncoderROI roi[2];
 
