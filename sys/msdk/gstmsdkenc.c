@@ -49,6 +49,7 @@
 #include "gstmsdkvideomemory.h"
 #include "gstmsdksystemmemory.h"
 #include "gstmsdkcontextutil.h"
+#include "mfxjpeg.h"
 
 #ifndef _WIN32
 #include "gstmsdkallocator_libva.h"
@@ -483,6 +484,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   guint i;
   gboolean need_vpp = TRUE;
   GstVideoFormat encoder_input_fmt;
+  mfxExtVideoSignalInfo ext_vsi;
 
   if (thiz->initialized) {
     GST_DEBUG_OBJECT (thiz, "Already initialized");
@@ -731,6 +733,25 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   if (klass->configure) {
     if (!klass->configure (thiz))
       goto failed;
+  }
+
+  /* If color properties are available from upstream, set it and pass to MediaSDK here.
+   * MJPEG is excluded from color config below as it is different from other codecs in
+   * mfxInfoMFX struct.
+   */
+  if (thiz->param.mfx.CodecId != MFX_CODEC_JPEG && (info->colorimetry.primaries
+          || info->colorimetry.transfer || info->colorimetry.matrix)) {
+    memset (&ext_vsi, 0, sizeof (ext_vsi));
+    ext_vsi.Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO;
+    ext_vsi.Header.BufferSz = sizeof (ext_vsi);
+    ext_vsi.ColourDescriptionPresent = 1;
+    ext_vsi.ColourPrimaries =
+        gst_video_color_primaries_to_iso (info->colorimetry.primaries);
+    ext_vsi.TransferCharacteristics =
+        gst_video_transfer_function_to_iso (info->colorimetry.transfer);
+    ext_vsi.MatrixCoefficients =
+        gst_video_color_matrix_to_iso (info->colorimetry.matrix);
+    gst_msdkenc_add_extra_param (thiz, (mfxExtBuffer *) & ext_vsi);
   }
 
   if (thiz->num_extra_params) {
