@@ -2429,8 +2429,6 @@ gst_codec_utils_caps_get_mime_codec (GstCaps * caps)
     if (g_strcmp0 (gst_structure_get_string (caps_st, "layout"), "g726") == 0) {
       mime_codec = g_strdup ("g726");
     }
-  } else if (g_strcmp0 (media_type, "audio/x-raw") == 0) {
-    mime_codec = g_strdup ("raw");
   }
 
 done:

@@ -1457,13 +1457,6 @@ GST_START_TEST (test_pb_utils_caps_get_mime_codec)
   fail_unless_equals_string (mime_codec, "g726");
   g_free (mime_codec);
   gst_caps_unref (caps);
-
-  /* raw */
-  caps = gst_caps_new_empty_simple ("audio/x-raw");
-  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
-  fail_unless_equals_string (mime_codec, "raw");
-  g_free (mime_codec);
-  gst_caps_unref (caps);
 }
 
 GST_END_TEST;
