@@ -1344,7 +1344,12 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
                     GST_STIME_ARGS (cmd->max_output_ts));
 
                 /* Extend the output range immediately */
-                splitmux->max_out_running_time = cmd->max_output_ts;
+                if (splitmux->max_out_running_time == GST_CLOCK_STIME_NONE
+                    || cmd->max_output_ts > splitmux->max_out_running_time)
+                  splitmux->max_out_running_time = cmd->max_output_ts;
+                GST_DEBUG_OBJECT (splitmux,
+                    "Max out running time now %" GST_STIME_FORMAT,
+                    GST_STIME_ARGS (splitmux->max_out_running_time));
                 splitmux->output_state = SPLITMUX_OUTPUT_STATE_OUTPUT_GOP;
               }
               GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
@@ -2856,7 +2861,8 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
           if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
             /* Allow other input pads to catch up to here too */
-            splitmux->max_in_running_time = ctx->in_running_time;
+            if (ctx->in_running_time > splitmux->max_in_running_time)
+              splitmux->max_in_running_time = ctx->in_running_time;
             GST_LOG_OBJECT (splitmux,
                 "Max in running time now %" GST_TIME_FORMAT,
                 GST_TIME_ARGS (splitmux->max_in_running_time));
@@ -2868,7 +2874,8 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
               GST_STIME_ARGS (ctx->in_running_time));
           keyframe = TRUE;
           splitmux->input_state = SPLITMUX_INPUT_STATE_WAITING_GOP_COLLECT;
-          splitmux->max_in_running_time = ctx->in_running_time;
+          if (ctx->in_running_time > splitmux->max_in_running_time)
+            splitmux->max_in_running_time = ctx->in_running_time;
           GST_LOG_OBJECT (splitmux, "Max in running time now %" GST_TIME_FORMAT,
               GST_TIME_ARGS (splitmux->max_in_running_time));
           /* Wake up other input pads to collect this GOP */
