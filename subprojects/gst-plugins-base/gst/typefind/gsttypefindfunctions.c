@@ -2887,7 +2887,12 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
       seen_pps, seen_sps, seen_idr, seen_ssps);
 
   if (good >= 2 && bad == 0) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, H264_VIDEO_CAPS);
+    GstTypeFindProbability probability = GST_TYPE_FIND_POSSIBLE;
+
+    if (seen_pps && seen_sps)
+      probability = GST_TYPE_FIND_LIKELY;
+
+    gst_type_find_suggest (tf, probability, H264_VIDEO_CAPS);
   }
 }
 
@@ -2980,7 +2985,12 @@ h265_video_type_find (GstTypeFind * tf, gpointer unused)
       seen_pps, seen_sps, seen_vps, seen_irap);
 
   if (good >= 2 && bad == 0) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, H265_VIDEO_CAPS);
+    GstTypeFindProbability probability = GST_TYPE_FIND_POSSIBLE;
+
+    if (seen_pps && seen_sps && seen_vps)
+      probability = GST_TYPE_FIND_LIKELY;
+
+    gst_type_find_suggest (tf, probability, H265_VIDEO_CAPS);
   }
 }
 
