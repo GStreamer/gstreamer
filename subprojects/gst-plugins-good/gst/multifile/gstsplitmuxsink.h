@@ -146,6 +146,7 @@ struct _GstSplitMuxSink
 
   SplitMuxInputState input_state;
   GstClockTimeDiff max_in_running_time;
+
   /* Number of bytes sent to the
    * current fragment */
   guint64 fragment_total_bytes;
@@ -159,16 +160,42 @@ struct _GstSplitMuxSink
   /* Number of bytes from the reference context
    * that we've collected into the current GOP */
   guint64 gop_reference_bytes;
-  /* Start time of the current fragment */
+
+  /* Number of bytes we've collected into
+   * the next GOP that's being collected */
+  guint64 next_gop_total_bytes;
+  /* Number of bytes from the reference context
+   * that we've collected into the next GOP */
+  guint64 next_gop_reference_bytes;
+
+  /* Minimum start time (PTS or DTS) of the current fragment */
   GstClockTimeDiff fragment_start_time;
-  /* Start time of the current GOP */
-  GstClockTimeDiff gop_start_time;
-  /* The last timecode we have */
-  GstVideoTimeCode *in_tc;
-  /* Start timecode of the current fragment */
+  /* Start time (PTS) of the current fragment */
+  GstClockTimeDiff fragment_start_time_pts;
+  /* Minimum start timecode of the current fragment */
   GstVideoTimeCode *fragment_start_tc;
-  /* Start timecode of the current GOP */
+
+  /* Current GOP is the oldest GOP that is currently queued, i.e. the one that
+   * would be drained out next */
+
+  /* Minimum start time (PTS or DTS) of the current GOP */
+  GstClockTimeDiff gop_start_time;
+  /* Start time (PTS) of the next GOP */
+  GstClockTimeDiff gop_start_time_pts;
+  /* Minimum start timecode of the current GOP */
   GstVideoTimeCode *gop_start_tc;
+
+  /* Next GOP is the next GOP that comes after the current GOP. Only its
+   * start is queued before draining the current GOP to accurately determine
+   * the end time of the current GOP. */
+
+  /* Minimum start time (PTS or DTS) of the next GOP */
+  GstClockTimeDiff next_gop_start_time;
+  /* Start time (PTS) of the current GOP */
+  GstClockTimeDiff next_gop_start_time_pts;
+  /* Minimum start timecode of the next GOP */
+  GstVideoTimeCode *next_gop_start_tc;
+
   /* expected running time of next fragment in timecode mode */
   GstClockTime next_fragment_start_tc_time;
 
