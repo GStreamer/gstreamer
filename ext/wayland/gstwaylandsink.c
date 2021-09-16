@@ -829,7 +829,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
         if (G_UNLIKELY (!wbuf))
           goto no_wl_buffer_shm;
 
-        gst_buffer_add_wl_buffer (to_render, wbuf, sink->display);
+        wlbuffer = gst_buffer_add_wl_buffer (to_render, wbuf, sink->display);
       }
 
       if (!gst_video_frame_map (&dst, &sink->video_info, to_render,
@@ -853,12 +853,13 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   if (!wbuf)
     goto no_wl_buffer;
 
-  gst_buffer_add_wl_buffer (buffer, wbuf, sink->display);
+  wlbuffer = gst_buffer_add_wl_buffer (buffer, wbuf, sink->display);
   to_render = buffer;
 
 render:
   /* drop double rendering */
-  if (G_UNLIKELY (to_render == sink->last_buffer)) {
+  if (G_UNLIKELY (wlbuffer ==
+          gst_buffer_get_wl_buffer (sink->display, sink->last_buffer))) {
     GST_LOG_OBJECT (sink, "Buffer already being rendered");
     goto done;
   }

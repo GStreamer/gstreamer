@@ -185,10 +185,18 @@ gst_buffer_add_wl_buffer (GstBuffer * gstbuffer, struct wl_buffer *wlbuffer,
 GstWlBuffer *
 gst_buffer_get_wl_buffer (GstWlDisplay * display, GstBuffer * gstbuffer)
 {
-  GstMemory *mem0 = gst_buffer_peek_memory (gstbuffer, 0);
-  GstWlBuffer *wlbuf = gst_wl_display_lookup_buffer (display, mem0);
+  GstMemory *mem0;
+  GstWlBuffer *wlbuf;
+
+  if (!gstbuffer)
+    return NULL;
+
+  mem0 = gst_buffer_peek_memory (gstbuffer, 0);
+
+  wlbuf = gst_wl_display_lookup_buffer (display, mem0);
   if (wlbuf)
     wlbuf->current_gstbuffer = gstbuffer;
+
   return wlbuf;
 }
 
