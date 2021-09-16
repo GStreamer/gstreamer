@@ -1239,10 +1239,8 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
     gboolean can_output = (ctx->is_reference || splitmux->ready_for_output);
     GstClockTimeDiff my_max_out_running_time = splitmux->max_out_running_time;
 
-    if (!(splitmux->max_out_running_time == 0 ||
-            splitmux->max_out_running_time == GST_CLOCK_STIME_NONE ||
-            splitmux->alignment_threshold == 0 ||
-            splitmux->max_out_running_time < splitmux->alignment_threshold)) {
+    if (my_max_out_running_time != GST_CLOCK_STIME_NONE
+        && my_max_out_running_time != G_MAXINT64) {
       my_max_out_running_time -= splitmux->alignment_threshold;
       GST_LOG_OBJECT (ctx->srcpad,
           "Max out running time currently %" GST_STIME_FORMAT
@@ -1261,7 +1259,7 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         GST_STIME_ARGS (my_max_out_running_time));
 
     if (can_output) {
-      if (splitmux->max_out_running_time == GST_CLOCK_STIME_NONE ||
+      if (splitmux->max_out_running_time != GST_CLOCK_STIME_NONE &&
           ctx->out_running_time < my_max_out_running_time) {
         return GST_FLOW_OK;
       }
@@ -2493,7 +2491,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
   } else {
     /* This is probably already the current state, but just in case: */
     splitmux->input_state = SPLITMUX_INPUT_STATE_FINISHING_UP;
-    new_out_ts = GST_CLOCK_STIME_NONE;  /* EOS runs until forever */
+    new_out_ts = G_MAXINT64;    /* EOS runs until forever */
   }
 
   /* And wake all input contexts to send a wake-up event */
@@ -3645,7 +3643,7 @@ gst_splitmux_sink_reset (GstSplitMuxSink * splitmux)
   splitmux->max_in_running_time = GST_CLOCK_STIME_NONE;
   splitmux->gop_start_time = splitmux->fragment_start_time =
       GST_CLOCK_STIME_NONE;
-  splitmux->max_out_running_time = 0;
+  splitmux->max_out_running_time = GST_CLOCK_STIME_NONE;
   splitmux->fragment_total_bytes = 0;
   splitmux->fragment_reference_bytes = 0;
   splitmux->gop_total_bytes = 0;
