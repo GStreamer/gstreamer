@@ -1754,7 +1754,7 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
   }
 
   /* If we have popped a keyframe, decrement the queued_gop count */
-  if (buf_info->keyframe && splitmux->queued_keyframes > 0)
+  if (buf_info->keyframe && splitmux->queued_keyframes > 0 && ctx->is_reference)
     splitmux->queued_keyframes--;
 
   ctx->out_running_time = buf_info->run_ts;
@@ -2926,10 +2926,9 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
   }
   while (loop_again);
 
-  if (keyframe) {
+  if (keyframe && ctx->is_reference)
     splitmux->queued_keyframes++;
-    buf_info->keyframe = TRUE;
-  }
+  buf_info->keyframe = keyframe;
 
   /* Update total input byte counter for overflow detect */
   splitmux->gop_total_bytes += buf_info->buf_size;
