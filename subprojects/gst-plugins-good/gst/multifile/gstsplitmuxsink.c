@@ -3662,6 +3662,8 @@ gst_splitmux_sink_reset (GstSplitMuxSink * splitmux)
 
   g_queue_foreach (&splitmux->out_cmd_q, (GFunc) out_cmd_buf_free, NULL);
   g_queue_clear (&splitmux->out_cmd_q);
+
+  gst_splitmux_reset_timecode (splitmux);
 }
 
 static GstStateChangeReturn
