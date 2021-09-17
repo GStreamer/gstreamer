@@ -75,7 +75,7 @@ struct _GstAV1DecoderClass
    *
    * Since: 1.20
    */
-  gboolean        (*new_sequence)      (GstAV1Decoder * decoder,
+  GstFlowReturn   (*new_sequence)      (GstAV1Decoder * decoder,
                                         const GstAV1SequenceHeaderOBU * seq_hdr);
   /**
    * GstAV1DecoderClass::new_picture:
@@ -89,7 +89,7 @@ struct _GstAV1DecoderClass
    *
    * Since: 1.20
    */
-  gboolean        (*new_picture)       (GstAV1Decoder * decoder,
+  GstFlowReturn   (*new_picture)       (GstAV1Decoder * decoder,
                                         GstVideoCodecFrame * frame,
                                         GstAV1Picture * picture);
   /**
@@ -115,7 +115,7 @@ struct _GstAV1DecoderClass
    *
    * Since: 1.20
    */
-  gboolean        (*start_picture)     (GstAV1Decoder * decoder,
+  GstFlowReturn   (*start_picture)     (GstAV1Decoder * decoder,
                                         GstAV1Picture * picture,
                                         GstAV1Dpb * dpb);
   /**
@@ -129,7 +129,7 @@ struct _GstAV1DecoderClass
    *
    * Since: 1.20
    */
-  gboolean        (*decode_tile)       (GstAV1Decoder * decoder,
+  GstFlowReturn   (*decode_tile)       (GstAV1Decoder * decoder,
                                         GstAV1Picture * picture,
                                         GstAV1Tile * tile);
   /**
@@ -142,7 +142,7 @@ struct _GstAV1DecoderClass
    *
    * Since: 1.20
    */
-  gboolean        (*end_picture)       (GstAV1Decoder * decoder,
+  GstFlowReturn   (*end_picture)       (GstAV1Decoder * decoder,
                                         GstAV1Picture * picture);
   /**
    * GstAV1DecoderClass::output_picture:

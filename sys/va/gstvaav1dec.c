@@ -246,7 +246,7 @@ gst_va_av1_dec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
   return caps;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
     const GstAV1SequenceHeaderOBU * seq_hdr)
 {
@@ -259,11 +259,11 @@ gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
 
   profile = _get_profile (self, seq_hdr);
   if (profile == VAProfileNone)
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
 
   rt_format = _get_rtformat (self, profile, seq_hdr);
   if (!rt_format)
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
 
   self->seq = *seq_hdr;
 
@@ -284,10 +284,10 @@ gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
     base->need_valign = FALSE;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
     GstVideoCodecFrame * frame, GstAV1Picture * picture)
 {
@@ -318,7 +318,7 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
   if (self->need_negotiation) {
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
   }
 
@@ -327,7 +327,7 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
     GST_WARNING_OBJECT (self,
         "Failed to allocated output buffer, return %s",
         gst_flow_get_name (self->last_ret));
-    return FALSE;
+    return self->last_ret;
   }
 
   if (picture->apply_grain) {
@@ -335,7 +335,7 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
       GST_WARNING_OBJECT (self,
           "Failed to allocated aux surface for buffer %p",
           frame->output_buffer);
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
   }
 
@@ -353,7 +353,7 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
         gst_va_decode_picture_get_surface (pic));
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstAV1Picture *
@@ -573,7 +573,7 @@ _setup_global_motion_info (VADecPictureParameterBufferAV1 * pic_param,
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
     GstAV1Dpb * dpb)
 {
@@ -771,12 +771,12 @@ gst_va_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
 
   if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
           VAPictureParameterBufferType, &pic_param, sizeof (pic_param)))
-    return FALSE;
+    return GST_FLOW_ERROR;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_av1_dec_decode_tile (GstAV1Decoder * decoder, GstAV1Picture * picture,
     GstAV1Tile * tile)
 {
@@ -804,12 +804,17 @@ gst_va_av1_dec_decode_tile (GstAV1Decoder * decoder, GstAV1Picture * picture,
   }
 
   va_pic = gst_av1_picture_get_user_data (picture);
-  return gst_va_decoder_add_slice_buffer_with_n_params (base->decoder, va_pic,
-      slice_param, sizeof (VASliceParameterBufferAV1), i, tile->obu.data,
-      tile->obu.obu_size);
+
+  if (!gst_va_decoder_add_slice_buffer_with_n_params (base->decoder, va_pic,
+          slice_param, sizeof (VASliceParameterBufferAV1), i, tile->obu.data,
+          tile->obu.obu_size)) {
+    return GST_FLOW_ERROR;
+  }
+
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_av1_dec_end_picture (GstAV1Decoder * decoder, GstAV1Picture * picture)
 {
   GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
@@ -821,8 +826,12 @@ gst_va_av1_dec_end_picture (GstAV1Decoder * decoder, GstAV1Picture * picture)
 
   va_pic = gst_av1_picture_get_user_data (picture);
 
-  return gst_va_decoder_decode_with_aux_surface (base->decoder, va_pic,
-      picture->apply_grain);
+  if (!gst_va_decoder_decode_with_aux_surface (base->decoder, va_pic,
+          picture->apply_grain)) {
+    return GST_FLOW_ERROR;
+  }
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn

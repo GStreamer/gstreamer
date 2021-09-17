@@ -256,7 +256,7 @@ gst_av1_decoder_profile_to_string (GstAV1Profile profile)
   return NULL;
 }
 
-static gboolean
+static GstFlowReturn
 gst_av1_decoder_process_sequence (GstAV1Decoder * self, GstAV1OBU * obu)
 {
   GstAV1ParserResult res;
@@ -264,6 +264,7 @@ gst_av1_decoder_process_sequence (GstAV1Decoder * self, GstAV1OBU * obu)
   GstAV1SequenceHeaderOBU seq_header;
   GstAV1SequenceHeaderOBU old_seq_header = { 0, };
   GstAV1DecoderClass *klass = GST_AV1_DECODER_GET_CLASS (self);
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (priv->parser->seq_header)
     old_seq_header = *priv->parser->seq_header;
@@ -272,12 +273,12 @@ gst_av1_decoder_process_sequence (GstAV1Decoder * self, GstAV1OBU * obu)
       obu, &seq_header);
   if (res != GST_AV1_PARSER_OK) {
     GST_WARNING_OBJECT (self, "Parsing sequence failed.");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   if (!memcmp (&old_seq_header, &seq_header, sizeof (GstAV1SequenceHeaderOBU))) {
     GST_DEBUG_OBJECT (self, "Get same sequence header.");
-    return TRUE;
+    return GST_FLOW_OK;
   }
 
   g_assert (klass->new_sequence);
@@ -289,9 +290,10 @@ gst_av1_decoder_process_sequence (GstAV1Decoder * self, GstAV1OBU * obu)
       priv->max_width, priv->max_height, seq_header.max_frame_width_minus_1 + 1,
       seq_header.max_frame_height_minus_1 + 1);
 
-  if (!klass->new_sequence (self, &seq_header)) {
+  ret = klass->new_sequence (self, &seq_header);
+  if (ret != GST_FLOW_OK) {
     GST_ERROR_OBJECT (self, "subclass does not want accept new sequence");
-    return FALSE;
+    return ret;
   }
 
   priv->profile = seq_header.seq_profile;
@@ -299,10 +301,10 @@ gst_av1_decoder_process_sequence (GstAV1Decoder * self, GstAV1OBU * obu)
   priv->max_height = seq_header.max_frame_height_minus_1 + 1;
   gst_av1_dpb_clear (priv->dpb);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_av1_decoder_decode_tile_group (GstAV1Decoder * self,
     GstAV1TileGroupOBU * tile_group, GstAV1OBU * obu)
 {
@@ -310,42 +312,45 @@ gst_av1_decoder_decode_tile_group (GstAV1Decoder * self,
   GstAV1DecoderClass *klass = GST_AV1_DECODER_GET_CLASS (self);
   GstAV1Picture *picture = priv->current_picture;
   GstAV1Tile tile;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (!picture) {
     GST_ERROR_OBJECT (self, "No picture has created for current frame");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   if (picture->frame_hdr.show_existing_frame) {
     GST_ERROR_OBJECT (self, "Current picture is showing the existing frame.");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   tile.obu = *obu;
   tile.tile_group = *tile_group;
 
   g_assert (klass->decode_tile);
-  if (!klass->decode_tile (self, picture, &tile)) {
-    GST_ERROR_OBJECT (self, "Decode tile error");
-    return FALSE;
+  ret = klass->decode_tile (self, picture, &tile);
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (self, "Decode tile error");
+    return ret;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
     GstAV1FrameHeaderOBU * frame_header)
 {
   GstAV1DecoderPrivate *priv = self->priv;
   GstAV1DecoderClass *klass = GST_AV1_DECODER_GET_CLASS (self);
   GstAV1Picture *picture = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   g_assert (priv->current_frame);
 
   if (priv->current_picture != NULL) {
     GST_ERROR_OBJECT (self, "Already have picture for current frame");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   if (frame_header->show_existing_frame) {
@@ -355,20 +360,22 @@ gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
     if (!ref_picture) {
       GST_WARNING_OBJECT (self, "Failed to find the frame index %d to show.",
           frame_header->frame_to_show_map_idx);
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
 
     if (gst_av1_parser_reference_frame_loading (priv->parser,
             &ref_picture->frame_hdr) != GST_AV1_PARSER_OK) {
       GST_WARNING_OBJECT (self, "load the reference frame failed");
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
 
+    /* FIXME: duplicate picture might be optional feature like that of VP9
+     * decoder baseclass */
     g_assert (klass->duplicate_picture);
     picture = klass->duplicate_picture (self, ref_picture);
     if (!picture) {
       GST_ERROR_OBJECT (self, "subclass didn't provide duplicated picture");
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
 
     picture->system_frame_number = priv->current_frame->system_frame_number;
@@ -390,27 +397,29 @@ gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
           GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
 
     if (klass->new_picture) {
-      if (!klass->new_picture (self, priv->current_frame, picture)) {
-        GST_ERROR_OBJECT (self, "new picture error");
-        return FALSE;
+      ret = klass->new_picture (self, priv->current_frame, picture);
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "new picture error");
+        return ret;
       }
     }
     priv->current_picture = picture;
 
     if (klass->start_picture) {
-      if (!klass->start_picture (self, picture, priv->dpb)) {
-        GST_ERROR_OBJECT (self, "start picture error");
-        return FALSE;
+      ret = klass->start_picture (self, picture, priv->dpb);
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "start picture error");
+        return ret;
       }
     }
   }
 
   g_assert (priv->current_picture != NULL);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_av1_decoder_process_frame_header (GstAV1Decoder * self, GstAV1OBU * obu)
 {
   GstAV1ParserResult res;
@@ -421,13 +430,13 @@ gst_av1_decoder_process_frame_header (GstAV1Decoder * self, GstAV1OBU * obu)
       &frame_header);
   if (res != GST_AV1_PARSER_OK) {
     GST_WARNING_OBJECT (self, "Parsing frame header failed.");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   return gst_av1_decoder_decode_frame_header (self, &frame_header);
 }
 
-static gboolean
+static GstFlowReturn
 gst_av1_decoder_process_tile_group (GstAV1Decoder * self, GstAV1OBU * obu)
 {
   GstAV1ParserResult res;
@@ -437,42 +446,50 @@ gst_av1_decoder_process_tile_group (GstAV1Decoder * self, GstAV1OBU * obu)
   res = gst_av1_parser_parse_tile_group_obu (priv->parser, obu, &tile_group);
   if (res != GST_AV1_PARSER_OK) {
     GST_WARNING_OBJECT (self, "Parsing tile group failed.");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   return gst_av1_decoder_decode_tile_group (self, &tile_group, obu);
 }
 
-static gboolean
+static GstFlowReturn
 gst_av1_decoder_process_frame (GstAV1Decoder * self, GstAV1OBU * obu)
 {
   GstAV1ParserResult res;
   GstAV1DecoderPrivate *priv = self->priv;
   GstAV1FrameOBU frame;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   res = gst_av1_parser_parse_frame_obu (priv->parser, obu, &frame);
   if (res != GST_AV1_PARSER_OK) {
     GST_WARNING_OBJECT (self, "Parsing frame failed.");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
-  return gst_av1_decoder_decode_frame_header (self, &frame.frame_header) &&
-      gst_av1_decoder_decode_tile_group (self, &frame.tile_group, obu);
+  ret = gst_av1_decoder_decode_frame_header (self, &frame.frame_header);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  return gst_av1_decoder_decode_tile_group (self, &frame.tile_group, obu);
 }
 
-static gboolean
+static GstFlowReturn
 gst_av1_decoder_temporal_delimiter (GstAV1Decoder * self, GstAV1OBU * obu)
 {
   GstAV1DecoderPrivate *priv = self->priv;
 
-  return gst_av1_parser_parse_temporal_delimiter_obu (priv->parser,
-      obu) == GST_AV1_PARSER_OK;
+  if (gst_av1_parser_parse_temporal_delimiter_obu (priv->parser, obu) ==
+      GST_AV1_PARSER_OK) {
+    return GST_FLOW_OK;
+  }
+
+  return GST_FLOW_ERROR;
 }
 
-static gboolean
+static GstFlowReturn
 gst_av1_decoder_decode_one_obu (GstAV1Decoder * self, GstAV1OBU * obu)
 {
-  gboolean ret = TRUE;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (self, "Decode obu %s", get_obu_name (obu->obu_type));
   switch (obu->obu_type) {
@@ -496,15 +513,13 @@ gst_av1_decoder_decode_one_obu (GstAV1Decoder * self, GstAV1OBU * obu)
     case GST_AV1_OBU_REDUNDANT_FRAME_HEADER:
     case GST_AV1_OBU_TILE_LIST:
     case GST_AV1_OBU_PADDING:
-      ret = TRUE;
       break;
     default:
       GST_WARNING_OBJECT (self, "an unrecognized obu type %d", obu->obu_type);
-      ret = FALSE;
       break;
   }
 
-  if (!ret)
+  if (ret != GST_FLOW_OK)
     GST_WARNING_OBJECT (self, "Failed to handle %s OBU",
         get_obu_name (obu->obu_type));
 
@@ -558,8 +573,8 @@ gst_av1_decoder_handle_frame (GstVideoDecoder * decoder,
   if (!gst_buffer_map (in_buf, &map, GST_MAP_READ)) {
     priv->current_frame = NULL;
     GST_ERROR_OBJECT (self, "can not map input buffer");
-    ret = GST_FLOW_ERROR;
-    return ret;
+
+    return GST_FLOW_ERROR;
   }
 
   total_consumed = 0;
@@ -571,8 +586,8 @@ gst_av1_decoder_handle_frame (GstVideoDecoder * decoder,
       goto out;
     }
 
-    if (!gst_av1_decoder_decode_one_obu (self, &obu)) {
-      ret = GST_FLOW_ERROR;
+    ret = gst_av1_decoder_decode_one_obu (self, &obu);
+    if (ret != GST_FLOW_OK) {
       goto out;
     }
 
@@ -587,9 +602,9 @@ gst_av1_decoder_handle_frame (GstVideoDecoder * decoder,
 
   if (!priv->current_picture->frame_hdr.show_existing_frame) {
     if (klass->end_picture) {
-      if (!klass->end_picture (self, priv->current_picture)) {
-        ret = GST_FLOW_ERROR;
-        GST_ERROR_OBJECT (self, "end picture error");
+      ret = klass->end_picture (self, priv->current_picture);
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "end picture error");
         goto out;
       }
     }
@@ -626,13 +641,19 @@ out:
     if (priv->current_picture)
       gst_av1_picture_unref (priv->current_picture);
 
-    GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE,
-        ("Failed to handle the frame %d", frame->system_frame_number),
-        NULL, ret);
     gst_video_decoder_drop_frame (decoder, frame);
   }
 
   priv->current_picture = NULL;
   priv->current_frame = NULL;
-  return ret;
+
+  if (ret != GST_FLOW_OK) {
+    GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE,
+        ("Failed to handle the frame %d", frame->system_frame_number),
+        NULL, ret);
+
+    return ret;
+  }
+
+  return GST_FLOW_OK;
 }

@@ -408,17 +408,17 @@ static gboolean gst_d3d11_av1_dec_sink_event (GstVideoDecoder * decoder,
     GstEvent * event);
 
 /* GstAV1Decoder */
-static gboolean gst_d3d11_av1_dec_new_sequence (GstAV1Decoder * decoder,
+static GstFlowReturn gst_d3d11_av1_dec_new_sequence (GstAV1Decoder * decoder,
     const GstAV1SequenceHeaderOBU * seq_hdr);
-static gboolean gst_d3d11_av1_dec_new_picture (GstAV1Decoder * decoder,
+static GstFlowReturn gst_d3d11_av1_dec_new_picture (GstAV1Decoder * decoder,
     GstVideoCodecFrame * frame, GstAV1Picture * picture);
 static GstAV1Picture *gst_d3d11_av1_dec_duplicate_picture (GstAV1Decoder *
     decoder, GstAV1Picture * picture);
-static gboolean gst_d3d11_av1_dec_start_picture (GstAV1Decoder * decoder,
+static GstFlowReturn gst_d3d11_av1_dec_start_picture (GstAV1Decoder * decoder,
     GstAV1Picture * picture, GstAV1Dpb * dpb);
-static gboolean gst_d3d11_av1_dec_decode_tile (GstAV1Decoder * decoder,
+static GstFlowReturn gst_d3d11_av1_dec_decode_tile (GstAV1Decoder * decoder,
     GstAV1Picture * picture, GstAV1Tile * tile);
-static gboolean gst_d3d11_av1_dec_end_picture (GstAV1Decoder * decoder,
+static GstFlowReturn gst_d3d11_av1_dec_end_picture (GstAV1Decoder * decoder,
     GstAV1Picture * picture);
 static GstFlowReturn gst_d3d11_av1_dec_output_picture (GstAV1Decoder *
     decoder, GstVideoCodecFrame * frame, GstAV1Picture * picture);
@@ -615,7 +615,7 @@ gst_d3d11_av1_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
   return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_av1_dec_new_sequence (GstAV1Decoder * decoder,
     const GstAV1SequenceHeaderOBU * seq_hdr)
 {
@@ -628,12 +628,12 @@ gst_d3d11_av1_dec_new_sequence (GstAV1Decoder * decoder,
 
   if (seq_hdr->seq_profile != GST_AV1_PROFILE_0) {
     GST_WARNING_OBJECT (self, "Unsupported profile %d", seq_hdr->seq_profile);
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   if (seq_hdr->num_planes != 3) {
     GST_WARNING_OBJECT (self, "Monochrome is not supported");
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   inner->seq_hdr = *seq_hdr;
@@ -666,7 +666,7 @@ gst_d3d11_av1_dec_new_sequence (GstAV1Decoder * decoder,
       out_format = GST_VIDEO_FORMAT_P010_10LE;
     } else {
       GST_WARNING_OBJECT (self, "Invalid bit-depth %d", seq_hdr->bit_depth);
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
 
     gst_video_info_set_format (&info,
@@ -676,19 +676,19 @@ gst_d3d11_av1_dec_new_sequence (GstAV1Decoder * decoder,
             decoder->input_state, &info, (gint) inner->max_width,
             (gint) inner->max_height, NUM_OUTPUT_VIEW)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
 
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_av1_dec_new_picture (GstAV1Decoder * decoder,
     GstVideoCodecFrame * frame, GstAV1Picture * picture)
 {
@@ -700,7 +700,7 @@ gst_d3d11_av1_dec_new_picture (GstAV1Decoder * decoder,
       GST_VIDEO_DECODER (decoder));
   if (!view_buffer) {
     GST_DEBUG_OBJECT (self, "No available output view buffer");
-    return FALSE;
+    return GST_FLOW_FLUSHING;
   }
 
   GST_LOG_OBJECT (self, "New output view buffer %" GST_PTR_FORMAT, view_buffer);
@@ -710,7 +710,7 @@ gst_d3d11_av1_dec_new_picture (GstAV1Decoder * decoder,
 
   GST_LOG_OBJECT (self, "New AV1 picture %p", picture);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstAV1Picture *
@@ -764,7 +764,7 @@ gst_d3d11_av1_dec_get_output_view_from_picture (GstD3D11AV1Dec * self,
   return view;
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_av1_dec_start_picture (GstAV1Decoder * decoder,
     GstAV1Picture * picture, GstAV1Dpb * dpb)
 {
@@ -781,7 +781,7 @@ gst_d3d11_av1_dec_start_picture (GstAV1Decoder * decoder,
       &view_id);
   if (!view) {
     GST_ERROR_OBJECT (self, "current picture does not have output view handle");
-    return FALSE;
+    return GST_FLOW_OK;
   }
 
   memset (pic_params, 0, sizeof (GST_DXVA_PicParams_AV1));
@@ -894,7 +894,7 @@ gst_d3d11_av1_dec_start_picture (GstAV1Decoder * decoder,
       if (!other_view) {
         GST_ERROR_OBJECT (self,
             "current picture does not have output view handle");
-        return FALSE;
+        return GST_FLOW_ERROR;
       }
 
       pic_params->RefFrameMapTextureIndex[i] = other_view_id;
@@ -1090,10 +1090,10 @@ gst_d3d11_av1_dec_start_picture (GstAV1Decoder * decoder,
   inner->bitstream_buffer.resize (0);
   inner->tile_list.resize (0);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_av1_dec_decode_tile (GstAV1Decoder * decoder,
     GstAV1Picture * picture, GstAV1Tile * tile)
 {
@@ -1134,10 +1134,10 @@ gst_d3d11_av1_dec_decode_tile (GstAV1Decoder * decoder,
   memcpy (&inner->bitstream_buffer[0] + pos,
       tile->obu.data, tile->obu.obu_size);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_av1_dec_end_picture (GstAV1Decoder * decoder, GstAV1Picture * picture)
 {
   GstD3D11AV1Dec *self = GST_D3D11_AV1_DEC (decoder);
@@ -1150,14 +1150,14 @@ gst_d3d11_av1_dec_end_picture (GstAV1Decoder * decoder, GstAV1Picture * picture)
 
   if (inner->bitstream_buffer.empty () || inner->tile_list.empty ()) {
     GST_ERROR_OBJECT (self, "No bitstream buffer to submit");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   view = gst_d3d11_av1_dec_get_output_view_from_picture (self, picture,
       &view_id);
   if (!view) {
     GST_ERROR_OBJECT (self, "current picture does not have output view handle");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   memset (&input_args, 0, sizeof (GstD3D11DecodeInputStreamArgs));
@@ -1185,8 +1185,10 @@ gst_d3d11_av1_dec_end_picture (GstAV1Decoder * decoder, GstAV1Picture * picture)
   input_args.bitstream = &inner->bitstream_buffer[0];
   input_args.bitstream_size = inner->bitstream_buffer.size ();
 
-  return gst_d3d11_decoder_decode_frame (inner->d3d11_decoder,
-      view, &input_args);
+  if (!gst_d3d11_decoder_decode_frame (inner->d3d11_decoder, view, &input_args))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
