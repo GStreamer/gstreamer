@@ -75,7 +75,7 @@ static GstFlowReturn gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
 static void gst_vp8_decoder_clear_output_frame (GstVp8DecoderOutputFrame *
     output_frame);
 static void gst_vp8_decoder_drain_output_queue (GstVp8Decoder * self,
-    guint num);
+    guint num, GstFlowReturn * ret);
 
 
 static void
@@ -148,12 +148,12 @@ gst_vp8_decoder_stop (GstVideoDecoder * decoder)
   return TRUE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_vp8_decoder_check_codec_change (GstVp8Decoder * self,
     const GstVp8FrameHdr * frame_hdr)
 {
   GstVp8DecoderPrivate *priv = self->priv;
-  gboolean ret = TRUE;
+  GstFlowReturn ret = GST_FLOW_OK;
   gboolean changed = FALSE;
 
   if (priv->width != frame_hdr->width || priv->height != frame_hdr->height) {
@@ -276,12 +276,13 @@ static GstFlowReturn
 gst_vp8_decoder_finish (GstVideoDecoder * decoder)
 {
   GstVp8Decoder *self = GST_VP8_DECODER (decoder);
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (self, "finish");
 
-  gst_vp8_decoder_drain_output_queue (GST_VP8_DECODER (decoder), 0);
+  gst_vp8_decoder_drain_output_queue (GST_VP8_DECODER (decoder), 0, &ret);
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static gboolean
@@ -300,13 +301,14 @@ static GstFlowReturn
 gst_vp8_decoder_drain (GstVideoDecoder * decoder)
 {
   GstVp8Decoder *self = GST_VP8_DECODER (decoder);
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (self, "drain");
 
-  gst_vp8_decoder_drain_output_queue (GST_VP8_DECODER (decoder), 0);
+  gst_vp8_decoder_drain_output_queue (GST_VP8_DECODER (decoder), 0, &ret);
   gst_vp8_decoder_reset (self);
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static void
@@ -346,7 +348,6 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
 
   if (!gst_buffer_map (in_buf, &map, GST_MAP_READ)) {
     GST_ERROR_OBJECT (self, "Cannot map buffer");
-
     goto error;
   }
 
@@ -355,7 +356,6 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
 
   if (pres != GST_VP8_PARSER_OK) {
     GST_ERROR_OBJECT (self, "Cannot parser frame header");
-
     goto unmap_and_error;
   }
 
@@ -373,10 +373,12 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
 
   priv->wait_keyframe = FALSE;
 
-  if (frame_hdr.key_frame &&
-      !gst_vp8_decoder_check_codec_change (self, &frame_hdr)) {
-    GST_ERROR_OBJECT (self, "Subclass cannot handle codec change");
-    goto unmap_and_error;
+  if (frame_hdr.key_frame) {
+    ret = gst_vp8_decoder_check_codec_change (self, &frame_hdr);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "Subclass cannot handle codec change");
+      goto unmap_and_error;
+    }
   }
 
   picture = gst_vp8_picture_new ();
@@ -387,29 +389,33 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
   picture->system_frame_number = frame->system_frame_number;
 
   if (klass->new_picture) {
-    if (!klass->new_picture (self, frame, picture)) {
-      GST_ERROR_OBJECT (self, "subclass cannot handle new picture");
+    ret = klass->new_picture (self, frame, picture);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "subclass failed to handle new picture");
       goto unmap_and_error;
     }
   }
 
   if (klass->start_picture) {
-    if (!klass->start_picture (self, picture)) {
-      GST_ERROR_OBJECT (self, "subclass cannot handle start picture");
+    ret = klass->start_picture (self, picture);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "subclass failed to handle start picture");
       goto unmap_and_error;
     }
   }
 
   if (klass->decode_picture) {
-    if (!klass->decode_picture (self, picture, &priv->parser)) {
-      GST_ERROR_OBJECT (self, "subclass cannot decode current picture");
+    ret = klass->decode_picture (self, picture, &priv->parser);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "subclass failed to decode current picture");
       goto unmap_and_error;
     }
   }
 
   if (klass->end_picture) {
-    if (!klass->end_picture (self, picture)) {
-      GST_ERROR_OBJECT (self, "subclass cannot handle end picture");
+    ret = klass->end_picture (self, picture);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "subclass failed to handle end picture");
       goto unmap_and_error;
     }
   }
@@ -432,7 +438,14 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
     gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
   }
 
-  gst_vp8_decoder_drain_output_queue (self, priv->preferred_output_delay);
+  gst_vp8_decoder_drain_output_queue (self, priv->preferred_output_delay, &ret);
+
+  if (ret == GST_FLOW_ERROR) {
+    GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
+        ("Failed to decode data"), (NULL), ret);
+    return ret;
+  }
+
   return ret;
 
 unmap_and_error:
@@ -446,6 +459,9 @@ error:
     if (picture)
       gst_vp8_picture_unref (picture);
 
+    if (ret == GST_FLOW_OK)
+      ret = GST_FLOW_ERROR;
+
     gst_video_decoder_drop_frame (decoder, frame);
     GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
         ("Failed to decode data"), (NULL), ret);
@@ -455,15 +471,39 @@ error:
 }
 
 static void
-gst_vp8_decoder_drain_output_queue (GstVp8Decoder * self, guint num)
+gst_vp8_decoder_drain_output_queue (GstVp8Decoder * self, guint num,
+    GstFlowReturn * ret)
 {
   GstVp8DecoderPrivate *priv = self->priv;
   GstVp8DecoderClass *klass = GST_VP8_DECODER_GET_CLASS (self);
+
   g_assert (klass->output_picture);
 
   while (gst_queue_array_get_length (priv->output_queue) > num) {
     GstVp8DecoderOutputFrame *output_frame = (GstVp8DecoderOutputFrame *)
         gst_queue_array_pop_head_struct (priv->output_queue);
-    klass->output_picture (self, output_frame->frame, output_frame->picture);
+    /* Output queued fraems whatever the return value is, in order to empty
+     * the queue */
+    GstFlowReturn flow_ret = klass->output_picture (self,
+        output_frame->frame, output_frame->picture);
+
+    /* Then, update @ret with new flow return value only if @ret was
+     * GST_FLOW_OK. This is to avoid pattern such that
+     * ```c
+     * GstFlowReturn my_return = GST_FLOW_OK;
+     * do something
+     *
+     * if (my_return == GST_FLOW_OK) {
+     *   my_return = gst_vp8_decoder_drain_output_queue ();
+     * } else {
+     *   // Ignore flow return of this method, but current `my_return` error code
+     *   gst_vp8_decoder_drain_output_queue ();
+     * }
+     *
+     * return my_return;
+     * ```
+     */
+    if (*ret == GST_FLOW_OK)
+      *ret = flow_ret;
   }
 }

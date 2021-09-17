@@ -435,7 +435,7 @@ gst_v4l2_codec_vp8_dec_fill_references (GstV4l2CodecVp8Dec * self)
       (guint32) self->frame_header.alt_frame_ts / 1000);
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_codec_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     const GstVp8FrameHdr * frame_hdr)
 {
@@ -460,7 +460,7 @@ gst_v4l2_codec_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     self->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
   }
 
@@ -485,10 +485,10 @@ gst_v4l2_codec_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     self->copy_frames = FALSE;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_codec_vp8_dec_start_picture (GstVp8Decoder * decoder,
     GstVp8Picture * picture)
 {
@@ -496,7 +496,7 @@ gst_v4l2_codec_vp8_dec_start_picture (GstVp8Decoder * decoder,
 
   /* FIXME base class should not call us if negotiation failed */
   if (!self->sink_allocator)
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
 
   /* Ensure we have a bitstream to write into */
   if (!self->bitstream) {
@@ -505,24 +505,24 @@ gst_v4l2_codec_vp8_dec_start_picture (GstVp8Decoder * decoder,
     if (!self->bitstream) {
       GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
           ("Not enough memory to decode VP8 stream."), (NULL));
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
 
     if (!gst_memory_map (self->bitstream, &self->bitstream_map, GST_MAP_WRITE)) {
       GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
           ("Could not access bitstream memory for writing"), (NULL));
       g_clear_pointer (&self->bitstream, gst_memory_unref);
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
   }
 
   /* We use this field to track how much we have written */
   self->bitstream_map.size = 0;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_codec_vp8_dec_decode_picture (GstVp8Decoder * decoder,
     GstVp8Picture * picture, GstVp8Parser * parser)
 {
@@ -532,7 +532,7 @@ gst_v4l2_codec_vp8_dec_decode_picture (GstVp8Decoder * decoder,
   if (self->bitstream_map.maxsize < picture->size) {
     GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
         ("Not enough space to send picture bitstream."), (NULL));
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   gst_v4l2_codec_vp8_dec_fill_frame_header (self, &picture->frame_hdr);
@@ -545,7 +545,7 @@ gst_v4l2_codec_vp8_dec_decode_picture (GstVp8Decoder * decoder,
   memcpy (bitstream_data, picture->data, picture->size);
   self->bitstream_map.size = picture->size;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static void
@@ -559,7 +559,7 @@ gst_v4l2_codec_vp8_dec_reset_picture (GstV4l2CodecVp8Dec * self)
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
     GstVp8Picture * picture)
 {
@@ -567,7 +567,7 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
   GstVideoCodecFrame *frame;
   GstV4l2Request *request;
   GstBuffer *buffer;
-  GstFlowReturn flow_ret;
+  GstFlowReturn flow_ret = GST_FLOW_OK;
   gsize bytesused;
 
   /* *INDENT-OFF* */
@@ -598,7 +598,7 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
       picture->system_frame_number);
-  g_return_val_if_fail (frame, FALSE);
+  g_return_val_if_fail (frame, GST_FLOW_ERROR);
   g_warn_if_fail (frame->output_buffer == NULL);
   frame->output_buffer = buffer;
   gst_video_codec_frame_unref (frame);
@@ -628,11 +628,16 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
   }
 
   gst_v4l2_codec_vp8_dec_reset_picture (self);
-  return TRUE;
+
+  return GST_FLOW_OK;
 
 fail:
   gst_v4l2_codec_vp8_dec_reset_picture (self);
-  return FALSE;
+
+  if (flow_ret != GST_FLOW_OK)
+    return flow_ret;
+
+  return GST_FLOW_ERROR;
 }
 
 static gboolean

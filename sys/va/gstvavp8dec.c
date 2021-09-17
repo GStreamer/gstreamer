@@ -142,7 +142,7 @@ _get_profile (GstVaVp8Dec * self, const GstVp8FrameHdr * frame_hdr)
   return VAProfileVP8Version0_3;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     const GstVp8FrameHdr * frame_hdr)
 {
@@ -156,12 +156,12 @@ gst_va_vp8_dec_new_sequence (GstVp8Decoder * decoder,
 
   profile = _get_profile (self, frame_hdr);
   if (profile == VAProfileNone)
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
 
   if (!gst_va_decoder_has_profile (base->decoder, profile)) {
     GST_ERROR_OBJECT (self, "Profile %s is not supported",
         gst_va_profile_name (profile));
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   /* VP8 always use 8 bits 4:2:0 */
@@ -182,14 +182,14 @@ gst_va_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     self->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_vp8_dec_new_picture (GstVp8Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp8Picture * picture)
 {
@@ -209,14 +209,15 @@ gst_va_vp8_dec_new_picture (GstVp8Decoder * decoder,
 
   GST_LOG_OBJECT (self, "New va decode picture %p - %#x", pic,
       gst_va_decode_picture_get_surface (pic));
-  return TRUE;
+
+  return GST_FLOW_OK;
 
 error:
   {
     GST_WARNING_OBJECT (self,
         "Failed to allocated output buffer, return %s",
         gst_flow_get_name (self->last_ret));
-    return FALSE;
+    return self->last_ret;
   }
 }
 
@@ -412,11 +413,14 @@ static gboolean
 gst_va_vp8_dec_decode_picture (GstVp8Decoder * decoder, GstVp8Picture * picture,
     GstVp8Parser * parser)
 {
-  return _fill_picture (decoder, picture, parser) &&
-      _add_slice (decoder, picture, parser);
+  if (_fill_picture (decoder, picture, parser) &&
+      _add_slice (decoder, picture, parser))
+    return GST_FLOW_OK;
+
+  return GST_FLOW_ERROR;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_vp8_dec_end_picture (GstVp8Decoder * decoder, GstVp8Picture * picture)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
@@ -427,7 +431,10 @@ gst_va_vp8_dec_end_picture (GstVp8Decoder * decoder, GstVp8Picture * picture)
 
   va_pic = gst_vp8_picture_get_user_data (picture);
 
-  return gst_va_decoder_decode (base->decoder, va_pic);
+  if (!gst_va_decoder_decode (base->decoder, va_pic))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn

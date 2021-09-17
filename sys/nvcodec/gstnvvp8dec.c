@@ -72,11 +72,11 @@ static gboolean gst_nv_vp8_dec_src_query (GstVideoDecoder * decoder,
     GstQuery * query);
 
 /* GstVp8Decoder */
-static gboolean gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
+static GstFlowReturn gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     const GstVp8FrameHdr * frame_hdr);
-static gboolean gst_nv_vp8_dec_new_picture (GstVp8Decoder * decoder,
+static GstFlowReturn gst_nv_vp8_dec_new_picture (GstVp8Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp8Picture * picture);
-static gboolean gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
+static GstFlowReturn gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
     GstVp8Picture * picture, GstVp8Parser * parser);
 static GstFlowReturn gst_nv_vp8_dec_output_picture (GstVp8Decoder *
     decoder, GstVideoCodecFrame * frame, GstVp8Picture * picture);
@@ -225,7 +225,7 @@ gst_nv_vp8_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
   return GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     const GstVp8FrameHdr * frame_hdr)
 {
@@ -256,12 +256,12 @@ gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
             cudaVideoCodec_VP8, &info, self->width, self->height,
             NUM_OUTPUT_VIEW)) {
       GST_ERROR_OBJECT (self, "Failed to configure decoder");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
 
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
 
     memset (&self->params, 0, sizeof (CUVIDPICPARAMS));
@@ -273,10 +273,10 @@ gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     self->params.CodecSpecific.vp8.height = self->height;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_vp8_dec_new_picture (GstVp8Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp8Picture * picture)
 {
@@ -286,7 +286,7 @@ gst_nv_vp8_dec_new_picture (GstVp8Decoder * decoder,
   nv_frame = gst_nv_decoder_new_frame (self->decoder);
   if (!nv_frame) {
     GST_ERROR_OBJECT (self, "No available decoder frame");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   GST_LOG_OBJECT (self,
@@ -295,7 +295,7 @@ gst_nv_vp8_dec_new_picture (GstVp8Decoder * decoder,
   gst_vp8_picture_set_user_data (picture,
       nv_frame, (GDestroyNotify) gst_nv_decoder_frame_unref);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstNvDecoderFrame *
@@ -312,7 +312,7 @@ gst_nv_vp8_dec_get_decoder_frame_from_picture (GstNvVp8Dec * self,
   return frame;
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
     GstVp8Picture * picture, GstVp8Parser * parser)
 {
@@ -327,7 +327,7 @@ gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
   frame = gst_nv_vp8_dec_get_decoder_frame_from_picture (self, picture);
   if (!frame) {
     GST_ERROR_OBJECT (self, "Decoder frame is unavailable");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   self->params.nBitstreamDataLen = picture->size;
@@ -346,7 +346,7 @@ gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
         decoder->alt_ref_picture);
     if (!other_frame) {
       GST_ERROR_OBJECT (self, "Couldn't get decoder frame for AltRef");
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
 
     self->params.CodecSpecific.vp8.AltRefIdx = other_frame->index;
@@ -360,7 +360,7 @@ gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
         decoder->golden_ref_picture);
     if (!other_frame) {
       GST_ERROR_OBJECT (self, "Couldn't get decoder frame for GoldenRef");
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
 
     self->params.CodecSpecific.vp8.GoldenRefIdx = other_frame->index;
@@ -374,7 +374,7 @@ gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
         decoder->last_picture);
     if (!other_frame) {
       GST_ERROR_OBJECT (self, "Couldn't get decoder frame for LastRef");
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
 
     self->params.CodecSpecific.vp8.LastRefIdx = other_frame->index;
@@ -391,7 +391,10 @@ gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
       parser->segmentation.segmentation_enabled ?
       parser->segmentation.update_segment_feature_data : 0;
 
-  return gst_nv_decoder_decode_picture (self->decoder, &self->params);
+  if (!gst_nv_decoder_decode_picture (self->decoder, &self->params))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn

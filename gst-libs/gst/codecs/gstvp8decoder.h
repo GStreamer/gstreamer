@@ -88,31 +88,31 @@ struct _GstVp8DecoderClass
 {
   GstVideoDecoderClass parent_class;
 
-  gboolean        (*new_sequence)      (GstVp8Decoder * decoder,
+  GstFlowReturn   (*new_sequence)      (GstVp8Decoder * decoder,
                                         const GstVp8FrameHdr * frame_hdr);
 
   /**
-   * GstVp8Decoder:new_picture:
+   * GstVp8DecoderClass:new_picture:
    * @decoder: a #GstVp8Decoder
    * @frame: (transfer none): a #GstVideoCodecFrame
    * @picture: (transfer none): a #GstVp8Picture
    */
-  gboolean        (*new_picture)       (GstVp8Decoder * decoder,
+  GstFlowReturn   (*new_picture)       (GstVp8Decoder * decoder,
                                         GstVideoCodecFrame * frame,
                                         GstVp8Picture * picture);
 
-  gboolean        (*start_picture)     (GstVp8Decoder * decoder,
+  GstFlowReturn   (*start_picture)     (GstVp8Decoder * decoder,
                                         GstVp8Picture * picture);
 
-  gboolean        (*decode_picture)    (GstVp8Decoder * decoder,
+  GstFlowReturn   (*decode_picture)    (GstVp8Decoder * decoder,
                                         GstVp8Picture * picture,
                                         GstVp8Parser * parser);
 
-  gboolean        (*end_picture)       (GstVp8Decoder * decoder,
+  GstFlowReturn   (*end_picture)       (GstVp8Decoder * decoder,
                                         GstVp8Picture * picture);
 
   /**
-   * GstVp8Decoder:output_picture:
+   * GstVp8DecoderClass:output_picture:
    * @decoder: a #GstVp8Decoder
    * @frame: (transfer full): a #GstVideoCodecFrame
    * @picture: (transfer full): a #GstVp8Picture
