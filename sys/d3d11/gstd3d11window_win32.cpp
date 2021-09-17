@@ -129,6 +129,8 @@ static void gst_d3d11_window_win32_unprepare (GstD3D11Window * window);
 static void
 gst_d3d11_window_win32_set_render_rectangle (GstD3D11Window * window,
     const GstVideoRectangle * rect);
+static void gst_d3d11_window_win32_set_title (GstD3D11Window * window,
+    const gchar * title);
 
 static void
 gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
@@ -154,6 +156,8 @@ gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_unprepare);
   window_class->set_render_rectangle =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_set_render_rectangle);
+  window_class->set_title =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_set_title);
 }
 
 static void
@@ -277,6 +281,22 @@ gst_d3d11_window_win32_set_render_rectangle (GstD3D11Window * window,
      * - Or should we ignore set_render_rectangle if we are drawing on
      *   internal HWND without external HWND ?
      */
+  }
+}
+
+static void
+gst_d3d11_window_win32_set_title (GstD3D11Window * window, const gchar * title)
+{
+  GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
+
+  /* Do this only when we are rendring on our own HWND */
+  if (!self->external_hwnd && self->internal_hwnd) {
+    gunichar2 *str = g_utf8_to_utf16 (title, -1, nullptr, nullptr, nullptr);
+
+    if (str) {
+      SetWindowTextW (self->internal_hwnd, (LPCWSTR) str);
+      g_free (str);
+    }
   }
 }
 

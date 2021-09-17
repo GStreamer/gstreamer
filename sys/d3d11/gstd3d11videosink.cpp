@@ -41,6 +41,7 @@
 #include "gstd3d11videosink.h"
 #include "gstd3d11videoprocessor.h"
 #include "gstd3d11pluginutils.h"
+#include <string>
 
 #if GST_D3D11_WINAPI_APP
 #include "gstd3d11window_corewindow.h"
@@ -132,6 +133,8 @@ struct _GstD3D11VideoSink
   gboolean drawing;
   GstBuffer *current_buffer;
   GRecMutex draw_lock;
+
+  gchar *title;
 };
 
 static void gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
@@ -164,6 +167,8 @@ static gboolean gst_d3d11_video_sink_query (GstBaseSink * sink,
     GstQuery * query);
 static gboolean gst_d3d11_video_sink_unlock (GstBaseSink * sink);
 static gboolean gst_d3d11_video_sink_unlock_stop (GstBaseSink * sink);
+static gboolean gst_d3d11_video_sink_event (GstBaseSink * sink,
+    GstEvent * event);
 
 static GstFlowReturn
 gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf);
@@ -320,6 +325,7 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
   basesink_class->unlock = GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_unlock);
   basesink_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_unlock_stop);
+  basesink_class->event = GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_event);
 
   videosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_show_frame);
@@ -432,6 +438,7 @@ gst_d3d11_video_sink_finalize (GObject * object)
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (object);
 
   g_rec_mutex_clear (&self->draw_lock);
+  g_free (self->title);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -642,6 +649,11 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
 
   self->processor_in_use = FALSE;
 
+  if (self->title) {
+    gst_d3d11_window_set_title (self->window, self->title);
+    g_clear_pointer (&self->title, g_free);
+  }
+
   return TRUE;
 
   /* ERRORS */
@@ -810,6 +822,8 @@ gst_d3d11_video_sink_stop (GstBaseSink * sink)
   gst_clear_object (&self->device);
   gst_clear_object (&self->window);
 
+  g_clear_pointer (&self->title, g_free);
+
   return TRUE;
 }
 
@@ -960,6 +974,47 @@ gst_d3d11_video_sink_unlock_stop (GstBaseSink * sink)
     gst_d3d11_window_unlock_stop (self->window);
 
   return TRUE;
+}
+
+static gboolean
+gst_d3d11_video_sink_event (GstBaseSink * sink, GstEvent * event)
+{
+  GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:{
+      GstTagList *taglist;
+      gchar *title = nullptr;
+
+      gst_event_parse_tag (event, &taglist);
+      gst_tag_list_get_string (taglist, GST_TAG_TITLE, &title);
+
+      if (title) {
+        const gchar *app_name = g_get_application_name ();
+        std::string title_string;
+
+        if (app_name) {
+          title_string = std::string (title) + " : " + std::string (app_name);
+        } else {
+          title_string = std::string (title);
+        }
+
+        if (self->window) {
+          gst_d3d11_window_set_title (self->window, title_string.c_str ());
+        } else {
+          g_free (self->title);
+          self->title = g_strdup (title_string.c_str ());
+        }
+
+        g_free (title);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 }
 
 static gboolean

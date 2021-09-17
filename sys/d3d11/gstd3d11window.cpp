@@ -788,6 +788,19 @@ gst_d3d11_window_set_render_rectangle (GstD3D11Window * window,
     klass->set_render_rectangle (window, rect);
 }
 
+void
+gst_d3d11_window_set_title (GstD3D11Window * window, const gchar * title)
+{
+  GstD3D11WindowClass *klass;
+
+  g_return_if_fail (GST_IS_D3D11_WINDOW (window));
+
+  klass = GST_D3D11_WINDOW_GET_CLASS (window);
+
+  if (klass->set_title)
+    klass->set_title (window, title);
+}
+
 static gboolean
 gst_d3d11_window_buffer_ensure_processor_input (GstD3D11Window * self,
     GstBuffer * buffer, ID3D11VideoProcessorInputView ** in_view)
