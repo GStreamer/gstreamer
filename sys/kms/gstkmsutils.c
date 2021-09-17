@@ -78,6 +78,10 @@ static const struct
   DEF_FMT (NV21, NV21),
   DEF_FMT (NV12, NV12),
 
+  /* 16bits/p RGB */
+  DEF_FMT (RGB565, RGB16),
+  DEF_FMT (BGR565, BGR16),
+
 #undef DEF_FMT
 };
 /* *INDENT-ON* */
@@ -131,6 +135,8 @@ gst_drm_bpp_from_drm (guint32 drmfmt)
     case DRM_FORMAT_YUYV:
     case DRM_FORMAT_YVYU:
     case DRM_FORMAT_P016:
+    case DRM_FORMAT_RGB565:
+    case DRM_FORMAT_BGR565:
       bpp = 16;
       break;
     case DRM_FORMAT_BGR888:
