@@ -143,7 +143,7 @@ _get_profile (GstVaVp9Dec * self, GstVP9Profile profile)
   return VAProfileNone;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_vp9_new_sequence (GstVp9Decoder * decoder,
     const GstVp9FrameHeader * frame_hdr)
 {
@@ -155,18 +155,18 @@ gst_va_vp9_new_sequence (GstVp9Decoder * decoder,
 
   profile = _get_profile (self, frame_hdr->profile);
   if (profile == VAProfileNone)
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
 
   if (!gst_va_decoder_has_profile (base->decoder, profile)) {
     GST_ERROR_OBJECT (self, "Profile %s is not supported",
         gst_va_profile_name (profile));
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   rt_format = _get_rtformat (self, frame_hdr->profile, frame_hdr->bit_depth,
       frame_hdr->subsampling_x, frame_hdr->subsampling_y);
   if (rt_format == 0)
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
 
   if (!gst_va_decoder_config_is_equal (base->decoder, profile,
           rt_format, frame_hdr->width, frame_hdr->height)) {
@@ -183,14 +183,14 @@ gst_va_vp9_new_sequence (GstVp9Decoder * decoder,
     self->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 _check_resolution_change (GstVaVp9Dec * self, GstVp9Picture * picture)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (self);
@@ -204,7 +204,7 @@ _check_resolution_change (GstVaVp9Dec * self, GstVp9Picture * picture)
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Resolution changed, but failed to"
           " negotiate with downstream");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
 
       /* @TODO: if negotiation fails, decoder should resize output
        * frame. For that we would need an auxiliar allocator, and
@@ -212,10 +212,10 @@ _check_resolution_change (GstVaVp9Dec * self, GstVp9Picture * picture)
     }
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture)
 {
@@ -225,8 +225,9 @@ gst_va_vp9_dec_new_picture (GstVp9Decoder * decoder,
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
 
-  if (!_check_resolution_change (self, picture))
-    return FALSE;
+  ret = _check_resolution_change (self, picture);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   ret = gst_video_decoder_allocate_output_frame (vdec, frame);
   if (ret != GST_FLOW_OK)
@@ -240,13 +241,13 @@ gst_va_vp9_dec_new_picture (GstVp9Decoder * decoder,
   GST_LOG_OBJECT (self, "New va decode picture %p - %#x", pic,
       gst_va_decode_picture_get_surface (pic));
 
-  return TRUE;
+  return GST_FLOW_OK;
 
 error:
   {
     GST_WARNING_OBJECT (self, "Failed to allocated output buffer, return %s",
         gst_flow_get_name (ret));
-    return FALSE;
+    return ret;
   }
 }
 
@@ -472,14 +473,17 @@ _fill_slice (GstVp9Decoder * decoder, GstVp9Picture * picture)
       sizeof (slice_param), (gpointer) picture->data, picture->size);
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_vp9_decode_picture (GstVp9Decoder * decoder, GstVp9Picture * picture,
     GstVp9Dpb * dpb)
 {
-  return _fill_param (decoder, picture, dpb) && _fill_slice (decoder, picture);
+  if (_fill_param (decoder, picture, dpb) && _fill_slice (decoder, picture))
+    return GST_FLOW_OK;
+
+  return GST_FLOW_ERROR;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_vp9_dec_end_picture (GstVp9Decoder * decoder, GstVp9Picture * picture)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
@@ -489,7 +493,10 @@ gst_va_vp9_dec_end_picture (GstVp9Decoder * decoder, GstVp9Picture * picture)
 
   va_pic = gst_vp9_picture_get_user_data (picture);
 
-  return gst_va_decoder_decode (base->decoder, va_pic);
+  if (!gst_va_decoder_decode (base->decoder, va_pic))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -516,8 +523,10 @@ gst_va_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
   GstVaDecodePicture *va_pic, *va_dup;
   GstVp9Picture *new_picture;
 
-  if (!_check_resolution_change (GST_VA_VP9_DEC (decoder), picture))
+  if (_check_resolution_change (GST_VA_VP9_DEC (decoder), picture) !=
+      GST_FLOW_OK) {
     return NULL;
+  }
 
   va_pic = gst_vp9_picture_get_user_data (picture);
   va_dup = gst_va_decode_picture_dup (va_pic);

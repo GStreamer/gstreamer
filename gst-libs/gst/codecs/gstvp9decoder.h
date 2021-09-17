@@ -72,7 +72,7 @@ struct _GstVp9DecoderClass
    *
    * Since: 1.18
    */
-  gboolean        (*new_sequence)      (GstVp9Decoder * decoder,
+  GstFlowReturn   (*new_sequence)      (GstVp9Decoder * decoder,
                                         const GstVp9FrameHeader *frame_hdr);
 
   /**
@@ -87,7 +87,7 @@ struct _GstVp9DecoderClass
    *
    * Since: 1.18
    */
-  gboolean        (*new_picture)       (GstVp9Decoder * decoder,
+  GstFlowReturn   (*new_picture)       (GstVp9Decoder * decoder,
                                         GstVideoCodecFrame * frame,
                                         GstVp9Picture * picture);
 
@@ -126,7 +126,7 @@ struct _GstVp9DecoderClass
    *
    * Since: 1.18
    */
-  gboolean        (*start_picture)     (GstVp9Decoder * decoder,
+  GstFlowReturn   (*start_picture)     (GstVp9Decoder * decoder,
                                         GstVp9Picture * picture);
 
   /**
@@ -140,7 +140,7 @@ struct _GstVp9DecoderClass
    *
    * Since: 1.18
    */
-  gboolean        (*decode_picture)    (GstVp9Decoder * decoder,
+  GstFlowReturn   (*decode_picture)    (GstVp9Decoder * decoder,
                                         GstVp9Picture * picture,
                                         GstVp9Dpb * dpb);
 
@@ -154,7 +154,7 @@ struct _GstVp9DecoderClass
    *
    * Since: 1.18
    */
-  gboolean        (*end_picture)       (GstVp9Decoder * decoder,
+  GstFlowReturn   (*end_picture)       (GstVp9Decoder * decoder,
                                         GstVp9Picture * picture);
 
   /**

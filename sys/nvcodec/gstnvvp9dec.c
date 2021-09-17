@@ -73,13 +73,13 @@ static gboolean gst_nv_vp9_dec_src_query (GstVideoDecoder * decoder,
     GstQuery * query);
 
 /* GstVp9Decoder */
-static gboolean gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
+static GstFlowReturn gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
     const GstVp9FrameHeader * frame_hdr);
-static gboolean gst_nv_vp9_dec_new_picture (GstVp9Decoder * decoder,
+static GstFlowReturn gst_nv_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static GstVp9Picture *gst_nv_vp9_dec_duplicate_picture (GstVp9Decoder *
     decoder, GstVideoCodecFrame * frame, GstVp9Picture * picture);
-static gboolean gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
+static GstFlowReturn gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture, GstVp9Dpb * dpb);
 static GstFlowReturn gst_nv_vp9_dec_output_picture (GstVp9Decoder *
     decoder, GstVideoCodecFrame * frame, GstVp9Picture * picture);
@@ -230,7 +230,7 @@ gst_nv_vp9_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
   return GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
     const GstVp9FrameHeader * frame_hdr)
 {
@@ -254,7 +254,7 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
 
   if (out_format == GST_VIDEO_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (self, "Could not support profile %d", self->profile);
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   gst_video_info_set_format (&info, out_format, self->width, self->height);
@@ -262,22 +262,22 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
           cudaVideoCodec_VP9, &info, self->width, self->height,
           NUM_OUTPUT_VIEW)) {
     GST_ERROR_OBJECT (self, "Failed to configure decoder");
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
     GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   memset (&self->params, 0, sizeof (CUVIDPICPARAMS));
 
   self->params.CodecSpecific.vp9.colorSpace = frame_hdr->color_space;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture)
 {
@@ -287,7 +287,7 @@ gst_nv_vp9_dec_new_picture (GstVp9Decoder * decoder,
   nv_frame = gst_nv_decoder_new_frame (self->decoder);
   if (!nv_frame) {
     GST_ERROR_OBJECT (self, "No available decoder frame");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   GST_LOG_OBJECT (self,
@@ -296,7 +296,7 @@ gst_nv_vp9_dec_new_picture (GstVp9Decoder * decoder,
   gst_vp9_picture_set_user_data (picture,
       nv_frame, (GDestroyNotify) gst_nv_decoder_frame_unref);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstNvDecoderFrame *
@@ -338,7 +338,7 @@ gst_nv_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
   return new_picture;
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture, GstVp9Dpb * dpb)
 {
@@ -387,7 +387,7 @@ gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
   frame = gst_nv_vp9_dec_get_decoder_frame_from_picture (self, picture);
   if (!frame) {
     GST_ERROR_OBJECT (self, "Decoder frame is unavailable");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   params->nBitstreamDataLen = picture->size;
@@ -479,7 +479,10 @@ gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
   memcpy (vp9_params->segmentFeatureData, sp->feature_data,
       sizeof (sp->feature_data));
 
-  return gst_nv_decoder_decode_picture (self->decoder, &self->params);
+  if (!gst_nv_decoder_decode_picture (self->decoder, &self->params))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn

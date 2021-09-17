@@ -144,12 +144,12 @@ gst_vp9_decoder_stop (GstVideoDecoder * decoder)
   return TRUE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
     const GstVp9FrameHeader * frame_hdr)
 {
   GstVp9DecoderPrivate *priv = self->priv;
-  gboolean ret = TRUE;
+  GstFlowReturn ret = GST_FLOW_OK;
   gboolean changed = FALSE;
 
   if (priv->width != frame_hdr->width || priv->height != frame_hdr->height) {
@@ -171,9 +171,10 @@ gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
 
     priv->had_sequence = TRUE;
     if (klass->new_sequence)
-      priv->had_sequence = klass->new_sequence (self, frame_hdr);
+      ret = klass->new_sequence (self, frame_hdr);
 
-    ret = priv->had_sequence;
+    if (ret != GST_FLOW_OK)
+      priv->had_sequence = FALSE;
   }
 
   return ret;
@@ -298,10 +299,12 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     return GST_FLOW_OK;
   }
 
-  if (check_codec_change &&
-      !gst_vp9_decoder_check_codec_change (self, &frame_hdr)) {
-    GST_ERROR_OBJECT (self, "codec change error");
-    goto unmap_and_error;
+  if (check_codec_change) {
+    ret = gst_vp9_decoder_check_codec_change (self, &frame_hdr);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "Subclass cannot handle codec change");
+      goto unmap_and_error;
+    }
   }
 
   if (!priv->had_sequence) {
@@ -346,29 +349,33 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     picture->size = map.size;
 
     if (klass->new_picture) {
-      if (!klass->new_picture (self, frame, picture)) {
-        GST_ERROR_OBJECT (self, "new picture error");
+      ret = klass->new_picture (self, frame, picture);
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "subclass failed to handle new picture");
         goto unmap_and_error;
       }
     }
 
     if (klass->start_picture) {
-      if (!klass->start_picture (self, picture)) {
-        GST_ERROR_OBJECT (self, "start picture error");
+      ret = klass->start_picture (self, picture);
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "subclass failed to handle start picture");
         goto unmap_and_error;
       }
     }
 
     if (klass->decode_picture) {
-      if (!klass->decode_picture (self, picture, priv->dpb)) {
-        GST_ERROR_OBJECT (self, "decode picture error");
+      ret = klass->decode_picture (self, picture, priv->dpb);
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "subclass failed to decode current picture");
         goto unmap_and_error;
       }
     }
 
     if (klass->end_picture) {
-      if (!klass->end_picture (self, picture)) {
-        GST_ERROR_OBJECT (self, "end picture error");
+      ret = klass->end_picture (self, picture);
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "subclass failed to handle end picture");
         goto unmap_and_error;
       }
     }
@@ -394,6 +401,12 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     ret = klass->output_picture (self, frame, picture);
   }
 
+  if (ret == GST_FLOW_ERROR) {
+    GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
+        ("Failed to decode data"), (NULL), ret);
+    return ret;
+  }
+
   return ret;
 
 unmap_and_error:
@@ -406,6 +419,9 @@ error:
   {
     if (picture)
       gst_vp9_picture_unref (picture);
+
+    if (ret == GST_FLOW_OK)
+      ret = GST_FLOW_ERROR;
 
     gst_video_decoder_drop_frame (decoder, frame);
     GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,

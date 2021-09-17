@@ -141,17 +141,17 @@ static gboolean gst_d3d11_vp9_dec_sink_event (GstVideoDecoder * decoder,
     GstEvent * event);
 
 /* GstVp9Decoder */
-static gboolean gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
+static GstFlowReturn gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
     const GstVp9FrameHeader * frame_hdr);
-static gboolean gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
+static GstFlowReturn gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static GstVp9Picture *gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder *
     decoder, GstVideoCodecFrame * frame, GstVp9Picture * picture);
-static gboolean gst_d3d11_vp9_dec_start_picture (GstVp9Decoder * decoder,
+static GstFlowReturn gst_d3d11_vp9_dec_start_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture);
-static gboolean gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
+static GstFlowReturn gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture, GstVp9Dpb * dpb);
-static gboolean gst_d3d11_vp9_dec_end_picture (GstVp9Decoder * decoder,
+static GstFlowReturn gst_d3d11_vp9_dec_end_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture);
 static GstFlowReturn gst_d3d11_vp9_dec_output_picture (GstVp9Decoder *
     decoder, GstVideoCodecFrame * frame, GstVp9Picture * picture);
@@ -347,7 +347,7 @@ gst_d3d11_vp9_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
   return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
     const GstVp9FrameHeader * frame_hdr)
 {
@@ -365,7 +365,7 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
 
   if (out_format == GST_VIDEO_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (self, "Could not support profile %d", frame_hdr->profile);
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   gst_video_info_set_format (&info,
@@ -375,22 +375,22 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
           decoder->input_state, &info, (gint) frame_hdr->width,
           (gint) frame_hdr->height, NUM_OUTPUT_VIEW)) {
     GST_ERROR_OBJECT (self, "Failed to create decoder");
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
     GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   /* Will be updated per decode_picture */
   inner->last_frame_width = inner->last_frame_height = 0;
   inner->last_show_frame = FALSE;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture)
 {
@@ -402,7 +402,7 @@ gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
       GST_VIDEO_DECODER (decoder));
   if (!view_buffer) {
     GST_DEBUG_OBJECT (self, "No available output view buffer");
-    return FALSE;
+    return GST_FLOW_FLUSHING;
   }
 
   GST_LOG_OBJECT (self, "New output view buffer %" GST_PTR_FORMAT, view_buffer);
@@ -412,7 +412,7 @@ gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder,
 
   GST_LOG_OBJECT (self, "New VP9 picture %p", picture);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstVp9Picture *
@@ -446,7 +446,7 @@ gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
   return new_picture;
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_vp9_dec_start_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture)
 {
@@ -455,7 +455,7 @@ gst_d3d11_vp9_dec_start_picture (GstVp9Decoder * decoder,
 
   inner->bitstream_buffer.resize (0);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static ID3D11VideoDecoderOutputView *
@@ -658,7 +658,7 @@ gst_d3d11_vp9_dec_copy_segmentation_params (GstD3D11Vp9Dec * self,
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture, GstVp9Dpb * dpb)
 {
@@ -673,7 +673,7 @@ gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
       &view_id);
   if (!view) {
     GST_ERROR_OBJECT (self, "current picture does not have output view handle");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   memset (pic_params, 0, sizeof (DXVA_PicParams_VP9));
@@ -702,10 +702,10 @@ gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
   inner->last_frame_height = pic_params->height;
   inner->last_show_frame = TRUE;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_vp9_dec_end_picture (GstVp9Decoder * decoder, GstVp9Picture * picture)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
@@ -718,14 +718,14 @@ gst_d3d11_vp9_dec_end_picture (GstVp9Decoder * decoder, GstVp9Picture * picture)
 
   if (inner->bitstream_buffer.empty ()) {
     GST_ERROR_OBJECT (self, "No bitstream buffer to submit");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   view = gst_d3d11_vp9_dec_get_output_view_from_picture (self,
       picture, &view_id);
   if (!view) {
     GST_ERROR_OBJECT (self, "current picture does not have output view handle");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   memset (&input_args, 0, sizeof (GstD3D11DecodeInputStreamArgs));
@@ -751,8 +751,10 @@ gst_d3d11_vp9_dec_end_picture (GstVp9Decoder * decoder, GstVp9Picture * picture)
   input_args.bitstream = &inner->bitstream_buffer[0];
   input_args.bitstream_size = inner->bitstream_buffer.size ();
 
-  return gst_d3d11_decoder_decode_frame (inner->d3d11_decoder,
-      view, &input_args);
+  if (!gst_d3d11_decoder_decode_frame (inner->d3d11_decoder, view, &input_args))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
