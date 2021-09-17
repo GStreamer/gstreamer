@@ -40,27 +40,43 @@ static const struct
 #define DEF_FMT(fourcc, fmt) \
   { DRM_FORMAT_##fourcc,GST_VIDEO_FORMAT_##fmt }
 
-  /* DEF_FMT (XRGB1555, ???), */
-  /* DEF_FMT (XBGR1555, ???), */
+  /* Keep sorted by decreasing quality, refer to GST_VIDEO_FORMATS_ALL order
+   * if unsure */  
+
+  /* 32bits/p RGB with Alpha */
   DEF_FMT (ARGB8888, BGRA),
-  DEF_FMT (XRGB8888, BGRx),
   DEF_FMT (ABGR8888, RGBA),
+
+  /* 16bits/c YUV 4:2:0 */
+  DEF_FMT (P016, P016_LE),
+
+  /* 16bits/c YUV 4:2:0 */
+  DEF_FMT (P010, P010_10LE),
+
+  /* YUV 4:4:4 */
+  DEF_FMT (NV24, NV24),
+
+  /* 32bits/p RGB opaque */
+  DEF_FMT (XRGB8888, BGRx),
   DEF_FMT (XBGR8888, RGBx),
+
+  /* 24bits RGB opaque */
   DEF_FMT (BGR888, RGB),
   DEF_FMT (RGB888, BGR),
-  DEF_FMT (P010, P010_10LE),
-  DEF_FMT (P016, P016_LE),
+
+  /* 8bits/c YUV 4:2:2 */
+  DEF_FMT (YUV422, Y42B),
+  DEF_FMT (NV61, NV61),
+  DEF_FMT (NV16, NV16),
   DEF_FMT (UYVY, UYVY),
-  DEF_FMT (YUYV, YUY2),
   DEF_FMT (YVYU, YVYU),
+  DEF_FMT (YUYV, YUY2),
+
+  /* 8bits/c YUV 4:2:0 */
   DEF_FMT (YUV420, I420),
   DEF_FMT (YVU420, YV12),
-  DEF_FMT (YUV422, Y42B),
-  DEF_FMT (NV12, NV12),
   DEF_FMT (NV21, NV21),
-  DEF_FMT (NV16, NV16),
-  DEF_FMT (NV61, NV61),
-  DEF_FMT (NV24, NV24),
+  DEF_FMT (NV12, NV12),
 
 #undef DEF_FMT
 };
