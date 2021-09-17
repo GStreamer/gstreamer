@@ -236,6 +236,9 @@ gst_hls_demux_create_pad (GstHLSDemux * hlsdemux)
   pad = gst_pad_new_from_static_template (&srctemplate, name);
   g_free (name);
 
+  /* We only typefind at most once */
+  gst_pad_use_fixed_caps (pad);
+
   return pad;
 }
 

@@ -2041,6 +2041,11 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
 
       GST_MANIFEST_UNLOCK (demux);
       break;
+
+    case GST_QUERY_CAPS:
+      ret = gst_pad_query_default (pad, parent, query);
+      break;
+
     default:
       /* Don't forward queries upstream because of the special nature of this
        *  "demuxer", which relies on the upstream element only to be fed
