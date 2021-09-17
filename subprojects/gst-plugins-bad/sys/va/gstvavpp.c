@@ -743,7 +743,7 @@ gst_va_vpp_complete_caps_features (GstCaps * caps, GstCaps * tmpl_caps)
         has_dma = TRUE;
         valid = TRUE;
       }
-      if (gst_caps_features_contains (features, "memory:VAMemory")) {
+      if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA)) {
         has_va = TRUE;
         valid = TRUE;
       }
@@ -774,7 +774,8 @@ gst_va_vpp_complete_caps_features (GstCaps * caps, GstCaps * tmpl_caps)
     structure = gst_caps_get_structure (tmpl_caps, i);
     features = gst_caps_get_features (tmpl_caps, i);
 
-    if (gst_caps_features_contains (features, "memory:VAMemory") && !has_va)
+    if (gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_MEMORY_VA) && !has_va)
       gst_caps_append_structure_full (full_caps, gst_structure_copy (structure),
           gst_caps_features_copy (features));
 

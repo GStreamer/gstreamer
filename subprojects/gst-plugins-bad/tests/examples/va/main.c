@@ -229,7 +229,7 @@ build_pipeline (struct _app *app)
   gst_object_unref (src);
 
   sink = gst_bin_get_by_name (GST_BIN (app->pipeline), "sink");
-  caps = gst_caps_from_string ("video/x-raw(memory:VAMemory)");
+  caps = gst_caps_from_string ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_VA ")");
   g_object_set (sink, "caps", caps, NULL);
   gst_caps_unref (caps);
   gst_app_sink_set_callbacks (GST_APP_SINK (sink), &callbacks, app, NULL);

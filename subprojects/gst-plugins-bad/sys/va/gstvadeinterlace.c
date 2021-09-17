@@ -115,10 +115,11 @@ struct CData
 };
 
 /* *INDENT-OFF* */
-static const gchar *caps_str = GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory",
-            "{ NV12, I420, YV12, YUY2, RGBA, BGRA, P010_10LE, ARGB, ABGR }") " ;"
-            GST_VIDEO_CAPS_MAKE ("{ VUYA, GRAY8, NV12, NV21, YUY2, UYVY, YV12, "
-            "I420, P010_10LE, RGBA, BGRA, ARGB, ABGR  }");
+static const gchar *caps_str =
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VA,
+        "{ NV12, I420, YV12, YUY2, RGBA, BGRA, P010_10LE, ARGB, ABGR }") " ;"
+    GST_VIDEO_CAPS_MAKE ("{ VUYA, GRAY8, NV12, NV21, YUY2, UYVY, YV12, "
+        "I420, P010_10LE, RGBA, BGRA, ARGB, ABGR  }");
 /* *INDENT-ON* */
 
 static void
