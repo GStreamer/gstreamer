@@ -200,7 +200,7 @@ gst_bit_writer_reset_and_get_data (GstBitWriter * bitwriter)
 
   data = bitwriter->data;
   if (bitwriter->owned)
-    data = g_memdup (data, bitwriter->bit_size >> 3);
+    data = g_memdup (data, GST_ROUND_UP_8 (bitwriter->bit_size) >> 3);
   gst_bit_writer_reset (bitwriter);
 
   return data;
@@ -226,7 +226,7 @@ gst_bit_writer_reset_and_get_buffer (GstBitWriter * bitwriter)
 
   g_return_val_if_fail (bitwriter != NULL, NULL);
 
-  size = bitwriter->bit_size >> 3;
+  size = GST_ROUND_UP_8 (bitwriter->bit_size) >> 3;
   data = gst_bit_writer_reset_and_get_data (bitwriter);
 
   /* we cannot rely on buffers allocated externally, thus let's dup
