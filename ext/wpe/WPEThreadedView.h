@@ -138,6 +138,7 @@ private:
     struct {
         GMutex mutex;
         GCond cond;
+        gboolean ready;
         GThread* thread { nullptr };
     } threading;
 

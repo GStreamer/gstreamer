@@ -77,7 +77,9 @@ WPEContextThread::WPEContextThread()
     {
         GMutexHolder lock(threading.mutex);
         threading.thread = g_thread_new("WPEContextThread", s_viewThread, this);
-        g_cond_wait(&threading.cond, &threading.mutex);
+        while (!threading.ready) {
+            g_cond_wait(&threading.cond, &threading.mutex);
+        }
         GST_DEBUG("thread spawned");
     }
 }
@@ -138,6 +140,7 @@ gpointer WPEContextThread::s_viewThread(gpointer data)
             [](gpointer data) -> gboolean {
                 auto& view = *static_cast<WPEContextThread*>(data);
                 GMutexHolder lock(view.threading.mutex);
+                view.threading.ready = TRUE;
                 g_cond_signal(&view.threading.cond);
                 return G_SOURCE_REMOVE;
             },
