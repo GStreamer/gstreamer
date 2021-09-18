@@ -220,61 +220,9 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
     gst_caps_set_features_simple (feature_caps, features);
     caps = gst_caps_merge (caps, feature_caps);
   }
+
   /* raw caps */
-  /* XXX(victor): assumption -- drivers can only download to image
-   * formats with same chroma of surface's format.
-   *
-   * This assumption is only valid for i965 and Gallium (so far).
-   * iHD's color space conversor, in decoders, has some problems or
-   * outputs wrong MD5 in tests.
-   */
-  {
-    GstCaps *raw_caps;
-    GArray *image_formats = NULL;
-
-    if (!gst_va_display_is_implementation (display,
-            GST_VA_IMPLEMENTATION_INTEL_IHD))
-      image_formats = gst_va_display_get_image_formats (display);
-
-    if (!image_formats) {
-      raw_caps = gst_caps_copy (base_caps);
-    } else {
-      GArray *raw_formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
-      guint j, surface_chroma, image_chroma;
-      GstVideoFormat image_format;
-
-      raw_caps =
-          gst_caps_new_simple ("video/x-raw", "width", GST_TYPE_INT_RANGE,
-          min_width, max_width, "height", GST_TYPE_INT_RANGE, min_height,
-          max_height, NULL);
-
-      for (i = 0; i < formats->len; i++) {
-        format = g_array_index (formats, GstVideoFormat, i);
-        surface_chroma = gst_va_chroma_from_video_format (format);
-        if (surface_chroma == 0)
-          continue;
-
-        g_array_append_val (raw_formats, format);
-
-        for (j = 0; j < image_formats->len; j++) {
-          image_format = g_array_index (image_formats, GstVideoFormat, j);
-          image_chroma = gst_va_chroma_from_video_format (image_format);
-          if (image_format != format && surface_chroma == image_chroma)
-            g_array_append_val (raw_formats, image_format);
-        }
-      }
-
-      if (!gst_caps_set_format_array (raw_caps, raw_formats)) {
-        gst_caps_unref (raw_caps);
-        raw_caps = gst_caps_copy (base_caps);
-      }
-
-      g_array_unref (raw_formats);
-      g_array_unref (image_formats);
-    }
-
-    caps = gst_caps_merge (caps, raw_caps);
-  }
+  caps = gst_caps_merge (caps, gst_caps_copy (base_caps));
 
   gst_caps_unref (base_caps);
 
