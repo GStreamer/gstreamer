@@ -98,30 +98,49 @@ WPEContextThread::~WPEContextThread()
 template<typename Function>
 void WPEContextThread::dispatch(Function func)
 {
-    struct Payload {
-        Function& func;
-    };
-    struct Payload payload { func };
+    struct Job {
+        Job(Function& f)
+            : func(f)
+        {
+            g_mutex_init(&mutex);
+            g_cond_init(&cond);
+            dispatched = FALSE;
+        }
+        ~Job() {
+            g_mutex_clear(&mutex);
+            g_cond_clear(&cond);
+        }
 
+        void dispatch() {
+            GMutexHolder lock(mutex);
+            func();
+            dispatched = TRUE;
+            g_cond_signal(&cond);
+        }
+
+        void waitCompletion() {
+            GMutexHolder lock(mutex);
+            while(!dispatched) {
+                g_cond_wait(&cond, &mutex);
+            }
+        }
+
+        Function& func;
+        GMutex mutex;
+        GCond cond;
+        gboolean dispatched;
+    };
+
+    struct Job job(func);
     GSource* source = g_idle_source_new();
     g_source_set_callback(source, [](gpointer data) -> gboolean {
-        auto& view = WPEContextThread::singleton();
-        GMutexHolder lock(view.threading.mutex);
-
-        auto* payload = static_cast<struct Payload*>(data);
-        payload->func();
-
-        g_cond_signal(&view.threading.cond);
+        auto* job = static_cast<struct Job*>(data);
+        job->dispatch();
         return G_SOURCE_REMOVE;
-    }, &payload, nullptr);
+    }, &job, nullptr);
     g_source_set_priority(source, G_PRIORITY_DEFAULT);
-
-    {
-        GMutexHolder lock(threading.mutex);
-        g_source_attach(source, glib.context);
-        g_cond_wait(&threading.cond, &threading.mutex);
-    }
-
+    g_source_attach(source, glib.context);
+    job.waitCompletion();
     g_source_unref(source);
 }
 
