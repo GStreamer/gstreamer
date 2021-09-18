@@ -837,7 +837,7 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
   guint size;
   gboolean need_pool;
 
-  if (!self->device || !self->window)
+  if (!self->device)
     return FALSE;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
