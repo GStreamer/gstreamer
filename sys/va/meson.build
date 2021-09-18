@@ -33,8 +33,9 @@ if not gstva_dep.found()
   subdir_done()
 endif
 
+# Keep av1 support optional as long as required libva version in gst-libs/va is < 1.8
 libva_av1_req = ['>= 1.8']
-libva_av1_dep = dependency('libva', version: libva_av1_req, required: va_option)
+libva_av1_dep = dependency('libva', version: libva_av1_req, required: false)
 if libva_av1_dep.found()
   va_sources += 'gstvaav1dec.c'
 endif
