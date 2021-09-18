@@ -905,6 +905,12 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
       gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr,
           nullptr);
       gst_structure_free (config);
+
+      /* In case of system memory, we will upload video frame to GPU memory,
+       * (which is copy in any case), so crop meta support for system memory
+       * is almost pointless */
+      gst_query_add_allocation_meta (query,
+          GST_VIDEO_CROP_META_API_TYPE, nullptr);
     }
   }
 
@@ -1068,6 +1074,7 @@ gst_d3d11_video_sink_get_fallback_buffer (GstD3D11VideoSink * self,
   GstBuffer *outbuf = NULL;
   ID3D11ShaderResourceView *view[GST_VIDEO_MAX_PLANES];
   GstVideoOverlayCompositionMeta *compo_meta;
+  GstVideoCropMeta *crop_meta;
 
   if (!self->fallback_pool ||
       !gst_buffer_pool_set_active (self->fallback_pool, TRUE) ||
@@ -1097,6 +1104,17 @@ gst_d3d11_video_sink_get_fallback_buffer (GstD3D11VideoSink * self,
   compo_meta = gst_buffer_get_video_overlay_composition_meta (inbuf);
   if (compo_meta)
     gst_buffer_add_video_overlay_composition_meta (outbuf, compo_meta->overlay);
+
+  /* And copy crop meta as well */
+  crop_meta = gst_buffer_get_video_crop_meta (inbuf);
+  if (crop_meta) {
+    GstVideoCropMeta *new_crop_meta = gst_buffer_add_video_crop_meta (outbuf);
+
+    new_crop_meta->x = crop_meta->x;
+    new_crop_meta->y = crop_meta->y;
+    new_crop_meta->width = crop_meta->width;
+    new_crop_meta->height = crop_meta->height;
+  }
 
   *fallback_buf = outbuf;
 

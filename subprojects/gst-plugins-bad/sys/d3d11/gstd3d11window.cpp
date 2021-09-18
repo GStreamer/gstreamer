@@ -828,12 +828,13 @@ gst_d3d11_window_buffer_ensure_processor_input (GstD3D11Window * self,
 
 static gboolean
 gst_d3d11_window_do_processor (GstD3D11Window * self,
-    ID3D11VideoProcessorInputView * piv, ID3D11VideoProcessorOutputView * pov)
+    ID3D11VideoProcessorInputView * piv, ID3D11VideoProcessorOutputView * pov,
+    RECT * input_rect)
 {
   gboolean ret;
 
   ret = gst_d3d11_video_processor_render_unlocked (self->processor,
-      &self->input_rect, piv, &self->render_rect, pov);
+      input_rect, piv, &self->render_rect, pov);
   if (!ret) {
     GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using processor");
   } else {
@@ -847,8 +848,13 @@ gst_d3d11_window_do_processor (GstD3D11Window * self,
 static gboolean
 gst_d3d11_window_do_convert (GstD3D11Window * self,
     ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
-    ID3D11RenderTargetView * rtv)
+    ID3D11RenderTargetView * rtv, RECT * input_rect)
 {
+  if (!gst_d3d11_converter_update_src_rect (self->converter, input_rect)) {
+    GST_ERROR_OBJECT (self, "Failed to update src rect");
+    return FALSE;
+  }
+
   if (!gst_d3d11_converter_convert_unlocked (self->converter,
           srv, &rtv, NULL, NULL)) {
     GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using converter");
@@ -880,6 +886,8 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
     gboolean can_convert = FALSE;
     gboolean can_process = FALSE;
     gboolean convert_ret = FALSE;
+    RECT input_rect = self->input_rect;
+    GstVideoCropMeta *crop_meta;
 
     /* Map memory in any case so that we can upload pending stage texture */
     if (!gst_d3d11_buffer_map (buffer, device_handle, infos, GST_MAP_READ)) {
@@ -896,6 +904,29 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
     if (!can_convert && !can_process) {
       GST_ERROR_OBJECT (self, "Input texture cannot be used for converter");
       return GST_FLOW_ERROR;
+    }
+
+    crop_meta = gst_buffer_get_video_crop_meta (buffer);
+    /* Do minimal validate */
+    if (crop_meta) {
+      ID3D11Texture2D *texture = (ID3D11Texture2D *) infos[0].data;
+      D3D11_TEXTURE2D_DESC desc = { 0, };
+
+      texture->GetDesc (&desc);
+
+      if (desc.Width < crop_meta->x + crop_meta->width ||
+          desc.Height < crop_meta->y + crop_meta->height) {
+        GST_WARNING_OBJECT (self, "Invalid crop meta, ignore");
+
+        crop_meta = nullptr;
+      }
+    }
+
+    if (crop_meta) {
+      input_rect.left = crop_meta->x;
+      input_rect.right = crop_meta->x + crop_meta->width;
+      input_rect.top = crop_meta->y;
+      input_rect.bottom = crop_meta->y + crop_meta->height;
     }
 
     if (self->first_present) {
@@ -919,11 +950,11 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
      * 3) otherwise, use processor
      */
     if (can_process && self->processor_in_use) {
-      convert_ret = gst_d3d11_window_do_processor (self, piv, pov);
+      convert_ret = gst_d3d11_window_do_processor (self, piv, pov, &input_rect);
     } else if (can_convert) {
-      convert_ret = gst_d3d11_window_do_convert (self, srv, rtv);
+      convert_ret = gst_d3d11_window_do_convert (self, srv, rtv, &input_rect);
     } else if (can_process) {
-      convert_ret = gst_d3d11_window_do_processor (self, piv, pov);
+      convert_ret = gst_d3d11_window_do_processor (self, piv, pov, &input_rect);
     } else {
       g_assert_not_reached ();
       ret = GST_FLOW_ERROR;
