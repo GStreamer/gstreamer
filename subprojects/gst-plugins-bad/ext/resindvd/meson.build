@@ -1,3 +1,8 @@
+resindvd_opt = get_option('resindvd').require(gpl_allowed, error_message: '''
+  Plugin resindvd explicitly required via options but GPL-licensed plugins disabled via options.
+  Pass option -Dgpl=enabled to Meson to allow GPL-licensed plugins to be built.
+  ''')
+
 resindvd_sources = [
   'gstmpegdemux.c',
   'gstmpegdesc.c',
@@ -10,8 +15,8 @@ resindvd_sources = [
   'rsnparsetter.c',
 ]
 
-dvdnav_dep = dependency('dvdnav', version : '>= 4.1.2', required : get_option('resindvd'))
-dvdread_dep = dependency('dvdread', version : '>= 4.1.2', required : get_option('resindvd'))
+dvdnav_dep = dependency('dvdnav', version : '>= 4.1.2', required : resindvd_opt)
+dvdread_dep = dependency('dvdread', version : '>= 4.1.2', required : resindvd_opt)
 
 if dvdnav_dep.found() and dvdread_dep.found()
   gstresindvd = library('gstresindvd',

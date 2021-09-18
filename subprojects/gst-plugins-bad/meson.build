@@ -486,6 +486,8 @@ pkgconfig.generate(
   description : 'Streaming media framework, bad plugins libraries',
 )
 
+gpl_allowed = get_option('gpl').allowed()
+
 subdir('gst-libs')
 subdir('gst')
 subdir('sys')
@@ -559,5 +561,9 @@ if meson.version().version_compare('>= 0.54')
       plugin_names += [plugin.name()]
     endif
   endforeach
-  summary({'Plugins':plugin_names}, list_sep: ', ')
+
+  summary({
+      'Plugins': plugin_names,
+      '(A)GPL license allowed': gpl_allowed,
+  }, list_sep: ', ')
 endif

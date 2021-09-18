@@ -1,6 +1,11 @@
-# See: ext/mpeg2enc for note about mjpegtools dep
-mjpegtools_dep = dependency('mjpegtools', version : '>=2.0.0', required : get_option('mplex'))
-mplex2_dep = cxx.find_library('mplex2', required : get_option('mplex'))
+mplex_opt = get_option('mplex').require(gpl_allowed, error_message: '''
+  Plugin mplex explicitly required via options but GPL-licensed plugins disabled via options.
+  Pass option -Dgpl=enabled to Meson to allow GPL-licensed plugins to be built.
+  ''')
+
+# See: ext/mplex for note about mjpegtools dep
+mjpegtools_dep = dependency('mjpegtools', version : '>=2.0.0', required : mplex_opt)
+mplex2_dep = cxx.find_library('mplex2', required : mplex_opt)
 
 if mjpegtools_dep.found() and mplex2_dep.found()
   gstmplex2 = library('gstmplex',

@@ -1,5 +1,10 @@
+dts_opt = get_option('dts').require(gpl_allowed, error_message: '''
+  Plugin dts explicitly required via options but GPL-licensed plugins disabled via options.
+  Pass option -Dgpl=enabled to Meson to allow GPL-licensed plugins to be built.
+  ''')
+
 # Don't do any dependency checks if disabled
-if get_option('dts').disabled()
+if dts_opt.disabled()
   subdir_done()
 endif
 
@@ -9,7 +14,7 @@ if not dca_dep.found()
   if cc.has_header_symbol('dca.h', 'dca_init')
     dca_dep = cc.find_library('dca', required : false)
   endif
-  if not dca_dep.found() and get_option('dts').enabled()
+  if not dca_dep.found() and dts_opt.enabled()
     error('DTS plugin enabled, but libdca not found')
   endif
 endif

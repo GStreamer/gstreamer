@@ -101,10 +101,10 @@ option('decklink', type : 'feature', value : 'auto', description : 'DeckLink aud
 option('directfb', type : 'feature', value : 'auto', description : 'DirectFB video sink plugin')
 option('directsound', type : 'feature', value : 'auto', description : 'Directsound audio source plugin')
 option('dtls', type : 'feature', value : 'auto', description : 'DTLS encoder and decoder plugin')
-option('dts', type : 'feature', value : 'auto', description : 'DTS audio decoder plugin')
+option('dts', type : 'feature', value : 'auto', description : 'DTS audio decoder plugin (GPL - only built if gpl option is also enabled!)')
 option('dvb', type : 'feature', value : 'auto', description : 'DVB video bin and source plugin')
 option('faac', type : 'feature', value : 'auto', description : 'Free AAC audio encoder plugin')
-option('faad', type : 'feature', value : 'auto', description : 'Free AAC audio decoder plugin')
+option('faad', type : 'feature', value : 'auto', description : 'Free AAC audio decoder plugin (GPL - only built if gpl option is also enabled!)')
 option('fbdev', type : 'feature', value : 'auto', description : 'Framebuffer video sink plugin')
 option('fdkaac', type : 'feature', value : 'auto', description : 'Fraunhofer AAC audio codec plugin')
 option('flite', type : 'feature', value : 'auto', description : 'Flite speech synthesizer source plugin')
@@ -114,7 +114,7 @@ option('gme', type : 'feature', value : 'auto', description : 'libgme gaming con
 option('gs', type : 'feature', value : 'auto', description : 'Google Cloud Storage source and sink plugin')
 option('gsm', type : 'feature', value : 'auto', description : 'GSM encoder/decoder plugin')
 option('ipcpipeline', type : 'feature', value : 'auto', description : 'Inter-process communication plugin')
-option('iqa', type : 'feature', value : 'auto', description : 'Image quality assessment plugin')
+option('iqa', type : 'feature', value : 'auto', description : 'Image quality assessment plugin (AGPL - only built if gpl option is also enabled!)')
 option('kate', type : 'feature', value : 'auto', description : 'Kate subtitle parser, tagger, and codec plugin')
 option('kms', type : 'feature', value : 'auto', description : 'KMS video sink plugin')
 option('ladspa', type : 'feature', value : 'auto', description : 'LADSPA plugin bridge')
@@ -126,8 +126,8 @@ option('lv2', type : 'feature', value : 'auto', description : 'LV2 audio plugin 
 option('mediafoundation', type : 'feature', value : 'auto', description : 'Microsoft Media Foundation plugin')
 option('microdns', type : 'feature', value : 'auto', description : 'libmicrodns-based device provider')
 option('modplug', type : 'feature', value : 'auto', description : 'ModPlug audio decoder plugin')
-option('mpeg2enc', type : 'feature', value : 'auto', description : 'mpeg2enc video encoder plugin')
-option('mplex', type : 'feature', value : 'auto', description : 'mplex audio/video multiplexer plugin')
+option('mpeg2enc', type : 'feature', value : 'auto', description : 'mpeg2enc video encoder plugin (GPL - only built if gpl option is also enabled!)')
+option('mplex', type : 'feature', value : 'auto', description : 'mplex audio/video multiplexer plugin (GPL - only built if gpl option is also enabled!)')
 option('msdk', type : 'feature', value : 'auto', description : 'Intel Media SDK video encoder/decoder plugin')
 option('musepack', type : 'feature', value : 'auto', description : 'libmpcdec Musepack decoder plugin')
 option('neon', type : 'feature', value : 'auto', description : 'NEON HTTP source plugin')
@@ -141,7 +141,7 @@ option('openmpt', type : 'feature', value : 'auto', description : 'OpenMPT modul
 option('openni2', type : 'feature', value : 'auto', description : 'OpenNI2 library plugin')
 option('opensles', type : 'feature', value : 'auto', description : 'OpenSL ES audio source/sink plugin')
 option('opus', type : 'feature', value : 'auto', description : 'OPUS audio parser plugin')
-option('resindvd', type : 'feature', value : 'auto', description : 'Resin DVD playback plugin')
+option('resindvd', type : 'feature', value : 'auto', description : 'Resin DVD playback plugin (GPL - only built if gpl option is also enabled!)')
 option('rsvg', type : 'feature', value : 'auto', description : 'SVG overlayer and image decoder plugin')
 option('rtmp', type : 'feature', value : 'auto', description : 'RTMP video network source and sink plugin')
 option('sbc', type : 'feature', value : 'auto', description : 'SBC bluetooth audio codec plugin')
@@ -171,7 +171,7 @@ option('webrtcdsp', type : 'feature', value : 'auto', description : 'Plugin with
 option('wildmidi', type : 'feature', value : 'auto', description : 'WildMidi midi soft synth plugin')
 option('winks', type : 'feature', value : 'auto', description : 'Windows Kernel Streaming video source plugin')
 option('winscreencap', type : 'feature', value : 'auto', description : 'Windows Screen Capture video source plugin')
-option('x265', type : 'feature', value : 'auto', description : 'HEVC/H.265 video encoder plugin')
+option('x265', type : 'feature', value : 'auto', description : 'HEVC/H.265 video encoder plugin (GPL - only built if gpl option is also enabled!)')
 option('zbar', type : 'feature', value : 'auto', description : 'Barcode image scanner plugin using zbar library')
 option('zxing', type : 'feature', value : 'auto', description : 'Barcode image scanner plugin using zxing-cpp library')
 option('wpe', type : 'feature', value : 'auto', description : 'WPE Web browser plugin')
@@ -191,6 +191,10 @@ option('sctp-internal-usrsctp', type: 'feature', value : 'enabled',
 # MSDK plugin options
 option('mfx_api', type : 'combo', choices : ['MSDK', 'oneVPL', 'auto'], value : 'auto',
        description : 'Select MFX API to build against')
+
+# License-related feature options
+option('gpl', type: 'feature', value: 'auto', yield: true, # FIXME: disable by default
+  description: 'Allow build plugins that have (A)GPL-licensed dependencies')
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)

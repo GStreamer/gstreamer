@@ -1,4 +1,9 @@
-dssim_dep = dependency('dssim', required : get_option('iqa'),
+iqa_opt = get_option('iqa').require(gpl_allowed, error_message: '''
+  Plugin iqa explicitly required via options but (A)GPL-licensed plugins disabled via options.
+  Pass option -Dgpl=enabled to Meson to allow (A)GPL-licensed plugins to be built.
+  ''')
+
+dssim_dep = dependency('dssim', required: iqa_opt,
     fallback: ['dssim', 'dssim_dep'])
 
 if dssim_dep.found()

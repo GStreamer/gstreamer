@@ -1,4 +1,9 @@
-dvdread_dep = dependency('dvdread', version : '>= 0.5.0', required : get_option('dvdread'))
+dvdread_opt = get_option('dvdread').require(gpl_allowed, error_message: '''
+  Plugin dvdread explicitly required via options but GPL-licensed plugins disabled via options.
+  Pass option -Dgpl=enabled to Meson to allow GPL-licensed plugins to be built.
+  ''')
+
+dvdread_dep = dependency('dvdread', version : '>= 0.5.0', required : dvdread_opt)
 
 if gmodule_dep.found() and dvdread_dep.found()
   dvdread = library('gstdvdread',

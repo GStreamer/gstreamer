@@ -53,7 +53,8 @@ $env:MESON_ARGS = "-Dglib:installed_tests=false " +
     "-Dlibav=disabled " +
     "-Dvaapi=disabled " +
     "-Dgst-plugins-base:pango=enabled " +
-    "-Dgst-plugins-good:cairo=enabled "
+    "-Dgst-plugins-good:cairo=enabled " +
+    "-Dgpl=enabled "
 
 Write-Output "Building gst"
 cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=amd64 && meson _build $env:MESON_ARGS && meson compile -C _build && ninja -C _build install"

@@ -516,6 +516,7 @@ plugin_init (GstPlugin * plugin)
   return GST_ELEMENT_REGISTER (iqa, plugin);
 }
 
+// FIXME: effective iqa plugin license should be AGPL3+ !
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     iqa,

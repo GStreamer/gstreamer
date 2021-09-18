@@ -1,21 +1,26 @@
+mpeg2enc_opt = get_option('mpeg2enc').require(gpl_allowed, error_message: '''
+  Plugin mpeg2enc explicitly required via options but GPL-licensed plugins disabled via options.
+  Pass option -Dgpl=enabled to Meson to allow GPL-licensed plugins to be built.
+  ''')
+
 # mjpegtools upstream breaks API constantly and doesn't export the version in
 # a header anywhere. The configure file has a lot of logic to support old
 # versions, but it all seems untested and broken. Require 2.0.0. Can be changed
 # if someone complains.
-mjpegtools_dep = dependency('mjpegtools', version : '>=2.0.0', required : get_option('mpeg2enc'))
-mpeg2enc_dep = cxx.find_library('mpeg2encpp', required : get_option('mpeg2enc'))
-
-no_warn_args = []
-foreach arg : [
-    '-Wno-mismatched-tags', # mjpeg headers get class/struct mixed up
-    '-Wno-header-guard',
-  ]
-  if cxx.has_argument(arg)
-    no_warn_args += [arg]
-  endif
-endforeach
+mjpegtools_dep = dependency('mjpegtools', version : '>=2.0.0', required : mpeg2enc_opt)
+mpeg2enc_dep = cxx.find_library('mpeg2encpp', required : mpeg2enc_opt)
 
 if mjpegtools_dep.found() and mpeg2enc_dep.found()
+  no_warn_args = []
+  foreach arg : [
+      '-Wno-mismatched-tags', # mjpeg headers get class/struct mixed up
+      '-Wno-header-guard',
+    ]
+    if cxx.has_argument(arg)
+      no_warn_args += [arg]
+    endif
+  endforeach
+
   gstmpeg2enc = library('gstmpeg2enc',
     'gstmpeg2enc.cc',
     'gstmpeg2encoptions.cc',

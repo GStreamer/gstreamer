@@ -63,6 +63,7 @@ variables:
     -Drtsp_server=enabled
     -Dvaapi=enabled
     -Dsharp=disabled
+    -Dgpl=enabled
 
   MESON_GST_WERROR: >
     -Dgstreamer:werror=true

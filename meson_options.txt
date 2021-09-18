@@ -34,6 +34,10 @@ option('gst-full-device-providers', type : 'string', value : '',
 option('gst-full-dynamic-types', type : 'string', value : '',
   description : '''List of dynamic types to expose in gstreamer-full's ABI with the syntax plugin:dt1,dt2. By default '' will export all device provider of the enabled plugin.''')
 
+# License-related feature options
+option('gpl', type: 'feature', value: 'disabled',
+  description: 'Allow build of plugins that have (A)GPL-licensed dependencies')
+
 # Common options, automatically inherited by subprojects
 option('tests', type : 'feature', value : 'auto', description : 'Build tests')
 option('examples', type : 'feature', value : 'auto', description : 'Build examples')

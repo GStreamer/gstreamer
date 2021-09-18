@@ -271,7 +271,10 @@ if get_option('default_library') == 'shared'
   plugins_pkgconfig_install_dir = disabler()
 endif
 
+gpl_allowed = get_option('gpl').allowed()
+
 python3 = import('python').find_installation()
+
 subdir('gst')
 subdir('ext')
 subdir('tests')
@@ -312,5 +315,8 @@ if meson.version().version_compare('>= 0.54')
       plugin_names += [plugin.name()]
     endif
   endforeach
-  summary({'Plugins':plugin_names}, list_sep: ', ')
+  summary({
+      'Plugins': plugin_names,
+      '(A)GPL license allowed': gpl_allowed,
+    }, list_sep: ', ')
 endif
