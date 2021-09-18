@@ -6,11 +6,12 @@ shm_sources = [
   'gstshmsink.c',
 ]
 
+shm_deps = []
+shm_enabled = false
 if get_option('shm').disabled()
   subdir_done()
 endif
 
-shm_deps = []
 if ['darwin', 'ios'].contains(host_system) or host_system.endswith('bsd')
   rt_dep = []
   shm_enabled = true
