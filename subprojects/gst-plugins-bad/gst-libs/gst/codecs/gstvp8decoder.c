@@ -168,6 +168,14 @@ gst_vp8_decoder_check_codec_change (GstVp8Decoder * self,
   if (changed || !priv->had_sequence) {
     GstVp8DecoderClass *klass = GST_VP8_DECODER_GET_CLASS (self);
 
+    /* Drain before new sequence */
+    ret = gst_vp8_decoder_drain_internal (self, FALSE);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "Failed to drain pending frames, returned %s",
+          gst_flow_get_name (ret));
+      return ret;
+    }
+
     priv->had_sequence = TRUE;
 
     if (klass->get_preferred_output_delay)
