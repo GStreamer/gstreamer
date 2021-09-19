@@ -1,10 +1,9 @@
 /*
  * Copyright 2006 BBC and Fluendo S.A.
  *
- * This library is licensed under 4 different licenses and you
+ * This library is licensed under 3 different licenses and you
  * can choose to use it under the terms of any one of them. The
- * four licenses are the MPL 1.1, the LGPL, the GPL and the MIT
- * license.
+ * three licenses are the MPL 1.1, the LGPL, and the MIT license.
  *
  * MPL:
  *
@@ -35,22 +34,6 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  *
- * GPL:
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
- *
  * MIT:
  *
  * Unless otherwise indicated, Source Code is licensed under MIT license.
@@ -75,6 +58,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
+ * SPDX-License-Identifier: MPL-1.1 OR MIT OR LGPL-2.0-or-later
  */
 
 #ifndef __TSMUX_H__
