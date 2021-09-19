@@ -148,6 +148,66 @@ GST_START_TEST (test_reset)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reset_data_unaligned)
+{
+  GstBitWriter writer;
+  static guint8 sdata[] = { 0xff, 0xf1, 0xf2, 0x80 };
+  guint8 *data, i;
+  GstBuffer *buf;
+  GstMapInfo info;
+
+  gst_bit_writer_init_with_size (&writer, 32, TRUE);
+  fail_unless_equals_int (gst_bit_writer_get_remaining (&writer), 2048);
+
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0xf, 4));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x7, 3));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x3, 2));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x3, 2));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x8, 4));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x1, 1));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0xf2, 8));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x2, 2));
+
+  fail_unless_equals_int (gst_bit_writer_get_remaining (&writer), 2048 - 26);
+
+  data = gst_bit_writer_reset_and_get_data (&writer);
+  fail_unless (data != NULL);
+
+  for (i = 0; i < 4; i++)
+    fail_unless (memcmp (&sdata[i], &data[i], 1) == 0);
+
+  gst_bit_writer_init (&writer);
+
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x7, 3));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0xf, 4));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x1, 1));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x1, 1));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x3, 2));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x8, 4));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x1, 1));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0xf2, 8));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x1, 1));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x0, 1));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x0, 1));
+  fail_unless (gst_bit_writer_put_bits_uint8 (&writer, 0x0, 3));
+
+  fail_unless_equals_int (gst_bit_writer_get_size (&writer), 30);
+
+  buf = gst_bit_writer_reset_and_get_buffer (&writer);
+  fail_unless (buf != NULL);
+  fail_unless (gst_buffer_map (buf, &info, GST_MAP_READWRITE));
+  fail_unless (info.data);
+  fail_unless_equals_int (info.size, 4);
+
+  for (i = 0; i < 4; i++)
+    fail_unless (memcmp (&sdata[i], &info.data[i], 1) == 0);
+
+  g_free (data);
+  gst_buffer_unmap (buf, &info);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_bit_writer_suite (void)
@@ -160,6 +220,7 @@ gst_bit_writer_suite (void)
   tcase_add_test (tc_chain, test_initialization);
   tcase_add_test (tc_chain, test_data);
   tcase_add_test (tc_chain, test_reset);
+  tcase_add_test (tc_chain, test_reset_data_unaligned);
 
   return s;
 }
