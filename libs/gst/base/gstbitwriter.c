@@ -223,15 +223,18 @@ gst_bit_writer_reset_and_get_buffer (GstBitWriter * bitwriter)
   GstBuffer *buffer;
   gpointer data;
   gsize size;
+  gboolean owned;
 
   g_return_val_if_fail (bitwriter != NULL, NULL);
+
+  owned = bitwriter->owned;
 
   size = GST_ROUND_UP_8 (bitwriter->bit_size) >> 3;
   data = gst_bit_writer_reset_and_get_data (bitwriter);
 
   /* we cannot rely on buffers allocated externally, thus let's dup
    * the data */
-  if (data && !bitwriter->owned)
+  if (data && !owned)
     data = g_memdup (data, size);
 
   buffer = gst_buffer_new ();
