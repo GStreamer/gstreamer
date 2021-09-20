@@ -610,7 +610,7 @@ gst_play_set_property (GObject * object, guint prop_id,
       self->suburi = NULL;
 
       self->uri = g_value_dup_string (value);
-      GST_DEBUG_OBJECT (self, "Set uri=%s", self->uri);
+      GST_DEBUG_OBJECT (self, "Set uri=%s", GST_STR_NULL (self->uri));
       g_mutex_unlock (&self->lock);
 
       g_main_context_invoke_full (self->context, G_PRIORITY_DEFAULT,
@@ -3098,7 +3098,7 @@ remove_seek_source (GstPlay * self)
  *
  * Gets the URI of the currently-playing stream.
  *
- * Returns: (transfer full): a string containing the URI of the
+ * Returns: (transfer full) (nullable): a string containing the URI of the
  * currently-playing stream. g_free() after usage.
  * Since: 1.20
  */
@@ -3117,7 +3117,7 @@ gst_play_get_uri (GstPlay * self)
 /**
  * gst_play_set_uri:
  * @play: #GstPlay instance
- * @uri: next URI to play.
+ * @uri: (nullable): next URI to play.
  *
  * Sets the next URI to play.
  * Since: 1.20
@@ -3133,7 +3133,7 @@ gst_play_set_uri (GstPlay * self, const gchar * val)
 /**
  * gst_play_set_subtitle_uri:
  * @play: #GstPlay instance
- * @uri: subtitle URI
+ * @uri: (nullable): subtitle URI
  *
  * Sets the external subtitle URI. This should be combined with a call to
  * gst_play_set_subtitle_track_enabled(@play, TRUE) so the subtitles are actually
@@ -3154,7 +3154,7 @@ gst_play_set_subtitle_uri (GstPlay * self, const gchar * suburi)
  *
  * current subtitle URI
  *
- * Returns: (transfer full): URI of the current external subtitle.
+ * Returns: (transfer full) (nullable): URI of the current external subtitle.
  *   g_free() after usage.
  * Since: 1.20
  */
@@ -3311,7 +3311,7 @@ gst_play_get_pipeline (GstPlay * self)
  *
  * A Function to get the current media info #GstPlayMediaInfo instance.
  *
- * Returns: (transfer full): media info instance.
+ * Returns: (transfer full) (nullable): media info instance.
  *
  * The caller should free it with g_object_unref()
  * Since: 1.20
@@ -3651,7 +3651,7 @@ gst_play_set_subtitle_track_enabled (GstPlay * self, gboolean enabled)
 /**
  * gst_play_set_visualization:
  * @play: #GstPlay instance
- * @name (nullable): visualization element obtained from
+ * @name: (nullable): visualization element obtained from
  * #gst_play_visualizations_get()
  *
  * Returns: %TRUE if the visualizations was set correctly. Otherwise,
@@ -4299,7 +4299,7 @@ gst_play_get_config (GstPlay * self)
 /**
  * gst_play_config_set_user_agent:
  * @config: a #GstPlay configuration
- * @agent: the string to use as user agent
+ * @agent: (nullable): the string to use as user agent
  *
  * Set the user agent to pass to the server if @play needs to connect
  * to a server during playback. This is typically used when playing HTTP
@@ -4324,7 +4324,7 @@ gst_play_config_set_user_agent (GstStructure * config, const gchar * agent)
  * Return the user agent which has been configured using
  * gst_play_config_set_user_agent() if any.
  *
- * Returns: (transfer full): the configured agent, or %NULL
+ * Returns: (transfer full) (nullable): the configured agent, or %NULL
  * Since: 1.20
  */
 gchar *
@@ -4557,7 +4557,7 @@ gst_play_is_play_message (GstMessage * msg)
 /**
  * gst_play_message_parse_type:
  * @msg: A #GstMessage
- * @type: (out): (optional): (transfer full): the resulting message type
+ * @type: (out) (optional): the resulting message type
  *
  * Parse the given @msg and extract its #GstPlayMessage type.
  *
@@ -4573,7 +4573,7 @@ gst_play_message_parse_type (GstMessage * msg, GstPlayMessage * type)
 /**
  * gst_play_message_parse_duration_updated:
  * @msg: A #GstMessage
- * @duration: (out): (optional): (transfer full): the resulting duration
+ * @duration: (out) (optional): the resulting duration
  *
  * Parse the given duration @msg and extract the corresponding #GstClockTime
  *
@@ -4590,7 +4590,7 @@ gst_play_message_parse_duration_updated (GstMessage * msg,
 /**
  * gst_play_message_parse_position_updated:
  * @msg: A #GstMessage
- * @position: (out): (optional): (transfer full): the resulting position
+ * @position: (out) (optional): the resulting position
  *
  * Parse the given position @msg and extract the corresponding #GstClockTime
  *
@@ -4607,7 +4607,7 @@ gst_play_message_parse_position_updated (GstMessage * msg,
 /**
  * gst_play_message_parse_state_changed:
  * @msg: A #GstMessage
- * @state: (out): (optional): (transfer full): the resulting play state
+ * @state: (out) (optional): the resulting play state
  *
  * Parse the given state @msg and extract the corresponding #GstPlayState
  *
@@ -4623,7 +4623,7 @@ gst_play_message_parse_state_changed (GstMessage * msg, GstPlayState * state)
 /**
  * gst_play_message_parse_buffering_percent:
  * @msg: A #GstMessage
- * @percent: (out): (optional): the resulting buffering percent
+ * @percent: (out) (optional): the resulting buffering percent
  *
  * Parse the given buffering-percent @msg and extract the corresponding value
  *
@@ -4639,8 +4639,8 @@ gst_play_message_parse_buffering_percent (GstMessage * msg, guint * percent)
 /**
  * gst_play_message_parse_error:
  * @msg: A #GstMessage
- * @error: (out): (optional): (transfer full): the resulting error
- * @details: (out): (optional): (transfer none): A GstStructure containing extra details about the error
+ * @error: (out) (optional) (transfer full): the resulting error
+ * @details: (out) (optional) (nullable) (transfer full): A GstStructure containing extra details about the error
  *
  * Parse the given error @msg and extract the corresponding #GError
  *
@@ -4658,8 +4658,8 @@ gst_play_message_parse_error (GstMessage * msg, GError * error,
 /**
  * gst_play_message_parse_warning:
  * @msg: A #GstMessage
- * @error: (out): (optional): (transfer full): the resulting warning
- * @details: (out): (optional): (transfer none): A GstStructure containing extra details about the error
+ * @error: (out) (optional) (transfer full): the resulting warning
+ * @details: (out) (optional) (nullable) (transfer full): A GstStructure containing extra details about the error
  *
  * Parse the given error @msg and extract the corresponding #GError warning
  *
@@ -4677,8 +4677,8 @@ gst_play_message_parse_warning (GstMessage * msg, GError * error,
 /**
  * gst_play_message_parse_video_dimensions_changed:
  * @msg: A #GstMessage
- * @width: (out): (optional): the resulting video width
- * @height: (out): (optional): the resulting video height
+ * @width: (out) (optional): the resulting video width
+ * @height: (out) (optional): the resulting video height
  *
  * Parse the given @msg and extract the corresponding video dimensions
  *
@@ -4697,7 +4697,7 @@ gst_play_message_parse_video_dimensions_changed (GstMessage * msg,
 /**
  * gst_play_message_parse_media_info_updated:
  * @msg: A #GstMessage
- * @info: (out): (optional): (transfer full): the resulting media info
+ * @info: (out) (optional) (transfer full): the resulting media info
  *
  * Parse the given @msg and extract the corresponding media information
  *
@@ -4714,7 +4714,7 @@ gst_play_message_parse_media_info_updated (GstMessage * msg,
 /**
  * gst_play_message_parse_volume_changed:
  * @msg: A #GstMessage
- * @volume: (out): (optional): the resulting audio volume
+ * @volume: (out) (optional): the resulting audio volume
  *
  * Parse the given @msg and extract the corresponding audio volume
  *
@@ -4730,7 +4730,7 @@ gst_play_message_parse_volume_changed (GstMessage * msg, gdouble * volume)
 /**
  * gst_play_message_parse_muted_changed:
  * @msg: A #GstMessage
- * @muted: (out): (optional): the resulting audio muted state
+ * @muted: (out) (optional): the resulting audio muted state
  *
  * Parse the given @msg and extract the corresponding audio muted state
  *

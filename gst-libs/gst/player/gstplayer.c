@@ -743,7 +743,7 @@ gst_player_get_uri (GstPlayer * self)
 /**
  * gst_player_set_uri:
  * @player: #GstPlayer instance
- * @uri: next URI to play.
+ * @uri: (nullable): next URI to play.
  *
  * Sets the next URI to play.
  */
@@ -758,7 +758,7 @@ gst_player_set_uri (GstPlayer * self, const gchar * val)
 /**
  * gst_player_set_subtitle_uri:
  * @player: #GstPlayer instance
- * @uri: subtitle URI
+ * @uri: (nullable): subtitle URI
  *
  * Sets the external subtitle URI. This should be combined with a call to
  * gst_player_set_subtitle_track_enabled(@player, TRUE) so the subtitles are actually
@@ -931,7 +931,7 @@ gst_player_get_pipeline (GstPlayer * self)
  *
  * A Function to get the current media info #GstPlayerMediaInfo instance.
  *
- * Returns: (transfer full): media info instance.
+ * Returns: (transfer full) (nullable): media info instance.
  *
  * The caller should free it with g_object_unref()
  */
@@ -944,6 +944,9 @@ gst_player_get_media_info (GstPlayer * self)
   g_return_val_if_fail (GST_IS_PLAYER (self), NULL);
 
   info = gst_play_get_media_info (self->play);
+  if (!info)
+    return NULL;
+
   ret = gst_player_media_info_wrapped (info);
   g_object_unref (info);
   return ret;
@@ -1126,7 +1129,7 @@ gst_player_set_subtitle_track_enabled (GstPlayer * self, gboolean enabled)
 /**
  * gst_player_set_visualization:
  * @player: #GstPlayer instance
- * @name (nullable): visualization element obtained from
+ * @name: (nullable): visualization element obtained from
  * #gst_player_visualizations_get()
  *
  * Returns: %TRUE if the visualizations was set correctly. Otherwise,
@@ -1581,7 +1584,7 @@ gst_player_get_config (GstPlayer * self)
 /**
  * gst_player_config_set_user_agent:
  * @config: a #GstPlayer configuration
- * @agent: the string to use as user agent
+ * @agent: (nullable): the string to use as user agent
  *
  * Set the user agent to pass to the server if @player needs to connect
  * to a server during playback. This is typically used when playing HTTP
@@ -1606,7 +1609,7 @@ gst_player_config_set_user_agent (GstStructure * config, const gchar * agent)
  * Return the user agent which has been configured using
  * gst_player_config_set_user_agent() if any.
  *
- * Returns: (transfer full): the configured agent, or %NULL
+ * Returns: (transfer full) (nullable): the configured agent, or %NULL
  *
  * Since: 1.10
  */

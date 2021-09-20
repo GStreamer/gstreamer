@@ -64,7 +64,8 @@ gst_player_stream_info_class_init (GstPlayerStreamInfoClass * klass)
  * gst_player_stream_info_get_index:
  * @info: a #GstPlayerStreamInfo
  *
- * Function to get stream index from #GstPlayerStreamInfo instance.
+ * Function to get stream index from #GstPlayerStreamInfo instance or -1 if
+ * unknown.
  *
  * Returns: the stream index of this stream.
  */
@@ -97,7 +98,7 @@ gst_player_stream_info_get_stream_type (const GstPlayerStreamInfo * info)
  * gst_player_stream_info_get_tags:
  * @info: a #GstPlayerStreamInfo
  *
- * Returns: (transfer none): the tags contained in this stream.
+ * Returns: (transfer none) (nullable): the tags contained in this stream.
  */
 GstTagList *
 gst_player_stream_info_get_tags (const GstPlayerStreamInfo * info)
@@ -113,7 +114,7 @@ gst_player_stream_info_get_tags (const GstPlayerStreamInfo * info)
  *
  * A string describing codec used in #GstPlayerStreamInfo.
  *
- * Returns: codec string or NULL on unknown.
+ * Returns: (nullable): codec string or %NULL on unknown.
  */
 const gchar *
 gst_player_stream_info_get_codec (const GstPlayerStreamInfo * info)
@@ -127,7 +128,7 @@ gst_player_stream_info_get_codec (const GstPlayerStreamInfo * info)
  * gst_player_stream_info_get_caps:
  * @info: a #GstPlayerStreamInfo
  *
- * Returns: (transfer none): the #GstCaps of the stream.
+ * Returns: (transfer none) (nullable): the #GstCaps of the stream.
  */
 GstCaps *
 gst_player_stream_info_get_caps (const GstPlayerStreamInfo * info)
@@ -157,7 +158,7 @@ gst_player_video_info_class_init (G_GNUC_UNUSED GstPlayerVideoInfoClass * klass)
  * gst_player_video_info_get_width:
  * @info: a #GstPlayerVideoInfo
  *
- * Returns: the width of video in #GstPlayerVideoInfo.
+ * Returns: the width of video in #GstPlayerVideoInfo or -1 if unknown.
  */
 gint
 gst_player_video_info_get_width (const GstPlayerVideoInfo * info)
@@ -171,7 +172,7 @@ gst_player_video_info_get_width (const GstPlayerVideoInfo * info)
  * gst_player_video_info_get_height:
  * @info: a #GstPlayerVideoInfo
  *
- * Returns: the height of video in #GstPlayerVideoInfo.
+ * Returns: the height of video in #GstPlayerVideoInfo or -1 if unknown.
  */
 gint
 gst_player_video_info_get_height (const GstPlayerVideoInfo * info)
@@ -219,7 +220,8 @@ gst_player_video_info_get_pixel_aspect_ratio (const GstPlayerVideoInfo * info,
  * gst_player_video_info_get_bitrate:
  * @info: a #GstPlayerVideoInfo
  *
- * Returns: the current bitrate of video in #GstPlayerVideoInfo.
+ * Returns: the current bitrate of video in #GstPlayerVideoInfo or -1 if
+ * unknown.
  */
 gint
 gst_player_video_info_get_bitrate (const GstPlayerVideoInfo * info)
@@ -233,7 +235,8 @@ gst_player_video_info_get_bitrate (const GstPlayerVideoInfo * info)
  * gst_player_video_info_get_max_bitrate:
  * @info: a #GstPlayerVideoInfo
  *
- * Returns: the maximum bitrate of video in #GstPlayerVideoInfo.
+ * Returns: the maximum bitrate of video in #GstPlayerVideoInfo or -1 if
+ * unknown.
  */
 gint
 gst_player_video_info_get_max_bitrate (const GstPlayerVideoInfo * info)
@@ -275,7 +278,7 @@ gst_player_audio_info_class_init (GstPlayerAudioInfoClass * klass)
  * gst_player_audio_info_get_language:
  * @info: a #GstPlayerAudioInfo
  *
- * Returns (nullable): the language of the stream, or NULL if unknown.
+ * Returns: (nullable): the language of the stream, or NULL if unknown.
  */
 const gchar *
 gst_player_audio_info_get_language (const GstPlayerAudioInfo * info)
@@ -289,7 +292,8 @@ gst_player_audio_info_get_language (const GstPlayerAudioInfo * info)
  * gst_player_audio_info_get_channels:
  * @info: a #GstPlayerAudioInfo
  *
- * Returns: the number of audio channels in #GstPlayerAudioInfo.
+ * Returns: the number of audio channels in #GstPlayerAudioInfo or 0 if
+ * unknown.
  */
 gint
 gst_player_audio_info_get_channels (const GstPlayerAudioInfo * info)
@@ -303,7 +307,7 @@ gst_player_audio_info_get_channels (const GstPlayerAudioInfo * info)
  * gst_player_audio_info_get_sample_rate:
  * @info: a #GstPlayerAudioInfo
  *
- * Returns: the audio sample rate in #GstPlayerAudioInfo.
+ * Returns: the audio sample rate in #GstPlayerAudioInfo or 0 if unknown.
  */
 gint
 gst_player_audio_info_get_sample_rate (const GstPlayerAudioInfo * info)
@@ -317,7 +321,7 @@ gst_player_audio_info_get_sample_rate (const GstPlayerAudioInfo * info)
  * gst_player_audio_info_get_bitrate:
  * @info: a #GstPlayerAudioInfo
  *
- * Returns: the audio bitrate in #GstPlayerAudioInfo.
+ * Returns: the audio bitrate in #GstPlayerAudioInfo or -1 if unknown.
  */
 gint
 gst_player_audio_info_get_bitrate (const GstPlayerAudioInfo * info)
@@ -331,7 +335,7 @@ gst_player_audio_info_get_bitrate (const GstPlayerAudioInfo * info)
  * gst_player_audio_info_get_max_bitrate:
  * @info: a #GstPlayerAudioInfo
  *
- * Returns: the audio maximum bitrate in #GstPlayerAudioInfo.
+ * Returns: the audio maximum bitrate in #GstPlayerAudioInfo or -1 if unknown.
  */
 gint
 gst_player_audio_info_get_max_bitrate (const GstPlayerAudioInfo * info)
@@ -373,7 +377,7 @@ gst_player_subtitle_info_class_init (GstPlayerSubtitleInfoClass * klass)
  * gst_player_subtitle_info_get_language:
  * @info: a #GstPlayerSubtitleInfo
  *
- * Returns: the language of the stream, or NULL if unknown.
+ * Returns: (nullable): the language of the stream, or %NULL if unknown.
  */
 const gchar *
 gst_player_subtitle_info_get_language (const GstPlayerSubtitleInfo * info)
@@ -741,7 +745,7 @@ gst_player_media_info_get_audio_streams (const GstPlayerMediaInfo * info)
  * gst_player_media_info_get_duration:
  * @info: a #GstPlayerMediaInfo
  *
- * Returns: duration of the media.
+ * Returns: duration of the media or %GST_CLOCK_TIME_NONE if unknown.
  */
 GstClockTime
 gst_player_media_info_get_duration (const GstPlayerMediaInfo * info)
@@ -755,7 +759,7 @@ gst_player_media_info_get_duration (const GstPlayerMediaInfo * info)
  * gst_player_media_info_get_tags:
  * @info: a #GstPlayerMediaInfo
  *
- * Returns: (transfer none): the tags contained in media info.
+ * Returns: (transfer none) (nullable): the tags contained in media info.
  */
 GstTagList *
 gst_player_media_info_get_tags (const GstPlayerMediaInfo * info)
@@ -769,7 +773,7 @@ gst_player_media_info_get_tags (const GstPlayerMediaInfo * info)
  * gst_player_media_info_get_title:
  * @info: a #GstPlayerMediaInfo
  *
- * Returns: the media title.
+ * Returns: (nullable): the media title or %NULL if unknown.
  */
 const gchar *
 gst_player_media_info_get_title (const GstPlayerMediaInfo * info)
@@ -783,7 +787,7 @@ gst_player_media_info_get_title (const GstPlayerMediaInfo * info)
  * gst_player_media_info_get_container_format:
  * @info: a #GstPlayerMediaInfo
  *
- * Returns: the container format.
+ * Returns: (nullable): the container format or %NULL if unknown.
  */
 const gchar *
 gst_player_media_info_get_container_format (const GstPlayerMediaInfo * info)
@@ -800,7 +804,7 @@ gst_player_media_info_get_container_format (const GstPlayerMediaInfo * info)
  * Function to get the image (or preview-image) stored in taglist.
  * Application can use `gst_sample_*_()` API's to get caps, buffer etc.
  *
- * Returns: (transfer none): GstSample or NULL.
+ * Returns: (transfer none) (nullable): GstSample or %NULL.
  */
 GstSample *
 gst_player_media_info_get_image_sample (const GstPlayerMediaInfo * info)
@@ -814,7 +818,8 @@ gst_player_media_info_get_image_sample (const GstPlayerMediaInfo * info)
  * gst_player_media_info_get_number_of_streams:
  * @info: a #GstPlayerMediaInfo
  *
- * Returns: number of total streams.
+ * Returns: number of total streams or 0 if unknown.
+ *
  * Since: 1.12
  */
 guint
@@ -829,7 +834,8 @@ gst_player_media_info_get_number_of_streams (const GstPlayerMediaInfo * info)
  * gst_player_media_info_get_number_of_video_streams:
  * @info: a #GstPlayerMediaInfo
  *
- * Returns: number of video streams.
+ * Returns: number of video streams or 0 if unknown.
+ *
  * Since: 1.12
  */
 guint
@@ -845,7 +851,8 @@ gst_player_media_info_get_number_of_video_streams (const GstPlayerMediaInfo *
  * gst_player_media_info_get_number_of_audio_streams:
  * @info: a #GstPlayerMediaInfo
  *
- * Returns: number of audio streams.
+ * Returns: number of audio streams or 0 if unknown.
+ *
  * Since: 1.12
  */
 guint
@@ -861,7 +868,8 @@ gst_player_media_info_get_number_of_audio_streams (const GstPlayerMediaInfo *
  * gst_player_media_info_get_number_of_subtitle_streams:
  * @info: a #GstPlayerMediaInfo
  *
- * Returns: number of subtitle streams.
+ * Returns: number of subtitle streams or 0 if unknown.
+ *
  * Since: 1.12
  */
 guint gst_player_media_info_get_number_of_subtitle_streams
