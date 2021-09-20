@@ -475,7 +475,7 @@ _get_slice_data_byte_offset (GstH265SliceHdr * slice_hdr,
   return nal_header_bytes + (slice_hdr->header_size + 7) / 8 - epb_count;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_h265_dec_decode_slice (GstH265Decoder * decoder,
     GstH265Picture * picture, GstH265Slice * slice, GArray * ref_pic_list0,
     GArray * ref_pic_list1)
@@ -491,7 +491,7 @@ gst_va_h265_dec_decode_slice (GstH265Decoder * decoder,
   if (!_submit_previous_slice (base, va_pic)) {
     _replace_previous_slice (self, NULL, 0);
     GST_ERROR_OBJECT (base, "Failed to submit previous slice buffers");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   slice_param = &self->prev_slice.param;
@@ -559,7 +559,7 @@ gst_va_h265_dec_decode_slice (GstH265Decoder * decoder,
   _replace_previous_slice (self, slice->nalu.data + slice->nalu.offset,
       slice->nalu.size);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static void
@@ -649,7 +649,7 @@ _fill_screen_content_ext_parameter (GstVaH265Dec * decoder,
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
     GstH265Picture * picture, GstH265Slice * slice, GstH265Dpb * dpb)
 {
@@ -798,7 +798,7 @@ gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
       sizeof (*pic_param) : sizeof (pic_param->base);
   if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
           VAPictureParameterBufferType, pic_param, pic_param_size))
-    return FALSE;
+    return GST_FLOW_ERROR;
 
   if (pps->scaling_list_data_present_flag ||
       (sps->scaling_list_enabled_flag
@@ -836,14 +836,16 @@ gst_va_h265_dec_start_picture (GstH265Decoder * decoder,
       iq_matrix.ScalingListDC32x32[i] =
           scaling_list->scaling_list_dc_coef_minus8_32x32[i] + 8;
 
-    return gst_va_decoder_add_param_buffer (base->decoder, va_pic,
-        VAIQMatrixBufferType, &iq_matrix, sizeof (iq_matrix));
+    if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
+            VAIQMatrixBufferType, &iq_matrix, sizeof (iq_matrix))) {
+      return GST_FLOW_ERROR;
+    }
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_h265_dec_new_picture (GstH265Decoder * decoder,
     GstVideoCodecFrame * frame, GstH265Picture * picture)
 {
@@ -869,14 +871,14 @@ gst_va_h265_dec_new_picture (GstH265Decoder * decoder,
   GST_LOG_OBJECT (self, "New va decode picture %p - %#x", pic,
       gst_va_decode_picture_get_surface (pic));
 
-  return TRUE;
+  return GST_FLOW_OK;
 
 error:
   {
     GST_WARNING_OBJECT (self,
         "Failed to allocated output buffer, return %s",
         gst_flow_get_name (self->last_ret));
-    return FALSE;
+    return self->last_ret;
   }
 }
 
@@ -1033,7 +1035,7 @@ _get_profile (GstVaH265Dec * self, const GstH265SPS * sps, gint max_dpb_size)
   return VAProfileNone;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
     gint max_dpb_size)
 {
@@ -1064,12 +1066,12 @@ gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
 
   profile = _get_profile (self, sps, max_dpb_size);
   if (profile == VAProfileNone)
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
 
   rt_format = _get_rtformat (self, sps->bit_depth_luma_minus8 + 8,
       sps->bit_depth_chroma_minus8 + 8, sps->chroma_format_idc);
   if (rt_format == 0)
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
 
   if (!gst_va_decoder_config_is_equal (base->decoder, profile,
           rt_format, sps->width, sps->height)) {
@@ -1120,7 +1122,7 @@ gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
     self->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
   }
 
@@ -1135,7 +1137,7 @@ gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
         1 << (high_precision_offsets_enabled_flag ? (bitdepthC - 1) : 7);
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstCaps *

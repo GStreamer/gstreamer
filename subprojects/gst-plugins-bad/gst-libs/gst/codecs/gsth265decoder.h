@@ -94,7 +94,7 @@ struct _GstH265DecoderClass
 {
   GstVideoDecoderClass parent_class;
 
-  gboolean      (*new_sequence)     (GstH265Decoder * decoder,
+  GstFlowReturn (*new_sequence)     (GstH265Decoder * decoder,
                                      const GstH265SPS * sps,
                                      gint max_dpb_size);
   /**
@@ -103,22 +103,22 @@ struct _GstH265DecoderClass
    * @frame: (transfer none): a #GstVideoCodecFrame
    * @picture: (transfer none): a #GstH265Picture
    */
-  gboolean      (*new_picture)      (GstH265Decoder * decoder,
+  GstFlowReturn (*new_picture)      (GstH265Decoder * decoder,
                                      GstVideoCodecFrame * frame,
                                      GstH265Picture * picture);
 
-  gboolean      (*start_picture)    (GstH265Decoder * decoder,
+  GstFlowReturn (*start_picture)    (GstH265Decoder * decoder,
                                      GstH265Picture * picture,
                                      GstH265Slice * slice,
                                      GstH265Dpb * dpb);
 
-  gboolean      (*decode_slice)     (GstH265Decoder * decoder,
+  GstFlowReturn (*decode_slice)     (GstH265Decoder * decoder,
                                      GstH265Picture * picture,
                                      GstH265Slice * slice,
                                      GArray * ref_pic_list0,
                                      GArray * ref_pic_list1);
 
-  gboolean      (*end_picture)      (GstH265Decoder * decoder,
+  GstFlowReturn (*end_picture)      (GstH265Decoder * decoder,
                                      GstH265Picture * picture);
   /**
    * GstH265Decoder:output_picture:
