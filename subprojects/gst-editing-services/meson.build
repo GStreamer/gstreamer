@@ -144,6 +144,8 @@ gir_init_section = [ '--add-init-section=' + \
     'gst_init(NULL,NULL);' + \
     'ges_init();', '--quiet']
 
+pymod = import('python')
+python = pymod.find_installation(required: get_option('python'))
 has_python = false
 static_build = get_option('default_library') == 'static'
 if static_build
@@ -153,8 +155,6 @@ if static_build
     message('Disabling python support as it is not supported on static builds')
   endif
 elif build_gir
-  pymod = import('python')
-  python = pymod.find_installation(required: get_option('python'))
   if python.found()
     # Workaround for https://github.com/mesonbuild/meson/issues/5629
     pythonver = python.language_version()
