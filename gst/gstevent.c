@@ -1437,6 +1437,9 @@ gst_event_parse_seek_trickmode_interval (GstEvent * event,
   g_return_if_fail (interval != NULL);
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEEK);
 
+  if (interval)
+    *interval = GST_CLOCK_TIME_NONE;
+
   gst_structure_id_get (GST_EVENT_STRUCTURE (event),
       GST_QUARK (TRICKMODE_INTERVAL), GST_TYPE_CLOCK_TIME, interval, NULL);
 }
@@ -1771,10 +1774,10 @@ gst_event_parse_stream (GstEvent * event, GstStream ** stream)
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
 
   if (stream) {
+    *stream = NULL;
     gst_structure_id_get (GST_EVENT_STRUCTURE (event),
         GST_QUARK (STREAM), GST_TYPE_STREAM, stream, NULL);
   }
-
 }
 
 /**
@@ -1809,6 +1812,7 @@ gst_event_parse_stream_flags (GstEvent * event, GstStreamFlags * flags)
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
 
   if (flags) {
+    *flags = 0;
     gst_structure_id_get (GST_EVENT_STRUCTURE (event),
         GST_QUARK (FLAGS), GST_TYPE_STREAM_FLAGS, flags, NULL);
   }
@@ -1859,6 +1863,7 @@ gst_event_parse_group_id (GstEvent * event, guint * group_id)
       FALSE);
 
   if (group_id) {
+    *group_id = 0;
     return gst_structure_id_get (GST_EVENT_STRUCTURE (event),
         GST_QUARK (GROUP_ID), G_TYPE_UINT, group_id, NULL);
   }

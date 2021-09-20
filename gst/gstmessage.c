@@ -2470,6 +2470,8 @@ gst_message_parse_group_id (GstMessage * message, guint * group_id)
   if (!group_id)
     return TRUE;
 
+  *group_id = 0;
+
   structure = GST_MESSAGE_STRUCTURE (message);
 
   v = gst_structure_id_get_value (structure, GST_QUARK (GROUP_ID));
