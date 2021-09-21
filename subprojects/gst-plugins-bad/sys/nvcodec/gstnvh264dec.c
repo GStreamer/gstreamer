@@ -137,20 +137,20 @@ static gboolean gst_nv_h264_dec_src_query (GstVideoDecoder * decoder,
     GstQuery * query);
 
 /* GstH264Decoder */
-static gboolean gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder,
+static GstFlowReturn gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder,
     const GstH264SPS * sps, gint max_dpb_size);
-static gboolean gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
+static GstFlowReturn gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture);
-static gboolean gst_nv_h264_dec_new_field_picture (GstH264Decoder *
+static GstFlowReturn gst_nv_h264_dec_new_field_picture (GstH264Decoder *
     decoder, const GstH264Picture * first_field, GstH264Picture * second_field);
 static GstFlowReturn gst_nv_h264_dec_output_picture (GstH264Decoder *
     decoder, GstVideoCodecFrame * frame, GstH264Picture * picture);
-static gboolean gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
+static GstFlowReturn gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb);
-static gboolean gst_nv_h264_dec_decode_slice (GstH264Decoder * decoder,
+static GstFlowReturn gst_nv_h264_dec_decode_slice (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GArray * ref_pic_list0,
     GArray * ref_pic_list1);
-static gboolean gst_nv_h264_dec_end_picture (GstH264Decoder * decoder,
+static GstFlowReturn gst_nv_h264_dec_end_picture (GstH264Decoder * decoder,
     GstH264Picture * picture);
 static guint
 gst_nv_h264_dec_get_preferred_output_delay (GstH264Decoder * decoder,
@@ -359,7 +359,7 @@ gst_nv_h264_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
   return GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     gint max_dpb_size)
 {
@@ -434,7 +434,7 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
 
     if (out_format == GST_VIDEO_FORMAT_UNKNOWN) {
       GST_ERROR_OBJECT (self, "Could not support bitdepth/chroma format");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
 
     gst_video_info_set_format (&info, out_format, self->width, self->height);
@@ -448,21 +448,21 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
             /* Additional 4 buffers for render delay */
             max_dpb_size + 4)) {
       GST_ERROR_OBJECT (self, "Failed to configure decoder");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
 
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
 
     memset (&self->params, 0, sizeof (CUVIDPICPARAMS));
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture)
 {
@@ -472,7 +472,7 @@ gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
   nv_frame = gst_nv_decoder_new_frame (self->decoder);
   if (!nv_frame) {
     GST_ERROR_OBJECT (self, "No available decoder frame");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   GST_LOG_OBJECT (self,
@@ -481,10 +481,10 @@ gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
   gst_h264_picture_set_user_data (picture,
       nv_frame, (GDestroyNotify) gst_nv_decoder_frame_unref);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_h264_dec_new_field_picture (GstH264Decoder * decoder,
     const GstH264Picture * first_field, GstH264Picture * second_field)
 {
@@ -495,14 +495,14 @@ gst_nv_h264_dec_new_field_picture (GstH264Decoder * decoder,
   if (!nv_frame) {
     GST_ERROR_OBJECT (decoder,
         "No decoder frame in the first picture %p", first_field);
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   gst_h264_picture_set_user_data (second_field,
       gst_nv_decoder_frame_ref (nv_frame),
       (GDestroyNotify) gst_nv_decoder_frame_unref);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -714,7 +714,7 @@ gst_nv_h264_dec_fill_dpb (GstNvH264Dec * self, GstH264Picture * ref,
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb)
 {
@@ -736,7 +736,7 @@ gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
   if (!frame) {
     GST_ERROR_OBJECT (self,
         "Couldn't get decoder frame frame picture %p", picture);
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   gst_nv_h264_dec_reset_bitstream_params (self);
@@ -806,10 +806,10 @@ gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
   for (i = ref_frame_idx; i < 16; i++)
     h264_params->dpb[i].PicIdx = -1;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_h264_dec_decode_slice (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GArray * ref_pic_list0,
     GArray * ref_pic_list1)
@@ -847,10 +847,10 @@ gst_nv_h264_dec_decode_slice (GstH264Decoder * decoder,
       !GST_H264_IS_SI_SLICE (&slice->header))
     self->params.intra_pic_flag = 0;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_nv_h264_dec_end_picture (GstH264Decoder * decoder, GstH264Picture * picture)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
@@ -867,10 +867,12 @@ gst_nv_h264_dec_end_picture (GstH264Decoder * decoder, GstH264Picture * picture)
 
   ret = gst_nv_decoder_decode_picture (self->decoder, &self->params);
 
-  if (!ret)
+  if (!ret) {
     GST_ERROR_OBJECT (self, "Failed to decode picture");
+    return GST_FLOW_ERROR;
+  }
 
-  return ret;
+  return GST_FLOW_OK;
 }
 
 static guint

@@ -120,7 +120,7 @@ struct _GstH264DecoderClass
    *
    * Notifies subclass of SPS update
    */
-  gboolean      (*new_sequence)     (GstH264Decoder * decoder,
+  GstFlowReturn (*new_sequence)     (GstH264Decoder * decoder,
                                      const GstH264SPS * sps,
                                      gint max_dpb_size);
 
@@ -134,7 +134,7 @@ struct _GstH264DecoderClass
    * Subclass can set implementation specific user data
    * on the #GstH264Picture via gst_h264_picture_set_user_data()
    */
-  gboolean      (*new_picture)      (GstH264Decoder * decoder,
+  GstFlowReturn (*new_picture)      (GstH264Decoder * decoder,
                                      GstVideoCodecFrame * frame,
                                      GstH264Picture * picture);
 
@@ -150,7 +150,7 @@ struct _GstH264DecoderClass
    *
    * Since: 1.20
    */
-  gboolean      (*new_field_picture)  (GstH264Decoder * decoder,
+  GstFlowReturn (*new_field_picture)  (GstH264Decoder * decoder,
                                        const GstH264Picture * first_field,
                                        GstH264Picture * second_field);
 
@@ -164,7 +164,7 @@ struct _GstH264DecoderClass
    * Optional. Called per one #GstH264Picture to notify subclass to prepare
    * decoding process for the #GstH264Picture
    */
-  gboolean      (*start_picture)    (GstH264Decoder * decoder,
+  GstFlowReturn (*start_picture)    (GstH264Decoder * decoder,
                                      GstH264Picture * picture,
                                      GstH264Slice * slice,
                                      GstH264Dpb * dpb);
@@ -189,7 +189,7 @@ struct _GstH264DecoderClass
    * need to retrive the other field (i.e., the second field) of the picture
    * if needed.
    */
-  gboolean      (*decode_slice)     (GstH264Decoder * decoder,
+  GstFlowReturn (*decode_slice)     (GstH264Decoder * decoder,
                                      GstH264Picture * picture,
                                      GstH264Slice * slice,
                                      GArray * ref_pic_list0,
@@ -203,7 +203,7 @@ struct _GstH264DecoderClass
    * Optional. Called per one #GstH264Picture to notify subclass to finish
    * decoding process for the #GstH264Picture
    */
-  gboolean      (*end_picture)      (GstH264Decoder * decoder,
+  GstFlowReturn (*end_picture)      (GstH264Decoder * decoder,
                                      GstH264Picture * picture);
 
   /**

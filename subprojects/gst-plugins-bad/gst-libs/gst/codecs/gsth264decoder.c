@@ -97,7 +97,6 @@ struct _GstH264DecoderPrivate
   /* Cache last field which can not enter the DPB, should be a non ref */
   GstH264Picture *last_field;
 
-  GstFlowReturn last_ret;
   /* used for low-latency vs. high throughput mode decision */
   gboolean is_live;
 
@@ -164,6 +163,11 @@ typedef struct
   GstH264Decoder *self;
 } GstH264DecoderOutputFrame;
 
+#define UPDATE_FLOW_RETURN(ret,new_ret) G_STMT_START { \
+  if (*(ret) == GST_FLOW_OK) \
+    *(ret) = new_ret; \
+} G_STMT_END
+
 #define parent_class gst_h264_decoder_parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstH264Decoder, gst_h264_decoder,
     GST_TYPE_VIDEO_DECODER,
@@ -183,11 +187,11 @@ static GstFlowReturn gst_h264_decoder_drain (GstVideoDecoder * decoder);
 static GstFlowReturn gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 
-/* codec spcific functions */
-static gboolean gst_h264_decoder_process_sps (GstH264Decoder * self,
+/* codec specific functions */
+static GstFlowReturn gst_h264_decoder_process_sps (GstH264Decoder * self,
     GstH264SPS * sps);
 static gboolean gst_h264_decoder_decode_slice (GstH264Decoder * self);
-static gboolean gst_h264_decoder_decode_nal (GstH264Decoder * self,
+static GstFlowReturn gst_h264_decoder_decode_nal (GstH264Decoder * self,
     GstH264NalUnit * nalu);
 static gboolean gst_h264_decoder_fill_picture_from_slice (GstH264Decoder * self,
     const GstH264Slice * slice, GstH264Picture * picture);
@@ -195,10 +199,11 @@ static gboolean gst_h264_decoder_calculate_poc (GstH264Decoder * self,
     GstH264Picture * picture);
 static gboolean gst_h264_decoder_init_gap_picture (GstH264Decoder * self,
     GstH264Picture * picture, gint frame_num);
-static gboolean gst_h264_decoder_drain_internal (GstH264Decoder * self);
-static gboolean gst_h264_decoder_finish_current_picture (GstH264Decoder * self);
-static gboolean gst_h264_decoder_finish_picture (GstH264Decoder * self,
-    GstH264Picture * picture);
+static GstFlowReturn gst_h264_decoder_drain_internal (GstH264Decoder * self);
+static void gst_h264_decoder_finish_current_picture (GstH264Decoder * self,
+    GstFlowReturn * ret);
+static void gst_h264_decoder_finish_picture (GstH264Decoder * self,
+    GstH264Picture * picture, GstFlowReturn * ret);
 static void gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self,
     GstH264Picture * current_picture);
 static void gst_h264_decoder_clear_ref_pic_lists (GstH264Decoder * self);
@@ -207,7 +212,7 @@ static gboolean
 gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self,
     GstH264Picture * picture);
 static void gst_h264_decoder_do_output_picture (GstH264Decoder * self,
-    GstH264Picture * picture);
+    GstH264Picture * picture, GstFlowReturn * ret);
 static GstH264Picture *gst_h264_decoder_new_field_picture (GstH264Decoder *
     self, GstH264Picture * picture);
 static void
@@ -495,13 +500,9 @@ static GstFlowReturn
 gst_h264_decoder_drain (GstVideoDecoder * decoder)
 {
   GstH264Decoder *self = GST_H264_DECODER (decoder);
-  GstH264DecoderPrivate *priv = self->priv;
 
-  priv->last_ret = GST_FLOW_OK;
   /* dpb will be cleared by this method */
-  gst_h264_decoder_drain_internal (self);
-
-  return priv->last_ret;
+  return gst_h264_decoder_drain_internal (self);
 }
 
 static GstFlowReturn
@@ -520,7 +521,7 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
   GstH264NalUnit nalu;
   GstH264ParserResult pres;
   GstMapInfo map;
-  gboolean decode_ret = TRUE;
+  GstFlowReturn decode_ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (self,
       "handle frame, PTS: %" GST_TIME_FORMAT ", DTS: %"
@@ -528,14 +529,13 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
       GST_TIME_ARGS (GST_BUFFER_DTS (in_buf)));
 
   priv->current_frame = frame;
-  priv->last_ret = GST_FLOW_OK;
 
   gst_buffer_map (in_buf, &map, GST_MAP_READ);
   if (priv->in_format == GST_H264_DECODER_FORMAT_AVC) {
     pres = gst_h264_parser_identify_nalu_avc (priv->parser,
         map.data, 0, map.size, priv->nal_length_size, &nalu);
 
-    while (pres == GST_H264_PARSER_OK && decode_ret) {
+    while (pres == GST_H264_PARSER_OK && decode_ret == GST_FLOW_OK) {
       decode_ret = gst_h264_decoder_decode_nal (self, &nalu);
 
       pres = gst_h264_parser_identify_nalu_avc (priv->parser,
@@ -549,7 +549,7 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
     if (pres == GST_H264_PARSER_NO_NAL_END)
       pres = GST_H264_PARSER_OK;
 
-    while (pres == GST_H264_PARSER_OK && decode_ret) {
+    while (pres == GST_H264_PARSER_OK && decode_ret == GST_FLOW_OK) {
       decode_ret = gst_h264_decoder_decode_nal (self, &nalu);
 
       pres = gst_h264_parser_identify_nalu (priv->parser,
@@ -562,25 +562,30 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
 
   gst_buffer_unmap (in_buf, &map);
 
-  if (!decode_ret) {
+  if (decode_ret != GST_FLOW_OK) {
     GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
-        ("Failed to decode data"), (NULL), priv->last_ret);
+        ("Failed to decode data"), (NULL), decode_ret);
     gst_video_decoder_drop_frame (decoder, frame);
 
     gst_h264_picture_clear (&priv->current_picture);
     priv->current_frame = NULL;
 
-    return priv->last_ret;
+    return decode_ret;
   }
 
-  gst_h264_decoder_finish_current_picture (self);
+  gst_h264_decoder_finish_current_picture (self, &decode_ret);
   gst_video_codec_frame_unref (frame);
   priv->current_frame = NULL;
 
-  return priv->last_ret;
+  if (decode_ret != GST_FLOW_OK) {
+    GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
+        ("Failed to decode data"), (NULL), decode_ret);
+  }
+
+  return decode_ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_h264_decoder_parse_sps (GstH264Decoder * self, GstH264NalUnit * nalu)
 {
   GstH264DecoderPrivate *priv = self->priv;
@@ -591,18 +596,18 @@ gst_h264_decoder_parse_sps (GstH264Decoder * self, GstH264NalUnit * nalu)
   pres = gst_h264_parse_sps (nalu, &sps);
   if (pres != GST_H264_PARSER_OK) {
     GST_WARNING_OBJECT (self, "Failed to parse SPS, result %d", pres);
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   GST_LOG_OBJECT (self, "SPS parsed");
 
   ret = gst_h264_decoder_process_sps (self, &sps);
-  if (!ret) {
+  if (ret != GST_FLOW_OK) {
     GST_WARNING_OBJECT (self, "Failed to process SPS");
   } else if (gst_h264_parser_update_sps (priv->parser,
           &sps) != GST_H264_PARSER_OK) {
     GST_WARNING_OBJECT (self, "Failed to update SPS");
-    ret = FALSE;
+    ret = GST_FLOW_ERROR;
   }
 
   gst_h264_sps_clear (&sps);
@@ -610,29 +615,29 @@ gst_h264_decoder_parse_sps (GstH264Decoder * self, GstH264NalUnit * nalu)
   return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_h264_decoder_parse_pps (GstH264Decoder * self, GstH264NalUnit * nalu)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264PPS pps;
   GstH264ParserResult pres;
-  gboolean ret = TRUE;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   pres = gst_h264_parse_pps (priv->parser, nalu, &pps);
   if (pres != GST_H264_PARSER_OK) {
     GST_WARNING_OBJECT (self, "Failed to parse PPS, result %d", pres);
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   GST_LOG_OBJECT (self, "PPS parsed");
 
   if (pps.num_slice_groups_minus1 > 0) {
     GST_FIXME_OBJECT (self, "FMO is not supported");
-    ret = FALSE;
+    ret = GST_FLOW_ERROR;
   } else if (gst_h264_parser_update_pps (priv->parser, &pps)
       != GST_H264_PARSER_OK) {
     GST_WARNING_OBJECT (self, "Failed to update PPS");
-    ret = FALSE;
+    ret = GST_FLOW_ERROR;
   }
 
   gst_h264_pps_clear (&pps);
@@ -640,7 +645,7 @@ gst_h264_decoder_parse_pps (GstH264Decoder * self, GstH264NalUnit * nalu)
   return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_h264_decoder_parse_codec_data (GstH264Decoder * self, const guint8 * data,
     gsize size)
 {
@@ -650,18 +655,19 @@ gst_h264_decoder_parse_codec_data (GstH264Decoder * self, const guint8 * data,
   gint i;
   GstH264ParserResult pres;
   GstH264NalUnit nalu;
+  GstFlowReturn ret = GST_FLOW_OK;
 #ifndef GST_DISABLE_GST_DEBUG
   guint profile;
 #endif
 
   /* parse the avcC data */
   if (size < 7) {               /* when numSPS==0 and numPPS==0, length is 7 bytes */
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   /* parse the version, this must be 1 */
   if (data[0] != 1) {
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 #ifndef GST_DISABLE_GST_DEBUG
   /* AVCProfileIndication */
@@ -684,19 +690,20 @@ gst_h264_decoder_parse_codec_data (GstH264Decoder * self, const guint8 * data,
         data, off, size, 2, &nalu);
     if (pres != GST_H264_PARSER_OK) {
       GST_WARNING_OBJECT (self, "Failed to identify SPS nalu");
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
 
-    if (!gst_h264_decoder_parse_sps (self, &nalu)) {
+    ret = gst_h264_decoder_parse_sps (self, &nalu);
+    if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (self, "Failed to parse SPS");
-      return FALSE;
+      return ret;
     }
     off = nalu.offset + nalu.size;
   }
 
   if (off >= size) {
     GST_WARNING_OBJECT (self, "Too small avcC");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   num_pps = data[off];
@@ -707,17 +714,18 @@ gst_h264_decoder_parse_codec_data (GstH264Decoder * self, const guint8 * data,
         data, off, size, 2, &nalu);
     if (pres != GST_H264_PARSER_OK) {
       GST_WARNING_OBJECT (self, "Failed to identify PPS nalu");
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
 
-    if (!gst_h264_decoder_parse_pps (self, &nalu)) {
+    ret = gst_h264_decoder_parse_pps (self, &nalu);
+    if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (self, "Failed to parse PPS");
-      return FALSE;
+      return ret;
     }
     off = nalu.offset + nalu.size;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -817,17 +825,19 @@ gst_h264_decoder_split_frame (GstH264Decoder * self, GstH264Picture * picture)
   return other_field;
 }
 
-static gboolean
-output_picture_directly (GstH264Decoder * self, GstH264Picture * picture)
+static void
+output_picture_directly (GstH264Decoder * self, GstH264Picture * picture,
+    GstFlowReturn * ret)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264Picture *out_pic = NULL;
-  gboolean ret = TRUE;
+  GstFlowReturn flow_ret = GST_FLOW_OK;
+
+  g_assert (ret != NULL);
 
   if (GST_H264_PICTURE_IS_FRAME (picture)) {
     g_assert (priv->last_field == NULL);
     out_pic = g_steal_pointer (&picture);
-    ret = TRUE;
     goto output;
   }
 
@@ -836,13 +846,12 @@ output_picture_directly (GstH264Decoder * self, GstH264Picture * picture)
       GST_WARNING ("Set the last output %p poc:%d, without first field",
           picture, picture->pic_order_cnt);
 
-      ret = FALSE;
+      flow_ret = GST_FLOW_ERROR;
       goto output;
     }
 
     /* Just cache the first field. */
     priv->last_field = g_steal_pointer (&picture);
-    ret = TRUE;
   } else {
     if (!picture->second_field || !picture->other_field
         || picture->other_field != priv->last_field) {
@@ -852,7 +861,7 @@ output_picture_directly (GstH264Decoder * self, GstH264Picture * picture)
           picture, picture->pic_order_cnt);
 
       gst_h264_picture_clear (&priv->last_field);
-      ret = FALSE;
+      flow_ret = GST_FLOW_ERROR;
       goto output;
     }
 
@@ -870,12 +879,12 @@ output_picture_directly (GstH264Decoder * self, GstH264Picture * picture)
 output:
   if (out_pic) {
     gst_h264_dpb_set_last_output (priv->dpb, out_pic);
-    gst_h264_decoder_do_output_picture (self, out_pic);
+    gst_h264_decoder_do_output_picture (self, out_pic, &flow_ret);
   }
 
   gst_h264_picture_clear (&picture);
 
-  return ret;
+  UPDATE_FLOW_RETURN (ret, flow_ret);
 }
 
 static void
@@ -902,9 +911,11 @@ add_picture_to_dpb (GstH264Decoder * self, GstH264Picture * picture)
 
 static void
 _bump_dpb (GstH264Decoder * self, GstH264DpbBumpMode bump_level,
-    GstH264Picture * current_picture)
+    GstH264Picture * current_picture, GstFlowReturn * ret)
 {
   GstH264DecoderPrivate *priv = self->priv;
+
+  g_assert (ret != NULL);
 
   while (gst_h264_dpb_needs_bump (priv->dpb, current_picture, bump_level)) {
     GstH264Picture *to_output;
@@ -916,11 +927,11 @@ _bump_dpb (GstH264Decoder * self, GstH264DpbBumpMode bump_level,
       break;
     }
 
-    gst_h264_decoder_do_output_picture (self, to_output);
+    gst_h264_decoder_do_output_picture (self, to_output, ret);
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
 {
   GstH264DecoderPrivate *priv = self->priv;
@@ -929,25 +940,25 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
 
   if (!sps) {
     GST_ERROR_OBJECT (self, "No active sps");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   if (priv->prev_ref_frame_num == frame_num) {
     GST_TRACE_OBJECT (self,
         "frame_num == PrevRefFrameNum (%d), not a gap", frame_num);
-    return TRUE;
+    return GST_FLOW_OK;
   }
 
   if (((priv->prev_ref_frame_num + 1) % priv->max_frame_num) == frame_num) {
     GST_TRACE_OBJECT (self,
         "frame_num ==  (PrevRefFrameNum + 1) %% MaxFrameNum (%d), not a gap",
         frame_num);
-    return TRUE;
+    return GST_FLOW_OK;
   }
 
   if (gst_h264_dpb_get_size (priv->dpb) == 0) {
     GST_TRACE_OBJECT (self, "DPB is empty, not a gap");
-    return TRUE;
+    return GST_FLOW_OK;
   }
 
   if (!sps->gaps_in_frame_num_value_allowed_flag) {
@@ -956,7 +967,7 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
     GST_WARNING_OBJECT (self, "Invalid frame num %d, maybe frame drop",
         frame_num);
 
-    return TRUE;
+    return GST_FLOW_OK;
   }
 
   GST_DEBUG_OBJECT (self, "Handling frame num gap %d -> %d (MaxFrameNum: %d)",
@@ -967,10 +978,11 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
       (priv->prev_ref_frame_num + 1) % priv->max_frame_num;
   while (unused_short_term_frame_num != frame_num) {
     GstH264Picture *picture = gst_h264_picture_new ();
+    GstFlowReturn ret = GST_FLOW_OK;
 
     if (!gst_h264_decoder_init_gap_picture (self, picture,
             unused_short_term_frame_num))
-      return FALSE;
+      return GST_FLOW_ERROR;
 
     gst_h264_decoder_update_pic_nums (self, picture,
         unused_short_term_frame_num);
@@ -979,12 +991,14 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
     if (!gst_h264_decoder_sliding_window_picture_marking (self, picture)) {
       GST_ERROR_OBJECT (self,
           "Couldn't perform sliding window picture marking");
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
 
     gst_h264_dpb_delete_unused (priv->dpb);
 
-    _bump_dpb (self, GST_H264_DPB_BUMP_NORMAL_LATENCY, picture);
+    _bump_dpb (self, GST_H264_DPB_BUMP_NORMAL_LATENCY, picture, &ret);
+    if (ret != GST_FLOW_OK)
+      return ret;
 
     /* the picture is short term ref, add to DPB. */
     if (gst_h264_dpb_get_interlaced (priv->dpb)) {
@@ -1001,7 +1015,7 @@ gst_h264_decoder_handle_frame_num_gap (GstH264Decoder * self, gint frame_num)
     unused_short_term_frame_num %= priv->max_frame_num;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -1029,14 +1043,14 @@ gst_h264_decoder_init_current_picture (GstH264Decoder * self)
   return TRUE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_h264_decoder_start_current_picture (GstH264Decoder * self)
 {
   GstH264DecoderClass *klass;
   GstH264DecoderPrivate *priv = self->priv;
   const GstH264SPS *sps;
   gint frame_num;
-  gboolean ret = TRUE;
+  GstFlowReturn ret = GST_FLOW_OK;
   GstH264Picture *current_picture;
 
   g_assert (priv->current_picture != NULL);
@@ -1050,18 +1064,21 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
   if (priv->current_slice.nalu.idr_pic_flag)
     priv->prev_ref_frame_num = 0;
 
-  if (!gst_h264_decoder_handle_frame_num_gap (self, frame_num))
-    return FALSE;
+  ret = gst_h264_decoder_handle_frame_num_gap (self, frame_num);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   if (!gst_h264_decoder_init_current_picture (self))
-    return FALSE;
+    return GST_FLOW_ERROR;
 
   current_picture = priv->current_picture;
 
   /* If the new picture is an IDR, flush DPB */
   if (current_picture->idr) {
     if (!current_picture->dec_ref_pic_marking.no_output_of_prior_pics_flag) {
-      gst_h264_decoder_drain_internal (self);
+      ret = gst_h264_decoder_drain_internal (self);
+      if (ret != GST_FLOW_OK)
+        return ret;
     } else {
       /* C.4.4 Removal of pictures from the DPB before possible insertion
        * of the current picture
@@ -1081,16 +1098,17 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
     gst_h264_decoder_prepare_ref_pic_lists (self, current_picture);
 
   klass = GST_H264_DECODER_GET_CLASS (self);
-  if (klass->start_picture)
+  if (klass->start_picture) {
     ret = klass->start_picture (self, priv->current_picture,
         &priv->current_slice, priv->dpb);
 
-  if (!ret) {
-    GST_ERROR_OBJECT (self, "subclass does not want to start picture");
-    return FALSE;
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "subclass does not want to start picture");
+      return ret;
+    }
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstH264Picture *
@@ -1107,12 +1125,16 @@ gst_h264_decoder_new_field_picture (GstH264Decoder * self,
 
   new_picture = gst_h264_picture_new ();
   /* don't confuse subclass by non-existing picture */
-  if (!picture->nonexisting &&
-      !klass->new_field_picture (self, picture, new_picture)) {
-    GST_ERROR_OBJECT (self, "Subclass couldn't handle new field picture");
-    gst_h264_picture_unref (new_picture);
+  if (!picture->nonexisting) {
+    GstFlowReturn ret;
 
-    return NULL;
+    ret = klass->new_field_picture (self, picture, new_picture);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "Subclass couldn't handle new field picture");
+      gst_h264_picture_unref (new_picture);
+
+      return NULL;
+    }
   }
 
   new_picture->other_field = picture;
@@ -1200,11 +1222,12 @@ error:
   return FALSE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264ParserResult pres = GST_H264_PARSER_OK;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   memset (&priv->current_slice, 0, sizeof (GstH264Slice));
 
@@ -1215,13 +1238,13 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
     GST_ERROR_OBJECT (self, "Failed to parse slice header, ret %d", pres);
     memset (&priv->current_slice, 0, sizeof (GstH264Slice));
 
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   priv->current_slice.nalu = *nalu;
 
   if (!gst_h264_decoder_preprocess_slice (self, &priv->current_slice))
-    return FALSE;
+    return GST_FLOW_ERROR;
 
   priv->active_pps = priv->current_slice.header.pps;
   priv->active_sps = priv->active_pps->sequence;
@@ -1245,7 +1268,7 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
     if (cur_field != prev_field) {
       GST_LOG_OBJECT (self,
           "Found new field picture, finishing the first field picture");
-      gst_h264_decoder_finish_current_picture (self);
+      gst_h264_decoder_finish_current_picture (self, &ret);
     }
   }
 
@@ -1260,7 +1283,7 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
     if (!gst_h264_decoder_find_first_field_picture (self,
             &priv->current_slice, &first_field)) {
       GST_ERROR_OBJECT (self, "Couldn't find or determine first picture");
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
 
     if (first_field) {
@@ -1269,7 +1292,7 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
 
       if (!picture) {
         GST_ERROR_OBJECT (self, "Couldn't duplicate the first field picture");
-        return FALSE;
+        return GST_FLOW_ERROR;
       }
     } else {
       picture = gst_h264_picture_new ();
@@ -1277,10 +1300,11 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
       if (klass->new_picture)
         ret = klass->new_picture (self, priv->current_frame, picture);
 
-      if (!ret) {
-        GST_ERROR_OBJECT (self, "subclass does not want accept new picture");
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "subclass does not want accept new picture");
+        priv->current_picture = NULL;
         gst_h264_picture_unref (picture);
-        return FALSE;
+        return ret;
       }
     }
 
@@ -1288,19 +1312,20 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
     picture->system_frame_number = priv->current_frame->system_frame_number;
     priv->current_picture = picture;
 
-    if (!gst_h264_decoder_start_current_picture (self)) {
-      GST_ERROR_OBJECT (self, "start picture failed");
-      return FALSE;
+    ret = gst_h264_decoder_start_current_picture (self);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "start picture failed");
+      return ret;
     }
   }
 
   return gst_h264_decoder_decode_slice (self);
 }
 
-static gboolean
+static GstFlowReturn
 gst_h264_decoder_decode_nal (GstH264Decoder * self, GstH264NalUnit * nalu)
 {
-  gboolean ret = TRUE;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (self, "Parsed nal type: %d, offset %d, size %d",
       nalu->type, nalu->offset, nalu->size);
@@ -1443,7 +1468,8 @@ gst_h264_decoder_set_format (GstVideoDecoder * decoder,
     GstMapInfo map;
 
     gst_buffer_map (priv->codec_data, &map, GST_MAP_READ);
-    if (!gst_h264_decoder_parse_codec_data (self, map.data, map.size)) {
+    if (gst_h264_decoder_parse_codec_data (self, map.data, map.size) !=
+        GST_FLOW_OK) {
       /* keep going without error.
        * Probably inband SPS/PPS might be valid data */
       GST_WARNING_OBJECT (self, "Failed to handle codec data");
@@ -1742,29 +1768,35 @@ gst_h264_decoder_calculate_poc (GstH264Decoder * self, GstH264Picture * picture)
 }
 
 static void
-gst_h264_decoder_drain_output_queue (GstH264Decoder * self, guint num)
+gst_h264_decoder_drain_output_queue (GstH264Decoder * self, guint num,
+    GstFlowReturn * ret)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
 
   g_assert (klass->output_picture);
+  g_assert (ret != NULL);
 
   while (gst_queue_array_get_length (priv->output_queue) > num) {
     GstH264DecoderOutputFrame *output_frame = (GstH264DecoderOutputFrame *)
         gst_queue_array_pop_head_struct (priv->output_queue);
-    priv->last_ret =
-        klass->output_picture (self, output_frame->frame,
+    GstFlowReturn flow_ret = klass->output_picture (self, output_frame->frame,
         output_frame->picture);
+
+    UPDATE_FLOW_RETURN (ret, flow_ret);
   }
 }
 
 static void
 gst_h264_decoder_do_output_picture (GstH264Decoder * self,
-    GstH264Picture * picture)
+    GstH264Picture * picture, GstFlowReturn * ret)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstVideoCodecFrame *frame = NULL;
   GstH264DecoderOutputFrame output_frame;
+  GstFlowReturn flow_ret = GST_FLOW_OK;
+
+  g_assert (ret != NULL);
 
   GST_LOG_OBJECT (self, "Outputting picture %p (frame_num %d, poc %d)",
       picture, picture->frame_num, picture->pic_order_cnt);
@@ -1784,7 +1816,8 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
     GST_ERROR_OBJECT (self,
         "No available codec frame with frame number %d",
         picture->system_frame_number);
-    priv->last_ret = GST_FLOW_ERROR;
+    UPDATE_FLOW_RETURN (ret, GST_FLOW_ERROR);
+
     gst_h264_picture_unref (picture);
 
     return;
@@ -1795,23 +1828,27 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
   output_frame.self = self;
   gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
 
-  gst_h264_decoder_drain_output_queue (self, priv->preferred_output_delay);
+  gst_h264_decoder_drain_output_queue (self, priv->preferred_output_delay,
+      &flow_ret);
+  UPDATE_FLOW_RETURN (ret, flow_ret);
 }
 
-static gboolean
-gst_h264_decoder_finish_current_picture (GstH264Decoder * self)
+static void
+gst_h264_decoder_finish_current_picture (GstH264Decoder * self,
+    GstFlowReturn * ret)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264DecoderClass *klass;
-  gboolean ret = TRUE;
+  GstFlowReturn flow_ret = GST_FLOW_OK;
 
   if (!priv->current_picture)
-    return TRUE;
+    return;
 
   klass = GST_H264_DECODER_GET_CLASS (self);
 
   if (klass->end_picture) {
-    if (!klass->end_picture (self, priv->current_picture)) {
+    flow_ret = klass->end_picture (self, priv->current_picture);
+    if (flow_ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (self,
           "end picture failed, marking picture %p non-existing "
           "(frame_num %d, poc %d)", priv->current_picture,
@@ -1829,15 +1866,10 @@ gst_h264_decoder_finish_current_picture (GstH264Decoder * self)
   gst_h264_decoder_clear_ref_pic_lists (self);
 
   /* finish picture takes ownership of the picture */
-  ret = gst_h264_decoder_finish_picture (self, priv->current_picture);
+  gst_h264_decoder_finish_picture (self, priv->current_picture, &flow_ret);
   priv->current_picture = NULL;
 
-  if (!ret) {
-    GST_ERROR_OBJECT (self, "Failed to finish picture");
-    return FALSE;
-  }
-
-  return TRUE;
+  UPDATE_FLOW_RETURN (ret, flow_ret);
 }
 
 static gint
@@ -1852,23 +1884,24 @@ poc_desc_compare (const GstH264Picture ** a, const GstH264Picture ** b)
   return (*b)->pic_order_cnt - (*a)->pic_order_cnt;
 }
 
-static gboolean
+static GstFlowReturn
 gst_h264_decoder_drain_internal (GstH264Decoder * self)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264Picture *picture;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   while ((picture = gst_h264_dpb_bump (priv->dpb, TRUE)) != NULL) {
-    gst_h264_decoder_do_output_picture (self, picture);
+    gst_h264_decoder_do_output_picture (self, picture, &ret);
   }
 
-  gst_h264_decoder_drain_output_queue (self, 0);
+  gst_h264_decoder_drain_output_queue (self, 0, &ret);
 
   gst_h264_picture_clear (&priv->last_field);
   gst_h264_dpb_clear (priv->dpb);
   priv->last_output_poc = G_MININT32;
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
@@ -2052,13 +2085,12 @@ get_bump_level (GstH264Decoder * self)
   return GST_H264_DPB_BUMP_NORMAL_LATENCY;
 }
 
-static gboolean
+static void
 gst_h264_decoder_finish_picture (GstH264Decoder * self,
-    GstH264Picture * picture)
+    GstH264Picture * picture, GstFlowReturn * ret)
 {
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (self);
   GstH264DecoderPrivate *priv = self->priv;
-  gboolean ret = TRUE;
   GstH264DpbBumpMode bump_level = get_bump_level (self);
 
   /* Finish processing the picture.
@@ -2095,11 +2127,15 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
 
   /* C.4.4 */
   if (picture->mem_mgmt_5) {
+    GstFlowReturn drain_ret;
+
     GST_TRACE_OBJECT (self, "Memory management type 5, drain the DPB");
-    gst_h264_decoder_drain_internal (self);
+
+    drain_ret = gst_h264_decoder_drain_internal (self);
+    UPDATE_FLOW_RETURN (ret, drain_ret);
   }
 
-  _bump_dpb (self, bump_level, picture);
+  _bump_dpb (self, bump_level, picture, ret);
 
   /* Add a ref to avoid the case of directly outputed and destroyed. */
   gst_h264_picture_ref (picture);
@@ -2139,7 +2175,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
       add_picture_to_dpb (self, picture);
     }
   } else {
-    ret = output_picture_directly (self, picture);
+    output_picture_directly (self, picture, ret);
   }
 
   GST_LOG_OBJECT (self,
@@ -2152,9 +2188,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
   /* For the live mode, we try to bump here to avoid waiting
      for another decoding circle. */
   if (priv->is_live && priv->compliance != GST_H264_DECODER_COMPLIANCE_STRICT)
-    _bump_dpb (self, bump_level, NULL);
-
-  return ret;
+    _bump_dpb (self, bump_level, NULL, ret);
 }
 
 static gboolean
@@ -2337,7 +2371,7 @@ gst_h264_decoder_set_latency (GstH264Decoder * self, const GstH264SPS * sps,
   gst_video_decoder_set_latency (GST_VIDEO_DECODER (self), min, max);
 }
 
-static gboolean
+static GstFlowReturn
 gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
 {
   GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
@@ -2350,12 +2384,13 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
   gint prev_max_dpb_size;
   gboolean prev_interlaced;
   gboolean interlaced;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (sps->frame_mbs_only_flag == 0) {
     if (!klass->new_field_picture) {
       GST_FIXME_OBJECT (self,
           "frame_mbs_only_flag != 1 not supported by subclass");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
 
     if (sps->mb_adaptive_frame_field_flag) {
@@ -2381,7 +2416,7 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
 
   max_dpb_mbs = h264_level_to_max_dpb_mbs ((GstH264DecoderLevel) level);
   if (!max_dpb_mbs)
-    return FALSE;
+    return GST_FLOW_ERROR;
 
   width_mb = sps->width / 16;
   height_mb = sps->height / 16;
@@ -2407,7 +2442,7 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
   }
 
   /* Safety, so that subclass don't need bound checking */
-  g_return_val_if_fail (max_dpb_size <= GST_H264_DPB_MAX_SIZE, FALSE);
+  g_return_val_if_fail (max_dpb_size <= GST_H264_DPB_MAX_SIZE, GST_FLOW_ERROR);
 
   prev_max_dpb_size = gst_h264_dpb_get_max_num_frames (priv->dpb);
   prev_interlaced = gst_h264_dpb_get_interlaced (priv->dpb);
@@ -2421,8 +2456,9 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
         priv->width, priv->height, sps->width, sps->height,
         prev_max_dpb_size, max_dpb_size, prev_interlaced, interlaced);
 
-    if (gst_h264_decoder_drain (GST_VIDEO_DECODER (self)) != GST_FLOW_OK)
-      return FALSE;
+    ret = gst_h264_decoder_drain (GST_VIDEO_DECODER (self));
+    if (ret != GST_FLOW_OK)
+      return ret;
 
     g_assert (klass->new_sequence);
 
@@ -2433,10 +2469,11 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
       priv->preferred_output_delay = 0;
     }
 
-    if (!klass->new_sequence (self, sps,
-            max_dpb_size + priv->preferred_output_delay)) {
-      GST_ERROR_OBJECT (self, "subclass does not want accept new sequence");
-      return FALSE;
+    ret = klass->new_sequence (self,
+        sps, max_dpb_size + priv->preferred_output_delay);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "subclass does not want accept new sequence");
+      return ret;
     }
 
     priv->profile_idc = sps->profile_idc;
@@ -2448,7 +2485,10 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
     gst_h264_dpb_set_interlaced (priv->dpb, interlaced);
   }
 
-  return gst_h264_decoder_update_max_num_reorder_frames (self, sps);
+  if (!gst_h264_decoder_update_max_num_reorder_frames (self, sps))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
 }
 
 static gboolean

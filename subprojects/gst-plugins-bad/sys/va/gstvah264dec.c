@@ -97,7 +97,7 @@ static const gchar *src_caps_str =
 
 static const gchar *sink_caps_str = "video/x-h264";
 
-static gboolean
+static GstFlowReturn
 gst_va_h264_dec_end_picture (GstH264Decoder * decoder, GstH264Picture * picture)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
@@ -108,7 +108,10 @@ gst_va_h264_dec_end_picture (GstH264Decoder * decoder, GstH264Picture * picture)
 
   va_pic = gst_h264_picture_get_user_data (picture);
 
-  return gst_va_decoder_decode (base->decoder, va_pic);
+  if (!gst_va_decoder_decode (base->decoder, va_pic))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -319,7 +322,7 @@ _get_slice_data_bit_offset (GstH264SliceHdr * header, guint nal_header_bytes)
   return 8 * nal_header_bytes + header->header_size - epb_count * 8;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_h264_dec_decode_slice (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GArray * ref_pic_list0,
     GArray * ref_pic_list1)
@@ -357,12 +360,16 @@ gst_va_h264_dec_decode_slice (GstH264Decoder * decoder,
 
   va_pic = gst_h264_picture_get_user_data (picture);
 
-  return gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice_param,
-      sizeof (slice_param), slice->nalu.data + slice->nalu.offset,
-      slice->nalu.size);
+  if (!gst_va_decoder_add_slice_buffer (base->decoder, va_pic, &slice_param,
+          sizeof (slice_param), slice->nalu.data + slice->nalu.offset,
+          slice->nalu.size)) {
+    return GST_FLOW_ERROR;
+  }
+
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb)
 {
@@ -454,7 +461,7 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
 
   if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
           VAPictureParameterBufferType, &pic_param, sizeof (pic_param)))
-    return FALSE;
+    return GST_FLOW_ERROR;
 
   /* there are always 6 4x4 scaling lists */
   for (i = 0; i < 6; i++) {
@@ -471,11 +478,14 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
         [i], pps->scaling_lists_8x8[i]);
   }
 
-  return gst_va_decoder_add_param_buffer (base->decoder, va_pic,
-      VAIQMatrixBufferType, &iq_matrix, sizeof (iq_matrix));
+  if (!gst_va_decoder_add_param_buffer (base->decoder, va_pic,
+          VAIQMatrixBufferType, &iq_matrix, sizeof (iq_matrix)))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_h264_dec_new_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture)
 {
@@ -496,18 +506,18 @@ gst_va_h264_dec_new_picture (GstH264Decoder * decoder,
   GST_LOG_OBJECT (self, "New va decode picture %p - %#x", pic,
       gst_va_decode_picture_get_surface (pic));
 
-  return TRUE;
+  return GST_FLOW_OK;
 
 error:
   {
     GST_WARNING_OBJECT (self,
         "Failed to allocated output buffer, return %s",
         gst_flow_get_name (self->last_ret));
-    return FALSE;
+    return self->last_ret;
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_h264_dec_new_field_picture (GstH264Decoder * decoder,
     const GstH264Picture * first_field, GstH264Picture * second_field)
 {
@@ -517,7 +527,7 @@ gst_va_h264_dec_new_field_picture (GstH264Decoder * decoder,
 
   first_pic = gst_h264_picture_get_user_data ((GstH264Picture *) first_field);
   if (!first_pic)
-    return FALSE;
+    return GST_FLOW_ERROR;
 
   second_pic = gst_va_decode_picture_new (base->decoder, first_pic->gstbuffer);
   gst_h264_picture_set_user_data (second_field, second_pic,
@@ -526,7 +536,7 @@ gst_va_h264_dec_new_field_picture (GstH264Decoder * decoder,
   GST_LOG_OBJECT (self, "New va decode picture %p - %#x", second_pic,
       gst_va_decode_picture_get_surface (second_pic));
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static inline guint
@@ -643,7 +653,7 @@ _get_profile (GstVaH264Dec * self, const GstH264SPS * sps, gint max_dpb_size)
   return VAProfileNone;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     gint max_dpb_size)
 {
@@ -675,12 +685,12 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
 
   profile = _get_profile (self, sps, max_dpb_size);
   if (profile == VAProfileNone)
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
 
   rt_format = _get_rtformat (self, sps->bit_depth_luma_minus8 + 8,
       sps->chroma_format_idc);
   if (rt_format == 0)
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
 
   if (!gst_va_decoder_config_is_equal (base->decoder, profile,
           rt_format, sps->width, sps->height)) {
@@ -739,11 +749,11 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     self->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstCaps *

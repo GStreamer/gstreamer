@@ -808,7 +808,7 @@ gst_v4l2_codec_h264_dec_fill_references (GstV4l2CodecH264Dec * self,
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
     const GstH264SPS * sps, gint max_dpb_size)
 {
@@ -873,7 +873,7 @@ gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
     self->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
   }
 
@@ -898,7 +898,7 @@ gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
     self->copy_frames = FALSE;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -929,7 +929,7 @@ done:
   return TRUE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb)
 {
@@ -937,10 +937,10 @@ gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
 
   /* FIXME base class should not call us if negotiation failed */
   if (!self->sink_allocator)
-    return FALSE;
+    return GST_FLOW_NOT_NEGOTIATED;
 
   if (!gst_v4l2_codec_h264_dec_ensure_bitstream (self))
-    return FALSE;
+    return GST_FLOW_ERROR;
 
   /*
    * Scaling matrix is present if there's one provided
@@ -961,7 +961,7 @@ gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
 
   self->first_slice = TRUE;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -1219,7 +1219,7 @@ done:
   return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GArray * ref_pic_list0,
     GArray * ref_pic_list1)
@@ -1236,7 +1236,7 @@ gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
       if (!gst_v4l2_codec_h264_dec_submit_bitstream (self, picture,
               V4L2_BUF_FLAG_M2M_HOLD_CAPTURE_BUF)
           || !gst_v4l2_codec_h264_dec_ensure_bitstream (self))
-        return FALSE;
+        return GST_FLOW_ERROR;
     }
 
     gst_v4l2_codec_h264_dec_fill_slice_params (self, slice);
@@ -1254,7 +1254,7 @@ gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
   if (self->bitstream_map.size + nal_size > self->bitstream_map.maxsize) {
     GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
         ("Not enough space to send all slice of an H264 frame."), (NULL));
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   if (needs_start_codes (self)) {
@@ -1267,10 +1267,10 @@ gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
       slice->nalu.size);
   self->bitstream_map.size += nal_size;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
     GstH264Picture * picture)
 {
@@ -1281,10 +1281,13 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
   if (picture->field != GST_H264_PICTURE_FIELD_FRAME && !picture->second_field)
     flags = V4L2_BUF_FLAG_M2M_HOLD_CAPTURE_BUF;
 
-  return gst_v4l2_codec_h264_dec_submit_bitstream (self, picture, flags);
+  if (!gst_v4l2_codec_h264_dec_submit_bitstream (self, picture, flags))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_codec_h264_dec_new_field_picture (GstH264Decoder * decoder,
     const GstH264Picture * first_field, GstH264Picture * second_field)
 {
@@ -1295,7 +1298,7 @@ gst_v4l2_codec_h264_dec_new_field_picture (GstH264Decoder * decoder,
   if (!request) {
     GST_WARNING_OBJECT (self,
         "First picture does not have an associated request");
-    return TRUE;
+    return GST_FLOW_OK;
   }
 
   GST_DEBUG_OBJECT (self, "Assigned request %p to second field.", request);
@@ -1305,7 +1308,7 @@ gst_v4l2_codec_h264_dec_new_field_picture (GstH264Decoder * decoder,
   gst_h264_picture_set_user_data (second_field, gst_v4l2_request_ref (request),
       (GDestroyNotify) gst_v4l2_request_unref);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static guint
