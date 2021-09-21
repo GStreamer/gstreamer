@@ -1255,8 +1255,11 @@ gst_x264_enc_log_callback (gpointer private, gint level, const char *format,
       break;
   }
 
-  gst_debug_log_valist (x264_enc_debug, gst_level, "", "", 0, object, format,
-      args);
+  if (G_LIKELY (gst_level > _gst_debug_min))
+    return;
+
+  gst_debug_log_valist (GST_CAT_DEFAULT, gst_level, __FILE__, GST_FUNCTION,
+      __LINE__, object, format, args);
 #endif /* GST_DISABLE_GST_DEBUG */
 }
 
