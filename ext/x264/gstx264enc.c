@@ -1228,6 +1228,10 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   gst_type_mark_as_plugin_api (GST_X264_ENC_TUNE_TYPE, 0);
 }
 
+/* *INDENT-OFF* */
+G_GNUC_PRINTF (3, 0)
+/* *INDENT-ON* */
+
 static void
 gst_x264_enc_log_callback (gpointer private, gint level, const char *format,
     va_list args)
@@ -1235,6 +1239,7 @@ gst_x264_enc_log_callback (gpointer private, gint level, const char *format,
 #ifndef GST_DISABLE_GST_DEBUG
   GstDebugLevel gst_level;
   GObject *object = (GObject *) private;
+  gchar *formatted;
 
   switch (level) {
     case X264_LOG_NONE:
@@ -1258,8 +1263,15 @@ gst_x264_enc_log_callback (gpointer private, gint level, const char *format,
   if (G_LIKELY (gst_level > _gst_debug_min))
     return;
 
-  gst_debug_log_valist (GST_CAT_DEFAULT, gst_level, __FILE__, GST_FUNCTION,
-      __LINE__, object, format, args);
+  if (G_LIKELY (gst_level > gst_debug_category_get_threshold (GST_CAT_DEFAULT)))
+    return;
+
+  formatted = g_strdup_vprintf (format, args);
+  g_strchomp (formatted);
+
+  GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, gst_level, object, "%s", formatted);
+
+  g_free (formatted);
 #endif /* GST_DISABLE_GST_DEBUG */
 }
 
