@@ -222,8 +222,6 @@ gst_x264_enc_add_x264_chroma_format (GstStructure * s,
   if (vtable_8bit) {
     gint chroma_format = *vtable_8bit->x264_chroma_format;
 
-    GST_INFO ("8-bit depth supported");
-
     if ((chroma_format == 0 || chroma_format == X264_CSP_I444) && allow_444) {
       g_value_set_string (&fmt, "Y444");
       gst_value_list_append_value (&fmts, &fmt);
@@ -246,8 +244,6 @@ gst_x264_enc_add_x264_chroma_format (GstStructure * s,
 
   if (vtable_10bit) {
     gint chroma_format = *vtable_10bit->x264_chroma_format;
-
-    GST_INFO ("10-bit depth supported");
 
     if ((chroma_format == 0 || chroma_format == X264_CSP_I444) && allow_444) {
       if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
@@ -295,8 +291,10 @@ load_x264_libraries (void)
 {
   if (*default_vtable.x264_bit_depth == 8) {
     vtable_8bit = &default_vtable;
+    GST_INFO ("8-bit depth supported");
   } else if (*default_vtable.x264_bit_depth == 10) {
     vtable_10bit = &default_vtable;
+    GST_INFO ("10-bit depth supported");
   }
 #ifdef HAVE_X264_ADDITIONAL_LIBRARIES
   {
@@ -308,8 +306,10 @@ load_x264_libraries (void)
 
       if (vtable) {
         if (!vtable_8bit && *vtable->x264_bit_depth == 8) {
+          GST_INFO ("8-bit depth support loaded from %s", *p);
           vtable_8bit = vtable;
         } else if (!vtable_10bit && *vtable->x264_bit_depth == 10) {
+          GST_INFO ("10-bit depth support loaded from %s", *p);
           vtable_10bit = vtable;
         } else {
           unload_x264 (vtable);
@@ -334,11 +334,14 @@ static gboolean
 load_x264_libraries (void)
 {
 #if X264_BIT_DEPTH == 0         /* all */
+  GST_INFO ("8-bit depth and 10-bit depth supported");
   vtable_8bit = &default_vtable;
   vtable_10bit = &default_vtable;
 #elif X264_BIT_DEPTH == 8
+  GST_INFO ("Only 8-bit depth supported");
   vtable_8bit = &default_vtable;
 #elif X264_BIT_DEPTH == 10
+  GST_INFO ("Only 10-bit depth supported");
   vtable_10bit = &default_vtable;
 #else
 #error "unexpected X264_BIT_DEPTH value"
