@@ -67,6 +67,26 @@ typedef struct _MqStreamBuf
   GstClockTime duration;
 } MqStreamBuf;
 
+typedef struct {
+  /* For the very first GOP if it was created from a GAP event */
+  gboolean from_gap;
+
+  /* Minimum start time (PTS or DTS) of the GOP */
+  GstClockTimeDiff start_time;
+  /* Start time (PTS) of the GOP */
+  GstClockTimeDiff start_time_pts;
+  /* Minimum start timecode of the GOP */
+  GstVideoTimeCode *start_tc;
+
+  /* Number of bytes we've collected into the GOP */
+  guint64 total_bytes;
+  /* Number of bytes from the reference context
+   * that we've collected into the GOP */
+  guint64 reference_bytes;
+
+  gboolean sent_fku;
+} InputGop;
+
 typedef struct _MqStreamCtx
 {
   GstSplitMuxSink *splitmux;
@@ -146,6 +166,7 @@ struct _GstSplitMuxSink
 
   SplitMuxInputState input_state;
   GstClockTimeDiff max_in_running_time;
+  GstClockTimeDiff max_in_running_time_dts;
 
   /* Number of bytes sent to the
    * current fragment */
@@ -154,20 +175,6 @@ struct _GstSplitMuxSink
    * stream in this fragment */
   guint64 fragment_reference_bytes;
 
-  /* Number of bytes we've collected into
-   * the GOP that's being collected */
-  guint64 gop_total_bytes;
-  /* Number of bytes from the reference context
-   * that we've collected into the current GOP */
-  guint64 gop_reference_bytes;
-
-  /* Number of bytes we've collected into
-   * the next GOP that's being collected */
-  guint64 next_gop_total_bytes;
-  /* Number of bytes from the reference context
-   * that we've collected into the next GOP */
-  guint64 next_gop_reference_bytes;
-
   /* Minimum start time (PTS or DTS) of the current fragment */
   GstClockTimeDiff fragment_start_time;
   /* Start time (PTS) of the current fragment */
@@ -175,26 +182,8 @@ struct _GstSplitMuxSink
   /* Minimum start timecode of the current fragment */
   GstVideoTimeCode *fragment_start_tc;
 
-  /* Current GOP is the oldest GOP that is currently queued, i.e. the one that
-   * would be drained out next */
-
-  /* Minimum start time (PTS or DTS) of the current GOP */
-  GstClockTimeDiff gop_start_time;
-  /* Start time (PTS) of the next GOP */
-  GstClockTimeDiff gop_start_time_pts;
-  /* Minimum start timecode of the current GOP */
-  GstVideoTimeCode *gop_start_tc;
-
-  /* Next GOP is the next GOP that comes after the current GOP. Only its
-   * start is queued before draining the current GOP to accurately determine
-   * the end time of the current GOP. */
-
-  /* Minimum start time (PTS or DTS) of the next GOP */
-  GstClockTimeDiff next_gop_start_time;
-  /* Start time (PTS) of the current GOP */
-  GstClockTimeDiff next_gop_start_time_pts;
-  /* Minimum start timecode of the next GOP */
-  GstVideoTimeCode *next_gop_start_tc;
+  /* Oldest GOP at head, newest GOP at tail */
+  GQueue pending_input_gops;
 
   /* expected running time of next fragment in timecode mode */
   GstClockTime next_fragment_start_tc_time;
