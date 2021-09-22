@@ -97,7 +97,11 @@ if get_option('default_library') == 'shared'
 endif
 
 subdir('gi')
-subdir('plugin')
+if get_option('default_library') != 'static'
+  subdir('plugin')
+else
+  warning('Python plugin not supported with `static` builds yet.')
+endif
 if not get_option('tests').disabled()
   subdir('testsuite')
 endif
