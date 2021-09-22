@@ -150,7 +150,7 @@ if __name__ == "__main__":
     tar = tarfile.open(outname, 'w:xz')
     tar.add(files, release_name, filter=exclude_filter)
     for license in ['LICENSE.BSD', 'LICENSE.CC-BY-SA-4.0', 'LICENSE.LGPL-2.1', 'LICENSE.MIT', 'LICENSE.OPL']:
-        tar.add(license, os.path.join(release_name, license))
+        tar.add(os.path.join(HERE, '..', license), os.path.join(release_name, license))
     os.chdir(os.path.dirname(readme))
     tar.add(os.path.basename(readme), os.path.join(release_name, os.path.basename(readme)))
     tar.close()
