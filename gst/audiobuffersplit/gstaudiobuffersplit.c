@@ -663,13 +663,6 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
 }
 
 static GstBuffer *
-gst_audio_buffer_split_clip_buffer (GstAudioBufferSplit * self,
-    GstBuffer * buffer, const GstSegment * segment, gint rate, gint bpf)
-{
-  return gst_audio_buffer_clip (buffer, segment, rate, bpf);
-}
-
-static GstBuffer *
 gst_audio_buffer_split_clip_buffer_start_for_gapless (GstAudioBufferSplit *
     self, GstBuffer * buffer, gint rate, gint bpf)
 {
@@ -737,9 +730,7 @@ gst_audio_buffer_split_sink_chain (GstPad * pad, GstObject * parent,
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  buffer =
-      gst_audio_buffer_split_clip_buffer (self, buffer, &self->in_segment, rate,
-      bpf);
+  buffer = gst_audio_buffer_clip (buffer, &self->in_segment, rate, bpf);
   if (!buffer)
     return GST_FLOW_OK;
 
