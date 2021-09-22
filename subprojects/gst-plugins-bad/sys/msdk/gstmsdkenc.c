@@ -736,11 +736,13 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   }
 
   /* If color properties are available from upstream, set it and pass to MediaSDK here.
-   * MJPEG is excluded from color config below as it is different from other codecs in
-   * mfxInfoMFX struct.
+   * MJPEG and VP9 are excluded as MediaSDK does not support to handle video param
+   * extbuff with buffer id equals to MFX_EXTBUFF_VIDEO_SIGNAL_INFO.
    */
-  if (thiz->param.mfx.CodecId != MFX_CODEC_JPEG && (info->colorimetry.primaries
-          || info->colorimetry.transfer || info->colorimetry.matrix)) {
+  if (thiz->param.mfx.CodecId != MFX_CODEC_JPEG &&
+      thiz->param.mfx.CodecId != MFX_CODEC_VP9 &&
+      (info->colorimetry.primaries || info->colorimetry.transfer
+          || info->colorimetry.matrix)) {
     memset (&ext_vsi, 0, sizeof (ext_vsi));
     ext_vsi.Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO;
     ext_vsi.Header.BufferSz = sizeof (ext_vsi);
