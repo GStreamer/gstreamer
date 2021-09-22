@@ -234,6 +234,98 @@ no_caps:
   }
 }
 
+static void
+gst_rtp_h263p_depay_decorate_output_buffer (GstRtpH263PDepay * rtph263pdepay,
+    GstBuffer * outbuf)
+{
+  gboolean is_intra = FALSE;
+  GstBitReader bits;
+  guint8 pic_hdr[16];
+  gsize pic_hdr_len = 0;
+  guint32 psc, ptype, mpptype;
+  guint8 ufep;
+
+  pic_hdr_len = gst_buffer_extract (outbuf, 0, pic_hdr, sizeof (pic_hdr));
+
+  GST_MEMDUMP_OBJECT (rtph263pdepay, "pic_hdr", pic_hdr, pic_hdr_len);
+
+#if 0
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_MEMDUMP) {
+    gchar bit_str[1 + sizeof (pic_hdr) * 8] = { 0, };
+    guint8 b;
+
+    gst_bit_reader_init (&bits, pic_hdr, pic_hdr_len);
+    while ((gst_bit_reader_get_bits_uint8 (&bits, &b, 1))) {
+      g_strlcat (bit_str, b ? "1" : "0", sizeof (bit_str));
+    }
+    GST_TRACE_OBJECT (rtph263pdepay, "pic_hdr bits: %s", bit_str);
+  }
+#endif
+
+  gst_bit_reader_init (&bits, pic_hdr, pic_hdr_len);
+
+  /* PSC - Picture Start Code: 22 bits: 0000 0000 0000 0000 10 0000 */
+  if (!gst_bit_reader_get_bits_uint32 (&bits, &psc, 22) || psc != 0x20) {
+    GST_WARNING_OBJECT (rtph263pdepay, "No picture start code");
+    return;
+  }
+
+  /* TR - Temporal Reference: 8 bits */
+  if (!gst_bit_reader_skip (&bits, 8)) {
+    GST_WARNING_OBJECT (rtph263pdepay, "Short picture header: no TR");
+    return;
+  }
+
+  /* PTYPE (first 8 bits) */
+  if (!gst_bit_reader_get_bits_uint32 (&bits, &ptype, 8) || (ptype >> 6) != 2) {
+    GST_WARNING_OBJECT (rtph263pdepay, "Short picture header: no PTYPE");
+    return;
+  }
+
+  /* PTYPE: check for extended PTYPE (bits 6-8 = 111) */
+  if ((ptype & 7) != 7) {
+    /* No extended PTYPE, read remaining 5 bits */
+    if (!gst_bit_reader_get_bits_uint32 (&bits, &ptype, 5)) {
+      GST_WARNING_OBJECT (rtph263pdepay, "Short picture header: no PTYPE");
+      return;
+    }
+    is_intra = (ptype & 0x10) == 0;
+    goto done;
+  }
+
+  /* UFEP - Update Full Extended PTYPE */
+  ufep = 0;
+  if (!gst_bit_reader_get_bits_uint8 (&bits, &ufep, 3) || ufep > 1) {
+    GST_WARNING_OBJECT (rtph263pdepay, "Short picture header: no PLUSPTYPE, %d",
+        ufep);
+    return;
+  }
+
+  /* Skip optional part of PLUSPTYPE (OPPTYPE) */
+  if (ufep == 1 && !gst_bit_reader_skip (&bits, 18)) {
+    GST_WARNING_OBJECT (rtph263pdepay, "Short picture header: no OPPTYPE");
+    return;
+  }
+
+  /* Mandatory part of PLUSPTYPE (MPPTYPE) */
+  if (!gst_bit_reader_get_bits_uint32 (&bits, &mpptype, 9)
+      || (mpptype & 7) != 1) {
+    GST_WARNING_OBJECT (rtph263pdepay, "Short picture header: no MPPTYPE");
+    return;
+  }
+
+  is_intra = (mpptype >> 6) == 0;
+
+done:
+
+  if (is_intra) {
+    GST_LOG_OBJECT (rtph263pdepay, "I-frame");
+    GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+  } else {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
+}
+
 static GstBuffer *
 gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload,
     GstRTPBuffer * rtp)
@@ -335,6 +427,8 @@ gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload,
     }
 
     gst_rtp_drop_non_video_meta (rtph263pdepay, outbuf);
+
+    gst_rtp_h263p_depay_decorate_output_buffer (rtph263pdepay, outbuf);
 
     return outbuf;
   } else {
