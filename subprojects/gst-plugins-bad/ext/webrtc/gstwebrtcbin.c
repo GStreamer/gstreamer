@@ -7498,6 +7498,16 @@ _transport_free (GObject * object)
 static void
 gst_webrtc_bin_init (GstWebRTCBin * webrtc)
 {
+  /* Set SINK/SRC flags as webrtcbin can act as one depending on the
+   * SDP later. Without setting this here already, surrounding bins might not
+   * notice this and the pipeline configuration might become inconsistent,
+   * e.g. with regards to latency.
+   * See: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/737
+   */
+  gst_bin_set_suppressed_flags (GST_BIN_CAST (webrtc),
+      GST_ELEMENT_FLAG_SINK | GST_ELEMENT_FLAG_SOURCE);
+  GST_OBJECT_FLAG_SET (webrtc, GST_ELEMENT_FLAG_SINK | GST_ELEMENT_FLAG_SOURCE);
+
   webrtc->priv = gst_webrtc_bin_get_instance_private (webrtc);
   g_mutex_init (PC_GET_LOCK (webrtc));
   g_cond_init (PC_GET_COND (webrtc));
