@@ -4,7 +4,7 @@ extra_launch_dep = []
 extra_launch_arg = []
 
 if gst_parse
-  if host_system == 'windows'
+  if host_system == 'windows' and not building_for_uwp
     winmm_lib = cc.find_library('winmm', required: false)
     if winmm_lib.found() and cc.has_header('timeapi.h')
       extra_launch_dep += [winmm_lib]
