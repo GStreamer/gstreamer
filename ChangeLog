@@ -1,3 +1,70 @@
+=== release 1.19.2 ===
+
+2021-09-23 01:35:17 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.19.2
+
+2021-09-18 11:51:03 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add support for GBRA_10LE/BE
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/142>
+
+2021-08-06 17:41:19 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavdemux.c:
+	  avdemux: add xwma support
+	  Add xwma tested with the media
+	  b8edfb1e970ed7892f35b34a1ef36fee_wma.wav
+	  from this ticket:
+	  http://trac.ffmpeg.org/ticket/9358
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/138>
+
+2020-01-22 12:41:27 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavviddec.c:
+	  avviddec:  Enable subframe decoding for H.264
+	  Enable sending NAL units to the decoder without having to first
+	  group them in a frame (an AU).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/66>
+
+2020-01-22 12:39:47 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Split allocation tracking from decode-only-ness
+	  When doing subframe decoding, handle_frame will be called multiple
+	  times, so the DECODE_ONLY flag gets re-set when it shouldn't. Instead,
+	  let's create our own flag to track this.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/66>
+
+2021-06-21 08:33:59 +0000  Corentin Damman <c.damman@intopix.com>
+
+	* COPYING:
+	  Update COPYING
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/135>
+
+2021-06-03 06:01:30 -0400  Doug Nazar <nazard@nazar.ca>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Fix size of linesize parameter
+	  Although avcodec_align_dimensions2() only copies 4 ints, it expects
+	  a buffer of at least AV_NUM_DATA_POINTERS (8) ints.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-libav/-/merge_requests/134>
+
+2021-06-01 15:29:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.19.1 ===
 
 2021-06-01 00:14:52 +0100  Tim-Philipp Müller <tim@centricular.com>
