@@ -1,3 +1,73 @@
+=== release 1.19.2 ===
+
+2021-09-23 01:34:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.19.2
+
+2021-09-21 15:05:58 +0200  Jan Alexander Steffens (heftig) <jan.steffens@ltnglobal.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Strip trailing whitespace from x264's log messages
+	  x264 has linebreaks at the end of its log messages that we should
+	  ignore.
+	  Add G_GNUC_PRINTF to the callback to make sure GCC lets us forward the
+	  format string to another function marked as printf (g_strdup_vprintf)
+	  without triggering -Wformat-nonliteral.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/85>
+
+2021-09-21 14:57:29 +0200  Jan Alexander Steffens (heftig) <jan.steffens@ltnglobal.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Add the func/line info to the log callback
+	  It looks awkward when it's missing. At least point us at the callback
+	  function.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/85>
+
+2021-09-21 14:56:23 +0200  Jan Alexander Steffens (heftig) <jan.steffens@ltnglobal.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Reduce log spam about bit depth support
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/85>
+
+2021-07-28 11:49:16 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: drop B-frame on open gop
+	  Enhance open gop detection to drop B-frame which are invalid
+	  before the first reference frame.
+	  In stream such
+	  gst-integration-testsuites/medias/defaults/mxf/op2b-mpeg2-wave_hd.mxf,
+	  the two first frames must be dropped as we detect an open GOP situation
+	  but in another media, such as http://col.la/1920X1080IXDCAMEX5MIN, the
+	  first frames should not be dropped as we are in a closed GOP situation.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/84>
+
+2021-05-22 01:53:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/x264/gstencoderbitrateprofilemanager.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/realmedia/rtspreal.c:
+	* meson.build:
+	  Use g_memdup2() where available and add fallback for older GLib versions
+	  - x264 encoder bitrate profile manager: alloc size is based
+	  on existing allocation
+	  - asfdemux: change length var to 64-bit and check for G_MAXUINT
+	  - realmedia: opaque_data_len is read from 32 bits and then
+	  only subtracted upon.
+	  g_memdup() is deprecated since GLib 2.68 and we want to avoid
+	  deprecation warnings with recent versions of GLib.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/-/merge_requests/83>
+
+2021-06-01 15:28:40 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.19.1 ===
 
 2021-06-01 00:12:09 +0100  Tim-Philipp Müller <tim@centricular.com>
