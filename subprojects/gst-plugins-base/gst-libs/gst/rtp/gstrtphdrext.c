@@ -43,10 +43,15 @@ GST_DEBUG_CATEGORY_STATIC (rtphderext_debug);
 
 #define MAX_RTP_EXT_ID 256
 
+#define GST_RTP_HEADER_EXTENSION_DIRECTION_DEFAULT      \
+  (GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV |        \
+      GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED)
+
 typedef struct
 {
   guint ext_id;
   gboolean wants_update_non_rtp_src_caps;
+  GstRTPHeaderExtensionDirection direction;
 } GstRTPHeaderExtensionPrivate;
 
 /**
@@ -193,6 +198,7 @@ gst_rtp_header_extension_init (GstRTPHeaderExtension * ext)
       gst_rtp_header_extension_get_instance_private (ext);
 
   priv->ext_id = G_MAXUINT32;
+  priv->direction = GST_RTP_HEADER_EXTENSION_DIRECTION_DEFAULT;
 }
 
 /**
@@ -735,4 +741,53 @@ gst_rtp_header_extension_create_from_uri (const gchar * uri)
   }
 
   return NULL;
+}
+
+/**
+ * gst_rtp_header_extension_set_direction:
+ * @ext: the #GstRTPHeaderExtension
+ * @direction: The direction
+ *
+ * Set the direction that this header extension should be used in.
+ * If #GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED is included, the
+ * direction will not be included in the caps (as it shouldn't be in the
+ * extmap line in the SDP).
+ *
+ * Since: 1.20
+ */
+
+void
+gst_rtp_header_extension_set_direction (GstRTPHeaderExtension * ext,
+    GstRTPHeaderExtensionDirection direction)
+{
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
+
+  g_return_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext));
+  g_return_if_fail (direction <= GST_RTP_HEADER_EXTENSION_DIRECTION_DEFAULT);
+
+  priv->direction = direction;
+}
+
+/**
+ * gst_rtp_header_extension_get_direction:
+ * @ext: the #GstRTPHeaderExtension
+ *
+ * Retrieve the direction
+ *
+ * Returns: The direction
+ *
+ * Since: 1.20
+ */
+
+GstRTPHeaderExtensionDirection
+gst_rtp_header_extension_get_direction (GstRTPHeaderExtension * ext)
+{
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
+
+  g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext),
+      GST_RTP_HEADER_EXTENSION_DIRECTION_DEFAULT);
+
+  return priv->direction;
 }

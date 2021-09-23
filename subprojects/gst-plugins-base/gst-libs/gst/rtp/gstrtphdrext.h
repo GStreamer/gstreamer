@@ -104,6 +104,33 @@ typedef enum /*< underscore_name=gst_rtp_header_extension_flags >*/
 } GstRTPHeaderExtensionFlags;
 
 /**
+ * GstRTPHeaderExtensionDirection:
+ * @GST_RTP_HEADER_EXTENSION_DIRECTION_INACTIVE: Neither send nor
+ * receive RTP Header Extensions
+ * @GST_RTP_HEADER_EXTENSION_DIRECTION_SENDONLY: Only send RTP Header
+ * Extensions @GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY: Only
+ * receive RTP Header Extensions
+ * @GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV: Send and receive RTP
+ * Header Extensions ext
+ * @GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED: RTP header extension
+ * direction is inherited from the stream
+ *
+ * Direction to which to apply the RTP Header Extension
+ *
+ * Since: 1.20
+ */
+typedef enum /*< underscore_name=gst_rtp_header_extension_direction >*/
+{
+  GST_RTP_HEADER_EXTENSION_DIRECTION_INACTIVE = 0,
+  GST_RTP_HEADER_EXTENSION_DIRECTION_SENDONLY = (1 << 0),
+  GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY = (1 << 1),
+  GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV = (
+    GST_RTP_HEADER_EXTENSION_DIRECTION_SENDONLY |
+    GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY),
+  GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED = (1 << 2)
+} GstRTPHeaderExtensionDirection;
+
+/**
  * GstRTPHeaderExtension:
  * @parent: the parent #GObject
  * @ext_id: the configured extension id
@@ -247,6 +274,12 @@ GstRTPHeaderExtension * gst_rtp_header_extension_create_from_uri (const gchar * 
 
 GST_RTP_API
 gchar *	            gst_rtp_header_extension_get_sdp_caps_field_name (GstRTPHeaderExtension * ext);
+
+GST_RTP_API
+void	            gst_rtp_header_extension_set_direction (GstRTPHeaderExtension * ext,
+                                                            GstRTPHeaderExtensionDirection direction);
+GST_RTP_API
+GstRTPHeaderExtensionDirection	gst_rtp_header_extension_get_direction (GstRTPHeaderExtension * ext);
 
 G_END_DECLS
 
