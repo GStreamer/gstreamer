@@ -1,3 +1,43 @@
+=== release 1.19.2 ===
+
+2021-09-23 01:35:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.19.2
+
+2021-07-05 11:54:18 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  Protection against early RTCP packets.
+	  When receiving RTCP packets early the funnel is not ready yet and
+	  GST_FLOW_FLUSHING will be returned when pushing data to it's srcpad.
+	  This causes the thread that handle RTCP packets to go to pause mode.
+	  Since this thread is in pause mode there will be no further callbacks to
+	  handle keep-alive for incoming RTCP packets. This will make the session
+	  time out if the client is not using another keep-alive mechanism.
+	  Change-Id: Idb29db05f59c06423fa693a2aeeacbe3a1883fc5
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/211>
+
+2021-06-21 08:34:35 +0000  Corentin Damman <c.damman@intopix.com>
+
+	* COPYING:
+	* COPYING.LIB:
+	  Update COPYING.LIB, COPYING files
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/210>
+
+2021-06-01 15:29:07 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.19.1 ===
 
 2021-06-01 00:15:08 +0100  Tim-Philipp Müller <tim@centricular.com>
@@ -5,6 +45,7 @@
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-rtsp-server.doap:
 	* meson.build:
 	  Release 1.19.1

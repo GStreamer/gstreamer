@@ -1,15 +1,15 @@
 GStreamer 1.20 Release Notes
 
 GStreamer 1.20 has not been released yet. It is scheduled for release
-around July 2021.
+around October/November 2021.
 
 1.19.x is the unstable development version that is being developed in
-the git master branch and which will eventually result in 1.20, and
-1.19.1 is the current development release in that series
+the git main branch and which will eventually result in 1.20, and 1.19.2
+is the current development release in that series
 
-It is expected that feature freeze will be around June/July 2021,
-followed by several 1.19 pre-releases and the new 1.20 stable release
-around July 2021.
+It is expected that feature freeze will be in early October 2021,
+followed by one or two 1.19.9x pre-releases and the new 1.20 stable
+release around October/November 2021.
 
 1.20 will be backwards-compatible to the stable 1.18, 1.16, 1.14, 1.12,
 1.10, 1.8, 1.6,, 1.4, 1.2 and 1.0 release series.
@@ -17,7 +17,7 @@ around July 2021.
 See https://gstreamer.freedesktop.org/releases/1.20/ for the latest
 version of this document.
 
-Last updated: Sunday 30 May 2021, 16:00 UTC (log)
+Last updated: Wednesday 22 September 2021, 18:00 UTC (log)
 
 Introduction
 
@@ -247,6 +247,10 @@ Documentation improvements
 Possibly Breaking Changes
 
 -   this section will be filled in in due course
+-   MPEG-TS SCTE-35 API changes (FIXME: flesh out)
+-   gst_parse_launch() and friends now error out on non-existing
+    properties on top-level bins where they would silently fail and
+    ignore those before.
 
 Known Issues
 
@@ -274,16 +278,15 @@ the git 1.20 branch, which will be a stable branch.
 
 1.20.0
 
-1.20.0 is scheduled to be released around July 2021.
+1.20.0 is scheduled to be released around October/November 2021.
 
 Schedule for 1.22
 
 Our next major feature release will be 1.22, and 1.21 will be the
 unstable development version leading up to the stable 1.22 release. The
-development of 1.21/1.22 will happen in the git master branch.
+development of 1.21/1.22 will happen in the git main branch.
 
-The plan for the 1.22 development cycle is yet to be confirmed, but it
-is hoped that feature freeze will take place some time in December 2021.
+The plan for the 1.22 development cycle is yet to be confirmed.
 
 1.22 will be backwards-compatible to the stable 1.20, 1.18, 1.16, 1.14,
 1.12, 1.10, 1.8, 1.6, 1.4, 1.2 and 1.0 release series.

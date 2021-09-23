@@ -321,7 +321,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "GStreamer/1.19.1.1",
+                        "default": "GStreamer/1.19.2",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
