@@ -119,36 +119,14 @@ gst_rtp_header_extension_rfc6464_set_attributes_from_caps (GstRTPHeaderExtension
 {
   gchar *field_name = gst_rtp_header_extension_get_sdp_caps_field_name (ext);
   GstStructure *s = gst_caps_get_structure (caps, 0);
-  const gchar *ext_uri;
   const GValue *arr;
 
-  if (!field_name)
-    return FALSE;
+  arr = gst_structure_get_value (s, field_name);
+  g_free (field_name);
 
-  if ((ext_uri = gst_structure_get_string (s, field_name))) {
-    if (g_strcmp0 (ext_uri, gst_rtp_header_extension_get_uri (ext)) != 0) {
-      /* incompatible extension uri for this instance */
-      goto error;
-    }
-    set_vad (ext, DEFAULT_VAD);
-  } else if ((arr = gst_structure_get_value (s, field_name))
-      && GST_VALUE_HOLDS_ARRAY (arr)
-      && gst_value_array_get_size (arr) == 3) {
-    const GValue *val;
-    const gchar *vad_attr;
-
-    val = gst_value_array_get_value (arr, 1);
-    if (!G_VALUE_HOLDS_STRING (val))
-      goto error;
-    if (g_strcmp0 (g_value_get_string (val),
-            gst_rtp_header_extension_get_uri (ext)) != 0)
-      goto error;
-
-    val = gst_value_array_get_value (arr, 2);
-    if (!G_VALUE_HOLDS_STRING (val))
-      goto error;
-
-    vad_attr = g_value_get_string (val);
+  if (GST_VALUE_HOLDS_ARRAY (arr)) {
+    const GValue *val = gst_value_array_get_value (arr, 2);
+    const gchar *vad_attr = g_value_get_string (val);
 
     if (g_str_equal (vad_attr, "vad=on"))
       set_vad (ext, TRUE);
@@ -156,19 +134,11 @@ gst_rtp_header_extension_rfc6464_set_attributes_from_caps (GstRTPHeaderExtension
       set_vad (ext, FALSE);
     else {
       GST_WARNING_OBJECT (ext, "Invalid attribute: %s", vad_attr);
-      goto error;
+      return FALSE;
     }
-  } else {
-    /* unknown caps format */
-    goto error;
   }
 
-  g_free (field_name);
   return TRUE;
-
-error:
-  g_free (field_name);
-  return FALSE;
 }
 
 static gboolean

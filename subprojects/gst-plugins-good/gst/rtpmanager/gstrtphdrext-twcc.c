@@ -104,8 +104,6 @@ gst_rtp_header_extension_twcc_class_init (GstRTPHeaderExtensionTWCCClass *
   rtp_hdr_class->get_max_size = gst_rtp_header_extension_twcc_get_max_size;
   rtp_hdr_class->write = gst_rtp_header_extension_twcc_write;
   rtp_hdr_class->read = gst_rtp_header_extension_twcc_read;
-  rtp_hdr_class->set_attributes_from_caps =
-      gst_rtp_header_extension_set_attributes_from_caps_simple_sdp;
   rtp_hdr_class->set_caps_from_attributes =
       gst_rtp_header_extension_set_caps_from_attributes_simple_sdp;
 

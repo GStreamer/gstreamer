@@ -399,21 +399,55 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
   GstRTPHeaderExtensionClass *klass;
   GstStructure *structure;
   gchar *field_name;
+  const GValue *val;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
   g_return_val_if_fail (GST_IS_RTP_HEADER_EXTENSION (ext), FALSE);
   g_return_val_if_fail (priv->ext_id <= MAX_RTP_EXT_ID, FALSE);
   klass = GST_RTP_HEADER_EXTENSION_GET_CLASS (ext);
-  g_return_val_if_fail (klass->set_attributes_from_caps != NULL, FALSE);
 
   structure = gst_caps_get_structure (caps, 0);
   g_return_val_if_fail (structure != NULL, FALSE);
   field_name = g_strdup_printf ("extmap-%u", priv->ext_id);
   g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
+
+  val = gst_structure_get_value (structure, field_name);
   g_free (field_name);
 
-  return klass->set_attributes_from_caps (ext, caps);
+  if (G_VALUE_HOLDS_STRING (val)) {
+    const gchar *ext_uri = g_value_get_string (val);
+
+    if (g_strcmp0 (ext_uri, gst_rtp_header_extension_get_uri (ext)) != 0) {
+      /* incompatible extension uri for this instance */
+      goto error;
+    }
+  } else if (GST_VALUE_HOLDS_ARRAY (val)
+      && gst_value_array_get_size (val) == 3) {
+    const GValue *inner_val;
+
+    inner_val = gst_value_array_get_value (val, 1);
+    if (!G_VALUE_HOLDS_STRING (inner_val))
+      goto error;
+    if (g_strcmp0 (g_value_get_string (inner_val),
+            gst_rtp_header_extension_get_uri (ext)) != 0)
+      goto error;
+
+    inner_val = gst_value_array_get_value (val, 2);
+    if (!G_VALUE_HOLDS_STRING (inner_val))
+      goto error;
+  } else {
+    /* unknown caps format */
+    goto error;
+  }
+
+  if (klass->set_attributes_from_caps)
+    return klass->set_attributes_from_caps (ext, caps);
+  else
+    return TRUE;
+
+error:
+  return FALSE;
 }
 
 /**
@@ -584,42 +618,6 @@ gst_rtp_header_extension_get_sdp_caps_field_name (GstRTPHeaderExtension * ext)
   g_return_val_if_fail (priv->ext_id <= MAX_RTP_EXT_ID, NULL);
 
   return g_strdup_printf ("extmap-%u", priv->ext_id);
-}
-
-/**
- * gst_rtp_header_extension_set_attributes_from_caps_simple_sdp:
- * @ext: the #GstRTPHeaderExtension
- * @caps: #GstCaps to read attributes from
- *
- * Helper implementation for GstRTPExtensionClass::set_attributes_from_caps
- * that retrieves the configured extension id and checks that the
- * corresponding field in the sdp caps is configured for this extension uri.
- * Requires that the extension does not have any attributes or direction
- * advertised in the caps.
- *
- * Returns: whether the attributes in the @caps could be set on @ext successfully
- *
- * Since: 1.20
- */
-gboolean
-    gst_rtp_header_extension_set_attributes_from_caps_simple_sdp
-    (GstRTPHeaderExtension * ext, const GstCaps * caps) {
-  gchar *field_name = gst_rtp_header_extension_get_sdp_caps_field_name (ext);
-  GstStructure *s = gst_caps_get_structure (caps, 0);
-  const gchar *ext_uri;
-
-  if (!(ext_uri = gst_structure_get_string (s, field_name)))
-    goto error;
-
-  if (g_strcmp0 (ext_uri, gst_rtp_header_extension_get_uri (ext)) != 0)
-    goto error;
-
-  g_free (field_name);
-  return TRUE;
-
-error:
-  g_free (field_name);
-  return FALSE;
 }
 
 /**

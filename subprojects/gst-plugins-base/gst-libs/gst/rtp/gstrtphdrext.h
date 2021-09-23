@@ -248,8 +248,6 @@ GstRTPHeaderExtension * gst_rtp_header_extension_create_from_uri (const gchar * 
 GST_RTP_API
 gchar *	            gst_rtp_header_extension_get_sdp_caps_field_name (GstRTPHeaderExtension * ext);
 GST_RTP_API
-gboolean           gst_rtp_header_extension_set_attributes_from_caps_simple_sdp (GstRTPHeaderExtension * ext, const GstCaps *caps);
-GST_RTP_API
 gboolean           gst_rtp_header_extension_set_caps_from_attributes_simple_sdp (GstRTPHeaderExtension * ext, GstCaps *caps);
 
 G_END_DECLS
