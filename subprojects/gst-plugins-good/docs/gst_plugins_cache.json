@@ -7789,12 +7789,12 @@
                 "long-name": "Still frame stream generator",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(ANY):\n",
+                        "caps": "video/x-raw(ANY):\n\nvideo/x-bayer(ANY):\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(ANY):\n",
+                        "caps": "video/x-raw(ANY):\n\nvideo/x-bayer(ANY):\n",
                         "direction": "src",
                         "presence": "always"
                     }
