@@ -1,3 +1,59 @@
+=== release 1.19.2 ===
+
+2021-09-23 01:36:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-devtools.doap:
+	* meson.build:
+	  Release 1.19.2
+
+2021-09-13 18:24:18 +0200  Vivienne Watermeier <vwatermeier@igalia.com>
+
+	* validate/gst/validate/validate.c:
+	  validate: fix relative paths for test files
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/256>
+
+2021-09-10 17:11:29 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-override-registry.c:
+	  validate: Fix double freeing of GstStructure
+	  gst_validate_get_config is transfer-container only
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/255>
+
+2021-08-20 09:22:28 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate-utils: Only modify structure fields that really need updates
+	  This avoids memory corruption in users of that structure which
+	  were (rightfullly) assuming static fields (such as name) wouldn't
+	  change. Without this, they would be using strings which will have been freed in
+	  the meantime.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/252>
+
+2021-07-15 14:42:51 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  validate-media-descriptor: Don't check segment position field
+	  The position field of GstSegment is meant for private usage within
+	  elements. Don't compare the values of it when doing media-check.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/251>
+
+2021-06-08 12:28:49 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* validate/gst/validate/meson.build:
+	  validate: use `extract_objects` to avoid rebuilding all files for the tracer
+	  And add the tracer to the plugins list so it can be used in our
+	  uninstalled environment.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-devtools/-/merge_requests/250>
+
+2021-06-01 15:29:21 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.19.1 ===
 
 2021-06-01 00:16:57 +0100  Tim-Philipp Müller <tim@centricular.com>
