@@ -650,11 +650,52 @@ static gboolean
 gst_rtp_header_extension_set_caps_from_attributes_default (GstRTPHeaderExtension
     * ext, GstCaps * caps)
 {
+  GstRTPHeaderExtensionPrivate *priv =
+      gst_rtp_header_extension_get_instance_private (ext);
   gchar *field_name = gst_rtp_header_extension_get_sdp_caps_field_name (ext);
   GstStructure *s = gst_caps_get_structure (caps, 0);
 
-  gst_structure_set (s, field_name, G_TYPE_STRING,
-      gst_rtp_header_extension_get_uri (ext), NULL);
+  if (priv->direction & GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED) {
+    gst_structure_set (s, field_name, G_TYPE_STRING,
+        gst_rtp_header_extension_get_uri (ext), NULL);
+  } else {
+    GValue arr = G_VALUE_INIT;
+    GValue val = G_VALUE_INIT;
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+    g_value_init (&val, G_TYPE_STRING);
+
+
+    if (priv->direction & GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED) {
+      g_value_set_string (&val, "");
+    } else {
+      if ((priv->direction & GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV) ==
+          GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV)
+        g_value_set_string (&val, "sendrecv");
+      else if (priv->direction & GST_RTP_HEADER_EXTENSION_DIRECTION_SENDONLY)
+        g_value_set_string (&val, "sendonly");
+      else if (priv->direction & GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY)
+        g_value_set_string (&val, "recvonly");
+      else
+        g_value_set_string (&val, "inactive");
+    }
+    gst_value_array_append_value (&arr, &val);
+
+    /* uri */
+    g_value_set_string (&val, gst_rtp_header_extension_get_uri (ext));
+    gst_value_array_append_value (&arr, &val);
+
+    /* attributes */
+    g_value_set_string (&val, "");
+    gst_value_array_append_value (&arr, &val);
+
+    gst_structure_set_value (s, field_name, &arr);
+
+    GST_DEBUG_OBJECT (ext, "%" GST_PTR_FORMAT, caps);
+
+    g_value_unset (&val);
+    g_value_unset (&arr);
+  }
 
   g_free (field_name);
   return TRUE;
