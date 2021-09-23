@@ -438,6 +438,26 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
       && gst_value_array_get_size (val) == 3) {
     const GValue *inner_val;
 
+    inner_val = gst_value_array_get_value (val, 0);
+    if (G_VALUE_HOLDS_STRING (inner_val)) {
+      const gchar *dir = g_value_get_string (inner_val);
+
+      if (!strcmp (dir, ""))
+        priv->direction = GST_RTP_HEADER_EXTENSION_DIRECTION_DEFAULT;
+      else if (!strcmp (dir, "sendrecv"))
+        priv->direction = GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV;
+      else if (!strcmp (dir, "sendonly"))
+        priv->direction = GST_RTP_HEADER_EXTENSION_DIRECTION_SENDONLY;
+      else if (!strcmp (dir, "recvonly"))
+        priv->direction = GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY;
+      else if (!strcmp (dir, "inactive"))
+        priv->direction = GST_RTP_HEADER_EXTENSION_DIRECTION_INACTIVE;
+      else
+        goto error;
+    } else {
+      goto error;
+    }
+
     inner_val = gst_value_array_get_value (val, 1);
     if (!G_VALUE_HOLDS_STRING (inner_val))
       goto error;
@@ -664,7 +684,6 @@ gst_rtp_header_extension_set_caps_from_attributes_default (GstRTPHeaderExtension
 
     g_value_init (&arr, GST_TYPE_ARRAY);
     g_value_init (&val, G_TYPE_STRING);
-
 
     if (priv->direction & GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED) {
       g_value_set_string (&val, "");
