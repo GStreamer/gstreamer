@@ -2,4 +2,4 @@
 directory=gst-editing-services
 url=https://gitlab.freedesktop.org/gstreamer/gst-editing-services.git
 push-url=git@gitlab.freedesktop.org:gstreamer/gst-editing-services.git
-revision=master
+revision=1.19.2
