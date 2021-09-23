@@ -1,3 +1,114 @@
+=== release 1.19.2 ===
+
+2021-09-23 01:35:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.19.2
+
+2021-08-26 15:06:53 +0800  Zhang Yuankun <yuankunx.zhang@intel.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapi: decoder: modify the condition to judge whether dma buffer is supported
+	  It seems "GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (decode)" will
+	  return false even if this platform support the mem_type dma buffer.
+	  And media-driver will return GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF2
+	  on Gen12(such as TGL).
+	  Without this patch, The command such as:
+	  gst-launch-1.0 videotestsrc num-buffers=100 ! video/x-raw, format=I420 ! \
+	  x264enc ! h264parse ! vaapih264dec ! video/x-raw\(memory:DMABuf\) ! fakesink
+	  will return not-negotiated.
+	  Signed-off-by: Zhang Yuankun <yuankunx.zhang@intel.com>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/437>
+
+2021-05-14 12:04:04 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst/vaapi/gstvaapivideocontext.c:
+	  Display: Add a property to export the VA display handle.
+	  Just like what we do in VA plugins. The display can be seen as a
+	  generic gst object and we can add a property to get the internal
+	  VA handle.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/435>
+
+2021-05-14 11:49:01 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  plugins: video memory: Add a GST_MAP_VAAPI flag to peek the surface.
+	  Just like what we do in VA plugins, the GST_MAP_VAAPI can directly
+	  peek the surface of the VA buffers. The old flag 0 just peek the
+	  surface proxy, which may not be convenient for the users who do not
+	  want to include our headers.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/435>
+
+2021-07-09 11:01:14 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapi.c:
+	* gst/vaapi/gstvaapidecode.c:
+	  Revert "vaapi: Demote vaapidecodebin to rank NONE."
+	  This reverts commit 7a25c5d4ec95aefeca6515ac023b23c5dd330194.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/436>
+
+2021-06-23 16:23:00 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  plugins: encode: fix a deadlock because of _drain()
+	  We call gst_vaapiencode_drain() in gst_vaapiencode_change_state(),
+	  whose context does not hold the stream lock of the encoder. The
+	  current gst_vaapiencode_drain inside unlock/lock pair adds a extra
+	  lock count to the stream lock of encoder and causes hang later.
+	  We just remove the gst_vaapiencode_drain() and expand its logic
+	  correctly according to the lock/unlock context.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/433>
+
+2021-06-29 15:09:13 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_av1.c:
+	  libs: decoder: av1: Clean the film_grain_info field.
+	  We need to clean all film_grain_info fields when the film grain
+	  feature is not enabled. It may have random data because the picture
+	  parameter buffer is not cleaned.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/434>
+
+2021-06-03 22:12:04 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_mpeg2.h:
+	  libs: encoder: mpeg2: Add highP level for 1080@50p/60p.
+	  The MPEG2 spec has amendment 3 to introduce a new level highP, which
+	  is used for 1080@50p/60p streams. We need to add this level to avoid
+	  encoding failure because of the level check.
+	  Fix: #306
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/432>
+
+2021-05-11 16:59:07 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  Decoder: H264: Add the support for frame packing arrangement SEI message.
+	  Frame packing arrangement SEI message is an alternative simple stereo 3D
+	  manner for AVC. We need to recognize that SEI message and report the correct
+	  3D caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/420>
+
+2021-05-22 18:54:49 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	* meson.build:
+	  Use g_memdup2() where available and add fallback for older GLib versions
+	  Alloc size is based on existing allocations and struct sizes.
+	  g_memdup() is deprecated since GLib 2.68 and we want to avoid
+	  deprecation warnings with recent versions of GLib.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/-/merge_requests/431>
+
+2021-06-01 15:29:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.19.1 ===
 
 2021-06-01 00:16:31 +0100  Tim-Philipp Müller <tim@centricular.com>
