@@ -6,10 +6,6 @@ openjpeg_sources = [
 
 openjpeg_cargs = []
 
-if get_option('openjpeg').disabled()
-  subdir_done()
-endif
-
 openjpeg_dep = dependency('libopenjp2', version : '>=2.2',
                           fallback : ['libopenjp2', 'libopenjp2_dep'],
                           required : get_option('openjpeg'))
