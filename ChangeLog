@@ -1,3 +1,137 @@
+=== release 1.19.2 ===
+
+2021-09-23 01:35:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.19.2
+
+2021-08-10 17:10:43 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/meson.build:
+	* tools/ges-launcher.c:
+	* tools/ges-validate.c:
+	* tools/utils.h:
+	  launch: Make enabling validate opt-in
+	  Instead of opt-out.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/264>
+
+2021-08-12 23:37:59 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ges/ges-uri-source.c:
+	  ges-uri-source: fix object debug
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/265>
+
+2021-08-10 23:54:47 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* plugins/nle/nlecomposition.c:
+	* tools/ges-launcher.c:
+	* tools/utils.h:
+	  ges-launcher: add option to forward tags
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/265>
+
+2021-08-10 23:25:06 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* tools/ges-launcher.c:
+	* tools/utils.h:
+	  ges-launcher: allow using a clip to determine the rendering format
+	  This includes both topology and profile
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/265>
+
+2021-08-10 23:23:39 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* tools/ges-launcher.c:
+	  launcher: don't start the pipeline before we're done updating it
+	  Since 70e3b8ae2a8d13b50f52305b71cfa4b590bb63f6 the CommandLineFormatter
+	  also emit "loaded" so we ended up doing this twice, once
+	  as before in `run_pipeline` and another time in the `project:loaded`
+	  callback.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/265>
+
+2021-08-10 23:20:21 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* tools/ges-launcher.c:
+	  ges-launcher: don't unref transfer none objects
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/265>
+
+2021-07-21 19:31:53 +0200  Piotrek Brzeziński <thewildtree@outlook.com>
+
+	* ges/ges-clip.c:
+	* tests/check/ges/clip.c:
+	  clip: Copy trackelement's metadata upon splitting
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/260>
+
+2021-07-09 16:15:01 +0200  Piotrek Brzeziński <thewildtree@outlook.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Add support for metadata on sources
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/260>
+
+2021-07-09 16:14:19 +0200  Piotrek Brzeziński <thewildtree@outlook.com>
+
+	* ges/ges-marker-list.c:
+	* tests/check/ges/markerlist.c:
+	  marker-list: Add flags (de)serialization
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/260>
+
+2021-08-03 11:31:07 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* ges/ges-pipeline.c:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	  ges: freeze commit during render
+	  In render mode, do not commit the timeline
+	  as the position can be invalid and lead to
+	  missing frames.
+	  Fixes #136
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/262>
+
+2021-08-05 22:59:07 +0200  Piotrek Brzeziński <thewildtree@outlook.com>
+
+	* ges/ges-timeline-tree.c:
+	  timeline: Check if metadata value holds object on marker snapping
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/263>
+
+2021-06-20 23:51:02 +0200  Piotrek Brzeziński <thewildtree@outlook.com>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-internal.h:
+	* ges/ges-marker-list.c:
+	* ges/ges-marker-list.h:
+	* ges/ges-timeline-tree.c:
+	* tests/check/ges/markerlist.c:
+	* tests/check/ges/timelineedition.c:
+	  timeline: Implement snapping to markers
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/259>
+
+2021-06-16 17:12:11 +0200  François Laignel <fengalin@free.fr>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	  Check mandatory ClockTime arguments
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/258>
+
+2021-05-22 18:41:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ges/ges-pitivi-formatter.c:
+	* meson.build:
+	  Use g_memdup2() where available and add fallback for older GLib versions
+	  Size is constant here, so no problem in any case, but g_memdup() is
+	  now deprecated and we don't want deprecation warnings.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/257>
+
+2021-06-01 15:29:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.19.1 ===
 
 2021-06-01 00:16:05 +0100  Tim-Philipp Müller <tim@centricular.com>
