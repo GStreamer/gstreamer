@@ -104,8 +104,6 @@ gst_rtp_header_extension_twcc_class_init (GstRTPHeaderExtensionTWCCClass *
   rtp_hdr_class->get_max_size = gst_rtp_header_extension_twcc_get_max_size;
   rtp_hdr_class->write = gst_rtp_header_extension_twcc_write;
   rtp_hdr_class->read = gst_rtp_header_extension_twcc_read;
-  rtp_hdr_class->set_caps_from_attributes =
-      gst_rtp_header_extension_set_caps_from_attributes_simple_sdp;
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Transport Wide Congestion Control", GST_RTP_HDREXT_ELEMENT_CLASS,

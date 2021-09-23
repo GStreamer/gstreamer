@@ -451,8 +451,6 @@ static void
       gst_rtp_header_extension_colorspace_set_non_rtp_sink_caps;
   rtp_hdr_class->update_non_rtp_src_caps =
       gst_rtp_header_extension_colorspace_update_non_rtp_src_caps;
-  rtp_hdr_class->set_caps_from_attributes =
-      gst_rtp_header_extension_set_caps_from_attributes_simple_sdp;
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Color Space", GST_RTP_HDREXT_ELEMENT_CLASS,

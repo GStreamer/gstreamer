@@ -34,6 +34,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+static gboolean
+gst_rtp_header_extension_set_caps_from_attributes_default (GstRTPHeaderExtension
+    * ext, GstCaps * caps);
+
 GST_DEBUG_CATEGORY_STATIC (rtphderext_debug);
 #define GST_CAT_DEFAULT (rtphderext_debug)
 
@@ -178,6 +182,8 @@ gst_rtp_header_extension_class_set_uri (GstRTPHeaderExtensionClass * klass,
 static void
 gst_rtp_header_extension_class_init (GstRTPHeaderExtensionClass * klass)
 {
+  klass->set_caps_from_attributes =
+      gst_rtp_header_extension_set_caps_from_attributes_default;
 }
 
 static void
@@ -620,8 +626,8 @@ gst_rtp_header_extension_get_sdp_caps_field_name (GstRTPHeaderExtension * ext)
   return g_strdup_printf ("extmap-%u", priv->ext_id);
 }
 
-/**
- * gst_rtp_header_extension_set_caps_from_attributes_simple_sdp:
+/*
+ * gst_rtp_header_extension_set_caps_from_attributes_default
  * @ext: the #GstRTPHeaderExtension
  * @caps: #GstCaps to write fields into
  *
@@ -633,12 +639,11 @@ gst_rtp_header_extension_get_sdp_caps_field_name (GstRTPHeaderExtension * ext)
  * advertised in @caps.
  *
  * Returns: whether the @ext attributes could be set on @caps.
- *
- * Since: 1.20
  */
-gboolean
-    gst_rtp_header_extension_set_caps_from_attributes_simple_sdp
-    (GstRTPHeaderExtension * ext, GstCaps * caps) {
+static gboolean
+gst_rtp_header_extension_set_caps_from_attributes_default (GstRTPHeaderExtension
+    * ext, GstCaps * caps)
+{
   gchar *field_name = gst_rtp_header_extension_get_sdp_caps_field_name (ext);
   GstStructure *s = gst_caps_get_structure (caps, 0);
 
