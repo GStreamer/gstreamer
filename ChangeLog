@@ -1,3 +1,58 @@
+=== release 1.19.2 ===
+
+2021-09-23 01:36:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.19.2
+
+2021-07-09 15:14:15 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fix OMX flags on header buffer
+	  The header (SPS/PPS) buffer should have the CODECONFIG flag
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-omx/-/merge_requests/49>
+
+2021-07-09 14:52:59 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: allow to start decoder on HEADER buffer
+	  If the headers are sent in their own buffer
+	  it won't have the SYNC_FRAME flag but we still
+	  do want to start decoding rather than dropping it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-omx/-/merge_requests/49>
+
+2018-09-06 21:56:57 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomx.c:
+	* omx/gstomxh264dec.c:
+	* omx/gstomxh265dec.c:
+	* omx/gstomxvideodec.c:
+	  omxh26xdec: videodecoder support subframe
+	  Use of subframe API from videodecoder base class.
+	  This subframe allows to decode subframe instead of
+	  waiting for a whole frame.
+	  The subframe uses the same frame over the whole
+	  subframe passing process and will wait
+	  for a signal to know the last subframe.
+	  In this implementation it will use
+	  GST_VIDEO_BUFFER_FLAG_MARKER as the
+	  end of batch of subframes.
+	  This implement subframe mode negotation for the Zynq based on caps
+	  negotation. This mode can be combined with low-latency mode, in order to
+	  reach the lowest possible latency (assuming the stream is within the
+	  low-latency constraints for the HW).
+	  ... ! video/x-h264,alignment=nal ! omxh264dec ! ...
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-omx/-/merge_requests/49>
+
+2021-06-01 15:29:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.19.1 ===
 
 2021-06-01 00:16:41 +0100  Tim-Philipp Müller <tim@centricular.com>
