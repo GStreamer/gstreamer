@@ -327,5 +327,3 @@ if gio_dep.version().version_compare('< 2.67.4')
 endif
 
 configure_file(output: 'config.h', configuration: cdata)
-
-run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')

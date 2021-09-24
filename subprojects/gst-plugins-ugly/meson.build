@@ -300,8 +300,6 @@ endif
 
 configure_file(output : 'config.h', configuration : cdata)
 
-run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
-
 if meson.version().version_compare('>= 0.54')
   plugin_names = []
   foreach plugin: plugins

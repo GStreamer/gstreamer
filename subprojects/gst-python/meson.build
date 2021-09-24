@@ -99,5 +99,3 @@ endif
 subdir('gi')
 subdir('plugin')
 subdir('testsuite')
- 
-run_command(python, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')

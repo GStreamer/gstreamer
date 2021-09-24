@@ -24,6 +24,9 @@ if cmdres.returncode() != 0
   error('Do not run `ninja` or `meson` for gst-build inside the uninstalled environment, you will run into problems')
 endif
 
+# Install gst-indent pre-commit hook
+run_command(python3, '-c', 'import shutil; shutil.copy("scripts/git-hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")')
+
 # Ensure that the user does not have Strawberry Perl in PATH, since it ships
 # with a pkg-config.bat and broken pkgconfig files for libffi and zlib. Will
 # cause a build error, such as in

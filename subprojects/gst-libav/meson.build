@@ -212,6 +212,3 @@ if gst_version_nano == 0
 endif
 
 configure_file(output: 'config.h', configuration: cdata)
-
-python3 = import('python').find_installation()
-run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
