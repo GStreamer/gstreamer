@@ -2942,13 +2942,14 @@ generate_backtrace_trace (void)
   char **strings;
   GString *trace;
 
-  trace = g_string_new (NULL);
   nptrs = backtrace (buffer, BT_BUF_SIZE);
 
   strings = backtrace_symbols (buffer, nptrs);
 
   if (!strings)
     return NULL;
+
+  trace = g_string_new (NULL);
 
   for (j = 0; j < nptrs; j++)
     g_string_append_printf (trace, "%s\n", strings[j]);
