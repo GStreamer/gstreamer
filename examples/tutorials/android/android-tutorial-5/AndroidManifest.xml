@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.freedesktop.gstreamer.tutorials.tutorial_5"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="9"
+        android:targetSdkVersion="14" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <uses-feature android:glEsVersion="0x00020000" />
+
+    <application
+        android:icon="@drawable/gstreamer_logo_5"
+        android:label="@string/app_name" >
+        <activity
+            android:name=".Tutorial5"
+            android:label="@string/app_name" >
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Local files whose MIME type is known to Android -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="video/*" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
+            <!-- Local files with unknown MIME type.
+                 The list of extensions and supported protocols can certainly be extended. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.avi" />
+                <data android:pathPattern=".*\\.AVI" />
+                <data android:pathPattern=".*\\.mkv" />
+                <data android:pathPattern=".*\\.MKV" />
+                <data android:pathPattern=".*\\.webm" />
+                <data android:pathPattern=".*\\.WEBM" />
+                <data android:pathPattern=".*\\.ogv" />
+                <data android:pathPattern=".*\\.OGV" />
+                <data android:pathPattern=".*\\.mp4" />
+                <data android:pathPattern=".*\\.MP4" />
+                <data android:pathPattern=".*\\.mov" />
+                <data android:pathPattern=".*\\.MOV" />
+            </intent-filter>
+
+            <!-- Remote files. These typically have unknown MIME type.
+                 The list of extensions and supported protocols can certainly be extended. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="http" />
+                <data android:pathPattern=".*\\.avi" />
+                <data android:pathPattern=".*\\.AVI" />
+                <data android:pathPattern=".*\\.mkv" />
+                <data android:pathPattern=".*\\.MKV" />
+                <data android:pathPattern=".*\\.webm" />
+                <data android:pathPattern=".*\\.WEBM" />
+                <data android:pathPattern=".*\\.ogv" />
+                <data android:pathPattern=".*\\.OGV" />
+                <data android:pathPattern=".*\\.mp4" />
+                <data android:pathPattern=".*\\.MP4" />
+                <data android:pathPattern=".*\\.mov" />
+                <data android:pathPattern=".*\\.MOV" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.lamerman.FileDialog"
+            android:label="@string/filechooser_name" >
+        </activity>
+    </application>
+
+</manifest>

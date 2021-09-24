@@ -1,0 +1,83 @@
+h1, h2, h2, h3, h4, h5 {
+	font-weight: 300;
+}
+
+.hotdoc-navbar-brand {
+	font-weight: 700;
+	text-transform: uppercase;
+	font-size: 70%;
+	color: black;
+}
+
+.page-header {
+	text-align: center;
+	font-weight: 300;
+	padding: 100px 15px;
+}
+
+.page-header h1, .page-header h2 {
+	margin-bottom: 1em;
+}
+
+.page-header p {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 80%;
+	font-size: 18px;
+}
+
+.btn-xl {
+	padding: 15px 30px;
+}
+
+.toned-row {
+	background-color: #dfdfdf;
+	margin: 3em -15px 3em -15px;
+	padding: 3em;
+	text-align: center;
+
+}
+
+.toned-row a.icon {
+	display: inline-block;
+	width: 92px;
+	height: 92px;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 64px;
+	padding-top: 92px;
+	cursor: pointer;
+	font-size: 90%;
+	transition: 500ms color ease-in-out;
+}
+
+.toned-row #apiref {
+	background-image: url("../../assets/images/api-reference.svg");
+}
+
+.toned-row #hig {
+	background-image: url("../../assets/images/design-guidelines.svg");
+}
+
+.toned-row #tutorials {
+	background-image: url("../../assets/images/tutorials.png");
+}
+
+.toned-row #deploy {
+	background-image: url("../../assets/images/deploy.png");
+}
+
+/* Make sure to have emoticons properly rendered at the left */
+img[src*="images/icons/emoticons/"] {
+    float: left;
+    padding: 10px;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    max-width: 40px;
+}
+
+/* Get the various images to install for different OSes in a line */
+img[src*="images/mac.png"], img[src*="images/windows.png"], img[src*="images/android.png"], img[src*="images/ios.jpeg"], img[src*="images/linux.png"] {
+    display: inline !important;
+    max-width: 200px;
+}

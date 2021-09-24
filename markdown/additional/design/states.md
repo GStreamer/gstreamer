@@ -1,0 +1,410 @@
+# States
+
+Both elements and pads can be in different states. The states of the
+pads are linked to the state of the element so the design of the states
+is mainly focused around the element states.
+
+An element can be in 4 states. `NULL`, `READY`, `PAUSED` and `PLAYING`. When an
+element is initially instantiated, it is in the NULL state.
+
+## State definitions
+
+  - `NULL`: This is the initial state of an element.
+
+  - `READY`: The element should be prepared to go to `PAUSED`.
+
+  - `PAUSED`: The element should be ready to accept and process data. Sink
+    elements, however, only accept one buffer and then block.
+
+  - `PLAYING`: The same as `PAUSED` except for live sources and sinks. Sinks
+    accept and render data. Live sources produce data.
+
+We call the sequence `NULL→PLAYING` an upwards state change and
+`PLAYING→NULL` a downwards state change.
+
+## State transitions
+
+the following state changes are possible:
+
+* `NULL -> READY`:
+  - The element must check if the resources it needs are available.
+    Device sinks and sources typically try to probe the device to constrain
+    their caps.
+  - The element opens the device, this is needed if the previous step requires
+    the device to be opened.
+
+* `READY -> PAUSED`:
+  - The element pads are activated in order to receive data in `PAUSED`.
+    Streaming threads are started.
+  - Some elements might need to return `ASYNC` and complete the state change
+    when they have enough information. It is a requirement for sinks to
+    return `ASYNC` and complete the state change when they receive the first
+    buffer or EOS event (preroll). Sinks also block the dataflow when in `PAUSED`.
+  - A pipeline resets the `running_time` to 0.
+  - Live sources return `NO_PREROLL` and don't generate data.
+
+* `PAUSED -> PLAYING`:
+  - Most elements ignore this state change.
+  - The pipeline selects a clock and distributes this to all the children
+    before setting them to `PLAYING`. This means that it is only allowed to
+    synchronize on the clock in the `PLAYING` state.
+  - The pipeline uses the clock and the `running_time` to calculate the
+    `base_time`. This `base_time` is distributed to all children when
+    performing the state change.
+  - Sink elements stop blocking on the preroll buffer or event and start
+    rendering the data.
+  - Sinks can post the EOS message in the `PLAYING` state. It is not allowed to
+    post EOS when not in the `PLAYING` state.
+  - While streaming in `PAUSED` or `PLAYING` elements can create and remove
+    sometimes pads.
+  - Live sources start generating data and return `SUCCESS`.
+
+* `PLAYING -> PAUSED`:
+  - Most elements ignore this state change.
+  - The pipeline calculates the `running_time` based on the last selected clock
+    and the `base_time`. It stores this information to continue playback when
+    going back to the `PLAYING` state.
+  - Sinks unblock any clock wait calls.
+  - When a sink does not have a pending buffer to play, it returns `ASYNC` from
+    this state change and completes the state change when it receives a new
+    buffer or an EOS event.
+  - Any queued EOS messages are removed since they will be reposted when going
+    back to the `PLAYING` state. The EOS messages are queued in `GstBins`.
+  - Live sources stop generating data and return `NO_PREROLL`.
+
+* `PAUSED -> READY`:
+  - Sinks unblock any waits in the preroll.
+  - Elements unblock any waits on devices
+  - Chain or `get_range()` functions return `FLUSHING`.
+  - The element pads are deactivated so that streaming becomes impossible and
+    all streaming threads are stopped.
+  - The sink forgets all negotiated formats
+  - Elements remove all sometimes pads
+
+* `READY -> NULL`:
+  - Elements close devices
+  - Elements reset any internal state.
+
+## State variables
+
+An element has 5 state variables that are protected with the object LOCK:
+
+  - `STATE`
+  - `STATE_NEXT`
+  - `STATE_PENDING`
+  - `STATE_TARGET`
+  - `STATE_RETURN`
+
+`STATE` always reflects the current state of the element.
+
+`STATE_NEXT` reflects the next state the element will go to.
+
+`STATE_PENDING` always reflects the final state that the element is going to.
+This is different than `STATE_NEXT` when the final state involves going through
+multiple state changes, like from `PLAYING -> NULL`.
+
+`STATE_TARGET` is the final state that the element should go to as set by the
+application. `STATE_PENDING` can diverge from `STATE_TARGET` during `ASYNC`
+state changes when the element does state transitions.
+
+`STATE_RETURN` reflects the last return value of a state change.
+
+`STATE_NEXT` and `STATE_PENDING` can be `VOID_PENDING` if the element is
+already in the right state.
+
+An element has a special lock to protect against concurrent invocations
+of `set_state()`, called the `STATE_LOCK`.
+
+## Setting state on elements
+
+The state of an element can be changed with `_element_set_state()`.
+When changing the state of an element all intermediate states will also
+be set on the element until the final desired state is set.
+
+The `set_state()` function can return 3 possible values:
+
+* `GST_STATE_FAILURE`: The state change failed for some reason. The plugin should have posted an error message on the bus with information.
+
+* `GST_STATE_SUCCESS`: The state change is completed successfully.
+
+* `GST_STATE_ASYNC`: The state change will complete later on. This can happen
+when the element needs a long time to perform the state change or for sinks
+that need to receive the first buffer before they can complete the state change
+(preroll).
+
+* `GST_STATE_NO_PREROLL`: The state change is completed successfully but the
+element will not be able to produce data in the `PAUSED` state.
+
+In the case of an `ASYNC` state change, it is possible to proceed to the
+next state before the current state change completes, however, the
+element will only get to this next state before completing the previous
+`ASYNC` state change. After receiving an `ASYNC` return value, you can use
+`element_get_state()` to poll the status of the element. If the
+polling returns `SUCCESS`, the element completed the state change to the
+last requested state with `set_state()`.
+
+When setting the state of an element, the `STATE_PENDING` is set to the
+required state. Then the state change function of the element is called
+and the result of that function is used to update the `STATE` and
+`STATE_RETURN` fields, `STATE_NEXT`, `STATE_PENDING` and `STATE_RETURN`
+fields. If the function returned `ASYNC`, this result is immediately
+returned to the caller.
+
+## Getting the state of elements
+
+The `get_state()` function takes 3 arguments, two pointers that will
+hold the current and pending state and one `GstClockTime` that holds a
+timeout value. The function returns a `GstElementStateReturn`.
+
+  - If the element returned `SUCCESS` to the previous `_set_state()`
+    function, this function will return the last state set on the
+    element and `VOID_PENDING` in the pending state value. The function
+    returns `GST_STATE_SUCCESS`.
+
+  - If the element returned `NO_PREROLL` to the previous `_set_state()`
+    function, this function will return the last state set on the
+    element and `VOID_PENDING` in the pending state value. The function
+    returns `GST_STATE_NO_PREROLL`.
+
+  - If the element returned `FAILURE` to the previous `_set_state()` call,
+    this function will return `FAILURE` with the state set to the current
+    state of the element and the pending state set to the value used in
+    the last call of `_set_state()`.
+
+  - If the element returned `ASYNC` to the previous `_set_state()` call,
+    this function will wait for the element to complete its state change
+    up to the amount of time specified in the `GstClockTime`.
+
+      - If the element does not complete the state change in the
+        specified amount of time, this function will return `ASYNC` with
+        the state set to the current state and the pending state set to
+        the pending state.
+
+      - If the element completes the state change within the specified
+        timeout, this function returns the updated state and
+        `VOID_PENDING` as the pending state.
+
+      - If the element aborts the `ASYNC` state change due to an error
+        within the specified timeout, this function returns `FAILURE` with
+        the state set to last successful state and pending set to the
+        last attempt. The element should also post an error message on
+        the bus with more information about the problem.
+
+## States in GstBin
+
+A `GstBin` manages the state of its children. It does this by propagating
+the state changes performed on it to all of its children. The
+`_set_state()` function on a bin will call the `_set_state()` function
+on all of its children, that are not already in the target state or in a
+change state to the target state.
+
+The children are iterated from the sink elements to the source elements.
+This makes sure that when changing the state of an element, the
+downstream elements are in the correct state to process the eventual
+buffers. In the case of a downwards state change, the sink elements will
+shut down first which makes the upstream elements shut down as well
+since the `_push()` function returns a `GST_FLOW_FLUSHING` error.
+
+If all the children return `SUCCESS`, the function returns `SUCCESS` as
+well.
+
+If one of the children returns `FAILURE`, the function returns `FAILURE` as
+well. In this state it is possible that some elements successfully
+changed state. The application can check which elements have a changed
+state, which were in error and which were not affected by iterating the
+elements and calling `_get_state()` on the elements.
+
+If after calling the state function on all children, one of the children
+returned `ASYNC`, the function returns `ASYNC` as well.
+
+If after calling the state function on all children, one of the children
+returned `NO_PREROLL`, the function returns `NO_PREROLL` as well.
+
+If both `NO_PREROLL` and `ASYNC` children are present, `NO_PREROLL` is
+returned.
+
+The current state of the bin can be retrieved with `_get_state()`.
+
+If the bin is performing an `ASYNC` state change, it will automatically
+update its current state fields when it receives state messages from the
+children.
+
+## Implementing states in elements
+
+### Upward state change
+
+Upward state changes always return `ASYNC` either if the `STATE_PENDING` is
+reached or not.
+
+Element:
+
+* A -> B => `SUCCESS`
+  - commit state
+
+* A -> B => `ASYNC`
+  - no commit state
+  - element commits state `ASYNC`
+
+* A -> B while `ASYNC`
+  - update `STATE_PENDING` state
+  - no commit state
+  - no `change_state()` called on element
+
+Bin:
+
+* A->B: all elements `SUCCESS`
+  - commit state
+
+* A->B: some elements `ASYNC`
+  - no commit state
+  - listen for commit messages on bus
+  - for each commit message, poll elements, this happens in another
+    thread.
+  - if no `ASYNC` elements, commit state, continue state change
+    to `STATE_PENDING`
+
+### Downward state change
+
+Downward state changes only return `ASYNC` if the final state is `ASYNC`.
+This is to make sure that it’s not needed to wait for an element to
+complete the preroll or other `ASYNC` state changes when one only wants to
+shut down an element.
+
+Element:
+
+A -> B => `SUCCESS`
+  - commit state
+
+A -> B => `ASYNC` not final state
+  - commit state on behalf of element
+
+A -> B => `ASYNC` final state
+  - element will commit `ASYNC`
+
+Bin:
+
+A -> B -> `SUCCESS`
+  - commit state
+
+A -> B -> `ASYNC` not final state
+  - commit state on behalf of element, continue state change
+
+A -> B => `ASYNC` final state
+  - no commit state
+  - listen for commit messages on bus
+  - for each commit message, poll elements
+  - if no `ASYNC` elements, commit state
+
+## Locking overview (element)
+
+- Element committing `SUCCESS`
+
+  - `STATE_LOCK` is taken in `set_state()`
+
+  - change state is called if `SUCCESS`, commit state is called
+
+  - commit state calls `change_state()` to next state change.
+
+  - if final state is reached, stack unwinds and result is returned
+    to `set_state()` and caller.
+
+```
+set_state(element)       change_state (element)   commit_state
+
+    |                         |                       |
+    |                         |                       |
+STATE_LOCK                    |                       |
+    |                         |                       |
+    |------------------------>|                       |
+    |                         |                       |
+    |                         |                       |
+    |                         | (do state change)     |
+    |                         |                       |
+    |                         |                       |
+    |                         | if `SUCCESS`            |
+    |                         |---------------------->|
+    |                         |                       | post message
+    |                         |                       |
+    |                         |<----------------------| if (!final) change_state (next)
+    |                         |                       | else SIGNAL
+    |                         |                       |
+    |                         |                       |
+    |                         |                       |
+    |<------------------------|                       |
+    |     `SUCCESS`
+    |
+STATE_UNLOCK
+    |
+  `SUCCESS`
+```
+
+- Element committing `ASYNC`
+
+  - `STATE_LOCK` is taken in `set_state()`
+
+  - change state is called and returns `ASYNC`
+
+  - `ASYNC` returned to the caller.
+
+  - element takes LOCK in streaming thread.
+
+  - element calls `commit_state` in streaming thread.
+
+  - commit state calls `change_state()` to next state
+        change.
+
+```
+set_state(element)       change_state (element)     stream_thread      commit_state (element)
+
+    |                         |                          |                  |
+    |                         |                          |                  |
+STATE_LOCK                    |                          |                  |
+    |                         |                          |                  |
+    |------------------------>|                          |                  |
+    |                         |                          |                  |
+    |                         |                          |                  |
+    |                         | (start_task)             |                  |
+    |                         |                          |                  |
+    |                         |                     STREAM_LOCK             |
+    |                         |                          |...               |
+    |<------------------------|                          |                  |
+    |     ASYNC                                     STREAM_UNLOCK           |
+STATE_UNLOCK                                             |                  |
+    |                .....sync........               STATE_LOCK             |
+  ASYNC                                                  |----------------->|
+                                                         |                  |
+                                                         |                  |---> post_message()
+                                                         |                  |---> if (!final) change_state (next)
+                                                         |                  |     else SIGNAL
+                                                         |<-----------------|
+                                                     STATE_UNLOCK
+                                                         |
+                                                    STREAM_LOCK
+                                                         | ...
+                                                    STREAM_UNLOCK
+```
+
+## Remarks
+
+`set_state()` cannot be called from multiple threads at the same time. The
+`STATE_LOCK` prevents this.
+
+State variables are protected with the LOCK.
+
+Calling `set_state()` while `get_state()` is called should unlock the
+`get_state()` with an error. The cookie will do that.
+
+``` c
+set_state(element)
+
+STATE_LOCK
+
+LOCK
+update current, next, pending state
+cookie++
+UNLOCK
+
+change_state
+
+STATE_UNLOCK
+```

@@ -1,0 +1,1697 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		63A43C111DBEB7F50017F03D /* Images-1.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C101DBEB7F50017F03D /* Images-1.xcassets */; };
+		63A43C551DBEBDBE0017F03D /* Images-2.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C541DBEBDBE0017F03D /* Images-2.xcassets */; };
+		63A43C571DBEBE770017F03D /* Images-4.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C561DBEBE770017F03D /* Images-4.xcassets */; };
+		63A43C591DBEBE850017F03D /* Images-5.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C581DBEBE850017F03D /* Images-5.xcassets */; };
+		63A43C5B1DBEBEC40017F03D /* Images-3.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C5A1DBEBEC40017F03D /* Images-3.xcassets */; };
+		63A43C5F1DBECF6C0017F03D /* ssl in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C5E1DBECF6C0017F03D /* ssl */; };
+		63A43C611DBED0600017F03D /* ssl in Resources */ = {isa = PBXBuildFile; fileRef = 63A43C5C1DBECF5B0017F03D /* ssl */; };
+		C67B40CD172EBEA3008359CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CC172EBEA3008359CC /* UIKit.framework */; };
+		C67B40CF172EBEA3008359CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CE172EBEA3008359CC /* Foundation.framework */; };
+		C67B40D1172EBEA3008359CC /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D0172EBEA3008359CC /* CoreGraphics.framework */; };
+		C67B40D3172EBEA3008359CC /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D2172EBEA3008359CC /* GStreamer.framework */; };
+		C67B40D9172EBEA3008359CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C67B40D7172EBEA3008359CC /* InfoPlist.strings */; };
+		C67B40DB172EBEA3008359CC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B40DA172EBEA3008359CC /* main.m */; };
+		C67B40DF172EBEA3008359CC /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B40DE172EBEA3008359CC /* AppDelegate.m */; };
+		C67B40E8172EBEA3008359CC /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C67B40E6172EBEA3008359CC /* MainStoryboard_iPhone.storyboard */; };
+		C67B40EB172EBEA3008359CC /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C67B40E9172EBEA3008359CC /* MainStoryboard_iPad.storyboard */; };
+		C67B40EE172EBEA3008359CC /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B40ED172EBEA3008359CC /* ViewController.m */; };
+		C67B40FA172EC27D008359CC /* GStreamerBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B40F9172EC27D008359CC /* GStreamerBackend.m */; };
+		C67B4100172FC7F4008359CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CC172EBEA3008359CC /* UIKit.framework */; };
+		C67B4101172FC7F4008359CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CE172EBEA3008359CC /* Foundation.framework */; };
+		C67B4102172FC7F4008359CC /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D0172EBEA3008359CC /* CoreGraphics.framework */; };
+		C67B4103172FC7F4008359CC /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D2172EBEA3008359CC /* GStreamer.framework */; };
+		C67B4109172FC7F4008359CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C67B4107172FC7F4008359CC /* InfoPlist.strings */; };
+		C67B410B172FC7F4008359CC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B410A172FC7F4008359CC /* main.m */; };
+		C67B410F172FC7F5008359CC /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B410E172FC7F5008359CC /* AppDelegate.m */; };
+		C67B4118172FC7F5008359CC /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C67B4116172FC7F5008359CC /* MainStoryboard_iPhone.storyboard */; };
+		C67B411B172FC7F5008359CC /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C67B4119172FC7F5008359CC /* MainStoryboard_iPad.storyboard */; };
+		C67B411E172FC7F5008359CC /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B411D172FC7F5008359CC /* ViewController.m */; };
+		C67B412E172FCC4C008359CC /* GStreamerBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = C67B412C172FCC4C008359CC /* GStreamerBackend.m */; };
+		C68B1D8917465EB7004FD7D0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CC172EBEA3008359CC /* UIKit.framework */; };
+		C68B1D8A17465EB7004FD7D0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CE172EBEA3008359CC /* Foundation.framework */; };
+		C68B1D8B17465EB7004FD7D0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D0172EBEA3008359CC /* CoreGraphics.framework */; };
+		C68B1D8C17465EB7004FD7D0 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D2172EBEA3008359CC /* GStreamer.framework */; };
+		C68B1D9217465EB7004FD7D0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C68B1D9017465EB7004FD7D0 /* InfoPlist.strings */; };
+		C68B1D9417465EB7004FD7D0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1D9317465EB7004FD7D0 /* main.m */; };
+		C68B1D9817465EB7004FD7D0 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1D9717465EB7004FD7D0 /* AppDelegate.m */; };
+		C68B1DA117465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C68B1D9F17465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard */; };
+		C68B1DA417465EB7004FD7D0 /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C68B1DA217465EB7004FD7D0 /* MainStoryboard_iPad.storyboard */; };
+		C68B1DB617465F96004FD7D0 /* GStreamerBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1DB017465F95004FD7D0 /* GStreamerBackend.m */; };
+		C68B1DB717465F96004FD7D0 /* LibraryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1DB317465F95004FD7D0 /* LibraryViewController.m */; };
+		C68B1DB817465F96004FD7D0 /* VideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1DB517465F95004FD7D0 /* VideoViewController.m */; };
+		C68B1DBA17465FD4004FD7D0 /* EaglUIVIew.m in Sources */ = {isa = PBXBuildFile; fileRef = C68B1DB917465FD4004FD7D0 /* EaglUIVIew.m */; };
+		C68C527E174D11F0007A0729 /* fonts.conf in Resources */ = {isa = PBXBuildFile; fileRef = C68C527B174D11F0007A0729 /* fonts.conf */; };
+		C68C527F174D11F0007A0729 /* gst_ios_init.m in Sources */ = {isa = PBXBuildFile; fileRef = C68C527C174D11F0007A0729 /* gst_ios_init.m */; };
+		C68C5280174D11F0007A0729 /* Ubuntu-R.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C68C527D174D11F0007A0729 /* Ubuntu-R.ttf */; };
+		C68C5284174D137B007A0729 /* fonts.conf in Resources */ = {isa = PBXBuildFile; fileRef = C68C5281174D137B007A0729 /* fonts.conf */; };
+		C68C5285174D137B007A0729 /* gst_ios_init.m in Sources */ = {isa = PBXBuildFile; fileRef = C68C5282174D137B007A0729 /* gst_ios_init.m */; };
+		C68C5286174D137B007A0729 /* Ubuntu-R.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C68C5283174D137B007A0729 /* Ubuntu-R.ttf */; };
+		C68C528A174D13EB007A0729 /* fonts.conf in Resources */ = {isa = PBXBuildFile; fileRef = C68C5287174D13EB007A0729 /* fonts.conf */; };
+		C68C528B174D13EB007A0729 /* gst_ios_init.m in Sources */ = {isa = PBXBuildFile; fileRef = C68C5288174D13EB007A0729 /* gst_ios_init.m */; };
+		C68C528C174D13EB007A0729 /* Ubuntu-R.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C68C5289174D13EB007A0729 /* Ubuntu-R.ttf */; };
+		C68C5290174D1408007A0729 /* fonts.conf in Resources */ = {isa = PBXBuildFile; fileRef = C68C528D174D1408007A0729 /* fonts.conf */; };
+		C68C5291174D1408007A0729 /* gst_ios_init.m in Sources */ = {isa = PBXBuildFile; fileRef = C68C528E174D1408007A0729 /* gst_ios_init.m */; };
+		C68C5292174D1408007A0729 /* Ubuntu-R.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C68C528F174D1408007A0729 /* Ubuntu-R.ttf */; };
+		C68C5296174D1427007A0729 /* fonts.conf in Resources */ = {isa = PBXBuildFile; fileRef = C68C5293174D1427007A0729 /* fonts.conf */; };
+		C68C5297174D1427007A0729 /* gst_ios_init.m in Sources */ = {isa = PBXBuildFile; fileRef = C68C5294174D1427007A0729 /* gst_ios_init.m */; };
+		C68C5298174D1427007A0729 /* Ubuntu-R.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C68C5295174D1427007A0729 /* Ubuntu-R.ttf */; };
+		C6B6126017395CF2003FC410 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CC172EBEA3008359CC /* UIKit.framework */; };
+		C6B6126117395CF2003FC410 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CE172EBEA3008359CC /* Foundation.framework */; };
+		C6B6126217395CF2003FC410 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D0172EBEA3008359CC /* CoreGraphics.framework */; };
+		C6B6126317395CF2003FC410 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D2172EBEA3008359CC /* GStreamer.framework */; };
+		C6B6126917395CF2003FC410 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C6B6126717395CF2003FC410 /* InfoPlist.strings */; };
+		C6B6126B17395CF2003FC410 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C6B6126A17395CF2003FC410 /* main.m */; };
+		C6B6126F17395CF2003FC410 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C6B6126E17395CF2003FC410 /* AppDelegate.m */; };
+		C6B6127817395CF2003FC410 /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C6B6127617395CF2003FC410 /* MainStoryboard_iPhone.storyboard */; };
+		C6B6127B17395CF2003FC410 /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C6B6127917395CF2003FC410 /* MainStoryboard_iPad.storyboard */; };
+		C6B6127E17395CF2003FC410 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6B6127D17395CF2003FC410 /* ViewController.m */; };
+		C6B6128B17395D4F003FC410 /* GStreamerBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = C6B6128917395D4F003FC410 /* GStreamerBackend.m */; };
+		C6EB857C173A4D9500C3953D /* EaglUIVIew.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB857B173A4D9500C3953D /* EaglUIVIew.m */; };
+		C6EB8582173BEE5E00C3953D /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CC172EBEA3008359CC /* UIKit.framework */; };
+		C6EB8583173BEE5E00C3953D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40CE172EBEA3008359CC /* Foundation.framework */; };
+		C6EB8584173BEE5E00C3953D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D0172EBEA3008359CC /* CoreGraphics.framework */; };
+		C6EB8585173BEE5E00C3953D /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C67B40D2172EBEA3008359CC /* GStreamer.framework */; };
+		C6EB858B173BEE5E00C3953D /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C6EB8589173BEE5E00C3953D /* InfoPlist.strings */; };
+		C6EB858D173BEE5E00C3953D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB858C173BEE5E00C3953D /* main.m */; };
+		C6EB8591173BEE5E00C3953D /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB8590173BEE5E00C3953D /* AppDelegate.m */; };
+		C6EB859A173BEE5E00C3953D /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C6EB8598173BEE5E00C3953D /* MainStoryboard_iPhone.storyboard */; };
+		C6EB859D173BEE5E00C3953D /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C6EB859B173BEE5E00C3953D /* MainStoryboard_iPad.storyboard */; };
+		C6EB85A0173BEE5E00C3953D /* VideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB859F173BEE5E00C3953D /* VideoViewController.m */; };
+		C6EB85B1173BEF2600C3953D /* EaglUIVIew.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB85AB173BEF2600C3953D /* EaglUIVIew.m */; };
+		C6EB85B3173BEF2600C3953D /* GStreamerBackend.m in Sources */ = {isa = PBXBuildFile; fileRef = C6EB85AF173BEF2600C3953D /* GStreamerBackend.m */; };
+		C987C0DB1BAB090B00D54784 /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */; };
+		C987C0DC1BAB096C00D54784 /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */; };
+		C987C0DD1BAB09A100D54784 /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */; };
+		C987C0DE1BAB09AA00D54784 /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */; };
+		C987C0DF1BAB09AF00D54784 /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		63A43C101DBEB7F50017F03D /* Images-1.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Images-1.xcassets"; sourceTree = "<group>"; };
+		63A43C541DBEBDBE0017F03D /* Images-2.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Images-2.xcassets"; sourceTree = "<group>"; };
+		63A43C561DBEBE770017F03D /* Images-4.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Images-4.xcassets"; sourceTree = "<group>"; };
+		63A43C581DBEBE850017F03D /* Images-5.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Images-5.xcassets"; sourceTree = "<group>"; };
+		63A43C5A1DBEBEC40017F03D /* Images-3.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Images-3.xcassets"; sourceTree = "<group>"; };
+		63A43C5C1DBECF5B0017F03D /* ssl */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ssl; sourceTree = "<group>"; };
+		63A43C5E1DBECF6C0017F03D /* ssl */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ssl; sourceTree = "<group>"; };
+		C67B40C9172EBEA3008359CC /* Tutorial 1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tutorial 1.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C67B40CC172EBEA3008359CC /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		C67B40CE172EBEA3008359CC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		C67B40D0172EBEA3008359CC /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = Library/Frameworks/CoreGraphics.framework; sourceTree = DEVELOPER_DIR; };
+		C67B40D2172EBEA3008359CC /* GStreamer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GStreamer.framework; path = Library/Frameworks/GStreamer.framework; sourceTree = SDKROOT; };
+		C67B40D6172EBEA3008359CC /* Tutorial 1-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tutorial 1-Info.plist"; sourceTree = "<group>"; };
+		C67B40D8172EBEA3008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C67B40DA172EBEA3008359CC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		C67B40DC172EBEA3008359CC /* Tutorial 1-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 1-Prefix.pch"; sourceTree = "<group>"; };
+		C67B40DD172EBEA3008359CC /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		C67B40DE172EBEA3008359CC /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		C67B40E7172EBEA3008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		C67B40EA172EBEA3008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		C67B40EC172EBEA3008359CC /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		C67B40ED172EBEA3008359CC /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		C67B40F1172EBEA3008359CC /* gst_ios_init.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gst_ios_init.h; sourceTree = "<group>"; };
+		C67B40F8172EC27D008359CC /* GStreamerBackend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackend.h; sourceTree = "<group>"; };
+		C67B40F9172EC27D008359CC /* GStreamerBackend.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GStreamerBackend.m; sourceTree = "<group>"; };
+		C67B40FF172FC7F4008359CC /* Tutorial 2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tutorial 2.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C67B4106172FC7F4008359CC /* Tutorial 2-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tutorial 2-Info.plist"; sourceTree = "<group>"; };
+		C67B4108172FC7F4008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C67B410A172FC7F4008359CC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		C67B410C172FC7F5008359CC /* Tutorial 2-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 2-Prefix.pch"; sourceTree = "<group>"; };
+		C67B410D172FC7F5008359CC /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		C67B410E172FC7F5008359CC /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		C67B4117172FC7F5008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		C67B411A172FC7F5008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		C67B411C172FC7F5008359CC /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		C67B411D172FC7F5008359CC /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		C67B4129172FC85D008359CC /* gst_ios_init.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gst_ios_init.h; sourceTree = "<group>"; };
+		C67B412B172FCC4C008359CC /* GStreamerBackend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackend.h; sourceTree = "<group>"; };
+		C67B412C172FCC4C008359CC /* GStreamerBackend.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GStreamerBackend.m; sourceTree = "<group>"; };
+		C67B412D172FCC4C008359CC /* GStreamerBackendDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackendDelegate.h; sourceTree = "<group>"; };
+		C68B1D8817465EB7004FD7D0 /* Tutorial 5.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tutorial 5.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C68B1D8F17465EB7004FD7D0 /* Tutorial 5-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tutorial 5-Info.plist"; sourceTree = "<group>"; };
+		C68B1D9117465EB7004FD7D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C68B1D9317465EB7004FD7D0 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		C68B1D9517465EB7004FD7D0 /* Tutorial 5-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 5-Prefix.pch"; sourceTree = "<group>"; };
+		C68B1D9617465EB7004FD7D0 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		C68B1D9717465EB7004FD7D0 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		C68B1DA017465EB7004FD7D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		C68B1DA317465EB7004FD7D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		C68B1DAA17465EB8004FD7D0 /* gst_ios_init.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gst_ios_init.h; sourceTree = "<group>"; };
+		C68B1DAE17465F95004FD7D0 /* EaglUIVIew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EaglUIVIew.h; sourceTree = "<group>"; };
+		C68B1DAF17465F95004FD7D0 /* GStreamerBackend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackend.h; sourceTree = "<group>"; };
+		C68B1DB017465F95004FD7D0 /* GStreamerBackend.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GStreamerBackend.m; sourceTree = "<group>"; };
+		C68B1DB117465F95004FD7D0 /* GStreamerBackendDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackendDelegate.h; sourceTree = "<group>"; };
+		C68B1DB217465F95004FD7D0 /* LibraryViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LibraryViewController.h; sourceTree = "<group>"; };
+		C68B1DB317465F95004FD7D0 /* LibraryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LibraryViewController.m; sourceTree = "<group>"; };
+		C68B1DB417465F95004FD7D0 /* VideoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoViewController.h; sourceTree = "<group>"; };
+		C68B1DB517465F95004FD7D0 /* VideoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoViewController.m; sourceTree = "<group>"; };
+		C68B1DB917465FD4004FD7D0 /* EaglUIVIew.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EaglUIVIew.m; sourceTree = "<group>"; };
+		C68C527B174D11F0007A0729 /* fonts.conf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = fonts.conf; sourceTree = "<group>"; };
+		C68C527C174D11F0007A0729 /* gst_ios_init.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = gst_ios_init.m; sourceTree = "<group>"; };
+		C68C527D174D11F0007A0729 /* Ubuntu-R.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Ubuntu-R.ttf"; sourceTree = "<group>"; };
+		C68C5281174D137B007A0729 /* fonts.conf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = fonts.conf; sourceTree = "<group>"; };
+		C68C5282174D137B007A0729 /* gst_ios_init.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = gst_ios_init.m; sourceTree = "<group>"; };
+		C68C5283174D137B007A0729 /* Ubuntu-R.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Ubuntu-R.ttf"; sourceTree = "<group>"; };
+		C68C5287174D13EB007A0729 /* fonts.conf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = fonts.conf; sourceTree = "<group>"; };
+		C68C5288174D13EB007A0729 /* gst_ios_init.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = gst_ios_init.m; sourceTree = "<group>"; };
+		C68C5289174D13EB007A0729 /* Ubuntu-R.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Ubuntu-R.ttf"; sourceTree = "<group>"; };
+		C68C528D174D1408007A0729 /* fonts.conf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = fonts.conf; sourceTree = "<group>"; };
+		C68C528E174D1408007A0729 /* gst_ios_init.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = gst_ios_init.m; sourceTree = "<group>"; };
+		C68C528F174D1408007A0729 /* Ubuntu-R.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Ubuntu-R.ttf"; sourceTree = "<group>"; };
+		C68C5293174D1427007A0729 /* fonts.conf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = fonts.conf; sourceTree = "<group>"; };
+		C68C5294174D1427007A0729 /* gst_ios_init.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = gst_ios_init.m; sourceTree = "<group>"; };
+		C68C5295174D1427007A0729 /* Ubuntu-R.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Ubuntu-R.ttf"; sourceTree = "<group>"; };
+		C6B6125F17395CF1003FC410 /* Tutorial 3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tutorial 3.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C6B6126617395CF2003FC410 /* Tutorial 3-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tutorial 3-Info.plist"; sourceTree = "<group>"; };
+		C6B6126817395CF2003FC410 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C6B6126A17395CF2003FC410 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		C6B6126C17395CF2003FC410 /* Tutorial 3-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 3-Prefix.pch"; sourceTree = "<group>"; };
+		C6B6126D17395CF2003FC410 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		C6B6126E17395CF2003FC410 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		C6B6127717395CF2003FC410 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		C6B6127A17395CF2003FC410 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		C6B6127C17395CF2003FC410 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		C6B6127D17395CF2003FC410 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		C6B6128817395D4F003FC410 /* GStreamerBackend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackend.h; sourceTree = "<group>"; };
+		C6B6128917395D4F003FC410 /* GStreamerBackend.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GStreamerBackend.m; sourceTree = "<group>"; };
+		C6B6128A17395D4F003FC410 /* GStreamerBackendDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackendDelegate.h; sourceTree = "<group>"; };
+		C6B6128D17395EE2003FC410 /* gst_ios_init.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gst_ios_init.h; sourceTree = "<group>"; };
+		C6EB857A173A4D9500C3953D /* EaglUIVIew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EaglUIVIew.h; sourceTree = "<group>"; };
+		C6EB857B173A4D9500C3953D /* EaglUIVIew.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EaglUIVIew.m; sourceTree = "<group>"; };
+		C6EB8581173BEE5D00C3953D /* Tutorial 4.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tutorial 4.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C6EB8588173BEE5E00C3953D /* Tutorial 4-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Tutorial 4-Info.plist"; sourceTree = "<group>"; };
+		C6EB858A173BEE5E00C3953D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C6EB858C173BEE5E00C3953D /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		C6EB858E173BEE5E00C3953D /* Tutorial 4-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 4-Prefix.pch"; sourceTree = "<group>"; };
+		C6EB858F173BEE5E00C3953D /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		C6EB8590173BEE5E00C3953D /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		C6EB8599173BEE5E00C3953D /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		C6EB859C173BEE5E00C3953D /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		C6EB859E173BEE5E00C3953D /* VideoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoViewController.h; sourceTree = "<group>"; };
+		C6EB859F173BEE5E00C3953D /* VideoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VideoViewController.m; sourceTree = "<group>"; };
+		C6EB85AA173BEF2600C3953D /* EaglUIVIew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EaglUIVIew.h; sourceTree = "<group>"; };
+		C6EB85AB173BEF2600C3953D /* EaglUIVIew.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EaglUIVIew.m; sourceTree = "<group>"; };
+		C6EB85AD173BEF2600C3953D /* gst_ios_init.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gst_ios_init.h; sourceTree = "<group>"; };
+		C6EB85AE173BEF2600C3953D /* GStreamerBackend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackend.h; sourceTree = "<group>"; };
+		C6EB85AF173BEF2600C3953D /* GStreamerBackend.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GStreamerBackend.m; sourceTree = "<group>"; };
+		C6EB85B0173BEF2600C3953D /* GStreamerBackendDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackendDelegate.h; sourceTree = "<group>"; };
+		C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.2.dylib; path = usr/lib/libiconv.2.dylib; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C67B40C6172EBEA3008359CC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C987C0DB1BAB090B00D54784 /* libiconv.2.dylib in Frameworks */,
+				C67B40CD172EBEA3008359CC /* UIKit.framework in Frameworks */,
+				C67B40CF172EBEA3008359CC /* Foundation.framework in Frameworks */,
+				C67B40D1172EBEA3008359CC /* CoreGraphics.framework in Frameworks */,
+				C67B40D3172EBEA3008359CC /* GStreamer.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C67B40FC172FC7F4008359CC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C987C0DC1BAB096C00D54784 /* libiconv.2.dylib in Frameworks */,
+				C67B4100172FC7F4008359CC /* UIKit.framework in Frameworks */,
+				C67B4101172FC7F4008359CC /* Foundation.framework in Frameworks */,
+				C67B4102172FC7F4008359CC /* CoreGraphics.framework in Frameworks */,
+				C67B4103172FC7F4008359CC /* GStreamer.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C68B1D8517465EB7004FD7D0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C987C0DF1BAB09AF00D54784 /* libiconv.2.dylib in Frameworks */,
+				C68B1D8917465EB7004FD7D0 /* UIKit.framework in Frameworks */,
+				C68B1D8A17465EB7004FD7D0 /* Foundation.framework in Frameworks */,
+				C68B1D8B17465EB7004FD7D0 /* CoreGraphics.framework in Frameworks */,
+				C68B1D8C17465EB7004FD7D0 /* GStreamer.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C6B6125C17395CF1003FC410 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C987C0DD1BAB09A100D54784 /* libiconv.2.dylib in Frameworks */,
+				C6B6126017395CF2003FC410 /* UIKit.framework in Frameworks */,
+				C6B6126117395CF2003FC410 /* Foundation.framework in Frameworks */,
+				C6B6126217395CF2003FC410 /* CoreGraphics.framework in Frameworks */,
+				C6B6126317395CF2003FC410 /* GStreamer.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C6EB857E173BEE5D00C3953D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C987C0DE1BAB09AA00D54784 /* libiconv.2.dylib in Frameworks */,
+				C6EB8582173BEE5E00C3953D /* UIKit.framework in Frameworks */,
+				C6EB8583173BEE5E00C3953D /* Foundation.framework in Frameworks */,
+				C6EB8584173BEE5E00C3953D /* CoreGraphics.framework in Frameworks */,
+				C6EB8585173BEE5E00C3953D /* GStreamer.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C67B40BE172EBDF1008359CC = {
+			isa = PBXGroup;
+			children = (
+				C67B40D4172EBEA3008359CC /* Tutorial 1 */,
+				C67B4104172FC7F4008359CC /* Tutorial 2 */,
+				C6B6126417395CF2003FC410 /* Tutorial 3 */,
+				C6EB8586173BEE5E00C3953D /* Tutorial 4 */,
+				C68B1D8D17465EB7004FD7D0 /* Tutorial 5 */,
+				C67B40CB172EBEA3008359CC /* Frameworks */,
+				C67B40CA172EBEA3008359CC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C67B40CA172EBEA3008359CC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C67B40C9172EBEA3008359CC /* Tutorial 1.app */,
+				C67B40FF172FC7F4008359CC /* Tutorial 2.app */,
+				C6B6125F17395CF1003FC410 /* Tutorial 3.app */,
+				C6EB8581173BEE5D00C3953D /* Tutorial 4.app */,
+				C68B1D8817465EB7004FD7D0 /* Tutorial 5.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C67B40CB172EBEA3008359CC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C987C0DA1BAB090B00D54784 /* libiconv.2.dylib */,
+				C67B40CC172EBEA3008359CC /* UIKit.framework */,
+				C67B40CE172EBEA3008359CC /* Foundation.framework */,
+				C67B40D0172EBEA3008359CC /* CoreGraphics.framework */,
+				C67B40D2172EBEA3008359CC /* GStreamer.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C67B40D4172EBEA3008359CC /* Tutorial 1 */ = {
+			isa = PBXGroup;
+			children = (
+				C67B40F8172EC27D008359CC /* GStreamerBackend.h */,
+				C67B40F9172EC27D008359CC /* GStreamerBackend.m */,
+				C67B40DD172EBEA3008359CC /* AppDelegate.h */,
+				C67B40DE172EBEA3008359CC /* AppDelegate.m */,
+				C67B40E6172EBEA3008359CC /* MainStoryboard_iPhone.storyboard */,
+				C67B40E9172EBEA3008359CC /* MainStoryboard_iPad.storyboard */,
+				C67B40EC172EBEA3008359CC /* ViewController.h */,
+				C67B40ED172EBEA3008359CC /* ViewController.m */,
+				63A43C101DBEB7F50017F03D /* Images-1.xcassets */,
+				C67B40D5172EBEA3008359CC /* Supporting Files */,
+			);
+			path = "Tutorial 1";
+			sourceTree = SOURCE_ROOT;
+		};
+		C67B40D5172EBEA3008359CC /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				C68C5293174D1427007A0729 /* fonts.conf */,
+				C68C5295174D1427007A0729 /* Ubuntu-R.ttf */,
+				C67B40D6172EBEA3008359CC /* Tutorial 1-Info.plist */,
+				C67B40D7172EBEA3008359CC /* InfoPlist.strings */,
+				C67B40DA172EBEA3008359CC /* main.m */,
+				C67B40DC172EBEA3008359CC /* Tutorial 1-Prefix.pch */,
+				C67B40F1172EBEA3008359CC /* gst_ios_init.h */,
+				C68C5294174D1427007A0729 /* gst_ios_init.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C67B4104172FC7F4008359CC /* Tutorial 2 */ = {
+			isa = PBXGroup;
+			children = (
+				C67B412B172FCC4C008359CC /* GStreamerBackend.h */,
+				C67B412C172FCC4C008359CC /* GStreamerBackend.m */,
+				C67B410D172FC7F5008359CC /* AppDelegate.h */,
+				C67B410E172FC7F5008359CC /* AppDelegate.m */,
+				C67B4116172FC7F5008359CC /* MainStoryboard_iPhone.storyboard */,
+				C67B4119172FC7F5008359CC /* MainStoryboard_iPad.storyboard */,
+				C67B411C172FC7F5008359CC /* ViewController.h */,
+				C67B411D172FC7F5008359CC /* ViewController.m */,
+				C67B4105172FC7F4008359CC /* Supporting Files */,
+				63A43C541DBEBDBE0017F03D /* Images-2.xcassets */,
+			);
+			path = "Tutorial 2";
+			sourceTree = "<group>";
+		};
+		C67B4105172FC7F4008359CC /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				C68C528D174D1408007A0729 /* fonts.conf */,
+				C68C528F174D1408007A0729 /* Ubuntu-R.ttf */,
+				C67B4106172FC7F4008359CC /* Tutorial 2-Info.plist */,
+				C67B4107172FC7F4008359CC /* InfoPlist.strings */,
+				C67B410A172FC7F4008359CC /* main.m */,
+				C67B410C172FC7F5008359CC /* Tutorial 2-Prefix.pch */,
+				C67B4129172FC85D008359CC /* gst_ios_init.h */,
+				C68C528E174D1408007A0729 /* gst_ios_init.m */,
+				C67B412D172FCC4C008359CC /* GStreamerBackendDelegate.h */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C68B1D8D17465EB7004FD7D0 /* Tutorial 5 */ = {
+			isa = PBXGroup;
+			children = (
+				C68B1DAE17465F95004FD7D0 /* EaglUIVIew.h */,
+				C68B1DB917465FD4004FD7D0 /* EaglUIVIew.m */,
+				C68B1DAF17465F95004FD7D0 /* GStreamerBackend.h */,
+				C68B1DB017465F95004FD7D0 /* GStreamerBackend.m */,
+				C68B1D9617465EB7004FD7D0 /* AppDelegate.h */,
+				C68B1D9717465EB7004FD7D0 /* AppDelegate.m */,
+				C68B1D9F17465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard */,
+				C68B1DA217465EB7004FD7D0 /* MainStoryboard_iPad.storyboard */,
+				C68B1DB217465F95004FD7D0 /* LibraryViewController.h */,
+				C68B1DB317465F95004FD7D0 /* LibraryViewController.m */,
+				C68B1DB417465F95004FD7D0 /* VideoViewController.h */,
+				C68B1DB517465F95004FD7D0 /* VideoViewController.m */,
+				C68B1D8E17465EB7004FD7D0 /* Supporting Files */,
+				63A43C581DBEBE850017F03D /* Images-5.xcassets */,
+			);
+			path = "Tutorial 5";
+			sourceTree = "<group>";
+		};
+		C68B1D8E17465EB7004FD7D0 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				63A43C5C1DBECF5B0017F03D /* ssl */,
+				C68C527B174D11F0007A0729 /* fonts.conf */,
+				C68C527D174D11F0007A0729 /* Ubuntu-R.ttf */,
+				C68B1D8F17465EB7004FD7D0 /* Tutorial 5-Info.plist */,
+				C68B1D9017465EB7004FD7D0 /* InfoPlist.strings */,
+				C68B1D9317465EB7004FD7D0 /* main.m */,
+				C68B1D9517465EB7004FD7D0 /* Tutorial 5-Prefix.pch */,
+				C68B1DAA17465EB8004FD7D0 /* gst_ios_init.h */,
+				C68C527C174D11F0007A0729 /* gst_ios_init.m */,
+				C68B1DB117465F95004FD7D0 /* GStreamerBackendDelegate.h */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C6B6126417395CF2003FC410 /* Tutorial 3 */ = {
+			isa = PBXGroup;
+			children = (
+				C6EB857A173A4D9500C3953D /* EaglUIVIew.h */,
+				C6EB857B173A4D9500C3953D /* EaglUIVIew.m */,
+				C6B6128817395D4F003FC410 /* GStreamerBackend.h */,
+				C6B6128917395D4F003FC410 /* GStreamerBackend.m */,
+				C6B6126D17395CF2003FC410 /* AppDelegate.h */,
+				C6B6126E17395CF2003FC410 /* AppDelegate.m */,
+				C6B6127617395CF2003FC410 /* MainStoryboard_iPhone.storyboard */,
+				C6B6127917395CF2003FC410 /* MainStoryboard_iPad.storyboard */,
+				C6B6127C17395CF2003FC410 /* ViewController.h */,
+				C6B6127D17395CF2003FC410 /* ViewController.m */,
+				C6B6126517395CF2003FC410 /* Supporting Files */,
+				63A43C5A1DBEBEC40017F03D /* Images-3.xcassets */,
+			);
+			path = "Tutorial 3";
+			sourceTree = "<group>";
+		};
+		C6B6126517395CF2003FC410 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				C68C5287174D13EB007A0729 /* fonts.conf */,
+				C68C5289174D13EB007A0729 /* Ubuntu-R.ttf */,
+				C6B6126617395CF2003FC410 /* Tutorial 3-Info.plist */,
+				C6B6126717395CF2003FC410 /* InfoPlist.strings */,
+				C6B6126A17395CF2003FC410 /* main.m */,
+				C6B6126C17395CF2003FC410 /* Tutorial 3-Prefix.pch */,
+				C6B6128D17395EE2003FC410 /* gst_ios_init.h */,
+				C68C5288174D13EB007A0729 /* gst_ios_init.m */,
+				C6B6128A17395D4F003FC410 /* GStreamerBackendDelegate.h */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C6EB8586173BEE5E00C3953D /* Tutorial 4 */ = {
+			isa = PBXGroup;
+			children = (
+				C6EB85AA173BEF2600C3953D /* EaglUIVIew.h */,
+				C6EB85AB173BEF2600C3953D /* EaglUIVIew.m */,
+				C6EB85AE173BEF2600C3953D /* GStreamerBackend.h */,
+				C6EB85AF173BEF2600C3953D /* GStreamerBackend.m */,
+				C6EB858F173BEE5E00C3953D /* AppDelegate.h */,
+				C6EB8590173BEE5E00C3953D /* AppDelegate.m */,
+				C6EB8598173BEE5E00C3953D /* MainStoryboard_iPhone.storyboard */,
+				C6EB859B173BEE5E00C3953D /* MainStoryboard_iPad.storyboard */,
+				C6EB859E173BEE5E00C3953D /* VideoViewController.h */,
+				C6EB859F173BEE5E00C3953D /* VideoViewController.m */,
+				C6EB8587173BEE5E00C3953D /* Supporting Files */,
+				63A43C561DBEBE770017F03D /* Images-4.xcassets */,
+			);
+			path = "Tutorial 4";
+			sourceTree = "<group>";
+		};
+		C6EB8587173BEE5E00C3953D /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				63A43C5E1DBECF6C0017F03D /* ssl */,
+				C68C5281174D137B007A0729 /* fonts.conf */,
+				C68C5283174D137B007A0729 /* Ubuntu-R.ttf */,
+				C6EB8588173BEE5E00C3953D /* Tutorial 4-Info.plist */,
+				C6EB8589173BEE5E00C3953D /* InfoPlist.strings */,
+				C6EB858C173BEE5E00C3953D /* main.m */,
+				C6EB858E173BEE5E00C3953D /* Tutorial 4-Prefix.pch */,
+				C6EB85AD173BEF2600C3953D /* gst_ios_init.h */,
+				C68C5282174D137B007A0729 /* gst_ios_init.m */,
+				C6EB85B0173BEF2600C3953D /* GStreamerBackendDelegate.h */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C67B40C8172EBEA3008359CC /* Tutorial 1 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C67B40F7172EBEA4008359CC /* Build configuration list for PBXNativeTarget "Tutorial 1" */;
+			buildPhases = (
+				C67B40C5172EBEA3008359CC /* Sources */,
+				C67B40C6172EBEA3008359CC /* Frameworks */,
+				C67B40C7172EBEA3008359CC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Tutorial 1";
+			productName = "Tutorial 1";
+			productReference = C67B40C9172EBEA3008359CC /* Tutorial 1.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C67B40FE172FC7F4008359CC /* Tutorial 2 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C67B4125172FC7F5008359CC /* Build configuration list for PBXNativeTarget "Tutorial 2" */;
+			buildPhases = (
+				C67B40FB172FC7F4008359CC /* Sources */,
+				C67B40FC172FC7F4008359CC /* Frameworks */,
+				C67B40FD172FC7F4008359CC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Tutorial 2";
+			productName = "Tutorial 2";
+			productReference = C67B40FF172FC7F4008359CC /* Tutorial 2.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C68B1D8717465EB7004FD7D0 /* Tutorial 5 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C68B1DAD17465EB8004FD7D0 /* Build configuration list for PBXNativeTarget "Tutorial 5" */;
+			buildPhases = (
+				C68B1D8417465EB7004FD7D0 /* Sources */,
+				C68B1D8517465EB7004FD7D0 /* Frameworks */,
+				C68B1D8617465EB7004FD7D0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Tutorial 5";
+			productName = "Tutorial 5";
+			productReference = C68B1D8817465EB7004FD7D0 /* Tutorial 5.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C6B6125E17395CF1003FC410 /* Tutorial 3 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C6B6128517395CF2003FC410 /* Build configuration list for PBXNativeTarget "Tutorial 3" */;
+			buildPhases = (
+				C6B6125B17395CF1003FC410 /* Sources */,
+				C6B6125C17395CF1003FC410 /* Frameworks */,
+				C6B6125D17395CF1003FC410 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Tutorial 3";
+			productName = "Tutorial 3";
+			productReference = C6B6125F17395CF1003FC410 /* Tutorial 3.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C6EB8580173BEE5D00C3953D /* Tutorial 4 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C6EB85A7173BEE5F00C3953D /* Build configuration list for PBXNativeTarget "Tutorial 4" */;
+			buildPhases = (
+				C6EB857D173BEE5D00C3953D /* Sources */,
+				C6EB857E173BEE5D00C3953D /* Frameworks */,
+				C6EB857F173BEE5D00C3953D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Tutorial 4";
+			productName = "Tutorial 4";
+			productReference = C6EB8581173BEE5D00C3953D /* Tutorial 4.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C67B40BF172EBDF1008359CC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0500;
+			};
+			buildConfigurationList = C67B40C2172EBDF1008359CC /* Build configuration list for PBXProject "GStreamer iOS Tutorials" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = C67B40BE172EBDF1008359CC;
+			productRefGroup = C67B40CA172EBEA3008359CC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C67B40C8172EBEA3008359CC /* Tutorial 1 */,
+				C67B40FE172FC7F4008359CC /* Tutorial 2 */,
+				C6B6125E17395CF1003FC410 /* Tutorial 3 */,
+				C6EB8580173BEE5D00C3953D /* Tutorial 4 */,
+				C68B1D8717465EB7004FD7D0 /* Tutorial 5 */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C67B40C7172EBEA3008359CC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C67B40D9172EBEA3008359CC /* InfoPlist.strings in Resources */,
+				C67B40E8172EBEA3008359CC /* MainStoryboard_iPhone.storyboard in Resources */,
+				C67B40EB172EBEA3008359CC /* MainStoryboard_iPad.storyboard in Resources */,
+				63A43C111DBEB7F50017F03D /* Images-1.xcassets in Resources */,
+				C68C5296174D1427007A0729 /* fonts.conf in Resources */,
+				C68C5298174D1427007A0729 /* Ubuntu-R.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C67B40FD172FC7F4008359CC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C67B4109172FC7F4008359CC /* InfoPlist.strings in Resources */,
+				C67B4118172FC7F5008359CC /* MainStoryboard_iPhone.storyboard in Resources */,
+				C67B411B172FC7F5008359CC /* MainStoryboard_iPad.storyboard in Resources */,
+				63A43C551DBEBDBE0017F03D /* Images-2.xcassets in Resources */,
+				C68C5290174D1408007A0729 /* fonts.conf in Resources */,
+				C68C5292174D1408007A0729 /* Ubuntu-R.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C68B1D8617465EB7004FD7D0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63A43C611DBED0600017F03D /* ssl in Resources */,
+				C68B1D9217465EB7004FD7D0 /* InfoPlist.strings in Resources */,
+				C68B1DA117465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard in Resources */,
+				C68B1DA417465EB7004FD7D0 /* MainStoryboard_iPad.storyboard in Resources */,
+				63A43C591DBEBE850017F03D /* Images-5.xcassets in Resources */,
+				C68C527E174D11F0007A0729 /* fonts.conf in Resources */,
+				C68C5280174D11F0007A0729 /* Ubuntu-R.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C6B6125D17395CF1003FC410 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C6B6126917395CF2003FC410 /* InfoPlist.strings in Resources */,
+				C6B6127817395CF2003FC410 /* MainStoryboard_iPhone.storyboard in Resources */,
+				C6B6127B17395CF2003FC410 /* MainStoryboard_iPad.storyboard in Resources */,
+				C68C528A174D13EB007A0729 /* fonts.conf in Resources */,
+				C68C528C174D13EB007A0729 /* Ubuntu-R.ttf in Resources */,
+				63A43C5B1DBEBEC40017F03D /* Images-3.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C6EB857F173BEE5D00C3953D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C6EB858B173BEE5E00C3953D /* InfoPlist.strings in Resources */,
+				C6EB859A173BEE5E00C3953D /* MainStoryboard_iPhone.storyboard in Resources */,
+				C6EB859D173BEE5E00C3953D /* MainStoryboard_iPad.storyboard in Resources */,
+				C68C5284174D137B007A0729 /* fonts.conf in Resources */,
+				63A43C571DBEBE770017F03D /* Images-4.xcassets in Resources */,
+				63A43C5F1DBECF6C0017F03D /* ssl in Resources */,
+				C68C5286174D137B007A0729 /* Ubuntu-R.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C67B40C5172EBEA3008359CC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C67B40DB172EBEA3008359CC /* main.m in Sources */,
+				C67B40DF172EBEA3008359CC /* AppDelegate.m in Sources */,
+				C67B40EE172EBEA3008359CC /* ViewController.m in Sources */,
+				C67B40FA172EC27D008359CC /* GStreamerBackend.m in Sources */,
+				C68C5297174D1427007A0729 /* gst_ios_init.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C67B40FB172FC7F4008359CC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C67B410B172FC7F4008359CC /* main.m in Sources */,
+				C67B410F172FC7F5008359CC /* AppDelegate.m in Sources */,
+				C67B411E172FC7F5008359CC /* ViewController.m in Sources */,
+				C67B412E172FCC4C008359CC /* GStreamerBackend.m in Sources */,
+				C68C5291174D1408007A0729 /* gst_ios_init.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C68B1D8417465EB7004FD7D0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C68B1D9417465EB7004FD7D0 /* main.m in Sources */,
+				C68B1D9817465EB7004FD7D0 /* AppDelegate.m in Sources */,
+				C68B1DB617465F96004FD7D0 /* GStreamerBackend.m in Sources */,
+				C68B1DB717465F96004FD7D0 /* LibraryViewController.m in Sources */,
+				C68B1DB817465F96004FD7D0 /* VideoViewController.m in Sources */,
+				C68B1DBA17465FD4004FD7D0 /* EaglUIVIew.m in Sources */,
+				C68C527F174D11F0007A0729 /* gst_ios_init.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C6B6125B17395CF1003FC410 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C6B6126B17395CF2003FC410 /* main.m in Sources */,
+				C6B6126F17395CF2003FC410 /* AppDelegate.m in Sources */,
+				C6B6127E17395CF2003FC410 /* ViewController.m in Sources */,
+				C6B6128B17395D4F003FC410 /* GStreamerBackend.m in Sources */,
+				C6EB857C173A4D9500C3953D /* EaglUIVIew.m in Sources */,
+				C68C528B174D13EB007A0729 /* gst_ios_init.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C6EB857D173BEE5D00C3953D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C6EB858D173BEE5E00C3953D /* main.m in Sources */,
+				C6EB8591173BEE5E00C3953D /* AppDelegate.m in Sources */,
+				C6EB85A0173BEE5E00C3953D /* VideoViewController.m in Sources */,
+				C6EB85B1173BEF2600C3953D /* EaglUIVIew.m in Sources */,
+				C6EB85B3173BEF2600C3953D /* GStreamerBackend.m in Sources */,
+				C68C5285174D137B007A0729 /* gst_ios_init.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		C67B40D7172EBEA3008359CC /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C67B40D8172EBEA3008359CC /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C67B40E6172EBEA3008359CC /* MainStoryboard_iPhone.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C67B40E7172EBEA3008359CC /* en */,
+			);
+			name = MainStoryboard_iPhone.storyboard;
+			sourceTree = "<group>";
+		};
+		C67B40E9172EBEA3008359CC /* MainStoryboard_iPad.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C67B40EA172EBEA3008359CC /* en */,
+			);
+			name = MainStoryboard_iPad.storyboard;
+			sourceTree = "<group>";
+		};
+		C67B4107172FC7F4008359CC /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C67B4108172FC7F4008359CC /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C67B4116172FC7F5008359CC /* MainStoryboard_iPhone.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C67B4117172FC7F5008359CC /* en */,
+			);
+			name = MainStoryboard_iPhone.storyboard;
+			sourceTree = "<group>";
+		};
+		C67B4119172FC7F5008359CC /* MainStoryboard_iPad.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C67B411A172FC7F5008359CC /* en */,
+			);
+			name = MainStoryboard_iPad.storyboard;
+			sourceTree = "<group>";
+		};
+		C68B1D9017465EB7004FD7D0 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C68B1D9117465EB7004FD7D0 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C68B1D9F17465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C68B1DA017465EB7004FD7D0 /* en */,
+			);
+			name = MainStoryboard_iPhone.storyboard;
+			sourceTree = "<group>";
+		};
+		C68B1DA217465EB7004FD7D0 /* MainStoryboard_iPad.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C68B1DA317465EB7004FD7D0 /* en */,
+			);
+			name = MainStoryboard_iPad.storyboard;
+			sourceTree = "<group>";
+		};
+		C6B6126717395CF2003FC410 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C6B6126817395CF2003FC410 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C6B6127617395CF2003FC410 /* MainStoryboard_iPhone.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C6B6127717395CF2003FC410 /* en */,
+			);
+			name = MainStoryboard_iPhone.storyboard;
+			sourceTree = "<group>";
+		};
+		C6B6127917395CF2003FC410 /* MainStoryboard_iPad.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C6B6127A17395CF2003FC410 /* en */,
+			);
+			name = MainStoryboard_iPad.storyboard;
+			sourceTree = "<group>";
+		};
+		C6EB8589173BEE5E00C3953D /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C6EB858A173BEE5E00C3953D /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C6EB8598173BEE5E00C3953D /* MainStoryboard_iPhone.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C6EB8599173BEE5E00C3953D /* en */,
+			);
+			name = MainStoryboard_iPhone.storyboard;
+			sourceTree = "<group>";
+		};
+		C6EB859B173BEE5E00C3953D /* MainStoryboard_iPad.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C6EB859C173BEE5E00C3953D /* en */,
+			);
+			name = MainStoryboard_iPad.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		C67B40C3172EBDF1008359CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ENABLE_BITCODE = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+				VALID_ARCHS = "arm64 x86_64";
+			};
+			name = Debug;
+		};
+		C67B40C4172EBDF1008359CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ENABLE_BITCODE = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				ONLY_ACTIVE_ARCH = NO;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+				VALID_ARCHS = "arm64 x86_64";
+			};
+			name = Release;
+		};
+		C67B40F5172EBEA4008359CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-1";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "LaunchImage-1";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 1/Tutorial 1-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 1/Tutorial 1-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-1";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		C67B40F6172EBEA4008359CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-1";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "LaunchImage-1";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 1/Tutorial 1-Prefix.pch";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 1/Tutorial 1-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-1";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		C67B4126172FC7F5008359CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-2";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "LaunchImage-2";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 2/Tutorial 2-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 2/Tutorial 2-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
+					"-framework",
+					IOSurface,
+					"-framework",
+					Metal,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-2";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		C67B4127172FC7F5008359CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-2";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "LaunchImage-2";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 2/Tutorial 2-Prefix.pch";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 2/Tutorial 2-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
+					"-framework",
+					IOSurface,
+					"-framework",
+					Metal,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-2";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		C68B1DAB17465EB8004FD7D0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-5";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "LaunchImage-5";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 5/Tutorial 5-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 5/Tutorial 5-Info.plist";
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
+					"-framework",
+					CoreText,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-5";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		C68B1DAC17465EB8004FD7D0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-5";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "LaunchImage-5";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 5/Tutorial 5-Prefix.pch";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 5/Tutorial 5-Info.plist";
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
+					"-framework",
+					CoreText,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-5";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		C6B6128617395CF2003FC410 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-3";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "LaunchImage-3";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 3/Tutorial 3-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 3/Tutorial 3-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-3";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		C6B6128717395CF2003FC410 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-3";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "LaunchImage-3";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 3/Tutorial 3-Prefix.pch";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 3/Tutorial 3-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-3";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		C6EB85A8173BEE5F00C3953D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-4";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "LaunchImage-4";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 4/Tutorial 4-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 4/Tutorial 4-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
+					"-framework",
+					CoreText,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-4";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		C6EB85A9173BEE5F00C3953D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-4";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "LaunchImage-4";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Tutorial 4/Tutorial 4-Prefix.pch";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				INFOPLIST_FILE = "Tutorial 4/Tutorial 4-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = (
+					"-lresolv",
+					"-lc++",
+					"-framework",
+					CoreFoundation,
+					"-framework",
+					Foundation,
+					"-framework",
+					AVFoundation,
+					"-framework",
+					CoreMedia,
+					"-framework",
+					CoreVideo,
+					"-framework",
+					CoreAudio,
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					OpenGLES,
+					"-framework",
+					AssetsLibrary,
+					"-framework",
+					QuartzCore,
+					"-framework",
+					AssetsLibrary,
+					"-weak_framework",
+					VideoToolBox,
+					"-framework",
+					CoreText,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-4";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C67B40C2172EBDF1008359CC /* Build configuration list for PBXProject "GStreamer iOS Tutorials" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C67B40C3172EBDF1008359CC /* Debug */,
+				C67B40C4172EBDF1008359CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C67B40F7172EBEA4008359CC /* Build configuration list for PBXNativeTarget "Tutorial 1" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C67B40F5172EBEA4008359CC /* Debug */,
+				C67B40F6172EBEA4008359CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C67B4125172FC7F5008359CC /* Build configuration list for PBXNativeTarget "Tutorial 2" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C67B4126172FC7F5008359CC /* Debug */,
+				C67B4127172FC7F5008359CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C68B1DAD17465EB8004FD7D0 /* Build configuration list for PBXNativeTarget "Tutorial 5" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C68B1DAB17465EB8004FD7D0 /* Debug */,
+				C68B1DAC17465EB8004FD7D0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C6B6128517395CF2003FC410 /* Build configuration list for PBXNativeTarget "Tutorial 3" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C6B6128617395CF2003FC410 /* Debug */,
+				C6B6128717395CF2003FC410 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C6EB85A7173BEE5F00C3953D /* Build configuration list for PBXNativeTarget "Tutorial 4" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C6EB85A8173BEE5F00C3953D /* Debug */,
+				C6EB85A9173BEE5F00C3953D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C67B40BF172EBDF1008359CC /* Project object */;
+}

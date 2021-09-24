@@ -1,0 +1,25 @@
+@require(page)
+
+<li class="dropdown">
+    <a class="dropdown-toggle" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        API References<span class="caret"></span>
+    </a>
+	<ul class="dropdown-menu" id="modules-menu">
+		@for tup in (("gstreamer/gi-index.html","GStreamer core"), \
+				("libs.html","GStreamer Libraries"),\
+				("plugins_doc.html","GStreamer Plugins")):
+			<li>
+				<a href="@tup[0]">@tup[1]</a>
+			</li>
+		@end
+</li>
+
+<li>
+    <a href="application-development/index.html">Application manual</a>
+</li>
+
+
+<li>
+    <a href="tutorials/index.html">Tutorials</a>
+</li>
+

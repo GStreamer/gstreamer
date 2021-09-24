@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GStreamer tutorial 5</string>
+    <string name="button_play">Play</string>
+    <string name="button_stop">Stop</string>
+    <string name="button_select">Select</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="filechooser_name">Select a file</string>
+    <string name="location">Location</string>
+    <string name="cant_read_folder">folder cannot be read</string>
+    <string name="icon">Icon</string>
+</resources>
