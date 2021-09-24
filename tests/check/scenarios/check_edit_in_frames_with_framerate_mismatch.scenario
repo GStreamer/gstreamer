@@ -1,0 +1,23 @@
+description, handles-states=true,
+    ges-options={\
+        --track-types, video,
+        --disable-mixing,
+        "--videosink=fakevideosink"\
+    }
+
+add-clip, name=clip, asset-id="time-overlay,framerate=120/1", layer-priority=0, type=GESSourceClip, pattern=blue, duration=f240, inpoint=f100
+set-child-properties, element-name=clip, time-mode=time-code
+pause
+
+check-last-sample, sinkpad-caps="video/x-raw", timecode-frame-number=100
+
+edit, element-name=clip, edit-mode=normal, position=1.0
+
+edit, element-name=clip, edit-mode=edit_trim, edge=start, source-frame=60
+edit, element-name=clip, position=0
+commit;
+check-last-sample, sinkpad-caps="video/x-raw", timecode-frame-number=60
+
+edit, element-name=clip, edit-mode=edit_trim, edge=start, source-frame=120
+check-ges-properties, element-name=clip, start=0.5
+stop

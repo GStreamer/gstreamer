@@ -1,0 +1,440 @@
+GStreamer Editing Services
+--------------------------
+
+  This is a list of features and goals for the GStreamer Editing
+  Services.
+
+  Some features are already implemented, and some others not. When the
+  status is not specified, this means it is still not implemented but
+  might be investigated.
+
+
+FUNDAMENTAL GOALS:
+
+ 1) API must be easy to use for simple use-cases. Use and abuse
+ convenience methods.
+ 2) API must allow as many use-cases as possible, not just the simple
+ ones.
+
+
+FEATURES
+
+Index of features:
+
+ * Project file load/save support (GESFormatter)
+ * Grouping/Linking of Multiple TrackObjects
+ * Selection support (Extension from Grouping/Linking)
+ * Effects support
+ * Source Material object
+ * Proxy support
+ * Editing modes (Ripple/Roll/Slip/Slide)
+ * Coherent handling of Content in different formats
+ * Video compositing and audio mixing
+ * Handling of alpha video (i.e. transparency)
+ * Faster/Tigher interaction with GNonLin elements
+ * Media Asset Management integration
+ * Templates
+ * Plugin system
+
+
+
+* Project file load/save support (GESFormatter)
+
+  Status:
+   Implemented, requires API addition for all use-cases.
+
+  Problems:
+   Timelines can be stored in many different formats, we need to
+   ensure it is as easy/trivial as possible for users to load/save
+   those timelines.
+   Some timeline formats might have format-specific
+   sources/objects/effects which need to be handled in certain ways
+   and therefore provide their own classes.
+
+  The object that can save/load GESTimeline are Formatters.
+
+  Formatters can offer support for load-only/save-only formats.
+
+  There must be a list of well-known GES classes that all formatters
+  must be able to cope with. If a subclass of one of those classes is
+  present in a timeline, the formatter will do its best to store a
+  compatible information.
+
+  A Formatter can ask a pre-render of classes that it doesn't
+  understand (See Proxy section).
+
+  Formatters can provide subclasses of well-known GES classes when
+  filling in the timeline to offer format-specific features.
+
+
+
+* Grouping/Linking of Multiple TrackObjects
+
+  Status:
+   Implemented, but doesn't have public API for controlling the
+   tracked objects or creating groups from TimelineObject(s)
+
+  Problems:
+   In order to make the usage of timelines at the Layer level as easy
+   as possible, we must be able to group any TrackObject together as
+   one TimelineObject.
+
+  The base GESTimelineObject keeps a reference to all the
+  GESTrackObjects it is controlling. It contains a mapping of the
+  position of those track objects relatively to the timeline objects.
+
+  TrackObjects will move and be modified synchronously with the
+  TimelineObject, and vice-versa.
+
+  TrackObjects can be 'unlocked' from the changes of its controlling
+  TimelineObject. In this case, it will not move and be modified
+  synchronously with the TimelineObject.
+
+
+
+* Selection support (Extension from Grouping/Linking)
+   
+  Problems:
+   In order to make user-interface faster to write, we must have a way
+   to create selections of user-selected TimelineObject(s) or
+   TrackObject(s) to move them together.
+
+  This should be able to do by creating a non-visible (maybe not even
+  inserted in the layer?) TimelineObject.
+
+
+
+* Effects support
+
+  Status:
+    Partially Implemented, requires API addition for all use-cases.
+
+  Problems:
+    In order for users to apply multimedia effects in their timelines,
+    we need an API to search, add and control those effects.
+
+  We must be able to provide a list of effects available on the system
+  at runtime.
+  We must be able to configure effects through an API in GES without
+  having to access the GstElements properties directly.
+
+  We should also expose the GstElements contained in an effect so it
+  is possible for people to control their properties as they wish.
+
+  We must be able to implement and handle complex effects directly in
+  GES.
+
+  We must be able to configure effects through time -> Keyframes
+  without duplicating code from GStreamer.
+
+
+
+* Source Material object
+
+  Problems:
+   Several TimelineSource for a same uri actually share a lot
+   in common. That information will mostly come from GstDiscoverer,
+   but could also contain extra information provided by 3rd party
+   modules.
+
+   The information regarding the various streams (and obtained through
+   optionally running GstDiscoverer) is not stored and has to be
+   re-analyzed else where.
+
+  Definition:
+   Material: n, The substance or substances out of which a thing is or
+   can be made.
+
+  In order to avoid duplicating that information in every single
+  TimelineSource, a 'Material' object needs to be made available.
+
+  A Material object contains all the information which is independent
+  of the usage of that material in a timeline.
+
+  A Material contains the list of 'streams' that can be provided with
+  as much information as possible (ex: contains audio and video
+  streams with full caps information, or better yet the output of
+  GstDiscoverer).
+
+  A Material contains the various Metadata (author, title, origin,
+  copyright ,....).
+
+  A Material object can specify the TimelineSource class to use in a
+  Layer.
+
+
+
+* Proxy support
+
+  Problems:
+   A certain content might be impossible to edit on a certain setup
+   due to many reasons (too complex to decode in realtime, not in
+   digital format, not available locally, ...).
+
+   In order to be able to store/export timelines to some formats, one
+   might need to have to create a pre-render of some items of the
+   timeline, while retaining as much information as possible.
+
+   Content here is not limited to single materials, it could very well
+   be a complex combination of materials/effects like a timeline or a
+   collection of images.
+
+  To solve this problem, we need a notion of ProxyMaterial.
+
+  It is a subclass of Material and as such provides all the same
+  features as Material.
+
+  It should be made easy to create one from an existing TimelineSource
+  (and it's associated Material(s)), with specifiable rendering
+  settings and output location.
+
+  The user should have the possibility to switch from Proxy materials
+  to original (in order to use the lower
+  resolution/quality/... version for the editing phase and the
+  original material for final rendering phase).
+
+  Requires:
+   GESMaterial
+
+
+
+* Editing modes (Ripple/Roll/Slip/Slide)
+
+  Status:
+   Not implemented.
+
+  Problems:
+   Most editing relies on heavy usage of 4 editing tools which editors
+   will require. Ripple/Roll happen on edit points (between two clips)
+   and Slip/Slide happen on a clip.
+
+   The Ripple tool allows you to modify the beginning/end of a clip
+   and move the neighbour accordingly. This will change the overall
+   timeline duration.
+
+   The Roll tool allows you to modify the position of an editing point
+   between two clips without modifying the inpoint of the first clip
+   nor the out-point of the second clip. This will not change the
+   overall timeline duration.
+
+   The Slip tool allows you to modify the in-point of a clip without
+   modifying it's duration or position in the timeline.
+
+   The Slide tool allows you to modify the position of a clip in a
+   timeline without modifying it's duration or it's in-point, but will
+   modify the out-point of the previous clip and in-point of the
+   following clip so as not to modify the overall timeline duration.
+
+   These tools can be used both on TimelineObjects and on
+   TrackObjects, we need to make sure that changes are propagated
+   properly.
+
+
+
+* Coherent handling of Content in different formats
+
+  Problems:
+   When mixing content in different format (Aspect-Ratio, Size, color
+   depth, number of audio channels, ...), decisions need to be made on
+   whether to conform the material to a common format or not, and on
+   how to conform that material.
+
+   Conforming the material here means bringing it to a common format.
+
+  All the information regarding the contents we are handling are
+  stored in the various GESMaterial. The target format is also known
+  through the caps of the various GESTracks involved. The Material and
+  track output caps will allow us to make decisions on what course of
+  action to take.
+
+  By default content should be conformed to a good balance of speed
+  and avoid loss of information.
+    Ex: If mixing a 4:3 video and a 16:9 video with a target track
+        aspect ratio of 4:3, we will make the width of the two videos
+        be equal without distorting their respective aspect-ratios.
+
+  Requires:
+   GESMaterial
+
+  See also:
+   Video compositing and audio mixing
+
+
+
+* Video compositing and audio mixing
+
+  Status:
+   Not implemented. The bare minimum to implement are the static
+   absolute property handling. Relative/variable properties and group
+   handling can be done once we know how to handle object grouping.
+
+  Problems:
+   Editing requires not only a linear combination of cuts and
+   sequences, but also mixing various content/effect at the same
+   time.
+
+   Audio and Video compositing/mixing requires having a set of base
+   properties for all sources that indicate their positioning in the
+   final composition.
+
+   Audio properties
+    * Volume
+    * Panning (or more generally positioning and up-/down-mixing for
+      multi-channel).
+
+   Video properties
+    * Z-layer (implicit through priority property)
+    * X,Y position
+    * Vertical and Horizontal scaling
+    * Global Alpha (see note below about alpha).
+
+   A big problem with compositing/mixing is handling positioning that
+   could change due to different input/output format AND avoiding any
+   quality loss.
+
+   Example 1 (video position and scale/aspect-ratio changes):
+    A user puts a 32x24 logo video at position 10,10 on a 1280x720
+    video. Later on the user decides to render the timeline to a
+    different resolution (like 1920x1080) or aspect ratio (4:3 instead
+    of 16:9).
+    The overlayed logo should stay at the same relative position
+    regardless of the output format.
+
+   Example 2 (video scaling):
+    A user decides to overlay a video logo which is originally a
+    320x240 video by scaling it down to 32x24 on top of a 1280x720
+    video. Later on the user decides to render a 1920x1080 version of
+    the timeline.
+    The resulting rendered 1920x1080 video shall have the overlay
+    video located at the exact relative position and using a 64x48
+    downscale of the original overlay video (i.e. avoiding a
+    640x480=>32x24=>64x48 double-scaling).
+
+   Example 3 (audio volume):
+    A user adjusts the commentary audio track and the soundtrack audio
+    track based on the volume of the various videos playing. Later on
+    the user wants to adjust the overall audio volume in order for the
+    final output to conform to a target RMS/peak volume.
+    The resulting relative volumes of each track should be the same
+    WITHOUT any extra loss of audio quality (i.e. avoiding a
+    downscale/upscale lossy volume conversion cycle).
+
+   Example 4 (audio positioning):
+    A user adjusts the relative panning/positioning of the commentary,
+    soundtrack and sequence for a 5.1 mixing. Later on he decides to
+    make a 7.1 and a stereo rendering.
+    The resulting relative positioning should be kept as much as
+    possible (left/right downmix and re-positioning for extra 2
+    channels in the case of 7.1 upmixing) WITHOUT any extra loss in
+    quality.
+
+
+  Create a new 'CompositingProperties' object for audio and video
+  which is an extensible set of properties for media-specific
+  positioning. This contains the properties mentionned above.
+
+  Add the CompositingProperties object to the base GESTrackObject
+  which points to the audio or video CompositingProperties
+  object (depending on what format that object is handling).
+
+  Provide convenience functions to retrieve and set the audio or video
+  compositing properties of a GESTrackObject. Do the same for the
+  GESTimelineObject, which proxies it to the relevant GESTrackObject.
+
+  Create a new GESTrack{Audio|Video}Compositing GstElement which will
+  be put in each track as a priority 0 expandable NleOperation.
+  That object will be able to figure out which
+  mixing/scaling/conversion elements to use at any given time by
+  inspecting:
+   * The various GESTrackObject Compositing Properties
+   * The various GESTrackObject GESMaterial stream properties
+   * The GESTrack target output GstCaps
+
+  The properties values could be both set/stored as 'relative' values
+  and as 'absolute' values in order to handle any input/output formats
+  or setting.
+
+  Objects that are linked/grouped with others have their properties
+  move in sync with each other. (Ex: If an overlay logo is locked to a
+  video, it will scale/move/be-transparent in sync with the video on
+  which it is overlayed).
+
+  Objects that are not linked/grouped to other objects have their
+  properties move in sync with the target format. If the target format
+  changes, all object positioning will change relatively to that
+  format.
+
+  Requires:
+   GESMaterial
+
+  See also:
+   Coherent handling of Content in different formats
+
+
+
+* Handling of alpha video (i.e. transparency)
+
+  Problem:
+   Some streams will contain partial transparency (overlay
+   logos/videos, bluescreen, ...).
+
+   Those streams need to be handle-able by the user just like
+   non-alpha videos without losing the transparency regions (i.e. it
+   should be properly blended with the underlying regions).
+
+
+
+* Faster/Tighter interaction with GNonLin elements
+
+  Problems:
+   A lot of properties/concepts need to be duplicated at the GES level
+   since the only way to communicate with the GNonLin elements is
+   through publically available APIs (GObject and GStreamer APIs).
+
+   The GESTrackObject for example has to duplicate exactly the same
+   properties as NleObject for no reason.
+
+   Other properties are also expensive to re-compute and also become
+   non-MT-safe (like computing the exact 'tree' of objects at a
+   certain position in a NleComposition).
+
+  Merge the GES and GNonLin modules together into one single module,
+  and keep the same previous API for both for backward compatibility.
+
+  Add additional APIs to GNonLin which GES can use.
+
+
+
+* Media Asset Management integration
+
+  (Track, Search, Browse, Push content) TBD
+
+
+
+* Templates
+
+  Problem:
+   In order to create as quickly as possible professional-looking
+   timelines, we need to provide a way to create 'templates' which
+   users can select and have an automatic timeline 'look' used.
+
+   This will allow users to be able to quickly add their clips, set
+   titles and have a timeline with a professional look. This is
+   similar to the same feature that iMovie offers both on desktop and
+   iOS.
+
+
+
+* Plugin system
+
+  Problem:
+   All of GES classes are made in such a way that creating new
+   sources, effects, templates, formatters, etc... can be easily added
+   either to the GES codebase itself or to applications.
+
+   But in order to provide more features without depending on GES
+   releases, limit those features to a single application, and in
+   order to provide 'closed'/3rd party features, we need to implement
+   a plugin system so one can add new features.
+
+  Use a registry system similar to GStreamer.

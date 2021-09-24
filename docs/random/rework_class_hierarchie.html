@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" >
+<title> Rework the GStreamer Editing Services class hierarchy </title>
+<xmp theme="cerulean" style="display:none;">
+
+Reasoning:
+----------
+
+All the time (position) related concepts are shared between GESTimelineObject and GESTrackObject
+and currently are repeated at the 2 levels.
+Moreover, if we want to add the concept of Group we end up with something quite similare to the current
+GESTimelineObject but that contains GESTimelineObject-s instead of GESTrackObject-s so we could share
+those informations creating a new class aiming at containing the objects that have that
+notion of timing.
+
+At the same time, we want to clarify namings. First we should remove the word Object in class names,
+we have been told various times that it sounds just "wrong" for people as Objects are instances and there
+we are talking about Classes.
+
+Class Hierarchy:
+-------------
+
+<pre><code>
+<table>
+<tr>
+  <td>
+
+Before:
+-------
+
+GESTimelineObject
+    GESTimelineSource
+        GESCustomTimelineSource
+        GESTimelineTestSource
+        GESTimelineFileSource
+        GESTimelineTitleSource
+    GESTimelineOperation
+        GESTimelineOverlay
+            GESTimelineTextOverlay
+        GESTimelineTransition
+            GESTimelineTransition
+        GESTimelineEffect
+            GESTimelineParseLaunchEffect
+GESTimelineLayer
+    GESSimpleTimelineLayer
+GESTrackObject
+    GESTrackSource
+        GESTrackAudioTestSource
+        GESTrackFileSource
+        GESTrackImageSource
+        GESTrackTitleSource
+        GESTrackVideoTestSource
+    GESTrackOperation
+        GESTrackTransition
+            GESTrackAudioTransition
+            GESTrackVideoTransition
+        GESTrackEffect
+            GESTrackParseLaunchEffect
+        GESTrackTextOverlay
+  </td>
+  <td>
+
+After:
+-------
+
+GESTimelineElement
+    GESContainer
+        GESClip
+            GESSourceClip
+                GESCustomSourceClip
+                GESTestClip
+                GESUriClip
+                GESTitleClip
+            GESOperationClip
+                GESOverlayClip
+                    GESTextOverlayClip
+                GESBaseTransitionClip
+                    GESTransitionClip
+                GESBaseEffectClip
+                    GESEffectClip
+        GESClipGroup
+    GESTrackElement
+        GESSource
+            GESAudioTestSource
+            GESUriSource
+            GESImageSource
+            GESTitleSource
+            GESVideoTestSource
+        GESOperation
+            GESTransition
+                GESAudioTransition
+                GESVideoTransition
+            GESBaseEffect
+                GESEffect
+            GESTextOverlay
+    </td>
+  </tr>
+</table>
+</code></pre>
+</xmp>
+<script src="http://strapdownjs.com/v/0.1/strapdown.js"></script>
+</html>

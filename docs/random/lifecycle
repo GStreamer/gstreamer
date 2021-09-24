@@ -1,0 +1,18 @@
+Lifecycle of a Timeline/Track Object
+
+* Adding a TimelineObject to a Layer
+
+(tlobj:timelineobject, trobj:trackobject)
+
+ges_timeline_layer_add_object(layer, tlobj)
+  signal_emit "object-added", layer, tlobj
+  GESTimeline receives signal
+    for each TRACK {
+      ges_timeline_object_create_track_objects(tlobj, TRACK)
+        trobj = GESTimelineObject::create_track_objects
+        ges_track_add_object(TRACK, trobj)
+          ges_track_object_set_track(troj, TRACK)
+            nleobj = GESTrackObject::create_gnl_object
+            ges_timeline_object_fill_track_object(tlobj, trobj, nleobj)
+              GESTimelineObject::fill_track_object
+

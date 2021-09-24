@@ -1,0 +1,473 @@
+{
+    "ges": {
+        "description": "GStreamer Editing Services Plugin",
+        "elements": {
+            "gesdemux": {
+                "author": "Thibault Saunier <tsaunier@igalia.com",
+                "description": "Demuxer for complex timeline file formats using GES.",
+                "hierarchy": [
+                    "GESDemux",
+                    "GESBaseBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Codec/Demux/Editing",
+                "long-name": "GStreamer Editing Services based 'demuxer'",
+                "pad-templates": {
+                    "audio_src": {
+                        "caps": "audio/x-raw(ANY):\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "sink": {
+                        "caps": "application/xges:\ntext/x-xptv:\napplication/vnd.pixar.opentimelineio+json:\napplication/vnd.apple-xmeml+xml:\napplication/vnd.apple-fcp+xml:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "video_src": {
+                        "caps": "video/x-raw(ANY):\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "properties": {},
+                "rank": "primary",
+                "signals": {}
+            },
+            "gessrc": {
+                "author": "Thibault Saunier <tsaunier@igalia.com",
+                "description": "Source for GESTimeline.",
+                "hierarchy": [
+                    "GESSrc",
+                    "GESBaseBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy",
+                    "GstURIHandler"
+                ],
+                "klass": "Codec/Source/Editing",
+                "long-name": "GStreamer Editing Services based 'source'",
+                "pad-templates": {
+                    "audio_src": {
+                        "caps": "audio/x-raw(ANY):\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "video_src": {
+                        "caps": "video/x-raw(ANY):\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "properties": {},
+                "rank": "none",
+                "signals": {}
+            }
+        },
+        "filename": "gstges",
+        "license": "LGPL",
+        "other-types": {
+            "GESBaseBin": {
+                "hierarchy": [
+                    "GESBaseBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "kind": "object",
+                "properties": {
+                    "timeline": {
+                        "blurb": "Timeline to use in this src.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GESTimeline",
+                        "writable": true
+                    }
+                }
+            }
+        },
+        "package": "GStreamer Editing Services",
+        "source": "gst-editing-services",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "nle": {
+        "description": "GStreamer Non Linear Engine",
+        "elements": {
+            "nlecomposition": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>, Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>, Thibault Saunier <tsaunier@gnome.org>",
+                "description": "Combines NLE objects",
+                "hierarchy": [
+                    "NleComposition",
+                    "NleObject",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Filter/Editor",
+                "long-name": "GNonLin Composition",
+                "pad-templates": {
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "drop-tags": {
+                        "blurb": "Whether the composition should drop tags from its children",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "id": {
+                        "blurb": "The stream-id of the composition",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "commited": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "gboolean"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "first"
+                    }
+                }
+            },
+            "nleoperation": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>",
+                "description": "Encapsulates filters/effects for use with NLE Objects",
+                "hierarchy": [
+                    "NleOperation",
+                    "NleObject",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Filter/Editor",
+                "long-name": "GNonLin Operation",
+                "pad-templates": {
+                    "sink%%d": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "sinks": {
+                        "blurb": "Number of input sinks (-1 for automatic handling)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "input-priority-changed": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstPad"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    }
+                }
+            },
+            "nlesource": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>",
+                "description": "Manages source elements",
+                "hierarchy": [
+                    "NleSource",
+                    "NleObject",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Filter/Editor",
+                "long-name": "GNonLin Source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {},
+                "rank": "none",
+                "signals": {}
+            },
+            "nleurisource": {
+                "author": "Edward Hervey <bilboed@bilboed.com>",
+                "description": "High-level URI Source element",
+                "hierarchy": [
+                    "NleURISource",
+                    "NleSource",
+                    "NleObject",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Filter/Editor",
+                "long-name": "GNonLin URI Source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "properties": {
+                    "uri": {
+                        "blurb": "Uri of the file to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {}
+            }
+        },
+        "filename": "gstnle",
+        "license": "LGPL",
+        "other-types": {
+            "NleObject": {
+                "hierarchy": [
+                    "NleObject",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "kind": "object",
+                "properties": {
+                    "active": {
+                        "blurb": "Use this object in the NleComposition",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "caps": {
+                        "blurb": "Caps used to filter/choose the output stream",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "ANY",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstCaps",
+                        "writable": true
+                    },
+                    "duration": {
+                        "blurb": "Outgoing duration (in nanoseconds)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint64",
+                        "writable": true
+                    },
+                    "expandable": {
+                        "blurb": "Expand to the full duration of the container composition",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "inpoint": {
+                        "blurb": "The media start position (in nanoseconds)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "media-duration-factor": {
+                        "blurb": "The relative rate caused by this object",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "1.79769e+308",
+                        "min": "0.01",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
+                    "priority": {
+                        "blurb": "The priority of the object (0 = highest priority)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "start": {
+                        "blurb": "The start position relative to the parent (in nanoseconds)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "stop": {
+                        "blurb": "The stop position relative to the parent (in nanoseconds)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    }
+                },
+                "signals": {
+                    "commit": {
+                        "action": true,
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "gboolean"
+                            }
+                        ],
+                        "return-type": "gboolean",
+                        "when": "last"
+                    }
+                }
+            }
+        },
+        "package": "GStreamer Editing Services",
+        "source": "gst-editing-services",
+        "tracers": {},
+        "url": "Unknown package origin"
+    }
+}

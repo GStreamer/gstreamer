@@ -1,0 +1,18 @@
+GStreamer Editing Services
+--------------------------
+
+ This is a high-level library for facilitating the creation of audio/video
+non-linear editors.
+
+License:
+--------
+
+  This package and its contents are licensend under the GNU Lesser General
+Public License (LGPL).
+
+Dependencies:
+-------------
+
+ * GStreamer core
+ * gst-plugins-base
+

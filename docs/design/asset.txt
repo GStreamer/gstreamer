@@ -1,0 +1,321 @@
+Assets
+~~~~~~~~~
+
+This draft document describes a possible design for asset objects.
+
+The assets should be used in order to instantiate objects of differents
+types.
+
+Terminology: A asset is an object from which objects can be extracted.
+
+Summary
+~~~~~~~~~
+
+1. Basic ideas
+2. Problems
+3. Propositions to solve those problems
+4. Use-cases
+5. API draft
+   A. Asset API draft
+   B. Source asset API draft
+   C. Project asset API draft
+   D. Extractable/Asset Interface API draft
+   E. Methods that should be added to other classes
+
+1. Basic ideas
+~~~~~~~~~~~~~~~
+
+Basically, asset is a way of avoiding duplicating data between object and avoid
+processing when the same processing would happen several times for an 2 different
+objects of a same type.
+
+    * There will be a listing of avalaible, ready to use assets
+    * Asset allow to create some particular types of object that implement the GESExtractable
+      interface
+    * Assets will hold metadatas
+    * Assets can be either, created by the user, or will be created by GES itself
+      when initializing, there should be a way to disable that feature on demand.
+
+Some ideas of asset(especially for TimelineSource objects) can be found in docs/random/design.
+
+2. Problems (Not in any particular order)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    1) We have avoid to various times the same file on the system
+    2) We must be able to query assets by some criteria
+        a. By type of TimelineObject that it can produce
+        b. By type of supported tracks
+        c. Should we have filters by some specific properties of source asset
+           - like duration, width, height, etc?
+    3) We must be able to get reference to origin asset of any extracted object
+    4) We need a way to describe projects
+    5) GESAssets can be instantiated asynchronously
+    6) The instantiation of a asset can fail
+    7) Users need to get informations about the instantiation failures
+    8) User should be able to cancel the creation of a GESAsset (especially
+       in case of asynchronous Asset creation)
+
+3. Propositions to solve those problems
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    1) We should have an interface that needs to be implemented by classes that need to be extractable.
+       We can call it GESExtractable. It should be responsible for:
+          * letting the user get the Asset from which an extracted object comes from
+          * Making it possible to instantiate a GESAsset only from a GType which means that:
+              - It needs to contain a reference to a GES_TYPE_ASSET (or subclass) so the proper GESAsset type will be instantiated.
+              - It need to contain some mapping between the ID (string) of the asset, and the property of the object that is used as its ID.
+                For a property to be usable as an ID for its asset, each objects extracted from a same asset must have the same value for the property
+                Examples:
+                    GESTimelineFileSource -> URI
+                    GESTrackParseLaunchEffect -> bin_description
+                    GESProject -> project name / uri of the stored serialized
+
+    2) A list of all available, ready to be used assets should be cached  and
+       reused whenever it is possible.
+       Basically it will look like:
+          GESAsset.id -> asset
+       (the ID is computed thanks to the mapping)
+
+    4) To allow users to implement some sort of library (media, effects, transitions...)
+       we must be able to query assets by using some criteria,
+        e.g. GType of the extractable object, URI, supported track types, etc...
+
+    5) We can instantiate a GESAsset only from a GType, the appropriate checks need
+       to be done and it can return subclasses of GESAsset thanks to the
+       information included in the GESExtractable interface.
+
+    6) Instanciation can happen asyncronously in some cases. For example, a
+       asset that  needs to discover a file to be properly filled needs.
+
+4. Use cases
+~~~~~~~~~~~~~
+    UC-1. Define media files and discover them
+    UC-2. Define project - reference all assets
+    UC-3. Define titles
+    UC-4. Define operations
+        - Transitions - 1 asset per transition type
+        - Effects - 1 asset per effects type
+        - TextOverlay
+    UC-5. Handle metadata
+    UC-6. Add operations (only effects?) to a GESTimelineObject
+    UC-7. User want to 'invent' a new operation, we need to be able
+          to let him define it
+    UC-8. The user want to make an object from a GESAsset
+
+
+5. API Draft
+~~~~~~~~~~~~
+
+A. GESExtractable API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+GESExtractable is responsible for telling what GESAsset subclass need to
+be instantiated.
+
+/**
+ * ges_extractable_object_get_asset:
+ * @object: Target object
+ * Method to get asset which was used to instaniate specified object
+ * Returns: origin asset
+ */
+GESAsset *
+ges_extractable_get_asset(GESExtractable *extractable);
+
+/**
+ * ges_extractable_object_set_asset:
+ * @object: Target object
+ * @asset: (transfer none): The #GESAsset to set
+ *
+ * Method to set asset which was used to instaniate specified object
+ */
+void
+ges_extractable_set_asset (GESExtractable * self, GESAsset * asset)
+
+/**
+ * ges_extractable_get_asset_type:
+ * @class: Get the #GType of the GESAsset that should be used to extract
+ * the object that implements that #GESExtractable interface
+ *
+ * Lets user know the type of GESAsset that should be used to extract the
+ * object that implement that interface.
+ */
+GType
+ges_extractable_get_asset_type (GESExtractableClass *class)
+
+/**
+ * ges_extractable_get_id:
+ * @self: The #GESExtractable
+ *
+ * Returns: The #id of the associated #GESAsset
+ */
+const gchar *
+ges_extractable_get_id (GESExtractable * self)
+
+/**
+ * ges_extractable_type_get_parameters_for_id:
+ * @type: The #GType implementing #GESExtractable
+ * @id: The ID of the Extractable
+ * @n_params: (out): Return location for the returned array
+ *
+ * Returns: (transfer full) (array length=n_params): an array of #GParameter
+ * needed to extract the #GESExtractable from a #GESAsset of @id
+ */
+GParameter *
+ges_extractable_type_get_parameters_from_id (GType type, const gchar * id,
+    guint * n_params)
+
+/**
+ * ges_extractable_type_get_asset_type:
+ * @type: The #GType implementing #GESExtractable
+ *
+ * Get the #GType, subclass of #GES_TYPE_ASSET to instanciate
+ * to be able to extract a @type
+ *
+ * Returns: the #GType to use to create a asset to extract @type
+ */
+GType
+ges_extractable_type_get_asset_type (GType type)
+
+/**
+ * ges_extractable_type_check_id:
+ * @type: The #GType implementing #GESExtractable
+ * @id: The ID to check
+ *
+ * Check if @id is valid for @type
+ *
+ * Returns: Return %TRUE if @id is valid, %FALSE otherwise
+ */
+gchar *
+ges_extractable_type_check_id (GType type, const gchar * id)
+
+
+A. Asset And subclasses API draft
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+a) GESAsset
+|  ~~~~~~~~~~~
+|
+|  Will implement GESMetdata
+|
+|  Virtual method type:
+|  -------------------
+|
+|  /**
+|   * GESAssetCreatedCallback:
+|   * @asset: the #newly created #GESAsset or %NULL if something went wrong
+|   * @error: The #GError filled if previsouly provided in the constructor or %NULL
+|   * @user_data: The user data pointer
+|   *
+|   * A function that will be called when a #GESAsset is ready to be used.
+|   */
+|  typedef void (*GESAssetCreatedCallback)(GESAsset *asset, GError *error, gpointer user_data);
+|
+|
+|  Methods prototypes:
+|  -------------------
+|  /**
+|   * ges_asset_request:
+|   * @extractable_type: The #GType of the object that can be extracted from the new asset.
+|   *    The class must implement the #GESExtractable interface.
+|   * @callback: a #GAsyncReadyCallback to call when the initialization is finished
+|   * @id: The Identifier of the asset we want to create. This identifier depends of the extractable
+|   * type you want. By default it is the name of the class itself (or %NULL), but for example for a
+|   * GESTrackParseLaunchEffect, it will be the pipeline description, for a GESTimelineFileSource it
+|   * will be the name of the file, etc... You should refer to the documentation of the #GESExtractable
+|   * type you want to create a #GESAsset for.
+|   *
+|   * Creates a new #GESAsset asyncronously, @callback will be called when the materail is loaded
+|   *
+|   * Returns: %TRUE if the asset could be loaded to load %FALSE otherwize
+|   */
+|   gboolean
+|   ges_asset_request (GType extractable_type, GESAssetCreatedCallback callback,
+|                     gpointer user_data, const gchar *id);
+|
+|->b) GESAssetTimelineObject
+|  |  ~~~~~~~~~~~~~~~~~~~~~~~~~
+|  |  /**
+|  |   * ges_asset_timeline_object_get_track_types:
+|  |   * @asset: a #GESAssetTimelineObject
+|  |   *
+|  |   * Method that returns track types that are supported by given asset
+|  |   *
+|  |   * Returns: Track types that are supported by asset
+|  |   */
+|  |  GESTrackType
+|  |  ges_asset_timeline_object_get_track_types (GESAssetTimelineObject *asset);
+|  |
+|  |
+|  |-> c) GESAssetFileSource
+|         ~~~~~~~~~~~~~~~~~~~~~
+|      /**
+|       * ges_asset_file_source_get_stream_info:
+|       * @asset: a #GESAsset of extractable_type GES_TIMELINE_FILE_SOURCE
+|       * Method that returns discoverer data of specified asset so user could work with
+|       * it directly
+|       * Returns: discover info of asset
+|       */
+|      GstDiscovererStreamInfo *
+|      ges_asset_file_source_get_stream_info (GESAssetFileSource *asset);
+|
+|
+|-> d) GESProjectAsset asset API
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    A project is a GESAsset that has GES_TYPE_TIMELINE or subclasses as extractable_type
+
+    FIXME: This special case that should be thought thoroughly.
+
+    /**
+     * ges_asset_project_list_assets:
+     * @asset: Project asset
+     * @type: Type of asset to list
+     * Method for listing assets of specified type that are available in
+     * particular project.
+     *
+     * Returns: list of available assets of given type in project
+     */
+    ges_asset_project_list_assets (GESAsset *project,
+                                       GType type)
+
+E. Methods that should be added to other classes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+/**
+ * ges_timeline_layer_add_asset:
+ *
+ * Creates TimelineObject from asset, adds it to layer and
+ * returns reference to it.
+ *
+ * Returns: Created #GESTimelineObject
+ */
+GESTimelineObject * ges_timeline_layer_add_asset   (GESTimelineLayer *layer,
+                                                       GESAssetTimelineObject *asset,
+                                                       GstClockTime start,
+                                                       GstClockTime inpoint,
+                                                       GstClockTime duration,
+
+/**
+ * ges_timeline_remove_extracted_from_asset:
+ * @timeline: A #GESTimeline from which to remove objects
+ * @asset: The #GESAssetTimelineObject to remove from @timeline
+ *
+ * Removes all asset in @timeline that have been extracted from @asset
+ *
+ * Returns: %TRUE if everything could be done properly %FALSE otherwize
+ */
+gboolean ges_timeline_layer_add_asset   (GESTimeline *timeline, GESAsset *asset);
+
+/**
+ * ges_timeline_object_add_asset:
+ * @object: Target #GESTimelineObject
+ * @asset: a #GESAsset that must have a GES_TYPE_TRACK_OPERATION as extractable_type
+ * @priority: The priority of the new #GESTrackObject
+ *
+ * Adds an operation (GESTrackObject(s)) to a GESTimelineObject
+ *
+ * Returns: (transfer full):The newly created #GESTrackObject.
+ */
+GESTrackObject
+ges_timeline_object_add_asset (GESTimelineObject *object,
+                                  GESAsset *asset,
+                                  guint32 priority);

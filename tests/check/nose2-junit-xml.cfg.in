@@ -1,0 +1,3 @@
+[junit-xml]
+always-on = True
+path = @path@

@@ -1,0 +1,9 @@
+/build/
+/b/
+/_build/
+*~
+core.*
+
+core
+log
+

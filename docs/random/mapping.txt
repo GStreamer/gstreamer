@@ -1,0 +1,99 @@
+Mapping Timeline position to Track position
+-------------------------------------------
+
+TrackObject/TimelineObject basic properties (hereafter position):
+ start
+ duration
+ in-point
+ priority
+
+
+Use Cases:
+
+ A TimelineObject tracks one or many TrackObject(s).
+
+ When the TimelineObject position is modified we might need
+ to cascade those changes to the controlled TrackObject(s) if those
+ TrackObject(s) are 'locked' to the TimelineObject.
+
+ If we modify the positions of a TrackObject that TrackObject is
+ 'locked' to the TimelineObject, we need to ensure all the other
+ co-related TrackObject belong to the same TimelineObject are moved in
+ the same way.
+
+ A TrackObject can be temporarily 'unlocked' from its TimelineObject,
+ so as to move it independently, and then 'locked' back to it. This
+ can allow moves, like shifting audio trackobject in relation to the
+ video trackobject (to fix sync issues) and then 'lock' them back so
+ as to be able to move them as one entity thereafter.
+
+ When adding TimelineOverlay(s) or TimelineEffect(s) on a
+ TimelineObject, we need to ensure the TrackObject(s) that those extra
+ effects will create can be added with specific priority offsets, in
+ such a way that they always end up "on top" of the TimelineObject's
+ existing tracked TrackObject(s).
+
+ When a controlled TrackObject is being moved when 'unlocked', we need
+ to make sure the duration/height of the TimelineObject is updated
+ accordingly. Ex : moving a TrackObject down by one priority should
+ increase the TimelineObject "heigh" property by 1.
+
+ A TimelineObject might want to have a tighter control over which
+ Track(s) each of the TrackObjects it is controlling are going. This
+ is more obvious in the case of timeline with multiple Tracks of the
+ same kind, or if a TimelineObject can produce multiple TrackObjects
+ of the same media type (ex: file with multiple audio tracks).
+
+
+Main Problem:
+
+ There needs to be a mapping between the TimelineObject basic
+ properties and its controlled TrackObject(s) position.
+
+Design:
+
+ The TimelineObject listen to TrackObject 'notify' signals
+
+ When it sets a property on its trackobjects, it 'ignores' all
+ notifications that happen while setting them.
+
+ Setting a property on a TrackObject will see its property changed,
+ and then it emits a notify with the modified property.
+
+ TrackObject::locked
+  ges_track_object_set_locked()
+  ges_track_object_is_locked()
+
+ Mapping {
+   GESTrackObject *object;
+   gint64 start_offset;
+   gint64 duration_offset;
+   gint64 inpoint_offset;
+   gint32 priority_offset;
+   /* Track ??? */
+ }
+
+ P : property
+ V : value
+
+ TimelineObject set_property(P,V)
+   ignore_notifies = TRUE
+   parent.P = V
+   foreach child in trackobjects:
+     if child.is_locked():
+        child.set_property(P, parent.P + mapping(child).P_offset)
+   ignore_notifies = FALSE
+
+ TimelineObject child 'notify::P' handler:
+   if ignore_notifies:
+      return
+   if not child.is_locked():
+     mapping(child).P_offset = timeline.P - child.P
+   else:
+     TimelineObject.set_property(P, child value + mapping(child).P_offset)
+
+ TrackObject set_property(P, V)
+   update the property locally (P = V)
+   emit 'notify::P' signal
+
+ TODO : When do we resync the parent values to have minimal offsets ?

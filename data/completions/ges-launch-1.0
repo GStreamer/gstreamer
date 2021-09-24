@@ -1,0 +1,235 @@
+# GStreamer
+# Copyright (C) 2015 Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+#
+# bash/zsh completion support for ges-launch
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public
+# License along with this library; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+# Boston, MA 02110-1301, USA.
+
+HELPERDIR="${BASH_SOURCE[0]%/*}/../helpers"
+
+if [[ ! -d "$HELPERDIR" ]]; then
+	HELPERDIR="$(pkg-config --variable=bashhelpersdir gstreamer-1.0)"
+else
+	HELPERDIR=`cd "$HELPERDIR"; pwd`
+fi
+
+# Common definitions
+. "$HELPERDIR"/gst
+
+HELPER="$_GST_HELPER"
+
+_list_commands ()
+{
+  ges-launch-1.0 help | grep '^  +' | cut -d' ' -f3
+}
+
+_ges___inspect_action_type ()
+{
+	COMPREPLY=( $(compgen -W "$(ges-launch-1.0 --inspect-action-type | grep '^[^ ]' | cut -d':' -f2)" -- $cur) )
+}
+
+_ges___track_types ()
+{
+	COMPREPLY=( $(compgen -W "audio video audio+video" -- $cur) )
+}
+
+_ges___set_scenario () {
+	COMPREPLY=( $(compgen -W "*.scenario $(gst-validate-1.0 -l | awk '$0=$2' FS=[ RS=])" -- $cur) )
+}
+
+_ges___load () {
+	COMPREPLY=( $(compgen -W "*.xges" -- $cur) )
+}
+
+_ges___outputuri () {
+	COMPREPLY=( $(compgen -W "file://" -- $cur) )
+}
+
+_ges___audiosink () {
+	COMPREPLY=( $(compgen -W "$($HELPER --klass=Sink --sinkcaps='audio/x-raw')" -- $cur) )
+}
+
+_ges___videosink () {
+	COMPREPLY=( $(compgen -W "$($HELPER --klass=Sink --sinkcaps='video/x-raw')" -- $cur) )
+}
+
+_ges_clip () {
+	if [[ "$prev" == "$command" ]];
+	then
+		_gst_mandatory_argument
+	else
+		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $(_list_commands)" -- $cur) )
+	fi
+}
+
+_ges_test_clip () {
+	if [[ "$prev" == "$command" ]];
+	then
+		_gst_mandatory_argument
+	else
+		COMPREPLY=( $(compgen -W "duration= inpoint= start= layer= $(_list_commands)" -- $cur) )
+	fi
+}
+
+_ges_effect () {
+	if [[ "$prev" == "$command" ]];
+	then
+		_gst_mandatory_argument
+	else
+		COMPREPLY=( $(compgen -W "duration= start= layer= $(_list_commands)" -- $cur) )
+	fi
+}
+
+_ges_list_options () {
+	_gst_all_arguments ges-launch-1.0
+}
+
+_ges_list_commands () {
+	COMPREPLY=( $(compgen -W "$(_list_commands)" -- $cur) )
+}
+
+_ges_list_properties () {
+	local props
+
+	if [[ "$real_command" == "" ]]
+	then
+		_gst_mandatory_argument
+	elif [[ "$real_command" == "+clip" ]]
+	then
+		COMPREPLY=( $(compgen -W "set-alpha set-posx set-posy set-width set-height set-volume set-mute" -- $cur) )
+	elif [[ "$real_command" == "+test-clip" ]]
+	then
+		COMPREPLY=( $(compgen -W "set-alpha set-posx set-posy set-width set-height set-volume set-mute" -- $cur) )
+	elif [[ "$real_command" == "+effect" ]]
+	then
+		COMPREPLY=()
+		effect_bin_description="${effect_bin_description//\"/ }"
+		array=(${effect_bin_description//!/ })
+		for i in "${array[@]}"; do
+			props=("$($HELPER --element-properties $i)")
+			for j in $props; do
+				j="${j//=/ }"
+				COMPREPLY+=( $(compgen -W "set-$j" -- $cur) )
+			done
+		done
+	else
+		_gst_mandatory_argument
+	fi
+}
+
+_ges___exclude_ () { _gst_mandatory_argument; }
+_ges___encoding_profile () { _gst_mandatory_argument; }
+_ges___ges_sample_path () { _gst_mandatory_argument; }
+_ges___ges_sample_path_recurse () { _gst_mandatory_argument; }
+_ges___thumbnail () { _gst_mandatory_argument; }
+_ges___repeat () { _gst_mandatory_argument; }
+_ges___save () { _gst_mandatory_argument; }
+
+containsElement () {
+	local e
+	for e in "${@:2}";
+	do
+		[[ "$e" == "$1" ]] && return 0;
+	done
+	return 1
+}
+
+__ges_main ()
+{
+	local i=1 c=1 command function_exists completion_func commands real_command effect_bin_description
+
+	commands=($(_list_commands))
+	real_command=""
+	effect_bin_description=""
+
+	if [[ "$cur" == "=" ]]; then
+		_gst_mandatory_argument
+		return
+	fi
+
+	while [[ $i -ne $COMP_CWORD ]];
+		do
+			local var
+			var="${COMP_WORDS[i]}"
+			if [[ "$var" == "--"* ]]
+			then
+				command="$var"
+			elif containsElement "$var" "${commands[@]}";
+			then
+				real_command="$var"
+				command="$var"
+				if [[ "$var" == "+effect" ]]
+				then
+					effect_bin_description="${COMP_WORDS[i+1]}"
+				fi
+			fi
+		i=$[$i+1]
+		done
+
+	if [[ "$command" == "--gst"* ]]; then
+		completion_func="_${command//-/_}"
+	else
+		completion_func="_ges_${command//-/_}"
+		completion_func="${completion_func//+/}"
+	fi
+
+	declare -f $completion_func >/dev/null 2>&1
+
+	function_exists=$?
+
+	if [[ "$cur" == "-"* ]]; then
+		_ges_list_options
+	elif [[ "$cur" == "+"* ]]; then
+		_ges_list_commands
+	elif [[ "$cur" == "="* ]]
+	then
+		_gst_mandatory_argument
+	elif [[ "$cur" == "set-"* ]]
+	then
+		_ges_list_properties
+	elif [ $function_exists -eq 0 ]
+	then
+		$completion_func
+	else
+		_ges_list_commands
+	fi
+}
+
+__ges_func_wrap ()
+{
+	local cur prev
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
+	$1
+}
+
+# Setup completion for certain functions defined above by setting common
+# variables and workarounds.
+# This is NOT a public function; use at your own risk.
+__ges_complete ()
+{
+	local wrapper="__ges_wrap${2}"
+	eval "$wrapper () { __ges_func_wrap $2 ; }"
+	complete -o bashdefault -o default -o nospace -F $wrapper $1 2>/dev/null \
+		|| complete -o default -o nospace -F $wrapper $1
+}
+
+_ges ()
+{
+	__ges_wrap__ges_main
+}
+
+__ges_complete ges-launch-1.0 __ges_main

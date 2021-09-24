@@ -1,0 +1,111 @@
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    args = {
+        -t, video,
+        --videosink, "$(videosink) name=videosink sync=true",
+        --video-caps, "video/x-raw,width=500,height=500,framerate=10/1,format=I420,colorimetry=(string)bt601,chroma-site=(string)jpeg",
+    },
+    handles-states=true,
+    ignore-eos=true,
+    configs = {
+        "$(validateflow), pad=videosink:sink, buffers-checksum=as-id, ignored-fields=\"stream-start={stream-id,group-id, stream}\"",
+    },
+    expected-issues = {
+        # Blending is not 100% reproducible when seeking/changing values for
+        # some reason. It has been manually checked and the contents are very
+        # slightly off and ssim would detect no difference at all between the
+        # images
+        "expected-issue, issue-id=validateflow::mismatch, details=\".*content-id=10.*\\\\n.*\\\\n.*content-id=12.*\", sometimes=true",
+        "expected-issue, issue-id=validateflow::mismatch, details=\".*content-id=12.*\\\\n.*\\\\n.*content-id=10.*\", sometimes=true",
+        "expected-issue, issue-id=validateflow::mismatch, details=\".*content-id=0.*\\\\n.*\\\\n.*content-id=12.*\", sometimes=true",
+        "expected-issue, issue-id=validateflow::mismatch, details=\".*content-id=0.*\\\\n.*\\\\n.*content-id=13.*\", sometimes=true",
+    }
+
+remove-feature, name=queue
+
+add-clip, name=c0, asset-id="pattern=blue", layer-priority=0, type=GESTestClip, start=0, duration=2.0, inpoint=2.0
+add-clip, name=c1, asset-id="pattern=green", layer-priority=1, type=GESTestClip, start=0, duration=2.0
+set-child-properties, element-name=c0, width=250, height=250, pattern=blue
+set-child-properties, element-name=c1, width=250, height=250, pattern=green
+
+set-control-source, element-name=c0, property-name=posx, binding-type=direct-absolute
+set-control-source, element-name=c0, property-name=posy, binding-type=direct-absolute
+set-control-source, element-name=c1, property-name=posx, binding-type=direct-absolute
+set-control-source, element-name=c1, property-name=posy, binding-type=direct-absolute
+
+# c0 starts in the top left corner going to the bottom right at 1sec and going back to the top right at 2s
+# Keyframes are in 'source stream time' so we take the inpoint into account for the timestamp
+add-keyframe, element-name=c0, timestamp=2.0, property-name=posx, value=0
+add-keyframe, element-name=c0, timestamp=2.0, property-name=posy, value=0
+add-keyframe, element-name=c1, timestamp=0.0, property-name=posx, value=250
+add-keyframe, element-name=c1, timestamp=0.0, property-name=posy, value=250
+
+add-keyframe, element-name=c0, timestamp=3.0, property-name=posx, value=250
+add-keyframe, element-name=c0, timestamp=3.0, property-name=posy, value=250
+add-keyframe, element-name=c1, timestamp=1.0, property-name=posx, value=0
+add-keyframe, element-name=c1, timestamp=1.0, property-name=posy, value=0
+
+add-keyframe, element-name=c0, timestamp=4.0, property-name=posx, value=0
+add-keyframe, element-name=c0, timestamp=4.0, property-name=posy, value=0
+add-keyframe, element-name=c1, timestamp=2.0, property-name=posx, value=250
+add-keyframe, element-name=c1, timestamp=2.0, property-name=posy, value=250
+
+play
+
+check-properties,
+    gessmartmixer0-compositor.sink_0::xpos=0,  gessmartmixer0-compositor.sink_0::ypos=0,
+    gessmartmixer0-compositor.sink_1::xpos=250, gessmartmixer0-compositor.sink_1::ypos=250
+
+crank-clock
+wait, on-clock=true
+
+check-properties,
+    gessmartmixer0-compositor.sink_0::xpos=25,  gessmartmixer0-compositor.sink_0::ypos=25,
+    gessmartmixer0-compositor.sink_1::xpos=225, gessmartmixer0-compositor.sink_1::ypos=225
+
+# Check the 5th buffer
+crank-clock, repeat=4
+wait, on-clock=true
+check-properties,
+    gessmartmixer0-compositor.sink_0::xpos=125, gessmartmixer0-compositor.sink_0::ypos=125,
+    gessmartmixer0-compositor.sink_1::xpos=125,   gessmartmixer0-compositor.sink_1::ypos=125
+
+crank-clock
+check-position, expected-position=0.5
+
+# Check the 10th buffer
+crank-clock, repeat=4
+wait, on-clock=true
+check-properties,
+    gessmartmixer0-compositor.sink_0::xpos=250, gessmartmixer0-compositor.sink_0::ypos=250,
+    gessmartmixer0-compositor.sink_1::xpos=0,   gessmartmixer0-compositor.sink_1::ypos=0
+
+crank-clock
+check-position, expected-position=1.0
+
+crank-clock, repeat=11
+check-position, on-message=eos, expected-position=2000000001
+
+seek, start=1.0, flags=accurate+flush
+wait, on-clock=true
+
+# 10th buffer
+check-properties,
+    gessmartmixer0-compositor.sink_3::xpos=250, gessmartmixer0-compositor.sink_3::ypos=250,
+    gessmartmixer0-compositor.sink_4::xpos=0,   gessmartmixer0-compositor.sink_4::ypos=0
+
+set-ges-properties, element-name=c0, start=1000000000
+set-ges-properties, element-name=c1, start=1000000000
+commit;
+wait, on-clock=true
+
+check-position, expected-position=1.0
+
+# First buffer
+check-properties,
+    gessmartmixer0-compositor.sink_3::xpos=0,
+    gessmartmixer0-compositor.sink_3::ypos=0,
+    gessmartmixer0-compositor.sink_4::xpos=250,
+    gessmartmixer0-compositor.sink_4::ypos=250
+
+stop

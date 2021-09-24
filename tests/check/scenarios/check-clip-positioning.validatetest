@@ -1,0 +1,12 @@
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    handles-states=true,
+    args = {
+        +test-clip, blue, "d=0.5", "asset-id=time-overlay, width=640, height=360, max-duration=5.0", "name=clip",
+        --track-types, video,
+        --videosink, "$(videosink) name=videosink sync=true",
+        --video-caps, "video/x-raw,format=I420,width=640,height=360,framerate=10/1,chroma-site=mpeg2,colorimetry=bt709;",
+    }
+
+check-child-properties, element-name=clip, width=0, height=0
+stop

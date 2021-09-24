@@ -1,0 +1,30 @@
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    args = {
+        --track-types, video,
+        --videosink, "$(videosink) name=videosink",
+        --video-caps, "video/x-raw,format=I420,width=1280,height=720,framerate=10/1,chroma-site=mpeg2,colorimetry=bt709;",
+    },
+    handles-states=true,
+    ignore-eos=true,
+    configs = {
+        # Ideally we should be able to record checksums... but they are not reproducible
+        "$(validateflow), pad=videosink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
+    }
+
+add-clip, name=c0, asset-id=time-overlay, layer-priority=0, type=GESSourceClip, start=0, duration=1.0
+set-child-properties, element-name=c0, pattern=blue, valignment=center, halignment=center, time-mode=time-code
+
+add-clip, name=c1, asset-id=time-overlay, layer-priority=0, type=GESSourceClip, start=1.0, duration=1.0
+set-child-properties, element-name=c1, pattern=red, valignment=center, halignment=center, time-mode=time-code
+commit;
+play
+
+seek, start=0.0, stop=0.5, flags=accurate+flush
+crank-clock, expected-elapsed-time=0.0
+
+# 4 remaining buffers + eos.
+crank-clock, repeat=5, expected-elapsed-time=0.1
+
+check-position, on-message=eos, expected-position=0.5
+stop;

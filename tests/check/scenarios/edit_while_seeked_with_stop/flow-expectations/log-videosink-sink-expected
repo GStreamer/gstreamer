@@ -1,0 +1,49 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE;
+event caps: video/x-raw, chroma-site=(string)mpeg2, colorimetry=(string)bt709, format=(string)I420, framerate=(fraction)10/1, height=(int)720, width=(int)1280;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:01.000000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=none
+buffer: pts=0:00:00.000000000, dur=0:00:00.100000000, meta=GstVideoMeta
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:00.500000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=none
+buffer: pts=0:00:00.000000000, dur=0:00:00.100000000, meta=GstVideoMeta
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:00.500000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=none
+buffer: pts=0:00:00.000000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:00.100000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:00.200000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:00.300000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:00.400000000, dur=0:00:00.100000000, meta=GstVideoMeta
+event eos: (no structure)
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.500000000, offset=0:00:00.000000000, stop=0:00:01.000000000, flags=0x01, time=0:00:00.500000000, base=0:00:00.000000000, position=none
+buffer: pts=0:00:00.500000000, dur=0:00:00.100000000, meta=GstVideoMeta
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.500000000, offset=0:00:00.000000000, stop=0:00:01.000000000, flags=0x01, time=0:00:00.500000000, base=0:00:00.000000000, position=none
+buffer: pts=0:00:00.500000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:00.600000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:00.700000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:00.800000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:00.900000000, dur=0:00:00.100000000, meta=GstVideoMeta
+event eos: (no structure)
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:01.000000000, offset=0:00:00.000000000, stop=0:00:01.000000000, flags=0x01, time=0:00:01.000000000, base=0:00:00.000000000, position=none
+event eos: (no structure)
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:01.000000000, offset=0:00:00.000000000, stop=0:00:02.000000000, flags=0x01, time=0:00:01.000000000, base=0:00:00.000000000, position=none
+buffer: pts=0:00:01.000000000, dur=0:00:00.100000000, meta=GstVideoMeta
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:01.000000000, offset=0:00:00.000000000, stop=0:00:01.500000000, flags=0x01, time=0:00:01.000000000, base=0:00:00.000000000, position=none
+buffer: pts=0:00:01.000000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:01.100000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:01.200000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:01.300000000, dur=0:00:00.100000000, meta=GstVideoMeta
+buffer: pts=0:00:01.400000000, dur=0:00:00.100000000, meta=GstVideoMeta
+event segment: format=TIME, start=0:00:01.500000000, offset=0:00:00.000000000, stop=0:00:01.500000001, flags=0x01, time=0:00:01.500000000, base=0:00:00.500000000, position=none
+buffer: pts=0:00:01.500000000, dur=0:00:00.000000001, meta=GstVideoMeta
+event eos: (no structure)

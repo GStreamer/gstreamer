@@ -1,0 +1,24 @@
+# Check that we can have effect with sources integrated where GES will request a pad on some elements
+# In that example, we are blending a green rectangle on top of a blue GESVideoTestSource using an effect
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    handles-states=true,
+    args = {
+        "--track-types", "video",
+        "--videosink", "$(videosink) name=videosink",
+        "--video-caps", "video/x-raw, format=I420, width=1280, height=720, framerate=30/1, chroma-site=jpeg, colorimetry=bt601",
+    },
+    configs = {
+        "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}, segment={position,}\", ignored-event-types={gap}",
+    }
+
+
+add-clip, name=c0, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, start=0, duration=0.1
+set-child-properties, element-name=c0, pattern=blue
+
+container-add-child,
+    container-name=c0,
+    asset-id="videotestsrc pattern=green ! video/x-raw,width=640,height=360 ! compositor sink_0::xpos=320 sink_0::ypos=180 sink_0::zorder=500",
+    child-type=GESEffect,
+    child-name=effect
+play

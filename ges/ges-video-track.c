@@ -1,0 +1,189 @@
+/* GStreamer Editing Services
+ * Copyright (C) <2013> Thibault Saunier <thibault.saunier@collabora.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+/**
+ * SECTION: gesvideotrack
+ * @title: GESVideoTrack
+ * @short_description: A standard GESTrack for raw video
+ *
+ * A #GESVideoTrack is a default video #GESTrack, with a
+ * #GES_TRACK_TYPE_VIDEO #GESTrack:track-type and "video/x-raw(ANY)"
+ * #GESTrack:caps.
+ *
+ * By default, a video track will have its #GESTrack:restriction-caps
+ * set to "video/x-raw" with the following properties:
+ *
+ * - width: 1280
+ * - height: 720
+ * - framerate: 30/1
+ *
+ * These fields are needed for negotiation purposes, but you can change
+ * their values if you wish. It is advised that you do so using
+ * ges_track_update_restriction_caps() with new values for the fields you
+ * wish to change, and any additional fields you may want to add. Unlike
+ * using ges_track_set_restriction_caps(), this will ensure that these
+ * default fields will at least have some value set.
+ */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "ges-video-track.h"
+#include "ges-smart-video-mixer.h"
+#include "ges-internal.h"
+
+#define DEFAULT_RESTRICTION_CAPS "video/x-raw(ANY), framerate=" G_STRINGIFY(DEFAULT_FRAMERATE_N) "/" G_STRINGIFY(DEFAULT_FRAMERATE_D) ", width=" G_STRINGIFY(DEFAULT_WIDTH) ", height=" G_STRINGIFY(DEFAULT_HEIGHT)
+
+struct _GESVideoTrackPrivate
+{
+  gpointer nothing;
+};
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESVideoTrack, ges_video_track, GES_TYPE_TRACK);
+
+static void
+_sync_capsfilter_with_track (GESTrack * track, GstElement * capsfilter)
+{
+  GstCaps *restriction, *caps;
+  gint fps_n, fps_d;
+  GstStructure *structure;
+
+  g_object_get (track, "restriction-caps", &restriction, NULL);
+  if (restriction == NULL)
+    return;
+
+  if (gst_caps_get_size (restriction) == 0)
+    goto done;
+
+  structure = gst_caps_get_structure (restriction, 0);
+  if (!gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d))
+    goto done;
+
+  caps =
+      gst_caps_new_simple ("video/x-raw", "framerate", GST_TYPE_FRACTION, fps_n,
+      fps_d, NULL);
+
+  g_object_set (capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+done:
+  gst_caps_unref (restriction);
+}
+
+static void
+_track_restriction_changed_cb (GESTrack * track, GParamSpec * arg G_GNUC_UNUSED,
+    GstElement * capsfilter)
+{
+  _sync_capsfilter_with_track (track, capsfilter);
+}
+
+static void
+_weak_notify_cb (GESTrack * track, GstElement * capsfilter)
+{
+  g_signal_handlers_disconnect_by_func (track,
+      (GCallback) _track_restriction_changed_cb, capsfilter);
+}
+
+static GstElement *
+create_element_for_raw_video_gap (GESTrack * track)
+{
+  GstElement *bin;
+  GstElement *capsfilter;
+
+  bin = gst_parse_bin_from_description
+      ("videotestsrc pattern=2 name=src ! videorate ! capsfilter name=gapfilter caps=video/x-raw",
+      TRUE, NULL);
+
+  capsfilter = gst_bin_get_by_name (GST_BIN (bin), "gapfilter");
+  g_object_weak_ref (G_OBJECT (capsfilter), (GWeakNotify) _weak_notify_cb,
+      track);
+  g_signal_connect (track, "notify::restriction-caps",
+      (GCallback) _track_restriction_changed_cb, capsfilter);
+
+  _sync_capsfilter_with_track (track, capsfilter);
+
+  gst_object_unref (capsfilter);
+
+  return bin;
+}
+
+static void
+ges_video_track_init (GESVideoTrack * ges_video_track)
+{
+/*   GESVideoTrackPrivate *priv = GES_VIDEO_TRACK_GET_PRIVATE (ges_video_track);
+ */
+
+  /* TODO: Add initialization code here */
+}
+
+static void
+ges_video_track_finalize (GObject * object)
+{
+  /* TODO: Add deinitalization code here */
+
+  G_OBJECT_CLASS (ges_video_track_parent_class)->finalize (object);
+}
+
+static void
+ges_video_track_class_init (GESVideoTrackClass * klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+/*   GESTrackClass *parent_class = GES_TRACK_CLASS (klass);
+ */
+
+  object_class->finalize = ges_video_track_finalize;
+
+  GES_TRACK_CLASS (klass)->get_mixing_element = ges_smart_mixer_new;
+}
+
+/**
+ * ges_video_track_new:
+ *
+ * Creates a new video track, with a #GES_TRACK_TYPE_VIDEO
+ * #GESTrack:track-type and "video/x-raw(ANY)" #GESTrack:caps, and
+ * "video/x-raw" #GESTrack:restriction-caps with the properties:
+ *
+ * - width: 1280
+ * - height: 720
+ * - framerate: 30/1
+ *
+ * You should use ges_track_update_restriction_caps() if you wish to
+ * modify these fields, or add additional ones.
+ *
+ * Returns: (transfer floating): The newly created video track.
+ */
+GESVideoTrack *
+ges_video_track_new (void)
+{
+  GESVideoTrack *ret;
+  GstCaps *caps = gst_caps_new_empty_simple ("video/x-raw");
+  GstCaps *restriction_caps = gst_caps_from_string (DEFAULT_RESTRICTION_CAPS);
+
+  ret = g_object_new (GES_TYPE_VIDEO_TRACK, "track-type", GES_TRACK_TYPE_VIDEO,
+      "caps", caps, NULL);
+
+  ges_track_set_create_element_for_gap_func (GES_TRACK (ret),
+      create_element_for_raw_video_gap);
+  ges_track_set_restriction_caps (GES_TRACK (ret), restriction_caps);
+
+  gst_caps_unref (caps);
+  gst_caps_unref (restriction_caps);
+
+  return ret;
+}

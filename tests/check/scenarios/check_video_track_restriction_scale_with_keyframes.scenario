@@ -1,0 +1,32 @@
+description, handles-states=true, seek=true,
+    ges-options={\
+        --track-types, video,
+        --video-caps, "video/x-raw,width=1280,height=720,framerate=30/1" \
+    }
+
+add-clip, name=clip, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, start=0.0, duration=1.0, pattern=blue
+
+set-control-source, element-name=videotestsource0, property-name=width, binding-type=direct-absolute, source-type=interpolation
+set-control-source, element-name=videotestsource0, property-name=height, binding-type=direct, source-type=interpolation
+
+
+# Goes from 1280x720 at 0, to 640x360 at 0.5 then back to 1280x720 ar 1.0
+add-keyframe, element-name=videotestsource0, property-name="width", timestamp=0.0, value=(gint)1280
+add-keyframe, element-name=videotestsource0, property-name="height", timestamp=0.0, value=0.0072
+
+add-keyframe, element-name=videotestsource0, property-name="width", timestamp=0.5, value=(gint)640
+add-keyframe, element-name=videotestsource0, property-name="height", timestamp=0.5, value=0.0036
+
+add-keyframe, element-name=videotestsource0, property-name="width", timestamp=1.0, value=(gint)1280
+add-keyframe, element-name=videotestsource0, property-name="height", timestamp=1.0, value=0.0072
+
+check-child-properties, element-name=videotestsource0, width=1280, height=720, posx=0, posy=0, at-time=0.0
+check-child-properties, element-name=videotestsource0, width=640, height=360, posx=0, posy=0, at-time=0.5
+check-child-properties, element-name=videotestsource0, width=1280, height=720, posx=0, posy=0, at-time=1.0
+
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=1920,height=1080"
+check-child-properties, element-name=videotestsource0, width=1920, height=1080, posx=0, posy=0, at-time=0.0
+check-child-properties, element-name=videotestsource0, width=960, height=540, posx=0, posy=0, at-time=0.5
+check-child-properties, element-name=videotestsource0, width=1920, height=1080, posx=0, posy=0, at-time=1.0
+
+stop;

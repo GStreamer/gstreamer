@@ -1,0 +1,143 @@
+SCENARIOS
+
+* Adding a TimelineObject to a TimelineLayer
+--------------------------------------------
+
+ * Create a Timeline
+
+ * Create a Track
+
+ * Add the track to the Timeline (==> ges_timeline_add_track (track);)
+   The Timeline adds the Track to itself (i.e. gst_bin_add())
+   'track-added' is emitted
+
+ * Create a TimelineLayer
+
+ * Add the TimelineLayer to the Timeline   (ges_timeline_add_layer (layer);)
+   The Timeline takes a reference on the layer and stores it
+   The Timeline tells the TimelineLayer that it now belongs to the given Timeline (weak reference)
+      ==> ges_timeline_layer_set_timeline ();
+   'layer-added' is emitted
+
+ * Create a TimelineObject
+
+ * Add the TimelineObject to the TimelineLayer  (ges_timeline_layer_add_object (object);)
+   The TimelineLayer takes a reference on the TimelineObject and stores it
+   The timelineLayer tells the TimelineObject that it now belongs to the given layer (weak reference)
+     ==> ges_timeline_object_set_layer ();
+   'object-added' is emitted by TimelineLayer
+      The Timeline requests a new TrackObject from the new TimelineObject for each Track
+         ==> ges_timeline_object_create_track_object (track)
+            The TimelineObject calls the 'create_track_object' virtual method with the given track
+               Example implementation
+                  Create a GESTrackSource
+		    (GESTimelineObject is a constructor property of track objects)
+		    A GESTrackObject CAN NOT EXIST WITHOUT A GESTimelineObject !
+      The Timeline adds the newly created TrackObject to the Track
+        ==> ges_track_add_object (track, trackobject);
+          Set the track on the TrackObject
+            ==> ges_track_object_set_track (track)
+	      The GESTrackObject can create the NleObject
+
+
+
+Methods
+-------
+
+[ GESTimeline ]
+
+* gboolean
+  ges_timeline_add_track (GESTimeline * timeline, GESTrack * track);
+
+    * The Timeline adds the track to itself (gst_bin_add ()) # reference implicitely taken
+    * The Timeline adds the track to its list of tracked tracks
+    * The Timeline sets the Timeline on the track
+       => ges_track_set_timeline (GESTrack * track, GESTimeline * timeline);
+          Just sets the timeline field of the track.
+    * emits 'track-added'
+
+
+* gboolean
+  ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer);
+
+    * The Timeline takes a reference on the layer and stores it
+    * The Timeline tells the Layer that it now belongs to the given Timeline
+       => ges_timeline_layer_set_timeline (GESTimelineLayer * layer, GESTimeline * timeline);
+          Just sets the timeline field of the layer.
+    * Connect to the layer's 'object-added' signal
+    * emits 'layer-added'
+
+
+* GESTimeline's
+  callback for GESTimelineLayer::object-added (GESTimelineLayer * layer, GESTimelineObject * object);
+
+    * For each GESTrack in the Timeline:
+        * The timeline requests a new TrackObject for the new TimelineObject for each Track
+            trackobj = ges_timeline_object_create_track_object (timelineobj, track);
+	* The timeline adds the newly created TrackObject to the track
+            ges_track_add_object (track, trackobj);
+
+[ GESTimelineLayer ]
+
+* gboolean
+  ges_timeline_layer_add_object (GESTimelineLayer * layer, GESTimelineObject * object);
+
+    * The TimelineLayer takes a reference on the TimelineObject and stores it
+    * The TimelineLayer tells the TimelineObject it now belongs to the given Layer
+       => ges_timeline_object_set_layer (GESTimelineObject * object, GESTimelineLayer * layer);
+          Just sets the layer field of the timeline object.
+    * emits 'object-added'
+
+
+[ GESTimelineObject ]
+
+* GESTrackObject *
+  ges_timeline_object_create_track_object (GESTimelineObject * object, GESTrack * track);
+
+    * The TimelineObject calls the 'create_track_object' virtual method
+    * The TimelineObject sets the TimelineObject on the new TrackObject
+	 => ges_track_object_set_timeline_object (track_object, timeline_object);
+	    Just sets the timeline-object field of the TrackObject
+    * Return the newly created GESTrackObject
+
+
+* Virtual-method for GESTimelineObject::create_track_object (GESTimelineObject * object, GESTrack * track);
+
+    * Create a track object of the proper type
+      Ex (for a source) :
+         return ges_track_source_new();
+
+* gboolean
+  ges_timeline_object_fill_track_object (GESTimelineObject *tlo, GESTrackObject *tro, GstElement *nleobj);
+
+    * up to the implementation :)
+
+
+[ GESTrack ]
+
+* gboolean
+  ges_track_add_object (GESTrack * track, GESTrackObject * object);
+
+    * Set the track on the track_object
+      ges_track_object_set_track (object, track);
+    * Add the NleObject of the TrackObject to the composition
+      gst_bin_add (track->composition, object->nleobject);
+
+
+[ GESTrackObject ]
+
+* gboolean
+  ges_track_object_set_track (GESTrackObject * object, GESTrack * track);
+
+    * Set the track field of the TrackObject
+    * if no NleObject is available yet:
+        * Call the 'create_gnl_object' virtual method
+
+
+* Virtual-method for GESTrackObject::create_gnl_object
+
+    * Create a NleObject of the proper type
+      Ex : nleobject = gst_element_factory_make("nlesource", NULL);
+    * Ask the TimelineObject to fill in the NleObject
+      => ges_timeline_object_fill_track_object (GESTimelineObject * tlo, GESTrackObject * tro, GstElement * nleobj);
+

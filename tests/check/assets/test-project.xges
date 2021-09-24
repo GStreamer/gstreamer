@@ -1,0 +1,28 @@
+<ges version="0.1">
+  <project metadatas='metadatas, name=(string)&quot;Example\ project&quot;;'>
+    <encoding-profiles>
+      <encoding-profile name='first_profile' description='(null)' type='container' format='application/ogg'>
+        <stream-profile parent='first_profile' enabled='0' id='0' type='video' presence='0' format='video/x-h264' pass='0' variableframerate='0' />
+        <stream-profile parent='first_profile' id='1' type='audio' presence='0' format='audio/x-aac' />
+      </encoding-profile>
+    </encoding-profiles>
+    <resources>
+      <asset id="file:///test/not/exisiting"
+         extractable-type-name="GESUriClip"/>
+    </resources>
+    <timeline>
+      <track track-type="2" caps="audio/x-raw" track-id="0"/>
+      <track track-type="4" caps="video/x-raw" track-id="1"/>
+      <layer priority="0" properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, a=(guint)3'>
+        <clip id="0" layer-priority='0' asset-id="file:///test/not/exisiting" type-name="GESUriClip" track-types="6" start="0" duration="1000000000">
+        <effect asset-id='agingtv' clip-id='0' type-name='GESEffect' track-type='4' track-id='1' metadatas='metadatas;' children-properties='properties, scratch-lines=(uint)12;'/>
+        </clip>
+      </layer>
+      <layer priority="1" properties='properties, auto-transition=(boolean)true;'>
+        <clip id="1" asset-id="file:///test/not/exisiting" layer-priority="1"
+        type-name="GESUriClip" track-types="2" start="1000000000" duration="1000000000">
+        </clip>
+      </layer>
+    </timeline>
+  </project>
+</ges>

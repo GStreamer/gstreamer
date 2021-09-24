@@ -1,0 +1,26 @@
+# Common feature options
+option('doc', type : 'feature', value : 'auto', yield: true,
+       description: 'Enable documentation.')
+option('examples', type : 'feature', value : 'auto', yield : true,
+       description : 'Build examples')
+option('introspection', type : 'feature', value : 'auto', yield : true,
+       description : 'Generate gobject-introspection bindings')
+option('tests', type : 'feature', value : 'auto', yield : true,
+       description : 'Build and enable unit tests')
+option('tools', type : 'feature', value : 'auto', yield : true,
+       description : 'Build ges-launch command line tool')
+
+# GES options
+option('bash-completion', type : 'feature', value : 'auto',
+       description : 'Install bash completion files')
+option('pygi-overrides-dir', type : 'string', value : '',
+        description: 'Path to pygobject overrides directory')
+option('xptv', type : 'feature', value : 'auto',
+       description : 'Build the deprecated xptv formater')
+option('python', type : 'feature', value : 'auto', yield: true,
+       description: 'Enable python formatters.')
+option('libpython-dir', type : 'string', value : '',
+        description: 'Path to find libpythonXX.so')
+option('validate', type : 'feature', value : 'auto', yield: true,
+       description: 'Enable GstValidate integration.')
+option('examples', type : 'feature', value : 'auto', yield : true)

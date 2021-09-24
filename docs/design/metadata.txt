@@ -1,0 +1,263 @@
+Metadata
+~~~~~~~~
+
+Summary
+~~~~~~~
+
+1. Basic ideas
+2. Problems
+3. Ways of solving problems
+4. Use-cases
+5. API draft
+
+1. Basic ideas
+~~~~~~~~~~~~~~
+
+If we look at entities that are present in GES we can see that almost all of
+them need some sort of metadata:
+    * GESTimeline
+    * GESTimelineLayer
+    * GESTimelineObject
+    * GESTrackObject
+    * Yet to be implemented GESProject
+
+For all those classes to be able to contain metadatas and to avoid code
+duplication as much as possible, we should have an interface to handle Metadata.
+Let's call the interface GESMetaContainer for now (name to be defined).
+
+2. Problems
+~~~~~~~~~~~
+
+    1) We must be able to discover all metadata items that are
+       attached to object
+    2) We must be able to hold metadata of any type user wants
+    3) Some metadatas are read only, others are writable
+    4) User should be able to query metadata easily using various criteria
+    5) Metadatas should be serializable
+    6) User should be able to define read only metadatas with a default value
+    7) User should be able to define metadatas that have a specific type which can not
+       be changed when setting a new value
+
+
+3. Possible solution
+~~~~~~~~~~~~~~~~~~~~~
+
+    1) To implement metadata GstStructure will be used. It allows to get list of
+       all available tags in specified list by calling "gst_structure_foreach".
+    2) We will have methods to register metas
+
+4. Use-cases
+~~~~~~~~~~~~
+
+    UC-1. Hold tag information about file source asset.
+      - TS: I think some of them are TrackObject specific... so we should be
+        able to get them from the 2 types of objects
+    UC-2. Hold descriptions of operations
+    UC-3. Hold information about projects (title, author, description)
+    UC-4. Hold user comments about any of TimelineLayer/Timeline/Project/TimelineObjects
+    UC-5. Hold application specific settings (i.e. layer height, folding state
+          in Pitivi)
+    UC-6. Serialize a timeline, project and keep metadatas
+
+5. API
+~~~~~~
+
+We have a GESMetdata class that controls metadata.
+
+gboolean
+ges_meta_container_set_boolean     (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        gboolean value);
+
+gboolean
+ges_meta_container_set_int         (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        gint value);
+
+gboolean
+ges_meta_container_set_uint        (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        guint value);
+
+gboolean
+ges_meta_container_set_int64       (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        gint64 value);
+
+gboolean
+ges_meta_container_set_uint64      (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        guint64 value);
+
+gboolean
+ges_meta_container_set_float       (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        gfloat value);
+
+gboolean
+ges_meta_container_set_double      (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        gdouble value);
+
+gboolean
+ges_meta_container_set_date        (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        const GDate* value);
+
+gboolean
+ges_meta_container_set_date_time   (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        const GstDateTime* value);
+
+gboolean
+ges_meta_container_set_string      (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        const gchar* value);
+
+gboolean
+ges_meta_container_set_meta            (GESMetaContainer * container,
+                                        const gchar* meta_item,
+                                        const GValue *value);
+
+gboolean
+ges_meta_container_register_meta_boolean (GESMetaContainer *container,
+                                          GESMetaFlag flags,
+                                          const gchar* meta_item,
+                                          gboolean value);
+
+gboolean
+ges_meta_container_register_meta_int     (GESMetaContainer *container,
+                                          GESMetaFlag flags,
+                                          const gchar* meta_item,
+                                          gint value);
+
+gboolean
+ges_meta_container_register_meta_uint    (GESMetaContainer *container,
+                                          GESMetaFlag flags,
+                                          const gchar* meta_item,
+                                          guint value);
+
+gboolean
+ges_meta_container_register_meta_int64   (GESMetaContainer *container,
+                                          GESMetaFlag flags,
+                                          const gchar* meta_item,
+                                          gint64 value);
+
+gboolean
+ges_meta_container_register_meta_uint64  (GESMetaContainer *container,
+                                          GESMetaFlag flags,
+                                          const gchar* meta_item,
+                                          guint64 value);
+
+gboolean
+ges_meta_container_register_meta_float   (GESMetaContainer *container,
+                                          GESMetaFlag flags,
+                                          const gchar* meta_item,
+                                          gfloat value);
+
+gboolean
+ges_meta_container_register_meta_double  (GESMetaContainer *container,
+                                          GESMetaFlag flags,
+                                          const gchar* meta_item,
+                                          gdouble value);
+
+gboolean
+ges_meta_container_register_meta_date    (GESMetaContainer *container,
+                                          GESMetaFlag flags,
+                                          const gchar* meta_item,
+                                          const GDate* value);
+
+gboolean
+ges_meta_container_register_meta_date_time  (GESMetaContainer *container,
+                                             GESMetaFlag flags,
+                                             const gchar* meta_item,
+                                             const GstDateTime* value);
+
+gboolean
+ges_meta_container_register_meta_string     (GESMetaContainer *container,
+                                             GESMetaFlag flags,
+                                             const gchar* meta_item,
+                                             const gchar* value);
+
+gboolean
+ges_meta_container_register_meta            (GESMetaContainer *container,
+                                             GESMetaFlag flags,
+                                             const gchar* meta_item,
+                                             const GValue * value);
+
+gboolean
+ges_meta_container_check_meta_registered    (GESMetaContainer *container,
+                                             const gchar * meta_item,
+                                             GESMetaFlag * flags,
+                                             GType * type);
+
+gboolean
+ges_meta_container_get_boolean     (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        gboolean* dest);
+
+gboolean
+ges_meta_container_get_int         (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        gint* dest);
+
+gboolean
+ges_meta_container_get_uint        (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        guint* dest);
+
+gboolean
+ges_meta_container_get_int64       (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        gint64* dest);
+
+gboolean
+ges_meta_container_get_uint64      (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        guint64* dest);
+
+gboolean
+ges_meta_container_get_float       (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        gfloat* dest);
+
+gboolean
+ges_meta_container_get_double      (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        gdouble* dest);
+
+gboolean
+ges_meta_container_get_date        (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        GDate** dest);
+
+gboolean
+ges_meta_container_get_date_time   (GESMetaContainer *container,
+                                        const gchar* meta_item,
+                                        GstDateTime** dest);
+
+const gchar *
+ges_meta_container_get_string      (GESMetaContainer * container,
+                                        const gchar * meta_item);
+
+const GValue *
+ges_meta_container_get_meta            (GESMetaContainer * container,
+                                        const gchar * key);
+
+typedef void
+(*GESMetaForeachFunc)                  (const GESMetaContainer *container,
+                                        const gchar *key,
+                                        const GValue *value,
+                                        gpointer user_data);
+
+void
+ges_meta_container_foreach             (GESMetaContainer *container,
+                                        GESMetaForeachFunc func,
+                                        gpointer user_data);
+
+gchar *
+ges_meta_container_metas_to_string     (GESMetaContainer *container);
+
+gboolean
+ges_meta_container_add_metas_from_string (GESMetaContainer *container,
+                                          const gchar *str);

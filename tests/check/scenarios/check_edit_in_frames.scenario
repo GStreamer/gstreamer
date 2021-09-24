@@ -1,0 +1,31 @@
+description, handles-states=true,
+    ges-options={\
+        --track-types, video\
+     }
+
+add-clip, name=clip, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, start=f0, inpoint=f30, duration=f60
+
+check-ges-properties, element-name=clip, start=0, in-point=1.0, duration=2.0
+edit, element-name=clip, position=f30
+
+check-ges-properties, element-name=clip, start=1.0, in-point=1.0, duration=2.0
+
+# Getting the 60th frame in the input media file, means inpoint=f30 + f30 = f60
+edit, element-name=clip, position=f60, edit-mode=edit_trim, edge=edge_end
+check-ges-properties, element-name=clip, start=1.0, in-point=1.0, duration=1.0
+
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=1280,height=720,framerate=60/1"
+
+# 60 frames in media time, meaning 90 - inpoint (30) / 30 = 2 seconds
+edit, element-name=clip, source-frame=90, edit-mode=edit_trim, edge=edge_end
+check-ges-properties, element-name=clip, start=1.0, in-point=1.0, duration=2.0
+
+# 60 frames in timeline time, meaning 60/60 = 1 second
+edit, element-name=clip, position=f60
+check-ges-properties, element-name=clip, start=1.0, in-point=1.0, duration=2.0
+
+# 60 frames in timeline time, meaning 60/60 = 1 second
+edit, element-name=clip, source-frame=75, edit-mode=trim, edge=start
+check-ges-properties, element-name=clip, start=2.5, in-point=2.5, duration=0.5
+
+stop

@@ -1,0 +1,58 @@
+description, handles-states=true,
+    ges-options={\
+        --track-types, video,
+        --video-caps, "video/x-raw,width=1200,height=1000" \
+    }
+
+add-clip, name=clip, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, duration=1.0
+
+# VideoTestSource natural size is 1280x720, so keeping aspect ratio, mean
+# that it will be scaled to 1200x675 (placed at x=0, y=163)
+check-child-properties, element-name=clip, width=1200, height=675, posx=0, posy=163
+
+set-child-properties, element-name=clip, width=1024, height=768
+check-child-properties, element-name=clip, width=1024, height=768
+
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=1400,height=1200"
+check-child-properties, element-name=clip, width=1024, height=768
+
+set-child-properties, element-name=clip, width=0
+check-child-properties, element-name=clip, width=0, height=768
+
+set-child-properties, element-name=clip, height=0
+check-child-properties, element-name=clip, width=0, height=0
+
+set-child-properties, element-name=clip, width=1400, height=1200
+check-child-properties, element-name=clip, width=1400, height=1200
+
+# Changing track size, keeping aspect ratio should scale the video source
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=700,height=600"
+check-child-properties, element-name=clip, width=700, height=600
+
+# The video source has the same size as the track restriction caps but we
+# are changing the aspect ratio, the video should thus not be rescaled. */
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=1920,height=1080"
+check-child-properties, element-name=clip, width=700, height=600
+
+set-child-properties, element-name=clip, width=1280, height=720, posx=320, posy=240
+check-child-properties, element-name=clip, width=1280, height=720, posx=320, posy=240
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=960,height=540"
+check-child-properties, element-name=clip, width=640, height=360, posx=160, posy=120
+
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=1280,height=720"
+set-child-properties, element-name=clip, width=128, height=72, posx=-100, posy=-100
+check-child-properties, element-name=clip, width=128, height=72, posx=-100, posy=-100
+
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=1920,height=1080"
+check-child-properties, element-name=clip, width=192, height=108, posx=-150, posy=-150
+
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=192,height=108"
+check-child-properties, element-name=clip, width=19, height=11, posx=-15, posy=-15
+
+set-child-properties, element-name=clip, posx=10, posy=-10
+
+# Make sure we do not lose precision when going back to previous size
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=1920,height=1080"
+check-child-properties, element-name=clip, width=192, height=108, posx=100, posy=-100
+
+stop

@@ -1,0 +1,110 @@
+GStreamer: Research into encoding and muxing
+--------------------------------------------
+
+Use Cases
+---------
+
+ This is a list of various use-cases where encoding/muxing is being
+ used.
+
+* Transcoding
+
+  The goal is to convert with as minimal loss of quality any input
+  file for a target use.
+  A specific variant of this is transmuxing (see below).
+
+  Example applications: Arista, Transmageddon
+
+* Rendering timelines
+
+  The incoming streams are a collection of various segments that need
+  to be rendered.
+  Those segments can vary in nature (i.e. the video width/height can
+  change).
+  This requires the use of identiy with the single-segment property
+  activated to transform the incoming collection of segments to a
+  single continuous segment.
+
+  Example applications: Pitivi, Jokosher
+
+* Encoding of live sources
+
+  The major risk to take into account is the encoder not encoding the
+  incoming stream fast enough. This is outside of the scope of
+  encodebin, and should be solved by using queues between the sources
+  and encodebin, as well as implementing QoS in encoders and sources
+  (the encoders emitting QoS events, and the upstream elements
+  adapting themselves accordingly).
+
+  Example applications: camerabin, cheese
+
+* Screencasting applications
+
+  This is similar to encoding of live sources.
+  The difference being that due to the nature of the source (size and
+  amount/frequency of updates) one might want to do the encoding in
+  two parts:
+  * The actual live capture is encoded with a 'almost-lossless' codec
+  (such as huffyuv)
+  * Once the capture is done, the file created in the first step is
+  then rendered to the desired target format.
+
+  Fixing sources to only emit region-updates and having encoders
+  capable of encoding those streams would fix the need for the first
+  step but is outside of the scope of encodebin.
+
+  Example applications: Istanbul, gnome-shell, recordmydesktop
+
+* Live transcoding
+
+  This is the case of an incoming live stream which will be
+  broadcasted/transmitted live.
+  One issue to take into account is to reduce the encoding latency to
+  a minimum. This should mostly be done by picking low-latency
+  encoders.
+
+  Example applications: Rygel, Coherence
+
+* Transmuxing
+
+  Given a certain file, the aim is to remux the contents WITHOUT
+  decoding into either a different container format or the same
+  container format.
+  Remuxing into the same container format is useful when the file was
+  not created properly (for example, the index is missing).
+  Whenever available, parsers should be applied on the encoded streams
+  to validate and/or fix the streams before muxing them.
+
+  Metadata from the original file must be kept in the newly created
+  file.
+
+  Example applications: Arista, Transmaggedon
+
+* Loss-less cutting
+
+  Given a certain file, the aim is to extract a certain part of the
+  file without going through the process of decoding and re-encoding
+  that file.
+  This is similar to the transmuxing use-case.
+
+  Example applications: Pitivi, Transmageddon, Arista, ...
+
+* Multi-pass encoding
+
+  Some encoders allow doing a multi-pass encoding.
+  The initial pass(es) are only used to collect encoding estimates and
+  are not actually muxed and outputted.
+  The final pass uses previously collected information, and the output
+  is then muxed and outputted.
+
+* Archiving and intermediary format
+
+  The requirement is to have lossless
+
+* CD ripping
+
+  Example applications: Sound-juicer
+
+* DVD ripping
+
+  Example application: Thoggen

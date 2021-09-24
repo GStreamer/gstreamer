@@ -1,0 +1,58 @@
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    args = {
+        --track-types, video,
+        --videosink, "$(videosink) name=videosink",
+        --video-caps, "video/x-raw,format=I420,width=1280,height=720,framerate=10/1,chroma-site=mpeg2,colorimetry=bt709",
+    },
+    handles-states=true,
+    ignore-eos=true,
+    configs = {
+        # Ideally we should be able to record checksums... but they are not reproducible
+        "$(validateflow), pad=videosink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
+    }
+
+add-clip, name=c0, asset-id=time-overlay, layer-priority=0, type=GESSourceClip, start=0, duration=1.0
+set-child-properties, element-name=c0, pattern=blue, valignment=center, halignment=center, time-mode=time-code
+
+add-clip, name=c1, asset-id=time-overlay, layer-priority=0, type=GESSourceClip, start=1.0, duration=1.0
+set-child-properties, element-name=c1, pattern=red, valignment=center, halignment=center, time-mode=time-code
+commit;
+play
+
+seek, start=0.0, stop=0.5, flags=accurate+flush
+
+edit, element-name=c0, position=0.5, edge=end, edit-mode=trim
+commit;
+
+crank-clock, expected-elapsed-time=0.0
+crank-clock, repeat=5, expected-elapsed-time=0.1
+check-position, on-message=eos, expected-position=0.5
+
+seek, start=0.5, stop=1.0, flags=accurate+flush
+
+edit, element-name=c1, position=5.0, edge=end, edit-mode=trim
+commit;
+
+crank-clock, expected-elapsed-time=0.0
+crank-clock, repeat=5, expected-elapsed-time=0.1
+check-position, on-message=eos, expected-position=1.0
+
+edit, element-name=c1, position=3.0, edge=end, edit-mode=trim
+commit;
+check-position, on-message=eos, expected-position=1.0
+
+seek, start=1.0, stop=2.0, flags=accurate+flush
+check-position, expected-position=1.0
+
+edit, element-name=c1, position=1.5, edge=end, edit-mode=trim
+commit;
+
+crank-clock, expected-elapsed-time=0.0
+crank-clock, repeat=5, expected-elapsed-time=0.1
+
+# Last 1ns clip added by GES
+crank-clock, repeat=1, expected-elapsed-time=(guint64)1
+check-position, on-message=eos, expected-position=1500000001
+
+stop;
