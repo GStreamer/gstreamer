@@ -1,0 +1,9 @@
+*~
+
+Build
+*.user
+*.suo
+*.ipch
+*.sdf
+*.opensdf
+*.DS_Store
