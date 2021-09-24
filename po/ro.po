@@ -1,0 +1,141 @@
+# Romanian translation for gst-plugins-bad
+# This file is distributed under the same license as the gst-plugins-bad package.
+# Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"PO-Revision-Date: 2010-08-16 03:11+0300\n"
+"Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
+"Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
+"20)) ? 1 : 2);;\n"
+"X-Generator: Virtaal 0.6.1\n"
+
+msgid "No URL set."
+msgstr ""
+
+msgid "OpenCV failed to load template image"
+msgstr ""
+
+msgid "Could not read title information for DVD."
+msgstr "Nu s-au putut citi informațiile despre titlu pentru DVD."
+
+#, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "Nu s-a putut deschide dispozitivul DVD „%s”."
+
+msgid "Failed to set PGC based seeking."
+msgstr "Nu s-a putut stabili derularea bazată pe PGC."
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "Nu s-au putut citi informațiile despre titlu pentru DVD."
+
+msgid "This file contains no playable streams."
+msgstr ""
+
+#, fuzzy
+msgid "Could not open sndfile stream for reading."
+msgstr "Nu s-a putut deschide fișierul „%s” pentru citire."
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr ""
+
+msgid "Digitalzoom element couldn't be created"
+msgstr ""
+
+msgid "Subpicture format was not configured before data flow"
+msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Couldn't download fragments"
+msgstr ""
+
+msgid "Internal data stream error."
+msgstr "Eroare internă a fluxului de date."
+
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Dispozitivul „%s” nu există."
+
+#, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "Nu s-a putut deschide dispozitivul frontend „%s”."
+
+#, c-format
+msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Nu s-au putut obține configurările de la dispozitivul frontend „%s”."
+
+#, fuzzy, c-format
+msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
+msgstr "Nu s-au putut obține configurările de la dispozitivul frontend „%s”."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Nu s-a putut deschide fișierul „%s” pentru citire."
+
+msgid "Couldn't find channel configuration file"
+msgstr ""
+
+#, c-format
+msgid "Couldn't load channel configuration file: '%s'"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find details for channel '%s'"
+msgstr ""
+
+#, c-format
+msgid "No properties for channel '%s'"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Failed to set properties for channel '%s'"
+msgstr "Nu s-a putut deschide dispozitivul DVD „%s”."
+
+#, c-format
+msgid "Couldn't find channel configuration file: '%s'"
+msgstr ""
+
+msgid "Channel configuration file doesn't contain any channels"
+msgstr ""
+
+#, fuzzy
+#~ msgid "Could not configure sndio"
+#~ msgstr "Nu s-a putut deschide fișierul „%s” pentru citire."
+
+#, fuzzy
+#~ msgid "Could not start sndio"
+#~ msgstr "Nu s-au putut citi informațiile despre titlu pentru DVD."
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Niciun nume de fișier specificat pentru scriere."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Nu s-a putut deschide fișierul „%s” pentru scriere."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Eroare internă de flux al datelor."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Nu s-a putut scrie în fișierul „%s”."

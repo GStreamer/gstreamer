@@ -1,0 +1,1181 @@
+/* GStreamer
+ * Copyright (C) 2020 Intel Corporation
+ *     Author: He Junyan <junyan.he@intel.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+/**
+ * SECTION:gstmpeg2decoder
+ * @title: GstMpeg2Decoder
+ * @short_description: Base class to implement stateless MPEG2 decoders
+ * @sources:
+ * - gstmpeg2picture.h
+ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include "gstmpeg2decoder.h"
+
+GST_DEBUG_CATEGORY (gst_mpeg2_decoder_debug);
+#define GST_CAT_DEFAULT gst_mpeg2_decoder_debug
+
+/* ------------------------------------------------------------------------- */
+/* --- PTS Generator                                                     --- */
+/* ------------------------------------------------------------------------- */
+typedef struct _PTSGenerator PTSGenerator;
+struct _PTSGenerator
+{
+  /* The current GOP PTS */
+  GstClockTime gop_pts;
+  /* Max picture PTS */
+  GstClockTime max_pts;
+  /* Absolute GOP TSN */
+  guint gop_tsn;
+  /* Max picture TSN, relative to last GOP TSN */
+  guint max_tsn;
+  /* How many times TSN overflowed since GOP */
+  guint ovl_tsn;
+  /* Last picture TSN */
+  guint lst_tsn;
+  guint fps_n;
+  guint fps_d;
+};
+
+static void
+_pts_init (PTSGenerator * tsg)
+{
+  tsg->gop_pts = GST_CLOCK_TIME_NONE;
+  tsg->max_pts = GST_CLOCK_TIME_NONE;
+  tsg->gop_tsn = 0;
+  tsg->max_tsn = 0;
+  tsg->ovl_tsn = 0;
+  tsg->lst_tsn = 0;
+  tsg->fps_n = 0;
+  tsg->fps_d = 0;
+}
+
+static inline GstClockTime
+_pts_get_duration (PTSGenerator * tsg, guint num_frames)
+{
+  return gst_util_uint64_scale (num_frames, GST_SECOND * tsg->fps_d,
+      tsg->fps_n);
+}
+
+static inline guint
+_pts_get_poc (PTSGenerator * tsg)
+{
+  return tsg->gop_tsn + tsg->ovl_tsn * 1024 + tsg->lst_tsn;
+}
+
+static void
+_pts_set_framerate (PTSGenerator * tsg, guint fps_n, guint fps_d)
+{
+  tsg->fps_n = fps_n;
+  tsg->fps_d = fps_d;
+}
+
+static void
+_pts_sync (PTSGenerator * tsg, GstClockTime gop_pts)
+{
+  guint gop_tsn;
+
+  if (!GST_CLOCK_TIME_IS_VALID (gop_pts) ||
+      (GST_CLOCK_TIME_IS_VALID (tsg->max_pts) && tsg->max_pts >= gop_pts)) {
+    /* Invalid GOP PTS, interpolate from the last known picture PTS */
+    if (GST_CLOCK_TIME_IS_VALID (tsg->max_pts)) {
+      gop_pts = tsg->max_pts + _pts_get_duration (tsg, 1);
+      gop_tsn = tsg->gop_tsn + tsg->ovl_tsn * 1024 + tsg->max_tsn + 1;
+    } else {
+      gop_pts = 0;
+      gop_tsn = 0;
+    }
+  } else {
+    /* Interpolate GOP TSN from this valid PTS */
+    if (GST_CLOCK_TIME_IS_VALID (tsg->gop_pts))
+      gop_tsn = tsg->gop_tsn + gst_util_uint64_scale (gop_pts - tsg->gop_pts +
+          _pts_get_duration (tsg, 1) - 1, tsg->fps_n, GST_SECOND * tsg->fps_d);
+    else
+      gop_tsn = 0;
+  }
+
+  tsg->gop_pts = gop_pts;
+  tsg->gop_tsn = gop_tsn;
+  tsg->max_tsn = 0;
+  tsg->ovl_tsn = 0;
+  tsg->lst_tsn = 0;
+}
+
+static GstClockTime
+_pts_eval (PTSGenerator * tsg, GstClockTime pic_pts, guint pic_tsn)
+{
+  GstClockTime pts;
+
+  if (!GST_CLOCK_TIME_IS_VALID (tsg->gop_pts))
+    tsg->gop_pts = _pts_get_duration (tsg, pic_tsn);
+
+  pts = pic_pts;
+  if (!GST_CLOCK_TIME_IS_VALID (pts))
+    pts = tsg->gop_pts + _pts_get_duration (tsg, tsg->ovl_tsn * 1024 + pic_tsn);
+  else if (pts == tsg->gop_pts) {
+    /* The picture following the GOP header shall be an I-frame.
+       So we can compensate for the GOP start time from here */
+    tsg->gop_pts -= _pts_get_duration (tsg, pic_tsn);
+  }
+
+  if (!GST_CLOCK_TIME_IS_VALID (tsg->max_pts) || tsg->max_pts < pts)
+    tsg->max_pts = pts;
+
+  if (tsg->max_tsn < pic_tsn)
+    tsg->max_tsn = pic_tsn;
+  else if (tsg->max_tsn == 1023 && pic_tsn < tsg->lst_tsn) {    /* TSN wrapped */
+    tsg->max_tsn = pic_tsn;
+    tsg->ovl_tsn++;
+  }
+  tsg->lst_tsn = pic_tsn;
+
+  return pts;
+}
+
+static inline gboolean
+_seq_hdr_is_valid (GstMpegVideoSequenceHdr * hdr)
+{
+  return hdr->width > 0 && hdr->height > 0;
+}
+
+#define SEQ_HDR_INIT (GstMpegVideoSequenceHdr) { 0, }
+
+static inline gboolean
+_seq_ext_is_valid (GstMpegVideoSequenceExt * ext)
+{
+  return ext->profile >= GST_MPEG_VIDEO_PROFILE_422
+      && ext->profile <= GST_MPEG_VIDEO_PROFILE_SIMPLE;
+}
+
+#define SEQ_EXT_INIT (GstMpegVideoSequenceExt) { 0xff, 0, }
+
+static inline gboolean
+_seq_display_ext_is_valid (GstMpegVideoSequenceDisplayExt * ext)
+{
+  return ext->video_format != 0xff;
+}
+
+#define SEQ_DISPLAY_EXT_INIT (GstMpegVideoSequenceDisplayExt) { 0xff, 0, }
+
+static inline gboolean
+_seq_scalable_ext_is_valid (GstMpegVideoSequenceScalableExt * ext)
+{
+  return ext->scalable_mode != 0xff;
+}
+
+#define SEQ_SCALABLE_EXT_INIT (GstMpegVideoSequenceScalableExt) { 0xff, 0, }
+
+static inline gboolean
+_quant_matrix_ext_is_valid (GstMpegVideoQuantMatrixExt * ext)
+{
+  return ext->load_intra_quantiser_matrix != 0xff;
+}
+
+#define QUANT_MATRIX_EXT_INIT (GstMpegVideoQuantMatrixExt) { 0xff, { 0, } }
+
+static inline gboolean
+_pic_hdr_is_valid (GstMpegVideoPictureHdr * hdr)
+{
+  return hdr->tsn != 0xffff;
+}
+
+#define PIC_HDR_INIT (GstMpegVideoPictureHdr) { 0xffff, 0, }
+
+static inline gboolean
+_pic_hdr_ext_is_valid (GstMpegVideoPictureExt * ext)
+{
+  return ext->f_code[0][0] != 0xff;
+}
+
+#define PIC_HDR_EXT_INIT                                        \
+    (GstMpegVideoPictureExt) { { { 0xff, 0, }, { 0, } }, 0, }
+
+typedef enum
+{
+  GST_MPEG2_DECODER_STATE_GOT_SEQ_HDR = 1 << 0,
+  GST_MPEG2_DECODER_STATE_GOT_SEQ_EXT = 1 << 1,
+  GST_MPEG2_DECODER_STATE_GOT_PIC_HDR = 1 << 2,
+  GST_MPEG2_DECODER_STATE_GOT_PIC_EXT = 1 << 3,
+  GST_MPEG2_DECODER_STATE_GOT_SLICE = 1 << 4,
+
+  GST_MPEG2_DECODER_STATE_VALID_SEQ_HEADERS =
+      (GST_MPEG2_DECODER_STATE_GOT_SEQ_HDR |
+      GST_MPEG2_DECODER_STATE_GOT_SEQ_EXT),
+  GST_MPEG2_DECODER_STATE_VALID_PIC_HEADERS =
+      (GST_MPEG2_DECODER_STATE_GOT_PIC_HDR |
+      GST_MPEG2_DECODER_STATE_GOT_PIC_EXT),
+  GST_MPEG2_DECODER_STATE_VALID_PICTURE =
+      (GST_MPEG2_DECODER_STATE_VALID_SEQ_HEADERS |
+      GST_MPEG2_DECODER_STATE_VALID_PIC_HEADERS |
+      GST_MPEG2_DECODER_STATE_GOT_SLICE)
+} GstMpeg2DecoderState;
+
+struct _GstMpeg2DecoderPrivate
+{
+  gint width;
+  gint height;
+  gint display_width;
+  gint display_height;
+  GstMpegVideoProfile profile;
+  gboolean progressive;
+
+  GstMpegVideoSequenceHdr seq_hdr;
+  GstMpegVideoSequenceExt seq_ext;
+  GstMpegVideoSequenceDisplayExt seq_display_ext;
+  GstMpegVideoSequenceScalableExt seq_scalable_ext;
+
+  /* some sequence info changed after last new_sequence () */
+  gboolean seq_changed;
+  GstMpegVideoGop gop;
+  GstMpegVideoQuantMatrixExt quant_matrix;
+  GstMpegVideoPictureHdr pic_hdr;
+  GstMpegVideoPictureExt pic_ext;
+
+  GstMpeg2Dpb *dpb;
+  GstMpeg2DecoderState state;
+  PTSGenerator tsg;
+  GstClockTime current_pts;
+
+  GstMpeg2Picture *current_picture;
+  GstVideoCodecFrame *current_frame;
+  GstMpeg2Picture *first_field;
+};
+
+#define parent_class gst_mpeg2_decoder_parent_class
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstMpeg2Decoder, gst_mpeg2_decoder,
+    GST_TYPE_VIDEO_DECODER,
+    G_ADD_PRIVATE (GstMpeg2Decoder);
+    GST_DEBUG_CATEGORY_INIT (gst_mpeg2_decoder_debug, "mpeg2decoder", 0,
+        "MPEG2 Video Decoder"));
+
+static gboolean gst_mpeg2_decoder_start (GstVideoDecoder * decoder);
+static gboolean gst_mpeg2_decoder_stop (GstVideoDecoder * decoder);
+static gboolean gst_mpeg2_decoder_set_format (GstVideoDecoder * decoder,
+    GstVideoCodecState * state);
+static GstFlowReturn gst_mpeg2_decoder_finish (GstVideoDecoder * decoder);
+static gboolean gst_mpeg2_decoder_flush (GstVideoDecoder * decoder);
+static GstFlowReturn gst_mpeg2_decoder_drain (GstVideoDecoder * decoder);
+static GstFlowReturn gst_mpeg2_decoder_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame);
+static gboolean gst_mpeg2_decoder_do_output_picture (GstMpeg2Decoder * self,
+    GstMpeg2Picture * picture);
+
+static void
+gst_mpeg2_decoder_class_init (GstMpeg2DecoderClass * klass)
+{
+  GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
+
+  decoder_class->start = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_start);
+  decoder_class->stop = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_stop);
+  decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_set_format);
+  decoder_class->finish = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_finish);
+  decoder_class->flush = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_flush);
+  decoder_class->drain = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_drain);
+  decoder_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_handle_frame);
+}
+
+static void
+gst_mpeg2_decoder_init (GstMpeg2Decoder * self)
+{
+  gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
+
+  self->priv = gst_mpeg2_decoder_get_instance_private (self);
+
+  self->priv->seq_hdr = SEQ_HDR_INIT;
+  self->priv->seq_ext = SEQ_EXT_INIT;
+  self->priv->seq_display_ext = SEQ_DISPLAY_EXT_INIT;
+  self->priv->seq_scalable_ext = SEQ_SCALABLE_EXT_INIT;
+  self->priv->quant_matrix = QUANT_MATRIX_EXT_INIT;
+  self->priv->pic_hdr = PIC_HDR_INIT;
+  self->priv->pic_ext = PIC_HDR_EXT_INIT;
+}
+
+static gboolean
+gst_mpeg2_decoder_start (GstVideoDecoder * decoder)
+{
+  GstMpeg2Decoder *self = GST_MPEG2_DECODER (decoder);
+  GstMpeg2DecoderPrivate *priv = self->priv;
+
+  _pts_init (&priv->tsg);
+  priv->dpb = gst_mpeg2_dpb_new ();
+  priv->profile = -1;
+  priv->progressive = TRUE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_stop (GstVideoDecoder * decoder)
+{
+  GstMpeg2Decoder *self = GST_MPEG2_DECODER (decoder);
+  GstMpeg2DecoderPrivate *priv = self->priv;
+
+  g_clear_pointer (&self->input_state, gst_video_codec_state_unref);
+  g_clear_pointer (&priv->dpb, gst_mpeg2_dpb_free);
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_set_format (GstVideoDecoder * decoder,
+    GstVideoCodecState * state)
+{
+  GstMpeg2Decoder *self = GST_MPEG2_DECODER (decoder);
+  GstMpeg2DecoderPrivate *priv = self->priv;
+
+  GST_DEBUG_OBJECT (decoder, "Set format");
+
+  if (self->input_state)
+    gst_video_codec_state_unref (self->input_state);
+
+  self->input_state = gst_video_codec_state_ref (state);
+
+  priv->width = GST_VIDEO_INFO_WIDTH (&state->info);
+  priv->height = GST_VIDEO_INFO_HEIGHT (&state->info);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_mpeg2_decoder_drain (GstVideoDecoder * decoder)
+{
+  GstMpeg2Decoder *self = GST_MPEG2_DECODER (decoder);
+  GstMpeg2DecoderPrivate *priv = self->priv;
+  GstMpeg2Picture *picture;
+
+  while ((picture = gst_mpeg2_dpb_bump (priv->dpb)) != NULL) {
+    gst_mpeg2_decoder_do_output_picture (self, picture);
+  }
+
+  gst_mpeg2_dpb_clear (priv->dpb);
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_mpeg2_decoder_finish (GstVideoDecoder * decoder)
+{
+  return gst_mpeg2_decoder_drain (decoder);
+}
+
+static gboolean
+gst_mpeg2_decoder_flush (GstVideoDecoder * decoder)
+{
+  GstMpeg2Decoder *self = GST_MPEG2_DECODER (decoder);
+  GstMpeg2DecoderPrivate *priv = self->priv;
+
+  gst_mpeg2_dpb_clear (priv->dpb);
+  priv->state &= GST_MPEG2_DECODER_STATE_VALID_SEQ_HEADERS;
+  priv->pic_hdr = PIC_HDR_INIT;
+  priv->pic_ext = PIC_HDR_EXT_INIT;
+
+  return TRUE;
+}
+
+static inline gboolean
+_is_valid_state (GstMpeg2Decoder * decoder, GstMpeg2DecoderState state)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+
+  return (priv->state & state) == state;
+}
+
+static void
+gst_mpeg2_decoder_set_latency (GstMpeg2Decoder * decoder)
+{
+  GstCaps *caps;
+  GstClockTime min, max;
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstStructure *structure;
+  gint fps_d = 1, fps_n = 0;
+
+  if (priv->tsg.fps_d > 0 && priv->tsg.fps_n > 0) {
+    fps_n = priv->tsg.fps_n;
+    fps_d = priv->tsg.fps_d;
+  } else {
+    caps = gst_pad_get_current_caps (GST_VIDEO_DECODER_SINK_PAD (decoder));
+    if (caps) {
+      structure = gst_caps_get_structure (caps, 0);
+      if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+        if (fps_n == 0) {
+          /* variable framerate: see if we have a max-framerate */
+          gst_structure_get_fraction (structure, "max-framerate", &fps_n,
+              &fps_d);
+        }
+      }
+      gst_caps_unref (caps);
+    }
+  }
+
+  /* if no fps or variable, then 25/1 */
+  if (fps_n == 0) {
+    fps_n = 25;
+    fps_d = 1;
+  }
+
+  max = gst_util_uint64_scale (2 * GST_SECOND, fps_d, fps_n);
+  min = gst_util_uint64_scale (1 * GST_SECOND, fps_d, fps_n);
+
+  GST_LOG_OBJECT (decoder,
+      "latency min %" G_GUINT64_FORMAT " max %" G_GUINT64_FORMAT, min, max);
+
+  gst_video_decoder_set_latency (GST_VIDEO_DECODER (decoder), min, max);
+}
+
+static gboolean
+gst_mpeg2_decoder_handle_sequence (GstMpeg2Decoder * decoder,
+    GstMpegVideoPacket * packet)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpegVideoSequenceHdr seq_hdr = { 0, };
+
+  if (!gst_mpeg_video_packet_parse_sequence_header (packet, &seq_hdr)) {
+    GST_ERROR_OBJECT (decoder, "failed to parse sequence header");
+    return FALSE;
+  }
+
+  /* 6.1.1.6 Sequence header
+     The quantisation matrices may be redefined each time that a sequence
+     header occurs in the bitstream */
+  priv->quant_matrix = QUANT_MATRIX_EXT_INIT;
+
+  if (_seq_hdr_is_valid (&priv->seq_hdr) &&
+      memcmp (&priv->seq_hdr, &seq_hdr, sizeof (seq_hdr)) == 0)
+    return TRUE;
+
+  priv->seq_ext = SEQ_EXT_INIT;
+  priv->seq_display_ext = SEQ_DISPLAY_EXT_INIT;
+  priv->seq_scalable_ext = SEQ_SCALABLE_EXT_INIT;
+  priv->pic_ext = PIC_HDR_EXT_INIT;
+
+  priv->seq_hdr = seq_hdr;
+  priv->seq_changed = TRUE;
+
+  priv->width = seq_hdr.width;
+  priv->height = seq_hdr.height;
+  priv->display_width = priv->width;
+  priv->display_height = priv->height;
+
+  _pts_set_framerate (&priv->tsg, seq_hdr.fps_n, seq_hdr.fps_d);
+
+  gst_mpeg2_decoder_set_latency (decoder);
+
+  priv->state = GST_MPEG2_DECODER_STATE_GOT_SEQ_HDR;
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_handle_sequence_ext (GstMpeg2Decoder * decoder,
+    GstMpegVideoPacket * packet)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpegVideoSequenceExt seq_ext = { 0, };
+  guint width, height;
+
+  if (!_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_GOT_SEQ_HDR)) {
+    GST_ERROR_OBJECT (decoder, "no sequence before parsing sequence-extension");
+    return FALSE;
+  }
+
+  if (!gst_mpeg_video_packet_parse_sequence_extension (packet, &seq_ext)) {
+    GST_ERROR_OBJECT (decoder, "failed to parse sequence-extension");
+    return FALSE;
+  }
+
+  if (_seq_ext_is_valid (&priv->seq_ext) &&
+      memcmp (&priv->seq_ext, &seq_ext, sizeof (seq_ext)) == 0)
+    return TRUE;
+
+  priv->seq_ext = seq_ext;
+  priv->seq_changed = TRUE;
+
+  priv->progressive = seq_ext.progressive;
+
+  if (seq_ext.fps_n_ext && seq_ext.fps_d_ext) {
+    guint fps_n = priv->tsg.fps_n;
+    guint fps_d = priv->tsg.fps_d;
+    fps_n *= seq_ext.fps_n_ext + 1;
+    fps_d *= seq_ext.fps_d_ext + 1;
+    _pts_set_framerate (&priv->tsg, fps_n, fps_d);
+    gst_mpeg2_decoder_set_latency (decoder);
+  }
+
+  width = (priv->width & 0x0fff) | ((guint32) seq_ext.horiz_size_ext << 12);
+  height = (priv->height & 0x0fff) | ((guint32) seq_ext.vert_size_ext << 12);
+  GST_DEBUG_OBJECT (decoder, "video resolution %ux%u", width, height);
+  priv->width = width;
+  priv->height = height;
+
+  priv->profile = seq_ext.profile;
+
+  priv->state |= GST_MPEG2_DECODER_STATE_GOT_SEQ_EXT;
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_handle_sequence_display_ext (GstMpeg2Decoder * decoder,
+    GstMpegVideoPacket * packet)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpegVideoSequenceDisplayExt seq_display_ext = { 0, };
+
+  if (!_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_GOT_SEQ_HDR)) {
+    GST_ERROR_OBJECT (decoder,
+        "no sequence before parsing sequence-display-extension");
+    return FALSE;
+  }
+
+  if (!gst_mpeg_video_packet_parse_sequence_display_extension (packet,
+          &seq_display_ext)) {
+    GST_ERROR_OBJECT (decoder, "failed to parse sequence-display-extension");
+    return FALSE;
+  }
+
+  if (_seq_display_ext_is_valid (&priv->seq_display_ext) &&
+      memcmp (&priv->seq_display_ext, &seq_display_ext,
+          sizeof (seq_display_ext)) == 0)
+    return TRUE;
+
+  priv->seq_display_ext = seq_display_ext;
+  priv->seq_changed = TRUE;
+
+  priv->display_width = seq_display_ext.display_horizontal_size;
+  priv->display_height = seq_display_ext.display_vertical_size;
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_handle_sequence_scalable_ext (GstMpeg2Decoder * decoder,
+    GstMpegVideoPacket * packet)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpegVideoSequenceScalableExt seq_scalable_ext = { 0, };
+
+  if (!_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_GOT_SEQ_HDR)) {
+    GST_ERROR_OBJECT (decoder,
+        "no sequence before parsing sequence-scalable-extension");
+    return FALSE;
+  }
+
+  if (!gst_mpeg_video_packet_parse_sequence_scalable_extension (packet,
+          &seq_scalable_ext)) {
+    GST_ERROR_OBJECT (decoder, "failed to parse sequence-scalable-extension");
+    return FALSE;
+  }
+
+  if (_seq_scalable_ext_is_valid (&priv->seq_scalable_ext) &&
+      memcmp (&priv->seq_scalable_ext, &seq_scalable_ext,
+          sizeof (seq_scalable_ext)) == 0)
+    return TRUE;
+
+  priv->seq_scalable_ext = seq_scalable_ext;
+  priv->seq_changed = TRUE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_handle_quant_matrix_ext (GstMpeg2Decoder * decoder,
+    GstMpegVideoPacket * packet)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpegVideoQuantMatrixExt matrix_ext = { 0, };
+
+  if (!gst_mpeg_video_packet_parse_quant_matrix_extension (packet, &matrix_ext)) {
+    GST_ERROR_OBJECT (decoder, "failed to parse sequence-scalable-extension");
+    return FALSE;
+  }
+
+  priv->quant_matrix = matrix_ext;
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_handle_picture_ext (GstMpeg2Decoder * decoder,
+    GstMpegVideoPacket * packet)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpegVideoPictureExt pic_ext = { {{0,},}, };
+
+  if (!_is_valid_state (decoder,
+          GST_MPEG2_DECODER_STATE_VALID_SEQ_HEADERS |
+          GST_MPEG2_DECODER_STATE_GOT_PIC_HDR)) {
+    GST_ERROR_OBJECT (decoder,
+        "no sequence before parsing sequence-scalable-extension");
+    return FALSE;
+  }
+
+  if (!gst_mpeg_video_packet_parse_picture_extension (packet, &pic_ext)) {
+    GST_ERROR_OBJECT (decoder, "failed to parse picture-extension");
+    return FALSE;
+  }
+
+  if (priv->progressive && !pic_ext.progressive_frame) {
+    GST_WARNING_OBJECT (decoder,
+        "invalid interlaced frame in progressive sequence, fixing");
+    pic_ext.progressive_frame = 1;
+  }
+
+  if (pic_ext.picture_structure == 0 ||
+      (pic_ext.progressive_frame &&
+          pic_ext.picture_structure !=
+          GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME)) {
+    GST_WARNING_OBJECT (decoder,
+        "invalid picture_structure %d, replacing with \"frame\"",
+        pic_ext.picture_structure);
+    pic_ext.picture_structure = GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME;
+  }
+
+  priv->pic_ext = pic_ext;
+
+  priv->state |= GST_MPEG2_DECODER_STATE_GOT_PIC_EXT;
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_handle_gop (GstMpeg2Decoder * decoder,
+    GstMpegVideoPacket * packet)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpegVideoGop gop = { 0, };
+
+  if (!gst_mpeg_video_packet_parse_gop (packet, &gop)) {
+    GST_ERROR_OBJECT (decoder, "failed to parse GOP");
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (decoder,
+      "GOP %02u:%02u:%02u:%02u (closed_gop %d, broken_link %d)", gop.hour,
+      gop.minute, gop.second, gop.frame, gop.closed_gop, gop.broken_link);
+
+  priv->gop = gop;
+
+  _pts_sync (&priv->tsg, priv->current_frame->pts);
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_handle_picture (GstMpeg2Decoder * decoder,
+    GstMpegVideoPacket * packet)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpegVideoPictureHdr pic_hdr = { 0, };
+  GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
+
+  if (!_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_VALID_SEQ_HEADERS)) {
+    GST_ERROR_OBJECT (decoder, "no sequence before parsing picture header");
+    return FALSE;
+  }
+
+  /* 6.1.1.6: Conversely if no sequence_xxx_extension() occurs between
+     the first sequence_header() and the first picture_header() then
+     sequence_xxx_extension() shall not occur in the bitstream. */
+  if (priv->seq_changed && klass->new_sequence) {
+    priv->seq_changed = FALSE;
+    if (!klass->new_sequence (decoder, &priv->seq_hdr,
+            _seq_ext_is_valid (&priv->seq_ext) ? &priv->seq_ext : NULL,
+            _seq_display_ext_is_valid (&priv->seq_display_ext) ?
+            &priv->seq_display_ext : NULL,
+            _seq_scalable_ext_is_valid (&priv->seq_scalable_ext) ?
+            &priv->seq_scalable_ext : NULL)) {
+      GST_ERROR_OBJECT (decoder, "new sequence error");
+      return FALSE;
+    }
+  }
+
+  priv->state &= (GST_MPEG2_DECODER_STATE_GOT_SEQ_HDR |
+      GST_MPEG2_DECODER_STATE_GOT_SEQ_EXT);
+
+  if (!gst_mpeg_video_packet_parse_picture_header (packet, &pic_hdr)) {
+    GST_ERROR_OBJECT (decoder, "failed to parse picture header");
+    return FALSE;
+  }
+
+  priv->pic_hdr = pic_hdr;
+
+  priv->state |= GST_MPEG2_DECODER_STATE_GOT_PIC_HDR;
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_start_current_picture (GstMpeg2Decoder * decoder,
+    GstMpeg2Slice * slice)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
+  GstMpeg2Picture *prev_picture, *next_picture;
+  gboolean ret;
+
+  if (!klass->start_picture)
+    return TRUE;
+
+  gst_mpeg2_dpb_get_neighbours (priv->dpb, priv->current_picture,
+      &prev_picture, &next_picture);
+
+  if (priv->current_picture->type == GST_MPEG_VIDEO_PICTURE_TYPE_B
+      && !prev_picture && !priv->gop.closed_gop) {
+    GST_VIDEO_CODEC_FRAME_FLAG_SET (priv->current_frame,
+        GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
+  }
+
+  ret = klass->start_picture (decoder, priv->current_picture, slice,
+      prev_picture, next_picture);
+
+  if (!ret) {
+    GST_ERROR_OBJECT (decoder, "subclass does not want to start picture");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_ensure_current_picture (GstMpeg2Decoder * decoder,
+    GstMpeg2Slice * slice)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
+  GstMpeg2Picture *picture = NULL;
+  gboolean ret = TRUE;
+
+  if (priv->current_picture) {
+    g_assert (_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_GOT_SLICE));
+    return TRUE;
+  }
+
+  if (priv->progressive ||
+      priv->pic_ext.picture_structure ==
+      GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME) {
+    g_assert (!_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_GOT_SLICE));
+
+    if (priv->first_field) {
+      GST_WARNING_OBJECT (decoder, "An unmatched first field");
+      gst_mpeg2_picture_clear (&priv->first_field);
+    }
+
+    picture = gst_mpeg2_picture_new ();
+    if (klass->new_picture)
+      ret = klass->new_picture (decoder, priv->current_frame, picture);
+
+    if (!ret) {
+      GST_ERROR_OBJECT (decoder, "subclass does not want accept new picture");
+      gst_mpeg2_picture_unref (picture);
+      return FALSE;
+    }
+
+    picture->structure = GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME;
+  } else {
+    if (!priv->first_field) {
+      picture = gst_mpeg2_picture_new ();
+      if (klass->new_picture)
+        ret = klass->new_picture (decoder, priv->current_frame, picture);
+
+      if (!ret) {
+        GST_ERROR_OBJECT (decoder, "subclass does not want accept new picture");
+        gst_mpeg2_picture_unref (picture);
+        return FALSE;
+      }
+    } else {
+      picture = gst_mpeg2_picture_new ();
+
+      if (klass->new_field_picture)
+        ret = klass->new_field_picture (decoder, priv->first_field, picture);
+
+      if (!ret) {
+        GST_ERROR_OBJECT (decoder,
+            "Subclass couldn't handle new field picture");
+        gst_mpeg2_picture_unref (picture);
+        return FALSE;
+      }
+
+      picture->first_field = gst_mpeg2_picture_ref (priv->first_field);
+
+      /* At this moment, this picture should be interlaced */
+      picture->buffer_flags |= GST_VIDEO_BUFFER_FLAG_INTERLACED;
+      if (priv->pic_ext.top_field_first)
+        picture->buffer_flags |= GST_VIDEO_BUFFER_FLAG_TFF;
+    }
+
+    picture->structure = priv->pic_ext.picture_structure;
+  }
+
+  picture->needed_for_output = TRUE;
+  /* This allows accessing the frame from the picture. */
+  picture->system_frame_number = priv->current_frame->system_frame_number;
+  picture->type = priv->pic_hdr.pic_type;
+  picture->tsn = priv->pic_hdr.tsn;
+  priv->current_pts =
+      _pts_eval (&priv->tsg, priv->current_frame->pts, picture->tsn);
+  picture->pic_order_cnt = _pts_get_poc (&priv->tsg);
+
+  priv->current_picture = picture;
+  GST_LOG_OBJECT (decoder,
+      "Create new picture %p(%s), system number: %d, poc: %d,"
+      " type: 0x%d, first field %p",
+      picture,
+      (picture->structure == GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME) ?
+      "frame" : "field",
+      picture->system_frame_number, picture->pic_order_cnt, picture->type,
+      picture->first_field);
+
+  if (!gst_mpeg2_decoder_start_current_picture (decoder, slice))
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_finish_current_field (GstMpeg2Decoder * decoder)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
+  gboolean ret;
+
+  if (priv->current_picture == NULL)
+    return TRUE;
+
+  ret = klass->end_picture (decoder, priv->current_picture);
+  if (!ret) {
+    GST_ERROR_OBJECT (decoder, "subclass end_picture failed");
+    return FALSE;
+  }
+
+  if (priv->current_picture->structure !=
+      GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME &&
+      !priv->current_picture->first_field) {
+    priv->first_field = priv->current_picture;
+    priv->current_picture = NULL;
+  } else {
+    GST_WARNING_OBJECT (decoder, "The current picture %p is not %s, should not "
+        "begin another picture. Just discard this.",
+        priv->current_picture, priv->current_picture->structure ==
+        GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME ?
+        " a field" : "the first field");
+    gst_mpeg2_picture_clear (&priv->current_picture);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_finish_current_picture (GstMpeg2Decoder * decoder)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
+  gboolean ret;
+
+  g_assert (priv->current_picture != NULL);
+
+  ret = klass->end_picture (decoder, priv->current_picture);
+  if (!ret) {
+    GST_ERROR_OBJECT (decoder, "subclass end_picture failed");
+    return FALSE;
+  }
+
+  if (priv->current_picture->structure !=
+      GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME &&
+      !priv->current_picture->first_field) {
+    priv->first_field = priv->current_picture;
+    priv->current_picture = NULL;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_handle_slice (GstMpeg2Decoder * decoder,
+    GstMpegVideoPacket * packet)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpegVideoSliceHdr slice_hdr;
+  GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
+  GstMpeg2Slice slice;
+  gboolean ret;
+
+  if (!_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_VALID_PIC_HEADERS)) {
+    GST_ERROR_OBJECT (decoder,
+        "no sequence or picture header before parsing picture header");
+    return FALSE;
+  }
+
+  if (!gst_mpeg_video_packet_parse_slice_header (packet, &slice_hdr,
+          &priv->seq_hdr,
+          _seq_scalable_ext_is_valid (&priv->seq_scalable_ext) ?
+          &priv->seq_scalable_ext : NULL)) {
+    GST_ERROR_OBJECT (decoder, "failed to parse slice header");
+    return FALSE;
+  }
+
+  slice.header = slice_hdr;
+  slice.packet = *packet;
+  slice.quant_matrix = _quant_matrix_ext_is_valid (&priv->quant_matrix) ?
+      &priv->quant_matrix : NULL;
+  g_assert (_pic_hdr_is_valid (&priv->pic_hdr));
+  slice.pic_hdr = &priv->pic_hdr;
+  slice.pic_ext = _pic_hdr_ext_is_valid (&priv->pic_ext) ?
+      &priv->pic_ext : NULL;
+
+  if (!gst_mpeg2_decoder_ensure_current_picture (decoder, &slice)) {
+    GST_ERROR_OBJECT (decoder, "failed to start current picture");
+    return FALSE;
+  }
+
+  g_assert (klass->decode_slice);
+  ret = klass->decode_slice (decoder, priv->current_picture, &slice);
+  if (!ret) {
+    GST_ERROR_OBJECT (decoder,
+        "Subclass didn't want to decode picture %p (frame_num %d, poc %d)",
+        priv->current_picture, priv->current_picture->system_frame_number,
+        priv->current_picture->pic_order_cnt);
+    return FALSE;
+  }
+
+  priv->state |= GST_MPEG2_DECODER_STATE_GOT_SLICE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_decode_packet (GstMpeg2Decoder * decoder,
+    GstMpegVideoPacket * packet)
+{
+  GstMpegVideoPacketExtensionCode ext_type;
+  gboolean ret = TRUE;
+
+  GST_LOG_OBJECT (decoder, "Parsing the packet 0x%x, size %d",
+      packet->type, packet->size);
+  switch (packet->type) {
+    case GST_MPEG_VIDEO_PACKET_PICTURE:{
+      ret = gst_mpeg2_decoder_finish_current_field (decoder);
+      if (!ret)
+        break;
+
+      ret = gst_mpeg2_decoder_handle_picture (decoder, packet);
+      break;
+    }
+    case GST_MPEG_VIDEO_PACKET_SEQUENCE:
+      ret = gst_mpeg2_decoder_handle_sequence (decoder, packet);
+      break;
+    case GST_MPEG_VIDEO_PACKET_EXTENSION:
+      ext_type = packet->data[packet->offset] >> 4;
+      GST_LOG_OBJECT (decoder, "  Parsing the ext packet 0x%x", ext_type);
+      switch (ext_type) {
+        case GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE:
+          ret = gst_mpeg2_decoder_handle_sequence_ext (decoder, packet);
+          break;
+        case GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_DISPLAY:
+          ret = gst_mpeg2_decoder_handle_sequence_display_ext (decoder, packet);
+          break;
+        case GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_SCALABLE:
+          ret =
+              gst_mpeg2_decoder_handle_sequence_scalable_ext (decoder, packet);
+          break;
+        case GST_MPEG_VIDEO_PACKET_EXT_QUANT_MATRIX:
+          ret = gst_mpeg2_decoder_handle_quant_matrix_ext (decoder, packet);
+          break;
+        case GST_MPEG_VIDEO_PACKET_EXT_PICTURE:
+          ret = gst_mpeg2_decoder_handle_picture_ext (decoder, packet);
+          break;
+        default:
+          /* Ignore unknown start-code extensions */
+          ret = TRUE;
+          break;
+      }
+      break;
+    case GST_MPEG_VIDEO_PACKET_SEQUENCE_END:
+      ret = TRUE;
+      break;
+    case GST_MPEG_VIDEO_PACKET_GOP:
+      ret = gst_mpeg2_decoder_handle_gop (decoder, packet);
+      break;
+    case GST_MPEG_VIDEO_PACKET_USER_DATA:
+      ret = TRUE;
+      break;
+    default:
+      if (packet->type >= GST_MPEG_VIDEO_PACKET_SLICE_MIN &&
+          packet->type <= GST_MPEG_VIDEO_PACKET_SLICE_MAX) {
+        ret = gst_mpeg2_decoder_handle_slice (decoder, packet);
+        break;
+      }
+      GST_WARNING_OBJECT (decoder, "unsupported packet type 0x%02x, ignore",
+          packet->type);
+      ret = TRUE;
+      break;
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_mpeg2_decoder_do_output_picture (GstMpeg2Decoder * decoder,
+    GstMpeg2Picture * to_output)
+{
+  GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
+  GstVideoCodecFrame *frame = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  frame =
+      gst_video_decoder_get_frame (GST_VIDEO_DECODER (decoder),
+      to_output->system_frame_number);
+  if (!frame) {
+    GST_ERROR_OBJECT (decoder,
+        "No available codec frame with frame number %d",
+        to_output->system_frame_number);
+    gst_mpeg2_picture_unref (to_output);
+    return GST_FLOW_ERROR;
+  }
+
+  g_assert (klass->output_picture);
+  GST_LOG_OBJECT (decoder,
+      "Output picture %p (frame_num %d, poc %d, pts: %" GST_TIME_FORMAT
+      "), from DPB",
+      to_output, to_output->system_frame_number, to_output->pic_order_cnt,
+      GST_TIME_ARGS (frame->pts));
+  ret = klass->output_picture (decoder, frame, to_output);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_mpeg2_decoder_output_current_picture (GstMpeg2Decoder * decoder)
+{
+  GstMpeg2DecoderPrivate *priv = decoder->priv;
+  GstMpeg2Picture *picture = priv->current_picture;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (!picture && priv->first_field) {
+    GST_WARNING_OBJECT (decoder, "Missing the second field");
+    picture = priv->first_field;
+  }
+
+  g_assert (picture);
+
+  /* Update the presentation time */
+  priv->current_frame->pts = priv->current_pts;
+
+  gst_mpeg2_dpb_add (priv->dpb, picture);
+
+  GST_LOG_OBJECT (decoder,
+      "Add picture %p (frame_num %d, poc %d, type 0x%x), into DPB", picture,
+      picture->system_frame_number, picture->pic_order_cnt, picture->type);
+
+  while (gst_mpeg2_dpb_need_bump (priv->dpb)) {
+    GstMpeg2Picture *to_output;
+
+    to_output = gst_mpeg2_dpb_bump (priv->dpb);
+    g_assert (to_output);
+    ret = gst_mpeg2_decoder_do_output_picture (decoder, to_output);
+    if (ret != GST_FLOW_OK)
+      break;
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_mpeg2_decoder_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame)
+{
+  GstMpeg2Decoder *self = GST_MPEG2_DECODER (decoder);
+  GstMpeg2DecoderPrivate *priv = self->priv;
+  GstBuffer *in_buf = frame->input_buffer;
+  GstMapInfo map_info;
+  GstMpegVideoPacket packet;
+  GstFlowReturn ret = GST_FLOW_OK;
+  guint offset;
+  gboolean last_one;
+
+  GST_LOG_OBJECT (self, "handle frame, PTS: %" GST_TIME_FORMAT
+      ", DTS: %" GST_TIME_FORMAT " system frame number is %d",
+      GST_TIME_ARGS (GST_BUFFER_PTS (in_buf)),
+      GST_TIME_ARGS (GST_BUFFER_DTS (in_buf)), frame->system_frame_number);
+
+  priv->state &= ~GST_MPEG2_DECODER_STATE_GOT_SLICE;
+
+  priv->current_frame = frame;
+  gst_buffer_map (in_buf, &map_info, GST_MAP_READ);
+
+  offset = 0;
+  last_one = FALSE;
+  while (gst_mpeg_video_parse (&packet, map_info.data, map_info.size, offset)) {
+    /* The packet is the last one */
+    if (packet.size == -1) {
+      if (packet.offset < map_info.size) {
+        packet.size = map_info.size - packet.offset;
+        last_one = TRUE;
+      } else {
+        GST_WARNING_OBJECT (decoder, "Get a packet with wrong size");
+        break;
+      }
+    }
+
+    if (!gst_mpeg2_decoder_decode_packet (self, &packet)) {
+      gst_buffer_unmap (in_buf, &map_info);
+      GST_ERROR_OBJECT (decoder, "failed to handle the packet type 0x%x",
+          packet.type);
+      goto failed;
+    }
+
+    if (last_one)
+      break;
+
+    offset = packet.offset;
+  }
+
+  gst_buffer_unmap (in_buf, &map_info);
+
+  if (!priv->current_picture) {
+    GST_ERROR_OBJECT (decoder, "no valid picture created");
+    goto failed;
+  }
+
+  if (!gst_mpeg2_decoder_finish_current_picture (self)) {
+    GST_ERROR_OBJECT (decoder, "failed to decode the current picture");
+    goto failed;
+  }
+
+  ret = gst_mpeg2_decoder_output_current_picture (self);
+  gst_mpeg2_picture_clear (&priv->current_picture);
+  gst_mpeg2_picture_clear (&priv->first_field);
+  gst_video_codec_frame_unref (priv->current_frame);
+  priv->current_frame = NULL;
+  return ret;
+
+failed:
+  {
+    GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE,
+        ("failed to handle the frame %d", frame->system_frame_number), (NULL),
+        ret);
+    gst_video_decoder_drop_frame (decoder, frame);
+    gst_mpeg2_picture_clear (&priv->current_picture);
+    gst_mpeg2_picture_clear (&priv->first_field);
+    priv->current_frame = NULL;
+    return ret;
+  }
+}

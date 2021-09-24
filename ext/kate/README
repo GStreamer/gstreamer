@@ -1,0 +1,20 @@
+Kate is a free codec for text based data, which can also carry images.
+It is typically used to create overlays on a video.
+
+libkate, a codec for Kate streams, is required to build this plugin:
+http://libkate.googlecode.com/
+
+libtiger, a rendering library for Kate streams, is optional:
+http://libtiger.googlecode.com/
+
+The Kate plugin contains various elements to manipulate Kate streams:
+
+ - katedec: decodes Kate streams to text and SPU images
+ - kateenc: encodes Kate streams from text and SPU images
+ - kateparse: parses Kate streams
+ - katetag: allows changing metadata in Kate streams
+ - tiger: decodes and renders Kate streams using libtiger (needs libtiger)
+
+More information about Kate can be found at:
+http://wiki.xiph.org/index.php/OggKate
+

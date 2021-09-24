@@ -1,0 +1,38 @@
+# Translation of 'gst-plugins-bad' messages to Kirghiz.
+# Copyright (C) 2002 Free Software Foundation, Inc.
+# Ilyas Bakirov <just_ilyas@yahoo.com>, 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-bad 0.10.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-06-13 12:47+0200\n"
+"PO-Revision-Date: 2007-11-13 17:16+0600\n"
+"Last-Translator: Ilyas Bakirov <just_ilyas@yahoo.com>\n"
+"Language-Team: Kirghiz <i18n-team-ky-kyrgyz@lists.sourceforge.net>\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Kyrgyz\n"
+"X-Poedit-Country: KYRGYZSTAN\n"
+
+#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "\"%s\" мындай жабдык жок."
+
+#: sys/dvb/gstdvbsrc.c:662
+#, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "Алдын \"%s\" жабдыкты ачалган жок."
+
+#: sys/dvb/gstdvbsrc.c:674
+#, c-format
+msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Алдын \"%s\" жабдыктан ырастоолор алынган жок."
+
+#: sys/dvb/gstdvbsrc.c:717
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "\"%s\"  файлы окууга ачылган жок."

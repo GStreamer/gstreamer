@@ -1,0 +1,5 @@
+To build this, you'll require the DirectShow base classes. These are supplied
+in the Windows SDK, but under Samples\Multimedia\DirectShow\BaseClasses
+
+Once you've built that, you should be able to figure out the rest...
+
