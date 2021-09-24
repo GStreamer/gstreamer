@@ -5137,11 +5137,8 @@ done:
           }
         }
         gst_caps_unref (target_caps);
-        target_caps = tmp;
+        result = gst_caps_merge (result, tmp);
       }
-
-
-      result = gst_caps_merge (result, target_caps);
       gst_object_unref (target);
     }
   }

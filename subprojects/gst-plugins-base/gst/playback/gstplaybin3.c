@@ -4309,7 +4309,8 @@ done:
     if (target) {
       GstCaps *target_caps = gst_pad_get_pad_template_caps (target);
       GST_PLAY_BIN3_FILTER_CAPS (filter, target_caps);
-      result = gst_caps_merge (result, target_caps);
+      if (!gst_caps_is_any (target_caps))
+        result = gst_caps_merge (result, target_caps);
       gst_object_unref (target);
     }
   }
