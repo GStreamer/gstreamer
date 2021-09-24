@@ -234,6 +234,13 @@ updating the plugin registry. This is useful for embedded device which
 is not updating the plugins frequently, it will save time when doing
 `gst_init()`.
 
+**`GST_REGISTRY_MODE`. (Since: 1.20)**
+
+Set this environment variable to make Gstreamer change the file
+permissions of the plugin cache / registry. If not set, default is to
+limit read / write permissions to current user only. Set mode shall
+be from one to four octal digits as used in chmod.
+
 **`GST_TRACE`.**
 
 Enable memory allocation tracing. Most GStreamer objects have support
