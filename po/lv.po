@@ -1,0 +1,855 @@
+# Latvian translation of gst-plugins-base
+# This file is put in the public domain.
+#
+# Arvis Lācis <arvis.lacis@inbox.lv>, 2009.
+# Rihards Priedītis <rprieditis@gmail.com>, 2010.
+# Rihards Priedītis <rprieditis@gmail.com>, 2011.
+# Rūdolfs Mazurs <rudolfs.mazurs@gmail.com>, 2014.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"PO-Revision-Date: 2014-04-20 16:15+0300\n"
+"Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
+"Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
+"Language: lv\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Latvian\n"
+"X-Poedit-Country: LATVIA\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
+"2);\n"
+"X-Generator: Lokalize 1.5\n"
+
+msgid "Could not open device for playback in mono mode."
+msgstr "Nevarēja atvērt ierīci atskaņošanai mono režīmā."
+
+msgid "Could not open device for playback in stereo mode."
+msgstr "Nevarēja atvērt ierīci atskaņošanai stereo režīmā."
+
+#, c-format
+msgid "Could not open device for playback in %d-channel mode."
+msgstr "Nevarēja atvērt ierīci atskaņošanai %d-kanālu režīmā."
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Nevarēja atvērt audio ierīci atskaņošanai. Ierīci pašlaik izmanto cita "
+"lietotne."
+
+msgid "Could not open audio device for playback."
+msgstr "Nevarēja atvērt audio ierīci atskaņošanai."
+
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr "Kļūda, izvadot audio ierīcē. Ierīce tika atvienota."
+
+msgid "Could not open device for recording in mono mode."
+msgstr "Nevarēja atvērt ierīci ierakstīšanai mono režīmā."
+
+msgid "Could not open device for recording in stereo mode."
+msgstr "Nevarēja atvērt ierīci ierakstīšanai stereo režīmā."
+
+#, c-format
+msgid "Could not open device for recording in %d-channel mode"
+msgstr "Nevarēja atvērt ierīci ierakstīšanai %d-kanālu režīmā"
+
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr ""
+"Nevarēja atvērt audio ierīci ierakstīšanai. Ierīci pašlaik izmanto cita "
+"lietotne."
+
+msgid "Could not open audio device for recording."
+msgstr "Nevarēja atvērt audio ierīci ierakstīšanai."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr "Kļūda, rakstot audio ierīcē. Ierīce tika atvienota."
+
+msgid "Could not open CD device for reading."
+msgstr "Nevarēja atvērt CD ierīci lasīšanai."
+
+msgid "Could not seek CD."
+msgstr "Nevarēja meklēt pa CD."
+
+msgid "Could not read CD."
+msgstr "Nevarēja nolasīt CD."
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Trūkst elements “%s” - pārbaudiet savu GStreamer instalāciju."
+
+msgid "Could not determine type of stream"
+msgstr "Nevarēja noteikt straumes tipu"
+
+msgid "This appears to be a text file"
+msgstr "Tiek atpazīts kā teksta datne"
+
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Nevarēja izveidot “uridecodebin” elementu."
+
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Nevarēja izveidot “uridecodebin” elementu."
+
+#, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr "Trūkst gan autovideosink, gan %s elementi."
+
+msgid "The autovideosink element is missing."
+msgstr "Trūkst autovideosink elements."
+
+#, c-format
+msgid "Configured videosink %s is not working."
+msgstr "Konfigurētais videosink %s nestrādā."
+
+#, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr "Gan autovideosink, gan %s elementi nedarbojas."
+
+msgid "The autovideosink element is not working."
+msgstr "autovideosink elements nedarbojas."
+
+msgid "Custom text sink element is not usable."
+msgstr "Pielāgots teksta uztveršanas elements nav lietojams."
+
+msgid "No volume control found"
+msgstr "Netika atrasta neviena skaļuma vadīkla"
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr "Trūkst gan autoaudiosink, gan %s elementi."
+
+msgid "The autoaudiosink element is missing."
+msgstr "Trūkst autoaudiosink elements."
+
+#, c-format
+msgid "Configured audiosink %s is not working."
+msgstr "Konfigurētais audiosink %s nestrādā."
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr "Nedarbojas autoaudiosink un %s elementi."
+
+msgid "The autoaudiosink element is not working."
+msgstr "autoaudiosink elements nedarbojas."
+
+msgid "Can't play a text file without video or visualizations."
+msgstr "Nevar atskaņot teksta datni bez video vai vizualizācijas."
+
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr "Nav pieejams neviens atkodētājs datnes veidam “%s”."
+
+msgid "No URI specified to play from."
+msgstr "Nav norādīts neviens URI, no kā varētu atskaņot. "
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Nederīgs URI “%s”."
+
+msgid "This stream type cannot be played yet."
+msgstr "Šo plūsmu pagaidām nevar atskaņot."
+
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr "Nav izstrādāts neviens “%s” URI apstrādātājs."
+
+msgid "Source element is invalid."
+msgstr "Avota elements ir nederīgs."
+
+#, c-format
+msgid "Error while sending data to \"%s:%d\"."
+msgstr "Radās kļūda, nosūtot datus uz “%s:%d”."
+
+msgid "Can't record audio fast enough"
+msgstr "Nevar ierakstīt audio pietiekami ātri"
+
+msgid "This CD has no audio tracks"
+msgstr "Šajā CD nav neviena audio celiņa"
+
+msgid "ID3 tag"
+msgstr "ID3 iezīme"
+
+msgid "APE tag"
+msgstr "APE iezīme"
+
+msgid "ICY internet radio"
+msgstr "ICY interneta radio"
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Apple Lossless Audio (ALAC)"
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "Free Lossless Audio Codec (FLAC)"
+
+msgid "Lossless True Audio (TTA)"
+msgstr "Bezzudumu True Audio (TTA)"
+
+msgid "Windows Media Speech"
+msgstr "Windows mediju runa"
+
+msgid "CYUV Lossless"
+msgstr "CYUV bezzudumu"
+
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+msgid "Lossless MSZH"
+msgstr "Bezzudumu MSZH"
+
+msgid "Run-length encoding"
+msgstr "Secīgo atkārtojumu kodēšana"
+
+msgid "Timed Text"
+msgstr "Teksts laikā"
+
+msgid "Subtitle"
+msgstr "Subtitri"
+
+msgid "MPL2 subtitle format"
+msgstr "MPL2 subtitru formāts"
+
+msgid "DKS subtitle format"
+msgstr "DKS subtitru formāts"
+
+msgid "QTtext subtitle format"
+msgstr "QTtext subtitru formāts"
+
+msgid "Sami subtitle format"
+msgstr "Sami subtitru formāts"
+
+msgid "TMPlayer subtitle format"
+msgstr "TMPlayer subtitru formāts"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
+
+msgid "Kate subtitle format"
+msgstr "Kate subtitru formāts"
+
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Kate subtitru formāts"
+
+msgid "Uncompressed video"
+msgstr "Nesaspiests video"
+
+msgid "Uncompressed gray"
+msgstr "Neatspiests pelēks"
+
+#, c-format
+msgid "Uncompressed packed YUV %s"
+msgstr "Nesaspiests pakots YUV %s"
+
+#, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "Nesaspiests pus-plaknes YUV %s"
+
+#, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "Nesaspiests plaknes YUV %s"
+
+#, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Nesaspiests paletizēts %d-bitu %s"
+
+#, c-format
+msgid "Uncompressed %d-bit %s"
+msgstr "Nesaspiests %d-bitu %s"
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 versija %d"
+
+msgid "Uncompressed audio"
+msgstr "Nesaspiests audio"
+
+#, c-format
+msgid "Raw %d-bit %s audio"
+msgstr "Jēls %d-bitu %s audio"
+
+msgid "Audio CD source"
+msgstr "Audio CD avots"
+
+msgid "DVD source"
+msgstr "DVD avots"
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "Reālā laika straumēšanas protokola (RTSP) avots"
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Microsoft mediju servera (MMS) protokola avots"
+
+#, c-format
+msgid "%s protocol source"
+msgstr "%s protokola avots"
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr "%s video RTP izkrāvējs"
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr "%s audio RTP izkrāvējs"
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr "%s RTP izkrāvējs"
+
+#, c-format
+msgid "%s demuxer"
+msgstr "%s atjaucējs"
+
+#, c-format
+msgid "%s decoder"
+msgstr "%s atkodētājs"
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr "%s video RTP iekrāvējs"
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr "%s audio RTP iekrāvējs"
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr "%s RTP iekrāvējs"
+
+#, c-format
+msgid "%s muxer"
+msgstr "%s jaucējs"
+
+#, c-format
+msgid "%s encoder"
+msgstr "%s kodētājs"
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr "GStreamer elements %s"
+
+msgid "Unknown source element"
+msgstr "Nezināms avota elements"
+
+msgid "Unknown sink element"
+msgstr "Nezināms uztveršanas elements"
+
+msgid "Unknown element"
+msgstr "Nezināms elements"
+
+msgid "Unknown decoder element"
+msgstr "Nezināms atkodētāja elements"
+
+msgid "Unknown encoder element"
+msgstr "Nezināms kodētāja elements"
+
+msgid "Plugin or element of unknown type"
+msgstr "Nezināma veida spraudnis vai elements"
+
+msgid "Failed to read tag: not enough data"
+msgstr "Neizdevās nolasīt iezīmi: nepietiek datu"
+
+msgid "track ID"
+msgstr "celiņa ID"
+
+msgid "MusicBrainz track ID"
+msgstr "MusicBrainz celiņa ID"
+
+msgid "artist ID"
+msgstr "izpildītāja ID"
+
+msgid "MusicBrainz artist ID"
+msgstr "MusicBrainz izpildītāja ID"
+
+msgid "album ID"
+msgstr "albuma ID"
+
+msgid "MusicBrainz album ID"
+msgstr "MusicBrainz albuma ID"
+
+msgid "album artist ID"
+msgstr "albuma izpildītāja ID"
+
+msgid "MusicBrainz album artist ID"
+msgstr "MusicBrainz albuma izpildītāja ID"
+
+msgid "track TRM ID"
+msgstr "celiņa TRM ID"
+
+msgid "MusicBrainz TRM ID"
+msgstr "MusicBrainz TRM ID"
+
+msgid "capturing shutter speed"
+msgstr "tveršanas slēdža ātrums"
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "Attēla tveršanā izmantotais slēdža ātrums sekundēs"
+
+msgid "capturing focal ratio"
+msgstr "tveršanas fokusa attiecība"
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "Attēla tveršanā izmantotā fokusa attiecība (f-skaitlis)"
+
+msgid "capturing focal length"
+msgstr "tveršanas fokusa attālums"
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Attēla tveršanā izmantotā lēcas fokusa attālums milimetros"
+
+#, fuzzy
+msgid "capturing 35 mm equivalent focal length"
+msgstr "tveršanas fokusa attālums"
+
+#, fuzzy
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
+msgstr "Attēla tveršanā izmantotā lēcas fokusa attālums milimetros"
+
+msgid "capturing digital zoom ratio"
+msgstr "tveršanas digitālais mērogs"
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "Attēla tveršanā izmantotais digitālais mērogs"
+
+msgid "capturing iso speed"
+msgstr "tveršanas iso ātrums"
+
+msgid "The ISO speed used when capturing an image"
+msgstr "Attēla tveršanā izmantotais ISO ātrums"
+
+msgid "capturing exposure program"
+msgstr "tveršanas eksponēšanas programma"
+
+msgid "The exposure program used when capturing an image"
+msgstr "Attēla tveršanā izmantotā eksponēšanas programma"
+
+msgid "capturing exposure mode"
+msgstr "tveršanas eksponēšanas režīms"
+
+msgid "The exposure mode used when capturing an image"
+msgstr "Attēla tveršanā izmantotais eksponēšanas režīms"
+
+msgid "capturing exposure compensation"
+msgstr "tveršanas ekspozīcijas kompensācija"
+
+msgid "The exposure compensation used when capturing an image"
+msgstr "Attēla tveršanā izmantotais ekspozīcijas kompensācija"
+
+msgid "capturing scene capture type"
+msgstr "tveršanas ainas tveršanas tips"
+
+msgid "The scene capture mode used when capturing an image"
+msgstr "Attēla tveršanā izmantotas ainas tveršanas režīms"
+
+msgid "capturing gain adjustment"
+msgstr "tveršanas pieauguma korekcija"
+
+msgid "The overall gain adjustment applied on an image"
+msgstr "Attēla tveršanā izmantotais vispārējā pieauguma korekcija"
+
+msgid "capturing white balance"
+msgstr "tveršanas baltā līdzsvars"
+
+msgid "The white balance mode set when capturing an image"
+msgstr "Lietotais baltās krāsas līdzsvara virziens attēla tveršanā"
+
+msgid "capturing contrast"
+msgstr "tveršanas kontrasts"
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "Lietotais kontrasta virziens attēla tveršanā"
+
+msgid "capturing saturation"
+msgstr "tveršanas piesātinājums"
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "Lietotais piesātinājuma virziens attēla tveršanā"
+
+msgid "capturing sharpness"
+msgstr "tveršanas asums"
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "Lietotais asuma virziens attēla tveršanā"
+
+msgid "capturing flash fired"
+msgstr "tveršanas zibsnis palaists"
+
+msgid "If the flash fired while capturing an image"
+msgstr "Ja zibsnis palaists attēla tveršanā"
+
+msgid "capturing flash mode"
+msgstr "tveršanas zibšņa režīms"
+
+msgid "The selected flash mode while capturing an image"
+msgstr "Atlasītais zibšņa režīms attēla tveršanai"
+
+msgid "capturing metering mode"
+msgstr "tveršanas mērīšanas režīms"
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr "Mērīšanas režīms, lai noteiktu ekspozīciju attēla tveršanai"
+
+msgid "capturing source"
+msgstr "tveršanas avots"
+
+msgid "The source or type of device used for the capture"
+msgstr "Tveršanas avots vai iekārtas tips"
+
+msgid "image horizontal ppi"
+msgstr "attēla horizontālais ppi"
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr "Medija (attēls/video) domātā horizontālā pikseļu blīvums ppi"
+
+msgid "image vertical ppi"
+msgstr "attēla vertikālais ppi"
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr "Medija (attēls/video) domātā vertikālā pikseļu blīvums ppi"
+
+msgid "ID3v2 frame"
+msgstr "ID3v2 kadrs"
+
+msgid "unparsed id3v2 tag frame"
+msgstr "neparsēts id3v2 iezīmes kadrs"
+
+msgid "musical-key"
+msgstr "mūzikas-kadrs"
+
+msgid "Initial key in which the sound starts"
+msgstr "Sākotnējais kadrs, kurā sākas mūzika"
+
+msgid "Print version information and exit"
+msgstr "Parādīt informāciju par versiju un iziet"
+
+msgid ""
+"Don't exit after showing the initial device list, but wait for devices to "
+"added/removed."
+msgstr ""
+
+#, c-format
+msgid "Volume: %.0f%%"
+msgstr ""
+
+msgid "Buffering..."
+msgstr "Buferē..."
+
+msgid "Clock lost, selecting a new one\n"
+msgstr ""
+
+msgid "Reached end of play list."
+msgstr ""
+
+msgid "Paused"
+msgstr ""
+
+#, c-format
+msgid "Now playing %s\n"
+msgstr ""
+
+#, c-format
+msgid "About to finish, preparing next title: %s"
+msgstr ""
+
+#, c-format
+msgid "Playback rate: %.2f"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not change playback rate to %.2f"
+msgstr "Nevarēja atvērt ierīci atskaņošanai stereo režīmā."
+
+msgid "space"
+msgstr ""
+
+msgid "pause/unpause"
+msgstr ""
+
+msgid "q or ESC"
+msgstr ""
+
+msgid "quit"
+msgstr ""
+
+msgid "> or n"
+msgstr ""
+
+msgid "play next"
+msgstr ""
+
+msgid "< or b"
+msgstr ""
+
+msgid "play previous"
+msgstr ""
+
+msgid "seek forward"
+msgstr ""
+
+msgid "seek backward"
+msgstr ""
+
+msgid "volume up"
+msgstr ""
+
+msgid "volume down"
+msgstr ""
+
+msgid "increase playback rate"
+msgstr ""
+
+msgid "decrease playback rate"
+msgstr ""
+
+msgid "change playback direction"
+msgstr ""
+
+msgid "enable/disable trick modes"
+msgstr ""
+
+#, fuzzy
+msgid "change audio track"
+msgstr "Šajā CD nav neviena audio celiņa"
+
+msgid "change video track"
+msgstr ""
+
+#, fuzzy
+msgid "change subtitle track"
+msgstr "Kate subtitru formāts"
+
+msgid "seek to beginning"
+msgstr ""
+
+msgid "show keyboard shortcuts"
+msgstr ""
+
+msgid "Interactive mode - keyboard controls:"
+msgstr ""
+
+msgid "Output status information and property notifications"
+msgstr ""
+
+msgid "Control playback behaviour setting playbin 'flags' property"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr "Izmantojamais video uztvērējs (pēc noklusējuma autovideosink)"
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr "Izmantojamais audio uztvērējs (pēc noklusējuma autoaudiosink)"
+
+msgid "Enable gapless playback"
+msgstr "Aktivēt atskaņošanu bez pauzēm"
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Disable interactive control via the keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
+msgstr ""
+
+msgid "Do not print any output (apart from errors)"
+msgstr ""
+
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr "Lietojums: %s DATNE1|URI1 [DATNE2|URI2] [DATNE3|URI3] ..."
+
+msgid "You must provide at least one filename or URI to play."
+msgstr "Jums jānorāda vismaz viens datnes nosaukums vai atskaņojamais URI."
+
+msgid "Press 'k' to see a list of keyboard shortcuts.\n"
+msgstr ""
+
+#, fuzzy
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Nav iespējams izveidot \"decodebin2\" elementu."
+
+#, fuzzy
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Nevarēja izveidot “uridecodebin” elementu."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Iekšējās datu plūsmas kļūda."
+
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr ""
+#~ "Nepieciešamas %s spraudnis, lai atskaņotu šo plūsmu, bet tas nav "
+#~ "instalēts."
+
+#~ msgid "Master"
+#~ msgstr "Galvenais"
+
+#~ msgid "Bass"
+#~ msgstr "Bass"
+
+#~ msgid "Treble"
+#~ msgstr "Diskants"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Sintēze"
+
+#~ msgid "Line-in"
+#~ msgstr "Line-in"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofons"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Datora skaļrunis"
+
+#~ msgid "Playback"
+#~ msgstr "Atskaņošana"
+
+#~ msgid "Capture"
+#~ msgstr "Tveršana"
+
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "Nevarēja atvērt vfs failu \"%s\" rakstīšanai: %s."
+
+#~ msgid "No filename given"
+#~ msgstr "Nav norādīts faila nosaukums"
+
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Nevarēja aizvērt vfs failu \"%s\"."
+
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Kļūda rakstot failā \"%s\"."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "Nederīgs subtitru URI \"%s\", subtitri izslēgti."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "RTSP plūsmas pagaidām nevar tikt atskaņotas."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Tika pamanīta tikai subtitru plūsma. Vai nu jūs ielādējat subtitru failu "
+#~ "vai cita veida teksta failu, vai arī mediju fails netika atpazīts."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Jums nav instalēta atkodētāja, lai apietos ar šo failu. Jums iespējams "
+#~ "vajadzētu instalēt nepieciešamos spraudņus."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Šis nav mediju fails"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Tika pamanīta subtitru plūsma, bet ne video plūsma."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Trūkst gan autovideosink, gan xvimagesink elementi."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Trūkst gan autoaudiosink, gan alsasink elementi."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Radās kļūda nosūtot gdb galvenas datus uz \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Kļūda sūtot gdp iekrāvēja datus uz \"%s:%d\""
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Savienojums ar %s:%d noraidīts."
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Nesaspiesta plakne YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Nesaspiests pakots YUP 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Nesaspiests pakots YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Nesaspiests pakots YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Nesaspiests pakots YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Nesaspiesta plakne YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Nesaspiesta plakne YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Nesaspiests melnbaltais Y-plakne"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Jēls PCM audio"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Jēls %d-bitu plūstošā punkta audio"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Jēls plūstošā punkta audio"
+
+#~ msgid "No device specified."
+#~ msgstr "Nav norādīta ierīce."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Ierīce \"%s\" neeksistē."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "Ierīce \"%s\" jau tiek izmantota."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Nav iespējams izveidot  \"queue2\" elementu."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Nav iespējams izveidot \"typefind\" elementu."
+
+#~ msgid "Can't play a text subtitles and subpictures."
+#~ msgstr "Nevar atskaņot teksta subtitrus un subattēlus."
+
+#~ msgid "No file name specified."
+#~ msgstr "Nav norādīts faila nosaukums."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."

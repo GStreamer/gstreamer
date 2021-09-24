@@ -1,0 +1,845 @@
+# Romanian translation for gst-plugins-base
+# This file is distributed under the same license as the gst-plugins-base package.
+# Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-base 0.10.29.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"PO-Revision-Date: 2010-08-16 01:21+0300\n"
+"Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
+"Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
+"20)) ? 1 : 2);;\n"
+
+msgid "Could not open device for playback in mono mode."
+msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul mono."
+
+msgid "Could not open device for playback in stereo mode."
+msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul stereo."
+
+#, c-format
+msgid "Could not open device for playback in %d-channel mode."
+msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul %d-canal."
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Nu s-a putut deschide dispozitivul audio pentru redare. Dispozitivul este "
+"folosit de o altă aplicație."
+
+msgid "Could not open audio device for playback."
+msgstr "Nu s-a putut deschide dispozitivul audio pentru redare."
+
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
+msgid "Could not open device for recording in mono mode."
+msgstr "Nu s-a putut deschide dispozitivul pentru înregistrare în modul mono."
+
+msgid "Could not open device for recording in stereo mode."
+msgstr ""
+"Nu s-a putut deschide dispozitivul pentru înregistrare în modul stereo."
+
+#, c-format
+msgid "Could not open device for recording in %d-channel mode"
+msgstr ""
+"Nu s-a putut deschide dispozitivul pentru înregistrare în modul %d-canal"
+
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr ""
+"Nu s-a putut deschide dispozitivul audio pentru înregistrare. Dispozitivul "
+"este folosit de o altă aplicație."
+
+msgid "Could not open audio device for recording."
+msgstr "Nu s-a putut deschide dispozitivul audio pentru înregistrare."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
+
+msgid "Could not open CD device for reading."
+msgstr "Nu s-a putut deschide unitatea CD pentru redare."
+
+msgid "Could not seek CD."
+msgstr "Nu s-a putut accesa CD-ul."
+
+msgid "Could not read CD."
+msgstr "Nu s-a putut citi CD-ul."
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Element %s lipsă - verificați instalarea GStreamer."
+
+msgid "Could not determine type of stream"
+msgstr "Nu s-a putut determina tipul fluxului"
+
+msgid "This appears to be a text file"
+msgstr "Acesta pare să fie un fișier text."
+
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Nu se poate crea elementul „decodebin”."
+
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Nu se poate crea elementul „decodebin”."
+
+#, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr "Lipsește atât elementul autovideosink cât și %s."
+
+msgid "The autovideosink element is missing."
+msgstr "Elementul autovideosink lipsește."
+
+#, c-format
+msgid "Configured videosink %s is not working."
+msgstr "Videosink-ul configurat %s nu funcționează."
+
+#, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr "Nu funcționează atât elementul autovideosink cât și %s."
+
+msgid "The autovideosink element is not working."
+msgstr "Elementul autovideosink nu funcționează."
+
+msgid "Custom text sink element is not usable."
+msgstr "Elementul sink de text personalizat nu este utilizabil."
+
+msgid "No volume control found"
+msgstr "Nu s-a găsit niciun control de volum"
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr "Lipsește atât elementul autoaudiosink cât și %s."
+
+msgid "The autoaudiosink element is missing."
+msgstr "Elementul autoaudiosink lipsește."
+
+#, c-format
+msgid "Configured audiosink %s is not working."
+msgstr "Audiosink-ul configurat %s nu funcționează."
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr "Nu funcționează atât elementul autoaudiosink cât și %s."
+
+msgid "The autoaudiosink element is not working."
+msgstr "Elementul autoaudiosink nu funcționează."
+
+msgid "Can't play a text file without video or visualizations."
+msgstr "Nu se poate reda un fișier text fără video sau vizualizări."
+
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr "Niciun decodor disponibil pentru tipul „%s”."
+
+msgid "No URI specified to play from."
+msgstr "Nu s-a specificat URI pentru redare."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "URI „%s” nevalid."
+
+msgid "This stream type cannot be played yet."
+msgstr "Acest tip de flux nu poate fi redat încă."
+
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr "Nicio rutină de tratare de URI implementată pentru „%s”."
+
+msgid "Source element is invalid."
+msgstr "Element sursă nevalid."
+
+#, c-format
+msgid "Error while sending data to \"%s:%d\"."
+msgstr "Eroare la trimiterea datelor către „%s:%d”."
+
+msgid "Can't record audio fast enough"
+msgstr "Nu se poate înregistra sunetul destul de repede"
+
+msgid "This CD has no audio tracks"
+msgstr "Acest CD nu conține piste audio"
+
+msgid "ID3 tag"
+msgstr "etichetă ID3"
+
+msgid "APE tag"
+msgstr "etichetă APE"
+
+msgid "ICY internet radio"
+msgstr "Radio Internet ICY"
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Apple Audio fără pierdere (ALAC)"
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "Codec audio liber fără pierdere (FLAC)"
+
+msgid "Lossless True Audio (TTA)"
+msgstr "Lossless True Audio (TTA)"
+
+msgid "Windows Media Speech"
+msgstr "Windows Media Speech"
+
+msgid "CYUV Lossless"
+msgstr "CYUV fără pierdere"
+
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+msgid "Lossless MSZH"
+msgstr "MSZH fără pierdere"
+
+msgid "Run-length encoding"
+msgstr "Codarea run-length"
+
+msgid "Timed Text"
+msgstr ""
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Format subtitrare TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Format subtitrare Sami"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Format subtitrare Kate"
+
+msgid "Sami subtitle format"
+msgstr "Format subtitrare Sami"
+
+msgid "TMPlayer subtitle format"
+msgstr "Format subtitrare TMPlayer"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
+
+msgid "Kate subtitle format"
+msgstr "Format subtitrare Kate"
+
+#, fuzzy
+msgid "WebVTT subtitle format"
+msgstr "Format subtitrare Kate"
+
+#, fuzzy
+msgid "Uncompressed video"
+msgstr "YUV necomprimat"
+
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Imagine gri necomprimată"
+
+#, fuzzy, c-format
+msgid "Uncompressed packed YUV %s"
+msgstr "Pachet necomprimat YUV 4:2:2"
+
+#, fuzzy, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "Planar necomprimat YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "Planar necomprimat YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Paletizat la %d biți necomprimat %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
+msgstr "Paletizat la %d biți necomprimat %s"
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 versiunea %d"
+
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "YUV necomprimat"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
+msgstr "PCM audio brut %d biți"
+
+msgid "Audio CD source"
+msgstr "Sursă CD audio"
+
+msgid "DVD source"
+msgstr "Sursă DVD"
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "Sursă RTSP (protocol pentru flux în timp real)"
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Sursă protocol Microsoft Media Server (MMS)"
+
+#, c-format
+msgid "%s protocol source"
+msgstr "Sursă protocol %s"
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s demuxer"
+msgstr "Demuxer %s"
+
+#, c-format
+msgid "%s decoder"
+msgstr "Decoder %s"
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s muxer"
+msgstr "Muxer %s"
+
+#, c-format
+msgid "%s encoder"
+msgstr "codificator %s"
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr "Element GStreamer %s"
+
+msgid "Unknown source element"
+msgstr "Element sursă necunoscut"
+
+msgid "Unknown sink element"
+msgstr "Element sink necunoscut"
+
+msgid "Unknown element"
+msgstr "Element necunoscut"
+
+msgid "Unknown decoder element"
+msgstr "Element decodor necunoscut"
+
+msgid "Unknown encoder element"
+msgstr "Element codor necunoscut"
+
+msgid "Plugin or element of unknown type"
+msgstr "Modul de extensie sau element de tip necunoscut"
+
+msgid "Failed to read tag: not enough data"
+msgstr "Citirea etichetei a eșuat: date insuficiente"
+
+msgid "track ID"
+msgstr "ID pistă"
+
+msgid "MusicBrainz track ID"
+msgstr "ID pistă MusicBrainz"
+
+msgid "artist ID"
+msgstr "ID artist"
+
+msgid "MusicBrainz artist ID"
+msgstr "ID artist MusicBrainz"
+
+msgid "album ID"
+msgstr "ID album"
+
+msgid "MusicBrainz album ID"
+msgstr "ID album MusicBrainz"
+
+msgid "album artist ID"
+msgstr "ID artist album"
+
+msgid "MusicBrainz album artist ID"
+msgstr "ID album artist MusicBrainz"
+
+msgid "track TRM ID"
+msgstr "TRM ID pistă"
+
+msgid "MusicBrainz TRM ID"
+msgstr "ID TRM MusicBrainz"
+
+msgid "capturing shutter speed"
+msgstr ""
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr ""
+
+msgid "capturing focal ratio"
+msgstr ""
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr ""
+
+msgid "capturing focal length"
+msgstr ""
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+
+msgid "capturing 35 mm equivalent focal length"
+msgstr ""
+
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
+msgstr ""
+
+msgid "capturing digital zoom ratio"
+msgstr ""
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr ""
+
+msgid "capturing iso speed"
+msgstr ""
+
+msgid "The ISO speed used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure program"
+msgstr ""
+
+msgid "The exposure program used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure mode"
+msgstr ""
+
+msgid "The exposure mode used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure compensation"
+msgstr ""
+
+msgid "The exposure compensation used when capturing an image"
+msgstr ""
+
+msgid "capturing scene capture type"
+msgstr ""
+
+msgid "The scene capture mode used when capturing an image"
+msgstr ""
+
+msgid "capturing gain adjustment"
+msgstr ""
+
+msgid "The overall gain adjustment applied on an image"
+msgstr ""
+
+msgid "capturing white balance"
+msgstr ""
+
+msgid "The white balance mode set when capturing an image"
+msgstr ""
+
+msgid "capturing contrast"
+msgstr ""
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing saturation"
+msgstr ""
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing sharpness"
+msgstr ""
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing flash fired"
+msgstr ""
+
+msgid "If the flash fired while capturing an image"
+msgstr ""
+
+msgid "capturing flash mode"
+msgstr ""
+
+msgid "The selected flash mode while capturing an image"
+msgstr ""
+
+msgid "capturing metering mode"
+msgstr ""
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr ""
+
+msgid "capturing source"
+msgstr ""
+
+msgid "The source or type of device used for the capture"
+msgstr ""
+
+msgid "image horizontal ppi"
+msgstr ""
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr ""
+
+msgid "image vertical ppi"
+msgstr ""
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr ""
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
+msgid "musical-key"
+msgstr ""
+
+msgid "Initial key in which the sound starts"
+msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid ""
+"Don't exit after showing the initial device list, but wait for devices to "
+"added/removed."
+msgstr ""
+
+#, c-format
+msgid "Volume: %.0f%%"
+msgstr ""
+
+msgid "Buffering..."
+msgstr ""
+
+msgid "Clock lost, selecting a new one\n"
+msgstr ""
+
+msgid "Reached end of play list."
+msgstr ""
+
+msgid "Paused"
+msgstr ""
+
+#, c-format
+msgid "Now playing %s\n"
+msgstr ""
+
+#, c-format
+msgid "About to finish, preparing next title: %s"
+msgstr ""
+
+#, c-format
+msgid "Playback rate: %.2f"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not change playback rate to %.2f"
+msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul stereo."
+
+msgid "space"
+msgstr ""
+
+msgid "pause/unpause"
+msgstr ""
+
+msgid "q or ESC"
+msgstr ""
+
+msgid "quit"
+msgstr ""
+
+msgid "> or n"
+msgstr ""
+
+msgid "play next"
+msgstr ""
+
+msgid "< or b"
+msgstr ""
+
+msgid "play previous"
+msgstr ""
+
+msgid "seek forward"
+msgstr ""
+
+msgid "seek backward"
+msgstr ""
+
+msgid "volume up"
+msgstr ""
+
+msgid "volume down"
+msgstr ""
+
+msgid "increase playback rate"
+msgstr ""
+
+msgid "decrease playback rate"
+msgstr ""
+
+msgid "change playback direction"
+msgstr ""
+
+msgid "enable/disable trick modes"
+msgstr ""
+
+#, fuzzy
+msgid "change audio track"
+msgstr "Acest CD nu conține piste audio"
+
+msgid "change video track"
+msgstr ""
+
+#, fuzzy
+msgid "change subtitle track"
+msgstr "Format subtitrare Kate"
+
+msgid "seek to beginning"
+msgstr ""
+
+msgid "show keyboard shortcuts"
+msgstr ""
+
+msgid "Interactive mode - keyboard controls:"
+msgstr ""
+
+msgid "Output status information and property notifications"
+msgstr ""
+
+msgid "Control playback behaviour setting playbin 'flags' property"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+msgid "Shuffle playlist"
+msgstr ""
+
+msgid "Disable interactive control via the keyboard"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Playlist file containing input media files"
+msgstr ""
+
+msgid "Do not print any output (apart from errors)"
+msgstr ""
+
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
+msgstr ""
+
+msgid "Press 'k' to see a list of keyboard shortcuts.\n"
+msgstr ""
+
+#, fuzzy
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Nu se poate crea elementul „decodebin”."
+
+#, fuzzy
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Nu se poate crea elementul „decodebin”."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Eroare internă a fluxului de date."
+
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr ""
+#~ "Un modul de extensie %s este necesar pentru a reda acest flux, dar acesta "
+#~ "nu este instalat."
+
+#, fuzzy
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "YUV necomprimat"
+
+#~ msgid "Master"
+#~ msgstr "Principal"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Înalte"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Synth"
+
+#~ msgid "Line-in"
+#~ msgstr "Linie intrare"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Microfon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Difuzor PC"
+
+#~ msgid "Playback"
+#~ msgstr "Redare"
+
+#~ msgid "Capture"
+#~ msgstr "Captură"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Conexiunea la %s:%d a fost refuzată."
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Planar necomprimat YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Pachet necomprimat YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Pachet necomprimat YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Pachet necomprimat YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Pachet necomprimat YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Planar necomprimat YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Planar necomprimat YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Plan-Y alb și negru necomprimat"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "PCM audio brut"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Audio în virgulă mobilă brut la %d biți"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Audio în virgulă mobilă brut"
+
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "Nu s-a putut deschide fișierul vsf „%s\" pentru scriere: %s."
+
+#~ msgid "No filename given"
+#~ msgstr "Niciun nume de fișier dat."
+
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Nu s-a putut închide fișierul vsf „%s\"."
+
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Eroare la scrierea fișierului „%s\"."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "URI subtitrare „%s” nevalid, subtitrare dezactivată."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "Fluxurile RTSP nu pot fi redate încă."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "A fost detectat doar un flux pentru subtitrare. Fie încărcați un fișier "
+#~ "de subtitrare sau un alt tip de fișier text, sau fișierul nu a fost "
+#~ "recunoscut."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Nu există instalat un decodor pentru deschiderea acestui fișier. Probabil "
+#~ "trebuie să instalați modulele de extensie necesare."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Acesta nu este un fișier media"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "A fost detectat un flux de subtitrare, dar nu există flux video."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Lipsesc ambele elemente autovideosink și xvimagesink."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Lipsesc ambele elemente autoaudiosink și alsasink."
+
+#~ msgid "No device specified."
+#~ msgstr "Nu s-a specificat niciun dispozitiv."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Dispozitivul „%s” nu există."
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "Dispozitivul „%s” este deja folosit."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Nu s-a putut deschide dispozitivul „%s” pentru citire și scriere."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Eroare la trimiterea antetului gdp către „%s:%d”."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Eroare la trimiterea conținutului gdp către „%s:%d”."

@@ -1,0 +1,1051 @@
+# Chinese (simplified) translation about gst-plugin-base.
+# This file is put in the public domain.
+# Funda Wang <fundawang@linux.net.cn>, 2005.
+# Ji ZhengYu <zhengyuji@gmail.com>, 2008.
+# Tianze Wang <zwpwjwtz@126.com>, 2015.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-base 1.15.1\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
+"PO-Revision-Date: 2019-03-05 16:30+0100\n"
+"Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
+"Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 2.0.7\n"
+
+#: ext/alsa/gstalsasink.c:579
+msgid "Could not open device for playback in mono mode."
+msgstr "无法在单声道模式打开设备播放。"
+
+#: ext/alsa/gstalsasink.c:581
+msgid "Could not open device for playback in stereo mode."
+msgstr "无法在立体声模式打开设备播放。"
+
+#: ext/alsa/gstalsasink.c:585
+#, c-format
+msgid "Could not open device for playback in %d-channel mode."
+msgstr "无法在 %d 声道模式打开设备播放。"
+
+#: ext/alsa/gstalsasink.c:858
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "无法打开音频设备用于回放。目前有另一个程序正在使用该设备。"
+
+#: ext/alsa/gstalsasink.c:863
+msgid "Could not open audio device for playback."
+msgstr "无法打开音频设备播放。"
+
+#: ext/alsa/gstalsasink.c:1076
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr "输出到音频设备错误。设备已断开连接。"
+
+#: ext/alsa/gstalsasrc.c:444
+msgid "Could not open device for recording in mono mode."
+msgstr "无法在单声道模式打开设备录音。"
+
+#: ext/alsa/gstalsasrc.c:446
+msgid "Could not open device for recording in stereo mode."
+msgstr "无法在立体声模式打开设备录音。"
+
+#: ext/alsa/gstalsasrc.c:450
+#, c-format
+msgid "Could not open device for recording in %d-channel mode"
+msgstr "无法在 %d 声道模式打开设备录音。"
+
+#: ext/alsa/gstalsasrc.c:741
+msgid "Could not open audio device for recording. Device is being used by another application."
+msgstr "无法打开音频设备用于录音。目前有另一个程序正在使用该设备。"
+
+#: ext/alsa/gstalsasrc.c:746
+msgid "Could not open audio device for recording."
+msgstr "无法打开音频设备录音。"
+
+#: ext/alsa/gstalsasrc.c:992
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr "从音频设备输入错误。设备已断开连接。"
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:277 ext/cdparanoia/gstcdparanoiasrc.c:283
+msgid "Could not open CD device for reading."
+msgstr "无法打开 CD 设备读取。"
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:409
+msgid "Could not seek CD."
+msgstr "无法搜索 CD。"
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:417
+msgid "Could not read CD."
+msgstr "无法读取 CD。"
+
+#: ext/gl/gstgltestsrc.c:491
+msgid "failed to draw pattern"
+msgstr "无法绘制图案"
+
+#: ext/gl/gstgltestsrc.c:492
+msgid "A GL error occurred"
+msgstr "发生了 GL 错误"
+
+#: ext/gl/gstgltestsrc.c:498
+msgid "format wasn't negotiated before get function"
+msgstr "在调用 get 函数之前未确定合适的格式"
+
+#: gst/encoding/gstencodebin.c:1636 gst/playback/gstplaybin2.c:3399
+#: gst/playback/gstplaysink.c:1522 gst/playback/gstplaysink.c:1535
+#: gst/playback/gstplaysink.c:1872 gst/playback/gstplaysink.c:1904
+#: gst/playback/gstplaysink.c:2488 gst/playback/gstplaysink.c:2537
+#: gst/playback/gstplaysink.c:2552 gst/playback/gstplaysink.c:2577
+#: gst/playback/gstplaysink.c:2609 gst/playback/gstplaysink.c:2757
+#: gst/playback/gstplaysink.c:2788 gst/playback/gstplaysink.c:3166
+#: gst/playback/gstplaysink.c:3175 gst/playback/gstplaysink.c:3184
+#: gst/playback/gstplaysink.c:3193 gst/playback/gstplaysink.c:3606
+#: gst/playback/gstplaysink.c:4526 gst/playback/gstplaysinkconvertbin.c:97
+#: gst/playback/gstplaysinkconvertbin.c:117
+#: gst/playback/gsturidecodebin.c:1472 gst/playback/gsturisourcebin.c:1596
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "未找到组件‘%s’－请检查您的 GStreamer 安装情况。"
+
+#: gst/playback/gstdecodebin2.c:1873 gst/playback/gstparsebin.c:1553
+msgid "Could not determine type of stream"
+msgstr "无法确定流的类型"
+
+#: gst/playback/gstdecodebin2.c:2851 gst/playback/gstparsebin.c:2385
+msgid "This appears to be a text file"
+msgstr "此文件是个文本文件"
+
+#: gst/playback/gstplaybin2.c:5452
+msgid "Could not create \"uridecodebin\" element."
+msgstr "无法创建“uridecodebin”组件。"
+
+#: gst/playback/gstplaybin3.c:4558
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "无法创建“uridecodebin3”组件。"
+
+#: gst/playback/gstplaysink.c:2003
+#, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr "缺少 autovideosink 和 %s 组件。"
+
+#: gst/playback/gstplaysink.c:2007
+msgid "The autovideosink element is missing."
+msgstr "缺少 autovideosink 组件。"
+
+#: gst/playback/gstplaysink.c:2012
+#, c-format
+msgid "Configured videosink %s is not working."
+msgstr "配置后的 videosink %s 无法工作。"
+
+#: gst/playback/gstplaysink.c:2016
+#, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr "autovideosink 和 %s 组件都无法工作。"
+
+#: gst/playback/gstplaysink.c:2020
+msgid "The autovideosink element is not working."
+msgstr "autovideosink 组件无法工作。"
+
+#: gst/playback/gstplaysink.c:2525
+msgid "Custom text sink element is not usable."
+msgstr "自定义文字汇组件不可用。"
+
+#: gst/playback/gstplaysink.c:2903
+msgid "No volume control found"
+msgstr "未找到音量控制"
+
+#: gst/playback/gstplaysink.c:2933
+#, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr "缺少 autovideosink 和 %s 组件。"
+
+#: gst/playback/gstplaysink.c:2937
+msgid "The autoaudiosink element is missing."
+msgstr "缺少 autovideosink 组件。"
+
+#: gst/playback/gstplaysink.c:2942
+#, c-format
+msgid "Configured audiosink %s is not working."
+msgstr "配置后的 audiosink %s 无法工作。"
+
+#: gst/playback/gstplaysink.c:2946
+#, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr "autovideosink 和 %s 组件都无法工作。"
+
+#: gst/playback/gstplaysink.c:2950
+msgid "The autoaudiosink element is not working."
+msgstr "autovideosink 组件无法工作。"
+
+#: gst/playback/gstplaysink.c:3269 gst/playback/gstplaysink.c:3274
+msgid "Can't play a text file without video or visualizations."
+msgstr "无法播放不带视频或可视化效果的文本文件。"
+
+#: gst/playback/gsturidecodebin.c:921
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr "找不到‘%s’类型可用的解码器。"
+
+#: gst/playback/gsturidecodebin.c:1378 gst/playback/gsturisourcebin.c:1490
+msgid "No URI specified to play from."
+msgstr "未指定要播放的 URI。"
+
+#: gst/playback/gsturidecodebin.c:1384 gst/playback/gsturisourcebin.c:1496
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "无效的 URI“%s”。"
+
+#: gst/playback/gsturidecodebin.c:1391 gst/playback/gsturisourcebin.c:1503
+msgid "This stream type cannot be played yet."
+msgstr "此类型的数据流尚不能播放。"
+
+#: gst/playback/gsturidecodebin.c:1409 gst/playback/gsturisourcebin.c:1521
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr "“%s”未实现 URI 处理器。"
+
+#: gst/playback/gsturidecodebin.c:2280 gst/playback/gsturisourcebin.c:2227
+msgid "Source element is invalid."
+msgstr "无效的源组件。"
+
+#: gst/tcp/gsttcpclientsink.c:216
+#, c-format
+msgid "Error while sending data to \"%s:%d\"."
+msgstr "发送数据至“%s:%d”时出错。"
+
+#: gst-libs/gst/audio/gstaudiobasesrc.c:842
+msgid "Can't record audio fast enough"
+msgstr "无法足够快的录音"
+
+#: gst-libs/gst/audio/gstaudiocdsrc.c:1625
+msgid "This CD has no audio tracks"
+msgstr "此 CD 无音轨"
+
+#: gst-libs/gst/pbutils/descriptions.c:89
+msgid "ID3 tag"
+msgstr "ID3 标识"
+
+#: gst-libs/gst/pbutils/descriptions.c:90
+#: gst-libs/gst/pbutils/descriptions.c:91
+msgid "APE tag"
+msgstr "APE 标识"
+
+#: gst-libs/gst/pbutils/descriptions.c:92
+msgid "ICY internet radio"
+msgstr "ICY 网络电台"
+
+#: gst-libs/gst/pbutils/descriptions.c:127
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Apple 无损音频(ALAC)"
+
+#: gst-libs/gst/pbutils/descriptions.c:143
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "自由无损音频编码(FLAC)"
+
+#: gst-libs/gst/pbutils/descriptions.c:173
+#: gst-libs/gst/pbutils/descriptions.c:174
+msgid "Lossless True Audio (TTA)"
+msgstr "无损高保真音频(TTA)"
+
+#: gst-libs/gst/pbutils/descriptions.c:182
+msgid "Windows Media Speech"
+msgstr "Windows Media 语音"
+
+#: gst-libs/gst/pbutils/descriptions.c:198
+msgid "CYUV Lossless"
+msgstr "CYUV 无损"
+
+#: gst-libs/gst/pbutils/descriptions.c:202
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+#: gst-libs/gst/pbutils/descriptions.c:216
+msgid "Lossless MSZH"
+msgstr "无损 MSZH"
+
+#: gst-libs/gst/pbutils/descriptions.c:227
+msgid "Run-length encoding"
+msgstr "Run-length 编码"
+
+#: gst-libs/gst/pbutils/descriptions.c:273
+msgid "Timed Text"
+msgstr "定时文本"
+
+#: gst-libs/gst/pbutils/descriptions.c:277
+msgid "Subtitle"
+msgstr "字幕"
+
+#: gst-libs/gst/pbutils/descriptions.c:278
+msgid "MPL2 subtitle format"
+msgstr "MPL2 字幕格式"
+
+#: gst-libs/gst/pbutils/descriptions.c:279
+msgid "DKS subtitle format"
+msgstr "DKS 字幕格式"
+
+#: gst-libs/gst/pbutils/descriptions.c:280
+msgid "QTtext subtitle format"
+msgstr "QTtext 字幕格式"
+
+#: gst-libs/gst/pbutils/descriptions.c:281
+msgid "Sami subtitle format"
+msgstr "Sami 字幕格式"
+
+#: gst-libs/gst/pbutils/descriptions.c:282
+msgid "TMPlayer subtitle format"
+msgstr "TMPlayer 字幕格式"
+
+#: gst-libs/gst/pbutils/descriptions.c:286
+msgid "CEA 608 Closed Caption"
+msgstr "CEA 608 隐藏式字幕"
+
+#: gst-libs/gst/pbutils/descriptions.c:287
+msgid "CEA 708 Closed Caption"
+msgstr "CEA 708 隐藏式字幕"
+
+#: gst-libs/gst/pbutils/descriptions.c:288
+msgid "Kate subtitle format"
+msgstr "Kate 字幕格式"
+
+#: gst-libs/gst/pbutils/descriptions.c:289
+msgid "WebVTT subtitle format"
+msgstr "WebVTT 字幕格式"
+
+#: gst-libs/gst/pbutils/descriptions.c:454
+#: gst-libs/gst/pbutils/descriptions.c:457
+#: gst-libs/gst/pbutils/descriptions.c:507
+msgid "Uncompressed video"
+msgstr "未压缩的视频"
+
+#: gst-libs/gst/pbutils/descriptions.c:462
+msgid "Uncompressed gray"
+msgstr "未压缩的灰度图像"
+
+#: gst-libs/gst/pbutils/descriptions.c:485
+#, c-format
+msgid "Uncompressed packed YUV %s"
+msgstr "未压缩的紧缩 YUV %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:487
+#, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "未压缩的半平面 YUV %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:489
+#, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "未压缩的平面 YUV %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:500
+#, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "未压缩的调色板映射 %d位 %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:503
+#, c-format
+msgid "Uncompressed %d-bit %s"
+msgstr "未压缩的 %d位 %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:585
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 第 %d 版"
+
+#: gst-libs/gst/pbutils/descriptions.c:833
+msgid "Uncompressed audio"
+msgstr "未压缩的音频"
+
+#: gst-libs/gst/pbutils/descriptions.c:839
+#, c-format
+msgid "Raw %d-bit %s audio"
+msgstr "原始 %d位 %s 音频"
+
+#: gst-libs/gst/pbutils/descriptions.c:941
+msgid "Audio CD source"
+msgstr "音频 CD 源"
+
+#: gst-libs/gst/pbutils/descriptions.c:944
+msgid "DVD source"
+msgstr "DVD 源"
+
+#: gst-libs/gst/pbutils/descriptions.c:947
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "实时流协议(RTSP)源"
+
+#: gst-libs/gst/pbutils/descriptions.c:951
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Microsoft 媒体服务协议(MMS)源"
+
+#: gst-libs/gst/pbutils/descriptions.c:959
+#, c-format
+msgid "%s protocol source"
+msgstr "%s 协议源"
+
+#: gst-libs/gst/pbutils/descriptions.c:1033
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr "%s 视频 RTP 去负载器"
+
+#: gst-libs/gst/pbutils/descriptions.c:1035
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr "%s 音频 RTP 去负载器"
+
+#: gst-libs/gst/pbutils/descriptions.c:1037
+#, c-format
+msgid "%s RTP depayloader"
+msgstr "%s RTP 去负载器"
+
+#: gst-libs/gst/pbutils/descriptions.c:1044
+#, c-format
+msgid "%s demuxer"
+msgstr "%s 多路分配器"
+
+#: gst-libs/gst/pbutils/descriptions.c:1046
+#, c-format
+msgid "%s decoder"
+msgstr "%s 解码器"
+
+#: gst-libs/gst/pbutils/descriptions.c:1085
+#, c-format
+msgid "%s video RTP payloader"
+msgstr "%s 视频 RTP 负载器"
+
+#: gst-libs/gst/pbutils/descriptions.c:1087
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr "%s 音频 RTP 负载器"
+
+#: gst-libs/gst/pbutils/descriptions.c:1089
+#, c-format
+msgid "%s RTP payloader"
+msgstr "%s RTP 负载器"
+
+#: gst-libs/gst/pbutils/descriptions.c:1096
+#, c-format
+msgid "%s muxer"
+msgstr "%s 混音器"
+
+#: gst-libs/gst/pbutils/descriptions.c:1098
+#, c-format
+msgid "%s encoder"
+msgstr "%s 编码器"
+
+#: gst-libs/gst/pbutils/descriptions.c:1132
+#, c-format
+msgid "GStreamer element %s"
+msgstr "GStreamer 组件 %s"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:558
+msgid "Unknown source element"
+msgstr "未知源组件"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:561
+msgid "Unknown sink element"
+msgstr "未知的汇组件"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:564
+msgid "Unknown element"
+msgstr "未知组件"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:567
+msgid "Unknown decoder element"
+msgstr "未知的解码组件"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:570
+msgid "Unknown encoder element"
+msgstr "未知的编码组件"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:575
+msgid "Plugin or element of unknown type"
+msgstr "未知类型的插件或组件"
+
+#: gst-libs/gst/tag/gsttagdemux.c:1243
+msgid "Failed to read tag: not enough data"
+msgstr "无法读取标签: 数据不足"
+
+#: gst-libs/gst/tag/tags.c:77
+msgid "track ID"
+msgstr "音轨 ID"
+
+#: gst-libs/gst/tag/tags.c:77
+msgid "MusicBrainz track ID"
+msgstr "MusicBrainz 音轨 ID"
+
+#: gst-libs/gst/tag/tags.c:79
+msgid "artist ID"
+msgstr "艺人 ID"
+
+#: gst-libs/gst/tag/tags.c:79
+msgid "MusicBrainz artist ID"
+msgstr "MusicBrainz 艺人 ID"
+
+#: gst-libs/gst/tag/tags.c:81
+msgid "album ID"
+msgstr "专辑 ID"
+
+#: gst-libs/gst/tag/tags.c:81
+msgid "MusicBrainz album ID"
+msgstr "MusicBrainz 专辑 ID"
+
+#: gst-libs/gst/tag/tags.c:84
+msgid "album artist ID"
+msgstr "音轨艺人 ID"
+
+#: gst-libs/gst/tag/tags.c:84
+msgid "MusicBrainz album artist ID"
+msgstr "MusicBrainz 专辑艺人 ID"
+
+#: gst-libs/gst/tag/tags.c:86
+msgid "track TRM ID"
+msgstr "音轨 TRM ID"
+
+#: gst-libs/gst/tag/tags.c:86
+msgid "MusicBrainz TRM ID"
+msgstr "MusicBrainz TRM ID"
+
+#: gst-libs/gst/tag/tags.c:108
+msgid "capturing shutter speed"
+msgstr "捕捉快门速度"
+
+#: gst-libs/gst/tag/tags.c:109
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "用于捕捉图像的快门速度，单位为秒"
+
+#: gst-libs/gst/tag/tags.c:112
+msgid "capturing focal ratio"
+msgstr "捕捉焦比"
+
+#: gst-libs/gst/tag/tags.c:113
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "捕捉图像时的焦比（f值）"
+
+#: gst-libs/gst/tag/tags.c:116
+msgid "capturing focal length"
+msgstr "捕捉焦距"
+
+#: gst-libs/gst/tag/tags.c:117
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "捕捉图像时的等效焦距（单位为 mm）"
+
+#: gst-libs/gst/tag/tags.c:121
+msgid "capturing 35 mm equivalent focal length"
+msgstr "以 35mm 等效焦距捕捉"
+
+#: gst-libs/gst/tag/tags.c:122
+msgid "35 mm equivalent focal length of the lens used capturing the image, in mm"
+msgstr "捕捉图像时使用 35mm 等效焦距"
+
+#: gst-libs/gst/tag/tags.c:126
+msgid "capturing digital zoom ratio"
+msgstr "捕捉数码变焦比"
+
+#: gst-libs/gst/tag/tags.c:127
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "捕捉图像时的数码变焦比"
+
+#: gst-libs/gst/tag/tags.c:130
+msgid "capturing iso speed"
+msgstr "捕捉ISO感光度"
+
+#: gst-libs/gst/tag/tags.c:131
+msgid "The ISO speed used when capturing an image"
+msgstr "捕捉图像时使用的ISO感光度"
+
+#: gst-libs/gst/tag/tags.c:134
+msgid "capturing exposure program"
+msgstr "捕捉曝光程序"
+
+#: gst-libs/gst/tag/tags.c:135
+msgid "The exposure program used when capturing an image"
+msgstr "用于捕捉图像的曝光程序"
+
+#: gst-libs/gst/tag/tags.c:138
+msgid "capturing exposure mode"
+msgstr "捕捉曝光模式"
+
+#: gst-libs/gst/tag/tags.c:139
+msgid "The exposure mode used when capturing an image"
+msgstr "捕捉图像时使用的曝光模式"
+
+#: gst-libs/gst/tag/tags.c:142
+msgid "capturing exposure compensation"
+msgstr "捕捉曝光补偿"
+
+#: gst-libs/gst/tag/tags.c:143
+msgid "The exposure compensation used when capturing an image"
+msgstr "捕捉图像时使用的曝光补偿值"
+
+#: gst-libs/gst/tag/tags.c:146
+msgid "capturing scene capture type"
+msgstr "捕捉场景模式"
+
+#: gst-libs/gst/tag/tags.c:147
+msgid "The scene capture mode used when capturing an image"
+msgstr "用于捕捉图像的场景模式"
+
+#: gst-libs/gst/tag/tags.c:150
+msgid "capturing gain adjustment"
+msgstr "捕捉增益调节"
+
+#: gst-libs/gst/tag/tags.c:151
+msgid "The overall gain adjustment applied on an image"
+msgstr "调整应用于图像的总体增益"
+
+#: gst-libs/gst/tag/tags.c:154
+msgid "capturing white balance"
+msgstr "捕捉白平衡"
+
+#: gst-libs/gst/tag/tags.c:155
+msgid "The white balance mode set when capturing an image"
+msgstr "捕捉图像时的白平衡"
+
+#: gst-libs/gst/tag/tags.c:158
+msgid "capturing contrast"
+msgstr "捕捉对比度"
+
+#: gst-libs/gst/tag/tags.c:159
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "捕捉图像时所使用的对比度"
+
+#: gst-libs/gst/tag/tags.c:163
+msgid "capturing saturation"
+msgstr "捕捉饱和度"
+
+#: gst-libs/gst/tag/tags.c:164
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "捕捉图像时所使用的饱和度"
+
+#: gst-libs/gst/tag/tags.c:168
+msgid "capturing sharpness"
+msgstr "捕捉锐度"
+
+#: gst-libs/gst/tag/tags.c:169
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "捕捉图像时所使用的锐度"
+
+#: gst-libs/gst/tag/tags.c:173
+msgid "capturing flash fired"
+msgstr "捕捉闪光灯"
+
+#: gst-libs/gst/tag/tags.c:174
+msgid "If the flash fired while capturing an image"
+msgstr "设定在捕捉图像时是否使用闪光灯补光"
+
+#: gst-libs/gst/tag/tags.c:177
+msgid "capturing flash mode"
+msgstr "捕捉闪光模式"
+
+#: gst-libs/gst/tag/tags.c:178
+msgid "The selected flash mode while capturing an image"
+msgstr "捕捉图像时使用的闪光模式"
+
+#: gst-libs/gst/tag/tags.c:181
+msgid "capturing metering mode"
+msgstr "捕捉测光"
+
+#: gst-libs/gst/tag/tags.c:182
+msgid "The metering mode used while determining exposure for capturing an image"
+msgstr "用于确定要捕捉图像的曝光度的测光模式"
+
+#: gst-libs/gst/tag/tags.c:186
+msgid "capturing source"
+msgstr "捕捉源"
+
+#: gst-libs/gst/tag/tags.c:187
+msgid "The source or type of device used for the capture"
+msgstr "指定用于捕捉的源或设备类型"
+
+#: gst-libs/gst/tag/tags.c:190
+msgid "image horizontal ppi"
+msgstr "图像横向ppi"
+
+#: gst-libs/gst/tag/tags.c:191
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr "指定媒体（图片/视频）的横向像素密度，单位是ppi"
+
+#: gst-libs/gst/tag/tags.c:194
+msgid "image vertical ppi"
+msgstr "图像纵向ppi"
+
+#: gst-libs/gst/tag/tags.c:195
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr "指定媒体（图片/视频）的纵向像素密度，单位是ppi"
+
+#: gst-libs/gst/tag/tags.c:198
+msgid "ID3v2 frame"
+msgstr "ID3v2 帧"
+
+#: gst-libs/gst/tag/tags.c:198
+msgid "unparsed id3v2 tag frame"
+msgstr "未被解析的 ID3v2 标识帧"
+
+#: gst-libs/gst/tag/tags.c:202
+msgid "musical-key"
+msgstr "音调"
+
+#: gst-libs/gst/tag/tags.c:202
+msgid "Initial key in which the sound starts"
+msgstr "音乐开始时的音调"
+
+#: tools/gst-device-monitor.c:255 tools/gst-play.c:1442
+msgid "Print version information and exit"
+msgstr "显示版本信息，然后退出。"
+
+#: tools/gst-device-monitor.c:257
+msgid "Don't exit after showing the initial device list, but wait for devices to added/removed."
+msgstr "显示初始设备列表后不退出，而是等待设备被添加或移除。"
+
+#: tools/gst-play.c:308
+#, c-format
+msgid "Volume: %.0f%%"
+msgstr "音量：%.0f%%"
+
+#: tools/gst-play.c:347
+msgid "Buffering..."
+msgstr "缓冲中..."
+
+#: tools/gst-play.c:368
+msgid "Clock lost, selecting a new one\n"
+msgstr "时钟已丢失，请选择一个新的\n"
+
+#: tools/gst-play.c:398 tools/gst-play.c:444 tools/gst-play.c:881
+#: tools/gst-play.c:1345
+msgid "Reached end of play list."
+msgstr "到达播放列表结尾。"
+
+#: tools/gst-play.c:611
+msgid "Paused"
+msgstr "已暂停"
+
+#: tools/gst-play.c:669
+#, c-format
+msgid "Now playing %s\n"
+msgstr "正在播放 %s\n"
+
+#: tools/gst-play.c:732
+#, c-format
+msgid "About to finish, preparing next title: %s"
+msgstr "即将结束，准备下一标题：%s"
+
+#: tools/gst-play.c:977
+#, c-format
+msgid "Playback rate: %.2f"
+msgstr "回放速率：%.2f"
+
+#: tools/gst-play.c:981
+#, c-format
+msgid "Could not change playback rate to %.2f"
+msgstr "无法将回放速率改变为%.2f"
+
+#: tools/gst-play.c:1285
+msgid "space"
+msgstr "空格"
+
+#: tools/gst-play.c:1285
+msgid "pause/unpause"
+msgstr "暂停/继续"
+
+#: tools/gst-play.c:1286
+msgid "q or ESC"
+msgstr "q 或 ESC"
+
+#: tools/gst-play.c:1286
+msgid "quit"
+msgstr "退出"
+
+#: tools/gst-play.c:1287
+msgid "> or n"
+msgstr "> 或 n"
+
+#: tools/gst-play.c:1287
+msgid "play next"
+msgstr "下一曲"
+
+#: tools/gst-play.c:1288
+msgid "< or b"
+msgstr "< 或 b"
+
+#: tools/gst-play.c:1288
+msgid "play previous"
+msgstr "上一曲"
+
+#: tools/gst-play.c:1289
+msgid "seek forward"
+msgstr "前进"
+
+#: tools/gst-play.c:1290
+msgid "seek backward"
+msgstr "后退"
+
+#: tools/gst-play.c:1291
+msgid "volume up"
+msgstr "增大音量"
+
+#: tools/gst-play.c:1292
+msgid "volume down"
+msgstr "减小音量"
+
+#: tools/gst-play.c:1293
+msgid "increase playback rate"
+msgstr "增大回放速率"
+
+#: tools/gst-play.c:1294
+msgid "decrease playback rate"
+msgstr "减小回访率"
+
+#: tools/gst-play.c:1295
+msgid "change playback direction"
+msgstr "改变回放方向"
+
+#: tools/gst-play.c:1296
+msgid "enable/disable trick modes"
+msgstr "启用/禁用特效模式"
+
+#: tools/gst-play.c:1297
+msgid "change audio track"
+msgstr "改变音频轨"
+
+#: tools/gst-play.c:1298
+msgid "change video track"
+msgstr "改变视频轨"
+
+#: tools/gst-play.c:1299
+msgid "change subtitle track"
+msgstr "改变字幕轨"
+
+#: tools/gst-play.c:1300
+msgid "seek to beginning"
+msgstr "定位至开始处"
+
+#: tools/gst-play.c:1301
+msgid "show keyboard shortcuts"
+msgstr "显示键盘快捷键"
+
+#: tools/gst-play.c:1304
+msgid "Interactive mode - keyboard controls:"
+msgstr "交互模式 - 键盘控制："
+
+#: tools/gst-play.c:1437
+msgid "Output status information and property notifications"
+msgstr "输出状态信息和属性通知"
+
+#: tools/gst-play.c:1439
+msgid "Control playback behaviour setting playbin 'flags' property"
+msgstr "控制回放行为设置中 playbin 的“flags”属性"
+
+#: tools/gst-play.c:1444
+msgid "Video sink to use (default is autovideosink)"
+msgstr "要使用的视频接收组件（默认为autovideosink）"
+
+#: tools/gst-play.c:1446
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr "要使用的音频接收组件（默认为autoaudiosink）"
+
+#: tools/gst-play.c:1448
+msgid "Enable gapless playback"
+msgstr "启用无缝回放"
+
+#: tools/gst-play.c:1450
+msgid "Shuffle playlist"
+msgstr "随机播放列表"
+
+#: tools/gst-play.c:1453
+msgid "Disable interactive control via the keyboard"
+msgstr "禁用键盘交互操作"
+
+#: tools/gst-play.c:1455
+msgid "Volume"
+msgstr "音量"
+
+#: tools/gst-play.c:1457
+msgid "Playlist file containing input media files"
+msgstr "播放列表文件含有媒体文件"
+
+#: tools/gst-play.c:1459
+msgid "Do not print any output (apart from errors)"
+msgstr "不显示任何输出（除了错误信息）"
+
+#: tools/gst-play.c:1461
+msgid "Use playbin3 pipeline"
+msgstr "使用 playbin3 管道"
+
+#: tools/gst-play.c:1462
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr "（默认配置取决于“USE_PLAYBIN”环境变量）"
+
+#: tools/gst-play.c:1536
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr "用法：%s [文件1|URI1] [文件2|URI2] [文件3|URI3] ..."
+
+#: tools/gst-play.c:1540
+msgid "You must provide at least one filename or URI to play."
+msgstr "你必须提供至少一个文件名或URI来播放。"
+
+#: tools/gst-play.c:1580
+msgid "Press 'k' to see a list of keyboard shortcuts.\n"
+msgstr "按“k”键来显示键盘快捷键列表。\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "无法创建“decodebin3”组件。"
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "无法创建“urisourcebin”组件。"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "内部数据流错误。"
+
+#~ msgid "Master"
+#~ msgstr "主音量"
+
+#~ msgid "Bass"
+#~ msgstr "低音(Bass)"
+
+#~ msgid "Treble"
+#~ msgstr "高音(Treble)"
+
+#~ msgid "PCM"
+#~ msgstr "波形"
+
+#~ msgid "Synth"
+#~ msgstr "合成器"
+
+#~ msgid "Line-in"
+#~ msgstr "线路输入"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "话筒"
+
+#~ msgid "PC Speaker"
+#~ msgstr "PC 扬声器"
+
+#~ msgid "Playback"
+#~ msgstr "回放"
+
+#~ msgid "Capture"
+#~ msgstr "录音"
+
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "无法打开 vfs 文件“%s”写入：%s。"
+
+#~ msgid "No filename given"
+#~ msgstr "没有给定文件名"
+
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "无法关闭 vfs 文件“%s”。"
+
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "写入文件“%s”时出错。"
+
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr "播放此数据流需要 %s 插件，但它未安装。"
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "无效的字幕 URI “%s”，不使用字幕。"
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "RTSP 流尚不能播放。"
+
+#~ msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
+#~ msgstr "仅检测到字幕流。您可能装入的是字幕文件或者其它类型文本文件，又或者是媒体文件无法识别。"
+
+#~ msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
+#~ msgstr "您没有安装可处理此文件的解码器。您可能需要安装必要的插件。"
+
+#~ msgid "This is not a media file"
+#~ msgstr "此文件不是媒体文件"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "检测到了字幕流，但无视频流。"
+
+#~ msgid "No file name specified."
+#~ msgstr "未给定文件名。"
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "无法打开文件“%s”读取。"
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "无法创建“queue2”组件。"
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "发送 gdp 头部数据至“%s:%d”时出错。"
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "发送 gdp 负载数据至“%s:%d”时出错。"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "拒绝连接至 %s:%d。"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "未压缩的平面 YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "未压缩的紧缩 YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "未压缩的紧缩 YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "未压缩的紧缩 YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "未压缩的紧缩 YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "未压缩的平面 YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "未压缩的平面 YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "未压缩的黑白 Y-plane"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "原始 PCM 音频"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "原始 %d位浮点音频"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "原始浮点音频"
+
+#~ msgid "No device specified."
+#~ msgstr "未指定设备。"
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "设备“%s”不存在。"
+
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "设备“%s”正被使用。"
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "无法打开设备“%s”读取。"
+
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "未压缩的 %s YUV %s"
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "缺少 autovideosink 和 xvimagesink 组件。"
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "缺少 autovideosink 和 alsasink 组件。"
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "无法创建“typefind”组件。"
+
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "无法同时播放文本格式的子标题和子画面。"
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "未指定临时设备。"
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "无法创建临时文件“%s”。"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "内部数据流错误。"
