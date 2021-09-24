@@ -1,0 +1,12 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, stream=(GstStream)"\(GstStream\)\ stream0";
+event caps: video/x-raw, chroma-site=(string)jpeg, colorimetry=(string)1:4:0:0, format=(string)I420, framerate=(fraction)1/1, height=(int)720, width=(int)1080;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:04.000000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=none
+buffer: checksum=9b42849e45e15981115cff9da00ecbf7afafd462, pts=0:00:00.000000000, dur=0:00:01.000000000
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:01.000000000, offset=0:00:00.000000000, stop=0:00:04.000000000, flags=0x01, time=0:00:01.000000000, base=0:00:00.000000000, position=none
+buffer: checksum=13efd225948060c424b8cdb4c4d017dbea65f61f, pts=0:00:01.000000000, dur=0:00:01.000000000
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:02.000000000, offset=0:00:00.000000000, stop=0:00:04.000000000, flags=0x01, time=0:00:02.000000000, base=0:00:00.000000000, position=none
+buffer: checksum=91973bf9aad6aaae195e5867b1a59c017031e8bf, pts=0:00:02.000000000, dur=0:00:01.000000000

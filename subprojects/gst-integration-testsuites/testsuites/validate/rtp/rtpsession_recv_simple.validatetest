@@ -1,0 +1,8 @@
+meta,
+    args = {
+         "rtpsession name=rtpsess   videotestsrc num-buffers=10 ! video/x-raw,format=RGB,width=\"320\",height=\"240\" ! rtpvrawpay ! rtpsess.recv_rtp_sink   rtpsess.recv_rtp_src   ! rtpvrawdepay ! fakesink",
+    },
+    configs = {
+       "$(validateflow), pad=fakesink0:sink, record-buffers=true, caps-properties={ media, clock-rate, encoding-name, sampling, depth, width, height, colorimetry, payload, a-framerate };",
+    }
+

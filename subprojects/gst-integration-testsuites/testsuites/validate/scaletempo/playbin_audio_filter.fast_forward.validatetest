@@ -1,0 +1,7 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    args = {
+         "playbin audio-filter=scaletempo video-sink=\"$(videosink)\" audio-sink=\"$(audiosink)\" uri=file://$(media_dir)/defaults/mp4/mp3_h264.0.mp4",
+    },
+    scenario=fast_forward
+

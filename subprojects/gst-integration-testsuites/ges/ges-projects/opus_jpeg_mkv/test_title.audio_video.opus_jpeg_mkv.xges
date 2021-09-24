@@ -1,0 +1,22 @@
+<ges version='0.1'>
+  <project properties='properties;' metadatas='metadatas;'>
+    <encoding-profiles>
+    </encoding-profiles>
+    <ressources>
+      <asset id='GESTitleClip' extractable-type-name='GESTitleClip' properties='properties;' metadatas='metadatas;' />
+      <asset id='file://$HOME/Videos/gst-qa-assets/medias//opus_jpeg.0.mkv' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)10031000000;' metadatas='metadatas;' />
+    </ressources>
+    <timeline properties='properties, auto-transition=(boolean)false, snapping-distance=(guint64)621283108;' metadatas='metadatas, duration=(guint64)2000000000;'>
+      <track caps='video/x-raw' track-type='4' track-id='0' properties='properties, async-handling=(boolean)false, message-forward=(boolean)false, caps=(string)video/x-raw, restriction-caps=(string)&quot;video/x-raw\,\ width\=\(int\)320\,\ height\=\(int\)240\,\ framerate\=\(fraction\)25/1&quot;;' metadatas='metadatas;'/>
+      <track caps='audio/x-raw' track-type='2' track-id='1' metadatas='metadatas;'/>
+      <layer priority='0' properties='properties, auto-transition=(boolean)false;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='0' asset-id='GESTitleClip' type-name='GESTitleClip' layer-priority='0' track-types='6' start='0' duration='1000000000' inpoint='0' rate='0' properties='properties, text=(string)&quot;This\ is\ a\ title\ test&quot;, font-desc=(string)&quot;Serif\ 36&quot;, halignment=(int)1, valignment=(int)0, color=(uint)4294967295, background=(uint)4294967295, xpos=(double)0.5, ypos=(double)0.5;' >
+        </clip>
+      </layer>
+      <layer priority='1' properties='properties, auto-transition=(boolean)false;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='1' asset-id='file://$HOME/Videos/gst-qa-assets/medias//opus_jpeg.0.mkv' type-name='GESUriClip' layer-priority='1' track-types='6' start='1000000000' duration='1000000000' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+        </clip>
+      </layer>
+    </timeline>
+</project>
+</ges>

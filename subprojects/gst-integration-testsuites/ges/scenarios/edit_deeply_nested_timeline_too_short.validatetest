@@ -1,0 +1,54 @@
+set-globals, media_dir="$(test_dir)/../../medias/defaults"
+meta,
+    seek=true,
+    handles-states=true,
+    needs_preroll=true,
+    tool = "ges-launch-$(gst_api_version)",
+    args = {
+        "--track-types=video",
+        --videosink, "$(videosink) sync=true name=videosink",
+        --video-caps, "video/x-raw,format=I420,chroma-site=mpeg2,colorimetry=bt709",
+    },
+    configs = {
+        "$(validateflow), pad=videosink:sink, record-buffers=true,
+            ignored-fields=\"stream-start={stream-id,group-id,stream},buffer={meta},segment={position}\",
+            caps-properties={height,width,framerate}",
+    },
+    expected-issues = {
+        # Sometimes the segment arrives before the caps, and sometimes the other way around
+        "expected-issue, issue-id=validateflow::mismatch, details=\".*event segment:.*\\\\n.*\\\\n.*event caps:.*\", sometimes=true",
+    }
+
+set-vars,
+    nested_timeline_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline.xges",
+    nested_timeline_depth2_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline_depth2.xges",
+    project_uri="file://$(logsdir)/ges/scenarios/$(test_name)/project.xges"
+
+set-track-restriction-caps, track-type="video", caps="video/x-raw,width=1080,height=720,format=I420"
+# Make sure the asset ID is the project_uri and serialize the empty timeline for each nested projects uris
+serialize-project, uri="$(project_uri)"
+serialize-project, uri="$(nested_timeline_uri)"
+serialize-project, uri="$(nested_timeline_depth2_uri)"
+
+add-clip, name=clip, asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv", layer-priority=0, type=GESUriClip, duration=4.0, project-uri="$(nested_timeline_uri)"
+add-clip, name=nested-clip1, asset-id="$(nested_timeline_uri)", layer-priority=0, type=GESUriClip, project-uri="$(nested_timeline_depth2_uri)"
+add-clip, name=nested-timeline1, asset-id="$(nested_timeline_depth2_uri)", layer-priority=0, type=GESUriClip, inpoint=0, duration=4.0
+add-asset, id="$(nested_timeline_depth2_uri)", type="GESTimeline"
+serialize-project, uri="$(project_uri)"
+
+pause
+seek, start=3.0, flags="accurate+flush"
+
+checkpoint, text="Paused pipeline, now editing nested timeline and committing."
+
+# Trim the nested timeline clip in a way that the nested timeline would be too short to check that gesdemux handles that by adding
+# an SMPTE75 test clip.
+edit-container, project-uri="$(nested_timeline_uri)", container-name="clip", position=1.0, edit-mode="edit_trim", edge="edge_end"
+commit
+play
+crank-clock
+check-position, expected-position=3.0
+crank-clock, repeat=30
+check-position, expected-position=4.0
+crank-clock
+stop, on-message=eos

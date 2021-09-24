@@ -1,0 +1,14 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    seek=true,
+    handles-states=true,
+    args = {
+         "filesrc location=$(media_dir)/defaults/mp4/mp3_h264.0.mp4 ! qtdemux ! h264parse name=parse ! fakesink",
+    },
+    configs = {
+       "$(validateflow), pad=parse:src, record-buffers=true",
+    }
+
+pause
+seek, name=trickmode-predicted-seek, rate=1.0, start=0.0, stop="$(duration)", flags="flush+accurate+trickmode-forward-predicted"
+play

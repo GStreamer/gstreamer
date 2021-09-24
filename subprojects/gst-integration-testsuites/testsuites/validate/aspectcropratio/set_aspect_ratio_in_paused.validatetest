@@ -1,0 +1,11 @@
+meta,
+    seek=true,
+    handles-states=true,
+    args = {
+         "videotestsrc !  aspectratiocrop name=cropper ! $(videosink)",
+    }
+
+pause
+set-property, playback-time=0.0, target-element-name=cropper, property-name=aspect-ratio, property-value="16/9"
+play
+stop, playback-time=1.0

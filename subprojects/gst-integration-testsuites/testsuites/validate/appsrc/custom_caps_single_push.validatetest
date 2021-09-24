@@ -1,0 +1,13 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    seek=false,
+    handles-states=false,
+    args = {
+         "appsrc ! fakesink async=false",
+    },
+    configs = {
+       "$(validateflow), pad=fakesink0:sink, record-buffers=true",
+    }
+
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/defaults/mp4/raw_h264.0.mp4", caps=(GstCaps)"video/foo\,\ variant\=\"test-custom\""
+appsrc-eos, target-element-name=appsrc0

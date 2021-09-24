@@ -1,0 +1,129 @@
+<ges version='0.1'>
+  <project properties='properties;' metadatas='metadatas, name=(string)&quot;The\ Sausage\ Being\ Made\ -\ Test\ Shot\ 1&quot;, author=(string)&quot;John\ \(J5\)\ Palmieri&quot;, render-scale=(double)100, year=(string)2014;'>
+    <encoding-profiles>
+      <encoding-profile name='pitivi-profile' description='Pitivi encoding profile' type='container' preset-name='webmmux' format='video/webm' >
+        <stream-profile parent='pitivi-profile' id='0' type='video' presence='1' format='video/x-vp8' preset-name='vp8enc' restriction='video/x-raw, width=(int)320, height=(int)180, framerate=(fraction)30000/1001, pixel-aspect-ratio=(fraction)1/1, format=(string)I420' pass='87092576' variableframerate='0' />
+        <stream-profile parent='pitivi-profile' id='1' type='audio' presence='1' format='audio/x-vorbis' preset-name='vorbisenc' restriction='audio/x-raw, channels=(int)2, rate=(int)44100' />
+      </encoding-profile>
+    </encoding-profiles>
+    <ressources>
+      <asset id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4862-small.webm' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)437140000000;' metadatas='metadatas, container-format=(string)Matroska, language-code=(string)en, application-name=(string)Lavc55.39.101, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20140122\ \(Turpak\303\244r\303\244jiin\)&quot;, encoder-version=(uint)0, audio-codec=(string)Vorbis, nominal-bitrate=(uint)112000, bitrate=(uint)112000, video-codec=(string)&quot;VP8\ video&quot;;' />
+      <asset id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/concept.png' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)4, duration=(guint64)18446744073709551615;' metadatas='metadatas;' />
+      <asset id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4864-small.webm' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)367238000000;' metadatas='metadatas, video-codec=(string)&quot;VP8\ video&quot;, container-format=(string)Matroska, language-code=(string)en, application-name=(string)Lavc55.39.101, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20140122\ \(Turpak\303\244r\303\244jiin\)&quot;, encoder-version=(uint)0, audio-codec=(string)Vorbis, nominal-bitrate=(uint)112000, bitrate=(uint)112000;' />
+      <asset id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/assembly.png' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)4, duration=(guint64)18446744073709551615;' metadatas='metadatas;' />
+      <asset id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/title.png' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)4, duration=(guint64)18446744073709551615;' metadatas='metadatas;' />
+      <asset id='crossfade' extractable-type-name='GESTransitionClip' properties='properties;' metadatas='metadatas, description=(string)&quot;Crossfade\ between\ two\ clips&quot;;' />
+      <asset id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4861-small.webm' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)3707000000;' metadatas='metadatas, container-format=(string)Matroska, language-code=(string)en, application-name=(string)Lavc55.39.101, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20140122\ \(Turpak\303\244r\303\244jiin\)&quot;, encoder-version=(uint)0, audio-codec=(string)Vorbis, nominal-bitrate=(uint)112000, bitrate=(uint)112000, video-codec=(string)&quot;VP8\ video&quot;;' />
+      <asset id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/recipe.png' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)4, duration=(guint64)18446744073709551615;' metadatas='metadatas;' />
+      <asset id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4863-small.webm' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)3807000000;' metadatas='metadatas, container-format=(string)Matroska, language-code=(string)en, application-name=(string)Lavc55.39.101, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20140122\ \(Turpak\303\244r\303\244jiin\)&quot;, encoder-version=(uint)0, audio-codec=(string)Vorbis, nominal-bitrate=(uint)112000, bitrate=(uint)112000, video-codec=(string)&quot;VP8\ video&quot;;' />
+      <asset id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/IMG_4866.JPG' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)4, duration=(guint64)18446744073709551615;' metadatas='metadatas;' />
+      <asset id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4860-small.webm' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)397500000000;' metadatas='metadatas, container-format=(string)Matroska, language-code=(string)en, application-name=(string)Lavc55.39.101, encoder=(string)&quot;Xiph.Org\ libVorbis\ I\ 20140122\ \(Turpak\303\244r\303\244jiin\)&quot;, encoder-version=(uint)0, audio-codec=(string)Vorbis, nominal-bitrate=(uint)112000, bitrate=(uint)112000, video-codec=(string)&quot;VP8\ video&quot;;' />
+    </ressources>
+    <timeline properties='properties, auto-transition=(boolean)true, snapping-distance=(guint64)3163221101;' metadatas='metadatas, duration=(guint64)778650485553;'>
+      <track caps='video/x-raw' track-type='4' track-id='0' properties='properties, async-handling=(boolean)false, message-forward=(boolean)false, caps=(string)video/x-raw, restriction-caps=(string)&quot;video/x-raw\,\ width\=\(int\)320\,\ height\=\(int\)180\,\ framerate\=\(fraction\)30000/1001&quot;;' metadatas='metadatas;'/>
+      <track caps='audio/x-raw' track-type='2' track-id='1' properties='properties, async-handling=(boolean)false, message-forward=(boolean)false, caps=(string)audio/x-raw, restriction-caps=(string)&quot;NULL&quot;;' metadatas='metadatas;'/>
+      <layer priority='0' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='0' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/assembly.png' type-name='GESUriClip' layer-priority='0' track-types='4' start='434280743542' duration='14326958289' inpoint='454929381' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 454929381:1  14781887670:1 '/>
+        </clip>
+        <clip id='1' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/title.png' type-name='GESUriClip' layer-priority='0' track-types='4' start='767764786062' duration='10885699491' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 0:1  10885699491:1 '/>
+        </clip>
+      </layer>
+      <layer priority='1' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='2' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/title.png' type-name='GESUriClip' layer-priority='1' track-types='4' start='0' duration='8156687156' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 0:1  5378621419:1  8156687155:1  8156687156:1 '/>
+        </clip>
+        <clip id='3' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/concept.png' type-name='GESUriClip' layer-priority='1' track-types='4' start='50728691066' duration='5158561202' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 0:0  1243305977:1  3767314358:1  5158561202:1 '/>
+        </clip>
+        <clip id='4' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/recipe.png' type-name='GESUriClip' layer-priority='1' track-types='4' start='76429690194' duration='4102642926' inpoint='183603689' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 183603689:0  1100622984:1  3414297333:1  4286246615:1 '/>
+        </clip>
+        <clip id='5' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4864-small.webm' type-name='GESUriClip' layer-priority='1' track-types='6' start='436897106847' duration='4769571937' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 0:0.10000000149011612  4769571937:0.10000000149011612 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 0:0  1476927725:0  4769571937:0 '/>
+        </clip>
+        <clip id='6' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4864-small.webm' type-name='GESUriClip' layer-priority='1' track-types='6' start='441666678784' duration='293100387290' inpoint='6136743143' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 6136743143:0.10000000149011612  299237130433:0.10000000149011612 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 6136743143:0  8657670461:1  299237130433:1 '/>
+        </clip>
+        <clip id='7' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4864-small.webm' type-name='GESUriClip' layer-priority='1' track-types='6' start='734767066074' duration='28717476364' inpoint='301255471872' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 301255471872:0.10000000149011612  329972948236:0.10000000149011612 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 301255471872:1  329972948236:1 '/>
+        </clip>
+        <clip id='8' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4864-small.webm' type-name='GESUriClip' layer-priority='1' track-types='6' start='763484542438' duration='5076081565' inpoint='344897556105' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 344897556105:0.10000000149011612  349973637670:0.10000000149011612 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 344897556105:1  349106239600:1  349973637670:0 '/>
+        </clip>
+      </layer>
+      <layer priority='2' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='9' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/IMG_4866.JPG' type-name='GESUriClip' layer-priority='2' track-types='4' start='0' duration='8156687156' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 0:1  6891716879:1  8156687156:0.060313761234283447 '/>
+        </clip>
+        <clip id='10' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/IMG_4866.JPG' type-name='GESUriClip' layer-priority='2' track-types='4' start='50728691066' duration='3973440150' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 0:0  810283779:1  3198046325:1  3973440150:0 '/>
+        </clip>
+        <clip id='11' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/IMG_4866.JPG' type-name='GESUriClip' layer-priority='2' track-types='4' start='76429690194' duration='3366473815' inpoint='201497224' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 201497224:0  902451889:1  1160470488:1  3109459948:1  3567971039:0 '/>
+        </clip>
+        <clip id='12' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4862-small.webm' type-name='GESUriClip' layer-priority='2' track-types='6' start='97817363921' duration='17359353884' inpoint='75219934816' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 75219934816:0.10000000149011612  92579288700:0.10000000149011612 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 75219934816:0  76735632763:1  77645419469:1  92579288700:1 '/>
+        </clip>
+        <clip id='13' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4862-small.webm' type-name='GESUriClip' layer-priority='2' track-types='6' start='113278785144' duration='156501000' inpoint='92579288700' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =''/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =''/>
+        </clip>
+        <clip id='14' asset-id='crossfade' type-name='GESTransitionClip' layer-priority='2' track-types='4' start='114771264752' duration='405453053' inpoint='0' rate='0' properties='properties;' >
+        </clip>
+        <clip id='15' asset-id='crossfade' type-name='GESTransitionClip' layer-priority='2' track-types='2' start='114771264752' duration='405453053' inpoint='0' rate='0' properties='properties;' >
+        </clip>
+        <clip id='16' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4862-small.webm' type-name='GESUriClip' layer-priority='2' track-types='6' start='114771264752' duration='46651861802' inpoint='103756348868' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 103756348868:0.10000000149011612  150408210670:0.10000000149011612 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 103756348868:1  150408210670:1 '/>
+        </clip>
+        <clip id='17' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4862-small.webm' type-name='GESUriClip' layer-priority='2' track-types='6' start='161423126554' duration='275473980293' inpoint='160170240099' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 160170240099:0.10000000149011612  435644220392:0.10000000149011612 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 160170240099:1  434441989869:1  435074435787:0  435644220392:0 '/>
+        </clip>
+        <clip id='18' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/IMG_4866.JPG' type-name='GESUriClip' layer-priority='2' track-types='4' start='767764786062' duration='8008240099' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 0:1  8008240099:1 '/>
+        </clip>
+      </layer>
+      <layer priority='3' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='19' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/IMG_4866.JPG' type-name='GESUriClip' layer-priority='3' track-types='4' start='434280743542' duration='10675365459' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 0:1  3002857256:1  10675365459:1 '/>
+        </clip>
+      </layer>
+      <layer priority='4' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='20' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4860-small.webm' type-name='GESUriClip' layer-priority='4' track-types='6' start='7024889464' duration='2022599980' inpoint='19418238972' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 19418238972:0.10000000149011612  21440838952:0.10000000149011612 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 19418238972:1  21440838952:1 '/>
+        </clip>
+        <clip id='21' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4860-small.webm' type-name='GESUriClip' layer-priority='4' track-types='6' start='9047489444' duration='42539563744' inpoint='21440838952' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 21440838952:0.10769230769230753  63459468575:0.10769230769230753  63980402696:0 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 21440838952:1  63980402696:1 '/>
+        </clip>
+        <clip id='22' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4860-small.webm' type-name='GESUriClip' layer-priority='4' track-types='6' start='53891192994' duration='22959670147' inpoint='132043362350' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 132043362350:0  132535075786:0.10255784254807693  155003032497:0.1023409441113472 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 132043362350:1  132644126179:1  132746723639:1  132959491043:1  155003032497:1 '/>
+        </clip>
+        <clip id='23' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4862-small.webm' type-name='GESUriClip' layer-priority='4' track-types='6' start='79240780050' duration='18171130818' inpoint='17936720390' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 17936720390:0.10000000149011612  36107851208:0.10000000149011612 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 17936720390:1  34309604293:1  36107851208:0 '/>
+        </clip>
+        <clip id='24' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/IMG_4866.JPG' type-name='GESUriClip' layer-priority='4' track-types='4' start='434280743542' duration='0' inpoint='591244582' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =''/>
+        </clip>
+        <clip id='25' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/IMG_4866.JPG' type-name='GESUriClip' layer-priority='4' track-types='4' start='460258601159' duration='0' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)true;' >
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =''/>
+        </clip>
+        <clip id='26' asset-id='file:///home/thiblahute/Videos/pitivi-projects/The_Sausage_Being_Made-Test_Shot1-export/Videos/projects/test-sausage/MVI_4864-small.webm' type-name='GESUriClip' layer-priority='4' track-types='6' start='767764786062' duration='8008240099' inpoint='357595889153' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 357595889153:0.10000000149011612  365604129252:0 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 357595889153:1  365461584437:1  365604129252:0.91955476999282837 '/>
+        </clip>
+      </layer>
+    </timeline>
+</project>
+</ges>

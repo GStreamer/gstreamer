@@ -1,0 +1,11 @@
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    args = {
+         "playbin uri=testbin://video,num-buffers=1+audio,num-buffers=1 video-sink=fakesink audio-sink=fakesink name=pb",
+    }
+
+pause
+check-property, target-element-name=pb, property-name=current-video, property-value=0
+check-property, target-element-name=pb, property-name=current-audio, property-value=0
+stop

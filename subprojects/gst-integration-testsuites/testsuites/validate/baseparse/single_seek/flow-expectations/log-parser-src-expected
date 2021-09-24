@@ -1,0 +1,5 @@
+event segment: format=TIME, start=0:00:00.066000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000, duration=0:00:02.500000000
+buffer: pts=0:00:00.066000000, dur=0:00:00.033333333, flags=discont marker header
+event segment: format=TIME, start=0:00:00.099333336, offset=0:00:00.000000000, stop=0:00:02.566000000, flags=0x01, time=0:00:00.033333336, base=0:00:00.000000000, position=0:00:00.066000000, duration=0:00:02.500000000
+buffer: pts=0:00:00.066000000, dur=0:00:00.033333333, flags=discont marker header
+buffer: pts=0:00:00.166000000, dur=0:00:00.033333333, flags=marker delta-unit

@@ -1,0 +1,143 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
+event caps: video/x-h265, alignment=(string)au, bit-depth-chroma=(uint)10, bit-depth-luma=(uint)10, chroma-format=(string)4:2:0, codec_data=(buffer)0102200000009000000000003ff000fcfdfafa00000f03200001001840010c01ffff02200000030090000003000003003f959009210001002e42010102200000030090000003000003003fa00a080f136595924932bffc0004000404000003000400000300782022000100074401c172b46240, colorimetry=(string)2:4:5:4, framerate=(fraction)30/1, height=(int)240, level=(string)2.1, parsed=(boolean)true, pixel-aspect-ratio=(fraction)1/1, profile=(string)main-10, stream-format=(string)hvc1, tier=(string)main, width=(int)320;
+event segment: format=TIME, start=0:00:00.066666666, offset=0:00:00.000000000, stop=0:00:10.066666666, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.066666666
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ /\\\ HEVC\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\;";
+event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2019-07-15T17:28:39Z\,\ container-format\=\(string\)\"ISO\\\ MP4/M4A\"\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\;";
+buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont marker header
+buffer: dts=0:00:00.033333333, pts=0:00:00.166666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:00.066666666, pts=0:00:00.133333333, dur=0:00:00.033333333, flags=marker delta-unit
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.066666666, offset=0:00:00.000000000, stop=0:00:10.066666666, flags=0x201, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.066666666
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\;";
+buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont marker header
+buffer: dts=0:00:00.033333333, pts=0:00:00.166666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:00.133333333, pts=0:00:00.266666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:00.233333333, pts=0:00:00.366666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:00.333333333, pts=0:00:00.466666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:00.433333333, pts=0:00:00.566666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1303920\;";
+buffer: dts=0:00:00.533333333, pts=0:00:00.666666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1318320\;";
+buffer: dts=0:00:00.633333333, pts=0:00:00.766666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1360080\;";
+buffer: dts=0:00:00.733333333, pts=0:00:00.866666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:00.833333333, pts=0:00:00.966666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1363440\;";
+buffer: dts=0:00:00.933333333, pts=0:00:01.066666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1388400\;";
+buffer: dts=0:00:01.033333333, pts=0:00:01.166666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1396080\;";
+buffer: dts=0:00:01.133333333, pts=0:00:01.266666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1400640\;";
+buffer: dts=0:00:01.233333333, pts=0:00:01.366666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1430400\;";
+buffer: dts=0:00:01.333333333, pts=0:00:01.466666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:01.433333333, pts=0:00:01.566666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1432320\;";
+buffer: dts=0:00:01.533333333, pts=0:00:01.666666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1447200\;";
+buffer: dts=0:00:01.633333333, pts=0:00:01.766666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:01.733333333, pts=0:00:01.866666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1463520\;";
+buffer: dts=0:00:01.833333333, pts=0:00:01.966666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1479120\;";
+buffer: dts=0:00:01.933333333, pts=0:00:02.066666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1481040\;";
+buffer: dts=0:00:02.033333333, pts=0:00:02.166666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1488480\;";
+buffer: dts=0:00:02.133333333, pts=0:00:02.266666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:02.233333333, pts=0:00:02.366666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1619280\;";
+buffer: dts=0:00:02.333333333, pts=0:00:02.466666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:02.433333333, pts=0:00:02.566666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:02.533333333, pts=0:00:02.666666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1620000\;";
+buffer: dts=0:00:02.633333333, pts=0:00:02.766666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1638720\;";
+buffer: dts=0:00:02.733333333, pts=0:00:02.866666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1643280\;";
+buffer: dts=0:00:02.833333333, pts=0:00:02.966666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1656720\;";
+buffer: dts=0:00:02.933333333, pts=0:00:03.066666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:03.033333333, pts=0:00:03.166666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:03.133333333, pts=0:00:03.266666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1667280\;";
+buffer: dts=0:00:03.233333333, pts=0:00:03.366666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1680480\;";
+buffer: dts=0:00:03.333333333, pts=0:00:03.466666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:03.433333333, pts=0:00:03.566666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:03.533333333, pts=0:00:03.666666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:03.633333333, pts=0:00:03.766666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1680720\;";
+buffer: dts=0:00:03.733333333, pts=0:00:03.866666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:03.833333333, pts=0:00:03.966666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:03.933333333, pts=0:00:04.066666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1700160\;";
+buffer: dts=0:00:04.033333333, pts=0:00:04.166666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1713120\;";
+buffer: dts=0:00:04.133333333, pts=0:00:04.266666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:04.233333333, pts=0:00:04.366666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1718640\;";
+buffer: dts=0:00:04.333333333, pts=0:00:04.466666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:04.433333333, pts=0:00:04.566666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:04.533333333, pts=0:00:04.666666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:04.633333333, pts=0:00:04.766666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:04.733333333, pts=0:00:04.866666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:04.833333333, pts=0:00:04.966666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:04.933333333, pts=0:00:05.066666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1720560\;";
+buffer: dts=0:00:05.033333333, pts=0:00:05.166666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:05.133333333, pts=0:00:05.266666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:05.233333333, pts=0:00:05.366666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:05.333333333, pts=0:00:05.466666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:05.433333333, pts=0:00:05.566666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:05.533333333, pts=0:00:05.666666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:05.633333333, pts=0:00:05.766666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:05.733333333, pts=0:00:05.866666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:05.833333333, pts=0:00:05.966666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:05.933333333, pts=0:00:06.066666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:06.033333333, pts=0:00:06.166666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:06.133333333, pts=0:00:06.266666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:06.233333333, pts=0:00:06.366666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:06.333333333, pts=0:00:06.466666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:06.433333333, pts=0:00:06.566666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:06.533333333, pts=0:00:06.666666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:06.633333333, pts=0:00:06.766666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:06.733333333, pts=0:00:06.866666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:06.833333333, pts=0:00:06.966666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:06.933333333, pts=0:00:07.066666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:07.033333333, pts=0:00:07.166666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:07.133333333, pts=0:00:07.266666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:07.233333333, pts=0:00:07.366666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:07.333333333, pts=0:00:07.466666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:07.433333333, pts=0:00:07.566666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:07.533333333, pts=0:00:07.666666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:07.633333333, pts=0:00:07.766666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:07.733333333, pts=0:00:07.866666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:07.833333333, pts=0:00:07.966666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:07.933333333, pts=0:00:08.066666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:08.033333333, pts=0:00:08.166666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:08.133333333, pts=0:00:08.266666666, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:08.233333333, pts=0:00:08.366666666, dur=0:00:00.033333333, flags=marker delta-unit
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\,\ minimum-bitrate\=\(uint\)1303920\,\ maximum-bitrate\=\(uint\)1937280\;";
+buffer: dts=0:00:08.333333333, pts=0:00:08.400000000, dur=0:00:00.033333333, flags=marker
+buffer: dts=0:00:08.366666666, pts=0:00:08.500000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:08.466666666, pts=0:00:08.600000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:08.566666666, pts=0:00:08.700000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:08.666666666, pts=0:00:08.800000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:08.766666666, pts=0:00:08.900000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:08.866666666, pts=0:00:09.000000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:08.966666666, pts=0:00:09.100000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:09.066666666, pts=0:00:09.200000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:09.166666666, pts=0:00:09.300000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:09.266666666, pts=0:00:09.400000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:09.366666666, pts=0:00:09.500000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:09.466666666, pts=0:00:09.600000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:09.566666666, pts=0:00:09.700000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:09.666666666, pts=0:00:09.800000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:09.766666666, pts=0:00:09.900000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:09.866666666, pts=0:00:10.000000000, dur=0:00:00.033333333, flags=marker delta-unit
+buffer: dts=0:00:09.966666666, pts=0:00:10.033333333, dur=0:00:00.033333333, flags=marker delta-unit
+event eos: (no structure)

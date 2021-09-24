@@ -1,0 +1,11 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    seek=false,
+    handles-states=false,
+    args = {
+         "nleurisource uri=file://$(media_dir)/defaults/matroska/numerated_frames_blue.mkv inpoint=1000000000 duration=1000000000  ! videoconvert name=videoconvert ! $(videosink)",
+    },
+    configs = {
+       "$(validateflow), pad=videoconvert:sink, record-buffers=true, buffers-checksum=true, ignored-event-types={ tag }",
+    }
+

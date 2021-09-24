@@ -1,0 +1,16 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    reverse-playback=true,
+    seek=true,
+    handles-states=true,
+    args = {
+         "filesrc location=$(media_dir)/defaults/mp4/mp3_h264.0.mp4 ! qtdemux ! h264parse name=parse ! fakesink",
+    },
+    configs = {
+       "$(validateflow), pad=parse:src, record-buffers=true",
+    }
+
+include,location=includes/default-seek-flags.scenario
+pause
+seek, name=Reverse-seek, playback-time=0.0, rate=-1.0, start=5.0, stop=10.0, flags="$(default_flags)"
+play

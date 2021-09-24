@@ -1,0 +1,9 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    args = {
+         "filesrc location=$(media_dir)/encrypted/cenc-encrypted-youtube-aac.mp4 ! qtdemux ! mockdecryptor ! fakesink async=false",
+    },
+    configs = {
+       "$(validateflow), pad=fakesink0:sink, record-buffers=true",
+    }
+

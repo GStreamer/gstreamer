@@ -1,0 +1,19 @@
+<ges version='0.1'>
+  <project properties='properties;' metadatas='metadatas;'>
+    <encoding-profiles>
+    </encoding-profiles>
+    <ressources>
+      <asset id='file://$HOME/Videos/gst-qa-assets/medias//opus_jpeg.0.mkv' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)10031000000;' metadatas='metadatas;' />
+      <asset id='file://$HOME/Videos/gst-qa-assets/medias//opus_jpeg.1.mkv' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)10031000000;' metadatas='metadatas;' />
+    </ressources>
+    <timeline properties='properties, auto-transition=(boolean)false, snapping-distance=(guint64)621283108;' metadatas='metadatas, duration=(guint64)2000000000;'>
+      <track caps='audio/x-raw' track-type='2' track-id='0' metadatas='metadatas;'/>
+      <layer priority='0' properties='properties, auto-transition=(boolean)false;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='0' asset-id='file://$HOME/Videos/gst-qa-assets/medias//opus_jpeg.0.mkv' type-name='GESUriClip' layer-priority='0' track-types='6' start='0' duration='1000000000' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+        </clip>
+        <clip id='1' asset-id='file://$HOME/Videos/gst-qa-assets/medias//opus_jpeg.1.mkv' type-name='GESUriClip' layer-priority='0' track-types='6' start='1000000000' duration='1000000000' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+        </clip>
+      </layer>
+    </timeline>
+</project>
+</ges>

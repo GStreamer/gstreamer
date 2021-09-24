@@ -1,0 +1,24 @@
+<ges version='0.1'>
+  <project properties='properties;' metadatas='metadatas, name=(string)&quot;New\ Project&quot;, author=(string)&quot;Thibault\ Saunier&quot;, render-scale=(double)100;'>
+    <encoding-profiles>
+      <encoding-profile name='pitivi-profile' description='Pitivi encoding profile' type='container' preset-name='oggmux' format='application/ogg' >
+        <stream-profile parent='pitivi-profile' id='0' type='video' presence='0' format='video/x-theora' preset-name='theoraenc' restriction='video/x-raw, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)16/15' pass='70156224' variableframerate='0' />
+        <stream-profile parent='pitivi-profile' id='1' type='audio' presence='0' format='audio/x-flac' preset-name='flacenc' restriction='audio/x-raw, channels=(int)2, rate=(int)44100' />
+      </encoding-profile>
+    </encoding-profiles>
+    <ressources>
+      <asset id='file://$HOME/Videos/ges-integration-projects/assets/flac_jpeg.0.mkv' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)10031000000;' metadatas='metadatas, datetime=(datetime)2013-09-03T18:21:39+0200, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, container-format=(string)Quicktime, audio-codec=(string)&quot;MPEG\ 1\ Audio\,\ Layer\ 3\ \(MP3\)&quot;, language-code=(string)en, bitrate=(uint)75394, nominal-bitrate=(uint)256000, has-crc=(boolean)false, channel-mode=(string)mono, video-codec=(string)&quot;H.264\ /\ AVC&quot;;' />
+      <asset id='file://$HOME/Videos/ges-integration-projects/assets/flac_jpeg.1.mkv' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)10031000000;' metadatas='metadatas, datetime=(datetime)2013-09-03T18:21:40+0200, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, container-format=(string)Quicktime, audio-codec=(string)&quot;MPEG\ 1\ Audio\,\ Layer\ 3\ \(MP3\)&quot;, language-code=(string)en, bitrate=(uint)28066, nominal-bitrate=(uint)224000, has-crc=(boolean)false, channel-mode=(string)mono, video-codec=(string)&quot;H.264\ /\ AVC&quot;;' />
+    </ressources>
+    <timeline properties='properties, auto-transition=(boolean)false, snapping-distance=(guint64)621283108;' metadatas='metadatas, duration=(guint64)2000000000;'>
+      <track caps='video/x-raw' track-type='4' track-id='0' properties='properties, async-handling=(boolean)false, message-forward=(boolean)false, caps=(string)video/x-raw, restriction-caps=(string)&quot;video/x-raw\,\ width\=\(int\)320\,\ height\=\(int\)240\,\ framerate\=\(fraction\)25/1&quot;;' metadatas='metadatas;'/>
+      <track caps='audio/x-raw' track-type='2' track-id='1' properties='properties, async-handling=(boolean)false, message-forward=(boolean)false, caps=(string)audio/x-raw, restriction-caps=(string)&quot;NULL&quot;;' metadatas='metadatas;'/>
+      <layer priority='0' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='0' asset-id='file://$HOME/Videos/ges-integration-projects/assets/flac_jpeg.0.mkv' type-name='GESUriClip' layer-priority='0' track-types='6' start='0' duration='1500000000' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+        </clip>
+        <clip id='2' asset-id='file://$HOME/Videos/ges-integration-projects/assets/flac_jpeg.1.mkv' type-name='GESUriClip' layer-priority='0' track-types='6' start='1000000000' duration='1000000000' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+        </clip>
+      </layer>
+    </timeline>
+</project>
+</ges>

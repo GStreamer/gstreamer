@@ -1,0 +1,8 @@
+meta,
+    args = {
+         "videotestsrc num-buffers=10 ! interlace ! video/x-raw\(format:Interlaced\),format=I420 ! deinterlace ! video/x-raw ! fakevideosink name=fakevideosink",
+    },
+    configs = {
+       "$(validateflow), pad=fakevideosink:sink, record-buffers=true, buffers-checksum=true",
+    }
+

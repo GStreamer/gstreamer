@@ -1,0 +1,25 @@
+<ges version='0.1'>
+  <project properties='properties;' metadatas='metadatas, format-version=(string)0.1;'>
+    <encoding-profiles>
+    </encoding-profiles>
+    <ressources>
+      <asset id='video capsfilter' extractable-type-name='GESEffect' properties='properties, track-type=(int)4;' metadatas='metadatas;' />
+      <asset id='GESTestClip' extractable-type-name='GESTestClip' properties='properties;' metadatas='metadatas;' />
+    </ressources>
+    <timeline properties='properties, auto-transition=(boolean)true, snapping-distance=(guint64)0;' metadatas='metadatas, duration=(guint64)1000000000;'>
+      <track caps='video/x-raw(ANY)' track-type='4' track-id='0' properties='properties, async-handling=(boolean)false, message-forward=(boolean)true, caps=(string)&quot;video/x-raw\(ANY\)&quot;, restriction-caps=(string)&quot;NULL&quot;, mixing=(boolean)true;' metadatas='metadatas;'/>
+      <layer priority='0' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='0' asset-id='GESTestClip' type-name='GESTestClip' layer-priority='0' track-types='6' start='0' duration='1000000000' inpoint='0' rate='0' properties='properties, name=(string)testclip0, mute=(boolean)false, vpattern=(int)3, freq=(double)440, volume=(double)1;' >
+          <effect asset-id='video capsfilter' clip-id='0' type-name='GESEffect' track-type='4' track-id='0' properties='properties, active=(boolean)true, track-type=(int)4;' metadatas='metadatas;' children-properties='properties, GstCapsFilter::caps=(GstCaps)"video/x-raw,format=I420";'/>
+          <source track-id='0' children-properties='properties, GstFramePositioner::alpha=(double)1, GstDeinterlace::fields=(int)0, GstFramePositioner::height=(int)0, GstDeinterlace::mode=(int)0, GstVideoTestSrc::pattern=(int)3, GstFramePositioner::posx=(int)0, GstFramePositioner::posy=(int)0, GstDeinterlace::tff=(int)0, GstFramePositioner::width=(int)0;'/>
+        </clip>
+        <clip id='1' asset-id='GESTestClip' type-name='GESTestClip' layer-priority='0' track-types='6' start='1000000000' duration='1000000000' inpoint='0' rate='0' properties='properties, name=(string)testclip0, mute=(boolean)false, vpattern=(int)3, freq=(double)440, volume=(double)1;' >
+          <effect asset-id='video capsfilter' clip-id='0' type-name='GESEffect' track-type='4' track-id='0' properties='properties, active=(boolean)true, track-type=(int)4;' metadatas='metadatas;' children-properties='properties, GstCapsFilter::caps=(GstCaps)"video/x-raw,format=Y444";'/>
+          <source track-id='0' children-properties='properties, GstFramePositioner::alpha=(double)1, GstDeinterlace::fields=(int)0, GstFramePositioner::height=(int)0, GstDeinterlace::mode=(int)0, GstVideoTestSrc::pattern=(int)5, GstFramePositioner::posx=(int)0, GstFramePositioner::posy=(int)0, GstDeinterlace::tff=(int)0, GstFramePositioner::width=(int)0;'/>
+        </clip>
+      </layer>
+      <groups>
+      </groups>
+    </timeline>
+</project>
+</ges>

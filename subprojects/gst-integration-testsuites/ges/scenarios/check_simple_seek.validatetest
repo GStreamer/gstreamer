@@ -1,0 +1,20 @@
+set-globals, media_dir="$(test_dir)/../../medias/defaults"
+meta, handles-states=true,
+    tool = "ges-launch-$(gst_api_version)",
+    ges-options={
+        --track-types, video,
+        --video-caps, "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1",
+        --videosink, "$(videosink) name=videosink",
+    }
+
+include, location="../../medias/defaults/matroska/red_timed_frames_video_only_1fps.mkv.frames_checksums.scenario"
+include, location="../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums.scenario"
+
+pause
+add-clip, name=red, asset-id="file://$(media_dir)/matroska/red_timed_frames_video_only_1fps.mkv", layer-priority=0, type=GESUriClip
+add-clip, name=blue, asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv", layer-priority=0, type=GESUriClip
+commit
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(red_timed_frames_video_only_1fps_mkv_0_00_00_000000000)"
+seek, flags=accurate+flush, start=30.0
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(timed_frames_video_only_1fps_mkv_0_00_10_000000000)"
+stop

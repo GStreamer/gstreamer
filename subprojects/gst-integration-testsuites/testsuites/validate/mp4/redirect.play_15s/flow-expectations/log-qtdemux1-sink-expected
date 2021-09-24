@@ -1,0 +1,12 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)2;
+event caps: video/quicktime;
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)2;
+event caps: video/quicktime;
+event segment: format=BYTES, start=0, offset=0, stop=18446744073709551615, time=0, base=0, position=0, duration=15361432
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=BYTES, start=15360036, offset=0, stop=18446744073709551615, flags=0x01, time=15360036, base=0, position=15360036, duration=15361432
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=BYTES, start=28, offset=0, stop=18446744073709551615, flags=0x01, time=28, base=0, position=28, duration=15361432
+event eos: (no structure)

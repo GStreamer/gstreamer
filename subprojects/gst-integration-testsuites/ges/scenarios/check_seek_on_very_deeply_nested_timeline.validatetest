@@ -1,0 +1,57 @@
+set-globals, media_dir="$(test_dir)/../../medias/defaults"
+meta, seek=true, handles-states=true,
+    tool = "ges-launch-$(gst_api_version)",
+    args = {
+        --track-types, video,
+        --video-caps, "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1",
+        --videosink, "$(videosink) name=videosink",
+    }
+
+include, location="../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums.scenario"
+
+set-vars,
+    nested_timeline_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline.xges",
+    nested_timeline_depth2_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline_depth2.xges",
+    nested_timeline_depth3_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline_depth3.xges",
+    nested_timeline_depth4_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline_depth4.xges",
+    nested_timeline_depth5_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline_depth5.xges",
+    nested_timeline_depth6_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline_depth6.xges",
+    nested_timeline_depth7_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline_depth7.xges"
+
+
+serialize-project, uri="$(nested_timeline_uri)"
+serialize-project, uri="$(nested_timeline_depth2_uri)"
+serialize-project, uri="$(nested_timeline_depth3_uri)"
+serialize-project, uri="$(nested_timeline_depth4_uri)"
+serialize-project, uri="$(nested_timeline_depth5_uri)"
+serialize-project, uri="$(nested_timeline_depth6_uri)"
+serialize-project, uri="$(nested_timeline_depth7_uri)"
+
+add-clip, name=clip, asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv", layer-priority=0, type=GESUriClip, duration=8.0, project-uri="$(nested_timeline_uri)", inpoint=2.0
+add-clip, name=nested-clip1, asset-id="$(nested_timeline_uri)", layer-priority=0, type=GESUriClip, project-uri="$(nested_timeline_depth2_uri)"
+add-clip, name=nested-clip2, asset-id="$(nested_timeline_depth2_uri)", layer-priority=0, type=GESUriClip, project-uri="$(nested_timeline_depth3_uri)"
+add-clip, name=nested-clip3, asset-id="$(nested_timeline_depth3_uri)", layer-priority=0, type=GESUriClip, project-uri="$(nested_timeline_depth4_uri)", inpoint=2.0
+add-clip, name=nested-clip4, asset-id="$(nested_timeline_depth4_uri)", layer-priority=0, type=GESUriClip, project-uri="$(nested_timeline_depth5_uri)"
+add-clip, name=nested-clip5, asset-id="$(nested_timeline_depth5_uri)", layer-priority=0, type=GESUriClip, project-uri="$(nested_timeline_depth6_uri)"
+add-clip, name=nested-clip6, asset-id="$(nested_timeline_depth6_uri)", layer-priority=0, type=GESUriClip, project-uri="$(nested_timeline_depth7_uri)"
+add-clip, name=nested-clip7, asset-id="$(nested_timeline_depth6_uri)", layer-priority=0, type=GESUriClip, project-uri="$(nested_timeline_depth7_uri)", start=6.0, inpoint=4.0, duration=1.0
+
+# Final inpoint is clip.inpoint + nested-clip3.inpoint = 4.0
+load-project, uri="$(nested_timeline_depth7_uri)"
+
+commit;
+pause;
+
+# seek to 1.0 sec and check that is 1.0 + 4.0(inpoint) = 5.0
+seek, flags=accurate+flush, start=1.0
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(timed_frames_video_only_1fps_mkv_0_00_05_000000000)"
+
+# seek to 2.0 sec and check that is 2.0 + 4.0(inpoint) = 6.0
+seek, flags=accurate+flush, start=2.0
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(timed_frames_video_only_1fps_mkv_0_00_06_000000000)"
+
+# seek to 6.0 sec, meaning first frame of second clip, which is clip.inpoint(2) + nested-clip3.inpoint(2) + nested-clip7.inpoint(4) = 8.0
+seek, flags=accurate+flush, start=6.0
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(timed_frames_video_only_1fps_mkv_0_00_08_000000000)"
+
+stop;

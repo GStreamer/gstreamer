@@ -1,0 +1,14 @@
+testsuites/tags
+*.pyc
+medias/fragments/car-20120827-86.mp4/init.mp4
+medias/fragments/car-20120827-86.mp4/media2.mp4
+medias/fragments/car-20120827-86.mp4/media1.mp4
+medias/fragments/car-20120827-85.mp4/init.mp4
+medias/fragments/car-20120827-85.mp4/media2.mp4
+medias/fragments/car-20120827-85.mp4/media1.mp4
+medias/fragments/feelings_vp9-20130806-242.webm/init.webm
+medias/fragments/feelings_vp9-20130806-242.webm/media2.webm
+medias/fragments/feelings_vp9-20130806-242.webm/media1.webm
+medias/fragments/feelings_vp9-20130806-247.webm/init.webm
+medias/fragments/feelings_vp9-20130806-247.webm/media2.webm
+medias/fragments/feelings_vp9-20130806-247.webm/media1.webm

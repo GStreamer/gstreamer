@@ -1,0 +1,27 @@
+<ges version='0.1'>
+  <project properties='properties;' metadatas='metadatas, name=(string)&quot;New\ Project&quot;, author=(string)&quot;Thibault\ Saunier&quot;, render-scale=(double)100;'>
+    <encoding-profiles>
+      <encoding-profile name='pitivi-profile' description='Pitivi encoding profile' type='container' preset-name='oggmux' format='application/ogg' >
+        <stream-profile parent='pitivi-profile' id='0' type='video' presence='0' format='video/x-theora, framerate=(fraction)[ 1/2147483647, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]' preset-name='theoraenc' restriction='video/x-raw, width=(int)720, height=(int)576, framerate=(fraction)25/1, pixel-aspect-ratio=(fraction)16/15' pass='0' variableframerate='0' />
+        <stream-profile parent='pitivi-profile' id='1' type='audio' presence='0' format='audio/x-vorbis, rate=(int)[ 1, 200000 ], channels=(int)[ 1, 255 ]' preset-name='vorbisenc' restriction='audio/x-raw, channels=(int)2, rate=(int)44100' />
+      </encoding-profile>
+    </encoding-profiles>
+    <resources>
+      <asset id='file:///home/thiblahute/gst-validate/gst-qa-assets/medias/mp3_h264.1.mp4' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)10031000000;' metadatas='metadatas, datetime=(datetime)2013-09-03T16:21:40Z, description=(string)&quot;audiotest\ wave&quot;, encoder=(string)x264, container-format=(string)Quicktime, audio-codec=(string)&quot;MPEG-1\ Layer\ 3\ \(MP3\)&quot;, language-code=(string)en, bitrate=(uint)28066, nominal-bitrate=(uint)224000, has-crc=(boolean)false, channel-mode=(string)mono, video-codec=(string)H.264;' />
+    </resources>
+    <timeline properties='properties, auto-transition=(boolean)true, snapping-distance=(guint64)35505602;' metadatas='metadatas, duration=(guint64)10031000000;'>
+      <track caps='video/x-raw' track-type='4' track-id='0' properties='properties, async-handling=(boolean)false, message-forward=(boolean)false, caps=(string)video/x-raw, restriction-caps=(string)&quot;video/x-raw\,\ width\=\(int\)720\,\ height\=\(int\)576\,\ framerate\=\(fraction\)25/1&quot;;' metadatas='metadatas;'/>
+      <track caps='audio/x-raw' track-type='2' track-id='1' properties='properties, async-handling=(boolean)false, message-forward=(boolean)false, caps=(string)audio/x-raw, restriction-caps=(string)&quot;NULL&quot;;' metadatas='metadatas;'/>
+      <layer priority='0' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='0' asset-id='file:///home/thiblahute/gst-validate/gst-qa-assets/medias/mp3_h264.1.mp4' type-name='GESUriClip' layer-priority='0' track-types='6' start='0' duration='10031000000' inpoint='0' rate='0' properties='properties, name=(string)uriclip0, mute=(boolean)false, is-image=(boolean)false;' >
+          <effect asset-id='frei0r-filter-c0rners' clip-id='0' type-name='GESEffect' track-type='4' track-id='0' properties='properties, priority=(uint)2, active=(boolean)true, track-type=(int)4;' metadatas='metadatas;' children-properties='properties, corner-2-x=(double)0.66666597127914429, corner-1-y=(double)0.33333298563957214, corner-2-y=(double)0.33333298563957214, corner-3-x=(double)0.66666597127914429, corner-3-y=(double)0.66666597127914429, enable-stretch=(boolean)false, qos=(boolean)true, corner-4-y=(double)0.66666597127914429, stretch-y=(double)0.5, corner-1-x=(double)0.33333298563957214, stretch-x=(double)0.5, corner-4-x=(double)0.33333298563957214, transparent-background=(boolean)false, feather-alpha=(double)0.0099999997764825821, interpolator=(double)0.1666666716337204, alpha-operation=(double)0;'>
+          </effect>
+          <effect asset-id='videocrop' clip-id='0' type-name='GESEffect' track-type='4' track-id='0' properties='properties, priority=(uint)3, active=(boolean)true, track-type=(int)4;' metadatas='metadatas;' children-properties='properties, left=(int)0, right=(int)0, qos=(boolean)true, bottom=(int)0, top=(int)0;'>
+          </effect>
+            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' 0:0.10000000000000001  10031000000:0.10000000000000001 '/>
+            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' 0:1  10031000000:1 '/>
+        </clip>
+      </layer>
+    </timeline>
+</project>
+</ges>

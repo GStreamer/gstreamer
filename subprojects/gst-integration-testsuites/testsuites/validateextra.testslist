@@ -1,0 +1,16 @@
+~validateextra.rtsp.playback.change_state_intensive.Sintel_2010_720p_mkv
+~validateextra.rtsp.playback.fast_forward.Sintel_2010_720p_mkv
+~validateextra.rtsp.playback.play_15s.Sintel_2010_720p_mkv
+~validateextra.rtsp.playback.seek_backward.Sintel_2010_720p_mkv
+~validateextra.rtsp.playback.seek_forward.Sintel_2010_720p_mkv
+~validateextra.rtsp.playback.seek_with_stop.Sintel_2010_720p_mkv
+~validateextra.rtsp.playback.set_subtitles.Sintel_2010_720p_mkv
+~validateextra.rtsp.playback.switch_subtitle_track.Sintel_2010_720p_mkv
+~validateextra.rtsp.playback.switch_subtitles.Sintel_2010_720p_mkv
+~validateextra.rtsp2.playback.change_state_intensive.Sintel_2010_720p_mkv
+~validateextra.rtsp2.playback.play_15s.Sintel_2010_720p_mkv
+~validateextra.rtsp2.playback.seek_backward.Sintel_2010_720p_mkv
+~validateextra.rtsp2.playback.seek_forward.Sintel_2010_720p_mkv
+~validateextra.rtsp2.playback.set_subtitles.Sintel_2010_720p_mkv
+~validateextra.rtsp2.playback.switch_subtitle_track.Sintel_2010_720p_mkv
+~validateextra.rtsp2.playback.switch_subtitles.Sintel_2010_720p_mkv

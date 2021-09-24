@@ -1,0 +1,55 @@
+set-globals, media_dir="$(test_dir)/../../medias/defaults"
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    seek=true,
+    handles-states=true,
+    needs_preroll=true,
+    ges-options={
+        "--track-types=video",
+        "--video-caps=video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1",
+        --videosink, "$(videosink) name=videosink",
+    }
+
+include, location="../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums.scenario"
+
+set-vars,
+    nested_timeline_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline.xges"
+
+add-clip,
+    name=clip,
+    asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv",
+    layer-priority=0,
+    type=GESUriClip
+
+serialize-project, uri="$(nested_timeline_uri)"
+remove-clip, name=clip
+
+add-clip, name=nested-clip1, asset-id="$(nested_timeline_uri)",
+    layer-priority=0, type=GESUriClip, inpoint=0.0, duration=2.0
+
+add-clip, name=nested-clip2, asset-id="$(nested_timeline_uri)", layer-priority=0, type=GESUriClip, inpoint=0.0, duration=2.0, start=2.0
+
+commit;
+pause;
+
+# seek to 2.2 sec and check frame
+seek, flags=accurate+flush, start=2.2
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(timed_frames_video_only_1fps_mkv_0_00_00_000000000)"
+
+# brings the element to layer 1
+edit-container, container-name=nested-clip2, position=0, new-layer-priority=1;
+
+#adds effect
+container-add-child, container-name=nested-clip2, asset-id=videoflip, child-type=GESEffect
+set-child-property, element-name=effect0, property=method, value=2;
+
+# trim nested-clip2 to 1 sec
+edit-container, container-name=nested-clip2, edit-mode=edit_trim, position=1, new-layer-priority=(int)-1, edge=(string)edge_end;
+
+# seek to 1.2 sec and check frame
+seek, flags=accurate+flush, start=1.2
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(timed_frames_video_only_1fps_mkv_0_00_01_000000000)"
+
+# remove nested-clip2 and remove layer 0
+remove-clip, name=nested-clip2;
+stop;

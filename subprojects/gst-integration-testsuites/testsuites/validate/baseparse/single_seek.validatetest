@@ -1,0 +1,14 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    seek=true,
+    handles-states=true,
+    args = {
+         "file://$(media_dir)/defaults/matroska/numerated_frames_blue.mkv ! matroskademux ! h264parse name=parser ! fakesink",
+    },
+    configs = {
+       "$(validateflow), pad=parser:src, record-buffers=true, logged-event-types={ segment }",
+    }
+
+pause
+seek, rate=1.0, start=0.03333333333, flags="flush+accurate"
+stop

@@ -1,0 +1,51 @@
+meta, seek=true, handles-states=true, needs_preroll=true,
+    tool = "ges-launch-$(gst_api_version)",
+    args = {
+        --track-types, video,
+        --video-caps, "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1",
+        --videosink, "$(videosink) name=videosink",
+    },
+    configs = {
+        "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
+    }
+
+include, location="../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums.scenario"
+
+set-vars,\
+    nested_timeline_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline.xges",\
+    nested_timeline_depth2_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline_depth2.xges", \
+    project_uri="file://$(logsdir)/ges/scenarios/$(test_name)/project.xges"
+
+# Make sure the asset ID is the project_uri and serialize the empty timeline for each nested projects uris
+serialize-project, uri="$(project_uri)"
+serialize-project, uri="$(nested_timeline_uri)"
+serialize-project, uri="$(nested_timeline_depth2_uri)"
+
+add-clip, name=clip, project-uri="$(nested_timeline_uri)",
+    asset-id="file://$(test_dir)/../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv",
+    layer-priority=0, type=GESUriClip, duration=4.0
+
+add-clip, name=nested-clip1, project-uri="$(nested_timeline_depth2_uri)",
+    asset-id="$(nested_timeline_uri)",
+    layer-priority=0, type=GESUriClip
+
+add-clip, name=nested-timeline1,
+    asset-id="$(nested_timeline_depth2_uri)",
+    layer-priority=0, type=GESUriClip, inpoint=0, duration=2.0
+
+add-asset, id="$(nested_timeline_depth2_uri)", type="GESTimeline"
+serialize-project, uri="$(project_uri)"
+
+# We reload the project from nested projects
+load-project, uri="$(project_uri)"
+commit
+pause
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(timed_frames_video_only_1fps_mkv_0_00_00_000000000)"
+
+checkpoint, text="Paused pipeline, now editing nested timeline and committing."
+# Set inpoint to 1.0
+edit-container, project-uri="$(nested_timeline_depth2_uri)", container-name="nested-clip1", position=1.0, edit-mode="edit_trim", edge="start"
+edit-container, project-uri="$(nested_timeline_depth2_uri)", container-name="nested-clip1", position=0.0
+commit
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(timed_frames_video_only_1fps_mkv_0_00_01_000000000)"
+stop;

@@ -1,0 +1,14 @@
+meta,
+    handles-states=true,
+    args = {
+        "playbin3 uri=testbin://video video-sink=\"fakesink sync=true\" audio-sink=\"fakesink sync=true\"",
+    }
+
+pause
+set-properties, testsrcbin0::stream-types=video+audio
+wait, message-type=async-done  # New `async-done` message after the sink is added
+
+# Check that the new pad has been exposed
+check-properties, urisourcebin0.src_1::name=src_1
+
+stop

@@ -1,0 +1,49 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE;
+event caps: video/x-raw, framerate=(fraction)1/1, height=(int)720, width=(int)1080;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:04.000000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000
+buffer: pts=0:00:00.000000000, dur=0:00:01.000000000
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:03.000000000, offset=0:00:00.000000000, stop=0:00:04.000000000, flags=0x01, time=0:00:03.000000000, base=0:00:00.000000000
+buffer: pts=0:00:03.000000000, dur=0:00:01.000000000
+
+CHECKPOINT: Paused pipeline, now editing nested timeline and committing.
+
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event caps: video/x-raw, framerate=(fraction)30/1, height=(int)720, width=(int)1080;
+event segment: format=TIME, start=0:00:03.000000000, offset=0:00:00.000000000, stop=0:00:04.000000000, flags=0x01, time=0:00:03.000000000, base=0:00:00.000000000
+buffer: pts=0:00:03.000000000, dur=0:00:00.033333333
+buffer: pts=0:00:03.033333333, dur=0:00:00.033333334
+buffer: pts=0:00:03.066666667, dur=0:00:00.033333333
+buffer: pts=0:00:03.100000000, dur=0:00:00.033333333
+buffer: pts=0:00:03.133333333, dur=0:00:00.033333334
+buffer: pts=0:00:03.166666667, dur=0:00:00.033333333
+buffer: pts=0:00:03.200000000, dur=0:00:00.033333333
+buffer: pts=0:00:03.233333333, dur=0:00:00.033333334
+buffer: pts=0:00:03.266666667, dur=0:00:00.033333333
+buffer: pts=0:00:03.300000000, dur=0:00:00.033333333
+buffer: pts=0:00:03.333333333, dur=0:00:00.033333334
+buffer: pts=0:00:03.366666667, dur=0:00:00.033333333
+buffer: pts=0:00:03.400000000, dur=0:00:00.033333333
+buffer: pts=0:00:03.433333333, dur=0:00:00.033333334
+buffer: pts=0:00:03.466666667, dur=0:00:00.033333333
+buffer: pts=0:00:03.500000000, dur=0:00:00.033333333
+buffer: pts=0:00:03.533333333, dur=0:00:00.033333334
+buffer: pts=0:00:03.566666667, dur=0:00:00.033333333
+buffer: pts=0:00:03.600000000, dur=0:00:00.033333333
+buffer: pts=0:00:03.633333333, dur=0:00:00.033333334
+buffer: pts=0:00:03.666666667, dur=0:00:00.033333333
+buffer: pts=0:00:03.700000000, dur=0:00:00.033333333
+buffer: pts=0:00:03.733333333, dur=0:00:00.033333334
+buffer: pts=0:00:03.766666667, dur=0:00:00.033333333
+buffer: pts=0:00:03.800000000, dur=0:00:00.033333333
+buffer: pts=0:00:03.833333333, dur=0:00:00.033333334
+buffer: pts=0:00:03.866666667, dur=0:00:00.033333333
+buffer: pts=0:00:03.900000000, dur=0:00:00.033333333
+buffer: pts=0:00:03.933333333, dur=0:00:00.033333334
+buffer: pts=0:00:03.966666667, dur=0:00:00.033333333
+event caps: video/x-raw, framerate=(fraction)30/1, height=(int)720, width=(int)1080;
+event segment: format=TIME, start=0:00:04.000000000, offset=0:00:00.000000000, stop=0:00:04.000000001, flags=0x01, time=0:00:04.000000000, base=0:00:01.000000000
+buffer: pts=0:00:04.000000000, dur=0:00:00.000000001
+event eos: (no structure)

@@ -1,0 +1,42 @@
+set-globals, media_dir="$(test_dir)/../../medias/defaults"
+meta,
+    handles-states=true,
+    tool = "ges-launch-$(gst_api_version)",
+    args = {
+        --track-types, video,
+        --video-caps, "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1, chroma-site=(string)jpeg, colorimetry=(string)bt601",
+        --videosink, "$(videosink) name=videosink",
+    },
+    configs = {
+        "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
+    }
+
+include, location="../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv.frames_checksums.scenario"
+
+set-vars,
+    nested_timeline_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline.xges",
+    nested_timeline_depth2_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline_depth2.xges",
+    project_uri="file://$(logsdir)/ges/scenarios/$(test_name)/project.xges"
+
+# Make sure the asset ID is the project_uri
+serialize-project, uri="$(project_uri)"
+
+add-clip, name=clip, asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv", layer-priority=0, type=GESUriClip
+serialize-project, uri="$(nested_timeline_uri)"
+remove-clip, name=clip
+
+add-clip, name=nested-clip1, asset-id="$(nested_timeline_uri)", layer-priority=0, type=GESUriClip
+serialize-project, uri="$(nested_timeline_depth2_uri)"
+remove-clip, name=nested-clip1
+remove-asset, id="$(nested_timeline_uri)", type="GESTimelineElement"
+
+add-clip, name=nested-timeline1, asset-id="$(nested_timeline_depth2_uri)", layer-priority=0, type=GESUriClip, inpoint=0, duration=2.0
+add-clip, name=nested-timeline2, asset-id="$(nested_timeline_depth2_uri)", layer-priority=0, type=GESUriClip, inpoint=0, duration=2.0, start=2.0
+
+add-asset, id="$(nested_timeline_depth2_uri)", type="GESTimeline"
+serialize-project, uri="$(project_uri)"
+
+# We reload the project from nested projects
+load-project, uri="$(project_uri)"
+commit;
+play;

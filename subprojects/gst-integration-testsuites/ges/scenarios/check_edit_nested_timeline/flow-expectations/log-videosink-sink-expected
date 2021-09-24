@@ -1,0 +1,11 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE;
+event caps: video/x-raw, chroma-site=(string)jpeg, colorimetry=(string)1:4:0:0, format=(string)I420, framerate=(fraction)1/1, height=(int)720, width=(int)1080;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:02.000000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=none
+buffer: checksum=68cc0c0b6d6863a135f40297a54aec9f1593f34c, pts=0:00:00.000000000, dur=0:00:01.000000000
+
+CHECKPOINT: Paused pipeline, now editing nested timeline and committing.
+
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:02.000000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=none
+buffer: checksum=9b42849e45e15981115cff9da00ecbf7afafd462, pts=0:00:00.000000000, dur=0:00:01.000000000

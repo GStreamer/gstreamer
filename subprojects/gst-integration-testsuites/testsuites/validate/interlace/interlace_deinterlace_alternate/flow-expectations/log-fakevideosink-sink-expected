@@ -1,0 +1,28 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
+event caps: video/x-raw, format=(string)I420, framerate=(fraction)75/1, height=(int)240, interlace-mode=(string)progressive, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, width=(int)320;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+buffer: checksum=bf6625bbbe79889dff9c9b243d706889179e315e, pts=0:00:00.000000000, dur=0:00:00.013333333, flags=discont, meta=GstVideoMeta
+buffer: checksum=e2741266db11fcea33ce8308c228e786a707503a, pts=0:00:00.013333333, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=dda552d0148ab6b9fa03882d1c004c7ba48c06ba, pts=0:00:00.026666666, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=a41e461df0e314c4379ada03ae8c373970f6eea8, pts=0:00:00.039999999, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=dda552d0148ab6b9fa03882d1c004c7ba48c06ba, pts=0:00:00.053333333, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=b53b9b6ff87cc31c2ce5e969522706467e687933, pts=0:00:00.066666666, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=af90066527bfb48d624b08e5a8ff77442ff0f098, pts=0:00:00.080000000, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=59993a29b63cc7e531d2b81f91bd9c862afd7eca, pts=0:00:00.093333333, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=571a17336cfd3ff8ddccd487f721d1d48febc5f9, pts=0:00:00.106666666, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=59993a29b63cc7e531d2b81f91bd9c862afd7eca, pts=0:00:00.119999999, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=d64ca1f72c35d2084206ea0e4d696881e1c289bf, pts=0:00:00.133333333, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=aad185493bf14813eb472e1f6bf652dec8a26d24, pts=0:00:00.146666666, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=6fd5bd2ef2d71e44b7d40d477c9843e98472f4bb, pts=0:00:00.159999999, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=457dc545aa58bc91e827d04f30b98c56b980fcc2, pts=0:00:00.173333332, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=6fd5bd2ef2d71e44b7d40d477c9843e98472f4bb, pts=0:00:00.186666666, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=483df01d608957d6bb031c277ccec17e2d352d0b, pts=0:00:00.199999999, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=c5ec60667dd1aed6cca24cadec2bfa290dff0add, pts=0:00:00.213333333, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=0f53000fe373422fc2876a8f02aa7bd798c7f9e8, pts=0:00:00.226666666, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=848ce60433df2c16416fb86a6b1b63081dc487fa, pts=0:00:00.239999999, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=0f53000fe373422fc2876a8f02aa7bd798c7f9e8, pts=0:00:00.253333332, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=0136ef72906e4ad4a1578bf14c369d2fdca805d8, pts=0:00:00.266666666, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=968761a317ccf6a487dc7ecd66d215a44abd6403, pts=0:00:00.279999999, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=11798180fdbcb4a418329c41b5715f069339c157, pts=0:00:00.293333332, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=097a018f7db672057130e060b557ee6b1e8e6756, pts=0:00:00.306666665, dur=0:00:00.013333333, meta=GstVideoMeta
+event eos: (no structure)

@@ -1,0 +1,17 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    seek=false,
+    handles-states=false,
+    args = {
+         "appsrc ! qtdemux ! fakesink async=false",
+    },
+    configs = {
+       "$(validateflow), pad=fakesink0:sink, record-buffers=false",
+    }
+
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/car-20120827-85.mp4/init.mp4"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/car-20120827-85.mp4/media1.mp4"
+checkpoint, text="A moov with a different edit list is now pushed"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/car-20120827-86.mp4/init.mp4"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/car-20120827-86.mp4/media2.mp4"
+stop

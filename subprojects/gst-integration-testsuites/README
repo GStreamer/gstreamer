@@ -1,0 +1,22 @@
+This the official GStreamer integration testsuites implementation repository.
+Those testsuites are meant to be used with GstValidate available in the
+gst-devtools[0] repository
+
+This repository includes both media files (available in medias/)
+that will be retrieved from the web using medias/get_files.py and several
+testsuites (available in testsuites/) to be used with gst-validate-launcher[1].
+
+By default, gst-validate-launcher --sync will retrieve that repository to run
+the default testsuite (namely validate and ges testsuites from testsuites/validate.py
+and testsuites/ges.py)
+
+For any USAGE documentation, you should refer to gst-validate documentation and
+in particular to:
+
+    $ gst-validate-launcher --help
+
+Note that this repository uses [git-lfs] so you will need to install it before cloning.
+
+[0] http://cgit.freedesktop.org/gstreamer/gst-devtools/
+[1] https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-validate/html/gst-validate-launcher.html
+[git-lfs] https://git-lfs.github.com/

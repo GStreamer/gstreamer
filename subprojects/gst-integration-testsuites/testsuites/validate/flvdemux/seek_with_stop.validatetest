@@ -1,0 +1,9 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    configs = {
+        "change-issue-severity, issue-id=event::eos-has-wrong-seqnum, new-severity=critical",
+    },
+    args = {
+        "playbin uri=file://$(media_dir)/defaults/flv/819290236.flv",
+    },
+    scenario=seek_with_stop

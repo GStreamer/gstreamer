@@ -1,0 +1,9 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    args = {
+         "filesrc location=$(media_dir)/defaults/h265/alternate.h265 ! h265parse ! fakesink name=fakesink",
+    },
+    configs = {
+       "$(validateflow), pad=fakesink:sink, record-buffers=true",
+    }
+

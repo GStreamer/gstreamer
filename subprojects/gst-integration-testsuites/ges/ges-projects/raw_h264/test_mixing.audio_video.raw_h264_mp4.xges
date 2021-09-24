@@ -1,0 +1,29 @@
+<ges version='0.1'>
+  <project properties='properties;' metadatas='metadatas;'>
+    <encoding-profiles>
+    </encoding-profiles>
+    <ressources>
+      <asset id='file://$HOME/Videos/gst-qa-assets/medias//raw_h264.0.mp4' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)10031000000;' metadatas='metadatas;' />
+    </ressources>
+    <timeline properties='properties, auto-transition=(boolean)false, snapping-distance=(guint64)621283108;' metadatas='metadatas, duration=(guint64)1750000000;'>
+      <track caps='video/x-raw' track-type='4' track-id='0' properties='properties, async-handling=(boolean)false, message-forward=(boolean)false, caps=(string)video/x-raw, restriction-caps=(string)&quot;video/x-raw\,\ width\=\(int\)320\,\ height\=\(int\)240\,\ framerate\=\(fraction\)25/1&quot;;' metadatas='metadatas;'/>
+      <track caps='audio/x-raw' track-type='2' track-id='1' metadatas='metadatas;'/>
+      <layer priority='0' properties='properties, auto-transition=(boolean)false;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='0' asset-id='file://$HOME/Videos/gst-qa-assets/medias//raw_h264.0.mp4' type-name='GESUriClip' layer-priority='0' track-types='6' start='0' duration='1000000000' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+        </clip>
+      </layer>
+      <layer priority='1' properties='properties, auto-transition=(boolean)false;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='1' asset-id='file://$HOME/Videos/gst-qa-assets/medias//raw_h264.0.mp4' type-name='GESUriClip' layer-priority='1' track-types='6' start='250000000' duration='1000000000' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+        </clip>
+      </layer>
+      <layer priority='2' properties='properties, auto-transition=(boolean)false;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='2' asset-id='file://$HOME/Videos/gst-qa-assets/medias//raw_h264.0.mp4' type-name='GESUriClip' layer-priority='2' track-types='6' start='500000000' duration='1000000000' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+        </clip>
+      </layer>
+      <layer priority='3' properties='properties, auto-transition=(boolean)false;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='3' asset-id='file://$HOME/Videos/gst-qa-assets/medias//raw_h264.0.mp4' type-name='GESUriClip' layer-priority='3' track-types='6' start='750000000' duration='1000000000' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+        </clip>
+      </layer>
+    </timeline>
+</project>
+</ges>

@@ -1,0 +1,2 @@
+description, duration=15.0
+set-child-property, playback_time=1.0, element-name="effect1", property="left", value=(int)500

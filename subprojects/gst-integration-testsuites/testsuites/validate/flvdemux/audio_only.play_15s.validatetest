@@ -1,0 +1,7 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    args = {
+         "uridecodebin uri=file://$(media_dir)/defaults/flv/819290236.flv caps=audio/x-raw expose-all-streams=FALSE ! queue ! audioconvert ! audioresample ! $(audiosink)",
+    },
+    scenario=play_15s
+

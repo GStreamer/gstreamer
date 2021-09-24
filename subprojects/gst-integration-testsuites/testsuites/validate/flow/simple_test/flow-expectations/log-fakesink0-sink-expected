@@ -1,0 +1,7 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
+event caps: video/x-raw, height=(int)240, width=(int)320;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+buffer: pts=0:00:00.000000000, dur=0:00:00.033333333, flags=discont
+buffer: pts=0:00:00.033333333, dur=0:00:00.033333333
+buffer: pts=0:00:00.066666666, dur=0:00:00.033333334
+event eos: (no structure)

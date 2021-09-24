@@ -1,0 +1,24 @@
+set-globals, media_dir="$(test_dir)/../../medias/defaults"
+meta, handles-states=true,
+    tool = "ges-launch-$(gst_api_version)",
+    args = {
+        --track-types, video,
+        --video-caps, "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1",
+        --videosink, "$(videosink) name=videosink",
+    }
+
+set-vars,
+    frame0=68cc0c0b6d6863a135f40297a54aec9f1593f34c,
+    frame1=9b42849e45e15981115cff9da00ecbf7afafd462
+
+pause
+add-clip, name=clip, asset-id="file://$(media_dir)/matroska/timed_frames_video_only_1fps.mkv", layer-priority=0, type=GESUriClip
+commit
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame0)"
+
+edit-container, container-name=(string)clip, edit-mode=(string)edit_trim, position=(double)1.0, new-layer-priority=(int)-1, edge=(string)edge_start;
+edit-container, container-name=(string)clip, edit-mode=(string)edit_normal, position=(double)0.0, new-layer-priority=(int)-1, edge=(string)edge_none;
+commit
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame1)"
+
+stop;

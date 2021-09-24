@@ -1,0 +1,20 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
+event caps: video/x-raw, format=(string)I420, framerate=(fraction)75/1, height=(int)240, interlace-mode=(string)progressive, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, width=(int)320;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+buffer: checksum=96f54b85d2ba09c1f8d6863771304c191d8a0e83, dts=0:00:00.000000000, pts=0:00:00.000000000, dur=0:00:00.026666666, flags=discont
+buffer: checksum=06ea7c0dce328162fbd15515cd40f6ab9b2fedad, dts=0:00:00.026666666, pts=0:00:00.026666666, dur=0:00:00.026666666
+buffer: checksum=f23734e985c15eae60881e2923db35dec7232472, pts=0:00:00.053333333, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=9362c038f9c40ce7f8a19b54f9ab8c9a7d3654f4, pts=0:00:00.066666666, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=e6bc4469a4073adab5d5e6e6c1b6c37cd09b4536, pts=0:00:00.080000000, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=d637c6a33a787b792ddfc41c52414421668bb8a9, pts=0:00:00.093333333, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=a33753318af1113e98ab7d5fcbe4258f45efdb1a, dts=0:00:00.106666666, pts=0:00:00.106666666, dur=0:00:00.026666666
+buffer: checksum=cd5c2a365590667741b40136856de7bfb85513f1, dts=0:00:00.133333333, pts=0:00:00.133333333, dur=0:00:00.026666666
+buffer: checksum=f8910ba35cfb967bab88ba655105aa36eb2c6abb, dts=0:00:00.159999999, pts=0:00:00.159999999, dur=0:00:00.026666666
+buffer: checksum=09947d8d0ebffeb50b062ead5350747ea6c99f57, pts=0:00:00.186666666, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=89e827e74d326712569c1e8e04816a9b407108a0, pts=0:00:00.199999999, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=92568bc3fed4c52d907d77de8982c12b8f753c23, pts=0:00:00.213333333, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=55bae2416275a792f0725d0dee4658df580323ae, pts=0:00:00.226666666, dur=0:00:00.013333333, meta=GstVideoMeta
+buffer: checksum=e7b5464887bd0eb4634240c2f18dac37faf4e205, dts=0:00:00.239999999, pts=0:00:00.239999999, dur=0:00:00.026666666
+buffer: checksum=64595449f6eb0eb97a914eed0e1ac2d1b9749f92, dts=0:00:00.266666666, pts=0:00:00.266666666, dur=0:00:00.026666666
+buffer: checksum=ad0fc6b080a48402831e26c1bc0aa5d8d83ff21d, dts=0:00:00.293333332, pts=0:00:00.293333332, dur=0:00:00.026666666
+event eos: (no structure)

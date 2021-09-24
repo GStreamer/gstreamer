@@ -1,0 +1,20 @@
+<ges version='0.1'>
+  <project properties='properties;' metadatas='metadatas;'>
+    <encoding-profiles>
+    </encoding-profiles>
+    <ressources>
+      <asset id='file://$HOME/Videos/gst-qa-assets/medias//flac_jpeg.0.mkv' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)10031000000;' metadatas='metadatas;' />
+      <asset id='agingtv' extractable-type-name='GESEffect' properties='properties, track-type=(int)1;' metadatas='metadatas;' />
+    </ressources>
+    <timeline properties='properties, auto-transition=(boolean)false, snapping-distance=(guint64)621283108;' metadatas='metadatas, duration=(guint64)1000000000;'>
+      <track caps='video/x-raw' track-type='4' track-id='0' properties='properties, async-handling=(boolean)false, message-forward=(boolean)false, caps=(string)video/x-raw, restriction-caps=(string)&quot;video/x-raw\,\ width\=\(int\)320\,\ height\=\(int\)240\,\ framerate\=\(fraction\)25/1&quot;;' metadatas='metadatas;'/>
+      <track caps='audio/x-raw' track-type='2' track-id='1' metadatas='metadatas;'/>
+      <layer priority='0' properties='properties, auto-transition=(boolean)false;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='0' asset-id='file://$HOME/Videos/gst-qa-assets/medias//flac_jpeg.0.mkv' type-name='GESUriClip' layer-priority='0' track-types='6' start='0' duration='1000000000' inpoint='0' rate='0' properties='properties, mute=(boolean)false, is-image=(boolean)false;' >
+          <effect asset-id='agingtv' clip-id='0' type-name='GESEffect' track-type='4' track-id='0' properties='properties, priority=(uint)2, active=(boolean)true, track-type=(int)4;' metadatas='metadatas;' children-properties='properties, pits=(boolean)true, color-aging=(boolean)true, dusts=(boolean)true, qos=(boolean)true, scratch-lines=(uint)7;'>
+          </effect>
+        </clip>
+      </layer>
+    </timeline>
+</project>
+</ges>

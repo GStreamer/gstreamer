@@ -1,0 +1,53 @@
+set-globals, media_file="$(test_dir)/../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv"
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    handles-states=true,
+    seek=true,
+    needs_preroll=true,
+    args = {
+        --track-types, video,
+        --video-caps, "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1",
+        --videosink, "$(videosink) name=videosink",
+    }
+
+set-vars,\
+    frame0=68cc0c0b6d6863a135f40297a54aec9f1593f34c,\
+    frame1=9b42849e45e15981115cff9da00ecbf7afafd462, \
+    frame1_rotated=8a2966951d269e9aa4dccf38fe93fce8093d3847
+
+pause
+
+# Add a clip and check that the first frame is displayed
+add-clip, name=clip, asset-id="file://$(media_file)", layer-priority=0, type=GESUriClip, name=(string)theclip
+commit
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame0)"
+
+# Seek to 1sec and make sure the right frame is displayed
+seek, start=(double)1.0, flags=(string)accurate+flush;
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame1)"
+
+# Apply the videoflip effect and flip the clip 180 degrees
+container-add-child, container-name=(string)theclip, asset-id=(string)videoflip, child-type=(string)GESEffect;
+set-child-property, element-name=(string)effect0, property=(string)method, value=2;
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame1)"
+commit
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame1_rotated)"
+
+# Split the clip and check that rotation is still applied
+split-clip, clip-name=(string)theclip, position=(double)1.0;
+commit
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame1_rotated)"
+
+# Make sure that the second clip is being used by stopping rotation of the first clip and checking outputed frame
+set-child-property, element-name=(string)effect0, property=(string)method, value=0;
+commit
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame1_rotated)"
+
+seek, start=(double)0.0, flags=(string)accurate+flush;
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame0)"
+
+play;
+pause,playback_time=1.0
+check-last-sample, sinkpad-caps="video/x-raw", checksum="$(frame1_rotated)"
+
+stop;
