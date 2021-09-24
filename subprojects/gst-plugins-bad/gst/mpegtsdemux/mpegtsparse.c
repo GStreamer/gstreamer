@@ -423,9 +423,12 @@ push_event (MpegTSBase * base, GstEvent * event)
     prepare_src_pad (base, parse);
   }
   if (G_UNLIKELY (GST_EVENT_TYPE (event) == GST_EVENT_EOS)) {
+    gsize packet_size = base->packetizer->packet_size;
+
     parse->is_eos = TRUE;
 
-    if (parse->alignment > 0 && parse->ts_adapter.packets_in_adapter > 0
+    if (packet_size > 0 && parse->alignment > 0 &&
+        parse->ts_adapter.packets_in_adapter > 0
         && parse->ts_adapter.packets_in_adapter < parse->alignment) {
       GstBuffer *buf;
       GstMapInfo map;
@@ -433,15 +436,12 @@ push_event (MpegTSBase * base, GstEvent * event)
       gint missing_packets =
           parse->alignment - parse->ts_adapter.packets_in_adapter;
       gint i = missing_packets;
-      gsize packet_size = base->packetizer->packet_size;
 
       GST_DEBUG_OBJECT (parse, "Adding %d dummy packets", missing_packets);
 
       buf = gst_buffer_new_and_alloc (missing_packets * packet_size);
       gst_buffer_map (buf, &map, GST_MAP_READWRITE);
       data = map.data;
-
-      g_assert (packet_size > 0);
 
       for (; i > 0; i--) {
         gint offset;
