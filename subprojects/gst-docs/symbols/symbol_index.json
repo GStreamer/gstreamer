@@ -13295,7 +13295,7 @@
   "GstRTPHeaderExtensionClass::get_max_size",
   "GstRTPHeaderExtensionClass::get_supported_flags",
   "GstRTPHeaderExtensionClass::read",
-  "GstRTPHeaderExtensionClass::set_attributes_from_caps",
+  "GstRTPHeaderExtensionClass::set_attributes",
   "GstRTPHeaderExtensionClass::set_caps_from_attributes",
   "GstRTPHeaderExtensionClass::set_non_rtp_sink_caps",
   "GstRTPHeaderExtensionClass::update_non_rtp_src_caps",

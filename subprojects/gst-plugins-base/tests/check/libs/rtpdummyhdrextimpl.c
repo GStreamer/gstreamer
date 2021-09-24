@@ -83,8 +83,8 @@ static gboolean
 gst_rtp_dummy_hdr_ext_set_caps_from_attributes (GstRTPHeaderExtension * ext,
     GstCaps * caps);
 static gboolean
-gst_rtp_dummy_hdr_ext_set_attributes_from_caps (GstRTPHeaderExtension * ext,
-    const GstCaps * caps);
+gst_rtp_dummy_hdr_ext_set_attributes (GstRTPHeaderExtension * ext,
+    GstRTPHeaderExtensionDirection direction, const gchar * attributes);
 static gboolean
 gst_rtp_dummy_hdr_ext_update_non_rtp_src_caps (GstRTPHeaderExtension * ext,
     GstCaps * caps);
@@ -108,8 +108,8 @@ gst_rtp_dummy_hdr_ext_class_init (GstRTPDummyHdrExtClass * klass)
       gst_rtp_dummy_hdr_ext_get_max_size;
   gstrtpheaderextension_class->write = gst_rtp_dummy_hdr_ext_write;
   gstrtpheaderextension_class->read = gst_rtp_dummy_hdr_ext_read;
-  gstrtpheaderextension_class->set_attributes_from_caps =
-      gst_rtp_dummy_hdr_ext_set_attributes_from_caps;
+  gstrtpheaderextension_class->set_attributes =
+      gst_rtp_dummy_hdr_ext_set_attributes;
   gstrtpheaderextension_class->set_caps_from_attributes =
       gst_rtp_dummy_hdr_ext_set_caps_from_attributes;
   gstrtpheaderextension_class->update_non_rtp_src_caps =
@@ -211,57 +211,17 @@ gst_rtp_dummy_hdr_ext_set_caps_from_attributes (GstRTPHeaderExtension * ext,
 }
 
 static gboolean
-gst_rtp_dummy_hdr_ext_set_attributes_from_caps (GstRTPHeaderExtension * ext,
-    const GstCaps * caps)
+gst_rtp_dummy_hdr_ext_set_attributes (GstRTPHeaderExtension * ext,
+    GstRTPHeaderExtensionDirection direction, const gchar * attributes)
 {
   GstRTPDummyHdrExt *dummy = GST_RTP_DUMMY_HDR_EXT (ext);
-  gchar *field_name = gst_rtp_header_extension_get_sdp_caps_field_name (ext);
-  GstStructure *s = gst_caps_get_structure (caps, 0);
-  const gchar *ext_uri;
-  const GValue *arr;
-  gchar *new_attrs = NULL;
 
   dummy->set_attributes_count++;
 
-  if (!field_name)
-    return FALSE;
-
-  if ((ext_uri = gst_structure_get_string (s, field_name))) {
-    if (g_strcmp0 (ext_uri, gst_rtp_header_extension_get_uri (ext)) != 0) {
-      /* incompatible extension uri for this instance */
-      goto error;
-    }
-  } else if ((arr = gst_structure_get_value (s, field_name))
-      && GST_VALUE_HOLDS_ARRAY (arr)
-      && gst_value_array_get_size (arr) == 3) {
-    const GValue *val;
-
-    val = gst_value_array_get_value (arr, 1);
-    if (!G_VALUE_HOLDS_STRING (val))
-      goto error;
-    if (g_strcmp0 (g_value_get_string (val),
-            gst_rtp_header_extension_get_uri (ext)) != 0)
-      goto error;
-
-    val = gst_value_array_get_value (arr, 2);
-    if (!G_VALUE_HOLDS_STRING (val))
-      goto error;
-    new_attrs = g_value_dup_string (val);
-  } else {
-    /* unknown caps format */
-    goto error;
-  }
-
   g_free (dummy->attributes);
-  dummy->attributes = new_attrs;
+  dummy->attributes = g_strdup (attributes);
 
-  g_free (field_name);
   return TRUE;
-
-error:
-  g_free (field_name);
-  g_free (new_attrs);
-  return FALSE;
 }
 
 static gboolean

@@ -114,28 +114,16 @@ set_vad (GstRTPHeaderExtension * ext, gboolean vad)
 }
 
 static gboolean
-gst_rtp_header_extension_rfc6464_set_attributes_from_caps (GstRTPHeaderExtension
-    * ext, const GstCaps * caps)
+gst_rtp_header_extension_rfc6464_set_attributes (GstRTPHeaderExtension * ext,
+    GstRTPHeaderExtensionDirection direction, const gchar * attributes)
 {
-  gchar *field_name = gst_rtp_header_extension_get_sdp_caps_field_name (ext);
-  GstStructure *s = gst_caps_get_structure (caps, 0);
-  const GValue *arr;
-
-  arr = gst_structure_get_value (s, field_name);
-  g_free (field_name);
-
-  if (GST_VALUE_HOLDS_ARRAY (arr)) {
-    const GValue *val = gst_value_array_get_value (arr, 2);
-    const gchar *vad_attr = g_value_get_string (val);
-
-    if (g_str_equal (vad_attr, "vad=on"))
-      set_vad (ext, TRUE);
-    else if (g_str_equal (vad_attr, "vad=off"))
-      set_vad (ext, FALSE);
-    else {
-      GST_WARNING_OBJECT (ext, "Invalid attribute: %s", vad_attr);
-      return FALSE;
-    }
+  if (g_str_equal (attributes, "vad=on") || g_str_equal (attributes, "")) {
+    set_vad (ext, TRUE);
+  } else if (g_str_equal (attributes, "vad=off")) {
+    set_vad (ext, FALSE);
+  } else {
+    GST_WARNING_OBJECT (ext, "Invalid attribute: %s", attributes);
+    return FALSE;
   }
 
   return TRUE;
@@ -247,8 +235,8 @@ gst_rtp_header_extension_rfc6464_class_init (GstRTPHeaderExtensionRfc6464Class *
   rtp_hdr_class->get_supported_flags =
       gst_rtp_header_extension_rfc6464_get_supported_flags;
   rtp_hdr_class->get_max_size = gst_rtp_header_extension_rfc6464_get_max_size;
-  rtp_hdr_class->set_attributes_from_caps =
-      gst_rtp_header_extension_rfc6464_set_attributes_from_caps;
+  rtp_hdr_class->set_attributes =
+      gst_rtp_header_extension_rfc6464_set_attributes;
   rtp_hdr_class->set_caps_from_attributes =
       gst_rtp_header_extension_rfc6464_set_caps_from_attributes;
   rtp_hdr_class->write = gst_rtp_header_extension_rfc6464_write;

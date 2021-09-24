@@ -167,8 +167,8 @@ struct _GstRTPHeaderExtension
  *     extension needs for its function.
  * @update_non_rtp_src_caps: update depayloader non-RTP (depayloaded) caps with
  *     the information parsed from RTP header.
- * @set_attributes_from_caps: read the caps information to set the necessary
- *     attributes that may be signaled e.g. with an SDP.
+ * @set_attributes: set the necessary attributes that may be signaled e.g. with
+ *     an SDP.
  * @set_caps_from_attributes: write the necessary caps field/s for the configured
  *     attributes e.g. as signalled with SDP.
  *
@@ -202,8 +202,9 @@ struct _GstRTPHeaderExtensionClass
                                                      const GstCaps * caps);
   gboolean              (*update_non_rtp_src_caps)  (GstRTPHeaderExtension * ext,
                                                      GstCaps * caps);
-  gboolean              (*set_attributes_from_caps) (GstRTPHeaderExtension * ext,
-                                                     const GstCaps * caps);
+  gboolean              (*set_attributes)            (GstRTPHeaderExtension * ext,
+                                                      GstRTPHeaderExtensionDirection direction,
+                                                      const gchar * attributes);
   gboolean              (*set_caps_from_attributes) (GstRTPHeaderExtension * ext,
                                                      GstCaps * caps);
 

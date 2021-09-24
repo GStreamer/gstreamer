@@ -412,6 +412,10 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
   GstStructure *structure;
   gchar *field_name;
   const GValue *val;
+  GstRTPHeaderExtensionDirection direction =
+      GST_RTP_HEADER_EXTENSION_DIRECTION_DEFAULT;
+  const gchar *attributes = "";
+  gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
@@ -443,15 +447,15 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
       const gchar *dir = g_value_get_string (inner_val);
 
       if (!strcmp (dir, ""))
-        priv->direction = GST_RTP_HEADER_EXTENSION_DIRECTION_DEFAULT;
+        direction = GST_RTP_HEADER_EXTENSION_DIRECTION_DEFAULT;
       else if (!strcmp (dir, "sendrecv"))
-        priv->direction = GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV;
+        direction = GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV;
       else if (!strcmp (dir, "sendonly"))
-        priv->direction = GST_RTP_HEADER_EXTENSION_DIRECTION_SENDONLY;
+        direction = GST_RTP_HEADER_EXTENSION_DIRECTION_SENDONLY;
       else if (!strcmp (dir, "recvonly"))
-        priv->direction = GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY;
+        direction = GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY;
       else if (!strcmp (dir, "inactive"))
-        priv->direction = GST_RTP_HEADER_EXTENSION_DIRECTION_INACTIVE;
+        direction = GST_RTP_HEADER_EXTENSION_DIRECTION_INACTIVE;
       else
         goto error;
     } else {
@@ -468,15 +472,20 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
     inner_val = gst_value_array_get_value (val, 2);
     if (!G_VALUE_HOLDS_STRING (inner_val))
       goto error;
+
+    attributes = g_value_get_string (inner_val);
   } else {
     /* unknown caps format */
     goto error;
   }
 
-  if (klass->set_attributes_from_caps)
-    return klass->set_attributes_from_caps (ext, caps);
-  else
-    return TRUE;
+  if (klass->set_attributes)
+    ret = klass->set_attributes (ext, direction, attributes);
+
+  if (ret)
+    priv->direction = direction;
+
+  return ret;
 
 error:
   return FALSE;
