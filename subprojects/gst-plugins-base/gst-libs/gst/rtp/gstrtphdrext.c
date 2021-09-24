@@ -652,8 +652,8 @@ gst_rtp_header_extension_get_sdp_caps_field_name (GstRTPHeaderExtension * ext)
   return g_strdup_printf ("extmap-%u", priv->ext_id);
 }
 
-/*
- * gst_rtp_header_extension_set_caps_from_attributes_default
+/**
+ * gst_rtp_header_extension_set_caps_from_attributes_helper:
  * @ext: the #GstRTPHeaderExtension
  * @caps: #GstCaps to write fields into
  *
@@ -665,17 +665,20 @@ gst_rtp_header_extension_get_sdp_caps_field_name (GstRTPHeaderExtension * ext)
  * advertised in @caps.
  *
  * Returns: whether the @ext attributes could be set on @caps.
+ *
+ * Since: 1.20
  */
-static gboolean
-gst_rtp_header_extension_set_caps_from_attributes_default (GstRTPHeaderExtension
-    * ext, GstCaps * caps)
+gboolean
+gst_rtp_header_extension_set_caps_from_attributes_helper (GstRTPHeaderExtension
+    * ext, GstCaps * caps, const gchar * attributes)
 {
   GstRTPHeaderExtensionPrivate *priv =
       gst_rtp_header_extension_get_instance_private (ext);
   gchar *field_name = gst_rtp_header_extension_get_sdp_caps_field_name (ext);
   GstStructure *s = gst_caps_get_structure (caps, 0);
 
-  if (priv->direction & GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED) {
+  if (priv->direction & GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED &&
+      (attributes == NULL || attributes[0] == 0)) {
     gst_structure_set (s, field_name, G_TYPE_STRING,
         gst_rtp_header_extension_get_uri (ext), NULL);
   } else {
@@ -705,7 +708,7 @@ gst_rtp_header_extension_set_caps_from_attributes_default (GstRTPHeaderExtension
     gst_value_array_append_value (&arr, &val);
 
     /* attributes */
-    g_value_set_string (&val, "");
+    g_value_set_string (&val, attributes);
     gst_value_array_append_value (&arr, &val);
 
     gst_structure_set_value (s, field_name, &arr);
@@ -718,6 +721,14 @@ gst_rtp_header_extension_set_caps_from_attributes_default (GstRTPHeaderExtension
 
   g_free (field_name);
   return TRUE;
+}
+
+static gboolean
+gst_rtp_header_extension_set_caps_from_attributes_default (GstRTPHeaderExtension
+    * ext, GstCaps * caps)
+{
+  return gst_rtp_header_extension_set_caps_from_attributes_helper (ext, caps,
+      NULL);
 }
 
 static gboolean

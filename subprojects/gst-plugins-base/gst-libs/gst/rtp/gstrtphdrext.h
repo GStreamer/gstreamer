@@ -281,6 +281,11 @@ void	            gst_rtp_header_extension_set_direction (GstRTPHeaderExtension *
 GST_RTP_API
 GstRTPHeaderExtensionDirection	gst_rtp_header_extension_get_direction (GstRTPHeaderExtension * ext);
 
+GST_RTP_API
+gboolean    gst_rtp_header_extension_set_caps_from_attributes_helper (GstRTPHeaderExtension * ext,
+                                                                      GstCaps * caps,
+                                                                      const gchar * attributes);
+
 G_END_DECLS
 
 #endif /* __GST_RTPHDREXT_H__ */
