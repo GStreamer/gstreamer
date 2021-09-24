@@ -438,8 +438,7 @@ gst_bin_class_init (GstBinClass * klass)
    *
    * The messages are converted to an ELEMENT message with the bin as the
    * source. The structure of the message is named `GstBinForwarded` and contains
-   * a field named `message` of type %GST_TYPE_MESSAGE that contains the original
-   * forwarded message.
+   * a field named `message` that contains the original forwarded #GstMessage.
    */
   g_object_class_install_property (gobject_class, PROP_MESSAGE_FORWARD,
       g_param_spec_boolean ("message-forward", "Message Forward",
