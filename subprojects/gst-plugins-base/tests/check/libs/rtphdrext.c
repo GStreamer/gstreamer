@@ -95,7 +95,8 @@ GST_START_TEST (rtp_header_ext_caps_with_attributes)
 
   gst_rtp_header_extension_set_id (dummy, 1);
 
-  GST_RTP_DUMMY_HDR_EXT (dummy)->direction = g_strdup (direction);
+  gst_rtp_header_extension_set_direction (dummy,
+      GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY);
   GST_RTP_DUMMY_HDR_EXT (dummy)->attributes = g_strdup (attributes);
 
   fail_unless (gst_rtp_header_extension_set_caps_from_attributes (dummy, caps));
@@ -111,8 +112,9 @@ GST_START_TEST (rtp_header_ext_caps_with_attributes)
   val = gst_value_array_get_value (arr, 2);
   fail_unless_equals_int (g_strcmp0 (g_value_get_string (val), attributes), 0);
 
-  g_free (GST_RTP_DUMMY_HDR_EXT (dummy)->direction);
-  GST_RTP_DUMMY_HDR_EXT (dummy)->direction = NULL;
+  gst_rtp_header_extension_set_direction (dummy,
+      GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV |
+      GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED);
   g_free (GST_RTP_DUMMY_HDR_EXT (dummy)->attributes);
   GST_RTP_DUMMY_HDR_EXT (dummy)->attributes = NULL;
 
@@ -120,8 +122,8 @@ GST_START_TEST (rtp_header_ext_caps_with_attributes)
 
   fail_unless_equals_int (g_strcmp0 (GST_RTP_DUMMY_HDR_EXT (dummy)->attributes,
           attributes), 0);
-  fail_unless_equals_int (g_strcmp0 (GST_RTP_DUMMY_HDR_EXT (dummy)->direction,
-          direction), 0);
+  fail_unless_equals_int (gst_rtp_header_extension_get_direction (dummy),
+      GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY);
 
   gst_caps_unref (caps);
   gst_object_unref (dummy);

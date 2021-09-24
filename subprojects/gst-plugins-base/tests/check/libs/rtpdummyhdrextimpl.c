@@ -56,7 +56,6 @@ struct _GstRTPDummyHdrExt
   guint set_attributes_count;
   guint caps_field_value;
 
-  gchar *direction;
   gchar *attributes;
 };
 
@@ -139,8 +138,6 @@ gst_rtp_dummy_hdr_ext_finalize (GObject * object)
 
   g_free (dummy->attributes);
   dummy->attributes = NULL;
-  g_free (dummy->direction);
-  dummy->direction = NULL;
 
   G_OBJECT_CLASS (gst_rtp_dummy_hdr_ext_parent_class)->finalize (object);
 }
@@ -208,42 +205,9 @@ gst_rtp_dummy_hdr_ext_set_caps_from_attributes (GstRTPHeaderExtension * ext,
     GstCaps * caps)
 {
   GstRTPDummyHdrExt *dummy = GST_RTP_DUMMY_HDR_EXT (ext);
-  gchar *field_name = gst_rtp_header_extension_get_sdp_caps_field_name (ext);
-  GstStructure *s = gst_caps_get_structure (caps, 0);
 
-  if (!field_name)
-    return FALSE;
-
-  if (dummy->attributes || dummy->direction) {
-    GValue arr = G_VALUE_INIT;
-    GValue val = G_VALUE_INIT;
-
-    g_value_init (&arr, GST_TYPE_ARRAY);
-    g_value_init (&val, G_TYPE_STRING);
-
-    /* direction */
-    g_value_set_string (&val, dummy->direction);
-    gst_value_array_append_value (&arr, &val);
-
-    /* uri */
-    g_value_set_string (&val, gst_rtp_header_extension_get_uri (ext));
-    gst_value_array_append_value (&arr, &val);
-
-    /* attributes */
-    g_value_set_string (&val, dummy->attributes);
-    gst_value_array_append_value (&arr, &val);
-
-    gst_structure_set_value (s, field_name, &arr);
-
-    g_value_unset (&val);
-    g_value_unset (&arr);
-  } else {
-    gst_structure_set (s, field_name, G_TYPE_STRING,
-        gst_rtp_header_extension_get_uri (ext), NULL);
-  }
-
-  g_free (field_name);
-  return TRUE;
+  return gst_rtp_header_extension_set_caps_from_attributes_helper (ext, caps,
+      dummy->attributes);
 }
 
 static gboolean
@@ -253,9 +217,9 @@ gst_rtp_dummy_hdr_ext_set_attributes_from_caps (GstRTPHeaderExtension * ext,
   GstRTPDummyHdrExt *dummy = GST_RTP_DUMMY_HDR_EXT (ext);
   gchar *field_name = gst_rtp_header_extension_get_sdp_caps_field_name (ext);
   GstStructure *s = gst_caps_get_structure (caps, 0);
-  gchar *new_attrs = NULL, *new_direction = NULL;
   const gchar *ext_uri;
   const GValue *arr;
+  gchar *new_attrs = NULL;
 
   dummy->set_attributes_count++;
 
@@ -279,11 +243,6 @@ gst_rtp_dummy_hdr_ext_set_attributes_from_caps (GstRTPHeaderExtension * ext,
             gst_rtp_header_extension_get_uri (ext)) != 0)
       goto error;
 
-    val = gst_value_array_get_value (arr, 0);
-    if (!G_VALUE_HOLDS_STRING (val))
-      goto error;
-    new_direction = g_value_dup_string (val);
-
     val = gst_value_array_get_value (arr, 2);
     if (!G_VALUE_HOLDS_STRING (val))
       goto error;
@@ -295,15 +254,12 @@ gst_rtp_dummy_hdr_ext_set_attributes_from_caps (GstRTPHeaderExtension * ext,
 
   g_free (dummy->attributes);
   dummy->attributes = new_attrs;
-  g_free (dummy->direction);
-  dummy->direction = new_direction;
 
   g_free (field_name);
   return TRUE;
 
 error:
   g_free (field_name);
-  g_free (new_direction);
   g_free (new_attrs);
   return FALSE;
 }
