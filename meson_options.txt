@@ -1,0 +1,44 @@
+# Subproject options
+option('python', type : 'feature', value : 'auto')
+option('libav', type : 'feature', value : 'auto')
+option('libnice', type : 'feature', value : 'auto')
+option('base', type : 'feature', value : 'enabled')
+option('good', type : 'feature', value : 'enabled')
+option('ugly', type : 'feature', value : 'auto')
+option('bad', type : 'feature', value : 'auto')
+option('devtools', type : 'feature', value : 'auto')
+option('ges', type : 'feature', value : 'auto')
+option('rtsp_server', type : 'feature', value : 'auto')
+option('omx', type : 'feature', value : 'disabled')
+option('vaapi', type : 'feature', value : 'disabled')
+option('sharp', type : 'feature', value : 'disabled')
+option('rs', type : 'feature', value : 'disabled')
+option('gst-examples', type : 'feature', value : 'auto', description : 'Build gst-examples')
+option('tls', type : 'feature', value : 'auto', description : 'TLS support using glib-networking')
+option('qt5', type : 'feature', value : 'auto', description : 'Qt5 Support')
+
+# Other options
+option('custom_subprojects', type : 'string', value : '', description : 'Comma-separated project names')
+option('gst-full-libraries', type : 'array', value : [],
+  description : '''List of libraries to expose in gstreamer-full's ABI. gstreamer, glib and gobject are always included.''')
+option('gst-full-version-script', type : 'string', value: 'gstreamer-full-default.map',
+  description : 'path of the version script to be used by the linker, see https://www.gnu.org/software/gnulib/manual/html_node/LD-Version-Scripts.html')
+option('gst-full-plugins', type : 'string', value : '*',
+  description : '''List of plugins to expose in gstreamer-full's ABI with the syntax plugin1;plugin2. By default '*' will export all plugins enabled by the build process.''')
+option('gst-full-elements', type : 'string', value : '',
+  description : '''List of elements to expose in gstreamer-full's ABI with the syntax plugin1;plugin2:element1,element2. By default '' will export all element of the enabled plugin.''')
+option('gst-full-typefind-functions', type : 'string', value : '',
+  description : '''List of typefind functions to expose in gstreamer-full's ABI with the syntax plugin:func1,func2. By default '' will export all typefind functions of the enabled plugin.''')
+option('gst-full-device-providers', type : 'string', value : '',
+  description : '''List of device providers to expose in gstreamer-full's ABI with the syntax plugin1:dp1;plugin2:dp1:dp2. By default '' will export all device provider of the enabled plugin.''')
+option('gst-full-dynamic-types', type : 'string', value : '',
+  description : '''List of dynamic types to expose in gstreamer-full's ABI with the syntax plugin:dt1,dt2. By default '' will export all device provider of the enabled plugin.''')
+
+# Common options, automatically inherited by subprojects
+option('tests', type : 'feature', value : 'auto', description : 'Build tests')
+option('examples', type : 'feature', value : 'auto', description : 'Build examples')
+option('introspection', type : 'feature', value : 'auto', description : 'Generate introspection data')
+option('nls', type : 'feature', value : 'auto', description : 'Enable native language support (translations)')
+option('orc', type : 'feature', value : 'auto', description : 'Enable Optimized Inner Loop Runtime Compiler')
+option('doc', type : 'feature', value : 'auto', description : 'Generate API documentation with hotdoc')
+option('gtk_doc', type : 'feature', value : 'disabled', description : 'Generate API documentation with gtk-doc')

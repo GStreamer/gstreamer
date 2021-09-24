@@ -1,0 +1,5 @@
+[wrap-git]
+directory=gst-rtsp-server
+url=https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server.git
+push-url=git@gitlab.freedesktop.org:gstreamer/gst-rtsp-server.git
+revision=master

@@ -1,0 +1,10 @@
+*.sw[op]
+*~
+/custom_build_rules/
+/data/
+/FlexLexer.h
+/README.md
+/changelog.md
+/UNISTD_ERROR.readme
+*.exe
+*.zip

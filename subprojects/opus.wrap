@@ -1,0 +1,7 @@
+[wrap-git]
+directory=opus
+url=https://gitlab.xiph.org/xiph/opus.git
+revision=master
+
+[provide]
+opus=opus_dep

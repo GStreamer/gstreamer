@@ -1,0 +1,5 @@
+[wrap-git]
+directory=gstreamer-vaapi
+url=https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi.git
+push-url=git@gitlab.freedesktop.org:gstreamer/gstreamer-vaapi.git
+revision=master

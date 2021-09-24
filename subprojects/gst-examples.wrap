@@ -1,0 +1,5 @@
+[wrap-git]
+directory=gst-examples
+url=https://gitlab.freedesktop.org/gstreamer/gst-examples.git
+push-url=git@gitlab.freedesktop.org:gstreamer/gst-examples.git
+revision=master

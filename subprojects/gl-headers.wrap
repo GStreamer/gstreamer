@@ -1,0 +1,5 @@
+[wrap-git]
+directory=gl-headers
+url=https://gitlab.freedesktop.org/gstreamer/meson-ports/gl-headers.git
+push-url=git@gitlab.freedesktop.org:gstreamer/meson-ports/gl-headers.git
+revision=5c8c7c0d3ca1f0b783272dac0b95e09414e49bc8

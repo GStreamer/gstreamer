@@ -1,0 +1,5 @@
+[wrap-git]
+directory=dav1d
+url=https://code.videolan.org/videolan/dav1d.git
+push-url=git@code.videolan.org:videolan/dav1d.git
+revision=0.6.0

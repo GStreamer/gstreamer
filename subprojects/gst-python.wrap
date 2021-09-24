@@ -1,0 +1,5 @@
+[wrap-git]
+directory=gst-python
+url=https://gitlab.freedesktop.org/gstreamer/gst-python.git
+push-url=git@gitlab.freedesktop.org:gstreamer/gst-python.git
+revision=master

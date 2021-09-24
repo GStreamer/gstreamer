@@ -1,0 +1,9 @@
+[wrap-file]
+directory = libxml2-2.9.7
+
+source_url = http://xmlsoft.org/sources/libxml2-2.9.7.tar.gz
+source_filename = libxml2-2.9.7.tar.gz
+source_hash = f63c5e7d30362ed28b38bfa1ac6313f9a80230720b7fb6c80575eeab3ff5900c
+patch_url = https://github.com/mesonbuild/libxml2/releases/download/2.9.7-6/libxml2.zip
+patch_filename = libxml2.zip
+patch_hash = 4f56174fef39fdcc83f235e7021f18ec638403ab3ee2c314fb2509a8bf599b27
