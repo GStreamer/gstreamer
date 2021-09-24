@@ -1,0 +1,2018 @@
+{
+    "vaapi": {
+        "description": "VA-API based elements",
+        "elements": {
+            "vaapidecodebin": {
+                "author": "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Victor Jaquez <victorx.jaquez@intel.com>",
+                "description": "A VA-API based bin with a decoder and a postprocessor",
+                "hierarchy": [
+                    "GstVaapiDecodeBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "long-name": "VA-API Decode Bin",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/mpeg:\n    mpegversion: 2\n   systemstream: false\nvideo/mpeg:\n    mpegversion: 4\nvideo/x-divx:\nvideo/x-xvid:\nvideo/x-h263:\nvideo/x-h264:\nvideo/x-h265:\nvideo/x-wmv:\nvideo/x-vp8:\nvideo/x-vp9:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { AYUV64, ARGB64, GBRA_12LE, GBRA_12BE, Y412_LE, Y412_BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, RGB10A2_LE, BGR10A2_LE, Y410, GBRA, ABGR, VUYA, BGRA, AYUV, ARGB, RGBA, A420, Y444_16LE, Y444_16BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, r210, I422_10LE, I422_10BE, NV16_10LE32, Y210, v210, UYVP, I420_10LE, I420_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, P010_10BE, Y444, GBR, NV24, xBGR, BGRx, xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, YV12, NV21, NV12, NV12_64Z32, Y41B, IYU1, YVU9, YUV9, RGB16, BGR16, RGB15, BGR15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "deinterlace-method": {
+                        "blurb": "Deinterlace method to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiDeinterlaceMethod",
+                        "writable": true
+                    },
+                    "disable-vpp": {
+                        "blurb": "Disable Video Post Processing (No support for run time disabling)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "max-size-buffers": {
+                        "blurb": "Max. number of buffers in the queue (0=disable)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-size-bytes": {
+                        "blurb": "Max. amount of data in the queue (bytes, 0=disable)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-size-time": {
+                        "blurb": "Max. amount of data in the queue (in ns, 0=disable)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    }
+                },
+                "rank": "primary + 2"
+            },
+            "vaapih264dec": {
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
+                "description": "A VA-API based H264 video decoder",
+                "hierarchy": [
+                    "GstVaapiDecode_h264",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "long-name": "VA-API H264 decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-h264:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "base-only": {
+                        "blurb": "Drop any NAL unit not defined in Annex.A",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "low-latency": {
+                        "blurb": "When enabled, frames will be pushed as soon as they are available. It might violate the H.264 spec.",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "vaapih264enc": {
+                "author": "Wind Yuan <feng.yuan@intel.com>",
+                "description": "A VA-API based H264 video encoder",
+                "hierarchy": [
+                    "GstVaapiEncodeH264",
+                    "GstVaapiEncode",
+                    "GstVideoEncoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstPreset"
+                ],
+                "klass": "Codec/Encoder/Video/Hardware",
+                "long-name": "VA-API H264 encoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw:\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:VASurface):\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-h264:\n  stream-format: { (string)avc, (string)byte-stream }\n      alignment: au\n        profile: { (string)constrained-baseline, (string)baseline, (string)main, (string)high, (string)multiview-high, (string)stereo-high }\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "bitrate": {
+                        "blurb": "The desired bitrate expressed in kbps (0: auto-calculate)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2048000",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "cabac": {
+                        "blurb": "Enable CABAC entropy coding mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "compliance-mode": {
+                        "blurb": "Tune Encode quality/performance by relaxing specification compliance restrictions",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "strict (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiEncoderH264ComplianceMode",
+                        "writable": true
+                    },
+                    "cpb-length": {
+                        "blurb": "Length of the CPB buffer in milliseconds",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1500",
+                        "max": "10000",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "dct8x8": {
+                        "blurb": "Enable adaptive use of 8x8 transforms in I-frames",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "default-roi-delta-qp": {
+                        "blurb": "The default delta-qp to apply to each Region of Interest(lower value means higher-quality, higher value means lower-quality)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-10",
+                        "max": "10",
+                        "min": "-10",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "init-qp": {
+                        "blurb": "Initial quantizer value",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "26",
+                        "max": "51",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "keyframe-period": {
+                        "blurb": "Maximal distance between two keyframes (0: auto-calculate)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "30",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-bframes": {
+                        "blurb": "Number of B-frames between I and P",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "10",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-qp": {
+                        "blurb": "Maximum quantizer value",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "51",
+                        "max": "51",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "mbbrc": {
+                        "blurb": "Macroblock level Bitrate Control",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "auto (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiEncoderMbbrc",
+                        "writable": true
+                    },
+                    "min-qp": {
+                        "blurb": "Minimum quantizer value",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "51",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "num-slices": {
+                        "blurb": "Number of slices per frame",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "200",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "num-views": {
+                        "blurb": "Number of Views for MVC encoding",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "10",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "prediction-type": {
+                        "blurb": "Reference Picture Selection Modes",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "default (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiEncoderH264PredictionType",
+                        "writable": true
+                    },
+                    "qp-ib": {
+                        "blurb": "Difference of QP between I and B frame (available only on CQP)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "51",
+                        "min": "-51",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "qp-ip": {
+                        "blurb": "Difference of QP between I and P frame (available only on CQP)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "51",
+                        "min": "-51",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "quality-factor": {
+                        "blurb": "quality factor for ICQ/QVBR bitrate control mode(low value means higher-quality, higher value means lower-quality)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "26",
+                        "max": "51",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "quality-level": {
+                        "blurb": "Encoding Quality Level (lower value means higher-quality/slow-encode,  higher value means lower-quality/fast-encode)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "4",
+                        "max": "7",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "rate-control": {
+                        "blurb": "Rate control mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "cqp (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiRateControlH264",
+                        "writable": true
+                    },
+                    "refs": {
+                        "blurb": "Number of reference frames",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "8",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "target-percentage": {
+                        "blurb": "The desired target percentage of bitrate for variable rate controls.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "70",
+                        "max": "100",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "temporal-levels": {
+                        "blurb": "Number of temporal levels in the encoded stream ",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "4",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "trellis": {
+                        "blurb": "The Trellis Quantization Method of Encoder",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "tune": {
+                        "blurb": "Encoder tuning option",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiEncoderTuneH264",
+                        "writable": true
+                    },
+                    "view-ids": {
+                        "blurb": "Set of View Ids used for MVC encoding",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstValueArray",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "vaapih265dec": {
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
+                "description": "A VA-API based H265 video decoder",
+                "hierarchy": [
+                    "GstVaapiDecode_h265",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "long-name": "VA-API H265 decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-h265:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {},
+                "rank": "primary"
+            },
+            "vaapih265enc": {
+                "author": "Sreerenj Balachandran <sreerenj.balachandran@intel.com>",
+                "description": "A VA-API based H265 video encoder",
+                "hierarchy": [
+                    "GstVaapiEncodeH265",
+                    "GstVaapiEncode",
+                    "GstVideoEncoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstPreset"
+                ],
+                "klass": "Codec/Encoder/Video/Hardware",
+                "long-name": "VA-API H265 encoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw:\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:VASurface):\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-h265:\n  stream-format: { (string)hvc1, (string)byte-stream }\n      alignment: au\n        profile: { (string)main, (string)main-10, (string)main-444, (string)main-444-10 }\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "bitrate": {
+                        "blurb": "The desired bitrate expressed in kbps (0: auto-calculate)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2048000",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "cpb-length": {
+                        "blurb": "Length of the CPB buffer in milliseconds",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1500",
+                        "max": "10000",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "default-roi-delta-qp": {
+                        "blurb": "The default delta-qp to apply to each Region of Interest(lower value means higher-quality, higher value means lower-quality)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-10",
+                        "max": "10",
+                        "min": "-10",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "init-qp": {
+                        "blurb": "Initial quantizer value",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "26",
+                        "max": "51",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "keyframe-period": {
+                        "blurb": "Maximal distance between two keyframes (0: auto-calculate)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "30",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "low-delay-b": {
+                        "blurb": "Transforms P frames into predictive B frames. Enable it when P frames are not supported.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "max-bframes": {
+                        "blurb": "Number of B-frames between I and P",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "10",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-qp": {
+                        "blurb": "Maximum quantizer value",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "51",
+                        "max": "51",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "mbbrc": {
+                        "blurb": "Macroblock level Bitrate Control",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "auto (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiEncoderMbbrc",
+                        "writable": true
+                    },
+                    "min-qp": {
+                        "blurb": "Minimum quantizer value",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "51",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "num-slices": {
+                        "blurb": "Number of slices per frame",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "200",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "num-tile-cols": {
+                        "blurb": "the number of columns for tile encoding",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "20",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "num-tile-rows": {
+                        "blurb": "the number of rows for tile encoding",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "22",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "qp-ib": {
+                        "blurb": "Difference of QP between I and B frame (available only on CQP)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "51",
+                        "min": "-51",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "qp-ip": {
+                        "blurb": "Difference of QP between I and P frame (available only on CQP)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "51",
+                        "min": "-51",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "quality-factor": {
+                        "blurb": "quality factor for ICQ/QBVR bitrate control mode (lower value means higher quality, higher value means lower quality)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "26",
+                        "max": "51",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "quality-level": {
+                        "blurb": "Encoding Quality Level (lower value means higher-quality/slow-encode,  higher value means lower-quality/fast-encode)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "4",
+                        "max": "7",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "rate-control": {
+                        "blurb": "Rate control mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "cqp (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiRateControlH265",
+                        "writable": true
+                    },
+                    "refs": {
+                        "blurb": "Number of reference frames",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "3",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "target-percentage": {
+                        "blurb": "The desired target percentage of bitrate for variable rate controls.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "70",
+                        "max": "100",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "trellis": {
+                        "blurb": "The Trellis Quantization Method of Encoder",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "tune": {
+                        "blurb": "Encoder tuning option",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiEncoderTuneH265",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "vaapijpegdec": {
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
+                "description": "A VA-API based JPEG video decoder",
+                "hierarchy": [
+                    "GstVaapiDecode_jpeg",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "long-name": "VA-API JPEG decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "image/jpeg:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {},
+                "rank": "marginal"
+            },
+            "vaapimpeg2dec": {
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
+                "description": "A VA-API based MPEG2 video decoder",
+                "hierarchy": [
+                    "GstVaapiDecode_mpeg2",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "long-name": "VA-API MPEG2 decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/mpeg:\n    mpegversion: 2\n   systemstream: false\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {},
+                "rank": "primary"
+            },
+            "vaapimpeg2enc": {
+                "author": "Guangxin Xu <guangxin.xu@intel.com>",
+                "description": "A VA-API based MPEG-2 video encoder",
+                "hierarchy": [
+                    "GstVaapiEncodeMpeg2",
+                    "GstVaapiEncode",
+                    "GstVideoEncoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstPreset"
+                ],
+                "klass": "Codec/Encoder/Video/Hardware",
+                "long-name": "VA-API MPEG-2 encoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw:\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:VASurface):\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/mpeg:\n    mpegversion: 2\n   systemstream: false\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "bitrate": {
+                        "blurb": "The desired bitrate expressed in kbps (0: auto-calculate)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2048000",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "default-roi-delta-qp": {
+                        "blurb": "The default delta-qp to apply to each Region of Interest(lower value means higher-quality, higher value means lower-quality)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-10",
+                        "max": "10",
+                        "min": "-10",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "keyframe-period": {
+                        "blurb": "Maximal distance between two keyframes (0: auto-calculate)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "30",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-bframes": {
+                        "blurb": "Number of B-frames between I and P",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "16",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "min-force-key-unit-interval": {
+                        "blurb": "Minimum interval between force-keyunit requests in nanoseconds",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Handle Quality-of-Service events from downstream",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "quality-level": {
+                        "blurb": "Encoding Quality Level (lower value means higher-quality/slow-encode,  higher value means lower-quality/fast-encode)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "4",
+                        "max": "7",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "quantizer": {
+                        "blurb": "Constant quantizer (if rate-control mode is CQP)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "8",
+                        "max": "62",
+                        "min": "2",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "rate-control": {
+                        "blurb": "Rate control mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "cqp (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiRateControlMPEG2",
+                        "writable": true
+                    },
+                    "target-percentage": {
+                        "blurb": "The desired target percentage of bitrate for variable rate controls.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "70",
+                        "max": "100",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "trellis": {
+                        "blurb": "The Trellis Quantization Method of Encoder",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "tune": {
+                        "blurb": "Encoder tuning option",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiEncoderTuneMPEG2",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "vaapipostproc": {
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>",
+                "description": "A VA-API video postprocessing filter",
+                "hierarchy": [
+                    "GstVaapiPostproc",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstColorBalance"
+                ],
+                "klass": "Filter/Converter/Effect/Video/Scaler/Deinterlace/Hardware",
+                "long-name": "VA-API video postprocessing",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "brightness": {
+                        "blurb": "The color brightness value",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "1",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "contrast": {
+                        "blurb": "The color contrast value",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "2",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "crop-bottom": {
+                        "blurb": "Pixels to crop at bottom",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "crop-left": {
+                        "blurb": "Pixels to crop at left",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "crop-right": {
+                        "blurb": "Pixels to crop at right",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "crop-top": {
+                        "blurb": "Pixels to crop at top",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "deinterlace-method": {
+                        "blurb": "Deinterlace method to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "bob (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiDeinterlaceMethod",
+                        "writable": true
+                    },
+                    "deinterlace-mode": {
+                        "blurb": "Deinterlace mode to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "auto (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiDeinterlaceMode",
+                        "writable": true
+                    },
+                    "denoise": {
+                        "blurb": "The level of denoising to apply",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "force-aspect-ratio": {
+                        "blurb": "When enabled, scaling will respect original aspect ratio",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "format": {
+                        "blurb": "The forced output pixel format",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "encoded (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVideoFormat",
+                        "writable": true
+                    },
+                    "hdr-tone-map": {
+                        "blurb": "Apply HDR tone mapping algorithm",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "auto (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiHDRToneMap",
+                        "writable": true
+                    },
+                    "height": {
+                        "blurb": "Forced output height",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "hue": {
+                        "blurb": "The color hue value",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "180",
+                        "min": "-180",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "saturation": {
+                        "blurb": "The color saturation value",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "2",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "scale-method": {
+                        "blurb": "Scaling method to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "default (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiScaleMethod",
+                        "writable": true
+                    },
+                    "sharpen": {
+                        "blurb": "The level of sharpening/blurring to apply",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "1",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "skin-tone-enhancement": {
+                        "blurb": "Apply the skin tone enhancement algorithm",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "skin-tone-enhancement-level": {
+                        "blurb": "Apply the skin tone enhancement algorithm with specified level",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "3",
+                        "max": "9",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "video-direction": {
+                        "blurb": "Video direction: rotation and flipping",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "identity (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVideoOrientationMethod",
+                        "writable": true
+                    },
+                    "width": {
+                        "blurb": "Forced output width",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "vaapisink": {
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>",
+                "description": "A VA-API based videosink",
+                "hierarchy": [
+                    "GstVaapiSink",
+                    "GstVideoSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstVideoOverlay",
+                    "GstColorBalance",
+                    "GstNavigation"
+                ],
+                "klass": "Sink/Video",
+                "long-name": "VA-API sink",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:VASurface, meta:GstVideoOverlayComposition):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoOverlayComposition):\n         format: { AYUV64, ARGB64, GBRA_12LE, GBRA_12BE, Y412_LE, Y412_BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, RGB10A2_LE, BGR10A2_LE, Y410, GBRA, ABGR, VUYA, BGRA, AYUV, ARGB, RGBA, A420, Y444_16LE, Y444_16BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, r210, I422_10LE, I422_10BE, NV16_10LE32, Y210, v210, UYVP, I420_10LE, I420_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, P010_10BE, Y444, GBR, NV24, xBGR, BGRx, xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, YV12, NV21, NV12, NV12_64Z32, Y41B, IYU1, YVU9, YUV9, RGB16, BGR16, RGB15, BGR15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { AYUV64, ARGB64, GBRA_12LE, GBRA_12BE, Y412_LE, Y412_BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, RGB10A2_LE, BGR10A2_LE, Y410, GBRA, ABGR, VUYA, BGRA, AYUV, ARGB, RGBA, A420, Y444_16LE, Y444_16BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, r210, I422_10LE, I422_10BE, NV16_10LE32, Y210, v210, UYVP, I420_10LE, I420_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, P010_10BE, Y444, GBR, NV24, xBGR, BGRx, xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, YV12, NV21, NV12, NV12_64Z32, Y41B, IYU1, YVU9, YUV9, RGB16, BGR16, RGB15, BGR15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "brightness": {
+                        "blurb": "The display brightness value",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "1",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "contrast": {
+                        "blurb": "The display contrast value",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "2",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "display": {
+                        "blurb": "display type to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "any (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiDisplayType",
+                        "writable": true
+                    },
+                    "display-name": {
+                        "blurb": "display name to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "force-aspect-ratio": {
+                        "blurb": "When enabled, scaling will respect original aspect ratio",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "fullscreen": {
+                        "blurb": "Requests window in fullscreen state",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "hue": {
+                        "blurb": "The display hue value",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "180",
+                        "min": "-180",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "rotation": {
+                        "blurb": "The display rotation mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0 (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstVaapiRotation",
+                        "writable": true
+                    },
+                    "saturation": {
+                        "blurb": "The display saturation value",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "2",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "signal-handoffs": {
+                        "blurb": "Send a signal after rendering the buffer",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "view-id": {
+                        "blurb": "ID of the view component of interest to display",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    }
+                },
+                "rank": "marginal",
+                "signals": {
+                    "handoff": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstBuffer"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    }
+                }
+            },
+            "vaapivc1dec": {
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
+                "description": "A VA-API based VC1 video decoder",
+                "hierarchy": [
+                    "GstVaapiDecode_vc1",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "long-name": "VA-API VC1 decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-wmv:\n     wmvversion: 3\n         format: { WMV3, WVC1 }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {},
+                "rank": "primary"
+            }
+        },
+        "filename": "gstvaapi",
+        "license": "LGPL",
+        "other-types": {
+            "GstVaapiDeinterlaceMethod": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Disable deinterlacing",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Bob deinterlacing",
+                        "name": "bob",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Weave deinterlacing",
+                        "name": "weave",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Motion adaptive deinterlacing",
+                        "name": "motion-adaptive",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "Motion compensated deinterlacing",
+                        "name": "motion-compensated",
+                        "value": "4"
+                    }
+                ]
+            },
+            "GstVaapiDeinterlaceMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Auto detection",
+                        "name": "auto",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Force deinterlacing",
+                        "name": "interlaced",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Never deinterlace",
+                        "name": "disabled",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstVaapiDisplayType": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Auto detection",
+                        "name": "any",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "VA/X11 display",
+                        "name": "x11",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "VA/GLX display",
+                        "name": "glx",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "VA/EGL display",
+                        "name": "egl",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "VA/Wayland display",
+                        "name": "wayland",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "VA/DRM display",
+                        "name": "drm",
+                        "value": "4"
+                    }
+                ]
+            },
+            "GstVaapiEncode": {
+                "hierarchy": [
+                    "GstVaapiEncode",
+                    "GstVideoEncoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstPreset"
+                ],
+                "kind": "object"
+            },
+            "GstVaapiEncoderH264ComplianceMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Strict compliance to the H264 Specification ",
+                        "name": "strict",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Restrict the allocation size of coded-buffer",
+                        "name": "restrict-buf-alloc",
+                        "value": "1"
+                    }
+                ]
+            },
+            "GstVaapiEncoderH264PredictionType": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Default encode, prev/next frame as ref ",
+                        "name": "default",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Hierarchical P frame encode",
+                        "name": "hierarchical-p",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Hierarchical B frame encode",
+                        "name": "hierarchical-b",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstVaapiEncoderMbbrc": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Auto",
+                        "name": "auto",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "On",
+                        "name": "on",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Off",
+                        "name": "off",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstVaapiEncoderTuneH264": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "None",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "High compression",
+                        "name": "high-compression",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Low power mode",
+                        "name": "low-power",
+                        "value": "3"
+                    }
+                ]
+            },
+            "GstVaapiEncoderTuneH265": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "None",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Low power mode",
+                        "name": "low-power",
+                        "value": "3"
+                    }
+                ]
+            },
+            "GstVaapiEncoderTuneMPEG2": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "None",
+                        "name": "none",
+                        "value": "0"
+                    }
+                ]
+            },
+            "GstVaapiHDRToneMap": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Auto detection",
+                        "name": "auto",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Disable HDR tone mapping",
+                        "name": "disabled",
+                        "value": "1"
+                    }
+                ]
+            },
+            "GstVaapiRateControlH264": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Constant QP",
+                        "name": "cqp",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Constant bitrate",
+                        "name": "cbr",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Variable bitrate",
+                        "name": "vbr",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "Variable bitrate - Constrained",
+                        "name": "vbr_constrained",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "Constant QP - Intelligent",
+                        "name": "icq",
+                        "value": "7"
+                    },
+                    {
+                        "desc": "Variable bitrate - Quality defined",
+                        "name": "qvbr",
+                        "value": "8"
+                    }
+                ]
+            },
+            "GstVaapiRateControlH265": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Constant QP",
+                        "name": "cqp",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Constant bitrate",
+                        "name": "cbr",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Variable bitrate",
+                        "name": "vbr",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "Constant QP - Intelligent",
+                        "name": "icq",
+                        "value": "7"
+                    },
+                    {
+                        "desc": "Variable bitrate - Quality defined",
+                        "name": "qvbr",
+                        "value": "8"
+                    }
+                ]
+            },
+            "GstVaapiRateControlMPEG2": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Constant QP",
+                        "name": "cqp",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Constant bitrate",
+                        "name": "cbr",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstVaapiRotation": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Unrotated mode",
+                        "name": "0",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Rotated by 90°, clockwise",
+                        "name": "90",
+                        "value": "90"
+                    },
+                    {
+                        "desc": "Rotated by 180°, clockwise",
+                        "name": "180",
+                        "value": "180"
+                    },
+                    {
+                        "desc": "Rotated by 270°, clockwise",
+                        "name": "270",
+                        "value": "270"
+                    },
+                    {
+                        "desc": "Rotated by image-orientating tag°",
+                        "name": "Automatic",
+                        "value": "360"
+                    }
+                ]
+            },
+            "GstVaapiScaleMethod": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Default scaling mode",
+                        "name": "default",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Fast scaling mode",
+                        "name": "fast",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "High quality scaling mode",
+                        "name": "hq",
+                        "value": "2"
+                    }
+                ]
+            }
+        },
+        "package": "gstreamer-vaapi",
+        "source": "gstreamer-vaapi",
+        "tracers": {},
+        "url": "https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/issues"
+    }
+}
