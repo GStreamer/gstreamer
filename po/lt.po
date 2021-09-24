@@ -1,0 +1,103 @@
+# translation of gst-plugins-ugly-0.10.7.2 to Lithuanian
+# This file is put in the public domain.
+#
+# Gintautas Miliauskas <gintas@akl.lt>, 2008.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly-0.10.7.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2008-05-14 02:52+0300\n"
+"Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
+"Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
+"Language: lt\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n"
+"%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#, fuzzy
+msgid "Could not read from CD."
+msgstr "Nepavyko perskaityti DVD įrašo informacijos."
+
+#, fuzzy
+msgid "Could not open CD device for reading."
+msgstr "Nepavyko atverti %d DVD įrašo"
+
+msgid "Disc is not an Audio CD."
+msgstr ""
+
+msgid "Could not open DVD"
+msgstr "Nepavyko atverti DVD"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "Nepavyko atverti %d DVD įrašo"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Nepavyko peršokti į %2$d DVD įrašo %1$d dalį"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Nepavyko atverti %d DVD įrašo. Šis elementas nepalaiko interaktyvių įrašų"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "Nepavyko atverti DVD"
+
+msgid "This stream contains no data."
+msgstr "Šiame sraute nėra duomenų."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Nepavyko sukonfigūruoti LAME kodavimo programos. Patikrinkite kodavimo "
+#~ "parametrus."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Pageidautas bitų dažnis %d kbit/s savybei „%s“ neleidžiamas. Bitų dažnis "
+#~ "pakeistas į %d kbit/s."
+
+#, fuzzy
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Nepavyko sukonfigūruoti LAME kodavimo programos. Patikrinkite kodavimo "
+#~ "parametrus."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Nepavyko sukonfigūruoti LAME kodavimo programos. Patikrinkite kodavimo "
+#~ "parametrus."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Netaisyklinga DVD įrašo informacija."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Nepavyko perskaityti DVD įrašo informacijos."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Nepavyko atverti DVD įrenginio „%s“."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Nepavyko nustatyti PGC paieškos."
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Šis failas užšifruotas ir negali būti parodytas."

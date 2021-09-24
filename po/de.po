@@ -1,0 +1,101 @@
+# German translations for gst-plugins-ugly 1.3.2
+# Copyright (C) 2009 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-ugly package.
+#
+# PCM = PCM
+# Line-in = Eingang
+# Line-out = Ausgang
+# Pipeline = Weiterleitung
+# Stream = Strom
+# Christian Kirbach <christian.kirbach@gmail.com>, 2009, 2011, 2012, 2013.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 1.3.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2014-05-22 18:29+0100\n"
+"Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
+"Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 1.5.4\n"
+
+msgid "Could not read from CD."
+msgstr "Von der CD konnte nicht gelesen werden."
+
+msgid "Could not open CD device for reading."
+msgstr "Das CD-Laufwerk konnte nicht zum Lesen geöffnet werden."
+
+msgid "Disc is not an Audio CD."
+msgstr "Das Medium ist keine Audio-CD."
+
+msgid "Could not open DVD"
+msgstr "Die DVD konnte nicht geöffnet werden."
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "Der Titel »%d« der DVD konnte nicht geöffnet werden."
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Springen zu Kapitel %d des DVD-Titels »%d« schlug fehl"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Der DVD-Titel »%d« konnte nicht geöffnet werden. Interaktive Titel werden "
+"von diesem Element nicht unterstützt"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"DVD konnten nicht gelesen werden. Dies könnte daran liegen, dass die DVD "
+"verschlüsselt ist und eine Bibliothek zur DVD-Entschlüsselung nicht "
+"installiert ist."
+
+msgid "Could not read DVD."
+msgstr "DVD konnten nicht gelesen werden."
+
+msgid "This stream contains no data."
+msgstr "Dieser Strom enthält keine Daten."
+
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Konfigurieren des MP3 Audio-Enkodierers »LAME« schlug fehl. Überprüfen "
+#~ "Sie die Parameter zum Enkodieren."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Die angeforderte Bitrate von %d kBit/s ist für die Eigenschaft »%s« nicht "
+#~ "erlaubt. Die Bitrate wurde auf %d kBit/s abgeändert."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Konfigurieren des Enkodierers »TwoLAME« schlug fehl. Überprüfen Sie die "
+#~ "Parameter zum Enkodieren. "
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Interner Datenstromfehler."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Ungültige Titelinformation auf der DVD."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Die Titelinformationen der DVD konnten nicht gelesen werden."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Öffnen des DVD-Geräts »%s« schlug fehl."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "PGC-basiertes Suchen schlug fehl."

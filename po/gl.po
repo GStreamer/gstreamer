@@ -1,0 +1,84 @@
+# Galician translation of gst-plugins-ugly.
+# Copyright (C) 2009 gst-plugins-ugly's COPYRIGHT HOLDER
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# Fran Diéguez <frandieguez@ubuntu.com>, 2009, 2010.
+# Fran Dieguez <frandieguez@gnome.org>, 2012.
+# Francisco Diéguez <frandieguez@ubuntu.com>, 2012.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 1.0.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2012-12-15 03:47+0200\n"
+"Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
+"Language-Team: Galician <proxecto@trasno.net>\n"
+"Language: gl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Virtaal 0.7.1\n"
+"X-Project-Style: gnome\n"
+
+msgid "Could not read from CD."
+msgstr "Non foi posíbel ler desde o CD."
+
+msgid "Could not open CD device for reading."
+msgstr "Non foi posíbel abrir o dispositivo de CD para a súa lectura."
+
+msgid "Disc is not an Audio CD."
+msgstr "O disco non é un CD de son."
+
+msgid "Could not open DVD"
+msgstr "Non foi posíbel abrir o DVD"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "Non foi posíbel abrir o título %d do DVD"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Produciuse un erro ao ir ao capítulo %d do título %d do DVD"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Non foi posíbel abrir o título %d de DVD. Este elemento non é compatíbel cos "
+"títulos interactivos"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Non foi posíbel ler o DVD. Isto pode ser porque o DVD está cifrado e non ten "
+"instalada unha biblioteca de descifrado de DVD."
+
+msgid "Could not read DVD."
+msgstr "Non foi posíbel ler o DVD"
+
+msgid "This stream contains no data."
+msgstr "Este fluxo non contén datos."
+
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Produciuse un erro ao configurar o codificador LAME mp3. Comprobe os seus "
+#~ "parámetros de codificación."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Non se permite o bitrate solicitado %d kbit/s para a propiedade '%s'. O "
+#~ "bitrate cambiouse a %d kbit/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Produciuse un fallo ao configurar o codificador TwoLAME. Comprobe os seus "
+#~ "parámetros de codificación."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Erro de fluxo de datos interno."

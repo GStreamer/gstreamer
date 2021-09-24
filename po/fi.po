@@ -1,0 +1,102 @@
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# Finnish messages for gst-plugins-ugly.
+# Copyright (C) 2007 Ilkka Tuohela.
+# Copyright (C) 2008-2009 Tommi Vainikainen.
+# Suomennos: http://gnome.fi/
+#
+# Ilkka Tuohela <hile@iki.fi>, 2007.
+# Tommi Vainikainen <thv@iki.fi>, 2008-2009.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2009-03-10 20:41+0200\n"
+"Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
+"Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
+"Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: KBabel 1.11.2\n"
+
+msgid "Could not read from CD."
+msgstr "Lukeminen CD:ltä ei onnistunut."
+
+msgid "Could not open CD device for reading."
+msgstr "CD-laitetta ei voitu avata luettavaksi."
+
+msgid "Disc is not an Audio CD."
+msgstr "Levy ei ole ääni-CD."
+
+msgid "Could not open DVD"
+msgstr "DVD:tä ei voitu avata"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "DVD:n ohjelmaa %d ei voitu avata"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Ei voitu siirtyä kappaleeseen %d DVD:n ohjelmassa %d"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"DVD:n ohjelmaa %d ei voitu avata. Tämä elementti ei tue interaktiivisia "
+"ohjelmia"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "DVD:tä ei voitu avata"
+
+msgid "This stream contains no data."
+msgstr "Virta ei sisällä tietoa."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr "TwoLAME-kodekkia ei voitu määritellä. Tarkista kodekkiasetuksesi."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Pyydetty bittinopeus %d kb/s ominaisuudelle \"%s\" ei ole sallittu. "
+#~ "Bittinopeus asetettiin arvoon %d kb/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr "TwoLAME-kodekkia ei voitu määritellä. Tarkista kodekkiasetuksesi."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Sisäinen tietovirtavirhe."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr "LAME-kodekkia ei voitu määritellä. Tarkista kodekkiasetuksesi."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "DVD:llä on virheellisiä ohjelmatietoja."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Ohjelmatietoja ei voitu lukea DVD:ltä."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "DVD-laitetta \"%s\" ei voitu avata."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "PGC-pohjaista siirtymistä ei voitu asettaa."
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Tiedosto on salattu eikä sitä voi toistaa."

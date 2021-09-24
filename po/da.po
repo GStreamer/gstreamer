@@ -1,0 +1,97 @@
+# Danish translation of gst-plugins-ugly.
+# Copyright (C) 2011 gst.
+# This file is distributed under the same license as the gst-plugins-ugly package.
+#
+# Mogens Jaeger <mogens@jaeger.tf>, 2007.
+# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009, 2011, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly-1.0.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2012-12-09 03:56+0100\n"
+"Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
+"Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
+"Language: da\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Could not read from CD."
+msgstr "Kunne ikke åbne cd."
+
+msgid "Could not open CD device for reading."
+msgstr "Kunne ikke åbne cd-enhed."
+
+msgid "Disc is not an Audio CD."
+msgstr "Disk er ikke en lyd-cd."
+
+msgid "Could not open DVD"
+msgstr "Kunne ikke åbne dvd"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "Kunne ikke åbne dvd-titel %d"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Kunne ikke gå til kapitel %d i dvd-titel %d"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Kunne ikke åbne dvd-titel %d. Interaktive titler er ikke understøttet i "
+"dette element"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Kunne ikke læse dvd. Dette kan være fordi dvd'en er krypteret og et dvd-"
+"dekrypteringsbibliotek ikke er installeret."
+
+msgid "Could not read DVD."
+msgstr "Kunne ikke læse dvd."
+
+msgid "This stream contains no data."
+msgstr "Denne strøm indeholder ingen data."
+
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Kunne ikke konfigurere LAME mp3-lydindkoderen. Kontroller dine "
+#~ "indkoderparametre."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Den krævede bithastighed %d kbit/s for egenskab %s er ikke tilladt. "
+#~ "Bithastigheden blev ændret til %d kbit/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Kunne ikke konfigurere TwoLAME-indkoderen. Kontroller dine "
+#~ "indkoderparametre."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Intern datastrømfejl."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Ugyldig titelinformation på dvd."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Kunne ikke læse titelinformation på dvd."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Kunne ikke åbne dvd-enhed %s."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Mislykkedes i at indstille PGC-baseret søgning."
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Filen er krypteret og kan ikke afspilles."

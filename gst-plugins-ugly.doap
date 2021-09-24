@@ -1,0 +1,875 @@
+<Project
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns="http://usefulinc.com/ns/doap#"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/"
+  xmlns:admin="http://webns.net/mvcb/">
+
+ <name>GStreamer Ugly Plug-ins</name>
+ <shortname>gst-plugins-ugly</shortname>
+ <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gst-plugins-ugly.html" />
+ <created>2005-09-06</created>
+ <shortdesc xml:lang="en">
+a set of good-quality plug-ins with license or patent problems.
+</shortdesc>
+ <description xml:lang="en">
+GStreamer Ugly Plug-ins is a set of plug-ins that have good quality and correct
+functionality, but distributing them might pose problems. The license on either
+the plug-ins or the supporting libraries might not be how we'd like. The code
+might be widely known to present patent problems.
+ </description>
+ <category></category>
+ <bug-database rdf:resource="https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/issues/" />
+ <screenshots></screenshots>
+ <mailing-list rdf:resource="http://lists.freedesktop.org/mailman/listinfo/gstreamer-devel" />
+ <programming-language>C</programming-language>
+ <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl"/>
+ <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
+
+ <repository>
+   <GitRepository>
+     <location rdf:resource="git://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly"/>
+     <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly"/>
+   </GitRepository>
+ </repository>
+
+ <release>
+  <Version>
+   <revision>1.19.2</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2021-09-23</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.19.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.19.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2021-06-01</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.19.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.18.0</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2020-09-08</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.18.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.17.90</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2020-08-20</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.17.90.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.17.2</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2020-07-03</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.17.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.17.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2020-06-19</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.17.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.16.0</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2019-04-19</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.16.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.15.90</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2019-04-11</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.15.90.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.15.2</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2019-02-26</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.15.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.15.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2019-01-17</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.15.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.14.0</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2018-03-19</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.14.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.13.91</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2018-03-13</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.13.91.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.13.90</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2018-03-03</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.13.90.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.13.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2018-02-15</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.13.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.12.4</revision>
+   <branch>1.12</branch>
+   <name></name>
+   <created>2017-12-07</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.12.4.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.12.3</revision>
+   <branch>1.12</branch>
+   <name></name>
+   <created>2017-09-18</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.12.3.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.12.2</revision>
+   <branch>1.12</branch>
+   <name></name>
+   <created>2017-07-14</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.12.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.12.1</revision>
+   <branch>1.12</branch>
+   <name></name>
+   <created>2017-06-20</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.12.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.12.0</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2017-05-04</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.12.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.11.91</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2017-04-27</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.11.91.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.11.90</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2017-04-07</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.11.90.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.11.2</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2017-02-24</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.11.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.11.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2017-01-12</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.11.1.tar.xz" />
+  </Version>
+ </release>
+
+  <release>
+  <Version>
+   <revision>1.10.0</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2016-11-01</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.10.0.tar.xz" />
+  </Version>
+ </release>
+
+  <release>
+  <Version>
+   <revision>1.9.90</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2016-09-30</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.9.90.tar.xz" />
+  </Version>
+ </release>
+
+  <release>
+  <Version>
+   <revision>1.9.2</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2016-09-01</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.9.2.tar.xz" />
+  </Version>
+ </release>
+
+  <release>
+  <Version>
+   <revision>1.9.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2016-06-06</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.9.1.tar.xz" />
+  </Version>
+ </release>
+
+  <release>
+  <Version>
+   <revision>1.8.0</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2016-03-24</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.8.0.tar.xz" />
+  </Version>
+ </release>
+
+  <release>
+  <Version>
+   <revision>1.7.91</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2016-03-15</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.7.91.tar.xz" />
+  </Version>
+ </release>
+
+  <release>
+  <Version>
+   <revision>1.7.90</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2016-03-01</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.7.90.tar.xz" />
+  </Version>
+ </release>
+
+  <release>
+  <Version>
+   <revision>1.7.2</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2016-02-19</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.7.2.tar.xz" />
+  </Version>
+ </release>
+
+  <release>
+  <Version>
+   <revision>1.7.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2015-12-24</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.7.1.tar.xz" />
+  </Version>
+ </release>
+
+  <release>
+  <Version>
+   <revision>1.6.2</revision>
+   <branch>1.6</branch>
+   <name></name>
+   <created>2015-12-14</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.6.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.6.1</revision>
+   <branch>1.6</branch>
+   <name></name>
+   <created>2015-10-30</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.6.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.6.0</revision>
+   <branch>1.6</branch>
+   <name></name>
+   <created>2015-09-25</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.6.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.5.91</revision>
+   <branch>1.5</branch>
+   <name></name>
+   <created>2015-09-18</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.5.91.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.5.90</revision>
+   <branch>1.5</branch>
+   <name></name>
+   <created>2015-08-19</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.5.90.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.5.2</revision>
+   <branch>1.5</branch>
+   <name></name>
+   <created>2015-06-24</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.5.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.5.1</revision>
+   <branch>1.5</branch>
+   <name></name>
+   <created>2015-06-07</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.5.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.4.0</revision>
+   <branch>1.4</branch>
+   <name></name>
+   <created>2014-07-19</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.4.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.3.91</revision>
+   <branch>1.3</branch>
+   <name></name>
+   <created>2014-07-11</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.3.91.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.3.90</revision>
+   <branch>1.3</branch>
+   <name></name>
+   <created>2014-06-28</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.3.90.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.3.3</revision>
+   <branch>1.3</branch>
+   <name></name>
+   <created>2014-06-22</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.3.3.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.3.2</revision>
+   <branch>1.3</branch>
+   <name></name>
+   <created>2014-05-21</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.3.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.3.1</revision>
+   <branch>1.3</branch>
+   <name></name>
+   <created>2014-05-03</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.3.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.2.0</revision>
+   <branch>1.2</branch>
+   <name></name>
+   <created>2013-09-24</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.2.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.1.90</revision>
+   <branch>1.1</branch>
+   <name></name>
+   <created>2013-09-19</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.1.90.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.1.4</revision>
+   <branch>1.1</branch>
+   <name></name>
+   <created>2013-08-28</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.1.4.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.1.3</revision>
+   <branch>1.1</branch>
+   <name></name>
+   <created>2013-07-29</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.1.3.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.1.2</revision>
+   <branch>1.1</branch>
+   <name></name>
+   <created>2013-07-11</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.1.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.1.1</revision>
+   <branch>1.1</branch>
+   <name></name>
+   <created>2013-06-05</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.1.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.0.2</revision>
+   <branch>1.0</branch>
+   <name></name>
+   <created>2012-10-24</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.0.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.0.1</revision>
+   <branch>1.0</branch>
+   <name></name>
+   <created>2012-10-07</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.0.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>1.0.0</revision>
+   <branch>1.0</branch>
+   <name></name>
+   <created>2012-09-24</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.0.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.11.99</revision>
+   <branch>0.11</branch>
+   <name>Stole Many a Mans Soul and Faith</name>
+   <created>2012-09-17</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.99.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.11.94</revision>
+   <branch>0.11</branch>
+   <name>Rag Hummin'</name>
+   <created>2012-09-14</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.94.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.11.93</revision>
+   <branch>0.11</branch>
+   <name>Rag Doll Physics</name>
+   <created>2012-08-08</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.93.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.11.92</revision>
+   <branch>0.11</branch>
+   <name>Hey You</name>
+   <created>2012-06-07</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.92.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.11.91</revision>
+   <branch>0.11</branch>
+   <name>I’ll grind his bones to make my bread!</name>
+   <created>2012-05-13</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.91.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.11.90</revision>
+   <branch>0.11</branch>
+   <name>Is all that we see or seem but a dream within a dream?</name>
+   <created>2012-04-12</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.90.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.90.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.11.2</revision>
+   <branch>0.11</branch>
+   <name>Savior from Anger</name>
+   <created>2012-03-22</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.2.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.2.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.11.1</revision>
+   <branch>0.11</branch>
+   <name>Moonlapse Vertigo</name>
+   <created>2012-02-16</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.1.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.1.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.18</revision>
+   <branch>0.10</branch>
+   <name>Extra Life</name>
+   <created>2011-05-10</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.18.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.18.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.17</revision>
+   <branch>0.10</branch>
+   <name>Raised by Wolves</name>
+   <created>2011-01-21</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.17.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.17.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.16</revision>
+   <branch>0.10</branch>
+   <name>Because He Knows the Time is Short</name>
+   <created>2010-09-02</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.16.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.16.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.15</revision>
+   <branch>0.10</branch>
+   <name>Englishman in a Baseball Cap</name>
+   <created>2010-05-30</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.15.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.15.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.14</revision>
+   <branch>0.10</branch>
+   <name>Run Rabbit</name>
+   <created>2010-03-06</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.14.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.14.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.13</revision>
+   <branch>0.10</branch>
+   <name>Appointed Point</name>
+   <created>2009-10-21</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.13.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.13.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.12</revision>
+   <branch>0.10</branch>
+   <name>Moving Along The Highway</name>
+   <created>2009-06-18</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.12.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.12.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.11</revision>
+   <branch>0.10</branch>
+   <name>Their swords and their knives</name>
+   <created>2009-03-20</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.11.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.11.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.10</revision>
+   <branch>0.10</branch>
+   <name>Under the House</name>
+   <created>2008-11-19</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.10.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.10.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.9</revision>
+   <branch>0.10</branch>
+   <name>Back The Way It Was</name>
+   <created>2008-08-26</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.9.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.9.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.8</revision>
+   <branch>0.10</branch>
+   <name>And yet</name>
+   <created>2008-05-21</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.8.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.8.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.7</revision>
+   <branch>0.10</branch>
+   <name>I Cheated Time</name>
+   <created>2008-01-20</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.7.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.7.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.6</revision>
+   <branch>0.10</branch>
+   <name>The Sacrifice</name>
+   <created>2007-06-19</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.6.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.6.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.5</revision>
+   <branch>0.10</branch>
+   <name>She said</name>
+   <created>2006-12-13</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.5.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.5.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.4</revision>
+   <branch>0.10</branch>
+   <name>Metal Molly</name>
+   <created>2006-08-14</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.4.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.4.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.3</revision>
+   <branch>0.10</branch>
+   <name>Late Plane</name>
+   <created>2006-03-31</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.3.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.3.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.2</revision>
+   <branch>0.10</branch>
+   <name>Season to Taste</name>
+   <created>2006-02-20</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.2.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.2.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.1</revision>
+   <branch>0.10</branch>
+   <name>Peng</name>
+   <created>2006-01-13</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.1.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.1.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.0</revision>
+   <branch>0.10</branch>
+   <name>Brie</name>
+   <created>2005-12-05</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.0.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.0.tar.gz" />
+  </Version>
+ </release>
+
+ <maintainer>
+  <foaf:Person>
+     <foaf:name>Wim Taymans</foaf:name>
+     <foaf:mbox_sha1sum>0d93fde052812d51a05fd86de9bdbf674423daa2</foaf:mbox_sha1sum>
+  </foaf:Person>
+ </maintainer>
+
+</Project>

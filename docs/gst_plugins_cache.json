@@ -1,0 +1,2015 @@
+{
+    "a52dec": {
+        "description": "Decodes ATSC A/52 encoded audio streams",
+        "elements": {
+            "a52dec": {
+                "author": "David I. Lehn <dlehn@users.sourceforge.net>",
+                "description": "Decodes ATSC A/52 encoded audio streams",
+                "hierarchy": [
+                    "GstA52Dec",
+                    "GstAudioDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Audio/Converter",
+                "long-name": "ATSC A/52 audio decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-ac3:\naudio/ac3:\naudio/x-private1-ac3:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: F32LE\n         layout: interleaved\n           rate: [ 4000, 96000 ]\n       channels: [ 1, 6 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "drc": {
+                        "blurb": "Use Dynamic Range Compression",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "lfe": {
+                        "blurb": "LFE",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "mode": {
+                        "blurb": "Decoding Mode (default 3f2r)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": " (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstA52DecMode",
+                        "writable": true
+                    }
+                },
+                "rank": "secondary"
+            }
+        },
+        "filename": "gsta52dec",
+        "license": "GPL",
+        "other-types": {
+            "GstA52DecMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Mono",
+                        "name": "mono",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Stereo",
+                        "name": "stereo",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "3 Front",
+                        "name": "3f",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "2 Front, 1 Rear",
+                        "name": "2f1r",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "3 Front, 1 Rear",
+                        "name": "3f1r",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "2 Front, 2 Rear",
+                        "name": "2f2r",
+                        "value": "6"
+                    },
+                    {
+                        "desc": "3 Front, 2 Rear",
+                        "name": "3f2r",
+                        "value": "7"
+                    },
+                    {
+                        "desc": "Dolby",
+                        "name": "dolby",
+                        "value": "10"
+                    }
+                ]
+            }
+        },
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "amrnb": {
+        "description": "Adaptive Multi-Rate Narrow-Band",
+        "elements": {
+            "amrnbdec": {
+                "author": "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>",
+                "description": "Adaptive Multi-Rate Narrow-Band audio decoder",
+                "hierarchy": [
+                    "GstAmrnbDec",
+                    "GstAudioDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Audio",
+                "long-name": "AMR-NB audio decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/AMR:\n           rate: 8000\n       channels: 1\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n           rate: 8000\n       channels: 1\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "variant": {
+                        "blurb": "The decoder variant",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "IF1 (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAmrnbVariant",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "amrnbenc": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>",
+                "description": "Adaptive Multi-Rate Narrow-Band audio encoder",
+                "hierarchy": [
+                    "GstAmrnbEnc",
+                    "GstAudioEncoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstPreset"
+                ],
+                "klass": "Codec/Encoder/Audio",
+                "long-name": "AMR-NB audio encoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n           rate: 8000\n       channels: 1\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/AMR:\n           rate: 8000\n       channels: 1\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "band-mode": {
+                        "blurb": "Encoding Band Mode (Kbps)",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "MR122 (7)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAmrnbEncBandMode",
+                        "writable": true
+                    }
+                },
+                "rank": "secondary"
+            }
+        },
+        "filename": "gstamrnb",
+        "license": "unknown",
+        "other-types": {
+            "GstAmrnbEncBandMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "MR475",
+                        "name": "MR475",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "MR515",
+                        "name": "MR515",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "MR59",
+                        "name": "MR59",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "MR67",
+                        "name": "MR67",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "MR74",
+                        "name": "MR74",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "MR795",
+                        "name": "MR795",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "MR102",
+                        "name": "MR102",
+                        "value": "6"
+                    },
+                    {
+                        "desc": "MR122",
+                        "name": "MR122",
+                        "value": "7"
+                    },
+                    {
+                        "desc": "MRDTX",
+                        "name": "MRDTX",
+                        "value": "8"
+                    }
+                ]
+            },
+            "GstAmrnbVariant": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "IF1",
+                        "name": "IF1",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "IF2",
+                        "name": "IF2",
+                        "value": "1"
+                    }
+                ]
+            }
+        },
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "amrwbdec": {
+        "description": "Adaptive Multi-Rate Wide-Band Decoder",
+        "elements": {
+            "amrwbdec": {
+                "author": "Renato Araujo <renato.filho@indt.org.br>",
+                "description": "Adaptive Multi-Rate Wideband audio decoder",
+                "hierarchy": [
+                    "GstAmrwbDec",
+                    "GstAudioDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Audio",
+                "long-name": "AMR-WB audio decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/AMR-WB:\n           rate: 16000\n       channels: 1\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n           rate: 16000\n       channels: 1\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {},
+                "rank": "primary"
+            }
+        },
+        "filename": "gstamrwbdec",
+        "license": "unknown",
+        "other-types": {},
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "asf": {
+        "description": "Demuxes and muxes audio and video in Microsofts ASF format",
+        "elements": {
+            "asfdemux": {
+                "author": "Owen Fraser-Green <owen@discobabe.net>",
+                "description": "Demultiplexes ASF Streams",
+                "hierarchy": [
+                    "GstASFDemux",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Demuxer",
+                "long-name": "ASF Demuxer",
+                "pad-templates": {
+                    "audio_%%u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "sink": {
+                        "caps": "video/x-ms-asf:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "video_%%u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "rank": "secondary",
+                "signals": {}
+            },
+            "rtpasfdepay": {
+                "author": "Tim-Philipp Müller <tim centricular net>, Wim Taymans <wim.taymans@gmail.com>",
+                "description": "Extracts ASF streams from RTP",
+                "hierarchy": [
+                    "GstRtpAsfDepay",
+                    "GstRTPBaseDepayload",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Depayloader/Network",
+                "long-name": "RTP ASF packet depayloader",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-rtp:\n          media: { (string)application, (string)video, (string)audio }\n        payload: [ 96, 127 ]\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: X-ASF-PF\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-ms-asf:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {},
+                "rank": "marginal"
+            },
+            "rtspwms": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>",
+                "description": "Extends RTSP so that it can handle WMS setup",
+                "hierarchy": [
+                    "GstRTSPWMS",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstRTSPExtension"
+                ],
+                "klass": "Network/Extension/Protocol",
+                "long-name": "WMS RTSP Extension",
+                "rank": "secondary"
+            }
+        },
+        "filename": "gstasf",
+        "license": "LGPL",
+        "other-types": {},
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "cdio": {
+        "description": "Read audio from audio CDs",
+        "elements": {
+            "cdiocddasrc": {
+                "author": "Tim-Philipp Müller <tim centricular net>",
+                "description": "Read audio from CD using libcdio",
+                "hierarchy": [
+                    "GstCdioCddaSrc",
+                    "GstAudioCdSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstURIHandler"
+                ],
+                "klass": "Source/File",
+                "long-name": "CD audio source (CDDA)",
+                "pad-templates": {
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n           rate: 44100\n       channels: 2\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "read-speed": {
+                        "blurb": "Read from device at the specified speed (-1 = default)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "100",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    }
+                },
+                "rank": "secondary - 1"
+            }
+        },
+        "filename": "gstcdio",
+        "license": "GPL",
+        "other-types": {},
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "dvdlpcmdec": {
+        "description": "Decode DVD LPCM frames into standard PCM",
+        "elements": {
+            "dvdlpcmdec": {
+                "author": "Jan Schmidt <jan@noraisin.net>, Michael Smith <msmith@fluendo.com>",
+                "description": "Decode DVD LPCM frames into standard PCM audio",
+                "hierarchy": [
+                    "GstDvdLpcmDec",
+                    "GstAudioDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Audio",
+                "long-name": "DVD LPCM Audio decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-private1-lpcm:\naudio/x-private2-lpcm:\naudio/x-private-ts-lpcm:\naudio/x-lpcm:\n          width: { (int)16, (int)20, (int)24 }\n           rate: { (int)32000, (int)44100, (int)48000, (int)96000 }\n       channels: [ 1, 8 ]\n  dynamic_range: [ 0, 255 ]\n       emphasis: { (boolean)true, (boolean)false }\n           mute: { (boolean)true, (boolean)false }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: { S16BE, S24BE }\n         layout: interleaved\n           rate: { (int)32000, (int)44100, (int)48000, (int)96000 }\n       channels: [ 1, 8 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {},
+                "rank": "primary"
+            }
+        },
+        "filename": "gstdvdlpcmdec",
+        "license": "LGPL",
+        "other-types": {},
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "dvdread": {
+        "description": "Access a DVD with dvdread",
+        "elements": {
+            "dvdreadsrc": {
+                "author": "Erik Walthinsen <omega@cse.ogi.edu>",
+                "description": "Access a DVD title/chapter/angle using libdvdread",
+                "hierarchy": [
+                    "GstDvdReadSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstURIHandler"
+                ],
+                "klass": "Source/File/DVD",
+                "long-name": "DVD Source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "video/mpeg:\n    mpegversion: 2\n   systemstream: true\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "angle": {
+                        "blurb": "angle",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "999",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "chapter": {
+                        "blurb": "chapter",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "999",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "device": {
+                        "blurb": "DVD device location",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "/dev/dvd",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "title": {
+                        "blurb": "title",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "999",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gstdvdread",
+        "license": "GPL",
+        "other-types": {},
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "dvdsub": {
+        "description": "DVD subtitle parser and decoder",
+        "elements": {
+            "dvdsubdec": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>, Jan Schmidt <thaytan@mad.scientist.com>",
+                "description": "Decodes DVD subtitles into AYUV video frames",
+                "hierarchy": [
+                    "GstDvdSubDec",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video",
+                "long-name": "DVD subtitle decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "subpicture/x-dvd:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { AYUV, ARGB }\n          width: 720\n         height: 576\n      framerate: 0/1\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "none"
+            },
+            "dvdsubparse": {
+                "author": "Mark Nauwelaerts <mnauw@users.sourceforge.net>",
+                "description": "Parses and packetizes DVD subtitle streams",
+                "hierarchy": [
+                    "GstDvdSubParse",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Parser/Subtitle",
+                "long-name": "DVD subtitle parser",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "subpicture/x-dvd:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "subpicture/x-dvd:\n         parsed: true\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gstdvdsub",
+        "license": "LGPL",
+        "other-types": {},
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "mpeg2dec": {
+        "description": "LibMpeg2 decoder",
+        "elements": {
+            "mpeg2dec": {
+                "author": "Wim Taymans <wim.taymans@chello.be>",
+                "description": "Uses libmpeg2 to decode MPEG video streams",
+                "hierarchy": [
+                    "GstMpeg2dec",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video",
+                "long-name": "mpeg1 and mpeg2 video decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/mpeg:\n    mpegversion: [ 1, 2 ]\n   systemstream: false\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { YV12, I420, Y42B, Y444 }\n          width: [ 16, 4096 ]\n         height: [ 16, 4096 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {},
+                "rank": "secondary"
+            }
+        },
+        "filename": "gstmpeg2dec",
+        "license": "GPL",
+        "other-types": {},
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "realmedia": {
+        "description": "RealMedia support plugins",
+        "elements": {
+            "pnmsrc": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>",
+                "description": "Receive data over the network via PNM",
+                "hierarchy": [
+                    "GstPNMSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstURIHandler"
+                ],
+                "klass": "Source/Network",
+                "long-name": "PNM packet receiver",
+                "pad-templates": {
+                    "src": {
+                        "caps": "application/vnd.rn-realmedia:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "location": {
+                        "blurb": "Location of the PNM url to read",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "marginal"
+            },
+            "rademux": {
+                "author": "Tim-Philipp Müller <tim centricular net>",
+                "description": "Demultiplex a RealAudio file",
+                "hierarchy": [
+                    "GstRealAudioDemux",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Demuxer",
+                "long-name": "RealAudio Demuxer",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-pn-realaudio:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "rank": "secondary",
+                "signals": {}
+            },
+            "rdtdepay": {
+                "author": "Lutz Mueller <lutz at topfrose dot de>, Wim Taymans <wim@fluendo.com>",
+                "description": "Extracts RealMedia from RDT packets",
+                "hierarchy": [
+                    "GstRDTDepay",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Depayloader/Network",
+                "long-name": "RDT packet parser",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-rdt:\n          media: application\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: X-REAL-RDT\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "application/vnd.rn-realmedia:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "marginal"
+            },
+            "rdtmanager": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>",
+                "description": "Accepts raw RTP and RTCP packets and sends them forward",
+                "hierarchy": [
+                    "GstRDTManager",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Parser/Network",
+                "long-name": "RTP Decoder",
+                "pad-templates": {
+                    "recv_rtcp_sink_%%u": {
+                        "caps": "application/x-rtcp:\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "recv_rtp_sink_%%u": {
+                        "caps": "application/x-rdt:\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "recv_rtp_src_%%u_%%u_%%u": {
+                        "caps": "application/x-rdt:\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "rtcp_src_%%u": {
+                        "caps": "application/x-rtcp:\n",
+                        "direction": "src",
+                        "presence": "request"
+                    }
+                },
+                "properties": {
+                    "latency": {
+                        "blurb": "Amount of ms to buffer",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "200",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "clear-pt-map": {
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "on-bye-ssrc": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "on-bye-timeout": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "on-npt-stop": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "on-timeout": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "request-pt-map": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "GstCaps",
+                        "when": "last"
+                    }
+                }
+            },
+            "rmdemux": {
+                "author": "David Schleef <ds@schleef.org>",
+                "description": "Demultiplex a RealMedia file into audio and video streams",
+                "hierarchy": [
+                    "GstRMDemux",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Demuxer",
+                "long-name": "RealMedia Demuxer",
+                "pad-templates": {
+                    "audio_%%u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "sink": {
+                        "caps": "application/vnd.rn-realmedia:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "video_%%u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "rank": "primary",
+                "signals": {}
+            },
+            "rtspreal": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>",
+                "description": "Extends RTSP so that it can handle RealMedia setup",
+                "hierarchy": [
+                    "GstRTSPReal",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstRTSPExtension"
+                ],
+                "klass": "Network/Extension/Protocol",
+                "long-name": "RealMedia RTSP Extension",
+                "rank": "marginal"
+            }
+        },
+        "filename": "gstrealmedia",
+        "license": "LGPL",
+        "other-types": {},
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "sid": {
+        "description": "Uses libsidplay to decode .sid files",
+        "elements": {
+            "siddec": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>",
+                "description": "Use libsidplay to decode SID audio tunes",
+                "hierarchy": [
+                    "GstSidDec",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Audio",
+                "long-name": "Sid decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-sid:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: { S16LE, U16LE, S8, U8 }\n         layout: interleaved\n           rate: [ 8000, 48000 ]\n       channels: [ 1, 2 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "blocksize": {
+                        "blurb": "Size in bytes to output per buffer",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "clock": {
+                        "blurb": "clock",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "pal (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstSidClock",
+                        "writable": true
+                    },
+                    "filter": {
+                        "blurb": "filter",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "force-speed": {
+                        "blurb": "force_speed",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "measured-volume": {
+                        "blurb": "measured_volume",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "memory": {
+                        "blurb": "memory",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "bank-switching (32)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstSidMemory",
+                        "writable": true
+                    },
+                    "metadata": {
+                        "blurb": "Metadata",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstCaps",
+                        "writable": false
+                    },
+                    "mos8580": {
+                        "blurb": "mos8580",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "tune": {
+                        "blurb": "tune",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "100",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            }
+        },
+        "filename": "gstsid",
+        "license": "GPL",
+        "other-types": {
+            "GstSidClock": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "PAL",
+                        "name": "pal",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "NTSC",
+                        "name": "ntsc",
+                        "value": "2"
+                    }
+                ]
+            },
+            "GstSidMemory": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Bank Switching",
+                        "name": "bank-switching",
+                        "value": "32"
+                    },
+                    {
+                        "desc": "Transparent ROM",
+                        "name": "transparent-rom",
+                        "value": "33"
+                    },
+                    {
+                        "desc": "Playsid Environment",
+                        "name": "playsid-environment",
+                        "value": "34"
+                    }
+                ]
+            }
+        },
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "x264": {
+        "description": "libx264-based H264 plugins",
+        "elements": {
+            "x264enc": {
+                "author": "Josef Zlomek <josef.zlomek@itonis.tv>, Mark Nauwelaerts <mnauw@users.sf.net>",
+                "description": "H264 Encoder",
+                "hierarchy": [
+                    "GstX264Enc",
+                    "GstVideoEncoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstPreset"
+                ],
+                "klass": "Codec/Encoder/Video",
+                "long-name": "x264enc",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw:\n      framerate: [ 0/1, 2147483647/1 ]\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n         format: { Y444, Y42B, I420, YV12, NV12, Y444_10LE, I422_10LE, I420_10LE }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-h264:\n      framerate: [ 0/1, 2147483647/1 ]\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n  stream-format: { (string)avc, (string)byte-stream }\n      alignment: au\n        profile: { (string)high-4:4:4, (string)high-4:2:2, (string)high-10, (string)high, (string)main, (string)baseline, (string)constrained-baseline, (string)high-4:4:4-intra, (string)high-4:2:2-intra, (string)high-10-intra }\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "analyse": {
+                        "blurb": "Partitions to consider",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "(none)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstX264EncAnalyse",
+                        "writable": true
+                    },
+                    "aud": {
+                        "blurb": "Use AU (Access Unit) delimiter",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "b-adapt": {
+                        "blurb": "Automatically decide how many B-frames to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "b-pyramid": {
+                        "blurb": "Keep some B-frames as references",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "bframes": {
+                        "blurb": "Number of B-frames between I and P",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "16",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "bitrate": {
+                        "blurb": "Bitrate in kbit/sec",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "2048",
+                        "max": "2048000",
+                        "min": "1",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "byte-stream": {
+                        "blurb": "Generate byte stream format of NALU",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "cabac": {
+                        "blurb": "Enable CABAC entropy coding",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "dct8x8": {
+                        "blurb": "Adaptive spatial transform size",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "frame-packing": {
+                        "blurb": "Set frame packing mode for Stereoscopic content",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "auto (-1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstX264EncFramePacking",
+                        "writable": true
+                    },
+                    "insert-vui": {
+                        "blurb": "Insert VUI NAL in stream",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "interlaced": {
+                        "blurb": "Interlaced material",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "intra-refresh": {
+                        "blurb": "Use Periodic Intra Refresh instead of IDR frames",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "ip-factor": {
+                        "blurb": "Quantizer factor between I- and P-frames",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1.4",
+                        "max": "2",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "key-int-max": {
+                        "blurb": "Maximal distance between two key-frames (0 for automatic)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "mb-tree": {
+                        "blurb": "Macroblock-Tree ratecontrol",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "me": {
+                        "blurb": "Integer pixel motion estimation method",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "hex (1)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstX264EncMe",
+                        "writable": true
+                    },
+                    "multipass-cache-file": {
+                        "blurb": "Filename for multipass cache file",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "x264.log",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "noise-reduction": {
+                        "blurb": "Noise reduction strength",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "100000",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "option-string": {
+                        "blurb": "String of x264 options (overridden by element properties) in the format \"key1=value1:key2=value2\".",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "pass": {
+                        "blurb": "Encoding pass/type",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "cbr (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstX264EncPass",
+                        "writable": true
+                    },
+                    "pb-factor": {
+                        "blurb": "Quantizer factor between P- and B-frames",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1.3",
+                        "max": "2",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "psy-tune": {
+                        "blurb": "Preset name for psychovisual tuning options",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstX264EncPsyTune",
+                        "writable": true
+                    },
+                    "qp-max": {
+                        "blurb": "Maximum quantizer",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "51",
+                        "max": "63",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "qp-min": {
+                        "blurb": "Minimum quantizer",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "10",
+                        "max": "63",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "qp-step": {
+                        "blurb": "Maximum quantizer difference between frames",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "4",
+                        "max": "63",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "quantizer": {
+                        "blurb": "Constant quantizer or quality to apply",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "21",
+                        "max": "50",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "rc-lookahead": {
+                        "blurb": "Number of frames for frametype lookahead",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "40",
+                        "max": "250",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "ref": {
+                        "blurb": "Number of reference frames",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "3",
+                        "max": "16",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "sliced-threads": {
+                        "blurb": "Low latency but lower efficiency threading",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "speed-preset": {
+                        "blurb": "Preset name for speed/quality tradeoff options (can affect decode compatibility - impose restrictions separately for your target decoder)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "medium (6)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstX264EncPreset",
+                        "writable": true
+                    },
+                    "sps-id": {
+                        "blurb": "SPS and PPS ID number",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "31",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "subme": {
+                        "blurb": "Subpixel motion estimation and partition decision quality: 1=fast, 10=best",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "10",
+                        "min": "1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "sync-lookahead": {
+                        "blurb": "Number of buffer frames for threaded lookahead (-1 for automatic)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "250",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "threads": {
+                        "blurb": "Number of threads used by the codec (0 for automatic)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "trellis": {
+                        "blurb": "Enable trellis searched quantization",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "tune": {
+                        "blurb": "Preset name for non-psychovisual tuning options",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "(none)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstX264EncTune",
+                        "writable": true
+                    },
+                    "vbv-buf-capacity": {
+                        "blurb": "Size of the VBV buffer in milliseconds",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "600",
+                        "max": "10000",
+                        "min": "0",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "weightb": {
+                        "blurb": "Weighted prediction for B-frames",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            }
+        },
+        "filename": "gstx264",
+        "license": "GPL",
+        "other-types": {
+            "GstX264EncAnalyse": {
+                "kind": "flags",
+                "values": [
+                    {
+                        "desc": "i4x4",
+                        "name": "i4x4",
+                        "value": "0x00000001"
+                    },
+                    {
+                        "desc": "i8x8",
+                        "name": "i8x8",
+                        "value": "0x00000002"
+                    },
+                    {
+                        "desc": "p8x8",
+                        "name": "p8x8",
+                        "value": "0x00000010"
+                    },
+                    {
+                        "desc": "p4x4",
+                        "name": "p4x4",
+                        "value": "0x00000020"
+                    },
+                    {
+                        "desc": "b8x8",
+                        "name": "b8x8",
+                        "value": "0x00000100"
+                    }
+                ]
+            },
+            "GstX264EncFramePacking": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Automatic (use incoming video information)",
+                        "name": "auto",
+                        "value": "-1"
+                    },
+                    {
+                        "desc": "checkerboard - Left and Right pixels alternate in a checkerboard pattern",
+                        "name": "checkerboard",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "column interleaved - Alternating pixel columns represent Left and Right views",
+                        "name": "column-interleaved",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "row interleaved - Alternating pixel rows represent Left and Right views",
+                        "name": "row-interleaved",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "side by side - The left half of the frame contains the Left eye view, the right half the Right eye view",
+                        "name": "side-by-side",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "top bottom - L is on top, R on bottom",
+                        "name": "top-bottom",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "frame interleaved - Each frame contains either Left or Right view alternately",
+                        "name": "frame-interleaved",
+                        "value": "5"
+                    }
+                ]
+            },
+            "GstX264EncMe": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "dia",
+                        "name": "dia",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "hex",
+                        "name": "hex",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "umh",
+                        "name": "umh",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "esa",
+                        "name": "esa",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "tesa",
+                        "name": "tesa",
+                        "value": "4"
+                    }
+                ]
+            },
+            "GstX264EncPass": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Constant Bitrate Encoding",
+                        "name": "cbr",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Constant Quantizer",
+                        "name": "quant",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "Constant Quality",
+                        "name": "qual",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "VBR Encoding - Pass 1",
+                        "name": "pass1",
+                        "value": "17"
+                    },
+                    {
+                        "desc": "VBR Encoding - Pass 2",
+                        "name": "pass2",
+                        "value": "18"
+                    },
+                    {
+                        "desc": "VBR Encoding - Pass 3",
+                        "name": "pass3",
+                        "value": "19"
+                    }
+                ]
+            },
+            "GstX264EncPreset": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "No preset",
+                        "name": "None",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "ultrafast",
+                        "name": "ultrafast",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "superfast",
+                        "name": "superfast",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "veryfast",
+                        "name": "veryfast",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "faster",
+                        "name": "faster",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "fast",
+                        "name": "fast",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "medium",
+                        "name": "medium",
+                        "value": "6"
+                    },
+                    {
+                        "desc": "slow",
+                        "name": "slow",
+                        "value": "7"
+                    },
+                    {
+                        "desc": "slower",
+                        "name": "slower",
+                        "value": "8"
+                    },
+                    {
+                        "desc": "veryslow",
+                        "name": "veryslow",
+                        "value": "9"
+                    },
+                    {
+                        "desc": "placebo",
+                        "name": "placebo",
+                        "value": "10"
+                    }
+                ]
+            },
+            "GstX264EncPsyTune": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "No tuning",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Film",
+                        "name": "film",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Animation",
+                        "name": "animation",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Grain",
+                        "name": "grain",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "PSNR",
+                        "name": "psnr",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "SSIM",
+                        "name": "ssim",
+                        "value": "5"
+                    }
+                ]
+            },
+            "GstX264EncTune": {
+                "kind": "flags",
+                "values": [
+                    {
+                        "desc": "Still image",
+                        "name": "stillimage",
+                        "value": "0x00000001"
+                    },
+                    {
+                        "desc": "Fast decode",
+                        "name": "fastdecode",
+                        "value": "0x00000002"
+                    },
+                    {
+                        "desc": "Zero latency",
+                        "name": "zerolatency",
+                        "value": "0x00000004"
+                    }
+                ]
+            }
+        },
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "xingmux": {
+        "description": "Add XING tags to mpeg audio files",
+        "elements": {
+            "xingmux": {
+                "author": "Christophe Fergeau <teuf@gnome.org>",
+                "description": "Adds a Xing header to the beginning of a VBR MP3 file",
+                "hierarchy": [
+                    "GstXingMux",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Formatter/Muxer/Metadata",
+                "long-name": "MP3 Xing muxer",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/mpeg:\n    mpegversion: 1\n          layer: [ 1, 3 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/mpeg:\n    mpegversion: 1\n          layer: [ 1, 3 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "marginal"
+            }
+        },
+        "filename": "gstxingmux",
+        "license": "LGPL",
+        "other-types": {},
+        "package": "GStreamer Ugly Plug-ins",
+        "source": "gst-plugins-ugly",
+        "tracers": {},
+        "url": "Unknown package origin"
+    }
+}

@@ -1,0 +1,84 @@
+# Vietnamese translation for GST Plugins Ugly.
+# Copyright © 2014 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# Clytie Siddall <clytie@riverland.net.au>, 2007-2010.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 1.3.90\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2014-06-30 09:20+0700\n"
+"Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
+"Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Language-Team-Website: <http://translationproject.org/team/vi.html>\n"
+"X-Generator: LocFactoryEditor 1.8\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+
+msgid "Could not read from CD."
+msgstr "Không thể đọc từ đĩa CD."
+
+msgid "Could not open CD device for reading."
+msgstr "Không thể mở thiết bị đĩa CD để đọc."
+
+msgid "Disc is not an Audio CD."
+msgstr "Đây không phải là một đĩa CD âm nhạc."
+
+msgid "Could not open DVD"
+msgstr "Không thể mở đĩa DVD"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "Không thể mở đĩa DVD tên %d"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Gặp lỗi khi nhảy đến chương %d của đĩa DVD tên %d"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Không thể mở đĩa DVD tên %d. Phần tử này không hỗ trợ tiêu đề tương tác."
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Không thể đọc đĩa DVD. Nguyên nhân có thể là DVD đã bị mã hóa và thư viện "
+"giải mã DVD chưa được cài đặt."
+
+msgid "Could not read DVD."
+msgstr "Không thể đọc đĩa DVD."
+
+msgid "This stream contains no data."
+msgstr "Luồng này không chứa dữ liệu."
+
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Gặp lỗi khi cấu hình bộ giải mã âm thanh mp3 của LAME. Hãy kiểm tra các "
+#~ "tham số giải mã."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Không cho phép tỷ lệ đã yêu cầu %d kbit/giây cho thuộc tính “%s” nên tỷ "
+#~ "lệ bit bị thay đổi thành %d kbit/g."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Gặp lỗi khi cấu hình bộ biên mã TwoLAME. Hãy kiểm tra lại các tham số "
+#~ "giải mã."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Lỗi luồng dữ liệu nội bộ."

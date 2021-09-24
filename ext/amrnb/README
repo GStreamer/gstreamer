@@ -1,0 +1,6 @@
+Compiling AMRNB:
+================
+
+To compile the amrnb plugin, you need the opencore-amrnb development package.
+If your distribution does not provide this package, you can download the 
+source code from "http://sourceforge.net/projects/opencore-amr".

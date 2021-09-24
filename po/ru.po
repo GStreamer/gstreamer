@@ -1,0 +1,98 @@
+# Translation for gst-plugins-ugly messages to Russian
+# This file is put in the public domain.
+#
+# Артём Попов <artfwo@gmail.com>, 2009.
+# Pavel Maryanov <acid_jack@ukr.net>, 2009.
+# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 1.0.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2012-12-01 13:38+0400\n"
+"Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
+"Language-Team: Russian <gnu@mx.ru>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.4\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "Could not read from CD."
+msgstr "Не удалось прочесть CD."
+
+msgid "Could not open CD device for reading."
+msgstr "Не удалось открыть CD-устройство для чтения."
+
+msgid "Disc is not an Audio CD."
+msgstr "Диск не в формате аудио-CD."
+
+msgid "Could not open DVD"
+msgstr "Не удалось открыть DVD"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "Не удалось открыть DVD-раздел %d"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Ошибка перехода к эпизоду %d DVD-раздела %d"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Не удалось открыть DVD-раздел %d. Интерактивные разделы не поддерживаются "
+"этим элементом"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Не удалось прочесть DVD. Это могло произойти из-за того, что DVD закодирован "
+"и не установлена библиотека декодирования DVD."
+
+msgid "Could not read DVD."
+msgstr "Не удалось прочесть DVD."
+
+msgid "This stream contains no data."
+msgstr "Поток не содержит данных."
+
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Не удалось настроить аудио-кодировщик mp3 LAME. Проверьте параметры "
+#~ "кодирования."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Запрошенный битрейт в %d кбит/с для свойства «%s» недопустим. Битрейт был "
+#~ "изменён на %d кбит/с."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Не удалось настроить кодировщик TwoLAME. Проверьте параметры кодирования."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Внутренняя ошибка потока данных."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Неверные сведения о разделах на DVD."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Не удалось прочесть сведения о разделах для DVD."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Ошибка при открытии DVD-устройства «%s»."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Не удалось включить PGC-позиционирование."
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Файл зашифрован и не может быть воспроизведён."

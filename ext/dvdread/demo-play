@@ -1,0 +1,6 @@
+#!/bin/sh
+AUDIOSINK=`gconftool-2 -g /system/gstreamer/0.8/default/audiosink`
+VIDEOSINK=`gconftool-2 -g /system/gstreamer/0.8/default/videosink`
+gst-launch dvdreadsrc ! dvddemux name=demux .video_00 ! \
+	{ queue ! mpeg2dec ! videoconvert ! videoscale ! $VIDEOSINK } \
+	{ demux.audio_00 ! queue ! a52dec ! audioconvert ! audioscale ! $AUDIOSINK }

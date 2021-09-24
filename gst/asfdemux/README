@@ -1,0 +1,88 @@
+ASF Demuxer Plugin
+==================
+
+Overview
+--------
+
+This plugin is a demuxer for Microsoft's ASF Advanced Streaming Format
+or ASF [1]. This demuxer only supports ASF v1.0 since the vast
+majority of existing ASF files use that version. The specification
+has been derived from a third party source [2] without reference to
+the original.
+
+Design
+------
+
+The ASF format can carry any combination of audio, video or
+'ASF_Command_Media' streams. For simplicity it is assumed that each
+file can carry up to 16 audio streams and 16 video streams. These are
+implemented as dynamic pads and appear as appropriate once the file
+headers have been parsed.
+
+    (-------------------------)
+    ! asfdemux                !
+    !                    (video/raw0)---
+    !                    (video/raw1)---
+    !                    (video/raw...
+  --- src                     !
+    !                    (audio/raw0)---
+    !                    (audio/raw1)---
+    !                    (audio/raw...
+    !                         !
+    (-------------------------)
+
+
+Known stream fourccs are:
+
+Type		Tags		MIME type
+------------------------------------------
+H263		H263 I263	video/x-h263
+MJPEG		MJPG		image/jpeg	
+MPEG4		DIVX divx DX50	video/mpeg
+		XVID xvid mp4s	
+		MP4S M4S2 m4s2
+		0x04000000
+MSMPEG4V1	MPG4		video/mpeg
+MSMPEG4V2	MP42		video/mpeg
+MSMPEG4V3	MP43 DIV3	video/mpeg
+WMV1		WMV1		video/x-wmv, wmvversion = (int) 1
+WMV2		WMV2		video/x-wmv, wmvversion = (int) 2
+WMV3		WMV3		video/x-wmv, wmvversion = (int) 3
+WMA1		WMA1		audio/x-wma, wmaversion = (int) 1
+WMA2		WMA2		audio/x-wma, wmaversion = (int) 2
+				audio/x-wma, wmaversion = (int) 3
+
+These video stream headers is very similar to that used in the AVI
+format as are the audio stream headers. In addition the content types
+are basically the same also so, for compatibility with existing
+plugins the src pads are set up as video/x-msvideo. This enables
+compatibility with the ffmpeg plugin.
+
+The demuxing process begins with the loop function gst_asf_demux_loop
+and parses the file in a recursive tree as follows:
+
+	gst_asf_demux_loop()
+	+-> gst_asf_demux_process_object()   <----
+	    +-> gst_asf_demux_process_stream()    \
+	    |-> gst_asf_demux_process_file()      |
+	    |-> gst_asf_demux_process_header()  --+
+	    |-> gst_asf_demux_process_data()
+		+-> gst_asf_demux_process_segment()
+		    +-> gst_asf_demux_process_chunk()
+
+Todo
+----
+
+- Support for ASF v2.0
+- Support for command media streams
+
+
+
+References
+----------
+
+[1] Microsoft. ASF Specification - Windows Media Technologies. 
+http://www.microsoft.com/windows/windowsmedia/format/asfspec.aspx (v01.20.01e, September 2003)
+
+[2] divx at euro.ru. ASF format version 1.0,
+reconstruction. http://avifile.sourceforge.net/asf-1.0.htm

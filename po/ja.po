@@ -1,0 +1,94 @@
+# Japanese translation of gst-plugins-ugly
+# Copyright (C) 2007, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# Makoto Kato <makoto.kt@gmail.com>, 2009-2011
+# Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>, 2012
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 1.0.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2012-12-22 19:42+0900\n"
+"Last-Translator: Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>\n"
+"Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.4\n"
+
+msgid "Could not read from CD."
+msgstr "CDを読むことができません。"
+
+msgid "Could not open CD device for reading."
+msgstr "読み込み用にCDデバイスを開くことができません。"
+
+msgid "Disc is not an Audio CD."
+msgstr "ディスクは音声CDではありません。"
+
+msgid "Could not open DVD"
+msgstr "DVDを開くことができません"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "DVDタイトル %d を開くことができません"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "DVDタイトル %2$d のチャプター %1$d へ移動できません"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"DVDタイトル %d を開くことができません。この要素はインタラクティブタイトルをサ"
+"ポートしていません。"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"DVDを読み込むことができませんでした。DVDが暗号化されているかDVDを解読するライ"
+"ブラリがインストールされていないからかもしれません。"
+
+msgid "Could not read DVD."
+msgstr "DVDを読み込むことができません。"
+
+msgid "This stream contains no data."
+msgstr "このストリームはデータを含んでいません。"
+
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "LAME MP3 音声エンコーダーの構成に失敗しました。エンコーディングパラメータ"
+#~ "をチェックしてください。"
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "要求されたビットレート %d kbit/s はプロパティ '%s' では許可されません。そ"
+#~ "のためビットレートは %d kbit/s へ変更されました。"
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "TwoLAMEエンコーダーの構成に失敗しました。エンコード用のパラメータをチェッ"
+#~ "クしてください。"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "内部データストリームエラー。"
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "DVD上のタイトル情報が不正です。"
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "DVDからタイトル情報を読み込むことができません。"
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "DVDデバイス '%s' を開くことができません。"
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "プログラム・チェーン (PGC) のシークに失敗しました。"

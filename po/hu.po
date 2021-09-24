@@ -1,0 +1,94 @@
+# Hungarian translation of gst-plugins-ugly
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+#
+# Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2012.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 1.0.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2012-11-30 15:02+0100\n"
+"Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
+"Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
+"Language: hu\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.4\n"
+"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
+
+msgid "Could not read from CD."
+msgstr "A CD nem olvasható."
+
+msgid "Could not open CD device for reading."
+msgstr "Nem nyitható meg a CD eszköz olvasásra."
+
+msgid "Disc is not an Audio CD."
+msgstr "A lemez nem hang CD."
+
+msgid "Could not open DVD"
+msgstr "A DVD nem nyitható meg"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "Nem nyitható meg a(z) %d. DVD cím"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "A(z) $%2d. DVD cím $%1d. fejezetére ugrás meghiúsult"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Nem nyitható meg a(z) %d. DVD cím. Ez az elem nem támogatja az interaktív "
+"címeket."
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Nem olvasható a DVD. Ezt az okozhatja, hogy a DVD titkosított, és a DVD-"
+"visszafejtő programkönyvtár nincs telepítve."
+
+msgid "Could not read DVD."
+msgstr "Nem olvasható a DVD."
+
+msgid "This stream contains no data."
+msgstr "Ez az adatfolyam nem tartalmaz adatokat."
+
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "A LAME MP3 hangkódoló beállítása meghiúsult. Ellenőrizze a kódolás "
+#~ "beállításait."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "A kért %d kbit/s bitsebesség nem engedélyezett a(z) „%s” tulajdonsághoz. "
+#~ "A bitsebesség módosítva %d kbit/s-re."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "A TwoLAME kódoló beállítása meghiúsult. Ellenőrizze a kódolás "
+#~ "beállításait."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Belső adatfolyam-hiba."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "A DVD címinformációi érvénytelenek."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "A DVD címinformációi nem olvashatók."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Nem nyitható meg a DVD eszköz („%s”)."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "A PGC alapú keresés beállítása meghiúsult."

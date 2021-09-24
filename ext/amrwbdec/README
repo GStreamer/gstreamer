@@ -1,0 +1,6 @@
+Compiling AMRWB decoder:
+========================
+
+To compile the amrwbdec plugin, you need the opencore-amrwb development
+package. If your distribution does not provide this package, you can
+download the source code from "http://sourceforge.net/projects/opencore-amr".

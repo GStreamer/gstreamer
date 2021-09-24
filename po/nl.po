@@ -1,0 +1,95 @@
+# translation of gst-plugins-ugly-1.10.0.nl.po to Dutch
+# Copyright (C) 2004, 2007, 2008, 2009 Free Software Foundation, Inc.
+#
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2011, 2012, 2014, 2017.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 1.10.0\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2017-10-24 23:30+0100\n"
+"Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
+"Language-Team: Dutch <vertaling@vrijschrift.org>\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Lokalize 2.0\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+msgid "Could not read from CD."
+msgstr "Kan niet van de cd lezen."
+
+msgid "Could not open CD device for reading."
+msgstr "Kan het CD-apparaat niet openen voor lezen."
+
+msgid "Disc is not an Audio CD."
+msgstr "De schrijf is geen audio-CD"
+
+msgid "Could not open DVD"
+msgstr "Kan DVD niet openen"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "Kan DVD-titel %d niet openen"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Kan niet naar hoofdstuk %d van DVD-titel %d gaan"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Kan de DVD-titel %d niet openen. Interactieve titels worden door dit element "
+"niet ondersteund"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Kon dvd niet lezen. Dit kan veroorzaakt zijn omdat de dvd versleuteld is en "
+"een bibliotheek voor ontcijferen van een dvd niet is geïnstalleerd."
+
+msgid "Could not read DVD."
+msgstr "Kon dvd niet lezen"
+
+msgid "This stream contains no data."
+msgstr "Deze stroom bevat geen gegevens."
+
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Instellen van de LAME mp3-encoder is mislukt. Controleer uw parameters "
+#~ "voor codering."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "De gevraagde bitsnelheid %d kbits/s voor eigenschap '%s' is niet "
+#~ "toegestaan. De bitsnelheid is gewijzigd in %d kbits/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Kan de TwoLAME-encoder niet configureren. Controleer uw "
+#~ "encodingparameters."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Fout met interne gegevensstroom."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Ongeldige titelinformatie op de DVD."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Kan de titelinformatie van de DVD niet lezen."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Kan het DVD-apparaat '%s' niet openen."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Kan op PGC gebaseerd zoeken niet instellen."

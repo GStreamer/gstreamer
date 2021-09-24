@@ -1,0 +1,84 @@
+# Catalan translation for gstreamer.
+# Copyright © 2004, 2005, 2010 Free Software Foundation, Inc.
+# This file is put in the public domain.
+# Jordi Mallach <jordi@sindominio.net>, 2004, 2005, 2010.
+# Jordi Estrada <jordi.estrada@yamaha-motor.es>, 2011.
+# Gil Forcada <gforcada@gnome.org>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2012-01-01 14:19+0100\n"
+"Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
+"Language-Team: Catalan <ca@dodds.net>\n"
+"Language: ca\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+msgid "Could not read from CD."
+msgstr "No s'ha pogut llegir des del CD."
+
+msgid "Could not open CD device for reading."
+msgstr "No s'ha pogut obrir el dispositiu de CD per a lectura."
+
+msgid "Disc is not an Audio CD."
+msgstr "El disc no és un CD d'àudio."
+
+msgid "Could not open DVD"
+msgstr "No s'ha pogut obrir el DVD"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "No s'ha pogut obrir el títol %d del DVD"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "No s'ha pogut anar al capítol %d del títol %d del DVD."
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"No s'ha pogut obrir el títol %d del DVD. Els títols interactius no són "
+"compatibles amb aquest element"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"No s'ha pogut llegir el DVD. Possiblement el DVD està encriptat i la "
+"biblioteca de desencriptació de DVD no està instal·lada."
+
+msgid "Could not read DVD."
+msgstr "No s'ha pogut llegir el DVD."
+
+msgid "This stream contains no data."
+msgstr "Aquest flux no conté dades."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "No s'ha pogut configurar el codificador LAME. Comproveu els paràmetres de "
+#~ "codificació."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "La taxa de bits %d kbit/s per a la propietat «%s» no és permesa. S'ha "
+#~ "canviat la taxa de bits a %d kbit/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "No s'ha pogut configurar el codificador TwoLAME. Comproveu els paràmetres "
+#~ "de codificació."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "S'ha produït un error intern de flux de dades."

@@ -1,0 +1,99 @@
+# translation of gst-plugins-ugly.master.po to Basque
+# Copyright (C) 2004, 2005, 2006, 2008, 2009 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-ugly package.
+#
+# Iñaki Larrañaga Murgoitio <dooteo@euskalgnu.org>, 2009.
+# Mikel Olasagasti Uranga <hey_neken@mundurat.net>, 2009, 2010.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly-0.10.13.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2010-03-07 13:12+0200\n"
+"Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
+"Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
+"Language: eu\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Could not read from CD."
+msgstr "Ezin izan da CDtik irakurri."
+
+msgid "Could not open CD device for reading."
+msgstr "Ezin izan da CD gailua ireki irakurtzeko."
+
+msgid "Disc is not an Audio CD."
+msgstr "Ez da Audio CD disko bat."
+
+msgid "Could not open DVD"
+msgstr "Ezin izan da DVDa ireki"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "Ezin izan da DVDko %d. titulua ireki"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Huts egin du DVDko %2$d. tituluaren %1$d. kapitulura joatean"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Ezin izan da DVDko %d. titulua ireki. Elementu honek ez ditu onartzen titulu "
+"interaktiboak"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "Ezin izan da DVDa ireki"
+
+msgid "This stream contains no data."
+msgstr "Korronte honek ez du daturik."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Huts egin du TwoLAME kodetzailea konfiguratzean. Begiratu kodetze-"
+#~ "parametroak ondo dauden."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Ez da onartzen '%2$s' propietatearentzat eskatutako %1$d kbit/s-ko bit-"
+#~ "emaria. Bit-emaria aldatu egin da, eta orain %3$d kbit/s-koa da."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Huts egin du TwoLAME kodetzailea konfiguratzean. Begiratu kodetze-"
+#~ "parametroak ondo dauden."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Datu-korrontearen barne-errorea."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Huts egin du LAME kodetzailea konfiguratzean. Begiratu kodetze-"
+#~ "parametroak ondo dauden."
+
+#, fuzzy
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Ezin izan da CDtik irakurri."
+
+#, fuzzy
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Ezin izan da DVDko %d. titulua ireki"

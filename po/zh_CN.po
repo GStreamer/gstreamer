@@ -1,0 +1,86 @@
+# Chinese (simplified) translation for gst-plugins-ugly.
+# Copyright (C) 2007 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# Wenzheng Hu <db_lobster@163.com>, 2007.
+# LI Daobing <lidaobing@gmail.com>, 2008, 2009.
+# Wylmer Wang <wantinghard@gmail.com>, 2011.
+# Mingye Wang <arthur200126@gmail.com>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 1.5.1\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2015-08-28 15:36+0800\n"
+"Last-Translator: Mingye Wang <arthur200126@gmail.com>\n"
+"Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.4\n"
+
+msgid "Could not read from CD."
+msgstr "无法读取 CD。"
+
+msgid "Could not open CD device for reading."
+msgstr "无法打开以读方式打开 CD 设备。"
+
+msgid "Disc is not an Audio CD."
+msgstr "盘类型不是音频 CD。"
+
+msgid "Could not open DVD"
+msgstr "无法打开 DVD"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "无法打开 DVD 标题 %d"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "跳转到章节 %d, DVD 标题 %d 失败"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr "无法打开 DVD 标题 %d. 这个元素不支持互动标题"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr "无法读取 DVD。可能 DVD 光盘已加密，但 DVD 解密库没有安装。"
+
+msgid "Could not read DVD."
+msgstr "无法读取 DVD。"
+
+msgid "This stream contains no data."
+msgstr "这个串流中没有包含数据."
+
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr "配置 LAME mp3 编码器失败. 请检查你的编码参数."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr "不允许的比特率 %d kbit/s 于 '%s'. 比特率已改变成 %d kbit/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr "设置 TwoLAME 编码器失败. 请检查你的编码参数."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "内部数据流错误。"
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "无效的 DVD 标题信息。"
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "无法读取为 DVD 读取标题信息。"
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "无法打开 DVD 设备 '%s'。"
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "设置基于 PGC 的定位失败。"

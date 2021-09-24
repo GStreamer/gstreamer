@@ -1,0 +1,99 @@
+# Maltese translation for gst-plugins-ugly.
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# NAME OF AUTHOR <michelbugeja@rabatmalta.com>, 2008.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly-0.10.9.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2008-11-13 18:18+0100\n"
+"Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
+"Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
+"Language: mt\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Maltese\n"
+"X-Poedit-Country: Malta\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Could not read from CD."
+msgstr "Ma nistax naqra mis-CD."
+
+msgid "Could not open CD device for reading."
+msgstr "Ma nistax niftaħ is-CD biex naqra."
+
+msgid "Disc is not an Audio CD."
+msgstr "Id-diska mijhiex CD tal-awdjo."
+
+msgid "Could not open DVD"
+msgstr "Ma nistax niftaħ DVD."
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "Ma nistax niftaħ titlu %d tad-DVD"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Problema biex immur kapitlu %d mit-titlu %d tad-DVD"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Ma nistax niftaħ titlu %d tad-DVD. Titli nterattivi mhux issapportjati minn "
+"dan l-element"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "Ma nistax niftaħ DVD."
+
+msgid "This stream contains no data."
+msgstr "L-istream ma fiha l-ebda data."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Problema biex nissetja LAME encoder. Iċċekkja l-parametri tal-encoding."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Mhux permess il-bitrate %d kbit/s rikjesta għal '%s'. Għalhekk il-bitrate "
+#~ "ġiet mibdula għal %d kbit/s."
+
+#, fuzzy
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Problema biex nissetja LAME encoder. Iċċekkja l-parametri tal-encoding."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Problema interna fid-data stream."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Problema biex nissetja LAME encoder. Iċċekkja l-parametri tal-encoding."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "L-informazzjoni tat-titlu tad-DVD mhux validu."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Ma nistax naqra l-informazzjoni tat-titlu tad-DVD."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Problema biex niftaħ l-apparat tad-DVD '%s'."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Problema biex nissettja tfittxija bbażata fuq PGC."

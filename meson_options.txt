@@ -1,0 +1,39 @@
+option('x264_libraries', type : 'string', value : '',
+       description : 'Colon separated list of additional x264 library paths, e.g. for 10-bit version')
+
+# Feature options for plugins without external deps
+option('asfdemux', type : 'feature', value : 'auto')
+option('dvdlpcmdec', type : 'feature', value : 'auto')
+option('dvdsub', type : 'feature', value : 'auto')
+option('realmedia', type : 'feature', value : 'auto')
+option('xingmux', type : 'feature', value : 'auto')
+
+# Feature options for plugins that need external deps
+option('a52dec', type : 'feature', value : 'auto', description : 'Dolby Digital (AC-3) audio decoder plugin')
+option('amrnb', type : 'feature', value : 'auto', description : 'Adaptive Multi-Rate Narrow-Band audio codec plugin')
+option('amrwbdec', type : 'feature', value : 'auto', description : 'Adaptive Multi-Rate Wide-Band audio decoder plugin')
+option('cdio', type : 'feature', value : 'auto', description : 'CD audio source plugin')
+option('dvdread', type : 'feature', value : 'auto', description : 'DVD video source plugin')
+option('mpeg2dec', type : 'feature', value : 'auto', description : 'MPEG 2 video decoder plugin')
+option('sidplay', type : 'feature', value : 'auto', description : 'Commodore 64 audio decoder plugin')
+option('x264', type : 'feature', value : 'auto', description : 'H.264 video encoder plugin')
+
+# Common feature options
+option('nls', type : 'feature', value : 'auto', yield: true,
+       description : 'Enable native language support (translations)')
+option('orc', type : 'feature', value : 'auto', yield : true)
+option('tests', type : 'feature', value : 'auto', yield : true)
+option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
+       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases)')
+option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
+       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)')
+option('glib-checks', type : 'feature', value : 'enabled', yield : true,
+       description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)')
+
+# Common options
+option('package-name', type : 'string', yield : true,
+       description : 'package name to use in plugins')
+option('package-origin', type : 'string', value : 'Unknown package origin', yield: true,
+       description : 'package origin URL to use in plugins')
+option('doc', type : 'feature', value : 'auto', yield: true,
+       description: 'Enable documentation.')
