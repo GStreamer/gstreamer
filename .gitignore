@@ -9,7 +9,7 @@ prefix/
 pygobject
 .gdbinit
 
-^gst*
+/gst*
 subprojects/*
 !subprojects/gst*
 subprojects/gst-plugins-rs/
