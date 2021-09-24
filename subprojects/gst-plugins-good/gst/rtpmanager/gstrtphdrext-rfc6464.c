@@ -146,41 +146,15 @@ gst_rtp_header_extension_rfc6464_set_caps_from_attributes (GstRTPHeaderExtension
     * ext, GstCaps * caps)
 {
   GstRTPHeaderExtensionRfc6464 *self = GST_RTP_HEADER_EXTENSION_RFC6464 (ext);
-  gchar *field_name = gst_rtp_header_extension_get_sdp_caps_field_name (ext);
-  GstStructure *s = gst_caps_get_structure (caps, 0);
-  GValue arr = G_VALUE_INIT;
-  GValue val = G_VALUE_INIT;
+  const gchar *vad;
 
-  if (!field_name)
-    return FALSE;
-
-  g_value_init (&arr, GST_TYPE_ARRAY);
-  g_value_init (&val, G_TYPE_STRING);
-
-  /* direction */
-  g_value_set_string (&val, "");
-  gst_value_array_append_value (&arr, &val);
-
-  /* uri */
-  g_value_set_string (&val, gst_rtp_header_extension_get_uri (ext));
-  gst_value_array_append_value (&arr, &val);
-
-  /* attributes */
   if (self->vad)
-    g_value_set_string (&val, "vad=on");
+    vad = "vad=on";
   else
-    g_value_set_string (&val, "vad=off");
-  gst_value_array_append_value (&arr, &val);
+    vad = "vad=off";
 
-  gst_structure_set_value (s, field_name, &arr);
-
-  GST_DEBUG_OBJECT (self, "%" GST_PTR_FORMAT, caps);
-
-  g_value_unset (&val);
-  g_value_unset (&arr);
-
-  g_free (field_name);
-  return TRUE;
+  return gst_rtp_header_extension_set_caps_from_attributes_helper (ext, caps,
+      vad);
 }
 
 static gssize
