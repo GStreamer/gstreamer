@@ -1,0 +1,54 @@
+meta,
+    handles-states=true,
+    args = {
+        "videotestsrc pattern=blue ! compositor name=c ! video/x-raw,width=100,height=100,framerate=10/1 ! $(videosink) videotestsrc pattern=green ! c.",
+    }
+
+# Start with the green stream on the top left corner and the blue on in the bottom right
+set-timed-value-properties, timestamp=0.0, source-type=GstTriggerControlSource, binding-type=direct-absolute,
+    c.sink_0::xpos=50,
+    c.sink_0::ypos=50,
+    c.sink_0::width=50,
+    c.sink_0::height=50,
+    c.sink_1::xpos=0,
+    c.sink_1::ypos=0,
+    c.sink_1::width=50,
+    c.sink_1::height=50
+
+# And invert it after 1 second of playback
+set-timed-value-properties, timestamp=1.0, source-type=GstTriggerControlSource, binding-type=direct-absolute,
+    c.sink_0::xpos=0,
+    c.sink_0::ypos=0,
+    c.sink_1::xpos=50,
+    c.sink_1::ypos=50
+
+play
+crank-clock, expected-time=0.0
+check-properties,
+    c.sink_0::xpos=50,
+    c.sink_0::ypos=50,
+    c.sink_1::xpos=0,
+    c.sink_1::ypos=0
+
+crank-clock, repeat=5
+check-position, expected-position=0.5
+check-properties,
+    c.sink_0::xpos=50,
+    c.sink_0::ypos=50,
+    c.sink_1::xpos=0,
+    c.sink_1::ypos=0
+
+crank-clock, repeat=5
+check-position, expected-position=1.0
+check-properties,
+    c.sink_0::xpos=0,
+    c.sink_0::ypos=0,
+    c.sink_1::xpos=50,
+    c.sink_1::ypos=50
+
+set-properties, c.sink_0::xpos=50, c.sink_0::ypos=50, c.sink_1::xpos=0, c.sink_1::ypos=0
+check-properties, c.sink_0::xpos=50, c.sink_0::ypos=50, c.sink_1::xpos=0, c.sink_1::ypos=0
+
+set-properties, c::latency=50.0
+check-properties, c::latency=50.0
+stop

@@ -1,0 +1,80 @@
+meta,
+    handles-states=true,
+    args = {
+        "videotestsrc pattern=ball animation-mode=frames num-buffers=30 ! video/x-raw,framerate=10/1 ! $(videosink) name=sink sync=true",
+    },
+    expected-issues = {
+        [
+            expected-issue,
+                level=critical,
+                issue-id=scenario::execution-error,
+                details="Pipeline position doesn.t match expectations got 0:00:00.100000000 instead of.*",
+        ],
+        [
+            expected-issue,
+                level=critical,
+                issue-id=scenario::execution-error,
+                details="Pipeline position doesn.t match expectations got 0:00:00.200000000 instead of.*",
+        ],
+        [
+            expected-issue,
+                level=critical,
+                issue-id=scenario::execution-error,
+                details="Expected subaction level 4, got 3",
+        ],
+        [
+            expected-issue,
+                level=critical,
+                issue-id=scenario::execution-error,
+                details="Expected subaction level 4, got 3",
+        ],
+        [
+            expected-issue,
+                level=critical,
+                issue-id=scenario::execution-error,
+                details="Expected subaction level 5, got 4",
+        ],
+        [
+            expected-issue,
+                level=critical,
+                issue-id=scenario::execution-error,
+                details="Expected subaction level 5, got 4",
+        ],
+    }
+
+pause;
+
+
+foreach, n=[0, 2],
+    actions={
+        [seek, start="$(position)+0.1", flags="accurate+flush"],
+        [check-position, expected-position="expr($(n)*0.01)"],  # Expected failling subaction!
+    }
+
+priv_check-action-type-calls, type=seek, n=2
+priv_check-action-type-calls, type=check-position, n=2
+
+foreach, i=[0, 2],
+    actions={
+        [seek, start="$(position)+0.1", flags="accurate+flush"],
+        [priv_check-subaction-level, level=1],
+        [foreach, j=[0, 1],
+            actions={
+                [priv_check-subaction-level, level=2],
+                [foreach, k=[0, 1],
+                    actions={
+                        [priv_check-subaction-level, level=4],  # Failling... twice
+                        [priv_check-subaction-level, level=3],
+                        [foreach, l=[0, 1],
+                            actions={
+                                [priv_check-subaction-level, level=4],
+                                [priv_check-subaction-level, level=5], # Failling... twice
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+priv_check-action-type-calls, type=seek, n=4
+stop

@@ -1,0 +1,117 @@
+# Add a python api for tracer analyzers
+
+The python framework will parse the tracer log and aggregate information.
+the tool writer will subclass from the Analyzer class and override methods:
+
+  'handle_tracer_class(self, entry)'
+  'handle_tracer_entry(self, entry)'
+
+Each of those is optional. The entry field is the parsed log line. In most cases
+the tools will parse the structure contained in event[Parser.F_MESSAGE].
+
+TODO: maybe do apply_tracer_entry() and revert_tracer_entry() - 'apply' will
+patch the shared state forward and 'revert' will 'apply' the inverse. This would
+let us go back from a state. An application should still take snapshots to allow
+for efficient jumping around. If that is the case we could also always go forward
+from a snapshot.
+
+A tool will use an AnalysisRunner to chain one or more analyzers and iterate the
+log. A tool can also replay the log multiple times. If it does, it won't work in
+'streaming' mode though (streaming mode can offer live stats).
+
+## TODO
+### gst shadow types
+Do we want to provide classes like GstBin, GstElement, GstPad, ... to aggregate
+info. One way to get them would be to have a GstLogAnalyzer that knows
+about data from the log tracer and populates the classes. Tools then can
+do e.g.
+
+  pad.name()             # pad name
+  pad.parent().name()    # element name
+  pad.peer().parent()    # peer element
+  pad.parent().state()   # element state
+
+This would allow us to e.g. get a pipeline graph at any point in the log.
+
+### improve class handling
+We already parse the tracer classes. Add helpers that for numeric values that
+extract them, and aggregate min/max/avg. Consider other statistical information
+(std. deviation) and provide a rolling average for live view.
+
+## Examples
+### Sequence chart generator (mscgen)
+
+1.) Write file header
+
+2.) collect element order
+Replay the log and use pad_link_pre to collect pad->peer_pad relationship.
+Build a sequence of element names and write to msc file.
+
+3.) collect event processing
+Replay the log and use pad_push_event_pre to output message lines to mscfile.
+
+4.) write footer and run the tool.
+
+## Latency stats
+
+1.) collect per sink-latencies and for each sink per source latencies
+Calculate min, max, avg. Consider streaming interface, where we update the stats
+e.g. once a sec
+
+2.) in non-streaming mode write final statistic
+
+## cpu load stats
+
+Like latency stats, for cpu load. Process cpu load + per thread cpu load.
+
+## top
+
+Combine various stats tools into one.
+
+
+# todo
+## all tools
+* need some (optional) progress reporting
+
+## structure parser
+* add an optional compiled regexp matcher an constructor param
+* then we'll parse the whole structure with a single regexp
+  * this will only parse the top-level structure, we'd then check if there are
+    nested substructure and handle them
+
+# Improve tracers
+## log
+* the log tracer logs args and results into misc categories
+* issues
+  * not easy/reliable to detect its output among other trace output
+  * not easy to match pre/post lines
+  * uses own do_log method, instead of gst_tracer_record_log
+    * if we also log structures, we need to log the 'function' as the
+      structure-name, also fields would be key=(type)val, instead of key=value
+    * if we switch to gst_tracer_record_log, we'd need to register 27 formats :/
+## object ids
+When logging GstObjects in PTR_FORMAT, we log the name. Unfortunately the name
+is not neccesarilly unique over time. Same goes for the object address.
+When logging a tracer record we need a way for the scope fileds to uniquely
+relate to objects.
+a) parse object creation and destruction and build <name:id>-maps in the tracer
+   tools:
+   new-element message: gst_util_seqnum_next() and assoc with name
+   <new stats>: get id by name and get data record via id
+
+   if we go this way, the stats tracer would log name in regullar record (which
+   makes them more readable).
+
+FIXME:
+- if we use stats or log and latency, do we log latency messages twice?
+  grep -c ":: latency, " logs/trace.all.log
+  8365
+
+  grep ":: event, " logs/trace.all.log | grep -c "name=(string)latency"
+  63
+
+  seems to not happen, regardless of order in GST_TRACERS="latency;stats"
+
+- why do we log element-ix for buffer, event, ... log-entries in the stats
+  tracer? We log new-pad, when the pad get added to a parent, so we should know
+  the element already

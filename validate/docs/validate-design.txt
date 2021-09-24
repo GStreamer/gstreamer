@@ -1,0 +1,59 @@
+== Main components
+
+Gst-validate is composed of 4 parts: the issues, the reports, the runner and
+the reporters.
+
+= Issue
+Gst-Validate's main target is finding problems in GStreamer elements/pipelines.
+To make it easier to track down exactly what happens, the tests run by
+Gst-Validate use an extensible list of 'Issues'. Each Issue describes a
+potential error situation and has an unique ID and a severity level.
+
+The issues list can be extended by 3rd party libraries if specific needs
+should be met.
+
+= Reporters
+A reporter is the object that implements the GstValidateReporter interface and
+is responsible for performing tests on some target element/scenario. The
+reporter is able to create 'Reports' whenever a test it executes fails.
+
+= Reports
+The GstValidateReports are created whenever a test fails, they are posted to the
+stderr and also are posted to the GstValidateRunner for accumulation.
+
+Each report contains information about the object that generated the issue,
+the issue associated with the report and a specific debug message for the case,
+this helps tracking down the problem and fixing it.
+
+= Runner
+The GstValidateRunner is the point of communication for the app to gst-validate
+monitoring. It provides an API to gather reports and to make them accessible
+to the application.
+
+== Reporter types
+
+= Monitors
+The monitors are used to wrap around pipelines (and elements and pads) and
+attach to their data flow handling functions to be able to intercept the data
+and compare it with the expected behaviors. There are 3 types of monitors:
+
+  * GstValidateElementMonitor
+  * GstValidateBinMonitor
+  * GstValidatePadMonitor
+
+All 3 inherit from the base GstValidateMonitor class. Their name suggest what
+they monitor and they have a relationship to their children and parents. A bin
+monitor has, possibly, child element monitors and element monitors have child
+pad monitors. The monitors are responsible for listening to new children added
+to their monitored object and creating monitors for them. For example, element
+monitors listen to element's pad-added signal and create pad monitors whenever
+a new pad is added.
+
+Most (if not all) the checks are implemented at the GstValidatePadMonitor,
+as it is where the data flow happens.
+
+= FileChecker
+The file checker is another reporter that is used to make sure a file has a
+few expected properties. It inspects the file and compares the results with
+expected values set by the user. Values such as file duration, file size, if
+it can be played back and also if its encoding and container types.

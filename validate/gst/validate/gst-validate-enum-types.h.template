@@ -1,0 +1,26 @@
+/*** BEGIN file-header ***/
+#ifndef __GST_ENUM_TYPES_H__
+#define __GST_ENUM_TYPES_H__
+
+#include <glib-object.h>
+#include <gst/validate/validate.h>
+#include <gst/validate/media-descriptor-writer.h>
+
+G_BEGIN_DECLS
+/*** END file-header ***/
+
+/*** BEGIN file-production ***/
+
+/* enumerations from "@basename@" */
+/*** END file-production ***/
+
+/*** BEGIN value-header ***/
+GST_VALIDATE_API GType @enum_name@_get_type (void);
+#define @ENUMPREFIX@_TYPE_@ENUMSHORT@ (@enum_name@_get_type ())
+/*** END value-header ***/
+
+/*** BEGIN file-tail ***/
+G_END_DECLS
+
+#endif /* __GST_ENUM_TYPES_H__ */
+/*** END file-tail ***/

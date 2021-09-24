@@ -1,0 +1,3 @@
+description, summary="Use the set seek type to seek at 5 seconds after 2 seconds", seek=true
+include,location=includes/default-seek-flags.scenario
+seek, playback-time=2.0, rate=1.0, start_type=set, start=5.0, stop_type=none, stop=0.0, flags="$(default_flags)"

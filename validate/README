@@ -1,0 +1,42 @@
+== Gst-Validate
+
+The goal of GstValidate is to be able to detect when elements are not
+behaving as expected and report it to the user so he knows how things
+are supposed to work inside a GstPipeline. In the end, fixing issues
+found by the tool will ensure that all elements behave all together in
+the expected way.
+
+The easiest way of using GstValidate is to use one of its command-line
+tools, located at tools/ directory. It is also possible to monitor
+GstPipelines from any application by using the LD_PRELOAD gstvalidate
+lib. The third way of using it is to write your own application that
+links and uses libgstvalidate.
+
+== BUILDING
+
+Getting the code:
+
+Releases are available at <URL>, download and extract the tarball. If you
+want to use latest git version, do:
+
+git clone <URI>
+
+After cloning or extracting from a tarball, enter the gst-validate directory:
+
+cd gst-validate
+
+Build with:
+
+meson build --prefix=<installation-prefix>
+ninja -C build
+sudo ninja -C build install (only if you want to install it)
+
+Replace <installation-prefix> with your desired installation path, you can omit
+the --prefix argument if you aren't going to install it or if you want the
+default /usr/local. It is possible to use gst-validate CLI tools without
+installation.
+
+== INSTRUCTIONS
+
+If you are looking for informations on how to use gst-validate -> docs/validate-usage.txt
+If you are looking for informations on gst-validate design -> docs/validate-design.txt

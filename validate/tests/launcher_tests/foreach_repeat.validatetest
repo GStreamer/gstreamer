@@ -1,0 +1,31 @@
+meta,
+    handles-states=true,
+    args = {
+        "videotestsrc name=src pattern=ball animation-mode=frames num-buffers=30 ! video/x-raw,framerate=10/1 ! $(videosink) name=sink sync=true",
+    }
+
+pause;
+
+foreach, repeat="max(1, 2)",
+    actions = {
+        "seek, start=\"$(position)+0.1\", flags=\"accurate+flush\"",
+        "check-position, expected-position=\"expr((1+$(repeat))*0.1)\"",
+    }
+
+priv_check-action-type-calls, type=seek, n=2
+priv_check-action-type-calls, type=check-position, n=2
+
+foreach,
+    repeat=2,
+    pattern=[0, 10, 5],
+    actions = {
+        "set-properties, src::horizontal-speed=\"$(pattern)\"",
+        "check-properties, src::horizontal-speed=\"$(pattern)\"",
+    }
+
+check-properties, src::horizontal-speed=5
+priv_check-action-type-calls, type=set-properties, n=4
+priv_check-action-type-calls, type=check-properties, n=5
+priv_check-action-type-calls, type=seek, n=2
+priv_check-action-type-calls, type=check-position, n=2
+stop

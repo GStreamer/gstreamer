@@ -1,0 +1,7 @@
+meta,
+    args = {
+        "audiotestsrc ! capsfilter caps=\"audio/x-raw,channels=2,channel-mask=(bitmask)0x67\" ! audioconvert ! capsfilter caps=\"audio/x-raw,channels=6,channel-mask=(bitmask)0x32\" name=capsfilter ! fakesink",
+    },
+    expected-issues = {
+        "expected-issue, level=critical, summary=\"a NOT NEGOTIATED message has been posted on the bus.\", details=\".*Caps negotiation failed at pad.*capsfilter:sink.*as it refused caps:.*\"",
+    }

@@ -1,0 +1,12 @@
+option('validate', type : 'feature', value : 'auto',
+       description : 'Build GstValidate')
+option('debug_viewer', type : 'feature', value : 'disabled',
+        description : 'Build GstDebugViewer (GPLv3+)')
+option('introspection', type : 'feature', value : 'auto', yield : true,
+       description : 'Generate gobject-introspection bindings')
+option('tests', type : 'feature', value : 'auto', yield : true,
+       description : 'Build and enable unit tests')
+option('nls', type : 'feature', value : 'auto', yield: true,
+       description : 'Enable native language support (translations)')
+option('doc', type : 'feature', value : 'auto', yield: true,
+       description: 'Enable documentation.')

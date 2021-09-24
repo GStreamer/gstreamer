@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=GStreamer Debug Viewer
+Comment=Examine GStreamer debug log information
+StartupNotify=true
+Exec=gst-debug-viewer
+Icon=gst-debug-viewer
+Type=Application
+Categories=GNOME;Development
+

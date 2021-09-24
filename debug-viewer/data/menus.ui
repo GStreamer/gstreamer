@@ -1,0 +1,82 @@
+<!-- -*- mode: xml; -*- -->
+<ui>
+  <menubar>
+    <menu name="AppMenu" action="AppMenuAction">
+      <menuitem name="AppNewWindow" action="new-window"/>
+      <menuitem name="WindowOpen" action="open-file"/>
+      <menuitem name="WindowReload" action="reload-file"/>
+      <separator/>
+      <menuitem name="ShowAbout" action="show-about"/>
+      <separator/>
+      <menuitem name="WindowClose" action="close-window"/>
+    </menu>
+    <menu name="ViewMenu" action="ViewMenuAction">
+      <menu name="ViewColumnsMenu" action="ViewColumnsMenuAction">
+        <menuitem name="ViewColumnsTime" action="show-time-column"/>
+        <menuitem name="ViewColumnsLevel" action="show-level-column"/>
+        <menuitem name="ViewColumnsPid" action="show-pid-column"/>
+        <menuitem name="ViewColumnsThread" action="show-thread-column"/>
+        <menuitem name="ViewColumnsCode" action="show-code-column"/>
+        <menuitem name="ViewColumnsCategory" action="show-category-column"/>
+        <menuitem name="ViewColumnsFunction" action="show-function-column"/>
+        <menuitem name="ViewColumnsObject" action="show-object-column"/>
+        <menuitem name="ViewColumnsMessage" action="show-message-column"/>
+      </menu>
+      <placeholder name="ViewMenuAdditions"/>
+      <separator/>
+      <menuitem name="ViewContextMenuHideLevel" action="hide-log-level"/>
+      <menuitem name="ViewContextMenuHideLevelAndAbove" action="hide-log-level-and-above"/>
+      <menuitem name="ViewContextMenuShowOnlyLevel" action="show-only-log-level"/>
+      <menuitem name="ViewContextMenuHideCategory" action="hide-log-category"/>
+      <menuitem name="ViewContextMenuShowOnlyCategory" action="show-only-log-category"/>
+      <menuitem name="ViewContextMenuHideThread" action="hide-thread"/>
+      <menuitem name="ViewContextMenuShowOnlyThread" action="show-only-thread"/>
+      <menuitem name="ViewContextMenuHideObject" action="hide-object"/>
+      <menuitem name="ViewContextMenuShowOnlyObject" action="show-only-object"/>
+      <menuitem name="ViewContextMenuHideFunction" action="hide-function"/>
+      <menuitem name="ViewContextMenuShowOnlyFunction" action="show-only-function"/>
+      <menuitem name="ViewContextMenuHideFilename" action="hide-filename"/>
+      <menuitem name="ViewContextMenuShowOnlyFilename" action="show-only-filename"/>
+      <menuitem name="ViewContextMenuHideBefore" action="hide-before-line"/>
+      <menuitem name="ViewContextMenuHideAfter" action="hide-after-line"/>
+      <menuitem name="ViewContextMenuShowHidden" action="show-hidden-lines"/>
+      <separator/>
+      <menuitem name="ViewContextMenuCopyMessage" action="edit-copy-message"/>
+      <menuitem name="ViewContextMenuCopyLine" action="edit-copy-line"/>
+      <separator/>
+      <menuitem name="ZoomIn" action="enlarge-text"/>
+      <menuitem name="ZoomOut" action="shrink-text"/>
+      <menuitem name="Zoom100" action="reset-text"/>
+    </menu>
+  </menubar>
+  <menubar name="context">
+    <menu name="LogViewContextMenu" action="ViewMenuAction">
+      <placeholder name="LogViewContextMenuAdditions"/>
+      <separator/>
+      <menuitem name="ViewContextMenuSetBaseTime" action="set-base-time"/>
+      <menuitem name="ViewContextMenuHideLevel" action="hide-log-level"/>
+      <menuitem name="ViewContextMenuHideLevelAndAbove" action="hide-log-level-and-above"/>
+      <menuitem name="ViewContextMenuShowOnlyLevel" action="show-only-log-level"/>
+      <menuitem name="ViewContextMenuHideCategory" action="hide-log-category"/>
+      <menuitem name="ViewContextMenuShowOnlyCategory" action="show-only-log-category"/>
+      <menuitem name="ViewContextMenuHideThread" action="hide-thread"/>
+      <menuitem name="ViewContextMenuShowOnlyThread" action="show-only-thread"/>
+      <menuitem name="ViewContextMenuHideObject" action="hide-object"/>
+      <menuitem name="ViewContextMenuShowOnlyObject" action="show-only-object"/>
+      <menuitem name="ViewContextMenuHideFunction" action="hide-function"/>
+      <menuitem name="ViewContextMenuShowOnlyFunction" action="show-only-function"/>
+      <menuitem name="ViewContextMenuHideFilename" action="hide-filename"/>
+      <menuitem name="ViewContextMenuShowOnlyFilename" action="show-only-filename"/>
+      <menuitem name="ViewContextMenuHideBefore" action="hide-before-line"/>
+      <menuitem name="ViewContextMenuHideAfter" action="hide-after-line"/>
+      <menuitem name="ViewContextMenuShowHidden" action="show-hidden-lines"/>
+      <separator/>
+      <menuitem name="ViewContextMenuCopyMessage" action="edit-copy-message"/>
+      <menuitem name="ViewContextMenuCopyLine" action="edit-copy-line"/>
+    </menu>
+    <menu name="LineViewContextMenu" action="LineViewContextMenuAction">
+      <menuitem name="LineViewContextMenuClear" action="clear-line-view"/>
+      <placeholder name="LineViewContextMenuAdditions"/>
+    </menu>
+  </menubar>
+</ui>

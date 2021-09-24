@@ -1,0 +1,15 @@
+meta,
+    handles-states=true,
+    args = {
+        "videotestsrc pattern=ball animation-mode=frames num-buffers=30 ! video/x-raw,framerate=10/1 ! $(videosink) name=sink sync=true",
+    },
+    configs = {
+       "$(validateflow), pad=sink:sink, buffers-checksum=true",
+    }
+
+pause;
+seek, start="$(position)+0.1", repeat=10, flags="accurate+flush"
+priv_check-action-type-calls, type=seek, n=10
+check-position, expected-position=1.0
+priv_check-action-type-calls, type=check-position, n=1
+stop

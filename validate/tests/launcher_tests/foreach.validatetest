@@ -1,0 +1,49 @@
+meta,
+    handles-states=true,
+    args = {
+        "videotestsrc pattern=ball animation-mode=frames num-buffers=30 ! video/x-raw,framerate=10/1 ! $(videosink) name=sink sync=true",
+    },
+    expected-issues = {
+        [
+            expected-issue,
+                level=critical,
+                issue-id=scenario::execution-error,
+                details="Pipeline position doesn.t match expectations got 0:00:00.100000000 instead of.*",
+        ],
+        [
+            expected-issue,
+                level=critical,
+                issue-id=scenario::execution-error,
+                details="Pipeline position doesn.t match expectations got 0:00:00.200000000 instead of.*",
+        ],
+    }
+
+pause;
+
+foreach, n=[0, 2],
+    actions = {
+        [seek, start="$(position)+0.1", flags="accurate+flush"],
+        [check-position, expected-position="expr($(n)*0.01)"], # expected to fail
+    }
+
+priv_check-action-type-calls, type=seek, n=2
+priv_check-action-type-calls, type=check-position, n=2
+
+foreach, n=[0, 6], actions = {
+    [seek, start="$(position)+0.1", flags="accurate+flush"],
+    [check-position, expected-position="expr((3 + $(n)) * 0.1)"],
+}
+
+priv_check-action-type-calls, type=seek, n=8
+priv_check-action-type-calls, type=check-position, n=8
+check-position, expected-position=0.8
+
+foreach, n=[9, 11], actions = {
+    [seek, start="$(position)+0.1", flags="accurate+flush"],
+    [check-position, expected-position="expr($(n)*0.1)"],
+}
+priv_check-action-type-calls, type=seek, n=10
+# We called it once manually
+priv_check-action-type-calls, type=check-position, n=11
+check-position, expected-position=1.0
+stop

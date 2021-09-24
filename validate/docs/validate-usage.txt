@@ -1,0 +1,90 @@
+=== The GstValidate CLI Tools
+
+The commands here assume that you have installed gst-validate. If this
+is not the case, go into the gst-validate directory and call the tools
+directly with the path tools/<tool-executable>
+
+1- gst-validate-1.0: It is the simplest tool and is used to run a gst
+launch style pipeline. Monitors are added to it to identify issues in the
+used elements. At the end a report will be printed, this report will
+contain information about all issues that were encountered while running
+gst-validate. To view issues as they are created, set the environment
+variable GST_DEBUG=validate:2 and it will be printed as gstreamer
+debugging. You can basically run any GstPipeline pipeline using it.
+If you are not familiar with gst-launch syntax, please refer to
+gst-launch's documentation.
+
+Examples:
+
+    # Simple playback pipeline
+    gst-validate-1.0 playbin uri=file:///path/to/some/media/file
+
+    # Transcoding pipeline
+    gst-validate-1.0 filesrc location=/root/Videos/big_buck_bunny_1080p_h264.mov ! \
+          qtdemux name=d ! queue ! x264enc ! h264parse ! mpegtsmux name=m ! progressreport ! filesink location=/root/test.ts \
+          d. ! queue ! faac ! m.
+
+You can also activate what we call "scenarios" which will execute
+actions on the pipeline. Those actions can be for example, "set pipeline
+to pause", "seek to N with rate=x" etc, using the following syntax:
+
+    gst-validate-1.0 playbin uri=file:///path/to/some/media/file --set-scenario=seek_forward
+
+You can list all available scenarios using:
+
+    gst-validate-transcoding-1.0 --list-scenarios
+
+Scenarios are simple text files describing a list of actions, you can find the
+source scenario files in validate/data/
+
+You can find more information about scenarios on the GstValidateScenario documentation: http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-validate/html/GstValidateScenario.html
+
+You can find more information about the various action types available to be executed with:
+
+    gst-validate-1.0 -t <optional-action-type>
+
+or:
+
+    gst-validate-transcoding-1.0 -t <optional-action-type>
+
+  2- gst-validate-transcoding-1.0: Transcodes input-uri to output-uri,
+using the given encoding profile. The pipeline will be monitored for
+possible issues detection using the gst-validate lib, at the end of
+execution, a report containing information about all found issues will
+be printed.
+
+Example:
+
+    # Will transcode file://path/to/some/media/file  to H264/AAC into mp4
+    gst-validate-transcoding-1.0 -o 'video/quicktime,variant=iso:video/x-h264:audio/mpeg,mpegversion=4' \
+          file://path/to/some/media/file file:///path/to/destination_h264_aac.qt
+
+The same scenarios can be activated on gst-validate-transcoding-1.0 as
+with gst-validate-1.0
+
+  3- gst-validate-media-check-1.0: Analyzes a media file and writes the
+results to stdout or a file. It can also compare the results found with
+another results file for identifying regressions. The monitoring lib
+from gst-validate will be enabled during the tests to identify issues
+with the GStreamer elements involved with the media file's container and
+codec types. It will actually do a series of checks over the media file.
+
+Example:
+
+    # Will check various media properties from the file
+    gst-validate-media-check-1.0 file://path/to/some/media/file
+
+=== LD_PRELOAD / Testing with exiting application
+
+If you want to test an already existing application without modifying it. Just
+use:
+
+LD_PRELOAD=path/to/libgstvalidatepreload.so yourapp ...
+
+gst-validate will try to replace GstPipeline creating functions and configure
+monitors automatically for you, reports will be printed to stderr when
+they are found. You can also use GST_DEBUG to view the issues that were found
+
+NOTES: The exit code will be "18" in case a critical issue has
+been seen while running any of those tools.
+

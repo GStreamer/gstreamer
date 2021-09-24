@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8; mode: python; -*-
+#
+#  GStreamer Debug Viewer - View and analyze GStreamer debug log files
+#
+#  Copyright (C) 2007 René Stadler <mail@renestadler.de>
+#
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the Free
+#  Software Foundation; either version 3 of the License, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful, but WITHOUT
+#  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU General Public License along with
+#  this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""GStreamer Debug Viewer program invocation."""
+
+
+def main():
+
+    import sys
+    import os.path
+
+    def substituted(s):
+        if s.startswith("@") and s.endswith("@"):
+            return None
+        else:
+            return s
+
+    # These "$"-enclosed strings are substituted at install time by a custom
+    # distutils extension (see setup.py).  If you don't see any dollar signs at
+    # all, you are looking at an installed version of this file.
+    data_dir = substituted("@DATADIR@")
+    lib_dir = substituted("@LIBDIR@")
+
+    if data_dir:
+        installed = True
+    else:
+        # Substitution has not been run, we are running uninstalled:
+        lib_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+        installed = False
+
+    if lib_dir:
+        if not os.path.normpath(lib_dir) in [os.path.normpath(p)
+                                             for p in sys.path]:
+            sys.path.insert(0, lib_dir)
+
+    try:
+        import GstDebugViewer
+    except ImportError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+    else:
+        if installed:
+            GstDebugViewer.Paths.setup_installed(data_dir)
+        else:
+            # Assume that we reside inside the source dist.
+            source_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+            GstDebugViewer.Paths.setup_uninstalled(source_dir)
+
+    GstDebugViewer.run()
+
+
+if __name__ == "__main__":
+    main()

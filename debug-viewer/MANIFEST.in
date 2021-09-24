@@ -1,0 +1,9 @@
+recursive-include GstDebugViewer *.py
+recursive-include data *.glade *.ui *.svg *.png
+recursive-include po *.po
+recursive-include tests *.py
+include gst-debug-viewer
+include gst-debug-viewer.desktop.in
+include org.freedesktop.GstDebugViewer.appdata.xml.in
+include AUTHORS COPYING ChangeLog MANIFEST.in NEWS README TODO
+include po/POTFILES.in

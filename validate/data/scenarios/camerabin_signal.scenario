@@ -1,0 +1,4 @@
+description, duration=20.0
+emit-signal, target-element-name=camerabin0, signal-name=start-capture, playback-time=10.0
+eos, playback-time=20.0
+

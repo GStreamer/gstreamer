@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+#
+# Copyright (c) 2015, Edward Hervey <edward@centricular.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+# Boston, MA 02110-1301, USA.
+
+import os
+import sys
+import xml.etree.cElementTree
+
+
+def extract_info(xmlfile):
+    e = xml.etree.cElementTree.parse(xmlfile).getroot()
+    r = {}
+    for i in e:
+        r[(i.get("classname"), i.get("name"))] = i
+    return r
+
+
+if "__main__" == __name__:
+    if len(sys.argv) < 2:
+        print("Usage : %s [<old run xml>] <new run xml>" % sys.argv[0])
+    if len(sys.argv) == 3:
+        oldfile = extract_info(sys.argv[1])
+        newfile = extract_info(sys.argv[2])
+    else:
+        oldfile = []
+        newfile = extract_info(sys.argv[1])
+
+    # new failures (pass in old run, fail in new run)
+    newfail = []
+    # new fixes (fail in old run, pass in new run)
+    newfix = []
+    # tests that are still failing
+    stillfail = []
+    # tests that are still failling but for a different reason
+    failchange = []
+
+    # failed tests sorted by reason
+    reasons = {}
+
+    # all files
+    allfiles = []
+
+    # failed tests sorted by file
+    failedfiles = {}
+
+    if oldfile:
+        # tests that weren't present in old run
+        newtests = [x for x in newfile.keys() if x not in oldfile]
+        # tests that are no longer present in new run
+        gonetests = [x for x in oldfile.keys() if x not in newfile]
+
+    # go over new tests
+    for k, v in newfile.iteritems():
+        tn, fn = k
+        if not fn in allfiles:
+            allfiles.append(fn)
+        newf = v.findall("error")
+        if newf:
+            # extract the failure reason
+            r = newf[0].get("message")
+            if "Application returned 18" in r or "Application returned -5" in r:
+                rs = r.split('[')[1].split(']')[0].split(',')
+                for la in rs:
+                    la = la.strip()
+                    if la not in reasons:
+                        reasons[la] = []
+                    reasons[la].append(k)
+            if fn not in failedfiles:
+                failedfiles[fn] = []
+            failedfiles[fn].append((tn, r))
+
+        if k in oldfile:
+            oldone = oldfile.get(k)
+
+            # compare failures
+            oldf = oldone.findall("error")
+            if newf and not oldf:
+                newfail.append(k)
+            if oldf and not newf:
+                newfix.append(k)
+            if oldf and newf:
+                stillfail.append(k)
+                a = oldf[0]
+                b = newf[0]
+                print a, b
+                # check if the failure reasons are the same
+                if a.get("type") != b.get("type"):
+                    failchange.append(k)
+                elif a.get("message") != b.get("message"):
+                    failchange.append(k)
+
+    if newfail:
+        print("New failures", len(newfail))
+        newfail.sort()
+        for i in newfail:
+            print "   %s : %s" % (i[0], i[1])
+            f = newfile[i].find("error")
+            print "     ", f.get("type"), f.get("message")
+        print
+
+    if newfix:
+        print "New fixes", len(newfix)
+        newfix.sort()
+        for i in newfix:
+            print "   %s : %s" % (i[0], i[1])
+        print
+
+    if failchange:
+        print "Failure changes", len(failchange)
+        failchange.sort()
+        for i in failchange:
+            print "   %s : %s" % (i[0], i[1])
+            oldt = oldfile[i].find("error").get("type")
+            newt = newfile[i].find("error").get("type")
+            if oldt != newt:
+                print "       Went from '%s' to '%s'" % (oldt, newt)
+            print "       Previous message :", oldfile[i].find("error").get("message")
+            print "       New message      :", newfile[i].find("error").get("message")
+        print
+
+    for k, v in reasons.iteritems():
+        print "Failure type : ", k, len(v)
+        v.sort()
+        for i in v:
+            print "   %s : %s" % (i[0], i[1])
+        print
+
+    nofailfiles = sorted([fn for fn in allfiles if fn not in failedfiles])
+    if nofailfiles:
+        print "Files without failures", len(nofailfiles)
+        for f in nofailfiles:
+            print "    ", f
+        print
+
+    for k, v in failedfiles.iteritems():
+        print "Failed File :", k
+        for i in v:
+            print "    %s : %s" % (i[0], i[1])

@@ -1,0 +1,241 @@
+### This file contains either validate specific suppressions or bugs that we
+### can't easily address because they are lower in the stack.
+### All the other suppressions should be added ton gstreamer/tests/check/gstreamer.supp
+
+### Each set of suppression rules should be prefixed by either:
+###   - FIXED: if the bug/leak has been fixed upstream but we keep the rule
+###     because the fix may not be deployed yet (because it's lower in the
+###     stack and not in gst itself).
+###   - PENDING: if the bug/leak hasn't been fixed yet. In this case, please
+###     add an url to the bug report.
+
+# PENDING: https://bugs.freedesktop.org/show_bug.cgi?id=90073
+{
+   Leak in mesa fixed with http://lists.freedesktop.org/archives/mesa-dev/2015-April/082101.html
+   Memcheck:Leak
+   fun:malloc
+   fun:read_packet
+   fun:_xcb_in_read
+   fun:_xcb_conn_wait
+   fun:wait_for_reply
+   fun:xcb_wait_for_reply
+   fun:dri3_open
+   fun:dri3_create_screen
+   fun:AllocAndFetchScreenConfigs
+   fun:__glXInitialize
+   fun:glXQueryVersion
+}
+
+{
+   Leak in mesa fixed with http://lists.freedesktop.org/archives/mesa-dev/2015-April/082100.html
+   Memcheck:Leak
+   ...
+   fun:get_render_node_from_id_path_tag
+   fun:loader_get_user_preferred_fd
+   fun:dri3_create_screen
+   fun:AllocAndFetchScreenConfigs
+   fun:__glXInitialize
+   fun:glXQueryVersion
+}
+
+# FIXED
+{
+   Fixed in pixman master
+   Memcheck:Leak
+   fun:memalign
+   fun:allocate_and_init
+   fun:tls_get_addr_tail
+}
+
+# PENDING: https://bugzilla.gnome.org/show_bug.cgi?id=748417
+{
+   Ignore all the invalid memory errors from libvpx
+   Memcheck:Cond
+   obj:/usr/lib64/libvpx.so*
+}
+
+{
+   Ignore all the invalid memory errors from libvpx
+   Memcheck:Value8
+   obj:/usr/lib64/libvpx.so*
+}
+
+# PENDING: https://bugzilla.gnome.org/show_bug.cgi?id=747110
+{
+   https://bugzilla.gnome.org/show_bug.cgi?id=747110
+   Memcheck:Addr4
+   ...
+   fun:aac_decode_frame_int
+   fun:aac_decode_frame
+}
+
+# PENDING: https://bugzilla.gnome.org/show_bug.cgi?id=752989
+{
+   https://bugzilla.gnome.org/show_bug.cgi?id=752989
+   Memcheck:Value4
+   ...
+   fun:aac_decode_frame_int
+   fun:aac_decode_frame
+}
+
+# PENDING: https://bugs.freedesktop.org/show_bug.cgi?id=90194
+{
+   https://bugs.freedesktop.org/show_bug.cgi?id=90194
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   fun:drmIoctl
+   fun:drmPrimeHandleToFD
+}
+
+# PENDING: https://bugzilla.gnome.org/show_bug.cgi?id=749232
+# x264 errors
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   ...
+   fun:x264_encoder_encode
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   ...
+   fun:x264_encoder_encode
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   ...
+   fun:x264_lookahead_thread
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   ...
+   fun:x264_lookahead_thread
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   ...
+   fun:x264_threadpool_thread
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   obj:/usr/lib64/libx264.so.*
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib64/libx264.so.*
+}
+
+# PENDING: https://bugzilla.gnome.org/show_bug.cgi?id=749428
+# Theora encoder
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   ...
+   fun:theora_enc_handle_frame
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   ...
+   fun:theora_enc_handle_frame
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:oc_enc_tokenize_ac
+}
+
+# FIXED
+{
+   Fixed with mesa master
+   Memcheck:Cond
+   fun:lp_build_blend_factor_unswizzled
+   ...
+   fun:gst_glimage_sink_on_draw
+}
+
+# FIXED
+{
+   Fixed with mesa master
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   ...
+   fun:_do_convert_draw
+   fun:_do_convert_one_view
+}
+
+# FIXED
+{
+   Fixed with mesa master
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   fun:gst_gl_shader_compile
+}
+
+# FIXED
+{
+   Fixed with mesa master
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   ...
+   fun:_draw_checker_background
+   fun:_draw_background
+   fun:gst_gl_video_mixer_callback
+}
+
+{
+    #https://bugs.freedesktop.org/show_bug.cgi?id=8215
+    #https://bugs.freedesktop.org/show_bug.cgi?id=8428
+    #FcPattern uses 'intptr_t elts_offset' instead of 'FcPatternEltPtr elts',
+    #which confuses valgrind.
+    font_config_bug_2
+    Memcheck:Leak
+    fun:*alloc
+    ...
+    fun:Fc*Add*
+}
+{
+    #Same root cause as font_config_bug_2.
+    #The 'leak' here is a copy of rule values, as opposed to new values.
+    font_config_bug_3
+    Memcheck:Leak
+    fun:*alloc
+    ...
+    fun:FcConfigValues
+}
+{
+    #Same root cause as font_config_bug_2.
+    #The 'leak' is copies of font or pattern values into returned pattern values.
+    font_config_bug_4
+    Memcheck:Leak
+    fun:*alloc
+    ...
+    fun:FcValue*
+    fun:FcFontRenderPrepare
+}
+{
+   font_config_bug_6
+   Memcheck:Leak
+   fun:*alloc
+   ...
+   obj:*/libfontconfig.so.*
+}

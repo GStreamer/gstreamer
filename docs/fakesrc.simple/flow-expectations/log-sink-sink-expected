@@ -1,0 +1,4 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
+event segment: format=BYTES, start=0, offset=0, stop=18446744073709551615, time=0, base=0, position=0
+buffer: checksum=da39a3ee5e6b4b0d3255bfef95601890afd80709, dts=0:00:00.000000000, flags=discont
+event eos: (no structure)
