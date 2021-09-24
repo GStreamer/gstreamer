@@ -1,0 +1,26 @@
+* {
+  background-color: rgba(43,56,54,0.0);
+  padding: 0px; 
+}
+
+GtkLabel {
+  font-size: 10px;
+  color: #ffffff; 
+}
+
+#toolbar {
+  border-radius: 25px;
+  border: 3px solid #212B2A;
+  background: rgba(43,56,54,0.6);
+}
+
+GtkButton:hover {
+  border-radius: 45px;
+  background: rgba(43,56,54,1.0);
+  border: 1px solid #212B2A;
+}
+
+#title_label {
+  font-size: 12px;
+}
+

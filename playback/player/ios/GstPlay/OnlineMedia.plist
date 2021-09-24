@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <array>
+
+        <!-- https://github.com/video-dev/streams HLS streams  -->
+        <string>https://video-dev.github.io/streams/x36xhzz/x36xhzz.m3u8</string>
+        <string>https://video-dev.github.io/streams/test_001/stream.m3u8</string>
+
+        <!-- Big Buck Bunny -->
+        <string>http://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_surround-fix.avi</string>
+        <string>http://mirrorblender.top-ix.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_h264.mov</string>
+        <string>http://mirrorblender.top-ix.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_stereo.ogg</string>
+        <string>http://mirrorblender.top-ix.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_stereo.avi</string>
+
+        <!--Sintel-->
+        <string>http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/Sintel_Trailer1.480p.DivX_Plus_HD.mkv</string>
+        <string>http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/sintel_trailer-480p.mp4</string>
+        <string>http://ftp.nluug.nl/ftp/graphics/blender/apricot/trailer/sintel_trailer-480p.ogv</string>
+        <string>http://mirrorblender.top-ix.org/movies/sintel-1024-surround.mp4</string>
+
+        <!--Tears of Steel-->
+        <string>http://blender-mirror.kino3d.org/mango/download.blender.org/demo/movies/ToS/tears_of_steel_720p.mkv</string>
+        <string>http://blender-mirror.kino3d.org/mango/download.blender.org/demo/movies/ToS/tears_of_steel_720p.mov</string>
+        <string>http://media.xiph.org/mango/tears_of_steel_1080p.webm</string>
+
+        <!--Radio stations-->
+        <string>http://radio.hbr1.com:19800/trance.ogg</string>
+        <string>http://radio.hbr1.com:19800/tronic.aac</string>
+
+        <!--Non-existing entries (to debug error reporting facilities)-->
+        <string>http://non-existing.org/Non_Existing_Server</string>
+        <string>http://docs.gstreamer.com/Non_Existing_File</string>
+    </array>
+</plist>

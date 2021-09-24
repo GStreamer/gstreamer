@@ -1,0 +1,11 @@
+<? xml version="1.0" encoding="UTF-8" ?>
+<gresources>
+  <gresource prefix="/ui">
+    <file>toolbar.ui</file>
+    <file>media_info_dialog.ui</file>
+  </gresource>
+  <gresource prefix="/css">
+    <file>toolbar.css</file>
+  </gresource>
+</gresources>
+

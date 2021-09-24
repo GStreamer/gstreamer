@@ -1,0 +1,10 @@
+
+Font Awesome
+
+URL: http://fontawesome.io
+
+Font License
+
+License: SIL OFL 1.1
+URL: http://scripts.sil.org/OFL
+

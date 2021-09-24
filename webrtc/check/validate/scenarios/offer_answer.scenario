@@ -1,0 +1,15 @@
+description, summary="Produce an offer and negotiate it with the peer"
+include,location=negotiation_initiator.scenario
+include,location=bundle_policy.scenario
+
+set-webrtc-options, local-bundle-policy="$(local_bundle_policy)", remote-bundle-policy="$(remote_bundle_policy)"
+
+create-offer, which="$(negotiation_initiator)";
+# all of these waits are technically unnecessary and only the last is needed
+wait-for-negotiation-state, which="$(negotiation_initiator)", state="offer-created"
+wait-for-negotiation-state, which="$(negotiation_initiator)", state="offer-set"
+wait-for-negotiation-state, which="$(negotiation_responder)", state="offer-set"
+create-answer, which="$(negotiation_responder)";
+wait-for-negotiation-state, which="$(negotiation_responder)", state="answer-created"
+wait-for-negotiation-state, which="$(negotiation_responder)", state="answer-set"
+wait-for-negotiation-state, which="$(negotiation_initiator)", state="answer-set"
