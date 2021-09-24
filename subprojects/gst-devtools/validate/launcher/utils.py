@@ -54,7 +54,7 @@ DEFAULT_GST_QA_ASSETS = os.path.join(config.SRCDIR, "subprojects", "gst-integrat
 USING_SUBPROJECT = os.path.exists(os.path.join(config.BUILDDIR, "subprojects", "gst-integration-testsuites"))
 if not USING_SUBPROJECT:
     DEFAULT_MAIN_DIR = os.path.join(os.path.expanduser("~"), "gst-validate")
-    DEFAULT_GST_QA_ASSETS = os.path.join(DEFAULT_MAIN_DIR, "gst-integration-testsuites")
+    DEFAULT_GST_QA_ASSETS = os.path.join(DEFAULT_MAIN_DIR, "gstreamer", "subprojects", "gst-integration-testsuites")
 
 DEFAULT_MAIN_DIR = os.environ.get('GST_VALIDATE_LAUNCHER_MAIN_DIR', DEFAULT_MAIN_DIR)
 DEFAULT_TESTSUITES_DIRS = [os.path.join(DEFAULT_GST_QA_ASSETS, "testsuites")]
