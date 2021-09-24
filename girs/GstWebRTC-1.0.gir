@@ -1,0 +1,1742 @@
+<?xml version="1.0"?>
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository version="1.2"
+            xmlns="http://www.gtk.org/introspection/core/1.0"
+            xmlns:c="http://www.gtk.org/introspection/c/1.0"
+            xmlns:glib="http://www.gtk.org/introspection/glib/1.0">
+  <include name="Gst" version="1.0"/>
+  <include name="GstSdp" version="1.0"/>
+  <package name="gstreamer-webrtc-1.0"/>
+  <c:include name="gst/webrtc/webrtc.h"/>
+  <namespace name="GstWebRTC"
+             version="1.0"
+             shared-library="libgstwebrtc-1.0.so.0"
+             c:identifier-prefixes="Gst"
+             c:symbol-prefixes="gst">
+    <function-macro name="IS_WEBRTC_DATA_CHANNEL"
+                    c:identifier="GST_IS_WEBRTC_DATA_CHANNEL"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/datachannel.h" line="34"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_DATA_CHANNEL_CLASS"
+                    c:identifier="GST_IS_WEBRTC_DATA_CHANNEL_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/datachannel.h" line="36"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_DTLS_TRANSPORT"
+                    c:identifier="GST_IS_WEBRTC_DTLS_TRANSPORT"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/dtlstransport.h"
+                       line="33"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_DTLS_TRANSPORT_CLASS"
+                    c:identifier="GST_IS_WEBRTC_DTLS_TRANSPORT_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/dtlstransport.h"
+                       line="35"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_ICE_TRANSPORT"
+                    c:identifier="GST_IS_WEBRTC_ICE_TRANSPORT"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/icetransport.h"
+                       line="32"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_ICE_TRANSPORT_CLASS"
+                    c:identifier="GST_IS_WEBRTC_ICE_TRANSPORT_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/icetransport.h"
+                       line="34"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_RECEIVER"
+                    c:identifier="GST_IS_WEBRTC_RTP_RECEIVER"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="33"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_RECEIVER_CLASS"
+                    c:identifier="GST_IS_WEBRTC_RTP_RECEIVER_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="35"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_SENDER"
+                    c:identifier="GST_IS_WEBRTC_RTP_SENDER"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="33"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_SENDER_CLASS"
+                    c:identifier="GST_IS_WEBRTC_RTP_SENDER_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="35"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_TRANSCEIVER"
+                    c:identifier="GST_IS_WEBRTC_RTP_TRANSCEIVER"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtptransceiver.h"
+                       line="32"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_TRANSCEIVER_CLASS"
+                    c:identifier="GST_IS_WEBRTC_RTP_TRANSCEIVER_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtptransceiver.h"
+                       line="34"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DATA_CHANNEL"
+                    c:identifier="GST_WEBRTC_DATA_CHANNEL"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/datachannel.h" line="33"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DATA_CHANNEL_CLASS"
+                    c:identifier="GST_WEBRTC_DATA_CHANNEL_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/datachannel.h" line="35"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DATA_CHANNEL_GET_CLASS"
+                    c:identifier="GST_WEBRTC_DATA_CHANNEL_GET_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/datachannel.h" line="37"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DTLS_TRANSPORT"
+                    c:identifier="GST_WEBRTC_DTLS_TRANSPORT"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/dtlstransport.h"
+                       line="32"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DTLS_TRANSPORT_CLASS"
+                    c:identifier="GST_WEBRTC_DTLS_TRANSPORT_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/dtlstransport.h"
+                       line="34"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DTLS_TRANSPORT_GET_CLASS"
+                    c:identifier="GST_WEBRTC_DTLS_TRANSPORT_GET_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/dtlstransport.h"
+                       line="36"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE_TRANSPORT"
+                    c:identifier="GST_WEBRTC_ICE_TRANSPORT"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/icetransport.h"
+                       line="31"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE_TRANSPORT_CLASS"
+                    c:identifier="GST_WEBRTC_ICE_TRANSPORT_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/icetransport.h"
+                       line="33"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE_TRANSPORT_GET_CLASS"
+                    c:identifier="GST_WEBRTC_ICE_TRANSPORT_GET_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/icetransport.h"
+                       line="35"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_RECEIVER"
+                    c:identifier="GST_WEBRTC_RTP_RECEIVER"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="32"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_RECEIVER_CLASS"
+                    c:identifier="GST_WEBRTC_RTP_RECEIVER_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="34"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_RECEIVER_GET_CLASS"
+                    c:identifier="GST_WEBRTC_RTP_RECEIVER_GET_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtpreceiver.h" line="36"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_SENDER"
+                    c:identifier="GST_WEBRTC_RTP_SENDER"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="32"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_SENDER_CLASS"
+                    c:identifier="GST_WEBRTC_RTP_SENDER_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="34"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_SENDER_GET_CLASS"
+                    c:identifier="GST_WEBRTC_RTP_SENDER_GET_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="36"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_TRANSCEIVER"
+                    c:identifier="GST_WEBRTC_RTP_TRANSCEIVER"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtptransceiver.h"
+                       line="31"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_TRANSCEIVER_CLASS"
+                    c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtptransceiver.h"
+                       line="33"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_TRANSCEIVER_GET_CLASS"
+                    c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_GET_CLASS"
+                    introspectable="0">
+      <source-position filename="gst-libs/gst/webrtc/rtptransceiver.h"
+                       line="35"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <enumeration name="WebRTCBundlePolicy"
+                 version="1.16"
+                 glib:type-name="GstWebRTCBundlePolicy"
+                 glib:get-type="gst_webrtc_bundle_policy_get_type"
+                 c:type="GstWebRTCBundlePolicy">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="340">See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
+for more information.</doc>
+      <member name="none"
+              value="0"
+              c:identifier="GST_WEBRTC_BUNDLE_POLICY_NONE"
+              glib:nick="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="342">none</doc>
+      </member>
+      <member name="balanced"
+              value="1"
+              c:identifier="GST_WEBRTC_BUNDLE_POLICY_BALANCED"
+              glib:nick="balanced">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="343">balanced</doc>
+      </member>
+      <member name="max_compat"
+              value="2"
+              c:identifier="GST_WEBRTC_BUNDLE_POLICY_MAX_COMPAT"
+              glib:nick="max-compat">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="344">max-compat</doc>
+      </member>
+      <member name="max_bundle"
+              value="3"
+              c:identifier="GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE"
+              glib:nick="max-bundle">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="345">max-bundle</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCDTLSSetup"
+                 glib:type-name="GstWebRTCDTLSSetup"
+                 glib:get-type="gst_webrtc_dtls_setup_get_type"
+                 c:type="GstWebRTCDTLSSetup">
+      <member name="none"
+              value="0"
+              c:identifier="GST_WEBRTC_DTLS_SETUP_NONE"
+              glib:nick="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="220">none</doc>
+      </member>
+      <member name="actpass"
+              value="1"
+              c:identifier="GST_WEBRTC_DTLS_SETUP_ACTPASS"
+              glib:nick="actpass">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="221">actpass</doc>
+      </member>
+      <member name="active"
+              value="2"
+              c:identifier="GST_WEBRTC_DTLS_SETUP_ACTIVE"
+              glib:nick="active">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="222">sendonly</doc>
+      </member>
+      <member name="passive"
+              value="3"
+              c:identifier="GST_WEBRTC_DTLS_SETUP_PASSIVE"
+              glib:nick="passive">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="223">recvonly</doc>
+      </member>
+    </enumeration>
+    <class name="WebRTCDTLSTransport"
+           c:symbol-prefix="webrtc_dtls_transport"
+           c:type="GstWebRTCDTLSTransport"
+           parent="Gst.Object"
+           glib:type-name="GstWebRTCDTLSTransport"
+           glib:get-type="gst_webrtc_dtls_transport_get_type"
+           glib:type-struct="WebRTCDTLSTransportClass">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="46"/>
+      <property name="certificate" writable="1" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="client" writable="1" transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="remote-certificate" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="session-id"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="guint" c:type="guint"/>
+      </property>
+      <property name="state" transfer-ownership="none">
+        <type name="WebRTCDTLSTransportState"/>
+      </property>
+      <property name="transport" transfer-ownership="none">
+        <type name="WebRTCICETransport"/>
+      </property>
+    </class>
+    <record name="WebRTCDTLSTransportClass"
+            c:type="GstWebRTCDTLSTransportClass"
+            disguised="1"
+            glib:is-gtype-struct-for="WebRTCDTLSTransport">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="46"/>
+    </record>
+    <enumeration name="WebRTCDTLSTransportState"
+                 glib:type-name="GstWebRTCDTLSTransportState"
+                 glib:get-type="gst_webrtc_dtls_transport_state_get_type"
+                 c:type="GstWebRTCDTLSTransportState">
+      <member name="new"
+              value="0"
+              c:identifier="GST_WEBRTC_DTLS_TRANSPORT_STATE_NEW"
+              glib:nick="new">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="67">new</doc>
+      </member>
+      <member name="closed"
+              value="1"
+              c:identifier="GST_WEBRTC_DTLS_TRANSPORT_STATE_CLOSED"
+              glib:nick="closed">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="68">closed</doc>
+      </member>
+      <member name="failed"
+              value="2"
+              c:identifier="GST_WEBRTC_DTLS_TRANSPORT_STATE_FAILED"
+              glib:nick="failed">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="69">failed</doc>
+      </member>
+      <member name="connecting"
+              value="3"
+              c:identifier="GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTING"
+              glib:nick="connecting">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="70">connecting</doc>
+      </member>
+      <member name="connected"
+              value="4"
+              c:identifier="GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTED"
+              glib:nick="connected">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="71">connected</doc>
+      </member>
+    </enumeration>
+    <class name="WebRTCDataChannel"
+           c:symbol-prefix="webrtc_data_channel"
+           c:type="GstWebRTCDataChannel"
+           parent="GObject.Object"
+           abstract="1"
+           glib:type-name="GstWebRTCDataChannel"
+           glib:get-type="gst_webrtc_data_channel_get_type"
+           glib:type-struct="WebRTCDataChannelClass">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="63"/>
+      <method name="close" c:identifier="gst_webrtc_data_channel_close">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/datachannel.c"
+             line="545">Close the @channel.</doc>
+        <source-position filename="gst-libs/gst/webrtc/datachannel.h"
+                         line="46"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="channel" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/datachannel.c"
+                 line="547">a #GstWebRTCDataChannel</doc>
+            <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="send_data"
+              c:identifier="gst_webrtc_data_channel_send_data">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/datachannel.c"
+             line="507">Send @data as a data message over @channel.</doc>
+        <source-position filename="gst-libs/gst/webrtc/datachannel.h"
+                         line="40"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="channel" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/datachannel.c"
+                 line="509">a #GstWebRTCDataChannel</doc>
+            <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
+          </instance-parameter>
+          <parameter name="data"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/datachannel.c"
+                 line="510">a #GBytes or %NULL</doc>
+            <type name="GLib.Bytes" c:type="GBytes*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="send_string"
+              c:identifier="gst_webrtc_data_channel_send_string">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/datachannel.c"
+             line="526">Send @str as a string message over @channel.</doc>
+        <source-position filename="gst-libs/gst/webrtc/datachannel.h"
+                         line="43"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="channel" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/datachannel.c"
+                 line="528">a #GstWebRTCDataChannel</doc>
+            <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
+          </instance-parameter>
+          <parameter name="str"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/datachannel.c"
+                 line="529">a string or %NULL</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <property name="buffered-amount" transfer-ownership="none">
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="buffered-amount-low-threshold"
+                writable="1"
+                transfer-ownership="none">
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="id"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="label"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="max-packet-lifetime"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="max-retransmits"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="negotiated"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="ordered"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="priority"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="WebRTCPriorityType"/>
+      </property>
+      <property name="protocol"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="ready-state" transfer-ownership="none">
+        <type name="WebRTCDataChannelState"/>
+      </property>
+      <glib:signal name="close" when="last" action="1">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/datachannel.c"
+             line="353">Close the data channel</doc>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+      <glib:signal name="on-buffered-amount-low" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+      <glib:signal name="on-close" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+      <glib:signal name="on-error" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="error" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/datachannel.c"
+                 line="299">the #GError thrown</doc>
+            <type name="GLib.Error"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="on-message-data" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="data"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/datachannel.c"
+                 line="308">a #GBytes of the data received</doc>
+            <type name="GLib.Bytes"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="on-message-string" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="data"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/datachannel.c"
+                 line="317">the data received as a string</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="on-open" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+      <glib:signal name="send-data" when="last" action="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="data"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/datachannel.c"
+                 line="334">a #GBytes with the data</doc>
+            <type name="GLib.Bytes"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="send-string" when="last" action="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="data"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/datachannel.c"
+                 line="345">the data to send as a string</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+    </class>
+    <record name="WebRTCDataChannelClass"
+            c:type="GstWebRTCDataChannelClass"
+            disguised="1"
+            glib:is-gtype-struct-for="WebRTCDataChannel">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="63"/>
+    </record>
+    <enumeration name="WebRTCDataChannelState"
+                 version="1.16"
+                 glib:type-name="GstWebRTCDataChannelState"
+                 glib:get-type="gst_webrtc_data_channel_state_get_type"
+                 c:type="GstWebRTCDataChannelState">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="319">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate&gt;</doc>
+      <member name="new"
+              value="0"
+              c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_NEW"
+              glib:nick="new">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="321">new</doc>
+      </member>
+      <member name="connecting"
+              value="1"
+              c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING"
+              glib:nick="connecting">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="322">connection</doc>
+      </member>
+      <member name="open"
+              value="2"
+              c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_OPEN"
+              glib:nick="open">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="323">open</doc>
+      </member>
+      <member name="closing"
+              value="3"
+              c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING"
+              glib:nick="closing">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="324">closing</doc>
+      </member>
+      <member name="closed"
+              value="4"
+              c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED"
+              glib:nick="closed">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="325">closed</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCFECType"
+                 version="1.14.1"
+                 glib:type-name="GstWebRTCFECType"
+                 glib:get-type="gst_webrtc_fec_type_get_type"
+                 c:type="GstWebRTCFECType">
+      <member name="none"
+              value="0"
+              c:identifier="GST_WEBRTC_FEC_TYPE_NONE"
+              glib:nick="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="270">none</doc>
+      </member>
+      <member name="ulp_red"
+              value="1"
+              c:identifier="GST_WEBRTC_FEC_TYPE_ULP_RED"
+              glib:nick="ulp-red">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="271">ulpfec + red</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCICEComponent"
+                 glib:type-name="GstWebRTCICEComponent"
+                 glib:get-type="gst_webrtc_ice_component_get_type"
+                 c:type="GstWebRTCICEComponent">
+      <member name="rtp"
+              value="0"
+              c:identifier="GST_WEBRTC_ICE_COMPONENT_RTP"
+              glib:nick="rtp">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="175">RTP component</doc>
+      </member>
+      <member name="rtcp"
+              value="1"
+              c:identifier="GST_WEBRTC_ICE_COMPONENT_RTCP"
+              glib:nick="rtcp">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="176">RTCP component</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCICEConnectionState"
+                 glib:type-name="GstWebRTCICEConnectionState"
+                 glib:get-type="gst_webrtc_ice_connection_state_get_type"
+                 c:type="GstWebRTCICEConnectionState">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="97">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtciceconnectionstate&gt;</doc>
+      <member name="new"
+              value="0"
+              c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_NEW"
+              glib:nick="new">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="99">new</doc>
+      </member>
+      <member name="checking"
+              value="1"
+              c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_CHECKING"
+              glib:nick="checking">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="100">checking</doc>
+      </member>
+      <member name="connected"
+              value="2"
+              c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_CONNECTED"
+              glib:nick="connected">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="101">connected</doc>
+      </member>
+      <member name="completed"
+              value="3"
+              c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_COMPLETED"
+              glib:nick="completed">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="102">completed</doc>
+      </member>
+      <member name="failed"
+              value="4"
+              c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_FAILED"
+              glib:nick="failed">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="103">failed</doc>
+      </member>
+      <member name="disconnected"
+              value="5"
+              c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_DISCONNECTED"
+              glib:nick="disconnected">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="104">disconnected</doc>
+      </member>
+      <member name="closed"
+              value="6"
+              c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_CLOSED"
+              glib:nick="closed">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="105">closed</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCICEGatheringState"
+                 glib:type-name="GstWebRTCICEGatheringState"
+                 glib:get-type="gst_webrtc_ice_gathering_state_get_type"
+                 c:type="GstWebRTCICEGatheringState">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="82">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcicegatheringstate&gt;</doc>
+      <member name="new"
+              value="0"
+              c:identifier="GST_WEBRTC_ICE_GATHERING_STATE_NEW"
+              glib:nick="new">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="84">new</doc>
+      </member>
+      <member name="gathering"
+              value="1"
+              c:identifier="GST_WEBRTC_ICE_GATHERING_STATE_GATHERING"
+              glib:nick="gathering">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="85">gathering</doc>
+      </member>
+      <member name="complete"
+              value="2"
+              c:identifier="GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE"
+              glib:nick="complete">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="86">complete</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCICERole"
+                 glib:type-name="GstWebRTCICERole"
+                 glib:get-type="gst_webrtc_ice_role_get_type"
+                 c:type="GstWebRTCICERole">
+      <member name="controlled"
+              value="0"
+              c:identifier="GST_WEBRTC_ICE_ROLE_CONTROLLED"
+              glib:nick="controlled">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="164">controlled</doc>
+      </member>
+      <member name="controlling"
+              value="1"
+              c:identifier="GST_WEBRTC_ICE_ROLE_CONTROLLING"
+              glib:nick="controlling">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="165">controlling</doc>
+      </member>
+    </enumeration>
+    <class name="WebRTCICETransport"
+           c:symbol-prefix="webrtc_ice_transport"
+           c:type="GstWebRTCICETransport"
+           parent="Gst.Object"
+           abstract="1"
+           glib:type-name="GstWebRTCICETransport"
+           glib:get-type="gst_webrtc_ice_transport_get_type"
+           glib:type-struct="WebRTCICETransportClass">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="49"/>
+      <property name="component"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="WebRTCICEComponent"/>
+      </property>
+      <property name="gathering-state" transfer-ownership="none">
+        <type name="WebRTCICEGatheringState"/>
+      </property>
+      <property name="state" transfer-ownership="none">
+        <type name="WebRTCICEConnectionState"/>
+      </property>
+      <glib:signal name="on-new-candidate" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="on-selected-candidate-pair-change" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+    </class>
+    <record name="WebRTCICETransportClass"
+            c:type="GstWebRTCICETransportClass"
+            disguised="1"
+            glib:is-gtype-struct-for="WebRTCICETransport">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="49"/>
+    </record>
+    <enumeration name="WebRTCICETransportPolicy"
+                 version="1.16"
+                 glib:type-name="GstWebRTCICETransportPolicy"
+                 glib:get-type="gst_webrtc_ice_transport_policy_get_type"
+                 c:type="GstWebRTCICETransportPolicy">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="360">See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
+for more information.</doc>
+      <member name="all"
+              value="0"
+              c:identifier="GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL"
+              glib:nick="all">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="362">all</doc>
+      </member>
+      <member name="relay"
+              value="1"
+              c:identifier="GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY"
+              glib:nick="relay">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="363">relay</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCKind"
+                 version="1.20"
+                 glib:type-name="GstWebRTCKind"
+                 glib:get-type="gst_webrtc_kind_get_type"
+                 c:type="GstWebRTCKind">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="376">https://w3c.github.io/mediacapture-main/#dom-mediastreamtrack-kind</doc>
+      <member name="unknown"
+              value="0"
+              c:identifier="GST_WEBRTC_KIND_UNKNOWN"
+              glib:nick="unknown">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="378">Kind has not yet been set</doc>
+      </member>
+      <member name="audio"
+              value="1"
+              c:identifier="GST_WEBRTC_KIND_AUDIO"
+              glib:nick="audio">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="379">Kind is audio</doc>
+      </member>
+      <member name="video"
+              value="2"
+              c:identifier="GST_WEBRTC_KIND_VIDEO"
+              glib:nick="video">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="380">Kind is audio</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCPeerConnectionState"
+                 glib:type-name="GstWebRTCPeerConnectionState"
+                 glib:get-type="gst_webrtc_peer_connection_state_get_type"
+                 c:type="GstWebRTCPeerConnectionState">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="141">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectionstate&gt;</doc>
+      <member name="new"
+              value="0"
+              c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_NEW"
+              glib:nick="new">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="143">new</doc>
+      </member>
+      <member name="connecting"
+              value="1"
+              c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_CONNECTING"
+              glib:nick="connecting">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="144">connecting</doc>
+      </member>
+      <member name="connected"
+              value="2"
+              c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_CONNECTED"
+              glib:nick="connected">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="145">connected</doc>
+      </member>
+      <member name="disconnected"
+              value="3"
+              c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_DISCONNECTED"
+              glib:nick="disconnected">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="146">disconnected</doc>
+      </member>
+      <member name="failed"
+              value="4"
+              c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_FAILED"
+              glib:nick="failed">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="147">failed</doc>
+      </member>
+      <member name="closed"
+              value="5"
+              c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_CLOSED"
+              glib:nick="closed">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="148">closed</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCPriorityType"
+                 version="1.16"
+                 glib:type-name="GstWebRTCPriorityType"
+                 glib:get-type="gst_webrtc_priority_type_get_type"
+                 c:type="GstWebRTCPriorityType">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="300">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
+      <member name="very_low"
+              value="1"
+              c:identifier="GST_WEBRTC_PRIORITY_TYPE_VERY_LOW"
+              glib:nick="very-low">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="302">very-low</doc>
+      </member>
+      <member name="low"
+              value="2"
+              c:identifier="GST_WEBRTC_PRIORITY_TYPE_LOW"
+              glib:nick="low">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="303">low</doc>
+      </member>
+      <member name="medium"
+              value="3"
+              c:identifier="GST_WEBRTC_PRIORITY_TYPE_MEDIUM"
+              glib:nick="medium">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="304">medium</doc>
+      </member>
+      <member name="high"
+              value="4"
+              c:identifier="GST_WEBRTC_PRIORITY_TYPE_HIGH"
+              glib:nick="high">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="305">high</doc>
+      </member>
+    </enumeration>
+    <class name="WebRTCRTPReceiver"
+           c:symbol-prefix="webrtc_rtp_receiver"
+           c:type="GstWebRTCRTPReceiver"
+           parent="Gst.Object"
+           glib:type-name="GstWebRTCRTPReceiver"
+           glib:get-type="gst_webrtc_rtp_receiver_get_type"
+           glib:type-struct="WebRTCRTPReceiverClass">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="52"/>
+      <property name="transport" version="1.20" transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpreceiver.c"
+             line="107">The DTLS transport for this receiver</doc>
+        <type name="WebRTCDTLSTransport"/>
+      </property>
+    </class>
+    <record name="WebRTCRTPReceiverClass"
+            c:type="GstWebRTCRTPReceiverClass"
+            disguised="1"
+            glib:is-gtype-struct-for="WebRTCRTPReceiver">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="52"/>
+    </record>
+    <class name="WebRTCRTPSender"
+           c:symbol-prefix="webrtc_rtp_sender"
+           c:type="GstWebRTCRTPSender"
+           parent="Gst.Object"
+           glib:type-name="GstWebRTCRTPSender"
+           glib:get-type="gst_webrtc_rtp_sender_get_type"
+           glib:type-struct="WebRTCRTPSenderClass">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="55"/>
+      <method name="set_priority"
+              c:identifier="gst_webrtc_rtp_sender_set_priority"
+              version="1.20">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpsender.c"
+             line="61">Sets the content of the IPv4 Type of Service (ToS), also known as DSCP
+(Differentiated Services Code Point).
+This also sets the Traffic Class field of IPv6.</doc>
+        <source-position filename="gst-libs/gst/webrtc/rtpsender.h" line="39"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="sender" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/rtpsender.c"
+                 line="63">a #GstWebRTCRTPSender</doc>
+            <type name="WebRTCRTPSender" c:type="GstWebRTCRTPSender*"/>
+          </instance-parameter>
+          <parameter name="priority" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/rtpsender.c"
+                 line="64">The priority of this sender</doc>
+            <type name="WebRTCPriorityType" c:type="GstWebRTCPriorityType"/>
+          </parameter>
+        </parameters>
+      </method>
+      <property name="priority"
+                version="1.20"
+                writable="1"
+                transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpsender.c"
+             line="143">The priority from which to set the DSCP field on packets</doc>
+        <type name="WebRTCPriorityType"/>
+      </property>
+      <property name="transport" version="1.20" transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtpsender.c"
+             line="158">The DTLS transport for this sender</doc>
+        <type name="WebRTCDTLSTransport"/>
+      </property>
+    </class>
+    <record name="WebRTCRTPSenderClass"
+            c:type="GstWebRTCRTPSenderClass"
+            disguised="1"
+            glib:is-gtype-struct-for="WebRTCRTPSender">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="55"/>
+    </record>
+    <class name="WebRTCRTPTransceiver"
+           c:symbol-prefix="webrtc_rtp_transceiver"
+           c:type="GstWebRTCRTPTransceiver"
+           parent="Gst.Object"
+           abstract="1"
+           glib:type-name="GstWebRTCRTPTransceiver"
+           glib:get-type="gst_webrtc_rtp_transceiver_get_type"
+           glib:type-struct="WebRTCRTPTransceiverClass">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="60"/>
+      <property name="codec-preferences"
+                version="1.20"
+                writable="1"
+                transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.c"
+             line="285">Caps representing the codec preferences.</doc>
+        <type name="Gst.Caps"/>
+      </property>
+      <property name="current-direction"
+                version="1.20"
+                transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.c"
+             line="253">The transceiver's current directionality, or none if the
+transceiver is stopped or has never participated in an exchange
+of offers and answers. To change the transceiver's
+directionality, set the value of the direction property.</doc>
+        <type name="WebRTCRTPTransceiverDirection"/>
+      </property>
+      <property name="direction"
+                version="1.18"
+                writable="1"
+                transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.c"
+             line="216">Direction of the transceiver.</doc>
+        <type name="WebRTCRTPTransceiverDirection"/>
+      </property>
+      <property name="kind" version="1.20" transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.c"
+             line="271">The kind of media this transceiver transports</doc>
+        <type name="WebRTCKind"/>
+      </property>
+      <property name="mid" version="1.20" transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtptransceiver.c"
+             line="231">The media ID of the m-line associated with this transceiver. This
+association is established, when possible, whenever either a
+local or remote description is applied. This field is null if
+neither a local or remote description has been applied, or if its
+associated m-line is rejected by either a remote offer or any
+answer.</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="mlineindex"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="guint" c:type="guint"/>
+      </property>
+      <property name="receiver"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="WebRTCRTPReceiver"/>
+      </property>
+      <property name="sender"
+                writable="1"
+                construct-only="1"
+                transfer-ownership="none">
+        <type name="WebRTCRTPSender"/>
+      </property>
+    </class>
+    <record name="WebRTCRTPTransceiverClass"
+            c:type="GstWebRTCRTPTransceiverClass"
+            disguised="1"
+            glib:is-gtype-struct-for="WebRTCRTPTransceiver">
+      <source-position filename="gst-libs/gst/webrtc/webrtc_fwd.h" line="60"/>
+    </record>
+    <enumeration name="WebRTCRTPTransceiverDirection"
+                 glib:type-name="GstWebRTCRTPTransceiverDirection"
+                 glib:get-type="gst_webrtc_rtp_transceiver_direction_get_type"
+                 c:type="GstWebRTCRTPTransceiverDirection">
+      <member name="none"
+              value="0"
+              c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE"
+              glib:nick="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="203">none</doc>
+      </member>
+      <member name="inactive"
+              value="1"
+              c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE"
+              glib:nick="inactive">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="204">inactive</doc>
+      </member>
+      <member name="sendonly"
+              value="2"
+              c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY"
+              glib:nick="sendonly">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="205">sendonly</doc>
+      </member>
+      <member name="recvonly"
+              value="3"
+              c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY"
+              glib:nick="recvonly">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="206">recvonly</doc>
+      </member>
+      <member name="sendrecv"
+              value="4"
+              c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV"
+              glib:nick="sendrecv">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="207">sendrecv</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCSCTPTransportState"
+                 version="1.16"
+                 glib:type-name="GstWebRTCSCTPTransportState"
+                 glib:get-type="gst_webrtc_sctp_transport_state_get_type"
+                 c:type="GstWebRTCSCTPTransportState">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="281">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate&gt;</doc>
+      <member name="new"
+              value="0"
+              c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_NEW"
+              glib:nick="new">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="283">new</doc>
+      </member>
+      <member name="connecting"
+              value="1"
+              c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTING"
+              glib:nick="connecting">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="284">connecting</doc>
+      </member>
+      <member name="connected"
+              value="2"
+              c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED"
+              glib:nick="connected">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="285">connected</doc>
+      </member>
+      <member name="closed"
+              value="3"
+              c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_CLOSED"
+              glib:nick="closed">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="286">closed</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCSDPType"
+                 glib:type-name="GstWebRTCSDPType"
+                 glib:get-type="gst_webrtc_sdp_type_get_type"
+                 c:type="GstWebRTCSDPType">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="184">See &lt;http://w3c.github.io/webrtc-pc/#rtcsdptype&gt;</doc>
+      <member name="offer"
+              value="1"
+              c:identifier="GST_WEBRTC_SDP_TYPE_OFFER"
+              glib:nick="offer">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="186">offer</doc>
+      </member>
+      <member name="pranswer"
+              value="2"
+              c:identifier="GST_WEBRTC_SDP_TYPE_PRANSWER"
+              glib:nick="pranswer">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="187">pranswer</doc>
+      </member>
+      <member name="answer"
+              value="3"
+              c:identifier="GST_WEBRTC_SDP_TYPE_ANSWER"
+              glib:nick="answer">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="188">answer</doc>
+      </member>
+      <member name="rollback"
+              value="4"
+              c:identifier="GST_WEBRTC_SDP_TYPE_ROLLBACK"
+              glib:nick="rollback">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="189">rollback</doc>
+      </member>
+      <function name="to_string" c:identifier="gst_webrtc_sdp_type_to_string">
+        <source-position filename="gst-libs/gst/webrtc/rtcsessiondescription.h"
+                         line="30"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+               line="41">the string representation of @type or "unknown" when @type is not
+     recognized.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+                 line="39">a #GstWebRTCSDPType</doc>
+            <type name="WebRTCSDPType" c:type="GstWebRTCSDPType"/>
+          </parameter>
+        </parameters>
+      </function>
+    </enumeration>
+    <record name="WebRTCSessionDescription"
+            c:type="GstWebRTCSessionDescription"
+            glib:type-name="GstWebRTCSessionDescription"
+            glib:get-type="gst_webrtc_session_description_get_type"
+            c:symbol-prefix="webrtc_session_description">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtcsessiondescription.h"
+           line="36">See &lt;https://www.w3.org/TR/webrtc/#rtcsessiondescription-class&gt;</doc>
+      <source-position filename="gst-libs/gst/webrtc/rtcsessiondescription.h"
+                       line="47"/>
+      <field name="type" writable="1">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtcsessiondescription.h"
+             line="38">the #GstWebRTCSDPType of the description</doc>
+        <type name="WebRTCSDPType" c:type="GstWebRTCSDPType"/>
+      </field>
+      <field name="sdp" writable="1">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtcsessiondescription.h"
+             line="39">the #GstSDPMessage of the description</doc>
+        <type name="GstSdp.SDPMessage" c:type="GstSDPMessage*"/>
+      </field>
+      <constructor name="new"
+                   c:identifier="gst_webrtc_session_description_new">
+        <source-position filename="gst-libs/gst/webrtc/rtcsessiondescription.h"
+                         line="50"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+               line="103">a new #GstWebRTCSessionDescription from @type
+     and @sdp</doc>
+          <type name="WebRTCSessionDescription"
+                c:type="GstWebRTCSessionDescription*"/>
+        </return-value>
+        <parameters>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+                 line="100">a #GstWebRTCSDPType</doc>
+            <type name="WebRTCSDPType" c:type="GstWebRTCSDPType"/>
+          </parameter>
+          <parameter name="sdp" transfer-ownership="full">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+                 line="101">a #GstSDPMessage</doc>
+            <type name="GstSdp.SDPMessage" c:type="GstSDPMessage*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="copy" c:identifier="gst_webrtc_session_description_copy">
+        <source-position filename="gst-libs/gst/webrtc/rtcsessiondescription.h"
+                         line="52"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+               line="65">a new copy of @src</doc>
+          <type name="WebRTCSessionDescription"
+                c:type="GstWebRTCSessionDescription*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="src" transfer-ownership="none">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+                 line="63">a #GstWebRTCSessionDescription</doc>
+            <type name="WebRTCSessionDescription"
+                  c:type="const GstWebRTCSessionDescription*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="gst_webrtc_session_description_free">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+             line="83">Free @desc and all associated resources</doc>
+        <source-position filename="gst-libs/gst/webrtc/rtcsessiondescription.h"
+                         line="54"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="desc" transfer-ownership="full">
+            <doc xml:space="preserve"
+                 filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+                 line="85">a #GstWebRTCSessionDescription</doc>
+            <type name="WebRTCSessionDescription"
+                  c:type="GstWebRTCSessionDescription*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <enumeration name="WebRTCSignalingState"
+                 glib:type-name="GstWebRTCSignalingState"
+                 glib:get-type="gst_webrtc_signaling_state_get_type"
+                 c:type="GstWebRTCSignalingState">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+           line="120">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcsignalingstate&gt;</doc>
+      <member name="stable"
+              value="0"
+              c:identifier="GST_WEBRTC_SIGNALING_STATE_STABLE"
+              glib:nick="stable">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="122">stable</doc>
+      </member>
+      <member name="closed"
+              value="1"
+              c:identifier="GST_WEBRTC_SIGNALING_STATE_CLOSED"
+              glib:nick="closed">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="123">closed</doc>
+      </member>
+      <member name="have_local_offer"
+              value="2"
+              c:identifier="GST_WEBRTC_SIGNALING_STATE_HAVE_LOCAL_OFFER"
+              glib:nick="have-local-offer">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="124">have-local-offer</doc>
+      </member>
+      <member name="have_remote_offer"
+              value="3"
+              c:identifier="GST_WEBRTC_SIGNALING_STATE_HAVE_REMOTE_OFFER"
+              glib:nick="have-remote-offer">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="125">have-remote-offer</doc>
+      </member>
+      <member name="have_local_pranswer"
+              value="4"
+              c:identifier="GST_WEBRTC_SIGNALING_STATE_HAVE_LOCAL_PRANSWER"
+              glib:nick="have-local-pranswer">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="126">have-local-pranswer</doc>
+      </member>
+      <member name="have_remote_pranswer"
+              value="5"
+              c:identifier="GST_WEBRTC_SIGNALING_STATE_HAVE_REMOTE_PRANSWER"
+              glib:nick="have-remote-pranswer">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="127">have-remote-pranswer</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCStatsType"
+                 glib:type-name="GstWebRTCStatsType"
+                 glib:get-type="gst_webrtc_stats_type_get_type"
+                 c:type="GstWebRTCStatsType">
+      <member name="codec"
+              value="1"
+              c:identifier="GST_WEBRTC_STATS_CODEC"
+              glib:nick="codec">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="235">codec</doc>
+      </member>
+      <member name="inbound_rtp"
+              value="2"
+              c:identifier="GST_WEBRTC_STATS_INBOUND_RTP"
+              glib:nick="inbound-rtp">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="236">inbound-rtp</doc>
+      </member>
+      <member name="outbound_rtp"
+              value="3"
+              c:identifier="GST_WEBRTC_STATS_OUTBOUND_RTP"
+              glib:nick="outbound-rtp">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="237">outbound-rtp</doc>
+      </member>
+      <member name="remote_inbound_rtp"
+              value="4"
+              c:identifier="GST_WEBRTC_STATS_REMOTE_INBOUND_RTP"
+              glib:nick="remote-inbound-rtp">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="238">remote-inbound-rtp</doc>
+      </member>
+      <member name="remote_outbound_rtp"
+              value="5"
+              c:identifier="GST_WEBRTC_STATS_REMOTE_OUTBOUND_RTP"
+              glib:nick="remote-outbound-rtp">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="239">remote-outbound-rtp</doc>
+      </member>
+      <member name="csrc"
+              value="6"
+              c:identifier="GST_WEBRTC_STATS_CSRC"
+              glib:nick="csrc">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="240">csrc</doc>
+      </member>
+      <member name="peer_connection"
+              value="7"
+              c:identifier="GST_WEBRTC_STATS_PEER_CONNECTION"
+              glib:nick="peer-connection">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="241">peer-connectiion</doc>
+      </member>
+      <member name="data_channel"
+              value="8"
+              c:identifier="GST_WEBRTC_STATS_DATA_CHANNEL"
+              glib:nick="data-channel">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="242">data-channel</doc>
+      </member>
+      <member name="stream"
+              value="9"
+              c:identifier="GST_WEBRTC_STATS_STREAM"
+              glib:nick="stream">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="243">stream</doc>
+      </member>
+      <member name="transport"
+              value="10"
+              c:identifier="GST_WEBRTC_STATS_TRANSPORT"
+              glib:nick="transport">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="244">transport</doc>
+      </member>
+      <member name="candidate_pair"
+              value="11"
+              c:identifier="GST_WEBRTC_STATS_CANDIDATE_PAIR"
+              glib:nick="candidate-pair">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="245">candidate-pair</doc>
+      </member>
+      <member name="local_candidate"
+              value="12"
+              c:identifier="GST_WEBRTC_STATS_LOCAL_CANDIDATE"
+              glib:nick="local-candidate">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="246">local-candidate</doc>
+      </member>
+      <member name="remote_candidate"
+              value="13"
+              c:identifier="GST_WEBRTC_STATS_REMOTE_CANDIDATE"
+              glib:nick="remote-candidate">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="247">remote-candidate</doc>
+      </member>
+      <member name="certificate"
+              value="14"
+              c:identifier="GST_WEBRTC_STATS_CERTIFICATE"
+              glib:nick="certificate">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/webrtc_fwd.h"
+             line="248">certificate</doc>
+      </member>
+    </enumeration>
+    <docsection name="gstwebrtc-datachannel">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/datachannel.c"
+           line="21">&lt;https://www.w3.org/TR/webrtc/#rtcdatachannel&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-dtlstransport">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/dtlstransport.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcdtlstransport&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-icetransport">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/icetransport.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcicetransport&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-receiver">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtpreceiver.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcrtpreceiver-interface&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-sender">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtpsender.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcrtpsender-interface&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-sessiondescription">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcsessiondescription-class&gt;</doc>
+    </docsection>
+    <docsection name="gstwebrtc-transceiver">
+      <doc xml:space="preserve"
+           filename="gst-libs/gst/webrtc/rtptransceiver.c"
+           line="20">&lt;https://www.w3.org/TR/webrtc/#rtcrtptransceiver-interface&gt;</doc>
+    </docsection>
+    <function name="webrtc_sdp_type_to_string"
+              c:identifier="gst_webrtc_sdp_type_to_string"
+              moved-to="WebRTCSDPType.to_string">
+      <source-position filename="gst-libs/gst/webrtc/rtcsessiondescription.h"
+                       line="30"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve"
+             filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+             line="41">the string representation of @type or "unknown" when @type is not
+     recognized.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="type" transfer-ownership="none">
+          <doc xml:space="preserve"
+               filename="gst-libs/gst/webrtc/rtcsessiondescription.c"
+               line="39">a #GstWebRTCSDPType</doc>
+          <type name="WebRTCSDPType" c:type="GstWebRTCSDPType"/>
+        </parameter>
+      </parameters>
+    </function>
+  </namespace>
+</repository>

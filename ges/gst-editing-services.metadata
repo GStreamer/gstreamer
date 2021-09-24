@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+
+<!--
+Copyright (C) 2013  Stephan Sundermann <stephansundermann@gmail.com>
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301  USA
+-->
+<metadata>
+	<remove-node path="/api/namespace/object[@cname='GESSmartAdder']"/>
+	<remove-node path="/api/namespace/object[@cname='GESPitiviFormatter']"/>
+    <remove-node path="/api/namespace/object/method[@cname='ges_uri_clip_is_image']"/>
+    <remove-node path="/api/namespace/object/method[@cname='ges_uri_clip_set_is_image']"/>
+	<!--FIXME- This fix should not be needed (ie. bindinator is messing with us).-->
+    <attr path="/api/namespace/object[@parent='GObject.InitiallyUnowned']" name="parent">GInitiallyUnowned</attr>
+    <attr path="/api/namespace/object[@parent='GObject.Object']" name="parent">GObject</attr>
+
+	<attr path="/api/namespace/object[@cname='GESGlobal']/method[@cname='ges_init_check']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@name='TimelineElement']/field[@cname='asset']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@name='TimelineElement']/field[@cname='parent']" name="access">private</attr>
+	<attr path="/api/namespace/object[@name='TimelineElement']/field[@cname='parent_instance']" name="access">private</attr>
+	<attr path="/api/namespace/object[@name='Layer']/field[@cname='parent']" name="access">private</attr>
+	<attr path="/api/namespace/object[@name='Formatter']/field[@cname='parent']" name="access">private</attr>
+	<attr path="/api/namespace/object/class_struct[@cname='GESBaseXmlFormatterClass']/field[@cname='content_parser']" name="type">GMarkupParser</attr>
+
+	<attr path="/api/namespace/object/class_struct[@cname='GESEffectAssetClass']" name="private">true</attr>
+	<add-node path="/api/namespace/object/class_struct[@cname='GESVideoSourceClass']">
+      <union name="ABI" cname="ABI">
+        <struct name="abi" cname="abi" opaque="false" hidden="false">
+          <field cname="disable_scale_in_compositor" access="public" writeable="true" readable="true" name="DisableScaleInCompositor" type="gint64"/>
+        </struct>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
+      </union>
+	</add-node>
+
+	<add-node path="/api/namespace/object/class_struct[@cname='GESTrackElementClass']">
+      <union name="ABI" cname="ABI">
+        <struct name="abi" cname="abi" opaque="false" hidden="false">
+        </struct>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20"/>
+      </union>
+	</add-node>
+
+	<add-node path="/api/namespace/object/class_struct[@cname='GESClipClass']">
+      <union name="ABI" cname="ABI">
+        <struct name="abi" cname="abi" opaque="false" hidden="false">
+        </struct>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20"/>
+      </union>
+	</add-node>
+
+	<!-- Mark reserved fields as padding -->
+	<attr path="//*[contains(@cname, 'ges_reserved')]" name="padding">true</attr>
+</metadata>
