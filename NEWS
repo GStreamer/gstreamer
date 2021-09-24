@@ -1,0 +1,299 @@
+GStreamer 1.20 Release Notes
+
+GStreamer 1.20 has not been released yet. It is scheduled for release
+around October/November 2021.
+
+1.19.x is the unstable development version that is being developed in
+the git main branch and which will eventually result in 1.20, and 1.19.2
+is the current development release in that series
+
+It is expected that feature freeze will be in early October 2021,
+followed by one or two 1.19.9x pre-releases and the new 1.20 stable
+release around October/November 2021.
+
+1.20 will be backwards-compatible to the stable 1.18, 1.16, 1.14, 1.12,
+1.10, 1.8, 1.6,, 1.4, 1.2 and 1.0 release series.
+
+See https://gstreamer.freedesktop.org/releases/1.20/ for the latest
+version of this document.
+
+Last updated: Wednesday 22 September 2021, 18:00 UTC (log)
+
+Introduction
+
+The GStreamer team is proud to announce a new major feature release in
+the stable 1.x API series of your favourite cross-platform multimedia
+framework!
+
+As always, this release is again packed with many new features, bug
+fixes and other improvements.
+
+Highlights
+
+-   this section will be completed in due course
+
+Major new features and changes
+
+Noteworthy new features and API
+
+-   this section will be filled in in due course
+
+New elements
+
+-   this section will be filled in in due course
+
+New element features and additions
+
+-   this section will be filled in in due course
+
+Plugin and library moves
+
+-   this section will be filled in in due course
+
+-   There were no plugin moves or library moves in this cycle.
+
+Plugin removals
+
+The following elements or plugins have been removed:
+
+-   this section will be filled in in due course
+
+Miscellaneous API additions
+
+-   this section will be filled in in due course
+
+Miscellaneous performance, latency and memory optimisations
+
+-   this section will be filled in in due course
+
+Miscellaneous other changes and enhancements
+
+-   this section will be filled in in due course
+
+Tracing framework and debugging improvements
+
+-   this section will be filled in in due course
+
+Tools
+
+-   this section will be filled in in due course
+
+GStreamer RTSP server
+
+-   this section will be filled in in due course
+
+GStreamer VAAPI
+
+-   this section will be filled in in due course
+
+GStreamer OMX
+
+-   this section will be filled in in due course
+
+GStreamer Editing Services and NLE
+
+-   this section will be filled in in due course
+
+GStreamer validate
+
+-   this section will be filled in in due course
+
+GStreamer Python Bindings
+
+-   this section will be filled in in due course
+
+GStreamer C# Bindings
+
+-   this section will be filled in in due course
+
+GStreamer Rust Bindings and Rust Plugins
+
+The GStreamer Rust bindings are released separately with a different
+release cadence that’s tied to gtk-rs, but the latest release has
+already been updated for the upcoming new GStreamer 1.20 API.
+
+gst-plugins-rs, the module containing GStreamer plugins written in Rust,
+has also seen lots of activity with many new elements and plugins.
+
+What follows is a list of elements and plugins available in
+gst-plugins-rs, so people don’t miss out on all those potentially useful
+elements that have no C equivalent.
+
+-   FIXME: add new elements
+
+Rust audio plugins
+
+-   audiornnoise: New element for audio denoising which implements the
+    noise removal algorithm of the Xiph RNNoise library, in Rust
+-   rsaudioecho: Port of the audioecho element from gst-plugins-good
+    rsaudioloudnorm: Live audio loudness normalization element based on
+    the FFmpeg af_loudnorm filter
+-   claxondec: FLAC lossless audio codec decoder element based on the
+    pure-Rust claxon implementation
+-   csoundfilter: Audio filter that can use any filter defined via the
+    Csound audio programming language
+-   lewtondec: Vorbis audio decoder element based on the pure-Rust
+    lewton implementation
+
+Rust video plugins
+
+-   cdgdec/cdgparse: Decoder and parser for the CD+G video codec based
+    on a pure-Rust CD+G implementation, used for example by karaoke CDs
+-   cea608overlay: CEA-608 Closed Captions overlay element
+-   cea608tott: CEA-608 Closed Captions to timed-text (e.g. VTT or SRT
+    subtitles) converter
+-   tttocea608: CEA-608 Closed Captions from timed-text converter
+-   mccenc/mccparse: MacCaption Closed Caption format encoder and parser
+-   sccenc/sccparse: Scenarist Closed Caption format encoder and parser
+-   dav1dec: AV1 video decoder based on the dav1d decoder implementation
+    by the VLC project
+-   rav1enc: AV1 video encoder based on the fast and pure-Rust rav1e
+    encoder implementation
+-   rsflvdemux: Alternative to the flvdemux FLV demuxer element from
+    gst-plugins-good, not feature-equivalent yet
+-   rsgifenc/rspngenc: GIF/PNG encoder elements based on the pure-Rust
+    implementations by the image-rs project
+
+Rust text plugins
+
+-   textwrap: Element for line-wrapping timed text (e.g. subtitles) for
+    better screen-fitting, including hyphenation support for some
+    languages
+
+Rust network plugins
+
+-   reqwesthttpsrc: HTTP(S) source element based on the Rust
+    reqwest/hyper HTTP implementations and almost feature-equivalent
+    with the main GStreamer HTTP source souphttpsrc
+-   s3src/s3sink: Source/sink element for the Amazon S3 cloud storage
+-   awstranscriber: Live audio to timed text transcription element using
+    the Amazon AWS Transcribe API
+
+Generic Rust plugins
+
+-   sodiumencrypter/sodiumdecrypter: Encryption/decryption element based
+    on libsodium/NaCl
+-   togglerecord: Recording element that allows to pause/resume
+    recordings easily and considers keyframe boundaries
+-   fallbackswitch/fallbacksrc: Elements for handling potentially
+    failing (network) sources, restarting them on errors/timeout and
+    showing a fallback stream instead
+-   threadshare: Set of elements that provide alternatives for various
+    existing GStreamer elements but allow to share the streaming threads
+    between each other to reduce the number of threads
+-   rsfilesrc/rsfilesink: File source/sink elements as replacements for
+    the existing filesrc/filesink elements
+
+Build and Dependencies
+
+-   this section will be filled in in due course
+
+gst-build
+
+-   this section will be filled in in due course
+
+Cerbero
+
+Cerbero is a meta build system used to build GStreamer plus dependencies
+on platforms where dependencies are not readily available, such as
+Windows, Android, iOS and macOS.
+
+General improvements
+
+-   this section will be filled in in due course
+
+macOS / iOS
+
+-   this section will be filled in in due course
+
+Windows
+
+-   this section will be filled in in due course
+
+Windows MSI installer
+
+-   this section will be filled in in due course
+
+Linux
+
+-   this section will be filled in in due course
+
+Android
+
+-   this section will be filled in in due course
+
+Platform-specific changes and improvements
+
+Android
+
+-   this section will be filled in in due course
+
+macOS and iOS
+
+-   this section will be filled in in due course
+
+Windows
+
+-   this section will be filled in in due course
+
+Linux
+
+-   this section will be filled in in due course
+
+Documentation improvements
+
+-   this section will be filled in in due course
+
+Possibly Breaking Changes
+
+-   this section will be filled in in due course
+-   MPEG-TS SCTE-35 API changes (FIXME: flesh out)
+-   gst_parse_launch() and friends now error out on non-existing
+    properties on top-level bins where they would silently fail and
+    ignore those before.
+
+Known Issues
+
+-   this section will be filled in in due course
+
+-   There are a couple of known WebRTC-related regressions/blockers:
+
+    -   webrtc: DTLS setup with Chrome is broken
+    -   webrtcbin: First keyframe is usually lost
+
+Contributors
+
+-   this section will be filled in in due course
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing.
+
+Stable 1.20 branch
+
+After the 1.20.0 release there will be several 1.20.x bug-fix releases
+which will contain bug fixes which have been deemed suitable for a
+stable branch, but no new features or intrusive changes will be added to
+a bug-fix release usually. The 1.20.x bug-fix releases will be made from
+the git 1.20 branch, which will be a stable branch.
+
+1.20.0
+
+1.20.0 is scheduled to be released around October/November 2021.
+
+Schedule for 1.22
+
+Our next major feature release will be 1.22, and 1.21 will be the
+unstable development version leading up to the stable 1.22 release. The
+development of 1.21/1.22 will happen in the git main branch.
+
+The plan for the 1.22 development cycle is yet to be confirmed.
+
+1.22 will be backwards-compatible to the stable 1.20, 1.18, 1.16, 1.14,
+1.12, 1.10, 1.8, 1.6, 1.4, 1.2 and 1.0 release series.
+
+------------------------------------------------------------------------
+
+These release notes have been prepared by Tim-Philipp Müller with
+contributions from …
+
+License: CC BY-SA 4.0
