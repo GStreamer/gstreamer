@@ -105,12 +105,12 @@ GST_START_TEST (rtp_header_ext_caps_with_attributes)
   fail_unless (GST_VALUE_HOLDS_ARRAY (arr));
   fail_unless_equals_int (gst_value_array_get_size (arr), 3);
   val = gst_value_array_get_value (arr, 0);
-  fail_unless_equals_int (g_strcmp0 (g_value_get_string (val), direction), 0);
+  fail_unless_equals_string (g_value_get_string (val), direction);
   val = gst_value_array_get_value (arr, 1);
-  fail_unless_equals_int (g_strcmp0 (g_value_get_string (val),
-          gst_rtp_header_extension_get_uri (dummy)), 0);
+  fail_unless_equals_string (g_value_get_string (val),
+      gst_rtp_header_extension_get_uri (dummy));
   val = gst_value_array_get_value (arr, 2);
-  fail_unless_equals_int (g_strcmp0 (g_value_get_string (val), attributes), 0);
+  fail_unless_equals_string (g_value_get_string (val), attributes);
 
   gst_rtp_header_extension_set_direction (dummy,
       GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV |
@@ -120,8 +120,8 @@ GST_START_TEST (rtp_header_ext_caps_with_attributes)
 
   fail_unless (gst_rtp_header_extension_set_attributes_from_caps (dummy, caps));
 
-  fail_unless_equals_int (g_strcmp0 (GST_RTP_DUMMY_HDR_EXT (dummy)->attributes,
-          attributes), 0);
+  fail_unless_equals_string (GST_RTP_DUMMY_HDR_EXT (dummy)->attributes,
+      attributes);
   fail_unless_equals_int (gst_rtp_header_extension_get_direction (dummy),
       GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY);
 
