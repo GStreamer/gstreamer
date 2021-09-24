@@ -1,0 +1,263 @@
+#!/usr/bin/env python
+#
+# gst-python
+# Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public
+# License along with this library; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301, USA.
+
+
+# A test more of gst-plugins than of gst-python.
+
+
+import sys
+
+import pygtk
+pygtk.require('2.0')
+import gtk
+import gtk.gdk
+import pango
+import gobject
+
+import pygst
+pygst.require('0.10')
+import gst
+
+import debugslider
+
+
+data = (('Video capture via V4L',
+         'v4lsrc name=source \n'
+         '    ! videorate \n'
+         '    ! ffmpegcolorspace ! autovideosink'),
+        ('Video capture via V4L, fixed frame rate',
+         'v4lsrc name=source autoprobe=false autoprobe-fps=false \n'
+         '    ! video/x-raw-yuv,format=(fourcc)I420,framerate=(double)7.5 \n'
+         '    ! videorate \n'
+         '    ! ffmpegcolorspace \n'
+         '    ! autovideosink'),
+        ('Sound capture',
+         'gconfaudiosrc\n'
+         '    ! audio/x-raw-int,rate=22050,depth=16,channels=1,width=16,signed=(boolean)TRUE,endianness=(int)BYTE_ORDER\n'
+         '    ! level message=true\n'
+         '    ! fakesink'),
+        ('Streaming Ogg/Theora+Vorbis playback, tee to disk',
+         'gnomevfssrc location=http://gstreamer.freedesktop.org/media/small/cooldance.ogg \n'
+         '    ! tee name=tee \n'
+         '    tee. ! oggdemux name=demux \n'
+         '    demux. ! queue ! theoradec ! ffmpegcolorspace ! autovideosink \n'
+         '    demux. ! queue ! vorbisdec ! audioconvert ! autoaudiosink \n'
+         '    tee. ! queue ! filesink location=/tmp/cooldance.ogg'),
+        ('Video test, YUV format',
+         'videotestsrc \n'
+         '    ! video/x-raw-yuv,format=(fourcc)I420 \n'
+         '    ! ffmpegcolorspace ! autovideosink'),
+        ('Video test, RGB format',
+         'videotestsrc \n'
+         '    ! video/x-raw-rgb,red_mask=0xff00 \n'
+         '    ! ffmpegcolorspace \n'
+         '    ! autovideosink'),
+        ('Software scaling',
+         'videotestsrc \n'
+         '    ! video/x-raw-rgb,height=200,width=320 \n'
+         '    ! videoscale method=2 \n'
+         '    ! ffmpegcolorspace ! autovideosink'),
+        ('Reencode Vorbis to mulaw, play',
+         'filesrc location=/tmp/cooldance.ogg \n'
+         '    ! oggdemux \n'
+         '    ! vorbisdec ! audioconvert \n'
+         '    ! mulawenc ! mulawdec ! autoaudiosink'),
+        ('Capture DV via firewire, transcode into Ogg',
+         'dv1394src \n'
+         '    ! dvdemux name=demux \n'
+         '    ! queue \n'
+         '    ! video/x-dv,systemstream=(boolean)false \n'
+         '    ! dvdec drop-factor=2 \n'
+         '    ! videorate \n'
+         '    ! videoscale \n'
+         '    ! video/x-raw-yuv,width=360,height=288 \n'
+         '    ! videoscale \n'
+         '    ! video/x-raw-yuv,width=240,height=192,framerate=10.0,format=(fourcc)YUY2 \n'
+         '    ! ffmpegcolorspace \n'
+         '    ! theoraenc \n'
+         '    ! oggmux name=mux \n'
+         '    ! filesink location=/tmp/dv.ogg \n'
+         ' \n'
+         '    demux. \n'
+         '    ! audio/x-raw-int \n'
+         '    ! queue \n'
+         '    ! audioconvert \n'
+         '    ! vorbisenc \n'
+         '    ! mux.'))
+
+
+def escape(s, chars, escaper='\\'):
+    for c in chars:
+        s = s.replace(c, '%s%s' % (escaper, c))
+    return s
+
+
+def make_model():
+    m = gtk.ListStore(str, str)
+    for pair in data:
+        i = m.append()
+        m.set_value(i, 0, pair[0])
+        m.set_value(i, 1, pair[1])
+    return m
+
+
+class Window(gtk.Window):
+    def __init__(self):
+        gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        self.playing = False
+        self.selected_pipe = None
+        self.pipeline = None
+        self.prepare_ui()
+
+    def prepare_ui(self):
+        self.set_default_size(300,400)
+        self.set_title('GStreamer Pipeline Tester')
+        self.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
+        self.connect('delete-event', lambda *x: gtk.main_quit())
+        self.set_border_width(18)
+        b = gtk.VBox(False, 12)
+        b.show()
+        self.add(b)
+        l = gtk.Label()
+        l.set_markup('<big><b>GStreamer Pipeline Tester</b></big>')
+        l.show()
+        b.pack_start(l, False, False, 6)
+        l = gtk.Label('Choose a pipeline below to run.')
+        l.show()
+        b.pack_start(l, False, False, 0)
+        sw = gtk.ScrolledWindow()
+        sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_NEVER)
+        sw.set_shadow_type(gtk.SHADOW_IN)
+        sw.show()
+        b.pack_start(sw, True, True, 6)
+        tv = gtk.TreeView(make_model())
+        tv.set_property('can-default', False)
+        r = gtk.CellRendererText()
+        r.set_property('xalign', 0.5)
+        c = gtk.TreeViewColumn('System', r, text=0)
+        tv.append_column(c)
+        tv.set_headers_visible(False)
+        tv.show()
+        sw.add(tv)
+        ds = debugslider.DebugSlider()
+        ds.show()
+        b.pack_start(ds, False, False, 0)
+        l = gtk.Label()
+        l.set_selectable(True)
+        l.show()
+        b.pack_start(l, False, False, 0)
+        bb = gtk.HButtonBox()
+        bb.set_layout(gtk.BUTTONBOX_SPREAD)
+        bb.show()
+        b.pack_start(bb, False, False, 0)
+        bu = gtk.Button(stock=gtk.STOCK_MEDIA_PLAY)
+        bu.set_property('can-default', True)
+        bu.set_focus_on_click(False)
+        bu.show()
+        bb.pack_start(bu, True, False, 0)
+        bu.set_property('has-default', True)
+        self.button = bu
+
+        def on_changed(s):
+            m, i = s.get_selected()
+            if m:
+                self.selected_pipe = m.get_value(i, 1)
+                pasteable = escape(self.selected_pipe, '\n)(')
+                l.set_markup('<small><tt>%s</tt></small>' % pasteable)
+            else:
+                self.selected_pipe = None
+                l.set_markup('')
+        tv.get_selection().connect('changed', on_changed)
+
+        tv.connect('row-activated', lambda *x: self.play_toggled())
+
+        bu.connect('clicked', lambda *x: self.play_toggled())
+
+    def error(self, message, secondary=None):
+        m = gtk.MessageDialog(self,
+                              gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                              gtk.MESSAGE_ERROR,
+                              gtk.BUTTONS_OK,
+                              message)
+        if secondary:
+            m.format_secondary_text(secondary)
+        m.run()
+        m.destroy()
+        self.stop()
+
+    def on_message(self, bus, message):
+        t = message.type
+        print message
+        if t == gst.MESSAGE_STATE_CHANGED:
+            pass
+        elif t == gst.MESSAGE_ERROR:
+            err, debug = message.parse_error()
+            self.error("%s" % err, debug)
+        elif t == gst.MESSAGE_EOS:
+            self.play_toggled()
+        else:
+            print '%s: %s:' % (message.src.get_path_string(),
+                               message.type.value_nicks[1])
+            if message.structure:
+                print '    %s' % message.structure.to_string()
+            else:
+                print '    (no structure)'
+        return True
+
+    def play(self):
+        pipestr = self.selected_pipe
+        try:
+            self.set_sensitive(False)
+            pipeline = gst.parse_launch(pipestr)
+            self.set_sensitive(True)
+        except gobject.GError, e:
+            self.set_sensitive(True)
+            self.error('Could not create pipeline', str(e))
+            return False
+        
+        bus = pipeline.get_bus()
+        bus.add_signal_watch()
+        watch_id = bus.connect('message', self.on_message)
+        self.pipeline = pipeline
+        self.watch_id = watch_id
+        pipeline.set_state(gst.STATE_PLAYING)
+
+    def stop(self):
+        bus = self.pipeline.get_bus()
+        bus.disconnect(self.watch_id)
+        bus.remove_signal_watch()
+        self.pipeline.set_state(gst.STATE_NULL)
+        self.pipeline = None
+        del self.watch_id
+
+    def play_toggled(self):
+        if self.playing:
+            self.stop()
+            self.button.set_label(gtk.STOCK_MEDIA_PLAY)
+            self.playing = False
+        else:
+            self.play()
+            self.playing = True
+            self.button.set_label(gtk.STOCK_MEDIA_STOP)
+
+if __name__ == '__main__':
+    w = Window()
+    w.show()
+    gtk.main()

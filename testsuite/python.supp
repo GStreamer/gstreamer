@@ -1,0 +1,526 @@
+#
+# This is a valgrind suppression file that should be used when using valgrind.
+#
+#  Here's an example of running valgrind:
+#
+#	cd python/dist/src
+#	valgrind --tool=memcheck --suppressions=Misc/valgrind-python.supp \
+#		./python -E -tt ./Lib/test/regrtest.py -u bsddb,network
+#
+# You must edit Objects/obmalloc.c and uncomment Py_USING_MEMORY_DEBUGGER
+# to use the preferred suppressions with Py_ADDRESS_IN_RANGE.
+#
+# If you do not want to recompile Python, you can uncomment
+# suppressions for PyObject_Free and PyObject_Realloc.
+#
+# See Misc/README.valgrind for more information.
+
+# all tool names: Addrcheck,Memcheck,cachegrind,helgrind,massif
+{
+   ADDRESS_IN_RANGE/Invalid read of size 4
+   Memcheck:Addr4
+   fun:Py_ADDRESS_IN_RANGE
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 4
+   Memcheck:Value4
+   fun:Py_ADDRESS_IN_RANGE
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 8 (x86_64)
+   Memcheck:Value8
+   fun:Py_ADDRESS_IN_RANGE
+}
+
+{
+   ADDRESS_IN_RANGE/Conditional jump or move depends on uninitialised value
+   Memcheck:Cond
+   fun:Py_ADDRESS_IN_RANGE
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 4
+   Memcheck:Addr4
+   fun:PyObject_Free
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 8 (x86_64)
+   Memcheck:Addr8
+   fun:PyObject_Free
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 4
+   Memcheck:Value4
+   fun:PyObject_Free
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 8 (x86_64)
+   Memcheck:Value8
+   fun:PyObject_Free
+}
+
+{
+   ADDRESS_IN_RANGE/Conditional jump or move depends on uninitialised value
+   Memcheck:Cond
+   fun:PyObject_Free
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 4
+   Memcheck:Addr4
+   fun:PyObject_Realloc
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 8 (x86_64)
+   Memcheck:Addr8
+   fun:PyObject_Realloc
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 4
+   Memcheck:Value4
+   fun:PyObject_Realloc
+}
+
+{
+   ADDRESS_IN_RANGE/Invalid read of size 8 (x86_64)
+   Memcheck:Value8
+   fun:PyObject_Realloc
+}
+
+{
+   ADDRESS_IN_RANGE/Conditional jump or move depends on uninitialised value
+   Memcheck:Cond
+   fun:PyObject_Realloc
+}
+
+###
+### All the suppressions below are for errors that occur within libraries
+### that Python uses.  The problems to not appear to be related to Python's
+### use of the libraries.
+###
+{
+   GDBM problems, see test_gdbm
+   Memcheck:Param
+   write(buf)
+   fun:write
+   fun:gdbm_open
+
+}
+
+{
+   Avoid problem in libc on gentoo
+   Memcheck:Cond
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+}
+
+{
+   Avoid problem in glibc on gentoo
+   Memcheck:Addr8
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/libc-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   fun:_dl_open
+   obj:/lib/libdl-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/libdl-2.3.4.so
+   fun:dlopen
+}
+
+{
+   Avoid problem in glibc on gentoo
+   Memcheck:Addr8
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/libc-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   fun:_dl_open
+   obj:/lib/libdl-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/libdl-2.3.4.so
+   fun:dlopen
+}
+
+{
+   Avoid problem in glibc on gentoo
+   Memcheck:Cond
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/libc-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   fun:_dl_open
+   obj:/lib/libdl-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/libdl-2.3.4.so
+   fun:dlopen
+}
+
+{
+   Avoid problem in glibc on gentoo
+   Memcheck:Cond
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/libc-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   fun:_dl_open
+   obj:/lib/libdl-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/libdl-2.3.4.so
+   fun:dlopen
+}
+
+{
+   Avoid problems w/readline doing a putenv and leaking on exit
+   Memcheck:Leak
+   fun:malloc
+   fun:xmalloc
+   fun:sh_set_lines_and_columns
+   fun:_rl_get_screen_size
+   fun:_rl_init_terminal_io
+   obj:/lib/libreadline.so.4.3
+   fun:rl_initialize
+   fun:setup_readline
+   fun:initreadline
+   fun:_PyImport_LoadDynamicModule
+   fun:load_module
+   fun:import_submodule
+   fun:load_next
+   fun:import_module_ex
+   fun:PyImport_ImportModuleEx
+}
+
+{
+   Mysterious leak that seems to deal w/pthreads
+   Memcheck:Leak
+   fun:calloc
+   obj:/lib/ld-2.3.4.so
+   obj:/lib/ld-2.3.4.so
+   fun:_dl_allocate_tls
+   fun:__pthread_initialize_minimal
+}
+
+{
+   Mysterious leak that seems to deal w/pthreads
+   Memcheck:Leak
+   fun:memalign
+   obj:/lib/ld-2.3.4.so
+   fun:_dl_allocate_tls
+   fun:__pthread_initialize_minimal
+}
+
+###
+### These occur from somewhere within the SSL, when running
+###  test_socket_sll.  They are too general to leave on by default.
+###
+###{
+###   somewhere in SSL stuff
+###   Memcheck:Cond
+###   fun:memset
+###}
+###{
+###   somewhere in SSL stuff
+###   Memcheck:Value4
+###   fun:memset
+###}
+###
+###{
+###   somewhere in SSL stuff
+###   Memcheck:Cond
+###   fun:MD5_Update
+###}
+###
+###{
+###   somewhere in SSL stuff
+###   Memcheck:Value4
+###   fun:MD5_Update
+###}
+
+#
+# All of these problems come from using test_socket_ssl
+#
+{
+   from test_socket_ssl
+   Memcheck:Cond
+   fun:BN_bin2bn
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Cond
+   fun:BN_num_bits_word
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Value4
+   fun:BN_num_bits_word
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Cond
+   fun:BN_mod_exp_mont_word
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Cond
+   fun:BN_mod_exp_mont
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Param
+   write(buf)
+   fun:write
+   obj:/usr/lib/libcrypto.so.0.9.7
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Cond
+   fun:RSA_verify
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Value4
+   fun:RSA_verify
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Value4
+   fun:DES_set_key_unchecked
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Value4
+   fun:DES_encrypt2
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Cond
+   obj:/usr/lib/libssl.so.0.9.7
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Value4
+   obj:/usr/lib/libssl.so.0.9.7
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Cond
+   fun:BUF_MEM_grow_clean
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Cond
+   fun:memcpy
+   fun:ssl3_read_bytes
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Cond
+   fun:SHA1_Update
+}
+
+{
+   from test_socket_ssl
+   Memcheck:Value4
+   fun:SHA1_Update
+}
+
+
+# python init memleak
+{
+   Py_Main memleak
+   Memcheck:Leak
+   fun:malloc
+   fun:PyObject_Malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:Py_InitializeEx
+}
+
+{
+   Py_Main memleak
+   Memcheck:Leak
+   fun:malloc
+   fun:PyObject_Malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:Py_InitializeEx
+}
+
+{
+   Py_Main memleak v2
+   Memcheck:Leak
+   fun:malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:Py_InitializeEx
+}
+
+{
+   Read compiled module memleak
+   Memcheck:Leak
+   fun:malloc
+   fun:PyObject_Malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_NewVar
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:read_compiled_module
+}
+
+{
+   PyRun_SimpleFileExFlags memleak
+   Memcheck:Leak
+   fun:malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New*
+   fun:*
+   fun:*
+   fun:*
+   fun:PyRun_SimpleFileExFlags
+}
+
+# memleak in update_keyword_args
+{
+   update_keyword_args
+   Memcheck:Leak
+   fun:malloc
+   fun:_PyObject_GC_Malloc
+   fun:*
+   fun:*
+   fun:update_keyword_args
+}
+
+# memleaks/conds in import_submodule
+{
+   memleak in import_submodule
+   Memcheck:Cond
+   fun:strcpy
+   fun:find_module
+}
+
+{
+   wrong jump in  import_submodule
+   Memcheck:Cond
+   fun:find_module
+   fun:import_submodule
+}
+
+{
+   wrong jump in  import_submodule
+   Memcheck:Cond
+   fun:find_module
+   fun:load_package
+   fun:load_module
+   fun:import_submodule
+}
+
+{
+   Use of uninitialised value of size 4
+   Memcheck:Value4
+   fun:strcpy
+   fun:find_module
+}
+
+## KNOWN MEMORY LEAK in gst_element_state_get_name
+## See gstreamer/gst/gstutils.c
+{
+   Known leak in gst_element_state_get_name
+   Memcheck:Leak
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:g_strdup_printf
+   fun:gst_element_state_get_name
+}
+
+## Suppressions for FC5 64bit
+
+{
+   Wrong jump in PyImport_ImportModuleEx
+   Memcheck:Cond
+   fun:__strcpy_chk
+   obj:/usr/lib64/libpython2.4.so.1.0
+   obj:/usr/lib64/libpython2.4.so.1.0
+   obj:/usr/lib64/libpython2.4.so.1.0
+   fun:PyImport_ImportModuleEx
+}
+
+{
+   Wrong jump in PyImport_ImportModuleEx
+   Memcheck:Cond
+   fun:__strcpy_chk
+   fun:PyImport_ImportModuleEx
+}
+
+{
+   Wrong jump in PyImport_ImportModuleEx
+   Memcheck:Cond
+   fun:__strcpy_chk
+   obj:/usr/lib64/libpython2.4.so.1.0
+   obj:/usr/lib64/libpython2.4.so.1.0
+   fun:PyObject_Call
+   fun:PyObject_CallFunction
+   obj:/usr/lib64/libpython2.4.so.1.0
+   obj:/usr/lib64/libpython2.4.so.1.0
+   obj:/usr/lib64/libpython2.4.so.1.0
+   fun:PyImport_ImportModuleEx
+}
+
+{
+   Wrong jump in PyUnicode_Decode
+   Memcheck:Cond
+   fun:PyUnicode_Decode
+}
