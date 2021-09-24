@@ -619,7 +619,7 @@ gst_mpegts_scte_splice_event_new (void)
 
 /**
  * gst_mpegts_scte_splice_component_new:
- * tag: the elementary PID stream identifier
+ * @tag: the elementary PID stream identifier
  *
  * Allocates and initializes a #GstMpegtsSCTESpliceComponent.
  *

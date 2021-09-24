@@ -398,7 +398,7 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * mpegtsdemux:send-scte35-events:
+   * tsdemux:send-scte35-events:
    *
    * Whether SCTE 35 sections should be forwarded as events.
    *

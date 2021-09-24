@@ -357,6 +357,15 @@ gst_message_new_mpegts_section (GstObject * parent, GstMpegtsSection * section)
   return msg;
 }
 
+/**
+ * gst_event_new_mpegts_section:
+ * @section: (transfer none): The #GstMpegtsSection to put in a message
+ *
+ * Creates a new #GstEvent for a #GstMpegtsSection.
+ *
+ * Returns: (transfer full): The new custom #GstEvent.
+ * Since: 1.20
+ */
 GstEvent *
 gst_event_new_mpegts_section (GstMpegtsSection * section)
 {

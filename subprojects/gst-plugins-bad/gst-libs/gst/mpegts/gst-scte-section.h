@@ -103,9 +103,20 @@ typedef enum {
 
 } GstMpegtsSectionSCTETableID;
 
-#define GST_TYPE_MPEGTS_SCTE_SPLICE_COMPONENT (gst_mpegts_scte_splice_component_get_type())
+#define GST_MPEGTS_TYPE_SCTE_SPLICE_COMPONENT (gst_mpegts_scte_splice_component_get_type())
 typedef struct _GstMpegtsSCTESpliceComponent GstMpegtsSCTESpliceComponent;
 
+/**
+ * GstMpegtsSCTESpliceComponent:
+ * @tag: the elementary PID stream containing the Splice Point
+ * @splice_time_specified: Whether @splice_time was specified
+ * @splice_time: the presentation time of the signaled splice event
+ * @utc_splice_time: The UTC time of the signaled splice event
+ *
+ * Per-PID splice information.
+ *
+ * Since: 1.20
+ */
 struct _GstMpegtsSCTESpliceComponent {
   guint8 tag;
 
@@ -136,8 +147,22 @@ struct _GstMpegtsSCTESpliceEvent {
   gboolean program_splice_time_specified; /* Only valid for insert_event && program_splice */
   guint64 program_splice_time; /* Only valid for insert_event && program_splice */
 
+  /**
+   * GstMpegtsSCTESpliceEvent.utc_splice_time:
+   *
+   * The UTC time of the signaled splice event
+   *
+   * Since: 1.20
+   */
   guint32 utc_splice_time; /* Only valid for !insert_event (schedule) && program_splice */
 
+  /**
+   * GstMpegtsSCTESpliceEvent.components:
+   *
+   * Per-PID splice time information
+   *
+   * Since: 1.20
+   */
   GPtrArray *components; /* Only valid for !program_splice */
 
   gboolean break_duration_auto_return;
@@ -195,11 +220,24 @@ struct _GstMpegtsSCTESIT
 
   GPtrArray *descriptors;
 
-  /* When encrypted, or when encountering an unknown command type,
-   * we may still want to pass the sit through */
+  /**
+   * GstMpegtsSCTESIT.fully_parsed:
+   *
+   * When encrypted, or when encountering an unknown command type,
+   * we may still want to pass the sit through.
+   *
+   * Since: 1.20
+   */
   gboolean fully_parsed;
-  /* When the SIT was constructed by the application, splice times
-   * are in running_time and must be translated before packetizing */
+
+  /**
+   * GstMpegtsSCTESIT.is_running_time:
+   *
+   * When the SIT was constructed by the application, splice times
+   * are in running_time and must be translated before packetizing.
+   *
+   * Since: 1.20
+   */
   gboolean is_running_time;
 };
 
