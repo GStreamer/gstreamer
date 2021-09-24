@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
 from urllib.parse import urlparse
 from contextlib import contextmanager
 import os
@@ -10,7 +9,15 @@ try:
     import gitlab
 except ModuleNotFoundError:
     print("========================================================================", file=sys.stderr)
-    print("ERROR: Install python-gitlab with `python3 -m pip install python-gitlab`", file=sys.stderr)
+    print("ERROR: Install python-gitlab with `python3 -m pip install python-gitlab dateutil`", file=sys.stderr)
+    print("========================================================================", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    from dateutil import parser as dateparse
+except ModuleNotFoundError:
+    print("========================================================================", file=sys.stderr)
+    print("ERROR: Install dateutil with `python3 -m pip install dateutil`", file=sys.stderr)
     print("========================================================================", file=sys.stderr)
     sys.exit(1)
 import argparse
@@ -309,15 +316,28 @@ class GstMRMover:
 
             new_discussion = None
             for note in notes:
-                note_url = f"{mr_url}#note_{note['id']}"
-                body = f"**{note['author']['name']} - {PING_SIGN}{note['author']['username']} wrote [here]({note_url})**:\n\n"
-                body += '\n'.join([l for l in note['body'].split('\n')])
+                note = discussion.notes.get(note['id'])
 
-                obj = {'body': body, 'type': note['type']}
+                note_url = f"{mr_url}#note_{note.id}"
+                when = dateparse.parse(note.created_at).strftime('on %d, %b %Y')
+                body = f"**{note.author['name']} - {PING_SIGN}{note.author['username']} wrote [here]({note_url})** {when}:\n\n"
+                body += '\n'.join([l for l in note.body.split('\n')])
+
+                obj = {
+                    'body': body,
+                    'type': note.type,
+                    'resolvable': note.resolvable,
+                }
+
                 if new_discussion:
                     new_discussion.notes.create(obj)
                 else:
                     new_discussion = new_mr.discussions.create(obj)
+
+                if not note.resolvable or note.resolved:
+                    new_discussion.resolved = True
+                    new_discussion.save()
+
         fprint(f"{green(' OK')}\n", nested=False)
 
         print(f"New MR available at: {bold(new_mr_url)}\n")
