@@ -1,0 +1,51 @@
+node("docker") {
+    docker.image('gstreamer/build-base-ubuntu:latest').inside {
+
+	env.OUTPREFIX="${env.WORKSPACE}/../output/${params.build_tag}/linux_x86_64/"
+
+	stage('Checkout') {
+	    // FIXME: Only checkout the manifest and not all dependencies ?
+	    checkout([$class: 'RepoScm',
+		      manifestRepositoryUrl:'git+ssh://git.arracacha.collabora.co.uk/git/gst-manifest.git',
+		      manifestBranch:"refs/tags/${params.build_tag}",
+		      jobs:4,
+		      currentBranch:true,
+		      quiet:true,
+		      depth:0])
+	}
+
+	stage('Setup') {
+	    sh "find ../output -maxdepth 1 -ctime +1 | xargs rm -Rf"
+	    sh "cd .repo/manifests/; git checkout ${params.build_tag}; cd ../.."
+	    sh "rm -Rf ./workdir/sources/linux_x86_64/"
+	    sh "rm -f *.rpm"
+	    sh "rm -Rf ./workdir/temp; mkdir -p ./workdir/temp"
+	    sh "rm -Rf ./workdir/tmp*"
+
+	    // Create custom configuration file
+	    sh "./gst-ci-scripts/manifest2cerbero.py .repo/manifests/default.xml ./cerbero/config/linux.config --output localconf.cbc"
+	    sh '''echo "home_dir = \\"$WORKSPACE/workdir\\"" >> localconf.cbc'''
+	    sh '''echo "logs = \\"$OUTPREFIX/logs\\"" >> localconf.cbc'''
+	    sh './cerbero/cerbero-uninstalled -c localconf.cbc show-config'
+	}
+
+	stage('bootstrap') {
+	    sh './cerbero/cerbero-uninstalled -c localconf.cbc bootstrap'
+	    sh 'rm -Rf ./workdir/sources/build-tools/'
+	}
+
+	stage('fetch') {
+	    sh './cerbero/cerbero-uninstalled -c localconf.cbc fetch-package --reset-rdeps --full-reset gstreamer-1.0'
+	}
+
+	stage('package') {
+	    sh './cerbero/cerbero-uninstalled -c localconf.cbc package gstreamer-1.0'
+	}
+
+	stage('Cleanup') {
+	    sh 'rm -f *.rpm'
+	    sh 'find ../output -maxdepth 1 -ctime +1 | xargs rm -Rf'
+	}
+	// FIXME: IRC Notification
+    }
+}

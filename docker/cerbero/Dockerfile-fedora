@@ -1,0 +1,35 @@
+FROM registry.fedoraproject.org/fedora:31
+
+ENV TERM="dumb"
+
+ARG DEFAULT_BRANCH="master"
+
+# System setup
+RUN echo "fastestmirror=true" >>  /etc/dnf/dnf.conf && \
+    dnf upgrade -y && \
+    dnf install -y sudo git lbzip2 rsync wine which
+
+# Configure git for various usage
+RUN git config --global user.email "cerbero@gstreamer.freedesktop.org" && \
+    git config --global user.name  "Cerbero Build System"
+
+RUN git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/cerbero.git && \
+    mkdir $HOME/.cerbero && \
+    echo "allow_parallel_build=True" > $HOME/.cerbero/cerbero.cbc && \
+    echo "use_ccache=True" >> $HOME/.cerbero/cerbero.cbc && \
+    cd cerbero && \
+      echo "local_sources=\"/cerbero/cerbero-sources\"" >> localconf.cbc && \
+      echo "home_dir=\"/cerbero/cerbero-build\"" >> localconf.cbc && \
+      ./cerbero-uninstalled -t -c localconf.cbc fetch-bootstrap --jobs=4 && \
+      ./cerbero-uninstalled -t -c localconf.cbc fetch-package --jobs=4 gstreamer-1.0 && \
+      ./cerbero-uninstalled -t -c localconf.cbc bootstrap -y --build-tools=no --toolchains=no && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc fetch-bootstrap --jobs=4 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc fetch-package --jobs=4 gstreamer-1.0 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc fetch-bootstrap --jobs=4 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc fetch-package --jobs=4 gstreamer-1.0 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc fetch-bootstrap --jobs=4 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc fetch-package --jobs=4 gstreamer-1.0 && \
+      cd .. && \
+    rm -rf /cerbero/cerbero-build/{dist,logs,sources} && \
+    rm -f /cerbero/cerbero-build/{linux,windows,android}*.cache && \
+    dnf clean all
