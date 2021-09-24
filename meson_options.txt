@@ -1,0 +1,25 @@
+# Feature options for plugins with no external deps
+option('rtspclientsink', type : 'feature', value : 'auto')
+
+# Common feature options
+option('examples', type : 'feature', value : 'auto', yield : true,
+       description : 'Build the examples')
+option('tests', type : 'feature', value : 'auto', yield : true,
+       description : 'Build and enable unit tests')
+option('introspection', type : 'feature', value : 'auto', yield : true,
+       description : 'Generate gobject-introspection bindings')
+option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
+       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases)')
+option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
+       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)')
+option('glib-checks', type : 'feature', value : 'enabled', yield : true,
+       description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)')
+
+# Common options
+option('package-name', type : 'string', yield : true,
+       description : 'package name to use in plugins')
+option('package-origin', type : 'string',
+       value : 'Unknown package origin', yield : true,
+       description : 'package origin URL to use in plugins')
+option('doc', type : 'feature', value : 'auto', yield: true,
+       description: 'Enable documentation.')

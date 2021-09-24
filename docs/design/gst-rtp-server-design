@@ -1,0 +1,35 @@
+RTSP server
+-----------
+
+This directory contains an example RTSP server built with various GStreamer
+components and libraries. It also uses GStreamer for all of the multimedia
+procesing and RTP bits. The following features are implemented:
+
+ - 
+
+Server Design
+-------------
+
+The toplevel component of the server is a GstRTSPServer object. This object
+creates and binds on the server socket and attaches into the mainloop.
+
+For each request a new GstRTSPClient object is created that will accept the
+request and a thread is started to handle further communication with the
+client until the connection is closed.
+
+When a client issues a SETUP request we create a GstRTSPSession object,
+identified with a sessionid, that will keep track of the state of a client.
+The object is destroyed when a TEARDOWN request is made for that sessionid.
+
+We also maintain a pool of URL to media pipeline mappings. Each url is mapped to
+an object that is able to provide a pipeline for that media. We provide
+pipelines to stream live captured data, on-demand file streaming or on-demand
+transcoding of a file or stream.
+
+A pool of currently active pipelines is also maintained. Usually the active
+pipelines are in use by one or more GstRTSPSession objects. An active pipeline
+becomes inactive when no more sessions refer to it.
+
+A client can choose to start a new pipeline or join a currently active pipeline.
+Some active pipeline cannot be joined (such as on-demand streams) but a new
+instance of that pipeline can be created.

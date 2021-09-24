@@ -1,0 +1,503 @@
+{
+    "rtspclientsink": {
+        "description": "RTSP client sink element",
+        "elements": {
+            "rtspclientsink": {
+                "author": "Jan Schmidt <jan@centricular.com>",
+                "description": "Send data over the network via RTSP RECORD(RFC 2326)",
+                "hierarchy": [
+                    "GstRTSPClientSink",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy",
+                    "GstURIHandler"
+                ],
+                "klass": "Sink/Network",
+                "long-name": "RTSP RECORD client",
+                "pad-templates": {
+                    "sink_%%u": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "request",
+                        "type": "GstRtspClientSinkPad"
+                    }
+                },
+                "properties": {
+                    "debug": {
+                        "blurb": "Dump request and response messages to stdout",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "do-rtsp-keep-alive": {
+                        "blurb": "Send RTSP keep alive packets, disable for old incompatible server.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "latency": {
+                        "blurb": "Amount of ms to buffer",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "2000",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "location": {
+                        "blurb": "Location of the RTSP url to read",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "multicast-iface": {
+                        "blurb": "The network interface on which to join the multicast group",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "ntp-time-source": {
+                        "blurb": "NTP time source for RTCP packets",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "ntp (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRTSPClientSinkNtpTimeSource",
+                        "writable": true
+                    },
+                    "port-range": {
+                        "blurb": "Client port range that can be used to receive RTCP data, eg. 3000-3005 (NULL = no restrictions)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "profiles": {
+                        "blurb": "Allowed RTSP profiles",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "avp",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRTSPProfile",
+                        "writable": true
+                    },
+                    "protocols": {
+                        "blurb": "Allowed lower transport protocols",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "tcp+udp-mcast+udp",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRTSPLowerTrans",
+                        "writable": true
+                    },
+                    "proxy": {
+                        "blurb": "Proxy settings for HTTP tunneling. Format: [http://][user:passwd@]host[:port]",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "proxy-id": {
+                        "blurb": "HTTP proxy URI user id for authentication",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "proxy-pw": {
+                        "blurb": "HTTP proxy URI user password for authentication",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "retry": {
+                        "blurb": "Max number of retries when allocating RTP ports.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "20",
+                        "max": "65535",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "rtp-blocksize": {
+                        "blurb": "RTP package size to suggest to server (0 = disabled)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "65536",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "rtx-time": {
+                        "blurb": "Amount of ms to buffer for retransmission. 0 disables retransmission",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "500",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "sdes": {
+                        "blurb": "The SDES items of this session",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstStructure",
+                        "writable": true
+                    },
+                    "tcp-timeout": {
+                        "blurb": "Fail after timeout microseconds on TCP connections (0 = disabled)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "20000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "timeout": {
+                        "blurb": "Retry TCP transport after UDP timeout microseconds (0 = disabled)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "5000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "tls-database": {
+                        "blurb": "TLS database with anchor certificate authorities used to validate the server certificate",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GTlsDatabase",
+                        "writable": true
+                    },
+                    "tls-interaction": {
+                        "blurb": "A GTlsInteraction object to prompt the user for password or certificate",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GTlsInteraction",
+                        "writable": true
+                    },
+                    "tls-validation-flags": {
+                        "blurb": "TLS certificate validation flags used to validate the server certificate",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "validate-all",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GTlsCertificateFlags",
+                        "writable": true
+                    },
+                    "udp-buffer-size": {
+                        "blurb": "Size of the kernel UDP receive buffer in bytes, 0=default",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "524288",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "udp-reconnect": {
+                        "blurb": "Reconnect to the server if RTSP connection is closed when doing UDP",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "user-agent": {
+                        "blurb": "The User-Agent string to send to the server",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "GStreamer/1.19.2",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "user-id": {
+                        "blurb": "RTSP location URI user id for authentication",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "user-pw": {
+                        "blurb": "RTSP location URI user password for authentication",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "accept-certificate": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GTlsConnection"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "GTlsCertificate"
+                            },
+                            {
+                                "name": "arg2",
+                                "type": "GTlsCertificateFlags"
+                            }
+                        ],
+                        "return-type": "gboolean",
+                        "when": "last"
+                    },
+                    "handle-request": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstRTSPMessage"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "GstRTSPMessage"
+                            }
+                        ],
+                        "return-type": "void"
+                    },
+                    "new-manager": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstElement"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "first"
+                    },
+                    "new-payloader": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstElement"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "first"
+                    },
+                    "request-rtcp-key": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "GstCaps",
+                        "when": "last"
+                    },
+                    "update-sdp": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstSDPMessage"
+                            }
+                        ],
+                        "return-type": "void"
+                    }
+                }
+            }
+        },
+        "filename": "gstrtspclientsink",
+        "license": "LGPL",
+        "other-types": {
+            "GstRTSPClientSinkNtpTimeSource": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "NTP time based on realtime clock",
+                        "name": "ntp",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "UNIX time based on realtime clock",
+                        "name": "unix",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Running time based on pipeline clock",
+                        "name": "running-time",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Pipeline clock time",
+                        "name": "clock-time",
+                        "value": "3"
+                    }
+                ]
+            },
+            "GstRtspClientSinkPad": {
+                "hierarchy": [
+                    "GstRtspClientSinkPad",
+                    "GstGhostPad",
+                    "GstProxyPad",
+                    "GstPad",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
+                "properties": {
+                    "payloader": {
+                        "blurb": "The payloader element to use (NULL = default automatically selected)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstElement",
+                        "writable": true
+                    },
+                    "ulpfec-percentage": {
+                        "blurb": "The percentage of ULP redundancy to apply",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "100",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    }
+                }
+            }
+        },
+        "package": "GStreamer RTSP Server Library",
+        "source": "gst-rtsp-server",
+        "tracers": {},
+        "url": "Unknown package origin"
+    }
+}

@@ -1,0 +1,4 @@
+gst-rtsp-server is a library on top of GStreamer for building an RTSP server
+
+There are some examples in the examples/ directory and more comprehensive
+documentation in docs/README.
