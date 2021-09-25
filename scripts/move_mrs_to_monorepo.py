@@ -275,13 +275,17 @@ class GstMRMover:
 
         description = f"**Copied from {URL}/{project.path_with_namespace}/-/merge_requests/{mr.iid}**\n\n{mr.description}"
 
+        title = mr.title
+        if ':' not in mr.title:
+            title = f"{project.name}: {mr.title}"
+
         new_mr_dict = {
             'source_branch': branch,
             'allow_collaboration': True,
             'remove_source_branch': True,
             'target_project_id': to_project.id,
             'target_branch': MONOREPO_BRANCH,
-            'title': mr.title,
+            'title': title,
             'labels': mr.labels,
             'description': description,
         }
