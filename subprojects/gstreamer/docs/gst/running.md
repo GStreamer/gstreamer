@@ -131,6 +131,12 @@ hand.
 Since GStreamer 1.2 it is also possible to specify debug levels by name,
 e.g. `GST_DEBUG=*:WARNING,*audio*:LOG`
 
+The categories and log levels are evaluated from left to right, with later
+entries overriding any previously-set levels for categories, e.g.
+`GST_DEBUG=decodebin:LOG,*:INFO` will set the decodebin category back to
+INFO level whereas `GST_DEBUG=*:INFO,decodebin:LOG` will log everything at
+INFO level apart from decodebin which will be logged at LOG level.
+
 **`GST_DEBUG_NO_COLOR`.**
 
 Set this environment variable to any value ("1" typically) to switch
