@@ -548,6 +548,17 @@ _ges_command_line_formatter_add_effect (GESTimeline * timeline,
   return _ges_container_add_child_from_struct (timeline, structure, error);
 }
 
+/**
+ * ges_command_line_formatter_get_help:
+ * @nargs: Number of commands in @commands
+ * @commands: (array length=nargs): Commands
+ *
+ * Creates a help string based on @commands.
+ *
+ * Result: (transfer full): A help string.
+ *
+ * Since: 1.20
+ */
 gchar *
 ges_command_line_formatter_get_help (gint nargs, gchar ** commands)
 {
@@ -1043,7 +1054,7 @@ _serialize_clip_effects (GESClip * clip, GString * res)
  * ges_command_line_formatter_get_timeline_uri:
  * @timeline: A GESTimeline to serialize
  *
- * Since: 1.20
+ * Since: 1.10
  */
 gchar *
 ges_command_line_formatter_get_timeline_uri (GESTimeline * timeline)

@@ -178,8 +178,8 @@ ges_clip_asset_get_supported_formats (GESClipAsset * self)
 /**
  * ges_clip_asset_get_natural_framerate:
  * @self: The object from which to retrieve the natural framerate
- * @framerate_n: The framerate numerator
- * @framerate_d: The framerate denominator
+ * @framerate_n: (out): The framerate numerator
+ * @framerate_d: (out): The framerate denominator
  *
  * Result: %TRUE if @self has a natural framerate %FALSE otherwise
  *

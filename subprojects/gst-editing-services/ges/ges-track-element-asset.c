@@ -147,8 +147,8 @@ ges_track_element_asset_get_track_type (GESTrackElementAsset * asset)
 /**
  * ges_track_element_asset_get_natural_framerate:
  * @self: A #GESAsset
- * @framerate_n: The framerate numerator
- * @framerate_d: The framerate denominator
+ * @framerate_n: (out): The framerate numerator
+ * @framerate_d: (out): The framerate denominator
  *
  * Result: %TRUE if @self has a natural framerate %FALSE otherwise
  *

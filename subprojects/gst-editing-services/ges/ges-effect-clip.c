@@ -251,8 +251,8 @@ _create_track_element (GESClip * self, GESTrackType type)
 
 /**
  * ges_effect_clip_new:
- * @video_bin_description: The gst-launch like bin description of the effect
- * @audio_bin_description: The gst-launch like bin description of the effect
+ * @video_bin_description: (nullable): The gst-launch like bin description of the effect
+ * @audio_bin_description: (nullable): The gst-launch like bin description of the effect
  *
  * Creates a new #GESEffectClip from the description of the bin.
  *

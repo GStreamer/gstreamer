@@ -874,9 +874,9 @@ ges_meta_container_register_meta (GESMetaContainer * container,
  * ges_meta_container_check_meta_registered:
  * @container: A #GESMetaContainer
  * @meta_item: The key for the @container field to check
- * @flags: (out) (nullable): A destination to get the registered flags of
+ * @flags: (out) (optional): A destination to get the registered flags of
  * the field, or %NULL to ignore
- * @type: (out) (nullable): A destination to get the registered type of
+ * @type: (out) (optional): A destination to get the registered type of
  * the field, or %NULL to ignore
  *
  * Checks whether the specified field has been registered as static, and
