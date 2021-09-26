@@ -103,6 +103,9 @@ typedef struct
   GstPlayTrickMode trick_mode;
   gdouble rate;
   gdouble start_position;
+
+  /* keyboard state tracking */
+  gboolean shift_pressed;
 } GstPlay;
 
 static gboolean quiet = FALSE;
@@ -498,13 +501,35 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
                   key = GST_PLAY_KB_ARROW_UP;
                 else if (strcmp (key, "Down") == 0)
                   key = GST_PLAY_KB_ARROW_DOWN;
-                else if (strcmp (key, "space") == 0 ||
-                    strcmp (key, "Space") == 0)
-                  key = " ";
-                else if (strlen (key) > 1)
+                else if (strncmp (key, "Shift", 5) == 0) {
+                  play->shift_pressed = TRUE;
                   break;
+                } else if (strcmp (key, "space") == 0 ||
+                    strcmp (key, "Space") == 0) {
+                  key = " ";
+                } else if (strcmp (key, "minus") == 0) {
+                  key = "-";
+                } else if (strcmp (key, "plus") == 0
+                    /* TODO: That's not universally correct at all, but still handy */
+                    || (strcmp (key, "equal") == 0 && play->shift_pressed)) {
+                  key = "+";
+                } else if (strlen (key) > 1) {
+                  break;
+                }
 
                 keyboard_cb (key, user_data);
+              }
+              break;
+            }
+            case GST_NAVIGATION_EVENT_KEY_RELEASE:
+            {
+              const gchar *key;
+
+              if (gst_navigation_event_parse_key_event (ev, &key)) {
+                GST_INFO ("Key release: %s", key);
+                if (strncmp (key, "Shift", 5) == 0) {
+                  play->shift_pressed = FALSE;
+                }
               }
               break;
             }
@@ -1325,6 +1350,7 @@ play_cycle_track_selection (GstPlay * play, GstPlayTrackType track_type)
 static void
 print_keyboard_help (void)
 {
+  /* *INDENT-OFF* */
   static struct
   {
     const gchar *key_desc;
@@ -1349,6 +1375,7 @@ print_keyboard_help (void)
     "s", N_("change subtitle track")}, {
     "0", N_("seek to beginning")}, {
   "k", N_("show keyboard shortcuts")},};
+  /* *INDENT-ON* */
   guint i, chars_to_pad, desc_len, max_desc_len = 0;
 
   gst_print ("\n\n%s\n\n", _("Interactive mode - keyboard controls:"));
