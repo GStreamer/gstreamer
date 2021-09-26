@@ -69,6 +69,24 @@ PARSER.add_argument(
     ),
     required=False,
 )
+PARSER.add_argument(
+    "-m",
+    "--module",
+    help="GStreamer module to move MRs for. All if none specified. Can be used multiple times.",
+    dest='modules',
+    action="append",
+    required=False,
+)
+PARSER.add_argument(
+    "--mr",
+    default=None,
+    type=int,
+    help=(
+        "Id of the MR to work on."
+        " One (and only one) module must be specified with `--module`."
+    ),
+    required=False,
+)
 
 GST_PROJECTS = [
     'gstreamer',
@@ -131,9 +149,11 @@ def fprint(msg, nested=True):
 class GstMRMover:
     def __init__(self):
 
+        self.modules = []
         self.gitlab = None
         self.config_files = []
         self.gl = None
+        self.mr = None
         self.all_projects = []
         self.skipped_branches = []
         self.git_rename_limit = None
@@ -259,7 +279,26 @@ class GstMRMover:
 
                 raise e
 
+    def cleanup_args(self):
+        if not self.modules:
+            if self.mr:
+                sys.exit(f"{red(f'Merge request #{self.mr} specified without module')}\n\n"
+                         f"{bold(' -> Use `--module` to specify which module the MR is from.')}")
+
+            self.modules = GST_PROJECTS
+        else:
+            VALID_PROJECTS = GST_PROJECTS[1:]
+            for m in self.modules:
+                if m not in VALID_PROJECTS:
+                    projects = '\n- '.join(VALID_PROJECTS)
+                    sys.exit(f"{red(f'Unknown module {m}')}\nModules are:\n- {projects}")
+            if self.mr and len(self.modules) > 1:
+                sys.exit(f"{red(f'Merge request #{self.mr} specified but several modules where specified')}\n\n"
+                         f"{bold(' -> Use `--module` only once to specify an merge request.')}")
+            self.modules.append(GST_PROJECTS[0])
+
     def run(self):
+        self.cleanup_args()
         self.gl = self.connect()
         self.gl.auth()
 
@@ -447,6 +486,7 @@ class GstMRMover:
 
     def move_mrs(self, from_projects, to_project):
         failed_mrs = []
+        found_mr = None
         for from_project in from_projects:
             with nested(f'{bold(from_project.path_with_namespace)}'):
                 fprint(f'Fetching mrs')
@@ -459,6 +499,10 @@ class GstMRMover:
                 fprint(f"{green(' DONE')}\n", nested=False)
 
                 for mr in mrs:
+                    if self.mr:
+                        if self.mr != mr.iid:
+                            continue
+                        found_mr = True
                     fprint(f'Moving {mr.source_branch} "{mr.title}": {URL}{from_project.path_with_namespace}/merge_requests/{mr.iid}... ')
                     if mr.source_branch in self.skipped_branches:
                         print(f"{yellow('SKIPPED')} (blacklisted branch)")
@@ -479,8 +523,11 @@ class GstMRMover:
 
             fprint(f"\n{yellow('DONE')} with {from_project.path_with_namespace}\n\n", nested=False)
 
+        if self.mr and not found_mr:
+            sys.exit(bold(red(f"\n==> Couldn't find MR {self.mr} in {self.modules[0]}\n")))
+
         for mr in failed_mrs:
-            print(f"Didn't move MR: {mr}")
+            fprint(f"Didn't move MR: {mr}\n")
 
     def close_mr(self, project, to_project, mr, new_mr):
         if new_mr:
@@ -538,7 +585,7 @@ class GstMRMover:
             git_rename_limit = 0
         if int(git_rename_limit) < 999999:
             self.git_rename_limit = git_rename_limit
-            fprint("-> Setting git rename limit to 999999 so we can properly cherry-pick between repos")
+            fprint("-> Setting git rename limit to 999999 so we can properly cherry-pick between repos\n")
             self.git("config", "merge.renameLimit", "999999")
 
 
