@@ -3921,6 +3921,9 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
   frame->pts = GST_BUFFER_PTS (frame->input_buffer);
   frame->dts = GST_BUFFER_DTS (frame->input_buffer);
   frame->duration = GST_BUFFER_DURATION (frame->input_buffer);
+  frame->deadline =
+      gst_segment_to_running_time (&decoder->input_segment, GST_FORMAT_TIME,
+      frame->pts);
 
   /* For keyframes, PTS = DTS + constant_offset, usually 0 to 3 frame
    * durations. */
@@ -3960,6 +3963,10 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
       GST_WARNING_OBJECT (decoder,
           "Subclass requires a sync point but we didn't receive one yet, discarding input");
       GST_OBJECT_UNLOCK (decoder);
+      if (priv->automatic_request_sync_points) {
+        gst_video_decoder_request_sync_point (decoder, frame,
+            priv->automatic_request_sync_point_flags);
+      }
       gst_video_decoder_release_frame (decoder, frame);
       return GST_FLOW_OK;
     }
@@ -3991,10 +3998,6 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
     GST_DEBUG_OBJECT (decoder, "decoder frame list getting long: %d frames,"
         "possible internal leaking?", priv->frames.length);
   }
-
-  frame->deadline =
-      gst_segment_to_running_time (&decoder->input_segment, GST_FORMAT_TIME,
-      frame->pts);
 
   /* do something with frame */
   ret = decoder_class->handle_frame (decoder, frame);
