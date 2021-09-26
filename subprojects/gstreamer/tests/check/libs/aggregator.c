@@ -24,6 +24,7 @@
 #  include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstaggregator.h>
 
@@ -441,6 +442,9 @@ _test_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
 static void
 _test_data_init (TestData * test, gboolean needs_flushing)
 {
+  const gchar *timeout_factor_str = g_getenv ("TIMEOUT_FACTOR");
+  gint timeout = 1000;
+
   test->aggregator = gst_element_factory_make ("testaggregator", NULL);
   gst_element_set_state (test->aggregator, GST_STATE_PLAYING);
   test->ml = g_main_loop_new (NULL, TRUE);
@@ -465,8 +469,14 @@ _test_data_init (TestData * test, gboolean needs_flushing)
         (GstPadProbeCallback) _aggregated_cb, test->ml, NULL);
   }
 
+  if (timeout_factor_str) {
+    gint factor = g_ascii_strtoll (timeout_factor_str, NULL, 10);
+    if (factor)
+      timeout *= factor;
+  }
+
   test->timeout_id =
-      g_timeout_add (1000, (GSourceFunc) _aggregate_timeout, test->ml);
+      g_timeout_add (timeout, (GSourceFunc) _aggregate_timeout, test->ml);
 }
 
 static void
