@@ -1,4 +1,4 @@
-neon_dep = dependency('neon', version: ['>= 0.27', '<= 0.31.99'],
+neon_dep = dependency('neon', version: ['>= 0.27', '<= 0.32.99'],
                       required : get_option('neon'))
 
 if neon_dep.found()
