@@ -237,6 +237,12 @@ class GstMRMover:
 
     def run(self):
         try:
+            prevbranch = self.git("rev-parse", "--abbrev-ref", "HEAD", can_fail=True).strip()
+        except:
+            fprint(bold(yellow("Not on a branch?\n")), indent=False)
+            prevbranch = None
+
+        try:
             self.setup_repo()
 
             from_projects, to_project = self.fetch_projects()
@@ -246,6 +252,8 @@ class GstMRMover:
         finally:
             if self.git_rename_limit is not None:
                 self.git("config", "merge.renameLimit", str(self.git_rename_limit))
+            if prevbranch:
+                self.git("checkout", prevbranch)
 
     def fetch_projects(self):
         fprint("Fetching projects... ")
