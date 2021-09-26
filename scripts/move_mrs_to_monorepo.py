@@ -51,6 +51,24 @@ PARSER.add_argument("--skip-branch", action="store", nargs="*",
 PARSER.add_argument("--skip-on-failure", action="store_true", default=False)
 PARSER.add_argument("--dry-run", "-n", action="store_true", default=False)
 PARSER.add_argument("--use-branch-if-exists", action="store_true", default=False)
+PARSER.add_argument(
+    "-c",
+    "--config-file",
+    action="append",
+    dest='config_files',
+    help="Configuration file to use. Can be used multiple times.",
+    required=False,
+)
+PARSER.add_argument(
+    "-g",
+    "--gitlab",
+    help=(
+        "Which configuration section should "
+        "be used. If not defined, the default selection "
+        "will be used."
+    ),
+    required=False,
+)
 
 GST_PROJECTS = [
     'gstreamer',
@@ -113,8 +131,9 @@ def fprint(msg, nested=True):
 class GstMRMover:
     def __init__(self):
 
-        self.gl = self.connect()
-        self.gl.auth()
+        self.gitlab = None
+        self.config_files = []
+        self.gl = None
         self.all_projects = []
         self.skipped_branches = []
         self.git_rename_limit = None
@@ -123,8 +142,13 @@ class GstMRMover:
 
     def connect(self):
         fprint("Logging into gitlab...")
-        gitlab_api_token = os.environ.get('GITLAB_API_TOKEN')
 
+        if self.gitlab:
+            gl = gitlab.Gitlab.from_config(self.gitlab, self.config_files)
+            fprint(f"{green(' OK')}\n", nested=False)
+            return gl
+
+        gitlab_api_token = os.environ.get('GITLAB_API_TOKEN')
         if gitlab_api_token:
             gl = gitlab.Gitlab(URL, private_token=gitlab_api_token)
             fprint(f"{green(' OK')}\n", nested=False)
@@ -236,6 +260,9 @@ class GstMRMover:
                 raise e
 
     def run(self):
+        self.gl = self.connect()
+        self.gl.auth()
+
         try:
             prevbranch = self.git("rev-parse", "--abbrev-ref", "HEAD", can_fail=True).strip()
         except:
@@ -253,13 +280,16 @@ class GstMRMover:
             if self.git_rename_limit is not None:
                 self.git("config", "merge.renameLimit", str(self.git_rename_limit))
             if prevbranch:
+                fprint(f'Back to {prevbranch}\n')
                 self.git("checkout", prevbranch)
 
     def fetch_projects(self):
         fprint("Fetching projects... ")
         self.all_projects = [proj for proj in self.gl.projects.list(
-            membership=1, all=True) if proj.name in GST_PROJECTS]
-        self.user_project, = [p for p in self.all_projects if p.namespace['path'] == self.gl.user.username and p.name == MONOREPO_NAME]
+            membership=1, all=True) if proj.name in self.modules]
+        self.user_project, = [p for p in self.all_projects
+                                if p.namespace['path'] == self.gl.user.username
+                                    and p.name == MONOREPO_NAME]
         fprint(f"{green(' OK')}\n", nested=False)
 
         from_projects = [proj for proj in self.all_projects if proj.namespace['path']
