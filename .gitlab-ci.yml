@@ -432,37 +432,6 @@ check allow-edit:
     CCACHE_MAXSIZE: '10G'
     CARGO_HOME: '/cache/gstreamer/cargo'
 
-.simple_fedora_build: &simple_build >-
-  ${DEFAULT_MESON_ARGS}
-  -Dsharp=enabled
-  -Domx=enabled
-  -Dgst-omx:target=generic
-  -Ddoc=disabled
-  -Drs=disabled
-  ${MESON_BUILDTYPE_ARGS}
-  ${MESON_GST_WERROR}
-
-.build:
-  stage: 'build'
-  extends:
-    - '.build_ccache_vars'
-  needs:
-    - "trigger"
-  # Taking into account the slowest shared runner + time needed to upload the binaries to artifacts
-  # Also need to take into account I/O of pulling docker images and uploading artifacts
-  timeout: '45min'
-  variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
-  script:
-    *build
-  after_script:
-    - mv build/meson-logs/ meson-logs
-  artifacts:
-    expire_in: "7 days"
-    when: "always"
-    paths:
-      - 'meson-logs/'
-
 .base_modules_changes: &modules_changes
   - .gitlab-ci.yml
   - meson.build
@@ -496,6 +465,8 @@ check allow-edit:
   stage: 'build'
   extends:
     - '.build_ccache_vars'
+  needs:
+    - "trigger"
   # Taking into account the slowest shared runner + time needed to upload the binaries to artifacts
   # Also need to take into account I/O of pulling docker images and uploading artifacts
   timeout: '45min'
