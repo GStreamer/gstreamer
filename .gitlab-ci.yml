@@ -15,8 +15,6 @@ variables:
   GST_UPSTREAM_BRANCH: 'master'
   ORC_UPSTREAM_BRANCH: 'master'
 
-  GIT_LFS_SKIP_SMUDGE: '1'
-
   ###
   # IMPORTANT
   # These are the version tags for the docker images the CI runs against.
@@ -204,8 +202,6 @@ default:
     STORAGE_DRIVER: 'vfs'
     BUILDAH_FORMAT: 'docker'
     BUILDAH_ISOLATION: 'chroot'
-
-    GIT_STRATEGY: fetch
   script:
     - export LOCAL_IMAGE="$CI_REGISTRY_IMAGE/$REPO_SUFFIX:$TAG"
     - export LOCAL_GST_CI_IMAGE="$CI_REGISTRY/$CI_PROJECT_NAMESPACE/gst-ci/$REPO_SUFFIX:$TAG"
@@ -281,8 +277,6 @@ gst-indent amd64 docker:
 windows amd64 docker:
   stage: "build docker"
   variables:
-    GIT_STRATEGY: fetch
-
     # Unlike the buildah/linux jobs, this file
     # needs to be relative to docker/windows/ subdir
     # as it makes life easier in the powershell script
@@ -313,8 +307,6 @@ windows amd64 docker:
   rules:
     - if: '$CI_PROJECT_NAME == "gst-ci"'
   variables:
-    GIT_STRATEGY: 'fetch'
-
     # Unlike the buildah/linux jobs, this file
     # needs to be relative to docker/windows/ subdir
     # as it makes life easier in the powershell script
@@ -364,9 +356,6 @@ windows rust amd64 docker minimum supported version:
 gst indent:
   image: $INDENT_IMAGE
   stage: 'preparation'
-  variables:
-    GIT_STRATEGY: 'fetch'
-    GIT_LFS_SKIP_SMUDGE: '1'
   script:
     # man indent. grep RETURN VALUE, grab a beer on my behalf...
     - indent --version || true
@@ -688,7 +677,6 @@ integration testsuites fedora:
   variables:
     EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --check-bugs --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX}"
     TEST_SUITE: "validate ges"
-    GIT_LFS_SKIP_SMUDGE: '0'
 
 # gstreamer-full:
 # introspection has been disabled as the static build does not support it.
