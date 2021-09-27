@@ -511,6 +511,13 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
     goto done;
   }
 
+  /* If the caps don't include directions, use the ones that were
+   * previously set by the application.
+   */
+  if (direction == GST_RTP_HEADER_EXTENSION_DIRECTION_DEFAULT &&
+      priv->direction & GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED)
+    direction = priv->direction;
+
   if (klass->set_attributes)
     ret = klass->set_attributes (ext, direction, attributes);
   else

@@ -176,6 +176,7 @@ struct _GstRTPHeaderExtension
  *
  * Since: 1.20
  */
+
 struct _GstRTPHeaderExtensionClass
 {
   GstElementClass parent_class;
