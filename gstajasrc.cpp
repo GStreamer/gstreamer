@@ -1812,6 +1812,29 @@ restart:
         self->device->device->GetInputVideoFormat(
             self->configured_input_source);
 
+    bool all_quads_equal = true;
+    if (self->quad_mode) {
+      for (int i = 1; i < 4; i++) {
+        NTV2VideoFormat other_video_format =
+            self->device->device->GetInputVideoFormat(
+                (NTV2InputSource)(self->configured_input_source + i));
+        if (other_video_format != current_video_format) {
+          std::string current_string =
+              NTV2VideoFormatToString(current_video_format);
+          std::string other_string =
+              NTV2VideoFormatToString(other_video_format);
+          GST_DEBUG_OBJECT(
+              self,
+              "Not all quadrants had the same format in "
+              "quad-link-mode: %s (%d) on input 1 vs. %s (%d) on input %d",
+              current_string.c_str(), current_video_format,
+              other_string.c_str(), other_video_format, i + 1);
+          all_quads_equal = false;
+          break;
+        }
+      }
+    }
+
     ULWord vpid_a = 0;
     ULWord vpid_b = 0;
     self->device->device->ReadSDIInVPID(self->channel, vpid_a, vpid_b);
@@ -1831,7 +1854,7 @@ restart:
           ::GetQuarterSizedVideoFormat(effective_video_format);
     }
 
-    if (current_video_format == ::NTV2_FORMAT_UNKNOWN) {
+    if (current_video_format == ::NTV2_FORMAT_UNKNOWN || !all_quads_equal) {
       if (self->video_format_setting == GST_AJA_VIDEO_FORMAT_AUTO)
         self->video_format = NTV2_FORMAT_UNKNOWN;
 
