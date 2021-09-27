@@ -891,15 +891,17 @@ cerbero trigger:
   stage: build
   image: $FEDORA_IMAGE
   script:
-    - curl --request POST
-      --form token=${CI_JOB_TOKEN}
-      --form ref=main
-      --form "variables[CI_GSTREAMER_URL]=$CI_PROJECT_URL"
-      --form "variables[CI_GSTREAMER_REF_NAME]=$CI_COMMIT_REF_NAME"
-      https://gitlab.freedesktop.org/api/v4/projects/1340/trigger/pipeline
+    - python3 -m pip install --user python-gitlab
+    - ci/gitlab/trigger_cerbero_pipeline.py
+
+  variables:
+    # Use GST_UPSTREAM_BRANCH
+    UPSTREAM_BRANCH: 'main'
+
   rules:
     - changes:
       - .gitlab-ci.yml
+      - ci/gitlab/tigger_cerbero_pipeline.py
       - subprojects/gst-devtools/**/*
       - subprojects/gst-editing-services/**/*
       - subprojects/gst-libav/**/*

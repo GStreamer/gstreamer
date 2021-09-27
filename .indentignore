@@ -3,3 +3,4 @@ subprojects/gstreamer-rs/
 subprojects/gstreamer-rs-sys/
 subprojects/gst-plugins-rs/
 subprojects/gstreamer-sharp/
+subprojects/gst-integration-testsuites/medias
