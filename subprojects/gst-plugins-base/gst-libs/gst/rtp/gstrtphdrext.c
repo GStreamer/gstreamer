@@ -415,7 +415,7 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
   GstRTPHeaderExtensionDirection direction =
       GST_RTP_HEADER_EXTENSION_DIRECTION_DEFAULT;
   const gchar *attributes = "";
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
@@ -429,14 +429,16 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
   g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
 
   val = gst_structure_get_value (structure, field_name);
-  g_free (field_name);
 
   if (G_VALUE_HOLDS_STRING (val)) {
     const gchar *ext_uri = g_value_get_string (val);
 
     if (g_strcmp0 (ext_uri, gst_rtp_header_extension_get_uri (ext)) != 0) {
       /* incompatible extension uri for this instance */
-      goto error;
+      GST_WARNING_OBJECT (ext, "Field %s, URI doesn't match RTP Header"
+          " extension:  \"%s\", expected \"%s\"", field_name, ext_uri,
+          gst_rtp_header_extension_get_uri (ext));
+      goto done;
     }
   } else if (GST_VALUE_HOLDS_ARRAY (val)
       && gst_value_array_get_size (val) == 3) {
@@ -456,39 +458,60 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
         direction = GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY;
       else if (!strcmp (dir, "inactive"))
         direction = GST_RTP_HEADER_EXTENSION_DIRECTION_INACTIVE;
-      else
-        goto error;
+      else {
+        GST_WARNING_OBJECT (ext, "Unexpected direction \"%s\", expected one"
+            " of: sendrecv, sendonly, recvonly or inactive", dir);
+        goto done;
+      }
     } else {
-      goto error;
+      GST_WARNING_OBJECT (ext, "Caps should hold an array of 3 strings, "
+          "but first member is %s instead", G_VALUE_TYPE_NAME (inner_val));
+      goto done;
     }
 
     inner_val = gst_value_array_get_value (val, 1);
-    if (!G_VALUE_HOLDS_STRING (inner_val))
-      goto error;
+    if (!G_VALUE_HOLDS_STRING (inner_val)) {
+      GST_WARNING_OBJECT (ext, "Caps should hold an array of 3 strings, "
+          "but second member is %s instead", G_VALUE_TYPE_NAME (inner_val));
+
+      goto done;
+    }
     if (g_strcmp0 (g_value_get_string (inner_val),
-            gst_rtp_header_extension_get_uri (ext)) != 0)
-      goto error;
+            gst_rtp_header_extension_get_uri (ext)) != 0) {
+      GST_WARNING_OBJECT (ext, "URI doesn't match RTP Header extension:"
+          " \"%s\", expected \"%s\"", g_value_get_string (inner_val),
+          gst_rtp_header_extension_get_uri (ext));
+      goto done;
+    }
 
     inner_val = gst_value_array_get_value (val, 2);
-    if (!G_VALUE_HOLDS_STRING (inner_val))
-      goto error;
+    if (!G_VALUE_HOLDS_STRING (inner_val)) {
+      GST_WARNING_OBJECT (ext, "Caps should hold an array of 3 strings, "
+          "but third member is %s instead", G_VALUE_TYPE_NAME (inner_val));
+      goto done;
+    }
 
     attributes = g_value_get_string (inner_val);
   } else {
-    /* unknown caps format */
-    goto error;
+    GST_WARNING_OBJECT (ext, "Caps field %s should be either a string"
+        " containing the URI or an array of 3 strings containing the"
+        " direction, URI and attributes, but contains %s", field_name,
+        G_VALUE_TYPE_NAME (val));
+    goto done;
   }
 
   if (klass->set_attributes)
     ret = klass->set_attributes (ext, direction, attributes);
+  else
+    ret = TRUE;
 
   if (ret)
     priv->direction = direction;
 
-  return ret;
+done:
 
-error:
-  return FALSE;
+  g_free (field_name);
+  return ret;
 }
 
 /**
