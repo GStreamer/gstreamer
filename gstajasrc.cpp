@@ -1816,9 +1816,13 @@ restart:
     ULWord vpid_b = 0;
     self->device->device->ReadSDIInVPID(self->channel, vpid_a, vpid_b);
 
-    GST_TRACE_OBJECT(self,
-                     "Detected input video format %u with VPID %08x / %08x",
-                     current_video_format, vpid_a, vpid_b);
+    {
+      std::string current_string =
+          NTV2VideoFormatToString(current_video_format);
+      GST_TRACE_OBJECT(
+          self, "Detected input video format %s (%d) with VPID %08x / %08x",
+          current_string.c_str(), (int)current_video_format, vpid_a, vpid_b);
+    }
 
     NTV2VideoFormat effective_video_format = self->video_format;
     // Can't call this unconditionally as it also maps e.g. 3840x2160p to 1080p
