@@ -884,3 +884,30 @@ documentation:
     paths:
     - documentation/
     - plugins-cache-diffs/
+
+# FIXME: Using trigger: causes permission issues, workaround using old REST API.
+# https://gitlab.com/gitlab-org/gitlab/-/issues/341737
+cerbero trigger:
+  stage: build
+  image: $FEDORA_IMAGE
+  script:
+    - curl --request POST
+      --form token=${CI_JOB_TOKEN}
+      --form ref=main
+      --form "variables[CI_GSTREAMER_URL]=$CI_PROJECT_URL"
+      --form "variables[CI_GSTREAMER_REF_NAME]=$CI_COMMIT_REF_NAME"
+      https://gitlab.freedesktop.org/api/v4/projects/1340/trigger/pipeline
+  rules:
+    - changes:
+      - .gitlab-ci.yml
+      - subprojects/gst-devtools/**/*
+      - subprojects/gst-editing-services/**/*
+      - subprojects/gst-libav/**/*
+      - subprojects/gst-plugins-bad/**/*
+      - subprojects/gst-plugins-base/**/*
+      - subprojects/gst-plugins-good/**/*
+      - subprojects/gst-plugins-ugly/**/*
+      - subprojects/gst-python/**/*
+      - subprojects/gstreamer/**/*
+      - subprojects/gst-rtsp-server/**/*
+      - subprojects/gst-examples/**/*
