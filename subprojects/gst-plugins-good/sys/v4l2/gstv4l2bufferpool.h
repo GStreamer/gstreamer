@@ -93,6 +93,7 @@ struct _GstV4l2BufferPool
   gboolean flushing;
 
   GstBuffer *buffers[VIDEO_MAX_FRAME];
+  volatile gint buffer_state[VIDEO_MAX_FRAME];
 
   /* signal handlers */
   gulong group_released_handler;
