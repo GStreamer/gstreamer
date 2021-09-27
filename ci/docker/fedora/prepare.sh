@@ -223,6 +223,10 @@ RUSTUP_URL=https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$RUST_ARC
 wget $RUSTUP_URL
 dnf remove -y wget
 
+export RUSTUP_HOME="/usr/local/rustup"
+export CARGO_HOME="/usr/local/cargo"
+export PATH="/usr/local/cargo/bin:$PATH"
+
 chmod +x rustup-init;
 ./rustup-init -y --no-modify-path --profile minimal --default-toolchain $RUST_VERSION;
 rm rustup-init;
@@ -233,6 +237,7 @@ cargo --version
 rustc --version
 
 # get gstreamer and make all subprojects available
+# FIXME: we don't really need to clone it now as we have the repo checkout out already
 git clone -b  ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/gstreamer.git /gstreamer
 meson subprojects download --sourcedir /gstreamer
 /gstreamer/ci/scripts/handle-subprojects-cache.py --build /gstreamer/subprojects/
@@ -242,3 +247,9 @@ for i in $(find subprojects/ -mindepth 1 -maxdepth 1 -type d);
 do
     git -C $i gc --aggressive || true;
 done
+
+echo "Removing DNF cache"
+dnf clean all
+
+rm -R /root/*
+rm -rf /var/cache/dnf /var/log/dnf*

@@ -1,5 +1,7 @@
 include:
-  - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/7ea696055e322cc7aa4bcbe5422b56a198c4bdff/templates/ci-fairy.yml"
+  - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/14731f78c23c7b523a85a26a068ade9ac1ecd2f3/templates/ci-fairy.yml"
+  - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/14731f78c23c7b523a85a26a068ade9ac1ecd2f3/templates/fedora.yml"
+  - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/14731f78c23c7b523a85a26a068ade9ac1ecd2f3/templates/debian.yml"
 
 stages:
   - 'trigger'
@@ -13,7 +15,7 @@ stages:
 
 variables:
   # Branch to track for modules that have no ref specified in the manifest
-  GST_UPSTREAM_BRANCH: 'master'
+  GST_UPSTREAM_BRANCH: 'main'
   ORC_UPSTREAM_BRANCH: 'master'
 
   ###
@@ -22,20 +24,19 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2021-06-30.0'
-  INDENT_TAG: '2020-10-22.0'
-  WINDOWS_TAG: "2021-10-01.0"
+  FEDORA_TAG:  '2021-10-04.0'
+  INDENT_TAG: '2021-10-04.0'
+  WINDOWS_TAG: "2021-10-04.0"
 
-  GST_UPSTREAM_REPO: 'gstreamer/gst-ci'
+  GST_UPSTREAM_REPO: 'gstreamer/gstreamer'
+  FDO_UPSTREAM_REPO: 'gstreamer/gstreamer'
 
   FEDORA_AMD64_SUFFIX:  'amd64/fedora'
   INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
   WINDOWS_AMD64_SUFFIX: 'amd64/windows'
   WINDOWS_RUST_AMD64_SUFFIX: 'amd64/windows-rust'
 
-  FEDORA_IMAGE:   "$CI_REGISTRY_IMAGE/$FEDORA_AMD64_SUFFIX:$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
   FEDORA_DOCS_IMAGE: "registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:2020-07-03.0-master"
-  INDENT_IMAGE:   "$CI_REGISTRY_IMAGE/$INDENT_AMD64_SUFFIX:$INDENT_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$GST_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
@@ -123,182 +124,33 @@ trigger:
     - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: 'manual'
 
-
-# Script to check if a docker image exists in the upstream registry
-# and if so copy it to the forked registry so we can use it
-#
-# This is copied/adapted from citemplates/templates/fedora.yml
-# https://gitlab.freedesktop.org/freedesktop/ci-templates/-/blob/96b621fe9f57ec2464f8d1a0940446afbf6c8f59/templates/fedora.yml
-.check_image: &check_image_exists |
-  # if-not-exists steps
-  set -x
-
-  if [[ -z "$GST_FORCE_REBUILD" ]]
-  then
-    # disable exit on failure
-    set +e
-
-    # check if our image is already in the current registry
-    # we store the sha of the digest and the layers
-    skopeo inspect docker://$LOCAL_IMAGE | jq '[.Digest, .Layers]' > local_sha
-
-    # check if our image is already in our gst-ci registry fork
-    skopeo inspect docker://$LOCAL_GST_CI_IMAGE | jq '[.Digest, .Layers]' > local_gst_ci_sha
-
-    # check if our image is already in the upstream registry
-    if [[ -z "$GST_UPSTREAM_REPO" ]]
-    then
-      echo "WARNING! Variable \$GST_UPSTREAM_REPO is undefined, cannot check for images"
-    else
-      skopeo inspect docker://$GST_UPSTREAM_IMAGE | jq '[.Digest, .Layers]' > upstream_sha
-    fi
-
-    # reenable exit on failure
-    set -e
-
-    # if the upstream repo has an image, ensure we use the same
-    if [ -s upstream_sha ]
-    then
-
-      echo "Checking if $LOCAL_IMAGE is up to date"
-      # ensure we use the same image from upstream
-      diff upstream_sha local_sha && exit 0 || true
-
-      echo "Copying image from gstreamer/gst-ci to local registry"
-      # copy the original image into the current project registry namespace
-      # we do 2 attempts with skopeo copy at most
-      skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
-                  docker://$GST_UPSTREAM_IMAGE \
-                  docker://$LOCAL_IMAGE || \
-      skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
-                  docker://$GST_UPSTREAM_IMAGE \
-                  docker://$LOCAL_IMAGE
-
-      exit 0
-    fi
-
-    set +x
-
-    # if the local ci fork repo has an image, ensure we use the same
-    if [ -s local_gst_ci_sha ]
-    then
-      echo "Checking if $LOCAL_GST_CI_IMAGE is up to date"
-      # ensure we use the same image from upstream
-      diff local_gst_ci_sha local_sha && exit 0 || true
-
-      echo "Copying image from $CI_PROJECT_NAMESPACE/gst-ci to local registry"
-      # copy the original image into the current project registry namespace
-      # we do 2 attempts with skopeo copy at most
-      skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
-                  docker://$LOCAL_GST_CI_IMAGE \
-                  docker://$LOCAL_IMAGE || \
-      skopeo copy --dest-creds $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD \
-                  docker://$LOCAL_GST_CI_IMAGE \
-                  docker://$LOCAL_IMAGE
-
-      exit 0
-    fi
-
-    # if we have a local image but none in the upstream repo, use our
-    if [ -s local_sha ]
-    then
-      echo "Using $LOCAL_IMAGE"
-      exit 0
-    fi
-  fi
-
-
-# Build docker images from Dockerfiles
-#
-# This is copied/adapted from citemplates/templates/fedora.yml
-# https://gitlab.freedesktop.org/freedesktop/ci-templates/-/blob/96b621fe9f57ec2464f8d1a0940446afbf6c8f59/templates/fedora.yml
-#
-# CITemplates builds uses buildah run/commit workflow to build the images which doesn't
-# fit us atm and our images need further adjustment to make use of it. Porting to
-# ci-templates is the next step though.
-#
-# All the documentation from citemplates should be applicable here, so please refer there
-.base:
-  image: "$CI_REGISTRY/freedesktop/ci-templates/buildah:2020-07-20.1"
+.fedora image:
   variables:
-    STORAGE_DRIVER: 'vfs'
-    BUILDAH_FORMAT: 'docker'
-    BUILDAH_ISOLATION: 'chroot'
-  script:
-    - export LOCAL_IMAGE="$CI_REGISTRY_IMAGE/$REPO_SUFFIX:$TAG"
-    - export LOCAL_GST_CI_IMAGE="$CI_REGISTRY/$CI_PROJECT_NAMESPACE/gst-ci/$REPO_SUFFIX:$TAG"
-    - export GST_UPSTREAM_IMAGE="$CI_REGISTRY/$GST_UPSTREAM_REPO/$REPO_SUFFIX:$TAG"
-
-    # check if the docker registry is enabled, else the variable will be missing
-    - |
-      if [[ -z "$CI_REGISTRY_IMAGE" ]]
-      then
-        echo "ERROR! Looks like your repository/fork has disabled Docker Registries."
-        echo "Pleae enable them by following the documentation from here:"
-        echo "https://docs.gitlab.com/ee/user/packages/container_registry/#enable-the-container-registry-for-your-project"
-        exit 1
-      fi
-
-    # Newer versions of podman/buildah try to set overlayfs mount options when
-    # using the vfs driver, and this causes errors.
-    - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
-
-    - *check_image_exists
-
-    - echo "Building image $LOCAL_IMAGE"
-
-    - >
-      buildah bud
-      --build-arg DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH
-      --label ci.job_id=$CI_JOB_ID
-      --label pipeline.url=$CI_PIPELINE_URL
-      --label git.ref_name=$CI_COMMIT_REF_NAME
-      --label git.sha=$CI_COMMIT_SHA
-      --label gitlab.project_path=$CI_PROJECT_PATH
-      --label gitlab.project_url=$CI_PROJECT_URL
-      --label fdo.upstream-repo=$GST_UPSTREAM_REPO
-      -f $DOCKERFILE
-      -t $LOCAL_IMAGE
-      $CONTEXT_DIR
-
-    - buildah login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-
-    # Sanity check
-    - |
-      if [ "$CI_PROJECT_PATH" = "gstreamer/gstreamer" ]; then
-        if [ "$LOCAL_IMAGE" != "$GST_UPSTREAM_IMAGE" ]; then
-          echo "ERROR!!! AAAAA! THE IMAGE URI DOES NOT MATCH THE EXPECTED UPSTREAM ONE"
-          echo $LOCAL_IMAGE
-          echo $GST_UPSTREAM_IMAGE
-          exit 1
-        fi
-      fi
-
-    -  buildah push $LOCAL_IMAGE
+    FDO_DISTRIBUTION_VERSION: '31'
+    FDO_REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
+    FDO_DISTRIBUTION_TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
+    FDO_DISTRIBUTION_EXEC: 'DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH bash ci/docker/fedora/prepare.sh'
 
 fedora amd64 docker:
-  stage: "build docker"
-  needs:
-    - "trigger"
-  variables:
-    REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
-    TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
+  extends:
+    - '.fedora image'
+    - '.fdo.container-build@fedora'
+  stage: 'build docker'
 
-    CONTEXT_DIR: "ci/docker/fedora/"
-    DOCKERFILE: "ci/docker/fedora/Dockerfile"
-  extends: .base
+.gst-indent image:
+  variables:
+    FDO_DISTRIBUTION_VERSION: 'stretch'
+    FDO_REPO_SUFFIX: "$INDENT_AMD64_SUFFIX"
+    FDO_DISTRIBUTION_TAG: "$INDENT_TAG-$GST_UPSTREAM_BRANCH"
+    FDO_DISTRIBUTION_PACKAGES: 'curl indent git findutils'
 
 gst-indent amd64 docker:
-  stage: "build docker"
+  extends:
+    - '.gst-indent image'
+    - '.fdo.container-build@debian'
+  stage: 'build docker'
   # Do not depend on the trigger, as we want to run indent always
   needs: []
-  variables:
-    REPO_SUFFIX: "$INDENT_AMD64_SUFFIX"
-    TAG: "$INDENT_TAG-$GST_UPSTREAM_BRANCH"
-
-    CONTEXT_DIR: "ci/docker/indent/"
-    DOCKERFILE: "ci/docker/indent/Dockerfile"
-  extends: .base
 
 windows amd64 docker:
   stage: "build docker"
@@ -382,7 +234,9 @@ windows rust amd64 docker minimum supported version:
 # gst-indent!!
 #
 gst indent:
-  image: $INDENT_IMAGE
+  extends:
+    - '.gst-indent image'
+    - '.fdo.suffixed-image@debian'
   stage: 'preparation'
   needs:
     - job: 'gst-indent amd64 docker'
@@ -473,6 +327,10 @@ check allow-edit:
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
   before_script:
+    - export RUSTUP_HOME="/usr/local/rustup"
+    - export CARGO_HOME="/usr/local/cargo"
+    - export PATH="/usr/local/cargo/bin:$PATH"
+
     - ci/scripts/handle-subprojects-cache.py subprojects/
     # Update subprojects to respect `.wrap` content
     - meson subprojects update --reset
@@ -487,8 +345,10 @@ check allow-edit:
       - 'meson-logs/'
 
 .build fedora x86_64:
-  extends: '.build'
-  image: $FEDORA_IMAGE
+  extends:
+    - '.fedora image'
+    - '.fdo.suffixed-image@fedora'
+    - '.build'
   needs:
     - "fedora amd64 docker"
   variables:
@@ -498,8 +358,10 @@ check allow-edit:
         *modules_changes
 
 build nodebug fedora x86_64:
-  extends: '.build'
-  image: $FEDORA_IMAGE
+  extends:
+    - '.fedora image'
+    - '.fdo.suffixed-image@fedora'
+    - '.build'
   needs:
     - "fedora amd64 docker"
   variables:
@@ -655,10 +517,12 @@ build msys2 :
         - "validate-logs/*.xml"
 
 .test fedora x86_64:
-  image: $FEDORA_IMAGE
+  extends:
+    - '.fedora image'
+    - '.fdo.suffixed-image@fedora'
+    - '.test'
   needs:
     - "fedora amd64 docker"
-  extends: '.test'
   tags: ['gstreamer']
 
 check fedora:
