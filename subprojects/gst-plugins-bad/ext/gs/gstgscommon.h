@@ -30,6 +30,7 @@
 
 std::unique_ptr<google::cloud::storage::Client> gst_gs_create_client(
     const gchar* service_account_email,
+    const gchar* service_account_credentials,
     GError** error);
 
 gboolean gst_gs_get_buffer_date(GstBuffer* buffer,

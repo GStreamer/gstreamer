@@ -110,6 +110,7 @@ enum {
   PROP_NEXT_FILE,
   PROP_SERVICE_ACCOUNT_EMAIL,
   PROP_START_DATE,
+  PROP_SERVICE_ACCOUNT_CREDENTIALS,
 };
 
 class GSWriteStream;
@@ -120,6 +121,7 @@ struct _GstGsSink {
   std::unique_ptr<google::cloud::storage::Client> gcs_client;
   std::unique_ptr<GSWriteStream> gcs_stream;
   gchar* service_account_email;
+  gchar* service_account_credentials;
   gchar* bucket_name;
   gchar* object_name;
   gchar* start_date_str;
@@ -284,6 +286,22 @@ static void gst_gs_sink_class_init(GstGsSinkClass* klass) {
                         GST_PARAM_MUTABLE_READY)));
 
   /**
+   * GstGsSink:service-account-credentials:
+   *
+   * Service Account Credentials as a JSON string to use for credentials.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property(
+      gobject_class, PROP_SERVICE_ACCOUNT_CREDENTIALS,
+      g_param_spec_string(
+          "service-account-credentials", "Service Account Credentials",
+          "Service Account Credentials as a JSON string to use for credentials",
+          NULL,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        GST_PARAM_MUTABLE_READY)));
+
+  /**
    * GstGsSink:start-date:
    *
    * Start date in iso8601 format.
@@ -322,6 +340,7 @@ static void gst_gs_sink_init(GstGsSink* sink) {
   sink->index = DEFAULT_INDEX;
   sink->post_messages = DEFAULT_POST_MESSAGES;
   sink->service_account_email = NULL;
+  sink->service_account_credentials = NULL;
   sink->bucket_name = NULL;
   sink->object_name = g_strdup(DEFAULT_OBJECT_NAME);
   sink->start_date_str = NULL;
@@ -341,6 +360,8 @@ static void gst_gs_sink_finalize(GObject* object) {
   sink->gcs_stream = nullptr;
   g_free(sink->service_account_email);
   sink->service_account_email = NULL;
+  g_free(sink->service_account_credentials);
+  sink->service_account_credentials = NULL;
   g_free(sink->bucket_name);
   sink->bucket_name = NULL;
   g_free(sink->object_name);
@@ -427,6 +448,10 @@ static void gst_gs_sink_set_property(GObject* object,
       g_free(sink->service_account_email);
       sink->service_account_email = g_strdup(g_value_get_string(value));
       break;
+    case PROP_SERVICE_ACCOUNT_CREDENTIALS:
+      g_free(sink->service_account_credentials);
+      sink->service_account_credentials = g_strdup(g_value_get_string(value));
+      break;
     case PROP_START_DATE:
       g_free(sink->start_date_str);
       if (sink->start_date)
@@ -472,6 +497,9 @@ static void gst_gs_sink_get_property(GObject* object,
     case PROP_SERVICE_ACCOUNT_EMAIL:
       g_value_set_string(value, sink->service_account_email);
       break;
+    case PROP_SERVICE_ACCOUNT_CREDENTIALS:
+      g_value_set_string(value, sink->service_account_credentials);
+      break;
     case PROP_START_DATE:
       g_value_set_string(value, sink->start_date_str);
       break;
@@ -499,7 +527,8 @@ static gboolean gst_gs_sink_start(GstBaseSink* bsink) {
 
   sink->content_type = "";
 
-  sink->gcs_client = gst_gs_create_client(sink->service_account_email, &err);
+  sink->gcs_client = gst_gs_create_client(
+      sink->service_account_email, sink->service_account_credentials, &err);
   if (err) {
     GST_ELEMENT_ERROR(sink, RESOURCE, OPEN_READ,
                       ("Could not create client (%s)", err->message),

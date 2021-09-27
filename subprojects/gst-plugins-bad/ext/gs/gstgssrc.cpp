@@ -63,7 +63,12 @@ enum { LAST_SIGNAL };
 
 #define DEFAULT_BLOCKSIZE 4 * 1024
 
-enum { PROP_0, PROP_LOCATION, PROP_SERVICE_ACCOUNT_EMAIL };
+enum {
+  PROP_0,
+  PROP_LOCATION,
+  PROP_SERVICE_ACCOUNT_EMAIL,
+  PROP_SERVICE_ACCOUNT_CREDENTIALS
+};
 
 class GSReadStream;
 
@@ -74,6 +79,7 @@ struct _GstGsSrc {
   std::unique_ptr<GSReadStream> gcs_stream;
   gchar* uri;
   gchar* service_account_email;
+  gchar* service_account_credentials;
   std::string bucket_name;
   std::string object_name;
   guint64 read_position;
@@ -166,6 +172,22 @@ static void gst_gs_src_class_init(GstGsSrcClass* klass) {
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
                         GST_PARAM_MUTABLE_READY)));
 
+  /**
+   * GstGsSrc:service-account-credentials:
+   *
+   * Service Account Credentials as a JSON string to use for credentials.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property(
+      gobject_class, PROP_SERVICE_ACCOUNT_CREDENTIALS,
+      g_param_spec_string(
+          "service-account-credentials", "Service Account Credentials",
+          "Service Account Credentials as a JSON string to use for credentials",
+          NULL,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        GST_PARAM_MUTABLE_READY)));
+
   gobject_class->finalize = gst_gs_src_finalize;
 
   gst_element_class_set_static_metadata(
@@ -186,6 +208,7 @@ static void gst_gs_src_init(GstGsSrc* src) {
   src->gcs_stream = nullptr;
   src->uri = NULL;
   src->service_account_email = NULL;
+  src->service_account_credentials = NULL;
   src->read_position = 0;
   src->object_size = 0;
 
@@ -201,6 +224,8 @@ static void gst_gs_src_finalize(GObject* object) {
   src->uri = NULL;
   g_free(src->service_account_email);
   src->service_account_email = NULL;
+  g_free(src->service_account_credentials);
+  src->service_account_credentials = NULL;
   src->read_position = 0;
   src->object_size = 0;
 
@@ -294,6 +319,30 @@ static gboolean gst_gs_src_set_service_account_email(
   return TRUE;
 }
 
+static gboolean gst_gs_src_set_service_account_credentials(
+    GstGsSrc* src,
+    const gchar* service_account_credentials) {
+  if (GST_STATE(src) == GST_STATE_PLAYING ||
+      GST_STATE(src) == GST_STATE_PAUSED) {
+    GST_WARNING_OBJECT(
+        src,
+        "Setting a new service account credentials not supported in "
+        "PLAYING or PAUSED state");
+    return FALSE;
+  }
+
+  GST_OBJECT_LOCK(src);
+  g_free(src->service_account_credentials);
+  src->service_account_credentials = NULL;
+
+  if (service_account_credentials)
+    src->service_account_credentials = g_strdup(service_account_credentials);
+
+  GST_OBJECT_UNLOCK(src);
+
+  return TRUE;
+}
+
 static void gst_gs_src_set_property(GObject* object,
                                     guint prop_id,
                                     const GValue* value,
@@ -308,6 +357,10 @@ static void gst_gs_src_set_property(GObject* object,
       break;
     case PROP_SERVICE_ACCOUNT_EMAIL:
       gst_gs_src_set_service_account_email(src, g_value_get_string(value));
+      break;
+    case PROP_SERVICE_ACCOUNT_CREDENTIALS:
+      gst_gs_src_set_service_account_credentials(src,
+                                                 g_value_get_string(value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -332,6 +385,11 @@ static void gst_gs_src_get_property(GObject* object,
     case PROP_SERVICE_ACCOUNT_EMAIL:
       GST_OBJECT_LOCK(src);
       g_value_set_string(value, src->service_account_email);
+      GST_OBJECT_UNLOCK(src);
+      break;
+    case PROP_SERVICE_ACCOUNT_CREDENTIALS:
+      GST_OBJECT_LOCK(src);
+      g_value_set_string(value, src->service_account_credentials);
       GST_OBJECT_UNLOCK(src);
       break;
     default:
@@ -470,7 +528,8 @@ static gboolean gst_gs_src_start(GstBaseSrc* basesrc) {
 
   GST_INFO_OBJECT(src, "Opening file %s", src->uri);
 
-  src->gcs_client = gst_gs_create_client(src->service_account_email, &err);
+  src->gcs_client = gst_gs_create_client(
+      src->service_account_email, src->service_account_credentials, &err);
   if (err) {
     GST_ELEMENT_ERROR(src, RESOURCE, OPEN_READ,
                       ("Could not create client (%s)", err->message),

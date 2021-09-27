@@ -58,18 +58,35 @@ static inline gchar* g_date_time_format_iso8601(GDateTime* datetime) {
 
 std::unique_ptr<google::cloud::storage::Client> gst_gs_create_client(
     const gchar* service_account_email,
+    const gchar* service_account_credentials,
     GError** error) {
-  if (service_account_email) {
-    // Meant to be used from a container running in the Cloud.
+  if (service_account_email || service_account_credentials) {
+    google::cloud::StatusOr<std::shared_ptr<gcs::oauth2::Credentials>> creds;
+    if (service_account_credentials) {
+      creds = gcs::oauth2::CreateServiceAccountCredentialsFromJsonContents(
+          service_account_credentials,
+          {{"https://www.googleapis.com/auth/devstorage.full_control"}},
+          absl::nullopt);
+    } else {
+      // Meant to be used from a container running in the Cloud.
+      creds =
+          gcs::oauth2::CreateComputeEngineCredentials(service_account_email);
+    }
 
-    google::cloud::StatusOr<std::shared_ptr<gcs::oauth2::Credentials>> creds(
-        std::make_shared<gcs::oauth2::ComputeEngineCredentials<>>(
-            service_account_email));
     if (!creds) {
-      g_set_error(error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_AUTHORIZED,
-                  "Could not retrieve credentials for the given service "
-                  "account %s (%s)",
-                  service_account_email, creds.status().message().c_str());
+      if (service_account_email) {
+        g_set_error(error, GST_RESOURCE_ERROR,
+                    GST_RESOURCE_ERROR_NOT_AUTHORIZED,
+                    "Could not retrieve credentials for the given service "
+                    "account %s (%s)",
+                    service_account_email, creds.status().message().c_str());
+      } else {
+        g_set_error(error, GST_RESOURCE_ERROR,
+                    GST_RESOURCE_ERROR_NOT_AUTHORIZED,
+                    "Could not retrieve credentials for the given service "
+                    "account credentials JSON (%s)",
+                    creds.status().message().c_str());
+      }
       return nullptr;
     }
 
