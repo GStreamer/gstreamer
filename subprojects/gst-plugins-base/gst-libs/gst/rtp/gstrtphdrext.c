@@ -387,6 +387,17 @@ gst_rtp_header_extension_set_id (GstRTPHeaderExtension * ext, guint ext_id)
   priv->ext_id = ext_id;
 }
 
+static int
+strcasecmp0 (const gchar * str1, const gchar * str2)
+{
+  if (!str1)
+    return -(str1 != str2);
+  if (!str2)
+    return str1 != str2;
+
+  return g_ascii_strcasecmp (str1, str2);
+}
+
 /**
  * gst_rtp_header_extension_set_attributes_from_caps:
  * @ext: a #GstRTPHeaderExtension
@@ -433,7 +444,7 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
   if (G_VALUE_HOLDS_STRING (val)) {
     const gchar *ext_uri = g_value_get_string (val);
 
-    if (g_strcmp0 (ext_uri, gst_rtp_header_extension_get_uri (ext)) != 0) {
+    if (strcasecmp0 (ext_uri, gst_rtp_header_extension_get_uri (ext)) != 0) {
       /* incompatible extension uri for this instance */
       GST_WARNING_OBJECT (ext, "Field %s, URI doesn't match RTP Header"
           " extension:  \"%s\", expected \"%s\"", field_name, ext_uri,
@@ -448,15 +459,15 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
     if (G_VALUE_HOLDS_STRING (inner_val)) {
       const gchar *dir = g_value_get_string (inner_val);
 
-      if (!strcmp (dir, ""))
+      if (!strcasecmp0 (dir, ""))
         direction = GST_RTP_HEADER_EXTENSION_DIRECTION_DEFAULT;
-      else if (!strcmp (dir, "sendrecv"))
+      else if (!strcasecmp0 (dir, "sendrecv"))
         direction = GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV;
-      else if (!strcmp (dir, "sendonly"))
+      else if (!strcasecmp0 (dir, "sendonly"))
         direction = GST_RTP_HEADER_EXTENSION_DIRECTION_SENDONLY;
-      else if (!strcmp (dir, "recvonly"))
+      else if (!strcasecmp0 (dir, "recvonly"))
         direction = GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY;
-      else if (!strcmp (dir, "inactive"))
+      else if (!strcasecmp0 (dir, "inactive"))
         direction = GST_RTP_HEADER_EXTENSION_DIRECTION_INACTIVE;
       else {
         GST_WARNING_OBJECT (ext, "Unexpected direction \"%s\", expected one"
@@ -476,7 +487,7 @@ gst_rtp_header_extension_set_attributes_from_caps (GstRTPHeaderExtension * ext,
 
       goto done;
     }
-    if (g_strcmp0 (g_value_get_string (inner_val),
+    if (strcasecmp0 (g_value_get_string (inner_val),
             gst_rtp_header_extension_get_uri (ext)) != 0) {
       GST_WARNING_OBJECT (ext, "URI doesn't match RTP Header extension:"
           " \"%s\", expected \"%s\"", g_value_get_string (inner_val),
