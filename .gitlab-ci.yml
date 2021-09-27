@@ -26,7 +26,7 @@ variables:
   ###
   FEDORA_TAG:  '2021-10-04.0'
   INDENT_TAG: '2021-10-04.0'
-  WINDOWS_TAG: "2021-10-04.0"
+  WINDOWS_TAG: "2021-10-04.1"
 
   GST_UPSTREAM_REPO: 'gstreamer/gstreamer'
   FDO_UPSTREAM_REPO: 'gstreamer/gstreamer'
