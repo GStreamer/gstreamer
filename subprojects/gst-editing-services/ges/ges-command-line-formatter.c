@@ -557,7 +557,7 @@ _ges_command_line_formatter_add_effect (GESTimeline * timeline,
  *
  * Result: (transfer full): A help string.
  *
- * Since: 1.20
+ * Since: 1.10
  */
 gchar *
 ges_command_line_formatter_get_help (gint nargs, gchar ** commands)
