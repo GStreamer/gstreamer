@@ -34,20 +34,21 @@
 #include "gstgssink.h"
 #include "gstgssrc.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
+static gboolean plugin_init(GstPlugin* plugin) {
   gboolean ret = FALSE;
 
-  ret |= GST_ELEMENT_REGISTER (gssrc, plugin);
-  ret |= GST_ELEMENT_REGISTER (gssink, plugin);
+  ret |= GST_ELEMENT_REGISTER(gssrc, plugin);
+  ret |= GST_ELEMENT_REGISTER(gssink, plugin);
 
   return ret;
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    gs,
-    "Read and write from and to a Google Cloud Storage",
-    plugin_init,
-    PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+GST_PLUGIN_DEFINE(GST_VERSION_MAJOR,
+                  GST_VERSION_MINOR,
+                  gs,
+                  "Read and write from and to a Google Cloud Storage",
+                  plugin_init,
+                  PACKAGE_VERSION,
+                  GST_LICENSE,
+                  GST_PACKAGE_NAME,
+                  GST_PACKAGE_ORIGIN)

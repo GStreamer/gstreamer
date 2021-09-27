@@ -109,7 +109,7 @@ static void gst_gs_src_uri_handler_init(gpointer g_iface, gpointer iface_data);
   GST_DEBUG_CATEGORY_INIT(gst_gs_src_debug, "gssrc", 0, "gssrc element");
 #define gst_gs_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE(GstGsSrc, gst_gs_src, GST_TYPE_BASE_SRC, _do_init);
-GST_ELEMENT_REGISTER_DEFINE (gssrc, "gssrc", GST_RANK_NONE, GST_TYPE_GS_SRC)
+GST_ELEMENT_REGISTER_DEFINE(gssrc, "gssrc", GST_RANK_NONE, GST_TYPE_GS_SRC)
 
 namespace gcs = google::cloud::storage;
 

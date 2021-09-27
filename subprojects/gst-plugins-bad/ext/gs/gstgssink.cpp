@@ -168,7 +168,7 @@ static GType gst_gs_sink_next_get_type(void) {
 
 #define gst_gs_sink_parent_class parent_class
 G_DEFINE_TYPE(GstGsSink, gst_gs_sink, GST_TYPE_BASE_SINK);
-GST_ELEMENT_REGISTER_DEFINE (gssink, "gssink", GST_RANK_NONE, GST_TYPE_GS_SINK)
+GST_ELEMENT_REGISTER_DEFINE(gssink, "gssink", GST_RANK_NONE, GST_TYPE_GS_SINK)
 
 class GSWriteStream {
  public:

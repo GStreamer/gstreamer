@@ -36,4 +36,4 @@ gboolean gst_gs_get_buffer_date(GstBuffer* buffer,
                                 GDateTime* start_date,
                                 gchar** buffer_date_str_ptr);
 
-#endif // __GST_GS_COMMON_H__
+#endif  // __GST_GS_COMMON_H__

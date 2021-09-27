@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_GS_SRC (gst_gs_src_get_type())
 G_DECLARE_FINAL_TYPE(GstGsSrc, gst_gs_src, GST, GS_SRC, GstBaseSrc)
-GST_ELEMENT_REGISTER_DECLARE (gssrc);
+GST_ELEMENT_REGISTER_DECLARE(gssrc);
 
 G_END_DECLS
-#endif // __GST_GS_SRC_H__
+#endif  // __GST_GS_SRC_H__

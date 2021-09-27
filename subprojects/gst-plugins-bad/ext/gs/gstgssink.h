@@ -43,7 +43,7 @@ typedef enum {
   GST_GS_SINK_NEXT_NONE,
 } GstGsSinkNext;
 
-GST_ELEMENT_REGISTER_DECLARE (gssink);
+GST_ELEMENT_REGISTER_DECLARE(gssink);
 
 G_END_DECLS
-#endif // __GST_GS_SINK_H__
+#endif  // __GST_GS_SINK_H__
