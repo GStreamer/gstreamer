@@ -148,10 +148,6 @@ foreach sp : subprojects
     orc_update_targets += subproj.get_variable('orc_update_targets', [])
 
     subprojects_names += [project_name]
-    cmdres = run_command(python3, '-c', symlink.format(project_name, meson.current_source_dir()))
-    if cmdres.returncode() == 0
-      message('Created symlink to ' + project_name)
-    endif
 
     if not meson.is_cross_build() and build_infos.get('build-hotdoc', false)
       if plugins.length() > 0
