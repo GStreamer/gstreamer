@@ -1,6 +1,0 @@
-{
-    "phabricator.uri" : "https://phabricator.freedesktop.org/",
-    "repository.callsign" : "GES",
-    "project": "GStreamer Editing Services",
-    "default-reviewers": "thiblahute,Mathieu_Du"
-}
