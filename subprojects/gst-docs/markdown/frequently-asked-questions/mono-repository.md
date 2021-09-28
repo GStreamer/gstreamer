@@ -38,7 +38,7 @@ to (API, read_user, read_api) and then press the *create personal access token* 
 
 You should see a value in the *token name* edit box. The name is just for you, you can call it anything you like (e.g. "scripts").
 
-![](https://codimd.s3.shivering-isles.com/demo/uploads/upload_0ce1143e8c2117f71ace923688469383.png)
+![](images/faq-monorepo-gitlab-personal-access-token-dialog.png)
 
 
 When you have a token such as "edEFoqK3tATMj-XD6pY_" you should be able to access the gitlab API and run the script:
