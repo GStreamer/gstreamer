@@ -7,7 +7,7 @@ title: Quotes from the Developers
 As well as being a cool piece of software, GStreamer is a lively
 project, with developers from around the globe very actively
 contributing. We often hang out on the \#gstreamer IRC channel on
-irc.freenode.net: the following are a selection of amusing\[1\] quotes
+irc.oftc.net: the following are a selection of amusing\[1\] quotes
 from our conversations.
 
   - 6 Mar 2006

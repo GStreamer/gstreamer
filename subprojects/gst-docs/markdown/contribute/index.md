@@ -50,8 +50,8 @@ these operations:
 - If you don't know which component to file the issue against, just pick the one
   that seems the most likely to you, or file it against the gstreamer-project
   component. If in doubt just pop into our IRC channel `#gstreamer` on the
-  [freenode IRC network](https://freenode.net), which you can connect to using
-  any IRC client application or the [freenode IRC webchat](https://webchat.freenode.net/?channels=%23gstreamer).
+  [OFTC IRC network](https://www.oftc.net/), which you can connect to using
+  any IRC client application or the [OFTC IRC webchat](https://webchat.oftc.net/?channels=%23gstreamer).
   In any case, if it's not the right component someone will move the issue
   once they have a better idea what the problem is and where it belongs.
 

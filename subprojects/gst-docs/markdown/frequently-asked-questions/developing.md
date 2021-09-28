@@ -74,13 +74,13 @@ directory.
 ## Why is mail traffic so low on gstreamer-devel?
 
 Our main arenas for coordination and discussion are IRC and Gitlab, not
-the mailing lists. Join us in [`#gstreamer`][irc-gstreamer] on irc.freenode.net.
+the mailing lists. Join us in [`#gstreamer`][irc-gstreamer] on irc.oftc.net.
 There is also a [webchat interface][webchat-gstreamer]. For larger picture
 questions or getting more input from more people, a mail to the gstreamer-devel
 mailing list is never a bad idea, however.
 
-[irc-gstreamer]: irc://irc.freenode.net/#gstreamer
-[webchat-gstreamer]: https://webchat.freenode.net
+[irc-gstreamer]: irc://irc.oftc.net/#gstreamer
+[webchat-gstreamer]: https://webchat.oftc.net/?channels=%23gstreamer
 
 ## What kind of versioning scheme does GStreamer use?
 

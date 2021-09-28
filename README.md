@@ -22,7 +22,7 @@ We track bugs, feature requests and merge requests (patches) in GitLab at
 
   https://gitlab.freedesktop.org/gstreamer/
 
-You can join us on IRC - #gstreamer on irc.freenode.org
+You can join us on IRC - #gstreamer on irc.oftc.net
 
 This repository contains all official modules supported by the GStreamer
 community which can be found in the `subprojects/` directory.
