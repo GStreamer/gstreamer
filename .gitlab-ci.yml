@@ -832,29 +832,10 @@ valgrind ges:
 
 # ---- Integration ----- #
 
-documentation:
+.documentation:
   image: $FEDORA_DOCS_IMAGE
   extends:
     - '.build_ccache_vars'
-  needs:
-    - "gst indent"
-  rules:
-    - changes:
-      - "*"
-      - subprojects/*.wrap
-      - subprojects/gst-docs/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gst-editing-services/**/*
-      - subprojects/gst-libav/**/*
-      - subprojects/gst-omx/**/*
-      - subprojects/gst-plugins-bad/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-ugly/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gstreamer-vaapi/**/*
-      - subprojects/gst-rtsp-server/**/*
-  stage: integrate
   variables:
     MESON_ARGS: *simple_build
     MESON_BUILDTYPE_ARGS: "-Ddoc=enabled"
@@ -869,9 +850,44 @@ documentation:
 
   artifacts:
     when: always
+    expire_in: "7 days"
     paths:
     - documentation/
     - plugins-cache-diffs/
+
+documentation:
+  stage: integrate
+  extends:
+    - '.documentation'
+  needs: []
+  rules:
+    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == "main"'
+
+build documentation:
+  extends:
+    - '.documentation'
+  stage: build
+  needs:
+    - "gst indent"
+
+  stage: build
+  rules:
+    - changes:
+      - .gitlab-ci.yml
+      - ci/gitlab/freedesktop_doc_importer.sh
+      - subprojects/*.wrap
+      - subprojects/gst-docs/**/*
+      - subprojects/gst-devtools/**/*
+      - subprojects/gst-editing-services/**/*
+      - subprojects/gst-libav/**/*
+      - subprojects/gst-omx/**/*
+      - subprojects/gst-plugins-bad/**/*
+      - subprojects/gst-plugins-base/**/*
+      - subprojects/gst-plugins-good/**/*
+      - subprojects/gst-plugins-ugly/**/*
+      - subprojects/gstreamer/**/*
+      - subprojects/gstreamer-vaapi/**/*
+      - subprojects/gst-rtsp-server/**/*
 
 # FIXME: Using trigger: causes permission issues, workaround using old REST API.
 # https://gitlab.com/gitlab-org/gitlab/-/issues/341737
