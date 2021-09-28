@@ -89,6 +89,10 @@ This script will only modify your local gstreamer mono repository checkout and n
 
 We will continue to release the various GStreamer modules individually as tarballs, so if you only consume tarballs the move to a mono repository should not affect you at all.
 
+## I use or distribute the release tarballs but would rather not bother with all those separate module tarballs - is the monorepo going to do anything for me?
+
+In future (>= v1.19.3) you will be able to simply download a mono repo tarball for the [release tag](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tags) in gitlab which will then contain all modules same as the monorepo in git.
+
 ## I use gst-build - what should I use now?
 
 In short, the `gstreamer` repository has now become what `gst-build` used to be, with the small difference that the code for all the main GStreamer modules is now already in the repository in the subprojects folder, and doesn't need to be downloaded via Meson as part of the build process.
@@ -117,7 +121,7 @@ All the modules have been imported as-is, with history and commit hashes unchang
 
 ## Does that mean we will be able to easily git bisect across modules now?
 
-Why yes, yes it does.
+Why yes, yes it does. At least going forward. git bisecting into pre-monorepo history will not work.
 
 ## Have all modules been moved into the mono repository?
 
