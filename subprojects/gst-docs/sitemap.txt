@@ -125,6 +125,7 @@
 		frequently-asked-questions/developing.md
 		frequently-asked-questions/legal.md
 		frequently-asked-questions/licensing.md
+		frequently-asked-questions/mono-repository.md
 	deploying/index.md
 		deploying/mac-osx.md
 		deploying/windows.md
