@@ -52,6 +52,7 @@ PARSER.add_argument("--skip-on-failure", action="store_true", default=False)
 PARSER.add_argument("--dry-run", "-n", action="store_true", default=False)
 PARSER.add_argument("--use-branch-if-exists",
                     action="store_true", default=False)
+PARSER.add_argument("--list-mrs-only", action="store_true", default=False)
 PARSER.add_argument(
     "-c",
     "--config-file",
@@ -571,6 +572,9 @@ class GstMRMover:
                         print(f"{yellow('SKIPPED')} (blacklisted branch)")
                         failed_mrs.append(
                             f"{URL}{from_project.path_with_namespace}/merge_requests/{mr.iid}")
+                        continue
+                    if self.list_mrs_only:
+                        fprint("\n"f"List only: {yellow('SKIPPED')}\n")
                         continue
 
                     with nested(f'{bold(from_project.path_with_namespace)}: {mr.iid}'):
