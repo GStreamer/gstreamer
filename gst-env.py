@@ -471,7 +471,7 @@ if __name__ == "__main__":
                         help="The meson build directory")
     parser.add_argument("--gstbuilddir",
                         default=None,
-                        help="The meson gst-build build directory (defaults to builddir)")
+                        help="The meson GStreamer build directory (defaults to builddir)")
     parser.add_argument("--srcdir",
                         default=SCRIPTDIR,
                         help="The top level source directory")
@@ -496,7 +496,7 @@ if __name__ == "__main__":
         exit(1)
 
     if options.gstbuilddir and not os.path.exists(options.gstbuilddir):
-        print("gst-build is not built in %s\n\nBuild it and try again" %
+        print("GStreamer is not built in %s\n\nBuild it and try again" %
               options.gstbuilddir)
         exit(1)
     elif not options.gstbuilddir:

@@ -350,7 +350,7 @@ and place it into `PATH`.
 ### Meson on Windows
 
 **IMPORTANT**: Do not use the Meson MSI installer since it is experimental and known to not
-work with `gst-build`.
+work with `GStreamer`.
 
 You can use `pip3` to install Meson, same as Ninja above:
 

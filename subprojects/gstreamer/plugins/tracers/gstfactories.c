@@ -42,7 +42,7 @@
  * ```
  *
  * Based on this information, one can build a minimal, yet sufficient
- * build of GStreamer using gst-build with a configuration like this one:
+ * build of GStreamer with a configuration like this one:
  * ```
  * meson setup builddir -Dgst-full-elements="audiotestsrc:audiotestsrc;coreelements:fakesink"
  * ```
