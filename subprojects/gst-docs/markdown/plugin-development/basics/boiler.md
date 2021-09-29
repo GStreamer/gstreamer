@@ -216,7 +216,7 @@ gst_my_filter_class_init (GstMyFilterClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
 [..]
-  gst_element_class_set_static_metadata (element_klass,
+  gst_element_class_set_static_metadata (element_class,
     "An example plugin",
     "Example/FirstExample",
     "Shows the basic structure of a plugin",
