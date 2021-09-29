@@ -361,10 +361,10 @@ gst indent:
     - indent --version || true
     - ./scripts/gst-indent-all
     - |
-      if git diff --quiet; then
+      if git diff --quiet -- ':!subprojects/gst-integration-testsuites/medias' .; then
           echo "Code is properly formatted"
       else
-          git diff --color=always
+          git diff --color=always -- ':!subprojects/gst-integration-testsuites/medias' .
           echo 'style diverges, please run gst-indent first'
           exit 1
       fi
