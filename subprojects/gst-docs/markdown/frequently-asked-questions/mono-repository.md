@@ -54,7 +54,8 @@ https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/-/merge_requests/1277
 you can run:
 
 ```
-GITLAB_API_TOKEN=zytXYboB5yi3uggRpBM6 ./scripts/move_mrs_to_monorepo.py -m gst-plugins-base --mr 1277
+GITLAB_API_TOKEN=zytXYboB5yi3uggRpBM6 ./scripts/move_mrs_to_monorepo.py -mr https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/-/merge_requests/1277
+
 ```
 
 When you are ready, you can also run the same script without any parameters to browse and move all your Merge Requests:

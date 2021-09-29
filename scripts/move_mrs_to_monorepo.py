@@ -80,12 +80,12 @@ PARSER.add_argument(
     required=False,
 )
 PARSER.add_argument(
-    "--mr",
+    "-mr",
+    "--mr-url",
     default=None,
-    type=int,
+    type=str,
     help=(
-        "Id of the MR to work on."
-        " One (and only one) module must be specified with `--module`."
+        "URL of the MR to work on."
     ),
     required=False,
 )
@@ -182,6 +182,7 @@ class GstMRMover:
         self.config_files = []
         self.gl = None
         self.mr = None
+        self.mr_url = None
         self.all_projects = []
         self.skipped_branches = []
         self.git_rename_limit = None
@@ -312,7 +313,12 @@ class GstMRMover:
                 raise e
 
     def cleanup_args(self):
-        if not self.modules:
+        if self.mr_url:
+            self.modules.append(GST_PROJECTS[0])
+            (namespace, module, _, _, mr) = os.path.normpath(urlparse(self.mr_url).path).split('/')[1:]
+            self.modules.append(module)
+            self.mr = int(mr)
+        elif not self.modules:
             if self.mr:
                 sys.exit(f"{red(f'Merge request #{self.mr} specified without module')}\n\n"
                          f"{bold(' -> Use `--module` to specify which module the MR is from.')}")
@@ -526,6 +532,9 @@ class GstMRMover:
             fprint(
                 bold(f"{red('SKIPPED')} (couldn't checkout)\n"), nested=False)
             return False
+
+        # unset upstream to avoid to push to main (ie push.default = tracking)
+        self.git("branch", branch, "--unset-upstream")
 
         for commit in reversed([c for c in mr.commits()]):
             if self.git("cherry-pick", commit.id,
