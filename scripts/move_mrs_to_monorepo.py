@@ -215,7 +215,7 @@ class GstMRMover:
             ' then set it in the "GITLAB_API_TOKEN" environment variable:"'
             f'\n\n  $ GITLAB_API_TOKEN=<your token> {" ".join(sys.argv)}\n'))
 
-    def git(self, *args, can_fail=False, interaction_message=None, call=False):
+    def git(self, *args, can_fail=False, interaction_message=None, call=False, revert_operation=None):
         cwd = ROOT_DIR
         retry = True
         while retry:
@@ -265,8 +265,12 @@ class GstMRMover:
                             retry = True
                             continue
                         elif e.returncode == 2:
+                            if revert_operation:
+                                self.git(*revert_operation, can_fail=True)
                             return "SKIP"
                         elif e.returncode == 3:
+                            if revert_operation:
+                                self.git(*revert_operation, can_fail=True)
                             sys.exit(3)
                     except:
                         # Result of subshell does not really matter
@@ -468,9 +472,9 @@ class GstMRMover:
         for commit in reversed([c for c in mr.commits()]):
             if self.git("cherry-pick", commit.id,
                         interaction_message=f"cherry-picking {commit.id} onto {branch} with:\n  "
-                        f" `$ git cherry-pick {commit.id}`") == "SKIP":
+                        f" `$ git cherry-pick {commit.id}`",
+                        revert_operation=["cherry-pick", "--abort"]) == "SKIP":
                 fprint(f"{yellow('SKIPPED')} (couldn't cherry-pick).", nested=False)
-                self.git("cherry-pick", "--abort", can_fail=True)
                 return False
 
         self.git("show", remote_branch + "..", call=True)
