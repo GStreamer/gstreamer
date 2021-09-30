@@ -4291,28 +4291,39 @@ unsupported_format:
   }
 }
 
+/**
+ * gst_v4l2_object_set_crop:
+ * @obj: the object
+ * @crop_rect: the region to crop
+ *
+ * Crop the video data to the regions specified in the @crop_rect.
+ *
+ * For capture devices, this crop the image sensor / video stream provided by
+ * the V4L2 device.
+ * For output devices, this crops the memory buffer that GStreamer passed to
+ * the V4L2 device.
+ *
+ * The crop_rect may be modified by the V4L2 device to a region that
+ * fulfills H/W requirements.
+ *
+ * Returns: %TRUE on success, %FALSE on failure.
+ */
 gboolean
-gst_v4l2_object_set_crop (GstV4l2Object * obj)
+gst_v4l2_object_set_crop (GstV4l2Object * obj, struct v4l2_rect * crop_rect)
 {
   struct v4l2_selection sel = { 0 };
   struct v4l2_crop crop = { 0 };
 
+  GST_V4L2_CHECK_OPEN (obj);
+  GST_V4L2_CHECK_NOT_ACTIVE (obj);
+
   sel.type = obj->type;
   sel.target = V4L2_SEL_TGT_CROP;
   sel.flags = 0;
-  sel.r.left = obj->align.padding_left;
-  sel.r.top = obj->align.padding_top;
-  sel.r.width = obj->info.width;
-  sel.r.height = GST_VIDEO_INFO_FIELD_HEIGHT (&obj->info);
+  sel.r = *crop_rect;
 
   crop.type = obj->type;
   crop.c = sel.r;
-
-  if (obj->align.padding_left + obj->align.padding_top +
-      obj->align.padding_right + obj->align.padding_bottom == 0) {
-    GST_DEBUG_OBJECT (obj->dbg_obj, "no cropping needed");
-    return TRUE;
-  }
 
   GST_DEBUG_OBJECT (obj->dbg_obj,
       "Desired cropping left %u, top %u, size %ux%u", crop.c.left, crop.c.top,
@@ -4344,6 +4355,40 @@ gst_v4l2_object_set_crop (GstV4l2Object * obj)
       crop.c.width, crop.c.height);
 
   return TRUE;
+}
+
+/**
+ * gst_v4l2_object_setup_padding:
+ * @obj: v4l2 object
+ *
+ * Crop away the padding around the video data as specified
+ * in GstVideoAlignement data stored in @obj.
+ *
+ * For capture devices, this crop the image sensor / video stream provided by
+ * the V4L2 device.
+ * For output devices, this crops the memory buffer that GStreamer passed to
+ * the V4L2 device.
+ *
+ * Returns: %TRUE on success, %FALSE on failure.
+ */
+gboolean
+gst_v4l2_object_setup_padding (GstV4l2Object * obj)
+{
+  GstVideoAlignment *align = &obj->align;
+  struct v4l2_rect crop;
+
+  if (align->padding_left + align->padding_top
+      + align->padding_right + align->padding_bottom == 0) {
+    GST_DEBUG_OBJECT (obj->dbg_obj, "no cropping needed");
+    return TRUE;
+  }
+
+  crop.left = align->padding_left;
+  crop.top = align->padding_top;
+  crop.width = obj->info.width;
+  crop.height = GST_VIDEO_INFO_FIELD_HEIGHT (&obj->info);
+
+  return gst_v4l2_object_set_crop (obj, &crop);
 }
 
 gboolean
@@ -4712,7 +4757,7 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
     /* Crop because of vertical padding */
     GST_DEBUG_OBJECT (obj->dbg_obj, "crop because of bottom padding of %d",
         obj->align.padding_bottom);
-    gst_v4l2_object_set_crop (obj);
+    gst_v4l2_object_setup_padding (obj);
   }
 
   return TRUE;
