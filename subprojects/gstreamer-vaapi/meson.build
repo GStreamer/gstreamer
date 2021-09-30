@@ -81,11 +81,15 @@ endif
 
 # Other deps
 gmodule_dep = dependency('gmodule-2.0', required: false)
-libva_dep = dependency('libva', version: libva_req)
+libva_dep = dependency('libva', version: libva_req,
+  fallback : ['libva', 'libva_dep'])
 
-libva_drm_dep = dependency('libva-drm', version: libva_req, required: false)
-libva_wayland_dep = dependency('libva-wayland', version: libva_req, required: false)
-libva_x11_dep = dependency('libva-x11', version: libva_req, required: false)
+libva_drm_dep = dependency('libva-drm', version: libva_req,
+  fallback : ['libva', 'libva_drm_dep'], required: false)
+libva_wayland_dep = dependency('libva-wayland', version: libva_req,
+  fallback : ['libva', 'libva_wayland_dep'], required: false)
+libva_x11_dep = dependency('libva-x11', version: libva_req,
+  fallback : ['libva', 'libva_x11_dep'], required: false)
 libdrm_dep = dependency('libdrm', version: libdrm_req, required: false,
   fallback: ['libdrm', 'ext_libdrm'])
 libudev_dep = dependency('libudev', required: false)
@@ -119,8 +123,8 @@ if glesv2_dep.found()
 endif
 
 USE_ENCODERS = get_option('with_encoders') != 'no'
-USE_VP9_ENCODER = USE_ENCODERS and cc.has_header('va/va_enc_vp9.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
-USE_AV1_DECODER = cc.has_header('va/va_dec_av1.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
+USE_VP9_ENCODER = USE_ENCODERS and libva_dep.version().version_compare('>= 0.40.0')
+USE_AV1_DECODER = libva_dep.version().version_compare('>= 1.10')
 
 USE_DRM = libva_drm_dep.found() and libdrm_dep.found() and libudev_dep.found() and get_option('with_drm') != 'no'
 USE_EGL = gmodule_dep.found() and egl_dep.found() and GLES_VERSION_MASK != 0 and get_option('with_egl') != 'no'
@@ -157,7 +161,7 @@ if gstgl_dep.found()
   endif
 endif
 
-driverdir = libva_dep.get_variable('driverdir')
+driverdir = libva_dep.get_variable('driverdir', default_value: '')
 if driverdir == ''
   driverdir = join_paths(get_option('prefix'), get_option('libdir'), 'dri')
 endif

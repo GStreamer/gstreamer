@@ -23,8 +23,10 @@ if va_option.disabled() or host_system != 'linux'
 endif
 
 libva_req = ['>= 1.6']
-libva_dep = dependency('libva', version: libva_req, required: va_option)
-libva_drm_dep = dependency('libva-drm', version: libva_req, required: va_option)
+libva_dep = dependency('libva', version: libva_req, required: va_option,
+    fallback: ['libva', 'libva_dep'])
+libva_drm_dep = dependency('libva-drm', version: libva_req, required: va_option,
+    fallback: ['libva', 'libva_drm_dep'])
 
 if not (libva_dep.found() and libva_drm_dep.found())
   subdir_done()

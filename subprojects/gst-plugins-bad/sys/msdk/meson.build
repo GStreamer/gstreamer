@@ -147,8 +147,10 @@ if host_machine.system() == 'windows'
   msdk_deps = declare_dependency(dependencies: [d3d11_dep, legacy_stdio_dep])
   msdk_deps_found = d3d11_dep.found() and legacy_stdio_dep.found() and cc.get_id() == 'msvc'
 else
-  libva_dep = dependency('libva', required: get_option('msdk'))
-  libva_drm_dep = dependency('libva-drm', required: get_option('msdk'))
+  libva_dep = dependency('libva', required: get_option('msdk'),
+      fallback: ['libva', 'libva_dep'])
+  libva_drm_dep = dependency('libva-drm', required: get_option('msdk'),
+      fallback: ['libva', 'libva_drm_dep'])
   libdl_dep = cc.find_library('dl', required: get_option('msdk'))
   libgudev_dep = dependency('gudev-1.0', required: get_option('msdk'))
   libdrm_dep = dependency('libdrm', required: get_option('msdk'))
