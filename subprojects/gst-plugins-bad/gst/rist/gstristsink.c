@@ -695,6 +695,7 @@ gst_rist_sink_setup_rtcp_socket (GstRistSink * sink, RistSenderBond * bond)
       "close-socket", FALSE, NULL);
   g_object_unref (socket);
 
+  g_object_set (bond->rtcp_sink, "sync", FALSE, "async", FALSE, NULL);
   gst_element_set_locked_state (bond->rtcp_sink, FALSE);
   gst_element_sync_state_with_parent (bond->rtcp_sink);
 
