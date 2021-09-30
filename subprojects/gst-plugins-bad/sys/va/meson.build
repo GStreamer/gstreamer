@@ -33,16 +33,13 @@ if not gstva_dep.found()
   subdir_done()
 endif
 
-# Keep av1 support optional as long as required libva version in gst-libs/va is < 1.8
-libva_av1_req = ['>= 1.8']
-libva_av1_dep = dependency('libva', version: libva_av1_req, required: false)
-if libva_av1_dep.found()
+if libva_dep.version().version_compare('>= 1.8')
   va_sources += 'gstvaav1dec.c'
 endif
 
 cdata.set10('HAVE_LIBDRM', libdrm_dep.found())
 
-driverdir = libva_dep.get_pkgconfig_variable('driverdir')
+driverdir = libva_dep.get_variable(pkgconfig: 'driverdir', internal: 'driverdir', default_value: '')
 if driverdir == ''
   driverdir = join_paths(get_option('prefix'), get_option('libdir'), 'dri')
 endif
