@@ -80,6 +80,8 @@ static GstFlowReturn gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
     GstVp8Picture * picture, GstVp8Parser * parser);
 static GstFlowReturn gst_nv_vp8_dec_output_picture (GstVp8Decoder *
     decoder, GstVideoCodecFrame * frame, GstVp8Picture * picture);
+static guint gst_nv_vp8_dec_get_preferred_output_delay (GstVp8Decoder * decoder,
+    gboolean is_live);
 
 static void
 gst_nv_vp8_dec_class_init (GstNvVp8DecClass * klass)
@@ -105,6 +107,8 @@ gst_nv_vp8_dec_class_init (GstNvVp8DecClass * klass)
       GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_decode_picture);
   vp8decoder_class->output_picture =
       GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_output_picture);
+  vp8decoder_class->get_preferred_output_delay =
+      GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_get_preferred_output_delay);
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_vp8_dec_debug,
       "nvvp8dec", 0, "NVIDIA VP8 Decoder");
@@ -254,7 +258,8 @@ gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
 
     if (!gst_nv_decoder_configure (self->decoder,
             cudaVideoCodec_VP8, &info, self->width, self->height,
-            NUM_OUTPUT_VIEW)) {
+            /* +4 for render delay */
+            NUM_OUTPUT_VIEW + 4)) {
       GST_ERROR_OBJECT (self, "Failed to configure decoder");
       return GST_FLOW_NOT_NEGOTIATED;
     }
@@ -428,6 +433,18 @@ error:
   gst_vp8_picture_unref (picture);
 
   return GST_FLOW_ERROR;
+}
+
+static guint
+gst_nv_vp8_dec_get_preferred_output_delay (GstVp8Decoder * decoder,
+    gboolean is_live)
+{
+  /* Prefer to zero latency for live pipeline */
+  if (is_live)
+    return 0;
+
+  /* NVCODEC SDK uses 4 frame delay for better throughput performance */
+  return 4;
 }
 
 typedef struct

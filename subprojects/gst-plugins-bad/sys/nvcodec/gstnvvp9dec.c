@@ -83,6 +83,8 @@ static GstFlowReturn gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture, GstVp9Dpb * dpb);
 static GstFlowReturn gst_nv_vp9_dec_output_picture (GstVp9Decoder *
     decoder, GstVideoCodecFrame * frame, GstVp9Picture * picture);
+static guint gst_nv_vp9_dec_get_preferred_output_delay (GstVp9Decoder * decoder,
+    gboolean is_live);
 
 static void
 gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass)
@@ -110,6 +112,8 @@ gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass)
       GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_decode_picture);
   vp9decoder_class->output_picture =
       GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_output_picture);
+  vp9decoder_class->get_preferred_output_delay =
+      GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_get_preferred_output_delay);
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_vp9_dec_debug,
       "nvvp9dec", 0, "NVIDIA VP9 Decoder");
@@ -260,6 +264,7 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
   gst_video_info_set_format (&info, out_format, self->width, self->height);
   if (!gst_nv_decoder_configure (self->decoder,
           cudaVideoCodec_VP9, &info, self->width, self->height,
+          /* +4 for render delay */
           NUM_OUTPUT_VIEW)) {
     GST_ERROR_OBJECT (self, "Failed to configure decoder");
     return GST_FLOW_NOT_NEGOTIATED;
@@ -516,6 +521,18 @@ error:
   gst_vp9_picture_unref (picture);
 
   return GST_FLOW_ERROR;
+}
+
+static guint
+gst_nv_vp9_dec_get_preferred_output_delay (GstVp9Decoder * decoder,
+    gboolean is_live)
+{
+  /* Prefer to zero latency for live pipeline */
+  if (is_live)
+    return 0;
+
+  /* NVCODEC SDK uses 4 frame delay for better throughput performance */
+  return 4;
 }
 
 typedef struct
