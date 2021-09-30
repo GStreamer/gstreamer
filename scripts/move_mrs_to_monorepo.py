@@ -102,12 +102,32 @@ GST_PROJECTS = [
     'gst-omx',
     'gst-editing-services',
     'gst-devtools',
-    'gst-integration-testsuites',
     'gst-docs',
     'gst-examples',
     'gst-build',
     'gst-ci',
 ]
+
+GST_PROJECTS_ID = {
+    'gstreamer': 1357,
+    'gst-rtsp-server': 1362,
+    'gstreamer-vaapi': 1359,
+    'gstreamer-sharp': 1358,
+    'gst-python': 1355,
+    'gst-plugins-ugly': 1354,
+    'gst-plugins-good': 1353,
+    'gst-plugins-base': 1352,
+    'gst-plugins-bad': 1351,
+    'gst-omx': 1350,
+    'gst-libav': 1349,
+    'gst-integration-testsuites': 1348,
+    'gst-examples': 1347,
+    'gst-editing-services': 1346,
+    'gst-docs': 1345,
+    'gst-devtools': 1344,
+    'gst-ci': 1343,
+    'gst-build': 1342,
+}
 
 # We do not want to deal with LFS
 os.environ["GIT_LFS_SKIP_SMUDGE"] = "1"
@@ -341,16 +361,27 @@ class GstMRMover:
             sys.exit(1)
         fprint(f"{green(' OK')}\n", nested=False)
 
-        from_projects = [proj for proj in self.all_projects if proj.namespace['path']
-                         == NAMESPACE and proj.name != "gstreamer"]
+        from_projects = []
+        user_projects_name = [proj.name for proj in self.all_projects if proj.namespace['path'] == self.gl.user.username and proj.name in GST_PROJECTS]
+        for project, id in GST_PROJECTS_ID.items():
+            if project not in user_projects_name or project == 'gstreamer':
+                continue
+
+            projects = [p for p in self.all_projects if p.id == id]
+            if not projects:
+                upstream_project = self.gl.projects.get(id)
+            else:
+                upstream_project, = projects
+            assert project
+
+            from_projects.append(upstream_project)
+
         fprint(f"\nMoving MRs from:\n")
         fprint(f"----------------\n")
         for p in from_projects:
             fprint(f"  - {bold(p.path_with_namespace)}\n")
 
-        to_project, = [p for p in self.all_projects if p.path_with_namespace ==
-                       MOVING_NAMESPACE + "/gstreamer"]
-
+        to_project =  self.gl.projects.get(GST_PROJECTS_ID['gstreamer'])
         fprint(f"To: {bold(to_project.path_with_namespace)}\n\n")
 
         return from_projects, to_project
