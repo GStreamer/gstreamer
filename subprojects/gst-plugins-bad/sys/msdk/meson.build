@@ -154,14 +154,15 @@ else
   libdrm_dep = dependency('libdrm', required: get_option('msdk'))
   msdk_deps = declare_dependency(dependencies: [libva_dep, libva_drm_dep, libdl_dep, libgudev_dep, libdrm_dep])
   msdk_deps_found = libva_dep.found() and libva_drm_dep.found() and libdl_dep.found() and libgudev_dep.found() and libdrm_dep.found()
-  driverdir = libva_dep.get_pkgconfig_variable('driverdir')
+endif
+
+if msdk_deps_found
+  driverdir = libva_dep.get_variable(pkgconfig: 'driverdir', internal: 'driverdir', default_value: '')
   if driverdir == ''
     driverdir = join_paths(get_option('prefix'), get_option('libdir'), 'dri')
   endif
   cdata.set_quoted('VA_DRIVERS_PATH', '@0@'.format(driverdir))
-endif
 
-if msdk_deps_found
   gstmsdktag = library('gstmsdk',
     msdk_sources,
     c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
