@@ -365,9 +365,9 @@ _create_uri_source_asset (GESUriClipAsset * asset,
       g_strdup (gst_discoverer_stream_info_get_stream_id (sinfo));
 
   if (stream_id == NULL) {
-    GST_WARNING ("No stream ID found, using the pointer instead");
-
-    stream_id = g_strdup_printf ("%i", GPOINTER_TO_INT (sinfo));
+    GST_WARNING ("No stream ID, ignoring %p on %s", sinfo,
+        ges_track_type_name (type));
+    return;
   }
 
   if (type == GES_TRACK_TYPE_VIDEO)
