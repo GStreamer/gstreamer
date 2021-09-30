@@ -450,6 +450,19 @@ if orc_subproject.found() and orc_update_targets.length() > 0
   alias_target('update-orc-dist', orc_update_targets)
 endif
 
+dotnet_format = find_program('dotnet-format', required: false)
+if dotnet_format.found()
+    run_target('csharp_format_check',
+        command: [join_paths(meson.current_source_dir(), 'scripts', 'format-chsharp'),
+            '--check'
+        ],
+    )
+    run_target('csharp_format_apply',
+        command: [join_paths(meson.current_source_dir(), 'scripts', 'format-chsharp'),
+        ],
+    )
+endif
+
 summary({
   'gstreamer-full': building_full,
 }, section: 'Build options', bool_yn: true, list_sep: '  ')

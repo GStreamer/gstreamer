@@ -26,7 +26,7 @@ variables:
   # to change any part of the string of the image you want.
   ###
   FEDORA_TAG:  '2022-03-14.0'
-  INDENT_TAG: '2021-10-04.0'
+  INDENT_TAG: '2022-03-07.1'
   WINDOWS_TAG: "2022-03-14.0"
 
   GST_UPSTREAM_REPO: 'gstreamer/gstreamer'
@@ -155,6 +155,7 @@ fedora amd64 docker:
     FDO_REPO_SUFFIX: "$INDENT_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$INDENT_TAG-$GST_UPSTREAM_BRANCH"
     FDO_DISTRIBUTION_PACKAGES: 'curl indent git findutils'
+    FDO_DISTRIBUTION_EXEC: 'ci/docker/indent/prepare.sh'
 
 gst-indent amd64 docker:
   extends:
@@ -255,17 +256,8 @@ gst indent:
     - job: 'gst-indent amd64 docker'
       artifacts: false
   script:
-    # man indent. grep RETURN VALUE, grab a beer on my behalf...
-    - indent --version || true
-    - ./scripts/gst-indent-all
-    - |
-      if git diff --quiet -- ':!subprojects/gst-integration-testsuites/medias' .; then
-          echo "Code is properly formatted"
-      else
-          git diff --color=always -- ':!subprojects/gst-integration-testsuites/medias' .
-          echo 'style diverges, please run gst-indent first'
-          exit 1
-      fi
+    - ./scripts/check-format-c
+    - ./scripts/format-csharp --check
   rules:
     # Don't check indentation on post merge pipelines
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'

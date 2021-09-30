@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+
+dotnet-format subprojects/gstreamer-sharp/gstreamer-sharp.sln --include sources/custom/\*.cs $@
