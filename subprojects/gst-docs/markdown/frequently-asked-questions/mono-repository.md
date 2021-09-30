@@ -66,6 +66,8 @@ GITLAB_API_TOKEN=zytXYboB5yi3uggRpBM6 ./scripts/move_mrs_to_monorepo.py
 
 Don't worry - the script will prompt you for input along the way before it does anything.
 
+
+
 ### Must I use the script? Can't I just open a new MR?
 
 The script will move existing discussions and comments. This is particularly useful for MRs that have been reviewed already and have open discussion items. This makes sure we don't accidentally merge something even though there were outstanding issues, which we wouldn't know if you just filed a new MR and closed the old Merge Request.
@@ -84,7 +86,11 @@ You can do this via the GitLab user interface by editing the issue and then chan
 
 We provide a [scripts/rebase-branch-from-old-module.py](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/main/scripts/rebase-branch-from-old-module.py) script in the `gstreamer` repository that you should use to rebase branches from the old GStreamer module repositories onto the main `gstreamer` repository.
 
-This script will only modify your local gstreamer mono repository checkout and not upload anything to GitLab or create any Merge Requests of course. You don't even need a GitLab account to run it.
+This script will only modify your local gstreamer mono repository checkout and not upload anything to GitLab or create any Merge Requests of course. You don't even need a GitLab account to run it. You can use the script as following:
+
+```
+./scripts/rebase-branch-from-old-module.py https://gitlab.freedesktop.org/user/gst-plugins-bad my_wip_dev_branch
+```
 
 ## I use or distribute the release tarballs - how will this affect me?
 
