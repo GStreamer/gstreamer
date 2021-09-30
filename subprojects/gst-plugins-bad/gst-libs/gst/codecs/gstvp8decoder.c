@@ -482,7 +482,7 @@ gst_vp8_decoder_drain_output_queue (GstVp8Decoder * self, guint num,
   while (gst_queue_array_get_length (priv->output_queue) > num) {
     GstVp8DecoderOutputFrame *output_frame = (GstVp8DecoderOutputFrame *)
         gst_queue_array_pop_head_struct (priv->output_queue);
-    /* Output queued fraems whatever the return value is, in order to empty
+    /* Output queued frames whatever the return value is, in order to empty
      * the queue */
     GstFlowReturn flow_ret = klass->output_picture (self,
         output_frame->frame, output_frame->picture);
