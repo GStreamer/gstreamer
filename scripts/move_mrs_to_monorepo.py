@@ -330,9 +330,15 @@ class GstMRMover:
         fprint("Fetching projects... ")
         self.all_projects = [proj for proj in self.gl.projects.list(
             membership=1, all=True) if proj.name in self.modules]
-        self.user_project, = [p for p in self.all_projects
-                                if p.namespace['path'] == self.gl.user.username
-                                    and p.name == MONOREPO_NAME]
+
+        try:
+            self.user_project, = [p for p in self.all_projects
+                                    if p.namespace['path'] == self.gl.user.username
+                                        and p.name == MONOREPO_NAME]
+        except ValueError:
+            fprint(f"{red(f'ERROR')}\n\nCould not find repository {self.gl.user.name}/{MONOREPO_NAME}")
+            fprint(f"{red(f'Got to https://gitlab.freedesktop.org/gstreamer/gstreamer/ and create a fork so we can move your Merge requests.')}")
+            sys.exit(1)
         fprint(f"{green(' OK')}\n", nested=False)
 
         from_projects = [proj for proj in self.all_projects if proj.namespace['path']
