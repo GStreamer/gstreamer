@@ -25,29 +25,29 @@
 
 namespace Gst {
 
+	using GLib;
 	using System;
 	using System.Collections;
 	using System.Collections.Generic;
 	using System.Runtime.InteropServices;
-	using GLib;
 
 	public partial class Iterator : IEnumerable {
 
-		[DllImport ("gobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr g_value_reset (ref GLib.Value val);
+		[DllImport("gobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr g_value_reset(ref GLib.Value val);
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_iterator_next(IntPtr raw, ref GLib.Value elem);
 
 		public Gst.IteratorResult Next(ref GLib.Value elem) {
 			int raw_ret = gst_iterator_next(Handle, ref elem);
-			Gst.IteratorResult ret = (Gst.IteratorResult) raw_ret;
+			Gst.IteratorResult ret = (Gst.IteratorResult)raw_ret;
 			return ret;
 		}
 
 		private class Enumerator : IEnumerator {
 			Iterator iterator;
-			Hashtable seen = new Hashtable ();
+			Hashtable seen = new Hashtable();
 
 			private object current = null;
 			public object Current {
@@ -56,7 +56,7 @@ namespace Gst {
 				}
 			}
 
-			public bool MoveNext () {
+			public bool MoveNext() {
 				IntPtr raw_ret;
 				bool retry = false;
 
@@ -64,51 +64,51 @@ namespace Gst {
 					return false;
 
 				do {
-					GLib.Value value = new GLib.Value (GLib.GType.Boolean);
-					value.Dispose ();
+					GLib.Value value = new GLib.Value(GLib.GType.Boolean);
+					value.Dispose();
 
-					IteratorResult ret = iterator.Next (ref value);
+					IteratorResult ret = iterator.Next(ref value);
 
 					switch (ret) {
-					case IteratorResult.Done:
-						return false;
-					case IteratorResult.Ok:
-						if (seen.Contains (value)) {
+						case IteratorResult.Done:
+							return false;
+						case IteratorResult.Ok:
+							if (seen.Contains(value)) {
+								retry = true;
+								break;
+							}
+							seen.Add(value, null);
+							current = value.Val;
+							return true;
+						case IteratorResult.Resync:
+							iterator.Resync();
 							retry = true;
 							break;
-						}
-						seen.Add (value , null);
-						current = value.Val;
-						return true;
-					case IteratorResult.Resync:
-						iterator.Resync ();
-						retry = true;
-						break;
 						default:
-					case IteratorResult.Error:
-						throw new Exception ("Error while iterating");
+						case IteratorResult.Error:
+							throw new Exception("Error while iterating");
 					}
 				} while (retry);
 
 				return false;
 			}
 
-			public void Reset () {
-				seen.Clear ();
+			public void Reset() {
+				seen.Clear();
 				if (iterator.Handle != IntPtr.Zero)
-					iterator.Resync ();
+					iterator.Resync();
 			}
 
-			public Enumerator (Iterator iterator) {
+			public Enumerator(Iterator iterator) {
 				this.iterator = iterator;
 			}
 		}
 
 		private Enumerator enumerator = null;
 
-		public IEnumerator GetEnumerator () {
+		public IEnumerator GetEnumerator() {
 			if (this.enumerator == null)
-				this.enumerator = new Enumerator (this);
+				this.enumerator = new Enumerator(this);
 			return this.enumerator;
 		}
 	}

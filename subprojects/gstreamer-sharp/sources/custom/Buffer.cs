@@ -25,8 +25,8 @@ namespace Gst {
 		static extern UIntPtr gst_buffer_extract(IntPtr raw, UIntPtr offset, byte[] dest, UIntPtr size);
 
 		public ulong Extract(ulong offset, ref byte[] dest) {
-			UIntPtr raw_ret = gst_buffer_extract(Handle, new UIntPtr (offset), dest, new UIntPtr ((ulong)dest.Length));
-			ulong ret = (ulong) raw_ret;
+			UIntPtr raw_ret = gst_buffer_extract(Handle, new UIntPtr(offset), dest, new UIntPtr((ulong)dest.Length));
+			ulong ret = (ulong)raw_ret;
 			return ret;
 		}
 
@@ -36,25 +36,24 @@ namespace Gst {
 		public ulong ExtractDup(ulong offset, ulong size, out byte[] dest) {
 			UIntPtr native_dest_size;
 			IntPtr ptr;
-			gst_buffer_extract_dup(Handle, new UIntPtr (offset), new UIntPtr (size), out ptr, out native_dest_size);
+			gst_buffer_extract_dup(Handle, new UIntPtr(offset), new UIntPtr(size), out ptr, out native_dest_size);
 
 			byte[] bytes = new byte[(ulong)native_dest_size];
-			Marshal.Copy (ptr, bytes, 0, (int)native_dest_size);
+			Marshal.Copy(ptr, bytes, 0, (int)native_dest_size);
 
 			dest = bytes;
-			GLib.Marshaller.Free (ptr);
+			GLib.Marshaller.Free(ptr);
 
-			return (ulong) native_dest_size;
+			return (ulong)native_dest_size;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_new_wrapped(IntPtr data, UIntPtr n_length);
 
-		public Buffer (byte[] data)
-		{
-			IntPtr ptr = GLib.Marshaller.Malloc((ulong) data.Length);
+		public Buffer(byte[] data) {
+			IntPtr ptr = GLib.Marshaller.Malloc((ulong)data.Length);
 			Marshal.Copy(data, 0, ptr, data.Length);
-			Raw = gst_buffer_new_wrapped(ptr, new UIntPtr((ulong) data.Length));
+			Raw = gst_buffer_new_wrapped(ptr, new UIntPtr((ulong)data.Length));
 		}
 	}
 }

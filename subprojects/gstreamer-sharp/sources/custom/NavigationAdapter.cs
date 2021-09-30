@@ -26,11 +26,11 @@ namespace Gst.Video {
 
 	public partial class NavigationAdapter {
 
-		public static bool ParseCommands (Gst.Query query, out NavigationCommand[] cmds) {
+		public static bool ParseCommands(Gst.Query query, out NavigationCommand[] cmds) {
 			uint len;
 
 			cmds = null;
-			if (!QueryParseCommandsLength (query, out len))
+			if (!QueryParseCommandsLength(query, out len))
 				return false;
 
 			cmds = new NavigationCommand[len];
@@ -38,7 +38,7 @@ namespace Gst.Video {
 			for (uint i = 0; i < len; i++) {
 				NavigationCommand cmd;
 
-				if (!QueryParseCommandsNth (query, i, out cmd))
+				if (!QueryParseCommandsNth(query, i, out cmd))
 					return false;
 				cmds[i] = cmd;
 			}

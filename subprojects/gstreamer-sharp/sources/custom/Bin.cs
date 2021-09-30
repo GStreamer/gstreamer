@@ -21,17 +21,17 @@ namespace Gst {
 	using System.Runtime.InteropServices;
 
 	partial class Bin {
-		public Bin () : this (null) {}
+		public Bin() : this(null) { }
 
-		public void Add (params Element [] elements) {
+		public void Add(params Element[] elements) {
 			foreach (var elem in elements) {
-				Add (elem);
+				Add(elem);
 			}
 		}
 
-		public void Remove (params Element [] elements) {
+		public void Remove(params Element[] elements) {
 			foreach (var elem in elements) {
-				Remove (elem);
+				Remove(elem);
 			}
 		}
 	}

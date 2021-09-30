@@ -30,19 +30,18 @@ namespace Gst {
 	using System;
 	using System.Runtime.InteropServices;
 
-	partial class Element 
-	{
-		public static bool Link (params Element [] elements) {
+	partial class Element {
+		public static bool Link(params Element[] elements) {
 			for (int i = 0; i < elements.Length - 1; i++) {
-				if (!elements[i].Link (elements[i+1]))
+				if (!elements[i].Link(elements[i + 1]))
 					return false;
 			}
 			return true;
 		}
 
-		public static void Unlink (params Element [] elements) {
+		public static void Unlink(params Element[] elements) {
 			for (int i = 0; i < elements.Length - 1; i++) {
-				elements[i].Unlink (elements[i+1]);
+				elements[i].Unlink(elements[i + 1]);
 			}
 		}
 
@@ -50,59 +49,59 @@ namespace Gst {
 		static extern void gst_element_class_add_metadata(IntPtr klass, IntPtr key, IntPtr value);
 
 		public void AddMetadata(string key, string value) {
-			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
-			IntPtr native_value = GLib.Marshaller.StringToPtrGStrdup (value);
-			gst_element_class_add_metadata(LookupGType().GetClassPtr (), native_key, native_value);
-			GLib.Marshaller.Free (native_key);
-			GLib.Marshaller.Free (native_value);
+			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup(key);
+			IntPtr native_value = GLib.Marshaller.StringToPtrGStrdup(value);
+			gst_element_class_add_metadata(LookupGType().GetClassPtr(), native_key, native_value);
+			GLib.Marshaller.Free(native_key);
+			GLib.Marshaller.Free(native_value);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_element_class_add_pad_template(IntPtr klass, IntPtr templ);
 
 		public void AddPadTemplate(Gst.PadTemplate templ) {
-			gst_element_class_add_pad_template(LookupGType().GetClassPtr (), templ == null ? IntPtr.Zero : templ.OwnedHandle);
+			gst_element_class_add_pad_template(LookupGType().GetClassPtr(), templ == null ? IntPtr.Zero : templ.OwnedHandle);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_element_class_add_static_metadata(IntPtr klass, IntPtr key, IntPtr value);
 
 		public void AddStaticMetadata(string key, string value) {
-			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
-			IntPtr native_value = GLib.Marshaller.StringToPtrGStrdup (value);
-			gst_element_class_add_static_metadata(LookupGType().GetClassPtr (), native_key, native_value);
-			GLib.Marshaller.Free (native_key);
-			GLib.Marshaller.Free (native_value);
+			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup(key);
+			IntPtr native_value = GLib.Marshaller.StringToPtrGStrdup(value);
+			gst_element_class_add_static_metadata(LookupGType().GetClassPtr(), native_key, native_value);
+			GLib.Marshaller.Free(native_key);
+			GLib.Marshaller.Free(native_value);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_element_class_set_metadata(IntPtr klass, IntPtr longname, IntPtr classification, IntPtr description, IntPtr author);
 
 		public void SetMetadata(string longname, string classification, string description, string author) {
-			IntPtr native_longname = GLib.Marshaller.StringToPtrGStrdup (longname);
-			IntPtr native_classification = GLib.Marshaller.StringToPtrGStrdup (classification);
-			IntPtr native_description = GLib.Marshaller.StringToPtrGStrdup (description);
-			IntPtr native_author = GLib.Marshaller.StringToPtrGStrdup (author);
-			gst_element_class_set_metadata(LookupGType().GetClassPtr (), native_longname, native_classification, native_description, native_author);
-			GLib.Marshaller.Free (native_longname);
-			GLib.Marshaller.Free (native_classification);
-			GLib.Marshaller.Free (native_description);
-			GLib.Marshaller.Free (native_author);
+			IntPtr native_longname = GLib.Marshaller.StringToPtrGStrdup(longname);
+			IntPtr native_classification = GLib.Marshaller.StringToPtrGStrdup(classification);
+			IntPtr native_description = GLib.Marshaller.StringToPtrGStrdup(description);
+			IntPtr native_author = GLib.Marshaller.StringToPtrGStrdup(author);
+			gst_element_class_set_metadata(LookupGType().GetClassPtr(), native_longname, native_classification, native_description, native_author);
+			GLib.Marshaller.Free(native_longname);
+			GLib.Marshaller.Free(native_classification);
+			GLib.Marshaller.Free(native_description);
+			GLib.Marshaller.Free(native_author);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_element_class_set_static_metadata(IntPtr klass, IntPtr longname, IntPtr classification, IntPtr description, IntPtr author);
 
 		public void SetStaticMetadata(string longname, string classification, string description, string author) {
-			IntPtr native_longname = GLib.Marshaller.StringToPtrGStrdup (longname);
-			IntPtr native_classification = GLib.Marshaller.StringToPtrGStrdup (classification);
-			IntPtr native_description = GLib.Marshaller.StringToPtrGStrdup (description);
-			IntPtr native_author = GLib.Marshaller.StringToPtrGStrdup (author);
-			gst_element_class_set_static_metadata(LookupGType().GetClassPtr (), native_longname, native_classification, native_description, native_author);
-			GLib.Marshaller.Free (native_longname);
-			GLib.Marshaller.Free (native_classification);
-			GLib.Marshaller.Free (native_description);
-			GLib.Marshaller.Free (native_author);
+			IntPtr native_longname = GLib.Marshaller.StringToPtrGStrdup(longname);
+			IntPtr native_classification = GLib.Marshaller.StringToPtrGStrdup(classification);
+			IntPtr native_description = GLib.Marshaller.StringToPtrGStrdup(description);
+			IntPtr native_author = GLib.Marshaller.StringToPtrGStrdup(author);
+			gst_element_class_set_static_metadata(LookupGType().GetClassPtr(), native_longname, native_classification, native_description, native_author);
+			GLib.Marshaller.Free(native_longname);
+			GLib.Marshaller.Free(native_classification);
+			GLib.Marshaller.Free(native_description);
+			GLib.Marshaller.Free(native_author);
 		}
 
 	}

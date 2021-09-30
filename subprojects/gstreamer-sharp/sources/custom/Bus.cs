@@ -17,15 +17,12 @@
 
 using System;
 
-namespace Gst
-{
-	partial class Bus
-	{
-		public uint AddWatch (Gst.BusFunc func) {
+namespace Gst {
+	partial class Bus {
+		public uint AddWatch(Gst.BusFunc func) {
 			// https://developer.gnome.org/glib/unstable/glib-The-Main-Event-Loop.html#G-PRIORITY-DEFAULT:CAPS
 			int G_PRIORITY_DEFAULT = 0;
-			return AddWatchFull (G_PRIORITY_DEFAULT, func);
+			return AddWatchFull(G_PRIORITY_DEFAULT, func);
 		}
 	}
 }
-

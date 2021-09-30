@@ -25,13 +25,12 @@ namespace Gst.Audio {
 	using System;
 	using System.Runtime.InteropServices;
 
-	partial class AudioFilter 
-	{
+	partial class AudioFilter {
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_filter_class_add_pad_templates(IntPtr klass, IntPtr allowed_caps);
 
 		public void AddPadTemplates(Gst.Caps allowed_caps) {
-			gst_audio_filter_class_add_pad_templates(LookupGType().GetClassPtr (), allowed_caps == null ? IntPtr.Zero : allowed_caps.Handle);
+			gst_audio_filter_class_add_pad_templates(LookupGType().GetClassPtr(), allowed_caps == null ? IntPtr.Zero : allowed_caps.Handle);
 		}
 	}
 }

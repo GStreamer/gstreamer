@@ -26,14 +26,13 @@ namespace Gst {
 	using System.Collections;
 	using System.Runtime.InteropServices;
 
-	partial class Caps : IEnumerable
-	{
-		public Structure this [uint index] {
+	partial class Caps : IEnumerable {
+		public Structure this[uint index] {
 			get {
 				if (index >= Size)
-					throw new ArgumentOutOfRangeException ();
+					throw new ArgumentOutOfRangeException();
 
-				Structure structure = GetStructure ((uint) index);
+				Structure structure = GetStructure((uint)index);
 				return structure;
 			}
 		}
@@ -42,7 +41,7 @@ namespace Gst {
 			Gst.Caps caps;
 			long index;
 
-			public StructureEnumerator (Gst.Caps caps) {
+			public StructureEnumerator(Gst.Caps caps) {
 				this.caps = caps;
 				index = -1;
 			}
@@ -50,26 +49,26 @@ namespace Gst {
 			public object Current {
 				get {
 					if (index >= caps.Size)
-						throw new ArgumentOutOfRangeException ();
+						throw new ArgumentOutOfRangeException();
 					if (index == -1)
-						throw new ArgumentException ();
+						throw new ArgumentException();
 
-					return caps[ (uint) index];
+					return caps[(uint)index];
 				}
 			}
 
-			public bool MoveNext () {
+			public bool MoveNext() {
 				index += 1;
 				return (index < caps.Size);
 			}
 
-			public void Reset () {
+			public void Reset() {
 				index = -1;
 			}
 		}
 
 		public IEnumerator GetEnumerator() {
-			return new StructureEnumerator (this);
+			return new StructureEnumerator(this);
 		}
 	}
 }

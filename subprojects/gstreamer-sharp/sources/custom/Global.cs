@@ -16,25 +16,23 @@
 // 02110-1301  USA
 
 namespace Gst {
-    using System;
-    using System.Runtime.InteropServices;
+	using System;
+	using System.Runtime.InteropServices;
 
-    partial class Global
-    {
-        public static string TimeFormat(ulong time) {
-            return (time / (Gst.Constants.SECOND * 60 * 60)) + ":" +
-                (time / (Gst.Constants.SECOND * 60)) % 60 + ":" +
-                (time / (Gst.Constants.SECOND)) % 60 + ":" +
-                (time % 60);
-        }
+	partial class Global {
+		public static string TimeFormat(ulong time) {
+			return (time / (Gst.Constants.SECOND * 60 * 60)) + ":" +
+				(time / (Gst.Constants.SECOND * 60)) % 60 + ":" +
+				(time / (Gst.Constants.SECOND)) % 60 + ":" +
+				(time % 60);
+		}
 
-        public static string TimeFormat(long time) {
-            return (time / (Gst.Constants.SECOND * 60 * 60)) + ":" +
-                (time / (Gst.Constants.SECOND * 60)) % 60 + ":" +
-                (time / (Gst.Constants.SECOND)) % 60 + ":" +
-                (time % 60);
-        }
+		public static string TimeFormat(long time) {
+			return (time / (Gst.Constants.SECOND * 60 * 60)) + ":" +
+				(time / (Gst.Constants.SECOND * 60)) % 60 + ":" +
+				(time / (Gst.Constants.SECOND)) % 60 + ":" +
+				(time % 60);
+		}
 
-    }
+	}
 }
-

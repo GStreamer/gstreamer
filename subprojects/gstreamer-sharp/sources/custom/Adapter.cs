@@ -15,23 +15,22 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301  USA
 
-namespace Gst.Base	 {
+namespace Gst.Base {
 	using System;
 	using System.Runtime.InteropServices;
 
-	public partial class Adapter 
-	{
+	public partial class Adapter {
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_adapter_copy(IntPtr raw, out IntPtr dest, int offset, int size);
 
 		public byte[] Copy(int offset, int size) {
 
-			IntPtr mem = Marshal.AllocHGlobal (size);
+			IntPtr mem = Marshal.AllocHGlobal(size);
 
 			gst_adapter_copy(Handle, out mem, offset, size);
 
 			byte[] bytes = new byte[size];
-			Marshal.Copy (mem, bytes, 0, size);
+			Marshal.Copy(mem, bytes, 0, size);
 
 			return bytes;
 		}
@@ -42,9 +41,9 @@ namespace Gst.Base	 {
 		public byte[] Map() {
 			int size;
 
-			IntPtr mem = gst_adapter_map (Handle, out size);
+			IntPtr mem = gst_adapter_map(Handle, out size);
 			byte[] ret = new byte[size];
-			Marshal.Copy (mem, ret , 0, size);
+			Marshal.Copy(mem, ret, 0, size);
 
 			return ret;
 		}

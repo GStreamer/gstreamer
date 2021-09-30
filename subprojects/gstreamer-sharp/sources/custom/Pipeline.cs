@@ -23,6 +23,6 @@
 
 namespace Gst {
 	partial class Pipeline {
-		public Pipeline () : this (null) {}
+		public Pipeline() : this(null) { }
 	}
 }

@@ -25,9 +25,8 @@ namespace Gst.App {
 	using System;
 	using System.Runtime.InteropServices;
 
-	partial class AppSink 
-	{
-		public AppSink (String name) : base(IntPtr.Zero) {
+	partial class AppSink {
+		public AppSink(String name) : base(IntPtr.Zero) {
 			Raw = ElementFactory.MakeRaw("appsink", name);
 		}
 	}

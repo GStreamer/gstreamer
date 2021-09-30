@@ -25,16 +25,15 @@ namespace Gst {
 	using System;
 	using System.Runtime.InteropServices;
 
-	partial struct MapInfo 
-	{
+	partial struct MapInfo {
 		public byte[] Data {
 			get {
 				byte[] data = new byte[Size];
-				Marshal.Copy (_data, data, 0, (int)Size);
+				Marshal.Copy(_data, data, 0, (int)Size);
 				return data;
 			}
 			set {
-				Marshal.Copy (value, 0, _data, value.Length);
+				Marshal.Copy(value, 0, _data, value.Length);
 			}
 		}
 

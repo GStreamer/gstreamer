@@ -15,29 +15,27 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301  USA
 
-namespace Gst
-{
+namespace Gst {
 	using System;
 	using System.Runtime.InteropServices;
 
-	public partial class TagList
-	{
-		public object this [string tag, uint index] {
-		 	get { return GetValueIndex (tag, index).Val; }
+	public partial class TagList {
+		public object this[string tag, uint index] {
+			get { return GetValueIndex(tag, index).Val; }
 		}
 
-		public object this [string tag] {
+		public object this[string tag] {
 			get {
 				var v = GLib.Value.Empty;
 				bool success;
 
-				success = CopyValue (ref v, this, tag);
+				success = CopyValue(ref v, this, tag);
 
 				if (!success)
 					return null;
 
 				object ret = (object)v.Val;
-				v.Dispose ();
+				v.Dispose();
 
 				return ret;
 			}
@@ -45,24 +43,23 @@ namespace Gst
 
 		public string[] Tags {
 			get {
-				int size = NTags ();
+				int size = NTags();
 				string[] tags = new string[size];
 				for (uint i = 0; i < size; i++)
-					tags [i] = NthTagName (i);
+					tags[i] = NthTagName(i);
 
 				return tags;
 			}
 		}
 
-		public void Add (Gst.TagMergeMode mode, string tag, object value)
-		{
-			if (!Tag.Exists (tag))
-				throw new ArgumentException (String.Format ("Invalid tag name '{0}'", tag));
+		public void Add(Gst.TagMergeMode mode, string tag, object value) {
+			if (!Tag.Exists(tag))
+				throw new ArgumentException(String.Format("Invalid tag name '{0}'", tag));
 
-			GLib.Value v = new GLib.Value (value);
+			GLib.Value v = new GLib.Value(value);
 
-			AddValue (mode, tag, v);
-			v.Dispose ();
+			AddValue(mode, tag, v);
+			v.Dispose();
 		}
 	}
 }

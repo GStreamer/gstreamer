@@ -25,26 +25,23 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Gst
-{
-	public static class Version
-	{
+namespace Gst {
+	public static class Version {
 		private static uint major;
 		private static uint minor;
 		private static uint micro;
 		private static uint nano;
 		private static string version_string;
 
-		static Version ()
-		{
-			gst_version (out major, out minor, out micro, out nano);
+		static Version() {
+			gst_version(out major, out minor, out micro, out nano);
 		}
 
 		public static string Description {
 			get {
 				if (version_string == null) {
-					IntPtr version_string_ptr = gst_version_string ();
-					version_string = GLib.Marshaller.Utf8PtrToString (version_string_ptr);
+					IntPtr version_string_ptr = gst_version_string();
+					version_string = GLib.Marshaller.Utf8PtrToString(version_string_ptr);
 				}
 
 				return version_string;
@@ -75,10 +72,10 @@ namespace Gst
 			}
 		}
 
-		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		private static extern void gst_version (out uint major, out uint minor, out uint micro, out uint nano);
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		private static extern void gst_version(out uint major, out uint minor, out uint micro, out uint nano);
 
-		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		private static extern IntPtr gst_version_string ();
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		private static extern IntPtr gst_version_string();
 	}
 }

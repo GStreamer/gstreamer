@@ -21,15 +21,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301  USA
 
-namespace Gst
-{
+namespace Gst {
 	using System;
 	using System.Runtime.InteropServices;
 
-	public partial class ElementFactory
-	{
-		public static IntPtr MakeRaw(string factoryname, string name)
-		{
+	public partial class ElementFactory {
+		public static IntPtr MakeRaw(string factoryname, string name) {
 			IntPtr native_factoryname = GLib.Marshaller.StringToPtrGStrdup(factoryname);
 			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup(name);
 			IntPtr raw_ret = gst_element_factory_make(native_factoryname, native_name);

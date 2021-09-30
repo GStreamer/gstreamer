@@ -20,9 +20,8 @@ namespace Gst {
 	using System;
 	using System.Runtime.InteropServices;
 
-	partial class MiniObject
-	{
-		protected MiniObject () {}
+	partial class MiniObject {
+		protected MiniObject() { }
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mini_object_replace(IntPtr olddata, IntPtr newdata);
@@ -32,7 +31,7 @@ namespace Gst {
 		}
 
 		public static bool Replace(ref Gst.MiniObject olddata) {
-			return Replace (ref olddata, null);
+			return Replace(ref olddata, null);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -46,12 +45,12 @@ namespace Gst {
 		static extern IntPtr gst_mini_object_make_writable(IntPtr mini_object);
 
 		public void MakeWritable() {
-			IntPtr raw = gst_mini_object_make_writable (Raw);
+			IntPtr raw = gst_mini_object_make_writable(Raw);
 			if (raw == Raw)
 				return;
 			Raw = raw;
 			if (raw != IntPtr.Zero)
-				Unref (raw);
+				Unref(raw);
 		}
 
 	}

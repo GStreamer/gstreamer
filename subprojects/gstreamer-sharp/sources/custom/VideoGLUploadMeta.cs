@@ -19,11 +19,9 @@ namespace Gst.Video {
 	using System;
 	using System.Runtime.InteropServices;
 
-	partial struct VideoGLTextureUploadMeta 
-	{
-		public bool Equals (VideoGLTextureUploadMeta other)
-		{
-			return Meta.Equals (other.Meta) && TextureOrientation.Equals (other.TextureOrientation) && NTextures.Equals (other.NTextures) && TextureType.Equals (other.TextureType);
+	partial struct VideoGLTextureUploadMeta {
+		public bool Equals(VideoGLTextureUploadMeta other) {
+			return Meta.Equals(other.Meta) && TextureOrientation.Equals(other.TextureOrientation) && NTextures.Equals(other.NTextures) && TextureType.Equals(other.TextureType);
 		}
 	}
 }

@@ -19,14 +19,13 @@ namespace Gst {
 	using System;
 	using System.Runtime.InteropServices;
 
-	partial class Pad 
-	{
-		[GLib.Property ("caps")]
+	partial class Pad {
+		[GLib.Property("caps")]
 		public Gst.Caps Caps {
 			get {
-				GLib.Value val = GetProperty ("caps");
-				Gst.Caps ret = (Gst.Caps) val.Val;
-				val.Dispose ();
+				GLib.Value val = GetProperty("caps");
+				Gst.Caps ret = (Gst.Caps)val.Val;
+				val.Dispose();
 				return ret;
 			}
 		}
