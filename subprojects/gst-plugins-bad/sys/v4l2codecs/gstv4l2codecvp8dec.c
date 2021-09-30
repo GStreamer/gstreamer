@@ -536,7 +536,7 @@ gst_v4l2_codec_vp8_dec_decode_picture (GstVp8Decoder * decoder,
   }
 
   gst_v4l2_codec_vp8_dec_fill_frame_header (self, &picture->frame_hdr);
-  gst_v4l2_codec_vp8_dec_fill_segment (&self->frame_header.seg,
+  gst_v4l2_codec_vp8_dec_fill_segment (&self->frame_header.segment,
       &parser->segmentation);
   gst_v4l2_codec_vp8_dec_fill_lf (&self->frame_header.lf,
       &parser->mb_lf_adjust);
