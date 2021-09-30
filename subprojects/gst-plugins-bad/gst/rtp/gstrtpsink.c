@@ -506,6 +506,7 @@ gst_rtp_sink_start (GstRtpSink * self)
       "close-socket", FALSE, NULL);
   g_object_unref (socket);
 
+  g_object_set (self->rtcp_sink, "sync", FALSE, "async", FALSE, NULL);
   gst_element_set_locked_state (self->rtcp_sink, FALSE);
   gst_element_sync_state_with_parent (self->rtcp_sink);
 
