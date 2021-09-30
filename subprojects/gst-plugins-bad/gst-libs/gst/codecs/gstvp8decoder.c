@@ -76,7 +76,8 @@ static void gst_vp8_decoder_clear_output_frame (GstVp8DecoderOutputFrame *
     output_frame);
 static void gst_vp8_decoder_drain_output_queue (GstVp8Decoder * self,
     guint num, GstFlowReturn * ret);
-
+static GstFlowReturn gst_vp8_decoder_drain_internal (GstVp8Decoder * self,
+    gboolean wait_keyframe);
 
 static void
 gst_vp8_decoder_class_init (GstVp8DecoderClass * klass)
@@ -273,16 +274,27 @@ done:
 }
 
 static GstFlowReturn
-gst_vp8_decoder_finish (GstVideoDecoder * decoder)
+gst_vp8_decoder_drain_internal (GstVp8Decoder * self, gboolean wait_keyframe)
 {
-  GstVp8Decoder *self = GST_VP8_DECODER (decoder);
   GstFlowReturn ret = GST_FLOW_OK;
+  GstVp8DecoderPrivate *priv = self->priv;
 
-  GST_DEBUG_OBJECT (self, "finish");
+  gst_vp8_decoder_drain_output_queue (self, 0, &ret);
+  gst_vp8_picture_clear (&self->last_picture);
+  gst_vp8_picture_clear (&self->golden_ref_picture);
+  gst_vp8_picture_clear (&self->alt_ref_picture);
 
-  gst_vp8_decoder_drain_output_queue (GST_VP8_DECODER (decoder), 0, &ret);
+  priv->wait_keyframe = wait_keyframe;
 
   return ret;
+}
+
+static GstFlowReturn
+gst_vp8_decoder_finish (GstVideoDecoder * decoder)
+{
+  GST_DEBUG_OBJECT (decoder, "finish");
+
+  return gst_vp8_decoder_drain_internal (GST_VP8_DECODER (decoder), TRUE);
 }
 
 static gboolean
@@ -300,15 +312,9 @@ gst_vp8_decoder_flush (GstVideoDecoder * decoder)
 static GstFlowReturn
 gst_vp8_decoder_drain (GstVideoDecoder * decoder)
 {
-  GstVp8Decoder *self = GST_VP8_DECODER (decoder);
-  GstFlowReturn ret = GST_FLOW_OK;
+  GST_DEBUG_OBJECT (decoder, "drain");
 
-  GST_DEBUG_OBJECT (self, "drain");
-
-  gst_vp8_decoder_drain_output_queue (GST_VP8_DECODER (decoder), 0, &ret);
-  gst_vp8_decoder_reset (self);
-
-  return ret;
+  return gst_vp8_decoder_drain_internal (GST_VP8_DECODER (decoder), TRUE);
 }
 
 static void

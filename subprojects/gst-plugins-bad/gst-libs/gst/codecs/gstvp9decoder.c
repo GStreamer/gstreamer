@@ -110,6 +110,8 @@ static void
 gst_vp9_decoder_clear_output_frame (GstVp9DecoderOutputFrame * output_frame);
 static void gst_vp9_decoder_drain_output_queue (GstVp9Decoder * self,
     guint num, GstFlowReturn * ret);
+static GstFlowReturn gst_vp9_decoder_drain_internal (GstVp9Decoder * self,
+    gboolean wait_keyframe);
 
 static void
 gst_vp9_decoder_class_init (GstVp9DecoderClass * klass)
@@ -249,16 +251,26 @@ gst_vp9_decoder_reset (GstVp9Decoder * self)
 }
 
 static GstFlowReturn
-gst_vp9_decoder_finish (GstVideoDecoder * decoder)
+gst_vp9_decoder_drain_internal (GstVp9Decoder * self, gboolean wait_keyframe)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  GstVp9DecoderPrivate *priv = self->priv;
 
-  GST_DEBUG_OBJECT (decoder, "finish");
+  gst_vp9_decoder_drain_output_queue (self, 0, &ret);
+  if (priv->dpb)
+    gst_vp9_dpb_clear (priv->dpb);
 
-  gst_vp9_decoder_drain_output_queue (GST_VP9_DECODER (decoder), 0, &ret);
-  gst_vp9_decoder_reset (GST_VP9_DECODER (decoder));
+  priv->wait_keyframe = wait_keyframe;
 
   return ret;
+}
+
+static GstFlowReturn
+gst_vp9_decoder_finish (GstVideoDecoder * decoder)
+{
+  GST_DEBUG_OBJECT (decoder, "finish");
+
+  return gst_vp9_decoder_drain_internal (GST_VP9_DECODER (decoder), TRUE);
 }
 
 static gboolean
@@ -274,14 +286,9 @@ gst_vp9_decoder_flush (GstVideoDecoder * decoder)
 static GstFlowReturn
 gst_vp9_decoder_drain (GstVideoDecoder * decoder)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
-
   GST_DEBUG_OBJECT (decoder, "drain");
 
-  gst_vp9_decoder_drain_output_queue (GST_VP9_DECODER (decoder), 0, &ret);
-  gst_vp9_decoder_reset (GST_VP9_DECODER (decoder));
-
-  return ret;
+  return gst_vp9_decoder_drain_internal (GST_VP9_DECODER (decoder), TRUE);
 }
 
 static void
