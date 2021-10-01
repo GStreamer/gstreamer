@@ -2887,9 +2887,10 @@ gst_ts_demux_check_and_sync_streams (GstTSDemux * demux, GstClockTime time)
    * This means we can detect buffers passing without PTSes fine and still generate
    * gaps.
    *
-   * If there haven't been any buffers pushed on this stream since the last
-   * gap check, push a gap event updating to the indicated input PCR time
-   * and update the pad's tracking.
+   * If there haven't been any buffers pushed on this stream since the last gap
+   * check *AND* there is no pending data (stream->current_size), push a gap
+   * event updating to the indicated input PCR time and update the pad's
+   * tracking.
    *
    * If there have been buffers pushed, update the reference buffer count
    * and but don't push a gap event
@@ -2898,15 +2899,16 @@ gst_ts_demux_check_and_sync_streams (GstTSDemux * demux, GstClockTime time)
     TSDemuxStream *ps = (TSDemuxStream *) tmp->data;
     GST_DEBUG_OBJECT (ps->pad,
         "0x%04x, PTS:%" GST_TIME_FORMAT " REFPTS:%" GST_TIME_FORMAT " Gap:%"
-        GST_TIME_FORMAT " nb_buffers: %d (ref:%d)",
+        GST_TIME_FORMAT " nb_buffers: %d (ref:%d) pending_data size %u",
         ((MpegTSBaseStream *) ps)->pid, GST_TIME_ARGS (ps->pts),
         GST_TIME_ARGS (ps->gap_ref_pts),
         GST_TIME_ARGS (ps->pts - ps->gap_ref_pts), ps->nb_out_buffers,
-        ps->gap_ref_buffers);
+        ps->gap_ref_buffers, ps->current_size);
     if (ps->pad == NULL)
       continue;
 
-    if (ps->nb_out_buffers == ps->gap_ref_buffers && ps->gap_ref_pts != ps->pts) {
+    if (ps->nb_out_buffers == ps->gap_ref_buffers && ps->current_size == 0
+        && ps->gap_ref_pts != ps->pts) {
       /* Do initial setup of pad if needed - segment etc */
       GST_DEBUG_OBJECT (ps->pad,
           "Stream needs update. Pushing GAP event to TS %" GST_TIME_FORMAT,
