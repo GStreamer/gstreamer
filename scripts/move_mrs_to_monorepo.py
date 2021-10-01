@@ -334,6 +334,11 @@ class GstMRMover:
         self.gl = self.connect()
         self.gl.auth()
 
+        # Skip pre-commit hooks when migrating. Some users may have a
+        # different version of gnu indent and that can lead to cherry-pick
+        # failing.
+        os.environ["GST_DISABLE_PRE_COMMIT_HOOKS"] = "1"
+
         try:
             prevbranch = self.git(
                 "rev-parse", "--abbrev-ref", "HEAD", can_fail=True).strip()

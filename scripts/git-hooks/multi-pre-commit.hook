@@ -20,6 +20,12 @@ HOOKS="scripts/git-hooks/pre-commit.hook scripts/git-hooks/pre-commit-python.hoo
 # exit on error
 set -e
 
+if [ "$GST_DISABLE_PRE_COMMIT_HOOKS" = "1" ]
+then
+  echo "Pre-commits hooks disabled by env GST_DISABLE_PRE_COMMIT_HOOKS."
+  exit 0
+fi
+
 echo $PWD
 
 for hook in $HOOKS
