@@ -41,6 +41,10 @@
 #   include <sys/wait.h>
 #endif
 
+#ifdef G_OS_WIN32
+/* _isatty() */
+#include <io.h>
+#endif
 
 /* "R" : support color
  * "X" : do not clear the screen when leaving the pager

@@ -67,6 +67,9 @@ static gboolean gst_vulkan_window_win32_open (GstVulkanWindow * window,
 static void gst_vulkan_window_win32_close (GstVulkanWindow * window);
 static void release_parent_win_id (GstVulkanWindowWin32 * window_win32);
 static void gst_vulkan_window_win32_show (GstVulkanWindowWin32 * window);
+static gboolean
+gst_vulkan_window_win32_create_window (GstVulkanWindowWin32 * window_win32,
+    GError ** error);
 
 static void
 gst_vulkan_window_win32_class_init (GstVulkanWindowWin32Class * klass)

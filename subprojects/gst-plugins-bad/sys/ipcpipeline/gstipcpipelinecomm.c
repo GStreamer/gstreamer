@@ -30,6 +30,8 @@
 #ifdef _MSC_VER
 /* ssize_t is not available, so match return value of read()/write() on MSVC */
 #define ssize_t int
+/* read, write */
+#include <io.h>
 #endif
 #include <errno.h>
 #include <string.h>

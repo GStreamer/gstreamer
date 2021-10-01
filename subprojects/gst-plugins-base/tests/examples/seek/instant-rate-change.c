@@ -30,6 +30,7 @@
 #include <glib-object.h>
 #include <glib/gprintf.h>
 #include <gst/gst.h>
+#include <stdlib.h>
 
 /* There are several supported scenarios
 0) Play rate to 1x -> Apply 'instant-rate-change' to 2x -> Apply 'instant-rate-change' to 0.25x (repeat as fast as possible for 2 sec) -> let play for 2s

@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <stdlib.h>
 
 #include "nvcodec.h"
 
@@ -53,6 +54,7 @@ restore_terminal (void)
 static void
 print_keyboard_help (void)
 {
+  /* *INDENT-OFF* */
   static struct
   {
     const gchar *key_desc;
@@ -68,6 +70,8 @@ print_keyboard_help (void)
     "<", "Decrease encoding bitrate by 100 kbit/sec"}, {
     "k", "show keyboard shortcuts"}
   };
+  /* *INDENT-ON* */
+
   guint i, chars_to_pad, desc_len, max_desc_len = 0;
 
   g_print ("\n\n%s\n\n", "Keyboard controls:");

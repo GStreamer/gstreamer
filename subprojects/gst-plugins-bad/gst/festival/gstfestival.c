@@ -95,6 +95,8 @@
 #ifdef G_OS_WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
+/* dup, read, close */
+#include <io.h>
 #else
 #include <sys/socket.h>
 #include <netdb.h>

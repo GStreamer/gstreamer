@@ -318,8 +318,6 @@ public:
   bool
   GetWindowSize (guint * width, guint * height)
   {
-    bool ret = true;
-
     if (!isValid_)
       return false;
 

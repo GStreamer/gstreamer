@@ -1479,7 +1479,9 @@ gst_mf_video_encoder_enum_internal (GstMFTransform * transform, GUID & subtype,
   gboolean have_I420 = FALSE;
   gboolean have_NV12 = FALSE;
   gboolean have_P010 = FALSE;
+#if GST_MF_HAVE_D3D11
   gboolean d3d11_aware = FALSE;
+#endif
   gchar *device_name = nullptr;
   IMFActivate *activate;
   IMFTransform *encoder;

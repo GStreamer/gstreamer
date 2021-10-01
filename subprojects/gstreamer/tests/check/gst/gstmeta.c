@@ -182,7 +182,7 @@ foo_transform_func (GstBuffer * transbuf, GstMeta * meta,
       g_quark_to_string (type), buffer, transbuf, meta);
 
   if (GST_META_TRANSFORM_IS_COPY (type)) {
-    G_GNUC_UNUSED GstMetaFoo *unused = GST_META_FOO_ADD (transbuf);
+    GST_META_FOO_ADD (transbuf);
   } else {
     /* return FALSE, if transform type is not supported */
     return FALSE;

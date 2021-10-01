@@ -28,6 +28,7 @@
 #ifdef G_OS_WIN32
 #include <winsock2.h>
 #include <fcntl.h>
+#include <io.h>
 #else
 #include <unistd.h>
 #include <sys/socket.h>
