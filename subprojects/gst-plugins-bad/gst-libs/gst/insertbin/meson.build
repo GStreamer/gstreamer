@@ -4,7 +4,7 @@ install_headers(insert_headers, subdir : 'gstreamer-1.0/gst/insertbin')
 
 gstinsertbin = library('gstinsertbin-' + api_version,
   insert_sources,
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_INSERT_BIN'],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_INSERT_BIN', '-DG_LOG_DOMAIN="GStreamer-InsertBin"'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

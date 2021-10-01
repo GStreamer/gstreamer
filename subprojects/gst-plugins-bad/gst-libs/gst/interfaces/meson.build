@@ -16,7 +16,7 @@ photoenum_h = photo_enums[1]
 pkg_name = 'gstreamer-photography-1.0'
 gstphotography = library('gstphotography-' + api_version,
   photography_sources, photoenum_h, photoenum_c,
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_PHOTOGRAPHY'],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_PHOTOGRAPHY', '-DG_LOG_DOMAIN="GStreamer-Photography"'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

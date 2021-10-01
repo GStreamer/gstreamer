@@ -23,7 +23,7 @@ install_headers(gstplay_headers, subdir : 'gstreamer-' + api_version + '/gst/pla
 
 gstplay = library('gstplay-' + api_version,
   gstplay_sources,
-  c_args : gst_plugins_bad_args + ['-DBUILDING_GST_PLAY'],
+  c_args : gst_plugins_bad_args + ['-DBUILDING_GST_PLAY', '-DG_LOG_DOMAIN="GStreamer-Play"'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

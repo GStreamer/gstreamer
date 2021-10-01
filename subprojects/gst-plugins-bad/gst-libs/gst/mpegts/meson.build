@@ -37,7 +37,7 @@ gen_sources = [mpegtsenumtypes_h]
 
 gstmpegts = library('gstmpegts-' + api_version,
   mpegts_sources, mpegts_enums,
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_MPEGTS'],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_MPEGTS', '-DG_LOG_DOMAIN="GStreamer-MpegTS"'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

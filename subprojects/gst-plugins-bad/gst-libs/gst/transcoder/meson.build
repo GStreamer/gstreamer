@@ -21,7 +21,7 @@ gst_transcoder = library('gsttranscoder-' + api_version,
   install: true,
   include_directories : [configinc, libsinc],
   dependencies: [gst_dep, gstpbutils_dep],
-  c_args: gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_TRANSCODER'],
+  c_args: gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_TRANSCODER', '-DG_LOG_DOMAIN="GStreamer-Transcoder"'],
   soversion : soversion,
 )
 

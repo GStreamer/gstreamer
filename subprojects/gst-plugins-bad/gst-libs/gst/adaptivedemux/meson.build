@@ -4,7 +4,7 @@ adaptivedemux_headers = files('gstadaptivedemux.h')
 pkg_name = 'gstreamer-adaptivedemux-1.0'
 gstadaptivedemux = library('gstadaptivedemux-' + api_version,
   adaptivedemux_sources,
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_ADAPTIVE_DEMUX'],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_ADAPTIVE_DEMUX', '-DG_LOG_DOMAIN="GStreamer-AdaptiveDemux"'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

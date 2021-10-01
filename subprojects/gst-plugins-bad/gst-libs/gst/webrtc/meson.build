@@ -46,7 +46,7 @@ gstwebrtc_dependencies = [gstbase_dep, gstsdp_dep]
 
 gstwebrtc = library('gstwebrtc-' + api_version,
   webrtc_sources, gstwebrtc_c, gstwebrtc_h,
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_WEBRTC'],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_WEBRTC', '-DG_LOG_DOMAIN="GStreamer-WebRTC"'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

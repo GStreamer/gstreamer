@@ -311,8 +311,8 @@ gen_sources += [vulkan_enumtypes_h]
 
 gstvulkan = library('gstvulkan-' + api_version,
   vulkan_sources, vulkan_priv_sources, vulkan_wayland_sources, vulkan_xcb_sources, vulkan_enumtypes_c, vulkan_enumtypes_h,
-  c_args : gst_plugins_bad_args + vulkan_defines + ['-DBUILDING_GST_VULKAN'],
-  objc_args : gst_plugins_bad_args + vulkan_defines + vulkan_objc_args + ['-DBUILDING_GST_VULKAN'],
+  c_args : gst_plugins_bad_args + vulkan_defines + ['-DBUILDING_GST_VULKAN', '-DG_LOG_DOMAIN="GStreamer-Vulkan"'],
+  objc_args : gst_plugins_bad_args + vulkan_defines + vulkan_objc_args + ['-DBUILDING_GST_VULKAN', '-DG_LOG_DOMAIN="GStreamer-Vulkan"'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

@@ -9,7 +9,8 @@ extra_c_args = [
 ]
 extra_comm_args = [
   '-DGST_USE_UNSTABLE_API',
-  '-DBUILDING_GST_WINRT'
+  '-DBUILDING_GST_WINRT',
+  '-DG_LOG_DOMAIN="GStreamer-WinRT"'
 ]
 
 if host_system != 'windows'

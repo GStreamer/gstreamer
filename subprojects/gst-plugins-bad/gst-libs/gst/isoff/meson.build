@@ -8,7 +8,7 @@ install_headers(isoff_headers, subdir : 'gstreamer-1.0/gst/isoff')
 
 gstisoff = library('gstisoff-' + api_version,
   isoff_sources,
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_ISOFF'],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_ISOFF', '-DG_LOG_DOMAIN="GStreamer-ISOFF"'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

@@ -36,7 +36,8 @@ extra_c_args = [
 ]
 extra_comm_args = [
   '-DGST_USE_UNSTABLE_API',
-  '-DBUILDING_GST_D3D11'
+  '-DBUILDING_GST_D3D11',
+  '-DG_LOG_DOMAIN="GStreamer-D3D11"',
 ]
 
 have_dxgi_header = false

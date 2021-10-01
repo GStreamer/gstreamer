@@ -13,7 +13,7 @@ install_headers(sctp_headers, subdir : 'gstreamer-1.0/gst/sctp')
 
 libgstsctp = library('gstsctp-' + api_version,
   sctp_sources,
-  c_args : gst_plugins_bad_args + ['-DBUILDING_GST_SCTP'],
+  c_args : gst_plugins_bad_args + ['-DBUILDING_GST_SCTP', '-DG_LOG_DOMAIN="GStreamer-SCTP"'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

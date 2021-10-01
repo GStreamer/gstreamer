@@ -37,7 +37,7 @@ cdata.set10('HAVE_LIBDRM', libdrm_dep.found())
 
 gstva = library('gstva-' + api_version,
   va_sources,
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_VA'],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_VA', '-DG_LOG_DOMAIN="GStreamer-VA"'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

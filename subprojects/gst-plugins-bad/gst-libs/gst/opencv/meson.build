@@ -29,7 +29,7 @@ if opencv_dep.found()
   gstopencv = library('gstopencv-' + api_version,
     opencv_sources,
     c_args : gst_plugins_bad_args + ['-DBUILDING_GST_OPENCV'],
-    cpp_args : gst_plugins_bad_args + gstopencv_cargs + ['-DBUILDING_GST_OPENCV'],
+    cpp_args : gst_plugins_bad_args + gstopencv_cargs + ['-DBUILDING_GST_OPENCV', '-DG_LOG_DOMAIN="GStreamer-OpenCV"'],
     override_options : ['cpp_std=c++11'],
     include_directories : [configinc, libsinc],
     version : libversion,

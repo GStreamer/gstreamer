@@ -33,6 +33,7 @@ codecs_headers = files(
 cp_args = [
   '-DGST_USE_UNSTABLE_API',
   '-DBUILDING_GST_CODECS',
+  '-DG_LOG_DOMAIN="GStreamer-Codecs"'
 ]
 
 gstcodecs = library('gstcodecs-' + api_version,

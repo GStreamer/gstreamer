@@ -9,7 +9,7 @@ use_wayland = wl_protocol_dep.found() and wl_client_dep.found() and wl_scanner.f
 if use_wayland
   gstwayland = library('gstwayland-' + api_version,
     'wayland.c',
-    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_WAYLAND'],
+    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_WAYLAND', '-DG_LOG_DOMAIN="GStreamer-Wayland"'],
     include_directories : [configinc, libsinc],
     version : libversion,
     soversion : soversion,
