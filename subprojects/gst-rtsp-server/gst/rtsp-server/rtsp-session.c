@@ -454,19 +454,38 @@ restart:
       res = func (sess, media, user_data);
 
       g_mutex_lock (&priv->lock);
-    } else
+    } else {
       res = GST_RTSP_FILTER_REF;
+    }
 
     changed = (cookie != priv->medias_cookie);
 
     switch (res) {
       case GST_RTSP_FILTER_REMOVE:
-        if (changed)
-          priv->medias = g_list_remove (priv->medias, media);
-        else
+        if (changed) {
+          GList *l;
+
+          walk = NULL;
+
+          for (l = priv->medias; l; l = l->next) {
+            if (l->data == media) {
+              walk = l;
+              break;
+            }
+          }
+        }
+
+        /* The media might have been removed from the list while the mutex was
+         * unlocked above. In that case there's nothing else to do here as the
+         * only reference to the media owned by this function is in the
+         * visited hash table and that is released in the end
+         */
+        if (walk) {
           priv->medias = g_list_delete_link (priv->medias, walk);
+          g_object_unref (media);
+        }
+
         cookie = ++priv->medias_cookie;
-        g_object_unref (media);
         break;
       case GST_RTSP_FILTER_REF:
         result = g_list_prepend (result, g_object_ref (media));
