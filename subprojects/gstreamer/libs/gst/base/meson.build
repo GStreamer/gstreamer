@@ -40,7 +40,7 @@ gst_base_headers = files(
 
 gst_base = library('gstbase-@0@'.format(apiversion),
   gst_base_sources,
-  c_args : gst_c_args + ['-DBUILDING_GST_BASE'],
+  c_args : gst_c_args + ['-DBUILDING_GST_BASE', '-DG_LOG_DOMAIN="GStreamer-Base"'],
   version : libversion,
   soversion : soversion,
   darwin_versions : osxversion,

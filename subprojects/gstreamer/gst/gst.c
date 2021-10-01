@@ -168,8 +168,6 @@ static gboolean parse_goption_arg (const gchar * s_opt,
 
 GSList *_priv_gst_preload_plugins = NULL;
 
-const gchar g_log_domain_gstreamer[] = "GStreamer";
-
 static void
 debug_log_handler (const gchar * log_domain,
     GLogLevelFlags log_level, const gchar * message, gpointer user_data)
@@ -678,7 +676,8 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   }
 
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
-  g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
+  /* TODO: should we also set up a handler for the other gst libs/domains? */
+  g_log_set_handler (G_LOG_DOMAIN, llf, debug_log_handler, NULL);
 
   _priv_gst_mini_object_initialize ();
   _priv_gst_quarks_initialize ();

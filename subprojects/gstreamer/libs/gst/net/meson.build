@@ -26,7 +26,7 @@ install_headers(gst_net_headers, subdir : 'gstreamer-1.0/gst/net/')
 gst_net_gen_sources = []
 gst_net = library('gstnet-@0@'.format(apiversion),
   gst_net_sources,
-  c_args : gst_c_args + ['-DBUILDING_GST_NET'],
+  c_args : gst_c_args + ['-DBUILDING_GST_NET', '-DG_LOG_DOMAIN="GStreamer-Net"'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,
