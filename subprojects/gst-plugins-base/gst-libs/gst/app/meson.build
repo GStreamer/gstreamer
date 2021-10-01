@@ -21,7 +21,7 @@ app_gen_sources = [gstapp_h]
 
 gstapp = library('gstapp-@0@'.format(api_version),
   app_sources, gstapp_h, gstapp_c,
-  c_args : gst_plugins_base_args + ['-DBUILDING_GST_APP'],
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_APP', '-DG_LOG_DOMAIN="GStreamer-App"'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

@@ -1029,7 +1029,7 @@ if build_gstgl
     command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
   gen_sources = [gl_enumtypes_h]
 
-  common_args = gst_plugins_base_args + gl_cpp_args + ['-DBUILDING_GST_GL']
+  common_args = gst_plugins_base_args + gl_cpp_args + ['-DBUILDING_GST_GL', '-DG_LOG_DOMAIN="GStreamer-GL"']
 
   # We have custom_target() that generate headers in the current build dir,
   # but with implicit_include_directories: false, meson >= 0.58.0 won't include

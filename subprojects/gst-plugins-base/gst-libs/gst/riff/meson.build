@@ -16,7 +16,7 @@ install_headers(riff_headers, subdir : 'gstreamer-1.0/gst/riff/')
 riff_deps = [audio_dep, tag_dep]
 gstriff = library('gstriff-@0@'.format(api_version),
   riff_sources,
-  c_args : gst_plugins_base_args + ['-DBUILDING_GST_RIFF'],
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_RIFF', '-DG_LOG_DOMAIN="GStreamer-RIFF"'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

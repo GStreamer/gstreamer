@@ -133,7 +133,7 @@ endif
 
 gstvideo = library('gstvideo-@0@'.format(api_version),
   video_sources, gstvideo_h, gstvideo_c, orc_c, orc_h,
-  c_args : gst_plugins_base_args + ['-DBUILDING_GST_VIDEO'],
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_VIDEO', '-DG_LOG_DOMAIN="GStreamer-Video"'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

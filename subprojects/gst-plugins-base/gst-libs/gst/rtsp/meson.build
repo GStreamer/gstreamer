@@ -42,7 +42,7 @@ gstrtsp_deps = [gst_base_dep, gst_dep, gio_dep, libm, winsock2]
 gst_rtsp = library('gstrtsp-@0@'.format(api_version),
   rtsp_sources,
   gstrtsp_h, gstrtsp_c,
-  c_args : gst_plugins_base_args + ['-DBUILDING_GST_RTSP'],
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_RTSP', '-DG_LOG_DOMAIN="GStreamer-RTSP"'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

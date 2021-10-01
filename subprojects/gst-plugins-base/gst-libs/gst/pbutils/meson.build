@@ -51,7 +51,7 @@ gstpbutils_h = pbutils_enums[1]
 gstpbutils_deps = [video_dep, audio_dep, tag_dep]
 pbutils = library('gstpbutils-@0@'.format(api_version),
   pbutils_sources, gstpbutils_c, gstpbutils_h,
-  c_args : gst_plugins_base_args + ['-DBUILDING_GST_PBUTILS'],
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_PBUTILS', '-DG_LOG_DOMAIN="GStreamer-PBUtils"'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

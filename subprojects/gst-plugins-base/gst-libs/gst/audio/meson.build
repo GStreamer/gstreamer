@@ -142,7 +142,7 @@ endif
 
 gstaudio = library('gstaudio-@0@'.format(api_version),
   audio_src, gstaudio_h, gstaudio_c, orc_c, orc_h,
-  c_args : gst_plugins_base_args + simd_cargs + ['-DBUILDING_GST_AUDIO'],
+  c_args : gst_plugins_base_args + simd_cargs + ['-DBUILDING_GST_AUDIO', '-DG_LOG_DOMAIN="GStreamer-Audio"'],
   include_directories: [configinc, libsinc],
   objects : simd_objects,
   version : libversion,

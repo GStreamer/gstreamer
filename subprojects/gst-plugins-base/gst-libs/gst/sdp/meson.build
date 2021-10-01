@@ -11,7 +11,7 @@ sdp_deps = [rtp_dep, gst_dep, gio_dep]
 gst_sdp_sources = files(['gstsdpmessage.c', 'gstmikey.c'])
 gstsdp = library('gstsdp-@0@'.format(api_version),
   gst_sdp_sources,
-  c_args : gst_plugins_base_args + ['-DBUILDING_GST_SDP'],
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_SDP', '-DG_LOG_DOMAIN="GStreamer-SDP"'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

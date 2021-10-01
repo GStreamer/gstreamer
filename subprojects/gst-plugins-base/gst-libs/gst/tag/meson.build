@@ -82,7 +82,7 @@ core_conf.set('HAVE_ZLIB', true)
 tag_deps = [gst_base_dep, libm, zlib_dep]
 gsttag = library('gsttag-@0@'.format(api_version),
   tag_sources, gsttag_h, gsttag_c,
-  c_args : gst_plugins_base_args + gst_tag_args + ['-DBUILDING_GST_TAG'],
+  c_args : gst_plugins_base_args + gst_tag_args + ['-DBUILDING_GST_TAG', '-DG_LOG_DOMAIN="GStreamer-Tag"'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

@@ -27,7 +27,7 @@ install_headers(fft_headers, subdir : 'gstreamer-1.0/gst/fft/')
 
 gstfft = library('gstfft-@0@'.format(api_version),
   fft_sources,
-  c_args : gst_plugins_base_args + ['-DBUILDING_GST_FFT'],
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_FFT', '-DG_LOG_DOMAIN="GStreamer-FFT"'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,
