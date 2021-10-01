@@ -1,6 +1,9 @@
 Get-Date
 Write-Host "Installing Chocolatey"
-Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+Set-ExecutionPolicy Bypass -Scope Process -Force;
+# Force TLS 1.2
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 Import-Module "$env:ProgramData\chocolatey\helpers\chocolateyProfile.psm1"
 Update-SessionEnvironment
 
