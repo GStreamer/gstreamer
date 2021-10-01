@@ -6,7 +6,8 @@ sudo apt-get install \
     libcurl3-gnutls-dev \
     libgrpc++-dev \
     libprotobuf-dev \
-    protobuf-compiler-grpc
+    protobuf-compiler-grpc \
+    nlohmann-json3-dev
 ```
 
 # Build the Google Cloud Storage library
@@ -17,36 +18,39 @@ cd crc32c && git checkout -b 1.1.1
 mkdir build && cd build
 cmake .. \
     -GNinja \
-    -DCMAKE_INSTALL_PREFIX:PATH=~/dev/gst-build/prefix \
+    -DCMAKE_INSTALL_PREFIX:PATH=~/dev/gstreamer/prefix \
     -DCMAKE_INSTALL_LIBDIR:PATH=lib \
     -DBUILD_SHARED_LIBS=YES \
     -DCRC32C_USE_GLOG=NO \
     -DCRC32C_BUILD_TESTS=NO \
     -DCRC32C_BUILD_BENCHMARKS=NO
 ninja && ninja install
+cd ../..
 
 git clone https://github.com/abseil/abseil-cpp.git
-git checkout master
+cd abseil-cpp && git checkout master
 mkdir build && cd build
 cmake .. \
     -GNinja \
     -DBUILD_TESTING=NO \
-    -DCMAKE_INSTALL_PREFIX:PATH=~/dev/gst-build/prefix \
+    -DCMAKE_INSTALL_PREFIX:PATH=~/dev/gstreamer/prefix \
     -DCMAKE_INSTALL_LIBDIR:PATH=lib \
     -DBUILD_SHARED_LIBS=YES
 ninja && ninja install
+cd ../..
 
 git clone https://github.com/googleapis/google-cloud-cpp.git
-git checkout -b v1.25.0
+cd  google-cloud-cpp && git checkout -b v1.31.1
 mkdir build && cd build
 cmake .. \
     -GNinja \
-    -DCMAKE_INSTALL_PREFIX:PATH=~/dev/gst-build/prefix \
+    -DCMAKE_INSTALL_PREFIX:PATH=~/dev/gstreamer/prefix \
     -DCMAKE_INSTALL_LIBDIR:PATH=lib \
     -DBUILD_SHARED_LIBS=YES \
     -DBUILD_TESTING=NO \
     -DGOOGLE_CLOUD_CPP_ENABLE=storage
 ninja && ninja install
+cd ../..
 ```
 
 # Running the gs elements locally
