@@ -50,7 +50,8 @@ PARSER.add_argument("--skip-branch", action="store", nargs="*",
                     help="Ignore MRs for branches which match those names.", dest="skipped_branches")
 PARSER.add_argument("--skip-on-failure", action="store_true", default=False)
 PARSER.add_argument("--dry-run", "-n", action="store_true", default=False)
-PARSER.add_argument("--use-branch-if-exists", action="store_true", default=False)
+PARSER.add_argument("--use-branch-if-exists",
+                    action="store_true", default=False)
 PARSER.add_argument(
     "-c",
     "--config-file",
@@ -135,6 +136,7 @@ os.environ["GIT_LFS_SKIP_SMUDGE"] = "1"
 
 log_depth = []               # type: T.List[str]
 
+
 @contextmanager
 def nested(name=''):
     global log_depth
@@ -144,17 +146,22 @@ def nested(name=''):
     finally:
         log_depth.pop()
 
+
 def bold(text: str):
     return f"\033[1m{text}\033[0m"
+
 
 def green(text: str):
     return f"\033[1;32m{text}\033[0m"
 
+
 def red(text: str):
     return f"\033[1;31m{text}\033[0m"
 
+
 def yellow(text: str):
     return f"\033[1;33m{text}\033[0m"
+
 
 def fprint(msg, nested=True):
     if log_depth:
@@ -196,8 +203,8 @@ class GstMRMover:
 
         session = requests.Session()
         sign_in_page = session.get(SIGN_IN_URL).content.decode()
-        for l in sign_in_page.split('\n'):
-            m = re.search('name="authenticity_token" value="([^"]+)"', l)
+        for line in sign_in_page.split('\n'):
+            m = re.search('name="authenticity_token" value="([^"]+)"', line)
             if m:
                 break
 
@@ -208,7 +215,6 @@ class GstMRMover:
         if not token:
             fprint(f"{red('Unable to find the authenticity token')}\n")
             sys.exit(1)
-
 
         for data, url in [
             ({'user[login]': 'login_or_email',
@@ -230,10 +236,10 @@ class GstMRMover:
             return gl
 
         sys.exit(bold(f"{red('FAILED')}.\n\nPlease go to:\n\n"
-            '   https://gitlab.freedesktop.org/-/profile/personal_access_tokens\n\n'
-            f'and generate a token {bold("with read/write access to all but the registry")},'
-            ' then set it in the "GITLAB_API_TOKEN" environment variable:"'
-            f'\n\n  $ GITLAB_API_TOKEN=<your token> {" ".join(sys.argv)}\n'))
+                      '   https://gitlab.freedesktop.org/-/profile/personal_access_tokens\n\n'
+                      f'and generate a token {bold("with read/write access to all but the registry")},'
+                      ' then set it in the "GITLAB_API_TOKEN" environment variable:"'
+                      f'\n\n  $ GITLAB_API_TOKEN=<your token> {" ".join(sys.argv)}\n'))
 
     def git(self, *args, can_fail=False, interaction_message=None, call=False, revert_operation=None):
         cwd = ROOT_DIR
@@ -244,11 +250,12 @@ class GstMRMover:
                 if not call:
                     try:
                         return subprocess.check_output(["git"] + list(args), cwd=cwd,
-                                                    stdin=subprocess.DEVNULL,
-                                                    stderr=subprocess.STDOUT).decode()
-                    except:
+                                                       stdin=subprocess.DEVNULL,
+                                                       stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError:
                         if not can_fail:
-                            fprint(f"\n\n{bold(red('ERROR'))}: `git {' '.join(args)}` failed" + "\n", nested=False)
+                            fprint(
+                                f"\n\n{bold(red('ERROR'))}: `git {' '.join(args)}` failed" + "\n", nested=False)
                         raise
                 else:
                     subprocess.call(["git"] + list(args), cwd=cwd)
@@ -263,15 +270,15 @@ class GstMRMover:
                     else:
                         out = "????"
                     fprint(f"\n```"
-                          f"\n{out}\n"
-                          f"Entering a shell in {cwd} to fix:\n\n"
-                          f" {bold(interaction_message)}\n\n"
-                          f"You should then exit with the following codes:\n\n"
-                          f"  - {bold('`exit 0`')}: once you have fixed the problem and we can keep moving the merge request\n"
-                          f"  - {bold('`exit 1`')}: {bold('retry')}: once you have let the repo in a state where the operation should be to retried\n"
-                          f"  - {bold('`exit 2`')}: to skip that merge request\n"
-                          f"  - {bold('`exit 3`')}: stop the script and abandon moving your MRs\n"
-                          "\n```\n", nested=False)
+                           f"\n{out}\n"
+                           f"Entering a shell in {cwd} to fix:\n\n"
+                           f" {bold(interaction_message)}\n\n"
+                           f"You should then exit with the following codes:\n\n"
+                           f"  - {bold('`exit 0`')}: once you have fixed the problem and we can keep moving the merge request\n"
+                           f"  - {bold('`exit 1`')}: {bold('retry')}: once you have let the repo in a state where the operation should be to retried\n"
+                           f"  - {bold('`exit 2`')}: to skip that merge request\n"
+                           f"  - {bold('`exit 3`')}: stop the script and abandon moving your MRs\n"
+                           "\n```\n", nested=False)
                     try:
                         if os.name == 'nt':
                             shell = os.environ.get(
@@ -292,7 +299,7 @@ class GstMRMover:
                             if revert_operation:
                                 self.git(*revert_operation, can_fail=True)
                             sys.exit(3)
-                    except:
+                    except Exception:
                         # Result of subshell does not really matter
                         pass
 
@@ -315,7 +322,8 @@ class GstMRMover:
             for m in self.modules:
                 if m not in VALID_PROJECTS:
                     projects = '\n- '.join(VALID_PROJECTS)
-                    sys.exit(f"{red(f'Unknown module {m}')}\nModules are:\n- {projects}")
+                    sys.exit(
+                        f"{red(f'Unknown module {m}')}\nModules are:\n- {projects}")
             if self.mr and len(self.modules) > 1:
                 sys.exit(f"{red(f'Merge request #{self.mr} specified but several modules where specified')}\n\n"
                          f"{bold(' -> Use `--module` only once to specify an merge request.')}")
@@ -327,8 +335,9 @@ class GstMRMover:
         self.gl.auth()
 
         try:
-            prevbranch = self.git("rev-parse", "--abbrev-ref", "HEAD", can_fail=True).strip()
-        except:
+            prevbranch = self.git(
+                "rev-parse", "--abbrev-ref", "HEAD", can_fail=True).strip()
+        except Exception:
             fprint(bold(yellow("Not on a branch?\n")), indent=False)
             prevbranch = None
 
@@ -341,7 +350,8 @@ class GstMRMover:
                 self.move_mrs(from_projects, to_project)
         finally:
             if self.git_rename_limit is not None:
-                self.git("config", "merge.renameLimit", str(self.git_rename_limit))
+                self.git("config", "merge.renameLimit",
+                         str(self.git_rename_limit))
             if prevbranch:
                 fprint(f'Back to {prevbranch}\n')
                 self.git("checkout", prevbranch)
@@ -353,16 +363,18 @@ class GstMRMover:
 
         try:
             self.user_project, = [p for p in self.all_projects
-                                    if p.namespace['path'] == self.gl.user.username
-                                        and p.name == MONOREPO_NAME]
+                                  if p.namespace['path'] == self.gl.user.username
+                                  and p.name == MONOREPO_NAME]
         except ValueError:
-            fprint(f"{red(f'ERROR')}\n\nCould not find repository {self.gl.user.name}/{MONOREPO_NAME}")
+            fprint(
+                f"{red(f'ERROR')}\n\nCould not find repository {self.gl.user.name}/{MONOREPO_NAME}")
             fprint(f"{red(f'Got to https://gitlab.freedesktop.org/gstreamer/gstreamer/ and create a fork so we can move your Merge requests.')}")
             sys.exit(1)
         fprint(f"{green(' OK')}\n", nested=False)
 
         from_projects = []
-        user_projects_name = [proj.name for proj in self.all_projects if proj.namespace['path'] == self.gl.user.username and proj.name in GST_PROJECTS]
+        user_projects_name = [proj.name for proj in self.all_projects if proj.namespace['path']
+                              == self.gl.user.username and proj.name in GST_PROJECTS]
         for project, id in GST_PROJECTS_ID.items():
             if project not in user_projects_name or project == 'gstreamer':
                 continue
@@ -381,7 +393,7 @@ class GstMRMover:
         for p in from_projects:
             fprint(f"  - {bold(p.path_with_namespace)}\n")
 
-        to_project =  self.gl.projects.get(GST_PROJECTS_ID['gstreamer'])
+        to_project = self.gl.projects.get(GST_PROJECTS_ID['gstreamer'])
         fprint(f"To: {bold(to_project.path_with_namespace)}\n\n")
 
         return from_projects, to_project
@@ -441,9 +453,10 @@ class GstMRMover:
                 note = discussion.notes.get(note['id'])
 
                 note_url = f"{mr_url}#note_{note.id}"
-                when = dateparse.parse(note.created_at).strftime('on %d, %b %Y')
+                when = dateparse.parse(
+                    note.created_at).strftime('on %d, %b %Y')
                 body = f"**{note.author['name']} - {PING_SIGN}{note.author['username']} wrote [here]({note_url})** {when}:\n\n"
-                body += '\n'.join([l for l in note.body.split('\n')])
+                body += '\n'.join([line for line in note.body.split('\n')])
 
                 obj = {
                     'body': body,
@@ -467,7 +480,8 @@ class GstMRMover:
         return new_mr
 
     def push_branch(self, branch):
-        fprint(f"-> Pushing branch {branch} to remote {self.gl.user.username}...")
+        fprint(
+            f"-> Pushing branch {branch} to remote {self.gl.user.username}...")
         if self.git("push", "--no-verify", self.gl.user.username, branch,
                     interaction_message=f"pushing {branch} to {self.gl.user.username} with:\n  "
                     f" `$git push {self.gl.user.username} {branch}`") == "SKIP":
@@ -503,7 +517,8 @@ class GstMRMover:
 
         if self.git("checkout", remote_branch, "-b", branch,
                     interaction_message=f"checking out branch with `git checkout {remote_branch} -b {branch}`") == "SKIP":
-            fprint(bold(f"{red('SKIPPED')} (couldn't checkout)\n"), nested=False)
+            fprint(
+                bold(f"{red('SKIPPED')} (couldn't checkout)\n"), nested=False)
             return False
 
         for commit in reversed([c for c in mr.commits()]):
@@ -511,7 +526,8 @@ class GstMRMover:
                         interaction_message=f"cherry-picking {commit.id} onto {branch} with:\n  "
                         f" `$ git cherry-pick {commit.id}`",
                         revert_operation=["cherry-pick", "--abort"]) == "SKIP":
-                fprint(f"{yellow('SKIPPED')} (couldn't cherry-pick).", nested=False)
+                fprint(
+                    f"{yellow('SKIPPED')} (couldn't cherry-pick).", nested=False)
                 return False
 
         self.git("show", remote_branch + "..", call=True)
@@ -544,7 +560,8 @@ class GstMRMover:
                         if self.mr != mr.iid:
                             continue
                         found_mr = True
-                    fprint(f'Moving {mr.source_branch} "{mr.title}": {URL}{from_project.path_with_namespace}/merge_requests/{mr.iid}... ')
+                    fprint(
+                        f'Moving {mr.source_branch} "{mr.title}": {URL}{from_project.path_with_namespace}/merge_requests/{mr.iid}... ')
                     if mr.source_branch in self.skipped_branches:
                         print(f"{yellow('SKIPPED')} (blacklisted branch)")
                         failed_mrs.append(
@@ -562,10 +579,12 @@ class GstMRMover:
 
                         self.close_mr(from_project, to_project, mr, new_mr)
 
-            fprint(f"\n{yellow('DONE')} with {from_project.path_with_namespace}\n\n", nested=False)
+            fprint(
+                f"\n{yellow('DONE')} with {from_project.path_with_namespace}\n\n", nested=False)
 
         if self.mr and not found_mr:
-            sys.exit(bold(red(f"\n==> Couldn't find MR {self.mr} in {self.modules[0]}\n")))
+            sys.exit(
+                bold(red(f"\n==> Couldn't find MR {self.mr} in {self.modules[0]}\n")))
 
         for mr in failed_mrs:
             fprint(f"Didn't move MR: {mr}\n")
@@ -584,7 +603,8 @@ class GstMRMover:
             if new_mr_url:
                 obj = {'body': f"Moved to: {new_mr_url}"}
             else:
-                ret = input(f"Write a comment to add while closing MR {mr.iid} '{bold(mr.title)}':\n\n").strip()
+                ret = input(
+                    f"Write a comment to add while closing MR {mr.iid} '{bold(mr.title)}':\n\n").strip()
                 if ret:
                     obj = {'body': ret}
 
@@ -595,7 +615,8 @@ class GstMRMover:
                     mr.discussions.create(obj)
                 mr.state_event = 'close'
                 mr.save()
-                fprint(f'Old MR {mr_url} "{bold(mr.title)}" {yellow("CLOSED")}\n')
+                fprint(
+                    f'Old MR {mr_url} "{bold(mr.title)}" {yellow("CLOSED")}\n')
 
     def setup_repo(self):
         fprint(f"Setting up '{bold(ROOT_DIR)}'...")
@@ -603,7 +624,8 @@ class GstMRMover:
         try:
             out = self.git("status", "--porcelain")
             if out:
-                fprint("\n" + red('Git repository is not clean:') + "\n```\n" + out + "\n```\n")
+                fprint("\n" + red('Git repository is not clean:')
+                       + "\n```\n" + out + "\n```\n")
                 sys.exit(1)
 
         except Exception as e:
@@ -626,7 +648,8 @@ class GstMRMover:
             git_rename_limit = 0
         if int(git_rename_limit) < 999999:
             self.git_rename_limit = git_rename_limit
-            fprint("-> Setting git rename limit to 999999 so we can properly cherry-pick between repos\n")
+            fprint(
+                "-> Setting git rename limit to 999999 so we can properly cherry-pick between repos\n")
             self.git("config", "merge.renameLimit", "999999")
 
 
