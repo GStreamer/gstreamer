@@ -9,7 +9,7 @@ try:
     import gitlab
 except ModuleNotFoundError:
     print("========================================================================", file=sys.stderr)
-    print("ERROR: Install python-gitlab with `python3 -m pip install python-gitlab dateutil`", file=sys.stderr)
+    print("ERROR: Install python-gitlab with `python3 -m pip install python-gitlab python-dateutil`", file=sys.stderr)
     print("========================================================================", file=sys.stderr)
     sys.exit(1)
 
