@@ -5,7 +5,7 @@ rtspsink_sources = [
 
 rtspsink = library('gstrtspclientsink',
   rtspsink_sources,
-  c_args : rtspserver_args,
+  c_args : rtspserver_args + ['-DG_LOG_DOMAIN="GStreamer-rtspclientsink"'],
   include_directories : rtspserver_incs,
   dependencies : [gstrtsp_dep, gstsdp_dep, gst_rtsp_server_dep],
   install : true,

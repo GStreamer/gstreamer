@@ -59,7 +59,7 @@ gst_rtsp_server_deps = [gstrtsp_dep, gstrtp_dep, gstsdp_dep, gstnet_dep, gstapp_
 gst_rtsp_server = library('gstrtspserver-@0@'.format(api_version),
   rtsp_server_sources,
   include_directories : rtspserver_incs,
-  c_args: rtspserver_args + ['-DBUILDING_GST_RTSP_SERVER'],
+  c_args: rtspserver_args + ['-DBUILDING_GST_RTSP_SERVER', '-DG_LOG_DOMAIN="GStreamer-RTSP-Server"'],
   version : libversion,
   soversion : soversion,
   darwin_versions : osxversion,
