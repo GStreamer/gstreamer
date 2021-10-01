@@ -769,7 +769,7 @@ GST_START_TEST (test_meta_custom_transform)
   user_data = g_malloc (sizeof (gint));
   *user_data = 42;
   info =
-      gst_meta_register_custom ("test-custom", tags,
+      gst_meta_register_custom ("test-custom-transform", tags,
       (GstCustomMetaTransformFunction) transform_custom, user_data, g_free);
 
   fail_unless (info != NULL);
@@ -778,14 +778,14 @@ GST_START_TEST (test_meta_custom_transform)
   fail_if (buffer == NULL);
 
   /* add some metadata */
-  meta = gst_buffer_add_custom_meta (buffer, "test-custom");
+  meta = gst_buffer_add_custom_meta (buffer, "test-custom-transform");
   fail_if (meta == NULL);
 
   buffer_copy = gst_buffer_copy (buffer);
-  meta = gst_buffer_get_custom_meta (buffer_copy, "test-custom");
+  meta = gst_buffer_get_custom_meta (buffer_copy, "test-custom-transform");
   fail_unless (meta != NULL);
-  expected =
-      gst_structure_new ("test-custom", "test-field", G_TYPE_INT, 42, NULL);
+  expected = gst_structure_new ("test-custom-transform",
+      "test-field", G_TYPE_INT, 42, NULL);
   s = gst_custom_meta_get_structure (meta);
   fail_unless (gst_structure_is_equal (s, expected));
   gst_structure_free (expected);
