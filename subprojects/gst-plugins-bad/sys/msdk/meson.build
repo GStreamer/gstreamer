@@ -157,11 +157,13 @@ else
 endif
 
 if msdk_deps_found
-  driverdir = libva_dep.get_variable(pkgconfig: 'driverdir', internal: 'driverdir', default_value: '')
-  if driverdir == ''
-    driverdir = join_paths(get_option('prefix'), get_option('libdir'), 'dri')
+  if host_machine.system() != 'windows'
+    driverdir = libva_dep.get_variable(pkgconfig: 'driverdir', internal: 'driverdir', default_value: '')
+    if driverdir == ''
+      driverdir = join_paths(get_option('prefix'), get_option('libdir'), 'dri')
+    endif
+    cdata.set_quoted('VA_DRIVERS_PATH', '@0@'.format(driverdir))
   endif
-  cdata.set_quoted('VA_DRIVERS_PATH', '@0@'.format(driverdir))
 
   gstmsdktag = library('gstmsdk',
     msdk_sources,
