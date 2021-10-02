@@ -65,7 +65,7 @@ struct _GstVp9DecoderClass
   GstVideoDecoderClass parent_class;
 
   /**
-   * GstVp9Decoder::new_sequence:
+   * GstVp9DecoderClass::new_sequence:
    *
    * Notifies subclass of video sequence update such as resolution, bitdepth,
    * profile.
@@ -76,7 +76,7 @@ struct _GstVp9DecoderClass
                                         const GstVp9FrameHeader *frame_hdr);
 
   /**
-   * GstVp9Decoder:new_picture:
+   * GstVp9DecoderClass::new_picture:
    * @decoder: a #GstVp9Decoder
    * @frame: (transfer none): a #GstVideoCodecFrame
    * @picture: (transfer none): a #GstVp9Picture
@@ -92,7 +92,7 @@ struct _GstVp9DecoderClass
                                         GstVp9Picture * picture);
 
   /**
-   * GstVp9Decoder:duplicate_picture:
+   * GstVp9DecoderClass::duplicate_picture:
    * @decoder: a #GstVp9Decoder
    * @frame: (transfer none): a #GstVideoCodecFrame
    * @picture: (transfer none): a #GstVp9Picture to be duplicated
@@ -117,7 +117,7 @@ struct _GstVp9DecoderClass
                                         GstVp9Picture * picture);
 
   /**
-   * GstVp9Decoder:start_picture:
+   * GstVp9DecoderClass::start_picture:
    * @decoder: a #GstVp9Decoder
    * @picture: (transfer none): a #GstVp9Picture
    *
@@ -130,7 +130,7 @@ struct _GstVp9DecoderClass
                                         GstVp9Picture * picture);
 
   /**
-   * GstVp9Decoder:decode_picture:
+   * GstVp9DecoderClass::decode_picture:
    * @decoder: a #GstVp9Decoder
    * @picture: (transfer none): a #GstVp9Picture to decoder
    * @dpb: (transfer none): a #GstVp9Dpb
@@ -145,7 +145,7 @@ struct _GstVp9DecoderClass
                                         GstVp9Dpb * dpb);
 
   /**
-   * GstVp9Decoder::end_picture:
+   * GstVp9DecoderClass::end_picture:
    * @decoder: a #GstVp9Decoder
    * @picture: (transfer none): a #GstVp9Picture
    *
@@ -158,7 +158,7 @@ struct _GstVp9DecoderClass
                                         GstVp9Picture * picture);
 
   /**
-   * GstVp9Decoder:output_picture:
+   * GstVp9DecoderClass::output_picture:
    * @decoder: a #GstVp9Decoder
    * @frame: (transfer full): a #GstVideoCodecFrame
    * @picture: (transfer full): a #GstVp9Picture
