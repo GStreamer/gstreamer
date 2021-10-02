@@ -1505,7 +1505,7 @@ copy_splice (GstMpegtsSCTESpliceEvent * splice)
 static void
 free_splice (GstMpegtsSCTESpliceEvent * splice)
 {
-  return g_boxed_free (GST_TYPE_MPEGTS_SCTE_SPLICE_EVENT, splice);
+  g_boxed_free (GST_TYPE_MPEGTS_SCTE_SPLICE_EVENT, splice);
 }
 
 /* FIXME: get rid of this when depending on glib >= 2.62 */
