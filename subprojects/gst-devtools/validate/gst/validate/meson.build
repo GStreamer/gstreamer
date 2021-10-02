@@ -66,16 +66,22 @@ gstvalidate = library('gstvalidate-1.0',
     c_args : [gst_c_args] + ['-D_GNU_SOURCE'],
     dependencies : validate_deps)
 
-gstvalidatetracer = library('gstvalidatetracer',
-    sources: files('gst-validate-runner.c') + gst_validate_enums,
-    include_directories : [inc_dirs],
-    install: true,
-    c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE'],
-    install_dir : plugins_install_dir,
-    objects: gstvalidate.extract_objects(gstvalidate_sources),
-    dependencies : validate_deps)
+if not static_build
+  gstvalidatetracer = library('gstvalidatetracer',
+      sources: files('gst-validate-runner.c') + gst_validate_enums,
+      include_directories : [inc_dirs],
+      install: true,
+      c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE'],
+      install_dir : plugins_install_dir,
+      objects: gstvalidate.extract_objects(gstvalidate_sources),
+      dependencies : validate_deps)
+  plugins += gstvalidatetracer
 
-plugins += gstvalidatetracer
+  pkgconfig.generate(gstvalidatetracer, install_dir : plugins_pkgconfig_install_dir)
+else
+  warning('Statically building GstValidate as a tracer is not supported yet.')
+endif
+
 
 pkg_name = 'gst-validate-1.0'
 library_def = {'lib': gstvalidate}
@@ -123,4 +129,3 @@ validate_dep = declare_dependency(link_with : gstvalidate,
 
 meson.override_dependency(pkg_name, validate_dep)
 
-pkgconfig.generate(gstvalidatetracer, install_dir : plugins_pkgconfig_install_dir)
