@@ -23,9 +23,12 @@ The GstValidate default testsuite
 
 import os
 import glob
+import pathlib
 import re
+import subprocess
 
 from testsuiteutils import update_assets
+from launcher import utils
 from launcher.baseclasses import MediaFormatCombination
 from launcher.apps.gstvalidate import GstValidateSimpleTestsGenerator
 from validate_known_issues import KNOWN_ISSUES
@@ -98,8 +101,15 @@ def setup_tests(test_manager, options):
 
     assets_dir = os.path.realpath(os.path.join(testsuite_dir, os.path.pardir, "medias", "defaults"))
     if options.sync:
-        if not update_assets(options, assets_dir):
-            return False
+        if not utils.USING_SUBPROJECT:
+            if not update_assets(options, assets_dir):
+                return False
+        else:
+            print("Syncing gst-integration-testsuites media files")
+            subprocess.check_call(['git', 'submodule', 'update', '--init'],
+                                cwd=utils.DEFAULT_GST_QA_ASSETS)
+            subprocess.check_call(['git', 'lfs', 'pull', '--exclude='],
+                                cwd=pathlib.Path(utils.DEFAULT_GST_QA_ASSETS) / 'medias')
 
     options.add_paths(assets_dir)
     options.set_http_server_dir(media_dir)

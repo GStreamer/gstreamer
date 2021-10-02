@@ -21,23 +21,35 @@
 The GES GstValidate default testsuite
 """
 import os
+import pathlib
+import subprocess
+from launcher import utils
 from testsuiteutils import update_assets
 from ges_known_issues import KNOWN_ISSUES
 
 
 TEST_MANAGER = "ges"
 
+
 def setup_tests(test_manager, options):
-    assets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "medias", "defaults"))
+    assets_dir = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), "..", "medias", "defaults"))
     if options.sync:
-        if not update_assets(options, assets_dir):
-            return False
+        if not utils.USING_SUBPROJECT:
+            if not update_assets(options, assets_dir):
+                return False
+        else:
+            print("Syncing gst-integration-testsuites media files")
+            subprocess.check_call(['git', 'submodule', 'update', '--init'],
+                                  cwd=utils.DEFAULT_GST_QA_ASSETS)
+            subprocess.check_call(['git', 'lfs', 'pull', '--exclude='],
+                                  cwd=pathlib.Path(utils.DEFAULT_GST_QA_ASSETS) / 'medias')
     options.add_paths(os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                    "..", "medias", "defaults")))
     projects_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ges",
                                                  "ges-projects"))
     scenarios_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ges",
-                                                 "scenarios"))
+                                                  "scenarios"))
     test_manager.add_expected_issues(KNOWN_ISSUES)
     test_manager.register_defaults(projects_path, scenarios_path)
     return True

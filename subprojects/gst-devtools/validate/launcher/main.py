@@ -626,17 +626,6 @@ def setup_launcher_from_args(args, main_options=None):
     if options.remote_assets_url and options.sync and not os.path.exists(options.clone_dir):
         if not download_assets(options):
             return False, None, None
-
-    for d in options.testsuites_dirs:
-        path = pathlib.Path(d).resolve()
-        if not path.as_posix().endswith('subprojects/gst-integration-testsuites/testsuites'):
-            continue
-
-        # Ensure we have gst-integration-testsuites media files.
-        subprocess.check_call(['git', 'submodule', 'update', '--init'],
-                              cwd=utils.DEFAULT_GST_QA_ASSETS)
-        subprocess.check_call(['git', 'lfs', 'pull', '--exclude='],
-                              cwd=pathlib.Path(utils.DEFAULT_GST_QA_ASSETS) / 'medias')
     # Ensure that the scenario manager singleton is ready to be used
     ScenarioManager().config = options
     if not tests_launcher.set_settings(options, []):

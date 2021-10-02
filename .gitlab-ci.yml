@@ -521,7 +521,7 @@ integration testsuites fedora:
   extends: '.test fedora x86_64'
   parallel: 4
   variables:
-    EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --check-bugs --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX}"
+    EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --check-bugs --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX} --sync"
     TEST_SUITE: "validate ges"
 
 # gstreamer-full:
