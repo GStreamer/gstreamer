@@ -420,12 +420,8 @@ gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
-  GstD3D11Vp9DecInner *inner = self->inner;
   GstBuffer *view_buffer;
   GstVp9Picture *new_picture;
-
-  /* This method is called when show_frame == FALSE */
-  inner->last_show_frame = FALSE;
 
   view_buffer = (GstBuffer *) gst_vp9_picture_get_user_data (picture);
 
@@ -578,11 +574,13 @@ gst_d3d11_vp9_dec_copy_loop_filter_params (GstD3D11Vp9Dec * self,
   params->mode_ref_delta_enabled = lfp->loop_filter_delta_enabled;
   params->mode_ref_delta_update = lfp->loop_filter_delta_update;
   params->use_prev_in_find_mv_refs =
-      inner->last_show_frame &&
-      frame_hdr->width == inner->last_frame_width &&
-      frame_hdr->height == inner->last_frame_height &&
-      !frame_hdr->error_resilient_mode &&
-      !(frame_hdr->frame_type == GST_VP9_KEY_FRAME || frame_hdr->intra_only);
+      inner->last_show_frame && !frame_hdr->error_resilient_mode;
+
+  if (frame_hdr->frame_type != GST_VP9_KEY_FRAME && !frame_hdr->intra_only) {
+    params->use_prev_in_find_mv_refs &=
+        (frame_hdr->width == inner->last_frame_width &&
+        frame_hdr->height == inner->last_frame_height);
+  }
 
   G_STATIC_ASSERT (G_N_ELEMENTS (params->ref_deltas) ==
       G_N_ELEMENTS (lfp->loop_filter_ref_deltas));
@@ -700,7 +698,7 @@ gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
 
   inner->last_frame_width = pic_params->width;
   inner->last_frame_height = pic_params->height;
-  inner->last_show_frame = TRUE;
+  inner->last_show_frame = pic_params->show_frame;
 
   return GST_FLOW_OK;
 }
