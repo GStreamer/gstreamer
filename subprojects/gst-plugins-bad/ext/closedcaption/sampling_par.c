@@ -374,7 +374,7 @@ vbi_service_set
     if (0 == (VBI_VIDEOSTD_SET_ALL & videostd_set_req)
         || ((VBI_VIDEOSTD_SET_525_60 & videostd_set_req)
             && (VBI_VIDEOSTD_SET_625_50 & videostd_set_req))) {
-      warning (log,
+      warn (log,
           "Ambiguous videostd_set 0x%lx.", (unsigned long) videostd_set_req);
       CLEAR (*sp);
       return 0;

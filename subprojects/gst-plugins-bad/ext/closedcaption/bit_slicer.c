@@ -463,7 +463,7 @@ null_function (vbi3_bit_slicer * bs,
   /* n_points = n_points; */
   /* raw = raw; */
 
-  warning (&bs->log, "vbi3_bit_slicer_set_params() not called.");
+  warn (&bs->log, "vbi3_bit_slicer_set_params() not called.");
 
   return FALSE;
 }
@@ -524,13 +524,13 @@ vbi_bool
   *n_points = 0;
 
   if (bs->payload > buffer_size * 8) {
-    warning (&bs->log,
+    warn (&bs->log,
         "buffer_size %u < %u bits of payload.", buffer_size * 8, bs->payload);
     return FALSE;
   }
 
   if (bs->total_bits > max_points) {
-    warning (&bs->log,
+    warn (&bs->log,
         "max_points %u < %u CRI, FRC and payload bits.",
         max_points, bs->total_bits);
     return FALSE;
@@ -539,7 +539,7 @@ vbi_bool
   if (low_pass_bit_slicer_Y8 == bs->func) {
     return bs->func (bs, buffer, points, n_points, raw);
   } else if (bit_slicer_Y8 != bs->func) {
-    warning (&bs->log,
+    warn (&bs->log,
         "Function not implemented for pixfmt %u.", bs->sample_format);
     return bs->func (bs, buffer,
         /* points */ NULL,
@@ -582,7 +582,7 @@ vbi3_bit_slicer_slice (vbi3_bit_slicer * bs,
   assert (NULL != raw);
 
   if (bs->payload > buffer_size * 8) {
-    warning (&bs->log,
+    warn (&bs->log,
         "buffer_size %u < %u bits of payload.", buffer_size * 8, bs->payload);
     return FALSE;
   }
@@ -677,13 +677,12 @@ vbi3_bit_slicer_set_params (vbi3_bit_slicer * bs,
   assert (samples_per_line <= 32767);
 
   if (cri_rate > sampling_rate) {
-    warning (&bs->log,
-        "cri_rate %u > sampling_rate %u.", cri_rate, sampling_rate);
+    warn (&bs->log, "cri_rate %u > sampling_rate %u.", cri_rate, sampling_rate);
     goto failure;
   }
 
   if (payload_rate > sampling_rate) {
-    warning (&bs->log,
+    warn (&bs->log,
         "payload_rate %u > sampling_rate %u.", payload_rate, sampling_rate);
     goto failure;
   }
@@ -835,7 +834,7 @@ vbi3_bit_slicer_set_params (vbi3_bit_slicer * bs,
 
 
     default:
-      warning (&bs->log,
+      warn (&bs->log,
           "Unknown sample_format 0x%x.", (unsigned int) sample_format);
       return FALSE;
   }
@@ -858,7 +857,7 @@ vbi3_bit_slicer_set_params (vbi3_bit_slicer * bs,
   if ((sample_offset > samples_per_line)
       || ((cri_samples + data_samples)
           > (samples_per_line - sample_offset))) {
-    warning (&bs->log,
+    warn (&bs->log,
         "%u samples_per_line too small for "
         "sample_offset %u + %u cri_bits (%u samples) "
         "+ %u frc_bits and %u payload_bits "

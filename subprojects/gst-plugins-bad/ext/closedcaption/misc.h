@@ -348,7 +348,7 @@ VBI_CAT_LEVEL_LOG (GstDebugLevel level,
 #ifdef G_HAVE_GNUC_VARARGS
 #define error(hook, templ, args...)					\
 	VBI_CAT_LEVEL_LOG (GST_LEVEL_ERROR, NULL, templ , ##args)
-#define warning(hook, templ, args...)					\
+#define warn(hook, templ, args...)					\
 	VBI_CAT_LEVEL_LOG (GST_LEVEL_WARNING, NULL, templ , ##args)
 #define notice(hook, templ, args...)					\
 	VBI_CAT_LEVEL_LOG (GST_LEVEL_INFO, NULL, templ , ##args)
@@ -363,7 +363,7 @@ VBI_CAT_LEVEL_LOG (GstDebugLevel level,
 #elif defined(G_HAVE_ISO_VARARGS)
 #define error(hook, templ, ...)					\
 	VBI_CAT_LEVEL_LOG (GST_LEVEL_ERROR, NULL, templ, __VA_ARGS__)
-#define warning(hook, templ, ...)					\
+#define warn(hook, templ, ...)					\
 	VBI_CAT_LEVEL_LOG (GST_LEVEL_WARNING, NULL, templ, __VA_ARGS__)
 #define notice(hook, templ, ...)					\
 	VBI_CAT_LEVEL_LOG (GST_LEVEL_INFO, NULL, templ, __VA_ARGS__)
