@@ -58,6 +58,7 @@
 #include <config.h>
 #endif
 
+#include <gst/base/base.h>
 #include "gstvp9decoder.h"
 
 GST_DEBUG_CATEGORY (gst_vp9_decoder_debug);
@@ -75,7 +76,18 @@ struct _GstVp9DecoderPrivate
   GstVp9Dpb *dpb;
 
   gboolean wait_keyframe;
+  /* controls how many frames to delay when calling output_picture() */
+  guint preferred_output_delay;
+  GstQueueArray *output_queue;
+  gboolean is_live;
 };
+
+typedef struct
+{
+  GstVideoCodecFrame *frame;
+  GstVp9Picture *picture;
+  GstVp9Decoder *self;
+} GstVp9DecoderOutputFrame;
 
 #define parent_class gst_vp9_decoder_parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVp9Decoder, gst_vp9_decoder,
@@ -94,6 +106,10 @@ static GstFlowReturn gst_vp9_decoder_drain (GstVideoDecoder * decoder);
 static GstFlowReturn gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 
+static void
+gst_vp9_decoder_clear_output_frame (GstVp9DecoderOutputFrame * output_frame);
+static void gst_vp9_decoder_drain_output_queue (GstVp9Decoder * self,
+    guint num, GstFlowReturn * ret);
 
 static void
 gst_vp9_decoder_class_init (GstVp9DecoderClass * klass)
@@ -128,6 +144,11 @@ gst_vp9_decoder_start (GstVideoDecoder * decoder)
   priv->dpb = gst_vp9_dpb_new ();
   priv->wait_keyframe = TRUE;
 
+  priv->output_queue =
+      gst_queue_array_new_for_struct (sizeof (GstVp9DecoderOutputFrame), 1);
+  gst_queue_array_set_clear_func (priv->output_queue,
+      (GDestroyNotify) gst_vp9_decoder_clear_output_frame);
+
   return TRUE;
 }
 
@@ -140,6 +161,7 @@ gst_vp9_decoder_stop (GstVideoDecoder * decoder)
   g_clear_pointer (&self->input_state, gst_video_codec_state_unref);
   g_clear_pointer (&priv->parser, gst_vp9_stateful_parser_free);
   g_clear_pointer (&priv->dpb, gst_vp9_dpb_free);
+  gst_queue_array_free (priv->output_queue);
 
   return TRUE;
 }
@@ -170,6 +192,14 @@ gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
     GstVp9DecoderClass *klass = GST_VP9_DECODER_GET_CLASS (self);
 
     priv->had_sequence = TRUE;
+
+    if (klass->get_preferred_output_delay) {
+      priv->preferred_output_delay =
+          klass->get_preferred_output_delay (self, priv->is_live);
+    } else {
+      priv->preferred_output_delay = 0;
+    }
+
     if (klass->new_sequence)
       ret = klass->new_sequence (self, frame_hdr);
 
@@ -186,6 +216,7 @@ gst_vp9_decoder_set_format (GstVideoDecoder * decoder,
 {
   GstVp9Decoder *self = GST_VP9_DECODER (decoder);
   GstVp9DecoderPrivate *priv = self->priv;
+  GstQuery *query;
 
   GST_DEBUG_OBJECT (decoder, "Set format");
 
@@ -196,6 +227,11 @@ gst_vp9_decoder_set_format (GstVideoDecoder * decoder,
 
   priv->width = GST_VIDEO_INFO_WIDTH (&state->info);
   priv->height = GST_VIDEO_INFO_HEIGHT (&state->info);
+
+  query = gst_query_new_latency ();
+  if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (self), query))
+    gst_query_parse_latency (query, &priv->is_live, NULL, NULL);
+  gst_query_unref (query);
 
   return TRUE;
 }
@@ -209,16 +245,20 @@ gst_vp9_decoder_reset (GstVp9Decoder * self)
     gst_vp9_dpb_clear (priv->dpb);
 
   priv->wait_keyframe = TRUE;
+  gst_queue_array_clear (priv->output_queue);
 }
 
 static GstFlowReturn
 gst_vp9_decoder_finish (GstVideoDecoder * decoder)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
+
   GST_DEBUG_OBJECT (decoder, "finish");
 
+  gst_vp9_decoder_drain_output_queue (GST_VP9_DECODER (decoder), 0, &ret);
   gst_vp9_decoder_reset (GST_VP9_DECODER (decoder));
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static gboolean
@@ -234,11 +274,29 @@ gst_vp9_decoder_flush (GstVideoDecoder * decoder)
 static GstFlowReturn
 gst_vp9_decoder_drain (GstVideoDecoder * decoder)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
+
   GST_DEBUG_OBJECT (decoder, "drain");
 
+  gst_vp9_decoder_drain_output_queue (GST_VP9_DECODER (decoder), 0, &ret);
   gst_vp9_decoder_reset (GST_VP9_DECODER (decoder));
 
-  return GST_FLOW_OK;
+  return ret;
+}
+
+static void
+gst_vp9_decoder_clear_output_frame (GstVp9DecoderOutputFrame * output_frame)
+{
+  if (!output_frame)
+    return;
+
+  if (output_frame->frame) {
+    gst_video_decoder_release_frame (GST_VIDEO_DECODER (output_frame->self),
+        output_frame->frame);
+    output_frame->frame = NULL;
+  }
+
+  gst_vp9_picture_clear (&output_frame->picture);
 }
 
 static GstFlowReturn
@@ -256,6 +314,7 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean intra_only = FALSE;
   gboolean check_codec_change = FALSE;
+  GstVp9DecoderOutputFrame output_frame;
 
   GST_LOG_OBJECT (self, "handle frame %" GST_PTR_FORMAT, in_buf);
 
@@ -397,9 +456,13 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
 
     ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
   } else {
-    g_assert (klass->output_picture);
-    ret = klass->output_picture (self, frame, picture);
+    output_frame.frame = frame;
+    output_frame.picture = picture;
+    output_frame.self = self;
+    gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
   }
+
+  gst_vp9_decoder_drain_output_queue (self, priv->preferred_output_delay, &ret);
 
   if (ret == GST_FLOW_ERROR) {
     GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
@@ -428,5 +491,43 @@ error:
         ("Failed to decode data"), (NULL), ret);
 
     return ret;
+  }
+}
+
+static void
+gst_vp9_decoder_drain_output_queue (GstVp9Decoder * self, guint num,
+    GstFlowReturn * ret)
+{
+  GstVp9DecoderPrivate *priv = self->priv;
+  GstVp9DecoderClass *klass = GST_VP9_DECODER_GET_CLASS (self);
+
+  g_assert (klass->output_picture);
+
+  while (gst_queue_array_get_length (priv->output_queue) > num) {
+    GstVp9DecoderOutputFrame *output_frame = (GstVp9DecoderOutputFrame *)
+        gst_queue_array_pop_head_struct (priv->output_queue);
+    /* Output queued frames whatever the return value is, in order to empty
+     * the queue */
+    GstFlowReturn flow_ret = klass->output_picture (self,
+        output_frame->frame, output_frame->picture);
+
+    /* Then, update @ret with new flow return value only if @ret was
+     * GST_FLOW_OK. This is to avoid pattern such that
+     * ```c
+     * GstFlowReturn my_return = GST_FLOW_OK;
+     * do something
+     *
+     * if (my_return == GST_FLOW_OK) {
+     *   my_return = gst_vp9_decoder_drain_output_queue ();
+     * } else {
+     *   // Ignore flow return of this method, but current `my_return` error code
+     *   gst_vp9_decoder_drain_output_queue ();
+     * }
+     *
+     * return my_return;
+     * ```
+     */
+    if (*ret == GST_FLOW_OK)
+      *ret = flow_ret;
   }
 }

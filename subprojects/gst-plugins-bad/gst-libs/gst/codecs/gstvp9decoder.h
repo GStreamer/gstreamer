@@ -171,6 +171,22 @@ struct _GstVp9DecoderClass
                                         GstVideoCodecFrame * frame,
                                         GstVp9Picture * picture);
 
+  /**
+   * GstVp9DecoderClass::get_preferred_output_delay:
+   * @decoder: a #GstVp9Decoder
+   * @is_live: whether upstream is live or not
+   *
+   * Optional. Retrieve the preferred output delay from child classes.
+   * controls how many frames to delay when calling
+   * GstVp9DecoderClass::output_picture
+   *
+   * Returns: the number of perferred delayed output frame
+   *
+   * Since: 1.20
+   */
+  guint           (*get_preferred_output_delay)   (GstVp9Decoder * decoder,
+                                                   gboolean is_live);
+
   /*< private >*/
   gpointer padding[GST_PADDING_LARGE];
 };
