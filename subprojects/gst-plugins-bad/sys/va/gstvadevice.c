@@ -24,7 +24,9 @@
 
 #include "gstvadevice.h"
 
+#if HAVE_GUDEV
 #include <gudev/gudev.h>
+#endif
 
 #define GST_CAT_DEFAULT gstva_debug
 GST_DEBUG_CATEGORY_EXTERN (gstva_debug);
@@ -62,6 +64,7 @@ compare_device_path (gconstpointer a, gconstpointer b, gpointer user_data)
   return strcmp (pa->render_device_path, pb->render_device_path);
 }
 
+#if HAVE_GUDEV
 GList *
 gst_va_device_find_devices (void)
 {
@@ -96,6 +99,31 @@ gst_va_device_find_devices (void)
 
   return devices.head;
 }
+#else
+GList *
+gst_va_device_find_devices (void)
+{
+  GstVaDisplay *dpy;
+  GQueue devices = G_QUEUE_INIT;
+  gchar path[64];
+  guint i;
+
+  for (i = 0; i < 8; i++) {
+    g_snprintf (path, sizeof (path), "/dev/dri/renderD%d", 128 + i);
+    if (!g_file_test (path, G_FILE_TEST_EXISTS))
+      continue;
+
+    if (!(dpy = gst_va_display_drm_new_from_path (path)))
+      continue;
+
+    GST_INFO ("Found VA-API device: %s", path);
+    g_queue_push_head (&devices, gst_va_device_new (dpy, path));
+  }
+
+  g_queue_sort (&devices, compare_device_path, NULL);
+  return devices.head;
+}
+#endif
 
 void
 gst_va_device_list_free (GList * devices)

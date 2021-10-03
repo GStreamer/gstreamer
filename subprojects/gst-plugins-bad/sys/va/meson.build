@@ -26,7 +26,7 @@ if va_option.disabled() or host_system != 'linux'
   subdir_done()
 endif
 
-libgudev_dep = dependency('gudev-1.0', required: va_option)
+libgudev_dep = dependency('gudev-1.0', required: false)
 
 if not gstva_dep.found() or not libgudev_dep.found()
   if va_option.enabled()
@@ -39,6 +39,7 @@ if libva_dep.version().version_compare('>= 1.8')
   va_sources += 'gstvaav1dec.c'
 endif
 
+cdata.set10('HAVE_GUDEV', libgudev_dep.found())
 
 driverdir = libva_dep.get_variable(pkgconfig: 'driverdir', internal: 'driverdir', default_value: '')
 if driverdir == ''
