@@ -1,4 +1,4 @@
-va_sources = [
+va_sources = files(
   'gstvaallocator.c',
   'gstvadisplay.c',
   'gstvadisplay_drm.c',
@@ -8,9 +8,9 @@ va_sources = [
   'gstvautils.c',
   'gstvavideoformat.c',
   'vasurfaceimage.c',
-]
+)
 
-va_headers = [
+va_headers = files(
   'gstva.h',
   'gstvaallocator.h',
   'gstvadisplay.h',
@@ -21,7 +21,7 @@ va_headers = [
   'gstvavideoformat.h',
   'va-prelude.h',
   'va_fwd.h',
-]
+)
 
 gstva_dep = dependency('', required : false)
 
@@ -47,9 +47,12 @@ va_enums = gnome.mkenums_simple('va-enumtypes',
   decorator: 'GST_VA_API',
   header_prefix: '#include <gst/va/va-prelude.h>',
   body_prefix: '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
-  install_header: false)
+  install_header: true,
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/va'),
+)
 
 va_enumtypes_h = va_enums[1]
+va_gen_sources = [va_enumtypes_h]
 
 gstva = library('gstva-' + api_version,
   va_sources, va_enums,
@@ -61,12 +64,43 @@ gstva = library('gstva-' + api_version,
   dependencies : [gst_dep, gstbase_dep, gstvideo_dep, gstallocators_dep, libva_dep, libva_drm_dep, libdrm_dep],
 )
 
+library_def = {'lib': gstva}
 pkg_name = 'gstreamer-va-' + api_version
-gst_libraries += [[pkg_name, {'lib': gstva}]]
+
+pkgconfig.generate(gstva,
+  libraries : [gst_dep, gstvideo_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : pkg_name,
+  description : 'GStreamer VA support',
+)
+
+if build_gir
+  gir = {
+    'sources' : [va_sources, va_headers, va_enums],
+    'namespace' : 'GstVa',
+    'nsversion' : api_version,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'includes' : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'],
+    'install' : true,
+    'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    'dependencies' : [gst_dep, gstbase_dep, gstvideo_dep, gstallocators_dep, libva_dep, libva_drm_dep, libdrm_dep]
+  }
+  library_def = {'lib': library_def['lib'], 'gir': [gir]}
+  if not static_build
+    va_gir = gnome.generate_gir(gstva, kwargs: gir)
+    va_gen_sources += va_gir
+  endif
+endif
+gst_libraries += [[pkg_name, library_def]]
+
+install_headers(va_headers, subdir : 'gstreamer-1.0/gst/va/')
 
 gstva_dep = declare_dependency(link_with : gstva,
   include_directories : [libsinc],
   dependencies : [gst_dep, gstvideo_dep, gstallocators_dep, libva_dep, libva_drm_dep, libdrm_dep],
-  sources : [va_enumtypes_h])
+  sources : va_gen_sources)
 
 meson.override_dependency(pkg_name, gstva_dep)

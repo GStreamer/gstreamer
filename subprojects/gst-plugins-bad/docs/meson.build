@@ -140,6 +140,10 @@ if build_gir
         ]
     endif
 
+    if gstva_dep.found()
+        libs += [{'name': 'va', 'gir': va_gir, 'lib': gstva_dep, 'suffix': 'lib'}]
+    endif
+
     if gstvulkan_dep.found()
         libs += [
              {'name': 'vulkan', 'gir': vulkan_gir, 'lib': gstvulkan_dep, 'suffix': 'lib'},
