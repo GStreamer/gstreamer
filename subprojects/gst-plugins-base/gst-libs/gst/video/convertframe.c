@@ -115,10 +115,12 @@ build_convert_frame_pipeline (GstElement ** src_element,
     GstElement ** sink_element, const GstCaps * from_caps,
     GstVideoCropMeta * cmeta, const GstCaps * to_caps, GError ** err)
 {
-  GstElement *vcrop = NULL, *csp = NULL, *csp2 = NULL, *vscale = NULL;
+  GstElement *vcrop = NULL, *csp = NULL, *csp2 = NULL, *vscale = NULL, *gldownload = NULL, *gloverlay = NULL;
   GstElement *src = NULL, *sink = NULL, *encoder = NULL, *pipeline;
   GstVideoInfo info;
   GError *error = NULL;
+  guint i, n;
+  gboolean is_memory_gl_memory=FALSE;
 
   if (cmeta) {
     if (!create_element ("videocrop", &vcrop, &error)) {
@@ -130,6 +132,20 @@ build_convert_frame_pipeline (GstElement ** src_element,
         goto no_elements;
     }
   }
+  
+  n = gst_caps_get_size (from_caps);
+  for (i = 0; i < n; i++) {
+    GstCapsFeatures *feature = gst_caps_get_features(from_caps, i);
+    GST_DEBUG ("features are %" GST_PTR_FORMAT, feature);
+    if(gst_caps_features_contains(feature,"memory:GLMemory")){
+      GST_DEBUG ("This is GL buffer \n");
+      is_memory_gl_memory = TRUE; 
+    }
+    else{
+      GST_DEBUG ("This is not GL buffer \n"); 
+      is_memory_gl_memory = FALSE; 
+    }
+  }
 
   /* videoscale is here to correct for the pixel-aspect-ratio for us */
   GST_DEBUG ("creating elements");
@@ -138,6 +154,13 @@ build_convert_frame_pipeline (GstElement ** src_element,
       !create_element ("videoscale", &vscale, &error) ||
       !create_element ("appsink", &sink, &error))
     goto no_elements;
+ 
+  if(is_memory_gl_memory){
+  /*if this is gl_memory then create extra elements*/ 
+  if (!create_element ("gloverlaycompositor", &gloverlay, &error) ||
+      !create_element ("gldownload", &gldownload, &error))
+    goto no_elements;
+  }
 
   pipeline = gst_pipeline_new ("videoconvert-pipeline");
   if (pipeline == NULL)
@@ -148,6 +171,8 @@ build_convert_frame_pipeline (GstElement ** src_element,
 
   GST_DEBUG ("adding elements");
   gst_bin_add_many (GST_BIN (pipeline), src, csp, vscale, sink, NULL);
+  if (is_memory_gl_memory)
+    gst_bin_add_many (GST_BIN (pipeline), gloverlay, gldownload, NULL);
   if (vcrop)
     gst_bin_add_many (GST_BIN (pipeline), vcrop, csp2, NULL);
 
@@ -168,9 +193,24 @@ build_convert_frame_pipeline (GstElement ** src_element,
 
   /* FIXME: linking is still way too expensive, profile this properly */
   if (vcrop) {
-    GST_DEBUG ("linking src->csp2");
+  if(is_memory_gl_memory){
+  /*if this is gl_memory then link gldownload element to src*/ 
+    GST_DEBUG ("linking src->glcompositor");
+    if (!gst_element_link_pads (src, "src", gloverlay, "sink"))
+      goto link_failed;
+    GST_DEBUG ("linking glcompositor->gldownload");
+    if (!gst_element_link_pads (gloverlay, "src", gldownload, "sink"))
+      goto link_failed;
+
+    GST_DEBUG ("linking gldownload->csp2");
+    if (!gst_element_link_pads (gldownload, "src", csp2, "sink"))
+      goto link_failed;
+  }
+  else{
+    GST_DEBUG ("linking gldownload->csp2");
     if (!gst_element_link_pads (src, "src", csp2, "sink"))
       goto link_failed;
+  }
 
     GST_DEBUG ("linking csp2->vcrop");
     if (!gst_element_link_pads (csp2, "src", vcrop, "sink"))
@@ -180,9 +220,23 @@ build_convert_frame_pipeline (GstElement ** src_element,
     if (!gst_element_link_pads (vcrop, "src", csp, "sink"))
       goto link_failed;
   } else {
+    if(is_memory_gl_memory){
+    GST_DEBUG ("linking src->glcompositor");
+    if (!gst_element_link_pads (src, "src", gloverlay, "sink"))
+      goto link_failed;
+    GST_DEBUG ("linking glcompositor->downloader");
+    if (!gst_element_link_pads (gloverlay, "src", gldownload, "sink"))
+      goto link_failed;
+    
+    GST_DEBUG ("linking gldownload->csp");
+    if (!gst_element_link_pads (gldownload, "src", csp, "sink"))
+      goto link_failed;
+    }
+    else{
     GST_DEBUG ("linking src->csp");
     if (!gst_element_link_pads (src, "src", csp, "sink"))
       goto link_failed;
+    }
   }
 
   GST_DEBUG ("linking csp->vscale");
