@@ -343,20 +343,9 @@ gst_rtsp_session_release_media (GstRTSPSession * sess,
   return more;
 }
 
-/**
- * gst_rtsp_session_get_media:
- * @sess: a #GstRTSPSession
- * @path: the path for the media
- * @matched: (out): the amount of matched characters
- *
- * Get the session media for @path. @matched will contain the number of matched
- * characters of @path.
- *
- * Returns: (transfer none) (nullable): the configuration for @path in @sess.
- */
-GstRTSPSessionMedia *
-gst_rtsp_session_get_media (GstRTSPSession * sess, const gchar * path,
-    gint * matched)
+static GstRTSPSessionMedia *
+_gst_rtsp_session_get_media (GstRTSPSession * sess, const gchar * path,
+    gint * matched, gboolean dup)
 {
   GstRTSPSessionPrivate *priv;
   GstRTSPSessionMedia *result;
@@ -384,11 +373,53 @@ gst_rtsp_session_get_media (GstRTSPSession * sess, const gchar * path,
       }
     }
   }
+
+  if (result && dup)
+    result = g_object_ref (result);
   g_mutex_unlock (&priv->lock);
 
   *matched = best;
 
   return result;
+}
+
+/**
+ * gst_rtsp_session_get_media:
+ * @sess: a #GstRTSPSession
+ * @path: the path for the media
+ * @matched: (out): the amount of matched characters
+ *
+ * Gets the session media for @path. @matched will contain the number of matched
+ * characters of @path.
+ *
+ * Returns: (transfer none) (nullable): the configuration for @path in @sess.
+ */
+GstRTSPSessionMedia *
+gst_rtsp_session_get_media (GstRTSPSession * sess, const gchar * path,
+    gint * matched)
+{
+  return _gst_rtsp_session_get_media (sess, path, matched, FALSE);
+}
+
+/**
+ * gst_rtsp_session_dup_media:
+ * @sess: a #GstRTSPSession
+ * @path: the path for the media
+ * @matched: (out): the amount of matched characters
+ *
+ * Gets the session media for @path, increasing its reference count. @matched
+ * will contain the number of matched characters of @path.
+ *
+ * Returns: (transfer full) (nullable): the configuration for @path in @sess,
+ * should be unreferenced when no longer needed.
+ *
+ * Since: 1.20
+ */
+GstRTSPSessionMedia *
+gst_rtsp_session_dup_media (GstRTSPSession * sess, const gchar * path,
+    gint * matched)
+{
+  return _gst_rtsp_session_get_media (sess, path, matched, TRUE);
 }
 
 /**

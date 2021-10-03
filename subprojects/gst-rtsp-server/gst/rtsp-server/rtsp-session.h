@@ -141,7 +141,12 @@ GST_RTSP_SERVER_API
 GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess,
                                                               const gchar *path,
                                                               gint * matched);
+/* get media in a session, increasing its reference count */
 
+GST_RTSP_SERVER_API
+GstRTSPSessionMedia *  gst_rtsp_session_dup_media            (GstRTSPSession *sess,
+                                                              const gchar *path,
+                                                              gint * matched);
 /**
  * GstRTSPSessionFilterFunc:
  * @sess: a #GstRTSPSession object

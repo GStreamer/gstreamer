@@ -1447,7 +1447,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   path = klass->make_path_from_uri (client, ctx->uri);
 
   /* get a handle to the configuration of the media in the session */
-  sessmedia = gst_rtsp_session_get_media (session, path, &matched);
+  sessmedia = gst_rtsp_session_dup_media (session, path, &matched);
   if (!sessmedia)
     goto not_found;
 
@@ -1482,6 +1482,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* unmanage the media in the session, returns false if all media session
    * are torn down. */
   keep_session = gst_rtsp_session_release_media (session, sessmedia);
+  g_object_unref (sessmedia);
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
@@ -1532,6 +1533,7 @@ no_aggregate:
     send_generic_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
     g_free (path);
+    g_object_unref (sessmedia);
     return FALSE;
   }
 sig_failed:
@@ -1541,6 +1543,7 @@ sig_failed:
     send_generic_response (client, sig_result, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
+    g_object_unref (sessmedia);
     return FALSE;
   }
 }
@@ -1699,7 +1702,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
   path = klass->make_path_from_uri (client, ctx->uri);
 
   /* get a handle to the configuration of the media in the session */
-  sessmedia = gst_rtsp_session_get_media (session, path, &matched);
+  sessmedia = gst_rtsp_session_dup_media (session, path, &matched);
   if (!sessmedia)
     goto not_found;
 
@@ -1746,6 +1749,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   /* the state is now READY */
   gst_rtsp_session_media_set_rtsp_state (sessmedia, GST_RTSP_STATE_READY);
+  g_object_unref (sessmedia);
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PAUSE_REQUEST], 0, ctx);
 
@@ -1779,6 +1783,7 @@ no_aggregate:
     GST_ERROR ("client %p: no aggregate path %s", client, path);
     send_generic_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
+    g_object_unref (sessmedia);
     g_free (path);
     return FALSE;
   }
@@ -1788,6 +1793,7 @@ sig_failed:
         gst_rtsp_status_as_text (sig_result));
     send_generic_response (client, sig_result, ctx);
     gst_rtsp_media_unlock (media);
+    g_object_unref (sessmedia);
     g_object_unref (media);
     return FALSE;
   }
@@ -1797,6 +1803,7 @@ invalid_state:
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
         ctx);
     gst_rtsp_media_unlock (media);
+    g_object_unref (sessmedia);
     g_object_unref (media);
     return FALSE;
   }
@@ -1805,6 +1812,7 @@ not_supported:
     GST_ERROR ("client %p: pausing not supported", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     gst_rtsp_media_unlock (media);
+    g_object_unref (sessmedia);
     g_object_unref (media);
     return FALSE;
   }
@@ -2068,7 +2076,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   path = klass->make_path_from_uri (client, uri);
 
   /* get a handle to the configuration of the media in the session */
-  sessmedia = gst_rtsp_session_get_media (session, path, &matched);
+  sessmedia = gst_rtsp_session_dup_media (session, path, &matched);
   if (!sessmedia)
     goto not_found;
 
@@ -2163,6 +2171,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gst_rtsp_session_media_set_state (sessmedia, GST_STATE_PLAYING);
 
   gst_rtsp_session_media_set_rtsp_state (sessmedia, GST_RTSP_STATE_PLAYING);
+  g_object_unref (sessmedia);
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PLAY_REQUEST], 0, ctx);
 
@@ -2195,6 +2204,7 @@ no_aggregate:
     GST_ERROR ("client %p: no aggregate path %s", client, path);
     send_generic_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
+    g_object_unref (sessmedia);
     g_free (path);
     return FALSE;
   }
@@ -2205,6 +2215,7 @@ sig_failed:
     send_generic_response (client, sig_result, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
+    g_object_unref (sessmedia);
     return FALSE;
   }
 invalid_state:
@@ -2214,6 +2225,7 @@ invalid_state:
         ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
+    g_object_unref (sessmedia);
     return FALSE;
   }
 pipeline_error:
@@ -2223,6 +2235,7 @@ pipeline_error:
         ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
+    g_object_unref (sessmedia);
     return FALSE;
   }
 unsuspend_failed:
@@ -2231,6 +2244,7 @@ unsuspend_failed:
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
+    g_object_unref (sessmedia);
     return FALSE;
   }
 invalid_mode:
@@ -2239,6 +2253,7 @@ invalid_mode:
     send_generic_response (client, code, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
+    g_object_unref (sessmedia);
     return FALSE;
   }
 unsupported_mode:
@@ -2247,6 +2262,7 @@ unsupported_mode:
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
+    g_object_unref (sessmedia);
     return FALSE;
   }
 get_rates_error:
@@ -2255,6 +2271,7 @@ get_rates_error:
     send_generic_response (client, GST_RTSP_STS_INTERNAL_SERVER_ERROR, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
+    g_object_unref (sessmedia);
     return FALSE;
   }
 adjust_play_response_failed:
@@ -2263,6 +2280,7 @@ adjust_play_response_failed:
     send_generic_response (client, code, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
+    g_object_unref (sessmedia);
     return FALSE;
   }
 rtp_info_error:
@@ -2271,6 +2289,7 @@ rtp_info_error:
     send_generic_response (client, GST_RTSP_STS_INTERNAL_SERVER_ERROR, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
+    g_object_unref (sessmedia);
     return FALSE;
   }
 }
