@@ -1472,8 +1472,8 @@ gst_nv_decoder_negotiate (GstNvDecoder * decoder,
   }
 
   info = &decoder->info;
-  state = gst_video_decoder_set_output_state (videodec,
-      GST_VIDEO_INFO_FORMAT (info),
+  state = gst_video_decoder_set_interlaced_output_state (videodec,
+      GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_INTERLACE_MODE (info),
       GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info), input_state);
   state->caps = gst_video_info_to_caps (&state->info);
 
