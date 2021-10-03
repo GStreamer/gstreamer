@@ -26,7 +26,9 @@ if va_option.disabled() or host_system != 'linux'
   subdir_done()
 endif
 
-if not gstva_dep.found()
+libgudev_dep = dependency('gudev-1.0', required: va_option)
+
+if not gstva_dep.found() or not libgudev_dep.found()
   if va_option.enabled()
     error('The va plugin was enabled explicity, but required dependencies were not found.')
   endif
@@ -37,7 +39,6 @@ if libva_dep.version().version_compare('>= 1.8')
   va_sources += 'gstvaav1dec.c'
 endif
 
-cdata.set10('HAVE_LIBDRM', libdrm_dep.found())
 
 driverdir = libva_dep.get_variable(pkgconfig: 'driverdir', internal: 'driverdir', default_value: '')
 if driverdir == ''
@@ -49,7 +50,7 @@ gstva = library('gstva',
   va_sources,
   c_args : gst_plugins_bad_args + extra_c_args + gstva_cargs + ['-std=c99'],
   include_directories : [configinc],
-  dependencies : [libva_dep, gstvideo_dep, gstcodecs_dep, gstallocators_dep, gstva_dep] + extra_dep,
+  dependencies : [gstvideo_dep, gstcodecs_dep, gstallocators_dep, gstva_dep, libgudev_dep] + extra_dep,
   install : true,
   install_dir : plugins_install_dir,
 )
