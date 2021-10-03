@@ -413,8 +413,8 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     /* FIXME: add support cudaVideoCodec_H264_SVC and cudaVideoCodec_H264_MVC */
     if (!gst_nv_decoder_configure (self->decoder,
             cudaVideoCodec_H264, &info, self->coded_width, self->coded_height,
-            /* Additional 2 buffers for margin */
-            max_dpb_size + 2)) {
+            /* Additional 4 buffers for render delay */
+            max_dpb_size + 4)) {
       GST_ERROR_OBJECT (self, "Failed to configure decoder");
       return FALSE;
     }
