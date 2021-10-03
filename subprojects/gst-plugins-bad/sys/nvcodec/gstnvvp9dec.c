@@ -246,6 +246,7 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
 
   self->width = frame_hdr->width;
   self->height = frame_hdr->height;
+  self->profile = frame_hdr->profile;
 
   if (self->profile == GST_VP9_PROFILE_0) {
     out_format = GST_VIDEO_FORMAT_NV12;
