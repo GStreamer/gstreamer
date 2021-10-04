@@ -140,6 +140,13 @@ if host_machine.system() != 'windows'
   ]
 endif
 
+# linux only tests
+if host_machine.system() == 'linux'
+  base_tests += [
+    [['elements/vapostproc.c'], not gstva_dep.found(), [gstva_dep]],
+  ]
+endif
+
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
