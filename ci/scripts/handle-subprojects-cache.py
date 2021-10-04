@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
 Copies current subproject git repository to create a cache
@@ -14,6 +14,7 @@ PARSER = argparse.ArgumentParser()
 PARSER.add_argument('subprojects_dir')
 PARSER.add_argument('--build', action="store_true", default=False)
 
+
 def create_cache_in_image(options):
     os.makedirs(DEST, exist_ok=True)
     print("Creating cache from %s" % options.subprojects_dir)
@@ -28,7 +29,8 @@ def create_cache_in_image(options):
 
 
 def copy_cache(options):
-    for path in [DEST, "/gst-build/subprojects", r"C:\gst-build\subprojects"]: # FIXME Remove when not needed anymore.
+    # FIXME Remove when not needed anymore.
+    for path in [DEST, "/gst-build/subprojects", r"C:\gst-build\subprojects"]:
         if not os.path.exists(path):
             print("%s doesn't exist." % path)
             continue
