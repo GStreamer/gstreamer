@@ -261,16 +261,18 @@ gst_va_create_raw_caps (GstVaDisplay * display, VAProfile profile,
   return caps;
 }
 
-static GstCaps *
+GstCaps *
 gst_va_create_coded_caps (GstVaDisplay * display, VAProfile profile,
     VAEntrypoint entrypoint, guint32 * rt_formats_ptr)
 {
   GstCaps *caps;
+  /* *INDENT-OFF* */
   VAConfigAttrib attribs[] = {
-    {.type = VAConfigAttribMaxPictureWidth,},
-    {.type = VAConfigAttribMaxPictureHeight,},
-    {.type = VAConfigAttribRTFormat,},
+    { .type = VAConfigAttribMaxPictureWidth, },
+    { .type = VAConfigAttribMaxPictureHeight, },
+    { .type = VAConfigAttribRTFormat, },
   };
+  /* *INDENT-ON* */
   VADisplay dpy;
   VAStatus status;
   guint32 value, rt_formats = 0;
