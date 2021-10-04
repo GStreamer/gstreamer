@@ -180,6 +180,9 @@ cdata.set('SIZEOF_SHORT', cc.sizeof('short'))
 cdata.set('SIZEOF_VOIDP', cc.sizeof('void*'))
 cdata.set('SIZEOF_OFF_T', cc.sizeof('off_t'))
 
+have_rtld_noload = cc.has_header_symbol('dlfcn.h', 'RTLD_NOLOAD')
+cdata.set('HAVE_RTLD_NOLOAD', have_rtld_noload)
+
 # Here be fixmes.
 # FIXME: check if this is correct
 cdata.set('HAVE_CPU_X86_64', host_machine.cpu() == 'amd64')

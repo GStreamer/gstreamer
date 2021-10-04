@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2007-2008 Wouter Cloetens <wouter@mind.be>
+ * Copyright (C) 2021 Igalia S.L.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,11 +20,23 @@
 #include <gst/gst-i18n-plugin.h>
 
 #include "gstsoupelements.h"
+#include "gstsouploader.h"
+
+GST_DEBUG_CATEGORY (gst_soup_debug);
+
+#define GST_CAT_DEFAULT gst_soup_debug
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (gst_soup_debug, "soup", 0, "soup");
+
+  if (!gst_soup_load_library ()) {
+    GST_WARNING ("Failed to load libsoup library");
+    return TRUE;
+  }
 
   ret |= GST_ELEMENT_REGISTER (souphttpsrc, plugin);
   ret |= GST_ELEMENT_REGISTER (souphttpclientsink, plugin);

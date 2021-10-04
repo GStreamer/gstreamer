@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2014 Samsung Electronics. All rights reserved.
  *     @Author: Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>
+ * Copyright (C) 2021 Igalia S.L.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,8 +18,8 @@
 
 #include <glib.h>
 #include <gst/gst.h>
-#include <libsoup/soup.h>
 #include "gstsouputils.h"
+#include "gstsouploader.h"
 
 /*
  * Soup logger funcs
@@ -87,11 +88,12 @@ gst_soup_util_log_setup (SoupSession * session, SoupLoggerLogLevel level,
   }
 
   /* Create a new logger and set body_size_limit to -1 (no limit) */
-  logger = soup_logger_new (level, -1);
-  soup_logger_set_printer (logger, gst_soup_util_log_printer_cb,
+  logger = _soup_logger_new (level);
+
+  _soup_logger_set_printer (logger, gst_soup_util_log_printer_cb,
       gst_object_ref (element), (GDestroyNotify) gst_object_unref);
 
   /* Attach logger to session */
-  soup_session_add_feature (session, SOUP_SESSION_FEATURE (logger));
+  _soup_session_add_feature (session, (SoupSessionFeature *) logger);
   g_object_unref (logger);
 }

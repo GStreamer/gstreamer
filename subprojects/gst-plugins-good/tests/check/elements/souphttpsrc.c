@@ -2,6 +2,7 @@
  * Copyright (C) 2006-2007 Tim-Philipp Müller <tim centricular net>
  * Copyright (C) 2008 Wouter Cloetens <wouter@mind.be>
  * Copyright (C) 2001-2003, Ximian, Inc.
+ * Copyright (C) 2021 Igalia S.L.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -28,14 +29,44 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 
-#define SOUP_VERSION_MIN_REQUIRED (SOUP_VERSION_2_40)
 #include <libsoup/soup.h>
 #include <gst/check/gstcheck.h>
 
+#if ! SOUP_CHECK_VERSION(3, 0, 0)
 #if !defined(SOUP_MINOR_VERSION) || SOUP_MINOR_VERSION < 44
 #define SoupStatus SoupKnownStatusCode
 #endif
+#endif
 
+#if SOUP_CHECK_VERSION(3, 0, 0)
+
+#define SOUP_AUTH_DOMAIN_BASIC_AUTH_CALLBACK "auth-callback"
+#define SOUP_AUTH_DOMAIN_DIGEST_AUTH_CALLBACK "auth-callback"
+
+#define gst_soup_uri_free g_uri_unref
+#define gst_soup_uri_to_string(x) g_uri_to_string_partial(x, G_URI_HIDE_PASSWORD)
+#define gst_soup_uri_get_port(x) g_uri_get_port(x)
+
+#else
+
+#define gst_soup_uri_free soup_uri_free
+#define gst_soup_uri_to_string(x) soup_uri_to_string(x, FALSE)
+#define gst_soup_uri_get_port(x) soup_uri_get_port(x)
+
+#define SoupServerMessage SoupMessage
+
+#define soup_server_message_get_method(x) (x->method)
+#define soup_server_message_get_http_version(x) soup_message_get_http_version(x)
+#define soup_server_message_get_status(x) (x->status_code)
+#define soup_server_message_set_status(x, s, r) soup_message_set_status(x, s)
+#define soup_server_message_get_reason_phrase(x) (x->reason_phrase)
+#define soup_server_message_get_uri(x) soup_message_get_uri(x)
+#define soup_server_message_get_request_headers(x) (x->request_headers)
+#define soup_server_message_get_response_headers(x) (x->response_headers)
+#define soup_server_message_get_request_body(x) (x->request_body)
+#define soup_server_message_get_response_body(x) (x->response_body)
+
+#endif
 
 gboolean redirect = TRUE;
 
@@ -487,7 +518,7 @@ souphttpsrc_suite (void)
 GST_CHECK_MAIN (souphttpsrc);
 
 static void
-do_get (SoupMessage * msg, const char *path)
+do_get (SoupServerMessage * msg, const char *path)
 {
   gboolean send_error_doc = FALSE;
   char *uri;
@@ -496,7 +527,7 @@ do_get (SoupMessage * msg, const char *path)
 
   SoupStatus status = SOUP_STATUS_OK;
 
-  uri = soup_uri_to_string (soup_message_get_uri (msg), FALSE);
+  uri = gst_soup_uri_to_string (soup_server_message_get_uri (msg));
   GST_DEBUG ("request: \"%s\"", uri);
 
   if (!strcmp (path, "/301"))
@@ -518,20 +549,21 @@ do_get (SoupMessage * msg, const char *path)
     char *redir_uri;
 
     redir_uri = g_strdup_printf ("%s-redirected", uri);
-    soup_message_headers_append (msg->response_headers, "Location", redir_uri);
+    soup_message_headers_append (soup_server_message_get_response_headers (msg),
+        "Location", redir_uri);
     g_free (redir_uri);
   }
   if (status != (SoupStatus) SOUP_STATUS_OK && !send_error_doc)
     goto leave;
 
-  if (msg->method == SOUP_METHOD_GET) {
+  if (soup_server_message_get_method (msg) == SOUP_METHOD_GET) {
     char *buf;
 
     buf = g_malloc (buflen);
     memset (buf, 0, buflen);
-    soup_message_body_append (msg->response_body, SOUP_MEMORY_TAKE,
-        buf, buflen);
-  } else {                      /* msg->method == SOUP_METHOD_HEAD */
+    soup_message_body_append (soup_server_message_get_response_body (msg),
+        SOUP_MEMORY_TAKE, buf, buflen);
+  } else {                      /* method == SOUP_METHOD_HEAD */
 
     char *length;
 
@@ -540,13 +572,13 @@ do_get (SoupMessage * msg, const char *path)
      * malloc.
      */
     length = g_strdup_printf ("%lu", (gulong) buflen);
-    soup_message_headers_append (msg->response_headers,
+    soup_message_headers_append (soup_server_message_get_response_headers (msg),
         "Content-Length", length);
     g_free (length);
   }
 
 leave:
-  soup_message_set_status (msg, status);
+  soup_server_message_set_status (msg, status, NULL);
   g_free (uri);
 }
 
@@ -557,22 +589,29 @@ print_header (const char *name, const char *value, gpointer data)
 }
 
 static void
-server_callback (SoupServer * server, SoupMessage * msg,
+server_callback (SoupServer * server, SoupServerMessage * msg,
     const char *path, GHashTable * query,
-    SoupClientContext * context, gpointer data)
+#if !SOUP_CHECK_VERSION(3, 0, 0)
+    SoupClientContext * context,
+#endif
+    gpointer data)
 {
-  GST_DEBUG ("%s %s HTTP/1.%d", msg->method, path,
-      soup_message_get_http_version (msg));
-  soup_message_headers_foreach (msg->request_headers, print_header, NULL);
-  if (msg->request_body->length)
-    GST_DEBUG ("%s", msg->request_body->data);
+  const char *method = soup_server_message_get_method (msg);
 
-  if (msg->method == SOUP_METHOD_GET || msg->method == SOUP_METHOD_HEAD)
+  GST_DEBUG ("%s %s HTTP/1.%d", method, path,
+      soup_server_message_get_http_version (msg));
+  soup_message_headers_foreach (soup_server_message_get_request_headers (msg),
+      print_header, NULL);
+  if (soup_server_message_get_request_body (msg)->length)
+    GST_DEBUG ("%s", soup_server_message_get_request_body (msg)->data);
+
+  if (method == SOUP_METHOD_GET || method == SOUP_METHOD_HEAD)
     do_get (msg, path);
   else
-    soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
+    soup_server_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED, NULL);
 
-  GST_DEBUG ("  -> %d %s", msg->status_code, msg->reason_phrase);
+  GST_DEBUG ("  -> %d %s", soup_server_message_get_status (msg),
+      soup_server_message_get_reason_phrase (msg));
 }
 
 static guint
@@ -583,8 +622,8 @@ get_port_from_server (SoupServer * server)
 
   uris = soup_server_get_uris (server);
   g_assert (g_slist_length (uris) == 1);
-  port = soup_uri_get_port (uris->data);
-  g_slist_free_full (uris, (GDestroyNotify) soup_uri_free);
+  port = gst_soup_uri_get_port (uris->data);
+  g_slist_free_full (uris, (GDestroyNotify) gst_soup_uri_free);
 
   return port;
 }
@@ -606,7 +645,20 @@ run_server (gboolean use_https)
       g_object_unref (server);
       return NULL;
     }
-
+#if SOUP_CHECK_VERSION(3, 0, 0)
+    {
+      GTlsCertificate *cert =
+          g_tls_certificate_new_from_files (ssl_cert_file, ssl_key_file,
+          &err);
+      if (!cert) {
+        GST_INFO ("Failed to load certificate: %s", err->message);
+        g_error_free (err);
+        return NULL;
+      }
+      soup_server_set_tls_certificate (server, cert);
+      g_object_unref (cert);
+    }
+#else
     if (!soup_server_set_ssl_cert_file (server, ssl_cert_file, ssl_key_file,
             &err)) {
       GST_INFO ("Failed to load certificate: %s", err->message);
@@ -614,6 +666,7 @@ run_server (gboolean use_https)
       g_error_free (err);
       return NULL;
     }
+#endif
 
     listen_flags |= SOUP_SERVER_LISTEN_HTTPS;
   }
@@ -623,15 +676,15 @@ run_server (gboolean use_https)
   {
     SoupAuthDomain *domain;
 
-    domain = soup_auth_domain_basic_new (SOUP_AUTH_DOMAIN_REALM, realm,
-        SOUP_AUTH_DOMAIN_BASIC_AUTH_CALLBACK, basic_auth_cb,
-        SOUP_AUTH_DOMAIN_ADD_PATH, basic_auth_path, NULL);
+    domain = soup_auth_domain_basic_new ("realm", realm,
+        SOUP_AUTH_DOMAIN_BASIC_AUTH_CALLBACK, basic_auth_cb, NULL);
+    soup_auth_domain_add_path (domain, basic_auth_path);
     soup_server_add_auth_domain (server, domain);
     g_object_unref (domain);
 
-    domain = soup_auth_domain_digest_new (SOUP_AUTH_DOMAIN_REALM, realm,
-        SOUP_AUTH_DOMAIN_DIGEST_AUTH_CALLBACK, digest_auth_cb,
-        SOUP_AUTH_DOMAIN_ADD_PATH, digest_auth_path, NULL);
+    domain = soup_auth_domain_digest_new ("realm", realm,
+        SOUP_AUTH_DOMAIN_DIGEST_AUTH_CALLBACK, digest_auth_cb, NULL);
+    soup_auth_domain_add_path (domain, digest_auth_path);
     soup_server_add_auth_domain (server, domain);
     g_object_unref (domain);
   }
@@ -640,9 +693,7 @@ run_server (gboolean use_https)
     GSocketAddress *address;
     GError *err = NULL;
 
-    address =
-        g_inet_socket_address_new_from_string ("0.0.0.0",
-        SOUP_ADDRESS_ANY_PORT);
+    address = g_inet_socket_address_new_from_string ("0.0.0.0", 0);
     soup_server_listen (server, address, listen_flags, &err);
     g_object_unref (address);
 

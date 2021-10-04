@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2014 Samsung Electronics. All rights reserved.
  *     @Author: Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>
+ * Copyright (C) 2021 Igalia S.L.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,7 +20,8 @@
 
 #include <glib.h>
 #include <gst/gst.h>
-#include <libsoup/soup.h>
+
+#include "stub/soup.h"
 
 G_BEGIN_DECLS
 

@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2007-2008 Wouter Cloetens <wouter@mind.be>
+ * Copyright (C) 2021 Igalia S.L.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -15,13 +16,12 @@
 #ifndef __GST_SOUP_HTTP_SRC_H__
 #define __GST_SOUP_HTTP_SRC_H__
 
-#include <gst/gst.h>
+#include "gstsouputils.h"
+#include "gstsouploader.h"
+#include <gio/gio.h>
 #include <gst/base/gstpushsrc.h>
-#include <glib.h>
 
 G_BEGIN_DECLS
-
-#include <libsoup/soup.h>
 
 #define GST_TYPE_SOUP_HTTP_SRC \
   (gst_soup_http_src_get_type())
@@ -53,7 +53,7 @@ struct _GstSoupHTTPSrc {
   gboolean redirection_permanent; /* Permanent or temporary redirect? */
   gchar *user_agent;           /* User-Agent HTTP header. */
   gboolean automatic_redirect; /* Follow redirects. */
-  SoupURI *proxy;              /* HTTP proxy URI. */
+  GstSoupUri *proxy;           /* HTTP proxy URI. */
   gchar *user_id;              /* Authentication user id for location URI. */
   gchar *user_pw;              /* Authentication user password for location URI. */
   gchar *proxy_id;             /* Authentication user id for proxy URI. */

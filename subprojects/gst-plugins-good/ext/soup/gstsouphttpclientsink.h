@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2011 David Schleef <ds@entropywave.com>
+ * Copyright (C) 2021 Igalia S.L.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,8 +21,9 @@
 #ifndef _GST_SOUP_HTTP_CLIENT_SINK_H_
 #define _GST_SOUP_HTTP_CLIENT_SINK_H_
 
+#include "gstsouploader.h"
+#include "gstsouputils.h"
 #include <gst/base/gstbasesink.h>
-#include <libsoup/soup.h>
 
 G_BEGIN_DECLS
 
@@ -44,6 +46,7 @@ struct _GstSoupHttpClientSink
   GList *queued_buffers;
   GList *sent_buffers;
   GList *streamheader_buffers;
+  GBytes *request_body;
 
   int status_code;
   char *reason_phrase;
@@ -57,7 +60,7 @@ struct _GstSoupHttpClientSink
   char *location;
   char *user_id;
   char *user_pw;
-  SoupURI *proxy;
+  GstSoupUri *proxy;
   char *proxy_id;
   char *proxy_pw;
   char *user_agent;
