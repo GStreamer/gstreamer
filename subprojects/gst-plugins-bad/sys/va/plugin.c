@@ -33,6 +33,7 @@
 #include "gstvadevice.h"
 #include "gstvafilter.h"
 #include "gstvah264dec.h"
+#include "gstvah264enc.h"
 #include "gstvah265dec.h"
 #include "gstvampeg2dec.h"
 #include "gstvaprofile.h"
@@ -182,6 +183,20 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
     GST_LOG ("sink caps: %" GST_PTR_FORMAT, sinkcaps);
     GST_LOG ("src caps: %" GST_PTR_FORMAT, srccaps);
 
+    switch (codec) {
+      case H264:
+        if (!gst_va_h264_enc_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE)) {
+          GST_WARNING ("Failed to register H264 decoder: %s",
+              device->render_device_path);
+        }
+        break;
+      default:
+        GST_DEBUG ("No decoder implementation for %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (codec));
+        break;
+    }
+
     gst_caps_unref (srccaps);
     gst_caps_unref (sinkcaps);
   }
@@ -289,7 +304,8 @@ plugin_register_elements (GstPlugin * plugin, GstVaDevice * device)
 
   plugin_register_decoders (plugin, device, decoders);
   plugin_register_encoders (plugin, device, encoders, VAEntrypointEncSlice);
-  plugin_register_encoders (plugin, device, encoderslp, VAEntrypointEncSliceLP);
+  /* @TODO: ignore low power encoders temporarly */
+  /* plugin_register_encoders (plugin, device, encoderslp, VAEntrypointEncSliceLP); */
   plugin_register_encoders (plugin, device, encodersimg,
       VAEntrypointEncPicture);
   if (has_vpp)
