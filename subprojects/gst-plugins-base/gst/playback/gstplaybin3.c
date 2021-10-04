@@ -2505,16 +2505,23 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
     GstSourceGroup *group;
 
     /* Only post buffering messages for group which is currently playing */
+    GST_PLAY_BIN3_LOCK (playbin);
     group = find_source_group_owner (playbin, msg->src);
-    GST_SOURCE_GROUP_LOCK (group);
-    if (!group->playing) {
-      GST_DEBUG_OBJECT (playbin, "Storing buffering message from pending group "
-          "%p %" GST_PTR_FORMAT, group, msg);
-      gst_message_replace (&group->pending_buffering_msg, msg);
-      gst_message_unref (msg);
-      msg = NULL;
+    if (group->active) {
+      GST_SOURCE_GROUP_LOCK (group);
+      GST_PLAY_BIN3_UNLOCK (playbin);
+      if (!group->playing) {
+        GST_DEBUG_OBJECT (playbin,
+            "Storing buffering message from pending group " "%p %"
+            GST_PTR_FORMAT, group, msg);
+        gst_message_replace (&group->pending_buffering_msg, msg);
+        gst_message_unref (msg);
+        msg = NULL;
+      }
+      GST_SOURCE_GROUP_UNLOCK (group);
+    } else {
+      GST_PLAY_BIN3_UNLOCK (playbin);
     }
-    GST_SOURCE_GROUP_UNLOCK (group);
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_COLLECTION) {
     GstStreamCollection *collection = NULL;
 
@@ -4636,7 +4643,8 @@ error_cleanup:
   }
 }
 
-/* must be called with PLAY_BIN_LOCK */
+/* must be called with PLAY_BIN_LOCK, which is dropped temporarily
+ * if changing states */
 static gboolean
 deactivate_group (GstPlayBin3 * playbin, GstSourceGroup * group)
 {
@@ -4692,8 +4700,10 @@ deactivate_group (GstPlayBin3 * playbin, GstSourceGroup * group)
     REMOVE_SIGNAL (group->uridecodebin, group->source_setup_id);
     REMOVE_SIGNAL (group->uridecodebin, group->about_to_finish_id);
 
+    GST_PLAY_BIN3_UNLOCK (playbin);
     gst_element_set_state (group->uridecodebin, GST_STATE_NULL);
     gst_bin_remove (GST_BIN_CAST (playbin), group->uridecodebin);
+    GST_PLAY_BIN3_LOCK (playbin);
 
     REMOVE_SIGNAL (group->uridecodebin, group->pad_added_id);
     REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
@@ -4766,6 +4776,7 @@ static gboolean
 save_current_group (GstPlayBin3 * playbin)
 {
   GstSourceGroup *curr_group;
+  gboolean swapped = FALSE;
 
   GST_DEBUG_OBJECT (playbin, "save current group");
 
@@ -4773,12 +4784,16 @@ save_current_group (GstPlayBin3 * playbin)
   GST_PLAY_BIN3_LOCK (playbin);
   curr_group = playbin->curr_group;
   if (curr_group && curr_group->valid && curr_group->active) {
-    /* unlink our pads with the sink */
-    deactivate_group (playbin, curr_group);
+    swapped = TRUE;
   }
   /* swap old and new */
   playbin->curr_group = playbin->next_group;
   playbin->next_group = curr_group;
+
+  if (swapped) {
+    /* unlink our pads with the sink */
+    deactivate_group (playbin, curr_group);
+  }
   GST_PLAY_BIN3_UNLOCK (playbin);
 
   return TRUE;
@@ -4979,6 +4994,7 @@ gst_play_bin3_change_state (GstElement * element, GstStateChange transition)
       if (do_save)
         save_current_group (playbin);
       /* Deactivate the groups, set uridecodebin to NULL and unref it */
+      GST_PLAY_BIN3_LOCK (playbin);
       for (i = 0; i < 2; i++) {
         if (playbin->groups[i].active && playbin->groups[i].valid) {
           deactivate_group (playbin, &playbin->groups[i]);
@@ -4993,6 +5009,7 @@ gst_play_bin3_change_state (GstElement * element, GstStateChange transition)
         }
 
       }
+      GST_PLAY_BIN3_UNLOCK (playbin);
 
       /* Set our sinks back to NULL, they might not be child of playbin */
       if (playbin->audio_sink)
@@ -5034,6 +5051,8 @@ failure:
     if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
       GstSourceGroup *curr_group;
 
+      GST_PLAY_BIN3_LOCK (playbin);
+
       curr_group = playbin->curr_group;
       if (curr_group) {
         if (curr_group->active && curr_group->valid) {
@@ -5046,6 +5065,8 @@ failure:
       /* Swap current and next group back */
       playbin->curr_group = playbin->next_group;
       playbin->next_group = curr_group;
+
+      GST_PLAY_BIN3_UNLOCK (playbin);
     }
     return ret;
   }
