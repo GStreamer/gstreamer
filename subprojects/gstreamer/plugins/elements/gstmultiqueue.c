@@ -2091,7 +2091,7 @@ gst_multi_queue_loop (GstPad * pad)
   guint32 newid;
   GstFlowReturn result;
   GstClockTimeDiff next_time;
-  gboolean is_buffer;
+  gboolean is_buffer, is_query;
   gboolean do_update_buffering = FALSE;
   gboolean dropping = FALSE;
   GstPad *srcpad = NULL;
@@ -2116,6 +2116,8 @@ next:
 
   item = (GstMultiQueueItem *) sitem;
   newid = item->posid;
+
+  is_query = item->is_query;
 
   /* steal the object and destroy the item */
   object = gst_multi_queue_item_steal_object (item);
@@ -2362,7 +2364,7 @@ done:
 
 out_flushing:
   {
-    if (object && !GST_IS_QUERY (object))
+    if (object && !is_query)
       gst_mini_object_unref (object);
 
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
