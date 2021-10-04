@@ -20,7 +20,8 @@ va_sources = [
   'gstvavp9dec.c',
   'gstvampeg2dec.c',
   'gstvavpp.c',
-  'vasurfaceimage.c',
+  'gstvah264enc.c',
+  'vasurfaceimage.c'
 ]
 
 if host_system != 'linux'
