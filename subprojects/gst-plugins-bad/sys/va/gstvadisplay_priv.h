@@ -28,5 +28,6 @@ GArray *              gst_va_display_get_profiles         (GstVaDisplay * self,
                                                            guint32 codec,
                                                            VAEntrypoint entrypoint);
 GArray *              gst_va_display_get_image_formats    (GstVaDisplay * self);
+gboolean              gst_va_display_has_vpp              (GstVaDisplay * self);
 
 G_END_DECLS

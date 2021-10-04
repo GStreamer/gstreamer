@@ -135,3 +135,41 @@ bail:
   g_free (va_formats);
   return ret;
 }
+
+gboolean
+gst_va_display_has_vpp (GstVaDisplay * self)
+{
+  VADisplay dpy;
+  VAEntrypoint *entrypoints;
+  VAStatus status;
+  int i, max, num;
+  gboolean found = FALSE;
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), FALSE);
+
+  dpy = gst_va_display_get_va_dpy (self);
+
+  gst_va_display_lock (self);
+  max = vaMaxNumEntrypoints (dpy);
+  gst_va_display_unlock (self);
+
+  entrypoints = g_new (VAEntrypoint, max);
+
+  gst_va_display_lock (self);
+  status = vaQueryConfigEntrypoints (dpy, VAProfileNone, entrypoints, &num);
+  gst_va_display_unlock (self);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR ("vaQueryImageFormats: %s", vaErrorStr (status));
+    goto bail;
+  }
+
+  for (i = 0; i < num; i++) {
+    if (entrypoints[i] == VAEntrypointVideoProc) {
+      found = TRUE;
+      break;
+    }
+  }
+
+bail:
+  g_free (entrypoints);
+  return found;
+}
