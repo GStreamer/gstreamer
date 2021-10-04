@@ -209,6 +209,9 @@ G_GNUC_INTERNAL
 GstMemory * nal_writer_reset_and_get_memory (NalWriter * nw);
 
 G_GNUC_INTERNAL
+guint8 * nal_writer_reset_and_get_data (NalWriter * nw, guint32 * ret_size);
+
+G_GNUC_INTERNAL
 gboolean nal_writer_put_bits_uint8 (NalWriter * nw, guint8 value, guint nbits);
 
 G_GNUC_INTERNAL

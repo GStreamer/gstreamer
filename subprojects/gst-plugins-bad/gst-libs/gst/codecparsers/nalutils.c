@@ -345,28 +345,14 @@ nal_writer_do_rbsp_trailing_bits (NalWriter * nw)
   return TRUE;
 }
 
-GstMemory *
-nal_writer_reset_and_get_memory (NalWriter * nw)
+static gpointer
+nal_writer_create_nal_data (NalWriter * nw, guint32 * ret_size)
 {
   GstBitWriter bw;
   gint i;
   guint8 *src, *dst;
   gsize size;
-  GstMemory *ret = NULL;
   gpointer data;
-
-  g_return_val_if_fail (nw != NULL, NULL);
-
-  if ((GST_BIT_WRITER_BIT_SIZE (&nw->bw) >> 3) == 0) {
-    GST_WARNING ("No written byte");
-    goto done;
-  }
-
-  if ((GST_BIT_WRITER_BIT_SIZE (&nw->bw) & 0x7) != 0) {
-    GST_WARNING ("Written stream is not byte aligned");
-    if (!nal_writer_do_rbsp_trailing_bits (nw))
-      goto done;
-  }
 
   /* scan to put emulation_prevention_three_byte */
   size = GST_BIT_WRITER_BIT_SIZE (&nw->bw) >> 3;
@@ -388,42 +374,102 @@ nal_writer_reset_and_get_memory (NalWriter * nw)
     gst_bit_writer_put_bits_uint8 (&bw, src[i], 8);
   }
 
-  size = bw.bit_size >> 3;
+  *ret_size = bw.bit_size >> 3;
   data = gst_bit_writer_reset_and_get_data (&bw);
-  ret = gst_memory_new_wrapped (0, data, size, 0, size, data, g_free);
 
   if (nw->packetized) {
-    GstMapInfo info;
-
-    gst_memory_map (ret, &info, GST_MAP_WRITE);
-
-    size = info.size - nw->nal_prefix_size;
+    size = *ret_size - nw->nal_prefix_size;
 
     switch (nw->nal_prefix_size) {
       case 1:
-        GST_WRITE_UINT8 (info.data, size);
+        GST_WRITE_UINT8 (data, size);
         break;
       case 2:
-        GST_WRITE_UINT16_BE (info.data, size);
+        GST_WRITE_UINT16_BE (data, size);
         break;
       case 3:
-        GST_WRITE_UINT24_BE (info.data, size);
+        GST_WRITE_UINT24_BE (data, size);
         break;
       case 4:
-        GST_WRITE_UINT32_BE (info.data, size);
+        GST_WRITE_UINT32_BE (data, size);
         break;
       default:
         g_assert_not_reached ();
         break;
     }
-
-    gst_memory_unmap (ret, &info);
   }
+
+  return data;
+}
+
+GstMemory *
+nal_writer_reset_and_get_memory (NalWriter * nw)
+{
+  guint32 size = 0;
+  GstMemory *ret = NULL;
+  gpointer data;
+
+  g_return_val_if_fail (nw != NULL, NULL);
+
+  if ((GST_BIT_WRITER_BIT_SIZE (&nw->bw) >> 3) == 0) {
+    GST_WARNING ("No written byte");
+    goto done;
+  }
+
+  if ((GST_BIT_WRITER_BIT_SIZE (&nw->bw) & 0x7) != 0) {
+    GST_WARNING ("Written stream is not byte aligned");
+    if (!nal_writer_do_rbsp_trailing_bits (nw))
+      goto done;
+  }
+
+  data = nal_writer_create_nal_data (nw, &size);
+  if (!data) {
+    GST_WARNING ("Failed to create nal data");
+    goto done;
+  }
+
+  ret = gst_memory_new_wrapped (0, data, size, 0, size, data, g_free);
 
 done:
   gst_bit_writer_reset (&nw->bw);
 
   return ret;
+}
+
+guint8 *
+nal_writer_reset_and_get_data (NalWriter * nw, guint32 * ret_size)
+{
+  guint32 size = 0;
+  guint8 *data = NULL;
+
+  g_return_val_if_fail (nw != NULL, NULL);
+  g_return_val_if_fail (ret_size != NULL, NULL);
+
+  *ret_size = 0;
+
+  if ((GST_BIT_WRITER_BIT_SIZE (&nw->bw) >> 3) == 0) {
+    GST_WARNING ("No written byte");
+    goto done;
+  }
+
+  if ((GST_BIT_WRITER_BIT_SIZE (&nw->bw) & 0x7) != 0) {
+    GST_WARNING ("Written stream is not byte aligned");
+    if (!nal_writer_do_rbsp_trailing_bits (nw))
+      goto done;
+  }
+
+  data = nal_writer_create_nal_data (nw, &size);
+  if (!data) {
+    GST_WARNING ("Failed to create nal data");
+    goto done;
+  }
+
+  *ret_size = size;
+
+done:
+  gst_bit_writer_reset (&nw->bw);
+
+  return data;
 }
 
 gboolean
