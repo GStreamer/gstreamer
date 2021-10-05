@@ -63,15 +63,6 @@ using namespace Microsoft::WRL;
 G_LOCK_DEFINE_STATIC (dupl_list_lock);
 static GList *dupl_list = nullptr;
 
-enum
-{
-  PROP_0,
-  PROP_D3D11_DEVICE,
-  PROP_OUTPUT_INDEX,
-};
-
-#define DEFAULT_MONITOR_INDEX -1
-
 /* Below implemenation were taken from Microsoft sample
  * https://github.com/microsoft/Windows-classic-samples/tree/master/Samples/DXGIDesktopDuplication
  */
@@ -260,7 +251,7 @@ public:
   }
 
   GstFlowReturn
-  Init (GstD3D11Device * device, UINT monitor_index)
+  Init (GstD3D11Device * device, HMONITOR monitor)
   {
     GstFlowReturn ret;
     ID3D11Device *device_handle;
@@ -270,7 +261,7 @@ public:
     if (!InitShader (device))
       return GST_FLOW_ERROR;
 
-    ret = InitDupl (device, monitor_index);
+    ret = InitDupl (device, monitor);
     if (ret != GST_FLOW_OK)
       return ret;
 
@@ -661,32 +652,20 @@ private:
 
   /* Maybe returning expected error code depending on desktop status */
   GstFlowReturn
-  InitDupl (GstD3D11Device * device, UINT monitor_index)
+  InitDupl (GstD3D11Device * device, HMONITOR monitor)
   {
     ComPtr<ID3D11Device> d3d11_device;
-    ComPtr<IDXGIDevice> dxgi_device;
-    ComPtr<IDXGIAdapter> adapter;
+    ComPtr<IDXGIAdapter1> adapter;
     ComPtr<IDXGIOutput> output;
     ComPtr<IDXGIOutput1> output1;
 
     d3d11_device = gst_d3d11_device_get_device_handle (device);
 
-    HRESULT hr = d3d11_device.As (&dxgi_device);
+    HRESULT hr = gst_d3d11_desktop_dup_find_output_for_monitor (monitor,
+        &adapter, &output);
     if (!gst_d3d11_result (hr, device)) {
-      GST_ERROR ("Couldn't get IDXGIDevice interface, hr 0x%x", (guint) hr);
+      GST_ERROR ("Couldn't get adapter and output for monitor");
       return GST_FLOW_ERROR;
-    }
-
-    hr = dxgi_device->GetParent (IID_PPV_ARGS (&adapter));
-    if (!gst_d3d11_result (hr, device)) {
-      return gst_d3d11_desktop_dup_return_from_hr (d3d11_device.Get(),
-          hr, SystemTransitionsExpectedErrors);
-    }
-
-    hr = adapter->EnumOutputs(monitor_index, &output);
-    if (!gst_d3d11_result (hr, device)) {
-      return gst_d3d11_desktop_dup_return_from_hr (d3d11_device.Get(),
-          hr, EnumOutputsExpectedErrors);
     }
 
     hr = output.As (&output1);
@@ -1469,6 +1448,15 @@ private:
 };
 /* *INDENT-ON* */
 
+enum
+{
+  PROP_0,
+  PROP_D3D11_DEVICE,
+  PROP_MONITOR_HANDLE,
+};
+
+#define DEFAULT_MONITOR_INDEX -1
+
 struct _GstD3D11DesktopDup
 {
   GstObject parent;
@@ -1479,8 +1467,7 @@ struct _GstD3D11DesktopDup
 
   D3D11DesktopDupObject *dupl_obj;
 
-  gboolean primary;
-  gint monitor_index;
+  HMONITOR monitor_handle;
   RECT desktop_coordinates;
   gboolean prepared;
 
@@ -1512,10 +1499,9 @@ gst_d3d11_desktop_dup_class_init (GstD3D11DesktopDupClass * klass)
           GST_TYPE_D3D11_DEVICE, (GParamFlags)
           (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
               G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (gobject_class, PROP_OUTPUT_INDEX,
-      g_param_spec_int ("monitor-index", "Monitor Index",
-          "Zero-based index for monitor to capture (-1 = primary monitor)",
-          -1, G_MAXINT, DEFAULT_MONITOR_INDEX, (GParamFlags)
+  g_object_class_install_property (gobject_class, PROP_MONITOR_HANDLE,
+      g_param_spec_pointer ("monitor-handle", "Monitor Handle",
+          "A HMONITOR handle of monitor to capture", (GParamFlags)
           (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
               G_PARAM_STATIC_STRINGS)));
 }
@@ -1523,40 +1509,9 @@ gst_d3d11_desktop_dup_class_init (GstD3D11DesktopDupClass * klass)
 static void
 gst_d3d11_desktop_dup_init (GstD3D11DesktopDup * self)
 {
-  self->monitor_index = DEFAULT_MONITOR_INDEX;
   g_rec_mutex_init (&self->lock);
 
   memset (&self->desktop_coordinates, 0, sizeof (RECT));
-}
-
-static gboolean
-gst_d3d11_desktop_dup_get_monitor_size (GstD3D11DesktopDup * self,
-    HMONITOR hmonitor, RECT * size)
-{
-  MONITORINFOEX monitor_info;
-  DEVMODE dev_mode;
-
-  monitor_info.cbSize = sizeof (MONITORINFOEX);
-  if (!GetMonitorInfo (hmonitor, (LPMONITORINFO) & monitor_info)) {
-    GST_WARNING_OBJECT (self, "Couldn't get monitor info");
-    return FALSE;
-  }
-
-  dev_mode.dmSize = sizeof (DEVMODE);
-  dev_mode.dmDriverExtra = sizeof (POINTL);
-  dev_mode.dmFields = DM_POSITION;
-  if (!EnumDisplaySettings
-      (monitor_info.szDevice, ENUM_CURRENT_SETTINGS, &dev_mode)) {
-    GST_WARNING_OBJECT (self, "Couldn't enumerate display settings");
-    return FALSE;
-  }
-
-  size->left = dev_mode.dmPosition.x;
-  size->top = dev_mode.dmPosition.y;
-  size->right = size->left + dev_mode.dmPelsWidth;
-  size->bottom = size->top + dev_mode.dmPelsHeight;
-
-  return TRUE;
 }
 
 static void
@@ -1565,64 +1520,33 @@ gst_d3d11_desktop_dup_constructed (GObject * object)
   GstD3D11DesktopDup *self = GST_D3D11_DESKTOP_DUP (object);
   /* *INDENT-OFF* */
   ComPtr<IDXGIDevice> dxgi_device;
-  ComPtr<IDXGIAdapter> adapter;
+  ComPtr<IDXGIAdapter1> adapter;
   ComPtr<IDXGIOutput> output;
   ComPtr<IDXGIOutput1> output1;
   /* *INDENT-ON* */
-  ID3D11Device *device_handle;
   HRESULT hr;
   gboolean ret = FALSE;
   DXGI_OUTPUT_DESC output_desc;
+  DXGI_ADAPTER_DESC adapter_desc;
+  gint64 luid, device_luid;
 
   if (!self->device) {
     GST_WARNING_OBJECT (self, "D3D11 device is unavailable");
-    return;
+    goto out;
   }
 
-  device_handle = gst_d3d11_device_get_device_handle (self->device);
-
-  /* Below code is just for getting resolution of IDXGIOutput (i.e., monitor)
-   * and we will setup IDXGIOutputDuplication interface later.
-   */
-  hr = device_handle->QueryInterface (IID_PPV_ARGS (&dxgi_device));
-  if (!gst_d3d11_result (hr, self->device))
+  if (!self->monitor_handle) {
+    GST_WARNING_OBJECT (self, "Null monitor handle");
     goto out;
+  }
 
-  hr = dxgi_device->GetParent (IID_PPV_ARGS (&adapter));
-  if (!gst_d3d11_result (hr, self->device))
+  hr = gst_d3d11_desktop_dup_find_output_for_monitor (self->monitor_handle,
+      &adapter, &output);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_WARNING_OBJECT (self,
+        "Failed to find associated adapter for monitor %p",
+        self->monitor_handle);
     goto out;
-
-  if (self->monitor_index < 0) {
-    guint index = 0;
-    /* Enumerate all outputs to find primary monitor */
-    do {
-      hr = adapter->EnumOutputs (index, output.ReleaseAndGetAddressOf ());
-      if (!gst_d3d11_result (hr, self->device))
-        goto out;
-
-      output->GetDesc (&output_desc);
-      if (output_desc.DesktopCoordinates.left == 0 &&
-          output_desc.DesktopCoordinates.top == 0) {
-        GST_DEBUG_OBJECT (self, "Found primary output, index %d", index);
-        self->monitor_index = index;
-        self->primary = TRUE;
-        break;
-      }
-      index++;
-    } while (gst_d3d11_result (hr, self->device));
-  } else {
-    hr = adapter->EnumOutputs (self->monitor_index, &output);
-    if (!gst_d3d11_result (hr, self->device)) {
-      GST_WARNING_OBJECT (self, "No available output");
-      goto out;
-    }
-
-    output->GetDesc (&output_desc);
-    if (output_desc.DesktopCoordinates.left == 0 &&
-        output_desc.DesktopCoordinates.top == 0) {
-      GST_DEBUG_OBJECT (self, "We are primary output");
-      self->primary = TRUE;
-    }
   }
 
   hr = output.As (&output1);
@@ -1631,13 +1555,52 @@ gst_d3d11_desktop_dup_constructed (GObject * object)
     goto out;
   }
 
+  hr = adapter->GetDesc (&adapter_desc);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_WARNING_OBJECT (self, "Failed to get adapter desc");
+    goto out;
+  }
+
+  luid = gst_d3d11_luid_to_int64 (&adapter_desc.AdapterLuid);
+  g_object_get (self->device, "adapter-luid", &device_luid, nullptr);
+  if (luid != device_luid) {
+    GST_WARNING_OBJECT (self, "Incompatible d3d11 device");
+    goto out;
+  }
+
+  hr = output->GetDesc (&output_desc);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_WARNING_OBJECT (self, "Failed to get output desc");
+    goto out;
+  }
+
   /* DesktopCoordinates will not report actual texture size in case that
    * application is running without dpi-awareness. To get actual monitor size,
    * we need to use Win32 API... */
-  if (!gst_d3d11_desktop_dup_get_monitor_size (self,
-          output_desc.Monitor, &self->desktop_coordinates)) {
+  MONITORINFOEXW monitor_info;
+  DEVMODEW dev_mode;
+
+  monitor_info.cbSize = sizeof (MONITORINFOEXW);
+  if (!GetMonitorInfoW (output_desc.Monitor, (LPMONITORINFO) & monitor_info)) {
+    GST_WARNING_OBJECT (self, "Couldn't get monitor info");
     goto out;
   }
+
+  dev_mode.dmSize = sizeof (DEVMODEW);
+  dev_mode.dmDriverExtra = sizeof (POINTL);
+  dev_mode.dmFields = DM_POSITION;
+  if (!EnumDisplaySettingsW
+      (monitor_info.szDevice, ENUM_CURRENT_SETTINGS, &dev_mode)) {
+    GST_WARNING_OBJECT (self, "Couldn't enumerate display settings");
+    goto out;
+  }
+
+  self->desktop_coordinates.left = dev_mode.dmPosition.x;
+  self->desktop_coordinates.top = dev_mode.dmPosition.y;
+  self->desktop_coordinates.right =
+      dev_mode.dmPosition.x + dev_mode.dmPelsWidth;
+  self->desktop_coordinates.bottom =
+      dev_mode.dmPosition.y + dev_mode.dmPelsHeight;
 
   self->cached_width =
       self->desktop_coordinates.right - self->desktop_coordinates.left;
@@ -1655,6 +1618,8 @@ gst_d3d11_desktop_dup_constructed (GObject * object)
 out:
   if (!ret)
     gst_clear_object (&self->device);
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
 static void
@@ -1667,8 +1632,8 @@ gst_d3d11_desktop_dup_set_property (GObject * object, guint prop_id,
     case PROP_D3D11_DEVICE:
       self->device = (GstD3D11Device *) g_value_dup_object (value);
       break;
-    case PROP_OUTPUT_INDEX:
-      self->monitor_index = g_value_get_int (value);
+    case PROP_MONITOR_HANDLE:
+      self->monitor_handle = (HMONITOR) g_value_get_pointer (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1710,15 +1675,15 @@ gst_d3d11_desktop_dup_weak_ref_notify (gpointer data, GstD3D11DesktopDup * dupl)
 }
 
 GstD3D11DesktopDup *
-gst_d3d11_desktop_dup_new (GstD3D11Device * device, gint monitor_index)
+gst_d3d11_desktop_dup_new (GstD3D11Device * device, HMONITOR monitor_handle)
 {
   GstD3D11DesktopDup *self = nullptr;
   GList *iter;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
 
-  /* Check if we have dup object corresponding to monitor_index, and if there is
-   * already configured capture object, reuse it.
+  /* Check if we have dup object corresponding to monitor_handle,
+   * and if there is already configured capture object, reuse it.
    * This is because of the limitation of desktop duplication API
    * (i.e., in a process, only one duplication object can exist).
    * See also
@@ -1728,10 +1693,9 @@ gst_d3d11_desktop_dup_new (GstD3D11Device * device, gint monitor_index)
   for (iter = dupl_list; iter; iter = g_list_next (iter)) {
     GstD3D11DesktopDup *dupl = (GstD3D11DesktopDup *) iter->data;
 
-    if (dupl->monitor_index == monitor_index ||
-        (monitor_index < 0 && dupl->primary)) {
-      GST_DEBUG ("Found configured desktop dup object for output index %d",
-          monitor_index);
+    if (dupl->monitor_handle == monitor_handle) {
+      GST_DEBUG ("Found configured desktop dup object for monitor handle %p",
+          monitor_handle);
       self = (GstD3D11DesktopDup *) gst_object_ref (dupl);
       break;
     }
@@ -1743,7 +1707,7 @@ gst_d3d11_desktop_dup_new (GstD3D11Device * device, gint monitor_index)
   }
 
   self = (GstD3D11DesktopDup *) g_object_new (GST_TYPE_D3D11_DESKTOP_DUP,
-      "d3d11device", device, "monitor-index", monitor_index, nullptr);
+      "d3d11device", device, "monitor-handle", monitor_handle, nullptr);
 
   if (!self->device) {
     GST_WARNING_OBJECT (self, "Couldn't configure desktop dup object");
@@ -1778,7 +1742,7 @@ gst_d3d11_desktop_dup_prepare (GstD3D11DesktopDup * desktop)
   }
 
   desktop->dupl_obj = new D3D11DesktopDupObject ();
-  ret = desktop->dupl_obj->Init (desktop->device, desktop->monitor_index);
+  ret = desktop->dupl_obj->Init (desktop->device, desktop->monitor_handle);
   if (ret != GST_FLOW_OK) {
     GST_WARNING_OBJECT (desktop,
         "Couldn't prepare capturing, %sexpected failure",
@@ -1884,4 +1848,155 @@ gst_d3d11_desktop_dup_capture (GstD3D11DesktopDup * desktop,
   g_rec_mutex_unlock (&desktop->lock);
 
   return GST_FLOW_OK;
+}
+
+HRESULT
+gst_d3d11_desktop_dup_find_output_for_monitor (HMONITOR monitor,
+    IDXGIAdapter1 ** adapter, IDXGIOutput ** output)
+{
+  ComPtr < IDXGIFactory1 > factory;
+  HRESULT hr = S_OK;
+
+  g_return_val_if_fail (monitor != nullptr, E_INVALIDARG);
+
+  hr = CreateDXGIFactory1 (IID_PPV_ARGS (&factory));
+  if (FAILED (hr))
+    return hr;
+
+  for (UINT adapter_idx = 0;; adapter_idx++) {
+    ComPtr < IDXGIAdapter1 > adapter_tmp;
+
+    hr = factory->EnumAdapters1 (adapter_idx, &adapter_tmp);
+    if (FAILED (hr))
+      break;
+
+    for (UINT output_idx = 0;; output_idx++) {
+      ComPtr < IDXGIOutput > output_tmp;
+      DXGI_OUTPUT_DESC desc;
+
+      hr = adapter_tmp->EnumOutputs (output_idx, &output_tmp);
+      if (FAILED (hr))
+        break;
+
+      hr = output_tmp->GetDesc (&desc);
+      if (FAILED (hr))
+        continue;
+
+      if (desc.Monitor == monitor) {
+        if (adapter)
+          *adapter = adapter_tmp.Detach ();
+        if (output)
+          *output = output_tmp.Detach ();
+
+        return S_OK;
+      }
+    }
+  }
+
+  return E_FAIL;
+}
+
+HRESULT
+gst_d3d11_desktop_dup_find_primary_monitor (HMONITOR * monitor,
+    IDXGIAdapter1 ** adapter, IDXGIOutput ** output)
+{
+  ComPtr < IDXGIFactory1 > factory;
+  HRESULT hr = S_OK;
+
+  hr = CreateDXGIFactory1 (IID_PPV_ARGS (&factory));
+  if (FAILED (hr))
+    return hr;
+
+  for (UINT adapter_idx = 0;; adapter_idx++) {
+    ComPtr < IDXGIAdapter1 > adapter_tmp;
+
+    hr = factory->EnumAdapters1 (adapter_idx, &adapter_tmp);
+    if (FAILED (hr))
+      break;
+
+    for (UINT output_idx = 0;; output_idx++) {
+      ComPtr < IDXGIOutput > output_tmp;
+      DXGI_OUTPUT_DESC desc;
+      MONITORINFOEXW minfo;
+
+      hr = adapter_tmp->EnumOutputs (output_idx, &output_tmp);
+      if (FAILED (hr))
+        break;
+
+      hr = output_tmp->GetDesc (&desc);
+      if (FAILED (hr))
+        continue;
+
+      minfo.cbSize = sizeof (MONITORINFOEXW);
+      if (!GetMonitorInfoW (desc.Monitor, &minfo))
+        continue;
+
+      if ((minfo.dwFlags & MONITORINFOF_PRIMARY) != 0) {
+        if (monitor)
+          *monitor = desc.Monitor;
+        if (adapter)
+          *adapter = adapter_tmp.Detach ();
+        if (output)
+          *output = output_tmp.Detach ();
+
+        return S_OK;
+      }
+    }
+  }
+
+  return E_FAIL;
+}
+
+HRESULT
+gst_d3d11_desktop_dup_find_nth_monitor (guint index, HMONITOR * monitor,
+    IDXGIAdapter1 ** adapter, IDXGIOutput ** output)
+{
+  ComPtr < IDXGIFactory1 > factory;
+  HRESULT hr = S_OK;
+  guint num_found = 0;
+
+  hr = CreateDXGIFactory1 (IID_PPV_ARGS (&factory));
+  if (FAILED (hr))
+    return hr;
+
+  for (UINT adapter_idx = 0;; adapter_idx++) {
+    ComPtr < IDXGIAdapter1 > adapter_tmp;
+
+    hr = factory->EnumAdapters1 (adapter_idx, &adapter_tmp);
+    if (FAILED (hr))
+      break;
+
+    for (UINT output_idx = 0;; output_idx++) {
+      ComPtr < IDXGIOutput > output_tmp;
+      DXGI_OUTPUT_DESC desc;
+      MONITORINFOEXW minfo;
+
+      hr = adapter_tmp->EnumOutputs (output_idx, &output_tmp);
+      if (FAILED (hr))
+        break;
+
+      hr = output_tmp->GetDesc (&desc);
+      if (FAILED (hr))
+        continue;
+
+      minfo.cbSize = sizeof (MONITORINFOEXW);
+      if (!GetMonitorInfoW (desc.Monitor, &minfo))
+        continue;
+
+      if (num_found == index) {
+        if (monitor)
+          *monitor = desc.Monitor;
+        if (adapter)
+          *adapter = adapter_tmp.Detach ();
+        if (output)
+          *output = output_tmp.Detach ();
+
+        return S_OK;
+      }
+
+      num_found++;
+    }
+  }
+
+  return E_FAIL;
 }

@@ -36,7 +36,7 @@ G_DECLARE_FINAL_TYPE (GstD3D11DesktopDup, gst_d3d11_desktop_dup,
     GST, D3D11_DESKTOP_DUP, GstObject);
 
 GstD3D11DesktopDup *  gst_d3d11_desktop_dup_new (GstD3D11Device * device,
-                                                 gint output_index);
+                                                 HMONITOR monitor_handle);
 
 GstFlowReturn   gst_d3d11_desktop_dup_prepare (GstD3D11DesktopDup * desktop);
 
@@ -48,6 +48,19 @@ GstFlowReturn   gst_d3d11_desktop_dup_capture (GstD3D11DesktopDup * desktop,
                                                ID3D11Texture2D * texture,
                                                ID3D11RenderTargetView *rtv,
                                                gboolean draw_mouse);
+
+HRESULT         gst_d3d11_desktop_dup_find_output_for_monitor (HMONITOR monitor,
+                                                               IDXGIAdapter1 ** adapter,
+                                                               IDXGIOutput ** output);
+
+HRESULT         gst_d3d11_desktop_dup_find_primary_monitor (HMONITOR * monitor,
+                                                            IDXGIAdapter1 ** adapter,
+                                                            IDXGIOutput ** output);
+
+HRESULT         gst_d3d11_desktop_dup_find_nth_monitor (guint index,
+                                                        HMONITOR * monitor,
+                                                        IDXGIAdapter1 ** adapter,
+                                                        IDXGIOutput ** output);
 
 G_END_DECLS
 

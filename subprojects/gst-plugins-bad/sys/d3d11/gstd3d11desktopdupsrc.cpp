@@ -39,8 +39,12 @@
 #include "gstd3d11desktopdupsrc.h"
 #include "gstd3d11desktopdup.h"
 #include "gstd3d11pluginutils.h"
-
+#include <wrl.h>
 #include <string.h>
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_desktop_dup_debug);
 #define GST_CAT_DEFAULT gst_d3d11_desktop_dup_debug
@@ -49,6 +53,7 @@ enum
 {
   PROP_0,
   PROP_MONITOR_INDEX,
+  PROP_MONITOR_HANDLE,
   PROP_SHOW_CURSOR,
 
   PROP_LAST,
@@ -77,8 +82,9 @@ struct _GstD3D11DesktopDupSrc
 
   GstBufferPool *pool;
 
-  gint adapter;
+  gint64 adapter_luid;
   gint monitor_index;
+  HMONITOR monitor_handle;
   gboolean show_cursor;
 
   gboolean flushing;
@@ -138,6 +144,13 @@ gst_d3d11_desktop_dup_src_class_init (GstD3D11DesktopDupSrcClass * klass)
       (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));
 
+  properties[PROP_MONITOR_HANDLE] =
+      g_param_spec_uint64 ("monitor-handle", "Monitor Handle",
+      "A HMONITOR handle of monitor to capture",
+      0, G_MAXUINT64, 0,
+      (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
+
   properties[PROP_SHOW_CURSOR] =
       g_param_spec_boolean ("show-cursor",
       "Show Mouse Cursor", "Whether to show mouse cursor",
@@ -183,8 +196,6 @@ gst_d3d11_desktop_dup_src_init (GstD3D11DesktopDupSrc * self)
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
 
-  /* FIXME: investigate non-zero adapter use case */
-  self->adapter = 0;
   self->monitor_index = DEFAULT_MONITOR_INDEX;
   self->show_cursor = DEFAULT_SHOW_CURSOR;
   self->min_latency = GST_CLOCK_TIME_NONE;
@@ -212,6 +223,9 @@ gst_d3d11_desktop_dup_src_set_property (GObject * object, guint prop_id,
     case PROP_MONITOR_INDEX:
       self->monitor_index = g_value_get_int (value);
       break;
+    case PROP_MONITOR_HANDLE:
+      self->monitor_handle = (HMONITOR) g_value_get_uint64 (value);
+      break;
     case PROP_SHOW_CURSOR:
       self->show_cursor = g_value_get_boolean (value);
       break;
@@ -231,6 +245,9 @@ gst_d3d11_desktop_dup_src_get_property (GObject * object, guint prop_id,
     case PROP_MONITOR_INDEX:
       g_value_set_int (value, self->monitor_index);
       break;
+    case PROP_MONITOR_HANDLE:
+      g_value_set_uint64 (value, (guint64) self->monitor_handle);
+      break;
     case PROP_SHOW_CURSOR:
       g_value_set_boolean (value, self->show_cursor);
       break;
@@ -246,7 +263,8 @@ gst_d3d11_desktop_dup_src_set_context (GstElement * element,
 {
   GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (element);
 
-  gst_d3d11_handle_set_context (element, context, self->adapter, &self->device);
+  gst_d3d11_handle_set_context_for_adapter_luid (element,
+      context, self->adapter_luid, &self->device);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -487,20 +505,42 @@ gst_d3d11_desktop_dup_src_start (GstBaseSrc * bsrc)
 {
   GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
   GstFlowReturn ret;
+  HMONITOR monitor = self->monitor_handle;
+  ComPtr < IDXGIAdapter1 > adapter;
+  DXGI_ADAPTER_DESC desc;
+  HRESULT hr;
 
-  /* FIXME: this element will use only the first adapter, but
-   * this might cause issue in case of multi-gpu environment and
-   * some monitor is connected to non-default adapter */
-  if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), self->adapter,
-          &self->device)) {
+  if (monitor) {
+    hr = gst_d3d11_desktop_dup_find_output_for_monitor (monitor,
+        &adapter, nullptr);
+  } else if (self->monitor_index < 0) {
+    hr = gst_d3d11_desktop_dup_find_primary_monitor (&monitor,
+        &adapter, nullptr);
+  } else {
+    hr = gst_d3d11_desktop_dup_find_nth_monitor (self->monitor_index,
+        &monitor, &adapter, nullptr);
+  }
+
+  if (FAILED (hr))
+    goto error;
+
+  hr = adapter->GetDesc (&desc);
+  if (FAILED (hr))
+    goto error;
+
+  self->adapter_luid = gst_d3d11_luid_to_int64 (&desc.AdapterLuid);
+  gst_clear_object (&self->device);
+
+  if (!gst_d3d11_ensure_element_data_for_adapter_luid (GST_ELEMENT_CAST (self),
+          self->adapter_luid, &self->device)) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-        ("D3D11 device with adapter index %d is unavailble", self->adapter),
-        (NULL));
+        ("D3D11 device for LUID %" G_GINT64_FORMAT " is unavailble",
+            self->adapter_luid), (nullptr));
 
     return FALSE;
   }
 
-  self->dupl = gst_d3d11_desktop_dup_new (self->device, self->monitor_index);
+  self->dupl = gst_d3d11_desktop_dup_new (self->device, monitor);
   if (!self->dupl)
     goto error;
 
@@ -524,16 +564,18 @@ gst_d3d11_desktop_dup_src_start (GstBaseSrc * bsrc)
 error:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-        ("Failed to prepare duplication for output index %d",
-            self->monitor_index), (NULL));
+        ("Failed to prepare duplication with given configuration, "
+            "monitor-index: %d, monitor-handle: %p",
+            self->monitor_index, self->monitor_handle), (nullptr));
+    return FALSE;
   }
-  return FALSE;
 
 unsupported:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
-        ("Failed to prepare duplication for output index %d",
-            self->monitor_index),
+        ("Failed to prepare duplication with given configuration, "
+            "monitor-index: %d, monitor-handle: %p",
+            self->monitor_index, self->monitor_handle),
         ("Try run the application on the integrated GPU"));
     return FALSE;
   }
