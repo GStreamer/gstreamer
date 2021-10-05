@@ -10,8 +10,8 @@ git clone -b $env:DEFAULT_BRANCH https://gitlab.freedesktop.org/gstreamer/gstrea
 
 # download the subprojects to try and cache them
 Write-Host "Downloading subprojects"
-meson subprojects download --sourcedir /gstreamer
+meson subprojects download --sourcedir C:\gstreamer
 
 Write-Host "Caching subprojects into /subprojects/"
-python /gstreamer/ci/scripts/handle-subprojects-cache.py --build /gstreamer/subprojects/
+python C:\gstreamer/ci/scripts/handle-subprojects-cache.py --build C:\gstreamer/subprojects/
 Remove-Item -Recurse -Force C:\gstreamer
