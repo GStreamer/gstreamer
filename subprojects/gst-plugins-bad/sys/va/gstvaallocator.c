@@ -32,7 +32,7 @@
 #include "vasurfaceimage.h"
 
 #define GST_CAT_DEFAULT gst_va_memory_debug
-GST_DEBUG_CATEGORY_STATIC (gst_va_memory_debug);
+GST_DEBUG_CATEGORY (gst_va_memory_debug);
 
 static void
 _init_debug_category (void)

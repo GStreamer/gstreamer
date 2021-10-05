@@ -46,6 +46,9 @@ gboolean              va_sync_surface                     (GstVaDisplay * displa
                                                            VASurfaceID surface);
 gboolean              va_check_surface                    (GstVaDisplay * display,
                                                            VASurfaceID surface);
+gboolean              va_copy_surface                     (GstVaDisplay * display,
+                                                           VASurfaceID dst,
+                                                           VASurfaceID src);
 
 /* images */
 gboolean              va_create_image                     (GstVaDisplay * display,

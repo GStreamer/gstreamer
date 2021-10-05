@@ -310,3 +310,43 @@ va_check_surface (GstVaDisplay * display, VASurfaceID surface)
 
   return (status == VA_STATUS_SUCCESS);
 }
+
+gboolean
+va_copy_surface (GstVaDisplay * display, VASurfaceID dst, VASurfaceID src)
+{
+#if VA_CHECK_VERSION (1, 12, 0)
+  VADisplay dpy = gst_va_display_get_va_dpy (display);
+  /* *INDENT-OFF* */
+  VACopyObject obj_src = {
+    .obj_type = VACopyObjectSurface,
+    .object = {
+      .surface_id = src,
+    },
+  };
+  VACopyObject obj_dst = {
+    .obj_type = VACopyObjectSurface,
+    .object = {
+      .surface_id = dst,
+    },
+  };
+  VACopyOption option = {
+    .bits = {
+      .va_copy_sync = VA_EXEC_SYNC,
+      .va_copy_mode = VA_EXEC_MODE_DEFAULT,
+    },
+  };
+  /* *INDENT-ON* */
+  VAStatus status;
+
+  gst_va_display_lock (display);
+  status = vaCopy (dpy, &obj_dst, &obj_src, option);
+  gst_va_display_unlock (display);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_INFO ("vaCopy: %s", vaErrorStr (status));
+    return FALSE;
+  }
+  return TRUE;
+#else
+  return FALSE;
+#endif
+}
