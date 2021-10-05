@@ -1470,6 +1470,29 @@ done:
     g_value_unset (&tpar);
 }
 
+static void
+copy_misc_fields_from_input (GstVaVpp * self, GstCaps * in_caps,
+    GstCaps * out_caps)
+{
+  const gchar *fields[] = { "interlace-mode", "field-order", "multiview-mode",
+    "multiview-flags", "framerate"
+  };
+  GstStructure *out_caps_s = gst_caps_get_structure (out_caps, 0);
+  GstStructure *in_caps_s = gst_caps_get_structure (in_caps, 0);
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (fields); i++) {
+    const GValue *in_field = gst_structure_get_value (in_caps_s, fields[i]);
+    const GValue *out_field = gst_structure_get_value (out_caps_s, fields[i]);
+
+    if (out_field && gst_value_is_fixed (out_field))
+      continue;
+
+    if (in_field)
+      gst_structure_set_value (out_caps_s, fields[i], in_field);
+  }
+}
+
 static GstCaps *
 gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
     GstCaps * caps, GstCaps * othercaps)
@@ -1500,20 +1523,8 @@ gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
   /* fixate remaining fields */
   result = gst_caps_fixate (result);
 
-  /* copy the framerate */
-  {
-    GstStructure *fixated_struct = gst_caps_get_structure (result, 0);
-    const GValue *framerate =
-        gst_structure_get_value (fixated_struct, "framerate");
-
-    if (!(framerate && gst_value_is_fixed (framerate))) {
-      GstStructure *orig_struct = gst_caps_get_structure (caps, 0);
-      const GValue *orig_framerate =
-          gst_structure_get_value (orig_struct, "framerate");
-
-      gst_structure_set_value (fixated_struct, "framerate", orig_framerate);
-    }
-  }
+  /* some fields might be lost while feature caps conversion */
+  copy_misc_fields_from_input (self, caps, result);
 
   if (direction == GST_PAD_SINK) {
     if (gst_caps_is_subset (caps, result)) {
