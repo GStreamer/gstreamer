@@ -24,7 +24,7 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2021-10-04.0'
+  FEDORA_TAG:  '2021-10-05.0'
   INDENT_TAG: '2021-10-04.0'
   WINDOWS_TAG: "2021-10-04.1"
 
@@ -760,16 +760,13 @@ build documentation:
 # https://gitlab.com/gitlab-org/gitlab/-/issues/341737
 cerbero trigger:
   stage: build
-  image: $FEDORA_IMAGE
+  extends:
+    - '.fedora image'
+    - '.fdo.suffixed-image@fedora'
   needs:
     - "fedora amd64 docker"
   script:
-    - python3 -m pip install --user python-gitlab
     - ci/gitlab/trigger_cerbero_pipeline.py
-
-  variables:
-    # Use GST_UPSTREAM_BRANCH
-    UPSTREAM_BRANCH: 'main'
 
   rules:
     - changes:

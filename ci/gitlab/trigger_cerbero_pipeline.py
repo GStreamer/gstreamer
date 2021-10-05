@@ -7,6 +7,7 @@ import gitlab
 
 CERBERO_ID = 1340
 
+
 class Status:
     FAILED = 'failed'
     MANUAL = 'manual'
@@ -30,6 +31,7 @@ def fprint(msg):
     print(msg, end="")
     sys.stdout.flush()
 
+
 if __name__ == "__main__":
     gl = gitlab.Gitlab(
         "https://gitlab.freedesktop.org/",
@@ -40,7 +42,7 @@ if __name__ == "__main__":
     cerbero = gl.projects.get(CERBERO_ID)
     pipe = cerbero.trigger_pipeline(
         token=os.environ['CI_JOB_TOKEN'],
-        ref=os.environ["UPSTREAM_BRANCH"],
+        ref=os.environ["GST_UPSTREAM_BRANCH"],
         variables={
             "CI_GSTREAMER_URL": os.environ["CI_PROJECT_URL"],
             "CI_GSTREAMER_REF_NAME": os.environ["CI_COMMIT_REF_NAME"],
@@ -56,4 +58,3 @@ if __name__ == "__main__":
             sys.exit(0 if pipe.status == Status.SUCCESS else 1)
         else:
             fprint(".")
-
