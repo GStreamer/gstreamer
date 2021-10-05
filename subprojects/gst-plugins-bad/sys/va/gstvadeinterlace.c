@@ -396,32 +396,7 @@ gst_va_deinterlace_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   g_assert (self->curr_field == FIRST_FIELD
       || self->curr_field == SECOND_FIELD);
 
-  surface_flags = 0;
-  if (GST_VIDEO_INFO_INTERLACE_MODE (info) == GST_VIDEO_INTERLACE_MODE_MIXED
-      || (GST_VIDEO_INFO_INTERLACE_MODE (info) ==
-          GST_VIDEO_INTERLACE_MODE_INTERLEAVED
-          && GST_VIDEO_INFO_FIELD_ORDER (info) ==
-          GST_VIDEO_FIELD_ORDER_UNKNOWN)) {
-    if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
-      if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_VIDEO_BUFFER_FLAG_TFF)) {
-        surface_flags = VA_TOP_FIELD_FIRST;
-      } else {
-        surface_flags = VA_BOTTOM_FIELD_FIRST;
-      }
-    } else {
-      /* complete frame? do it twice */
-      surface_flags = VA_FRAME_PICTURE;
-    }
-  } else if (GST_VIDEO_INFO_FIELD_ORDER (info) ==
-      GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST) {
-    surface_flags = VA_BOTTOM_FIELD_FIRST;
-  } else if (GST_VIDEO_INFO_FIELD_ORDER (info) ==
-      GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST) {
-    surface_flags = VA_TOP_FIELD_FIRST;
-  } else {
-    g_assert_not_reached ();
-  }
-
+  surface_flags = gst_va_buffer_get_surface_flags (inbuf, info);
   if (surface_flags != VA_FRAME_PICTURE)
     _set_field (self, &surface_flags);
 

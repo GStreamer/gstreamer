@@ -110,4 +110,7 @@ gboolean              gst_va_filter_process               (GstVaFilter * self,
                                                            GstVaSample * src,
                                                            GstVaSample * dest);
 
+guint32               gst_va_buffer_get_surface_flags     (GstBuffer * buffer,
+                                                           GstVideoInfo * info);
+
 G_END_DECLS

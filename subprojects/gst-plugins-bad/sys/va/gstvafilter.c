@@ -1695,3 +1695,43 @@ fail_end_pic:
     goto bail;
   }
 }
+
+/**
+ * gst_va_buffer_get_surface_flags:
+ * @buffer: the #GstBuffer to check.
+ * @info: the #GstVideoInfo with info.
+ *
+ * Gets the surface flags, related with interlace given @buffer and
+ * @info.
+ *
+ * Returns: VA surface flags.
+ */
+guint32
+gst_va_buffer_get_surface_flags (GstBuffer * buffer, GstVideoInfo * info)
+{
+  guint32 surface_flags = 0;
+
+  if (GST_VIDEO_INFO_INTERLACE_MODE (info) == GST_VIDEO_INTERLACE_MODE_MIXED
+      || (GST_VIDEO_INFO_INTERLACE_MODE (info) ==
+          GST_VIDEO_INTERLACE_MODE_INTERLEAVED
+          && GST_VIDEO_INFO_FIELD_ORDER (info) ==
+          GST_VIDEO_FIELD_ORDER_UNKNOWN)) {
+    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
+      if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF)) {
+        surface_flags = VA_TOP_FIELD_FIRST;
+      } else {
+        surface_flags = VA_BOTTOM_FIELD_FIRST;
+      }
+    } else {
+      surface_flags = VA_FRAME_PICTURE;
+    }
+  } else if (GST_VIDEO_INFO_FIELD_ORDER (info) ==
+      GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST) {
+    surface_flags = VA_BOTTOM_FIELD_FIRST;
+  } else if (GST_VIDEO_INFO_FIELD_ORDER (info) ==
+      GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST) {
+    surface_flags = VA_TOP_FIELD_FIRST;
+  }
+
+  return surface_flags;
+}

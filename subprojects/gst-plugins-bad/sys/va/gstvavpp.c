@@ -651,10 +651,12 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   /* *INDENT-OFF* */
   src = (GstVaSample) {
     .buffer = buf,
+    .flags = gst_va_buffer_get_surface_flags (buf, &btrans->in_info),
   };
 
   dst = (GstVaSample) {
     .buffer = outbuf,
+    .flags = gst_va_buffer_get_surface_flags (outbuf, &btrans->out_info),
   };
   /* *INDENT-ON* */
 
