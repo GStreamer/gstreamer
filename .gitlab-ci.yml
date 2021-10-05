@@ -756,7 +756,7 @@ cerbero trigger:
   rules:
     - changes:
       - .gitlab-ci.yml
-      - ci/gitlab/tigger_cerbero_pipeline.py
+      - ci/gitlab/trigger_cerbero_pipeline.py
       - subprojects/gst-devtools/**/*
       - subprojects/gst-editing-services/**/*
       - subprojects/gst-libav/**/*
