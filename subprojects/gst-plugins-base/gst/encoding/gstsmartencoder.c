@@ -23,6 +23,7 @@
 #endif
 
 #include <string.h>
+#include <gst/video/video.h>
 #include "gstsmartencoder.h"
 
 GST_DEBUG_CATEGORY_STATIC (smart_encoder_debug);
@@ -497,6 +498,66 @@ beach:
   return res;
 }
 
+static GstCaps *
+smart_encoder_get_caps (GstSmartEncoder * self, GstCaps * original_caps)
+{
+  gint i;
+  GstCaps *caps, *outcaps;
+  GstStructure *original_struct = gst_caps_get_structure (original_caps, 0);
+  GstStructure *out_struct, *_struct;
+  GstVideoInfo info;
+  static const gchar *default_fields[] = {
+    "pixel-aspect-ratio",
+    "framerate",
+    "interlace-mode",
+    "colorimetry",
+    "chroma-site",
+    "multiview-mode",
+    "multiview-flags",
+  };
+
+  if (!gst_structure_has_name (original_struct, "video/x-vp8")) {
+
+    return gst_caps_ref (original_caps);
+  }
+
+  /* VP8 is always decoded into YUV colorspaces and we support VP9 profiles
+   * where only YUV is supported (0 and 2) so we ensure that all the
+   * default fields for video/x-raw are set on the caps if none provided by
+   * upstream. This allows us to allow renegotiating new caps downstream when
+   * switching from no reencoding to reencoding making sure all the fields are
+   * defined all the time
+   */
+  caps = gst_caps_copy (original_caps);
+  _struct = gst_caps_get_structure (caps, 0);
+  gst_structure_set_name (_struct, "video/x-raw");
+  gst_structure_set (_struct,
+      "format", G_TYPE_STRING, "I420",
+      "multiview-mode", G_TYPE_STRING, "mono",
+      "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET,
+      GST_VIDEO_MULTIVIEW_FLAGS_NONE, GST_FLAG_SET_MASK_EXACT, NULL);
+
+  gst_video_info_from_caps (&info, caps);
+  gst_caps_unref (caps);
+  caps = gst_video_info_to_caps (&info);
+  _struct = gst_caps_get_structure (caps, 0);
+
+  outcaps = gst_caps_copy (original_caps);
+  out_struct = gst_caps_get_structure (outcaps, 0);
+  for (i = 0; i < G_N_ELEMENTS (default_fields); i++) {
+    const gchar *field = default_fields[i];
+
+    if (!gst_structure_has_field (original_struct, field)) {
+      const GValue *v = gst_structure_get_value (_struct, field);
+      g_assert (v);
+      gst_structure_set_value (out_struct, field, v);
+    }
+  }
+  gst_caps_unref (caps);
+
+  return outcaps;
+}
+
 static gboolean
 smart_encoder_sink_event (GstPad * pad, GstObject * ghostpad, GstEvent * event)
 {
@@ -515,7 +576,8 @@ smart_encoder_sink_event (GstPad * pad, GstObject * ghostpad, GstEvent * event)
       if (self->original_caps)
         gst_caps_unref (self->original_caps);
 
-      self->original_caps = gst_caps_ref (caps);
+
+      self->original_caps = smart_encoder_get_caps (self, caps);
       self->push_original_caps = TRUE;
       gst_clear_event (&event);
       break;
