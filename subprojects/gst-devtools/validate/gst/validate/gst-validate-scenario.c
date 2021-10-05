@@ -148,6 +148,8 @@ static GstValidateExecuteActionReturn
 _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
     GstStructure * structure, gboolean add_to_lists);
 static gboolean _action_set_done (GstValidateAction * action);
+static GList *_find_elements_defined_in_action (GstValidateScenario * scenario,
+    GstValidateAction * action);
 
 /* GstValidateSinkInformation tracks information for all sinks in the pipeline */
 typedef struct
@@ -2858,13 +2860,15 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
   GstValidateScenarioPrivate *priv = scenario->priv;
   const gchar *signal_name = gst_structure_get_string
       (action->structure, "signal-name");
+  GList *targets = NULL;
   GstElement *target;
   GstStructure *data;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
   DECLARE_AND_GET_PIPELINE (scenario, action);
 
   REPORT_UNLESS (signal_name, err, "No signal-name given for wait action");
-  REPORT_UNLESS ((target = _get_target_element (scenario, action)), err,
+  targets = _find_elements_defined_in_action (scenario, action);
+  REPORT_UNLESS ((g_list_length (targets) == 1), err,
       "Could not find target element.");
 
   gst_validate_printf (action, "Waiting for '%s' signal\n", signal_name);
@@ -2874,6 +2878,7 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
     priv->execute_actions_source_id = 0;
   }
 
+  target = targets->data;
   data =
       gst_structure_new ("a", "action", GST_TYPE_VALIDATE_ACTION, action,
       "target", G_TYPE_POINTER, target, NULL);
@@ -2892,12 +2897,14 @@ _execute_wait_for_signal (GstValidateScenario * scenario,
   SCENARIO_UNLOCK (scenario);
 
   gst_object_unref (pipeline);
+  g_list_free (targets);
 
 
   return non_blocking ? GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING :
       GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 
 err:
+  g_list_free_full (targets, gst_object_unref);
   gst_object_unref (pipeline);
   return res;
 }
@@ -6682,6 +6689,13 @@ register_action_types (void)
           .description = "The name of the GstElement to wait @signal-name on.",
           .mandatory = FALSE,
           .types = "string"
+        },
+        {
+          .name = "target-element-factory-name",
+          .description = "The name factory for which to wait @signal-name on",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
         },
         {
           .name = "signal-name",
