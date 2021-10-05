@@ -34,6 +34,7 @@
 #include <libavutil/opt.h>
 
 #include <gst/gst.h>
+#include <gst/base/base.h>
 
 #include "gstav.h"
 #include "gstavcfg.h"
@@ -584,12 +585,33 @@ gst_ffmpegaudenc_receive_packet (GstFFMpegAudEnc * ffmpegaudenc,
 
   if (res == 0) {
     GstBuffer *outbuf;
+    const uint8_t *side_data;
+#if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(58,130,0)
+    size_t side_data_length = 0;
+#else
+    int side_data_length = 0;
+#endif
 
     GST_LOG_OBJECT (ffmpegaudenc, "pushing size %d", pkt->size);
 
     outbuf =
         gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, pkt->data,
         pkt->size, 0, pkt->size, pkt, gst_ffmpegaudenc_free_avpacket);
+
+    if ((side_data =
+            av_packet_get_side_data (pkt, AV_PKT_DATA_SKIP_SAMPLES,
+                &side_data_length)) && side_data_length == 10) {
+      GstByteReader reader = GST_BYTE_READER_INIT (pkt->data, pkt->size);
+      guint32 start, end;
+
+      start = gst_byte_reader_get_uint32_le_unchecked (&reader);
+      end = gst_byte_reader_get_uint32_le_unchecked (&reader);
+
+      GST_LOG_OBJECT (ffmpegaudenc,
+          "got skip samples side data with start %u and end %u", start, end);
+      gst_buffer_add_audio_clipping_meta (outbuf, GST_FORMAT_DEFAULT, start,
+          end);
+    }
 
     ret =
         gst_audio_encoder_finish_frame (enc, outbuf,
