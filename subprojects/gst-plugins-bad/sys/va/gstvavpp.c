@@ -991,8 +991,6 @@ gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
 
     tests = gst_caps_get_structure (result, i);
     format = gst_structure_get_value (tests, "format");
-    gst_structure_remove_fields (tests, "height", "width", "pixel-aspect-ratio",
-        "display-aspect-ratio", NULL);
     /* should not happen */
     if (format == NULL)
       continue;
@@ -1019,32 +1017,6 @@ gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
   if (out_info)
     gst_structure_set (outs, "format", G_TYPE_STRING,
         GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
-}
-
-static GstCaps *
-gst_va_vpp_get_fixed_format (GstVaVpp * self, GstPadDirection direction,
-    GstCaps * caps, GstCaps * othercaps)
-{
-  GstCaps *result;
-
-  result = gst_caps_intersect (othercaps, caps);
-  if (gst_caps_is_empty (result)) {
-    gst_caps_unref (result);
-    result = gst_caps_copy (othercaps);
-  }
-
-  gst_va_vpp_fixate_format (self, caps, result);
-
-  /* fixate remaining fields */
-  result = gst_caps_fixate (result);
-
-  if (direction == GST_PAD_SINK) {
-    if (gst_caps_is_subset (caps, result)) {
-      gst_caps_replace (&result, caps);
-    }
-  }
-
-  return result;
 }
 
 static GstCaps *
@@ -1507,56 +1479,48 @@ gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
     GstCaps * caps, GstCaps * othercaps)
 {
   GstVaVpp *self = GST_VA_VPP (trans);
-  GstCaps *format;
+  GstCaps *result;
 
   GST_DEBUG_OBJECT (self,
       "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
       GST_PTR_FORMAT, othercaps, caps);
 
-  format = gst_va_vpp_get_fixed_format (self, direction, caps, othercaps);
-
-  if (gst_caps_is_empty (format)) {
-    GST_ERROR_OBJECT (self, "Could not convert formats");
-    return format;
+  result = gst_caps_intersect (othercaps, caps);
+  if (gst_caps_is_empty (result)) {
+    gst_caps_unref (result);
+    result = gst_caps_copy (othercaps);
   }
 
-  othercaps = gst_va_vpp_fixate_size (self, direction, caps, othercaps);
-  if (gst_caps_get_size (othercaps) == 1) {
-    gint i;
-    const gchar *format_fields[] = { "format", "colorimetry", "chroma-site" };
-    GstStructure *format_struct = gst_caps_get_structure (format, 0);
-    GstStructure *fixated_struct;
+  gst_va_vpp_fixate_format (self, caps, result);
+  result = gst_va_vpp_fixate_size (self, direction, caps, result);
 
-    othercaps = gst_caps_make_writable (othercaps);
-    fixated_struct = gst_caps_get_structure (othercaps, 0);
+  /* fixate remaining fields */
+  result = gst_caps_fixate (result);
 
-    for (i = 0; i < G_N_ELEMENTS (format_fields); i++) {
-      if (gst_structure_has_field (format_struct, format_fields[i])) {
-        gst_structure_set (fixated_struct, format_fields[i], G_TYPE_STRING,
-            gst_structure_get_string (format_struct, format_fields[i]), NULL);
-      } else {
-        gst_structure_remove_field (fixated_struct, format_fields[i]);
-      }
-    }
+  /* copy the framerate */
+  {
+    GstStructure *fixated_struct = gst_caps_get_structure (result, 0);
+    const GValue *framerate =
+        gst_structure_get_value (fixated_struct, "framerate");
 
-    /* copy the framerate */
-    {
-      const GValue *framerate =
-          gst_structure_get_value (fixated_struct, "framerate");
-      if (framerate && !gst_value_is_fixed (framerate)) {
-        GstStructure *st = gst_caps_get_structure (caps, 0);
-        const GValue *fixated_framerate =
-            gst_structure_get_value (st, "framerate");
-        gst_structure_set_value (fixated_struct, "framerate",
-            fixated_framerate);
-      }
+    if (!(framerate && gst_value_is_fixed (framerate))) {
+      GstStructure *orig_struct = gst_caps_get_structure (caps, 0);
+      const GValue *orig_framerate =
+          gst_structure_get_value (orig_struct, "framerate");
+
+      gst_structure_set_value (fixated_struct, "framerate", orig_framerate);
     }
   }
-  gst_caps_unref (format);
 
-  GST_DEBUG_OBJECT (self, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
+  if (direction == GST_PAD_SINK) {
+    if (gst_caps_is_subset (caps, result)) {
+      gst_caps_replace (&result, caps);
+    }
+  }
 
-  return othercaps;
+  GST_DEBUG_OBJECT (self, "fixated othercaps to %" GST_PTR_FORMAT, result);
+
+  return result;
 }
 
 static void
