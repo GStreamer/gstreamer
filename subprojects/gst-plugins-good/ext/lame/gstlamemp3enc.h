@@ -29,7 +29,11 @@
 
 G_BEGIN_DECLS
 
+#ifndef LAME_SUBPROJECT
 #include <lame/lame.h>
+#else
+#include "lame.h"
+#endif
 
 #define GST_TYPE_LAMEMP3ENC (gst_lamemp3enc_get_type())
 G_DECLARE_FINAL_TYPE (GstLameMP3Enc, gst_lamemp3enc, GST, LAMEMP3ENC,

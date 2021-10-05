@@ -1,0 +1,9 @@
+[wrap-file]
+directory = lame-3.100
+source_url = http://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
+source_filename = lame-3.100.tar.gz
+source_hash = ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e
+patch_url = https://wrapdb.mesonbuild.com/v2/lame_3.100-1/get_patch
+patch_filename = lame-3.100-1-wrap.zip
+patch_hash = 3e62e95d13aef0f139e4376e775acb367525a8ed2dbeb8d09c93fd318f093654
+
