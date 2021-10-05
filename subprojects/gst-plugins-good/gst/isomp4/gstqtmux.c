@@ -5705,6 +5705,27 @@ gst_qt_mux_aggregate (GstAggregator * agg, gboolean timeout)
 }
 
 static gboolean
+field_is_in (GQuark field_id, const gchar * fieldname, ...)
+{
+  va_list varargs;
+  gchar *name = (gchar *) fieldname;
+
+  va_start (varargs, fieldname);
+  while (name) {
+    if (field_id == g_quark_from_static_string (name)) {
+      va_end (varargs);
+
+      return TRUE;
+    }
+
+    name = va_arg (varargs, char *);
+  }
+  va_end (varargs);
+
+  return FALSE;
+}
+
+static gboolean
 check_field (GQuark field_id, const GValue * value, gpointer user_data)
 {
   GstStructure *structure = (GstStructure *) user_data;
@@ -5723,34 +5744,25 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
      * will contain updated tier / level / profiles, which means we do
      * not need to fail renegotiation when those change.
      */
-    if (g_strcmp0 (g_quark_to_string (field_id), "codec_data") == 0) {
-      return TRUE;
-    } else if (g_strcmp0 (g_quark_to_string (field_id), "tier") == 0) {
-      return TRUE;
-    } else if (g_strcmp0 (g_quark_to_string (field_id), "level") == 0) {
-      return TRUE;
-    } else if (g_strcmp0 (g_quark_to_string (field_id), "profile") == 0) {
-      return TRUE;
-    } else if (g_strcmp0 (g_quark_to_string (field_id), "chroma-format") == 0) {
-      return TRUE;
-    } else if (g_strcmp0 (g_quark_to_string (field_id), "bit-depth-luma") == 0) {
-      return TRUE;
-    } else if (g_strcmp0 (g_quark_to_string (field_id),
-            "bit-depth-chroma") == 0) {
-      return TRUE;
-    } else if (g_strcmp0 (g_quark_to_string (field_id), "colorimetry") == 0) {
-      return TRUE;
-    } else if (g_strcmp0 (g_quark_to_string (field_id), "width") == 0) {
-      /* TODO: this may require a separate track but gst, vlc, ffmpeg and
-       * browsers work with this so... */
-      return TRUE;
-    } else if (g_strcmp0 (g_quark_to_string (field_id), "height") == 0) {
+    if (field_is_in (field_id,
+            "codec_data", "tier", "level", "profile",
+            "chroma-site", "chroma-format", "bit-depth-luma", "colorimetry",
+            /* TODO: this may require a separate track but gst, vlc, ffmpeg and
+             * browsers work with this so... */
+            "width", "height", NULL)) {
+
       return TRUE;
     }
   }
 
-  if (other == NULL)
+  if (other == NULL) {
+    if (field_is_in (field_id, "interlace-mode", NULL) &&
+        !g_strcmp0 (g_value_get_string (value), "progressive")) {
+      return TRUE;
+    }
     return FALSE;
+  }
+
   return gst_value_compare (value, other) == GST_VALUE_EQUAL;
 }
 
