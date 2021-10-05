@@ -723,8 +723,6 @@ build documentation:
   stage: build
   needs:
     - "trigger"
-
-  stage: build
   rules:
     - changes:
       - .gitlab-ci.yml
