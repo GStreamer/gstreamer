@@ -1,5 +1,4 @@
 include:
-  - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/14731f78c23c7b523a85a26a068ade9ac1ecd2f3/templates/ci-fairy.yml"
   - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/14731f78c23c7b523a85a26a068ade9ac1ecd2f3/templates/fedora.yml"
   - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/14731f78c23c7b523a85a26a068ade9ac1ecd2f3/templates/debian.yml"
 
@@ -253,18 +252,6 @@ gst indent:
           echo 'style diverges, please run gst-indent first'
           exit 1
       fi
-
-#
-# Check "allow-edit" checkbox on merge requests with ci-fairy
-#
-check allow-edit:
-  extends: '.fdo.ci-fairy'
-  needs: []
-  stage: 'preparation'
-  script:
-    - ci-fairy check-merge-request --require-allow-collaboration
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 #
 # build setup templates
