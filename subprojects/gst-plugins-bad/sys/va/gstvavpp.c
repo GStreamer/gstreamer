@@ -1019,7 +1019,7 @@ gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
         GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
 }
 
-static GstCaps *
+static void
 gst_va_vpp_fixate_size (GstVaVpp * self, GstPadDirection direction,
     GstCaps * caps, GstCaps * othercaps)
 {
@@ -1029,8 +1029,6 @@ gst_va_vpp_fixate_size (GstVaVpp * self, GstPadDirection direction,
   GValue fpar = { 0, };
   GValue tpar = { 0, };
 
-  othercaps = gst_caps_truncate (othercaps);
-  othercaps = gst_caps_make_writable (othercaps);
   ins = gst_caps_get_structure (caps, 0);
   outs = gst_caps_get_structure (othercaps, 0);
 
@@ -1076,7 +1074,7 @@ gst_va_vpp_fixate_size (GstVaVpp * self, GstPadDirection direction,
     gint num, den;
 
     /* from_par should be fixed */
-    g_return_val_if_fail (gst_value_is_fixed (from_par), othercaps);
+    g_return_if_fail (gst_value_is_fixed (from_par));
 
     from_par_n = gst_value_get_fraction_numerator (from_par);
     from_par_d = gst_value_get_fraction_denominator (from_par);
@@ -1470,8 +1468,6 @@ done:
     g_value_unset (&fpar);
   if (to_par == &tpar)
     g_value_unset (&tpar);
-
-  return othercaps;
 }
 
 static GstCaps *
@@ -1491,8 +1487,15 @@ gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
     result = gst_caps_copy (othercaps);
   }
 
+  result = gst_caps_make_writable (result);
+
+  /* will iterate in all structures to find the best color */
   gst_va_vpp_fixate_format (self, caps, result);
-  result = gst_va_vpp_fixate_size (self, direction, caps, result);
+
+  /* truncate to the first structure since size fixate will work on
+   *  one */
+  result = gst_caps_truncate (result);
+  gst_va_vpp_fixate_size (self, direction, caps, result);
 
   /* fixate remaining fields */
   result = gst_caps_fixate (result);
