@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include "gstvacaps.h"
+#include "gstvasurfacecopy.h"
 #include "gstvavideoformat.h"
 #include "vasurfaceimage.h"
 
@@ -787,6 +788,8 @@ struct _GstVaAllocator
   GstVideoInfo info;
   guint usage_hint;
 
+  GstVaSurfaceCopy *copy;
+
   GstVaMemoryPool pool;
 };
 
@@ -818,6 +821,7 @@ gst_va_allocator_finalize (GObject * object)
 {
   GstVaAllocator *self = GST_VA_ALLOCATOR (object);
 
+  g_clear_pointer (&self->copy, gst_va_surface_copy_free);
   gst_va_memory_pool_finalize (&self->pool);
   g_clear_pointer (&self->surface_formats, g_array_unref);
   gst_clear_object (&self->display);
@@ -1137,14 +1141,15 @@ _va_share (GstMemory * mem, gssize offset, gssize size)
   return GST_MEMORY_CAST (sub);
 }
 
-/* XXX(victor): deep copy implementation. A further optimization can
- * be done with vaCopy() from libva 2.12 */
+/* XXX(victor): deep copy implementation. */
 static GstMemory *
 _va_copy (GstMemory * mem, gssize offset, gssize size)
 {
   GstMemory *copy;
   GstMapInfo sinfo, dinfo;
   GstVaAllocator *va_allocator = GST_VA_ALLOCATOR (mem->allocator);
+  GstVaMemory *va_copy, *va_mem = (GstVaMemory *) mem;
+  gsize mem_size;
 
   GST_DEBUG ("%p: copy %" G_GSSIZE_FORMAT ", %" G_GSIZE_FORMAT, mem, offset,
       size);
@@ -1165,25 +1170,27 @@ _va_copy (GstMemory * mem, gssize offset, gssize size)
     }
   }
 
-  if (!gst_memory_map (mem, &sinfo, GST_MAP_READ))
-    return NULL;
+  va_copy = (GstVaMemory *) copy;
+  mem_size = gst_memory_get_sizes (mem, NULL, NULL);
 
   if (size == -1)
-    size = sinfo.size > offset ? sinfo.size - offset : 0;
+    size = mem_size > offset ? mem_size - offset : 0;
 
-  if (offset == 0 && size == sinfo.size) {
-    GstVaMemory *va_mem = (GstVaMemory *) mem;
-    GstVaMemory *va_copy = (GstVaMemory *) copy;
-
-    if (!va_mem->is_derived) {
-      if (va_put_image (va_allocator->display, va_copy->surface,
-              &va_mem->image)) {
-        GST_LOG ("shallow copy of %#x to %#x", va_mem->surface,
-            va_copy->surface);
-        gst_memory_unmap (mem, &sinfo);
-        return copy;
-      }
+  if (offset == 0 && size == mem_size) {
+    if (!va_allocator->copy) {
+      va_allocator->copy =
+          gst_va_surface_copy_new (va_allocator->display, &va_allocator->info);
     }
+    if (va_allocator->copy
+        && gst_va_surface_copy (va_allocator->copy, va_copy->surface,
+            va_mem->surface)) {
+      return copy;
+    }
+  }
+
+  if (!gst_memory_map (mem, &sinfo, GST_MAP_READ)) {
+    GST_WARNING ("failed to map memory to copy");
+    return NULL;
   }
 
   if (!gst_memory_map (copy, &dinfo, GST_MAP_WRITE)) {
@@ -1407,6 +1414,8 @@ gst_va_allocator_set_format (GstAllocator * allocator, GstVideoInfo * info,
 
   self->usage_hint = usage_hint;
   self->info = *info;
+
+  g_clear_pointer (&self->copy, gst_va_surface_copy_free);
 
   ret = gst_va_allocator_try (allocator);
   if (ret)
