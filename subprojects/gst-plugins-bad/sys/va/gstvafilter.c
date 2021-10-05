@@ -1033,12 +1033,9 @@ gst_va_filter_enable_cropping (GstVaFilter * self, gboolean cropping)
 static inline GstCaps *
 _create_base_caps (GstVaFilter * self)
 {
-  /* XXX(victor): remove interlace-mode when deinterlacing is
-   * supported */
   return gst_caps_new_simple ("video/x-raw", "width", GST_TYPE_INT_RANGE,
       self->min_width, self->max_width, "height", GST_TYPE_INT_RANGE,
-      self->min_height, self->max_height, "interlace-mode", G_TYPE_STRING,
-      "progressive", NULL);
+      self->min_height, self->max_height, NULL);
 }
 
 GstCaps *

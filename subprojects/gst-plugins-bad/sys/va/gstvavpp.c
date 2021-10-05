@@ -392,6 +392,12 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
   GstVaVpp *self = GST_VA_VPP (btrans);
   GstCapsFeatures *infeat, *outfeat;
 
+  if (GST_VIDEO_INFO_INTERLACE_MODE (in_info) !=
+      GST_VIDEO_INFO_INTERLACE_MODE (out_info)) {
+    GST_ERROR_OBJECT (self, "input and output formats do not match");
+    return FALSE;
+  }
+
   if (!gst_video_info_is_equal (in_info, out_info)) {
     if (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_INFO_FORMAT (out_info))
       self->op_flags |= VPP_CONVERT_FORMAT;
