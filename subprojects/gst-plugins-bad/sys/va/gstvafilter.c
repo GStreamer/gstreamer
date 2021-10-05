@@ -32,6 +32,7 @@
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
 #include "gstvavideoformat.h"
+#include "vasurfaceimage.h"
 
 struct _GstVaFilter
 {
@@ -1508,11 +1509,19 @@ static gboolean
 _fill_va_sample (GstVaFilter * self, GstVaSample * sample,
     GstPadDirection direction)
 {
-  GstVideoCropMeta *crop;
+  GstVideoCropMeta *crop = NULL;
 
-  sample->surface = gst_va_buffer_get_surface (sample->buffer);
+  if (sample->buffer)
+    sample->surface = gst_va_buffer_get_surface (sample->buffer);
   if (sample->surface == VA_INVALID_ID)
     return FALSE;
+
+  /* @FIXME: in gallium vaQuerySurfaceStatus only seems to work with
+   * encoder's surfaces */
+  if (!GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, MESA_GALLIUM)) {
+    if (!va_check_surface (self->display, sample->surface))
+      return FALSE;
+  }
 
   /* XXX: cropping occurs only in input frames */
   if (direction == GST_PAD_SRC) {
@@ -1524,7 +1533,8 @@ _fill_va_sample (GstVaFilter * self, GstVaSample * sample,
   }
 
   /* if buffer has crop meta, its real size is in video meta */
-  crop = gst_buffer_get_video_crop_meta (sample->buffer);
+  if (sample->buffer)
+    crop = gst_buffer_get_video_crop_meta (sample->buffer);
 
   GST_OBJECT_LOCK (self);
   if (crop && self->crop_enabled) {
@@ -1612,8 +1622,8 @@ gst_va_filter_process (GstVaFilter * self, GstVaSample * src, GstVaSample * dst)
   gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
-  g_return_val_if_fail (src && GST_IS_BUFFER (src->buffer), FALSE);
-  g_return_val_if_fail (dst && GST_IS_BUFFER (dst->buffer), FALSE);
+  g_return_val_if_fail (src, FALSE);
+  g_return_val_if_fail (dst, FALSE);
 
   if (!gst_va_filter_is_open (self))
     return FALSE;

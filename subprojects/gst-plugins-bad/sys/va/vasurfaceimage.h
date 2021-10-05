@@ -44,6 +44,8 @@ gboolean              va_export_surface_to_dmabuf         (GstVaDisplay * displa
                                                            VADRMPRIMESurfaceDescriptor * desc);
 gboolean              va_sync_surface                     (GstVaDisplay * display,
                                                            VASurfaceID surface);
+gboolean              va_check_surface                    (GstVaDisplay * display,
+                                                           VASurfaceID surface);
 
 /* images */
 gboolean              va_create_image                     (GstVaDisplay * display,

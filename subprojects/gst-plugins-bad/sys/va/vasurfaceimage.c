@@ -21,6 +21,7 @@
 #include "vasurfaceimage.h"
 
 #include "gstvavideoformat.h"
+#include <va/va.h>
 
 gboolean
 va_destroy_surfaces (GstVaDisplay * display, VASurfaceID * surfaces,
@@ -289,4 +290,23 @@ va_ensure_image (GstVaDisplay * display, VASurfaceID surface,
   }
 
   return ret;
+}
+
+gboolean
+va_check_surface (GstVaDisplay * display, VASurfaceID surface)
+{
+  VADisplay dpy = gst_va_display_get_va_dpy (display);
+  VAStatus status;
+  VASurfaceStatus state;
+
+  gst_va_display_lock (display);
+  status = vaQuerySurfaceStatus (dpy, surface, &state);
+  gst_va_display_unlock (display);
+
+  if (status != VA_STATUS_SUCCESS)
+    GST_ERROR ("vaQuerySurfaceStatus: %s", vaErrorStr (status));
+
+  GST_LOG ("surface %#x status %d", surface, state);
+
+  return (status == VA_STATUS_SUCCESS);
 }
