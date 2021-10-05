@@ -989,6 +989,25 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
     } else if (field_id == g_quark_from_static_string ("level")) {
       return FALSE;
     }
+  } else if (gst_structure_has_name (structure, "video/x-vp8")
+      || gst_structure_has_name (structure, "video/x-vp9")) {
+    /* We do not use profile and streamheader for VPX so let it change
+     * mid stream */
+    if (field_id == g_quark_from_static_string ("streamheader"))
+      return FALSE;
+    else if (field_id == g_quark_from_static_string ("profile"))
+      return FALSE;
+  }
+
+  /* This fields aren't used and are not retained into the bitstream so we can
+   * discard them. */
+  if (g_str_has_prefix (gst_structure_get_name (structure), "video/")) {
+    if (field_id == g_quark_from_static_string ("chroma-site"))
+      return FALSE;
+    else if (field_id == g_quark_from_static_string ("chroma-format"))
+      return FALSE;
+    else if (field_id == g_quark_from_static_string ("bit-depth-luma"))
+      return FALSE;
   }
 
   return TRUE;
