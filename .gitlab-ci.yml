@@ -2,6 +2,7 @@ include:
   - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/7ea696055e322cc7aa4bcbe5422b56a198c4bdff/templates/ci-fairy.yml"
 
 stages:
+  - 'trigger'
   - 'build docker'
   - 'preparation'
   - 'pre-build'
@@ -102,6 +103,25 @@ default:
       - 'scheduler_failure'
       - 'api_failure'
   interruptible: true
+
+# This is an empty job that is used to trigger the pipeline.
+trigger:
+  image: alpine:latest
+  stage: 'trigger'
+  script:
+    - echo "Trigger job done, now running the pipeline."
+  rules:
+    # If the MR is assigned to the Merge bot, trigger the pipeline automatically
+    - if: '$CI_MERGE_REQUEST_ASSIGNEES == "gstreamer-merge-bot"'
+    # When the assignee isn't the merge bot, require an explicit action to trigger the pipeline
+    # to avoid wasting CI resources
+    - if: '$CI_MERGE_REQUEST_ASSIGNEES != "gstreamer-merge-bot"'
+      when: 'manual'
+      allow_failure: false
+    # If this matches, it means the pipeline is running against either the main
+    # or a stable branch, so make it manual
+    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+      when: 'manual'
 
 
 # Script to check if a docker image exists in the upstream registry
@@ -258,6 +278,8 @@ default:
 
 fedora amd64 docker:
   stage: "build docker"
+  needs:
+    - "trigger"
   variables:
     REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
     TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
@@ -268,6 +290,8 @@ fedora amd64 docker:
 
 gst-indent amd64 docker:
   stage: "build docker"
+  # Do not depend on the trigger, as we want to run indent always
+  needs: []
   variables:
     REPO_SUFFIX: "$INDENT_AMD64_SUFFIX"
     TAG: "$INDENT_TAG-$GST_UPSTREAM_BRANCH"
@@ -278,6 +302,8 @@ gst-indent amd64 docker:
 
 windows amd64 docker:
   stage: "build docker"
+  needs:
+    - "trigger"
   variables:
     # Unlike the buildah/linux jobs, this file
     # needs to be relative to docker/windows/ subdir
@@ -358,6 +384,9 @@ windows rust amd64 docker minimum supported version:
 gst indent:
   image: $INDENT_IMAGE
   stage: 'preparation'
+  needs:
+    - job: 'gst-indent amd64 docker'
+      artifacts: false
   script:
     # man indent. grep RETURN VALUE, grab a beer on my behalf...
     - indent --version || true
@@ -370,19 +399,6 @@ gst indent:
           echo 'style diverges, please run gst-indent first'
           exit 1
       fi
-
-  rules:
-    # If the MR is assigned to the Merge bot, trigger the pipeline automatically
-    - if: '$CI_MERGE_REQUEST_ASSIGNEES == "gstreamer-merge-bot"'
-    # When the assignee isn't the merge bot, require an explicit action to trigger the pipeline
-    # to avoid wasting CI resources
-    - if: '$CI_MERGE_REQUEST_ASSIGNEES != "gstreamer-merge-bot"'
-      when: 'manual'
-      allow_failure: false
-    # If this matches, it means the pipeline is running against either the main
-    # or a stable branch, so make it manual
-    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
-      when: 'manual'
 
 #
 # Check "allow-edit" checkbox on merge requests with ci-fairy
@@ -431,7 +447,7 @@ check allow-edit:
   extends:
     - '.build_ccache_vars'
   needs:
-    - "gst indent"
+    - "trigger"
   # Taking into account the slowest shared runner + time needed to upload the binaries to artifacts
   # Also need to take into account I/O of pulling docker images and uploading artifacts
   timeout: '45min'
@@ -502,6 +518,8 @@ check allow-edit:
 .build fedora x86_64:
   extends: '.build'
   image: $FEDORA_IMAGE
+  needs:
+    - "fedora amd64 docker"
   variables:
     MESON_ARGS: *simple_build
   rules:
@@ -511,6 +529,8 @@ check allow-edit:
 build nodebug fedora x86_64:
   extends: '.build'
   image: $FEDORA_IMAGE
+  needs:
+    - "fedora amd64 docker"
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
 
@@ -538,7 +558,7 @@ build clang fedora x86_64:
     - 'windows'
     - '1809'
   needs:
-    - "gst indent"
+    - "windows amd64 docker"
   timeout: '45min'
   variables:
     MESON_ARGS: >
@@ -618,7 +638,7 @@ build msys2 :
   extends:
     - '.build_ccache_vars'
   needs:
-    - "gst indent"
+    - "trigger"
   variables:
     MESON_ARGS: *simple_build
 
@@ -665,6 +685,8 @@ build msys2 :
 
 .test fedora x86_64:
   image: $FEDORA_IMAGE
+  needs:
+    - "fedora amd64 docker"
   extends: '.test'
   tags: ['gstreamer']
 
@@ -878,7 +900,7 @@ build documentation:
     - '.documentation'
   stage: build
   needs:
-    - "gst indent"
+    - "trigger"
 
   stage: build
   rules:
@@ -904,6 +926,8 @@ build documentation:
 cerbero trigger:
   stage: build
   image: $FEDORA_IMAGE
+  needs:
+    - "fedora amd64 docker"
   script:
     - python3 -m pip install --user python-gitlab
     - ci/gitlab/trigger_cerbero_pipeline.py
