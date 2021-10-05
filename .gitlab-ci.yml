@@ -857,6 +857,10 @@ valgrind ges:
     - documentation/
     - plugins-cache-diffs/
 
+#
+# This jobs runs in gsrtreamer namespace when after the merge into main branch.
+# The produced artifact is later used to automatically update the web page.
+#
 documentation:
   stage: integrate
   extends:
@@ -865,6 +869,10 @@ documentation:
   rules:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == "main"'
 
+#
+# This job is run in users namespace to validate documentation before merging
+# MR.
+#
 build documentation:
   extends:
     - '.documentation'
