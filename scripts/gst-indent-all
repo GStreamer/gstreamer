@@ -1,5 +1,8 @@
 #!/bin/bash
 
+BASEDIR=$(dirname $0)
+
+
 filter_cmd=("cat")
 if test -f ".indentignore"; then
     filter_args=()
@@ -12,4 +15,4 @@ if test -f ".indentignore"; then
         filter_cmd=("grep" "-v" "${filter_args[@]}")
     fi
 fi
-git ls-files "*.c" | "${filter_cmd[@]}" | xargs -d '\n' gst-indent
+git ls-files "*.c" | "${filter_cmd[@]}" | xargs -d '\n' $BASEDIR/gst-indent

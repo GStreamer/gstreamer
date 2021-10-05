@@ -302,7 +302,7 @@ def get_subprocess_env(options, gst_version):
                     options.sysroot)
 
     # gst-indent
-    prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'gstreamer', 'tools'),
+    prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'scripts'),
                     options.sysroot)
 
     # tools: gst-launch-1.0, gst-inspect-1.0

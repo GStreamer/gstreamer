@@ -324,7 +324,7 @@ changes selectively via `git add -p`. You can bypass the local indentation
 check hook by using `git commit -n`, but it will still be checked again later
 when you submit your changes through GitLab for merging.
 
-[gst-indent]: https://gitlab.freedesktop.org/gstreamer/gstreamer/tree/master/tools/gst-indent
+[gst-indent]: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/main/scripts/gst-indent-all
 [create-mr]: https://docs.gitlab.com/ee/gitlab-basics/add-merge-request.html
 
 ### Writing Good Commit Messages
