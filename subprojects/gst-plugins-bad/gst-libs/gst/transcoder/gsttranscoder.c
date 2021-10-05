@@ -984,6 +984,7 @@ gst_transcoder_run (GstTranscoder * self, GError ** error)
   if (!data.error)
     g_main_loop_run (data.loop);
 
+  gst_element_set_state (self->transcodebin, GST_STATE_NULL);
   g_object_unref (signal_adapter);
 
   if (data.error) {
