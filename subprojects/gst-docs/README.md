@@ -42,12 +42,12 @@ gio open build/GStreamer-doc/html/index.html
 
 ## API documentation
 
-Building the API documentation in the portal implies using
-[gst-build](https://gitlab.freedesktop.org/gstreamer/gst-build/) which allows us
-to aggregate the documentation from all GStreamer modules using the hotdoc subproject
-feature.
+Building the API documentation in the portal implies using the full multi-repo
+[gstreamer](https://gitlab.freedesktop.org/gstreamer/gstreamer/) build which
+allows us to aggregate the documentation from all GStreamer modules using the
+hotdoc subproject feature.
 
-From `gst-build`:
+From `gstreamer`:
 
 ```
 meson build/
@@ -91,7 +91,8 @@ the target manually, if building from the module itself:
 ninja -C <build-dir> docs/gst_plugins_cache.json
 ```
 
-if you use `gst-build` you can run the target that will rebuild all cache files:
+if you use the mono repo build there's also a target that will rebuild all
+the cache files in the various GStreamer subprojects:
 
 ```
 ninja -C <build-dir> plugins_doc_caches`

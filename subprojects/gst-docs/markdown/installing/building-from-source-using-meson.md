@@ -27,45 +27,64 @@ Please refer to [Building using Cerbero](installing/building-from-source-using-c
 which can be used to build a specific GStreamer release or to build unreleased
 GStreamer code.
 
-## What are meson and gst-build?
+## What are Meson, gst-build and the GStreamer monorepo?
 
 The [Meson build system][meson] is a portable build system which is fast and
 meant to be more user friendly than alternatives. It generates build
 instructions which can then be executed by [`ninja`][ninja]. The GStreamer
 project uses it for all subprojects.
 
-Since GStreamer has many components and has many dependencies, the
-[`gst-build`][gst-build] module contains multiple python3 scripts to simplify
-downloading and configuring everything using Meson. It uses a feature from meson
-which allows defining subprojects and you can therefore configure and build the
-GStreamer modules and certain dependencies in one go.
+In September 2021 all of the main GStreamer modules were merged into a
+single code repository, the GStreamer [mono repo][monorepo-faq] which lives
+in the main [GStreamer git repository][gstreamer], and this is where all
+GStreamer development happens nowadays for GStreamer version 1.19/1.20 and later.
 
+Before the mono repository merge the different GStreamer modules lived in
+separate git repositories and there was a separate meta-builder project
+called [`gst-build`][gst-build] to download and build all the subprojects.
+This is what you should use if you want to build or develop against older
+stable branches such as GStreamer 1.16 or 1.18.
 
-## Setting up gst-build
+If you want to build or develop against upcoming development or stable branches
+you should use the `main` branch of the GStreamer module containing the mono
+repository.
 
-First clone `gst-build`:
+In the following sections we will only talk about the GStreamer mono repo,
+but `gst-build` works pretty much the same way, the only difference being
+that it would download the various GStreamer submodules as well.
+
+[monorepo-faq]: https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/mono-repository.html
+
+## Setting up the build with Meson
+
+In order to build the current GStreamer development version, which will become
+the 1.20 stable branch in the near future, clone the GStreamer mono repository:
+``` shell
+git clone https://gitlab.freedesktop.org/gstreamer/gstreamer.git
+cd gstreamer
+```
+
+Or if you have developer access to the repositories:
+``` shell
+git clone git@gitlab.freedesktop.org:gstreamer/gstreamer.git
+cd gstreamer
+```
+If you want to build the stable 1.18 or 1.16 branches, clone `gst-build`:
 
 ``` shell
 git clone https://gitlab.freedesktop.org/gstreamer/gst-build.git
 cd gst-build
 ```
 
-Or if you have developer access to the repositories:
-``` shell
-git clone git@gitlab.freedesktop.org:gstreamer/gst-build.git
-cd gst-build
-```
+### Repository layout
 
-### Layout of gst-build
-
-gst-build contains a few notable scripts and directories:
+The repository contains a few notable scripts and directories:
 1. `meson.build` is the top-level build definition which will recursively
    configure all dependencies. It also defines some helper commands allowing you
    to have an uninstalled development environment or easily update git
    repositories for the GStreamer modules.
- 2. `subprojects/` is the directory containing GStreamer modules and
+2. `subprojects/` is the directory containing GStreamer modules and
    a selection of dependencies.
-
 
 
 ## Basic meson and ninja usage
@@ -84,9 +103,8 @@ any *command* argument is implicitely calling the `meson setup` command (i.e. to
 do the initial configuration of a project).
 
 There is only one restriction regarding the location of the `build_directory`:
-it can't be the same as the source directory (i.e. where you cloned your module
-or gst-build). It can be outside of that directory or below/within that
-directory though.
+it can't be the same as the source directory (i.e. where you cloned your module).
+It can be outside of that directory or below/within that directory though.
 
 Once meson is done configuring, you can either:
 
@@ -105,8 +123,8 @@ Once meson is done configuring, you can either:
    ninja -C </path/to/build_directory>
    ```
 
-This will build everything from that module (and subprojects if within
-gst-build).
+This will build everything from that module (and subprojects if building
+gst-build or the mono repository).
 
 Note: You do not need to re-run `meson` when you modify source files, you just
 need to re-run `ninja`. If you build/configuration files changed, `ninja` will
@@ -117,8 +135,9 @@ automatically.
 ## Entering the "uninstalled" environment
 
 GStreamer is made of several tools, plugins and components. In order to make it
-easier for development and testing, there is a target (provided by `gst-build`)
-which will setup environment variables accordingly so that you can use all the
+easier for development and testing, there is a target (provided by `gst-build`
+or the mono repository, and in future directly by `meson` itself) which will
+setup environment variables accordingly so that you can use all the
 build results directly.
 
 ``` shell
@@ -134,7 +153,18 @@ tool you just built directly (like `gst-inspect-1.0`, `gst-launch-1.0`, ...).
 It is not uncommon to track multiple git remote repositories (such as the
 official upstream repositories and your personal clone on gitlab).
 
-You can do so by adding your personal git remotes in the subproject directory:
+In the gstreamer mono repository, just add your personal git remotes as you
+would do with any other git repository, e.g.:
+
+``` shell
+git remote add personal git@gitlab.freedesktop.org:awesomehacker/gstreamer.git
+git fetch
+```
+
+In gst-build (for 1.16/1.18 branches), you can add your personal
+git remotes in the relevant subproject directory (and that would have to be
+done for each subproject of interest, since the old 1.16/1.18 branches live in
+separate git repositories), e.g.:
 
 ``` shell
 cd subprojects/gstreamer/
@@ -142,7 +172,8 @@ git remote add personal git@gitlab.freedesktop.org:awesomehacker/gstreamer.git
 git fetch
 ```
 
-## Configuration of gst-build
+
+## Configuration
 
 You can list all the available options of a `meson` project by using the
 configure command:
@@ -182,6 +213,10 @@ rust plugins in `gst-build` (`rs` option), you would do:
 meson -Drs=disabled <build-directory>
 ```
 
+You can also peek at the `meson_options.txt` files and `subproject/xyz/meson_options.txt`
+files which is where the various project specific build options are listed.
+These do not include all the standard Meson options however.
+
 ## Running tests
 
 Running the unit tests is done by calling `meson test` from the build directory,
@@ -203,10 +238,11 @@ gst-validate-launcher check.gst*
 
 ## Going further
 
-More details are available in the [gst-build
-documentation](https://gitlab.freedesktop.org/gstreamer/gst-build/blob/master/README.md).
+More details are available in the [GStreamer mono repo README](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/main/README.md)
+or (for the older 1.16/1.18 branches) in the [gst-build documentation](https://gitlab.freedesktop.org/gstreamer/gst-build/blob/master/README.md).
 
   [meson]: https://mesonbuild.com/
   [ninja]: https://ninja-build.org/
+  [gstreamer]: https://gitlab.freedesktop.org/gstreamer/gstreamer/
   [gst-build]: https://gitlab.freedesktop.org/gstreamer/gst-build/
   [gst-validate]: https://gstreamer.freedesktop.org/documentation/gst-devtools/
