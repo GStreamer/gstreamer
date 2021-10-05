@@ -5,7 +5,8 @@ import os
 import sys
 import gitlab
 
-CERBERO_ID = 1340
+CERBERO_PROJECT = 'gstreamer/cerbero'
+
 
 
 class Status:
@@ -33,13 +34,12 @@ def fprint(msg):
 
 
 if __name__ == "__main__":
-    gl = gitlab.Gitlab(
-        "https://gitlab.freedesktop.org/",
+    server = os.environ['CI_SERVER_URL']
+    gl = gitlab.Gitlab(server,
         private_token=os.environ.get('GITLAB_API_TOKEN'),
-        job_token=os.environ.get('CI_JOB_TOKEN')
-    )
+        job_token=os.environ.get('CI_JOB_TOKEN'))
 
-    cerbero = gl.projects.get(CERBERO_ID)
+    cerbero = gl.projects.get(CERBERO_PROJECT)
     pipe = cerbero.trigger_pipeline(
         token=os.environ['CI_JOB_TOKEN'],
         ref=os.environ["GST_UPSTREAM_BRANCH"],
