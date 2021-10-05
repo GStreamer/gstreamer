@@ -4632,9 +4632,8 @@ default_unsuspend (GstRTSPMedia * media)
 
   switch (priv->suspend_mode) {
     case GST_RTSP_SUSPEND_MODE_NONE:
-      if (gst_rtsp_media_is_receive_only (media))
-        break;
-      if (media_streams_blocking (media)) {
+      if (!gst_rtsp_media_is_receive_only (media)
+          && media_streams_blocking (media)) {
         g_rec_mutex_unlock (&priv->state_lock);
         if (gst_rtsp_media_get_status (media) == GST_RTSP_MEDIA_STATUS_ERROR) {
           g_rec_mutex_lock (&priv->state_lock);
