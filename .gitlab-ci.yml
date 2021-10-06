@@ -539,7 +539,7 @@ gstreamer-full:
     - changes:
       - "*"
       - scripts/*
-      - subprojects/gst-ci/**/*
+      - ci/**/*
 
   script:
   - *build
@@ -597,7 +597,7 @@ valgrind core:
     - changes:
       - "*"
       - scripts/*
-      - subprojects/gst-ci/**/*
+      - ci/**/*
       - subprojects/gst-devtools/**/*
       - subprojects/gstreamer/**/*
 
@@ -609,7 +609,7 @@ valgrind base:
     - changes:
       - "*"
       - scripts/*
-      - subprojects/gst-ci/**/*
+      - ci//**/*
       - subprojects/gst-devtools/**/*
       - subprojects/gstreamer/**/*
       - subprojects/gst-plugins-base/**/*
@@ -624,7 +624,7 @@ valgrind good:
     - changes:
       - "*"
       - scripts/*
-      - subprojects/gst-ci/**/*
+      - ci/**/*
       - subprojects/gst-devtools/**/*
       - subprojects/gstreamer/**/*
       - subprojects/gst-plugins-base/**/*
@@ -638,7 +638,7 @@ valgrind ugly:
     - changes:
       - "*"
       - scripts/*
-      - subprojects/gst-ci/**/*
+      - ci/**/*
       - subprojects/gst-devtools/**/*
       - subprojects/gstreamer/**/*
       - subprojects/gst-plugins-base/**/*
@@ -653,7 +653,7 @@ valgrind bad:
     - changes:
       - "*"
       - scripts/*
-      - subprojects/gst-ci/**/*
+      - ci/**/*
       - subprojects/gst-devtools/**/*
       - subprojects/gstreamer/**/*
       - subprojects/gst-plugins-base/**/*
@@ -668,7 +668,7 @@ valgrind ges:
     - changes:
       - "*"
       - scripts/*
-      - subprojects/gst-ci/**/*
+      - ci/**/*
       - subprojects/gst-devtools/**/*
       - subprojects/gstreamer/**/*
       - subprojects/gst-plugins-base/**/*
