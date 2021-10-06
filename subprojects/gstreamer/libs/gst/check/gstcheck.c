@@ -332,6 +332,52 @@ gst_check_deinit (void)
   gst_check_clear_log_filter ();
 }
 
+static const gchar *log_domains[] = {
+  "GLib-GObject",
+  "GLib-GIO",
+  "GLib",
+  "GStreamer-AdaptiveDemux",
+  "GStreamer-Allocators",
+  "GStreamer-App",
+  "GStreamer-Audio",
+  "GStreamer-AudioBad",
+  "GStreamer-Base",
+  "GStreamer-BaseCameraBinSrc",
+  "GStreamer-Check",
+  "GStreamer-CodecParsers",
+  "GStreamer-Codecs",
+  "GStreamer-Controller",
+  "GStreamer-D3D11",
+  "GStreamer",
+  "GStreamer-FFT",
+  "GStreamer-GL",
+  "GStreamer-InsertBin",
+  "GStreamer-ISOFF",
+  "GStreamer-MpegTS",
+  "GStreamer-Net",
+  "GStreamer-OpenCV",
+  "GStreamer-PBUtils",
+  "GStreamer-Photography",
+  "GStreamer-Play",
+  "GStreamer-Player",
+  "GStreamer-RIFF",
+  "GStreamer-RTP",
+  "GStreamer-RTSP",
+  "GStreamer-RTSP-Server",
+  "GStreamer-SCTP",
+  "GStreamer-SDP",
+  "GStreamer-Tag",
+  "GStreamer-Transcoder",
+  "GStreamer-UriDownloader",
+  "GStreamer-VA",
+  "GStreamer-Video",
+  "GStreamer-Vulkan",
+  "GStreamer-Vulkan",
+  "GStreamer-Wayland",
+  "GStreamer-WebRTC",
+  "GStreamer-WinRT",
+};
+
 /* gst_check_init:
  * @argc: (inout) (allow-none): pointer to application's argc
  * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
@@ -352,6 +398,7 @@ gst_check_init (int *argc, char **argv[])
         "List tests present in the testsuite", NULL},
     {NULL}
   };
+  guint i;
 
   ctx = g_option_context_new ("gst-check");
   g_option_context_add_main_entries (ctx, options, NULL);
@@ -379,14 +426,13 @@ gst_check_init (int *argc, char **argv[])
       NULL);
   g_log_set_handler (NULL, G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
       gst_check_log_critical_func, NULL);
-  g_log_set_handler ("GStreamer", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
-      gst_check_log_critical_func, NULL);
-  g_log_set_handler ("GLib-GObject", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
-      gst_check_log_critical_func, NULL);
-  g_log_set_handler ("GLib-GIO", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
-      gst_check_log_critical_func, NULL);
-  g_log_set_handler ("GLib", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
-      gst_check_log_critical_func, NULL);
+
+  for (i = 0; i < G_N_ELEMENTS (log_domains); ++i) {
+    g_log_set_handler (log_domains[i],
+        G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
+        gst_check_log_critical_func, NULL);
+  }
+
   g_test_log_set_fatal_handler (gst_check_log_fatal_func, NULL);
 
   print_plugins ();
