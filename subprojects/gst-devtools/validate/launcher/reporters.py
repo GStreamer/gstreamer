@@ -147,7 +147,7 @@ class XunitReporter(Reporter):
         return super(XunitReporter, self).final_report()
 
     def _get_all_logs_data(self, test):
-        if not self.options.redirect_logs:
+        if self.options.redirect_logs:
             return ""
 
         captured = ""
@@ -216,12 +216,12 @@ class XunitReporter(Reporter):
         xml_file = codecs.open(self.tmp_xml_file.name, 'a',
                                self.encoding, 'replace')
         xml_file.write(self._forceUnicode(
-            '<testcase name=%(name)s time="%(taken).3f">'
-            '<failure type=%(errtype)s message=%(message)s>%(logs)s'
+            '<testcase name=%(name)s time="%(taken).3f">%(systemout)s'
+            '<failure type=%(errtype)s message=%(message)s>'
             '</failure></testcase>' %
             {'name': self._quoteattr(test.get_classname() + '.' + test.get_name()),
              'taken': test.time_taken,
-             'logs': self._get_all_logs_data(test),
+             'systemout': self._get_captured(test),
              'errtype': self._quoteattr(test.result),
              'message': self._quoteattr(test.message),
              }))
