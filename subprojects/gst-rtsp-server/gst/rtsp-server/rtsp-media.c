@@ -4101,6 +4101,8 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
   priv->prepare_count--;
   if (priv->prepare_count > 0)
     goto is_busy;
+  if (priv->status == GST_RTSP_MEDIA_STATUS_UNPREPARING)
+    goto is_unpreparing;
 
   GST_INFO ("unprepare media %p", media);
   set_target_state (media, GST_STATE_NULL, FALSE);
@@ -4124,6 +4126,12 @@ was_unprepared:
   {
     g_rec_mutex_unlock (&priv->state_lock);
     GST_INFO ("media %p was already unprepared", media);
+    return TRUE;
+  }
+is_unpreparing:
+  {
+    g_rec_mutex_unlock (&priv->state_lock);
+    GST_INFO ("media %p is already unpreparing", media);
     return TRUE;
   }
 is_busy:
