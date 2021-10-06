@@ -1476,6 +1476,105 @@ done:
     g_value_unset (&tpar);
 }
 
+static gboolean
+subsampling_unchanged (GstVideoInfo * in_info, GstVideoInfo * out_info)
+{
+  gint i;
+  const GstVideoFormatInfo *in_format, *out_format;
+
+  if (GST_VIDEO_INFO_N_COMPONENTS (in_info) !=
+      GST_VIDEO_INFO_N_COMPONENTS (out_info))
+    return FALSE;
+
+  in_format = in_info->finfo;
+  out_format = out_info->finfo;
+
+  for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (in_info); i++) {
+    if (GST_VIDEO_FORMAT_INFO_W_SUB (in_format,
+            i) != GST_VIDEO_FORMAT_INFO_W_SUB (out_format, i))
+      return FALSE;
+    if (GST_VIDEO_FORMAT_INFO_H_SUB (in_format,
+            i) != GST_VIDEO_FORMAT_INFO_H_SUB (out_format, i))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void
+transfer_colorimetry_from_input (GstVaVpp * self, GstCaps * in_caps,
+    GstCaps * out_caps)
+{
+  GstStructure *out_caps_s = gst_caps_get_structure (out_caps, 0);
+  GstStructure *in_caps_s = gst_caps_get_structure (in_caps, 0);
+  gboolean have_colorimetry =
+      gst_structure_has_field (out_caps_s, "colorimetry");
+  gboolean have_chroma_site =
+      gst_structure_has_field (out_caps_s, "chroma-site");
+
+  /* If the output already has colorimetry and chroma-site, stop,
+   * otherwise try and transfer what we can from the input caps */
+  if (have_colorimetry && have_chroma_site)
+    return;
+
+  {
+    GstVideoInfo in_info, out_info;
+    const GValue *in_colorimetry =
+        gst_structure_get_value (in_caps_s, "colorimetry");
+
+    if (!gst_video_info_from_caps (&in_info, in_caps)) {
+      GST_WARNING_OBJECT (self,
+          "Failed to convert sink pad caps to video info");
+      return;
+    }
+    if (!gst_video_info_from_caps (&out_info, out_caps)) {
+      GST_WARNING_OBJECT (self, "Failed to convert src pad caps to video info");
+      return;
+    }
+
+    if (!have_colorimetry && in_colorimetry != NULL) {
+      if ((GST_VIDEO_INFO_IS_YUV (&out_info)
+              && GST_VIDEO_INFO_IS_YUV (&in_info))
+          || (GST_VIDEO_INFO_IS_RGB (&out_info)
+              && GST_VIDEO_INFO_IS_RGB (&in_info))
+          || (GST_VIDEO_INFO_IS_GRAY (&out_info)
+              && GST_VIDEO_INFO_IS_GRAY (&in_info))) {
+        /* Can transfer the colorimetry intact from the input if it has it */
+        gst_structure_set_value (out_caps_s, "colorimetry", in_colorimetry);
+      } else {
+        gchar *colorimetry_str;
+
+        /* Changing between YUV/RGB - forward primaries and transfer function, but use
+         * default range and matrix.
+         * the primaries is used for conversion between RGB and XYZ (CIE 1931 coordinate).
+         * the transfer function could be another reference (e.g., HDR)
+         */
+        out_info.colorimetry.primaries = in_info.colorimetry.primaries;
+        out_info.colorimetry.transfer = in_info.colorimetry.transfer;
+
+        colorimetry_str =
+            gst_video_colorimetry_to_string (&out_info.colorimetry);
+        gst_caps_set_simple (out_caps, "colorimetry", G_TYPE_STRING,
+            colorimetry_str, NULL);
+        g_free (colorimetry_str);
+      }
+    }
+
+    /* Only YUV output needs chroma-site. If the input was also YUV and had the same chroma
+     * subsampling, transfer the siting. If the sub-sampling is changing, then the planes get
+     * scaled anyway so there's no real reason to prefer the input siting. */
+    if (!have_chroma_site && GST_VIDEO_INFO_IS_YUV (&out_info)) {
+      if (GST_VIDEO_INFO_IS_YUV (&in_info)) {
+        const GValue *in_chroma_site =
+            gst_structure_get_value (in_caps_s, "chroma-site");
+        if (in_chroma_site != NULL
+            && subsampling_unchanged (&in_info, &out_info))
+          gst_structure_set_value (out_caps_s, "chroma-site", in_chroma_site);
+      }
+    }
+  }
+}
+
 static void
 copy_misc_fields_from_input (GstVaVpp * self, GstCaps * in_caps,
     GstCaps * out_caps)
@@ -1535,6 +1634,9 @@ gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
   if (direction == GST_PAD_SINK) {
     if (gst_caps_is_subset (caps, result)) {
       gst_caps_replace (&result, caps);
+    } else {
+      /* Try and preserve input colorimetry / chroma information */
+      transfer_colorimetry_from_input (self, caps, result);
     }
   }
 
