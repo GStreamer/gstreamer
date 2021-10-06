@@ -567,8 +567,6 @@ gstreamer-full-minimal:
       -Dgst-full-device-providers=alsa:alsadeviceprovider
       -Dgst-full-dynamic-types=pbtypes:video_multiview_flagset
       $MESON_GST_WERROR
-  rules:
-    - if: '$CI_PROJECT_NAME =~ /^(gst-build|gst-ci)$/'
 
   script:
   - *build
