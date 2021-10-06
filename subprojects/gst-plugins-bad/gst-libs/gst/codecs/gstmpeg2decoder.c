@@ -1184,13 +1184,17 @@ gst_mpeg2_decoder_handle_frame (GstVideoDecoder * decoder,
 
 failed:
   {
-    GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE,
-        ("failed to handle the frame %d", frame->system_frame_number), (NULL),
-        ret);
+    if (ret == GST_FLOW_ERROR) {
+      GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE,
+          ("failed to handle the frame %d", frame->system_frame_number), (NULL),
+          ret);
+    }
+
     gst_video_decoder_drop_frame (decoder, frame);
     gst_mpeg2_picture_clear (&priv->current_picture);
     gst_mpeg2_picture_clear (&priv->first_field);
     priv->current_frame = NULL;
+
     return ret;
   }
 }

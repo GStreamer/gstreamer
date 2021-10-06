@@ -362,6 +362,7 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
 
   if (!gst_buffer_map (in_buf, &map, GST_MAP_READ)) {
     GST_ERROR_OBJECT (self, "Cannot map buffer");
+    ret = GST_FLOW_ERROR;
     goto error;
   }
 
@@ -370,6 +371,7 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
 
   if (pres != GST_VP8_PARSER_OK) {
     GST_ERROR_OBJECT (self, "Cannot parser frame header");
+    ret = GST_FLOW_ERROR;
     goto unmap_and_error;
   }
 
@@ -473,12 +475,12 @@ error:
     if (picture)
       gst_vp8_picture_unref (picture);
 
-    if (ret == GST_FLOW_OK)
-      ret = GST_FLOW_ERROR;
+    if (ret == GST_FLOW_ERROR) {
+      GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
+          ("Failed to decode data"), (NULL), ret);
+    }
 
     gst_video_decoder_drop_frame (decoder, frame);
-    GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
-        ("Failed to decode data"), (NULL), ret);
 
     return ret;
   }

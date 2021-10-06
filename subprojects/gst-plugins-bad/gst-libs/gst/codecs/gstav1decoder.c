@@ -647,13 +647,11 @@ out:
   priv->current_picture = NULL;
   priv->current_frame = NULL;
 
-  if (ret != GST_FLOW_OK) {
+  if (ret == GST_FLOW_ERROR) {
     GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE,
         ("Failed to handle the frame %d", frame->system_frame_number),
         NULL, ret);
-
-    return ret;
   }
 
-  return GST_FLOW_OK;
+  return ret;
 }

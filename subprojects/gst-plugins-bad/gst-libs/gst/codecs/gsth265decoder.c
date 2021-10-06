@@ -1804,10 +1804,12 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
   priv->current_frame = NULL;
 
   if (decode_ret != GST_FLOW_OK) {
-    GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
-        ("Failed to decode data"), (NULL), decode_ret);
-    gst_video_decoder_drop_frame (decoder, frame);
+    if (decode_ret == GST_FLOW_ERROR) {
+      GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
+          ("Failed to decode data"), (NULL), decode_ret);
+    }
 
+    gst_video_decoder_drop_frame (decoder, frame);
     gst_h265_picture_clear (&priv->current_picture);
 
     return decode_ret;
@@ -1821,7 +1823,7 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
     gst_video_decoder_release_frame (decoder, frame);
   }
 
-  if (decode_ret != GST_FLOW_OK) {
+  if (decode_ret == GST_FLOW_ERROR) {
     GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
         ("Failed to decode data"), (NULL), decode_ret);
   }
