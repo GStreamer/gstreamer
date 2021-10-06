@@ -6,7 +6,7 @@ aes_sources = [
 ]
 
 aes_cargs = []
-aes_dep = dependency('openssl', required : get_option('aes'))
+aes_dep = dependency('openssl', version : '>= 1.1.0', required : get_option('aes'))
 if aes_dep.found()
   aes_cargs += ['-DHAVE_OPENSSL']
 else
