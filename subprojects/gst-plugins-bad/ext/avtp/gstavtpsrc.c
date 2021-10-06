@@ -303,6 +303,7 @@ retry:
     return GST_FLOW_ERROR;
   }
 
+  gst_buffer_set_size (buffer, received);
   gst_buffer_unmap (buffer, &map);
 
   return GST_FLOW_OK;
