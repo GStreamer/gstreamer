@@ -244,9 +244,12 @@ struct _GstVaDmabufAllocator
   GstVaDisplay *display;
 
   GstMemoryMapFunction parent_map;
+  GstMemoryCopyFunction parent_copy;
 
   GstVideoInfo info;
   guint usage_hint;
+
+  GstVaSurfaceCopy *copy;
 
   GstVaMemoryPool pool;
 };
@@ -254,6 +257,84 @@ struct _GstVaDmabufAllocator
 #define gst_va_dmabuf_allocator_parent_class dmabuf_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVaDmabufAllocator, gst_va_dmabuf_allocator,
     GST_TYPE_DMABUF_ALLOCATOR, _init_debug_category ());
+
+/* If a buffer contains multiple memories (dmabuf objects) its very
+ * difficult to provide a realiable way to fast-copy single memories:
+ * While VA API sees surfaces with dependant dmabufs, GStreamer only
+ * copies dmabufs in isolation; trying to solve it while keeping a
+ * reference of the copied buffer and dmabuf index is very fragile. */
+static GstMemory *
+gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
+{
+  GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (gmem->allocator);
+  GstVaBufferSurface *buf;
+  guint64 *drm_mod;
+  gsize mem_size;
+
+  buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (gmem),
+      gst_va_buffer_surface_quark ());
+
+  drm_mod = gst_mini_object_get_qdata (GST_MINI_OBJECT (gmem),
+      gst_va_drm_mod_quark ());
+
+  /* 0 is DRM_FORMAT_MOD_LINEAR, we do not include its header now. */
+  if (buf->n_mems > 1 && *drm_mod != 0) {
+    GST_ERROR_OBJECT (self, "Failed to copy multi-dmabuf because non-linear "
+        "modifier: %#lx.", *drm_mod);
+    return NULL;
+  }
+
+  /* check if it's full memory copy */
+  mem_size = gst_memory_get_sizes (gmem, NULL, NULL);
+
+  if (size == -1)
+    size = mem_size > offset ? mem_size - offset : 0;
+
+  /* @XXX: if one-memory buffer it's possible to copy */
+  if (offset == 0 && size == mem_size && buf->n_mems == 1) {
+    GstVaBufferSurface *buf_copy;
+    GstMemory *copy;
+
+    GST_VA_MEMORY_POOL_LOCK (&self->pool);
+    copy = gst_va_memory_pool_pop (&self->pool);
+    GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
+
+    if (!copy) {
+      GstBuffer *buffer = gst_buffer_new ();
+      if (!gst_va_dmabuf_allocator_setup_buffer (gmem->allocator, buffer)) {
+        GST_WARNING_OBJECT (self, "Failed to create a new dmabuf memory");
+        return NULL;
+      }
+
+      copy = gst_buffer_get_memory (buffer, 0);
+      gst_buffer_unref (buffer);
+    }
+
+    buf_copy = gst_mini_object_get_qdata (GST_MINI_OBJECT (copy),
+        gst_va_buffer_surface_quark ());
+    g_assert (buf_copy->n_mems == 1);
+
+    if (!self->copy)
+      self->copy = gst_va_surface_copy_new (self->display, &self->info);
+    if (self->copy && gst_va_surface_copy (self->copy, buf_copy->surface,
+            buf->surface))
+      return copy;
+
+    gst_memory_unref (copy);
+
+    /* try system memory */
+  }
+
+  if (*drm_mod != 0) {
+    GST_ERROR_OBJECT (self, "Failed to copy dmabuf because non-linear "
+        "modifier: %#lx.", *drm_mod);
+    return NULL;
+  }
+
+  /* fallback to system memory */
+  return self->parent_copy (gmem, offset, size);
+
+}
 
 static gpointer
 gst_va_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
@@ -282,6 +363,7 @@ gst_va_dmabuf_allocator_finalize (GObject * object)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (object);
 
+  g_clear_pointer (&self->copy, gst_va_surface_copy_free);
   gst_va_memory_pool_finalize (&self->pool);
   gst_clear_object (&self->display);
 
@@ -314,9 +396,14 @@ gst_va_dmabuf_allocator_class_init (GstVaDmabufAllocatorClass * klass)
 static void
 gst_va_dmabuf_allocator_init (GstVaDmabufAllocator * self)
 {
+  GstAllocator *allocator = GST_ALLOCATOR (self);
+
+  self->parent_map = allocator->mem_map;
+  allocator->mem_map = gst_va_dmabuf_mem_map;
+  self->parent_copy = allocator->mem_copy;
+  allocator->mem_copy = gst_va_dmabuf_mem_copy;
+
   gst_va_memory_pool_init (&self->pool);
-  self->parent_map = GST_ALLOCATOR (self)->mem_map;
-  GST_ALLOCATOR (self)->mem_map = gst_va_dmabuf_mem_map;
 }
 
 GstAllocator *
@@ -672,6 +759,8 @@ gst_va_dmabuf_allocator_set_format (GstAllocator * allocator,
 
   self->usage_hint = usage_hint;
   self->info = *info;
+
+  g_clear_pointer (&self->copy, gst_va_surface_copy_free);
 
   ret = gst_va_dmabuf_allocator_try (allocator);
 
