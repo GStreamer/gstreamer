@@ -272,6 +272,7 @@ gst_avtp_src_fill (GstPushSrc * pushsrc, GstBuffer * buffer)
   GstMapInfo map;
   gsize buffer_size;
   ssize_t n = MAX_AVTPDU_SIZE;
+  ssize_t received = -1;
   GstAvtpSrc *avtpsrc = GST_AVTP_SRC (pushsrc);
 
   buffer_size = gst_buffer_get_size (buffer);
@@ -290,8 +291,8 @@ gst_avtp_src_fill (GstPushSrc * pushsrc, GstBuffer * buffer)
 
 retry:
   errno = 0;
-  n = recv (avtpsrc->sk_fd, map.data, n, 0);
-  if (n < 0) {
+  received = recv (avtpsrc->sk_fd, map.data, n, 0);
+  if (received < 0) {
     if (errno == EINTR) {
       goto retry;
     }
