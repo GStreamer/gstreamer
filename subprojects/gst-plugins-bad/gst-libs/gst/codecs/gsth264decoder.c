@@ -190,7 +190,7 @@ static GstFlowReturn gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
 /* codec specific functions */
 static GstFlowReturn gst_h264_decoder_process_sps (GstH264Decoder * self,
     GstH264SPS * sps);
-static gboolean gst_h264_decoder_decode_slice (GstH264Decoder * self);
+static GstFlowReturn gst_h264_decoder_decode_slice (GstH264Decoder * self);
 static GstFlowReturn gst_h264_decoder_decode_nal (GstH264Decoder * self,
     GstH264NalUnit * nalu);
 static gboolean gst_h264_decoder_fill_picture_from_slice (GstH264Decoder * self,
@@ -2507,7 +2507,7 @@ gst_h264_decoder_init_gap_picture (GstH264Decoder * self,
   return gst_h264_decoder_calculate_poc (self, picture);
 }
 
-static gboolean
+static GstFlowReturn
 gst_h264_decoder_decode_slice (GstH264Decoder * self)
 {
   GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
@@ -2516,11 +2516,11 @@ gst_h264_decoder_decode_slice (GstH264Decoder * self)
   GstH264Picture *picture = priv->current_picture;
   GArray *ref_pic_list0 = NULL;
   GArray *ref_pic_list1 = NULL;
-  gboolean ret = FALSE;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (!picture) {
     GST_ERROR_OBJECT (self, "No current picture");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   GST_LOG_OBJECT (self, "Decode picture %p (frame_num %d, poc %d)",
@@ -2529,8 +2529,10 @@ gst_h264_decoder_decode_slice (GstH264Decoder * self)
   priv->max_pic_num = slice->header.max_pic_num;
 
   if (priv->process_ref_pic_lists) {
-    if (!gst_h264_decoder_modify_ref_pic_lists (self))
+    if (!gst_h264_decoder_modify_ref_pic_lists (self)) {
+      ret = GST_FLOW_ERROR;
       goto beach;
+    }
 
     ref_pic_list0 = priv->ref_pic_list0;
     ref_pic_list1 = priv->ref_pic_list1;
@@ -2540,7 +2542,7 @@ gst_h264_decoder_decode_slice (GstH264Decoder * self)
 
   ret = klass->decode_slice (self, picture, slice, ref_pic_list0,
       ref_pic_list1);
-  if (!ret) {
+  if (ret != GST_FLOW_OK) {
     GST_WARNING_OBJECT (self,
         "Subclass didn't want to decode picture %p (frame_num %d, poc %d)",
         picture, picture->frame_num, picture->pic_order_cnt);
