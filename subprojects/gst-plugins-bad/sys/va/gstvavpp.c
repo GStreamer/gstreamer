@@ -68,6 +68,7 @@
 #include "gstvavpp.h"
 
 #include <gst/video/video.h>
+#include <gst/va/gstvautils.h>
 
 #include <va/va_drmcommon.h>
 
@@ -77,7 +78,6 @@
 #include "gstvadisplay_priv.h"
 #include "gstvafilter.h"
 #include "gstvapool.h"
-#include "gstvautils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_vpp_debug);
 #define GST_CAT_DEFAULT gst_va_vpp_debug

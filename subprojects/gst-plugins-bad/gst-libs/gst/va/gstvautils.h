@@ -24,23 +24,31 @@
 
 G_BEGIN_DECLS
 
+GST_VA_API
 gboolean              gst_va_ensure_element_data          (gpointer element,
                                                            const gchar *render_device_path,
                                                            GstVaDisplay ** display_ptr);
+GST_VA_API
+void                  gst_va_context_query                (GstElement * element,
+                                                           const gchar * context_type);
+GST_VA_API
 gboolean              gst_va_handle_set_context           (GstElement * element,
                                                            GstContext * context,
                                                            const gchar *render_device_path,
                                                            GstVaDisplay ** display_ptr);
+GST_VA_API
 gboolean              gst_va_handle_context_query         (GstElement * element,
                                                            GstQuery * query,
                                                            GstVaDisplay * display);
+GST_VA_API
 void                  gst_va_element_propagate_display_context (GstElement * element,
                                                            GstVaDisplay * display);
-
+GST_VA_API
 gboolean              gst_context_get_va_display          (GstContext * context,
                                                            const gchar * type_name,
                                                            const gchar * render_device_path,
                                                            GstVaDisplay ** display_ptr);
+GST_VA_API
 void                  gst_context_set_va_display          (GstContext * context,
                                                            GstVaDisplay * display);
 

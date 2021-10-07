@@ -14,7 +14,6 @@ va_sources = [
   'gstvapool.c',
   'gstvaprofile.c',
   'gstvasurfacecopy.c',
-  'gstvautils.c',
   'gstvavideoformat.c',
   'gstvavp8dec.c',
   'gstvavp9dec.c',

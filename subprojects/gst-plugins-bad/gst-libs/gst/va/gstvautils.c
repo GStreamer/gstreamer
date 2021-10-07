@@ -44,8 +44,6 @@ _init_context_debug (void)
 static gboolean
 gst_va_display_found (GstElement * element, GstVaDisplay * display)
 {
-  _init_context_debug ();
-
   if (display) {
     GST_CAT_LOG_OBJECT (GST_CAT_CONTEXT, element, "already have a display (%p)",
         display);
@@ -61,8 +59,6 @@ pad_query (const GValue * item, GValue * value, gpointer user_data)
   GstPad *pad = g_value_get_object (item);
   GstQuery *query = user_data;
   gboolean res;
-
-  _init_context_debug ();
 
   res = gst_pad_peer_query (pad, query);
 
@@ -99,8 +95,17 @@ _gst_va_run_query (GstElement * element, GstQuery * query,
   return g_value_get_boolean (&res);
 }
 
-static void
-_gst_context_query (GstElement * element, const gchar * context_type)
+/**
+ * gst_va_context_query:
+ * @element: a #GstElement
+ * @context_type: the #gchar string specify the context type name
+ *
+ * Query the specified context type name.
+ *
+ * Since: 1.22
+ **/
+void
+gst_va_context_query (GstElement * element, const gchar * context_type)
 {
   GstQuery *query;
   GstContext *ctxt = NULL;
@@ -147,9 +152,15 @@ _gst_context_query (GstElement * element, const gchar * context_type)
   gst_query_unref (query);
 }
 
-/*  4) Create a context by itself and post a GST_MESSAGE_HAVE_CONTEXT
- *     message.
- */
+/**
+ * gst_va_element_propagate_display_context:
+ * @element: a #GstElement
+ * @display: the #GstVaDisplay to propagate
+ *
+ * Propagate @display by posting it as #GstContext in the pipeline's bus.
+ *
+ * Since: 1.22
+ **/
 void
 gst_va_element_propagate_display_context (GstElement * element,
     GstVaDisplay * display)
@@ -157,13 +168,16 @@ gst_va_element_propagate_display_context (GstElement * element,
   GstContext *ctxt;
   GstMessage *msg;
 
+  _init_context_debug ();
+
   if (!display) {
     GST_ERROR_OBJECT (element, "Could not get VA display connection");
     return;
   }
 
-  _init_context_debug ();
-
+  /*  4) Create a context by itself and post a GST_MESSAGE_HAVE_CONTEXT
+   *     message.
+   */
   ctxt = gst_context_new (GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR, TRUE);
   gst_context_set_va_display (ctxt, display);
 
@@ -173,11 +187,25 @@ gst_va_element_propagate_display_context (GstElement * element,
   gst_element_post_message (element, msg);
 }
 
+/**
+ * gst_va_ensure_element_data:
+ * @element: a #GstElement
+ * @render_device_path: the #gchar string of render device path
+ * @display_ptr: (out) (transfer full): The #GstVaDisplay to ensure
+ *
+ * Called by the va element to ensure a valid #GstVaDisplay.
+ *
+ * Returns: whether a #GstVaDisplay exists in @display_ptr
+ *
+ * Since: 1.22
+ **/
 gboolean
 gst_va_ensure_element_data (gpointer element, const gchar * render_device_path,
     GstVaDisplay ** display_ptr)
 {
   GstVaDisplay *display;
+
+  _init_context_debug ();
 
   g_return_val_if_fail (element, FALSE);
   g_return_val_if_fail (render_device_path, FALSE);
@@ -189,13 +217,13 @@ gst_va_ensure_element_data (gpointer element, const gchar * render_device_path,
   if (gst_va_display_found (element, g_atomic_pointer_get (display_ptr)))
     goto done;
 
-  _gst_context_query (element, GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR);
+  gst_va_context_query (element, GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR);
 
-  /* Neighbour found and it updated the display */
+  /* Neighbour found and it updated the display. */
   if (gst_va_display_found (element, g_atomic_pointer_get (display_ptr)))
     goto done;
 
-  /* If no neighbor, or application not interested, use drm */
+  /* If no neighbor, or application not interested, use drm. */
   display = gst_va_display_drm_new_from_path (render_device_path);
 
   gst_object_replace ((GstObject **) display_ptr, (GstObject *) display);
@@ -208,12 +236,29 @@ done:
   return g_atomic_pointer_get (display_ptr) != NULL;
 }
 
+/**
+ * gst_va_handle_set_context:
+ * @element: a #GstElement
+ * @context: a #GstContext may contain the display
+ * @render_device_path: the #gchar string of render device path
+ * @display_ptr: (out) (transfer full): The #GstVaDisplay to set
+ *
+ * Called by elements in their GstElement::set_context() vmehtods.
+ * It gets a valid #GstVaDisplay if @context has it.
+ *
+ * Returns: whether the @display_ptr could be successfully set to
+ * a valid #GstVaDisplay in the @context
+ *
+ * Since: 1.22
+ **/
 gboolean
 gst_va_handle_set_context (GstElement * element, GstContext * context,
     const gchar * render_device_path, GstVaDisplay ** display_ptr)
 {
   GstVaDisplay *display_replacement = NULL;
   const gchar *context_type, *type_name;
+
+  _init_context_debug ();
 
   g_return_val_if_fail (display_ptr, FALSE);
 
@@ -241,6 +286,19 @@ gst_va_handle_set_context (GstElement * element, GstContext * context,
   return TRUE;
 }
 
+/**
+ * gst_va_handle_context_query:
+ * @element: a #GstElement
+ * @query: a #GstQuery to query the context
+ * @display: a #GstVaDisplay to answer the query
+ *
+ * Used by elements when processing their pad's queries, propagating
+ * element's #GstVaDisplay if the processed query requests it.
+ *
+ * Returns: whether we can handle the context query successfully
+ *
+ * Since: 1.22
+ **/
 gboolean
 gst_va_handle_context_query (GstElement * element, GstQuery * query,
     GstVaDisplay * display)
@@ -248,11 +306,11 @@ gst_va_handle_context_query (GstElement * element, GstQuery * query,
   const gchar *context_type;
   GstContext *ctxt, *old_ctxt;
 
+  _init_context_debug ();
+
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
   g_return_val_if_fail (!display || GST_IS_VA_DISPLAY (display), FALSE);
-
-  _init_context_debug ();
 
   GST_CAT_LOG_OBJECT (GST_CAT_CONTEXT, element,
       "handle context query %" GST_PTR_FORMAT, query);
@@ -273,11 +331,22 @@ gst_va_handle_context_query (GstElement * element, GstQuery * query,
   gst_query_set_context (query, ctxt);
   gst_context_unref (ctxt);
   GST_CAT_DEBUG_OBJECT (GST_CAT_CONTEXT, element,
-      "successuflly %" GST_PTR_FORMAT " on %" GST_PTR_FORMAT, display, query);
+      "successfully %" GST_PTR_FORMAT " on %" GST_PTR_FORMAT, display, query);
 
   return TRUE;
 }
 
+/**
+ * gst_context_get_va_display:
+ * @context: a #GstContext may contain the display
+ * @type_name: a #gchar string of the element type
+ * @render_device_path: the #gchar string of render device path
+ * @display_ptr: (out) (transfer full): the #GstVaDisplay we get
+ *
+ * Returns: whether we find a valid @display in the @context
+ *
+ * Since: 1.22
+ **/
 gboolean
 gst_context_get_va_display (GstContext * context, const gchar * type_name,
     const gchar * render_device_path, GstVaDisplay ** display_ptr)
@@ -286,6 +355,8 @@ gst_context_get_va_display (GstContext * context, const gchar * type_name,
   GstVaDisplay *display = NULL;
   gpointer dpy;
   gboolean is_devnode;
+
+  _init_context_debug ();
 
   g_return_val_if_fail (display_ptr, FALSE);
   g_return_val_if_fail (context, FALSE);
@@ -333,10 +404,21 @@ accept:
   }
 }
 
+/**
+ * gst_context_set_va_display:
+ * @context: a #GstContext
+ * @display: the #GstVaDisplay we want to set
+ *
+ * Set the @display in the @context
+ *
+ * Since: 1.22
+ */
 void
 gst_context_set_va_display (GstContext * context, GstVaDisplay * display)
 {
   GstStructure *s;
+
+  _init_context_debug ();
 
   g_return_if_fail (context != NULL);
 

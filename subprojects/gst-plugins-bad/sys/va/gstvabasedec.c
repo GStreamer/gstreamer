@@ -18,12 +18,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <gst/va/gstvautils.h>
+
 #include "gstvabasedec.h"
 
 #include "gstvaallocator.h"
 #include "gstvacaps.h"
 #include "gstvapool.h"
-#include "gstvautils.h"
 #include "gstvavideoformat.h"
 
 #define GST_CAT_DEFAULT (base->debug_category)

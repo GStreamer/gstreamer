@@ -22,12 +22,13 @@
 #include "config.h"
 #endif
 
+#include <gst/va/gstvautils.h>
+
 #include "gstvabasetransform.h"
 
 #include "gstvaallocator.h"
 #include "gstvacaps.h"
 #include "gstvapool.h"
-#include "gstvautils.h"
 
 #define GST_CAT_DEFAULT gst_va_base_transform_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);

@@ -2,12 +2,14 @@ va_sources = [
   'gstvadisplay.c',
   'gstvadisplay_drm.c',
   'gstvadisplay_wrapped.c',
+  'gstvautils.c',
 ]
 
 va_headers = [
   'gstvadisplay.h',
   'gstvadisplay_drm.h',
   'gstvadisplay_wrapped.h',
+  'gstvautils.h',
   'va_fwd.h',
   'va-prelude.h',
 ]
