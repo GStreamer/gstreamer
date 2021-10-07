@@ -807,7 +807,8 @@ class GstValidateListener(socketserver.BaseRequestHandler, Loggable):
                 # Make sure that action end is taken into account when checking if process
                 # is updating
                 test.position += 1
-                test.actions_infos[-1]['execution-duration'] = obj['execution-duration']
+                if test.actions_infos:
+                    test.actions_infos[-1]['execution-duration'] = obj['execution-duration']
             elif obj_type == 'report':
                 test.add_report(obj)
             elif obj_type == 'skip-test':
