@@ -423,7 +423,7 @@ validate_flow_setup_files (ValidateFlowOverride * flow, gint default_generate)
     g_free (directory_path);
   }
 
-  flow->output_file = fopen (flow->output_file_path, "w");
+  flow->output_file = fopen (flow->output_file_path, "wb");
   if (!flow->output_file)
     gst_validate_abort ("Could not open for writing: %s",
         flow->output_file_path);
