@@ -7,6 +7,7 @@ KNOWN_ISSUES = {
             r"^validate\.((?!compositor).)*$",
             r"^validate\.((?!glvideomixer).)*$",
             r"^validate\.((?!launch_pipeline).)*$",
+            r"^validate\.((?!rtsp*).)*$",
         ],
         "allow_flakiness": True,
     },
