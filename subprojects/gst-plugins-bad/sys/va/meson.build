@@ -18,7 +18,8 @@ va_sources = [
   'gstvavp8dec.c',
   'gstvavp9dec.c',
   'gstvampeg2dec.c',
-  'gstvavpp.c'
+  'gstvavpp.c',
+  'vasurfaceimage.c',
 ]
 
 va_option = get_option('va')

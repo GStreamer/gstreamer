@@ -26,10 +26,10 @@
 
 #include <sys/types.h>
 #include <unistd.h>
-#include <va/va_drmcommon.h>
 
 #include "gstvacaps.h"
 #include "gstvavideoformat.h"
+#include "vasurfaceimage.h"
 
 #define GST_CAT_DEFAULT gst_va_memory_debug
 GST_DEBUG_CATEGORY_STATIC (gst_va_memory_debug);
@@ -45,252 +45,6 @@ _init_debug_category (void)
     g_once_init_leave (&_init, 1);
   }
 #endif
-}
-
-static gboolean
-_destroy_surfaces (GstVaDisplay * display, VASurfaceID * surfaces,
-    gint num_surfaces)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  VAStatus status;
-
-  g_return_val_if_fail (num_surfaces > 0, FALSE);
-
-  gst_va_display_lock (display);
-  status = vaDestroySurfaces (dpy, surfaces, num_surfaces);
-  gst_va_display_unlock (display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaDestroySurfaces: %s", vaErrorStr (status));
-    return FALSE;
-  }
-
-  return TRUE;
-
-}
-
-static gboolean
-_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
-    guint width, guint height, gint usage_hint,
-    VASurfaceAttribExternalBuffers * ext_buf, VASurfaceID * surfaces,
-    guint num_surfaces)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  /* *INDENT-OFF* */
-  VASurfaceAttrib attrs[5] = {
-    {
-      .type = VASurfaceAttribUsageHint,
-      .flags = VA_SURFACE_ATTRIB_SETTABLE,
-      .value.type = VAGenericValueTypeInteger,
-      .value.value.i = usage_hint,
-    },
-    {
-      .type = VASurfaceAttribMemoryType,
-      .flags = VA_SURFACE_ATTRIB_SETTABLE,
-      .value.type = VAGenericValueTypeInteger,
-      .value.value.i = (ext_buf && ext_buf->num_buffers > 0)
-                               ? VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
-                               : VA_SURFACE_ATTRIB_MEM_TYPE_VA,
-    },
-  };
-  /* *INDENT-ON* */
-  VAStatus status;
-  guint num_attrs = 2;
-
-  g_return_val_if_fail (num_surfaces > 0, FALSE);
-
-  if (fourcc > 0) {
-    /* *INDENT-OFF* */
-    attrs[num_attrs++] = (VASurfaceAttrib) {
-      .type = VASurfaceAttribPixelFormat,
-      .flags = VA_SURFACE_ATTRIB_SETTABLE,
-      .value.type = VAGenericValueTypeInteger,
-      .value.value.i = fourcc,
-    };
-    /* *INDENT-ON* */
-  }
-
-  if (ext_buf) {
-    /* *INDENT-OFF* */
-    attrs[num_attrs++] = (VASurfaceAttrib) {
-      .type = VASurfaceAttribExternalBufferDescriptor,
-      .flags = VA_SURFACE_ATTRIB_SETTABLE,
-      .value.type = VAGenericValueTypePointer,
-      .value.value.p = ext_buf,
-    };
-    /* *INDENT-ON* */
-  }
-
-  gst_va_display_lock (display);
-  status = vaCreateSurfaces (dpy, rt_format, width, height, surfaces,
-      num_surfaces, attrs, num_attrs);
-  gst_va_display_unlock (display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaCreateSurfaces: %s", vaErrorStr (status));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_export_surface_to_dmabuf (GstVaDisplay * display, VASurfaceID surface,
-    guint32 flags, VADRMPRIMESurfaceDescriptor * desc)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  VAStatus status;
-
-  gst_va_display_lock (display);
-  status = vaExportSurfaceHandle (dpy, surface,
-      VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2, flags, desc);
-  gst_va_display_unlock (display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaExportSurfaceHandle: %s", vaErrorStr (status));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_destroy_image (GstVaDisplay * display, VAImageID image_id)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  VAStatus status;
-
-  gst_va_display_lock (display);
-  status = vaDestroyImage (dpy, image_id);
-  gst_va_display_unlock (display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaDestroyImage: %s", vaErrorStr (status));
-    return FALSE;
-  }
-  return TRUE;
-}
-
-static gboolean
-_get_derive_image (GstVaDisplay * display, VASurfaceID surface, VAImage * image)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  VAStatus status;
-
-  gst_va_display_lock (display);
-  status = vaDeriveImage (dpy, surface, image);
-  gst_va_display_unlock (display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_WARNING ("vaDeriveImage: %s", vaErrorStr (status));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_create_image (GstVaDisplay * display, GstVideoFormat format, gint width,
-    gint height, VAImage * image)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  const VAImageFormat *va_format;
-  VAStatus status;
-
-  va_format = gst_va_image_format_from_video_format (format);
-  if (!va_format)
-    return FALSE;
-
-  gst_va_display_lock (display);
-  status =
-      vaCreateImage (dpy, (VAImageFormat *) va_format, width, height, image);
-  gst_va_display_unlock (display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaCreateImage: %s", vaErrorStr (status));
-    return FALSE;
-  }
-  return TRUE;
-}
-
-static gboolean
-_get_image (GstVaDisplay * display, VASurfaceID surface, VAImage * image)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  VAStatus status;
-
-  gst_va_display_lock (display);
-  status = vaGetImage (dpy, surface, 0, 0, image->width, image->height,
-      image->image_id);
-  gst_va_display_unlock (display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaGetImage: %s", vaErrorStr (status));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_sync_surface (GstVaDisplay * display, VASurfaceID surface)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  VAStatus status;
-
-  gst_va_display_lock (display);
-  status = vaSyncSurface (dpy, surface);
-  gst_va_display_unlock (display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_WARNING ("vaSyncSurface: %s", vaErrorStr (status));
-    return FALSE;
-  }
-  return TRUE;
-}
-
-static gboolean
-_map_buffer (GstVaDisplay * display, VABufferID buffer, gpointer * data)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  VAStatus status;
-
-  gst_va_display_lock (display);
-  status = vaMapBuffer (dpy, buffer, data);
-  gst_va_display_unlock (display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_WARNING ("vaMapBuffer: %s", vaErrorStr (status));
-    return FALSE;
-  }
-  return TRUE;
-}
-
-static gboolean
-_unmap_buffer (GstVaDisplay * display, VABufferID buffer)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  VAStatus status;
-
-  gst_va_display_lock (display);
-  status = vaUnmapBuffer (dpy, buffer);
-  gst_va_display_unlock (display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_WARNING ("vaUnmapBuffer: %s", vaErrorStr (status));
-    return FALSE;
-  }
-  return TRUE;
-}
-
-static gboolean
-_put_image (GstVaDisplay * display, VASurfaceID surface, VAImage * image)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  VAStatus status;
-
-  if (!_sync_surface (display, surface))
-    return FALSE;
-
-  gst_va_display_lock (display);
-  status = vaPutImage (dpy, surface, image->image_id, 0, 0, image->width,
-      image->height, 0, 0, image->width, image->height);
-  gst_va_display_unlock (display);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaPutImage: %s", vaErrorStr (status));
-    return FALSE;
-  }
-  return TRUE;
 }
 
 /*=========================== Quarks for GstMemory ===========================*/
@@ -356,7 +110,7 @@ gst_va_buffer_surface_unref (gpointer data)
 
   if (g_atomic_int_dec_and_test (&buf->ref_count)) {
     GST_LOG_OBJECT (buf->display, "Destroying surface %#x", buf->surface);
-    _destroy_surfaces (buf->display, &buf->surface, 1);
+    va_destroy_surfaces (buf->display, &buf->surface, 1);
     gst_clear_object (&buf->display);
     g_slice_free (GstVaBufferSurface, buf);
   }
@@ -425,7 +179,7 @@ gst_va_memory_pool_flush_unlocked (GstVaMemoryPool * self,
     if (buf) {
       if (g_atomic_int_dec_and_test (&buf->ref_count)) {
         GST_LOG ("Destroying surface %#x", buf->surface);
-        _destroy_surfaces (display, &buf->surface, 1);
+        va_destroy_surfaces (display, &buf->surface, 1);
         self->surface_count -= 1;       /* GstVaDmabufAllocator */
         g_slice_free (GstVaBufferSurface, buf);
       }
@@ -517,7 +271,7 @@ gst_va_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
     return NULL;
   }
 
-  _sync_surface (self->display, surface);
+  va_sync_surface (self->display, surface);
 
   return self->parent_map (gmem, maxsize, flags);
 }
@@ -667,7 +421,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
     extbuf = &ext_buf;
   }
 
-  if (!_create_surfaces (self->display, rt_format, fourcc,
+  if (!va_create_surfaces (self->display, rt_format, fourcc,
           GST_VIDEO_INFO_WIDTH (&self->info),
           GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, extbuf,
           &surface, 1))
@@ -687,7 +441,8 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
 
   export_flags |= VA_EXPORT_SURFACE_READ_WRITE;
 
-  if (!_export_surface_to_dmabuf (self->display, surface, export_flags, &desc))
+  if (!va_export_surface_to_dmabuf (self->display, surface, export_flags,
+          &desc))
     goto failed;
 
   g_assert (GST_VIDEO_INFO_N_PLANES (&self->info) == desc.num_layers);
@@ -757,7 +512,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
 
 failed:
   {
-    _destroy_surfaces (self->display, &surface, 1);
+    va_destroy_surfaces (self->display, &surface, 1);
     return FALSE;
   }
 }
@@ -987,7 +742,7 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
     ext_buf.offsets[i] = offset[i];
   }
 
-  ret = _create_surfaces (display, rt_format, ext_buf.pixel_format,
+  ret = va_create_surfaces (display, rt_format, ext_buf.pixel_format,
       ext_buf.width, ext_buf.height, usage_hint, &ext_buf, &surface, 1);
   if (!ret)
     return FALSE;
@@ -1098,7 +853,7 @@ _va_free (GstAllocator * allocator, GstMemory * mem)
 
   if (va_mem->surface != VA_INVALID_ID && mem->parent == NULL) {
     GST_LOG_OBJECT (self, "Destroying surface %#x", va_mem->surface);
-    _destroy_surfaces (self->display, &va_mem->surface, 1);
+    va_destroy_surfaces (self->display, &va_mem->surface, 1);
   }
 
   g_mutex_clear (&va_mem->lock);
@@ -1141,28 +896,6 @@ _reset_mem (GstVaMemory * mem, GstAllocator * allocator, gsize size)
       0 /* align */ , 0 /* offset */ , size);
 }
 
-static inline gboolean
-_ensure_image (GstVaDisplay * display, VASurfaceID surface,
-    GstVideoInfo * info, VAImage * image, gboolean derived)
-{
-  gboolean ret = TRUE;
-
-  if (image->image_id != VA_INVALID_ID)
-    return TRUE;
-
-  if (!_sync_surface (display, surface))
-    return FALSE;
-
-  if (derived) {
-    ret = _get_derive_image (display, surface, image);
-  } else {
-    ret = _create_image (display, GST_VIDEO_INFO_FORMAT (info),
-        GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info), image);
-  }
-
-  return ret;
-}
-
 static inline void
 _update_info (GstVideoInfo * info, const VAImage * image)
 {
@@ -1183,7 +916,7 @@ _update_image_info (GstVaAllocator * va_allocator)
   VAImage image = {.image_id = VA_INVALID_ID, };
 
   /* Create a test surface first */
-  if (!_create_surfaces (va_allocator->display, va_allocator->rt_format,
+  if (!va_create_surfaces (va_allocator->display, va_allocator->rt_format,
           va_allocator->fourcc, GST_VIDEO_INFO_WIDTH (&va_allocator->info),
           GST_VIDEO_INFO_HEIGHT (&va_allocator->info), va_allocator->usage_hint,
           NULL, &surface, 1)) {
@@ -1197,26 +930,26 @@ _update_image_info (GstVaAllocator * va_allocator)
 
   /* Try derived first, but different formats can never derive */
   if (va_allocator->surface_format == va_allocator->img_format) {
-    if (_get_derive_image (va_allocator->display, surface, &image)) {
+    if (va_get_derive_image (va_allocator->display, surface, &image)) {
       va_allocator->use_derived = TRUE;
       va_allocator->derived_info = va_allocator->info;
       _update_info (&va_allocator->derived_info, &image);
-      _destroy_image (va_allocator->display, image.image_id);
+      va_destroy_image (va_allocator->display, image.image_id);
     }
     image.image_id = VA_INVALID_ID;     /* reset it */
   }
 
   /* Then we try to create a image. */
-  if (!_create_image (va_allocator->display, va_allocator->img_format,
+  if (!va_create_image (va_allocator->display, va_allocator->img_format,
           GST_VIDEO_INFO_WIDTH (&va_allocator->info),
           GST_VIDEO_INFO_HEIGHT (&va_allocator->info), &image)) {
-    _destroy_surfaces (va_allocator->display, &surface, 1);
+    va_destroy_surfaces (va_allocator->display, &surface, 1);
     return FALSE;
   }
 
   _update_info (&va_allocator->info, &image);
-  _destroy_image (va_allocator->display, image.image_id);
-  _destroy_surfaces (va_allocator->display, &surface, 1);
+  va_destroy_image (va_allocator->display, image.image_id);
+  va_destroy_surfaces (va_allocator->display, &surface, 1);
 
   return TRUE;
 }
@@ -1284,17 +1017,17 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
   else
     info = &va_allocator->info;
 
-  if (!_ensure_image (display, mem->surface, info, &mem->image, use_derived))
+  if (!va_ensure_image (display, mem->surface, info, &mem->image, use_derived))
     return NULL;
 
   mem->is_derived = use_derived;
 
   if (!mem->is_derived) {
-    if (!_get_image (display, mem->surface, &mem->image))
+    if (!va_get_image (display, mem->surface, &mem->image))
       goto fail;
   }
 
-  if (!_map_buffer (display, mem->image.buf, &mem->mapped_data))
+  if (!va_map_buffer (display, mem->image.buf, &mem->mapped_data))
     goto fail;
 
 success:
@@ -1306,7 +1039,7 @@ success:
 
 fail:
   {
-    _destroy_image (display, mem->image.image_id);
+    va_destroy_image (display, mem->image.image_id);
     _clean_mem (mem);
     return NULL;
   }
@@ -1341,15 +1074,15 @@ _va_unmap_unlocked (GstVaMemory * mem)
 
   if (mem->image.image_id != VA_INVALID_ID) {
     if (mem->is_dirty && !mem->is_derived) {
-      ret = _put_image (display, mem->surface, &mem->image);
+      ret = va_put_image (display, mem->surface, &mem->image);
       mem->is_dirty = FALSE;
     }
     /* XXX(victor): if is derived and is dirty, create another surface
      * an replace it in mem */
   }
 
-  ret &= _unmap_buffer (display, mem->image.buf);
-  ret &= _destroy_image (display, mem->image.image_id);
+  ret &= va_unmap_buffer (display, mem->image.buf);
+  ret &= va_destroy_image (display, mem->image.image_id);
 
 bail:
   _clean_mem (mem);
@@ -1443,7 +1176,8 @@ _va_copy (GstMemory * mem, gssize offset, gssize size)
     GstVaMemory *va_copy = (GstVaMemory *) copy;
 
     if (!va_mem->is_derived) {
-      if (_put_image (va_allocator->display, va_copy->surface, &va_mem->image)) {
+      if (va_put_image (va_allocator->display, va_copy->surface,
+              &va_mem->image)) {
         GST_LOG ("shallow copy of %#x to %#x", va_mem->surface,
             va_copy->surface);
         gst_memory_unmap (mem, &sinfo);
@@ -1515,7 +1249,7 @@ gst_va_allocator_alloc (GstAllocator * allocator)
     return NULL;
   }
 
-  if (!_create_surfaces (self->display, self->rt_format, self->fourcc,
+  if (!va_create_surfaces (self->display, self->rt_format, self->fourcc,
           GST_VIDEO_INFO_WIDTH (&self->info),
           GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
           &surface, 1))
@@ -1774,7 +1508,7 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
     display = self->display;
     width = GST_VIDEO_INFO_WIDTH (&self->info);
     height = GST_VIDEO_INFO_HEIGHT (&self->info);
-    if (!_create_surfaces (self->display, rt_format, fourcc,
+    if (!va_create_surfaces (self->display, rt_format, fourcc,
             GST_VIDEO_INFO_WIDTH (&self->info),
             GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
             &surface, 1))
@@ -1791,7 +1525,7 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
     width = GST_VIDEO_INFO_WIDTH (&self->info);
     height = GST_VIDEO_INFO_HEIGHT (&self->info);
     format = GST_VIDEO_INFO_FORMAT (&self->info);
-    if (!_create_surfaces (self->display, self->rt_format, self->fourcc,
+    if (!va_create_surfaces (self->display, self->rt_format, self->fourcc,
             GST_VIDEO_INFO_WIDTH (&self->info),
             GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
             &surface, 1))
