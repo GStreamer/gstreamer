@@ -31,6 +31,7 @@ KNOWN_ISSUES = {
     "General flakiness": {
         "tests": [
             r"^ges\.((?!render).)*$",
+            r"^ges\.playback\.nested.*$",
         ],
         "allow_flakiness": True,
     },
