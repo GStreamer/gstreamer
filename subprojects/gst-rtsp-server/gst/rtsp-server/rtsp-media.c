@@ -4108,7 +4108,8 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
   set_target_state (media, GST_STATE_NULL, FALSE);
   success = TRUE;
 
-  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED) {
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED
+      || priv->status == GST_RTSP_MEDIA_STATUS_SUSPENDED) {
     GstRTSPMediaClass *klass;
 
     klass = GST_RTSP_MEDIA_GET_CLASS (media);
