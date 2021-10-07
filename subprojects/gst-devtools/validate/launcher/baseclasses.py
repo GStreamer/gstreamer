@@ -2194,7 +2194,7 @@ class _TestsLauncher(Loggable):
                 res = True
                 for r in range(self.options.n_runs):
                     printc("-> Iteration %d" % r, end='\r')
-                    if not self._run_tests():
+                    if not self._run_tests(retry_on_failures=self.options.retry_on_failures):
                         res = False
                         printc("ERROR", Colors.FAIL, end="\r")
                     else:
