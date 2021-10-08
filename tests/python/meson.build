@@ -17,3 +17,18 @@ test('python-overrides-devenv', setenv, args: ['--builddir=@0@'.format(meson.bui
               '--gstbuilddir=@0@'.format(meson.current_build_dir() / '..' / '..'),
               '--srcdir=@0@'.format(meson.source_root()),
               meson.current_source_dir() / 'python-devenv-overrides.py'])
+
+env = environment()
+env.set('GI_TYPELIB_PATH', meson.current_build_dir() / root_rel)
+if build_machine.system() == 'windows'
+    env.append('PATH', meson.current_build_dir() / root_rel)
+elif build_machine.system() == 'linux'
+    env.append('LD_LIBRARY_PATH', meson.current_build_dir() / root_rel)
+else
+    env.append('DYLD_LIBRARY_PATH', meson.current_build_dir() / root_rel)
+endif
+
+env.set('GST_OVERRIDE_SRC_PATH', meson.current_source_dir() / root_rel / 'subprojects/gst-python/gi/overrides')
+env.set('GST_OVERRIDE_BUILD_PATH', meson.current_build_dir() / root_rel / 'subprojects/gst-python/gi/overrides')
+
+test('python-full', python, args: [meson.current_source_dir() / 'python-full.py'], env: env)
