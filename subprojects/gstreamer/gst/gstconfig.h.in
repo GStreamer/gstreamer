@@ -124,7 +124,7 @@
  * http://docs.oracle.com/cd/E19205-01/820-4155/c++_faq.html#Vers6
  * https://software.intel.com/en-us/node/583402
  */
-#if defined(__alpha__) || defined(__arc__) || defined(__arm__) || defined(__aarch64__) || defined(__bfin) || defined(__hppa__) || defined(__nios2__) || defined(__MICROBLAZE__) || defined(__mips__) || defined(__or1k__) || defined(__sh__) || defined(__SH4__) || defined(__sparc__) || defined(__sparc) || defined(__ia64__) || defined(_M_ALPHA) || defined(_M_ARM) || defined(_M_ARM64) || defined(_M_IA64) || defined(__xtensa__) || defined(__e2k__) || defined(__riscv)
+#if defined(__alpha__) || defined(__arc__) || defined(__arm__) || defined(__aarch64__) || defined(__bfin) || defined(__hppa__) || defined(__nios2__) || defined(__MICROBLAZE__) || defined(__mips__) || defined(__or1k__) || defined(__sh__) || defined(__SH4__) || defined(__sparc__) || defined(__sparc) || defined(__ia64__) || defined(_M_ALPHA) || defined(_M_ARM) || defined(_M_ARM64) || defined(_M_IA64) || defined(__xtensa__) || defined(__e2k__) || defined(__riscv) || defined(__ARC64__) 
 #  define GST_HAVE_UNALIGNED_ACCESS 0
 #elif defined(__i386__) || defined(__i386) || defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__ppc__) || defined(__ppc64__) || defined(__powerpc__) || defined(__powerpc64__) || defined(__m68k__) || defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64) || defined(__s390__) || defined(__s390x__) || defined(__zarch__)
 #  define GST_HAVE_UNALIGNED_ACCESS 1
