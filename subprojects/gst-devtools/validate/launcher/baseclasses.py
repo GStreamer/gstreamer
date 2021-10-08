@@ -708,7 +708,7 @@ class Test(Loggable):
             extra_logs.append(shutil.copy(logfile, path))
         self.extra_logfiles = extra_logs
 
-    def test_end(self):
+    def test_end(self, retry_on_failures=False):
         self.kill_subprocess()
         self.thread.join()
         self.time_taken = time.time() - self._starting_time
@@ -717,10 +717,7 @@ class Test(Loggable):
             signal.signal(signal.SIGINT, self.previous_sigint_handler)
 
         self.finalize_logfiles()
-        message = None
-        end = "\n"
-
-        if self.options.dump_on_failure:
+        if self.options.dump_on_failure and not retry_on_failures and not self.max_retries:
             if self.result not in [Result.PASSED, Result.KNOWN_ERROR, Result.NOT_RUN]:
                 self._dump_log_files()
 
@@ -1490,7 +1487,7 @@ class TestsManager(Loggable):
                     max_retries = failure_def.get('allow_flakiness', failure_def.get('max_retries'))
                     if max_retries:
                         test.max_retries = int(max_retries)
-                        self.debug(f"{test.classname} allow {test.max_retries}")
+                        self.debug(f"{test.classname} allow {test.max_retries} retries.")
                     else:
                         for issue in failure_def['issues']:
                             issue['bug'] = bugid
@@ -2068,8 +2065,8 @@ class _TestsLauncher(Loggable):
 
         return True
 
-    def print_result(self, current_test_num, test, total_num_tests, retry_on_failure=False):
-        if test.result != Result.PASSED and (not retry_on_failure or test.max_retries):
+    def print_result(self, current_test_num, test, total_num_tests, retry_on_failures=False):
+        if test.result != Result.PASSED and (not retry_on_failures or test.max_retries):
             printc(str(test), color=utils.get_color_for_result(test.result))
 
         length = 80
@@ -2138,17 +2135,17 @@ class _TestsLauncher(Loggable):
                 test = self.tests_wait()
                 jobs_running -= 1
                 current_test_num += 1
-                res = test.test_end()
+                res = test.test_end(retry_on_failures=retry_on_failures)
                 to_report = True
                 if res not in [Result.PASSED, Result.SKIPPED, Result.KNOWN_ERROR]:
                     if self.options.forever or self.options.fatal_error:
-                        self.print_result(current_test_num - 1, test, retry_on_failure=retry_on_failures,
+                        self.print_result(current_test_num - 1, test, retry_on_failures=retry_on_failures,
                             total_num_tests=total_num_tests)
                         self.reporter.after_test(test)
                         return False
 
                     if retry_on_failures or test.max_retries:
-                        if not self.options.redirect_logs and test.max_retries:
+                        if not self.options.redirect_logs:
                             test.copy_logfiles()
                         to_retry.append(test)
 
@@ -2157,7 +2154,7 @@ class _TestsLauncher(Loggable):
                             test.max_retries -= 1
                             to_report = False
                 self.print_result(current_test_num - 1, test,
-                    retry_on_failure=retry_on_failures,
+                    retry_on_failures=retry_on_failures,
                     total_num_tests=total_num_tests)
                 if to_report:
                     self.reporter.after_test(test)
