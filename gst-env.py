@@ -582,6 +582,10 @@ if __name__ == "__main__":
                 print('{}={}'.format(name, shlex.quote(value)))
                 print('export {}'.format(name))
         else:
+            if os.environ.get("CI_PROJECT_NAME"):
+                print("Ignoring SIGINT when running on the CI,"
+                      " as we get spurious sigint in there for some reason.")
+                signal.signal(signal.SIGINT, signal.SIG_IGN)
             exit(subprocess.call(args, close_fds=False, env=env))
 
     except subprocess.CalledProcessError as e:
