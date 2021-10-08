@@ -792,7 +792,27 @@ static void
 src_pad_removed_cb (GstElement * element, GstPad * pad,
     GstSourceHandler * handler)
 {
-  /* FIXME : IMPLEMENT */
+  GstURIDecodeBin3 *uridecodebin = handler->uridecodebin;
+  GstPad *peer_pad = gst_pad_get_peer (pad);
+
+  if (peer_pad) {
+    GstPadTemplate *templ = gst_pad_get_pad_template (peer_pad);
+
+    GST_DEBUG_OBJECT (uridecodebin,
+        "Source %" GST_PTR_FORMAT " removed pad %" GST_PTR_FORMAT " peer %"
+        GST_PTR_FORMAT, element, pad, peer_pad);
+
+    if (templ) {
+      if (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_REQUEST) {
+        GST_DEBUG_OBJECT (uridecodebin,
+            "Releasing decodebin pad %" GST_PTR_FORMAT, peer_pad);
+        gst_element_release_request_pad (uridecodebin->decodebin, peer_pad);
+      }
+      gst_object_unref (templ);
+    }
+
+    gst_object_unref (peer_pad);
+  }
 }
 
 static void
