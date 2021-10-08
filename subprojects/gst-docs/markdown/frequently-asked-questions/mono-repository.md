@@ -183,6 +183,14 @@ We may remove the "master" branch at some point in future.
 
 You can still build each GStreamer module individually by changing into the `subprojects/$gst_module` directory and then running Meson with that directory as the source directory.
 
+## I want to cherry-pick a patch from the upstream mono repository into my <= 1.18 repository:
+
+As the subtree changed in the monorepo organization (ie subprojects/gst-pluigns-xx), you can give a try to the following git command to resolve the path conflict:
+
+```
+$ git cherry-pick <commit> ... --strategy=subtree
+```
+
 ## I have another question related to the mono repository - where is the best place to ask or get help?
 
 Best to just pop into our IRC channel `#gstreamer` on the OFTC network (also accessible via Matrix) or send a mail to the gstreamer-devel mailing list.
