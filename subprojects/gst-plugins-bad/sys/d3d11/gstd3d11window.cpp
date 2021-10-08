@@ -533,7 +533,25 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   /* Step 3: Create swapchain
    * (or reuse old swapchain if the format is not changed) */
   window->allow_tearing = FALSE;
-  g_object_get (window->device, "allow-tearing", &window->allow_tearing, NULL);
+
+#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
+  {
+    ComPtr < IDXGIFactory5 > factory5;
+    IDXGIFactory1 *factory_handle;
+    BOOL allow_tearing = FALSE;
+
+    factory_handle = gst_d3d11_device_get_dxgi_factory_handle (window->device);
+    hr = factory_handle->QueryInterface (IID_PPV_ARGS (&factory5));
+    if (SUCCEEDED (hr)) {
+      hr = factory5->CheckFeatureSupport (DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+          (void *) &allow_tearing, sizeof (allow_tearing));
+    }
+
+    if (SUCCEEDED (hr) && allow_tearing)
+      window->allow_tearing = allow_tearing;
+  }
+#endif
+
   if (window->allow_tearing) {
     GST_DEBUG_OBJECT (window, "device support tearning");
     swapchain_flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;

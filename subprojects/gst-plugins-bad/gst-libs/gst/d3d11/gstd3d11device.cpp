@@ -87,7 +87,6 @@ enum
   PROP_VENDOR_ID,
   PROP_HARDWARE,
   PROP_DESCRIPTION,
-  PROP_ALLOW_TEARING,
   PROP_CREATE_FLAGS,
   PROP_ADAPTER_LUID,
 };
@@ -104,7 +103,6 @@ struct _GstD3D11DevicePrivate
   guint vendor_id;
   gboolean hardware;
   gchar *description;
-  gboolean allow_tearing;
   guint create_flags;
   gint64 adapter_luid;
 
@@ -397,11 +395,6 @@ gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
   g_object_class_install_property (gobject_class, PROP_DESCRIPTION,
       g_param_spec_string ("description", "Description",
           "Human readable device description", NULL, readable_flags));
-
-  g_object_class_install_property (gobject_class, PROP_ALLOW_TEARING,
-      g_param_spec_boolean ("allow-tearing", "Allow tearing",
-          "Whether dxgi device supports allow-tearing feature or not", FALSE,
-          readable_flags));
 
   g_object_class_install_property (gobject_class, PROP_CREATE_FLAGS,
       g_param_spec_uint ("create-flags", "Create flags",
@@ -810,20 +803,6 @@ gst_d3d11_device_constructed (GObject * object)
     GST_ERROR_OBJECT (self, "cannot create dxgi factory, hr: 0x%x", (guint) hr);
     goto out;
   }
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
-  {
-    ComPtr < IDXGIFactory5 > factory5;
-    BOOL allow_tearing;
-
-    hr = factory.As (&factory5);
-    if (SUCCEEDED (hr)) {
-      hr = factory5->CheckFeatureSupport (DXGI_FEATURE_PRESENT_ALLOW_TEARING,
-          (void *) &allow_tearing, sizeof (allow_tearing));
-
-      priv->allow_tearing = SUCCEEDED (hr) && allow_tearing;
-    }
-  }
-#endif
 
   if (factory->EnumAdapters1 (priv->adapter, &adapter) == DXGI_ERROR_NOT_FOUND) {
     GST_DEBUG_OBJECT (self, "No adapter for index %d", priv->adapter);
@@ -996,9 +975,6 @@ gst_d3d11_device_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DESCRIPTION:
       g_value_set_string (value, priv->description);
-      break;
-    case PROP_ALLOW_TEARING:
-      g_value_set_boolean (value, priv->allow_tearing);
       break;
     case PROP_CREATE_FLAGS:
       g_value_set_uint (value, priv->create_flags);
