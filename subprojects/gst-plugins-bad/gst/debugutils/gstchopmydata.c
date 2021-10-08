@@ -128,8 +128,9 @@ gst_chop_my_data_class_init (GstChopMyDataClass * klass)
   gst_element_class_add_static_pad_template (element_class,
       &gst_chop_my_data_sink_template);
 
-  gst_element_class_set_static_metadata (element_class, "FIXME",
-      "Generic", "FIXME", "David Schleef <ds@schleef.org>");
+  gst_element_class_set_static_metadata (element_class, "Chop my data",
+      "Generic", "Split up a stream into randomly-sized buffers",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void
