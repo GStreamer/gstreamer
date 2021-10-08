@@ -120,8 +120,13 @@ gst_mf_video_enc_set_context (GstElement * element, GstContext * context)
 {
 #if GST_MF_HAVE_D3D11
   GstMFVideoEnc *self = GST_MF_VIDEO_ENC (element);
+  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (self);
+  GstMFVideoEncDeviceCaps *device_caps = &klass->device_caps;
 
-  gst_d3d11_handle_set_context (element, context, 0, &self->other_d3d11_device);
+  if (device_caps->d3d11_aware) {
+    gst_d3d11_handle_set_context_for_adapter_luid (element, context,
+        device_caps->adapter_luid, &self->other_d3d11_device);
+  }
 #endif
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
@@ -134,7 +139,6 @@ gst_mf_video_enc_open (GstVideoEncoder * enc)
   GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (enc);
   GstMFVideoEncDeviceCaps *device_caps = &klass->device_caps;
   GstMFTransformEnumParams enum_params = { 0, };
-  gint64 adapter_luid = 0;
   MFT_REGISTER_TYPE_INFO output_type;
   gboolean ret;
 
@@ -145,14 +149,15 @@ gst_mf_video_enc_open (GstVideoEncoder * enc)
     ComPtr < ID3D10Multithread > multi_thread;
     GstD3D11Device *device;
 
-    if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self),
-            device_caps->adapter, &self->other_d3d11_device)) {
+    if (!gst_d3d11_ensure_element_data_for_adapter_luid (GST_ELEMENT (self),
+            device_caps->adapter_luid, &self->other_d3d11_device)) {
       GST_ERROR_OBJECT (self, "Other d3d11 device is unavailable");
       return FALSE;
     }
 
     /* Create our own device with D3D11_CREATE_DEVICE_VIDEO_SUPPORT */
-    self->d3d11_device = gst_d3d11_device_new (device_caps->adapter,
+    self->d3d11_device =
+        gst_d3d11_device_new_for_adapter_luid (device_caps->adapter_luid,
         D3D11_CREATE_DEVICE_VIDEO_SUPPORT);
     if (!self->d3d11_device) {
       GST_ERROR_OBJECT (self, "Couldn't create internal d3d11 device");
@@ -191,8 +196,6 @@ gst_mf_video_enc_open (GstVideoEncoder * enc)
       gst_clear_object (&self->d3d11_device);
       return FALSE;
     }
-
-    g_object_get (self->d3d11_device, "adapter-luid", &adapter_luid, NULL);
   }
 #endif
 
@@ -205,12 +208,12 @@ gst_mf_video_enc_open (GstVideoEncoder * enc)
   enum_params.device_index = klass->device_index;
 
   if (device_caps->d3d11_aware)
-    enum_params.adapter_luid = adapter_luid;
+    enum_params.adapter_luid = device_caps->adapter_luid;
 
   GST_DEBUG_OBJECT (self,
       "Create MFT with enum flags: 0x%x, device index: %d, d3d11 aware: %d, "
       "adapter-luid %" G_GINT64_FORMAT, klass->enum_flags, klass->device_index,
-      device_caps->d3d11_aware, adapter_luid);
+      device_caps->d3d11_aware, device_caps->adapter_luid);
 
   self->transform = gst_mf_transform_new (&enum_params);
   ret = !!self->transform;
@@ -1692,10 +1695,10 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
   }
 
   if (d3d11_device && (have_NV12 || have_P010) && d3d11_aware) {
-    guint adapter = 0;
+    gint64 adapter_luid = 0;
     GValue d3d11_formats = G_VALUE_INIT;
 
-    g_object_get (d3d11_device, "adapter", &adapter, NULL);
+    g_object_get (d3d11_device, "adapter-luid", &adapter_luid, NULL);
 
     d3d11_caps = gst_caps_copy (sink_caps);
 
@@ -1719,7 +1722,7 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
     gst_caps_set_features_simple (d3d11_caps,
         gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
     device_caps->d3d11_aware = TRUE;
-    device_caps->adapter = adapter;
+    device_caps->adapter_luid = adapter_luid;
   }
 #endif
 

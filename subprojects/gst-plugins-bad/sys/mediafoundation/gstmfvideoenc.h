@@ -75,8 +75,8 @@ struct _GstMFVideoEncDeviceCaps
 
   /* TRUE if MFT support d3d11 and also we can use d3d11 interop */
   gboolean d3d11_aware;
-  /* DXGI adapter index to use, ignored if d3d11-unaware  */
-  guint adapter;
+  /* DXGI adapter LUID, valid only when d3d11_aware == TRUE */
+  gint64 adapter_luid;
 };
 
 struct _GstMFVideoEncClassData

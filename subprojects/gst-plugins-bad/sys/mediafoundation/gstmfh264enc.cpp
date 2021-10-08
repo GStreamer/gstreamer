@@ -163,7 +163,7 @@ enum
   PROP_QP_B,
   PROP_REF,
   PROP_D3D11_AWARE,
-  PROP_ADAPTER,
+  PROP_ADAPTER_LUID,
 };
 
 #define DEFAULT_BITRATE (2 * 1024)
@@ -476,10 +476,10 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   if (device_caps->d3d11_aware) {
-    g_object_class_install_property (gobject_class, PROP_ADAPTER,
-        g_param_spec_uint ("adapter", "Adapter",
-            "DXGI Adapter index for creating device",
-            0, G_MAXUINT32, device_caps->adapter,
+    g_object_class_install_property (gobject_class, PROP_ADAPTER_LUID,
+        g_param_spec_int64 ("adapter-luid", "Adapter LUID",
+            "DXGI Adapter LUID (Locally Unique Identifier) of created device",
+            G_MININT64, G_MAXINT64, device_caps->adapter_luid,
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
                 G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   }
@@ -629,8 +629,8 @@ gst_mf_h264_enc_get_property (GObject * object, guint prop_id,
     case PROP_D3D11_AWARE:
       g_value_set_boolean (value, klass->device_caps.d3d11_aware);
       break;
-    case PROP_ADAPTER:
-      g_value_set_uint (value, klass->device_caps.adapter);
+    case PROP_ADAPTER_LUID:
+      g_value_set_int64 (value, klass->device_caps.adapter_luid);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
