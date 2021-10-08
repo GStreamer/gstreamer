@@ -42,6 +42,9 @@ gboolean        gst_d3d11_ensure_element_data       (GstElement * element,
                                                      GstD3D11Device ** device);
 
 GST_D3D11_API
+gint64          gst_d3d11_luid_to_int64             (const LUID * luid);
+
+GST_D3D11_API
 gboolean       _gst_d3d11_result                    (HRESULT hr,
                                                      GstD3D11Device * device,
                                                      GstDebugCategory * cat,

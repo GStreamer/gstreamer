@@ -92,6 +92,7 @@ base_tests = [
   [['libs/vkcommandpool.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkimage.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkinstance.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
+  [['libs/d3d11device.cpp'], not gstd3d11_dep.found(), [gstd3d11_dep]],
 ]
 
 # FIXME: unistd dependency, unstable or not tested yet on windows
@@ -168,6 +169,16 @@ else
 endif
 gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
+extra_args = []
+# XXX: our MinGW 32bits toolchain complians when ComPtr is in use
+if host_system == 'windows' and cc.get_id() != 'msvc'
+  mingw_args = cc.get_supported_arguments([
+    '-Wno-redundant-decls',
+  ])
+
+  extra_args += mingw_args
+endif
+
 foreach t : base_tests
   fnames = t.get(0)
   test_name = fnames[0].split('.').get(0).underscorify()
@@ -187,8 +198,8 @@ foreach t : base_tests
   if not skip_test
     exe = executable(test_name, fnames, extra_sources,
       include_directories : [configinc],
-      c_args : gst_plugins_bad_args + test_defines,
-      cpp_args : gst_plugins_bad_args + test_defines,
+      c_args : gst_plugins_bad_args + test_defines + extra_args,
+      cpp_args : gst_plugins_bad_args + test_defines + extra_args,
       dependencies : [libm] + test_deps + extra_deps,
     )
 

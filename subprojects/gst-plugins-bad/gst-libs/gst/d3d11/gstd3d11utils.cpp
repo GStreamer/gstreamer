@@ -367,6 +367,29 @@ gst_d3d11_ensure_element_data (GstElement * element, gint adapter,
   return TRUE;
 }
 
+/**
+ * gst_d3d11_luid_to_int64:
+ * @luid: A pointer to LUID struct
+ *
+ * Converts from a LUID to a 64-bit signed integer.
+ * See also Int64FromLuid method defined in
+ * windows.devices.display.core.interop.h Windows SDK header
+ *
+ * Since: 1.20
+ */
+gint64
+gst_d3d11_luid_to_int64 (const LUID * luid)
+{
+  LARGE_INTEGER val;
+
+  g_return_val_if_fail (luid != nullptr, 0);
+
+  val.LowPart = luid->LowPart;
+  val.HighPart = luid->HighPart;
+
+  return val.QuadPart;
+}
+
 gboolean
 _gst_d3d11_result (HRESULT hr, GstD3D11Device * device, GstDebugCategory * cat,
     const gchar * file, const gchar * function, gint line)

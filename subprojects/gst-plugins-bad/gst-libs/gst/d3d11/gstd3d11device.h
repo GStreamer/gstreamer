@@ -59,8 +59,15 @@ GST_D3D11_API
 GType                 gst_d3d11_device_get_type           (void);
 
 GST_D3D11_API
-GstD3D11Device *      gst_d3d11_device_new                (guint adapter,
+GstD3D11Device *      gst_d3d11_device_new                (guint adapter_index,
                                                            guint flags);
+
+GST_D3D11_API
+GstD3D11Device *      gst_d3d11_device_new_for_adapter_luid (gint64 adapter_luid,
+                                                             guint flags);
+
+GST_D3D11_API
+GstD3D11Device *      gst_d3d11_device_new_wrapped        (ID3D11Device * device);
 
 GST_D3D11_API
 ID3D11Device *        gst_d3d11_device_get_device_handle  (GstD3D11Device * device);
