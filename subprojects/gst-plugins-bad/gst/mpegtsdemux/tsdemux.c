@@ -2687,8 +2687,13 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
         }
         stream->state = PENDING_PACKET_HEADER;
       } else {
-        GST_WARNING ("CONTINUITY: Mismatch packet %d, stream %d",
-            cc, stream->continuity_counter);
+        GST_ELEMENT_WARNING_WITH_DETAILS (demux, STREAM, DEMUX,
+            ("CONTINUITY: Mismatch packet %d, stream %d (pid 0x%04x)", cc,
+                stream->continuity_counter, stream->stream.pid), (NULL),
+            ("warning-type", G_TYPE_STRING, "continuity-mismatch",
+                "packet", G_TYPE_INT, cc,
+                "stream", G_TYPE_INT, stream->continuity_counter,
+                "pid", G_TYPE_UINT, stream->stream.pid, NULL));
         stream->state = PENDING_PACKET_DISCONT;
       }
     }
