@@ -48,7 +48,8 @@ typedef enum
 
 typedef struct
 {
-  guint adapter;
+  GstDXVACodec codec;
+  gint64 adapter_luid;
   guint device_id;
   guint vendor_id;
 } GstD3D11DecoderSubClassData;
@@ -156,6 +157,11 @@ void  gst_d3d11_decoder_proxy_get_property            (GObject * object,
                                                        GValue * value,
                                                        GParamSpec * pspec,
                                                        GstD3D11DecoderSubClassData * subclass_data);
+
+gboolean gst_d3d11_decoder_proxy_open                 (GstVideoDecoder * videodec,
+                                                       GstD3D11DecoderSubClassData * subclass_data,
+                                                       GstD3D11Device ** device,
+                                                       GstD3D11Decoder ** decoder);
 
 G_END_DECLS
 

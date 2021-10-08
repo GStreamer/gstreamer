@@ -2090,7 +2090,7 @@ gst_d3d11_decoder_supports_resolution (GstD3D11Device * device,
 
 enum
 {
-  PROP_DECODER_ADAPTER = 1,
+  PROP_DECODER_ADAPTER_LUID = 1,
   PROP_DECODER_DEVICE_ID,
   PROP_DECODER_VENDOR_ID,
 };
@@ -2101,7 +2101,6 @@ struct _GstD3D11DecoderClassData
   GstCaps *sink_caps;
   GstCaps *src_caps;
   gchar *description;
-  GstDXVACodec codec;
 };
 
 /**
@@ -2126,13 +2125,12 @@ gst_d3d11_decoder_class_data_new (GstD3D11Device * device, GstDXVACodec codec,
 
   ret = g_new0 (GstD3D11DecoderClassData, 1);
 
-  ret->codec = codec;
-
   /* class data will be leaked if the element never gets instantiated */
   GST_MINI_OBJECT_FLAG_SET (sink_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   GST_MINI_OBJECT_FLAG_SET (src_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
-  g_object_get (device, "adapter", &ret->subclass_data.adapter,
+  ret->subclass_data.codec = codec;
+  g_object_get (device, "adapter-luid", &ret->subclass_data.adapter_luid,
       "device-id", &ret->subclass_data.device_id,
       "vendor-id", &ret->subclass_data.vendor_id,
       "description", &ret->description, nullptr);
@@ -2174,10 +2172,10 @@ gst_d3d11_decoder_proxy_class_init (GstElementClass * klass,
   std::string description;
   const gchar *codec_name;
 
-  g_object_class_install_property (gobject_class, PROP_DECODER_ADAPTER,
-      g_param_spec_uint ("adapter", "Adapter",
-          "DXGI Adapter index for creating device",
-          0, G_MAXUINT32, cdata->adapter,
+  g_object_class_install_property (gobject_class, PROP_DECODER_ADAPTER_LUID,
+      g_param_spec_int64 ("adapter-luid", "Adapter LUID",
+          "DXGI Adapter LUID (Locally Unique Identifier) of created device",
+          G_MININT64, G_MAXINT64, cdata->adapter_luid,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_DECODER_DEVICE_ID,
@@ -2190,7 +2188,7 @@ gst_d3d11_decoder_proxy_class_init (GstElementClass * klass,
           "DXGI Vendor ID", 0, G_MAXUINT32, 0,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
-  codec_name = gst_dxva_codec_to_string (data->codec);
+  codec_name = gst_dxva_codec_to_string (cdata->codec);
   long_name = "Direct3D11/DXVA " + std::string (codec_name) + " " +
       std::string (data->description) + " Decoder";
   description = "Direct3D11/DXVA based " + std::string (codec_name) +
@@ -2215,8 +2213,8 @@ gst_d3d11_decoder_proxy_get_property (GObject * object, guint prop_id,
     GstD3D11DecoderSubClassData * subclass_data)
 {
   switch (prop_id) {
-    case PROP_DECODER_ADAPTER:
-      g_value_set_uint (value, subclass_data->adapter);
+    case PROP_DECODER_ADAPTER_LUID:
+      g_value_set_int64 (value, subclass_data->adapter_luid);
       break;
     case PROP_DECODER_DEVICE_ID:
       g_value_set_uint (value, subclass_data->device_id);
@@ -2228,4 +2226,28 @@ gst_d3d11_decoder_proxy_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+gboolean
+gst_d3d11_decoder_proxy_open (GstVideoDecoder * videodec,
+    GstD3D11DecoderSubClassData * subclass_data, GstD3D11Device ** device,
+    GstD3D11Decoder ** decoder)
+{
+  GstElement *elem = GST_ELEMENT (videodec);
+
+  if (!gst_d3d11_ensure_element_data_for_adapter_luid (elem,
+          subclass_data->adapter_luid, device)) {
+    GST_ERROR_OBJECT (elem, "Cannot create d3d11device");
+    return FALSE;
+  }
+
+  *decoder = gst_d3d11_decoder_new (*device, subclass_data->codec);
+
+  if (*decoder == nullptr) {
+    GST_ERROR_OBJECT (elem, "Cannot create d3d11 decoder");
+    gst_clear_object (device);
+    return FALSE;
+  }
+
+  return TRUE;
 }

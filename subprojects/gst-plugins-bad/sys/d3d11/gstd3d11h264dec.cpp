@@ -236,8 +236,8 @@ gst_d3d11_h264_dec_set_context (GstElement * element, GstContext * context)
   GstD3D11H264DecClass *klass = GST_D3D11_H264_DEC_GET_CLASS (self);
   GstD3D11DecoderSubClassData *cdata = &klass->class_data;
 
-  gst_d3d11_handle_set_context (element, context, cdata->adapter,
-      &inner->device);
+  gst_d3d11_handle_set_context_for_adapter_luid (element,
+      context, cdata->adapter_luid, &inner->device);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -267,18 +267,9 @@ gst_d3d11_h264_dec_open (GstVideoDecoder * decoder)
   GstD3D11H264DecClass *klass = GST_D3D11_H264_DEC_GET_CLASS (self);
   GstD3D11DecoderSubClassData *cdata = &klass->class_data;
 
-  if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), cdata->adapter,
-          &inner->device)) {
-    GST_ERROR_OBJECT (self, "Cannot create d3d11device");
-    return FALSE;
-  }
-
-  inner->d3d11_decoder = gst_d3d11_decoder_new (inner->device,
-      GST_DXVA_CODEC_H264);
-
-  if (!inner->d3d11_decoder) {
-    GST_ERROR_OBJECT (self, "Cannot create d3d11 decoder");
-    gst_clear_object (&inner->device);
+  if (!gst_d3d11_decoder_proxy_open (decoder,
+          cdata, &inner->device, &inner->d3d11_decoder)) {
+    GST_ERROR_OBJECT (self, "Failed to open decoder");
     return FALSE;
   }
 
