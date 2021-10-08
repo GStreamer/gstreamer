@@ -2066,21 +2066,21 @@ class _TestsLauncher(Loggable):
 
         return True
 
-    def print_result(self, current_test_num, test, retry_on_failure=False):
+    def print_result(self, current_test_num, test, total_num_tests, retry_on_failure=False):
         if test.result != Result.PASSED and not retry_on_failure:
             printc(str(test), color=utils.get_color_for_result(test.result))
 
         length = 80
-        progress = int(length * current_test_num // self.total_num_tests)
+        progress = int(length * current_test_num // total_num_tests)
         bar = '█' * progress + '-' * (length - progress)
         if is_tty():
-            printc('\r|%s| [%s/%s]' % (bar, current_test_num, self.total_num_tests), end='\r')
+            printc('\r|%s| [%s/%s]' % (bar, current_test_num, total_num_tests), end='\r')
         else:
             if progress > self.current_progress:
                 self.current_progress = progress
-                printc('|%s| [%s/%s]' % (bar, current_test_num, self.total_num_tests))
+                printc('|%s| [%s/%s]' % (bar, current_test_num, total_num_tests))
 
-    def _run_tests(self, running_tests=None, all_alone=False, retry_on_failures=False):
+    def _run_tests(self, running_tests=None, all_alone=False, retry_on_failures=False, total_num_tests=None):
         if not self.all_tests:
             self.all_tests = self.list_tests()
 
@@ -2114,7 +2114,9 @@ class _TestsLauncher(Loggable):
             self.tests += copied
 
         self.total_num_tests = len(self.all_tests)
-        printc("\nRunning %d tests..." % self.total_num_tests, color=Colors.HEADER)
+        prefix = "=> Re-r" if total_num_tests else "R"
+        total_num_tests = total_num_tests if total_num_tests else self.total_num_tests
+        printc(f"\n{prefix}unning {total_num_tests} tests...", color=Colors.HEADER)
         # if order of test execution doesn't matter, shuffle
         # the order to optimize cpu usage
         if self.options.shuffle:
@@ -2138,19 +2140,21 @@ class _TestsLauncher(Loggable):
                 to_report = True
                 if res not in [Result.PASSED, Result.SKIPPED, Result.KNOWN_ERROR]:
                     if self.options.forever or self.options.fatal_error:
-                        self.print_result(current_test_num - 1, test, retry_on_failure=retry_on_failures)
+                        self.print_result(current_test_num - 1, test, retry_on_failure=retry_on_failures,
+                            total_num_tests=total_num_tests)
                         self.reporter.after_test(test)
                         return False
 
                     if retry_on_failures:
                         if not self.options.redirect_logs and test.allow_flakiness:
                             test.copy_logfiles()
-                        printc(test)
                         to_retry.append(test)
 
                         # Not adding to final report if flakiness is tolerated
                         to_report = not test.allow_flakiness
-                self.print_result(current_test_num - 1, test, retry_on_failure=retry_on_failures)
+                self.print_result(current_test_num - 1, test,
+                    retry_on_failure=retry_on_failures,
+                    total_num_tests=total_num_tests)
                 if to_report:
                     self.reporter.after_test(test)
                 if retry_on_failures:
@@ -2163,7 +2167,15 @@ class _TestsLauncher(Loggable):
             for test in to_retry:
                 printc('  * %s' % test.classname)
             printc('')
-            return self._run_tests(to_retry, all_alone=True, retry_on_failures=False)
+            self.current_progress = -1
+            res = self._run_tests(
+                to_retry,
+                all_alone=True,
+                retry_on_failures=False,
+                total_num_tests=len(to_retry),
+            )
+
+            return res
 
         return True
 
@@ -2180,6 +2192,7 @@ class _TestsLauncher(Loggable):
             if self.options.forever:
                 r = 1
                 while True:
+                    self.current_progress = -1
                     printc("-> Iteration %d" % r, end='\r')
 
                     if not self._run_tests():
@@ -2193,6 +2206,7 @@ class _TestsLauncher(Loggable):
             elif self.options.n_runs:
                 res = True
                 for r in range(self.options.n_runs):
+                    self.current_progress = -1
                     printc("-> Iteration %d" % r, end='\r')
                     if not self._run_tests(retry_on_failures=self.options.retry_on_failures):
                         res = False
