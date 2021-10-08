@@ -110,7 +110,9 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-libav.generic_libavcodec_locking', '?'),
     (r'check.gst-libav.elements_avdemux_ape', '?'),
     (r'check.gst-editing-services.pythontests', 'Need to figure out how to introduce python suppressions'),
-    (r'check.gst-editing-services.check_keyframes_in_compositor_two_sources', 'Valgrind exit with an exitcode 20 but shows no issue: https://gitlab.freedesktop.org/thiblahute/gst-editing-services/-/jobs/4079972')
+    (r'check.gst-editing-services.check_keyframes_in_compositor_two_sources', 'Valgrind exit with an exitcode 20 but shows no issue: https://gitlab.freedesktop.org/thiblahute/gst-editing-services/-/jobs/4079972'),
+    (r'check.gst-plugins-good.elements_splitmuxsrc.test_splitmuxsrc_sparse_streams', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/739'),
+    (r'check.gst-plugins-good.elements_udpsrc.test_udpsrc_empty_packet', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/740')
 ]
 
 BLACKLIST = [
@@ -157,6 +159,7 @@ BLACKLIST = [
     (r'check.gst-devtools.validate.launcher_tests.test_validate.launch_pipeline.not_negotiated.caps_query_failure.play_15s$', '?'),
     (r'check.gst-editing-services.nle_simple.test_one_bin_after_other$', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/66'),
     (r'check.gstreamer-vaapi.*$', 'only run the tests explicitly'),
+    (r'check.gst-rtsp-server.gst_rtspserver.test_multiple_transports', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/767'),
 ]
 
 
