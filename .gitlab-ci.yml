@@ -589,8 +589,10 @@ gstreamer-full-minimal:
 
 valgrind core:
   extends: '.valgrind fedora x86_64'
+  parallel: 2
   variables:
     TEST_SUITE: "check.gstreamer\\..*"
+    EXTRA_VALIDATE_ARGS: "--valgrind --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX}"
   rules:
     - changes:
       - "*"
@@ -601,8 +603,10 @@ valgrind core:
 
 valgrind base:
   extends: '.valgrind fedora x86_64'
+  parallel: 4
   variables:
     TEST_SUITE: "check.gst-plugins-base\\..*"
+    EXTRA_VALIDATE_ARGS: "--valgrind --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX}"
   rules:
     - changes:
       - "*"
