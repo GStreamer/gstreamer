@@ -28,8 +28,14 @@ G_BEGIN_DECLS
 GST_D3D11_API
 gboolean        gst_d3d11_handle_set_context        (GstElement * element,
                                                      GstContext * context,
-                                                     gint adapter,
+                                                     gint adapter_index,
                                                      GstD3D11Device ** device);
+
+GST_D3D11_API
+gboolean        gst_d3d11_handle_set_context_for_adapter_luid (GstElement * element,
+                                                               GstContext * context,
+                                                               gint64 adapter_luid,
+                                                               GstD3D11Device ** device);
 
 GST_D3D11_API
 gboolean        gst_d3d11_handle_context_query      (GstElement * element,
@@ -38,8 +44,13 @@ gboolean        gst_d3d11_handle_context_query      (GstElement * element,
 
 GST_D3D11_API
 gboolean        gst_d3d11_ensure_element_data       (GstElement * element,
-                                                     gint adapter,
+                                                     gint adapter_index,
                                                      GstD3D11Device ** device);
+
+GST_D3D11_API
+gboolean        gst_d3d11_ensure_element_data_for_adapter_luid (GstElement * element,
+                                                                gint64 adapter_luid,
+                                                                GstD3D11Device ** device);
 
 GST_D3D11_API
 gint64          gst_d3d11_luid_to_int64             (const LUID * luid);

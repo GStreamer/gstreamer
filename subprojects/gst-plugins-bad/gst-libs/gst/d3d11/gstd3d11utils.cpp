@@ -66,12 +66,15 @@ _init_context_debug (void)
  * gst_d3d11_handle_set_context:
  * @element: a #GstElement
  * @context: a #GstContext
+ * @adapter_index: a DXGI adapter index
  * @device: (inout) (transfer full): location of a #GstD3D11Device
  *
  * Helper function for implementing #GstElementClass.set_context() in
  * D3D11 capable elements.
  *
  * Retrieve's the #GstD3D11Device in @context and places the result in @device.
+ * @device is accepted if @adapter_index is equal to -1 (accept any device)
+ * or equal to that of @device
  *
  * Returns: whether the @device could be set successfully
  *
@@ -79,7 +82,7 @@ _init_context_debug (void)
  */
 gboolean
 gst_d3d11_handle_set_context (GstElement * element, GstContext * context,
-    gint adapter, GstD3D11Device ** device)
+    gint adapter_index, GstD3D11Device ** device)
 {
   const gchar *context_type;
 
@@ -95,7 +98,7 @@ gst_d3d11_handle_set_context (GstElement * element, GstContext * context,
   if (g_strcmp0 (context_type, GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE) == 0) {
     const GstStructure *str;
     GstD3D11Device *other_device = NULL;
-    guint other_adapter = 0;
+    guint other_adapter_index = 0;
 
     /* If we had device already, will not replace it */
     if (*device)
@@ -104,8 +107,70 @@ gst_d3d11_handle_set_context (GstElement * element, GstContext * context,
     str = gst_context_get_structure (context);
 
     if (gst_structure_get (str, "device", GST_TYPE_D3D11_DEVICE,
-            &other_device, "adapter", G_TYPE_UINT, &other_adapter, NULL)) {
-      if (adapter == -1 || (guint) adapter == other_adapter) {
+            &other_device, "adapter", G_TYPE_UINT, &other_adapter_index,
+            NULL)) {
+      if (adapter_index == -1 || (guint) adapter_index == other_adapter_index) {
+        GST_CAT_DEBUG_OBJECT (GST_CAT_CONTEXT,
+            element, "Found D3D11 device context");
+        *device = other_device;
+
+        return TRUE;
+      }
+
+      gst_object_unref (other_device);
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_d3d11_handle_set_context_for_adapter_luid:
+ * @element: a #GstElement
+ * @context: a #GstContext
+ * @adapter_luid: an int64 representation of DXGI adapter LUID
+ * @device: (inout) (transfer full): location of a #GstD3D11Device
+ *
+ * Helper function for implementing #GstElementClass.set_context() in
+ * D3D11 capable elements.
+ *
+ * Retrieve's the #GstD3D11Device in @context and places the result in @device.
+ * @device is accepted only when @adapter_index is equal to that of @device
+ *
+ * Returns: whether the @device could be set successfully
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_d3d11_handle_set_context_for_adapter_luid (GstElement * element,
+    GstContext * context, gint64 adapter_luid, GstD3D11Device ** device)
+{
+  const gchar *context_type;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (device != NULL, FALSE);
+
+  _init_context_debug ();
+
+  if (!context)
+    return FALSE;
+
+  context_type = gst_context_get_context_type (context);
+  if (g_strcmp0 (context_type, GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE) == 0) {
+    const GstStructure *str;
+    GstD3D11Device *other_device = NULL;
+    gint64 other_adapter_luid = 0;
+
+    /* If we had device already, will not replace it */
+    if (*device)
+      return TRUE;
+
+    str = gst_context_get_structure (context);
+
+    if (gst_structure_get (str, "device", GST_TYPE_D3D11_DEVICE,
+            &other_device, "adapter-luid", G_TYPE_INT64,
+            &other_adapter_luid, NULL)) {
+      if (adapter_luid == other_adapter_luid) {
         GST_CAT_DEBUG_OBJECT (GST_CAT_CONTEXT,
             element, "Found D3D11 device context");
         *device = other_device;
@@ -301,7 +366,7 @@ run_d3d11_context_query (GstElement * element, GstD3D11Device ** device)
 /**
  * gst_d3d11_ensure_element_data:
  * @element: the #GstElement running the query
- * @adapter: preferred adapter index, pass adapter >=0 when
+ * @adapter: preferred DXGI adapter index, pass adapter >=0 when
  *           the adapter explicitly required. Otherwise, set -1.
  * @device: (inout): the resulting #GstD3D11Device
  *
@@ -345,6 +410,70 @@ gst_d3d11_ensure_element_data (GstElement * element, gint adapter,
   if (*device == NULL) {
     GST_ERROR_OBJECT (element,
         "Couldn't create new device with adapter index %d", target_adapter);
+    return FALSE;
+  } else {
+    GstContext *context;
+    GstMessage *msg;
+
+    /* Propagate new D3D11 device context */
+
+    context = gst_context_new (GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE, TRUE);
+    context_set_d3d11_device (context, *device);
+
+    gst_element_set_context (element, context);
+
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+        "posting have context (%p) message with D3D11 device context (%p)",
+        context, *device);
+    msg = gst_message_new_have_context (GST_OBJECT_CAST (element), context);
+    gst_element_post_message (GST_ELEMENT_CAST (element), msg);
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_d3d11_ensure_element_data_for_adapter_luid:
+ * @element: the #GstElement running the query
+ * @adapter_luid: an int64 representation of DXGI adapter LUID
+ * @device: (inout): the resulting #GstD3D11Device
+ *
+ * Perform the steps necessary for retrieving a #GstD3D11Device
+ * from the surrounding elements or from the application using the #GstContext mechanism.
+ *
+ * If the contents of @device is not %NULL, then no #GstContext query is
+ * necessary for #GstD3D11Device retrieval is performed.
+ *
+ * Returns: whether a #GstD3D11Device exists in @device
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_d3d11_ensure_element_data_for_adapter_luid (GstElement * element,
+    gint64 adapter_luid, GstD3D11Device ** device)
+{
+  g_return_val_if_fail (element != NULL, FALSE);
+  g_return_val_if_fail (device != NULL, FALSE);
+
+  _init_context_debug ();
+
+  if (*device) {
+    GST_LOG_OBJECT (element, "already have a device %" GST_PTR_FORMAT, *device);
+    return TRUE;
+  }
+
+  run_d3d11_context_query (element, device);
+  if (*device)
+    return TRUE;
+
+  /* Needs D3D11_CREATE_DEVICE_BGRA_SUPPORT flag for Direct2D interop */
+  *device = gst_d3d11_device_new_for_adapter_luid (adapter_luid,
+      D3D11_CREATE_DEVICE_BGRA_SUPPORT);
+
+  if (*device == NULL) {
+    GST_ERROR_OBJECT (element,
+        "Couldn't create new device with adapter luid %" G_GINT64_FORMAT,
+        adapter_luid);
     return FALSE;
   } else {
     GstContext *context;
