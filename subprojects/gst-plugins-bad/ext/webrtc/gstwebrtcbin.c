@@ -851,8 +851,7 @@ _execute_op (GstWebRTCBinTask * op)
       GError *error =
           g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
           "webrtcbin is closed. aborting execution.");
-      GstStructure *s =
-          gst_structure_new ("application/x-gstwebrtcbin-promise-error",
+      GstStructure *s = gst_structure_new ("application/x-gst-promise",
           "error", G_TYPE_ERROR, error, NULL);
 
       gst_promise_reply (op->promise, s);
@@ -3921,7 +3920,7 @@ _create_sdp_task (GstWebRTCBin * webrtc, struct create_sdp *data)
     g_warn_if_fail (error != NULL);
     GST_WARNING_OBJECT (webrtc, "returning error: %s",
         error ? error->message : "Unknown");
-    s = gst_structure_new ("application/x-gstwebrtcbin-error",
+    s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
     g_clear_error (&error);
   }
@@ -3957,8 +3956,7 @@ gst_webrtc_bin_create_offer (GstWebRTCBin * webrtc,
     GError *error =
         g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
         "Could not create offer. webrtcbin is closed");
-    GstStructure *s =
-        gst_structure_new ("application/x-gstwebrtcbin-promise-error",
+    GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
 
     gst_promise_reply (promise, s);
@@ -3982,8 +3980,7 @@ gst_webrtc_bin_create_answer (GstWebRTCBin * webrtc,
     GError *error =
         g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
         "Could not create answer. webrtcbin is closed.");
-    GstStructure *s =
-        gst_structure_new ("application/x-gstwebrtcbin-promise-error",
+    GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
 
     gst_promise_reply (promise, s);
@@ -5424,7 +5421,7 @@ out:
   g_strfreev (bundled);
 
   if (error) {
-    GstStructure *s = gst_structure_new ("application/x-gstwebrtcbin-error",
+    GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
     GST_WARNING_OBJECT (webrtc, "returning error: %s", error->message);
     g_clear_error (&error);
@@ -5463,8 +5460,7 @@ gst_webrtc_bin_set_remote_description (GstWebRTCBin * webrtc,
     GError *error =
         g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
         "Could not set remote description. webrtcbin is closed.");
-    GstStructure *s =
-        gst_structure_new ("application/x-gstwebrtcbin-promise-error",
+    GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
 
     gst_promise_reply (promise, s);
@@ -5502,8 +5498,7 @@ gst_webrtc_bin_set_local_description (GstWebRTCBin * webrtc,
     GError *error =
         g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
         "Could not set remote description. webrtcbin is closed");
-    GstStructure *s =
-        gst_structure_new ("application/x-gstwebrtcbin-promise-error",
+    GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
 
     gst_promise_reply (promise, s);
@@ -5698,7 +5693,7 @@ gst_webrtc_bin_get_stats (GstWebRTCBin * webrtc, GstPad * pad,
     GError *error =
         g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
         "Could not retrieve statistics. webrtcbin is closed.");
-    GstStructure *s = gst_structure_new ("application/x-gst-promise-error",
+    GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
 
     gst_promise_reply (promise, s);

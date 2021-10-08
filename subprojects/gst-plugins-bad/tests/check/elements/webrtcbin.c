@@ -3724,7 +3724,6 @@ GST_START_TEST (test_reject_create_offer)
   fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
   s = gst_promise_get_reply (promise);
   fail_unless (s != NULL);
-  fail_unless (gst_structure_has_name (s, "application/x-gstwebrtcbin-error"));
   gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
   fail_unless (g_error_matches (error, GST_WEBRTC_BIN_ERROR,
           GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION));
@@ -3781,7 +3780,6 @@ GST_START_TEST (test_reject_set_description)
   fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
   s = gst_promise_get_reply (promise);
   fail_unless (s != NULL);
-  fail_unless (gst_structure_has_name (s, "application/x-gst-promise"));
   gst_structure_get (s, "offer", GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &desc,
       NULL);
   fail_unless (desc != NULL);
@@ -3797,7 +3795,6 @@ GST_START_TEST (test_reject_set_description)
   res = gst_promise_wait (promise);
   fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
   s = gst_promise_get_reply (promise);
-  fail_unless (gst_structure_has_name (s, "application/x-gstwebrtcbin-error"));
   gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
   fail_unless (g_error_matches (error, GST_WEBRTC_BIN_ERROR,
           GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION));
@@ -3994,7 +3991,6 @@ GST_START_TEST (test_codec_preferences_negotiation_sinkpad)
   fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
   s = gst_promise_get_reply (promise);
   fail_unless (s != NULL);
-  fail_unless (gst_structure_has_name (s, "application/x-gstwebrtcbin-error"));
   gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
   fail_unless (g_error_matches (error, GST_WEBRTC_BIN_ERROR,
           GST_WEBRTC_BIN_ERROR_CAPS_NEGOTIATION_FAILED));
