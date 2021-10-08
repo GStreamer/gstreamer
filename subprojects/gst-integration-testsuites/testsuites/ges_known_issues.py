@@ -33,6 +33,6 @@ KNOWN_ISSUES = {
             r"^ges\.((?!render).)*$",
             r"^ges\.playback\.nested.*$",
         ],
-        "allow_flakiness": True,
+        "max_retries": 2,
     },
 }

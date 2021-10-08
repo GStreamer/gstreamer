@@ -127,7 +127,7 @@ class Test(Loggable):
         self.is_parallel = is_parallel
         self.generator = None
         self.workdir = workdir
-        self.allow_flakiness = False
+        self.max_retries = 0
         self.html_log = None
         self.rr_logdir = None
 
@@ -708,7 +708,7 @@ class Test(Loggable):
             extra_logs.append(shutil.copy(logfile, path))
         self.extra_logfiles = extra_logs
 
-    def test_end(self, retry_on_failure=False):
+    def test_end(self):
         self.kill_subprocess()
         self.thread.join()
         self.time_taken = time.time() - self._starting_time
@@ -1465,9 +1465,10 @@ class TestsManager(Loggable):
                 tests_regexes.append(regex)
                 for test in self.tests:
                     if regex.findall(test.classname):
-                        if failure_def.get('allow_flakiness'):
-                            test.allow_flakiness = True
-                            self.debug("%s allow flakiness" % (test.classname))
+                        max_retries = failure_def.get('allow_flakiness', failure_def.get('max_retries'))
+                        if max_retries:
+                            test.max_retries = int(max_retries)
+                            self.debug(f"{test.classname} allow {test.max_retries}")
                         else:
                             for issue in failure_def['issues']:
                                 issue['bug'] = bugid
@@ -1486,9 +1487,10 @@ class TestsManager(Loggable):
             failure_def['bug'] = bugid
             for regex in failure_def['tests']:
                 if regex.findall(test.classname):
-                    if failure_def.get('allow_flakiness'):
-                        test.allow_flakiness = True
-                        self.debug("%s allow flakiness" % (test.classname))
+                    max_retries = failure_def.get('allow_flakiness', failure_def.get('max_retries'))
+                    if max_retries:
+                        test.max_retries = int(max_retries)
+                        self.debug(f"{test.classname} allow {test.max_retries}")
                     else:
                         for issue in failure_def['issues']:
                             issue['bug'] = bugid
@@ -2067,7 +2069,7 @@ class _TestsLauncher(Loggable):
         return True
 
     def print_result(self, current_test_num, test, total_num_tests, retry_on_failure=False):
-        if test.result != Result.PASSED and not retry_on_failure:
+        if test.result != Result.PASSED and (not retry_on_failure or test.max_retries):
             printc(str(test), color=utils.get_color_for_result(test.result))
 
         length = 80
@@ -2136,7 +2138,7 @@ class _TestsLauncher(Loggable):
                 test = self.tests_wait()
                 jobs_running -= 1
                 current_test_num += 1
-                res = test.test_end(retry_on_failure=retry_on_failures)
+                res = test.test_end()
                 to_report = True
                 if res not in [Result.PASSED, Result.SKIPPED, Result.KNOWN_ERROR]:
                     if self.options.forever or self.options.fatal_error:
@@ -2145,27 +2147,28 @@ class _TestsLauncher(Loggable):
                         self.reporter.after_test(test)
                         return False
 
-                    if retry_on_failures:
-                        if not self.options.redirect_logs and test.allow_flakiness:
+                    if retry_on_failures or test.max_retries:
+                        if not self.options.redirect_logs and test.max_retries:
                             test.copy_logfiles()
                         to_retry.append(test)
 
                         # Not adding to final report if flakiness is tolerated
-                        to_report = not test.allow_flakiness
+                        if test.max_retries:
+                            test.max_retries -= 1
+                            to_report = False
                 self.print_result(current_test_num - 1, test,
                     retry_on_failure=retry_on_failures,
                     total_num_tests=total_num_tests)
                 if to_report:
                     self.reporter.after_test(test)
-                if retry_on_failures:
-                    test.clean()
                 if self.start_new_job(tests_left):
                     jobs_running += 1
 
         if to_retry:
             printc("--> Rerunning the following tests to see if they are flaky:", Colors.WARNING)
             for test in to_retry:
-                printc('  * %s' % test.classname)
+                test.clean()
+                printc(f'  * {test.classname}')
             printc('')
             self.current_progress = -1
             res = self._run_tests(

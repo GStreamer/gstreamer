@@ -9,7 +9,7 @@ KNOWN_ISSUES = {
             r"^validate\.((?!launch_pipeline).)*$",
             r"^validate\.((?!rtsp*).)*$",
         ],
-        "allow_flakiness": True,
+        "max_retries": 2,
     },
     "https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/486": {
         "tests": [
