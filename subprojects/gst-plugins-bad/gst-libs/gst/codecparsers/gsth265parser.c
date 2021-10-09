@@ -3987,14 +3987,14 @@ gst_h265_create_sei_memory_internal (guint8 layer_id, guint8 temporal_id_plus1,
     /* write payload type bytes */
     while (payload_type_data >= 0xff) {
       WRITE_UINT8 (&nw, 0xff, 8);
-      payload_type_data -= -0xff;
+      payload_type_data -= 0xff;
     }
     WRITE_UINT8 (&nw, payload_type_data, 8);
 
     /* write payload size bytes */
     while (payload_size_data >= 0xff) {
       WRITE_UINT8 (&nw, 0xff, 8);
-      payload_size_data -= -0xff;
+      payload_size_data -= 0xff;
     }
     WRITE_UINT8 (&nw, payload_size_data, 8);
 

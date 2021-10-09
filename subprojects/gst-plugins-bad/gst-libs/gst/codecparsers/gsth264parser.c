@@ -3142,14 +3142,14 @@ gst_h264_create_sei_memory_internal (guint8 nal_prefix_size,
     /* write payload type bytes */
     while (payload_type_data >= 0xff) {
       WRITE_UINT8 (&nw, 0xff, 8);
-      payload_type_data -= -0xff;
+      payload_type_data -= 0xff;
     }
     WRITE_UINT8 (&nw, payload_type_data, 8);
 
     /* write payload size bytes */
     while (payload_size_data >= 0xff) {
       WRITE_UINT8 (&nw, 0xff, 8);
-      payload_size_data -= -0xff;
+      payload_size_data -= 0xff;
     }
     WRITE_UINT8 (&nw, payload_size_data, 8);
 
