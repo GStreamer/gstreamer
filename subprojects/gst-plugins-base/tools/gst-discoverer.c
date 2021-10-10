@@ -388,6 +388,12 @@ print_stream_info (GstDiscovererStreamInfo * info, void *depth)
     desc =
         gst_stream_subtitle_information_to_string (info,
         GPOINTER_TO_INT (depth) + 1);
+  else if (GST_IS_DISCOVERER_CONTAINER_INFO (info)) {
+    const GstTagList *tags =
+        gst_discoverer_container_info_get_tags (GST_DISCOVERER_CONTAINER_INFO
+        (info));
+    print_tags_topology (GPOINTER_TO_INT (depth) + 1, tags);
+  }
   if (desc) {
     g_print ("%s", desc);
     g_free (desc);

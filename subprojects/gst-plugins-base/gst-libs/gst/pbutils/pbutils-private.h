@@ -37,6 +37,7 @@ struct _GstDiscovererContainerInfo {
   GstDiscovererStreamInfo parent;
 
   GList               *streams;
+  GstTagList          *tags;
 };
 
 struct _GstDiscovererAudioInfo {
