@@ -7,6 +7,14 @@ if host_system == 'windows'
     install: false,
   )
 
+  executable('d3d11desktopdupsrc',
+    ['d3d11desktopdupsrc.cpp'],
+    c_args : gst_plugins_bad_args,
+    include_directories : [configinc, libsinc],
+    dependencies: [gst_dep, gstbase_dep, gstvideo_dep],
+    install: false,
+  )
+
   d3d11_lib = cc.find_library('d3d11', required : false)
   dxgi_lib = cc.find_library('dxgi', required : false)
   d3dcompiler_lib = cc.find_library('d3dcompiler', required: false)
