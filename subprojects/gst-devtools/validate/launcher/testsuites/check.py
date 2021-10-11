@@ -162,6 +162,15 @@ BLACKLIST = [
     (r'check.gst-rtsp-server.gst_rtspserver.test_multiple_transports', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/767'),
 ]
 
+KNOWN_ISSUES = {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/773": {
+        "tests": [
+            r"check.gst-plugins-bad.elements_webrtcbin.*",
+        ],
+        "max_retries": 1,
+    },
+}
+
 
 def setup_tests(test_manager, options):
     if options.gst_check_leak_trace_testnames == 'known-not-leaky':
@@ -171,6 +180,8 @@ def setup_tests(test_manager, options):
         test_manager.set_default_blacklist(VALGRIND_BLACKLIST)
         if options.long_limit <= utils.LONG_TEST:
             test_manager.set_default_blacklist(LONG_VALGRIND_TESTS)
+
+    test_manager.add_expected_issues(KNOWN_ISSUES)
 
     test_manager.register_tests()
     return True
