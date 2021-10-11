@@ -169,6 +169,12 @@ KNOWN_ISSUES = {
         ],
         "max_retries": 1,
     },
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/775": {
+        "tests": [
+            r"check.gst-editing-services.check_edit_in_frames_with_framerate_mismatch",
+        ],
+        "max_retries": 1,
+    }
 }
 
 
