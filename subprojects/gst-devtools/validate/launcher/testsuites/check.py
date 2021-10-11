@@ -174,7 +174,13 @@ KNOWN_ISSUES = {
             r"check.gst-editing-services.check_edit_in_frames_with_framerate_mismatch",
         ],
         "max_retries": 1,
-    }
+    },
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/776": {
+        "tests": [
+            r"check.gst-plugins-base.validate.giosrc.read-growing-file",
+        ],
+        "max_retries": 1,
+    },
 }
 
 
