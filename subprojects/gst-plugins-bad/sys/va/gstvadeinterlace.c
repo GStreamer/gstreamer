@@ -568,11 +568,10 @@ gst_va_deinterlace_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GstVaDeinterlace *self = GST_VA_DEINTERLACE (trans);
-  GstCaps *tmp;
-  GstStructure *s;
-  GstVideoInfo info;
+  GstCapsFeatures *out_f;
+  GstStructure *in_s, *out_s;
   gint fps_n, fps_d;
-  const gchar *interlace_mode;
+  const gchar *in_interlace_mode, *out_interlace_mode;
 
   GST_DEBUG_OBJECT (self,
       "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
@@ -586,34 +585,48 @@ gst_va_deinterlace_fixate_caps (GstBaseTransform * trans,
     goto bail;
   }
 
-  tmp = gst_caps_copy (caps);
-  tmp = gst_caps_fixate (tmp);
+  in_s = gst_caps_get_structure (caps, 0);
+  in_interlace_mode = gst_structure_get_string (in_s, "interlace-mode");
 
-  if (!gst_video_info_from_caps (&info, tmp)) {
-    GST_WARNING_OBJECT (self, "Invalid caps %" GST_PTR_FORMAT, caps);
-    gst_caps_unref (tmp);
+  out_s = gst_caps_get_structure (othercaps, 0);
 
-    othercaps = gst_caps_fixate (othercaps);
+  if (g_strcmp0 ("progressive", in_interlace_mode) == 0) {
+    /* Just forward interlace-mode=progressive and framerate
+     * By this way, basetransform will enable passthrough for non-interlaced
+     * stream */
+    const GValue *framerate = gst_structure_get_value (in_s, "framerate");
+    gst_structure_set_value (out_s, "framerate", framerate);
+    gst_structure_set (out_s, "interlace-mode", G_TYPE_STRING, "progressive",
+        NULL);
+
     goto bail;
   }
 
-  s = gst_caps_get_structure (tmp, 0);
-  if (gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)) {
-    fps_n *= 2;
-    gst_caps_set_simple (othercaps,
-        "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
-  }
+  out_f = gst_caps_get_features (othercaps, 0);
+  out_interlace_mode = gst_structure_get_string (out_s, "interlace-mode");
 
-  interlace_mode = gst_structure_get_string (s, "interlace-mode");
-  if (g_strcmp0 ("progressive", interlace_mode) == 0) {
-    /* Just forward interlace-mode=progressive.
-     * By this way, basetransform will enable passthrough for non-interlaced
-     * stream*/
-    gst_caps_set_simple (othercaps,
-        "interlace-mode", G_TYPE_STRING, "progressive", NULL);
-  }
+  if ((!out_interlace_mode
+          || (g_strcmp0 ("progressive", out_interlace_mode) == 0))
+      && (gst_caps_features_contains (out_f, GST_CAPS_FEATURE_MEMORY_VA)
+          || gst_caps_features_contains (out_f, GST_CAPS_FEATURE_MEMORY_DMABUF)
+          || gst_caps_features_contains (out_f,
+              GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY))) {
+    gst_structure_set (out_s, "interlace-mode", G_TYPE_STRING, "progressive",
+        NULL);
 
-  gst_caps_unref (tmp);
+    if (gst_structure_get_fraction (in_s, "framerate", &fps_n, &fps_d)) {
+      fps_n *= 2;
+      gst_structure_set (out_s, "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+          NULL);
+    }
+  } else {
+    /* if caps features aren't supported, just forward interlace-mode
+     * and framerate */
+    const GValue *framerate = gst_structure_get_value (in_s, "framerate");
+    gst_structure_set_value (out_s, "framerate", framerate);
+    gst_structure_set (out_s, "interlace-mode", G_TYPE_STRING,
+        in_interlace_mode, NULL);
+  }
 
 bail:
   GST_DEBUG_OBJECT (self, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
