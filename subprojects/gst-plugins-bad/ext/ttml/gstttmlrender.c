@@ -3071,13 +3071,13 @@ gst_element_ttmlrender_init (GstPlugin * plugin)
 
   ttml_element_init (plugin);
 
+  GST_DEBUG_CATEGORY_INIT (ttmlrender_debug, "ttmlrender", 0, "TTML renderer");
+
   /* We don't want this autoplugged by default yet for now */
   if (g_getenv ("GST_TTML_AUTOPLUG")) {
     GST_INFO_OBJECT (plugin, "Registering ttml elements with primary rank.");
     rank = GST_RANK_PRIMARY;
   }
-
-  GST_DEBUG_CATEGORY_INIT (ttmlrender_debug, "ttmlrender", 0, "TTML renderer");
 
   return gst_element_register (plugin, "ttmlrender", rank,
       GST_TYPE_TTML_RENDER);
