@@ -183,7 +183,7 @@ gst_gtk_base_sink_get_widget (GstGtkBaseSink * gtk_sink)
   /* Ensure GTK is initialized, this has no side effect if it was already
    * initialized. Also, we do that lazily, so the application can be first */
   if (!gtk_init_check (NULL, NULL)) {
-    GST_ERROR_OBJECT (gtk_sink, "Could not ensure GTK initialization.");
+    GST_INFO_OBJECT (gtk_sink, "Could not ensure GTK initialization.");
     return NULL;
   }
 
@@ -296,6 +296,11 @@ gst_gtk_base_sink_navigation_send_event (GstNavigation * navigation,
     GtkGstBaseWidget *widget = gst_gtk_base_sink_get_widget (sink);
     gdouble stream_x, stream_y;
 
+    if (widget == NULL) {
+      GST_ERROR_OBJECT (sink, "Could not ensure GTK initialization.");
+      return;
+    }
+
     gtk_gst_base_widget_display_size_to_stream_size (widget,
         x, y, &stream_x, &stream_y);
     gst_structure_set (structure,
@@ -333,8 +338,10 @@ gst_gtk_base_sink_start_on_main (GstBaseSink * bsink)
   GstGtkBaseSinkClass *klass = GST_GTK_BASE_SINK_GET_CLASS (bsink);
   GtkWidget *toplevel;
 
-  if (gst_gtk_base_sink_get_widget (gst_sink) == NULL)
+  if (gst_gtk_base_sink_get_widget (gst_sink) == NULL) {
+    GST_ERROR_OBJECT (bsink, "Could not ensure GTK initialization.");
     return FALSE;
+  }
 
   /* After this point, gtk_sink->widget will always be set */
 

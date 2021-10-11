@@ -139,9 +139,11 @@ gst_gtk_gl_sink_set_property (GObject * object, guint prop_id,
     {
       GtkWidget *widget =
           gst_gtk_base_sink_acquire_widget (GST_GTK_BASE_SINK (object));
-      gtk_gst_gl_widget_set_rotate_method (GTK_GST_GL_WIDGET (widget),
-          g_value_get_enum (value), FALSE);
-      g_object_unref (widget);
+      if (widget != NULL) {
+        gtk_gst_gl_widget_set_rotate_method (GTK_GST_GL_WIDGET (widget),
+            g_value_get_enum (value), FALSE);
+        g_object_unref (widget);
+      }
       break;
     }
     default:
@@ -161,9 +163,13 @@ gst_gtk_gl_sink_get_property (GObject * object, guint prop_id,
       GtkWidget *widget =
           gst_gtk_base_sink_acquire_widget (GST_GTK_BASE_SINK (object));
 
-      g_value_set_enum (value,
-          gtk_gst_gl_widget_get_rotate_method (GTK_GST_GL_WIDGET (widget)));
-      g_object_unref (widget);
+      if (widget != NULL) {
+        g_value_set_enum (value,
+            gtk_gst_gl_widget_get_rotate_method (GTK_GST_GL_WIDGET (widget)));
+        g_object_unref (widget);
+      } else {
+        g_value_set_enum (value, GST_VIDEO_ORIENTATION_IDENTITY);
+      }
 
       break;
     }
@@ -460,6 +466,10 @@ gst_gtk_gl_sink_event (GstBaseSink * sink, GstEvent * event)
 
         widget = GTK_GST_GL_WIDGET
             (gst_gtk_base_sink_acquire_widget (GST_GTK_BASE_SINK (sink)));
+        if (widget == NULL) {
+          GST_ERROR_OBJECT (sink, "Could not ensure GTK initialization.");
+          break;
+        }
 
         gtk_gst_gl_widget_set_rotate_method (widget, orientation, TRUE);
 
