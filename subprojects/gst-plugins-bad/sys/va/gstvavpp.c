@@ -769,21 +769,22 @@ gst_va_vpp_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
   return FALSE;
 }
 
-/* Remove all the info for the cases when we can actually convert:
- * Delete all the video "format", rangify the resolution size, also
- * remove "colorimetry", "chroma-site" and "pixel-aspect-ratio".  All
- * the missing caps features should be added based on the template,
- * and the caps features' order in @caps is kept */
+/* In structures with supported caps features it's:
+ * + Rangified resolution size.
+ * + Rangified "pixel-aspect-ratio" if present.
+ * + Removed "format", "colorimetry", "chroma-site"
+ *
+ * Structures with unsupported caps features are copied as-is.
+ */
 static GstCaps *
-gst_va_vpp_complete_caps_features (GstCaps * caps, GstCaps * tmpl_caps)
+gst_va_vpp_caps_remove_fields (GstCaps * caps)
 {
-  GstCaps *ret, *full_caps;
+  GstCaps *ret;
   GstStructure *structure;
   GstCapsFeatures *features;
-  gboolean has_sys_mem = FALSE, has_dma = FALSE, has_va = FALSE;
   gint i, n;
 
-  full_caps = gst_caps_new_empty ();
+  ret = gst_caps_new_empty ();
 
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
@@ -792,46 +793,59 @@ gst_va_vpp_complete_caps_features (GstCaps * caps, GstCaps * tmpl_caps)
 
     /* If this is already expressed by the existing caps
      * skip this structure */
-    if (i > 0
-        && gst_caps_is_subset_structure_full (full_caps, structure, features))
+    if (i > 0 && gst_caps_is_subset_structure_full (ret, structure, features))
       continue;
-
-    if (gst_caps_features_is_any (features))
-      continue;
-
-    if (gst_caps_features_is_equal (features,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
-      has_sys_mem = TRUE;
-    } else {
-      gboolean valid = FALSE;
-
-      if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
-        has_dma = TRUE;
-        valid = TRUE;
-      }
-      if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA)) {
-        has_va = TRUE;
-        valid = TRUE;
-      }
-      /* Not contain our supported feature */
-      if (!valid)
-        continue;
-    }
 
     structure = gst_structure_copy (structure);
 
-    gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-    /* if pixel aspect ratio, make a range of it */
-    if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
-      gst_structure_set (structure, "pixel-aspect-ratio",
-          GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
-    }
-    gst_structure_remove_fields (structure, "format", "colorimetry",
-        "chroma-site", NULL);
+    if (gst_caps_features_is_equal (features,
+            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
+        || gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)
+        || gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA)) {
+      /* rangify frame size */
+      gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
-    gst_caps_append_structure_full (full_caps, structure,
+      /* if pixel aspect ratio, make a range of it */
+      if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
+        gst_structure_set (structure, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+      }
+
+      /* remove format-related fields */
+      gst_structure_remove_fields (structure, "format", "colorimetry",
+          "chroma-site", NULL);
+    }
+
+    gst_caps_append_structure_full (ret, structure,
         gst_caps_features_copy (features));
+  }
+
+  return ret;
+}
+
+/* All missing caps features should be added based on the template,
+ * and the caps features' order in @caps are kept */
+static void
+gst_va_vpp_complete_caps_features (GstCaps * caps, GstCaps * tmpl_caps)
+{
+  GstStructure *structure;
+  GstCapsFeatures *features;
+  gboolean has_sys = FALSE, has_dma = FALSE, has_va = FALSE;
+  gint i, n;
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    features = gst_caps_get_features (caps, i);
+
+    if (gst_caps_features_is_equal (features,
+            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
+      has_sys = TRUE;
+    else if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA))
+      has_va = TRUE;
+    else if (gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_MEMORY_DMABUF))
+      has_dma = TRUE;
   }
 
   /* Adding the missing features. */
@@ -842,25 +856,19 @@ gst_va_vpp_complete_caps_features (GstCaps * caps, GstCaps * tmpl_caps)
 
     if (gst_caps_features_contains (features,
             GST_CAPS_FEATURE_MEMORY_VA) && !has_va)
-      gst_caps_append_structure_full (full_caps, gst_structure_copy (structure),
+      gst_caps_append_structure_full (caps, gst_structure_copy (structure),
           gst_caps_features_copy (features));
 
     if (gst_caps_features_contains (features,
             GST_CAPS_FEATURE_MEMORY_DMABUF) && !has_dma)
-      gst_caps_append_structure_full (full_caps, gst_structure_copy (structure),
+      gst_caps_append_structure_full (caps, gst_structure_copy (structure),
           gst_caps_features_copy (features));
 
     if (gst_caps_features_is_equal (features,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY) && !has_sys_mem)
-      gst_caps_append_structure_full (full_caps, gst_structure_copy (structure),
+            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY) && !has_sys)
+      gst_caps_append_structure_full (caps, gst_structure_copy (structure),
           gst_caps_features_copy (features));
   }
-
-  ret = gst_caps_intersect_full (full_caps, tmpl_caps,
-      GST_CAPS_INTERSECT_FIRST);
-  gst_caps_unref (full_caps);
-
-  return ret;
 }
 
 static GstCaps *
@@ -874,6 +882,8 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
+  ret = gst_va_vpp_caps_remove_fields (caps);
+
   if (direction == GST_PAD_SINK) {
     tmpl_caps =
         gst_pad_get_pad_template_caps (GST_BASE_TRANSFORM_SRC_PAD (trans));
@@ -882,8 +892,7 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
         gst_pad_get_pad_template_caps (GST_BASE_TRANSFORM_SINK_PAD (trans));
   }
 
-  ret = gst_va_vpp_complete_caps_features (caps, tmpl_caps);
-
+  gst_va_vpp_complete_caps_features (ret, tmpl_caps);
   gst_caps_unref (tmpl_caps);
 
   if (filter) {
