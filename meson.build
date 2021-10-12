@@ -148,7 +148,7 @@ foreach sp : subprojects
 
     if not meson.is_cross_build() and build_infos.get('build-hotdoc', false)
       if plugins.length() > 0
-        plugins_doc_caches += [subproj.get_variable('plugins_doc_dep')]
+        plugins_doc_caches += [subproj.get_variable('plugins_doc_dep', [])]
       endif
       if documented_projects != ''
         documented_projects += ','

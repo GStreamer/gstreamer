@@ -9,6 +9,23 @@ if meson.is_cross_build()
     subdir_done()
 endif
 
+if static_build
+    if get_option('doc').enabled()
+        error('Documentation enabled but not supported when building statically.')
+    endif
+
+    message('Building statically, can\'t build the documentation')
+    subdir_done()
+endif
+
+if not build_gir
+    if get_option('doc').enabled()
+        error('Documentation enabled but introspection not built.')
+    endif
+
+    message('Introspection not built, won\'t build documentation requiring it')
+endif
+
 required_hotdoc_extensions = ['gi-extension', 'c-extension', 'gst-extension']
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
@@ -60,24 +77,6 @@ foreach extension: required_hotdoc_extensions
         message('@0@ extensions not found, not building documentation requiring it'.format(extension))
     endif
 endforeach
-
-if static_build
-    if get_option('doc').enabled()
-        error('Documentation enabled but not supported when building statically.')
-    endif
-
-    message('Building statically, can\'t build the documentation')
-    subdir_done()
-endif
-
-if not build_gir
-    if get_option('doc').enabled()
-        error('Documentation enabled but introspection not built.')
-    endif
-
-    message('Introspection not built, won\'t build documentation requiring it')
-    subdir_done()
-endif
 
 build_hotdoc = true
 

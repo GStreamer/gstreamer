@@ -1,5 +1,14 @@
 build_hotdoc = false
 
+if meson.is_cross_build()
+    if get_option('doc').enabled()
+        error('Documentation enabled but building the doc while cross building is not supported yet.')
+    endif
+
+    message('Documentation not built as building it while cross building is not supported yet.')
+    subdir_done()
+endif
+
 required_hotdoc_extensions = ['gst-extension']
 plugins_cache = join_paths(meson.current_source_dir(), 'gst_plugins_cache.json')
 if gst_dep.type_name() == 'internal'

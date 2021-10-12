@@ -9,6 +9,24 @@ if meson.is_cross_build()
     subdir_done()
 endif
 
+if static_build
+    if get_option('doc').enabled()
+        error('Documentation enabled but not supported when building statically.')
+    endif
+
+    message('Building statically, can\'t build the documentation')
+    subdir_done()
+endif
+
+if not build_gir
+    if get_option('doc').enabled()
+        error('Documentation enabled but introspection not built.')
+    endif
+
+    message('Introspection not built, won\'t build documentation requiring it')
+    subdir_done()
+endif
+
 hotdoc_p = find_program('hotdoc', required: get_option('doc'))
 if not hotdoc_p.found()
     message('Hotdoc not found, not building the documentation')
@@ -16,15 +34,6 @@ if not hotdoc_p.found()
 endif
 
 required_hotdoc_extensions = ['gi-extension']
-if not build_gir
-    if get_option('doc').enabled()
-        error('Documentation enabled but introspection not built.')
-    endif
-
-    message('Introspection not built, can\'t build the documentation')
-    subdir_done()
-endif
-
 hotdoc = import('hotdoc')
 foreach extension: required_hotdoc_extensions
     if not hotdoc.has_extensions(extension)

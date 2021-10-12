@@ -9,7 +9,7 @@ if meson.is_cross_build()
     subdir_done()
 endif
 
-required_hotdoc_extensions = ['gi-extension', 'gst-extension']
+required_hotdoc_extensions = ['gst-extension']
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
     plugins_cache_generator = gst_proj.get_variable('plugins_cache_generator')
