@@ -491,6 +491,14 @@ def check_bugs_resolution(bugs_definitions):
     gitlab_issues = defaultdict(list)
 
     regexes = {}
+    mr_id = os.environ.get('CI_MERGE_REQUEST_IID')
+    mr_closes_issues = []
+    if mr_id:
+        gitlab_url = f"{os.environ['CI_API_V4_URL']}/projects/{os.environ['CI_MERGE_REQUEST_PROJECT_ID']}/merge_requests/{mr_id}/closes_issues"
+        for issue in json.load(urllib.request.urlopen(gitlab_url)):
+            mr_closes_issues.append(issue)
+
+    res = True
     for regex, bugs in bugs_definitions:
         if isinstance(bugs, str):
             bugs = [bugs]
@@ -505,7 +513,14 @@ def check_bugs_resolution(bugs_definitions):
                         Colors.WARNING)
                     continue
                 project_id = components[0] + '%2F' + components[1]
-                issue_id = components[-1]
+                issue_id = int(components[-1])
+                for issue in mr_closes_issues:
+                    url = urllib.parse.urlparse(issue['web_url'])
+                    closing_issue_project = '%2F'.join([c for c in url.path.split('/') if c][0:2])
+                    if project_id == closing_issue_project and issue['iid'] == issue_id:
+                        res = False
+                        printc("\n  + %s \n   --> %s: '%s'\n   ==> Will be closed by current MR %s\n\n===> Remove blacklisting before merging." % (
+                            regex, issue['web_url'], issue['title'], issue['state']), Colors.FAIL)
 
                 gitlab_url = "https://%s/api/v4/projects/%s/issues/%s" % (url.hostname, project_id, issue_id)
                 if gitlab_url in ALL_GITLAB_ISSUES:
@@ -533,7 +548,6 @@ def check_bugs_resolution(bugs_definitions):
             ids.append(_id)
             bugz[url_parts] = ids
 
-    res = True
     for gitlab_url, regexe in gitlab_issues.items():
         try:
             issue = json.load(urllib.request.urlopen(gitlab_url))
@@ -589,7 +603,7 @@ def check_bugs_resolution(bugs_definitions):
                    regex, bugid, desc, status), Colors.OKGREEN)
 
     if not res:
-        printc("\n==> Some bugs marked as known issues have been closed!", Colors.FAIL)
+        printc("\n==> Some bugs marked as known issues have been (or will be) closed!", Colors.FAIL)
 
     return res
 
