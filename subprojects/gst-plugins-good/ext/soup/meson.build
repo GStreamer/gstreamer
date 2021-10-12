@@ -12,7 +12,8 @@ soup_args = [
 ]
 
 libsoup_dep = dependency('libsoup-2.4', version : '>=2.48', required : get_option('soup'),
-  fallback : ['libsoup', 'libsoup_dep'])
+  fallback : ['libsoup', 'libsoup_dep'],
+  default_options: ['sysprof=disabled'])
 
 if libsoup_dep.found()
   gstsouphttpsrc = library('gstsoup',
