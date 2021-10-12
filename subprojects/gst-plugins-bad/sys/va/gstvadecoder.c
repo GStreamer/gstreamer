@@ -119,7 +119,8 @@ gst_va_decoder_dispose (GObject * object)
 {
   GstVaDecoder *self = GST_VA_DECODER (object);
 
-  gst_va_decoder_close (self);
+  if (!gst_va_decoder_close (self))
+    GST_WARNING_OBJECT (self, "VaDecoder is not successfully closed");
 
   g_clear_pointer (&self->available_profiles, g_array_unref);
   gst_clear_object (&self->display);
