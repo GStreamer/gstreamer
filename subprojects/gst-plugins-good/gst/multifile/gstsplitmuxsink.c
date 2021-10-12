@@ -3187,7 +3187,8 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
   /* Update total input byte counter for overflow detect unless we're after
    * EOS now */
-  if (splitmux->input_state != SPLITMUX_INPUT_STATE_FINISHING_UP) {
+  if (splitmux->input_state != SPLITMUX_INPUT_STATE_FINISHING_UP
+      && splitmux->input_state != SPLITMUX_INPUT_STATE_STOPPED) {
     InputGop *gop = g_queue_peek_tail (&splitmux->pending_input_gops);
 
     /* We must have a GOP at this point */
