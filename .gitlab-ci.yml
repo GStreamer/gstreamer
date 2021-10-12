@@ -135,6 +135,8 @@ fedora amd64 docker:
     - '.fedora image'
     - '.fdo.container-build@fedora'
   stage: 'build docker'
+  needs:
+    - "trigger"
 
 .gst-indent image:
   variables:
