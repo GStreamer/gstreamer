@@ -1784,9 +1784,13 @@ restart:
       if (start_frame == end_frame) {
         guint16 num_frames = ::NTV2DeviceGetNumberFrameBuffers(self->device_id);
         guint16 num_channels = ::NTV2DeviceGetNumFrameStores(self->device_id);
+        guint start_channel = self->channel;
+        guint end_channel = self->channel + 1;
 
-        start_frame = self->channel * (num_frames / num_channels);
-        end_frame = ((self->channel + 1) * (num_frames / num_channels)) - 1;
+        if (self->quad_mode) end_channel = self->channel + 4;
+
+        start_frame = start_channel * (num_frames / num_channels);
+        end_frame = (end_channel * (num_frames / num_channels)) - 1;
       }
 
       GST_DEBUG_OBJECT(
