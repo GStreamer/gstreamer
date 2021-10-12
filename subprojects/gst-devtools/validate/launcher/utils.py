@@ -500,12 +500,12 @@ def check_bugs_resolution(bugs_definitions):
 
             if "gitlab" in url.netloc:
                 components = [c for c in url.path.split('/') if c]
-                if len(components) != 4:
+                if len(components) not in [4, 5]:
                     printc("\n  + %s \n   --> bug: %s\n   --> Status: Not a proper gitlab report" % (regex, bug),
                         Colors.WARNING)
                     continue
                 project_id = components[0] + '%2F' + components[1]
-                issue_id = components[3]
+                issue_id = components[-1]
 
                 gitlab_url = "https://%s/api/v4/projects/%s/issues/%s" % (url.hostname, project_id, issue_id)
                 if gitlab_url in ALL_GITLAB_ISSUES:
