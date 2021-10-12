@@ -101,7 +101,7 @@ static gboolean
 _check_sdp_crypto (SDPSource source, GstWebRTCSessionDescription * sdp,
     GError ** error)
 {
-  const gchar *message_fingerprint, *fingerprint;
+  const gchar *message_fingerprint;
   const GstSDPKey *key;
   int i;
 
@@ -112,7 +112,7 @@ _check_sdp_crypto (SDPSource source, GstWebRTCSessionDescription * sdp,
     return FALSE;
   }
 
-  message_fingerprint = fingerprint =
+  message_fingerprint =
       gst_sdp_message_get_attribute_val (sdp->sdp, "fingerprint");
   for (i = 0; i < gst_sdp_message_medias_len (sdp->sdp); i++) {
     const GstSDPMedia *media = gst_sdp_message_get_media (sdp->sdp, i);
@@ -124,18 +124,6 @@ _check_sdp_crypto (SDPSource source, GstWebRTCSessionDescription * sdp,
       g_set_error (error, GST_WEBRTC_ERROR,
           GST_WEBRTC_ERROR_FINGERPRINT_FAILURE,
           "No fingerprint lines in sdp for media %u", i);
-      return FALSE;
-    }
-    if (IS_EMPTY_SDP_ATTRIBUTE (fingerprint)) {
-      fingerprint = media_fingerprint;
-    }
-    if (!IS_EMPTY_SDP_ATTRIBUTE (media_fingerprint)
-        && g_strcmp0 (fingerprint, media_fingerprint) != 0) {
-      g_set_error (error, GST_WEBRTC_ERROR,
-          GST_WEBRTC_ERROR_FINGERPRINT_FAILURE,
-          "Fingerprint in media %u differs from %s fingerprint. "
-          "\'%s\' != \'%s\'", i, message_fingerprint ? "global" : "previous",
-          fingerprint, media_fingerprint);
       return FALSE;
     }
   }
