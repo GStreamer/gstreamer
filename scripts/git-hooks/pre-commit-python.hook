@@ -71,7 +71,7 @@ def main():
         if non_compliant_files:
             print(NOT_PYCODESTYLE_COMPLIANT_MESSAGE_POST)
             for non_compliant_file in non_compliant_files:
-                print("autopep8 -i ", non_compliant_file, "; git add ",
+                print("autopep8 -i --max-line-length 120", non_compliant_file, "; git add ",
                       non_compliant_file)
             print("git commit")
         sys.exit(1)
