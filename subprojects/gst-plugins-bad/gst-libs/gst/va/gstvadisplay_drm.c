@@ -140,7 +140,6 @@ gst_va_display_drm_create_va_display (GstVaDisplay * display)
   if (fd < 0) {
     GST_WARNING_OBJECT (self, "Failed to open %s: %s", self->path,
         g_strerror (saved_errno));
-    close (fd);
     return 0;
   }
 #if HAVE_LIBDRM
