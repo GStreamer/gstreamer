@@ -393,7 +393,7 @@ bool gst_ntv2_video_format_is_quad(NTV2VideoFormat format) {
 }
 
 GType gst_aja_audio_meta_api_get_type(void) {
-  static volatile GType type;
+  static GType type;
 
   if (g_once_init_enter(&type)) {
     static const gchar *tags[] = {NULL};
