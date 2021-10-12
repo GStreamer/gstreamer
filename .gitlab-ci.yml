@@ -438,26 +438,17 @@ build msys2 :
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
     - $ErrorActionPreference = "Stop"
 
-    # For some reason docker build hangs if this is included in the image, needs more troubleshooting
-    - $env:PATH += ';C:\msys64\usr\bin;C:\msys64\mingw64\bin;C:\msys64\mingw32\bin'
-    # Copied from https://github.com/msys2/setup-msys2/blob/master/main.js#L98
-    - C:\msys64\usr\bin\bash -c "pacman-key --init && pacman-key --populate msys2 && pacman-key --refresh-keys || true"
-    - C:\msys64\usr\bin\bash -c "sed -i 's/^CheckSpace/#CheckSpace/g' /etc/pacman.conf"
-    - echo "Updating MSYS2"
-    - C:\msys64\usr\bin\bash -c "pacman -Syuu --noconfirm || echo Update failed, ignoring"
-    - echo "Killing all MSYS2 processes"
-    - taskkill /F /FI "MODULES eq msys-2.0.dll"
-    - echo "Completing MSYS2 update"
-    - C:\msys64\usr\bin\bash -c "pacman -Suu --noconfirm"
-    - echo "Installing needed MSYS2 packages"
-    - C:\msys64\usr\bin\bash -c "pacman -Sy --noconfirm --needed mingw-w64-x86_64-toolchain ninja"
-
+    # Configure MSYS2 to use the UCRT64 environment, start in the same directory
+    # and inherit PATH
+    - $env:MSYSTEM = "UCRT64"
+    - $env:CHERE_INVOKING = "1"
+    - $env:MSYS2_PATH_TYPE = "inherit"
     # For some reason, options are separated by newline instead of space, so we
     # have to replace them first.
     - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
     # Replace forward slashes with backwards so bash doesn't complain
     - $env:_PROJECT_DIR = $env:CI_PROJECT_DIR.replace('\','/')
-    - C:\msys64\usr\bin\bash -c "meson build $env:MESON_ARGS && ninja -C build"
+    - C:\msys64\usr\bin\bash -lc "meson build $env:MESON_ARGS && ninja -C build"
 
 # ---- Tests ----- #
 

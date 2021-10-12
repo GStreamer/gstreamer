@@ -18,6 +18,7 @@ RUN choco install -y windows-sdk-8.1
 RUN choco install -y python3
 RUN choco install -y msys2 --params '/NoPath /NoUpdate /InstallDir:C:\\msys64'
 
+RUN c:\msys64\usr\bin\bash -lc 'pacman -S --noconfirm mingw-w64-ucrt-x86_64-toolchain ninja'
 # Visual Studio can't be installed with choco.
 # It depends on dotnetfx v4.8.0.20190930, which requires a reboot: dotnetfx (exit code 3010)
 # https://github.com/microsoft/vs-dockerfiles/blob/main/native-desktop/
@@ -34,6 +35,8 @@ RUN C:\TEMP\Install.cmd C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --n
     --installChannelUri C:\TEMP\VisualStudio.chman `
     --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended`
     --installPath C:\BuildTools
+
+RUN Get-ChildItem C:\BuildTools
 
 RUN pip3 install meson
 
