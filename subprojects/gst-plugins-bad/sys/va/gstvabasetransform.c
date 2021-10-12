@@ -729,7 +729,11 @@ _get_sinkpad_pool (GstVaBaseTransform * self)
 
   gst_object_unref (allocator);
 
-  gst_buffer_pool_set_active (self->priv->sinkpad_pool, TRUE);
+  if (!gst_buffer_pool_set_active (self->priv->sinkpad_pool, TRUE)) {
+    GST_WARNING_OBJECT (self, "failed to active the sinkpad pool %"
+        GST_PTR_FORMAT, self->priv->sinkpad_pool);
+    return NULL;
+  }
 
   return self->priv->sinkpad_pool;
 }
