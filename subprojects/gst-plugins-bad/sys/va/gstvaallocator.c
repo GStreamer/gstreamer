@@ -541,6 +541,11 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
     goto failed;
   }
 
+  if (desc.num_objects == 0) {
+    GST_ERROR ("Failed to export surface to dmabuf");
+    goto failed;
+  }
+
   buf = gst_va_buffer_surface_new (surface, format, desc.width, desc.height);
   if (G_UNLIKELY (info)) {
     *info = self->info;
@@ -811,7 +816,8 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_VA_DISPLAY (display), FALSE);
-  g_return_val_if_fail (n_planes <= GST_VIDEO_MAX_PLANES, FALSE);
+  g_return_val_if_fail (n_planes > 0
+      && n_planes <= GST_VIDEO_MAX_PLANES, FALSE);
 
   format = GST_VIDEO_INFO_FORMAT (info);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
