@@ -117,6 +117,7 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-plugins-good.elements_udpsrc.test_udpsrc_empty_packet', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/740')
 ]
 
+
 BLACKLIST = [
     (r'check.gstreamer.gst_gstsystemclock.test_stress_cleanup_unschedule', 'flaky under high server load'),
     (r'check.gstreamer.gst_gstsystemclock.test_stress_reschedule', 'flaky under high server load'),
@@ -188,8 +189,40 @@ KNOWN_ISSUES = {
             r"check.gstreamer.gst_gstbin.test_watch_for_state_change",
         ],
         "max_retries": 1,
-
-    }
+    },
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/803": {
+        "tests": [
+            "check.gst-editing-services.edit_while_seeked_with_stop"
+        ],
+        "issues": [
+            {
+                'returncode': None,
+                'sometimes': True,
+            },
+            {
+                'timeout': True,
+                'sometimes': True,
+            },
+        ],
+    },
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/804": {
+        "tests": [
+            "check.gst-editing-services.check_layer_activness_gaps"
+        ],
+        "issues": [
+            {
+                'returncode': 18,
+                'sometimes': True,
+            },
+            {
+                "issue-id": "scenario::execution-error",
+                "summary": "The execution of an action did not properly happen",
+                "level": "critical",
+                "detected-on": "check_layer_activness_gaps.scenario",
+                # "details": "\n> check_layer_activness_gaps.scenario:22\n    22 | check-property, target-element-factory-name=videotestsrc, property-name=pattern, property-value="Blue"\n       >\n       > <src>::pattern expected value: '(gchararray)Blue' different than observed: '(gchararray)"100\%\ Black"'",
+            },
+        ],
+    },
 }
 
 

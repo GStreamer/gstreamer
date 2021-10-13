@@ -116,6 +116,7 @@ class GstCheckTest(MesonTest):
 
         return env
 
+
 class GstValidateCheckTest(GstValidateTest):
     def __init__(self, name, options, reporter, test_infos, child_env=None):
         ref_env = os.environ.copy()
