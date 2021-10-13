@@ -693,6 +693,9 @@ gtk_gst_gl_widget_set_rotate_method (GtkGstGLWidget * gst_widget,
   if (method == GST_VIDEO_ORIENTATION_CUSTOM) {
     GST_WARNING_OBJECT (gst_widget, "unsupported custom orientation");
     return;
+  } else if (method == GST_VIDEO_ORIENTATION_AUTO && from_tag) {
+    GST_WARNING_OBJECT (gst_widget, "auto orientation cannot come from a tag");
+    return;
   }
 
   GTK_GST_BASE_WIDGET_LOCK (gst_widget);
@@ -705,6 +708,12 @@ gtk_gst_gl_widget_set_rotate_method (GtkGstGLWidget * gst_widget,
     method = tag_method;
   else
     method = priv->rotate_method;
+
+  /* We can't apply an AUTO orientation if we don't have an
+   * orientation coming from a tag, so reset to identity */
+  if (method != priv->current_rotate_method &&
+      method == GST_VIDEO_ORIENTATION_AUTO)
+    method = GST_VIDEO_ORIENTATION_IDENTITY;
 
   if (method != priv->current_rotate_method) {
     GST_DEBUG ("Changing method from %d to %d",
