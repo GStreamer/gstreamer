@@ -823,7 +823,7 @@ class GstValidateTest(Test):
                  options, reporter, duration=0,
                  timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None,
                  media_descriptor=None, extra_env_variables=None,
-                 expected_issues=None, workdir=None):
+                 expected_issues=None, workdir=None, **kwargs):
 
         extra_env_variables = extra_env_variables or {}
 
@@ -861,14 +861,16 @@ class GstValidateTest(Test):
 
             extra_env_variables["GST_VALIDATE_OVERRIDE"] = override_path
 
-        super(GstValidateTest, self).__init__(application_name, classname,
-                                              options, reporter,
-                                              duration=duration,
-                                              timeout=timeout,
-                                              hard_timeout=hard_timeout,
-                                              extra_env_variables=extra_env_variables,
-                                              expected_issues=expected_issues,
-                                              workdir=workdir)
+        super().__init__(application_name,
+                         classname,
+                         options, reporter,
+                         duration=duration,
+                         timeout=timeout,
+                         hard_timeout=hard_timeout,
+                         extra_env_variables=extra_env_variables,
+                         expected_issues=expected_issues,
+                         workdir=workdir,
+                         **kwargs)
         if media_descriptor and media_descriptor.get_media_filepath():
             config_file = os.path.join(media_descriptor.get_media_filepath() + '.config')
             if os.path.isfile(config_file):
