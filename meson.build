@@ -387,3 +387,7 @@ run_target('devenv', command : devenv_cmd)
 if orc_subproject.found() and orc_update_targets.length() > 0
   alias_target('update-orc-dist', orc_update_targets)
 endif
+
+summary({
+  'gstreamer-full': get_option('default_library') == 'static',
+}, section: 'Build options', bool_yn: true, list_sep: '  ')
