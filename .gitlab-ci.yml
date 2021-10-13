@@ -114,7 +114,7 @@ trigger:
     # If the MR is assigned to the Merge bot, trigger the pipeline automatically
     - if: '$CI_MERGE_REQUEST_ASSIGNEES == "gstreamer-merge-bot"'
     # Alway run tests post merged
-    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
     # When the assignee isn't the merge bot, require an explicit action to trigger the pipeline
     # to avoid wasting CI resources
     - if: '$CI_MERGE_REQUEST_ASSIGNEES != "gstreamer-merge-bot"'
@@ -330,6 +330,13 @@ gst indent:
     when: "always"
     paths:
       - 'meson-logs/'
+  rules:
+    # If this matches, it means the pipeline is running against either the main
+    # or a stable branch, so make it manual
+    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+      when: manual
+    - changes:
+        *modules_changes
 
 .build fedora x86_64:
   extends:
@@ -340,13 +347,6 @@ gst indent:
     - "fedora amd64 docker"
   variables:
     MESON_ARGS: *simple_build
-  rules:
-    # If this matches, it means the pipeline is running against either the main
-    # or a stable branch, so make it manual
-    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
-      when: manual
-    - changes:
-        *modules_changes
 
 build nodebug fedora x86_64:
   extends:
@@ -395,7 +395,7 @@ build clang fedora x86_64:
   rules:
     # If this matches, it means the pipeline is running against either the main
     # or a stable branch, so make it manual
-    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: manual
     - changes:
         *modules_changes
@@ -538,7 +538,7 @@ gstreamer-full:
   rules:
     # If this matches, it means the pipeline is running against either the main
     # or a stable branch, so make it manual
-    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: manual
     - changes:
       - "*"
@@ -708,7 +708,7 @@ valgrind ges:
     - plugins-cache-diffs/
 
 #
-# This jobs runs in gsrtreamer namespace when after the merge into main branch.
+# This jobs runs in gstreamer namespace when after the merge into main branch.
 # The produced artifact is later used to automatically update the web page.
 #
 documentation:
@@ -730,7 +730,8 @@ build documentation:
   needs:
     - "trigger"
   rules:
-    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+    # Never run post merge, we have the `documentation` always running for that
+    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: never
     - changes:
       - .gitlab-ci.yml
@@ -762,7 +763,8 @@ cerbero trigger:
     - ci/gitlab/trigger_cerbero_pipeline.py
 
   rules:
-    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+    # Never run post merge
+    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: never
     - changes:
       - .gitlab-ci.yml
