@@ -162,10 +162,16 @@ typedef void (*SoupLoggerPrinter)(SoupLogger *logger,
                                                    const char *data,
                                                    gpointer user_data);
 
+#if GLIB_CHECK_VERSION(2, 68, 0)
 #define SOUP_HTTP_URI_FLAGS                                                    \
   (G_URI_FLAGS_HAS_PASSWORD | G_URI_FLAGS_ENCODED_PATH |                       \
    G_URI_FLAGS_ENCODED_QUERY | G_URI_FLAGS_ENCODED_FRAGMENT |                  \
    G_URI_FLAGS_SCHEME_NORMALIZE)
+#else
+#define SOUP_HTTP_URI_FLAGS                                                    \
+  (G_URI_FLAGS_HAS_PASSWORD | G_URI_FLAGS_ENCODED_PATH |                       \
+   G_URI_FLAGS_ENCODED_QUERY | G_URI_FLAGS_ENCODED_FRAGMENT)
+#endif
 
 typedef void (*SoupMessageHeadersForeachFunc)(const char *name,
                                               const char *value,
