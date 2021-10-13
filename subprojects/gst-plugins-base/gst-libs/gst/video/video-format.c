@@ -568,8 +568,8 @@ unpack_v210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint16 u0, u2, u4;
   guint16 v0, v2, v4;
 
-  /* FIXME */
-  s += x * 2;
+  if (x != 0)
+    GST_FIXME ("Horizontal offsets are not supported for v210");
 
   for (i = 0; i < width; i += 6) {
     a0 = GST_READ_UINT32_LE (s + (i / 6) * 16 + 0);
@@ -661,63 +661,33 @@ pack_v210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint16 u0, u1, u2;
   guint16 v0, v1, v2;
 
-  for (i = 0; i < width - 5; i += 6) {
-    y0 = s[4 * (i + 0) + 1] >> 6;
-    y1 = s[4 * (i + 1) + 1] >> 6;
-    y2 = s[4 * (i + 2) + 1] >> 6;
-    y3 = s[4 * (i + 3) + 1] >> 6;
-    y4 = s[4 * (i + 4) + 1] >> 6;
-    y5 = s[4 * (i + 5) + 1] >> 6;
+  for (i = 0; i < width; i += 6) {
+    y1 = y2 = y3 = y4 = y5 = 0;
+    u1 = u2 = v1 = v2 = 0;
 
-    u0 = s[4 * (i + 0) + 2] >> 6;
-    u1 = s[4 * (i + 2) + 2] >> 6;
-    u2 = s[4 * (i + 4) + 2] >> 6;
-
-    v0 = s[4 * (i + 0) + 3] >> 6;
-    v1 = s[4 * (i + 2) + 3] >> 6;
-    v2 = s[4 * (i + 4) + 3] >> 6;
-
-    a0 = u0 | (y0 << 10) | (v0 << 20);
-    a1 = y1 | (u1 << 10) | (y2 << 20);
-    a2 = v1 | (y3 << 10) | (u2 << 20);
-    a3 = y4 | (v2 << 10) | (y5 << 20);
-
-    GST_WRITE_UINT32_LE (d + (i / 6) * 16 + 0, a0);
-    GST_WRITE_UINT32_LE (d + (i / 6) * 16 + 4, a1);
-    GST_WRITE_UINT32_LE (d + (i / 6) * 16 + 8, a2);
-    GST_WRITE_UINT32_LE (d + (i / 6) * 16 + 12, a3);
-  }
-  if (i < width) {
     y0 = s[4 * (i + 0) + 1] >> 6;
     u0 = s[4 * (i + 0) + 2] >> 6;
     v0 = s[4 * (i + 0) + 3] >> 6;
-    if (i < width - 1)
+
+    if (i < width - 1) {
       y1 = s[4 * (i + 1) + 1] >> 6;
-    else
-      y1 = y0;
+    }
     if (i < width - 2) {
       y2 = s[4 * (i + 2) + 1] >> 6;
       u1 = s[4 * (i + 2) + 2] >> 6;
       v1 = s[4 * (i + 2) + 3] >> 6;
-    } else {
-      y2 = y1;
-      u1 = u0;
-      v1 = v0;
     }
-    if (i < width - 3)
+    if (i < width - 3) {
       y3 = s[4 * (i + 3) + 1] >> 6;
-    else
-      y3 = y2;
+    }
     if (i < width - 4) {
       y4 = s[4 * (i + 4) + 1] >> 6;
       u2 = s[4 * (i + 4) + 2] >> 6;
       v2 = s[4 * (i + 4) + 3] >> 6;
-    } else {
-      y4 = y3;
-      u2 = u1;
-      v2 = v1;
     }
-    y5 = y4;
+    if (i < width - 5) {
+      y5 = s[4 * (i + 5) + 1] >> 6;
+    }
 
     a0 = u0 | (y0 << 10) | (v0 << 20);
     a1 = y1 | (u1 << 10) | (y2 << 20);
