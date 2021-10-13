@@ -782,7 +782,7 @@ gst_va_vpp_caps_remove_fields (GstCaps * caps)
   GstCaps *ret;
   GstStructure *structure;
   GstCapsFeatures *features;
-  gint i, n;
+  gint i, j, n, m;
 
   ret = gst_caps_new_empty ();
 
@@ -798,23 +798,30 @@ gst_va_vpp_caps_remove_fields (GstCaps * caps)
 
     structure = gst_structure_copy (structure);
 
-    if (gst_caps_features_is_equal (features,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
-        || gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)
-        || gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA)) {
-      /* rangify frame size */
-      gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+    m = gst_caps_features_get_size (features);
+    for (j = 0; j < m; j++) {
+      const gchar *feature = gst_caps_features_get_nth (features, j);
 
-      /* if pixel aspect ratio, make a range of it */
-      if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
-        gst_structure_set (structure, "pixel-aspect-ratio",
-            GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+      if (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY) == 0
+          || g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_DMABUF) == 0
+          || g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_VA) == 0) {
+
+        /* rangify frame size */
+        gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+
+        /* if pixel aspect ratio, make a range of it */
+        if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
+          gst_structure_set (structure, "pixel-aspect-ratio",
+              GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+        }
+
+        /* remove format-related fields */
+        gst_structure_remove_fields (structure, "format", "colorimetry",
+            "chroma-site", NULL);
+
+        break;
       }
-
-      /* remove format-related fields */
-      gst_structure_remove_fields (structure, "format", "colorimetry",
-          "chroma-site", NULL);
     }
 
     gst_caps_append_structure_full (ret, structure,
