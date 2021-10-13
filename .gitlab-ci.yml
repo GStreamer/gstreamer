@@ -113,13 +113,13 @@ trigger:
   rules:
     # If the MR is assigned to the Merge bot, trigger the pipeline automatically
     - if: '$CI_MERGE_REQUEST_ASSIGNEES == "gstreamer-merge-bot"'
+    # Alway run tests post merged
+    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
     # When the assignee isn't the merge bot, require an explicit action to trigger the pipeline
     # to avoid wasting CI resources
     - if: '$CI_MERGE_REQUEST_ASSIGNEES != "gstreamer-merge-bot"'
       when: 'manual'
       allow_failure: false
-    # Alway run tests post merged
-    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
 
 .fedora image:
   variables:
@@ -341,12 +341,12 @@ gst indent:
   variables:
     MESON_ARGS: *simple_build
   rules:
-    - changes:
-        *modules_changes
     # If this matches, it means the pipeline is running against either the main
     # or a stable branch, so make it manual
     - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: manual
+    - changes:
+        *modules_changes
 
 build nodebug fedora x86_64:
   extends:
@@ -393,12 +393,12 @@ build clang fedora x86_64:
       -Dgst-plugins-base:pango=enabled
       -Dgst-plugins-good:cairo=enabled
   rules:
-    - changes:
-        *modules_changes
     # If this matches, it means the pipeline is running against either the main
     # or a stable branch, so make it manual
     - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: manual
+    - changes:
+        *modules_changes
   before_script:
     - ci/scripts/handle-subprojects-cache.py subprojects/
   script:
@@ -536,14 +536,14 @@ gstreamer-full:
       -Dintrospection=disabled
       $MESON_GST_WERROR
   rules:
-    - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
     # If this matches, it means the pipeline is running against either the main
     # or a stable branch, so make it manual
     - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: manual
+    - changes:
+      - "*"
+      - scripts/*
+      - ci/**/*
 
   script:
   - *build
@@ -730,6 +730,8 @@ build documentation:
   needs:
     - "trigger"
   rules:
+    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+      when: never
     - changes:
       - .gitlab-ci.yml
       - ci/gitlab/freedesktop_doc_importer.sh
@@ -746,8 +748,6 @@ build documentation:
       - subprojects/gstreamer/**/*
       - subprojects/gstreamer-vaapi/**/*
       - subprojects/gst-rtsp-server/**/*
-    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
-      when: never
 
 # FIXME: Using trigger: causes permission issues, workaround using old REST API.
 # https://gitlab.com/gitlab-org/gitlab/-/issues/341737
@@ -762,6 +762,8 @@ cerbero trigger:
     - ci/gitlab/trigger_cerbero_pipeline.py
 
   rules:
+    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+      when: never
     - changes:
       - .gitlab-ci.yml
       - ci/gitlab/trigger_cerbero_pipeline.py
@@ -776,5 +778,3 @@ cerbero trigger:
       - subprojects/gstreamer/**/*
       - subprojects/gst-rtsp-server/**/*
       - subprojects/gst-examples/**/*
-    - if: '$CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
-      when: never
