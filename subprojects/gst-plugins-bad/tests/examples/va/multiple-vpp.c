@@ -140,12 +140,15 @@ message_handler (GstBus * bus, GstMessage * msg, gpointer data)
       GError *err = NULL;
 
       gst_message_parse_error (msg, &err, &debug);
-      gst_printerrln ("GStreamer error: %s\n%s", err->message,
-          debug ? debug : "");
+
+      if (err) {
+        gst_printerrln ("GStreamer error: %s\n%s", err->message,
+            debug ? debug : "");
+        g_error_free (err);
+      }
+
       if (debug)
         g_free (debug);
-      if (err)
-        g_error_free (err);
 
       g_main_loop_quit (app->loop);
       break;
