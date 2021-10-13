@@ -26,6 +26,7 @@ import platform
 import shutil
 import subprocess
 import threading
+from pathlib import Path
 import concurrent.futures as conc
 
 
@@ -267,7 +268,9 @@ class MesonTestsManager(TestsManager):
         if binary != sys.argv[0]:
             return sublauncher_tests
 
+        os.environ["GST_DEBUG_FILE"] = str(Path(self.options.logsdir) / f"{test['name']}.discover.gstlog")
         res, _, tests_launcher = setup_launcher_from_args(cmd[1:], main_options=self.options)
+        del os.environ["GST_DEBUG_FILE"]
         if res is False:
             return sublauncher_tests
 
