@@ -824,51 +824,44 @@ gst_va_vpp_caps_remove_fields (GstCaps * caps)
   return ret;
 }
 
-/* All missing caps features should be added based on the template,
- * and the caps features' order in @caps are kept */
-static void
-gst_va_vpp_complete_caps_features (GstCaps * caps, GstCaps * tmpl_caps)
+/* Returns all structures in @caps without @feature_name but now with
+ * @feature_name */
+static GstCaps *
+gst_va_vpp_complete_caps_features (const GstCaps * caps,
+    const gchar * feature_name)
 {
-  GstStructure *structure;
-  GstCapsFeatures *features;
-  gboolean has_sys = FALSE, has_dma = FALSE, has_va = FALSE;
-  gint i, n;
+  guint i, j, m, n;
+  GstCaps *tmp;
+
+  tmp = gst_caps_new_empty ();
 
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
-    features = gst_caps_get_features (caps, i);
+    GstCapsFeatures *features, *orig_features;
+    GstStructure *s = gst_caps_get_structure (caps, i);
+    gboolean contained = FALSE;
 
-    if (gst_caps_features_is_equal (features,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
-      has_sys = TRUE;
-    else if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA))
-      has_va = TRUE;
-    else if (gst_caps_features_contains (features,
-            GST_CAPS_FEATURE_MEMORY_DMABUF))
-      has_dma = TRUE;
+    orig_features = gst_caps_get_features (caps, i);
+    features = gst_caps_features_new (feature_name, NULL);
+
+    m = gst_caps_features_get_size (orig_features);
+    for (j = 0; j < m; j++) {
+      const gchar *feature = gst_caps_features_get_nth (orig_features, j);
+
+      /* if we already have the features */
+      if (gst_caps_features_contains (features, feature)) {
+        contained = TRUE;
+        break;
+      }
+    }
+
+    if (!contained && !gst_caps_is_subset_structure_full (tmp, s, features))
+      gst_caps_append_structure_full (tmp, gst_structure_copy (s), features);
+    else
+      gst_caps_features_free (features);
   }
 
-  /* Adding the missing features. */
-  n = gst_caps_get_size (tmpl_caps);
-  for (i = 0; i < n; i++) {
-    structure = gst_caps_get_structure (tmpl_caps, i);
-    features = gst_caps_get_features (tmpl_caps, i);
-
-    if (gst_caps_features_contains (features,
-            GST_CAPS_FEATURE_MEMORY_VA) && !has_va)
-      gst_caps_append_structure_full (caps, gst_structure_copy (structure),
-          gst_caps_features_copy (features));
-
-    if (gst_caps_features_contains (features,
-            GST_CAPS_FEATURE_MEMORY_DMABUF) && !has_dma)
-      gst_caps_append_structure_full (caps, gst_structure_copy (structure),
-          gst_caps_features_copy (features));
-
-    if (gst_caps_features_is_equal (features,
-            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY) && !has_sys)
-      gst_caps_append_structure_full (caps, gst_structure_copy (structure),
-          gst_caps_features_copy (features));
-  }
+  return tmp;
 }
 
 static GstCaps *
@@ -876,7 +869,7 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
     GstCaps * caps, GstCaps * filter)
 {
   GstVaVpp *self = GST_VA_VPP (trans);
-  GstCaps *ret, *tmpl_caps;
+  GstCaps *ret, *tmp;
 
   GST_DEBUG_OBJECT (self,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
@@ -884,16 +877,15 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
 
   ret = gst_va_vpp_caps_remove_fields (caps);
 
-  if (direction == GST_PAD_SINK) {
-    tmpl_caps =
-        gst_pad_get_pad_template_caps (GST_BASE_TRANSFORM_SRC_PAD (trans));
-  } else {
-    tmpl_caps =
-        gst_pad_get_pad_template_caps (GST_BASE_TRANSFORM_SINK_PAD (trans));
-  }
+  tmp = gst_va_vpp_complete_caps_features (ret, GST_CAPS_FEATURE_MEMORY_VA);
+  ret = gst_caps_merge (ret, tmp);
 
-  gst_va_vpp_complete_caps_features (ret, tmpl_caps);
-  gst_caps_unref (tmpl_caps);
+  tmp = gst_va_vpp_complete_caps_features (ret, GST_CAPS_FEATURE_MEMORY_DMABUF);
+  ret = gst_caps_merge (ret, tmp);
+
+  tmp = gst_va_vpp_complete_caps_features (ret,
+      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+  ret = gst_caps_merge (ret, tmp);
 
   if (filter) {
     GstCaps *intersection;
