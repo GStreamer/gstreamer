@@ -753,31 +753,36 @@ _destroy_buffers (GstVaDecodePicture * pic)
 
   dpy = gst_va_display_get_va_dpy (pic->display);
 
-  for (i = 0; i < pic->buffers->len; i++) {
-    buffer = g_array_index (pic->buffers, VABufferID, i);
-    gst_va_display_lock (pic->display);
-    status = vaDestroyBuffer (dpy, buffer);
-    gst_va_display_unlock (pic->display);
-    if (status != VA_STATUS_SUCCESS) {
-      ret = FALSE;
-      GST_WARNING ("Failed to destroy parameter buffer: %s",
-          vaErrorStr (status));
+  if (pic->buffers) {
+    for (i = 0; i < pic->buffers->len; i++) {
+      buffer = g_array_index (pic->buffers, VABufferID, i);
+      gst_va_display_lock (pic->display);
+      status = vaDestroyBuffer (dpy, buffer);
+      gst_va_display_unlock (pic->display);
+      if (status != VA_STATUS_SUCCESS) {
+        ret = FALSE;
+        GST_WARNING ("Failed to destroy parameter buffer: %s",
+            vaErrorStr (status));
+      }
     }
+
+    pic->buffers = g_array_set_size (pic->buffers, 0);
   }
 
-  for (i = 0; i < pic->slices->len; i++) {
-    buffer = g_array_index (pic->slices, VABufferID, i);
-    gst_va_display_lock (pic->display);
-    status = vaDestroyBuffer (dpy, buffer);
-    gst_va_display_unlock (pic->display);
-    if (status != VA_STATUS_SUCCESS) {
-      ret = FALSE;
-      GST_WARNING ("Failed to destroy slice buffer: %s", vaErrorStr (status));
+  if (pic->slices) {
+    for (i = 0; i < pic->slices->len; i++) {
+      buffer = g_array_index (pic->slices, VABufferID, i);
+      gst_va_display_lock (pic->display);
+      status = vaDestroyBuffer (dpy, buffer);
+      gst_va_display_unlock (pic->display);
+      if (status != VA_STATUS_SUCCESS) {
+        ret = FALSE;
+        GST_WARNING ("Failed to destroy slice buffer: %s", vaErrorStr (status));
+      }
     }
-  }
 
-  pic->buffers = g_array_set_size (pic->buffers, 0);
-  pic->slices = g_array_set_size (pic->slices, 0);
+    pic->slices = g_array_set_size (pic->slices, 0);
+  }
 
   return ret;
 }
@@ -822,10 +827,7 @@ gst_va_decode_picture_free (GstVaDecodePicture * pic)
 {
   g_return_if_fail (pic);
 
-  /* only if add_param_buffer() or add_slice_buffer() failed */
-  if ((pic->buffers != NULL && pic->buffers->len > 0)
-      || (pic->slices != NULL && pic->slices->len > 0))
-    _destroy_buffers (pic);
+  _destroy_buffers (pic);
 
   gst_buffer_unref (pic->gstbuffer);
   g_clear_pointer (&pic->buffers, g_array_unref);
