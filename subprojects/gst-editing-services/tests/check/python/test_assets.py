@@ -62,17 +62,17 @@ class TestTimeline(GESSimpleTimelineTest):
 
     @unittest.skipUnless(*common.can_generate_assets())
     def test_reload_asset(self):
-        with common.created_video_asset() as uri:
+        with common.created_video_asset(num_bufs=2, framerate="2/1") as uri:
             asset0 = GES.UriClipAsset.request_sync(uri)
             self.assertEqual(asset0.props.duration, Gst.SECOND)
 
-            with common.created_video_asset(uri, 60) as uri:
+            with common.created_video_asset(uri, 4, framerate="2/1") as uri:
                 GES.Asset.needs_reload(GES.UriClip, uri)
                 asset1 = GES.UriClipAsset.request_sync(uri)
                 self.assertEqual(asset1.props.duration, 2 * Gst.SECOND)
                 self.assertEqual(asset1, asset0)
 
-                with common.created_video_asset(uri, 90) as uri:
+                with common.created_video_asset(uri, 6, framerate="2/1") as uri:
                     mainloop = common.create_main_loop()
                     def asset_loaded_cb(_, res, mainloop):
                         asset2 = GES.Asset.request_finish(res)

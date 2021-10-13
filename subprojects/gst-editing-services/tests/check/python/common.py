@@ -18,6 +18,7 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
+from urllib.parse import urlparse
 import gi
 
 gi.require_version("Gst", "1.0")
@@ -116,13 +117,17 @@ def can_generate_assets():
 
 
 @contextlib.contextmanager
-def created_video_asset(uri=None, num_bufs=30):
+def created_video_asset(uri=None, num_bufs=30, framerate="30/1"):
     with tempfile.NamedTemporaryFile(suffix=".ogg") as f:
         if not uri:
             uri = Gst.filename_to_uri(f.name)
-        transcoder = GstTranscoder.Transcoder.new("testbin://video,num-buffers=%s" % num_bufs,
-            uri, "application/ogg:video/x-theora:audio/x-vorbis")
-        transcoder.run()
+            name = f.name
+        else:
+            name = urlparse(uri).path
+        pipe = Gst.parse_launch(f"videotestsrc num-buffers={num_bufs} ! video/x-raw,framerate={framerate} ! theoraenc ! oggmux ! filesink location={name}")
+        pipe.set_state(Gst.State.PLAYING)
+        assert pipe.get_bus().timed_pop_filtered(Gst.CLOCK_TIME_NONE, Gst.MessageType.EOS)
+        pipe.set_state(Gst.State.NULL)
 
         yield uri
 
