@@ -25,6 +25,10 @@ prefix/
 /gst-examples
 /gst-plugins-rs
 
+# Because of unwanted diff caused by redirect wrap files 
+# https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1140
+subprojects/*.wrap
+
 subprojects/*/
 !subprojects/gst-devtools
 !subprojects/gst-docs
