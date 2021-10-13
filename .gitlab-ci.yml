@@ -361,12 +361,20 @@ build nodebug fedora x86_64:
 build static fedora x86_64:
   extends: '.build fedora x86_64'
   variables:
-    MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
+    MESON_BUILDTYPE_ARGS: >
+      --default-library=static
+      -Dintrospection=disabled
+      -Ddoc=disabled
+      -Dpython=auto
 
 build static nodebug fedora x86_64:
   extends: 'build nodebug fedora x86_64'
   variables:
-    MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
+    MESON_BUILDTYPE_ARGS: >
+      --default-library=static
+      -Dintrospection=disabled
+      -Ddoc=disabled
+      -Dpython=auto
 
 build clang fedora x86_64:
   extends: '.build fedora x86_64'
@@ -525,15 +533,14 @@ integration testsuites fedora:
     TEST_SUITE: "validate ges"
 
 # gstreamer-full:
-# introspection has been disabled as the static build does not support it.
-# See https://gitlab.freedesktop.org/gstreamer/gst-build/-/issues/162
 gstreamer-full:
   extends: 'build static fedora x86_64'
   stage: integrate
   variables:
     MESON_ARGS: >
       --default-library=static
-      -Dintrospection=disabled
+      -Ddoc=disabled
+      -Dgst-editing-services:python=disabled
       $MESON_GST_WERROR
   rules:
     # If this matches, it means the pipeline is running against either the main
