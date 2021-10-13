@@ -42,86 +42,6 @@ enum
   PROP_IGNORE_ALPHA,
 };
 
-static void _update_par (GtkGstBaseWidget * widget);
-
-static void
-gtk_gst_base_widget_get_preferred_width (GtkWidget * widget, gint * min,
-    gint * natural)
-{
-  GtkGstBaseWidget *gst_widget = (GtkGstBaseWidget *) widget;
-  gint video_width = gst_widget->display_width;
-
-  if (!gst_widget->negotiated)
-    video_width = 10;
-
-  if (min)
-    *min = 1;
-  if (natural)
-    *natural = video_width;
-}
-
-static void
-gtk_gst_base_widget_get_preferred_height (GtkWidget * widget, gint * min,
-    gint * natural)
-{
-  GtkGstBaseWidget *gst_widget = (GtkGstBaseWidget *) widget;
-  gint video_height = gst_widget->display_height;
-
-  if (!gst_widget->negotiated)
-    video_height = 10;
-
-  if (min)
-    *min = 1;
-  if (natural)
-    *natural = video_height;
-}
-
-static void
-gtk_gst_base_widget_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GtkGstBaseWidget *gtk_widget = GTK_GST_BASE_WIDGET (object);
-
-  switch (prop_id) {
-    case PROP_FORCE_ASPECT_RATIO:
-      gtk_widget->force_aspect_ratio = g_value_get_boolean (value);
-      break;
-    case PROP_PIXEL_ASPECT_RATIO:
-      gtk_widget->par_n = gst_value_get_fraction_numerator (value);
-      gtk_widget->par_d = gst_value_get_fraction_denominator (value);
-      _update_par (gtk_widget);
-      break;
-    case PROP_IGNORE_ALPHA:
-      gtk_widget->ignore_alpha = g_value_get_boolean (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gtk_gst_base_widget_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GtkGstBaseWidget *gtk_widget = GTK_GST_BASE_WIDGET (object);
-
-  switch (prop_id) {
-    case PROP_FORCE_ASPECT_RATIO:
-      g_value_set_boolean (value, gtk_widget->force_aspect_ratio);
-      break;
-    case PROP_PIXEL_ASPECT_RATIO:
-      gst_value_set_fraction (value, gtk_widget->par_n, gtk_widget->par_d);
-      break;
-    case PROP_IGNORE_ALPHA:
-      g_value_set_boolean (value, gtk_widget->ignore_alpha);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
 static gboolean
 _calculate_par (GtkGstBaseWidget * widget, GstVideoInfo * info)
 {
@@ -245,6 +165,84 @@ _update_par (GtkGstBaseWidget * widget)
         (GSourceFunc) _queue_draw, widget, NULL);
   }
   GTK_GST_BASE_WIDGET_UNLOCK (widget);
+}
+
+static void
+gtk_gst_base_widget_get_preferred_width (GtkWidget * widget, gint * min,
+    gint * natural)
+{
+  GtkGstBaseWidget *gst_widget = (GtkGstBaseWidget *) widget;
+  gint video_width = gst_widget->display_width;
+
+  if (!gst_widget->negotiated)
+    video_width = 10;
+
+  if (min)
+    *min = 1;
+  if (natural)
+    *natural = video_width;
+}
+
+static void
+gtk_gst_base_widget_get_preferred_height (GtkWidget * widget, gint * min,
+    gint * natural)
+{
+  GtkGstBaseWidget *gst_widget = (GtkGstBaseWidget *) widget;
+  gint video_height = gst_widget->display_height;
+
+  if (!gst_widget->negotiated)
+    video_height = 10;
+
+  if (min)
+    *min = 1;
+  if (natural)
+    *natural = video_height;
+}
+
+static void
+gtk_gst_base_widget_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GtkGstBaseWidget *gtk_widget = GTK_GST_BASE_WIDGET (object);
+
+  switch (prop_id) {
+    case PROP_FORCE_ASPECT_RATIO:
+      gtk_widget->force_aspect_ratio = g_value_get_boolean (value);
+      break;
+    case PROP_PIXEL_ASPECT_RATIO:
+      gtk_widget->par_n = gst_value_get_fraction_numerator (value);
+      gtk_widget->par_d = gst_value_get_fraction_denominator (value);
+      _update_par (gtk_widget);
+      break;
+    case PROP_IGNORE_ALPHA:
+      gtk_widget->ignore_alpha = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gtk_gst_base_widget_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GtkGstBaseWidget *gtk_widget = GTK_GST_BASE_WIDGET (object);
+
+  switch (prop_id) {
+    case PROP_FORCE_ASPECT_RATIO:
+      g_value_set_boolean (value, gtk_widget->force_aspect_ratio);
+      break;
+    case PROP_PIXEL_ASPECT_RATIO:
+      gst_value_set_fraction (value, gtk_widget->par_n, gtk_widget->par_d);
+      break;
+    case PROP_IGNORE_ALPHA:
+      g_value_set_boolean (value, gtk_widget->ignore_alpha);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static const gchar *
