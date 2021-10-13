@@ -19,14 +19,14 @@
  */
 
 /**
- * SECTION:element-d3d11desktopdupsrc
- * @title: d3d11desktopdupsrc
+ * SECTION:element-d3d11screencapturesrc
+ * @title: d3d11screencapturesrc
  *
  * A DXGI Desktop Duplication API based screen capture element
  *
  * ## Example launch line
  * ```
- * gst-launch-1.0 d3d11desktopdupsrc ! queue ! d3d11videosink
+ * gst-launch-1.0 d3d11screencapturesrc ! queue ! d3d11videosink
  * ```
  *
  * Since: 1.20
@@ -36,8 +36,8 @@
 #include "config.h"
 #endif
 
-#include "gstd3d11desktopdupsrc.h"
-#include "gstd3d11desktopdup.h"
+#include "gstd3d11screencapturesrc.h"
+#include "gstd3d11screencapture.h"
 #include "gstd3d11pluginutils.h"
 #include <wrl.h>
 #include <string.h>
@@ -46,8 +46,8 @@
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_desktop_dup_debug);
-#define GST_CAT_DEFAULT gst_d3d11_desktop_dup_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_screen_capture_debug);
+#define GST_CAT_DEFAULT gst_d3d11_screen_capture_debug
 
 enum
 {
@@ -69,7 +69,7 @@ static GstStaticCaps template_caps =
     (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "BGRA") ";"
     GST_VIDEO_CAPS_MAKE ("BGRA"));
 
-struct _GstD3D11DesktopDupSrc
+struct _GstD3D11ScreenCaptureSrc
 {
   GstBaseSrc src;
 
@@ -78,7 +78,7 @@ struct _GstD3D11DesktopDupSrc
   GstVideoInfo video_info;
 
   GstD3D11Device *device;
-  GstD3D11DesktopDup *dupl;
+  GstD3D11ScreenCapture *capture;
 
   GstBufferPool *pool;
 
@@ -94,48 +94,48 @@ struct _GstD3D11DesktopDupSrc
   gboolean downstream_supports_d3d11;
 };
 
-static void gst_d3d11_desktop_dup_src_dispose (GObject * object);
-static void gst_d3d11_desktop_dup_src_set_property (GObject * object,
+static void gst_d3d11_screen_capture_src_dispose (GObject * object);
+static void gst_d3d11_screen_capture_src_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_d3d11_desktop_dup_src_get_property (GObject * object,
+static void gst_d3d11_screen_capture_src_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static void gst_d3d11_desktop_dup_src_set_context (GstElement * element,
+static void gst_d3d11_screen_capture_src_set_context (GstElement * element,
     GstContext * context);
 
-static GstCaps *gst_d3d11_desktop_dup_src_get_caps (GstBaseSrc * bsrc,
+static GstCaps *gst_d3d11_screen_capture_src_get_caps (GstBaseSrc * bsrc,
     GstCaps * filter);
-static GstCaps *gst_d3d11_desktop_dup_src_fixate (GstBaseSrc * bsrc,
+static GstCaps *gst_d3d11_screen_capture_src_fixate (GstBaseSrc * bsrc,
     GstCaps * caps);
-static gboolean gst_d3d11_desktop_dup_src_set_caps (GstBaseSrc * bsrc,
+static gboolean gst_d3d11_screen_capture_src_set_caps (GstBaseSrc * bsrc,
     GstCaps * caps);
-static gboolean gst_d3d11_desktop_dup_src_decide_allocation (GstBaseSrc * bsrc,
-    GstQuery * query);
-static gboolean gst_d3d11_desktop_dup_src_start (GstBaseSrc * bsrc);
-static gboolean gst_d3d11_desktop_dup_src_stop (GstBaseSrc * bsrc);
-static gboolean gst_d3d11_desktop_dup_src_unlock (GstBaseSrc * bsrc);
-static gboolean gst_d3d11_desktop_dup_src_unlock_stop (GstBaseSrc * bsrc);
+static gboolean gst_d3d11_screen_capture_src_decide_allocation (GstBaseSrc *
+    bsrc, GstQuery * query);
+static gboolean gst_d3d11_screen_capture_src_start (GstBaseSrc * bsrc);
+static gboolean gst_d3d11_screen_capture_src_stop (GstBaseSrc * bsrc);
+static gboolean gst_d3d11_screen_capture_src_unlock (GstBaseSrc * bsrc);
+static gboolean gst_d3d11_screen_capture_src_unlock_stop (GstBaseSrc * bsrc);
 static gboolean
-gst_d3d11_desktop_dup_src_src_query (GstBaseSrc * bsrc, GstQuery * query);
+gst_d3d11_screen_capture_src_src_query (GstBaseSrc * bsrc, GstQuery * query);
 
-static GstFlowReturn gst_d3d11_desktop_dup_src_create (GstBaseSrc * bsrc,
+static GstFlowReturn gst_d3d11_screen_capture_src_create (GstBaseSrc * bsrc,
     guint64 offset, guint size, GstBuffer ** buf);
 
-#define gst_d3d11_desktop_dup_src_parent_class parent_class
-G_DEFINE_TYPE (GstD3D11DesktopDupSrc, gst_d3d11_desktop_dup_src,
+#define gst_d3d11_screen_capture_src_parent_class parent_class
+G_DEFINE_TYPE (GstD3D11ScreenCaptureSrc, gst_d3d11_screen_capture_src,
     GST_TYPE_BASE_SRC);
 
 static void
-gst_d3d11_desktop_dup_src_class_init (GstD3D11DesktopDupSrcClass * klass)
+gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseSrcClass *basesrc_class = GST_BASE_SRC_CLASS (klass);
   GstCaps *caps;
 
-  gobject_class->dispose = gst_d3d11_desktop_dup_src_dispose;
-  gobject_class->set_property = gst_d3d11_desktop_dup_src_set_property;
-  gobject_class->get_property = gst_d3d11_desktop_dup_src_get_property;
+  gobject_class->dispose = gst_d3d11_screen_capture_src_dispose;
+  gobject_class->set_property = gst_d3d11_screen_capture_src_set_property;
+  gobject_class->get_property = gst_d3d11_screen_capture_src_get_property;
 
   properties[PROP_MONITOR_INDEX] =
       g_param_spec_int ("monitor-index", "Monitor Index",
@@ -160,10 +160,10 @@ gst_d3d11_desktop_dup_src_class_init (GstD3D11DesktopDupSrcClass * klass)
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   element_class->set_context =
-      GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_set_context);
+      GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_set_context);
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 desktop duplication src", "Source/Video",
+      "Direct3D11 screen capture src", "Source/Video",
       "Capture desktop image by using Desktop Duplication API",
       "Seungha Yang <seungha@centricular.com>");
 
@@ -173,25 +173,28 @@ gst_d3d11_desktop_dup_src_class_init (GstD3D11DesktopDupSrcClass * klass)
   gst_caps_unref (caps);
 
   basesrc_class->get_caps =
-      GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_get_caps);
-  basesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_fixate);
+      GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_get_caps);
+  basesrc_class->fixate =
+      GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_fixate);
   basesrc_class->set_caps =
-      GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_set_caps);
+      GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_set_caps);
   basesrc_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_decide_allocation);
-  basesrc_class->start = GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_start);
-  basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_stop);
-  basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_unlock);
+      GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_decide_allocation);
+  basesrc_class->start = GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_start);
+  basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_stop);
+  basesrc_class->unlock =
+      GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_unlock);
   basesrc_class->unlock_stop =
-      GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_unlock_stop);
+      GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_unlock_stop);
   basesrc_class->query =
-      GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_src_query);
+      GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_src_query);
 
-  basesrc_class->create = GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_src_create);
+  basesrc_class->create =
+      GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_create);
 }
 
 static void
-gst_d3d11_desktop_dup_src_init (GstD3D11DesktopDupSrc * self)
+gst_d3d11_screen_capture_src_init (GstD3D11ScreenCaptureSrc * self)
 {
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
@@ -203,21 +206,21 @@ gst_d3d11_desktop_dup_src_init (GstD3D11DesktopDupSrc * self)
 }
 
 static void
-gst_d3d11_desktop_dup_src_dispose (GObject * object)
+gst_d3d11_screen_capture_src_dispose (GObject * object)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (object);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (object);
 
-  gst_clear_object (&self->dupl);
+  gst_clear_object (&self->capture);
   gst_clear_object (&self->device);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
-gst_d3d11_desktop_dup_src_set_property (GObject * object, guint prop_id,
+gst_d3d11_screen_capture_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (object);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (object);
 
   switch (prop_id) {
     case PROP_MONITOR_INDEX:
@@ -236,10 +239,10 @@ gst_d3d11_desktop_dup_src_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_d3d11_desktop_dup_src_get_property (GObject * object, guint prop_id,
+gst_d3d11_screen_capture_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (object);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (object);
 
   switch (prop_id) {
     case PROP_MONITOR_INDEX:
@@ -258,10 +261,10 @@ gst_d3d11_desktop_dup_src_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_d3d11_desktop_dup_src_set_context (GstElement * element,
+gst_d3d11_screen_capture_src_set_context (GstElement * element,
     GstContext * context)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (element);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (element);
 
   gst_d3d11_handle_set_context_for_adapter_luid (element,
       context, self->adapter_luid, &self->device);
@@ -270,18 +273,18 @@ gst_d3d11_desktop_dup_src_set_context (GstElement * element,
 }
 
 static GstCaps *
-gst_d3d11_desktop_dup_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
+gst_d3d11_screen_capture_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
   GstCaps *caps = NULL;
   guint width, height;
 
-  if (!self->dupl) {
+  if (!self->capture) {
     GST_DEBUG_OBJECT (self, "Duplication object is not configured yet");
     return gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
   }
 
-  if (!gst_d3d11_desktop_dup_get_size (self->dupl, &width, &height)) {
+  if (!gst_d3d11_screen_capture_get_size (self->capture, &width, &height)) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
         ("Cannot query supported resolution"), (NULL));
     return NULL;
@@ -305,7 +308,7 @@ gst_d3d11_desktop_dup_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 }
 
 static GstCaps *
-gst_d3d11_desktop_dup_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
+gst_d3d11_screen_capture_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   guint size;
   GstCaps *d3d11_caps = nullptr;
@@ -347,9 +350,9 @@ gst_d3d11_desktop_dup_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 }
 
 static gboolean
-gst_d3d11_desktop_dup_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
+gst_d3d11_screen_capture_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
   GstCapsFeatures *features;
 
   GST_DEBUG_OBJECT (self, "Set caps %" GST_PTR_FORMAT, caps);
@@ -369,10 +372,10 @@ gst_d3d11_desktop_dup_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 }
 
 static gboolean
-gst_d3d11_desktop_dup_src_decide_allocation (GstBaseSrc * bsrc,
+gst_d3d11_screen_capture_src_decide_allocation (GstBaseSrc * bsrc,
     GstQuery * query)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
   GstBufferPool *pool = NULL;
   GstStructure *config;
   GstD3D11AllocationParams *d3d11_params;
@@ -501,9 +504,9 @@ error:
 }
 
 static gboolean
-gst_d3d11_desktop_dup_src_start (GstBaseSrc * bsrc)
+gst_d3d11_screen_capture_src_start (GstBaseSrc * bsrc)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
   GstFlowReturn ret;
   HMONITOR monitor = self->monitor_handle;
   ComPtr < IDXGIAdapter1 > adapter;
@@ -511,13 +514,13 @@ gst_d3d11_desktop_dup_src_start (GstBaseSrc * bsrc)
   HRESULT hr;
 
   if (monitor) {
-    hr = gst_d3d11_desktop_dup_find_output_for_monitor (monitor,
+    hr = gst_d3d11_screen_capture_find_output_for_monitor (monitor,
         &adapter, nullptr);
   } else if (self->monitor_index < 0) {
-    hr = gst_d3d11_desktop_dup_find_primary_monitor (&monitor,
+    hr = gst_d3d11_screen_capture_find_primary_monitor (&monitor,
         &adapter, nullptr);
   } else {
-    hr = gst_d3d11_desktop_dup_find_nth_monitor (self->monitor_index,
+    hr = gst_d3d11_screen_capture_find_nth_monitor (self->monitor_index,
         &monitor, &adapter, nullptr);
   }
 
@@ -540,17 +543,17 @@ gst_d3d11_desktop_dup_src_start (GstBaseSrc * bsrc)
     return FALSE;
   }
 
-  self->dupl = gst_d3d11_desktop_dup_new (self->device, monitor);
-  if (!self->dupl)
+  self->capture = gst_d3d11_screen_capture_new (self->device, monitor);
+  if (!self->capture)
     goto error;
 
   /* Check if we can open device */
-  ret = gst_d3d11_desktop_dup_prepare (self->dupl);
+  ret = gst_d3d11_screen_capture_prepare (self->capture);
   switch (ret) {
-    case GST_D3D11_DESKTOP_DUP_FLOW_EXPECTED_ERROR:
+    case GST_D3D11_SCREEN_CAPTURE_FLOW_EXPECTED_ERROR:
     case GST_FLOW_OK:
       break;
-    case GST_D3D11_DESKTOP_DUP_FLOW_UNSUPPORTED:
+    case GST_D3D11_SCREEN_CAPTURE_FLOW_UNSUPPORTED:
       goto unsupported;
     default:
       goto error;
@@ -564,7 +567,7 @@ gst_d3d11_desktop_dup_src_start (GstBaseSrc * bsrc)
 error:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-        ("Failed to prepare duplication with given configuration, "
+        ("Failed to prepare capture object with given configuration, "
             "monitor-index: %d, monitor-handle: %p",
             self->monitor_index, self->monitor_handle), (nullptr));
     return FALSE;
@@ -573,7 +576,7 @@ error:
 unsupported:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
-        ("Failed to prepare duplication with given configuration, "
+        ("Failed to prepare capture object with given configuration, "
             "monitor-index: %d, monitor-handle: %p",
             self->monitor_index, self->monitor_handle),
         ("Try run the application on the integrated GPU"));
@@ -582,25 +585,25 @@ unsupported:
 }
 
 static gboolean
-gst_d3d11_desktop_dup_src_stop (GstBaseSrc * bsrc)
+gst_d3d11_screen_capture_src_stop (GstBaseSrc * bsrc)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
 
   if (self->pool) {
     gst_buffer_pool_set_active (self->pool, FALSE);
     gst_clear_object (&self->pool);
   }
 
-  gst_clear_object (&self->dupl);
+  gst_clear_object (&self->capture);
   gst_clear_object (&self->device);
 
   return TRUE;
 }
 
 static gboolean
-gst_d3d11_desktop_dup_src_unlock (GstBaseSrc * bsrc)
+gst_d3d11_screen_capture_src_unlock (GstBaseSrc * bsrc)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
 
   GST_OBJECT_LOCK (self);
   if (self->clock_id) {
@@ -614,9 +617,9 @@ gst_d3d11_desktop_dup_src_unlock (GstBaseSrc * bsrc)
 }
 
 static gboolean
-gst_d3d11_desktop_dup_src_unlock_stop (GstBaseSrc * bsrc)
+gst_d3d11_screen_capture_src_unlock_stop (GstBaseSrc * bsrc)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
 
   GST_OBJECT_LOCK (self);
   self->flushing = FALSE;
@@ -626,9 +629,9 @@ gst_d3d11_desktop_dup_src_unlock_stop (GstBaseSrc * bsrc)
 }
 
 static gboolean
-gst_d3d11_desktop_dup_src_src_query (GstBaseSrc * bsrc, GstQuery * query)
+gst_d3d11_screen_capture_src_src_query (GstBaseSrc * bsrc, GstQuery * query)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
@@ -652,10 +655,10 @@ gst_d3d11_desktop_dup_src_src_query (GstBaseSrc * bsrc, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_d3d11_desktop_dup_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
-    GstBuffer ** buf)
+gst_d3d11_screen_capture_src_create (GstBaseSrc * bsrc, guint64 offset,
+    guint size, GstBuffer ** buf)
 {
-  GstD3D11DesktopDupSrc *self = GST_D3D11_DESKTOP_DUP_SRC (bsrc);
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
   ID3D11Texture2D *texture;
   ID3D11RenderTargetView *rtv = NULL;
   gint fps_n, fps_d;
@@ -678,9 +681,9 @@ gst_d3d11_desktop_dup_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
   GstBuffer *buffer = NULL;
   GstBuffer *sysmem_buf = NULL;
 
-  if (!self->dupl) {
+  if (!self->capture) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
-        ("Couldn't configure DXGI Desktop Duplication capture object"), (NULL));
+        ("Couldn't configure capture object"), (nullptr));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
@@ -694,7 +697,7 @@ again:
   clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
   if (!clock) {
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
-        ("Cannot operate without a clock"), (NULL));
+        ("Cannot operate without a clock"), (nullptr));
     return GST_FLOW_ERROR;
   }
 
@@ -804,15 +807,17 @@ again:
 
   texture = (ID3D11Texture2D *) info.data;
   before_capture = gst_clock_get_time (clock);
-  ret = gst_d3d11_desktop_dup_capture (self->dupl, texture, rtv, draw_mouse);
+  ret =
+      gst_d3d11_screen_capture_do_capture (self->capture, texture, rtv,
+      draw_mouse);
   gst_memory_unmap (mem, &info);
 
   switch (ret) {
-    case GST_D3D11_DESKTOP_DUP_FLOW_EXPECTED_ERROR:
+    case GST_D3D11_SCREEN_CAPTURE_FLOW_EXPECTED_ERROR:
       GST_WARNING_OBJECT (self, "Got expected error, try again");
       gst_clear_object (&clock);
       goto again;
-    case GST_D3D11_DESKTOP_DUP_FLOW_UNSUPPORTED:
+    case GST_D3D11_SCREEN_CAPTURE_FLOW_UNSUPPORTED:
       GST_WARNING_OBJECT (self, "Got DXGI_ERROR_UNSUPPORTED error");
       unsupported_retry_count--;
 
@@ -821,7 +826,7 @@ again:
 
       gst_clear_object (&clock);
       goto again;
-    case GST_D3D11_DESKTOP_DUP_FLOW_SIZE_CHANGED:
+    case GST_D3D11_SCREEN_CAPTURE_FLOW_SIZE_CHANGED:
       GST_INFO_OBJECT (self, "Size was changed, need negotiation");
       gst_clear_buffer (&buffer);
       gst_clear_object (&clock);

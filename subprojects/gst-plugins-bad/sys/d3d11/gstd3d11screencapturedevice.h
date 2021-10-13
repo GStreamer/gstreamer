@@ -23,14 +23,14 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D11_DESKTOP_DUP_DEVICE (gst_d3d11_desktop_dup_device_get_type())
-G_DECLARE_FINAL_TYPE (GstD3D11DesktopDupDevice, gst_d3d11_desktop_dup_device,
-    GST, D3D11_DESKTOP_DUP_DEVICE, GstDevice);
+#define GST_TYPE_D3D11_SCREEN_CAPTURE_DEVICE (gst_d3d11_screen_capture_device_get_type())
+G_DECLARE_FINAL_TYPE (GstD3D11ScreenCaptureDevice, gst_d3d11_screen_capture_device,
+    GST, D3D11_SCREEN_CAPTURE_DEVICE, GstDevice);
 
-#define GST_TYPE_D3D11_DESKTOP_DUP_DEVICE_PROVIDER (gst_d3d11_desktop_dup_device_provider_get_type())
-G_DECLARE_FINAL_TYPE (GstD3D11DesktopDupDeviceProvider,
-    gst_d3d11_desktop_dup_device_provider,
-    GST, D3D11_DESKTOP_DUP_DEVICE_PROVIDER, GstDeviceProvider);
+#define GST_TYPE_D3D11_SCREEN_CAPTURE_DEVICE_PROVIDER (gst_d3d11_screen_capture_device_provider_get_type())
+G_DECLARE_FINAL_TYPE (GstD3D11ScreenCaptureDeviceProvider,
+    gst_d3d11_screen_capture_device_provider,
+    GST, D3D11_SCREEN_CAPTURE_DEVICE_PROVIDER, GstDeviceProvider);
 
 G_END_DECLS
 

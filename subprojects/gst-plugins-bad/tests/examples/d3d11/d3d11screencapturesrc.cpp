@@ -161,7 +161,7 @@ main (gint argc, gchar ** argv)
     {nullptr}
   };
 
-  option_ctx = g_option_context_new ("D3D11 desktop capture example");
+  option_ctx = g_option_context_new ("D3D11 screen capture example");
   g_option_context_add_main_entries (option_ctx, options, NULL);
   g_option_context_add_group (option_ctx, gst_init_get_option_group ());
   ret = g_option_context_parse (option_ctx, &argc, &argv, &err);
@@ -187,7 +187,7 @@ main (gint argc, gchar ** argv)
   src = gst_device_create_element (device, nullptr);
   gst_object_unref (device);
   if (!src) {
-    g_warning ("Failed to create d3d11desktopdup element");
+    g_warning ("Failed to create d3d11screencapture element");
     return 1;
   }
 

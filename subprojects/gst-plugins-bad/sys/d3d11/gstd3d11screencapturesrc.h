@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_DESKTOP_DUP_SRC_H__
-#define __GST_D3D11_DESKTOP_DUP_SRC_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -28,10 +27,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D11_DESKTOP_DUP_SRC (gst_d3d11_desktop_dup_src_get_type())
-G_DECLARE_FINAL_TYPE (GstD3D11DesktopDupSrc, gst_d3d11_desktop_dup_src,
-    GST, D3D11_DESKTOP_DUP_SRC, GstBaseSrc);
+#define GST_TYPE_D3D11_SCREEN_CAPTURE_SRC (gst_d3d11_screen_capture_src_get_type())
+G_DECLARE_FINAL_TYPE (GstD3D11ScreenCaptureSrc, gst_d3d11_screen_capture_src,
+    GST, D3D11_SCREEN_CAPTURE_SRC, GstBaseSrc);
 
 G_END_DECLS
 
-#endif /* __GST_D3D11_DESKTOP_DUP_H__ */

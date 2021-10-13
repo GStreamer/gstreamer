@@ -84,9 +84,9 @@ if d3d11_winapi_desktop
     # Desktop Duplication API is unavailable for UWP
     # and MinGW is not supported due to some missing headers
     extra_args += ['-DHAVE_DXGI_DESKTOP_DUP']
-    d3d11_sources += ['gstd3d11desktopdup.cpp',
-                      'gstd3d11desktopdupdevice.cpp',
-                      'gstd3d11desktopdupsrc.cpp']
+    d3d11_sources += ['gstd3d11screencapture.cpp',
+                      'gstd3d11screencapturedevice.cpp',
+                      'gstd3d11screencapturesrc.cpp']
     message('Enable D3D11 Desktop Duplication API')
   endif
   # multimedia clock is desktop only API

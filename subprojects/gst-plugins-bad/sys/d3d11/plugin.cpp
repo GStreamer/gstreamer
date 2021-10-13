@@ -39,8 +39,8 @@
 #include "gstd3d11av1dec.h"
 #endif
 #ifdef HAVE_DXGI_DESKTOP_DUP
-#include "gstd3d11desktopdupsrc.h"
-#include "gstd3d11desktopdupdevice.h"
+#include "gstd3d11screencapturesrc.h"
+#include "gstd3d11screencapturedevice.h"
 #endif
 #ifdef HAVE_D3D11_VIDEO_PROC
 #include "gstd3d11deinterlace.h"
@@ -68,8 +68,8 @@ GST_DEBUG_CATEGORY (gst_d3d11_av1_dec_debug);
 #endif
 
 #ifdef HAVE_DXGI_DESKTOP_DUP
-GST_DEBUG_CATEGORY (gst_d3d11_desktop_dup_debug);
-GST_DEBUG_CATEGORY (gst_d3d11_desktop_dup_device_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_screen_capture_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_screen_capture_device_debug);
 #endif
 
 #ifdef HAVE_D3D11_VIDEO_PROC
@@ -213,16 +213,17 @@ plugin_init (GstPlugin * plugin)
 
 #ifdef HAVE_DXGI_DESKTOP_DUP
   if (gst_d3d11_is_windows_8_or_greater ()) {
-    GST_DEBUG_CATEGORY_INIT (gst_d3d11_desktop_dup_debug,
-        "d3d11desktopdupsrc", 0, "d3d11desktopdupsrc");
-    GST_DEBUG_CATEGORY_INIT (gst_d3d11_desktop_dup_device_debug,
-        "d3d11desktopdupdevice", 0, "d3d11desktopdupdevice");
+    GST_DEBUG_CATEGORY_INIT (gst_d3d11_screen_capture_debug,
+        "d3d11screencapturesrc", 0, "d3d11screencapturesrc");
+    GST_DEBUG_CATEGORY_INIT (gst_d3d11_screen_capture_device_debug,
+        "d3d11screencapturedevice", 0, "d3d11screencapturedevice");
 
     gst_element_register (plugin,
-        "d3d11desktopdupsrc", GST_RANK_NONE, GST_TYPE_D3D11_DESKTOP_DUP_SRC);
+        "d3d11screencapturesrc", GST_RANK_NONE,
+        GST_TYPE_D3D11_SCREEN_CAPTURE_SRC);
     gst_device_provider_register (plugin,
-        "d3d11desktopdupdeviceprovider", GST_RANK_PRIMARY,
-        GST_TYPE_D3D11_DESKTOP_DUP_DEVICE_PROVIDER);
+        "d3d11screencapturedeviceprovider", GST_RANK_PRIMARY,
+        GST_TYPE_D3D11_SCREEN_CAPTURE_DEVICE_PROVIDER);
   }
 #endif
 

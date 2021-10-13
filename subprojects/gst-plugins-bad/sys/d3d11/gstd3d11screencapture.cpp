@@ -46,20 +46,20 @@
 #include "config.h"
 #endif
 
-#include "gstd3d11desktopdup.h"
+#include "gstd3d11screencapture.h"
 #include "gstd3d11shader.h"
 #include "gstd3d11pluginutils.h"
 #include <string.h>
 
 #include <wrl.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_desktop_dup_debug);
-#define GST_CAT_DEFAULT gst_d3d11_desktop_dup_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_screen_capture_debug);
+#define GST_CAT_DEFAULT gst_d3d11_screen_capture_debug
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
-/* List of GstD3D11DesktopDup weakref */
+/* List of GstD3D11ScreenCapture weakref */
 G_LOCK_DEFINE_STATIC (dupl_list_lock);
 static GList *dupl_list = nullptr;
 
@@ -147,7 +147,7 @@ HRESULT EnumOutputsExpectedErrors[] = {
 };
 
 static GstFlowReturn
-gst_d3d11_desktop_dup_return_from_hr (ID3D11Device * device,
+gst_d3d11_screen_capture_return_from_hr (ID3D11Device * device,
     HRESULT hr, HRESULT * expected_errors = nullptr)
 {
   HRESULT translated_hr = hr;
@@ -181,7 +181,7 @@ gst_d3d11_desktop_dup_return_from_hr (ID3D11Device * device,
 
     while (*rst != S_OK) {
       if (*rst == translated_hr)
-        return GST_D3D11_DESKTOP_DUP_FLOW_EXPECTED_ERROR;
+        return GST_D3D11_SCREEN_CAPTURE_FLOW_EXPECTED_ERROR;
 
       rst++;
     }
@@ -336,7 +336,7 @@ public:
     HRESULT hr = dupl_->ReleaseFrame ();
     if (!gst_d3d11_result (hr, device_)) {
       GST_WARNING ("Couldn't release frame");
-      return gst_d3d11_desktop_dup_return_from_hr (nullptr, hr, FrameInfoExpectedErrors);
+      return gst_d3d11_screen_capture_return_from_hr (nullptr, hr, FrameInfoExpectedErrors);
     }
 
     GST_TRACE ("Capture done");
@@ -661,7 +661,7 @@ private:
 
     d3d11_device = gst_d3d11_device_get_device_handle (device);
 
-    HRESULT hr = gst_d3d11_desktop_dup_find_output_for_monitor (monitor,
+    HRESULT hr = gst_d3d11_screen_capture_find_output_for_monitor (monitor,
         &adapter, &output);
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Couldn't get adapter and output for monitor");
@@ -701,10 +701,10 @@ private:
         GST_WARNING ("IDXGIOutput1::DuplicateOutput returned "
             "DXGI_ERROR_UNSUPPORTED, possiblely application is run against a "
             "discrete GPU");
-        return GST_D3D11_DESKTOP_DUP_FLOW_UNSUPPORTED;
+        return GST_D3D11_SCREEN_CAPTURE_FLOW_UNSUPPORTED;
       }
 
-      return gst_d3d11_desktop_dup_return_from_hr (d3d11_device.Get(), hr,
+      return gst_d3d11_screen_capture_return_from_hr (d3d11_device.Get(), hr,
           CreateDuplicationExpectedErrors);
     }
 
@@ -746,7 +746,7 @@ private:
       ID3D11Device *device_handle =
           gst_d3d11_device_get_device_handle (device_);
 
-      return gst_d3d11_desktop_dup_return_from_hr(device_handle, hr,
+      return gst_d3d11_screen_capture_return_from_hr(device_handle, hr,
           FrameInfoExpectedErrors);
     }
 
@@ -788,7 +788,7 @@ private:
     *dirty_count = 0;
 
     if (!gst_d3d11_result (hr, device_)) {
-      return gst_d3d11_desktop_dup_return_from_hr(device_handle, hr,
+      return gst_d3d11_screen_capture_return_from_hr(device_handle, hr,
           FrameInfoExpectedErrors);
     }
 
@@ -831,7 +831,7 @@ private:
       if (!gst_d3d11_result (hr, device_)) {
         GST_ERROR ("Couldn't get move rect, hr 0x%x", (guint) hr);
 
-        return gst_d3d11_desktop_dup_return_from_hr(nullptr, hr,
+        return gst_d3d11_screen_capture_return_from_hr(nullptr, hr,
             FrameInfoExpectedErrors);
       }
 
@@ -862,7 +862,7 @@ private:
         *move_count = 0;
         *dirty_count = 0;
 
-        return gst_d3d11_desktop_dup_return_from_hr(nullptr,
+        return gst_d3d11_screen_capture_return_from_hr(nullptr,
             hr, FrameInfoExpectedErrors);
       }
 
@@ -1169,7 +1169,7 @@ private:
     hr = device_handle->CreateShaderResourceView(SrcSurface,
         &ShaderDesc, &ShaderResource);
     if (!gst_d3d11_result (hr, device_)) {
-      return gst_d3d11_desktop_dup_return_from_hr(device_handle, hr,
+      return gst_d3d11_screen_capture_return_from_hr(device_handle, hr,
           SystemTransitionsExpectedErrors);
     }
 
@@ -1457,7 +1457,7 @@ enum
 
 #define DEFAULT_MONITOR_INDEX -1
 
-struct _GstD3D11DesktopDup
+struct _GstD3D11ScreenCapture
 {
   GstObject parent;
 
@@ -1474,24 +1474,25 @@ struct _GstD3D11DesktopDup
   GRecMutex lock;
 };
 
-static void gst_d3d11_desktop_dup_constructed (GObject * object);
-static void gst_d3d11_desktop_dup_dispose (GObject * object);
-static void gst_d3d11_desktop_dup_finalize (GObject * object);
-static void gst_d3d11_desktop_dup_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
+static void gst_d3d11_screen_capture_constructed (GObject * object);
+static void gst_d3d11_screen_capture_dispose (GObject * object);
+static void gst_d3d11_screen_capture_finalize (GObject * object);
+static void gst_d3d11_screen_capture_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
 
-#define gst_d3d11_desktop_dup_parent_class parent_class
-G_DEFINE_TYPE (GstD3D11DesktopDup, gst_d3d11_desktop_dup, GST_TYPE_OBJECT);
+#define gst_d3d11_screen_capture_parent_class parent_class
+G_DEFINE_TYPE (GstD3D11ScreenCapture, gst_d3d11_screen_capture,
+    GST_TYPE_OBJECT);
 
 static void
-gst_d3d11_desktop_dup_class_init (GstD3D11DesktopDupClass * klass)
+gst_d3d11_screen_capture_class_init (GstD3D11ScreenCaptureClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->constructed = gst_d3d11_desktop_dup_constructed;
-  gobject_class->dispose = gst_d3d11_desktop_dup_dispose;
-  gobject_class->finalize = gst_d3d11_desktop_dup_finalize;
-  gobject_class->set_property = gst_d3d11_desktop_dup_set_property;
+  gobject_class->constructed = gst_d3d11_screen_capture_constructed;
+  gobject_class->dispose = gst_d3d11_screen_capture_dispose;
+  gobject_class->finalize = gst_d3d11_screen_capture_finalize;
+  gobject_class->set_property = gst_d3d11_screen_capture_set_property;
 
   g_object_class_install_property (gobject_class, PROP_D3D11_DEVICE,
       g_param_spec_object ("d3d11device", "D3D11 Device",
@@ -1507,7 +1508,7 @@ gst_d3d11_desktop_dup_class_init (GstD3D11DesktopDupClass * klass)
 }
 
 static void
-gst_d3d11_desktop_dup_init (GstD3D11DesktopDup * self)
+gst_d3d11_screen_capture_init (GstD3D11ScreenCapture * self)
 {
   g_rec_mutex_init (&self->lock);
 
@@ -1515,9 +1516,9 @@ gst_d3d11_desktop_dup_init (GstD3D11DesktopDup * self)
 }
 
 static void
-gst_d3d11_desktop_dup_constructed (GObject * object)
+gst_d3d11_screen_capture_constructed (GObject * object)
 {
-  GstD3D11DesktopDup *self = GST_D3D11_DESKTOP_DUP (object);
+  GstD3D11ScreenCapture *self = GST_D3D11_SCREEN_CAPTURE (object);
   /* *INDENT-OFF* */
   ComPtr<IDXGIDevice> dxgi_device;
   ComPtr<IDXGIAdapter1> adapter;
@@ -1540,7 +1541,7 @@ gst_d3d11_desktop_dup_constructed (GObject * object)
     goto out;
   }
 
-  hr = gst_d3d11_desktop_dup_find_output_for_monitor (self->monitor_handle,
+  hr = gst_d3d11_screen_capture_find_output_for_monitor (self->monitor_handle,
       &adapter, &output);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_WARNING_OBJECT (self,
@@ -1623,10 +1624,10 @@ out:
 }
 
 static void
-gst_d3d11_desktop_dup_set_property (GObject * object, guint prop_id,
+gst_d3d11_screen_capture_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstD3D11DesktopDup *self = GST_D3D11_DESKTOP_DUP (object);
+  GstD3D11ScreenCapture *self = GST_D3D11_SCREEN_CAPTURE (object);
 
   switch (prop_id) {
     case PROP_D3D11_DEVICE:
@@ -1642,9 +1643,9 @@ gst_d3d11_desktop_dup_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_d3d11_desktop_dup_dispose (GObject * object)
+gst_d3d11_screen_capture_dispose (GObject * object)
 {
-  GstD3D11DesktopDup *self = GST_D3D11_DESKTOP_DUP (object);
+  GstD3D11ScreenCapture *self = GST_D3D11_SCREEN_CAPTURE (object);
 
   if (self->dupl_obj) {
     delete self->dupl_obj;
@@ -1657,9 +1658,9 @@ gst_d3d11_desktop_dup_dispose (GObject * object)
 }
 
 static void
-gst_d3d11_desktop_dup_finalize (GObject * object)
+gst_d3d11_screen_capture_finalize (GObject * object)
 {
-  GstD3D11DesktopDup *self = GST_D3D11_DESKTOP_DUP (object);
+  GstD3D11ScreenCapture *self = GST_D3D11_SCREEN_CAPTURE (object);
 
   g_rec_mutex_clear (&self->lock);
 
@@ -1667,17 +1668,18 @@ gst_d3d11_desktop_dup_finalize (GObject * object)
 }
 
 static void
-gst_d3d11_desktop_dup_weak_ref_notify (gpointer data, GstD3D11DesktopDup * dupl)
+gst_d3d11_screen_capture_weak_ref_notify (gpointer data,
+    GstD3D11ScreenCapture * dupl)
 {
   G_LOCK (dupl_list_lock);
   dupl_list = g_list_remove (dupl_list, dupl);
   G_UNLOCK (dupl_list_lock);
 }
 
-GstD3D11DesktopDup *
-gst_d3d11_desktop_dup_new (GstD3D11Device * device, HMONITOR monitor_handle)
+GstD3D11ScreenCapture *
+gst_d3d11_screen_capture_new (GstD3D11Device * device, HMONITOR monitor_handle)
 {
-  GstD3D11DesktopDup *self = nullptr;
+  GstD3D11ScreenCapture *self = nullptr;
   GList *iter;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
@@ -1691,12 +1693,12 @@ gst_d3d11_desktop_dup_new (GstD3D11Device * device, HMONITOR monitor_handle)
    */
   G_LOCK (dupl_list_lock);
   for (iter = dupl_list; iter; iter = g_list_next (iter)) {
-    GstD3D11DesktopDup *dupl = (GstD3D11DesktopDup *) iter->data;
+    GstD3D11ScreenCapture *dupl = (GstD3D11ScreenCapture *) iter->data;
 
     if (dupl->monitor_handle == monitor_handle) {
       GST_DEBUG ("Found configured desktop dup object for monitor handle %p",
           monitor_handle);
-      self = (GstD3D11DesktopDup *) gst_object_ref (dupl);
+      self = (GstD3D11ScreenCapture *) gst_object_ref (dupl);
       break;
     }
   }
@@ -1706,7 +1708,7 @@ gst_d3d11_desktop_dup_new (GstD3D11Device * device, HMONITOR monitor_handle)
     return self;
   }
 
-  self = (GstD3D11DesktopDup *) g_object_new (GST_TYPE_D3D11_DESKTOP_DUP,
+  self = (GstD3D11ScreenCapture *) g_object_new (GST_TYPE_D3D11_SCREEN_CAPTURE,
       "d3d11device", device, "monitor-handle", monitor_handle, nullptr);
 
   if (!self->device) {
@@ -1718,7 +1720,7 @@ gst_d3d11_desktop_dup_new (GstD3D11Device * device, HMONITOR monitor_handle)
   }
 
   g_object_weak_ref (G_OBJECT (self),
-      (GWeakNotify) gst_d3d11_desktop_dup_weak_ref_notify, nullptr);
+      (GWeakNotify) gst_d3d11_screen_capture_weak_ref_notify, nullptr);
   dupl_list = g_list_append (dupl_list, self);
 
   G_UNLOCK (dupl_list_lock);
@@ -1727,66 +1729,66 @@ gst_d3d11_desktop_dup_new (GstD3D11Device * device, HMONITOR monitor_handle)
 }
 
 GstFlowReturn
-gst_d3d11_desktop_dup_prepare (GstD3D11DesktopDup * desktop)
+gst_d3d11_screen_capture_prepare (GstD3D11ScreenCapture * capture)
 {
   GstFlowReturn ret;
 
-  g_return_val_if_fail (GST_IS_D3D11_DESKTOP_DUP (desktop), GST_FLOW_ERROR);
-  g_return_val_if_fail (desktop->device != nullptr, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture), GST_FLOW_ERROR);
+  g_return_val_if_fail (capture->device != nullptr, GST_FLOW_ERROR);
 
-  g_rec_mutex_lock (&desktop->lock);
-  if (desktop->prepared) {
-    GST_DEBUG_OBJECT (desktop, "Already prepared");
-    g_rec_mutex_unlock (&desktop->lock);
+  g_rec_mutex_lock (&capture->lock);
+  if (capture->prepared) {
+    GST_DEBUG_OBJECT (capture, "Already prepared");
+    g_rec_mutex_unlock (&capture->lock);
     return GST_FLOW_OK;
   }
 
-  desktop->dupl_obj = new D3D11DesktopDupObject ();
-  ret = desktop->dupl_obj->Init (desktop->device, desktop->monitor_handle);
+  capture->dupl_obj = new D3D11DesktopDupObject ();
+  ret = capture->dupl_obj->Init (capture->device, capture->monitor_handle);
   if (ret != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (desktop,
+    GST_WARNING_OBJECT (capture,
         "Couldn't prepare capturing, %sexpected failure",
-        ret == GST_D3D11_DESKTOP_DUP_FLOW_EXPECTED_ERROR ? "" : "un");
+        ret == GST_D3D11_SCREEN_CAPTURE_FLOW_EXPECTED_ERROR ? "" : "un");
 
-    delete desktop->dupl_obj;
-    desktop->dupl_obj = nullptr;
-    g_rec_mutex_unlock (&desktop->lock);
+    delete capture->dupl_obj;
+    capture->dupl_obj = nullptr;
+    g_rec_mutex_unlock (&capture->lock);
 
     return ret;
   }
 
-  desktop->prepared = TRUE;
-  g_rec_mutex_unlock (&desktop->lock);
+  capture->prepared = TRUE;
+  g_rec_mutex_unlock (&capture->lock);
 
   return GST_FLOW_OK;
 }
 
 gboolean
-gst_d3d11_desktop_dup_get_size (GstD3D11DesktopDup * desktop, guint * width,
-    guint * height)
+gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * capture,
+    guint * width, guint * height)
 {
-  g_return_val_if_fail (GST_IS_D3D11_DESKTOP_DUP (desktop), FALSE);
+  g_return_val_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture), FALSE);
   g_return_val_if_fail (width != nullptr, FALSE);
   g_return_val_if_fail (height != nullptr, FALSE);
 
-  g_rec_mutex_lock (&desktop->lock);
+  g_rec_mutex_lock (&capture->lock);
   *width = 0;
   *height = 0;
 
-  if (desktop->dupl_obj) {
-    desktop->dupl_obj->GetSize (&desktop->cached_width,
-        &desktop->cached_height);
+  if (capture->dupl_obj) {
+    capture->dupl_obj->GetSize (&capture->cached_width,
+        &capture->cached_height);
   }
 
-  *width = desktop->cached_width;
-  *height = desktop->cached_height;
-  g_rec_mutex_unlock (&desktop->lock);
+  *width = capture->cached_width;
+  *height = capture->cached_height;
+  g_rec_mutex_unlock (&capture->lock);
 
   return TRUE;
 }
 
 GstFlowReturn
-gst_d3d11_desktop_dup_capture (GstD3D11DesktopDup * desktop,
+gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
     ID3D11Texture2D * texture, ID3D11RenderTargetView * rtv,
     gboolean draw_mouse)
 {
@@ -1794,64 +1796,64 @@ gst_d3d11_desktop_dup_capture (GstD3D11DesktopDup * desktop,
   D3D11_TEXTURE2D_DESC desc;
   guint width, height;
 
-  g_return_val_if_fail (GST_IS_D3D11_DESKTOP_DUP (desktop), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture), GST_FLOW_ERROR);
   g_return_val_if_fail (texture != nullptr, GST_FLOW_ERROR);
 
-  g_rec_mutex_lock (&desktop->lock);
-  if (!desktop->prepared)
-    ret = gst_d3d11_desktop_dup_prepare (desktop);
+  g_rec_mutex_lock (&capture->lock);
+  if (!capture->prepared)
+    ret = gst_d3d11_screen_capture_prepare (capture);
 
   if (ret != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (desktop, "We are not prepared");
-    g_rec_mutex_unlock (&desktop->lock);
+    GST_WARNING_OBJECT (capture, "We are not prepared");
+    g_rec_mutex_unlock (&capture->lock);
     return ret;
   }
 
-  gst_d3d11_desktop_dup_get_size (desktop, &width, &height);
+  gst_d3d11_screen_capture_get_size (capture, &width, &height);
 
   texture->GetDesc (&desc);
   if (desc.Width != width || desc.Height != height) {
-    GST_INFO_OBJECT (desktop,
+    GST_INFO_OBJECT (capture,
         "Different texture size, ours: %dx%d, external: %dx%d",
         width, height, desc.Width, desc.Height);
-    g_rec_mutex_unlock (&desktop->lock);
+    g_rec_mutex_unlock (&capture->lock);
 
-    return GST_D3D11_DESKTOP_DUP_FLOW_SIZE_CHANGED;
+    return GST_D3D11_SCREEN_CAPTURE_FLOW_SIZE_CHANGED;
   }
 
-  gst_d3d11_device_lock (desktop->device);
-  ret = desktop->dupl_obj->Capture (draw_mouse);
+  gst_d3d11_device_lock (capture->device);
+  ret = capture->dupl_obj->Capture (draw_mouse);
   if (ret != GST_FLOW_OK) {
-    gst_d3d11_device_unlock (desktop->device);
+    gst_d3d11_device_unlock (capture->device);
 
-    delete desktop->dupl_obj;
-    desktop->dupl_obj = nullptr;
-    desktop->prepared = FALSE;
+    delete capture->dupl_obj;
+    capture->dupl_obj = nullptr;
+    capture->prepared = FALSE;
 
-    if (ret == GST_D3D11_DESKTOP_DUP_FLOW_EXPECTED_ERROR) {
-      GST_WARNING_OBJECT (desktop,
+    if (ret == GST_D3D11_SCREEN_CAPTURE_FLOW_EXPECTED_ERROR) {
+      GST_WARNING_OBJECT (capture,
           "Couldn't capture frame, but expected failure");
     } else {
-      GST_ERROR_OBJECT (desktop, "Unexpected failure during capture");
+      GST_ERROR_OBJECT (capture, "Unexpected failure during capture");
     }
 
-    g_rec_mutex_unlock (&desktop->lock);
+    g_rec_mutex_unlock (&capture->lock);
     return ret;
   }
 
-  GST_LOG_OBJECT (desktop, "Capture done");
+  GST_LOG_OBJECT (capture, "Capture done");
 
-  desktop->dupl_obj->CopyToTexture (texture);
+  capture->dupl_obj->CopyToTexture (texture);
   if (draw_mouse)
-    desktop->dupl_obj->DrawMouse (rtv);
-  gst_d3d11_device_unlock (desktop->device);
-  g_rec_mutex_unlock (&desktop->lock);
+    capture->dupl_obj->DrawMouse (rtv);
+  gst_d3d11_device_unlock (capture->device);
+  g_rec_mutex_unlock (&capture->lock);
 
   return GST_FLOW_OK;
 }
 
 HRESULT
-gst_d3d11_desktop_dup_find_output_for_monitor (HMONITOR monitor,
+gst_d3d11_screen_capture_find_output_for_monitor (HMONITOR monitor,
     IDXGIAdapter1 ** adapter, IDXGIOutput ** output)
 {
   ComPtr < IDXGIFactory1 > factory;
@@ -1897,7 +1899,7 @@ gst_d3d11_desktop_dup_find_output_for_monitor (HMONITOR monitor,
 }
 
 HRESULT
-gst_d3d11_desktop_dup_find_primary_monitor (HMONITOR * monitor,
+gst_d3d11_screen_capture_find_primary_monitor (HMONITOR * monitor,
     IDXGIAdapter1 ** adapter, IDXGIOutput ** output)
 {
   ComPtr < IDXGIFactory1 > factory;
@@ -1948,7 +1950,7 @@ gst_d3d11_desktop_dup_find_primary_monitor (HMONITOR * monitor,
 }
 
 HRESULT
-gst_d3d11_desktop_dup_find_nth_monitor (guint index, HMONITOR * monitor,
+gst_d3d11_screen_capture_find_nth_monitor (guint index, HMONITOR * monitor,
     IDXGIAdapter1 ** adapter, IDXGIOutput ** output)
 {
   ComPtr < IDXGIFactory1 > factory;

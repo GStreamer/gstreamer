@@ -7,8 +7,8 @@ if host_system == 'windows'
     install: false,
   )
 
-  executable('d3d11desktopdupsrc',
-    ['d3d11desktopdupsrc.cpp'],
+  executable('d3d11screencapturesrc',
+    ['d3d11screencapturesrc.cpp'],
     c_args : gst_plugins_bad_args,
     include_directories : [configinc, libsinc],
     dependencies: [gst_dep, gstbase_dep, gstvideo_dep],

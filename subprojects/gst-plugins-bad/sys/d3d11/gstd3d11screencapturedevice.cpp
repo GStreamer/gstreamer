@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gstd3d11desktopdupdevice.h"
+#include "gstd3d11screencapturedevice.h"
 #include <gst/d3d11/gstd3d11.h>
 #include <gst/video/video.h>
 #include <wrl.h>
@@ -34,8 +34,8 @@
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_desktop_dup_device_debug);
-#define GST_CAT_DEFAULT gst_d3d11_desktop_dup_device_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_screen_capture_device_debug);
+#define GST_CAT_DEFAULT gst_d3d11_screen_capture_device_debug
 
 static GstStaticCaps template_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
@@ -48,31 +48,32 @@ enum
   PROP_MONITOR_HANDLE,
 };
 
-struct _GstD3D11DesktopDupDevice
+struct _GstD3D11ScreenCaptureDevice
 {
   GstDevice parent;
 
   HMONITOR monitor_handle;
 };
 
-static void gst_d3d11_desktop_dup_device_get_property (GObject * object,
+static void gst_d3d11_screen_capture_device_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static void gst_d3d11_desktop_dup_device_set_property (GObject * object,
+static void gst_d3d11_screen_capture_device_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static GstElement *gst_d3d11_desktop_dup_device_create_element (GstDevice *
+static GstElement *gst_d3d11_screen_capture_device_create_element (GstDevice *
     device, const gchar * name);
 
-G_DEFINE_TYPE (GstD3D11DesktopDupDevice,
-    gst_d3d11_desktop_dup_device, GST_TYPE_DEVICE);
+G_DEFINE_TYPE (GstD3D11ScreenCaptureDevice,
+    gst_d3d11_screen_capture_device, GST_TYPE_DEVICE);
 
 static void
-gst_d3d11_desktop_dup_device_class_init (GstD3D11DesktopDupDeviceClass * klass)
+gst_d3d11_screen_capture_device_class_init (GstD3D11ScreenCaptureDeviceClass *
+    klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstDeviceClass *dev_class = GST_DEVICE_CLASS (klass);
 
-  object_class->get_property = gst_d3d11_desktop_dup_device_get_property;
-  object_class->set_property = gst_d3d11_desktop_dup_device_set_property;
+  object_class->get_property = gst_d3d11_screen_capture_device_get_property;
+  object_class->set_property = gst_d3d11_screen_capture_device_set_property;
 
   g_object_class_install_property (object_class, PROP_MONITOR_HANDLE,
       g_param_spec_uint64 ("monitor-handle", "Monitor Handle",
@@ -81,19 +82,19 @@ gst_d3d11_desktop_dup_device_class_init (GstD3D11DesktopDupDeviceClass * klass)
               G_PARAM_CONSTRUCT_ONLY)));
 
 
-  dev_class->create_element = gst_d3d11_desktop_dup_device_create_element;
+  dev_class->create_element = gst_d3d11_screen_capture_device_create_element;
 }
 
 static void
-gst_d3d11_desktop_dup_device_init (GstD3D11DesktopDupDevice * self)
+gst_d3d11_screen_capture_device_init (GstD3D11ScreenCaptureDevice * self)
 {
 }
 
 static void
-gst_d3d11_desktop_dup_device_get_property (GObject * object, guint prop_id,
+gst_d3d11_screen_capture_device_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstD3D11DesktopDupDevice *self = GST_D3D11_DESKTOP_DUP_DEVICE (object);
+  GstD3D11ScreenCaptureDevice *self = GST_D3D11_SCREEN_CAPTURE_DEVICE (object);
 
   switch (prop_id) {
     case PROP_MONITOR_HANDLE:
@@ -106,10 +107,10 @@ gst_d3d11_desktop_dup_device_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_d3d11_desktop_dup_device_set_property (GObject * object, guint prop_id,
+gst_d3d11_screen_capture_device_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstD3D11DesktopDupDevice *self = GST_D3D11_DESKTOP_DUP_DEVICE (object);
+  GstD3D11ScreenCaptureDevice *self = GST_D3D11_SCREEN_CAPTURE_DEVICE (object);
 
   switch (prop_id) {
     case PROP_MONITOR_HANDLE:
@@ -122,38 +123,38 @@ gst_d3d11_desktop_dup_device_set_property (GObject * object, guint prop_id,
 }
 
 static GstElement *
-gst_d3d11_desktop_dup_device_create_element (GstDevice * device,
+gst_d3d11_screen_capture_device_create_element (GstDevice * device,
     const gchar * name)
 {
-  GstD3D11DesktopDupDevice *self = GST_D3D11_DESKTOP_DUP_DEVICE (device);
+  GstD3D11ScreenCaptureDevice *self = GST_D3D11_SCREEN_CAPTURE_DEVICE (device);
   GstElement *elem;
 
-  elem = gst_element_factory_make ("d3d11desktopdupsrc", name);
+  elem = gst_element_factory_make ("d3d11screencapturesrc", name);
 
-  g_object_set (elem, "monitor-handle", self->monitor_handle, NULL);
+  g_object_set (elem, "monitor-handle", self->monitor_handle, nullptr);
 
   return elem;
 }
 
-struct _GstD3D11DesktopDupDeviceProvider
+struct _GstD3D11ScreenCaptureDeviceProvider
 {
   GstDeviceProvider parent;
 };
 
-G_DEFINE_TYPE (GstD3D11DesktopDupDeviceProvider,
-    gst_d3d11_desktop_dup_device_provider, GST_TYPE_DEVICE_PROVIDER);
+G_DEFINE_TYPE (GstD3D11ScreenCaptureDeviceProvider,
+    gst_d3d11_screen_capture_device_provider, GST_TYPE_DEVICE_PROVIDER);
 
-static GList *gst_d3d11_desktop_dup_device_provider_probe (GstDeviceProvider *
-    provider);
+static GList *gst_d3d11_screen_capture_device_provider_probe (GstDeviceProvider
+    * provider);
 
 static void
-    gst_d3d11_desktop_dup_device_provider_class_init
-    (GstD3D11DesktopDupDeviceProviderClass * klass)
+    gst_d3d11_screen_capture_device_provider_class_init
+    (GstD3D11ScreenCaptureDeviceProviderClass * klass)
 {
   GstDeviceProviderClass *provider_class = GST_DEVICE_PROVIDER_CLASS (klass);
 
   provider_class->probe =
-      GST_DEBUG_FUNCPTR (gst_d3d11_desktop_dup_device_provider_probe);
+      GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_device_provider_probe);
 
   gst_device_provider_class_set_static_metadata (provider_class,
       "Direct3D11 Desktop Capture Device Provider",
@@ -162,8 +163,8 @@ static void
 }
 
 static void
-gst_d3d11_desktop_dup_device_provider_init (GstD3D11DesktopDupDeviceProvider *
-    self)
+    gst_d3d11_screen_capture_device_provider_init
+    (GstD3D11ScreenCaptureDeviceProvider * self)
 {
 }
 
@@ -235,26 +236,26 @@ get_monitor_name (const MONITORINFOEXW * info,
  * DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY defined in wingdi.h */
 typedef enum
 {
-  OUTPUT_TECH_OTHER                   = -1,
-  OUTPUT_TECH_HD15                    =  0,
-  OUTPUT_TECH_SVIDEO                  =  1,
-  OUTPUT_TECH_COMPOSITE_VIDEO         =  2,
-  OUTPUT_TECH_COMPONENT_VIDEO         =  3,
-  OUTPUT_TECH_DVI                     =  4,
-  OUTPUT_TECH_HDMI                    =  5,
-  OUTPUT_TECH_LVDS                    =  6,
-  OUTPUT_TECH_D_JPN                   =  8,
-  OUTPUT_TECH_SDI                     =  9,
-  OUTPUT_TECH_DISPLAYPORT_EXTERNAL    = 10,
-  OUTPUT_TECH_DISPLAYPORT_EMBEDDED    = 11,
-  OUTPUT_TECH_UDI_EXTERNAL            = 12,
-  OUTPUT_TECH_UDI_EMBEDDED            = 13,
-  OUTPUT_TECH_SDTVDONGLE              = 14,
-  OUTPUT_TECH_MIRACAST                = 15,
-  OUTPUT_TECH_INDIRECT_WIRED          = 16,
-  OUTPUT_TECH_INDIRECT_VIRTUAL        = 17,
-  OUTPUT_TECH_INTERNAL                = 0x80000000,
-  OUTPUT_TECH_FORCE_UINT32            = 0xFFFFFFFF
+  OUTPUT_TECH_OTHER = -1,
+  OUTPUT_TECH_HD15 = 0,
+  OUTPUT_TECH_SVIDEO = 1,
+  OUTPUT_TECH_COMPOSITE_VIDEO = 2,
+  OUTPUT_TECH_COMPONENT_VIDEO = 3,
+  OUTPUT_TECH_DVI = 4,
+  OUTPUT_TECH_HDMI = 5,
+  OUTPUT_TECH_LVDS = 6,
+  OUTPUT_TECH_D_JPN = 8,
+  OUTPUT_TECH_SDI = 9,
+  OUTPUT_TECH_DISPLAYPORT_EXTERNAL = 10,
+  OUTPUT_TECH_DISPLAYPORT_EMBEDDED = 11,
+  OUTPUT_TECH_UDI_EXTERNAL = 12,
+  OUTPUT_TECH_UDI_EMBEDDED = 13,
+  OUTPUT_TECH_SDTVDONGLE = 14,
+  OUTPUT_TECH_MIRACAST = 15,
+  OUTPUT_TECH_INDIRECT_WIRED = 16,
+  OUTPUT_TECH_INDIRECT_VIRTUAL = 17,
+  OUTPUT_TECH_INTERNAL = 0x80000000,
+  OUTPUT_TECH_FORCE_UINT32 = 0xFFFFFFFF
 } GST_OUTPUT_TECHNOLOGY;
 
 static const gchar *
@@ -341,7 +342,7 @@ create_device (const DXGI_ADAPTER_DESC * adapter_desc,
   if ((minfo->dwFlags & MONITORINFOF_PRIMARY) != 0)
     primary = TRUE;
 
-  props = gst_structure_new ("d3d11desktopdupdevice-proplist",
+  props = gst_structure_new ("d3d11screencapturedevice-proplist",
       "device.api", G_TYPE_STRING, "d3d11",
       "device.name", G_TYPE_STRING, GST_STR_NULL (device_name.c_str ()),
       "device.path", G_TYPE_STRING, GST_STR_NULL (device_path.c_str ()),
@@ -365,7 +366,7 @@ create_device (const DXGI_ADAPTER_DESC * adapter_desc,
       "display.coordinates.right", G_TYPE_INT, right,
       "display.coordinates.bottom", G_TYPE_INT, bottom, nullptr);
 
-  device = (GstDevice *) g_object_new (GST_TYPE_D3D11_DESKTOP_DUP_DEVICE,
+  device = (GstDevice *) g_object_new (GST_TYPE_D3D11_SCREEN_CAPTURE_DEVICE,
       "display-name", display_name.c_str (), "caps", caps, "device-class",
       "Source/Monitor", "properties", props, "monitor-handle",
       (guint64) output_desc->Monitor, nullptr);
@@ -376,7 +377,7 @@ create_device (const DXGI_ADAPTER_DESC * adapter_desc,
 }
 
 static GList *
-gst_d3d11_desktop_dup_device_provider_probe (GstDeviceProvider * provider)
+gst_d3d11_screen_capture_device_provider_probe (GstDeviceProvider * provider)
 {
   GList *devices = nullptr;
   ComPtr < IDXGIFactory1 > factory;
