@@ -88,8 +88,6 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-plugins-base.elements_gl', 'driver leaks / memory access'),
     (r'check.gst-plugins-base.elements_libvisual', 'uninitialized memory access'),
     (r'check.gst-plugins-base.generic_states', 'need to add gl elements to ignore list but only if using valgrind'),
-    (r'check.gst-plugins-good.elements_udpsrc.test_udpsrc_empty_packet$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/740'),
-    (r'check.gst-plugins-good.elements_splitmuxsrc.test_splitmuxsrc_sparse_streams', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/739'),
     (r'check.gst-plugins-good.elements_rtpjitterbuffer.test_push_backward_seq', 'flaky in valgrind'),
     (r'check.gst-plugins-good.elements_rtpjitterbuffer.test_push_unordered', 'flaky in valgrind'),
     (r'check.gst-plugins-bad.elements_assrender', '?'),
