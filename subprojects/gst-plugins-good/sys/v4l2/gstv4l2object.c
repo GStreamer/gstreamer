@@ -4415,6 +4415,60 @@ gst_v4l2_object_setup_padding (GstV4l2Object * obj)
   return gst_v4l2_object_set_crop (obj, &crop);
 }
 
+static gboolean
+gst_v4l2_object_get_crop_rect (GstV4l2Object * obj, guint target,
+    struct v4l2_rect *result)
+{
+  struct v4l2_rect *res_rect;
+
+  struct v4l2_selection sel = { 0 };
+  struct v4l2_cropcap cropcap = { 0 };
+
+  GST_V4L2_CHECK_OPEN (obj);
+
+  if (target != V4L2_SEL_TGT_CROP_BOUNDS && target != V4L2_SEL_TGT_CROP_DEFAULT)
+    return FALSE;
+
+  sel.type = obj->type;
+  sel.target = target;
+
+  res_rect = &sel.r;
+
+  if (obj->ioctl (obj->video_fd, VIDIOC_G_SELECTION, &sel) < 0) {
+    if (errno != ENOTTY) {
+      GST_WARNING_OBJECT (obj->dbg_obj,
+          "Failed to get default crop rectangle with VIDIOC_G_SELECTION: %s",
+          g_strerror (errno));
+      return FALSE;
+    } else {
+      if (obj->ioctl (obj->video_fd, VIDIOC_CROPCAP, &cropcap) < 0) {
+        GST_WARNING_OBJECT (obj->dbg_obj, "VIDIOC_CROPCAP failed");
+        return FALSE;
+      }
+      if (target == V4L2_SEL_TGT_CROP_BOUNDS)
+        res_rect = &cropcap.bounds;
+      else if (target == V4L2_SEL_TGT_CROP_DEFAULT)
+        res_rect = &cropcap.defrect;
+    }
+  }
+
+  *result = *res_rect;
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_object_get_crop_bounds (GstV4l2Object * obj, struct v4l2_rect * result)
+{
+  return gst_v4l2_object_get_crop_rect (obj, V4L2_SEL_TGT_CROP_BOUNDS, result);
+}
+
+gboolean
+gst_v4l2_object_get_crop_default (GstV4l2Object * obj,
+    struct v4l2_rect * result)
+{
+  return gst_v4l2_object_get_crop_rect (obj, V4L2_SEL_TGT_CROP_DEFAULT, result);
+}
+
 gboolean
 gst_v4l2_object_caps_equal (GstV4l2Object * v4l2object, GstCaps * caps)
 {
