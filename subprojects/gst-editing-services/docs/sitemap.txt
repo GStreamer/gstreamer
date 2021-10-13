@@ -61,5 +61,4 @@ gi-index
 		ges-prelude.h
 	deprecated.md
 		ges-pitivi-formatter.h
-		ges-image-source.h
 		ges-multi-file-source.h

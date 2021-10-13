@@ -216,6 +216,7 @@ if build_gir
     }
     library_def = {'gir': gir}
     if not static_build
+      gir += {'sources': ges_sources + ges_headers + files('ges-image-source.h')}
       ges_gir = gnome.generate_gir(libges, kwargs: gir)
       ges_gen_sources += [ges_gir]
     endif
@@ -223,7 +224,7 @@ endif
 
 # GESImageSource is unused and is internal only so it gets stripped out when we statically
 # link GES. We keep the header for backward compatibility reasons.
-install_headers(ges_headers + files('ges-image-source.h'), subdir : 'gstreamer-1.0/ges')
+install_headers(ges_headers, subdir : 'gstreamer-1.0/ges')
 libraries += [[pkg_name, library_def]]
 
 ges_dep = declare_dependency(link_with : libges,
