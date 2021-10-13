@@ -86,7 +86,7 @@ subprojects = [
   ['gstreamer-vaapi', { 'option': get_option('vaapi'), 'build-hotdoc': true}],
   ['gst-omx', { 'option': get_option('omx'), 'build-hotdoc': true}],
   ['gstreamer-sharp', { 'option': get_option('sharp') }],
-  ['pygobject', { 'option': get_option('python'), 'match_gst_version': false }],
+  ['pygobject', { 'option': get_option('python'), 'match_gst_version': false, 'sysdep': 'pygobject-3.0', 'sysdep_version': '>= 3.38.1' }],
   ['gst-python', { 'option': get_option('python')}],
   ['gst-examples', { 'option': get_option('gst-examples'), 'match_gst_versions': false}],
   ['gst-plugins-rs', { 'option': get_option('rs'), 'match_gst_version': false}],
@@ -116,10 +116,17 @@ foreach sp : subprojects
   project_name = sp[0]
   build_infos = sp[1]
   is_required = build_infos.get('option', true)
+  sysdep = build_infos.get('sysdep', '')
+  sysdep_version = build_infos.get('sysdep_version', '')
   match_gst_version = build_infos.get('match_gst_version', true)
 
   if match_gst_version
     subproj = subproject(project_name, version: gst_version, required: is_required)
+  elif sysdep != ''
+      sysdep_dep = dependency(sysdep, version: sysdep_version, required: false)
+      if not sysdep_dep.found()
+        subproj = subproject(project_name, required: is_required)
+      endif
   else
     subproj = subproject(project_name, required: is_required)
   endif
