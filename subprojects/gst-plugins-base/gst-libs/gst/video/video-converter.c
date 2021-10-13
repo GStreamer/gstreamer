@@ -3953,6 +3953,7 @@ convert_v210_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   FConvertTask **tasks_p;
   gint n_threads;
   gint lines_per_thread;
+  guint8 *tmpline_8;
 
   /* I420 has half as many chroma lines, as such we have to
    * always merge two into one. For non-interlaced these are
@@ -3992,6 +3993,12 @@ convert_v210_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
   if (h2 != height) {
     for (i = h2; i < height; i++) {
       UNPACK_FRAME (src, convert->tmpline[0], i, convert->in_x, width);
+
+      tmpline_8 = (guint8 *) convert->tmpline[0];
+      for (int j = 0; j < width * 4; j++) {
+        tmpline_8[j] = convert->tmpline[0][j] >> 8;
+      }
+
       PACK_FRAME (dest, convert->tmpline[0], i, width);
     }
   }
