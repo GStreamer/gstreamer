@@ -1278,7 +1278,7 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
     GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
     GstH264Picture *picture = NULL;
     GstH264Picture *first_field = NULL;
-    gboolean ret = TRUE;
+    GstFlowReturn ret = GST_FLOW_OK;
 
     g_assert (priv->current_frame);
 
