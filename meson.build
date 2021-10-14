@@ -368,14 +368,12 @@ endforeach
 
 message('Building subprojects: ' + ', '.join(subprojects_names))
 
-subdir('tests')
-
 setenv = find_program('gst-env.py')
-
 devenv_cmd = [setenv, '--builddir=@0@'.format(meson.build_root()),
               '--gstbuilddir=@0@'.format(meson.current_build_dir()),
               '--srcdir=@0@'.format(meson.source_root())]
 
+subdir('tests')
 if meson.has_exe_wrapper() and build_machine.system() == 'linux' and host_machine.system() == 'windows'
   # FIXME: Ideally we could get the wrapper directly from meson
   devenv_cmd += ['--wine', host_machine.cpu_family() == 'x86_64' ? 'wine64' : 'wine32']
