@@ -2041,9 +2041,7 @@ gst_mpd_client_get_next_fragment (GstMPDClient * client,
 
     GST_DEBUG ("currentChunk->SegmentURL = %p", currentChunk->SegmentURL);
     if (currentChunk->SegmentURL != NULL) {
-      mediaURL =
-          g_strdup (gst_mpdparser_get_mediaURL (stream,
-              currentChunk->SegmentURL));
+      mediaURL = gst_mpdparser_get_mediaURL (stream, currentChunk->SegmentURL);
       indexURL = g_strdup (currentChunk->SegmentURL->index);
     } else if (stream->cur_seg_template != NULL) {
       mediaURL =
@@ -2315,9 +2313,8 @@ gst_mpd_client_get_next_header (GstMPDClient * client, gchar ** uri,
   *uri = NULL;
   if (stream->cur_segment_base) {
     if (stream->cur_segment_base->Initialization) {
-      *uri =
-          g_strdup (gst_mpdparser_get_initializationURL (stream,
-              stream->cur_segment_base->Initialization));
+      *uri = gst_mpdparser_get_initializationURL (stream,
+          stream->cur_segment_base->Initialization);
       if (stream->cur_segment_base->Initialization->range) {
         *range_start =
             stream->cur_segment_base->Initialization->range->first_byte_pos;
@@ -2325,9 +2322,8 @@ gst_mpd_client_get_next_header (GstMPDClient * client, gchar ** uri,
             stream->cur_segment_base->Initialization->range->last_byte_pos;
       }
     } else if (stream->cur_segment_base->indexRange) {
-      *uri =
-          g_strdup (gst_mpdparser_get_initializationURL (stream,
-              stream->cur_segment_base->Initialization));
+      *uri = gst_mpdparser_get_initializationURL (stream,
+          stream->cur_segment_base->Initialization);
       *range_start = 0;
       *range_end = stream->cur_segment_base->indexRange->first_byte_pos - 1;
     }
@@ -2362,9 +2358,8 @@ gst_mpd_client_get_next_header_index (GstMPDClient * client, gchar ** uri,
   GST_DEBUG ("Looking for current representation index");
   *uri = NULL;
   if (stream->cur_segment_base && stream->cur_segment_base->indexRange) {
-    *uri =
-        g_strdup (gst_mpdparser_get_initializationURL (stream,
-            stream->cur_segment_base->RepresentationIndex));
+    *uri = gst_mpdparser_get_initializationURL (stream,
+        stream->cur_segment_base->RepresentationIndex);
     *range_start = stream->cur_segment_base->indexRange->first_byte_pos;
     *range_end = stream->cur_segment_base->indexRange->last_byte_pos;
   } else if (stream->cur_seg_template && stream->cur_seg_template->index) {
