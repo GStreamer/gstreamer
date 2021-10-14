@@ -1424,7 +1424,7 @@ gst_mpdparser_get_mediaURL (GstActiveStream * stream,
   url_prefix = segmentURL->media ? segmentURL->media : stream->baseURL;
   g_return_val_if_fail (url_prefix != NULL, NULL);
 
-  return segmentURL->media;
+  return url_prefix;
 }
 
 /* navigation functions */
