@@ -639,21 +639,31 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     return FALSE;
 
   if (!gst_gl_context_check_feature (dmabuf->upload->context,
-          "EGL_KHR_image_base"))
+          "EGL_KHR_image_base")) {
+    GST_DEBUG_OBJECT (dmabuf->upload, "no EGL_KHR_image_base extension");
     return FALSE;
+  }
 
   if (dmabuf->target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES &&
       !gst_gl_context_check_feature (dmabuf->upload->context,
-          "GL_OES_EGL_image_external"))
+          "GL_OES_EGL_image_external")) {
+    GST_DEBUG_OBJECT (dmabuf->upload,
+        "no EGL_KHR_image_base_external extension");
     return FALSE;
+  }
 
   /* This will eliminate most non-dmabuf out there */
-  if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (buffer, 0)))
+  if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (buffer, 0))) {
+    GST_DEBUG_OBJECT (dmabuf->upload, "input not dmabuf");
     return FALSE;
+  }
 
   /* We cannot have multiple dmabuf per plane */
-  if (n_mem > n_planes)
+  if (n_mem > n_planes) {
+    GST_DEBUG_OBJECT (dmabuf->upload,
+        "number of memory (%u) != number of planes (%u)", n_mem, n_planes);
     return FALSE;
+  }
 
   /* Update video info based on video meta */
   if (meta) {
@@ -690,18 +700,25 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     plane_size = gst_gl_get_plane_data_size (in_info, NULL, i);
 
     if (!gst_buffer_find_memory (buffer, in_info->offset[i], plane_size,
-            &mem_idx, &length, &mem_skip))
+            &mem_idx, &length, &mem_skip)) {
+      GST_DEBUG_OBJECT (dmabuf->upload, "could not find memory %u", i);
       return FALSE;
+    }
 
     /* We can't have more then one dmabuf per plane */
-    if (length != 1)
+    if (length != 1) {
+      GST_DEBUG_OBJECT (dmabuf->upload, "data for plane %u spans %u memories",
+          i, length);
       return FALSE;
+    }
 
     mems[i] = gst_buffer_peek_memory (buffer, mem_idx);
 
     /* And all memory found must be dmabuf */
-    if (!gst_is_dmabuf_memory (mems[i]))
+    if (!gst_is_dmabuf_memory (mems[i])) {
+      GST_DEBUG_OBJECT (dmabuf->upload, "memory %u is not dmabuf", i);
       return FALSE;
+    }
 
     offset[i] = mems[i]->offset + mem_skip;
     fd[i] = gst_dmabuf_memory_get_fd (mems[i]);
@@ -711,8 +728,10 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     /* Check if this format is supported by the driver */
     dmabuf->n_mem = 1;
     if (!gst_egl_image_check_dmabuf_direct (dmabuf->upload->context, in_info,
-            dmabuf->target))
+            dmabuf->target)) {
+      GST_DEBUG_OBJECT (dmabuf->upload, "direct check failed");
       return FALSE;
+    }
   } else
     dmabuf->n_mem = n_planes;
 
@@ -736,8 +755,10 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
       dmabuf->eglimage[i] = gst_egl_image_from_dmabuf (dmabuf->upload->context,
           fd[i], in_info, i, offset[i]);
 
-    if (!dmabuf->eglimage[i])
+    if (!dmabuf->eglimage[i]) {
+      GST_DEBUG_OBJECT (dmabuf->upload, "could not create eglimage");
       return FALSE;
+    }
 
     _set_cached_eglimage (mems[i], dmabuf->eglimage[i], cache_id);
     dmabuf->formats[i] = dmabuf->eglimage[i]->format;
