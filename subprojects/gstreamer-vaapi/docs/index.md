@@ -20,7 +20,7 @@ loaded, even if they are deprecated.
 **LIBVA_DRIVER_NAME.**
 
 This environment variable can be set with the drivers name to load. For
-example, intel's driver is `i915`, meanwhile mesa is `gallium`.
+example, intel's driver is `i965`, meanwhile mesa is `gallium`.
 
 **LIBVA_DRIVERS_PATH.**
 
