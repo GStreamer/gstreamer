@@ -584,12 +584,6 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
     case GST_VIDEO_FORMAT_NV12:
       cv_format = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
       break;
-    case GST_VIDEO_FORMAT_UYVY:
-      cv_format = kCVPixelFormatType_422YpCbCr8;
-      break;
-    case GST_VIDEO_FORMAT_RGBA:
-      cv_format = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
-      break;
     default:
       g_warn_if_reached ();
       break;
