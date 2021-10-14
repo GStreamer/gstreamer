@@ -17,7 +17,7 @@ avtp_sources = [
 avtp_dep = dependency('', required: false)
 avtp_option = get_option('avtp')
 
-if host_machine.system() != 'linux'
+if host_machine.system() != 'linux' or not cc.has_type('struct sock_txtime', prefix : '#include <linux/net_tstamp.h>')
   if avtp_option.enabled()
     error('avtp plugin enabled but host is not supported')
   else
@@ -28,7 +28,7 @@ endif
 avtp_dep = dependency('avtp', required: avtp_option,
                       fallback: ['avtp', 'avtp_dep'])
 
-if avtp_dep.found() and cc.has_type('struct sock_txtime', prefix : '#include <linux/net_tstamp.h>')
+if avtp_dep.found()
   gstavtp = library('gstavtp',
     avtp_sources,
     c_args : gst_plugins_bad_args,
