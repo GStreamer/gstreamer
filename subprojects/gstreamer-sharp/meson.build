@@ -1,5 +1,5 @@
 project('gstreamer-sharp', ['cs', 'c'], version: '1.19.2.1',
-    meson_version : '>= 0.54', license: 'LGPL')
+    meson_version : '>= 0.59', license: 'LGPL')
 
 if host_machine.system() == 'osx'
   lib_prefix=''
