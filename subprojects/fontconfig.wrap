@@ -3,4 +3,4 @@ directory=fontconfig
 url=https://gitlab.freedesktop.org/fontconfig/fontconfig
 push-url=git@gitlab.freedesktop.org:fontconfig/fontconfig.git
 depth=1
-revision=main
+revision=1d7669992798bb7fec7dc613c05310741d7b3781

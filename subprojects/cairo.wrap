@@ -2,4 +2,4 @@
 directory=cairo
 url=https://gitlab.freedesktop.org/cairo/cairo.git
 depth=1
-revision=master
+revision=a04786b9330109ce54bf7f65c7068281419cec6a

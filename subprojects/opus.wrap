@@ -1,7 +1,7 @@
 [wrap-git]
 directory=opus
 url=https://gitlab.xiph.org/xiph/opus.git
-revision=master
+revision=6b6035ae4a29abbd237463d84a45fbeb0d92bc18
 
 [provide]
 opus=opus_dep

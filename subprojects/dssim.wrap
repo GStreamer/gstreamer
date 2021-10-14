@@ -1,4 +1,4 @@
 [wrap-git]
 directory=dssim
 url=https://github.com/kornelski/dssim.git
-revision=dssim1-c
+revision=a40c62b95fa2a4223218c973a85dc183e610070a
