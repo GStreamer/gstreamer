@@ -1858,10 +1858,20 @@ gst_webrtc_bin_attach_tos_to_session (GstWebRTCBin * webrtc, guint session_id)
   }
 }
 
+static void
+weak_free (GWeakRef * weak)
+{
+  g_weak_ref_clear (weak);
+  g_free (weak);
+}
+
 static GstPadProbeReturn
 _nicesink_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
-  GstWebRTCBin *webrtc = user_data;
+  GstWebRTCBin *webrtc = g_weak_ref_get ((GWeakRef *) user_data);
+
+  if (!webrtc)
+    return GST_PAD_PROBE_REMOVE;
 
   if (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_EVENT (info))
       == GST_EVENT_CUSTOM_DOWNSTREAM_STICKY) {
@@ -1950,6 +1960,9 @@ _nicesink_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       }
     }
   }
+
+  gst_object_unref (webrtc);
+
   return GST_PAD_PROBE_OK;
 }
 
@@ -1994,11 +2007,15 @@ gst_webrtc_bin_attach_probe_to_ice_sink (GstWebRTCBin * webrtc,
     GstWebRTCICETransport * transport)
 {
   GstPad *pad;
+  GWeakRef *weak;
 
   pad = gst_element_get_static_pad (transport->sink, "sink");
+
+  weak = g_new0 (GWeakRef, 1);
+  g_weak_ref_init (weak, webrtc);
+
   gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-      _nicesink_pad_probe, g_object_ref (webrtc),
-      (GDestroyNotify) gst_object_unref);
+      _nicesink_pad_probe, weak, (GDestroyNotify) weak_free);
   gst_object_unref (pad);
 }
 
