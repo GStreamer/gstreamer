@@ -1907,10 +1907,18 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
   display = gst_va_display_drm_new_from_path (btrans_class->render_device_path);
   filter = gst_va_filter_new (display);
 
-  if (gst_va_filter_open (filter))
+  if (gst_va_filter_open (filter)) {
     caps = gst_va_filter_get_caps (filter);
-  else
+
+    /* adds any to enable passthrough */
+    {
+      GstCaps *any_caps = gst_caps_new_empty_simple ("video/x-raw");
+      gst_caps_set_features_simple (any_caps, gst_caps_features_new_any ());
+      caps = gst_caps_merge (caps, any_caps);
+    }
+  } else {
     caps = gst_caps_from_string (caps_str);
+  }
 
   doc_caps = gst_caps_from_string (caps_str);
 
