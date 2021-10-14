@@ -132,7 +132,6 @@ option('msdk', type : 'feature', value : 'auto', description : 'Intel Media SDK 
 option('musepack', type : 'feature', value : 'auto', description : 'libmpcdec Musepack decoder plugin')
 option('neon', type : 'feature', value : 'auto', description : 'NEON HTTP source plugin')
 option('nvcodec', type : 'feature', value : 'auto', description : 'NVIDIA GPU codec plugin')
-option('ofa', type : 'feature', value : 'auto', description : 'Open Fingerprint Architecture library plugin')
 option('onnx', type : 'feature', value : 'auto', description : 'ONNX neural network plugin')
 option('openal', type : 'feature', value : 'auto', description : 'OpenAL plugin')
 option('openexr', type : 'feature', value : 'auto', description : 'OpenEXR plugin')
