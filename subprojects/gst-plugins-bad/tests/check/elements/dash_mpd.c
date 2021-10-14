@@ -4231,6 +4231,57 @@ GST_START_TEST (dash_mpdparser_get_baseURL8)
 GST_END_TEST;
 
 /*
+ * Test getting baseURL with query
+ *
+ */
+GST_START_TEST (dash_mpdparser_get_baseURL_with_query)
+{
+  gboolean ret;
+  gchar *uri;
+  gint64 range_start, range_end;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period id=\"Period0\" duration=\"P0Y0M1DT1H1M1S\">"
+      "    <AdaptationSet id=\"1\" mimeType=\"audio\" lang=\"en\">"
+      "      <Representation id=\"1\" bandwidth=\"250000\">"
+      "        <BaseURL>http://example.com/test?param1=value1&amp;param2=value2</BaseURL>"
+      "        <SegmentBase indexRange=\"100-200\" indexRangeExact=\"true\">"
+      "          <Initialization range=\"0-100\" />"
+      "        </SegmentBase>"
+      "      </Representation></AdaptationSet></Period></MPD>";
+
+  GstMPDClient *mpdclient = setup_mpd_client (xml);
+
+  /* get segment url and range from segment Initialization */
+  ret =
+      gst_mpd_client_get_next_header (mpdclient, &uri, 0, &range_start,
+      &range_end);
+  assert_equals_int (ret, TRUE);
+  assert_equals_string (uri,
+      "http://example.com/test?param1=value1&param2=value2");
+  assert_equals_int64 (range_start, 0);
+  assert_equals_int64 (range_end, 100);
+  g_free (uri);
+
+  /* get segment url and range from segment indexRange */
+  ret =
+      gst_mpd_client_get_next_header_index (mpdclient, &uri, 0, &range_start,
+      &range_end);
+  assert_equals_int (ret, TRUE);
+  assert_equals_string (uri,
+      "http://example.com/test?param1=value1&param2=value2");
+  assert_equals_int64 (range_start, 100);
+  assert_equals_int64 (range_end, 200);
+  g_free (uri);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * Test getting mediaPresentationDuration
  *
  */
@@ -6631,6 +6682,7 @@ dash_suite (void)
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL6);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL7);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL8);
+  tcase_add_test (tc_complexMPD, dash_mpdparser_get_baseURL_with_query);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_mediaPresentationDuration);
   tcase_add_test (tc_complexMPD, dash_mpdparser_get_streamPresentationOffset);
   tcase_add_test (tc_complexMPD, dash_mpdparser_segments);
