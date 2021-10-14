@@ -72,6 +72,11 @@ enum
 {
   PROP_0,
   V4L2_STD_OBJECT_PROPS,
+  PROP_CROP_TOP,
+  PROP_CROP_LEFT,
+  PROP_CROP_BOTTOM,
+  PROP_CROP_RIGHT,
+  PROP_CROP_BOUNDS,
   PROP_LAST
 };
 
@@ -158,6 +163,81 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
       DEFAULT_PROP_DEVICE);
 
   /**
+   * GstV4l2Src:crop-top:
+   *
+   * Number of pixels to crop from the top edge of captured video
+   * stream
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_CROP_TOP,
+      g_param_spec_uint ("crop-top", "Crop top",
+          "Pixels to crop at top of video capture input",
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstV4l2Src:crop-left:
+   *
+   * Number of pixels to crop from the left edge of captured video
+   * stream
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_CROP_LEFT,
+      g_param_spec_uint ("crop-left", "Crop left",
+          "Pixels to crop at left of video capture input",
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstV4l2Src:crop-bottom:
+   *
+   * Number of pixels to crop from the bottom edge of captured video
+   * stream
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_CROP_BOTTOM,
+      g_param_spec_uint ("crop-bottom", "Crop bottom",
+          "Pixels to crop at bottom of video capture input",
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstV4l2Src:crop-right:
+   *
+   * Number of pixels to crop from the right edge of captured video
+   * stream
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_CROP_RIGHT,
+      g_param_spec_uint ("crop-right", "Crop right",
+          "Pixels to crop at right of video capture input",
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstV4l2Src:crop-bounds:
+   *
+   * Crop bounding region.  All crop regions must lie within this region.
+   * The bounds are represented as a four element array, that descibes the
+   * [x, y, width, height] of the area.
+   *
+   * The size and position of the crop
+   * bounds will only be known, once the v4l2 device is opened and the
+   * input source selected. Applications can connect to the
+   * "notify::crop-bounds" signal to be notified when the bounding region is
+   * updated, and set an appropriate crop region.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_CROP_BOUNDS,
+      gst_param_spec_array ("crop-bounds", "Crop bounds",
+          "The bounding region for crop rectangles ('<x, y, width, height>').",
+          g_param_spec_int ("rect-value", "Rectangle Value",
+              "One of x, y, width or height value.", G_MININT, G_MAXINT, -1,
+              G_PARAM_READABLE | G_PARAM_STATIC_STRINGS),
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstV4l2Src::prepare-format:
    * @v4l2src: the v4l2src instance
    * @fd: the file descriptor of the current device
@@ -236,11 +316,46 @@ gst_v4l2src_set_property (GObject * object,
   if (!gst_v4l2_object_set_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
+      case PROP_CROP_TOP:
+        v4l2src->crop_top = g_value_get_uint (value);
+        break;
+      case PROP_CROP_LEFT:
+        v4l2src->crop_left = g_value_get_uint (value);
+        break;
+      case PROP_CROP_BOTTOM:
+        v4l2src->crop_bottom = g_value_get_uint (value);
+        break;
+      case PROP_CROP_RIGHT:
+        v4l2src->crop_right = g_value_get_uint (value);
+        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
     }
   }
+}
+
+static void
+gst_v4l2src_set_rect_value (GValue * value, struct v4l2_rect *rect)
+{
+  GValue val = { 0 };
+
+  g_value_init (&val, G_TYPE_INT);
+  g_value_reset (value);
+
+  g_value_set_int (&val, rect->left);
+  gst_value_array_append_value (value, &val);
+
+  g_value_set_int (&val, rect->top);
+  gst_value_array_append_value (value, &val);
+
+  g_value_set_int (&val, rect->width);
+  gst_value_array_append_value (value, &val);
+
+  g_value_set_int (&val, rect->height);
+  gst_value_array_append_value (value, &val);
+
+  g_value_unset (&val);
 }
 
 static void
@@ -252,6 +367,21 @@ gst_v4l2src_get_property (GObject * object,
   if (!gst_v4l2_object_get_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
+      case PROP_CROP_TOP:
+        g_value_set_uint (value, v4l2src->crop_top);
+        break;
+      case PROP_CROP_LEFT:
+        g_value_set_uint (value, v4l2src->crop_left);
+        break;
+      case PROP_CROP_BOTTOM:
+        g_value_set_uint (value, v4l2src->crop_bottom);
+        break;
+      case PROP_CROP_RIGHT:
+        g_value_set_uint (value, v4l2src->crop_right);
+        break;
+      case PROP_CROP_BOUNDS:
+        gst_v4l2src_set_rect_value (value, &v4l2src->crop_bounds);
+        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -374,6 +504,23 @@ done:
 }
 
 static gboolean
+gst_v4l2src_do_source_crop (GstV4l2Src * v4l2src)
+{
+  struct v4l2_rect def_crop;
+
+  if (v4l2src->apply_crop_settings)
+    return gst_v4l2_object_set_crop (v4l2src->v4l2object, &v4l2src->crop_rect);
+
+  /* If no crop setting is given, reset to the default. Resetting the default
+   * crop may fail if the device does not support cropping. This  should not
+   * be considered an error. */
+  if (gst_v4l2_object_get_crop_default (v4l2src->v4l2object, &def_crop))
+    gst_v4l2_object_set_crop (v4l2src->v4l2object, &def_crop);
+
+  return TRUE;
+}
+
+static gboolean
 gst_v4l2src_set_format (GstV4l2Src * v4l2src, GstCaps * caps,
     GstV4l2Error * error)
 {
@@ -387,6 +534,9 @@ gst_v4l2src_set_format (GstV4l2Src * v4l2src, GstCaps * caps,
 
   g_signal_emit (v4l2src, gst_v4l2_signals[SIGNAL_PRE_SET_FORMAT], 0,
       v4l2src->v4l2object->video_fd, caps);
+
+  if (!gst_v4l2src_do_source_crop (v4l2src))
+    return FALSE;
 
   return gst_v4l2_object_set_format (obj, caps, error);
 }
@@ -577,6 +727,53 @@ gst_v4l2src_query_preferred_size (GstV4l2Src * v4l2src,
 }
 
 static gboolean
+gst_v4l2src_setup_source_crop (GstV4l2Src * v4l2src,
+    struct PreferredCapsInfo *pref)
+{
+  gint cropped_width, cropped_height;
+  struct v4l2_rect *crop_bounds = &v4l2src->crop_bounds;
+
+  v4l2src->apply_crop_settings = FALSE;
+
+  if (!gst_v4l2_object_get_crop_bounds (v4l2src->v4l2object, crop_bounds))
+    return FALSE;
+
+  g_object_notify (G_OBJECT (v4l2src), "crop-bounds");
+
+  cropped_width = crop_bounds->width - v4l2src->crop_left - v4l2src->crop_right;
+  cropped_height =
+      crop_bounds->height - v4l2src->crop_top - v4l2src->crop_bottom;
+
+  if (v4l2src->crop_left < crop_bounds->left
+      || v4l2src->crop_top < crop_bounds->top
+      || cropped_width <= 0 || cropped_height <= 0) {
+    GST_WARNING_OBJECT (v4l2src, "Ignoring out of bounds crop region");
+    return FALSE;
+  }
+
+  if (cropped_width == crop_bounds->width
+      && cropped_height == crop_bounds->height) {
+    GST_DEBUG_OBJECT (v4l2src,
+        "No cropping requested, keep current preferred size");
+    return FALSE;
+  }
+
+  v4l2src->crop_rect.left = v4l2src->crop_left;
+  v4l2src->crop_rect.top = v4l2src->crop_top;
+  v4l2src->crop_rect.width = cropped_width;
+  v4l2src->crop_rect.height = cropped_height;
+  v4l2src->apply_crop_settings = TRUE;
+
+  pref->width = cropped_width;
+  pref->height = cropped_height;
+
+  GST_INFO_OBJECT (v4l2src, "Updated preferred capture size to %i x %i",
+      pref->width, pref->height);
+
+  return TRUE;
+}
+
+static gboolean
 gst_v4l2src_negotiate (GstBaseSrc * basesrc)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (basesrc);
@@ -595,6 +792,8 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
    * probe the caps, as locking DV Timings or standards will change result of
    * the caps enumeration. */
   have_pref = gst_v4l2src_query_preferred_size (v4l2src, &pref);
+
+  have_pref |= gst_v4l2src_setup_source_crop (v4l2src, &pref);
 
   /* first see what is possible on our source pad */
   thiscaps = gst_pad_query_caps (GST_BASE_SRC_PAD (basesrc), NULL);
