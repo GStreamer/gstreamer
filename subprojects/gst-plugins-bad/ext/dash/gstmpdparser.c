@@ -1366,46 +1366,56 @@ gst_mpdparser_free_active_stream (GstActiveStream * active_stream)
   }
 }
 
+static gchar *
+get_base_url_with_query (GstActiveStream * stream)
+{
+  GstUri *uri;
+  gchar *uri_str;
+
+  if (!stream->queryURL)
+    return g_strdup (stream->baseURL);
+
+  uri = gst_uri_from_string (stream->baseURL);
+  gst_uri_set_query_string (uri, stream->queryURL);
+  uri_str = gst_uri_to_string (uri);
+
+  gst_uri_unref (uri);
+  return uri_str;
+}
+
 /*
  * gst_mpdparser_get_initializationURL:
  *
  * Returns: (transfer full): stream initializationURL if available,
- *   baseURL otherwise.
+ *   baseURL combined with queryURL otherwise.
  */
 gchar *
 gst_mpdparser_get_initializationURL (GstActiveStream * stream,
     GstMPDURLTypeNode * InitializationURL)
 {
-  const gchar *url_prefix;
-
   g_return_val_if_fail (stream != NULL, NULL);
 
-  url_prefix = (InitializationURL
-      && InitializationURL->sourceURL) ? InitializationURL->sourceURL : stream->
-      baseURL;
-
-  return g_strdup (url_prefix);
+  return (InitializationURL && InitializationURL->sourceURL)
+      ? g_strdup (InitializationURL->sourceURL)
+      : get_base_url_with_query (stream);
 }
 
 /*
  * gst_mpdparser_get_mediaURL:
  *
  * Returns: (transfer full): stream mediaURL if available,
- *   baseURL otherwise.
+ *   baseURL combined with queryURL otherwise.
  */
 gchar *
 gst_mpdparser_get_mediaURL (GstActiveStream * stream,
     GstMPDSegmentURLNode * segmentURL)
 {
-  const gchar *url_prefix;
-
   g_return_val_if_fail (stream != NULL, NULL);
   g_return_val_if_fail (segmentURL != NULL, NULL);
 
-  url_prefix = segmentURL->media ? segmentURL->media : stream->baseURL;
-  g_return_val_if_fail (url_prefix != NULL, NULL);
-
-  return g_strdup (url_prefix);
+  return (segmentURL->media)
+      ? g_strdup (segmentURL->media)
+      : get_base_url_with_query (stream);
 }
 
 /* navigation functions */
