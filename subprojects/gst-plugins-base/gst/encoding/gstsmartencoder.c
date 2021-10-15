@@ -744,14 +744,15 @@ static gboolean
 gst_smart_encoder_add_parser (GstSmartEncoder * self, GstCaps * format)
 {
   const gchar *stream_format;
-  GstPad *chainpad, *internal_chainpad, *sinkpad;
+  GstPad *chainpad, *internal_chainpad, *sinkpad = NULL;
   GstStructure *structure = gst_caps_get_structure (format, 0);
   GstElement *capsfilter = gst_element_factory_make ("capsfilter", NULL);
+  GstElement *parser = NULL;
 
   gst_bin_add (GST_BIN (self), capsfilter);
   g_object_set (capsfilter, "caps", format, NULL);
   if (gst_structure_has_name (structure, "video/x-h264")) {
-    GstElement *parser = gst_element_factory_make ("h264parse", NULL);
+    parser = gst_element_factory_make ("h264parse", NULL);
     if (!parser) {
       GST_ERROR_OBJECT (self, "`h264parse` is missing, can't encode smartly");
 
@@ -762,22 +763,9 @@ gst_smart_encoder_add_parser (GstSmartEncoder * self, GstCaps * format)
     if (g_strcmp0 (stream_format, "avc1"))
       g_object_set (parser, "config-interval", -1, NULL);
 
-    if (!gst_bin_add (GST_BIN (self), parser)) {
-      GST_ERROR_OBJECT (self, "Could not add parser.");
-
-      goto failed;
-    }
-
-    if (!gst_element_link (parser, capsfilter)) {
-      GST_ERROR_OBJECT (self, "Could not link capfilter and parser.");
-
-      goto failed;
-    }
-
-    sinkpad = gst_element_get_static_pad (parser, "sink");
   } else if (gst_structure_has_name (gst_caps_get_structure (format, 0),
           "video/x-h265")) {
-    GstElement *parser = gst_element_factory_make ("h265parse", NULL);
+    parser = gst_element_factory_make ("h265parse", NULL);
     if (!parser) {
       GST_ERROR_OBJECT (self, "`h265parse` is missing, can't encode smartly");
 
@@ -787,7 +775,18 @@ gst_smart_encoder_add_parser (GstSmartEncoder * self, GstCaps * format)
     stream_format = gst_structure_get_string (structure, "stream-format");
     if (g_strcmp0 (stream_format, "hvc1"))
       g_object_set (parser, "config-interval", -1, NULL);
+  } else if (gst_structure_has_name (structure, "video/x-vp9")) {
+    parser = gst_element_factory_make ("vp9parse", NULL);
+    if (!parser) {
+      GST_ERROR_OBJECT (self, "`vp9parse` is missing, can't encode smartly");
 
+      goto failed;
+    }
+  } else {
+    sinkpad = gst_element_get_static_pad (capsfilter, "sink");
+  }
+
+  if (parser) {
     if (!gst_bin_add (GST_BIN (self), parser)) {
       GST_ERROR_OBJECT (self, "Could not add parser.");
 
@@ -801,8 +800,6 @@ gst_smart_encoder_add_parser (GstSmartEncoder * self, GstCaps * format)
     }
 
     sinkpad = gst_element_get_static_pad (parser, "sink");
-  } else {
-    sinkpad = gst_element_get_static_pad (capsfilter, "sink");
   }
 
   g_assert (sinkpad);
@@ -826,6 +823,8 @@ gst_smart_encoder_add_parser (GstSmartEncoder * self, GstCaps * format)
   return TRUE;
 
 failed:
+  gst_clear_object (&parser);
+
   return FALSE;
 }
 
