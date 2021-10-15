@@ -356,11 +356,38 @@ done:
   return res;
 }
 
+static gboolean
+gst_smart_encoder_force_reencoding_for_caps (GstSmartEncoder * self)
+{
+  const gchar *profile;
+  GstStructure *structure = gst_caps_get_structure (self->original_caps, 0);
+
+  if (!gst_structure_has_name (structure, "video/x-vp9"))
+    return FALSE;
+
+  if (!(profile = gst_structure_get_string (structure, "profile"))) {
+    GST_WARNING_OBJECT (self,
+        "No profile set on `vp9` stream, force reencoding");
+
+    return TRUE;
+  }
+
+  if (g_strcmp0 (profile, "0") && g_strcmp0 (profile, "2")) {
+    GST_INFO_OBJECT (self, "vp9 profile %s not supported for smart reencoding"
+        " as it might be using RGB stream which we can't handle properly"
+        " force reencoding", profile);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static GstFlowReturn
 gst_smart_encoder_push_pending_gop (GstSmartEncoder * self)
 {
   guint64 cstart, cstop;
   GList *tmp;
+  gboolean force_reencoding = FALSE;
   GstFlowReturn res = GST_FLOW_OK;
 
   GST_DEBUG ("Pushing pending GOP (%" GST_TIME_FORMAT " -- %" GST_TIME_FORMAT
@@ -386,8 +413,10 @@ gst_smart_encoder_push_pending_gop (GstSmartEncoder * self)
     goto done;
   }
 
+  force_reencoding = gst_smart_encoder_force_reencoding_for_caps (self);
   if ((cstart != self->gop_start)
-      || (cstop != self->gop_stop)) {
+      || (cstop != self->gop_stop)
+      || force_reencoding) {
     GST_INFO_OBJECT (self,
         "GOP needs to be re-encoded from %" GST_TIME_FORMAT " to %"
         GST_TIME_FORMAT " - %" GST_SEGMENT_FORMAT, GST_TIME_ARGS (cstart),
@@ -395,7 +424,8 @@ gst_smart_encoder_push_pending_gop (GstSmartEncoder * self)
     res = gst_smart_encoder_reencode_gop (self);
 
     /* Make sure we push the original caps when resuming the original stream */
-    self->push_original_caps = TRUE;
+    if (!force_reencoding)
+      self->push_original_caps = TRUE;
   } else {
     if (self->push_original_caps) {
       gst_pad_push_event (self->srcpad,
