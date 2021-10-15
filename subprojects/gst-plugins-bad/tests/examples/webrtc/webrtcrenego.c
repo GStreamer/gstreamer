@@ -229,6 +229,7 @@ stream_change (gpointer data)
     gst_pad_unlink (pad, peer);
     gst_element_release_request_pad (webrtc1, peer);
 
+    gst_object_unref (transceiver);
     gst_object_unref (peer);
     gst_object_unref (pad);
 
