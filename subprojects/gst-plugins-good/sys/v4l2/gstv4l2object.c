@@ -3170,6 +3170,41 @@ no_supported_capture_method:
   }
 }
 
+static gboolean
+gst_v4l2_object_reset_compose_region (GstV4l2Object * obj)
+{
+  struct v4l2_selection sel = { 0 };
+
+  GST_V4L2_CHECK_OPEN (obj);
+  GST_V4L2_CHECK_NOT_ACTIVE (obj);
+
+  sel.type = obj->type;
+  sel.target = V4L2_SEL_TGT_COMPOSE_DEFAULT;
+
+  if (obj->ioctl (obj->video_fd, VIDIOC_G_SELECTION, &sel) < 0) {
+    if (errno == ENOTTY) {
+      /* No-op when selection API is not supported */
+      return TRUE;
+    } else {
+      GST_WARNING_OBJECT (obj->dbg_obj,
+          "Failed to get default compose rectangle with VIDIOC_G_SELECTION: %s",
+          g_strerror (errno));
+      return FALSE;
+    }
+  }
+
+  sel.target = V4L2_SEL_TGT_COMPOSE;
+
+  if (obj->ioctl (obj->video_fd, VIDIOC_S_SELECTION, &sel) < 0) {
+    GST_WARNING_OBJECT (obj->dbg_obj,
+        "Failed to set default compose rectangle with VIDIOC_S_SELECTION: %s",
+        g_strerror (errno));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static void
 gst_v4l2_object_set_stride (GstVideoInfo * info, GstVideoAlignment * align,
     gint plane, gint stride)
@@ -3978,6 +4013,9 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 done:
   /* add boolean return, so we can fail on drivers bugs */
   gst_v4l2_object_save_format (v4l2object, fmtdesc, &format, &info, &align);
+
+  /* reset composition region to match the S_FMT size */
+  gst_v4l2_object_reset_compose_region (v4l2object);
 
   /* now configure the pool */
   if (!gst_v4l2_object_setup_pool (v4l2object, caps))
