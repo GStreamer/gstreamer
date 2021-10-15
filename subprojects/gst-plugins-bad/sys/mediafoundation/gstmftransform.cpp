@@ -1059,7 +1059,7 @@ gst_mf_transform_close (GstMFTransform * object)
   return TRUE;
 }
 
-static gchar *
+static const gchar *
 gst_mf_transform_event_type_to_string (MediaEventType event)
 {
   switch (event) {

@@ -1492,12 +1492,12 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
     {0, NULL},
   };
   GstMFVideoEncProfileMap *profile_to_check = NULL;
-  static gchar *h264_caps_str =
+  static const gchar *h264_caps_str =
       "video/x-h264, stream-format=(string) byte-stream, alignment=(string) au";
-  static gchar *hevc_caps_str =
+  static const gchar *hevc_caps_str =
       "video/x-h265, stream-format=(string) byte-stream, alignment=(string) au";
-  static gchar *vp9_caps_str = "video/x-vp9";
-  static gchar *codec_caps_str = NULL;
+  static const gchar *vp9_caps_str = "video/x-vp9";
+  const gchar *codec_caps_str = NULL;
 
   /* NOTE: depending on environment,
    * some enumerated h/w MFT might not be usable (e.g., multiple GPU case) */
@@ -1850,8 +1850,8 @@ gst_mf_video_enc_register_internal (GstPlugin * plugin, guint rank,
   GstMFVideoEncClassData *cdata;
   gboolean is_default = TRUE;
   gchar *device_name = NULL;
-  static gchar *type_name_prefix = NULL;
-  static gchar *feature_name_prefix = NULL;
+  const gchar *type_name_prefix = NULL;
+  const gchar *feature_name_prefix = NULL;
 
   if (IsEqualGUID (MFVideoFormat_H264, *subtype)) {
     type_name_prefix = "H264";

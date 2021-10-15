@@ -726,7 +726,7 @@ gst_mf_attribute_value_to_string (const GUID & guid, const PROPVARIANT & var)
       IsEqualGUID (guid, MF_MT_MINIMUM_DISPLAY_APERTURE) ||
       IsEqualGUID (guid, MF_MT_PAN_SCAN_APERTURE)) {
     /* FIXME: Not our usecase for now */
-    return g_strup ("Not parsed");
+    return g_strdup ("Not parsed");
   }
 
   switch (var.vt) {
