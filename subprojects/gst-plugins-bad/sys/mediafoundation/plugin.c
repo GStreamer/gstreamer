@@ -36,10 +36,10 @@
 #include "gstmfvp9enc.h"
 #include "gstmfaacenc.h"
 #include "gstmfmp3enc.h"
-#include "gstmftransform.h"
 
 #if GST_MF_HAVE_D3D11
 #include <gst/d3d11/gstd3d11.h>
+#include <gstmfplatloader.h>
 #endif
 
 GST_DEBUG_CATEGORY (gst_mf_debug);
@@ -67,7 +67,7 @@ get_d3d11_devices (void)
   IMFVideoSampleAllocatorEx *allocator = NULL;
 
   /* Check whether we can use IMFVideoSampleAllocatorEx interface */
-  hr = MFCreateVideoSampleAllocatorEx (&IID_IMFVideoSampleAllocatorEx,
+  hr = GstMFCreateVideoSampleAllocatorEx (&IID_IMFVideoSampleAllocatorEx,
       &allocator);
   if (!gst_mf_result (hr)) {
     GST_DEBUG ("IMFVideoSampleAllocatorEx interface is unavailable");
@@ -189,7 +189,7 @@ plugin_init (GstPlugin * plugin)
    * So, resulting MFT and D3D11 might not be compatible in case of multi-GPU
    * environment on UWP. */
 #if GST_MF_HAVE_D3D11
-  if (gst_mf_transform_load_library ())
+  if (gst_mf_plat_load_library ())
     device_list = get_d3d11_devices ();
 #endif
 

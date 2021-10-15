@@ -24,8 +24,9 @@
 
 #include <gst/gst.h>
 #include "gstmfvideoenc.h"
-#include <wrl.h>
 #include "gstmfvideobuffer.h"
+#include "gstmfplatloader.h"
+#include <wrl.h>
 #include <string.h>
 #include <cmath>
 
@@ -167,7 +168,7 @@ gst_mf_video_enc_open (GstVideoEncoder * enc)
 
     device = self->d3d11_device;
 
-    hr = MFCreateDXGIDeviceManager (&self->reset_token, &self->device_manager);
+    hr = GstMFCreateDXGIDeviceManager (&self->reset_token, &self->device_manager);
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (self, "Couldn't create DXGI device manager");
       gst_clear_object (&self->other_d3d11_device);
@@ -477,7 +478,7 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
             GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
       GST_DEBUG_OBJECT (self, "found D3D11 memory feature");
 
-      hr = MFCreateVideoSampleAllocatorEx (IID_PPV_ARGS (&allocator));
+      hr = GstMFCreateVideoSampleAllocatorEx (IID_PPV_ARGS (&allocator));
       if (!gst_mf_result (hr))
         GST_WARNING_OBJECT (self,
             "IMFVideoSampleAllocatorEx interface is unavailable");

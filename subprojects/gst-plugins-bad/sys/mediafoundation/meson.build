@@ -13,6 +13,7 @@ mf_sources = [
   'gstmfaacenc.cpp',
   'gstmfmp3enc.cpp',
   'gstmfvideobuffer.cpp',
+  'gstmfplatloader.c',
 ]
 
 mf_desktop_sources = [

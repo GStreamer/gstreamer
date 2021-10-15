@@ -69,8 +69,6 @@ typedef HRESULT (*GstMFTransformNewSampleCallback) (GstMFTransform * object,
                                                     IMFSample * sample,
                                                     gpointer user_data);
 
-gboolean         gst_mf_transform_load_library    (void);
-
 GstMFTransform * gst_mf_transform_new             (GstMFTransformEnumParams * params);
 
 gboolean        gst_mf_transform_open             (GstMFTransform * object);

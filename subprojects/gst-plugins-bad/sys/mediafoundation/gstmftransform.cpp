@@ -25,9 +25,9 @@
 #include "gstmfconfig.h"
 
 #include <gst/gst.h>
-#include <gmodule.h>
 #include "gstmftransform.h"
 #include "gstmfutils.h"
+#include "gstmfplatloader.h"
 #include <string.h>
 #include <wrl.h>
 
@@ -40,43 +40,6 @@ GST_DEBUG_CATEGORY_EXTERN (gst_mf_transform_debug);
 #define GST_CAT_DEFAULT gst_mf_transform_debug
 
 G_END_DECLS
-
-static GModule *mf_plat_module = NULL;
-typedef HRESULT (__stdcall *pMFTEnum2) (GUID guidCategory,
-                                        UINT32 Flags,
-                                        const MFT_REGISTER_TYPE_INFO * pInputType,
-                                        const MFT_REGISTER_TYPE_INFO * pOutputType,
-                                        IMFAttributes * pAttributes,
-                                        IMFActivate *** pppMFTActivate,
-                                        UINT32 * pnumMFTActivate);
-static pMFTEnum2 GstMFTEnum2Func = NULL;
-
-gboolean
-gst_mf_transform_load_library (void)
-{
-#if GST_MF_HAVE_D3D11
-  static gsize _init = 0;
-  if (g_once_init_enter (&_init)) {
-    mf_plat_module = g_module_open ("mfplat.dll", G_MODULE_BIND_LAZY);
-
-    if (mf_plat_module) {
-      if (!g_module_symbol (mf_plat_module, "MFTEnum2",
-              (gpointer *) & GstMFTEnum2Func)) {
-        GST_WARNING ("Cannot load MFTEnum2 symbol");
-        g_module_close (mf_plat_module);
-        mf_plat_module = NULL;
-        GstMFTEnum2Func = NULL;
-      } else {
-        GST_INFO ("MFTEnum2 symbol is available");
-      }
-    }
-
-    g_once_init_leave (&_init, 1);
-  }
-#endif
-
-  return ! !GstMFTEnum2Func;
-}
 
 typedef HRESULT (*GstMFTransformAsyncCallbackOnEvent) (MediaEventType event,
     GstObject * client);
@@ -508,7 +471,7 @@ gst_mf_transform_thread_func (GstMFTransform * self)
 
   /* NOTE: MFTEnum2 is desktop only and requires Windows 10 */
 #if GST_MF_HAVE_D3D11
-  if (GstMFTEnum2Func && self->enum_params.adapter_luid &&
+  if (gst_mf_plat_load_library () && self->enum_params.adapter_luid &&
       (self->enum_params.enum_flags & MFT_ENUM_FLAG_HARDWARE) != 0) {
     ComPtr < IMFAttributes > attr;
     LUID luid;
@@ -533,7 +496,7 @@ gst_mf_transform_thread_func (GstMFTransform * self)
       goto run_loop;
     }
 
-    hr = GstMFTEnum2Func (self->enum_params.category,
+    hr = GstMFTEnum2 (self->enum_params.category,
         self->enum_params.enum_flags, self->enum_params.input_typeinfo,
         self->enum_params.output_typeinfo, attr.Get (), &devices, &num_devices);
   } else
