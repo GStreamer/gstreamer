@@ -1207,10 +1207,12 @@ if build_gstgl
         'extra_args' : gir_init_section + ['--c-include=gst/gl/egl/egl.h'],
         'dependencies' : [video_dep, gst_dep, gst_base_dep]
       }
+      gir_dict = gir + {'includes': gir['includes'] + ['GstGL-1.0']}
+      libraries += [[pkg_name, {'gir': gir_dict}]]
       if not static_build
+        gir += {'includes': gir['includes'] + [gl_gir[0]]}
         gl_egl_gir = gnome.generate_gir(gstgl, kwargs: gir)
       endif
-      libraries += [[pkg_name, {'gir': gir}]]
     endif
     gstglegl_dep = declare_dependency(dependencies : [gstgl_dep],
       sources : gl_egl_gir)

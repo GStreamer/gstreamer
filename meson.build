@@ -113,6 +113,8 @@ subprojects_names = []
 plugins_doc_caches = []
 orc_update_targets = []
 all_plugins = []
+# Using a list and not a dict to keep the ordering to build the chain of `gir`
+# dependencies
 all_libraries = []
 foreach sp : subprojects
   project_name = sp[0]
