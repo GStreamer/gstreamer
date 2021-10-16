@@ -93,7 +93,7 @@ KNOWN_ISSUES = {
             {
                 "timeout": True,
                 "sometimes": True,
-            }
+            },
         ]
     },
     "https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/930": {
@@ -166,6 +166,13 @@ KNOWN_ISSUES = {
                 "summary": "We got a g_log critical issue",
                 "details": ".*g_hash_table_foreach_remove_or_steal.*",
             },
+            {
+                "issue-id": "runtime::error-on-bus",
+                "summary": "We got an ERROR message on the bus",
+                "level": "critical",
+                "detected-on": "playbin0",
+                "details": ".*Could not open resource for reading and writing.*",
+            },
         ],
     },
     "https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/578": {
@@ -194,11 +201,11 @@ KNOWN_ISSUES = {
             },
         ]
     },
-  "https://gitlab.freedesktop.org/gstreamer/gst-libav/issues/45": {
+    "https://gitlab.freedesktop.org/gstreamer/gst-libav/issues/45": {
         "tests": [
             "validate.file.playback.reverse_playback.rawaudioS32LE_prores_mov"
         ],
-       "issues": [
+        "issues": [
             {
                 "issue-id": "runtime::error-on-bus",
                 "summary": "We got an ERROR message on the bus",
@@ -219,12 +226,12 @@ KNOWN_ISSUES = {
             "validate.*mxf.*",
         ],
         "issues": [
-             {
-                 "issue-id": "threading::pull-range-from-wrong-thread",
-                 "summary": "gst_pad_pull_range called from wrong thread",
-                 "level": "critical",
-                 'can-happen-several-times': True,
-             },
+            {
+                "issue-id": "threading::pull-range-from-wrong-thread",
+                "summary": "gst_pad_pull_range called from wrong thread",
+                "level": "critical",
+                'can-happen-several-times': True,
+            },
         ]
     },
     "Our asf file is basically broken": {
@@ -235,6 +242,6 @@ KNOWN_ISSUES = {
             {
                 "issue-id": "transcoded-file-wrong-duration",
             },
-       ]
+        ]
     }
 }
