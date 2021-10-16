@@ -118,6 +118,9 @@ struct _GstVaVpp
   GstVideoOrientationMethod direction;
   GstVideoOrientationMethod prev_direction;
   GstVideoOrientationMethod tag_direction;
+  gboolean add_borders;
+  gint borders_h;
+  gint borders_w;
 
   GList *channels;
 };
@@ -299,6 +302,9 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
         self->op_flags &= ~VPP_CONVERT_DUMMY;
       break;
     }
+    case GST_VA_FILTER_PROP_ADD_BORDERS:
+      self->add_borders = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -357,6 +363,9 @@ gst_va_vpp_get_property (GObject * object, guint prop_id, GValue * value,
     case GST_VA_FILTER_PROP_DISABLE_PASSTHROUGH:
       g_value_set_boolean (value, (self->op_flags & VPP_CONVERT_DUMMY));
       break;
+    case GST_VA_FILTER_PROP_ADD_BORDERS:
+      g_value_set_boolean (value, self->add_borders);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -391,11 +400,53 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
 {
   GstVaVpp *self = GST_VA_VPP (btrans);
   GstCapsFeatures *infeat, *outfeat;
+  gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
 
   if (GST_VIDEO_INFO_INTERLACE_MODE (in_info) !=
       GST_VIDEO_INFO_INTERLACE_MODE (out_info)) {
     GST_ERROR_OBJECT (self, "input and output formats do not match");
     return FALSE;
+  }
+
+  /* calculate possible borders if display-aspect-ratio change */
+  {
+    if (!gst_util_fraction_multiply (GST_VIDEO_INFO_WIDTH (in_info),
+            GST_VIDEO_INFO_HEIGHT (in_info), GST_VIDEO_INFO_PAR_N (in_info),
+            GST_VIDEO_INFO_PAR_D (in_info), &from_dar_n, &from_dar_d)) {
+      from_dar_n = from_dar_d = -1;
+    }
+
+    if (!gst_util_fraction_multiply (GST_VIDEO_INFO_WIDTH (out_info),
+            GST_VIDEO_INFO_HEIGHT (out_info), GST_VIDEO_INFO_PAR_N (out_info),
+            GST_VIDEO_INFO_PAR_D (out_info), &to_dar_n, &to_dar_d)) {
+      to_dar_n = to_dar_d = -1;
+    }
+
+    self->borders_h = self->borders_w = 0;
+    if (to_dar_n != from_dar_n || to_dar_d != from_dar_d) {
+      if (self->add_borders) {
+        gint n, d, to_h, to_w;
+
+        if (from_dar_n != -1 && from_dar_d != -1
+            && gst_util_fraction_multiply (from_dar_n, from_dar_d,
+                out_info->par_d, out_info->par_n, &n, &d)) {
+          to_h = gst_util_uint64_scale_int (out_info->width, d, n);
+          if (to_h <= out_info->height) {
+            self->borders_h = out_info->height - to_h;
+            self->borders_w = 0;
+          } else {
+            to_w = gst_util_uint64_scale_int (out_info->height, n, d);
+            g_assert (to_w <= out_info->width);
+            self->borders_h = 0;
+            self->borders_w = out_info->width - to_w;
+          }
+        } else {
+          GST_WARNING_OBJECT (self, "Can't calculate borders");
+        }
+      } else {
+        GST_WARNING_OBJECT (self, "Can't keep DAR!");
+      }
+    }
   }
 
   if (!gst_video_info_is_equal (in_info, out_info)) {
@@ -405,7 +456,8 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
       self->op_flags &= ~VPP_CONVERT_FORMAT;
 
     if (GST_VIDEO_INFO_WIDTH (in_info) != GST_VIDEO_INFO_WIDTH (out_info)
-        || GST_VIDEO_INFO_HEIGHT (in_info) != GST_VIDEO_INFO_HEIGHT (out_info))
+        || GST_VIDEO_INFO_HEIGHT (in_info) != GST_VIDEO_INFO_HEIGHT (out_info)
+        || self->borders_h > 0 || self->borders_w > 0)
       self->op_flags |= VPP_CONVERT_SIZE;
     else
       self->op_flags &= ~VPP_CONVERT_SIZE;
@@ -419,6 +471,10 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
     self->op_flags |= VPP_CONVERT_FEATURE;
   else
     self->op_flags &= ~VPP_CONVERT_FEATURE;
+
+  if (self->op_flags & VPP_CONVERT_SIZE) {
+
+  }
 
   if (gst_va_filter_set_video_info (btrans->filter, in_info, out_info)) {
     gst_va_vpp_update_passthrough (self, FALSE);
@@ -662,6 +718,8 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   dst = (GstVaSample) {
     .buffer = outbuf,
+    .borders_h = self->borders_h,
+    .borders_w = self->borders_w,
     .flags = gst_va_buffer_get_surface_flags (outbuf, &btrans->out_info),
   };
   /* *INDENT-ON* */

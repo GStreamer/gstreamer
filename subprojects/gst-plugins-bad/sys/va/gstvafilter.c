@@ -706,6 +706,21 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
           | GST_PARAM_MUTABLE_READY));
 
+  /**
+   * GstVaPostProc:add-borders:
+   *
+   * If set to %TRUE the filter will add black borders if necessary to
+   * keep the display aspect ratio.
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (klass, GST_VA_FILTER_PROP_ADD_BORDERS,
+      g_param_spec_boolean ("add-borders", "Add Borders",
+          "Add black borders if necessary to keep the display aspect ratio",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
+          | GST_PARAM_MUTABLE_PLAYING));
+
+
   return TRUE;
 }
 
@@ -1524,6 +1539,10 @@ _fill_va_sample (GstVaFilter * self, GstVaSample * sample,
   if (direction == GST_PAD_SRC) {
     GST_OBJECT_LOCK (self);
     sample->rect = self->output_region;
+    sample->rect.x = sample->borders_w / 2;
+    sample->rect.y = sample->borders_h / 2;
+    sample->rect.width -= sample->borders_w;
+    sample->rect.height -= sample->borders_h;
     GST_OBJECT_UNLOCK (self);
 
     return TRUE;

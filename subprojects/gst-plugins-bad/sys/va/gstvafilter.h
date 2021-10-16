@@ -52,6 +52,7 @@ enum {
   GST_VA_FILTER_PROP_AUTO_CONTRAST,
   GST_VA_FILTER_PROP_DISABLE_PASSTHROUGH,
   GST_VA_FILTER_PROP_DEINTERLACE_METHOD,
+  GST_VA_FILTER_PROP_ADD_BORDERS,
   GST_VA_FILTER_PROP_LAST
 };
 
@@ -66,6 +67,10 @@ struct _GstVaSample
   guint num_forward_references;
   VASurfaceID *backward_references;
   guint num_backward_references;
+
+  /* borders to preserve dar */
+  gint borders_h;
+  gint borders_w;
 
   /*< private >*/
   VASurfaceID surface;
