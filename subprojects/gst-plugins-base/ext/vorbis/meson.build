@@ -17,9 +17,9 @@ vorbisidec_sources = [
   'gstvorbiscommon.c',
 ]
 
-vorbis_dep = dependency('vorbis', version : '>= 1.3.1', required : get_option('vorbis'))
-vorbisenc_dep = dependency('vorbisenc', version : '>= 1.3.1', required : get_option('vorbis'))
-vorbisidec_dep = dependency('vorbisidec', required : get_option('tremor'))
+vorbis_dep = dependency('vorbis', version : '>= 1.3.1', allow_fallback: true, required : get_option('vorbis'))
+vorbisenc_dep = dependency('vorbisenc', version : '>= 1.3.1', allow_fallback: true, required : get_option('vorbis'))
+vorbisidec_dep = dependency('vorbisidec', allow_fallback: true, required : get_option('tremor'))
 
 if vorbis_dep.found()
   vorbis_deps = [vorbis_dep]

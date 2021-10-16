@@ -10,7 +10,7 @@ ogg_sources = [
   'vorbis_parse.c',
 ]
 
-ogg_dep = dependency('ogg', version : '>=1.0', required : get_option('ogg'))
+ogg_dep = dependency('ogg', allow_fallback: true, version : '>=1.0', required : get_option('ogg'))
 core_conf.set('HAVE_OGG', ogg_dep.found())
 
 if ogg_dep.found()
