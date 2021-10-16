@@ -1625,11 +1625,11 @@ gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
   result = gst_caps_truncate (result);
   gst_va_vpp_fixate_size (self, direction, caps, result);
 
-  /* fixate remaining fields */
-  result = gst_caps_fixate (result);
-
   /* some fields might be lost while feature caps conversion */
   copy_misc_fields_from_input (self, caps, result);
+
+  /* fixate remaining fields */
+  result = gst_caps_fixate (result);
 
   if (direction == GST_PAD_SINK) {
     if (gst_caps_is_subset (caps, result)) {
