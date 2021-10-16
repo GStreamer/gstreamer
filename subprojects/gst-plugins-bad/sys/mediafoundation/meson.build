@@ -155,6 +155,10 @@ configure_file(
   configuration: mf_config,
 )
 
+# Work around for Windows SDK header issue
+# https://docs.microsoft.com/en-us/cpp/build/reference/permissive-standards-conformance?view=msvc-160#windows-header-issues
+extra_cpp_args += cxx.get_supported_arguments(['/Zc:twoPhase-'])
+
 gstmediafoundation = library('gstmediafoundation',
   mf_sources,
   c_args : gst_plugins_bad_args + extra_c_args,
