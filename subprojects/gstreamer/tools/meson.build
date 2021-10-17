@@ -31,7 +31,7 @@ foreach tool : tools
     install: true,
     include_directories : [configinc],
     dependencies : [glib_dep, gobject_dep, gmodule_dep, mathlib, gst_dep] + extra_deps,
-    c_args: gst_c_args + extra_c_args,
+    c_args: gst_c_args + extra_c_args + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],
   )
 
   man_page = '@0@-1.0.1'.format(tool)

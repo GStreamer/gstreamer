@@ -1,6 +1,6 @@
 deps = [ges_dep, gstpbutils_dep, gio_dep, gstvideo_dep, gstaudio_dep]
 
-ges_tool_args = [ges_c_args]
+ges_tool_args = [ges_c_args, '-UG_LOG_DOMAIN']
 if gstvalidate_dep.found()
   deps = deps + [gstvalidate_dep]
   ges_tool_args += ['-DGST_USE_UNSTABLE_API']
@@ -8,7 +8,7 @@ endif
 
 ges_launch = executable('ges-launch-@0@'.format(apiversion),
     'ges-validate.c', 'ges-launch.c', 'ges-launcher.c', 'utils.c', 'ges-launcher-kb.c',
-    c_args : [ges_tool_args],
+    c_args : [ges_tool_args] + ['-DG_LOG_DOMAIN="ges-launch-@0@"'.format(apiversion)],
     dependencies : deps,
     install: true
 )
