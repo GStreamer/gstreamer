@@ -574,7 +574,7 @@ theora_handle_header_packet (GstTheoraDec * dec, ogg_packet * packet)
       break;
     default:
       /* ignore */
-      g_warning ("unknown theora header packet found");
+      GST_WARNING_OBJECT (dec, "unknown theora header packet found");
     case 0x80:
       /* nothing special, this is the identification header */
       res = GST_FLOW_OK;
