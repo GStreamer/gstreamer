@@ -355,7 +355,7 @@ vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
       break;
     default:
       /* ignore */
-      g_warning ("unknown vorbis header packet found");
+      GST_WARNING_OBJECT (vd, "unknown vorbis header packet found");
       res = GST_FLOW_OK;
       break;
   }
