@@ -54,8 +54,8 @@ gst_tag_args = [
 have_iso_codes = false
 iso_codes_dep = dependency('iso-codes', required: get_option('iso-codes'))
 if iso_codes_dep.found()
-  if iso_codes_dep.get_pkgconfig_variable('domains').split(' ').contains('iso_639-2')
-    iso_codes_prefix = iso_codes_dep.get_pkgconfig_variable('prefix')
+  if iso_codes_dep.get_variable('domains').split(' ').contains('iso_639-2')
+    iso_codes_prefix = iso_codes_dep.get_variable('prefix')
     if iso_codes_prefix != ''
       core_conf.set_quoted('ISO_CODES_PREFIX', iso_codes_prefix)
       core_conf.set_quoted('ISO_CODES_VERSION', iso_codes_dep.version())

@@ -323,11 +323,11 @@ core_conf.set('HAVE_GIO_UNIX_2_0', giounix_dep.found())
 
 if gio_dep.type_name() == 'pkgconfig'
     core_conf.set_quoted('GIO_MODULE_DIR',
-        gio_dep.get_pkgconfig_variable('giomoduledir'))
+        gio_dep.get_variable('giomoduledir'))
     core_conf.set_quoted('GIO_LIBDIR',
-        gio_dep.get_pkgconfig_variable('libdir'))
+        gio_dep.get_variable('libdir'))
     core_conf.set_quoted('GIO_PREFIX',
-        gio_dep.get_pkgconfig_variable('prefix'))
+        gio_dep.get_variable('prefix'))
 else
     core_conf.set_quoted('GIO_MODULE_DIR', join_paths(get_option('prefix'),
       get_option('libdir'), 'gio/modules'))

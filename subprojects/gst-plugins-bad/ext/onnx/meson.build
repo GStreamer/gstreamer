@@ -6,7 +6,7 @@ endif
 onnxrt_dep = dependency('libonnxruntime',required : get_option('onnx'))
 
 if onnxrt_dep.found()
-	onnxrt_include_root = onnxrt_dep.get_pkgconfig_variable('includedir')
+	onnxrt_include_root = onnxrt_dep.get_variable('includedir')
 	onnxrt_includes = [onnxrt_include_root / 'core/session', onnxrt_include_root / 'core']
 	onnxrt_dep_args = []
 	

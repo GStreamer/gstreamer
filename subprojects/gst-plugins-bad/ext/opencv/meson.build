@@ -84,7 +84,7 @@ if not opencv_found
 endif
 
 if opencv_found
-  opencv_prefix = opencv_dep.get_pkgconfig_variable('prefix')
+  opencv_prefix = opencv_dep.get_variable('prefix')
   gstopencv_cargs += ['-DOPENCV_PREFIX="' + opencv_prefix + '"']
 
   # Check the data dir used by opencv for its xml data files

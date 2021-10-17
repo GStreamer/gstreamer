@@ -148,7 +148,7 @@ if gstgl_dep.found()
   endif
 endif
 
-driverdir = libva_dep.get_pkgconfig_variable('driverdir')
+driverdir = libva_dep.get_variable('driverdir')
 if driverdir == ''
   driverdir = join_paths(get_option('prefix'), get_option('libdir'), 'dri')
 endif

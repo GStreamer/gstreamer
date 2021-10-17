@@ -171,7 +171,7 @@ endif
 
 if USE_WAYLAND
   # The XDG shell interface needs to be generated first
-  wayland_protocols_basedir = wayland_protocols_dep.get_pkgconfig_variable('pkgdatadir')
+  wayland_protocols_basedir = wayland_protocols_dep.get_variable('pkgdatadir')
   xdg_shell_xml_spec = join_paths(wayland_protocols_basedir, 'stable', 'xdg-shell', 'xdg-shell.xml')
   xdg_shell_header = custom_target('vaapi-xdg-shell-client-header',
       command: [ wayland_scanner_bin, 'client-header', '@INPUT@', '@OUTPUT@' ],

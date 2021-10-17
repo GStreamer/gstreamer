@@ -98,7 +98,7 @@ i = 0
 testsenv_ld_library_path = []
 foreach dep: gst_deps + [ges_dep]
     if dep.type_name() == 'pkgconfig'
-        testsenv_ld_library_path += [dep.get_pkgconfig_variable('libdir')]
+        testsenv_ld_library_path += [dep.get_variable('libdir')]
     else
         depdef = gst_deps_defs[i][1]
         libname = gst_deps_defs[i].get(2, '')

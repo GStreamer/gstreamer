@@ -17,7 +17,7 @@ test_defines = [
 
 pluginsdirs = []
 if gst_dep.type_name() == 'pkgconfig'
-  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir')]
+  pluginsdirs = [gst_dep.get_variable('pluginsdir')]
 endif
 
 foreach t : tests

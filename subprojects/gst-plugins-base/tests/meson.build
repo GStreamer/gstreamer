@@ -1,7 +1,7 @@
 pluginsdirs = []
 if gst_dep.type_name() == 'pkgconfig'
-  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir')]
-  gst_plugin_scanner_dir = gst_dep.get_pkgconfig_variable('pluginscannerdir')
+  pluginsdirs = [gst_dep.get_variable('pluginsdir')]
+  gst_plugin_scanner_dir = gst_dep.get_variable('pluginscannerdir')
 else
   gst_plugin_scanner_dir = gst_proj.get_variable('gst_scanner_dir')
 endif

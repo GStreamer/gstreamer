@@ -315,9 +315,9 @@ gstglegl_dep = dependency('', required : false)
 
 if gstgl_dep.found()
   if gstgl_dep.type_name() == 'pkgconfig'
-    gst_gl_apis = gstgl_dep.get_pkgconfig_variable('gl_apis').split()
-    gst_gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys').split()
-    gst_gl_platforms = gstgl_dep.get_pkgconfig_variable('gl_platforms').split()
+    gst_gl_apis = gstgl_dep.get_variable('gl_apis').split()
+    gst_gl_winsys = gstgl_dep.get_variable('gl_winsys').split()
+    gst_gl_platforms = gstgl_dep.get_variable('gl_platforms').split()
   else
     gstbase = subproject('gst-plugins-base')
     gst_gl_apis = gstbase.get_variable('enabled_gl_apis')

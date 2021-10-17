@@ -39,10 +39,10 @@ if gst_dep.type_name() == 'pkgconfig'
   pbase = dependency('gstreamer-plugins-base-' + apiversion, required : false)
   pbad = dependency('gstreamer-plugins-bad-' + apiversion, required : false)
 
-  pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir'),
-                 pbase.get_pkgconfig_variable('pluginsdir'),
-                 pbad.get_pkgconfig_variable('pluginsdir')]
- gst_plugin_scanner_dir = gst_dep.get_pkgconfig_variable('pluginscannerdir')
+  pluginsdirs = [gst_dep.get_variable('pluginsdir'),
+                 pbase.get_variable('pluginsdir'),
+                 pbad.get_variable('pluginsdir')]
+ gst_plugin_scanner_dir = gst_dep.get_variable('pluginscannerdir')
 else
  gst_plugin_scanner_dir = subproject('gstreamer').get_variable('gst_scanner_dir')
 endif

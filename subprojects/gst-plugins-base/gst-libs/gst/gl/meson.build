@@ -599,7 +599,7 @@ if need_win_wayland != 'no'
 
     if wayland_client_dep.found() and wayland_cursor_dep.found() and wayland_egl_dep.found() and wayland_protocols_dep.found() and wayland_scanner.found()
       # Generate the XDG shell interface
-      wayland_protocols_basedir = wayland_protocols_dep.get_pkgconfig_variable('pkgdatadir')
+      wayland_protocols_basedir = wayland_protocols_dep.get_variable('pkgdatadir')
       xdg_shell_xml_spec = join_paths(wayland_protocols_basedir, 'stable', 'xdg-shell', 'xdg-shell.xml')
       xdg_shell_header = custom_target('xdg-shell-client-header',
         command: [ wayland_scanner, 'client-header', '@INPUT@', '@OUTPUT@' ],

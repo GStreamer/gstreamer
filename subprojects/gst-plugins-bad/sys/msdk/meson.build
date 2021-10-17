@@ -46,7 +46,7 @@ if mfx_api != 'oneVPL'
   mfx_dep = dependency('libmfx', version: ['>= 1.0', '<= 1.99'], required: false)
 
   if mfx_dep.found()
-    mfx_incdir = mfx_dep.get_pkgconfig_variable('includedir')
+    mfx_incdir = mfx_dep.get_variable('includedir')
     mfx_inc = []
     use_msdk = true
   else
@@ -75,7 +75,7 @@ if not use_msdk and mfx_api != 'MSDK'
   mfx_dep = dependency('vpl', version: '>= 2.2', required: false)
 
   if mfx_dep.found()
-    mfx_incdir = mfx_dep.get_pkgconfig_variable('includedir')
+    mfx_incdir = mfx_dep.get_variable('includedir')
     mfx_inc = []
     use_onevpl = true
   endif

@@ -188,8 +188,8 @@ elif omx_target == 'rpi'
 
   if gstgl_dep.found()
     if gstgl_dep.type_name() == 'pkgconfig'
-      gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys').split(' ')
-      gl_platforms = gstgl_dep.get_pkgconfig_variable('gl_platforms').split(' ')
+      gl_winsys = gstgl_dep.get_variable('gl_winsys').split(' ')
+      gl_platforms = gstgl_dep.get_variable('gl_platforms').split(' ')
     elif gstgl_dep.type_name() == 'internal'
       # XXX assume gst-plugins-base was built with dispmanx and egl support
       gl_winsys = ['dispmanx']
@@ -219,8 +219,8 @@ elif omx_target == 'tizonia'
   endif
   cdata.set('USE_OMX_TARGET_TIZONIA', 1)
   tizil_dep = dependency('tizilheaders', version : tizil_req)
-  cdata.set('TIZONIA_LIBDIR', tizil_dep.get_pkgconfig_variable('libdir'))
-  tizil_includedir = tizil_dep.get_pkgconfig_variable('includedir')
+  cdata.set('TIZONIA_LIBDIR', tizil_dep.get_variable('libdir'))
+  tizil_includedir = tizil_dep.get_variable('includedir')
   gst_omx_args += ['-I' + tizil_includedir + '/tizonia']
   omx_inc = []
 else

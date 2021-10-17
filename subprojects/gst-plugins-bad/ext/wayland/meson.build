@@ -11,7 +11,7 @@ wl_sources = [
 libdrm_dep = dependency('libdrm', version: '>= 2.4.55', required:get_option('wayland'))
 
 if use_wayland
-    protocols_datadir = wl_protocol_dep.get_pkgconfig_variable('pkgdatadir')
+    protocols_datadir = wl_protocol_dep.get_variable('pkgdatadir')
 
     protocol_defs = [
         ['/stable/viewporter/viewporter.xml', 'viewporter-protocol.c', 'viewporter-client-protocol.h'],
