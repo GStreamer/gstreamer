@@ -622,17 +622,15 @@ endif
 configure_file(output : 'config.h', configuration : cdata)
 install_data('gst-element-check-1.0.m4', install_dir : join_paths(get_option('datadir'), 'aclocal'))
 
-if meson.version().version_compare('>= 0.54')
-  plugin_names = []
-  foreach plugin: plugins
-    # FIXME: Use str.subtring() when we can depend on Meson 0.56
-    split = plugin.name().split('gst')
-    if split.length() == 2
-      plugin_names += [split[1]]
-    else
-      warning('Need substring API in meson >= 0.56 to properly parse plugin name: ' + plugin.name())
-      plugin_names += [plugin.name()]
-    endif
-  endforeach
-  summary({'Plugins':plugin_names}, list_sep: ', ')
-endif
+plugin_names = []
+foreach plugin: plugins
+  if plugin.name().startswith('gst')
+    plugin_names += [plugin.name().substring(3)]
+  else
+    plugin_names += [plugin.name()]
+  endif
+endforeach
+
+summary({
+    'Plugins': plugin_names,
+}, list_sep: ', ')

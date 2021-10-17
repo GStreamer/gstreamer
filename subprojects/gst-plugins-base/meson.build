@@ -510,7 +510,7 @@ if have_orcc
     ]
   endforeach
 
-  if meson.version().version_compare('>= 0.52')
+  if orc_update_targets.length() > 0
     update_orc_dist_target = alias_target('update-orc-dist', orc_update_targets)
   endif
 endif
@@ -536,17 +536,15 @@ endif
 # Use core_conf after all subdirs have set values
 configure_file(output : 'config.h', configuration : core_conf)
 
-if meson.version().version_compare('>= 0.54')
-  plugin_names = []
-  foreach plugin: plugins
-    # FIXME: Use str.subtring() when we can depend on Meson 0.56
-    split = plugin.name().split('gst')
-    if split.length() == 2
-      plugin_names += [split[1]]
-    else
-      warning('Need substring API in meson >= 0.56 to properly parse plugin name: ' + plugin.name())
-      plugin_names += [plugin.name()]
-    endif
-  endforeach
-  summary({'Plugins':plugin_names}, list_sep: ', ')
-endif
+plugin_names = []
+foreach plugin: plugins
+  if plugin.name().startswith('gst')
+    plugin_names += [plugin.name().substring(3)]
+  else
+    plugin_names += [plugin.name()]
+  endif
+endforeach
+
+summary({
+    'Plugins': plugin_names,
+}, list_sep: ', ')
