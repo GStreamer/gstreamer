@@ -58,6 +58,7 @@ struct _GstVTEnc
 
   const GstVTEncoderDetails * details;
 
+  CMVideoCodecType specific_format_id;
   CFStringRef profile_level;
   guint bitrate;
   gboolean allow_frame_reordering;

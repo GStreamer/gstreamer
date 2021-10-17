@@ -24,7 +24,7 @@
 #include <gst/video/gstvideometa.h>
 #include "videotexturecache.h"
 
-#include "CoreMedia/CoreMedia.h"
+#include <CoreMedia/CoreMedia.h>
 
 G_BEGIN_DECLS
 

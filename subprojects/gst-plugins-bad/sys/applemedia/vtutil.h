@@ -22,6 +22,12 @@
 
 #include <glib.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <CoreMedia/CoreMedia.h>
+
+/* Some formats such as Apple ProRes have separate codec type mappings for all
+ * variants / profiles, and we don't want to instantiate separate elements for
+ * each variant, so we use a dummy type for details->format_id */
+#define GST_kCMVideoCodecType_Some_AppleProRes  1
 
 G_BEGIN_DECLS
 
@@ -37,6 +43,9 @@ void gst_vtutil_dict_set_data (CFMutableDictionaryRef dict,
     CFStringRef key, guint8 * value, guint64 length);
 void gst_vtutil_dict_set_object (CFMutableDictionaryRef dict,
     CFStringRef key, CFTypeRef * value);
+
+CMVideoCodecType gst_vtutil_codec_type_from_prores_variant (const char * variant);
+const char * gst_vtutil_codec_type_to_prores_variant (CMVideoCodecType codec_type);
 
 G_END_DECLS
 
