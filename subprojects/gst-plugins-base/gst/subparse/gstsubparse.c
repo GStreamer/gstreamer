@@ -515,7 +515,7 @@ parse_mdvdsub (ParserState * state, const gchar * line)
   gdouble fps = 0.0;
 
   if (sscanf (line, "{%u}{%u}", &start_frame, &end_frame) != 2) {
-    g_warning ("Parse of the following line, assumed to be in microdvd .sub"
+    GST_WARNING ("Parsing of the following line, assumed to be in microdvd .sub"
         " format, failed:\n%s", line);
     return NULL;
   }
