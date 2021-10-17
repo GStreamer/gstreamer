@@ -1157,18 +1157,21 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
         pixel_format_type = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
         break;
       default:
-        goto cv_error;
+        g_assert_not_reached ();
     }
 
     if (!gst_video_frame_map (&inframe, &self->video_info, frame->input_buffer,
-            GST_MAP_READ))
+            GST_MAP_READ)) {
+      GST_ERROR_OBJECT (self, "failed to map input buffer");
       goto cv_error;
+    }
 
     cv_ret =
         CVPixelBufferCreate (NULL, self->negotiated_width,
         self->negotiated_height, pixel_format_type, NULL, &pbuf);
 
     if (cv_ret != kCVReturnSuccess) {
+      GST_ERROR_OBJECT (self, "CVPixelBufferCreate failed: %i", cv_ret);
       gst_video_frame_unmap (&inframe);
       goto cv_error;
     }
@@ -1177,6 +1180,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
         gst_core_video_buffer_new ((CVBufferRef) pbuf, &self->video_info, NULL);
     if (!gst_video_frame_map (&outframe, &self->video_info, outbuf,
             GST_MAP_WRITE)) {
+      GST_ERROR_OBJECT (self, "Failed to map output buffer");
       gst_video_frame_unmap (&inframe);
       gst_buffer_unref (outbuf);
       CVPixelBufferRelease (pbuf);
@@ -1184,6 +1188,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
     }
 
     if (!gst_video_frame_copy (&outframe, &inframe)) {
+      GST_ERROR_OBJECT (self, "Failed to copy output frame");
       gst_video_frame_unmap (&inframe);
       gst_buffer_unref (outbuf);
       CVPixelBufferRelease (pbuf);
@@ -1200,8 +1205,10 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
     CVReturn cv_ret;
 
     vframe = gst_vtenc_frame_new (frame->input_buffer, &self->video_info);
-    if (!vframe)
+    if (!vframe) {
+      GST_ERROR_OBJECT (self, "Failed to create a new input frame");
       goto cv_error;
+    }
 
     {
       const size_t num_planes = GST_VIDEO_FRAME_N_PLANES (&vframe->videoframe);
@@ -1234,8 +1241,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
           pixel_format_type = kCVPixelFormatType_422YpCbCr8;
           break;
         default:
-          gst_vtenc_frame_free (vframe);
-          goto cv_error;
+          g_assert_not_reached ();
       }
 
       cv_ret = CVPixelBufferCreateWithPlanarBytes (NULL,
@@ -1250,6 +1256,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
           plane_bytes_per_row, gst_pixel_buffer_release_cb, vframe, NULL,
           &pbuf);
       if (cv_ret != kCVReturnSuccess) {
+        GST_ERROR_OBJECT (self, "CVPixelBufferCreateWithPlanarBytes failed: %i", cv_ret);
         gst_vtenc_frame_free (vframe);
         goto cv_error;
       }
