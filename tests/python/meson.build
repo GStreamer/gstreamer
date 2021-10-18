@@ -13,9 +13,9 @@ if run_command(python, '-c', 'import gi').returncode() != 0
     subdir_done()
 endif
 
-test('python-overrides-devenv', setenv, args: ['--builddir=@0@'.format(meson.build_root()),
+test('python-overrides-devenv', setenv, args: ['--builddir=@0@'.format(meson.project_build_root()),
               '--gstbuilddir=@0@'.format(meson.current_build_dir() / '..' / '..'),
-              '--srcdir=@0@'.format(meson.source_root()),
+              '--srcdir=@0@'.format(meson.project_source_root()),
               meson.current_source_dir() / 'python-devenv-overrides.py'])
 
 env = environment()

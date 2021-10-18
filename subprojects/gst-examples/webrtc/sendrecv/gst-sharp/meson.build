@@ -14,7 +14,7 @@ foreach dependency, version: { 'Newtonsoft.Json': '11.0.2', 'WebSocketSharp': '1
         '--nuget-version', version,
         '--csharp-version=net45',
         '--current-builddir', meson.current_build_dir(),
-        '--builddir', meson.build_root(),
+        '--builddir', meson.global_build_root(),  # FIXME: --builddir specified twice?!
     )
 
     if get_dep.returncode() != 0

@@ -12,7 +12,7 @@ if nunit_console.found()
         '--nuget-version', nunit_version,
         '--csharp-version=net45',
         '--current-builddir', meson.current_build_dir(),
-        '--builddir', meson.build_root(),
+        '--builddir', meson.build_root(), # FIXME: --builddir specified twice?!
     )
 
 

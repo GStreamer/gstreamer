@@ -28,7 +28,7 @@ foreach t : tests
   env = environment()
   env.set('CK_DEFAULT_TIMEOUT', '20')
   env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
-  env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
+  env.set('GST_PLUGIN_PATH_1_0', [meson.global_build_root()] + pluginsdirs)
   env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
   exe = executable(test_name, fname, extra_sources,
     include_directories : [configinc, libsinc],

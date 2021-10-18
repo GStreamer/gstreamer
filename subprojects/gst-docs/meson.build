@@ -44,7 +44,7 @@ with open(fname, 'r') as f:
 
   # gst-build will generate this file for us to consume so that subproject
   # changes can still work
-  fname = join_paths(meson.build_root(), 'GstDocumentedSubprojects')
+  fname = join_paths(meson.project_build_root(), '..', '..', 'GstDocumentedSubprojects')
   cmdres = run_command(
       python3,
       '-c', read_file_contents,

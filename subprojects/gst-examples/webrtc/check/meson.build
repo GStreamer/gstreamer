@@ -15,8 +15,8 @@ if openssl.found() and have_webrtc_check_deps
       depends: test_deps,
       args : files(elem.get(1)),
       # XXX: This PYTHONPATH hack is fun
-      env : ['PYTHONPATH=' + join_paths(meson.source_root(), 'sendrecv', 'gst') + ':' + join_paths(meson.source_root(), 'signalling'),
-             'TEST_HTML_SOURCE=' + join_paths(meson.source_root(), 'sendrecv', 'js'),
-             'TEST_CA_CERT_PATH=' + join_paths(meson.build_root(), 'signalling')])
+      env : ['PYTHONPATH=' + join_paths(meson.project_source_root(), 'sendrecv', 'gst') + ':' + join_paths(meson.project_source_root(), 'signalling'),
+             'TEST_HTML_SOURCE=' + join_paths(meson.project_source_root(), 'sendrecv', 'js'),
+             'TEST_CA_CERT_PATH=' + join_paths(meson.project_build_root(), 'signalling')])
   endforeach
 endif

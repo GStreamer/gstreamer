@@ -40,8 +40,8 @@ foreach t : omx_tests
     env.set('GST_STATE_IGNORE_ELEMENTS', state_ignore_elements)
     env.set('CK_DEFAULT_TIMEOUT', '20')
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-plugins-base',
-      'gst-plugins-good', 'gst-omx@' + meson.build_root(), separator: ':')
-    env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
+      'gst-plugins-good', 'gst-omx@' + meson.project_build_root(), separator: ':')
+    env.set('GST_PLUGIN_PATH_1_0', [meson.global_build_root()] + pluginsdirs)
     env.set('GSETTINGS_BACKEND', 'memory')
     env.set('GST_OMX_CONFIG_DIR', omx_config_dir)
 

@@ -33,16 +33,16 @@ if gst_dep.type_name() == 'pkgconfig'
                  pbase.get_variable('pluginsdir')]
 endif
 
-pypluginsdir = [join_paths (meson.build_root(), 'plugin'), meson.current_source_dir()]
+pypluginsdir = [join_paths (meson.project_build_root(), 'plugin'), meson.current_source_dir()]
 
 foreach i: tests
     test_name = i.get(0)
     env = environment()
     env.set('GST_OVERRIDE_SRC_PATH', join_paths (meson.current_source_dir(), '..', 'gi', 'overrides'))
     env.set('GST_OVERRIDE_BUILD_PATH', join_paths (meson.current_build_dir(), '..', 'gi', 'overrides'))
-    env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
-        'gst-plugins-base@' + meson.build_root(), 'gst-python@' + meson.build_root())
-    env.set('GST_PLUGIN_PATH_1_0', meson.build_root(), pluginsdirs + pypluginsdir)
+    env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-plugins-base',
+        'gst-python@' + meson.project_build_root())
+    env.set('GST_PLUGIN_PATH_1_0', meson.global_build_root(), pluginsdirs + pypluginsdir)
     env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
     test(test_name, python, args: [runtests, i.get(1)], env: env)
 endforeach

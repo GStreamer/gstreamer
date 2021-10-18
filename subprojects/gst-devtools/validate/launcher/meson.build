@@ -2,8 +2,8 @@ _launcherdir = get_option('libdir') + '/gst-validate-launcher/python/launcher/'
 
 launcher_configure = configuration_data()
 launcher_configure.set('GST_VALIDATE_TESTSUITE_VERSION', '@0@'.format(TESTSUITE_VERSION))
-launcher_configure.set('BUILDDIR', meson.build_root())
-launcher_configure.set('SRCDIR', meson.source_root())
+launcher_configure.set('BUILDDIR', meson.global_build_root())
+launcher_configure.set('SRCDIR', meson.global_source_root())
 launcher_configure.set('DATADIR', join_paths(get_option('prefix'), get_option('datadir')))
 launcher_configure.set('LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
 

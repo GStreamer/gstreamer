@@ -384,9 +384,9 @@ endforeach
 message('Building subprojects: ' + ', '.join(subprojects_names))
 
 setenv = find_program('gst-env.py')
-devenv_cmd = [setenv, '--builddir=@0@'.format(meson.build_root()),
+devenv_cmd = [setenv, '--builddir=@0@'.format(meson.project_build_root()),
               '--gstbuilddir=@0@'.format(meson.current_build_dir()),
-              '--srcdir=@0@'.format(meson.source_root())]
+              '--srcdir=@0@'.format(meson.project_source_root())]
 
 subdir('tests')
 if meson.has_exe_wrapper() and build_machine.system() == 'linux' and host_machine.system() == 'windows'

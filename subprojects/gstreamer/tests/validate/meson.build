@@ -1,6 +1,6 @@
 gst_tester = executable('gst-tester-' + apiversion,
     'gst-tester.c',
-    c_args : gst_c_args + ['-DBUILDDIR=' + meson.build_root()],
+    c_args : gst_c_args,
     include_directories : [configinc],
     install: true,
     dependencies : [gio_dep],
@@ -13,7 +13,7 @@ tests = [
 ]
 
 env = environment()
-env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
+env.set('GST_PLUGIN_PATH_1_0', meson.global_build_root())
 env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
 env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), 'validate'))
 env.set('GST_PLUGIN_SCANNER_1_0', gst_scanner_dir + '/gst-plugin-scanner')
