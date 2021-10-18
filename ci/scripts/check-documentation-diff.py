@@ -2,7 +2,7 @@
 import os, subprocess, sys
 
 if __name__ == "__main__":
-    diffsdir = '../plugins-cache-diffs'
+    diffsdir = 'plugins-cache-diffs'
     os.makedirs(diffsdir, exist_ok=True)
     res = 0
     try:
