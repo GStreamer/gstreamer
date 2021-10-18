@@ -1390,7 +1390,11 @@ _all_sinks_have_caps (GstWebRTCBin * webrtc)
     wpad = GST_WEBRTC_BIN_PAD (l->data);
     if (GST_PAD_DIRECTION (l->data) == GST_PAD_SINK && !wpad->received_caps
         && (!wpad->trans || !wpad->trans->stopped)) {
-      goto done;
+      if (wpad->trans && wpad->trans->codec_preferences) {
+        continue;
+      } else {
+        goto done;
+      }
     }
   }
 
