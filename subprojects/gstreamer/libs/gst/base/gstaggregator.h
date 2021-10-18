@@ -121,6 +121,9 @@ gboolean    gst_aggregator_pad_has_buffer   (GstAggregatorPad * pad);
 GST_BASE_API
 gboolean    gst_aggregator_pad_is_eos       (GstAggregatorPad *  pad);
 
+GST_BASE_API
+gboolean    gst_aggregator_pad_is_inactive  (GstAggregatorPad * pad);
+
 /*********************
  * GstAggregator API *
  ********************/
@@ -423,6 +426,13 @@ void            gst_aggregator_selected_samples     (GstAggregator              
                                                      GstClockTime                   dts,
                                                      GstClockTime                   duration,
                                                      GstStructure                 * info);
+
+GST_BASE_API
+void            gst_aggregator_set_ignore_inactive_pads (GstAggregator * self,
+                                                         gboolean ignore);
+
+GST_BASE_API
+gboolean        gst_aggregator_get_ignore_inactive_pads (GstAggregator * self);
 
 /**
  * GstAggregatorStartTimeSelection:
