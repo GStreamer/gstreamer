@@ -15,7 +15,7 @@ else
   message('flex version @0@ >= @1@: YES'.format(flexversion, flex_min_version))
 endif
 
-flex_cdata.set('FLEX', flex.path())
+flex_cdata.set('FLEX', flex.full_path())
 if cc.get_id() == 'msvc'
   flex_cdata.set('FLEX_ARGS', '--nounistd')
 else
@@ -55,7 +55,7 @@ gen_grammar_file = configure_file(input : 'grammar.y.in',
   output : 'grammar.y',
   configuration : bison_parser_cdata)
 
-bison_cdata.set('BISON', bison.path())
+bison_cdata.set('BISON', bison.full_path())
 bison_cdata.set('BISON_ARGS', '')
 
 gen_grammar = configure_file(input : 'gen_grammar.py.in',

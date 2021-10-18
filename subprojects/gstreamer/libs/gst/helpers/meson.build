@@ -118,7 +118,7 @@ if have_ptp
 
   meson.add_install_script('ptp_helper_post_install.sh',
       helpers_install_dir, with_ptp_helper_permissions,
-      setcap_prog.found() ? setcap_prog.path() : '')
+      setcap_prog.found() ? setcap_prog.full_path() : '')
 endif
 
 install_data(['gst_gdb.py', 'glib_gobject_helper.py'],
