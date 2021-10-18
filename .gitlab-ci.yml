@@ -701,7 +701,9 @@ valgrind ges:
     MESON_BUILDTYPE_ARGS: "-Ddoc=enabled"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
+  # FIXME: should rebuild the image with newer versions!
   - pip3 install --upgrade hotdoc
+  - pip3 install --upgrade meson
   - *build
   - ./gst-env.py ninja -C build/ plugins_doc_caches
   - ./ci/scripts/check-documentation-diff.py
