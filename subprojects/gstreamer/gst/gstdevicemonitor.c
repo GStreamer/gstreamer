@@ -108,9 +108,9 @@ struct _GstDeviceMonitorPrivate
   GstBus *bus;
 
   GPtrArray *providers;
-  guint cookie;
-
   GPtrArray *filters;
+
+  GList *started_providers;
 
   guint last_id;
   GList *hidden;
@@ -129,6 +129,9 @@ G_DEFINE_TYPE_WITH_PRIVATE (GstDeviceMonitor, gst_device_monitor,
 
 static void gst_device_monitor_dispose (GObject * object);
 
+static guint gst_device_monitor_add_filter_unlocked (GstDeviceMonitor * monitor,
+    const gchar * classes, GstCaps * caps);
+
 struct DeviceFilter
 {
   guint id;
@@ -137,11 +140,24 @@ struct DeviceFilter
   GstCaps *caps;
 };
 
+static struct DeviceFilter *
+device_filter_copy (struct DeviceFilter *filter)
+{
+  struct DeviceFilter *copy = g_slice_new0 (struct DeviceFilter);
+
+  copy->classesv = g_strdupv (filter->classesv);
+  copy->caps = filter->caps ? gst_caps_ref (filter->caps) : NULL;
+
+  return copy;
+}
+
 static void
 device_filter_free (struct DeviceFilter *filter)
 {
   g_strfreev (filter->classesv);
-  gst_caps_unref (filter->caps);
+
+  if (filter->caps)
+    gst_caps_unref (filter->caps);
 
   g_slice_free (struct DeviceFilter, filter);
 }
@@ -357,9 +373,11 @@ gst_device_monitor_dispose (GObject * object)
 GList *
 gst_device_monitor_get_devices (GstDeviceMonitor * monitor)
 {
-  GList *devices = NULL, *hidden = NULL;
+  GQueue providers = G_QUEUE_INIT, filters = G_QUEUE_INIT;
+  GList *hidden = NULL;
+  GQueue devices = G_QUEUE_INIT;
+  GList *l;
   guint i;
-  guint cookie;
 
   g_return_val_if_fail (GST_IS_DEVICE_MONITOR (monitor), NULL);
 
@@ -377,13 +395,6 @@ gst_device_monitor_get_devices (GstDeviceMonitor * monitor)
     return NULL;
   }
 
-again:
-
-  g_list_free_full (devices, gst_object_unref);
-  g_list_free_full (hidden, g_free);
-  devices = NULL;
-  hidden = NULL;
-
   for (i = 0; i < monitor->priv->providers->len; i++) {
     GstDeviceProvider *provider =
         g_ptr_array_index (monitor->priv->providers, i);
@@ -391,37 +402,41 @@ again:
     update_hidden_providers_list (&hidden, provider);
   }
 
-  cookie = monitor->priv->cookie;
-
+  /* Create a copy of all current providers and filters while keeping the lock
+   * and afterwards unlock and work with this snapshot */
   for (i = 0; i < monitor->priv->providers->len; i++) {
-    GList *tmpdev;
     GstDeviceProvider *provider =
-        gst_object_ref (g_ptr_array_index (monitor->priv->providers, i));
-    GList *item;
+        g_ptr_array_index (monitor->priv->providers, i);
 
     if (!is_provider_hidden (monitor, hidden, provider)) {
-      GST_OBJECT_UNLOCK (monitor);
-
-      tmpdev = gst_device_provider_get_devices (provider);
-
-      GST_OBJECT_LOCK (monitor);
-    } else {
-      tmpdev = NULL;
+      g_queue_push_tail (&providers, gst_object_ref (provider));
     }
+  }
 
+  for (i = 0; i < monitor->priv->filters->len; i++) {
+    struct DeviceFilter *filter = g_ptr_array_index (monitor->priv->filters, i);
+
+    g_queue_push_tail (&filters, device_filter_copy (filter));
+  }
+  GST_OBJECT_UNLOCK (monitor);
+
+  for (l = providers.head; l; l = l->next) {
+    GstDeviceProvider *provider = l->data;
+    GList *tmpdev, *item, *filter_item;
+
+    tmpdev = gst_device_provider_get_devices (provider);
 
     for (item = tmpdev; item; item = item->next) {
       GstDevice *dev = GST_DEVICE (item->data);
       GstCaps *caps = gst_device_get_caps (dev);
-      guint j;
 
-      for (j = 0; j < monitor->priv->filters->len; j++) {
-        struct DeviceFilter *filter =
-            g_ptr_array_index (monitor->priv->filters, j);
+      for (filter_item = filters.head; filter_item;
+          filter_item = filter_item->next) {
+        struct DeviceFilter *filter = filter_item->data;
 
         if (gst_caps_can_intersect (filter->caps, caps) &&
             gst_device_has_classesv (dev, filter->classesv)) {
-          devices = g_list_prepend (devices, gst_object_ref (dev));
+          g_queue_push_tail (&devices, gst_object_ref (dev));
           break;
         }
       }
@@ -429,16 +444,13 @@ again:
     }
 
     g_list_free_full (tmpdev, gst_object_unref);
-    gst_object_unref (provider);
-
-    if (monitor->priv->cookie != cookie)
-      goto again;
   }
   g_list_free_full (hidden, g_free);
 
-  GST_OBJECT_UNLOCK (monitor);
+  g_queue_clear_full (&providers, (GDestroyNotify) gst_object_unref);
+  g_queue_clear_full (&filters, (GDestroyNotify) device_filter_free);
 
-  return g_list_reverse (devices);
+  return devices.head;
 }
 
 /**
@@ -449,7 +461,8 @@ again:
  * %GST_MESSAGE_DEVICE_ADDED and %GST_MESSAGE_DEVICE_REMOVED messages
  * will be emitted on the bus when the list of devices changes.
  *
- * Returns: %TRUE if the device monitoring could be started
+ * Returns: %TRUE if the device monitoring could be started, i.e. at least a
+ *     single device provider was started successfully.
  *
  * Since: 1.4
  */
@@ -457,19 +470,24 @@ again:
 gboolean
 gst_device_monitor_start (GstDeviceMonitor * monitor)
 {
-  guint cookie, i;
-  GList *pending = NULL, *started = NULL, *removed = NULL;
+  guint i;
+  GQueue pending = G_QUEUE_INIT;
+  GList *started = NULL;
+  GstDeviceProvider *provider;
 
   g_return_val_if_fail (GST_IS_DEVICE_MONITOR (monitor), FALSE);
 
   GST_OBJECT_LOCK (monitor);
 
-  if (monitor->priv->filters->len == 0) {
+  if (monitor->priv->started) {
     GST_OBJECT_UNLOCK (monitor);
+    GST_DEBUG_OBJECT (monitor, "Monitor started already");
+    return TRUE;
+  }
+  if (monitor->priv->filters->len == 0) {
     GST_WARNING_OBJECT (monitor, "No filters have been set, will expose all "
         "devices found");
-    gst_device_monitor_add_filter (monitor, NULL, NULL);
-    GST_OBJECT_LOCK (monitor);
+    gst_device_monitor_add_filter_unlocked (monitor, NULL, NULL);
   }
 
   if (monitor->priv->providers->len == 0) {
@@ -478,74 +496,39 @@ gst_device_monitor_start (GstDeviceMonitor * monitor)
     return FALSE;
   }
 
+  monitor->priv->started = TRUE;
+
   gst_bus_set_flushing (monitor->priv->bus, FALSE);
-
-again:
-  cookie = monitor->priv->cookie;
-
-  g_list_free_full (pending, gst_object_unref);
-  pending = NULL;
-  removed = started;
-  started = NULL;
 
   for (i = 0; i < monitor->priv->providers->len; i++) {
     GstDeviceProvider *provider;
-    GList *find;
 
     provider = g_ptr_array_index (monitor->priv->providers, i);
-
-    find = g_list_find (removed, provider);
-    if (find) {
-      /* this was already started, move to started list */
-      removed = g_list_remove_link (removed, find);
-      started = g_list_concat (started, find);
-    } else {
-      /* not started, add to pending list */
-      pending = g_list_append (pending, gst_object_ref (provider));
-    }
+    g_queue_push_tail (&pending, gst_object_ref (provider));
   }
-  g_list_free_full (removed, gst_object_unref);
-  removed = NULL;
 
-  while (pending) {
-    GstDeviceProvider *provider = pending->data;
-
+  while ((provider = g_queue_pop_head (&pending))) {
     GST_OBJECT_UNLOCK (monitor);
 
-    if (!gst_device_provider_start (provider))
-      goto start_failed;
+    if (gst_device_provider_start (provider)) {
+      started = g_list_prepend (started, provider);
+    } else {
+      gst_object_unref (provider);
+    }
 
     GST_OBJECT_LOCK (monitor);
-
-    started = g_list_prepend (started, provider);
-    pending = g_list_delete_link (pending, pending);
-
-    if (monitor->priv->cookie != cookie)
-      goto again;
   }
-  monitor->priv->started = TRUE;
+
+  if (started) {
+    monitor->priv->started_providers = started;
+  } else {
+    gst_bus_set_flushing (monitor->priv->bus, TRUE);
+    monitor->priv->started = FALSE;
+  }
+
   GST_OBJECT_UNLOCK (monitor);
 
-  g_list_free_full (started, gst_object_unref);
-
-  return TRUE;
-
-start_failed:
-  {
-    GST_OBJECT_LOCK (monitor);
-    gst_bus_set_flushing (monitor->priv->bus, TRUE);
-    GST_OBJECT_UNLOCK (monitor);
-
-    while (started) {
-      GstDeviceProvider *provider = started->data;
-
-      gst_device_provider_stop (provider);
-      gst_object_unref (provider);
-
-      started = g_list_delete_link (started, started);
-    }
-    return FALSE;
-  }
+  return started != NULL;
 }
 
 /**
@@ -559,7 +542,6 @@ start_failed:
 void
 gst_device_monitor_stop (GstDeviceMonitor * monitor)
 {
-  guint i;
   GList *started = NULL;
 
   g_return_if_fail (GST_IS_DEVICE_MONITOR (monitor));
@@ -567,13 +549,15 @@ gst_device_monitor_stop (GstDeviceMonitor * monitor)
   gst_bus_set_flushing (monitor->priv->bus, TRUE);
 
   GST_OBJECT_LOCK (monitor);
-  for (i = 0; i < monitor->priv->providers->len; i++) {
-    GstDeviceProvider *provider =
-        g_ptr_array_index (monitor->priv->providers, i);
-
-    if (gst_device_provider_is_started (provider))
-      started = g_list_prepend (started, gst_object_ref (provider));
+  if (!monitor->priv->started) {
+    GST_DEBUG_OBJECT (monitor, "Monitor was not started yet");
+    GST_OBJECT_UNLOCK (monitor);
+    return;
   }
+
+  started = monitor->priv->started_providers;
+  monitor->priv->started_providers = NULL;
+  monitor->priv->started = FALSE;
   GST_OBJECT_UNLOCK (monitor);
 
   while (started) {
@@ -584,11 +568,6 @@ gst_device_monitor_stop (GstDeviceMonitor * monitor)
     started = g_list_delete_link (started, started);
     gst_object_unref (provider);
   }
-
-  GST_OBJECT_LOCK (monitor);
-  monitor->priv->started = FALSE;
-  GST_OBJECT_UNLOCK (monitor);
-
 }
 
 static void
@@ -645,15 +624,26 @@ guint
 gst_device_monitor_add_filter (GstDeviceMonitor * monitor,
     const gchar * classes, GstCaps * caps)
 {
-  GList *factories = NULL;
-  struct DeviceFilter *filter;
-  guint id = 0;
-  gboolean matched = FALSE;
+  guint id;
 
   g_return_val_if_fail (GST_IS_DEVICE_MONITOR (monitor), 0);
   g_return_val_if_fail (!monitor->priv->started, 0);
 
   GST_OBJECT_LOCK (monitor);
+  id = gst_device_monitor_add_filter_unlocked (monitor, classes, caps);
+  GST_OBJECT_UNLOCK (monitor);
+
+  return id;
+}
+
+static guint
+gst_device_monitor_add_filter_unlocked (GstDeviceMonitor * monitor,
+    const gchar * classes, GstCaps * caps)
+{
+  GList *factories = NULL;
+  struct DeviceFilter *filter;
+  guint id = 0;
+  gboolean matched = FALSE;
 
   filter = g_slice_new0 (struct DeviceFilter);
   filter->id = monitor->priv->last_id++;
@@ -702,7 +692,6 @@ gst_device_monitor_add_filter (GstDeviceMonitor * monitor,
             G_CALLBACK (bus_sync_message), monitor);
         gst_object_unref (bus);
         g_ptr_array_add (monitor->priv->providers, provider);
-        monitor->priv->cookie++;
       }
     }
 
@@ -716,8 +705,6 @@ gst_device_monitor_add_filter (GstDeviceMonitor * monitor,
   if (matched)
     id = filter->id;
   g_ptr_array_add (monitor->priv->filters, filter);
-
-  GST_OBJECT_UNLOCK (monitor);
 
   return id;
 }
@@ -775,7 +762,6 @@ gst_device_monitor_remove_filter (GstDeviceMonitor * monitor, guint filter_id)
       }
 
       if (!valid) {
-        monitor->priv->cookie++;
         gst_device_monitor_remove (monitor, i);
         i--;
       }
