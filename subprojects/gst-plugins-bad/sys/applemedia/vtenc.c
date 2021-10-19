@@ -35,6 +35,7 @@
 #define VTENC_DEFAULT_QUALITY 0.5
 #define VTENC_DEFAULT_MAX_KEYFRAME_INTERVAL 0
 #define VTENC_DEFAULT_MAX_KEYFRAME_INTERVAL_DURATION 0
+#define VTENC_DEFAULT_PRESERVE_ALPHA TRUE
 
 GST_DEBUG_CATEGORY (gst_vtenc_debug);
 #define GST_CAT_DEFAULT (gst_vtenc_debug)
@@ -66,6 +67,12 @@ VTCompressionSessionPrepareToEncodeFrames (VTCompressionSessionRef session)
     __attribute__ ((weak_import));
 #endif
 
+/* This property key is currently completely undocumented. The only way you can
+ * know about its existence is if Apple tells you. It allows you to tell the
+ * encoder to not preserve alpha even when outputting alpha formats. */
+const CFStringRef gstVTCodecPropertyKey_PreserveAlphaChannel =
+CFSTR ("kVTCodecPropertyKey_PreserveAlphaChannel");
+
 enum
 {
   PROP_0,
@@ -75,7 +82,8 @@ enum
   PROP_REALTIME,
   PROP_QUALITY,
   PROP_MAX_KEYFRAME_INTERVAL,
-  PROP_MAX_KEYFRAME_INTERVAL_DURATION
+  PROP_MAX_KEYFRAME_INTERVAL_DURATION,
+  PROP_PRESERVE_ALPHA,
 };
 
 typedef struct _GstVTEncFrame GstVTEncFrame;
@@ -288,6 +296,12 @@ gst_vtenc_class_init (GstVTEncClass * klass)
           "Maximum number of nanoseconds between keyframes (0 = no limit)", 0,
           G_MAXUINT64, VTENC_DEFAULT_MAX_KEYFRAME_INTERVAL_DURATION,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_PRESERVE_ALPHA,
+      g_param_spec_boolean ("preserve-alpha", "Preserve Video Alpha Values",
+          "Video alpha values (non opaque) need to be perserved.",
+          VTENC_DEFAULT_PRESERVE_ALPHA,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -494,6 +508,9 @@ gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
       g_value_set_uint64 (value,
           gst_vtenc_get_max_keyframe_interval_duration (self));
       break;
+    case PROP_PRESERVE_ALPHA:
+      g_value_set_boolean (value, self->preserve_alpha);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
       break;
@@ -525,6 +542,9 @@ gst_vtenc_set_property (GObject * obj, guint prop_id, const GValue * value,
     case PROP_MAX_KEYFRAME_INTERVAL_DURATION:
       gst_vtenc_set_max_keyframe_interval_duration (self,
           g_value_get_uint64 (value));
+      break;
+    case PROP_PRESERVE_ALPHA:
+      self->preserve_alpha = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -1084,6 +1104,17 @@ gst_vtenc_create_session (GstVTEnc * self)
 
     gst_vtenc_session_configure_bitrate (self, session,
         gst_vtenc_get_bitrate (self));
+  }
+
+  /* Force encoder to not preserve alpha with 4444(XQ) ProRes formats if
+   * requested */
+  if (!self->preserve_alpha &&
+      (self->specific_format_id == kCMVideoCodecType_AppleProRes4444XQ ||
+          self->specific_format_id == kCMVideoCodecType_AppleProRes4444)) {
+    status = VTSessionSetProperty (session,
+        gstVTCodecPropertyKey_PreserveAlphaChannel, CFSTR ("NO"));
+    GST_DEBUG_OBJECT (self, "kVTCodecPropertyKey_PreserveAlphaChannel => %d",
+        (int) status);
   }
 
   gst_vtenc_set_colorimetry (self, session);

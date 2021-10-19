@@ -67,6 +67,7 @@ struct _GstVTEnc
   gint max_keyframe_interval;
   GstClockTime max_keyframe_interval_duration;
   gint latency_frames;
+  gboolean preserve_alpha;
 
   gboolean dump_properties;
   gboolean dump_attributes;
