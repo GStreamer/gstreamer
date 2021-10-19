@@ -344,7 +344,7 @@ gst_video_overlay_composition_new (GstVideoOverlayRectangle * rectangle)
   GstVideoOverlayComposition *comp;
 
   g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_RECTANGLE (rectangle)
-      || NULL, NULL);
+      || rectangle == NULL, NULL);
 
   comp = g_slice_new0 (GstVideoOverlayComposition);
 
@@ -356,14 +356,15 @@ gst_video_overlay_composition_new (GstVideoOverlayRectangle * rectangle)
   comp->rectangles = g_new0 (GstVideoOverlayRectangle *, RECTANGLE_ARRAY_STEP);
 
   comp->seq_num = gst_video_overlay_get_seqnum ();
-
-  /* since the rectangle was created earlier, its seqnum is smaller than ours */
-  comp->min_seq_num_used = rectangle->seq_num;
+  comp->min_seq_num_used = comp->seq_num;
 
   GST_LOG ("new composition %p: seq_num %u", comp, comp->seq_num);
 
-  if (rectangle)
+  if (rectangle) {
+    /* since the rectangle was created earlier, its seqnum is smaller than ours */
+    comp->min_seq_num_used = rectangle->seq_num;
     gst_video_overlay_composition_add_rectangle (comp, rectangle);
+  }
 
   return comp;
 }
