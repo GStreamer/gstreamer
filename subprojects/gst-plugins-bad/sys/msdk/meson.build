@@ -158,7 +158,7 @@ endif
 
 if msdk_deps_found
   if host_machine.system() != 'windows'
-    driverdir = libva_dep.get_variable(pkgconfig: 'driverdir', internal: 'driverdir', default_value: '')
+    driverdir = libva_dep.get_variable('driverdir', default_value: '')
     if driverdir == ''
       driverdir = join_paths(get_option('prefix'), get_option('libdir'), 'dri')
     endif
