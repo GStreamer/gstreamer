@@ -904,6 +904,115 @@ gst_vtenc_flush (GstVideoEncoder * enc)
   return (ret == GST_FLOW_OK);
 }
 
+static void
+gst_vtenc_set_colorimetry (GstVTEnc * self, VTCompressionSessionRef session)
+{
+  OSStatus status;
+  CFStringRef primaries = NULL, transfer = NULL, matrix = NULL;
+  GstVideoColorimetry cm = GST_VIDEO_INFO_COLORIMETRY (&self->video_info);
+
+  /*
+   * https://developer.apple.com/documentation/corevideo/cvimagebuffer/image_buffer_ycbcr_matrix_constants
+   */
+  switch (cm.matrix) {
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+      matrix = kCVImageBufferYCbCrMatrix_ITU_R_709_2;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+      matrix = kCVImageBufferYCbCrMatrix_ITU_R_601_4;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
+      matrix = kCVImageBufferYCbCrMatrix_SMPTE_240M_1995;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT2020:
+      matrix = kCVImageBufferYCbCrMatrix_ITU_R_2020;
+      break;
+    default:
+      GST_WARNING_OBJECT (self, "Unsupported color matrix %u", cm.matrix);
+  }
+
+  /*
+   * https://developer.apple.com/documentation/corevideo/cvimagebuffer/image_buffer_transfer_function_constants
+   */
+  switch (cm.transfer) {
+    case GST_VIDEO_TRANSFER_BT709:
+    case GST_VIDEO_TRANSFER_BT601:
+    case GST_VIDEO_TRANSFER_UNKNOWN:
+      transfer = kCVImageBufferTransferFunction_ITU_R_709_2;
+      break;
+    case GST_VIDEO_TRANSFER_SMPTE240M:
+      transfer = kCVImageBufferTransferFunction_SMPTE_240M_1995;
+      break;
+    case GST_VIDEO_TRANSFER_BT2020_12:
+      transfer = kCVImageBufferTransferFunction_ITU_R_2020;
+      break;
+    case GST_VIDEO_TRANSFER_SRGB:
+      if (__builtin_available (macOS 10.13, *))
+        transfer = kCVImageBufferTransferFunction_sRGB;
+      else
+        GST_WARNING_OBJECT (self, "macOS version is too old, the sRGB transfer "
+            "function is not available");
+      break;
+    case GST_VIDEO_TRANSFER_SMPTE2084:
+      if (__builtin_available (macOS 10.13, *))
+        transfer = kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ;
+      else
+        GST_WARNING_OBJECT (self, "macOS version is too old, the SMPTE2084 "
+            "transfer function is not available");
+      break;
+    default:
+      GST_WARNING_OBJECT (self, "Unsupported color transfer %u", cm.transfer);
+  }
+
+  /*
+   * https://developer.apple.com/documentation/corevideo/cvimagebuffer/image_buffer_color_primaries_constants
+   */
+  switch (cm.primaries) {
+    case GST_VIDEO_COLOR_PRIMARIES_BT709:
+      primaries = kCVImageBufferColorPrimaries_ITU_R_709_2;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
+      primaries = kCVImageBufferColorPrimaries_SMPTE_C;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT2020:
+      primaries = kCVImageBufferColorPrimaries_ITU_R_2020;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTERP431:
+      primaries = kCVImageBufferColorPrimaries_DCI_P3;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTEEG432:
+      primaries = kCVImageBufferColorPrimaries_P3_D65;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_EBU3213:
+      primaries = kCVImageBufferColorPrimaries_EBU_3213;
+      break;
+    default:
+      GST_WARNING_OBJECT (self, "Unsupported color primaries %u", cm.primaries);
+  }
+
+  if (primaries) {
+    status = VTSessionSetProperty (session,
+        kVTCompressionPropertyKey_ColorPrimaries, primaries);
+    GST_DEBUG_OBJECT (self, "kVTCompressionPropertyKey_ColorPrimaries =>"
+        "%d", status);
+  }
+
+  if (transfer) {
+    status = VTSessionSetProperty (session,
+        kVTCompressionPropertyKey_TransferFunction, transfer);
+    GST_DEBUG_OBJECT (self, "kVTCompressionPropertyKey_TransferFunction =>"
+        "%d", status);
+  }
+
+  if (matrix) {
+    status = VTSessionSetProperty (session,
+        kVTCompressionPropertyKey_YCbCrMatrix, matrix);
+    GST_DEBUG_OBJECT (self, "kVTCompressionPropertyKey_YCbCrMatrix => %d",
+        status);
+  }
+}
+
 static VTCompressionSessionRef
 gst_vtenc_create_session (GstVTEnc * self)
 {
@@ -976,6 +1085,8 @@ gst_vtenc_create_session (GstVTEnc * self)
     gst_vtenc_session_configure_bitrate (self, session,
         gst_vtenc_get_bitrate (self));
   }
+
+  gst_vtenc_set_colorimetry (self, session);
 
   gst_vtenc_session_configure_realtime (self, session,
       gst_vtenc_get_realtime (self));
