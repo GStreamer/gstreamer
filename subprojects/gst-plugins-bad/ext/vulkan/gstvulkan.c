@@ -33,6 +33,7 @@
 #include "vkupload.h"
 #include "vkimageidentity.h"
 #include "vkcolorconvert.h"
+#include "vkshaderspv.h"
 #include "vkdownload.h"
 #include "vkviewconvert.h"
 #include "vkdeviceprovider.h"
@@ -55,6 +56,8 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (vulkancolorconvert, plugin);
 
   ret |= GST_ELEMENT_REGISTER (vulkanimageidentity, plugin);
+
+  ret |= GST_ELEMENT_REGISTER (vulkanshaderspv, plugin);
 
   ret |= GST_ELEMENT_REGISTER (vulkanviewconvert, plugin);
 
