@@ -105,7 +105,7 @@ gst_gl_context_eagl_new (GstGLDisplay * display)
 
   if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_EAGL)
       == GST_GL_DISPLAY_TYPE_NONE) {
-    GST_INFO ("Wrong display type %u for this window type %u", display->type,
+    GST_INFO ("Wrong display type %u for this context type %u", display->type,
         GST_GL_DISPLAY_TYPE_EAGL);
     return NULL;
   }

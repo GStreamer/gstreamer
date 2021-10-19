@@ -408,12 +408,16 @@ gst_gl_display_new_with_type (GstGLDisplayType type)
 #if GST_GL_HAVE_WINDOW_WIN32 || GST_GL_HAVE_WINDOW_EAGL
   if (!display) {
     GstGLDisplayType create_type = 0;
+#if GST_GL_HAVE_WINDOW_WIN32
     if (type & GST_GL_DISPLAY_TYPE_WIN32)
       create_type = GST_GL_DISPLAY_TYPE_WIN32;
-    else if (type & GST_GL_DISPLAY_TYPE_EAGL)
+#endif
+#if GST_GL_HAVE_WINDOW_EAGL
+    if (type & GST_GL_DISPLAY_TYPE_EAGL)
       create_type = GST_GL_DISPLAY_TYPE_EAGL;
+#endif
     if (create_type) {
-      GST_INFO_OBJECT (display, "Creating display with type %u(0x%x)",
+      GST_INFO ("Creating display with type %u(0x%x)",
           create_type, create_type);
       display = create_dummy_display ();
       display->type = create_type;
