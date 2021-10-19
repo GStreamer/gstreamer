@@ -237,7 +237,6 @@ gst_incdirs = [configinc]
 gst_gen_sources = [gstenum_h]
 libgst = library('gstreamer-1.0', gst_sources,
   gstenum_h, gstenum_c, gst_parse_sources, gst_registry_sources,
-  objects : printf_lib.extract_all_objects(),
   version : libversion,
   soversion : soversion,
   darwin_versions : osxversion,
@@ -245,6 +244,7 @@ libgst = library('gstreamer-1.0', gst_sources,
   include_directories : [configinc,
     # HACK, change include paths in .y and .l in final version.
     include_directories('parse')],
+  link_with : printf_lib,
   install : true,
   dependencies : [gobject_dep, gmodule_dep, glib_dep, mathlib, dl_dep] + backtrace_deps
                    + platform_deps,
