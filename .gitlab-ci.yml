@@ -541,17 +541,7 @@ gstreamer-full:
     MESON_ARGS: >
       --default-library=static
       -Ddoc=disabled
-      -Dgst-editing-services:python=disabled
       $MESON_GST_WERROR
-  rules:
-    # If this matches, it means the pipeline is running against either the main
-    # or a stable branch, so make it manual
-    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
-      when: manual
-    - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
 
   script:
   - *build
