@@ -76,6 +76,7 @@ struct _GstVTEnc
   gint negotiated_fps_n, negotiated_fps_d;
   gint caps_width, caps_height;
   gint caps_fps_n, caps_fps_d;
+  gboolean have_field_order;
   GstVideoCodecState *input_state;
   GstVideoInfo video_info;
   VTCompressionSessionRef session;

@@ -195,6 +195,23 @@ gst_vtenc_base_init (GstVTEncClass * klass)
       "height", GST_TYPE_INT_RANGE, min_height, max_height,
       "framerate", GST_TYPE_FRACTION_RANGE,
       min_fps_n, min_fps_d, max_fps_n, max_fps_d, NULL);
+
+  /* Signal our limited interlace support */
+  {
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+    GValueArray *arr = g_value_array_new (2);
+    GValue val = G_VALUE_INIT;
+
+    g_value_init (&val, G_TYPE_STRING);
+    g_value_set_string (&val, "progressive");
+    arr = g_value_array_append (arr, &val);
+    g_value_set_string (&val, "interleaved");
+    arr = g_value_array_append (arr, &val);
+    G_GNUC_END_IGNORE_DEPRECATIONS;
+    gst_structure_set_list (gst_caps_get_structure (src_caps, 0),
+        "interlace-mode", arr);
+  }
+
   switch (codec_details->format_id) {
     case kCMVideoCodecType_H264:
       gst_structure_set (gst_caps_get_structure (src_caps, 0),
@@ -319,6 +336,7 @@ gst_vtenc_init (GstVTEnc * self)
   self->latency_frames = -1;
   self->session = NULL;
   self->profile_level = NULL;
+  self->have_field_order = TRUE;
 
   self->keyframe_props =
       CFDictionaryCreate (NULL, (const void **) keyframe_props_keys,
@@ -1119,6 +1137,41 @@ gst_vtenc_create_session (GstVTEnc * self)
 
   gst_vtenc_set_colorimetry (self, session);
 
+  /* Interlacing */
+  switch (GST_VIDEO_INFO_INTERLACE_MODE (&self->video_info)) {
+    case GST_VIDEO_INTERLACE_MODE_PROGRESSIVE:
+      gst_vtenc_session_configure_property_int (self, session,
+          kVTCompressionPropertyKey_FieldCount, 1);
+      break;
+    case GST_VIDEO_INTERLACE_MODE_INTERLEAVED:
+      gst_vtenc_session_configure_property_int (self, session,
+          kVTCompressionPropertyKey_FieldCount, 2);
+      switch (GST_VIDEO_INFO_FIELD_ORDER (&self->video_info)) {
+        case GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST:
+          status = VTSessionSetProperty (session,
+              kVTCompressionPropertyKey_FieldDetail,
+              kCMFormatDescriptionFieldDetail_TemporalTopFirst);
+          GST_DEBUG_OBJECT (self, "kVTCompressionPropertyKey_FieldDetail "
+              "TemporalTopFirst => %d", (int) status);
+          break;
+        case GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST:
+          status = VTSessionSetProperty (session,
+              kVTCompressionPropertyKey_FieldDetail,
+              kCMFormatDescriptionFieldDetail_TemporalBottomFirst);
+          GST_DEBUG_OBJECT (self, "kVTCompressionPropertyKey_FieldDetail "
+              "TemporalBottomFirst => %d", (int) status);
+          break;
+        case GST_VIDEO_FIELD_ORDER_UNKNOWN:
+          GST_INFO_OBJECT (self, "Unknown field order for interleaved content, "
+              "will check first buffer");
+          self->have_field_order = FALSE;
+      }
+      break;
+    default:
+      /* Caps negotiation should prevent this */
+      g_assert_not_reached ();
+  }
+
   gst_vtenc_session_configure_realtime (self, session,
       gst_vtenc_get_realtime (self));
   gst_vtenc_session_configure_allow_frame_reordering (self, session,
@@ -1370,6 +1423,33 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
     duration = CMTimeMake (frame->duration, GST_SECOND);
   else
     duration = kCMTimeInvalid;
+
+  /* If we don't have field order, we need to pick it up from the first buffer
+   * that has that information. The encoder session also cannot be reconfigured
+   * with a new field detail after it has been set, so we encode mixed streams
+   * with whatever the first buffer's field order is. */
+  if (!self->have_field_order) {
+    CFStringRef field_detail = NULL;
+
+    if (GST_VIDEO_BUFFER_IS_TOP_FIELD (frame->input_buffer))
+      field_detail = kCMFormatDescriptionFieldDetail_TemporalTopFirst;
+    else if (GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (frame->input_buffer))
+      field_detail = kCMFormatDescriptionFieldDetail_TemporalBottomFirst;
+
+    if (field_detail) {
+      vt_status = VTSessionSetProperty (self->session,
+          kVTCompressionPropertyKey_FieldDetail, field_detail);
+      GST_DEBUG_OBJECT (self, "kVTCompressionPropertyKey_FieldDetail => %d",
+          (int) vt_status);
+    } else {
+      GST_WARNING_OBJECT (self, "have interlaced content, but don't know field "
+          "order yet, skipping buffer");
+      gst_video_codec_frame_unref (frame);
+      return GST_FLOW_OK;
+    }
+
+    self->have_field_order = TRUE;
+  }
 
   meta = gst_buffer_get_core_media_meta (frame->input_buffer);
   if (meta != NULL) {
