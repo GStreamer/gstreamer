@@ -328,7 +328,7 @@ if get_option('default_library') == 'static'
     elif cc.get_id() == 'msvc'
       warning('FIXME: Provide a def file to publish the public symbols')
     else
-      error('Failed to link with version script (' + symbol_map + '), check logs for details')
+      warning('FIXME: Linker does not support the supplied version script (' + symbol_map + '), please disable the "gst-full-version-script" option')
     endif
   endif
 
