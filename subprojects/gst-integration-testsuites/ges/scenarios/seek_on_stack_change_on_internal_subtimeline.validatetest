@@ -9,7 +9,7 @@ meta,
         --videosink, "$(videosink) name=videosink",
     },
     configs = {
-        "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id}\"",
+        "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
     }
 
 set-vars, nested_timeline_uri="file://$(logsdir)/ges/scenarios/$(test_name)/nested_timeline.xges"

@@ -7,7 +7,7 @@ meta, seek=true, handles-states=true, needs_preroll=true,
         --videosink, "$(videosink) name=videosink",
     },
     configs = {
-        "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id}\"",
+        "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
     }
 
 set-vars,\
