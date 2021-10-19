@@ -185,6 +185,7 @@ gst_v4l2_video_dec_start (GstVideoDecoder * decoder)
 
   gst_v4l2_object_unlock (self->v4l2output);
   g_atomic_int_set (&self->active, TRUE);
+  g_atomic_int_set (&self->capture_configuration_change, FALSE);
   self->output_flow = GST_FLOW_OK;
 
   return TRUE;
@@ -609,6 +610,8 @@ gst_v4l2_video_dec_setup_capture (GstVideoDecoder * decoder)
     /* Copy the rest of the information, there might be more in the future */
     output_state->info.interlace_mode = info.interlace_mode;
     gst_video_codec_state_unref (output_state);
+    gst_v4l2_buffer_pool_enable_resolution_change (GST_V4L2_BUFFER_POOL
+        (self->v4l2capture->pool));
 
     if (!gst_video_decoder_negotiate (decoder)) {
       if (GST_PAD_IS_FLUSHING (decoder->srcpad))
@@ -642,15 +645,30 @@ static void
 gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
 {
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
-  GstV4l2BufferPool *v4l2_pool = GST_V4L2_BUFFER_POOL (self->v4l2capture->pool);
+  GstV4l2BufferPool *v4l2_pool;
   GstBufferPool *pool;
   GstVideoCodecFrame *frame;
   GstBuffer *buffer = NULL;
   GstFlowReturn ret;
 
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+  if (g_atomic_int_get (&self->capture_configuration_change)) {
+    gst_v4l2_object_stop (self->v4l2capture);
+    ret = gst_v4l2_video_dec_setup_capture (decoder);
+    if (ret != GST_FLOW_OK)
+      return;
+    g_atomic_int_set (&self->capture_configuration_change, FALSE);
+  }
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
+  if (G_UNLIKELY (!GST_V4L2_IS_ACTIVE (self->v4l2capture)))
+    return;
+
   GST_LOG_OBJECT (decoder, "Allocate output buffer");
 
+  v4l2_pool = GST_V4L2_BUFFER_POOL (self->v4l2capture->pool);
   self->output_flow = GST_FLOW_OK;
+
   do {
     /* We cannot use the base class allotate helper since it taking the internal
      * stream lock. we know that the acquire may need to poll until more frames
@@ -666,6 +684,12 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
 
     ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
     g_object_unref (pool);
+
+    if (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
+      GST_WARNING_OBJECT (decoder, "Received resolution change");
+      g_atomic_int_set (&self->capture_configuration_change, TRUE);
+      return;
+    }
 
     if (ret != GST_FLOW_OK)
       goto beach;
@@ -754,10 +778,12 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
       goto not_negotiated;
   }
 
-  ret = gst_v4l2_video_dec_setup_capture (decoder);
-  if (ret != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (decoder, "setup capture fail\n");
-    goto not_negotiated;
+  if (!g_atomic_int_get (&self->capture_configuration_change)) {
+    ret = gst_v4l2_video_dec_setup_capture (decoder);
+    if (ret != GST_FLOW_OK) {
+      GST_ERROR_OBJECT (decoder, "setup capture fail\n");
+      goto not_negotiated;
+    }
   }
 
   if (G_UNLIKELY (!gst_buffer_pool_is_active (pool))) {

@@ -62,6 +62,9 @@ struct _GstV4l2VideoDec
   GstVideoCodecState *input_state;
   gboolean active;
   GstFlowReturn output_flow;
+
+  /* dynamic resolution change flag */
+  gboolean capture_configuration_change;
 };
 
 struct _GstV4l2VideoDecClass
