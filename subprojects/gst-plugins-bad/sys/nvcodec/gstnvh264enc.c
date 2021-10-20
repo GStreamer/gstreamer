@@ -79,7 +79,7 @@ enum
     "framerate = " GST_VIDEO_FPS_RANGE ", " \
     "stream-format = (string) byte-stream, " \
     "alignment = (string) au, " \
-    "profile = (string) { main, high, high-4:4:4, baseline }"
+    "profile = (string) { main, high, high-4:4:4, baseline, constrained-baseline }"
 
 static gboolean gst_nv_h264_enc_open (GstVideoEncoder * enc);
 static gboolean gst_nv_h264_enc_close (GstVideoEncoder * enc);
@@ -474,7 +474,8 @@ gst_nv_h264_enc_set_encoder_config (GstNvBaseEnc * nvenc,
 
     profile = gst_structure_get_string (s, "profile");
     if (profile) {
-      if (!strcmp (profile, "baseline")) {
+      if (!strcmp (profile, "baseline")
+          || !strcmp (profile, "constrained-baseline")) {
         selected_profile = NV_ENC_H264_PROFILE_BASELINE_GUID;
       } else if (g_str_has_prefix (profile, "high-4:4:4")) {
         selected_profile = NV_ENC_H264_PROFILE_HIGH_444_GUID;

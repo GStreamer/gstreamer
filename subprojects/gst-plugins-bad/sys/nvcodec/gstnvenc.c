@@ -514,6 +514,9 @@ gst_nvenc_get_supported_codec_profiles (gpointer enc, GUID codec_id)
     /* put baseline to last since it does not support bframe */
     {"baseline", NV_ENC_H264_PROFILE_BASELINE_GUID, NV_ENC_CODEC_H264_GUID,
         FALSE, FALSE, FALSE},
+    {"constrained-baseline", NV_ENC_H264_PROFILE_BASELINE_GUID,
+          NV_ENC_CODEC_H264_GUID,
+        FALSE, FALSE, FALSE},
     /* hevc profiles */
     {"main", NV_ENC_HEVC_PROFILE_MAIN_GUID, NV_ENC_CODEC_HEVC_GUID, FALSE,
         FALSE, FALSE},
