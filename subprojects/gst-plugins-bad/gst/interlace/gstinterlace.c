@@ -347,6 +347,7 @@ gst_interlace_init (GstInterlace * interlace)
   interlace->new_pattern = GST_INTERLACE_PATTERN_2_3;
   interlace->pattern_offset = 0;
   interlace->src_fps_n = 0;
+  interlace->src_fps_d = 1;
   g_mutex_init (&interlace->lock);
   gst_interlace_reset (interlace);
 }
@@ -1524,6 +1525,7 @@ gst_interlace_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       g_mutex_lock (&interlace->lock);
       interlace->src_fps_n = 0;
+      interlace->src_fps_d = 1;
       g_mutex_unlock (&interlace->lock);
 
       gst_interlace_reset (interlace);
