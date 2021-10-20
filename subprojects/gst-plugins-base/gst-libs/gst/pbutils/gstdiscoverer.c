@@ -1313,7 +1313,8 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
     cont = (GstDiscovererContainerInfo *)
         g_object_new (GST_TYPE_DISCOVERER_CONTAINER_INFO, NULL);
     cont->parent.caps = caps;
-    cont->tags = gst_tag_list_ref (dc->priv->global_tags);
+    if (dc->priv->global_tags)
+      cont->tags = gst_tag_list_ref (dc->priv->global_tags);
     res = (GstDiscovererStreamInfo *) cont;
 
     for (i = 0; i < len; i++) {
