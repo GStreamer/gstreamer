@@ -1514,23 +1514,23 @@ static GstStateChangeReturn
 gst_interlace_change_state (GstElement * element, GstStateChange transition)
 {
   GstInterlace *interlace = GST_INTERLACE (element);
+  GstStateChangeReturn ret;
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       g_mutex_lock (&interlace->lock);
       interlace->src_fps_n = 0;
-      if (interlace->stored_frame) {
-        gst_buffer_unref (interlace->stored_frame);
-      }
       g_mutex_unlock (&interlace->lock);
-      /* why? */
-      //gst_interlace_reset (interlace);
+
+      gst_interlace_reset (interlace);
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return ret;
 }
 
 static gboolean
