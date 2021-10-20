@@ -213,7 +213,10 @@ gst_v4l2_codec_allocator_dispose (GObject * object)
   while ((buf = g_queue_pop_head (&self->pool)))
     gst_v4l2_codec_buffer_free (buf);
 
-  gst_clear_object (&self->decoder);
+  if (self->decoder) {
+    gst_v4l2_codec_allocator_detach (self);
+    gst_clear_object (&self->decoder);
+  }
 
   G_OBJECT_CLASS (gst_v4l2_codec_allocator_parent_class)->dispose (object);
 }
@@ -222,9 +225,6 @@ static void
 gst_v4l2_codec_allocator_finalize (GObject * object)
 {
   GstV4l2CodecAllocator *self = GST_V4L2_CODEC_ALLOCATOR (object);
-
-  if (!self->detached)
-    gst_v4l2_decoder_request_buffers (self->decoder, self->direction, 0);
 
   g_cond_clear (&self->buffer_cond);
 
