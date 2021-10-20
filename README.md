@@ -38,9 +38,7 @@ You can find [instructions for Windows below](#windows-prerequisites-setup).
 
 ### Install meson and ninja
 
-Meson 0.52 or newer is required.
-
-For cross-compilation Meson 0.54 or newer is required.
+Meson 0.59 or newer is required.
 
 On Linux and macOS you can get meson through your package manager or using:
 
