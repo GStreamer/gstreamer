@@ -758,13 +758,10 @@ gst_concat_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     case GST_EVENT_QOS:{
-      GstPad *sinkpad = NULL;
-
       g_mutex_lock (&self->lock);
       if ((sinkpad = self->current_sinkpad))
         gst_object_ref (sinkpad);
       g_mutex_unlock (&self->lock);
-
 
       if (!sinkpad) {
         gst_event_replace (&event, NULL);
