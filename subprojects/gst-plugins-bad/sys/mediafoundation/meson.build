@@ -139,7 +139,7 @@ if winapi_desktop
   # by using g_module_open() so that keep supporting old OS versions
   if gstd3d11_dep.found() and cc.has_header('d3d11_4.h') and cc.has_header('d3d10.h')
     have_mf_d3d11 = true
-    mf_lib_deps += [gstd3d11_dep, gmodule_dep]
+    mf_lib_deps += [gstd3d11_dep]
     extra_c_args += ['-DGST_USE_UNSTABLE_API']
     extra_cpp_args += ['-DGST_USE_UNSTABLE_API']
     message ('Enable D3D11 interop for MediaFoundation plugin')
@@ -164,7 +164,7 @@ gstmediafoundation = library('gstmediafoundation',
   c_args : gst_plugins_bad_args + extra_c_args,
   cpp_args : gst_plugins_bad_args + extra_cpp_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep, gstpbutils_dep] + mf_lib_deps,
+  dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep, gstpbutils_dep, gmodule_dep] + mf_lib_deps,
   install : true,
   install_dir : plugins_install_dir,
 )

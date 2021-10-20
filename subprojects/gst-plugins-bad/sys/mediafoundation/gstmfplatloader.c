@@ -22,6 +22,7 @@
 #endif
 
 #include "gstmfplatloader.h"
+#include "gstmfconfig.h"
 #include <gmodule.h>
 
 /* *INDENT-OFF* */
@@ -66,6 +67,7 @@ load_library_once (void)
 {
   static gsize load_once = 0;
   if (g_once_init_enter (&load_once)) {
+#if GST_MF_HAVE_D3D11
     GModule *module;
     GstMFPlatVTable *vtable = &gst_mf_plat_vtable;
 
@@ -79,6 +81,7 @@ load_library_once (void)
         GstMFCreateVideoSampleAllocatorEx);
 
     vtable->loaded = TRUE;
+#endif
 
   out:
     g_once_init_leave (&load_once, 1);
