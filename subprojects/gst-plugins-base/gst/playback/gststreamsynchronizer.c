@@ -257,6 +257,35 @@ gst_stream_synchronizer_iterate_internal_links (GstPad * pad,
   return it;
 }
 
+static GstEvent *
+set_event_rt_offset (GstStreamSynchronizer * self, GstPad * pad,
+    GstEvent * event)
+{
+  gint64 running_time_diff;
+  GstSyncStream *stream;
+
+  GST_STREAM_SYNCHRONIZER_LOCK (self);
+  stream = gst_streamsync_pad_get_stream (pad);
+  running_time_diff = stream->segment.base;
+  gst_syncstream_unref (stream);
+  GST_STREAM_SYNCHRONIZER_UNLOCK (self);
+
+  if (running_time_diff != -1) {
+    gint64 offset;
+
+    event = gst_event_make_writable (event);
+    offset = gst_event_get_running_time_offset (event);
+    if (GST_PAD_IS_SRC (pad))
+      offset -= running_time_diff;
+    else
+      offset += running_time_diff;
+
+    gst_event_set_running_time_offset (event, offset);
+  }
+
+  return event;
+}
+
 /* srcpad functions */
 static gboolean
 gst_stream_synchronizer_src_event (GstPad * pad, GstObject * parent,
@@ -268,59 +297,10 @@ gst_stream_synchronizer_src_event (GstPad * pad, GstObject * parent,
   GST_LOG_OBJECT (pad, "Handling event %s: %" GST_PTR_FORMAT,
       GST_EVENT_TYPE_NAME (event), event);
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_QOS:{
-      gdouble proportion;
-      GstClockTimeDiff diff;
-      GstClockTime timestamp;
-      gint64 running_time_diff = -1;
-      GstSyncStream *stream;
-
-      gst_event_parse_qos (event, NULL, &proportion, &diff, &timestamp);
-      gst_event_unref (event);
-
-      GST_STREAM_SYNCHRONIZER_LOCK (self);
-      stream = gst_streamsync_pad_get_stream (pad);
-      running_time_diff = stream->segment.base;
-      gst_syncstream_unref (stream);
-      GST_STREAM_SYNCHRONIZER_UNLOCK (self);
-
-      if (running_time_diff == -1) {
-        GST_WARNING_OBJECT (pad, "QOS event before group start");
-        goto out;
-      }
-      if (timestamp < running_time_diff) {
-        GST_DEBUG_OBJECT (pad, "QOS event from previous group");
-        goto out;
-      }
-
-      GST_LOG_OBJECT (pad,
-          "Adjusting QOS event: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT " = %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
-          GST_TIME_ARGS (running_time_diff),
-          GST_TIME_ARGS (timestamp - running_time_diff));
-
-      timestamp -= running_time_diff;
-
-      /* That case is invalid for QoS events */
-      if (diff < 0 && -diff > timestamp) {
-        GST_DEBUG_OBJECT (pad, "QOS event from previous group");
-        ret = TRUE;
-        goto out;
-      }
-
-      event =
-          gst_event_new_qos (GST_QOS_TYPE_UNDERFLOW, proportion, diff,
-          timestamp);
-      break;
-    }
-    default:
-      break;
-  }
+  event = set_event_rt_offset (self, pad, event);
 
   ret = gst_pad_event_default (pad, parent, event);
 
-out:
   return ret;
 }
 
@@ -762,6 +742,8 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
     default:
       break;
   }
+
+  event = set_event_rt_offset (self, pad, event);
 
   ret = gst_pad_event_default (pad, parent, event);
 
