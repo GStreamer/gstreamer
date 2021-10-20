@@ -98,7 +98,6 @@ struct _GstInterlace
   int src_fps_n;
   int src_fps_d;
 
-  GMutex lock;
   gint new_pattern;
   GstBuffer *stored_frame;
   guint stored_fields;
@@ -305,17 +304,15 @@ gst_interlace_class_init (GstInterlaceClass * klass)
 static void
 gst_interlace_finalize (GObject * obj)
 {
-  GstInterlace *interlace = GST_INTERLACE (obj);
-  g_mutex_clear (&interlace->lock);
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void
 gst_interlace_reset (GstInterlace * interlace)
 {
-  g_mutex_lock (&interlace->lock);
+  GST_OBJECT_LOCK (interlace);
   interlace->phase_index = interlace->pattern_offset;
-  g_mutex_unlock (&interlace->lock);
+  GST_OBJECT_UNLOCK (interlace);
 
   interlace->timebase = GST_CLOCK_TIME_NONE;
   interlace->field_index = 0;
@@ -351,7 +348,6 @@ gst_interlace_init (GstInterlace * interlace)
   interlace->pattern_offset = 0;
   interlace->src_fps_n = 0;
   interlace->src_fps_d = 1;
-  g_mutex_init (&interlace->lock);
   gst_interlace_reset (interlace);
 }
 
@@ -395,10 +391,10 @@ gst_interlace_decorate_buffer_ts (GstInterlace * interlace, GstBuffer * buf,
 {
   gint src_fps_n, src_fps_d;
 
-  g_mutex_lock (&interlace->lock);
+  GST_OBJECT_LOCK (interlace);
   src_fps_n = interlace->src_fps_n;
   src_fps_d = interlace->src_fps_d;
-  g_mutex_unlock (&interlace->lock);
+  GST_OBJECT_UNLOCK (interlace);
 
   /* field duration = src_fps_d / (2 * src_fps_n) */
   if (src_fps_n == 0) {
@@ -422,9 +418,9 @@ gst_interlace_decorate_buffer (GstInterlace * interlace, GstBuffer * buf,
 {
   GstInterlacePattern pattern;
 
-  g_mutex_lock (&interlace->lock);
+  GST_OBJECT_LOCK (interlace);
   pattern = interlace->pattern;
-  g_mutex_unlock (&interlace->lock);
+  GST_OBJECT_UNLOCK (interlace);
 
   gst_interlace_decorate_buffer_ts (interlace, buf, n_fields);
 
@@ -447,9 +443,9 @@ interlace_mode_from_pattern (GstInterlace * interlace)
 {
   GstInterlacePattern pattern;
 
-  g_mutex_lock (&interlace->lock);
+  GST_OBJECT_LOCK (interlace);
   pattern = interlace->pattern;
-  g_mutex_unlock (&interlace->lock);
+  GST_OBJECT_UNLOCK (interlace);
 
   if (pattern > GST_INTERLACE_PATTERN_2_2)
     return "mixed";
@@ -488,11 +484,11 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
   if (!gst_video_info_from_caps (&info, caps))
     goto caps_error;
 
-  g_mutex_lock (&interlace->lock);
+  GST_OBJECT_LOCK (interlace);
   interlace->pattern = interlace->new_pattern;
   pattern = interlace->pattern;
   top_field_first = interlace->top_field_first;
-  g_mutex_unlock (&interlace->lock);
+  GST_OBJECT_UNLOCK (interlace);
 
   /* Check if downstream prefers alternate mode */
   othercaps = gst_caps_copy (caps);
@@ -542,11 +538,11 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
   src_fps_n = info.fps_n * pdformat->ratio_n;
   src_fps_d = info.fps_d * pdformat->ratio_d;
 
-  g_mutex_lock (&interlace->lock);
+  GST_OBJECT_LOCK (interlace);
   interlace->phase_index = interlace->pattern_offset;
   interlace->src_fps_n = src_fps_n;
   interlace->src_fps_d = src_fps_d;
-  g_mutex_unlock (&interlace->lock);
+  GST_OBJECT_UNLOCK (interlace);
 
   GST_DEBUG_OBJECT (interlace, "new framerate %d/%d", src_fps_n, src_fps_d);
 
@@ -890,10 +886,10 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
   otherpad =
       (pad == interlace->srcpad) ? interlace->sinkpad : interlace->srcpad;
 
-  g_mutex_lock (&interlace->lock);
+  GST_OBJECT_LOCK (interlace);
   pattern = interlace->new_pattern;
   top_field_first = interlace->top_field_first;
-  g_mutex_unlock (&interlace->lock);
+  GST_OBJECT_UNLOCK (interlace);
 
   if (filter != NULL) {
     clean_filter = gst_caps_copy (filter);
@@ -1248,12 +1244,12 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     return gst_pad_push (interlace->srcpad, buffer);
   }
 
-  g_mutex_lock (&interlace->lock);
+  GST_OBJECT_LOCK (interlace);
   format = &formats[interlace->pattern];
   allow_rff = interlace->allow_rff;
   pattern_offset = interlace->pattern_offset;
   top_field_first = interlace->top_field_first;
-  g_mutex_unlock (&interlace->lock);
+  GST_OBJECT_UNLOCK (interlace);
 
   if (GST_BUFFER_FLAGS (buffer) & GST_BUFFER_FLAG_DISCONT) {
     GST_DEBUG ("discont");
@@ -1474,35 +1470,35 @@ gst_interlace_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_TOP_FIELD_FIRST:
-      g_mutex_lock (&interlace->lock);
+      GST_OBJECT_LOCK (interlace);
       interlace->top_field_first = g_value_get_boolean (value);
-      g_mutex_unlock (&interlace->lock);
+      GST_OBJECT_UNLOCK (interlace);
       break;
     case PROP_PATTERN:{
       gint pattern = g_value_get_enum (value);
       gboolean reconfigure = FALSE;
 
-      g_mutex_lock (&interlace->lock);
+      GST_OBJECT_LOCK (interlace);
       interlace->new_pattern = pattern;
       if (interlace->src_fps_n == 0 || interlace->pattern == pattern)
         interlace->pattern = pattern;
       else
         reconfigure = TRUE;
-      g_mutex_unlock (&interlace->lock);
+      GST_OBJECT_UNLOCK (interlace);
 
       if (reconfigure)
         gst_pad_push_event (interlace->sinkpad, gst_event_new_reconfigure ());
       break;
     }
     case PROP_PATTERN_OFFSET:
-      g_mutex_lock (&interlace->lock);
+      GST_OBJECT_LOCK (interlace);
       interlace->pattern_offset = g_value_get_uint (value);
-      g_mutex_unlock (&interlace->lock);
+      GST_OBJECT_UNLOCK (interlace);
       break;
     case PROP_ALLOW_RFF:
-      g_mutex_lock (&interlace->lock);
+      GST_OBJECT_LOCK (interlace);
       interlace->allow_rff = g_value_get_boolean (value);
-      g_mutex_unlock (&interlace->lock);
+      GST_OBJECT_UNLOCK (interlace);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1518,24 +1514,24 @@ gst_interlace_get_property (GObject * object,
 
   switch (prop_id) {
     case PROP_TOP_FIELD_FIRST:
-      g_mutex_lock (&interlace->lock);
+      GST_OBJECT_LOCK (interlace);
       g_value_set_boolean (value, interlace->top_field_first);
-      g_mutex_unlock (&interlace->lock);
+      GST_OBJECT_UNLOCK (interlace);
       break;
     case PROP_PATTERN:
-      g_mutex_lock (&interlace->lock);
+      GST_OBJECT_LOCK (interlace);
       g_value_set_enum (value, interlace->new_pattern);
-      g_mutex_unlock (&interlace->lock);
+      GST_OBJECT_UNLOCK (interlace);
       break;
     case PROP_PATTERN_OFFSET:
-      g_mutex_lock (&interlace->lock);
+      GST_OBJECT_LOCK (interlace);
       g_value_set_uint (value, interlace->pattern_offset);
-      g_mutex_unlock (&interlace->lock);
+      GST_OBJECT_UNLOCK (interlace);
       break;
     case PROP_ALLOW_RFF:
-      g_mutex_lock (&interlace->lock);
+      GST_OBJECT_LOCK (interlace);
       g_value_set_boolean (value, interlace->allow_rff);
-      g_mutex_unlock (&interlace->lock);
+      GST_OBJECT_UNLOCK (interlace);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1553,10 +1549,10 @@ gst_interlace_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      g_mutex_lock (&interlace->lock);
+      GST_OBJECT_LOCK (interlace);
       interlace->src_fps_n = 0;
       interlace->src_fps_d = 1;
-      g_mutex_unlock (&interlace->lock);
+      GST_OBJECT_UNLOCK (interlace);
 
       gst_interlace_reset (interlace);
       break;
