@@ -248,12 +248,118 @@ gst_msdkh265enc_add_cc (GstMsdkH265Enc * thiz, GstVideoCodecFrame * frame)
   gst_memory_unref (mem);
 }
 
+static void
+gst_msdkh265enc_add_mdcv_sei (GstMsdkEnc * encoder, GstVideoCodecFrame * frame)
+{
+  GstMsdkH265Enc *thiz = GST_MSDKH265ENC (encoder);
+  GstVideoMasteringDisplayInfo *mastering_display_info
+      = encoder->input_state->mastering_display_info;
+  GstH265SEIMessage sei;
+  GstH265MasteringDisplayColourVolume *mdcv;
+  GstMemory *mem = NULL;
+  guint i = 0;
+
+  memset (&sei, 0, sizeof (GstH265SEIMessage));
+  sei.payloadType = GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME;
+  mdcv = &sei.payload.mastering_display_colour_volume;
+
+  for (i = 0; i < 3; i++) {
+    mdcv->display_primaries_x[i] =
+        mastering_display_info->display_primaries[i].x;
+    mdcv->display_primaries_y[i] =
+        mastering_display_info->display_primaries[i].y;
+  }
+
+  mdcv->white_point_x = mastering_display_info->white_point.x;
+  mdcv->white_point_y = mastering_display_info->white_point.y;
+  mdcv->max_display_mastering_luminance =
+      mastering_display_info->max_display_mastering_luminance;
+  mdcv->min_display_mastering_luminance =
+      mastering_display_info->min_display_mastering_luminance;
+
+  if (!thiz->cc_sei_array)
+    thiz->cc_sei_array = g_array_new (FALSE, FALSE, sizeof (GstH265SEIMessage));
+  else
+    g_array_set_size (thiz->cc_sei_array, 0);
+
+  g_array_append_val (thiz->cc_sei_array, sei);
+
+  if (!thiz->cc_sei_array || !thiz->cc_sei_array->len)
+    return;
+
+  /* layer_id and temporal_id will be updated by parser later */
+  mem = gst_h265_create_sei_memory (0, 1, 4, thiz->cc_sei_array);
+
+  if (!mem) {
+    GST_WARNING_OBJECT (thiz, "Cannot create SEI nal unit");
+    return;
+  }
+
+  GST_DEBUG_OBJECT (thiz,
+      "Inserting %d mastering display colout volume SEI message(s)",
+      thiz->cc_sei_array->len);
+
+  gst_msdkh265enc_insert_sei (thiz, frame, mem);
+  gst_memory_unref (mem);
+}
+
+static void
+gst_msdkh265enc_add_cll_sei (GstMsdkEnc * encoder, GstVideoCodecFrame * frame)
+{
+  GstMsdkH265Enc *thiz = GST_MSDKH265ENC (encoder);
+  GstVideoContentLightLevel *content_light_level
+      = encoder->input_state->content_light_level;
+  GstH265ContentLightLevel *cll;
+  GstH265SEIMessage sei;
+  GstMemory *mem = NULL;
+
+  memset (&sei, 0, sizeof (GstH265SEIMessage));
+  sei.payloadType = GST_H265_SEI_CONTENT_LIGHT_LEVEL;
+  cll = &sei.payload.content_light_level;
+
+  cll->max_content_light_level = content_light_level->max_content_light_level;
+  cll->max_pic_average_light_level =
+      content_light_level->max_frame_average_light_level;
+
+  if (!thiz->cc_sei_array)
+    thiz->cc_sei_array = g_array_new (FALSE, FALSE, sizeof (GstH265SEIMessage));
+  else
+    g_array_set_size (thiz->cc_sei_array, 0);
+
+  g_array_append_val (thiz->cc_sei_array, sei);
+
+  if (!thiz->cc_sei_array || !thiz->cc_sei_array->len)
+    return;
+
+  /* layer_id and temporal_id will be updated by parser later */
+  mem = gst_h265_create_sei_memory (0, 1, 4, thiz->cc_sei_array);
+
+  if (!mem) {
+    GST_WARNING_OBJECT (thiz, "Cannot create SEI nal unit");
+    return;
+  }
+
+  GST_DEBUG_OBJECT (thiz,
+      "Inserting %d content light level SEI message(s)",
+      thiz->cc_sei_array->len);
+
+  gst_msdkh265enc_insert_sei (thiz, frame, mem);
+  gst_memory_unref (mem);
+}
+
 static GstFlowReturn
 gst_msdkh265enc_pre_push (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 {
   GstMsdkH265Enc *thiz = GST_MSDKH265ENC (encoder);
+  GstMsdkEnc *msdk_encoder = GST_MSDKENC (encoder);
 
   gst_msdkh265enc_add_cc (thiz, frame);
+
+  if (msdk_encoder->input_state->mastering_display_info)
+    gst_msdkh265enc_add_mdcv_sei (msdk_encoder, frame);
+
+  if (msdk_encoder->input_state->content_light_level)
+    gst_msdkh265enc_add_cll_sei (msdk_encoder, frame);
 
   return GST_FLOW_OK;
 }
