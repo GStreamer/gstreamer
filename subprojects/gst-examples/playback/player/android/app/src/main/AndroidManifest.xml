@@ -294,10 +294,6 @@
                 <data android:scheme="rtspsu" />
                 <data android:scheme="rtspst" />
                 <data android:scheme="rtspsh" />
-                <data android:scheme="mms" />
-                <data android:scheme="mmsh" />
-                <data android:scheme="mmst" />
-                <data android:scheme="mmsu" />
                 <data android:scheme="icy" />
                 <data android:scheme="icyx" />
                 <data android:scheme="udp" />
@@ -330,10 +326,6 @@
                 <data android:scheme="rtspsu" />
                 <data android:scheme="rtspst" />
                 <data android:scheme="rtspsh" />
-                <data android:scheme="mms" />
-                <data android:scheme="mmsh" />
-                <data android:scheme="mmst" />
-                <data android:scheme="mmsu" />
                 <data android:scheme="icy" />
                 <data android:scheme="icyx" />
                 <data android:scheme="udp" />

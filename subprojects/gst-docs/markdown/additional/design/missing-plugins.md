@@ -17,21 +17,21 @@ missing plugins, with the following fields set:
 * **`type`**: (string) { "urisource", "urisink", "decoder", "encoder",
 "element" } (we do not distinguish between demuxer/decoders/parsers etc.)
 
-* **`detail`**: (string) or (caps) depending on the type { ANY } ex: "mms,
-"mmsh", "audio/x-mp3,rate=48000,…"
+* **`detail`**: (string) or (caps) depending on the type { ANY } ex: "rtsp,
+"rtspt", "audio/x-mp3,rate=48000,…"
 
-* **`name`**: (string) { ANY } ex: "MMS protocol handler",..
+* **`name`**: (string) { ANY } ex: "RTSP protocol handler",..
 
 ### missing uri handler
 
-ex. mms://foo.bar/file.asf
+ex. rtsp://some.camera/stream1
 
-When no protocol handler is installed for mms://, the application will not be
+When no protocol handler is installed for rtsp://, the application will not be
 able to instantiate an element for that uri (`gst_element_make_from_uri()`
 returns NULL).
 
 Playbin will post a `missing-plugin` element message with the type set to
-"urisource", detail set to "mms". Optionally the friendly name can be filled
+"urisource", detail set to "rtsp". Optionally the friendly name can be filled
 in as well.
 
 ### missing typefind function
@@ -162,7 +162,7 @@ plugin install mechanism in the same way.
 
 - identifier string for the required component, e.g.
 
-- urisource-(`PROTOCOL_REQUIRED`) e.g. `urisource-http` or `urisource-mms`
+- urisource-(`PROTOCOL_REQUIRED`) e.g. `urisource-http` or `urisource-rtsp`
 
 - element-(`ELEMENT_REQUIRED`), e.g. `element-videoconvert`
 

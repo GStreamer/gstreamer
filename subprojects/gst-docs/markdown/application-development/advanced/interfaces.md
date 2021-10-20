@@ -34,7 +34,7 @@ correct plugins installed, GStreamer supports:
 ```
 file:///<path>/<file>
 http://<host>/<path>/<file>
-mms://<host>/<path>/<file>
+rtsp://<host>/<path>
 dvb://<CHANNEL>
 ...
 ```

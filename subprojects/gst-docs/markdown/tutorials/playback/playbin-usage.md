@@ -402,7 +402,7 @@ This property is not really useful in this example.
 `connection-speed` informs `playbin` of the maximum speed of our network
 connection, so, in case multiple versions of the requested media are
 available in the server, `playbin` chooses the most appropriate. This is
-mostly used in combination with streaming protocols like `mms` or
+mostly used in combination with streaming protocols like `hls` or
 `rtsp`.
 
 We have set all these properties one by one, but we could have all of
