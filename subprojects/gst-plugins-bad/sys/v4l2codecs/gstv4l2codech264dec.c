@@ -422,8 +422,21 @@ gst_v4l2_codec_h264_dec_decide_allocation (GstVideoDecoder * decoder,
 
   self->sink_allocator = gst_v4l2_codec_allocator_new (self->decoder,
       GST_PAD_SINK, num_bitstream);
+  if (!self->sink_allocator) {
+    GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
+        ("Not enough memory to allocate sink buffers."), (NULL));
+    return FALSE;
+  }
+
   self->src_allocator = gst_v4l2_codec_allocator_new (self->decoder,
       GST_PAD_SRC, self->min_pool_size + min + 4);
+  if (!self->src_allocator) {
+    GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
+        ("Not enough memory to allocate source buffers."), (NULL));
+    g_clear_object (&self->sink_allocator);
+    return FALSE;
+  }
+
   self->src_pool = gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo);
 
   /* Our buffer pool is internal, we will let the base class create a video
