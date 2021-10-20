@@ -321,6 +321,7 @@ gst_interlace_reset (GstInterlace * interlace)
   if (interlace->stored_frame) {
     gst_buffer_unref (interlace->stored_frame);
     interlace->stored_frame = NULL;
+    interlace->stored_fields = 0;
   }
 }
 
@@ -685,6 +686,7 @@ gst_interlace_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (interlace->stored_frame) {
         gst_buffer_unref (interlace->stored_frame);
         interlace->stored_frame = NULL;
+        interlace->stored_fields = 0;
       }
       ret = gst_pad_push_event (interlace->srcpad, event);
       break;
@@ -1238,9 +1240,9 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     if (interlace->stored_frame) {
       gst_buffer_unref (interlace->stored_frame);
+      interlace->stored_frame = NULL;
+      interlace->stored_fields = 0;
     }
-    interlace->stored_frame = NULL;
-    interlace->stored_fields = 0;
 
     if (interlace->top_field_first) {
       interlace->field_index = 0;
