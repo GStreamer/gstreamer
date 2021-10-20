@@ -359,24 +359,6 @@ build nodebug fedora x86_64:
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
 
-build static fedora x86_64:
-  extends: '.build fedora x86_64'
-  variables:
-    MESON_BUILDTYPE_ARGS: >
-      --default-library=static
-      -Dintrospection=disabled
-      -Ddoc=disabled
-      -Dpython=auto
-
-build static nodebug fedora x86_64:
-  extends: 'build nodebug fedora x86_64'
-  variables:
-    MESON_BUILDTYPE_ARGS: >
-      --default-library=static
-      -Dintrospection=disabled
-      -Ddoc=disabled
-      -Dpython=auto
-
 build clang fedora x86_64:
   extends: '.build fedora x86_64'
   variables:
@@ -534,9 +516,9 @@ integration testsuites fedora:
     TEST_SUITE: "validate ges"
 
 # gstreamer-full:
-gstreamer-full:
-  extends: 'build static fedora x86_64'
-  stage: integrate
+gstreamer-full static build:
+  extends: '.build fedora x86_64'
+  stage: 'build'
   variables:
     MESON_ARGS: >
       --default-library=static
@@ -552,12 +534,14 @@ gstreamer-full:
     paths:
       - 'meson-logs/'
 
-gstreamer-full-minimal:
-  extends: 'build static fedora x86_64'
-  stage: integrate
+gstreamer-full-minimal static build:
+  extends: 'gstreamer-full static build'
+  stage: 'build'
   variables:
     MESON_ARGS: >
       --default-library=static
+      -Ddoc=disabled
+      -Dgstreamer:gst_debug=false
       -Dauto_features=disabled
       -Dgstreamer:check=enabled
       -Dtests=enabled
