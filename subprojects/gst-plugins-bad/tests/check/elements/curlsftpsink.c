@@ -52,6 +52,7 @@ GST_START_TEST (test_properties)
   gchar *res_passphrase = NULL;
   gchar *res_kh_file = NULL;
   gchar *res_host_pubkey_md5 = NULL;
+  gchar *res_host_pubkey_sha256 = NULL;
   guint res_auth_type = 0;
   gboolean res_accept_unkh = FALSE;
 
@@ -76,6 +77,10 @@ GST_START_TEST (test_properties)
   g_object_set (G_OBJECT (sink), "ssh-knownhosts", "known_hosts", NULL);
   g_object_set (G_OBJECT (sink), "ssh-host-pubkey-md5",
       "00112233445566778899aabbccddeeff", NULL);
+#if CURL_AT_LEAST_VERSION(7, 80, 0)
+  g_object_set (G_OBJECT (sink), "ssh-host-pubkey-sha256",
+      "TQtiu1/zwGEEKG4z/PDfPE/ak47AF9nbWHykx4CWcu9", NULL);
+#endif
   g_object_set (G_OBJECT (sink), "ssh-accept-unknownhost", TRUE, NULL);
   g_object_set (G_OBJECT (sink), "ssh-key-passphrase", "SoMePaSsPhRaSe", NULL);
 
@@ -93,6 +98,10 @@ GST_START_TEST (test_properties)
       "ssh-accept-unknownhost", &res_accept_unkh,
       "create-dirs", &res_create_dirs, "ssh-key-passphrase", &res_passphrase,
       NULL);
+
+#if CURL_AT_LEAST_VERSION(7, 80, 0)
+  g_object_get (sink, "ssh-host-pubkey-sha256", &res_host_pubkey_sha256, NULL);
+#endif
 
   fail_unless (strncmp (res_location, "test_location", strlen ("test_location"))
       == 0);
@@ -113,6 +122,11 @@ GST_START_TEST (test_properties)
       == 0);
   fail_unless (strncmp (res_host_pubkey_md5, "00112233445566778899aabbccddeeff",
           strlen ("00112233445566778899aabbccddeeff")) == 0);
+#if CURL_AT_LEAST_VERSION(7, 80, 0)
+  fail_unless (strncmp (res_host_pubkey_sha256,
+          "TQtiu1/zwGEEKG4z/PDfPE/ak47AF9nbWHykx4CWcu9",
+          strlen ("TQtiu1/zwGEEKG4z/PDfPE/ak47AF9nbWHykx4CWcu9")) == 0);
+#endif
   fail_unless (strncmp (res_passphrase, "SoMePaSsPhRaSe",
           strlen ("SoMePaSsPhRaSe")) == 0);
   fail_unless (res_accept_unkh == TRUE);
@@ -127,6 +141,7 @@ GST_START_TEST (test_properties)
   g_free (res_passphrase);
   g_free (res_kh_file);
   g_free (res_host_pubkey_md5);
+  g_free (res_host_pubkey_sha256);
 
   /* ------- change properties ------------- */
 
@@ -145,6 +160,10 @@ GST_START_TEST (test_properties)
   g_object_set (G_OBJECT (sink), "ssh-knownhosts", "/zzz/known_hosts", NULL);
   g_object_set (G_OBJECT (sink), "ssh-host-pubkey-md5",
       "ffeeddccbbaa99887766554433221100", NULL);
+#if CURL_AT_LEAST_VERSION(7, 80, 0)
+  g_object_set (G_OBJECT (sink), "ssh-host-pubkey-sha256",
+      "TUtitut/wGEEKG4z/PDfPE/ak47AF7nbWHykAxCWcu5", NULL);
+#endif
   g_object_set (G_OBJECT (sink), "ssh-accept-unknownhost", FALSE, NULL);
   g_object_set (G_OBJECT (sink), "ssh-key-passphrase", "OtherPASSphrase", NULL);
 
@@ -162,6 +181,10 @@ GST_START_TEST (test_properties)
       "ssh-host-pubkey-md5", &res_host_pubkey_md5,
       "ssh-key-passphrase", &res_passphrase, "create-dirs", &res_create_dirs,
       NULL);
+
+#if CURL_AT_LEAST_VERSION(7, 80, 0)
+  g_object_get (sink, "ssh-host-pubkey-sha256", &res_host_pubkey_sha256, NULL);
+#endif
 
   fail_unless (strncmp (res_location, "new_location", strlen ("new_location"))
       == 0);
@@ -182,6 +205,11 @@ GST_START_TEST (test_properties)
           strlen ("/zzz/known_host")) == 0);
   fail_unless (strncmp (res_host_pubkey_md5, "ffeeddccbbaa99887766554433221100",
           strlen ("ffeeddccbbaa99887766554433221100")) == 0);
+#if CURL_AT_LEAST_VERSION(7, 80, 0)
+  fail_unless (strncmp (res_host_pubkey_sha256,
+          "TUtitut/wGEEKG4z/PDfPE/ak47AF7nbWHykAxCWcu5",
+          strlen ("TUtitut/wGEEKG4z/PDfPE/ak47AF7nbWHykAxCWcu5")) == 0);
+#endif
   fail_unless (strncmp (res_passphrase, "OtherPASSphrase",
           strlen ("OtherPASSphrase")) == 0);
   fail_unless (res_accept_unkh == FALSE);
@@ -196,6 +224,7 @@ GST_START_TEST (test_properties)
   g_free (res_passphrase);
   g_free (res_kh_file);
   g_free (res_host_pubkey_md5);
+  g_free (res_host_pubkey_256);
 
   cleanup_curlsftpsink (sink);
 }

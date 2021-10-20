@@ -66,6 +66,7 @@ enum
   PROP_SSH_KEY_PASSPHRASE,
   PROP_SSH_KNOWNHOSTS,
   PROP_SSH_HOST_PUBLIC_KEY_MD5,
+  PROP_SSH_HOST_PUBLIC_KEY_SHA256,
   PROP_SSH_ACCEPT_UNKNOWNHOST
 };
 
@@ -167,6 +168,16 @@ gst_curl_ssh_sink_class_init (GstCurlSshSinkClass * klass)
           "remote host's public key",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+#if CURL_AT_LEAST_VERSION(7, 80, 0)
+  g_object_class_install_property (gobject_class,
+      PROP_SSH_HOST_PUBLIC_KEY_SHA256,
+      g_param_spec_string ("ssh-host-pubkey-sha256",
+          "SHA256 checksum of the remote host's public key",
+          "SHA256 checksum (Base64 encoded) of the remote host's public key",
+          NULL, G_PARAM_READWRITE | GST_PARAM_CONDITIONALLY_AVAILABLE |
+          G_PARAM_STATIC_STRINGS));
+#endif
+
   g_object_class_install_property (gobject_class, PROP_SSH_ACCEPT_UNKNOWNHOST,
       g_param_spec_boolean ("ssh-accept-unknownhost",
           "SSH accept unknown host",
@@ -186,6 +197,7 @@ gst_curl_ssh_sink_init (GstCurlSshSink * sink)
   sink->ssh_key_passphrase = NULL;
   sink->ssh_knownhosts = NULL;
   sink->ssh_host_public_key_md5 = NULL;
+  sink->ssh_host_public_key_sha256 = NULL;
   sink->ssh_accept_unknownhost = FALSE;
 }
 
@@ -201,6 +213,7 @@ gst_curl_ssh_sink_finalize (GObject * gobject)
   g_free (this->ssh_key_passphrase);
   g_free (this->ssh_knownhosts);
   g_free (this->ssh_host_public_key_md5);
+  g_free (this->ssh_host_public_key_sha256);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -262,6 +275,13 @@ gst_curl_ssh_sink_set_property (GObject * object, guint prop_id,
           sink->ssh_host_public_key_md5);
       break;
 
+    case PROP_SSH_HOST_PUBLIC_KEY_SHA256:
+      g_free (sink->ssh_host_public_key_sha256);
+      sink->ssh_host_public_key_sha256 = g_value_dup_string (value);
+      GST_DEBUG_OBJECT (sink, "ssh_host_public_key_sha256 set to %s",
+          sink->ssh_host_public_key_sha256);
+      break;
+
     case PROP_SSH_ACCEPT_UNKNOWNHOST:
       sink->ssh_accept_unknownhost = g_value_get_boolean (value);
       GST_DEBUG_OBJECT (sink, "ssh_accept_unknownhost set to %d",
@@ -307,6 +327,10 @@ gst_curl_ssh_sink_get_property (GObject * object, guint prop_id,
 
     case PROP_SSH_HOST_PUBLIC_KEY_MD5:
       g_value_set_string (value, sink->ssh_host_public_key_md5);
+      break;
+
+    case PROP_SSH_HOST_PUBLIC_KEY_SHA256:
+      g_value_set_string (value, sink->ssh_host_public_key_sha256);
       break;
 
     case PROP_SSH_ACCEPT_UNKNOWNHOST:
@@ -371,6 +395,17 @@ gst_curl_ssh_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
       return FALSE;
     }
   }
+#if CURL_AT_LEAST_VERSION(7, 80, 0)
+  if (sink->ssh_host_public_key_sha256) {
+    if ((curl_err =
+            curl_easy_setopt (bcsink->curl, CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256,
+                sink->ssh_host_public_key_sha256)) != CURLE_OK) {
+      bcsink->error = g_strdup_printf ("failed to set remote host's public "
+          "key SHA256: %s", curl_easy_strerror (curl_err));
+      return FALSE;
+    }
+  }
+#endif
 
   /* make sure we only accept PASSWORD or PUBLICKEY auth methods
    * (can be extended later) */

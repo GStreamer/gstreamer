@@ -74,6 +74,9 @@ struct _GstCurlSshSink
                                            from remote host */
   gchar *ssh_host_public_key_md5;   /* MD5-hash of the remote host's public key:
                                        CURLOPT_SSH_HOST_PUBLIC_KEY_MD5 */
+  gchar *ssh_host_public_key_sha256; /* SHA256-hash of the remote host's public
+                                        key: CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256
+                                      */
 };
 
 struct _GstCurlSshSinkClass
