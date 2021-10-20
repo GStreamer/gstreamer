@@ -192,7 +192,7 @@ option('mfx_api', type : 'combo', choices : ['MSDK', 'oneVPL', 'auto'], value : 
        description : 'Select MFX API to build against')
 
 # License-related feature options
-option('gpl', type: 'feature', value: 'auto', yield: true, # FIXME: disable by default
+option('gpl', type: 'feature', value: 'disabled', yield: true,
   description: 'Allow build plugins that have (A)GPL-licensed dependencies')
 
 # Common feature options

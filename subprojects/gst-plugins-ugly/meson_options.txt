@@ -19,7 +19,7 @@ option('sidplay', type : 'feature', value : 'auto', description : 'Commodore 64 
 option('x264', type : 'feature', value : 'auto', description : 'H.264 video encoder plugin based on libx264 (GPL - only built if gpl option is also enabled!)')
 
 # License-related feature options
-option('gpl', type: 'feature', value: 'auto', yield: true, # FIXME: disable by default
+option('gpl', type: 'feature', value: 'disabled', yield: true,
   description: 'Allow build plugins that have GPL-licensed dependencies')
 
 # Common feature options
