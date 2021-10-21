@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:element-d3d11av19dec
+ * SECTION:element-d3d11av1dec
  * @title: d3d11av1dec
  *
  * A Direct3D11/DXVA based AV1 video decoder
@@ -440,6 +440,14 @@ gst_d3d11_av1_dec_class_init (GstD3D11AV1DecClass * klass, gpointer data)
 
   parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
   gst_d3d11_decoder_class_data_fill_subclass_data (cdata, &klass->class_data);
+
+  /**
+   * GstD3D11AV1Dec:adapter-luid:
+   *
+   * DXGI Adapter LUID for this elemenet
+   *
+   * Since: 1.20
+   */
   gst_d3d11_decoder_proxy_class_init (element_class, cdata,
       "Seungha Yang <seungha@centricular.com>");
 
@@ -1341,6 +1349,9 @@ gst_d3d11_av1_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   /* make lower rank than default device */
   if (rank > 0 && index != 0)
     rank--;
+
+  if (index != 0)
+    gst_element_type_set_skip_documentation (type);
 
   if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);

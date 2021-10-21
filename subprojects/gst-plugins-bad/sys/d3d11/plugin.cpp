@@ -17,6 +17,45 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:plugin-d3d11
+ *
+ * Microsoft Direct3D11 plugin.
+ *
+ * This plugin consists of various video filter, screen capture source,
+ * video sink, and video decoder elements.
+ *
+ * GstD3D11 plugin supports H.264/AVC, H.265/HEVC, VP8, VP9, H.262/MPEG-2 video,
+ * and AV1 codecs for decoding as well as hardware-accelerated video
+ * deinterlacing. Note that minimum required OS version for video decoder and
+ * deinterlacing elements is Windows 8.
+ *
+ * Plugin feature names of decoders:
+ * - d3d11h264dec
+ * - d3d11h265dec
+ * - d3d11vp8dec
+ * - d3d11vp9dec
+ * - d3d11mpeg2dec
+ * - d3d11av1dec
+ *
+ * Similar to the video decoder case, deinterlacing element would be registered
+ * only if its supported by hardware with the feature name `d3d11deinterlace`
+ *
+ * However, depending on the hardware it runs on, some elements might not be
+ * registered in case that underlying hardware doesn't support the feature.
+ * For a system with multiple Direct3D11 compatible hardwares (i.e., GPU),
+ * there can be multiple plugin features having the same role.
+ * The naming rule for the non-primary decoder element is
+ * `d3d11{codec}device{index}dec` where `index` is an arbitrary index number of
+ * hardware starting from 1.
+ *
+ * To get a list of all available elements, user can run
+ * ```sh
+ * gst-inspect-1.0.exe d3d11
+ * ```
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

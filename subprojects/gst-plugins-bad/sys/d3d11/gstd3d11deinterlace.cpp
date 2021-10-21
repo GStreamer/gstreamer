@@ -2445,6 +2445,9 @@ gst_d3d11_deinterlace_register (GstPlugin * plugin, GstD3D11Device * device,
       type_name, &type_info, (GTypeFlags) 0);
   cdata->deinterlace_type = type;
 
+  if (index != 0)
+    gst_element_type_set_skip_documentation (type);
+
   if (!gst_element_register (plugin, feature_name, GST_RANK_NONE, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);
 
@@ -2470,6 +2473,9 @@ gst_d3d11_deinterlace_register (GstPlugin * plugin, GstD3D11Device * device,
   /* make lower rank than default device */
   if (rank > 0 && index != 0)
     rank--;
+
+  if (index != 0)
+    gst_element_type_set_skip_documentation (bin_type);
 
   if (!gst_element_register (plugin, feature_name, rank, bin_type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);
