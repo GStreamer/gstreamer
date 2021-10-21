@@ -4842,6 +4842,7 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
       if (ret != GST_PAD_LINK_OK) {
         goto aux_link_failed;
       }
+      gst_object_unref (sinkpad);
     }
     prev = aux;
   } else {
