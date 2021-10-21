@@ -917,6 +917,10 @@ main (int argc, char *argv[])
     for (tmp = features; tmp; tmp = tmp->next) {
       GstPluginFeature *feature = tmp->data;
       if (GST_IS_ELEMENT_FACTORY (feature)) {
+        GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
+        if (gst_element_factory_get_skip_documentation (factory))
+          continue;
+
         if (!f)
           g_string_append_printf (json, ",");
         _add_element_details (json, other_types, seen_other_types, feature);

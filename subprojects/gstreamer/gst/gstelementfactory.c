@@ -77,6 +77,7 @@ static void gst_element_factory_cleanup (GstElementFactory * factory);
 
 /* this is defined in gstelement.c */
 extern GQuark __gst_elementclass_factory;
+extern GQuark __gst_elementclass_skip_doc;
 
 #define _do_init \
 { \
@@ -325,6 +326,60 @@ detailserror:
     gst_element_factory_cleanup (factory);
     return FALSE;
   }
+}
+
+/**
+ * gst_element_type_set_skip_documentation:
+ * @type: a #GType of element
+ *
+ * Marks @type as "documentation should be skipped".
+ * Can be useful for dynamically registered element to be excluded from
+ * plugin documentation system.
+ *
+ * Example:
+ * ```c
+ * GType my_type;
+ * GTypeInfo my_type_info;
+ *
+ * // Fill "my_type_info"
+ * ...
+ *
+ * my_type = g_type_register_static (GST_TYPE_MY_ELEMENT, "my-type-name",
+ *    &my_type_info, 0);
+ * gst_element_type_set_skip_documentation (my_type);
+ * gst_element_register (plugin, "my-plugin-feature-name", rank, my_type);
+ * ```
+ *
+ * Since: 1.20
+ */
+void
+gst_element_type_set_skip_documentation (GType type)
+{
+  g_return_if_fail (g_type_is_a (type, GST_TYPE_ELEMENT));
+
+  g_type_set_qdata (type, __gst_elementclass_skip_doc, GINT_TO_POINTER (1));
+}
+
+/**
+ * gst_element_factory_get_skip_documentation:
+ * @factory: a #GstElementFactory to query documentation skip
+ *
+ * Queries whether registered element managed by @factory needs to
+ * be excluded from documentation system or not.
+ *
+ * Returns: %TRUE if documentation should be skipped
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_element_factory_get_skip_documentation (GstElementFactory * factory)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), TRUE);
+
+  if (g_type_get_qdata (factory->type, __gst_elementclass_skip_doc))
+    return TRUE;
+
+  return FALSE;
 }
 
 static gboolean

@@ -108,6 +108,12 @@ GST_API
 gboolean                gst_element_register                    (GstPlugin *plugin, const gchar *name,
                                                                  guint rank, GType type);
 
+GST_API
+void                    gst_element_type_set_skip_documentation (GType type);
+
+GST_API
+gboolean                gst_element_factory_get_skip_documentation (GstElementFactory * factory);
+
 /* Factory list functions */
 
 /**

@@ -166,6 +166,10 @@ static GThreadPool *gst_element_pool = NULL;
 /* this is used in gstelementfactory.c:gst_element_register() */
 GQuark __gst_elementclass_factory = 0;
 
+/* used for gst_element_type_set_skip_documentation() and
+ * gst_element_factory_get_skip_documentation() */
+GQuark __gst_elementclass_skip_doc = 0;
+
 GType
 gst_element_get_type (void)
 {
@@ -191,6 +195,8 @@ gst_element_get_type (void)
 
     __gst_elementclass_factory =
         g_quark_from_static_string ("GST_ELEMENTCLASS_FACTORY");
+    __gst_elementclass_skip_doc =
+        g_quark_from_static_string ("GST_ELEMENTCLASS_SKIP_DOCUMENTATION");
     g_once_init_leave (&gst_element_type, _type);
   }
   return gst_element_type;
