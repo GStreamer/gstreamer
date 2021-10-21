@@ -29,62 +29,68 @@ static const struct ProfileMap
 {
   VAProfile profile;
   GstVaCodecs codec;
+  const gchar *va_name;
   const gchar *name;
   const gchar *media_type;
   const gchar *caps_str;
 } profile_map[] = {
-#define P(codec, name, media_type, caps_str) {                \
-    G_PASTE (G_PASTE (VAProfile, codec), name), codec,        \
-    G_STRINGIFY (G_PASTE (G_PASTE (VAProfile, codec), name)), \
-    media_type, caps_str }
-  P (MPEG2, Simple, "video/mpeg",
+#define P(codec, va_name, name, media_type, caps_str) {          \
+    G_PASTE (G_PASTE (VAProfile, codec), va_name), codec,        \
+    G_STRINGIFY (G_PASTE (G_PASTE (VAProfile, codec), va_name)), \
+    name, media_type, caps_str }
+  P (MPEG2, Simple, "simple", "video/mpeg",
       "mpegversion = (int) 2, profile = (string) simple"),
-  P (MPEG2, Main, "video/mpeg",
+  P (MPEG2, Main, "main", "video/mpeg",
       "mpegversion = (int) 2, profile = (string) main"),
-  P (MPEG4, Simple, "video/mpeg",
+  P (MPEG4, Simple, "simple", "video/mpeg",
       "mpegversion = (int) 4, profile = (string) simple"),
-  P (MPEG4, AdvancedSimple, "video/mpeg",
+  P (MPEG4, AdvancedSimple, "advanced-simple", "video/mpeg",
       "mpegversion = (int) 4, profile = (string) advanced-simple"),
-  P (MPEG4, Main, "video/mpeg",
+  P (MPEG4, Main, "main", "video/mpeg",
       "mpegversion = (int) 4, profile = (string) main, "),
-  P (H264, Main, "video/x-h264", "profile = (string) { main, baseline }"),
-  P (H264, High, "video/x-h264",
+  P (H264, Main, "main", "video/x-h264", "profile = (string) { main, baseline }"),
+  P (H264, High, "high", "video/x-h264",
       "profile = (string) { high, progressive-high, constrained-high }"),
-  P (VC1, Simple, "video/x-wmv",
+  P (VC1, Simple, "simple", "video/x-wmv",
       "wmvversion = (int) 3, profile = (string) simple"),
-  P (VC1, Main, "video/x-wmv",
+  P (VC1, Main, "main", "video/x-wmv",
       "wmvversion = (int) 3, profile = (string) main"),
-  P (VC1, Advanced, "video/x-wmv",
+  P (VC1, Advanced, "advanced", "video/x-wmv",
       "wmvversion = (int) 3, format = (string) WVC1, "
       "profile = (string) advanced"),
-  P (H263, Baseline, "video/x-h263",
+  P (H263, Baseline, "baseline", "video/x-h263",
       "variant = (string) itu, h263version = (string) h263, "
       "profile = (string) baseline"),
-  P (JPEG, Baseline, "image/jpeg", NULL),
-  P (H264, ConstrainedBaseline, "video/x-h264",
+  P (JPEG, Baseline, "", "image/jpeg", NULL),
+  P (H264, ConstrainedBaseline, "constrained-baseline", "video/x-h264",
       "profile = (string) { constrained-baseline, baseline }"),
-  P (VP8, Version0_3, "video/x-vp8", NULL),
+  P (VP8, Version0_3, "", "video/x-vp8", NULL),
   /* Unsupported profiles by current GstH264Decoder */
   /* P (H264, MultiviewHigh, "video/x-h264", */
   /*     "profile = (string) {  multiview-high, stereo-high }"), */
   /* P (H264, StereoHigh, "video/x-h264", */
   /*     "profile = (string) {  multiview-high, stereo-high }"), */
-  P (HEVC, Main, "video/x-h265", "profile = (string) main"),
-  P (HEVC, Main10, "video/x-h265", "profile = (string) main-10"),
-  P (VP9, Profile0, "video/x-vp9", "profile = (string) 0"),
-  P (VP9, Profile1, "video/x-vp9", "profile = (string) 1"),
-  P (VP9, Profile2, "video/x-vp9", "profile = (string) 2"),
-  P (VP9, Profile3, "video/x-vp9", "profile = (string) 3"),
-  P (HEVC, Main12, "video/x-h265", "profile = (string) main-12"),
-  P (HEVC, Main422_10, "video/x-h265", "profile = (string) main-422-10"),
-  P (HEVC, Main422_12, "video/x-h265", "profile = (string) main-422-12"),
-  P (HEVC, Main444, "video/x-h265", "profile = (string) main-444"),
-  P (HEVC, Main444_10, "video/x-h265", "profile = (string) main-444-10"),
-  P (HEVC, Main444_12, "video/x-h265", "profile = (string) main-444-12"),
-  P (HEVC, SccMain, "video/x-h265", "profile = (string) screen-extended-main"),
-  P (HEVC, SccMain10, "video/x-h265",
+  P (HEVC, Main, "main", "video/x-h265", "profile = (string) main"),
+  P (HEVC, Main10, "main-10", "video/x-h265", "profile = (string) main-10"),
+  P (VP9, Profile0, "0", "video/x-vp9", "profile = (string) 0"),
+  P (VP9, Profile1, "1", "video/x-vp9", "profile = (string) 1"),
+  P (VP9, Profile2, "2", "video/x-vp9", "profile = (string) 2"),
+  P (VP9, Profile3, "3", "video/x-vp9", "profile = (string) 3"),
+  P (HEVC, Main12, "main-12", "video/x-h265", "profile = (string) main-12"),
+  P (HEVC, Main422_10, "main-422-10", "video/x-h265",
+      "profile = (string) main-422-10"),
+  P (HEVC, Main422_12, "main-422-12", "video/x-h265",
+      "profile = (string) main-422-12"),
+  P (HEVC, Main444, "main-444", "video/x-h265", "profile = (string) main-444"),
+  P (HEVC, Main444_10, "main-444-10", "video/x-h265",
+      "profile = (string) main-444-10"),
+  P (HEVC, Main444_12, "main-444-12", "video/x-h265",
+      "profile = (string) main-444-12"),
+  P (HEVC, SccMain, "screen-extended-main", "video/x-h265",
+      "profile = (string) screen-extended-main"),
+  P (HEVC, SccMain10, "screen-extended-main-10", "video/x-h265",
       "profile = (string) screen-extended-main-10"),
-  P (HEVC, SccMain444, "video/x-h265",
+  P (HEVC, SccMain444, "screen-extended-main-444", "video/x-h265",
       "profile = (string) screen-extended-main-444"),
 #if VA_CHECK_VERSION(1,7,0)
   /* Spec A.2:
@@ -103,11 +109,11 @@ static const struct ProfileMap
 
      So far, all va decoders can support "0" when they support "1",
      we just map "0" to "main" and "1" to "high".  */
-  P (AV1, Profile0, "video/x-av1", "profile = (string) main"),
-  P (AV1, Profile1, "video/x-av1", "profile = (string) high"),
+  P (AV1, Profile0, "main", "video/x-av1", "profile = (string) main"),
+  P (AV1, Profile1, "high", "video/x-av1", "profile = (string) high"),
 #endif
 #if VA_CHECK_VERSION(1, 8, 0)
-  P (HEVC, SccMain444_10, "video/x-h265",
+  P (HEVC, SccMain444_10, "screen-extended-main-444-10", "video/x-h265",
       "profile = (string) screen-extended-main-444-10"),
 #endif
 #undef P
@@ -138,7 +144,21 @@ const gchar *
 gst_va_profile_name (VAProfile profile)
 {
   const struct ProfileMap *map = get_profile_map (profile);
-  return map ? map->name : NULL;
+  return map ? map->va_name : NULL;
+}
+
+VAProfile
+gst_va_profile_from_name (GstVaCodecs codec, const gchar * name)
+{
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (profile_map); i++) {
+    if (profile_map[i].codec == codec &&
+        g_strcmp0 (profile_map[i].name, name) == 0)
+      return profile_map[i].profile;
+  }
+
+  return VAProfileNone;
 }
 
 GstCaps *
