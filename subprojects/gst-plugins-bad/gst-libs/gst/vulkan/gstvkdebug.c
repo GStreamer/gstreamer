@@ -163,3 +163,27 @@ gst_vulkan_physical_device_type_to_string (VkPhysicalDeviceType type)
       return "unknown";
   }
 }
+
+/**
+ * gst_vulkan_present_mode_to_string:
+ * @present_mode: a `VkPresentModeKHR`
+ *
+ * Returns: name of @present_mode
+ *
+ * Since: 1.20
+ */
+const gchar *
+gst_vulkan_present_mode_to_string (VkPresentModeKHR present_mode)
+{
+  switch (present_mode) {
+    case VK_PRESENT_MODE_FIFO_KHR:
+      return "FIFO";
+    case VK_PRESENT_MODE_IMMEDIATE_KHR:
+      return "immediate";
+    case VK_PRESENT_MODE_MAILBOX_KHR:
+      return "mailbox";
+      /* XXX: add other values as necessary */
+    default:
+      return "unknown";
+  }
+}

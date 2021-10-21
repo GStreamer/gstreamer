@@ -66,6 +66,8 @@ GST_VULKAN_API
 gchar *                     gst_vulkan_queue_flags_to_string                (VkQueueFlags queue_bits);
 GST_VULKAN_API
 gchar *                     gst_vulkan_sample_count_flags_to_string         (VkSampleCountFlags sample_count_bits);
+GST_VULKAN_API
+const gchar *               gst_vulkan_present_mode_to_string               (VkPresentModeKHR present_mode);
 
 G_END_DECLS
 
