@@ -1150,6 +1150,40 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
       ice_all_connected_completed_or_closed = FALSE;
   }
 
+  // also check data channel transport state
+  if (webrtc->priv->data_channel_transport) {
+    GstWebRTCDTLSTransport *transport =
+        webrtc->priv->data_channel_transport->transport;
+    GstWebRTCICEConnectionState ice_state;
+    GstWebRTCDTLSTransportState dtls_state;
+
+    g_object_get (transport, "state", &dtls_state, NULL);
+    GST_TRACE_OBJECT (webrtc, "data channel transport DTLS state: 0x%x",
+        dtls_state);
+    any_dtls_state |= (1 << dtls_state);
+
+    if (dtls_state != DTLS_STATE (NEW) && dtls_state != DTLS_STATE (CLOSED))
+      dtls_all_new_or_closed = FALSE;
+    if (dtls_state != DTLS_STATE (NEW) && dtls_state != DTLS_STATE (CONNECTING))
+      dtls_all_new_connecting_or_checking = FALSE;
+    if (dtls_state != DTLS_STATE (CONNECTED)
+        && dtls_state != DTLS_STATE (CLOSED))
+      dtls_all_connected_completed_or_closed = FALSE;
+
+    g_object_get (transport->transport, "state", &ice_state, NULL);
+    GST_TRACE_OBJECT (webrtc, "data channel transport ICE state: 0x%x",
+        ice_state);
+    any_ice_state |= (1 << ice_state);
+
+    if (ice_state != ICE_STATE (NEW) && ice_state != ICE_STATE (CLOSED))
+      ice_all_new_or_closed = FALSE;
+    if (ice_state != ICE_STATE (NEW) && ice_state != ICE_STATE (CHECKING))
+      ice_all_new_connecting_or_checking = FALSE;
+    if (ice_state != ICE_STATE (CONNECTED) && ice_state != ICE_STATE (COMPLETED)
+        && ice_state != ICE_STATE (CLOSED))
+      ice_all_connected_completed_or_closed = FALSE;
+  }
+
   GST_TRACE_OBJECT (webrtc, "ICE connection state: 0x%x. DTLS connection "
       "state: 0x%x", any_ice_state, any_dtls_state);
 
@@ -1179,7 +1213,7 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
   /* All RTCIceTransports and RTCDtlsTransports are in the new or closed
    * state, or there are no transports. */
   if ((dtls_all_new_or_closed && ice_all_new_or_closed)
-      || webrtc->priv->transceivers->len == 0) {
+      || webrtc->priv->transports->len == 0) {
     GST_TRACE_OBJECT (webrtc, "returning new");
     return STATE (NEW);
   }
@@ -6374,7 +6408,7 @@ static void
 on_rtpbin_ssrc_active (GstElement * rtpbin, guint session_id, guint ssrc,
     GstWebRTCBin * webrtc)
 {
-  GST_INFO_OBJECT (webrtc, "session %u ssrc %u active", session_id, ssrc);
+  GST_TRACE_OBJECT (webrtc, "session %u ssrc %u active", session_id, ssrc);
 }
 
 static void
@@ -6417,7 +6451,7 @@ static void
 on_rtpbin_sender_ssrc_active (GstElement * rtpbin, guint session_id, guint ssrc,
     GstWebRTCBin * webrtc)
 {
-  GST_INFO_OBJECT (webrtc, "session %u ssrc %u sender ssrc active", session_id,
+  GST_TRACE_OBJECT (webrtc, "session %u ssrc %u sender ssrc active", session_id,
       ssrc);
 }
 
