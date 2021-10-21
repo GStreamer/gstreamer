@@ -384,12 +384,6 @@ Note that Meson is written entirely in Python, so you can also run it as-is
 from the [git repository](https://github.com/mesonbuild/meson/) if you want to
 use the latest master branch for some reason.
 
-**ARM64 native only**: You might need
-[native upstream ARM64 support fix](https://github.com/mesonbuild/meson/pull/7432)
-which is expected to be a part of Meson 0.55.1.
-If your Meson package version which was installed via `pip3` is lower than 0.55.1,
-then you need to use [the latest master branch](https://github.com/mesonbuild/meson/).
-
 ### Running Meson on Windows
 
 At present, to build with Visual Studio, you need to run Meson from inside the
