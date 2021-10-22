@@ -7324,6 +7324,55 @@ gst_value_transform_string_date (const GValue * src_value, GValue * dest_value)
 }
 
 
+/*********
+ * bytes *
+ *********/
+
+static gint
+gst_value_compare_bytes (const GValue * value1, const GValue * value2)
+{
+  GBytes *bytes1 = (GBytes *) g_value_get_boxed (value1);
+  GBytes *bytes2 = (GBytes *) g_value_get_boxed (value2);
+
+  if (G_UNLIKELY (!bytes1 || !bytes2)) {
+    if (bytes1 == bytes2)
+      return GST_VALUE_EQUAL;
+    else
+      return GST_VALUE_UNORDERED;
+  }
+
+  return g_bytes_compare (bytes1, bytes2);
+}
+
+static gchar *
+gst_value_serialize_bytes (const GValue * value)
+{
+  GBytes *bytes = (GBytes *) g_value_get_boxed (value);
+  gsize len = 0;
+  const guint8 *data;
+
+  data = bytes ? g_bytes_get_data (bytes, &len) : NULL;
+
+  return g_base64_encode (data, len);
+}
+
+static gboolean
+gst_value_deserialize_bytes (GValue * dest, const gchar * s)
+{
+  gsize len;
+  guint8 *data;
+
+  if (!s) {
+    g_value_set_boxed (dest, g_bytes_new (NULL, 0));
+    return TRUE;
+  }
+
+  data = g_base64_decode (s, &len);
+  g_value_set_boxed (dest, g_bytes_new_take (data, len));
+  return TRUE;
+}
+
+
 /************
  * bitmask *
  ************/
@@ -8066,6 +8115,7 @@ _priv_gst_value_initialize (void)
   REGISTER_SERIALIZATION (gst_caps_get_type (), caps);
   REGISTER_SERIALIZATION (gst_tag_list_get_type (), tag_list);
   REGISTER_SERIALIZATION (G_TYPE_DATE, date);
+  REGISTER_SERIALIZATION (G_TYPE_BYTES, bytes);
   REGISTER_SERIALIZATION (gst_date_time_get_type (), date_time);
   REGISTER_SERIALIZATION (gst_bitmask_get_type (), bitmask);
   REGISTER_SERIALIZATION (gst_structure_get_type (), structure);
