@@ -115,6 +115,12 @@ that it is accessible and working.
 If you have not done so already, you may need to first
 [set up SSH keys in your GitLab User Settings](https://gitlab.freedesktop.org/profile/keys).
 
+**Once you have done that, please make your repository public.** By default
+newly-forked repositories might be private, but that causes problems for
+maintainers and merge bots, so please go to the newly-created repository's
+settings (https://gitlab.freedesktop.org/$USERNAME/gstreamer/edit) and set
+the visibility to public. Thanks!
+
 Next, you make a git branch with one or more commits you want to submit
 for review and merging. For that you will first need a local branch which
 you can create with e.g.
@@ -149,10 +155,12 @@ Couple of additional points:
 - You do not have to file an issue to go with each Merge Request, it's fine
   to just submit a Merge Request on its own.
 
-- **Please enable the "Allow commits from members who can merge to the target branch"**
-  **checkbox when submitting merge requests** as otherwise maintainers can't
-  rebase your Merge Request when they want to merge it, which means they
-  won't be able to merge it.
+- **Please make sure the "Allow commits from members who can merge to the target branch"**
+  **checkbox is enabled when submitting merge requests** as otherwise
+  maintainers (and our merge bot) can't rebase your Merge Request when they
+  want to merge it, which means they won't be able to merge it. If you can't
+  enable the check box that means your personal repository fork is private.
+  In that case, please go to the settings and change visibility to public.
 
 - If your proposed changes are proposed for review but not ready to be merged
   yet, please prefix the Merge Request title with `WIP:` for Work-in-Progress.
@@ -222,14 +230,15 @@ Couple of additional points:
 
 ### How to Prepare a Merge Request for Submission
 
-Please prepare any merge request against a current git checkout, ideally against
-the tip of the master branch.  If a merge request is prepared against an old
-commit or older branch and can't easily be rebased you may be asked to rebase
-and update the branch on top of the master branch.
+Please prepare any merge request against a current git checkout of the
+GStreamer monorepo (gstreamer module), against the tip of the `main` branch.
+If a merge request is prepared against an old commit or older branch and can't
+be easily rebased you may be asked to rebase and update the branch on top of
+the `main` branch.
 
 If you have created a new plugin, please submit a merge request that adds it to
-the gst-plugins-bad module, including `meson.build` modifications, new files
-and documentation.
+`subprojects/gst-plugins-bad`, including any required `meson.build` modifications,
+new files and documentation.
 
 #### Preparation: create a personal fork of the git repository on GitLab
 
@@ -240,8 +249,23 @@ the module in question (e.g. <https://gitlab.freedesktop.org/gstreamer/gstreamer
 and hit the fork button.  A new repository will be created in your user namespace
 and should be accessible as
 <https://gitlab.freedesktop.org/$USERNAME/gstreamer>.
-You should clone this repository with valid ssh credentials to be able to
-automatically push code to your fork.
+
+Clone the main gstreamer repository, like this:
+
+    git clone https://gitlab.freedesktop.org/gstreamer/gstreamer.git
+
+and then add your personal fork as a git remote like this:
+
+    git remote add my-personal-gitlab-fork git@gitlab.freedesktop.org:$USERNAME/gstreamer.git
+
+Check with
+
+    git fetch my-personal-gitlab-fork
+
+that it is accessible and working.
+
+If you have not done so already, you may need to first
+[set up SSH keys in your GitLab User Settings](https://gitlab.freedesktop.org/profile/keys).
 
 #### Creating a branch for the merge request and adding commits to it
 
@@ -372,10 +396,13 @@ The important part is really what the reasoning behind the change is, since
 that's what people want to know if they try to figure out twelve months later
 why a line of code does what it does.
 
-If the commit is related to any particular issues in gitlab, please add the
-full issue URL at the end of the commit message.
+If the commit is related to any particular issues in gitlab, please add a
+reference to the issue (e.g. `See #123` or `Fixes #123` if it fixes it the
+issue). For issues in other repositories (gst-plugins-{base,good,ugly,bad} etc.)
+please add the full issue URL to the commit message instead (or ask for the
+issue to be moved to the monorepo gstreamer repository), e.g.
 
-    https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/123
+    https://gitlab.freedesktop.org/gstreamer/gst-plugins-foo/issues/123
 
 We do not use `Signed-off by:` lines in GStreamer, please create commits
 without such lines.
@@ -452,15 +479,15 @@ may not receive e-mail notifications when you update the commits in your branch.
 ## Backporting to a stable branch
 
 Before backporting any changes to a stable branch, they should first be
-applied to the `master` branch, and should obviously not have caused any known
+applied to the `main` branch, and should obviously not have caused any known
 outstanding regressions. The only exception here are changes that do not apply
-to the `master` branch anymore.
+to the `main` branch anymore.
 
 You do not need to create backport merge requests against stable branches.
 Backport merge requests for stable branches will be created automatically
-based on labels on `master` branch merge requests.
+based on labels on `main` branch merge requests.
 
-Existing merge request against the `master` branch, including merged ones,
+Existing merge request against the `main` branch, including merged ones,
 that should be considered for backporting in the future should be labeled with
 the `Needs backport` label and the label for the target stable branch
 (e.g. `1.18`). All merge requests with the [`Needs backport`][needs-backport]
