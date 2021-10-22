@@ -826,6 +826,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->bitrate = 0;
   parse->priv->framecount = 0;
   parse->priv->bytecount = 0;
+  parse->priv->data_bytecount = 0;
   parse->priv->acc_duration = 0;
   parse->priv->first_frame_pts = GST_CLOCK_TIME_NONE;
   parse->priv->first_frame_dts = GST_CLOCK_TIME_NONE;
