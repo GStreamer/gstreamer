@@ -1239,6 +1239,14 @@ get_functions (GstVideoScaler * hscale, GstVideoScaler * vscale,
       *n_elems = 4;
       break;
     case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_ARGB64_LE:
+    case GST_VIDEO_FORMAT_ARGB64_BE:
+    case GST_VIDEO_FORMAT_RGBA64_BE:
+    case GST_VIDEO_FORMAT_RGBA64_LE:
+    case GST_VIDEO_FORMAT_BGRA64_BE:
+    case GST_VIDEO_FORMAT_BGRA64_LE:
+    case GST_VIDEO_FORMAT_ABGR64_BE:
+    case GST_VIDEO_FORMAT_ABGR64_LE:
     case GST_VIDEO_FORMAT_AYUV64:
       *bits = 16;
       *n_elems = 4;

@@ -7250,6 +7250,14 @@ get_scale_format (GstVideoFormat format, gint plane)
     case GST_VIDEO_FORMAT_v308:
     case GST_VIDEO_FORMAT_IYU2:
     case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_ARGB64_LE:
+    case GST_VIDEO_FORMAT_ARGB64_BE:
+    case GST_VIDEO_FORMAT_RGBA64_BE:
+    case GST_VIDEO_FORMAT_RGBA64_LE:
+    case GST_VIDEO_FORMAT_BGRA64_BE:
+    case GST_VIDEO_FORMAT_BGRA64_LE:
+    case GST_VIDEO_FORMAT_ABGR64_BE:
+    case GST_VIDEO_FORMAT_ABGR64_LE:
     case GST_VIDEO_FORMAT_AYUV64:
       res = format;
       break;
