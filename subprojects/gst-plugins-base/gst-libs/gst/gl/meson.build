@@ -539,6 +539,7 @@ if need_platform_egl != 'no'
       'egl/gstgldisplay_egl_device.c',
     ])
     gl_egl_headers += files([
+      'egl/egl.h',
       'egl/gstegl.h',
       'egl/gsteglimage.h',
       'egl/gstgldisplay_egl.h',
