@@ -112,6 +112,9 @@
  */
 
 static void _update_need_negotiation (GstWebRTCBin * webrtc);
+static GstPad *_connect_input_stream (GstWebRTCBin * webrtc,
+    GstWebRTCBinPad * pad);
+
 
 #define GST_CAT_DEFAULT gst_webrtc_bin_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -274,6 +277,19 @@ gst_webrtc_bin_pad_update_ssrc_event (GstWebRTCBinPad * wpad)
   }
 }
 
+static GList *
+_get_pending_sink_transceiver (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
+{
+  GList *ret;
+
+  for (ret = webrtc->priv->pending_sink_transceivers; ret; ret = ret->next) {
+    if (ret->data == pad)
+      break;
+  }
+
+  return ret;
+}
+
 static gboolean
 gst_webrtcbin_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -301,6 +317,35 @@ gst_webrtcbin_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_structure_get_uint (s, "ssrc", &trans->current_ssrc);
       gst_webrtc_bin_pad_update_ssrc_event (wpad);
     }
+
+    /* A remote description might have been set while the pad hadn't
+     * yet received caps, delaying the connection of the input stream
+     */
+    PC_LOCK (webrtc);
+    if (wpad->trans) {
+      GST_OBJECT_LOCK (wpad->trans);
+      if (wpad->trans->current_direction ==
+          GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY
+          || wpad->trans->current_direction ==
+          GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV) {
+        GList *pending = _get_pending_sink_transceiver (webrtc, wpad);
+
+        if (pending) {
+          GST_LOG_OBJECT (pad, "Connecting input stream to rtpbin with "
+              "transceiver %" GST_PTR_FORMAT " and caps %" GST_PTR_FORMAT,
+              wpad->trans, wpad->received_caps);
+          _connect_input_stream (webrtc, wpad);
+          gst_pad_remove_probe (GST_PAD (pad), wpad->block_id);
+          wpad->block_id = 0;
+          gst_object_unref (pending->data);
+          webrtc->priv->pending_sink_transceivers =
+              g_list_delete_link (webrtc->priv->pending_sink_transceivers,
+              pending);
+        }
+      }
+      GST_OBJECT_UNLOCK (wpad->trans);
+    }
+    PC_UNLOCK (webrtc);
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     check_negotiation = TRUE;
   }
@@ -423,10 +468,8 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCBin, gst_webrtc_bin, GST_TYPE_BIN,
     G_ADD_PRIVATE (GstWebRTCBin)
     GST_DEBUG_CATEGORY_INIT (gst_webrtc_bin_debug, "webrtcbin", 0,
-        "webrtcbin element"););
-
-static GstPad *_connect_input_stream (GstWebRTCBin * webrtc,
-    GstWebRTCBinPad * pad);
+        "webrtcbin element");
+    );
 
 enum
 {
@@ -1446,8 +1489,8 @@ _check_if_negotiation_is_needed (GstWebRTCBin * webrtc)
   /* If connection has created any RTCDataChannel's, and no m= section has
    * been negotiated yet for data, return "true". */
   if (webrtc->priv->data_channels->len > 0) {
-    if (_message_get_datachannel_index (webrtc->current_local_description->
-            sdp) >= G_MAXUINT) {
+    if (_message_get_datachannel_index (webrtc->
+            current_local_description->sdp) >= G_MAXUINT) {
       GST_LOG_OBJECT (webrtc,
           "no data channel media section and have %u " "transports",
           webrtc->priv->data_channels->len);
