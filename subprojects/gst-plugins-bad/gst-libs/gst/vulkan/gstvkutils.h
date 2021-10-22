@@ -57,7 +57,7 @@ GstVulkanImageView *    gst_vulkan_get_or_create_image_view     (GstVulkanImageM
 
 GST_VULKAN_API
 GstVulkanHandle *       gst_vulkan_create_shader                (GstVulkanDevice * device,
-                                                                 gchar * code,
+                                                                 const gchar * code,
                                                                  gsize size,
                                                                  GError ** error);
 
