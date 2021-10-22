@@ -164,3 +164,23 @@
    fun:lvp_CreateDevice
    ...
 }
+
+{
+   <libvmaf svm uninitialised value>
+   Memcheck:Cond
+   ...
+   fun:svm_predict_values
+   fun:svm_predict
+   fun:vmaf_predict_score_at_index
+   ...
+}
+
+{
+   <libvmaf svm uninitialised value>
+   Memcheck:Value8
+   ...
+   fun:svm_predict_values
+   fun:svm_predict
+   fun:vmaf_predict_score_at_index
+   ...
+}
