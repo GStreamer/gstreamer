@@ -1,4 +1,4 @@
-project('All GStreamer modules', 'c',
+project('gstreamer-full', 'c',
   version : '1.19.2.1',
   meson_version : '>= 0.59',
   default_options : ['buildtype=debugoptimized',
