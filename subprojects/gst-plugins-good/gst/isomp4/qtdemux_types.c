@@ -87,6 +87,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_mhdr, "mhdr", QT_FLAG_CONTAINER,},
   {FOURCC_jp2h, "jp2h", QT_FLAG_CONTAINER,},
   {FOURCC_colr, "colr", 0,},
+  {FOURCC_pasp, "pasp", 0,},
   {FOURCC_clap, "clap", 0,},
   {FOURCC_tapt, "tapt", 0,},
   {FOURCC_ihdr, "ihdr", 0,},
