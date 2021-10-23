@@ -3434,13 +3434,22 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       break;
     }
 
-    /* box/atom types that are in common with ISO base media file format */
+    /* top-level box/atom types that are in common with ISO base media file format */
     if (STRNCMP (&data[4], "moov", 4) == 0 ||
         STRNCMP (&data[4], "mdat", 4) == 0 ||
         STRNCMP (&data[4], "ftyp", 4) == 0 ||
         STRNCMP (&data[4], "free", 4) == 0 ||
         STRNCMP (&data[4], "uuid", 4) == 0 ||
+        STRNCMP (&data[4], "udta", 4) == 0 ||
+        STRNCMP (&data[4], "styp", 4) == 0 ||
+        STRNCMP (&data[4], "sidx", 4) == 0 ||
+        STRNCMP (&data[4], "ssix", 4) == 0 ||
+        STRNCMP (&data[4], "prft", 4) == 0 ||
+        STRNCMP (&data[4], "emsg", 4) == 0 ||
         STRNCMP (&data[4], "moof", 4) == 0 ||
+        STRNCMP (&data[4], "mfra", 4) == 0 ||
+        STRNCMP (&data[4], "pdin", 4) == 0 ||
+        STRNCMP (&data[4], "meta", 4) == 0 ||
         STRNCMP (&data[4], "skip", 4) == 0) {
       if (tip == 0) {
         tip = GST_TYPE_FIND_LIKELY;
