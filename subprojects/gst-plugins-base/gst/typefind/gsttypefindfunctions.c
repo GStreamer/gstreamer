@@ -3412,6 +3412,27 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
   guint64 size;
   const gchar *variant = NULL;
   static const gchar *qt_brands[] = { "qt  " };
+  static const gchar *cmaf_brands[] = {
+    "cmf2",
+    "cmfc",
+    /* CMAF AVC */
+    "cfsd",
+    "cfhd",
+    "chdf",
+    /* CMAF AAC */
+    "caac",
+    "caaa",
+    /* CMAF CEA closed captions */
+    "ccea",
+    /* CMAF HEVC */
+    "chhd",
+    "chh1",
+    "cud8",
+    "cud1",
+    "chd1",
+    "clg1"
+        /* TODO: CMAF WebVTT / IMSC1 */
+  };
   static const gchar *iso_brands[] = {
     "isom",
     "avc1",
@@ -3442,6 +3463,12 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
     if (STRNCMP (&data[4], "ftyp", 4) == 0) {
       if (ftyp_brand_is (&data[8], qt_brands, G_N_ELEMENTS (qt_brands))) {
         tip = GST_TYPE_FIND_MAXIMUM;
+        break;
+      }
+
+      if (ftyp_brand_is (&data[8], cmaf_brands, G_N_ELEMENTS (cmaf_brands))) {
+        tip = GST_TYPE_FIND_MAXIMUM;
+        variant = "cmaf";
         break;
       }
 
@@ -3530,6 +3557,13 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
         goto done;
       new_offset = 12;
       while (new_offset + 4 <= size) {
+        if (ftyp_brand_is (&data[new_offset], cmaf_brands,
+                G_N_ELEMENTS (cmaf_brands))) {
+          tip = GST_TYPE_FIND_MAXIMUM;
+          variant = "cmaf";
+          goto done;
+        }
+
         if (ftyp_brand_is (&data[new_offset], iso_brands,
                 G_N_ELEMENTS (iso_brands))) {
           tip = GST_TYPE_FIND_MAXIMUM;
