@@ -169,6 +169,12 @@ gst_d3d11_device_enable_d3d11_debug (void)
     if (!d3d11_debug_module)
       d3d11_debug_module =
           g_module_open ("d3d11_1sdklayers.dll", G_MODULE_BIND_LAZY);
+    if (!d3d11_debug_module)
+      d3d11_debug_module =
+          g_module_open ("d3d11_2sdklayers.dll", G_MODULE_BIND_LAZY);
+    if (!d3d11_debug_module)
+      d3d11_debug_module =
+          g_module_open ("d3d11_3sdklayers.dll", G_MODULE_BIND_LAZY);
 
     g_once_init_leave (&_init, 1);
   }
