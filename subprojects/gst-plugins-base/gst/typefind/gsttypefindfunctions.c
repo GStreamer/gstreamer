@@ -3387,6 +3387,19 @@ static GstStaticCaps qt_caps = GST_STATIC_CAPS ("video/quicktime");
 #define QT_CAPS gst_static_caps_get(&qt_caps)
 #define STRNCMP(x,y,z) (strncmp ((char*)(x), (char*)(y), z))
 
+static gboolean
+ftyp_brand_is (const guint8 * brand, const gchar * brands[], gsize n_brands)
+{
+  gsize i;
+
+  for (i = 0; i < n_brands; i++) {
+    if (STRNCMP (brand, brands[i], 4) == 0)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 /* FIXME 0.11: go through http://www.ftyps.com/ */
 static void
 qt_type_find (GstTypeFind * tf, gpointer unused)
@@ -3398,40 +3411,64 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
   guint64 offset = 0;
   guint64 size;
   const gchar *variant = NULL;
+  static const gchar *qt_brands[] = { "qt  " };
+  static const gchar *iso_brands[] = {
+    "isom",
+    "avc1",
+    "iso3",
+    "iso4",
+    "iso5",
+    "iso6",
+    "iso7",
+    "iso8",
+    "iso9",
+    "isoa",
+    "isob",
+    "mp42",
+    "mp41"
+  };
+  static const gchar *iso_fragmented_brands[] = {
+    "isml",
+    "dash",
+    "hlsf",
+    "avc3"
+  };
+  static const gchar *ccff_brands[] = { "ccff" };
+  static const gchar *heif_brands[] = { "mif1" };
 
   while ((data = gst_type_find_peek (tf, offset, 12)) != NULL) {
     guint64 new_offset;
 
-    if (STRNCMP (&data[4], "ftypqt  ", 8) == 0) {
-      tip = GST_TYPE_FIND_MAXIMUM;
-      break;
-    }
+    if (STRNCMP (&data[4], "ftyp", 4) == 0) {
+      if (ftyp_brand_is (&data[8], qt_brands, G_N_ELEMENTS (qt_brands))) {
+        tip = GST_TYPE_FIND_MAXIMUM;
+        break;
+      }
 
-    if (STRNCMP (&data[4], "ftypisom", 8) == 0 ||
-        STRNCMP (&data[4], "ftypavc1", 8) == 0 ||
-        STRNCMP (&data[4], "ftypmp42", 8) == 0) {
-      tip = GST_TYPE_FIND_MAXIMUM;
-      variant = "iso";
-      break;
-    }
+      if (ftyp_brand_is (&data[8], iso_brands, G_N_ELEMENTS (iso_brands))) {
+        tip = GST_TYPE_FIND_MAXIMUM;
+        variant = "iso";
+        break;
+      }
 
-    if (STRNCMP (&data[4], "ftypisml", 8) == 0 ||
-        STRNCMP (&data[4], "ftypavc3", 8) == 0) {
-      tip = GST_TYPE_FIND_MAXIMUM;
-      variant = "iso-fragmented";
-      break;
-    }
+      if (ftyp_brand_is (&data[8], iso_fragmented_brands,
+              G_N_ELEMENTS (iso_fragmented_brands))) {
+        tip = GST_TYPE_FIND_MAXIMUM;
+        variant = "iso-fragmented";
+        break;
+      }
 
-    if (STRNCMP (&data[4], "ftypccff", 8) == 0) {
-      tip = GST_TYPE_FIND_MAXIMUM;
-      variant = "ccff";
-      break;
-    }
+      if (ftyp_brand_is (&data[8], ccff_brands, G_N_ELEMENTS (ccff_brands))) {
+        tip = GST_TYPE_FIND_MAXIMUM;
+        variant = "ccff";
+        break;
+      }
 
-    if (STRNCMP (&data[4], "ftypmif1", 8) == 0) {
-      tip = GST_TYPE_FIND_MAXIMUM;
-      variant = "heif";
-      break;
+      if (ftyp_brand_is (&data[8], heif_brands, G_N_ELEMENTS (heif_brands))) {
+        tip = GST_TYPE_FIND_MAXIMUM;
+        variant = "heif";
+        break;
+      }
     }
 
     /* top-level box/atom types that are in common with ISO base media file format */
@@ -3493,20 +3530,27 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
         goto done;
       new_offset = 12;
       while (new_offset + 4 <= size) {
-        if (STRNCMP (&data[new_offset], "isom", 4) == 0 ||
-            STRNCMP (&data[new_offset], "dash", 4) == 0 ||
-            STRNCMP (&data[new_offset], "avc1", 4) == 0 ||
-            STRNCMP (&data[new_offset], "avc3", 4) == 0 ||
-            STRNCMP (&data[new_offset], "mp41", 4) == 0 ||
-            STRNCMP (&data[new_offset], "mp42", 4) == 0) {
+        if (ftyp_brand_is (&data[new_offset], iso_brands,
+                G_N_ELEMENTS (iso_brands))) {
           tip = GST_TYPE_FIND_MAXIMUM;
           variant = "iso";
           goto done;
-        } else if (STRNCMP (&data[new_offset], "mif1", 4) == 0) {
+        }
+
+        if (ftyp_brand_is (&data[new_offset], iso_fragmented_brands,
+                G_N_ELEMENTS (iso_fragmented_brands))) {
+          tip = GST_TYPE_FIND_MAXIMUM;
+          variant = "iso-fragmented";
+          goto done;
+        }
+
+        if (ftyp_brand_is (&data[new_offset], heif_brands,
+                G_N_ELEMENTS (heif_brands))) {
           tip = GST_TYPE_FIND_MAXIMUM;
           variant = "heif";
           goto done;
         }
+
         new_offset += 4;
       }
     }
