@@ -3385,7 +3385,6 @@ jpc_type_find (GstTypeFind * tf, gpointer unused)
 static GstStaticCaps qt_caps = GST_STATIC_CAPS ("video/quicktime");
 
 #define QT_CAPS gst_static_caps_get(&qt_caps)
-#define STRNCMP(x,y,z) (strncmp ((char*)(x), (char*)(y), z))
 
 static gboolean
 ftyp_brand_is (const guint8 * brand, const gchar * brands[], gsize n_brands)
@@ -3393,7 +3392,7 @@ ftyp_brand_is (const guint8 * brand, const gchar * brands[], gsize n_brands)
   gsize i;
 
   for (i = 0; i < n_brands; i++) {
-    if (STRNCMP (brand, brands[i], 4) == 0)
+    if (memcmp (brand, brands[i], 4) == 0)
       return TRUE;
   }
 
@@ -3460,7 +3459,7 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
   while ((data = gst_type_find_peek (tf, offset, 12)) != NULL) {
     guint64 new_offset;
 
-    if (STRNCMP (&data[4], "ftyp", 4) == 0) {
+    if (memcmp (&data[4], "ftyp", 4) == 0) {
       if (ftyp_brand_is (&data[8], qt_brands, G_N_ELEMENTS (qt_brands))) {
         tip = GST_TYPE_FIND_MAXIMUM;
         break;
@@ -3499,31 +3498,31 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
     }
 
     /* top-level box/atom types that are in common with ISO base media file format */
-    if (STRNCMP (&data[4], "moov", 4) == 0 ||
-        STRNCMP (&data[4], "mdat", 4) == 0 ||
-        STRNCMP (&data[4], "ftyp", 4) == 0 ||
-        STRNCMP (&data[4], "free", 4) == 0 ||
-        STRNCMP (&data[4], "uuid", 4) == 0 ||
-        STRNCMP (&data[4], "udta", 4) == 0 ||
-        STRNCMP (&data[4], "styp", 4) == 0 ||
-        STRNCMP (&data[4], "sidx", 4) == 0 ||
-        STRNCMP (&data[4], "ssix", 4) == 0 ||
-        STRNCMP (&data[4], "prft", 4) == 0 ||
-        STRNCMP (&data[4], "emsg", 4) == 0 ||
-        STRNCMP (&data[4], "moof", 4) == 0 ||
-        STRNCMP (&data[4], "mfra", 4) == 0 ||
-        STRNCMP (&data[4], "pdin", 4) == 0 ||
-        STRNCMP (&data[4], "meta", 4) == 0 ||
-        STRNCMP (&data[4], "skip", 4) == 0) {
+    if (memcmp (&data[4], "moov", 4) == 0 ||
+        memcmp (&data[4], "mdat", 4) == 0 ||
+        memcmp (&data[4], "ftyp", 4) == 0 ||
+        memcmp (&data[4], "free", 4) == 0 ||
+        memcmp (&data[4], "uuid", 4) == 0 ||
+        memcmp (&data[4], "udta", 4) == 0 ||
+        memcmp (&data[4], "styp", 4) == 0 ||
+        memcmp (&data[4], "sidx", 4) == 0 ||
+        memcmp (&data[4], "ssix", 4) == 0 ||
+        memcmp (&data[4], "prft", 4) == 0 ||
+        memcmp (&data[4], "emsg", 4) == 0 ||
+        memcmp (&data[4], "moof", 4) == 0 ||
+        memcmp (&data[4], "mfra", 4) == 0 ||
+        memcmp (&data[4], "pdin", 4) == 0 ||
+        memcmp (&data[4], "meta", 4) == 0 ||
+        memcmp (&data[4], "skip", 4) == 0) {
       if (tip == 0) {
         tip = GST_TYPE_FIND_LIKELY;
       } else {
         tip = GST_TYPE_FIND_NEARLY_CERTAIN;
       }
 
-      if (STRNCMP (&data[4], "moov", 4) == 0)
+      if (memcmp (&data[4], "moov", 4) == 0)
         have_moov = TRUE;
-      if (STRNCMP (&data[4], "mdat", 4) == 0)
+      if (memcmp (&data[4], "mdat", 4) == 0)
         have_mdat = TRUE;
 
       atoms_in_a_row += 1;
@@ -3533,10 +3532,10 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       }
     }
     /* other box/atom types, apparently quicktime specific */
-    else if (STRNCMP (&data[4], "pnot", 4) == 0 ||
-        STRNCMP (&data[4], "PICT", 4) == 0 ||
-        STRNCMP (&data[4], "wide", 4) == 0 ||
-        STRNCMP (&data[4], "prfl", 4) == 0) {
+    else if (memcmp (&data[4], "pnot", 4) == 0 ||
+        memcmp (&data[4], "PICT", 4) == 0 ||
+        memcmp (&data[4], "wide", 4) == 0 ||
+        memcmp (&data[4], "prfl", 4) == 0) {
       tip = GST_TYPE_FIND_MAXIMUM;
       break;
     } else {
@@ -3551,7 +3550,7 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
     if (size + offset >= G_MAXINT64)
       break;
     /* check compatible brands rather than ever expanding major brands above */
-    if ((STRNCMP (&data[4], "ftyp", 4) == 0) && (size >= 16)) {
+    if ((memcmp (&data[4], "ftyp", 4) == 0) && (size >= 16)) {
       data = gst_type_find_peek (tf, offset, size);
       if (data == NULL)
         goto done;
@@ -3657,9 +3656,9 @@ qtif_type_find (GstTypeFind * tf, gpointer unused)
     if (size < 8)
       break;
 
-    if (STRNCMP (data + 4, "idsc", 4) == 0)
+    if (memcmp (data + 4, "idsc", 4) == 0)
       found_idsc = TRUE;
-    if (STRNCMP (data + 4, "idat", 4) == 0)
+    if (memcmp (data + 4, "idat", 4) == 0)
       found_idat = TRUE;
 
     if (found_idsc && found_idat) {
