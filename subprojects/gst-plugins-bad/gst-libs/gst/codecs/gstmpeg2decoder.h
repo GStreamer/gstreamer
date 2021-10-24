@@ -113,7 +113,7 @@ struct _GstMpeg2DecoderClass
    * Since: 1.20
    */
   GstFlowReturn (*new_field_picture)  (GstMpeg2Decoder * decoder,
-                                       const GstMpeg2Picture * first_field,
+                                       GstMpeg2Picture * first_field,
                                        GstMpeg2Picture * second_field);
 
   /**

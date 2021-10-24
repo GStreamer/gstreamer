@@ -324,13 +324,13 @@ error:
 
 static GstFlowReturn
 gst_va_mpeg2_dec_new_field_picture (GstMpeg2Decoder * decoder,
-    const GstMpeg2Picture * first_field, GstMpeg2Picture * second_field)
+    GstMpeg2Picture * first_field, GstMpeg2Picture * second_field)
 {
   GstVaDecodePicture *first_pic, *second_pic;
   GstVaMpeg2Dec *self = GST_VA_MPEG2_DEC (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
 
-  first_pic = gst_mpeg2_picture_get_user_data ((GstMpeg2Picture *) first_field);
+  first_pic = gst_mpeg2_picture_get_user_data (first_field);
   if (!first_pic)
     return GST_FLOW_ERROR;
 

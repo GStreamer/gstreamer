@@ -123,9 +123,9 @@ static GstFlowReturn gst_d3d11_mpeg2_dec_new_sequence (GstMpeg2Decoder *
     const GstMpegVideoSequenceScalableExt * seq_scalable_ext);
 static GstFlowReturn gst_d3d11_mpeg2_dec_new_picture (GstMpeg2Decoder * decoder,
     GstVideoCodecFrame * frame, GstMpeg2Picture * picture);
-static GstFlowReturn gst_d3d11_mpeg2_dec_new_field_picture (GstMpeg2Decoder *
-    decoder, const GstMpeg2Picture * first_field,
-    GstMpeg2Picture * second_field);
+static GstFlowReturn
+gst_d3d11_mpeg2_dec_new_field_picture (GstMpeg2Decoder * decoder,
+    GstMpeg2Picture * first_field, GstMpeg2Picture * second_field);
 static GstFlowReturn gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder *
     decoder, GstMpeg2Picture * picture, GstMpeg2Slice * slice,
     GstMpeg2Picture * prev_picture, GstMpeg2Picture * next_picture);
@@ -438,13 +438,13 @@ gst_d3d11_mpeg2_dec_new_picture (GstMpeg2Decoder * decoder,
 
 static GstFlowReturn
 gst_d3d11_mpeg2_dec_new_field_picture (GstMpeg2Decoder * decoder,
-    const GstMpeg2Picture * first_field, GstMpeg2Picture * second_field)
+    GstMpeg2Picture * first_field, GstMpeg2Picture * second_field)
 {
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
   GstBuffer *view_buffer;
 
   view_buffer = (GstBuffer *)
-      gst_mpeg2_picture_get_user_data ((GstMpeg2Picture *) first_field);
+      gst_mpeg2_picture_get_user_data (first_field);
 
   if (!view_buffer) {
     GST_WARNING_OBJECT (self, "First picture does not have output view buffer");

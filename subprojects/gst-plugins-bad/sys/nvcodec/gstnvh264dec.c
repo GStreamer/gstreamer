@@ -141,8 +141,9 @@ static GstFlowReturn gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder,
     const GstH264SPS * sps, gint max_dpb_size);
 static GstFlowReturn gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture);
-static GstFlowReturn gst_nv_h264_dec_new_field_picture (GstH264Decoder *
-    decoder, const GstH264Picture * first_field, GstH264Picture * second_field);
+static GstFlowReturn
+gst_nv_h264_dec_new_field_picture (GstH264Decoder * decoder,
+    GstH264Picture * first_field, GstH264Picture * second_field);
 static GstFlowReturn gst_nv_h264_dec_output_picture (GstH264Decoder *
     decoder, GstVideoCodecFrame * frame, GstH264Picture * picture);
 static GstFlowReturn gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
@@ -486,12 +487,12 @@ gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
 
 static GstFlowReturn
 gst_nv_h264_dec_new_field_picture (GstH264Decoder * decoder,
-    const GstH264Picture * first_field, GstH264Picture * second_field)
+    GstH264Picture * first_field, GstH264Picture * second_field)
 {
   GstNvDecoderFrame *nv_frame;
 
   nv_frame = (GstNvDecoderFrame *)
-      gst_h264_picture_get_user_data ((GstH264Picture *) first_field);
+      gst_h264_picture_get_user_data (first_field);
   if (!nv_frame) {
     GST_ERROR_OBJECT (decoder,
         "No decoder frame in the first picture %p", first_field);

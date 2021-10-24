@@ -1307,11 +1307,10 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
 
 static GstFlowReturn
 gst_v4l2_codec_h264_dec_new_field_picture (GstH264Decoder * decoder,
-    const GstH264Picture * first_field, GstH264Picture * second_field)
+    GstH264Picture * first_field, GstH264Picture * second_field)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
-  GstV4l2Request *request =
-      gst_h264_picture_get_user_data ((GstH264Picture *) first_field);
+  GstV4l2Request *request = gst_h264_picture_get_user_data (first_field);
 
   if (!request) {
     GST_WARNING_OBJECT (self,

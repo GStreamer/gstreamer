@@ -527,13 +527,13 @@ error:
 
 static GstFlowReturn
 gst_va_h264_dec_new_field_picture (GstH264Decoder * decoder,
-    const GstH264Picture * first_field, GstH264Picture * second_field)
+    GstH264Picture * first_field, GstH264Picture * second_field)
 {
   GstVaDecodePicture *first_pic, *second_pic;
   GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
 
-  first_pic = gst_h264_picture_get_user_data ((GstH264Picture *) first_field);
+  first_pic = gst_h264_picture_get_user_data (first_field);
   if (!first_pic)
     return GST_FLOW_ERROR;
 

@@ -146,8 +146,9 @@ static GstFlowReturn gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
     const GstH264SPS * sps, gint max_dpb_size);
 static GstFlowReturn gst_d3d11_h264_dec_new_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture);
-static GstFlowReturn gst_d3d11_h264_dec_new_field_picture (GstH264Decoder *
-    decoder, const GstH264Picture * first_field, GstH264Picture * second_field);
+static GstFlowReturn
+gst_d3d11_h264_dec_new_field_picture (GstH264Decoder * decoder,
+    GstH264Picture * first_field, GstH264Picture * second_field);
 static GstFlowReturn gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb);
 static GstFlowReturn gst_d3d11_h264_dec_decode_slice (GstH264Decoder * decoder,
@@ -497,13 +498,12 @@ gst_d3d11_h264_dec_new_picture (GstH264Decoder * decoder,
 
 static GstFlowReturn
 gst_d3d11_h264_dec_new_field_picture (GstH264Decoder * decoder,
-    const GstH264Picture * first_field, GstH264Picture * second_field)
+    GstH264Picture * first_field, GstH264Picture * second_field)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
   GstBuffer *view_buffer;
 
-  view_buffer = (GstBuffer *) gst_h264_picture_get_user_data ((GstH264Picture *)
-      first_field);
+  view_buffer = (GstBuffer *) gst_h264_picture_get_user_data (first_field);
 
   if (!view_buffer) {
     GST_WARNING_OBJECT (self, "First picture does not have output view buffer");

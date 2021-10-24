@@ -151,7 +151,7 @@ struct _GstH264DecoderClass
    * Since: 1.20
    */
   GstFlowReturn (*new_field_picture)  (GstH264Decoder * decoder,
-                                       const GstH264Picture * first_field,
+                                       GstH264Picture * first_field,
                                        GstH264Picture * second_field);
 
   /**
