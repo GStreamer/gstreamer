@@ -14,6 +14,8 @@ gst_version_micro = version_arr[2].to_int()
 else
   gst_version_nano = 0
 endif
+gst_version_is_stable = gst_version_minor.is_even()
+gst_version_is_dev = gst_version_minor.is_odd() and gst_version_micro < 90
 
 api_version = '1.0'
 libavfilter_dep = dependency('libavfilter', version: '>= 7.16.100',
@@ -79,7 +81,12 @@ foreach h : check_headers
   endif
 endforeach
 
-gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
+if gst_version_is_stable
+  gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
+else
+  gst_req = '>= ' + gst_version
+endif
+
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_dep'])
 gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,

@@ -10,10 +10,12 @@ version_arr = gst_version.split('.')
 gst_version_major = version_arr[0].to_int()
 gst_version_minor = version_arr[1].to_int()
 gst_version_micro = version_arr[2].to_int()
-if gst_version_minor.is_even()
+gst_version_is_stable = gst_version_minor.is_even()
+gst_version_is_dev = gst_version_minor.is_odd() and gst_version_micro < 90
+if gst_version_is_stable
   TESTSUITE_VERSION = '@0@.@1@'.format(gst_version_major, gst_version_minor)
 else
-  TESTSUITE_VERSION = 'master'
+  TESTSUITE_VERSION = 'master' # FIXME: main?
 endif
 
 apiversion = '1.0'
@@ -27,7 +29,12 @@ osxversion = curversion + 1
 prefix = get_option('prefix')
 
 glib_req = '>= 2.56.0'
-gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
+
+if gst_version_is_stable
+  gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
+else
+  gst_req = '>= ' + gst_version
+endif
 
 cc = meson.get_compiler('c')
 
