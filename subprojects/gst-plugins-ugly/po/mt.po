@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.9.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2008-11-13 18:18+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -13,6 +13,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Poedit-Language: Maltese\n"
 "X-Poedit-Country: Malta\n"
 "X-Poedit-SourceCharset: UTF-8\n"
@@ -58,13 +59,24 @@ msgstr "Ma nistax niftaħ DVD."
 msgid "This stream contains no data."
 msgstr "L-istream ma fiha l-ebda data."
 
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
-#~ "parameters."
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "L-informazzjoni tat-titlu tad-DVD mhux validu."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Ma nistax naqra l-informazzjoni tat-titlu tad-DVD."
+
+#, c-format
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Problema biex niftaħ l-apparat tad-DVD '%s'."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Problema biex nissettja tfittxija bbażata fuq PGC."
+
+#~ msgid "Failed to configure LAME encoder. Check your encoding parameters."
 #~ msgstr ""
 #~ "Problema biex nissetja LAME encoder. Iċċekkja l-parametri tal-encoding."
 
+#, c-format
 #~ msgid ""
 #~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 #~ "bitrate was changed to %d kbit/s."
@@ -72,28 +84,5 @@ msgstr "L-istream ma fiha l-ebda data."
 #~ "Mhux permess il-bitrate %d kbit/s rikjesta għal '%s'. Għalhekk il-bitrate "
 #~ "ġiet mibdula għal %d kbit/s."
 
-#, fuzzy
-#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Problema biex nissetja LAME encoder. Iċċekkja l-parametri tal-encoding."
-
 #~ msgid "Internal data stream error."
 #~ msgstr "Problema interna fid-data stream."
-
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Problema biex nissetja LAME encoder. Iċċekkja l-parametri tal-encoding."
-
-#~ msgid "Invalid title information on DVD."
-#~ msgstr "L-informazzjoni tat-titlu tad-DVD mhux validu."
-
-#~ msgid "Could not read title information for DVD."
-#~ msgstr "Ma nistax naqra l-informazzjoni tat-titlu tad-DVD."
-
-#~ msgid "Failed to open DVD device '%s'."
-#~ msgstr "Problema biex niftaħ l-apparat tad-DVD '%s'."
-
-#~ msgid "Failed to set PGC based seeking."
-#~ msgstr "Problema biex nissettja tfittxija bbażata fuq PGC."

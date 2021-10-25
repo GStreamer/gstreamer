@@ -1,21 +1,23 @@
 # Bulgarian translation of gst-plugins-ugly.
 # Copyright (C) 2007, 2008, 2009, 2010, 2011, 2016 Free Software Foundation, Inc.
+# Copyright (C) 2021 Alexander Shopov.
 # This file is distributed under the same license as the gst-plugins-ugly package.
-# Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010, 2011, 2016.
+# Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010, 2011, 2016, 2021.
 #
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 1.7.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:48+0000\n"
-"PO-Revision-Date: 2016-02-21 21:03+0200\n"
+"Project-Id-Version: gst-plugins-ugly 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-10-02 20:15+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Could not read from CD."
@@ -58,25 +60,3 @@ msgstr "DVD-то не може да бъде прочетено."
 
 msgid "This stream contains no data."
 msgstr "Потокът не съдържа данни."
-
-#~ msgid ""
-#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
-#~ "parameters."
-#~ msgstr ""
-#~ "Кодерът за mp3 — LAME не може да бъде настроен. Проверете настройките за "
-#~ "кодиране."
-
-#~ msgid ""
-#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-#~ "bitrate was changed to %d kbit/s."
-#~ msgstr ""
-#~ "Поисканата честота в битове %d kbit/s за свойството „%s“ не е позволена. "
-#~ "Тя бе променена на %d kbit/s."
-
-#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Кодерът TwoLAME не може да бъде настроен. Проверете настройките за "
-#~ "кодиране."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Вътрешна грешка в потока от данни."

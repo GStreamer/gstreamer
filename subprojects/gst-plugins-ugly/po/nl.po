@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2017-10-24 23:30+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -67,6 +67,7 @@ msgstr "Deze stroom bevat geen gegevens."
 #~ "Instellen van de LAME mp3-encoder is mislukt. Controleer uw parameters "
 #~ "voor codering."
 
+#, c-format
 #~ msgid ""
 #~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 #~ "bitrate was changed to %d kbit/s."

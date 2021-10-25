@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2017-09-15 09:56+0200\n"
 "Last-Translator: Sebastiano Pistore <sebastianopistore.info@protonmail.ch>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -70,6 +70,7 @@ msgstr "Questo flusso non contiene dati."
 #~ "di codifica."
 
 # NEW
+#, c-format
 #~ msgid ""
 #~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 #~ "bitrate was changed to %d kbit/s."

@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.11.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2009-07-16 15:07+0800\n"
 "Last-Translator: Muhammad Najmi bin Ahmad Zabidi <najmi.zabidi@gmail.com>\n"
 "Language-Team: Malay <translation-team-ms@lists.sourceforge.net>\n"
@@ -14,6 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: KBabel 1.11.4\n"
 
 msgid "Could not read from CD."
@@ -55,13 +56,23 @@ msgstr "Tidak dapat buka DVD"
 msgid "This stream contains no data."
 msgstr "Aliran ini tiada data."
 
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
-#~ "parameters."
-#~ msgstr ""
-#~ "Gagal mengkonfigur pengenkod TwoLAME. Periksa parameter pengenkod anda."
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Maklumat tajuk pada DVD tidak sah."
 
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Tidak dapat baca maklumat tajuk pada DVD."
+
+#, c-format
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Gagal membuka peranti DVD %s'."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Gagal untuk menetapkan carian berasaskan PGC."
+
+#~ msgid "Failed to configure LAME encoder. Check your encoding parameters."
+#~ msgstr "Gagal mengkonfigur pengekod LAME. Periksa parameter pengenkod anda."
+
+#, c-format
 #~ msgid ""
 #~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 #~ "bitrate was changed to %d kbit/s."
@@ -75,20 +86,3 @@ msgstr "Aliran ini tiada data."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Ralat aliran data dalaman."
-
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
-#~ msgstr "Gagal mengkonfigur pengekod LAME. Periksa parameter pengenkod anda."
-
-#~ msgid "Invalid title information on DVD."
-#~ msgstr "Maklumat tajuk pada DVD tidak sah."
-
-#~ msgid "Could not read title information for DVD."
-#~ msgstr "Tidak dapat baca maklumat tajuk pada DVD."
-
-#~ msgid "Failed to open DVD device '%s'."
-#~ msgstr "Gagal membuka peranti DVD %s'."
-
-#~ msgid "Failed to set PGC based seeking."
-#~ msgstr "Gagal untuk menetapkan carian berasaskan PGC."

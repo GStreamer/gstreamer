@@ -5,77 +5,77 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 1.2.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-11-09 15:57+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2014-01-27 20:04+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 
-#: ext/cdio/gstcdiocddasrc.c:199
 msgid "Could not read from CD."
 msgstr "Tak dapat membaca dari CD."
 
-#: ext/cdio/gstcdiocddasrc.c:406
 msgid "Could not open CD device for reading."
 msgstr "Tak dapat membuka divais CD untuk dibaca."
 
-#: ext/cdio/gstcdiocddasrc.c:413
 msgid "Disc is not an Audio CD."
 msgstr "Cakram bukan CD Audio."
 
-#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "Tak dapat membuka DVD"
 
-#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:618
-#: ext/dvdread/dvdreadsrc.c:625
 #, c-format
 msgid "Could not open DVD title %d"
 msgstr "Tak dapat membuka judul DVD %d"
 
-#: ext/dvdread/dvdreadsrc.c:248
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
 msgstr "Gagal pergi ke bab %d dari judul DVD %d"
 
-#: ext/dvdread/dvdreadsrc.c:632
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Tak dapat membuka judul DVD %d. Judul interaktif tidak didukung oleh elemen ini"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Tak dapat membuka judul DVD %d. Judul interaktif tidak didukung oleh elemen "
+"ini"
 
-#: ext/dvdread/dvdreadsrc.c:985
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Tak dapat membaca DVD. Hal ini karena DVD terenkripsi dan pustaka dekripsi DVD tidak diinstal."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Tak dapat membaca DVD. Hal ini karena DVD terenkripsi dan pustaka dekripsi "
+"DVD tidak diinstal."
 
-#: ext/dvdread/dvdreadsrc.c:988
 msgid "Could not read DVD."
 msgstr "Tak dapat membaca DVD."
 
-#: ext/lame/gstlamemp3enc.c:394
-msgid "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr "Gagal mengatur penyandi audio mp3 LAME. Cek parameter penyandian anda."
-
-#: ext/lame/gstlamemp3enc.c:426 ext/twolame/gsttwolamemp2enc.c:486
-#, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Bitrasi %d kbit/s yang diminta untuk properti '%s' tidak diizinkan. Bitrasi diubah ke %d kbit/s."
-
-#: ext/twolame/gsttwolamemp2enc.c:411
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "Gagal mengatur penyandi TwoLAME. Cek parameter penyandian anda."
-
-#: gst/asfdemux/gstasfdemux.c:412
 msgid "This stream contains no data."
 msgstr "Arus ini tidak berisi data."
 
-#: gst/asfdemux/gstasfdemux.c:419 gst/asfdemux/gstasfdemux.c:1971
-msgid "Internal data stream error."
-msgstr "Galat arus data internal."
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Gagal mengatur penyandi audio mp3 LAME. Cek parameter penyandian anda."
+
+#, c-format
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Bitrasi %d kbit/s yang diminta untuk properti '%s' tidak diizinkan. "
+#~ "Bitrasi diubah ke %d kbit/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr "Gagal mengatur penyandi TwoLAME. Cek parameter penyandian anda."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Galat arus data internal."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Informasi judul tidak sah pada DVD."

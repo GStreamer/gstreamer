@@ -1,0 +1,56 @@
+# Chinese (traditional) translation of gst-plugins-ugly.
+# This file is put in the public domain.
+# Yi-Jyun Pan <pan93412@gmail.com>, 2020.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 1.15.1\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2019-01-17 02:02+0000\n"
+"PO-Revision-Date: 2020-05-09 02:21+0800\n"
+"Last-Translator: Yi-Jyun Pan <pan93412@gmail.com>\n"
+"Language-Team: Chinese (traditional) <zh-l10n@lists.linux.org.tw>\n"
+"Language: zh_TW\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.3\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Could not read from CD."
+msgstr "無法從 CD 讀取。"
+
+msgid "Could not open CD device for reading."
+msgstr "無法開啟 CD 裝置以讀取。"
+
+msgid "Disc is not an Audio CD."
+msgstr "光碟非音訊 CD。"
+
+msgid "Could not open DVD"
+msgstr "無法開啟 DVD"
+
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "無法開啟 DVD 標題 %d"
+
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "無法前往 DVD 標題 %2$d 的章節 %1$d"
+
+#, c-format
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr "無法開啟 DVD 標題 %d。互動式標題不受此元素支援"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr "無法讀取 DVD。這可能是因為 DVD 已受加密，且未安裝 DVD 解密函式庫。"
+
+msgid "Could not read DVD."
+msgstr "無法讀取 DVD。"
+
+msgid "This stream contains no data."
+msgstr "此串流沒有資料。"

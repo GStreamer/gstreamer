@@ -1,15 +1,15 @@
 # Brazilian Portuguese translation of gst-plugins-ugly.
 # This file is distributed under the same license as the gst-plugins-ugly package.
-# Copyright (C) 2007-2013 Free Software Foundation, Inc.
+# Copyright (C) 2007-2021 Free Software Foundation, Inc.
 # Raphael Higino <In memoriam>, 2007.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2015.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly-1.7.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:48+0000\n"
-"PO-Revision-Date: 2015-12-28 19:54-0200\n"
+"Project-Id-Version: gst-plugins-ugly-1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-09-26 12:38-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -17,7 +17,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.0\n"
 
 msgid "Could not read from CD."
 msgstr "Não foi possível ler as informações do CD."

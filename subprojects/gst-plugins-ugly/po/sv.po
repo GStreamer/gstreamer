@@ -7,70 +7,77 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 02:02+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2019-01-17 02:02+0000\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Poedit 1.8.6\n"
 
-#: ext/cdio/gstcdiocddasrc.c:199
 msgid "Could not read from CD."
 msgstr "Kunde inte läsa från cd."
 
-#: ext/cdio/gstcdiocddasrc.c:406
 msgid "Could not open CD device for reading."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/cdio/gstcdiocddasrc.c:413
 msgid "Disc is not an Audio CD."
 msgstr "Skivan är inte en ljud-cd."
 
-#: ext/dvdread/dvdreadsrc.c:231 ext/dvdread/dvdreadsrc.c:238
 msgid "Could not open DVD"
 msgstr "Kunde inte öppna dvd"
 
-#: ext/dvdread/dvdreadsrc.c:245 ext/dvdread/dvdreadsrc.c:622
-#: ext/dvdread/dvdreadsrc.c:629
 #, c-format
 msgid "Could not open DVD title %d"
 msgstr "Kunde inte öppna dvd-titel %d"
 
-#: ext/dvdread/dvdreadsrc.c:251
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
 msgstr "Misslyckades med att gå till kapitel %d för dvd-titel %d"
 
-#: ext/dvdread/dvdreadsrc.c:636
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Kunde inte öppna dvd-titel %d. Interaktiva titlar stöds inte av det här elementet"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Kunde inte öppna dvd-titel %d. Interaktiva titlar stöds inte av det här "
+"elementet"
 
-#: ext/dvdread/dvdreadsrc.c:991
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Kunde ej läsa dvd. Detta kan vara för att dvd:n är krypterad och ett dvd-avkrypteringsbibliotek inte är installerat."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Kunde ej läsa dvd. Detta kan vara för att dvd:n är krypterad och ett dvd-"
+"avkrypteringsbibliotek inte är installerat."
 
-#: ext/dvdread/dvdreadsrc.c:994
 msgid "Could not read DVD."
 msgstr "Kunde inte läsa dvd."
 
-#: gst/asfdemux/gstasfdemux.c:446 gst/asfdemux/gstasfdemux.c:454
 msgid "This stream contains no data."
 msgstr "Den här strömmen innehåller inget data."
 
-#~ msgid "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-#~ msgstr "Misslyckades med att konfigurera LAME mp3 ljudkodare. Kontrollera dina kodningsparametrar."
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Misslyckades med att konfigurera LAME mp3 ljudkodare. Kontrollera dina "
+#~ "kodningsparametrar."
 
-#~ msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-#~ msgstr "Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. Bitfrekvensen ändrades till %d kbit/s."
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. "
+#~ "Bitfrekvensen ändrades till %d kbit/s."
 
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-#~ msgstr "Misslyckades med att konfigurera TwoLAME-kodaren. Kontrollera dina kodningsparametrar."
+#~ msgstr ""
+#~ "Misslyckades med att konfigurera TwoLAME-kodaren. Kontrollera dina "
+#~ "kodningsparametrar."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Fel i intern dataström."
