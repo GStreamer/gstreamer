@@ -484,10 +484,6 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
   else
     self->op_flags &= ~VPP_CONVERT_FEATURE;
 
-  if (self->op_flags & VPP_CONVERT_SIZE) {
-
-  }
-
   if (gst_va_filter_set_video_info (btrans->filter, in_info, out_info)) {
     gst_va_vpp_update_passthrough (self, FALSE);
     return TRUE;
@@ -1669,8 +1665,7 @@ transfer_colorimetry_from_input (GstVaVpp * self, GstCaps * in_caps,
 }
 
 static void
-copy_misc_fields_from_input (GstVaVpp * self, GstCaps * in_caps,
-    GstCaps * out_caps)
+copy_misc_fields_from_input (GstCaps * in_caps, GstCaps * out_caps)
 {
   const gchar *fields[] = { "interlace-mode", "field-order", "multiview-mode",
     "multiview-flags", "framerate"
@@ -1712,7 +1707,7 @@ gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
   gst_va_vpp_fixate_size (self, direction, caps, result);
 
   /* some fields might be lost while feature caps conversion */
-  copy_misc_fields_from_input (self, caps, result);
+  copy_misc_fields_from_input (caps, result);
 
   /* fixate remaining fields */
   result = gst_caps_fixate (result);
