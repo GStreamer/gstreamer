@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -17,6 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -78,24 +79,15 @@ msgstr "No s'ha pogut cercar el CD."
 msgid "Could not read CD."
 msgstr "No s'ha pogut llegir el CD."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Manca l'element «%s» - comproveu la vostra instaŀlació del GStreamer."
-
 msgid "Could not determine type of stream"
 msgstr "No s'ha pogut determinar el tipus de flux"
 
 msgid "This appears to be a text file"
 msgstr "Això sembla ser un fitxer de text"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Manca l'element «%s» - comproveu la vostra instaŀlació del GStreamer."
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
@@ -181,6 +173,15 @@ msgstr "No es pot enregistrar l'àudio el suficientment ràpid"
 msgid "This CD has no audio tracks"
 msgstr "Aquest CD no té pistes d'àudio"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr "Etiqueta ID3"
 
@@ -214,9 +215,11 @@ msgstr "MSZH sense pèrdues"
 msgid "Run-length encoding"
 msgstr "Codificació Run-length"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr ""
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr ""
 
@@ -271,7 +274,7 @@ msgstr "YUV 4:2:0 planar sense comprimir"
 msgid "Uncompressed planar YUV %s"
 msgstr "YUV 4:2:0 planar sense comprimir"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Paletitzat %d-bit %s sense comprimir"
 
@@ -303,6 +306,9 @@ msgstr "Font del protocol de transmissió en temps real (RTSP)"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Font del protocol de servidor Microsoft Media (MMS)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "Font del protocol %s"
@@ -366,6 +372,8 @@ msgstr "L'element descodificador és desconegut"
 msgid "Unknown encoder element"
 msgstr "L'element codificador és desconegut"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "El connector o element és de tipus desconegut"
 
@@ -396,11 +404,32 @@ msgstr "ID de l'artista de l'àlbum"
 msgid "MusicBrainz album artist ID"
 msgstr "ID de l'artista de l'àlbum al MusicBrainz"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "ID de la pista al MusicBrainz"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "ID de la pista"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "ID de la pista al MusicBrainz"
+
 msgid "track TRM ID"
 msgstr "ID TRM de la pista"
 
 msgid "MusicBrainz TRM ID"
 msgstr "ID TRM al MusicBrainz"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr "velocitat d'obturació de la captura"
@@ -559,8 +588,17 @@ msgid ""
 "added/removed."
 msgstr ""
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
+msgstr ""
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
 msgstr ""
 
 msgid "Buffering..."
@@ -628,6 +666,9 @@ msgstr ""
 msgid "volume down"
 msgstr ""
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr ""
 
@@ -684,7 +725,13 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
+msgstr ""
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
 
 msgid "Do not print any output (apart from errors)"
@@ -696,6 +743,11 @@ msgstr ""
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr ""
 
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
@@ -705,26 +757,6 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "No s'ha pogut crear l'element «decodebin»."
-
-#, fuzzy
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "No s'ha pogut crear l'element «decodebin»."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "S'ha produït un error intern de flux de dades."
-
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "Es requereix un connector %s per a reproduir aquest flux, però no és "
-#~ "instaŀlat."
-
-#, fuzzy
-#~ msgid "Uncompressed %s YUV %s"
-#~ msgstr "YUV sense comprimir"
 
 #~ msgid "Master"
 #~ msgstr "Mestre"
@@ -759,18 +791,31 @@ msgstr ""
 #~ msgid "Capture"
 #~ msgstr "Captura"
 
+#, c-format
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a l'escriptura: %s."
 
 #~ msgid "No filename given"
 #~ msgstr "No s'ha donat cap nom de fitxer"
 
+#, c-format
 #~ msgid "Could not close vfs file \"%s\"."
 #~ msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
 
+#, c-format
 #~ msgid "Error while writing to file \"%s\"."
 #~ msgstr "S'ha produït un error en escriure al fitxer «%s»."
 
+#~ msgid "Internal data stream error."
+#~ msgstr "S'ha produït un error intern de flux de dades."
+
+#, c-format
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr ""
+#~ "Es requereix un connector %s per a reproduir aquest flux, però no és "
+#~ "instaŀlat."
+
+#, c-format
 #~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 #~ msgstr "L'URI de subtítols «%s» no és vàlid, s'inhabiliten els subtítols."
 
@@ -805,15 +850,18 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Manquen els elements autoaudiosink i alsasink."
 
+#, c-format
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr ""
 #~ "S'ha produït un error en enviar dades de la capçalera gdp a «%s:%d»."
 
 # Payload -> càrrega en molts àmbits. jm
+#, c-format
 #~ msgid "Error while sending gdp payload data to \"%s:%d\"."
 #~ msgstr ""
 #~ "S'ha produït un error en enviar la càrrega de dades de gdp a «%s:%d»."
 
+#, c-format
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "S'ha refusat la connexió amb %s:%d."
 
@@ -844,6 +892,7 @@ msgstr ""
 #~ msgid "Raw PCM audio"
 #~ msgstr "Àudio PCM en cru"
 
+#, c-format
 #~ msgid "Raw %d-bit floating-point audio"
 #~ msgstr "Àudio en cru de %d-bit en coma flotant"
 
@@ -853,12 +902,15 @@ msgstr ""
 #~ msgid "No device specified."
 #~ msgstr "No s'ha especificat un dispositiu."
 
+#, c-format
 #~ msgid "Device \"%s\" does not exist."
 #~ msgstr "El dispositiu «%s» no existeix."
 
+#, c-format
 #~ msgid "Device \"%s\" is already being used."
 #~ msgstr "El dispositiu «%s» ja és en ús."
 
+#, c-format
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "No s'ha pogut obrir el dispositiu «%s» per a lectura o escriptura."
 

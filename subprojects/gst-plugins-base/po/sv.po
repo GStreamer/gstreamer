@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
-"PO-Revision-Date: 2019-02-05 18:23+0100\n"
+"Project-Id-Version: gst-plugins-base 1.16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2019-09-03 18:26+0200\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.2.1\n"
+"X-Generator: Poedit 2.2.3\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunde inte öppna enheten för uppspelning i monoläge."
@@ -75,24 +75,15 @@ msgstr "Kunde inte söka på cd-skivan."
 msgid "Could not read CD."
 msgstr "Kunde inte läsa cd-skivan."
 
-msgid "failed to draw pattern"
-msgstr "misslyckades med att rita mönster"
-
-msgid "A GL error occurred"
-msgstr "Ett GL-fel uppstod"
-
-msgid "format wasn't negotiated before get function"
-msgstr "formatet förhandlades inte fram innan hämtfunktionen"
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Saknar elementet ”%s” - kontrollera din GStreamer-installation."
-
 msgid "Could not determine type of stream"
 msgstr "Kunde inte fastställa typ av ström"
 
 msgid "This appears to be a text file"
 msgstr "Den här ser ut att vara en textfil"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Saknar elementet ”%s” - kontrollera din GStreamer-installation."
 
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Kunde inte skapa ”uridecodebin”-element."
@@ -176,6 +167,15 @@ msgstr "Kan inte spela in ljud tillräckligt snabbt"
 msgid "This CD has no audio tracks"
 msgstr "Den här cd-skivan saknar ljudspår"
 
+msgid "failed to draw pattern"
+msgstr "misslyckades med att rita mönster"
+
+msgid "A GL error occurred"
+msgstr "Ett GL-fel uppstod"
+
+msgid "format wasn't negotiated before get function"
+msgstr "formatet förhandlades inte fram innan hämtfunktionen"
+
 msgid "ID3 tag"
 msgstr "ID3-tagg"
 
@@ -209,9 +209,11 @@ msgstr "Förlustfri MSZH"
 msgid "Run-length encoding"
 msgstr "Skurlängdskodning"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr "Textning"
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr "Undertext"
 
@@ -291,6 +293,9 @@ msgstr "Real Time Streaming Protocol-källa (RTSP)"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Microsoft Media Server-protokollkälla (MMS)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "%s-protokollkälla"
@@ -354,6 +359,8 @@ msgstr "Okänt avkodarelement"
 msgid "Unknown encoder element"
 msgstr "Okänt kodarelement"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Insticksmodul eller element av okänd typ"
 
@@ -384,11 +391,32 @@ msgstr "albumartist-ID"
 msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz albumartist-ID"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "MusicBrainz spår-ID"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "spår-ID"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "MusicBrainz spår-ID"
+
 msgid "track TRM ID"
 msgstr "spår TRM-ID"
 
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM-ID"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr "slutarhastighet"
@@ -541,9 +569,18 @@ msgstr ""
 "Avsluta inte efter att den inledande enhetslistan visats, utan vänta på att "
 "enheter läggs till/tas bort."
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Volym: %.0f%%"
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
+msgstr ""
 
 msgid "Buffering..."
 msgstr "Buffrar..."
@@ -609,6 +646,9 @@ msgstr "höj volym"
 msgid "volume down"
 msgstr "sänk volym"
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr "öka uppspelningshastighet"
 
@@ -664,8 +704,14 @@ msgstr "Inaktivera interaktiv styrning via tangentbordet"
 msgid "Volume"
 msgstr "Volym"
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
 msgstr "Fil med spellista innehållandes inkommande mediafiler"
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
+msgstr ""
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Mata inte ut någonting (bortsett från fel)"
@@ -675,6 +721,13 @@ msgstr "Använd playbin3-rörledning"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr "(standardvärdet beror på miljövariabeln ”USE_PLAYBIN”)"
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+"Fortsätt visa den sista ramen vid EOS tills avslutning eller "
+"ändringskommando för spellista (mellanrumslös hoppas över)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

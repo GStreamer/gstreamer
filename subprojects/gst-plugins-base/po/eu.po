@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.26.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2010-03-25 12:32+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -16,6 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
@@ -74,24 +75,15 @@ msgstr "Ezin izan da CDan bilatu."
 msgid "Could not read CD."
 msgstr "Ezin izan da CDa irakurri."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "'%s' elementua falta da. Begiratu GStreamer ondo instalatua dagoen."
-
 msgid "Could not determine type of stream"
 msgstr "Ezin izan da korronte mota zehaztu"
 
 msgid "This appears to be a text file"
 msgstr "Testu-fitxategia dela dirudi"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "'%s' elementua falta da. Begiratu GStreamer ondo instalatua dagoen."
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
@@ -179,6 +171,15 @@ msgstr "Ezin da behar bezain bizkor grabatu audioa"
 msgid "This CD has no audio tracks"
 msgstr "CD honek ez du audio-pistarik"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr "ID3 etiketa"
 
@@ -212,9 +213,11 @@ msgstr "Galerarik gabeko MSZH"
 msgid "Run-length encoding"
 msgstr "Run-length kodeketa"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr ""
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr ""
 
@@ -269,7 +272,7 @@ msgstr "Konprimitu gabeko YUV 4:2:0 planarra"
 msgid "Uncompressed planar YUV %s"
 msgstr "Konprimitu gabeko YUV 4:2:0 planarra"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Konprimitu gabeko paleta moduko %d biteko %s"
 
@@ -301,6 +304,9 @@ msgstr "Denbora errealeko transmisio-protokoloaren (RTSP) iturburua"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Microsoft Media Server (MMS) protokoloaren iturburua"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "%s protokolo-ituruburua"
@@ -364,6 +370,8 @@ msgstr "Deskodetzailearen elementu ezezaguna"
 msgid "Unknown encoder element"
 msgstr "Kodetzailearen elementu ezezaguna"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Mota ezezaguneko plugina edo elementua"
 
@@ -394,11 +402,32 @@ msgstr "albumaren interpretearen IDa"
 msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz albumaren interpretearen IDa"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "MusicBrainz pistaren IDa"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "pistaren IDa"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "MusicBrainz pistaren IDa"
+
 msgid "track TRM ID"
 msgstr "pistaren TRM IDa"
 
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM IDa"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr ""
@@ -548,8 +577,17 @@ msgid ""
 "added/removed."
 msgstr ""
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
+msgstr ""
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
 msgstr ""
 
 msgid "Buffering..."
@@ -616,6 +654,9 @@ msgstr ""
 msgid "volume down"
 msgstr ""
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr ""
 
@@ -672,7 +713,13 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
+msgstr ""
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
 
 msgid "Do not print any output (apart from errors)"
@@ -684,6 +731,11 @@ msgstr ""
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr ""
 
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
@@ -693,26 +745,6 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "Ezin izan da sortu \"decodebin\" elementua."
-
-#, fuzzy
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "Ezin izan da sortu \"decodebin\" elementua."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Datu-korrontearen barne-errorea."
-
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "%s plugina behar da korronte hori erreproduzitzeko, baina ez dago "
-#~ "instalatua."
-
-#, fuzzy
-#~ msgid "Uncompressed %s YUV %s"
-#~ msgstr "Konprimitu gabeko YUV"
 
 #~ msgid "Master"
 #~ msgstr "Maisua"
@@ -747,54 +779,31 @@ msgstr ""
 #~ msgid "Capture"
 #~ msgstr "Kapturatzea"
 
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "%s:%d(e)ra konektatzea ukatu da."
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Konprimitu gabeko YVU 4:2:0 planarra"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Konprimitu gabeko YUV 4:1:0 paketatua"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Konprimitu gabeko YVU 4:1:0 paketatua"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Konprimitu gabeko YUV 4:1:1 paketatua"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Konprimitu gabeko YUV 4:4:4 paketatua"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Konprimitu gabeko YUV 4:2:2 planarra"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Konprimitu gabeko YUV 4:1:1 planarra"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Konprimitu gabeko zuri-beltzeko Y-planoa"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Prozesatu gabeko PCM audioa"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Koma mugikorreko %d biteko prozesatu gabeko PCM audioa"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Koma mugikorreko prozesatu gabeko audioa"
-
+#, c-format
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Ezin izan da \"%s\" vfs fitxategia ireki idazteko: %s."
 
 #~ msgid "No filename given"
 #~ msgstr "Ez da fitxategi-izenik eman"
 
+#, c-format
 #~ msgid "Could not close vfs file \"%s\"."
 #~ msgstr "Ezin izan da itxi \"%s\" vfs fitxategia."
 
+#, c-format
 #~ msgid "Error while writing to file \"%s\"."
 #~ msgstr "Errorea gertatu da \"%s\" fitxategian idaztean."
 
+#~ msgid "Internal data stream error."
+#~ msgstr "Datu-korrontearen barne-errorea."
+
+#, c-format
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr ""
+#~ "%s plugina behar da korronte hori erreproduzitzeko, baina ez dago "
+#~ "instalatua."
+
+#, c-format
 #~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 #~ msgstr ""
 #~ "Azpitituluen \"%s\" URIa ez da baliozkoa. Azpitituluak desgaitu egin dira."
@@ -830,23 +839,66 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Autoaudiosink eta alsasink elementuak, biak, falta dira."
 
-#~ msgid "No device specified."
-#~ msgstr "Ez da gailurik zehaztu."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "\"%s\" gailua ez dago."
-
-#~ msgid "Device \"%s\" is already being used."
-#~ msgstr "\"%s\" gailua erabiltzen ari dira."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Ezin izan da \"%s\" gailua ireki irakurtzeko eta idazteko."
-
+#, c-format
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr ""
 #~ "Errorea gertatu da gdp goiburuaren datuak \"%s:%d\"(e)ra bidaltzean."
 
+#, c-format
 #~ msgid "Error while sending gdp payload data to \"%s:%d\"."
 #~ msgstr ""
 #~ "Errorea gertatu da gdp karga erabilgarriaren datuak \"%s:%d\"(e)ra "
 #~ "bidaltzean."
+
+#, c-format
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "%s:%d(e)ra konektatzea ukatu da."
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Konprimitu gabeko YVU 4:2:0 planarra"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Konprimitu gabeko YUV 4:1:0 paketatua"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Konprimitu gabeko YVU 4:1:0 paketatua"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Konprimitu gabeko YUV 4:1:1 paketatua"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Konprimitu gabeko YUV 4:4:4 paketatua"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Konprimitu gabeko YUV 4:2:2 planarra"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Konprimitu gabeko YUV 4:1:1 planarra"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Konprimitu gabeko zuri-beltzeko Y-planoa"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Prozesatu gabeko PCM audioa"
+
+#, c-format
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Koma mugikorreko %d biteko prozesatu gabeko PCM audioa"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Koma mugikorreko prozesatu gabeko audioa"
+
+#~ msgid "No device specified."
+#~ msgstr "Ez da gailurik zehaztu."
+
+#, c-format
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "\"%s\" gailua ez dago."
+
+#, c-format
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "\"%s\" gailua erabiltzen ari dira."
+
+#, c-format
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Ezin izan da \"%s\" gailua ireki irakurtzeko eta idazteko."

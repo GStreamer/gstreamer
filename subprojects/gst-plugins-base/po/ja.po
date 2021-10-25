@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2010-10-25 10:27+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -14,6 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Lokalize 0.2\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
@@ -72,26 +73,17 @@ msgstr "CDをシークすることができませんでした"
 msgid "Could not read CD."
 msgstr "CD を読むことができませんでした"
 
-msgid "failed to draw pattern"
-msgstr ""
+msgid "Could not determine type of stream"
+msgstr "ストリームの種類を判別できませんでした"
 
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
+msgid "This appears to be a text file"
+msgstr "これはテキストファイルのようです"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 "エレメント '%s' が見つかりません - GStreamer のインストールが失敗している可能"
 "性があります"
-
-msgid "Could not determine type of stream"
-msgstr "ストリームの種類を判別できませんでした"
-
-msgid "This appears to be a text file"
-msgstr "これはテキストファイルのようです"
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
@@ -177,6 +169,15 @@ msgstr "十分に速くオーディオを録音することができません"
 msgid "This CD has no audio tracks"
 msgstr "この CD にはオーディオトラックがありません"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr "ID3 タグ"
 
@@ -210,9 +211,11 @@ msgstr "ロスレス MSZH"
 msgid "Run-length encoding"
 msgstr "ランレングス符号化"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr ""
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr ""
 
@@ -267,7 +270,7 @@ msgstr "非圧縮 planar YUV 4:2:0"
 msgid "Uncompressed planar YUV %s"
 msgstr "非圧縮 planar YUV 4:2:0"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "非圧縮 palettized %d ビット %s"
 
@@ -299,6 +302,9 @@ msgstr "Real Time Streaming Protocol (RTSP) ソース"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Microsoft Media Server (MMS) プロトコルソース"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "%s プロトコルソース"
@@ -362,6 +368,8 @@ msgstr "不明なデコーダーエレメント"
 msgid "Unknown encoder element"
 msgstr "不明なエンコーダーエレメント"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "不明な種類のプラグインまたはエレメント"
 
@@ -392,11 +400,32 @@ msgstr "アルバムアーティスト ID"
 msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz アルバムアーティスト ID"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "MusicBrainz トラック ID"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "トラック ID"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "MusicBrainz トラック ID"
+
 msgid "track TRM ID"
 msgstr "トラック TRM ID"
 
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr "キャプチャーのシャッタースピード"
@@ -548,8 +577,17 @@ msgid ""
 "added/removed."
 msgstr ""
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
+msgstr ""
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
 msgstr ""
 
 msgid "Buffering..."
@@ -616,6 +654,9 @@ msgstr ""
 msgid "volume down"
 msgstr ""
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr ""
 
@@ -672,7 +713,13 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
+msgstr ""
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
 
 msgid "Do not print any output (apart from errors)"
@@ -684,6 +731,11 @@ msgstr ""
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr ""
 
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
@@ -693,26 +745,6 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "\"decodebin2\" エレメントを作成できませんでした"
-
-#, fuzzy
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "\"decodebin\" エレメントを作成できません。"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "内部データストリームエラー"
-
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "%s プラグインはこのストリームを再生するのに必要ですが、インストールされて"
-#~ "いません"
-
-#, fuzzy
-#~ msgid "Uncompressed %s YUV %s"
-#~ msgstr "非圧縮 YUV"
 
 #~ msgid "Master"
 #~ msgstr "マスター"
@@ -747,54 +779,31 @@ msgstr ""
 #~ msgid "Capture"
 #~ msgstr "キャプチャ"
 
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "%s:%d への接続が拒否されました"
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "非圧縮 planar YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "非圧縮 packed YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "非圧縮 packed YVU 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "非圧縮 packed YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "非圧縮 packed YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "非圧縮 planar YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "非圧縮 planar YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "非圧縮黒と白Y-plane"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Raw PCM オーディオ"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Raw %d ビット浮動小数点オーディオ"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Raw 浮動小数点オーディオ"
-
+#, c-format
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "書き込み用に vfs ファイル \"%s\" を開くことができませんでした: %s"
 
 #~ msgid "No filename given"
 #~ msgstr "ファイル名が与えられていません"
 
+#, c-format
 #~ msgid "Could not close vfs file \"%s\"."
 #~ msgstr "vfs ファイル \"%s\" をクローズできませんでした"
 
+#, c-format
 #~ msgid "Error while writing to file \"%s\"."
 #~ msgstr "ファイル \"%s\" の書き込み中にエラーが発生しました"
 
+#~ msgid "Internal data stream error."
+#~ msgstr "内部データストリームエラー"
+
+#, c-format
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr ""
+#~ "%s プラグインはこのストリームを再生するのに必要ですが、インストールされて"
+#~ "いません"
+
+#, c-format
 #~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 #~ msgstr "不正な字幕 URI \"%s\"。字幕を無効にします。"
 
@@ -828,30 +837,76 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "autovideosinkとalsasinkエレメントの両方が見つかりません。"
 
-#~ msgid "No device specified."
-#~ msgstr "デバイスが指定されていません。"
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "デバイス \"%s\" は存在しません。"
-
-#~ msgid "Device \"%s\" is already being used."
-#~ msgstr "デバイス \"%s\" は既に使われています。"
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr ""
-#~ "読み込み用と書き込み用にデバイス \"%s\" を開くことができませんでした。"
-
+#, c-format
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "gdp ヘッダデータを \"%s:%d\" へ送信中にエラーが発生しました"
 
+#, c-format
 #~ msgid "Error while sending gdp payload data to \"%s:%d\"."
 #~ msgstr "gdp ペイロードデータを \"%s:%d\" へ送信中にエラーが発生しました"
+
+#, c-format
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "%s:%d への接続が拒否されました"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "非圧縮 planar YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "非圧縮 packed YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "非圧縮 packed YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "非圧縮 packed YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "非圧縮 packed YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "非圧縮 planar YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "非圧縮 planar YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "非圧縮黒と白Y-plane"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Raw PCM オーディオ"
+
+#, c-format
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Raw %d ビット浮動小数点オーディオ"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Raw 浮動小数点オーディオ"
+
+#~ msgid "No device specified."
+#~ msgstr "デバイスが指定されていません。"
+
+#, c-format
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "デバイス \"%s\" は存在しません。"
+
+#, c-format
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "デバイス \"%s\" は既に使われています。"
+
+#, c-format
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr ""
+#~ "読み込み用と書き込み用にデバイス \"%s\" を開くことができませんでした。"
 
 #~ msgid "No file name specified."
 #~ msgstr "ファイル名が指定されていません"
 
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "読み込み用にファイル \"%s\" を開くことができませんでした"
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "\"decodebin2\" エレメントを作成できませんでした"
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "\"queue2\" エレメントを作成できませんでした"

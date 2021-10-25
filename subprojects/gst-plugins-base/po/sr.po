@@ -1,14 +1,14 @@
 # Serbian translation of gst-plugins
-# Copyright (C) 2014 Free Software Foundation, Inc.
+# Copyright © 2020 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011—2016.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011–2021.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
-"PO-Revision-Date: 2016-12-04 14:32+0200\n"
+"Project-Id-Version: gst-plugins-base-1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2021-10-01 21:56+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -18,6 +18,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Project-Style: gnome\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Не могу да отворим уређај ради пуштања у моно режиму."
@@ -74,31 +75,21 @@ msgstr "Не могу да премотам ЦД."
 msgid "Could not read CD."
 msgstr "Не могу да читам ЦД."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Недостаје елемент „%s“ — проверите вашу инсталацију Гстримера."
-
 msgid "Could not determine type of stream"
 msgstr "Не могу да утврдим врсту тока"
 
 msgid "This appears to be a text file"
 msgstr "Изгледа да је ово текстуална датотека"
 
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Недостаје елемент „%s“ — проверите вашу инсталацију Гстримера."
+
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Не могу да направим „uridecodebin“ елемент."
 
-#, fuzzy
 msgid "Could not create \"uridecodebin3\" element."
-msgstr "Не могу да направим „uridecodebin“ елемент."
+msgstr "Не могу да направим „uridecodebin3“ елемент."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -176,6 +167,15 @@ msgstr "Не могу да снимам звук довољно брзо"
 msgid "This CD has no audio tracks"
 msgstr "Овај ЦД нема звучних нумера"
 
+msgid "failed to draw pattern"
+msgstr "нисам успео да исцртам шаблон"
+
+msgid "A GL error occurred"
+msgstr "Дошло је до ГЛ грешке"
+
+msgid "format wasn't negotiated before get function"
+msgstr "запис није преговаран пре функције добављања"
+
 msgid "ID3 tag"
 msgstr "ИБ3 ознака"
 
@@ -209,9 +209,11 @@ msgstr "Безгубитни МСЗХ"
 msgid "Run-length encoding"
 msgstr "Кодирање покретања дужине"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr "Временски текст"
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr "Превод"
 
@@ -231,10 +233,10 @@ msgid "TMPlayer subtitle format"
 msgstr "ТМПлејер запис превода"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "Затворени наслов CEA 608"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "Затворени наслов CEA 708"
 
 msgid "Kate subtitle format"
 msgstr "Кејт запис превода"
@@ -291,6 +293,9 @@ msgstr "Извор протокола тока стварног времена (
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Извор протокола Мајкрософтовог сервера медија (MMS)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "Извор „%s“ протокола"
@@ -354,6 +359,8 @@ msgstr "Непознати елемент декодера"
 msgid "Unknown encoder element"
 msgstr "Непознати елемент кодера"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Прикључак или елемент непознате врсте"
 
@@ -384,11 +391,29 @@ msgstr "ИБ извођача албума"
 msgid "MusicBrainz album artist ID"
 msgstr "ИБ извођача албума Мозгића музике"
 
+msgid "release group ID"
+msgstr "ИБ групе издања"
+
+msgid "MusicBrainz release group ID"
+msgstr "ИБ групе издања Мозгића музике"
+
+msgid "release track ID"
+msgstr "ИБ нумере издања"
+
+msgid "MusicBrainz release track ID"
+msgstr "ИБ нумере издања Мозгића музике"
+
 msgid "track TRM ID"
 msgstr "ТРМ ИБ стазе"
 
 msgid "MusicBrainz TRM ID"
 msgstr "ИБ ТРМ-а Мозгића музике"
+
+msgid "AcoustID ID"
+msgstr "ИБ АкустИБ-а"
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr "Отисак АкустИБ-а (хромпринт)"
 
 msgid "capturing shutter speed"
 msgstr "брзина затварача снимања"
@@ -542,9 +567,18 @@ msgstr ""
 "Не излази након показивања почетног списка уређаја, већ чека да уређаји буду "
 "додати/уклоњени."
 
+msgid "Include devices from hidden device providers."
+msgstr "Укључује уређаје од скривених достављача уређаја."
+
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Јачина звука: %.0f%%"
+
+msgid "Mute: on"
+msgstr "Утишање: укљ."
+
+msgid "Mute: off"
+msgstr "Утишање: искљ."
 
 msgid "Buffering..."
 msgstr "Смештам у међумеморију..."
@@ -610,6 +644,9 @@ msgstr "појачава јачину звука"
 msgid "volume down"
 msgstr "смањује јачину звука"
 
+msgid "toggle audio mute on/off"
+msgstr "окида утишање звука на укључено/искључено"
+
 msgid "increase playback rate"
 msgstr "повећава проток пуштања"
 
@@ -664,17 +701,31 @@ msgstr "Искључује међудејствено управљање пут�
 msgid "Volume"
 msgstr "Јачина звука"
 
+msgid "Start position in seconds."
+msgstr "Положај почетка у секундама."
+
 msgid "Playlist file containing input media files"
 msgstr "Датотека списка нумера садржи датотеке улазних медија"
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
+msgstr ""
+"Користи пробну заставицу тренутне-промене-протока приликом промене протока"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Не исписује никакав излаз (осим грешака)"
 
 msgid "Use playbin3 pipeline"
-msgstr ""
+msgstr "Користи спојку „playbin3“"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr "(основне променљиве зависе од „USE_PLAYBIN“ променљиве окружења)"
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
 msgstr ""
+"Наставља да приказује последњи кадар на ЕОС-у све до наредбе излаза или "
+"промене списка нумера (безпаузно се занемарује)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

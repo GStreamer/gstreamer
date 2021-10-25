@@ -11,8 +11,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2010-12-31 23:21+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -20,6 +20,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -76,24 +77,15 @@ msgstr "CD-levyllä ei voitu siirtyä."
 msgid "Could not read CD."
 msgstr "CD-levyä ei voitu lukea."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Puuttuva elementti \"%s\" - tarkista GStreamer-asennuksesi."
-
 msgid "Could not determine type of stream"
 msgstr "Virran tyyppiä ei voitu määrittää"
 
 msgid "This appears to be a text file"
 msgstr "Tämä näyttää olevan tekstitiedosto"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Puuttuva elementti \"%s\" - tarkista GStreamer-asennuksesi."
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
@@ -179,6 +171,15 @@ msgstr "Ääntä ei voi nauhoittaa tarpeeksi nopeasti"
 msgid "This CD has no audio tracks"
 msgstr "Tällä CD-levyllä ei ole ääniraitoja"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr "ID3-tagi"
 
@@ -212,9 +213,11 @@ msgstr "Häviötön MSZH"
 msgid "Run-length encoding"
 msgstr "RLE-koodaus"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr ""
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr ""
 
@@ -269,7 +272,7 @@ msgstr "Pakkaamaton tasollinen YUV 4:2:0"
 msgid "Uncompressed planar YUV %s"
 msgstr "Pakkaamaton tasollinen YUV 4:2:0"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Pakkaamaton paletillinen %d-bittinen %s"
 
@@ -301,6 +304,9 @@ msgstr "Real Time Streaming Protocol (RTSP) -lähde"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Microsoft Media Server (MMS) -protokollalähde"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "%s-protokollalähde"
@@ -364,6 +370,8 @@ msgstr "Tuntematon purkajaelementti"
 msgid "Unknown encoder element"
 msgstr "Tuntematon kodekkielementti"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Liitännäisen tai elementin tyyppi on tuntematon"
 
@@ -394,11 +402,32 @@ msgstr "levyn esittäjätunniste"
 msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz levyn esittäjätunniste"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "MusicBrainz-kappaletunniste"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "kappaletunniste"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "MusicBrainz-kappaletunniste"
+
 msgid "track TRM ID"
 msgstr "kappaleen TRM-tunniste"
 
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM-tunniste"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr "kuvaamisen suljinnopeus"
@@ -552,8 +581,17 @@ msgid ""
 "added/removed."
 msgstr ""
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
+msgstr ""
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
 msgstr ""
 
 msgid "Buffering..."
@@ -620,6 +658,9 @@ msgstr ""
 msgid "volume down"
 msgstr ""
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr ""
 
@@ -676,7 +717,13 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
+msgstr ""
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
 
 msgid "Do not print any output (apart from errors)"
@@ -688,6 +735,11 @@ msgstr ""
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr ""
 
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
@@ -697,25 +749,6 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "Elementtiä \"decodebin2\" ei voitu luoda."
-
-#, fuzzy
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "Elementtiä \"decodebin\" ei voitu luoda."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Sisäisen tietovirran virhe."
-
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "Virran toistamiseen tarvitaan %s-liitännäinen, mutta se ei ole asennettu."
-
-#, fuzzy
-#~ msgid "Uncompressed %s YUV %s"
-#~ msgstr "Pakkaamaton YUV"
 
 #~ msgid "Master"
 #~ msgstr "Pääkanava"
@@ -750,54 +783,30 @@ msgstr ""
 #~ msgid "Capture"
 #~ msgstr "Nauhoitus"
 
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Yhteys kohteeseen %s:%d estettiin."
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Pakkaamaton tasollinen YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Pakkaamaton paketoitu YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Pakkaamaton paketoitu YVU 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Pakkaamaton paketoitu YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Pakkaamaton paketoitu YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Pakkaamaton tasollinen YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Pakkaamaton tasollinen YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Pakkaamaton mustavalkoinen Y-taso"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Raaka pcm-ääni"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Raaka %d-bittinen liukulukupohjainen ääni"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Raaka liukulukupohjainen ääni"
-
+#, c-format
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "VFS-tiedostoa \"%s\" ei voi avata kirjoitettavaksi: %s."
 
 #~ msgid "No filename given"
 #~ msgstr "Tiedostonimeä ei annettu"
 
+#, c-format
 #~ msgid "Could not close vfs file \"%s\"."
 #~ msgstr "VFS-tiedostoa \"%s\" ei voitu sulkea."
 
+#, c-format
 #~ msgid "Error while writing to file \"%s\"."
 #~ msgstr "Virhe kirjoitettaessa tiedostoon \"%s\"."
 
+#~ msgid "Internal data stream error."
+#~ msgstr "Sisäisen tietovirran virhe."
+
+#, c-format
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr ""
+#~ "Virran toistamiseen tarvitaan %s-liitännäinen, mutta se ei ole asennettu."
+
+#, c-format
 #~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 #~ msgstr "Virheellinen tekstitysten URI \"%s\", tekstitys ei ole käytössä."
 
@@ -831,23 +840,66 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Sekä autoaudiosink- että alsasink-elementit puuttuvat."
 
-#~ msgid "No device specified."
-#~ msgstr "Laitetta ei ole määritelty."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Laitetta \"%s\" ei ole olemassa."
-
-#~ msgid "Device \"%s\" is already being used."
-#~ msgstr "Laite \"%s\" on jo käytössä."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Laitetta \"%s\" ei voi avata luettavaksi ja kirjoitettavaksi."
-
+#, c-format
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "Virhe lähetettäessä gdp-otsaketietoja kohteeseen \"%s:%d\"."
 
+#, c-format
 #~ msgid "Error while sending gdp payload data to \"%s:%d\"."
 #~ msgstr "Virhe lähetettäessä gdp-sisältöä kohteeseen \"%s:%d\"."
+
+#, c-format
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Yhteys kohteeseen %s:%d estettiin."
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Pakkaamaton tasollinen YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Pakkaamaton paketoitu YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Pakkaamaton paketoitu YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Pakkaamaton paketoitu YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Pakkaamaton paketoitu YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Pakkaamaton tasollinen YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Pakkaamaton tasollinen YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Pakkaamaton mustavalkoinen Y-taso"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Raaka pcm-ääni"
+
+#, c-format
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Raaka %d-bittinen liukulukupohjainen ääni"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Raaka liukulukupohjainen ääni"
+
+#~ msgid "No device specified."
+#~ msgstr "Laitetta ei ole määritelty."
+
+#, c-format
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Laitetta \"%s\" ei ole olemassa."
+
+#, c-format
+#~ msgid "Device \"%s\" is already being used."
+#~ msgstr "Laite \"%s\" on jo käytössä."
+
+#, c-format
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Laitetta \"%s\" ei voi avata luettavaksi ja kirjoitettavaksi."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Ei voida toistaa sekä tekstitystä että alikuvaa."
@@ -863,6 +915,9 @@ msgstr ""
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Sisäisen tietovirran virhe."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Elementtiä \"decodebin2\" ei voitu luoda."
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "Elementtiä \"queue2\" ei voitu luoda."

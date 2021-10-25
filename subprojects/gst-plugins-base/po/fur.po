@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2017-02-20 15:34+0100\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
@@ -76,24 +76,15 @@ msgstr "Impussibil cirî tal CD."
 msgid "Could not read CD."
 msgstr "Impussibil lei il CD."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Al mancje l'element '%s' - controlâ la instalazion di GStreamer."
-
 msgid "Could not determine type of stream"
 msgstr "Impussibil determinâ il gjenar di flus"
 
 msgid "This appears to be a text file"
 msgstr "Chest al semee jessi un file di test"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Al mancje l'element '%s' - controlâ la instalazion di GStreamer."
 
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Impussibil creâ l'element \"uridecodebin\"."
@@ -178,6 +169,15 @@ msgstr "Impussibil regjistrâ audio a velocitât adeguade"
 msgid "This CD has no audio tracks"
 msgstr "Chest CD nol à tocs audio"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr "Etichete ID3"
 
@@ -211,9 +211,11 @@ msgstr "MSZH cence pierdite"
 msgid "Run-length encoding"
 msgstr "Run-length encoding (RLE)"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr "Test a timp"
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr "Sottitul"
 
@@ -293,6 +295,9 @@ msgstr "Sorzint RTSP (protocol di flus in timp reâl)"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Sorzint protocol MMS (servidôr multimediâl Microsoft)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "Sorzint protocol %s"
@@ -356,6 +361,8 @@ msgstr "Element decodificadôr no cognossût"
 msgid "Unknown encoder element"
 msgstr "Element codificadôr no cognossût"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Plugin o element di gjenar no cognossût"
 
@@ -386,11 +393,32 @@ msgstr "ID artist dal album"
 msgid "MusicBrainz album artist ID"
 msgstr "ID MusicBrainz dal artist dal album"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "ID MusicBrainz dal toc"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "ID toc"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "ID MusicBrainz dal toc"
+
 msgid "track TRM ID"
 msgstr "ID TRM dal toc"
 
 msgid "MusicBrainz TRM ID"
 msgstr "ID MusicBrainz dal TRM"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr ""
@@ -540,9 +568,18 @@ msgid ""
 "added/removed."
 msgstr ""
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Volum: %.0f%%"
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
+msgstr ""
 
 msgid "Buffering..."
 msgstr "Daûr a jemplâ il buffer..."
@@ -608,6 +645,9 @@ msgstr "alce volum"
 msgid "volume down"
 msgstr "sbasse volum"
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr ""
 
@@ -663,8 +703,14 @@ msgstr "Disabilite control interatîf cun la tastiere"
 msgid "Volume"
 msgstr "Volum"
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
 msgstr "Il file de liste di riproduzion al conten file multimediâi di jentrade"
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
+msgstr ""
 
 msgid "Do not print any output (apart from errors)"
 msgstr "No sta a stampâ nissun output (infûr dai erôrs)"
@@ -673,6 +719,11 @@ msgid "Use playbin3 pipeline"
 msgstr ""
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
 msgstr ""
 
 #, c-format

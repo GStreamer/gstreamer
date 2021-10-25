@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2016-05-20 12:24+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -14,6 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\\n;\n"
 "X-Generator: Poedit 1.6.10\n"
 
@@ -73,24 +74,15 @@ msgstr "Nepodarilo sa nastaviť pozíciu na CD."
 msgid "Could not read CD."
 msgstr "Nepodarilo sa čítať CD."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Chýa prvok '%s' - skontrolujte svoju inštaláciu GStreamer."
-
 msgid "Could not determine type of stream"
 msgstr "Nepodarilo sa zistiť typ prúdu údajov"
 
 msgid "This appears to be a text file"
 msgstr "Tento súbor je asi textový"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Chýa prvok '%s' - skontrolujte svoju inštaláciu GStreamer."
 
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nepodarilo sa vytvoriť prvok \"uridecodebin\"."
@@ -175,6 +167,15 @@ msgstr "Zvuk sa nedá nahrávať dostatočne rýchlo"
 msgid "This CD has no audio tracks"
 msgstr "Toto CD nemá zvukové stopy"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr "ID3 značka"
 
@@ -208,9 +209,11 @@ msgstr "Bezstratové MSZH"
 msgid "Run-length encoding"
 msgstr "Kódovanie počas prehrávania"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr "Časovaný text"
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr "Titulky"
 
@@ -291,6 +294,9 @@ msgstr "Zdroj Real Time Streaming Protocol (RTSP)"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Zdroj protokolu Microsoft Media Server (MMS)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "zdroj protokolu %s"
@@ -354,6 +360,8 @@ msgstr "Neznámy prvok dekodéra"
 msgid "Unknown encoder element"
 msgstr "Neznámy prvok enkodéra"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Neznámy typ zásuvného modulu alebo prvku"
 
@@ -384,11 +392,32 @@ msgstr "ID umelca albumu"
 msgid "MusicBrainz album artist ID"
 msgstr "ID umelca albumu MusicBrainz"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "ID stopy MusicBrainz"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "ID stopy"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "ID stopy MusicBrainz"
+
 msgid "track TRM ID"
 msgstr "ID TRM stopy"
 
 msgid "MusicBrainz TRM ID"
 msgstr "ID TRM MusicBrainz"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr "rýchlosť uzávierky"
@@ -542,9 +571,18 @@ msgstr ""
 "Neskončiť po zobrazení úvodného zoznamu zariadení, ale čakať na ich pridanie/"
 "odstránenie."
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Hlasitosť: %.0f%%"
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
+msgstr ""
 
 msgid "Buffering..."
 msgstr "Napĺňam vyrovnávaciu pamäť..."
@@ -610,6 +648,9 @@ msgstr "zhlasniť"
 msgid "volume down"
 msgstr "stíšiť"
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr "zvýšiť rýchlosť prehrávania"
 
@@ -664,8 +705,14 @@ msgstr "Zakázať interaktívne ovládanie pomocou klávesnice"
 msgid "Volume"
 msgstr "Hlasitosť"
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
 msgstr "Súbor s prehrávacím zoznamom obsahujúcim vstupné mediálne súbory"
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
+msgstr ""
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Nevypisovať žiadny výstup (okrem chýb)"
@@ -674,6 +721,11 @@ msgid "Use playbin3 pipeline"
 msgstr ""
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
 msgstr ""
 
 #, c-format
@@ -685,14 +737,6 @@ msgstr "Ak chcete prehrávať, musíte zadať aspoň jeden názov súboru alebo 
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Stlačením 'k' zobrazíte zoznam klávesových skratiek.\n"
-
-#, fuzzy
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "Nepodarilo sa vytvoriť prvok \"decodebin2\"."
-
-#, fuzzy
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "Nepodarilo sa vytvoriť prvok \"uridecodebin\"."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Vnútorná chyba prúdu údajov."
@@ -849,6 +893,9 @@ msgstr "Stlačením 'k' zobrazíte zoznam klávesových skratiek.\n"
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Vnútorná chyba prúdu údajov."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Nepodarilo sa vytvoriť prvok \"decodebin2\"."
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "Nepodarilo sa vytvoriť prvok \"queue2\"."

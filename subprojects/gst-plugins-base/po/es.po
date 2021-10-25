@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2011-10-02 15:46+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -72,24 +73,15 @@ msgstr "No se pudo buscar en el CD."
 msgid "Could not read CD."
 msgstr "No se pudo leer del D."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Falta el elemento «%s»; compruebe su instalación de GStreamer."
-
 msgid "Could not determine type of stream"
 msgstr "No se pudo determinar el tipo de flujo"
 
 msgid "This appears to be a text file"
 msgstr "Esto parece ser un archivo de texto"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Falta el elemento «%s»; compruebe su instalación de GStreamer."
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
@@ -176,6 +168,15 @@ msgstr "No se puede grabar el sonido lo suficientemente rápido"
 msgid "This CD has no audio tracks"
 msgstr "Este CD no tiene pistas de sonido"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr "Etiqueta ID3"
 
@@ -209,9 +210,11 @@ msgstr "MSZH sin pérdida"
 msgid "Run-length encoding"
 msgstr "Codificación del tamaño durante la ejecución"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr ""
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr ""
 
@@ -266,7 +269,7 @@ msgstr "YUV 4:2:0 plano sin comprimir"
 msgid "Uncompressed planar YUV %s"
 msgstr "YUV 4:2:0 plano sin comprimir"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Paletizado sin comprimir de %d-bit %s"
 
@@ -298,6 +301,9 @@ msgstr "Fuente: Real Time Streaming Protocol (RTSP)"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Fuente: Protocolo Microsoft Media Server (MMS)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "Fuente: Protocolo %s"
@@ -361,6 +367,8 @@ msgstr "Elemento decodificador desconocido"
 msgid "Unknown encoder element"
 msgstr "Elemento codificador desconocido"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Complemento o elemento de tipo desconocido"
 
@@ -391,11 +399,32 @@ msgstr "ID del álbum del artista"
 msgid "MusicBrainz album artist ID"
 msgstr "ID del álbum del artista en MusicBrainz"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "ID de la pista en MusicBrainz"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "ID de la pista"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "ID de la pista en MusicBrainz"
+
 msgid "track TRM ID"
 msgstr "ID TRM de la pista"
 
 msgid "MusicBrainz TRM ID"
 msgstr "ID TRM en MusicBrainz"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr "velocidad del obturador de la toma"
@@ -548,8 +577,17 @@ msgid ""
 "added/removed."
 msgstr ""
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
+msgstr ""
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
 msgstr ""
 
 msgid "Buffering..."
@@ -616,6 +654,9 @@ msgstr ""
 msgid "volume down"
 msgstr ""
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr ""
 
@@ -672,7 +713,13 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
+msgstr ""
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
 
 msgid "Do not print any output (apart from errors)"
@@ -684,6 +731,11 @@ msgstr ""
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr ""
 
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
@@ -693,26 +745,6 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "No se pudo crear el elemento «decodebin2»."
-
-#, fuzzy
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "No se pudo crear el elemento «decodebin»."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Error interno de flujo de datos."
-
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "Se requiere un complemento de %s para reproducir este medio, pero no está "
-#~ "instalado."
-
-#, fuzzy
-#~ msgid "Uncompressed %s YUV %s"
-#~ msgstr "YUV sin comprimir"
 
 #~ msgid "Master"
 #~ msgstr "Maestro"
@@ -747,21 +779,31 @@ msgstr ""
 #~ msgid "Capture"
 #~ msgstr "Capturar"
 
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Se rechazó la conexión con %s:%d."
-
+#, c-format
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "No se pudo abrir el archivo VFS «%s» para escribir: %s."
 
 #~ msgid "No filename given"
 #~ msgstr "No se dio un nombre de archivo"
 
+#, c-format
 #~ msgid "Could not close vfs file \"%s\"."
 #~ msgstr "No se pudo cerrar el archivo VFS «%s»."
 
+#, c-format
 #~ msgid "Error while writing to file \"%s\"."
 #~ msgstr "Error al escribir al archivo «%s»."
 
+#~ msgid "Internal data stream error."
+#~ msgstr "Error interno de flujo de datos."
+
+#, c-format
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr ""
+#~ "Se requiere un complemento de %s para reproducir este medio, pero no está "
+#~ "instalado."
+
+#, c-format
 #~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 #~ msgstr "URI de subtítulos «%s» no válida, se desactivaron los subtítulos."
 
@@ -796,11 +838,17 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Tanto el elemento autoaudiosink como alsasink faltan."
 
+#, c-format
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "Error al enviar los datos de la cabecera gdp a «%s:%d»."
 
+#, c-format
 #~ msgid "Error while sending gdp payload data to \"%s:%d\"."
 #~ msgstr "Error al enviar la carga de datos de gdp a «%s:%d»."
+
+#, c-format
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Se rechazó la conexión con %s:%d."
 
 #~ msgid "Uncompressed planar YVU 4:2:0"
 #~ msgstr "YVU 4:2:0 plano sin comprimir"
@@ -829,6 +877,7 @@ msgstr ""
 #~ msgid "Raw PCM audio"
 #~ msgstr "Audio PCM sin comprimir"
 
+#, c-format
 #~ msgid "Raw %d-bit floating-point audio"
 #~ msgstr "Audio sin comprimir de %d-bits en coma flotante"
 
@@ -838,12 +887,15 @@ msgstr ""
 #~ msgid "No device specified."
 #~ msgstr "No se especificó un dispositivo."
 
+#, c-format
 #~ msgid "Device \"%s\" does not exist."
 #~ msgstr "El dispositivo «%s» no existe."
 
+#, c-format
 #~ msgid "Device \"%s\" is already being used."
 #~ msgstr "El dispositivo «%s» ya se está usando."
 
+#, c-format
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "No se pudo abrir el dispositivo «%s» para su lectura y escritura."
 
@@ -861,6 +913,9 @@ msgstr ""
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Error en el flujo de datos interno."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "No se pudo crear el elemento «decodebin2»."
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "No se pudo crear el elemento «queue2»."

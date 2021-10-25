@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.15.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2008-03-07 23:43+0200\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n"
 "%100<10 || n%100>=20) ? 1 : 2);\n"
@@ -74,25 +75,15 @@ msgstr "Nepavyko pakeisti pozicijos CD."
 msgid "Could not read CD."
 msgstr "Nepavyko perskaityti CD."
 
-msgid "failed to draw pattern"
+msgid "Could not determine type of stream"
 msgstr ""
 
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
+msgid "This appears to be a text file"
+msgstr "Atrodo, kad šis failas tekstinis"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Trūksta elemento „%s“ - patikrinkite GStreamer įdiegimą."
-
-#, fuzzy
-msgid "Could not determine type of stream"
-msgstr "Nepavyko sukurti „decodebin“ elemento."
-
-msgid "This appears to be a text file"
-msgstr "Atrodo, kad šis failas tekstinis"
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
@@ -110,9 +101,9 @@ msgstr "Trūksta ir autovideosink, ir xvimagesink elementų."
 msgid "The autovideosink element is missing."
 msgstr "Trūksta ir autovideosink, ir xvimagesink elementų."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Trūksta ir autovideosink, ir xvimagesink elementų."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -136,9 +127,9 @@ msgstr "Trūksta ir autoaudiosink, ir alsasink elementų."
 msgid "The autoaudiosink element is missing."
 msgstr "Trūksta ir autoaudiosink, ir alsasink elementų."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Trūksta ir autoaudiosink, ir alsasink elementų."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -182,6 +173,15 @@ msgstr "Nepakankamai greitai įrašomas garsas"
 msgid "This CD has no audio tracks"
 msgstr "Šiame CD nėra audio takelių"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr "ID3 žymė"
 
@@ -215,9 +215,11 @@ msgstr "Lossless MSZH"
 msgid "Run-length encoding"
 msgstr "Eilės ilgio kodavimas (RLE)"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr ""
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr ""
 
@@ -231,7 +233,7 @@ msgstr "Sami titrų formatas"
 
 #, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Sami titrų formatas"
+msgstr "TMPlayer titrų formatas"
 
 msgid "Sami subtitle format"
 msgstr "Sami titrų formatas"
@@ -273,7 +275,7 @@ msgstr "Nekompresuotas planarinis YUV 4:2:0"
 msgid "Uncompressed planar YUV %s"
 msgstr "Nekompresuotas planarinis YUV 4:2:0"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Nekompresuotas paletizuotas %d bitų %s"
 
@@ -305,6 +307,9 @@ msgstr "Realaus laiko srautų protokolo (RTSP) šaltinis"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Microsoft Media Server (MMS) protokolo šaltinis"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "%s protokolo šaltinis"
@@ -368,6 +373,8 @@ msgstr "Nežinomas dekodavimo elementas"
 msgid "Unknown encoder element"
 msgstr "Nežinomas kodavimo elementas"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Nežinomo tipo įskiepis ar elementas"
 
@@ -398,11 +405,32 @@ msgstr "albumo atlikėjo ID"
 msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz albumo atlikėjo ID"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "MusicBrainz takelio ID"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "takelio ID"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "MusicBrainz takelio ID"
+
 msgid "track TRM ID"
 msgstr "takelio TRM ID"
 
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr ""
@@ -552,8 +580,17 @@ msgid ""
 "added/removed."
 msgstr ""
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
+msgstr ""
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
 msgstr ""
 
 msgid "Buffering..."
@@ -620,6 +657,9 @@ msgstr ""
 msgid "volume down"
 msgstr ""
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr ""
 
@@ -676,7 +716,13 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
+msgstr ""
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
 
 msgid "Do not print any output (apart from errors)"
@@ -688,6 +734,11 @@ msgstr ""
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr ""
 
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
@@ -697,24 +748,6 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "Nepavyko sukurti „decodebin2“ elemento."
-
-#, fuzzy
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "Nepavyko sukurti „decodebin“ elemento."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Vidinė duomenų srauto klaida."
-
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr "Šiam srautui groti reikalingas %s įskiepis, bet jis nėra įdiegtas."
-
-#, fuzzy
-#~ msgid "Uncompressed %s YUV %s"
-#~ msgstr "Nekompresuotas YUV"
 
 #~ msgid "Master"
 #~ msgstr "Pagrindinis"
@@ -749,6 +782,78 @@ msgstr ""
 #~ msgid "Capture"
 #~ msgstr "Įrašymas"
 
+#, c-format
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "Nepavyko atverti vfs failo „%s“ rašymui: %s."
+
+#~ msgid "No filename given"
+#~ msgstr "Nenurodytas failo vardas"
+
+#, c-format
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Nepavyko užverti vfs failo „%s“."
+
+#, c-format
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Klaida rašant į failą „%s“."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Vidinė duomenų srauto klaida."
+
+#, c-format
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr "Šiam srautui groti reikalingas %s įskiepis, bet jis nėra įdiegtas."
+
+#, c-format
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "Netaisyklingas titrų URI „%s“, titrai išjungti."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "RTSP srautai dar negali būti rodomi."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Rastas tik subtitrų srautas. Arba bandote įkelti subtitrų failą ar kitokį "
+#~ "tekstinį failą, arba failas nebuvo teisingai atpažintas."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Neturite dekoderio, reikalingo šiam failui rodyti. Gali prireikti įdiegti "
+#~ "reikalingus įskiepius."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Tai nėra medijos failas"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Rastas titrų srautas, bet be video srauto."
+
+#~ msgid "No file name specified."
+#~ msgstr "Nenurodytas failo vardas."
+
+#, c-format
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Nepavyko atverti failo „%s“ rašymui."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Nepavyko sukurti „decodebin2“ elemento."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Nepavyko sukurti „queue2“ elemento."
+
+#, c-format
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Klaida siunčiant gdp antraštės duomenis į \"%s:%d\"."
+
+#, c-format
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Klaida siunčiant gdp duomenis į „%s:%d“."
+
+#, c-format
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Prisijungimas prie %s:%d atmestas."
 
@@ -779,96 +884,24 @@ msgstr ""
 #~ msgid "Raw PCM audio"
 #~ msgstr "Neapdorotas PCM garsas"
 
+#, c-format
 #~ msgid "Raw %d-bit floating-point audio"
 #~ msgstr "Neapdorotas %d bitų slankaus kablelio garsas"
 
 #~ msgid "Raw floating-point audio"
 #~ msgstr "Neapdorotas slankaus kablelio garsas"
 
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Nepavyko atverti vfs failo „%s“ rašymui: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "Nenurodytas failo vardas"
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Nepavyko užverti vfs failo „%s“."
-
-#~ msgid "Error while writing to file \"%s\"."
-#~ msgstr "Klaida rašant į failą „%s“."
-
-#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-#~ msgstr "Netaisyklingas titrų URI „%s“, titrai išjungti."
-
-#~ msgid "RTSP streams cannot be played yet."
-#~ msgstr "RTSP srautai dar negali būti rodomi."
-
-#~ msgid ""
-#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
-#~ "file or some other type of text file, or the media file was not "
-#~ "recognized."
-#~ msgstr ""
-#~ "Rastas tik subtitrų srautas. Arba bandote įkelti subtitrų failą ar kitokį "
-#~ "tekstinį failą, arba failas nebuvo teisingai atpažintas."
-
-#~ msgid ""
-#~ "You do not have a decoder installed to handle this file. You might need "
-#~ "to install the necessary plugins."
-#~ msgstr ""
-#~ "Neturite dekoderio, reikalingo šiam failui rodyti. Gali prireikti įdiegti "
-#~ "reikalingus įskiepius."
-
-#~ msgid "This is not a media file"
-#~ msgstr "Tai nėra medijos failas"
-
-#~ msgid "A subtitle stream was detected, but no video stream."
-#~ msgstr "Rastas titrų srautas, bet be video srauto."
-
-#~ msgid "Both autovideosink and xvimagesink elements are missing."
-#~ msgstr "Trūksta ir autovideosink, ir xvimagesink elementų."
-
-#~ msgid "Both autoaudiosink and alsasink elements are missing."
-#~ msgstr "Trūksta ir autoaudiosink, ir alsasink elementų."
-
 #~ msgid "No device specified."
 #~ msgstr "Nenurodytas įrenginys."
 
+#, c-format
 #~ msgid "Device \"%s\" does not exist."
 #~ msgstr "Įrenginys „%s“ neegzistuoja."
 
+#, c-format
 #~ msgid "Device \"%s\" is already being used."
 #~ msgstr "Įrenginys „%s“ jau naudojamas."
 
+#, c-format
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Nepavyko atverti įrenginio „%s“ skaitymui ir rašymui."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Klaida siunčiant gdp antraštės duomenis į \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Klaida siunčiant gdp duomenis į „%s:%d“."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Nepavyko sukurti „queue2“ elemento."
-
-#, fuzzy
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Nepavyko sukurti „decodebin“ elemento."
-
-#, fuzzy
-#~ msgid "No Temp directory specified."
-#~ msgstr "Nenurodytas įrenginys."
-
-#, fuzzy
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Nepavyko užverti vfs failo „%s“."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Nepavyko atverti failo „%s“ rašymui."
-
-#, fuzzy
-#~ msgid "Internal data flow error."
-#~ msgstr "Vidinė duomenų srauto klaida."
-
-#~ msgid "No file name specified."
-#~ msgstr "Nenurodytas failo vardas."

@@ -1,7 +1,7 @@
 # Brazilian Portuguese translation of gst-plugins-base.
-# Copyright (C) 2008-2018 Free Software Foundation, Inc.
+# Copyright (C) 2008-2021 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2018.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2021.
 #
 # PCM -> PCM
 # buffering -> preenchendo buffer
@@ -10,10 +10,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
-"PO-Revision-Date: 2018-10-20 16:32-0300\n"
+"Project-Id-Version: gst-plugins-base-1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2021-09-25 22:29-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -23,6 +23,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.0\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Não foi possível abrir o dispositivo para reprodução em mono."
@@ -56,7 +57,7 @@ msgstr "Não foi possível abrir o dispositivo para gravação em estéreo."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Não foi possível abrir o dispositivo para gravação com %d canais."
+msgstr "Não foi possível abrir o dispositivo para gravação com %d canais"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
@@ -81,32 +82,22 @@ msgstr "Não foi possível buscar no CD."
 msgid "Could not read CD."
 msgstr "Não foi possível ler o CD."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-"O elemento \"%s\" está faltando, verifique a instalação do seu GStreamer."
-
 msgid "Could not determine type of stream"
 msgstr "Não foi possível determinar o tipo de fluxo"
 
 msgid "This appears to be a text file"
 msgstr "Este arquivo parece ser de texto"
 
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+"O elemento \"%s\" está faltando, verifique a instalação do seu GStreamer."
+
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Não foi possível criar o elemento \"uridecodebin\"."
 
-#, fuzzy
 msgid "Could not create \"uridecodebin3\" element."
-msgstr "Não foi possível criar o elemento \"uridecodebin\"."
+msgstr "Não foi possível criar o elemento \"uridecodebin3\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -173,7 +164,7 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Nenhum controlador para o URI \"%s\" foi implementado."
 
 msgid "Source element is invalid."
-msgstr "O elemente de origem é inválido."
+msgstr "O elemento de origem é inválido."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -184,6 +175,15 @@ msgstr "Não é possível gravar o áudio rápido suficiente"
 
 msgid "This CD has no audio tracks"
 msgstr "Este CD não tem trilhas de áudio"
+
+msgid "failed to draw pattern"
+msgstr "falha ao desenhar padrão"
+
+msgid "A GL error occurred"
+msgstr "Um erro ocorreu com o GL"
+
+msgid "format wasn't negotiated before get function"
+msgstr "o formato não foi negociado antes da função get"
 
 msgid "ID3 tag"
 msgstr "Etiqueta ID3"
@@ -218,9 +218,11 @@ msgstr "MSZH Sem Perdas"
 msgid "Run-length encoding"
 msgstr "Codificação Run-length"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr "Texto Temporizado"
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr "Legenda"
 
@@ -240,10 +242,10 @@ msgid "TMPlayer subtitle format"
 msgstr "Formato de legendas TMPlayer"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "Closed Caption CEA 608"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "Closed Caption CEA 708"
 
 msgid "Kate subtitle format"
 msgstr "Formato de legendas Kate"
@@ -300,6 +302,9 @@ msgstr "Origem: Protocolo de Fluxo Contínuo em Tempo Real (RTSP)"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Origem: protocolo do Servidor de Mídia da Microsoft (MMS)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "Origem: protocolo %s"
@@ -318,11 +323,11 @@ msgstr "decodificador RTP %s"
 
 #, c-format
 msgid "%s demuxer"
-msgstr "Demultiplexador %s"
+msgstr "demultiplexador %s"
 
 #, c-format
 msgid "%s decoder"
-msgstr "Decodificador %s"
+msgstr "decodificador %s"
 
 #, c-format
 msgid "%s video RTP payloader"
@@ -338,11 +343,11 @@ msgstr "codificador RTP %s"
 
 #, c-format
 msgid "%s muxer"
-msgstr "Multiplexador %s"
+msgstr "multiplexador %s"
 
 #, c-format
 msgid "%s encoder"
-msgstr "Codificador %s"
+msgstr "codificador %s"
 
 #, c-format
 msgid "GStreamer element %s"
@@ -363,6 +368,8 @@ msgstr "Elemento decodificador desconhecido"
 msgid "Unknown encoder element"
 msgstr "Elemento codificador desconhecido"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Elemento ou plug-in de tipo desconhecido"
 
@@ -393,11 +400,29 @@ msgstr "ident. do artista do álbum"
 msgid "MusicBrainz album artist ID"
 msgstr "ident. do artista do álbum no MusicBrainz"
 
+msgid "release group ID"
+msgstr "ident. do grupo de lançamento"
+
+msgid "MusicBrainz release group ID"
+msgstr "ident. do grupo de lançamento no MusicBrainz"
+
+msgid "release track ID"
+msgstr "ident. do lançamento da trilha"
+
+msgid "MusicBrainz release track ID"
+msgstr "ident. do lançamento da trilha no MusicBrainz"
+
 msgid "track TRM ID"
 msgstr "ident. da trilha TRM"
 
 msgid "MusicBrainz TRM ID"
 msgstr "ident. da trilha TRM no MusicBrainz"
+
+msgid "AcoustID ID"
+msgstr "Identidade acústica"
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr "Impressão digital acústica (chromaprint)"
 
 msgid "capturing shutter speed"
 msgstr "velocidade do obturador ao capturar"
@@ -558,9 +583,18 @@ msgstr ""
 "Não sair após exibir a lista inicial de dispositivos, mas sim, esperar por "
 "dispositivos serem adicionados ou removidos."
 
+msgid "Include devices from hidden device providers."
+msgstr "Incluir dispositivos de provedores ocultos de dispositivos."
+
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Volume: %.0f%%"
+
+msgid "Mute: on"
+msgstr "Áudio: ligado"
+
+msgid "Mute: off"
+msgstr "Áudio: desligado"
 
 msgid "Buffering..."
 msgstr "Preenchendo buffer..."
@@ -626,6 +660,9 @@ msgstr "aumentar volume"
 msgid "volume down"
 msgstr "diminuir volume"
 
+msgid "toggle audio mute on/off"
+msgstr "alternar entre áudio ligado e desligado"
+
 msgid "increase playback rate"
 msgstr "aumentar a taxa de reprodução"
 
@@ -690,19 +727,36 @@ msgstr "Desativar controle interativo via teclado"
 msgid "Volume"
 msgstr "Volume"
 
+msgid "Start position in seconds."
+msgstr "Posição inicial em segundos."
+
 #  Flag: playlist
 msgid "Playlist file containing input media files"
 msgstr "Arquivo de lista de reprodução que contém arquivos de mídia de entrada"
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
+msgstr ""
+"Utiliza o sinalizador experimental instant-rate-change ao trocar taxa de "
+"reprodução"
 
 #  Flag: quiet
 msgid "Do not print any output (apart from errors)"
 msgstr "Não exibir nenhuma saída (além dos erros)"
 
 msgid "Use playbin3 pipeline"
-msgstr ""
+msgstr "Utiliza a fila de processamento playbin3"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr ""
+"(valor predefinido varia de acordo com a variável de ambiente \"USE_PLAYBIN"
+"\")"
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+"Continua exibindo o último quadro ao final do fluxo até sair ou ocorrer "
+"alteração da lista de reprodução (reprodução sem intervalos é ignorada)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

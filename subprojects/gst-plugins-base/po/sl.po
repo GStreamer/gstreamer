@@ -9,8 +9,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.0.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2013-01-05 10:10+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -18,6 +18,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
 "%100==4 ? 3 : 0);\n"
 
@@ -75,24 +76,15 @@ msgstr "Po CD-ju ni mogoče iskati."
 msgid "Could not read CD."
 msgstr "CD-ja ni mogoče prebrati."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Predmet '%s' manjka - preverite namestitev paketa GStreamer."
-
 msgid "Could not determine type of stream"
 msgstr "Vrste pretoka ni mogoče določiti."
 
 msgid "This appears to be a text file"
 msgstr "Datoteka je videti kot besedilna datoteka"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Predmet '%s' manjka - preverite namestitev paketa GStreamer."
 
 msgid "Could not create \"uridecodebin\" element."
 msgstr ""
@@ -176,6 +168,15 @@ msgstr "Ni mogoče dovolj hitro snemati zvoka"
 msgid "This CD has no audio tracks"
 msgstr "Ta CD nima zvočnih sledi"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr "Oznaka ID3"
 
@@ -209,9 +210,11 @@ msgstr "Brezizgubni MSZH"
 msgid "Run-length encoding"
 msgstr "Kodiranje trajanja izvajanja"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr ""
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr "Podnapisi"
 
@@ -292,6 +295,9 @@ msgstr "Vir protokola Real Time Streaming Protocol (RTSP)"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Vir protokola Microsoft Media Server (MMS)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "Vir protokola %s"
@@ -355,6 +361,8 @@ msgstr "Neznan predmet odkodirnika"
 msgid "Unknown encoder element"
 msgstr "Neznan predmet kodirnika"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Vstavek ali predmet neznane vrste"
 
@@ -385,11 +393,32 @@ msgstr "ID izvajalca albuma"
 msgid "MusicBrainz album artist ID"
 msgstr "ID izvajalca albuma MusicBrainz"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "ID sledi MusicBrainz"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "ID sledi"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "ID sledi MusicBrainz"
+
 msgid "track TRM ID"
 msgstr "TRM ID sledi"
 
 msgid "MusicBrainz TRM ID"
 msgstr "TRM ID MusicBrainz"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr "hitrost zaslonke"
@@ -542,8 +571,17 @@ msgid ""
 "added/removed."
 msgstr ""
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
+msgstr ""
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
 msgstr ""
 
 msgid "Buffering..."
@@ -610,6 +648,9 @@ msgstr ""
 msgid "volume down"
 msgstr ""
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr ""
 
@@ -666,7 +707,13 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
+msgstr ""
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
 
 msgid "Do not print any output (apart from errors)"
@@ -676,6 +723,11 @@ msgid "Use playbin3 pipeline"
 msgstr ""
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
 msgstr ""
 
 #, c-format
@@ -691,6 +743,7 @@ msgstr ""
 #~ msgid "Internal data stream error."
 #~ msgstr "Notranja napaka pretoka podatkov."
 
+#, c-format
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""
 #~ "Za predvajanje tega pretoka je potreben vstavek %s, ki pa ni nameščen."

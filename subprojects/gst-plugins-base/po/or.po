@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -77,24 +77,15 @@ msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ବନ୍ଦ କରିହେ�
 msgid "Could not read CD."
 msgstr "\"%s\" ଯନ୍ତ୍ରରେ ଲେଖିହେଲା ନାହିଁ."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-
 #, fuzzy
 msgid "Could not determine type of stream"
 msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
 
 msgid "This appears to be a text file"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 
 #, fuzzy
@@ -181,6 +172,15 @@ msgstr ""
 msgid "This CD has no audio tracks"
 msgstr ""
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr ""
 
@@ -214,9 +214,11 @@ msgstr ""
 msgid "Run-length encoding"
 msgstr ""
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr ""
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr ""
 
@@ -296,6 +298,9 @@ msgstr ""
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr ""
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr ""
@@ -359,6 +364,8 @@ msgstr ""
 msgid "Unknown encoder element"
 msgstr ""
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr ""
 
@@ -389,10 +396,28 @@ msgstr ""
 msgid "MusicBrainz album artist ID"
 msgstr ""
 
+msgid "release group ID"
+msgstr ""
+
+msgid "MusicBrainz release group ID"
+msgstr ""
+
+msgid "release track ID"
+msgstr ""
+
+msgid "MusicBrainz release track ID"
+msgstr ""
+
 msgid "track TRM ID"
 msgstr ""
 
 msgid "MusicBrainz TRM ID"
+msgstr ""
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
 msgstr ""
 
 msgid "capturing shutter speed"
@@ -543,9 +568,18 @@ msgid ""
 "added/removed."
 msgstr ""
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Volume: %.0f%%"
 msgstr "ପ୍ରବଳତା"
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
+msgstr ""
 
 msgid "Buffering..."
 msgstr ""
@@ -612,6 +646,9 @@ msgstr "ପ୍ରବଳତା"
 msgid "volume down"
 msgstr ""
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr ""
 
@@ -666,7 +703,13 @@ msgstr ""
 msgid "Volume"
 msgstr "ପ୍ରବଳତା"
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
+msgstr ""
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
 
 msgid "Do not print any output (apart from errors)"
@@ -676,6 +719,11 @@ msgid "Use playbin3 pipeline"
 msgstr ""
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
 msgstr ""
 
 #, c-format

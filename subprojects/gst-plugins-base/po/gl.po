@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.0.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2012-12-15 03:40+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -16,6 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Virtaal 0.7.1\n"
 "X-Poedit-Language: galego\n"
@@ -77,24 +78,15 @@ msgstr "Non foi posíbel buscar no CD."
 msgid "Could not read CD."
 msgstr "Non foi posíbel ler o CD."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Falta o elemento «%s» - comprobe a instalación do GStreamer."
-
 msgid "Could not determine type of stream"
 msgstr "Non foi posíbel determinar o tipo de fluxo."
 
 msgid "This appears to be a text file"
 msgstr "Isto parece ser un ficheiro de texto"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Falta o elemento «%s» - comprobe a instalación do GStreamer."
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
@@ -181,6 +173,15 @@ msgstr "Non é posíbel gravar o son cunha velocidade suficiente"
 msgid "This CD has no audio tracks"
 msgstr "Este CD non contén pistas de son"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr "Etiqueta ID3"
 
@@ -214,9 +215,11 @@ msgstr "MSZH sen perda"
 msgid "Run-length encoding"
 msgstr "Codificación do tamaño durante a execución"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr ""
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr "Subtítulo"
 
@@ -297,6 +300,9 @@ msgstr "Fonte: Real Time Streaming Protocol (RTSP)"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Fonte: protocolo Microsoft Media Server (MMS)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "Fonte: Protocolo %s"
@@ -360,6 +366,8 @@ msgstr "O elemento decodificador é descoñecido"
 msgid "Unknown encoder element"
 msgstr "O elemento codificador é descoñecido"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Engadido ou elemento de tipo descoñecido"
 
@@ -390,11 +398,32 @@ msgstr "ID do álbum do artista"
 msgid "MusicBrainz album artist ID"
 msgstr "ID do álbum do artista en MusicBrainz"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "ID da pista en MusicBrainz"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "ID da pista"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "ID da pista en MusicBrainz"
+
 msgid "track TRM ID"
 msgstr "ID TRM da pista"
 
 msgid "MusicBrainz TRM ID"
 msgstr "ID TRM en MusicBrainz"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr "velocidade do obturador da toma"
@@ -547,8 +576,17 @@ msgid ""
 "added/removed."
 msgstr ""
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
+msgstr ""
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
 msgstr ""
 
 msgid "Buffering..."
@@ -616,6 +654,9 @@ msgstr ""
 msgid "volume down"
 msgstr ""
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr ""
 
@@ -672,7 +713,13 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
+msgstr ""
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
 
 msgid "Do not print any output (apart from errors)"
@@ -682,6 +729,11 @@ msgid "Use playbin3 pipeline"
 msgstr ""
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
 msgstr ""
 
 #, c-format
@@ -694,22 +746,16 @@ msgstr ""
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
 
-#, fuzzy
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
-
-#, fuzzy
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
-
 #~ msgid "Internal data stream error."
 #~ msgstr "Produciuse un erro no fluxo de datos internos."
 
+#, c-format
 #~ msgid "A %s plugin is required to play this stream, but not installed."
 #~ msgstr ""
 #~ "Precísase un engadido %s que non está instalado para reproducir este "
 #~ "fluxo."
 
+#, c-format
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "%s YUV %s sen comprimir"
 

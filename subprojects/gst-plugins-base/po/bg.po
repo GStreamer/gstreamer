@@ -1,23 +1,24 @@
 # Bulgarian translation of gst-plugins-base.
 # Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
-# Copyright (C) 2011, 2016 Free Software Foundation, Inc.
+# Copyright (C) 2011, 2016, 2019 Free Software Foundation, Inc.
+# Copyright (C) 2021 Alexander Shopov.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Alexander Shopov <ash@kambanaria.org>, 2005, 2006, 2007, 2008, 2009, 2010.
-# Alexander Shopov <ash@kambanaria.org>, 2011, 2016.
-#
+# Alexander Shopov <ash@kambanaria.org>, 2011, 2016, 2019, 2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.7.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
-"PO-Revision-Date: 2016-02-21 21:03+0200\n"
+"Project-Id-Version: gst-plugins-base 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2021-10-02 19:54+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -75,31 +76,21 @@ msgstr "По CD-то не може да се търси."
 msgid "Could not read CD."
 msgstr "CD-то не може да бъде прочетено."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Елементът „%s“ липсва — проверете инсталацията на GStreamer."
-
 msgid "Could not determine type of stream"
 msgstr "Видът на потока не може да бъде определен"
 
 msgid "This appears to be a text file"
 msgstr "Това изглежда е текстов файл"
 
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Елементът „%s“ липсва — проверете инсталацията на GStreamer."
+
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Не може да се създаде елемент „uridecodebin“."
 
-#, fuzzy
 msgid "Could not create \"uridecodebin3\" element."
-msgstr "Не може да се създаде елемент „uridecodebin“."
+msgstr "Не може да се създаде елемент „uridecodebin3“."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -158,7 +149,7 @@ msgid "Invalid URI \"%s\"."
 msgstr "Грешен адрес „%s“."
 
 msgid "This stream type cannot be played yet."
-msgstr "Потоци от този тип все още не могат да бъдат изпълнявани."
+msgstr "Потоци от този вид все още не могат да бъдат изпълнявани."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
@@ -176,6 +167,15 @@ msgstr "Звукът не може да бъде записан достатъч
 
 msgid "This CD has no audio tracks"
 msgstr "В това CD липсва аудио"
+
+msgid "failed to draw pattern"
+msgstr "шарката не може да се начертае"
+
+msgid "A GL error occurred"
+msgstr "Грешка от графичната система GL"
+
+msgid "format wasn't negotiated before get function"
+msgstr "форматът не е бил уточнен преди извикването на функцията за получаване"
 
 msgid "ID3 tag"
 msgstr "Етикет ID3"
@@ -210,9 +210,11 @@ msgstr "MSZH без загуба на качество"
 msgid "Run-length encoding"
 msgstr "Последователно кодиране RLE"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr "Текст по време"
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr "Субтитри"
 
@@ -232,17 +234,16 @@ msgid "TMPlayer subtitle format"
 msgstr "Субтитри, формат TMPlayer"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "Субтитри, формат CEA 608"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "Субтитри, формат CEA 708"
 
 msgid "Kate subtitle format"
 msgstr "Субтитри, формат Kate"
 
-#, fuzzy
 msgid "WebVTT subtitle format"
-msgstr "Субтитри, формат Kate"
+msgstr "Субтитри, формат WebVTT"
 
 msgid "Uncompressed video"
 msgstr "Некомпресирано видео"
@@ -279,7 +280,7 @@ msgstr "Некомпресирано аудио"
 
 #, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Аудио, необработен %d-битов %s"
+msgstr "Аудио, необработено %d-битово %s"
 
 msgid "Audio CD source"
 msgstr "Елемент-източник — CD"
@@ -293,6 +294,9 @@ msgstr "Елемент-източник — RTSP (поточен протоко�
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Елемент-източник — MMS (сървър за медия на Microsoft)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "Елемент-източник, протокол %s"
@@ -356,11 +360,13 @@ msgstr "Непознат елемент-декодер"
 msgid "Unknown encoder element"
 msgstr "Непознат елемент-кодер"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Приставка или елемент от непознат вид"
 
 msgid "Failed to read tag: not enough data"
-msgstr "Неуспешно прочитано на етикет: липсват достатъчно данни"
+msgstr "Неуспешно прочитане на етикет: липсват достатъчно данни"
 
 msgid "track ID"
 msgstr "идентификатор на песен"
@@ -386,11 +392,29 @@ msgstr "идентификатор на изпълнител в албума"
 msgid "MusicBrainz album artist ID"
 msgstr "идентификатор на изпълнител в албума според MusicBrainz"
 
+msgid "release group ID"
+msgstr "идентификатор на издание"
+
+msgid "MusicBrainz release group ID"
+msgstr "идентификатор на издание според MusicBrainz"
+
+msgid "release track ID"
+msgstr "идентификатор на издание на песен"
+
+msgid "MusicBrainz release track ID"
+msgstr "идентификатор на издание на песен според MusicBrainz"
+
 msgid "track TRM ID"
 msgstr "индустриален идентификатор на песен (TRM)"
 
 msgid "MusicBrainz TRM ID"
 msgstr "индустриален идентификатор на песен според MusicBrainz (TRM)"
+
+msgid "AcoustID ID"
+msgstr "акустичен идентификатор"
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr "акустичен идентификатор (отпечатък AcoustID)"
 
 msgid "capturing shutter speed"
 msgstr "скорост на затвора"
@@ -410,14 +434,13 @@ msgstr "фокусно разстояние"
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Фокусно разстояние на обектива при заснемане в милиметри"
 
-#, fuzzy
 msgid "capturing 35 mm equivalent focal length"
-msgstr "фокусно разстояние"
+msgstr "приравнено към 35mm фокусно разстояние "
 
-#, fuzzy
 msgid ""
 "35 mm equivalent focal length of the lens used capturing the image, in mm"
-msgstr "Фокусно разстояние на обектива при заснемане в милиметри"
+msgstr ""
+"Приравнено към 35mm фокусно разстояние на обектива при заснемане в милиметри"
 
 msgid "capturing digital zoom ratio"
 msgstr "цифрово увеличение"
@@ -508,19 +531,19 @@ msgid "capturing source"
 msgstr "източник"
 
 msgid "The source or type of device used for the capture"
-msgstr "Видът на устройството-източник при заснемане"
+msgstr "Вид на устройството-източник при заснемане"
 
 msgid "image horizontal ppi"
 msgstr "точки на инч по хоризонтал"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Целевата разделителна способност на медията по хоризонтал"
+msgstr "Целева разделителна способност на медията по хоризонтал"
 
 msgid "image vertical ppi"
 msgstr "точки на инч по вертикал"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Целевата разделителна способност на медията по вертикал"
+msgstr "Целева разделителна способност на медията по вертикал"
 
 msgid "ID3v2 frame"
 msgstr "Кадър за ID3v2"
@@ -532,7 +555,7 @@ msgid "musical-key"
 msgstr "лад"
 
 msgid "Initial key in which the sound starts"
-msgstr "Тоналността, в която почва музиката"
+msgstr "Тоналност, в която почва музиката"
 
 msgid "Print version information and exit"
 msgstr "Извеждане на информация за версията и спиране на програмата"
@@ -544,9 +567,18 @@ msgstr ""
 "След извеждане на първоначалния списък с устройства, да се чака за добавяне/"
 "махане на устройства."
 
+msgid "Include devices from hidden device providers."
+msgstr "Включване на устройства от скритите доставчици."
+
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Сила на звука: %.0f%%"
+
+msgid "Mute: on"
+msgstr "Заглушаване: включено"
+
+msgid "Mute: off"
+msgstr "Заглушаване: изключено"
 
 msgid "Buffering..."
 msgstr "Буфериране…"
@@ -589,13 +621,13 @@ msgid "quit"
 msgstr "спиране"
 
 msgid "> or n"
-msgstr ""
+msgstr "„>“ или „n“"
 
 msgid "play next"
 msgstr "следващо"
 
 msgid "< or b"
-msgstr ""
+msgstr "„<“ или „b“"
 
 msgid "play previous"
 msgstr "предишно"
@@ -611,6 +643,9 @@ msgstr "увеличаване на звука"
 
 msgid "volume down"
 msgstr "намаляване на звука"
+
+msgid "toggle audio mute on/off"
+msgstr "превключване на заглушаването на звука"
 
 msgid "increase playback rate"
 msgstr "забързване на изпълнението"
@@ -668,17 +703,33 @@ msgstr "Без управление от клавиатурата"
 msgid "Volume"
 msgstr "Сила на звука"
 
+msgid "Start position in seconds."
+msgstr "Начално положение в секунди."
+
 msgid "Playlist file containing input media files"
 msgstr "Файл със списък за изпълнение"
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
+msgstr ""
+"При промяната на скоростта да се ползва експерименталният флаг за мигновена "
+"промяна"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Без извеждане на информация (освен грешките)"
 
 msgid "Use playbin3 pipeline"
-msgstr ""
+msgstr "Конвейер с „playbin3“"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr "(стандартният вариант зависи от променливата на средата „USE_PLAYBIN“)"
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
 msgstr ""
+"Последният кадър в края на поток да се показва до получаването на команда за "
+"спиране или смяна на списъка за изпълнение (в този случай настройката за "
+"изпълнение без прекъсвания се пренебрегва)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -689,14 +740,3 @@ msgstr "Трябва да укажете поне един файл или ад�
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Натиснете „k“, за да видите списъка с клавишни комбинации.\n"
-
-#, fuzzy
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "Не може да се създаде елемент „uridecodebin“."
-
-#, fuzzy
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "Не може да се създаде елемент „uridecodebin“."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Вътрешна грешка на потока от данни."

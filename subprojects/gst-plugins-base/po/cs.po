@@ -9,8 +9,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2017-09-13 15:20+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -77,24 +77,15 @@ msgstr "Nezdařilo přeskočit na CD."
 msgid "Could not read CD."
 msgstr "Nezdařilo čtení z CD."
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Schází prvek „%s“ – zkontrolujte prosím instalaci systému GStreamer."
-
 msgid "Could not determine type of stream"
 msgstr "Nezdařilo se určit typ proudu"
 
 msgid "This appears to be a text file"
 msgstr "Zdá se, že se jedná o textový soubor"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Schází prvek „%s“ – zkontrolujte prosím instalaci systému GStreamer."
 
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nelze vytvořit prvek „uridecodebin“."
@@ -179,6 +170,15 @@ msgstr "Zvuk nelze nahrávat dostatečnou rychlostí"
 msgid "This CD has no audio tracks"
 msgstr "Toto CD nemá žádné zvukové stopy"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 msgid "ID3 tag"
 msgstr "Štítek ID3"
 
@@ -212,9 +212,11 @@ msgstr "Bezeztrátové MSZH"
 msgid "Run-length encoding"
 msgstr "RLE (Run-Length Encoding)"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr "Timed Text"
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr "Titulek"
 
@@ -294,6 +296,9 @@ msgstr "Zdroj Real Time Streaming Protocol (RTSP)"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Zdroj protokolu Microsoft Media Server (MMS)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "Zdroj protokolu %s"
@@ -357,6 +362,8 @@ msgstr "Neznámý dekodérový prvek"
 msgid "Unknown encoder element"
 msgstr "Neznámý kodérový prvek"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Zásuvný modul nebo prvek neznámého typu"
 
@@ -387,11 +394,32 @@ msgstr "ID umělce alba"
 msgid "MusicBrainz album artist ID"
 msgstr "ID umělce alba z MusicBrainz"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "ID stopy z MusicBrainz"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "ID stopy"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "ID stopy z MusicBrainz"
+
 msgid "track TRM ID"
 msgstr "ID stopy TRM"
 
 msgid "MusicBrainz TRM ID"
 msgstr "ID stopy TRM z MusicBrainz"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr "rychlost závěrky při zachytávání"
@@ -548,9 +576,18 @@ msgstr ""
 "Po zobrazení počátečního seznamu zařízení neskončit, ale ček na přidání/"
 "odebrání zařízení."
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Hlasitost: %.0f %%"
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
+msgstr ""
 
 msgid "Buffering..."
 msgstr "Ukládá se do vyrovnávací paměti…"
@@ -616,6 +653,9 @@ msgstr "zvýšit hlasitost"
 msgid "volume down"
 msgstr "snížit hlasitost"
 
+msgid "toggle audio mute on/off"
+msgstr ""
+
 msgid "increase playback rate"
 msgstr "zvýšit rychlost přehrávání"
 
@@ -671,8 +711,14 @@ msgstr "Zakázat interaktivní ovládání klávesnicí"
 msgid "Volume"
 msgstr "Hlasitost"
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
 msgstr "Soubor se seznamem k přehrání obsahující vstupní multimediální soubory"
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
+msgstr ""
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Nevypisovat žádný výstup (mimo chyb)"
@@ -681,6 +727,11 @@ msgid "Use playbin3 pipeline"
 msgstr ""
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
 msgstr ""
 
 #, c-format

@@ -1,17 +1,17 @@
-# Hungarian translation of gst-plugins-base
-# Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010, 2012, 2014, 2015, 2016, 2017 Free Software Foundation, Inc.
+# Hungarian translation for gst-plugins-base.
+# Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010, 2012, 2014, 2015, 2016, 2017, 2019 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
 # Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2012, 2016.
-# Balázs Úr <urbalazs@gmail.com>, 2014, 2015, 2017.
+# Balázs Úr <ur.balazs@fsf.hu>, 2014, 2015, 2017, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
-"PO-Revision-Date: 2017-03-19 00:47+0100\n"
-"Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
+"Project-Id-Version: gst-plugins-base 1.16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2019-11-23 21:59+0100\n"
+"Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
@@ -19,89 +19,79 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Rosetta-Export-Date: 2007-03-10 00:18+0000\n"
-"X-Generator: Lokalize 1.2\n"
+"X-Generator: Lokalize 19.04.3\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Could not open device for playback in mono mode."
-msgstr "Nem lehet lejátszásra megnyitni az eszközt mono módban."
+msgstr "Nem sikerült lejátszásra megnyitni az eszközt mono módban."
 
 msgid "Could not open device for playback in stereo mode."
-msgstr "Nem lehet lejátszásra megnyitni az eszközt sztereó módban."
+msgstr "Nem sikerült lejátszásra megnyitni az eszközt sztereó módban."
 
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "Nem lehet lejátszásra megnyitni az eszközt %d csatornás módban."
+msgstr "Nem sikerült lejátszásra megnyitni az eszközt %d csatornás módban."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Nem lehet lejátszásra megnyitni a hangeszközt. Az eszközt másik alkalmazás "
-"használja."
+"Nem sikerült lejátszásra megnyitni a hangeszközt. Az eszközt másik "
+"alkalmazás használja."
 
 msgid "Could not open audio device for playback."
-msgstr "Nem lehet lejátszásra megnyitni a hangeszközt."
+msgstr "Nem sikerült lejátszásra megnyitni a hangeszközt."
 
 msgid "Error outputting to audio device. The device has been disconnected."
 msgstr "Hiba a hangeszközre való kimenetküldéskor. Az eszközt leválasztották."
 
 msgid "Could not open device for recording in mono mode."
-msgstr "Nem lehet felvételre megnyitni az eszközt mono módban."
+msgstr "Nem sikerült felvételre megnyitni az eszközt mono módban."
 
 msgid "Could not open device for recording in stereo mode."
-msgstr "Nem lehet felvételre megnyitni az eszközt sztereó módban."
+msgstr "Nem sikerült felvételre megnyitni az eszközt sztereó módban."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Az eszköz nem nyitható meg felvételre %d csatornás módban."
+msgstr "Nem sikerült felvételre megnyitni az eszközt %d csatornás módban"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
 msgstr ""
-"Nem lehet felvételre megnyitni a hangeszközt. Az eszközt másik alkalmazás "
+"Nem sikerült felvételre megnyitni a hangeszközt. Az eszközt másik alkalmazás "
 "használja."
 
 msgid "Could not open audio device for recording."
-msgstr "Nem lehet felvételre megnyitni a hangeszközt."
+msgstr "Nem sikerült felvételre megnyitni a hangeszközt."
 
 msgid "Error recording from audio device. The device has been disconnected."
 msgstr "Hiba a hangeszközről való felvételkor. Az eszközt leválasztották."
 
 msgid "Could not open CD device for reading."
-msgstr "Nem lehet olvasásra megnyitni a CD-eszközt."
+msgstr "Nem sikerült olvasásra megnyitni a CD-eszközt."
 
 msgid "Could not seek CD."
-msgstr "Nem kereshető a CD."
+msgstr "Nem sikerült pozicionálni a CD-t."
 
 msgid "Could not read CD."
-msgstr "Nem olvasható a CD."
+msgstr "Nem sikerült olvasni a CD-t."
 
-msgid "failed to draw pattern"
-msgstr ""
+msgid "Could not determine type of stream"
+msgstr "Nem sikerült meghatározni az adatfolyam típusát"
 
-msgid "A GL error occurred"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr ""
+msgid "This appears to be a text file"
+msgstr "Ez egy szövegfájlnak tűnik"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "A(z) „%s” elem hiányzik - ellenőrizze a Gstreamer telepítését."
 
-msgid "Could not determine type of stream"
-msgstr "Nem határozható meg az adatfolyam típusa"
-
-msgid "This appears to be a text file"
-msgstr "Ez egy szövegfájlnak tűnik"
-
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Nem hozható létre „uridecodebin” elem."
+msgstr "Nem sikerült létrehozni „uridecodebin” elemet."
 
-#, fuzzy
 msgid "Could not create \"uridecodebin3\" element."
-msgstr "Nem hozható létre „uridecodebin” elem."
+msgstr "Nem sikerült létrehozni „uridecodebin3” elemet."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -179,6 +169,15 @@ msgstr "Nem lehet elég gyorsan rögzíteni a hangot"
 msgid "This CD has no audio tracks"
 msgstr "Ez a CD nem rendelkezik hangsávokkal"
 
+msgid "failed to draw pattern"
+msgstr "a minta rajzolása sikertelen"
+
+msgid "A GL error occurred"
+msgstr "Egy GL hiba történt"
+
+msgid "format wasn't negotiated before get function"
+msgstr "a formátum nem lett egyeztetve a függvény lekérése előtt"
+
 msgid "ID3 tag"
 msgstr "ID3 címke"
 
@@ -212,9 +211,11 @@ msgstr "Veszteségmentes MSZH"
 msgid "Run-length encoding"
 msgstr "Műsorhossz-kódolás"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr "Időzített szöveg"
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr "Felirat"
 
@@ -234,10 +235,10 @@ msgid "TMPlayer subtitle format"
 msgstr "TMPlayer feliratformátum"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "CEA 608 lezárt felirat"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "CEA 708 lezárt felirat"
 
 msgid "Kate subtitle format"
 msgstr "Kate feliratformátum"
@@ -294,6 +295,9 @@ msgstr "Valósidejű adatfolyam-protokoll (RTSP) forrás"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Microsoft Media Server (MMS) protokollforrás"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "%s protokollforrás"
@@ -357,6 +361,8 @@ msgstr "Ismeretlen dekódolóelem"
 msgid "Unknown encoder element"
 msgstr "Ismeretlen kódolóelem"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Ismeretlen típusú bővítmény vagy elem"
 
@@ -387,11 +393,32 @@ msgstr "Albumelőadó azonosítója"
 msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz albumelőadó azonosítója"
 
+msgid "release group ID"
+msgstr ""
+
+#, fuzzy
+msgid "MusicBrainz release group ID"
+msgstr "MusicBrainz számazonosító"
+
+#, fuzzy
+msgid "release track ID"
+msgstr "számazonosító"
+
+#, fuzzy
+msgid "MusicBrainz release track ID"
+msgstr "MusicBrainz számazonosító"
+
 msgid "track TRM ID"
 msgstr "szám TRM azonosítója"
 
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz szám TRM azonosítója"
+
+msgid "AcoustID ID"
+msgstr ""
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr ""
 
 msgid "capturing shutter speed"
 msgstr "felvétel zársebessége"
@@ -544,9 +571,18 @@ msgstr ""
 "Ne lépjen ki a kezdeti eszközlista megjelenítése után, de várjon az eszközök "
 "hozzáadására/eltávolítására."
 
+msgid "Include devices from hidden device providers."
+msgstr ""
+
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Hangerő: %.0f%%"
+
+msgid "Mute: on"
+msgstr ""
+
+msgid "Mute: off"
+msgstr ""
 
 msgid "Buffering..."
 msgstr "Pufferelés…"
@@ -574,7 +610,7 @@ msgstr "Lejátszási sebesség: %.2f"
 
 #, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "Nem lehet megváltoztatni a lejátszási sebességet erre: %.2f"
+msgstr "Nem sikerült megváltoztatni a lejátszási sebességet erre: %.2f"
 
 msgid "space"
 msgstr "szóköz"
@@ -611,6 +647,9 @@ msgstr "hangerő fel"
 
 msgid "volume down"
 msgstr "hangerő le"
+
+msgid "toggle audio mute on/off"
+msgstr ""
 
 msgid "increase playback rate"
 msgstr "lejátszási sebesség növelése"
@@ -668,17 +707,31 @@ msgstr "Interaktív vezérlés letiltása a billentyűzeten keresztül"
 msgid "Volume"
 msgstr "Hangerő"
 
+msgid "Start position in seconds."
+msgstr ""
+
 msgid "Playlist file containing input media files"
 msgstr "Bemeneti médiafájlokat tartalmazó lejátszólista fájl"
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
+msgstr ""
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Ne írjon ki semmilyen kimenetet (a hibákon kívül)"
 
 msgid "Use playbin3 pipeline"
-msgstr ""
+msgstr "Playbin3 csővezeték használata"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr ""
+"(az alapértelmezett a „USE_PLAYBIN” környezeti változótól függően változik)"
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+"Az utolsó képkocka láthatóan tartása az adatfolyam végén a kilépésig vagy a "
+"lejátszólista megváltoztatása parancsig (szünetmentes mellőzve)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -690,9 +743,3 @@ msgstr "Meg kell adnia legalább egy fájlnevet vagy URI-t a lejátszáshoz."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
 "Nyomja meg a „k” billentyűt a gyorsbillentyűk listájának megtekintéséhez.\n"
-
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "Nem hozható létre „decodebin3” elem."
-
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "Nem hozható létre „urisourcebin” elem."

@@ -3,22 +3,22 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019.
+# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019, 2021.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
-"PO-Revision-Date: 2019-01-24 22:01+0200\n"
+"Project-Id-Version: gst-plugins-base 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2021-09-24 16:44+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
-"Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
+"Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Lokalize 2.0\n"
+"X-Generator: Lokalize 20.12.0\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Не вдалося відкрити пристрій відтворення у режимі моно."
@@ -79,25 +79,16 @@ msgstr "Не вдалося встановити позицію на CD."
 msgid "Could not read CD."
 msgstr "Не вдалося прочитати CD."
 
-msgid "failed to draw pattern"
-msgstr "не вдалося намалювати візерунок"
-
-msgid "A GL error occurred"
-msgstr "Сталася помилка GL"
-
-msgid "format wasn't negotiated before get function"
-msgstr "формат не було узгоджено до функції отримання"
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-"Відсутній елемент «%s». Перевірте, чи встановлено GStreamer належним чином."
-
 msgid "Could not determine type of stream"
 msgstr "Не вдалося визначити тип даних потоку"
 
 msgid "This appears to be a text file"
 msgstr "Файл схожий на текстовий файл"
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+"Відсутній елемент «%s». Перевірте, чи встановлено GStreamer належним чином."
 
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Не вдалося створити елемент \"uridecodebin\"."
@@ -182,6 +173,15 @@ msgstr "Не вдалося запис аудіоданих з потрібно�
 msgid "This CD has no audio tracks"
 msgstr "На цьому компакт-диску немає звукових доріжок"
 
+msgid "failed to draw pattern"
+msgstr "не вдалося намалювати візерунок"
+
+msgid "A GL error occurred"
+msgstr "Сталася помилка GL"
+
+msgid "format wasn't negotiated before get function"
+msgstr "формат не було узгоджено до функції отримання"
+
 msgid "ID3 tag"
 msgstr "Мітка ID3"
 
@@ -215,9 +215,11 @@ msgstr "MSZH без втрат"
 msgid "Run-length encoding"
 msgstr "Кодування Run-length"
 
+#. subtitle formats with static descriptions
 msgid "Timed Text"
 msgstr "Timed Text"
 
+#. FIXME: add variant field to typefinder?
 msgid "Subtitle"
 msgstr "Субтитри"
 
@@ -297,6 +299,9 @@ msgstr "Джерело потокового протоколу реальног�
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Джерело протоколу Microsoft Media Server (MMS)"
 
+#. TODO: find out how to add a comment for translators to the source code
+#. * (and tell them to make the first letter uppercase below if they move
+#. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
 msgstr "Джерело протоколу %s"
@@ -360,6 +365,8 @@ msgstr "Невідомий елемент декодера"
 msgid "Unknown encoder element"
 msgstr "Невідомий елемент кодера"
 
+#. we should really never get here, but we better still return
+#. * something if we do
 msgid "Plugin or element of unknown type"
 msgstr "Модуль або елемент невідомого типу"
 
@@ -390,11 +397,29 @@ msgstr "ідентифікатор виконавця альбому"
 msgid "MusicBrainz album artist ID"
 msgstr "Ідентифікатор виконавця альбому у MusicBrainz"
 
+msgid "release group ID"
+msgstr "ідентифікатор групи випуску"
+
+msgid "MusicBrainz release group ID"
+msgstr "Ідентифікатор групи випуску у MusicBrainz"
+
+msgid "release track ID"
+msgstr "ідентифікатор доріжки випуску"
+
+msgid "MusicBrainz release track ID"
+msgstr "Ідентифікатор доріжки випуску у MusicBrainz"
+
 msgid "track TRM ID"
 msgstr "ідентифікатор доріжки TRM"
 
 msgid "MusicBrainz TRM ID"
 msgstr "Ідентифікатор доріжки TRM у MusicBrainz"
+
+msgid "AcoustID ID"
+msgstr "ідентифікатор AcoustID"
+
+msgid "AcoustID fingerprint (chromaprint)"
+msgstr "відбиток AcoustID (chromaprint)"
 
 msgid "capturing shutter speed"
 msgstr "швидкість затвору"
@@ -559,9 +584,18 @@ msgstr ""
 "Не завершувати роботу після показу початкового списку пристроїв, чекати на "
 "додавання або вилучення пристроїв."
 
+msgid "Include devices from hidden device providers."
+msgstr "Включити пристрої з прихованих надавачів пристроїв."
+
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Гучність: %.0f%%"
+
+msgid "Mute: on"
+msgstr "Вимкнено: так"
+
+msgid "Mute: off"
+msgstr "Вимкнено: ні"
 
 msgid "Buffering..."
 msgstr "Буферизація…"
@@ -627,6 +661,9 @@ msgstr "гучніше"
 msgid "volume down"
 msgstr "тихіше"
 
+msgid "toggle audio mute on/off"
+msgstr "увімкнути/вимкнути звук"
+
 msgid "increase playback rate"
 msgstr "збільшити частоту відтворення"
 
@@ -682,8 +719,16 @@ msgstr "Вимкнути інтерактивне керування за доп
 msgid "Volume"
 msgstr "Гучність"
 
+msgid "Start position in seconds."
+msgstr "Початкова позиція у секундах."
+
 msgid "Playlist file containing input media files"
 msgstr "Файл списку відтворення, що містить мультимедійні файли вхідних даних"
+
+msgid "Use the experimental instant-rate-change flag when changing rate"
+msgstr ""
+"Скористатися експериментальним прапорцем instant-rate-change при зміні "
+"швидкості"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Не виводити повідомлень (окрім повідомлень щодо помилок)"
@@ -693,6 +738,13 @@ msgstr "Використовувати конвеєр playbin3"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr "(типове значення залежить від змінної середовища USE_PLAYBIN)"
+
+msgid ""
+"Keep showing the last frame on EOS until quit or playlist change command "
+"(gapless is ignored)"
+msgstr ""
+"Показувати останній кадр на EOS до команди виходу або зміни списку "
+"відтворення (gapless буде проігноровано)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
