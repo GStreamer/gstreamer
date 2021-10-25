@@ -61,7 +61,8 @@ GST_DEBUG_CATEGORY_STATIC(gst_gs_src_debug);
 
 enum { LAST_SIGNAL };
 
-#define DEFAULT_BLOCKSIZE 4 * 1024
+// https://github.com/googleapis/google-cloud-cpp/issues/2657
+#define DEFAULT_BLOCKSIZE 3 * 1024 * 1024 / 2
 
 enum {
   PROP_0,
@@ -515,7 +516,6 @@ static gboolean gst_gs_src_get_size(GstBaseSrc* basesrc, guint64* size) {
 static gboolean gst_gs_src_start(GstBaseSrc* basesrc) {
   GstGsSrc* src = GST_GS_SRC(basesrc);
   GError* err = NULL;
-  guint blocksize = 0;
 
   src->read_position = 0;
   src->object_size = 0;
@@ -556,12 +556,6 @@ static gboolean gst_gs_src_start(GstBaseSrc* basesrc) {
   GST_INFO_OBJECT(src, "Object size %" G_GUINT64_FORMAT "\n", src->object_size);
 
   src->gcs_stream = std::make_unique<GSReadStream>(src);
-
-  blocksize = gcs::ClientOptions(nullptr).download_buffer_size();
-
-  GST_INFO_OBJECT(src, "Set blocksize to %" G_GUINT32_FORMAT, blocksize);
-
-  gst_base_src_set_blocksize(GST_BASE_SRC(src), blocksize);
 
   return TRUE;
 }
