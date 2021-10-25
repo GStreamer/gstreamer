@@ -25,16 +25,17 @@
 # 5. metadata
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.3.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
-"PO-Revision-Date: 2014-06-08 00:22+0800\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2021-09-26 21:45+0800\n"
 "Last-Translator: Wen Liao <wen.cf83@gmail.com>\n"
-"Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
+"Language-Team: Chinese (traditional) <zh-l10n@lists.linux.org.tw>\n"
 "Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "Print the GStreamer version"
@@ -44,7 +45,7 @@ msgid "Make all warnings fatal"
 msgstr "將所有警告視為嚴重錯誤"
 
 msgid "Print available debug categories and exit"
-msgstr "顯示可以偵錯的類別，並結束"
+msgstr "顯示可以偵錯的類別並結束"
 
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
@@ -52,7 +53,7 @@ msgstr ""
 "將預設偵錯等級設定為 1 (只顯示錯誤) 至 9 (任何訊息)，或者用 0 表示不顯示訊息"
 
 msgid "LEVEL"
-msgstr ""
+msgstr "等級"
 
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
@@ -109,6 +110,7 @@ msgstr "GStreamer 選項"
 msgid "Show GStreamer Options"
 msgstr "顯示 GStreamer 選項"
 
+#, c-format
 msgid "Unknown option"
 msgstr "未知的選項"
 
@@ -822,7 +824,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
+msgstr ""
+
+#, c-format
+msgid "Invalid URI: %s"
 msgstr ""
 
 #, c-format
@@ -846,6 +853,9 @@ msgstr ""
 "%s\n"
 
 # Wen, 不翻譯，幾乎都是專有名詞
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -863,16 +873,24 @@ msgstr "“%2$s” 元件沒有 “%1$s” 屬性"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "無法將 “%2$s” element的 “%1$s” 屬性設定為 “%3$s”"
 
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "“%s” 是一個 socket。"
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "無法將 “%2$s” element的 “%1$s” 屬性設定為 “%3$s”"
+
 msgid "Delayed linking failed."
 msgstr ""
 
 #, fuzzy, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "無法連接 %s 和 %s"
+msgstr "無法將%s連接到%s"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr ""
+msgstr "無法將%s連接到%s，也沒有element 可以處理 caps %s"
 
 #, fuzzy, c-format
 msgid "could not link %s to %s with caps %s"
@@ -948,10 +966,10 @@ msgid ""
 msgstr "限制允許的capabilities (NULL表示不限制)，打開該屬性將會參照GstCaps物件"
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "變更 Caps 模式"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "過慮caps 變更行為"
 
 msgid "No Temp directory specified."
 msgstr "未指定暫存目錄"
@@ -1006,10 +1024,10 @@ msgid "Failed after iterations as requested."
 msgstr "重複送出請求後發生失敗"
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "不允許下面兩個同時定義： eos-after. error-after"
 
 msgid "caps"
-msgstr ""
+msgstr "caps"
 
 msgid "detected capabilities in stream"
 msgstr "已從資料串流中偵測到capabilities"
@@ -1046,6 +1064,10 @@ msgstr ""
 msgid "controllable"
 msgstr "可控制"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "可控制"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "可以切換到NULL, READY, PAUSED 或PLAYING狀態"
 
@@ -1060,7 +1082,7 @@ msgstr "黑名單檔案"
 
 #, fuzzy, c-format
 msgid "%sTotal count%s: %s"
-msgstr "總數量:"
+msgstr "%s 總數量 %s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1104,7 +1126,7 @@ msgstr "列出外掛程式內容"
 msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
-msgstr ""
+msgstr "使用'/'區隔element type列表中的資料(無先後順序)"
 
 msgid "Check if the specified element or plugin exists"
 msgstr "檢查指定的element或是外掛程式是否存在"
@@ -1118,13 +1140,17 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "印出支援的URI schemes以及有實作它的elements"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"關閉輸出顯示色彩，您可以設定'GST_INSPECT_NO_COLORS'環境變數達到相同效果"
+
+msgid "Color output, even when not sending to a tty."
+msgstr "即使沒有送到tty 也要輸出時顯示色彩"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "無法再入外掛程式檔案： “%s”\n"
+msgstr "無法載入外掛程式檔案： “%s”\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
@@ -1132,6 +1158,12 @@ msgstr "找不到element或外掛程式'%s'\n"
 
 msgid "Index statistics"
 msgstr "索引統計"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "將pipeline狀態設為PLAYING...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "錯誤：Pipeline 不想要播放。\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1153,17 +1185,20 @@ msgstr "收到訊息 #%u (%s):"
 msgid "Got EOS from element \"%s\".\n"
 msgstr "從element \"%s\" 中得到EOS通知\n"
 
+msgid "EOS received - stopping pipeline...\n"
+msgstr "收到EOS - 停止pipeline...\n"
+
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "找到標籤      : 由element \"%s\"找到。\n"
+msgstr "找到標籤      : 在element \"%s\"找到。\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "找到標籤      : 由pad \"%s:%s\"找到。\n"
+msgstr "找到標籤      : 在pad \"%s:%s\"找到。\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "找到標籤      : 由從物件 \"%s\"找到。\n"
+msgstr "找到標籤      : 在從物件 \"%s\"找到。\n"
 
 msgid "FOUND TAG\n"
 msgstr "找到標籤\n"
@@ -1191,6 +1226,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "警告：來自element %s ：%s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Pipleline已經緩衝完畢 ...\n"
+
 # Wen, 怪怪的, 如何精確區分preroll和buffer?
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "緩衝中，等待緩衝完成...\n"
@@ -1204,6 +1242,7 @@ msgstr "緩衝中..."
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "緩衝完成，將pipeline狀態設成PLAYING...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "緩衝完成，將pipeline狀態設成PAUSE...\n"
 
@@ -1214,8 +1253,19 @@ msgstr "重新分配延遲時間...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "由%2$s要求，將狀態設成%1$s...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "中斷：停止pipeline...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "等待EOS時發生中斷 - 停止pipeline\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "關閉時送出EOS已設定 -- 強迫Pipeline EOS\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "等待EOS...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1228,6 +1278,16 @@ msgstr "“%s” element不存在\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "從element '%s' 取得內容: %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "錯誤：Pipeline 不想要緩衝。\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "等待EOS時發生錯誤\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "輸出標籤 （即metadata）"
@@ -1244,22 +1304,38 @@ msgstr "不顯示任何進度資訊"
 msgid "Output messages"
 msgstr "輸出訊息"
 
+# Wen, 小括號不懂意思，只能照翻
 msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
-msgstr ""
+msgstr "當開啟verbose 輸出時請勿印出指定的屬性中的狀態資訊 (可被多次使用)"
 
 msgid "PROPERTY-NAME"
 msgstr ""
 
 msgid "Do not install a fault handler"
-msgstr "不安裝錯誤處理程式"
+msgstr "請勿安裝錯誤處理程式"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "在關閉pipeline前強迫source EOS"
 
 msgid "Gather and print index statistics"
 msgstr "收集並列印索引統計"
+
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+"不可印出目前pipeline的位置。如果該選項未指定，在stdout為TTY時才會印出位置。如"
+"果想在stdout不是TTY的情況下印出問位置，請開啟\"force-position\"選項"
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+"就算stdout不是TTY時才會印出位置也允許印出目前pipeline的位置。該選項遇到\"no-"
+"position\"開啟時無效"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1278,8 +1354,9 @@ msgstr "錯誤：找不到 ‘pipeline’ element。\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "將pipeline狀態設為PAUSED...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "錯誤：Pipeline 不想要暫停。\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "將pipeline狀態設為PAUSED...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Pipepline可以正常運動，不需要緩衝 ...\n"
@@ -1287,59 +1364,14 @@ msgstr "Pipepline可以正常運動，不需要緩衝 ...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Pipeline正在緩衝 ...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "錯誤：Pipeline 不想要緩衝。\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Pipleline已經緩衝完畢 ...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "將pipeline狀態設為PLAYING...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "錯誤：Pipeline 不想要播放。\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "關閉時送出EOS已設定 -- 強迫Pipeline EOS\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "關閉時送出EOS已設定 -- 產生錯誤後等待EOS\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "等待EOS...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "收到EOS - 停止pipeline...\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "等待EOS時發生中斷 - 停止pipeline\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "等待EOS時發生錯誤\n"
-
 msgid "Execution ended after %"
 msgstr "在 % 之後執行結束"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "將pipeline狀態設為READY...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "將pipeline狀態設為NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "釋放pipeline ...\n"
-
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "關閉檔案 “%s” 時發生錯誤。"
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "關閉檔案 “%s” 時發生錯誤。"
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "當寫入內容至檔案 “%s” 時發生錯誤。"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "內部資料串流錯誤"
@@ -1349,6 +1381,15 @@ msgstr "釋放pipeline ...\n"
 
 #~ msgid "TYPE1,TYPE2,..."
 #~ msgstr "TYPE1,TYPE2,..."
+
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "錯誤：Pipeline 不想要暫停。\n"
+
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "關閉時送出EOS已設定 -- 產生錯誤後等待EOS\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "將pipeline狀態設為READY...\n"
 
 #~ msgid "link without source element"
 #~ msgstr "管線中沒有來源元件"

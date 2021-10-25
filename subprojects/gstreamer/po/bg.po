@@ -1,17 +1,18 @@
 # Bulgarian translation of gstreamer.
 # Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Fondation, Inc.
-# Copyright (C) 2011, 2016, 2017 Free Software Fondation, Inc.
+# Copyright (C) 2011, 2016, 2017, 2019 Free Software Fondation, Inc.
+# Copyright (C) 2021, Alexander Shopov.
 # This file is distributed under the same license as the gstreamer package.
 # Alexander Shopov <ash@kambanaria.org>, 2005, 2006, 2007, 2008, 2009, 2010.
-# Alexander Shopov <ash@kambanaria.org>, 2011, 2016, 2017.
+# Alexander Shopov <ash@kambanaria.org>, 2011, 2016, 2017, 2019, 2021.
 #
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
-"PO-Revision-Date: 2017-05-08 11:35+0200\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2021-10-01 19:22+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
@@ -22,13 +23,13 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Print the GStreamer version"
-msgstr "Отпечатване на версията на GStreamer"
+msgstr "Извеждане на версията на GStreamer"
 
 msgid "Make all warnings fatal"
 msgstr "Всички предупреждения да са фатални"
 
 msgid "Print available debug categories and exit"
-msgstr "Отпечатване на наличните категории за изчистване на грешки и изход"
+msgstr "Извеждане на наличните категории за изчистване на грешки и изход"
 
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
@@ -51,7 +52,7 @@ msgid "LIST"
 msgstr "СПИСЪК"
 
 msgid "Disable colored debugging output"
-msgstr "Спиране на оцветените съобщения за изчистване на грешки"
+msgstr "Без оцветяване на съобщенията за изчистване на грешки"
 
 msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
@@ -62,7 +63,7 @@ msgstr ""
 "„disable“ (спиране), „auto“ (автоматично), „unix“ (стандартно за unix)"
 
 msgid "Disable debugging"
-msgstr "Спиране на съобщенията за изчистване на грешки"
+msgstr "Без съобщения за изчистване на грешки"
 
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Включване на подробни съобщения при зареждане на приставка"
@@ -86,21 +87,21 @@ msgstr "ПРИСТАВКИ"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
-"Спиране на прихващането на сегментационни грешки по времето на зареждане на "
-"приставка"
+"Без прихващане на сегментационни грешки по времето на зареждане на приставка"
 
 msgid "Disable updating the registry"
-msgstr "Регистърът да не се прочита"
+msgstr "Без прочитане на регистъра"
 
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Без стартирането на спомагателен процес при изчитането на регистъра"
+msgstr "Без стартиране на спомагателен процес при изчитането на регистъра"
 
 msgid "GStreamer Options"
 msgstr "Настройки на GStreamer"
 
 msgid "Show GStreamer Options"
-msgstr "Показване на опциите на GStreamer"
+msgstr "Извеждане на опциите на GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Непозната опция"
 
@@ -110,8 +111,8 @@ msgstr "GStreamer получи обща грешка в основна библ�
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
-"Разработчиците на GStreamer са били прекалено мързеливи и не са задали код "
-"за грешка на този проблем."
+"Разработчиците на GStreamer са били твърде мързеливи и не са задали код за "
+"грешка на този проблем."
 
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Вътрешна грешка на GStreamer: кодът не е реализиран."
@@ -145,7 +146,7 @@ msgid "Internal GStreamer error: tag problem."
 msgstr "Вътрешна грешка на GStreamer: проблем с етикетите."
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr "Липсва необходима приставка в тази инсталация на GStreamer"
+msgstr "Липсва необходима приставка в тази инсталация на GStreamer."
 
 msgid "GStreamer error: clock problem."
 msgstr "Грешка на GStreamer: проблем с часовника."
@@ -278,10 +279,10 @@ msgid "commonly used title"
 msgstr "популярно заглавие"
 
 msgid "title sortname"
-msgstr "заглавие, ползва се при подреждане"
+msgstr "заглавие при подреждане"
 
 msgid "commonly used title for sorting purposes"
-msgstr "популярно заглавие, ползва се при подреждане"
+msgstr "популярно заглавие при подреждане"
 
 msgid "artist"
 msgstr "изпълнител"
@@ -299,25 +300,25 @@ msgid "album"
 msgstr "албум"
 
 msgid "album containing this data"
-msgstr "албум съдържащ тези данни"
+msgstr "албум с тези данни"
 
 msgid "album sortname"
-msgstr "албум, ползва се при подреждане"
+msgstr "албум при подреждане"
 
 msgid "album containing this data for sorting purposes"
-msgstr "албум съдържащ тези данни, ползва се при подреждане"
+msgstr "албум с тези данни при подреждане"
 
 msgid "album artist"
 msgstr "изпълнител на албум"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr "изпълнител на целия албум, ползва се при показване"
+msgstr "изпълнител на целия албум при показване"
 
 msgid "album artist sortname"
-msgstr "изпълнител на албум, ползва се при подреждане"
+msgstr "изпълнител на албум при подреждане"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr "изпълнител на целия албум, ползва се при подреждане"
+msgstr "изпълнител на целия албум при подреждане"
 
 msgid "date"
 msgstr "дата"
@@ -367,7 +368,7 @@ msgid "disc number"
 msgstr "номер на диска"
 
 msgid "disc number inside a collection"
-msgstr "номер на диска от колекция"
+msgstr "номер на диска в колекция"
 
 msgid "disc count"
 msgstr "брой дискове"
@@ -407,7 +408,7 @@ msgid "ISRC"
 msgstr "ISRC"
 
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "Стандартен, международен код на запис — http://www.ifpi.org/isrc/"
+msgstr "Стандартен международен код на запис — http://www.ifpi.org/isrc/"
 
 msgid "organization"
 msgstr "организация"
@@ -819,7 +820,7 @@ msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Информация за хората създали ремикс или друга интерпретация"
 
 msgid "midi-base-note"
-msgstr "нота за midi"
+msgstr "нота по Midi"
 
 msgid "Midi note number of the audio track."
 msgstr "Номер на нотата по Midi за песента"
@@ -830,8 +831,13 @@ msgstr "собствени данни"
 msgid "Private data"
 msgstr "Собствени данни"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr "Неправилен адрес: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -853,6 +859,9 @@ msgstr ""
 "Допълнителна информация за изчистване на грешки:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "връзка без източник [sink=%s@%p]"
@@ -868,6 +877,14 @@ msgstr "елементът „2$%s“ няма свойството „1$%s“"
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "свойството „%s“ на елемента „%s“ не може да се зададе да е „%s“"
+
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Файлът „%s“ е във формат GstPreset."
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "настройките „%s“ не може да се зададат в елемента „%s“"
 
 msgid "Delayed linking failed."
 msgstr "Неуспешно отложено свързване."
@@ -902,7 +919,7 @@ msgstr "неочакван указател за допълване „%s“ —
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "възможностите „%s“ не могат да бъдат анализирани"
+msgstr "възможностите „%s“ не може да бъдат анализирани"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
@@ -927,7 +944,7 @@ msgid "empty pipeline not allowed"
 msgstr "не е позволен празен конвейер"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Неправилно конструиран конвейер. Добавете опашки."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Много буфери се пропускат."
@@ -1012,7 +1029,7 @@ msgid "Failed after iterations as requested."
 msgstr "Грешка след заявения брой повторения."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "Невъзможно е едновременното задаване на „eos-after“ и „error-after“."
 
 msgid "caps"
 msgstr "възможности"
@@ -1035,9 +1052,9 @@ msgstr "Потокът не съдържа достатъчно данни."
 msgid "Stream contains no data."
 msgstr "Потокът не съдържа никакви данни"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Реализирани интерфейси:\n"
+msgstr "%sРеализирани интерфейси%s:\n"
 
 msgid "readable"
 msgstr "с права за четене"
@@ -1050,6 +1067,9 @@ msgstr "изоставен"
 
 msgid "controllable"
 msgstr "може да се контролира"
+
+msgid "conditionally available"
+msgstr "налично под условие"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr ""
@@ -1068,9 +1088,9 @@ msgstr ""
 msgid "Blacklisted files:"
 msgstr "Забранени файлове:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Общ брой:"
+msgstr "%sОбщ брой%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1137,9 +1157,14 @@ msgstr ""
 "реализация"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Без цветове на изхода. Това може да се постигне и със задаването на "
+"произволна стойност на променливата на средата „GST_INSPECT_NO_COLORS“."
+
+msgid "Color output, even when not sending to a tty."
+msgstr "Цветен изход, дори когато не се праща към терминал."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1151,6 +1176,12 @@ msgstr "Няма такъв елемент или приставка „%s“\n"
 
 msgid "Index statistics"
 msgstr "Статистика на индекса"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Конвейерът се дава за ИЗПЪЛНЕНИЕ…\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ГРЕШКА: конвейерът не иска да проработи.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1171,6 +1202,9 @@ msgstr "Получено е съобщение #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Получен е EOS (край на потока) от елемент „%s“.\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Получен е край на поток: конвейерът се спира…\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1210,6 +1244,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: от елемент %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Конвейерът е БУФЕРИРАН…\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Буфериран, изчаква се завършването на буферирането…\n"
 
@@ -1222,6 +1259,7 @@ msgstr "буфериране…"
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Буферирането завърши, конвейерът се дава за ИЗПЪЛНЕНИЕ…\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Буфериране, конвейерът се дава НА ПАУЗА…\n"
 
@@ -1232,8 +1270,19 @@ msgstr "Преразпределяне на латентността…\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Задаване на състоянието на %s по заявка на %s…\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Прекъсване: Конвейерът се спира…\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Прекъсване при изчакване: конвейерът се спира…\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "Включен е EOS при спиране — извеждане на EOS по конвейера\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Изчакване на EOS…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1247,6 +1296,16 @@ msgstr "Липсващ елемент: „%s“\n"
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Получен е контекст от елемента „%s“: %s=%s\n"
 
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ГРЕШКА: конвейерът не иска да превърти напред.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Възникна грешка при изчакването на EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Ползване на часовника на Windows с висока точност: %u ms\n"
+
 msgid "Output tags (also known as metadata)"
 msgstr "Извеждане на етикетите (метаданните)"
 
@@ -1257,7 +1316,7 @@ msgid "Output status information and property notifications"
 msgstr "Извеждане на съобщения за състоянието и промяната на свойства"
 
 msgid "Do not print any progress information"
-msgstr "Да не се извежда информация за напредъка"
+msgstr "Без извеждане на информация за напредъка"
 
 msgid "Output messages"
 msgstr "Изходни съобщения"
@@ -1267,7 +1326,7 @@ msgid ""
 "output is enabled (can be used multiple times)"
 msgstr ""
 "Без извеждане на информацията за състоянието на указаното свойство, ако е "
-"включен подробния изход (може да се ползва много пъти)"
+"включен подробният изход (може да се ползва много пъти)"
 
 msgid "PROPERTY-NAME"
 msgstr "ИМЕ-НА-СВОЙСТВО"
@@ -1281,6 +1340,24 @@ msgstr ""
 
 msgid "Gather and print index statistics"
 msgstr "Събиране и показване на статистика за индекса"
+
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+"Без отпечатване на текущото местоположение на конвейера. Когато опцията не е "
+"указва, местоположението се отпечатва, ако изходът е терминал. За да "
+"позволите печат, дори когато изходът не е терминал, ползвайте опцията „force-"
+"position“"
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+"Позволяване на отпечатване на текущото на текущото местоположение на "
+"конвейера, дори и изходът да не е терминал. Опцията „no-position“ е с "
+"приоритет над тази"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1299,8 +1376,8 @@ msgstr "ГРЕШКА: не е открит елемент за конвейер 
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Конвейерът се дава НА ПАУЗА…\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "ГРЕШКА: конвейерът не изпълнява даването на пауза.\n"
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Неуспешно даване НА ПАУЗА на конвейера.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Конвейерът работи и не се нуждае от БУФЕРИРАНЕ…\n"
@@ -1308,56 +1385,11 @@ msgstr "Конвейерът работи и не се нуждае от БУФ�
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Конвейерът се БУФЕРИРА…\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ГРЕШКА: конвейерът не иска да превърти напред.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Конвейерът е БУФЕРИРАН…\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Конвейерът се дава за ИЗПЪЛНЕНИЕ…\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "ГРЕШКА: конвейерът не иска да проработи.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "Включен е EOS при спиране — извеждане на EOS по конвейера\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "Включен е EOS при спиране — извеждане на EOS след грешка\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Изчакване на EOS…\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "Получен е край на поток: конвейерът се спира…\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Прекъсване при изчакване: конвейерът се спира…\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Възникна грешка при изчакването на EOS\n"
-
 msgid "Execution ended after %"
 msgstr "Изпълнението завърши след %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Конвейерът е в ГОТОВНОСТ…\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Конвейерът се освобождава…\n"
-
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Грешка при затварянето на файла „%s“."
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Грешка при затварянето на файла „%s“."
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Грешка при запис във файл „%s“."

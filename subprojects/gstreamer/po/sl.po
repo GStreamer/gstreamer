@@ -9,8 +9,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.2.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2014-04-09 22:38+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -18,6 +18,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
 "%100==4 ? 3 : 0);\n"
 "X-Generator: Poedit 1.6.4\n"
@@ -97,6 +98,7 @@ msgstr "Možnosti GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Pokaži možnosti GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Neznana možnost"
 
@@ -828,8 +830,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -851,6 +858,9 @@ msgstr ""
 "Dodatni podatki razhroščevanja:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -865,6 +875,15 @@ msgstr "lastnost \"%s\" v predmetu \"%s\" ne obstaja"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+"lastnosti \"%s\" v predmetu \"%s\" ni mogoče nastaviti na vrednost \"%s\""
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Datoteka \"%s\" je vtič."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr ""
 "lastnosti \"%s\" v predmetu \"%s\" ni mogoče nastaviti na vrednost \"%s\""
 
@@ -1051,6 +1070,10 @@ msgstr ""
 msgid "controllable"
 msgstr "nadzorljivo"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "nadzorljivo"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "spremenljivo le v stanjih NULL, READY, PAUSED in PLAYING"
 
@@ -1138,8 +1161,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Izpiši podprte sheme URI s predmeti, ki jih vstavljajo"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1152,6 +1178,12 @@ msgstr "Predmet ali datoteka \"%s\" ne obstaja\n"
 
 msgid "Index statistics"
 msgstr "Statistika kazala"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Nastavljanje cevovoda na PLAYING ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "NAPAKA: vsebine cevovoda ni mogoče predvajati.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1172,6 +1204,9 @@ msgstr "Prejeto sporočilo #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Prejet EOS predmeta \"%s\".\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Prejet EOS - zaustavljanje cevovoda ...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1211,6 +1246,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "OPOZORILO: predmet %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Cevovod je pripravljen ...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Pripravljeno, čakanje na zaključek polnjenja medpomnilnika ...\n"
 
@@ -1224,6 +1262,7 @@ msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 "Polnjenje medpomnilnika je končano, nastavljanje cevovoda na PLAYING ...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Polnjenje medpomnilnika, nastavljanje cevovoda na PAUSED ...\n"
 
@@ -1234,8 +1273,19 @@ msgstr "Prerazporejanje pritajenosti ...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Nastavljanje stanja na %s, kot to zahteva %s ...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Prekinitev: zaustavljanje cevovoda ... \n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Prekinitev med čakanjem na EOS. Zaustavljanje cevovoda ...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS ob izklopu je omogočen -- vsiljen EOS vsebine cevovoda\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Čakanje na EOS ...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1248,6 +1298,16 @@ msgstr "Manjkajoči element: %s\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Vsebina je bila pridobljena iz elementa \"%s\": %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "NAPAKA: cevovoda ni mogoče pripraviti.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Med čakanjem na EOS je prišlo do napake\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Izhodne oznake (znane tudi kot metapodatki)"
@@ -1281,6 +1341,17 @@ msgstr "Viru vsili EOS pred zaustavitvijo cevovoda"
 msgid "Gather and print index statistics"
 msgstr "Zberi in natisni statistiko kazala"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "NAPAKA: cevovoda ni mogoče izgraditi: %s.\n"
@@ -1298,8 +1369,9 @@ msgstr "NAPAKA: predmeta \"cevovoda\" ni mogoče najti.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Nastavljanje cevovoda na PAUSED ...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "NAPAKA: cevovoda ni mogoče postaviti v mirovanje.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Nastavljanje cevovoda na PAUSED ...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Cevovod je živ in ga ni potrebno pripraviti ...\n"
@@ -1307,41 +1379,8 @@ msgstr "Cevovod je živ in ga ni potrebno pripraviti ...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Cevovod se pripravlja ...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "NAPAKA: cevovoda ni mogoče pripraviti.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Cevovod je pripravljen ...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Nastavljanje cevovoda na PLAYING ...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "NAPAKA: vsebine cevovoda ni mogoče predvajati.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS ob izklopu je omogočen -- vsiljen EOS vsebine cevovoda\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS ob izklopu je omogočen -- čakanje na EOS, ki sledi napaki\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Čakanje na EOS ...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "Prejet EOS - zaustavljanje cevovoda ...\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Prekinitev med čakanjem na EOS. Zaustavljanje cevovoda ...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Med čakanjem na EOS je prišlo do napake\n"
-
 msgid "Execution ended after %"
 msgstr "Izvajanje je bilo prekinjeno po %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Nastavljanje cevovoda na READY ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Nastavljanje cevovoda na NULL ...\n"
@@ -1349,17 +1388,15 @@ msgstr "Nastavljanje cevovoda na NULL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Sproščanje cevovoda ...\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Napaka med zapiranjem datoteke \"%s\"."
+#~ msgid "link without source element"
+#~ msgstr "povezava brez predmeta vira"
 
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Napaka med zapiranjem datoteke \"%s\"."
+#~ msgid "link without sink element"
+#~ msgstr "povezava brez predmeta ponora"
 
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Napaka med pisanjem v datoteko \"%s\"."
+#, c-format
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "ni predmeta za povezovanje naslova \"%s\" na"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Notranja napaka pretoka podatkov."
@@ -1370,11 +1407,11 @@ msgstr "Sproščanje cevovoda ...\n"
 #~ msgid "TYPE1,TYPE2,..."
 #~ msgstr "VRSTA1, VRSTA2 ..."
 
-#~ msgid "link without source element"
-#~ msgstr "povezava brez predmeta vira"
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "NAPAKA: cevovoda ni mogoče postaviti v mirovanje.\n"
 
-#~ msgid "link without sink element"
-#~ msgstr "povezava brez predmeta ponora"
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "EOS ob izklopu je omogočen -- čakanje na EOS, ki sledi napaki\n"
 
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "ni predmeta za povezovanje naslova \"%s\" na"
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Nastavljanje cevovoda na READY ...\n"

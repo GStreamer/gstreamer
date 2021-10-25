@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2013-08-20 14:56+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -14,6 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Lokalize 0.2\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
@@ -86,6 +87,7 @@ msgstr "GStreamer オプション"
 msgid "Show GStreamer Options"
 msgstr "GStreamer オプションを表示する"
 
+#, c-format
 msgid "Unknown option"
 msgstr "不明なオプション"
 
@@ -796,8 +798,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -819,6 +826,9 @@ msgstr ""
 "追加のデバッグ情報:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -834,6 +844,14 @@ msgstr "プロパティ \"%s\" がエレメント \"%s\" にありません"
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "ファイル \"%s\" はソケットです"
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "プロパティ \"%s\" がエレメント \"%s\" にありません"
 
 msgid "Delayed linking failed."
 msgstr ""
@@ -1016,6 +1034,10 @@ msgstr ""
 msgid "controllable"
 msgstr "コントロール可能"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "コントロール可能"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr ""
 
@@ -1089,8 +1111,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1102,6 +1127,12 @@ msgid "No such element or plugin '%s'\n"
 msgstr ""
 
 msgid "Index statistics"
+msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "パイプラインを再生中 (PLAYING) にしています...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr ""
 
 #, c-format
@@ -1123,6 +1154,10 @@ msgstr ""
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "割り込み: パイプラインを停止しています...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1162,6 +1197,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr ""
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr ""
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
@@ -1176,6 +1214,7 @@ msgstr ""
 "バッファリングが完了しましたので、パイプラインを再生中 (PLAYING) にしま"
 "す...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "バッファリング中なので、パイプラインを一時停止 (PAUSED) にします...\n"
 
@@ -1186,8 +1225,20 @@ msgstr ""
 msgid "Setting state to %s as requested by %s...\n"
 msgstr ""
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "割り込み: パイプラインを停止しています...\n"
+
+#, fuzzy
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "割り込み: パイプラインを停止しています...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1199,6 +1250,16 @@ msgstr "エレメントが見つかりません: %s\n"
 
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
+msgstr ""
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr ""
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
 msgstr ""
 
 msgid "Output tags (also known as metadata)"
@@ -1234,6 +1295,17 @@ msgstr ""
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "エラー: パイプラインを構築することができません: %s\n"
@@ -1251,8 +1323,9 @@ msgstr "エラー: 'pipeline' エレメントが見つかりませんでした\n
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "パイプラインを一時停止 (PAUSED) にしています...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr ""
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "パイプラインを一時停止 (PAUSED) にしています...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
@@ -1260,42 +1333,7 @@ msgstr ""
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr ""
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "パイプラインを再生中 (PLAYING) にしています...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-
-msgid "Waiting for EOS...\n"
-msgstr ""
-
-#, fuzzy
-msgid "EOS received - stopping pipeline...\n"
-msgstr "割り込み: パイプラインを停止しています...\n"
-
-#, fuzzy
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "割り込み: パイプラインを停止しています...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr ""
-
 msgid "Execution ended after %"
-msgstr ""
-
-msgid "Setting pipeline to READY ...\n"
 msgstr ""
 
 msgid "Setting pipeline to NULL ...\n"
@@ -1305,22 +1343,6 @@ msgstr ""
 msgid "Freeing pipeline ...\n"
 msgstr "パイプラインを解放 (FREEING) しています...\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "ファイル \"%s\" のクローズ時にエラーが発生しました"
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "ファイル \"%s\" のクローズ時にエラーが発生しました"
-
-#, fuzzy
-#~ msgid "Error reading from console: %s\n"
-#~ msgstr "レジストリ %s の再スキャン中にエラーが発生しました: %s"
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "ファイル \"%s\" の書き込み中にエラーが発生しました"
-
 #~ msgid "Internal data stream error."
 #~ msgstr "内部データストリームエラー"
 
@@ -1329,6 +1351,9 @@ msgstr "パイプラインを解放 (FREEING) しています...\n"
 
 #~ msgid "TYPE1,TYPE2,..."
 #~ msgstr "TYPE1,TYPE2,..."
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "レジストリ %s の再スキャン中にエラーが発生しました: %s"
 
 #~ msgid "Error re-scanning registry %s"
 #~ msgstr "レジストリ %s の再スキャン中にエラーが発生しました"

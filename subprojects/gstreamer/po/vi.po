@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2017-05-05 06:45+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -97,6 +97,7 @@ msgstr "Tùy chọn GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Hiện Tùy chọn GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Tùy chọn lạ"
 
@@ -833,8 +834,13 @@ msgstr "dữ-liệu-riêng"
 msgid "Private data"
 msgstr "Dữ liệu riêng"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -856,6 +862,9 @@ msgstr ""
 "Thông tin gỡ lỗi thêm:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "liên kết không có nguồn [sink=%s@%p]"
@@ -870,6 +879,14 @@ msgstr "không có thuộc tính “%s” trong phần tử “%s”"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "không thể đặt thuộc tính “%s” trong phần tử “%s” thành “%s”"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Tập tin “%s” là ổ cắm mạng."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "không thể đặt thuộc tính “%s” trong phần tử “%s” thành “%s”"
 
 msgid "Delayed linking failed."
@@ -1059,6 +1076,10 @@ msgstr "đã lạc hậu"
 msgid "controllable"
 msgstr "điều khiển được"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "điều khiển được"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "có thể thay đổi được trong trạng thái NULL, READY, PAUSED hay PLAYING"
 
@@ -1136,8 +1157,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "In ra các lược đồ URI được hỗ trợ, với những phần tử thực hiện chúng."
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1150,6 +1174,12 @@ msgstr "Không có phần tử hay phần bổ sung như vậy “%s”\n"
 
 msgid "Index statistics"
 msgstr "Thống kê chỉ mục"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Đang đặt đường ống thành ĐANG PHÁT …\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "LỖI: đường ống không phát được.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1170,6 +1200,9 @@ msgstr "Nhận được thông điệp số %u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Mới nhận kết thúc luồng (EOS) từ phần tử “%s”.\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Nhận được tín hiệu kết thúc luồng: đang ngừng chạy đường ống …\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1209,6 +1242,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "CẢNH BÁO: từ phần tử %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Đường ống ĐÃ TIỀN CUỘN …\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Cuộn sẵn, đợi chuyển hoán đệm xong…\n"
 
@@ -1221,6 +1257,7 @@ msgstr "đang chuyển hoán đệm…"
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Hoàn tất chuyển hoán đệm nên đặt đường ống thành ĐANG PHÁT …\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Đang chuyển hoán đệm nên đặt đường ống thành BỊ TẠM DỪNG …\n"
 
@@ -1231,8 +1268,21 @@ msgstr "Phân phối lại độ trễ…\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Đang đặt tình trạng thành %s như yêu cầu bởi %s….\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Ngắt: đang ngừng chạy đường ống …\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Ngắt trong khi chờ EOS - đang dừng đường ống lại…\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+"Kết thúc luồng khi tắt phần mềm vẫn còn hoạt động thì đang ép buộc kết thúc "
+"luồng trên đường ống\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Đang đợi kết thúc luồng…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1245,6 +1295,16 @@ msgstr "Thiếu phần tử: %s\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Đã nhận nội dung từ phần tử “%s”: %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "LỖI: đường ống không tiền cuộn được.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Gặp lỗi trong khi đợi kết thúc luồng\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Xuất các thẻ (cũng được biết là siêu dữ liệu)"
@@ -1280,6 +1340,17 @@ msgstr "Ép buộc kết thúc luồng trên các nguồn trước khi đóng đ
 msgid "Gather and print index statistics"
 msgstr "Tập hợp lại và in ra thống kê chỉ mục"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "LỖI: không thể xây dựng đường ống: %s.\n"
@@ -1297,8 +1368,9 @@ msgstr "LỖI: không tìm thấy phần tử “đường ống” (pipeline).\
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Đang đặt đường ống thành BỊ TẠM DỪNG …\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "LỖI: đường ống không tạm dừng được.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Đang đặt đường ống thành BỊ TẠM DỪNG …\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Đường ống đang sống và không cần TIỀN CUỘN …\n"
@@ -1306,43 +1378,8 @@ msgstr "Đường ống đang sống và không cần TIỀN CUỘN …\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Đường ống ĐANG TIỀN CUỘN …\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "LỖI: đường ống không tiền cuộn được.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Đường ống ĐÃ TIỀN CUỘN …\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Đang đặt đường ống thành ĐANG PHÁT …\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "LỖI: đường ống không phát được.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-"Kết thúc luồng khi tắt phần mềm vẫn còn hoạt động thì đang ép buộc kết thúc "
-"luồng trên đường ống\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS khi tắt máy được bật -- chờ sau Lỗi EOS\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Đang đợi kết thúc luồng…\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "Nhận được tín hiệu kết thúc luồng: đang ngừng chạy đường ống …\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Ngắt trong khi chờ EOS - đang dừng đường ống lại…\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Gặp lỗi trong khi đợi kết thúc luồng\n"
-
 msgid "Execution ended after %"
 msgstr "Thực hiện xong sau %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Đang đặt đường ống thành SẴN_SÀNG …\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Đang đặt đường ống thành VÔ_GIÁ_TRỊ …\n"
@@ -1350,17 +1387,14 @@ msgstr "Đang đặt đường ống thành VÔ_GIÁ_TRỊ …\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Đang giải phóng đường ống …\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Gặp lỗi khi đóng tập tin “%s”."
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "LỖI: đường ống không tạm dừng được.\n"
 
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Gặp lỗi khi đóng tập tin “%s”."
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "EOS khi tắt máy được bật -- chờ sau Lỗi EOS\n"
 
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Gặp lỗi khi ghi vào tập tin “%s”."
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Đang đặt đường ống thành SẴN_SÀNG …\n"
 
 #~ msgid "bin"
 #~ msgstr "nhị phân"

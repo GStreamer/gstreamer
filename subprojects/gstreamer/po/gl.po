@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2012-12-15 03:29+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -14,6 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Virtaal 0.7.1\n"
 "X-Project-Style: gnome\n"
@@ -93,6 +94,7 @@ msgstr "Opcións de GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Mostrar as opcións de GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Opción descoñecida"
 
@@ -831,8 +833,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -854,6 +861,9 @@ msgstr ""
 "Información adicional de depuración:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -868,6 +878,14 @@ msgstr "non hai unha propiedade «%s» no elemento «%s»"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "non foi posíbel estabelecer a propiedade «%s» no elemento «%s» a «%s»"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "O ficheiro «%s» é un socket."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "non foi posíbel estabelecer a propiedade «%s» no elemento «%s» a «%s»"
 
 msgid "Delayed linking failed."
@@ -1054,6 +1072,10 @@ msgstr ""
 msgid "controllable"
 msgstr "controlábel"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "controlábel"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "intercambiábel entre os estados NULL, READY, PAUSED ou PLAYING"
 
@@ -1133,8 +1155,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Imprimir os esquemas URI admitidos, cos elementos que os implementan"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1147,6 +1172,12 @@ msgstr "Non existe o elemento ou engadido «%s»\n"
 
 msgid "Index statistics"
 msgstr "Estatísticas do índice"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Estabelecendo a tubería a REPRODUCINDO.\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ERRO: a tubería non quere reproducirse.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1167,6 +1198,9 @@ msgstr "Obtívose a mensaxe num. %u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Obtívose un EOS do elemento «%s».\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS recibido: detendo a tubería...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1206,6 +1240,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "AVISO: do elemento %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "A tubería está PREPARADA...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preparado, agardando a encher o búfer para rematar…\n"
 
@@ -1221,6 +1258,7 @@ msgstr ""
 "Rematouse de almacenar no búfer, estabelecendo a canalización para "
 "REPRODUCIR...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Almacenando no búfer, estabelecendo a canalización a PAUSADA...\n"
 
@@ -1231,8 +1269,19 @@ msgstr "Redistribuír latencia...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Estabelecendo o estado a %s segundo foi solicitado por %s...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interromper: parando a canalización …\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Interromper ao agardar polo EOS - detendo a canalización…\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS ao apagar activado; Forzando EOS na tubería\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Agardando pola EOS...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1245,6 +1294,16 @@ msgstr "Elemento que falta: «%s»\n"
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "AVISO: do elemento %s: %s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ERRO: a tubería non quere prepararse.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Produciuse un erro ao esperar a EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Etiquetas de saída (tamén coñecido como metadatos)"
@@ -1278,6 +1337,17 @@ msgstr "Forzar EOS nas orixes antes de pechar a canalización"
 msgid "Gather and print index statistics"
 msgstr "Obter e imprimir as estatísticas do índice"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERRO: non foi posíbel construír a canalización: %s.\n"
@@ -1295,8 +1365,9 @@ msgstr "ERRO: o elemento «canalización» non foi atopado.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Estabelecendo a tubería a PAUSA...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "ERROR: A tubería non quere pausarse.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Estabelecendo a tubería a PAUSA...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "A tubería está viva e non necesita PREPARARSE...\n"
@@ -1304,41 +1375,8 @@ msgstr "A tubería está viva e non necesita PREPARARSE...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "A tubería está PREPARÁNDOSE...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ERRO: a tubería non quere prepararse.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "A tubería está PREPARADA...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Estabelecendo a tubería a REPRODUCINDO.\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "ERRO: a tubería non quere reproducirse.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS ao apagar activado; Forzando EOS na tubería\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS ao apagar activado; -- agardando polo EOS despois de erro\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Agardando pola EOS...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "EOS recibido: detendo a tubería...\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interromper ao agardar polo EOS - detendo a canalización…\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Produciuse un erro ao esperar a EOS\n"
-
 msgid "Execution ended after %"
 msgstr "A execución rematou despois de %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Estabelecendo a tubería a PREPARADO...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Estabelecendo a tubería a NULL...\n"
@@ -1346,17 +1384,15 @@ msgstr "Estabelecendo a tubería a NULL...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a tubería...\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Produciuse un erro ao pechar o ficheiro «%s»."
+#~ msgid "link without source element"
+#~ msgstr "ligazón sen elemento orixe"
 
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Produciuse un erro ao pechar o ficheiro «%s»."
+#~ msgid "link without sink element"
+#~ msgstr "ligazón sen elemento sumidoiro"
 
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Produciuse un erro ao escribir no ficheiro «%s»."
+#, c-format
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "non existe un elemento co que ligar o URI «%s»"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Produciuse un erro no fluxo interno de datos."
@@ -1367,14 +1403,14 @@ msgstr "Liberando a tubería...\n"
 #~ msgid "TYPE1,TYPE2,..."
 #~ msgstr "TIPO1,TIPO2,…"
 
-#~ msgid "link without source element"
-#~ msgstr "ligazón sen elemento orixe"
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "ERROR: A tubería non quere pausarse.\n"
 
-#~ msgid "link without sink element"
-#~ msgstr "ligazón sen elemento sumidoiro"
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "EOS ao apagar activado; -- agardando polo EOS despois de erro\n"
 
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "non existe un elemento co que ligar o URI «%s»"
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Estabelecendo a tubería a PREPARADO...\n"
 
 #~ msgid "maximum"
 #~ msgstr "máximo"

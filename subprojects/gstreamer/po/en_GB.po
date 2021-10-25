@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -14,6 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 
 msgid "Print the GStreamer version"
 msgstr "Print the GStreamer version"
@@ -90,6 +91,7 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "Print the GStreamer version"
 
+#, c-format
 msgid "Unknown option"
 msgstr ""
 
@@ -667,9 +669,8 @@ msgid ""
 "according to WGS84 (zero is average sea level)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location country"
-msgstr "location"
+msgstr ""
 
 msgid "country (english name) where the media has been recorded or produced"
 msgstr ""
@@ -681,33 +682,29 @@ msgstr "location"
 msgid "city (english name) where the media has been recorded or produced"
 msgstr ""
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "location"
+msgstr ""
 
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "location"
+msgstr ""
 
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "location"
+msgstr ""
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "location"
+msgstr ""
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
@@ -715,9 +712,8 @@ msgid ""
 "means the geographic north, and increases clockwise"
 msgstr ""
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "location"
+msgstr ""
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
@@ -754,9 +750,8 @@ msgstr "disc number"
 msgid "The season number of the show the media is part of"
 msgstr ""
 
-#, fuzzy
 msgid "lyrics"
-msgstr "licence"
+msgstr ""
 
 msgid "The lyrics of the media, commonly used for songs"
 msgstr ""
@@ -764,9 +759,8 @@ msgstr ""
 msgid "composer sortname"
 msgstr ""
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "person(s) responsible for the recording"
+msgstr ""
 
 msgid "grouping"
 msgstr ""
@@ -799,13 +793,11 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "version of the encoder used to encode this stream"
 
-#, fuzzy
 msgid "application name"
-msgstr "location"
+msgstr ""
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "version of the encoder used to encode this stream"
+msgstr ""
 
 msgid "application data"
 msgstr ""
@@ -843,8 +835,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -866,6 +863,9 @@ msgstr ""
 "Additional debug info:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -880,6 +880,14 @@ msgstr "no property \"%s\" in element \"%s\""
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "could not set property \"%s\" in element \"%s\" to \"%s\""
+
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "could not set property \"%s\" in element \"%s\" to \"%s\""
 
 msgid "Delayed linking failed."
@@ -976,7 +984,7 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Could not get/set settings from/on resource."
+msgstr "Could not open file \"%s\" for writing."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -1041,9 +1049,8 @@ msgstr ""
 msgid "force caps without doing a typefind"
 msgstr ""
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
-msgstr "album containing this data"
+msgstr ""
 
 #, fuzzy
 msgid "Stream contains no data."
@@ -1056,14 +1063,16 @@ msgstr ""
 msgid "readable"
 msgstr ""
 
-#, fuzzy
 msgid "writable"
-msgstr "title"
+msgstr ""
 
 msgid "deprecated"
 msgstr ""
 
 msgid "controllable"
+msgstr ""
+
+msgid "conditionally available"
 msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
@@ -1078,9 +1087,9 @@ msgstr ""
 msgid "Blacklisted files:"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "track count"
+msgstr ""
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1140,8 +1149,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, fuzzy, c-format
@@ -1154,6 +1166,12 @@ msgstr "no source element for URI \"%s\""
 
 msgid "Index statistics"
 msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr ""
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ERROR: pipeline doesn't want to play.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1174,6 +1192,9 @@ msgstr ""
 #, fuzzy, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "ERROR: from element %s: %s\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr ""
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1211,6 +1232,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ERROR: from element %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr ""
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
@@ -1223,6 +1247,7 @@ msgstr ""
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
 
@@ -1233,7 +1258,18 @@ msgstr ""
 msgid "Setting state to %s as requested by %s...\n"
 msgstr ""
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
+msgstr ""
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr ""
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
 msgstr ""
 
 #, c-format
@@ -1247,6 +1283,17 @@ msgstr "no element \"%s\""
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "ERROR: from element %s: %s\n"
+
+#, fuzzy
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ERROR: pipeline doesn't want to play.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Output tags (also known as metadata)"
@@ -1281,6 +1328,17 @@ msgstr ""
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERROR: pipeline could not be constructed: %s.\n"
@@ -1298,9 +1356,8 @@ msgstr "ERROR: the 'pipeline' element wasn't found.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#, fuzzy
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "ERROR: pipeline doesn't want to play.\n"
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr ""
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
@@ -1308,42 +1365,8 @@ msgstr ""
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-#, fuzzy
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ERROR: pipeline doesn't want to play.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "ERROR: pipeline doesn't want to play.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-
-msgid "Waiting for EOS...\n"
-msgstr ""
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr ""
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr ""
-
-msgid "An error happened while waiting for EOS\n"
-msgstr ""
-
 msgid "Execution ended after %"
 msgstr "Execution ended after %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr ""
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr ""
@@ -1351,65 +1374,6 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "RUNNING pipeline ...\n"
-
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Error closing file \"%s\"."
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Error closing file \"%s\"."
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Error while writing to file \"%s\"."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Do not output status information of TYPE"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TYPE1,TYPE2,..."
-
-#~ msgid "link without source element"
-#~ msgstr "link without source element"
-
-#~ msgid "link without sink element"
-#~ msgstr "link without sink element"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "no element to link URI \"%s\" to"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Print alloc trace (if enabled at compile time)"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "ERROR: parsing of xml file '%s' failed.\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr "ERROR: no toplevel pipeline element in file '%s'.\n"
-
-#, fuzzy
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr "WARNING: only one toplevel element is supported at this time."
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "ERROR: could not parse command line argument %d: %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "WARNING: element named '%s' not found.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Save xml representation of pipeline to FILE and exit"
-
-#~ msgid "FILE"
-#~ msgstr "FILE"
-
-#, fuzzy
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Do not install a fault handler"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Disable accelerated CPU instructions"
@@ -1423,9 +1387,11 @@ msgstr "RUNNING pipeline ...\n"
 #~ msgid "REGISTRY"
 #~ msgstr "REGISTRY"
 
+#, c-format
 #~ msgid "path list for loading plugins (separated by '%s')"
 #~ msgstr "path list for loading plugins (separated by '%s')"
 
+#, c-format
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Scheduler to use (default is '%s')"
 
@@ -1438,13 +1404,28 @@ msgstr "RUNNING pipeline ...\n"
 #~ msgid "original location of file as a URI"
 #~ msgstr "original location of file as a URI"
 
+#, c-format
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr "There is no element present to handle the stream's mime type %s."
 
+#~ msgid "maximum"
+#~ msgstr "maximum"
+
+#, c-format
 #~ msgid ""
 #~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
 #~ msgstr ""
 #~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+
+#~ msgid "link without source element"
+#~ msgstr "link without source element"
+
+#~ msgid "link without sink element"
+#~ msgstr "link without sink element"
+
+#, c-format
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "no element to link URI \"%s\" to"
 
 #~ msgid "Show plugin details"
 #~ msgstr "Show plugin details"
@@ -1466,6 +1447,40 @@ msgstr "RUNNING pipeline ...\n"
 
 #~ msgid " ns).\n"
 #~ msgstr " ns).\n"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+
+#, c-format
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "ERROR: parsing of xml file '%s' failed.\n"
+
+#, c-format
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "ERROR: no toplevel pipeline element in file '%s'.\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time."
+#~ msgstr "WARNING: only one toplevel element is supported at this time."
+
+#, c-format
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "ERROR: could not parse command line argument %d: %s.\n"
+
+#, c-format
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "WARNING: element named '%s' not found.\n"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "TYPE1,TYPE2,..."
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Save xml representation of pipeline to FILE and exit"
+
+#~ msgid "FILE"
+#~ msgstr "FILE"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Print alloc trace (if enabled at compile time)"
 
 #~ msgid "Number of times to iterate pipeline"
 #~ msgstr "Number of times to iterate pipeline"

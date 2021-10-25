@@ -1,21 +1,24 @@
 # Esperanto translation for gstreamer.
-# Copyright (C) 2011 Free Software Foundation, Inc.
+# Copyright (C) 2011, 2021 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>, 2011.
+# Felipe CASTRO <fefcas@gmail.com>, 2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.32.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
-"PO-Revision-Date: 2011-06-04 21:11+0100\n"
-"Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
+"Project-Id-Version: gstreamer 1.16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2021-03-26 21:54-0300\n"
+"Last-Translator: Felipe Castro <fefcas@gmail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
 "Language: eo\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 2.4.2\n"
 
 msgid "Print the GStreamer version"
 msgstr "Eligi la version de GStreamer"
@@ -24,11 +27,12 @@ msgid "Make all warnings fatal"
 msgstr "Igi ĉiujn avertojn fatalaj"
 
 msgid "Print available debug categories and exit"
-msgstr "Eligi disponeblaj sencimig-koategorioj kaj eliri"
+msgstr "Eligi disponeblajn sencimig-kategoriojn kaj eliri"
 
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
+"Apriora sencimiga nivelo el 1 (nur eraroj) al 9 (ĉio) aŭ 0 por neniu eligo"
 
 msgid "LEVEL"
 msgstr "NIVELO"
@@ -37,26 +41,31 @@ msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
+"Komo-apartita listo de paroj kategori_nomo:nivelo por difini specifajn "
+"nivelojn por la individuaj kategorioj. Ekzemplo: GST_AUTOPLUG:5,"
+"GST_ELEMENT_*:3"
 
 msgid "LIST"
 msgstr "LISTO"
 
 msgid "Disable colored debugging output"
-msgstr ""
+msgstr "Malaktivigi koloran sencimigan eliron"
 
 msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Ŝanĝi kolor-reĝimon de la sencimiga protokolo. Eblaj reĝimoj: off, on, "
+"disable, auto, unix"
 
 msgid "Disable debugging"
-msgstr "Elŝalti sencimigon"
+msgstr "Malaktivigi sencimigon"
 
 msgid "Enable verbose plugin loading diagnostics"
-msgstr ""
+msgstr "Aktivigi detaleman diagnozon de ŝargado je kromaĵo"
 
 msgid "Colon-separated paths containing plugins"
-msgstr ""
+msgstr "Dupunkto-apartitaj vojoj enhavantaj kromaĵojn"
 
 msgid "PATHS"
 msgstr "VOJOJ"
@@ -65,287 +74,296 @@ msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
+"Komo-apartita listo de kromaĵoj por antaŭŝargi pluse al la listo konservita "
+"en la medi-variablo GST_PLUGIN_PATH"
 
 msgid "PLUGINS"
-msgstr "KROMPROGRAMOJ"
+msgstr "KROMAĴOJ"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr ""
+msgstr "Malakvigi interrompon de segmentaj eraroj dum ŝargado je kromaĵoj"
 
 msgid "Disable updating the registry"
-msgstr ""
+msgstr "Malaktivigi ĝisdatigon de registrejo"
 
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr ""
+msgstr "Malaktivigi lanĉo de help-procezon dum traserĉado de la registrejo"
 
 msgid "GStreamer Options"
 msgstr "Opcioj de GStreamer"
 
 msgid "Show GStreamer Options"
-msgstr "Montri la opcijon de GStreamer"
+msgstr "Montri la opciojn de GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Nekonata opcio"
 
 msgid "GStreamer encountered a general core library error."
-msgstr ""
+msgstr "GStreamer trovis ĝeneralan eraron pri kerna biblioteko."
 
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
-msgstr ""
+msgstr "GSTreamer programistoj ne sukcesis atribui erarkodon al tiu ĉi eraro."
 
 msgid "Internal GStreamer error: code not implemented."
-msgstr ""
+msgstr "Interna Eraro de GStreamer: kodo ne realigita."
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Eraro de GStreamer: stat-ŝanĝo malsukcesis kaj iu elemento ne sukcesis "
+"prezenti taŭgan erar-mesaĝon kun kaŭzo de la fiasko."
 
 msgid "Internal GStreamer error: pad problem."
-msgstr ""
+msgstr "Interna eraro de GStreamer: problemo pri Pad."
 
 msgid "Internal GStreamer error: thread problem."
-msgstr ""
+msgstr "Interna eraro de GStreamer: problemo pri fadeno."
 
 msgid "GStreamer error: negotiation problem."
-msgstr ""
+msgstr "Eraro de GStreamer: problemo pri negocado."
 
 msgid "Internal GStreamer error: event problem."
-msgstr ""
+msgstr "Interna eraro de GStreamer: problemo pri evento."
 
 msgid "Internal GStreamer error: seek problem."
-msgstr ""
+msgstr "Interna eraro de GStreamer: problemo pri traserĉado."
 
 msgid "Internal GStreamer error: caps problem."
-msgstr ""
+msgstr "Interna eraro de GStreamer: problemo pri Caps."
 
 msgid "Internal GStreamer error: tag problem."
-msgstr ""
+msgstr "Interna eraro de GStreamer: problemo pri etikedo."
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr ""
+msgstr "Mankas kromaĵo en via instalo de GStreamer."
 
 msgid "GStreamer error: clock problem."
-msgstr ""
+msgstr "Eraro de GStreamer: horloĝa problemo."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
-msgstr ""
+msgstr "Tiu ĉi aplikaĵo provas uzi malebligitan funkcion de GStreamer."
 
 msgid "GStreamer encountered a general supporting library error."
-msgstr ""
+msgstr "GStreamer trovis ĝeneralan eraron pri subtena biblioteko."
 
 msgid "Could not initialize supporting library."
-msgstr ""
+msgstr "Ne eblis lanĉi subtenan bibliotekon."
 
 msgid "Could not close supporting library."
-msgstr ""
+msgstr "Ne eblis fermi subtenan bibliotekon."
 
 msgid "Could not configure supporting library."
-msgstr ""
+msgstr "Ne eblis agordi subtenan bibliotekon."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Enkoda eraro."
 
 msgid "GStreamer encountered a general resource error."
-msgstr ""
+msgstr "GStreamer trovis ĝeneralan eraron pri risurco."
 
 msgid "Resource not found."
 msgstr "Ne trovis risurcon."
 
 msgid "Resource busy or not available."
-msgstr "Risurco estas okupite aŭ ne disponeble."
+msgstr "Risurco estas okupita aŭ ne disponebla."
 
 msgid "Could not open resource for reading."
-msgstr "Ne eblas melfermi la risurcon por legado."
+msgstr "Ne eblis malfermi la risurcon por legado."
 
 msgid "Could not open resource for writing."
-msgstr "Ne eblas melfermi la risurcon por skribado."
+msgstr "Ne eblis malfermi la risurcon por skribado."
 
 msgid "Could not open resource for reading and writing."
-msgstr "Ne eblas melfermi la risurcon por legado kaj skribado."
+msgstr "Ne eblis malfermi la risurcon por legado kaj skribado."
 
 msgid "Could not close resource."
-msgstr "Ne eblas fermi la risurcon."
+msgstr "Ne eblis fermi la risurcon."
 
 msgid "Could not read from resource."
-msgstr "Ne eblas legi de la risurco."
+msgstr "Ne eblis legi de la risurco."
 
 msgid "Could not write to resource."
-msgstr "Ne eblas skribi al la risurco."
+msgstr "Ne eblis skribi al la risurco."
 
 msgid "Could not perform seek on resource."
-msgstr ""
+msgstr "Ne eblis fari traserĉon en la risurco."
 
 msgid "Could not synchronize on resource."
-msgstr ""
+msgstr "Ne eblis sinkronigi ĉe la risurco."
 
 msgid "Could not get/set settings from/on resource."
-msgstr ""
+msgstr "Ne eblis havigi/difini agordojn el/por la risurco."
 
 msgid "No space left on the resource."
-msgstr ""
+msgstr "Neniu spaco lasita en la risurco."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Ne eblas skribi al la risurco."
+msgstr "Ne estas permesita atingi risurcon."
 
 msgid "GStreamer encountered a general stream error."
-msgstr ""
+msgstr "GStreamer trovis ĝeneralan eraron pri fluo."
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
+"La elemento ne realigas traktadon de tiu ĉi fluo. Bonvole sendu raporton."
 
 msgid "Could not determine type of stream."
-msgstr ""
+msgstr "Ne eblis determini la tipon de fluo."
 
 msgid "The stream is of a different type than handled by this element."
-msgstr ""
+msgstr "La fluo estas de malsama tipo ol la traktebla de tiu ĉi elemento."
 
 msgid "There is no codec present that can handle the stream's type."
-msgstr ""
+msgstr "Estas neniu ĉeestanta kodeko kiu povas trakti la tipo de fluo."
 
 msgid "Could not decode stream."
-msgstr ""
+msgstr "Ne eblis malkodi fluon."
 
 msgid "Could not encode stream."
-msgstr ""
+msgstr "Ne eblis enkodi fluon."
 
 msgid "Could not demultiplex stream."
-msgstr ""
+msgstr "Ne eblis malplektigi fluon."
 
 msgid "Could not multiplex stream."
-msgstr ""
+msgstr "Ne eblis plektigi fluon."
 
 msgid "The stream is in the wrong format."
-msgstr ""
+msgstr "La fluo estas laŭ malĝusta formo."
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr ""
+msgstr "La fluo estas ĉifrita kaj malĉifrado ne subtenatas."
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
 msgstr ""
+"La fluo estas ĉifrita kaj ne povas esti malĉifrita ĉar neniu taŭga ŝlosilo "
+"estas provizita."
 
 #, c-format
 msgid "No error message for domain %s."
-msgstr ""
+msgstr "Neniu erarmesaĝo por domajno %s."
 
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr ""
+msgstr "Neniu norma erarmesaĝo por domajno %s kaj kodo %d."
 
 msgid "Selected clock cannot be used in pipeline."
-msgstr ""
+msgstr "Elektita horloĝo ne povas esti uzata en ĉenstablo."
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "Eraro dum skribo de registreja kaŝmemoro al %s: %s"
 
 msgid "title"
 msgstr "titolo"
 
 msgid "commonly used title"
-msgstr ""
+msgstr "ordinare uzata titolo"
 
 msgid "title sortname"
-msgstr ""
+msgstr "titolo por ordigo"
 
 msgid "commonly used title for sorting purposes"
-msgstr ""
+msgstr "ordinare uzata titolo por ordigo"
 
 msgid "artist"
 msgstr "artisto"
 
 msgid "person(s) responsible for the recording"
-msgstr ""
+msgstr "homo respondeca pri la registraĵo"
 
 msgid "artist sortname"
-msgstr ""
+msgstr "artisto por ordigo"
 
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr ""
+msgstr "nomo de homo respondeca pri la registraĵo, por ordigo"
 
 msgid "album"
 msgstr "albumo"
 
 msgid "album containing this data"
-msgstr ""
+msgstr "albumo enhavanta tiun ĉi datumaron"
 
 msgid "album sortname"
-msgstr ""
+msgstr "albumo por ordigo"
 
 msgid "album containing this data for sorting purposes"
-msgstr ""
+msgstr "nomo de albumo enhavanta tiun ĉi datumaron, por ordigo"
 
 msgid "album artist"
 msgstr "album-artisto"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "La artisto de la tuta albumo, kiel devas aperi"
 
 msgid "album artist sortname"
-msgstr ""
+msgstr "album-artisto por ordigo"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "La nomo de la artisto de la tuta albumo, por ordigo"
 
 msgid "date"
 msgstr "dato"
 
 msgid "date the data was created (as a GDate structure)"
-msgstr ""
+msgstr "dato kiam la datumaro estis kreata (kiel strukturo GDate)"
 
 msgid "datetime"
-msgstr "datohoro"
+msgstr "dato-horo"
 
 msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr ""
+"dato kaj horo kiam la datumaro estis kreata (kiel strukturo GstDateTime)"
 
 msgid "genre"
 msgstr "ĝenro"
 
 msgid "genre this data belongs to"
-msgstr ""
+msgstr "ĝenro al kiu tiu ĉi datumaro apartenas"
 
 msgid "comment"
 msgstr "komento"
 
 msgid "free text commenting the data"
-msgstr ""
+msgstr "libera teksto priskribanta la datumaron"
 
 msgid "extended comment"
-msgstr ""
+msgstr "kroma komento"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
+"libera teksto komentanta la datumaron laŭ formo key=valoro aŭ key[en]=komento"
 
 msgid "track number"
-msgstr ""
+msgstr "trak-numero"
 
 msgid "track number inside a collection"
-msgstr ""
+msgstr "trak-numero ene de aro"
 
 msgid "track count"
-msgstr ""
+msgstr "trak-nombro"
 
 msgid "count of tracks inside collection this track belongs to"
-msgstr ""
+msgstr "nombro da trakoj ene de aro al kiu tiu ĉi trako apartenas"
 
 msgid "disc number"
 msgstr "disk-numero"
 
 msgid "disc number inside a collection"
-msgstr ""
+msgstr "disk-numero ene de aro"
 
 msgid "disc count"
 msgstr "disk-nombro"
 
 msgid "count of discs inside collection this disc belongs to"
-msgstr ""
+msgstr "nombro da diskoj ene de aro al kiu tiu ĉi disko apartenas"
 
 msgid "location"
 msgstr "loko"
@@ -354,489 +372,529 @@ msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
 msgstr ""
+"Deveno de aŭdvidaĵo kiel URI (loko, kie la originalo de la dosiero aŭ fluo "
+"gastiĝas)"
 
 msgid "homepage"
 msgstr "hejmpaĝo"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
+msgstr "Hejmpaĝo por tiu ĉi aŭdvidaĵo (t.e. artista aŭ filma hejmpaĝo)"
 
 msgid "description"
 msgstr "priskribo"
 
 msgid "short text describing the content of the data"
-msgstr ""
+msgstr "teksteto priskribanta la enhavo de la datumaro"
 
 msgid "version"
 msgstr "versio"
 
 msgid "version of this data"
-msgstr "versi de tiu datumo"
+msgstr "versio de tiu ĉi datumaro"
 
 msgid "ISRC"
-msgstr ""
+msgstr "ISRC"
 
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr ""
+msgstr "International Standard Recording Code - vidu http://www.ifpi.org/isrc/"
 
 msgid "organization"
-msgstr ""
+msgstr "organizaĵo"
 
 msgid "copyright"
 msgstr "kopirajto"
 
 msgid "copyright notice of the data"
-msgstr ""
+msgstr "kopirajta rimarko pri tiu ĉi datumaro"
 
 msgid "copyright uri"
-msgstr ""
+msgstr "kopirajta URI"
 
 msgid "URI to the copyright notice of the data"
-msgstr ""
+msgstr "URI al la kopirajta rimarko de la datumaro"
 
 msgid "encoded by"
-msgstr ""
+msgstr "enkodita de"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "nomo la enkodanta homo aŭ organizaĵo"
 
 msgid "contact"
 msgstr "kontakto"
 
 msgid "contact information"
-msgstr ""
+msgstr "informo pri kontakto"
 
 msgid "license"
 msgstr "permesilo"
 
 msgid "license of data"
-msgstr "permesilo de la datumoj"
+msgstr "permesilo de la datumaro"
 
 msgid "license uri"
-msgstr ""
+msgstr "permesila URI"
 
 msgid "URI to the license of the data"
-msgstr ""
+msgstr "URI al la permesilo de la datumoj"
 
 msgid "performer"
-msgstr ""
+msgstr "ludanto"
 
 msgid "person(s) performing"
-msgstr ""
+msgstr "homo kiu estas ludanta"
 
 msgid "composer"
 msgstr "komponisto"
 
 msgid "person(s) who composed the recording"
-msgstr ""
+msgstr "homo kiu komponis la registraĵon"
 
 msgid "conductor"
-msgstr ""
+msgstr "dirigento"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "dirigento/ludanto, pli polure"
 
 msgid "duration"
 msgstr "daŭro"
 
 msgid "length in GStreamer time units (nanoseconds)"
-msgstr ""
+msgstr "longo laŭ temp-unuo de GStreamer (nanosekondoj)"
 
 msgid "codec"
 msgstr "kodeko"
 
 msgid "codec the data is stored in"
-msgstr ""
+msgstr "kodeko laŭ kiu la datumaro estas konservita"
 
 msgid "video codec"
 msgstr "video-kodeko"
 
 msgid "codec the video data is stored in"
-msgstr ""
+msgstr "kodeko laŭ kiu la videa datumaro estas konservita"
 
 msgid "audio codec"
 msgstr "son-kodeko"
 
 msgid "codec the audio data is stored in"
-msgstr ""
+msgstr "kodeko laŭ kiu la sona datumaro estas konservita"
 
 msgid "subtitle codec"
 msgstr "subtekst-kodeko"
 
 msgid "codec the subtitle data is stored in"
-msgstr ""
+msgstr "kodeko laŭ kiu la subteksta datumaro estas konservita"
 
 msgid "container format"
-msgstr ""
+msgstr "enhavila formo"
 
 msgid "container format the data is stored in"
-msgstr ""
+msgstr "enhavila formo laŭ kiu la datumaro estas konservita"
 
 msgid "bitrate"
 msgstr "bitrapido"
 
 msgid "exact or average bitrate in bits/s"
-msgstr ""
+msgstr "ĝusta aŭ meznombra bitrapido laŭ bitoj/s"
 
 msgid "nominal bitrate"
-msgstr ""
+msgstr "meznombra bitrapido"
 
 msgid "nominal bitrate in bits/s"
-msgstr ""
+msgstr "meznombra bitrapido laŭ bitoj/s"
 
 msgid "minimum bitrate"
-msgstr ""
+msgstr "minimuma bitrapido"
 
 msgid "minimum bitrate in bits/s"
-msgstr ""
+msgstr "minimuma bitrapido laŭ bitoj/s"
 
 msgid "maximum bitrate"
-msgstr ""
+msgstr "maksimuma bitrapido"
 
 msgid "maximum bitrate in bits/s"
-msgstr ""
+msgstr "maksimuma bitrapido laŭ bitoj/s"
 
 msgid "encoder"
-msgstr ""
+msgstr "enkodilo"
 
 msgid "encoder used to encode this stream"
-msgstr ""
+msgstr "enkodilo uzata por enkodi tiun ĉi fluon"
 
 msgid "encoder version"
-msgstr ""
+msgstr "enkodila versio"
 
 msgid "version of the encoder used to encode this stream"
-msgstr ""
+msgstr "versio de la enkodilo uzata por enkodi tiun ĉi fluon"
 
 msgid "serial"
-msgstr ""
+msgstr "seriaĵo"
 
 msgid "serial number of track"
-msgstr ""
+msgstr "seria numero de trako"
 
 msgid "replaygain track gain"
-msgstr ""
+msgstr "trak-amplifo de ReplayGain"
 
 msgid "track gain in db"
-msgstr ""
+msgstr "trak-amplifo laŭ db"
 
 msgid "replaygain track peak"
-msgstr ""
+msgstr "traka pinto de ReplayGain"
 
 msgid "peak of the track"
-msgstr ""
+msgstr "pinto de la trako"
 
 msgid "replaygain album gain"
-msgstr ""
+msgstr "albuma amplifo de ReplayGain"
 
 msgid "album gain in db"
-msgstr ""
+msgstr "albuma amplifo laŭ db"
 
 msgid "replaygain album peak"
-msgstr ""
+msgstr "albuma pinto de ReplayGain"
 
 msgid "peak of the album"
-msgstr ""
+msgstr "pinto de la albumo"
 
 msgid "replaygain reference level"
-msgstr ""
+msgstr "referenca nivelo de ReplayGain"
 
 msgid "reference level of track and album gain values"
-msgstr ""
+msgstr "referenca nivelo de amplifaj valoroj de trako kaj albumo"
 
 msgid "language code"
-msgstr "Lingvokodo"
+msgstr "lingvokodo"
 
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr ""
+msgstr "lingvokodo por tiu ĉi fluo, konforme al ISO-639-1 aŭ ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "Lingvokodo"
+msgstr "lingva nomo"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "liberforma nomo de la lingvo de la fluo"
 
 msgid "image"
 msgstr "bildo"
 
 msgid "image related to this stream"
-msgstr ""
+msgstr "bildo rilata al tiu ĉi fluo"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
-msgstr ""
+msgstr "antaŭvida bildo"
 
 msgid "preview image related to this stream"
-msgstr ""
+msgstr "antaŭvida bildo rilata al tiu ĉi fluo"
 
 msgid "attachment"
 msgstr "kunsendaĵo"
 
 msgid "file attached to this stream"
-msgstr ""
+msgstr "dosiero alkroĉita al tiu ĉi fluo"
 
 msgid "beats per minute"
-msgstr ""
+msgstr "frapoj por minuto"
 
 msgid "number of beats per minute in audio"
-msgstr ""
+msgstr "valoro de frapoj por minuto en sono"
 
 msgid "keywords"
-msgstr ""
+msgstr "ĉefvortoj"
 
 msgid "comma separated keywords describing the content"
-msgstr ""
+msgstr "komo-apartitaj ĉefvortoj priskribantaj la enhavo"
 
 msgid "geo location name"
-msgstr ""
+msgstr "ter-pozicia nomo"
 
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
+"hom-legebla priskribo de loko, kie la aŭdvidaĵo estis registrata aŭ "
+"produktata"
 
 msgid "geo location latitude"
-msgstr ""
+msgstr "ter-pozicia latitudo"
 
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
+"tera latitudo, kie la aŭdvidaĵo estis registrita aŭ produktata laŭ gradoj "
+"WGS84 (nulo ĉe ekvatoro, negativaj valoroj por sudaj latitudoj)"
 
 msgid "geo location longitude"
-msgstr ""
+msgstr "ter-pozicia longitudo"
 
 msgid ""
 "geo longitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
 msgstr ""
+"tera longitudo, kie la aŭdvidaĵo estis registrita aŭ produktata laŭ gradoj "
+"WGS84 (nulo ĉe Grenviĉo/UK, negativaj valoroj por okcidentaj longitudoj)"
 
 msgid "geo location elevation"
-msgstr ""
+msgstr "ter-pozicia alto"
 
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
+"tera alto, kie la aŭdvidaĵo estis registrita aŭ produktata laŭ gradoj WGS84 "
+"(nulo ĉe meznombra mar-nivelo)"
 
 msgid "geo location country"
-msgstr ""
+msgstr "ter-pozicio laŭ lando"
 
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
+msgstr "lando (angla nomo) kie la aŭdvidaĵo estis registrata aŭ produktata"
 
 msgid "geo location city"
-msgstr ""
+msgstr "ter-pozicio laŭ urbo"
 
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
+msgstr "urbo (angla nomo) kie la aŭdvidaĵo estis registrata aŭ produktata"
 
 msgid "geo location sublocation"
-msgstr ""
+msgstr "ter-pozicio laŭ subloko"
 
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
-msgstr ""
+msgstr "loko ene de urbo kie  la aŭdvidaĵo estis registrata aŭ produktata"
 
 msgid "geo location horizontal error"
-msgstr ""
+msgstr "ter-pozicia horizontala eraro"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "atendata eraro de la horizontala poziciaj mezuroj (laŭ metroj)"
 
 msgid "geo location movement speed"
-msgstr ""
+msgstr "ter-pozicia mov-rapido"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
-msgstr ""
+msgstr "mov-rapido de la kaptanta aparato dum la kaptado laŭ m/s"
 
 msgid "geo location movement direction"
-msgstr ""
+msgstr "ter-pozicia mov-direkto"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"indikas la mov-direkton de la aparato kiu kaptadas aŭdvidaĵon. Ĝi estas "
+"reprezentata kiel gradoj laŭ glit-punkta cifero; 0 signifas geografia nordo, "
+"kaj ĝi pliiĝas dekstrume"
 
 msgid "geo location capture direction"
-msgstr ""
+msgstr "ter-pozicia kaptada direkto"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"indikas la direkto kien la aparato iras dum kaptado de aŭdvidaĵo. Ĝi estas "
+"reprezentata kiel gradoj laŭ glit-punkta cifero; 0 signifas geografia nordo, "
+"kaj ĝi pliiĝas dekstrume"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr "montri nomon"
+msgstr "spektakla nomo"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "Nomo de la tv/podcast/seria spektaklo el kie la aŭdvidaĵo devenas"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
-msgstr ""
+msgstr "spektakla nomo por ordigo"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"Nomo de la tv/podcast/seria spektaklo el kie la aŭdvidaĵo devenas, por ordigo"
 
 msgid "episode number"
-msgstr ""
+msgstr "epizoda numero"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "La epizoda numero en la sezono al kiu la aŭdividaĵo apartenas"
 
 msgid "season number"
-msgstr ""
+msgstr "sezona numero"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "La sezona numero de la spektaklo al kiu la aŭdividaĵo apartenas"
 
 msgid "lyrics"
 msgstr "lirikoj"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "La lirikoj da la aŭdvidaĵo, ordinare uzata por kanzonoj"
 
 msgid "composer sortname"
-msgstr ""
+msgstr "komponisto por ordigo"
 
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr ""
+msgstr "homo kiu komponis la registraĵon, por ordigo"
 
 msgid "grouping"
-msgstr "grupado"
+msgstr "grupigo"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Grupo de interrilataj aŭdvidaĵoj formita de pluraj trakoj, kiel malsamaj "
+"pecoj de koncerto. Ĝi estas pli alta klaso ol trako, sed malpli alta ol "
+"albumo"
 
 msgid "user rating"
-msgstr ""
+msgstr "taksado de uzanto"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Takso farita de uzanto. Ju pli alta la rango, des pli la uzanto ŝatas tiun "
+"ĉi aŭdvidaĵon"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "aparato-fabrikanto"
 
 msgid "Manufacturer of the device used to create this media"
-msgstr ""
+msgstr "Fabrikanto de la aparato uzata por krei tiun ĉi aŭdvidaĵon"
 
 msgid "device model"
-msgstr ""
+msgstr "aparata modelo"
 
 msgid "Model of the device used to create this media"
-msgstr ""
+msgstr "Modelo de la aparato por krei tiun ĉi aŭdvidaĵon"
 
 msgid "application name"
-msgstr ""
+msgstr "aplikaĵ-nomo"
 
 msgid "Application used to create the media"
-msgstr ""
+msgstr "Aplikaĵo uzata por krei la aŭdvidaĵon"
 
 msgid "application data"
-msgstr ""
+msgstr "aplikaĵa datumaro"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Ajna aplikaĵ-datumaro kiu estos seriigita en la aŭdvidaĵon"
 
 msgid "image orientation"
-msgstr ""
+msgstr "orientiĝo de bildo"
 
 msgid "How the image should be rotated or flipped before display"
 msgstr ""
+"Kiel la bildo devus esti rotaciita aŭ renversita antaŭ ol esti montrata"
 
 msgid "publisher"
-msgstr ""
+msgstr "eldonisto"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Nomo de la eldonejo aŭ eldonisto"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "interpretita-de"
 
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr ""
+msgstr "Informo pri la homoj kiuj faris remikson kaj similajn interpretojn"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "midi-baza-noto"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "MIDIa not-numero de son-trako."
 
 msgid "private-data"
-msgstr ""
+msgstr "privata-datumaro"
 
 msgid "Private data"
-msgstr ""
+msgstr "Privata datumaro"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
 
 #, c-format
-msgid "No URI handler for the %s protocol found"
+msgid "Invalid URI: %s"
 msgstr ""
+
+#, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr "Neniu URI-traktilo por la protokolo %s estas trovita"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "URI-skemo '%s' ne subtenatas"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr ""
+msgstr "ERARO: el elemento %s: %s\n"
 
 #, c-format
 msgid ""
 "Additional debug info:\n"
 "%s\n"
 msgstr ""
+"Kroma sencimiga informo:\n"
+"%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "la ligo ne havas fonton [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "la ligo ne havas konsumanton [source=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr ""
+msgstr "neniu atributo \"%s\" en elemento \"%s\""
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr ""
+msgstr "ne eblis difini atributon \"%s\" en elemento \"%s\" kiel \"%s\""
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Dosiero \"%s\" estas konektinterfaco (socket)."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "ne eblis difini atributon \"%s\" en elemento \"%s\" kiel \"%s\""
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Prokrastita ligiĝo malsukcesis."
 
 #, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr ""
+msgstr "ne eblis ligi %s al %s, %s ne povas trakti Caps %s"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr ""
+msgstr "ne eblis ligi %s al %s, neniu elemento povas trakti Caps %s"
 
 #, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr ""
+msgstr "ne eblis ligi %s al %s per Caps %s"
 
 #, c-format
 msgid "could not link %s to %s"
-msgstr ""
+msgstr "ne eblis ligi %s al %s"
 
 #, c-format
 msgid "no element \"%s\""
@@ -844,86 +902,88 @@ msgstr "neniu elemento \"%s\""
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "neatendita referenco \"%s\" - ni ignoras"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "neatendita Pad-referenco \"%s\" - ni ignoras"
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr ""
+msgstr "ne eblis analizi Caps \"%s\""
 
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr ""
+msgstr "neniu konsumanta elemento por URI \"%s\""
 
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr ""
+msgstr "neniu fonta elemento por URI \"%s\""
 
 msgid "syntax error"
-msgstr ""
+msgstr "sintaksa eraro"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr ""
+msgstr "la Bin \"%s\" malplenas, tio ne permesatas"
 
 #, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr ""
+msgstr "neniu Bin \"%s\", ni elpakigas elementojn"
 
 msgid "empty pipeline not allowed"
-msgstr ""
+msgstr "malplena ĉenstablo ne permesatas"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Konstruo de ĉenstablo malvalidas, bonvolu aldoni envicig-petojn."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Multe da bufroj estas forlasataj."
 
 msgid "Internal data flow problem."
-msgstr ""
+msgstr "Problemo pri interna datumara fluo."
 
 msgid "Internal data flow error."
-msgstr ""
+msgstr "Eraro pri interna datumara fluo."
 
 msgid "Internal clock error."
-msgstr ""
+msgstr "Eraro pri interna horloĝa."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Ni malsukcesis mapigi bufron."
 
 msgid "Filter caps"
-msgstr ""
+msgstr "Filtri Caps"
 
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
+"Limigi la eble permesataj kapabloj (NULL = ANY). Difino de tiu ĉi atributo "
+"portas referencon al la provizita objekto GstCaps."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Ŝanĝa Reĝimo de Caps"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Filtri ŝanĝan konduton de Caps"
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Neniu dosierujo Temp estis indikata."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr ""
+msgstr "Ne eblis krei provizoran dosieron \"%s\"."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr ""
+msgstr "Ne eblis malfermi la dosieron \"%s\" por legi."
 
 msgid "Error while writing to download file."
-msgstr ""
+msgstr "Eraro dum skribo al la elŝuta dosiero."
 
 msgid "No file name specified for writing."
-msgstr ""
+msgstr "Neniu dosiernomo estis indikata por legi."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
@@ -931,22 +991,22 @@ msgstr "Ne eblis malfermi la dosieron \"%s\" por skribi."
 
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr "Eraro dum fermado de la dosiero \"%s\"."
+msgstr "Eraro dum fermo de la dosiero \"%s\"."
 
 #, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr ""
+msgstr "Eraro dum traŝerĉado en la dosiero \"%s\"."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Eraro dum skribo al la dosiero \"%s\"."
 
 msgid "No file name specified for reading."
-msgstr ""
+msgstr "Neniu dosiernomo estis indikata por legi."
 
 #, c-format
 msgid "Could not get info on \"%s\"."
-msgstr ""
+msgstr "Ne eblis havigi informon pri \"%s\"."
 
 #, c-format
 msgid "\"%s\" is a directory."
@@ -954,72 +1014,76 @@ msgstr "\"%s\" estas dosierujo."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr ""
+msgstr "Dosiero \"%s\" estas konektinterfaco (socket)."
 
 msgid "Failed after iterations as requested."
-msgstr ""
+msgstr "Malsukceso post iteracioj kiel petite."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "eos-after kaj error-after ne povas esti difinataj samtempe."
 
 msgid "caps"
-msgstr ""
+msgstr "Caps"
 
 msgid "detected capabilities in stream"
-msgstr ""
+msgstr "detektitaj kapabloj en fluo"
 
 msgid "minimum"
 msgstr "minimumo"
 
 msgid "force caps"
-msgstr ""
+msgstr "devigi Caps"
 
 msgid "force caps without doing a typefind"
-msgstr ""
+msgstr "devigi Caps sen uzo de 'typefind'"
 
 msgid "Stream doesn't contain enough data."
-msgstr ""
+msgstr "La fluo ne enhavas sufiĉe da datumaro."
 
 msgid "Stream contains no data."
-msgstr ""
+msgstr "La fluo enhavas neniun datumaron."
 
 #, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr ""
+msgstr "%sRealigitaj Interfacoj%s:\n"
 
 msgid "readable"
-msgstr "legeble"
+msgstr "legebla"
 
 msgid "writable"
-msgstr "skribeble"
+msgstr "skribebla"
 
 msgid "deprecated"
-msgstr ""
+msgstr "evitinda"
 
 msgid "controllable"
-msgstr "regeble"
+msgstr "regebla"
+
+#, fuzzy
+msgid "conditionally available"
+msgstr "regebla"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "ŝanĝebla nur en statoj NULA, PRETA, PAŬZITA aŭ LUDANTA"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "ŝanĝebla nur en statoj NULA, PRETA aŭ PAŬZITA"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "ŝanĝebla nur en statoj NULA aŭ PRETA"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Dosieroj en nigra listo:"
 
 #, c-format
 msgid "%sTotal count%s: %s"
-msgstr ""
+msgstr "%sTotalo%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d dosiero en nigra listo"
+msgstr[1] "%d dosieroj en nigra listo"
 
 #, c-format
 msgid "%d plugin"
@@ -1030,8 +1094,8 @@ msgstr[1] "%d kromprogramoj"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d ero de nigra listo"
+msgstr[1] "%d eroj de nigra listo"
 
 #, c-format
 msgid "%d feature"
@@ -1043,7 +1107,7 @@ msgid "Print all elements"
 msgstr "Eligi ĉiujn elementojn"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Montri aron da dosieroj en nigra listo"
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
@@ -1051,87 +1115,110 @@ msgid ""
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
+"Montri maŝin-analizeblan liston de trajtoj kiuj la indikita kromprogramo aŭ "
+"ĉiuj ili provizas.\n"
+"                                       Utilas kune kun ekstera aŭtomata "
+"meĥanismo de instalado de kromprogramoj"
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "Listigi la enhavon de la kromprogramo"
 
 msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"Klino-apartita ('/') listo de tipoj de elementoj (ankaŭ nomataj klass) "
+"listigota. (senorde)"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Kontrolu ĉu la indikita elemento aŭ kromprogramo ekzistas"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Dum kontrolado ĉu elemento aŭ kromprogramo ekzistas, ankaŭ kontrolu ĉu ĝia "
+"versio estas minimume la indikita versio"
 
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr ""
+msgstr "Montri subtenatajn skemojn de URI, kun la elementoj kiuj realigas ilin"
 
+#, fuzzy
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+"Malebligi kolorojn en eligo. Vi ankaŭ povas akiri la saman rezulton per "
+"difino de iu ajn valoro por la medi-variablo 'GST_INSPECT_NO_COLORS'."
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr ""
+msgstr "Ne eblis ŝargi je kromprograma dosiero: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr ""
+msgstr "Neniu elemento aŭ kromprogramo tia '%s'\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Indeksaj statistikoj"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Ni difinas ĉenstablon kiel LUDANTA ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ERARO: ĉenstablo ne volas ludi.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr ""
+msgstr "Ni havigis mesaĝon #%u el elemento \"%s\" (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr ""
+msgstr "Ni havigis mesaĝon #%u el Pad \"%s:%s\" (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr ""
+msgstr "Ni havigis mesaĝon #%u el objekto \"%s\" (%s): "
 
 #, c-format
 msgid "Got message #%u (%s): "
-msgstr ""
+msgstr "Ni havigis mesaĝon #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr ""
+msgstr "Ni havigis EOS el elemento \"%s\".\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS ricevita - ni ĉesas ĉenstablon...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr ""
+msgstr "ETIKEDO TROVITA: trovita per elemento \"%s\".\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr ""
+msgstr "ETIKEDO TROVITA: trovita per Pad \"%s:%s\".\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr ""
+msgstr "ETIKEDO TROVITA: trovita per objekto \"%s\".\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "ETIKEDO TROVITA\n"
 
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr ""
+msgstr "TOC TROVITA   : trovita per elemento \"%s\".\n"
 
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr ""
+msgstr "TOC TROVITA   : trovita per objekto \"%s\".\n"
 
 msgid "FOUND TOC\n"
-msgstr ""
+msgstr "TOC TROVITA\n"
 
 #, c-format
 msgid ""
@@ -1143,159 +1230,165 @@ msgstr ""
 
 #, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr "AVERTO: de elemento %s: %s\n"
+msgstr "AVERTO: el elemento %s: %s\n"
+
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Ĉenstablo estas ANTAŬPREPARITA ...\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr ""
+msgstr "Preparite, ni atendas plenigon de bufro por fini...\n"
 
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr ""
+msgstr "Preparite, ni atendas progreson por fini...\n"
 
 msgid "buffering..."
 msgstr "bufrado..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "Bufrado plenutima, ni difinas ĉenstablo kiel LUDANTA ...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "Bufrado, ni difinas ĉenstablo kiel PAŬZITA ...\n"
 
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Redisdoni respondotempon...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "Difino de stato al %s kiel petite de %s...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr ""
+msgstr "Interrompo: ni haltas ĉenstablon ...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Interrompo dum atendo je EOS - ni ĉesas ĉenstablon...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS je malŝalto aktivas -- Ni devigas EOS en la ĉenstablo\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Ni atendas je EOS...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Progreso: (%s) %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "neniu elemento \"%s\""
+msgstr "Mankas elementos: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "AVERTO: de elemento %s: %s\n"
+msgstr "Havigita kunteksto el elemento '%s': %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ERARO: ĉenstablo ne volas antaŭprepariĝi.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Eraro okazis dum atendo je EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
-msgstr ""
+msgstr "Eligi etikedojn (ankaŭ konataj kiel metadatumaro)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "Eligi TOC (ĉapitroj kaj eldonoj)"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Eligi informon pri stato kaj sciigojn pri atributoj"
 
 msgid "Do not print any progress information"
-msgstr ""
+msgstr "Ne montru iun ajn informon pri progreso"
 
 msgid "Output messages"
-msgstr ""
+msgstr "Eligaj mesaĝoj"
 
 msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Ne eligi informon pri stato por la indikita atributo okaze de aktivigo de "
+"detalema eligo (povas esti uzata multfoje)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "ATRIBUTO-NOMO"
 
 msgid "Do not install a fault handler"
-msgstr ""
+msgstr "Ne instali traktilon de misfunkcio"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "Devigi EOS en fontoj antaŭ ol malŝalti la ĉenstablon"
 
 msgid "Gather and print index statistics"
+msgstr "Kolekti kaj montri indeksajn statistikojn"
+
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
 msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr ""
+msgstr "ERARO: ne eblis konstrui ĉenstablon: %s.\n"
 
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr ""
+msgstr "ERARO: ne eblis konstrui ĉenstablon.\n"
 
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
-msgstr ""
+msgstr "AVERTO: malĝusta ĉenstablo %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr ""
+msgstr "ERARO: la elemento 'pipeline' ne estas trovita.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "Ni difinas ĉenstablo kiel PAŬZITA ...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr ""
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Ni difinas ĉenstablo kiel PAŬZITA ...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr ""
+msgstr "Ĉenstablo vivas kaj ne bezonas ANTAŬPREPARO ...\n"
 
 msgid "Pipeline is PREROLLING ...\n"
-msgstr ""
-
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr ""
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-
-msgid "Waiting for EOS...\n"
-msgstr ""
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr ""
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr ""
-
-msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "Ĉenstablo faras PREPARADON ...\n"
 
 msgid "Execution ended after %"
-msgstr ""
-
-msgid "Setting pipeline to READY ...\n"
-msgstr ""
+msgstr "Plenumado finis post %"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr ""
+msgstr "Ni difinas ĉenstablon kiel NULA ...\n"
 
 msgid "Freeing pipeline ...\n"
-msgstr ""
+msgstr "Ni liberigas ĉenstablon ...\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Eraro dum fermado de la dosiero \"%s\"."
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "ERARO: ĉenstablo ne volas paŭzi.\n"
 
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Eraro dum fermado de la dosiero \"%s\"."
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "EOS pro malŝalto aktivas -- ni atendas je EOS post Eraro\n"
 
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Eraro dum skribo al la dosiero \"%s\"."
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Ni difinas ĉenstablon kiel PRETA ...\n"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interna datumflu-eraro."
+
+#~ msgid "maximum"
+#~ msgstr "maksimumo"
 
 #~ msgid "TYPE1,TYPE2,..."
 #~ msgstr "TIPO1,TIPO2,..."

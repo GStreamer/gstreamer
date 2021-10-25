@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: KBabel 1.0.2\n"
 
 msgid "Print the GStreamer version"
@@ -85,6 +86,7 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "GStreamer buraxılışını göstər"
 
+#, c-format
 msgid "Unknown option"
 msgstr ""
 
@@ -707,9 +709,8 @@ msgstr ""
 msgid "The season number of the show the media is part of"
 msgstr ""
 
-#, fuzzy
 msgid "lyrics"
-msgstr "lisenziya"
+msgstr ""
 
 msgid "The lyrics of the media, commonly used for songs"
 msgstr ""
@@ -717,9 +718,8 @@ msgstr ""
 msgid "composer sortname"
 msgstr ""
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "ifa edən şəxs(lər)"
+msgstr ""
 
 msgid "grouping"
 msgstr ""
@@ -792,8 +792,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -813,6 +818,9 @@ msgid ""
 "%s\n"
 msgstr ""
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -827,6 +835,14 @@ msgstr ""
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr ""
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr ""
 
 msgid "Delayed linking failed."
@@ -1009,6 +1025,9 @@ msgstr ""
 msgid "controllable"
 msgstr ""
 
+msgid "conditionally available"
+msgstr ""
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr ""
 
@@ -1082,8 +1101,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1095,6 +1117,12 @@ msgid "No such element or plugin '%s'\n"
 msgstr ""
 
 msgid "Index statistics"
+msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr ""
+
+msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr ""
 
 #, c-format
@@ -1115,6 +1143,9 @@ msgstr ""
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
+msgstr ""
+
+msgid "EOS received - stopping pipeline...\n"
 msgstr ""
 
 #, c-format
@@ -1153,6 +1184,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr ""
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr ""
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
@@ -1165,6 +1199,7 @@ msgstr ""
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
 
@@ -1175,7 +1210,18 @@ msgstr ""
 msgid "Setting state to %s as requested by %s...\n"
 msgstr ""
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
+msgstr ""
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr ""
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
 msgstr ""
 
 #, c-format
@@ -1188,6 +1234,16 @@ msgstr ""
 
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
+msgstr ""
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr ""
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
 msgstr ""
 
 msgid "Output tags (also known as metadata)"
@@ -1222,6 +1278,17 @@ msgstr ""
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr ""
@@ -1239,7 +1306,7 @@ msgstr ""
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr ""
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
+msgid "Failed to set pipeline to PAUSED.\n"
 msgstr ""
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
@@ -1248,40 +1315,7 @@ msgstr ""
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr ""
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-
-msgid "Waiting for EOS...\n"
-msgstr ""
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr ""
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr ""
-
-msgid "An error happened while waiting for EOS\n"
-msgstr ""
-
 msgid "Execution ended after %"
-msgstr ""
-
-msgid "Setting pipeline to READY ...\n"
 msgstr ""
 
 msgid "Setting pipeline to NULL ...\n"
@@ -1289,9 +1323,6 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr ""
-
-#~ msgid "FILE"
-#~ msgstr "FAYL"
 
 #~ msgid "')"
 #~ msgstr "')"
@@ -1304,3 +1335,9 @@ msgstr ""
 
 #~ msgid "REGISTRY"
 #~ msgstr "QEYDBAZASI"
+
+#~ msgid "maximum"
+#~ msgstr "maksimal"
+
+#~ msgid "FILE"
+#~ msgstr "FAYL"

@@ -1,23 +1,23 @@
-# Hungarian translation for gstreamer
-# Copyright (c) 2006, 2007, 2008, 2009, 2010, 2012, 2014, 2015, 2016, 2017 Canonical Ltd, and Rosetta Contributors
+# Hungarian translation for gstreamer.
+# Copyright (c) 2006, 2007, 2008, 2009, 2010, 2012, 2014, 2015, 2016, 2017, 2019 Canonical Ltd, and Rosetta Contributors
 # This file is distributed under the same license as the gstreamer package.
 #
 # Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2010, 2012, 2016.
-# Balázs Úr <urbalazs@gmail.com>, 2014, 2015, 2017.
+# Balázs Úr <ur.balazs@fsf.hu>, 2014, 2015, 2017, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
-"PO-Revision-Date: 2017-05-05 20:17+0200\n"
-"Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
+"Project-Id-Version: gstreamer 1.16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2019-11-23 22:13+0100\n"
+"Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 1.2\n"
+"X-Generator: Lokalize 19.04.3\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Print the GStreamer version"
@@ -95,6 +95,7 @@ msgstr "GStreamer beállításai"
 msgid "Show GStreamer Options"
 msgstr "A GStreamer beállításainak megjelenítése"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Ismeretlen beállítás"
 
@@ -828,8 +829,13 @@ msgstr "privát-adatok"
 msgid "Private data"
 msgstr "Privát adatok"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -851,6 +857,9 @@ msgstr ""
 "További hibakeresési információk:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "a hivatkozásnak nincs forrása [nyelő=%s@%p]"
@@ -865,6 +874,14 @@ msgstr "nincs „%s” tulajdonság a(z) „%s” elemben"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "nem állítható be a(z) „%2$s” elem „%1$s” tulajdonsága „%3$s” értékre"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "A(z) „%s” fájl egy foglalat."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "nem állítható be a(z) „%2$s” elem „%1$s” tulajdonsága „%3$s” értékre"
 
 msgid "Delayed linking failed."
@@ -929,7 +946,7 @@ msgid "empty pipeline not allowed"
 msgstr "üres adatcsatorna nem engedélyezett"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "A csővezetés felépítése érvénytelen, adjon hozzá sorokat."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Rengetek puffer kerül eldobásra."
@@ -1014,7 +1031,7 @@ msgid "Failed after iterations as requested."
 msgstr "Ismétlések után kérésére meghiúsult."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "Az eos-after és error-after nem lehet egyszerre meghatározva."
 
 msgid "caps"
 msgstr "képességek"
@@ -1037,9 +1054,9 @@ msgstr "Az adatfolyam nem tartalmaz elég adatot."
 msgid "Stream contains no data."
 msgstr "Az adatfolyam nem tartalmaz adatokat."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Megvalósított felületek:\n"
+msgstr "%sMegvalósított felületek%s:\n"
 
 msgid "readable"
 msgstr "olvasható"
@@ -1051,6 +1068,10 @@ msgid "deprecated"
 msgstr "elavult"
 
 msgid "controllable"
+msgstr "vezérelhető"
+
+#, fuzzy
+msgid "conditionally available"
 msgstr "vezérelhető"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
@@ -1065,9 +1086,9 @@ msgstr "csak a NULL vagy KÉSZ állapotban módosítható"
 msgid "Blacklisted files:"
 msgstr "Feketelistás fájlok:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Teljes szám: "
+msgstr "%sTeljes szám%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1132,9 +1153,15 @@ msgstr ""
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Támogatott URI sémák kiírása, az azokat megvalósító elemmel"
 
+#, fuzzy
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+"Színek letiltása a kimeneten. Ugyanezt érheti el a „GST_INSPECT_NO_COLORS” "
+"környezeti változó bármilyen értékre történő beállításával."
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1147,6 +1174,12 @@ msgstr "Nincs ilyen elem vagy bővítmény: „%s”\n"
 
 msgid "Index statistics"
 msgstr "Indexstatisztika"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Adatcsatorna beállítása LEJÁTSZÁSRA…\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "HIBA: az adatcsatorna nem akar lejátszani.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1167,6 +1200,9 @@ msgstr "%u számú üzenet (%s) érkezett:"
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "EOS érkezett a következő elemtől: „%s”.\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS érkezett – adatcsatorna leállítása…\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1206,6 +1242,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "FIGYELMEZTETÉS: a következő elemtől: %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Az adatcsatorna ELINDÍTVA…\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Előzetesen betöltve, várakozás a pufferelés befejeződésére…\n"
 
@@ -1218,6 +1257,7 @@ msgstr "pufferelés…"
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "A pufferelés kész, adatcsatorna beállítása LEJÁTSZÁSRA…\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Pufferelés, az adatcsatorna beállítása SZÜNETELTETETT állapotúra…\n"
 
@@ -1228,8 +1268,19 @@ msgstr "Késleltetés újraelosztása…\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Állapot beállítása erre: %s, %s kérésének megfelelően…\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Megszakítás: Adatcsatorna leállítása…\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Megszakítás az EOS-ra várakozás közben – adatcsatorna leállítása…\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "Leállításkor EOS engedélyezve – EOS kényszerítése az adatcsatornára\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Várakozás EOS-ra…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1242,6 +1293,16 @@ msgstr "Hiányzó elem: „%s”\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Környezet lekérése a(z) „%s” elemtől: %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "HIBA: az adatcsatorna nem akar elindulni.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Hiba történt az EOS-ra várakozáskor\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Kimeneti címkék (metaadatok)"
@@ -1277,6 +1338,17 @@ msgstr "EOS kényszerítése a forrásokra az adatcsatorna leállítása előtt"
 msgid "Gather and print index statistics"
 msgstr "Indexstatisztikák gyűjtése és kiírása"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "HIBA: az adatcsatorna nem építhető fel: %s.\n"
@@ -1294,8 +1366,9 @@ msgstr "HIBA: az „adatcsatorna” elem nem található.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Adatcsatorna beállítása SZÜNETELTETETT állapotúra…\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "HIBA: az adatcsatorna nem akar megállni.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Adatcsatorna beállítása SZÜNETELTETETT állapotúra…\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Az adatcsatorna él és nem szükséges ELINDÍTANI…\n"
@@ -1303,41 +1376,8 @@ msgstr "Az adatcsatorna él és nem szükséges ELINDÍTANI…\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Az adatcsatorna INDÍTÁSA…\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "HIBA: az adatcsatorna nem akar elindulni.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Az adatcsatorna ELINDÍTVA…\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Adatcsatorna beállítása LEJÁTSZÁSRA…\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "HIBA: az adatcsatorna nem akar lejátszani.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "Leállításkor EOS engedélyezve – EOS kényszerítése az adatcsatornára\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "Leállításkor EOS engedélyezve – várakozás EOS-ra hiba után\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Várakozás EOS-ra…\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "EOS érkezett – adatcsatorna leállítása…\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Megszakítás az EOS-ra várakozás közben – adatcsatorna leállítása…\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Hiba történt az EOS-ra várakozáskor\n"
-
 msgid "Execution ended after %"
 msgstr "A végrehajtás befejeződött %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Az adatcsatorna beállítása KÉSZ állapotra…\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Az adatcsatorna beállítása NULL értékre…\n"
@@ -1345,14 +1385,11 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Hiba a(z) „%s” fájl bezárása közben."
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "HIBA: az adatcsatorna nem akar megállni.\n"
 
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Hiba a(z) „%s” fájl bezárása közben."
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "Leállításkor EOS engedélyezve – várakozás EOS-ra hiba után\n"
 
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Hiba a(z) „%s” fájl írása közben."
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Az adatcsatorna beállítása KÉSZ állapotra…\n"

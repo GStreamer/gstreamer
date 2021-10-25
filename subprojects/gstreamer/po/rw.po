@@ -14,8 +14,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -136,6 +136,7 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "i Verisiyo"
 
+#, c-format
 msgid "Unknown option"
 msgstr ""
 
@@ -996,8 +997,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -1017,6 +1023,9 @@ msgid ""
 "%s\n"
 msgstr "Kosora amakosa Ibisobanuro"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -1031,6 +1040,14 @@ msgstr "Oya indangakintu in Ikigize:"
 
 #, fuzzy, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "OYA Gushyiraho indangakintu in Ikigize: Kuri"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Idosiye ni a"
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "OYA Gushyiraho indangakintu in Ikigize: Kuri"
 
 msgid "Delayed linking failed."
@@ -1231,6 +1248,9 @@ msgstr ""
 msgid "controllable"
 msgstr ""
 
+msgid "conditionally available"
+msgstr ""
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr ""
 
@@ -1305,8 +1325,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, fuzzy, c-format
@@ -1319,6 +1342,13 @@ msgstr "Oya Inkomoko Ikigize: kugirango"
 
 msgid "Index statistics"
 msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr ""
+
+#, fuzzy
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "Kuri Gukina"
 
 #, fuzzy, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1339,6 +1369,9 @@ msgstr "Bivuye Ikigize:"
 #, fuzzy, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Bivuye Ikigize:"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1376,6 +1409,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "Bivuye Ikigize:"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr ""
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
@@ -1388,6 +1424,7 @@ msgstr ""
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
 
@@ -1398,7 +1435,18 @@ msgstr ""
 msgid "Setting state to %s as requested by %s...\n"
 msgstr ""
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
+msgstr ""
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr ""
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
 msgstr ""
 
 #, c-format
@@ -1412,6 +1460,17 @@ msgstr "Oya Ikigize:"
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Bivuye Ikigize:"
+
+#, fuzzy
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "Kuri Gukina"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 #, fuzzy
 msgid "Output tags (also known as metadata)"
@@ -1449,6 +1508,17 @@ msgstr ""
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, fuzzy, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "OYA"
@@ -1468,9 +1538,8 @@ msgstr "i Ikigize: Byabonetse"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#, fuzzy
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "Kuri Gukina"
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr ""
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
@@ -1478,42 +1547,7 @@ msgstr ""
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-#, fuzzy
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "Kuri Gukina"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
-
-#, fuzzy
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "Kuri Gukina"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-
-msgid "Waiting for EOS...\n"
-msgstr ""
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr ""
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr ""
-
-msgid "An error happened while waiting for EOS\n"
-msgstr ""
-
 msgid "Execution ended after %"
-msgstr ""
-
-msgid "Setting pipeline to READY ...\n"
 msgstr ""
 
 msgid "Setting pipeline to NULL ...\n"
@@ -1521,6 +1555,10 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "Kuri Gukina"
 
 #, fuzzy
 #~ msgid "Error creating pipe: %s\n"

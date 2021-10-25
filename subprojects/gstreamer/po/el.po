@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -14,6 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n!= 1)\n"
 "X-Poedit-Language: Greek\n"
 "X-Poedit-Country: GREECE\n"
@@ -95,6 +96,7 @@ msgstr "Επιλογές του GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Εμφάνιση επιλογών του GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Άγνωστη επιλογή"
 
@@ -852,8 +854,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -875,6 +882,9 @@ msgstr ""
 "Επιπλέον πληροφορίες αποσφαλμάτωσης:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -889,6 +899,14 @@ msgstr "δεν υπάρχει ιδιότητα «%s» στο στοιχείο «
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "αδυναμία ορισμού ιδιότητας «%s» στο στοιχείο «%s» σε «%s»"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Το αρχείο «%s» είναι μια υποδοχή."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "αδυναμία ορισμού ιδιότητας «%s» στο στοιχείο «%s» σε «%s»"
 
 msgid "Delayed linking failed."
@@ -1075,6 +1093,10 @@ msgstr ""
 msgid "controllable"
 msgstr "ελεγχόμενο"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "ελεγχόμενο"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "μπορεί να αλλάξει σε κατάσταση NULL, READY, PAUSED ή PLAYING"
 
@@ -1152,8 +1174,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Εμφάνιση υποστηριζόμενων μορφών URI, με τα στοιχεία που τις υλοποιούν"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1166,6 +1191,12 @@ msgstr "Δεν υπάρχει τέτοιο στοιχείο ή πρόσθετο 
 
 msgid "Index statistics"
 msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Ορισμός διασωλήνωσης σε PLAYING …\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ERROR: η διασωλήνωση δεν θέλει να αναπαραχθεί.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1186,6 +1217,9 @@ msgstr "Ελήφθη το μήνυμα  #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Ελήφθη EOS από το στοιχείο «%s».\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Λήψη EOS - διακοπή διασωλήνωσης…\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1226,6 +1260,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "WARNING: από το στοιχείο %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Η διασωλήνωση είναι PREROLLED …\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Προτυλιγμένο, αναμονή για ολοκλήρωση η αποθήκευση ροής…\n"
 
@@ -1239,6 +1276,7 @@ msgstr "προσωρινή αποθήκευση…"
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Αποθήκευση ολοκληρώθηκε, ορισμός διασωλήνωσης σε PLAYING …\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Αποθήκευση, ορισμός διασωλήνωσης σε PAUSED …\n"
 
@@ -1249,8 +1287,21 @@ msgstr "Καθυστέρηση αναδιανομής…\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Ορισμός κατάστασης σε %s όπως ζητήθηκε από %s…\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Διακοπή: Τερματισμός διασωλήνωσης…\n"
+
+#, fuzzy
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Διακοπή: Τερματισμός διασωλήνωσης…\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+"Ενεργοποίηση του EOS κατά τον τερματισμό -- Επιβολή του EOS στη διασωλήνωση\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Αναμονή για EOS…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1263,6 +1314,16 @@ msgstr "δεν υπάρχει στοιχείο «%s»"
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "WARNING: από το στοιχείο %s: %s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ERROR: η διασωλήνωση δεν θέλει να προτυλιχθεί.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Προέκυψε σφάλμα κατά την αναμονή για EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Ετικέτες εξόδου (επίσης γνωστές ως μεταδεδομένα)"
@@ -1296,6 +1357,17 @@ msgstr "Εξαναγκασμός του EOS στις πηγές πριν το κ
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERROR: αδυναμία κατασκευής διασωλήνωσης: %s.\n"
@@ -1313,8 +1385,9 @@ msgstr "ERROR: το στοιχείο 'διασωλήνωση' δεν βρέθη�
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Ορισμός διασωλήνωσης σε PAUSED …\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "ERROR: Η διασωλήνωση δεν θέλει να παύσει.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Ορισμός διασωλήνωσης σε PAUSED …\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Η διασωλήνωση είναι ενεργή και δεν χρειάζεται PREROLL … \n"
@@ -1322,45 +1395,8 @@ msgstr "Η διασωλήνωση είναι ενεργή και δεν χρει
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Η διασωλήνωση είναι σε PREROLLING …\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ERROR: η διασωλήνωση δεν θέλει να προτυλιχθεί.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Η διασωλήνωση είναι PREROLLED …\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Ορισμός διασωλήνωσης σε PLAYING …\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "ERROR: η διασωλήνωση δεν θέλει να αναπαραχθεί.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-"Ενεργοποίηση του EOS κατά τον τερματισμό -- Επιβολή του EOS στη διασωλήνωση\n"
-
-#, fuzzy
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-"Ενεργοποίηση του EOS κατά τον τερματισμό -- Επιβολή του EOS στη διασωλήνωση\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Αναμονή για EOS…\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "Λήψη EOS - διακοπή διασωλήνωσης…\n"
-
-#, fuzzy
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Διακοπή: Τερματισμός διασωλήνωσης…\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Προέκυψε σφάλμα κατά την αναμονή για EOS\n"
-
 msgid "Execution ended after %"
 msgstr "Η εκτέλεση τελείωσε μετά %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Ορισμός διασωλήνωσης σε READY …\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Ορισμός διασωλήνωσης σε NULL …\n"
@@ -1368,47 +1404,30 @@ msgstr "Ορισμός διασωλήνωσης σε NULL …\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Αποδέσμευση της διασωλήνωσης …\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Σφάλμα κλεισίματος αρχείου «%s»."
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Σφάλμα κλεισίματος αρχείου «%s»."
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Σφάλμα κατά την εγγραφή στο αρχείο «%s»."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Να μην εξάγεται πληροφορία κατάστασης εξόδου του TYPE"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TYPE1,TYPE2,…"
-
 #~ msgid "link without source element"
 #~ msgstr "σύνδεση χωρίς στοιχείο προέλευσης"
 
 #~ msgid "link without sink element"
 #~ msgstr "σύνδεση χωρίς στοιχείο προορισμού"
 
+#, c-format
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "δεν υπάρχει στοιχείο για τη σύνδεση του URI «%s» σε"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr ""
-#~ "Εμφάνιση ίχνους αντιστοίχισης (αν είναι ενεργοποιημένο κατά τη "
-#~ "μεταγλώττιση κώδικα)"
+#~ msgid "Internal data stream error."
+#~ msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
+
+#~ msgid "maximum"
+#~ msgstr "μέγιστο"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr "Χρήση: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 
+#, c-format
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "ERROR: αποτυχία ανάλυσης αρχείου xml '%s'.\n"
 
+#, c-format
 #~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 #~ msgstr ""
 #~ "ERROR: δεν υπάρχει στοιχείο διασωλήνωσης στο ανώτερο επίπεδο στο αρχείο "
@@ -1419,11 +1438,19 @@ msgstr "Αποδέσμευση της διασωλήνωσης …\n"
 #~ "WARNING: μόνο ένα στοιχείο σε ανώτερο επίπεδο υποστηρίζεται αυτή τη "
 #~ "στιγμή.\n"
 
+#, c-format
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
 #~ msgstr "ERROR: αδυναμία ανάλυσης ορίσματος γραμμής εντολής %d: %s.\n"
 
+#, c-format
 #~ msgid "WARNING: element named '%s' not found.\n"
 #~ msgstr "WARNING: το στοιχείο με το όνομα '%s' δεν βρέθηκε.\n"
+
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "Να μην εξάγεται πληροφορία κατάστασης εξόδου του TYPE"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "TYPE1,TYPE2,…"
 
 #~ msgid "Save xml representation of pipeline to FILE and exit"
 #~ msgstr "Αποθήκευση xml αναπαράστασης της διασωλήνωσης στο FILE και έξοδος"
@@ -1433,3 +1460,14 @@ msgstr "Αποδέσμευση της διασωλήνωσης …\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Να μην εγκατασταθούν χειριστές σημάτων για SIGUSR1 και SIGUSR2"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr ""
+#~ "Εμφάνιση ίχνους αντιστοίχισης (αν είναι ενεργοποιημένο κατά τη "
+#~ "μεταγλώττιση κώδικα)"
+
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "ERROR: Η διασωλήνωση δεν θέλει να παύσει.\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Ορισμός διασωλήνωσης σε READY …\n"

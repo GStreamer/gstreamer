@@ -1,15 +1,15 @@
 # Indonesian translations for gstreamer package.
 # This file is put in the public domain.
-# Andika Triwidada <andika@gmail.com>, 2013.
+# Andika Triwidada <andika@gmail.com>, 2013, 2021.
 # Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
-"PO-Revision-Date: 2016-11-14 20:59+0700\n"
-"Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2021-09-25 16:56+0700\n"
+"Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
@@ -17,12 +17,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 2.4.2\n"
 
 msgid "Print the GStreamer version"
 msgstr "Cetak versi GStreamer"
 
 msgid "Make all warnings fatal"
-msgstr "Buat semua peringatan fatal"
+msgstr "Jadikan semua peringatan fatal"
 
 msgid "Print available debug categories and exit"
 msgstr "Cetak kategori awakutu yang tersedia lalu keluar"
@@ -94,6 +95,7 @@ msgstr "Opsi GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Tampilkan Opsi GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Opsi tak diketahui"
 
@@ -130,8 +132,9 @@ msgstr "Galat GStreamer internal: masalah event."
 msgid "Internal GStreamer error: seek problem."
 msgstr "Galat GStreamer internal: masalah pencarian."
 
+# caps here is not related to character upper/lower case
 msgid "Internal GStreamer error: caps problem."
-msgstr "Galat GStreamer internal: masalah huruf."
+msgstr "Galat GStreamer internal: masalah caps."
 
 msgid "Internal GStreamer error: tag problem."
 msgstr "Galat GStreamer internal: masalah tag."
@@ -831,8 +834,13 @@ msgstr "data-privat"
 msgid "Private data"
 msgstr "Data privat"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr "URI tidak valid: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -854,6 +862,9 @@ msgstr ""
 "Info awakutu tambahan:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "tautan tidak mempunyai sumber [sink=%s@%p]"
@@ -870,24 +881,36 @@ msgstr "tak ada properti \"%s\" di elemen \"%s\""
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "tak dapat mengatur properti \"%s\" di elemen \"%s\" ke \"%s\""
 
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Elemen \"%s\" bukat suatu GstPreset"
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "tak dapat mengatur pratata \"%s\" di elemen \"%s\""
+
 msgid "Delayed linking failed."
 msgstr "Jeda penautan gagal."
 
-#, fuzzy, c-format
+# caps here is not related to character upper/lower case
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "tak dapat menautkan %s ke %s"
+msgstr "tidak dapat menautkan %s ke %s, %s tidak dapat menangani caps %s"
 
-#, fuzzy, c-format
+# caps here is not related to character upper/lower case
+#, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr "tak dapat menautkan elemen buang untuk URI \"%s\""
+msgstr ""
+"tidak dapat menautkan %s ke %s, kedua elemen tidak dapat menangani caps %s"
 
-#, fuzzy, c-format
+# caps here is not related to character upper/lower case
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "tak dapat menautkan %s ke %s"
+msgstr "tidak dapat menautkan %s ke %s dengan caps %s"
 
 #, c-format
 msgid "could not link %s to %s"
-msgstr "tak dapat menautkan %s ke %s"
+msgstr "tidak dapat menautkan %s ke %s"
 
 #, c-format
 msgid "no element \"%s\""
@@ -901,9 +924,10 @@ msgstr "referensi tak diharapkan \"%s\" - mengabaikan"
 msgid "unexpected pad-reference \"%s\" - ignoring"
 msgstr "referensi pad tak diharapkan \"%s\" - mengabaikan"
 
+# caps here is not related to character upper/lower case
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "tak dapat menguraikan huruf \"%s\""
+msgstr "tak dapat menguraikan caps \"%s\""
 
 #, c-format
 msgid "no sink element for URI \"%s\""
@@ -928,7 +952,7 @@ msgid "empty pipeline not allowed"
 msgstr "baris pipa kosong tak diizinkan"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Konstruksi pipeline tidak valid, silakan tambahkan antrian."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Banyak penyangga yang didrop."
@@ -945,8 +969,9 @@ msgstr "Galat jam internal."
 msgid "Failed to map buffer."
 msgstr "Gagal memetakan penyangga."
 
+# caps here is not related to character upper/lower case
 msgid "Filter caps"
-msgstr "Filter huruf"
+msgstr "Filter caps"
 
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
@@ -955,11 +980,13 @@ msgstr ""
 "Larang kemampuan yang mungkin diizinkan (KOSONG berarti APAPUN). Pengaturan "
 "properti ini bersumber pada objek GstCaps yang disediakan."
 
+# caps here is not related to character upper/lower case
 msgid "Caps Change Mode"
-msgstr "Mode Ubah Huruf"
+msgstr "Mode Ubah Caps"
 
+# caps here is not related to character upper/lower case
 msgid "Filter caps change behaviour"
-msgstr "Filter perilaku ubah huruf"
+msgstr "Filter perilaku ubah caps"
 
 msgid "No Temp directory specified."
 msgstr "Tak ada direktori Temp yang ditentukan."
@@ -1013,10 +1040,11 @@ msgid "Failed after iterations as requested."
 msgstr "Gagal setelah pengulangan seperti yang diminta."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "eos-after dan error-after tidak dapat didefinisikan bersamaan."
 
+# caps here is not related to character upper/lower case
 msgid "caps"
-msgstr "huruf"
+msgstr "caps"
 
 msgid "detected capabilities in stream"
 msgstr "mendeteksi kemampuan dalam arus"
@@ -1024,11 +1052,13 @@ msgstr "mendeteksi kemampuan dalam arus"
 msgid "minimum"
 msgstr "minimum"
 
+# caps here is not related to character upper/lower case
 msgid "force caps"
-msgstr "paksa huruf"
+msgstr "paksa caps"
 
+# caps here is not related to character upper/lower case
 msgid "force caps without doing a typefind"
-msgstr "paksa huruf tanpa melakukan pencarian tipe"
+msgstr "paksa caps tanpa melakukan pencarian tipe"
 
 msgid "Stream doesn't contain enough data."
 msgstr "Arus tidak berisi cukup data."
@@ -1036,9 +1066,9 @@ msgstr "Arus tidak berisi cukup data."
 msgid "Stream contains no data."
 msgstr "Arus tidak berisi data."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Antarmuka Terimplementasi:\n"
+msgstr "%sAntarmuka Terimplementasi%s:\n"
 
 msgid "readable"
 msgstr "dapat dibaca"
@@ -1052,6 +1082,9 @@ msgstr "usang"
 msgid "controllable"
 msgstr "dapat dikendalikan"
 
+msgid "conditionally available"
+msgstr "tersedia bersyarat"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "dapat diubah dalam kondisi NULL, READY, PAUSED atau PLAYING"
 
@@ -1064,9 +1097,9 @@ msgstr "hanya dapat diubah dalam kondisi NULL atau READY"
 msgid "Blacklisted files:"
 msgstr "Berkas yang dilarang:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Jumlah total: "
+msgstr "%sCacah total%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1112,6 +1145,8 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"Sebuah slashes ('/') terpisah daftar jenis elemen (juga dikenal sebagai "
+"klass) untuk daftar. (tidak terurut)"
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Klik bila elemen atau plugin yang dinyatakan ada"
@@ -1128,9 +1163,14 @@ msgstr ""
 "Cetak skema URI yang didukung, dengan elemen yang mengimplementasikannya"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Nonaktifkan warna dalam keluaran. Anda juga dapat mencapai hal yang sama "
+"dengan mengatur variabel lingkungan 'GST_INSPECT_NO_COLORS' ke nilai apa pun."
+
+msgid "Color output, even when not sending to a tty."
+msgstr "Warnai keluaran, bahkan ketika tidak mengirim ke suatu tty."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1142,6 +1182,12 @@ msgstr "Tak ada elemen atau plugin '%s'\n"
 
 msgid "Index statistics"
 msgstr "Statistik indeks"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Mengatur baris pipa ke PUTAR ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "GALAT: baris pipa tidak ingin diputar.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1162,6 +1208,9 @@ msgstr "Mendapat Pesan #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Mendapat EOS dari elemen \"%s\".\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS diterima - menghentikan baris pipa...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1201,6 +1250,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "PERINGATAN: dari elemen %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Baris pipa telah PRAGULUNG ...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Pragulung, menunggu hingga penyangga selesai...\n"
 
@@ -1213,6 +1265,7 @@ msgstr "menyangga..."
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Selesai menyangga, mengatur baris pipa ke MEMUTAR ...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Menyangga, mengatur baris pipa ke JEDA ...\n"
 
@@ -1223,8 +1276,19 @@ msgstr "Mendistribusikan ulang latency...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Mengatur tingkat ke %s seperti diminta oleh %s...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interupsi: Menghentikan baris pipa ...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Interupsi saat menunggu EOS - menghentikan baris pipa...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS pada matikan diaktifkan -- Paksa EOS pada pemipaan\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Menunggu untuk EOS...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1237,6 +1301,16 @@ msgstr "Elemen kurang: %s\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Mendapat konteks dari elemen '%s': %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "GALAT: baris pipa tak ingin dipragulung.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Galat terjadi ketika menunggu EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Gunakan jam resolusi tinggi Windows, ketelitian: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Tag keluaran (juga dikenal sebagai metadata)"
@@ -1272,6 +1346,23 @@ msgstr "Paksa EOS pada sumber sebelum mematikan pemipaan"
 msgid "Gather and print index statistics"
 msgstr "Kumpulkan dan cetak statistik indeks"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+"Jangan cetak posisi saat ini dari pipeline. Bila opsi ini tidak dinyatakan, "
+"posisi akan dicetak ketika stdout adalah sebuah TTY. Untuk memfungsikan "
+"pencetakan posisi ketika stdout bukan suatu TTY, gunakan opsi \"force-"
+"position\"."
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+"Izinkan pencetakan posisi saat ini dari pipeline bahkan bila stdout bukan "
+"suatu TTY. Opsi ini tidak punya pengaruh bila opsi \"no-position\" dinyatakan"
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "GALAT: baris pipa tak dapat dibangun: %s.\n"
@@ -1287,10 +1378,10 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "GALAT: elemen 'baris pipa' tak ditemukan.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "Mengatur baris pipa ke JEDA ...\n"
+msgstr "Mengatur pipeline ke DIISTIRAHATKAN ...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "GALAT: Baris pipa tak ingin dijedakan.\n"
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Gagal mengatur pipeline ke DIISTIRAHATKAN.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Baris pipa telah hidup dan tak membutuhkan PRAGULUNG ...\n"
@@ -1298,77 +1389,11 @@ msgstr "Baris pipa telah hidup dan tak membutuhkan PRAGULUNG ...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Baris pipa PRAGULUNG ...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "GALAT: baris pipa tak ingin dipragulung.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Baris pipa telah PRAGULUNG ...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Mengatur baris pipa ke PUTAR ...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "GALAT: baris pipa tidak ingin diputar.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS pada matikan diaktifkan -- Paksa EOS pada pemipaan\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS pada matikan diaktifkan -- menunggu EOS setelah Galat\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Menunggu untuk EOS...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "EOS diterima - menghentikan baris pipa...\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interupsi saat menunggu EOS - menghentikan baris pipa...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Galat terjadi ketika menunggu EOS\n"
-
 msgid "Execution ended after %"
 msgstr "Eksekusi berakhir setelah %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Mengatur baris pipa ke SIAP ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Mengatur baris pipa ke KOSONG ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Membebaskan baris pipa ...\n"
-
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Galat menulis berkas \"%s\"."
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Galat menulis berkas \"%s\"."
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Galat ketika menulis ke berkas \"%s\"."
-
-#~ msgid "bin"
-#~ msgstr "tempat sampah"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Galat arus data internal."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Jangan keluarkan informasi status dari TIPE"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TIPE1, TIPE2,..."
-
-#~ msgid "link without source element"
-#~ msgstr "taut tanpa elemen sumber"
-
-#~ msgid "link without sink element"
-#~ msgstr "taut tanpa elemen buang"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "tak ada elemen ke taut URI \"%s\""

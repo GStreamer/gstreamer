@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2016-05-20 11:32+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -16,6 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Poedit 1.6.10\n"
@@ -96,6 +97,7 @@ msgstr "Možnosti pre GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Zobraziť možnosti pre GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Neznáma možnosť"
 
@@ -829,8 +831,13 @@ msgstr "súkromné-dáta"
 msgid "Private data"
 msgstr "Súkromné dáta"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -852,6 +859,9 @@ msgstr ""
 "Prídavné ladiace informácie:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "odkaz nemá zdroj [sink=%s@%p]"
@@ -866,6 +876,14 @@ msgstr "neexistuje vlastnosť \"%s\" v prvku \"%s\""
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "nepodarilo sa nastaviť vlastnosť \"%s\" v prvku \"%s\" na \"%s\""
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Súbor \"%s\" je zásuvka."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "nepodarilo sa nastaviť vlastnosť \"%s\" v prvku \"%s\" na \"%s\""
 
 msgid "Delayed linking failed."
@@ -1050,6 +1068,10 @@ msgstr "zastaralé"
 msgid "controllable"
 msgstr "ovládateľné"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "ovládateľné"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "meniteľné v stave NULOVÝ, PRIPRAVENÝ, POZASTAVENÝ alebo HRAJÚCI"
 
@@ -1134,8 +1156,11 @@ msgstr ""
 "Zobraziť podporované URI schémy, spolu s prvkami ktoré ich implementujú"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1148,6 +1173,13 @@ msgstr "Takýto prvok alebo zásuvný modul neexistuje '%s'\n"
 
 msgid "Index statistics"
 msgstr "Štatistika indexu"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Nastavujem rúru na HRAJÚCU ...\n"
+
+# On strike?
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "CHYBA: Rúra nechce hrať.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1168,6 +1200,9 @@ msgstr "Dostal som správu #%u (%s):"
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Dostal som EOS od prvku \"%s\".\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Prijatý EOS - zastavujem rúru ...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1207,6 +1242,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "VAROVANIE: z prvku %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Rúra je v stave PREROLLED ...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Predčítané, čakám na dokončenie napĺňania vyrovnávacej pamäte...\n"
 
@@ -1219,6 +1257,7 @@ msgstr "Ukladám do vyrovnávacej pamäte..."
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Vyrovnávacia pamäť je naplnená, nastavujem rúru na HRAJÚCU ...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Napĺňa sa vyrovnávacia pamäť, nastavujem rúru na POZASTAVENÚ ...\n"
 
@@ -1229,8 +1268,19 @@ msgstr "Predistribuovať latenciu...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Nastavujem stav na %s ako požaduje %s...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Prerušenie: Zastavujem rúru ...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Prerušenie počas čakania na EOS - zastavujem rúru ...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS pri vypnutí je povolený -- Vynucujem EOS pre rúru\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Čakám na EOS...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1243,6 +1293,17 @@ msgstr "Chýba prvok %s\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Získal som kontext z prvku '%s': %s=%s\n"
+
+# On strike?
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "CHYBA: rúra nechce prerollovať.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Počas čakania na EOS nastala chyba\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Vypísať značky (známe tiež ako metadáta)"
@@ -1278,6 +1339,17 @@ msgstr "Vynútiť EOS na zdrojoch pred vypnutím rúry"
 msgid "Gather and print index statistics"
 msgstr "Zozbierať a zobraziť štatistiku indexu"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "CHYBA: nepodarilo sa vytvoriť rúru: %s.\n"
@@ -1295,9 +1367,9 @@ msgstr "CHYBA: prvok 'rúra' sa nenašiel.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Nastavujem rúru na POZASTAVENÚ ...\n"
 
-# On strike?
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "CHYBA: Rúra sa nechce pozastaviť.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Nastavujem rúru na POZASTAVENÚ ...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Rúra je živá a nepotrebuje PREROLL ...\n"
@@ -1305,43 +1377,8 @@ msgstr "Rúra je živá a nepotrebuje PREROLL ...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Rúra je v stave PREROLLING ...\n"
 
-# On strike?
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "CHYBA: rúra nechce prerollovať.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Rúra je v stave PREROLLED ...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Nastavujem rúru na HRAJÚCU ...\n"
-
-# On strike?
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "CHYBA: Rúra nechce hrať.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS pri vypnutí je povolený -- Vynucujem EOS pre rúru\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS pri vypnutí je povolený -- čakám na EOS po chybe\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Čakám na EOS...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "Prijatý EOS - zastavujem rúru ...\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Prerušenie počas čakania na EOS - zastavujem rúru ...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Počas čakania na EOS nastala chyba\n"
-
 msgid "Execution ended after %"
 msgstr "Vykonávanie skončilo po %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Nastavujem rúru na PRIPRAVENÚ ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Nastavujem rúru na NULOVÚ ...\n"
@@ -1349,27 +1386,21 @@ msgstr "Nastavujem rúru na NULOVÚ ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Uvoľňujem rúru ...\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Chyba pri zatváraní súboru \"%s\"."
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Chyba pri zatváraní súboru \"%s\"."
-
-#, fuzzy
-#~ msgid "Error reading from console: %s\n"
-#~ msgstr "Chyba pri opätovnom skenovaní registrov %s: %s"
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Chyba pri zápise do súboru \"%s\"."
-
 #~ msgid "bin"
 #~ msgstr "zásobník"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Vnútorná chyba prúdu údajov."
+
+# On strike?
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "CHYBA: Rúra sa nechce pozastaviť.\n"
+
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "EOS pri vypnutí je povolený -- čakám na EOS po chybe\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Nastavujem rúru na PRIPRAVENÚ ...\n"
 
 #~ msgid "link without source element"
 #~ msgstr "pripojenie bez zdrojového prvku"
@@ -1421,6 +1452,9 @@ msgstr "Uvoľňujem rúru ...\n"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Vypisovať stopu alokácie (ak je to povolené pri kompilácii)"
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "Chyba pri opätovnom skenovaní registrov %s: %s"
 
 #~ msgid "Error re-scanning registry %s"
 #~ msgstr "Chyba pri opätovnom skenovaní registrov %s"

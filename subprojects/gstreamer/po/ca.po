@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n!=1;\n"
 
 msgid "Print the GStreamer version"
@@ -95,6 +96,7 @@ msgstr "Opcions del GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Mostra les opcions del GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Opció desconeguda"
 
@@ -840,8 +842,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -863,6 +870,9 @@ msgstr ""
 "Informació de depuració addicional:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -877,6 +887,14 @@ msgstr "no hi ha cap propietat «%s» en l'element «%s»"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "no s'ha pogut establir la propietat «%s» en l'element «%s» a «%s»"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "El fitxer «%s» és un sòcol."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "no s'ha pogut establir la propietat «%s» en l'element «%s» a «%s»"
 
 msgid "Delayed linking failed."
@@ -1063,6 +1081,10 @@ msgstr ""
 msgid "controllable"
 msgstr "controlable"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "controlable"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "es pot canviar als estats NUL, PREPARAT, EN PAUSA o REPRODUINT"
 
@@ -1141,8 +1163,11 @@ msgstr ""
 "Mostra els esquemes d'URI implementats, amb els elements que els implementen"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1155,6 +1180,12 @@ msgstr "L'element o connector «%s» no existeix\n"
 
 msgid "Index statistics"
 msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "S'està establint el conducte a REPRODUINT…\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ERROR: el conducte no vol reproduir-se.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1175,6 +1206,9 @@ msgstr "S'ha rebut el missatge %u: (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "S'ha obtingut un final del flux de l'element «%s».\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "S'ha rebut un final del flux - s'està aturant el conducte…\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1215,6 +1249,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "AVÍS: des de l'element %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "El conducte s'ha PREPARAT…\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 "S'ha preparat, s'està esperant a que s'òmpliga la memòria intermèdial…\n"
@@ -1231,6 +1268,7 @@ msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 "S'està omplert la memòria intermèdia, s'estableix el conducte REPRODUINT…\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
 "S'està omplint la memòria intermèdia, s'estableix el conducte a EN PAUSA…\n"
@@ -1243,8 +1281,22 @@ msgstr "Redistribució de la latència…\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "S'està establint l'estat a %s a petició de %s…\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrupció: S'està aturant el conducte…\n"
+
+#, fuzzy
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Interrupció: S'està aturant el conducte…\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+"S'ha habilitat el final del flux en tancar -- S'està forçant un final del "
+"flux al conducte\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "S'està esperant al final del flux…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1257,6 +1309,16 @@ msgstr "no hi ha cap element «%s»"
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "AVÍS: des de l'element %s: %s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ERROR: el conducte no vol preparar-se.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "S'ha produït un error en esperar al final del flux\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Mostra els marcadors (també coneguts com metadades)"
@@ -1290,6 +1352,17 @@ msgstr "Força el final del flux abans de tancar el conducte"
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERROR: no s'ha pogut construir el conducte: %s.\n"
@@ -1307,8 +1380,9 @@ msgstr "ERROR: l'element «conducte» no s'ha trobat.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "S'està establint el conducte a EN PAUSA…\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "ERROR: el conducte no es vol posar en pausa.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "S'està establint el conducte a EN PAUSA…\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "El conducte és en directe i no necessita PREPARACIÓ…\n"
@@ -1316,47 +1390,8 @@ msgstr "El conducte és en directe i no necessita PREPARACIÓ…\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "El conducte s'està PREPARANT…\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ERROR: el conducte no vol preparar-se.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "El conducte s'ha PREPARAT…\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "S'està establint el conducte a REPRODUINT…\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "ERROR: el conducte no vol reproduir-se.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-"S'ha habilitat el final del flux en tancar -- S'està forçant un final del "
-"flux al conducte\n"
-
-#, fuzzy
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-"S'ha habilitat el final del flux en tancar -- S'està forçant un final del "
-"flux al conducte\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "S'està esperant al final del flux…\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "S'ha rebut un final del flux - s'està aturant el conducte…\n"
-
-#, fuzzy
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interrupció: S'està aturant el conducte…\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "S'ha produït un error en esperar al final del flux\n"
-
 msgid "Execution ended after %"
 msgstr "L'execució ha finalitzat després de %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "S'està establint el conducte a PREPARAT…\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "S'està establint el conducte a NUL…\n"
@@ -1364,50 +1399,31 @@ msgstr "S'està establint el conducte a NUL…\n"
 msgid "Freeing pipeline ...\n"
 msgstr "S'està alliberant el conducte…\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "S'ha produït un error en carregar %s\n"
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "S'ha produït un error en carregar %s\n"
-
-#, fuzzy
-#~ msgid "Error reading from console: %s\n"
-#~ msgstr "S'ha produït un error en carregar %s\n"
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "S'ha produït un error en escriure al fitxer «%s»."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "S'ha produït un error intern de flux de dades."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "No mostres informació d'estat de TIPUS"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TIPUS1,TIPUS2,…"
-
 #~ msgid "link without source element"
 #~ msgstr "l'enllaç no té un element font"
 
 #~ msgid "link without sink element"
 #~ msgstr "l'enllaç no té un element sortida"
 
+#, c-format
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "no hi ha cap element el qual enllaçar a l'URI «%s»"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Imprimeix una traça d'alloc (si s'ha habilitat al compilar)"
+#~ msgid "Internal data stream error."
+#~ msgstr "S'ha produït un error intern de flux de dades."
+
+#~ msgid "maximum"
+#~ msgstr "màxim"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
 #~ "Forma d'ús: gst-xmllaunch <file.xml> [ element.propietat=valor … ]\n"
 
+#, c-format
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "ERROR: l'anàlisi del fitxer xml «%s» ha fallat.\n"
 
+#, c-format
 #~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 #~ msgstr ""
 #~ "ERROR: no hi ha cap conducte de nivell superior en el fitxer «%s».\n"
@@ -1415,12 +1431,20 @@ msgstr "S'està alliberant el conducte…\n"
 #~ msgid "WARNING: only one toplevel element is supported at this time.\n"
 #~ msgstr "AVÍS: només es gestiona un element de primer nivell ara mateix.\n"
 
+#, c-format
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
 #~ msgstr ""
 #~ "ERROR: no s'ha pogut analitzar l'argument de la línia d'ordres %d: %s.\n"
 
+#, c-format
 #~ msgid "WARNING: element named '%s' not found.\n"
 #~ msgstr "AVÍS: no s'ha trobat l'element anomenat «%s».\n"
+
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "No mostres informació d'estat de TIPUS"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "TIPUS1,TIPUS2,…"
 
 #~ msgid "Save xml representation of pipeline to FILE and exit"
 #~ msgstr "Desa la representació xml del conducte a FITXER i surt"
@@ -1430,6 +1454,15 @@ msgstr "S'està alliberant el conducte…\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "No instaŀles gestors de senyals per a SIGUSR1 i SIGUSR2"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Imprimeix una traça d'alloc (si s'ha habilitat al compilar)"
+
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "ERROR: el conducte no es vol posar en pausa.\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "S'està establint el conducte a PREPARAT…\n"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr ""
@@ -1597,6 +1630,9 @@ msgstr "S'està alliberant el conducte…\n"
 
 #~ msgid "Trying to load %s ...\n"
 #~ msgstr "S'està intentant carregar %s…\n"
+
+#~ msgid "Error loading %s\n"
+#~ msgstr "S'ha produït un error en carregar %s\n"
 
 #~ msgid "Loaded %d plugins with %d %s.\n"
 #~ msgstr "S'han carregat %d connectors amb %d %s.\n"

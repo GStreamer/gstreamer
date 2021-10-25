@@ -11,8 +11,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -20,6 +20,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Print the GStreamer version"
@@ -96,6 +97,7 @@ msgstr "GStreamerin valitsimet"
 msgid "Show GStreamer Options"
 msgstr "Näytä GStreamerin valitsimet"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Tuntematon valitsin"
 
@@ -838,8 +840,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -861,6 +868,9 @@ msgstr ""
 "Lisätietoja vianetsintään:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -875,6 +885,14 @@ msgstr "ominaisuutta ”%s” ei ole elementissä ”%s”"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "elementin ”%2$s” ominaisuutta ”%1$s” ei voitu asettaa arvoon ”%3$s”"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Tiedosto ”%s” on pistoke."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "elementin ”%2$s” ominaisuutta ”%1$s” ei voitu asettaa arvoon ”%3$s”"
 
 msgid "Delayed linking failed."
@@ -1061,6 +1079,10 @@ msgstr ""
 msgid "controllable"
 msgstr "ohjattavissa"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "ohjattavissa"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "vaihdettavissa TYHJÄ-, VALMIS-, TAUOLLA- tai SOI-tiloissa"
 
@@ -1138,8 +1160,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Tulosta tuetut URI-skeemat sekä ne toteuttavat elementit"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1152,6 +1177,12 @@ msgstr "Ei tällaista elementtiä tai liitännäistä ”%s”\n"
 
 msgid "Index statistics"
 msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Asetetaan liukuhihna tilaan SOI...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "VIRHE: Liukuhihna ei halua toistaa.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1172,6 +1203,9 @@ msgstr "Saatiin viesti #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Saatiin EOS (virran loppu) elementiltä ”%s”.\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Virran-loppu vastaanotettu - pysäytetään liukuhihna...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1212,6 +1246,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "VAROITUS: elementiltä %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Liukuhihna on ESIRULLATTU...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Esipyöritetty, odotetaan puskuroinnin päättymistä...\n"
 
@@ -1225,6 +1262,7 @@ msgstr "puskuroidaan..."
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Puskurointi tehty, asetetaan liukuhihna tilaan SOI...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Puskuroidaan, asetetaan liukuhihna tilaan TAUOLLA...\n"
 
@@ -1235,8 +1273,22 @@ msgstr "Uudelleenjaa latenssi...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Asetetaan tilaan %s kuten %s pyysi...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Keskeytys: Pysäytetään liukuhihna ...\n"
+
+#, fuzzy
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Keskeytys: Pysäytetään liukuhihna ...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+"Virran-loppu sammutettaessa käytössä -- pakotetaan virran-loppu "
+"liukuhihnalle\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Odotetaan virran loppua...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1249,6 +1301,16 @@ msgstr "ei elementtiä ”%s”"
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "VAROITUS: elementiltä %s: %s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "VIRHE: Liukuhihna ei halua esirullautua.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Tapahtui virhe odotettaessa virran-loppua\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Tulostemerkinnät (tunnetaan myös metadatana)"
@@ -1282,6 +1344,17 @@ msgstr "Pakota virran-loppu lähteille ennen liukuhihan sammuttamista"
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "VIRHE: liukuhihnaa ei voitu rakentaa: %s.\n"
@@ -1299,8 +1372,9 @@ msgstr "VIRHE: ”liukuhihna”-elementtiä ei löytynyt.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Asetetaan liukuhihna tilaan TAUOLLA...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "VIRHE: Liukuhihna ei halua mennä tauolle.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Asetetaan liukuhihna tilaan TAUOLLA...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Liukuhihna on käynnissä eikä sitä tarvitse ESIRULLATA...\n"
@@ -1308,47 +1382,8 @@ msgstr "Liukuhihna on käynnissä eikä sitä tarvitse ESIRULLATA...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Liukuhihna ESIRULLAUTUU...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "VIRHE: Liukuhihna ei halua esirullautua.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Liukuhihna on ESIRULLATTU...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Asetetaan liukuhihna tilaan SOI...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "VIRHE: Liukuhihna ei halua toistaa.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-"Virran-loppu sammutettaessa käytössä -- pakotetaan virran-loppu "
-"liukuhihnalle\n"
-
-#, fuzzy
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-"Virran-loppu sammutettaessa käytössä -- pakotetaan virran-loppu "
-"liukuhihnalle\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Odotetaan virran loppua...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "Virran-loppu vastaanotettu - pysäytetään liukuhihna...\n"
-
-#, fuzzy
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Keskeytys: Pysäytetään liukuhihna ...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Tapahtui virhe odotettaessa virran-loppua\n"
-
 msgid "Execution ended after %"
 msgstr "Suoritus päättyi jälkeen %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Asetetaan liukuhihna tilaan VALMIS...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Asetetaan liukuhihna tilaan TYHJÄ...\n"
@@ -1356,61 +1391,50 @@ msgstr "Asetetaan liukuhihna tilaan TYHJÄ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Vapautetaan liukuhihna...\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Virhe ladattaessa %s\n"
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Virhe ladattaessa %s\n"
-
-#, fuzzy
-#~ msgid "Error reading from console: %s\n"
-#~ msgstr "Virhe uudelleenskannatessa rekisteriä %s: %s"
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Virhe kirjoitettaessa tiedostoon ”%s”."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Sisäinen tietovirtavirhe."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Älä tulosta tilatietoa TYYPPI"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TYYPPI1,TYYPPI2,..."
-
 #~ msgid "link without source element"
 #~ msgstr "linkki ilman lähde-elementtiä"
 
 #~ msgid "link without sink element"
 #~ msgstr "linkki ilman nieluelementtiä"
 
+#, c-format
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "ei elementtiä, jota linkittää URIin ”%s”"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Tulosta varausjälki (jos valittu käännöksen yhteydessä)"
+#~ msgid "Internal data stream error."
+#~ msgstr "Sisäinen tietovirtavirhe."
+
+#~ msgid "maximum"
+#~ msgstr "enintään"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
 #~ "Käyttö: gst-xmllaunch <tiedosto.xml> [ elementti.ominaisuus=arvo ... ]\n"
 
+#, c-format
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "VIRHE: XML-tiedoston ”%s” jäsentäminen epäonnistui.\n"
 
+#, c-format
 #~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 #~ msgstr "VIRHE: päätason liukuhihnaelementtiä ei ole tiedostossa ”%s”.\n"
 
 #~ msgid "WARNING: only one toplevel element is supported at this time.\n"
 #~ msgstr "VAROITUS: vain yhtä päätason elementtiä tuetaan tällä kertaa.\n"
 
+#, c-format
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
 #~ msgstr "VIRHE: ei voitu jäsentää komentoriviargumenttia %d: %s.\n"
 
+#, c-format
 #~ msgid "WARNING: element named '%s' not found.\n"
 #~ msgstr "VAROITUS: elementtiä nimeltä ”%s” ei löytynyt.\n"
+
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "Älä tulosta tilatietoa TYYPPI"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "TYYPPI1,TYYPPI2,..."
 
 #~ msgid "Save xml representation of pipeline to FILE and exit"
 #~ msgstr "Tallenna liukuhihnan XML-esitys TIEDOSTOon ja poistu"
@@ -1420,6 +1444,18 @@ msgstr "Vapautetaan liukuhihna...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Älä asenna SIGUSR1- ja SIGUSR2-signaalinkäsittelijöitä"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Tulosta varausjälki (jos valittu käännöksen yhteydessä)"
+
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "VIRHE: Liukuhihna ei halua mennä tauolle.\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Asetetaan liukuhihna tilaan VALMIS...\n"
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "Virhe uudelleenskannatessa rekisteriä %s: %s"
 
 #~ msgid "Error re-scanning registry %s"
 #~ msgstr "Virhe uudelleenskannatessa rekisteriä %s"
@@ -1485,6 +1521,9 @@ msgstr "Vapautetaan liukuhihna...\n"
 
 #~ msgid "Trying to load %s ...\n"
 #~ msgstr "Yritetään ladata %s ...\n"
+
+#~ msgid "Error loading %s\n"
+#~ msgstr "Virhe ladattaessa %s\n"
 
 #~ msgid "Loaded %d plugins with %d feature.\n"
 #~ msgid_plural "Loaded %d plugins with %d features.\n"

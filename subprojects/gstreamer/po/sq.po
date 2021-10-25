@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -14,6 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Print the GStreamer version"
@@ -94,6 +95,7 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "Printo versionin e GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr ""
 
@@ -673,9 +675,8 @@ msgid ""
 "according to WGS84 (zero is average sea level)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location country"
-msgstr "pozicioni"
+msgstr ""
 
 msgid "country (english name) where the media has been recorded or produced"
 msgstr ""
@@ -687,33 +688,29 @@ msgstr "pozicioni"
 msgid "city (english name) where the media has been recorded or produced"
 msgstr ""
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "pozicioni"
+msgstr ""
 
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "pozicioni"
+msgstr ""
 
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "pozicioni"
+msgstr ""
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "pozicioni"
+msgstr ""
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
@@ -721,9 +718,8 @@ msgid ""
 "means the geographic north, and increases clockwise"
 msgstr ""
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "pozicioni"
+msgstr ""
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
@@ -760,9 +756,8 @@ msgstr "numri i diskut"
 msgid "The season number of the show the media is part of"
 msgstr ""
 
-#, fuzzy
 msgid "lyrics"
-msgstr "liçenca"
+msgstr ""
 
 msgid "The lyrics of the media, commonly used for songs"
 msgstr ""
@@ -770,9 +765,8 @@ msgstr ""
 msgid "composer sortname"
 msgstr ""
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "personi(at) përgjegjës për regjistrimin"
+msgstr ""
 
 msgid "grouping"
 msgstr ""
@@ -805,13 +799,11 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "versioni i kodifikuesit të përdorur për të kodifikuar këtë fluks"
 
-#, fuzzy
 msgid "application name"
-msgstr "pozicioni"
+msgstr ""
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "versioni i kodifikuesit të përdorur për të kodifikuar këtë fluks"
+msgstr ""
 
 msgid "application data"
 msgstr ""
@@ -849,8 +841,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -872,6 +869,9 @@ msgstr ""
 "Informacione shtesë të debug:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -886,6 +886,14 @@ msgstr "asnjë pronësi \"%s\" tek elementi \"%s\""
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "e pamundur vendosja e pronësisë \"%s\" tek elementi \"%s\" në \"%s"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "File \"%s\" është një socket."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "e pamundur vendosja e pronësisë \"%s\" tek elementi \"%s\" në \"%s"
 
 msgid "Delayed linking failed."
@@ -982,7 +990,7 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "E pamundur marrja/vendosja e rregullimeve nga/në burim."
+msgstr "E pamundur hapja e file \"%s\" në shkrim."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -1047,9 +1055,8 @@ msgstr ""
 msgid "force caps without doing a typefind"
 msgstr ""
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
-msgstr "albumi që përmban këtë të dhënë"
+msgstr ""
 
 #, fuzzy
 msgid "Stream contains no data."
@@ -1062,14 +1069,16 @@ msgstr ""
 msgid "readable"
 msgstr ""
 
-#, fuzzy
 msgid "writable"
-msgstr "titulli"
+msgstr ""
 
 msgid "deprecated"
 msgstr ""
 
 msgid "controllable"
+msgstr ""
+
+msgid "conditionally available"
 msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
@@ -1084,9 +1093,9 @@ msgstr ""
 msgid "Blacklisted files:"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "numërimi i pjesës"
+msgstr ""
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1145,8 +1154,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, fuzzy, c-format
@@ -1159,6 +1171,12 @@ msgstr "asnjë element burues për URI \"%s\""
 
 msgid "Index statistics"
 msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr ""
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1179,6 +1197,9 @@ msgstr ""
 #, fuzzy, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "GABIM: nga elementi %s: %s\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr ""
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1216,6 +1237,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "GABIM: nga elementi %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr ""
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
@@ -1228,6 +1252,7 @@ msgstr ""
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
 
@@ -1238,7 +1263,18 @@ msgstr ""
 msgid "Setting state to %s as requested by %s...\n"
 msgstr ""
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
+msgstr ""
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr ""
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
 msgstr ""
 
 #, c-format
@@ -1252,6 +1288,17 @@ msgstr "asnjë element \"%s\""
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "GABIM: nga elementi %s: %s\n"
+
+#, fuzzy
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Tags e output (njohur gjithashtu si metadata)"
@@ -1286,6 +1333,17 @@ msgstr ""
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "GABIM: i pamundur ndërtimi i pipeline: %s.\n"
@@ -1303,9 +1361,8 @@ msgstr "GABIM: elementi 'konduktor' nuk u gjet.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#, fuzzy
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr ""
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
@@ -1313,42 +1370,8 @@ msgstr ""
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-#, fuzzy
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-
-msgid "Waiting for EOS...\n"
-msgstr ""
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr ""
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr ""
-
-msgid "An error happened while waiting for EOS\n"
-msgstr ""
-
 msgid "Execution ended after %"
 msgstr "Ekzekutimi përfundoi mbas %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr ""
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr ""
@@ -1356,71 +1379,6 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "DUKE ZBATUAR pipeline ...\n"
-
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Gabim gjatë ngarkimit të %s\n"
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Gabim gjatë ngarkimit të %s\n"
-
-#, fuzzy
-#~ msgid "Error reading from console: %s\n"
-#~ msgstr "Gabim gjatë ngarkimit të %s\n"
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Gabim gjatë shkrimit tek file \"%s\"."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Mos jep informacionin e gjendjes së LLOJIT"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "LLOJI1,LLOJI2,..."
-
-#~ msgid "link without source element"
-#~ msgstr "lidhje ma element burues"
-
-#~ msgid "link without sink element"
-#~ msgstr "lidhje pa elementin sink"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "asnjë element për të lidhur URI \"%s\" me"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Printo shenjat e alloc (nëse aktivuar në kohën e kompilimit)"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr ""
-#~ "Përdorimi: gst-xmllaunch <file.xml> [ element.property=vlera ... ]\n"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "GABIM: analizimi i file xml '%s' dështoi.\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr "GABIM: asnjë element i pipline të toplevel tek file '%s'.\n"
-
-#, fuzzy
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr "KUJDES: vetëm një element toplevel suportohet aktualisht."
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr ""
-#~ "GABIM: i pamundur analizimi i argumentit %d të rreshtit të komandës: %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "KUJDES: elementi me emrin '%s' nuk u gjet.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Ruaj prezantimin xml të pipeline tek FILE dhe dil"
-
-#~ msgid "FILE"
-#~ msgstr "FILE"
-
-#, fuzzy
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Mos instalo një ushqyes të dëmtuar"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Ç'aktivo instruksionet e përshpejtimit të CPU"
@@ -1434,9 +1392,11 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 #~ msgid "REGISTRY"
 #~ msgstr "REGJISTRI"
 
+#, c-format
 #~ msgid "path list for loading plugins (separated by '%s')"
 #~ msgstr "pozicioni i listës për ngarkimin e plugins (ndarë me '%s')"
 
+#, c-format
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Planifikuesi që duhet përdorur (i prezgjedhuri është '%s')"
 
@@ -1450,9 +1410,23 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 #~ msgid "original location of file as a URI"
 #~ msgstr "vendodhja orgjinale e file si një URI"
 
+#, c-format
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr ""
 #~ "Nuk ekziston asnjë element për të trajtuar llojin mime %s të fluksit."
+
+#~ msgid "maximum"
+#~ msgstr "maksimum"
+
+#~ msgid "link without source element"
+#~ msgstr "lidhje ma element burues"
+
+#~ msgid "link without sink element"
+#~ msgstr "lidhje pa elementin sink"
+
+#, c-format
+#~ msgid "no element to link URI \"%s\" to"
+#~ msgstr "asnjë element për të lidhur URI \"%s\" me"
 
 #~ msgid " iterations (sum %"
 #~ msgstr " përsëritjet (shuma %"
@@ -1469,23 +1443,70 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 #~ msgid " ns).\n"
 #~ msgstr " ns).\n"
 
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr ""
+#~ "Përdorimi: gst-xmllaunch <file.xml> [ element.property=vlera ... ]\n"
+
+#, c-format
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "GABIM: analizimi i file xml '%s' dështoi.\n"
+
+#, c-format
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr "GABIM: asnjë element i pipline të toplevel tek file '%s'.\n"
+
+#, c-format
+#~ msgid "WARNING: only one toplevel element is supported at this time."
+#~ msgstr "KUJDES: vetëm një element toplevel suportohet aktualisht."
+
+#, c-format
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr ""
+#~ "GABIM: i pamundur analizimi i argumentit %d të rreshtit të komandës: %s.\n"
+
+#, c-format
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "KUJDES: elementi me emrin '%s' nuk u gjet.\n"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "LLOJI1,LLOJI2,..."
+
+#~ msgid "Save xml representation of pipeline to FILE and exit"
+#~ msgstr "Ruaj prezantimin xml të pipeline tek FILE dhe dil"
+
+#~ msgid "FILE"
+#~ msgstr "FILE"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Printo shenjat e alloc (nëse aktivuar në kohën e kompilimit)"
+
 #~ msgid "Number of times to iterate pipeline"
 #~ msgstr "Numri i herëve të përsëritjes së kanalit"
 
+#, c-format
 #~ msgid "         Trying to run anyway.\n"
 #~ msgstr "         Duke u përpjekur të zbatohet sidoqoftë.\n"
 
+#, c-format
 #~ msgid "Added plugin %s with %d %s.\n"
 #~ msgstr "U shtua plugin %s me %d %s.\n"
 
+#, c-format
 #~ msgid "Added path   %s to %s \n"
 #~ msgstr "U shtua pozicioni   %s tek %s \n"
 
+#, c-format
 #~ msgid "Rebuilding %s (%s) ...\n"
 #~ msgstr "Duke rindërtuar %s (%s) ...\n"
 
+#, c-format
 #~ msgid "Trying to load %s ...\n"
 #~ msgstr "Duke u përpjekur të ngarkoj %s ...\n"
 
+#, c-format
+#~ msgid "Error loading %s\n"
+#~ msgstr "Gabim gjatë ngarkimit të %s\n"
+
+#, c-format
 #~ msgid "Loaded %d plugins with %d %s.\n"
 #~ msgstr "U ngarkuan %d plugins me %d %s.\n"

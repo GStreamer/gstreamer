@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2010-06-07 22:01+0100\n"
 "Last-Translator: astur <maacub@gmail.com>\n"
 "Language-Team: Asturian <ubuntu-l10n-ast@lists.ubuntu.com>\n"
@@ -97,6 +97,7 @@ msgstr "Opciones de GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Amosar opciones de GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Opción desconocía"
 
@@ -836,8 +837,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -859,6 +865,9 @@ msgstr ""
 "Información adicional de depuráu:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -873,6 +882,14 @@ msgstr "nun esiste la propiedá «%s» nel elementu «%s»"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "nun pudo afitase la propiedá \"%s\" nel elementu \"%s\" a \"%s\""
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "El ficheru \"%s\" ye un socket."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "nun pudo afitase la propiedá \"%s\" nel elementu \"%s\" a \"%s\""
 
 msgid "Delayed linking failed."
@@ -1058,6 +1075,10 @@ msgstr ""
 msgid "controllable"
 msgstr "controlable"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "controlable"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr ""
 
@@ -1136,8 +1157,11 @@ msgstr ""
 "Imprentar los esquemes URI sofitaos, colos elementos que los implementen"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1150,6 +1174,12 @@ msgstr "Nun esiste l'elementu o complementu «%s»\n"
 
 msgid "Index statistics"
 msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Afitando'l fluxu pa REPRODUCCIÓN ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "FALLU: el fluxu nun quier reproducise.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1170,6 +1200,9 @@ msgstr "Obtúvose'l mensax #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "¿Obtuvo EOS dende l'elementu \"%s\".?\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS recibíu: parando'l conductu …\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1210,6 +1243,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ATENCIÓN: dende l'elementu %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "El fluxu ta precacheáu ...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Pre-endolcáu, esperando al buffer a que fine...\n"
 
@@ -1223,6 +1259,7 @@ msgstr "atroxando nel búfer…"
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Atroxáu, afite la tubería a REPRODUCIENDO...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Atroxando, afite la tubería a PAUSA...\n"
 
@@ -1233,8 +1270,20 @@ msgstr "Redistribuyir llatencia…\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Afitando l'estáu a %s según lo solicitó %s…\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrumpir: parando'l conductu …\n"
+
+#, fuzzy
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Interrumpir: parando'l conductu …\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS al apagar activáu; Forciando EOS na tubería\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Esperando a EOS…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1247,6 +1296,16 @@ msgstr "nun esiste l'elementu «%s»"
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "ATENCIÓN: dende l'elementu %s: %s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "FALLU: El fluxu nun quier precachease.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Asocedió un fallu al esperar a EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Etiquetes de salides (tamién conocíes como metadatos)"
@@ -1280,6 +1339,17 @@ msgstr "Forciar EOS nes fontes enantes de zarrar la tubería"
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FALLU: nun pudo criase la conexón: %s.\n"
@@ -1297,8 +1367,9 @@ msgstr "FALLU: Nun s'atopó l'elementu de «conexón».\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Afitando'l fluxu a POSÁU ...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "FALLU: El fluxu nun quier ponese en posa.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Afitando'l fluxu a POSÁU ...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "El fluxu ye en vivo y nun necesita PRECACHEÁU ...\n"
@@ -1306,43 +1377,8 @@ msgstr "El fluxu ye en vivo y nun necesita PRECACHEÁU ...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "El fluxu ta PRECACHEÁNDOSE ...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "FALLU: El fluxu nun quier precachease.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "El fluxu ta precacheáu ...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Afitando'l fluxu pa REPRODUCCIÓN ...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "FALLU: el fluxu nun quier reproducise.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS al apagar activáu; Forciando EOS na tubería\n"
-
-#, fuzzy
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS al apagar activáu; Forciando EOS na tubería\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Esperando a EOS…\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "EOS recibíu: parando'l conductu …\n"
-
-#, fuzzy
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interrumpir: parando'l conductu …\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Asocedió un fallu al esperar a EOS\n"
-
 msgid "Execution ended after %"
 msgstr "La execución finó tres de %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Afitando pipeline a READY...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Afitando pipeline a NULL...\n"
@@ -1350,24 +1386,13 @@ msgstr "Afitando pipeline a NULL...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Lliberando la tubería…\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Fallu al zarrar el ficheru \"%s\"."
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Fallu al zarrar el ficheru \"%s\"."
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Fallu al escribir al ficheru \"%s\"."
-
 #~ msgid "link without source element"
 #~ msgstr "enllaz ensin elementos de fonte"
 
 #~ msgid "link without sink element"
 #~ msgstr "enllaz ensin elementu sink"
 
+#, c-format
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "nun hai dengún elementu au apunta'l URI \"%s\""
 
@@ -1380,9 +1405,11 @@ msgstr "Lliberando la tubería…\n"
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr "Usu: gst-xmllaunch <ficheru.xml> [ elementu.propiedá=valor ... ]\n"
 
+#, c-format
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "ERROR: falló l'analís del ficheru xml «%s».\n"
 
+#, c-format
 #~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 #~ msgstr ""
 #~ "FALLU: nun hai elementos de fluxu de primer nivel nel ficheru «%s».\n"
@@ -1391,10 +1418,12 @@ msgstr "Lliberando la tubería…\n"
 #~ msgstr ""
 #~ "ALVERTENCIA: nesti intre namái se sofita un elementu de nivel superior.\n"
 
+#, c-format
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
 #~ msgstr ""
 #~ "FALLU: nun pudo analizase l'argumentu %d de la llinia d'órdenes: %s.\n"
 
+#, c-format
 #~ msgid "WARNING: element named '%s' not found.\n"
 #~ msgstr "AVISU: elementu '%s' non alcontráu.\n"
 
@@ -1412,3 +1441,9 @@ msgstr "Lliberando la tubería…\n"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Imprentar la traza d'asignaciones (si s'activó al compilar)"
+
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "FALLU: El fluxu nun quier ponese en posa.\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Afitando pipeline a READY...\n"

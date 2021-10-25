@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2019-02-05 18:22+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -97,6 +97,7 @@ msgstr "GStreamer-alternativ"
 msgid "Show GStreamer Options"
 msgstr "Visa GStreamer-alternativ"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Okänt alternativ"
 
@@ -831,8 +832,13 @@ msgstr "privat-data"
 msgid "Private data"
 msgstr "Privat data"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -854,6 +860,9 @@ msgstr ""
 "Ytterligare felsökningsinformation:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "länk har ingen källa [utgång=%s@%p]"
@@ -868,6 +877,14 @@ msgstr "ingen ”%s”-egenskap i elementet ”%s”"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "kunde inte ställa in egenskapen ”%s” i elementet ”%s” till ”%s”"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Filen ”%s” är ett uttag."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "kunde inte ställa in egenskapen ”%s” i elementet ”%s” till ”%s”"
 
 msgid "Delayed linking failed."
@@ -1053,6 +1070,10 @@ msgstr "föråldrad"
 msgid "controllable"
 msgstr "kontrollerbar"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "kontrollerbar"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "ändringsbart i tillstånden NULL, READY, PAUSED eller PLAYING"
 
@@ -1137,12 +1158,16 @@ msgstr ""
 "Skriv ut uri-scheman som stöds, tillsammans med elementen som implementerar "
 "dem"
 
+#, fuzzy
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
 "Inaktivera färger i utdata. Du kan också åstadkomma detsamma genom att sätta "
 "miljövariabeln ”GST_INSPECT_NO_COLORS” till vilket värde som helst."
+
+msgid "Color output, even when not sending to a tty."
+msgstr ""
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1154,6 +1179,12 @@ msgstr "Inget sådant element eller insticksmodul ”%s”\n"
 
 msgid "Index statistics"
 msgstr "Indexstatistik"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Ställer in rörledningen till PLAYING...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "FEL: rörledningen vill inte spela.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1174,6 +1205,9 @@ msgstr "Fick meddelande #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Fick EOS från element ”%s”.\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS togs emot - stoppar rörledning...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1213,6 +1247,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "VARNING: från elementet %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Rörledningen har utfört PREROLL...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Förinläst, väntar på att buffringen ska bli färdig...\n"
 
@@ -1225,6 +1262,7 @@ msgstr "buffrar..."
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Färdig med buffringen, ställer in rörledningen till PLAYING...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Buffrar, ställer in rörledningen till PAUSED...\n"
 
@@ -1235,8 +1273,19 @@ msgstr "Fördröjning för vidaresändning...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Ställer in tillståndet till %s enligt begäran från %s...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Avbrott: Stoppar rörledningen ...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Avbrott medan EOS väntades på: Stoppar rörledningen...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS vid avstängning aktiverad -- Tvingar EOS på rörledningen\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Väntar på EOS...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1249,6 +1298,16 @@ msgstr "Element saknas: %s\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Fick kontext från elementet ”%s”: %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "FEL: rörledningen vill inte utföra preroll.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Ett fel inträffade vid väntan på EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Mata ut taggar (även känt som metadata)"
@@ -1284,6 +1343,17 @@ msgstr "Tvinga EOS på källor innan rörledningen stängs av"
 msgid "Gather and print index statistics"
 msgstr "Samla och skriv ut indexstatistik"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras: %s.\n"
@@ -1301,8 +1371,9 @@ msgstr "FEL: ”pipeline”-elementet hittades inte.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Ställer in rörledningen till PAUSED...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "FEL: Rörledningen vill inte göra paus.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Ställer in rörledningen till PAUSED...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Rörledningen lever och behöver inte PREROLL ...\n"
@@ -1310,41 +1381,8 @@ msgstr "Rörledningen lever och behöver inte PREROLL ...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Rörledningen utför PREROLL...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "FEL: rörledningen vill inte utföra preroll.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Rörledningen har utfört PREROLL...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Ställer in rörledningen till PLAYING...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "FEL: rörledningen vill inte spela.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS vid avstängning aktiverad -- Tvingar EOS på rörledningen\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS vid avstängning aktiverad -- Väntar på EOS efter fel\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Väntar på EOS...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "EOS togs emot - stoppar rörledning...\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Avbrott medan EOS väntades på: Stoppar rörledningen...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Ett fel inträffade vid väntan på EOS\n"
-
 msgid "Execution ended after %"
 msgstr "Körning avslutades efter %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Ställer in rörledningen till READY...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Ställer in rörledningen till NULL...\n"
@@ -1352,17 +1390,30 @@ msgstr "Ställer in rörledningen till NULL...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Frigör rörledning ...\n"
 
+#, c-format
 #~ msgid "Error creating pipe: %s\n"
 #~ msgstr "Fel vid stängning av rörledning: %s\n"
 
+#, c-format
 #~ msgid "Error forking: %s\n"
 #~ msgstr "Fel vid processgrening: %s\n"
 
+#, c-format
 #~ msgid "Error reading from console: %s\n"
 #~ msgstr "Fel vid läsning från konsol: %s\n"
 
+#, c-format
 #~ msgid "Error writing to console: %s\n"
 #~ msgstr "Fel vid skrivning till konsol: %s\n"
+
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "FEL: Rörledningen vill inte göra paus.\n"
+
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "EOS vid avstängning aktiverad -- Väntar på EOS efter fel\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Ställer in rörledningen till READY...\n"
 
 #~ msgid "bin"
 #~ msgstr "korg"

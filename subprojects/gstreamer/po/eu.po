@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -16,6 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: KBabel 1.11.4\n"
 
@@ -97,6 +98,7 @@ msgstr "GStreamer-en aukerak"
 msgid "Show GStreamer Options"
 msgstr "Erakutsi GStreamer-en aukerak"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Aukera ezezaguna"
 
@@ -801,9 +803,8 @@ msgstr "korronte hau kodetzeko erabili den kodetzailearen bertsioa"
 msgid "application name"
 msgstr "geolokalizazioaren izena"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "korronte hau kodetzeko erabili den kodetzailearen bertsioa"
+msgstr ""
 
 msgid "application data"
 msgstr ""
@@ -841,8 +842,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -864,6 +870,9 @@ msgstr ""
 "Arazketa-informazio gehigarria:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -878,6 +887,15 @@ msgstr "ez dago \"%s\" propietaterik \"%s\" elementuan"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+"ezin izan da ezarri \"%2$s\" elementuko \"%1$s\" propietatea honela: \"%3$s\""
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "\"%s\" fitxategia socket-a da."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr ""
 "ezin izan da ezarri \"%2$s\" elementuko \"%1$s\" propietatea honela: \"%3$s\""
 
@@ -1065,6 +1083,10 @@ msgstr ""
 msgid "controllable"
 msgstr "kontrola daitekeena"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "kontrola daitekeena"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr ""
 
@@ -1143,8 +1165,11 @@ msgstr ""
 "Erakutsi onartutako URI eskemak, haiek inplementatzen dituzten elementuekin"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1157,6 +1182,12 @@ msgstr "'%s' elementua edo plugina ez da existitzen\n"
 
 msgid "Index statistics"
 msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Kanalizazioa ERREPRODUZITZEA gisa ezartzen... \n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ERROREA: ezin da kanalizazioa erreproduzitu.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1177,6 +1208,9 @@ msgstr "%u. (%s) mezua jaso da: "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "\"%s\" elementuaren EOS bat jaso da.\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOSa jasota - kanalizazioa gelditzen...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1217,6 +1251,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ABISUA,  %s elementuarena: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Kanalizazioa PRESTATUA dago... \n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Prestatu da; bufferreratzen bukatu zain...\n"
 
@@ -1231,6 +1268,7 @@ msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 "Bufferreratu da; kanalizazioaren ezarpena ERREPRODUZITZEA gisa jartzen... \n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Bufferreratzen; kanalizazioa PAUSARAZIA gisa ezartzen... \n"
 
@@ -1241,8 +1279,20 @@ msgstr "Latentzia birbanatzen...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Egoera %s(e)ra ezartzen %s(e)k eskatu bezala...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Eten: Kanalizazioa gelditzen... \n"
+
+#, fuzzy
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Eten: Kanalizazioa gelditzen... \n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS itzaltzean gaituta -- EOS derrigortzen kanalizazioan\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "EOSren zain...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1255,6 +1305,16 @@ msgstr "ez dago \"%s\" elementua"
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "ABISUA,  %s elementuarena: %s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ERROREA: ezin da kanalizazioa prestatu.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Errorea gertatu da EOSren zain egotean\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Erakutsi etiketak (metadatu gisa ere ezagutzen direnak)"
@@ -1288,6 +1348,17 @@ msgstr "Derrigortu EOS iturburuetan kanalizazioa itzali aurretik"
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERROREA: ezin izan da kanalizazioa eraiki: %s.\n"
@@ -1305,8 +1376,9 @@ msgstr "ERROREA: ezin izan da 'kanalizazio' elementua aurkitu.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Kanalizazioa PAUSARAZIA gisa ezartzen... \n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "ERROREA: ezin da kanalizazioa pausarazi.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Kanalizazioa PAUSARAZIA gisa ezartzen... \n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Kanalizazioa aktibo dago eta ez du PRESTATU beharrik...\n"
@@ -1314,43 +1386,8 @@ msgstr "Kanalizazioa aktibo dago eta ez du PRESTATU beharrik...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Kanalizazioa PRESTATZEN ari da... \n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ERROREA: ezin da kanalizazioa prestatu.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Kanalizazioa PRESTATUA dago... \n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Kanalizazioa ERREPRODUZITZEA gisa ezartzen... \n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "ERROREA: ezin da kanalizazioa erreproduzitu.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS itzaltzean gaituta -- EOS derrigortzen kanalizazioan\n"
-
-#, fuzzy
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS itzaltzean gaituta -- EOS derrigortzen kanalizazioan\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "EOSren zain...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "EOSa jasota - kanalizazioa gelditzen...\n"
-
-#, fuzzy
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Eten: Kanalizazioa gelditzen... \n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Errorea gertatu da EOSren zain egotean\n"
-
 msgid "Execution ended after %"
 msgstr "Erreprodukzioa amaitu egin da %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Kanalizazioa PREST gisa ezartzen... \n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Kanalizazioa NULUA gisa ezartzen... \n"
@@ -1358,47 +1395,32 @@ msgstr "Kanalizazioa NULUA gisa ezartzen... \n"
 msgid "Freeing pipeline ...\n"
 msgstr "Kanalizazioa askatzen...\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Errorea gertatu da \"%s\" fitxategia ixtean."
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Errorea gertatu da \"%s\" fitxategia ixtean."
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Errorea gertatu da \"%s\" fitxategian idaztean."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Datu-korrontearen barne-errorea."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Ez erakutsi MOTA hauetako egoera-informazioa:"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "1.MOTA, 2.MOTA..."
-
 #~ msgid "link without source element"
 #~ msgstr "iturburu-elementurik gabeko esteka"
 
 #~ msgid "link without sink element"
 #~ msgstr "kolektore-elementurik gabeko esteka"
 
+#, c-format
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "ez dago elementurik \"%s\" URIa hona estekatzeko:"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Inprimatu esleipenen segimendua (konpilatzean gaitu bada)"
+#~ msgid "Internal data stream error."
+#~ msgstr "Datu-korrontearen barne-errorea."
+
+#~ msgid "maximum"
+#~ msgstr "gehienezkoa"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
 #~ "Erabilera: gst-xmllaunch <fitxategia.xml> [ elementua."
 #~ "propietatea=balioa... ]\n"
 
+#, c-format
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "ERROREA: huts egin du '%s' xml fitxategia analizatzean.\n"
 
+#, c-format
 #~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 #~ msgstr ""
 #~ "ERROREA: ez dago goi-mailako kanalizazio-elementurik '%s' fitxategian.\n"
@@ -1406,12 +1428,20 @@ msgstr "Kanalizazioa askatzen...\n"
 #~ msgid "WARNING: only one toplevel element is supported at this time.\n"
 #~ msgstr "KONTUZ: goi-mailako elementu bat bakarra onartzen da oraingoan.\n"
 
+#, c-format
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
 #~ msgstr ""
 #~ "ERROREA: ezin izan da komando-lerroko %d. argumentua analizatu: %s.\n"
 
+#, c-format
 #~ msgid "WARNING: element named '%s' not found.\n"
 #~ msgstr "KONTUZ: ez da aurkitu '%s' izeneko elementua.\n"
+
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "Ez erakutsi MOTA hauetako egoera-informazioa:"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "1.MOTA, 2.MOTA..."
 
 #~ msgid "Save xml representation of pipeline to FILE and exit"
 #~ msgstr "Gorde kanalizazioen xml adierazpena FITXATEGIan eta irten"
@@ -1419,6 +1449,11 @@ msgstr "Kanalizazioa askatzen...\n"
 #~ msgid "FILE"
 #~ msgstr "FITXATEGIA"
 
-#, fuzzy
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Ez instalatu akats-maneiatzailerik"
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Inprimatu esleipenen segimendua (konpilatzean gaitu bada)"
+
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "ERROREA: ezin da kanalizazioa pausarazi.\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Kanalizazioa PREST gisa ezartzen... \n"

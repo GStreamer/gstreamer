@@ -107,8 +107,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2019-01-29 09:16+0100\n"
 "Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -213,6 +213,7 @@ msgstr "Opzioni di GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Mostra le opzioni di GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Opzione sconosciuta"
 
@@ -986,8 +987,13 @@ msgstr "dati privati"
 msgid "Private data"
 msgstr "dati privati"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -1009,6 +1015,9 @@ msgstr ""
 "Informazioni di debug aggiuntive:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "il collegamento non ha alcuna sorgente [sink=%s@%p]"
@@ -1023,6 +1032,14 @@ msgstr "nessuna proprietà «%s» nell'elemento «%s»"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "impossibile impostare la proprietà «%s» nell'elemento «%s» a «%s»"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Il file «%s» è un socket."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "impossibile impostare la proprietà «%s» nell'elemento «%s» a «%s»"
 
 msgid "Delayed linking failed."
@@ -1215,6 +1232,10 @@ msgstr "deprecato"
 msgid "controllable"
 msgstr "controllabile"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "controllabile"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "può passare allo stato  NULL, READY, PAUSED o PLAYING"
 
@@ -1310,13 +1331,17 @@ msgstr ""
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Stampa gli schemi URI supportati, con gli elementi che li implementano"
 
+#, fuzzy
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
 "Disabilita i colori sull'output, è possibile ottenere lo stesso risultato "
 "impostando la variabile d'ambiente GST_INSPECT_NO_COLORS con un valore "
 "qualsiasi"
+
+msgid "Color output, even when not sending to a tty."
+msgstr ""
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1328,6 +1353,12 @@ msgstr "Elemento o plugin «%s» inesistente\n"
 
 msgid "Index statistics"
 msgstr "Statistiche indice"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Impostazione della pipeline a PLAYING ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ERRORE: la pipeline non vuole riprodurre.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1348,6 +1379,9 @@ msgstr "Ottenuto messaggio #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Ottenuto EOS dall'elemento «%s».\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Ricevuto EOS - arresto della pipeline...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1387,6 +1421,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ATTENZIONE: dall'elemento %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "La pipeline è in PREROLLED ...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preroll eseguito, in attesa del riempimento buffer per completare...\n"
 
@@ -1400,6 +1437,7 @@ msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 "Riempimento buffer completato, impostazione della pipeline a PLAYING ...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Riempimento buffer, impostazione della pipeline a PAUSED ...\n"
 
@@ -1410,8 +1448,19 @@ msgstr "Ridistribuzione latenza...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Impostazione dello stato a %s come richiesto da %s...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrotto: arresto della pipeline ...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Interrotto durante l'atteso di EOS - arresto della pipeline...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS all'arresto abilitato -- Forzato EOS sulla pipeline\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "In attesa di EOS...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1424,6 +1473,16 @@ msgstr "Elemento mancante: %s\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Ottenuto contesto dall'elemento «%s»: %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ERRORE: la pipeline non vuole fare il preroll.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Si è verificato un errore durante l'attesa di EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 # -t, --tags
 msgid "Output tags (also known as metadata)"
@@ -1465,6 +1524,17 @@ msgstr "Forza EOS sulle sorgenti prima di arrestare la pipeline"
 msgid "Gather and print index statistics"
 msgstr "Recupera e stampa statistiche dell'indice"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERRORE: impossibile costruire la pipeline: %s.\n"
@@ -1482,8 +1552,9 @@ msgstr "ERRORE: l'elemento «pipeline» non è stato trovato.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Impostazione della pipeline a PAUSED ...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "ERRORE: la pipeline non vuole mettersi in pausa.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Impostazione della pipeline a PAUSED ...\n"
 
 # Sinks are special elements in GStreamer. This is because sink elements have to take care of preroll, which is the process that takes care that elements going into the GST_STATE_PAUSED state will have buffers ready after the state change. The result of this is that such elements can start processing data immediately after going into the GST_STATE_PLAYING state, without requiring to take some time to initialize outputs or set up decoders; all that is done already before the state-change to GST_STATE_PAUSED  successfully completes.
 #
@@ -1494,46 +1565,11 @@ msgstr "La pipeline è viva e non necessita il PREROLL ...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "La pipeline è in PREROLLING ...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ERRORE: la pipeline non vuole fare il preroll.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "La pipeline è in PREROLLED ...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Impostazione della pipeline a PLAYING ...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "ERRORE: la pipeline non vuole riprodurre.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS all'arresto abilitato -- Forzato EOS sulla pipeline\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-"EOS all'arresto abilitato -- atteso EOS dopo errore\n"
-"\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "In attesa di EOS...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "Ricevuto EOS - arresto della pipeline...\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interrotto durante l'atteso di EOS - arresto della pipeline...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Si è verificato un errore durante l'attesa di EOS\n"
-
 # secondo me quel % è un errore... magari dovrebbe
 # essere %d o %s, a meno che non costruscano il messagio
 # in qualche modo esoterico...
 msgid "Execution ended after %"
 msgstr "Esecuzione terminata dopo %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Impostazione della pipeline a READY ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Impostazione della pipeline a NULL ...\n"
@@ -1541,17 +1577,32 @@ msgstr "Impostazione della pipeline a NULL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Esecuzione di free sulla pipeline...\n"
 
+#, c-format
 #~ msgid "Error creating pipe: %s\n"
 #~ msgstr "Errore nel creare la pipe: %s\n"
 
+#, c-format
 #~ msgid "Error forking: %s\n"
 #~ msgstr "Errore nell'eseguire fork: %s\n"
 
+#, c-format
 #~ msgid "Error reading from console: %s\n"
 #~ msgstr "Errore nel leggere dalla console: %s\n"
 
+#, c-format
 #~ msgid "Error writing to console: %s\n"
 #~ msgstr "Errore nello scrivere sulla console: %s\n"
+
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "ERRORE: la pipeline non vuole mettersi in pausa.\n"
+
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr ""
+#~ "EOS all'arresto abilitato -- atteso EOS dopo errore\n"
+#~ "\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Impostazione della pipeline a READY ...\n"
 
 #~ msgid "link without source element"
 #~ msgstr "collegamento senza elemento sorgente"

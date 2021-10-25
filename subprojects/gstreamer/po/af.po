@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 
 msgid "Print the GStreamer version"
 msgstr "Vertoon die GStreamer weergawe"
@@ -90,6 +91,7 @@ msgstr "GStreamer Opsies"
 msgid "Show GStreamer Options"
 msgstr "Wys GStreamer opsies"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Onbekende opsie"
 
@@ -663,9 +665,8 @@ msgid ""
 "according to WGS84 (zero is average sea level)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location country"
-msgstr "ligging"
+msgstr ""
 
 msgid "country (english name) where the media has been recorded or produced"
 msgstr ""
@@ -677,33 +678,29 @@ msgstr "ligging"
 msgid "city (english name) where the media has been recorded or produced"
 msgstr ""
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "ligging"
+msgstr ""
 
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "ligging"
+msgstr ""
 
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "ligging"
+msgstr ""
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "ligging"
+msgstr ""
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
@@ -711,9 +708,8 @@ msgid ""
 "means the geographic north, and increases clockwise"
 msgstr ""
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "ligging"
+msgstr ""
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
@@ -750,9 +746,8 @@ msgstr "skyfnommer"
 msgid "The season number of the show the media is part of"
 msgstr ""
 
-#, fuzzy
 msgid "lyrics"
-msgstr "lisensie"
+msgstr ""
 
 msgid "The lyrics of the media, commonly used for songs"
 msgstr ""
@@ -760,9 +755,8 @@ msgstr ""
 msgid "composer sortname"
 msgstr ""
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "persoon(e) verantwoordelik vir die opname"
+msgstr ""
 
 msgid "grouping"
 msgstr ""
@@ -795,13 +789,11 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "weergawe van die enkodeerder wat hierdie stroom enkodeer"
 
-#, fuzzy
 msgid "application name"
-msgstr "ligging"
+msgstr ""
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "weergawe van die enkodeerder wat hierdie stroom enkodeer"
+msgstr ""
 
 msgid "application data"
 msgstr ""
@@ -839,8 +831,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -862,6 +859,9 @@ msgstr ""
 "Addisionele ontfout-inligting:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -876,6 +876,14 @@ msgstr "Geen eienskap \"%s\" in element \"%s\""
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "kon nie eienskap \"%s\" in element \"%s\" stel na \"%s\" nie"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Lêer \"%s\" is 'n sok."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "kon nie eienskap \"%s\" in element \"%s\" stel na \"%s\" nie"
 
 msgid "Delayed linking failed."
@@ -1038,9 +1046,8 @@ msgstr ""
 msgid "force caps without doing a typefind"
 msgstr ""
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
-msgstr "album wat hierdie data bevat"
+msgstr ""
 
 #, fuzzy
 msgid "Stream contains no data."
@@ -1053,14 +1060,16 @@ msgstr ""
 msgid "readable"
 msgstr ""
 
-#, fuzzy
 msgid "writable"
-msgstr "titel"
+msgstr ""
 
 msgid "deprecated"
 msgstr ""
 
 msgid "controllable"
+msgstr ""
+
+msgid "conditionally available"
 msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
@@ -1075,9 +1084,9 @@ msgstr ""
 msgid "Blacklisted files:"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "aantal snitte"
+msgstr ""
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1136,8 +1145,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, fuzzy, c-format
@@ -1150,6 +1162,12 @@ msgstr "geen bronelement vir URI \"%s\""
 
 msgid "Index statistics"
 msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Pyplyn word gestel na SPEEL ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "FOUT: pyplyn wil nie speel nie.\n"
 
 #, fuzzy, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1170,6 +1188,9 @@ msgstr "Boodskap vanaf element \"%s\" (%s):"
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "EOS gekry vanaf element \"%s\".\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr ""
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1207,6 +1228,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "FOUT: vanaf element %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Pyplyn is VOORGEROL ...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
@@ -1220,6 +1244,7 @@ msgstr ""
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Pyplyn word gestel na SPEEL ...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 #, fuzzy
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Stel pyplyn na POUSEER ...\n"
@@ -1231,9 +1256,20 @@ msgstr ""
 msgid "Setting state to %s as requested by %s...\n"
 msgstr ""
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 #, fuzzy
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr ""
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1245,7 +1281,17 @@ msgstr "geen element \"%s\""
 
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "FOUT: vanaf element %s: %s\n"
+msgstr "Boodskap vanaf element \"%s\" (%s):"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "FOUT: pyplyn wil nie voorrol nie.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Wys etikette (ook bekend as metadata)"
@@ -1280,6 +1326,17 @@ msgstr ""
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FOUT: pyplyn kon nie opgestel word nie: %s.\n"
@@ -1297,8 +1354,9 @@ msgstr "FOUT: die pyplynelement kon nie gevind word nie.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Stel pyplyn na POUSEER ...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "FOUT: pyplyn wil nie pouseer nie.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Stel pyplyn na POUSEER ...\n"
 
 #, fuzzy
 msgid "Pipeline is live and does not need PREROLL ...\n"
@@ -1307,42 +1365,8 @@ msgstr "Pyplyn is VOORGEROL ...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Pyplyn doen VOORROLLING ...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "FOUT: pyplyn wil nie voorrol nie.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Pyplyn is VOORGEROL ...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Pyplyn word gestel na SPEEL ...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "FOUT: pyplyn wil nie speel nie.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-
-msgid "Waiting for EOS...\n"
-msgstr ""
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr ""
-
-#, fuzzy
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Pyplyn word gestel na NULL ...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr ""
-
 msgid "Execution ended after %"
 msgstr "Uitvoering het geëindig na %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Pyplyn word gestel na GEREED ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
@@ -1351,27 +1375,11 @@ msgstr "Pyplyn word gestel na NULL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Fout met toemaak van lêer \"%s\"."
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Interne GStreamer-fout: state change failed."
 
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Fout met toemaak van lêer \"%s\"."
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Fout tydens skryf na lêer \"%s\"."
-
-#, fuzzy
-#~ msgid "Internal data stream error."
-#~ msgstr "Interne datavloeifout."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Moenie statusinligting van TIPE wys nie"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TIPE1, TIPE2,..."
+#~ msgid "original location of file as a URI"
+#~ msgstr "oorsprong van lêer gegee as 'n URI"
 
 #~ msgid "link without source element"
 #~ msgstr "verbinding sonder bron-element"
@@ -1379,31 +1387,43 @@ msgstr "Pyplyn word gestel na NULL ...\n"
 #~ msgid "link without sink element"
 #~ msgstr "verbinding sonder bestemming-element"
 
+#, c-format
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "geen element vir URI \"%s\" om heen te skakel nie"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Druk \"alloc trace\" (indien aangeskakel tydens kompilering)"
+#~ msgid "maximum"
+#~ msgstr "maksimum"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
 #~ "Gebruik so: gst-xmllaunch <lêer.xml> [ element.eienskap=waarde ... ]\n"
 
+#, c-format
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "FOUT: ontleding van xml-lêer '%s' het misluk.\n"
 
+#, c-format
 #~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 #~ msgstr "FOUT: geen topvlak pyplynelement in lêer '%s' nie.\n"
 
-#, fuzzy
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
+#, c-format
+#~ msgid "WARNING: only one toplevel element is supported at this time."
 #~ msgstr "WAARSKUWING: slegs een topvlak element word tans ondersteun."
 
+#, c-format
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
 #~ msgstr "FOUT: onverstaanbare bevellynparameter %d: %s.\n"
 
+#, c-format
 #~ msgid "WARNING: element named '%s' not found.\n"
 #~ msgstr "WAARSKUWING: element genaamd '%s' nie gevind nie.\n"
+
+#, c-format
+#~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
+#~ msgstr "Element \"%s\" het verander van SPEEL na POUSE, verlaat dus.\n"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "TIPE1, TIPE2,..."
 
 #~ msgid "Save xml representation of pipeline to FILE and exit"
 #~ msgstr "Stoor xml-voorstelling van pyplyn na LÊER en stop"
@@ -1411,24 +1431,24 @@ msgstr "Pyplyn word gestel na NULL ...\n"
 #~ msgid "FILE"
 #~ msgstr "LÊER"
 
-#, fuzzy
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Moenie 'n fouthanteerder installeer nie"
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Druk \"alloc trace\" (indien aangeskakel tydens kompilering)"
 
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Interne GStreamer-fout: state change failed."
+#, c-format
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "FOUT: pyplyn wil nie pouseer nie.\n"
 
-#~ msgid "original location of file as a URI"
-#~ msgstr "oorsprong van lêer gegee as 'n URI"
-
-#~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
-#~ msgstr "Element \"%s\" het verander van SPEEL na POUSE, verlaat dus.\n"
-
+#, c-format
 #~ msgid "ERROR: Pipeline can't PREROLL ...\n"
 #~ msgstr "FOUT: pyplyn kan nie VOORROL nie ...\n"
 
 #~ msgid " ns.\n"
 #~ msgstr " ns.\n"
 
+#, c-format
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Pyplyn word gestel na GEREED ...\n"
+
+#, c-format
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "pyplyn word VRYGEMAAK ...\n"

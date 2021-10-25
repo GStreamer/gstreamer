@@ -4,14 +4,14 @@
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Claude Paroz <claude@2xlibre.net>, 2008-2012.
-# Stéphane Aulery <lkppo@free.fr>, 2015, 2017.
+# Stéphane Aulery <lkppo@free.fr>, 2015, 2017, 2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
-"PO-Revision-Date: 2017-05-05 22:33+0200\n"
+"Project-Id-Version: gstreamer 1.16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2020-06-13 01:47+0200\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -100,6 +100,7 @@ msgstr "Options de GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Afficher les options de GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Option inconnue"
 
@@ -138,7 +139,7 @@ msgid "Internal GStreamer error: seek problem."
 msgstr "Erreur interne de Gstreamer : problème de recherche."
 
 msgid "Internal GStreamer error: caps problem."
-msgstr "Erreur interne de Gstreamer : problème de caps."
+msgstr "Erreur interne de Gstreamer : problème de capacités."
 
 msgid "Internal GStreamer error: tag problem."
 msgstr "Erreur interne de Gstreamer : problème de balise."
@@ -830,7 +831,7 @@ msgid "midi-base-note"
 msgstr "midi-base-note"
 
 msgid "Midi note number of the audio track."
-msgstr "Numèro de note Midi d’une piste audio."
+msgstr "Numéro de note Midi d’une piste audio."
 
 msgid "private-data"
 msgstr "données-privées"
@@ -838,8 +839,13 @@ msgstr "données-privées"
 msgid "Private data"
 msgstr "Données privées"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -847,7 +853,7 @@ msgstr "Aucun gestionnaire d’URI trouvé pour le protocole %s"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr "schèma URI « %s » non pris en charge"
+msgstr "schéma URI « %s » non pris en charge"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -861,6 +867,9 @@ msgstr ""
 "Information de débogage supplémentaire :\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "lien sans source [sink=%s@%p]"
@@ -877,21 +886,29 @@ msgstr "pas de propriété « %s » dans l’élément « %s »"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "impossible de définir la propriété « %s » de l’élément « %s » à « %s »"
 
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Le fichier « %s » est un connecteur."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "impossible de définir la propriété « %s » de l’élément « %s » à « %s »"
+
 msgid "Delayed linking failed."
 msgstr "Échec du chargement dynamique différé."
 
 #, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "impossible de connecter %s à %s, %s n’accepte pas les majuscules %s"
+msgstr "impossible de connecter %s à %s, %s n’accepte pas les capacités %s"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
 msgstr ""
-"impossible de connecter %s à %s, aucun élément n’accepte les majuscules %s"
+"impossible de connecter %s à %s, aucun élément n’accepte les capacités %s"
 
 #, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "impossible de connecter %s à %s avec les majuscules %s"
+msgstr "impossible de connecter %s à %s avec les capacités %s"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -911,7 +928,7 @@ msgstr "pad-référence « %s » inattendue - ignoré"
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "impossible d’analyser le caps « %s »"
+msgstr "impossible d’analyser les capacités « %s »"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
@@ -936,7 +953,7 @@ msgid "empty pipeline not allowed"
 msgstr "pipeline vide non autorisé"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Construction du pipeline invalide, veuillez ajouter des queues."
 
 msgid "A lot of buffers are being dropped."
 msgstr "De nombreux tampons sont éliminés."
@@ -951,24 +968,24 @@ msgid "Internal clock error."
 msgstr "Erreur d’horloge interne."
 
 msgid "Failed to map buffer."
-msgstr "Impossible de mapper les buffer."
+msgstr "Impossible de mapper les buffers."
 
 msgid "Filter caps"
-msgstr "Capacités de filtrage"
+msgstr "Filtre de capacités"
 
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
 "Restreint les capacités possibles autorisées (NULL signifie ANY). La "
-"définition de cette propriété nécessite une référence à l’objet GSTCaps "
+"définition de cette propriété nécessite une référence à l’objet GstCaps "
 "fourni."
 
 msgid "Caps Change Mode"
-msgstr "Mode majuscule activé"
+msgstr "Mode de changement des capacités"
 
 msgid "Filter caps change behaviour"
-msgstr "Filtre de comportement de modification des majuscules"
+msgstr "Comportement du changement du filtre de capacités"
 
 msgid "No Temp directory specified."
 msgstr "Aucun répertoire temporaire indiqué."
@@ -1022,7 +1039,7 @@ msgid "Failed after iterations as requested."
 msgstr "Échec suite aux itérations demandées."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "eos-after et error-after ne peuvent pas être définis en même temps."
 
 msgid "caps"
 msgstr "capacités"
@@ -1045,9 +1062,9 @@ msgstr "Le flux ne contient pas assez de données."
 msgid "Stream contains no data."
 msgstr "Le flux ne contient aucune donnée."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Interfaces implémentées :\n"
+msgstr "%sinterfaces implémentées%s :\n"
 
 msgid "readable"
 msgstr "accès en lecture"
@@ -1059,6 +1076,10 @@ msgid "deprecated"
 msgstr "obsolète"
 
 msgid "controllable"
+msgstr "contrôlable"
+
+#, fuzzy
+msgid "conditionally available"
 msgstr "contrôlable"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
@@ -1073,9 +1094,9 @@ msgstr "modifiable uniquement en l’état NULL ou READY"
 msgid "Blacklisted files:"
 msgstr "Fichiers sur liste noire :"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Nombre total :"
+msgstr "%sNombre total%s : %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1143,9 +1164,16 @@ msgstr ""
 "Affiche les types d’URI pris en charge, avec les éléments qui les "
 "implémentent"
 
+#, fuzzy
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+"Désactive les couleurs en sortie. Vous pouvez aussi activer cette option en "
+"donnant une valeur non nulle à la variable d'environnement "
+"GST_INSPECT_NO_COLORS."
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1158,6 +1186,12 @@ msgstr "Aucun élément ou greffon « %s »\n"
 
 msgid "Index statistics"
 msgstr "Statistiques d’index"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Passage du pipeline à la phase PLAYING…\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ERREUR : le pipeline refuse de passer en mode actif.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1178,6 +1212,9 @@ msgstr "Message n°%u reçu (%s) : "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "EOS reçu de l’élément « %s ».\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS reçu - arrêt du pipeline…\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1217,6 +1254,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "AVERTISSEMENT : de l’élément %s : %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Le pipeline a terminé la phase PREROLL…\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Préparation terminée, attente de la fin de remplissage du tampon…\n"
 
@@ -1229,6 +1269,7 @@ msgstr "mise en mémoire tampon…"
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Mémoire tampon pleine, définition du pipeline à PLAYING…\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Remplissage du tampon, définition du pipeline à PAUSED…\n"
 
@@ -1239,8 +1280,19 @@ msgstr "Redistribution de latence…\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Définition de l’état à %s comme demandé par %s…\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interruption : arrêt du pipeline…\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Interruption lors de l’attente d’EOS - arrêt du pipeline…\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS à la fermeture est activé -- EOS forcé sur le pipeline\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Attente d’EOS.\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1253,6 +1305,16 @@ msgstr "Élément manquant : %s\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Contexte de l’élément « %s » : %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ERREUR : le pipeline refuse de passer en phase de préparation.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Une erreur s’est produite lors de l’attente de l’EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Affiche les balises (aussi connues sous le nom de métadonnées)"
@@ -1288,6 +1350,17 @@ msgstr "Force l’EOS sur les sources avant de fermer le pipeline"
 msgid "Gather and print index statistics"
 msgstr "Rassemble et affiche les statistiques d’index"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERREUR : le pipeline n’a pas pu être construit : %s.\n"
@@ -1305,8 +1378,9 @@ msgstr "ERREUR : l’élément « pipeline » est introuvable.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Définition du pipeline à PAUSED...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "ERREUR : le pipeline refuse de se mettre en pause.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Définition du pipeline à PAUSED...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Le pipeline est actif et n’a pas besoin de phase PREROLL…\n"
@@ -1314,41 +1388,8 @@ msgstr "Le pipeline est actif et n’a pas besoin de phase PREROLL…\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Le pipeline est en phase de PREROLL…\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ERREUR : le pipeline refuse de passer en phase de préparation.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Le pipeline a terminé la phase PREROLL…\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Passage du pipeline à la phase PLAYING…\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "ERREUR : le pipeline refuse de passer en mode actif.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS à la fermeture est activé -- EOS forcé sur le pipeline\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS à la fermeture est activé -- attente d’EOS après erreur\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Attente d’EOS.\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "EOS reçu - arrêt du pipeline…\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interruption lors de l’attende d’EOS - arrêt du pipeline…\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Une erreur s’est produite lors de l’attente de l’EOS\n"
-
 msgid "Execution ended after %"
 msgstr "L’exécution s’est terminée après %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Définition du pipeline à READY (prêt)…\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Définition du pipeline à NULL…\n"
@@ -1356,17 +1397,26 @@ msgstr "Définition du pipeline à NULL…\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Libération du pipeline…\n"
 
-#, fuzzy
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "ERREUR : le pipeline refuse de se mettre en pause.\n"
+
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "EOS à la fermeture est activé -- attente d’EOS après erreur\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Définition du pipeline à READY (prêt)…\n"
+
 #~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Erreur lors de la fermeture du fichier « %s »."
+#~ msgstr "Erreur lors de la création du tube : %s\n"
 
-#, fuzzy
 #~ msgid "Error forking: %s\n"
-#~ msgstr "Erreur lors de la fermeture du fichier « %s »."
+#~ msgstr "Erreur lors du fork : %s\n"
 
-#, fuzzy
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Erreur lors de la lecture depuis la console : %s\n"
+
 #~ msgid "Error writing to console: %s\n"
-#~ msgstr "Erreur d’écriture dans le fichier « %s »."
+#~ msgstr "Erreur d’écriture vers la console : %s\n"
 
 #~ msgid "bin"
 #~ msgstr "bin"

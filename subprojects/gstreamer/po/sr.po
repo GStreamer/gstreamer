@@ -1,14 +1,14 @@
 # Serbian translation of gstreamer
-# Copyright © 2014 Free Software Foundation, Inc.
+# Copyright © 2020 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Danilo Segan <dsegan@gmx.net>, 2004-2005.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011—2017.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011–2021.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
-"PO-Revision-Date: 2017-05-07 12:42+0200\n"
+"Project-Id-Version: gstreamer-1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2021-10-01 22:08+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -96,6 +96,7 @@ msgstr "Опције Гстримера"
 msgid "Show GStreamer Options"
 msgstr "Приказује опције Гстримера"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Непозната опција"
 
@@ -832,8 +833,13 @@ msgstr "приватни подаци"
 msgid "Private data"
 msgstr "Приватни подаци"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr "Неисправна путања: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -855,6 +861,9 @@ msgstr ""
 "Додатни подаци за исправљање грешака:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "веза нема извора [sink=%s@%p]"
@@ -870,6 +879,14 @@ msgstr "нема особине „%s“ у елементу „%s“"
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "не могу да поставим особину „%s“ у елементу „%s“ на „%s“"
+
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Елемент „%s“ није Гст претподешавање"
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "не могу да поставим претподешавање „%s“ у елементу „%s“"
 
 msgid "Delayed linking failed."
 msgstr "Одложено повезивање није успело."
@@ -932,7 +949,7 @@ msgid "empty pipeline not allowed"
 msgstr "није допуштена празна спојка низа"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Конструкција спојке није исправна, додајте на чекање."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Много помоћне меморије је одбачено."
@@ -1017,7 +1034,7 @@ msgid "Failed after iterations as requested."
 msgstr "Неуспех након траженог броја покушаја."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "„eos-after“ и „error-after“ се не могу одредити."
 
 # bug: this should be full word
 msgid "caps"
@@ -1041,9 +1058,9 @@ msgstr "Овај ток не садржи довољно података."
 msgid "Stream contains no data."
 msgstr "Овај ток не садржи податке."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Примењени уређаји:\n"
+msgstr "%sПримењени уређаји%s:\n"
 
 msgid "readable"
 msgstr "читљив"
@@ -1057,6 +1074,9 @@ msgstr "застарело"
 msgid "controllable"
 msgstr "управљив"
 
+msgid "conditionally available"
+msgstr "условно доступан"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "измењив у стање НИШТА, СПРЕМАН, ПАУЗИРАН или ПУШТАМ"
 
@@ -1069,9 +1089,9 @@ msgstr "измењив само у стање НИШТА или СПРЕМАН"
 msgid "Blacklisted files:"
 msgstr "Забрањене датотеке:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Укупан број:"
+msgstr "%sУкупан број%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1142,9 +1162,14 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Штампа подржане шеме адреса, са елементима који их примењују."
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Искључује боје на излазу. Исто можете постићи подешавањем "
+"„GST_INSPECT_NO_COLORS“ променљиве окружења на било коју вредност."
+
+msgid "Color output, even when not sending to a tty."
+msgstr "Боји излаз, чак и када не шаље на конзолу."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1156,6 +1181,12 @@ msgstr "Нема таквог елемента или прикључка „%s�
 
 msgid "Index statistics"
 msgstr "Статистике пописа"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Постављам спојку низа на ПУШТАМ ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ГРЕШКА: спојка низа не жели да пусти.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1176,6 +1207,9 @@ msgstr "Добих поруку #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Добих ЕОС од елемента „%s“.\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "ЕОС је примљен — заустављам спојку низа…\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1215,6 +1249,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "УПОЗОРЕЊЕ: из елемента %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Спојка низа је ПРИПРЕМЉЕНА ...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Припремљено, чекам да заврши смештање у међумеморију…\n"
 
@@ -1228,6 +1265,7 @@ msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 "Обавио сам смештање у међумеморију, постављам спојку низа на ПУШТАМ ...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Смештам у међумеморију, постављам спојку низа на ПАУЗИРАН ...\n"
 
@@ -1238,8 +1276,19 @@ msgstr "Расподељујем кашњење...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Постављам стање на %s као што је затражио %s...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Прекид: Заустављам спојку низа ...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Прекид за време чекања на ЕОС — заустављам спојку низа...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "ЕОС је укључен приликом гашења —— Присиљавам ЕОС на спојци низа\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Чекам на ЕОС...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1252,6 +1301,16 @@ msgstr "Недостаје елемент: %s\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Добих садржај из елемента „%s“: %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ГРЕШКА: спојка низа не жели да припреми.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Дошло је до грешке док сам чекао на ЕОС\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Користи Виндоузов сат високе резолуције, тачност: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Излазне ознаке (такође познате и као метаподаци)"
@@ -1287,6 +1346,23 @@ msgstr "Приморај ЕОС на извору пре гашења спојк
 msgid "Gather and print index statistics"
 msgstr "Прикупи и штампај статистике регистра"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+"Не исписује тренутни положај спојке. Ако ова опција није одређена, положај "
+"ће бити исписан када је стандардни излаз конзола. Да укључите положај "
+"исписивања када стандардни излаз није конзола, користитие опцију „force-"
+"position“"
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+"Омогућава исписивање тренутног положаја спојке чак и ако стандардни излаз "
+"није конзола. Ова опција нема дејства ако је опција „no-position“ наведена"
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ГРЕШКА: не могу да саставим спојку низа: %s.\n"
@@ -1304,8 +1380,8 @@ msgstr "ГРЕШКА: елемент „спојка низа“ није нађ
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Постављам спојку низа на ПАУЗИРАН ...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "ГРЕШКА: Спојка низа не жели да иде на паузу.\n"
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Нисам успео да поставим спојку на ПАУЗИРАНО.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Спојка низа је жива и не треба јој ПРИПРЕМА ...\n"
@@ -1313,41 +1389,8 @@ msgstr "Спојка низа је жива и не треба јој ПРИПР
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Спојка низа врши ПРИПРЕМУ ...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ГРЕШКА: спојка низа не жели да припреми.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Спојка низа је ПРИПРЕМЉЕНА ...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Постављам спојку низа на ПУШТАМ ...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "ГРЕШКА: спојка низа не жели да пусти.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "ЕОС је укључен приликом гашења —— Присиљавам ЕОС на спојци низа\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "ЕОС је укључен гашењем —— чекам на ЕОС након грешке\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Чекам на ЕОС...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "ЕОС је примљен — заустављам спојку низа…\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Прекид за време чекања на ЕОС — заустављам спојку низа...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Дошло је до грешке док сам чекао на ЕОС\n"
-
 msgid "Execution ended after %"
 msgstr "Извршење је окончано након %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Постављам спојку низа на СПРЕМАН ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Постављам спојку низа на НИШТА ...\n"
@@ -1355,17 +1398,14 @@ msgstr "Постављам спојку низа на НИШТА ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Ослобађам спојку низа...\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Грешка при затварању датотеке „%s“."
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "ГРЕШКА: Спојка низа не жели да иде на паузу.\n"
 
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Грешка при затварању датотеке „%s“."
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "ЕОС је укључен гашењем —— чекам на ЕОС након грешке\n"
 
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Грешка при упису у датотеку „%s“."
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Постављам спојку низа на СПРЕМАН ...\n"
 
 #~ msgid "bin"
 #~ msgstr "канта"

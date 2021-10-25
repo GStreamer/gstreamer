@@ -4,13 +4,13 @@
 # Peter Astakhov <astakhovp@mail.ru>, 2005.
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
-"PO-Revision-Date: 2019-01-25 19:43+0300\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2021-09-28 07:22+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -20,7 +20,7 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Lokalize 2.0\n"
+"X-Generator: Lokalize 20.12.0\n"
 
 msgid "Print the GStreamer version"
 msgstr "Вывести версию GStreamer"
@@ -99,6 +99,7 @@ msgstr "Параметры GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Показать параметры GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Неизвестный параметр"
 
@@ -832,8 +833,13 @@ msgstr "private-data"
 msgid "Private data"
 msgstr "Частная информация"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr "Неверный URI: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -855,6 +861,9 @@ msgstr ""
 "Дополнительная отладочная информация:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "соединение без источника [приёмник=%s@%p]"
@@ -870,6 +879,14 @@ msgstr "свойство «%s» не найдено для элемента «%s
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "не удалось установить свойство «%s» элемента «%s» в значение «%s»"
+
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Элемент «%s» не является GstPreset"
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "невозможно установить свойство «%s» в элементе «%s»"
 
 msgid "Delayed linking failed."
 msgstr "Ошибка при отложенной компоновке."
@@ -1054,6 +1071,9 @@ msgstr "устаревший"
 msgid "controllable"
 msgstr "контролируемый"
 
+msgid "conditionally available"
+msgstr "условно доступно"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "может быть равно состоянию NULL, READY, PAUSED или PLAYING"
 
@@ -1138,11 +1158,14 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Вывести поддерживаемые схемы URI для элементов, которые их используют"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
 "Отключить цветность в выводе. Также это можно сделать задав переменной "
 "окружения «GST_INSPECT_NO_COLORS» любое значение."
+
+msgid "Color output, even when not sending to a tty."
+msgstr "Цветность в выводе даже если не отправляется на tty."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1154,6 +1177,12 @@ msgstr "Модуль или элемент «%s» не найден\n"
 
 msgid "Index statistics"
 msgstr "Индексная статистика"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Установка конвейера в состояние PLAYING…\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "ОШИБКА: конвейер не хочет воспроизводить.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1174,6 +1203,9 @@ msgstr "Получено сообщение #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Получен маркер EOS («конец потока») от элемента «%s».\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Получен EOS — остановка конвейера…\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1213,6 +1245,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: от элемента %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Конвейер подготовлен (PREROLLED)…\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Конвейер подготовлен, ожидается завершение буферизации…\n"
 
@@ -1225,6 +1260,7 @@ msgstr "буферизация…"
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Буферизация завершена, конвейер переведён в состояние PLAYING…\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Идёт буферизация, конвейер переведён в состояние PAUSED…\n"
 
@@ -1235,8 +1271,19 @@ msgstr "Перераспределение латентности…\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Устанавливается состояние %s, запрошенное %s…\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Прерывание: Остановка конвейера…\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Прерывание во время ожидания EOS — остановка конвейера…\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "Включён EOS при закрытии — Выдача EOS в конвейер\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Ожидание EOS…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1249,6 +1296,16 @@ msgstr "Элемент отсутствует: %s\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Получен контекст из элемента «%s»: %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ОШИБКА: конвейер не хочет подготавливаться (PREROLL).\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Во время ожидания EOS произошла ошибка\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Использовать таймер высокой точности Windows, точность: %u мс\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Выводить теги (метаданные)"
@@ -1284,6 +1341,22 @@ msgstr "Выдать EOS в источники перед закрытием к�
 msgid "Gather and print index statistics"
 msgstr "Собрать и вывести индексную статистику"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+"Не выводить текущее положение канала. Если этот параметр не задан, то "
+"положение будет выводиться, если stdout является TTY. Чтобы включить вывод "
+"положения когда stdout не равен TTY, используйте параметр «force-position»"
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+"Позволяет выводить текущее положение канала даже, если stdout не является "
+"TTY. Этот параметр игнорируется, если указан параметр «no-position»"
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ОШИБКА: не удалось собрать конвейер: %s.\n"
@@ -1301,8 +1374,9 @@ msgstr "ОШИБКА: не найден элемент «pipeline».\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Установка конвейера в состояние PAUSED…\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "ОШИБКА: Конвейер не хочет становиться на паузу.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Установка конвейера в состояние PAUSED…\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Конвейер работает и не требует состояния PREROLL…\n"
@@ -1310,41 +1384,8 @@ msgstr "Конвейер работает и не требует состоян�
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Подготовка конвейера (PREROLL)…\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ОШИБКА: конвейер не хочет подготавливаться (PREROLL).\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Конвейер подготовлен (PREROLLED)…\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Установка конвейера в состояние PLAYING…\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "ОШИБКА: конвейер не хочет воспроизводить.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "Включён EOS при закрытии — Выдача EOS в конвейер\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "Включён EOS при закрытии — ожидание EOS после ошибки\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Ожидание EOS…\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "Получен EOS — остановка конвейера…\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Прерывание во время ожидания EOS — остановка конвейера…\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Во время ожидания EOS произошла ошибка\n"
-
 msgid "Execution ended after %"
 msgstr "Выполнение окончено после %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Установка конвейера в состояние READY…\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Установка конвейера в состояние NULL…\n"
@@ -1363,6 +1404,15 @@ msgstr "Освобождение конвейера…\n"
 
 #~ msgid "Error writing to console: %s\n"
 #~ msgstr "Ошибка записи в консоль: %s»\n"
+
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "ОШИБКА: Конвейер не хочет становиться на паузу.\n"
+
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "Включён EOS при закрытии — ожидание EOS после ошибки\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Установка конвейера в состояние READY…\n"
 
 #~ msgid "bin"
 #~ msgstr "контейнер"

@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n"
 "%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Virtaal 0.6.1\n"
@@ -94,6 +95,7 @@ msgstr "GStreamer parinktys"
 msgid "Show GStreamer Options"
 msgstr "Rodyti GStreamer parinktis"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Nežinoma parinktis"
 
@@ -836,8 +838,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -859,6 +866,9 @@ msgstr ""
 "Papildoma derinimo informacija:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -873,6 +883,14 @@ msgstr "nenurodyta savybė „%s“ elemente „%s“"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "nepavyko nustatyti savybės „%s“ elemente „%s“ į „%s“"
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Failas „%s“ yra lizdas."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "nepavyko nustatyti savybės „%s“ elemente „%s“ į „%s“"
 
 msgid "Delayed linking failed."
@@ -1058,6 +1076,10 @@ msgstr ""
 msgid "controllable"
 msgstr "valdomas"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "valdomas"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr ""
 
@@ -1139,8 +1161,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Išvesti palaikomas URI schemas su jas sukuriančiais elementais"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1153,6 +1178,12 @@ msgstr "Nėra tokio elemento arba įskiepio „%s“\n"
 
 msgid "Index statistics"
 msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Nustatomas konvejeris į GROJAMA...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "KLAIDA: konvejeris nepradeda groti.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1173,6 +1204,9 @@ msgstr "Gautas pranešimas #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Gautas EOS iš elemento „%s“.\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS gautas – stabdomas konvejeris...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1213,6 +1247,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ĮSPĖJIMAS: iš elemento %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Konvejeris PARUOŠTAS...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Paruošta, laukiama kol bus sukurtas buferis...\n"
 
@@ -1226,6 +1263,7 @@ msgstr "kuriamas buferis..."
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Buferis sukurtas, konvejeris nustatomas GROJIMUI...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Kuriamas buferis, konvejeris nustatomas į PRISTABDYTĄ...\n"
 
@@ -1236,8 +1274,20 @@ msgstr "Perskirstyti gaišties laiką...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Nustatoma būsena į %s, kaip prašė %s...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Pertraukimas: stabdomas konvejeris...\n"
+
+#, fuzzy
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Pertraukimas: stabdomas konvejeris...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "Įjungtas EOS išjungiant – priverstinai naudojama EOS konvejeryje\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Laukiama EOS...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1250,6 +1300,16 @@ msgstr "nėra elemento „%s“"
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "ĮSPĖJIMAS: iš elemento %s: %s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "KLAIDA: konvejeris nesileidžia paruošiamas.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Įvyko klaida laukiant EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Išvesti žymas (dar žinomas kaip metaduomenys)"
@@ -1283,6 +1343,17 @@ msgstr "Priverstinai naudoti EOS šaltiniuose prie išjungiant konvejerį"
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "KLAIDA: nepavyko sukurti konvejerio: %s.\n"
@@ -1300,8 +1371,9 @@ msgstr "KLAIDA: „pipeline“ elementas nerastas.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Nustatomas konvejeris į PRISTABDYTĄ...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "KLAIDA: konvejeris nesileidžia pristabdomas.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Nustatomas konvejeris į PRISTABDYTĄ...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Konvejeris aktyvus ir nereikalauja PARUOŠIMO...\n"
@@ -1309,43 +1381,8 @@ msgstr "Konvejeris aktyvus ir nereikalauja PARUOŠIMO...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Konvejeris RUOŠIAMAS...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "KLAIDA: konvejeris nesileidžia paruošiamas.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Konvejeris PARUOŠTAS...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Nustatomas konvejeris į GROJAMA...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "KLAIDA: konvejeris nepradeda groti.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "Įjungtas EOS išjungiant – priverstinai naudojama EOS konvejeryje\n"
-
-#, fuzzy
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "Įjungtas EOS išjungiant – priverstinai naudojama EOS konvejeryje\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Laukiama EOS...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "EOS gautas – stabdomas konvejeris...\n"
-
-#, fuzzy
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Pertraukimas: stabdomas konvejeris...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Įvyko klaida laukiant EOS\n"
-
 msgid "Execution ended after %"
 msgstr "Vykdymas baigėsi po %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Nustatomas konvejeris į PARUOŠTA...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Nustatomas konvejeris į NULL...\n"
@@ -1353,46 +1390,31 @@ msgstr "Nustatomas konvejeris į NULL...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Atlaisvinamas konvejeris...\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Klaida užveriant failą „%s“."
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Klaida užveriant failą „%s“."
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Klaida rašant į failą „%s“."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Vidinė duomenų srauto klaida."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Neišvesti šio TIPO būsenos informacijos"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TIPAS1,TIPAS2,..."
-
 #~ msgid "link without source element"
 #~ msgstr "saitas be šaltinio elemento"
 
 #~ msgid "link without sink element"
 #~ msgstr "saitas be išvesties elemento"
 
+#, c-format
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "nėra elemento, su kuriuo susieti URI „%s“"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Išvesti alloc sekimą (jei įjungta kompiliavimo metu)"
+#~ msgid "Internal data stream error."
+#~ msgstr "Vidinė duomenų srauto klaida."
+
+#~ msgid "maximum"
+#~ msgstr "didžiausios"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
 #~ "Naudojimas: gst-xmllaunch <failas.xml> [ elementas.savybė=reikšmė ... ]\n"
 
+#, c-format
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "KLAIDA: nepavyko perskaityti xml failo „%s“.\n"
 
+#, c-format
 #~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 #~ msgstr "KLAIDA: nėra aukščiausio lygmens konvejerio elemento faile „%s“.\n"
 
@@ -1401,11 +1423,19 @@ msgstr "Atlaisvinamas konvejeris...\n"
 #~ "ĮSPĖJIMAS: šiuo metu palaikomas tik vienas aukščiausio lygmens "
 #~ "elementas.\n"
 
+#, c-format
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
 #~ msgstr "KLAIDA: nepavyko apdoroti komandinės eilutės argumento %d: %s.\n"
 
+#, c-format
 #~ msgid "WARNING: element named '%s' not found.\n"
 #~ msgstr "ĮSPĖJIMAS: nerastas elementas „%s“.\n"
+
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "Neišvesti šio TIPO būsenos informacijos"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "TIPAS1,TIPAS2,..."
 
 #~ msgid "Save xml representation of pipeline to FILE and exit"
 #~ msgstr "Įrašyti konvejerio xml atitikmenį į FAILĄ ir išeiti"
@@ -1416,3 +1446,12 @@ msgstr "Atlaisvinamas konvejeris...\n"
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr ""
 #~ "Neįdiegti signalų apdorojimo posistemės signalams SIGUSR1 ir SIGUSR2"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Išvesti alloc sekimą (jei įjungta kompiliavimo metu)"
+
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "KLAIDA: konvejeris nesileidžia pristabdomas.\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Nustatomas konvejeris į PARUOŠTA...\n"

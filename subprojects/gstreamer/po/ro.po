@@ -1,21 +1,24 @@
 # Romanian translation for gstreamer
 # This file is distributed under the same license as the gstreamer package.
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
+# Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.29.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
-"PO-Revision-Date: 2010-08-16 01:10+0300\n"
-"Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
+"Project-Id-Version: gstreamer 1.16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2020-06-24 09:18+0300\n"
+"Last-Translator: Florentina Mușat <florentina.musat.28@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
-"20)) ? 1 : 2);;\n"
-"X-Generator: Virtaal 0.6.1\n"
+"20)) ? 1 : 2);\n"
+"X-Generator: Poedit 2.3.1\n"
 
 msgid "Print the GStreamer version"
 msgstr "Afișează versiunea GStreamer"
@@ -26,12 +29,11 @@ msgstr "Setează toate avertizările ca fiind fatale"
 msgid "Print available debug categories and exit"
 msgstr "Afișează categoriile de depanare disponibile și ieși"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Nivelul standard de depanare de la 1 (numai erorile) la 5 (orice) sau 0 fără "
-"afișare"
+"Nivelul de depanare implicit de la 1 (doar eroare) la 9 (orice) sau 0 pentru "
+"nicio ieșire"
 
 msgid "LEVEL"
 msgstr "NIVEL"
@@ -54,6 +56,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Modifică modul de colorare a istoricului de depanare. Moduri posibile: "
+"oprit, pornit, dezactivează, auto, unix"
 
 msgid "Disable debugging"
 msgstr "Dezactivează depanarea"
@@ -95,6 +99,7 @@ msgstr "Opțiuni GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Arată opțiunile GStreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Opțiune necunoscută"
 
@@ -123,9 +128,8 @@ msgstr "Eroare internă GStreamer: problemă de „pad”."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Eroare internă GStreamer: problemă cu firele de execuție."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Eroare internă GStreamer: problemă de negociere."
+msgstr "Eroare GStreamer: problemă de negociere."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Eroare internă GStreamer: problemă legată de un eveniment."
@@ -142,9 +146,8 @@ msgstr "Eroare internă Gstreamer: problemă de etichetă."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Lipsește un modul din instalarea programului GStreamer."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Eroare internă GStreamer: problemă de ceas."
+msgstr "Eroare GStreamer: problemă de ceas."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -166,7 +169,7 @@ msgid "Could not configure supporting library."
 msgstr "Nu se poate configura biblioteca suport."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Eroare de codare."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer a întâlnit o eroare generală de resurse."
@@ -207,9 +210,8 @@ msgstr "Nu s-au putut obține/defini configurările din/în resursă."
 msgid "No space left on the resource."
 msgstr "Nu mai există spațiu liber pe resursă."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Nu mai există spațiu liber pe resursă."
+msgstr "Nu este autorizat să acceseze resursa."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer a întâlnit o eroare generală de flux."
@@ -266,7 +268,7 @@ msgstr "Ceasul selectat nu poate fi utilizat în linia de asamblare."
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "Eroare la scrierea cache-ului de registru la %s: %s"
 
 msgid "title"
 msgstr "titlu"
@@ -322,13 +324,11 @@ msgstr "data"
 msgid "date the data was created (as a GDate structure)"
 msgstr "data la care au fost create aceste date (ca structură GDate)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "data"
+msgstr "datăoră"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "data la care au fost create aceste date (ca structură GDate)"
+msgstr "data și ora la care datele au fost create (ca o structură GstDateTime)"
 
 msgid "genre"
 msgstr "gen"
@@ -426,12 +426,11 @@ msgstr "uri pentru drepturile de autor"
 msgid "URI to the copyright notice of the data"
 msgstr "URI către notița asupra drepturilor de autor pentru aceste date (URI)"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "codor"
+msgstr "codat de"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "numele persoanei sau organizației care codează"
 
 msgid "contact"
 msgstr "contact"
@@ -464,10 +463,10 @@ msgid "person(s) who composed the recording"
 msgstr "persoana care a compus înregistrarea"
 
 msgid "conductor"
-msgstr ""
+msgstr "dirijor"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "rafinament dirijor/executant"
 
 msgid "duration"
 msgstr "durata"
@@ -580,16 +579,16 @@ msgstr "nivelul de referință al valorilor câștigului pentru pistă și album
 msgid "language code"
 msgstr "cod limbă"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "codul de limbă al acestui flux, conform ISO-639-1"
+msgstr ""
+"codul de limbă pentru acest flux, care se conformează cu ISO-639-1 sau "
+"ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "cod limbă"
+msgstr "nume de limbă"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "nume în formă liberă a limbii în care este acest flux"
 
 msgid "image"
 msgstr "imagine"
@@ -686,20 +685,18 @@ msgstr ""
 msgid "geo location sublocation"
 msgstr "sublocație geo-locație"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
-"locație în orașul unde a fost înregistrat sau produs acest fișier media (de "
-"ex. cartierul)"
+"o locație într-un oraș unde media a fost produsă sau creată (de ex. "
+"vecinătatea)"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "nume geo-locație"
+msgstr "eroare orizontală de locație geografică"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "eroare așteptată a măsurilor de poziționare orizontală (în metri)"
 
 msgid "geo location movement speed"
 msgstr "viteza de circulație a geo-locației"
@@ -809,19 +806,17 @@ msgstr "model dispozitiv"
 msgid "Model of the device used to create this media"
 msgstr "Modelul dispozitivului utilizat pentru a crea acest fișier media"
 
-#, fuzzy
 msgid "application name"
-msgstr "nume geo-locație"
+msgstr "nume de aplicație"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "Modelul dispozitivului utilizat pentru a crea acest fișier media"
+msgstr "Aplicația utilizată pentru a crea media"
 
 msgid "application data"
-msgstr ""
+msgstr "datele aplicației"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Date de aplicație arbitrară pentru a fi serializată în media"
 
 msgid "image orientation"
 msgstr "orientare imagine"
@@ -830,39 +825,45 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Cum ar trebui rotită sau întoarsă imaginea înainte de afișare"
 
 msgid "publisher"
-msgstr ""
+msgstr "editor"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Numele mărcii sau editorului"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "interpretat de"
 
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
+"Informații despre persoanele în spatele unui remix și interpretări similare"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "notă-bază-midi"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Număr de notă midi al pistei audio."
 
 msgid "private-data"
-msgstr ""
+msgstr "date-private"
 
 msgid "Private data"
-msgstr ""
+msgstr "Date private"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
 
 #, c-format
-msgid "No URI handler for the %s protocol found"
+msgid "Invalid URI: %s"
 msgstr ""
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr "Nu există niciun manipulant de URI pentru protocolul %s găsit"
+
+#, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "Schema URL „%s” nu este suportată"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -876,13 +877,16 @@ msgstr ""
 "Informații suplimentare pentru depanare:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "legătura nu are nicio sursă [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "legătura nu are niciun sink [sursă=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -893,20 +897,31 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 "nu se poate stabili proprietatea „%s” în elementul „%s” la valoarea „%s”"
 
-msgid "Delayed linking failed."
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Fișierul „%s” este un socket."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
 msgstr ""
+"nu se poate stabili proprietatea „%s” în elementul „%s” la valoarea „%s”"
 
-#, fuzzy, c-format
+msgid "Delayed linking failed."
+msgstr "Legătura întârziată a eșuat."
+
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "nu se poate lega %s la %s"
+msgstr "nu s-a putut lega %s la %s, %s nu poate manipula majusculele %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr "nu se poate lega elementul derivat pentru URI „%s”"
+msgstr ""
+"nu s-a putut lega %s la %s, niciunul dintre elemente nu poate să manipuleze "
+"majusculele %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "nu se poate lega %s la %s"
+msgstr "nu s-a putut lega %s la %s cu majusculele %s"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -918,11 +933,11 @@ msgstr "niciun element „%s”"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "referință neașteptată „%s” - se ignoră"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "referință pad neașteptată „%s” - se ignoră"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -937,21 +952,21 @@ msgid "no source element for URI \"%s\""
 msgstr "niciun element sursă pentru URI „%s”"
 
 msgid "syntax error"
-msgstr ""
+msgstr "eroare de sintaxă"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "containerul gol „%s” specificat, nu este permis"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "niciun container „%s”, se omite"
+msgstr "niciun container „%s”, se despachetează elementele"
 
 msgid "empty pipeline not allowed"
 msgstr "linia de asamblare vidă nu este permisă"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Construirea liniei de conexiune nu este validă, adăugați cozi."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Multe zone de memorie tampon sunt abandonate."
@@ -966,7 +981,7 @@ msgid "Internal clock error."
 msgstr "Eroare internă de ceas."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Nu s-a putut mapa preîncărcarea."
 
 msgid "Filter caps"
 msgstr "Filtrare majuscule"
@@ -979,10 +994,10 @@ msgstr ""
 "acestei proprietăți preia o referință către obiectul GstCaps furnizat."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Modul de modificare a majusculelor"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Majusculele de filtru schimbă comportamentul"
 
 msgid "No Temp directory specified."
 msgstr "Niciun director temporar specificat."
@@ -1036,7 +1051,7 @@ msgid "Failed after iterations as requested."
 msgstr "Eșec după numărul de iterații care a fost cerut."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "eos-after și error-after nu pot fi amândouă definite."
 
 msgid "caps"
 msgstr "majuscule"
@@ -1053,16 +1068,15 @@ msgstr "forțează caps"
 msgid "force caps without doing a typefind"
 msgstr "forțează caps fără a efectua un typefind"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
-msgstr "Fluxul nu conține date."
+msgstr "Fluxul nu conține destule date."
 
 msgid "Stream contains no data."
 msgstr "Fluxul nu conține date."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Interfețe implementate:\n"
+msgstr "%sInterfețe implementate%s:\n"
 
 msgid "readable"
 msgstr "se poate citi"
@@ -1071,26 +1085,30 @@ msgid "writable"
 msgstr "se poate scrie"
 
 msgid "deprecated"
-msgstr ""
+msgstr "depășit"
 
 msgid "controllable"
 msgstr "se poate controla"
 
+#, fuzzy
+msgid "conditionally available"
+msgstr "se poate controla"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "modificabil în stările NULL, GATA, PAUZAT sau REDARE"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "modificabil doar în stările NULL, GATA sau PAUZAT"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "modificabil doar în stările NULL sau GATA"
 
 msgid "Blacklisted files:"
 msgstr "Fișierele de pe lista neagră:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Număr total: "
+msgstr "%sNumăr total%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1144,22 +1162,33 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"O listă separată prin liniuțe oblice („/”) de tipuri de elemente (cunoscută, "
+"de asemenea, ca și klass) de listat. (neordonat)"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Verifică dacă elementul sau modulul specificat există"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Când se verifică dacă un element sau modul există, verifică, de asemenea, ca "
+"versiunea acestuia să fie cel puțin versiunea specificată"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 "Tipărește schemele URI suportate, cu elementele pe care le implementează"
 
+#, fuzzy
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+"Dezactivează culorile la ieșire. Puteți, de asemenea, să atingeți același "
+"lucru prin stabilirea variabilei de mediu „GST_INSPECT_NO_COLORS” la orice "
+"valoare."
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1171,27 +1200,36 @@ msgid "No such element or plugin '%s'\n"
 msgstr "Niciun astfel de element sau modul „%s”\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Statistici de index"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Se setează linia de asamblare pe REDARE ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "EROARE: linia de asamblare nu vrea să redea.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Primit mesajul #%u, de la elementul „%s” (%s):"
+msgstr "A fost primit mesajul #%u de la elementul „%s” (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Primit mesajul #%u, de la pad-ul „%s:%s” (%s):"
+msgstr "A fost primit mesajul #%u de la pad-ul „%s:%s” (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Primit mesajul #%u, de la obiectul „%s” (%s):"
+msgstr "A fost primit mesajul #%u de la obiectul „%s” (%s): "
 
 #, c-format
 msgid "Got message #%u (%s): "
-msgstr "Primit mesajul #%u (%s):"
+msgstr "A fost primit mesajul #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Primire EOS de la elementul „%s”.\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS primit - se oprește linia de asamblare...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1208,17 +1246,16 @@ msgstr "MARCAJ GĂSIT   : găsit de către obiectul „%s”.\n"
 msgid "FOUND TAG\n"
 msgstr "MARCAJ GĂSIT\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "MARCAJ GĂSIT: găsit de către elementul „%s”.\n"
+msgstr "S-A GĂSIT TOC      : găsit de elementul „%s”.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "MARCAJ GĂSIT   : găsit de către obiectul „%s”.\n"
+msgstr "S-A GĂSIT TOC      : găsit de elementul „%s”.\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "MARCAJ GĂSIT\n"
+msgstr "S-A GĂSIT TOC\n"
 
 #, c-format
 msgid ""
@@ -1232,19 +1269,22 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "AVERTISMENT: de la elementul %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Linia de asamblare se PREÎNCARCĂ ...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preîncărcare, se așteaptă terminarea umplerii memoriei tampon...\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Preîncărcare, se așteaptă terminarea umplerii memoriei tampon...\n"
+msgstr "Pre-rulat, se așteaptă după progresul să se termine...\n"
 
 msgid "buffering..."
-msgstr ""
+msgstr "se preîncarcă..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Preîncărcare completă, se setează liniei de asamblare pe REDARE ...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Preîncărcare, se setează linia de asamblare pe PAUZĂ ...\n"
 
@@ -1255,26 +1295,49 @@ msgstr "Se redistribuie latența...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Se definește starea la %s după cum a fost cerut de %s...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Întrerupere: Se oprește linia de asamblare ...\n"
 
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr ""
+"Întrerupere în timpul așteptării pentru EOS - se oprește linia de "
+"conexiune...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS la închidere activat -- Se forțează EOS pe linia de asamblare\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Se așteaptă EOS...\n"
+
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Progres: (%s) %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "niciun element „%s”"
+msgstr "Element lipsă: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "AVERTISMENT: de la elementul %s: %s\n"
+msgstr "S-a obținut contextul de la elementul „%s”: %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "EROARE: linia de asamblare nu vrea să se preîncarce.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "A apărut o eroare în timp ce se aștepta EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Marcaje de ieșire (cunoscute și ca „metadata”)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "Ieșire TOC (capitole și ediții)"
 
 msgid "Output status information and property notifications"
 msgstr "Informații asupra stării de ieșire și notificări proprietăți"
@@ -1289,9 +1352,11 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Nu produce informații de stare pentru proprietatea specificată dacă ieșirea "
+"detaliată este activată (poate fi utilizată de mai multe ori)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "NUME-PROPRIETATE"
 
 msgid "Do not install a fault handler"
 msgstr "Nu instala un gestionar de erori"
@@ -1300,6 +1365,17 @@ msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Forțează EOS pe surse înainte de a închide linia de asamblare"
 
 msgid "Gather and print index statistics"
+msgstr "Adună și tipărește statistici de index"
+
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
 msgstr ""
 
 #, c-format
@@ -1319,8 +1395,9 @@ msgstr "EROARE: elementul „pipeline” (linie de asamblare) nu a fost găsit.\
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Se setează linia de asamblare pe PAUZĂ ...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "EROARE: Linia de asamblare nu vrea să fie pusă pe pauză.\n"
+#, fuzzy
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Se setează linia de asamblare pe PAUZĂ ...\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Linia de asamblare este „live” și nu necesită PREÎNCĂRCARE ...\n"
@@ -1328,43 +1405,8 @@ msgstr "Linia de asamblare este „live” și nu necesită PREÎNCĂRCARE ...\n
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Linia de asamblare este PREÎNCĂRCATĂ ...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "EROARE: linia de asamblare nu vrea să se preîncarce.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Linia de asamblare se PREÎNCARCĂ ...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Se setează linia de asamblare pe REDARE ...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "EROARE: linia de asamblare nu vrea să redea.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS la închidere activat -- Se forțează EOS pe linia de asamblare\n"
-
-#, fuzzy
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS la închidere activat -- Se forțează EOS pe linia de asamblare\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Se așteaptă EOS...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "EOS primit - se oprește linia de asamblare...\n"
-
-#, fuzzy
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Întrerupere: Se oprește linia de asamblare ...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "A apărut o eroare în timp ce se aștepta EOS\n"
-
 msgid "Execution ended after %"
 msgstr "Execuție terminată după %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Se setează linia de asamblare pe PREGĂTIT ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Se setează linia de asamblare pe NULL ...\n"
@@ -1372,26 +1414,14 @@ msgstr "Se setează linia de asamblare pe NULL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Se eliberează linia de asamblare...\n"
 
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Eroare la închiderea fișierului „%s”."
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "EROARE: Linia de asamblare nu vrea să fie pusă pe pauză.\n"
 
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Eroare la închiderea fișierului „%s”."
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "EOS la oprire activat -- se așteaptă pentru EOS după Eroare\n"
 
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Eroare la scrierea fișierului „%s\"."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Eroare internă a fluxului de date."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Nu scoate informații despre stările de TIPUL"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TIP1,TIP2,..."
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Se setează linia de asamblare pe PREGĂTIT ...\n"
 
 #~ msgid "link without source element"
 #~ msgstr "legătură fără un element sursă"
@@ -1402,8 +1432,11 @@ msgstr "Se eliberează linia de asamblare...\n"
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "niciun element pentru a lega URI „%s” la"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Afișează căile de alocare (dacă s-a activat la momentul compilării)"
+#~ msgid "Internal data stream error."
+#~ msgstr "Eroare internă a fluxului de date."
+
+#~ msgid "maximum"
+#~ msgstr "maxim"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
@@ -1428,6 +1461,12 @@ msgstr "Se eliberează linia de asamblare...\n"
 #~ msgid "WARNING: element named '%s' not found.\n"
 #~ msgstr "AVERTISMENT: elementul cu numele „%s” nu a fost găsit.\n"
 
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "Nu scoate informații despre stările de TIPUL"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "TIP1,TIP2,..."
+
 #~ msgid "Save xml representation of pipeline to FILE and exit"
 #~ msgstr ""
 #~ "Salvarea unei reprezentări xml a liniei de asamblare în FIȘIER și ieșire"
@@ -1437,3 +1476,6 @@ msgstr "Se eliberează linia de asamblare...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Nu instala rutine de tratare a semnalului pentru SIGUSR1 și SIGUSR2"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Afișează căile de alocare (dacă s-a activat la momentul compilării)"

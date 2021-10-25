@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
 "PO-Revision-Date: 2017-03-19 15:41+0100\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
@@ -85,6 +85,7 @@ msgstr "Opzions GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Mostre lis opzions di GSstreamer"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Opzion no cognossude"
 
@@ -810,8 +811,13 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr ""
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -831,6 +837,9 @@ msgid ""
 "%s\n"
 msgstr ""
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr ""
@@ -846,6 +855,14 @@ msgstr ""
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Il file \"%s\" al è un socket."
+
+#, fuzzy, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "Impussibil creâ il file temporani \"%s\"."
 
 msgid "Delayed linking failed."
 msgstr ""
@@ -1027,6 +1044,9 @@ msgstr ""
 msgid "controllable"
 msgstr ""
 
+msgid "conditionally available"
+msgstr ""
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr ""
 
@@ -1100,8 +1120,11 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
+msgid "Color output, even when not sending to a tty."
 msgstr ""
 
 #, c-format
@@ -1113,6 +1136,12 @@ msgid "No such element or plugin '%s'\n"
 msgstr ""
 
 msgid "Index statistics"
+msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr ""
+
+msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr ""
 
 #, c-format
@@ -1133,6 +1162,9 @@ msgstr ""
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
+msgstr ""
+
+msgid "EOS received - stopping pipeline...\n"
 msgstr ""
 
 #, c-format
@@ -1171,6 +1203,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr ""
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr ""
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
@@ -1183,6 +1218,7 @@ msgstr ""
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
 
@@ -1193,7 +1229,18 @@ msgstr ""
 msgid "Setting state to %s as requested by %s...\n"
 msgstr ""
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
+msgstr ""
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr ""
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
 msgstr ""
 
 #, c-format
@@ -1206,6 +1253,16 @@ msgstr "Element mancjant: %s\n"
 
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
+msgstr ""
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr ""
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
 msgstr ""
 
 msgid "Output tags (also known as metadata)"
@@ -1240,6 +1297,17 @@ msgstr ""
 msgid "Gather and print index statistics"
 msgstr ""
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr ""
@@ -1257,7 +1325,7 @@ msgstr ""
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr ""
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
+msgid "Failed to set pipeline to PAUSED.\n"
 msgstr ""
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
@@ -1266,40 +1334,7 @@ msgstr ""
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr ""
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-
-msgid "Waiting for EOS...\n"
-msgstr ""
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr ""
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr ""
-
-msgid "An error happened while waiting for EOS\n"
-msgstr ""
-
 msgid "Execution ended after %"
-msgstr ""
-
-msgid "Setting pipeline to READY ...\n"
 msgstr ""
 
 msgid "Setting pipeline to NULL ...\n"
@@ -1307,15 +1342,3 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Erôr tal sierâ il file \"%s\"."
-
-#, fuzzy
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Erôr tal sierâ il file \"%s\"."
-
-#, fuzzy
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Erôr tal scrivi sul file \"%s\"."

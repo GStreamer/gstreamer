@@ -1,13 +1,13 @@
 # Polish translation for gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2019.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
-"PO-Revision-Date: 2019-01-24 21:45+0100\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"PO-Revision-Date: 2021-09-25 08:30+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -96,6 +96,7 @@ msgstr "Opcje GStreamera"
 msgid "Show GStreamer Options"
 msgstr "Pokazanie opcji GStreamera"
 
+#, c-format
 msgid "Unknown option"
 msgstr "Nieznana opcja"
 
@@ -833,8 +834,13 @@ msgstr "dane-prywatne"
 msgid "Private data"
 msgstr "Dane prywatne"
 
+#. separator between two strings
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr "Błędny URI: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -856,6 +862,9 @@ msgstr ""
 "Dodatkowe informacje diagnostyczne:\n"
 "%s\n"
 
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "dowiązanie nie ma źródła [cel=%s@%p]"
@@ -871,6 +880,14 @@ msgstr "brak właściwości \"%s\" w elemencie \"%s\""
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "nie udało się ustawić właściwości \"%s\" w elemencie \"%s\" na \"%s\""
+
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Element \"%s\" to nie GstPreset"
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "nie udało się ustawić predefiniowanego \"%s\" w elemencie \"%s\""
 
 msgid "Delayed linking failed."
 msgstr "Opóźnione dowiązanie nie powiodło się."
@@ -1055,6 +1072,9 @@ msgstr "przestarzałe"
 msgid "controllable"
 msgstr "sterowanie"
 
+msgid "conditionally available"
+msgstr "warunkowo dostępne"
+
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "możliwa zmiana w stanie NULL, GOTOWOŚĆ, PAUZOWANIE lub ODTWARZANIE"
 
@@ -1141,11 +1161,14 @@ msgstr ""
 "Wypisanie obsługiwanych schematów URI wraz z implementującymi je elementami"
 
 msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
 "Wyłączenie kolorów na wyjściu. Można to samo osiągnąć ustawiając na dowolną "
 "wartość zmienną środowiskową 'GST_INSPECT_NO_COLORS'."
+
+msgid "Color output, even when not sending to a tty."
+msgstr "Kolorowe wyjście, nawet jeśli nie jest wysyłane na terminal."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1157,6 +1180,12 @@ msgstr "Nie ma takiego elementu lub wtyczki '%s'\n"
 
 msgid "Index statistics"
 msgstr "Statystyki indeksu"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Ustawianie potoku na ODTWARZANIE...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "BŁĄD: potok odmawia odtwarzania.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1177,6 +1206,9 @@ msgstr "Odebrano komunikat #%u (%s): "
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Otrzymano EOS od elementu \"%s\".\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Otrzymano EOS - zatrzymywanie potoku...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1216,6 +1248,9 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "UWAGA: od elementu %s: %s\n"
 
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Potok jest PRZEWINIĘTY...\n"
+
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Przewinięto, czekanie na zakończenie buforowania...\n"
 
@@ -1228,6 +1263,7 @@ msgstr "buforowanie..."
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Buforowanie zakończone, ustawianie potoku na ODTWARZANIE...\n"
 
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Buforowanie, ustawianie potoku na PAUZOWANIE...\n"
 
@@ -1238,8 +1274,19 @@ msgstr "Rozprzestrzenianie opóźnień...\n"
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Ustawianie stanu na %s zgodnie z wymaganiem %s...\n"
 
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Przerwanie: Zatrzymywanie potoku...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Przerwanie podczas oczekiwania na EOS - zatrzymywanie potoku...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "Włączony EOS przy wyłączaniu - wymuszanie EOS w potoku\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Oczekiwanie na EOS...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1252,6 +1299,17 @@ msgstr "Brak elementu: %s\n"
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Otrzymano kontekst od elementu '%s': %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "BŁĄD: potok odmawia przewinięcia.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Wystąpił błąd w trakcie oczekiwania na EOS\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
+"Użycie zegara wysokiej rozdzielczości systemu Windows, dokładność: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Wypisanie znaczników (znanych także jako metadane)"
@@ -1287,6 +1345,23 @@ msgstr "Wymuszanie EOS na źródłach przed zamknięciem potoku"
 msgid "Gather and print index statistics"
 msgstr "Zebranie i wypisanie statystyk indeksu"
 
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+"Bez wypisywania bieżącego położenia potoku. Bez tej opcji położenie będzie "
+"wypisane, jeśli standardowym wyjściem jest terminal. Aby włączyć wypisywanie "
+"pozycji nie na terminal, można użyć opcji \"force-position\""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+"Zezwolenie na wypisywanie bieżącego położenia potoku, nawet jeśli "
+"standardowym wyjściem nie jest terminal. Ta opcja nic nie robi, jeśli podano "
+"opcję \"no-position\""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "BŁĄD: nie udało się skonstruować potoku: %s.\n"
@@ -1304,8 +1379,8 @@ msgstr "BŁĄD: nie znaleziono elementu 'pipeline'.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Ustawianie potoku na PAUZOWANIE...\n"
 
-msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "BŁĄD: potok odmawia pauzowania.\n"
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Nie udało się ustawić potoku na PAUZOWANIE.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Potok jest na żywo i nie wymaga PRZEWINIĘCIA...\n"
@@ -1313,56 +1388,11 @@ msgstr "Potok jest na żywo i nie wymaga PRZEWINIĘCIA...\n"
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Potok jest PRZEWIJANY...\n"
 
-msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "BŁĄD: potok odmawia przewinięcia.\n"
-
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Potok jest PRZEWINIĘTY...\n"
-
-msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Ustawianie potoku na ODTWARZANIE...\n"
-
-msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "BŁĄD: potok odmawia odtwarzania.\n"
-
-msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "Włączony EOS przy wyłączaniu - wymuszanie EOS w potoku\n"
-
-msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "Włączony EOS przy wyłączaniu - oczekiwanie na EOS po błędzie\n"
-
-msgid "Waiting for EOS...\n"
-msgstr "Oczekiwanie na EOS...\n"
-
-msgid "EOS received - stopping pipeline...\n"
-msgstr "Otrzymano EOS - zatrzymywanie potoku...\n"
-
-msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Przerwanie podczas oczekiwania na EOS - zatrzymywanie potoku...\n"
-
-msgid "An error happened while waiting for EOS\n"
-msgstr "Wystąpił błąd w trakcie oczekiwania na EOS\n"
-
 msgid "Execution ended after %"
 msgstr "Wykonywanie zakończone po %"
-
-msgid "Setting pipeline to READY ...\n"
-msgstr "Ustawianie potoku na GOTOWOŚĆ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
-
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Błąd tworzenia potoku: %s\n"
-
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Błąd odgałęziania procesu: %s\n"
-
-#~ msgid "Error reading from console: %s\n"
-#~ msgstr "Błąd odczytu z konsoli: %s\n"
-
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Błąd zapisu na konsolę: %s\n"
