@@ -1,6 +1,7 @@
 [wrap-file]
 directory = fdk-aac-2.0.2
 source_url = https://sourceforge.net/projects/opencore-amr/files/fdk-aac/fdk-aac-2.0.2.tar.gz/download
+source_fallback_url = https://gstreamer.freedesktop.org/data/src/mirror/fdk-aac-2.0.2.tar.gz
 source_filename = fdk-aac-2.0.2.tar.gz
 source_hash = c9e8630cf9d433f3cead74906a1520d2223f89bcd3fa9254861017440b8eb22f
 patch_filename = fdk-aac_2.0.2-0_patch.zip
