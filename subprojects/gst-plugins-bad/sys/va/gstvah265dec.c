@@ -188,7 +188,7 @@ _submit_previous_slice (GstVaBaseDec * base, GstVaDecodePicture * va_pic)
   return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_h265_dec_end_picture (GstH265Decoder * decoder, GstH265Picture * picture)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
@@ -210,17 +210,17 @@ gst_va_h265_dec_end_picture (GstH265Decoder * decoder, GstH265Picture * picture)
 
   if (!ret) {
     GST_ERROR_OBJECT (self, "Failed to submit the previous slice");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   ret = gst_va_decoder_decode (base->decoder, va_pic);
   if (!ret) {
     GST_ERROR_OBJECT (self, "Failed at end picture %p, (poc %d)",
         picture, picture->pic_order_cnt);
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
