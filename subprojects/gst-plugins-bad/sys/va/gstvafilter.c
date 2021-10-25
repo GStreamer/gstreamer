@@ -1509,6 +1509,8 @@ gst_va_filter_drop_filter_buffers (GstVaFilter * self)
 {
   gboolean ret = TRUE;
 
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+
   GST_OBJECT_LOCK (self);
   if (self->filters)
     ret = _destroy_filters_unlocked (self);
