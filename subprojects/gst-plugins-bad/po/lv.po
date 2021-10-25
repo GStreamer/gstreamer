@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.2.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2014-04-20 15:52+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -16,6 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Poedit-Language: Latvian\n"
 "X-Poedit-Country: LATVIA\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
@@ -76,6 +77,7 @@ msgstr "Apakšattēla formāts netika konfigurēts pirms datu plūsmas"
 msgid "Failed to get fragment URL."
 msgstr "Neizdevās saņemt fragmenta URL."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Nevarēja lejupielādēt fragmentus"
 
@@ -102,7 +104,7 @@ msgstr "Nevarēja saņemt iestatījumus no priekšējās ierīces “%s”."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nevarēja atvērt datni “%s” lasīšanai."
 
-#, fuzzy
+#, fuzzy, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Nevarēja atrast DVB kanāla konfigurācijas datni"
 
@@ -120,15 +122,29 @@ msgstr "Nevarēja atrast sīkāku informāciju par DVB kanālu %s"
 
 #, fuzzy, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Nevarēja atrast sīkāku informāciju par DVB kanālu %s"
+msgstr "Neizdevās atvērt DVD ierīci “%s”."
 
 #, fuzzy, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Nevarēja atrast DVB kanāla konfigurācijas datni"
 
-#, fuzzy
+#, fuzzy, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "DVB kanāla konfigurācijas datne nesatur nevienu kanālu"
+
+#~ msgid "Couldn't get the Manifest's URI"
+#~ msgstr "Nevarēja saņemt manifesta URI"
+
+#~ msgid "No file name specified for writing."
+#~ msgstr "Ierakstīšanai nav norādīts neviens datnes nosaukums."
+
+#, c-format
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Nav iespējams atvērt datni “%s” ierakstīšanai."
+
+#, c-format
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Nevarēja ierakstīt datnē “%s”."
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Nevarēja izveidot savienojumu ar sndio"
@@ -142,26 +158,15 @@ msgstr "DVB kanāla konfigurācijas datne nesatur nevienu kanālu"
 #~ msgid "Could not start sndio"
 #~ msgstr "Nevarēja palaist sndio"
 
-#~ msgid "No file name specified for writing."
-#~ msgstr "Ierakstīšanai nav norādīts neviens datnes nosaukums."
+#~ msgid "Internal data flow error."
+#~ msgstr "Iekšēja datu plūsmas kļūda."
 
+#, c-format
 #~ msgid ""
 #~ "Given file name \"%s\" can't be converted to local file name encoding."
 #~ msgstr ""
 #~ "Doto datnes nosaukumu “%s” nevar pārveidot uz lokālo datnes nosaukuma "
 #~ "kodējumu."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Nav iespējams atvērt datni “%s” ierakstīšanai."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Iekšēja datu plūsmas kļūda."
-
-#~ msgid "Couldn't get the Manifest's URI"
-#~ msgstr "Nevarēja saņemt manifesta URI"
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Nevarēja ierakstīt datnē “%s”."
 
 #~ msgid "Internal clock error."
 #~ msgstr "Iekšējā pulksteņa kļūda."

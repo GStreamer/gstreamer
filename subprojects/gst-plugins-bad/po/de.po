@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2019-02-09 20:47+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -78,6 +78,7 @@ msgstr "Format des Unterbilds wurde nicht vor dem Datenfluss konfiguriert"
 msgid "Failed to get fragment URL."
 msgstr "Ermitteln der Fragment-Adresse schlug fehl."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Fragmente konnten nicht heruntergeladen werden"
 
@@ -106,6 +107,7 @@ msgstr ""
 msgid "Could not open file \"%s\" for reading."
 msgstr "Datei »%s« konnte nicht zum Lesen geöffnet werden."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Kanal-Konfigurationsdatei konnte nicht gefunden werden"
 
@@ -129,6 +131,7 @@ msgstr "Festlegen der Eigenschaften für Kanal »%s« schlug fehl"
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Kanal-Konfigurationsdatei konnte nicht gefunden werden: »%s«"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Kanal-Konfigurationsdatei enthält keine Kanäle"
 

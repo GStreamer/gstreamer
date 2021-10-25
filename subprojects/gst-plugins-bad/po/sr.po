@@ -1,14 +1,14 @@
 # Serbian translation of gst-plugins
-# Copyright (C) 2014 Free Software Foundation, Inc.
+# Copyright © 2020 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011—2015, 2016.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011—2020.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
-"PO-Revision-Date: 2016-12-04 14:22+0200\n"
+"Project-Id-Version: gst-plugins-bad-1.15.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2020-04-01 13:24+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -17,11 +17,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Virtaal 0.7.1\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Project-Style: gnome\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Није подешена адреса."
 
 msgid "OpenCV failed to load template image"
 msgstr "ОтворениЦВ није успео да учита слику шаблона"
@@ -72,6 +73,7 @@ msgstr "Запис подслике није подешен пре проток�
 msgid "Failed to get fragment URL."
 msgstr "Нисам успео да добијем адресу одломка."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Не могу да преузмем одломке"
 
@@ -98,6 +100,7 @@ msgstr "Не могу да нумеришем системе доставе са
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не могу да отворим датотеку „%s“ за читање."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Не могу да нађем датотеку подешавања канала"
 
@@ -121,6 +124,7 @@ msgstr "Нисам успео да подесим својства за кана
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Не могу да нађем датотеку подешавања канала: %s"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Датотека подешавања канала не садржи ниједан канал"
 

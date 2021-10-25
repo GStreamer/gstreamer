@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -69,6 +69,7 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr ""
 
@@ -95,6 +96,7 @@ msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍
 msgid "Could not open file \"%s\" for reading."
 msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr ""
 
@@ -118,6 +120,7 @@ msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କ�
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr ""
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
 

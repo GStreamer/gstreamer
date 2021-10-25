@@ -1,15 +1,15 @@
 # Brazilian Portuguese translation of gst-plugins-bad.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Copyright (C) 2007-2016 Free Software Foundation, Inc.
+# Copyright (C) 2007-2021 Free Software Foundation, Inc.
 # Raphael Higino <In memorian>, 2007.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2018.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
-"PO-Revision-Date: 2018-10-20 15:25-0300\n"
+"Project-Id-Version: gst-plugins-bad-1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-09-26 12:26-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -19,9 +19,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.0\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Nenhum URL definido."
 
 msgid "OpenCV failed to load template image"
 msgstr "O OpenCV falhou ao carregar a imagem modelo"
@@ -69,11 +70,12 @@ msgid "Digitalzoom element couldn't be created"
 msgstr "O elemento Digitalzoom não pôde ser criado"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr "O formato de subimagem não foi configurado antes do fluxo de dados"
+msgstr "O formato de sub-imagem não foi configurado antes do fluxo de dados"
 
 msgid "Failed to get fragment URL."
 msgstr "Falha ao obter um fragmento de URL."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Não foi possível baixar os fragmentos"
 
@@ -103,6 +105,7 @@ msgstr ""
 msgid "Could not open file \"%s\" for reading."
 msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Não foi possível encontrar o arquivo de configuração de canal"
 
@@ -112,7 +115,7 @@ msgstr "Não foi possível carregar o arquivo de configuração de canal: \"%s\"
 
 #, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr "Não foi possível encontrar detalhes para o canal DVB \"%s\""
+msgstr "Não foi possível encontrar detalhes para o canal \"%s\""
 
 #, c-format
 msgid "No properties for channel '%s'"
@@ -126,6 +129,7 @@ msgstr "Falha ao definir propriedades para o canal \"%s\""
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Não foi possível encontrar o arquivo de configuração de canal: \"%s\""
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Nenhum canal foi encontrado no arquivo de configuração de canal"
 
@@ -136,7 +140,7 @@ msgstr "Nenhum canal foi encontrado no arquivo de configuração de canal"
 #~ msgstr "Um erro ocorreu no GL"
 
 #~ msgid "format wasn't negotiated before get function"
-#~ msgstr "O formato não foi negociado antes da chamada da função"
+#~ msgstr "o formato não foi negociado antes da chamada da função"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Não foi possível estabelecer a conexão para sndio"

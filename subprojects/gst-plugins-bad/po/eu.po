@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.17.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2010-03-25 12:30+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -16,6 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
@@ -70,6 +71,7 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr ""
 
@@ -96,6 +98,7 @@ msgstr "Ezin izan dira \"%s\" kontrol-gailuaren ezarpenak eskuratu."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Ezin izan da \"%s\" fitxategia ireki irakurtzeko."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr ""
 
@@ -119,28 +122,23 @@ msgstr "Huts egin du '%s' DVD gailua irekitzean."
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr ""
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Could not configure sndio"
-#~ msgstr "Ezin izan da \"%s\" fitxategia ireki irakurtzeko."
-
-#, fuzzy
-#~ msgid "Could not start sndio"
-#~ msgstr "Ezin izan da DVDaren tituluaren informazioa irakurri."
 
 #~ msgid "No file name specified for writing."
 #~ msgstr "Ez da fitxategi-izenik zehaztu idazteko."
 
+#, c-format
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Ezin izan da \"%s\" fitxategia ireki idazteko."
 
-#~ msgid "Internal data flow error."
-#~ msgstr "Datu-korrontearen barne-errorea."
-
+#, c-format
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "Ezin izan da idatzi \"%s\" fitxategian."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Datu-korrontearen barne-errorea."
 
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr ""
@@ -450,9 +448,11 @@ msgstr ""
 #~ msgid "Virtual Mixer Channels"
 #~ msgstr "Nahastaile birtualaren kanalak"
 
+#, c-format
 #~ msgid "%s Function"
 #~ msgstr "%s funtzioa"
 
+#, c-format
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 

@@ -2,26 +2,27 @@
 # Czech translations of gst-plugins.
 # Copyright (C) 2004 gst-plugins' COPYRIGHT HOLDER
 # This file is put in the public domain.
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014, 2016.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014, 2016, 2020.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.7.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
-"PO-Revision-Date: 2016-05-20 12:33+0100\n"
+"Project-Id-Version: gst-plugins-bad 1.15.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2020-06-11 09:09+0200\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 1.6.10\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Nebola nastavená URL adresa."
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV nedokázalo načítať obrazovú šablónu"
@@ -74,6 +75,7 @@ msgstr "Formát podobrázku nebol nastavený pred prúdom údajov."
 msgid "Failed to get fragment URL."
 msgstr "Nepodarilo sa získať URL fragmentu."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Nepodarilo sa získať fragmenty"
 
@@ -100,33 +102,33 @@ msgstr "Nepodarilo sa získať nastavenia od zariadenia \"%s\"."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."
 
-#, fuzzy
+#, c-format
 msgid "Couldn't find channel configuration file"
-msgstr "Nepodarilo sa nájsť konfiguračný súbor DVB kanálu"
+msgstr "Nepodarilo sa nájsť konfiguračný súbor kanálu"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "Nepodarilo sa načítať konfiguračný súbor DVB kanálu: %s"
+msgstr "Nepodarilo sa načítať konfiguračný súbor kanálu: %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr "Nepodarilo sa nájsť podrobnosti o DVB kanáli %s"
+msgstr "Nepodarilo sa nájsť podrobnosti o kanáli %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "No properties for channel '%s'"
-msgstr "Nepodarilo sa nájsť podrobnosti o DVB kanáli %s"
+msgstr "Nepodarilo sa nájsť podrobnosti o kanáli %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Nepodarilo sa nájsť podrobnosti o DVB kanáli %s"
+msgstr "Nepodarilo sa nastaviť vlastnosti pre kanál '%s'"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Nepodarilo sa nájsť konfiguračný súbor DVB kanálu"
+msgstr "Nepodarilo sa nájsť konfiguračný súbor kanálu: '%s'"
 
-#, fuzzy
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
-msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
+msgstr "Konfiguračný súbor kanálov neobsahuje žiadne kanály"
 
 #~ msgid "format wasn't negotiated before get function"
 #~ msgstr "formát nebol dohodnutý pred funkciou stiahnutia"
@@ -143,6 +145,9 @@ msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
 #~ msgid "Could not start sndio"
 #~ msgstr "Nepodarilo sa spustiť sndio"
 
+#~ msgid "Internal data flow error."
+#~ msgstr "Vnútorná chyba prúdu údajov."
+
 #~ msgid "No file name specified for writing."
 #~ msgstr "Nebolo zadané žiadne meno súboru pre zápis."
 
@@ -154,9 +159,6 @@ msgstr "Konfiguračný súbor DVB kanála neobsahuje žiadne kanály"
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Nepodarilo sa otvoriť súbor \"%s\" pre zápis."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Vnútorná chyba prúdu údajov."
 
 #~ msgid "Couldn't get the Manifest's URI"
 #~ msgstr "Nepodarilo sa získať URI Manifestu"

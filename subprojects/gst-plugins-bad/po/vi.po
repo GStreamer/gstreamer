@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2016-11-02 13:38+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -75,6 +75,7 @@ msgstr "Định dạng ảnh phụ chưa được cấu hình trước khi dữ 
 msgid "Failed to get fragment URL."
 msgstr "Gặp lỗi khi lấy URL phân mảnh."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Không thể tải về các phân mảnh"
 
@@ -103,6 +104,7 @@ msgstr ""
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không thể mở tập tin “%s” để đọc."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Không thể tìm thấy tập tin cấu hình kênh"
 
@@ -126,6 +128,7 @@ msgstr "Gặp lỗi khi đặt thuộc tính cho kênh “%s”"
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Không thể tìm thấy tập tin cấu hình kênh: “%s”"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Tập tin cấu hình kênh chẳng chứa kênh nào cả"
 
@@ -153,11 +156,13 @@ msgstr "Tập tin cấu hình kênh chẳng chứa kênh nào cả"
 #~ msgid "No file name specified for writing."
 #~ msgstr "Chưa chỉ định tên tập tin để ghi vào."
 
+#, c-format
 #~ msgid ""
 #~ "Given file name \"%s\" can't be converted to local file name encoding."
 #~ msgstr ""
 #~ "Tên tập tin đã cho “%s” không thể chuyển đổi bảng mã tên tập tin nội bộ."
 
+#, c-format
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Không thể mở tập tin “%s” để ghi."
 

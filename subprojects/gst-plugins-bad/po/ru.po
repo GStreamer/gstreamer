@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2019-02-02 09:10+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -74,6 +74,7 @@ msgstr "Не настроен формат субграфики (subpicture) д�
 msgid "Failed to get fragment URL."
 msgstr "Ошибка при получении URL фрагмента."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Не удалось скачать фрагменты"
 
@@ -100,6 +101,7 @@ msgstr "Не удалось пронумеровать системы доста
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не удалось открыть для чтения файл «%s»."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Не удалось найти файл настройки каналов"
 
@@ -123,6 +125,7 @@ msgstr "Не удалось задать настройки канала «%s»"
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Не удалось найти файл настройки каналов: «%s»"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Файл настройки каналов не содержит каналов"
 

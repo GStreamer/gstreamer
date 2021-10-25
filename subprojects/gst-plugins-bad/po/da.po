@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2019-02-05 11:28+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -71,6 +71,7 @@ msgstr "Format for underbillede blev ikke konfigureret før datastrøm"
 msgid "Failed to get fragment URL."
 msgstr "Kunne ikke indhente fragmentadresse."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Kunne ikke hente fragmenter"
 
@@ -97,6 +98,7 @@ msgstr "Kunne opregne leveringssystemer fra forende-enheden »%s«."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åbne filen »%s« for læsning."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Kunne ikke finde kanalkonfigurationsfil"
 
@@ -121,6 +123,7 @@ msgstr "Kunne ikke angive egenskaber for kanalen »%s«"
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Kunne ikke finde kanalkonfigurationsfilen: »%s«"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Kanalkonfigurationsfilen indeholder ikke nogen kanaler"
 

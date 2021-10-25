@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 
 msgid "No URL set."
 msgstr ""
@@ -40,7 +41,7 @@ msgstr ""
 
 #, fuzzy
 msgid "Could not read DVD."
-msgstr "Kon nie skryf na lêer \"%s\" nie."
+msgstr "Kon nie skryf na toestel \"%s\" nie."
 
 msgid "This file contains no playable streams."
 msgstr ""
@@ -68,6 +69,7 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr ""
 
@@ -94,6 +96,7 @@ msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr ""
 
@@ -109,34 +112,25 @@ msgstr ""
 msgid "No properties for channel '%s'"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
+msgstr ""
 
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr ""
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Could not configure sndio"
-#~ msgstr "Kon nie oudio-toestel \"%s\" konfigureer nie."
-
-#, fuzzy
-#~ msgid "Could not start sndio"
-#~ msgstr "Kon nie skryf na lêer \"%s\" nie."
 
 #, fuzzy
 #~ msgid "No file name specified for writing."
 #~ msgstr "Geen lêernaam gespesifiseer."
 
+#, c-format
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Kon nie skryf na lêer \"%s\" nie."
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Kon nie toestel \"%s\" oopmaak vir lees en skryf nie."
@@ -144,14 +138,17 @@ msgstr ""
 #~ msgid "Device \"%s\" is not a capture device."
 #~ msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
 
-#~ msgid "Could not write to device \"%s\"."
-#~ msgstr "Kon nie skryf na toestel \"%s\" nie."
-
 #~ msgid "Could not get buffers from device \"%s\"."
 #~ msgstr "Kon nie buffers vanaf toestel \"%s\" verkry nie."
 
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Kon nie oudio-toestel \"%s\" oopmaak vir skryf nie."
+
 #~ msgid "Could not open control device \"%s\" for writing."
 #~ msgstr "Kon nie beheertoestel \"%s\" oopmaak vir skryf nie."
+
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Kon nie oudio-toestel \"%s\" konfigureer nie."
 
 #~ msgid "Could not set audio device \"%s\" to %d Hz."
 #~ msgstr "Kon nie klanktoestel \"%s\" verstel na %d Hz nie."
@@ -183,8 +180,29 @@ msgstr ""
 #~ msgid "Could not open device \"%s\" for reading."
 #~ msgstr "Kon nie toestel \"%s\" oopmaak vir lees nie."
 
+#~ msgid "Volume"
+#~ msgstr "Volume"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Treble"
+
 #~ msgid "Synth"
 #~ msgstr "Sintetiseerder"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Luidspreker"
+
+#~ msgid "Line-in"
+#~ msgstr "Lyn-in"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofoon"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -195,8 +213,14 @@ msgstr ""
 #~ msgid "PCM-2"
 #~ msgstr "PCM-2"
 
+#~ msgid "Record"
+#~ msgstr "Neem op"
+
 #~ msgid "In-gain"
 #~ msgstr "In-versterking"
+
+#~ msgid "Out-gain"
+#~ msgstr "Uit-versterking"
 
 #~ msgid "Line-1"
 #~ msgstr "Lyn-1"
@@ -206,6 +230,9 @@ msgstr ""
 
 #~ msgid "Line-3"
 #~ msgstr "Lyn-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digitaal-1"
 
 #~ msgid "Digital-2"
 #~ msgstr "Digitaal-2"
@@ -219,8 +246,18 @@ msgstr ""
 #~ msgid "Phone-out"
 #~ msgstr "Telefoon-uit"
 
+#~ msgid "Video"
+#~ msgstr "Video"
+
 #~ msgid "Radio"
 #~ msgstr "Radio"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#, fuzzy
+#~ msgid "PC Speaker"
+#~ msgstr "Luidspreker"
 
 #~ msgid "Could not open CD device for reading."
 #~ msgstr "Kon nie CD-toestel oopmaak om te lees nie."

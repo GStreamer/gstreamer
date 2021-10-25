@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2016-12-30 13:28+0100\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
@@ -72,6 +72,7 @@ msgstr "Il formât subpicture nol jere configurât prime dal fluî dai dâts"
 msgid "Failed to get fragment URL."
 msgstr "No si è rivâts a otignî il URL dal frament"
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Impussibil discjariâ i framents"
 
@@ -99,6 +100,7 @@ msgstr ""
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impussibil vierzi il file \"%s\" pe leture."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Impussibil cjatâ il file di configurazion canâl"
 
@@ -122,6 +124,7 @@ msgstr "No si è rivâts a stabilî lis proprietâts pal canâl '%s'"
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Impussibil cjatâ il file di configurazion canâl: '%s'"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Il file di configurazion canâl nol à nissun canâl"
 
@@ -149,11 +152,13 @@ msgstr "Il file di configurazion canâl nol à nissun canâl"
 #~ msgid "No file name specified for writing."
 #~ msgstr "Nissun non di file specificât pe scriture."
 
+#, c-format
 #~ msgid ""
 #~ "Given file name \"%s\" can't be converted to local file name encoding."
 #~ msgstr ""
 #~ "Il non di file furnît \"%s\" nol pues jessi convertît te codifiche non "
 #~ "file locâl."
 
+#, c-format
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Impussibil vierzi il file \"%s\" pe scriture."

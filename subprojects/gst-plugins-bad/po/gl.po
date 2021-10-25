@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2011-09-05 12:50+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -16,6 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
 "X-Poedit-Language: galego\n"
 
@@ -71,6 +72,7 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr ""
 
@@ -97,6 +99,7 @@ msgstr "Non foi posíbel obter os axustes do dispositivo frontend «%s»."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Non foi posíbel abrir o ficheiro «%s» para ler."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr ""
 
@@ -120,28 +123,23 @@ msgstr "Produciuse un fallo ao abrir o dispositivo DVD «%s»."
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr ""
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Could not configure sndio"
-#~ msgstr "Non foi posíbel abrir o ficheiro «%s» para ler."
-
-#, fuzzy
-#~ msgid "Could not start sndio"
-#~ msgstr "Non foi posíbel ler o DVD."
 
 #~ msgid "No file name specified for writing."
 #~ msgstr "Non se especificou ningún nome de ficheiro para a súa escritura."
 
+#, c-format
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Non foi posíbel abrir o ficheiro «%s» para escribir."
 
-#~ msgid "Internal data flow error."
-#~ msgstr "Produciuse un erro interno no fluxo de datos."
-
+#, c-format
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "Non foi posíbel escribir no ficheiro «%s»."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Produciuse un erro interno no fluxo de datos."
 
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr ""

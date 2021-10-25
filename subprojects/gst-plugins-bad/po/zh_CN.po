@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 02:16+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2019-03-05 16:31+0100\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -20,134 +20,107 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Poedit 2.0.7\n"
 
-#: ext/curl/gstcurlhttpsrc.c:1265
 msgid "No URL set."
 msgstr "未设置 URL。"
 
-#: ext/opencv/gsttemplatematch.cpp:202
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV加载模版图片失败"
 
-#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "无法读取DVD的标题信息。"
 
-#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "无法打开DVD设备“%s”。"
 
-#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "无法设置基于PGC的检索。"
 
-#: ext/resindvd/resindvdsrc.c:1164
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
 msgstr "无法读取DVD。这可能是由于DVD已加密，且没有安装解密所需的库。"
 
-#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "无法读取DVD。"
 
-#: ext/smoothstreaming/gstmssdemux.c:421
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:731
 msgid "This file contains no playable streams."
 msgstr "该文件含有无法播放的流。"
 
-#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "无法打开并读取sndfile流。"
 
-#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr "生成文件的预告片段超过其自身流长度。"
 
-#: gst/camerabin2/camerabingeneral.c:167 gst/camerabin2/gstcamerabin2.c:1859
-#: gst/camerabin2/gstdigitalzoom.c:283 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "缺少“%s”组件 - 请检查你的GStreamer安装。"
 
-#: gst/camerabin2/gstcamerabin2.c:347
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr "文件位置为NULL，请将其设置为有效的文件名"
 
-#: gst/camerabin2/gstwrappercamerabinsrc.c:585
 msgid "Digitalzoom element couldn't be created"
 msgstr "无法创建Digitalzoom组件"
 
-#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "子画面格式未在数据流前配置"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3564
 msgid "Failed to get fragment URL."
 msgstr "无法获取片段URL。"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3951
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "无法下载片段。"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:4040
-#: gst/mpegtsdemux/mpegtsbase.c:1640
 msgid "Internal data stream error."
 msgstr "内部数据流错误。"
 
-#: sys/dvb/gstdvbsrc.c:1580 sys/dvb/gstdvbsrc.c:1794
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "不存在设备“%s”。"
 
-#: sys/dvb/gstdvbsrc.c:1584
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "无法打开前端设备“%s”。"
 
-#: sys/dvb/gstdvbsrc.c:1603
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "无法从前端设备“%s”获取设置。"
 
-#: sys/dvb/gstdvbsrc.c:1620
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "无法从终端设备“%s”中枚举传输系统。"
 
-#: sys/dvb/gstdvbsrc.c:1798
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "无法以读方式打开文件“%s”。"
 
-#: sys/dvb/parsechannels.c:410
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "无法找到通道配置文件"
 
-#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
 msgstr "无法加载通道配置文件：“%s”"
 
-#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
 #, c-format
 msgid "Couldn't find details for channel '%s'"
 msgstr "无法获取通道“%s”的详细信息"
 
-#: sys/dvb/parsechannels.c:430
 #, c-format
 msgid "No properties for channel '%s'"
 msgstr "通道“%s”没有属性"
 
-#: sys/dvb/parsechannels.c:439
 #, c-format
 msgid "Failed to set properties for channel '%s'"
 msgstr "无法设置通道“%s”的属性"
 
-#: sys/dvb/parsechannels.c:560
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "无法找到通道配置文件：“%s”"
 
-#: sys/dvb/parsechannels.c:570
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "通道配置文件中不包含任何通道"
 
@@ -175,7 +148,8 @@ msgstr "通道配置文件中不包含任何通道"
 #~ msgid "No file name specified for writing."
 #~ msgstr "未指定写入文件名。"
 
-#~ msgid "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
 #~ msgstr "给定的文件名“%s”无法被转换为本地文件名编码。"
 
 #~ msgid "Could not open file \"%s\" for writing."
@@ -184,8 +158,13 @@ msgstr "通道配置文件中不包含任何通道"
 #~ msgid "default GStreamer sound events audiosink"
 #~ msgstr "默认GStreamer声音事件的音频汇"
 
-#~ msgid "GStreamer can play audio using any number of output elements. Some possible choices are osssink, pulsesink and alsasink. The audiosink can be a partial pipeline instead of just one element."
-#~ msgstr "GStreamer可以使用任意数量的输出组件播放音频。可能的选择有osssink、pulsesink和alsasink。音频汇可以是管道的一部分，而不仅仅为一个组件。"
+#~ msgid ""
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, pulsesink and alsasink. The audiosink can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer可以使用任意数量的输出组件播放音频。可能的选择有osssink、"
+#~ "pulsesink和alsasink。音频汇可以是管道的一部分，而不仅仅为一个组件。"
 
 #~ msgid "description for default GStreamer sound events audiosink"
 #~ msgstr "有关默认GStreamer声音事件的音频汇的说明"
@@ -196,7 +175,8 @@ msgstr "通道配置文件中不包含任何通道"
 #~ msgid "default GStreamer audiosink for Audio/Video Conferencing"
 #~ msgstr "用于音/视频会议的默认Gstreamer音频汇"
 
-#~ msgid "description for default GStreamer audiosink for Audio/Video Conferencing"
+#~ msgid ""
+#~ "description for default GStreamer audiosink for Audio/Video Conferencing"
 #~ msgstr "有关用于音/视频会议的默认Gstreamer音频汇的描述"
 
 #~ msgid "default GStreamer audiosink for Music and Movies"
@@ -208,8 +188,14 @@ msgstr "通道配置文件中不包含任何通道"
 #~ msgid "default GStreamer videosink"
 #~ msgstr "默认GStreamer的视频汇"
 
-#~ msgid "GStreamer can play video using any number of output elements. Some possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. The videosink can be a partial pipeline instead of just one element."
-#~ msgstr "GStreamer可以使用任意数量的输出组件播放视频。可能的选择有xvimagesink、ximagesink、sdlvideosink和aasink。视频汇可以是管道的一部分，而不仅仅为一个组件。"
+#~ msgid ""
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer可以使用任意数量的输出组件播放视频。可能的选择有xvimagesink、"
+#~ "ximagesink、sdlvideosink和aasink。视频汇可以是管道的一部分，而不仅仅为一个"
+#~ "组件。"
 
 #~ msgid "description for default GStreamer videosink"
 #~ msgstr "有关默认GStreamer视频汇的描述"
@@ -220,8 +206,13 @@ msgstr "通道配置文件中不包含任何通道"
 #~ msgid "default GStreamer audiosrc"
 #~ msgstr "默认GStreamer音频源"
 
-#~ msgid "GStreamer can record audio using any number of input elements. Some possible choices are osssrc, pulsesrc and alsasrc. The audio source can be a partial pipeline instead of just one element."
-#~ msgstr "GStreamer可以使用任意数量的输入组件来记录音频。可能的选择有osssrc、pulsesrc和alsasrc。音频源可以是管道的一部分，而不仅仅为一个组件。"
+#~ msgid ""
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, pulsesrc and alsasrc. The audio source can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer可以使用任意数量的输入组件来记录音频。可能的选择有osssrc、"
+#~ "pulsesrc和alsasrc。音频源可以是管道的一部分，而不仅仅为一个组件。"
 
 #~ msgid "description for default GStreamer audiosrc"
 #~ msgstr "有关默认GStreamer音频源的描述"
@@ -232,8 +223,13 @@ msgstr "通道配置文件中不包含任何通道"
 #~ msgid "default GStreamer videosrc"
 #~ msgstr "默认GStreamer视频源"
 
-#~ msgid "GStreamer can record video from any number of input elements. Some possible choices are v4lsrc, v4l2src and videotestsrc. The video source can be a partial pipeline instead of just one element."
-#~ msgstr "GStreamer可以使用任意数量的输出组件播放视频。可能的选择有v4lsrc、v4l2src和videotestsrc。视频源可以是管道的一部分，而不仅仅为一个组件。"
+#~ msgid ""
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc, v4l2src and videotestsrc. The video source "
+#~ "can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer可以使用任意数量的输出组件播放视频。可能的选择有v4lsrc、v4l2src和"
+#~ "videotestsrc。视频源可以是管道的一部分，而不仅仅为一个组件。"
 
 #~ msgid "description for default GStreamer videosrc"
 #~ msgstr "有关默认GStreamer视频源的描述"
@@ -244,8 +240,15 @@ msgstr "通道配置文件中不包含任何通道"
 #~ msgid "default GStreamer visualization"
 #~ msgstr "默认Gstreamer可视化组件"
 
-#~ msgid "GStreamer can put visualization plugins in a pipeline to transform audio streams in video frames. Some possible choices are goom, goom2k1 and synaesthesia. The visualization plugin can be a partial pipeline instead of just one element."
-#~ msgstr "GStreamer可以将可视化插件加载于管道中，并在视频帧中传递音频流。可能的选择有goom、goom2k1和synaesthesia。可视化插件可以是管道的一部分，而不仅仅为一个组件。"
+#~ msgid ""
+#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
+#~ "streams in video frames. Some possible choices are goom, goom2k1 and "
+#~ "synaesthesia. The visualization plugin can be a partial pipeline instead "
+#~ "of just one element."
+#~ msgstr ""
+#~ "GStreamer可以将可视化插件加载于管道中，并在视频帧中传递音频流。可能的选择"
+#~ "有goom、goom2k1和synaesthesia。可视化插件可以是管道的一部分，而不仅仅为一"
+#~ "个组件。"
 
 #~ msgid "description for default GStreamer visualization"
 #~ msgstr "有关默认Gstreamer可视化组件的描述"
@@ -265,8 +268,11 @@ msgstr "通道配置文件中不包含任何通道"
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "无法打开音频文件进行混音控制操作。"
 
-#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-#~ msgstr "无法打开音频设备进行音量控制操作。此部件不支持开放声音系统(OSS)的版本。"
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "无法打开音频设备进行音量控制操作。此部件不支持开放声音系统(OSS)的版本。"
 
 #~ msgid "Volume"
 #~ msgstr "音量"
@@ -591,16 +597,22 @@ msgstr "通道配置文件中不包含任何通道"
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 
-#~ msgid "Could not open audio device for playback. Device is being used by another application."
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
 #~ msgstr "无法打开音频设备播放音频。设备正由另一程序使用。"
 
-#~ msgid "Could not open audio device for playback. You don't have permission to open the device."
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
 #~ msgstr "无法打开音频设备播放音频。您无权打开此设备"
 
 #~ msgid "Could not open audio device for playback."
 #~ msgstr "无法打开音频设备播放音频。"
 
-#~ msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
 #~ msgstr "无法打开音频设备播放音频。此组件不支持开放声音系统(OSS)版本。"
 
 #~ msgid "Playback is not supported by this audio device."
@@ -618,7 +630,9 @@ msgstr "通道配置文件中不包含任何通道"
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 #~ msgstr "无法配置 TwoLAME 编码器。请检查您的编码参数。"
 
-#~ msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
 #~ msgstr "不允许使用“%2$s”所请求的码率 %1$d kbit/s。码率改为 %3$d kbit/s。"
 
 #~ msgid "PCM 1"

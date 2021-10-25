@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.8.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2008-10-26 20:27+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -13,6 +13,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Poedit-Language: Maltese\n"
 "X-Poedit-Country: MALTA\n"
 "X-Poedit-SourceCharset: utf-8\n"
@@ -69,6 +70,7 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr ""
 
@@ -95,7 +97,7 @@ msgstr "Ma nistax inġib is-settings mill-apparat frontend \"%s\"."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Ma nistax naqra mill-fajl \"%s\"."
 
-#, fuzzy
+#, fuzzy, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Virtual mixer channel configuration"
 
@@ -119,43 +121,106 @@ msgstr "Problema biex niftaħ apparat tad-DVD '%s'."
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Virtual mixer channel configuration"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
 
-#, fuzzy
-#~ msgid "Could not configure sndio"
-#~ msgstr "Ma nistax naqra mill-fajl \"%s\"."
-
-#, fuzzy
-#~ msgid "Could not start sndio"
-#~ msgstr "Ma stajtx naqra informazzjoni fuq it-titlu tad-DVD."
-
-#~ msgid "No file name specified for writing."
-#~ msgstr "L-ebda isem speċifikat biex nikteb."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Ma nistax niftaħ fajl \"%s\" biex nikteb."
+#~ msgid "Internal clock error."
+#~ msgstr "Internal clock error."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Internal data flow error."
 
+#~ msgid "No file name specified for writing."
+#~ msgstr "L-ebda isem speċifikat biex nikteb."
+
+#, c-format
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Ma nistax niftaħ fajl \"%s\" biex nikteb."
+
+#, c-format
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "Ma nistax nikteb fil-fajl \"%s\". "
-
-#~ msgid "Internal clock error."
-#~ msgstr "Internal clock error."
 
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 #~ msgstr ""
 #~ "Ma nistax naghmel il-konfigurazzjoni ta' TwoLAME encoder.  Iċċekkja "
 #~ "parametri tal-encoding."
 
+#, c-format
 #~ msgid ""
 #~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 #~ "bitrate was changed to %d kbit/s."
 #~ msgstr ""
 #~ "Il-bitrate rikjesta ta' %d kbit/s għal-property '%s' mhux permessa. Il-"
 #~ "bitrate ġiet mibdula għal %d kbit/s. "
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Ma nistax niftaħ apparat tal-awdjo għal mixer control handling."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Ma nistax niftaħ apparat tal-awdjo għal mixer control handling. Din il-"
+#~ "verzjoni ta' Open Sound System mhux issapportjata minn din l-element."
+
+#~ msgid "Fast"
+#~ msgstr "Fast"
+
+#~ msgid "Low"
+#~ msgstr "Low"
+
+#~ msgid "Medium"
+#~ msgstr "Medium"
+
+#~ msgid "High"
+#~ msgstr "High"
+
+#~ msgid "Very high"
+#~ msgstr "Very high"
+
+#~ msgid "Production"
+#~ msgstr "Production"
+
+#~ msgid "Off"
+#~ msgstr "Off"
+
+#~ msgid "On"
+#~ msgstr "On"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Surround sound"
+#~ msgstr "Surround sound"
+
+#~ msgid "Input mix"
+#~ msgstr "Input mix"
+
+#~ msgid "Front"
+#~ msgstr "Quddiem"
+
+#~ msgid "Rear"
+#~ msgstr "Wara"
+
+#~ msgid "Side"
+#~ msgstr "Ġenb"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Center / LFE"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofonu"
+
+#~ msgid "Front panel microphone"
+#~ msgstr "Mikrofonu tal-panella ta' quddiem"
+
+#~ msgid "Input"
+#~ msgstr "Input"
+
+#~ msgid "Line-in"
+#~ msgstr "Line-in"
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"
@@ -168,6 +233,60 @@ msgstr ""
 
 #~ msgid "PCM 4"
 #~ msgstr "PCM 4"
+
+#~ msgid "Green connector"
+#~ msgstr "Connector aħdar"
+
+#~ msgid "Green front panel connector"
+#~ msgstr "Front panel connector aħdar"
+
+#~ msgid "Pink connector"
+#~ msgstr "Connector roża"
+
+#~ msgid "Pink front panel connector"
+#~ msgstr "Front panel connector roża"
+
+#~ msgid "Blue connector"
+#~ msgstr "Connector Blu"
+
+#~ msgid "Blue front panel connector"
+#~ msgstr "Front panel connector blu"
+
+#~ msgid "Orange connector"
+#~ msgstr "Connector oranġjo"
+
+#~ msgid "Orange front panel connector"
+#~ msgstr "Front Panel connector oranġjo"
+
+#~ msgid "Black connector"
+#~ msgstr "Connector iswed"
+
+#~ msgid "Black front panel connector"
+#~ msgstr "Front panel connector iswed"
+
+#~ msgid "Gray connector"
+#~ msgstr "Connector Griż"
+
+#~ msgid "Gray front panel connector"
+#~ msgstr "Front panel connector Griż"
+
+#~ msgid "White connector"
+#~ msgstr "Connector abjad"
+
+#~ msgid "White front panel connector"
+#~ msgstr "Front panel connector abjad"
+
+#~ msgid "Red connector"
+#~ msgstr "Connector aħmar"
+
+#~ msgid "Red front panel connector"
+#~ msgstr "Front panel connector aħmar"
+
+#~ msgid "Yellow connector"
+#~ msgstr "Connector isfar"
+
+#~ msgid "Yellow front panel connector"
+#~ msgstr "Front panel connector isfar"
 
 #~ msgid "Green connector function"
 #~ msgstr "Connector function aħdar"
@@ -222,3 +341,57 @@ msgstr ""
 
 #~ msgid "Yellow front panel connector function"
 #~ msgstr "Front panel connector function isfar"
+
+#~ msgid "Front panel line-in"
+#~ msgstr "Front panel line-in"
+
+#~ msgid "Headphones"
+#~ msgstr "Headphones"
+
+#~ msgid "Front panel headphones"
+#~ msgstr "Front panel headphones"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Virtual mixer input"
+#~ msgstr "Virtual mixer input"
+
+#~ msgid "Virtual mixer output"
+#~ msgstr "Virtual mixer output"
+
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
+#~ msgstr ""
+#~ "Ma nistax niftaħ apparat tal-awdjo biex indoqq. Apparat qed jintuża minn "
+#~ "programm ieħor."
+
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
+#~ msgstr ""
+#~ "Ma nistax niftaħ apparat tal-awdjo biex indoqq. M'għandekx aċċess għall-"
+#~ "apparat."
+
+#~ msgid "Could not open audio device for playback."
+#~ msgstr "Ma nistax niftaħ apparat tal-awdjo biex indoqq."
+
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
+#~ msgstr ""
+#~ "Ma nistax niftaħ apparat tal-awdjo biex indoqq. Dil il-verżjoni ta' Open "
+#~ "Sound System mhux issapportjatha minn dan l-element."
+
+#~ msgid "Playback is not supported by this audio device."
+#~ msgstr "Id-daqq mhux issappartjat minn dan l-apparat tal-awdjo."
+
+#~ msgid "Audio playback error."
+#~ msgstr "Żball fiid-daqq tal-awdjo."
+
+#~ msgid "Recording is not supported by this audio device."
+#~ msgstr "Irrekordjar mhux issapportjat minn dan l-apparat tal-awdjo."
+
+#~ msgid "Error recording from audio device."
+#~ msgstr "Żball fl-irrekordjar mill-apparat tal-awdjo."

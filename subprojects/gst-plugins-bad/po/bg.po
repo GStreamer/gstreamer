@@ -1,16 +1,17 @@
 # Bulgarian translation of gst-plugins-bad.
 # Copyright (C) 2007, 2008, 2009, 2010, 2011, 2016 Free Software Fondation, Inc.
 # Copyright (C) 2017 Free Software Fondation, Inc.
+# Copyright (C) 2021 Alexander Shopov.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010, 2011, 2016.
-# Alexander Shopov <ash@kambanaria.org>, 2017.
+# Alexander Shopov <ash@kambanaria.org>, 2017, 2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
-"PO-Revision-Date: 2017-05-08 11:49+0200\n"
+"Project-Id-Version: gst-plugins-bad 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-10-02 20:07+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
@@ -21,7 +22,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Не е зададен адрес."
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV не успя да зареди изображението-шаблон"
@@ -73,6 +74,7 @@ msgstr "Форматът на подкартината не е бил уточн
 msgid "Failed to get fragment URL."
 msgstr "Неуспешно получаване на адреса на фрагмента."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Фрагментите не могат да бъдат свалени"
 
@@ -89,16 +91,17 @@ msgstr "Устройството „%s“ не може да бъде отвор
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Настройките на устройството „%s“ не могат да бъдат получени."
+msgstr "Настройките на устройството „%s“ не може да бъдат получени."
 
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Системите за доставка от устройството „%s“ не могат да бъдат изброени."
+msgstr "Системите за доставка от устройството „%s“ не може да бъдат изброени."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Файлът „%s“ не може да се отвори за четене."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Файлът с настройките на каналите не може да бъде открит"
 
@@ -116,21 +119,12 @@ msgstr "Липсват данни за канала „%s“"
 
 #, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Свойствата на канала „%s“ не могат да бъдат зададени"
+msgstr "Свойствата на канала „%s“ не може да бъдат зададени"
 
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Файлът с настройките на каналите не може да бъде открит: „%s“"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Файлът с настройките на каналите не съдържа никакви канали"
-
-#~ msgid "failed to draw pattern"
-#~ msgstr "шарката не може да се изобрази"
-
-#~ msgid "A GL error occured"
-#~ msgstr "Грешка от GL"
-
-#~ msgid "format wasn't negotiated before get function"
-#~ msgstr ""
-#~ "форматът не е бил уточнен преди извикване на функцията за получаване"

@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2017-10-24 22:43+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -74,6 +74,7 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr "Verkrijgen van de URL van het fragment is mislukt."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Kan fragmenten niet downloaden"
 
@@ -100,6 +101,7 @@ msgstr "Kan de afleversystemen van het frontend-apparaat \"%s\" niet opnoemen."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kan bestand \"%s\" niet openen om te lezen."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Kon het configuratiebestand van het kanaal niet vinden"
 
@@ -123,6 +125,7 @@ msgstr "Eigenschappen instellen voor kanaal '%s' is mislukt"
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Kon het configuratiebestand van het kanaal niet vinden: '%s'"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Het configuratiebestand bevat geen enkel kanaal"
 

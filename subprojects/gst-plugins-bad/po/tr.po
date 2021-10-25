@@ -2,21 +2,21 @@
 # This file is put in the public domain.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Server Acim <serveracim@gmail.com>, 2009, 2015.
-# Mehmet Kececi <mkececi@mehmetkececi.com>, 2017, 2019.
+# Mehmet Kececi <mkececi@mehmetkececi.com>, 2017, 2019, 2021.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
-"PO-Revision-Date: 2019-01-25 12:21+0300\n"
+"Project-Id-Version: gst-plugins-bad-1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-10-04 14:09+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
-"Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
+"Language-Team: Turkish <gnome-turk@gnome.org>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Virtaal 0.7.1\n"
+"X-Generator: Poedit 3.0\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Project-Style: gnome\n"
 
@@ -74,6 +74,7 @@ msgstr "Alt resim biçimi, veri  akışından önce yapılandırılmış"
 msgid "Failed to get fragment URL."
 msgstr "Parça adresi alınamadı."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Parçalar indirilemedi"
 
@@ -94,12 +95,14 @@ msgstr "Aygıt ayarları bulunamadı \"%s\"."
 
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "\"%s\" ön yüz aygıtından iletim sistemleri numaralandırılanamıyor"
+msgstr ""
+"\"%s\" ön arayüz aygıtından teslim sistemleri numaralandırma yapılamıyor."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Dosyayı \"%s\" okumak için açamıyor."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Kanal yapılandırma dosyası bulamadım"
 
@@ -123,6 +126,7 @@ msgstr "'%s' kanal özelliklerini ayarlama başarısız oldu"
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Kanal yapılandırma dosyası bulamadı: '%s'"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Kanal yapılandırma dosyası herhangi bir kanal içermez"
 

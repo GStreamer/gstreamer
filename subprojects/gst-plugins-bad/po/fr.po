@@ -3,14 +3,14 @@
 # This file is distributed under the same license as the gst-plugins-bad package.
 #
 # Claude Paroz <claude@2xlibre.net>, 2008-2011.
-# Stéphane Aulery <lkppo@free.fr>, 2015-2016.
+# Stéphane Aulery <lkppo@free.fr>, 2015-2016, 2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
-"PO-Revision-Date: 2016-12-23 20:45+0100\n"
+"Project-Id-Version: gst-plugins-bad 1.15.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2019-05-12 03:46+0200\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -20,7 +20,7 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Aucune URL définie."
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV n’a pas pu charger l’image modèle"
@@ -73,6 +73,7 @@ msgstr "Le format de sous-image n’était pas configuré avant le flux de donn�
 msgid "Failed to get fragment URL."
 msgstr "Échec de la récupération de l’URL de fragment."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Impossible de télécharger les fragments"
 
@@ -100,6 +101,7 @@ msgstr ""
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossible d’ouvrir le fichier « %s » en lecture."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Impossible de trouver le fichier de configuration de canal"
 
@@ -123,6 +125,7 @@ msgstr "Impossible d’enregistrer le réglage du canal « %s »."
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Impossible de trouver le fichier de configuration du canal « %s »"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Le fichier de configuration ne contient aucun canal"
 

@@ -10,8 +10,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2017-09-13 14:36+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -78,6 +78,7 @@ msgstr "Formát podřízeného obrázku nebyl nastaven před datovým tokem"
 msgid "Failed to get fragment URL."
 msgstr "Selhalo získání adresy URL fragmentu."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Nelze stáhnout fragmenty"
 
@@ -105,6 +106,7 @@ msgstr ""
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nezdařilo se otevření souboru „%s“ ke čtení."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Nezdařilo se najít soubor s nastavením kanálů"
 
@@ -128,6 +130,7 @@ msgstr "Nezdařilo se nastavit vlastnosti pro kanál „%s“."
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Nezdařilo se najít soubor s nastavením kanálu: „%s“"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Soubor s nastavením kanálů neobsahuje žádné kanály"
 

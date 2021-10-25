@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2019-02-03 13:38-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -76,6 +76,7 @@ msgstr "Format podslike nije konfiguriran prije protoka podataka"
 msgid "Failed to get fragment URL."
 msgstr "Nije uspjelo dobiti fragment URL adrese."
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "Nije moguće preuzeti fragmente"
 
@@ -105,6 +106,7 @@ msgstr ""
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nije moguće otvoriti datoteku „%s“ za čitanje."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Nije moguće naći datoteku s postavkama za kanal"
 
@@ -128,6 +130,7 @@ msgstr "Nije uspjelo postaviti svojstva za kanal „%s“"
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Nije moguće naći datoteku s postavkama za kanal: „%s“"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Datoteka s postavkama za kanal ne sadrži nijedan kanal"
 

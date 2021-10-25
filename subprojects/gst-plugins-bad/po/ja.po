@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2011-04-26 19:38+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -14,6 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Lokalize 0.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
@@ -69,6 +70,7 @@ msgstr ""
 msgid "Failed to get fragment URL."
 msgstr ""
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr ""
 
@@ -95,7 +97,7 @@ msgstr "フロントエンドデバイス \"%s\" から設定を取得できま�
 msgid "Could not open file \"%s\" for reading."
 msgstr "読み込み用にファイル \"%s\" を開くことができません。"
 
-#, fuzzy
+#, fuzzy, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "仮想ミックスチャンネル設定"
 
@@ -119,28 +121,23 @@ msgstr "DVDデバイス '%s' のオープンに失敗しました。"
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "仮想ミックスチャンネル設定"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Could not configure sndio"
-#~ msgstr "読み込み用にファイル \"%s\" を開くことができません。"
-
-#, fuzzy
-#~ msgid "Could not start sndio"
-#~ msgstr "DVDを読み込むことができませんでした。"
 
 #~ msgid "No file name specified for writing."
 #~ msgstr "書き込み用にファイル名が指定されていません。"
 
+#, c-format
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "書き込み用にファイル \"%s\" を開くことができませんでした。"
 
-#~ msgid "Internal data flow error."
-#~ msgstr "内部データフローエラー。"
-
+#, c-format
 #~ msgid "Could not write to file \"%s\"."
 #~ msgstr "ファイル \"%s\" へ書き込むことができませんでした。"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "内部データフローエラー。"
 
 #~ msgid "Internal clock error."
 #~ msgstr "内部クロックエラー"

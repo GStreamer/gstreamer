@@ -1,24 +1,25 @@
 # Indonesian translations for gst-plugins-bad package.
 # This file is put in the public domain.
-# Andika Triwidada <andika@gmail.com>, 2013.
+# Andika Triwidada <andika@gmail.com>, 2013, 2021.
 # Andhika Padmawan <andhika.padmawan@gmail.com>, 2009-2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
-"PO-Revision-Date: 2016-11-14 20:38+0700\n"
-"Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
+"Project-Id-Version: gst-plugins-bad 1.15.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-09-07 19:48+0700\n"
+"Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 2.4.3\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Tidak ada URL yang ditata."
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV gagal memuat templat gambar"
@@ -70,8 +71,9 @@ msgstr "Format subgambar tak ditata sebelum aliran data"
 msgid "Failed to get fragment URL."
 msgstr "Gagal mendapat URL fragmen."
 
+#, c-format
 msgid "Couldn't download fragments"
-msgstr "Tak bisa mengunduh fragmen."
+msgstr "Tak bisa mengunduh fragmen"
 
 msgid "Internal data stream error."
 msgstr "Galat arus data internal."
@@ -97,6 +99,7 @@ msgstr ""
 msgid "Could not open file \"%s\" for reading."
 msgstr "Tak dapat membuka berkas \"%s\" untuk dibaca."
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "Tak bisa temukan berkas konfigurasi kanal"
 
@@ -120,47 +123,6 @@ msgstr "Gagal mengatur properti untuk kanal '%s'"
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Tak bisa temukan berkas konfigurasi kanal: ‘%s’"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Berkas konfigurasi kanal tak memuat kanal apapun"
-
-#~ msgid "failed to draw pattern"
-#~ msgstr "gagal menggambar pola"
-
-#~ msgid "A GL error occured"
-#~ msgstr "Sebuah galat GL terjadi"
-
-#~ msgid "format wasn't negotiated before get function"
-#~ msgstr "format tidak dinegosiasikan sebelum mendapat fungsi"
-
-#~ msgid "Could not establish connection to sndio"
-#~ msgstr "Tak bisa menjalin koneksi ke sndio"
-
-#~ msgid "Failed to query sndio capabilities"
-#~ msgstr "Gagal mengkuiri kapabilitas sndio"
-
-#~ msgid "Could not configure sndio"
-#~ msgstr "Tak dapat menata sndio"
-
-#~ msgid "Could not start sndio"
-#~ msgstr "Tak dapat memulai sndio"
-
-#~ msgid "No file name specified for writing."
-#~ msgstr "Tak ada nama berkas yang ditentukan untuk ditulis."
-
-#~ msgid ""
-#~ "Given file name \"%s\" can't be converted to local file name encoding."
-#~ msgstr ""
-#~ "Nama berkas \"%s\" yang diberikan tak bisa dikonversi ke enkoding nama "
-#~ "berkas lokal."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Tak dapat membuka berkas \"%s\" untuk ditulis."
-
-#~ msgid "Couldn't get the Manifest's URI"
-#~ msgstr "Tak bisa memperoleh URI Manifes"
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Tak dapat menulis ke berkas \"%s\"."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Galat arus data internal."
