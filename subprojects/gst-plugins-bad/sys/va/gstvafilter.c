@@ -676,6 +676,15 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
 
         break;
       }
+      case VAProcFilterHighDynamicRangeToneMapping:{
+        const VAProcFilterCapHighDynamicRange *caps = &filter->caps.hdr;
+        if (caps->metadata_type == VAProcHighDynamicRangeMetadataHDR10
+            && (caps->caps_flag & VA_TONE_MAPPING_HDR_TO_SDR)) {
+          g_object_class_install_property (klass, GST_VA_FILTER_PROP_HDR,
+              g_param_spec_boolean ("hdr-tone-mapping", "HDR tone mapping",
+                  "Enable HDR to SDR tone mapping", FALSE, common_flags));
+        }
+      }
       default:
         break;
     }
@@ -1608,6 +1617,8 @@ _create_pipeline_buffer (GstVaFilter * self, GstVaSample * src,
     .output_surface_flag = dst->flags,
     .input_color_properties = self->input_color_properties,
     .output_color_properties = self->output_color_properties,
+    /* output to SDR */
+    .output_hdr_metadata = NULL,
   };
   /* *INDENT-ON* */
 

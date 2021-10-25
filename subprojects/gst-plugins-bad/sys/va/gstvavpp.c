@@ -56,11 +56,6 @@
  *
  */
 
-/* ToDo:
- *
- * + HDR tone mapping
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -120,6 +115,10 @@ struct _GstVaVpp
   gboolean add_borders;
   gint borders_h;
   gint borders_w;
+
+  gboolean hdr_mapping;
+  gboolean has_hdr_meta;
+  VAHdrMetaDataHDR10 hdr_meta;
 
   GList *channels;
 };
@@ -304,6 +303,10 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
     case GST_VA_FILTER_PROP_ADD_BORDERS:
       self->add_borders = g_value_get_boolean (value);
       break;
+    case GST_VA_FILTER_PROP_HDR:
+      self->hdr_mapping = g_value_get_boolean (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -365,6 +368,9 @@ gst_va_vpp_get_property (GObject * object, guint prop_id, GValue * value,
     case GST_VA_FILTER_PROP_ADD_BORDERS:
       g_value_set_boolean (value, self->add_borders);
       break;
+    case GST_VA_FILTER_PROP_HDR:
+      g_value_set_boolean (value, self->hdr_mapping);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -391,6 +397,47 @@ gst_va_vpp_update_properties (GstVaBaseTransform * btrans)
 
   gst_va_vpp_rebuild_filters (self);
   _update_properties_unlocked (self);
+}
+
+static void
+_set_hdr_metadata (GstVaVpp * self, GstCaps * caps)
+{
+  GstVideoMasteringDisplayInfo mdinfo;
+  GstVideoContentLightLevel llevel;
+
+  self->has_hdr_meta = FALSE;
+
+  if (gst_video_mastering_display_info_from_caps (&mdinfo, caps)) {
+    self->hdr_meta.display_primaries_x[0] = mdinfo.display_primaries[1].x;
+    self->hdr_meta.display_primaries_x[1] = mdinfo.display_primaries[2].x;
+    self->hdr_meta.display_primaries_x[2] = mdinfo.display_primaries[0].x;
+
+    self->hdr_meta.display_primaries_y[0] = mdinfo.display_primaries[1].y;
+    self->hdr_meta.display_primaries_y[1] = mdinfo.display_primaries[2].y;
+    self->hdr_meta.display_primaries_y[2] = mdinfo.display_primaries[0].y;
+
+    self->hdr_meta.white_point_x = mdinfo.white_point.x;
+    self->hdr_meta.white_point_y = mdinfo.white_point.y;
+
+    self->hdr_meta.max_display_mastering_luminance =
+        mdinfo.max_display_mastering_luminance;
+    self->hdr_meta.min_display_mastering_luminance =
+        mdinfo.min_display_mastering_luminance;
+
+    self->has_hdr_meta = TRUE;
+  }
+
+
+  if (gst_video_content_light_level_from_caps (&llevel, caps)) {
+    self->hdr_meta.max_content_light_level = llevel.max_content_light_level;
+    self->hdr_meta.max_pic_average_light_level =
+        llevel.max_frame_average_light_level;
+
+    self->has_hdr_meta = TRUE;
+  };
+
+  /* rebuild filters only if hdr mapping is enabled */
+  g_atomic_int_set (&self->rebuild_filters, self->hdr_mapping);
 }
 
 static gboolean
@@ -484,6 +531,7 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
     self->op_flags &= ~VPP_CONVERT_FEATURE;
 
   if (gst_va_filter_set_video_info (btrans->filter, in_info, out_info)) {
+    _set_hdr_metadata (self, incaps);
     gst_va_vpp_update_passthrough (self, FALSE);
     return TRUE;
   }
@@ -611,13 +659,50 @@ _add_filter_cb_buffer (GstVaVpp * self,
   return FALSE;
 }
 
+static inline gboolean
+_add_filter_hdr_buffer (GstVaVpp * self,
+    const VAProcFilterCapHighDynamicRange * caps)
+{
+  GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (self);
+  /* *INDENT-OFF* */
+  VAProcFilterParameterBufferHDRToneMapping params = {
+    .type = VAProcFilterHighDynamicRangeToneMapping,
+    .data = {
+      .metadata_type = VAProcHighDynamicRangeMetadataHDR10,
+      .metadata = &self->hdr_meta,
+      .metadata_size = sizeof (self->hdr_meta),
+    },
+  };
+  /* *INDENT-ON* */
+
+  /* if not has hdr meta, it may try later again */
+  if (!(self->has_hdr_meta && self->hdr_mapping))
+    return FALSE;
+
+  if (!(caps && caps->metadata_type == VAProcHighDynamicRangeMetadataHDR10
+          && (caps->caps_flag & VA_TONE_MAPPING_HDR_TO_SDR)))
+    goto bail;
+
+  if (self->op_flags & VPP_CONVERT_FORMAT) {
+    GST_WARNING_OBJECT (self, "Cannot apply HDR with color conversion");
+    goto bail;
+  }
+
+  return gst_va_filter_add_filter_buffer (btrans->filter, &params,
+      sizeof (params), 1);
+
+bail:
+  self->hdr_mapping = FALSE;
+  return FALSE;
+}
+
 static void
 _build_filters (GstVaVpp * self)
 {
   GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (self);
   static const VAProcFilterType filter_types[] = { VAProcFilterNoiseReduction,
     VAProcFilterSharpening, VAProcFilterSkinToneEnhancement,
-    VAProcFilterColorBalance,
+    VAProcFilterColorBalance, VAProcFilterHighDynamicRangeToneMapping,
   };
   guint i, num_caps;
   gboolean apply = FALSE;
@@ -641,6 +726,8 @@ _build_filters (GstVaVpp * self)
       case VAProcFilterColorBalance:
         apply |= _add_filter_cb_buffer (self, caps, num_caps);
         break;
+      case VAProcFilterHighDynamicRangeToneMapping:
+        apply |= _add_filter_hdr_buffer (self, caps);
       default:
         break;
     }
@@ -1705,6 +1792,15 @@ copy_misc_fields_from_input (GstCaps * in_caps, GstCaps * out_caps)
   }
 }
 
+static inline void
+remove_hdr_fields (GstCaps * caps)
+{
+  GstStructure *s = gst_caps_get_structure (caps, 0);
+
+  gst_structure_remove_fields (s, "mastering-display-info",
+      "content-light-level", "hdr-format", NULL);
+}
+
 static GstCaps *
 gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
     GstCaps * caps, GstCaps * othercaps)
@@ -1737,6 +1833,8 @@ gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
     } else {
       /* Try and preserve input colorimetry / chroma information */
       transfer_colorimetry_from_input (self, caps, result);
+      if (self->hdr_mapping)
+        remove_hdr_fields (result);
     }
   }
 
@@ -2064,6 +2162,13 @@ gst_va_vpp_init (GTypeInstance * instance, gpointer g_class)
     self->saturation =
         g_value_get_float (g_param_spec_get_default_value (pspec));
     _create_colorbalance_channel (self, "SATURATION");
+  }
+
+  /* HDR tone mapping */
+  pspec = g_object_class_find_property (g_class, "hdr-tone-mapping");
+  if (pspec) {
+    self->hdr_mapping =
+        g_value_get_boolean (g_param_spec_get_default_value (pspec));
   }
 
   /* enable QoS */
