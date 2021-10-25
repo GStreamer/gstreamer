@@ -103,7 +103,7 @@ GST_START_TEST (captions_and_eos)
   GstCaps *caps;
   GstVideoCaptionMeta *meta;
   GstBuffer *second_video_buf, *second_caption_buf;
-  const guint8 cc_data[3] = { 0x0, 0x0, 0x0 };
+  const guint8 cc_data[3] = { 0xfc, 0x20, 0x20 };
 
   h = gst_harness_new_with_padnames ("cccombiner", "sink", "src");
   h2 = gst_harness_new_with_element (h->element, NULL, NULL);

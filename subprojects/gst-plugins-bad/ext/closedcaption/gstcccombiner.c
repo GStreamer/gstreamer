@@ -683,7 +683,8 @@ schedule_caption (GstCCCombiner * self, GstBuffer * caption_buf,
 }
 
 static void
-dequeue_caption (GstCCCombiner * self, const GstVideoTimeCode * tc, guint field)
+dequeue_caption (GstCCCombiner * self, const GstVideoTimeCode * tc, guint field,
+    gboolean drain)
 {
   CaptionQueueItem *scheduled;
   CaptionData caption_data;
@@ -692,7 +693,7 @@ dequeue_caption (GstCCCombiner * self, const GstVideoTimeCode * tc, guint field)
     caption_data.buffer = scheduled->buffer;
     caption_data.caption_type = self->caption_type;
     g_array_append_val (self->current_frame_captions, caption_data);
-  } else {
+  } else if (!drain) {
     caption_data.caption_type = self->caption_type;
     caption_data.buffer = make_padding (self, tc, field);
     g_array_append_val (self->current_frame_captions, caption_data);
@@ -708,6 +709,7 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
   GstBuffer *video_buf;
   GstVideoTimeCodeMeta *tc_meta;
   GstVideoTimeCode *tc = NULL;
+  gboolean caption_pad_is_eos = FALSE;
 
   g_assert (self->current_video_buffer != NULL);
 
@@ -741,6 +743,8 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
     if (!caption_buf) {
       if (gst_aggregator_pad_is_eos (caption_pad)) {
         GST_DEBUG_OBJECT (self, "Caption pad is EOS, we're done");
+
+        caption_pad_is_eos = TRUE;
         break;
       } else if (!timeout) {
         GST_DEBUG_OBJECT (self, "Need more caption data");
@@ -854,10 +858,10 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
         if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
                 GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
           if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
-            dequeue_caption (self, tc, 0);
+            dequeue_caption (self, tc, 0, caption_pad_is_eos);
           }
         } else {
-          dequeue_caption (self, tc, 0);
+          dequeue_caption (self, tc, 0, caption_pad_is_eos);
         }
         break;
       }
@@ -865,33 +869,33 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
       case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
       {
         if (self->progressive) {
-          dequeue_caption (self, tc, 0);
+          dequeue_caption (self, tc, 0, caption_pad_is_eos);
         } else if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
                 GST_VIDEO_BUFFER_FLAG_INTERLACED) &&
             GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
                 GST_VIDEO_BUFFER_FLAG_ONEFIELD)) {
           if (GST_VIDEO_BUFFER_IS_TOP_FIELD (self->current_video_buffer)) {
-            dequeue_caption (self, tc, 0);
+            dequeue_caption (self, tc, 0, caption_pad_is_eos);
           } else {
-            dequeue_caption (self, tc, 1);
+            dequeue_caption (self, tc, 1, caption_pad_is_eos);
           }
         } else {
-          dequeue_caption (self, tc, 0);
-          dequeue_caption (self, tc, 1);
+          dequeue_caption (self, tc, 0, caption_pad_is_eos);
+          dequeue_caption (self, tc, 1, caption_pad_is_eos);
         }
         break;
       }
       case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
       {
         if (self->progressive) {
-          dequeue_caption (self, tc, 0);
+          dequeue_caption (self, tc, 0, caption_pad_is_eos);
         } else if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
                 GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
           if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
-            dequeue_caption (self, tc, 0);
+            dequeue_caption (self, tc, 0, caption_pad_is_eos);
           }
         } else {
-          dequeue_caption (self, tc, 0);
+          dequeue_caption (self, tc, 0, caption_pad_is_eos);
         }
         break;
       }
