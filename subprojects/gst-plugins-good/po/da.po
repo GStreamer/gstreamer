@@ -10,8 +10,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2019-02-17 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -27,12 +27,20 @@ msgstr "Jack-server blev ikke fundet"
 msgid "Failed to decode JPEG image"
 msgstr "Mislykkedes i at afkode JPEG-billede"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Kunne ikke allokere den krævede hukommelse."
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 "Kunne ikke konfigurere LAME mp3-lydafkoderen. Kontroller dine "
 "kodningsparametre."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -168,6 +176,9 @@ msgstr "CoreAudio-enhed blev ikke fundet"
 msgid "CoreAudio device could not be opened"
 msgstr "CoreAudio-enhed kunne ikke åbnes"
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Fejl ved læsning af %d byte på enhed »%s«."
@@ -188,6 +199,10 @@ msgstr "Driveren til enhed »%s« understøtter ikke IO-metoden %d"
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Driveren til enhed »%s« understøtter ingen kendt IO-metode."
+
+#, fuzzy
+msgid "Invalid caps"
+msgstr "Ugyldig atomstørrelse."
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -391,10 +406,18 @@ msgstr "Kunne ikke hente værdi af kontrol %d for enhed »%s«."
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Kunne ikke sætte værdi %d på kontrol %d for enhed »%s«."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Kunne ikke sætte værdi %d på kontrol %d for enhed »%s«."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Kunne ikke hente nuværende inddata for enhed »%s«. Måske er det en radioenhed"
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Kunne ikke sætte inddata %d for enhed %s."
 
 #, c-format
 msgid ""
@@ -402,8 +425,8 @@ msgid ""
 msgstr ""
 "Kunne ikke hente nuværende uddata for enhed »%s«. Måske er det en radioenhed"
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "Kunne ikke sætte uddata %d for enhed %s."
 
 msgid "Changing resolution at runtime is not yet supported."

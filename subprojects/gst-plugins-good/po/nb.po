@@ -2,22 +2,22 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2012-2017
+# Johnny A. Solbu <johnny@solbu.net>, 2012-2021
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
-"PO-Revision-Date: 2017-05-23 23:04+0200\n"
+"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-09-24 18:03+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
-"Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
+"Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
 "Language: nb_NO\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 1.8.7.1\n"
+"X-Generator: Poedit 2.2.3\n"
 
 msgid "Jack server not found"
 msgstr "Jack-server ikke funnet"
@@ -25,15 +25,25 @@ msgstr "Jack-server ikke funnet"
 msgid "Failed to decode JPEG image"
 msgstr "Klarte ikke å dekode JPEG-bilde"
 
+msgid "Failed to read memory"
+msgstr "Kunne ikke lese minne"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Kunne ikke konfigurere LAME mp3-lydkoder. Sjekk kodingsparametrene dine."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Den forespurte bitraten %d-kbit/s for egenskapen «%s» er ikke tillatt. "
+"Bitraten ble endret til %d kbit/s."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -67,6 +77,7 @@ msgstr "Tjener støtter ikke søking."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Kunne ikke konfigurere TwoLame-enkoder. Kontroller kodingsparametrene dine."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Ingen eller ugyldig inndatalyd, AVI-strømmen vil bli skadet."
@@ -160,6 +171,9 @@ msgstr "CoreAudio-enhet ikke funnet"
 msgid "CoreAudio device could not be opened"
 msgstr "CoreAudio-enhet kune ikke åpnes"
 
+msgid "Raspberry Pi Camera Module"
+msgstr "Raspberry Pi kameramodul"
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Feil ved lesing av% d bytes fra enheten '% s»."
@@ -180,13 +194,16 @@ msgstr "Driveren av enheten «%s» støtter ikke IO metoden %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Driveren av enheten «%s» støtter ikke noen kjente IO-metoder."
 
-#, fuzzy, c-format
+msgid "Invalid caps"
+msgstr "Ugyldig caps"
+
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Enkoder på enhet «%s» har ingen støttede inndataformat"
+msgstr "Enhet «%s» har ingen støttede format"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "Enheten «%s» mislyktes under initialiseringen"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -204,13 +221,13 @@ msgstr "Enhet «%s» kan ikke fange i det angitte formatet"
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "Enhet «%s» støtter ikke ikke-sammenhengende plan"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Enhet «%s» støtter ikke videoopptak"
+msgstr "Enhet «%s» støtter ikke %s-linjefletting"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Enhet «%s» støtter ikke videoopptak"
+msgstr "Enhet «%s» støtter ikke %s-kolorimetri"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -278,13 +295,13 @@ msgstr "Konverter på enhet «%s» har ingen støttede inndataformat"
 msgid "Converter on device %s has no supported output format"
 msgstr "Konverter på enhet «%s» har ingen støttede utdataformat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Enkoder på enhet «%s» har ingen støttede inndataformat"
+msgstr "Dekoder på enhet «%s» har ingen støttede inndataformat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Enkoder på enhet «%s» har ingen støttede utdataformat"
+msgstr "Dekoder på enhet «%s» har ingen støttede utdataformat"
 
 msgid "Failed to start decoding thread."
 msgstr "Klarte ikke å starte dekoding av tråden."
@@ -300,9 +317,8 @@ msgstr "Enkoder på enhet «%s» har ingen støttede utdataformat"
 msgid "Encoder on device %s has no supported input format"
 msgstr "Enkoder på enhet «%s» har ingen støttede inndataformat"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Klarte ikke å starte dekoding av tråden."
+msgstr "Klarte ikke å starte kodingstråd."
 
 #, c-format
 msgid ""
@@ -382,10 +398,18 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Klarte ikke å sette verdi %d for kontroll %d på enheten «%s»."
 
 #, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Klarte ikke å sette verdi %s for kontroll %d på enheten «%s»."
+
+#, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Kunne ikke hente gjeldende inndata på enheten «%s». Kanskje det er en "
 "radioenhet"
+
+#, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Klarte ikke å sette inngang %u på enhet %s."
 
 #, c-format
 msgid ""
@@ -393,8 +417,8 @@ msgid ""
 msgstr "Kunne ikke hente utdata fra enheten «%s». Kanskje det er en radioenhet"
 
 #, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "Klarte ikke å sette utgang %d på enhet %s."
+msgid "Failed to set output %u on device %s."
+msgstr "Klarte ikke å sette utgang %u på enhet %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Endring av oppløsning under kjøring støttes ikke enda."

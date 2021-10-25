@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -23,10 +23,17 @@ msgstr ""
 msgid "Failed to decode JPEG image"
 msgstr ""
 
+msgid "Failed to read memory"
+msgstr ""
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -154,6 +161,9 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr "ଆପଣଙ୍କର ଓ.ଏସ.ଏସ. ଯନ୍ତ୍ରର ଠିକ ଭାବରେ ଅନୁସନ୍ଧାନ କରିହେଲା ନାହିଁ."
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
@@ -172,6 +182,9 @@ msgstr ""
 
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
+msgstr ""
+
+msgid "Invalid caps"
 msgstr ""
 
 #, fuzzy, c-format
@@ -371,9 +384,17 @@ msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କ�
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
 #, fuzzy, c-format
 msgid ""
@@ -381,7 +402,7 @@ msgid ""
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
 
 #, fuzzy, c-format
-msgid "Failed to set output %d on device %s."
+msgid "Failed to set output %u on device %s."
 msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
 msgid "Changing resolution at runtime is not yet supported."

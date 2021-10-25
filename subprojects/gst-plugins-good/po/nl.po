@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2017-10-23 23:59+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -24,10 +24,18 @@ msgstr "Jack-server niet gevonden"
 msgid "Failed to decode JPEG image"
 msgstr "Kan de JPEG-afbeelding niet decoderen"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Vereist geheugen toekennen is mislukt."
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -161,6 +169,9 @@ msgstr "CoreAudio apparaat niet gevonden"
 msgid "CoreAudio device could not be opened"
 msgstr "CoreAudio apparaat kon niet geopend worden"
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Fout bij het lezen van %d bytes van apparaat '%s'."
@@ -181,6 +192,10 @@ msgstr "Het stuurprogramma van apparaat '%s' ondersteunt de IO-methode %d niet"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "Het stuurprogramma van apparaat '%s' ondersteunt geen bekende IO-methode."
+
+#, fuzzy
+msgid "Invalid caps"
+msgstr "Ongeldige \"atom\"-grootte."
 
 #, fuzzy, c-format
 msgid "Device '%s' has no supported format"
@@ -384,11 +399,19 @@ msgstr "Kan de waarde voor knop %d op apparaat '%s' niet verkrijgen."
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Kan de waarde %d voor knop %d op apparaat '%s' niet instellen."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Kan de waarde %d voor knop %d op apparaat '%s' niet instellen."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Kan de huidige instellingen van apparaat '%s' niet verkrijgen. Het is "
 "mogelijk een radio"
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Kan invoer %d op apparaat '%s' niet instellen."
 
 #, c-format
 msgid ""
@@ -397,8 +420,8 @@ msgstr ""
 "Kan de huidige uitvoer niet op apparaat '%s' krijgen. Het is mogelijk een "
 "radio"
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "Kan uitvoer %d op apparaat %s niet instellen."
 
 msgid "Changing resolution at runtime is not yet supported."
@@ -407,6 +430,7 @@ msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."
 msgid "Cannot operate without a clock"
 msgstr "Kan niet werken zonder een klok."
 
+#, c-format
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr ""
 #~ "Dit bestand bevat te veel stromen. Alleen de eerste %d worden afgespeeld."

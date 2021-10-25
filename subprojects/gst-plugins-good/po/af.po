@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 
 msgid "Jack server not found"
 msgstr ""
@@ -22,10 +23,17 @@ msgstr ""
 msgid "Failed to decode JPEG image"
 msgstr ""
 
+msgid "Failed to read memory"
+msgstr ""
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -46,11 +54,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Could not resolve server name."
-msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
+msgstr "Kon nie skryf na toestel \"%s\" nie."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
+msgstr ""
 
 msgid "Secure connection setup failed."
 msgstr ""
@@ -149,6 +156,9 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Kon nie buffers vanaf toestel \"%s\" verkry nie."
@@ -169,37 +179,40 @@ msgstr ""
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 
-#, fuzzy, c-format
+msgid "Invalid caps"
+msgstr ""
+
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
+msgstr ""
 
 #, c-format
 msgid "Device '%s' failed during initialization"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
+msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
+msgstr "Toestel \"%s\" bestaan nie."
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
+msgstr "Toestel \"%s\" bestaan nie."
 
 #, fuzzy, c-format
 msgid "Could not get parameters on device '%s'"
@@ -233,9 +246,9 @@ msgstr ""
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Kon nie buffers vanaf toestel \"%s\" verkry nie."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' is not a tuner."
@@ -243,7 +256,7 @@ msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."
 
 #, fuzzy, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Kon nie oudio-toestel \"%s\" toemaak nie."
+msgstr "Kon nie skryf na toestel \"%s\" nie."
 
 #, fuzzy, c-format
 msgid "Failed to set input %d on device %s."
@@ -366,18 +379,26 @@ msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 
 #, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Kon nie skryf na toestel \"%s\" nie."
+
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
-msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."
+msgstr ""
 
 #, fuzzy, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "Kon nie oudio-toestel \"%s\" toemaak nie."
+msgid "Failed to set output %u on device %s."
+msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
@@ -385,30 +406,50 @@ msgstr ""
 msgid "Cannot operate without a clock"
 msgstr ""
 
-#, fuzzy
-#~ msgid "Record Source"
-#~ msgstr "Neem op"
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
 
-#~ msgid "Microphone"
-#~ msgstr "Mikrofoon"
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Fout tydens toemaak van lêer \"%s\"."
 
-#, fuzzy
-#~ msgid "Line In"
-#~ msgstr "Lyn-in"
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
+
+#~ msgid "No filename specified."
+#~ msgstr "Geen lêernaam gespesifiseer."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Kon nie skryf na lêer \"%s\" nie."
+
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "Kon nie beheertoestel \"%s\" oopmaak vir skryf nie."
+
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Kon nie oudio-toestel \"%s\" konfigureer nie."
+
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "Kon nie klanktoestel \"%s\" verstel na %d Hz nie."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "Kon nie video-toestel \"%s\" oopmaak vir skryf nie."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "Kon nie video-toestel \"%s\" toemaak nie."
+
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr "OSS-toestel \"%s\" is reeds in gebruik deur 'n ander program."
+
+#~ msgid "Could not access device \"%s\", check its permissions."
+#~ msgstr "Kon nie toegang kry tot toestel \"%s\" nie, kyk na toegangsregte."
+
+#~ msgid "Could not open device \"%s\" for writing."
+#~ msgstr "Kon nie toestel \"%s\" oopmaak vir skryf nie."
+
+#~ msgid "Could not open device \"%s\" for reading."
+#~ msgstr "Kon nie toestel \"%s\" oopmaak vir lees nie."
 
 #~ msgid "Volume"
 #~ msgstr "Volume"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#, fuzzy
-#~ msgid "Built-in Speaker"
-#~ msgstr "Luidspreker"
-
-#, fuzzy
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."
 
 #~ msgid "Bass"
 #~ msgstr "Bas"
@@ -427,6 +468,9 @@ msgstr ""
 
 #~ msgid "Line-in"
 #~ msgstr "Lyn-in"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofoon"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -476,118 +520,12 @@ msgstr ""
 #~ msgid "Radio"
 #~ msgstr "Radio"
 
-#, fuzzy
-#~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Kon nie oudio-toestel \"%s\" oopmaak vir skryf nie."
-
-#, fuzzy
-#~ msgid "Rear"
-#~ msgstr "Neem op"
-
-#, fuzzy
-#~ msgid "Side"
-#~ msgstr "Video"
-
-#, fuzzy
-#~ msgid "Video In"
-#~ msgstr "Video"
-
-#, fuzzy
-#~ msgid "Record Gain"
-#~ msgstr "Neem op"
-
-#, fuzzy
-#~ msgid "Output Gain"
-#~ msgstr "Uit-versterking"
-
-#, fuzzy
-#~ msgid "Microphone Boost"
-#~ msgstr "Mikrofoon"
-
-#, fuzzy
-#~ msgid "Monitor Source"
+#~ msgid "Monitor"
 #~ msgstr "Monitor"
 
 #, fuzzy
-#~ msgid "Microphone Gain"
-#~ msgstr "Mikrofoon"
-
-#, fuzzy
-#~ msgid "Speaker Source"
+#~ msgid "PC Speaker"
 #~ msgstr "Luidspreker"
-
-#, fuzzy
-#~ msgid "Microphone Source"
-#~ msgstr "Mikrofoon"
-
-#, fuzzy
-#~ msgid "Microphone 1"
-#~ msgstr "Mikrofoon"
-
-#, fuzzy
-#~ msgid "Microphone 2"
-#~ msgstr "Mikrofoon"
-
-#, fuzzy
-#~ msgid "Digital Out"
-#~ msgstr "Digitaal-1"
-
-#, fuzzy
-#~ msgid "Digital In"
-#~ msgstr "Digitaal-1"
-
-#, fuzzy
-#~ msgid "Front Panel Microphone"
-#~ msgstr "Mikrofoon"
-
-#, fuzzy
-#~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "Kon nie buffers vanaf toestel \"%s\" verkry nie."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Fout tydens toemaak van lêer \"%s\"."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
-
-#~ msgid "No filename specified."
-#~ msgstr "Geen lêernaam gespesifiseer."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Kon nie skryf na lêer \"%s\" nie."
-
-#~ msgid "Could not open control device \"%s\" for writing."
-#~ msgstr "Kon nie beheertoestel \"%s\" oopmaak vir skryf nie."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "Kon nie oudio-toestel \"%s\" konfigureer nie."
-
-#~ msgid "Could not set audio device \"%s\" to %d Hz."
-#~ msgstr "Kon nie klanktoestel \"%s\" verstel na %d Hz nie."
-
-#~ msgid "Could not open video device \"%s\" for writing."
-#~ msgstr "Kon nie video-toestel \"%s\" oopmaak vir skryf nie."
-
-#~ msgid "Could not close video device \"%s\"."
-#~ msgstr "Kon nie video-toestel \"%s\" toemaak nie."
-
-#~ msgid "OSS device \"%s\" is already in use by another program."
-#~ msgstr "OSS-toestel \"%s\" is reeds in gebruik deur 'n ander program."
-
-#~ msgid "Could not access device \"%s\", check its permissions."
-#~ msgstr "Kon nie toegang kry tot toestel \"%s\" nie, kyk na toegangsregte."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Toestel \"%s\" bestaan nie."
-
-#~ msgid "Could not open device \"%s\" for writing."
-#~ msgstr "Kon nie toestel \"%s\" oopmaak vir skryf nie."
-
-#~ msgid "Could not open device \"%s\" for reading."
-#~ msgstr "Kon nie toestel \"%s\" oopmaak vir lees nie."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Kon nie vfs-lêer \"%s\" oopmaak vir lees nie."

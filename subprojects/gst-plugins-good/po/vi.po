@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2017-05-05 06:52+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -28,10 +28,18 @@ msgstr "Không tìm thấy máy phục vụ Jack"
 msgid "Failed to decode JPEG image"
 msgstr "Gặp lỗi khi giải mã ảnh JPEG"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Gặp lỗi khi cấp phát bộ nhớ theo yêu cầu."
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -163,6 +171,9 @@ msgstr "Không tìm thấy thiết bị CoreAudio"
 msgid "CoreAudio device could not be opened"
 msgstr "Không thể mở thiết bị CoreAudio"
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Gặp lỗi khi đọc %d byte từ thiết bị “%s”."
@@ -185,6 +196,10 @@ msgstr "Trình điều khiển của thiết bị “%s” không hỗ trợ ph�
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "Trình điều khiển của thiết bị “%s” không hỗ trợ phương pháp VR đã biết nào."
+
+#, fuzzy
+msgid "Invalid caps"
+msgstr "Kích thước nguyên tử (atom) không hợp lệ."
 
 #, fuzzy, c-format
 msgid "Device '%s' has no supported format"
@@ -394,11 +409,19 @@ msgstr "Gặp lỗi khi lấy giá trị của bộ điều khiển %d trên thi
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Gặp lỗi khi đặt giá trị %d của bộ điều khiển %d trên thiết bị “%s”."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Gặp lỗi khi đặt giá trị %d của bộ điều khiển %d trên thiết bị “%s”."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Gặp lỗi khi lấy đầu vào hiện thời vào thiết bị “%s”. Có thể là thiết bị thu "
 "thanh."
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Gặp lỗi khi đặt dữ liệu nhập %d vào thiết bị “%s”."
 
 #, c-format
 msgid ""
@@ -407,8 +430,8 @@ msgstr ""
 "Gặp lỗi khi lấy đầu vào hiện hành trên thiết bị “%s”. Có thể nó là thiết bị "
 "vô tuyến."
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "Gặp lỗi khi đặt dữ liệu nhập %d trên thiết bị %s."
 
 msgid "Changing resolution at runtime is not yet supported."
@@ -417,6 +440,7 @@ msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi ch
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ"
 
+#, c-format
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr "Tập tin này chứa quá nhiều luồng nên chỉ phát %d đầu tiên"
 

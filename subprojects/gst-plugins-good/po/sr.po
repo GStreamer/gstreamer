@@ -1,14 +1,14 @@
 # Serbian translation of gst-plugins
-# Copyright © 2014 Free Software Foundation, Inc.
+# Copyright © 2020 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011—2017.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011–2021.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
-"PO-Revision-Date: 2017-05-07 12:21+0200\n"
+"Project-Id-Version: gst-plugins-good-1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-10-01 22:00+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -26,15 +26,25 @@ msgstr "Нисам пронашао сервер утичнице"
 msgid "Failed to decode JPEG image"
 msgstr "Нисам успео да декодирам ЈПЕГ слику"
 
+msgid "Failed to read memory"
+msgstr "Нисам успео да прочитам меморију"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Нисам успео да подесим ЛАМЕ мп3 енкодер. Проверите ваше параметре кодирања."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Тражени проток података од %d kbit/s за „%s“ није допуштен. Проток података "
+"је постављен на %d kbit/s."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -68,6 +78,7 @@ msgstr "Сервер не подржава позиционирање."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Нисам успео да подесим ДваЛАМЕ енкодер. Проверите ваше параметре кодирања."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити оштећен."
@@ -162,6 +173,9 @@ msgstr "Нисам нашао кључни уређај звука"
 msgid "CoreAudio device could not be opened"
 msgstr "Не могу да отворим кључни уређај звука"
 
+msgid "Raspberry Pi Camera Module"
+msgstr "Модул фото-апарата Распбери Пи-ја"
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Грешка приликом читања %d бајтова са уређаја „%s“."
@@ -184,13 +198,16 @@ msgstr "Управљачки програм уређаја „%s“ не под�
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Управљачки програм уређаја „%s“ не подржава ниједан познати УИ начин."
 
-#, fuzzy, c-format
+msgid "Invalid caps"
+msgstr "Неисправна величина слова"
+
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Кодер на уређају „%s“ нема подржани улазни запис"
+msgstr "Уређај „%s“ нема подржани запис"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "Уређај „%s“ није успео приликом покретања"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -208,13 +225,13 @@ msgstr "Уређај „%s“ не може да снима у наведено�
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "Уређај „%s“ не подржава не-непрекидне равни"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Уређај „%s“ не подржава видео снимање"
+msgstr "Уређај „%s“ не подржава „%s“ преплитање"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Уређај „%s“ не подржава видео снимање"
+msgstr "Уређај „%s“ не подржава „%s“ колориметрију"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -282,13 +299,13 @@ msgstr "Претварач на уређају „%s“ нема подржан�
 msgid "Converter on device %s has no supported output format"
 msgstr "Претварач на уређају „%s“ нема подржани излазни запис"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Кодер на уређају „%s“ нема подржани улазни запис"
+msgstr "Декодер на уређају „%s“ нема подржани улазни запис"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Кодер на уређају „%s“ нема подржани излазни запис"
+msgstr "Декодер на уређају „%s“ нема подржани излазни запис"
 
 msgid "Failed to start decoding thread."
 msgstr "Нисам успео да покренем нит декодирања."
@@ -304,9 +321,8 @@ msgstr "Кодер на уређају „%s“ нема подржани изл
 msgid "Encoder on device %s has no supported input format"
 msgstr "Кодер на уређају „%s“ нема подржани улазни запис"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Нисам успео да покренем нит декодирања."
+msgstr "Нисам успео да покренем нит кодирања."
 
 #, c-format
 msgid ""
@@ -386,9 +402,17 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Нисам успео да подесим вредност %d за контролу %d на уређају „%s“."
 
 #, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Нисам успео да подесим вредност „%s“ за контролу %d на уређају „%s“."
+
+#, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Нисам успео да добавим текући улаз на уређају „%s“. Можда је то радио уређај."
+
+#, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Нисам успео да подесим улаз „%u“ на уређају %s."
 
 #, c-format
 msgid ""
@@ -398,8 +422,8 @@ msgstr ""
 "уређај."
 
 #, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "Нисам успео да подесим излаз %d на уређају %s."
+msgid "Failed to set output %u on device %s."
+msgstr "Нисам успео да подесим излаз „%u“ на уређају %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Промена резолуције приликом извршавања још увек није подржана."

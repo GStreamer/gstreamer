@@ -9,8 +9,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2017-09-13 15:00+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -28,10 +28,18 @@ msgstr "Server Jack nebyl nalezen"
 msgid "Failed to decode JPEG image"
 msgstr "Selhalo dekódování obrázku JPEG"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Selhalo přidělení požadované paměti."
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -163,6 +171,9 @@ msgstr "Nebylo nalezeno zařízení CoreAudio"
 msgid "CoreAudio device could not be opened"
 msgstr "Nelze otevřít zařízení CoreAudio"
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Chyba při čtení %d bajtů na zařízení „%s“."
@@ -184,6 +195,10 @@ msgstr "Ovladač zařízení „%s“ nepodporuje V/V metodu %d"
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Ovladač zařízení „%s“ nepodporuje žádnou známou V/V metodu."
+
+#, fuzzy
+msgid "Invalid caps"
+msgstr "Neplatná atomická velikost."
 
 #, fuzzy, c-format
 msgid "Device '%s' has no supported format"
@@ -385,11 +400,19 @@ msgstr "Selhalo zjištění hodnoty u ovládacího prvku %d na zařízení „%s
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Selhalo nastavení hodnoty %d u ovládacího prvku %d na zařízení „%s“."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Selhalo nastavení hodnoty %d u ovládacího prvku %d na zařízení „%s“."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Selhalo získání aktuálního vstupu na zařízení „%s“. Možná se jedná o "
 "radiopřijímač."
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Nezdařilo se nastavení vstupu %d u zařízení „%s“."
 
 #, c-format
 msgid ""
@@ -398,8 +421,8 @@ msgstr ""
 "Selhalo získání aktuálního výstupu na zařízení „%s“. Možná se jedná o "
 "radiopřijímač"
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "Selhalo nastavení výstupu %d na zařízení %s."
 
 msgid "Changing resolution at runtime is not yet supported."
@@ -408,6 +431,7 @@ msgstr "Změna rozlišení za běhu zatím není podporována."
 msgid "Cannot operate without a clock"
 msgstr "Není možné fungovat bez hodin"
 
+#, c-format
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr ""
 #~ "Tento soubor obsahuje příliš mnoho proudů. Přehrává se pouze první %d"

@@ -4,13 +4,13 @@
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
-"PO-Revision-Date: 2019-02-03 13:58-0800\n"
+"Project-Id-Version: gst-plugins-good-1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-09-24 15:33+0200\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -20,7 +20,7 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 2.2.1\n"
+"X-Generator: Poedit 3.0\n"
 
 msgid "Jack server not found"
 msgstr "Server Jack nije pronađen"
@@ -28,12 +28,19 @@ msgstr "Server Jack nije pronađen"
 msgid "Failed to decode JPEG image"
 msgstr "Nije uspjelo dekodirati JPEG sliku"
 
+msgid "Failed to read memory"
+msgstr "Nije uspjelo pročitati memoriju"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 "Nije uspjelo konfigurirati audio koder MP3 LAME. Provjerite parametre "
 "kodiranja."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -169,9 +176,12 @@ msgstr "CoreAudio uređaj nije pronađen"
 msgid "CoreAudio device could not be opened"
 msgstr "CoreAudio uređaj nije moguće otvoriti"
 
+msgid "Raspberry Pi Camera Module"
+msgstr "Raspberry Pi Kamera Modul"
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Greška čitanja %d bajtova iz uređaja „%s“."
+msgstr "greška pri čitanju %d bajtova iz uređaja „%s“."
 
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
@@ -190,6 +200,9 @@ msgstr "Upravljački program uređaja „%s“ ne podržava metodu U/I %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "Upravljački program uređaja „%s“ ne podržava nijednu poznatu metodu U/I."
+
+msgid "Invalid caps"
+msgstr "Nevaljana sposobnost (caps)."
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -373,12 +386,12 @@ msgstr "Nije uspjelo postaviti „norm“ za uređaj „%s“."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Nije uspjelo dobiti aktualnu frekvenciju tunera za uređaj „%s“."
+msgstr "Nije uspjelo dobiti trenutnu frekvenciju tunera za uređaj „%s“."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
-"Nije uspjelo postaviti aktualnu frekvenciju tunera za uređaj „%s“ na %lu Hz."
+"Nije uspjelo postaviti trenutnu frekvenciju tunera za uređaj „%s“ na %lu Hz."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
@@ -393,20 +406,28 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Nije uspjelo postaviti na vrijednost %d kontrolu %d na uređaju „%s“."
 
 #, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Nije uspjelo postaviti na vrijednost %s kontrolu %d na uređaju „%s“."
+
+#, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Nije uspjelo dobiti aktualni ulaz na uređaju „%s“ -- možda je to radiouređaj."
+"Nije uspjelo dobiti trenutni ulaz na uređaju „%s“ -- možda je to radiouređaj."
+
+#, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Nije uspjelo postaviti ulaz %u na uređaju %s."
 
 #, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Nije uspjelo dobiti aktualni izlaz na uređaju „%s“ -- možda je to "
+"Nije uspjelo dobiti trenutni izlaz na uređaju „%s“ -- možda je to "
 "radiouređaj."
 
 #, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "Nije uspjelo postaviti izlaz %d na uređaju %s."
+msgid "Failed to set output %u on device %s."
+msgstr "Nije uspjelo postaviti izlaz %u na uređaju %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Promjena rezolucije u tijeku rada (runtime) još nije podržana."

@@ -1,21 +1,22 @@
 # Slovak translations for gst-plugins-good.
 # This file is put in the public domain.
 #
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014, 2016.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010, 2014, 2016, 2020.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.7.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
-"PO-Revision-Date: 2016-05-20 12:31+0100\n"
+"Project-Id-Version: gst-plugins-good 1.15.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2020-06-11 10:01+0200\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\\n;\n"
-"X-Generator: Poedit 1.6.10\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "Jack server not found"
 msgstr "Jack server sa nenašiel"
@@ -23,15 +24,27 @@ msgstr "Jack server sa nenašiel"
 msgid "Failed to decode JPEG image"
 msgstr "Nepodarilo sa dekódovať obrázok JPEG"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Nepodarilo sa uvoľniť dostatok pamäte."
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Nepodarilo sa nakonfigurovať LAME mp3 audio enkodér. Skontrolujte si "
+"parametre kódovania."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Požadovaný tok %d kbit/s pre '%s' nie je dovolený. Tok bol zmenený na %d "
+"kbit/s."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -65,6 +78,8 @@ msgstr "Server nepodporuje zmenu pozície"
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Nepodarilo sa nakonfigurovať LAME mp3 audio enkodér. Skontrolujte si "
+"parametre kódovania."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Žiadny alebo chybný vstup zvuku, prúd údajov AVI bude poškodený."
@@ -154,9 +169,12 @@ msgid "Could not open audio device for recording."
 msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime nahrávania."
 
 msgid "CoreAudio device not found"
-msgstr ""
+msgstr "Zariadenie CoreAudio sa nenašlo"
 
 msgid "CoreAudio device could not be opened"
+msgstr "Zariadenie CoreAudio sa nepodarilo ovoriť"
+
+msgid "Raspberry Pi Camera Module"
 msgstr ""
 
 #, c-format
@@ -181,13 +199,17 @@ msgstr "Tento ovládač zariadenia '%s' nepodporuje IO metódu %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Tento ovládač zariadenia '%s' nepodporuje žiadnu známu IO metódu."
 
-#, fuzzy, c-format
+#, fuzzy
+msgid "Invalid caps"
+msgstr "Nesprávna atomická veľkosť."
+
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Enkodér na zariadení %s nepodporuje žiadny vstupný formát"
+msgstr "Zariadenie %s nemá žiadny podporovaný formát"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "Nepodarilo sa inicializovať zariadenie '%s'"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -205,13 +227,13 @@ msgstr "Zariadenie '%s' nedokáže nahrávať v uvedenom formáte"
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "Zariadenie '%s' podporuje nespojité roviny"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Server nepodporuje zmenu pozície"
+msgstr "Zariadenie '%s' nepodporuje %s prekladaný režim"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Zariadenie '%s' podporuje nespojité roviny"
+msgstr "Zariadenie '%s' nepodporuje farebnosť %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -226,11 +248,9 @@ msgstr "ideo zariadenie neposkytlo výstupný formát."
 msgid "Video device returned invalid dimensions."
 msgstr "Video zariadenie udáva nesprávne rozmery."
 
-#, fuzzy
 msgid "Video device uses an unsupported interlacing method."
 msgstr "Video zariadenie používa nepodporovanú metódu prekladania snímok."
 
-#, fuzzy
 msgid "Video device uses an unsupported pixel format."
 msgstr "Video zariadenie používa nepodporovaný formát pixelov."
 
@@ -281,13 +301,13 @@ msgstr "Konvertor na zariadení %s nepodporuje žiadny vstupný formát"
 msgid "Converter on device %s has no supported output format"
 msgstr "Konvertor na zariadení %s nepodporuje žiadny výstupný formát"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Enkodér na zariadení %s nepodporuje žiadny vstupný formát"
+msgstr "Dekodér na zariadení %s nemá žiadny podporovaný vstupný formát"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Enkodér na zariadení %s nepodporuje žiadny výstupný formát"
+msgstr "Dekodér na zariadení %s nemá žiadny podporovaný výstupný formát"
 
 msgid "Failed to start decoding thread."
 msgstr "Nepodarilo sa spustiť dekódovacie vlákno."
@@ -303,9 +323,8 @@ msgstr "Enkodér na zariadení %s nepodporuje žiadny výstupný formát"
 msgid "Encoder on device %s has no supported input format"
 msgstr "Enkodér na zariadení %s nepodporuje žiadny vstupný formát"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Nepodarilo sa spustiť dekódovacie vlákno."
+msgstr "Nepodarilo sa spustiť enkódovacie vlákno."
 
 #, c-format
 msgid ""
@@ -387,10 +406,19 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 "Nepodarilo sa nastaviť hodnotu %d pre ovládací prvok %d na zariadení '%s'."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr ""
+"Nepodarilo sa nastaviť hodnotu %d pre ovládací prvok %d na zariadení '%s'."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Nepodarilo sa zistiť súčasný vstup na zariadení '%s'. Možno je to rádio."
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Nepodarilo sa nastaviť vstup %d na zariadení %s."
 
 #, c-format
 msgid ""
@@ -398,8 +426,8 @@ msgid ""
 msgstr ""
 "Nepodarilo sa zistiť súčasný výstup na zariadení '%s'. Možno je to rádio."
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "Nepodarilo sa nastaviť výstup %d na zariadení %s."
 
 msgid "Changing resolution at runtime is not yet supported."
@@ -408,9 +436,15 @@ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
 
+#~ msgid "Internal data stream error."
+#~ msgstr "Vnútorná chyba prúdu údajov."
+
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr ""
 #~ "Tento súbor obsahuje príliš mnoho prúdov údajov. Prehrávam iba prvý %d"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Vnútorná chyba toku údajov."
 
 #~ msgid "Record Source"
 #~ msgstr "Zdroj záznamu"
@@ -465,12 +499,6 @@ msgstr "Nemôžem fungovať bez hodín"
 
 #~ msgid "AUX 2 Out"
 #~ msgstr "AUX 2 výstup"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Vnútorná chyba prúdu údajov."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Vnútorná chyba toku údajov."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nepodarilo sa nadviazať spojenie so zvukovým serverom"

@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2011-02-12 18:30+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
@@ -24,10 +25,18 @@ msgstr ""
 msgid "Failed to decode JPEG image"
 msgstr "Falló al decodificar la imagen JPEG"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Falló al decodificar la imagen JPEG"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -163,6 +172,9 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Error al leer %d bytes del dispositivo «%s»."
@@ -189,19 +201,21 @@ msgstr ""
 "El controlador del dispositivo «%s» no soporta ningún método de captura "
 "conocido."
 
+#, fuzzy
+msgid "Invalid caps"
+msgstr "El tamaño atom no es válido."
+
 #, fuzzy, c-format
 msgid "Device '%s' has no supported format"
-msgstr ""
-"El dispositivo de entrada de vídeo no aceptó el ajuste de la nueva tasa de "
-"fotogramas."
+msgstr "El dispositivo «%s» no puede capturar en el formato especificado"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "El dispositivo «%s» no es un dispositivo de salida."
+msgstr ""
 
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
@@ -211,13 +225,13 @@ msgstr "El dispositivo «%s» no puede capturar a %dx%d"
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "El dispositivo «%s» no puede capturar en el formato especificado"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "El dispositivo «%s» no es un dispositivo de salida."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "El dispositivo «%s» no es un dispositivo de salida."
+msgstr "El servidor no soporta la búsqueda."
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support %s colorimetry"
@@ -248,11 +262,8 @@ msgstr ""
 "El controlador del dispositivo «%s» no soporta ningún método de captura "
 "conocido."
 
-#, fuzzy
 msgid "Video device uses an unsupported pixel format."
 msgstr ""
-"El controlador del dispositivo «%s» no soporta ningún método de captura "
-"conocido."
 
 msgid "Failed to configure internal buffer pool."
 msgstr ""
@@ -303,23 +314,21 @@ msgstr ""
 "El controlador del dispositivo «%s» no soporta ningún método de captura "
 "conocido."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported output format"
 msgstr ""
-"El dispositivo de entrada de vídeo no aceptó el ajuste de la nueva tasa de "
-"fotogramas."
 
 #, fuzzy, c-format
 msgid "Decoder on device %s has no supported input format"
 msgstr ""
-"El dispositivo de entrada de vídeo no aceptó el ajuste de la nueva tasa de "
-"fotogramas."
+"El controlador del dispositivo «%s» no soporta ningún método de captura "
+"conocido."
 
 #, fuzzy, c-format
 msgid "Decoder on device %s has no supported output format"
 msgstr ""
-"El dispositivo de entrada de vídeo no aceptó el ajuste de la nueva tasa de "
-"fotogramas."
+"El controlador del dispositivo «%s» no soporta ningún método de captura "
+"conocido."
 
 #, fuzzy
 msgid "Failed to start decoding thread."
@@ -328,21 +337,16 @@ msgstr "Falló al decodificar la imagen JPEG"
 msgid "Failed to process frame."
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr ""
-"El dispositivo de entrada de vídeo no aceptó el ajuste de la nueva tasa de "
-"fotogramas."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr ""
-"El dispositivo de entrada de vídeo no aceptó el ajuste de la nueva tasa de "
-"fotogramas."
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Falló al decodificar la imagen JPEG"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -426,11 +430,20 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 "Falló al establecer el valor %ds para el control %d del dispositivo «%s»."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr ""
+"Falló al establecer el valor %ds para el control %d del dispositivo «%s»."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Falló al obtener la entrada actual en el dispositivo «%s». Quizá sea un "
 "dispositivo de radio."
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Falló al establecer la entrada %d en el dispositivo %s."
 
 #, c-format
 msgid ""
@@ -439,8 +452,8 @@ msgstr ""
 "Falló al obtener la salida actual en el dispositivo «%s». Quizá sea un "
 "dispositivo de radio."
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "Falló al establecer la salida %d en el dispositivo %s."
 
 msgid "Changing resolution at runtime is not yet supported."
@@ -449,80 +462,25 @@ msgstr "El cambio de resolución durante la reproducción aún no está soportad
 msgid "Cannot operate without a clock"
 msgstr "No se puede operar sin reloj"
 
-#~ msgid "This file contains too many streams. Only playing first %d"
-#~ msgstr ""
-#~ "Este archivo contiene demasiados flujos. Sólo se reproducirá el primer %d"
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "No se pudo establecer la conexión con el servidor de sonido"
 
-#~ msgid "Record Source"
-#~ msgstr "Origen de la grabación"
-
-#~ msgid "Microphone"
-#~ msgstr "Micrófono"
-
-#~ msgid "Line In"
-#~ msgstr "Línea de entrada"
-
-#~ msgid "Internal CD"
-#~ msgstr "CD interno"
-
-#~ msgid "SPDIF In"
-#~ msgstr "Entrada S/PDIF"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "Entrada AUX 1"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "Entrada AUX 2"
-
-#, fuzzy
-#~ msgid "Codec Loopback"
-#~ msgstr "Bucle local"
-
-#, fuzzy
-#~ msgid "SunVTS Loopback"
-#~ msgstr "Bucle local"
-
-#~ msgid "Volume"
-#~ msgstr "Volumen"
-
-#~ msgid "Gain"
-#~ msgstr "Ganancia"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#~ msgid "Built-in Speaker"
-#~ msgstr "Altavoz integrado"
-
-#~ msgid "Headphone"
-#~ msgstr "Auriculares"
-
-#~ msgid "Line Out"
-#~ msgstr "Línea de salida"
-
-#~ msgid "SPDIF Out"
-#~ msgstr "Salida S/PDIF"
-
-#~ msgid "AUX 1 Out"
-#~ msgstr "Salida AUX 1"
-
-#~ msgid "AUX 2 Out"
-#~ msgstr "Salida AUX 2"
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Falló al preguntar al servidor de sonido sus capacidades"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Error interno de flujo de datos."
 
+#, c-format
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr ""
+#~ "Este archivo contiene demasiados flujos. Sólo se reproducirá el primer %d"
+
 #~ msgid "Internal data flow error."
 #~ msgstr "Error en el flujo de datos interno."
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Se obtuvo un tamaño de cuadro inesperado %u en lugar de %u."
-
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Falló al intentar obtener cuadros de vídeo del dispositivo «%s»."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Falló después de %d intentos. Dispositivo %s. Error del sistema: %s"
+#~ msgid "Volume"
+#~ msgstr "Volumen"
 
 #~ msgid "Bass"
 #~ msgstr "Bass"
@@ -541,6 +499,9 @@ msgstr "No se puede operar sin reloj"
 
 #~ msgid "Line-in"
 #~ msgstr "Línea de entrada"
+
+#~ msgid "Microphone"
+#~ msgstr "Micrófono"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -590,6 +551,9 @@ msgstr "No se puede operar sin reloj"
 #~ msgid "Radio"
 #~ msgstr "Radio"
 
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr ""
 #~ "No se pudo abrir el dispositivo de sonido para su gestión por el control "
@@ -627,6 +591,15 @@ msgstr "No se puede operar sin reloj"
 #~ msgid "Side"
 #~ msgstr "Lateral"
 
+#~ msgid "Built-in Speaker"
+#~ msgstr "Altavoz integrado"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "Salida AUX 1"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "Salida AUX 2"
+
 #~ msgid "AUX Out"
 #~ msgstr "Salida AUX"
 
@@ -642,8 +615,23 @@ msgstr "No se puede operar sin reloj"
 #~ msgid "Telephone"
 #~ msgstr "Teléfono"
 
+#~ msgid "Line Out"
+#~ msgstr "Línea de salida"
+
+#~ msgid "Line In"
+#~ msgstr "Línea de entrada"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD interno"
+
 #~ msgid "Video In"
 #~ msgstr "Entrada de vídeo"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Entrada AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Entrada AUX 2"
 
 #~ msgid "AUX In"
 #~ msgstr "Entrada AUX"
@@ -657,6 +645,9 @@ msgstr "No se puede operar sin reloj"
 #~ msgid "Microphone Boost"
 #~ msgstr "Aumento del micrófono"
 
+#~ msgid "Loopback"
+#~ msgstr "Bucle local"
+
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnóstico"
 
@@ -668,6 +659,9 @@ msgstr "No se puede operar sin reloj"
 
 #~ msgid "Input"
 #~ msgstr "Entrada"
+
+#~ msgid "Record Source"
+#~ msgstr "Origen de la grabación"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Monitor de origen"
@@ -707,6 +701,12 @@ msgstr "No se puede operar sin reloj"
 
 #~ msgid "Input Mix"
 #~ msgstr "Mezclador de entrada"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Entrada S/PDIF"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "Salida S/PDIF"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Micrófono 1"
@@ -846,23 +846,39 @@ msgstr "No se puede operar sin reloj"
 #~ msgid "Virtual Mixer Channels"
 #~ msgstr "Canales del mezclador virtual"
 
+#, c-format
 #~ msgid "%s %d Function"
 #~ msgstr "Función %s %d"
 
+#, c-format
 #~ msgid "%s Function"
 #~ msgstr "Función %s"
 
+#~ msgid "Gain"
+#~ msgstr "Ganancia"
+
+#~ msgid "Headphone"
+#~ msgstr "Auriculares"
+
+#, c-format
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Se obtuvo un tamaño de cuadro inesperado %u en lugar de %u."
+
+#, c-format
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Error al leer %d bytes del dispositivo «%s»."
 
+#, c-format
 #~ msgid "Could not enqueue buffers in device '%s'."
 #~ msgstr "No se pueden encolar los búferes en el dispositivo «%s»."
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "No se pudo establecer la conexión con el servidor de sonido"
+#, c-format
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Falló al intentar obtener cuadros de vídeo del dispositivo «%s»."
 
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Falló al preguntar al servidor de sonido sus capacidades"
+#, c-format
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Falló después de %d intentos. Dispositivo %s. Error del sistema: %s"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "

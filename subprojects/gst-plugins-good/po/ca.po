@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -17,6 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Jack server not found"
@@ -25,10 +26,18 @@ msgstr ""
 msgid "Failed to decode JPEG image"
 msgstr "Ha fallat en descodificar la imatge JPEG"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Ha fallat en descodificar la imatge JPEG"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -163,6 +172,9 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "S'ha produït un error al llegir %d bytes des del dispositiu «%s»."
@@ -187,11 +199,13 @@ msgstr ""
 "El controlador del dispositiu «%s» no és compatible amb cap mètode de "
 "captura conegut."
 
+#, fuzzy
+msgid "Invalid caps"
+msgstr "La mida de l'àtom no és vàlida."
+
 #, fuzzy, c-format
 msgid "Device '%s' has no supported format"
-msgstr ""
-"El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
-"fotogrames per segon."
+msgstr "El dispositiu «%s» no és un dispositiu de sortida."
 
 #, c-format
 msgid "Device '%s' failed during initialization"
@@ -209,13 +223,13 @@ msgstr "El dispositiu «%s» no és un dispositiu de captura."
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "El dispositiu «%s» no és un dispositiu de captura."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "El dispositiu «%s» no és un dispositiu de sortida."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "El dispositiu «%s» no és un dispositiu de sortida."
+msgstr "El servidor no ademet les cerques."
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support %s colorimetry"
@@ -246,11 +260,8 @@ msgstr ""
 "El controlador del dispositiu «%s» no és compatible amb cap mètode de "
 "captura conegut."
 
-#, fuzzy
 msgid "Video device uses an unsupported pixel format."
 msgstr ""
-"El controlador del dispositiu «%s» no és compatible amb cap mètode de "
-"captura conegut."
 
 msgid "Failed to configure internal buffer pool."
 msgstr ""
@@ -302,23 +313,21 @@ msgstr ""
 "El controlador del dispositiu «%s» no és compatible amb cap mètode de "
 "captura conegut."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported output format"
 msgstr ""
-"El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
-"fotogrames per segon."
 
 #, fuzzy, c-format
 msgid "Decoder on device %s has no supported input format"
 msgstr ""
-"El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
-"fotogrames per segon."
+"El controlador del dispositiu «%s» no és compatible amb cap mètode de "
+"captura conegut."
 
 #, fuzzy, c-format
 msgid "Decoder on device %s has no supported output format"
 msgstr ""
-"El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
-"fotogrames per segon."
+"El controlador del dispositiu «%s» no és compatible amb cap mètode de "
+"captura conegut."
 
 #, fuzzy
 msgid "Failed to start decoding thread."
@@ -327,21 +336,16 @@ msgstr "Ha fallat en descodificar la imatge JPEG"
 msgid "Failed to process frame."
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr ""
-"El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
-"fotogrames per segon."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr ""
-"El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
-"fotogrames per segon."
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Ha fallat en descodificar la imatge JPEG"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -430,11 +434,20 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 "No s'ha pogut establir el valor %d per al control %d en el dispositiu «%s»."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr ""
+"No s'ha pogut establir el valor %d per al control %d en el dispositiu «%s»."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "No s'ha pogut obtenir l'entrada actual en el dispositiu «%s». Potser és un "
 "dispositiu de ràdio"
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "No s'ha pogut establir l'entrada %d en el dispositiu %s."
 
 #, c-format
 msgid ""
@@ -443,8 +456,8 @@ msgstr ""
 "No s'ha pogut obtenir la sortida actual en el dispositiu «%s». Potser és un "
 "dispositiu de ràdio"
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "No s'ha pogut establir la sortida %d en el dispositiu %s."
 
 msgid "Changing resolution at runtime is not yet supported."
@@ -453,83 +466,25 @@ msgstr "Encara no es permet el canvi de la resolució en temps d'execució."
 msgid "Cannot operate without a clock"
 msgstr "No es pot operar sense un rellotge"
 
-#~ msgid "This file contains too many streams. Only playing first %d"
-#~ msgstr ""
-#~ "Aquest fitxer conté massa fluxos. Només s'estan reproduint els primers %d"
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "No s'ha pogut establir la connexió al servidor de so"
 
-#~ msgid "Record Source"
-#~ msgstr "Font d'enregistrament"
-
-#~ msgid "Microphone"
-#~ msgstr "Micròfon"
-
-#~ msgid "Line In"
-#~ msgstr "Línia d'entrada"
-
-#~ msgid "Internal CD"
-#~ msgstr "CD intern"
-
-#~ msgid "SPDIF In"
-#~ msgstr "Entrada SPDIF"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "Entrada AUX 1"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "Entrada AUX 2"
-
-#, fuzzy
-#~ msgid "Codec Loopback"
-#~ msgstr "Bucle local"
-
-#, fuzzy
-#~ msgid "SunVTS Loopback"
-#~ msgstr "Bucle local"
-
-#~ msgid "Volume"
-#~ msgstr "Volum"
-
-#~ msgid "Gain"
-#~ msgstr "Guany"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#~ msgid "Built-in Speaker"
-#~ msgstr "Altaveu incorporat"
-
-#~ msgid "Headphone"
-#~ msgstr "Auriculars"
-
-#~ msgid "Line Out"
-#~ msgstr "Línia de sortida"
-
-#~ msgid "SPDIF Out"
-#~ msgstr "Sortida SPDIF"
-
-#~ msgid "AUX 1 Out"
-#~ msgstr "Sortida AUX 1"
-
-#~ msgid "AUX 2 Out"
-#~ msgstr "Sortida AUX 2"
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Ha fallat en consultar les capacitats del servidor de so"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "S'ha produït un error intern de flux de dades."
 
+#, c-format
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr ""
+#~ "Aquest fitxer conté massa fluxos. Només s'estan reproduint els primers %d"
+
 #~ msgid "Internal data flow error."
 #~ msgstr "S'ha produït un error intern de flux de dades."
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "S'ha obtingut una mida de fotograma inesperada de %u en lloc de %u."
-
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr ""
-#~ "S'ha produït un error en provar d'obtenir fotogrames de vídeo des del "
-#~ "dispositiu «%s»."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr ""
-#~ "Ha fallat després de %d intents. Dispositiu %s. Error de sistema: %s"
+#~ msgid "Volume"
+#~ msgstr "Volum"
 
 #~ msgid "Bass"
 #~ msgstr "Baixos"
@@ -548,6 +503,9 @@ msgstr "No es pot operar sense un rellotge"
 
 #~ msgid "Line-in"
 #~ msgstr "Línia d'entrada"
+
+#~ msgid "Microphone"
+#~ msgstr "Micròfon"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -597,6 +555,9 @@ msgstr "No es pot operar sense un rellotge"
 #~ msgid "Radio"
 #~ msgstr "Ràdio"
 
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr ""
 #~ "No s'ha pogut obrir el dispositiu d'àudio per a la gestió del control del "
@@ -634,6 +595,15 @@ msgstr "No es pot operar sense un rellotge"
 #~ msgid "Side"
 #~ msgstr "Lateral"
 
+#~ msgid "Built-in Speaker"
+#~ msgstr "Altaveu incorporat"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "Sortida AUX 1"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "Sortida AUX 2"
+
 #~ msgid "AUX Out"
 #~ msgstr "Sortida AUX"
 
@@ -649,8 +619,23 @@ msgstr "No es pot operar sense un rellotge"
 #~ msgid "Telephone"
 #~ msgstr "Telèfon"
 
+#~ msgid "Line Out"
+#~ msgstr "Línia de sortida"
+
+#~ msgid "Line In"
+#~ msgstr "Línia d'entrada"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD intern"
+
 #~ msgid "Video In"
 #~ msgstr "Entrada de vídeo"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Entrada AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Entrada AUX 2"
 
 #~ msgid "AUX In"
 #~ msgstr "Entrada AUX"
@@ -664,6 +649,9 @@ msgstr "No es pot operar sense un rellotge"
 #~ msgid "Microphone Boost"
 #~ msgstr "Amplificació del micròfon"
 
+#~ msgid "Loopback"
+#~ msgstr "Bucle local"
+
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnòstic"
 
@@ -675,6 +663,9 @@ msgstr "No es pot operar sense un rellotge"
 
 #~ msgid "Input"
 #~ msgstr "Entrada"
+
+#~ msgid "Record Source"
+#~ msgstr "Font d'enregistrament"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Font del monitor"
@@ -714,6 +705,12 @@ msgstr "No es pot operar sense un rellotge"
 
 #~ msgid "Input Mix"
 #~ msgstr "Mescla d'entrada"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Entrada SPDIF"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "Sortida SPDIF"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Micròfon 1"
@@ -853,25 +850,44 @@ msgstr "No es pot operar sense un rellotge"
 #~ msgid "Virtual Mixer Channels"
 #~ msgstr "Canals del mesclador virtual"
 
+#, c-format
 #~ msgid "%s %d Function"
 #~ msgstr "Funció %s %d"
 
+#, c-format
 #~ msgid "%s Function"
 #~ msgstr "Funció %s"
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "No s'ha pogut establir la connexió al servidor de so"
+#~ msgid "Gain"
+#~ msgstr "Guany"
 
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Ha fallat en consultar les capacitats del servidor de so"
+#~ msgid "Headphone"
+#~ msgstr "Auriculars"
 
+#, c-format
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "S'ha obtingut una mida de fotograma inesperada de %u en lloc de %u."
+
+#, c-format
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "S'ha produït un error al llegir %d bytes en el dispositiu «%s»."
 
+#, c-format
 #~ msgid "Could not enqueue buffers in device '%s'."
 #~ msgstr ""
 #~ "No s'han pogut enviar a la cua les memòries intermèdies en el dispositiu "
 #~ "«%s»."
+
+#, c-format
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr ""
+#~ "S'ha produït un error en provar d'obtenir fotogrames de vídeo des del "
+#~ "dispositiu «%s»."
+
+#, c-format
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr ""
+#~ "Ha fallat després de %d intents. Dispositiu %s. Error de sistema: %s"
 
 #~ msgid "Describes the selected input element."
 #~ msgstr "Descriu l'element d'entrada seleccionat."

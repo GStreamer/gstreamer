@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-good.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2019.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
-"PO-Revision-Date: 2019-01-25 05:36+0100\n"
+"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-09-25 08:52+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -22,12 +22,19 @@ msgstr "Nie znaleziono serwera Jack"
 msgid "Failed to decode JPEG image"
 msgstr "Nie udało się zdekodować obrazu JPEG"
 
+msgid "Failed to read memory"
+msgstr "Nie udało się odczytać pamięci"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 "Nie udało się skonfigurować kodera dźwięku LAME mp3. Proszę sprawdzić "
 "parametry kodowania."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -164,6 +171,9 @@ msgstr "Nie znaleziono urządzenia CoreAudio"
 msgid "CoreAudio device could not be opened"
 msgstr "Nie udało się otworzyć urządzenia CoreAudio"
 
+msgid "Raspberry Pi Camera Module"
+msgstr "Moduł kamery Raspberry Pi"
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Błąd odczytu %d bajtów z urządzenia '%s'."
@@ -185,6 +195,9 @@ msgstr "Sterownik urządzenia '%s' nie obsługuje metody we/wy %d"
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Sterownik urządzenia '%s' nie obsługuje żadnej znanej metody we/wy."
+
+msgid "Invalid caps"
+msgstr "Błędne możliwości"
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -390,9 +403,17 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Nie udało się ustawić %d jako wartości sterującej %d urządzenia '%s'."
 
 #, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Nie udało się ustawić %s jako wartości sterującej %d urządzenia '%s'."
+
+#, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Nie udało się uzyskać aktualnego wejścia urządzenia '%s'. Może to radio"
+
+#, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Nie udało się ustawić wejścia %u urządzenia %s."
 
 #, c-format
 msgid ""
@@ -401,8 +422,8 @@ msgstr ""
 "Nie udało się uzyskać aktualnego wyjścia urządzenia '%s'. Może to radio"
 
 #, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "Nie udało się ustawić wyjścia %d urządzenia %s."
+msgid "Failed to set output %u on device %s."
+msgstr "Nie udało się ustawić wyjścia %u urządzenia %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Zmiana rozdzielczości w czasie działania nie jest jeszcze obsługiwana."

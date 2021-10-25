@@ -1,16 +1,17 @@
 # Bulgarian translation of gst-plugins-good.
 # Copyright (C) 2007, 2008, 2009, 2010, 2011, 2016 Free Software Foundation, Inc.
 # Copyright (C) 2017 Free Software Foundation, Inc.
+# Copyright (C) 2021 Alexander Shopov.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010, 2011, 2016.
-# Alexander Shopov <ash@kambanaria.org>, 2017.
+# Alexander Shopov <ash@kambanaria.org>, 2017, 2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
-"PO-Revision-Date: 2017-05-07 22:46+0200\n"
+"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-10-02 17:43+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
@@ -26,15 +27,25 @@ msgstr "Сървърът Jack не е открит."
 msgid "Failed to decode JPEG image"
 msgstr "Неуспешно декодиране на изображение, формат JPEG."
 
+msgid "Failed to read memory"
+msgstr "Неуспешно прочитане на памет."
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Неуспешно настройване на аудио кодера за mp3: LAME. Проверете настройките."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Заявената скорост на битове %d kbit/s не се поддържа за свойство „%s“. "
+"Вместо нея е настроена %d kbit/s."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -68,6 +79,7 @@ msgstr "Сървърът не поддържа търсене."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Неуспешно настройване на аудио кодера за mp3: TwoLAME. Проверете настройките."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Аудио входът липсва или е грешен. Потокът с AVI ще бъде повреден."
@@ -158,6 +170,9 @@ msgstr "Устройството CoreAudio не е открито"
 msgid "CoreAudio device could not be opened"
 msgstr "Устройството CoreAudio не може да се отвори"
 
+msgid "Raspberry Pi Camera Module"
+msgstr "Модул за камера на Raspberry Pi"
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Грешка при прочитане на %d байта от устройство „%s“."
@@ -169,7 +184,7 @@ msgstr ""
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "Не могат да се получат буферите от устройството „%s“."
+msgstr "Не може да се получат буферите от устройството „%s“."
 
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
@@ -179,13 +194,16 @@ msgstr "Драйверът за устройството „%s“ не подд�
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Драйверът за устройството „%s“ не поддържа познат метод за В/И."
 
-#, fuzzy, c-format
+msgid "Invalid caps"
+msgstr "Неправилни възможности"
+
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Кодерът устройството „%s“ не поддържа познати метод за вход."
+msgstr "Устройството „%s“ не поддържа никой познат формат"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "Неуспешно инициализиране на устройството „%s“"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -203,13 +221,13 @@ msgstr "Устройството „%s“ не може да записва в �
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "Устройството „%s“ не поддържа несъседни равнини"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Сървърът не поддържа търсене."
+msgstr "Устройството „%s“ не поддържа презредова развивка %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Устройството „%s“ не поддържа несъседни равнини"
+msgstr "Устройството „%s“ не поддържа цветови профил %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -278,13 +296,13 @@ msgstr "Конверторът на устройството „%s“ не по�
 msgid "Converter on device %s has no supported output format"
 msgstr "Конверторът на устройството „%s“ не поддържа познати метод за изход."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Кодерът устройството „%s“ не поддържа познати метод за вход."
+msgstr "Декодерът устройството „%s“ не поддържа познати метод за вход."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Кодерът на устройството „%s“ не поддържа познати метод за изход."
+msgstr "Декодерът на устройството „%s“ не поддържа познати метод за изход."
 
 msgid "Failed to start decoding thread."
 msgstr "Неуспешно стартиране на нишката за декодиране."
@@ -300,9 +318,8 @@ msgstr "Кодерът на устройството „%s“ не поддър�
 msgid "Encoder on device %s has no supported input format"
 msgstr "Кодерът устройството „%s“ не поддържа познати метод за вход."
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Неуспешно стартиране на нишката за декодиране."
+msgstr "Неуспешно стартиране на нишката за кодиране."
 
 #, c-format
 msgid ""
@@ -384,9 +401,17 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Неуспешно задаване на стойността %d на контрол %d на устройство „%s“."
 
 #, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Неуспешно задаване на стойността %s на контрол %d на устройство „%s“."
+
+#, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Неуспешно получаване на текущия вход на устройство „%s“. Може би е радио."
+
+#, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Неуспешно задаване на вход %u на устройство „%s“."
 
 #, c-format
 msgid ""
@@ -395,8 +420,8 @@ msgstr ""
 "Неуспешно получаване на текущия изход на устройство „%s“. Може би е радио."
 
 #, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "Неуспешно задаване на изход %d на устройство „%s“."
+msgid "Failed to set output %u on device %s."
+msgstr "Неуспешно задаване на изход %u на устройство „%s“."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
@@ -405,61 +430,3 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Работата без часовник е невъзможна."
-
-#~ msgid "This file contains too many streams. Only playing first %d"
-#~ msgstr ""
-#~ "Този файл съдържа прекалено много потоци. Изпълняват се само първите %d"
-
-#~ msgid "Record Source"
-#~ msgstr "Източник за запис"
-
-#~ msgid "Microphone"
-#~ msgstr "Микрофон"
-
-#~ msgid "Line In"
-#~ msgstr "Вход"
-
-#~ msgid "Internal CD"
-#~ msgstr "Вътрешно CD"
-
-#~ msgid "SPDIF In"
-#~ msgstr "Вход SPDIF"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "Вход AUX 1"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "Вход AUX 2"
-
-#~ msgid "Codec Loopback"
-#~ msgstr "Обратна връзка на кодека"
-
-#~ msgid "SunVTS Loopback"
-#~ msgstr "Обратна връзка на SunVTS"
-
-#~ msgid "Volume"
-#~ msgstr "Сила на звука"
-
-#~ msgid "Gain"
-#~ msgstr "Усилване"
-
-#~ msgid "Monitor"
-#~ msgstr "Монитор"
-
-#~ msgid "Built-in Speaker"
-#~ msgstr "Вграден високоговорител"
-
-#~ msgid "Headphone"
-#~ msgstr "Слушалки"
-
-#~ msgid "Line Out"
-#~ msgstr "Изход"
-
-#~ msgid "SPDIF Out"
-#~ msgstr "Изход SPDIF"
-
-#~ msgid "AUX 1 Out"
-#~ msgstr "Изход AUX 1"
-
-#~ msgid "AUX 2 Out"
-#~ msgstr "Изход AUX 2"

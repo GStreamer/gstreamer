@@ -13,8 +13,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2019-02-09 21:19+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -32,12 +32,20 @@ msgstr "Jack-Server nicht gefunden"
 msgid "Failed to decode JPEG image"
 msgstr "Dekodieren des JPEG-Bildes schlug fehl"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Anfordern des benötigen Arbeitsspeichers schlug fehl."
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 "Einrichtung des LAME MP3-Kodierers ist fehlgeschlagen. Bitte prüfen Sie die "
 "Parameter des Kodierers."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -177,6 +185,9 @@ msgstr "CoreAudio-Gerät nicht gefunden"
 msgid "CoreAudio device could not be opened"
 msgstr "CoreAudio-Gerät konnte nicht geöffnet werden"
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Fehler beim Lesen von %d Bytes von Gerät »%s«."
@@ -199,6 +210,10 @@ msgstr "Der Treiber von Gerät »%s« unterstützt nicht die EA-Methode %d"
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Der Treiber des Geräts »%s« unterstützt keine bekannte E/A-Methode."
+
+#, fuzzy
+msgid "Invalid caps"
+msgstr "Ungültige Atom-Größe."
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -407,11 +422,20 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 "Festlegen des Wertes »%d« der Einstellung »%d« des Geräts »%s« schlug fehl."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr ""
+"Festlegen des Wertes »%d« der Einstellung »%d« des Geräts »%s« schlug fehl."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Auslesen der aktuellen Eingabe auf dem Gerät »%s« schlug fehl. Vielleicht "
 "ist es ein Funkgerät."
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Festlegen der Eingabe »%d« des Geräts »%s« schlug fehl."
 
 #, c-format
 msgid ""
@@ -420,8 +444,8 @@ msgstr ""
 "Auslesen der aktuellen Ausgabe des Geräts »%s« schlug fehl. Vielleicht ist "
 "es ein Funkgerät."
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "Festlegen der Ausgabe »%d« des Geräts »%s« schlug fehl."
 
 msgid "Changing resolution at runtime is not yet supported."

@@ -1,7 +1,7 @@
 # Brazilian Portuguese translation of gst-plugins-good.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Copyright (C) 2008-2018 Free Software Foundation, Inc.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2018.
+# Copyright (C) 2008-2019 Free Software Foundation, Inc.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2019.
 #
 # data flow -> fluxo de dados
 # streaming -> fluxo contínuo
@@ -11,10 +11,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.12.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
-"PO-Revision-Date: 2018-10-20 17:12-0300\n"
+"Project-Id-Version: gst-plugins-good-1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-09-26 11:49-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -24,6 +24,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.0\n"
 
 msgid "Jack server not found"
 msgstr "Servidor Jack não encontrado"
@@ -31,15 +32,26 @@ msgstr "Servidor Jack não encontrado"
 msgid "Failed to decode JPEG image"
 msgstr "Falha ao decodificar a imagem JPEG"
 
+msgid "Failed to read memory"
+msgstr "Falha ao ler a memória"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Falha ao configurar o codificador de áudio MP3 LAME. Verifique os parâmetros "
+"de codificação."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"A taxa de bits solicitada de %d kbit/s para a propriedade \"%s\" não é "
+"permitida. A taxa de bits foi alterada para %d kbit/s."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -70,10 +82,12 @@ msgid "Server sent bad data."
 msgstr "O servidor enviou dados ruins."
 
 msgid "Server does not support seeking."
-msgstr "Nâo há suporte a busca pelo servidor."
+msgstr "Não há suporte a busca pelo servidor."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Falha ao configurar o codificador TwoLAME. Verifique os parâmetros de "
+"codificação."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Entrada de áudio nula ou inválida, o fluxo AVI pode estar corrompido."
@@ -169,6 +183,9 @@ msgstr "Dispositivo CoreAudio não encontrado"
 msgid "CoreAudio device could not be opened"
 msgstr "Dispositivo CoreAudio não pôde ser aberto"
 
+msgid "Raspberry Pi Camera Module"
+msgstr "Módulo de câmera Raspberry Pi"
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Erro ao ler %d bytes do dispositivo \"%s\"."
@@ -193,14 +210,16 @@ msgstr ""
 "O driver do dispositivo \"%s\" não tem suporte a nenhum método conhecido de "
 "E/S."
 
-#, fuzzy, c-format
+msgid "Invalid caps"
+msgstr "Caps inválido"
+
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr ""
-"O codificador no dispositivo %s não tem um formato de entrada com suporte"
+msgstr "O dispositivo \"%s\" tem um formato sem suporte"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "O dispositivo \"%s\" falhou durante a inicialização"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -219,13 +238,13 @@ msgid "Device '%s' does support non-contiguous planes"
 msgstr ""
 "O dispositivo \"%s\" não tem suporte a planos de sobreposição não-contínuos"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "O dispositivo \"%s\" não tem suporte a captura de vídeo"
+msgstr "O dispositivo \"%s\" não tem suporte a entrelaçamento %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "O dispositivo \"%s\" não tem suporte a captura de vídeo"
+msgstr "O dispositivo \"%s\" não tem suporte a colorimetria %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -248,7 +267,7 @@ msgid "Video device uses an unsupported pixel format."
 msgstr "O dispositivo de vídeo utiliza um formato para pixel não suportado."
 
 msgid "Failed to configure internal buffer pool."
-msgstr "Falha ao configurar uma coleção de buffer interno."
+msgstr "Falha ao configurar uma coleção interna de buffer."
 
 msgid "Video device did not suggest any buffer size."
 msgstr "O dispositivo de vídeo não sugeriu nenhum tamanho de buffer."
@@ -270,7 +289,7 @@ msgstr "O dispositivo \"%s\" não é um sintonizador."
 
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Falha ao obter a entrada de rádio do dispositivo \"%s\"."
+msgstr "Falha ao obter a entrada de rádio do dispositivo \"%s\". "
 
 #, c-format
 msgid "Failed to set input %d on device %s."
@@ -295,15 +314,15 @@ msgstr ""
 msgid "Converter on device %s has no supported output format"
 msgstr "O conversor no dispositivo %s não tem um formato de saída com suporte"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
 msgstr ""
-"O codificador no dispositivo %s não tem um formato de entrada com suporte"
+"O decodificador no dispositivo %s não tem um formato de entrada com suporte"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
 msgstr ""
-"O codificador no dispositivo %s não tem um formato de saída com suporte"
+"O decodificador no dispositivo %s não tem um formato de saída com suporte"
 
 msgid "Failed to start decoding thread."
 msgstr "Falha ao iniciar o segmento de decodificação."
@@ -321,9 +340,8 @@ msgid "Encoder on device %s has no supported input format"
 msgstr ""
 "O codificador no dispositivo %s não tem um formato de entrada com suporte"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Falha ao iniciar o segmento de decodificação."
+msgstr "Falha ao iniciar o segmento de codificação."
 
 #, c-format
 msgid ""
@@ -384,12 +402,12 @@ msgstr "Falha ao definir as normas para o dispositivo \"%s\"."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Falha ao obter a freqüência do sintonizador para o dispositivo \"%s\"."
+msgstr "Falha ao obter a frequência do sintonizador para o dispositivo \"%s\"."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
-"Falha ao definir a freqüência do sintonizador para o dispositivo \"%s\" à "
+"Falha ao definir a frequência do sintonizador para o dispositivo \"%s\" à "
 "%lu Hz."
 
 #, c-format
@@ -405,10 +423,18 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Falha ao definir o valor %d para o controle %d no dispositivo \"%s\"."
 
 #, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Falha ao definir o valor %s para o controle %d no dispositivo \"%s\"."
+
+#, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Falha ao obter a entrada atual no dispositivo \"%s\". Talvez seja um "
 "dispositivo de rádio"
+
+#, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Falha ao definir a entrada %u no dispositivo %s."
 
 #, c-format
 msgid ""
@@ -418,8 +444,8 @@ msgstr ""
 "dispositivo de rádio"
 
 #, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "Falha ao definir a saída %d no dispositivo %s."
+msgid "Failed to set output %u on device %s."
+msgstr "Falha ao definir a saída %u no dispositivo %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Ainda não há suporte a mudança de resolução enquanto está executando."

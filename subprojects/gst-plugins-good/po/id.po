@@ -2,15 +2,15 @@
 # This file is put in the public domain.
 #
 # Andhika Padmawan <andhika.padmawan@gmail.com>, 2011-2016.
-# Andika Triwidada <andika@gmail.com>, 2013.
+# Andika Triwidada <andika@gmail.com>, 2013, 2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
-"PO-Revision-Date: 2016-11-10 22:06+0700\n"
-"Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
+"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-09-24 21:55+0700\n"
+"Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
@@ -18,6 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 2.4.2\n"
 
 msgid "Jack server not found"
 msgstr "Server Jack tak ditemukan"
@@ -25,15 +26,26 @@ msgstr "Server Jack tak ditemukan"
 msgid "Failed to decode JPEG image"
 msgstr "Gagal untuk mengawasandi citra JPEG"
 
+msgid "Failed to read memory"
+msgstr "Gagal membaca memori"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Gagal mengonfigurasi enkoder audio MP3 LAME. Periksa parameter pengodean "
+"Anda."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Bitrate yang diminta %d kbit/s untuk properti '%s' tidak diperbolehkan. "
+"Bitrate diubah menjadi %d kbit/s."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -68,6 +80,7 @@ msgstr "Server tidak mendukung pencarian."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Gagal mengonfigurasi enkoder TwoLAME. Periksa parameter pengodean Anda."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Masukan audio tidak ada atau tidak sah, arus AVI akan rusak."
@@ -113,161 +126,165 @@ msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Tak dapat membuka divais audio untuk putar kembali. Divais sedang digunakan "
-"oleh aplikasi lain."
+"Tak dapat membuka peranti audio untuk putar kembali. Peranti sedang "
+"digunakan oleh aplikasi lain."
 
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
-"Tak dapat membuka divais audio untuk putar kembali. Anda tak memiliki hak "
-"akses untuk membuka divais."
+"Tak dapat membuka peranti audio untuk putar kembali. Anda tak memiliki hak "
+"akses untuk membuka peranti."
 
 msgid "Could not open audio device for playback."
-msgstr "Tak dapat membuka divais audio untuk putar kembali."
+msgstr "Tak dapat membuka peranti audio untuk putar kembali."
 
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Tak dapat membuka divais audio untuk putar kembali. Versi Open Sound System "
+"Tak dapat membuka peranti audio untuk putar kembali. Versi Open Sound System "
 "ini tidak didukung oleh elemen ini."
 
 msgid "Playback is not supported by this audio device."
-msgstr "Putar balik tidak didukung oleh divais audio ini."
+msgstr "Putar balik tidak didukung oleh peranti audio ini."
 
 msgid "Audio playback error."
 msgstr "Galat putar balik audio."
 
 msgid "Recording is not supported by this audio device."
-msgstr "Perekaman tidak didukung oleh divais audio ini."
+msgstr "Perekaman tidak didukung oleh peranti audio ini."
 
 msgid "Error recording from audio device."
-msgstr "Galat merekam dari divais audio."
+msgstr "Galat merekam dari peranti audio."
 
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
-"Tak dapat membuka divais audio untuk merekam. Anda tak memiliki hak akses "
-"untuk membuka divais."
+"Tak dapat membuka peranti audio untuk merekam. Anda tak memiliki hak akses "
+"untuk membuka peranti."
 
 msgid "Could not open audio device for recording."
-msgstr "Tak dapat membuka divais audio untuk merekam."
+msgstr "Tak dapat membuka peranti audio untuk merekam."
 
 msgid "CoreAudio device not found"
-msgstr "Divais CoreAudio tidak ditemukan"
+msgstr "Peranti CoreAudio tidak ditemukan"
 
 msgid "CoreAudio device could not be opened"
-msgstr "Divais CoreAudio tidak dapat buka"
+msgstr "Peranti CoreAudio tidak dapat dibuka"
+
+msgid "Raspberry Pi Camera Module"
+msgstr "Modul Kamera Raspberry Pi"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Galat membaca %d bita dari divais '%s'."
+msgstr "Galat membaca %d bita dari peranti '%s'."
 
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
-"Gagal menyebutkan kemungkinan format video yang dapat bekerja dengan divais "
-"'%s'."
+"Gagal mengenumerasi kemungkinan format video yang dapat bekerja dengan "
+"peranti '%s'"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "Tak dapat memetakan penyangga dari divais '%s'"
+msgstr "Tak dapat memetakan penyangga dari peranti '%s'"
 
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr "Driver dari divais '%s' tak mendukung metode IO %d"
+msgstr "Driver dari peranti '%s' tak mendukung metode IO %d"
 
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr "Driver dari divais '%s' tak mendukung metode IO apapun yang dikenal."
+msgstr "Driver dari peranti '%s' tak mendukung metode IO apapun yang dikenal."
 
-#, fuzzy, c-format
+msgid "Invalid caps"
+msgstr "Caps tidak valid"
+
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Penyandi di divais %s tidak mempunyai format masukan yang didukung"
+msgstr "Peranti '%s' tidak memiliki format yang didukung"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "Peranti '%s' gagal selama inisialisasi"
 
 #, c-format
 msgid "Device '%s' is busy"
-msgstr "Divais '%s' sibuk"
+msgstr "Peranti '%s' sibuk"
 
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Divais '%s' tak dapat menangkap di %dx%d"
+msgstr "Peranti '%s' tak dapat menangkap di %dx%d"
 
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Divais '%s' tak dapat menangkap dalam format yang ditentukan"
+msgstr "Peranti '%s' tak dapat menangkap dalam format yang ditentukan"
 
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Divais '%s' tak mendukung pesawat tak bersinggungan"
+msgstr "Peranti '%s' tak mendukung pesawat tak bersinggungan"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Divais '%s' tak mendukung penangkapan video"
+msgstr "Peranti '%s' tidak mendukung interlacing %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Divais '%s' tak mendukung penangkapan video"
+msgstr "Peranti '%s' tidak mendukung colorimetry %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "Tak bisa mendapatkan parameter di divais '%s'"
+msgstr "Tak bisa mendapatkan parameter di peranti '%s'"
 
 msgid "Video device did not accept new frame rate setting."
-msgstr "Divais video tak menerima pengaturan laju bingkai baru."
+msgstr "Peranti video tak menerima pengaturan laju bingkai baru."
 
 msgid "Video device did not provide output format."
-msgstr "Divais video tak menyediakan format keluaran."
+msgstr "Peranti video tak menyediakan format keluaran."
 
 msgid "Video device returned invalid dimensions."
-msgstr "Divais video mengembalikan dimensi tidak sah."
+msgstr "Peranti video mengembalikan dimensi tidak sah."
 
-#, fuzzy
 msgid "Video device uses an unsupported interlacing method."
-msgstr "Divais video menggunakan metode penyilangan yang tidak didukung."
+msgstr "Peranti video menggunakan metode interlacing yang tidak didukung."
 
-#, fuzzy
 msgid "Video device uses an unsupported pixel format."
-msgstr "Divais video menggunakan format pixel yang tidak didukung."
+msgstr "Peranti video menggunakan format pixel yang tidak didukung."
 
 msgid "Failed to configure internal buffer pool."
 msgstr "Gagal mengatur pul singgahan internal."
 
 msgid "Video device did not suggest any buffer size."
-msgstr "Divais video tak menyarankan ukuran singgahan apapun."
+msgstr "Peranti video tak menyarankan ukuran singgahan apapun."
 
 msgid "No downstream pool to import from."
 msgstr "Tak ada pul downstream untuk diimpor."
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr "Gagal mendapatkan pengaturan tuner %d di divais '%s'."
+msgstr "Gagal mendapatkan pengaturan tuner %d di peranti '%s'."
 
 #, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Galat saat mengambil kapabilitas bagi divais '%s'."
+msgstr "Galat saat mengambil kapabilitas bagi peranti '%s'."
 
 #, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Divais '%s' bukan tuner."
+msgstr "Peranti '%s' bukan tuner."
 
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Gagal mendapat masukan radio pada divais '%s'."
+msgstr "Gagal mendapat masukan radio pada peranti '%s'. "
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr "Gagal mengatur masukan %d di divais %s."
+msgstr "Gagal mengatur masukan %d di peranti %s."
 
 #, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Gagal mengubah keadaan bisu untuk divais '%s'."
+msgstr "Gagal mengubah keadaan bisu untuk peranti '%s'."
 
 msgid "Failed to allocated required memory."
 msgstr "Gagal mengalokasikan memori yang diperlukan."
@@ -277,194 +294,139 @@ msgstr "Gagal mengalokasikan memori yang diperlukan."
 
 #, c-format
 msgid "Converter on device %s has no supported input format"
-msgstr "Konverter di divais %s tidak mempunyai format masukan yang didukung"
+msgstr "Konverter pada peranti %s tidak mempunyai format masukan yang didukung"
 
 #, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr "Konverter di divais %s tidak mempunyai format keluaran yang didukung"
+msgstr ""
+"Konverter pada peranti %s tidak mempunyai format keluaran yang didukung"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Penyandi di divais %s tidak mempunyai format masukan yang didukung"
+msgstr "Dekoder pada peranti %s tidak memiliki format masukan yang didukung"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Penyandi di divais %s tidak mempunyai format keluaran yang didukung"
+msgstr "Dekoder pada peranti %s tidak mempunyai format keluaran yang didukung"
 
 msgid "Failed to start decoding thread."
 msgstr "Gagal untuk menjalankan tali awasandi."
 
 msgid "Failed to process frame."
-msgstr "Gagal memproses bingkai."
+msgstr "Gagal memroses bingkai."
 
 #, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr "Penyandi di divais %s tidak mempunyai format keluaran yang didukung"
+msgstr "Penyandi di peranti %s tidak mempunyai format keluaran yang didukung"
 
 #, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr "Penyandi di divais %s tidak mempunyai format masukan yang didukung"
+msgstr "Penyandi di peranti %s tidak mempunyai format masukan yang didukung"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Gagal untuk menjalankan tali awasandi."
+msgstr "Gagal memulai pengodean thread."
 
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"Galat mendapatkan kemampuan untuk divais '%s': Itu bukan diver v4l2. Cek "
+"Galat mendapatkan kemampuan untuk peranti '%s': Itu bukan diver v4l2. Cek "
 "apakah itu merupakan driver v4l1."
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr "Gagal kueri atribut masukan %d di divais %s"
+msgstr "Gagal kueri atribut masukan %d di peranti %s"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Gagal mendapatkan pengaturan tuner %d di divais '%s'."
+msgstr "Gagal mendapatkan pengaturan tuner %d di peranti '%s'."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "Gagal kueri standar di divais '%s'."
+msgstr "Gagal kueri standar di peranti '%s'."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Gagal mendapatkan kendali atribut di divais '%s'."
+msgstr "Gagal mendapatkan kendali atribut di peranti '%s'."
 
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr "Tak dapat mengidentifikasi divais '%s'."
+msgstr "Tak dapat mengidentifikasi peranti '%s'."
 
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr "Ini bukan divais '%s'."
+msgstr "Ini bukan peranti '%s'."
 
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "Tak dapat membuka divais '%s' untuk dibaca dan ditulis."
+msgstr "Tak dapat membuka peranti '%s' untuk dibaca dan ditulis."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Divais '%s' bukan divais penangkap."
+msgstr "Peranti '%s' bukan peranti penangkap."
 
 #, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Divais '%s' bukan divais keluaran."
+msgstr "Peranti '%s' bukan peranti keluaran."
 
 #, c-format
 msgid "Device '%s' is not a M2M device."
-msgstr "Divais '%s' bukan divais M2M."
+msgstr "Peranti '%s' bukan peranti M2M."
 
 #, c-format
 msgid "Could not dup device '%s' for reading and writing."
-msgstr "Tak dapat membuka divais '%s' untuk dibaca dan ditulis."
+msgstr "Tak dapat membuka peranti '%s' untuk dibaca dan ditulis."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Gagal mengatur standar untuk divais '%s'."
+msgstr "Gagal mengatur standar untuk peranti '%s'."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Gagal untuk mendapatkan frekuensi tuner terkini untuk divais '%s'."
+msgstr "Gagal untuk mendapatkan frekuensi tuner terkini untuk peranti '%s'."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
-msgstr "Gagal mengatur frekuensi tuner terkini untuk divais '%s' ke %lu Hz."
+msgstr "Gagal mengatur frekuensi tuner terkini untuk peranti '%s' ke %lu Hz."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "Gagal mendapatkan kekuatan sinyal untuk divais '%s'."
+msgstr "Gagal mendapatkan kekuatan sinyal untuk peranti '%s'."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Gagal mendapatkan nilai untuk kendali %d di divais '%s'."
+msgstr "Gagal mendapatkan nilai untuk kendali %d di peranti '%s'."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr "Gagal mengatur nilai %d untuk kendali %d di divais '%s'."
+msgstr "Gagal mengatur nilai %d untuk kendali %d di peranti '%s'."
+
+#, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Gagal mengatur nilai %s untuk kendali %d di peranti '%s'."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Gagal mendapatkan masukan terkini di divais '%s'. Mungkin itu divais radio"
+"Gagal mendapatkan masukan terkini di peranti '%s'. Mungkin itu peranti radio"
+
+#, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Gagal mengatur masukan %u di peranti %s."
 
 #, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Gagal mendapatkan keluaran terkini di divais '%s'. Mungkin itu divais radio"
+"Gagal mendapatkan keluaran terkini di peranti '%s'. Mungkin itu peranti radio"
 
 #, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "Gagal mengatur keluaran %d di divais %s."
+msgid "Failed to set output %u on device %s."
+msgstr "Gagal mengatur keluaran %u di peranti %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Mengubah resolusi saat waktu berjalan belum didukung."
 
 msgid "Cannot operate without a clock"
 msgstr "Tak dapat beroperasi tanpa jam"
-
-#~ msgid "This file contains too many streams. Only playing first %d"
-#~ msgstr "Berkas ini berisi terlalu banyak arus. Hanya memutar %d pertama"
-
-#~ msgid "Record Source"
-#~ msgstr "Sumber Rekaman"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofon"
-
-#~ msgid "Line In"
-#~ msgstr "Jalur Masuk"
-
-#~ msgid "Internal CD"
-#~ msgstr "CD Internal"
-
-#~ msgid "SPDIF In"
-#~ msgstr "SPDIF Masuk"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "AUX 1 Masuk"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "AUX 2 Masuk"
-
-#~ msgid "Codec Loopback"
-#~ msgstr "Loopback Kodek"
-
-#~ msgid "SunVTS Loopback"
-#~ msgstr "Loopback SunVTS"
-
-#~ msgid "Volume"
-#~ msgstr "Volume"
-
-#~ msgid "Gain"
-#~ msgstr "Gain"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#~ msgid "Built-in Speaker"
-#~ msgstr "Pengeras Suara Terbina"
-
-#~ msgid "Headphone"
-#~ msgstr "Headphone"
-
-#~ msgid "Line Out"
-#~ msgstr "Jalur Keluar"
-
-#~ msgid "SPDIF Out"
-#~ msgstr "SPDIF Keluar"
-
-#~ msgid "AUX 1 Out"
-#~ msgstr "AUX 1 Keluar"
-
-#~ msgid "AUX 2 Out"
-#~ msgstr "AUX 2 Keluar"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Galat arus data internal."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Galat aliran data internal."

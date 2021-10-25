@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2019-02-05 18:23+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -26,12 +26,20 @@ msgstr "Jack-server hittades ej"
 msgid "Failed to decode JPEG image"
 msgstr "Misslyckades med att avkoda JPEG-bild"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Misslyckades med att allokera begärt minne."
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 "Misslyckades med att konfigurera LAME mp3-audiokodare. Kontrollera dina "
 "kodningsparametrar."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -167,6 +175,9 @@ msgstr "CoreAudio-enhet hittades inte"
 msgid "CoreAudio device could not be opened"
 msgstr "CoreAudio-enhet kunde inte öppnas"
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Fel vid läsning av %d byte från enheten ”%s”."
@@ -188,6 +199,10 @@ msgstr "Drivrutinen för enheten ”%s” stöder inte IO-metod %d"
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Drivrutinen för enheten ”%s” stöder inte någon känd IO-metod."
+
+#, fuzzy
+msgid "Invalid caps"
+msgstr "Ogiltig atomstorlek."
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -395,11 +410,19 @@ msgstr ""
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Kunde inte ställa in värdet %d för kontrollen %d på enheten ”%s”."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Kunde inte ställa in värdet %d för kontrollen %d på enheten ”%s”."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Misslyckades med att få tag på aktuell ingång på enheten ”%s”. Kan vara en "
 "radioenhet"
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Kunde inte ställa in ingång %d på enheten %s."
 
 #, c-format
 msgid ""
@@ -408,8 +431,8 @@ msgstr ""
 "Misslyckades med att få tag på aktuell utgång på enheten ”%s”. Kan vara en "
 "radioenhet"
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "Misslyckades med att ställa in utgång %d på enheten %s."
 
 msgid "Changing resolution at runtime is not yet supported."

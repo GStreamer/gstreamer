@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2010-07-16 19:34+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n"
 "%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Virtaal 0.6.1\n"
@@ -25,10 +26,18 @@ msgstr ""
 msgid "Failed to decode JPEG image"
 msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -160,6 +169,9 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Klaida skaitant %d baitus (-ų) iš įrenginio „%s“."
@@ -180,17 +192,20 @@ msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būd�
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
 
+msgid "Invalid caps"
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
+msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
 
 #, c-format
 msgid "Device '%s' failed during initialization"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' cannot capture at %dx%d"
@@ -200,9 +215,9 @@ msgstr "Įrenginys „%s“ nėra įrašymo įrenginys."
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Įrenginys „%s“ nėra įrašymo įrenginys."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support %s interlacing"
@@ -231,9 +246,8 @@ msgstr ""
 msgid "Video device uses an unsupported interlacing method."
 msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
 
-#, fuzzy
 msgid "Video device uses an unsupported pixel format."
-msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
+msgstr ""
 
 msgid "Failed to configure internal buffer pool."
 msgstr ""
@@ -279,17 +293,17 @@ msgstr ""
 msgid "Converter on device %s has no supported input format"
 msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
+msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
 
 #, fuzzy, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
+msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
 
 #, fuzzy
 msgid "Failed to start decoding thread."
@@ -298,17 +312,16 @@ msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
 msgid "Failed to process frame."
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
+msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
+msgstr ""
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -386,11 +399,19 @@ msgstr "Nepavyko gauti valdiklio %d reikšmės įrenginyje „%s“."
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Nepavyko nustatyti valdiklio %2$d įrenginyje „%3$s“ reikšmės %1$d."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Nepavyko nustatyti valdiklio %2$d įrenginyje „%3$s“ reikšmės %1$d."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Nepavyko gauti dabartinės įvesties įrenginyje „%s“. Galbūt tai radijo "
 "įrenginys"
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Nepavyko nustatyti įvesties %d įrenginyje %s."
 
 #, fuzzy, c-format
 msgid ""
@@ -400,7 +421,7 @@ msgstr ""
 "įrenginys"
 
 #, fuzzy, c-format
-msgid "Failed to set output %d on device %s."
+msgid "Failed to set output %u on device %s."
 msgstr "Nepavyko nustatyti įvesties %d įrenginyje %s."
 
 msgid "Changing resolution at runtime is not yet supported."
@@ -409,79 +430,21 @@ msgstr "Galimybės keisti skiriamąją gebą operacijos vykdymo metu dar nėra."
 msgid "Cannot operate without a clock"
 msgstr "Negali veikti be laikrodžio"
 
-#~ msgid "This file contains too many streams. Only playing first %d"
-#~ msgstr "Šiame faile per daug srautų. Grojami tik pirmieji %d"
-
-#~ msgid "Record Source"
-#~ msgstr "Įrašymo šaltinis"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofonas"
-
-#~ msgid "Line In"
-#~ msgstr "Įeinanti linija"
-
-#~ msgid "Internal CD"
-#~ msgstr "Vidinis CD"
-
-#~ msgid "SPDIF In"
-#~ msgstr "SPDIF įvestis"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "AUX 1 įvestis"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "AUX 2 įvestis"
-
-#, fuzzy
-#~ msgid "Codec Loopback"
-#~ msgstr "Perduoti ratu"
-
-#, fuzzy
-#~ msgid "SunVTS Loopback"
-#~ msgstr "Perduoti ratu"
-
-#~ msgid "Volume"
-#~ msgstr "Garsumas"
-
-#~ msgid "Gain"
-#~ msgstr "Garsinimas"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitorius"
-
-#~ msgid "Built-in Speaker"
-#~ msgstr "Integruotas garsiakalbis"
-
-#~ msgid "Headphone"
-#~ msgstr "Ausinės"
-
-#~ msgid "Line Out"
-#~ msgstr "Išeinanti linija"
-
-#~ msgid "SPDIF Out"
-#~ msgstr "SPDIF išvestis"
-
-#~ msgid "AUX 1 Out"
-#~ msgstr "AUX 1 išvestis"
-
-#~ msgid "AUX 2 Out"
-#~ msgstr "AUX 2 išvestis"
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Nepavyko užklausti garso serverio galimybių"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Vidinė duomenų srauto klaida."
 
+#, c-format
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Šiame faile per daug srautų. Grojami tik pirmieji %d"
+
 #~ msgid "Internal data flow error."
 #~ msgstr "Vidinė duomenų srauto klaida."
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Gautas netikėtas kadro dydis %u vietoje %u."
-
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Nepavyko gauti vaizdo kadrų iš įrenginio „%s“."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Nepavyko po %d bandymų. Įrenginys %s. Sistemos klaida: %s"
+#~ msgid "Volume"
+#~ msgstr "Garsumas"
 
 #~ msgid "Bass"
 #~ msgstr "Žemi dažniai"
@@ -500,6 +463,9 @@ msgstr "Negali veikti be laikrodžio"
 
 #~ msgid "Line-in"
 #~ msgstr "Įvedimas"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofonas"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -549,6 +515,9 @@ msgstr "Negali veikti be laikrodžio"
 #~ msgid "Radio"
 #~ msgstr "Radijas"
 
+#~ msgid "Monitor"
+#~ msgstr "Monitorius"
+
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "Nepavyko atverti garso įrenginio maišiklio valdymo apdorojimui."
 
@@ -583,6 +552,15 @@ msgstr "Negali veikti be laikrodžio"
 #~ msgid "Side"
 #~ msgstr "Šoninis"
 
+#~ msgid "Built-in Speaker"
+#~ msgstr "Integruotas garsiakalbis"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1 išvestis"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2 išvestis"
+
 #~ msgid "AUX Out"
 #~ msgstr "AUX išvestis"
 
@@ -598,8 +576,23 @@ msgstr "Negali veikti be laikrodžio"
 #~ msgid "Telephone"
 #~ msgstr "Telefonas"
 
+#~ msgid "Line Out"
+#~ msgstr "Išeinanti linija"
+
+#~ msgid "Line In"
+#~ msgstr "Įeinanti linija"
+
+#~ msgid "Internal CD"
+#~ msgstr "Vidinis CD"
+
 #~ msgid "Video In"
 #~ msgstr "Vaizdo įvestis"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 įvestis"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 įvestis"
 
 #~ msgid "AUX In"
 #~ msgstr "AUX įvestis"
@@ -613,6 +606,9 @@ msgstr "Negali veikti be laikrodžio"
 #~ msgid "Microphone Boost"
 #~ msgstr "Mikrofono pagarsinimas"
 
+#~ msgid "Loopback"
+#~ msgstr "Perduoti ratu"
+
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnostika"
 
@@ -624,6 +620,9 @@ msgstr "Negali veikti be laikrodžio"
 
 #~ msgid "Input"
 #~ msgstr "Įvestis"
+
+#~ msgid "Record Source"
+#~ msgstr "Įrašymo šaltinis"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Monitoriaus šaltinis"
@@ -663,6 +662,12 @@ msgstr "Negali veikti be laikrodžio"
 
 #~ msgid "Input Mix"
 #~ msgstr "Įvesties maiša"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF įvestis"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF išvestis"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Mikrofonas 1"
@@ -802,23 +807,39 @@ msgstr "Negali veikti be laikrodžio"
 #~ msgid "Virtual Mixer Channels"
 #~ msgstr "Virtualaus maišiklio kanalai"
 
+#, c-format
 #~ msgid "%s %d Function"
 #~ msgstr "%s %d funkcija"
 
+#, c-format
 #~ msgid "%s Function"
 #~ msgstr "%s funkcija"
 
+#~ msgid "Gain"
+#~ msgstr "Garsinimas"
+
+#~ msgid "Headphone"
+#~ msgstr "Ausinės"
+
+#, c-format
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Gautas netikėtas kadro dydis %u vietoje %u."
+
+#, c-format
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Klaida skaitant %d baitus (-ų) įrenginyje „%s“."
 
+#, c-format
 #~ msgid "Could not enqueue buffers in device '%s'."
 #~ msgstr "Nepavyko sustatyti į eilė buferių įrenginyje „%s“."
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Nepavyko prisijungti prie garso serverio"
+#, c-format
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Nepavyko gauti vaizdo kadrų iš įrenginio „%s“."
 
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Nepavyko užklausti garso serverio galimybių"
+#, c-format
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Nepavyko po %d bandymų. Įrenginys %s. Sistemos klaida: %s"
 
 #~ msgid "Describes the selected input element."
 #~ msgstr "Aprašo pasirinktą įvesties elementą."

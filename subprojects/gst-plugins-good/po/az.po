@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: KBabel 1.0.2\n"
 
 msgid "Jack server not found"
@@ -23,10 +24,17 @@ msgstr ""
 msgid "Failed to decode JPEG image"
 msgstr ""
 
+msgid "Failed to read memory"
+msgstr ""
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -47,11 +55,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Could not resolve server name."
-msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
+msgstr "\"%s\" avadanlığına yazıla bilmədi."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
+msgstr ""
 
 msgid "Secure connection setup failed."
 msgstr ""
@@ -150,6 +157,9 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "\"%s\" avadanlığından bufferlər alına bilmədi."
@@ -170,37 +180,40 @@ msgstr ""
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 
-#, fuzzy, c-format
+msgid "Invalid caps"
+msgstr ""
+
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
+msgstr ""
 
 #, c-format
 msgid "Device '%s' failed during initialization"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
+msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
+msgstr "\"%s\" avadanlığı mövcud deyil."
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
+msgstr "\"%s\" avadanlığı mövcud deyil."
 
 #, fuzzy, c-format
 msgid "Could not get parameters on device '%s'"
@@ -234,9 +247,9 @@ msgstr ""
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "\"%s\" avadanlığından kifayət qədər bufferlər alına bilmədi."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "\"%s\" avadanlığından bufferlər alına bilmədi."
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' is not a tuner."
@@ -244,7 +257,7 @@ msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
 
 #, fuzzy, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "\"%s\" audio avadanlığı bağlana bilmədi."
+msgstr "\"%s\" avadanlığına yazıla bilmədi."
 
 #, fuzzy, c-format
 msgid "Failed to set input %d on device %s."
@@ -367,18 +380,26 @@ msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 
 #, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "\"%s\" avadanlığına yazıla bilmədi."
+
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
-msgstr "\"%s\" avadanlığından kifayət qədər bufferlər alına bilmədi."
+msgstr ""
 
 #, fuzzy, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "\"%s\" audio avadanlığı bağlana bilmədi."
+msgid "Failed to set output %u on device %s."
+msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
@@ -386,30 +407,50 @@ msgstr ""
 msgid "Cannot operate without a clock"
 msgstr ""
 
-#, fuzzy
-#~ msgid "Record Source"
-#~ msgstr "Qeyd"
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "\"%s\" faylı yazma üçün açıla bilmədi."
 
-#~ msgid "Microphone"
-#~ msgstr "Mikrofon"
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "\"%s\" faylı bağlana bilmədi."
 
-#, fuzzy
-#~ msgid "Line In"
-#~ msgstr "Xətd-giriş"
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
+
+#~ msgid "No filename specified."
+#~ msgstr "Fayl adı verilməyib."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "\"%s\" faylına yazıla bilmədi."
+
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "\"%s\" idarə avadanlığı yazma üçün açıla bilmədi."
+
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "\"%s\" audio avadanlığı quraşdırıla bilmədi."
+
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "\"%s\" audio avadanlığı %d Hz-ə keçirilə bilmədi."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "\"%s\" video avadanlığı yazma üçün açıla bilmədi."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "\"%s\" video avadanlığı bağlana bilmədi."
+
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr "\"%s\" OSS avadanlığı başqa bir proqram tərəfindən istifadədədir."
+
+#~ msgid "Could not access device \"%s\", check its permissions."
+#~ msgstr "\"%s\" avadanlığına yetişə bilmədi, səlahiyyətlərini yoxlayın."
+
+#~ msgid "Could not open device \"%s\" for writing."
+#~ msgstr "\"%s\" avadanlığı yazma üçün açıla bilmədi."
+
+#~ msgid "Could not open device \"%s\" for reading."
+#~ msgstr "\"%s\" avadanlığı oxuma üçün açıla bilmədi."
 
 #~ msgid "Volume"
 #~ msgstr "Səs"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#, fuzzy
-#~ msgid "Built-in Speaker"
-#~ msgstr "Spiker"
-
-#, fuzzy
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "\"%s\" avadanlığından kifayət qədər bufferlər alına bilmədi."
 
 #~ msgid "Bass"
 #~ msgstr "Bas"
@@ -428,6 +469,9 @@ msgstr ""
 
 #~ msgid "Line-in"
 #~ msgstr "Xətd-giriş"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -477,118 +521,12 @@ msgstr ""
 #~ msgid "Radio"
 #~ msgstr "Radio"
 
-#, fuzzy
-#~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "\"%s\" audio avadanlığı yazma üçün açıla bilmədi."
-
-#, fuzzy
-#~ msgid "Rear"
-#~ msgstr "Qeyd"
-
-#, fuzzy
-#~ msgid "Side"
-#~ msgstr "Video"
-
-#, fuzzy
-#~ msgid "Video In"
-#~ msgstr "Video"
-
-#, fuzzy
-#~ msgid "Record Gain"
-#~ msgstr "Qeyd"
-
-#, fuzzy
-#~ msgid "Output Gain"
-#~ msgstr "Çıxış-gain"
-
-#, fuzzy
-#~ msgid "Microphone Boost"
-#~ msgstr "Mikrofon"
-
-#, fuzzy
-#~ msgid "Monitor Source"
+#~ msgid "Monitor"
 #~ msgstr "Monitor"
 
 #, fuzzy
-#~ msgid "Microphone Gain"
-#~ msgstr "Mikrofon"
-
-#, fuzzy
-#~ msgid "Speaker Source"
+#~ msgid "PC Speaker"
 #~ msgstr "Spiker"
-
-#, fuzzy
-#~ msgid "Microphone Source"
-#~ msgstr "Mikrofon"
-
-#, fuzzy
-#~ msgid "Microphone 1"
-#~ msgstr "Mikrofon"
-
-#, fuzzy
-#~ msgid "Microphone 2"
-#~ msgstr "Mikrofon"
-
-#, fuzzy
-#~ msgid "Digital Out"
-#~ msgstr "Dijital-1"
-
-#, fuzzy
-#~ msgid "Digital In"
-#~ msgstr "Dijital-1"
-
-#, fuzzy
-#~ msgid "Front Panel Microphone"
-#~ msgstr "Mikrofon"
-
-#, fuzzy
-#~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "\"%s\" avadanlığından bufferlər alına bilmədi."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "\"%s\" faylı yazma üçün açıla bilmədi."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "\"%s\" faylı bağlana bilmədi."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
-
-#~ msgid "No filename specified."
-#~ msgstr "Fayl adı verilməyib."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "\"%s\" faylına yazıla bilmədi."
-
-#~ msgid "Could not open control device \"%s\" for writing."
-#~ msgstr "\"%s\" idarə avadanlığı yazma üçün açıla bilmədi."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "\"%s\" audio avadanlığı quraşdırıla bilmədi."
-
-#~ msgid "Could not set audio device \"%s\" to %d Hz."
-#~ msgstr "\"%s\" audio avadanlığı %d Hz-ə keçirilə bilmədi."
-
-#~ msgid "Could not open video device \"%s\" for writing."
-#~ msgstr "\"%s\" video avadanlığı yazma üçün açıla bilmədi."
-
-#~ msgid "Could not close video device \"%s\"."
-#~ msgstr "\"%s\" video avadanlığı bağlana bilmədi."
-
-#~ msgid "OSS device \"%s\" is already in use by another program."
-#~ msgstr "\"%s\" OSS avadanlığı başqa bir proqram tərəfindən istifadədədir."
-
-#~ msgid "Could not access device \"%s\", check its permissions."
-#~ msgstr "\"%s\" avadanlığına yetişə bilmədi, səlahiyyətlərini yoxlayın."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "\"%s\" avadanlığı mövcud deyil."
-
-#~ msgid "Could not open device \"%s\" for writing."
-#~ msgstr "\"%s\" avadanlığı yazma üçün açıla bilmədi."
-
-#~ msgid "Could not open device \"%s\" for reading."
-#~ msgstr "\"%s\" avadanlığı oxuma üçün açıla bilmədi."
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "\"%s\" vfs faylı oxuma üçün açıla bilmədi."

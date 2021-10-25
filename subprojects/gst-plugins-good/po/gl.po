@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2012-12-15 03:46+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Virtaal 0.7.1\n"
 "X-Project-Style: gnome\n"
@@ -25,10 +26,18 @@ msgstr ""
 msgid "Failed to decode JPEG image"
 msgstr "Produciuse un erro ao descodificar a imaxe JPEG"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Produciuse un erro ao descodificar a imaxe JPEG"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -160,7 +169,11 @@ msgstr "Non foi posíbel abrir o dispositivo de son para a gravación."
 msgid "CoreAudio device not found"
 msgstr ""
 
+#, fuzzy
 msgid "CoreAudio device could not be opened"
+msgstr "O dispositivo de vídeo non pode crear un pool de búfer."
+
+msgid "Raspberry Pi Camera Module"
 msgstr ""
 
 #, c-format
@@ -186,10 +199,13 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "O controlador do dispositivo «%s» non admite calquera método IO coñecido."
 
+#, fuzzy
+msgid "Invalid caps"
+msgstr "Tamaño atom non válido."
+
 #, fuzzy, c-format
 msgid "Device '%s' has no supported format"
-msgstr ""
-"O dispositivo de vídeo non acepta a nova configuración de taxa de marcos."
+msgstr "O dispositivo «%s» non admite a captura de vídeo."
 
 #, c-format
 msgid "Device '%s' failed during initialization"
@@ -239,9 +255,8 @@ msgstr ""
 msgid "Video device uses an unsupported interlacing method."
 msgstr "O controlador do dispositivo «%s» non admite o método IO %d"
 
-#, fuzzy
 msgid "Video device uses an unsupported pixel format."
-msgstr "O controlador do dispositivo «%s» non admite o método IO %d"
+msgstr ""
 
 #, fuzzy
 msgid "Failed to configure internal buffer pool."
@@ -293,18 +308,15 @@ msgstr "O controlador do dispositivo «%s» non admite o método IO %d"
 
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr ""
-"O dispositivo de vídeo non acepta a nova configuración de taxa de marcos."
+msgstr "O controlador do dispositivo «%s» non admite o método IO %d"
 
 #, fuzzy, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr ""
-"O dispositivo de vídeo non acepta a nova configuración de taxa de marcos."
+msgstr "O controlador do dispositivo «%s» non admite o método IO %d"
 
 #, fuzzy, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr ""
-"O dispositivo de vídeo non acepta a nova configuración de taxa de marcos."
+msgstr "O controlador do dispositivo «%s» non admite o método IO %d"
 
 #, fuzzy
 msgid "Failed to start decoding thread."
@@ -315,17 +327,14 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr ""
-"O dispositivo de vídeo non acepta a nova configuración de taxa de marcos."
+msgstr "O controlador do dispositivo «%s» non admite o método IO %d"
 
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr ""
-"O dispositivo de vídeo non acepta a nova configuración de taxa de marcos."
+msgstr "O controlador do dispositivo «%s» non admite o método IO %d"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Produciuse un erro ao descodificar a imaxe JPEG"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -414,11 +423,21 @@ msgstr ""
 "Produciuse un fallo ao estabelecer o valor %ds para o control %d do "
 "dispositivo «%s»."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr ""
+"Produciuse un fallo ao estabelecer o valor %ds para o control %d do "
+"dispositivo «%s»."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Produciuse un fallo ao obter a entrada actual no dispositivo «%s». Cicáis "
 "sexa un dispositivo de radio."
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Produciuse un fallo ao estabelecer a entrada %d no dispositivo %s."
 
 #, c-format
 msgid ""
@@ -427,8 +446,8 @@ msgstr ""
 "Produciuse un fallo ao obter a entrada actual no dispositivo «%s». Quizais "
 "sexa un dispositivo de radio"
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "Produciuse un fallo ao estabelecer a saída %d no dispositivo %s."
 
 msgid "Changing resolution at runtime is not yet supported."
@@ -437,38 +456,16 @@ msgstr "Aínda non se admite o cambio de resolución durante a reprodución."
 msgid "Cannot operate without a clock"
 msgstr "Non é posíbel operar sen reloxo"
 
+#~ msgid "Internal data stream error."
+#~ msgstr "Produciuse un erro no fluxo de datos interno."
+
+#, c-format
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr ""
 #~ "Este ficheiro contén demasiados fluxos. Só se reproducirá o primeiro %d"
 
-#~ msgid "Record Source"
-#~ msgstr "Orixe da gravación"
-
-#~ msgid "Microphone"
-#~ msgstr "Micrófono"
-
-#~ msgid "Line In"
-#~ msgstr "Liña de entrada"
-
-#~ msgid "Internal CD"
-#~ msgstr "CD interno"
-
-#~ msgid "SPDIF In"
-#~ msgstr "Entrada SPDIF"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "Entrada AUX 1"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "Entrada AUX 2"
-
-#, fuzzy
-#~ msgid "Codec Loopback"
-#~ msgstr "Bucle local"
-
-#, fuzzy
-#~ msgid "SunVTS Loopback"
-#~ msgstr "Bucle local"
+#~ msgid "Internal data flow error."
+#~ msgstr "Produciuse un erro interno no fluxo de datos."
 
 #~ msgid "Volume"
 #~ msgstr "Volume"
@@ -497,12 +494,6 @@ msgstr "Non é posíbel operar sen reloxo"
 #~ msgid "AUX 2 Out"
 #~ msgstr "Saída AUX 2"
 
-#~ msgid "Internal data stream error."
-#~ msgstr "Produciuse un erro no fluxo de datos interno."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Produciuse un erro interno no fluxo de datos."
-
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Non foi posíbel estabelecer a conexión co servidor de son"
 
@@ -526,6 +517,9 @@ msgstr "Non é posíbel operar sen reloxo"
 
 #~ msgid "Line-in"
 #~ msgstr "Liña de entrada"
+
+#~ msgid "Microphone"
+#~ msgstr "Micrófono"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -627,8 +621,20 @@ msgstr "Non é posíbel operar sen reloxo"
 #~ msgid "Telephone"
 #~ msgstr "Teléfono"
 
+#~ msgid "Line In"
+#~ msgstr "Liña de entrada"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD interno"
+
 #~ msgid "Video In"
 #~ msgstr "Entrada de vídeo"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Entrada AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Entrada AUX 2"
 
 #~ msgid "AUX In"
 #~ msgstr "Entrada AUX"
@@ -642,6 +648,9 @@ msgstr "Non é posíbel operar sen reloxo"
 #~ msgid "Microphone Boost"
 #~ msgstr "Aumento do micrófono"
 
+#~ msgid "Loopback"
+#~ msgstr "Bucle local"
+
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnóstico"
 
@@ -653,6 +662,9 @@ msgstr "Non é posíbel operar sen reloxo"
 
 #~ msgid "Input"
 #~ msgstr "Entrada"
+
+#~ msgid "Record Source"
+#~ msgstr "Orixe da gravación"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Monitor de orixe"
@@ -692,6 +704,9 @@ msgstr "Non é posíbel operar sen reloxo"
 
 #~ msgid "Input Mix"
 #~ msgstr "Misturador de entrada"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Entrada SPDIF"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Micrófono 1"

@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.10.0\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2017-02-17 10:54+0100\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
@@ -24,10 +24,18 @@ msgstr "Servidôr Jack no cjatât"
 msgid "Failed to decode JPEG image"
 msgstr "No si è rivâts a decodificâ la imagjin JPEG"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "No si è rivâts a assegnâ la memorie domandade."
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -162,6 +170,9 @@ msgstr "Dispositîf CoreAudio no cjatât"
 msgid "CoreAudio device could not be opened"
 msgstr "Nol è stât pussibil vierzi il dispositîf CoreAudio"
 
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Erôr tal lei %d byte dal dispositîf '%s'."
@@ -183,6 +194,10 @@ msgstr "Il driver dal dispositîf '%s' nol supuarte il metodi IO %d"
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Il driver dal dispositîf '%s' nol supuarte nissun metodi IO cognossût."
+
+#, fuzzy
+msgid "Invalid caps"
+msgstr "Dimension atom no valide."
 
 #, fuzzy, c-format
 msgid "Device '%s' has no supported format"
@@ -394,11 +409,19 @@ msgstr "No si è rivâts a vê il valôr pal control %d sul dispositîf '%s'."
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "No si è rivâts a meti il valôr %d pal control %d sul dispositîf '%s'."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "No si è rivâts a meti il valôr %d pal control %d sul dispositîf '%s'."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "No si è rivâts a vê la jentrade atuâl sul dispositîf '%s'. Al podarès jessi "
 "un dispositîf radio"
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "No si è rivâts a stabilî la jentrade %d sul dispositîf %s."
 
 #, c-format
 msgid ""
@@ -407,8 +430,8 @@ msgstr ""
 "No si è rivâts a vê la jessude atuâl sul dispositîf '%s'. Al podarès jessi "
 "un dispositîf radio"
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "No si è rivâts a stabilî la jessude %d sul dispositîf %s."
 
 msgid "Changing resolution at runtime is not yet supported."
@@ -417,6 +440,7 @@ msgstr "Il cambiâ la risoluzion dilunc la vore nol è ancjemò supuartât."
 msgid "Cannot operate without a clock"
 msgstr "Impussibil operâ cence un orloi"
 
+#, c-format
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr "Chest file al conten masse flus. Si riprodusarà nome i prins %d"
 

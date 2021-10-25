@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:59+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2019-03-05 16:27+0100\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -18,457 +18,396 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Poedit 2.0.7\n"
 
-#: ext/jack/gstjackaudiosink.c:356 ext/jack/gstjackaudiosrc.c:364
 msgid "Jack server not found"
 msgstr "未找到插口设备"
 
-#: ext/jpeg/gstjpegdec.c:936 ext/jpeg/gstjpegdec.c:1103
-#: ext/jpeg/gstjpegdec.c:1112 ext/jpeg/gstjpegdec.c:1122
-#: ext/jpeg/gstjpegdec.c:1131 ext/jpeg/gstjpegdec.c:1393
-#: ext/jpeg/gstjpegdec.c:1421
 msgid "Failed to decode JPEG image"
 msgstr "解码 JPEG 图像出错"
 
-#: ext/lame/gstlamemp3enc.c:393
-msgid "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "分配请求的内存失败。"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr "配置 LAMP mp3 音频编码器失败。请检查编码所需的参数。"
 
-#: ext/lame/gstlamemp3enc.c:425 ext/twolame/gsttwolamemp2enc.c:488
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "无法在设置“%2$s”属性的同时设置比特率为 %1$d kbit/s。已将比特率调整为 %3$d kbit/s。"
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"无法在设置“%2$s”属性的同时设置比特率为 %1$d kbit/s。已将比特率调整为 %3$d "
+"kbit/s。"
 
 #. TRANSLATORS: 'song title' by 'artist name'
-#: ext/pulse/pulsesink.c:3127
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "“%2$s”的“%1$s”"
 
-#: ext/shout2/gstshout2.c:619 ext/shout2/gstshout2.c:629
 msgid "Could not connect to server"
 msgstr "无法连接至服务器"
 
-#: ext/soup/gstsouphttpsrc.c:914
 msgid "No URL set."
 msgstr "未设置URL。"
 
-#: ext/soup/gstsouphttpsrc.c:1372
 msgid "Could not resolve server name."
 msgstr "无法解析服务器名。"
 
-#: ext/soup/gstsouphttpsrc.c:1377
 msgid "Could not establish connection to server."
 msgstr "无法建立与音频服务器的连接"
 
-#: ext/soup/gstsouphttpsrc.c:1381
 msgid "Secure connection setup failed."
 msgstr "安全连接失败。"
 
-#: ext/soup/gstsouphttpsrc.c:1387
-msgid "A network error occurred, or the server closed the connection unexpectedly."
+msgid ""
+"A network error occurred, or the server closed the connection unexpectedly."
 msgstr "发生了网络错误，或服务器意外地关闭了连接。"
 
-#: ext/soup/gstsouphttpsrc.c:1392
 msgid "Server sent bad data."
 msgstr "服务器发送了错误的数据。"
 
-#: ext/soup/gstsouphttpsrc.c:1616
 msgid "Server does not support seeking."
 msgstr "设备不支持定位。"
 
-#: ext/twolame/gsttwolamemp2enc.c:411
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr "配置 TwoLAME 音频编码器失败。请检查编码所需的参数。"
 
-#: gst/avi/gstavimux.c:1832
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "没有或无效的输入音频，AVI 流将损坏。"
 
-#: gst/isomp4/qtdemux.c:713 gst/isomp4/qtdemux.c:717
 msgid "This file contains no playable streams."
 msgstr "此文件不包含可播放的流。"
 
-#: gst/isomp4/qtdemux.c:763 gst/isomp4/qtdemux.c:7003
-#: gst/isomp4/qtdemux.c:7072 gst/isomp4/qtdemux.c:7362
-#: gst/isomp4/qtdemux.c:8800
 msgid "This file is invalid and cannot be played."
 msgstr "此文件无效，无法播放。"
 
-#: gst/isomp4/qtdemux.c:3091
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr "无法播放流，因为它已被PlayReady DRM加密。"
 
-#: gst/isomp4/qtdemux.c:4312 gst/isomp4/qtdemux.c:8131
-#: gst/isomp4/qtdemux.c:8138 gst/isomp4/qtdemux.c:9283
-#: gst/isomp4/qtdemux.c:9720 gst/isomp4/qtdemux.c:9727
-#: gst/isomp4/qtdemux.c:12528
 msgid "This file is corrupt and cannot be played."
 msgstr "此文件已损坏，无法播放。"
 
-#: gst/isomp4/qtdemux.c:4554
 msgid "Invalid atom size."
 msgstr "无效的原子尺寸。"
 
-#: gst/isomp4/qtdemux.c:4633
 msgid "This file is incomplete and cannot be played."
 msgstr "此文件不完整且无法播放。"
 
-#: gst/isomp4/qtdemux.c:10756
 msgid "The video in this file might not play correctly."
 msgstr "此文件中的视频可能无法正确播放。"
 
-#: gst/rtsp/gstrtspsrc.c:7398
-msgid "No supported stream was found. You might need to install a GStreamer RTSP extension plugin for Real media streams."
-msgstr "未找到支持的流媒体。您可能需要安装一个 GStreamer RTSP 扩展插件来播放 Real 媒体流。"
+msgid ""
+"No supported stream was found. You might need to install a GStreamer RTSP "
+"extension plugin for Real media streams."
+msgstr ""
+"未找到支持的流媒体。您可能需要安装一个 GStreamer RTSP 扩展插件来播放 Real 媒"
+"体流。"
 
-#: gst/rtsp/gstrtspsrc.c:7403
-msgid "No supported stream was found. You might need to allow more transport protocols or may otherwise be missing the right GStreamer RTSP extension plugin."
-msgstr "未找到支持的流媒体。您可能需要启用更多的传送协议，或者也有可能是缺少正确的 GStreamer RTSP 扩展插件。"
+msgid ""
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
+msgstr ""
+"未找到支持的流媒体。您可能需要启用更多的传送协议，或者也有可能是缺少正确的 "
+"GStreamer RTSP 扩展插件。"
 
-#: sys/oss4/oss4-sink.c:493 sys/oss4/oss4-source.c:358
-#: sys/oss/gstosssink.c:384
-msgid "Could not open audio device for playback. Device is being used by another application."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
 msgstr "无法打开音频设备播放音频。设备当前由另一个程序使用。"
 
-#: sys/oss4/oss4-sink.c:503 sys/oss4/oss4-source.c:368
-#: sys/oss/gstosssink.c:391
-msgid "Could not open audio device for playback. You don't have permission to open the device."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
 msgstr "无法打开音频设备播放音频。您无权使用这一设备。"
 
-#: sys/oss4/oss4-sink.c:514 sys/oss4/oss4-source.c:379
-#: sys/oss/gstosssink.c:399
 msgid "Could not open audio device for playback."
 msgstr "无法打开音频设备播放音频。"
 
-#: sys/oss4/oss4-sink.c:523 sys/oss4/oss4-source.c:389
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
 msgstr "无法打开音频设备进行回放。这一版本的Open Sound System不支持此组件。"
 
-#: sys/oss4/oss4-sink.c:646
 msgid "Playback is not supported by this audio device."
 msgstr "此音频设备不支持回放。"
 
-#: sys/oss4/oss4-sink.c:653
 msgid "Audio playback error."
 msgstr "音频回放错误。"
 
-#: sys/oss4/oss4-source.c:503
 msgid "Recording is not supported by this audio device."
 msgstr "此音频设备不支持录音。"
 
-#: sys/oss4/oss4-source.c:510
 msgid "Error recording from audio device."
 msgstr "音频设备录音错误。"
 
-#: sys/oss/gstosssrc.c:376
-msgid "Could not open audio device for recording. You don't have permission to open the device."
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
 msgstr "无法打开音频设备录音。您无权使用这一设备。"
 
-#: sys/oss/gstosssrc.c:384
 msgid "Could not open audio device for recording."
 msgstr "无法打开音频设备录音。"
 
-#: sys/osxaudio/gstosxaudioringbuffer.c:149
 msgid "CoreAudio device not found"
 msgstr "未找到 CoreAudio 设备"
 
-#: sys/osxaudio/gstosxaudioringbuffer.c:155
 msgid "CoreAudio device could not be opened"
 msgstr "无法打开 CoreAudio 设备"
 
-#: sys/v4l2/gstv4l2bufferpool.c:1712
+msgid "Raspberry Pi Camera Module"
+msgstr ""
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "从设备“%2$s”中读取 %1$d 个字节时出错。"
 
-#: sys/v4l2/gstv4l2object.c:1223
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr "枚举设备“%s”可能支持的视频格式时出错"
 
-#: sys/v4l2/gstv4l2object.c:2956
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "无法从设备“%s”中映射出缓冲区"
 
-#: sys/v4l2/gstv4l2object.c:2964
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
 msgstr "设备“%s”的驱动不支持I/O方式 %d。"
 
-#: sys/v4l2/gstv4l2object.c:2971
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "设备“%s”的驱动不支持任何已知的I/O方式。"
 
-#: sys/v4l2/gstv4l2object.c:3741 sys/v4l2/gstv4l2object.c:3765
+#, fuzzy
+msgid "Invalid caps"
+msgstr "无效的原子尺寸。"
+
 #, c-format
 msgid "Device '%s' has no supported format"
 msgstr "设备“%s”上没有支持的媒体格式"
 
-#: sys/v4l2/gstv4l2object.c:3747 sys/v4l2/gstv4l2object.c:3771
 #, c-format
 msgid "Device '%s' failed during initialization"
 msgstr "设备“%s”初始化失败"
 
-#: sys/v4l2/gstv4l2object.c:3759
 #, c-format
 msgid "Device '%s' is busy"
 msgstr "设备“%s”正忙"
 
-#: sys/v4l2/gstv4l2object.c:3782
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "设备“%s”不能在 %dx%d 处捕获"
 
-#: sys/v4l2/gstv4l2object.c:3791
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "设备“%s”无法以指定格式捕获"
 
-#: sys/v4l2/gstv4l2object.c:3802
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "设备“%s”不支持非连续平面"
 
-#: sys/v4l2/gstv4l2object.c:3817
 #, c-format
 msgid "Device '%s' does not support %s interlacing"
 msgstr "设备“%s”不支持 %s 隔行扫描"
 
-#: sys/v4l2/gstv4l2object.c:3831
 #, c-format
 msgid "Device '%s' does not support %s colorimetry"
 msgstr "设备“%s”不支持 %s 色度"
 
-#: sys/v4l2/gstv4l2object.c:3843
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "无法获取设备“%s”的参数"
 
-#: sys/v4l2/gstv4l2object.c:3851
 msgid "Video device did not accept new frame rate setting."
 msgstr "视频设备不接受新的帧率设置。"
 
-#: sys/v4l2/gstv4l2object.c:3977
 msgid "Video device did not provide output format."
 msgstr "视频设备未提供输出格式。"
 
-#: sys/v4l2/gstv4l2object.c:3983
 msgid "Video device returned invalid dimensions."
 msgstr "视频设备返回了无效的维度。"
 
-#: sys/v4l2/gstv4l2object.c:3991
 msgid "Video device uses an unsupported interlacing method."
 msgstr "视频设备使用了不支持的隔行扫描方式。"
 
-#: sys/v4l2/gstv4l2object.c:3998
 msgid "Video device uses an unsupported pixel format."
 msgstr "视频设备使用了不支持的像素格式。"
 
-#: sys/v4l2/gstv4l2object.c:4518
 msgid "Failed to configure internal buffer pool."
 msgstr "无法配置内部缓冲池。"
 
-#: sys/v4l2/gstv4l2object.c:4524
 msgid "Video device did not suggest any buffer size."
 msgstr "视频设备未提供任何缓冲大小。"
 
-#: sys/v4l2/gstv4l2object.c:4539
 msgid "No downstream pool to import from."
 msgstr "没有可以用于导入的下游池。"
 
-#: sys/v4l2/gstv4l2radio.c:143
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "获取设备“%2$s”上微调钮“%1$d”的设置时出错。"
 
-#: sys/v4l2/gstv4l2radio.c:150
 #, c-format
 msgid "Error getting capabilities for device '%s'."
 msgstr "获取设备“%s”有关信息时出错。"
 
-#: sys/v4l2/gstv4l2radio.c:157
 #, c-format
 msgid "Device '%s' is not a tuner."
 msgstr "设备“%s”不是微调钮。"
 
-#: sys/v4l2/gstv4l2radio.c:184
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
 msgstr "设置设备“%s”上的广播输出时出错。"
 
-#: sys/v4l2/gstv4l2radio.c:207 sys/v4l2/v4l2_calls.c:1072
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "设置设备 %2$s 上的输入 %1$d 时出错。"
 
-#: sys/v4l2/gstv4l2radio.c:241
 #, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "改变设备“%s”的静音状态时出错。"
 
-#: sys/v4l2/gstv4l2sink.c:628
 msgid "Failed to allocated required memory."
 msgstr "分配请求的内存失败。"
 
-#: sys/v4l2/gstv4l2src.c:652 sys/v4l2/gstv4l2videodec.c:756
-#: sys/v4l2/gstv4l2videoenc.c:782
 msgid "Failed to allocate required memory."
 msgstr "分配请求的内存失败。"
 
-#: sys/v4l2/gstv4l2transform.c:142
 #, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "设备 %s 上的转换器没有支持的输入格式"
 
-#: sys/v4l2/gstv4l2transform.c:149
 #, c-format
 msgid "Converter on device %s has no supported output format"
 msgstr "设备 %s 上的转换器没有支持的输出格式"
 
-#: sys/v4l2/gstv4l2videodec.c:136
 #, c-format
 msgid "Decoder on device %s has no supported input format"
 msgstr "设备 %s 上的解码器没有支持的输入格式"
 
-#: sys/v4l2/gstv4l2videodec.c:281
 #, c-format
 msgid "Decoder on device %s has no supported output format"
 msgstr "设备 %s 上的解码器没有支持的输出格式"
 
-#: sys/v4l2/gstv4l2videodec.c:770
 msgid "Failed to start decoding thread."
 msgstr "启动解码线程失败。"
 
-#: sys/v4l2/gstv4l2videodec.c:777 sys/v4l2/gstv4l2videoenc.c:803
 msgid "Failed to process frame."
 msgstr "处理帧失败。"
 
-#: sys/v4l2/gstv4l2videoenc.c:140
 #, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "设备 %s 上的编码器没有支持的输出格式"
 
-#: sys/v4l2/gstv4l2videoenc.c:147
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "设备 %s 上的编码器没有支持的输入格式"
 
-#: sys/v4l2/gstv4l2videoenc.c:795
 msgid "Failed to start encoding thread."
 msgstr "启动编码线程失败。"
 
-#: sys/v4l2/v4l2_calls.c:92
 #, c-format
-msgid "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if it is a v4l1 driver."
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
 msgstr "获取设备“%s”的信息时出错:它不是一个 v4l2 驱动器，请检查是否为 v4l1。"
 
-#: sys/v4l2/v4l2_calls.c:156
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr "查寻设备 %2$s 中的输入 %1$d 的属性时出错"
 
-#: sys/v4l2/v4l2_calls.c:187
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "获取设备 %2$s 上的微调钮 %1$d 的设置时出错"
 
-#: sys/v4l2/v4l2_calls.c:235
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr "获取设备“%s”的基准时出错。"
 
-#: sys/v4l2/v4l2_calls.c:416
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "获取设备“%s”上的控制属性时出错。"
 
-#: sys/v4l2/v4l2_calls.c:608
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "无法确认设备“%s”。"
 
-#: sys/v4l2/v4l2_calls.c:615
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "不是设备“%s”。"
 
-#: sys/v4l2/v4l2_calls.c:622
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "无法打开设备“%s”读写。"
 
-#: sys/v4l2/v4l2_calls.c:629
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "“%s”不是一个捕获设备。"
 
-#: sys/v4l2/v4l2_calls.c:637
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "“%s”不是输出设备。"
 
-#: sys/v4l2/v4l2_calls.c:645
 #, c-format
 msgid "Device '%s' is not a M2M device."
 msgstr "设备“%s”不是M2M设备。"
 
-#: sys/v4l2/v4l2_calls.c:698
 #, c-format
 msgid "Could not dup device '%s' for reading and writing."
 msgstr "无法复制设备“%s”来读取和写入。"
 
-#: sys/v4l2/v4l2_calls.c:782
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "设置设备“%s”的基准时出错。"
 
-#: sys/v4l2/v4l2_calls.c:820
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr "获取设备“%s”的当前微调钮频率时出错。"
 
-#: sys/v4l2/v4l2_calls.c:862
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr "设置设备“%s”的当前微调钮频率为 %lu Hz 时出错。"
 
-#: sys/v4l2/v4l2_calls.c:896
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "获取设备“%s”的信号长度时出错。"
 
-#: sys/v4l2/v4l2_calls.c:932
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "获取设备“%2$s”的控制器 %1$d 的值出错。"
 
-#: sys/v4l2/v4l2_calls.c:967
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "设置设备“%3$s”的控制器 %2$d 的值为 %1$d 时出错。"
 
-#: sys/v4l2/v4l2_calls.c:1047
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "设置设备“%3$s”的控制器 %2$d 的值为 %1$d 时出错。"
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr "获取设备“%s”上的当前输入出错。也许它是一个广播设备"
 
-#: sys/v4l2/v4l2_calls.c:1104
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "设置设备 %2$s 上的输入 %1$d 时出错。"
+
 #, c-format
-msgid "Failed to get current output on device '%s'. May be it is a radio device"
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
 msgstr "获取设备“%s”上的当前输入出错。它可能是一个广播设备"
 
-#: sys/v4l2/v4l2_calls.c:1129
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "将输出 %d 设置到设备 %s 上失败。"
 
-#: sys/ximage/gstximagesrc.c:838
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "尚不支持在运行时更改分辨率。"
 
-#: sys/ximage/gstximagesrc.c:852
 msgid "Cannot operate without a clock"
 msgstr "没有时钟的话无法操作"
 
@@ -613,10 +552,16 @@ msgstr "没有时钟的话无法操作"
 #~ msgid "Failed after %d tries. device %s. system error: %s"
 #~ msgstr "在 %d 次尝试后失败。设备 %s。系统错误: %s"
 
-#~ msgid "The buffer type is not supported, or the index is out of bounds, or no buffers have been allocated yet, or the userptr or length are invalid. device %s"
-#~ msgstr "不支持的缓冲区类型，或者索引超出范围了，或是还未分配缓冲区，或非法的用户指针或长度。设备 %s"
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "不支持的缓冲区类型，或者索引超出范围了，或是还未分配缓冲区，或非法的用户指"
+#~ "针或长度。设备 %s"
 
-#~ msgid "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
 #~ msgstr "从设备‘%s’上获取视频的尝试失败了。没有足够的内存。"
 
 #~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
@@ -661,8 +606,12 @@ msgstr "没有时钟的话无法操作"
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "无法打开音频设备来进行混音器控制。"
 
-#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-#~ msgstr "无法打开音频设备来进行混音器控制。这一版本的Open Sound System不支持此组件。"
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "无法打开音频设备来进行混音器控制。这一版本的Open Sound System不支持此组"
+#~ "件。"
 
 #~ msgid "Master"
 #~ msgstr "主"

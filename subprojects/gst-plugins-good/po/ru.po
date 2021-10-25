@@ -3,14 +3,14 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019.
+# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021.
 # Pavel Maryanov <acid@jack.kiev.ua>, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
-"PO-Revision-Date: 2019-01-25 19:51+0300\n"
+"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2021-09-28 07:08+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 2.0\n"
+"X-Generator: Lokalize 20.12.0\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
@@ -28,12 +28,19 @@ msgstr "Сервер Jack не найден"
 msgid "Failed to decode JPEG image"
 msgstr "Не удалось декодировать JPEG-изображение"
 
+msgid "Failed to read memory"
+msgstr "Не удалось прочитать память"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 "Не удалось настроить аудио-кодировщик mp3 LAME. Проверьте параметры "
 "кодирования."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -171,6 +178,9 @@ msgstr "Устройство CoreAudio не найдено"
 msgid "CoreAudio device could not be opened"
 msgstr "Невозможно открыть устройство CoreAudio"
 
+msgid "Raspberry Pi Camera Module"
+msgstr "Модуль камеры Raspberry Pi"
+
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Ошибка чтения %d байт из устройства «%s»."
@@ -194,6 +204,9 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "Драйвер устройства «%s» не поддерживает ни один из известных методов ввода-"
 "вывода."
+
+msgid "Invalid caps"
+msgstr "Некорректные характеристики"
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -394,13 +407,24 @@ msgstr "Ошибка получения значения управляющег�
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
-"Ошибка установки значения %d для управляющего параметра %d устройства «%s»."
+"Ошибка при установке значения %d для управляющего параметра %d устройства "
+"«%s»."
+
+#, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr ""
+"Ошибка при установке значения %s для управляющего параметра %d устройства "
+"«%s»."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Не удалось определить активный вход устройства «%s». Возможно, это радио-"
 "устройство"
+
+#, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Не удалось выбрать вход %u на устройстве %s."
 
 #, c-format
 msgid ""
@@ -410,8 +434,8 @@ msgstr ""
 "устройство"
 
 #, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "Не удалось выбрать выход %d для устройства %s."
+msgid "Failed to set output %u on device %s."
+msgstr "Не удалось выбрать выход %u на устройстве %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""

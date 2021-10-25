@@ -1,38 +1,53 @@
 # Romanian translation for gst-plugins-good
 # This file is distributed under the same license as the gst-plugins-good package.
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
+# Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
-"PO-Revision-Date: 2010-08-16 03:22+0300\n"
-"Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
+"Project-Id-Version: gst-plugins-good 1.15.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"PO-Revision-Date: 2020-06-24 09:39+0300\n"
+"Last-Translator: Florentina Mușat <florentina.musat.28@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);;\n"
-"X-Generator: Virtaal 0.6.1\n"
+"X-Generator: Poedit 2.3.1\n"
 "X-Launchpad-Export-Date: 2010-08-16 00:08+0000\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Nu s-a găsit serverul jack"
 
 msgid "Failed to decode JPEG image"
 msgstr "Nu s-a putut decoda imaginea JPEG"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Nu s-a putut aloca memoria necesară."
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Nu s-a putut configura codorul audio mp3 LAME. Verificați parametrii de "
+"codare."
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Rata de biți cerută %d kbit/s pentru proprietatea „%s” nu este permisă. Rata "
+"de biți a fost modificată la %d kbit/s."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -43,31 +58,31 @@ msgid "Could not connect to server"
 msgstr "Nu se poate stabili o conexiune la server"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Nu este stabilit niciun URL."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Nu se poate stabili o conexiune la server"
+msgstr "Nu s-a putut rezolva numele serverului."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Nu se poate stabili o conexiune la serverul de sunet"
+msgstr "Nu s-a putut stabili conexiunea la server."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Configurarea de conexiune sigură a eșuat."
 
 msgid ""
 "A network error occurred, or the server closed the connection unexpectedly."
 msgstr ""
+"A apărut o eroare de rețea, sau serverul a închis conexiunea neașteptat."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Serverul a trimis date greșite."
 
 msgid "Server does not support seeking."
-msgstr ""
+msgstr "Serverul nu suportă căutarea."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Nu s-a putut configura codorul TwoLAME. Verificați parametrii de codare."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
@@ -80,13 +95,13 @@ msgid "This file is invalid and cannot be played."
 msgstr "Fișierul nu este valid și nu poate fi redat."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
-msgstr ""
+msgstr "Nu se poate reda fluxul pentru că este criptat cu DRM PlayReady."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Acest fișier este corupt și nu poate fi redat."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Dimensiune de atom nevalidă."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Acest fișier nu este complet și nu poate fi redat."
@@ -157,9 +172,12 @@ msgid "Could not open audio device for recording."
 msgstr "Nu s-a putut deschide dispozitivul audio pentru înregistrare."
 
 msgid "CoreAudio device not found"
-msgstr ""
+msgstr "Nu s-a găsit dispozitivul CoreAudio"
 
 msgid "CoreAudio device could not be opened"
+msgstr "Nu s-a putut deschide dispozitivul CoreAudio"
+
+msgid "Raspberry Pi Camera Module"
 msgstr ""
 
 #, c-format
@@ -169,168 +187,150 @@ msgstr "Eroare citire %d octeți de la dispozitivul „%s”."
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
+"Nu s-au putut enumera posibilele formate video cu care poate lucra "
+"dispozitivul „%s”"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Nu s-a putut mapa memoria tampon din dispozitivul „%s”"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr ""
-"Driverul pentru dispozitivul „%s” nu suport nici o metodă de captură "
-"cunoscută."
+msgstr "Driverul dispozitivului „%s” nu suportă metoda IO %d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr ""
-"Driverul pentru dispozitivul „%s” nu suport nici o metodă de captură "
-"cunoscută."
+msgstr "Driverul dispozitivului „%s” nu suportă orice metodă IO cunoscută."
 
-#, fuzzy, c-format
+#, fuzzy
+msgid "Invalid caps"
+msgstr "Dimensiune de atom nevalidă."
+
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr ""
-"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+msgstr "Dispozitivul „%s” nu are niciun format suportat"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "Dispozitivul „%s” a eșuat în timpul inițializării"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+msgstr "Dispozitivul „%s” este ocupat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Dispozitivul „%s” nu este un dispozitiv de captură."
+msgstr "Dispozitivul „%s” nu poate captura la %dx%d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Dispozitivul „%s” nu este un dispozitiv de captură."
+msgstr "Dispozitivul „%s” nu poate captura în formatul specificat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+msgstr "Dispozitivul „%s” nu suportă planele non-contigue"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+msgstr "Dispozitivul „%s” nu suportă întrețeserea %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+msgstr "Dispozitivul „%s” nu suportă colorimetria %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Nu s-au putut obține parametrii pentru dispozitivul „%s”"
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr ""
-"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+msgstr "Dispozitivul video nu a acceptat o configurare de rată de cadru nouă."
 
-#, fuzzy
 msgid "Video device did not provide output format."
-msgstr ""
-"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+msgstr "Dispozitivul video nu a furnizat un format de ieșire."
 
 msgid "Video device returned invalid dimensions."
-msgstr ""
+msgstr "Dispozitivul video a returnat dimensiuni nevalide."
 
-#, fuzzy
 msgid "Video device uses an unsupported interlacing method."
-msgstr ""
-"Driverul pentru dispozitivul „%s” nu suport nici o metodă de captură "
-"cunoscută."
+msgstr "Dispozitivul video utilizează o metodă de întrețesere nesuportată."
 
-#, fuzzy
 msgid "Video device uses an unsupported pixel format."
-msgstr ""
-"Driverul pentru dispozitivul „%s” nu suport nici o metodă de captură "
-"cunoscută."
+msgstr "Dispozitivul video utilizează un format de pixel nesuportat."
 
 msgid "Failed to configure internal buffer pool."
-msgstr ""
+msgstr "Nu s-a putut configura rezerva internă de preîncărcare."
 
-#, fuzzy
 msgid "Video device did not suggest any buffer size."
-msgstr ""
-"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+msgstr "Dispozitivul video nu a sugerat nicio dimensiune de preîncărcare."
 
 msgid "No downstream pool to import from."
-msgstr ""
+msgstr "Nu există o rezervă în aval din care să se importe."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
-"A eșuat obținerea configurării receptorului %d pentru dispozitivul „%s”."
+"Nu s-au putut obține configurările a acordorului %d pe dispozitivul „%s”."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Eroare citire %d octeți de la dispozitivul „%s”."
+msgstr "Eroare la obținerea capabilităților pentru dispozitivul „%s”."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+msgstr "Dispozitivul „%s” nu este un acordor."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
+msgstr "Nu s-a putut obține intrarea radio pe dispozitivul „%s”. "
 
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Obținerea nivelului semnalului pentru dispozitivul „%s” a eșuat."
+msgstr "Nu s-a putut modifica starea mută pe dispozitivul „%s”."
 
 msgid "Failed to allocated required memory."
-msgstr ""
+msgstr "Nu s-a putut aloca memoria necesară."
 
 msgid "Failed to allocate required memory."
-msgstr ""
+msgstr "Nu s-a putut aloca memoria necesară."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr ""
-"Driverul pentru dispozitivul „%s” nu suport nici o metodă de captură "
-"cunoscută."
+"Convertizorul pe dispozitivul %s nu are niciun format de intrare suportat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Converter on device %s has no supported output format"
 msgstr ""
-"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+"Convertizorul pe dispozitivul %s nu are niciun format de ieșire suportat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr ""
-"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+msgstr "Decodorul pe dispozitivul %s nu are niciun format de intrare suportat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr ""
-"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+msgstr "Decodorul pe dispozitivul %s nu are niciun format de ieșire suportat"
 
-#, fuzzy
 msgid "Failed to start decoding thread."
-msgstr "Nu s-a putut decoda imaginea JPEG"
+msgstr "Nu s-a putut începe firul de decodare."
 
 msgid "Failed to process frame."
-msgstr ""
+msgstr "Nu s-a putut procesa cadrul."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr ""
-"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+msgstr "Codorul pe dispozitivul %s nu are niciun format de ieșire suportat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr ""
-"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+msgstr "Codorul pe dispozitivul %s nu are niciun format de intrare suportat"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Nu s-a putut decoda imaginea JPEG"
+msgstr "Nu s-a putut începe firul de codare."
 
 #, c-format
 msgid ""
@@ -377,13 +377,13 @@ msgstr "Dispozitivul „%s” nu este un dispozitiv de captură."
 msgid "Device '%s' is not a output device."
 msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a M2M device."
-msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+msgstr "Dispozitivul „%s” nu este un dispozitiv M2M."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not dup device '%s' for reading and writing."
-msgstr "Nu se poate deschide dispozitivul „%s” pentru citire și scriere."
+msgstr "Nu s-a putut duplica dispozitivul „%s” pentru citire și scriere."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
@@ -412,22 +412,30 @@ msgstr "Obținerea valorii %d pentru dispozitivul „%s” a eșuat."
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Definirii valorii %d pentru controlul %d al dispozitivul „%s” a eșuat."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Definirii valorii %d pentru controlul %d al dispozitivul „%s” a eșuat."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Obținerea intrări curente pentru dispozitivul „%s” a eșuat. Posibil să fie "
-"un dispozitiv radio."
+"Nu s-a putut obține intrarea curentă pe dispozitivul „%s”. Poate este un "
+"dispozitiv radio"
 
 #, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
+
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Obținerea intrări curente pentru dispozitivul „%s” a eșuat. Posibil să fie "
-"un dispozitiv radio."
+"Nu s-a putut obține ieșirea curentă pe dispozitivul „%s”. Poate că este un "
+"dispozitiv radio"
 
 #, fuzzy, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
+msgid "Failed to set output %u on device %s."
+msgstr "Nu s-a putut stabili ieșirea %d pe dispozitivul %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Schimbarea rezoluției pe durata rulării nu este incă suportată."
@@ -435,79 +443,20 @@ msgstr "Schimbarea rezoluției pe durata rulării nu este incă suportată."
 msgid "Cannot operate without a clock"
 msgstr "Nu se poate opera fără un ceas"
 
-#~ msgid "This file contains too many streams. Only playing first %d"
-#~ msgstr "Fișierul conține prea multe fluxuri. Se redau doar primele %d"
-
-#~ msgid "Record Source"
-#~ msgstr "Sursă înregistrare"
-
-#~ msgid "Microphone"
-#~ msgstr "Microfon"
-
-#~ msgid "Line In"
-#~ msgstr "Linie intrare"
-
-#~ msgid "Internal CD"
-#~ msgstr "CD intern"
-
-#~ msgid "SPDIF In"
-#~ msgstr "Intrare SPDIF"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "Intrare AUX 1"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "Intrare AUX 2"
-
-#, fuzzy
-#~ msgid "Codec Loopback"
-#~ msgstr "Buclă"
-
-#, fuzzy
-#~ msgid "SunVTS Loopback"
-#~ msgstr "Buclă"
-
-#~ msgid "Volume"
-#~ msgstr "Volum"
-
-#~ msgid "Gain"
-#~ msgstr "Amplificare"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#~ msgid "Built-in Speaker"
-#~ msgstr "Boxe integrate"
-
-#~ msgid "Headphone"
-#~ msgstr "Căști"
-
-#~ msgid "Line Out"
-#~ msgstr "Linie ieșire"
-
-#~ msgid "SPDIF Out"
-#~ msgstr "Ieșire SPDIF"
-
-#~ msgid "AUX 1 Out"
-#~ msgstr "Ieșire AUX 1"
-
-#~ msgid "AUX 2 Out"
-#~ msgstr "Ieșire AUX 2"
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Interogarea capabilităților serverului de sunet a eșuat"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Eroare internă a fluxului de date."
 
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Fișierul conține prea multe fluxuri. Se redau doar primele %d"
+
 #~ msgid "Internal data flow error."
 #~ msgstr "Eroare internă a fluxului de date."
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "S-a obținut o dimensiune neașteptată pentru cadru, %u în loc de %u."
-
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Obținerea cadrelor video pentru dispozitivul „%s” a eșuat."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "A eșuat după %d încercări. dispozitiv %s. eroare sistem: %s"
+#~ msgid "Volume"
+#~ msgstr "Volum"
 
 #~ msgid "Bass"
 #~ msgstr "Bas"
@@ -526,6 +475,9 @@ msgstr "Nu se poate opera fără un ceas"
 
 #~ msgid "Line-in"
 #~ msgstr "Linie intrare"
+
+#~ msgid "Microphone"
+#~ msgstr "Microfon"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -575,6 +527,9 @@ msgstr "Nu se poate opera fără un ceas"
 #~ msgid "Radio"
 #~ msgstr "Radio"
 
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr ""
 #~ "Nu s-a putut deschide dispozitivul audio pentru gestionarea controlului "
@@ -612,6 +567,15 @@ msgstr "Nu se poate opera fără un ceas"
 #~ msgid "Side"
 #~ msgstr "Lateral"
 
+#~ msgid "Built-in Speaker"
+#~ msgstr "Boxe integrate"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "Ieșire AUX 1"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "Ieșire AUX 2"
+
 #~ msgid "AUX Out"
 #~ msgstr "Ieșire AUX"
 
@@ -627,8 +591,23 @@ msgstr "Nu se poate opera fără un ceas"
 #~ msgid "Telephone"
 #~ msgstr "Telefon"
 
+#~ msgid "Line Out"
+#~ msgstr "Linie ieșire"
+
+#~ msgid "Line In"
+#~ msgstr "Linie intrare"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD intern"
+
 #~ msgid "Video In"
 #~ msgstr "Intrare video"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Intrare AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Intrare AUX 2"
 
 #~ msgid "AUX In"
 #~ msgstr "Intrare AUX"
@@ -642,6 +621,9 @@ msgstr "Nu se poate opera fără un ceas"
 #~ msgid "Microphone Boost"
 #~ msgstr "Amplificare microfon"
 
+#~ msgid "Loopback"
+#~ msgstr "Buclă"
+
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnostic"
 
@@ -653,6 +635,9 @@ msgstr "Nu se poate opera fără un ceas"
 
 #~ msgid "Input"
 #~ msgstr "Intrare"
+
+#~ msgid "Record Source"
+#~ msgstr "Sursă înregistrare"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Sursă monitor"
@@ -692,6 +677,12 @@ msgstr "Nu se poate opera fără un ceas"
 
 #~ msgid "Input Mix"
 #~ msgstr "Mix intrare"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Intrare SPDIF"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "Ieșire SPDIF"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Microfon 1"
@@ -837,14 +828,23 @@ msgstr "Nu se poate opera fără un ceas"
 #~ msgid "%s Function"
 #~ msgstr "Funcție %s"
 
+#~ msgid "Gain"
+#~ msgstr "Amplificare"
+
+#~ msgid "Headphone"
+#~ msgstr "Căști"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "S-a obținut o dimensiune neașteptată pentru cadru, %u în loc de %u."
+
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Eroare citire %d octeți pe dispozitivul „%s”."
 
 #~ msgid "Could not enqueue buffers in device '%s'."
 #~ msgstr "Nu s-a putut programa memoria tampon în dispozitivul „%s”."
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Nu se poate stabili o conexiune la serverul de sunet"
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Obținerea cadrelor video pentru dispozitivul „%s” a eșuat."
 
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Interogarea capabilităților serverului de sunet a eșuat"
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "A eșuat după %d încercări. dispozitiv %s. eroare sistem: %s"

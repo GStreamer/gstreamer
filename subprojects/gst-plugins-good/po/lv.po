@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.2.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-25 01:02+0100\n"
 "PO-Revision-Date: 2014-04-20 16:38+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -17,6 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
 "2);\n"
 "X-Generator: Lokalize 1.5\n"
@@ -27,10 +28,18 @@ msgstr "Nav atrasts Jack serveris"
 msgid "Failed to decode JPEG image"
 msgstr "Neizdevās atkodēt JPEG attēlu"
 
+#, fuzzy
+msgid "Failed to read memory"
+msgstr "Neizdevās atkodēt JPEG attēlu"
+
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 
+#. <php-emulation-mode>three underscores for ___rate is really really really
+#. * private as opposed to one underscore<php-emulation-mode>
+#. call this MACRO outside of the NULL state so that we have a higher chance
+#. * of actually having a pipeline and bus to get the message through
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -159,7 +168,11 @@ msgstr "Nevarēja atvērt audio ierīci ierakstīšanai."
 msgid "CoreAudio device not found"
 msgstr ""
 
+#, fuzzy
 msgid "CoreAudio device could not be opened"
+msgstr "Video ierīce nevarēja izveidot bufera pūlu."
+
+msgid "Raspberry Pi Camera Module"
 msgstr ""
 
 #, c-format
@@ -182,9 +195,13 @@ msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Ierīces “%s” draiveris neatbalsta nevienu zināmo ierakstīšanas metodi."
 
+#, fuzzy
+msgid "Invalid caps"
+msgstr "Nederīgs atoma izmērs."
+
 #, fuzzy, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
+msgstr "Ierīce “%s” neatbalsta video tveršanu"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
@@ -232,9 +249,8 @@ msgstr ""
 msgid "Video device uses an unsupported interlacing method."
 msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 
-#, fuzzy
 msgid "Video device uses an unsupported pixel format."
-msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
+msgstr ""
 
 #, fuzzy
 msgid "Failed to configure internal buffer pool."
@@ -283,15 +299,15 @@ msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 
 #, fuzzy, c-format
 msgid "Converter on device %s has no supported output format"
-msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
+msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 
 #, fuzzy, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
+msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 
 #, fuzzy, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
+msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 
 #, fuzzy
 msgid "Failed to start decoding thread."
@@ -302,15 +318,14 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported output format"
-msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
+msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported input format"
-msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
+msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Neizdevās atkodēt JPEG attēlu"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -389,11 +404,19 @@ msgstr "Neizdevās saņemt vadīklas vērtību %d ierīcei “%s”."
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Neizdevās iestatīt vērtību %d vadīklai %d no ierīces “%s”."
 
+#, fuzzy, c-format
+msgid "Failed to set value %s for control %d on device '%s'."
+msgstr "Neizdevās iestatīt vērtību %d vadīklai %d no ierīces “%s”."
+
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Neizdevās saņemt pašreizējo ievadi no ierīces “%s”. Iespējams tā ir radio "
 "ierīce"
+
+#, fuzzy, c-format
+msgid "Failed to set input %u on device %s."
+msgstr "Neizdevās iestatīt ievadi %d uz ierīces %s."
 
 #, c-format
 msgid ""
@@ -402,8 +425,8 @@ msgstr ""
 "Neizdevās saņemt pašreizējo izvadu no ierīces “%s”. Iespējams tā ir radio "
 "ierīce"
 
-#, c-format
-msgid "Failed to set output %d on device %s."
+#, fuzzy, c-format
+msgid "Failed to set output %u on device %s."
 msgstr "Neizdevās iestatīt izvadi %d uz ierīces %s."
 
 msgid "Changing resolution at runtime is not yet supported."
@@ -412,8 +435,15 @@ msgstr "Izšķirtspējas mainīšana izpildlaikā pašlaik netiek atbalstīta."
 msgid "Cannot operate without a clock"
 msgstr "Nevar veikt darbības bez pulksteņa"
 
+#~ msgid "Internal data stream error."
+#~ msgstr "Iekšēja datu plūsmas kļūda."
+
+#, c-format
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr "Šī datne satur pārāk daudz straumju. Tiek atskaņota tikai pirmā %d"
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Iekšēja datu plūsmas kļūda."
 
 #~ msgid "Record Source"
 #~ msgstr "Ierakstīšanas avots"
@@ -468,12 +498,6 @@ msgstr "Nevar veikt darbības bez pulksteņa"
 
 #~ msgid "AUX 2 Out"
 #~ msgstr "AUX 2 izeja"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Iekšēja datu plūsmas kļūda."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Iekšēja datu plūsmas kļūda."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nevar izveidot savienojumu ar skaņas serveri"
