@@ -269,10 +269,11 @@ gst_webrtc_bin_pad_update_ssrc_event (GstWebRTCBinPad * wpad)
     WebRTCTransceiver *trans = (WebRTCTransceiver *) wpad->trans;
     GstPad *pad = GST_PAD (wpad);
 
-    trans->ssrc_event =
+    gst_event_take (&trans->ssrc_event,
         gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY,
-        gst_structure_new ("GstWebRtcBinUpdateTos", "ssrc", G_TYPE_UINT,
-            trans->current_ssrc, NULL));
+            gst_structure_new ("GstWebRtcBinUpdateTos", "ssrc", G_TYPE_UINT,
+                trans->current_ssrc, NULL)));
+
     gst_pad_send_event (pad, gst_event_ref (trans->ssrc_event));
   }
 }
@@ -302,7 +303,7 @@ gst_webrtcbin_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
     gst_event_parse_caps (event, &caps);
     check_negotiation = (!wpad->received_caps
-        || gst_caps_is_equal (wpad->received_caps, caps));
+        || !gst_caps_is_equal (wpad->received_caps, caps));
     gst_caps_replace (&wpad->received_caps, caps);
 
     GST_DEBUG_OBJECT (parent,
@@ -468,8 +469,7 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCBin, gst_webrtc_bin, GST_TYPE_BIN,
     G_ADD_PRIVATE (GstWebRTCBin)
     GST_DEBUG_CATEGORY_INIT (gst_webrtc_bin_debug, "webrtcbin", 0,
-        "webrtcbin element");
-    );
+        "webrtcbin element"););
 
 enum
 {
@@ -1489,8 +1489,8 @@ _check_if_negotiation_is_needed (GstWebRTCBin * webrtc)
   /* If connection has created any RTCDataChannel's, and no m= section has
    * been negotiated yet for data, return "true". */
   if (webrtc->priv->data_channels->len > 0) {
-    if (_message_get_datachannel_index (webrtc->
-            current_local_description->sdp) >= G_MAXUINT) {
+    if (_message_get_datachannel_index (webrtc->current_local_description->
+            sdp) >= G_MAXUINT) {
       GST_LOG_OBJECT (webrtc,
           "no data channel media section and have %u " "transports",
           webrtc->priv->data_channels->len);

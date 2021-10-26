@@ -32,7 +32,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 G_DEFINE_TYPE_WITH_CODE (WebRTCTransceiver, webrtc_transceiver,
     GST_TYPE_WEBRTC_RTP_TRANSCEIVER,
     GST_DEBUG_CATEGORY_INIT (webrtc_transceiver_debug,
-        "webrtctransceiver", 0, "webrtctransceiver"););
+        "webrtctransceiver", 0, "webrtctransceiver");
+    );
 
 #define DEFAULT_FEC_TYPE GST_WEBRTC_FEC_TYPE_NONE
 #define DEFAULT_DO_NACK FALSE
@@ -157,9 +158,7 @@ webrtc_transceiver_finalize (GObject * object)
 
   gst_caps_replace (&trans->last_configured_caps, NULL);
 
-  if (trans->ssrc_event)
-    gst_event_unref (trans->ssrc_event);
-  trans->ssrc_event = NULL;
+  gst_event_replace (&trans->ssrc_event, NULL);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
