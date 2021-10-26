@@ -103,6 +103,8 @@ struct _GstVaH265Dec
   gboolean need_negotiation;
 };
 
+static GstElementClass *parent_class = NULL;
+
 /* *INDENT-OFF* */
 static const gchar *src_caps_str =
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VA,
@@ -1239,8 +1241,7 @@ gst_va_h265_dec_negotiate (GstVideoDecoder * decoder)
   GST_INFO_OBJECT (self, "Negotiated caps %" GST_PTR_FORMAT,
       base->output_state->caps);
 
-  return GST_VIDEO_DECODER_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS
-      (decoder))->negotiate (decoder);
+  return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
 
 static void
@@ -1250,7 +1251,7 @@ gst_va_h265_dec_dispose (GObject * object)
 
   gst_va_base_dec_close (GST_VIDEO_DECODER (object));
 
-  G_OBJECT_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS (object))->dispose (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -1278,6 +1279,8 @@ gst_va_h265_dec_class_init (gpointer g_class, gpointer class_data)
 
   sink_doc_caps = gst_caps_from_string (sink_caps_str);
   src_doc_caps = gst_caps_from_string (src_caps_str);
+
+  parent_class = g_type_class_peek_parent (g_class);
 
   gst_va_base_dec_class_init (GST_VA_BASE_DEC_CLASS (g_class), HEVC,
       cdata->render_device_path, cdata->sink_caps, cdata->src_caps,

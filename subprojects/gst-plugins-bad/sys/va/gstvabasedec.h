@@ -37,7 +37,6 @@ G_BEGIN_DECLS
 #define GST_VA_BASE_DEC(obj) ((GstVaBaseDec *)(obj))
 #define GST_VA_BASE_DEC_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_FROM_INSTANCE (obj), GstVaBaseDecClass))
 #define GST_VA_BASE_DEC_CLASS(klass) ((GstVaBaseDecClass *)(klass))
-#define GST_VA_BASE_DEC_GET_PARENT_CLASS(obj) (GST_VA_BASE_DEC_GET_CLASS(obj)->parent_decoder_class)
 
 typedef struct _GstVaBaseDec GstVaBaseDec;
 typedef struct _GstVaBaseDecClass GstVaBaseDecClass;

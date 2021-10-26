@@ -27,6 +27,7 @@
 #include "gstvavideoformat.h"
 
 #define GST_CAT_DEFAULT (base->debug_category)
+#define GST_VA_BASE_DEC_GET_PARENT_CLASS(obj) (GST_VA_BASE_DEC_GET_CLASS(obj)->parent_decoder_class)
 
 static gboolean
 gst_va_base_dec_open (GstVideoDecoder * decoder)
