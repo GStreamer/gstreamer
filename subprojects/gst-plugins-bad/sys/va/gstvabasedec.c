@@ -387,7 +387,7 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
-  GST_WARNING_OBJECT (decoder, "We need to copy the output buffer manually "
+  GST_WARNING_OBJECT (base, "We need to copy the output buffer manually "
       "because of the top/left alignment, which may have low performance. "
       "The element which supports VideoCropMeta such as 'vapostproc' can "
       "avoid this.");
