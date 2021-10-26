@@ -1487,7 +1487,7 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
       PROP_SCHEDULE, g_param_spec_boolean ("schedule",
           "Schedule",
           "Schedule caption buffers so that exactly one is output per video frame",
-          FALSE,
+          DEFAULT_SCHEDULE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
