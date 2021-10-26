@@ -179,13 +179,7 @@ gst_va_vp9_new_sequence (GstVp9Decoder * decoder,
 
   base->min_buffers = GST_VP9_REF_FRAMES;
 
-  if (negotiation_needed) {
-    base->need_negotiation = TRUE;
-    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
-      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-  }
+  base->need_negotiation = negotiation_needed;
 
   return GST_FLOW_OK;
 }
@@ -228,6 +222,13 @@ gst_va_vp9_dec_new_picture (GstVp9Decoder * decoder,
   ret = _check_resolution_change (self, picture);
   if (ret != GST_FLOW_OK)
     return ret;
+
+  if (base->need_negotiation) {
+    if (!gst_video_decoder_negotiate (vdec)) {
+      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
 
   ret = gst_video_decoder_allocate_output_frame (vdec, frame);
   if (ret != GST_FLOW_OK)

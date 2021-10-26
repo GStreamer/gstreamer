@@ -177,13 +177,7 @@ gst_va_vp8_dec_new_sequence (GstVp8Decoder * decoder,
 
   base->min_buffers = 3 + 4;    /* max num pic references + scratch surfaces */
 
-  if (negotiation_needed) {
-    base->need_negotiation = TRUE;
-    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
-      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-  }
+  base->need_negotiation = negotiation_needed;
 
   return GST_FLOW_OK;
 }
@@ -196,6 +190,13 @@ gst_va_vp8_dec_new_picture (GstVp8Decoder * decoder,
   GstVaDecodePicture *pic;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+
+  if (base->need_negotiation) {
+    if (!gst_video_decoder_negotiate (vdec)) {
+      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
 
   self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
   if (self->last_ret != GST_FLOW_OK)

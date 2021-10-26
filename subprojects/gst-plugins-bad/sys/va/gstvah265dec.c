@@ -855,6 +855,13 @@ gst_va_h265_dec_new_picture (GstH265Decoder * decoder,
   GstBuffer *output_buffer;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
 
+  if (base->need_negotiation) {
+    if (!gst_video_decoder_negotiate (vdec)) {
+      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
+
   output_buffer = gst_video_decoder_allocate_output_buffer (vdec);
   if (!output_buffer) {
     self->last_ret = GST_FLOW_ERROR;
@@ -1118,13 +1125,7 @@ gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
 
   base->min_buffers = self->dpb_size + 4;       /* dpb size + scratch surfaces */
 
-  if (negotiation_needed) {
-    base->need_negotiation = TRUE;
-    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
-      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-  }
+  base->need_negotiation = negotiation_needed;
 
   {
     /* FIXME: We don't have parser API for sps_range_extension, so
