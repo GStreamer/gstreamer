@@ -546,9 +546,6 @@ gst_v4l2_object_new (GstElement * element,
   return v4l2object;
 }
 
-static gboolean gst_v4l2_object_clear_format_list (GstV4l2Object * v4l2object);
-
-
 void
 gst_v4l2_object_destroy (GstV4l2Object * v4l2object)
 {
@@ -574,7 +571,7 @@ gst_v4l2_object_destroy (GstV4l2Object * v4l2object)
 }
 
 
-static gboolean
+gboolean
 gst_v4l2_object_clear_format_list (GstV4l2Object * v4l2object)
 {
   g_slist_foreach (v4l2object->formats, (GFunc) g_free, NULL);
