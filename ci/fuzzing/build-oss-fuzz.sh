@@ -62,7 +62,7 @@ cd ..
 # with clang and the various sanitizers.
 
 # For now we only build core and base. Add other modules when/if needed
-for i in gstreamer gst-plugins-base;
+for i in gstreamer;
 do
     mkdir -p $i
     cd $i
@@ -74,8 +74,30 @@ do
         -Ddoc=disabled \
         -Dexamples=disabled \
         -Dintrospection=disabled \
-        -Dtracer_hooks=false \
-        -Dregistry=false _builddir $SRC/$i
+        -Dgood=disabled \
+        -Dugly=disabled \
+        -Dbad=disabled \
+        -Dlibav=disabled \
+        -Dges=disabled \
+        -Domx=disabled \
+        -Dvaapi=disabled \
+        -Dsharp=disabled \
+        -Drs=disabled \
+        -Dpython=disabled \
+        -Dlibnice=disabled \
+        -Ddevtools=disabled \
+        -Drtsp_server=disabled \
+        -Dgst-examples=disabled \
+        -Dqt5=disabled \
+        -Dorc=disabled \
+        -Dgtk_doc=disabled \
+        -Dgstreamer:tracer_hooks=false \
+        -Dgstreamer:registry=false \
+        -Dgst-plugins-base:cairo=disabled \
+        -Dgst-plugins-base:opus=disabled \
+        -Dgst-plugins-base:pango=disabled \
+        _builddir \
+        $SRC/$i
     ninja -C _builddir
     ninja -C _builddir install
     cd ..
@@ -120,7 +142,7 @@ TARGET_DEPS=" gstreamer-pbutils-1.0 \
 	      gstreamer-riff-1.0 \
 	      gstreamer-tag-1.0 \
 	      zlib ogg vorbis vorbisenc \
-	      theoraenc theoradec theora"
+	      theoraenc theoradec theora cairo"
 
 PLUGINS="$PLUGIN_DIR/libgstcoreelements.a \
        $PLUGIN_DIR/libgsttypefindfunctions.a \
@@ -136,11 +158,11 @@ echo
 BUILD_CFLAGS="$CFLAGS `pkg-config --static --cflags $COMMON_DEPS $TARGET_DEPS`"
 BUILD_LDFLAGS="-Wl,-static `pkg-config --static --libs $COMMON_DEPS $TARGET_DEPS`"
 
-$CC $CFLAGS $BUILD_CFLAGS -c $SRC/gst-ci/fuzzing/gst-discoverer.c -o $SRC/gst-ci/fuzzing/gst-discoverer.o
+$CC $CFLAGS $BUILD_CFLAGS -c $SRC/gstreamer/ci/fuzzing/gst-discoverer.c -o $SRC/gstreamer/ci/fuzzing/gst-discoverer.o
 $CXX $CXXFLAGS \
       -o $OUT/gst-discoverer \
       $PREDEPS_LDFLAGS \
-      $SRC/gst-ci/fuzzing/gst-discoverer.o \
+      $SRC/gstreamer/ci/fuzzing/gst-discoverer.o \
       $PLUGINS \
       $BUILD_LDFLAGS \
       $LIB_FUZZING_ENGINE \
@@ -166,11 +188,11 @@ echo
 BUILD_CFLAGS="$CFLAGS `pkg-config --static --cflags $COMMON_DEPS $TARGET_DEPS`"
 BUILD_LDFLAGS="-Wl,-static `pkg-config --static --libs $COMMON_DEPS $TARGET_DEPS`"
 
-$CC $CFLAGS $BUILD_CFLAGS -c $SRC/gst-ci/fuzzing/typefind.c -o $SRC/gst-ci/fuzzing/typefind.o
+$CC $CFLAGS $BUILD_CFLAGS -c $SRC/gstreamer/ci/fuzzing/typefind.c -o $SRC/gstreamer/ci/fuzzing/typefind.o
 $CXX $CXXFLAGS \
       -o $OUT/typefind \
       $PREDEPS_LDFLAGS \
-      $SRC/gst-ci/fuzzing/typefind.o \
+      $SRC/gstreamer/ci/fuzzing/typefind.o \
       $PLUGINS \
       $BUILD_LDFLAGS \
       $LIB_FUZZING_ENGINE \
