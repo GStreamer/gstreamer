@@ -3336,46 +3336,63 @@ static gint
 sort_end_pads (GstParsePad * da, GstParsePad * db)
 {
   gint va, vb;
-  GstCaps *capsa, *capsb;
-  GstStructure *sa, *sb;
   const gchar *namea, *nameb;
   gchar *ida, *idb;
   gint ret;
+  GstCaps *capsa, *capsb;
 
   capsa = get_pad_caps (GST_PAD_CAST (da));
   capsb = get_pad_caps (GST_PAD_CAST (db));
 
-  sa = gst_caps_get_structure ((const GstCaps *) capsa, 0);
-  sb = gst_caps_get_structure ((const GstCaps *) capsb, 0);
+  if (gst_caps_get_size (capsa) == 0 || gst_caps_get_size (capsb) == 0) {
+    if (gst_caps_is_any (capsa))
+      va = 6;
+    if (gst_caps_is_empty (capsa))
+      va = 7;
+    else
+      va = 0;
 
-  namea = gst_structure_get_name (sa);
-  nameb = gst_structure_get_name (sb);
+    if (gst_caps_is_any (capsb))
+      vb = 6;
+    if (gst_caps_is_empty (capsb))
+      vb = 7;
+    else
+      vb = 0;
+  } else {
+    GstStructure *sa, *sb;
 
-  if (g_strrstr (namea, "video/x-raw"))
-    va = 0;
-  else if (g_strrstr (namea, "video/"))
-    va = 1;
-  else if (g_strrstr (namea, "image/"))
-    va = 2;
-  else if (g_strrstr (namea, "audio/x-raw"))
-    va = 3;
-  else if (g_strrstr (namea, "audio/"))
-    va = 4;
-  else
-    va = 5;
+    sa = gst_caps_get_structure ((const GstCaps *) capsa, 0);
+    sb = gst_caps_get_structure ((const GstCaps *) capsb, 0);
 
-  if (g_strrstr (nameb, "video/x-raw"))
-    vb = 0;
-  else if (g_strrstr (nameb, "video/"))
-    vb = 1;
-  else if (g_strrstr (nameb, "image/"))
-    vb = 2;
-  else if (g_strrstr (nameb, "audio/x-raw"))
-    vb = 3;
-  else if (g_strrstr (nameb, "audio/"))
-    vb = 4;
-  else
-    vb = 5;
+    namea = gst_structure_get_name (sa);
+    nameb = gst_structure_get_name (sb);
+
+    if (g_strrstr (namea, "video/x-raw"))
+      va = 0;
+    else if (g_strrstr (namea, "video/"))
+      va = 1;
+    else if (g_strrstr (namea, "image/"))
+      va = 2;
+    else if (g_strrstr (namea, "audio/x-raw"))
+      va = 3;
+    else if (g_strrstr (namea, "audio/"))
+      va = 4;
+    else
+      va = 5;
+
+    if (g_strrstr (nameb, "video/x-raw"))
+      vb = 0;
+    else if (g_strrstr (nameb, "video/"))
+      vb = 1;
+    else if (g_strrstr (nameb, "image/"))
+      vb = 2;
+    else if (g_strrstr (nameb, "audio/x-raw"))
+      vb = 3;
+    else if (g_strrstr (nameb, "audio/"))
+      vb = 4;
+    else
+      vb = 5;
+  }
 
   gst_caps_unref (capsa);
   gst_caps_unref (capsb);
