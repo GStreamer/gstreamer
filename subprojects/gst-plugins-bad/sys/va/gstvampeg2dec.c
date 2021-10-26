@@ -71,8 +71,6 @@ struct _GstVaMpeg2Dec
   GstVaBaseDec parent;
 
   gboolean progressive;
-  gboolean need_negotiation;
-
   GstMpegVideoSequenceHdr seq;
 };
 
@@ -97,10 +95,10 @@ gst_va_mpeg2_dec_negotiate (GstVideoDecoder * decoder)
   GstMpeg2Decoder *mpeg2dec = GST_MPEG2_DECODER (decoder);
 
   /* Ignore downstream renegotiation request. */
-  if (!self->need_negotiation)
+  if (!base->need_negotiation)
     return TRUE;
 
-  self->need_negotiation = FALSE;
+  base->need_negotiation = FALSE;
 
   if (gst_va_decoder_is_open (base->decoder)
       && !gst_va_decoder_close (base->decoder))
@@ -281,7 +279,7 @@ gst_va_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
   base->min_buffers = 2 + 4;    /* max num pic references + scratch surfaces */
 
   if (negotiation_needed) {
-    self->need_negotiation = TRUE;
+    base->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return GST_FLOW_NOT_NEGOTIATED;

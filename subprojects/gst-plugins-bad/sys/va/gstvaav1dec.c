@@ -76,8 +76,6 @@ struct _GstVaAV1Dec
   GstAV1SequenceHeaderOBU seq;
   gint max_width;
   gint max_height;
-
-  gboolean need_negotiation;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -101,10 +99,10 @@ gst_va_av1_dec_negotiate (GstVideoDecoder * decoder)
   GstCapsFeatures *capsfeatures = NULL;
 
   /* Ignore downstream renegotiation request. */
-  if (!self->need_negotiation)
+  if (!base->need_negotiation)
     return TRUE;
 
-  self->need_negotiation = FALSE;
+  base->need_negotiation = FALSE;
 
   /* Do not re-create the context if only the frame size changes */
   if (!gst_va_decoder_config_is_equal (base->decoder, base->profile,
@@ -275,7 +273,7 @@ gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
     base->rt_format = rt_format;
     self->max_width = seq_hdr->max_frame_width_minus_1 + 1;
     self->max_height = seq_hdr->max_frame_height_minus_1 + 1;
-    self->need_negotiation = TRUE;
+    base->need_negotiation = TRUE;
 
     base->min_buffers = 7 + 4;  /* dpb size + scratch surfaces */
 
@@ -313,10 +311,10 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
       /* *INDENT-ON* */
     }
 
-    self->need_negotiation = TRUE;
+    base->need_negotiation = TRUE;
   }
 
-  if (self->need_negotiation) {
+  if (base->need_negotiation) {
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return GST_FLOW_NOT_NEGOTIATED;

@@ -99,8 +99,6 @@ struct _GstVaH265Dec
   gint32 WpOffsetHalfRangeC;
 
   struct slice prev_slice;
-
-  gboolean need_negotiation;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -1121,7 +1119,7 @@ gst_va_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
   base->min_buffers = self->dpb_size + 4;       /* dpb size + scratch surfaces */
 
   if (negotiation_needed) {
-    self->need_negotiation = TRUE;
+    base->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return GST_FLOW_NOT_NEGOTIATED;
@@ -1208,10 +1206,10 @@ gst_va_h265_dec_negotiate (GstVideoDecoder * decoder)
   GstH265Decoder *h265dec = GST_H265_DECODER (decoder);
 
   /* Ignore downstream renegotiation request. */
-  if (!self->need_negotiation)
+  if (!base->need_negotiation)
     return TRUE;
 
-  self->need_negotiation = FALSE;
+  base->need_negotiation = FALSE;
 
   if (gst_va_decoder_is_open (base->decoder)
       && !gst_va_decoder_close (base->decoder))

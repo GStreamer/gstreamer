@@ -84,7 +84,6 @@ struct _GstVaH264Dec
   /* Used to fill VAPictureParameterBufferH264.ReferenceFrames */
   GArray *ref_list;
 
-  gboolean need_negotiation;
   gboolean interlaced;
 };
 
@@ -748,7 +747,7 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
   base->min_buffers = self->dpb_size + 4;       /* dpb size + scratch surfaces */
 
   if (negotiation_needed) {
-    self->need_negotiation = TRUE;
+    base->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return GST_FLOW_NOT_NEGOTIATED;
@@ -824,10 +823,10 @@ gst_va_h264_dec_negotiate (GstVideoDecoder * decoder)
   GstH264Decoder *h264dec = GST_H264_DECODER (decoder);
 
   /* Ignore downstream renegotiation request. */
-  if (!self->need_negotiation)
+  if (!base->need_negotiation)
     return TRUE;
 
-  self->need_negotiation = FALSE;
+  base->need_negotiation = FALSE;
 
   if (gst_va_decoder_is_open (base->decoder)
       && !gst_va_decoder_close (base->decoder))

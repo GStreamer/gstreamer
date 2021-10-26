@@ -70,8 +70,6 @@ struct _GstVaVp9Dec
 {
   GstVaBaseDec parent;
   GstVp9Segmentation segmentation[GST_VP9_MAX_SEGMENTS];
-
-  gboolean need_negotiation;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -182,7 +180,7 @@ gst_va_vp9_new_sequence (GstVp9Decoder * decoder,
   base->min_buffers = GST_VP9_REF_FRAMES;
 
   if (negotiation_needed) {
-    self->need_negotiation = TRUE;
+    base->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return GST_FLOW_NOT_NEGOTIATED;
@@ -202,7 +200,7 @@ _check_resolution_change (GstVaVp9Dec * self, GstVp9Picture * picture)
     base->width = frame_hdr->width;
     base->height = frame_hdr->height;
 
-    self->need_negotiation = TRUE;
+    base->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Resolution changed, but failed to"
           " negotiate with downstream");
@@ -555,10 +553,10 @@ gst_va_vp9_dec_negotiate (GstVideoDecoder * decoder)
   gboolean need_open;
 
   /* Ignore downstream renegotiation request. */
-  if (!self->need_negotiation)
+  if (!base->need_negotiation)
     return TRUE;
 
-  self->need_negotiation = FALSE;
+  base->need_negotiation = FALSE;
 
   need_open = TRUE;
   /* VP9 profile entry should have the ability to handle dynamical
