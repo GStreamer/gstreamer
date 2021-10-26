@@ -720,10 +720,10 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
   if (!caption_pad) {
     GST_LOG_OBJECT (self, "No caption pad, passing through video");
     video_buf = self->current_video_buffer;
-    self->current_video_buffer = NULL;
     gst_aggregator_selected_samples (GST_AGGREGATOR_CAST (self),
         GST_BUFFER_PTS (video_buf), GST_BUFFER_DTS (video_buf),
         GST_BUFFER_DURATION (video_buf), NULL);
+    self->current_video_buffer = NULL;
     goto done;
   }
 
