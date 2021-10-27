@@ -1175,13 +1175,8 @@ gst_va_vpp_fixate_size (GstVaVpp * self, GstPadDirection direction,
       case GST_VIDEO_ORIENTATION_90L:
       case GST_VIDEO_ORIENTATION_UL_LR:
       case GST_VIDEO_ORIENTATION_UR_LL:
-        if (direction == GST_PAD_SINK) {
-          SWAP (from_w, from_h);
-          SWAP (from_par_n, from_par_d);
-        } else if (direction == GST_PAD_SRC) {
-          SWAP (w, h);
-          /* there's no need to swap 1/1 par */
-        }
+        SWAP (from_w, from_h);
+        SWAP (from_par_n, from_par_d);
         break;
       default:
         break;
