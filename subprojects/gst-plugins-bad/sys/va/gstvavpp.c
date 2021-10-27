@@ -965,7 +965,7 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
 #define PALETTE_MASK    (GST_VIDEO_FORMAT_FLAG_PALETTE)
 
 /* calculate how much loss a conversion would be */
-static void
+static gboolean
 score_value (GstVaVpp * self, const GstVideoFormatInfo * in_info,
     const GValue * val, gint * min_loss, const GstVideoFormatInfo ** out_info)
 {
@@ -977,13 +977,13 @@ score_value (GstVaVpp * self, const GstVideoFormatInfo * in_info,
   fname = g_value_get_string (val);
   t_info = gst_video_format_get_info (gst_video_format_from_string (fname));
   if (!t_info || t_info->format == GST_VIDEO_FORMAT_UNKNOWN)
-    return;
+    return FALSE;
 
   /* accept input format immediately without loss */
   if (in_info == t_info) {
     *min_loss = 0;
     *out_info = t_info;
-    return;
+    return TRUE;
   }
 
   loss = SCORE_FORMAT_CHANGE;
@@ -1041,32 +1041,34 @@ score_value (GstVaVpp * self, const GstVideoFormatInfo * in_info,
     GST_DEBUG_OBJECT (self, "found new best %d", loss);
     *out_info = t_info;
     *min_loss = loss;
+    return TRUE;
   }
+
+  return FALSE;
 }
 
-static void
+static GstCaps *
 gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
 {
-  GstStructure *ins, *outs;
+  GstStructure *ins;
   const gchar *in_format;
   const GstVideoFormatInfo *in_info, *out_info = NULL;
   gint min_loss = G_MAXINT;
-  guint i, capslen;
+  guint i, best_i, capslen;
 
   ins = gst_caps_get_structure (caps, 0);
   in_format = gst_structure_get_string (ins, "format");
   if (!in_format)
-    return;
+    return NULL;
 
   GST_DEBUG_OBJECT (self, "source format %s", in_format);
 
   in_info =
       gst_video_format_get_info (gst_video_format_from_string (in_format));
   if (!in_info)
-    return;
+    return NULL;
 
-  outs = gst_caps_get_structure (result, 0);
-
+  best_i = 0;
   capslen = gst_caps_get_size (result);
   GST_DEBUG_OBJECT (self, "iterate %d structures", capslen);
   for (i = 0; i < capslen; i++) {
@@ -1089,18 +1091,36 @@ gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
 
         val = gst_value_list_get_value (format, j);
         if (G_VALUE_HOLDS_STRING (val)) {
-          score_value (self, in_info, val, &min_loss, &out_info);
+          if (score_value (self, in_info, val, &min_loss, &out_info))
+            best_i = i;
           if (min_loss == 0)
             break;
         }
       }
     } else if (G_VALUE_HOLDS_STRING (format)) {
-      score_value (self, in_info, format, &min_loss, &out_info);
+      if (score_value (self, in_info, format, &min_loss, &out_info))
+        best_i = i;
     }
+
+    if (min_loss == 0)
+      break;
   }
-  if (out_info)
-    gst_structure_set (outs, "format", G_TYPE_STRING,
+
+  if (out_info) {
+    GstCaps *ret;
+    GstStructure *out;
+    GstCapsFeatures *features;
+
+    features = gst_caps_features_copy (gst_caps_get_features (result, best_i));
+    out = gst_structure_copy (gst_caps_get_structure (result, best_i));
+    gst_structure_set (out, "format", G_TYPE_STRING,
         GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
+    ret = gst_caps_new_full (out, NULL);
+    gst_caps_set_features_simple (ret, features);
+    return ret;
+  }
+
+  return NULL;
 }
 
 static void
@@ -1682,20 +1702,11 @@ gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
       "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
       GST_PTR_FORMAT, othercaps, caps);
 
-  result = gst_caps_intersect (othercaps, caps);
-  if (gst_caps_is_empty (result)) {
-    gst_caps_unref (result);
-    result = gst_caps_copy (othercaps);
-  }
+  /* will iterate in all structures to find one with "best color" */
+  result = gst_va_vpp_fixate_format (self, caps, othercaps);
+  if (!result)
+    return othercaps;
 
-  result = gst_caps_make_writable (result);
-
-  /* will iterate in all structures to find the best color */
-  gst_va_vpp_fixate_format (self, caps, result);
-
-  /* truncate to the first structure since size fixate will work on
-   *  one */
-  result = gst_caps_truncate (result);
   gst_va_vpp_fixate_size (self, direction, caps, result);
 
   /* some fields might be lost while feature caps conversion */
