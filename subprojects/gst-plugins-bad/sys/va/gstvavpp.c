@@ -422,6 +422,18 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
       to_dar_n = to_dar_d = -1;
     }
 
+    /* if video-orientation changes consider it for borders */
+    switch (gst_va_filter_get_orientation (btrans->filter)) {
+      case GST_VIDEO_ORIENTATION_90R:
+      case GST_VIDEO_ORIENTATION_90L:
+      case GST_VIDEO_ORIENTATION_UL_LR:
+      case GST_VIDEO_ORIENTATION_UR_LL:
+        SWAP (from_dar_n, from_dar_d);
+        break;
+      default:
+        break;
+    }
+
     self->borders_h = self->borders_w = 0;
     if (to_dar_n != from_dar_n || to_dar_d != from_dar_d) {
       if (self->add_borders) {
