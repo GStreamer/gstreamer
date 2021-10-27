@@ -423,19 +423,11 @@ remove_input_stream (GstDecodebin3 * dbin, DecodebinInputStream * stream)
   g_free (stream);
 }
 
-
-/* FIXME : HACK, REMOVE, USE INPUT CHAINS */
-static GstPadProbeReturn
-parsebin_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
-    DecodebinInput * input)
+static void
+unblock_pending_input (DecodebinInput * input)
 {
   GstDecodebin3 *dbin = input->dbin;
   GList *tmp, *unused_slot = NULL;
-
-  GST_DEBUG_OBJECT (pad, "Got a buffer ! UNBLOCK !");
-
-  /* Any data out the demuxer means it's not creating pads
-   * any more right now */
 
   /* 1. Re-use existing streams if/when possible */
   GST_FIXME_OBJECT (dbin, "Re-use existing input streams if/when possible");
@@ -525,6 +517,18 @@ parsebin_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
   if (unused_slot)
     g_list_free_full (unused_slot, (GDestroyNotify) gst_object_unref);
 
+}
+
+/* FIXME : HACK, REMOVE, USE INPUT CHAINS */
+static GstPadProbeReturn
+parsebin_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
+    DecodebinInput * input)
+{
+  /* Any data out the demuxer means it's not creating pads
+   * any more right now */
+  GST_DEBUG_OBJECT (pad, "Got a buffer ! UNBLOCK !");
+  unblock_pending_input (input);
+
   return GST_PAD_PROBE_OK;
 }
 
@@ -554,8 +558,9 @@ parsebin_pending_event_probe (GstPad * pad, GstPadProbeInfo * info,
     }
       break;
     case GST_EVENT_GAP:
-      /* Let gaps through to the buffer probe, as they should cause unblocking */
-      ret = GST_PAD_PROBE_PASS;
+      GST_DEBUG_OBJECT (pad, "Got a gap event! UNBLOCK !");
+      unblock_pending_input (ppad->input);
+      ret = GST_PAD_PROBE_OK;
       break;
     default:
       break;
@@ -584,8 +589,7 @@ parsebin_pad_added_cb (GstElement * demux, GstPad * pad, DecodebinInput * input)
       (GstPadProbeCallback) parsebin_pending_event_probe, ppad, NULL);
   ppad->buffer_probe =
       gst_pad_add_probe (pad,
-      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
-      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) parsebin_buffer_probe, input, NULL);
 
   input->pending_pads = g_list_append (input->pending_pads, ppad);
