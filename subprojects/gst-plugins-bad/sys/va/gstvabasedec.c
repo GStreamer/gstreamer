@@ -18,8 +18,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <gst/va/gstvautils.h>
-
 #include "gstvabasedec.h"
 
 #include "gstvaallocator.h"

@@ -54,7 +54,6 @@
 #include <gst/video/video.h>
 
 #include <va/va_drmcommon.h>
-#include <gst/va/gstvautils.h>
 
 #include "gstvaallocator.h"
 #include "gstvabasetransform.h"

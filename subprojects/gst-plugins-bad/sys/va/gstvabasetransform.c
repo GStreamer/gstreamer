@@ -22,8 +22,6 @@
 #include "config.h"
 #endif
 
-#include <gst/va/gstvautils.h>
-
 #include "gstvabasetransform.h"
 
 #include "gstvaallocator.h"

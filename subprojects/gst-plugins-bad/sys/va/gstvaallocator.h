@@ -21,7 +21,7 @@
 #pragma once
 
 #include <gst/allocators/allocators.h>
-#include <gst/va/gstvadisplay.h>
+#include <gst/va/gstva.h>
 #include <gst/video/video.h>
 #include <stdint.h>
 #include <va/va.h>

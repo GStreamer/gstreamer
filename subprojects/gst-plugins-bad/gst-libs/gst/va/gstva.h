@@ -1,6 +1,6 @@
 /* GStreamer
- * Copyright (C) 2020 Igalia, S.L.
- *     Author: Víctor Jáquez <vjaquez@igalia.com>
+ *  Copyright (C) 2021 Intel Corporation
+ *     Author: He Junyan <junyan.he@intel.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,26 +20,12 @@
 
 #pragma once
 
-#include <gst/gst.h>
+#ifndef GST_USE_UNSTABLE_API
+#pragma message ("The va library from gst-plugins-bad is unstable API and may change in future.")
+#pragma message ("You can define GST_USE_UNSTABLE_API to avoid this warning.")
+#endif
 
-G_BEGIN_DECLS
-
-#include <gst/va/gstva.h>
-
-#define GST_TYPE_VA_DEVICE    (gst_va_device_get_type())
-#define GST_IS_VA_DEVICE(obj) (GST_IS_MINI_OBJECT_TYPE((obj), GST_TYPE_VA_DEVICE))
-#define GST_VA_DEVICE(obj)    ((GstVaDevice *)(obj))
-
-typedef struct
-{
-  GstMiniObject mini_object;
-
-  GstVaDisplay *display;
-  gchar *render_device_path;
-} GstVaDevice;
-
-GType                 gst_va_device_get_type              (void);
-GList *               gst_va_device_find_devices          (void);
-void                  gst_va_device_list_free             (GList * devices);
-
-G_END_DECLS
+#include <gst/va/gstvadisplay.h>
+#include <gst/va/gstvadisplay_drm.h>
+#include <gst/va/gstvadisplay_wrapped.h>
+#include <gst/va/gstvautils.h>

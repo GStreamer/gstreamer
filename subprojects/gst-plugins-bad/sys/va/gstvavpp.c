@@ -68,7 +68,6 @@
 #include "gstvavpp.h"
 
 #include <gst/video/video.h>
-#include <gst/va/gstvautils.h>
 
 #include <va/va_drmcommon.h>
 

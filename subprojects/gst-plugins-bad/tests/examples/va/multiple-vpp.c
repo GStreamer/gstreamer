@@ -4,7 +4,7 @@
 #include <gst/video/video.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 #include <gst/controller/gstdirectcontrolbinding.h>
-#include <gst/va/gstvadisplay.h>
+#include <gst/va/gstva.h>
 
 #define CHANGE_DIR_WITH_EVENT 0
 

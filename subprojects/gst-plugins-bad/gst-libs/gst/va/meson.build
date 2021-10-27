@@ -6,6 +6,7 @@ va_sources = [
 ]
 
 va_headers = [
+  'gstva.h',
   'gstvadisplay.h',
   'gstvadisplay_drm.h',
   'gstvadisplay_wrapped.h',
