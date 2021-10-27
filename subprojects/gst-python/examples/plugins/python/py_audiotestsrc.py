@@ -174,7 +174,7 @@ class AudioTestSrc(GstBase.BaseSrc):
                     array[:] = 0
         except Exception as e:
             Gst.error("Mapping error: %s" % e)
-            return Gst.FlowReturn.ERROR
+            return (Gst.FlowReturn.ERROR, None)
 
         buf.offset = self.next_sample
         buf.offset_end = next_sample
