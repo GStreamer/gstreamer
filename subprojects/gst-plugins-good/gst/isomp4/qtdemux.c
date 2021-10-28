@@ -5677,6 +5677,7 @@ static GstBuffer *
 gst_qtdemux_process_buffer_clcp (GstQTDemux * qtdemux, QtDemuxStream * stream,
     GstBuffer * buf)
 {
+  GstBuffer *outbuf = NULL;
   GstMapInfo map;
   guint8 *cc;
   gsize cclen = 0;
@@ -5694,14 +5695,15 @@ gst_qtdemux_process_buffer_clcp (GstQTDemux * qtdemux, QtDemuxStream * stream,
    * [cdat],[cdt2] or [ccdp] atom */
   cc = extract_cc_from_data (stream, map.data, map.size, &cclen);
   gst_buffer_unmap (buf, &map);
-  gst_buffer_unref (buf);
   if (cc) {
-    buf = _gst_buffer_new_wrapped (cc, cclen, g_free);
+    outbuf = _gst_buffer_new_wrapped (cc, cclen, g_free);
+    gst_buffer_copy_into (outbuf, buf, GST_BUFFER_COPY_METADATA, 0, -1);
   } else {
     /* Conversion failed or there's nothing */
-    buf = NULL;
   }
-  return buf;
+  gst_buffer_unref (buf);
+
+  return outbuf;
 }
 
 /* DVD subpicture specific sample handling.
@@ -5733,6 +5735,7 @@ static GstBuffer *
 gst_qtdemux_process_buffer_text (GstQTDemux * qtdemux, QtDemuxStream * stream,
     GstBuffer * buf)
 {
+  GstBuffer *outbuf = NULL;
   GstMapInfo map;
   guint nsize = 0;
   gchar *str;
@@ -5762,18 +5765,18 @@ gst_qtdemux_process_buffer_text (GstQTDemux * qtdemux, QtDemuxStream * stream,
    * no other encoding expected */
   str = gst_tag_freeform_string_to_utf8 ((gchar *) map.data + 2, nsize, NULL);
   gst_buffer_unmap (buf, &map);
+
   if (str) {
-    gst_buffer_unref (buf);
-    buf = _gst_buffer_new_wrapped (str, strlen (str), g_free);
+    outbuf = _gst_buffer_new_wrapped (str, strlen (str), g_free);
+    gst_buffer_copy_into (outbuf, buf, GST_BUFFER_COPY_METADATA, 0, -1);
   } else {
     /* this should not really happen unless the subtitle is corrupted */
-    gst_buffer_unref (buf);
-    buf = NULL;
   }
+  gst_buffer_unref (buf);
 
   /* FIXME ? convert optional subsequent style info to markup */
 
-  return buf;
+  return outbuf;
 }
 
 /* WebVTT sample handling according to 14496-30 */
