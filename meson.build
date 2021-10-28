@@ -40,10 +40,10 @@ ensure_no_strawberry_perl = '''
 import os
 assert(r'Strawberry\perl\bin' not in os.environ['PATH'])
 '''
-if build_system == 'windows'
+if build_system == 'windows' and meson.version().version_compare('<0.60.0')
   cmdres = run_command(python3, '-c', ensure_no_strawberry_perl)
   if cmdres.returncode() != 0
-    error('You have Strawberry Perl in PATH which is known to cause build issues with gst-build. Please remove it from PATH or uninstall it.')
+    error('You have Strawberry Perl in PATH which is known to cause build issues with Meson < 0.60.0. Please remove it from PATH, uninstall it, or upgrade Meson.')
   endif
 endif
 
