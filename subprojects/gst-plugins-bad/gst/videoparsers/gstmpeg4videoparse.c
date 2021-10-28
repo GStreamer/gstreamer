@@ -797,26 +797,30 @@ gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
         /* we need to send config now first */
         GST_INFO_OBJECT (parse, "inserting config in stream");
-        gst_buffer_map (mp4vparse->config, &cmap, GST_MAP_READ);
-        diffconf = (gst_buffer_get_size (buffer) < cmap.size)
-            || gst_buffer_memcmp (buffer, 0, cmap.data, cmap.size);
-        csize = cmap.size;
-        gst_buffer_unmap (mp4vparse->config, &cmap);
+        if (mp4vparse->config != NULL
+            && gst_buffer_map (mp4vparse->config, &cmap, GST_MAP_READ)) {
+          diffconf = (gst_buffer_get_size (buffer) < cmap.size)
+              || gst_buffer_memcmp (buffer, 0, cmap.data, cmap.size);
+          csize = cmap.size;
+          gst_buffer_unmap (mp4vparse->config, &cmap);
 
-        /* avoid inserting duplicate config */
-        if (diffconf) {
-          GstBuffer *superbuf;
+          /* avoid inserting duplicate config */
+          if (diffconf) {
+            GstBuffer *superbuf;
 
-          /* insert header */
-          superbuf =
-              gst_buffer_append (gst_buffer_ref (mp4vparse->config),
-              gst_buffer_ref (buffer));
-          gst_buffer_copy_into (superbuf, buffer, GST_BUFFER_COPY_METADATA, 0,
-              csize);
-          gst_buffer_replace (&frame->out_buffer, superbuf);
-          gst_buffer_unref (superbuf);
+            /* insert header */
+            superbuf =
+                gst_buffer_append (gst_buffer_ref (mp4vparse->config),
+                gst_buffer_ref (buffer));
+            gst_buffer_copy_into (superbuf, buffer, GST_BUFFER_COPY_METADATA, 0,
+                csize);
+            gst_buffer_replace (&frame->out_buffer, superbuf);
+            gst_buffer_unref (superbuf);
+          } else {
+            GST_INFO_OBJECT (parse, "... but avoiding duplication");
+          }
         } else {
-          GST_INFO_OBJECT (parse, "... but avoiding duplication");
+          GST_WARNING_OBJECT (parse, "No config received yet");
         }
 
         if (G_UNLIKELY (timestamp != -1)) {
