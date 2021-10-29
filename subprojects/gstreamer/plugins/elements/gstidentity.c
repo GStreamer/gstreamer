@@ -480,19 +480,34 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_GAP &&
       trans->have_segment && trans->segment.format == GST_FORMAT_TIME) {
-    GstClockTime start, dur;
+    GstClockTime start, dur, old_start;
 
-    gst_event_parse_gap (event, &start, &dur);
-    if (GST_CLOCK_TIME_IS_VALID (start)) {
-      start = gst_segment_to_running_time (&trans->segment,
-          GST_FORMAT_TIME, start);
+    gst_event_parse_gap (event, &old_start, &dur);
 
-      gst_identity_do_sync (identity, start);
+    start = gst_segment_to_running_time (&trans->segment,
+        GST_FORMAT_TIME, old_start);
 
-      /* also transform GAP timestamp similar to buffer timestamps */
-      if (identity->single_segment) {
+    gst_identity_do_sync (identity,
+        GST_CLOCK_TIME_IS_VALID (start) ? start : 0);
+
+    /* also transform GAP timestamp similar to buffer timestamps */
+    if (identity->single_segment) {
+      guint64 clip_start, clip_stop;
+      if (GST_CLOCK_TIME_IS_VALID (start)) {
         gst_event_unref (event);
         event = gst_event_new_gap (start, dur);
+      } else if (GST_CLOCK_TIME_IS_VALID (dur) &&
+          gst_segment_clip (&trans->segment, GST_FORMAT_TIME, old_start,
+              old_start + dur, &clip_start, &clip_stop)) {
+        gst_event_unref (event);
+        event = gst_event_new_gap (clip_start, clip_stop - clip_start);
+      } else {
+        /* Gap event is completely outside the segment, drop it */
+        GST_DEBUG_OBJECT (identity,
+            "Dropping GAP event outside segment: %" GST_PTR_FORMAT, event);
+        gst_event_unref (event);
+        ret = TRUE;
+        goto done;
       }
     }
   }
