@@ -511,7 +511,20 @@ gst_alpha_combine_sink_query (GstPad * pad, GstObject * object,
   switch (query->type) {
     case GST_QUERY_ALLOCATION:
     {
-      gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+      int i;
+
+      if (!gst_pad_query_default (pad, object, query))
+        return FALSE;
+
+      /* Ensure NULL pool because it cannot be shared between the 2 decoders.
+       * Ideally, we should cache the downstream query and use it for both
+       * decoders, but it is hard to know when we should refresh it */
+      for (i = 0; i < gst_query_get_n_allocation_pools (query); i++) {
+        guint size = 0, min = 0, max = 0;
+        gst_query_parse_nth_allocation_pool (query, i, NULL, &size, &min, &max);
+        gst_query_set_nth_allocation_pool (query, i, NULL, size, min, max);
+      }
+
       return TRUE;
       break;
     }
@@ -619,6 +632,7 @@ gst_alpha_combine_init (GstAlphaCombine * self)
   GST_PAD_SET_PROXY_SCHEDULING (self->src_pad);
 
   GST_PAD_SET_PROXY_ALLOCATION (self->sink_pad);
+  GST_PAD_SET_PROXY_ALLOCATION (self->alpha_pad);
 
   gst_pad_set_chain_function (self->sink_pad, gst_alpha_combine_sink_chain);
   gst_pad_set_chain_function (self->alpha_pad, gst_alpha_combine_alpha_chain);
