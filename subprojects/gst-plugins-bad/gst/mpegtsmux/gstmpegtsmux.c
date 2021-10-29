@@ -76,6 +76,9 @@
  *
  * {{ tests/examples/mpegts/ts-section-writer.c }}
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "gstmpegtsmux.h"
 #include <string.h>

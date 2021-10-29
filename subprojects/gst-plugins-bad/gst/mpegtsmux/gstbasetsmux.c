@@ -65,6 +65,9 @@
  *
  * SPDX-License-Identifier: MPL-1.1 OR MIT OR LGPL-2.0-or-later
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -1818,7 +1821,7 @@ handle_scte35_section (GstBaseTsMux * mux, GstEvent * event,
         GSTTIME_TO_MPEGTIME (gst_event_get_running_time_offset (event));
 
     pts_adjust &= 0x1ffffffff;
-    section_data = g_memdup (section->data, section->section_length);
+    section_data = g_memdup2 (section->data, section->section_length);
     section_data[4] |= pts_adjust >> 32;
     section_data[5] = pts_adjust >> 24;
     section_data[6] = pts_adjust >> 16;

@@ -98,8 +98,8 @@ GST_START_TEST (test_rtphdrext_colorspace_onebyte)
 
   gst_harness_set_src_caps (h, src_caps);
 
-  gst_harness_push (h, gst_buffer_new_wrapped (g_memdup (vp8_payload,
-              sizeof (vp8_payload)), sizeof (vp8_payload)));
+  gst_harness_push (h,
+      gst_buffer_new_memdup (vp8_payload, sizeof (vp8_payload)));
 
   /* verify depayloader correctly reconstructs colorspace information in
    * its srccaps. */
@@ -192,8 +192,8 @@ GST_START_TEST (test_rtphdrext_colorspace_twobyte)
 
   gst_harness_set_src_caps (h, src_caps);
 
-  gst_harness_push (h, gst_buffer_new_wrapped (g_memdup (vp8_payload,
-              sizeof (vp8_payload)), sizeof (vp8_payload)));
+  gst_harness_push (h,
+      gst_buffer_new_memdup (vp8_payload, sizeof (vp8_payload)));
 
   /* verify depayloader correctly reconstructs colorspace information in
    * its srccaps. */
