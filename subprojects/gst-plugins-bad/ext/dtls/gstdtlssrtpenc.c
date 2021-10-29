@@ -268,12 +268,21 @@ gst_dtls_srtp_enc_init (GstDtlsSrtpEnc * self)
       NULL, auth_enum_class, NULL);
 }
 
+#if GLIB_CHECK_VERSION(2,68,0)
+#define binding_get_source(b) g_binding_dup_source(b)
+#define unref_source(s) G_STMT_START { if(s) g_object_unref(s); } G_STMT_END
+#else
+#define binding_get_source(b) g_binding_get_source(b)
+#define unref_source(s)         /* no op */
+#endif
+
 static gboolean
 transform_enum (GBinding * binding, const GValue * source_value,
     GValue * target_value, GEnumClass * enum_class)
 {
   GEnumValue *enum_value;
   const gchar *nick;
+  GObject *bind_src;
 
   nick = g_value_get_string (source_value);
   g_return_val_if_fail (nick, FALSE);
@@ -281,8 +290,12 @@ transform_enum (GBinding * binding, const GValue * source_value,
   enum_value = g_enum_get_value_by_nick (enum_class, nick);
   g_return_val_if_fail (enum_value, FALSE);
 
-  GST_DEBUG_OBJECT (g_binding_get_source (binding),
+  bind_src = binding_get_source (binding);
+
+  GST_DEBUG_OBJECT (bind_src,
       "transforming enum from %s to %d", nick, enum_value->value);
+
+  unref_source (bind_src);
 
   g_value_set_enum (target_value, enum_value->value);
 
