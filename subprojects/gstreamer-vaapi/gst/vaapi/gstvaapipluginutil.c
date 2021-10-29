@@ -1120,7 +1120,9 @@ gst_vaapi_build_caps_from_formats (GArray * formats, gint min_width,
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE));
 
   if (gst_vaapi_mem_type_supports (mem_types,
-          GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF)) {
+          GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF) ||
+      gst_vaapi_mem_type_supports (mem_types,
+          GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF2)) {
     dma_caps = gst_caps_copy (raw_caps);
     gst_caps_set_features_simple (dma_caps,
         gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
