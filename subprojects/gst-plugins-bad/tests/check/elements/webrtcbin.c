@@ -318,8 +318,9 @@ _bus_watch (GstBus * bus, GstMessage * msg, struct test_webrtc *t)
         gst_message_parse_state_changed (msg, &old, &new, &pending);
 
         {
-          gchar *dump_name = g_strconcat ("%s-state_changed-",
-              GST_OBJECT_NAME (msg->src), gst_element_state_get_name (old), "_",
+          gchar *dump_name =
+              g_strconcat (GST_OBJECT_NAME (msg->src), "-state_changed-",
+              gst_element_state_get_name (old), "_",
               gst_element_state_get_name (new), NULL);
           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (msg->src),
               GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
@@ -333,13 +334,11 @@ _bus_watch (GstBus * bus, GstMessage * msg, struct test_webrtc *t)
 
       {
         gchar *dump_name;
-        dump_name =
-            g_strconcat ("%s-error", GST_OBJECT_NAME (t->webrtc1), NULL);
+        dump_name = g_strconcat (GST_OBJECT_NAME (t->webrtc1), "-error", NULL);
         GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (t->webrtc1),
             GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
         g_free (dump_name);
-        dump_name =
-            g_strconcat ("%s-error", GST_OBJECT_NAME (t->webrtc2), NULL);
+        dump_name = g_strconcat (GST_OBJECT_NAME (t->webrtc2), "-error", NULL);
         GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (t->webrtc2),
             GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
         g_free (dump_name);
