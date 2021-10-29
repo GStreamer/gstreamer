@@ -30,6 +30,7 @@ static GMainLoop *loop = NULL;
 static gboolean visible = FALSE;
 static HWND hwnd = NULL;
 static gboolean set_handle_on_request = FALSE;
+static gboolean test_reuse = FALSE;
 
 static LRESULT CALLBACK
 window_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -115,6 +116,8 @@ bus_sync_handler (GstBus * bus, GstMessage * msg, gpointer user_data)
       g_clear_error (&err);
       g_free (dbg);
 
+      test_reuse = FALSE;
+
       g_main_loop_quit (loop);
       break;
     }
@@ -144,6 +147,9 @@ main (gint argc, gchar ** argv)
     ,
     {"set-handle-on-request", 0, 0, G_OPTION_ARG_NONE, &set_handle_on_request,
         "Set window handle on \"prepare-window-handle\" message", NULL}
+    ,
+    {"repeat", 0, 0, G_OPTION_ARG_NONE, &test_reuse,
+        "Repeat and reuse pipeline per EOS", NULL}
     ,
     {NULL}
   };
@@ -218,22 +224,25 @@ main (gint argc, gchar ** argv)
     gst_println ("Will set window handle on \"prepare-window-handle\" message");
   }
 
-  g_object_set (playbin, "uri", uri, NULL);
+  gst_bus_add_watch (GST_ELEMENT_BUS (playbin), bus_msg, playbin);
   gst_bus_set_sync_handler (GST_ELEMENT_BUS (playbin),
       bus_sync_handler, NULL, NULL);
-  gst_bus_add_watch (GST_ELEMENT_BUS (playbin), bus_msg, playbin);
+  g_object_set (playbin, "uri", uri, NULL);
 
-  if (gst_element_set_state (playbin,
-          GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE) {
-    gst_printerrln ("Pipeline doesn't want to pause");
-    gst_bus_remove_watch (GST_ELEMENT_BUS (playbin));
+  do {
+    if (gst_element_set_state (playbin,
+            GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE) {
+      gst_printerrln ("Pipeline doesn't want to pause");
+      gst_bus_remove_watch (GST_ELEMENT_BUS (playbin));
 
-    exitcode = 1;
-    goto terminate;
-  }
+      exitcode = 1;
+      goto terminate;
+    }
 
-  g_main_loop_run (loop);
-  gst_element_set_state (playbin, GST_STATE_NULL);
+    g_main_loop_run (loop);
+    gst_element_set_state (playbin, GST_STATE_NULL);
+  } while (test_reuse);
+
   gst_bus_remove_watch (GST_ELEMENT_BUS (playbin));
 
 terminate:
