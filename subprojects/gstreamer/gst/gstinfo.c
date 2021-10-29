@@ -1705,10 +1705,14 @@ gst_debug_get_default_threshold (void)
   return (GstDebugLevel) g_atomic_int_get (&__default_level);
 }
 
+#if !GLIB_CHECK_VERSION(2,70,0)
+#define g_pattern_spec_match_string g_pattern_match_string
+#endif
+
 static gboolean
 gst_debug_apply_entry (GstDebugCategory * cat, LevelNameEntry * entry)
 {
-  if (!g_pattern_match_string (entry->pat, cat->name))
+  if (!g_pattern_spec_match_string (entry->pat, cat->name))
     return FALSE;
 
   if (gst_is_initialized ())

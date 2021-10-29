@@ -2483,6 +2483,10 @@ connect_bus_signals (PlaybackApp * app)
   gst_object_unref (bus);
 }
 
+#if !GLIB_CHECK_VERSION(2,70,0)
+#define g_pattern_spec_match_string g_pattern_match_string
+#endif
+
 /* Return GList of paths described in location string */
 static GList *
 handle_wildcards (const gchar * location)
@@ -2502,7 +2506,7 @@ handle_wildcards (const gchar * location)
   }
 
   while ((name = g_dir_read_name (dir)) != NULL) {
-    if (g_pattern_match_string (pspec, name)) {
+    if (g_pattern_spec_match_string (pspec, name)) {
       res = g_list_append (res, g_strjoin ("/", path, name, NULL));
       g_print ("  found clip %s\n", name);
     }

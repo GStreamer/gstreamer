@@ -516,6 +516,10 @@ gst_validate_runner_get_default_reporting_level (GstValidateRunner * runner)
   return runner->priv->default_level;
 }
 
+#if !GLIB_CHECK_VERSION(2,70,0)
+#define g_pattern_spec_match_string g_pattern_match_string
+#endif
+
 /*
  * gst_validate_runner_get_reporting_level_for_name:
  *
@@ -538,7 +542,7 @@ gst_validate_runner_get_reporting_level_for_name (GstValidateRunner * runner,
   _replace_double_colons (fixed_name);
   for (tmp = runner->priv->report_pattern_levels; tmp; tmp = tmp->next) {
     PatternLevel *pattern_level = (PatternLevel *) tmp->data;
-    if (g_pattern_match_string (pattern_level->pattern, fixed_name)) {
+    if (g_pattern_spec_match_string (pattern_level->pattern, fixed_name)) {
       g_free (fixed_name);
 
       return pattern_level->level;
