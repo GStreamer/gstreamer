@@ -272,10 +272,27 @@ static guint16
 rtp_twcc_manager_set_send_twcc_seqnum (RTPTWCCManager * twcc,
     RTPPacketInfo * pinfo)
 {
-  guint16 seqnum = twcc->send_seqnum++;
-  pinfo->data = gst_buffer_make_writable (pinfo->data);
-  _set_twcc_seqnum_data (pinfo->data, twcc->send_ext_id, seqnum);
-  return seqnum;
+  guint16 first_seqnum = twcc->send_seqnum;
+
+  if (GST_IS_BUFFER_LIST (pinfo->data)) {
+    GstBufferList *list;
+    guint i = 0;
+
+    pinfo->data = gst_buffer_list_make_writable (pinfo->data);
+
+    list = GST_BUFFER_LIST (pinfo->data);
+
+    for (i = 0; i < gst_buffer_list_length (list); i++) {
+      GstBuffer *buffer = gst_buffer_list_get_writable (list, i);
+
+      _set_twcc_seqnum_data (buffer, twcc->send_ext_id, twcc->send_seqnum++);
+    }
+  } else {
+    pinfo->data = gst_buffer_make_writable (pinfo->data);
+    _set_twcc_seqnum_data (pinfo->data, twcc->send_ext_id, twcc->send_seqnum++);
+  }
+
+  return first_seqnum;
 }
 
 static gint32
