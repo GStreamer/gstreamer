@@ -62,7 +62,10 @@ static const char gst_vaapipostproc_sink_caps_str[] =
   GST_VAAPI_MAKE_SURFACE_CAPS ", "
   GST_CAPS_INTERLACED_MODES "; "
   GST_VIDEO_CAPS_MAKE (GST_VAAPI_FORMATS_ALL) ", "
-   GST_CAPS_INTERLACED_MODES;
+  GST_CAPS_INTERLACED_MODES "; "
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
+      GST_VAAPI_FORMATS_ALL) ", "
+  GST_CAPS_INTERLACED_MODES;
 /* *INDENT-ON* */
 
 /* *INDENT-OFF* */
@@ -74,7 +77,8 @@ static const char gst_vaapipostproc_src_caps_str[] =
 #endif
   GST_VIDEO_CAPS_MAKE (GST_VAAPI_FORMATS_ALL) ", "
   GST_CAPS_INTERLACED_MODES "; "
-  GST_VAAPI_MAKE_DMABUF_CAPS;
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
+      GST_VAAPI_FORMATS_ALL);
 /* *INDENT-ON* */
 
 /* *INDENT-OFF* */
@@ -287,7 +291,8 @@ gst_vaapipostproc_ensure_filter_caps (GstVaapiPostproc * postproc)
   }
 
   if (!postproc->filter_formats) {
-    postproc->filter_formats = gst_vaapi_filter_get_formats (postproc->filter);
+    postproc->filter_formats = gst_vaapi_filter_get_formats
+        (postproc->filter, NULL, NULL, NULL, NULL);
     if (!postproc->filter_formats)
       return FALSE;
   }
@@ -1292,50 +1297,46 @@ gst_vaapipostproc_update_src_caps (GstVaapiPostproc * postproc, GstCaps * caps,
 static gboolean
 ensure_allowed_sinkpad_caps (GstVaapiPostproc * postproc)
 {
-  GstCaps *out_caps, *raw_caps;
-  guint i, num_structures;
+  GstCaps *out_caps = NULL;
+  guint mem_types;
+  gint min_width, min_height, max_width, max_height;
+  GArray *mem_formats = NULL;
+  gboolean ret = TRUE;
 
-  if (postproc->allowed_sinkpad_caps)
-    return TRUE;
+  if (postproc->allowed_sinkpad_caps) {
+    ret = TRUE;
+    goto out;
+  }
 
-  if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (postproc))
-    return FALSE;
+  if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (postproc) ||
+      !gst_vaapipostproc_ensure_filter_caps (postproc)) {
+    ret = FALSE;
+    goto out;
+  }
 
-  /* Create VA caps */
-  out_caps = gst_caps_from_string (GST_VAAPI_MAKE_SURFACE_CAPS ", "
-      GST_CAPS_INTERLACED_MODES);
+  mem_types = gst_vaapi_filter_get_memory_types (postproc->filter);
+  mem_formats = gst_vaapi_filter_get_formats (postproc->filter, &min_width,
+      &min_height, &max_width, &max_height);
+
+  out_caps = gst_vaapi_build_caps_from_formats (mem_formats, min_width,
+      min_height, max_width, max_height, mem_types);
   if (!out_caps) {
     GST_WARNING_OBJECT (postproc, "failed to create VA sink caps");
-    return FALSE;
-  }
-
-  raw_caps = gst_vaapi_plugin_base_get_allowed_sinkpad_raw_caps
-      (GST_VAAPI_PLUGIN_BASE (postproc));
-  if (!raw_caps) {
-    gst_caps_unref (out_caps);
-    GST_WARNING_OBJECT (postproc, "failed to create YUV sink caps");
-    return FALSE;
-  }
-
-  out_caps = gst_caps_make_writable (out_caps);
-  gst_caps_append (out_caps, gst_caps_copy (raw_caps));
-
-  num_structures = gst_caps_get_size (out_caps);
-  for (i = 0; i < num_structures; i++) {
-    GstStructure *structure;
-
-    structure = gst_caps_get_structure (out_caps, i);
-    if (!structure)
-      continue;
-
-    if (postproc->filter)
-      gst_vaapi_filter_append_caps (postproc->filter, structure);
+    ret = FALSE;
+    goto out;
   }
 
   postproc->allowed_sinkpad_caps = out_caps;
+  out_caps = NULL;
+  GST_INFO_OBJECT (postproc, "postproc sink allowed caps is %" GST_PTR_FORMAT,
+      postproc->allowed_sinkpad_caps);
+out:
+  if (out_caps)
+    gst_caps_unref (out_caps);
+  if (mem_formats)
+    g_array_unref (mem_formats);
 
-  /* XXX: append VA/VPP filters */
-  return TRUE;
+  return ret;
 }
 
 /* Fixup output caps so that to reflect the supported set of pixel formats */

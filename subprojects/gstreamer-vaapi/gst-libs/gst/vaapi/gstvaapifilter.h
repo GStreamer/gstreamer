@@ -211,7 +211,8 @@ gst_vaapi_filter_process (GstVaapiFilter * filter,
     GstVaapiSurface * src_surface, GstVaapiSurface * dst_surface, guint flags);
 
 GArray *
-gst_vaapi_filter_get_formats (GstVaapiFilter * filter);
+gst_vaapi_filter_get_formats (GstVaapiFilter * filter, gint * min_width,
+    gint * min_height, gint * max_width, gint * max_height);
 
 gboolean
 gst_vaapi_filter_set_format (GstVaapiFilter * filter, GstVideoFormat format);

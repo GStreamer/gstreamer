@@ -188,7 +188,8 @@ dump_operations (GstVaapiFilter * filter)
 static void
 dump_formats (GstVaapiFilter * filter)
 {
-  GArray *const formats = gst_vaapi_filter_get_formats (filter);
+  GArray *const formats = gst_vaapi_filter_get_formats (filter,
+      NULL, NULL, NULL, NULL);
   guint i;
 
   if (!formats)
