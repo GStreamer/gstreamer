@@ -5,6 +5,10 @@ __pycache__
 prefix/
 .gdbinit
 
+# Editor/IDE spcific
+.vscode/
+.vscode-server/
+
 # Symlinks
 /gstreamer
 /gst-plugins-base
