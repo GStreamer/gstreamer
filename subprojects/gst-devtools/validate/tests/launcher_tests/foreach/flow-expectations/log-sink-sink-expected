@@ -1,24 +1,24 @@
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
-event caps: video/x-raw, format=(string)AYUV64, width=(int)320, height=(int)240, framerate=(fraction)10/1, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive;
-event caps: video/x-raw, format=(string)AYUV64, width=(int)320, height=(int)240, framerate=(fraction)10/1, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive;
+event caps: video/x-raw, format=(string)ABGR64_LE, width=(int)320, height=(int)240, framerate=(fraction)10/1, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive;
+event caps: video/x-raw, format=(string)ABGR64_LE, width=(int)320, height=(int)240, framerate=(fraction)10/1, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, interlace-mode=(string)progressive;
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
-buffer: checksum=5d4a9a9aa2038170a66bb2c675a16672fe70efbe, pts=0:00:00.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=5d4a9a9aa2038170a66bb2c675a16672fe70efbe, pts=0:00:00.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=c2c3ac5edd6cd9060ffce7e1fc012b390ac135d7, pts=0:00:00.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=c2c3ac5edd6cd9060ffce7e1fc012b390ac135d7, pts=0:00:00.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.100000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.100000000, base=0:00:00.000000000, position=0:00:00.100000000
 event segment: format=TIME, start=0:00:00.100000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.100000000, base=0:00:00.000000000, position=0:00:00.100000000
-buffer: checksum=ace920a5c387c5d216c7bf4fdc83df6ac9d2656e, pts=0:00:00.100000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=ace920a5c387c5d216c7bf4fdc83df6ac9d2656e, pts=0:00:00.100000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=eb34fe4e12ed160eee179fe802b0a876a8df7489, pts=0:00:00.100000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=eb34fe4e12ed160eee179fe802b0a876a8df7489, pts=0:00:00.100000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.200000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.200000000, base=0:00:00.000000000, position=0:00:00.200000000
 event segment: format=TIME, start=0:00:00.200000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.200000000, base=0:00:00.000000000, position=0:00:00.200000000
-buffer: checksum=b4a5b43f70ad1a1adb1f5e414b39d6bfb5718373, pts=0:00:00.200000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=b4a5b43f70ad1a1adb1f5e414b39d6bfb5718373, pts=0:00:00.200000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=5ece74f070b26a2d2f81818ea0c788de8afb684c, pts=0:00:00.200000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=5ece74f070b26a2d2f81818ea0c788de8afb684c, pts=0:00:00.200000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
