@@ -241,7 +241,7 @@ gst_video_orientation_method_get_type (void)
 /**
  * gst_video_orientation_from_tag:
  * @taglist: A #GstTagList
- * @method: The location where to return the orientation.
+ * @method: (out): The location where to return the orientation.
  *
  * Parses the "image-orientation" tag and transforms it into the
  * #GstVideoOrientationMethod enum.
