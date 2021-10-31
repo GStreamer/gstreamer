@@ -159,7 +159,8 @@ static GstStaticCaps sink_caps =
 GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ NV12, I420 }"));
 #else
 static GstStaticCaps sink_caps =
-GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV64, UYVY, NV12, I420 }"));
+GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+    ("{ AYUV64, UYVY, NV12, I420, RGBA64_LE, ARGB64_BE }"));
 #endif
 
 static void
@@ -1549,12 +1550,18 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
       }
 
       switch (GST_VIDEO_INFO_FORMAT (&self->video_info)) {
+        case GST_VIDEO_FORMAT_ARGB64_BE:
+          pixel_format_type = kCVPixelFormatType_64ARGB;
+          break;
         case GST_VIDEO_FORMAT_AYUV64:
 /* This is fine for now because Apple only ships LE devices */
 #if G_BYTE_ORDER != G_LITTLE_ENDIAN
 #error "AYUV64 is NE but kCVPixelFormatType_4444AYpCbCr16 is LE"
 #endif
           pixel_format_type = kCVPixelFormatType_4444AYpCbCr16;
+          break;
+        case GST_VIDEO_FORMAT_RGBA64_LE:
+          pixel_format_type = kCVPixelFormatType_64RGBALE;
           break;
         case GST_VIDEO_FORMAT_I420:
           pixel_format_type = kCVPixelFormatType_420YpCbCr8Planar;

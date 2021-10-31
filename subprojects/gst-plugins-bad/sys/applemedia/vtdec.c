@@ -117,7 +117,7 @@ const CFStringRef
 CFSTR ("RequireHardwareAcceleratedVideoDecoder");
 #endif
 
-#define VIDEO_SRC_CAPS_FORMATS "{ NV12, AYUV64 }"
+#define VIDEO_SRC_CAPS_FORMATS "{ NV12, AYUV64, RGBA64_LE, ARGB64_BE }"
 
 #define VIDEO_SRC_CAPS_NATIVE                                           \
     GST_VIDEO_CAPS_MAKE(VIDEO_SRC_CAPS_FORMATS) ";"                     \
@@ -269,6 +269,8 @@ get_preferred_video_format (GstStructure * s, gboolean prores)
           return vfmt;
         break;
       case GST_VIDEO_FORMAT_AYUV64:
+      case GST_VIDEO_FORMAT_ARGB64_BE:
+      case GST_VIDEO_FORMAT_RGBA64_LE:
         if (prores)
           return vfmt;
         break;
@@ -654,6 +656,12 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
 #error "AYUV64 is NE but kCVPixelFormatType_4444AYpCbCr16 is LE"
 #endif
       cv_format = kCVPixelFormatType_4444AYpCbCr16;
+      break;
+    case GST_VIDEO_FORMAT_ARGB64_BE:
+      cv_format = kCVPixelFormatType_64ARGB;
+      break;
+    case GST_VIDEO_FORMAT_RGBA64_LE:
+      cv_format = kCVPixelFormatType_64RGBALE;
       break;
     default:
       g_warn_if_reached ();
