@@ -256,7 +256,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"RGBx"** sparse rgb packed into 32 bit, space last
+- **"RGBx"** sparse RGB packed into 32 bit, space last
 
 ```
        +--+--+--+--+ +--+--+--+--+
@@ -283,7 +283,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"BGRx"** sparse reverse rgb packed into 32 bit, space last
+- **"BGRx"** sparse reverse RGB packed into 32 bit, space last
 
 ```
        +--+--+--+--+ +--+--+--+--+
@@ -310,7 +310,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"xRGB"** sparse rgb packed into 32 bit, space first
+- **"xRGB"** sparse RGB packed into 32 bit, space first
 
 ```
        +--+--+--+--+ +--+--+--+--+
@@ -337,7 +337,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"xBGR"** sparse reverse rgb packed into 32 bit, space first
+- **"xBGR"** sparse reverse RGB packed into 32 bit, space first
 
 ```
        +--+--+--+--+ +--+--+--+--+
@@ -364,7 +364,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"RGBA"** rgb with alpha channel last
+- **"RGBA"** RGB with alpha channel last
 
 ```
        +--+--+--+--+ +--+--+--+--+
@@ -396,7 +396,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"BGRA"** reverse rgb with alpha channel last
+- **"BGRA"** reverse RGB with alpha channel last
 
 ```
        +--+--+--+--+ +--+--+--+--+
@@ -428,7 +428,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"ARGB"** rgb with alpha channel first
+- **"ARGB"** RGB with alpha channel first
 
 ```
        +--+--+--+--+ +--+--+--+--+
@@ -460,7 +460,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"ABGR"** reverse rgb with alpha channel first
+- **"ABGR"** reverse RGB with alpha channel first
 
 ```
        +--+--+--+--+ +--+--+--+--+
@@ -492,7 +492,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"RGB"** rgb
+- **"RGB"** RGB
 
 ```
        +--+--+--+ +--+--+--+
@@ -519,7 +519,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"BGR"** reverse rgb
+- **"BGR"** reverse RGB
 
 ```
        +--+--+--+ +--+--+--+
@@ -829,7 +829,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"RGB16"** rgb 5-6-5 bits per component
+- **"RGB16"** RGB 5-6-5 bits per component
 
 ```
        +--+--+--+ +--+--+--+
@@ -853,7 +853,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"BGR16"** reverse rgb 5-6-5 bits per component
+- **"BGR16"** reverse RGB 5-6-5 bits per component
 
 ```
        +--+--+--+ +--+--+--+
@@ -877,7 +877,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"RGB15"** rgb 5-5-5 bits per component
+- **"RGB15"** RGB 5-5-5 bits per component
 
 ```
        +--+--+--+ +--+--+--+
@@ -901,7 +901,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"BGR15"** reverse rgb 5-5-5 bits per component
+- **"BGR15"** reverse RGB 5-5-5 bits per component
 
 ```
        +--+--+--+ +--+--+--+
@@ -1089,7 +1089,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"ARGB64"** rgb with alpha channel first, 16 bits per channel
+- **"ARGB64"** RGB with alpha channel first, 16 bits per channel in native endianness
 
 ```
        +--+--+--+--+ +--+--+--+--+
@@ -1097,22 +1097,22 @@
        +--+--+--+--+ +--+--+--+--+
 
         Component 0: R
-          depth:           16 LE
+          depth:           16
           pstride:         8
           offset:          2
 
         Component 1: G
-          depth            16 LE
+          depth            16
           pstride:         8
           offset:          4
 
         Component 2: B
-          depth:           16 LE
+          depth:           16
           pstride:         8
           offset:          6
 
         Component 3: A
-          depth:           16 LE
+          depth:           16
           pstride:         8
           offset:          0
 
@@ -1121,7 +1121,7 @@
           default size:    rstride (image) * height
 ```
 
-- **"AYUV64"** packed 4:4:4 YUV with alpha channel, 16 bits per channel (A0-Y0-U0-V0 ...)
+- **"AYUV64"** packed 4:4:4 YUV with alpha channel, 16 bits per channel (A0-Y0-U0-V0 ...) in native endianness
 
 ```
        +--+--+--+--+ +--+--+--+--+
@@ -1129,22 +1129,22 @@
        +--+--+--+--+ +--+--+--+--+
 
         Component 0: Y
-          depth:           16 LE
+          depth:           16
           pstride:         8
           offset:          2
 
         Component 1: U
-          depth            16 LE
+          depth            16
           pstride:         8
           offset:          4
 
         Component 2: V
-          depth:           16 LE
+          depth:           16
           pstride:         8
           offset:          6
 
         Component 3: A
-          depth:           16 LE
+          depth:           16
           pstride:         8
           offset:          0
 
@@ -1494,3 +1494,259 @@
 ```
 - **"RGBP"** planar 4:4:4 RGB, R-G-B order, 8 bits per channel
 - **"BGRP"** planar 4:4:4 RGB, B-G-R order, 8 bits per channel
+
+- **"RGBA64\_LE"** RGB with alpha channel last, 16 bits per channel, LE
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |R0|G0|B0|A0| |R1|G1|B1|A1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           16 LE
+          pstride:         8
+          offset:          0
+
+        Component 1: G
+          depth            16 LE
+          pstride:         8
+          offset:          2
+
+        Component 2: B
+          depth:           16 LE
+          pstride:         8
+          offset:          4
+
+        Component 3: A
+          depth:           16 LE
+          pstride:         8
+          offset:          6
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
+
+- **"RGBA64\_BE"** RGB with alpha channel last, 16 bits per channel, BE
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |R0|G0|B0|A0| |R1|G1|B1|A1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           16 BE
+          pstride:         8
+          offset:          0
+
+        Component 1: G
+          depth            16 BE
+          pstride:         8
+          offset:          2
+
+        Component 2: B
+          depth:           16 BE
+          pstride:         8
+          offset:          4
+
+        Component 3: A
+          depth:           16 BE
+          pstride:         8
+          offset:          6
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
+
+- **"BGRA64\_LE"** reverse RGB with alpha channel last, 16 bits per channel, LE
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |B0|G0|R0|A0| |B1|G1|R1|A1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           16 LE
+          pstride:         8
+          offset:          4
+
+        Component 1: G
+          depth            16 LE
+          pstride:         8
+          offset:          2
+
+        Component 2: B
+          depth:           16 LE
+          pstride:         8
+          offset:          0
+
+        Component 3: A
+          depth:           16 LE
+          pstride:         8
+          offset:          6
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
+
+- **"BGRA64\_BE"** reverse RGB with alpha channel last, 16 bits per channel, BE
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |B0|G0|R0|A0| |B1|G1|R1|A1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           16 BE
+          pstride:         8
+          offset:          4
+
+        Component 1: G
+          depth            16 BE
+          pstride:         8
+          offset:          2
+
+        Component 2: B
+          depth:           16 BE
+          pstride:         8
+          offset:          0
+
+        Component 3: A
+          depth:           16 BE
+          pstride:         8
+          offset:          6
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
+
+- **"ARGB64\_LE"** RGB with alpha channel first, 16 bits per channel, LE
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |A0|R0|G0|B0| |A1|R1|G1|B1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           16 LE
+          pstride:         8
+          offset:          2
+
+        Component 1: G
+          depth            16 LE
+          pstride:         8
+          offset:          4
+
+        Component 2: B
+          depth:           16 LE
+          pstride:         8
+          offset:          6
+
+        Component 3: A
+          depth:           16 LE
+          pstride:         8
+          offset:          0
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
+
+- **"ARGB64\_BE"** RGB with alpha channel first, 16 bits per channel, BE
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |A0|R0|G0|B0| |A1|R1|G1|B1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           16 BE
+          pstride:         8
+          offset:          2
+
+        Component 1: G
+          depth            16 BE
+          pstride:         8
+          offset:          4
+
+        Component 2: B
+          depth:           16 BE
+          pstride:         8
+          offset:          6
+
+        Component 3: A
+          depth:           16 BE
+          pstride:         8
+          offset:          0
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
+
+- **"ABGR64\_LE"** reverse RGB with alpha channel first, 16 bits per channel, LE
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |A0|B0|G0|R0| |A1|B1|G1|R1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           16 LE
+          pstride:         8
+          offset:          6
+
+        Component 1: G
+          depth            16 LE
+          pstride:         8
+          offset:          4
+
+        Component 2: B
+          depth:           16 LE
+          pstride:         8
+          offset:          2
+
+        Component 3: A
+          depth:           16 LE
+          pstride:         8
+          offset:          0
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
+
+- **"ABGR64\_BE"** reverse RGB with alpha channel first, 16 bits per channel, BE
+
+```
+       +--+--+--+--+ +--+--+--+--+
+       |A0|B0|G0|R0| |A1|B1|G1|R1| ...
+       +--+--+--+--+ +--+--+--+--+
+
+        Component 0: R
+          depth:           16 BE
+          pstride:         8
+          offset:          6
+
+        Component 1: G
+          depth            16 BE
+          pstride:         8
+          offset:          4
+
+        Component 2: B
+          depth:           16 BE
+          pstride:         8
+          offset:          2
+
+        Component 3: A
+          depth:           16 BE
+          pstride:         8
+          offset:          0
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
