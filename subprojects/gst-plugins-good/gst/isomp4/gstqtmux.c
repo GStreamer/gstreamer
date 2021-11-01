@@ -2437,6 +2437,7 @@ gst_qt_mux_downstream_is_seekable (GstQTMux * qtmux)
   return seekable;
 }
 
+/* Must be called with object lock */
 static void
 gst_qt_mux_prepare_moov_recovery (GstQTMux * qtmux)
 {
@@ -2457,21 +2458,17 @@ gst_qt_mux_prepare_moov_recovery (GstQTMux * qtmux)
 
   gst_qt_mux_prepare_ftyp (qtmux, &ftyp, &prefix);
 
-  GST_OBJECT_LOCK (qtmux);
   if (!atoms_recov_write_headers (qtmux->moov_recov_file, ftyp, prefix,
           qtmux->moov, qtmux->timescale,
           g_list_length (GST_ELEMENT (qtmux)->sinkpads))) {
     GST_WARNING_OBJECT (qtmux, "Failed to write moov recovery file " "headers");
-    GST_OBJECT_UNLOCK (qtmux);
     goto fail;
   }
-  GST_OBJECT_UNLOCK (qtmux);
 
   atom_ftyp_free (ftyp);
   if (prefix)
     gst_buffer_unref (prefix);
 
-  GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *qpad = (GstQTMuxPad *) l->data;
     /* write info for each stream */
@@ -2482,7 +2479,6 @@ gst_qt_mux_prepare_moov_recovery (GstQTMux * qtmux)
       break;
     }
   }
-  GST_OBJECT_UNLOCK (qtmux);
 
   return;
 
