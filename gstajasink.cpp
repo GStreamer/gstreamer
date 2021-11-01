@@ -1737,16 +1737,13 @@ restart:
     guint16 start_frame = self->start_frame;
     guint16 end_frame = self->end_frame;
 
+    // If nothing was configured, work with a number of frames that is half
+    // the queue size and assume that all other channels work the same.
     if (start_frame == end_frame) {
-      guint16 num_frames = ::NTV2DeviceGetNumberFrameBuffers(self->device_id);
-      guint16 num_channels = ::NTV2DeviceGetNumFrameStores(self->device_id);
+      guint16 num_frames = self->queue_size / 2;
 
-      start_frame = self->channel * (num_frames / num_channels);
-      end_frame = ((self->channel + 1) * (num_frames / num_channels)) - 1;
-
-      // Don't configure too many frames here. It needs to be in relation to
-      // our input queue.
-      end_frame = MIN(start_frame + self->queue_size / 2, end_frame);
+      start_frame = self->channel * num_frames;
+      end_frame = (self->channel + 1) * num_frames - 1;
     }
 
     GST_DEBUG_OBJECT(
