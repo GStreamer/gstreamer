@@ -4597,6 +4597,18 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
           offset[p], obj->info.offset[p], p);
       need_fmt_update = TRUE;
     }
+
+    if (padded_height) {
+      guint fmt_height;
+
+      if (V4L2_TYPE_IS_MULTIPLANAR (obj->type))
+        fmt_height = obj->format.fmt.pix_mp.height;
+      else
+        fmt_height = obj->format.fmt.pix.height;
+
+      if (padded_height > fmt_height)
+        need_fmt_update = TRUE;
+    }
   }
 
   if (need_fmt_update) {
