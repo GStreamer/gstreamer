@@ -1458,6 +1458,12 @@ gst_gl_context_egl_fill_info (GstGLContext * context, GError ** error)
     goto failure;
   }
 
+  if (config_id == 0) {
+    GST_INFO_OBJECT (context, "egl config not available. ID is 0");
+    gst_object_unref (display_egl);
+    return TRUE;
+  }
+
   attrs[0] = EGL_CONFIG_ID;
   attrs[1] = config_id;
   attrs[2] = EGL_NONE;
