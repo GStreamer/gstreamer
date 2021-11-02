@@ -469,6 +469,12 @@ mpegts_base_add_program (MpegTSBase * base,
   }
   MPEGTS_BIT_SET (base->known_psi, pmt_pid);
 
+  /* Ensure the PMT PID was not used by some PES stream */
+  if (G_UNLIKELY (MPEGTS_BIT_IS_SET (base->is_pes, pmt_pid))) {
+    GST_DEBUG ("New program PMT PID was previously used by a PES stream");
+    MPEGTS_BIT_UNSET (base->is_pes, pmt_pid);
+  }
+
 
   g_ptr_array_add (base->programs, program);
 
@@ -1053,10 +1059,21 @@ mpegts_base_apply_pat (MpegTSBase * base, GstMpegtsSection * section)
   for (i = 0; i < pat->len; ++i) {
     GstMpegtsPatProgram *patp = g_ptr_array_index (pat, i);
 
+    GST_LOG ("Looking for program %d / 0x%04x", patp->program_number,
+        patp->network_or_program_map_PID);
     program = mpegts_base_get_program (base, patp->program_number);
     if (program) {
-      /* IF the program already existed, just check if the PMT PID changed */
-      if (program->pmt_pid != patp->network_or_program_map_PID) {
+      GST_LOG ("Program exists on pid 0x%04x", program->pmt_pid);
+      /* If the new PMT PID clashes with an existing known PES stream, we know
+       * it is not an update */
+      if (MPEGTS_BIT_IS_SET (base->is_pes, patp->network_or_program_map_PID)) {
+        GST_LOG ("Program is not an update");
+        program =
+            mpegts_base_add_program (base, patp->program_number,
+            patp->network_or_program_map_PID);
+      } else if (program->pmt_pid != patp->network_or_program_map_PID) {
+        /* IF the program already existed, just check if the PMT PID changed */
+        GST_LOG ("PMT is on a different PID");
         if (program->pmt_pid != G_MAXUINT16) {
           /* pmt pid changed */
           /* FIXME: when this happens it may still be pmt pid of another
@@ -1071,6 +1088,8 @@ mpegts_base_apply_pat (MpegTSBase * base, GstMpegtsSection * section)
               ("Refcounting issue. Setting twice a PMT PID (0x%04x) as know PSI",
               program->pmt_pid);
         MPEGTS_BIT_SET (base->known_psi, patp->network_or_program_map_PID);
+      } else {
+        GST_LOG ("Regular program update");
       }
     } else {
       /* Create a new program */
@@ -1097,9 +1116,14 @@ mpegts_base_apply_pat (MpegTSBase * base, GstMpegtsSection * section)
         continue;
       }
 
-      if (--program->patcount > 0)
+      GST_LOG ("Deactivating program %d / 0x%04x", patp->program_number,
+          patp->network_or_program_map_PID);
+
+      if (--program->patcount > 0) {
+        GST_LOG ("Referenced by new program, keeping");
         /* the program has been referenced by the new pat, keep it */
         continue;
+      }
 
       GST_INFO_OBJECT (base, "PAT removing program 0x%04x 0x%04x",
           patp->program_number, patp->network_or_program_map_PID);
