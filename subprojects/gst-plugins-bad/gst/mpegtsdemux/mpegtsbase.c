@@ -96,7 +96,7 @@ static gboolean mpegts_base_get_tags_from_eit (MpegTSBase * base,
     GstMpegtsSection * section);
 static gboolean mpegts_base_parse_atsc_mgt (MpegTSBase * base,
     GstMpegtsSection * section);
-static gboolean remove_each_program (gpointer key, MpegTSBaseProgram * program,
+static void remove_each_program (MpegTSBaseProgram * program,
     MpegTSBase * base);
 
 static void
@@ -241,8 +241,8 @@ mpegts_base_reset (MpegTSBase * base)
   base->seen_pat = FALSE;
   base->seek_offset = -1;
 
-  g_hash_table_foreach_remove (base->programs, (GHRFunc) remove_each_program,
-      base);
+  g_ptr_array_foreach (base->programs, (GFunc) remove_each_program, base);
+  g_ptr_array_remove_range (base->programs, 0, base->programs->len);
 
   base->streams_aware = GST_OBJECT_PARENT (base)
       && GST_OBJECT_FLAG_IS_SET (GST_OBJECT_PARENT (base),
@@ -269,8 +269,8 @@ mpegts_base_init (MpegTSBase * base)
 
   base->disposed = FALSE;
   base->packetizer = mpegts_packetizer_new ();
-  base->programs = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-      NULL, (GDestroyNotify) mpegts_base_free_program);
+  base->programs =
+      g_ptr_array_new_full (16, (GDestroyNotify) mpegts_base_free_program);
 
   base->parse_private_sections = FALSE;
   base->is_pes = g_new0 (guint8, 1024);
@@ -310,7 +310,7 @@ mpegts_base_finalize (GObject * object)
     g_ptr_array_unref (base->pat);
     base->pat = NULL;
   }
-  g_hash_table_destroy (base->programs);
+  g_ptr_array_free (base->programs, TRUE);
 
   gst_event_replace (&base->seek_event, NULL);
 
@@ -354,8 +354,7 @@ typedef struct
 } PIDLookup;
 
 static void
-foreach_pid_in_program (gpointer key, MpegTSBaseProgram * program,
-    PIDLookup * lookup)
+foreach_pid_in_program (MpegTSBaseProgram * program, PIDLookup * lookup)
 {
   if (!program->active)
     return;
@@ -370,8 +369,7 @@ mpegts_pid_in_active_programs (MpegTSBase * base, guint16 pid)
 
   lookup.res = FALSE;
   lookup.pid = pid;
-  g_hash_table_foreach (base->programs, (GHFunc) foreach_pid_in_program,
-      &lookup);
+  g_ptr_array_foreach (base->programs, (GFunc) foreach_pid_in_program, &lookup);
 
   return lookup.res;
 }
@@ -434,7 +432,7 @@ mpegts_base_new_program (MpegTSBase * base,
   MpegTSBaseProgram *program;
   gchar *upstream_id, *stream_id;
 
-  GST_DEBUG_OBJECT (base, "program_number : %d, pmt_pid : %d",
+  GST_DEBUG_OBJECT (base, "program_number : %d, pmt_pid : 0x%04x",
       program_number, pmt_pid);
 
   program = g_malloc0 (base->program_size);
@@ -459,7 +457,7 @@ mpegts_base_add_program (MpegTSBase * base,
 {
   MpegTSBaseProgram *program;
 
-  GST_DEBUG_OBJECT (base, "program_number : %d, pmt_pid : %d",
+  GST_DEBUG_OBJECT (base, "program_number : %d, pmt_pid : 0x%04x",
       program_number, pmt_pid);
 
   program = mpegts_base_new_program (base, program_number, pmt_pid);
@@ -471,8 +469,8 @@ mpegts_base_add_program (MpegTSBase * base,
   }
   MPEGTS_BIT_SET (base->known_psi, pmt_pid);
 
-  g_hash_table_insert (base->programs,
-      GINT_TO_POINTER (program_number), program);
+
+  g_ptr_array_add (base->programs, program);
 
   return program;
 }
@@ -480,27 +478,28 @@ mpegts_base_add_program (MpegTSBase * base,
 MpegTSBaseProgram *
 mpegts_base_get_program (MpegTSBase * base, gint program_number)
 {
-  MpegTSBaseProgram *program;
+  guint i;
 
-  program = (MpegTSBaseProgram *) g_hash_table_lookup (base->programs,
-      GINT_TO_POINTER ((gint) program_number));
-
-  return program;
+  for (i = 0; i < base->programs->len; i++) {
+    MpegTSBaseProgram *program = g_ptr_array_index (base->programs, i);
+    if (program->program_number == program_number)
+      return program;
+  }
+  return NULL;
 }
 
 static MpegTSBaseProgram *
 mpegts_base_steal_program (MpegTSBase * base, gint program_number)
 {
-  MpegTSBaseProgram *program;
+  guint i;
 
-  program = (MpegTSBaseProgram *) g_hash_table_lookup (base->programs,
-      GINT_TO_POINTER ((gint) program_number));
+  for (i = 0; i < base->programs->len; i++) {
+    MpegTSBaseProgram *program = g_ptr_array_index (base->programs, i);
+    if (program->program_number == program_number)
+      return g_ptr_array_steal_index (base->programs, i);
+  }
 
-  if (program)
-    g_hash_table_steal (base->programs,
-        GINT_TO_POINTER ((gint) program_number));
-
-  return program;
+  return NULL;
 }
 
 static void
@@ -551,11 +550,11 @@ mpegts_base_deactivate_and_free_program (MpegTSBase * base,
 }
 
 static void
-mpegts_base_remove_program (MpegTSBase * base, gint program_number)
+mpegts_base_remove_program (MpegTSBase * base, MpegTSBaseProgram * program)
 {
-  GST_DEBUG_OBJECT (base, "program_number : %d", program_number);
+  GST_DEBUG_OBJECT (base, "program_number : %d", program->program_number);
 
-  g_hash_table_remove (base->programs, GINT_TO_POINTER (program_number));
+  g_ptr_array_remove (base->programs, program);
 }
 
 static guint32
@@ -1107,12 +1106,11 @@ mpegts_base_apply_pat (MpegTSBase * base, GstMpegtsSection * section)
 
       if (klass->can_remove_program (base, program)) {
         mpegts_base_deactivate_program (base, program);
-        mpegts_base_remove_program (base, patp->program_number);
+        mpegts_base_remove_program (base, program);
       } else {
         /* sub-class now owns the program and must call
          * mpegts_base_deactivate_and_free_program later */
-        g_hash_table_steal (base->programs,
-            GINT_TO_POINTER ((gint) patp->program_number));
+        mpegts_base_steal_program (base, patp->program_number);
       }
       /* FIXME: when this happens it may still be pmt pid of another
        * program, so setting to False may make it go through expensive
@@ -1197,12 +1195,10 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
     } else {
       /* sub-class now owns the program and must call
        * mpegts_base_deactivate_and_free_program later */
-      g_hash_table_steal (base->programs,
-          GINT_TO_POINTER ((gint) old_program->program_number));
+      mpegts_base_steal_program (base, old_program->program_number);
     }
     /* Add new program to the programs we track */
-    g_hash_table_insert (base->programs,
-        GINT_TO_POINTER (program_number), program);
+    g_ptr_array_add (base->programs, program);
     initial_program = FALSE;
   } else {
     GST_DEBUG ("Program update, re-using same program");
@@ -1362,14 +1358,11 @@ mpegts_base_get_tags_from_eit (MpegTSBase * base, GstMpegtsSection * section)
   return TRUE;
 }
 
-static gboolean
-remove_each_program (gpointer key, MpegTSBaseProgram * program,
-    MpegTSBase * base)
+static void
+remove_each_program (MpegTSBaseProgram * program, MpegTSBase * base)
 {
   /* First deactivate it */
   mpegts_base_deactivate_program (base, program);
-
-  return TRUE;
 }
 
 static inline GstFlowReturn
