@@ -149,8 +149,9 @@
  * Each element has its own configuration properties, with some being common
  * to several elements. Basic properties are:
  *
- *   * streamid (avtpaafpay, avtpcvfpay, avtpaafdepay, avtpcvfdepay,
- *     avtpcrfsync, avtpcrfcheck): Stream ID associated with the stream.
+ *   * streamid (avtpaafpay, avtprvfpay, avtpcvfpay, avtpcvfdepay,
+ *     avtprvfdepay, avtpcrfsync, avtpcrfcheck): Stream ID associated with the
+ *     stream.
  *
  *   * ifname (avtpsink, avtpsrc, avtpcrfsync, avtpcrfcheck): Network interface
  *     used to send/receive AVTP packets.
@@ -160,23 +161,23 @@
  *   * priority (avtpsink): Priority used by the plugin to transmit AVTP
  *     traffic.
  *
- *   * mtt (avtpaafpay, avtpcvfpay): Maximum Transit Time, in nanoseconds, as
- *     defined in AVTP spec.
+ *   * mtt (avtpaafpay, avtprvfpay, avtpcvfpay): Maximum Transit Time, in
+ *     nanoseconds, as defined in AVTP spec.
  *
- *   * tu (avtpaafpay, avtpcvfpay): Maximum Time Uncertainty, in nanoseconds, as
- *     defined in AVTP spec.
+ *   * tu (avtpaafpay, avtprvfpay, avtpcvfpay): Maximum Time Uncertainty, in
+ *     nanoseconds, as defined in AVTP spec.
  *
- *   * processing-deadline (avtpaafpay, avtpcvfpay, avtpsink): Maximum amount of
- *     time, in nanoseconds, that the pipeline is expected to process any
- *     buffer. This value should be in sync between the one used on the
- *     payloader and the sink, as this time is also taken into consideration to
- *     define the correct presentation time of the packets on the AVTP listener
+ *   * processing-deadline (avtpaafpay, avtprvfpay, avtpcvfpay, avtpsink):
+ *     Maximum amount of time, in nanoseconds, that the pipeline is expected to
+ *     process any buffer. This value should be in sync between the one used on
+ *     the payloader and the sink, as this time is also taken into consideration
+ *     to define the correct presentation time of the packets on the AVTP listener
  *     side. It should be as low as possible (zero if possible).
  *
  *   * timestamp-mode (avtpaafpay): AAF timestamping mode, as defined in AVTP spec.
  *
- *   * mtu (avtpcvfpay): Maximum Transmit Unit of the underlying network, used
- *     to determine when to fragment a CVF packet and how big it should be.
+ *   * mtu (avtprvfpay, avtpcvfpay): Maximum Transmit Unit of the underlying network,
+ *     used to determine when to fragment a RVF/CVF packet and how big it should be.
  *
  * Check each element documentation for more details.
  *
@@ -241,6 +242,7 @@
 #include "gstavtpaafpay.h"
 #include "gstavtpcvfdepay.h"
 #include "gstavtpcvfpay.h"
+#include "gstavtprvfpay.h"
 #include "gstavtpsink.h"
 #include "gstavtpsrc.h"
 #include "gstavtpcrfsync.h"
@@ -255,6 +257,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (avtpaafdepay, plugin);
   ret |= GST_ELEMENT_REGISTER (avtpsink, plugin);
   ret |= GST_ELEMENT_REGISTER (avtpsrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (avtprvfpay, plugin);
   ret |= GST_ELEMENT_REGISTER (avtpcvfpay, plugin);
   ret |= GST_ELEMENT_REGISTER (avtpcvfdepay, plugin);
   ret |= GST_ELEMENT_REGISTER (avtpcrfsync, plugin);
