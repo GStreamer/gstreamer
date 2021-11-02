@@ -740,6 +740,10 @@ gst_mpeg2_decoder_handle_picture (GstMpeg2Decoder * decoder,
   if (priv->seq_changed) {
     GstFlowReturn ret;
 
+    ret = gst_mpeg2_decoder_drain (GST_VIDEO_DECODER (decoder));
+    if (ret != GST_FLOW_OK)
+      return ret;
+
     if (klass->get_preferred_output_delay)
       priv->preferred_output_delay =
           klass->get_preferred_output_delay (decoder, priv->is_live);
