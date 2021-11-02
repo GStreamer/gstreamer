@@ -109,6 +109,8 @@ default:
 trigger:
   image: alpine:latest
   stage: 'trigger'
+  variables:
+    GIT_STRATEGY: none
   script:
     - echo "Trigger job done, now running the pipeline."
   rules:
