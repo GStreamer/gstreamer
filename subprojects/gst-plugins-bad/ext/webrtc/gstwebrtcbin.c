@@ -1663,17 +1663,46 @@ _query_pad_caps (GstWebRTCBin * webrtc, GstWebRTCRTPTransceiver * rtp_trans,
     GstWebRTCBinPad * pad, GstCaps * filter, GError ** error)
 {
   GstCaps *caps;
+  guint i, n;
 
   caps = gst_pad_peer_query_caps (GST_PAD (pad), filter);
   GST_LOG_OBJECT (webrtc, "Using peer query caps: %" GST_PTR_FORMAT, caps);
 
+  /* Only return an error if actual empty caps were returned from the query. */
   if (gst_caps_is_empty (caps)) {
     g_set_error (error, GST_WEBRTC_BIN_ERROR,
         GST_WEBRTC_BIN_ERROR_CAPS_NEGOTIATION_FAILED,
         "Caps negotiation on pad %s failed", GST_PAD_NAME (pad));
     gst_clear_caps (&caps);
-  } else if (!gst_caps_is_fixed (caps) || gst_caps_is_equal (caps, filter)
-      || gst_caps_is_empty (caps) || gst_caps_is_any (caps)) {
+    gst_caps_unref (filter);
+    return NULL;
+  }
+
+  n = gst_caps_get_size (caps);
+  if (n > 0) {
+    /* Make sure the caps are complete enough to figure out the media type and
+     * encoding-name, otherwise they would match with basically any media. */
+    caps = gst_caps_make_writable (caps);
+    for (i = n; i > 0; i--) {
+      const GstStructure *s = gst_caps_get_structure (caps, i - 1);
+
+      if (!gst_structure_has_name (s, "application/x-rtp") ||
+          !gst_structure_has_field (s, "media") ||
+          !gst_structure_has_field (s, "encoding-name")) {
+        gst_caps_remove_structure (caps, i - 1);
+      }
+    }
+  }
+
+  /* If the filtering above resulted in empty caps, or the caps were ANY to
+   * begin with, then don't report and error but just NULL.
+   *
+   * This would be the case if negotiation would not fail but the peer does
+   * not have any specific enough preferred caps that would allow us to
+   * use them further.
+   */
+  if (gst_caps_is_any (caps) || gst_caps_is_empty (caps)) {
+    GST_DEBUG_OBJECT (webrtc, "Peer caps not specific enough");
     gst_clear_caps (&caps);
   }
 
