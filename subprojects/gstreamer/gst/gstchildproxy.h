@@ -54,7 +54,7 @@ struct _GstChildProxyInterface
   /* methods */
 
   /**
-   * #GstChildProxyInterface::get_child_by_name:
+   * GstChildProxyInterface.get_child_by_name:
    * @parent: the #GstChildProxy
    * @name: the name of the child to fetch
    *
@@ -65,7 +65,7 @@ struct _GstChildProxyInterface
   GObject * (*get_child_by_name)  (GstChildProxy * parent, const gchar * name);
 
   /**
-   * #GstChildProxyInterface::get_child_by_index:
+   * GstChildProxyInterface.get_child_by_index:
    * @parent: the #GstChildProxy
    * @index: the index of the child to fetch
    *
@@ -76,7 +76,7 @@ struct _GstChildProxyInterface
   GObject * (*get_child_by_index) (GstChildProxy * parent, guint index);
 
   /**
-   * #GstChildProxyInterface::get_children_count:
+   * GstChildProxyInterface.get_children_count:
    * @parent: the #GstChildProxy
    *
    * Get the number of children in @parent
@@ -89,7 +89,7 @@ struct _GstChildProxyInterface
   /* signals */
 
   /**
-   * #GstChildProxyInterface::child_added:
+   * GstChildProxyInterface.child_added:
    * @parent: the #GstChildProxy
    * @child: the child object
    * @name: the name of the child object
@@ -99,7 +99,7 @@ struct _GstChildProxyInterface
   void      (*child_added)        (GstChildProxy * parent, GObject * child, const gchar * name);
 
   /**
-   * #GstChildProxyInterface::child_removed:
+   * GstChildProxyInterface.child_removed:
    * @parent: the #GstChildProxy
    * @child: the child object
    * @name: the name of the child object
