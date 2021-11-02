@@ -478,7 +478,7 @@ struct _QtDemuxStream
   gint32 ctts_soffset;
 
   /* cslg */
-  guint32 cslg_shift;
+  guint64 cslg_shift;
 
   /* fragmented */
   gboolean parsed_trex;

@@ -9385,9 +9385,31 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
     /* This is optional, if missing we iterate the ctts */
     if (qtdemux_tree_get_child_by_type_full (stbl, FOURCC_cslg, &cslg)) {
-      if (!gst_byte_reader_skip (&cslg, 1 + 3)
-          || !gst_byte_reader_get_uint32_be (&cslg, &stream->cslg_shift))
+      guint8 cslg_version;
+
+      /* cslg version 1 has 64 bit fields */
+      if (!gst_byte_reader_get_uint8 (&cslg, &cslg_version))
         goto corrupt_file;
+
+      /* skip flags */
+      if (!gst_byte_reader_skip (&cslg, 3))
+        goto corrupt_file;
+
+      if (cslg_version == 0) {
+        gint32 composition_to_dts_shift;
+
+        if (!gst_byte_reader_get_int32_be (&cslg, &composition_to_dts_shift))
+          goto corrupt_file;
+
+        stream->cslg_shift = MAX (0, composition_to_dts_shift);
+      } else {
+        gint64 composition_to_dts_shift;
+
+        if (!gst_byte_reader_get_int64_be (&cslg, &composition_to_dts_shift))
+          goto corrupt_file;
+
+        stream->cslg_shift = MAX (0, composition_to_dts_shift);
+      }
     } else {
       gint32 cslg_least = 0;
       guint num_entries, pos;
