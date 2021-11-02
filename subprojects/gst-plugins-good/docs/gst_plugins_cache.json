@@ -9679,6 +9679,20 @@
                         "type": "guint",
                         "writable": true
                     },
+                    "min-keyframe-distance": {
+                        "blurb": "Minimum distance between keyframes to start a new file",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "10000000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
                     "next-file": {
                         "blurb": "When to start a new file",
                         "conditionally-available": false,

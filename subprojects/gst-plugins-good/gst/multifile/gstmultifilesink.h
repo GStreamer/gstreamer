@@ -100,6 +100,7 @@ struct _GstMultiFileSink
 
   GstClockTime file_pts;
   GstClockTime max_file_duration;
+  GstClockTime min_keyframe_distance;
 
   gboolean aggregate_gops;
   GstAdapter *gop_adapter;  /* to aggregate GOPs */
