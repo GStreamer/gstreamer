@@ -123,7 +123,7 @@ struct _MpegTSBase {
 
   /* the following vars must be protected with the OBJECT_LOCK as they can be
    * accessed from the application thread and the streaming thread */
-  GHashTable *programs;
+  GPtrArray *programs;
 
   GPtrArray  *pat;
   MpegTSPacketizer2 *packetizer;
