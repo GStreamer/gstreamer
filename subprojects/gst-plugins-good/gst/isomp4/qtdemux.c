@@ -3210,6 +3210,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   GstClockTime gst_ts = GST_CLOCK_TIME_NONE;
   guint64 timestamp;
   gint32 data_offset = 0;
+  guint8 version;
   guint32 flags = 0, first_flags = 0, samples_count = 0;
   gint i;
   guint8 *data;
@@ -3217,6 +3218,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   QtDemuxSample *sample;
   gboolean ismv = FALSE;
   gint64 initial_offset;
+  gint32 min_ct = 0;
 
   GST_LOG_OBJECT (qtdemux, "parsing trun track-id %d; "
       "default dur %d, size %d, flags 0x%x, base offset %" G_GINT64_FORMAT ", "
@@ -3236,7 +3238,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     stream->all_keyframe = TRUE;
   }
 
-  if (!gst_byte_reader_skip (trun, 1) ||
+  if (!gst_byte_reader_get_uint8 (trun, &version) ||
       !gst_byte_reader_get_uint24_be (trun, &flags))
     goto fail;
 
@@ -3392,7 +3394,8 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
 
   sample = stream->samples + stream->n_samples;
   for (i = 0; i < samples_count; i++) {
-    guint32 dur, size, sflags, ct;
+    guint32 dur, size, sflags;
+    gint32 ct;
 
     /* first read sample data */
     if (flags & TR_SAMPLE_DURATION) {
@@ -3416,7 +3419,11 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     } else {
       sflags = d_sample_flags;
     }
+
     if (flags & TR_COMPOSITION_TIME_OFFSETS) {
+      /* Read offsets as signed numbers regardless of trun version as very
+       * high offsets are unlikely and there are files out there that use
+       * version=0 truns with negative offsets */
       ct = QT_UINT32 (data + ct_offset);
     } else {
       ct = 0;
@@ -3437,7 +3444,19 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     timestamp += dur;
     stream->duration_moof += dur;
     sample++;
+
+    if (ct < min_ct)
+      min_ct = ct;
   }
+
+  /* Shift PTS/DTS to allow for negative composition offsets while keeping
+   * A/V sync in place. This is similar to the code handling ctts/cslg in the
+   * non-fragmented case.
+   */
+  if (min_ct < 0)
+    stream->cslg_shift = -min_ct;
+  else
+    stream->cslg_shift = 0;
 
   /* Update total duration if needed */
   check_update_duration (qtdemux, QTSTREAMTIME_TO_GSTTIME (stream, timestamp));
