@@ -9368,12 +9368,17 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
           ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     GstByteReader cslg = GST_BYTE_READER_INIT (NULL, 0);
+    guint8 ctts_version;
 
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup2 (stream->ctts.data, stream->ctts.size);
 
-    /* skip version + flags */
-    if (!gst_byte_reader_skip (&stream->ctts, 1 + 3)
+    /* version 1 has signed offsets */
+    if (!gst_byte_reader_get_uint8 (&stream->ctts, &ctts_version))
+      goto corrupt_file;
+
+    /* flags */
+    if (!gst_byte_reader_skip (&stream->ctts, 3)
         || !gst_byte_reader_get_uint32_be (&stream->ctts,
             &stream->n_composition_times))
       goto corrupt_file;
@@ -9443,7 +9448,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
       }
 
       if (cslg_least < 0)
-        stream->cslg_shift = ABS (cslg_least);
+        stream->cslg_shift = -cslg_least;
       else
         stream->cslg_shift = 0;
 
