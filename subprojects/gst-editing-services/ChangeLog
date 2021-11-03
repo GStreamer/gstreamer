@@ -1,3 +1,18 @@
+=== release 1.19.3 ===
+
+2021-11-03 15:43:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.19.3
+
+2021-11-03 15:43:32 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.19.3
+
 2021-10-25 11:37:45 +0100  Tim-Philipp Müller <tim@centricular.com>
 
 	* meson.build:

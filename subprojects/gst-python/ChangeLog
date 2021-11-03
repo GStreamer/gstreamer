@@ -1,3 +1,18 @@
+=== release 1.19.3 ===
+
+2021-11-03 15:43:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.19.3
+
+2021-11-03 15:43:32 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.19.3
+
 2021-10-27 17:20:39 +1300  Chris Wiggins <chris@wiggins.nz>
 
 	* examples/plugins/python/py_audiotestsrc.py:

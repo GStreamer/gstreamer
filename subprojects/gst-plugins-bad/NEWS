@@ -1,10 +1,10 @@
 GStreamer 1.20 Release Notes
 
-GStreamer 1.20 has not been released yet. It is scheduled for release
-around October/November 2021.
+GStreamer 1.20 has not been released yet. It is scheduled for release in
+November 2021.
 
 1.19.x is the unstable development version that is being developed in
-the git main branch and which will eventually result in 1.20, and 1.19.2
+the git main branch and which will eventually result in 1.20, and 1.19.3
 is the current development release in that series
 
 It is expected that feature freeze will be in early October 2021,
@@ -17,7 +17,7 @@ release around October/November 2021.
 See https://gstreamer.freedesktop.org/releases/1.20/ for the latest
 version of this document.
 
-Last updated: Wednesday 22 September 2021, 18:00 UTC (log)
+Last updated: Monday 1 November 2021, 01:00 UTC (log)
 
 Introduction
 
@@ -57,6 +57,17 @@ Plugin removals
 The following elements or plugins have been removed:
 
 -   this section will be filled in in due course
+
+-   The ofa audio fingerprinting plugin has been removed. The MusicIP
+    database has been defunct for years so this plugin is likely neither
+    useful nor used by anyone.
+
+-   The mms plugin containing mmssrc has been removed. It seems unlikely
+    anyone still needs this or that there are even any streams left out
+    there. The MMS protocol was deprecated in 2003 (in favour of RTSP)
+    and support for it was dropped with Microsoft Media Services 2008,
+    and Windows Media Player apparently also does not support it any
+    more.
 
 Miscellaneous API additions
 
@@ -186,11 +197,25 @@ Generic Rust plugins
 
 Build and Dependencies
 
+-   Meson 0.59 or newer is required to build GStreamer now.
+
+-   FIXME: this section will be filled in in due course
+
+Explicit opt-in required for build of certain plugins with (A)GPL dependencies
+
+Some plugins have GPL- or AGPL-licensed dependencies and those plugins
+will no longer be built by default unless you have explicitly opted in
+to allow (A)GPL-licensed dependencies by passing -Dgpl=enabled to Meson,
+even if the required dependencies are available.
+
+See Building plugins with (A)GPL-licensed dependencies for more details
+and a non-exhaustive list of plugins affected.
+
+gst-build: replaced by Monorepo
+
 -   this section will be filled in in due course
 
-gst-build
-
--   this section will be filled in in due course
+-   FIXME: describe + link to Monorepo FAQ
 
 Cerbero
 
@@ -246,11 +271,15 @@ Documentation improvements
 
 Possibly Breaking Changes
 
--   this section will be filled in in due course
+-   FIXME: this section will be filled in in due course
 -   MPEG-TS SCTE-35 API changes (FIXME: flesh out)
 -   gst_parse_launch() and friends now error out on non-existing
     properties on top-level bins where they would silently fail and
     ignore those before.
+-   playbin and uridecodebin now emit the source-setup signal before the
+    element is added to the bin and linked so that the source element is
+    already configured before any scheduling query comes in, which is
+    useful for elements such as appsrc or giostreamsrc. (Merge Request)
 
 Known Issues
 
