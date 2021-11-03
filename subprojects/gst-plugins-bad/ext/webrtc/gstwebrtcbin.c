@@ -4432,7 +4432,7 @@ _create_pad_for_sdp_media (GstWebRTCBin * webrtc, GstPadDirection direction,
     if (serial == G_MAXUINT)
       serial = webrtc->priv->max_sink_pad_serial++;
   } else {
-    serial = trans->mline;
+    serial = webrtc->priv->src_pad_counter++;
   }
 
   pad_name =
