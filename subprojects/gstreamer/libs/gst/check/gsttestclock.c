@@ -699,6 +699,19 @@ gst_test_clock_new_with_start_time (GstClockTime start_time)
   return clock;
 }
 
+static void
+gst_test_clock_set_time_unlocked (GstTestClock * test_clock,
+    GstClockTime new_time)
+{
+  GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+
+  g_assert_cmpuint (new_time, >=, priv->internal_time);
+
+  priv->internal_time = new_time;
+  GST_CAT_DEBUG_OBJECT (GST_CAT_TEST_CLOCK, test_clock,
+      "clock set to %" GST_TIME_FORMAT, GST_TIME_ARGS (new_time));
+}
+
 /**
  * gst_test_clock_set_time:
  * @test_clock: a #GstTestClock of which to set the time
@@ -716,21 +729,13 @@ gst_test_clock_new_with_start_time (GstClockTime start_time)
 void
 gst_test_clock_set_time (GstTestClock * test_clock, GstClockTime new_time)
 {
-  GstTestClockPrivate *priv;
-
   g_return_if_fail (GST_IS_TEST_CLOCK (test_clock));
-
-  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
 
   g_assert_cmpuint (new_time, !=, GST_CLOCK_TIME_NONE);
 
   GST_OBJECT_LOCK (test_clock);
 
-  g_assert_cmpuint (new_time, >=, priv->internal_time);
-
-  priv->internal_time = new_time;
-  GST_CAT_DEBUG_OBJECT (GST_CAT_TEST_CLOCK, test_clock,
-      "clock set to %" GST_TIME_FORMAT, GST_TIME_ARGS (new_time));
+  gst_test_clock_set_time_unlocked (test_clock, new_time);
 
   GST_OBJECT_UNLOCK (test_clock);
 }
@@ -859,6 +864,19 @@ gst_test_clock_peek_next_pending_id (GstTestClock * test_clock,
   return result;
 }
 
+static void
+gst_test_clock_wait_for_next_pending_id_unlocked (GstTestClock * test_clock,
+    GstClockID * pending_id)
+{
+  GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+
+  while (priv->entry_contexts == NULL)
+    g_cond_wait (&priv->entry_added_cond, GST_OBJECT_GET_LOCK (test_clock));
+
+  if (!gst_test_clock_peek_next_pending_id_unlocked (test_clock, pending_id))
+    g_assert_not_reached ();
+}
+
 /**
  * gst_test_clock_wait_for_next_pending_id:
  * @test_clock: #GstTestClock for which to get the pending clock notification
@@ -877,19 +895,11 @@ void
 gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
     GstClockID * pending_id)
 {
-  GstTestClockPrivate *priv;
-
   g_return_if_fail (GST_IS_TEST_CLOCK (test_clock));
-
-  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
 
   GST_OBJECT_LOCK (test_clock);
 
-  while (priv->entry_contexts == NULL)
-    g_cond_wait (&priv->entry_added_cond, GST_OBJECT_GET_LOCK (test_clock));
-
-  if (!gst_test_clock_peek_next_pending_id_unlocked (test_clock, pending_id))
-    g_assert_not_reached ();
+  gst_test_clock_wait_for_next_pending_id_unlocked (test_clock, pending_id);
 
   GST_OBJECT_UNLOCK (test_clock);
 }
@@ -916,6 +926,30 @@ gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
 }
 #endif
 
+static GstClockID
+gst_test_clock_process_next_clock_id_unlocked (GstTestClock * test_clock)
+{
+  GstTestClockPrivate *priv;
+  GstClockID result = NULL;
+  GstClockEntryContext *ctx = NULL;
+  GList *cur;
+
+  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+
+  for (cur = priv->entry_contexts; cur != NULL && result == NULL;
+      cur = cur->next) {
+    ctx = cur->data;
+
+    if (priv->internal_time >= GST_CLOCK_ENTRY_TIME (ctx->clock_entry))
+      result = gst_clock_id_ref (ctx->clock_entry);
+  }
+
+  if (result != NULL)
+    process_entry_context_unlocked (test_clock, ctx);
+
+  return result;
+}
+
 /**
  * gst_test_clock_process_next_clock_id:
  * @test_clock: a #GstTestClock for which to retrieve the next pending clock
@@ -931,27 +965,13 @@ gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
 GstClockID
 gst_test_clock_process_next_clock_id (GstTestClock * test_clock)
 {
-  GstTestClockPrivate *priv;
-  GstClockID result = NULL;
-  GstClockEntryContext *ctx = NULL;
-  GList *cur;
+  GstClockID result;
 
   g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), NULL);
 
-  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
-
   GST_OBJECT_LOCK (test_clock);
 
-  for (cur = priv->entry_contexts; cur != NULL && result == NULL;
-      cur = cur->next) {
-    ctx = cur->data;
-
-    if (priv->internal_time >= GST_CLOCK_ENTRY_TIME (ctx->clock_entry))
-      result = gst_clock_id_ref (ctx->clock_entry);
-  }
-
-  if (result != NULL)
-    process_entry_context_unlocked (test_clock, ctx);
+  result = gst_test_clock_process_next_clock_id_unlocked (test_clock);
 
   GST_OBJECT_UNLOCK (test_clock);
 
@@ -1209,21 +1229,23 @@ gst_test_clock_crank (GstTestClock * test_clock)
   GstClockTime now;
   gboolean result;
 
-  gst_test_clock_wait_for_next_pending_id (test_clock, &pending);
-  now = gst_clock_get_time (GST_CLOCK (test_clock));
+  g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), FALSE);
+
+  GST_OBJECT_LOCK (test_clock);
+
+  gst_test_clock_wait_for_next_pending_id_unlocked (test_clock, &pending);
+  now = test_clock->priv->internal_time;
   if (gst_clock_id_get_time (pending) > now)
-    gst_test_clock_set_time (test_clock, gst_clock_id_get_time (pending));
-  res = gst_test_clock_process_next_clock_id (test_clock);
-  if (G_LIKELY (res == pending)) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_TEST_CLOCK, test_clock,
-        "cranked to time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (gst_clock_get_time (GST_CLOCK (test_clock))));
-    result = TRUE;
-  } else {
-    GST_CAT_WARNING_OBJECT (GST_CAT_TEST_CLOCK, test_clock,
-        "testclock next id != pending (%p != %p)", res, pending);
-    result = FALSE;
-  }
+    gst_test_clock_set_time_unlocked (test_clock,
+        gst_clock_id_get_time (pending));
+  res = gst_test_clock_process_next_clock_id_unlocked (test_clock);
+  g_assert (res == pending);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_TEST_CLOCK, test_clock,
+      "cranked to time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (test_clock->priv->internal_time));
+  result = TRUE;
+
+  GST_OBJECT_UNLOCK (test_clock);
 
   if (G_LIKELY (res != NULL))
     gst_clock_id_unref (res);
