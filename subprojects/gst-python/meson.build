@@ -1,5 +1,5 @@
 project('gst-python', 'c', 'cpp',
-  version : '1.19.3',
+  version : '1.19.3.1',
   meson_version : '>= 0.59',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
