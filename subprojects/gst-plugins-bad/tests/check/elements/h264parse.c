@@ -23,6 +23,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/check/check.h>
 #include <gst/video/video.h>
 #include "gst-libs/gst/codecparsers/gsth264parser.h"
@@ -801,11 +805,19 @@ h264parse_packetized_suite (void)
 }
 
 /* These were generated using pipeline:
- * gst-launch-1.0 videotestsrc num-buffers=1 pattern=green \
+ * gst-launch-1.0 videotestsrc num-buffers=2 pattern=green \
  *     ! video/x-raw,width=128,height=128 \
  *     ! openh264enc num-slices=2 \
  *     ! fakesink dump=1
  */
+
+/* codec-data */
+static guint8 h264_slicing_codec_data[] = {
+  0x01, 0x42, 0xc0, 0x0b, 0xff, 0xe1, 0x00, 0x0e,
+  0x67, 0x42, 0xc0, 0x0b, 0x8c, 0x8d, 0x41, 0x02,
+  0x24, 0x03, 0xc2, 0x21, 0x1a, 0x80, 0x01, 0x00,
+  0x04, 0x68, 0xce, 0x3c, 0x80
+};
 
 /* SPS */
 static guint8 h264_slicing_sps[] = {
@@ -839,6 +851,18 @@ static guint8 h264_idr_slice_2[] = {
   0xe4, 0xe4, 0xeb, 0x55, 0xd7, 0x5d, 0x75, 0xd7,
   0x5d, 0x75, 0xd7, 0x5d, 0x75, 0xd7, 0x5d, 0x75,
   0xd7, 0x5d, 0x75, 0xd7, 0x5e
+};
+
+/* P Slice 1 */
+static guint8 h264_slice_1[] = {
+  0x00, 0x00, 0x00, 0x01, 0x61, 0xe0, 0x00, 0x40,
+  0x00, 0x9c, 0x82, 0x3c, 0x10, 0xc0
+};
+
+/* P Slice 2 */
+static guint8 h264_slice_2[] = {
+  0x00, 0x00, 0x00, 0x01, 0x61, 0x04, 0x38, 0x00,
+  0x10, 0x00, 0x27, 0x20, 0x8f, 0x04, 0x30
 };
 
 static inline GstBuffer *
@@ -1257,6 +1281,187 @@ GST_START_TEST (test_parse_skip_to_4bytes_sc)
 
 GST_END_TEST;
 
+typedef enum
+{
+  PACKETIZED_AU = 0,
+  /* TODO: packetized with nal alignment if we expect that should work? */
+  BYTESTREAM_AU,
+  BYTESTREAM_NAL,
+} H264ParseStreamType;
+
+static const gchar *
+stream_type_to_caps_str (H264ParseStreamType type)
+{
+  switch (type) {
+    case PACKETIZED_AU:
+      return "video/x-h264,stream-format=avc,alignment=au";
+    case BYTESTREAM_AU:
+      return "video/x-h264,stream-format=byte-stream,alignment=au";
+    case BYTESTREAM_NAL:
+      return "video/x-h264,stream-format=byte-stream,alignment=nal";
+  }
+
+  g_assert_not_reached ();
+
+  return NULL;
+}
+
+static GstMemory *
+nalu_to_memory (H264ParseStreamType type, const guint8 * data, gsize size)
+{
+  gpointer dump = g_memdup2 (data, size);
+
+  if (type == PACKETIZED_AU) {
+    guint32 nalu_size;
+
+    nalu_size = size - 4;
+    nalu_size = GUINT32_TO_BE (nalu_size);
+    memcpy (dump, &nalu_size, sizeof (nalu_size));
+  }
+
+  return gst_memory_new_wrapped (0, dump, size, 0, size, dump, g_free);
+}
+
+static GList *
+create_aud_test_buffers (H264ParseStreamType type, gboolean inband_aud)
+{
+  GList *list = NULL;
+  GstBuffer *buf = NULL;
+
+#define APPEND_NALU_TO_BUFFER(type,nalu,end_of_au) G_STMT_START { \
+  if (!buf) { \
+    buf = gst_buffer_new (); \
+  } \
+  gst_buffer_append_memory (buf, nalu_to_memory (type, nalu, \
+      sizeof (nalu))); \
+  if (type == BYTESTREAM_NAL || end_of_au) { \
+    list = g_list_append (list, buf); \
+    buf = NULL; \
+  } \
+} G_STMT_END
+
+  if (inband_aud)
+    APPEND_NALU_TO_BUFFER (type, h264_aud, FALSE);
+
+  APPEND_NALU_TO_BUFFER (type, h264_slicing_sps, FALSE);
+  APPEND_NALU_TO_BUFFER (type, h264_slicing_pps, FALSE);
+  APPEND_NALU_TO_BUFFER (type, h264_idr_slice_1, FALSE);
+  APPEND_NALU_TO_BUFFER (type, h264_idr_slice_2, TRUE);
+
+  if (inband_aud)
+    APPEND_NALU_TO_BUFFER (type, h264_aud, FALSE);
+
+  APPEND_NALU_TO_BUFFER (type, h264_slice_1, FALSE);
+  APPEND_NALU_TO_BUFFER (type, h264_slice_2, TRUE);
+
+#undef APPEND_NALU_TO_BUFFER
+
+  return list;
+}
+
+static void
+check_aud_insertion (gboolean inband_aud, H264ParseStreamType in_type,
+    H264ParseStreamType out_type)
+{
+  GstHarness *h;
+  GList *in_buffers = NULL;
+  GList *expected_buffers = NULL;
+  GList *result_buffers = NULL;
+  GList *iter, *walk;
+  GstCaps *in_caps, *out_caps;
+  gboolean aud_in_output;
+  GstBuffer *buf;
+
+  h = gst_harness_new ("h264parse");
+
+  in_caps = gst_caps_from_string (stream_type_to_caps_str (in_type));
+  if (in_type == PACKETIZED_AU) {
+    GstBuffer *cdata_buf = gst_buffer_new_memdup (h264_slicing_codec_data,
+        sizeof (h264_slicing_codec_data));
+    gst_caps_set_simple (in_caps,
+        "codec_data", GST_TYPE_BUFFER, cdata_buf, NULL);
+    gst_buffer_unref (cdata_buf);
+  }
+
+  out_caps = gst_caps_from_string (stream_type_to_caps_str (out_type));
+
+  gst_harness_set_caps (h, in_caps, out_caps);
+
+  in_buffers = create_aud_test_buffers (in_type, inband_aud);
+
+  if (out_type == BYTESTREAM_AU || out_type == BYTESTREAM_NAL) {
+    /* In case of byte-stream output, parse will insert AUD always */
+    aud_in_output = TRUE;
+  } else if (inband_aud) {
+    /* Parse will not drop AUD in any case */
+    aud_in_output = TRUE;
+  } else {
+    /* Cases where input bitstream doesn't contain AUD and output format is
+     * packetized. In this case parse will not insert AUD */
+    aud_in_output = FALSE;
+  }
+
+  expected_buffers = create_aud_test_buffers (out_type, aud_in_output);
+
+  for (iter = in_buffers; iter; iter = g_list_next (iter)) {
+    buf = (GstBuffer *) iter->data;
+    fail_unless_equals_int (gst_harness_push (h, gst_buffer_ref (buf)),
+        GST_FLOW_OK);
+  }
+
+  /* EOS for pending buffers to be drained if any */
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  while ((buf = gst_harness_try_pull (h)))
+    result_buffers = g_list_append (result_buffers, buf);
+
+  fail_unless_equals_int (g_list_length (result_buffers),
+      g_list_length (expected_buffers));
+
+  for (iter = expected_buffers, walk = result_buffers; iter && walk;
+      iter = g_list_next (iter), walk = g_list_next (walk)) {
+    GstBuffer *buf1, *buf2;
+    GstMapInfo map1, map2;
+
+    buf1 = (GstBuffer *) iter->data;
+    buf2 = (GstBuffer *) walk->data;
+
+    gst_buffer_map (buf1, &map1, GST_MAP_READ);
+    gst_buffer_map (buf2, &map2, GST_MAP_READ);
+
+    fail_unless_equals_int (map1.size, map2.size);
+    fail_unless (memcmp (map1.data, map2.data, map1.size) == 0);
+    gst_buffer_unmap (buf1, &map1);
+    gst_buffer_unmap (buf2, &map2);
+  }
+
+  g_list_free_full (in_buffers, (GDestroyNotify) gst_buffer_unref);
+  g_list_free_full (expected_buffers, (GDestroyNotify) gst_buffer_unref);
+  g_list_free_full (result_buffers, (GDestroyNotify) gst_buffer_unref);
+
+  gst_harness_teardown (h);
+}
+
+GST_START_TEST (test_parse_aud_insert)
+{
+  gboolean inband_aud[] = {
+    TRUE, FALSE
+  };
+  H264ParseStreamType stream_types[] = {
+    PACKETIZED_AU, BYTESTREAM_AU, BYTESTREAM_NAL
+  };
+  guint i, j, k;
+
+  for (i = 0; i < G_N_ELEMENTS (inband_aud); i++) {
+    for (j = 0; j < G_N_ELEMENTS (stream_types); j++) {
+      for (k = 0; k < G_N_ELEMENTS (stream_types); k++) {
+        check_aud_insertion (inband_aud[i], stream_types[j], stream_types[k]);
+      }
+    }
+  }
+}
+
+GST_END_TEST;
 
 /*
  * TODO:
@@ -1369,6 +1574,7 @@ main (int argc, char **argv)
     tcase_add_test (tc_chain, test_parse_sei_closedcaptions);
     tcase_add_test (tc_chain, test_parse_compatible_caps);
     tcase_add_test (tc_chain, test_parse_skip_to_4bytes_sc);
+    tcase_add_test (tc_chain, test_parse_aud_insert);
     nf += gst_check_run_suite (s, "h264parse", __FILE__);
   }
 
