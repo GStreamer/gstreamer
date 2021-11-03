@@ -92,6 +92,16 @@ struct _GstH264Parse
   gboolean have_sps_in_frame;
   gboolean have_pps_in_frame;
 
+  /* per frame AU Delimiter check used when in_format == avc or avc3 */
+  gboolean have_aud_in_frame;
+
+  /* tracing state whether h264parse needs to insert AUD or not.
+   * Used when in_format == byte-stream */
+  gboolean aud_needed;
+
+  /* For insertion of AU Delimiter */
+  gboolean aud_insert;
+
   gboolean first_frame;
 
   /* collected SPS and PPS NALUs */
@@ -145,10 +155,6 @@ struct _GstH264Parse
   GstVideoMultiviewMode multiview_mode;
   GstVideoMultiviewFlags multiview_flags;
   gboolean first_in_bundle;
-
-  /* For insertion of AU Delimiter */
-  gboolean aud_needed;
-  gboolean aud_insert;
 
   GstVideoParseUserData user_data;
 

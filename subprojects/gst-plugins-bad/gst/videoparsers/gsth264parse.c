@@ -237,6 +237,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->frame_start = FALSE;
   h264parse->have_sps_in_frame = FALSE;
   h264parse->have_pps_in_frame = FALSE;
+  h264parse->have_aud_in_frame = FALSE;
   gst_adapter_clear (h264parse->frame_out);
 }
 
@@ -1130,6 +1131,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       if (pres != GST_H264_PARSER_OK)
         return FALSE;
       h264parse->aud_needed = FALSE;
+      h264parse->have_aud_in_frame = TRUE;
       break;
     default:
       /* drop anything before the initial SPS */
@@ -1231,8 +1233,9 @@ gst_h264_parse_handle_frame_packetized (GstBaseParse * parse,
   parse_res = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
       map.data, 0, map.size, nl, &nalu);
 
-  /* there is no AUD in AVC, always enable insertion, the pre_push function
-   * will only add it once, and will only add it for byte-stream output. */
+  /* Always enable AUD insertion per frame here. The pre_push function
+   * will only add it once, and will only add it for byte-stream output
+   * if AUD doesn't exist in the current frame */
   h264parse->aud_insert = TRUE;
 
   while (parse_res == GST_H264_PARSER_OK) {
@@ -3115,7 +3118,8 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   /* In case of byte-stream, insert au delimiter by default
    * if it doesn't exist */
-  if (h264parse->aud_insert && h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+  if (h264parse->aud_insert && !h264parse->have_aud_in_frame &&
+      h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
     GST_DEBUG_OBJECT (h264parse, "Inserting AUD into the stream.");
     if (h264parse->align == GST_H264_PARSE_ALIGN_AU) {
       GstMemory *mem =
