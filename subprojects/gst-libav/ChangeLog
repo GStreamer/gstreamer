@@ -1,3 +1,51 @@
+2021-10-25 11:37:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: require matching GStreamer dep versions for unstable development releases
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/929
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1244>
+
+2021-10-18 15:47:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  meson: update for meson.build_root() and .build_source() deprecation
+	  -> use meson.project_build_root() or .global_build_root() instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-18 00:40:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/meson.build:
+	* tests/check/meson.build:
+	  meson: update for dep.get_pkgconfig_variable() deprecation
+	  ... in favour of dep.get_variable('foo', ..) which in some
+	  cases allows for further cleanups in future since we can
+	  extract variables from pkg-config dependencies as well as
+	  internal dependencies using this mechanism.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-14 18:38:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: bump meson requirement to >= 0.59
+	  For monorepo build and ugly/bad, for advanced feature
+	  option API like get_option('xyz').required(..) which
+	  we use in combination with the 'gpl' option.
+	  For rest of modules for consistency (people will likely
+	  use newer features based on the top-level requirement).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1084>
+
+2021-09-28 10:11:15 +1000  Brad Hards <bradh@frogmouth.net>
+
+	* RELEASE:
+	  doc: update IRC links to OFTC
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/945>
+
+2021-09-26 01:07:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/925>
+
 === release 1.19.2 ===
 
 2021-09-23 01:35:17 +0100  Tim-Philipp Müller <tim@centricular.com>

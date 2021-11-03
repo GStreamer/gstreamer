@@ -1,3 +1,140 @@
+2021-10-25 11:37:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: require matching GStreamer dep versions for unstable development releases
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/929
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1244>
+
+2021-10-25 01:02:36 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/af.po:
+	* po/ast.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/fur.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/ta.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  gst-plugins-ugly: update translations
+	  Fixes #656
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1240>
+
+2021-10-21 00:33:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson_options.txt:
+	  meson: default to gpl=disabled for gst-plugins-bad and -ugly
+	  This will only affect individual/tarball module builds, as the
+	  options yield to the parent project which was set to gpl=disabled
+	  by default already. We kept it as auto in the original commit
+	  to accommodate the need to update cerbero as well, which had to
+	  be done separately after the initial commit.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1217>
+
+2021-10-18 15:47:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  meson: update for meson.build_root() and .build_source() deprecation
+	  -> use meson.project_build_root() or .global_build_root() instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-18 00:40:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/meson.build:
+	* tests/check/meson.build:
+	  meson: update for dep.get_pkgconfig_variable() deprecation
+	  ... in favour of dep.get_variable('foo', ..) which in some
+	  cases allows for further cleanups in future since we can
+	  extract variables from pkg-config dependencies as well as
+	  internal dependencies using this mechanism.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-18 00:03:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: clean up conditional paths after version bump
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-14 18:38:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: bump meson requirement to >= 0.59
+	  For monorepo build and ugly/bad, for advanced feature
+	  option API like get_option('xyz').required(..) which
+	  we use in combination with the 'gpl' option.
+	  For rest of modules for consistency (people will likely
+	  use newer features based on the top-level requirement).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1084>
+
+2021-09-19 00:55:34 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/a52dec/meson.build:
+	* ext/cdio/meson.build:
+	* ext/dvdread/meson.build:
+	* ext/mpeg2dec/meson.build:
+	* ext/sidplay/meson.build:
+	* ext/x264/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	  meson: add 'gpl' option and only build plugins with (A)GPL deps if explicitly enabled
+	  Require explicit opt-in to build plugins with (A)GPL dependencies.
+	  Keep ugly/bad options on 'auto' for now so cerbero doesn't fail.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1084>
+
+2021-10-12 15:52:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  meson: Streamline the way we detect when to build documentation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2021-09-28 10:11:15 +1000  Brad Hards <bradh@frogmouth.net>
+
+	* README:
+	* RELEASE:
+	  doc: update IRC links to OFTC
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/945>
+
+2021-09-26 01:07:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/925>
+
 === release 1.19.2 ===
 
 2021-09-23 01:34:00 +0100  Tim-Philipp Müller <tim@centricular.com>

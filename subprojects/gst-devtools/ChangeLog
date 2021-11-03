@@ -1,3 +1,285 @@
+2021-10-30 16:22:39 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/tests/launcher_tests/foreach/flow-expectations/log-sink-sink-expected:
+	* validate/tests/launcher_tests/simple_repeat/flow-expectations/log-sink-sink-expected:
+	  video: Fix order of new video formats
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1282>
+
+2021-10-30 00:34:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  Use g_pattern_spec_match() instead of g_pattern_match() which is deprecated since glib 2.70
+	  Fixes compiler warnings with glib 2.70
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1279>
+
+2021-10-25 11:37:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: require matching GStreamer dep versions for unstable development releases
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/929
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1244>
+
+2021-10-18 15:47:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/launcher/meson.build:
+	* validate/tests/check/meson.build:
+	* validate/tests/launcher_tests/meson.build:
+	  meson: update for meson.build_root() and .build_source() deprecation
+	  -> use meson.project_build_root() or .global_build_root() instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-18 00:40:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/tests/meson.build:
+	  meson: update for dep.get_pkgconfig_variable() deprecation
+	  ... in favour of dep.get_variable('foo', ..) which in some
+	  cases allows for further cleanups in future since we can
+	  extract variables from pkg-config dependencies as well as
+	  internal dependencies using this mechanism.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-17 11:39:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/tools/meson.build:
+	  tools: Define G_LOG_DOMAIN for various tools as well
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1009>
+
+2021-10-14 18:38:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: bump meson requirement to >= 0.59
+	  For monorepo build and ugly/bad, for advanced feature
+	  option API like get_option('xyz').required(..) which
+	  we use in combination with the 'gpl' option.
+	  For rest of modules for consistency (people will likely
+	  use newer features based on the top-level requirement).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1084>
+
+2021-10-12 15:52:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  meson: Streamline the way we detect when to build documentation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2021-10-02 11:54:00 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/meson.build:
+	  validate:build: Disable static building validate tracer
+	  It introduce duplication of symbols and we need to rework the way we implement it
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2020-06-27 00:39:00 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* validate/gst/validate/meson.build:
+	  meson: List libraries and their corresponding gir definition
+	  Introduces a `libraries` variable that contains all libraries in a
+	  list with the following format:
+	  ``` meson
+	  libraries = [
+	  [pkg_name, {
+	  'lib': library_object
+	  'gir': [ {full gir definition in a dict } ]
+	  ],
+	  ....
+	  ]
+	  ```
+	  It therefore refactors the way we build the gir so that we can reuse the
+	  same information to build them against 'gstreamer-full' in gst-build
+	  when linking statically
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2020-06-27 00:37:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	* validate/gst/validate/meson.build:
+	  meson: Mark files as files()
+	  Making it more robust and future proof
+	  And fix issues that it creates
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2021-10-12 18:05:52 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/utils.py:
+	  validate:launcher: Reindent utils.py
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1121>
+
+2021-10-12 17:59:03 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/utils.py:
+	  validate:launcher: Check if the running MR will close a referenced issue
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1121>
+
+2021-10-12 17:19:46 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	* validate/launcher/utils.py:
+	  ci: Check for closed bugs for unit tests too
+	  And add FIXMEs for test that should have been reenabled but haven't,
+	  we will reenable them when CI is stable enough!
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1121>
+
+2021-10-12 17:14:49 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  tests: Move all unit tests issues to the GStreamer monorepo
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1121>
+
+2021-10-13 11:09:20 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  Revert "tests: Blacklist some tests that recently failed"
+	  This reverts commit 9f13ee5b0eada5ca0997e59be2ef46d5c2dd1dcd as
+	  it was merge as part of the bigger CI gardening MR
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1139>
+
+2021-10-13 00:17:27 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/testsuites/check.py:
+	  ges:test: Document some GES failures
+	  Namely races in:
+	  * check.gst-editing-services.edit_while_seeked_with_stop_it
+	  * check.gst-editing-services.check_layer_activness_gaps_it
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/803
+	  and https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/804
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1130>
+
+2021-10-13 00:06:34 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate:launcher: Avoid spamming terminal when inspecting unit tests
+	  And redirect GStreamer logs when necessary
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1130>
+
+2021-10-12 23:05:20 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Run validate unit tests as GstValidate tests
+	  So we have all the features and we can properly document known issue
+	  for them
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1130>
+
+2021-10-07 19:28:41 +0900  Seungha Yang <seungha@centricular.com>
+
+	* validate/gst/validate/flow/gstvalidateflow.c:
+	  validate: flow: Fix for line-ending mismatch issue on Windows
+	  Unlike POSIX system, Windows distinguishes "w" and "wb" and when
+	  a file is opened with text mode, OS will translate \n into \r\n.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1092>
+
+2021-09-25 23:40:31 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  tests: Blacklist some tests that recently failed
+	  See:
+	  - https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/739
+	  - https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/740
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/927>
+
+2021-10-12 10:10:05 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  tests: Mark check.gstreamer.gst_gstbin.test_watch_for_state_change flaky
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/778
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113>
+
+2021-10-11 12:03:02 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  ges:tests: Mark check.gst-plugins-base.validate.giosrc.read-growing-file as flaky
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/776
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113>
+
+2021-10-11 11:45:50 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  ges:tests: Mark ges 'check_edit_in_frames_with_framerate_mistmatch as flaky
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/775
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113>
+
+2021-10-11 11:05:36 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  tests:webrtcbin: Make known flaky webrtcbin as such
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/773
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113>
+
+2021-10-08 12:09:47 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Do not dump on failure test we will retry
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113>
+
+2021-10-08 10:44:50 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  tests: Blacklist tests that are currently producing many CI failures
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113>
+
+2021-10-08 09:09:21 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Allow more flexible handling of flaky tests
+	  And retry twice flaky tests
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113>
+
+2021-10-07 21:28:12 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Fix progress reporting with --n-runs
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113>
+
+2021-10-07 19:42:10 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Support retry on failure when using --n-runs
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113>
+
+2021-10-07 19:41:07 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Fix potential invalid index access
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113>
+
+2021-10-06 17:21:58 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/reporters.py:
+	  validate:launcher: Fix adding logs to xunit
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1113>
+
+2021-10-05 18:50:21 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Allow waiting signal searching for element factory
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1064>
+
+2021-10-02 11:58:56 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/main.py:
+	  validate:launcher: Sync asset only when passing --sync
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1020>
+
+2021-09-28 15:45:19 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* .arcconfig:
+	  Delete .arcconfig files
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/951>
+
+2021-09-28 10:11:15 +1000  Brad Hards <bradh@frogmouth.net>
+
+	* RELEASE:
+	  doc: update IRC links to OFTC
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/945>
+
+2021-09-26 01:07:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/925>
+
 === release 1.19.2 ===
 
 2021-09-23 01:36:10 +0100  Tim-Philipp Müller <tim@centricular.com>

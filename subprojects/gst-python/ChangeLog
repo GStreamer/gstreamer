@@ -1,3 +1,88 @@
+2021-10-27 17:20:39 +1300  Chris Wiggins <chris@wiggins.nz>
+
+	* examples/plugins/python/py_audiotestsrc.py:
+	  python: Update audiotestsrc to return correct tuple on FlowReturn Errors
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1259>
+
+2021-10-18 15:47:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* testsuite/meson.build:
+	  meson: update for meson.build_root() and .build_source() deprecation
+	  -> use meson.project_build_root() or .global_build_root() instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-18 00:40:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* testsuite/meson.build:
+	  meson: update for dep.get_pkgconfig_variable() deprecation
+	  ... in favour of dep.get_variable('foo', ..) which in some
+	  cases allows for further cleanups in future since we can
+	  extract variables from pkg-config dependencies as well as
+	  internal dependencies using this mechanism.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-14 18:38:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: bump meson requirement to >= 0.59
+	  For monorepo build and ugly/bad, for advanced feature
+	  option API like get_option('xyz').required(..) which
+	  we use in combination with the 'gpl' option.
+	  For rest of modules for consistency (people will likely
+	  use newer features based on the top-level requirement).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1084>
+
+2021-09-22 13:12:07 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	  python:meson: Do not build plugin when statically built
+	  It is not supported yet
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2021-09-14 18:25:46 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  python: Add an option to disable tests
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2021-10-14 17:01:01 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/__init__.py:
+	  python: Fix using overrides when not building PyGObject
+	  Since 547570cd790f2b2e390edc1dfb5df4c7a33de45c we do not always build
+	  PyGObject and our development environment is broken when trying to use
+	  GStreamer python when built against system PyGObject with the following
+	  error importing Gst in there:
+	  ```
+	  12345678** (gst-plugin-scanner:710617): CRITICAL **: 11:45:02.343: can't find gi.repository.Gst
+	  Traceback (most recent call last):
+	  File "/usr/lib/python3.9/site-packages/gi/repository/__init__.py", line 23, in <module>
+	  from ..importer import DynamicImporter
+	  File "/usr/lib64/python3.9/site-packages/gi/importer.py", line 33, in <module>
+	  from .overrides import load_overrides
+	  ImportError: cannot import name 'load_overrides' from 'gi.overrides' (/var/home/thiblahute/devel/gstreamer/gstreamer/subprojects/gst-editing-services/bindings/python/gi/overrides/__init__.py)
+	  Factory Details:
+	  ```
+	  The approach to fixing it is to implement override `gi` in
+	  `gst-python/gi/` which we add to `PYTHONPATH`) and in there reset the
+	  `gi` module to the right place and we get overrides from paths from
+	  `_GI_OVERRIDES_PATH` we set in `gst-env.py` which points to all the
+	  overrides that will be installed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1155>
+
+2021-09-28 10:11:15 +1000  Brad Hards <bradh@frogmouth.net>
+
+	* RELEASE:
+	  doc: update IRC links to OFTC
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/945>
+
+2021-09-26 01:07:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/925>
+
 === release 1.19.2 ===
 
 2021-09-23 01:35:45 +0100  Tim-Philipp Müller <tim@centricular.com>

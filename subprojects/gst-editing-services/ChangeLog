@@ -1,3 +1,155 @@
+2021-10-25 11:37:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: require matching GStreamer dep versions for unstable development releases
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/929
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1244>
+
+2021-10-18 15:47:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  meson: update for meson.build_root() and .build_source() deprecation
+	  -> use meson.project_build_root() or .global_build_root() instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-18 00:40:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/meson.build:
+	* tests/check/meson.build:
+	* tools/meson.build:
+	  meson: update for dep.get_pkgconfig_variable() deprecation
+	  ... in favour of dep.get_variable('foo', ..) which in some
+	  cases allows for further cleanups in future since we can
+	  extract variables from pkg-config dependencies as well as
+	  internal dependencies using this mechanism.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-17 11:39:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/meson.build:
+	  tools: Define G_LOG_DOMAIN for various tools as well
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1009>
+
+2021-10-14 18:38:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: bump meson requirement to >= 0.59
+	  For monorepo build and ugly/bad, for advanced feature
+	  option API like get_option('xyz').required(..) which
+	  we use in combination with the 'gpl' option.
+	  For rest of modules for consistency (people will likely
+	  use newer features based on the top-level requirement).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1084>
+
+2021-10-12 23:25:40 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/sitemap.txt:
+	* ges/meson.build:
+	  ges:docs: Ignore GESImageSource as it is plain useless now
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2021-10-12 15:52:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  meson: Streamline the way we detect when to build documentation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2021-09-13 18:33:01 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	* meson.build:
+	  ges:build: Disable python modules when statically building
+	  Introspection fails otherwise
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2020-06-27 00:39:00 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	* ges/meson.build:
+	* meson.build:
+	  meson: List libraries and their corresponding gir definition
+	  Introduces a `libraries` variable that contains all libraries in a
+	  list with the following format:
+	  ``` meson
+	  libraries = [
+	  [pkg_name, {
+	  'lib': library_object
+	  'gir': [ {full gir definition in a dict } ]
+	  ],
+	  ....
+	  ]
+	  ```
+	  It therefore refactors the way we build the gir so that we can reuse the
+	  same information to build them against 'gstreamer-full' in gst-build
+	  when linking statically
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2021-10-13 00:07:20 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/python/common.py:
+	* tests/check/python/test_assets.py:
+	  ges:tests: Create shorter assets to avoid timeouts
+	  And use a simple GStreamer pipeline as testsrcbin with GstTranscoder
+	  doesn't let us easily set the framerate of the source and we end up
+	  having videorate dropping frames leading to the rendered file having
+	  an unprecise duration.
+	  This should fix races with `check.gst-editing-services.pythontests.pyunittest.python.test_assets.TestTimeline.test_reload_asset`
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1130>
+
+2021-10-13 02:58:29 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson_options.txt:
+	  meson: Remove duplicate definition of 'examples' option
+	  This is a hard error starting with Meson 0.60.0rc1, due to
+	  https://github.com/mesonbuild/meson/pull/9184#issuecomment-941603358
+	  The upstream change might get reverted before release, but we should
+	  of course fix this regardless.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1127>
+
+2021-09-30 19:03:40 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-uri-asset.c:
+	  ges:uri-asset: Ignore streams with no ID
+	  Since 0d95d9258b97 we respect the asset stream-id in `GESUriSource` so
+	  we can not work with unknown or broken stream ID in the assets.
+	  We just ignore them, warning about it and we should fix that in
+	  demuxer so they don't expose pad without providing a stream id for them.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1001>
+
+2021-09-28 15:45:19 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* .arcconfig:
+	  Delete .arcconfig files
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/951>
+
+2021-09-28 10:11:15 +1000  Brad Hards <bradh@frogmouth.net>
+
+	* RELEASE:
+	  doc: update IRC links to OFTC
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/945>
+
+2021-09-27 09:24:16 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-command-line-formatter.c:
+	  commandline-formatter: Fix version documentation for ges_command_line_formatter_get_help()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/929>
+
+2021-09-25 16:34:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-clip-asset.c:
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-effect-clip.c:
+	* ges/ges-meta-container.c:
+	* ges/ges-track-element-asset.c:
+	  ges: Add a few missing annotations
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/921>
+
+2021-09-26 01:07:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/925>
+
 === release 1.19.2 ===
 
 2021-09-23 01:35:39 +0100  Tim-Philipp Müller <tim@centricular.com>

@@ -1,3 +1,139 @@
+2021-10-25 11:37:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: require matching GStreamer dep versions for unstable development releases
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/929
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1244>
+
+2021-10-18 15:47:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  meson: update for meson.build_root() and .build_source() deprecation
+	  -> use meson.project_build_root() or .global_build_root() instead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-18 00:40:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/meson.build:
+	* tests/check/meson.build:
+	  meson: update for dep.get_pkgconfig_variable() deprecation
+	  ... in favour of dep.get_variable('foo', ..) which in some
+	  cases allows for further cleanups in future since we can
+	  extract variables from pkg-config dependencies as well as
+	  internal dependencies using this mechanism.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1183>
+
+2021-10-01 15:32:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/meson.build:
+	* gst/rtsp-sink/meson.build:
+	  rtsp-server: define G_LOG_DOMAIN
+	  Fixes #634
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1009>
+
+2021-10-14 18:38:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: bump meson requirement to >= 0.59
+	  For monorepo build and ugly/bad, for advanced feature
+	  option API like get_option('xyz').required(..) which
+	  we use in combination with the 'gpl' option.
+	  For rest of modules for consistency (people will likely
+	  use newer features based on the top-level requirement).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1084>
+
+2021-10-12 15:52:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  meson: Streamline the way we detect when to build documentation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2020-06-27 00:39:00 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	* gst/rtsp-server/meson.build:
+	* meson.build:
+	  meson: List libraries and their corresponding gir definition
+	  Introduces a `libraries` variable that contains all libraries in a
+	  list with the following format:
+	  ``` meson
+	  libraries = [
+	  [pkg_name, {
+	  'lib': library_object
+	  'gir': [ {full gir definition in a dict } ]
+	  ],
+	  ....
+	  ]
+	  ```
+	  It therefore refactors the way we build the gir so that we can reuse the
+	  same information to build them against 'gstreamer-full' in gst-build
+	  when linking statically
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2020-06-27 00:37:39 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* gst/rtsp-server/meson.build:
+	  meson: Mark files as files()
+	  Making it more robust and future proof
+	  And fix issues that it creates
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1093>
+
+2021-10-07 13:00:10 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Unprepare suspended medias too
+	  Previously suspended medias immediately reached the UNPREPARED state
+	  without going through the media's unprepare() vfunc. This didn't allow
+	  the media subclass to do any additional cleanup, and for example the
+	  shutdown-eos property of GstRTSPMedia was ignored.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1090>
+
+2021-10-06 18:19:29 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Only unprepare a media if it was not already unpreparing anyway
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1083>
+
+2021-10-03 23:25:23 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	  rtsp-client: make sure sessmedia will not get freed while used
+	  handle_*_request() functions were all retrieving the session media from
+	  the session by calling gst_rtsp_session_get_media () which is a transfer-none
+	  call. If a session timeout happens at that time, the session media may get freed
+	  making the pointer invalid..
+	  Fixes #757
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1053>
+
+2021-10-05 19:37:40 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Also mark receive-only (RECORD) medias as prepared when unsuspending
+	  Previously the status was only changed for other medias.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1058>
+
+2021-10-01 13:51:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-session.c:
+	  rtsp-session: Don't unref medias twice if it is removed inside gst_rtsp_session_filter() while the mutex is shortly released
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/757
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1004>
+
+2021-09-28 10:11:15 +1000  Brad Hards <bradh@frogmouth.net>
+
+	* RELEASE:
+	  doc: update IRC links to OFTC
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/945>
+
+2021-09-26 01:07:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/925>
+
 === release 1.19.2 ===
 
 2021-09-23 01:35:27 +0100  Tim-Philipp Müller <tim@centricular.com>
@@ -5,6 +141,7 @@
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-rtsp-server.doap:
 	* meson.build:
 	  Release 1.19.2
