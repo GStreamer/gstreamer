@@ -4323,6 +4323,22 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
   test_webrtc_reset_negotiation (t);
   test_validate_sdp_full (t, &offer, &answer_non_reject, 0, FALSE);
 
+  /* check that the mid/mline is correct */
+  {
+    GstWebRTCRTPTransceiver *rtp_trans;
+    GstPad *srcpad;
+    guint mline;
+
+    srcpad = gst_pad_get_peer (sink_harness->sinkpad);
+    fail_unless (srcpad != NULL);
+    g_object_get (srcpad, "transceiver", &rtp_trans, NULL);
+    gst_clear_object (&srcpad);
+    fail_unless (rtp_trans != NULL);
+    g_object_get (rtp_trans, "mlineindex", &mline, NULL);
+    gst_clear_object (&rtp_trans);
+    fail_unless_equals_int (mline, 0);
+  }
+
   test_webrtc_free (t);
 }
 
