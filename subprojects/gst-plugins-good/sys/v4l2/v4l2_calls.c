@@ -1064,6 +1064,9 @@ set_control (GQuark field_id, const GValue * value, gpointer user_data)
   if (G_VALUE_HOLDS (value, G_TYPE_INT)) {
     gst_v4l2_set_attribute (v4l2object, GPOINTER_TO_INT (d),
         g_value_get_int (value));
+  } else if (G_VALUE_HOLDS (value, G_TYPE_BOOLEAN)) {
+    gst_v4l2_set_attribute (v4l2object, GPOINTER_TO_INT (d),
+        g_value_get_boolean (value));
   } else if (G_VALUE_HOLDS (value, G_TYPE_STRING)) {
     gst_v4l2_set_string_attribute (v4l2object, GPOINTER_TO_INT (d),
         g_value_get_string (value));
