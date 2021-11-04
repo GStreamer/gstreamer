@@ -2848,8 +2848,6 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
   g_free (direction);
 
   caps = _find_codec_preferences (webrtc, trans, media_idx, error);
-  caps = _add_supported_attributes_to_caps (webrtc, WEBRTC_TRANSCEIVER (trans),
-      caps);
 
   if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps)) {
     GST_WARNING_OBJECT (webrtc, "no caps available for transceiver, skipping");
@@ -2857,6 +2855,9 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
       gst_caps_unref (caps);
     return FALSE;
   }
+
+  caps = _add_supported_attributes_to_caps (webrtc, WEBRTC_TRANSCEIVER (trans),
+      caps);
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     GstCaps *format = gst_caps_new_empty ();
