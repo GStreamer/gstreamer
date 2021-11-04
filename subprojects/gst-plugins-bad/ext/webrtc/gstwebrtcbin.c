@@ -3966,10 +3966,16 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
     if (0) {
     rejected:
-      GST_INFO_OBJECT (webrtc, "media %u rejected", i);
+      if (error && *error)
+        GST_INFO_OBJECT (webrtc, "media %u rejected: %s", i, (*error)->message);
+      else
+        GST_INFO_OBJECT (webrtc, "media %u rejected", i);
       gst_sdp_media_free (media);
       gst_sdp_media_copy (offer_media, &media);
       gst_sdp_media_set_port_info (media, 0, 0);
+      /* Clear error here as it is not propagated to the caller and the media
+       * is just skipped, i.e. more iterations are going to happen. */
+      g_clear_error (error);
     }
     gst_sdp_message_add_media (ret, media);
     gst_sdp_media_free (media);
