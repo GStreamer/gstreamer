@@ -34,6 +34,7 @@
  * cudaconvert will automatically convert the video to a format understood
  * by the video sink.
  *
+ * Since: 1.20
  */
 
 #ifdef HAVE_CONFIG_H
@@ -245,6 +246,8 @@ gst_cuda_convert_class_init (GstCudaConvertClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_cuda_convert_debug,
       "cudaconvert", 0, "Video ColorSpace convert using CUDA");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CUDA_BASE_FILTER, 0);
 }
 
 static void

@@ -43,6 +43,7 @@
  * ]|
  *  Decode an mp4/h264 and display the video with a width of 100.
  *
+ * Since: 1.20
  */
 
 #ifdef HAVE_CONFIG_H

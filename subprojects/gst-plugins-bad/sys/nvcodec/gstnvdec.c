@@ -234,6 +234,11 @@ gst_nvdec_class_init (GstNvDecClass * klass)
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nvdec_set_context);
   gst_type_mark_as_plugin_api (GST_TYPE_NVDEC, 0);
 
+  /**
+   * GstNvDec:max-display-delay:
+   *
+   * Since: 1.20
+   */
   g_object_class_install_property (gobject_class, PROP_MAX_DISPLAY_DELAY,
       g_param_spec_int ("max-display-delay", "Max Display Delay",
           "Improves pipelining of decode with display, 0 means no delay "

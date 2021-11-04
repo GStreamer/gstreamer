@@ -18,6 +18,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * element-cudadownload:
+ *
+ * Downloads data from NVIDA GPU via CUDA APIs
+ *
+ * Since: 1.20
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

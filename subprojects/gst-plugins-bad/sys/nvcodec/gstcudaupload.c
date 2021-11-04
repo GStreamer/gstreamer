@@ -17,6 +17,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * element-cudaupload:
+ *
+ * Uploads data to NVIDA GPU via CUDA APIs
+ *
+ * Since: 1.20
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -64,6 +72,7 @@ gst_cuda_upload_class_init (GstCudaUploadClass * klass)
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_cuda_upload_transform_caps);
 
+  gst_type_mark_as_plugin_api (GST_TYPE_CUDA_BASE_TRANSFORM, 0);
   GST_DEBUG_CATEGORY_INIT (gst_cuda_upload_debug,
       "cudaupload", 0, "cudaupload Element");
 }
