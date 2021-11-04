@@ -1,6 +1,8 @@
 /*
  * GStreamer AVTP Plugin
  * Copyright (C) 2019 Intel Corporation
+ * Copyright (c) 2021, Fastree3D
+ * Adrian Fiergolski <Adrian.Fiergolski@fastree3d.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,10 +26,9 @@
 
 #include <gst/gst.h>
 
-#include "gstavtpbasepayload.h"
+#include "gstavtpvfpaybase.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_AVTP_CVF_PAY (gst_avtp_cvf_pay_get_type())
 #define GST_AVTP_CVF_PAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AVTP_CVF_PAY,GstAvtpCvfPay))
@@ -37,19 +38,14 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AVTP_CVF_PAY))
 #define GST_IS_AVTP_CVF_PAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVTP_CVF_PAY))
-
 typedef struct _GstAvtpCvfPay GstAvtpCvfPay;
 typedef struct _GstAvtpCvfPayClass GstAvtpCvfPayClass;
 
 struct _GstAvtpCvfPay
 {
-  GstAvtpBasePayload payload;
+  GstAvtpVfPayBase vfbase;
 
   GstBuffer *header;
-  guint mtu;
-  guint64 measurement_interval;
-  guint max_interval_frames;
-  guint64 last_interval_ct;
 
   /* H.264 specific information */
   guint8 nal_length_size;
@@ -57,7 +53,7 @@ struct _GstAvtpCvfPay
 
 struct _GstAvtpCvfPayClass
 {
-  GstAvtpBasePayloadClass parent_class;
+  GstAvtpVfPayBaseClass parent_class;
 };
 
 GType gst_avtp_cvf_pay_get_type (void);
@@ -65,5 +61,4 @@ GType gst_avtp_cvf_pay_get_type (void);
 GST_ELEMENT_REGISTER_DECLARE (avtpcvfpay);
 
 G_END_DECLS
-
 #endif /* __GST_AVTP_CVF_PAY_H__ */
