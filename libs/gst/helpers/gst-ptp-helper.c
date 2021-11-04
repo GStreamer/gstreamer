@@ -226,7 +226,6 @@ setup_sockets (void)
   if (!socket_event)
     g_error ("Couldn't create event socket: %s", err->message);
   g_clear_error (&err);
-  g_socket_set_multicast_loopback (socket_event, FALSE);
 
   socket_general =
       g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM,
@@ -234,7 +233,6 @@ setup_sockets (void)
   if (!socket_general)
     g_error ("Couldn't create general socket: %s", err->message);
   g_clear_error (&err);
-  g_socket_set_multicast_loopback (socket_general, FALSE);
 
   /* Bind sockets */
   bind_addr = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
