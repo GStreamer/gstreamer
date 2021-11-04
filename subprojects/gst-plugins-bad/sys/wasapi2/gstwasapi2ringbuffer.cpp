@@ -165,7 +165,6 @@ struct _GstWasapi2RingBuffer
   guint64 expected_position;
   gboolean is_first;
   gboolean running;
-  gboolean opened;
   UINT32 buffer_size;
   UINT32 loopback_buffer_size;
 
@@ -231,8 +230,6 @@ gst_wasapi2_ring_buffer_class_init (GstWasapi2RingBufferClass * klass)
 static void
 gst_wasapi2_ring_buffer_init (GstWasapi2RingBuffer * self)
 {
-  self->opened = FALSE;
-
   self->volume = 1.0f;
   self->mute = FALSE;
 
@@ -377,7 +374,7 @@ gst_wasapi2_ring_buffer_open_device (GstAudioRingBuffer * buf)
 
   GST_DEBUG_OBJECT (self, "Open");
 
-  if (self->opened) {
+  if (self->client) {
     GST_DEBUG_OBJECT (self, "Already opened");
     return TRUE;
   }
@@ -429,8 +426,6 @@ gst_wasapi2_ring_buffer_close_device_internal (GstAudioRingBuffer * buf)
 
   gst_clear_object (&self->client);
   gst_clear_object (&self->loopback_client);
-
-  self->opened = FALSE;
 
   return TRUE;
 }
@@ -972,7 +967,7 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
 
   GST_DEBUG_OBJECT (buf, "Acquire");
 
-  if (!self->opened && !gst_wasapi2_ring_buffer_open_device (buf))
+  if (!self->client && !gst_wasapi2_ring_buffer_open_device (buf))
     return FALSE;
 
   if (self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE) {
@@ -980,11 +975,6 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
       GST_ERROR_OBJECT (self, "Failed to prepare loopback client");
       goto error;
     }
-  }
-
-  if (!self->client) {
-    GST_ERROR_OBJECT (self, "No configured client object");
-    goto error;
   }
 
   if (!gst_wasapi2_client_ensure_activation (self->client)) {
