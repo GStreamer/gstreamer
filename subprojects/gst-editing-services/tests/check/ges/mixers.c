@@ -96,6 +96,8 @@ GST_START_TEST (simple_audio_mixed_with_pipeline)
   GESTrack *track;
   GESTimeline *timeline;
   GESPipeline *pipeline;
+  GstClockTime timeout = 5 * GST_SECOND;
+  const gchar *timeout_factor_str = g_getenv ("TIMEOUT_FACTOR");
 
   ges_init ();
 
@@ -132,11 +134,16 @@ GST_START_TEST (simple_audio_mixed_with_pipeline)
   g_signal_connect (bus, "message", (GCallback) message_received_cb, pipeline);
   fail_if (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING)
       == GST_STATE_CHANGE_FAILURE);
-  message = gst_bus_timed_pop_filtered (bus, 5 * GST_SECOND,
+  if (timeout_factor_str) {
+    gint factor = g_ascii_strtoll (timeout_factor_str, NULL, 10);
+    if (factor)
+      timeout *= factor;
+  }
+  message = gst_bus_timed_pop_filtered (bus, timeout,
       GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
 
   if (message == NULL) {
-    fail_unless ("No message after 5 seconds" == NULL);
+    fail_unless ("Timed out" == NULL);
     goto done;
   } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR)
     fail_error_message (message);
