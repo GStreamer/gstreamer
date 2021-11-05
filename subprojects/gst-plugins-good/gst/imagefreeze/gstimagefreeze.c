@@ -232,7 +232,7 @@ gst_image_freeze_sink_setcaps (GstImageFreeze * self, GstCaps * caps)
   gboolean ret = FALSE;
   GstStructure *s;
   gint fps_n, fps_d;
-  GstCaps *othercaps, *intersection;
+  GstCaps *othercaps, *intersection, *pad_current_caps;
   guint i, n;
   GstPad *pad;
 
@@ -245,8 +245,12 @@ gst_image_freeze_sink_setcaps (GstImageFreeze * self, GstCaps * caps)
   if (self->negotiated_framerate) {
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, self->fps_n,
         self->fps_d, NULL);
-    GST_DEBUG_OBJECT (pad, "Setting caps %" GST_PTR_FORMAT, caps);
-    gst_pad_set_caps (self->srcpad, caps);
+    pad_current_caps = gst_pad_get_current_caps (self->srcpad);
+    if (pad_current_caps && !gst_caps_is_equal (caps, pad_current_caps)) {
+      GST_DEBUG_OBJECT (pad, "Setting caps %" GST_PTR_FORMAT, caps);
+      gst_pad_set_caps (self->srcpad, caps);
+    }
+    gst_caps_unref (pad_current_caps);
     gst_caps_unref (caps);
     return TRUE;
   }
