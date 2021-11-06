@@ -604,10 +604,7 @@ gst_vpx_dec_open_codec (GstVPXDec * dec, GstVideoCodecFrame * frame)
         gst_vpx_error_name (status));
     return GST_FLOW_CUSTOM_SUCCESS_1;
   }
-  if (!stream_info.is_kf) {
-    GST_INFO_OBJECT (dec, "No keyframe, skipping");
-    return GST_FLOW_CUSTOM_SUCCESS_1;
-  }
+
   if (stream_info.w == 0 || stream_info.h == 0) {
     /* For VP8 it's possible to signal width or height to be 0, but it does
      * not make sense to do so. For VP9 it's impossible. Hence, we most likely
