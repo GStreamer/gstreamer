@@ -2053,7 +2053,7 @@ decode_sei_frame_packing (GstVaapiDecoderH264 * decoder,
         priv->stereo_info.mode = GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE;
       }
       break;
-    case GST_H264_FRMAE_PACKING_TOP_BOTTOM:
+    case GST_H264_FRAME_PACKING_TOP_BOTTOM:
       priv->stereo_info.mode = GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM;
       break;
     case GST_H264_FRAME_PACKING_TEMPORAL_INTERLEAVING:
@@ -2097,7 +2097,7 @@ decode_sei_frame_packing (GstVaapiDecoderH264 * decoder,
       priv->stereo_info.flags |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_FLOPPED;
     }
   }
-  if (frame_packing->frame_packing_type == GST_H264_FRMAE_PACKING_TOP_BOTTOM
+  if (frame_packing->frame_packing_type == GST_H264_FRAME_PACKING_TOP_BOTTOM
       && frame_packing->spatial_flipping_flag !=
       ((priv->stereo_info.flags &
               GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST) != 0)) {

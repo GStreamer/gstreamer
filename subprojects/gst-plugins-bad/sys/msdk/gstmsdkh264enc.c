@@ -348,7 +348,7 @@ gst_msdkh264enc_set_format (GstMsdkEnc * encoder)
       frame_packing->frame_packing_type =
           (mode == GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE ?
           GST_H264_FRAME_PACKING_SIDE_BY_SIDE :
-          GST_H264_FRMAE_PACKING_TOP_BOTTOM);
+          GST_H264_FRAME_PACKING_TOP_BOTTOM);
       /* we don't do this */
       frame_packing->quincunx_sampling_flag = 0;
       /* 0: unspecified */
