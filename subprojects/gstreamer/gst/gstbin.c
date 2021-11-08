@@ -1166,10 +1166,6 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
 
   GST_DEBUG_OBJECT (bin, "element :%s", GST_ELEMENT_NAME (element));
 
-  /* we obviously can't add ourself to ourself */
-  if (G_UNLIKELY (element == GST_ELEMENT_CAST (bin)))
-    goto adding_itself;
-
   /* get the element name to make sure it is unique in this bin. */
   GST_OBJECT_LOCK (element);
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
@@ -1379,15 +1375,6 @@ no_state_recalc:
   return TRUE;
 
   /* ERROR handling here */
-adding_itself:
-  {
-    GST_OBJECT_LOCK (bin);
-    g_warning ("Cannot add bin '%s' to itself", GST_ELEMENT_NAME (bin));
-    GST_OBJECT_UNLOCK (bin);
-    gst_object_ref_sink (element);
-    gst_object_unref (element);
-    return FALSE;
-  }
 duplicate_name:
   {
     GST_OBJECT_UNLOCK (bin);
@@ -1574,10 +1561,6 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   GstStateChangeReturn ret;
 
   GST_DEBUG_OBJECT (bin, "element :%s", GST_ELEMENT_NAME (element));
-
-  /* we obviously can't remove ourself from ourself */
-  if (G_UNLIKELY (element == GST_ELEMENT_CAST (bin)))
-    goto removing_itself;
 
   GST_OBJECT_LOCK (bin);
 
@@ -1834,13 +1817,6 @@ no_state_recalc:
   return TRUE;
 
   /* ERROR handling */
-removing_itself:
-  {
-    GST_OBJECT_LOCK (bin);
-    g_warning ("Cannot remove bin '%s' from itself", GST_ELEMENT_NAME (bin));
-    GST_OBJECT_UNLOCK (bin);
-    return FALSE;
-  }
 not_in_bin:
   {
     GST_OBJECT_UNLOCK (element);
