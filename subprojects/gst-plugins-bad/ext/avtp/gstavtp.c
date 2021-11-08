@@ -149,7 +149,7 @@
  * Each element has its own configuration properties, with some being common
  * to several elements. Basic properties are:
  *
- *   * streamid (avtpaafpay, avtprvfpay, avtpcvfpay, avtpcvfdepay,
+ *   * streamid (avtpaafpay, avtprvfpay, avtpcvfpay, avtprvfdepay, avtpcvfdepay,
  *     avtprvfdepay, avtpcrfsync, avtpcrfcheck): Stream ID associated with the
  *     stream.
  *
@@ -241,6 +241,7 @@
 #include "gstavtpaafdepay.h"
 #include "gstavtpaafpay.h"
 #include "gstavtpcvfdepay.h"
+#include "gstavtprvfdepay.h"
 #include "gstavtpcvfpay.h"
 #include "gstavtprvfpay.h"
 #include "gstavtpsink.h"
@@ -259,6 +260,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (avtpsrc, plugin);
   ret |= GST_ELEMENT_REGISTER (avtprvfpay, plugin);
   ret |= GST_ELEMENT_REGISTER (avtpcvfpay, plugin);
+  ret |= GST_ELEMENT_REGISTER (avtprvfdepay, plugin);
   ret |= GST_ELEMENT_REGISTER (avtpcvfdepay, plugin);
   ret |= GST_ELEMENT_REGISTER (avtpcrfsync, plugin);
   ret |= GST_ELEMENT_REGISTER (avtpcrfcheck, plugin);
