@@ -214,7 +214,7 @@ if build_gir
         'dependencies' : libges_deps,
         'extra_args' : ges_gir_extra_args
     }
-    library_def = {'gir': gir}
+    library_def += {'gir': gir}
     if not static_build
       gir += {'sources': ges_sources + ges_headers + files('ges-image-source.h')}
       ges_gir = gnome.generate_gir(libges, kwargs: gir)
