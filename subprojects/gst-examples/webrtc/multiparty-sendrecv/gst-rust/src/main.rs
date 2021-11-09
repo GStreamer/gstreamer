@@ -19,7 +19,6 @@ use async_tungstenite::tungstenite;
 use tungstenite::Error as WsError;
 use tungstenite::Message as WsMessage;
 
-use gst::gst_element_error;
 use gst::prelude::*;
 
 use serde_derive::{Deserialize, Serialize};
@@ -178,21 +177,21 @@ impl App {
 
         // Get access to the tees and mixers by name
         let video_tee = pipeline
-            .get_by_name("video-tee")
+            .by_name("video-tee")
             .expect("can't find video-tee");
         let audio_tee = pipeline
-            .get_by_name("audio-tee")
+            .by_name("audio-tee")
             .expect("can't find audio-tee");
 
         let video_mixer = pipeline
-            .get_by_name("video-mixer")
+            .by_name("video-mixer")
             .expect("can't find video-mixer");
         let audio_mixer = pipeline
-            .get_by_name("audio-mixer")
+            .by_name("audio-mixer")
             .expect("can't find audio-mixer");
 
         // Create a stream for handling the GStreamer message asynchronously
-        let bus = pipeline.get_bus().unwrap();
+        let bus = pipeline.bus().unwrap();
         let send_gst_msg_rx = bus.stream();
 
         // Channel for outgoing WebSocket messages from other threads
@@ -224,7 +223,7 @@ impl App {
         app.pipeline.call_async(|pipeline| {
             // If this fails, post an error on the bus so we exit
             if pipeline.set_state(gst::State::Playing).is_err() {
-                gst_element_error!(
+                gst::element_error!(
                     pipeline,
                     gst::LibraryError::Failed,
                     ("Failed to set pipeline to Playing")
@@ -293,14 +292,14 @@ impl App {
         match message.view() {
             MessageView::Error(err) => bail!(
                 "Error from element {}: {} ({})",
-                err.get_src()
-                    .map(|s| String::from(s.get_path_string()))
+                err.src()
+                    .map(|s| String::from(s.path_string()))
                     .unwrap_or_else(|| String::from("None")),
-                err.get_error(),
-                err.get_debug().unwrap_or_else(|| String::from("None")),
+                err.error(),
+                err.debug().unwrap_or_else(|| String::from("None")),
             ),
             MessageView::Warning(warning) => {
-                println!("Warning: \"{}\"", warning.get_debug().unwrap());
+                println!("Warning: \"{}\"", warning.debug().unwrap());
             }
             _ => (),
         }
@@ -326,7 +325,7 @@ impl App {
 
         // Get access to the webrtcbin by name
         let webrtcbin = peer_bin
-            .get_by_name("webrtcbin")
+            .by_name("webrtcbin")
             .expect("can't find webrtcbin");
 
         // Set some properties on webrtcbin
@@ -336,21 +335,21 @@ impl App {
 
         // Add ghost pads for connecting to the input
         let audio_queue = peer_bin
-            .get_by_name("audio-queue")
+            .by_name("audio-queue")
             .expect("can't find audio-queue");
         let audio_sink_pad = gst::GhostPad::with_target(
             Some("audio_sink"),
-            &audio_queue.get_static_pad("sink").unwrap(),
+            &audio_queue.static_pad("sink").unwrap(),
         )
         .unwrap();
         peer_bin.add_pad(&audio_sink_pad).unwrap();
 
         let video_queue = peer_bin
-            .get_by_name("video-queue")
+            .by_name("video-queue")
             .expect("can't find video-queue");
         let video_sink_pad = gst::GhostPad::with_target(
             Some("video_sink"),
-            &video_queue.get_static_pad("sink").unwrap(),
+            &video_queue.static_pad("sink").unwrap(),
         )
         .unwrap();
         peer_bin.add_pad(&video_sink_pad).unwrap();
@@ -362,7 +361,7 @@ impl App {
             send_msg_tx: self.send_msg_tx.clone(),
         }));
 
-        // Insert the peer into our map
+        // Insert the peer into our map_
         peers.insert(peer_id, peer.clone());
         drop(peers);
 
@@ -379,7 +378,7 @@ impl App {
 
                     let peer = upgrade_weak!(peer_clone, None);
                     if let Err(err) = peer.on_negotiation_needed() {
-                        gst_element_error!(
+                        gst::element_error!(
                             peer.bin,
                             gst::LibraryError::Failed,
                             ("Failed to negotiate: {:?}", err)
@@ -396,16 +395,15 @@ impl App {
         peer.webrtcbin
             .connect("on-ice-candidate", false, move |values| {
                 let _webrtc = values[0].get::<gst::Element>().expect("Invalid argument");
-                let mlineindex = values[1].get_some::<u32>().expect("Invalid argument");
+                let mlineindex = values[1].get::<u32>().expect("Invalid argument");
                 let candidate = values[2]
                     .get::<String>()
-                    .expect("Invalid argument")
-                    .unwrap();
+                    .expect("Invalid argument");
 
                 let peer = upgrade_weak!(peer_clone, None);
 
                 if let Err(err) = peer.on_ice_candidate(mlineindex, candidate) {
-                    gst_element_error!(
+                    gst::element_error!(
                         peer.bin,
                         gst::LibraryError::Failed,
                         ("Failed to send ICE candidate: {:?}", err)
@@ -422,7 +420,7 @@ impl App {
             let peer = upgrade_weak!(peer_clone);
 
             if let Err(err) = peer.on_incoming_stream(pad) {
-                gst_element_error!(
+                gst::element_error!(
                     peer.bin,
                     gst::LibraryError::Failed,
                     ("Failed to handle incoming stream: {:?}", err)
@@ -435,20 +433,20 @@ impl App {
         peer.bin.connect_pad_added(move |_bin, pad| {
             let app = upgrade_weak!(app_clone);
 
-            if pad.get_name() == "audio_src" {
-                let audiomixer_sink_pad = app.audio_mixer.get_request_pad("sink_%u").unwrap();
+            if pad.name() == "audio_src" {
+                let audiomixer_sink_pad = app.audio_mixer.request_pad_simple("sink_%u").unwrap();
                 pad.link(&audiomixer_sink_pad).unwrap();
 
                 // Once it is unlinked again later when the peer is being removed,
                 // also release the pad on the mixer
                 audiomixer_sink_pad.connect_unlinked(move |pad, _peer| {
-                    if let Some(audiomixer) = pad.get_parent() {
+                    if let Some(audiomixer) = pad.parent() {
                         let audiomixer = audiomixer.downcast_ref::<gst::Element>().unwrap();
                         audiomixer.release_request_pad(pad);
                     }
                 });
-            } else if pad.get_name() == "video_src" {
-                let videomixer_sink_pad = app.video_mixer.get_request_pad("sink_%u").unwrap();
+            } else if pad.name() == "video_src" {
+                let videomixer_sink_pad = app.video_mixer.request_pad_simple("sink_%u").unwrap();
                 pad.link(&videomixer_sink_pad).unwrap();
 
                 app.relayout_videomixer();
@@ -459,7 +457,7 @@ impl App {
                 videomixer_sink_pad.connect_unlinked(move |pad, _peer| {
                     let app = upgrade_weak!(app_clone);
 
-                    if let Some(videomixer) = pad.get_parent() {
+                    if let Some(videomixer) = pad.parent() {
                         let videomixer = videomixer.downcast_ref::<gst::Element>().unwrap();
                         videomixer.release_request_pad(pad);
                     }
@@ -477,7 +475,7 @@ impl App {
         //
         // Otherwise it might happen that data is received before
         // the elements are ready and then an error happens.
-        let audio_src_pad = self.audio_tee.get_request_pad("src_%u").unwrap();
+        let audio_src_pad = self.audio_tee.request_pad_simple("src_%u").unwrap();
         let audio_block = audio_src_pad
             .add_probe(gst::PadProbeType::BLOCK_DOWNSTREAM, |_pad, _info| {
                 gst::PadProbeReturn::Ok
@@ -485,7 +483,7 @@ impl App {
             .unwrap();
         audio_src_pad.link(&audio_sink_pad)?;
 
-        let video_src_pad = self.video_tee.get_request_pad("src_%u").unwrap();
+        let video_src_pad = self.video_tee.request_pad_simple("src_%u").unwrap();
         let video_block = video_src_pad
             .add_probe(gst::PadProbeType::BLOCK_DOWNSTREAM, |_pad, _info| {
                 gst::PadProbeReturn::Ok
@@ -497,7 +495,7 @@ impl App {
         peer.bin.call_async(move |bin| {
             // If this fails, post an error on the bus so we exit
             if bin.sync_state_with_parent().is_err() {
-                gst_element_error!(
+                gst::element_error!(
                     bin,
                     gst::LibraryError::Failed,
                     ("Failed to set peer bin to Playing")
@@ -526,14 +524,14 @@ impl App {
                 let app = upgrade_weak!(app_clone);
 
                 // Block the tees shortly for removal
-                let audio_tee_sinkpad = app.audio_tee.get_static_pad("sink").unwrap();
+                let audio_tee_sinkpad = app.audio_tee.static_pad("sink").unwrap();
                 let audio_block = audio_tee_sinkpad
                     .add_probe(gst::PadProbeType::BLOCK_DOWNSTREAM, |_pad, _info| {
                         gst::PadProbeReturn::Ok
                     })
                     .unwrap();
 
-                let video_tee_sinkpad = app.video_tee.get_static_pad("sink").unwrap();
+                let video_tee_sinkpad = app.video_tee.static_pad("sink").unwrap();
                 let video_block = video_tee_sinkpad
                     .add_probe(gst::PadProbeType::BLOCK_DOWNSTREAM, |_pad, _info| {
                         gst::PadProbeReturn::Ok
@@ -541,16 +539,16 @@ impl App {
                     .unwrap();
 
                 // Release the tee pads and unblock
-                let audio_sinkpad = peer.bin.get_static_pad("audio_sink").unwrap();
-                let video_sinkpad = peer.bin.get_static_pad("video_sink").unwrap();
+                let audio_sinkpad = peer.bin.static_pad("audio_sink").unwrap();
+                let video_sinkpad = peer.bin.static_pad("video_sink").unwrap();
 
-                if let Some(audio_tee_srcpad) = audio_sinkpad.get_peer() {
+                if let Some(audio_tee_srcpad) = audio_sinkpad.peer() {
                     let _ = audio_tee_srcpad.unlink(&audio_sinkpad);
                     app.audio_tee.release_request_pad(&audio_tee_srcpad);
                 }
                 audio_tee_sinkpad.remove_probe(audio_block);
 
-                if let Some(video_tee_srcpad) = video_sinkpad.get_peer() {
+                if let Some(video_tee_srcpad) = video_sinkpad.peer() {
                     let _ = video_tee_srcpad.unlink(&video_sinkpad);
                     app.video_tee.release_request_pad(&video_tee_srcpad);
                 }
@@ -568,7 +566,7 @@ impl App {
     }
 
     fn relayout_videomixer(&self) {
-        let mut pads = self.video_mixer.get_sink_pads();
+        let mut pads = self.video_mixer.sink_pads();
         if pads.is_empty() {
             return;
         }
@@ -633,7 +631,7 @@ impl Peer {
             let peer = upgrade_weak!(peer_clone);
 
             if let Err(err) = peer.on_offer_created(reply) {
-                gst_element_error!(
+                gst::element_error!(
                     peer.bin,
                     gst::LibraryError::Failed,
                     ("Failed to send SDP offer: {:?}", err)
@@ -642,7 +640,7 @@ impl Peer {
         });
 
         self.webrtcbin
-            .emit("create-offer", &[&None::<gst::Structure>, &promise])
+            .emit_by_name("create-offer", &[&None::<gst::Structure>, &promise])
             .unwrap();
 
         Ok(())
@@ -665,23 +663,22 @@ impl Peer {
         };
 
         let offer = reply
-            .get_value("offer")
+            .value("offer")
             .unwrap()
             .get::<gst_webrtc::WebRTCSessionDescription>()
-            .expect("Invalid argument")
-            .unwrap();
+            .expect("Invalid argument");
         self.webrtcbin
-            .emit("set-local-description", &[&offer, &None::<gst::Promise>])
+            .emit_by_name("set-local-description", &[&offer, &None::<gst::Promise>])
             .unwrap();
 
         println!(
             "sending SDP offer to peer: {}",
-            offer.get_sdp().as_text().unwrap()
+            offer.sdp().as_text().unwrap()
         );
 
         let message = serde_json::to_string(&JsonMsg::Sdp {
             type_: "offer".to_string(),
-            sdp: offer.get_sdp().as_text().unwrap(),
+            sdp: offer.sdp().as_text().unwrap(),
         })
         .unwrap();
 
@@ -714,23 +711,22 @@ impl Peer {
         };
 
         let answer = reply
-            .get_value("answer")
+            .value("answer")
             .unwrap()
             .get::<gst_webrtc::WebRTCSessionDescription>()
-            .expect("Invalid argument")
-            .unwrap();
+            .expect("Invalid argument");
         self.webrtcbin
-            .emit("set-local-description", &[&answer, &None::<gst::Promise>])
+            .emit_by_name("set-local-description", &[&answer, &None::<gst::Promise>])
             .unwrap();
 
         println!(
             "sending SDP answer to peer: {}",
-            answer.get_sdp().as_text().unwrap()
+            answer.sdp().as_text().unwrap()
         );
 
         let message = serde_json::to_string(&JsonMsg::Sdp {
             type_: "answer".to_string(),
-            sdp: answer.get_sdp().as_text().unwrap(),
+            sdp: answer.sdp().as_text().unwrap(),
         })
         .unwrap();
 
@@ -757,7 +753,7 @@ impl Peer {
                 gst_webrtc::WebRTCSessionDescription::new(gst_webrtc::WebRTCSDPType::Answer, ret);
 
             self.webrtcbin
-                .emit("set-remote-description", &[&answer, &None::<gst::Promise>])
+                .emit_by_name("set-remote-description", &[&answer, &None::<gst::Promise>])
                 .unwrap();
 
             Ok(())
@@ -780,7 +776,7 @@ impl Peer {
 
                 peer.0
                     .webrtcbin
-                    .emit("set-remote-description", &[&offer, &None::<gst::Promise>])
+                    .emit_by_name("set-remote-description", &[&offer, &None::<gst::Promise>])
                     .unwrap();
 
                 let peer_clone = peer.downgrade();
@@ -788,7 +784,7 @@ impl Peer {
                     let peer = upgrade_weak!(peer_clone);
 
                     if let Err(err) = peer.on_answer_created(reply) {
-                        gst_element_error!(
+                        gst::element_error!(
                             peer.bin,
                             gst::LibraryError::Failed,
                             ("Failed to send SDP answer: {:?}", err)
@@ -798,7 +794,7 @@ impl Peer {
 
                 peer.0
                     .webrtcbin
-                    .emit("create-answer", &[&None::<gst::Structure>, &promise])
+                    .emit_by_name("create-answer", &[&None::<gst::Structure>, &promise])
                     .unwrap();
             });
 
@@ -811,7 +807,7 @@ impl Peer {
     // Handle incoming ICE candidates from the peer by passing them to webrtcbin
     fn handle_ice(&self, sdp_mline_index: u32, candidate: &str) -> Result<(), anyhow::Error> {
         self.webrtcbin
-            .emit("add-ice-candidate", &[&sdp_mline_index, &candidate])
+            .emit_by_name("add-ice-candidate", &[&sdp_mline_index, &candidate])
             .unwrap();
 
         Ok(())
@@ -842,14 +838,14 @@ impl Peer {
     // and audio/video sink depending on the stream type
     fn on_incoming_stream(&self, pad: &gst::Pad) -> Result<(), anyhow::Error> {
         // Early return for the source pads we're adding ourselves
-        if pad.get_direction() != gst::PadDirection::Src {
+        if pad.direction() != gst::PadDirection::Src {
             return Ok(());
         }
 
-        let caps = pad.get_current_caps().unwrap();
-        let s = caps.get_structure(0).unwrap();
+        let caps = pad.current_caps().unwrap();
+        let s = caps.structure(0).unwrap();
         let media_type = s
-            .get::<&str>("media")
+            .get_optional::<&str>("media")
             .expect("Invalid type")
             .ok_or_else(|| anyhow!("no media type in caps {:?}", caps))?;
 
@@ -873,16 +869,16 @@ impl Peer {
         };
 
         // Add a ghost pad on our conv bin that proxies the sink pad of the decodebin
-        let dbin = conv.get_by_name("dbin").unwrap();
+        let dbin = conv.by_name("dbin").unwrap();
         let sinkpad =
-            gst::GhostPad::with_target(Some("sink"), &dbin.get_static_pad("sink").unwrap())
+            gst::GhostPad::with_target(Some("sink"), &dbin.static_pad("sink").unwrap())
                 .unwrap();
         conv.add_pad(&sinkpad).unwrap();
 
         // And another one that proxies the source pad of the last element
-        let src = conv.get_by_name("src").unwrap();
+        let src = conv.by_name("src").unwrap();
         let srcpad =
-            gst::GhostPad::with_target(Some("src"), &src.get_static_pad("src").unwrap()).unwrap();
+            gst::GhostPad::with_target(Some("src"), &src.static_pad("src").unwrap()).unwrap();
         conv.add_pad(&srcpad).unwrap();
 
         self.bin.add(&conv).unwrap();
