@@ -134,6 +134,15 @@ enum
     GPOINTER_TO_UINT(data)))
 
 static void
+dump_stream_ctx_settings (GstRtpUlpFecEncStreamCtx * ctx)
+{
+  GST_DEBUG_OBJECT (ctx->parent, "rtpulpfec settings for ssrc 0x%x, pt %u, "
+      "percentage %u, percentage important %u, multipacket %u, mux_seq %u",
+      ctx->ssrc, ctx->pt, ctx->percentage, ctx->percentage_important,
+      ctx->multipacket, ctx->mux_seq);
+};
+
+static void
 gst_rtp_ulpfec_enc_stream_ctx_start (GstRtpUlpFecEncStreamCtx * ctx,
     GQueue * packets, guint fec_packets)
 {
@@ -338,6 +347,8 @@ gst_rtp_ulpfec_enc_stream_ctx_push_fec_packets (GstRtpUlpFecEncStreamCtx * ctx,
   guint fec_packets_num =
       gst_rtp_ulpfec_enc_stream_ctx_get_fec_packets_num (ctx);
 
+  GST_LOG_OBJECT (ctx->parent, "ctx %p have %u fec packets to push", ctx,
+      fec_packets_num);
   if (fec_packets_num) {
     guint fec_packets_pushed = 0;
     GstBuffer *latest_packet = ctx->packets_buf.head->data;
@@ -377,6 +388,8 @@ gst_rtp_ulpfec_enc_stream_ctx_push_fec_packets (GstRtpUlpFecEncStreamCtx * ctx,
         gst_rtp_buffer_unmap (&rtp);
       }
 
+      GST_LOG_OBJECT (ctx->parent, "ctx %p pushing generated fec buffer %"
+          GST_PTR_FORMAT, ctx, fec);
       ret = gst_pad_push (ctx->srcpad, fec);
       if (GST_FLOW_OK == ret)
         ++fec_packets_pushed;
@@ -410,6 +423,8 @@ gst_rtp_ulpfec_enc_stream_ctx_cache_packet (GstRtpUlpFecEncStreamCtx * ctx,
 
     *dst_empty_packet_buffer = gst_rtp_buffer_get_marker (rtp);
     *dst_push_fec = *dst_empty_packet_buffer;
+
+    GST_TRACE ("ctx %p pushing fec %u", ctx, *dst_push_fec);
   } else {
     gboolean push_fec;
 
@@ -423,6 +438,8 @@ gst_rtp_ulpfec_enc_stream_ctx_cache_packet (GstRtpUlpFecEncStreamCtx * ctx,
 
     *dst_push_fec = push_fec;
     *dst_empty_packet_buffer = FALSE;
+
+    GST_TRACE ("ctx %p pushing fec %u", ctx, *dst_push_fec);
   }
 }
 
@@ -449,6 +466,8 @@ gst_rtp_ulpfec_enc_stream_ctx_configure (GstRtpUlpFecEncStreamCtx * ctx,
 */
   ctx->budget_inc_important = percentage > percentage_important ?
       ctx->budget_inc : percentage_important / 100.;
+
+  dump_stream_ctx_settings (ctx);
 }
 
 static GstRtpUlpFecEncStreamCtx *
