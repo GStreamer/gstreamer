@@ -2761,6 +2761,10 @@ gst_app_src_push_sample_internal (GstAppSrc * appsrc, GstSample * sample)
       GST_LOG_OBJECT (appsrc, "segment wasn't changed");
       g_mutex_unlock (&priv->mutex);
       goto handle_buffer;
+    } else {
+      GST_LOG_OBJECT (appsrc,
+          "segment changed %" GST_SEGMENT_FORMAT " -> %" GST_SEGMENT_FORMAT,
+          &priv->last_segment, segment);
     }
 
     /* will be pushed to queue with next buffer/buffer-list */
