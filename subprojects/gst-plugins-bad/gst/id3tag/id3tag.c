@@ -708,7 +708,7 @@ add_comment_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
         val = g_strdup (s);
       }
 
-      /* If we don't have a valid language, match what taglib does for 
+      /* If we don't have a valid language, match what taglib does for
          unknown languages */
       if (!lang || strlen (lang) < 3)
         lang = g_strdup ("XXX");
