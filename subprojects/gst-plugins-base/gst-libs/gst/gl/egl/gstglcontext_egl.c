@@ -1191,6 +1191,9 @@ gst_gl_context_egl_destroy_context (GstGLContext * context)
     g_signal_handler_disconnect (window, egl->window_handle_signal);
     egl->window_handle_signal = 0;
   }
+  if (window) {
+    gst_object_unref (window);
+  }
 
   gst_gl_context_egl_activate (context, FALSE);
 
