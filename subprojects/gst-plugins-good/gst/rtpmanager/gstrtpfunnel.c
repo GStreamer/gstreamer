@@ -374,15 +374,18 @@ gst_rtp_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstStructure *s;
       guint ssrc;
       guint8 ext_id;
+      GstCaps *rtpcaps = gst_caps_new_empty_simple (RTP_CAPS);
 
       gst_event_parse_caps (event, &caps);
 
       GST_OBJECT_LOCK (funnel);
-      if (!gst_caps_can_intersect (funnel->srccaps, caps)) {
+      if (!gst_caps_can_intersect (rtpcaps, caps)) {
         GST_ERROR_OBJECT (funnel, "Can't intersect with caps %" GST_PTR_FORMAT,
             caps);
         g_assert_not_reached ();
       }
+
+      gst_caps_unref (rtpcaps);
 
       s = gst_caps_get_structure (caps, 0);
       if (gst_structure_get_uint (s, "ssrc", &ssrc)) {
@@ -430,15 +433,17 @@ gst_rtp_funnel_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
     {
       GstCaps *filter_caps;
       GstCaps *new_caps;
+      GstCaps *rtpcaps = gst_caps_new_empty_simple (RTP_CAPS);
 
       gst_query_parse_caps (query, &filter_caps);
 
       GST_OBJECT_LOCK (funnel);
       if (filter_caps) {
-        new_caps = gst_caps_intersect_full (funnel->srccaps, filter_caps,
+        new_caps = gst_caps_intersect_full (rtpcaps, filter_caps,
             GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (rtpcaps);
       } else {
-        new_caps = gst_caps_copy (funnel->srccaps);
+        new_caps = rtpcaps;
       }
       GST_OBJECT_UNLOCK (funnel);
 

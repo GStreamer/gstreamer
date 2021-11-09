@@ -310,12 +310,13 @@ GST_START_TEST (rtpfunnel_twcc_caps)
   gst_harness_set_src_caps_str (h0, "application/x-rtp, "
       "ssrc=(uint)123, extmap-5=" TWCC_EXTMAP_STR "");
 
-  /* request a second sinkpad, and verify the extmap is
-     present in the caps when doing a caps-query downstream */
+  /* request a second sinkpad, the extmap should not be
+     present in the caps when doing a caps-query downstream,
+     as we don't want to force upstream (typically a payloader)
+     to use the extension */
   h1 = gst_harness_new_with_element (h->element, "sink_1", NULL);
   caps = gst_pad_query_caps (GST_PAD_PEER (h1->srcpad), NULL);
-  expected_caps = gst_caps_from_string ("application/x-rtp, "
-      "extmap-5=" TWCC_EXTMAP_STR "");
+  expected_caps = gst_caps_new_empty_simple ("application/x-rtp");
   fail_unless (gst_caps_is_equal (expected_caps, caps));
   gst_caps_unref (caps);
   gst_caps_unref (expected_caps);
