@@ -841,9 +841,9 @@ add_musicbrainz_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 {
   static const struct
   {
-    const gchar gst_tag[28];
-    const gchar spec_id[28];
-    const gchar realworld_id[28];
+    const gchar gst_tag[32];
+    const gchar spec_id[32];
+    const gchar realworld_id[32];
   } mb_ids[] = {
     {
     GST_TAG_MUSICBRAINZ_ARTISTID, "MusicBrainz Artist Id",
@@ -851,6 +851,8 @@ add_musicbrainz_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     GST_TAG_MUSICBRAINZ_ALBUMID, "MusicBrainz Album Id", "musicbrainz_albumid"}, {
     GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "MusicBrainz Album Artist Id",
           "musicbrainz_albumartistid"}, {
+    GST_TAG_MUSICBRAINZ_RELEASEGROUPID, "MusicBrainz Release Group Id",
+          "musicbrainz_releasegroupid"}, {
     GST_TAG_MUSICBRAINZ_TRMID, "MusicBrainz TRM Id", "musicbrainz_trmid"}, {
     GST_TAG_CDDA_MUSICBRAINZ_DISCID, "MusicBrainz DiscID",
           "musicbrainz_discid"}, {
@@ -1170,9 +1172,10 @@ static const struct
   GST_TAG_MUSICBRAINZ_ARTISTID, add_musicbrainz_tag, "\000"}, {
   GST_TAG_MUSICBRAINZ_ALBUMID, add_musicbrainz_tag, "\001"}, {
   GST_TAG_MUSICBRAINZ_ALBUMARTISTID, add_musicbrainz_tag, "\002"}, {
-  GST_TAG_MUSICBRAINZ_TRMID, add_musicbrainz_tag, "\003"}, {
-  GST_TAG_CDDA_MUSICBRAINZ_DISCID, add_musicbrainz_tag, "\004"}, {
-  GST_TAG_CDDA_CDDB_DISCID, add_musicbrainz_tag, "\005"}, {
+  GST_TAG_MUSICBRAINZ_RELEASEGROUPID, add_musicbrainz_tag, "\003"}, {
+  GST_TAG_MUSICBRAINZ_TRMID, add_musicbrainz_tag, "\004"}, {
+  GST_TAG_CDDA_MUSICBRAINZ_DISCID, add_musicbrainz_tag, "\005"}, {
+  GST_TAG_CDDA_CDDB_DISCID, add_musicbrainz_tag, "\006"}, {
   GST_TAG_MUSICBRAINZ_TRACKID, add_unique_file_id_tag, NULL}, {
 
     /* Info about encoder */
