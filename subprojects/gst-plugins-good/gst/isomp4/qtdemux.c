@@ -12462,7 +12462,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         case FOURCC_opus:
         {
-          const guint8 *opus_data;
+          const guint8 *dops_data;
           guint8 *channel_mapping = NULL;
           guint32 rate;
           guint8 channels;
@@ -12471,18 +12471,22 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           guint8 coupled_count;
           guint8 i;
 
-          opus_data = stsd_entry_data;
+          version = GST_READ_UINT16_BE (stsd_entry_data + 16);
+          if (version == 1)
+            dops_data = stsd_entry_data + 51;
+          else
+            dops_data = stsd_entry_data + 35;
 
-          channels = GST_READ_UINT8 (opus_data + 45);
-          rate = GST_READ_UINT32_LE (opus_data + 48);
-          channel_mapping_family = GST_READ_UINT8 (opus_data + 54);
-          stream_count = GST_READ_UINT8 (opus_data + 55);
-          coupled_count = GST_READ_UINT8 (opus_data + 56);
+          channels = GST_READ_UINT8 (dops_data + 10);
+          rate = GST_READ_UINT32_LE (dops_data + 13);
+          channel_mapping_family = GST_READ_UINT8 (dops_data + 19);
+          stream_count = GST_READ_UINT8 (dops_data + 20);
+          coupled_count = GST_READ_UINT8 (dops_data + 21);
 
           if (channels > 0) {
             channel_mapping = g_malloc (channels * sizeof (guint8));
             for (i = 0; i < channels; i++)
-              channel_mapping[i] = GST_READ_UINT8 (opus_data + i + 57);
+              channel_mapping[i] = GST_READ_UINT8 (dops_data + i + 22);
           }
 
           entry->caps = gst_codec_utils_opus_create_caps (rate, channels,
