@@ -463,11 +463,15 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   }
 
   /* add metadata to raw video buffers */
-  if (pool->add_videometa)
-    gst_buffer_add_video_meta_full (newbuf, GST_VIDEO_FRAME_FLAG_NONE,
+  if (pool->add_videometa) {
+    GstVideoMeta *videometa =
+        gst_buffer_add_video_meta_full (newbuf, GST_VIDEO_FRAME_FLAG_NONE,
         GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
         GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
         info->offset, info->stride);
+    if (videometa)
+      gst_video_meta_set_alignment (videometa, obj->align);
+  }
 
   *buffer = newbuf;
 
