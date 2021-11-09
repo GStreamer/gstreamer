@@ -7368,6 +7368,7 @@
   "GstAvtpSrc!src",
   "GstAvtpSrc:address",
   "GstAvtpSrc:ifname",
+  "GstAvtpVfDepayBase",
   "GstAvtpVfPayBase",
   "GstAvtpVfPayBase:mtu",
   "GstAvtpVfPayBase:measurement-interval",

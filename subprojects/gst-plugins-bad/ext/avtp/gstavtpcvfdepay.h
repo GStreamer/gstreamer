@@ -24,10 +24,9 @@
 
 #include <gst/gst.h>
 
-#include "gstavtpbasedepayload.h"
+#include "gstavtpvfdepaybase.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_AVTP_CVF_DEPAY (gst_avtp_cvf_depay_get_type())
 #define GST_AVTP_CVF_DEPAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AVTP_CVF_DEPAY,GstAvtpCvfDepay))
@@ -37,22 +36,20 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AVTP_CVF_DEPAY))
 #define GST_IS_AVTP_CVF_DEPAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVTP_CVF_DEPAY))
-
 typedef struct _GstAvtpCvfDepay GstAvtpCvfDepay;
 typedef struct _GstAvtpCvfDepayClass GstAvtpCvfDepayClass;
 
 struct _GstAvtpCvfDepay
 {
-  GstAvtpBaseDepayload depayload;
+  GstAvtpVfDepayBaseClass vfdepayload;
 
   guint8 seqnum;
-  GstBuffer *out_buffer;
   GstBuffer *fragments;
 };
 
 struct _GstAvtpCvfDepayClass
 {
-  GstAvtpBaseDepayloadClass parent_class;
+  GstAvtpVfDepayBaseClass parent_class;
 };
 
 GType gst_avtp_cvf_depay_get_type (void);
@@ -60,5 +57,4 @@ GType gst_avtp_cvf_depay_get_type (void);
 GST_ELEMENT_REGISTER_DECLARE (avtpcvfdepay);
 
 G_END_DECLS
-
 #endif /* __GST_AVTP_CVF_DEPAY_H__ */

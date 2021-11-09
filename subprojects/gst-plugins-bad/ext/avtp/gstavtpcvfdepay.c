@@ -51,8 +51,7 @@ GST_DEBUG_CATEGORY_STATIC (avtpcvfdepay_debug);
 
 static GstFlowReturn gst_avtp_cvf_depay_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
-static GstStateChangeReturn gst_avtp_cvf_depay_change_state (GstElement *
-    element, GstStateChange transition);
+static gboolean gst_avtp_cvf_depay_push_caps (GstAvtpVfDepayBase * avtpvfdepay);
 
 #define AVTP_CVF_H264_HEADER_SIZE (sizeof(struct avtp_stream_pdu) + sizeof(guint32))
 #define FU_A_HEADER_SIZE (sizeof(guint16))
@@ -82,7 +81,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_avtp_cvf_depay_parent_class parent_class
 G_DEFINE_TYPE (GstAvtpCvfDepay, gst_avtp_cvf_depay,
-    GST_TYPE_AVTP_BASE_DEPAYLOAD);
+    GST_TYPE_AVTP_VF_DEPAY_BASE);
 GST_ELEMENT_REGISTER_DEFINE (avtpcvfdepay, "avtpcvfdepay", GST_RANK_NONE,
     GST_TYPE_AVTP_CVF_DEPAY);
 
@@ -92,6 +91,8 @@ gst_avtp_cvf_depay_class_init (GstAvtpCvfDepayClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstAvtpBaseDepayloadClass *avtpbasedepayload_class =
       GST_AVTP_BASE_DEPAYLOAD_CLASS (klass);
+  GstAvtpVfDepayBaseClass *avtpvfdepaybase_class =
+      GST_AVTP_VF_DEPAY_BASE_CLASS (klass);
 
   gst_element_class_add_static_pad_template (element_class, &src_template);
 
@@ -101,10 +102,10 @@ gst_avtp_cvf_depay_class_init (GstAvtpCvfDepayClass * klass)
       "Extracts compressed video from CVF AVTPDUs",
       "Ederson de Souza <ederson.desouza@intel.com>");
 
-  element_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_avtp_cvf_depay_change_state);
-
   avtpbasedepayload_class->chain = GST_DEBUG_FUNCPTR (gst_avtp_cvf_depay_chain);
+
+  avtpvfdepaybase_class->depay_push_caps =
+      GST_DEBUG_FUNCPTR (gst_avtp_cvf_depay_push_caps);
 
   GST_DEBUG_CATEGORY_INIT (avtpcvfdepay_debug, "avtpcvfdepay",
       0, "debug category for avtpcvfdepay element");
@@ -113,38 +114,16 @@ gst_avtp_cvf_depay_class_init (GstAvtpCvfDepayClass * klass)
 static void
 gst_avtp_cvf_depay_init (GstAvtpCvfDepay * avtpcvfdepay)
 {
-  avtpcvfdepay->out_buffer = NULL;
   avtpcvfdepay->fragments = NULL;
   avtpcvfdepay->seqnum = 0;
 }
 
-static GstStateChangeReturn
-gst_avtp_cvf_depay_change_state (GstElement *
-    element, GstStateChange transition)
-{
-  GstAvtpCvfDepay *avtpcvfdepay = GST_AVTP_CVF_DEPAY (element);
-  GstStateChangeReturn ret;
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE) {
-    return ret;
-  }
-
-  if (transition == GST_STATE_CHANGE_READY_TO_NULL) {
-    if (avtpcvfdepay->out_buffer) {
-      gst_buffer_unref (avtpcvfdepay->out_buffer);
-      avtpcvfdepay->out_buffer = NULL;
-    }
-  }
-
-  return ret;
-}
-
 static gboolean
-gst_avtp_cvf_depay_push_caps (GstAvtpCvfDepay * avtpcvfdepay)
+gst_avtp_cvf_depay_push_caps (GstAvtpVfDepayBase * avtpvfdepay)
 {
   GstAvtpBaseDepayload *avtpbasedepayload =
-      GST_AVTP_BASE_DEPAYLOAD (avtpcvfdepay);
+      GST_AVTP_BASE_DEPAYLOAD (avtpvfdepay);
+  GstAvtpCvfDepay *avtpcvfdepay = GST_AVTP_CVF_DEPAY (avtpvfdepay);
   GstBuffer *codec_data;
   GstEvent *event;
   GstMapInfo map;
@@ -176,109 +155,16 @@ gst_avtp_cvf_depay_push_caps (GstAvtpCvfDepay * avtpcvfdepay)
 }
 
 static GstFlowReturn
-gst_avtp_cvf_depay_push (GstAvtpCvfDepay * avtpcvfdepay)
-{
-  GstAvtpBaseDepayload *avtpbasedepayload =
-      GST_AVTP_BASE_DEPAYLOAD (avtpcvfdepay);
-  GstFlowReturn ret;
-
-  if (G_UNLIKELY (!gst_pad_has_current_caps (avtpbasedepayload->srcpad))) {
-    guint64 pts_m;
-    guint32 dts, pts;
-
-    if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_DEBUG) {
-      GstClock *clock = gst_element_get_clock (GST_ELEMENT_CAST (avtpcvfdepay));
-      if (clock == NULL) {
-        GST_DEBUG_OBJECT (avtpcvfdepay,
-            "Sending initial CAPS and SEGMENT, no pipeline time.");
-      } else {
-        GST_DEBUG_OBJECT (avtpcvfdepay,
-            "Sending initial CAPS and SEGMENT, pipeline time: %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (gst_clock_get_time (clock)));
-      }
-    }
-
-    if (!gst_avtp_cvf_depay_push_caps (avtpcvfdepay)) {
-      GST_ELEMENT_ERROR (avtpcvfdepay, CORE, CAPS, (NULL), (NULL));
-      return GST_FLOW_ERROR;
-    }
-
-    if (!gst_avtp_base_depayload_push_segment_event (avtpbasedepayload,
-            GST_BUFFER_PTS (avtpcvfdepay->out_buffer))) {
-      GST_ELEMENT_ERROR (avtpcvfdepay, CORE, EVENT,
-          ("Could not send SEGMENT event"), (NULL));
-    }
-
-    /* Now that we sent our segment starting on the first Presentation
-     * time available, `avtpbasedepayload->prev_ptime` saves that value,
-     * to be a reference for calculating future buffer timestamps from
-     * the AVTP timestamps (avtp_ts and h264_ts).
-     *
-     * However, decode timestamps can be smaller than presentation
-     * timestamps. So we can't use `avtpbasedepayload->prev_time` as
-     * reference to calculate them. Instead, here, we calculate the
-     * first decode timestamp and save it on `avtpcvfdepay->prev_ptime`.
-     *
-     * The method used to calculate the "absolute" decode timestamp (DTS)
-     * from presentation timestamp is as follows:
-     *
-     *   DTS = dts > pts ? (PTSm - 1) | dts : PTSm | dts
-     *
-     * Where:
-     *   dts: 32 bits gPTP decode timestamp
-     *   pts: 32 bits gPTP presentation timestamp
-     *   PTSm: 32 most signifactive bits of the "absolute" presentation
-     *   timestamp
-     *
-     * This allow us to handle cases where the pts ends up being smaller
-     * than dts due pts falling after an AVTP timestamp wrapping.
-     */
-
-    pts = GST_BUFFER_PTS (avtpcvfdepay->out_buffer);
-    dts = GST_BUFFER_DTS (avtpcvfdepay->out_buffer);
-    pts_m = avtpbasedepayload->prev_ptime & 0xFFFFFFFF00000000ULL;
-
-    avtpbasedepayload->prev_ptime = dts > pts ? (pts_m -=
-        (1ULL << 32)) | dts : pts_m | dts;
-    GST_DEBUG_OBJECT (avtpcvfdepay, "prev_ptime set to %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (avtpbasedepayload->prev_ptime));
-  }
-
-  /* At this point, we're sure segment was sent, so we can properly calc
-   * buffer timestamps */
-  GST_DEBUG_OBJECT (avtpcvfdepay, "Converting %" GST_TIME_FORMAT " to PTS",
-      GST_TIME_ARGS (GST_BUFFER_PTS (avtpcvfdepay->out_buffer)));
-  GST_BUFFER_PTS (avtpcvfdepay->out_buffer) =
-      gst_avtp_base_depayload_tstamp_to_ptime (avtpbasedepayload, GST_BUFFER_PTS
-      (avtpcvfdepay->out_buffer), avtpbasedepayload->prev_ptime);
-
-  GST_DEBUG_OBJECT (avtpcvfdepay, "Converting %" GST_TIME_FORMAT " to DTS",
-      GST_TIME_ARGS (GST_BUFFER_DTS (avtpcvfdepay->out_buffer)));
-  GST_BUFFER_DTS (avtpcvfdepay->out_buffer) =
-      gst_avtp_base_depayload_tstamp_to_ptime (avtpbasedepayload, GST_BUFFER_DTS
-      (avtpcvfdepay->out_buffer), avtpbasedepayload->prev_ptime);
-
-  /* Use DTS as prev_ptime as it is smaller or equal to PTS, so that
-   * next calculations of PTS/DTS won't wrap too early */
-  avtpbasedepayload->prev_ptime = GST_BUFFER_DTS (avtpcvfdepay->out_buffer);
-
-  ret = gst_pad_push (GST_AVTP_BASE_DEPAYLOAD (avtpcvfdepay)->srcpad,
-      avtpcvfdepay->out_buffer);
-  avtpcvfdepay->out_buffer = NULL;
-
-  return ret;
-}
-
-static GstFlowReturn
 gst_avtp_cvf_depay_push_and_discard (GstAvtpCvfDepay * avtpcvfdepay)
 {
+  GstAvtpVfDepayBase *avtpvfdepaybase = GST_AVTP_VF_DEPAY_BASE (avtpcvfdepay);
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* Push everything we have, hopefully decoder can handle it */
-  if (avtpcvfdepay->out_buffer != NULL) {
+  if (avtpvfdepaybase->out_buffer != NULL) {
     GST_DEBUG_OBJECT (avtpcvfdepay, "Pushing incomplete buffers");
 
-    ret = gst_avtp_cvf_depay_push (avtpcvfdepay);
+    ret = gst_avtp_vf_depay_base_push (GST_AVTP_VF_DEPAY_BASE (avtpcvfdepay));
   }
 
   /* Discard any incomplete fragments */
@@ -449,6 +335,7 @@ static GstFlowReturn
 gst_avtp_cvf_depay_internal_push (GstAvtpCvfDepay * avtpcvfdepay,
     GstBuffer * buffer, gboolean M)
 {
+  GstAvtpVfDepayBase *avtpvfdepaybase = GST_AVTP_VF_DEPAY_BASE (avtpcvfdepay);
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (avtpcvfdepay,
@@ -456,16 +343,16 @@ gst_avtp_cvf_depay_internal_push (GstAvtpCvfDepay * avtpcvfdepay,
       G_GSIZE_FORMAT ") to out_buffer", gst_buffer_get_size (buffer),
       gst_buffer_get_size (buffer) - sizeof (guint32));
 
-  if (avtpcvfdepay->out_buffer) {
-    avtpcvfdepay->out_buffer =
-        gst_buffer_append (avtpcvfdepay->out_buffer, buffer);
+  if (avtpvfdepaybase->out_buffer) {
+    avtpvfdepaybase->out_buffer =
+        gst_buffer_append (avtpvfdepaybase->out_buffer, buffer);
   } else {
-    avtpcvfdepay->out_buffer = buffer;
+    avtpvfdepaybase->out_buffer = buffer;
   }
 
   /* We only truly push to decoder when we get the last video buffer */
   if (M) {
-    ret = gst_avtp_cvf_depay_push (avtpcvfdepay);
+    ret = gst_avtp_vf_depay_base_push (GST_AVTP_VF_DEPAY_BASE (avtpcvfdepay));
   }
 
   return ret;
