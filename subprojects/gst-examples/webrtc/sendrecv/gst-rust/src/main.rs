@@ -16,7 +16,6 @@ use async_tungstenite::tungstenite;
 use tungstenite::Error as WsError;
 use tungstenite::Message as WsMessage;
 
-use gst::gst_element_error;
 use gst::prelude::*;
 
 use serde_derive::{Deserialize, Serialize};
@@ -127,7 +126,7 @@ impl App {
 
         // Get access to the webrtcbin by name
         let webrtcbin = pipeline
-            .get_by_name("webrtcbin")
+            .by_name("webrtcbin")
             .expect("can't find webrtcbin");
 
         // Set some properties on webrtcbin
@@ -136,7 +135,7 @@ impl App {
         webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
 
         // Create a stream for handling the GStreamer message asynchronously
-        let bus = pipeline.get_bus().unwrap();
+        let bus = pipeline.bus().unwrap();
         let send_gst_msg_rx = bus.stream();
 
         // Channel for outgoing WebSocket messages from other threads
@@ -158,7 +157,7 @@ impl App {
 
                     let app = upgrade_weak!(app_clone, None);
                     if let Err(err) = app.on_negotiation_needed() {
-                        gst_element_error!(
+                        gst::element_error!(
                             app.pipeline,
                             gst::LibraryError::Failed,
                             ("Failed to negotiate: {:?}", err)
@@ -175,16 +174,15 @@ impl App {
         app.webrtcbin
             .connect("on-ice-candidate", false, move |values| {
                 let _webrtc = values[0].get::<gst::Element>().expect("Invalid argument");
-                let mlineindex = values[1].get_some::<u32>().expect("Invalid argument");
+                let mlineindex = values[1].get::<u32>().expect("Invalid argument");
                 let candidate = values[2]
                     .get::<String>()
-                    .expect("Invalid argument")
-                    .unwrap();
+                    .expect("Invalid argument");
 
                 let app = upgrade_weak!(app_clone, None);
 
                 if let Err(err) = app.on_ice_candidate(mlineindex, candidate) {
-                    gst_element_error!(
+                    gst::element_error!(
                         app.pipeline,
                         gst::LibraryError::Failed,
                         ("Failed to send ICE candidate: {:?}", err)
@@ -201,7 +199,7 @@ impl App {
             let app = upgrade_weak!(app_clone);
 
             if let Err(err) = app.on_incoming_stream(pad) {
-                gst_element_error!(
+                gst::element_error!(
                     app.pipeline,
                     gst::LibraryError::Failed,
                     ("Failed to handle incoming stream: {:?}", err)
@@ -213,7 +211,7 @@ impl App {
         app.pipeline.call_async(|pipeline| {
             // If this fails, post an error on the bus so we exit
             if pipeline.set_state(gst::State::Playing).is_err() {
-                gst_element_error!(
+                gst::element_error!(
                     pipeline,
                     gst::LibraryError::Failed,
                     ("Failed to set pipeline to Playing")
@@ -255,14 +253,14 @@ impl App {
         match message.view() {
             MessageView::Error(err) => bail!(
                 "Error from element {}: {} ({})",
-                err.get_src()
-                    .map(|s| String::from(s.get_path_string()))
+                err.src()
+                    .map(|s| String::from(s.path_string()))
                     .unwrap_or_else(|| String::from("None")),
-                err.get_error(),
-                err.get_debug().unwrap_or_else(|| String::from("None")),
+                err.error(),
+                err.debug().unwrap_or_else(|| String::from("None")),
             ),
             MessageView::Warning(warning) => {
-                println!("Warning: \"{}\"", warning.get_debug().unwrap());
+                println!("Warning: \"{}\"", warning.debug().unwrap());
             }
             _ => (),
         }
@@ -281,7 +279,7 @@ impl App {
             let app = upgrade_weak!(app_clone);
 
             if let Err(err) = app.on_offer_created(reply) {
-                gst_element_error!(
+                gst::element_error!(
                     app.pipeline,
                     gst::LibraryError::Failed,
                     ("Failed to send SDP offer: {:?}", err)
@@ -290,7 +288,7 @@ impl App {
         });
 
         self.webrtcbin
-            .emit("create-offer", &[&None::<gst::Structure>, &promise])
+            .emit_by_name("create-offer", &[&None::<gst::Structure>, &promise])
             .unwrap();
 
         Ok(())
@@ -313,23 +311,22 @@ impl App {
         };
 
         let offer = reply
-            .get_value("offer")
+            .value("offer")
             .unwrap()
             .get::<gst_webrtc::WebRTCSessionDescription>()
-            .expect("Invalid argument")
-            .unwrap();
+            .expect("Invalid argument");
         self.webrtcbin
-            .emit("set-local-description", &[&offer, &None::<gst::Promise>])
+            .emit_by_name("set-local-description", &[&offer, &None::<gst::Promise>])
             .unwrap();
 
         println!(
             "sending SDP offer to peer: {}",
-            offer.get_sdp().as_text().unwrap()
+            offer.sdp().as_text().unwrap()
         );
 
         let message = serde_json::to_string(&JsonMsg::Sdp {
             type_: "offer".to_string(),
-            sdp: offer.get_sdp().as_text().unwrap(),
+            sdp: offer.sdp().as_text().unwrap(),
         })
         .unwrap();
 
@@ -359,23 +356,22 @@ impl App {
         };
 
         let answer = reply
-            .get_value("answer")
+            .value("answer")
             .unwrap()
             .get::<gst_webrtc::WebRTCSessionDescription>()
-            .expect("Invalid argument")
-            .unwrap();
+            .expect("Invalid argument");
         self.webrtcbin
-            .emit("set-local-description", &[&answer, &None::<gst::Promise>])
+            .emit_by_name("set-local-description", &[&answer, &None::<gst::Promise>])
             .unwrap();
 
         println!(
             "sending SDP answer to peer: {}",
-            answer.get_sdp().as_text().unwrap()
+            answer.sdp().as_text().unwrap()
         );
 
         let message = serde_json::to_string(&JsonMsg::Sdp {
             type_: "answer".to_string(),
-            sdp: answer.get_sdp().as_text().unwrap(),
+            sdp: answer.sdp().as_text().unwrap(),
         })
         .unwrap();
 
@@ -399,7 +395,7 @@ impl App {
                 gst_webrtc::WebRTCSessionDescription::new(gst_webrtc::WebRTCSDPType::Answer, ret);
 
             self.webrtcbin
-                .emit("set-remote-description", &[&answer, &None::<gst::Promise>])
+                .emit_by_name("set-remote-description", &[&answer, &None::<gst::Promise>])
                 .unwrap();
 
             Ok(())
@@ -422,7 +418,7 @@ impl App {
 
                 app.0
                     .webrtcbin
-                    .emit("set-remote-description", &[&offer, &None::<gst::Promise>])
+                    .emit_by_name("set-remote-description", &[&offer, &None::<gst::Promise>])
                     .unwrap();
 
                 let app_clone = app.downgrade();
@@ -430,7 +426,7 @@ impl App {
                     let app = upgrade_weak!(app_clone);
 
                     if let Err(err) = app.on_answer_created(reply) {
-                        gst_element_error!(
+                        gst::element_error!(
                             app.pipeline,
                             gst::LibraryError::Failed,
                             ("Failed to send SDP answer: {:?}", err)
@@ -440,7 +436,7 @@ impl App {
 
                 app.0
                     .webrtcbin
-                    .emit("create-answer", &[&None::<gst::Structure>, &promise])
+                    .emit_by_name("create-answer", &[&None::<gst::Structure>, &promise])
                     .unwrap();
             });
 
@@ -453,7 +449,7 @@ impl App {
     // Handle incoming ICE candidates from the peer by passing them to webrtcbin
     fn handle_ice(&self, sdp_mline_index: u32, candidate: &str) -> Result<(), anyhow::Error> {
         self.webrtcbin
-            .emit("add-ice-candidate", &[&sdp_mline_index, &candidate])
+            .emit_by_name("add-ice-candidate", &[&sdp_mline_index, &candidate])
             .unwrap();
 
         Ok(())
@@ -480,7 +476,7 @@ impl App {
     // Whenever there's a new incoming, encoded stream from the peer create a new decodebin
     fn on_incoming_stream(&self, pad: &gst::Pad) -> Result<(), anyhow::Error> {
         // Early return for the source pads we're adding ourselves
-        if pad.get_direction() != gst::PadDirection::Src {
+        if pad.direction() != gst::PadDirection::Src {
             return Ok(());
         }
 
@@ -490,7 +486,7 @@ impl App {
             let app = upgrade_weak!(app_clone);
 
             if let Err(err) = app.on_incoming_decodebin_stream(pad) {
-                gst_element_error!(
+                gst::element_error!(
                     app.pipeline,
                     gst::LibraryError::Failed,
                     ("Failed to handle decoded stream: {:?}", err)
@@ -501,7 +497,7 @@ impl App {
         self.pipeline.add(&decodebin).unwrap();
         decodebin.sync_state_with_parent().unwrap();
 
-        let sinkpad = decodebin.get_static_pad("sink").unwrap();
+        let sinkpad = decodebin.static_pad("sink").unwrap();
         pad.link(&sinkpad).unwrap();
 
         Ok(())
@@ -510,8 +506,8 @@ impl App {
     // Handle a newly decoded decodebin stream and depending on its type, create the relevant
     // elements or simply ignore it
     fn on_incoming_decodebin_stream(&self, pad: &gst::Pad) -> Result<(), anyhow::Error> {
-        let caps = pad.get_current_caps().unwrap();
-        let name = caps.get_structure(0).unwrap().get_name();
+        let caps = pad.current_caps().unwrap();
+        let name = caps.structure(0).unwrap().name();
 
         let sink = if name.starts_with("video/") {
             gst::parse_bin_from_description(
@@ -532,7 +528,7 @@ impl App {
         sink.sync_state_with_parent()
             .with_context(|| format!("can't start sink for stream {:?}", caps))?;
 
-        let sinkpad = sink.get_static_pad("sink").unwrap();
+        let sinkpad = sink.static_pad("sink").unwrap();
         pad.link(&sinkpad)
             .with_context(|| format!("can't link sink for stream {:?}", caps))?;
 
