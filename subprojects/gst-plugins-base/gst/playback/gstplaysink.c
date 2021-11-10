@@ -3424,19 +3424,43 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
     /* if we are not part of vis or subtitles, set the ghostpad target */
     if (!need_vis && !need_text && (!playsink->textchain
             || !playsink->text_pad)) {
+      GstPad *old_sink_peer = gst_pad_get_peer (playsink->videochain->sinkpad);
+      GstPad *new_peer = NULL;
+
       GST_DEBUG_OBJECT (playsink, "ghosting video sinkpad");
-      gst_pad_unlink (playsink->video_srcpad_stream_synchronizer,
-          playsink->videochain->sinkpad);
-      if (playsink->videodeinterlacechain
-          && playsink->videodeinterlacechain->srcpad)
-        gst_pad_unlink (playsink->videodeinterlacechain->srcpad,
-            playsink->videochain->sinkpad);
       if (need_deinterlace)
-        gst_pad_link_full (playsink->videodeinterlacechain->srcpad,
-            playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+        new_peer = playsink->videodeinterlacechain->srcpad;
       else
-        gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
-            playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+        new_peer = playsink->video_srcpad_stream_synchronizer;
+
+      if (old_sink_peer != new_peer) {
+        /* Make sure the srcpad we're linking to is unlinked. This may
+         * leave a deinterlace or text overlay unlinked and lying around,
+         * but that will be cleaned up below */
+        GstPad *old_src_peer = gst_pad_get_peer (new_peer);
+        if (old_src_peer != NULL) {
+          gst_pad_unlink (new_peer, old_src_peer);
+          gst_clear_object (&old_src_peer);
+        }
+
+        /* And that the pad we're linking to is unlinked */
+        if (old_sink_peer != NULL)
+          gst_pad_unlink (old_sink_peer, playsink->videochain->sinkpad);
+
+        if (!GST_PAD_LINK_SUCCESSFUL (gst_pad_link_full (new_peer,
+                    playsink->videochain->sinkpad,
+                    GST_PAD_LINK_CHECK_NOTHING))) {
+          if (need_deinterlace) {
+            GST_WARNING_OBJECT (playsink,
+                "Failed to link deinterlace srcpad to video sinkpad");
+          } else {
+            GST_WARNING_OBJECT (playsink,
+                "Failed to link stream synchronizer srcpad to video sinkpad");
+          }
+        }
+      }
+
+      gst_clear_object (&old_sink_peer);
     }
   } else {
     GST_DEBUG_OBJECT (playsink, "no video needed");
