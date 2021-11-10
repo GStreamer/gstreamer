@@ -648,7 +648,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
     println!("connected");
 
     // Say HELLO to the server and see if it replies with HELLO
-    let our_id = rand::thread_rng().gen_range(10, 10_000);
+    let our_id = rand::thread_rng().gen_range(10..10_000);
     println!("Registering id {} with server", our_id);
     ws.send(WsMessage::Text(format!("HELLO {}", our_id)))
         .await?;
