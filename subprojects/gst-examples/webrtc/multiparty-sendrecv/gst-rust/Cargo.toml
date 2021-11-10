@@ -9,8 +9,8 @@ futures = "0.3"
 async-std = "1"
 structopt = { version = "0.3", default-features = false }
 anyhow = "1"
-rand = "0.7"
-async-tungstenite = { version = "0.10", features = ["async-std-runtime", "async-native-tls"] }
+rand = "0.8"
+async-tungstenite = { version = "0.16", features = ["async-std-runtime", "async-native-tls"] }
 gst = { package = "gstreamer", version = "0.17", features = ["v1_14", "v1_20"] }
 gst-webrtc = { package = "gstreamer-webrtc", version = "0.17" }
 gst-sdp = { package = "gstreamer-sdp", version = "0.17", features = ["v1_14"] }
