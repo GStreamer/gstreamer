@@ -153,9 +153,10 @@ struct JsonReply {
 
 fn transaction_id() -> String {
     thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
-        .take(30)
-        .collect()
+	.sample_iter(&rand::distributions::Alphanumeric)
+	.map(char::from)
+	.take(30)
+	.collect()
 }
 
 // Strong reference to the state of one peer
@@ -634,7 +635,7 @@ impl JanusGateway {
                     ws_msg = send_ws_msg_rx.select_next_some() => Some(ws_msg),
 
                     // Handle keepalive ticks, fired every 10 seconds
-                    ws_msg = timer_fuse.select_next_some() => {
+                    _ws_msg = timer_fuse.select_next_some() => {
                         let transaction = transaction_id();
                         Some(WsMessage::Text(
                             json!({

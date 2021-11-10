@@ -10,8 +10,8 @@ futures = "0.3"
 structopt = { version = "0.3", default-features = false }
 anyhow = "1"
 url = "2"
-rand = "0.7"
-async-tungstenite = { version = "0.14", features = ["gio-runtime"] }
+rand = "0.8"
+async-tungstenite = { version = "0.16", features = ["gio-runtime"] }
 gst = { package = "gstreamer", version = "0.17", features = ["v1_14"] }
 gst-webrtc = { package = "gstreamer-webrtc", version = "0.17" }
 gst-sdp = { package = "gstreamer-sdp", version = "0.17", features = ["v1_14"] }
@@ -22,4 +22,4 @@ http = "0.2"
 glib = "0.14"
 gio = "0.14"
 log = "0.4.8"
-env_logger = "0.7.1"
+env_logger = "0.9"
