@@ -189,6 +189,8 @@ enum
 #define DEFAULT_BLOCKSIZE       4096
 #define DEFAULT_NUM_BUFFERS     -1
 #define DEFAULT_DO_TIMESTAMP    FALSE
+/* FIXME 2.0: automatic_eos should probably be disabled by default,
+ * see https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1330 */
 #define DEFAULT_AUTOMATIC_EOS   TRUE
 
 enum
