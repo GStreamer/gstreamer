@@ -32,9 +32,7 @@ va_destroy_surfaces (GstVaDisplay * display, VASurfaceID * surfaces,
 
   g_return_val_if_fail (num_surfaces > 0, FALSE);
 
-  gst_va_display_lock (display);
   status = vaDestroySurfaces (dpy, surfaces, num_surfaces);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaDestroySurfaces: %s", vaErrorStr (status));
     return FALSE;
@@ -96,10 +94,8 @@ va_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
     /* *INDENT-ON* */
   }
 
-  gst_va_display_lock (display);
   status = vaCreateSurfaces (dpy, rt_format, width, height, surfaces,
       num_surfaces, attrs, num_attrs);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaCreateSurfaces: %s", vaErrorStr (status));
     return FALSE;
@@ -115,10 +111,8 @@ va_export_surface_to_dmabuf (GstVaDisplay * display, VASurfaceID surface,
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   VAStatus status;
 
-  gst_va_display_lock (display);
   status = vaExportSurfaceHandle (dpy, surface,
       VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2, flags, desc);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaExportSurfaceHandle: %s", vaErrorStr (status));
     return FALSE;
@@ -133,9 +127,7 @@ va_destroy_image (GstVaDisplay * display, VAImageID image_id)
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   VAStatus status;
 
-  gst_va_display_lock (display);
   status = vaDestroyImage (dpy, image_id);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaDestroyImage: %s", vaErrorStr (status));
     return FALSE;
@@ -150,9 +142,7 @@ va_get_derive_image (GstVaDisplay * display, VASurfaceID surface,
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   VAStatus status;
 
-  gst_va_display_lock (display);
   status = vaDeriveImage (dpy, surface, image);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_WARNING ("vaDeriveImage: %s", vaErrorStr (status));
     return FALSE;
@@ -173,10 +163,8 @@ va_create_image (GstVaDisplay * display, GstVideoFormat format, gint width,
   if (!va_format)
     return FALSE;
 
-  gst_va_display_lock (display);
   status =
       vaCreateImage (dpy, (VAImageFormat *) va_format, width, height, image);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaCreateImage: %s", vaErrorStr (status));
     return FALSE;
@@ -190,10 +178,8 @@ va_get_image (GstVaDisplay * display, VASurfaceID surface, VAImage * image)
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   VAStatus status;
 
-  gst_va_display_lock (display);
   status = vaGetImage (dpy, surface, 0, 0, image->width, image->height,
       image->image_id);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaGetImage: %s", vaErrorStr (status));
     return FALSE;
@@ -208,9 +194,7 @@ va_sync_surface (GstVaDisplay * display, VASurfaceID surface)
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   VAStatus status;
 
-  gst_va_display_lock (display);
   status = vaSyncSurface (dpy, surface);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_WARNING ("vaSyncSurface: %s", vaErrorStr (status));
     return FALSE;
@@ -224,9 +208,7 @@ va_map_buffer (GstVaDisplay * display, VABufferID buffer, gpointer * data)
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   VAStatus status;
 
-  gst_va_display_lock (display);
   status = vaMapBuffer (dpy, buffer, data);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_WARNING ("vaMapBuffer: %s", vaErrorStr (status));
     return FALSE;
@@ -240,9 +222,7 @@ va_unmap_buffer (GstVaDisplay * display, VABufferID buffer)
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   VAStatus status;
 
-  gst_va_display_lock (display);
   status = vaUnmapBuffer (dpy, buffer);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_WARNING ("vaUnmapBuffer: %s", vaErrorStr (status));
     return FALSE;
@@ -259,10 +239,8 @@ va_put_image (GstVaDisplay * display, VASurfaceID surface, VAImage * image)
   if (!va_sync_surface (display, surface))
     return FALSE;
 
-  gst_va_display_lock (display);
   status = vaPutImage (dpy, surface, image->image_id, 0, 0, image->width,
       image->height, 0, 0, image->width, image->height);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaPutImage: %s", vaErrorStr (status));
     return FALSE;
@@ -299,9 +277,7 @@ va_check_surface (GstVaDisplay * display, VASurfaceID surface)
   VAStatus status;
   VASurfaceStatus state;
 
-  gst_va_display_lock (display);
   status = vaQuerySurfaceStatus (dpy, surface, &state);
-  gst_va_display_unlock (display);
 
   if (status != VA_STATUS_SUCCESS)
     GST_ERROR ("vaQuerySurfaceStatus: %s", vaErrorStr (status));
@@ -338,9 +314,7 @@ va_copy_surface (GstVaDisplay * display, VASurfaceID dst, VASurfaceID src)
   /* *INDENT-ON* */
   VAStatus status;
 
-  gst_va_display_lock (display);
   status = vaCopy (dpy, &obj_dst, &obj_src, option);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_INFO ("vaCopy: %s", vaErrorStr (status));
     return FALSE;

@@ -238,9 +238,7 @@ gst_va_decoder_open (GstVaDecoder * self, VAProfile profile, guint rt_format)
   }
 
   dpy = gst_va_display_get_va_dpy (self->display);
-  gst_va_display_lock (self->display);
   status = vaCreateConfig (dpy, profile, VAEntrypointVLD, &attrib, 1, &config);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateConfig: %s", vaErrorStr (status));
     return FALSE;
@@ -272,16 +270,12 @@ gst_va_decoder_close (GstVaDecoder * self)
   dpy = gst_va_display_get_va_dpy (self->display);
 
   if (self->context != VA_INVALID_ID) {
-    gst_va_display_lock (self->display);
     status = vaDestroyContext (dpy, self->context);
-    gst_va_display_unlock (self->display);
     if (status != VA_STATUS_SUCCESS)
       GST_ERROR_OBJECT (self, "vaDestroyContext: %s", vaErrorStr (status));
   }
 
-  gst_va_display_lock (self->display);
   status = vaDestroyConfig (dpy, self->config);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaDestroyConfig: %s", vaErrorStr (status));
     return FALSE;
@@ -329,10 +323,8 @@ gst_va_decoder_set_frame_size_with_surfaces (GstVaDecoder * self,
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
-  gst_va_display_lock (self->display);
   status = vaCreateContext (dpy, self->config, coded_width, coded_height,
       VA_PROGRESSIVE, render_targets, num_render_targets, &context);
-  gst_va_display_unlock (self->display);
 
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaDestroyConfig: %s", vaErrorStr (status));
@@ -555,9 +547,7 @@ gst_va_decoder_add_param_buffer (GstVaDecoder * self, GstVaDecodePicture * pic,
   g_return_val_if_fail (pic && data && size > 0, FALSE);
 
   dpy = gst_va_display_get_va_dpy (self->display);
-  gst_va_display_lock (self->display);
   status = vaCreateBuffer (dpy, self->context, type, size, 1, data, &buffer);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateBuffer: %s", vaErrorStr (status));
     return FALSE;
@@ -582,19 +572,15 @@ gst_va_decoder_add_slice_buffer_with_n_params (GstVaDecoder * self,
       && params_data && params_size > 0, FALSE);
 
   dpy = gst_va_display_get_va_dpy (self->display);
-  gst_va_display_lock (self->display);
   status = vaCreateBuffer (dpy, self->context, VASliceParameterBufferType,
       params_size, params_num, params_data, &params_buffer);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateBuffer: %s", vaErrorStr (status));
     return FALSE;
   }
 
-  gst_va_display_lock (self->display);
   status = vaCreateBuffer (dpy, self->context, VASliceDataBufferType,
       slice_size, 1, slice_data, &slice_buffer);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateBuffer: %s", vaErrorStr (status));
     return FALSE;
@@ -642,19 +628,15 @@ gst_va_decoder_decode_with_aux_surface (GstVaDecoder * self,
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
-  gst_va_display_lock (self->display);
   status = vaBeginPicture (dpy, self->context, surface);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_WARNING_OBJECT (self, "vaBeginPicture: %s", vaErrorStr (status));
     goto fail_end_pic;
   }
 
   if (pic->buffers->len > 0) {
-    gst_va_display_lock (self->display);
     status = vaRenderPicture (dpy, self->context,
         (VABufferID *) pic->buffers->data, pic->buffers->len);
-    gst_va_display_unlock (self->display);
     if (status != VA_STATUS_SUCCESS) {
       GST_WARNING_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
       goto fail_end_pic;
@@ -662,19 +644,15 @@ gst_va_decoder_decode_with_aux_surface (GstVaDecoder * self,
   }
 
   if (pic->slices->len > 0) {
-    gst_va_display_lock (self->display);
     status = vaRenderPicture (dpy, self->context,
         (VABufferID *) pic->slices->data, pic->slices->len);
-    gst_va_display_unlock (self->display);
     if (status != VA_STATUS_SUCCESS) {
       GST_WARNING_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
       goto fail_end_pic;
     }
   }
 
-  gst_va_display_lock (self->display);
   status = vaEndPicture (dpy, self->context);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS)
     GST_WARNING_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
   else
@@ -687,9 +665,7 @@ bail:
 
 fail_end_pic:
   {
-    gst_va_display_lock (self->display);
     status = vaEndPicture (dpy, self->context);
-    gst_va_display_unlock (self->display);
     goto bail;
   }
 }
@@ -757,9 +733,7 @@ _destroy_buffers (GstVaDecodePicture * pic)
   if (pic->buffers) {
     for (i = 0; i < pic->buffers->len; i++) {
       buffer = g_array_index (pic->buffers, VABufferID, i);
-      gst_va_display_lock (pic->display);
       status = vaDestroyBuffer (dpy, buffer);
-      gst_va_display_unlock (pic->display);
       if (status != VA_STATUS_SUCCESS) {
         ret = FALSE;
         GST_WARNING ("Failed to destroy parameter buffer: %s",
@@ -773,9 +747,7 @@ _destroy_buffers (GstVaDecodePicture * pic)
   if (pic->slices) {
     for (i = 0; i < pic->slices->len; i++) {
       buffer = g_array_index (pic->slices, VABufferID, i);
-      gst_va_display_lock (pic->display);
       status = vaDestroyBuffer (dpy, buffer);
-      gst_va_display_unlock (pic->display);
       if (status != VA_STATUS_SUCCESS) {
         ret = FALSE;
         GST_WARNING ("Failed to destroy slice buffer: %s", vaErrorStr (status));

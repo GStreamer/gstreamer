@@ -52,9 +52,7 @@ _has_copy (GstVaDisplay * display)
 
   dpy = gst_va_display_get_va_dpy (display);
 
-  gst_va_display_lock (display);
   status = vaGetDisplayAttributes (dpy, &attr, 1);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_INFO ("vaGetDisplayAttribures: %s", vaErrorStr (status));
     return FALSE;

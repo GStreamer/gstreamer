@@ -122,10 +122,6 @@ struct _GstVaDisplayClass
 GST_VA_API
 GType                 gst_va_display_get_type             (void);
 GST_VA_API
-void                  gst_va_display_lock                 (GstVaDisplay * self);
-GST_VA_API
-void                  gst_va_display_unlock               (GstVaDisplay * self);
-GST_VA_API
 gboolean              gst_va_display_initialize           (GstVaDisplay * self);
 GST_VA_API
 gpointer              gst_va_display_get_va_dpy           (GstVaDisplay * self);

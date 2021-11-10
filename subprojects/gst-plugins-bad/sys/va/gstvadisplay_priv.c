@@ -41,17 +41,13 @@ gst_va_display_get_profiles (GstVaDisplay * self, guint32 codec,
 
   dpy = gst_va_display_get_va_dpy (self);
 
-  gst_va_display_lock (self);
   num_profiles = vaMaxNumProfiles (dpy);
   num_entrypoints = vaMaxNumEntrypoints (dpy);
-  gst_va_display_unlock (self);
 
   profiles = g_new (VAProfile, num_profiles);
   entrypoints = g_new (VAEntrypoint, num_entrypoints);
 
-  gst_va_display_lock (self);
   status = vaQueryConfigProfiles (dpy, profiles, &num_profiles);
-  gst_va_display_unlock (self);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaQueryConfigProfile: %s", vaErrorStr (status));
     goto bail;
@@ -61,10 +57,8 @@ gst_va_display_get_profiles (GstVaDisplay * self, guint32 codec,
     if (codec != gst_va_profile_codec (profiles[i]))
       continue;
 
-    gst_va_display_lock (self);
     status = vaQueryConfigEntrypoints (dpy, profiles[i], entrypoints,
         &num_entrypoints);
-    gst_va_display_unlock (self);
     if (status != VA_STATUS_SUCCESS) {
       GST_ERROR ("vaQueryConfigEntrypoints: %s", vaErrorStr (status));
       goto bail;
@@ -100,17 +94,13 @@ gst_va_display_get_image_formats (GstVaDisplay * self)
 
   dpy = gst_va_display_get_va_dpy (self);
 
-  gst_va_display_lock (self);
   max = vaMaxNumImageFormats (dpy);
-  gst_va_display_unlock (self);
   if (max == 0)
     return NULL;
 
   va_formats = g_new (VAImageFormat, max);
 
-  gst_va_display_lock (self);
   status = vaQueryImageFormats (dpy, va_formats, &num);
-  gst_va_display_unlock (self);
 
   gst_va_video_format_fix_map (va_formats, num);
 
@@ -148,15 +138,11 @@ gst_va_display_has_vpp (GstVaDisplay * self)
 
   dpy = gst_va_display_get_va_dpy (self);
 
-  gst_va_display_lock (self);
   max = vaMaxNumEntrypoints (dpy);
-  gst_va_display_unlock (self);
 
   entrypoints = g_new (VAEntrypoint, max);
 
-  gst_va_display_lock (self);
   status = vaQueryConfigEntrypoints (dpy, VAProfileNone, entrypoints, &num);
-  gst_va_display_unlock (self);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaQueryImageFormats: %s", vaErrorStr (status));
     goto bail;

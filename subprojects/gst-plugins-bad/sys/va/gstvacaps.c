@@ -68,9 +68,7 @@ gst_va_get_surface_attribs (GstVaDisplay * display, VAConfigID config,
 
   dpy = gst_va_display_get_va_dpy (display);
 
-  gst_va_display_lock (display);
   status = vaQuerySurfaceAttributes (dpy, config, NULL, attrib_count);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (display, "vaQuerySurfaceAttributes: %s",
         vaErrorStr (status));
@@ -79,9 +77,7 @@ gst_va_get_surface_attribs (GstVaDisplay * display, VAConfigID config,
 
   attribs = g_new (VASurfaceAttrib, *attrib_count);
 
-  gst_va_display_lock (display);
   status = vaQuerySurfaceAttributes (dpy, config, attribs, attrib_count);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (display, "vaQuerySurfaceAttributes: %s",
         vaErrorStr (status));
@@ -248,9 +244,7 @@ gst_va_create_raw_caps (GstVaDisplay * display, VAProfile profile,
 
   dpy = gst_va_display_get_va_dpy (display);
 
-  gst_va_display_lock (display);
   status = vaCreateConfig (dpy, profile, entrypoint, &attrib, 1, &config);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (display, "vaCreateConfig: %s", vaErrorStr (status));
     return NULL;
@@ -258,9 +252,7 @@ gst_va_create_raw_caps (GstVaDisplay * display, VAProfile profile,
 
   caps = gst_va_create_raw_caps_from_config (display, config);
 
-  gst_va_display_lock (display);
   status = vaDestroyConfig (dpy, config);
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (display, "vaDestroyConfig: %s", vaErrorStr (status));
     return NULL;
@@ -286,10 +278,8 @@ gst_va_create_coded_caps (GstVaDisplay * display, VAProfile profile,
 
   dpy = gst_va_display_get_va_dpy (display);
 
-  gst_va_display_lock (display);
   status = vaGetConfigAttributes (dpy, profile, entrypoint, attribs,
       G_N_ELEMENTS (attribs));
-  gst_va_display_unlock (display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (display, "vaGetConfigAttributes: %s",
         vaErrorStr (status));

@@ -203,10 +203,8 @@ gst_va_filter_ensure_config_attributes (GstVaFilter * self,
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
-  gst_va_display_lock (self->display);
   status = vaGetConfigAttributes (dpy, VAProfileNone, VAEntrypointVideoProc,
       attribs, G_N_ELEMENTS (attribs));
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaGetConfigAttributes: %s", vaErrorStr (status));
     return FALSE;
@@ -332,10 +330,8 @@ gst_va_filter_ensure_pipeline_caps (GstVaFilter * self)
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
-  gst_va_display_lock (self->display);
   status = vaQueryVideoProcPipelineCaps (dpy, self->context, NULL, 0,
       &self->pipeline_caps);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaQueryVideoProcPipelineCaps: %s",
         vaErrorStr (status));
@@ -372,10 +368,8 @@ gst_va_filter_open (GstVaFilter * self)
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
-  gst_va_display_lock (self->display);
   status = vaCreateConfig (dpy, VAProfileNone, VAEntrypointVideoProc, &attrib,
       1, &self->config);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateConfig: %s", vaErrorStr (status));
     return FALSE;
@@ -384,10 +378,8 @@ gst_va_filter_open (GstVaFilter * self)
   if (!gst_va_filter_ensure_surface_attributes (self))
     goto bail;
 
-  gst_va_display_lock (self->display);
   status = vaCreateContext (dpy, self->config, 0, 0, 0, NULL, 0,
       &self->context);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateContext: %s", vaErrorStr (status));
     goto bail;
@@ -397,9 +389,7 @@ gst_va_filter_open (GstVaFilter * self)
 
 bail:
   {
-    gst_va_display_lock (self->display);
     status = vaDestroyConfig (dpy, self->config);
-    gst_va_display_unlock (self->display);
 
     return FALSE;
   }
@@ -420,16 +410,12 @@ gst_va_filter_close (GstVaFilter * self)
   dpy = gst_va_display_get_va_dpy (self->display);
 
   if (self->context != VA_INVALID_ID) {
-    gst_va_display_lock (self->display);
     status = vaDestroyContext (dpy, self->context);
-    gst_va_display_unlock (self->display);
     if (status != VA_STATUS_SUCCESS)
       GST_ERROR_OBJECT (self, "vaDestroyContext: %s", vaErrorStr (status));
   }
 
-  gst_va_display_lock (self->display);
   status = vaDestroyConfig (dpy, self->config);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaDestroyConfig: %s", vaErrorStr (status));
     return FALSE;
@@ -520,14 +506,10 @@ gst_va_filter_ensure_filters (GstVaFilter * self)
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
-  gst_va_display_lock (self->display);
   status = vaQueryVideoProcFilters (dpy, self->context, filter_types, &num);
-  gst_va_display_unlock (self->display);
   if (status == VA_STATUS_ERROR_MAX_NUM_EXCEEDED) {
     filter_types = g_try_realloc_n (filter_types, num, sizeof (*filter_types));
-    gst_va_display_lock (self->display);
     status = vaQueryVideoProcFilters (dpy, self->context, filter_types, &num);
-    gst_va_display_unlock (self->display);
   }
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaQueryVideoProcFilters: %s", vaErrorStr (status));
@@ -544,10 +526,8 @@ gst_va_filter_ensure_filters (GstVaFilter * self)
     struct VaFilter filter = { filter_types[i], num_caps, {{{0,}}} };
 
     if (num_caps > 0) {
-      gst_va_display_lock (self->display);
       status = vaQueryVideoProcFilterCaps (dpy, self->context, filter.type,
           &filter.caps, &filter.num_caps);
-      gst_va_display_unlock (self->display);
       if (status != VA_STATUS_SUCCESS) {
         GST_WARNING_OBJECT (self, "vaQueryVideoProcFiltersCaps: %s",
             vaErrorStr (status));
@@ -1397,10 +1377,8 @@ _query_pipeline_caps (GstVaFilter * self, GArray * filters,
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
-  gst_va_display_lock (self->display);
   status = vaQueryVideoProcPipelineCaps (dpy, self->context, va_filters,
       num_filters, caps);
-  gst_va_display_unlock (self->display);
 
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaQueryVideoProcPipelineCaps: %s",
@@ -1479,10 +1457,8 @@ gst_va_filter_add_filter_buffer (GstVaFilter * self, gpointer data, gsize size,
     return FALSE;
 
   dpy = gst_va_display_get_va_dpy (self->display);
-  gst_va_display_lock (self->display);
   status = vaCreateBuffer (dpy, self->context, VAProcFilterParameterBufferType,
       size, num, data, &buffer);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateBuffer: %s", vaErrorStr (status));
     return FALSE;
@@ -1517,9 +1493,7 @@ _destroy_filters_unlocked (GstVaFilter * self)
   for (i = 0; i < self->filters->len; i++) {
     buffer = g_array_index (self->filters, VABufferID, i);
 
-    gst_va_display_lock (self->display);
     status = vaDestroyBuffer (dpy, buffer);
-    gst_va_display_unlock (self->display);
     if (status != VA_STATUS_SUCCESS) {
       ret = FALSE;
       GST_WARNING_OBJECT (self, "Failed to destroy filter buffer: %s",
@@ -1644,10 +1618,8 @@ _create_pipeline_buffer (GstVaFilter * self, GstVaSample * src,
   GST_OBJECT_UNLOCK (self);
 
   dpy = gst_va_display_get_va_dpy (self->display);
-  gst_va_display_lock (self->display);
   status = vaCreateBuffer (dpy, self->context,
       VAProcPipelineParameterBufferType, sizeof (params), 1, &params, buffer);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateBuffer: %s", vaErrorStr (status));
     return FALSE;
@@ -1696,25 +1668,19 @@ gst_va_filter_process (GstVaFilter * self, GstVaSample * src, GstVaSample * dst)
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
-  gst_va_display_lock (self->display);
   status = vaBeginPicture (dpy, self->context, dst->surface);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaBeginPicture: %s", vaErrorStr (status));
     return FALSE;
   }
 
-  gst_va_display_lock (self->display);
   status = vaRenderPicture (dpy, self->context, &buffer, 1);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
     goto fail_end_pic;
   }
 
-  gst_va_display_lock (self->display);
   status = vaEndPicture (dpy, self->context);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
     goto bail;
@@ -1723,9 +1689,7 @@ gst_va_filter_process (GstVaFilter * self, GstVaSample * src, GstVaSample * dst)
   ret = TRUE;
 
 bail:
-  gst_va_display_lock (self->display);
   status = vaDestroyBuffer (dpy, buffer);
-  gst_va_display_unlock (self->display);
   if (status != VA_STATUS_SUCCESS) {
     GST_WARNING_OBJECT (self, "Failed to destroy pipeline buffer: %s",
         vaErrorStr (status));
@@ -1735,9 +1699,7 @@ bail:
 
 fail_end_pic:
   {
-    gst_va_display_lock (self->display);
     status = vaEndPicture (dpy, self->context);
-    gst_va_display_unlock (self->display);
     if (status != VA_STATUS_SUCCESS)
       GST_ERROR_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
     goto bail;

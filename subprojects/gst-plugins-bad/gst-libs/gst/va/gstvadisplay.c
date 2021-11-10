@@ -49,7 +49,6 @@ GST_DEBUG_CATEGORY (gst_va_display_debug);
 typedef struct _GstVaDisplayPrivate GstVaDisplayPrivate;
 struct _GstVaDisplayPrivate
 {
-  GRecMutex lock;
   VADisplay display;
 
   gboolean foreign;
@@ -191,10 +190,6 @@ gst_va_display_dispose (GObject * object)
 static void
 gst_va_display_finalize (GObject * object)
 {
-  GstVaDisplayPrivate *priv = GET_PRIV (object);
-
-  g_rec_mutex_clear (&priv->lock);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -221,50 +216,7 @@ gst_va_display_init (GstVaDisplay * self)
 {
   GstVaDisplayPrivate *priv = GET_PRIV (self);
 
-  g_rec_mutex_init (&priv->lock);
   priv->impl = GST_VA_IMPLEMENTATION_INVALID;
-}
-
-/**
- * gst_va_display_lock:
- * @self: a #GstVaDisplay
- *
- * Lock the display. It will be used before we call the
- * VA API functions to serialize the VA commands.
- *
- * Since: 1.20
- **/
-void
-gst_va_display_lock (GstVaDisplay * self)
-{
-  GstVaDisplayPrivate *priv;
-
-  g_return_if_fail (GST_IS_VA_DISPLAY (self));
-
-  priv = GET_PRIV (self);
-
-  g_rec_mutex_lock (&priv->lock);
-}
-
-/**
- * gst_va_display_unlock:
- * @self: a #GstVaDisplay
- *
- * Unlock the display. It will be used after we call the
- * VA API functions.
- *
- * Since: 1.20
- **/
-void
-gst_va_display_unlock (GstVaDisplay * self)
-{
-  GstVaDisplayPrivate *priv;
-
-  g_return_if_fail (GST_IS_VA_DISPLAY (self));
-
-  priv = GET_PRIV (self);
-
-  g_rec_mutex_unlock (&priv->lock);
 }
 
 #ifndef GST_DISABLE_GST_DEBUG
