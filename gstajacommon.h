@@ -65,6 +65,11 @@ GstAjaNtv2Device *gst_aja_ntv2_device_ref(GstAjaNtv2Device *device);
 G_GNUC_INTERNAL
 void gst_aja_ntv2_device_unref(GstAjaNtv2Device *device);
 
+G_GNUC_INTERNAL
+gint gst_aja_ntv2_device_find_unallocated_frames(GstAjaNtv2Device *device,
+                                                 NTV2Channel channel,
+                                                 guint frame_count);
+
 #define GST_AJA_ALLOCATOR_MEMTYPE "aja"
 
 #define GST_TYPE_AJA_ALLOCATOR (gst_aja_allocator_get_type())

@@ -684,6 +684,134 @@ ShmMutexLocker::~ShmMutexLocker() {
   if (s != SEM_FAILED) sem_post(s);
 }
 
+static guint gst_aja_device_get_frame_multiplier(GstAjaNtv2Device *device,
+                                                 NTV2Channel channel) {
+  // quad formats use 4x as many frames, quad-quad formats 8x
+  bool quad_enabled = false;
+  device->device->GetQuadFrameEnable(quad_enabled, channel);
+  bool quad_quad_enabled = false;
+  device->device->GetQuadQuadFrameEnable(quad_quad_enabled, channel);
+
+  NTV2VideoFormat format = NTV2_FORMAT_UNKNOWN;
+  device->device->GetVideoFormat(format, channel);
+
+  GST_TRACE("Channel %d uses mode %d (quad: %d, quad quad: %d)", (gint)channel,
+            (gint)format, quad_enabled, quad_quad_enabled);
+
+  // Similarly, 2k/UHD use 4x as many frames and 4k/UHD2 use 8x as many
+  // frames
+  if (format != NTV2_FORMAT_UNKNOWN) {
+    guint width = ::GetDisplayWidth(format);
+    guint height = ::GetDisplayHeight(format);
+
+    if (height <= 1080 && width <= 1920) {
+      // SD and HD but not 2k!
+    } else if (height <= 2160 && width <= 3840) {
+      // 2k and UHD but not 4k
+      quad_enabled = true;
+    } else if (height <= 4320 && width <= 7680) {
+      // 4k and UHD2 but not 8k
+      quad_quad_enabled = true;
+    } else {
+      // 8k FIXME
+      quad_quad_enabled = true;
+    }
+  }
+
+  if (quad_enabled) {
+    g_assert(!quad_quad_enabled);
+
+    return 4;
+  } else if (quad_quad_enabled) {
+    g_assert(!quad_enabled);
+
+    return 8;
+  }
+
+  return 1;
+}
+
+// Returns -1 on failure or otherwise the start_frame.
+// end_frame would be start_frame + frame_count - 1
+gint gst_aja_ntv2_device_find_unallocated_frames(GstAjaNtv2Device *device,
+                                                 NTV2Channel channel,
+                                                 guint frame_count) {
+  g_assert(frame_count != 0);
+  g_assert(device != NULL);
+  g_assert(device->device->IsOpen());
+
+  // Adapted from CNTV2Card::FindUnallocatedFrames() with
+  // quad/quad-quad/UHD/UHD2 support
+  std::set<guint16> used_frames;
+
+  for (NTV2Channel c = ::NTV2_CHANNEL1; c < NTV2_MAX_NUM_CHANNELS;
+       c = (NTV2Channel)(c + 1)) {
+    AUTOCIRCULATE_STATUS ac_status;
+
+    if (device->device->AutoCirculateGetStatus(c, ac_status) &&
+        !ac_status.IsStopped()) {
+      guint16 start_frame = ac_status.GetStartFrame();
+      guint16 end_frame = ac_status.GetEndFrame();
+
+      guint multiplier = gst_aja_device_get_frame_multiplier(device, c);
+
+      GST_TRACE("Channel %d uses frames %u-%u (multiplier: %u)", c, start_frame,
+                end_frame, multiplier);
+
+      start_frame *= multiplier;
+      end_frame *= multiplier;
+      end_frame += (multiplier - 1);
+
+      GST_TRACE("Channel %d uses HD frames %u-%u", c, start_frame, end_frame);
+      for (guint16 i = start_frame; i <= end_frame; i++) {
+        used_frames.insert(i);
+      }
+    }
+  }
+
+  guint multiplier = gst_aja_device_get_frame_multiplier(device, channel);
+  frame_count *= multiplier;
+
+  const guint16 last_frame =
+      ::NTV2DeviceGetNumberFrameBuffers(device->device->GetDeviceID()) - 1;
+  guint16 start_frame = 0;
+  guint16 end_frame = start_frame + frame_count - 1;
+
+  auto iter = used_frames.cbegin();
+  while (iter != used_frames.cend()) {
+    guint16 allocated_start_frame = *iter;
+    guint16 allocated_end_frame = allocated_start_frame;
+
+    // Find end of the allocation
+    while (++iter != used_frames.cend() && *iter == (allocated_end_frame + 1))
+      allocated_end_frame++;
+
+    // Free block before this allocation
+    if (start_frame < allocated_start_frame &&
+        end_frame < allocated_start_frame)
+      break;
+
+    // Move after this allocation and check if there is enough space before
+    // the next allocation
+    start_frame = GST_ROUND_UP_N(allocated_end_frame + 1, multiplier);
+    end_frame = start_frame + frame_count - 1;
+  }
+
+  // If above we moved after the end of the available frames error out
+  if (start_frame > last_frame || end_frame > last_frame) {
+    GST_WARNING("Did not find a contiguous unused range of %u frames",
+                frame_count);
+    return -1;
+  }
+
+  // Otherwise we have enough space after the last allocation
+  GST_INFO("Using HD frames %u-%u", start_frame, end_frame);
+  GST_INFO("Using frames %u-%u", start_frame / multiplier,
+           start_frame / multiplier + frame_count / multiplier - 1);
+
+  return start_frame / multiplier;
+}
+
 GType gst_aja_audio_system_get_type(void) {
   static gsize id = 0;
   static const GEnumValue modes[] = {

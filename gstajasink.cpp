@@ -1737,13 +1737,22 @@ restart:
     guint16 start_frame = self->start_frame;
     guint16 end_frame = self->end_frame;
 
-    // If nothing was configured, work with a number of frames that is half
-    // the queue size and assume that all other channels work the same.
+    // If both are the same, try to find queue_size/2 unallocated frames and
+    // use those.
     if (start_frame == end_frame) {
       guint16 num_frames = self->queue_size / 2;
 
-      start_frame = self->channel * num_frames;
-      end_frame = (self->channel + 1) * num_frames - 1;
+      gint assigned_start_frame = gst_aja_ntv2_device_find_unallocated_frames(
+          self->device, self->channel, num_frames);
+
+      if (assigned_start_frame == -1) {
+        GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
+                          ("Failed to allocate %u frames", num_frames));
+        goto out;
+      }
+
+      start_frame = assigned_start_frame;
+      end_frame = start_frame + num_frames - 1;
     }
 
     GST_DEBUG_OBJECT(

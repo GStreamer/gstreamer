@@ -42,8 +42,8 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_src_debug);
 #define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_VITC)
 #define DEFAULT_REFERENCE_SOURCE (GST_AJA_REFERENCE_SOURCE_FREERUN)
 #define DEFAULT_QUEUE_SIZE (16)
-#define DEFAULT_START_FRAME (0)
-#define DEFAULT_END_FRAME (0)
+#define DEFAULT_START_FRAME (8)
+#define DEFAULT_END_FRAME (8)
 #define DEFAULT_CAPTURE_CPU_CORE (G_MAXUINT)
 
 enum {
@@ -156,8 +156,8 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
       gobject_class, PROP_START_FRAME,
       g_param_spec_uint(
           "start-frame", "Start Frame",
-          "Start frame buffer to be used for capturing (auto if same number as "
-          "end-frame).",
+          "Start frame buffer to be used for capturing (automatically assign "
+          "that many frames if same number as end-frame).",
           0, G_MAXINT, DEFAULT_START_FRAME,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -165,8 +165,8 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
       gobject_class, PROP_END_FRAME,
       g_param_spec_uint(
           "end-frame", "End Frame",
-          "End frame buffer to be used for capturing (auto if same number as "
-          "start-frame).",
+          "End frame buffer to be used for capturing (automatically assign "
+          "that many frames if same number as start-frame).",
           0, G_MAXINT, DEFAULT_END_FRAME,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -1781,13 +1781,20 @@ restart:
       guint16 start_frame = self->start_frame;
       guint16 end_frame = self->end_frame;
 
-      // If nothing was configured, work with 8 frames and assume that all
-      // other channels work the same.
+      // If both are set to the same value, try to find that many unallocated
+      // frames and use those.
       if (start_frame == end_frame) {
-        const guint16 num_frames = 8;
+        gint assigned_start_frame = gst_aja_ntv2_device_find_unallocated_frames(
+            self->device, self->channel, self->start_frame);
 
-        start_frame = self->channel * num_frames;
-        end_frame = (self->channel + 1) * num_frames - 1;
+        if (assigned_start_frame == -1) {
+          GST_ELEMENT_ERROR(self, STREAM, FAILED, (NULL),
+                            ("Failed to allocate %u frames", start_frame));
+          goto out;
+        }
+
+        start_frame = assigned_start_frame;
+        end_frame = start_frame + self->start_frame - 1;
       }
 
       GST_DEBUG_OBJECT(
