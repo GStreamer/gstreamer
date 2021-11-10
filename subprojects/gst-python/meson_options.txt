@@ -4,3 +4,4 @@ option('libpython-dir', type : 'string', value : '',
         description: 'Path to find libpythonXX.so')
 option('python', type : 'string', value : 'python3')
 option('tests', type : 'feature', value : 'auto', yield : true)
+option('plugin', type : 'feature', value : 'auto')
