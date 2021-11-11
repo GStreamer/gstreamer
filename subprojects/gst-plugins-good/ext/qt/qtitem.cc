@@ -69,9 +69,10 @@ struct _QtGLVideoItemPrivate
   gint display_width;
   gint display_height;
 
-  gboolean negotiated;
   GstBuffer *buffer;
+  GstCaps *new_caps;
   GstCaps *caps;
+  GstVideoInfo new_v_info;
   GstVideoInfo v_info;
 
   gboolean initted;
@@ -158,6 +159,7 @@ QtGLVideoItem::~QtGLVideoItem()
   gst_buffer_replace (&this->priv->buffer, NULL);
 
   gst_caps_replace (&this->priv->caps, NULL);
+  gst_caps_replace (&this->priv->new_caps, NULL);
 
   g_weak_ref_clear (&this->priv->sink);
 
@@ -201,6 +203,70 @@ QtGLVideoItem::itemInitialized()
   return this->priv->initted;
 }
 
+static gboolean
+_calculate_par (QtGLVideoItem * widget, GstVideoInfo * info)
+{
+  gboolean ok;
+  gint width, height;
+  gint par_n, par_d;
+  gint display_par_n, display_par_d;
+  guint display_ratio_num, display_ratio_den;
+
+  width = GST_VIDEO_INFO_WIDTH (info);
+  height = GST_VIDEO_INFO_HEIGHT (info);
+
+  par_n = GST_VIDEO_INFO_PAR_N (info);
+  par_d = GST_VIDEO_INFO_PAR_D (info);
+
+  if (!par_n)
+    par_n = 1;
+
+  /* get display's PAR */
+  if (widget->priv->par_n != 0 && widget->priv->par_d != 0) {
+    display_par_n = widget->priv->par_n;
+    display_par_d = widget->priv->par_d;
+  } else {
+    display_par_n = 1;
+    display_par_d = 1;
+  }
+
+  ok = gst_video_calculate_display_ratio (&display_ratio_num,
+      &display_ratio_den, width, height, par_n, par_d, display_par_n,
+      display_par_d);
+
+  if (!ok)
+    return FALSE;
+
+  widget->setImplicitWidth (width);
+  widget->setImplicitHeight (height);
+
+  GST_LOG ("%p PAR: %u/%u DAR:%u/%u", widget, par_n, par_d, display_par_n,
+      display_par_d);
+
+  if (height % display_ratio_den == 0) {
+    GST_DEBUG ("%p keeping video height", widget);
+    widget->priv->display_width = (guint)
+        gst_util_uint64_scale_int (height, display_ratio_num,
+        display_ratio_den);
+    widget->priv->display_height = height;
+  } else if (width % display_ratio_num == 0) {
+    GST_DEBUG ("%p keeping video width", widget);
+    widget->priv->display_width = width;
+    widget->priv->display_height = (guint)
+        gst_util_uint64_scale_int (width, display_ratio_den, display_ratio_num);
+  } else {
+    GST_DEBUG ("%p approximating while keeping video height", widget);
+    widget->priv->display_width = (guint)
+        gst_util_uint64_scale_int (height, display_ratio_num,
+        display_ratio_den);
+    widget->priv->display_height = height;
+  }
+  GST_DEBUG ("%p scaling to %dx%d", widget, widget->priv->display_width,
+      widget->priv->display_height);
+
+  return TRUE;
+}
+
 QSGNode *
 QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
     UpdatePaintNodeData * updatePaintNodeData)
@@ -217,15 +283,29 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
 
   g_mutex_lock (&this->priv->lock);
 
-  if (gst_gl_context_get_current() == NULL)
-    gst_gl_context_activate (this->priv->other_context, TRUE);
-
   GST_TRACE ("%p updatePaintNode", this);
 
+  if (this->priv->new_caps) {
+    GST_DEBUG ("%p caps change from %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT,
+        this, this->priv->caps, this->priv->new_caps);
+    gst_caps_take (&this->priv->caps, this->priv->new_caps);
+    this->priv->new_caps = NULL;
+    this->priv->v_info = this->priv->new_v_info;
+
+    if (!_calculate_par (this, &this->priv->v_info)) {
+      g_mutex_unlock (&this->priv->lock);
+      return NULL;
+    }
+  }
+
   if (!this->priv->caps) {
+    GST_LOG ("%p no caps yet", this);
     g_mutex_unlock (&this->priv->lock);
     return NULL;
   }
+
+  if (gst_gl_context_get_current() == NULL)
+    gst_gl_context_activate (this->priv->other_context, TRUE);
 
   if (!texNode) {
     texNode = new QSGSimpleTextureNode ();
@@ -400,7 +480,7 @@ QtGLVideoItem::hoverMoveEvent(QHoverEvent * event)
   g_mutex_lock (&this->priv->lock);
 
   /* can't do anything when we don't have input format */
-  if (!this->priv->negotiated) {
+  if (!this->priv->caps) {
     g_mutex_unlock (&this->priv->lock);
     return;
   }
@@ -439,7 +519,7 @@ QtGLVideoItem::sendMouseEvent(QMouseEvent * event, const gchar * type)
   g_mutex_lock (&this->priv->lock);
 
   /* can't do anything when we don't have input format */
-  if (!this->priv->negotiated) {
+  if (!this->priv->caps) {
     g_mutex_unlock (&this->priv->lock);
     return;
   }
@@ -471,27 +551,6 @@ QtGLVideoItem::mouseReleaseEvent(QMouseEvent * event)
   sendMouseEvent(event, "release");
 }
 
-static void
-_reset (QtGLVideoItem * qt_item)
-{
-  GstBuffer *tmp_buffer;
-
-  gst_buffer_replace (&qt_item->priv->buffer, NULL);
-
-  gst_caps_replace (&qt_item->priv->caps, NULL);
-
-  qt_item->priv->negotiated = FALSE;
-
-  while ((tmp_buffer = (GstBuffer*) g_queue_pop_head (&qt_item->priv->potentially_unbound_buffers))) {
-    GST_TRACE ("old buffer %p should be unbound now, unreffing", tmp_buffer);
-    gst_buffer_unref (tmp_buffer);
-  }
-  while ((tmp_buffer = (GstBuffer*) g_queue_pop_head (&qt_item->priv->bound_buffers))) {
-    GST_TRACE ("old buffer %p should be unbound now, unreffing", tmp_buffer);
-    gst_buffer_unref (tmp_buffer);
-  }
-}
-
 void
 QtGLVideoItemInterface::setSink (GstElement * sink)
 {
@@ -514,7 +573,7 @@ QtGLVideoItemInterface::setBuffer (GstBuffer * buffer)
     return;
   }
 
-  if (!qt_item->priv->negotiated) {
+  if (!qt_item->priv->caps && !qt_item->priv->new_caps) {
     GST_WARNING ("%p Got buffer on unnegotiated QtGLVideoItem. Dropping", this);
     return;
   }
@@ -636,70 +695,6 @@ QtGLVideoItem::handleWindowChanged (QQuickWindow * win)
   }
 }
 
-static gboolean
-_calculate_par (QtGLVideoItem * widget, GstVideoInfo * info)
-{
-  gboolean ok;
-  gint width, height;
-  gint par_n, par_d;
-  gint display_par_n, display_par_d;
-  guint display_ratio_num, display_ratio_den;
-
-  width = GST_VIDEO_INFO_WIDTH (info);
-  height = GST_VIDEO_INFO_HEIGHT (info);
-
-  par_n = GST_VIDEO_INFO_PAR_N (info);
-  par_d = GST_VIDEO_INFO_PAR_D (info);
-
-  if (!par_n)
-    par_n = 1;
-
-  /* get display's PAR */
-  if (widget->priv->par_n != 0 && widget->priv->par_d != 0) {
-    display_par_n = widget->priv->par_n;
-    display_par_d = widget->priv->par_d;
-  } else {
-    display_par_n = 1;
-    display_par_d = 1;
-  }
-
-  ok = gst_video_calculate_display_ratio (&display_ratio_num,
-      &display_ratio_den, width, height, par_n, par_d, display_par_n,
-      display_par_d);
-
-  if (!ok)
-    return FALSE;
-
-  widget->setImplicitWidth (width);
-  widget->setImplicitHeight (height);
-
-  GST_LOG ("%p PAR: %u/%u DAR:%u/%u", widget, par_n, par_d, display_par_n,
-      display_par_d);
-
-  if (height % display_ratio_den == 0) {
-    GST_DEBUG ("%p keeping video height", widget);
-    widget->priv->display_width = (guint)
-        gst_util_uint64_scale_int (height, display_ratio_num,
-        display_ratio_den);
-    widget->priv->display_height = height;
-  } else if (width % display_ratio_num == 0) {
-    GST_DEBUG ("%p keeping video width", widget);
-    widget->priv->display_width = width;
-    widget->priv->display_height = (guint)
-        gst_util_uint64_scale_int (width, display_ratio_den, display_ratio_num);
-  } else {
-    GST_DEBUG ("%p approximating while keeping video height", widget);
-    widget->priv->display_width = (guint)
-        gst_util_uint64_scale_int (height, display_ratio_num,
-        display_ratio_den);
-    widget->priv->display_height = height;
-  }
-  GST_DEBUG ("%p scaling to %dx%d", widget, widget->priv->display_width,
-      widget->priv->display_height);
-
-  return TRUE;
-}
-
 gboolean
 QtGLVideoItemInterface::setCaps (GstCaps * caps)
 {
@@ -720,17 +715,11 @@ QtGLVideoItemInterface::setCaps (GstCaps * caps)
 
   g_mutex_lock (&qt_item->priv->lock);
 
-  _reset (qt_item);
+  GST_DEBUG ("%p set caps %" GST_PTR_FORMAT, qt_item, caps);
 
-  gst_caps_replace (&qt_item->priv->caps, caps);
+  gst_caps_replace (&qt_item->priv->new_caps, caps);
 
-  if (!_calculate_par (qt_item, &v_info)) {
-    g_mutex_unlock (&qt_item->priv->lock);
-    return FALSE;
-  }
-
-  qt_item->priv->v_info = v_info;
-  qt_item->priv->negotiated = TRUE;
+  qt_item->priv->new_v_info = v_info;
 
   g_mutex_unlock (&qt_item->priv->lock);
 
