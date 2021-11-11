@@ -46,7 +46,7 @@
  *
  *   // sinktemplate should be a #GstStaticPadTemplate with direction
  *   // %GST_PAD_SINK and name "sink"
- *   gst_element_class_add_static_pad_template (gstelement_class, &amp;sinktemplate);
+ *   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
  *
  *   gst_element_class_set_static_metadata (gstelement_class,
  *       "Sink name",

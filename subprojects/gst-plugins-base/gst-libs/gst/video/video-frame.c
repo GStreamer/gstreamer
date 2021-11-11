@@ -206,7 +206,7 @@ invalid_size:
  *   GstVideoFrame vframe;
  *   ...
  *   // set RGB pixels to black one at a time
- *   if (gst_video_frame_map (&amp;vframe, video_info, video_buffer, GST_MAP_WRITE)) {
+ *   if (gst_video_frame_map (&vframe, video_info, video_buffer, GST_MAP_WRITE)) {
  *     guint8 *pixels = GST_VIDEO_FRAME_PLANE_DATA (vframe, 0);
  *     guint stride = GST_VIDEO_FRAME_PLANE_STRIDE (vframe, 0);
  *     guint pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (vframe, 0);
@@ -219,7 +219,7 @@ invalid_size:
  *       }
  *     }
  *
- *     gst_video_frame_unmap (&amp;vframe);
+ *     gst_video_frame_unmap (&vframe);
  *   }
  *   ...
  * ]|

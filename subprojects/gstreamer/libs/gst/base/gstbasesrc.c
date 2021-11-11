@@ -109,7 +109,7 @@
  *   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
  *   // srctemplate should be a #GstStaticPadTemplate with direction
  *   // %GST_PAD_SRC and name "src"
- *   gst_element_class_add_static_pad_template (gstelement_class, &amp;srctemplate);
+ *   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
  *
  *   gst_element_class_set_static_metadata (gstelement_class,
  *      "Source name",

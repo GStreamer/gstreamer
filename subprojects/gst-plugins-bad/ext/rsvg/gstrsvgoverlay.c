@@ -53,7 +53,7 @@
  * gst-launch-1.0 -v videotestsrc ! videoconvert ! rsvgoverlay name=overlay ! videoconvert ! autovideosink filesrc location=foo.svg ! image/svg ! overlay.data_sink
  * ]| does the same by feeding data through the data_sink pad. You can also specify the SVG data itself as parameter:
  * |[
- * gst-launch-1.0 -v videotestsrc ! videoconvert ! rsvgoverlay data='&lt;svg viewBox="0 0 800 600"&gt;&lt;image x="80%" y="80%" width="10%" height="10%" xlink:href="foo.jpg" /&gt;&lt;/svg&gt;' ! videoconvert ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! videoconvert ! rsvgoverlay data='<svg viewBox="0 0 800 600"><image x="80%" y="80%" width="10%" height="10%" xlink:href="foo.jpg" /></svg>' ! videoconvert ! autovideosink
  * ]|
  *
  */

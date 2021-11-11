@@ -39,12 +39,12 @@
  *
  * ## Using an element factory
  * |[<!-- language="C" -->
- *   #include &lt;gst/gst.h&gt;
+ *   #include <gst/gst.h>
  *
  *   GstElement *src;
  *   GstElementFactory *srcfactory;
  *
- *   gst_init (&amp;argc, &amp;argv);
+ *   gst_init (&argc, &argv);
  *
  *   srcfactory = gst_element_factory_find ("filesrc");
  *   g_return_if_fail (srcfactory != NULL);

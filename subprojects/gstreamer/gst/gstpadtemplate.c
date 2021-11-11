@@ -70,7 +70,7 @@
  *   my_method (void)
  *   {
  *     GstPad *pad;
- *     pad = gst_pad_new_from_static_template (&amp;my_template, "sink");
+ *     pad = gst_pad_new_from_static_template (&my_template, "sink");
  *     ...
  *   }
  * ]|
@@ -83,7 +83,7 @@
  *   {
  *     GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
  *
- *     gst_element_class_add_static_pad_template (gstelement_class, &amp;my_template);
+ *     gst_element_class_add_static_pad_template (gstelement_class, &my_template);
  *   }
  * ]|
  */

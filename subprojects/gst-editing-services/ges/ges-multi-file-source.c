@@ -241,7 +241,7 @@ ges_multi_file_source_class_init (GESMultiFileSourceClass * klass)
    *
    * The uri of the file/resource to use. You can set a start index,
    * a stop index and a sequence pattern.
-   * The format is &lt;multifile://start:stop\@location-pattern&gt;.
+   * The format is <multifile://start:stop\@location-pattern>.
    * The pattern uses printf string formating.
    *
    * Example uris:

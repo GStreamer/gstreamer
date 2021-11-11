@@ -46,13 +46,13 @@
  *   // pad templates should be a #GstStaticPadTemplate with direction
  *   // #GST_PAD_SRC and name "vidsrc", "imgsrc" and "vfsrc"
  *   gst_element_class_add_static_pad_template (gstelement_class,
- *       &amp;vidsrc_template);
+ *       &vidsrc_template);
  *   gst_element_class_add_static_pad_template (gstelement_class,
- *       &amp;imgsrc_template);
+ *       &imgsrc_template);
  *   gst_element_class_add_static_pad_template (gstelement_class,
- *       &amp;vfsrc_template);
+ *       &vfsrc_template);
  *   // see #GstElementDetails
- *   gst_element_class_set_details (gstelement_class, &amp;details);
+ *   gst_element_class_set_details (gstelement_class, &details);
  * }
  * ]|
  *

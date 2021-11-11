@@ -392,13 +392,13 @@ void gst_install_plugins_context_set_startup_notification_id
  * Gtk+/Gnome application should be able to obtain the XID of the top-level
  * window like this:
  * |[
- * ##include &lt;gtk/gtk.h&gt;
+ * ##include <gtk/gtk.h>
  * ##ifdef GDK_WINDOWING_X11
- * ##include &lt;gdk/gdkx.h&gt;
+ * ##include <gdk/gdkx.h>
  * ##endif
  * ...
  * ##ifdef GDK_WINDOWING_X11
- *   xid = GDK_WINDOW_XWINDOW (GTK_WIDGET (application_window)-&gt;window);
+ *   xid = GDK_WINDOW_XWINDOW (GTK_WIDGET (application_window)->window);
  * ##endif
  * ...
  * ]|

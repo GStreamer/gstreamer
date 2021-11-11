@@ -28,8 +28,8 @@
  * ## Example code
  * |[
  *
- * #include &lt;gst/gst.h&gt;
- * #include &lt;gst/video/video.h&gt;
+ * #include <gst/gst.h>
+ * #include <gst/video/video.h>
  *
  * ...
  *
@@ -46,8 +46,8 @@
  * {
  *   CairoOverlayState *state = (CairoOverlayState *)user_data;
  *
- *   gst_video_format_parse_caps (caps, NULL, &amp;state-&gt;width, &amp;state-&gt;height);
- *   state-&gt;valid = TRUE;
+ *   gst_video_format_parse_caps (caps, NULL, &state->width, &state->height);
+ *   state->valid = TRUE;
  * }
  *
  * static void
@@ -57,11 +57,11 @@
  *   CairoOverlayState *s = (CairoOverlayState *)user_data;
  *   double scale;
  *
- *   if (!s-&gt;valid)
+ *   if (!s->valid)
  *     return;
  *
  *   scale = 2*(((timestamp/(int)1e7) % 70)+30)/100.0;
- *   cairo_translate(cr, s-&gt;width/2, (s-&gt;height/2)-30);
+ *   cairo_translate(cr, s->width/2, (s->height/2)-30);
  *   cairo_scale (cr, scale, scale);
  *
  *   cairo_move_to (cr, 0, 0);

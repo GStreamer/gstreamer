@@ -33,7 +33,7 @@
  *
  * ## Example code
  * |[
- * #include &lt;gst/gst.h&gt;
+ * #include <gst/gst.h>
  *
  * ...
  * typedef struct {
@@ -62,7 +62,7 @@
  *
  * ...
  *
- *   for (i = 0; i &lt; 5; i++) {
+ *   for (i = 0; i < 5; i++) {
  *     band = gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (equalizer), i);
  *     g_object_set (G_OBJECT (band), "freq", state[i].freq,
  *         "bandwidth", state[i].width,

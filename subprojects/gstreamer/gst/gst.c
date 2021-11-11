@@ -73,7 +73,7 @@
  * main (int argc, char *argv[])
  * {
  *  GOptionEntry options[] = {
- *   {"tags", 't', 0, G_OPTION_ARG_NONE, &amp;tags,
+ *   {"tags", 't', 0, G_OPTION_ARG_NONE, &tags,
  *       N_("Output tags (also known as metadata)"), NULL},
  *   {NULL}
  *  };
