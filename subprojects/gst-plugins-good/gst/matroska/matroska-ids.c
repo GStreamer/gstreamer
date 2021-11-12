@@ -349,14 +349,14 @@ gst_matroska_track_free (GstMatroskaTrackContext * track)
 
       g_free (enc->comp_settings);
     }
-    g_array_free (track->encodings, TRUE);
+    g_array_unref (track->encodings);
   }
 
   if (track->tags)
     gst_tag_list_unref (track->tags);
 
   if (track->index_table)
-    g_array_free (track->index_table, TRUE);
+    g_array_unref (track->index_table);
 
   if (track->stream_headers)
     gst_buffer_list_unref (track->stream_headers);

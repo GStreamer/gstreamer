@@ -328,7 +328,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->tracks_parsed = FALSE;
 
   if (demux->clusters) {
-    g_array_free (demux->clusters, TRUE);
+    g_array_unref (demux->clusters);
     demux->clusters = NULL;
   }
 

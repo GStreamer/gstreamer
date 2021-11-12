@@ -175,7 +175,7 @@ void
 gst_ebml_read_clear (GstEbmlRead * ebml)
 {
   if (ebml->readers)
-    g_array_free (ebml->readers, TRUE);
+    g_array_unref (ebml->readers);
   ebml->readers = NULL;
   if (ebml->buf) {
     gst_buffer_unmap (ebml->buf, &ebml->map);

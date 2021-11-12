@@ -1809,7 +1809,7 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
   guint i;
 
   if (common->index)
-    g_array_free (common->index, TRUE);
+    g_array_unref (common->index);
   common->index =
       g_array_sized_new (FALSE, FALSE, sizeof (GstMatroskaIndex), 128);
 
@@ -1897,7 +1897,7 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
 
   /* sanity check; empty index normalizes to no index */
   if (common->index->len == 0) {
-    g_array_free (common->index, TRUE);
+    g_array_unref (common->index);
     common->index = NULL;
   }
 
@@ -3319,7 +3319,7 @@ gst_matroska_read_common_reset (GstElement * element,
 
   /* reset indexes */
   if (ctx->index) {
-    g_array_free (ctx->index, TRUE);
+    g_array_unref (ctx->index);
     ctx->index = NULL;
   }
 
