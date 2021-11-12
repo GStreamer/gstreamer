@@ -477,7 +477,15 @@ struct _QtDemuxStream
   guint32 ctts_count;
   gint32 ctts_soffset;
 
-  /* cslg */
+  /* cslg composition_to_dts_shift or based on the smallest negative
+   * composition time offset.
+   *
+   * This is unsigned because only negative composition time offsets /
+   * positive composition_to_dts_shift matter here. In all other cases,
+   * DTS/PTS can be inferred directly without ending up with PTS>DTS.
+   *
+   * See 14496-12 6.4
+   */
   guint64 cslg_shift;
 
   /* fragmented */
