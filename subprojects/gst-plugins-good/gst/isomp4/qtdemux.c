@@ -3463,6 +3463,9 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   else
     stream->cslg_shift = 0;
 
+  GST_DEBUG_OBJECT (qtdemux, "Using clsg_shift %" G_GUINT64_FORMAT,
+      stream->cslg_shift);
+
   /* Update total duration if needed */
   check_update_duration (qtdemux, QTSTREAMTIME_TO_GSTTIME (stream, timestamp));
 
@@ -9525,6 +9528,9 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
      * unconditionally to produce TS and Segment */
     stream->cslg_shift = 0;
   }
+
+  GST_DEBUG_OBJECT (qtdemux, "Using clsg_shift %" G_GUINT64_FORMAT,
+      stream->cslg_shift);
 
   /* For raw audio streams especially we might want to merge the samples
    * to not output one audio sample per buffer. We're doing this here
