@@ -1593,6 +1593,12 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
   if (vpid.IsValid()) {
     GstVideoInfo info;
 
+    {
+      std::stringstream os;
+      vpid.Print(os);
+      GST_TRACE_OBJECT(self, "Got valid VPID %s", os.str().c_str());
+    }
+
     if (gst_video_info_from_ntv2_video_format(&info, item.detected_format)) {
       switch (vpid.GetTransferCharacteristics()) {
         default:
