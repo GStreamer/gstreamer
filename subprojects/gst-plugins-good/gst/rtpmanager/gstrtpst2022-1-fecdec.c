@@ -221,7 +221,8 @@ trim_items (GstRTPST_2022_1_FecDec * dec)
     GST_TRACE_OBJECT (dec,
         "Trimming packets up to %" GST_TIME_FORMAT " (seq: %u)",
         GST_TIME_ARGS (GST_BUFFER_DTS_OR_PTS (item->buffer)), item->seq);
-    g_sequence_remove_range (g_sequence_get_begin_iter (dec->packets), iter);
+    g_sequence_remove_range (g_sequence_get_begin_iter (dec->packets),
+        g_sequence_iter_next (iter));
   }
 }
 
@@ -263,7 +264,7 @@ trim_fec_items (GstRTPST_2022_1_FecDec * dec, guint D)
         D ? "row" : "column",
         GST_TIME_ARGS (GST_BUFFER_DTS_OR_PTS (item->buffer)), item->seq);
     g_sequence_remove_range (g_sequence_get_begin_iter (dec->fec_packets[D]),
-        iter);
+        g_sequence_iter_next (iter));
   }
 }
 
