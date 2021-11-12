@@ -3425,6 +3425,11 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
        * high offsets are unlikely and there are files out there that use
        * version=0 truns with negative offsets */
       ct = QT_UINT32 (data + ct_offset);
+
+      /* FIXME: Set offset to 0 for "no decode samples". This needs
+       * to be handled in a codec specific manner ideally. */
+      if (ct == G_MININT32)
+        ct = 0;
     } else {
       ct = 0;
     }
@@ -9457,18 +9462,21 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
         offset = gst_byte_reader_get_int32_be_unchecked (&stream->ctts);
         /* HACK: if sample_offset is larger than 2 * duration, ignore the box.
          * slightly inaccurate PTS could be more usable than corrupted one */
-        if (G_UNLIKELY ((ABS (offset) / 2) > stream->duration)) {
+        if (G_UNLIKELY ((ctts_version == 0 || offset != G_MININT32)
+                && ABS (offset) / 2 > stream->duration)) {
           GST_WARNING_OBJECT (qtdemux,
               "Ignore corrupted ctts, sample_offset %" G_GINT32_FORMAT
-              " larger than duration %" G_GUINT64_FORMAT,
-              offset, stream->duration);
+              " larger than duration %" G_GUINT64_FORMAT, offset,
+              stream->duration);
 
           stream->cslg_shift = 0;
           stream->ctts_present = FALSE;
           goto done;
         }
 
-        if (offset < cslg_least)
+        /* Don't consider "no decode samples" with offset G_MININT32
+         * for the DTS/PTS shift */
+        if (offset != G_MININT32 && offset < cslg_least)
           cslg_least = offset;
       }
 
@@ -9496,11 +9504,12 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
         offset = gst_byte_reader_get_int32_be_unchecked (&stream->ctts);
         /* HACK: if sample_offset is larger than 2 * duration, ignore the box.
          * slightly inaccurate PTS could be more usable than corrupted one */
-        if (G_UNLIKELY ((ABS (offset) / 2) > stream->duration)) {
+        if (G_UNLIKELY ((ctts_version == 0 || offset != G_MININT32)
+                && ABS (offset) / 2 > stream->duration)) {
           GST_WARNING_OBJECT (qtdemux,
               "Ignore corrupted ctts, sample_offset %" G_GINT32_FORMAT
-              " larger than duration %" G_GUINT64_FORMAT,
-              offset, stream->duration);
+              " larger than duration %" G_GUINT64_FORMAT, offset,
+              stream->duration);
 
           stream->cslg_shift = 0;
           stream->ctts_present = FALSE;
@@ -9937,6 +9946,11 @@ ctts:
 
       ctts_count = stream->ctts_count;
       ctts_soffset = stream->ctts_soffset;
+
+      /* FIXME: Set offset to 0 for "no decode samples". This needs
+       * to be handled in a codec specific manner ideally. */
+      if (ctts_soffset == G_MININT32)
+        ctts_soffset = 0;
 
       for (j = stream->ctts_sample_index; j < ctts_count; j++) {
         cur->pts_offset = ctts_soffset;
