@@ -333,7 +333,9 @@ add_musicbrainz_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
        * evidence that any popular application is actually putting this info
        * into TXXX frames; the first one comes from a musicbrainz wiki 'proposed
        * tags' page, the second one is analogue to the vorbis/ape/flac tag. */
-    GST_TAG_CDDA_CDDB_DISCID, "CDDB DiscID", "discid"}
+    GST_TAG_CDDA_CDDB_DISCID, "CDDB DiscID", "discid"}, {
+    GST_TAG_MUSICBRAINZ_RELEASETRACKID, "MusicBrainz Track Id",
+          "musicbrainz_trackid"}
   };
   guint i, idx;
 
@@ -730,6 +732,7 @@ static const struct
   GST_TAG_MUSICBRAINZ_TRMID, add_musicbrainz_tag, "\004"}, {
   GST_TAG_CDDA_MUSICBRAINZ_DISCID, add_musicbrainz_tag, "\005"}, {
   GST_TAG_CDDA_CDDB_DISCID, add_musicbrainz_tag, "\006"}, {
+  GST_TAG_MUSICBRAINZ_RELEASETRACKID, add_musicbrainz_tag, "\007"}, {
   GST_TAG_MUSICBRAINZ_TRACKID, add_unique_file_id_tag, ""}, {
   GST_TAG_ARTIST_SORTNAME, add_text_tag, "TSOP"}, {
   GST_TAG_ALBUM_SORTNAME, add_text_tag, "TSOA"}, {
