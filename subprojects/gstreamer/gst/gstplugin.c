@@ -819,7 +819,7 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
       /* already loaded */
       g_mutex_unlock (&gst_plugin_loading_mutex);
       return plugin;
-    } else {
+    } else if (g_strcmp0 (plugin->filename, filename) == 0) {
       /* load plugin and update fields */
       new_plugin = FALSE;
     }

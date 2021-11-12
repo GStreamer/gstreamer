@@ -8565,7 +8565,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "top (2)",
+                        "default": "baseline (0)",
                         "mutable": "null",
                         "readable": true,
                         "type": "GstBaseTextOverlayVAlign",
