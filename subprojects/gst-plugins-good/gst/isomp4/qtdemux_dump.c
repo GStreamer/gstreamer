@@ -828,7 +828,7 @@ qtdemux_dump_trun (GstQTDemux * qtdemux, GstByteReader * data, int depth)
     if (flags & TR_COMPOSITION_TIME_OFFSETS) {
       if (!gst_byte_reader_get_uint32_be (data, &composition_time_offsets))
         return FALSE;
-      GST_TRACE ("%*s    composition_time_offsets:  %u", depth, "",
+      GST_TRACE ("%*s    composition_time_offsets:  %d", depth, "",
           composition_time_offsets);
     }
   }
