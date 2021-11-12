@@ -9391,6 +9391,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     GstByteReader cslg = GST_BYTE_READER_INIT (NULL, 0);
     guint8 ctts_version;
+    gboolean checked_ctts = FALSE;
 
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup2 (stream->ctts.data, stream->ctts.size);
@@ -9445,6 +9446,8 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
       pos = gst_byte_reader_get_pos (&stream->ctts);
       num_entries = stream->n_composition_times;
 
+      checked_ctts = TRUE;
+
       stream->cslg_shift = 0;
 
       for (i = 0; i < num_entries; i++) {
@@ -9473,6 +9476,37 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
         stream->cslg_shift = -cslg_least;
       else
         stream->cslg_shift = 0;
+
+      /* reset the reader so we can generate sample table */
+      gst_byte_reader_set_pos (&stream->ctts, pos);
+    }
+
+    /* Check if ctts values are looking reasonable if that didn't happen above */
+    if (!checked_ctts) {
+      guint num_entries, pos;
+      gint i;
+
+      pos = gst_byte_reader_get_pos (&stream->ctts);
+      num_entries = stream->n_composition_times;
+
+      for (i = 0; i < num_entries; i++) {
+        gint32 offset;
+
+        gst_byte_reader_skip_unchecked (&stream->ctts, 4);
+        offset = gst_byte_reader_get_int32_be_unchecked (&stream->ctts);
+        /* HACK: if sample_offset is larger than 2 * duration, ignore the box.
+         * slightly inaccurate PTS could be more usable than corrupted one */
+        if (G_UNLIKELY ((ABS (offset) / 2) > stream->duration)) {
+          GST_WARNING_OBJECT (qtdemux,
+              "Ignore corrupted ctts, sample_offset %" G_GINT32_FORMAT
+              " larger than duration %" G_GUINT64_FORMAT,
+              offset, stream->duration);
+
+          stream->cslg_shift = 0;
+          stream->ctts_present = FALSE;
+          goto done;
+        }
+      }
 
       /* reset the reader so we can generate sample table */
       gst_byte_reader_set_pos (&stream->ctts, pos);
