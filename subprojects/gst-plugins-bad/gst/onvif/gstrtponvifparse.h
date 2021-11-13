@@ -47,6 +47,10 @@ struct _GstRtpOnvifParse {
 
   /* pads */
   GstPad *sinkpad,*srcpad;
+  gboolean gap_detected;
+  gboolean is_reverse;
+  gboolean first_buffer;
+  guint64 previous_key_frame_timestamp;
 };
 
 struct _GstRtpOnvifParseClass {
