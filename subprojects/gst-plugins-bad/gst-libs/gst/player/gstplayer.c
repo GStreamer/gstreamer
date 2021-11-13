@@ -573,10 +573,13 @@ gst_player_new (GstPlayerVideoRenderer * video_renderer,
       g_object_new (GST_TYPE_PLAYER, "signal-dispatcher", signal_dispatcher,
       NULL);
 
+  self->play = gst_play_new (NULL);
+
   if (video_renderer != NULL) {
     renderer = gst_player_wrapped_video_renderer_new (video_renderer, self);
+    g_object_set (self->play, "video-renderer",
+        GST_PLAY_VIDEO_RENDERER (renderer), NULL);
   }
-  self->play = gst_play_new (GST_PLAY_VIDEO_RENDERER (renderer));
 
   if (signal_dispatcher != NULL) {
     GMainContext *context = NULL;
