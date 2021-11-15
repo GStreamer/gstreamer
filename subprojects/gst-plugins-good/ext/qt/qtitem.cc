@@ -285,19 +285,6 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
 
   GST_TRACE ("%p updatePaintNode", this);
 
-  if (this->priv->new_caps) {
-    GST_DEBUG ("%p caps change from %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT,
-        this, this->priv->caps, this->priv->new_caps);
-    gst_caps_take (&this->priv->caps, this->priv->new_caps);
-    this->priv->new_caps = NULL;
-    this->priv->v_info = this->priv->new_v_info;
-
-    if (!_calculate_par (this, &this->priv->v_info)) {
-      g_mutex_unlock (&this->priv->lock);
-      return NULL;
-    }
-  }
-
   if (!this->priv->caps) {
     GST_LOG ("%p no caps yet", this);
     g_mutex_unlock (&this->priv->lock);
@@ -579,6 +566,19 @@ QtGLVideoItemInterface::setBuffer (GstBuffer * buffer)
   }
 
   g_mutex_lock (&qt_item->priv->lock);
+
+  if (qt_item->priv->new_caps) {
+    GST_DEBUG ("%p caps change from %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT,
+        this, qt_item->priv->caps, qt_item->priv->new_caps);
+    gst_caps_take (&qt_item->priv->caps, qt_item->priv->new_caps);
+    qt_item->priv->new_caps = NULL;
+    qt_item->priv->v_info = qt_item->priv->new_v_info;
+
+    if (!_calculate_par (qt_item, &qt_item->priv->v_info)) {
+      g_mutex_unlock (&qt_item->priv->lock);
+      return;
+    }
+  }
 
   gst_buffer_replace (&qt_item->priv->buffer, buffer);
 
