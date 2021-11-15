@@ -2330,7 +2330,8 @@ gst_qtdemux_map_and_push_segments (GstQTDemux * qtdemux, GstSegment * segment)
      * at the beginning and then one segment after, other scenarios are not
      * supported and are discarded when parsing the edts */
     for (i = 0; i < stream->n_segments; i++) {
-      if (stream->segments[i].stop_time > segment->start) {
+      if ((stream->segments[i].stop_time > segment->start)
+          || (i == stream->n_segments - 1)) {
         /* push the empty segment and move to the next one */
         gst_qtdemux_activate_segment (qtdemux, stream, i,
             stream->cur_global_pts);
