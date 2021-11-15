@@ -1578,6 +1578,9 @@ gst_vaapipostproc_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   ret = gst_vaapipostproc_passthrough (trans, buf, outbuf);
 
 done:
+  if (sys_buf)
+    copy_metadata (postproc, sys_buf, buf);
+
   gst_buffer_unref (buf);
 
   if (sys_buf) {
