@@ -586,9 +586,9 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
       GST_VIDEO_INFO_SIZE (info) += size;
 
     GST_LOG_OBJECT (self, "buffer %p: new dmabuf %d / surface %#x [%dx%d] "
-        "size %" G_GSIZE_FORMAT, buffer, fd, surface,
+        "size %" G_GSIZE_FORMAT " drm mod %#lx", buffer, fd, surface,
         GST_VIDEO_INFO_WIDTH (&self->info), GST_VIDEO_INFO_HEIGHT (&self->info),
-        GST_VIDEO_INFO_SIZE (&self->info));
+        GST_VIDEO_INFO_SIZE (&self->info), *drm_mod);
   }
 
   if (G_UNLIKELY (info)) {
