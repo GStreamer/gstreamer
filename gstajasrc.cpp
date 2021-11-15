@@ -1125,10 +1125,10 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
 
   switch (self->timecode_index) {
     case GST_AJA_TIMECODE_INDEX_VITC:
-      self->tc_index = ::NTV2InputSourceToTimecodeIndex(input_source, false);
+      self->tc_index = ::NTV2InputSourceToTimecodeIndex(input_source, true);
       break;
     case GST_AJA_TIMECODE_INDEX_ATC_LTC:
-      self->tc_index = ::NTV2InputSourceToTimecodeIndex(input_source, true);
+      self->tc_index = ::NTV2InputSourceToTimecodeIndex(input_source, false);
       break;
     case GST_AJA_TIMECODE_INDEX_LTC1:
       self->tc_index = ::NTV2_TCINDEX_LTC1;
