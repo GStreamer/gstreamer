@@ -1835,6 +1835,126 @@ GST_START_TEST (test_qtdemux_sample_interleaving)
 
 GST_END_TEST;
 
+static void
+qtdemux_pad_added_cb_for_push_mode (GstElement * demux, GstPad * pad,
+    GstElement * appsink)
+{
+  GstPad *appsink_pad;
+  GstPadLinkReturn ret;
+
+  appsink_pad = gst_element_get_static_pad (appsink, "sink");
+
+  if (gst_pad_is_linked (appsink_pad))
+    goto finish;
+
+  ret = gst_pad_link (pad, appsink_pad);
+  if (GST_PAD_LINK_FAILED (ret)) {
+    GST_ERROR ("Could not link qtdemux and appsink: %s",
+        gst_pad_link_get_name (ret));
+  }
+
+finish:
+  gst_object_unref (GST_OBJECT (appsink_pad));
+}
+
+static void
+check_start_of_segment (GstElement * appsink, GstClockTime first_pts)
+{
+  GstMiniObject *object;
+  gboolean have_segment_event = FALSE;
+  gboolean have_buffer = FALSE;
+
+  while (!have_buffer
+      && (object = gst_app_sink_pull_object (GST_APP_SINK (appsink)))) {
+    if (GST_IS_SAMPLE (object)) {
+      GstSample *sample = GST_SAMPLE (object);
+      GstBuffer *buffer = gst_sample_get_buffer (sample);
+      GstSegment *segment = gst_sample_get_segment (sample);
+
+      fail_unless (have_segment_event);
+      fail_unless (GST_IS_SAMPLE (sample));
+      fail_unless (GST_IS_BUFFER (buffer));
+      fail_unless (segment != NULL);
+
+      GST_TRACE ("Sample: %" GST_PTR_FORMAT " with %" GST_SEGMENT_FORMAT,
+          buffer, segment);
+
+      fail_unless (GST_BUFFER_PTS (buffer) == first_pts);
+
+      have_buffer = TRUE;
+    } else if (GST_IS_EVENT (object)) {
+      GstEvent *event = GST_EVENT (object);
+      if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+        have_segment_event = TRUE;
+      }
+
+      GST_TRACE ("Event: %" GST_PTR_FORMAT, event);
+    } else {
+      fail ("Unexpected object received");
+    }
+
+    gst_clear_mini_object (&object);
+  }
+
+  fail_unless (have_segment_event);
+  if (first_pts == GST_CLOCK_TIME_NONE) {
+    fail_if (have_buffer);
+    fail_unless (gst_app_sink_is_eos (GST_APP_SINK (appsink)));
+  } else {
+    fail_unless (have_buffer);
+    fail_if (gst_app_sink_is_eos (GST_APP_SINK (appsink)));
+  }
+}
+
+GST_START_TEST (test_qtdemux_seek_push_mode)
+{
+  GstElement *source, *queue, *demux, *appsink, *pipeline;
+
+  pipeline = gst_pipeline_new (NULL);
+  source = gst_element_factory_make ("filesrc", NULL);
+  /* Adding a queue to the pipeline forces qtdemux into push mode */
+  queue = gst_element_factory_make ("queue", NULL);
+  demux = gst_element_factory_make ("qtdemux", NULL);
+  appsink = gst_element_factory_make ("appsink", NULL);
+
+  g_signal_connect (demux, "pad-added", (GCallback)
+      qtdemux_pad_added_cb_for_push_mode, appsink);
+
+  gst_bin_add_many (GST_BIN (pipeline), source, queue, demux, appsink, NULL);
+  gst_element_link_many (source, queue, demux, NULL);
+
+  {
+    char *full_filename = g_build_filename (GST_TEST_FILES_PATH,
+        "sine-1kHztone-48kHzrate-mono-s32le-200000samples-itunes.m4a", NULL);
+    g_object_set (G_OBJECT (source), "location", full_filename, NULL);
+    g_free (full_filename);
+  }
+
+  g_object_set (G_OBJECT (appsink), "sync", FALSE, NULL);
+
+  switch_state_with_async_wait (pipeline, GST_STATE_PLAYING);
+  check_start_of_segment (appsink, 0 * GST_SECOND);
+
+  GST_DEBUG ("Seeking 2 seconds into the file");
+  switch_state_with_async_wait (pipeline, GST_STATE_PAUSED);
+  gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+      2 * GST_SECOND);
+  switch_state_with_async_wait (pipeline, GST_STATE_PLAYING);
+  check_start_of_segment (appsink, 1982666666);
+
+  GST_DEBUG ("Seeking beyond the end of file");
+  switch_state_with_async_wait (pipeline, GST_STATE_PAUSED);
+  gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+      50 * GST_SECOND);
+  switch_state_with_async_wait (pipeline, GST_STATE_PLAYING);
+  check_start_of_segment (appsink, GST_CLOCK_TIME_NONE);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 qtdemux_suite (void)
 {
@@ -1855,6 +1975,7 @@ qtdemux_suite (void)
   tcase_add_test (tc_chain, test_qtdemux_gapless_nero_data_without_itunsmpb);
   tcase_add_test (tc_chain, test_qtdemux_editlist);
   tcase_add_test (tc_chain, test_qtdemux_sample_interleaving);
+  tcase_add_test (tc_chain, test_qtdemux_seek_push_mode);
 
   return s;
 }
