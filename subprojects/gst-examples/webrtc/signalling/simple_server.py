@@ -161,7 +161,7 @@ class WebRTCSimpleServer(object):
                 if callee_id not in self.peers:
                     await ws.send('ERROR peer {!r} not found'.format(callee_id))
                     continue
-                if peer_status is not None:
+                if self.peers[callee_id][2] is not None:
                     await ws.send('ERROR peer {!r} busy'.format(callee_id))
                     continue
                 await ws.send('SESSION_OK')
