@@ -2515,7 +2515,7 @@ gst_caps_from_string (const gchar * string)
 {
   GstCaps *caps;
 
-  g_return_val_if_fail (string, FALSE);
+  g_return_val_if_fail (string, NULL);
 
   caps = gst_caps_new_empty ();
   if (gst_caps_from_string_inplace (caps, string)) {
