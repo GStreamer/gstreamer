@@ -776,12 +776,23 @@ _add_pad_to_list (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
   GST_OBJECT_UNLOCK (webrtc);
 }
 
-static void
+static gboolean
 _remove_pending_pad (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
 {
+  gboolean ret = FALSE;
+  GList *l;
+
   GST_OBJECT_LOCK (webrtc);
-  webrtc->priv->pending_pads = g_list_remove (webrtc->priv->pending_pads, pad);
+  l = g_list_find (webrtc->priv->pending_pads, pad);
+  if (l) {
+    webrtc->priv->pending_pads =
+        g_list_remove_link (webrtc->priv->pending_pads, l);
+    g_list_free (l);
+    ret = TRUE;
+  }
   GST_OBJECT_UNLOCK (webrtc);
+
+  return ret;
 }
 
 static void
@@ -6656,15 +6667,30 @@ on_rtpbin_pad_added (GstElement * rtpbin, GstPad * new_pad,
 
     GST_TRACE_OBJECT (webrtc, "found pad %" GST_PTR_FORMAT
         " for rtpbin pad name %s", pad, new_pad_name);
+    if (!_remove_pending_pad (webrtc, pad)) {
+      /* assumption here is that rtpbin doesn't duplicate pads and that if
+       * there is no pending pad, this is a duplicate stream for e.g. simulcast
+       * or somesuch */
+      gst_clear_object (&pad);
+      pad =
+          _create_pad_for_sdp_media (webrtc, GST_PAD_SRC, rtp_trans, G_MAXUINT);
+      GST_TRACE_OBJECT (webrtc,
+          "duplicate output ssrc? created new pad %" GST_PTR_FORMAT " for %"
+          GST_PTR_FORMAT " for rtp pad %s", pad, rtp_trans, new_pad_name);
+      gst_object_ref_sink (pad);
+    }
+
     if (!pad)
       g_warn_if_reached ();
     gst_ghost_pad_set_target (GST_GHOST_PAD (pad), GST_PAD (new_pad));
 
     if (webrtc->priv->running)
       gst_pad_set_active (GST_PAD (pad), TRUE);
+
+    PC_UNLOCK (webrtc);
+
     gst_pad_sticky_events_foreach (new_pad, copy_sticky_events, pad);
     gst_element_add_pad (GST_ELEMENT (webrtc), GST_PAD (pad));
-    _remove_pending_pad (webrtc, pad);
 
     gst_object_unref (pad);
   }
