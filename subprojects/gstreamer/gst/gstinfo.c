@@ -579,6 +579,54 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
 }
 
 /**
+ * gst_debug_log_literal:
+ * @category: category to log
+ * @level: level of the message is in
+ * @file: the file that emitted the message, usually the __FILE__ identifier
+ * @function: the function that emitted the message
+ * @line: the line from that the message was emitted, usually __LINE__
+ * @object: (transfer none) (allow-none): the object this message relates to,
+ *     or %NULL if none
+ * @message_string: a message string
+ *
+ * Logs the given message using the currently registered debugging handlers.
+ *
+ * Since: 1.20
+ */
+void
+gst_debug_log_literal (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    GObject * object, const gchar * message_string)
+{
+  GstDebugMessage message;
+  LogFuncEntry *entry;
+  GSList *handler;
+
+  g_return_if_fail (category != NULL);
+
+#ifdef GST_ENABLE_EXTRA_CHECKS
+  g_warn_if_fail (object == NULL || G_IS_OBJECT (object));
+#endif
+
+  if (level > gst_debug_category_get_threshold (category))
+    return;
+
+  g_return_if_fail (file != NULL);
+  g_return_if_fail (function != NULL);
+  g_return_if_fail (message_string != NULL);
+
+  message.message = (gchar *) message_string;
+
+  handler = __log_functions;
+  while (handler) {
+    entry = handler->data;
+    handler = g_slist_next (handler);
+    entry->func (category, level, file, function, line, object, &message,
+        entry->user_data);
+  }
+}
+
+/**
  * gst_debug_message_get:
  * @message: a debug message
  *
@@ -2338,6 +2386,13 @@ void
 gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line,
     GObject * object, const gchar * format, va_list args)
+{
+}
+
+void
+gst_debug_log_literal (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    GObject * object, const gchar * message_string)
 {
 }
 

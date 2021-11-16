@@ -368,10 +368,19 @@ void            gst_debug_log_valist     (GstDebugCategory * category,
                                           GstDebugLevel      level,
                                           const gchar      * file,
                                           const gchar      * function,
-                                          gint	              line,
+                                          gint	             line,
                                           GObject          * object,
                                           const gchar      * format,
                                           va_list            args) G_GNUC_NO_INSTRUMENT;
+
+GST_API
+void            gst_debug_log_literal    (GstDebugCategory * category,
+                                          GstDebugLevel      level,
+                                          const gchar      * file,
+                                          const gchar      * function,
+                                          gint	             line,
+                                          GObject          * object,
+                                          const gchar      * message_string) G_GNUC_NO_INSTRUMENT;
 
 /* do not use this function, use the GST_DEBUG_CATEGORY_INIT macro */
 
@@ -1496,6 +1505,7 @@ GST_TRACE (const char *format, ...)
 #if defined(__GNUC__) && __GNUC__ >= 3
 #  pragma GCC poison gst_debug_log
 #  pragma GCC poison gst_debug_log_valist
+#  pragma GCC poison gst_debug_log_literal
 #  pragma GCC poison _gst_debug_category_new
 #endif
 
