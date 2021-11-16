@@ -40,13 +40,13 @@ typedef struct
 
 typedef struct
 {
+  GstWebRTCRTPTransceiverDirection direction;
   guint32 ssrc;
   guint media_idx;
+  char *mid;
+  char *rid;
   GWeakRef rtpjitterbuffer; /* for stats */
 } SsrcMapItem;
-
-SsrcMapItem *           ssrcmap_item_new            (guint32 ssrc,
-                                                     guint media_idx);
 
 struct _TransportStream
 {
@@ -62,7 +62,7 @@ struct _TransportStream
   GstWebRTCDTLSTransport   *transport;
 
   GArray                   *ptmap;                  /* array of PtMapItem's */
-  GPtrArray                *remote_ssrcmap;         /* array of SsrcMapItem's */
+  GPtrArray                *ssrcmap;                /* array of SsrcMapItem's */
   gboolean                  output_connected;       /* whether receive bin is connected to rtpbin */
 
   GstElement               *rtxsend;
@@ -87,6 +87,21 @@ int *                   transport_stream_get_all_pt (TransportStream * stream,
                                                      gsize * pt_len);
 GstCaps *               transport_stream_get_caps_for_pt    (TransportStream * stream,
                                                              guint pt);
+
+typedef gboolean (*FindSsrcMapFunc) (SsrcMapItem * e1, gconstpointer data);
+
+SsrcMapItem *           transport_stream_find_ssrc_map_item (TransportStream * stream,
+                                                      gconstpointer data,
+                                                      FindSsrcMapFunc func);
+
+void                    transport_stream_filter_ssrc_map_item (TransportStream * stream,
+                                                      gconstpointer data,
+                                                      FindSsrcMapFunc func);
+
+SsrcMapItem *           transport_stream_add_ssrc_map_item (TransportStream * stream,
+                                                      GstWebRTCRTPTransceiverDirection direction,
+                                                      guint32 ssrc,
+                                                      guint media_idx);
 
 G_END_DECLS
 

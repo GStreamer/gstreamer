@@ -190,7 +190,7 @@ transport_stream_finalize (GObject * object)
   TransportStream *stream = TRANSPORT_STREAM (object);
 
   g_array_free (stream->ptmap, TRUE);
-  g_ptr_array_free (stream->remote_ssrcmap, TRUE);
+  g_ptr_array_free (stream->ssrcmap, TRUE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -277,11 +277,13 @@ clear_ptmap_item (PtMapItem * item)
     gst_caps_unref (item->caps);
 }
 
-SsrcMapItem *
-ssrcmap_item_new (guint32 ssrc, guint media_idx)
+static SsrcMapItem *
+ssrcmap_item_new (GstWebRTCRTPTransceiverDirection direction, guint32 ssrc,
+    guint media_idx)
 {
-  SsrcMapItem *ssrc_item = g_slice_new (SsrcMapItem);
+  SsrcMapItem *ssrc_item = g_new0 (SsrcMapItem, 1);
 
+  ssrc_item->direction = direction;
   ssrc_item->media_idx = media_idx;
   ssrc_item->ssrc = ssrc;
   g_weak_ref_init (&ssrc_item->rtpjitterbuffer, NULL);
@@ -293,7 +295,67 @@ static void
 ssrcmap_item_free (SsrcMapItem * item)
 {
   g_weak_ref_clear (&item->rtpjitterbuffer);
-  g_slice_free (SsrcMapItem, item);
+  g_clear_pointer (&item->mid, g_free);
+  g_clear_pointer (&item->rid, g_free);
+  g_free (item);
+}
+
+SsrcMapItem *
+transport_stream_find_ssrc_map_item (TransportStream * stream,
+    gconstpointer data, FindSsrcMapFunc func)
+{
+  int i;
+
+  for (i = 0; i < stream->ssrcmap->len; i++) {
+    SsrcMapItem *item = g_ptr_array_index (stream->ssrcmap, i);
+
+    if (func (item, data))
+      return item;
+  }
+
+  return NULL;
+}
+
+void
+transport_stream_filter_ssrc_map_item (TransportStream * stream,
+    gconstpointer data, FindSsrcMapFunc func)
+{
+  int i;
+
+  for (i = 0; i < stream->ssrcmap->len;) {
+    SsrcMapItem *item = g_ptr_array_index (stream->ssrcmap, i);
+
+    if (!func (item, data)) {
+      GST_TRACE_OBJECT (stream, "removing ssrc %u", item->ssrc);
+      g_ptr_array_remove_index_fast (stream->ssrcmap, i);
+    } else {
+      i++;
+    }
+  }
+}
+
+SsrcMapItem *
+transport_stream_add_ssrc_map_item (TransportStream * stream,
+    GstWebRTCRTPTransceiverDirection direction, guint32 ssrc, guint media_idx)
+{
+  SsrcMapItem *ret = NULL;
+  char *dir_str = gst_webrtc_rtp_transceiver_direction_to_string (direction);
+
+  g_return_val_if_fail (direction ==
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY
+      || direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY, NULL);
+  g_return_val_if_fail (ssrc != 0, NULL);
+
+  GST_INFO_OBJECT (stream, "Adding mapping for rtp session %u media_idx %u "
+      "direction %s ssrc %u", stream->session_id, media_idx, dir_str, ssrc);
+
+  /* XXX: duplicates? */
+  ret = ssrcmap_item_new (direction, ssrc, media_idx);
+
+  g_ptr_array_add (stream->ssrcmap, ret);
+  g_free (dir_str);
+
+  return ret;
 }
 
 static void
@@ -301,7 +363,7 @@ transport_stream_init (TransportStream * stream)
 {
   stream->ptmap = g_array_new (FALSE, TRUE, sizeof (PtMapItem));
   g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
-  stream->remote_ssrcmap = g_ptr_array_new_with_free_func (
+  stream->ssrcmap = g_ptr_array_new_with_free_func (
       (GDestroyNotify) ssrcmap_item_free);
 }
 

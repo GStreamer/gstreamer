@@ -321,10 +321,11 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
 
     gst_structure_get (source_stats, "have-sr", G_TYPE_BOOLEAN, &have_sr, NULL);
 
-    for (i = 0; i < stream->remote_ssrcmap->len; i++) {
-      SsrcMapItem *item = g_ptr_array_index (stream->remote_ssrcmap, i);
+    for (i = 0; i < stream->ssrcmap->len; i++) {
+      SsrcMapItem *item = g_ptr_array_index (stream->ssrcmap, i);
 
-      if (item->ssrc == ssrc) {
+      if (item->direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY
+          && item->ssrc == ssrc) {
         GObject *jb = g_weak_ref_get (&item->rtpjitterbuffer);
 
         if (jb) {

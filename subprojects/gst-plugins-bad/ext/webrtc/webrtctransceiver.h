@@ -40,15 +40,19 @@ struct _WebRTCTransceiver
 
   TransportStream          *stream;
   GstStructure             *local_rtx_ssrc_map;
-  guint                     current_ssrc;
-  GstEvent                 *ssrc_event;
+  GstEvent                 *tos_event;
 
   /* Properties */
   GstWebRTCFECType         fec_type;
   guint                    fec_percentage;
   gboolean                 do_nack;
 
-  GstCaps                  *last_configured_caps;
+  /* The last caps that we put into to a SDP media section */
+  GstCaps                  *last_retrieved_caps;
+  /* The last caps that we successfully configured from a valid
+   * set_local/remote description call.
+   */
+  GstCaps                  *last_send_configured_caps;
 
   gboolean                 mline_locked;
 

@@ -157,9 +157,10 @@ webrtc_transceiver_finalize (GObject * object)
     gst_structure_free (trans->local_rtx_ssrc_map);
   trans->local_rtx_ssrc_map = NULL;
 
-  gst_caps_replace (&trans->last_configured_caps, NULL);
+  gst_caps_replace (&trans->last_retrieved_caps, NULL);
+  gst_caps_replace (&trans->last_send_configured_caps, NULL);
 
-  gst_event_replace (&trans->ssrc_event, NULL);
+  gst_event_replace (&trans->tos_event, NULL);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
