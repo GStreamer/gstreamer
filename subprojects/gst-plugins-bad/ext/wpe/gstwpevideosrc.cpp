@@ -139,7 +139,7 @@ GST_DEBUG_CATEGORY_EXTERN (wpe_video_src_debug);
 #define GST_CAT_DEFAULT wpe_video_src_debug
 
 #define gst_wpe_video_src_parent_class parent_class
-G_DEFINE_TYPE(GstWpeVideoSrc, gst_wpe_video_src, GST_TYPE_GL_BASE_SRC);
+G_DEFINE_TYPE (GstWpeVideoSrc, gst_wpe_video_src, GST_TYPE_GL_BASE_SRC);
 
 #define WPE_RAW_CAPS "video/x-raw, "            \
   "format = (string) BGRA, "                    \
@@ -164,7 +164,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (WPE_VIDEO_SRC_CAPS));
 
 static GstFlowReturn
-gst_wpe_video_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer ** buf)
+gst_wpe_video_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
+    GstBuffer ** buf)
 {
   GstGLBaseSrc *gl_src = GST_GL_BASE_SRC (bsrc);
   GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (bsrc);
@@ -176,7 +177,8 @@ gst_wpe_video_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBu
   WPE_LOCK (src);
   if (src->gl_enabled) {
     WPE_UNLOCK (src);
-    return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS, create, (bsrc, offset, length, buf), ret);
+    return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS, create, (bsrc,
+            offset, length, buf), ret);
   }
 
   locked_buffer = src->view->buffer ();
@@ -188,7 +190,7 @@ gst_wpe_video_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBu
   }
   *buf = gst_buffer_copy_deep (locked_buffer);
 
-  g_object_get(gl_src, "timestamp-offset", &ts_offset, NULL);
+  g_object_get (gl_src, "timestamp-offset", &ts_offset, NULL);
 
   /* The following code mimics the behaviour of GLBaseSrc::fill */
   GST_BUFFER_TIMESTAMP (*buf) = ts_offset + gl_src->running_time;
@@ -264,7 +266,8 @@ gst_wpe_video_src_start (GstWpeVideoSrc * src)
     display = base_src->display;
   }
 
-  GST_DEBUG_OBJECT (src, "Will %sfill GLMemories", src->gl_enabled ? "" : "NOT ");
+  GST_DEBUG_OBJECT (src, "Will %sfill GLMemories",
+      src->gl_enabled ? "" : "NOT ");
 
   auto & thread = WPEContextThread::singleton ();
 
@@ -309,7 +312,9 @@ gst_wpe_video_src_decide_allocation (GstBaseSrc * base_src, GstQuery * query)
 
   WPE_LOCK (src);
   caps_features = gst_caps_get_features (gl_src->out_caps, 0);
-  if (caps_features != NULL && gst_caps_features_contains (caps_features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+  if (caps_features != NULL
+      && gst_caps_features_contains (caps_features,
+          GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
     src->gl_enabled = TRUE;
   } else {
     src->gl_enabled = FALSE;
@@ -317,7 +322,8 @@ gst_wpe_video_src_decide_allocation (GstBaseSrc * base_src, GstQuery * query)
 
   if (src->gl_enabled) {
     WPE_UNLOCK (src);
-    return GST_CALL_PARENT_WITH_DEFAULT(GST_BASE_SRC_CLASS, decide_allocation, (base_src, query), FALSE);
+    return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS, decide_allocation,
+        (base_src, query), FALSE);
   }
   WPE_UNLOCK (src);
   return gst_wpe_video_src_start (src);
@@ -358,7 +364,8 @@ gst_wpe_video_src_stop (GstBaseSrc * base_src)
   /* we can call this always, GstGLBaseSrc is smart enough to not crash if
    * gst_gl_base_src_gl_start() has not been called from chaining up
    * gst_wpe_video_src_decide_allocation() */
-  if (!GST_CALL_PARENT_WITH_DEFAULT(GST_BASE_SRC_CLASS, stop, (base_src), FALSE))
+  if (!GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS, stop, (base_src),
+          FALSE))
     return FALSE;
 
   WPE_LOCK (src);
@@ -408,14 +415,16 @@ gst_wpe_video_src_fixate (GstBaseSrc * base_src, GstCaps * combined_caps)
   GST_INFO_OBJECT (base_src, "Fixated caps to %" GST_PTR_FORMAT, caps);
 
   if (src->view) {
-    gst_structure_get (structure, "width", G_TYPE_INT, &width, "height", G_TYPE_INT, &height, NULL);
+    gst_structure_get (structure, "width", G_TYPE_INT, &width, "height",
+        G_TYPE_INT, &height, NULL);
     src->view->resize (width, height);
   }
   return caps;
 }
 
 void
-gst_wpe_video_src_configure_web_view (GstWpeVideoSrc * src, WebKitWebView * webview)
+gst_wpe_video_src_configure_web_view (GstWpeVideoSrc * src,
+    WebKitWebView * webview)
 {
   GValue args[2] = { {0}, {0} };
 
@@ -461,7 +470,8 @@ gst_wpe_video_src_set_location (GstWpeVideoSrc * src, const gchar * location,
 }
 
 static void
-gst_wpe_video_src_set_draw_background (GstWpeVideoSrc * src, gboolean draw_background)
+gst_wpe_video_src_set_draw_background (GstWpeVideoSrc * src,
+    gboolean draw_background)
 {
   GST_OBJECT_LOCK (src);
   src->draw_background = draw_background;
@@ -472,8 +482,8 @@ gst_wpe_video_src_set_draw_background (GstWpeVideoSrc * src, gboolean draw_backg
 }
 
 static void
-gst_wpe_video_src_set_property (GObject * object, guint prop_id, const GValue * value,
-    GParamSpec * pspec)
+gst_wpe_video_src_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (object);
 
@@ -689,7 +699,8 @@ gst_wpe_video_src_class_init (GstWpeVideoSrcClass * klass)
 
   base_src_class->fixate = GST_DEBUG_FUNCPTR (gst_wpe_video_src_fixate);
   base_src_class->create = GST_DEBUG_FUNCPTR (gst_wpe_video_src_create);
-  base_src_class->decide_allocation = GST_DEBUG_FUNCPTR (gst_wpe_video_src_decide_allocation);
+  base_src_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_wpe_video_src_decide_allocation);
   base_src_class->stop = GST_DEBUG_FUNCPTR (gst_wpe_video_src_stop);
 
   gl_base_src_class->supported_gl_api =
