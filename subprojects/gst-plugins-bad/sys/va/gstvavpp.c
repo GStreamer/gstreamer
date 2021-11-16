@@ -893,14 +893,17 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
   ret = gst_va_vpp_caps_remove_fields (caps);
 
   tmp = gst_va_vpp_complete_caps_features (ret, GST_CAPS_FEATURE_MEMORY_VA);
-  ret = gst_caps_merge (ret, tmp);
+  if (!gst_caps_is_subset (tmp, ret))
+    gst_caps_append (ret, tmp);
 
   tmp = gst_va_vpp_complete_caps_features (ret, GST_CAPS_FEATURE_MEMORY_DMABUF);
-  ret = gst_caps_merge (ret, tmp);
+  if (!gst_caps_is_subset (tmp, ret))
+    gst_caps_append (ret, tmp);
 
   tmp = gst_va_vpp_complete_caps_features (ret,
       GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
-  ret = gst_caps_merge (ret, tmp);
+  if (!gst_caps_is_subset (tmp, ret))
+    gst_caps_append (ret, tmp);
 
   if (filter) {
     GstCaps *intersection;
