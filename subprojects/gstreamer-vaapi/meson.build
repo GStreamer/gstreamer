@@ -4,12 +4,17 @@ project('gstreamer-vaapi', 'c',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
+if get_option('default_library') == 'static'
+  error('GStreamer-VAAPI plugin not supported with `static` builds yet.')
+endif
+
 gst_version = meson.project_version()
 version_arr = gst_version.split('.')
 gst_version_major = version_arr[0].to_int()
 gst_version_minor = version_arr[1].to_int()
 gst_version_micro = version_arr[2].to_int()
- if version_arr.length() == 4
+
+if version_arr.length() == 4
   gst_version_nano = version_arr[3].to_int()
 else
   gst_version_nano = 0
@@ -188,6 +193,8 @@ plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 gstreamer_vaapi_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
 libsinc = include_directories('gst-libs')
+
+plugins = []
 
 subdir('gst-libs')
 subdir('gst')
