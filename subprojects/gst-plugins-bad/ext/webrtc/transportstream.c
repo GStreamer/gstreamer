@@ -29,8 +29,13 @@
 #include "utils.h"
 #include "gst/webrtc/webrtc-priv.h"
 
+#define GST_CAT_DEFAULT transport_stream_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
 #define transport_stream_parent_class parent_class
-G_DEFINE_TYPE (TransportStream, transport_stream, GST_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_CODE (TransportStream, transport_stream, GST_TYPE_OBJECT,
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "webrtctransportstream", 0,
+        "webrtctransportstream"););
 
 enum
 {
