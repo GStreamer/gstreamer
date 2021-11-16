@@ -1073,7 +1073,7 @@ gst_vaapi_decoder_h265_reset (GstVaapiDecoder * base_decoder)
 }
 
 static void
-fill_profiles (GstVaapiProfile profiles[16], guint * n_profiles_ptr,
+fill_profiles (GstVaapiProfile profiles[], guint * n_profiles_ptr,
     GstVaapiProfile profile)
 {
   guint n_profiles = *n_profiles_ptr;

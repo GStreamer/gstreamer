@@ -1435,7 +1435,7 @@ get_sps (GstVaapiDecoderH264 * decoder)
 }
 
 static void
-fill_profiles (GstVaapiProfile profiles[16], guint * n_profiles_ptr,
+fill_profiles (GstVaapiProfile profiles[], guint * n_profiles_ptr,
     GstVaapiProfile profile)
 {
   guint n_profiles = *n_profiles_ptr;
@@ -1453,7 +1453,7 @@ fill_profiles (GstVaapiProfile profiles[16], guint * n_profiles_ptr,
 
 /* Fills in compatible profiles for MVC decoding */
 static void
-fill_profiles_mvc (GstVaapiDecoderH264 * decoder, GstVaapiProfile profiles[16],
+fill_profiles_mvc (GstVaapiDecoderH264 * decoder, GstVaapiProfile profiles[],
     guint * n_profiles_ptr, guint dpb_size)
 {
   const gchar *const vendor_string =
