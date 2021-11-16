@@ -6373,11 +6373,37 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     goto eos_stream;
   }
 
-  /* gap events for subtitle streams */
-  for (i = 0; i < QTDEMUX_N_STREAMS (qtdemux); i++) {
+  /* fetch info for the current sample of this stream */
+  if (G_UNLIKELY (!gst_qtdemux_prepare_current_sample (qtdemux, target_stream,
+              &empty, &offset, &sample_size, &dts, &pts, &duration, &keyframe)))
+    goto eos_stream;
+
+  /* Send catche-up GAP event for each other stream if required.
+   * This logic will be applied only for positive rate */
+  for (i = 0; i < QTDEMUX_N_STREAMS (qtdemux) &&
+      qtdemux->segment.rate >= 0; i++) {
     stream = QTDEMUX_NTH_STREAM (qtdemux, i);
+
+    if (stream == target_stream ||
+        !GST_CLOCK_TIME_IS_VALID (stream->segment.stop) ||
+        !GST_CLOCK_TIME_IS_VALID (stream->segment.position))
+      continue;
+
     if (stream->pad) {
       GstClockTime gap_threshold;
+      /* kind of running time with offset segment.base and segment.start */
+      GstClockTime pseudo_target_time = target_stream->segment.base;
+      GstClockTime pseudo_cur_time = stream->segment.base;
+
+      /* make sure positive offset, segment.position can be smallr than
+       * segment.start for some reasons */
+      if (target_stream->segment.position >= target_stream->segment.start) {
+        pseudo_target_time +=
+            (target_stream->segment.position - target_stream->segment.start);
+      }
+
+      if (stream->segment.position >= stream->segment.start)
+        pseudo_cur_time += (stream->segment.position - stream->segment.start);
 
       /* Only send gap events on non-subtitle streams if lagging way behind. */
       if (stream->subtype == FOURCC_subp
@@ -6389,22 +6415,20 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
       /* send gap events until the stream catches up */
       /* gaps can only be sent after segment is activated (segment.stop is no longer -1) */
-      while (GST_CLOCK_TIME_IS_VALID (stream->segment.stop) &&
-          GST_CLOCK_TIME_IS_VALID (stream->segment.position) &&
-          stream->segment.position + gap_threshold < min_time) {
+      while (GST_CLOCK_TIME_IS_VALID (stream->segment.position) &&
+          pseudo_cur_time + gap_threshold < pseudo_target_time) {
         GstEvent *gap =
             gst_event_new_gap (stream->segment.position, gap_threshold);
+        GST_LOG_OBJECT (stream->pad, "Sending %" GST_PTR_FORMAT, gap);
+
         gst_pad_push_event (stream->pad, gap);
         stream->segment.position += gap_threshold;
+        pseudo_cur_time += gap_threshold;
       }
     }
   }
 
   stream = target_stream;
-  /* fetch info for the current sample of this stream */
-  if (G_UNLIKELY (!gst_qtdemux_prepare_current_sample (qtdemux, stream, &empty,
-              &offset, &sample_size, &dts, &pts, &duration, &keyframe)))
-    goto eos_stream;
 
   gst_qtdemux_stream_check_and_change_stsd_index (qtdemux, stream);
   if (stream->new_caps) {
