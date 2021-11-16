@@ -3047,10 +3047,15 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
 
   if (last_media) {
     const char *setup = gst_sdp_media_get_attribute_val (last_media, "setup");
-    if (setup)
+    if (setup) {
       gst_sdp_media_add_attribute (media, "setup", setup);
-    else
+    } else {
+      g_set_error (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_INVALID_MODIFICATION,
+          "media %u cannot renegotiate without an existing a=setup line",
+          media_idx);
       return FALSE;
+    }
   } else {
     /* mandated by JSEP */
     gst_sdp_media_add_attribute (media, "setup", "actpass");
@@ -3179,7 +3184,16 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
 
   /* Some identifier; we also add the media name to it so it's identifiable */
   if (trans->mid) {
-    gst_sdp_media_add_attribute (media, "mid", trans->mid);
+    const char *media_mid = gst_sdp_media_get_attribute_val (media, "mid");
+    if (!media_mid) {
+      gst_sdp_media_add_attribute (media, "mid", trans->mid);
+    } else if (g_strcmp0 (media_mid, trans->mid) != 0) {
+      g_set_error (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_INVALID_MODIFICATION,
+          "Cannot change media %u mid value from \'%s\' to \'%s\'",
+          media_idx, media_mid, trans->mid);
+      return FALSE;
+    }
     mid = g_strdup (trans->mid);
   } else {
     const GstStructure *s = gst_caps_get_structure (caps, 0);
@@ -4168,7 +4182,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
          * that we cannot actually support */
         if (trans_caps) {
           answer_caps = gst_caps_intersect (offer_caps, trans_caps);
-          gst_caps_unref (trans_caps);
+          gst_clear_caps (&trans_caps);
         } else {
           answer_caps = gst_caps_ref (offer_caps);
         }
@@ -4180,8 +4194,8 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
       if (gst_caps_is_empty (answer_caps)) {
         GST_WARNING_OBJECT (webrtc, "Could not create caps for media");
-        gst_caps_unref (answer_caps);
-        gst_caps_unref (offer_caps);
+        gst_clear_caps (&answer_caps);
+        gst_clear_caps (&offer_caps);
         goto rejected;
       }
 
