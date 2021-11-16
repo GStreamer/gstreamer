@@ -17,10 +17,9 @@
 # License along with this program; if not, write to the
 # Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301, USA.
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+#
+# SPDX-License-Identifier: LGPL-2.0-or-later
+
 """
 A collection of objects to use for testing
 
