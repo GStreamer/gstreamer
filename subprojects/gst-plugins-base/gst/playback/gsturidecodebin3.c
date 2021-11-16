@@ -1116,6 +1116,7 @@ free_play_items (GstURIDecodeBin3 * dec)
 
   g_list_free (dec->play_items);
   dec->play_items = NULL;
+  dec->current = NULL;
 }
 
 static GstStateChangeReturn
