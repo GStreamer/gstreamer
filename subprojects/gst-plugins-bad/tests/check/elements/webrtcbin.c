@@ -29,6 +29,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 #include <gst/webrtc/webrtc.h>
+#include <gst/rtp/rtp.h>
 #include "../../../ext/webrtc/webrtcsdp.h"
 #include "../../../ext/webrtc/webrtcsdp.c"
 #include "../../../ext/webrtc/utils.h"
@@ -4227,7 +4228,7 @@ _pad_added_harness (struct test_webrtc *t, GstElement * element,
     GstPad * pad, gpointer user_data)
 {
   GstHarness *h;
-  GstHarness **sink_harness = user_data;
+  GList **sink_harness = user_data;
 
   if (GST_PAD_DIRECTION (pad) != GST_PAD_SRC)
     return;
@@ -4236,7 +4237,7 @@ _pad_added_harness (struct test_webrtc *t, GstElement * element,
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   if (sink_harness) {
-    *sink_harness = h;
+    *sink_harness = g_list_prepend (*sink_harness, h);
     g_cond_broadcast (&t->cond);
   }
 }
@@ -4273,6 +4274,7 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
   VAL_SDP_INIT (answer_non_reject, _count_non_rejected_media,
       GUINT_TO_POINTER (0), &count);
   GstHarness *h;
+  GList *sink_harnesses = NULL;
   GstHarness *sink_harness = NULL;
   guint i;
   GstElement *rtpbin2;
@@ -4281,7 +4283,7 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
   t->on_pad_added = _pad_added_harness;
-  t->pad_added_data = &sink_harness;
+  t->pad_added_data = &sink_harnesses;
 
   rtpbin2 = gst_bin_get_by_name (GST_BIN (t->webrtc2), "rtpbin");
   fail_unless (rtpbin2 != NULL);
@@ -4304,10 +4306,12 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
     gst_harness_push_from_src (h);
 
   g_mutex_lock (&t->lock);
-  while (sink_harness == NULL) {
+  while (sink_harnesses == NULL) {
     gst_harness_push_from_src (h);
     g_cond_wait_until (&t->cond, &t->lock, g_get_monotonic_time () + 5000);
   }
+  fail_unless_equals_int (1, g_list_length (sink_harnesses));
+  sink_harness = (GstHarness *) sink_harnesses->data;
   g_mutex_unlock (&t->lock);
   fail_unless (sink_harness->element == t->webrtc2);
 
@@ -4340,6 +4344,8 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
   }
 
   test_webrtc_free (t);
+
+  g_list_free (sink_harnesses);
 }
 
 GST_END_TEST;
@@ -4560,6 +4566,167 @@ GST_START_TEST (test_bundle_mid_header_extension)
 
 GST_END_TEST;
 
+static void
+on_new_transceiver_set_rtx_fec (GstElement * webrtcbin, GObject * trans,
+    gpointer user_data)
+{
+  g_object_set (trans, "fec-type", GST_WEBRTC_FEC_TYPE_ULP_RED,
+      "fec-percentage", 100, "do-nack", TRUE, NULL);
+}
+
+GST_START_TEST (test_max_bundle_fec)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  guint media_format_count[] = { 5, 5, };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, NULL);
+  VAL_SDP_INIT (payloads, on_sdp_media_no_duplicate_payloads, NULL,
+      &media_formats);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (2), &payloads);
+  VAL_SDP_INIT (offer_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (1), &count);
+  VAL_SDP_INIT (answer_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (2), &count);
+  const gchar *expected_offer_setup[] = { "actpass", "actpass", };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup,
+      &offer_non_reject);
+  const gchar *expected_answer_setup[] = { "active", "active", };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
+      &answer_non_reject);
+  const gchar *expected_offer_direction[] = { "sendrecv", "sendrecv", };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_direction[] = { "recvonly", "recvonly", };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+  GstHarness *src0, *src1;
+  GList *sink_harnesses = NULL;
+  guint i;
+  GstElement *rtpbin2;
+  GstBuffer *buf;
+  guint ssrcs[] = { 123456789, 987654321 };
+  GArray *ssrcs_received;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_harness;
+  t->pad_added_data = &sink_harnesses;
+
+  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
+      "max-bundle");
+  gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
+      "max-bundle");
+
+  rtpbin2 = gst_bin_get_by_name (GST_BIN (t->webrtc2), "rtpbin");
+  fail_unless (rtpbin2 != NULL);
+  g_signal_connect (rtpbin2, "new-jitterbuffer",
+      G_CALLBACK (new_jitterbuffer_set_fast_start), NULL);
+  g_object_unref (rtpbin2);
+
+  g_signal_connect (t->webrtc1, "on-new-transceiver",
+      G_CALLBACK (on_new_transceiver_set_rtx_fec), NULL);
+  g_signal_connect (t->webrtc2, "on-new-transceiver",
+      G_CALLBACK (on_new_transceiver_set_rtx_fec), NULL);
+
+  src0 = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
+  add_audio_test_src_harness (src0, ssrcs[0]);
+  t->harnesses = g_list_prepend (t->harnesses, src0);
+
+  src1 = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
+  add_audio_test_src_harness (src1, ssrcs[1]);
+  t->harnesses = g_list_prepend (t->harnesses, src1);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+
+  for (i = 0; i < 10; i++) {
+    gst_harness_push_from_src (src0);
+    gst_harness_push_from_src (src1);
+  }
+
+  ssrcs_received = g_array_new (FALSE, TRUE, sizeof (guint32));
+
+  /* Get one buffer out for each ssrc sent.
+   */
+  g_mutex_lock (&t->lock);
+  while (ssrcs_received->len < G_N_ELEMENTS (ssrcs)) {
+    GList *l;
+    guint i;
+
+    gst_harness_push_from_src (src0);
+    gst_harness_push_from_src (src1);
+    if (g_list_length (sink_harnesses) < 2) {
+      g_cond_wait_until (&t->cond, &t->lock, g_get_monotonic_time () + 5000);
+      if (g_list_length (sink_harnesses) < 2)
+        continue;
+    }
+
+    for (l = sink_harnesses; l; l = l->next) {
+      GstHarness *sink_harness = (GstHarness *) l->data;
+      GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+      GstWebRTCRTPTransceiver *rtp_trans;
+      char *trans_mid;
+      GstPad *srcpad;
+      guint ssrc;
+      guint mlineindex;
+      char *expected_mid;
+
+      fail_unless (sink_harness->element == t->webrtc2);
+
+      buf = gst_harness_try_pull (sink_harness);
+      if (!buf)
+        continue;
+
+      /* ensure that the resulting pad has the correct mid set */
+      srcpad = gst_pad_get_peer (sink_harness->sinkpad);
+      fail_unless (srcpad != NULL);
+      g_object_get (srcpad, "transceiver", &rtp_trans, NULL);
+      gst_clear_object (&srcpad);
+      fail_unless (rtp_trans);
+      g_object_get (rtp_trans, "mid", &trans_mid, "mlineindex", &mlineindex,
+          NULL);
+      gst_clear_object (&rtp_trans);
+      expected_mid = g_strdup_printf ("audio%u", mlineindex);
+      fail_unless (trans_mid != NULL);
+      fail_unless_equals_string (trans_mid, expected_mid);
+      g_clear_pointer (&trans_mid, g_free);
+      g_clear_pointer (&expected_mid, g_free);
+
+      fail_unless (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
+
+      ssrc = gst_rtp_buffer_get_ssrc (&rtp);
+      for (i = 0; i < ssrcs_received->len; i++) {
+        if (g_array_index (ssrcs_received, guint, i) == ssrc)
+          break;
+      }
+      if (i == ssrcs_received->len) {
+        g_array_append_val (ssrcs_received, ssrc);
+      }
+
+      gst_rtp_buffer_unmap (&rtp);
+
+      gst_buffer_unref (buf);
+    }
+  }
+  g_mutex_unlock (&t->lock);
+
+  GST_DEBUG_BIN_TO_DOT_FILE (GST_BIN (t->webrtc1), GST_DEBUG_GRAPH_SHOW_ALL,
+      "webrtc1-fec-final");
+  GST_DEBUG_BIN_TO_DOT_FILE (GST_BIN (t->webrtc2), GST_DEBUG_GRAPH_SHOW_ALL,
+      "webrtc2-fec-final");
+
+  test_webrtc_free (t);
+  g_list_free (sink_harnesses);
+
+  g_array_unref (ssrcs_received);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -4616,6 +4783,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_codec_preferences_invalid_extmap);
     tcase_add_test (tc, test_renego_rtx);
     tcase_add_test (tc, test_bundle_mid_header_extension);
+    tcase_add_test (tc, test_max_bundle_fec);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
