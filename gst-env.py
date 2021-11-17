@@ -18,8 +18,7 @@ import signal
 from functools import lru_cache
 from pathlib import PurePath, Path
 
-from distutils.sysconfig import get_python_lib
-from distutils.util import strtobool
+from typing import Any
 
 from scripts.common import get_meson
 from scripts.common import git
@@ -54,6 +53,16 @@ done
 '''
 BASH_COMPLETION_PATHS = [SCRIPTDIR + '/subprojects/gstreamer/data/bash-completion/completions']
 BASH_COMPLETION_PATHS += [SCRIPTDIR + '/subprojects/gst-devtools/validate/data/bash-completion/completions']
+
+
+def str_to_bool(value: Any) -> bool:
+    """Return whether the provided string (or any value really) represents true. Otherwise false.
+    Just like plugin server stringToBoolean.
+    """
+    if not value:
+        return False
+    return str(value).lower() in ("y", "yes", "t", "true", "on", "1")
+
 
 def listify(o):
     if isinstance(o, str):
@@ -545,7 +554,7 @@ if __name__ == "__main__":
                 args += ['/k', 'prompt [gst-{}] $P$G'.format(gst_version)]
         else:
             args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
-        if args[0].endswith('bash') and not strtobool(os.environ.get("GST_BUILD_DISABLE_PS1_OVERRIDE", r"FALSE")):
+        if args[0].endswith('bash') and not str_to_bool(os.environ.get("GST_BUILD_DISABLE_PS1_OVERRIDE", r"FALSE")):
             # Let the GC remove the tmp file
             tmprc = tempfile.NamedTemporaryFile(mode='w')
             bashrc = os.path.expanduser('~/.bashrc')
