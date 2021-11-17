@@ -18,6 +18,41 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:plugin-mediafoundation
+ *
+ * Microsoft MediaFoundation plugin.
+ *
+ * This plugin consists of various hardware/software video encoders
+ * software audio encoders, and video capture (from webcam) elements.
+ *
+ * GstMediaFoundation plugin supports H.264/AVC, H.265/HEVC, VP9, codecs for
+ * hardware-accelerate encoding.
+ *
+ * However, depending on the hardware it runs on, some elements might not be
+ * registered in case that underlying hardware doesn't support the feature.
+ *
+ * Moreover, depending on hardware vendor's MediaFoundation implementation,
+ * secendary GPU may not be usable. In that case, user could use vendor
+ * specific plugins, Intel Media SDK and NVCODEC plugins for example.
+ *
+ * For a system with multiple MediaFoundation compatible hardwares (i.e., GPU),
+ * there can be multiple plugin features having the same role.
+ * Also, there would be additional software video encoder element the system
+ * meets requirement.
+ *
+ * The naming rule for the non-primary encoder is `mf{codec}device{index}enc`
+ * where `index` is an arbitrary index number of hardware starting from 1.
+ *
+ * To get a list of all available elements, user can run
+ * ```sh
+ * gst-inspect-1.0.exe mediafoundation
+ * ```
+ *
+ * Since: 1.18
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -154,12 +189,6 @@ plugin_init (GstPlugin * plugin)
   HRESULT hr;
   GstRank rank = GST_RANK_SECONDARY;
   GList *device_list = NULL;
-
-  /**
-   * plugin-mediafoundation:
-   *
-   * Since: 1.18
-   */
 
   GST_DEBUG_CATEGORY_INIT (gst_mf_debug, "mf", 0, "media foundation");
   GST_DEBUG_CATEGORY_INIT (gst_mf_utils_debug,

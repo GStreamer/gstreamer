@@ -254,12 +254,26 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
                 G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   }
 
+  /**
+   * GstMFVP9Enc:d3d11-aware:
+   *
+   * Whether element supports Direct3D11 texture as an input or not
+   *
+   * Since: 1.20
+   */
   g_object_class_install_property (gobject_class, PROP_D3D11_AWARE,
       g_param_spec_boolean ("d3d11-aware", "D3D11 Aware",
           "Whether device can support Direct3D11 interop",
           device_caps->d3d11_aware,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstMFVP9Enc:adapter-luid:
+   *
+   * DXGI Adapter LUID for this elemenet
+   *
+   * Since: 1.20
+   */
   if (device_caps->d3d11_aware) {
     g_object_class_install_property (gobject_class, PROP_ADAPTER_LUID,
         g_param_spec_int64 ("adapter-luid", "Adapter LUID",

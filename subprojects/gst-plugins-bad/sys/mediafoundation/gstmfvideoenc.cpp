@@ -1911,6 +1911,9 @@ gst_mf_video_enc_register_internal (GstPlugin * plugin, guint rank,
   if (rank > 0 && !is_default)
     rank--;
 
+  if (!is_default)
+    gst_element_type_set_skip_documentation (type);
+
   if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);
 
