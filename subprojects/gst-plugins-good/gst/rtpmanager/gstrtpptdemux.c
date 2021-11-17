@@ -477,8 +477,12 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     if (!caps)
       goto no_caps;
 
-    if (gst_rtp_pt_demux_pt_is_ignored (rtpdemux, pt))
+    /* must be after the get_caps() call as get_caps() may cause external code
+     * (e.g. rtpbin) to update the ignored-pt list */
+    if (gst_rtp_pt_demux_pt_is_ignored (rtpdemux, pt)) {
+      gst_clear_caps (&caps);
       goto ignored;
+    }
 
     klass = GST_ELEMENT_GET_CLASS (rtpdemux);
     templ = gst_element_class_get_pad_template (klass, "src_%u");
