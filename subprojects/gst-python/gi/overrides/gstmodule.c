@@ -104,18 +104,58 @@ gi_gst_fraction_from_value (const GValue * value)
 static int
 gi_gst_fraction_to_value (GValue * value, PyObject * object)
 {
-  PyObject *numerator, *denominator;
+  glong numerator, denominator;
+  PyObject *numerator_obj, *denominator_obj, *is_integer;
 
-  numerator = PyObject_GetAttrString (object, "num");
-  if (numerator == NULL)
+  numerator_obj = PyObject_GetAttrString (object, "num");
+  if (numerator_obj == NULL)
     goto fail;
 
-  denominator = PyObject_GetAttrString (object, "denom");
-  if (denominator == NULL)
+  is_integer = PyObject_CallMethod (numerator_obj, "is_integer", NULL);
+  if (is_integer != Py_True) {
+    PyErr_Format (PyExc_TypeError,
+        "numerator %f is not an integer.", PyFloat_AsDouble (numerator_obj));
+    Py_DECREF (is_integer);
+    goto fail;
+  }
+  Py_DECREF (is_integer);
+
+  numerator = PyFloat_AsDouble (numerator_obj);
+  if (numerator < -G_MAXINT || numerator > G_MAXINT) {
+    PyErr_Format (PyExc_ValueError,
+        "numerator %" G_GINT64_FORMAT " is out of bound. [-%d - %d]",
+        numerator, G_MAXINT, G_MAXINT);
+    goto fail;
+  }
+
+  denominator_obj = PyObject_GetAttrString (object, "denom");
+  if (denominator_obj == NULL)
     goto fail;
 
-  gst_value_set_fraction (value,
-      PyLong_AsLong (numerator), PyLong_AsLong (denominator));
+  is_integer = PyObject_CallMethod (denominator_obj, "is_integer", NULL);
+  if (is_integer != Py_True) {
+    PyErr_Format (PyExc_TypeError,
+        "denominator %f is not an integer.",
+        PyFloat_AsDouble (denominator_obj));
+    Py_DECREF (is_integer);
+    goto fail;
+  }
+  Py_DECREF (is_integer);
+
+  denominator = PyFloat_AsDouble (denominator_obj);
+  if (denominator == 0) {
+    PyErr_SetString (PyExc_ValueError, "denominator is 0.");
+    goto fail;
+  }
+
+  if (denominator < -G_MAXINT || denominator > G_MAXINT) {
+    PyErr_Format (PyExc_ValueError,
+        "denominator %" G_GINT64_FORMAT " is out of bound. [-%d - %d]",
+        denominator, G_MAXINT, G_MAXINT);
+    goto fail;
+  }
+
+  gst_value_set_fraction (value, numerator, denominator);
 
   return 0;
 
