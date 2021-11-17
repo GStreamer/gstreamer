@@ -92,6 +92,15 @@ gst_msdkdec_add_bs_extra_param (GstMsdkDec * thiz, mfxExtBuffer * param)
   }
 }
 
+void
+gst_msdkdec_add_video_extra_param (GstMsdkDec * thiz, mfxExtBuffer * param)
+{
+  if (thiz->num_video_extra_params < MAX_VIDEO_EXTRA_PARAMS) {
+    thiz->video_extra_params[thiz->num_video_extra_params] = param;
+    thiz->num_video_extra_params++;
+  }
+}
+
 static GstVideoCodecFrame *
 gst_msdkdec_get_oldest_frame (GstVideoDecoder * decoder)
 {
@@ -253,8 +262,9 @@ get_surface (GstMsdkDec * thiz, GstBuffer * buffer)
       goto failed_unref_buffer2;
   }
 
-  gst_msdk_update_mfx_frame_info_from_mfx_video_param (&i->surface->Info,
-      &thiz->param);
+  if (!thiz->sfc)
+    gst_msdk_update_mfx_frame_info_from_mfx_video_param (&i->surface->Info,
+        &thiz->param);
 
   thiz->locked_msdk_surfaces = g_list_append (thiz->locked_msdk_surfaces, i);
   return i;
@@ -298,6 +308,7 @@ gst_msdkdec_close_decoder (GstMsdkDec * thiz, gboolean reset_param)
     memset (&thiz->param, 0, sizeof (thiz->param));
 
   thiz->num_bs_extra_params = 0;
+  thiz->num_video_extra_params = 0;
   thiz->initialized = FALSE;
   gst_adapter_clear (thiz->adapter);
 }
@@ -327,10 +338,16 @@ static gboolean
 gst_msdkdec_init_decoder (GstMsdkDec * thiz)
 {
   GstMsdkDecClass *klass = GST_MSDKDEC_GET_CLASS (thiz);
-  GstVideoInfo *info;
+  GstVideoInfo *info, *output_info;
   mfxSession session;
   mfxStatus status;
   mfxFrameAllocRequest request;
+#if (MFX_VERSION >= 1022)
+  mfxExtDecVideoProcessing ext_dec_video_proc;
+#endif
+
+  GstVideoCodecState *output_state =
+      gst_video_decoder_get_output_state (GST_VIDEO_DECODER (thiz));
 
   if (thiz->initialized)
     return TRUE;
@@ -345,6 +362,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
     return FALSE;
   }
   info = &thiz->input_state->info;
+  output_info = &output_state->info;
 
   GST_OBJECT_LOCK (thiz);
 
@@ -388,6 +406,35 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   thiz->param.mfx.FrameInfo.ChromaFormat =
       thiz->param.mfx.FrameInfo.ChromaFormat ? thiz->param.mfx.
       FrameInfo.ChromaFormat : MFX_CHROMAFORMAT_YUV420;
+
+#if (MFX_VERSION >= 1022)
+  if (output_info && thiz->sfc) {
+    memset (&ext_dec_video_proc, 0, sizeof (ext_dec_video_proc));
+    ext_dec_video_proc.Header.BufferId = MFX_EXTBUFF_DEC_VIDEO_PROCESSING;
+    ext_dec_video_proc.Header.BufferSz = sizeof (ext_dec_video_proc);
+    ext_dec_video_proc.In.CropW = thiz->param.mfx.FrameInfo.CropW;
+    ext_dec_video_proc.In.CropH = thiz->param.mfx.FrameInfo.CropH;
+    ext_dec_video_proc.In.CropX = 0;
+    ext_dec_video_proc.In.CropY = 0;
+    ext_dec_video_proc.Out.FourCC =
+        gst_msdk_get_mfx_fourcc_from_format (output_info->finfo->format);
+    ext_dec_video_proc.Out.ChromaFormat =
+        gst_msdk_get_mfx_chroma_from_format (output_info->finfo->format);
+    ext_dec_video_proc.Out.Width = GST_ROUND_UP_16 (output_info->width);
+    ext_dec_video_proc.Out.Height = GST_ROUND_UP_32 (output_info->height);
+    ext_dec_video_proc.Out.CropW = output_info->width;
+    ext_dec_video_proc.Out.CropH = output_info->height;
+    ext_dec_video_proc.Out.CropX = 0;
+    ext_dec_video_proc.Out.CropY = 0;
+    gst_msdkdec_add_video_extra_param (thiz,
+        (mfxExtBuffer *) & ext_dec_video_proc);
+  }
+#endif
+
+  if (thiz->num_video_extra_params) {
+    thiz->param.NumExtParam = thiz->num_video_extra_params;
+    thiz->param.ExtParam = thiz->video_extra_params;
+  }
 
   session = gst_msdk_context_get_session (thiz->context);
   /* validate parameters and allow MFX to make adjustments */
@@ -1955,6 +2002,7 @@ gst_msdkdec_init (GstMsdkDec * thiz)
   thiz->do_realloc = TRUE;
   thiz->force_reset_on_res_change = TRUE;
   thiz->report_error = FALSE;
+  thiz->sfc = FALSE;
   thiz->adapter = gst_adapter_new ();
   thiz->input_state = NULL;
   thiz->pool = NULL;
