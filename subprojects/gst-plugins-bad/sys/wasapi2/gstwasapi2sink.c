@@ -31,8 +31,8 @@
  *
  * ## Example pipelines
  * |[
- * gst-launch-1.0 -v audiotestsink samplesperbuffer=160 ! wasapi2sink
- * ]| Generate 20 ms buffers and render to the default audio device.
+ * gst-launch-1.0 -v audiotestsrc ! wasapi2sink
+ * ]| Generate audio test buffers and render to the default audio device.
  *
  * |[
  * gst-launch-1.0 -v audiotestsink samplesperbuffer=160 ! wasapi2sink low-latency=true
