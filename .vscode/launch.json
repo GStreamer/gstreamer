@@ -1,0 +1,52 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  //
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "GStreamer - Build and debug",
+      "request": "launch",
+      "type": "cppdbg",
+      "windows": {
+        "type": "cppvsdbg",
+        "program": "gst-launch-1.0.exe",
+      },
+      "osx": {
+        // https://github.com/microsoft/vscode-cpptools/issues/8411
+        "MIMode": "lldb",
+      },
+      "linux": {
+        "MIMode": "gdb"
+      },
+      "envFile": "${workspaceFolder}/${config:mesonbuild.buildFolder}/meson-vscode.env",
+      "cwd": "${workspaceFolder}/${config:mesonbuild.buildFolder}/subprojects/gstreamer/tools/",
+      "program": "${workspaceFolder}/${config:mesonbuild.buildFolder}/subprojects/gstreamer/tools/gst-launch-1.0",
+      "args": [
+        "videotestsrc",
+        "!",
+        "autovideosink"
+      ],
+      "environment": [
+        {
+          "name": "GST_DEBUG",
+          "value": "4"
+        },
+      ],
+      "stopAtEntry": false,
+      "preLaunchTask": "Meson: Build all targets",
+      "symbolOptions": {
+        "searchPaths": [
+          "${workspaceFolder}/${config:mesonbuild.buildFolder}",
+        ],
+        "searchMicrosoftSymbolServer": true,
+        "cachePath": "${workspaceFolder}\\${config:mesonbuild.buildFolder}\\cache",
+        "moduleFilter": {
+          "mode": "loadAllButExcluded",
+          "excludedModules": []
+        }
+      }
+    }
+  ]
+}
