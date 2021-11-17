@@ -102,6 +102,7 @@ struct _GstTagDemuxPrivate
 
   GstSegment segment;
   gboolean need_newseg;
+  guint32 segment_seqnum;
 
   guint64 offset;
 
@@ -265,6 +266,7 @@ gst_tag_demux_reset (GstTagDemux * tagdemux)
 
   gst_segment_init (&tagdemux->priv->segment, GST_FORMAT_UNDEFINED);
   tagdemux->priv->need_newseg = TRUE;
+  tagdemux->priv->segment_seqnum = gst_util_seqnum_next ();
 
   g_list_foreach (tagdemux->priv->pending_events,
       (GFunc) gst_mini_object_unref, NULL);
@@ -769,6 +771,7 @@ gst_tag_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_SEGMENT:
     {
       gst_event_copy_segment (event, &demux->priv->segment);
+      demux->priv->segment_seqnum = gst_event_get_seqnum (event);
 
       demux->priv->need_newseg = TRUE;
       gst_event_unref (event);
@@ -1854,6 +1857,7 @@ gst_tag_demux_send_new_segment (GstTagDemux * tagdemux)
   /* Can't adjust segments in non-BYTES formats */
   if (tagdemux->priv->segment.format != GST_FORMAT_BYTES) {
     event = gst_event_new_segment (seg);
+    gst_event_set_seqnum (event, tagdemux->priv->segment_seqnum);
     return gst_pad_push_event (tagdemux->priv->srcpad, event);
   }
 
@@ -1910,6 +1914,7 @@ gst_tag_demux_send_new_segment (GstTagDemux * tagdemux)
   newseg.stop = stop;
   newseg.time = time;
   event = gst_event_new_segment (&newseg);
+  gst_event_set_seqnum (event, tagdemux->priv->segment_seqnum);
 
   return gst_pad_push_event (tagdemux->priv->srcpad, event);
 }
