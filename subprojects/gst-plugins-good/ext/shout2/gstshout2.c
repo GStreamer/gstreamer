@@ -576,7 +576,13 @@ gst_shout2send_connect (GstShout2send * sink)
   ret = shout_open (sink->conn);
 
   /* wait for connection or timeout */
+#ifdef SHOUTERR_RETRY
+  /* starting with libshout 2.4.2, shout_open() has broken API + ABI and
+   * can also return SHOUTERR_RETRY (a new define) to mean "try again" */
+  while (ret == SHOUTERR_BUSY || ret == SHOUTERR_RETRY) {
+#else
   while (ret == SHOUTERR_BUSY) {
+#endif
     if (gst_util_get_timestamp () - start_ts > sink->timeout * GST_MSECOND) {
       goto connection_timeout;
     }
