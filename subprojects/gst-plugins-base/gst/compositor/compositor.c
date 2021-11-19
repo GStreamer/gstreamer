@@ -800,7 +800,9 @@ GST_ELEMENT_REGISTER_DEFINE (compositor, "compositor", GST_RANK_PRIMARY + 1,
 static gboolean
 set_functions (GstCompositor * self, const GstVideoInfo * info)
 {
-  gboolean ret = FALSE;
+  gint offset[GST_VIDEO_MAX_COMPONENTS] = { 0, };
+  gint scale[GST_VIDEO_MAX_COMPONENTS] = { 0, };
+  gint i;
 
   self->blend = NULL;
   self->overlay = NULL;
@@ -813,160 +815,164 @@ set_functions (GstCompositor * self, const GstVideoInfo * info)
       self->overlay = gst_compositor_overlay_ayuv;
       self->fill_checker = gst_compositor_fill_checker_ayuv;
       self->fill_color = gst_compositor_fill_color_ayuv;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_VUYA:
       self->blend = gst_compositor_blend_vuya;
       self->overlay = gst_compositor_overlay_vuya;
       self->fill_checker = gst_compositor_fill_checker_vuya;
       self->fill_color = gst_compositor_fill_color_vuya;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_ARGB:
       self->blend = gst_compositor_blend_argb;
       self->overlay = gst_compositor_overlay_argb;
       self->fill_checker = gst_compositor_fill_checker_argb;
       self->fill_color = gst_compositor_fill_color_argb;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_BGRA:
       self->blend = gst_compositor_blend_bgra;
       self->overlay = gst_compositor_overlay_bgra;
       self->fill_checker = gst_compositor_fill_checker_bgra;
       self->fill_color = gst_compositor_fill_color_bgra;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_ABGR:
       self->blend = gst_compositor_blend_abgr;
       self->overlay = gst_compositor_overlay_abgr;
       self->fill_checker = gst_compositor_fill_checker_abgr;
       self->fill_color = gst_compositor_fill_color_abgr;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_RGBA:
       self->blend = gst_compositor_blend_rgba;
       self->overlay = gst_compositor_overlay_rgba;
       self->fill_checker = gst_compositor_fill_checker_rgba;
       self->fill_color = gst_compositor_fill_color_rgba;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_Y444:
       self->blend = gst_compositor_blend_y444;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_y444;
       self->fill_color = gst_compositor_fill_color_y444;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_Y42B:
       self->blend = gst_compositor_blend_y42b;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_y42b;
       self->fill_color = gst_compositor_fill_color_y42b;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_YUY2:
       self->blend = gst_compositor_blend_yuy2;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_yuy2;
       self->fill_color = gst_compositor_fill_color_yuy2;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_UYVY:
       self->blend = gst_compositor_blend_uyvy;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_uyvy;
       self->fill_color = gst_compositor_fill_color_uyvy;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_YVYU:
       self->blend = gst_compositor_blend_yvyu;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_yvyu;
       self->fill_color = gst_compositor_fill_color_yvyu;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_I420:
       self->blend = gst_compositor_blend_i420;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_i420;
       self->fill_color = gst_compositor_fill_color_i420;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_YV12:
       self->blend = gst_compositor_blend_yv12;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_yv12;
       self->fill_color = gst_compositor_fill_color_yv12;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_NV12:
       self->blend = gst_compositor_blend_nv12;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_nv12;
       self->fill_color = gst_compositor_fill_color_nv12;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_NV21:
       self->blend = gst_compositor_blend_nv21;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_nv21;
       self->fill_color = gst_compositor_fill_color_nv21;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_Y41B:
       self->blend = gst_compositor_blend_y41b;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_y41b;
       self->fill_color = gst_compositor_fill_color_y41b;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_RGB:
       self->blend = gst_compositor_blend_rgb;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_rgb;
       self->fill_color = gst_compositor_fill_color_rgb;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_BGR:
       self->blend = gst_compositor_blend_bgr;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_bgr;
       self->fill_color = gst_compositor_fill_color_bgr;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_xRGB:
       self->blend = gst_compositor_blend_xrgb;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_xrgb;
       self->fill_color = gst_compositor_fill_color_xrgb;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_xBGR:
       self->blend = gst_compositor_blend_xbgr;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_xbgr;
       self->fill_color = gst_compositor_fill_color_xbgr;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_RGBx:
       self->blend = gst_compositor_blend_rgbx;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_rgbx;
       self->fill_color = gst_compositor_fill_color_rgbx;
-      ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_BGRx:
       self->blend = gst_compositor_blend_bgrx;
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_bgrx;
       self->fill_color = gst_compositor_fill_color_bgrx;
-      ret = TRUE;
       break;
     default:
-      break;
+      GST_ERROR_OBJECT (self, "Unhandled format %s",
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+      return FALSE;
   }
 
-  return ret;
+  /* calculate black and white colors */
+  gst_video_color_range_offsets (info->colorimetry.range, info->finfo,
+      offset, scale);
+  if (GST_VIDEO_INFO_IS_YUV (info)) {
+    /* black color [0.0, 0.0, 0.0] */
+    self->black_color[0] = offset[0];
+
+    /* white color [1.0, 0.0, 0.0] */
+    self->white_color[0] = scale[0] + offset[0];
+
+    for (i = 1; i < 3; i++)
+      self->black_color[i] = self->white_color[i] = offset[i];
+  } else {
+    for (i = 0; i < 3; i++) {
+      self->black_color[i] = offset[i];
+      self->white_color[i] = scale[i] + offset[i];
+    }
+  }
+
+  GST_DEBUG_OBJECT (self,
+      "Calculated background color block: [%d %d %d], white: [%d %d %d]",
+      self->black_color[0], self->black_color[1], self->black_color[2],
+      self->white_color[0], self->white_color[1], self->white_color[2]);
+
+  return TRUE;
 }
 
 static GstCaps *
@@ -1311,10 +1317,16 @@ _draw_background (GstCompositor * comp, GstVideoFrame * outframe,
       comp->fill_checker (outframe, y_start, y_end);
       break;
     case COMPOSITOR_BACKGROUND_BLACK:
-      comp->fill_color (outframe, y_start, y_end, 16, 128, 128);
+      comp->fill_color (outframe, y_start, y_end,
+          comp->black_color[GST_VIDEO_COMP_Y],
+          comp->black_color[GST_VIDEO_COMP_U],
+          comp->black_color[GST_VIDEO_COMP_V]);
       break;
     case COMPOSITOR_BACKGROUND_WHITE:
-      comp->fill_color (outframe, y_start, y_end, 240, 128, 128);
+      comp->fill_color (outframe, y_start, y_end,
+          comp->white_color[GST_VIDEO_COMP_Y],
+          comp->white_color[GST_VIDEO_COMP_U],
+          comp->white_color[GST_VIDEO_COMP_V]);
       break;
     case COMPOSITOR_BACKGROUND_TRANSPARENT:
     {

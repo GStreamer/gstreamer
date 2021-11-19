@@ -219,15 +219,10 @@ A32_CHECKER_C (bgra, TRUE, 3, 2, 1, 0);
 A32_CHECKER_C (ayuv, FALSE, 0, 1, 2, 3);
 A32_CHECKER_C (vuya, FALSE, 3, 2, 1, 0);
 
-#define YUV_TO_R(Y,U,V) (CLAMP (1.164 * (Y - 16) + 1.596 * (V - 128), 0, 255))
-#define YUV_TO_G(Y,U,V) (CLAMP (1.164 * (Y - 16) - 0.813 * (V - 128) - 0.391 * (U - 128), 0, 255))
-#define YUV_TO_B(Y,U,V) (CLAMP (1.164 * (Y - 16) + 2.018 * (U - 128), 0, 255))
-
-#define A32_COLOR(name, RGB, A, C1, C2, C3) \
+#define A32_COLOR(name, A, C1, C2, C3) \
 static void \
-fill_color_##name (GstVideoFrame * frame, guint y_start, guint y_end, gint Y, gint U, gint V) \
+fill_color_##name (GstVideoFrame * frame, guint y_start, guint y_end, gint c1, gint c2, gint c3) \
 { \
-  gint c1, c2, c3; \
   guint32 val; \
   gint stride; \
   guint8 *dest; \
@@ -236,26 +231,17 @@ fill_color_##name (GstVideoFrame * frame, guint y_start, guint y_end, gint Y, gi
   stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
   \
   dest += y_start * stride; \
-  if (RGB) { \
-    c1 = YUV_TO_R (Y, U, V); \
-    c2 = YUV_TO_G (Y, U, V); \
-    c3 = YUV_TO_B (Y, U, V); \
-  } else { \
-    c1 = Y; \
-    c2 = U; \
-    c3 = V; \
-  } \
   val = GUINT32_FROM_BE ((0xff << A) | (c1 << C1) | (c2 << C2) | (c3 << C3)); \
   \
   compositor_orc_splat_u32 ((guint32 *) dest, val, (y_end - y_start) * (stride / 4)); \
 }
 
-A32_COLOR (argb, TRUE, 24, 16, 8, 0);
-A32_COLOR (bgra, TRUE, 0, 8, 16, 24);
-A32_COLOR (abgr, TRUE, 24, 0, 8, 16);
-A32_COLOR (rgba, TRUE, 0, 24, 16, 8);
-A32_COLOR (ayuv, FALSE, 24, 16, 8, 0);
-A32_COLOR (vuya, FALSE, 0, 8, 16, 24);
+A32_COLOR (argb, 24, 16, 8, 0);
+A32_COLOR (bgra, 0, 8, 16, 24);
+A32_COLOR (abgr, 24, 0, 8, 16);
+A32_COLOR (rgba, 0, 24, 16, 8);
+A32_COLOR (ayuv, 24, 16, 8, 0);
+A32_COLOR (vuya, 0, 8, 16, 24);
 
 /* Y444, Y42B, I420, YV12, Y41B */
 #define PLANAR_YUV_BLEND(format_name,format_enum,x_round,y_round,MEMCPY,BLENDLOOP) \
@@ -857,9 +843,8 @@ fill_checker_##name##_c (GstVideoFrame * frame, guint y_start, guint y_end) \
 #define RGB_FILL_COLOR(name, bpp, MEMSET_RGB) \
 static void \
 fill_color_##name (GstVideoFrame * frame, \
-    guint y_start, guint y_end, gint colY, gint colU, gint colV) \
+    guint y_start, guint y_end, gint colR, gint colG, gint colB) \
 { \
-  gint red, green, blue; \
   gint i; \
   gint dest_stride; \
   gint width, height; \
@@ -870,13 +855,9 @@ fill_color_##name (GstVideoFrame * frame, \
   dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0); \
   dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
   \
-  red = YUV_TO_R (colY, colU, colV); \
-  green = YUV_TO_G (colY, colU, colV); \
-  blue = YUV_TO_B (colY, colU, colV); \
-  \
   dest += y_start * dest_stride; \
   for (i = 0; i < height; i++) { \
-    MEMSET_RGB (dest, red, green, blue, width); \
+    MEMSET_RGB (dest, colR, colG, colB, width); \
     dest += dest_stride; \
   } \
 }

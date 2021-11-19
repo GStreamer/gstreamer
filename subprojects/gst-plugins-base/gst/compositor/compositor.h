@@ -144,6 +144,11 @@ struct _GstCompositor
   FillCheckerFunction fill_checker;
   FillColorFunction fill_color;
 
+  /* pre-calculated white/black level values, YUV or RGB order depending on
+   * selected output format */
+  gint white_color[GST_VIDEO_MAX_COMPONENTS];
+  gint black_color[GST_VIDEO_MAX_COMPONENTS];
+
   GstParallelizedTaskRunner *blend_runner;
 };
 
