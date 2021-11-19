@@ -629,6 +629,21 @@ PLANAR_YUV_BLEND (i422_12le, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
     BLEND_HIGH (u12), 12);
 PLANAR_YUV_BLEND (i422_12be, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
     BLEND_HIGH (u12_swap), 12);
+
+PLANAR_YUV_BLEND (y444_10le, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u10), 10);
+PLANAR_YUV_BLEND (y444_10be, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u10_swap), 10);
+
+PLANAR_YUV_BLEND (y444_12le, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u12), 12);
+PLANAR_YUV_BLEND (y444_12be, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u12_swap), 12);
+
+PLANAR_YUV_BLEND (y444_16le, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u16), 16);
+PLANAR_YUV_BLEND (y444_16be, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u16_swap), 16);
 #else /* G_BYTE_ORDER == G_LITTLE_ENDIAN */
 PLANAR_YUV_BLEND (i420_10le, GST_ROUND_UP_2, GST_ROUND_UP_2, memcpy,
     BLEND_HIGH (u10_swap), 10);
@@ -649,6 +664,21 @@ PLANAR_YUV_BLEND (i422_12le, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
     BLEND_HIGH (u12_swap), 12);
 PLANAR_YUV_BLEND (i422_12be, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
     BLEND_HIGH (u12), 12);
+
+PLANAR_YUV_BLEND (y444_10le, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u10_swap), 10);
+PLANAR_YUV_BLEND (y444_10be, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u10), 10);
+
+PLANAR_YUV_BLEND (y444_12le, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u12_swap), 12);
+PLANAR_YUV_BLEND (y444_12be, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u12), 12);
+
+PLANAR_YUV_BLEND (y444_16le, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u16_swap), 16);
+PLANAR_YUV_BLEND (y444_16be, GST_ROUND_UP_1, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u16), 16);
 #endif /* G_BYTE_ORDER == G_LITTLE_ENDIAN */
 
 PLANAR_YUV_HIGH_FILL_CHECKER (i420_10le, 10, LE, compositor_orc_memset_u16_2d);
@@ -660,6 +690,11 @@ PLANAR_YUV_HIGH_FILL_CHECKER (i420_12le, 12, LE, compositor_orc_memset_u16_2d);
 PLANAR_YUV_HIGH_FILL_COLOR (i420_12le, LE, compositor_orc_memset_u16_2d);
 PLANAR_YUV_HIGH_FILL_CHECKER (i420_12be, 12, BE, compositor_orc_memset_u16_2d);
 PLANAR_YUV_HIGH_FILL_COLOR (i420_12be, BE, compositor_orc_memset_u16_2d);
+
+PLANAR_YUV_HIGH_FILL_CHECKER (y444_16le, 16, LE, compositor_orc_memset_u16_2d);
+PLANAR_YUV_HIGH_FILL_COLOR (y444_16le, LE, compositor_orc_memset_u16_2d);
+PLANAR_YUV_HIGH_FILL_CHECKER (y444_16be, 16, BE, compositor_orc_memset_u16_2d);
+PLANAR_YUV_HIGH_FILL_COLOR (y444_16be, BE, compositor_orc_memset_u16_2d);
 
 /* NV12, NV21 */
 #define NV_YUV_BLEND(format_name,MEMCPY,BLENDLOOP) \
@@ -1229,6 +1264,12 @@ BlendFunction gst_compositor_blend_i422_10le;
 BlendFunction gst_compositor_blend_i422_10be;
 BlendFunction gst_compositor_blend_i422_12le;
 BlendFunction gst_compositor_blend_i422_12be;
+BlendFunction gst_compositor_blend_y444_10le;
+BlendFunction gst_compositor_blend_y444_10be;
+BlendFunction gst_compositor_blend_y444_12le;
+BlendFunction gst_compositor_blend_y444_12be;
+BlendFunction gst_compositor_blend_y444_16le;
+BlendFunction gst_compositor_blend_y444_16be;
 
 FillCheckerFunction gst_compositor_fill_checker_argb;
 FillCheckerFunction gst_compositor_fill_checker_bgra;
@@ -1254,6 +1295,8 @@ FillCheckerFunction gst_compositor_fill_checker_i420_10le;
 FillCheckerFunction gst_compositor_fill_checker_i420_10be;
 FillCheckerFunction gst_compositor_fill_checker_i420_12le;
 FillCheckerFunction gst_compositor_fill_checker_i420_12be;
+FillCheckerFunction gst_compositor_fill_checker_y444_16le;
+FillCheckerFunction gst_compositor_fill_checker_y444_16be;
 
 FillColorFunction gst_compositor_fill_color_argb;
 FillColorFunction gst_compositor_fill_color_bgra;
@@ -1281,6 +1324,8 @@ FillColorFunction gst_compositor_fill_color_i420_10le;
 FillColorFunction gst_compositor_fill_color_i420_10be;
 FillColorFunction gst_compositor_fill_color_i420_12le;
 FillColorFunction gst_compositor_fill_color_i420_12be;
+FillColorFunction gst_compositor_fill_color_y444_16le;
+FillColorFunction gst_compositor_fill_color_y444_16be;
 
 void
 gst_compositor_init_blend (void)
@@ -1309,6 +1354,12 @@ gst_compositor_init_blend (void)
   gst_compositor_blend_i422_10be = GST_DEBUG_FUNCPTR (blend_i422_10be);
   gst_compositor_blend_i422_12le = GST_DEBUG_FUNCPTR (blend_i422_12le);
   gst_compositor_blend_i422_12be = GST_DEBUG_FUNCPTR (blend_i422_12be);
+  gst_compositor_blend_y444_10le = GST_DEBUG_FUNCPTR (blend_y444_10le);
+  gst_compositor_blend_y444_10be = GST_DEBUG_FUNCPTR (blend_y444_10be);
+  gst_compositor_blend_y444_12le = GST_DEBUG_FUNCPTR (blend_y444_12le);
+  gst_compositor_blend_y444_12be = GST_DEBUG_FUNCPTR (blend_y444_12be);
+  gst_compositor_blend_y444_16le = GST_DEBUG_FUNCPTR (blend_y444_16le);
+  gst_compositor_blend_y444_16be = GST_DEBUG_FUNCPTR (blend_y444_16be);
 
   gst_compositor_fill_checker_argb = GST_DEBUG_FUNCPTR (fill_checker_argb_c);
   gst_compositor_fill_checker_bgra = GST_DEBUG_FUNCPTR (fill_checker_bgra_c);
@@ -1333,6 +1384,10 @@ gst_compositor_init_blend (void)
       GST_DEBUG_FUNCPTR (fill_checker_i420_12le);
   gst_compositor_fill_checker_i420_12be =
       GST_DEBUG_FUNCPTR (fill_checker_i420_12be);
+  gst_compositor_fill_checker_y444_16le =
+      GST_DEBUG_FUNCPTR (fill_checker_y444_16le);
+  gst_compositor_fill_checker_y444_16be =
+      GST_DEBUG_FUNCPTR (fill_checker_y444_16be);
 
   gst_compositor_fill_color_argb = GST_DEBUG_FUNCPTR (fill_color_argb);
   gst_compositor_fill_color_bgra = GST_DEBUG_FUNCPTR (fill_color_bgra);
@@ -1363,4 +1418,8 @@ gst_compositor_init_blend (void)
       GST_DEBUG_FUNCPTR (fill_color_i420_12le);
   gst_compositor_fill_color_i420_12be =
       GST_DEBUG_FUNCPTR (fill_color_i420_12be);
+  gst_compositor_fill_color_y444_16le =
+      GST_DEBUG_FUNCPTR (fill_color_y444_16le);
+  gst_compositor_fill_color_y444_16be =
+      GST_DEBUG_FUNCPTR (fill_color_y444_16be);
 }
