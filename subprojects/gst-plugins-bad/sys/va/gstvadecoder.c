@@ -846,6 +846,7 @@ gst_va_decode_picture_dup (GstVaDecodePicture * pic)
 
   dup = g_slice_new0 (GstVaDecodePicture);
 
+  dup->display = gst_object_ref (pic->display);
   /* dups only need gstbuffer */
   dup->gstbuffer = gst_buffer_ref (pic->gstbuffer);
   return dup;
