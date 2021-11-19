@@ -884,11 +884,18 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
     GstCaps * caps, GstCaps * filter)
 {
   GstVaVpp *self = GST_VA_VPP (trans);
-  GstCaps *ret, *tmp;
+  GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (trans);
+  GstCaps *ret, *tmp, *filter_caps;
 
   GST_DEBUG_OBJECT (self,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
+
+  filter_caps = gst_va_base_transform_get_filter_caps (btrans);
+  if (filter_caps && !gst_caps_can_intersect (caps, filter_caps)) {
+    ret = gst_caps_ref (caps);
+    goto bail;
+  }
 
   ret = gst_va_vpp_caps_remove_fields (caps);
 
@@ -905,6 +912,7 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
   if (!gst_caps_is_subset (tmp, ret))
     gst_caps_append (ret, tmp);
 
+bail:
   if (filter) {
     GstCaps *intersection;
 

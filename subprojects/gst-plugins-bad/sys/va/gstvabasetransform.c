@@ -41,6 +41,8 @@ struct _GstVaBaseTransformPrivate
   GstCaps *sinkpad_caps;
   GstVideoInfo sinkpad_info;
   GstBufferPool *sinkpad_pool;
+
+  GstCaps *filter_caps;
 };
 
 /**
@@ -71,6 +73,8 @@ gst_va_base_transform_dispose (GObject * object)
 
   gst_clear_caps (&self->out_caps);
   gst_clear_caps (&self->in_caps);
+
+  gst_clear_caps (&self->priv->filter_caps);
 
   gst_clear_object (&self->filter);
   gst_clear_object (&self->display);
@@ -501,6 +505,7 @@ gst_va_base_transform_change_state (GstElement * element,
       if (!gst_va_ensure_element_data (element, klass->render_device_path,
               &self->display))
         goto open_failed;
+      gst_clear_caps (&self->priv->filter_caps);
       gst_clear_object (&self->filter);
       self->filter = gst_va_filter_new (self->display);
       if (!gst_va_filter_open (self->filter))
@@ -519,6 +524,7 @@ gst_va_base_transform_change_state (GstElement * element,
       gst_va_filter_close (self->filter);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_clear_caps (&self->priv->filter_caps);
       gst_clear_object (&self->filter);
       gst_clear_object (&self->display);
       break;
@@ -765,6 +771,8 @@ gst_va_base_transform_import_buffer (GstVaBaseTransform * self,
   GstVideoFrame in_frame, out_frame;
   gboolean imported, copied;
 
+  g_return_val_if_fail (GST_IS_VA_BASE_TRANSFORM (self), GST_FLOW_ERROR);
+
   imported = _try_import_buffer (self, inbuf);
   if (imported) {
     *buf = gst_buffer_ref (inbuf);
@@ -817,4 +825,25 @@ invalid_buffer:
       gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
+}
+
+GstCaps *
+gst_va_base_transform_get_filter_caps (GstVaBaseTransform * self)
+{
+  g_return_val_if_fail (GST_IS_VA_BASE_TRANSFORM (self), NULL);
+
+  GST_OBJECT_LOCK (self);
+  if (self->priv->filter_caps) {
+    GST_OBJECT_UNLOCK (self);
+    return self->priv->filter_caps;
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  if (!self->filter)
+    return NULL;
+
+  GST_OBJECT_LOCK (self);
+  self->priv->filter_caps = gst_va_filter_get_caps (self->filter);
+  GST_OBJECT_UNLOCK (self);
+  return self->priv->filter_caps;
 }
