@@ -98,7 +98,21 @@ typedef union
 void compositor_orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n);
 void compositor_orc_memcpy_u32 (guint32 * ORC_RESTRICT d1,
     const guint32 * ORC_RESTRICT s1, int n);
+void compositor_orc_memset_u16_2d (guint8 * ORC_RESTRICT d1, int d1_stride,
+    int p1, int n, int m);
 void compositor_orc_blend_u8 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void compositor_orc_blend_u10 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void compositor_orc_blend_u12 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void compositor_orc_blend_u16 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void compositor_orc_blend_u10_swap (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void compositor_orc_blend_u12_swap (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void compositor_orc_blend_u16_swap (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
 void compositor_orc_blend_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
@@ -370,6 +384,112 @@ compositor_orc_memcpy_u32 (guint32 * ORC_RESTRICT d1,
 #endif
 
 
+/* compositor_orc_memset_u16_2d */
+#ifdef DISABLE_ORC
+void
+compositor_orc_memset_u16_2d (guint8 * ORC_RESTRICT d1, int d1_stride, int p1,
+    int n, int m)
+{
+  int i;
+  int j;
+  orc_union16 *ORC_RESTRICT ptr0;
+  orc_union16 var32;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (d1, d1_stride * j);
+
+    /* 0: loadpw */
+    var32.i = p1;
+
+    for (i = 0; i < n; i++) {
+      /* 1: storew */
+      ptr0[i] = var32;
+    }
+  }
+
+}
+
+#else
+static void
+_backup_compositor_orc_memset_u16_2d (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int j;
+  int n = ex->n;
+  int m = ex->params[ORC_VAR_A1];
+  orc_union16 *ORC_RESTRICT ptr0;
+  orc_union16 var32;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (ex->arrays[0], ex->params[0] * j);
+
+    /* 0: loadpw */
+    var32.i = ex->params[24];
+
+    for (i = 0; i < n; i++) {
+      /* 1: storew */
+      ptr0[i] = var32;
+    }
+  }
+
+}
+
+void
+compositor_orc_memset_u16_2d (guint8 * ORC_RESTRICT d1, int d1_stride, int p1,
+    int n, int m)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 7, 9, 28, 99, 111, 109, 112, 111, 115, 105, 116, 111, 114, 95, 111,
+        114, 99, 95, 109, 101, 109, 115, 101, 116, 95, 117, 49, 54, 95, 50, 100,
+        11, 2, 2, 16, 2, 97, 0, 24, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_compositor_orc_memset_u16_2d);
+#else
+      p = orc_program_new ();
+      orc_program_set_2d (p);
+      orc_program_set_name (p, "compositor_orc_memset_u16_2d");
+      orc_program_set_backup_function (p, _backup_compositor_orc_memset_u16_2d);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_parameter (p, 2, "p1");
+
+      orc_program_append_2 (p, "storew", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
+          ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ORC_EXECUTOR_M (ex) = m;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_D1] = d1_stride;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
 /* compositor_orc_blend_u8 */
 #ifdef DISABLE_ORC
 void
@@ -536,6 +656,1242 @@ compositor_orc_blend_u8 (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
       orc_program_append_2 (p, "convsuswb", 0, ORC_VAR_D1, ORC_VAR_T2,
           ORC_VAR_D1, ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ORC_EXECUTOR_M (ex) = m;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_D1] = d1_stride;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_S1] = s1_stride;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* compositor_orc_blend_u10 */
+#ifdef DISABLE_ORC
+void
+compositor_orc_blend_u10 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  int i;
+  int j;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var34;
+  orc_union16 var35;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (d1, d1_stride * j);
+    ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
+
+    /* 5: loadpl */
+    var36.i = p1;
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var34 = ptr0[i];
+      /* 1: convuwl */
+      var38.i = (orc_uint16) var34.i;
+      /* 2: loadw */
+      var35 = ptr4[i];
+      /* 3: convuwl */
+      var39.i = (orc_uint16) var35.i;
+      /* 4: subl */
+      var40.i = ((orc_uint32) var39.i) - ((orc_uint32) var38.i);
+      /* 6: mulll */
+      var41.i = (((orc_uint32) var40.i) * ((orc_uint32) var36.i)) & 0xffffffff;
+      /* 7: shll */
+      var42.i = ((orc_uint32) var38.i) << 10;
+      /* 8: addl */
+      var43.i = ((orc_uint32) var42.i) + ((orc_uint32) var41.i);
+      /* 9: shrul */
+      var44.i = ((orc_uint32) var43.i) >> 10;
+      /* 10: convsuslw */
+      var37.i = ORC_CLAMP_UW (var44.i);
+      /* 11: storew */
+      ptr0[i] = var37;
+    }
+  }
+
+}
+
+#else
+static void
+_backup_compositor_orc_blend_u10 (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int j;
+  int n = ex->n;
+  int m = ex->params[ORC_VAR_A1];
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var34;
+  orc_union16 var35;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (ex->arrays[0], ex->params[0] * j);
+    ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
+
+    /* 5: loadpl */
+    var36.i = ex->params[24];
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var34 = ptr0[i];
+      /* 1: convuwl */
+      var38.i = (orc_uint16) var34.i;
+      /* 2: loadw */
+      var35 = ptr4[i];
+      /* 3: convuwl */
+      var39.i = (orc_uint16) var35.i;
+      /* 4: subl */
+      var40.i = ((orc_uint32) var39.i) - ((orc_uint32) var38.i);
+      /* 6: mulll */
+      var41.i = (((orc_uint32) var40.i) * ((orc_uint32) var36.i)) & 0xffffffff;
+      /* 7: shll */
+      var42.i = ((orc_uint32) var38.i) << 10;
+      /* 8: addl */
+      var43.i = ((orc_uint32) var42.i) + ((orc_uint32) var41.i);
+      /* 9: shrul */
+      var44.i = ((orc_uint32) var43.i) >> 10;
+      /* 10: convsuslw */
+      var37.i = ORC_CLAMP_UW (var44.i);
+      /* 11: storew */
+      ptr0[i] = var37;
+    }
+  }
+
+}
+
+void
+compositor_orc_blend_u10 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 7, 9, 24, 99, 111, 109, 112, 111, 115, 105, 116, 111, 114, 95, 111,
+        114, 99, 95, 98, 108, 101, 110, 100, 95, 117, 49, 48, 11, 2, 2, 12,
+        2, 2, 14, 1, 10, 0, 0, 0, 16, 2, 20, 4, 20, 4, 154, 32,
+        0, 154, 33, 4, 129, 33, 33, 32, 120, 33, 33, 24, 124, 32, 32, 16,
+        103, 33, 32, 33, 126, 33, 33, 16, 166, 0, 33, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_compositor_orc_blend_u10);
+#else
+      p = orc_program_new ();
+      orc_program_set_2d (p);
+      orc_program_set_name (p, "compositor_orc_blend_u10");
+      orc_program_set_backup_function (p, _backup_compositor_orc_blend_u10);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_source (p, 2, "s1");
+      orc_program_add_constant (p, 1, 0x0000000a, "c1");
+      orc_program_add_parameter (p, 2, "p1");
+      orc_program_add_temporary (p, 4, "t1");
+      orc_program_add_temporary (p, 4, "t2");
+
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "subl", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_T1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mulll", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_T2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuslw", 0, ORC_VAR_D1, ORC_VAR_T2,
+          ORC_VAR_D1, ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ORC_EXECUTOR_M (ex) = m;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_D1] = d1_stride;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_S1] = s1_stride;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* compositor_orc_blend_u12 */
+#ifdef DISABLE_ORC
+void
+compositor_orc_blend_u12 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  int i;
+  int j;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var34;
+  orc_union16 var35;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (d1, d1_stride * j);
+    ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
+
+    /* 5: loadpl */
+    var36.i = p1;
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var34 = ptr0[i];
+      /* 1: convuwl */
+      var38.i = (orc_uint16) var34.i;
+      /* 2: loadw */
+      var35 = ptr4[i];
+      /* 3: convuwl */
+      var39.i = (orc_uint16) var35.i;
+      /* 4: subl */
+      var40.i = ((orc_uint32) var39.i) - ((orc_uint32) var38.i);
+      /* 6: mulll */
+      var41.i = (((orc_uint32) var40.i) * ((orc_uint32) var36.i)) & 0xffffffff;
+      /* 7: shll */
+      var42.i = ((orc_uint32) var38.i) << 12;
+      /* 8: addl */
+      var43.i = ((orc_uint32) var42.i) + ((orc_uint32) var41.i);
+      /* 9: shrul */
+      var44.i = ((orc_uint32) var43.i) >> 12;
+      /* 10: convsuslw */
+      var37.i = ORC_CLAMP_UW (var44.i);
+      /* 11: storew */
+      ptr0[i] = var37;
+    }
+  }
+
+}
+
+#else
+static void
+_backup_compositor_orc_blend_u12 (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int j;
+  int n = ex->n;
+  int m = ex->params[ORC_VAR_A1];
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var34;
+  orc_union16 var35;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (ex->arrays[0], ex->params[0] * j);
+    ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
+
+    /* 5: loadpl */
+    var36.i = ex->params[24];
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var34 = ptr0[i];
+      /* 1: convuwl */
+      var38.i = (orc_uint16) var34.i;
+      /* 2: loadw */
+      var35 = ptr4[i];
+      /* 3: convuwl */
+      var39.i = (orc_uint16) var35.i;
+      /* 4: subl */
+      var40.i = ((orc_uint32) var39.i) - ((orc_uint32) var38.i);
+      /* 6: mulll */
+      var41.i = (((orc_uint32) var40.i) * ((orc_uint32) var36.i)) & 0xffffffff;
+      /* 7: shll */
+      var42.i = ((orc_uint32) var38.i) << 12;
+      /* 8: addl */
+      var43.i = ((orc_uint32) var42.i) + ((orc_uint32) var41.i);
+      /* 9: shrul */
+      var44.i = ((orc_uint32) var43.i) >> 12;
+      /* 10: convsuslw */
+      var37.i = ORC_CLAMP_UW (var44.i);
+      /* 11: storew */
+      ptr0[i] = var37;
+    }
+  }
+
+}
+
+void
+compositor_orc_blend_u12 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 7, 9, 24, 99, 111, 109, 112, 111, 115, 105, 116, 111, 114, 95, 111,
+        114, 99, 95, 98, 108, 101, 110, 100, 95, 117, 49, 50, 11, 2, 2, 12,
+        2, 2, 14, 1, 12, 0, 0, 0, 16, 2, 20, 4, 20, 4, 154, 32,
+        0, 154, 33, 4, 129, 33, 33, 32, 120, 33, 33, 24, 124, 32, 32, 16,
+        103, 33, 32, 33, 126, 33, 33, 16, 166, 0, 33, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_compositor_orc_blend_u12);
+#else
+      p = orc_program_new ();
+      orc_program_set_2d (p);
+      orc_program_set_name (p, "compositor_orc_blend_u12");
+      orc_program_set_backup_function (p, _backup_compositor_orc_blend_u12);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_source (p, 2, "s1");
+      orc_program_add_constant (p, 1, 0x0000000c, "c1");
+      orc_program_add_parameter (p, 2, "p1");
+      orc_program_add_temporary (p, 4, "t1");
+      orc_program_add_temporary (p, 4, "t2");
+
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "subl", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_T1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mulll", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_T2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuslw", 0, ORC_VAR_D1, ORC_VAR_T2,
+          ORC_VAR_D1, ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ORC_EXECUTOR_M (ex) = m;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_D1] = d1_stride;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_S1] = s1_stride;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* compositor_orc_blend_u16 */
+#ifdef DISABLE_ORC
+void
+compositor_orc_blend_u16 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  int i;
+  int j;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var34;
+  orc_union16 var35;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (d1, d1_stride * j);
+    ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
+
+    /* 5: loadpl */
+    var36.i = p1;
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var34 = ptr0[i];
+      /* 1: convuwl */
+      var38.i = (orc_uint16) var34.i;
+      /* 2: loadw */
+      var35 = ptr4[i];
+      /* 3: convuwl */
+      var39.i = (orc_uint16) var35.i;
+      /* 4: subl */
+      var40.i = ((orc_uint32) var39.i) - ((orc_uint32) var38.i);
+      /* 6: mulll */
+      var41.i = (((orc_uint32) var40.i) * ((orc_uint32) var36.i)) & 0xffffffff;
+      /* 7: shll */
+      var42.i = ((orc_uint32) var38.i) << 16;
+      /* 8: addl */
+      var43.i = ((orc_uint32) var42.i) + ((orc_uint32) var41.i);
+      /* 9: shrul */
+      var44.i = ((orc_uint32) var43.i) >> 16;
+      /* 10: convsuslw */
+      var37.i = ORC_CLAMP_UW (var44.i);
+      /* 11: storew */
+      ptr0[i] = var37;
+    }
+  }
+
+}
+
+#else
+static void
+_backup_compositor_orc_blend_u16 (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int j;
+  int n = ex->n;
+  int m = ex->params[ORC_VAR_A1];
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var34;
+  orc_union16 var35;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (ex->arrays[0], ex->params[0] * j);
+    ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
+
+    /* 5: loadpl */
+    var36.i = ex->params[24];
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var34 = ptr0[i];
+      /* 1: convuwl */
+      var38.i = (orc_uint16) var34.i;
+      /* 2: loadw */
+      var35 = ptr4[i];
+      /* 3: convuwl */
+      var39.i = (orc_uint16) var35.i;
+      /* 4: subl */
+      var40.i = ((orc_uint32) var39.i) - ((orc_uint32) var38.i);
+      /* 6: mulll */
+      var41.i = (((orc_uint32) var40.i) * ((orc_uint32) var36.i)) & 0xffffffff;
+      /* 7: shll */
+      var42.i = ((orc_uint32) var38.i) << 16;
+      /* 8: addl */
+      var43.i = ((orc_uint32) var42.i) + ((orc_uint32) var41.i);
+      /* 9: shrul */
+      var44.i = ((orc_uint32) var43.i) >> 16;
+      /* 10: convsuslw */
+      var37.i = ORC_CLAMP_UW (var44.i);
+      /* 11: storew */
+      ptr0[i] = var37;
+    }
+  }
+
+}
+
+void
+compositor_orc_blend_u16 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 7, 9, 24, 99, 111, 109, 112, 111, 115, 105, 116, 111, 114, 95, 111,
+        114, 99, 95, 98, 108, 101, 110, 100, 95, 117, 49, 54, 11, 2, 2, 12,
+        2, 2, 14, 1, 16, 0, 0, 0, 16, 2, 20, 4, 20, 4, 154, 32,
+        0, 154, 33, 4, 129, 33, 33, 32, 120, 33, 33, 24, 124, 32, 32, 16,
+        103, 33, 32, 33, 126, 33, 33, 16, 166, 0, 33, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_compositor_orc_blend_u16);
+#else
+      p = orc_program_new ();
+      orc_program_set_2d (p);
+      orc_program_set_name (p, "compositor_orc_blend_u16");
+      orc_program_set_backup_function (p, _backup_compositor_orc_blend_u16);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_source (p, 2, "s1");
+      orc_program_add_constant (p, 1, 0x00000010, "c1");
+      orc_program_add_parameter (p, 2, "p1");
+      orc_program_add_temporary (p, 4, "t1");
+      orc_program_add_temporary (p, 4, "t2");
+
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "subl", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_T1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mulll", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_T2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuslw", 0, ORC_VAR_D1, ORC_VAR_T2,
+          ORC_VAR_D1, ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ORC_EXECUTOR_M (ex) = m;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_D1] = d1_stride;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_S1] = s1_stride;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* compositor_orc_blend_u10_swap */
+#ifdef DISABLE_ORC
+void
+compositor_orc_blend_u10_swap (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  int i;
+  int j;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var35;
+  orc_union16 var36;
+  orc_union32 var37;
+  orc_union16 var38;
+  orc_union16 var39;
+  orc_union32 var40;
+  orc_union16 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+  orc_union32 var46;
+  orc_union32 var47;
+  orc_union16 var48;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (d1, d1_stride * j);
+    ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
+
+    /* 7: loadpl */
+    var37.i = p1;
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var35 = ptr0[i];
+      /* 1: swapw */
+      var39.i = ORC_SWAP_W (var35.i);
+      /* 2: convuwl */
+      var40.i = (orc_uint16) var39.i;
+      /* 3: loadw */
+      var36 = ptr4[i];
+      /* 4: swapw */
+      var41.i = ORC_SWAP_W (var36.i);
+      /* 5: convuwl */
+      var42.i = (orc_uint16) var41.i;
+      /* 6: subl */
+      var43.i = ((orc_uint32) var42.i) - ((orc_uint32) var40.i);
+      /* 8: mulll */
+      var44.i = (((orc_uint32) var43.i) * ((orc_uint32) var37.i)) & 0xffffffff;
+      /* 9: shll */
+      var45.i = ((orc_uint32) var40.i) << 10;
+      /* 10: addl */
+      var46.i = ((orc_uint32) var45.i) + ((orc_uint32) var44.i);
+      /* 11: shrul */
+      var47.i = ((orc_uint32) var46.i) >> 10;
+      /* 12: convsuslw */
+      var48.i = ORC_CLAMP_UW (var47.i);
+      /* 13: swapw */
+      var38.i = ORC_SWAP_W (var48.i);
+      /* 14: storew */
+      ptr0[i] = var38;
+    }
+  }
+
+}
+
+#else
+static void
+_backup_compositor_orc_blend_u10_swap (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int j;
+  int n = ex->n;
+  int m = ex->params[ORC_VAR_A1];
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var35;
+  orc_union16 var36;
+  orc_union32 var37;
+  orc_union16 var38;
+  orc_union16 var39;
+  orc_union32 var40;
+  orc_union16 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+  orc_union32 var46;
+  orc_union32 var47;
+  orc_union16 var48;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (ex->arrays[0], ex->params[0] * j);
+    ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
+
+    /* 7: loadpl */
+    var37.i = ex->params[24];
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var35 = ptr0[i];
+      /* 1: swapw */
+      var39.i = ORC_SWAP_W (var35.i);
+      /* 2: convuwl */
+      var40.i = (orc_uint16) var39.i;
+      /* 3: loadw */
+      var36 = ptr4[i];
+      /* 4: swapw */
+      var41.i = ORC_SWAP_W (var36.i);
+      /* 5: convuwl */
+      var42.i = (orc_uint16) var41.i;
+      /* 6: subl */
+      var43.i = ((orc_uint32) var42.i) - ((orc_uint32) var40.i);
+      /* 8: mulll */
+      var44.i = (((orc_uint32) var43.i) * ((orc_uint32) var37.i)) & 0xffffffff;
+      /* 9: shll */
+      var45.i = ((orc_uint32) var40.i) << 10;
+      /* 10: addl */
+      var46.i = ((orc_uint32) var45.i) + ((orc_uint32) var44.i);
+      /* 11: shrul */
+      var47.i = ((orc_uint32) var46.i) >> 10;
+      /* 12: convsuslw */
+      var48.i = ORC_CLAMP_UW (var47.i);
+      /* 13: swapw */
+      var38.i = ORC_SWAP_W (var48.i);
+      /* 14: storew */
+      ptr0[i] = var38;
+    }
+  }
+
+}
+
+void
+compositor_orc_blend_u10_swap (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 7, 9, 29, 99, 111, 109, 112, 111, 115, 105, 116, 111, 114, 95, 111,
+        114, 99, 95, 98, 108, 101, 110, 100, 95, 117, 49, 48, 95, 115, 119, 97,
+        112, 11, 2, 2, 12, 2, 2, 14, 1, 10, 0, 0, 0, 16, 2, 20,
+        4, 20, 4, 20, 2, 183, 34, 0, 154, 32, 34, 183, 34, 4, 154, 33,
+        34, 129, 33, 33, 32, 120, 33, 33, 24, 124, 32, 32, 16, 103, 33, 32,
+        33, 126, 33, 33, 16, 166, 34, 33, 183, 0, 34, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_compositor_orc_blend_u10_swap);
+#else
+      p = orc_program_new ();
+      orc_program_set_2d (p);
+      orc_program_set_name (p, "compositor_orc_blend_u10_swap");
+      orc_program_set_backup_function (p,
+          _backup_compositor_orc_blend_u10_swap);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_source (p, 2, "s1");
+      orc_program_add_constant (p, 1, 0x0000000a, "c1");
+      orc_program_add_parameter (p, 2, "p1");
+      orc_program_add_temporary (p, 4, "t1");
+      orc_program_add_temporary (p, 4, "t2");
+      orc_program_add_temporary (p, 2, "t3");
+
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_T3, ORC_VAR_D1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T1, ORC_VAR_T3, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_T3, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "subl", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_T1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mulll", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_T2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuslw", 0, ORC_VAR_T3, ORC_VAR_T2,
+          ORC_VAR_D1, ORC_VAR_D1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_D1, ORC_VAR_T3, ORC_VAR_D1,
+          ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ORC_EXECUTOR_M (ex) = m;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_D1] = d1_stride;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_S1] = s1_stride;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* compositor_orc_blend_u12_swap */
+#ifdef DISABLE_ORC
+void
+compositor_orc_blend_u12_swap (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  int i;
+  int j;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var35;
+  orc_union16 var36;
+  orc_union32 var37;
+  orc_union16 var38;
+  orc_union16 var39;
+  orc_union32 var40;
+  orc_union16 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+  orc_union32 var46;
+  orc_union32 var47;
+  orc_union16 var48;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (d1, d1_stride * j);
+    ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
+
+    /* 7: loadpl */
+    var37.i = p1;
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var35 = ptr0[i];
+      /* 1: swapw */
+      var39.i = ORC_SWAP_W (var35.i);
+      /* 2: convuwl */
+      var40.i = (orc_uint16) var39.i;
+      /* 3: loadw */
+      var36 = ptr4[i];
+      /* 4: swapw */
+      var41.i = ORC_SWAP_W (var36.i);
+      /* 5: convuwl */
+      var42.i = (orc_uint16) var41.i;
+      /* 6: subl */
+      var43.i = ((orc_uint32) var42.i) - ((orc_uint32) var40.i);
+      /* 8: mulll */
+      var44.i = (((orc_uint32) var43.i) * ((orc_uint32) var37.i)) & 0xffffffff;
+      /* 9: shll */
+      var45.i = ((orc_uint32) var40.i) << 12;
+      /* 10: addl */
+      var46.i = ((orc_uint32) var45.i) + ((orc_uint32) var44.i);
+      /* 11: shrul */
+      var47.i = ((orc_uint32) var46.i) >> 12;
+      /* 12: convsuslw */
+      var48.i = ORC_CLAMP_UW (var47.i);
+      /* 13: swapw */
+      var38.i = ORC_SWAP_W (var48.i);
+      /* 14: storew */
+      ptr0[i] = var38;
+    }
+  }
+
+}
+
+#else
+static void
+_backup_compositor_orc_blend_u12_swap (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int j;
+  int n = ex->n;
+  int m = ex->params[ORC_VAR_A1];
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var35;
+  orc_union16 var36;
+  orc_union32 var37;
+  orc_union16 var38;
+  orc_union16 var39;
+  orc_union32 var40;
+  orc_union16 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+  orc_union32 var46;
+  orc_union32 var47;
+  orc_union16 var48;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (ex->arrays[0], ex->params[0] * j);
+    ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
+
+    /* 7: loadpl */
+    var37.i = ex->params[24];
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var35 = ptr0[i];
+      /* 1: swapw */
+      var39.i = ORC_SWAP_W (var35.i);
+      /* 2: convuwl */
+      var40.i = (orc_uint16) var39.i;
+      /* 3: loadw */
+      var36 = ptr4[i];
+      /* 4: swapw */
+      var41.i = ORC_SWAP_W (var36.i);
+      /* 5: convuwl */
+      var42.i = (orc_uint16) var41.i;
+      /* 6: subl */
+      var43.i = ((orc_uint32) var42.i) - ((orc_uint32) var40.i);
+      /* 8: mulll */
+      var44.i = (((orc_uint32) var43.i) * ((orc_uint32) var37.i)) & 0xffffffff;
+      /* 9: shll */
+      var45.i = ((orc_uint32) var40.i) << 12;
+      /* 10: addl */
+      var46.i = ((orc_uint32) var45.i) + ((orc_uint32) var44.i);
+      /* 11: shrul */
+      var47.i = ((orc_uint32) var46.i) >> 12;
+      /* 12: convsuslw */
+      var48.i = ORC_CLAMP_UW (var47.i);
+      /* 13: swapw */
+      var38.i = ORC_SWAP_W (var48.i);
+      /* 14: storew */
+      ptr0[i] = var38;
+    }
+  }
+
+}
+
+void
+compositor_orc_blend_u12_swap (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 7, 9, 29, 99, 111, 109, 112, 111, 115, 105, 116, 111, 114, 95, 111,
+        114, 99, 95, 98, 108, 101, 110, 100, 95, 117, 49, 50, 95, 115, 119, 97,
+        112, 11, 2, 2, 12, 2, 2, 14, 1, 12, 0, 0, 0, 16, 2, 20,
+        4, 20, 4, 20, 2, 183, 34, 0, 154, 32, 34, 183, 34, 4, 154, 33,
+        34, 129, 33, 33, 32, 120, 33, 33, 24, 124, 32, 32, 16, 103, 33, 32,
+        33, 126, 33, 33, 16, 166, 34, 33, 183, 0, 34, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_compositor_orc_blend_u12_swap);
+#else
+      p = orc_program_new ();
+      orc_program_set_2d (p);
+      orc_program_set_name (p, "compositor_orc_blend_u12_swap");
+      orc_program_set_backup_function (p,
+          _backup_compositor_orc_blend_u12_swap);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_source (p, 2, "s1");
+      orc_program_add_constant (p, 1, 0x0000000c, "c1");
+      orc_program_add_parameter (p, 2, "p1");
+      orc_program_add_temporary (p, 4, "t1");
+      orc_program_add_temporary (p, 4, "t2");
+      orc_program_add_temporary (p, 2, "t3");
+
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_T3, ORC_VAR_D1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T1, ORC_VAR_T3, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_T3, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "subl", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_T1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mulll", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_T2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuslw", 0, ORC_VAR_T3, ORC_VAR_T2,
+          ORC_VAR_D1, ORC_VAR_D1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_D1, ORC_VAR_T3, ORC_VAR_D1,
+          ORC_VAR_D1);
+#endif
+
+      orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
+
+  ex->n = n;
+  ORC_EXECUTOR_M (ex) = m;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_D1] = d1_stride;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_S1] = s1_stride;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = c->exec;
+  func (ex);
+}
+#endif
+
+
+/* compositor_orc_blend_u16_swap */
+#ifdef DISABLE_ORC
+void
+compositor_orc_blend_u16_swap (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  int i;
+  int j;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var35;
+  orc_union16 var36;
+  orc_union32 var37;
+  orc_union16 var38;
+  orc_union16 var39;
+  orc_union32 var40;
+  orc_union16 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+  orc_union32 var46;
+  orc_union32 var47;
+  orc_union16 var48;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (d1, d1_stride * j);
+    ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
+
+    /* 7: loadpl */
+    var37.i = p1;
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var35 = ptr0[i];
+      /* 1: swapw */
+      var39.i = ORC_SWAP_W (var35.i);
+      /* 2: convuwl */
+      var40.i = (orc_uint16) var39.i;
+      /* 3: loadw */
+      var36 = ptr4[i];
+      /* 4: swapw */
+      var41.i = ORC_SWAP_W (var36.i);
+      /* 5: convuwl */
+      var42.i = (orc_uint16) var41.i;
+      /* 6: subl */
+      var43.i = ((orc_uint32) var42.i) - ((orc_uint32) var40.i);
+      /* 8: mulll */
+      var44.i = (((orc_uint32) var43.i) * ((orc_uint32) var37.i)) & 0xffffffff;
+      /* 9: shll */
+      var45.i = ((orc_uint32) var40.i) << 16;
+      /* 10: addl */
+      var46.i = ((orc_uint32) var45.i) + ((orc_uint32) var44.i);
+      /* 11: shrul */
+      var47.i = ((orc_uint32) var46.i) >> 16;
+      /* 12: convsuslw */
+      var48.i = ORC_CLAMP_UW (var47.i);
+      /* 13: swapw */
+      var38.i = ORC_SWAP_W (var48.i);
+      /* 14: storew */
+      ptr0[i] = var38;
+    }
+  }
+
+}
+
+#else
+static void
+_backup_compositor_orc_blend_u16_swap (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int j;
+  int n = ex->n;
+  int m = ex->params[ORC_VAR_A1];
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var35;
+  orc_union16 var36;
+  orc_union32 var37;
+  orc_union16 var38;
+  orc_union16 var39;
+  orc_union32 var40;
+  orc_union16 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+  orc_union32 var46;
+  orc_union32 var47;
+  orc_union16 var48;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (ex->arrays[0], ex->params[0] * j);
+    ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
+
+    /* 7: loadpl */
+    var37.i = ex->params[24];
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadw */
+      var35 = ptr0[i];
+      /* 1: swapw */
+      var39.i = ORC_SWAP_W (var35.i);
+      /* 2: convuwl */
+      var40.i = (orc_uint16) var39.i;
+      /* 3: loadw */
+      var36 = ptr4[i];
+      /* 4: swapw */
+      var41.i = ORC_SWAP_W (var36.i);
+      /* 5: convuwl */
+      var42.i = (orc_uint16) var41.i;
+      /* 6: subl */
+      var43.i = ((orc_uint32) var42.i) - ((orc_uint32) var40.i);
+      /* 8: mulll */
+      var44.i = (((orc_uint32) var43.i) * ((orc_uint32) var37.i)) & 0xffffffff;
+      /* 9: shll */
+      var45.i = ((orc_uint32) var40.i) << 16;
+      /* 10: addl */
+      var46.i = ((orc_uint32) var45.i) + ((orc_uint32) var44.i);
+      /* 11: shrul */
+      var47.i = ((orc_uint32) var46.i) >> 16;
+      /* 12: convsuslw */
+      var48.i = ORC_CLAMP_UW (var47.i);
+      /* 13: swapw */
+      var38.i = ORC_SWAP_W (var48.i);
+      /* 14: storew */
+      ptr0[i] = var38;
+    }
+  }
+
+}
+
+void
+compositor_orc_blend_u16_swap (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcCode *c = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcProgram *p;
+
+#if 1
+      static const orc_uint8 bc[] = {
+        1, 7, 9, 29, 99, 111, 109, 112, 111, 115, 105, 116, 111, 114, 95, 111,
+        114, 99, 95, 98, 108, 101, 110, 100, 95, 117, 49, 54, 95, 115, 119, 97,
+        112, 11, 2, 2, 12, 2, 2, 14, 1, 16, 0, 0, 0, 16, 2, 20,
+        4, 20, 4, 20, 2, 183, 34, 0, 154, 32, 34, 183, 34, 4, 154, 33,
+        34, 129, 33, 33, 32, 120, 33, 33, 24, 124, 32, 32, 16, 103, 33, 32,
+        33, 126, 33, 33, 16, 166, 34, 33, 183, 0, 34, 2, 0,
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p,
+          _backup_compositor_orc_blend_u16_swap);
+#else
+      p = orc_program_new ();
+      orc_program_set_2d (p);
+      orc_program_set_name (p, "compositor_orc_blend_u16_swap");
+      orc_program_set_backup_function (p,
+          _backup_compositor_orc_blend_u16_swap);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_source (p, 2, "s1");
+      orc_program_add_constant (p, 1, 0x00000010, "c1");
+      orc_program_add_parameter (p, 2, "p1");
+      orc_program_add_temporary (p, 4, "t1");
+      orc_program_add_temporary (p, 4, "t2");
+      orc_program_add_temporary (p, 2, "t3");
+
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_T3, ORC_VAR_D1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T1, ORC_VAR_T3, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_T3, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "subl", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_T1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mulll", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_T2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convsuslw", 0, ORC_VAR_T3, ORC_VAR_T2,
+          ORC_VAR_D1, ORC_VAR_D1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_D1, ORC_VAR_T3, ORC_VAR_D1,
+          ORC_VAR_D1);
 #endif
 
       orc_program_compile (p);

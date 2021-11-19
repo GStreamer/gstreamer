@@ -10,6 +10,13 @@ copyl d1, p1
 
 copyl d1, s1
 
+.function compositor_orc_memset_u16_2d
+.flags 2d
+.dest 2 d1 guint8
+.param 2 p1
+
+storew d1, p1
+
 .function compositor_orc_blend_u8
 .flags 2d
 .dest 1 d1 guint8
@@ -28,6 +35,125 @@ addw t2, t1, t2
 shruw t2, t2, c1
 convsuswb d1, t2
 
+.function compositor_orc_blend_u10
+.flags 2d
+.dest 2 d1 guint8
+.source 2 s1 guint8
+.param 2 p1
+.temp 4 t1
+.temp 4 t2
+.const 1 c1 10
+
+convuwl t1, d1
+convuwl t2, s1
+subl t2, t2, t1
+mulll t2, t2, p1
+shll t1, t1, c1
+addl t2, t1, t2
+shrul t2, t2, c1
+convsuslw d1, t2
+
+.function compositor_orc_blend_u12
+.flags 2d
+.dest 2 d1 guint8
+.source 2 s1 guint8
+.param 2 p1
+.temp 4 t1
+.temp 4 t2
+.const 1 c1 12
+
+convuwl t1, d1
+convuwl t2, s1
+subl t2, t2, t1
+mulll t2, t2, p1
+shll t1, t1, c1
+addl t2, t1, t2
+shrul t2, t2, c1
+convsuslw d1, t2
+
+.function compositor_orc_blend_u16
+.flags 2d
+.dest 2 d1 guint8
+.source 2 s1 guint8
+.param 2 p1
+.temp 4 t1
+.temp 4 t2
+.const 1 c1 16
+
+convuwl t1, d1
+convuwl t2, s1
+subl t2, t2, t1
+mulll t2, t2, p1
+shll t1, t1, c1
+addl t2, t1, t2
+shrul t2, t2, c1
+convsuslw d1, t2
+
+.function compositor_orc_blend_u10_swap
+.flags 2d
+.dest 2 d1 guint8
+.source 2 s1 guint8
+.param 2 p1
+.temp 4 t1
+.temp 4 t2
+.temp 2 t3
+.const 1 c1 10
+
+swapw t3 d1
+convuwl t1, t3
+swapw t3 s1
+convuwl t2, t3
+subl t2, t2, t1
+mulll t2, t2, p1
+shll t1, t1, c1
+addl t2, t1, t2
+shrul t2, t2, c1
+convsuslw t3, t2
+swapw d1 t3
+
+.function compositor_orc_blend_u12_swap
+.flags 2d
+.dest 2 d1 guint8
+.source 2 s1 guint8
+.param 2 p1
+.temp 4 t1
+.temp 4 t2
+.temp 2 t3
+.const 1 c1 12
+
+swapw t3 d1
+convuwl t1, t3
+swapw t3 s1
+convuwl t2, t3
+subl t2, t2, t1
+mulll t2, t2, p1
+shll t1, t1, c1
+addl t2, t1, t2
+shrul t2, t2, c1
+convsuslw t3, t2
+swapw d1 t3
+
+.function compositor_orc_blend_u16_swap
+.flags 2d
+.dest 2 d1 guint8
+.source 2 s1 guint8
+.param 2 p1
+.temp 4 t1
+.temp 4 t2
+.temp 2 t3
+.const 1 c1 16
+
+swapw t3 d1
+convuwl t1, t3
+swapw t3 s1
+convuwl t2, t3
+subl t2, t2, t1
+mulll t2, t2, p1
+shll t1, t1, c1
+addl t2, t1, t2
+shrul t2, t2, c1
+convsuslw t3, t2
+swapw d1 t3
 
 .function compositor_orc_blend_argb
 .flags 2d

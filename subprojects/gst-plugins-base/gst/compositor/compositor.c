@@ -103,9 +103,19 @@
 GST_DEBUG_CATEGORY_STATIC (gst_compositor_debug);
 #define GST_CAT_DEFAULT gst_compositor_debug
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define FORMATS " { AYUV, VUYA, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, "\
-                "   YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "\
+                "   YVYU, I422_12LE, I422_12BE, I422_10LE, I422_10BE, "\
+                "   I420_12LE, I420_12BE, I420_10LE, I420_10BE, " \
+                "   I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "\
                 "   RGBx, BGRx } "
+#else
+#define FORMATS " { AYUV, VUYA, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, "\
+                "   YVYU, I422_12BE, I422_12LE, I422_10BE, I422_10LE, "\
+                "   I420_12BE, I420_12LE, I420_10BE, I420_10LE, "\
+                "   I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "\
+                "   RGBx, BGRx } "
+#endif
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -875,6 +885,54 @@ set_functions (GstCompositor * self, const GstVideoInfo * info)
       self->overlay = self->blend;
       self->fill_checker = gst_compositor_fill_checker_yvyu;
       self->fill_color = gst_compositor_fill_color_yvyu;
+      break;
+    case GST_VIDEO_FORMAT_I422_12LE:
+      self->blend = gst_compositor_blend_i422_12le;
+      self->overlay = self->blend;
+      self->fill_checker = gst_compositor_fill_checker_i422_12le;
+      self->fill_color = gst_compositor_fill_color_i422_12le;
+      break;
+    case GST_VIDEO_FORMAT_I422_12BE:
+      self->blend = gst_compositor_blend_i422_12be;
+      self->overlay = self->blend;
+      self->fill_checker = gst_compositor_fill_checker_i422_12be;
+      self->fill_color = gst_compositor_fill_color_i422_12be;
+      break;
+    case GST_VIDEO_FORMAT_I422_10LE:
+      self->blend = gst_compositor_blend_i422_10le;
+      self->overlay = self->blend;
+      self->fill_checker = gst_compositor_fill_checker_i422_10le;
+      self->fill_color = gst_compositor_fill_color_i422_10le;
+      break;
+    case GST_VIDEO_FORMAT_I422_10BE:
+      self->blend = gst_compositor_blend_i422_10be;
+      self->overlay = self->blend;
+      self->fill_checker = gst_compositor_fill_checker_i422_10be;
+      self->fill_color = gst_compositor_fill_color_i422_10be;
+      break;
+    case GST_VIDEO_FORMAT_I420_12LE:
+      self->blend = gst_compositor_blend_i420_12le;
+      self->overlay = self->blend;
+      self->fill_checker = gst_compositor_fill_checker_i420_12le;
+      self->fill_color = gst_compositor_fill_color_i420_12le;
+      break;
+    case GST_VIDEO_FORMAT_I420_12BE:
+      self->blend = gst_compositor_blend_i420_12be;
+      self->overlay = self->blend;
+      self->fill_checker = gst_compositor_fill_checker_i420_12be;
+      self->fill_color = gst_compositor_fill_color_i420_12be;
+      break;
+    case GST_VIDEO_FORMAT_I420_10LE:
+      self->blend = gst_compositor_blend_i420_10le;
+      self->overlay = self->blend;
+      self->fill_checker = gst_compositor_fill_checker_i420_10le;
+      self->fill_color = gst_compositor_fill_color_i420_10le;
+      break;
+    case GST_VIDEO_FORMAT_I420_10BE:
+      self->blend = gst_compositor_blend_i420_10be;
+      self->overlay = self->blend;
+      self->fill_checker = gst_compositor_fill_checker_i420_10be;
+      self->fill_color = gst_compositor_fill_color_i420_10be;
       break;
     case GST_VIDEO_FORMAT_I420:
       self->blend = gst_compositor_blend_i420;

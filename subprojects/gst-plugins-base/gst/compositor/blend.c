@@ -244,14 +244,15 @@ A32_COLOR (ayuv, 24, 16, 8, 0);
 A32_COLOR (vuya, 0, 8, 16, 24);
 
 /* Y444, Y42B, I420, YV12, Y41B */
-#define PLANAR_YUV_BLEND(format_name,format_enum,x_round,y_round,MEMCPY,BLENDLOOP) \
+#define PLANAR_YUV_BLEND(format_name,x_round,y_round,MEMCPY,BLENDLOOP,n_bits) \
 inline static void \
 _blend_##format_name (const guint8 * src, guint8 * dest, \
-    gint src_stride, gint dest_stride, gint src_width, gint src_height, \
+    gint src_stride, gint dest_stride, gint pstride, gint src_width, gint src_height, \
     gdouble src_alpha, GstCompositorBlendMode mode) \
 { \
   gint i; \
   gint b_alpha; \
+  gint range; \
   \
   /* in source mode we just have to copy over things */ \
   if (mode == COMPOSITOR_BLEND_MODE_SOURCE) { \
@@ -266,16 +267,18 @@ _blend_##format_name (const guint8 * src, guint8 * dest, \
   \
   /* If it's completely opaque, we do a fast copy */ \
   if (G_UNLIKELY (src_alpha == 1.0)) { \
+    gint width_in_bytes = src_width * pstride; \
     GST_LOG ("Fast copy (alpha == 1.0)"); \
     for (i = 0; i < src_height; i++) { \
-      MEMCPY (dest, src, src_width); \
+      MEMCPY (dest, src, width_in_bytes); \
       src += src_stride; \
       dest += dest_stride; \
     } \
     return; \
   } \
   \
-  b_alpha = CLAMP ((gint) (src_alpha * 255), 0, 255); \
+  range = (1 << n_bits) - 1; \
+  b_alpha = CLAMP ((gint) (src_alpha * range), 0, range); \
   \
   BLENDLOOP(dest, dest_stride, src, src_stride, b_alpha, src_width, src_height);\
 } \
@@ -299,6 +302,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   gint dest_width, dest_height; \
   const GstVideoFormatInfo *info; \
   gint src_width, src_height; \
+  gint pstride; \
   \
   src_width = GST_VIDEO_FRAME_WIDTH (srcframe); \
   src_height = GST_VIDEO_FRAME_HEIGHT (srcframe); \
@@ -350,14 +354,15 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   dest_comp_rowstride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 0); \
   src_comp_width = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH(info, 0, b_src_width); \
   src_comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 0, b_src_height); \
+  pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (info, 0); \
   comp_xpos = (xpos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 0, xpos); \
   comp_ypos = (ypos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 0, ypos); \
   comp_xoffset = (xoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 0, xoffset); \
   comp_yoffset = (yoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 0, yoffset); \
-  _blend_##format_name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
-      b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
+  _blend_##format_name (b_src + comp_xoffset * pstride + comp_yoffset * src_comp_rowstride, \
+      b_dest + comp_xpos * pstride + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
-      dest_comp_rowstride, src_comp_width, src_comp_height, \
+      dest_comp_rowstride, pstride, src_comp_width, src_comp_height, \
       src_alpha, mode); \
   \
   b_src = GST_VIDEO_FRAME_COMP_DATA (srcframe, 1); \
@@ -366,14 +371,15 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   dest_comp_rowstride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 1); \
   src_comp_width = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH(info, 1, b_src_width); \
   src_comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 1, b_src_height); \
+  pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (info, 1); \
   comp_xpos = (xpos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 1, xpos); \
   comp_ypos = (ypos == 0) ? 0 : ypos >> info->h_sub[1]; \
   comp_xoffset = (xoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 1, xoffset); \
   comp_yoffset = (yoffset == 0) ? 0 : yoffset >> info->h_sub[1]; \
-  _blend_##format_name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
-      b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
+  _blend_##format_name (b_src + comp_xoffset * pstride + comp_yoffset * src_comp_rowstride, \
+      b_dest + comp_xpos * pstride + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
-      dest_comp_rowstride, src_comp_width, src_comp_height, \
+      dest_comp_rowstride, pstride, src_comp_width, src_comp_height, \
       src_alpha, mode); \
   \
   b_src = GST_VIDEO_FRAME_COMP_DATA (srcframe, 2); \
@@ -382,14 +388,15 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   dest_comp_rowstride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 2); \
   src_comp_width = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH(info, 2, b_src_width); \
   src_comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 2, b_src_height); \
+  pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (info, 2); \
   comp_xpos = (xpos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 2, xpos); \
   comp_ypos = (ypos == 0) ? 0 : ypos >> info->h_sub[2]; \
   comp_xoffset = (xoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 2, xoffset); \
   comp_yoffset = (yoffset == 0) ? 0 : yoffset >> info->h_sub[2]; \
-  _blend_##format_name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
-      b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
+  _blend_##format_name (b_src + comp_xoffset * pstride + comp_yoffset * src_comp_rowstride, \
+      b_dest + comp_xpos * pstride + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
-      dest_comp_rowstride, src_comp_width, src_comp_height, \
+      dest_comp_rowstride, pstride, src_comp_width, src_comp_height, \
       src_alpha, mode); \
 }
 
@@ -493,25 +500,166 @@ fill_color_##format_name (GstVideoFrame * frame, \
   } \
 }
 
+#define PLANAR_YUV_HIGH_FILL_CHECKER(format_name, nbits, endian, MEMSET) \
+static void \
+fill_checker_##format_name (GstVideoFrame * frame, guint y_start, guint y_end) \
+{ \
+  gint i, j; \
+  static const int tab[] = { 80 << (nbits - 8), 160 << (nbits - 8), 80 << (nbits - 8), 160 << (nbits - 8),}; \
+  guint8 *p; \
+  gint comp_width, comp_height; \
+  gint rowstride, comp_yoffset; \
+  gint pstride; \
+  gint uv; \
+  const GstVideoFormatInfo *info; \
+  \
+  info = frame->info.finfo; \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 0); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0); \
+  comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 0, y_end - y_start); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
+  pstride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 0); \
+  comp_yoffset = (y_start == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 0, y_start); \
+  p += comp_yoffset * rowstride; \
+  \
+  for (i = 0; i < comp_height; i++) { \
+    for (j = 0; j < comp_width; j++) { \
+      GST_WRITE_UINT16_##endian (p, tab[(((i + y_start) & 0x8) >> 3) + ((j & 0x8) >> 3)]); \
+      p += pstride; \
+    } \
+    p += rowstride - comp_width * pstride; \
+  } \
+  \
+  uv = GUINT16_TO_##endian (1 << (nbits - 1)); \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 1); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 1); \
+  comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 1, y_end - y_start); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1); \
+  pstride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 1); \
+  comp_yoffset = (y_start == 0) ? 0 : y_start >> info->h_sub[1]; \
+  p += comp_yoffset * rowstride; \
+  MEMSET (p, rowstride, uv, comp_width, comp_height); \
+  \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 2); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 2); \
+  comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 2, y_end - y_start); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2); \
+  pstride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 1); \
+  comp_yoffset = (y_start == 0) ? 0 : y_start >> info->h_sub[2]; \
+  p += comp_yoffset * rowstride; \
+  MEMSET (p, rowstride, uv, comp_width, comp_height); \
+}
+
+#define PLANAR_YUV_HIGH_FILL_COLOR(format_name,endian,MEMSET) \
+static void \
+fill_color_##format_name (GstVideoFrame * frame, \
+    guint y_start, guint y_end, gint colY, gint colU, gint colV) \
+{ \
+  guint8 *p; \
+  gint comp_width, comp_height; \
+  gint rowstride, comp_yoffset; \
+  const GstVideoFormatInfo *info; \
+  \
+  info = frame->info.finfo; \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 0); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0); \
+  comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 0, y_end - y_start); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
+  comp_yoffset = (y_start == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 0, y_start); \
+  p += comp_yoffset * rowstride; \
+  MEMSET (p, rowstride, GUINT16_TO_##endian (colY), comp_width, comp_height); \
+  \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 1); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 1); \
+  comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 1, y_end - y_start); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1); \
+  comp_yoffset = (y_start == 0) ? 0 : y_start >> info->h_sub[1]; \
+  p += comp_yoffset * rowstride; \
+  MEMSET (p, rowstride, GUINT16_TO_##endian (colU), comp_width, comp_height); \
+  \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 2); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 2); \
+  comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 2, y_end - y_start); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2); \
+  comp_yoffset = (y_start == 0) ? 0 : y_start >> info->h_sub[2]; \
+  p += comp_yoffset * rowstride; \
+  MEMSET (p, rowstride, GUINT16_TO_##endian (colV), comp_width, comp_height); \
+}
+
 #define GST_ROUND_UP_1(x) (x)
 
-PLANAR_YUV_BLEND (i420, GST_VIDEO_FORMAT_I420, GST_ROUND_UP_2,
-    GST_ROUND_UP_2, memcpy, compositor_orc_blend_u8);
+PLANAR_YUV_BLEND (i420, GST_ROUND_UP_2,
+    GST_ROUND_UP_2, memcpy, compositor_orc_blend_u8, 8);
 PLANAR_YUV_FILL_CHECKER (i420, GST_VIDEO_FORMAT_I420, memset);
 PLANAR_YUV_FILL_COLOR (i420, GST_VIDEO_FORMAT_I420, memset);
 PLANAR_YUV_FILL_COLOR (yv12, GST_VIDEO_FORMAT_YV12, memset);
-PLANAR_YUV_BLEND (y444, GST_VIDEO_FORMAT_Y444, GST_ROUND_UP_1,
-    GST_ROUND_UP_1, memcpy, compositor_orc_blend_u8);
+PLANAR_YUV_BLEND (y444, GST_ROUND_UP_1,
+    GST_ROUND_UP_1, memcpy, compositor_orc_blend_u8, 8);
 PLANAR_YUV_FILL_CHECKER (y444, GST_VIDEO_FORMAT_Y444, memset);
 PLANAR_YUV_FILL_COLOR (y444, GST_VIDEO_FORMAT_Y444, memset);
-PLANAR_YUV_BLEND (y42b, GST_VIDEO_FORMAT_Y42B, GST_ROUND_UP_2,
-    GST_ROUND_UP_1, memcpy, compositor_orc_blend_u8);
+PLANAR_YUV_BLEND (y42b, GST_ROUND_UP_2,
+    GST_ROUND_UP_1, memcpy, compositor_orc_blend_u8, 8);
 PLANAR_YUV_FILL_CHECKER (y42b, GST_VIDEO_FORMAT_Y42B, memset);
 PLANAR_YUV_FILL_COLOR (y42b, GST_VIDEO_FORMAT_Y42B, memset);
-PLANAR_YUV_BLEND (y41b, GST_VIDEO_FORMAT_Y41B, GST_ROUND_UP_4,
-    GST_ROUND_UP_1, memcpy, compositor_orc_blend_u8);
+PLANAR_YUV_BLEND (y41b, GST_ROUND_UP_4,
+    GST_ROUND_UP_1, memcpy, compositor_orc_blend_u8, 8);
 PLANAR_YUV_FILL_CHECKER (y41b, GST_VIDEO_FORMAT_Y41B, memset);
 PLANAR_YUV_FILL_COLOR (y41b, GST_VIDEO_FORMAT_Y41B, memset);
+
+#define BLEND_HIGH(format_name) \
+compositor_orc_blend_##format_name
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+PLANAR_YUV_BLEND (i420_10le, GST_ROUND_UP_2, GST_ROUND_UP_2, memcpy,
+    BLEND_HIGH (u10), 10);
+PLANAR_YUV_BLEND (i420_10be, GST_ROUND_UP_2, GST_ROUND_UP_2, memcpy,
+    BLEND_HIGH (u10_swap), 10);
+
+PLANAR_YUV_BLEND (i420_12le, GST_ROUND_UP_2, GST_ROUND_UP_2, memcpy,
+    BLEND_HIGH (u12), 12);
+PLANAR_YUV_BLEND (i420_12be, GST_ROUND_UP_2, GST_ROUND_UP_2, memcpy,
+    BLEND_HIGH (u12_swap), 12);
+
+PLANAR_YUV_BLEND (i422_10le, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u10), 10);
+PLANAR_YUV_BLEND (i422_10be, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u10_swap), 10);
+
+PLANAR_YUV_BLEND (i422_12le, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u12), 12);
+PLANAR_YUV_BLEND (i422_12be, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u12_swap), 12);
+#else /* G_BYTE_ORDER == G_LITTLE_ENDIAN */
+PLANAR_YUV_BLEND (i420_10le, GST_ROUND_UP_2, GST_ROUND_UP_2, memcpy,
+    BLEND_HIGH (u10_swap), 10);
+PLANAR_YUV_BLEND (i420_10be, GST_ROUND_UP_2, GST_ROUND_UP_2, memcpy,
+    BLEND_HIGH (u10), 10);
+
+PLANAR_YUV_BLEND (i420_12le, GST_ROUND_UP_2, GST_ROUND_UP_2, memcpy,
+    BLEND_HIGH (u12_swap), 12);
+PLANAR_YUV_BLEND (i420_12be, GST_ROUND_UP_2, GST_ROUND_UP_2, memcpy,
+    BLEND_HIGH (u12), 12);
+
+PLANAR_YUV_BLEND (i422_10le, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u10_swap), 10);
+PLANAR_YUV_BLEND (i422_10be, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u10), 10);
+
+PLANAR_YUV_BLEND (i422_12le, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u12_swap), 12);
+PLANAR_YUV_BLEND (i422_12be, GST_ROUND_UP_2, GST_ROUND_UP_1, memcpy,
+    BLEND_HIGH (u12), 12);
+#endif /* G_BYTE_ORDER == G_LITTLE_ENDIAN */
+
+PLANAR_YUV_HIGH_FILL_CHECKER (i420_10le, 10, LE, compositor_orc_memset_u16_2d);
+PLANAR_YUV_HIGH_FILL_COLOR (i420_10le, LE, compositor_orc_memset_u16_2d);
+PLANAR_YUV_HIGH_FILL_CHECKER (i420_10be, 10, BE, compositor_orc_memset_u16_2d);
+PLANAR_YUV_HIGH_FILL_COLOR (i420_10be, BE, compositor_orc_memset_u16_2d);
+
+PLANAR_YUV_HIGH_FILL_CHECKER (i420_12le, 12, LE, compositor_orc_memset_u16_2d);
+PLANAR_YUV_HIGH_FILL_COLOR (i420_12le, LE, compositor_orc_memset_u16_2d);
+PLANAR_YUV_HIGH_FILL_CHECKER (i420_12be, 12, BE, compositor_orc_memset_u16_2d);
+PLANAR_YUV_HIGH_FILL_COLOR (i420_12be, BE, compositor_orc_memset_u16_2d);
 
 /* NV12, NV21 */
 #define NV_YUV_BLEND(format_name,MEMCPY,BLENDLOOP) \
@@ -1073,6 +1221,14 @@ BlendFunction gst_compositor_blend_rgbx;
 /* BGRx, xRGB, xBGR are equal to RGBx */
 BlendFunction gst_compositor_blend_yuy2;
 /* YVYU and UYVY are equal to YUY2 */
+BlendFunction gst_compositor_blend_i420_10le;
+BlendFunction gst_compositor_blend_i420_10be;
+BlendFunction gst_compositor_blend_i420_12le;
+BlendFunction gst_compositor_blend_i420_12be;
+BlendFunction gst_compositor_blend_i422_10le;
+BlendFunction gst_compositor_blend_i422_10be;
+BlendFunction gst_compositor_blend_i422_12le;
+BlendFunction gst_compositor_blend_i422_12be;
 
 FillCheckerFunction gst_compositor_fill_checker_argb;
 FillCheckerFunction gst_compositor_fill_checker_bgra;
@@ -1094,6 +1250,10 @@ FillCheckerFunction gst_compositor_fill_checker_rgbx;
 FillCheckerFunction gst_compositor_fill_checker_yuy2;
 /* YVYU is equal to YUY2 */
 FillCheckerFunction gst_compositor_fill_checker_uyvy;
+FillCheckerFunction gst_compositor_fill_checker_i420_10le;
+FillCheckerFunction gst_compositor_fill_checker_i420_10be;
+FillCheckerFunction gst_compositor_fill_checker_i420_12le;
+FillCheckerFunction gst_compositor_fill_checker_i420_12be;
 
 FillColorFunction gst_compositor_fill_color_argb;
 FillColorFunction gst_compositor_fill_color_bgra;
@@ -1117,6 +1277,10 @@ FillColorFunction gst_compositor_fill_color_bgrx;
 FillColorFunction gst_compositor_fill_color_yuy2;
 FillColorFunction gst_compositor_fill_color_yvyu;
 FillColorFunction gst_compositor_fill_color_uyvy;
+FillColorFunction gst_compositor_fill_color_i420_10le;
+FillColorFunction gst_compositor_fill_color_i420_10be;
+FillColorFunction gst_compositor_fill_color_i420_12le;
+FillColorFunction gst_compositor_fill_color_i420_12be;
 
 void
 gst_compositor_init_blend (void)
@@ -1137,6 +1301,14 @@ gst_compositor_init_blend (void)
   gst_compositor_blend_rgb = GST_DEBUG_FUNCPTR (blend_rgb);
   gst_compositor_blend_xrgb = GST_DEBUG_FUNCPTR (blend_xrgb);
   gst_compositor_blend_yuy2 = GST_DEBUG_FUNCPTR (blend_yuy2);
+  gst_compositor_blend_i420_10le = GST_DEBUG_FUNCPTR (blend_i420_10le);
+  gst_compositor_blend_i420_10be = GST_DEBUG_FUNCPTR (blend_i420_10be);
+  gst_compositor_blend_i420_12le = GST_DEBUG_FUNCPTR (blend_i420_12le);
+  gst_compositor_blend_i420_12be = GST_DEBUG_FUNCPTR (blend_i420_12be);
+  gst_compositor_blend_i422_10le = GST_DEBUG_FUNCPTR (blend_i422_10le);
+  gst_compositor_blend_i422_10be = GST_DEBUG_FUNCPTR (blend_i422_10be);
+  gst_compositor_blend_i422_12le = GST_DEBUG_FUNCPTR (blend_i422_12le);
+  gst_compositor_blend_i422_12be = GST_DEBUG_FUNCPTR (blend_i422_12be);
 
   gst_compositor_fill_checker_argb = GST_DEBUG_FUNCPTR (fill_checker_argb_c);
   gst_compositor_fill_checker_bgra = GST_DEBUG_FUNCPTR (fill_checker_bgra_c);
@@ -1153,6 +1325,14 @@ gst_compositor_init_blend (void)
   gst_compositor_fill_checker_rgbx = GST_DEBUG_FUNCPTR (fill_checker_rgbx_c);
   gst_compositor_fill_checker_yuy2 = GST_DEBUG_FUNCPTR (fill_checker_yuy2_c);
   gst_compositor_fill_checker_uyvy = GST_DEBUG_FUNCPTR (fill_checker_uyvy_c);
+  gst_compositor_fill_checker_i420_10le =
+      GST_DEBUG_FUNCPTR (fill_checker_i420_10le);
+  gst_compositor_fill_checker_i420_10be =
+      GST_DEBUG_FUNCPTR (fill_checker_i420_10be);
+  gst_compositor_fill_checker_i420_12le =
+      GST_DEBUG_FUNCPTR (fill_checker_i420_12le);
+  gst_compositor_fill_checker_i420_12be =
+      GST_DEBUG_FUNCPTR (fill_checker_i420_12be);
 
   gst_compositor_fill_color_argb = GST_DEBUG_FUNCPTR (fill_color_argb);
   gst_compositor_fill_color_bgra = GST_DEBUG_FUNCPTR (fill_color_bgra);
@@ -1175,4 +1355,12 @@ gst_compositor_init_blend (void)
   gst_compositor_fill_color_yuy2 = GST_DEBUG_FUNCPTR (fill_color_yuy2);
   gst_compositor_fill_color_yvyu = GST_DEBUG_FUNCPTR (fill_color_yvyu);
   gst_compositor_fill_color_uyvy = GST_DEBUG_FUNCPTR (fill_color_uyvy);
+  gst_compositor_fill_color_i420_10le =
+      GST_DEBUG_FUNCPTR (fill_color_i420_10le);
+  gst_compositor_fill_color_i420_10be =
+      GST_DEBUG_FUNCPTR (fill_color_i420_10be);
+  gst_compositor_fill_color_i420_12le =
+      GST_DEBUG_FUNCPTR (fill_color_i420_12le);
+  gst_compositor_fill_color_i420_12be =
+      GST_DEBUG_FUNCPTR (fill_color_i420_12be);
 }
