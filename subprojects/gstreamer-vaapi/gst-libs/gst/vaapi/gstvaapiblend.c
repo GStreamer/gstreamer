@@ -275,9 +275,11 @@ gst_vaapi_blend_process_unlocked (GstVaapiBlend * blend,
     param->output_background_color = 0xff000000;
 
 #if VA_CHECK_VERSION(1,1,0)
-    blend_state.flags = VA_BLEND_GLOBAL_ALPHA;
-    blend_state.global_alpha = current->alpha;
-    param->blend_state = &blend_state;
+    if (current->alpha < 1.0) {
+      blend_state.flags = VA_BLEND_GLOBAL_ALPHA;
+      blend_state.global_alpha = current->alpha;
+      param->blend_state = &blend_state;
+    }
 #endif
 
     vaapi_unmap_buffer (va_display, id, NULL);
