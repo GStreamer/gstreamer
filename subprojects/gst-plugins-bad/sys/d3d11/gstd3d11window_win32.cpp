@@ -208,7 +208,6 @@ gst_d3d11_window_win32_unprepare (GstD3D11Window * window)
   if (self->external_hwnd) {
     gst_d3d11_window_win32_release_external_handle (self->external_hwnd);
     RemoveProp (self->internal_hwnd, D3D11_WINDOW_PROP_NAME);
-    ShowWindow (self->internal_hwnd, SW_HIDE);
 
     if (self->internal_hwnd_thread == g_thread_self ()) {
       /* State changing thread is identical to internal window thread.
