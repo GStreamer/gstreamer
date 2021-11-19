@@ -94,32 +94,67 @@ in GitHub, and uses the same [workflow][gitlab-merge-request-workflow].
 
 [gitlab-merge-request-workflow]: https://docs.gitlab.com/ce/user/project/merge_requests/index.html#overview
 
-In order to submit a merge request you first need a personal fork of the
-project / gstreamer module in question. To fork a module go to
-the module in question (e.g. <https://gitlab.freedesktop.org/gstreamer/gstreamer>)
-and hit the fork button. A new repository will be created in your user namespace
-(<https://gitlab.freedesktop.org/$USERNAME/gstreamer>). You will be redirected
+In a nutshell, you will:
+
+1. [Clone](https://github.com/git-guides/git-clone) the gstreamer repository on
+   your development machine
+1. Create a [fork](https://docs.gitlab.com/ee/user/project/repository/forking_workflow.html)
+   of it in your gitlab namespace
+1. Add that fork as a [git "remote"](https://github.com/git-guides/git-remote)
+   to the clone on your machine
+1. Setup a [branch](https://docs.gitlab.com/ee/user/project/repository/branches/)
+   with the commits you want to submit
+1. Push that branch to the fork in your gitlab namespace
+1. Open request to merge that branch into the main repository, which is called a
+   [merge request](https://docs.gitlab.com/ee/user/project/merge_requests/)
+
+#### Pre-requisites
+
+In order to submit a merge request you must first:
+
+1. Sign into or create an account on the [Freedesktop GitLab website](https://gitlab.freedesktop.org)
+2. Setup SSH keys in the [GitLab user settings](https://gitlab.freedesktop.org/profile/keys)
+3. Clone the gstreamer repository on your development machine
+
+#### Forking the gstreamer repository
+
+Then you need to create a *personal* fork of gstreamer. To fork gstreamer go to
+[the repository](https://gitlab.freedesktop.org/gstreamer/gstreamer) and hit
+the "Fork" button:
+
+![Forking gstreamer](images/contribute/fork-gstreamer.png)
+
+Select the namespace (your username), ensure that the visibility is set to
+"Public", and hit the "Fork project" button:
+
+![Fork settings](images/contribute/fork-settings.png)
+
+A new repository will be created in your user namespace
+(<https://gitlab.freedesktop.org/$GITLAB_USERNAME/gstreamer>). You will be redirected
 there automatically once the forking process is finished. For big repositories
 the forking might take a few minutes.
 
-Once this is done you can add your personal fork as new remote to your existing checkout with
+Once this is done you can add your personal fork as new remote to the gstreamer
+repository clone you made in step 3 above with the following command (replace
+`$GITLAB_USERNAME` with your actual gitlab username):
 
-    git remote add my-personal-gitlab-fork git@gitlab.freedesktop.org:$USERNAME/gstreamer.git
+    git remote add $GITLAB_USERNAME git@gitlab.freedesktop.org:$GITLAB_USERNAME/gstreamer.git
 
 Check with
 
-    git fetch my-personal-gitlab-fork
+    git fetch $GITLAB_USERNAME
 
 that it is accessible and working.
 
-If you have not done so already, you may need to first
-[set up SSH keys in your GitLab User Settings](https://gitlab.freedesktop.org/profile/keys).
+Common mistakes at this point are:
 
-**Once you have done that, please make your repository public.** By default
-newly-forked repositories might be private, but that causes problems for
-maintainers and merge bots, so please go to the newly-created repository's
-settings (https://gitlab.freedesktop.org/$USERNAME/gstreamer/edit) and set
-the visibility to public. Thanks!
+a) [Not setting up an SSH key](https://gitlab.freedesktop.org/profile/keys)
+
+b) Having a private fork. You can change your fork to public in the settings:
+https://gitlab.freedesktop.org/$GITLAB_USERNAME/gstreamer/edit (replace `$GITLAB_USERNAME`
+with your actual gitlab username)
+
+#### Setting up your branch
 
 Next, you make a git branch with one or more commits you want to submit
 for review and merging. For that you will first need a local branch which
@@ -127,25 +162,172 @@ you can create with e.g.
 
     git checkout -b fix-xyz
 
-You can then push that branch to your personal fork git repository with
+Then you can make your modifications and create a local commit with e.g.
 
-    git push my-personal-gitlab-fork
+    git commit path/to/file1.[ch]
+
+This will pop up an editor where you can create your commit message. It should
+look something like:
+
+    exampledemux: fix seeking without index in push mode
+
+    Without an index we would refuse to seek in push mode. Make
+    seeking without an index work by estimating the position
+    to seek to. It might not be 100% accurate, but better than
+    nothing.
+
+Then exit the editor, and you should have a commit.
+
+Please make sure your commits are as terse and precise as possible. Do not
+include 'clean-ups' or non-functional changes, since they distract from the
+real changes and make things harder to review, and also lower the chances that
+the patch will still apply cleanly to the latest version in git. If you feel
+there are things to clean up, please submit the clean-ups as a separate patch
+that does not contain any functional changes. See
+[Writing Good Commit Messages](#writing-good-commit-messages) for more
+information.
+
+It's best to run `git add` or `git commit` on specific directories or files
+instead of using `git commit -a`, as it's too easy to accidentally contaminate
+a patch with changes that belong into it with `git commit -a`, in particular
+changes to the `common` submodule.
+
+You can check your commit(s) with `git show` or `git log -p` or using a GUI
+such as `gitg` or `gitk`.
+
+Make sure the author is correctly set to your full name and e-mail address.
+
+If you haven't used git before, it would be a good idea to tell it who you are:
+
+    git config --global user.name "George S. Treamer"
+    git config --global user.email "george.s.treamer@example.com"
+
+You can make changes to the last commit using:
+
+ - `git commit --amend` to fix up the commit message
+
+ - `git commit --amend --author='John You <john@you.com>'` to fix up the author
+
+ - `git add path/to/file1.[ch]; git commit --amend` to incorporate fixes
+    made to the files since the last commit (i.e. what shows up in `git diff`).
+    If you just want to add some of the changes, but not all of them you can
+    use `git add -p file.c`, then it will ask you for each individual change
+    whether you want to add it or leave it.
+
+Once everything looks fine, you can push the branch to your personal fork git
+repository with:
+
+    git push -u $GITLAB_USERNAME
 
 You can use
 
-    git push --dry-run my-personal-gitlab-fork
+    git push -u --dry-run $GITLAB_USERNAME
 
 for testing to see what would happen without actually doing anything yet.
+As before, replace `$GITLAB_USERNAME` with your actual gitlab username.
 
 After you have pushed the branch to your personal fork you will see a link
 on the terminal with which you can create a merge request for the upstream
-repository. You can also do this later by going to the
-branch list of your personal repository at
-<https://gitlab.freedesktop.org/$USERNAME/gstreamer/branches>
-and then hitting the 'Merge Request' button when ready. This will open a new
-page where you can enter a description of the changes you are submitting.
+repository. It will look something like this:
 
-Couple of additional points:
+```sh
+$ git push -u $GITLAB_USERNAME
+Enumerating objects: 4436, done.
+Counting objects: 100% (4436/4436), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (1161/1161), done.
+Writing objects: 100% (3616/3616), 1.47 MiB | 8.12 MiB/s, done.
+Total 3616 (delta 2973), reused 3022 (delta 2443), pack-reused 0
+remote: Resolving deltas: 100% (2973/2973), completed with 704 local objects.
+remote:
+remote: To create a merge request for fix-xyz, visit:
+remote:   https://gitlab.freedesktop.org/$GITLAB_USERNAME/gstreamer/-/merge_requests/new?merge_request%5Bsource_branch%5D=fix-xyz
+remote:
+To gitlab.freedesktop.org:$GITLAB_USERNAME/gstreamer.git
+ * [new branch]            fix-xyz -> fix-xyz
+Branch 'fix-xyz' set up to track remote branch 'fix-xyz' from '$GITLAB_USERNAME' by rebasing.
+```
+
+Clicking on that link will take you to a page where you can enter a description
+of the changes you are submitting. If your branch contains only one commit, the
+title and description will be auto-filled using the commit message.
+
+![Submitting a merge request](images/contribute/submit-mr.png)
+
+On the same page, ensure that these checkboxes are selected and create the
+merge request:
+
+![Merge request settings](images/contribute/mr-settings.png)
+
+If you don't see the link or want to do this later, you can go to the branch
+list of your personal repository at <https://gitlab.freedesktop.org/$GITLAB_USERNAME/gstreamer/branches>
+and hit the 'Merge Request' button when ready. This will open a new page where
+you can select the source project `$GITLAB_USERNAME/gstreamer` + source branch
+`fix-xyz` and the target project `gstreamer/gstreamer` and target branch
+`main`. Then you will be able to enter a description of the changes you are
+submitting.
+
+
+#### Revising your merge request
+
+You will often need to revise the commits in your merge request based on review
+by maintainers of the project. You **do not** need to open a new merge request
+to do that. You need to edit the commits in your local branch and force-push it
+to sync the branch in your namespace. That will automatically update the merge
+request.
+
+The most common case is when you have a single commit in your branch that you
+want to edit. To do this, first make any changes you want to do, then check the
+branch status:
+
+```sh
+$ git status
+On branch fix-xyz
+Your branch is up to date with '$GITLAB_USERNAME/fix-xyz'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   subprojects/gst-docs/markdown/contribute/index.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+Next, add the changes and amend your commit:
+
+```sh
+$ git add subprojects/gst-docs/markdown/contribute/index.md
+$ git commit --amend
+```
+
+This will open your editor and allow you to edit the commit message if
+necessary. Closing the editor will save the new (updated) commit.
+
+Next, push the changes to your remote branch:
+
+```sh
+$ git push --force-with-lease
+```
+
+This will overwrite the old commit in your remote branch with the new commit
+that you just created. If this command completes successfully, that's it! The
+merge request has been automatically updated.
+
+**If the command fails**, that means that there were changes in the remote
+branch that you hadn't pulled into your branch before amending your commit.
+
+This can happen if, for example, someone uses the "Rebase" button on your merge
+request to rebase the commit(s) on top of the latest changes in the `main`
+branch.
+
+In that case you need to resync the two branches. This usually requires you to
+understand `git rebase`, which is beyond the scope of this document. There's
+tutorials you can find online, such as [git-rebase.io](https://git-rebase.io/)
+
+In the simplest case, you might be able to get away with just doing a `git pull
+--rebase`.
+
+#### Additional points
 
 - If you are submitting a Merge Request for an issue (or multiple issues) that
   already exist, please add 'Fixes #123' to the commit message of one of your
@@ -154,13 +336,6 @@ Couple of additional points:
 
 - You do not have to file an issue to go with each Merge Request, it's fine
   to just submit a Merge Request on its own.
-
-- **Please make sure the "Allow commits from members who can merge to the target branch"**
-  **checkbox is enabled when submitting merge requests** as otherwise
-  maintainers (and our merge bot) can't rebase your Merge Request when they
-  want to merge it, which means they won't be able to merge it. If you can't
-  enable the check box that means your personal repository fork is private.
-  In that case, please go to the settings and change visibility to public.
 
 - If your proposed changes are proposed for review but not ready to be merged
   yet, please prefix the Merge Request title with `WIP:` for Work-in-Progress.
@@ -195,13 +370,10 @@ Couple of additional points:
   current module. `!100` references merge request 100 in the current project.
   A complete list is available from [gitlab's documentation][special-md-references].
 
-- Please create separate merge requests for separate issues and for different
-  modules. There is no golden rule when something counts as a separate issue,
-  please just use your best judgment.  If a merge request is related to another
-  merge request in another module please mention that in the description using
-  a gitlab reference as outlined above.  For example, if you have a change that
-  needs to be done in each module, one issue with one merge request per module
-  is fine. If there is an issue that requires related fixes in multiple elements
+- Please create separate merge requests for separate issues.
+  There is no golden rule when something counts as a separate issue,
+  please just use your best judgment.
+  If there is an issue that requires related fixes in multiple elements
   or libraries, please also feel free to put everything into one issue. If you
   just happen to have multiple patches for us but they are not really related,
   please put them in separate issues and merge requests. The main question is
@@ -216,124 +388,22 @@ Couple of additional points:
 - Please do not send pull requests to our github mirror. They will be closed
   automatically.
 
-- Please do not attach patches to existing bugs on [GNOME Bugzilla][bugzilla]
-  If you want to reopen an already closed bug, let one of the developers know
-  and we will look into that on a case-by-case basis.
-
 - Please do not attach patches to issues.
+
+- Please prepare any merge request against a current git checkout of the
+  GStreamer monorepo (gstreamer module), against the tip of the `main` branch.
+  If a merge request is prepared against an old commit or older branch and
+  can't be easily rebased you may be asked to rebase and update the branch on
+  top of the `main` branch.
+
+- If you have created a new plugin, please submit a merge request that adds it
+  to `subprojects/gst-plugins-bad`, including any required `meson.build`
+  modifications, new files and documentation.
 
 
 [special-md-references]: https://docs.gitlab.com/ee/user/markdown.html#special-gitlab-references
-[bugzilla]: https://bugzilla.gnome.org/
 [bugs]: https://gstreamer.freedesktop.org/bugs/
 [gitlab]: https://gitlab.freedesktop.org/gstreamer
-
-### How to Prepare a Merge Request for Submission
-
-Please prepare any merge request against a current git checkout of the
-GStreamer monorepo (gstreamer module), against the tip of the `main` branch.
-If a merge request is prepared against an old commit or older branch and can't
-be easily rebased you may be asked to rebase and update the branch on top of
-the `main` branch.
-
-If you have created a new plugin, please submit a merge request that adds it to
-`subprojects/gst-plugins-bad`, including any required `meson.build` modifications,
-new files and documentation.
-
-#### Preparation: create a personal fork of the git repository on GitLab
-
-The easiest way to create a merge request is to create one or more local commits
-for your changes in a branch in a local git repository. This should be a git
-clone checkout of your fork of the module in question.  To fork a module go to
-the module in question (e.g. <https://gitlab.freedesktop.org/gstreamer/gstreamer>)
-and hit the fork button.  A new repository will be created in your user namespace
-and should be accessible as
-<https://gitlab.freedesktop.org/$USERNAME/gstreamer>.
-
-Clone the main gstreamer repository, like this:
-
-    git clone https://gitlab.freedesktop.org/gstreamer/gstreamer.git
-
-and then add your personal fork as a git remote like this:
-
-    git remote add my-personal-gitlab-fork git@gitlab.freedesktop.org:$USERNAME/gstreamer.git
-
-Check with
-
-    git fetch my-personal-gitlab-fork
-
-that it is accessible and working.
-
-If you have not done so already, you may need to first
-[set up SSH keys in your GitLab User Settings](https://gitlab.freedesktop.org/profile/keys).
-
-#### Creating a branch for the merge request and adding commits to it
-
-Once you have a git repository with the original code in it, you should create a
-branch for your change. e.g. to create a branch and checkout:
-
-    git checkout -b topic-branch
-
-Then you can make your modifications and create a local commit with e.g.
-
-    git commit path/to/file1.[ch]
-
-This will pop up an editor where you can create your commit message. It should
-look something like:
-
-    exampledemux: fix seeking without index in push mode
-
-    Without an index we would refuse to seek in push mode. Make
-    seeking without an index work by estimating the position
-    to seek to. It might not be 100% accurate, but better than
-    nothing.
-
-Then exit the editor, and you should have a commit.
-
-It's best to run `git add` or `git commit` on specific directories or files
-instead of using `git commit -a`, as it's too easy to accidentally contaminate
-a patch with changes that belong into it with `git commit -a`, in particular
-changes to the `common` submodule.
-
-You can check your commit(s) with `git show` or `git log -p` or using a GUI
-such as `gitg` or `gitk`.
-
-Make sure the author is correctly set to your full name and e-mail address.
-
-If you haven't used git before, it would be a good idea to tell it who you are:
-
-    $ git config --global user.name "George S. Treamer"
-    $ git config --global user.email "george.s.treamer@example.com"
-
-You can make changes to the last commit using:
-
- - `git commit --amend` to fix up the commit message
-
- - `git commit --amend --author='John You <john@you.com>'` to fix up the author
-
- - `git add path/to/file1.[ch]; git commit --amend` to incorporate fixes
-    made to the files since the last commit (i.e. what shows up in `git diff`).
-    If you just want to add some of the changes, but not all of them you can
-    use `git add -p file.c`, then it will ask you for each individual change
-    whether you want to add it or leave it.
-
-Once everything looks fine, push your branch to your local fork e.g. using
-
-    git push your-personal-gitlab-fork your-branch
-
-This push will display a link to be able create a merge request from your branch.
-Click this link and fill out the details of the merge request.  You can also
-create a merge request from an existing branch. See the
-[gitlab documentation][create-mr] for more details.
-
-Please make sure your commits are as terse and precise as possible. Do not
-include 'clean-ups' or non-functional changes, since they distract from the
-real changes and make things harder to review, and also lower the chances that
-the patch will still apply cleanly to the latest version in git. If you feel
-there are things to clean up, please submit the clean-ups as a separate patch
-that does not contain any functional changes.
-
-[create-mr]: https://docs.gitlab.com/ee/gitlab-basics/add-merge-request.html
 
 #### Coding Style
 
