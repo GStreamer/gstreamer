@@ -79,6 +79,7 @@ struct _GstVaapiOverlaySinkPad
   GstVideoAggregatorPad parent_instance;
 
   gint xpos, ypos;
+  gint width, height;
   gdouble alpha;
 
   GstVaapiPadPrivate *priv;

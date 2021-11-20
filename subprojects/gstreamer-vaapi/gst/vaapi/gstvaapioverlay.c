@@ -98,6 +98,8 @@ struct _GstVaapiOverlaySurfaceGenerator
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
 #define DEFAULT_PAD_ALPHA  1.0
+#define DEFAULT_PAD_WIDTH  0
+#define DEFAULT_PAD_HEIGHT 0
 
 enum
 {
@@ -105,6 +107,8 @@ enum
   PROP_PAD_XPOS,
   PROP_PAD_YPOS,
   PROP_PAD_ALPHA,
+  PROP_PAD_WIDTH,
+  PROP_PAD_HEIGHT,
 };
 
 static void
@@ -122,6 +126,12 @@ gst_vaapi_overlay_sink_pad_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_ALPHA:
       g_value_set_double (value, pad->alpha);
+      break;
+    case PROP_PAD_WIDTH:
+      g_value_set_int (value, pad->width);
+      break;
+    case PROP_PAD_HEIGHT:
+      g_value_set_int (value, pad->height);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -144,6 +154,12 @@ gst_vaapi_overlay_sink_pad_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_ALPHA:
       pad->alpha = g_value_get_double (value);
+      break;
+    case PROP_PAD_WIDTH:
+      pad->width = g_value_get_int (value);
+      break;
+    case PROP_PAD_HEIGHT:
+      pad->height = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -180,6 +196,16 @@ gst_vaapi_overlay_sink_pad_class_init (GstVaapiOverlaySinkPadClass * klass)
       g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
           DEFAULT_PAD_ALPHA,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAD_WIDTH,
+      g_param_spec_int ("width", "Width",
+          "Width of the picture (0, to use the width of the input frame)",
+          0, G_MAXINT, DEFAULT_PAD_WIDTH,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAD_HEIGHT,
+      g_param_spec_int ("height", "Height",
+          "Height of the picture (0, to use the height of the input frame)",
+          0, G_MAXINT, DEFAULT_PAD_HEIGHT,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -188,6 +214,8 @@ gst_vaapi_overlay_sink_pad_init (GstVaapiOverlaySinkPad * pad)
   pad->xpos = DEFAULT_PAD_XPOS;
   pad->ypos = DEFAULT_PAD_YPOS;
   pad->alpha = DEFAULT_PAD_ALPHA;
+  pad->width = DEFAULT_PAD_WIDTH;
+  pad->height = DEFAULT_PAD_HEIGHT;
   pad->priv = gst_vaapi_pad_private_new ();
 }
 
@@ -404,8 +432,10 @@ gst_vaapi_overlay_surface_next (gpointer data)
       blend_surface->crop = gst_vaapi_video_meta_get_render_rect (inbuf_meta);
       blend_surface->target.x = pad->xpos;
       blend_surface->target.y = pad->ypos;
-      blend_surface->target.width = GST_VIDEO_FRAME_WIDTH (inframe);
-      blend_surface->target.height = GST_VIDEO_FRAME_HEIGHT (inframe);
+      blend_surface->target.width = (pad->width == DEFAULT_PAD_WIDTH)
+          ? GST_VIDEO_FRAME_WIDTH (inframe) : pad->width;
+      blend_surface->target.height = (pad->height == DEFAULT_PAD_HEIGHT)
+          ? GST_VIDEO_FRAME_HEIGHT (inframe) : pad->height;
       blend_surface->alpha = pad->alpha;
     }
 
@@ -524,8 +554,13 @@ gst_vaapi_overlay_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
     fps_n = GST_VIDEO_INFO_FPS_N (&vaggpad->info);
     fps_d = GST_VIDEO_INFO_FPS_D (&vaggpad->info);
 
-    this_width = GST_VIDEO_INFO_WIDTH (&vaggpad->info) + MAX (pad->xpos, 0);
-    this_height = GST_VIDEO_INFO_HEIGHT (&vaggpad->info) + MAX (pad->ypos, 0);
+    this_width = (pad->width == DEFAULT_PAD_WIDTH)
+        ? GST_VIDEO_INFO_WIDTH (&vaggpad->info) : pad->width;
+    this_height = (pad->height == DEFAULT_PAD_HEIGHT)
+        ? GST_VIDEO_INFO_HEIGHT (&vaggpad->info) : pad->height;
+
+    this_width += MAX (pad->xpos, 0);
+    this_height += MAX (pad->ypos, 0);
 
     if (best_width < this_width)
       best_width = this_width;
