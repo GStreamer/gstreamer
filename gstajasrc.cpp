@@ -1767,6 +1767,8 @@ restart:
       }
       g_mutex_lock(&self->queue_lock);
 
+      if (!self->playing || self->shutdown) goto restart;
+
       if (self->video_format == ::NTV2_FORMAT_UNKNOWN) {
         GST_DEBUG_OBJECT(self, "No signal, waiting");
         frames_dropped_last = G_MAXUINT64;
