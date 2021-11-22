@@ -327,8 +327,9 @@ run_d3d11_context_query (GstElement * element, GstD3D11Device ** device)
     }
   }
 
-  /* 2) although we found d3d11 device context above, the element does not want
-   *    to use the context. Then try to find from the other direction */
+  /* 2) although we found d3d11 device context above, the context might not be
+   *    expected/wanted one by the element (e.g., belongs to the other GPU).
+   *    Then try to find it from the other direction */
   if (*device == NULL && run_query (element, query, GST_PAD_SINK)) {
     gst_query_parse_context (query, &ctxt);
     if (ctxt) {
@@ -353,12 +354,6 @@ run_d3d11_context_query (GstElement * element, GstD3D11Device ** device)
         GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE);
     gst_element_post_message (element, msg);
   }
-
-  /*
-   * Whomever responds to the need-context message performs a
-   * GstElement::set_context() with the required context in which the element
-   * is required to update the display_ptr or call gst_gl_handle_set_context().
-   */
 
   gst_query_unref (query);
 }

@@ -370,9 +370,11 @@ gst_d3d11_buffer_pool_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   GstFlowReturn ret = GST_FLOW_OK;
 
   buf = gst_buffer_new ();
-  /* For texture-array case, we release memory in reset_buffer() so that it can
-   * be returned to allocator. So our acquire_buffer() method is expecting
-   * empty buffer in that case. Don't fill memory here for non-texture-array */
+  /* In case of texture-array, we are releasing memory objects in
+   * the GstBufferPool::reset_buffer() so that GstD3D11Memory objects can be
+   * returned to the GstD3D11PoolAllocator. So, underlying GstD3D11Memory
+   * will be filled in the later GstBufferPool::acquire_buffer() call.
+   * Don't fill memory here for non-texture-array therefore */
   if (!priv->texture_array_pool) {
     ret = gst_d3d11_buffer_pool_fill_buffer (self, buf);
     if (ret != GST_FLOW_OK) {
@@ -421,8 +423,9 @@ gst_d3d11_buffer_pool_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
   GstD3D11BufferPool *self = GST_D3D11_BUFFER_POOL (pool);
   GstD3D11BufferPoolPrivate *priv = self->priv;
 
-  /* if we are using texture array, return memory to allocator, so that
-   * memory pool allocator can wake up if it's waiting for available memory */
+  /* If we are using texture array, we should return GstD3D11Memory to
+   * to the GstD3D11PoolAllocator, so that the allocator can wake up
+   * if it's waiting for available memory object */
   if (priv->texture_array_pool) {
     GST_LOG_OBJECT (self, "Returning memory to allocator");
     gst_buffer_remove_all_memory (buffer);
