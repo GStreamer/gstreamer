@@ -1752,12 +1752,12 @@ restart:
     // If we don't have a video format configured, configure the device now
     // and potentially auto-detect the video format
     if (self->video_format == NTV2_FORMAT_UNKNOWN) {
+      // Don't keep queue locked while configuring as this might take a while
+      g_mutex_unlock(&self->queue_lock);
+
       // Make sure to globally lock here as the routing settings and others are
       // global shared state
       ShmMutexLocker locker;
-
-      // Don't keep queue locked while configuring as this might take a while
-      g_mutex_unlock(&self->queue_lock);
 
       if (!gst_aja_src_configure(self)) {
         g_mutex_lock(&self->queue_lock);
