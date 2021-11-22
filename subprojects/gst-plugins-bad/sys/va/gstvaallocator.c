@@ -292,15 +292,25 @@ gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
 
   /* @XXX: if one-memory buffer it's possible to copy */
   if (offset == 0 && size == mem_size && buf->n_mems == 1) {
-    GstVaBufferSurface *buf_copy;
+    GstVaBufferSurface *buf_copy = NULL;
     GstMemory *copy;
 
     GST_VA_MEMORY_POOL_LOCK (&self->pool);
     copy = gst_va_memory_pool_pop (&self->pool);
     GST_VA_MEMORY_POOL_UNLOCK (&self->pool);
 
-    if (!copy) {
+    if (copy) {
+      gst_object_ref (copy->allocator);
+
+      buf_copy = gst_mini_object_get_qdata (GST_MINI_OBJECT (copy),
+          gst_va_buffer_surface_quark ());
+
+      g_assert (g_atomic_int_get (&buf_copy->ref_mems_count) == 0);
+
+      g_atomic_int_add (&buf_copy->ref_mems_count, 1);
+    } else {
       GstBuffer *buffer = gst_buffer_new ();
+
       if (!gst_va_dmabuf_allocator_setup_buffer (gmem->allocator, buffer)) {
         GST_WARNING_OBJECT (self, "Failed to create a new dmabuf memory");
         return NULL;
@@ -308,10 +318,11 @@ gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
 
       copy = gst_buffer_get_memory (buffer, 0);
       gst_buffer_unref (buffer);
+
+      buf_copy = gst_mini_object_get_qdata (GST_MINI_OBJECT (copy),
+          gst_va_buffer_surface_quark ());
     }
 
-    buf_copy = gst_mini_object_get_qdata (GST_MINI_OBJECT (copy),
-        gst_va_buffer_surface_quark ());
     g_assert (buf_copy->n_mems == 1);
 
     if (!self->copy)
