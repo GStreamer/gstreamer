@@ -1707,6 +1707,8 @@ gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
   if (!result)
     return othercaps;
 
+  gst_clear_caps (&othercaps);
+
   gst_va_vpp_fixate_size (self, direction, caps, result);
 
   /* some fields might be lost while feature caps conversion */
