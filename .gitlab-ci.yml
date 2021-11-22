@@ -427,7 +427,7 @@ build msys2 :
       allow_failure: true
       when: 'manual'
   script:
-    # Make sure powershell exists on errors
+    # Make sure powershell exits on errors
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
     - $ErrorActionPreference = "Stop"
 
