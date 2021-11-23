@@ -635,6 +635,18 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
   gst_video_info_from_ntv2_video_format(&self->configured_info,
                                         self->video_format);
 
+  bool had_quad_enabled = false, had_quad_quad_enabled = false;
+
+  if (self->channel < ::NTV2_CHANNEL5) {
+    self->device->device->GetQuadFrameEnable(had_quad_enabled, ::NTV2_CHANNEL1);
+    self->device->device->GetQuadQuadFrameEnable(had_quad_quad_enabled,
+                                                 ::NTV2_CHANNEL1);
+  } else {
+    self->device->device->GetQuadFrameEnable(had_quad_enabled, ::NTV2_CHANNEL5);
+    self->device->device->GetQuadQuadFrameEnable(had_quad_quad_enabled,
+                                                 ::NTV2_CHANNEL5);
+  }
+
   if (self->quad_mode) {
     if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
         self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4) {
@@ -679,10 +691,17 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
       }
     }
   } else {
-    self->device->device->Set4kSquaresEnable(false, self->channel);
-    self->device->device->SetTsiFrameEnable(false, self->channel);
-    self->device->device->SetQuadQuadFrameEnable(false, self->channel);
-    self->device->device->SetQuadQuadSquaresEnable(false, self->channel);
+    NTV2Channel quad_channel;
+
+    if (self->channel < ::NTV2_CHANNEL5)
+      quad_channel = ::NTV2_CHANNEL1;
+    else
+      quad_channel = ::NTV2_CHANNEL5;
+
+    self->device->device->Set4kSquaresEnable(false, quad_channel);
+    self->device->device->SetTsiFrameEnable(false, quad_channel);
+    self->device->device->SetQuadQuadFrameEnable(false, quad_channel);
+    self->device->device->SetQuadQuadSquaresEnable(false, quad_channel);
   }
 
   self->device->device->SetMode(self->channel, NTV2_MODE_CAPTURE, false);
@@ -859,23 +878,57 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
       g_assert_not_reached();
     }
   } else {
-    for (auto iter = connections.begin(); iter != connections.end(); iter++) {
-      if (iter->first == framebuffer_id || iter->second == input_source_id)
-        router.RemoveConnection(iter->first, iter->second);
+    // This also removes all connections for any previous quad mode on the
+    // corresponding channels.
 
-      if (((input_source_id == NTV2_XptSDIIn6 ||
-            input_source_id == NTV2_XptSDIIn8) &&
-           iter->first == NTV2_XptFrameBuffer6BInput) ||
-          ((input_source_id == NTV2_XptSDIIn5 ||
-            input_source_id == NTV2_XptSDIIn6) &&
-           iter->first == NTV2_XptFrameBuffer5BInput) ||
-          ((input_source_id == NTV2_XptSDIIn4 ||
-            input_source_id == NTV2_XptSDIIn2) &&
-           iter->first == NTV2_XptFrameBuffer2BInput) ||
-          ((input_source_id == NTV2_XptSDIIn1 ||
-            input_source_id == NTV2_XptSDIIn2) &&
-           iter->first == NTV2_XptFrameBuffer1BInput))
-        router.RemoveConnection(iter->first, iter->second);
+    NTV2OutputCrosspointID quad_input_source_ids[10];
+
+    if (input_source_id == NTV2_XptSDIIn1 ||
+        input_source_id == NTV2_XptSDIIn2 ||
+        input_source_id == NTV2_XptSDIIn3 ||
+        input_source_id == NTV2_XptSDIIn4) {
+      if (had_quad_enabled || had_quad_quad_enabled) {
+        quad_input_source_ids[0] = NTV2_XptSDIIn1;
+        quad_input_source_ids[1] = NTV2_XptSDIIn2;
+        quad_input_source_ids[2] = NTV2_XptSDIIn3;
+        quad_input_source_ids[3] = NTV2_XptSDIIn4;
+        quad_input_source_ids[4] = NTV2_XptSDIIn1DS2;
+        quad_input_source_ids[5] = NTV2_XptSDIIn2DS2;
+        quad_input_source_ids[6] = NTV2_Xpt425Mux1AYUV;
+        quad_input_source_ids[7] = NTV2_Xpt425Mux1BYUV;
+        quad_input_source_ids[8] = NTV2_Xpt425Mux2AYUV;
+        quad_input_source_ids[9] = NTV2_Xpt425Mux2BYUV;
+      }
+    } else if (input_source_id == NTV2_XptSDIIn5 ||
+               input_source_id == NTV2_XptSDIIn6 ||
+               input_source_id == NTV2_XptSDIIn7 ||
+               input_source_id == NTV2_XptSDIIn8) {
+      if (had_quad_enabled || had_quad_quad_enabled) {
+        quad_input_source_ids[0] = NTV2_XptSDIIn5;
+        quad_input_source_ids[1] = NTV2_XptSDIIn6;
+        quad_input_source_ids[2] = NTV2_XptSDIIn7;
+        quad_input_source_ids[3] = NTV2_XptSDIIn8;
+        quad_input_source_ids[4] = NTV2_XptSDIIn5DS2;
+        quad_input_source_ids[5] = NTV2_XptSDIIn6DS2;
+        quad_input_source_ids[6] = NTV2_Xpt425Mux3AYUV;
+        quad_input_source_ids[7] = NTV2_Xpt425Mux3BYUV;
+        quad_input_source_ids[8] = NTV2_Xpt425Mux4AYUV;
+        quad_input_source_ids[9] = NTV2_Xpt425Mux4BYUV;
+      }
+    } else {
+      g_assert_not_reached();
+    }
+
+    for (auto iter = connections.begin(); iter != connections.end(); iter++) {
+      if (had_quad_enabled || had_quad_quad_enabled) {
+        for (auto quad_input_source_id : quad_input_source_ids) {
+          if (iter->second == quad_input_source_id)
+            router.RemoveConnection(iter->first, iter->second);
+        }
+      } else {
+        if (iter->first == framebuffer_id || iter->second == input_source_id)
+          router.RemoveConnection(iter->first, iter->second);
+      }
     }
   }
 
