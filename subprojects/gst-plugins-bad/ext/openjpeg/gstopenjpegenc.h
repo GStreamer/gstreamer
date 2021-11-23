@@ -55,7 +55,7 @@ struct _GstOpenJPEGEnc
   gboolean is_jp2c;
 
   void (*fill_image) (opj_image_t * image, GstVideoFrame *frame);
-  gboolean (*encode_frame) (GstVideoEncoder * encoder, GstVideoCodecFrame *frame);
+  GstFlowReturn (*encode_frame) (GstVideoEncoder * encoder, GstVideoCodecFrame *frame);
 
   opj_cparameters_t params;
   gint num_stripes;
