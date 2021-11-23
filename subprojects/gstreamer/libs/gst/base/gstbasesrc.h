@@ -206,8 +206,15 @@ struct _GstBaseSrcClass {
   void          (*get_times)    (GstBaseSrc *src, GstBuffer *buffer,
                                  GstClockTime *start, GstClockTime *end);
 
-  /* get the total size of the resource in the format set by
-   * gst_base_src_set_format() */
+  /**
+   * GstBaseSrcClass::get_size:
+   * @size: (out):
+   *
+   * Get the total size of the resource in the format set by
+   * gst_base_src_set_format().
+   *
+   * Returns: %TRUE if the size is available and has been set.
+   */
   gboolean      (*get_size)     (GstBaseSrc *src, guint64 *size);
 
   /* check if the resource is seekable */
@@ -234,15 +241,20 @@ struct _GstBaseSrcClass {
 
   /**
    * GstBaseSrcClass::create:
-   * @buf: (out):
+   * @buf: (inout):
    *
    * Ask the subclass to create a buffer with @offset and @size, the default
-   * implementation will call alloc and fill.
+   * implementation will call alloc if no allocated @buf is provided and then call fill.
    */
   GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size,
                                  GstBuffer **buf);
-  /* ask the subclass to allocate an output buffer. The default implementation
-   * will use the negotiated allocator. */
+  /**
+   * GstBaseSrcClass::alloc:
+   * @buf: (out):
+   *
+   * Ask the subclass to allocate an output buffer with @offset and @size, the default
+   * implementation will use the negotiated allocator.
+   */
   GstFlowReturn (*alloc)        (GstBaseSrc *src, guint64 offset, guint size,
                                  GstBuffer **buf);
   /* ask the subclass to fill the buffer with data from offset and size */
