@@ -3490,6 +3490,19 @@ offer_set_produced_error (struct test_webrtc *t, GstElement * element,
   test_webrtc_signal_state_unlocked (t, STATE_CUSTOM);
 }
 
+static void
+offer_created_produced_error (struct test_webrtc *t, GstElement * element,
+    GstPromise * promise, gpointer user_data)
+{
+  const GstStructure *reply;
+  GError *error = NULL;
+
+  reply = gst_promise_get_reply (promise);
+  fail_unless (gst_structure_get (reply, "error", G_TYPE_ERROR, &error, NULL));
+  GST_INFO ("error produced: %s", error->message);
+  g_clear_error (&error);
+}
+
 GST_START_TEST (test_renego_lose_media_fails)
 {
   struct test_webrtc *t = create_audio_video_test ();
@@ -3567,6 +3580,130 @@ GST_START_TEST (test_bundle_codec_preferences_rtx_no_duplicate_payloads)
   add_fake_video_src_harness (h, 96);
   t->harnesses = g_list_prepend (t->harnesses, h);
   test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+static void
+on_sdp_media_no_duplicate_extmaps (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, 0);
+
+  fail_unless (media != NULL);
+
+  fail_unless_equals_string (gst_sdp_media_get_attribute_val_n (media, "extmap",
+          0), "1 foobar");
+
+  fail_unless (gst_sdp_media_get_attribute_val_n (media, "extmap", 1) == NULL);
+}
+
+/* In this test, we validate that identical extmaps for multiple formats
+ * in the caps of a single transceiver are deduplicated. This is necessary
+ * because Firefox will complain about duplicate extmap ids and fail negotiation
+ * otherwise. */
+GST_START_TEST (test_codec_preferences_no_duplicate_extmaps)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstWebRTCRTPTransceiver *trans;
+  GstWebRTCRTPTransceiverDirection direction;
+  VAL_SDP_INIT (extmaps, on_sdp_media_no_duplicate_extmaps, NULL, NULL);
+  GstCaps *caps;
+  GstStructure *s;
+
+  caps = gst_caps_new_empty ();
+
+  s = gst_structure_from_string (VP8_RTP_CAPS (96), NULL);
+  gst_structure_set (s, "extmap-1", G_TYPE_STRING, "foobar", NULL);
+  gst_caps_append_structure (caps, s);
+  s = gst_structure_from_string (H264_RTP_CAPS (97), NULL);
+  gst_structure_set (s, "extmap-1", G_TYPE_STRING, "foobar", NULL);
+  gst_caps_append_structure (caps, s);
+
+  direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
+      &trans);
+  gst_caps_unref (caps);
+  fail_unless (trans != NULL);
+
+  t->on_negotiation_needed = NULL;
+  t->on_pad_added = NULL;
+  t->on_ice_candidate = NULL;
+
+  test_validate_sdp (t, &extmaps, NULL);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+/* In this test, we validate that trying to use different values
+ * for the same extmap id in multiple formats in the caps of a
+ * single transceiver errors out when creating the offer. */
+GST_START_TEST (test_codec_preferences_incompatible_extmaps)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstWebRTCRTPTransceiver *trans;
+  GstWebRTCRTPTransceiverDirection direction;
+  GstCaps *caps;
+  GstStructure *s;
+
+  caps = gst_caps_new_empty ();
+
+  s = gst_structure_from_string (VP8_RTP_CAPS (96), NULL);
+  gst_structure_set (s, "extmap-1", G_TYPE_STRING, "foobar", NULL);
+  gst_caps_append_structure (caps, s);
+  s = gst_structure_from_string (H264_RTP_CAPS (97), NULL);
+  gst_structure_set (s, "extmap-1", G_TYPE_STRING, "foobaz", NULL);
+  gst_caps_append_structure (caps, s);
+
+  direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
+      &trans);
+  gst_caps_unref (caps);
+  fail_unless (trans != NULL);
+
+  t->on_negotiation_needed = NULL;
+  t->on_pad_added = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_offer_created = offer_created_produced_error;
+
+  test_validate_sdp_full (t, NULL, NULL, STATE_OFFER_CREATED, TRUE);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+/* In this test, we validate that extmap values must be of the correct type */
+GST_START_TEST (test_codec_preferences_invalid_extmap)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstWebRTCRTPTransceiver *trans;
+  GstWebRTCRTPTransceiverDirection direction;
+  GstCaps *caps;
+  GstStructure *s;
+
+  caps = gst_caps_new_empty ();
+
+  s = gst_structure_from_string (VP8_RTP_CAPS (96), NULL);
+  gst_structure_set (s, "extmap-1", G_TYPE_INT, 42, NULL);
+  gst_caps_append_structure (caps, s);
+
+  direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
+      &trans);
+  gst_caps_unref (caps);
+  fail_unless (trans != NULL);
+
+  t->on_negotiation_needed = NULL;
+  t->on_pad_added = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_offer_created = offer_created_produced_error;
+
+  test_validate_sdp_full (t, NULL, NULL, STATE_OFFER_CREATED, TRUE);
 
   test_webrtc_free (t);
 }
@@ -4275,6 +4412,9 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_codec_preferences_negotiation_sinkpad);
     tcase_add_test (tc, test_codec_preferences_negotiation_srcpad);
     tcase_add_test (tc, test_codec_preferences_in_on_new_transceiver);
+    tcase_add_test (tc, test_codec_preferences_no_duplicate_extmaps);
+    tcase_add_test (tc, test_codec_preferences_incompatible_extmaps);
+    tcase_add_test (tc, test_codec_preferences_invalid_extmap);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);

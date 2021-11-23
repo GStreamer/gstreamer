@@ -2766,6 +2766,146 @@ _add_fingerprint_to_media (GstWebRTCDTLSTransport * transport,
   g_free (val);
 }
 
+static gchar *
+_parse_extmap (GQuark field_id, const GValue * value, GError ** error)
+{
+  gchar *ret = NULL;
+
+  if (G_VALUE_HOLDS_STRING (value)) {
+    ret = g_value_dup_string (value);
+  } else if (G_VALUE_HOLDS (value, GST_TYPE_ARRAY)
+      && gst_value_array_get_size (value) == 3) {
+    const GValue *val;
+    const gchar *direction, *extensionname, *extensionattributes;
+
+    val = gst_value_array_get_value (value, 0);
+    direction = g_value_get_string (val);
+
+    val = gst_value_array_get_value (value, 1);
+    extensionname = g_value_get_string (val);
+
+    val = gst_value_array_get_value (value, 2);
+    extensionattributes = g_value_get_string (val);
+
+    if (!extensionname || *extensionname == '\0')
+      goto done;
+
+    if (direction && *direction != '\0' && extensionattributes
+        && *extensionattributes != '\0') {
+      ret =
+          g_strdup_printf ("/%s %s %s", direction, extensionname,
+          extensionattributes);
+    } else if (direction && *direction != '\0') {
+      ret = g_strdup_printf ("/%s %s", direction, extensionname);
+    } else if (extensionattributes && *extensionattributes != '\0') {
+      ret = g_strdup_printf ("%s %s", extensionname, extensionattributes);
+    } else {
+      ret = g_strdup (extensionname);
+    }
+  }
+
+  if (!ret && error) {
+    gchar *val_str = gst_value_serialize (value);
+
+    g_set_error (error, GST_WEBRTC_BIN_ERROR,
+        GST_WEBRTC_BIN_ERROR_CAPS_NEGOTIATION_FAILED,
+        "Invalid value for %s: %s", g_quark_to_string (field_id), val_str);
+    g_free (val_str);
+  }
+
+done:
+  return ret;
+}
+
+typedef struct
+{
+  gboolean ret;
+  GstStructure *extmap;
+  GError **error;
+} ExtmapData;
+
+static gboolean
+_dedup_extmap_field (GQuark field_id, const GValue * value, ExtmapData * data)
+{
+  gboolean is_extmap =
+      g_str_has_prefix (g_quark_to_string (field_id), "extmap-");
+
+  if (!data->ret)
+    goto done;
+
+  if (is_extmap) {
+    gchar *new_value = _parse_extmap (field_id, value, data->error);
+
+    if (!new_value) {
+      data->ret = FALSE;
+      goto done;
+    }
+
+    if (gst_structure_id_has_field (data->extmap, field_id)) {
+      gchar *old_value =
+          _parse_extmap (field_id, gst_structure_id_get_value (data->extmap,
+              field_id), NULL);
+
+      g_assert (old_value);
+
+      if (g_strcmp0 (new_value, old_value)) {
+        GST_ERROR
+            ("extmap contains different values for id %s (%s != %s)",
+            g_quark_to_string (field_id), old_value, new_value);
+        g_set_error (data->error, GST_WEBRTC_BIN_ERROR,
+            GST_WEBRTC_BIN_ERROR_CAPS_NEGOTIATION_FAILED,
+            "extmap contains different values for id %s (%s != %s)",
+            g_quark_to_string (field_id), old_value, new_value);
+        data->ret = FALSE;
+      }
+
+      g_free (old_value);
+
+    }
+
+    if (data->ret) {
+      gst_structure_id_set_value (data->extmap, field_id, value);
+    }
+
+    g_free (new_value);
+  }
+
+done:
+  return !is_extmap;
+}
+
+static GstStructure *
+_gather_extmap (GstCaps * caps, GError ** error)
+{
+  ExtmapData edata =
+      { TRUE, gst_structure_new_empty ("application/x-extmap"), error };
+  guint i, n;
+
+  n = gst_caps_get_size (caps);
+
+  for (i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+
+    gst_structure_filter_and_map_in_place (s,
+        (GstStructureFilterMapFunc) _dedup_extmap_field, &edata);
+
+    if (!edata.ret) {
+      gst_clear_structure (&edata.extmap);
+      break;
+    }
+  }
+
+  return edata.extmap;
+}
+
+static gboolean
+_copy_field (GQuark field_id, const GValue * value, GstStructure * s)
+{
+  gst_structure_id_set_value (s, field_id, value);
+
+  return TRUE;
+}
+
 /* based off https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-18#section-5.2.1 */
 static gboolean
 sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
@@ -2788,6 +2928,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
   gchar *direction, *sdp_mid, *ufrag, *pwd;
   gboolean bundle_only;
   GstCaps *caps;
+  GstStructure *extmap;
   int i;
 
   if (trans->direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE
@@ -2856,14 +2997,38 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
     return FALSE;
   }
 
+  caps = gst_caps_make_writable (caps);
+
+  /* When an extmap is defined twice for the same ID, firefox complains and
+   * errors out (chrome is smart enough to accept strict duplicates).
+   *
+   * To work around this, we deduplicate extmap attributes, and also error
+   * out when a different extmap is defined for the same ID.
+   *
+   * _gather_extmap will strip out all extmap- fields, which will then be
+   * added upon adding the first format for the media.
+   */
+  extmap = _gather_extmap (caps, error);
+
+  if (!extmap) {
+    GST_ERROR_OBJECT (webrtc,
+        "Failed to build extmap for transceiver %" GST_PTR_FORMAT, trans);
+    gst_caps_unref (caps);
+    return FALSE;
+  }
+
   caps = _add_supported_attributes_to_caps (webrtc, WEBRTC_TRANSCEIVER (trans),
       caps);
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     GstCaps *format = gst_caps_new_empty ();
-    const GstStructure *s = gst_caps_get_structure (caps, i);
+    GstStructure *s = gst_structure_copy (gst_caps_get_structure (caps, i));
 
-    gst_caps_append_structure (format, gst_structure_copy (s));
+    if (i == 0) {
+      gst_structure_foreach (extmap, (GstStructureForeachFunc) _copy_field, s);
+    }
+
+    gst_caps_append_structure (format, s);
 
     GST_DEBUG_OBJECT (webrtc, "Adding %u-th caps %" GST_PTR_FORMAT
         " to %u-th media", i, format, media_idx);
@@ -2874,6 +3039,8 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
 
     gst_caps_unref (format);
   }
+
+  gst_clear_structure (&extmap);
 
   {
     const GstStructure *s = gst_caps_get_structure (caps, 0);
