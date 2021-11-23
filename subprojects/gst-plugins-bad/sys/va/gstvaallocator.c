@@ -258,6 +258,27 @@ struct _GstVaDmabufAllocator
 G_DEFINE_TYPE_WITH_CODE (GstVaDmabufAllocator, gst_va_dmabuf_allocator,
     GST_TYPE_DMABUF_ALLOCATOR, _init_debug_category ());
 
+static GstVaSurfaceCopy *
+_ensure_surface_copy (GstVaSurfaceCopy ** old, GstVaDisplay * display,
+    GstVideoInfo * info)
+{
+  GstVaSurfaceCopy *surface_copy;
+
+  surface_copy = g_atomic_pointer_get (old);
+  if (!surface_copy) {
+    surface_copy = gst_va_surface_copy_new (display, info);
+
+    /* others create a new one and set it before us */
+    if (surface_copy &&
+        !g_atomic_pointer_compare_and_exchange (old, NULL, surface_copy)) {
+      gst_va_surface_copy_free (surface_copy);
+      surface_copy = g_atomic_pointer_get (old);
+    }
+  }
+
+  return surface_copy;
+}
+
 /* If a buffer contains multiple memories (dmabuf objects) its very
  * difficult to provide a realiable way to fast-copy single memories:
  * While VA API sees surfaces with dependant dmabufs, GStreamer only
@@ -294,6 +315,7 @@ gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
   if (offset == 0 && size == mem_size && buf->n_mems == 1) {
     GstVaBufferSurface *buf_copy = NULL;
     GstMemory *copy;
+    GstVaSurfaceCopy *copy_func;
 
     GST_VA_MEMORY_POOL_LOCK (&self->pool);
     copy = gst_va_memory_pool_pop (&self->pool);
@@ -325,9 +347,8 @@ gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
 
     g_assert (buf_copy->n_mems == 1);
 
-    if (!self->copy)
-      self->copy = gst_va_surface_copy_new (self->display, &self->info);
-    if (self->copy && gst_va_surface_copy (self->copy, buf_copy->surface,
+    copy_func = _ensure_surface_copy (&self->copy, self->display, &self->info);
+    if (copy_func && gst_va_surface_copy (copy_func, buf_copy->surface,
             buf->surface))
       return copy;
 
@@ -1283,15 +1304,13 @@ _va_copy (GstMemory * mem, gssize offset, gssize size)
     size = mem_size > offset ? mem_size - offset : 0;
 
   if (offset == 0 && size == mem_size) {
-    if (!va_allocator->copy) {
-      va_allocator->copy =
-          gst_va_surface_copy_new (va_allocator->display, &va_allocator->info);
-    }
-    if (va_allocator->copy
-        && gst_va_surface_copy (va_allocator->copy, va_copy->surface,
-            va_mem->surface)) {
+    GstVaSurfaceCopy *copy_func;
+
+    copy_func = _ensure_surface_copy (&va_allocator->copy,
+        va_allocator->display, &va_allocator->info);
+    if (copy_func
+        && gst_va_surface_copy (copy_func, va_copy->surface, va_mem->surface))
       return copy;
-    }
   }
 
   if (!gst_memory_map (mem, &sinfo, GST_MAP_READ)) {
