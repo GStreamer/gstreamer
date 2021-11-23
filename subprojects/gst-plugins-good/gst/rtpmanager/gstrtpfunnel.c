@@ -465,7 +465,7 @@ gst_rtp_funnel_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_parse_accept_caps (query, &caps);
 
       GST_OBJECT_LOCK (funnel);
-      result = gst_caps_is_subset (caps, funnel->srccaps);
+      result = gst_caps_can_intersect (caps, funnel->srccaps);
       if (!result) {
         GST_ERROR_OBJECT (pad,
             "caps: %" GST_PTR_FORMAT " were not compatible with: %"
