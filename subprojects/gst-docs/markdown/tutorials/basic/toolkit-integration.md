@@ -245,7 +245,7 @@ static gboolean refresh_ui (CustomData *data) {
     /* Block the "value-changed" signal, so the slider_cb function is not called
      * (which would trigger a seek the user has not requested) */
     g_signal_handler_block (data->slider, data->slider_update_signal_id);
-    /* Set the position of the slider to the current pipeline positoin, in SECONDS */
+    /* Set the position of the slider to the current pipeline position, in SECONDS */
     gtk_range_set_value (GTK_RANGE (data->slider), (gdouble)current / GST_SECOND);
     /* Re-enable the signal */
     g_signal_handler_unblock (data->slider, data->slider_update_signal_id);
@@ -764,7 +764,7 @@ if (gst_element_query_position (data->playbin, GST_FORMAT_TIME, &current)) {
   /* Block the "value-changed" signal, so the slider_cb function is not called
    * (which would trigger a seek the user has not requested) */
   g_signal_handler_block (data->slider, data->slider_update_signal_id);
-  /* Set the position of the slider to the current pipeline positoin, in SECONDS */
+  /* Set the position of the slider to the current pipeline position, in SECONDS */
   gtk_range_set_value (GTK_RANGE (data->slider), (gdouble)current / GST_SECOND);
   /* Re-enable the signal */
   g_signal_handler_unblock (data->slider, data->slider_update_signal_id);
