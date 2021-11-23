@@ -16918,6 +16918,20 @@
                         "type": "GstStructure",
                         "writable": true
                     },
+                    "ts-offset-smoothing-factor": {
+                        "blurb": "Sets a smoothing factor for the timestamp offset in number of values for a calculated running moving average. (0 = no smoothing factor)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
                     "use-pipeline-clock": {
                         "blurb": "Use the pipeline running-time to set the NTP time in the RTCP SR messages (DEPRECATED: Use ntp-time-source property)",
                         "conditionally-available": false,

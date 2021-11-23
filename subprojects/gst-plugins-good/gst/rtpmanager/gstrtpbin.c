@@ -354,6 +354,7 @@ enum
 #define DEFAULT_MAX_TS_OFFSET_ADJUSTMENT G_GUINT64_CONSTANT(0)
 #define DEFAULT_MAX_TS_OFFSET        G_GINT64_CONSTANT(3000000000)
 #define DEFAULT_MIN_TS_OFFSET        MIN_TS_OFFSET_ROUND_OFF_COMP
+#define DEFAULT_TS_OFFSET_SMOOTHING_FACTOR  0
 
 enum
 {
@@ -382,6 +383,7 @@ enum
   PROP_MAX_TS_OFFSET_ADJUSTMENT,
   PROP_MAX_TS_OFFSET,
   PROP_MIN_TS_OFFSET,
+  PROP_TS_OFFSET_SMOOTHING_FACTOR,
   PROP_FEC_DECODERS,
   PROP_FEC_ENCODERS,
 };
@@ -1347,11 +1349,17 @@ stream_set_ts_offset (GstRtpBin * bin, GstRtpBinStream * stream,
     return;
   }
 
-  if (!stream->is_initialized) {
-    stream->avg_ts_offset = ts_offset;
-    stream->is_initialized = TRUE;
+  if (bin->ts_offset_smoothing_factor > 0) {
+    if (!stream->is_initialized) {
+      stream->avg_ts_offset = ts_offset;
+      stream->is_initialized = TRUE;
+    } else {
+      stream->avg_ts_offset =
+          ((bin->ts_offset_smoothing_factor - 1) * stream->avg_ts_offset +
+          ts_offset) / bin->ts_offset_smoothing_factor;
+    }
   } else {
-    stream->avg_ts_offset = (9 * stream->avg_ts_offset + ts_offset) / 10;
+    stream->avg_ts_offset = ts_offset;
   }
 
   g_object_get (stream->buffer, "ts-offset", &prev_ts_offset, NULL);
@@ -2800,6 +2808,30 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtpBin:ts-offset-smoothing-factor:
+   *
+   * Controls the weighting between previous and current timestamp offsets in
+   * a running moving average (RMA):
+   * ts_offset_average(n) =
+   *   ((ts-offset-smoothing-factor - 1) * ts_offset_average(n - 1) + ts_offset(n)) /
+   *   ts-offset-smoothing-factor
+   *
+   * This can stabilize the timestamp offset and prevent unnecessary skew
+   * corrections due to jitter introduced by network or system load.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_TS_OFFSET_SMOOTHING_FACTOR,
+      g_param_spec_uint ("ts-offset-smoothing-factor",
+          "Timestamp Offset Smoothing Factor",
+          "Sets a smoothing factor for the timestamp offset in number of "
+          "values for a calculated running moving average. "
+          "(0 = no smoothing factor)", 0, G_MAXUINT,
+          DEFAULT_TS_OFFSET_SMOOTHING_FACTOR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRtpBin:fec-decoders:
    *
    * Used to provide a factory used to build the FEC decoder for a
@@ -2923,6 +2955,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->max_ts_offset_is_set = FALSE;
   rtpbin->min_ts_offset = DEFAULT_MIN_TS_OFFSET;
   rtpbin->min_ts_offset_is_set = FALSE;
+  rtpbin->ts_offset_smoothing_factor = DEFAULT_TS_OFFSET_SMOOTHING_FACTOR;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -3248,6 +3281,9 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       rtpbin->min_ts_offset = g_value_get_uint64 (value);
       rtpbin->min_ts_offset_is_set = TRUE;
       break;
+    case PROP_TS_OFFSET_SMOOTHING_FACTOR:
+      rtpbin->ts_offset_smoothing_factor = g_value_get_uint (value);
+      break;
     case PROP_FEC_DECODERS:
       gst_rtp_bin_set_fec_decoders_struct (rtpbin, g_value_get_boxed (value));
       break;
@@ -3350,6 +3386,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MIN_TS_OFFSET:
       g_value_set_uint64 (value, rtpbin->min_ts_offset);
+      break;
+    case PROP_TS_OFFSET_SMOOTHING_FACTOR:
+      g_value_set_uint (value, rtpbin->ts_offset_smoothing_factor);
       break;
     case PROP_FEC_DECODERS:
       g_value_take_boxed (value, gst_rtp_bin_get_fec_decoders_struct (rtpbin));

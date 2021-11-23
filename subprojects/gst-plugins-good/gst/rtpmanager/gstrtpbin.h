@@ -80,6 +80,7 @@ struct _GstRtpBin {
   gboolean        max_ts_offset_is_set;
   guint64         min_ts_offset;
   gboolean        min_ts_offset_is_set;
+  guint           ts_offset_smoothing_factor;
 
   /* a list of session */
   GSList         *sessions;
