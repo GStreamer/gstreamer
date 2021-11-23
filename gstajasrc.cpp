@@ -792,7 +792,26 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
 
   CNTV2SignalRouter router;
 
-  self->device->device->GetRouting(router);
+  // If any channels are currently running, initialize the router with the
+  // existing routing setup. Otherwise overwrite the whole routing table.
+  {
+    bool have_channels_running = false;
+
+    for (NTV2Channel c = ::NTV2_CHANNEL1; c < NTV2_MAX_NUM_CHANNELS;
+         c = (NTV2Channel)(c + 1)) {
+      AUTOCIRCULATE_STATUS ac_status;
+
+      if (c == self->channel) continue;
+
+      if (self->device->device->AutoCirculateGetStatus(c, ac_status) &&
+          !ac_status.IsStopped()) {
+        have_channels_running = true;
+        break;
+      }
+    }
+
+    if (have_channels_running) self->device->device->GetRouting(router);
+  }
 
   // Need to remove old routes for the output and framebuffer we're going to
   // use
