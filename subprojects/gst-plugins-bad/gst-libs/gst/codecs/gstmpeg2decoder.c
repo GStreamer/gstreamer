@@ -246,6 +246,8 @@ struct _GstMpeg2DecoderPrivate
 
   /* some sequence info changed after last new_sequence () */
   gboolean seq_changed;
+  /* whether we need to drain before new_sequence () */
+  gboolean need_to_drain;
   GstMpegVideoGop gop;
   GstMpegVideoQuantMatrixExt quant_matrix;
   GstMpegVideoPictureHdr pic_hdr;
@@ -512,8 +514,11 @@ gst_mpeg2_decoder_handle_sequence (GstMpeg2Decoder * decoder,
   priv->seq_hdr = seq_hdr;
   priv->seq_changed = TRUE;
 
-  priv->width = seq_hdr.width;
-  priv->height = seq_hdr.height;
+  if (priv->width != seq_hdr.width || priv->height != seq_hdr.height) {
+    priv->need_to_drain = TRUE;
+    priv->width = seq_hdr.width;
+    priv->height = seq_hdr.height;
+  }
   priv->display_width = priv->width;
   priv->display_height = priv->height;
 
@@ -551,8 +556,6 @@ gst_mpeg2_decoder_handle_sequence_ext (GstMpeg2Decoder * decoder,
   priv->seq_ext = seq_ext;
   priv->seq_changed = TRUE;
 
-  priv->progressive = seq_ext.progressive;
-
   if (seq_ext.fps_n_ext && seq_ext.fps_d_ext) {
     guint fps_n = priv->tsg.fps_n;
     guint fps_d = priv->tsg.fps_d;
@@ -564,11 +567,20 @@ gst_mpeg2_decoder_handle_sequence_ext (GstMpeg2Decoder * decoder,
 
   width = (priv->width & 0x0fff) | ((guint32) seq_ext.horiz_size_ext << 12);
   height = (priv->height & 0x0fff) | ((guint32) seq_ext.vert_size_ext << 12);
-  GST_DEBUG_OBJECT (decoder, "video resolution %ux%u", width, height);
-  priv->width = width;
-  priv->height = height;
 
-  priv->profile = seq_ext.profile;
+  if (priv->width != width || priv->height != height ||
+      priv->profile != seq_ext.profile ||
+      priv->progressive != seq_ext.progressive) {
+    priv->need_to_drain = TRUE;
+    priv->width = width;
+    priv->height = height;
+    priv->profile = seq_ext.profile;
+    priv->progressive = seq_ext.progressive;
+
+    GST_DEBUG_OBJECT (decoder, "video resolution %ux%u, profile %d,"
+        " progressive %d", priv->width, priv->height, priv->profile,
+        priv->progressive);
+  }
 
   priv->state |= GST_MPEG2_DECODER_STATE_GOT_SEQ_EXT;
 
@@ -734,15 +746,26 @@ gst_mpeg2_decoder_handle_picture (GstMpeg2Decoder * decoder,
     return GST_FLOW_ERROR;
   }
 
+  /* If need_to_drain, we must have sequence changed. */
+  g_assert (priv->need_to_drain ? priv->seq_changed : TRUE);
+
   /* 6.1.1.6: Conversely if no sequence_xxx_extension() occurs between
      the first sequence_header() and the first picture_header() then
      sequence_xxx_extension() shall not occur in the bitstream. */
   if (priv->seq_changed) {
     GstFlowReturn ret;
 
-    ret = gst_mpeg2_decoder_drain (GST_VIDEO_DECODER (decoder));
-    if (ret != GST_FLOW_OK)
-      return ret;
+    /* There are a lot of info in the mpeg2's sequence(also including ext
+       display_ext and scalable_ext). We need to notify the subclass about
+       its change, but not all the changes should trigger a drain(), which
+       may change the output picture order. */
+    if (priv->need_to_drain) {
+      ret = gst_mpeg2_decoder_drain (GST_VIDEO_DECODER (decoder));
+      if (ret != GST_FLOW_OK)
+        return ret;
+
+      priv->need_to_drain = FALSE;
+    }
 
     if (klass->get_preferred_output_delay)
       priv->preferred_output_delay =
