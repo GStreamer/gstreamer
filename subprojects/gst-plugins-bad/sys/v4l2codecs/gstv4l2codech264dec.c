@@ -603,7 +603,7 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
     entry = &self->decode_params.dpb[entry_id++];
     *entry = (struct v4l2_h264_dpb_entry) {
       /*
-       * The reference is multiplied by 1000 because it's wassed as micro
+       * The reference is multiplied by 1000 because it's was set as micro
        * seconds and this TS is nanosecond.
        */
       .reference_ts = (guint64) ref_pic->system_frame_number * 1000,
