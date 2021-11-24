@@ -582,6 +582,7 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
   for (i = 0; i < refs->len; i++) {
     GstH264Picture *ref_pic = g_array_index (refs, GstH264Picture *, i);
     gint pic_num = ref_pic->pic_num;
+    gint frame_num = ref_pic->frame_num;
     struct v4l2_h264_dpb_entry *entry;
 
     /* Skip non-reference as they are not useful to decoding */
@@ -592,6 +593,13 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
     if (ref_pic->second_field)
       continue;
 
+    /* V4L2 uAPI uses pic_num for both PicNum and LongTermPicNum, and
+     * frame_num for both FrameNum and LongTermFrameIdx */
+    if (GST_H264_PICTURE_IS_LONG_TERM_REF (ref_pic)) {
+      pic_num = ref_pic->long_term_pic_num;
+      frame_num = ref_pic->long_term_frame_idx;
+    }
+
     entry = &self->decode_params.dpb[entry_id++];
     *entry = (struct v4l2_h264_dpb_entry) {
       /*
@@ -599,7 +607,7 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
        * seconds and this TS is nanosecond.
        */
       .reference_ts = (guint64) ref_pic->system_frame_number * 1000,
-      .frame_num = ref_pic->frame_num,
+      .frame_num = frame_num,
       .pic_num = pic_num,
       .flags = V4L2_H264_DPB_ENTRY_FLAG_VALID
           | (GST_H264_PICTURE_IS_REF (ref_pic) ? V4L2_H264_DPB_ENTRY_FLAG_ACTIVE : 0)
