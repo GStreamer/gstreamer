@@ -65,6 +65,9 @@ extern BlendFunction gst_compositor_overlay_bgra;
 #define gst_compositor_overlay_vuya gst_compositor_overlay_bgra
 #define gst_compositor_overlay_abgr gst_compositor_overlay_argb
 #define gst_compositor_overlay_rgba gst_compositor_overlay_bgra
+extern BlendFunction gst_compositor_overlay_argb64;
+#define gst_compositor_overlay_ayuv64 gst_compositor_overlay_argb64;
+
 extern BlendFunction gst_compositor_blend_i420;
 #define gst_compositor_blend_yv12 gst_compositor_blend_i420
 extern BlendFunction gst_compositor_blend_nv12;
@@ -95,6 +98,9 @@ extern BlendFunction gst_compositor_blend_y444_12le;
 extern BlendFunction gst_compositor_blend_y444_12be;
 extern BlendFunction gst_compositor_blend_y444_16le;
 extern BlendFunction gst_compositor_blend_y444_16be;
+extern BlendFunction gst_compositor_blend_argb64;
+#define gst_compositor_blend_ayuv64 gst_compositor_blend_argb64;
+
 
 extern FillCheckerFunction gst_compositor_fill_checker_argb;
 #define gst_compositor_fill_checker_abgr gst_compositor_fill_checker_argb
@@ -132,6 +138,8 @@ extern FillCheckerFunction gst_compositor_fill_checker_i420_12be;
 #define gst_compositor_fill_checker_y444_12be gst_compositor_fill_checker_i420_12be
 extern FillCheckerFunction gst_compositor_fill_checker_y444_16le;
 extern FillCheckerFunction gst_compositor_fill_checker_y444_16be;
+extern FillCheckerFunction gst_compositor_fill_checker_argb64;
+extern FillCheckerFunction gst_compositor_fill_checker_ayuv64;
 
 extern FillColorFunction gst_compositor_fill_color_argb;
 extern FillColorFunction gst_compositor_fill_color_abgr;
@@ -169,6 +177,8 @@ extern FillColorFunction gst_compositor_fill_color_i420_12be;
 #define gst_compositor_fill_color_y444_12be gst_compositor_fill_color_i420_12be
 extern FillColorFunction gst_compositor_fill_color_y444_16le;
 extern FillColorFunction gst_compositor_fill_color_y444_16be;
+extern FillColorFunction gst_compositor_fill_color_argb64;
+#define gst_compositor_fill_color_ayuv64 gst_compositor_fill_color_argb64;
 
 void gst_compositor_init_blend (void);
 

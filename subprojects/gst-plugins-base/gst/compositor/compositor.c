@@ -103,28 +103,10 @@
 GST_DEBUG_CATEGORY_STATIC (gst_compositor_debug);
 #define GST_CAT_DEFAULT gst_compositor_debug
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS " { AYUV, VUYA, BGRA, ARGB, RGBA, ABGR, " \
-                "   Y444_16LE, Y444_16BE, Y444_12LE, Y444_12BE, Y444_10LE, Y444_10BE, " \
-                "   Y444, Y42B, YUY2, UYVY, YVYU, "\
-                "   I422_12LE, I422_12BE, I422_10LE, I422_10BE, "\
-                "   I420_12LE, I420_12BE, I420_10LE, I420_10BE, " \
-                "   I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "\
-                "   RGBx, BGRx } "
-#else
-#define FORMATS " { AYUV, VUYA, BGRA, ARGB, RGBA, ABGR, "\
-                "   Y444_16BE, Y444_16LE, Y444_12BE, Y444_12LE, Y444_10BE, Y444_10LE, " \
-                "   Y444, Y42B, YUY2, UYVY, YVYU, "\
-                "   I422_12BE, I422_12LE, I422_10BE, I422_10LE, "\
-                "   I420_12BE, I420_12LE, I420_10BE, I420_10LE, "\
-                "   I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "\
-                "   RGBx, BGRx } "
-#endif
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (FORMATS))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL))
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
@@ -622,6 +604,7 @@ static void
 gst_compositor_pad_create_conversion_info (GstVideoAggregatorConvertPad * pad,
     GstVideoAggregator * vagg, GstVideoInfo * conversion_info)
 {
+  GstCompositor *self = GST_COMPOSITOR (vagg);
   GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
   gint width, height;
   gint x_offset, y_offset;
@@ -632,7 +615,24 @@ gst_compositor_pad_create_conversion_info (GstVideoAggregatorConvertPad * pad,
   if (!conversion_info->finfo)
     return;
 
-  _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), cpad,
+  /* Need intermediate conversion? */
+  if (self->intermediate_frame) {
+    GstVideoInfo intermediate_info;
+    gst_video_info_set_interlaced_format (&intermediate_info,
+        GST_VIDEO_INFO_FORMAT (&self->intermediate_info),
+        conversion_info->interlace_mode,
+        GST_VIDEO_INFO_WIDTH (conversion_info),
+        GST_VIDEO_INFO_HEIGHT (conversion_info));
+    intermediate_info.colorimetry = conversion_info->colorimetry;
+    intermediate_info.par_n = conversion_info->par_n;
+    intermediate_info.par_d = conversion_info->par_d;
+    intermediate_info.fps_n = conversion_info->fps_n;
+    intermediate_info.fps_d = conversion_info->fps_d;
+    intermediate_info.flags = conversion_info->flags;
+    *conversion_info = intermediate_info;
+  }
+
+  _mixer_pad_get_output_size (self, cpad,
       GST_VIDEO_INFO_PAR_N (&vagg->info), GST_VIDEO_INFO_PAR_D (&vagg->info),
       &width, &height, &x_offset, &y_offset);
 
@@ -647,8 +647,9 @@ gst_compositor_pad_create_conversion_info (GstVideoAggregatorConvertPad * pad,
      * colorimetry, and chroma-site and our current pixel-aspect-ratio
      * and other relevant fields.
      */
-    gst_video_info_set_format (&tmp_info,
-        GST_VIDEO_INFO_FORMAT (conversion_info), width, height);
+    gst_video_info_set_interlaced_format (&tmp_info,
+        GST_VIDEO_INFO_FORMAT (conversion_info),
+        conversion_info->interlace_mode, width, height);
     tmp_info.chroma_site = conversion_info->chroma_site;
     tmp_info.colorimetry = conversion_info->colorimetry;
     tmp_info.par_n = conversion_info->par_n;
@@ -656,7 +657,6 @@ gst_compositor_pad_create_conversion_info (GstVideoAggregatorConvertPad * pad,
     tmp_info.fps_n = conversion_info->fps_n;
     tmp_info.fps_d = conversion_info->fps_d;
     tmp_info.flags = conversion_info->flags;
-    tmp_info.interlace_mode = conversion_info->interlace_mode;
 
     *conversion_info = tmp_info;
   }
@@ -818,10 +818,15 @@ set_functions (GstCompositor * self, const GstVideoInfo * info)
   gint scale[GST_VIDEO_MAX_COMPONENTS] = { 0, };
   gint i;
 
+  gst_clear_buffer (&self->intermediate_frame);
+  g_clear_pointer (&self->intermediate_convert, gst_video_converter_free);
+
   self->blend = NULL;
   self->overlay = NULL;
   self->fill_checker = NULL;
   self->fill_color = NULL;
+
+  self->intermediate_info = *info;
 
   switch (GST_VIDEO_INFO_FORMAT (info)) {
     case GST_VIDEO_FORMAT_AYUV:
@@ -1040,15 +1045,93 @@ set_functions (GstCompositor * self, const GstVideoInfo * info)
       self->fill_checker = gst_compositor_fill_checker_bgrx;
       self->fill_color = gst_compositor_fill_color_bgrx;
       break;
+    case GST_VIDEO_FORMAT_ARGB64:
+      self->blend = gst_compositor_blend_argb64;
+      self->overlay = gst_compositor_overlay_argb64;
+      self->fill_checker = gst_compositor_fill_checker_argb64;
+      self->fill_color = gst_compositor_fill_color_argb64;
+      break;
+    case GST_VIDEO_FORMAT_AYUV64:
+      self->blend = gst_compositor_blend_ayuv64;
+      self->overlay = gst_compositor_overlay_ayuv64;
+      self->fill_checker = gst_compositor_fill_checker_ayuv64;
+      self->fill_color = gst_compositor_fill_color_ayuv64;
+      break;
     default:
-      GST_ERROR_OBJECT (self, "Unhandled format %s",
+    {
+      GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+      GstVideoInfo *intermediate_info = &self->intermediate_info;
+      if (GST_VIDEO_INFO_IS_YUV (info)) {
+        if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) == 8)
+          format = GST_VIDEO_FORMAT_AYUV;
+        else
+          format = GST_VIDEO_FORMAT_AYUV64;
+      } else {
+        if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) == 8)
+          format = GST_VIDEO_FORMAT_ARGB;
+        else
+          format = GST_VIDEO_FORMAT_ARGB64;
+      }
+
+      switch (format) {
+        case GST_VIDEO_FORMAT_AYUV:
+          self->blend = gst_compositor_blend_ayuv;
+          self->overlay = gst_compositor_overlay_ayuv;
+          self->fill_checker = gst_compositor_fill_checker_ayuv;
+          self->fill_color = gst_compositor_fill_color_ayuv;
+          break;
+        case GST_VIDEO_FORMAT_AYUV64:
+          self->blend = gst_compositor_blend_ayuv64;
+          self->overlay = gst_compositor_overlay_ayuv64;
+          self->fill_checker = gst_compositor_fill_checker_ayuv64;
+          self->fill_color = gst_compositor_fill_color_ayuv64;
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+          self->blend = gst_compositor_blend_argb;
+          self->overlay = gst_compositor_overlay_argb;
+          self->fill_checker = gst_compositor_fill_checker_argb;
+          self->fill_color = gst_compositor_fill_color_argb;
+          break;
+        case GST_VIDEO_FORMAT_ARGB64:
+          self->blend = gst_compositor_blend_argb64;
+          self->overlay = gst_compositor_overlay_argb64;
+          self->fill_checker = gst_compositor_fill_checker_argb64;
+          self->fill_color = gst_compositor_fill_color_argb64;
+          break;
+        default:
+          GST_ERROR_OBJECT (self, "Unhandled format %s -> %s",
+              gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)),
+              gst_video_format_to_string (format));
+          return FALSE;
+      }
+
+      GST_DEBUG_OBJECT (self,
+          "Configured intermediate format %s for output format %s",
+          gst_video_format_to_string (format),
           gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
-      return FALSE;
+
+      /* needs intermediate conversion */
+      gst_video_info_set_interlaced_format (intermediate_info,
+          format, info->interlace_mode, info->width, info->height);
+      intermediate_info->par_n = info->par_n;
+      intermediate_info->par_d = info->par_d;
+      intermediate_info->fps_n = info->fps_n;
+      intermediate_info->fps_d = info->fps_d;
+      intermediate_info->flags = info->flags;
+
+      /* preserve colorimetry if required */
+      if (!GST_VIDEO_INFO_IS_GRAY (info))
+        intermediate_info->colorimetry = info->colorimetry;
+
+      self->intermediate_frame =
+          gst_buffer_new_and_alloc (self->intermediate_info.size);
+      break;
+    }
   }
 
   /* calculate black and white colors */
-  gst_video_color_range_offsets (info->colorimetry.range, info->finfo,
-      offset, scale);
+  gst_video_color_range_offsets (self->intermediate_info.colorimetry.range,
+      self->intermediate_info.finfo, offset, scale);
   if (GST_VIDEO_INFO_IS_YUV (info)) {
     /* black color [0.0, 0.0, 0.0] */
     self->black_color[0] = offset[0];
@@ -1341,7 +1424,34 @@ _negotiated_caps (GstAggregator * agg, GstCaps * caps)
     gst_clear_object (&pool);
   }
 
+  if (compositor->intermediate_frame) {
+    GstStructure *config = NULL;
+    GstTaskPool *pool = gst_video_aggregator_get_execution_task_pool (vagg);
+
+    if (pool && n_threads > 1) {
+      config = gst_structure_new_empty ("GstVideoConverterConfig");
+      gst_structure_set (config, GST_VIDEO_CONVERTER_OPT_THREADS,
+          G_TYPE_UINT, n_threads, NULL);
+    }
+
+    compositor->intermediate_convert =
+        gst_video_converter_new_with_pool (&compositor->intermediate_info,
+        &v_info, config, pool);
+    gst_clear_object (&pool);
+  }
+
   return GST_AGGREGATOR_CLASS (parent_class)->negotiated_src_caps (agg, caps);
+}
+
+static gboolean
+gst_composior_stop (GstAggregator * agg)
+{
+  GstCompositor *self = GST_COMPOSITOR (agg);
+
+  gst_clear_buffer (&self->intermediate_frame);
+  g_clear_pointer (&self->intermediate_convert, gst_video_converter_free);
+
+  return GST_AGGREGATOR_CLASS (parent_class)->stop (agg);
 }
 
 static gboolean
@@ -1490,7 +1600,7 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
 {
   GstCompositor *compositor = GST_COMPOSITOR (vagg);
   GList *l;
-  GstVideoFrame out_frame, *outframe;
+  GstVideoFrame out_frame, intermediate_frame, *outframe;
   gboolean draw_background;
   guint drawn_a_pad = FALSE;
   struct CompositePadInfo *pads_info;
@@ -1502,6 +1612,18 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   }
 
   outframe = &out_frame;
+
+  if (compositor->intermediate_frame) {
+    if (!gst_video_frame_map (&intermediate_frame,
+            &compositor->intermediate_info, compositor->intermediate_frame,
+            GST_MAP_READWRITE)) {
+      GST_WARNING_OBJECT (vagg, "Could not map intermediate buffer");
+      gst_video_frame_unmap (&out_frame);
+      return GST_FLOW_ERROR;
+    }
+
+    outframe = &intermediate_frame;
+  }
 
   /* If one of the frames to be composited completely obscures the background,
    * don't bother drawing the background at all. We can also always use the
@@ -1603,7 +1725,14 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
 
   GST_OBJECT_UNLOCK (vagg);
 
-  gst_video_frame_unmap (outframe);
+  if (compositor->intermediate_frame) {
+    gst_video_converter_frame (compositor->intermediate_convert,
+        &intermediate_frame, &out_frame);
+
+    gst_video_frame_unmap (&intermediate_frame);
+  }
+
+  gst_video_frame_unmap (&out_frame);
 
   return GST_FLOW_OK;
 }
@@ -1797,6 +1926,7 @@ gst_compositor_class_init (GstCompositorClass * klass)
   agg_class->src_event = _src_event;
   agg_class->fixate_src_caps = _fixate_caps;
   agg_class->negotiated_src_caps = _negotiated_caps;
+  agg_class->stop = GST_DEBUG_FUNCPTR (gst_composior_stop);
   videoaggregator_class->aggregate_frames = gst_compositor_aggregate_frames;
 
   g_object_class_install_property (gobject_class, PROP_BACKGROUND,

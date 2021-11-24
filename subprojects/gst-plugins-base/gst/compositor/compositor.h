@@ -149,6 +149,10 @@ struct _GstCompositor
   gint white_color[GST_VIDEO_MAX_COMPONENTS];
   gint black_color[GST_VIDEO_MAX_COMPONENTS];
 
+  GstBuffer *intermediate_frame;
+  GstVideoInfo intermediate_info;
+  GstVideoConverter *intermediate_convert;
+
   GstParallelizedTaskRunner *blend_runner;
 };
 

@@ -696,6 +696,693 @@ PLANAR_YUV_HIGH_FILL_COLOR (y444_16le, LE, compositor_orc_memset_u16_2d);
 PLANAR_YUV_HIGH_FILL_CHECKER (y444_16be, 16, BE, compositor_orc_memset_u16_2d);
 PLANAR_YUV_HIGH_FILL_COLOR (y444_16be, BE, compositor_orc_memset_u16_2d);
 
+/* TODO: port to ORC */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+static void
+compositor_blend_argb64 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  gint i, j, k;
+  const guint64 comp_mask_0 = 0xffff000000000000;
+  const guint64 comp_mask_1 = 0x0000ffff00000000;
+  const guint64 comp_mask_2 = 0x00000000ffff0000;
+  const guint64 comp_mask_alpha = 0x000000000000ffff;
+
+  for (j = 0; j < m; j++) {
+    guint64 *dst;
+    guint64 *src;
+
+    dst = (guint64 *) (d1 + (d1_stride * j));
+    src = (guint64 *) (s1 + (s1_stride * j));
+
+    for (i = 0; i < n; i++) {
+      guint64 src_val = src[i];
+      guint64 dst_val = dst[i];
+      guint64 src_comp[3];
+      guint64 dst_comp[3];
+      guint64 src_alpha;
+      guint64 src_alpha_inv;
+
+      src_comp[0] = (src_val & comp_mask_0) >> 48;
+      src_comp[1] = (src_val & comp_mask_1) >> 32;
+      src_comp[2] = (src_val & comp_mask_2) >> 16;
+
+      dst_comp[0] = (dst_val & comp_mask_0) >> 48;
+      dst_comp[1] = (dst_val & comp_mask_1) >> 32;
+      dst_comp[2] = (dst_val & comp_mask_2) >> 16;
+
+      src_alpha = src_val & comp_mask_alpha;
+      src_alpha *= p1;
+      src_alpha /= G_MAXUINT16;
+      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+      src_alpha_inv = G_MAXUINT16 - src_alpha;
+
+      for (k = 0; k < G_N_ELEMENTS (src_comp); k++) {
+        src_comp[k] *= src_alpha;
+        dst_comp[k] *= src_alpha_inv;
+        dst_comp[k] += src_comp[k];
+        dst_comp[k] /= G_MAXUINT16;
+
+        dst_comp[k] = CLAMP (dst_comp[k], 0, G_MAXUINT16);
+      }
+
+      dst_val = (dst_comp[0] << 48) | (dst_comp[1] << 32) | (dst_comp[2] << 16)
+          | comp_mask_alpha;
+      dst[i] = dst_val;
+    }
+  }
+}
+
+static void
+compositor_source_argb64 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  gint i, j;
+  const guint64 comp_mask_non_alpha = 0xffffffffffff0000;
+  const guint64 comp_mask_alpha = 0x000000000000ffff;
+
+  for (j = 0; j < m; j++) {
+    guint64 *dst;
+    guint64 *src;
+
+    dst = (guint64 *) (d1 + (d1_stride * j));
+    src = (guint64 *) (s1 + (s1_stride * j));
+
+    for (i = 0; i < n; i++) {
+      guint64 src_val = src[i];
+      guint64 dst_val;
+      guint64 src_alpha;
+
+      src_alpha = src_val & comp_mask_alpha;
+      src_alpha *= p1;
+      src_alpha /= G_MAXUINT16;
+      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+
+      dst_val = (src_val & comp_mask_non_alpha) | src_alpha;
+      dst[i] = dst_val;
+    }
+  }
+}
+
+static void
+compositor_overlay_argb64 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  gint i, j, k;
+  const guint64 comp_mask_0 = 0xffff000000000000;
+  const guint64 comp_mask_1 = 0x0000ffff00000000;
+  const guint64 comp_mask_2 = 0x00000000ffff0000;
+  const guint64 comp_mask_alpha = 0x000000000000ffff;
+
+  for (j = 0; j < m; j++) {
+    guint64 *dst;
+    guint64 *src;
+
+    dst = (guint64 *) (d1 + (d1_stride * j));
+    src = (guint64 *) (s1 + (s1_stride * j));
+
+    for (i = 0; i < n; i++) {
+      guint64 src_val = src[i];
+      guint64 dst_val = dst[i];
+      guint64 src_comp[3];
+      guint64 dst_comp[3];
+      guint64 src_alpha;
+      guint64 src_alpha_inv;
+      guint64 dst_alpha;
+
+      src_comp[0] = (src_val & comp_mask_0) >> 48;
+      src_comp[1] = (src_val & comp_mask_1) >> 32;
+      src_comp[2] = (src_val & comp_mask_2) >> 16;
+
+      dst_comp[0] = (dst_val & comp_mask_0) >> 48;
+      dst_comp[1] = (dst_val & comp_mask_1) >> 32;
+      dst_comp[2] = (dst_val & comp_mask_2) >> 16;
+
+      /* calc source alpha as alpha_s = alpha_s * alpha / 255 */
+      src_alpha = src_val & comp_mask_alpha;
+      src_alpha *= p1;
+      src_alpha /= G_MAXUINT16;
+      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+      src_alpha_inv = G_MAXUINT16 - src_alpha;
+
+      for (k = 0; k < G_N_ELEMENTS (src_comp); k++)
+        src_comp[k] *= src_alpha;
+
+      /* calc destination alpha as alpha_d = (1.0 - alpha_s) * alpha_d / 1.0 */
+      dst_alpha = dst_val & comp_mask_alpha;
+      dst_alpha *= src_alpha_inv;
+      dst_alpha /= G_MAXUINT16;
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++)
+        dst_comp[k] *= dst_alpha;
+
+      /* calc final pixel as pix_d = pix_s*alpha_s + pix_d*alpha_d*(255-alpha_s)/255 */
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++)
+        dst_comp[k] += src_comp[k];
+
+      /* calc the final destination alpha_d = alpha_s + alpha_d * (255-alpha_s)/255 */
+      dst_alpha += src_alpha;
+      dst_alpha = CLAMP (dst_alpha, 0, G_MAXUINT16);
+
+      /* now normalize the pix_d by the final alpha to make it associative */
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++) {
+        if (dst_alpha > 0)
+          dst_comp[k] /= dst_alpha;
+        dst_comp[k] = CLAMP (dst_comp[k], 0, G_MAXUINT16);
+      }
+
+      dst_val = (dst_comp[0] << 48) | (dst_comp[1] << 32) | (dst_comp[2] << 16)
+          | dst_alpha;
+      dst[i] = dst_val;
+    }
+  }
+}
+
+static void
+compositor_overlay_argb64_addition (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  gint i, j, k;
+  const guint64 comp_mask_0 = 0xffff000000000000;
+  const guint64 comp_mask_1 = 0x0000ffff00000000;
+  const guint64 comp_mask_2 = 0x00000000ffff0000;
+  const guint64 comp_mask_alpha = 0x000000000000ffff;
+
+  for (j = 0; j < m; j++) {
+    guint64 *dst;
+    guint64 *src;
+
+    dst = (guint64 *) (d1 + (d1_stride * j));
+    src = (guint64 *) (s1 + (s1_stride * j));
+
+    for (i = 0; i < n; i++) {
+      guint64 src_val = src[i];
+      guint64 dst_val = dst[i];
+      guint64 src_comp[3];
+      guint64 dst_comp[3];
+      guint64 src_alpha;
+      guint64 src_alpha_inv;
+      guint64 alpha_factor;
+      guint64 dst_alpha;
+
+      src_comp[0] = (src_val & comp_mask_0) >> 48;
+      src_comp[1] = (src_val & comp_mask_1) >> 32;
+      src_comp[2] = (src_val & comp_mask_2) >> 16;
+
+      dst_comp[0] = (dst_val & comp_mask_0) >> 48;
+      dst_comp[1] = (dst_val & comp_mask_1) >> 32;
+      dst_comp[2] = (dst_val & comp_mask_2) >> 16;
+
+      /* calc source alpha as alpha_s = alpha_s * alpha / 255 */
+      src_alpha = src_val & comp_mask_alpha;
+      src_alpha *= p1;
+      src_alpha /= G_MAXUINT16;
+      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+      src_alpha_inv = G_MAXUINT16 - src_alpha;
+
+      for (k = 0; k < G_N_ELEMENTS (src_comp); k++)
+        src_comp[k] *= src_alpha;
+
+      /* calc destination alpha as alpha_factor = (255-alpha_s) * alpha_factor / factor */
+      alpha_factor = dst_val & comp_mask_alpha;
+      alpha_factor *= src_alpha_inv;
+      alpha_factor /= G_MAXUINT16;
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++)
+        dst_comp[k] *= alpha_factor;
+
+      /* calc final pixel as pix_d = pix_s*alpha_s + pix_d*alpha_factor*(255-alpha_s)/255 */
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++)
+        dst_comp[k] += src_comp[k];
+
+      /* calc the alpha factor alpha_factor = alpha_s + alpha_factor * (255-alpha_s)/255 */
+      alpha_factor += src_alpha;
+      alpha_factor = CLAMP (alpha_factor, 0, G_MAXUINT16);
+
+      /* now normalize the pix_d by the final alpha to make it associative */
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++) {
+        if (alpha_factor > 0)
+          dst_comp[k] /= alpha_factor;
+        dst_comp[k] = CLAMP (dst_comp[k], 0, G_MAXUINT16);
+      }
+
+      /* calc the final global alpha_d = alpha_d + (alpha_s * (alpha / 255)) */
+      dst_alpha = dst_val & comp_mask_alpha;
+      dst_alpha += src_alpha;
+      dst_alpha = CLAMP (dst_alpha, 0, G_MAXUINT16);
+
+      dst_val = (dst_comp[0] << 48) | (dst_comp[1] << 32) | (dst_comp[2] << 16)
+          | dst_alpha;
+      dst[i] = dst_val;
+    }
+  }
+}
+#else /* if G_BYTE_ORDER == G_LITTLE_ENDIAN */
+static void
+compositor_blend_bgra64 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  gint i, j, k;
+  const guint64 comp_mask_0 = 0x000000000000ffff;
+  const guint64 comp_mask_1 = 0x00000000ffff0000;
+  const guint64 comp_mask_2 = 0x0000ffff00000000;
+  const guint64 comp_mask_alpha = 0xffff000000000000;
+
+  for (j = 0; j < m; j++) {
+    guint64 *dst;
+    guint64 *src;
+
+    dst = (guint64 *) (d1 + (d1_stride * j));
+    src = (guint64 *) (s1 + (s1_stride * j));
+
+    for (i = 0; i < n; i++) {
+      guint64 src_val = src[i];
+      guint64 dst_val = dst[i];
+      guint64 src_comp[3];
+      guint64 dst_comp[3];
+      guint64 src_alpha;
+      guint64 src_alpha_inv;
+
+      src_comp[0] = src_val & comp_mask_0;
+      src_comp[1] = (src_val & comp_mask_1) >> 16;
+      src_comp[2] = (src_val & comp_mask_2) >> 32;
+
+      dst_comp[0] = dst_val & comp_mask_0;
+      dst_comp[1] = (dst_val & comp_mask_1) >> 16;
+      dst_comp[2] = (dst_val & comp_mask_2) >> 32;
+
+      src_alpha = (src_val & comp_mask_alpha) >> 48;
+      src_alpha *= p1;
+      src_alpha /= G_MAXUINT16;
+      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+      src_alpha_inv = G_MAXUINT16 - src_alpha;
+
+      for (k = 0; k < G_N_ELEMENTS (src_comp); k++) {
+        src_comp[k] *= src_alpha;
+        dst_comp[k] *= src_alpha_inv;
+        dst_comp[k] += src_comp[k];
+        dst_comp[k] /= G_MAXUINT16;
+
+        dst_comp[k] = CLAMP (dst_comp[k], 0, G_MAXUINT16);
+      }
+
+      dst_val = (dst_comp[0]) | (dst_comp[1] << 16) | (dst_comp[2] << 32)
+          | comp_mask_alpha;
+      dst[i] = dst_val;
+    }
+  }
+}
+
+static void
+compositor_source_bgra64 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  gint i, j;
+  const guint64 comp_mask_non_alpha = 0x0000ffffffffffff;
+  const guint64 comp_mask_alpha = 0xffff000000000000;
+
+  for (j = 0; j < m; j++) {
+    guint64 *dst;
+    guint64 *src;
+
+    dst = (guint64 *) (d1 + (d1_stride * j));
+    src = (guint64 *) (s1 + (s1_stride * j));
+
+    for (i = 0; i < n; i++) {
+      guint64 src_val = src[i];
+      guint64 dst_val;
+      guint64 src_alpha;
+
+      src_alpha = (src_val & comp_mask_alpha) >> 48;
+      src_alpha *= p1;
+      src_alpha /= G_MAXUINT16;
+      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+      src_alpha <<= 48;
+
+      dst_val = (src_val & comp_mask_non_alpha) | src_alpha;
+      dst[i] = dst_val;
+    }
+  }
+}
+
+static void
+compositor_overlay_bgra64 (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  gint i, j, k;
+  const guint64 comp_mask_0 = 0x000000000000ffff;
+  const guint64 comp_mask_1 = 0x00000000ffff0000;
+  const guint64 comp_mask_2 = 0x0000ffff00000000;
+  const guint64 comp_mask_alpha = 0xffff000000000000;
+
+  for (j = 0; j < m; j++) {
+    guint64 *dst;
+    guint64 *src;
+
+    dst = (guint64 *) (d1 + (d1_stride * j));
+    src = (guint64 *) (s1 + (s1_stride * j));
+
+    for (i = 0; i < n; i++) {
+      guint64 src_val = src[i];
+      guint64 dst_val = dst[i];
+      guint64 src_comp[3];
+      guint64 dst_comp[3];
+      guint64 src_alpha;
+      guint64 src_alpha_inv;
+      guint64 dst_alpha;
+
+      src_comp[0] = src_val & comp_mask_0;
+      src_comp[1] = (src_val & comp_mask_1) >> 16;
+      src_comp[2] = (src_val & comp_mask_2) >> 32;
+
+      dst_comp[0] = dst_val & comp_mask_0;
+      dst_comp[1] = (dst_val & comp_mask_1) >> 16;
+      dst_comp[2] = (dst_val & comp_mask_2) >> 32;
+
+      /* calc source alpha as alpha_s = alpha_s * alpha / 255 */
+      src_alpha = (src_val & comp_mask_alpha) >> 48;
+      src_alpha *= p1;
+      src_alpha /= G_MAXUINT16;
+      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+      src_alpha_inv = G_MAXUINT16 - src_alpha;
+
+      for (k = 0; k < G_N_ELEMENTS (src_comp); k++)
+        src_comp[k] *= src_alpha;
+      /* calc destination alpha as alpha_d = (1.0 - alpha_s) * alpha_d / 1.0 */
+      dst_alpha = (dst_val & comp_mask_alpha) >> 48;
+      dst_alpha *= src_alpha_inv;
+      dst_alpha /= G_MAXUINT16;
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++)
+        dst_comp[k] *= dst_alpha;
+
+      /* calc final pixel as pix_d = pix_s*alpha_s + pix_d*alpha_d*(255-alpha_s)/255 */
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++)
+        dst_comp[k] += src_comp[k];
+
+      /* calc the final destination alpha_d = alpha_s + alpha_d * (255-alpha_s)/255 */
+      dst_alpha += src_alpha;
+      dst_alpha = CLAMP (dst_alpha, 0, G_MAXUINT16);
+
+      /* now normalize the pix_d by the final alpha to make it associative */
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++) {
+        if (dst_alpha > 0)
+          dst_comp[k] /= dst_alpha;
+        dst_comp[k] = CLAMP (dst_comp[k], 0, G_MAXUINT16);
+      }
+
+      dst_val = (dst_comp[0]) | (dst_comp[1] << 16) | (dst_comp[2] << 32)
+          | (dst_alpha << 48);
+      dst[i] = dst_val;
+    }
+  }
+}
+
+static void
+compositor_overlay_bgra64_addition (guint8 * ORC_RESTRICT d1, int d1_stride,
+    const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
+{
+  gint i, j, k;
+  const guint64 comp_mask_0 = 0x000000000000ffff;
+  const guint64 comp_mask_1 = 0x00000000ffff0000;
+  const guint64 comp_mask_2 = 0x0000ffff00000000;
+  const guint64 comp_mask_alpha = 0xffff000000000000;
+
+  for (j = 0; j < m; j++) {
+    guint64 *dst;
+    guint64 *src;
+
+    dst = (guint64 *) (d1 + (d1_stride * j));
+    src = (guint64 *) (s1 + (s1_stride * j));
+
+    for (i = 0; i < n; i++) {
+      guint64 src_val = src[i];
+      guint64 dst_val = dst[i];
+      guint64 src_comp[3];
+      guint64 dst_comp[3];
+      guint64 src_alpha;
+      guint64 src_alpha_inv;
+      guint64 alpha_factor;
+      guint64 dst_alpha;
+
+      src_comp[0] = src_val & comp_mask_0;
+      src_comp[1] = (src_val & comp_mask_1) >> 16;
+      src_comp[2] = (src_val & comp_mask_2) >> 32;
+
+      dst_comp[0] = dst_val & comp_mask_0;
+      dst_comp[1] = (dst_val & comp_mask_1) >> 16;
+      dst_comp[2] = (dst_val & comp_mask_2) >> 32;
+
+      /* calc source alpha as alpha_s = alpha_s * alpha / 255 */
+      src_alpha = (src_val & comp_mask_alpha) >> 48;
+      src_alpha *= p1;
+      src_alpha /= G_MAXUINT16;
+      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+      src_alpha_inv = G_MAXUINT16 - src_alpha;
+
+      for (k = 0; k < G_N_ELEMENTS (src_comp); k++)
+        src_comp[k] *= src_alpha;
+
+      /* calc destination alpha as alpha_factor = (255-alpha_s) * alpha_factor / factor */
+      alpha_factor = (dst_val & comp_mask_alpha) >> 48;
+      alpha_factor *= src_alpha_inv;
+      alpha_factor /= G_MAXUINT16;
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++)
+        dst_comp[k] *= alpha_factor;
+
+      /* calc final pixel as pix_d = pix_s*alpha_s + pix_d*alpha_factor*(255-alpha_s)/255 */
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++)
+        dst_comp[k] += src_comp[k];
+
+      /* calc the alpha factor alpha_factor = alpha_s + alpha_factor * (255-alpha_s)/255 */
+      alpha_factor += src_alpha;
+      alpha_factor = CLAMP (alpha_factor, 0, G_MAXUINT16);
+
+      /* now normalize the pix_d by the final alpha to make it associative */
+      for (k = 0; k < G_N_ELEMENTS (dst_comp); k++) {
+        if (alpha_factor > 0)
+          dst_comp[k] /= alpha_factor;
+        dst_comp[k] = CLAMP (dst_comp[k], 0, G_MAXUINT16);
+      }
+
+      /* calc the final global alpha_d = alpha_d + (alpha_s * (alpha / 255)) */
+      dst_alpha = (dst_val & comp_mask_alpha) >> 48;
+      dst_alpha += src_alpha;
+      dst_alpha = CLAMP (dst_alpha, 0, G_MAXUINT16);
+
+      dst_val = (dst_comp[0]) | (dst_comp[1] << 16) | (dst_comp[2] << 32)
+          | (dst_alpha << 48);
+      dst[i] = dst_val;
+    }
+  }
+}
+#endif /* if G_BYTE_ORDER == G_LITTLE_ENDIAN */
+
+/* for AYUV64, ARGB64 */
+#define BLEND_A64(name, method, LOOP) \
+static void \
+method##_ ##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
+    gdouble src_alpha, GstVideoFrame * destframe, gint dst_y_start, \
+    gint dst_y_end, GstCompositorBlendMode mode) \
+{ \
+  guint s_alpha; \
+  gint src_stride, dest_stride; \
+  gint dest_width, dest_height; \
+  guint8 *src, *dest; \
+  gint src_width, src_height; \
+  \
+  src_width = GST_VIDEO_FRAME_WIDTH (srcframe); \
+  src_height = GST_VIDEO_FRAME_HEIGHT (srcframe); \
+  src = GST_VIDEO_FRAME_PLANE_DATA (srcframe, 0); \
+  src_stride = GST_VIDEO_FRAME_COMP_STRIDE (srcframe, 0); \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (destframe, 0); \
+  dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 0); \
+  dest_width = GST_VIDEO_FRAME_COMP_WIDTH (destframe, 0); \
+  dest_height = GST_VIDEO_FRAME_COMP_HEIGHT (destframe, 0); \
+  \
+  s_alpha = CLAMP ((gint) (src_alpha * G_MAXUINT16), 0, G_MAXUINT16); \
+  \
+  /* If it's completely transparent... we just return */ \
+  if (G_UNLIKELY (s_alpha == 0)) \
+    return; \
+  \
+  if (dst_y_end > dest_height) { \
+    dst_y_end = dest_height; \
+  } \
+  /* adjust src pointers for negative sizes */ \
+  if (xpos < 0) { \
+    src += -xpos * 8; \
+    src_width -= -xpos; \
+    xpos = 0; \
+  } \
+  if (ypos < dst_y_start) { \
+    src += (dst_y_start - ypos) * src_stride; \
+    src_height -= dst_y_start - ypos; \
+    ypos = dst_y_start; \
+  } \
+  /* adjust width/height if the src is bigger than dest */ \
+  if (xpos + src_width > dest_width) { \
+    src_width = dest_width - xpos; \
+  } \
+  if (ypos + src_height > dst_y_end) { \
+    src_height = dst_y_end - ypos; \
+  } \
+  \
+  if (src_height > 0 && src_width > 0) { \
+    dest = dest + 8 * xpos + (ypos * dest_stride); \
+  \
+    LOOP (dest, src, src_height, src_width, src_stride, dest_stride, s_alpha, \
+        mode); \
+  } \
+}
+
+#define OVERLAY_A64_LOOP(name)  \
+static inline void \
+_overlay_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
+    gint src_width, gint src_stride, gint dest_stride, guint s_alpha, \
+    GstCompositorBlendMode mode) \
+{ \
+  s_alpha = MIN (G_MAXUINT16, s_alpha); \
+  switch (mode) { \
+    case COMPOSITOR_BLEND_MODE_SOURCE:\
+      if (s_alpha == G_MAXUINT16) { \
+        guint y; \
+        for (y = 0; y < src_height; y++) { \
+          memcpy (dest, src, 8 * src_width); \
+          dest += dest_stride; \
+          src += src_stride; \
+        } \
+      } else { \
+        compositor_source_##name (dest, dest_stride, src, src_stride, \
+          s_alpha, src_width, src_height); \
+      } \
+      break;\
+    case COMPOSITOR_BLEND_MODE_OVER:\
+      compositor_overlay_##name (dest, dest_stride, src, src_stride, \
+        s_alpha, src_width, src_height); \
+      break;\
+    case COMPOSITOR_BLEND_MODE_ADD:\
+      compositor_overlay_##name##_addition (dest, dest_stride, src, src_stride, \
+        s_alpha, src_width, src_height); \
+      break;\
+  }\
+}
+
+#define BLEND_A64_LOOP(name) \
+static inline void \
+_blend_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
+    gint src_width, gint src_stride, gint dest_stride, guint s_alpha, \
+    GstCompositorBlendMode mode) \
+{ \
+  s_alpha = MIN (G_MAXUINT16, s_alpha); \
+  switch (mode) { \
+    case COMPOSITOR_BLEND_MODE_SOURCE:\
+      if (s_alpha == G_MAXUINT16) { \
+        guint y; \
+        for (y = 0; y < src_height; y++) { \
+          memcpy (dest, src, 8 * src_width); \
+          dest += dest_stride; \
+          src += src_stride; \
+        } \
+      } else { \
+        compositor_source_##name (dest, dest_stride, src, src_stride, \
+          s_alpha, src_width, src_height); \
+      } \
+      break;\
+    case COMPOSITOR_BLEND_MODE_OVER:\
+    case COMPOSITOR_BLEND_MODE_ADD:\
+      /* both modes are the same for opaque background */ \
+      compositor_blend_##name (dest, dest_stride, src, src_stride, \
+        s_alpha, src_width, src_height); \
+      break;\
+  }\
+}
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+OVERLAY_A64_LOOP (argb64);
+BLEND_A64_LOOP (argb64);
+BLEND_A64 (argb64, blend, _blend_loop_argb64);
+BLEND_A64 (argb64, overlay, _overlay_loop_argb64);
+#else
+OVERLAY_A64_LOOP (bgra64);
+BLEND_A64_LOOP (bgra64);
+BLEND_A64 (argb64, blend, _blend_loop_bgra64);
+BLEND_A64 (argb64, overlay, _overlay_loop_bgra64);
+#endif
+
+#define A64_CHECKER_C(name, RGB, A, C1, C2, C3) \
+static void \
+fill_checker_##name##_c (GstVideoFrame * frame, guint y_start, guint y_end) \
+{ \
+  gint i, j; \
+  gint val; \
+  static const gint tab[] = { 20480, 40960, 20480, 40960 }; \
+  static const gint uv = 1 << 15; \
+  gint width, stride; \
+  guint8 *dest; \
+  \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0); \
+  width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0); \
+  stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
+  \
+  if (!RGB) { \
+    for (i = y_start; i < y_end; i++) { \
+      guint16 *data = (guint16 *) (dest + i * stride); \
+      for (j = 0; j < width; j++) { \
+        data[A] = 0xffff; \
+        data[C1] = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)]; \
+        data[C2] = uv; \
+        data[C3] = uv; \
+        data += 4; \
+      } \
+    } \
+  } else { \
+    for (i = y_start; i < y_end; i++) { \
+      guint16 *data = (guint16 *) (dest + i * stride); \
+      for (j = 0; j < width; j++) { \
+        val = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)]; \
+        data[A] = 0xffff; \
+        data[C1] = val; \
+        data[C2] = val; \
+        data[C3] = val; \
+        data += 4; \
+      } \
+    } \
+  } \
+}
+
+A64_CHECKER_C (argb64, TRUE, 0, 1, 2, 3);
+A64_CHECKER_C (ayuv64, FALSE, 0, 1, 2, 3);
+
+#define A64_COLOR(name, A, C1, C2, C3) \
+static void \
+fill_color_##name (GstVideoFrame * frame, guint y_start, guint y_end, gint c1, gint c2, gint c3) \
+{ \
+  gint i, j; \
+  gint stride; \
+  guint8 *dest; \
+  guint width; \
+  guint height; \
+  \
+  height = y_end - y_start; \
+  if (height <= 0) \
+    return; \
+  \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0); \
+  stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
+  width = GST_VIDEO_FRAME_WIDTH (frame); \
+  \
+  for (i = y_start; i < y_end; i++) { \
+    guint16 *data = (guint16 *) (dest + i * stride); \
+    for (j = 0; j < width; j++) { \
+      data[A] = 0xffff; \
+      data[C1] = c1; \
+      data[C2] = c2; \
+      data[C3] = c3; \
+      data += 4; \
+    } \
+  } \
+}
+
+A64_COLOR (argb64, 0, 1, 2, 3);
+
 /* NV12, NV21 */
 #define NV_YUV_BLEND(format_name,MEMCPY,BLENDLOOP) \
 inline static void \
@@ -1270,6 +1957,9 @@ BlendFunction gst_compositor_blend_y444_12le;
 BlendFunction gst_compositor_blend_y444_12be;
 BlendFunction gst_compositor_blend_y444_16le;
 BlendFunction gst_compositor_blend_y444_16be;
+BlendFunction gst_compositor_blend_argb64;
+BlendFunction gst_compositor_overlay_argb64;
+/* AYUV64 is equal to ARGB64 */
 
 FillCheckerFunction gst_compositor_fill_checker_argb;
 FillCheckerFunction gst_compositor_fill_checker_bgra;
@@ -1297,6 +1987,8 @@ FillCheckerFunction gst_compositor_fill_checker_i420_12le;
 FillCheckerFunction gst_compositor_fill_checker_i420_12be;
 FillCheckerFunction gst_compositor_fill_checker_y444_16le;
 FillCheckerFunction gst_compositor_fill_checker_y444_16be;
+FillCheckerFunction gst_compositor_fill_checker_argb64;
+FillCheckerFunction gst_compositor_fill_checker_ayuv64;
 
 FillColorFunction gst_compositor_fill_color_argb;
 FillColorFunction gst_compositor_fill_color_bgra;
@@ -1326,6 +2018,7 @@ FillColorFunction gst_compositor_fill_color_i420_12le;
 FillColorFunction gst_compositor_fill_color_i420_12be;
 FillColorFunction gst_compositor_fill_color_y444_16le;
 FillColorFunction gst_compositor_fill_color_y444_16be;
+FillColorFunction gst_compositor_fill_color_argb64;
 
 void
 gst_compositor_init_blend (void)
@@ -1360,6 +2053,8 @@ gst_compositor_init_blend (void)
   gst_compositor_blend_y444_12be = GST_DEBUG_FUNCPTR (blend_y444_12be);
   gst_compositor_blend_y444_16le = GST_DEBUG_FUNCPTR (blend_y444_16le);
   gst_compositor_blend_y444_16be = GST_DEBUG_FUNCPTR (blend_y444_16be);
+  gst_compositor_blend_argb64 = GST_DEBUG_FUNCPTR (blend_argb64);
+  gst_compositor_overlay_argb64 = GST_DEBUG_FUNCPTR (overlay_argb64);
 
   gst_compositor_fill_checker_argb = GST_DEBUG_FUNCPTR (fill_checker_argb_c);
   gst_compositor_fill_checker_bgra = GST_DEBUG_FUNCPTR (fill_checker_bgra_c);
@@ -1388,6 +2083,10 @@ gst_compositor_init_blend (void)
       GST_DEBUG_FUNCPTR (fill_checker_y444_16le);
   gst_compositor_fill_checker_y444_16be =
       GST_DEBUG_FUNCPTR (fill_checker_y444_16be);
+  gst_compositor_fill_checker_argb64 =
+      GST_DEBUG_FUNCPTR (fill_checker_argb64_c);
+  gst_compositor_fill_checker_ayuv64 =
+      GST_DEBUG_FUNCPTR (fill_checker_ayuv64_c);
 
   gst_compositor_fill_color_argb = GST_DEBUG_FUNCPTR (fill_color_argb);
   gst_compositor_fill_color_bgra = GST_DEBUG_FUNCPTR (fill_color_bgra);
@@ -1422,4 +2121,5 @@ gst_compositor_init_blend (void)
       GST_DEBUG_FUNCPTR (fill_color_y444_16le);
   gst_compositor_fill_color_y444_16be =
       GST_DEBUG_FUNCPTR (fill_color_y444_16be);
+  gst_compositor_fill_color_argb64 = GST_DEBUG_FUNCPTR (fill_color_argb64);
 }
