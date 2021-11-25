@@ -58,9 +58,12 @@ typedef enum
   STATE_CUSTOM,
 } TestState;
 
+struct test_webrtc;
+typedef void (*OnPadAdded) (struct test_webrtc * t, GstElement * element,
+    GstPad * pad, gpointer user_data);
+
 /* basic premise of this is that webrtc1 and webrtc2 are attempting to connect
  * to each other in various configurations */
-struct test_webrtc;
 struct test_webrtc
 {
   GList *harnesses;
@@ -125,10 +128,8 @@ struct test_webrtc
                                          gpointer user_data);
   gpointer data_channel_data;
   GDestroyNotify data_channel_notify;
-  void      (*on_pad_added)             (struct test_webrtc * t,
-                                         GstElement * element,
-                                         GstPad * pad,
-                                         gpointer user_data);
+
+  OnPadAdded on_pad_added;
   gpointer pad_added_data;
   GDestroyNotify pad_added_notify;
   void      (*bus_message)              (struct test_webrtc * t,
@@ -4223,22 +4224,34 @@ add_audio_test_src_harness (GstHarness * h, guint ssrc)
 #undef L16_CAPS
 }
 
+struct pad_added_harness_data
+{
+  GList *sink_harnesses;
+  OnPadAdded on_pad_added;
+  gpointer on_pad_added_data;
+};
+
 static void
 _pad_added_harness (struct test_webrtc *t, GstElement * element,
     GstPad * pad, gpointer user_data)
 {
+  struct pad_added_harness_data *data = user_data;
   GstHarness *h;
-  GList **sink_harness = user_data;
 
   if (GST_PAD_DIRECTION (pad) != GST_PAD_SRC)
     return;
 
+  GST_ERROR ("new pad %" GST_PTR_FORMAT, pad);
+
   h = gst_harness_new_with_element (element, NULL, GST_OBJECT_NAME (pad));
   t->harnesses = g_list_prepend (t->harnesses, h);
 
-  if (sink_harness) {
-    *sink_harness = g_list_prepend (*sink_harness, h);
+  if (data) {
+    data->sink_harnesses = g_list_prepend (data->sink_harnesses, h);
     g_cond_broadcast (&t->cond);
+
+    if (data->on_pad_added)
+      data->on_pad_added (t, element, pad, data->on_pad_added_data);
   }
 }
 
@@ -4274,7 +4287,7 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
   VAL_SDP_INIT (answer_non_reject, _count_non_rejected_media,
       GUINT_TO_POINTER (0), &count);
   GstHarness *h;
-  GList *sink_harnesses = NULL;
+  struct pad_added_harness_data pad_added_data = { NULL, };
   GstHarness *sink_harness = NULL;
   guint i;
   GstElement *rtpbin2;
@@ -4283,7 +4296,7 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
   t->on_pad_added = _pad_added_harness;
-  t->pad_added_data = &sink_harnesses;
+  t->pad_added_data = &pad_added_data;
 
   rtpbin2 = gst_bin_get_by_name (GST_BIN (t->webrtc2), "rtpbin");
   fail_unless (rtpbin2 != NULL);
@@ -4306,12 +4319,12 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
     gst_harness_push_from_src (h);
 
   g_mutex_lock (&t->lock);
-  while (sink_harnesses == NULL) {
+  while (pad_added_data.sink_harnesses == NULL) {
     gst_harness_push_from_src (h);
     g_cond_wait_until (&t->cond, &t->lock, g_get_monotonic_time () + 5000);
   }
-  fail_unless_equals_int (1, g_list_length (sink_harnesses));
-  sink_harness = (GstHarness *) sink_harnesses->data;
+  fail_unless_equals_int (1, g_list_length (pad_added_data.sink_harnesses));
+  sink_harness = (GstHarness *) pad_added_data.sink_harnesses->data;
   g_mutex_unlock (&t->lock);
   fail_unless (sink_harness->element == t->webrtc2);
 
@@ -4345,7 +4358,7 @@ GST_START_TEST (test_codec_preferences_negotiation_srcpad)
 
   test_webrtc_free (t);
 
-  g_list_free (sink_harnesses);
+  g_list_free (pad_added_data.sink_harnesses);
 }
 
 GST_END_TEST;
@@ -4574,6 +4587,50 @@ on_new_transceiver_set_rtx_fec (GstElement * webrtcbin, GObject * trans,
       "fec-percentage", 100, "do-nack", TRUE, NULL);
 }
 
+struct pad_properties
+{
+  const char *mid;
+  guint mlineindex;
+};
+
+struct new_pad_validate_properties
+{
+  guint n_props;
+  struct pad_properties *props;
+};
+
+static void
+on_pad_added_validate_props (struct test_webrtc *t, GstElement * element,
+    GstPad * pad, gpointer user_data)
+{
+  GstWebRTCRTPTransceiver *rtp_trans;
+  struct new_pad_validate_properties *pad_props = user_data;
+  char *trans_mid;
+  guint mlineindex;
+  int i;
+
+  g_object_get (pad, "transceiver", &rtp_trans, NULL);
+  fail_unless (rtp_trans);
+  g_object_get (rtp_trans, "mid", &trans_mid, "mlineindex", &mlineindex, NULL);
+  fail_unless (trans_mid != NULL);
+  fail_unless (mlineindex != -1);
+  for (i = 0; i < pad_props->n_props; i++) {
+    struct pad_properties *expected = &pad_props->props[i];
+
+    if (g_strcmp0 (expected->mid, trans_mid) == 0) {
+      if (expected->mlineindex != -1) {
+        fail_unless_equals_int (mlineindex, expected->mlineindex);
+        break;
+      }
+    }
+  }
+  if (i == pad_props->n_props)
+    fail ("could not find a matching expected output pad for mid %s and mline %u", trans_mid, mlineindex);
+
+  g_clear_pointer (&trans_mid, g_free);
+  gst_clear_object (&rtp_trans);
+}
+
 GST_START_TEST (test_max_bundle_fec)
 {
   struct test_webrtc *t = test_webrtc_new ();
@@ -4600,7 +4657,13 @@ GST_START_TEST (test_max_bundle_fec)
   VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
       &answer_setup);
   GstHarness *src0, *src1;
-  GList *sink_harnesses = NULL;
+  struct pad_properties pad_prop[] = {
+    {"audio0", 0},
+    {"audio1", 1},
+  };
+  struct new_pad_validate_properties validate_pad = { 2, pad_prop };
+  struct pad_added_harness_data pad_added_data =
+      { NULL, on_pad_added_validate_props, &validate_pad };
   guint i;
   GstElement *rtpbin2;
   GstBuffer *buf;
@@ -4610,7 +4673,7 @@ GST_START_TEST (test_max_bundle_fec)
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
   t->on_pad_added = _pad_added_harness;
-  t->pad_added_data = &sink_harnesses;
+  t->pad_added_data = &pad_added_data;
 
   gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
       "max-bundle");
@@ -4654,6 +4717,7 @@ GST_START_TEST (test_max_bundle_fec)
    */
   g_mutex_lock (&t->lock);
   while (ssrcs_received->len < G_N_ELEMENTS (ssrcs)) {
+    GList *sink_harnesses = pad_added_data.sink_harnesses;
     GList *l;
     guint i;
 
@@ -4665,36 +4729,18 @@ GST_START_TEST (test_max_bundle_fec)
         continue;
     }
 
+    g_mutex_unlock (&t->lock);
+
     for (l = sink_harnesses; l; l = l->next) {
       GstHarness *sink_harness = (GstHarness *) l->data;
       GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
-      GstWebRTCRTPTransceiver *rtp_trans;
-      char *trans_mid;
-      GstPad *srcpad;
       guint ssrc;
-      guint mlineindex;
-      char *expected_mid;
 
       fail_unless (sink_harness->element == t->webrtc2);
 
       buf = gst_harness_try_pull (sink_harness);
       if (!buf)
         continue;
-
-      /* ensure that the resulting pad has the correct mid set */
-      srcpad = gst_pad_get_peer (sink_harness->sinkpad);
-      fail_unless (srcpad != NULL);
-      g_object_get (srcpad, "transceiver", &rtp_trans, NULL);
-      gst_clear_object (&srcpad);
-      fail_unless (rtp_trans);
-      g_object_get (rtp_trans, "mid", &trans_mid, "mlineindex", &mlineindex,
-          NULL);
-      gst_clear_object (&rtp_trans);
-      expected_mid = g_strdup_printf ("audio%u", mlineindex);
-      fail_unless (trans_mid != NULL);
-      fail_unless_equals_string (trans_mid, expected_mid);
-      g_clear_pointer (&trans_mid, g_free);
-      g_clear_pointer (&expected_mid, g_free);
 
       fail_unless (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
 
@@ -4711,6 +4757,7 @@ GST_START_TEST (test_max_bundle_fec)
 
       gst_buffer_unref (buf);
     }
+    g_mutex_lock (&t->lock);
   }
   g_mutex_unlock (&t->lock);
 
@@ -4720,7 +4767,7 @@ GST_START_TEST (test_max_bundle_fec)
       "webrtc2-fec-final");
 
   test_webrtc_free (t);
-  g_list_free (sink_harnesses);
+  g_list_free (pad_added_data.sink_harnesses);
 
   g_array_unref (ssrcs_received);
 }
@@ -4979,7 +5026,6 @@ GST_START_TEST (test_simulcast)
   VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
       &answer_setup);
   GstHarness *h;
-  GList *sink_harnesses = NULL;
   GObject *trans;
   guint i;
   GstElement *rtpbin2;
@@ -4991,11 +5037,15 @@ GST_START_TEST (test_simulcast)
   guint ssrcs[] = { 123456789, 987654321 };
   GArray *ssrcs_received;
   GstCaps *caps;
+  struct pad_properties pad_prop = { mid, 0 };
+  struct new_pad_validate_properties validate_pad = { 1, &pad_prop };
+  struct pad_added_harness_data pad_added_data =
+      { NULL, on_pad_added_validate_props, &validate_pad };
 
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
   t->on_pad_added = _pad_added_harness;
-  t->pad_added_data = &sink_harnesses;
+  t->pad_added_data = &pad_added_data;
 
   gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
       "max-bundle");
@@ -5042,22 +5092,22 @@ GST_START_TEST (test_simulcast)
    */
   g_mutex_lock (&t->lock);
   while (ssrcs_received->len < G_N_ELEMENTS (ssrcs)) {
+    GList *sink_harnesses = pad_added_data.sink_harnesses;
     GList *l;
     guint i;
 
     gst_harness_push_from_src (h);
-    if (g_list_length (sink_harnesses) < 2) {
+    if (g_list_length (pad_added_data.sink_harnesses) < 2) {
       g_cond_wait_until (&t->cond, &t->lock, g_get_monotonic_time () + 5000);
-      if (g_list_length (sink_harnesses) < 2)
+      if (g_list_length (pad_added_data.sink_harnesses) < 2)
         continue;
     }
+
+    g_mutex_unlock (&t->lock);
 
     for (l = sink_harnesses; l; l = l->next) {
       GstHarness *sink_harness = (GstHarness *) l->data;
       GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
-      GstWebRTCRTPTransceiver *rtp_trans;
-      char *trans_mid;
-      GstPad *srcpad;
       guint ssrc;
 
       fail_unless (sink_harness->element == t->webrtc2);
@@ -5066,21 +5116,10 @@ GST_START_TEST (test_simulcast)
       if (!buf)
         continue;
 
-      /* ensure that the resulting pad has the correct mid set */
-      srcpad = gst_pad_get_peer (sink_harness->sinkpad);
-      fail_unless (srcpad != NULL);
-      g_object_get (srcpad, "transceiver", &rtp_trans, NULL);
-      gst_clear_object (&srcpad);
-      fail_unless (rtp_trans);
-      g_object_get (rtp_trans, "mid", &trans_mid, NULL);
-      gst_clear_object (&rtp_trans);
-      fail_unless (trans_mid != NULL);
-      fail_unless_equals_string (trans_mid, mid);
-      g_clear_pointer (&trans_mid, g_free);
-
       fail_unless (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
 
       ssrc = gst_rtp_buffer_get_ssrc (&rtp);
+      GST_ERROR ("received ssrc %u", ssrc);
       for (i = 0; i < ssrcs_received->len; i++) {
         if (g_array_index (ssrcs_received, guint, i) == ssrc)
           break;
@@ -5093,11 +5132,12 @@ GST_START_TEST (test_simulcast)
 
       gst_buffer_unref (buf);
     }
+    g_mutex_lock (&t->lock);
   }
   g_mutex_unlock (&t->lock);
 
   test_webrtc_free (t);
-  g_list_free (sink_harnesses);
+  g_list_free (pad_added_data.sink_harnesses);
 
   g_array_unref (ssrcs_received);
 }
