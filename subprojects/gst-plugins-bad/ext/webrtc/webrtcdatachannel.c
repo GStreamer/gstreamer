@@ -50,6 +50,9 @@ G_DEFINE_TYPE_WITH_CODE (WebRTCDataChannel, webrtc_data_channel,
     GST_DEBUG_CATEGORY_INIT (webrtc_data_channel_debug, "webrtcdatachannel", 0,
         "webrtcdatachannel"););
 
+G_LOCK_DEFINE_STATIC (outstanding_channels_lock);
+static GList *outstanding_channels;
+
 typedef enum
 {
   DATA_CHANNEL_PPID_WEBRTC_CONTROL = 50,
@@ -877,13 +880,37 @@ _on_sctp_notify_state_unlocked (GObject * sctp_transport,
   }
 }
 
+static WebRTCDataChannel *
+ensure_channel_alive (WebRTCDataChannel * channel)
+{
+  /* ghetto impl of, does the channel still exist?.
+   * Needed because g_signal_handler_disconnect*() will not disconnect any
+   * running functions and _finalize() implementation can complete and
+   * invalidate channel */
+  G_LOCK (outstanding_channels_lock);
+  if (g_list_find (outstanding_channels, channel)) {
+    g_object_ref (channel);
+  } else {
+    G_UNLOCK (outstanding_channels_lock);
+    return NULL;
+  }
+  G_UNLOCK (outstanding_channels_lock);
+
+  return channel;
+}
+
 static void
 _on_sctp_notify_state (GObject * sctp_transport, GParamSpec * pspec,
     WebRTCDataChannel * channel)
 {
+  if (!(channel = ensure_channel_alive (channel)))
+    return;
+
   GST_WEBRTC_DATA_CHANNEL_LOCK (channel);
   _on_sctp_notify_state_unlocked (sctp_transport, channel);
   GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
+
+  g_object_unref (channel);
 }
 
 static void
@@ -964,6 +991,16 @@ gst_webrtc_data_channel_constructed (GObject * object)
 }
 
 static void
+gst_webrtc_data_channel_dispose (GObject * object)
+{
+  G_LOCK (outstanding_channels_lock);
+  outstanding_channels = g_list_remove (outstanding_channels, object);
+  G_UNLOCK (outstanding_channels_lock);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
 gst_webrtc_data_channel_finalize (GObject * object)
 {
   WebRTCDataChannel *channel = WEBRTC_DATA_CHANNEL (object);
@@ -993,6 +1030,7 @@ webrtc_data_channel_class_init (WebRTCDataChannelClass * klass)
       (GstWebRTCDataChannelClass *) klass;
 
   gobject_class->constructed = gst_webrtc_data_channel_constructed;
+  gobject_class->dispose = gst_webrtc_data_channel_dispose;
   gobject_class->finalize = gst_webrtc_data_channel_finalize;
 
   channel_class->send_data = webrtc_data_channel_send_data;
@@ -1003,6 +1041,9 @@ webrtc_data_channel_class_init (WebRTCDataChannelClass * klass)
 static void
 webrtc_data_channel_init (WebRTCDataChannel * channel)
 {
+  G_LOCK (outstanding_channels_lock);
+  outstanding_channels = g_list_prepend (outstanding_channels, channel);
+  G_UNLOCK (outstanding_channels_lock);
 }
 
 static void
@@ -1015,6 +1056,7 @@ _data_channel_set_sctp_transport (WebRTCDataChannel * channel,
   GST_WEBRTC_DATA_CHANNEL_LOCK (channel);
   if (channel->sctp_transport)
     g_signal_handlers_disconnect_by_data (channel->sctp_transport, channel);
+  GST_TRACE ("%p set sctp %p", channel, sctp);
 
   gst_object_replace ((GstObject **) & channel->sctp_transport,
       GST_OBJECT (sctp));

@@ -179,6 +179,8 @@ gst_webrtc_data_channel_finalize (GObject * object)
   g_free (channel->protocol);
   channel->protocol = NULL;
 
+  g_mutex_clear (&channel->lock);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
