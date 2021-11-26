@@ -166,7 +166,13 @@ struct _GstBaseSinkClass {
   /* start or stop a pulling thread */
   gboolean      (*activate_pull)(GstBaseSink *sink, gboolean active);
 
-  /* get the start and end times for syncing on this buffer */
+  /**
+   * GstBaseSink::get_times:
+   * @start: (out): the start #GstClockTime
+   * @end: (out): the end #GstClockTime
+   *
+   * Get the start and end times for syncing on this buffer.
+   */
   void          (*get_times)    (GstBaseSink *sink, GstBuffer *buffer,
                                  GstClockTime *start, GstClockTime *end);
 
