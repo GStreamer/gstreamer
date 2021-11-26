@@ -2159,7 +2159,6 @@ struct test_data_channel
   GObject *dc2;
   gint n_open;
   gint n_closed;
-  gint n_destroyed;
 };
 
 static void
@@ -2168,7 +2167,7 @@ have_data_channel_mark_open (struct test_webrtc *t,
 {
   struct test_data_channel *tdc = t->data_channel_data;
 
-  tdc->dc2 = our;
+  tdc->dc2 = g_object_ref (our);
   if (g_atomic_int_add (&tdc->n_open, 1) == 1) {
     test_webrtc_signal_state_unlocked (t, STATE_CUSTOM);
   }
@@ -2213,28 +2212,11 @@ on_data_channel_close (GObject * channel, GParamSpec * pspec,
   }
 }
 
-static void
-on_data_channel_destroyed (gpointer data, GObject * where_the_object_was)
-{
-  struct test_webrtc *t = data;
-  struct test_data_channel *tdc = t->data_channel_data;
-
-  if (where_the_object_was == tdc->dc1) {
-    tdc->dc1 = NULL;
-  } else if (where_the_object_was == tdc->dc2) {
-    tdc->dc2 = NULL;
-  }
-
-  if (g_atomic_int_add (&tdc->n_destroyed, 1) == 1) {
-    test_webrtc_signal_state (t, STATE_CUSTOM);
-  }
-}
-
 GST_START_TEST (test_data_channel_close)
 {
 #define NUM_CHANNELS 3
   struct test_webrtc *t = test_webrtc_new ();
-  struct test_data_channel tdc = { NULL, NULL, 0, 0, 0 };
+  struct test_data_channel tdc = { NULL, };
   guint channel_id[NUM_CHANNELS] = { 0, 1, 2 };
   gulong sigid = 0;
   int i;
@@ -2255,15 +2237,14 @@ GST_START_TEST (test_data_channel_close)
    * stream id of a previously closed data channel and that we have the same
    * behaviour no matter if we create the channel in READY or PLAYING state */
   for (i = 0; i < NUM_CHANNELS; i++) {
+    GWeakRef dc1_ref, dc2_ref;
     tdc.n_open = 0;
     tdc.n_closed = 0;
-    tdc.n_destroyed = 0;
 
     g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
         &tdc.dc1);
     g_assert_nonnull (tdc.dc1);
-    g_object_unref (tdc.dc1);   /* webrtcbin should still hold a ref */
-    g_object_weak_ref (tdc.dc1, on_data_channel_destroyed, t);
+    g_weak_ref_init (&dc1_ref, tdc.dc1);
     g_signal_connect (tdc.dc1, "on-error",
         G_CALLBACK (on_channel_error_not_reached), NULL);
     sigid = g_signal_connect (tdc.dc1, "notify::ready-state",
@@ -2276,28 +2257,20 @@ GST_START_TEST (test_data_channel_close)
               GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
       test_validate_sdp_full (t, &offer, &offer, 1 << STATE_CUSTOM, FALSE);
-    } else {
-      /* FIXME: Creating a data channel may result in "on-open" being sent
-       * before we even had a chance to register the signal. For this test we
-       * want to make sure that the channel is actually open before we try to
-       * close it. So if we didn't receive the signal we fall back to a 1s
-       * timeout where we explicitly check if both channels are open. */
-      gint64 timeout = g_get_monotonic_time () + 1 * G_TIME_SPAN_SECOND;
-      g_mutex_lock (&t->lock);
-      while (((1 << t->state) & STATE_CUSTOM) == 0) {
-        if (!g_cond_wait_until (&t->cond, &t->lock, timeout)) {
-          g_assert (is_data_channel_open (tdc.dc1)
-              && is_data_channel_open (tdc.dc2));
-          break;
-        }
-      }
-      g_mutex_unlock (&t->lock);
     }
+    /* FIXME: Creating a data channel may result in "on-open" being sent
+     * before we even had a chance to register the signal. For this test we
+     * want to make sure that the channel is actually open before we try to
+     * close it. So if we didn't receive the signal we fall back to a 1s
+     * timeout where we explicitly check if both channels are open. */
+    while (!is_data_channel_open (tdc.dc1)
+        || !is_data_channel_open (tdc.dc2))
+      g_usleep (100 * 1000);
 
     g_object_get (tdc.dc1, "id", &channel_id[i], NULL);
 
     g_signal_handler_disconnect (tdc.dc1, sigid);
-    g_object_weak_ref (tdc.dc2, on_data_channel_destroyed, t);
+    g_weak_ref_init (&dc2_ref, tdc.dc2);
     g_signal_connect (tdc.dc1, "notify::ready-state",
         G_CALLBACK (on_data_channel_close), t);
     g_signal_connect (tdc.dc2, "notify::ready-state",
@@ -2311,13 +2284,23 @@ GST_START_TEST (test_data_channel_close)
     t->on_negotiation_needed = _negotiation_not_reached;
     g_signal_emit_by_name (tdc.dc1, "close");
 
-    test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+    /* XXX: try to do something better here */
+    while (g_atomic_int_get (&tdc.n_closed) != 2)
+      g_usleep (100 * 1000);
 
-    assert_equals_int (g_atomic_int_get (&tdc.n_closed), 2);
-    assert_equals_pointer (tdc.dc1, NULL);
-    assert_equals_pointer (tdc.dc2, NULL);
+    g_clear_object (&tdc.dc1);
+    g_clear_object (&tdc.dc2);
+
+    /* XXX: try to do something better here */
+    while (g_weak_ref_get (&dc1_ref) != NULL
+        || g_weak_ref_get (&dc2_ref) != NULL)
+      g_usleep (100 * 1000);
+
+    g_weak_ref_clear (&dc1_ref);
+    g_weak_ref_clear (&dc2_ref);
 
     test_webrtc_signal_state (t, STATE_NEW);
+    test_webrtc_wait_for_state_mask (t, 1 << STATE_NEW);
   }
 
   /* verify the same stream id has been reused for each data channel */
