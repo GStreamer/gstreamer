@@ -21,6 +21,7 @@
 #define __TRANSPORT_STREAM_H__
 
 #include "fwd.h"
+#include <gst/rtp/rtp.h>
 #include <gst/webrtc/rtptransceiver.h>
 
 G_BEGIN_DECLS
@@ -65,8 +66,14 @@ struct _TransportStream
   GPtrArray                *ssrcmap;                /* array of SsrcMapItem's */
   gboolean                  output_connected;       /* whether receive bin is connected to rtpbin */
 
+  guint                     rtphdrext_id_stream_id;
+  guint                     rtphdrext_id_repaired_stream_id;
   GstElement               *rtxsend;
+  GstRTPHeaderExtension    *rtxsend_stream_id;
+  GstRTPHeaderExtension    *rtxsend_repaired_stream_id;
   GstElement               *rtxreceive;
+  GstRTPHeaderExtension    *rtxreceive_stream_id;
+  GstRTPHeaderExtension    *rtxreceive_repaired_stream_id;
 
   GstElement               *reddec;
   GList                    *fecdecs;

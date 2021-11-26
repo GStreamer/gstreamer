@@ -192,6 +192,11 @@ transport_stream_finalize (GObject * object)
   g_array_free (stream->ptmap, TRUE);
   g_ptr_array_free (stream->ssrcmap, TRUE);
 
+  gst_clear_object (&stream->rtxsend_stream_id);
+  gst_clear_object (&stream->rtxsend_repaired_stream_id);
+  gst_clear_object (&stream->rtxreceive_stream_id);
+  gst_clear_object (&stream->rtxreceive_repaired_stream_id);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -365,6 +370,9 @@ transport_stream_init (TransportStream * stream)
   g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
   stream->ssrcmap = g_ptr_array_new_with_free_func (
       (GDestroyNotify) ssrcmap_item_free);
+
+  stream->rtphdrext_id_stream_id = -1;
+  stream->rtphdrext_id_repaired_stream_id = -1;
 }
 
 TransportStream *

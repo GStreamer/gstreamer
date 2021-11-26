@@ -3052,19 +3052,20 @@ _gather_extmap (GstCaps * caps, GError ** error)
   return edata.extmap;
 }
 
-struct has_hdrext
+struct hdrext_id
 {
-  const char *rtphdrext;
-  gboolean result;
+  const char *rtphdrext_uri;
+  guint ext_id;
 };
 
 static gboolean
-structure_value_has_rtphdrext (GQuark field_id, const GValue * value,
+structure_value_get_rtphdrext_id (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
-  struct has_hdrext *rtphdrext = user_data;
+  struct hdrext_id *rtphdrext = user_data;
+  const char *field_name = g_quark_to_string (field_id);
 
-  if (g_str_has_prefix (g_quark_to_string (field_id), "extmap-")) {
+  if (g_str_has_prefix (field_name, "extmap-")) {
     const char *val = NULL;
 
     if (GST_VALUE_HOLDS_ARRAY (value) && gst_value_array_get_size (value) >= 2) {
@@ -3074,8 +3075,12 @@ structure_value_has_rtphdrext (GQuark field_id, const GValue * value,
       val = g_value_get_string (value);
     }
 
-    if (g_strcmp0 (val, rtphdrext->rtphdrext) == 0) {
-      rtphdrext->result = TRUE;
+    if (g_strcmp0 (val, rtphdrext->rtphdrext_uri) == 0) {
+      gint64 id = g_ascii_strtoll (&field_name[strlen ("extmap-")], NULL, 10);
+
+      if (id > 0 && id < 256)
+        rtphdrext->ext_id = id;
+
       return FALSE;
     }
   }
@@ -3083,16 +3088,32 @@ structure_value_has_rtphdrext (GQuark field_id, const GValue * value,
   return TRUE;
 }
 
+// Returns -1 when not found
+static guint
+caps_get_rtp_header_extension_id (const GstCaps * caps,
+    const char *rtphdrext_uri)
+{
+  guint i, n;
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    const GstStructure *s = gst_caps_get_structure (caps, i);
+    struct hdrext_id data = { rtphdrext_uri, -1 };
+
+    gst_structure_foreach (s, structure_value_get_rtphdrext_id, &data);
+
+    if (data.ext_id != -1)
+      return data.ext_id;
+  }
+
+  return -1;
+}
+
 static gboolean
 caps_contain_rtp_header_extension (const GstCaps * caps,
-    const char *rtphdrextname)
+    const char *rtphdrext_uri)
 {
-  const GstStructure *s = gst_caps_get_structure (caps, 0);
-  struct has_hdrext data = { rtphdrextname, FALSE };
-
-  gst_structure_foreach (s, structure_value_has_rtphdrext, &data);
-
-  return data.result;
+  return caps_get_rtp_header_extension_id (caps, rtphdrext_uri) != -1;
 }
 
 static gboolean
@@ -5108,6 +5129,109 @@ _filter_sdp_fields (GQuark field_id, const GValue * value,
   return TRUE;
 }
 
+static guint
+transport_stream_ptmap_get_rtp_header_extension_id (TransportStream * stream,
+    const char *rtphdrext_uri)
+{
+  guint i;
+
+  for (i = 0; i < stream->ptmap->len; i++) {
+    PtMapItem *item = &g_array_index (stream->ptmap, PtMapItem, i);
+    guint id;
+
+    id = caps_get_rtp_header_extension_id (item->caps, rtphdrext_uri);
+    if (id != -1)
+      return id;
+  }
+
+  return -1;
+}
+
+static void
+ensure_rtx_hdr_ext (TransportStream * stream)
+{
+  stream->rtphdrext_id_stream_id =
+      transport_stream_ptmap_get_rtp_header_extension_id (stream,
+      RTPHDREXT_STREAM_ID);
+  stream->rtphdrext_id_repaired_stream_id =
+      transport_stream_ptmap_get_rtp_header_extension_id (stream,
+      RTPHDREXT_REPAIRED_STREAM_ID);
+
+  /* TODO: removing header extensions usage from rtx on renegotiation */
+
+  if (stream->rtxsend) {
+    if (stream->rtphdrext_id_stream_id != -1 && !stream->rtxsend_stream_id) {
+      stream->rtxsend_stream_id =
+          gst_rtp_header_extension_create_from_uri (RTPHDREXT_STREAM_ID);
+      if (!stream->rtxsend_stream_id)
+        g_warn_if_reached ();
+      gst_rtp_header_extension_set_id (stream->rtxsend_stream_id,
+          stream->rtphdrext_id_stream_id);
+
+      GST_DEBUG_OBJECT (stream, "adding rtp header extension %" GST_PTR_FORMAT
+          " with id %u to %" GST_PTR_FORMAT, stream->rtxsend_stream_id,
+          stream->rtphdrext_id_stream_id, stream->rtxsend);
+
+      g_signal_emit_by_name (stream->rtxsend, "add-extension",
+          stream->rtxsend_stream_id);
+    }
+
+    if (stream->rtphdrext_id_repaired_stream_id != -1
+        && !stream->rtxsend_repaired_stream_id) {
+      stream->rtxsend_repaired_stream_id =
+          gst_rtp_header_extension_create_from_uri
+          (RTPHDREXT_REPAIRED_STREAM_ID);
+      if (!stream->rtxsend_repaired_stream_id)
+        g_warn_if_reached ();
+      gst_rtp_header_extension_set_id (stream->rtxsend_repaired_stream_id,
+          stream->rtphdrext_id_repaired_stream_id);
+
+      GST_DEBUG_OBJECT (stream, "adding rtp header extension %" GST_PTR_FORMAT
+          " with id %u to %" GST_PTR_FORMAT, stream->rtxsend_repaired_stream_id,
+          stream->rtphdrext_id_repaired_stream_id, stream->rtxsend);
+
+      g_signal_emit_by_name (stream->rtxsend, "add-extension",
+          stream->rtxsend_repaired_stream_id);
+    }
+  }
+
+  if (stream->rtxreceive) {
+    if (stream->rtphdrext_id_stream_id != -1 && !stream->rtxreceive_stream_id) {
+      stream->rtxreceive_stream_id =
+          gst_rtp_header_extension_create_from_uri (RTPHDREXT_STREAM_ID);
+      if (!stream->rtxreceive_stream_id)
+        g_warn_if_reached ();
+      gst_rtp_header_extension_set_id (stream->rtxreceive_stream_id,
+          stream->rtphdrext_id_stream_id);
+
+      GST_DEBUG_OBJECT (stream, "adding rtp header extension %" GST_PTR_FORMAT
+          " with id %u to %" GST_PTR_FORMAT, stream->rtxsend_stream_id,
+          stream->rtphdrext_id_stream_id, stream->rtxreceive);
+
+      g_signal_emit_by_name (stream->rtxreceive, "add-extension",
+          stream->rtxreceive_stream_id);
+    }
+
+    if (stream->rtphdrext_id_repaired_stream_id != -1
+        && !stream->rtxreceive_repaired_stream_id) {
+      stream->rtxreceive_repaired_stream_id =
+          gst_rtp_header_extension_create_from_uri
+          (RTPHDREXT_REPAIRED_STREAM_ID);
+      if (!stream->rtxreceive_repaired_stream_id)
+        g_warn_if_reached ();
+      gst_rtp_header_extension_set_id (stream->rtxreceive_repaired_stream_id,
+          stream->rtphdrext_id_repaired_stream_id);
+
+      GST_DEBUG_OBJECT (stream, "adding rtp header extension %" GST_PTR_FORMAT
+          " with id %u to %" GST_PTR_FORMAT, stream->rtxsend_repaired_stream_id,
+          stream->rtphdrext_id_repaired_stream_id, stream->rtxreceive);
+
+      g_signal_emit_by_name (stream->rtxreceive, "add-extension",
+          stream->rtxreceive_repaired_stream_id);
+    }
+  }
+}
+
 static void
 _update_transport_ptmap_from_media (GstWebRTCBin * webrtc,
     TransportStream * stream, const GstSDPMessage * sdp, guint media_idx)
@@ -5636,6 +5760,7 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
        * parameters aren't set up properly for the bundled streams */
       _update_transport_ptmap_from_media (webrtc, bundle_stream, sdp->sdp, i);
     }
+    ensure_rtx_hdr_ext (bundle_stream);
 
     _connect_rtpfunnel (webrtc, bundle_idx);
   }
@@ -5664,6 +5789,7 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
        * bundling we need to do it now */
       g_array_set_size (stream->ptmap, 0);
       _update_transport_ptmap_from_media (webrtc, stream, sdp->sdp, i);
+      ensure_rtx_hdr_ext (stream);
     }
 
     if (trans)
@@ -6895,6 +7021,7 @@ on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
 
   if (!gst_bin_add (GST_BIN (ret), rtx))
     g_warn_if_reached ();
+  ensure_rtx_hdr_ext (stream);
 
   stream->rtxsend = gst_object_ref (rtx);
   _set_internal_rtpbin_element_props_from_stream (webrtc, stream);
@@ -6954,6 +7081,8 @@ on_rtpbin_request_aux_receiver (GstElement * rtpbin, guint session_id,
   gst_object_ref (stream->rtxreceive);
   if (!gst_bin_add (GST_BIN (ret), stream->rtxreceive))
     g_warn_if_reached ();
+
+  ensure_rtx_hdr_ext (stream);
 
   stream->reddec = gst_element_factory_make ("rtpreddec", NULL);
   gst_object_ref (stream->reddec);

@@ -5014,10 +5014,11 @@ on_sdp_media_rid (struct test_webrtc *t, GstElement * element,
   }
 }
 
-GST_START_TEST (test_simulcast)
+static void
+do_test_simulcast (gboolean enable_fec_rtx)
 {
   struct test_webrtc *t = test_webrtc_new ();
-  guint media_format_count[] = { 1, };
+  guint media_format_count[] = { enable_fec_rtx ? 5 : 1, };
   VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
       media_format_count, NULL);
   VAL_SDP_INIT (payloads, on_sdp_media_no_duplicate_payloads, NULL,
@@ -5067,6 +5068,13 @@ GST_START_TEST (test_simulcast)
       "max-bundle");
   gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
       "max-bundle");
+
+  if (enable_fec_rtx) {
+    g_signal_connect (t->webrtc1, "on-new-transceiver",
+        G_CALLBACK (on_new_transceiver_set_rtx_fec), NULL);
+    g_signal_connect (t->webrtc2, "on-new-transceiver",
+        G_CALLBACK (on_new_transceiver_set_rtx_fec), NULL);
+  }
 
   rtpbin2 = gst_bin_get_by_name (GST_BIN (t->webrtc2), "rtpbin");
   fail_unless (rtpbin2 != NULL);
@@ -5157,6 +5165,18 @@ GST_START_TEST (test_simulcast)
   g_array_unref (ssrcs_received);
 }
 
+GST_START_TEST (test_simulcast)
+{
+  do_test_simulcast (FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_simulcast_fec_rtx)
+{
+  do_test_simulcast (TRUE);
+}
+
 GST_END_TEST;
 
 static Suite *
@@ -5217,6 +5237,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_bundle_mid_header_extension);
     tcase_add_test (tc, test_max_bundle_fec);
     tcase_add_test (tc, test_simulcast);
+    tcase_add_test (tc, test_simulcast_fec_rtx);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
