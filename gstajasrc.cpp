@@ -473,10 +473,38 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
 
 #undef NEEDS_QUAD_MODE
 
+  bool had_quad_enabled = false, had_quad_quad_enabled = false;
+
+  if (self->channel < ::NTV2_CHANNEL5) {
+    self->device->device->GetQuadFrameEnable(had_quad_enabled, ::NTV2_CHANNEL1);
+    self->device->device->GetQuadQuadFrameEnable(had_quad_quad_enabled,
+                                                 ::NTV2_CHANNEL1);
+  } else {
+    self->device->device->GetQuadFrameEnable(had_quad_enabled, ::NTV2_CHANNEL5);
+    self->device->device->GetQuadQuadFrameEnable(had_quad_quad_enabled,
+                                                 ::NTV2_CHANNEL5);
+  }
+
+  // Stop any previously running quad mode, or other configurations on the
+  // quad channels
   self->device->device->AutoCirculateStop(self->channel);
+  if (self->quad_mode || had_quad_enabled || had_quad_enabled) {
+    NTV2Channel quad_channel;
+
+    if (self->channel < ::NTV2_CHANNEL5)
+      quad_channel = ::NTV2_CHANNEL1;
+    else
+      quad_channel = ::NTV2_CHANNEL5;
+
+    for (int i = 0; i < 4; i++) {
+      self->device->device->AutoCirculateStop((NTV2Channel)(quad_channel + i));
+    }
+  }
+
   if (self->quad_mode) {
-    for (int i = 1; i < 4; i++) {
-      self->device->device->AutoCirculateStop((NTV2Channel)(self->channel + i));
+    if (self->channel != ::NTV2_CHANNEL1 && self->channel != ::NTV2_CHANNEL5) {
+      GST_ERROR_OBJECT(self, "Quad modes require channels 1 or 5");
+      return FALSE;
     }
   }
 
@@ -625,27 +653,8 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
     return FALSE;
   }
 
-  if (self->quad_mode) {
-    if (self->channel != ::NTV2_CHANNEL1 && self->channel != ::NTV2_CHANNEL5) {
-      GST_ERROR_OBJECT(self, "Quad modes require channels 1 or 5");
-      return FALSE;
-    }
-  }
-
   gst_video_info_from_ntv2_video_format(&self->configured_info,
                                         self->video_format);
-
-  bool had_quad_enabled = false, had_quad_quad_enabled = false;
-
-  if (self->channel < ::NTV2_CHANNEL5) {
-    self->device->device->GetQuadFrameEnable(had_quad_enabled, ::NTV2_CHANNEL1);
-    self->device->device->GetQuadQuadFrameEnable(had_quad_quad_enabled,
-                                                 ::NTV2_CHANNEL1);
-  } else {
-    self->device->device->GetQuadFrameEnable(had_quad_enabled, ::NTV2_CHANNEL5);
-    self->device->device->GetQuadQuadFrameEnable(had_quad_quad_enabled,
-                                                 ::NTV2_CHANNEL5);
-  }
 
   if (self->quad_mode) {
     if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
