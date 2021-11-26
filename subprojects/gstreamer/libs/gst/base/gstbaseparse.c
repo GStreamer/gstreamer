@@ -1058,7 +1058,7 @@ gst_base_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
  * @src_format: #GstFormat describing the source format.
  * @src_value: Source value to be converted.
  * @dest_format: #GstFormat defining the converted format.
- * @dest_value: Pointer where the conversion result will be put.
+ * @dest_value: (out): Pointer where the conversion result will be put.
  *
  * Converts using configured "convert" vmethod in #GstBaseParse class.
  *
