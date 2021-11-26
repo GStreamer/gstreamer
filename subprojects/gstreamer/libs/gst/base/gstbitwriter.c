@@ -80,7 +80,7 @@ gst_bit_writer_new_with_size (guint size, gboolean fixed)
 
 /**
  * gst_bit_writer_new_with_data: (skip)
- * @data: Memory area for writing
+ * @data: (array length=size) (transfer none): Memory area for writing
  * @size: Size of @data in bytes
  * @initialized: if %TRUE the complete data can be read from the beginning
  *
@@ -333,7 +333,7 @@ gst_bit_writer_get_size (const GstBitWriter * bitwriter)
  *
  * Get written data pointer
  *
- * Returns: data pointer
+ * Returns: (array) (transfer none): data pointer
  */
 guint8 *
 gst_bit_writer_get_data (const GstBitWriter * bitwriter)
@@ -418,7 +418,7 @@ GST_BIT_WRITER_WRITE_BITS (64)
 /**
  * gst_bit_writer_put_bytes:
  * @bitwriter: a #GstBitWriter instance
- * @data: pointer of data to write
+ * @data: (array): pointer of data to write
  * @nbytes: number of bytes to write
  *
  * Write @nbytes bytes of @data to #GstBitWriter.
