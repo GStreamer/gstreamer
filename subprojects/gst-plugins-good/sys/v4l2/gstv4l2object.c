@@ -2933,6 +2933,10 @@ default_frame_sizes:
           "Could not probe maximum capture size for pixelformat %"
           GST_FOURCC_FORMAT, GST_FOURCC_ARGS (pixelformat));
     }
+    if (min_w == 0 || min_h == 0)
+      min_w = min_h = 1;
+    if (max_w == 0 || max_h == 0)
+      max_w = max_h = GST_V4L2_MAX_SIZE;
 
     /* Since we can't get framerate directly, try to use the current norm */
     if (v4l2object->tv_norm && v4l2object->norms) {
