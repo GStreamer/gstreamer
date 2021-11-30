@@ -31,6 +31,9 @@
 GST_DEBUG_CATEGORY_STATIC (v4l2_vp9dec_debug);
 #define GST_CAT_DEFAULT v4l2_vp9dec_debug
 
+/* Used to mark picture that have been outputed */
+#define FLAG_PICTURE_OUTPUTED GST_MINI_OBJECT_FLAG_LAST
+
 enum
 {
   PROP_0,
@@ -86,56 +89,6 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstV4l2CodecVp9Dec,
     GST_DEBUG_CATEGORY_INIT (v4l2_vp9dec_debug, "v4l2codecs-vp9dec", 0,
         "V4L2 stateless VP9 decoder"));
 
-
-typedef struct
-{
-  grefcount ref_count;
-
-  /* owns both */
-  GstV4l2Request *request;
-  GstBuffer *buf;
-} GstV4l2CodecVp9DecPictureData;
-
-static GstV4l2CodecVp9DecPictureData *
-gst_v4l2_codec_vp9_dec_picture_data_new (GstV4l2Request * request,
-    GstBuffer * buffer)
-{
-  GstV4l2CodecVp9DecPictureData *pic_data;
-
-  pic_data = g_slice_new0 (GstV4l2CodecVp9DecPictureData);
-  g_ref_count_init (&pic_data->ref_count);
-
-  /* transfer ownership of these */
-  pic_data->request = request;
-  pic_data->buf = buffer;
-
-  return pic_data;
-}
-
-static GstV4l2CodecVp9DecPictureData *
-gst_v4l2_codec_vp9_dec_picture_data_ref (GstV4l2CodecVp9DecPictureData * data)
-{
-  g_ref_count_inc (&data->ref_count);
-  return data;
-}
-
-static void
-gst_v4l2_codec_vp9_dec_picture_data_unref (GstV4l2CodecVp9DecPictureData * data)
-{
-  if (g_ref_count_dec (&data->ref_count)) {
-    g_clear_pointer (&data->request, gst_v4l2_request_unref);
-    gst_clear_buffer (&data->buf);
-    g_slice_free (GstV4l2CodecVp9DecPictureData, data);
-  }
-}
-
-static GstV4l2CodecVp9DecPictureData *
-gst_v4l2_codec_vp9_dec_picture_data_get (GstVp9Picture * picture)
-{
-  GstV4l2CodecVp9DecPictureData *data;
-  data = gst_vp9_picture_get_user_data (picture);
-  return gst_v4l2_codec_vp9_dec_picture_data_ref (data);
-}
 
 static guint
 gst_v4l2_codec_vp9_dec_get_preferred_output_delay (GstVp9Decoder * decoder,
@@ -771,11 +724,10 @@ gst_v4l2_codec_vp9_dec_end_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture)
 {
   GstV4l2CodecVp9Dec *self = GST_V4L2_CODEC_VP9_DEC (decoder);
-  GstV4l2Request *request;
-  GstBuffer *buffer;
+  GstVideoCodecFrame *frame;
+  GstV4l2Request *request = NULL;
   GstFlowReturn flow_ret;
   gsize bytesused;
-  GstV4l2CodecVp9DecPictureData *picture_data;
 
   /* *INDENT-OFF* */
   struct v4l2_ext_control decode_params_control[] = {
@@ -797,8 +749,12 @@ gst_v4l2_codec_vp9_dec_end_picture (GstVp9Decoder * decoder,
   self->bitstream_map = (GstMapInfo) GST_MAP_INFO_INIT;
   gst_memory_resize (self->bitstream, 0, bytesused);
 
+  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
+      picture->system_frame_number);
+  g_return_val_if_fail (frame, FALSE);
+
   flow_ret = gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (self->src_pool),
-      &buffer, NULL);
+      &frame->output_buffer, NULL);
   if (flow_ret != GST_FLOW_OK) {
     if (flow_ret == GST_FLOW_FLUSHING)
       GST_DEBUG_OBJECT (self, "Frame decoding aborted, we are flushing.");
@@ -809,17 +765,15 @@ gst_v4l2_codec_vp9_dec_end_picture (GstVp9Decoder * decoder,
   }
 
   request = gst_v4l2_decoder_alloc_request (self->decoder,
-      picture->system_frame_number, self->bitstream, buffer);
+      picture->system_frame_number, self->bitstream, frame->output_buffer);
+
+  gst_video_codec_frame_unref (frame);
+
   if (!request) {
     GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
         ("Failed to allocate a media request object."), (NULL));
     goto fail;
   }
-
-  picture_data = gst_v4l2_codec_vp9_dec_picture_data_new (request, buffer);
-
-  gst_vp9_picture_set_user_data (picture, picture_data,
-      (GDestroyNotify) gst_v4l2_codec_vp9_dec_picture_data_unref);
 
   if (!gst_v4l2_decoder_set_controls (self->decoder, request,
           decode_params_control, G_N_ELEMENTS (decode_params_control))) {
@@ -834,10 +788,15 @@ gst_v4l2_codec_vp9_dec_end_picture (GstVp9Decoder * decoder,
     goto fail;
   }
 
+  gst_vp9_picture_set_user_data (picture, request,
+      (GDestroyNotify) gst_v4l2_request_unref);
   gst_v4l2_codec_vp9_dec_reset_picture (self);
   return GST_FLOW_OK;
 
 fail:
+  if (request)
+    gst_v4l2_request_unref (request);
+
   gst_v4l2_codec_vp9_dec_reset_picture (self);
   return GST_FLOW_ERROR;
 }
@@ -902,11 +861,18 @@ gst_v4l2_codec_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
 
   new_picture = gst_vp9_picture_new ();
   new_picture->frame_hdr = picture->frame_hdr;
-  new_picture->system_frame_number = picture->system_frame_number;
+  new_picture->system_frame_number = frame->system_frame_number;
 
-  gst_vp9_picture_set_user_data (new_picture,
-      gst_v4l2_codec_vp9_dec_picture_data_get (picture),
-      (GDestroyNotify) gst_v4l2_codec_vp9_dec_picture_data_unref);
+  if (GST_MINI_OBJECT_FLAG_IS_SET (picture, FLAG_PICTURE_OUTPUTED)) {
+    GstBuffer *output_buffer = gst_vp9_picture_get_user_data (picture);
+    if (output_buffer)
+      frame->output_buffer = gst_buffer_ref (output_buffer);
+  } else {
+    GstV4l2Request *request = gst_vp9_picture_get_user_data (picture);
+    gst_vp9_picture_set_user_data (new_picture, gst_v4l2_request_ref (request),
+        (GDestroyNotify) gst_v4l2_request_unref);
+    frame->output_buffer = gst_v4l2_request_dup_pic_buf (request);
+  }
 
   return new_picture;
 }
@@ -917,14 +883,10 @@ gst_v4l2_codec_vp9_dec_output_picture (GstVp9Decoder * decoder,
 {
   GstV4l2CodecVp9Dec *self = GST_V4L2_CODEC_VP9_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  GstV4l2Request *request;
+  GstV4l2Request *request = gst_vp9_picture_get_user_data (picture);
   gint ret;
-  GstV4l2CodecVp9DecPictureData *pic_data;
 
   GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
-
-  pic_data = gst_vp9_picture_get_user_data (picture);
-  request = pic_data->request;
 
   if (request) {
     ret = gst_v4l2_request_set_done (request);
@@ -937,21 +899,28 @@ gst_v4l2_codec_vp9_dec_output_picture (GstVp9Decoder * decoder,
           ("Decoding request failed: %s", g_strerror (errno)), (NULL));
       goto error;
     }
+    g_return_val_if_fail (frame->output_buffer, GST_FLOW_ERROR);
 
     if (gst_v4l2_request_failed (request)) {
       GST_ELEMENT_ERROR (self, STREAM, DECODE,
           ("Failed to decode frame %u", picture->system_frame_number), (NULL));
       goto error;
     }
+
+    /* Hold on reference buffers for the rest of the picture lifetime */
+    gst_vp9_picture_set_user_data (picture,
+        gst_buffer_ref (frame->output_buffer),
+        (GDestroyNotify) gst_buffer_unref);
+
+    GST_MINI_OBJECT_FLAG_SET (picture, FLAG_PICTURE_OUTPUTED);
   }
 
-  /*
-   * Hold buffer throughout the lifetime of the picture, but allow the request
-   * to be freed early so we can reuse the bitstream buffer
-   */
-  g_warn_if_fail (frame->output_buffer == NULL);
-  frame->output_buffer = gst_buffer_ref (pic_data->buf);
-  g_clear_pointer (&pic_data->request, gst_v4l2_request_unref);
+  /* This may happen if we duplicate a picture witch failed to decode */
+  if (!frame->output_buffer) {
+    GST_ELEMENT_ERROR (self, STREAM, DECODE,
+        ("Failed to decode frame %u", picture->system_frame_number), (NULL));
+    goto error;
+  }
 
   if (self->copy_frames)
     gst_v4l2_codec_vp9_dec_copy_output_buffer (self, frame);
