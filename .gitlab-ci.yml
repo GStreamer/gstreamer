@@ -88,10 +88,14 @@ workflow:
   # https://docs.gitlab.com/ee/ci/yaml/index.html#switch-between-branch-pipelines-and-merge-request-pipelines
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      variables:
+        GIT_FETCH_EXTRA_FLAGS: '--no-tags'
     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
       when: never
     - if: '$CI_COMMIT_TAG'
     - if: '$CI_COMMIT_BRANCH'
+      variables:
+        GIT_FETCH_EXTRA_FLAGS: '--no-tags'
 
 #
 # Global CI policy
