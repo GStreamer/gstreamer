@@ -444,9 +444,30 @@ gst_rtp_sink_rtpbin_pad_removed_cb (GstElement * element, GstPad * pad,
 }
 
 static gboolean
-gst_rtp_sink_start (GstRtpSink * self)
+gst_rtp_sink_reuse_socket (GstRtpSink * self)
 {
   GSocket *socket = NULL;
+
+  gst_element_set_locked_state (self->rtcp_src, FALSE);
+  gst_element_sync_state_with_parent (self->rtcp_src);
+
+  /* share the socket created by the sink */
+  g_object_get (self->rtcp_src, "used-socket", &socket, NULL);
+  g_object_set (self->rtcp_sink, "socket", socket, "auto-multicast", FALSE,
+      "close-socket", FALSE, NULL);
+  g_object_unref (socket);
+
+  g_object_set (self->rtcp_sink, "sync", FALSE, "async", FALSE, NULL);
+  gst_element_set_locked_state (self->rtcp_sink, FALSE);
+  gst_element_sync_state_with_parent (self->rtcp_sink);
+
+  return TRUE;
+
+}
+
+static gboolean
+gst_rtp_sink_start (GstRtpSink * self)
+{
   GInetAddress *iaddr = NULL;
   gchar *remote_addr = NULL;
   GError *error = NULL;
@@ -497,19 +518,6 @@ gst_rtp_sink_start (GstRtpSink * self)
   g_free (remote_addr);
   g_object_unref (iaddr);
 
-  gst_element_set_locked_state (self->rtcp_src, FALSE);
-  gst_element_sync_state_with_parent (self->rtcp_src);
-
-  /* share the socket created by the sink */
-  g_object_get (self->rtcp_src, "used-socket", &socket, NULL);
-  g_object_set (self->rtcp_sink, "socket", socket, "auto-multicast", FALSE,
-      "close-socket", FALSE, NULL);
-  g_object_unref (socket);
-
-  g_object_set (self->rtcp_sink, "sync", FALSE, "async", FALSE, NULL);
-  gst_element_set_locked_state (self->rtcp_sink, FALSE);
-  gst_element_sync_state_with_parent (self->rtcp_sink);
-
   return TRUE;
 
 dns_resolve_failed:
@@ -532,6 +540,10 @@ gst_rtp_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      /* Set the properties to the child elements to avoid binding to
+       * a NULL interface on a network without a default gateway */
+      if (gst_rtp_sink_start (self) == FALSE)
+        return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
@@ -545,7 +557,8 @@ gst_rtp_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (gst_rtp_sink_start (self) == FALSE)
+      /* re-use the sockets after they have been initialised */
+      if (gst_rtp_sink_reuse_socket (self) == FALSE)
         return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
