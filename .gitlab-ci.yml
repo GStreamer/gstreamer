@@ -13,6 +13,8 @@ stages:
   - 'integrate'
 
 variables:
+  GIT_DEPTH: 1
+
   # Branch to track for modules that have no ref specified in the manifest
   GST_UPSTREAM_BRANCH: 'main'
   ORC_UPSTREAM_BRANCH: 'master'
