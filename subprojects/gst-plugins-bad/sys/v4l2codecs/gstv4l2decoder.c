@@ -1170,3 +1170,9 @@ gst_v4l2_request_failed (GstV4l2Request * request)
 {
   return request->failed;
 }
+
+GstBuffer *
+gst_v4l2_request_dup_pic_buf (GstV4l2Request * request)
+{
+  return gst_buffer_ref (request->pic_buf);
+}
