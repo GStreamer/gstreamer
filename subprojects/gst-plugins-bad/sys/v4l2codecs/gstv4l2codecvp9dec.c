@@ -429,10 +429,10 @@ gst_v4l2_codec_vp9_dec_negotiate (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Negotiate");
 
-  gst_v4l2_codec_vp9_dec_reset_allocation (self);
-
   gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
   gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
+
+  gst_v4l2_codec_vp9_dec_reset_allocation (self);
 
   if (!gst_v4l2_decoder_set_sink_fmt (self->decoder, V4L2_PIX_FMT_VP9_FRAME,
           self->width, self->height, self->bit_depth)) {
@@ -562,11 +562,6 @@ gst_v4l2_codec_vp9_dec_new_sequence (GstVp9Decoder * decoder,
 
   /* TODO Check if current buffers are large enough, and reuse them */
   if (self->width != frame_hdr->width || self->height != frame_hdr->height) {
-    if (self->width > 0 || self->height > 0) {
-      GST_ERROR_OBJECT (self,
-          "Dynamic resolution changes are not yet supported in v4l2");
-      return GST_FLOW_ERROR;
-    }
     self->width = frame_hdr->width;
     self->height = frame_hdr->height;
     negotiation_needed = TRUE;

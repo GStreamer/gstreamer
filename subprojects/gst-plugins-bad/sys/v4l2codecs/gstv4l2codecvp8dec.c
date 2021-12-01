@@ -191,10 +191,10 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Negotiate");
 
-  gst_v4l2_codec_vp8_dec_reset_allocation (self);
-
   gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
   gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
+
+  gst_v4l2_codec_vp8_dec_reset_allocation (self);
 
   if (!gst_v4l2_decoder_set_sink_fmt (self->decoder, V4L2_PIX_FMT_VP8_FRAME,
           self->width, self->height, 12 /* 8 bits 4:2:0 */ )) {

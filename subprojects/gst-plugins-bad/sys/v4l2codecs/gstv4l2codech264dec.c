@@ -322,10 +322,10 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Negotiate");
 
-  gst_v4l2_codec_h264_dec_reset_allocation (self);
-
   gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
   gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
+
+  gst_v4l2_codec_h264_dec_reset_allocation (self);
 
   if (!gst_v4l2_decoder_set_sink_fmt (self->decoder, V4L2_PIX_FMT_H264_SLICE,
           self->coded_width, self->coded_height, get_pixel_bitdepth (self))) {
