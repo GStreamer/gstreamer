@@ -917,13 +917,15 @@ out:
 }
 
 static void
-error_callback (GstRtmpConnection * connection, GstRtmp2Src * self)
+error_callback (GstRtmpConnection * connection, const GError * error,
+    GstRtmp2Src * self)
 {
   g_mutex_lock (&self->lock);
   if (self->cancellable) {
     g_cancellable_cancel (self->cancellable);
   } else if (self->loop) {
-    GST_INFO_OBJECT (self, "Connection error");
+    GST_INFO_OBJECT (self, "Connection error: %s %d %s",
+        g_quark_to_string (error->domain), error->code, error->message);
     stop_task (self);
   }
   g_mutex_unlock (&self->lock);
