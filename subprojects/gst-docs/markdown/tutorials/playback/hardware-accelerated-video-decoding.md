@@ -43,14 +43,6 @@ Technologies](http://en.wikipedia.org/wiki/Imagination_Technologies) or
 [S3 Graphics](http://en.wikipedia.org/wiki/S3_Graphics). Accessible to
 GStreamer through the [gstreamer-vaapi](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gstreamer-vaapi/) package.
 
-- [VDPAU](http://en.wikipedia.org/wiki/VDPAU) (*Video Decode and
-Presentation API for UNIX*): Initially designed by
-[NVidia](http://en.wikipedia.org/wiki/NVidia) in 2008, targeted at the X
-Window System on Unix-based operating systems, now open-source. Although
-it is also an open-source library, no manufacturer other than NVidia is
-using it yet. Accessible to GStreamer through
-the [vdpau](http://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/tree/master/sys/vdpau) element in plugins-bad.
-
  - [OpenMAX](http://en.wikipedia.org/wiki/OpenMAX) (*Open Media
 Acceleration*): Managed by the non-profit technology consortium [Khronos
 Group](http://en.wikipedia.org/wiki/Khronos_Group "Khronos Group"),
