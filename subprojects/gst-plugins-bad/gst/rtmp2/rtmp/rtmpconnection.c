@@ -245,7 +245,7 @@ gst_rtmp_connection_class_init (GstRtmpConnectionClass * klass)
   gobject_class->finalize = gst_rtmp_connection_finalize;
 
   signals[SIGNAL_ERROR] = g_signal_new ("error", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_ERROR);
 
   signals[SIGNAL_STREAM_CONTROL] = g_signal_new ("stream-control",
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
@@ -582,7 +582,7 @@ gst_rtmp_connection_emit_error (GstRtmpConnection * self, GError * error)
   if (!self->error) {
     self->error = TRUE;
     cancel_all_commands (self, error->message);
-    g_signal_emit (self, signals[SIGNAL_ERROR], 0);
+    g_signal_emit (self, signals[SIGNAL_ERROR], 0, error);
   }
 
   g_error_free (error);

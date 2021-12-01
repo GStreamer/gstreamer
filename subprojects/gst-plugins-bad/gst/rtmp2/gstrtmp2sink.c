@@ -1075,13 +1075,16 @@ put_chunk (GstRtmpConnection * connection, gpointer user_data)
 }
 
 static void
-error_callback (GstRtmpConnection * connection, GstRtmp2Sink * self)
+error_callback (GstRtmpConnection * connection, const GError * error,
+    GstRtmp2Sink * self)
 {
   g_mutex_lock (&self->lock);
   if (self->cancellable) {
     g_cancellable_cancel (self->cancellable);
   } else if (self->loop) {
-    GST_ELEMENT_ERROR (self, RESOURCE, WRITE, ("Connection error"), (NULL));
+    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
+        ("Connection error: %s", error->message),
+        ("domain %s, code %d", g_quark_to_string (error->domain), error->code));
     stop_task (self);
   }
   g_mutex_unlock (&self->lock);

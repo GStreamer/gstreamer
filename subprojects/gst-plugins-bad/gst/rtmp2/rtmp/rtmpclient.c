@@ -321,7 +321,7 @@ static void send_stop (GstRtmpConnection * connection, const gchar * stream,
 static void send_secure_token_response (GTask * task,
     GstRtmpConnection * connection, const gchar * challenge);
 static void connection_error (GstRtmpConnection * connection,
-    gpointer user_data);
+    const GError * error, gpointer user_data);
 
 #define DEFAULT_TIMEOUT 5
 
@@ -510,12 +510,13 @@ handshake_done (GObject * source, GAsyncResult * result, gpointer user_data)
 }
 
 static void
-connection_error (GstRtmpConnection * connection, gpointer user_data)
+connection_error (GstRtmpConnection * connection, const GError * error,
+    gpointer user_data)
 {
   GTask *task = user_data;
+
   if (!g_task_had_error (task))
-    g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
-        "error during connection attempt");
+    g_task_return_error (task, g_error_copy (error));
 }
 
 static gchar *
