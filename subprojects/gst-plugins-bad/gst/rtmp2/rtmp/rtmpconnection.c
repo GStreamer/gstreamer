@@ -106,7 +106,8 @@ static void gst_rtmp_connection_dispose (GObject * object);
 static void gst_rtmp_connection_finalize (GObject * object);
 static void gst_rtmp_connection_set_cancellable (GstRtmpConnection * self,
     GCancellable * cancellable);
-static void gst_rtmp_connection_emit_error (GstRtmpConnection * self);
+static void gst_rtmp_connection_emit_error (GstRtmpConnection * self,
+    GError * error);
 static gboolean gst_rtmp_connection_input_ready (GInputStream * is,
     gpointer user_data);
 static void gst_rtmp_connection_start_write (GstRtmpConnection * self);
@@ -495,8 +496,7 @@ gst_rtmp_connection_input_ready (GInputStream * is, gpointer user_data)
     GST_ERROR_OBJECT (sc, "read error: %s %d %s",
         g_quark_to_string (error->domain), code, error->message);
 
-    gst_rtmp_connection_emit_error (sc);
-    g_error_free (error);
+    gst_rtmp_connection_emit_error (sc, error);
     return G_SOURCE_REMOVE;
   }
 
@@ -577,13 +577,15 @@ out:
 }
 
 static void
-gst_rtmp_connection_emit_error (GstRtmpConnection * self)
+gst_rtmp_connection_emit_error (GstRtmpConnection * self, GError * error)
 {
   if (!self->error) {
     self->error = TRUE;
-    cancel_all_commands (self, "connection error");
+    cancel_all_commands (self, error->message);
     g_signal_emit (self, signals[SIGNAL_ERROR], 0);
   }
+
+  g_error_free (error);
 }
 
 static void
@@ -614,8 +616,7 @@ gst_rtmp_connection_write_buffer_done (GObject * obj,
           "write error: %s (wrote %" G_GSIZE_FORMAT " bytes)",
           error->message, bytes_written);
     }
-    gst_rtmp_connection_emit_error (self);
-    g_error_free (error);
+    gst_rtmp_connection_emit_error (self, error);
     g_object_unref (self);
     return;
   }
