@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
   CustomData data;
   GstBus *bus;
 
-  /* Initialize cumstom data structure */
+  /* Initialize custom data structure */
   memset (&data, 0, sizeof (data));
   data.b = 1; /* For waveform generation */
   data.d = 1;

@@ -256,7 +256,7 @@ int main (int argc, char **argv) {
     uri = argv[1];
   }
 
-  /* Initialize cumstom data structure */
+  /* Initialize custom data structure */
   memset (&data, 0, sizeof (data));
 
   /* Initialize GStreamer */
