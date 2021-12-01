@@ -81,7 +81,7 @@ the [gstreamer-ducati](https://github.com/robclark/gst-ducati) plugin.
    `androidmedia` plugin in gst-plugins-bad. This includes both encoding and
    decoding.
 
- - Apple VideoTool Box Framework: Apple's API to access h is available
+ - Apple VideoTool Box Framework: Apple's API to access hardware is available
   through the `applemedia` plugin which includes both encoding through
   the `vtenc` element and decoding through the `vtdec` element.
 
