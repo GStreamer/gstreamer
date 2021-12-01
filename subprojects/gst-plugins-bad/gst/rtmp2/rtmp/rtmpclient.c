@@ -822,6 +822,14 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
     {
       const gchar *reason = gst_uri_get_query_value (query, "reason");
 
+      if (!reason) {
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+            "authentication failed; no reason: %s", desc);
+        g_object_unref (task);
+        gst_uri_unref (query);
+        return;
+      }
+
       if (g_str_equal (reason, "authfailed")) {
         g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
             "authentication failed! wrong credentials?");
@@ -832,7 +840,7 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
 
       if (!g_str_equal (reason, "needauth")) {
         g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
-            "unhandled rejection reason '%s'", reason ? reason : "");
+            "unhandled rejection reason '%s'", reason);
         g_object_unref (task);
         gst_uri_unref (query);
         return;
