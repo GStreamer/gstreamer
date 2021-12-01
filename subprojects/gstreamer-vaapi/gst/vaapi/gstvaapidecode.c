@@ -67,19 +67,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapidecode);
 #define GST_CAPS_CODEC(CODEC) CODEC "; "
 
 /* *INDENT-OFF* */
-static const char gst_vaapidecode_sink_caps_str[] =
-    GST_CAPS_CODEC("video/mpeg, mpegversion=2, systemstream=(boolean)false")
-    GST_CAPS_CODEC("video/mpeg, mpegversion=4")
-    GST_CAPS_CODEC("video/x-divx")
-    GST_CAPS_CODEC("video/x-xvid")
-    GST_CAPS_CODEC("video/x-h263")
-    GST_CAPS_CODEC("video/x-h264")
-    GST_CAPS_CODEC("video/x-h265")
-    GST_CAPS_CODEC("video/x-wmv")
-    GST_CAPS_CODEC("video/x-vp8")
-    GST_CAPS_CODEC("video/x-vp9")
-    GST_CAPS_CODEC("video/x-av1")
-    ;
+char *gst_vaapidecode_sink_caps_str = NULL;
 
 static const char gst_vaapidecode_src_caps_str[] =
     GST_VAAPI_MAKE_SURFACE_CAPS "; "
@@ -123,8 +111,7 @@ static const GstVaapiDecoderMap vaapi_decode_map[] = {
   {GST_VAAPI_CODEC_VP9, GST_RANK_PRIMARY, "vp9", "video/x-vp9", NULL},
   {GST_VAAPI_CODEC_H265, GST_RANK_PRIMARY, "h265", "video/x-h265", NULL},
   {GST_VAAPI_CODEC_AV1, GST_RANK_PRIMARY, "av1", "video/x-av1", NULL},
-  {0 /* the rest */ , GST_RANK_PRIMARY + 1, NULL,
-      gst_vaapidecode_sink_caps_str, NULL},
+  {0 /* the rest */ , GST_RANK_PRIMARY + 1, NULL, NULL, NULL},
 };
 
 static GstElementClass *parent_class = NULL;
@@ -1567,7 +1554,12 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
     map->install_properties (object_class);
 
   /* sink pad */
-  caps = gst_caps_from_string (map->caps_str);
+  if (map->caps_str) {
+    caps = gst_caps_from_string (map->caps_str);
+  } else {
+    caps = gst_caps_from_string (gst_vaapidecode_sink_caps_str);
+    g_free (gst_vaapidecode_sink_caps_str);
+  }
   pad_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       caps);
   gst_caps_unref (caps);
@@ -1593,7 +1585,7 @@ gst_vaapidecode_register (GstPlugin * plugin, GArray * decoders)
 {
   gboolean ret = FALSE;
   guint i, codec, rank;
-  gchar *type_name, *element_name;
+  gchar *type_name, *element_name, *sink_caps_str;
   const gchar *name;
   GType type;
   GTypeInfo typeinfo = {
@@ -1615,6 +1607,15 @@ gst_vaapidecode_register (GstPlugin * plugin, GArray * decoders)
 
     if (codec && !gst_vaapi_codecs_has_codec (decoders, codec))
       continue;
+
+    if (!gst_vaapidecode_sink_caps_str) {
+      gst_vaapidecode_sink_caps_str = g_strdup (vaapi_decode_map[i].caps_str);
+    } else {
+      sink_caps_str = g_strconcat (gst_vaapidecode_sink_caps_str, "; ",
+          vaapi_decode_map[i].caps_str, NULL);
+      g_clear_pointer (&gst_vaapidecode_sink_caps_str, g_free);
+      gst_vaapidecode_sink_caps_str = sink_caps_str;
+    }
 
     if (codec) {
       type_name = g_strdup_printf ("GstVaapiDecode_%s", name);
