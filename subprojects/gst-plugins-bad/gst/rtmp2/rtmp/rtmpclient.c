@@ -746,15 +746,15 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
     GstUri *query;
 
     node = gst_amf_node_get_field (optional_args, "description");
-    if (!node) {
+    desc = node ? gst_amf_node_peek_string (node, NULL) : NULL;
+    if (!desc) {
       g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
           "Connect rejected; no description");
       g_object_unref (task);
       return;
     }
 
-    desc = gst_amf_node_peek_string (node, NULL);
-    GST_DEBUG ("connect result desc: %s", GST_STR_NULL (desc));
+    GST_DEBUG ("connect result desc: %s", desc);
 
     if (authmod == GST_RTMP_AUTHMOD_AUTO && strstr (desc, "code=403 need auth")) {
       if (strstr (desc, "authmod=adobe")) {
