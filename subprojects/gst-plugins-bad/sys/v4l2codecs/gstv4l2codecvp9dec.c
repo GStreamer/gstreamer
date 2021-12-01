@@ -353,6 +353,7 @@ gst_v4l2_codec_vp9_dec_fill_dec_params (GstV4l2CodecVp9Dec * self,
 static gboolean
 gst_v4l2_codec_vp9_dec_open (GstVideoDecoder * decoder)
 {
+  GstVp9Decoder *vp9dec = GST_VP9_DECODER (decoder);
   GstV4l2CodecVp9Dec *self = GST_V4L2_CODEC_VP9_DEC (decoder);
 
   if (!gst_v4l2_decoder_open (self->decoder)) {
@@ -361,6 +362,10 @@ gst_v4l2_codec_vp9_dec_open (GstVideoDecoder * decoder)
         ("gst_v4l2_decoder_open() failed: %s", g_strerror (errno)));
     return FALSE;
   }
+
+  /* V4L2 does not support non-keyframe resolution change, this will ask the
+   * base class to drop frame until the next keyframe as a workaround. */
+  gst_vp9_decoder_set_non_keyframe_format_change_support (vp9dec, FALSE);
 
   return TRUE;
 }
