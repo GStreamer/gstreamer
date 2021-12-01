@@ -66,8 +66,10 @@ GST_DEBUG_CATEGORY (gst_vp9_decoder_debug);
 
 struct _GstVp9DecoderPrivate
 {
-  gint width;
-  gint height;
+  gint frame_width;
+  gint frame_height;
+  gint render_width;
+  gint render_height;
   GstVP9Profile profile;
 
   gboolean had_sequence;
@@ -145,6 +147,11 @@ gst_vp9_decoder_start (GstVideoDecoder * decoder)
   priv->parser = gst_vp9_stateful_parser_new ();
   priv->dpb = gst_vp9_dpb_new ();
   priv->wait_keyframe = TRUE;
+  priv->profile = GST_VP9_PROFILE_UNDEFINED;
+  priv->frame_width = 0;
+  priv->frame_height = 0;
+  priv->render_width = 0;
+  priv->render_height = 0;
 
   priv->output_queue =
       gst_queue_array_new_for_struct (sizeof (GstVp9DecoderOutputFrame), 1);
@@ -176,11 +183,21 @@ gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean changed = FALSE;
 
-  if (priv->width != frame_hdr->width || priv->height != frame_hdr->height) {
-    GST_INFO_OBJECT (self, "resolution changed %dx%d", frame_hdr->width,
+  if (priv->frame_width != frame_hdr->width
+      || priv->frame_height != frame_hdr->height) {
+    GST_INFO_OBJECT (self, "frame resolution changed %dx%d", frame_hdr->width,
         frame_hdr->height);
-    priv->width = frame_hdr->width;
-    priv->height = frame_hdr->height;
+    priv->frame_width = frame_hdr->width;
+    priv->frame_height = frame_hdr->height;
+    changed = TRUE;
+  }
+
+  if (priv->render_width != frame_hdr->render_width
+      || priv->render_height != frame_hdr->render_height) {
+    GST_INFO_OBJECT (self, "render resolution changed %dx%d",
+        frame_hdr->render_width, frame_hdr->render_height);
+    priv->render_width = frame_hdr->render_width;
+    priv->render_height = frame_hdr->render_height;
     changed = TRUE;
   }
 
@@ -234,9 +251,6 @@ gst_vp9_decoder_set_format (GstVideoDecoder * decoder,
     gst_video_codec_state_unref (self->input_state);
 
   self->input_state = gst_video_codec_state_ref (state);
-
-  priv->width = GST_VIDEO_INFO_WIDTH (&state->info);
-  priv->height = GST_VIDEO_INFO_HEIGHT (&state->info);
 
   query = gst_query_new_latency ();
   if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (self), query))
