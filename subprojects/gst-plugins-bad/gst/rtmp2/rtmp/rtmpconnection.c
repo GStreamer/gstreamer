@@ -372,7 +372,7 @@ gst_rtmp_connection_new (GSocketConnection * connection,
 }
 
 static void
-cancel_all_commands (GstRtmpConnection * self)
+cancel_all_commands (GstRtmpConnection * self, const gchar * reason)
 {
   GList *l;
 
@@ -380,7 +380,7 @@ cancel_all_commands (GstRtmpConnection * self)
     Transaction *cc = l->data;
     GST_LOG_OBJECT (self, "calling transaction callback %s",
         GST_DEBUG_FUNCPTR_NAME (cc->func));
-    cc->func ("<cancelled>", NULL, cc->user_data);
+    cc->func (reason, NULL, cc->user_data);
   }
   g_list_free_full (self->transactions, transaction_free);
   self->transactions = NULL;
@@ -389,7 +389,7 @@ cancel_all_commands (GstRtmpConnection * self)
     ExpectedCommand *cc = l->data;
     GST_LOG_OBJECT (self, "calling expected command callback %s",
         GST_DEBUG_FUNCPTR_NAME (cc->func));
-    cc->func ("<cancelled>", NULL, cc->user_data);
+    cc->func (reason, NULL, cc->user_data);
   }
   g_list_free_full (self->expected_commands, expected_command_free);
   self->expected_commands = NULL;
@@ -403,7 +403,7 @@ gst_rtmp_connection_close (GstRtmpConnection * self)
   }
 
   g_cancellable_cancel (self->cancellable);
-  cancel_all_commands (self);
+  cancel_all_commands (self, "connection closed locally");
 
   if (self->input_source) {
     g_source_destroy (self->input_source);
@@ -581,7 +581,7 @@ gst_rtmp_connection_emit_error (GstRtmpConnection * self)
 {
   if (!self->error) {
     self->error = TRUE;
-    cancel_all_commands (self);
+    cancel_all_commands (self, "connection error");
     g_signal_emit (self, signals[SIGNAL_ERROR], 0);
   }
 }
