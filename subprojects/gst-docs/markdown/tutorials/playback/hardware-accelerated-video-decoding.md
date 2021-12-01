@@ -41,7 +41,7 @@ currently not limited to Intel GPUs as other manufacturers are free to
 use this API, for example, [Imagination
 Technologies](http://en.wikipedia.org/wiki/Imagination_Technologies) or
 [S3 Graphics](http://en.wikipedia.org/wiki/S3_Graphics). Accessible to
-GStreamer through the [gstreamer-vaapi](https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/) package.
+GStreamer through the [gstreamer-vaapi](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gstreamer-vaapi/) package.
 
 - [VDPAU](http://en.wikipedia.org/wiki/VDPAU) (*Video Decode and
 Presentation API for UNIX*): Initially designed by
