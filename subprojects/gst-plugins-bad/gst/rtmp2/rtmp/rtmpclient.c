@@ -722,15 +722,15 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
   optional_args = g_ptr_array_index (args, 1);
 
   node = gst_amf_node_get_field (optional_args, "code");
-  if (!node) {
+  code = node ? gst_amf_node_peek_string (node, NULL) : NULL;
+  if (!code) {
     g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
         "result code missing from connect cmd result");
     g_object_unref (task);
     return;
   }
 
-  code = gst_amf_node_peek_string (node, NULL);
-  GST_INFO ("connect result: %s", GST_STR_NULL (code));
+  GST_INFO ("connect result: %s", code);
 
   if (g_str_equal (code, "NetConnection.Connect.Success")) {
     node = gst_amf_node_get_field (optional_args, "secureToken");
@@ -859,7 +859,7 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
   }
 
   g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
-      "unhandled connect result code: %s", GST_STR_NULL (code));
+      "unhandled connect result code: %s", code);
   g_object_unref (task);
 }
 
