@@ -847,15 +847,32 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
       }
     }
 
-    g_warn_if_fail (!data->auth_query);
-    data->auth_query = do_adobe_auth (data->location.username,
-        data->location.password, gst_uri_get_query_value (query, "salt"),
-        gst_uri_get_query_value (query, "opaque"),
-        gst_uri_get_query_value (query, "challenge"));
+    {
+      const gchar *salt, *opaque, *challenge;
+
+      salt = gst_uri_get_query_value (query, "salt");
+      if (!salt) {
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+            "salt missing from auth request: %s", desc);
+        g_object_unref (task);
+        gst_uri_unref (query);
+        return;
+      }
+
+      opaque = gst_uri_get_query_value (query, "opaque");
+      challenge = gst_uri_get_query_value (query, "challenge");
+
+      g_warn_if_fail (!data->auth_query);
+      data->auth_query = do_adobe_auth (data->location.username,
+          data->location.password, salt, opaque, challenge);
+    }
 
     gst_uri_unref (query);
 
     if (!data->auth_query) {
+      /* do_adobe_auth should not fail; send_connect tests if username
+       * and password are provided */
+      g_warn_if_reached ();
       g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
           "couldn't generate adobe style authentication query");
       g_object_unref (task);
