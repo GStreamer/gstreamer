@@ -118,6 +118,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 G_DEFINE_TYPE (GstVaapiDecodeBin, gst_vaapi_decode_bin, GST_TYPE_BIN);
 
+extern gboolean _gst_vaapi_has_video_processing;
+
 static gboolean gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * self);
 
 static void
@@ -409,30 +411,30 @@ gst_vaapi_decode_bin_init (GstVaapiDecodeBin * vaapidecbin)
   g_assert (vaapidecbin->decoder);
 
   /* create the queue */
-  vaapidecbin->queue = gst_element_factory_make ("queue", "vaapi-queue");
-  if (!vaapidecbin->queue) {
-    gst_clear_object (&vaapidecbin->decoder);
-    post_missing_element_message (vaapidecbin, "queue");
-    return;
-  }
+  vaapidecbin->queue = gst_element_factory_make ("queue", NULL);
+  g_assert (vaapidecbin->queue);
 
   gst_bin_add_many (GST_BIN (vaapidecbin), vaapidecbin->decoder,
       vaapidecbin->queue, NULL);
 
   if (!gst_element_link (vaapidecbin->decoder, vaapidecbin->queue)) {
-    gst_clear_object (&vaapidecbin->decoder);
-    gst_clear_object (&vaapidecbin->queue);
-    g_critical ("failed to link decoder and queue");
+    GST_WARNING_OBJECT (vaapidecbin, "Failed to link decoder and queue");
     return;
   }
 
   /* create ghost pad sink */
   pad = gst_element_get_static_pad (vaapidecbin->decoder, "sink");
-  ghostpad = gst_ghost_pad_new_from_template ("sink", pad,
-      GST_PAD_PAD_TEMPLATE (pad));
+  if (!pad) {
+    GST_WARNING_OBJECT (vaapidecbin, "Failed to get decoder sink pad");
+    return;
+  }
+
+  ghostpad = gst_ghost_pad_new ("sink", pad);
   gst_object_unref (pad);
-  if (!gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghostpad))
-    g_critical ("failed to add decoder sink pad to bin");
+  if (!gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghostpad)) {
+    GST_WARNING_OBJECT (vaapidecbin, "Failed to add decoder sink pad to bin");
+    return;
+  }
 
   /* create ghost pad src */
   pad = gst_element_get_static_pad (GST_ELEMENT (vaapidecbin->queue), "src");
@@ -440,5 +442,5 @@ gst_vaapi_decode_bin_init (GstVaapiDecodeBin * vaapidecbin)
       GST_PAD_PAD_TEMPLATE (pad));
   gst_object_unref (pad);
   if (!gst_element_add_pad (GST_ELEMENT (vaapidecbin), ghostpad))
-    g_critical ("failed to add queue source pad to bin");
+    GST_WARNING_OBJECT (vaapidecbin, "Failed to add queue source pad to bin");
 }
