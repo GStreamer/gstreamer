@@ -65,7 +65,7 @@ struct _GstRtpH264Pay
 {
   GstRTPBasePayload payload;
 
-  guint profile;
+  guint profile_level;
   GPtrArray *sps, *pps;
 
   GstH264StreamFormat stream_format;

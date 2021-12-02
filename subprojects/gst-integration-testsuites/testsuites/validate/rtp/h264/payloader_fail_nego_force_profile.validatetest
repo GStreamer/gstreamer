@@ -1,0 +1,16 @@
+meta,
+    args = {
+        "videotestsrc num-buffers=1 ! x264enc ! h264parse ! \
+            video/x-h264,level=(string)4,profile=baseline ! rtph264pay name=pay ! \
+            application/x-rtp,profile=constrained-baseline ! fakesink",
+    },
+    expected-issues = {
+        [
+            expected-issue,
+                level=critical,
+                issue-id=runtime::not-negotiated,
+                details=".*Field 'profile'.*can't intersect with filter value.*baseline.*",
+        ],
+    }
+
+

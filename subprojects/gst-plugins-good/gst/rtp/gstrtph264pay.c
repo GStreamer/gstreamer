@@ -223,7 +223,7 @@ static void
 gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay)
 {
   rtph264pay->queue = g_array_new (FALSE, FALSE, sizeof (guint));
-  rtph264pay->profile = 0;
+  rtph264pay->profile_level = 0;
   rtph264pay->sps = g_ptr_array_new_with_free_func (
       (GDestroyNotify) gst_buffer_unref);
   rtph264pay->pps = g_ptr_array_new_with_free_func (
@@ -321,7 +321,7 @@ gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
   for (i = 0; i < gst_caps_get_size (allowed_caps); i++) {
     GstStructure *s = gst_caps_get_structure (allowed_caps, i);
     GstStructure *new_s = gst_structure_new_empty ("video/x-h264");
-    const gchar *profile_level_id;
+    const gchar *profile_level_id, *profile;
 
     profile_level_id = gst_structure_get_string (s, "profile-level-id");
 
@@ -343,9 +343,9 @@ gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
         GST_LOG_OBJECT (payload, "In caps, have profile %s and level %s",
             profile, level);
 
-        if (!strcmp (profile, "constrained-baseline"))
+        if (!strcmp (profile, "constrained-baseline")) {
           gst_structure_set (new_s, "profile", G_TYPE_STRING, profile, NULL);
-        else {
+        } else {
           GValue val = { 0, };
           GValue profiles = { 0, };
 
@@ -385,6 +385,8 @@ gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
         gst_structure_set (new_s,
             "profile", G_TYPE_STRING, "constrained-baseline", NULL);
       }
+    } else if ((profile = gst_structure_get_string (s, "profile"))) {
+      gst_structure_set (new_s, "profile", G_TYPE_STRING, profile, NULL);
     } else {
       /* No profile-level-id means baseline or unrestricted */
 
@@ -457,14 +459,13 @@ gst_rtp_h264_pay_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   return gst_pad_query_default (pad, parent, query);
 }
 
-
 /* take the currently configured SPS and PPS lists and set them on the caps as
  * sprop-parameter-sets */
 static gboolean
 gst_rtp_h264_pay_set_sps_pps (GstRTPBasePayload * basepayload)
 {
+  GstStructure *s = gst_structure_new_empty ("unused");
   GstRtpH264Pay *payloader = GST_RTP_H264_PAY (basepayload);
-  gchar *profile;
   gchar *set;
   GString *sprops;
   guint count;
@@ -502,24 +503,34 @@ gst_rtp_h264_pay_set_sps_pps (GstRTPBasePayload * basepayload)
   }
 
   if (G_LIKELY (count)) {
-    if (payloader->profile != 0) {
-      /* profile is 24 bit. Force it to respect the limit */
-      profile = g_strdup_printf ("%06x", payloader->profile & 0xffffff);
-      /* combine into output caps */
-      res = gst_rtp_base_payload_set_outcaps (basepayload,
-          "packetization-mode", G_TYPE_STRING, "1",
-          "profile-level-id", G_TYPE_STRING, profile,
-          "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
-      g_free (profile);
-    } else {
-      res = gst_rtp_base_payload_set_outcaps (basepayload,
-          "packetization-mode", G_TYPE_STRING, "1",
-          "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
+    gchar *profile_level;
+
+    gst_structure_set (s,
+        "packetization-mode", G_TYPE_STRING, "1",
+        "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
+
+    if (payloader->profile_level != 0) {
+      guint8 sps[2] = {
+        payloader->profile_level >> 16,
+        payloader->profile_level >> 8,
+      };
+
+      profile_level =
+          g_strdup_printf ("%06x", payloader->profile_level & 0xffffff);
+      gst_structure_set (s,
+          "profile-level-id", G_TYPE_STRING, profile_level,
+          "profile", G_TYPE_STRING, gst_codec_utils_h264_get_profile (sps, 2),
+          NULL);
+
+      g_free (profile_level);
     }
 
+    /* combine into output caps */
+    res = gst_rtp_base_payload_set_outcaps_structure (basepayload, s);
   } else {
     res = gst_rtp_base_payload_set_outcaps (basepayload, NULL);
   }
+  gst_structure_free (s);
   g_string_free (sprops, TRUE);
 
   return res;
@@ -591,8 +602,8 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
     /* AVCProfileIndication */
     /* profile_compat */
     /* AVCLevelIndication */
-    rtph264pay->profile = (data[1] << 16) | (data[2] << 8) | data[3];
-    GST_DEBUG_OBJECT (rtph264pay, "profile %06x", rtph264pay->profile);
+    rtph264pay->profile_level = (data[1] << 16) | (data[2] << 8) | data[3];
+    GST_DEBUG_OBJECT (rtph264pay, "profile %06x", rtph264pay->profile_level);
 
     /* 6 bits reserved | 2 bits lengthSizeMinusOne */
     /* this is the number of bytes in front of the NAL units to mark their

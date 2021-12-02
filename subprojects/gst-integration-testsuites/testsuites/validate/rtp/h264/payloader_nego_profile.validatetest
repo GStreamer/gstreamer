@@ -1,0 +1,13 @@
+meta,
+    args = {
+        "videotestsrc num-buffers=1 ! x264enc ! h264parse ! \
+            video/x-h264,level=(string)4 ! rtph264pay name=pay ! \
+            application/x-rtp,profile=constrained-baseline ! fakesink",
+    },
+    configs = {
+        "$(validateflow), pad=pay:sink, ignored-event-types={tag, segment}, \
+            logged-fields=\"caps={framerate, height, level, profile, stream-format, width}\"",
+        "$(validateflow), pad=pay:src, ignored-event-types={tag, segment}, \
+            logged-fields=\"caps={a-framerate, clock-rate, encoding-name, media, packetization-mode, payload, profile, profile-level-id}\"",
+    }
+
