@@ -150,6 +150,7 @@ done:
 static gboolean
 gst_nv_vp9_dec_open (GstVideoDecoder * decoder)
 {
+  GstVp9Decoder *vp9dec = GST_VP9_DECODER (decoder);
   GstNvVp9Dec *self = GST_NV_VP9_DEC (decoder);
   GstNvVp9DecClass *klass = GST_NV_VP9_DEC_GET_CLASS (self);
 
@@ -166,6 +167,10 @@ gst_nv_vp9_dec_open (GstVideoDecoder * decoder)
 
     return FALSE;
   }
+
+  /* NVDEC doesn't support non-keyframe resolution change and it will result
+   * in outputting broken frames */
+  gst_vp9_decoder_set_non_keyframe_format_change_support (vp9dec, FALSE);
 
   return TRUE;
 }
