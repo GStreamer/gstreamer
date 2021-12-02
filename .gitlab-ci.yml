@@ -25,7 +25,7 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2021-10-05.0'
+  FEDORA_TAG:  '2021-12-03.1'
   INDENT_TAG: '2021-10-04.0'
   WINDOWS_TAG: "2021-10-12.0"
 
@@ -136,7 +136,7 @@ trigger:
     FDO_DISTRIBUTION_VERSION: '31'
     FDO_REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
-    FDO_DISTRIBUTION_EXEC: 'DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH bash ci/docker/fedora/prepare.sh'
+    FDO_DISTRIBUTION_EXEC: 'GIT_BRANCH=$CI_COMMIT_REF_NAME GIT_URL=$CI_REPOSITORY_URL bash ci/docker/fedora/prepare.sh'
 
 fedora amd64 docker:
   extends:
@@ -267,8 +267,10 @@ gst indent:
 # build setup templates
 #
 .build_template: &build
+  - ci/scripts/handle-subprojects-cache.py subprojects/
+  # Update subprojects to respect `.wrap` content
+  - meson subprojects update --reset
   - echo $MESON_ARGS
-
   - meson build/ $MESON_ARGS
   - ninja -C build/
   - ccache --show-stats
@@ -323,14 +325,6 @@ gst indent:
   timeout: '45min'
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
-  before_script:
-    - export RUSTUP_HOME="/usr/local/rustup"
-    - export CARGO_HOME="/usr/local/cargo"
-    - export PATH="/usr/local/cargo/bin:$PATH"
-
-    - ci/scripts/handle-subprojects-cache.py subprojects/
-    # Update subprojects to respect `.wrap` content
-    - meson subprojects update --reset
   script:
     *build
   after_script:
@@ -399,9 +393,8 @@ build clang fedora x86_64:
       when: manual
     - changes:
         *modules_changes
-  before_script:
-    - ci/scripts/handle-subprojects-cache.py subprojects/
   script:
+    - ci/scripts/handle-subprojects-cache.py subprojects/
     # For some reason, options are separated by newline instead of space, so we
     # have to replace them first.
     - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
@@ -685,6 +678,8 @@ valgrind ges:
   - pip3 install --upgrade meson
   - *build
   - ./gst-env.py ninja -C build/ plugins_doc_caches
+  # Ignore modifications to wrap files made by meson
+  - git checkout subprojects/*.wrap
   - ./ci/scripts/check-documentation-diff.py
   - ./gst-env.py hotdoc run --conf-file=build/subprojects/gst-docs/GStreamer-doc.json --fatal-warnings
   - mv build/subprojects/gst-docs/GStreamer-doc/html documentation/
