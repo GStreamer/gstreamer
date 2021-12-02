@@ -67,6 +67,7 @@
 #endif
 
 #include "gstd3d11vp9dec.h"
+#include "gstd3d11pluginutils.h"
 
 #include <gst/codecs/gstvp9decoder.h>
 #include <string.h>
@@ -252,6 +253,7 @@ gst_d3d11_vp9_dec_set_context (GstElement * element, GstContext * context)
 static gboolean
 gst_d3d11_vp9_dec_open (GstVideoDecoder * decoder)
 {
+  GstVp9Decoder *vp9dec = GST_VP9_DECODER (decoder);
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
   GstD3D11Vp9DecInner *inner = self->inner;
   GstD3D11Vp9DecClass *klass = GST_D3D11_VP9_DEC_GET_CLASS (self);
@@ -261,6 +263,16 @@ gst_d3d11_vp9_dec_open (GstVideoDecoder * decoder)
           cdata, &inner->device, &inner->d3d11_decoder)) {
     GST_ERROR_OBJECT (self, "Failed to open decoder");
     return FALSE;
+  }
+
+  /* XXX: ConfigDecoderSpecific bit 12 indicates whether accelerator can
+   * support non-keyframe format change or not, but it doesn't seem to be
+   * reliable, since 1b means that it's supported and 0b indicates it may not be
+   * supported. Because some GPUs can support it even if the bit 12 is not
+   * set, do filtering by vendor for now (AMD and Intel looks fine) */
+  if (gst_d3d11_get_device_vendor (inner->device) ==
+      GST_D3D11_DEVICE_VENDOR_NVIDIA) {
+    gst_vp9_decoder_set_non_keyframe_format_change_support (vp9dec, FALSE);
   }
 
   return TRUE;
