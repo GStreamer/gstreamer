@@ -710,10 +710,37 @@ dns_resolve_failed:
 }
 
 static GstStateChangeReturn
+gst_rist_sink_reuse_socket (GstRistSink * sink)
+{
+  gint i;
+
+  for (i = 0; i < sink->bonds->len; i++) {
+    RistSenderBond *bond = g_ptr_array_index (sink->bonds, i);
+    GObject *session = NULL;
+    GstPad *pad;
+    gchar name[32];
+
+    g_signal_emit_by_name (sink->rtpbin, "get-session", i, &session);
+    g_object_set (session, "rtcp-min-interval", sink->min_rtcp_interval,
+        "rtcp-fraction", sink->max_rtcp_bandwidth, NULL);
+    g_object_unref (session);
+
+    g_snprintf (name, 32, "src_%u", bond->session);
+    pad = gst_element_request_pad_simple (sink->dispatcher, name);
+    gst_element_link_pads (sink->dispatcher, name, bond->rtx_queue, "sink");
+    gst_object_unref (pad);
+
+    if (!gst_rist_sink_setup_rtcp_socket (sink, bond))
+      return GST_STATE_CHANGE_FAILURE;
+  }
+
+  return GST_STATE_CHANGE_SUCCESS;
+}
+
+static GstStateChangeReturn
 gst_rist_sink_start (GstRistSink * sink)
 {
   GstPad *rtxbin_gpad, *rtpext_sinkpad;
-  gint i;
 
   /* Unless a custom dispatcher was provided, use the specified bonding method
    * to create one */
@@ -749,26 +776,6 @@ gst_rist_sink_start (GstRistSink * sink)
 
   gst_bin_add (GST_BIN (sink->rtxbin), sink->dispatcher);
   gst_element_link (sink->rtpext, sink->dispatcher);
-
-  for (i = 0; i < sink->bonds->len; i++) {
-    RistSenderBond *bond = g_ptr_array_index (sink->bonds, i);
-    GObject *session = NULL;
-    GstPad *pad;
-    gchar name[32];
-
-    g_signal_emit_by_name (sink->rtpbin, "get-session", i, &session);
-    g_object_set (session, "rtcp-min-interval", sink->min_rtcp_interval,
-        "rtcp-fraction", sink->max_rtcp_bandwidth, NULL);
-    g_object_unref (session);
-
-    g_snprintf (name, 32, "src_%u", bond->session);
-    pad = gst_element_request_pad_simple (sink->dispatcher, name);
-    gst_element_link_pads (sink->dispatcher, name, bond->rtx_queue, "sink");
-    gst_object_unref (pad);
-
-    if (!gst_rist_sink_setup_rtcp_socket (sink, bond))
-      return GST_STATE_CHANGE_FAILURE;
-  }
 
   return GST_STATE_CHANGE_SUCCESS;
 }
@@ -897,6 +904,11 @@ gst_rist_sink_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      /* Set the properties to the child elements to avoid binding to
+       * a NULL interface on a network without a default gateway */
+      if (gst_rist_sink_start (sink) == GST_STATE_CHANGE_FAILURE)
+        return GST_STATE_CHANGE_FAILURE;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_rist_sink_disable_stats_interval (sink);
       break;
@@ -909,7 +921,7 @@ gst_rist_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      ret = gst_rist_sink_start (sink);
+      ret = gst_rist_sink_reuse_socket (sink);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_rist_sink_enable_stats_interval (sink);
