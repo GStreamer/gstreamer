@@ -197,6 +197,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVp9Decoder, gst_object_unref)
 GST_CODECS_API
 GType gst_vp9_decoder_get_type (void);
 
+GST_CODECS_API
+void gst_vp9_decoder_set_non_keyframe_format_change_support (GstVp9Decoder * decoder,
+                                                             gboolean support);
+
 G_END_DECLS
 
 #endif /* __GST_VP9_DECODER_H__ */
