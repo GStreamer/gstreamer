@@ -597,6 +597,20 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
     return FALSE;
   }
 
+  if (quad_mode) {
+    if (self->output_destination != GST_AJA_OUTPUT_DESTINATION_AUTO) {
+      GST_ERROR_OBJECT(self,
+                       "Quad modes require usage of the channel's default "
+                       "output destination");
+      return FALSE;
+    }
+
+    if (self->channel != ::NTV2_CHANNEL1 && self->channel != ::NTV2_CHANNEL5) {
+      GST_ERROR_OBJECT(self, "Quad modes require channels 1 or 5");
+      return FALSE;
+    }
+  }
+
   self->quad_mode = quad_mode;
   self->video_format = video_format;
 

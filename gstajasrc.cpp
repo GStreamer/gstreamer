@@ -473,6 +473,22 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
 
 #undef NEEDS_QUAD_MODE
 
+  if (self->quad_mode) {
+    if (self->input_source != GST_AJA_INPUT_SOURCE_AUTO &&
+        !(self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
+          self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4)) {
+      GST_ERROR_OBJECT(
+          self,
+          "Quad modes require usage of the channel's default input source");
+      return FALSE;
+    }
+
+    if (self->channel != ::NTV2_CHANNEL1 && self->channel != ::NTV2_CHANNEL5) {
+      GST_ERROR_OBJECT(self, "Quad modes require channels 1 or 5");
+      return FALSE;
+    }
+  }
+
   bool had_quad_enabled = false, had_quad_quad_enabled = false;
 
   if (self->channel < ::NTV2_CHANNEL5) {
@@ -498,13 +514,6 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
 
     for (int i = 0; i < 4; i++) {
       self->device->device->AutoCirculateStop((NTV2Channel)(quad_channel + i));
-    }
-  }
-
-  if (self->quad_mode) {
-    if (self->channel != ::NTV2_CHANNEL1 && self->channel != ::NTV2_CHANNEL5) {
-      GST_ERROR_OBJECT(self, "Quad modes require channels 1 or 5");
-      return FALSE;
     }
   }
 
