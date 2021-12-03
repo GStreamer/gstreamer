@@ -215,8 +215,7 @@ gst_teletextdec_class_init (GstTeletextDecClass * klass)
   g_object_class_install_property (gobject_class, PROP_SUBS_TEMPLATE,
       g_param_spec_string ("subtitles-template", "Subtitles output template",
           "Output template used to print each one of the subtitles lines",
-          g_strescape ("%s\n", NULL),
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "%s\\n", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_FONT_DESCRIPTION,
       g_param_spec_string ("font-description", "Pango font description",
