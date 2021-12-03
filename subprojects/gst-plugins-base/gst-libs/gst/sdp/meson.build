@@ -7,7 +7,7 @@ gst_sdp_headers = files([
 ])
 install_headers(gst_sdp_headers, subdir : 'gstreamer-1.0/gst/sdp/')
 
-sdp_deps = [rtp_dep, gst_dep, gio_dep]
+sdp_deps = [rtp_dep, gst_dep, gio_dep, pbutils_dep]
 gst_sdp_sources = files(['gstsdpmessage.c', 'gstmikey.c'])
 gstsdp = library('gstsdp-@0@'.format(api_version),
   gst_sdp_sources,

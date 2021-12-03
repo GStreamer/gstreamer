@@ -47,6 +47,16 @@ static const gchar *sdp = "v=0\r\n"
     "a=sendrecv\r\n"
     "m=audio 1010 TCP 14\r\n";
 
+static const gchar *h264_sdp = "v=0\r\n"
+    "o=- 992782775729845470 2 IN IP4 127.0.0.1\r\n"
+    "s=TestH264\r\n"
+    "t=0 0\r\n"
+    "m=video 9 UDP/TLS/RTP/SAVPF 96\r\n"
+    "c=IN IP4 0.0.0.0\r\n"
+    "a=recvonly\r\n"
+    "a=rtpmap:96 H264/90000\r\n"
+    "a=fmtp:96 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f\r\n";
+
 static const gchar caps_video_string1[] =
     "application/x-unknown, media=(string)video, payload=(int)96, "
     "clock-rate=(int)90000, encoding-name=(string)MP4V-ES";
@@ -658,6 +668,33 @@ GST_START_TEST (caps_from_media_really_const)
 }
 
 GST_END_TEST
+GST_START_TEST (media_from_caps_h264_with_profile_asymmetry_allowed)
+{
+  GstSDPMessage *message;
+  glong length = -1;
+  const GstSDPMedia *result_video;
+  GstStructure *s_video;
+  GstCaps *caps_video;
+
+  gst_sdp_message_new (&message);
+  gst_sdp_message_parse_buffer ((guint8 *) h264_sdp, length, message);
+
+
+  result_video = gst_sdp_message_get_media (message, 0);
+  fail_unless (result_video != NULL);
+  caps_video = gst_sdp_media_get_caps_from_media (result_video, 96);
+
+  s_video = gst_caps_get_structure (caps_video, 0);
+  fail_if (gst_structure_has_field (s_video, "level-asymmetry-allowed"));
+  fail_if (gst_structure_has_field (s_video, "profile-level-id"));
+  fail_unless_equals_string (gst_structure_get_string (s_video, "profile"),
+      "constrained-baseline");
+
+  gst_caps_unref (caps_video);
+  gst_sdp_message_free (message);
+}
+
+GST_END_TEST
 /*
  * End of test cases
  */
@@ -681,6 +718,8 @@ sdp_suite (void)
   tcase_add_test (tc_chain, media_from_caps_rtcp_fb_pt_100);
   tcase_add_test (tc_chain, media_from_caps_rtcp_fb_pt_101);
   tcase_add_test (tc_chain, media_from_caps_extmap_pt_100);
+  tcase_add_test (tc_chain,
+      media_from_caps_h264_with_profile_asymmetry_allowed);
 
   return s;
 }
