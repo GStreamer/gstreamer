@@ -185,6 +185,27 @@ _alloc_red_packet_and_fill_headers (GstRtpRedEnc * self,
   rtp_red_block_set_payload_type (red_block_header,
       gst_rtp_buffer_get_payload_type (inp_rtp));
 
+  /* FIXME: remove that logic once https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/923
+   * has been addressed. */
+  if (self->twcc_ext_id != 0) {
+    guint8 appbits;
+    gpointer inp_data;
+    guint inp_size;
+    guint16 data;
+
+    /* If the input buffer was meant to hold a TWCC seqnum, we also do that
+     * for our wrapper */
+    if (gst_rtp_buffer_get_extension_onebyte_header (inp_rtp, self->twcc_ext_id,
+            0, &inp_data, &inp_size)) {
+      gst_rtp_buffer_add_extension_onebyte_header (&red_rtp, 1, &data,
+          sizeof (guint16));
+    } else if (gst_rtp_buffer_get_extension_twobytes_header (inp_rtp, &appbits,
+            self->twcc_ext_id, 0, &inp_data, &inp_size)) {
+      gst_rtp_buffer_add_extension_twobytes_header (&red_rtp, appbits,
+          self->twcc_ext_id, &data, sizeof (guint16));
+    }
+  }
+
   gst_rtp_buffer_unmap (&red_rtp);
 
   gst_buffer_copy_into (red, inp_rtp->buffer, GST_BUFFER_COPY_METADATA, 0, -1);
@@ -360,6 +381,31 @@ gst_rtp_red_enc_chain (GstPad G_GNUC_UNUSED * pad, GstObject * parent,
   return _push_red_packet (self, &rtp, buffer, redundant_block, distance);
 }
 
+static guint8
+_get_extmap_id_for_attribute (const GstStructure * s, const gchar * ext_name)
+{
+  guint i;
+  guint8 extmap_id = 0;
+  guint n_fields = gst_structure_n_fields (s);
+
+  for (i = 0; i < n_fields; i++) {
+    const gchar *field_name = gst_structure_nth_field_name (s, i);
+    if (g_str_has_prefix (field_name, "extmap-")) {
+      const gchar *str = gst_structure_get_string (s, field_name);
+      if (str && g_strcmp0 (str, ext_name) == 0) {
+        gint64 id = g_ascii_strtoll (field_name + 7, NULL, 10);
+        if (id > 0 && id < 15) {
+          extmap_id = id;
+          break;
+        }
+      }
+    }
+  }
+  return extmap_id;
+}
+
+#define TWCC_EXTMAP_STR "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+
 static gboolean
 gst_rtp_red_enc_event_sink (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -368,12 +414,18 @@ gst_rtp_red_enc_event_sink (GstPad * pad, GstObject * parent, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
     {
+      GstCaps *caps;
+      GstStructure *s;
       gboolean replace_with_red_caps =
           self->is_current_caps_red || self->allow_no_red_blocks;
 
+      gst_event_parse_caps (event, &caps);
+      s = gst_caps_get_structure (caps, 0);
+      self->twcc_ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
+
+      GST_INFO_OBJECT (self, "TWCC extension ID: %u", self->twcc_ext_id);
+
       if (replace_with_red_caps) {
-        GstCaps *caps;
-        gst_event_parse_caps (event, &caps);
         gst_event_take (&event, _create_caps_event (caps, self->pt));
 
         self->is_current_caps_red = TRUE;

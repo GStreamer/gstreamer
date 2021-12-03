@@ -56,6 +56,7 @@ struct _GstRtpRedEnc {
   GQueue *rtp_history;
   gboolean send_caps;
   gboolean is_current_caps_red;
+  guint8 twcc_ext_id;
 };
 
 GType gst_rtp_red_enc_get_type (void);

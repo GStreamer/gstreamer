@@ -331,7 +331,8 @@ gst_rtp_ulpfec_enc_stream_ctx_prepend_to_fec_buffer (GstRtpUlpFecEncStreamCtx *
 
 static GstFlowReturn
 gst_rtp_ulpfec_enc_stream_ctx_push_fec_packets (GstRtpUlpFecEncStreamCtx * ctx,
-    guint8 pt, guint16 seq, guint32 timestamp, guint32 ssrc)
+    guint8 pt, guint16 seq, guint32 timestamp, guint32 ssrc, guint8 twcc_ext_id,
+    GstRTPHeaderExtensionFlags twcc_ext_flags, guint8 twcc_appbits)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint fec_packets_num =
@@ -350,6 +351,31 @@ gst_rtp_ulpfec_enc_stream_ctx_push_fec_packets (GstRtpUlpFecEncStreamCtx * ctx,
                 seq + fec_packets_pushed, timestamp, ssrc))) {
       gst_buffer_copy_into (fec, latest_packet, GST_BUFFER_COPY_TIMESTAMPS, 0,
           -1);
+
+      /* If buffers in the stream we are protecting were meant to hold a TWCC seqnum,
+       * we also indicate that our protection buffers need one. At this point no seqnum
+       * has actually been set, we thus don't need to rewrite seqnums, simply indicate
+       * to RTPSession that the FEC buffers need one too */
+
+      /* FIXME: remove this logic once https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/923
+       * is addressed */
+      if (twcc_ext_id != 0) {
+        GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+        guint16 data;
+
+        if (!gst_rtp_buffer_map (fec, GST_MAP_READWRITE, &rtp))
+          g_assert_not_reached ();
+
+        if (twcc_ext_flags & GST_RTP_HEADER_EXTENSION_ONE_BYTE) {
+          gst_rtp_buffer_add_extension_onebyte_header (&rtp, twcc_ext_id,
+              &data, sizeof (guint16));
+        } else if (twcc_ext_flags & GST_RTP_HEADER_EXTENSION_TWO_BYTE) {
+          gst_rtp_buffer_add_extension_twobytes_header (&rtp, twcc_appbits,
+              twcc_ext_id, &data, sizeof (guint16));
+        }
+
+        gst_rtp_buffer_unmap (&rtp);
+      }
 
       ret = gst_pad_push (ctx->srcpad, fec);
       if (GST_FLOW_OK == ret)
@@ -468,12 +494,14 @@ gst_rtp_ulpfec_enc_stream_ctx_free (GstRtpUlpFecEncStreamCtx * ctx)
 
 static GstFlowReturn
 gst_rtp_ulpfec_enc_stream_ctx_process (GstRtpUlpFecEncStreamCtx * ctx,
-    GstBuffer * buffer)
+    GstBuffer * buffer, guint8 twcc_ext_id)
 {
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   GstFlowReturn ret;
   gboolean push_fec = FALSE;
   gboolean empty_packet_buffer = FALSE;
+  GstRTPHeaderExtensionFlags twcc_ext_flags = 0;
+  guint8 twcc_appbits = 0;
 
   ctx->num_packets_received++;
 
@@ -490,6 +518,21 @@ gst_rtp_ulpfec_enc_stream_ctx_process (GstRtpUlpFecEncStreamCtx * ctx,
       g_assert_not_reached ();
   }
 
+  if (twcc_ext_id != 0) {
+    gpointer data;
+    guint size;
+
+    if (gst_rtp_buffer_get_extension_onebyte_header (&rtp, twcc_ext_id, 0,
+            &data, &size)) {
+      twcc_ext_flags |= GST_RTP_HEADER_EXTENSION_ONE_BYTE;
+    } else if (gst_rtp_buffer_get_extension_twobytes_header (&rtp,
+            &twcc_appbits, twcc_ext_id, 0, &data, &size)) {
+      twcc_ext_flags |= GST_RTP_HEADER_EXTENSION_TWO_BYTE;
+    } else {
+      twcc_ext_id = 0;
+    }
+  }
+
   gst_rtp_ulpfec_enc_stream_ctx_cache_packet (ctx, &rtp, &empty_packet_buffer,
       &push_fec);
 
@@ -504,7 +547,7 @@ gst_rtp_ulpfec_enc_stream_ctx_process (GstRtpUlpFecEncStreamCtx * ctx,
     if (GST_FLOW_OK == ret)
       ret =
           gst_rtp_ulpfec_enc_stream_ctx_push_fec_packets (ctx, ctx->pt, fec_seq,
-          fec_timestamp, fec_ssrc);
+          fec_timestamp, fec_ssrc, twcc_ext_id, twcc_ext_flags, twcc_appbits);
   } else {
     gst_rtp_buffer_unmap (&rtp);
     ret = gst_pad_push (ctx->srcpad, buffer);
@@ -558,7 +601,7 @@ gst_rtp_ulpfec_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   ctx = gst_rtp_ulpfec_enc_aquire_ctx (fec, ssrc);
 
-  ret = gst_rtp_ulpfec_enc_stream_ctx_process (ctx, buffer);
+  ret = gst_rtp_ulpfec_enc_stream_ctx_process (ctx, buffer, fec->twcc_ext_id);
 
   /* FIXME: does not work for multiple ssrcs */
   fec->num_packets_protected = ctx->num_packets_protected;
@@ -575,6 +618,58 @@ gst_rtp_ulpfec_enc_configure_ctx (gpointer key, gpointer value,
 
   gst_rtp_ulpfec_enc_stream_ctx_configure (ctx, fec->pt,
       fec->percentage, fec->percentage_important, fec->multipacket);
+}
+
+static guint8
+_get_extmap_id_for_attribute (const GstStructure * s, const gchar * ext_name)
+{
+  guint i;
+  guint8 extmap_id = 0;
+  guint n_fields = gst_structure_n_fields (s);
+
+  for (i = 0; i < n_fields; i++) {
+    const gchar *field_name = gst_structure_nth_field_name (s, i);
+    if (g_str_has_prefix (field_name, "extmap-")) {
+      const gchar *str = gst_structure_get_string (s, field_name);
+      if (str && g_strcmp0 (str, ext_name) == 0) {
+        gint64 id = g_ascii_strtoll (field_name + 7, NULL, 10);
+        if (id > 0 && id < 15) {
+          extmap_id = id;
+          break;
+        }
+      }
+    }
+  }
+  return extmap_id;
+}
+
+#define TWCC_EXTMAP_STR "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+
+static gboolean
+gst_rtp_ulpfec_enc_event_sink (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  GstRtpUlpFecEnc *self = GST_RTP_ULPFEC_ENC (parent);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      GstStructure *s;
+
+      gst_event_parse_caps (event, &caps);
+      s = gst_caps_get_structure (caps, 0);
+      self->twcc_ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
+
+      GST_INFO_OBJECT (self, "TWCC extension ID: %u", self->twcc_ext_id);
+
+      break;
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static void
@@ -655,6 +750,8 @@ gst_rtp_ulpfec_enc_init (GstRtpUlpFecEnc * fec)
   GST_PAD_SET_PROXY_ALLOCATION (fec->sinkpad);
   gst_pad_set_chain_function (fec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rtp_ulpfec_enc_chain));
+  gst_pad_set_event_function (fec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_rtp_ulpfec_enc_event_sink));
   gst_element_add_pad (GST_ELEMENT (fec), fec->sinkpad);
 
   fec->ssrc_to_ctx = g_hash_table_new_full (NULL, NULL, NULL,

@@ -31,6 +31,7 @@
 #define xstr(s) str(s)
 #define str(s) #s
 #define GST_RTP_RED_ENC_CAPS_STR "application/x-rtp, payload=" xstr(PT_MEDIA)
+#define GST_RTP_RED_ENC_TWCC_CAPS_STR "application/x-rtp, extmap-1=http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01, payload=" xstr(PT_MEDIA)
 
 #define _check_red_received(h, expected)                     \
   G_STMT_START {                                             \
@@ -662,6 +663,58 @@ GST_START_TEST (rtpredenc_with_redundant_block)
 
 GST_END_TEST;
 
+GST_START_TEST (rtpredenc_transport_cc)
+{
+  GstHarness *h = gst_harness_new ("rtpredenc");
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  GstBuffer *bufin;
+  GstBuffer *bufout;
+  guint16 data;
+  gpointer out_data;
+  guint out_size;
+
+  g_object_set (h->element, "pt", PT_RED, "allow-no-red-blocks", TRUE, NULL);
+  gst_harness_set_src_caps_str (h, GST_RTP_RED_ENC_TWCC_CAPS_STR);
+
+  /* When we push in a media buffer with a transport-cc extension, the output
+   * RED buffer must hold one too */
+
+  bufin =
+      _new_rtp_buffer (TRUE, 0, PT_MEDIA, 0, TIMESTAMP_NTH (0), 0xabe2b0b, 0);
+  fail_unless (gst_rtp_buffer_map (bufin, GST_MAP_READ, &rtp));
+  gst_rtp_buffer_add_extension_onebyte_header (&rtp, 1, &data, sizeof (data));
+  gst_rtp_buffer_unmap (&rtp);
+
+  bufout = gst_harness_push_and_pull (h, bufin);
+
+  fail_unless (gst_rtp_buffer_map (bufout, GST_MAP_READ, &rtp));
+  fail_unless_equals_int (gst_rtp_buffer_get_payload_type (&rtp), PT_RED);
+  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 1, 0,
+          &out_data, &out_size));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (bufout);
+
+  /* And when the input media buffer doesn't hold the extension,
+   * the output buffer shouldn't either */
+
+  bufin =
+      _new_rtp_buffer (TRUE, 0, PT_MEDIA, 1, TIMESTAMP_NTH (1), 0xabe2b0b, 0);
+  bufout = gst_harness_push_and_pull (h, bufin);
+
+  fail_unless (gst_rtp_buffer_map (bufout, GST_MAP_READ, &rtp));
+  fail_unless_equals_int (gst_rtp_buffer_get_payload_type (&rtp), PT_RED);
+  fail_if (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 1, 0, &out_data,
+          &out_size));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (bufout);
+
+  _check_red_sent (h, 2);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
 static void
 rtpredenc_cant_create_red_packet_base_test (GstBuffer * buffer0,
     GstBuffer * buffer1)
@@ -833,6 +886,7 @@ rtpred_suite (void)
   tcase_add_loop_test (tc_chain, rtpredenc_negative_timestamp_offset, 0, 2);
   tcase_add_loop_test (tc_chain, rtpredenc_too_large_timestamp_offset, 0, 2);
   tcase_add_loop_test (tc_chain, rtpredenc_too_large_length, 0, 2);
+  tcase_add_test (tc_chain, rtpredenc_transport_cc);
 
   return s;
 }
