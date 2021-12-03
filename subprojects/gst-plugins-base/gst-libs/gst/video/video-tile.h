@@ -113,6 +113,8 @@ typedef enum
  *    in memory in Z or flipped Z order. In case of odd rows, the last row
  *    of blocks is arranged in linear order.
  * @GST_VIDEO_TILE_MODE_LINEAR: Tiles are in row order. (Since: 1.18)
+ * @GST_VIDEO_TILE_MODE_LINEAR_SUBSAMPLED: Tiles are in row order, with
+ *   variable tile size according to subsampling. (Since: 1.20)
  *
  * Enum value describing the available tiling modes.
  */

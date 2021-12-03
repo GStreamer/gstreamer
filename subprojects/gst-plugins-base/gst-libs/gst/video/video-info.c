@@ -1112,6 +1112,25 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
           (GST_ROUND_UP_N (height, 1 << (hs + 1)) / 2);
       break;
     }
+    case GST_VIDEO_FORMAT_NV12_16L32S:
+    {
+      gint ws = GST_VIDEO_FORMAT_INFO_TILE_WS (info->finfo);
+      gint hs = GST_VIDEO_FORMAT_INFO_TILE_HS (info->finfo);
+      info->stride[0] =
+          GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_N (width, 1 << ws) >> ws,
+          GST_ROUND_UP_N (height, 1 << hs) >> hs);
+      /*
+       * size of UV plane tiles is subsample, hence have the same number of
+       * tiles in both directions.
+       */
+      info->stride[1] = info->stride[0];
+      info->offset[0] = 0;
+      info->offset[1] =
+          GST_ROUND_UP_N (width, 1 << ws) * GST_ROUND_UP_N (height, 1 << hs);
+      info->size = info->offset[1] + GST_ROUND_UP_N (width, 1 << ws) *
+          GST_ROUND_UP_N (height, 1 << (hs - 1));
+      break;
+    }
     case GST_VIDEO_FORMAT_A420_10LE:
     case GST_VIDEO_FORMAT_A420_10BE:
       info->stride[0] = GST_ROUND_UP_4 (width * 2);

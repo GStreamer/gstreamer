@@ -142,6 +142,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_BGRA64_BE: reverse RGB with alpha channel last, 16 bits per channel
  * @GST_VIDEO_FORMAT_ABGR64_LE: reverse RGB with alpha channel first, 16 bits per channel
  * @GST_VIDEO_FORMAT_ABGR64_BE: reverse RGB with alpha channel first, 16 bits per channel
+ * @GST_VIDEO_FORMAT_NV12_16L32S: NV12 with 16x32 Y tiles and 16x16 UV tiles. (Since: 1.22)
  *
  * Enum value describing the most common video formats.
  *
@@ -370,6 +371,15 @@ typedef enum {
    * Since: 1.20
    */
   GST_VIDEO_FORMAT_ABGR64_BE,
+  /**
+   * GST_VIDEO_FORMAT_NV12_16L32S:
+   *
+   * NV12 with 16x32 Y tiles and 16x16 UV tiles.
+   *
+   * Since: 1.22
+   */
+  GST_VIDEO_FORMAT_NV12_16L32S,
+
 } GstVideoFormat;
 
 #define GST_VIDEO_MAX_PLANES 4
@@ -397,6 +407,8 @@ typedef struct _GstVideoFormatInfo GstVideoFormatInfo;
  *   #GstVideoFormatUnpack and #GstVideoFormatPack function.
  * @GST_VIDEO_FORMAT_FLAG_TILED: The format is tiled, there is tiling information
  *   in the last plane.
+ * @GST_VIDEO_FORMAT_FLAG_SUBTILES: The tile size varies per plane
+ *   according to the subsampling. (Since: 1.22)
  *
  * The different video flags that a format info can have.
  */
@@ -410,7 +422,15 @@ typedef enum
   GST_VIDEO_FORMAT_FLAG_PALETTE  = (1 << 5),
   GST_VIDEO_FORMAT_FLAG_COMPLEX  = (1 << 6),
   GST_VIDEO_FORMAT_FLAG_UNPACK   = (1 << 7),
-  GST_VIDEO_FORMAT_FLAG_TILED    = (1 << 8)
+  GST_VIDEO_FORMAT_FLAG_TILED    = (1 << 8),
+  /**
+   * GST_VIDEO_FORMAT_FLAG_SUBTILES:
+   *
+   * The tile size varies per plane according to the subsampling.
+   *
+   * Since: 1.22
+   */
+  GST_VIDEO_FORMAT_FLAG_SUBTILES = (1 << 9)
 } GstVideoFormatFlags;
 
 /* YUV components */
@@ -602,6 +622,19 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_HAS_PALETTE(info)  (((info)->flags & GST_VIDEO_FORMAT_FLAG_PALETTE) != 0)
 #define GST_VIDEO_FORMAT_INFO_IS_COMPLEX(info)   (((info)->flags & GST_VIDEO_FORMAT_FLAG_COMPLEX) != 0)
 #define GST_VIDEO_FORMAT_INFO_IS_TILED(info)     (((info)->flags & GST_VIDEO_FORMAT_FLAG_TILED) != 0)
+/**
+ * GST_VIDEO_FORMAT_INFO_HAS_SUBTILES:
+ * @info: a #GstVideoFormatInfo
+ *
+ * This macro checks if %GST_VIDEO_FORMAT_FLAG_SUBTILES is set. When this
+ * flag is set, it means that the tile sizes must be scaled as per the
+ * subsampling.
+ *
+ * Returns: %TRUE if the format uses subsampled tile sizes.
+ *
+ * Since: 1.22
+ */
+#define GST_VIDEO_FORMAT_INFO_HAS_SUBTILES(info) (((info)->flags & GST_VIDEO_FORMAT_FLAG_SUBTILES) != 0)
 
 #define GST_VIDEO_FORMAT_INFO_BITS(info)         ((info)->bits)
 #define GST_VIDEO_FORMAT_INFO_N_COMPONENTS(info) ((info)->n_components)
@@ -745,7 +778,7 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
     "I422_10BE, I422_10LE, NV16_10LE32, Y210, v210, UYVP, I420_10BE, I420_10LE, " \
     "P010_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, Y444, RGBP, GBR, BGRP, NV24, xBGR, BGRx, " \
     "xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, " \
-    "YV12, NV21, NV12, NV12_64Z32, NV12_4L4, NV12_32L32, Y41B, IYU1, YVU9, YUV9, RGB16, " \
+    "YV12, NV21, NV12, NV12_64Z32, NV12_4L4, NV12_32L32, NV12_16L32S, Y41B, IYU1, YVU9, YUV9, RGB16, " \
     "BGR16, RGB15, BGR15, RGB8P, GRAY16_BE, GRAY16_LE, GRAY10_LE32, GRAY8 }"
 #elif G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define GST_VIDEO_FORMATS_ALL "{ ABGR64_LE, BGRA64_LE, AYUV64, ARGB64_LE, ARGB64, " \
@@ -758,7 +791,7 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
     "I422_10LE, I422_10BE, NV16_10LE32, Y210, v210, UYVP, I420_10LE, I420_10BE, " \
     "P010_10LE, NV12_10LE32, NV12_10LE40, P010_10BE, Y444, RGBP, GBR, BGRP, NV24, xBGR, BGRx, " \
     "xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, " \
-    "YV12, NV21, NV12, NV12_64Z32, NV12_4L4, NV12_32L32, Y41B, IYU1, YVU9, YUV9, RGB16, " \
+    "YV12, NV21, NV12, NV12_64Z32, NV12_4L4, NV12_32L32, NV12_16L32S, Y41B, IYU1, YVU9, YUV9, RGB16, " \
     "BGR16, RGB15, BGR15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8 }"
 #endif
 
