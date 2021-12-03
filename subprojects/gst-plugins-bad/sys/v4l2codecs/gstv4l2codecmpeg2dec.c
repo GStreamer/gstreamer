@@ -34,6 +34,8 @@
 #define V4L2_MIN_KERNEL_VERSION \
     KERNEL_VERSION(V4L2_MIN_KERNEL_VER_MAJOR, V4L2_MIN_KERNEL_VER_MINOR, 0)
 
+#define MPEG2_BITDEPTH 8
+
 GST_DEBUG_CATEGORY_STATIC (v4l2_mpeg2dec_debug);
 #define GST_CAT_DEFAULT v4l2_mpeg2dec_debug
 
@@ -65,7 +67,6 @@ struct _GstV4l2CodecMpeg2Dec
 
   guint16 width;
   guint16 height;
-  guint bitdepth;
   guint chroma_format;
   gboolean interlaced;
   GstMpegVideoProfile profile;
@@ -188,19 +189,19 @@ get_pixel_bitdepth (GstV4l2CodecMpeg2Dec * self)
   switch (self->chroma_format) {
     case 0:
       /* 4:0:0 */
-      depth = self->bitdepth;
+      depth = MPEG2_BITDEPTH;
       break;
     case 1:
       /* 4:2:0 */
-      depth = self->bitdepth + self->bitdepth / 2;
+      depth = MPEG2_BITDEPTH + MPEG2_BITDEPTH / 2;
       break;
     case 2:
       /* 4:2:2 */
-      depth = 2 * self->bitdepth;
+      depth = 2 * MPEG2_BITDEPTH;
       break;
     case 3:
       /* 4:4:4 */
-      depth = 3 * self->bitdepth;
+      depth = 3 * MPEG2_BITDEPTH;
       break;
     default:
       GST_WARNING_OBJECT (self, "Unsupported chroma format %i",
@@ -277,8 +278,8 @@ gst_v4l2_codec_mpeg2_dec_negotiate (GstVideoDecoder * decoder)
   if (!gst_v4l2_decoder_select_src_format (self->decoder, caps, &self->vinfo)) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("Unsupported bitdepth/chroma format"),
-        ("No support for %ux%u %ubit chroma IDC %i", self->width,
-            self->height, self->bitdepth, self->chroma_format));
+        ("No support for %ux%u chroma IDC %i", self->width,
+            self->height, self->chroma_format));
     gst_caps_unref (caps);
     return FALSE;
   }
