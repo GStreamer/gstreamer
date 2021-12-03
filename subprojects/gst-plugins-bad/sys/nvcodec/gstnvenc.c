@@ -79,6 +79,13 @@ NvEncDestroyEncoder (void *encoder)
   return nvenc_api.nvEncDestroyEncoder (encoder);
 }
 
+const char *NVENCAPI
+NvEncGetLastErrorString (void *encoder)
+{
+  g_assert (nvenc_api.nvEncGetLastErrorString != NULL);
+  return nvenc_api.nvEncGetLastErrorString (encoder);
+}
+
 NVENCSTATUS NVENCAPI
 NvEncGetEncodeGUIDs (void *encoder, GUID * array, uint32_t array_size,
     uint32_t * count)

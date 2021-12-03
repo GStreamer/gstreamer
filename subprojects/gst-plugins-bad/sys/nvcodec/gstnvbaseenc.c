@@ -1847,7 +1847,8 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 
   if (nv_ret != NV_ENC_SUCCESS) {
     GST_ELEMENT_ERROR (nvenc, LIBRARY, SETTINGS, (NULL),
-        ("Failed to %sinit encoder: %d", reconfigure ? "re" : "", nv_ret));
+        ("Failed to %sinit encoder: %d- %s", reconfigure ? "re" : "", nv_ret,
+            NvEncGetLastErrorString (nvenc->encoder)));
     NvEncDestroyEncoder (nvenc->encoder);
     nvenc->encoder = NULL;
     return FALSE;
