@@ -1071,8 +1071,9 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc,
     peerformat = gst_structure_get_string (peerstruct, "format");
     peerfmt = gst_video_format_from_string (peerformat);
 
+    /* libjpeg-turbo only supports some colorspace conversions, see
+     * https://raw.githubusercontent.com/libjpeg-turbo/libjpeg-turbo/main/libjpeg.txt */
     switch (peerfmt) {
-      case GST_VIDEO_FORMAT_RGB:
       case GST_VIDEO_FORMAT_RGBx:
       case GST_VIDEO_FORMAT_xRGB:
       case GST_VIDEO_FORMAT_RGBA:
@@ -1082,11 +1083,14 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc,
       case GST_VIDEO_FORMAT_xBGR:
       case GST_VIDEO_FORMAT_BGRA:
       case GST_VIDEO_FORMAT_ABGR:
-        clrspc = JCS_RGB;
-        format = peerfmt;
-        dec->format_convert = TRUE;
-        dec->libjpeg_ext_format = gst_fmt_to_jpeg_turbo_ext_fmt (peerfmt);
+        if (clrspc == JCS_RGB) {
+          /* RGB -> other RGB formats */
+          format = peerfmt;
+          dec->format_convert = TRUE;
+          dec->libjpeg_ext_format = gst_fmt_to_jpeg_turbo_ext_fmt (peerfmt);
+        }
         break;
+        /* TODO: implement conversion from/to other supported colorspaces */
       default:
         break;
     }
