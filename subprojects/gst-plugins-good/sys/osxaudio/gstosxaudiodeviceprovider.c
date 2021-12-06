@@ -150,10 +150,40 @@ _audio_device_has_output (AudioDeviceID device_id)
 
   status = AudioObjectGetPropertyDataSize (device_id,
       &streamsAddress, 0, NULL, &propertySize);
+
   if (status != noErr) {
+    GST_WARNING ("failed getting device property: %d", (int) status);
     return FALSE;
   }
   if (propertySize == 0) {
+    GST_DEBUG ("property size was 0; device has no output channels");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static inline gboolean
+_audio_device_has_input (AudioDeviceID device_id)
+{
+  OSStatus status = noErr;
+  UInt32 propertySize;
+
+  AudioObjectPropertyAddress streamsAddress = {
+    kAudioDevicePropertyStreams,
+    kAudioDevicePropertyScopeInput,
+    kAudioObjectPropertyElementMaster
+  };
+
+  status = AudioObjectGetPropertyDataSize (device_id,
+      &streamsAddress, 0, NULL, &propertySize);
+
+  if (status != noErr) {
+    GST_WARNING ("failed getting device property: %d", (int) status);
+    return FALSE;
+  }
+  if (propertySize == 0) {
+    GST_DEBUG ("property size was 0; device has no input channels");
     return FALSE;
   }
 
@@ -197,14 +227,63 @@ _audio_system_get_devices (gint * ndevices)
   return devices;
 }
 
+static void
+gst_osx_audio_device_provider_probe_internal (GstOsxAudioDeviceProvider * self,
+    gboolean is_src, AudioDeviceID * osx_devices, gint ndevices,
+    GList ** devices)
+{
+
+  gint i = 0;
+  GstOsxAudioDeviceType type = GST_OSX_AUDIO_DEVICE_TYPE_INVALID;
+  GstOsxAudioDevice *device = NULL;
+
+  if (is_src) {
+    type = GST_OSX_AUDIO_DEVICE_TYPE_SOURCE;
+  } else {
+    type = GST_OSX_AUDIO_DEVICE_TYPE_SINK;
+  }
+
+  for (i = 0; i < ndevices; i++) {
+    gchar *device_name;
+
+    if ((device_name = _audio_device_get_name (osx_devices[i], FALSE))) {
+      gboolean has_output = _audio_device_has_output (osx_devices[i]);
+      gboolean has_input = _audio_device_has_input (osx_devices[i]);
+
+      if (is_src && !has_input) {
+        goto cleanup;
+      } else if (!is_src && !has_output) {
+        goto cleanup;
+      }
+
+      device =
+          gst_osx_audio_device_provider_probe_device (self, osx_devices[i],
+          device_name, type);
+      if (device) {
+        if (is_src) {
+          GST_DEBUG ("Input Device ID: %u Name: %s",
+              (unsigned) osx_devices[i], device_name);
+        } else {
+          GST_DEBUG ("Output Device ID: %u Name: %s",
+              (unsigned) osx_devices[i], device_name);
+        }
+        gst_object_ref_sink (device);
+        *devices = g_list_prepend (*devices, device);
+      }
+
+    cleanup:
+      g_free (device_name);
+    }
+  }
+}
+
 static GList *
 gst_osx_audio_device_provider_probe (GstDeviceProvider * provider)
 {
   GstOsxAudioDeviceProvider *self = GST_OSX_AUDIO_DEVICE_PROVIDER (provider);
   GList *devices = NULL;
-  GstOsxAudioDevice *device = NULL;
   AudioDeviceID *osx_devices = NULL;
-  gint i, ndevices = 0;
+  gint ndevices = 0;
 
   osx_devices = _audio_system_get_devices (&ndevices);
 
@@ -215,33 +294,10 @@ gst_osx_audio_device_provider_probe (GstDeviceProvider * provider)
 
   GST_INFO ("found %d audio device(s)", ndevices);
 
-  for (i = 0; i < ndevices; i++) {
-    gchar *device_name;
-    GstOsxAudioDeviceType type = GST_OSX_AUDIO_DEVICE_TYPE_INVALID;
-
-    if ((device_name = _audio_device_get_name (osx_devices[i], FALSE))) {
-      if (!_audio_device_has_output (osx_devices[i])) {
-        GST_DEBUG ("Input Device ID: %u Name: %s",
-            (unsigned) osx_devices[i], device_name);
-        type = GST_OSX_AUDIO_DEVICE_TYPE_SOURCE;
-
-      } else {
-        GST_DEBUG ("Output Device ID: %u Name: %s",
-            (unsigned) osx_devices[i], device_name);
-        type = GST_OSX_AUDIO_DEVICE_TYPE_SINK;
-      }
-
-      device =
-          gst_osx_audio_device_provider_probe_device (self, osx_devices[i],
-          device_name, type);
-      if (device) {
-        gst_object_ref_sink (device);
-        devices = g_list_prepend (devices, device);
-      }
-
-      g_free (device_name);
-    }
-  }
+  gst_osx_audio_device_provider_probe_internal (self, TRUE, osx_devices,
+      ndevices, &devices);
+  gst_osx_audio_device_provider_probe_internal (self, FALSE, osx_devices,
+      ndevices, &devices);
 
 done:
   g_free (osx_devices);
