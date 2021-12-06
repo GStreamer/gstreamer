@@ -32,6 +32,9 @@
 
 #include <locale.h>
 
+#define URI_HANDLER_PROTOCOLS_QUARK g_quark_from_static_string("__gst__uri_handler_protocols")
+#define URI_HANDLER_URITYPE_QUARK g_quark_from_static_string("__gst__uri_handler_uritype")
+
 #define PYGLIB_MODULE_START(symbol, modname)	        \
     static struct PyModuleDef _##symbol##module = {     \
     PyModuleDef_HEAD_INIT,                              \
@@ -1103,6 +1106,113 @@ static PyMethodDef _gi_gst_functions[] = {
   {NULL, NULL, 0, NULL}
 };
 
+static const gchar *const *
+py_uri_handler_get_protocols (GType type)
+{
+  /* FIXME: Ideally we should be able to free the list of protocols on
+   * deinitialization */
+  return g_type_get_qdata (type, URI_HANDLER_PROTOCOLS_QUARK);
+}
+
+static GstURIType
+py_uri_handler_get_type (GType type)
+{
+  return GPOINTER_TO_INT (g_type_get_qdata (type, URI_HANDLER_URITYPE_QUARK));
+}
+
+static const GStrv
+py_uri_handler_get_protocols_from_pyobject (PyObject * protocols)
+{
+  GStrv res = NULL;
+
+  if (PyTuple_Check (protocols)) {
+    gint i, len;
+
+    len = PyTuple_Size (protocols);
+    if (len == 0) {
+      PyErr_Format (PyExc_TypeError,
+          "Empty tuple for GstUriHandler.__protocols");
+      goto err;
+    }
+
+    res = g_malloc (len * sizeof (gchar *));
+    for (i = 0; i < len; i++) {
+      PyObject *protocol = (PyObject *) PyTuple_GetItem (protocols, i);
+
+      if (!PyUnicode_Check (protocol)) {
+        Py_DECREF (protocol);
+        goto err;
+      }
+
+      res[i] = g_strdup (PyUnicode_AsUTF8 (protocol));
+    }
+  } else {
+    PyErr_Format (PyExc_TypeError, "invalid type for GstUriHandler.__protocols."
+        " Should be a tuple");
+    goto err;
+  }
+
+  return res;
+
+err:
+  Py_DECREF (protocols);
+  g_strfreev (res);
+  return FALSE;
+}
+
+static void
+uri_handler_iface_init (GstURIHandlerInterface * iface, PyTypeObject * pytype)
+{
+  gint uritype;
+  GStrv protocols;
+  PyObject *pyprotocols = pytype ? PyObject_GetAttrString ((PyObject *) pytype,
+      "__protocols__") : NULL;
+  PyObject *pyuritype = pytype ? PyObject_GetAttrString ((PyObject *) pytype,
+      "__uritype__") : NULL;
+  GType gtype = pyg_type_from_object ((PyObject *) pytype);
+
+  if (pyprotocols == NULL) {
+    PyErr_Format (PyExc_KeyError, "__protocols__ missing in %s",
+        pytype->tp_name);
+    goto done;
+  }
+
+  if (pyuritype == NULL) {
+    PyErr_Format (PyExc_KeyError, "__pyuritype__ missing in %s",
+        pytype->tp_name);
+    goto done;
+  }
+
+  protocols = py_uri_handler_get_protocols_from_pyobject (pyprotocols);
+  if (!protocols)
+    goto done;
+
+  if (pyg_enum_get_value (GST_TYPE_URI_TYPE, pyuritype, &uritype) < 0) {
+    PyErr_SetString (PyExc_TypeError,
+        "entry for __uritype__ must be of type GstURIType");
+    goto done;
+  }
+
+  iface->get_protocols = py_uri_handler_get_protocols;
+  g_type_set_qdata (gtype, URI_HANDLER_PROTOCOLS_QUARK, protocols);
+
+  iface->get_type = py_uri_handler_get_type;
+  g_type_set_qdata (gtype, URI_HANDLER_URITYPE_QUARK,
+      GINT_TO_POINTER (uritype));
+
+done:
+  if (pyprotocols)
+    Py_DECREF (pyprotocols);
+  if (pyuritype)
+    Py_DECREF (pyuritype);
+}
+
+static const GInterfaceInfo GstURIHandlerInterfaceInfo = {
+  (GInterfaceInitFunc) uri_handler_iface_init,
+  NULL,
+  NULL
+};
+
 PYGLIB_MODULE_START (_gi_gst, "_gi_gst")
 {
   PyObject *d;
@@ -1120,6 +1230,8 @@ PYGLIB_MODULE_START (_gi_gst, "_gi_gst")
   d = PyModule_GetDict (module);
   gi_gst_register_types (d);
   pyg_register_class_init (GST_TYPE_ELEMENT, _pygst_element_init);
+  pyg_register_interface_info (GST_TYPE_URI_HANDLER,
+      &GstURIHandlerInterfaceInfo);
 }
 
 PYGLIB_MODULE_END;

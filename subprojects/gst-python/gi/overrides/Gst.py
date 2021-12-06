@@ -48,6 +48,14 @@ python module to use with Gst 0.10"
     warnings.warn(warn_msg, RuntimeWarning)
 
 
+# Ensuring that PyGObject loads the URIHandler interface
+# so we can force our own implementation soon enough (in gstmodule.c)
+class URIHandler(Gst.URIHandler):
+    pass
+
+URIHandler = override(URIHandler)
+__all__.append('URIHandler')
+
 class Element(Gst.Element):
     @staticmethod
     def link_many(*args):
