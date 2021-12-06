@@ -145,6 +145,8 @@ fedora amd64 docker:
   stage: 'build docker'
   needs:
     - "trigger"
+  tags:
+    - 'packet.net'
 
 .gst-indent image:
   variables:
