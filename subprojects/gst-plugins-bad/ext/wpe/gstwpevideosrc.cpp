@@ -551,20 +551,17 @@ gst_wpe_video_src_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-gst_wpe_video_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
 {
   gboolean ret = FALSE;
-  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (parent);
+  GstWpeVideoSrc *src = GST_WPE_VIDEO_SRC (base_src);
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION) {
+  if (src->view && GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION) {
     const gchar *key;
     gint button;
     gdouble x, y, delta_x, delta_y;
 
     GST_DEBUG_OBJECT (src, "Processing event %" GST_PTR_FORMAT, event);
-    if (!src->view) {
-      return FALSE;
-    }
     switch (gst_navigation_event_get_type (event)) {
       case GST_NAVIGATION_EVENT_KEY_PRESS:
       case GST_NAVIGATION_EVENT_KEY_RELEASE:
@@ -647,9 +644,9 @@ gst_wpe_video_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   }
 
   if (!ret) {
-    ret = gst_pad_event_default (pad, parent, event);
-  } else {
-    gst_event_unref (event);
+    ret =
+        GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS, event, (base_src,
+            event), FALSE);
   }
   return ret;
 }
@@ -657,11 +654,6 @@ gst_wpe_video_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 static void
 gst_wpe_video_src_init (GstWpeVideoSrc * src)
 {
-  GstPad *pad = gst_element_get_static_pad (GST_ELEMENT_CAST (src), "src");
-
-  gst_pad_set_event_function (pad, gst_wpe_video_src_event);
-  gst_object_unref (pad);
-
   src->draw_background = DEFAULT_DRAW_BACKGROUND;
 
   gst_base_src_set_live (GST_BASE_SRC_CAST (src), TRUE);
@@ -717,6 +709,7 @@ gst_wpe_video_src_class_init (GstWpeVideoSrcClass * klass)
   base_src_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_wpe_video_src_decide_allocation);
   base_src_class->stop = GST_DEBUG_FUNCPTR (gst_wpe_video_src_stop);
+  base_src_class->event = GST_DEBUG_FUNCPTR (gst_wpe_video_src_event);
 
   gl_base_src_class->supported_gl_api =
       static_cast < GstGLAPI >
