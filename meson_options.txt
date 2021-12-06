@@ -65,3 +65,6 @@ option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
        description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)')
 option('glib-checks', type : 'feature', value : 'enabled', yield : true,
        description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)')
+
+option('package-name', type : 'string', yield : true,
+       description : 'package name to use in plugins')
