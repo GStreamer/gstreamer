@@ -17019,6 +17019,24 @@
                         "return-type": "GstElement",
                         "when": "last"
                     },
+                    "request-fec-decoder-full": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "guint"
+                            },
+                            {
+                                "name": "arg2",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "GstElement",
+                        "when": "last"
+                    },
                     "request-fec-encoder": {
                         "args": [
                             {

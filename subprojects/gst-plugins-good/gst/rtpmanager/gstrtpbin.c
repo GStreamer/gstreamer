@@ -311,6 +311,7 @@ enum
   SIGNAL_REQUEST_RTCP_DECODER,
 
   SIGNAL_REQUEST_FEC_DECODER,
+  SIGNAL_REQUEST_FEC_DECODER_FULL,
   SIGNAL_REQUEST_FEC_ENCODER,
 
   SIGNAL_REQUEST_JITTERBUFFER,
@@ -2497,6 +2498,9 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    *
    * If no handler is connected, no FEC decoder will be used.
    *
+   * Warning: usage of this signal is not appropriate for the BUNDLE case,
+   * connect to #GstRtpBin::request-fec-decoder-full instead.
+   *
    * Since: 1.14
    */
   gst_rtp_bin_signals[SIGNAL_REQUEST_FEC_DECODER] =
@@ -2504,6 +2508,29 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
           request_fec_decoder), _gst_element_accumulator, NULL, NULL,
       GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+
+  /**
+   * GstRtpBin::request-fec-decoder-full:
+   * @rtpbin: the object which received the signal
+   * @session: the session index
+   * @ssrc: the ssrc of the stream
+   * @pt: the payload type
+   *
+   * Request a FEC decoder element for the given @session. The element
+   * will be added to the bin after the pt demuxer.  If there are multiple
+   * ssrc's and pt's in @session, this signal may be called multiple times for
+   * the same @session each corresponding to a newly discovered ssrc and payload
+   * type, those are provided as parameters.
+   *
+   * If no handler is connected, no FEC decoder will be used.
+   *
+   * Since: 1.20
+   */
+  gst_rtp_bin_signals[SIGNAL_REQUEST_FEC_DECODER_FULL] =
+      g_signal_new ("request-fec-decoder-full", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
+          request_fec_decoder), _gst_element_accumulator, NULL, NULL,
+      GST_TYPE_ELEMENT, 3, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT);
 
   /**
    * GstRtpBin::request-fec-encoder:
@@ -3528,6 +3555,32 @@ gst_rtp_bin_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstElement *
+session_request_element_full (GstRtpBinSession * session, guint signal,
+    guint ssrc, guint8 pt)
+{
+  GstElement *element = NULL;
+  GstRtpBin *bin = session->bin;
+
+  g_signal_emit (bin, gst_rtp_bin_signals[signal], 0, session->id, ssrc, pt,
+      &element);
+
+  if (element) {
+    if (!bin_manage_element (bin, element))
+      goto manage_failed;
+    session->elements = g_slist_prepend (session->elements, element);
+  }
+  return element;
+
+  /* ERRORS */
+manage_failed:
+  {
+    GST_WARNING_OBJECT (bin, "unable to manage element");
+    gst_object_unref (element);
+    return NULL;
+  }
+}
+
+static GstElement *
 session_request_element (GstRtpBinSession * session, guint signal)
 {
   GstElement *element = NULL;
@@ -3614,8 +3667,18 @@ expose_recv_src_pad (GstRtpBin * rtpbin, GstPad * pad, GstRtpBinStream * stream,
   gst_object_ref (pad);
 
   if (stream->session->storage) {
+    /* First try the legacy signal, with no ssrc and pt as parameters.
+     * This will likely cause issues for the BUNDLE case. */
     GstElement *fec_decoder =
         session_request_element (stream->session, SIGNAL_REQUEST_FEC_DECODER);
+
+    /* Now try the new signal, where the application can provide a FEC
+     * decoder according to ssrc and pt. */
+    if (!fec_decoder) {
+      fec_decoder =
+          session_request_element_full (stream->session,
+          SIGNAL_REQUEST_FEC_DECODER_FULL, stream->ssrc, pt);
+    }
 
     if (fec_decoder) {
       GstPad *sinkpad, *srcpad;
