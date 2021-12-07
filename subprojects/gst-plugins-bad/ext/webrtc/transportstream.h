@@ -34,6 +34,7 @@ GType transport_stream_get_type(void);
 typedef struct
 {
   guint8 pt;
+  guint media_idx;
   GstCaps *caps;
 } PtMapItem;
 
@@ -76,7 +77,8 @@ struct _TransportStreamClass
 TransportStream *       transport_stream_new        (GstWebRTCBin * webrtc,
                                                      guint session_id);
 int                     transport_stream_get_pt     (TransportStream * stream,
-                                                     const gchar * encoding_name);
+                                                     const gchar * encoding_name,
+                                                     guint media_idx);
 int *                   transport_stream_get_all_pt (TransportStream * stream,
                                                      const gchar * encoding_name,
                                                      gsize * pt_len);

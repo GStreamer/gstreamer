@@ -4342,45 +4342,123 @@ out:
   return ret;
 }
 
+static GstElement *
+_build_fec_encoder (GstWebRTCBin * webrtc, WebRTCTransceiver * trans)
+{
+  GstElement *ret = NULL;
+  GstElement *prev = NULL;
+  guint ulpfec_pt = 0;
+  guint red_pt = 0;
+  GstPad *sinkpad = NULL;
+  GstWebRTCRTPTransceiver *rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
+
+  if (trans->stream) {
+    ulpfec_pt =
+        transport_stream_get_pt (trans->stream, "ULPFEC", rtp_trans->mline);
+    red_pt = transport_stream_get_pt (trans->stream, "RED", rtp_trans->mline);
+  }
+
+  if (ulpfec_pt || red_pt)
+    ret = gst_bin_new (NULL);
+
+  if (ulpfec_pt) {
+    GstElement *fecenc = gst_element_factory_make ("rtpulpfecenc", NULL);
+    GstCaps *caps = transport_stream_get_caps_for_pt (trans->stream, ulpfec_pt);
+
+    GST_DEBUG_OBJECT (webrtc,
+        "Creating ULPFEC encoder for mline %u with pt %d", rtp_trans->mline,
+        ulpfec_pt);
+
+    gst_bin_add (GST_BIN (ret), fecenc);
+    sinkpad = gst_element_get_static_pad (fecenc, "sink");
+    g_object_set (fecenc, "pt", ulpfec_pt, "percentage",
+        trans->fec_percentage, NULL);
+
+    if (caps && !gst_caps_is_empty (caps)) {
+      const GstStructure *s = gst_caps_get_structure (caps, 0);
+      const gchar *media = gst_structure_get_string (s, "media");
+
+      if (!g_strcmp0 (media, "video"))
+        g_object_set (fecenc, "multipacket", TRUE, NULL);
+    }
+
+    prev = fecenc;
+  }
+
+  if (red_pt) {
+    GstElement *redenc = gst_element_factory_make ("rtpredenc", NULL);
+
+    GST_DEBUG_OBJECT (webrtc, "Creating RED encoder for mline %u with pt %d",
+        rtp_trans->mline, red_pt);
+
+    gst_bin_add (GST_BIN (ret), redenc);
+    if (prev)
+      gst_element_link (prev, redenc);
+    else
+      sinkpad = gst_element_get_static_pad (redenc, "sink");
+
+    g_object_set (redenc, "pt", red_pt, "allow-no-red-blocks", TRUE, NULL);
+
+    prev = redenc;
+  }
+
+  if (sinkpad) {
+    GstPad *ghost = gst_ghost_pad_new ("sink", sinkpad);
+    gst_object_unref (sinkpad);
+    gst_element_add_pad (ret, ghost);
+  }
+
+  if (prev) {
+    GstPad *srcpad = gst_element_get_static_pad (prev, "src");
+    GstPad *ghost = gst_ghost_pad_new ("src", srcpad);
+    gst_object_unref (srcpad);
+    gst_element_add_pad (ret, ghost);
+  }
+
+  return ret;
+}
+
+
 static GstPad *
 _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
 {
 /*
  * Not-bundle case:
  *
- * ,--------------------------------------------webrtcbin-------------------------,
- * ;                                                                              ;
- * ;                             ,-------rtpbin-------,   ,--transport_send_%u--, ;
- * ;                             ;    send_rtp_src_%u o---o rtp_sink            ; ;
- * ;         ,---clocksync---,   ;                    ;   ;                     ; ;
- * ;         ;               ;   ;   send_rtcp_src_%u o---o rtcp_sink           ; ;
- * ; sink_%u ;               ;   ;                    ;   '---------------------' ;
- * o---------o sink      src o---o send_rtp_sink_%u   ;                           ;
- * ;         '---------------'   '--------------------'                           ;
- * '------------------------------------------------------------------------------'
+ * ,--------------------------------------------webrtcbin--------------------------------------------,
+ * ;                                                                                                 ;
+ * ;                                                ,-------rtpbin-------,   ,--transport_send_%u--, ;
+ * ;                                                ;    send_rtp_src_%u o---o rtp_sink            ; ;
+ * ;         ,---clocksync---,                      ;                    ;   ;                     ; ;
+ * ;         ;               ;                      ;   send_rtcp_src_%u o---o rtcp_sink           ; ;
+ * ; sink_%u ;               ; ,---fec encoder---,  ;                    ;   '---------------------' ;
+ * o---------o sink      src o-o sink        src o--o send_rtp_sink_%u   ;                           ;
+ * ;         '---------------' ,-----------------,  '--------------------'                           ;
+ * '-------------------------------------------------------------------------------------------------'
  */
 
 /*
  * Bundle case:
- * ,-----------------------------------------------------webrtcbin--------------------------------,
- * ;                                                                                              ;
- * ;                                             ,-------rtpbin-------,   ,--transport_send_%u--, ;
- * ;                                             ;    send_rtp_src_%u o---o rtp_sink            ; ;
- * ;                                             ;                    ;   ;                     ; ;
- * ; sink_%u  ,---clocksync---,   ,---funnel---, ;   send_rtcp_src_%u o---o rtcp_sink           ; ;
- * o----------o sink      src o---o sink_%u    ; ;                    ;   '---------------------' ;
- * ;          '---------------'   ;            ; ;                    ;                           ;
- * ;                              ;        src o-o send_rtp_sink_%u   ;                           ;
- * ; sink_%u  ,---clocksync---,   ;            ; ;                    ;                           ;
- * o----------o sink      src o---o sink%u     ; '--------------------'                           ;
- * ;          '---------------'   '------------'                                                  ;
- * '----------------------------------------------------------------------------------------------'
+ * ,-----------------------------------------------------webrtcbin---------------------------------------------------,
+ * ;                                                                                                                 ;
+ * ;                                                                ,-------rtpbin-------,   ,--transport_send_%u--, ;
+ * ;                                                                ;    send_rtp_src_%u o---o rtp_sink            ; ;
+ * ;                                                                ;                    ;   ;                     ; ;
+ * ; sink_%u  ,---clocksync---, ,---fec encoder---,  ,---funnel---, ;   send_rtcp_src_%u o---o rtcp_sink           ; ;
+ * o----------o sink      src o-o sink        src o--o sink_%u    ; ;                    ;   '---------------------' ;
+ * ;          '---------------' ,-----------------,  ;            ; ;                    ;                           ;
+ * ;                                                 ;        src o-o send_rtp_sink_%u   ;                           ;
+ * ; sink_%u  ,---clocksync---, ,---fec encoder---,  ;            ; ;                    ;                           ;
+ * o----------o sink      src o-o sink        src o--o sink%u     ; '--------------------'                           ;
+ * ;          '---------------' ,-----------------,  '------------'                                                  ;
+ * '-----------------------------------------------------------------------------------------------------------------'
  */
   GstPadTemplate *rtp_templ;
   GstPad *rtp_sink, *sinkpad, *srcpad;
   gchar *pad_name;
   WebRTCTransceiver *trans;
   GstElement *clocksync;
+  GstElement *fec_encoder;
 
   g_return_val_if_fail (pad->trans != NULL, NULL);
 
@@ -4397,6 +4475,19 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
 
   srcpad = gst_element_get_static_pad (clocksync, "src");
   sinkpad = gst_element_get_static_pad (clocksync, "sink");
+
+  if ((fec_encoder = _build_fec_encoder (webrtc, trans))) {
+    GstPad *fec_sink;
+
+    gst_bin_add (GST_BIN (webrtc), fec_encoder);
+    gst_element_sync_state_with_parent (fec_encoder);
+
+    fec_sink = gst_element_get_static_pad (fec_encoder, "sink");
+    gst_pad_link (srcpad, fec_sink);
+    gst_object_unref (srcpad);
+    gst_object_unref (fec_sink);
+    srcpad = gst_element_get_static_pad (fec_encoder, "src");
+  }
 
   if (!webrtc->rtpfunnel) {
     rtp_templ =
@@ -4681,6 +4772,7 @@ _update_transport_ptmap_from_media (GstWebRTCBin * webrtc,
       }
 
       item.pt = pt;
+      item.media_idx = media_idx;
       gst_caps_unref (outcaps);
 
       g_array_append_val (stream->ptmap, item);
@@ -6359,7 +6451,7 @@ on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
   stream = _find_transport_for_session (webrtc, session_id);
 
   if (stream)
-    have_rtx = transport_stream_get_pt (stream, "RTX") != 0;
+    have_rtx = transport_stream_get_pt (stream, "RTX", -1) != 0;
 
   GST_LOG_OBJECT (webrtc, "requesting aux sender for stream %" GST_PTR_FORMAT
       " with pt map %" GST_PTR_FORMAT, stream, pt_map);
@@ -6428,20 +6520,43 @@ on_rtpbin_request_aux_receiver (GstElement * rtpbin, guint session_id,
   GstElement *prev = NULL;
   GstPad *sinkpad = NULL;
   TransportStream *stream;
-  gint red_pt = 0;
   gint rtx_pt = 0;
+  GValue red_pt_array = { 0, };
+  gboolean have_red_pt = FALSE;
+
+  g_value_init (&red_pt_array, GST_TYPE_ARRAY);
 
   stream = _find_transport_for_session (webrtc, session_id);
 
   if (stream) {
-    red_pt = transport_stream_get_pt (stream, "RED");
-    rtx_pt = transport_stream_get_pt (stream, "RTX");
+    guint i = 0;
+
+    for (i = 0; i < stream->ptmap->len; i++) {
+      PtMapItem *item = &g_array_index (stream->ptmap, PtMapItem, i);
+
+      if (!gst_caps_is_empty (item->caps)) {
+        GstStructure *s = gst_caps_get_structure (item->caps, 0);
+
+        if (!g_strcmp0 (gst_structure_get_string (s, "encoding-name"), "RED")) {
+          GValue ptval = { 0, };
+
+          g_value_init (&ptval, G_TYPE_INT);
+          g_value_set_int (&ptval, item->pt);
+          gst_value_array_append_value (&red_pt_array, &ptval);
+          g_value_unset (&ptval);
+
+          have_red_pt = TRUE;
+        }
+      }
+    }
+
+    rtx_pt = transport_stream_get_pt (stream, "RTX", -1);
   }
 
   GST_LOG_OBJECT (webrtc, "requesting aux receiver for stream %" GST_PTR_FORMAT,
       stream);
 
-  if (red_pt || rtx_pt)
+  if (have_red_pt || rtx_pt)
     ret = gst_bin_new (NULL);
 
   if (rtx_pt) {
@@ -6461,15 +6576,14 @@ on_rtpbin_request_aux_receiver (GstElement * rtpbin, guint session_id,
     prev = gst_object_ref (stream->rtxreceive);
   }
 
-  if (red_pt) {
+  if (have_red_pt) {
     GstElement *rtpreddec = gst_element_factory_make ("rtpreddec", NULL);
 
-    GST_DEBUG_OBJECT (webrtc, "Creating RED decoder for pt %d in session %u",
-        red_pt, session_id);
+    GST_DEBUG_OBJECT (webrtc, "Creating RED decoder in session %u", session_id);
 
     gst_bin_add (GST_BIN (ret), rtpreddec);
 
-    g_object_set (rtpreddec, "pt", red_pt, NULL);
+    g_object_set_property (G_OBJECT (rtpreddec), "payloads", &red_pt_array);
 
     if (prev)
       gst_element_link (prev, rtpreddec);
@@ -6497,6 +6611,7 @@ on_rtpbin_request_aux_receiver (GstElement * rtpbin, guint session_id,
   }
 
 out:
+  g_value_unset (&red_pt_array);
   return ret;
 
 error:
@@ -6506,12 +6621,12 @@ error:
 }
 
 static GstElement *
-on_rtpbin_request_fec_decoder (GstElement * rtpbin, guint session_id,
-    GstWebRTCBin * webrtc)
+on_rtpbin_request_fec_decoder_full (GstElement * rtpbin, guint session_id,
+    guint ssrc, guint pt, GstWebRTCBin * webrtc)
 {
   TransportStream *stream;
   GstElement *ret = NULL;
-  gint pt = 0;
+  gint fec_pt = 0;
   GObject *internal_storage;
 
   stream = _find_transport_for_session (webrtc, session_id);
@@ -6526,100 +6641,28 @@ on_rtpbin_request_fec_decoder (GstElement * rtpbin, guint session_id,
    *   we detect it (by connecting to ptdemux:new-payload-type for
    *   example)
    */
-  if (stream)
-    pt = transport_stream_get_pt (stream, "ULPFEC");
+  if (stream) {
+    guint i;
 
-  if (pt) {
+    for (i = 0; i < stream->ptmap->len; i++) {
+      PtMapItem *item = &g_array_index (stream->ptmap, PtMapItem, i);
+
+      if (item->pt == pt) {
+        fec_pt = transport_stream_get_pt (stream, "ULPFEC", item->media_idx);
+        break;
+      }
+    }
+  }
+
+  if (fec_pt) {
     GST_DEBUG_OBJECT (webrtc, "Creating ULPFEC decoder for pt %d in session %u",
-        pt, session_id);
+        fec_pt, session_id);
     ret = gst_element_factory_make ("rtpulpfecdec", NULL);
     g_signal_emit_by_name (webrtc->rtpbin, "get-internal-storage", session_id,
         &internal_storage);
 
-    g_object_set (ret, "pt", pt, "storage", internal_storage, NULL);
+    g_object_set (ret, "pt", fec_pt, "storage", internal_storage, NULL);
     g_object_unref (internal_storage);
-  }
-
-  return ret;
-}
-
-static GstElement *
-on_rtpbin_request_fec_encoder (GstElement * rtpbin, guint session_id,
-    GstWebRTCBin * webrtc)
-{
-  GstElement *ret = NULL;
-  GstElement *prev = NULL;
-  TransportStream *stream;
-  guint ulpfec_pt = 0;
-  guint red_pt = 0;
-  GstPad *sinkpad = NULL;
-  GstWebRTCRTPTransceiver *trans;
-
-  stream = _find_transport_for_session (webrtc, session_id);
-  trans = _find_transceiver (webrtc, &session_id,
-      (FindTransceiverFunc) transceiver_match_for_mline);
-
-  if (stream) {
-    ulpfec_pt = transport_stream_get_pt (stream, "ULPFEC");
-    red_pt = transport_stream_get_pt (stream, "RED");
-  }
-
-  if (ulpfec_pt || red_pt)
-    ret = gst_bin_new (NULL);
-
-  if (ulpfec_pt) {
-    GstElement *fecenc = gst_element_factory_make ("rtpulpfecenc", NULL);
-    GstCaps *caps = transport_stream_get_caps_for_pt (stream, ulpfec_pt);
-
-    GST_DEBUG_OBJECT (webrtc,
-        "Creating ULPFEC encoder for session %d with pt %d", session_id,
-        ulpfec_pt);
-
-    gst_bin_add (GST_BIN (ret), fecenc);
-    sinkpad = gst_element_get_static_pad (fecenc, "sink");
-    g_object_set (fecenc, "pt", ulpfec_pt, "percentage",
-        WEBRTC_TRANSCEIVER (trans)->fec_percentage, NULL);
-
-
-    if (caps && !gst_caps_is_empty (caps)) {
-      const GstStructure *s = gst_caps_get_structure (caps, 0);
-      const gchar *media = gst_structure_get_string (s, "media");
-
-      if (!g_strcmp0 (media, "video"))
-        g_object_set (fecenc, "multipacket", TRUE, NULL);
-    }
-
-    prev = fecenc;
-  }
-
-  if (red_pt) {
-    GstElement *redenc = gst_element_factory_make ("rtpredenc", NULL);
-
-    GST_DEBUG_OBJECT (webrtc, "Creating RED encoder for session %d with pt %d",
-        session_id, red_pt);
-
-    gst_bin_add (GST_BIN (ret), redenc);
-    if (prev)
-      gst_element_link (prev, redenc);
-    else
-      sinkpad = gst_element_get_static_pad (redenc, "sink");
-
-    g_object_set (redenc, "pt", red_pt, "allow-no-red-blocks", TRUE, NULL);
-
-    prev = redenc;
-  }
-
-  if (sinkpad) {
-    GstPad *ghost = gst_ghost_pad_new ("sink", sinkpad);
-    gst_object_unref (sinkpad);
-    gst_element_add_pad (ret, ghost);
-  }
-
-  if (prev) {
-    GstPad *srcpad = gst_element_get_static_pad (prev, "src");
-    GstPad *ghost = gst_ghost_pad_new ("src", srcpad);
-    gst_object_unref (srcpad);
-    gst_element_add_pad (ret, ghost);
   }
 
   return ret;
@@ -6788,10 +6831,8 @@ _create_rtpbin (GstWebRTCBin * webrtc)
       G_CALLBACK (on_rtpbin_request_aux_receiver), webrtc);
   g_signal_connect (rtpbin, "new-storage",
       G_CALLBACK (on_rtpbin_new_storage), webrtc);
-  g_signal_connect (rtpbin, "request-fec-decoder",
-      G_CALLBACK (on_rtpbin_request_fec_decoder), webrtc);
-  g_signal_connect (rtpbin, "request-fec-encoder",
-      G_CALLBACK (on_rtpbin_request_fec_encoder), webrtc);
+  g_signal_connect (rtpbin, "request-fec-decoder-full",
+      G_CALLBACK (on_rtpbin_request_fec_decoder_full), webrtc);
   g_signal_connect (rtpbin, "on-bye-ssrc",
       G_CALLBACK (on_rtpbin_bye_ssrc), webrtc);
   g_signal_connect (rtpbin, "on-bye-timeout",
