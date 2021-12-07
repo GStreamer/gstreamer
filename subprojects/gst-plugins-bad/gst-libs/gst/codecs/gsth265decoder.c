@@ -680,7 +680,7 @@ gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu,
   if (!priv->current_picture) {
     GstH265DecoderClass *klass = GST_H265_DECODER_GET_CLASS (self);
     GstH265Picture *picture;
-    gboolean ret = TRUE;
+    GstFlowReturn ret = GST_FLOW_OK;
 
     g_assert (priv->current_frame);
 
