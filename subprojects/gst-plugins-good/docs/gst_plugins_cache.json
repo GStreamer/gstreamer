@@ -15178,6 +15178,17 @@
                     }
                 },
                 "properties": {
+                    "payloads": {
+                        "blurb": "All the RED payloads this decoder may encounter",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstValueArray",
+                        "writable": true
+                    },
                     "pt": {
                         "blurb": "Payload type FEC packets",
                         "conditionally-available": false,
