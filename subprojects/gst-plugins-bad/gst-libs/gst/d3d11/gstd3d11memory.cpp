@@ -381,6 +381,9 @@ gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
   gst_d3d11_device_lock (dmem->device);
   GST_D3D11_MEMORY_LOCK (dmem);
 
+  memset (info->user_data, 0, sizeof (info->user_data));
+  info->user_data[0] = GUINT_TO_POINTER (dmem->priv->subresource_index);
+
   if ((flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
     if (priv->native_type == GST_D3D11_MEMORY_NATIVE_TYPE_BUFFER) {
       /* FIXME: handle non-staging buffer */
