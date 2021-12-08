@@ -21,11 +21,12 @@
 #include "config.h"
 #endif
 
+#include "cuda-gst.h"
 #include "gstcudaloader.h"
 #include <gmodule.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_nvcodec_debug);
-#define GST_CAT_DEFAULT gst_nvcodec_debug
+GST_DEBUG_CATEGORY (gst_cudaloader_debug);
+#define GST_CAT_DEFAULT gst_cudaloader_debug
 
 #ifndef G_OS_WIN32
 #define CUDA_LIBNAME "libcuda.so.1"
@@ -134,12 +135,29 @@ typedef struct _GstNvCodecCudaVTable
 
 static GstNvCodecCudaVTable gst_cuda_vtable = { 0, };
 
+/**
+ * gst_cuda_load_library:
+ *
+ * Loads the cuda library
+ *
+ * Returns: %TRUE if the libcuda could be loaded %FALSE otherwise
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_cuda_load_library (void)
 {
   GModule *module;
   const gchar *filename = CUDA_LIBNAME;
   GstNvCodecCudaVTable *vtable;
+  static gsize debug_initialized = FALSE;
+
+  if (g_once_init_enter (&debug_initialized)) {
+    GST_DEBUG_CATEGORY_INIT (gst_cudaloader_debug, "cudaloader", 0,
+        "cudaloader");
+
+    g_once_init_leave (&debug_initialized, TRUE);
+  }
 
   if (gst_cuda_vtable.loaded)
     return TRUE;
@@ -205,7 +223,7 @@ gst_cuda_load_library (void)
   LOAD_SYMBOL (cuGraphicsGLRegisterBuffer, CuGraphicsGLRegisterBuffer);
   LOAD_SYMBOL (cuGLGetDevices, CuGLGetDevices);
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   /* cudaD3D11.h */
   LOAD_SYMBOL (cuGraphicsD3D11RegisterResource,
       CuGraphicsD3D11RegisterResource);
@@ -572,6 +590,7 @@ CuGLGetDevices (unsigned int *pCudaDeviceCount, CUdevice * pCudaDevices,
 }
 
 /* cudaD3D11.h */
+#ifdef GST_CUDA_HAS_D3D
 CUresult CUDAAPI
 CuGraphicsD3D11RegisterResource (CUgraphicsResource * pCudaResource,
     gpointer pD3DResource, unsigned int Flags)
@@ -601,3 +620,4 @@ CuD3D11GetDevices (unsigned int *pCudaDeviceCount,
   return gst_cuda_vtable.CuD3D11GetDevices (pCudaDeviceCount, pCudaDevices,
       cudaDeviceCount, pD3D11Device, deviceList);
 }
+#endif

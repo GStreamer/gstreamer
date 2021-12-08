@@ -1,141 +1,153 @@
-/* GStreamer
- * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- */
+#pragma once
 
-#ifndef __GST_CUDA_LOADER_H__
-#define __GST_CUDA_LOADER_H__
-
-#include "stub/cuda.h"
-
-#include <gst/gst.h>
+#include "cuda-prelude.h"
+#include <nvrtc.h>
+#include <cuda.h>
+#include <cudaGL.h>
 
 G_BEGIN_DECLS
 
-gboolean gst_cuda_load_library (void);
-
 /* cuda.h */
+GST_CUDA_API
 CUresult CUDAAPI CuInit             (unsigned int Flags);
 
+GST_CUDA_API
 CUresult CUDAAPI CuGetErrorName     (CUresult error,
                                      const char **pStr);
 
+GST_CUDA_API
 CUresult CUDAAPI CuGetErrorString   (CUresult error,
                                      const char **pStr);
 
+GST_CUDA_API
 CUresult CUDAAPI CuCtxCreate        (CUcontext * pctx,
                                      unsigned int flags,
                                      CUdevice dev);
 
+GST_CUDA_API
 CUresult CUDAAPI CuCtxDestroy       (CUcontext ctx);
 
+GST_CUDA_API
 CUresult CUDAAPI CuCtxPopCurrent    (CUcontext * pctx);
 
+GST_CUDA_API
 CUresult CUDAAPI CuCtxPushCurrent   (CUcontext ctx);
 
+GST_CUDA_API
 CUresult CUDAAPI CuCtxEnablePeerAccess (CUcontext peerContext,
                                              unsigned int Flags);
 
+GST_CUDA_API
 CUresult CUDAAPI CuCtxDisablePeerAccess (CUcontext peerContext);
 
+GST_CUDA_API
 CUresult CUDAAPI CuGraphicsMapResources     (unsigned int count,
                                              CUgraphicsResource * resources,
                                              CUstream hStream);
 
+GST_CUDA_API
 CUresult CUDAAPI CuGraphicsUnmapResources   (unsigned int count,
                                              CUgraphicsResource * resources,
                                              CUstream hStream);
 
-CUresult CUDAAPI CuGraphicsResourceSetMapFlags (CUgraphicsResource resource,
-                                                unsigned int flags);
-
+GST_CUDA_API
 CUresult CUDAAPI CuGraphicsSubResourceGetMappedArray    (CUarray * pArray,
                                                          CUgraphicsResource resource,
                                                          unsigned int arrayIndex,
                                                          unsigned int mipLevel);
 
+GST_CUDA_API
 CUresult CUDAAPI CuGraphicsResourceGetMappedPointer     (CUdeviceptr * pDevPtr,
                                                          size_t * pSize,
                                                          CUgraphicsResource resource);
 
+GST_CUDA_API
 CUresult CUDAAPI CuGraphicsUnregisterResource           (CUgraphicsResource resource);
 
+GST_CUDA_API
 CUresult CUDAAPI CuMemAlloc         (CUdeviceptr * dptr,
                                      unsigned int bytesize);
 
+GST_CUDA_API
 CUresult CUDAAPI CuMemAllocPitch    (CUdeviceptr * dptr,
                                      size_t * pPitch,
                                      size_t WidthInBytes,
                                      size_t Height,
                                      unsigned int ElementSizeBytes);
 
+GST_CUDA_API
 CUresult CUDAAPI CuMemAllocHost     (void **pp,
                                      unsigned int bytesize);
 
+GST_CUDA_API
 CUresult CUDAAPI CuMemcpy2D         (const CUDA_MEMCPY2D * pCopy);
 
+GST_CUDA_API
 CUresult CUDAAPI CuMemcpy2DAsync    (const CUDA_MEMCPY2D *pCopy, CUstream hStream);
 
+GST_CUDA_API
 CUresult CUDAAPI CuMemFree          (CUdeviceptr dptr);
 
+GST_CUDA_API
 CUresult CUDAAPI CuMemFreeHost      (void *p);
 
+GST_CUDA_API
 CUresult CUDAAPI CuStreamCreate     (CUstream *phStream,
                                      unsigned int Flags);
 
+GST_CUDA_API
 CUresult CUDAAPI CuStreamDestroy    (CUstream hStream);
 
+GST_CUDA_API
 CUresult CUDAAPI CuStreamSynchronize (CUstream hStream);
 
+GST_CUDA_API
 CUresult CUDAAPI CuDeviceGet        (CUdevice * device,
                                      int ordinal);
 
+GST_CUDA_API
 CUresult CUDAAPI CuDeviceGetCount   (int *count);
 
+GST_CUDA_API
 CUresult CUDAAPI CuDeviceGetName    (char *name,
                                      int len,
                                      CUdevice dev);
 
+GST_CUDA_API
 CUresult CUDAAPI CuDeviceGetAttribute (int *pi,
                                        CUdevice_attribute attrib,
                                        CUdevice dev);
 
+GST_CUDA_API
 CUresult CUDAAPI CuDeviceCanAccessPeer (int *canAccessPeer,
                                         CUdevice dev,
                                         CUdevice peerDev);
 
+GST_CUDA_API
 CUresult CUDAAPI CuDriverGetVersion   (int * driverVersion);
 
+GST_CUDA_API
 CUresult CUDAAPI CuModuleLoadData     (CUmodule* module,
                                        const void *image);
 
+GST_CUDA_API
 CUresult CUDAAPI CuModuleUnload      (CUmodule module);
 
+GST_CUDA_API
 CUresult CUDAAPI CuModuleGetFunction  (CUfunction* hfunc,
                                        CUmodule hmod,
                                        const char* name);
 
+GST_CUDA_API
 CUresult CUDAAPI CuTexObjectCreate    (CUtexObject *pTexObject,
                                        const CUDA_RESOURCE_DESC *pResDesc,
                                        const CUDA_TEXTURE_DESC *pTexDesc,
                                        const CUDA_RESOURCE_VIEW_DESC *pResViewDesc);
 
+GST_CUDA_API
 CUresult CUDAAPI CuTexObjectDestroy   (CUtexObject texObject);
 
+GST_CUDA_API
 CUresult CUDAAPI CuLaunchKernel       (CUfunction f,
                                        unsigned int gridDimX,
                                        unsigned int gridDimY,
@@ -149,33 +161,78 @@ CUresult CUDAAPI CuLaunchKernel       (CUfunction f,
                                        void **extra);
 
 /* cudaGL.h */
+GST_CUDA_API
 CUresult CUDAAPI CuGraphicsGLRegisterImage  (CUgraphicsResource * pCudaResource,
                                              unsigned int image,
                                              unsigned int target,
                                              unsigned int Flags);
 
+GST_CUDA_API
 CUresult CUDAAPI CuGraphicsGLRegisterBuffer (CUgraphicsResource * pCudaResource,
                                              unsigned int buffer,
                                              unsigned int Flags);
 
+GST_CUDA_API
+CUresult CUDAAPI CuGraphicsResourceSetMapFlags (CUgraphicsResource resource,
+                                                unsigned int flags);
+
+GST_CUDA_API
 CUresult CUDAAPI CuGLGetDevices (unsigned int * pCudaDeviceCount,
                                  CUdevice * pCudaDevices,
                                  unsigned int cudaDeviceCount,
                                  CUGLDeviceList deviceList);
 
+
+#ifdef GST_CUDA_HAS_D3D
 /* cudaD3D11.h */
+GST_CUDA_API
 CUresult CUDAAPI CuGraphicsD3D11RegisterResource(CUgraphicsResource * pCudaResource,
                                                  gpointer pD3DResource,
                                                  unsigned int Flags);
 
+GST_CUDA_API
 CUresult CUDAAPI CuD3D11GetDevice(CUdevice * device,
                                   gpointer pAdapter);
 
+GST_CUDA_API
 CUresult CUDAAPI CuD3D11GetDevices(unsigned int * pCudaDeviceCount,
                                    CUdevice* pCudaDevices,
                                    unsigned int cudaDeviceCount,
                                    gpointer pD3D11Device,
                                    CUD3D11DeviceList deviceList);
+#endif
+
+/* nvrtc.h */
+GST_CUDA_API
+nvrtcResult  NvrtcCompileProgram (nvrtcProgram prog,
+                                 int numOptions,
+                                 const char** options);
+
+GST_CUDA_API
+nvrtcResult  NvrtcCreateProgram  (nvrtcProgram* prog,
+                                 const char* src,
+                                 const char* name,
+                                 int numHeaders,
+                                 const char** headers,
+                                 const char** includeNames);
+
+GST_CUDA_API
+nvrtcResult  NvrtcDestroyProgram (nvrtcProgram* prog);
+
+GST_CUDA_API
+nvrtcResult  NvrtcGetPTX         (nvrtcProgram prog,
+                                 char* ptx);
+
+GST_CUDA_API
+nvrtcResult  NvrtcGetPTXSize     (nvrtcProgram prog,
+                                 size_t* ptxSizeRet);
+
+GST_CUDA_API
+nvrtcResult  NvrtcGetProgramLog (nvrtcProgram prog,
+                                char* log);
+
+GST_CUDA_API
+nvrtcResult  NvrtcGetProgramLogSize (nvrtcProgram prog,
+                                    size_t* logSizeRet);
 
 G_END_DECLS
-#endif /* __GST_CUDA_LOADER_H__ */

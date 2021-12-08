@@ -420,6 +420,13 @@ cuda_mem_copy (GstMemory * mem, gssize offset, gssize size)
   return copy;
 }
 
+/**
+ * gst_cuda_memory_init_once:
+ *
+ * Ensures that the #GstCudaAllocator is initialized and ready to be used.
+ *
+ * Since: 1.22
+ */
 void
 gst_cuda_memory_init_once (void)
 {
@@ -435,6 +442,14 @@ gst_cuda_memory_init_once (void)
   }
 }
 
+/**
+ * gst_is_cuda_memory:
+ * @mem: A #GstMemory
+ *
+ * Check if @mem is a cuda memory
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_is_cuda_memory (GstMemory * mem)
 {
@@ -442,6 +457,11 @@ gst_is_cuda_memory (GstMemory * mem)
       GST_IS_CUDA_ALLOCATOR (mem->allocator);
 }
 
+/**
+ * gst_cuda_allocator_alloc:
+ *
+ * Since: 1.22
+ */
 GstMemory *
 gst_cuda_allocator_alloc (GstCudaAllocator * allocator,
     GstCudaContext * context, const GstVideoInfo * info)

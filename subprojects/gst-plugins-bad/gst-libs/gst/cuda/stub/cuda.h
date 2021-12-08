@@ -134,11 +134,6 @@ typedef struct
 
 typedef enum
 {
-  CU_GL_DEVICE_LIST_ALL = 0x01,
-} CUGLDeviceList;
-
-typedef enum
-{
   CU_D3D11_DEVICE_LIST_ALL = 0x01,
   CU_D3D11_DEVICE_LIST_CURRENT_FRAME = 0x02,
   CU_D3D11_DEVICE_LIST_NEXT_FRAME = 0x03,
@@ -225,7 +220,6 @@ typedef struct
 #define cuMemcpy2D cuMemcpy2D_v2
 #define cuMemcpy2DAsync cuMemcpy2DAsync_v2
 #define cuMemFree cuMemFree_v2
-#define cuGLGetDevices cuGLGetDevices_v2
 
 #define CU_TRSF_READ_AS_INTEGER 1
 

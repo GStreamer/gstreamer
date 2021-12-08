@@ -46,9 +46,9 @@
 #endif
 
 #include "cuda-converter.h"
-#include "gstcudautils.h"
-#include "gstcudaloader.h"
-#include "gstcudanvrtc.h"
+#include <gst/cuda/gstcudautils.h>
+#include <gst/cuda/gstcudaloader.h>
+#include <gst/cuda/gstcudanvrtc.h>
 #include <string.h>
 
 #define CUDA_BLOCK_X 16

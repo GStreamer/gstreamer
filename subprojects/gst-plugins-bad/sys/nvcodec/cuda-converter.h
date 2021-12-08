@@ -21,8 +21,8 @@
 #define __GST_CUDA_CONVERTER_H__
 
 #include <gst/video/video.h>
-#include "gstcudacontext.h"
-#include "gstcudamemory.h"
+#include <gst/cuda/gstcudacontext.h>
+#include <gst/cuda/gstcudamemory.h>
 
 G_BEGIN_DECLS
 

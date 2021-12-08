@@ -1109,7 +1109,10 @@ if build_gstgl
     include_directories : [libsinc, compat_includes],
     sources: gen_sources,
     dependencies : [video_dep, gst_base_dep])
-  gstglproto_dep = declare_dependency(dependencies : [gstgl_dep] + gl_lib_deps)
+  gstglproto_dep = declare_dependency(
+    dependencies : [gstgl_dep] + gl_lib_deps,
+    sources: gen_sources
+  )
   meson.override_dependency('gstreamer-gl-1.0', gstgl_dep)
   meson.override_dependency('gstreamer-gl-prototypes-1.0', gstglproto_dep)
 

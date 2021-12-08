@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gstcudautils.h"
+#include <gst/cuda/gstcudautils.h>
 #include "gstcuvidloader.h"
 
 G_BEGIN_DECLS

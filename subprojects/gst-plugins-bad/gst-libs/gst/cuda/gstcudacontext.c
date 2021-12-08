@@ -25,7 +25,7 @@
 #include "gstcudacontext.h"
 #include "gstcudautils.h"
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 #include <gst/d3d11/gstd3d11.h>
 #endif
 
@@ -76,16 +76,23 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
 
   gobject_class->set_property = gst_cuda_context_set_property;
   gobject_class->get_property = gst_cuda_context_get_property;
-  gobject_class->constructed = gst_cuda_context_constructed;
   gobject_class->finalize = gst_cuda_context_finalize;
+  gobject_class->constructed = gst_cuda_context_constructed;
 
+  /**
+   * GstCudaContext::cuda-device-id:
+   *
+   * The GPU index to use for the context.
+   *
+   * Since: 1.22
+   */
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
       g_param_spec_uint ("cuda-device-id", "Cuda Device ID",
           "Set the GPU device to use for operations",
           0, G_MAXUINT, 0,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   g_object_class_install_property (gobject_class, PROP_DXGI_ADAPTER_LUID,
       g_param_spec_int64 ("dxgi-adapter-luid", "DXGI Adapter LUID",
           "Associated DXGI Adapter LUID (Locally Unique Identifier) ",
@@ -145,7 +152,7 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
   }
 }
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 static gint64
 gst_cuda_context_find_dxgi_adapter_luid (CUdevice cuda_device)
 {
@@ -246,7 +253,7 @@ gst_cuda_context_constructed (GObject * object)
 
   priv->context = cuda_ctx;
   priv->device = cdev;
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   priv->dxgi_adapter_luid = gst_cuda_context_find_dxgi_adapter_luid (cdev);
 #endif
 
@@ -393,6 +400,8 @@ gst_cuda_context_new (guint device_id)
  * so all CUDA functions that operate on the current context are affected.
  *
  * Returns: %TRUE if @ctx was pushed without error.
+ *
+ * Since: 1.22
  */
 gboolean
 gst_cuda_context_push (GstCudaContext * ctx)
@@ -409,6 +418,8 @@ gst_cuda_context_push (GstCudaContext * ctx)
  * Pops the current CUDA context from CPU thread
  *
  * Returns: %TRUE if @ctx was pushed without error.
+ *
+ * Since: 1.22
  */
 gboolean
 gst_cuda_context_pop (CUcontext * cuda_ctx)
@@ -423,7 +434,9 @@ gst_cuda_context_pop (CUcontext * cuda_ctx)
  * Get CUDA device context. Caller must not modify and/or destroy
  * returned device context.
  *
- * Returns: the #CUcontext of @ctx
+ * Returns: the `CUcontext` of @ctx
+ *
+ * Since: 1.22
  */
 gpointer
 gst_cuda_context_get_handle (GstCudaContext * ctx)
@@ -440,7 +453,9 @@ gst_cuda_context_get_handle (GstCudaContext * ctx)
  *
  * Get required texture alignment by device
  *
- * Returns: the #CUcontext of @ctx
+ * Returns: the `CUcontext` of @ctx
+ *
+ * Since: 1.22
  */
 gint
 gst_cuda_context_get_texture_alignment (GstCudaContext * ctx)
@@ -457,8 +472,10 @@ gst_cuda_context_get_texture_alignment (GstCudaContext * ctx)
  * @peer: a #GstCudaContext
  *
  * Query whether @ctx can access any memory which belongs to @peer directly.
-
+ *
  * Returns: %TRUE if @ctx can access @peer directly
+ *
+ * Since: 1.22
  */
 gboolean
 gst_cuda_context_can_access_peer (GstCudaContext * ctx, GstCudaContext * peer)

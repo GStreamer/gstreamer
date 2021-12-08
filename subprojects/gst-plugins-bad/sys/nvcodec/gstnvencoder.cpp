@@ -22,12 +22,13 @@
 #endif
 
 #include "gstnvencoder.h"
-#include "gstcudautils.h"
-#include "gstcudamemory.h"
-#include "gstcudabufferpool.h"
+
+#include <gst/cuda/gstcudautils.h>
+#include <gst/cuda/gstcudamemory.h>
+#include <gst/cuda/gstcudabufferpool.h>
 #include <string.h>
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 #include <gst/d3d11/gstd3d11.h>
 #endif
 
@@ -57,7 +58,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_nv_encoder_debug);
 struct _GstNvEncoderPrivate
 {
   GstCudaContext *context;
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   GstD3D11Device *device;
 #endif
 
@@ -179,7 +180,7 @@ gst_nv_encoder_set_context (GstElement * element, GstContext * context)
   GstNvEncoder *self = GST_NV_ENCODER (element);
   GstNvEncoderPrivate *priv = self->priv;
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   if (priv->d3d11_mode) {
     gst_d3d11_handle_set_context_for_adapter_luid (element,
         context, priv->dxgi_adapter_luid, &priv->device);
@@ -224,7 +225,7 @@ gst_nv_encoder_device_lock (GstNvEncoder * self)
 {
   GstNvEncoderPrivate *priv = self->priv;
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   if (priv->d3d11_mode) {
     gst_d3d11_device_lock (priv->device);
     return TRUE;
@@ -237,7 +238,7 @@ gst_nv_encoder_device_lock (GstNvEncoder * self)
 static gboolean
 gst_nv_encoder_device_unlock (GstNvEncoder * self)
 {
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   GstNvEncoderPrivate *priv = self->priv;
 
   if (priv->d3d11_mode) {
@@ -338,7 +339,7 @@ gst_nv_encoder_drain (GstNvEncoder * self, gboolean locked)
   return TRUE;
 }
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 static gboolean
 gst_nv_encoder_open_d3d11_device (GstNvEncoder * self)
 {
@@ -374,7 +375,7 @@ gst_nv_encoder_open (GstVideoEncoder * encoder)
   GstNvEncoder *self = GST_NV_ENCODER (encoder);
   GstNvEncoderPrivate *priv = self->priv;
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   if (priv->d3d11_mode) {
     return gst_nv_encoder_open_d3d11_device (self);
   }
@@ -396,7 +397,7 @@ gst_nv_encoder_close (GstVideoEncoder * encoder)
   GstNvEncoderPrivate *priv = self->priv;
 
   gst_clear_object (&priv->context);
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   gst_clear_object (&priv->device);
 #endif
 
@@ -423,7 +424,7 @@ gst_nv_encoder_handle_context_query (GstNvEncoder * self, GstQuery * query)
 {
   GstNvEncoderPrivate *priv = self->priv;
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   if (priv->d3d11_mode) {
     return gst_d3d11_handle_context_query (GST_ELEMENT (self),
         query, priv->device);
@@ -493,7 +494,7 @@ gst_nv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   }
 
   features = gst_caps_get_features (caps, 0);
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   if (priv->d3d11_mode && features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
     GST_DEBUG_OBJECT (self, "upstream support d3d11 memory");
@@ -967,7 +968,7 @@ gst_nv_encoder_open_encode_session (GstNvEncoder * self, gpointer * session)
   session_params.apiVersion = gst_nvenc_get_api_version ();
   NVENCSTATUS status;
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   if (priv->d3d11_mode) {
     session_params.deviceType = NV_ENC_DEVICE_TYPE_DIRECTX;
     session_params.device = gst_d3d11_device_get_device_handle (priv->device);
@@ -988,7 +989,7 @@ gst_nv_encoder_open_encode_session (GstNvEncoder * self, gpointer * session)
   return TRUE;
 }
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 static GstBufferPool *
 gst_nv_encoder_create_d3d11_pool (GstNvEncoder * self,
     GstVideoCodecState * state)
@@ -1033,7 +1034,7 @@ gst_nv_encoder_create_pool (GstNvEncoder * self, GstVideoCodecState * state)
   GstNvEncoderPrivate *priv = self->priv;
   GstStructure *config;
   GstBufferPool *pool = NULL;
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   if (priv->d3d11_mode)
     return gst_nv_encoder_create_d3d11_pool (self, state);
 #endif
@@ -1402,7 +1403,7 @@ gst_nv_encoder_prepare_task_input_cuda (GstNvEncoder * self,
   return GST_FLOW_OK;
 }
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 static GstBuffer *
 gst_nv_encoder_copy_d3d11 (GstNvEncoder * self,
     GstBuffer * src_buffer, GstBufferPool * pool, gboolean shared)
@@ -1679,7 +1680,7 @@ gst_nv_encoder_prepare_task_input (GstNvEncoder * self,
     const GstVideoInfo * info, GstBuffer * buffer, gpointer session,
     GstBufferPool * pool, GstNvEncoderTask * task)
 {
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   GstNvEncoderPrivate *priv = self->priv;
   if (priv->d3d11_mode) {
     return gst_nv_encoder_prepare_task_input_d3d11 (self, info, buffer,

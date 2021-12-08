@@ -50,9 +50,9 @@
 #include <gst/gl/gstglfuncs.h>
 #endif
 
-#include "gstcudamemory.h"
+#include <gst/cuda/gstcudamemory.h>
+#include <gst/cuda/gstcudabufferpool.h>
 #include "gstnvdecoder.h"
-#include "gstcudabufferpool.h"
 #include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_nv_decoder_debug);

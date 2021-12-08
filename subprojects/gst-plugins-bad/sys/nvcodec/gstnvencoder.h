@@ -22,7 +22,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 #include <gst/d3d11/gstd3d11.h>
 #endif
 
@@ -30,7 +30,7 @@
 
 #include "nvEncodeAPI.h"
 #include "gstnvenc.h"
-#include "gstcudamemory.h"
+#include <gst/cuda/gstcudamemory.h>
 
 G_BEGIN_DECLS
 

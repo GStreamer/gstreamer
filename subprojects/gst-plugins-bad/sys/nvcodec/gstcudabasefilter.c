@@ -32,8 +32,9 @@
 #endif
 
 #include "gstcudabasefilter.h"
-#include "gstcudautils.h"
 #include "gstcudaformat.h"
+#include <gst/cuda/gstcudautils.h>
+
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_base_filter_debug);

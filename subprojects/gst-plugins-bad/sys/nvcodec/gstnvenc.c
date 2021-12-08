@@ -24,7 +24,8 @@
 #include "gstnvenc.h"
 #include "gstnvh264enc.h"
 #include "gstnvh265enc.h"
-#include "gstcudabufferpool.h"
+#include <gst/cuda/gstcudautils.h>
+#include <gst/cuda/gstcudabufferpool.h>
 
 #include <gmodule.h>
 

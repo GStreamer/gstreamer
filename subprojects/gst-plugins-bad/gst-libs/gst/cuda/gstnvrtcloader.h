@@ -20,37 +20,19 @@
 #ifndef __GST_NVRTC_LOADER_H__
 #define __GST_NVRTC_LOADER_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The Cuda library from gst-plugins-bad is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
+#include "cuda-prelude.h"
 #include <gst/gst.h>
 #include <nvrtc.h>
 
 G_BEGIN_DECLS
 
+GST_CUDA_API
 gboolean gst_nvrtc_load_library (void);
-
-nvrtcResult NvrtcCompileProgram (nvrtcProgram prog,
-                                 int numOptions,
-                                 const char** options);
-
-nvrtcResult NvrtcCreateProgram  (nvrtcProgram* prog,
-                                 const char* src,
-                                 const char* name,
-                                 int numHeaders,
-                                 const char** headers,
-                                 const char** includeNames);
-
-nvrtcResult NvrtcDestroyProgram (nvrtcProgram* prog);
-
-nvrtcResult NvrtcGetPTX         (nvrtcProgram prog,
-                                 char* ptx);
-
-nvrtcResult NvrtcGetPTXSize     (nvrtcProgram prog,
-                                 size_t* ptxSizeRet);
-
-nvrtcResult NvrtcGetProgramLog (nvrtcProgram prog,
-                                char* log);
-
-nvrtcResult NvrtcGetProgramLogSize (nvrtcProgram prog,
-                                    size_t* logSizeRet);
 
 G_END_DECLS
 #endif /* __GST_NVRTC_LOADER_H__ */

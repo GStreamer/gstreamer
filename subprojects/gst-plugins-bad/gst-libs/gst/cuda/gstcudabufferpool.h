@@ -20,6 +20,12 @@
 #ifndef __GST_CUDA_BUFFER_POOL_H__
 #define __GST_CUDA_BUFFER_POOL_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The Cuda library from gst-plugins-bad is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
+#include "cuda-prelude.h"
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
@@ -33,14 +39,21 @@ G_BEGIN_DECLS
 #define GST_CUDA_BUFFER_POOL_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj),  GST_TYPE_CUDA_BUFFER_POOL,GstCudaBufferPoolClass))
 #define GST_IS_CUDA_BUFFER_POOL(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj),GST_TYPE_CUDA_BUFFER_POOL))
 #define GST_IS_CUDA_BUFFER_POOL_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_CUDA_BUFFER_POOL))
+/**
+ * GST_CUDA_BUFFER_POOL_CAST:
+ *
+ * Since: 1.22
+ */
 #define GST_CUDA_BUFFER_POOL_CAST(obj)        ((GstCudaBufferPool*)(obj))
 
 typedef struct _GstCudaBufferPool GstCudaBufferPool;
 typedef struct _GstCudaBufferPoolClass GstCudaBufferPoolClass;
 typedef struct _GstCudaBufferPoolPrivate GstCudaBufferPoolPrivate;
 
-/*
+/**
  * GstCudaBufferPool:
+ *
+ * Since: 1.22
  */
 struct _GstCudaBufferPool
 {
@@ -59,8 +72,10 @@ struct _GstCudaBufferPoolClass
   GstBufferPoolClass parent_class;
 };
 
+GST_CUDA_API
 GType gst_cuda_buffer_pool_get_type (void);
 
+GST_CUDA_API
 GstBufferPool * gst_cuda_buffer_pool_new (GstCudaContext * context);
 
 G_END_DECLS

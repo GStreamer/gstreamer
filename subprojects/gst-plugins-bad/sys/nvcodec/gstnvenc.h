@@ -22,8 +22,8 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/cuda/gstcudaloader.h>
 
-#include "gstcudaloader.h"
 #include "nvEncodeAPI.h"
 
 G_BEGIN_DECLS

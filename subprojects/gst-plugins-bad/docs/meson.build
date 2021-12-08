@@ -125,6 +125,7 @@ if build_gir
         {'name': 'audio', 'gir': audio_gir, 'lib': gstbadaudio_dep, 'prefix': 'bad-'},
         {'name': 'transcoder', 'gir': transcoder_gir, 'lib': gst_transcoder_dep},
         {'name': 'codecs', 'gir': codecs_gir, 'lib': gstcodecs_dep},
+        {'name': 'cuda', 'gir': gst_cuda_gir, 'lib': gstcuda_dep},
     ]
 
     if gstopencv_dep.found()

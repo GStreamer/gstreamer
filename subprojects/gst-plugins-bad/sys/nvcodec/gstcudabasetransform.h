@@ -23,8 +23,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
-#include "gstcudacontext.h"
-#include "gstcudabufferpool.h"
+#include <gst/cuda/gstcudacontext.h>
+#include <gst/cuda/gstcudabufferpool.h>
 
 G_BEGIN_DECLS
 

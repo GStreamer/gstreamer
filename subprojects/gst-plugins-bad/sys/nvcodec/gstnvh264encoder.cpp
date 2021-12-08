@@ -1741,7 +1741,7 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
 
   system_caps = gst_caps_from_string (sink_caps_str.c_str ());
   sink_caps = gst_caps_copy (system_caps);
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   if (d3d11_mode) {
     gst_caps_set_features (sink_caps, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
@@ -1843,7 +1843,7 @@ gst_nv_h264_encoder_register_cuda (GstPlugin * plugin, GstCudaContext * context,
   g_free (feature_name);
 }
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 void
 gst_nv_h264_encoder_register_d3d11 (GstPlugin * plugin, GstD3D11Device * device,
     guint rank)

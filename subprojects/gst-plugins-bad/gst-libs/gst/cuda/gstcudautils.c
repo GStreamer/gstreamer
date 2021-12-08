@@ -29,7 +29,7 @@
 #include <gst/gl/gstglfuncs.h>
 #endif
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 #include <gst/d3d11/gstd3d11.h>
 #endif
 
@@ -189,6 +189,8 @@ context_set_cuda_context (GstContext * context, GstCudaContext * cuda_ctx)
  * necessary for #GstCudaContext.
  *
  * Returns: whether a #GstCudaContext exists in @cuda_ctx
+ *
+ * Since: 1.22
  */
 gboolean
 gst_cuda_ensure_element_context (GstElement * element, gint device_id,
@@ -253,6 +255,8 @@ gst_cuda_ensure_element_context (GstElement * element, gint device_id,
  * Retrieves the #GstCudaContext in @context and places the result in @cuda_ctx.
  *
  * Returns: whether the @cuda_ctx could be set successfully
+ *
+ * Since: 1.22
  */
 gboolean
 gst_cuda_handle_set_context (GstElement * element,
@@ -305,6 +309,8 @@ gst_cuda_handle_set_context (GstElement * element,
  *
  * Returns: Whether the @query was successfully responded to from the passed
  *          @context.
+ *
+ * Since: 1.22
  */
 gboolean
 gst_cuda_handle_context_query (GstElement * element,
@@ -347,10 +353,12 @@ gst_cuda_handle_context_query (GstElement * element,
 
 /**
  * gst_context_new_cuda_context:
- * @cuda_ctx: (transfer none) a #GstCudaContext
+ * @cuda_ctx: (transfer none): a #GstCudaContext
  *
  * Returns: (transfer full) (nullable): a new #GstContext embedding the @cuda_ctx
  * or %NULL
+ *
+ * Since: 1.22
  */
 GstContext *
 gst_context_new_cuda_context (GstCudaContext * cuda_ctx)
@@ -391,6 +399,8 @@ init_cuda_quark_once (void)
  * @id: a #GstCudaQuarkId
  *
  * Returns: the GQuark for given @id or 0 if @id is unknown value
+ *
+ * Since: 1.22
  */
 GQuark
 gst_cuda_quark_from_id (GstCudaQuarkId id)
@@ -413,6 +423,8 @@ gst_cuda_quark_from_id (GstCudaQuarkId id)
  *
  * Returns: a new #GstCudaGraphicsResource.
  * Free with gst_cuda_graphics_resource_free
+ *
+ * Since: 1.22
  */
 GstCudaGraphicsResource *
 gst_cuda_graphics_resource_new (GstCudaContext *
@@ -436,13 +448,15 @@ gst_cuda_graphics_resource_new (GstCudaContext *
  * gst_cuda_graphics_resource_register_gl_buffer: (skip)
  * @resource a #GstCudaGraphicsResource
  * @buffer: a GL buffer object
- * @flags: a #CUgraphicsRegisterFlags
+ * @flags: a `CUgraphicsRegisterFlags`
  *
  * Register the @buffer for access by CUDA.
  * Must be called from the gl context thread with current cuda context was
  * pushed on the current thread
  *
  * Returns: whether @buffer was registered or not
+ *
+ * Since: 1.22
  */
 gboolean
 gst_cuda_graphics_resource_register_gl_buffer (GstCudaGraphicsResource *
@@ -467,17 +481,20 @@ gst_cuda_graphics_resource_register_gl_buffer (GstCudaGraphicsResource *
   return TRUE;
 }
 
+#ifdef GST_CUDA_HAS_D3D
 /**
  * gst_cuda_graphics_resource_register_d3d11_resource: (skip)
  * @resource a #GstCudaGraphicsResource
  * @d3d11_resource: a ID3D11Resource
- * @flags: a #CUgraphicsRegisterFlags
+ * @flags: a CUgraphicsRegisterFlags
  *
  * Register the @d3d11_resource for accessing by CUDA.
  * Must be called with d3d11 device lock with current cuda context was
  * pushed on the current thread
  *
  * Returns: whether @d3d11_resource was registered or not
+ *
+ * Since: 1.22
  */
 gboolean
 gst_cuda_graphics_resource_register_d3d11_resource (GstCudaGraphicsResource *
@@ -502,6 +519,7 @@ gst_cuda_graphics_resource_register_d3d11_resource (GstCudaGraphicsResource *
 
   return TRUE;
 }
+#endif
 
 /**
  * gst_cuda_graphics_resource_unregister: (skip)
@@ -511,6 +529,8 @@ gst_cuda_graphics_resource_register_d3d11_resource (GstCudaGraphicsResource *
  * For GL resource, this method must be called from gl context thread.
  * Also, current cuda context should be pushed on the current thread
  * before calling this method.
+ *
+ * Since: 1.22
  */
 void
 gst_cuda_graphics_resource_unregister (GstCudaGraphicsResource * resource)
@@ -532,12 +552,14 @@ gst_cuda_graphics_resource_unregister (GstCudaGraphicsResource * resource)
 /**
  * gst_cuda_graphics_resource_map: (skip)
  * @resource: a #GstCudaGraphicsResource
- * @stream: a #CUstream
- * @flags: a #CUgraphicsMapResourceFlags
+ * @stream: a CUstream
+ * @flags: a CUgraphicsMapResourceFlags
  *
  * Map previously registered resource with map flags
  *
- * Returns: the #CUgraphicsResource if successful or %NULL when failed
+ * Returns: the `CUgraphicsResource` if successful or %NULL when failed
+ *
+ * Since: 1.22
  */
 CUgraphicsResource
 gst_cuda_graphics_resource_map (GstCudaGraphicsResource * resource,
@@ -566,9 +588,11 @@ gst_cuda_graphics_resource_map (GstCudaGraphicsResource * resource,
 /**
  * gst_cuda_graphics_resource_unmap: (skip)
  * @resource: a #GstCudaGraphicsResource
- * @stream: a #CUstream
+ * @stream: a `CUstream`
  *
  * Unmap previously mapped resource
+ *
+ * Since: 1.22
  */
 void
 gst_cuda_graphics_resource_unmap (GstCudaGraphicsResource * resource,
@@ -607,7 +631,7 @@ unregister_resource_from_gl_thread (GstGLContext * gl_context,
 }
 #endif
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 static void
 unregister_d3d11_resource (GstCudaGraphicsResource * resource)
 {
@@ -634,6 +658,8 @@ unregister_d3d11_resource (GstCudaGraphicsResource * resource)
  * @resource: a #GstCudaGraphicsResource
  *
  * Free @resource
+ *
+ * Since: 1.22
  */
 void
 gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource)
@@ -648,7 +674,7 @@ gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource)
           resource);
     } else
 #endif
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
     if (resource->type == GST_CUDA_GRAPHICS_RESOURCE_D3D11_RESOURCE) {
       unregister_d3d11_resource (resource);
     } else
@@ -1250,7 +1276,7 @@ cuda_copy_gl_interop (GstBuffer * dst_buf, const GstVideoInfo * dst_info,
 }
 #endif
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 static gboolean
 ensure_d3d11_interop (GstCudaContext * context, GstD3D11Device * device)
 {
@@ -1454,7 +1480,7 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
 {
   gboolean use_copy_2d = FALSE;
   GstMemory *dst_mem, *src_mem;
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   D3D11_TEXTURE2D_DESC desc;
 #endif
   GstCudaContext *cuda_context;
@@ -1524,7 +1550,7 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
   }
 #endif
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
   if (src_type == GST_CUDA_BUFFER_COPY_D3D11 && gst_is_d3d11_memory (src_mem) &&
       gst_d3d11_memory_get_texture_desc (GST_D3D11_MEMORY_CAST (src_mem), &desc)
       && desc.Usage == D3D11_USAGE_DEFAULT && gst_is_cuda_memory (dst_mem)) {

@@ -21,13 +21,14 @@
 #include "config.h"
 #endif
 
+#include "cuda-gst.h"
 #include "gstnvrtcloader.h"
 #include "gstcudaloader.h"
 
 #include <gmodule.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_nvcodec_debug);
-#define GST_CAT_DEFAULT gst_nvcodec_debug
+GST_DEBUG_CATEGORY (gst_nvrtcloader_debug);
+#define GST_CAT_DEFAULT gst_nvrtcloader_debug
 
 #ifndef G_OS_WIN32
 #define NVRTC_LIBNAME "libnvrtc.so"
@@ -63,6 +64,15 @@ typedef struct _GstNvCodecNvrtcVtahle
 
 static GstNvCodecNvrtcVtahle gst_nvrtc_vtable = { 0, };
 
+/**
+ * gst_nvrtc_load_library:
+ *
+ * Loads the nvrtc library.
+ *
+ * Returns: %TRUE if the library could be loaded, %FALSE otherwise
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_nvrtc_load_library (void)
 {
@@ -72,9 +82,18 @@ gst_nvrtc_load_library (void)
   const gchar *fname;
   gint cuda_version;
   GstNvCodecNvrtcVtahle *vtable;
+  static gsize debug_initialized = FALSE;
 
   if (gst_nvrtc_vtable.loaded)
     return TRUE;
+
+
+  if (g_once_init_enter (&debug_initialized)) {
+    GST_DEBUG_CATEGORY_INIT (gst_nvrtcloader_debug, "nvrtcloader", 0,
+        "nvrtcloader");
+
+    g_once_init_leave (&debug_initialized, TRUE);
+  }
 
   CuDriverGetVersion (&cuda_version);
 

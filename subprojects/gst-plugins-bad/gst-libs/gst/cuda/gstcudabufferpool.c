@@ -134,6 +134,14 @@ gst_cuda_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   return GST_FLOW_OK;
 }
 
+/**
+ * gst_cuda_buffer_pool_new:
+ * @context: The #GstCudaContext to use for the new buffer pool
+ *
+ * Returns: A newly created #GstCudaBufferPool
+ *
+ * Since: 1.22
+ */
 GstBufferPool *
 gst_cuda_buffer_pool_new (GstCudaContext * context)
 {

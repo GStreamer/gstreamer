@@ -22,8 +22,8 @@
 #endif
 
 #include "gstnvbaseenc.h"
-#include "gstcudautils.h"
-#include "gstcudabufferpool.h"
+#include <gst/cuda/gstcudautils.h>
+#include <gst/cuda/gstcudabufferpool.h>
 
 #include <gst/pbutils/codec-utils.h>
 

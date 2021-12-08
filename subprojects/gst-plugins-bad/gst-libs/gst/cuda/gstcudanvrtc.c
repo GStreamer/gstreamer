@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "cuda-gst.h"
 #include "gstcudanvrtc.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_nvrtc_debug);
@@ -39,6 +40,12 @@ _init_debug (void)
   }
 }
 
+/**
+ * gst_cuda_nvrtc_compile:
+ * @source: Source code to compile
+ *
+ * Since: 1.22
+ */
 gchar *
 gst_cuda_nvrtc_compile (const gchar * source)
 {

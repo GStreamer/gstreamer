@@ -17,41 +17,24 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef __GST_CUDA_LOADER_H__
+#define __GST_CUDA_LOADER_H__
+
+#ifndef GST_USE_UNSTABLE_API
+#warning "The Cuda library from gst-plugins-bad is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
 #endif
 
-#include <gst/cuda/gstcudaloader.h>
-#include <gst/cuda/gstnvrtcloader.h>
-#include <gst/cuda/gstcudanvrtc.h>
+#include "cuda.h"
+#include "cudaGL.h"
 
-#include "gstcudafilter.h"
-#include "gstcudaconvert.h"
-#include "gstcudascale.h"
+#include "cuda-prelude.h"
+#include <gst/gst.h>
 
-/* *INDENT-OFF* */
-const gchar *nvrtc_test_source =
-    "__global__ void\n"
-    "my_kernel (void) {}";
-/* *INDENT-ON* */
+G_BEGIN_DECLS
 
-void
-gst_cuda_filter_plugin_init (GstPlugin * plugin)
-{
-  gchar *test_ptx = NULL;
+GST_CUDA_API
+gboolean gst_cuda_load_library (void);
 
-  if (!gst_nvrtc_load_library ())
-    return;
-
-  test_ptx = gst_cuda_nvrtc_compile (nvrtc_test_source);
-
-  if (!test_ptx) {
-    return;
-  }
-  g_free (test_ptx);
-
-  gst_element_register (plugin, "cudaconvert", GST_RANK_NONE,
-      GST_TYPE_CUDA_CONVERT);
-  gst_element_register (plugin, "cudascale", GST_RANK_NONE,
-      GST_TYPE_CUDA_SCALE);
-}
+G_END_DECLS
+#endif /* __GST_CUDA_LOADER_H__ */

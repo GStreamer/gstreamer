@@ -1,5 +1,7 @@
-/* GStreamer
- * Copyright (C) 2022 Seungha Yang <seungha@centricular.com>
+/* GStreamer Cuda Library
+ * Copyright (C) 2021 GStreamer developers
+ *
+ * -prelude.h: prelude include header for gst-cuda library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,21 +19,18 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#pragma once
+#ifndef __GST_CUDA_PRELUDE_H__
+#define __GST_CUDA_PRELUDE_H__
 
-#include "gstnvencoder.h"
+#include <gst/gst.h>
 
-G_BEGIN_DECLS
-
-void gst_nv_h264_encoder_register_cuda  (GstPlugin * plugin,
-                                         GstCudaContext * context,
-                                         guint rank);
-
-#ifdef GST_CUDA_HAS_D3D
-void gst_nv_h264_encoder_register_d3d11 (GstPlugin * plugin,
-                                         GstD3D11Device * device,
-                                         guint rank);
+#ifndef GST_CUDA_API
+# ifdef BUILDING_GST_CUDA
+#  define GST_CUDA_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_CUDA_API GST_API_IMPORT
+# endif
 #endif
 
+#endif /* __GST_CUDA_PRELUDE_H__ */
 
-G_END_DECLS

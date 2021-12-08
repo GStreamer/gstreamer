@@ -74,8 +74,8 @@
 #include "config.h"
 #endif
 
+#include <gst/cuda/gstcudautils.h>
 #include "gstnvh265dec.h"
-#include "gstcudautils.h"
 #include "gstnvdecoder.h"
 
 #include <string.h>

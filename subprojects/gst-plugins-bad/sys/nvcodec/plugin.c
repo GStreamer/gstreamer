@@ -38,12 +38,12 @@
 #include "gstnvdecoder.h"
 #include "gstcudamemorycopy.h"
 #include "gstcudafilter.h"
-#include "gstcudamemory.h"
+#include <gst/cuda/gstcudamemory.h>
 #ifdef HAVE_NVCODEC_NVMM
 #include "gstcudanvmm.h"
 #endif
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 #include <gst/d3d11/gstd3d11.h>
 #endif
 #include "gstnvh264encoder.h"
@@ -235,7 +235,7 @@ plugin_init (GstPlugin * plugin)
     }
 
     if (nvenc_available) {
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
       if (g_win32_check_windows_version (6, 0, 0, G_WIN32_OS_ANY)) {
         gint64 adapter_luid;
         GstD3D11Device *d3d11_device;

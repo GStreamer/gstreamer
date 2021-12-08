@@ -33,12 +33,12 @@
 #include <gst/gl/gstglfuncs.h>
 #endif
 
+#include "nvcuvid.h"
 #include <gst/video/video.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/codecparsers/gsth265parser.h>
-#include "gstcuvidloader.h"
-#include "gstcudaloader.h"
-#include "gstcudacontext.h"
+#include <gst/cuda/gstcudaloader.h>
+#include <gst/cuda/gstcudacontext.h>
 
 G_BEGIN_DECLS
 

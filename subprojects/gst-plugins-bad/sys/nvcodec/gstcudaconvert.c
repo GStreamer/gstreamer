@@ -41,8 +41,9 @@
 #  include <config.h>
 #endif
 
+#include <gst/cuda/gstcudautils.h>
+
 #include "gstcudaconvert.h"
-#include "gstcudautils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_convert_debug);
 #define GST_CAT_DEFAULT gst_cuda_convert_debug

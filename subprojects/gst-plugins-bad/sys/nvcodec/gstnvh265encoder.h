@@ -27,7 +27,7 @@ void gst_nv_h265_encoder_register_cuda  (GstPlugin * plugin,
                                          GstCudaContext * context,
                                          guint rank);
 
-#ifdef HAVE_NVCODEC_GST_D3D11
+#ifdef GST_CUDA_HAS_D3D
 void gst_nv_h265_encoder_register_d3d11 (GstPlugin * plugin,
                                          GstD3D11Device * device,
                                          guint rank);
