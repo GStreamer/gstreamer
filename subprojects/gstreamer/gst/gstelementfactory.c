@@ -456,8 +456,8 @@ cleanup:
  * gst_element_factory_create_with_properties:
  * @factory: factory to instantiate
  * @n: count of properties
- * @names: (nullable): array of properties names
- * @values: (nullable): array of associated properties values
+ * @names: (nullable) (array length=n): array of properties names
+ * @values: (nullable) (array length=n): array of associated properties values
  *
  * Create a new element of the type defined by the given elementfactory.
  * The supplied list of properties, will be passed at object construction.
@@ -658,8 +658,8 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
  * gst_element_factory_make_with_properties:
  * @factoryname: a named factory to instantiate
  * @n: count of properties
- * @names: (nullable): array of properties names
- * @values: (nullable): array of associated properties values
+ * @names: (nullable) (array length=n): array of properties names
+ * @values: (nullable) (array length=n): array of associated properties values
  *
  * Create a new element of the type defined by the given elementfactory.
  * The supplied list of properties, will be passed at object construction.
