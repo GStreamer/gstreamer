@@ -413,6 +413,7 @@ gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
 {
   char *argv[6] = { NULL, };
   int c = 0;
+  GError *error = NULL;
 
 #if defined (__APPLE__) && defined (USR_BIN_ARCH_SWITCH)
   if (gst_plugin_loader_use_usr_bin_arch ()) {
@@ -432,11 +433,16 @@ gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
     GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s", location);
   }
 
-  if (!g_spawn_async_with_pipes (NULL, argv, NULL,
-          G_SPAWN_DO_NOT_REAP_CHILD /* | G_SPAWN_STDERR_TO_DEV_NULL */ ,
-          NULL, NULL, &loader->child_pid, &loader->fd_w.fd, &loader->fd_r.fd,
-          NULL, NULL))
+  g_spawn_async_with_pipes (NULL, argv, NULL,
+      G_SPAWN_DO_NOT_REAP_CHILD /* | G_SPAWN_STDERR_TO_DEV_NULL */ ,
+      NULL, NULL, &loader->child_pid, &loader->fd_w.fd, &loader->fd_r.fd,
+      NULL, &error);
+
+  if (error) {
+    GST_ERROR ("Spawning gst-plugin-scanner helper failed: %s", error->message);
+    g_clear_error (&error);
     return FALSE;
+  }
 
   gst_poll_add_fd (loader->fdset, &loader->fd_w);
   gst_poll_add_fd (loader->fdset, &loader->fd_r);
