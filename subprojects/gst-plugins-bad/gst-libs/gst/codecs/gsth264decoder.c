@@ -593,7 +593,7 @@ gst_h264_decoder_parse_sps (GstH264Decoder * self, GstH264NalUnit * nalu)
   GstH264DecoderPrivate *priv = self->priv;
   GstH264SPS sps;
   GstH264ParserResult pres;
-  gboolean ret;
+  GstFlowReturn ret;
 
   pres = gst_h264_parse_sps (nalu, &sps);
   if (pres != GST_H264_PARSER_OK) {
