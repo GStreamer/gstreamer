@@ -114,6 +114,7 @@ option('gl', type : 'feature', value : 'auto', description : 'GStreamer OpenGL i
 option('gme', type : 'feature', value : 'auto', description : 'libgme gaming console music file decoder plugin')
 option('gs', type : 'feature', value : 'auto', description : 'Google Cloud Storage source and sink plugin')
 option('gsm', type : 'feature', value : 'auto', description : 'GSM encoder/decoder plugin')
+option('gtk3', type : 'feature', value : 'auto', description : 'GTK+ video sink plugin')
 option('ipcpipeline', type : 'feature', value : 'auto', description : 'Inter-process communication plugin')
 option('iqa', type : 'feature', value : 'auto', description : 'Image quality assessment plugin (AGPL - only built if gpl option is also enabled!)')
 option('kate', type : 'feature', value : 'auto', description : 'Kate subtitle parser, tagger, and codec plugin')
