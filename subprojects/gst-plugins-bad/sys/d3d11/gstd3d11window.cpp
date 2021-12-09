@@ -526,7 +526,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
 
   g_assert (chosen_format != NULL);
 
-  GST_DEBUG_OBJECT (window, "chosen rendero format %s (DXGI_FORMAT %d)",
+  GST_DEBUG_OBJECT (window, "chosen render format %s (DXGI_FORMAT %d)",
       gst_video_format_to_string (chosen_format->gst_format),
       chosen_format->dxgi_format);
 
