@@ -583,17 +583,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   window->input_rect.bottom = GST_VIDEO_INFO_HEIGHT (&window->info);
 
   /* Step 4: Decide render color space and set it on converter/processor */
-
-  /* check HDR10 metadata. If HDR APIs are available, BT2020 primaries colorspcae
-   * will be used.
-   *
-   * FIXME: need to query h/w level support. If that's not the case, tone-mapping
-   * should be placed somewhere.
-   *
-   * FIXME: Non-HDR colorspace with BT2020 primaries will break rendering.
-   * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/1175
-   * To workaround it, BT709 colorspace will be chosen for non-HDR case.
-   */
 #if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
   {
     GstVideoMasteringDisplayInfo minfo;
@@ -646,7 +635,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     if (gst_d3d11_result (hr, window->device)) {
       chosen_colorspace =
           gst_d3d11_find_swap_chain_color_space (&window->render_info,
-          swapchain3.Get (), have_hdr10);
+          swapchain3.Get ());
       if (chosen_colorspace) {
         native_colorspace_type =
             (DXGI_COLOR_SPACE_TYPE) chosen_colorspace->dxgi_color_space_type;

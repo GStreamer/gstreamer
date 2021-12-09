@@ -514,7 +514,7 @@ gst_d3d11_video_info_to_dxgi_color_space (GstVideoInfo * info)
 
 const GstDxgiColorSpace *
 gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
-    IDXGISwapChain3 * swapchain, gboolean use_hdr10)
+    IDXGISwapChain3 * swapchain)
 {
   const GstDxgiColorSpace *colorspace = NULL;
   gint best_score = G_MAXINT;
@@ -534,14 +534,6 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
     gint score;
     DXGI_COLOR_SPACE_TYPE cur_type =
         (DXGI_COLOR_SPACE_TYPE) rgb_colorspace_map[i].dxgi_color_space_type;
-
-    /* FIXME: Non-HDR colorspace with BT2020 primaries will break rendering.
-     * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/1175
-     * To workaround it, BT709 colorspace will be chosen for non-HDR case.
-     */
-    if (!use_hdr10 &&
-        rgb_colorspace_map[i].primaries == GST_VIDEO_COLOR_PRIMARIES_BT2020)
-      continue;
 
     hr = swapchain->CheckColorSpaceSupport (cur_type, &can_support);
 

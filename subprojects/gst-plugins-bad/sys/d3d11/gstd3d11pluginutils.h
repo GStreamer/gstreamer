@@ -73,8 +73,7 @@ gboolean        gst_d3d11_hdr_meta_data_to_dxgi     (GstVideoMasteringDisplayInf
 const GstDxgiColorSpace * gst_d3d11_video_info_to_dxgi_color_space (GstVideoInfo * info);
 
 const GstDxgiColorSpace * gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
-                                                                 IDXGISwapChain3 * swapchain,
-                                                                 gboolean use_hdr10);
+                                                                 IDXGISwapChain3 * swapchain);
 #endif
 
 GstBuffer *     gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
