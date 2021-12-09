@@ -4374,6 +4374,9 @@ _build_fec_encoder (GstWebRTCBin * webrtc, WebRTCTransceiver * trans)
     g_object_set (fecenc, "pt", ulpfec_pt, "percentage",
         trans->fec_percentage, NULL);
 
+    g_object_bind_property (rtp_trans, "fec-percentage", fecenc, "percentage",
+        G_BINDING_BIDIRECTIONAL);
+
     if (caps && !gst_caps_is_empty (caps)) {
       const GstStructure *s = gst_caps_get_structure (caps, 0);
       const gchar *media = gst_structure_get_string (s, "media");
