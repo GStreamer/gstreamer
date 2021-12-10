@@ -186,8 +186,9 @@ validate_colorimetry (GstVideoInfo * info)
 {
   const GstVideoFormatInfo *finfo = info->finfo;
 
-  if (!GST_VIDEO_FORMAT_INFO_IS_RGB (finfo) &&
-      info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
+  if ((GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)
+          || GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo))
+      && info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
     GST_WARNING
         ("color matrix RGB is only supported with RGB format, %s is not",
         finfo->name);
