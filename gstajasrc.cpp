@@ -1818,6 +1818,17 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
     gst_caps_unref(caps);
   }
 
+  if (self->configured_info.interlace_mode !=
+      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
+    GST_BUFFER_FLAG_SET(*buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+    switch (GST_VIDEO_INFO_FIELD_ORDER(&self->configured_info)) {
+      case GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST:
+        GST_BUFFER_FLAG_SET(*buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+      default:
+        break;
+    }
+  }
+
   GST_TRACE_OBJECT(self, "Outputting buffer %" GST_PTR_FORMAT, *buffer);
 
   return flow_ret;

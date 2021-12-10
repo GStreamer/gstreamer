@@ -266,6 +266,7 @@ bool gst_video_info_from_ntv2_video_format(GstVideoInfo *info,
                                            NTV2VideoFormat format) {
   if (format == NTV2_FORMAT_UNKNOWN) return false;
 
+  NTV2Standard standard = ::GetNTV2StandardFromVideoFormat(format);
   guint width = ::GetDisplayWidth(format);
   guint height = ::GetDisplayHeight(format);
   NTV2FrameRate fps = ::GetNTV2FrameRateFromVideoFormat(format);
@@ -285,6 +286,17 @@ bool gst_video_info_from_ntv2_video_format(GstVideoInfo *info,
   info->interlace_mode = !::IsProgressiveTransport(format)
                              ? GST_VIDEO_INTERLACE_MODE_INTERLEAVED
                              : GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+
+  if (!::IsProgressiveTransport(format)) {
+    NTV2SmpteLineNumber line_number = ::GetSmpteLineNumber(standard);
+
+    if (line_number.firstFieldTop) {
+      GST_VIDEO_INFO_FIELD_ORDER(info) = GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+    } else {
+      GST_VIDEO_INFO_FIELD_ORDER(info) =
+          GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST;
+    }
+  }
 
   return true;
 }
