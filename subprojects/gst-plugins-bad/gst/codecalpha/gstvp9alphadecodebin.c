@@ -36,7 +36,8 @@
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-vp9, codec-alpha = (boolean) true")
+    GST_STATIC_CAPS ("video/x-vp9, codec-alpha = (boolean) true, "
+        "alignment = super-frame")
     );
 
 struct _GstVp9AlphaDecodeBin
