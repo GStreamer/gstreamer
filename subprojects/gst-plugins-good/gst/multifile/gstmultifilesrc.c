@@ -343,6 +343,7 @@ gst_multi_file_src_set_property (GObject * object, guint prop_id,
         src->fps_n = -1;
         src->fps_d = -1;
       }
+      gst_caps_unref (new_caps);
     }
       break;
     case PROP_LOOP:
