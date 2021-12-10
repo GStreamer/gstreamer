@@ -350,10 +350,8 @@ gst_svtav1enc_set_property (GObject * object, guint property_id,
         break;
     case PROP_SPEEDCONTROL:
       if (g_value_get_uint (value) > 0) {
-        svtav1enc->svt_config->injector_frame_rate = g_value_get_uint (value);
         svtav1enc->svt_config->speed_control_flag = 1;
       } else {
-        svtav1enc->svt_config->injector_frame_rate = 60 << 16;
         svtav1enc->svt_config->speed_control_flag = 0;
       }
       break;
@@ -414,7 +412,7 @@ gst_svtav1enc_get_property (GObject * object, guint property_id,
       break;
     case PROP_SPEEDCONTROL:
       if (svtav1enc->svt_config->speed_control_flag) {
-        g_value_set_uint (value, svtav1enc->svt_config->injector_frame_rate);
+        g_value_set_uint (value, 60);
       } else {
         g_value_set_uint (value, 0);
       }
@@ -612,7 +610,6 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->qp = PROP_QP_DEFAULT;
   svt_config->use_qp_file = FALSE;
   svt_config->disable_dlf_flag = (PROP_DEBLOCKING_DEFAULT == FALSE);
-  svt_config->enable_denoise_flag = FALSE;
   svt_config->film_grain_denoise_strength = FALSE;
   svt_config->enable_warped_motion = FALSE;
   svt_config->enable_global_motion = TRUE;
@@ -699,7 +696,6 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->superres_qthres = 43;
 
   // latency
-  svt_config->injector_frame_rate = PROP_SPEEDCONTROL_DEFAULT;
   svt_config->speed_control_flag = FALSE;
   svt_config->super_block_size = 128;
 
