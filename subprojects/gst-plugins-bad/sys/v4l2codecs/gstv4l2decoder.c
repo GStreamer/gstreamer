@@ -1132,8 +1132,16 @@ gst_v4l2_request_set_done (GstV4l2Request * request)
     return 1;
 
   ret = gst_poll_wait (request->poll, GST_SECOND);
-  if (ret <= 0)
+  if (ret == 0) {
+    GST_WARNING_OBJECT (decoder, "Request %p took too long.", request);
+    return 0;
+  }
+
+  if (ret < 0) {
+    GST_WARNING_OBJECT (decoder, "Request %p error: %s (%i)",
+        request, g_strerror (errno), errno);
     return ret;
+  }
 
   while ((pending_req = gst_queue_array_pop_head (decoder->pending_requests))) {
     gst_v4l2_decoder_dequeue_sink (decoder);
