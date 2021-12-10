@@ -69,7 +69,8 @@ register_video_decoder (GstPlugin * plugin, GstV4l2CodecDevice * device)
       case V4L2_PIX_FMT_VP9_FRAME:
         GST_INFO_OBJECT (decoder, "Registering %s as VP9 Decoder",
             device->name);
-        gst_v4l2_codec_vp9_dec_register (plugin, device, GST_RANK_PRIMARY + 1);
+        gst_v4l2_codec_vp9_dec_register (plugin, decoder, device,
+            GST_RANK_PRIMARY + 1);
         break;
 
       default:
