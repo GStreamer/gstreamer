@@ -519,6 +519,12 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
   const GstDxgiColorSpace *colorspace = NULL;
   gint best_score = G_MAXINT;
   guint i;
+  /* list of tested display color spaces */
+  static GST_DXGI_COLOR_SPACE_TYPE whitelist[] = {
+    GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709,
+    GST_DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709,
+    GST_DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020,
+  };
 
   g_return_val_if_fail (info != NULL, FALSE);
   g_return_val_if_fail (swapchain != NULL, FALSE);
@@ -532,10 +538,22 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
     UINT can_support = 0;
     HRESULT hr;
     gint score;
-    DXGI_COLOR_SPACE_TYPE cur_type =
-        (DXGI_COLOR_SPACE_TYPE) rgb_colorspace_map[i].dxgi_color_space_type;
+    gboolean valid = FALSE;
+    GST_DXGI_COLOR_SPACE_TYPE cur_type =
+        (GST_DXGI_COLOR_SPACE_TYPE) rgb_colorspace_map[i].dxgi_color_space_type;
 
-    hr = swapchain->CheckColorSpaceSupport (cur_type, &can_support);
+    for (guint j = 0; j < G_N_ELEMENTS (whitelist); j++) {
+      if (whitelist[j] == cur_type) {
+        valid = TRUE;
+        break;
+      }
+    }
+
+    if (!valid)
+      continue;
+
+    hr = swapchain->CheckColorSpaceSupport ((DXGI_COLOR_SPACE_TYPE) cur_type,
+        &can_support);
 
     if (FAILED (hr))
       continue;
