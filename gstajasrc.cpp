@@ -761,8 +761,13 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
   GST_DEBUG_OBJECT(self, "Configuring video format %s (%d) on channel %d",
                    configured_string.c_str(), (int)self->video_format,
                    (int)self->channel);
-  self->device->device->SetVideoFormat(self->video_format, false, false,
-                                       self->channel);
+  if (!self->device->device->SetVideoFormat(self->video_format, false, false,
+                                            self->channel)) {
+    GST_DEBUG_OBJECT(
+        self, "Failed configuring video format %s (%d) on channel %d",
+        configured_string.c_str(), (int)self->video_format, (int)self->channel);
+    return FALSE;
+  }
 
   if (!::NTV2DeviceCanDoFrameBufferFormat(self->device_id,
                                           ::NTV2_FBF_10BIT_YCBCR)) {
@@ -770,8 +775,33 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
                      (int)::NTV2_FBF_10BIT_YCBCR);
     return FALSE;
   }
-  self->device->device->SetFrameBufferFormat(self->channel,
-                                             ::NTV2_FBF_10BIT_YCBCR);
+
+  if (!self->device->device->SetFrameBufferFormat(self->channel,
+                                                  ::NTV2_FBF_10BIT_YCBCR)) {
+    GST_ERROR_OBJECT(self, "Failed configuring frame buffer format %d",
+                     (int)::NTV2_FBF_10BIT_YCBCR);
+    return FALSE;
+  }
+
+  // FIXME: Workaround for sometimes setting the video format not actually
+  // changing the register values. Let's just try again.
+  {
+    NTV2VideoFormat fmt;
+    self->device->device->GetVideoFormat(fmt, self->channel);
+
+    if (fmt != self->video_format) {
+      std::string actual_string = NTV2VideoFormatToString(fmt);
+
+      GST_ERROR_OBJECT(self,
+                       "Configured video format %s (%d) on channel %d but %s "
+                       "(%d) is configured instead, trying again",
+                       configured_string.c_str(), (int)self->video_format,
+                       (int)self->channel, actual_string.c_str(), (int)fmt);
+      self->video_format = ::NTV2_FORMAT_UNKNOWN;
+      return TRUE;
+    }
+  }
+
   if (self->quad_mode) {
     for (int i = 1; i < 4; i++)
       self->device->device->SetFrameBufferFormat(
