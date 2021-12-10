@@ -809,14 +809,11 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
       ::HasVANCGeometries(geometry) ? vanc_mode : ::NTV2_VANCMODE_OFF;
   if (self->vanc_mode == ::NTV2_VANCMODE_OFF) {
     self->device->device->SetFrameGeometry(geometry, false, self->channel);
-    self->device->device->SetVANCMode(self->vanc_mode, self->channel);
 
     if (self->quad_mode) {
       for (int i = 1; i < 4; i++) {
         self->device->device->SetFrameGeometry(
             geometry, false, (NTV2Channel)(self->channel + i));
-        self->device->device->SetVANCMode(self->vanc_mode,
-                                          (NTV2Channel)(self->channel + i));
       }
     }
   } else {
@@ -824,14 +821,11 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
         ::GetVANCFrameGeometry(geometry, self->vanc_mode);
 
     self->device->device->SetFrameGeometry(vanc_geometry, false, self->channel);
-    self->device->device->SetVANCMode(self->vanc_mode, self->channel);
 
     if (self->quad_mode) {
       for (int i = 1; i < 4; i++) {
         self->device->device->SetFrameGeometry(
             vanc_geometry, false, (NTV2Channel)(self->channel + i));
-        self->device->device->SetVANCMode(self->vanc_mode,
-                                          (NTV2Channel)(self->channel + i));
       }
     }
   }
