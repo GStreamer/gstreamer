@@ -1974,13 +1974,33 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev,
 
     if (idx == 0 && !convert->pack_rgb) {
       color_matrix_set_identity (&convert->to_YUV_matrix);
-      compute_matrix_to_YUV (convert, &convert->to_YUV_matrix, FALSE);
 
-      /* matrix is in 0..255 range, scale to pack bits */
+      /* When gamma remap is enabled, we do
+       * 1) converts to ARGB64 linear RGB
+       *   - if input is 8bits, convert to ARGB and scaled to 16bits with gamma
+       *     decoding at once
+       *   - otherwise converted ARGB64 and gamma decoded
+       * 2) scale/convert etc,
+       * 3) and gamma encode
+       *
+       * So source data to the do_convert_to_YUV_lines() method is always
+       * ARGB64
+       *
+       * Then, if output unpack format is 8bits, setup_gamma_encode() will scale
+       * ARGB64 down to ARGB as a part of gamma encoding, otherwise it's still
+       * ARGB64
+       *
+       * Finally this to_YUV_matrix is applied. Since compute_matrix_to_YUV()
+       * expects [0, 1.0] range RGB as an input, scale down identity matrix
+       * to expected scale here, otherwise offset of the matrix would be
+       * very wrong
+       */
       GST_DEBUG ("chain YUV convert");
       scale = 1 << convert->pack_bits;
       color_matrix_scale_components (&convert->to_YUV_matrix,
           1 / (float) scale, 1 / (float) scale, 1 / (float) scale);
+
+      compute_matrix_to_YUV (convert, &convert->to_YUV_matrix, FALSE);
       prepare_matrix (convert, &convert->to_YUV_matrix);
     }
     convert->current_format = convert->pack_format;
