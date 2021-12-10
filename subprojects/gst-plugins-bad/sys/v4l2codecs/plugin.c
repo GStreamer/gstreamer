@@ -57,8 +57,8 @@ register_video_decoder (GstPlugin * plugin, GstV4l2CodecDevice * device)
       case V4L2_PIX_FMT_VP8_FRAME:
         GST_INFO_OBJECT (decoder, "Registering %s as VP8 Decoder",
             device->name);
-        gst_v4l2_codec_vp8_dec_register (plugin, decoder,
-            device, GST_RANK_PRIMARY + 1);
+        gst_v4l2_codec_vp8_dec_register (plugin, decoder, device,
+            GST_RANK_PRIMARY + 1);
         break;
       case V4L2_PIX_FMT_MPEG2_SLICE:
         GST_INFO_OBJECT (decoder, "Registering %s as Mpeg2 Decoder",
