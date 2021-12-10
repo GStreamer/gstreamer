@@ -547,9 +547,8 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     do {
       XDamageNotifyEvent *damage_ev = (XDamageNotifyEvent *) (&ev);
 
-      XNextEvent (ximagesrc->xcontext->disp, &ev);
-
-      if (ev.type == ximagesrc->damage_event_base + XDamageNotify &&
+      if (XCheckTypedEvent (ximagesrc->xcontext->disp,
+              ximagesrc->damage_event_base + XDamageNotify, &ev) &&
           damage_ev->level == XDamageReportNonEmpty) {
 
         XDamageSubtract (ximagesrc->xcontext->disp, ximagesrc->damage, None,
