@@ -73,13 +73,15 @@ enum
     "audio/x-raw, " \
       "format = (string) " GST_AUDIO_NE (F32) ", " \
       "rate = (int) [ 8000, MAX ], " \
-      "channels = (int) [ 1, MAX ]"
+      "channels = (int) [ 1, MAX ], " \
+      "layout = (string) interleaved"
 #elif defined(SOUNDTOUCH_INTEGER_SAMPLES)
   #define SUPPORTED_CAPS \
     "audio/x-raw, " \
       "format = (string) " GST_AUDIO_NE (S16) ", " \
       "rate = (int) [ 8000, MAX ], " \
-      "channels = (int) [ 1, MAX ]"
+      "channels = (int) [ 1, MAX ]", \
+      "layout = (string) interleaved"
 #else
 #error "Only integer or float samples are supported"
 #endif
@@ -461,8 +463,8 @@ gst_pitch_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return res;
 }
 
-/* generic convert function based on caps, no rate 
- * used here 
+/* generic convert function based on caps, no rate
+ * used here
  */
 static gboolean
 gst_pitch_convert (GstPitch * pitch,
