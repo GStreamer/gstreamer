@@ -53,6 +53,7 @@ struct _GstCudaContextPrivate
   gint tex_align;
 
   GHashTable *accessible_peer;
+  gboolean owns_context;
 };
 
 #define gst_cuda_context_parent_class parent_class
@@ -62,7 +63,6 @@ static void gst_cuda_context_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_cuda_context_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_cuda_context_constructed (GObject * object);
 static void gst_cuda_context_finalize (GObject * object);
 static void gst_cuda_context_weak_ref_notify (gpointer data,
     GstCudaContext * context);
@@ -77,7 +77,6 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
   gobject_class->set_property = gst_cuda_context_set_property;
   gobject_class->get_property = gst_cuda_context_get_property;
   gobject_class->finalize = gst_cuda_context_finalize;
-  gobject_class->constructed = gst_cuda_context_constructed;
 
   /**
    * GstCudaContext::cuda-device-id:
@@ -100,9 +99,6 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
           GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READABLE |
           G_PARAM_STATIC_STRINGS));
 #endif
-
-  GST_DEBUG_CATEGORY_INIT (gst_cuda_context_debug,
-      "cudacontext", 0, "CUDA Context");
 }
 
 static void
@@ -200,76 +196,81 @@ gst_cuda_context_find_dxgi_adapter_luid (CUdevice cuda_device)
   return ret;
 }
 #endif
-
-static void
-gst_cuda_context_constructed (GObject * object)
+static gboolean
+init_cuda_ctx (void)
 {
-  GstCudaContext *context = GST_CUDA_CONTEXT (object);
-  GstCudaContextPrivate *priv = context->priv;
-  CUcontext cuda_ctx, old_ctx;
-  CUdevice cdev = 0;
+  gboolean ret = TRUE;
+
+  static gsize once = 0;
+
+  if (g_once_init_enter (&once)) {
+    if (CuInit (0) != CUDA_SUCCESS) {
+      GST_ERROR ("Failed to cuInit");
+      ret = FALSE;
+    }
+    GST_DEBUG_CATEGORY_INIT (gst_cuda_context_debug,
+        "cudacontext", 0, "CUDA Context");
+    g_once_init_leave (&once, ret);
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_create_cucontext (guint * device_id, CUcontext * context)
+{
+  CUcontext cuda_ctx;
+  CUdevice cdev = 0, cuda_dev = -1;
   gint dev_count = 0;
-  gint tex_align = 0;
-  GList *iter;
+  gchar name[256];
+  gint min = 0, maj = 0;
+  gint i;
+
+
+  if (!init_cuda_ctx ())
+    return FALSE;
 
   if (!gst_cuda_result (CuDeviceGetCount (&dev_count)) || dev_count == 0) {
     GST_WARNING ("No CUDA devices detected");
-    return;
+    return FALSE;
   }
 
-  if (priv->device_id >= dev_count) {
-    GST_WARNING ("Unavailable device id %d", priv->device_id);
-    return;
+  for (i = 0; i < dev_count; ++i) {
+    if (gst_cuda_result (CuDeviceGet (&cdev, i)) &&
+        gst_cuda_result (CuDeviceGetName (name, sizeof (name), cdev)) &&
+        gst_cuda_result (CuDeviceGetAttribute (&maj,
+                CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, cdev)) &&
+        gst_cuda_result (CuDeviceGetAttribute (&min,
+                CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, cdev))) {
+      GST_INFO ("GPU #%d supports NVENC: %s (%s) (Compute SM %d.%d)", i,
+          (((maj << 4) + min) >= 0x30) ? "yes" : "no", name, maj, min);
+      if (*device_id == -1 || *device_id == cdev) {
+        *device_id = cuda_dev = cdev;
+        break;
+      }
+    }
   }
 
-  if (!gst_cuda_result (CuDeviceGet (&cdev, priv->device_id))) {
-    GST_WARNING ("Failed to get device for id %d", priv->device_id);
-    return;
+  if (cuda_dev == -1) {
+    GST_WARNING ("Device with id %d does not exist", *device_id);
+    return FALSE;
   }
 
-  if (!gst_cuda_result (CuDeviceGetAttribute (&tex_align,
-              CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT, cdev))) {
-    GST_WARNING ("Failed to query texture alignment");
-    return;
+  if (!gst_cuda_result (CuDeviceGet (&cdev, *device_id))) {
+    GST_WARNING ("Failed to get device for id %d", *device_id);
+    return FALSE;
   }
 
-  priv->tex_align = tex_align;
-
-  GST_DEBUG ("Creating cuda context for device index %d, Texture Alignment: %d",
-      priv->device_id, priv->tex_align);
-
-  if (!gst_cuda_result (CuCtxCreate (&cuda_ctx, 0, cdev))) {
-    GST_WARNING ("Failed to create CUDA context for cuda device %d",
-        priv->device_id);
-    return;
+  if (!gst_cuda_result (CuCtxCreate (&cuda_ctx, 0, cuda_dev))) {
+    GST_WARNING ("Failed to create CUDA context for cuda device %d", cuda_dev);
+    return FALSE;
   }
 
-  if (!gst_cuda_result (CuCtxPopCurrent (&old_ctx))) {
-    return;
-  }
+  GST_INFO ("Created CUDA context %p with device-id %d", cuda_ctx, *device_id);
 
-  GST_INFO ("Created CUDA context %p with device-id %d",
-      cuda_ctx, priv->device_id);
+  *context = cuda_ctx;
 
-  priv->context = cuda_ctx;
-  priv->device = cdev;
-#ifdef GST_CUDA_HAS_D3D
-  priv->dxgi_adapter_luid = gst_cuda_context_find_dxgi_adapter_luid (cdev);
-#endif
-
-  G_LOCK (list_lock);
-  g_object_weak_ref (G_OBJECT (object),
-      (GWeakNotify) gst_cuda_context_weak_ref_notify, NULL);
-  for (iter = context_list; iter; iter = g_list_next (iter)) {
-    GstCudaContext *peer = (GstCudaContext *) iter->data;
-
-    /* EnablePeerAccess is unidirectional */
-    gst_cuda_context_enable_peer_access (context, peer);
-    gst_cuda_context_enable_peer_access (peer, context);
-  }
-
-  context_list = g_list_append (context_list, context);
-  G_UNLOCK (list_lock);
+  return TRUE;
 }
 
 /* must be called with list_lock taken */
@@ -359,7 +360,7 @@ gst_cuda_context_finalize (GObject * object)
   GstCudaContext *context = GST_CUDA_CONTEXT_CAST (object);
   GstCudaContextPrivate *priv = context->priv;
 
-  if (priv->context) {
+  if (priv->context && priv->owns_context) {
     GST_DEBUG_OBJECT (context, "Destroying CUDA context %p", priv->context);
     gst_cuda_result (CuCtxDestroy (priv->context));
   }
@@ -374,18 +375,30 @@ gst_cuda_context_finalize (GObject * object)
  * Create #GstCudaContext with given device_id
  *
  * Returns: a new #GstCudaContext or %NULL on failure
+ *
+ * Since: 1.22
  */
 GstCudaContext *
 gst_cuda_context_new (guint device_id)
 {
-  GstCudaContext *self =
-      g_object_new (GST_TYPE_CUDA_CONTEXT, "cuda-device-id", device_id, NULL);
+  CUcontext old_ctx;
+  CUcontext ctx;
+  GstCudaContext *self;
 
-  gst_object_ref_sink (self);
+  if (!gst_create_cucontext (&device_id, &ctx)) {
+    return NULL;
+  }
 
-  if (!self->priv->context) {
-    GST_ERROR ("Failed to create CUDA context");
-    gst_clear_object (&self);
+  self = gst_cuda_context_new_wrapped (ctx, device_id);
+  if (!self)
+    return NULL;
+
+  self->priv->owns_context = TRUE;
+
+  if (!gst_cuda_result (CuCtxPopCurrent (&old_ctx))) {
+    GST_ERROR ("Could not pop current context");
+
+    return NULL;
   }
 
   return self;
@@ -493,4 +506,71 @@ gst_cuda_context_can_access_peer (GstCudaContext * ctx, GstCudaContext * peer)
   G_UNLOCK (list_lock);
 
   return ret;
+}
+
+
+/**
+ * gst_cuda_context_new_wrapped:
+ * @handler: A
+ * [CUcontext](https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__TYPES.html#group__CUDA__TYPES_1gf9f5bd81658f866613785b3a0bb7d7d9)
+ * to wrap
+ * @device: A
+ * [CUDevice](https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__TYPES.html#group__CUDA__TYPES_1gf9f5bd81658f866613785b3a0bb7d7d9)
+ * to wrap
+ *
+ * Note: The caller is responsible for ensuring that the CUcontext and CUdevice
+ * represented by @handle and @device stay alive while the returned
+ * #GstCudaContext is active.
+ *
+ * Returns: (transfer full): A newly created #GstCudaContext
+ *
+ * Since: 1.22
+ */
+GstCudaContext *
+gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
+{
+  GList *iter;
+  gint tex_align = 0;
+
+  GstCudaContext *self;
+
+  g_return_val_if_fail (handler, NULL);
+  g_return_val_if_fail (device >= 0, NULL);
+
+  if (!init_cuda_ctx ())
+    return FALSE;
+
+  if (!gst_cuda_result (CuDeviceGetAttribute (&tex_align,
+              CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT, device))) {
+    GST_ERROR ("Could not get texture alignment for %d", device);
+
+    return NULL;
+  }
+
+  self = g_object_new (GST_TYPE_CUDA_CONTEXT, "cuda-device-id", device, NULL);
+  self->priv->context = handler;
+  self->priv->device = device;
+  gst_object_ref_sink (self);
+
+#ifdef GST_CUDA_HAS_D3D
+  self->priv->dxgi_adapter_luid =
+      gst_cuda_context_find_dxgi_adapter_luid (self->priv->device);
+#endif
+
+
+  G_LOCK (list_lock);
+  g_object_weak_ref (G_OBJECT (self),
+      (GWeakNotify) gst_cuda_context_weak_ref_notify, NULL);
+  for (iter = context_list; iter; iter = g_list_next (iter)) {
+    GstCudaContext *peer = (GstCudaContext *) iter->data;
+
+    /* EnablePeerAccess is unidirectional */
+    gst_cuda_context_enable_peer_access (self, peer);
+    gst_cuda_context_enable_peer_access (peer, self);
+  }
+
+  context_list = g_list_append (context_list, self);
+  G_UNLOCK (list_lock);
+
+  return self;
 }

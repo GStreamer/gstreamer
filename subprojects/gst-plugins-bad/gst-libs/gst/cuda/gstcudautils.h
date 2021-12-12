@@ -186,11 +186,11 @@ void            gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resou
 
 /**
  * GstCudaBufferCopyType:
- * GST_CUDA_BUFFER_COPY_SYSTEM: Copy from/to system memory
- * GST_CUDA_BUFFER_COPY_CUDA: Copy from/to cuda memory
- * GST_CUDA_BUFFER_COPY_GL: Copy from/to GL memory
- * GST_CUDA_BUFFER_COPY_D3D11: Copy from/to D3D11 memory
- * GST_CUDA_BUFFER_COPY_NVMM: Copy from/to NVMM memory
+ * @GST_CUDA_BUFFER_COPY_SYSTEM: Copy from/to system memory
+ * @GST_CUDA_BUFFER_COPY_CUDA: Copy from/to cuda memory
+ * @GST_CUDA_BUFFER_COPY_GL: Copy from/to GL memory
+ * @GST_CUDA_BUFFER_COPY_D3D11: Copy from/to D3D11 memory
+ * @GST_CUDA_BUFFER_COPY_NVMM: Copy from/to NVMM memory
  *
  * Since: 1.22
  */

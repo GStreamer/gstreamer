@@ -81,6 +81,9 @@ GST_CUDA_API
 GstCudaContext * gst_cuda_context_new         (guint device_id);
 
 GST_CUDA_API
+GstCudaContext * gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device);
+
+GST_CUDA_API
 gboolean         gst_cuda_context_push        (GstCudaContext * ctx);
 
 GST_CUDA_API
