@@ -114,6 +114,14 @@ endif
 
 orc_subproject = subproject('orc', required: get_option('orc'))
 
+foreach custom_subproj: get_option('custom_subprojects').split(',')
+    if custom_subproj != ''
+        message ('Adding custom subproject ' + custom_subproj)
+        subprojects += [[custom_subproj, {'match_gst_version': false}]]
+    endif
+endforeach
+
+
 subprojects_names = []
 plugins_doc_caches = []
 orc_update_targets = []
@@ -368,14 +376,6 @@ if get_option('default_library') == 'static'
     subdirs : 'gstreamer-1.0')
   meson.override_dependency('gstreamer-full-1.0', gst_full_dep)
 endif
-
-foreach custom_subproj: get_option('custom_subprojects').split(',')
-    if custom_subproj != ''
-        message ('Adding custom subproject ' + custom_subproj)
-        subproject(custom_subproj)
-        subprojects_names += [custom_subproj]
-    endif
-endforeach
 
 message('Building subprojects: ' + ', '.join(subprojects_names))
 
