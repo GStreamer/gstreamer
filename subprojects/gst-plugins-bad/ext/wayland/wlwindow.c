@@ -412,7 +412,6 @@ gst_wl_window_resize_video_surface (GstWlWindow * window, gboolean commit)
   if (commit)
     wl_surface_commit (window->video_surface_wrapper);
 
-  /* this is saved for use in wl_surface_damage */
   window->video_rectangle = res;
 }
 
@@ -452,8 +451,8 @@ gst_wl_window_render (GstWlWindow * window, GstWlBuffer * buffer,
 
   if (G_LIKELY (buffer)) {
     gst_wl_buffer_attach (buffer, window->video_surface_wrapper);
-    wl_surface_damage (window->video_surface_wrapper, 0, 0,
-        window->video_rectangle.w, window->video_rectangle.h);
+    wl_surface_damage (window->video_surface_wrapper, 0, 0, G_MAXINT32,
+        G_MAXINT32);
     wl_surface_commit (window->video_surface_wrapper);
   } else {
     /* clear both video and parent surfaces */
@@ -513,7 +512,8 @@ gst_wl_window_update_borders (GstWlWindow * window)
       window->display, &info);
   gwlbuf = gst_buffer_add_wl_buffer (buf, wlbuf, window->display);
   gst_wl_buffer_attach (gwlbuf, window->area_surface_wrapper);
-  wl_surface_damage (window->area_surface_wrapper, 0, 0, width, height);
+  wl_surface_damage (window->area_surface_wrapper, 0, 0, G_MAXINT32,
+      G_MAXINT32);
 
   /* at this point, the GstWlBuffer keeps the buffer
    * alive and will free it on wl_buffer::release */
