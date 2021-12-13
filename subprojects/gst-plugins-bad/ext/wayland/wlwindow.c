@@ -222,11 +222,7 @@ gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
         window->video_surface);
   }
 
-  /* do not accept input */
-  region = wl_compositor_create_region (display->compositor);
-  wl_surface_set_input_region (window->area_surface, region);
-  wl_region_destroy (region);
-
+  /* never accept input events on the video surface */
   region = wl_compositor_create_region (display->compositor);
   wl_surface_set_input_region (window->video_surface, region);
   wl_region_destroy (region);
@@ -345,7 +341,13 @@ gst_wl_window_new_in_surface (GstWlDisplay * display,
     struct wl_surface * parent, GMutex * render_lock)
 {
   GstWlWindow *window;
+  struct wl_region *region;
   window = gst_wl_window_new_internal (display, render_lock);
+
+  /* do not accept input events on the area surface when embedded */
+  region = wl_compositor_create_region (display->compositor);
+  wl_surface_set_input_region (window->area_surface, region);
+  wl_region_destroy (region);
 
   /* embed in parent */
   window->area_subsurface =
@@ -410,16 +412,6 @@ gst_wl_window_resize_video_surface (GstWlWindow * window, gboolean commit)
   if (commit) {
     wl_surface_damage (window->video_surface_wrapper, 0, 0, res.w, res.h);
     wl_surface_commit (window->video_surface_wrapper);
-  }
-
-  if (gst_wl_window_is_toplevel (window)) {
-    struct wl_region *region;
-
-    region = wl_compositor_create_region (window->display->compositor);
-    wl_region_add (region, 0, 0, window->render_rectangle.w,
-        window->render_rectangle.h);
-    wl_surface_set_input_region (window->area_surface, region);
-    wl_region_destroy (region);
   }
 
   /* this is saved for use in wl_surface_damage */
