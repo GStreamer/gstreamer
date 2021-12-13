@@ -433,16 +433,14 @@ gst_wl_window_set_opaque (GstWlWindow * window, const GstVideoInfo * info)
 
   /* Set area opaque */
   region = wl_compositor_create_region (window->display->compositor);
-  wl_region_add (region, 0, 0, window->render_rectangle.w,
-      window->render_rectangle.h);
+  wl_region_add (region, 0, 0, G_MAXINT32, G_MAXINT32);
   wl_surface_set_opaque_region (window->area_surface, region);
   wl_region_destroy (region);
 
   if (!GST_VIDEO_INFO_HAS_ALPHA (info)) {
     /* Set video opaque */
     region = wl_compositor_create_region (window->display->compositor);
-    wl_region_add (region, 0, 0, window->render_rectangle.w,
-        window->render_rectangle.h);
+    wl_region_add (region, 0, 0, G_MAXINT32, G_MAXINT32);
     wl_surface_set_opaque_region (window->video_surface, region);
     wl_region_destroy (region);
   }
