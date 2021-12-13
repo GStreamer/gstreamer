@@ -739,7 +739,6 @@ _get_stats_from_transport_channel (GstWebRTCBin * webrtc,
     stats = gst_value_get_structure (val);
 
     /* skip foreign sources */
-    gst_structure_get (stats, "ssrc", G_TYPE_UINT, &stats_ssrc, NULL);
     if (gst_structure_get_uint (stats, "ssrc", &stats_ssrc) &&
         ssrc == stats_ssrc)
       _get_stats_from_rtp_source_stats (webrtc, stream, stats, codec_id,
