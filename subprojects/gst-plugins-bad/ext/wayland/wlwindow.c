@@ -451,7 +451,7 @@ gst_wl_window_render (GstWlWindow * window, GstWlBuffer * buffer,
 
   if (G_LIKELY (buffer)) {
     gst_wl_buffer_attach (buffer, window->video_surface_wrapper);
-    wl_surface_damage (window->video_surface_wrapper, 0, 0, G_MAXINT32,
+    wl_surface_damage_buffer (window->video_surface_wrapper, 0, 0, G_MAXINT32,
         G_MAXINT32);
     wl_surface_commit (window->video_surface_wrapper);
   } else {
@@ -512,7 +512,7 @@ gst_wl_window_update_borders (GstWlWindow * window)
       window->display, &info);
   gwlbuf = gst_buffer_add_wl_buffer (buf, wlbuf, window->display);
   gst_wl_buffer_attach (gwlbuf, window->area_surface_wrapper);
-  wl_surface_damage (window->area_surface_wrapper, 0, 0, G_MAXINT32,
+  wl_surface_damage_buffer (window->area_surface_wrapper, 0, 0, G_MAXINT32,
       G_MAXINT32);
 
   /* at this point, the GstWlBuffer keeps the buffer

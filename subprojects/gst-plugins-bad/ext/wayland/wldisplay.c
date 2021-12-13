@@ -214,7 +214,7 @@ registry_handle_global (void *data, struct wl_registry *registry,
 
   if (g_strcmp0 (interface, "wl_compositor") == 0) {
     self->compositor = wl_registry_bind (registry, id, &wl_compositor_interface,
-        MIN (version, 3));
+        MIN (version, 4));
   } else if (g_strcmp0 (interface, "wl_subcompositor") == 0) {
     self->subcompositor =
         wl_registry_bind (registry, id, &wl_subcompositor_interface, 1);
