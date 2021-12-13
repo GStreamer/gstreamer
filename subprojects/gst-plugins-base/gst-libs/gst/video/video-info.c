@@ -150,7 +150,6 @@ gst_video_info_init (GstVideoInfo * info)
 #define DEFAULT_RGB     2
 #define DEFAULT_GRAY    3
 #define DEFAULT_UNKNOWN 4
-#define DEFAULT_YUV_UHD 5
 
 static const GstVideoColorimetry default_color[] = {
   MAKE_COLORIMETRY (_16_235, BT601, BT601, SMPTE170M),
@@ -158,7 +157,6 @@ static const GstVideoColorimetry default_color[] = {
   MAKE_COLORIMETRY (_0_255, RGB, SRGB, BT709),
   MAKE_COLORIMETRY (_0_255, BT601, UNKNOWN, UNKNOWN),
   MAKE_COLORIMETRY (_UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN),
-  MAKE_COLORIMETRY (_16_235, BT2020, BT2020_12, BT2020),
 };
 
 static void
@@ -167,10 +165,7 @@ set_default_colorimetry (GstVideoInfo * info)
   const GstVideoFormatInfo *finfo = info->finfo;
 
   if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)) {
-    if (info->height >= 2160) {
-      info->chroma_site = GST_VIDEO_CHROMA_SITE_H_COSITED;
-      info->colorimetry = default_color[DEFAULT_YUV_UHD];
-    } else if (info->height > 576) {
+    if (info->height > 576) {
       info->chroma_site = GST_VIDEO_CHROMA_SITE_H_COSITED;
       info->colorimetry = default_color[DEFAULT_YUV_HD];
     } else {
