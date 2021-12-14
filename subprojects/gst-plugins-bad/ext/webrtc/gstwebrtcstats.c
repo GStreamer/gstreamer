@@ -759,7 +759,7 @@ _get_stats_from_transport_channel (GstWebRTCBin * webrtc,
 }
 
 /* https://www.w3.org/TR/webrtc-stats/#codec-dict* */
-static void
+static gboolean
 _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
     GstStructure * s, gchar ** out_id, guint * out_ssrc, guint * out_clock_rate)
 {
@@ -770,6 +770,7 @@ _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
   double ts;
   guint ssrc = 0;
   gint clock_rate = 0;
+  gboolean has_caps_ssrc = FALSE;
 
   gst_structure_get_double (s, "timestamp", &ts);
 
@@ -793,8 +794,10 @@ _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
     if (gst_structure_get_int (caps_s, "clock-rate", &clock_rate))
       gst_structure_set (stats, "clock-rate", G_TYPE_UINT, clock_rate, NULL);
 
-    if (gst_structure_get_uint (caps_s, "ssrc", &ssrc))
+    if (gst_structure_get_uint (caps_s, "ssrc", &ssrc)) {
       gst_structure_set (stats, "ssrc", G_TYPE_UINT, ssrc, NULL);
+      has_caps_ssrc = TRUE;
+    }
 
     media = gst_structure_get_string (caps_s, "media");
     encoding_name = gst_structure_get_string (caps_s, "encoding-name");
@@ -848,6 +851,8 @@ _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
 
   if (out_clock_rate)
     *out_clock_rate = clock_rate;
+
+  return has_caps_ssrc;
 }
 
 static gboolean
@@ -857,8 +862,10 @@ _get_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad, GstStructure * s)
   TransportStream *stream;
   gchar *codec_id;
   guint ssrc, clock_rate;
+  gboolean has_caps_ssrc;
 
-  _get_codec_stats_from_pad (webrtc, pad, s, &codec_id, &ssrc, &clock_rate);
+  has_caps_ssrc = _get_codec_stats_from_pad (webrtc, pad, s, &codec_id, &ssrc,
+      &clock_rate);
 
   if (!wpad->trans)
     goto out;
@@ -866,6 +873,9 @@ _get_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad, GstStructure * s)
   stream = WEBRTC_TRANSCEIVER (wpad->trans)->stream;
   if (!stream)
     goto out;
+
+  if (!has_caps_ssrc)
+    ssrc = wpad->last_ssrc;
 
   _get_stats_from_transport_channel (webrtc, stream, codec_id, ssrc,
       clock_rate, s);
