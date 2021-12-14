@@ -46,6 +46,8 @@ struct _GstWebRTCBinPad
   GstWebRTCRTPTransceiver *trans;
   gulong                block_id;
 
+  guint32               last_ssrc;
+
   GstCaps              *received_caps;
 };
 

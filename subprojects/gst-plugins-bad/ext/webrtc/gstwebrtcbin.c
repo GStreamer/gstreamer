@@ -439,6 +439,37 @@ gst_webrtc_bin_pad_init (GstWebRTCBinPad * pad)
 {
 }
 
+static GstPadProbeReturn
+webrtc_bin_pad_buffer_cb (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  GstWebRTCBinPad *wpad;
+  GstBuffer *buf;
+  GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
+
+  if (info->type & GST_PAD_PROBE_TYPE_BUFFER) {
+    buf = GST_PAD_PROBE_INFO_BUFFER (info);
+  } else {
+    GstBufferList *list;
+
+    list = GST_PAD_PROBE_INFO_BUFFER_LIST (info);
+    buf = gst_buffer_list_get (list, 0);
+  }
+
+  if (buf == NULL)
+    return GST_PAD_PROBE_OK;
+
+  if (!gst_rtp_buffer_map (buf, GST_MAP_READ, &rtpbuf))
+    return GST_PAD_PROBE_OK;
+
+  wpad = GST_WEBRTC_BIN_PAD (pad);
+  wpad->last_ssrc = gst_rtp_buffer_get_ssrc (&rtpbuf);
+
+  gst_rtp_buffer_unmap (&rtpbuf);
+
+  return GST_PAD_PROBE_OK;
+}
+
 static GstWebRTCBinPad *
 gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 {
@@ -459,6 +490,9 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 
   gst_pad_set_event_function (GST_PAD (pad), gst_webrtcbin_sink_event);
   gst_pad_set_query_function (GST_PAD (pad), gst_webrtcbin_sink_query);
+
+  gst_pad_add_probe (GST_PAD (pad), GST_PAD_PROBE_TYPE_BUFFER |
+      GST_PAD_PROBE_TYPE_BUFFER_LIST, webrtc_bin_pad_buffer_cb, NULL, NULL);
 
   GST_DEBUG_OBJECT (pad, "new visible pad with direction %s",
       direction == GST_PAD_SRC ? "src" : "sink");
