@@ -2356,8 +2356,24 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       GstH265Profile p;
 
       p = gst_h265_get_profile_from_sps (sps);
-
       profile = gst_h265_profile_to_string (p);
+
+      if (s && gst_structure_has_field (s, "profile")) {
+        const gchar *profile_sink = gst_structure_get_string (s, "profile");
+        GstH265Profile p_sink = gst_h265_profile_from_string (profile_sink);
+
+        if (p != p_sink) {
+          const gchar *profile_src;
+
+          p = MAX (p, p_sink);
+          profile_src = (p == p_sink) ? profile_sink : profile;
+          GST_INFO_OBJECT (h265parse,
+              "Upstream profile (%s) is different than in SPS (%s). "
+              "Using %s.", profile_sink, profile, profile_src);
+          profile = profile_src;
+        }
+      }
+
       if (profile != NULL)
         gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
 
