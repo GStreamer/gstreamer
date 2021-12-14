@@ -763,8 +763,9 @@ static void
 _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
     GstStructure * s, gchar ** out_id, guint * out_ssrc, guint * out_clock_rate)
 {
+  GstWebRTCBinPad *wpad = GST_WEBRTC_BIN_PAD (pad);
   GstStructure *stats;
-  GstCaps *caps;
+  GstCaps *caps = NULL;
   gchar *id;
   double ts;
   guint ssrc = 0;
@@ -776,7 +777,8 @@ _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
   id = g_strdup_printf ("codec-stats-%s", GST_OBJECT_NAME (pad));
   _set_base_stats (stats, GST_WEBRTC_STATS_CODEC, ts, id);
 
-  caps = gst_pad_get_current_caps (pad);
+  if (wpad->received_caps)
+    caps = gst_caps_ref (wpad->received_caps);
   GST_DEBUG_OBJECT (pad, "Pad caps are: %" GST_PTR_FORMAT, caps);
   if (caps && gst_caps_is_fixed (caps)) {
     GstStructure *caps_s = gst_caps_get_structure (caps, 0);
