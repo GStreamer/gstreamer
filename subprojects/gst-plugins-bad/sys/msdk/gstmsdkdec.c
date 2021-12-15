@@ -581,10 +581,15 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
   GstVideoInfo *vinfo;
   GstVideoAlignment align;
   GstCaps *allocation_caps = NULL;
+  GstCaps *allowed_caps, *temp_caps;
   GstVideoFormat format;
   guint width, height;
   guint alloc_w, alloc_h;
   const gchar *format_str;
+  GstStructure *outs;
+  const gchar *out_format;
+  GValue v_format = G_VALUE_INIT;
+
 
   /* use display width and display height in output state, which
    * will be used for caps negotiation */
@@ -603,6 +608,37 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
     GST_WARNING_OBJECT (thiz, "Failed to find a valid video format");
     return FALSE;
   }
+#if (MFX_VERSION >= 1022)
+  /* SFC is triggered (for AVC and HEVC) when default output format is not
+   * accepted by downstream.
+   * For SFC csc, need to do the query twice: the first time uses default
+   * color format to query peer pad, empty caps means default format is
+   * not accepted by downstream; then we need the second query to decide
+   * src caps color format and let SFC work. */
+  if (thiz->param.mfx.CodecId == MFX_CODEC_AVC ||
+      thiz->param.mfx.CodecId == MFX_CODEC_HEVC) {
+    temp_caps = gst_pad_query_caps (GST_VIDEO_DECODER (thiz)->srcpad, NULL);
+    temp_caps = gst_caps_make_writable (temp_caps);
+
+    g_value_init (&v_format, G_TYPE_STRING);
+    g_value_set_string (&v_format, gst_video_format_to_string (format));
+    gst_caps_set_value (temp_caps, "format", &v_format);
+
+    if (gst_caps_is_empty (gst_pad_peer_query_caps (GST_VIDEO_DECODER
+                (thiz)->srcpad, temp_caps))) {
+      allowed_caps =
+          gst_pad_get_allowed_caps (GST_VIDEO_DECODER (thiz)->srcpad);
+      outs = gst_caps_get_structure (allowed_caps, 0);
+      out_format = gst_structure_get_string (outs, "format");
+      if (out_format) {
+        format = gst_video_format_from_string (out_format);
+        thiz->sfc = TRUE;
+      }
+      gst_caps_unref (allowed_caps);
+    }
+    gst_caps_unref (temp_caps);
+  }
+#endif
 
   output_state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (thiz),

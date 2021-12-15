@@ -54,6 +54,8 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkh264dec_debug);
 #define GST_CAT_DEFAULT gst_msdkh264dec_debug
 
+#define COMMON_FORMAT "{ NV12, BGRA, BGRx }"
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -61,6 +63,12 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
         "stream-format = (string) byte-stream , alignment = (string) au , "
         "profile = (string) { high, progressive-high, constrained-high, main, baseline, constrained-baseline }")
+    );
+
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, COMMON_FORMAT))
     );
 
 #define gst_msdkh264dec_parent_class parent_class
@@ -181,6 +189,7 @@ gst_msdkh264dec_class_init (GstMsdkH264DecClass * klass)
 #endif
 
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
 }
 
 static void
