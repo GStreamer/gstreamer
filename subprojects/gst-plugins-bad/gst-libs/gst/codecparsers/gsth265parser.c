@@ -3645,63 +3645,68 @@ append_profile (GstH265Profile profiles[GST_H265_PROFILE_MAX], guint * idx,
   profiles[*idx++] = profile;
 }
 
+/* *INDENT-OFF* */
+struct h265_profiles_map
+{
+  GstH265ProfileIDC profile_idc;
+  GstH265Profile (*get_profile) (const GstH265ProfileTierLevel *);
+  GstH265Profile profile;
+};
+/* *INDENT-ON* */
+
+static const struct h265_profiles_map profiles_map[] = {
+  /* keep profile check in asc order */
+  {GST_H265_PROFILE_IDC_MAIN, NULL, GST_H265_PROFILE_MAIN},
+  {GST_H265_PROFILE_IDC_MAIN_10, NULL, GST_H265_PROFILE_MAIN_10},
+  {GST_H265_PROFILE_IDC_MAIN_STILL_PICTURE, NULL,
+      GST_H265_PROFILE_MAIN_STILL_PICTURE},
+  {GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION,
+      get_format_range_extension_profile, GST_H265_PROFILE_INVALID},
+  {GST_H265_PROFILE_IDC_HIGH_THROUGHPUT, get_high_throughput_profile,
+      GST_H265_PROFILE_INVALID},
+  {GST_H265_PROFILE_IDC_MULTIVIEW_MAIN, get_multiview_profile,
+      GST_H265_PROFILE_INVALID},
+  {GST_H265_PROFILE_IDC_SCALABLE_MAIN, get_scalable_profile,
+      GST_H265_PROFILE_INVALID},
+  {GST_H265_PROFILE_IDC_3D_MAIN, get_3d_profile, GST_H265_PROFILE_INVALID},
+  {GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING,
+        get_screen_content_coding_extensions_profile,
+      GST_H265_PROFILE_INVALID},
+  {GST_H265_PROFILE_IDC_SCALABLE_FORMAT_RANGE_EXTENSION,
+        get_scalable_format_range_extensions_profile,
+      GST_H265_PROFILE_INVALID},
+  {GST_H265_PROFILE_IDC_HIGH_THROUGHPUT_SCREEN_CONTENT_CODING_EXTENSION,
+        get_screen_content_coding_extensions_high_throughput_profile,
+      GST_H265_PROFILE_INVALID},
+};
+
 static void
 gst_h265_profile_tier_level_get_profiles (const GstH265ProfileTierLevel * ptl,
     GstH265Profile profiles[GST_H265_PROFILE_MAX], guint * len)
 {
-  guint i = 0;
+  guint i = 0, j;
 
-  /* keep profile check in asc order */
-
-  if (ptl->profile_idc == GST_H265_PROFILE_IDC_MAIN
-      || ptl->profile_compatibility_flag[1])
-    profiles[i++] = GST_H265_PROFILE_MAIN;
-
-  if (ptl->profile_idc == GST_H265_PROFILE_IDC_MAIN_10
-      || ptl->profile_compatibility_flag[2])
-    profiles[i++] = GST_H265_PROFILE_MAIN_10;
-
-  if (ptl->profile_idc == GST_H265_PROFILE_IDC_MAIN_STILL_PICTURE
-      || ptl->profile_compatibility_flag[3])
-    profiles[i++] = GST_H265_PROFILE_MAIN_STILL_PICTURE;
-
-  if (ptl->profile_idc == GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION
-      || ptl->profile_compatibility_flag[4])
-    append_profile (profiles, &i, get_format_range_extension_profile (ptl));
-
-  if (ptl->profile_idc == GST_H265_PROFILE_IDC_HIGH_THROUGHPUT
-      || ptl->profile_compatibility_flag[5])
-    append_profile (profiles, &i, get_high_throughput_profile (ptl));
-
-  if (ptl->profile_idc == GST_H265_PROFILE_IDC_MULTIVIEW_MAIN
-      || ptl->profile_compatibility_flag[6])
-    append_profile (profiles, &i, get_multiview_profile (ptl));
-
-  if (ptl->profile_idc == GST_H265_PROFILE_IDC_SCALABLE_MAIN
-      || ptl->profile_compatibility_flag[7])
-    append_profile (profiles, &i, get_scalable_profile (ptl));
-
-  if (ptl->profile_idc == GST_H265_PROFILE_IDC_3D_MAIN
-      || ptl->profile_compatibility_flag[8])
-    append_profile (profiles, &i, get_3d_profile (ptl));
-
-  if (ptl->profile_idc == GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING
-      || ptl->profile_compatibility_flag[9]) {
-    append_profile (profiles, &i,
-        get_screen_content_coding_extensions_profile (ptl));
+  /* First add profile idc */
+  for (j = 0; j < G_N_ELEMENTS (profiles_map); j++) {
+    if (ptl->profile_idc == profiles_map[j].profile_idc) {
+      if (profiles_map[j].get_profile)
+        append_profile (profiles, &i, profiles_map[j].get_profile (ptl));
+      else
+        profiles[i++] = profiles_map[j].profile;
+      break;
+    }
   }
 
-  if (ptl->profile_idc == GST_H265_PROFILE_IDC_SCALABLE_FORMAT_RANGE_EXTENSION
-      || ptl->profile_compatibility_flag[10]) {
-    append_profile (profiles, &i,
-        get_scalable_format_range_extensions_profile (ptl));
-  }
-
-  if (ptl->profile_idc ==
-      GST_H265_PROFILE_IDC_HIGH_THROUGHPUT_SCREEN_CONTENT_CODING_EXTENSION
-      || ptl->profile_compatibility_flag[11]) {
-    append_profile (profiles, &i,
-        get_screen_content_coding_extensions_high_throughput_profile (ptl));
+  /* Later add compatibility flags */
+  for (j = 0; j < G_N_ELEMENTS (profiles_map); j++) {
+    if (i > 0 && ptl->profile_idc == profiles_map[j].profile_idc)
+      continue;
+    if (ptl->profile_compatibility_flag[profiles_map[j].profile_idc]) {
+      if (profiles_map[j].get_profile)
+        append_profile (profiles, &i, profiles_map[j].get_profile (ptl));
+      else
+        profiles[i++] = profiles_map[j].profile;
+    }
   }
 
   *len = i;
