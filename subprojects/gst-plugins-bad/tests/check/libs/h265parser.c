@@ -652,6 +652,15 @@ GST_START_TEST (test_h265_format_range_profiles_partial_match)
   set_format_range_fields (ptl, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (ptl), ==,
       GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14);
+
+  ptl->profile_idc = 2;
+  /* main and main10 compatibility flags but with 10 bith depth */
+  ptl->profile_compatibility_flag[1] = 1;
+  ptl->profile_compatibility_flag[2] = 1;
+  set_format_range_fields (ptl, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  set_chroma_idc_and_depth (&sps, 1, 10, 10);
+  g_assert_cmpuint (gst_h265_get_profile_from_sps (&sps), ==,
+      GST_H265_PROFILE_MAIN_10);
 }
 
 GST_END_TEST;
