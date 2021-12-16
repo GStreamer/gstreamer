@@ -5295,7 +5295,7 @@ restart:
 }
 
 static GstPadProbeReturn
-pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+rtp_pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstRTSPStreamPrivate *priv;
   GstRTSPStream *stream;
@@ -5382,6 +5382,41 @@ done:
   return ret;
 }
 
+static GstPadProbeReturn
+rtcp_pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstRTSPStreamPrivate *priv;
+  GstRTSPStream *stream;
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+
+  stream = user_data;
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+
+  if ((info->type & GST_PAD_PROBE_TYPE_BUFFER) ||
+      (info->type & GST_PAD_PROBE_TYPE_BUFFER_LIST)) {
+    GST_DEBUG_OBJECT (pad, "Now blocking on buffer");
+  } else if ((info->type & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM)) {
+    if (GST_EVENT_TYPE (info->data) == GST_EVENT_GAP) {
+      GST_DEBUG_OBJECT (pad, "Now blocking on gap event");
+      ret = GST_PAD_PROBE_OK;
+    } else {
+      ret = GST_PAD_PROBE_PASS;
+      g_mutex_unlock (&priv->lock);
+      goto done;
+    }
+  } else {
+    g_assert_not_reached ();
+  }
+
+  g_mutex_unlock (&priv->lock);
+
+done:
+  return ret;
+}
+
+
 static void
 set_blocked (GstRTSPStream * stream, gboolean blocked)
 {
@@ -5406,11 +5441,20 @@ set_blocked (GstRTSPStream * stream, gboolean blocked)
         priv->blocked_buffer = FALSE;
         priv->blocked_running_time = GST_CLOCK_TIME_NONE;
         priv->blocked_clock_rate = 0;
-        priv->blocked_id[i] = gst_pad_add_probe (priv->send_src[i],
-            GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
-            GST_PAD_PROBE_TYPE_BUFFER_LIST |
-            GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, pad_blocking,
-            g_object_ref (stream), g_object_unref);
+
+        if (i == 0) {
+          priv->blocked_id[i] = gst_pad_add_probe (priv->send_src[i],
+              GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
+              GST_PAD_PROBE_TYPE_BUFFER_LIST |
+              GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, rtp_pad_blocking,
+              g_object_ref (stream), g_object_unref);
+        } else {
+          priv->blocked_id[i] = gst_pad_add_probe (priv->send_src[i],
+              GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
+              GST_PAD_PROBE_TYPE_BUFFER_LIST |
+              GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, rtcp_pad_blocking,
+              g_object_ref (stream), g_object_unref);
+        }
       }
     }
   } else {
