@@ -1321,6 +1321,8 @@ static const gchar *adaptive_media[] = {
 
 /*
  * Generate and configure a source element.
+ *
+ * Returns: (transfer full): a new #GstElement
  */
 static GstElement *
 gen_source_element (GstURIDecodeBin * decoder)
@@ -1396,6 +1398,15 @@ gen_source_element (GstURIDecodeBin * decoder)
         "setting subtitle-encoding=%s to source element", decoder->encoding);
     g_object_set (source, "subtitle-encoding", decoder->encoding, NULL);
   }
+
+  /* Sink reference before passing it to signal handler.
+   * Language binding might otherwise sink it and then unref.
+   * A floating ref is also tricky for a native signal handler in case
+   * of a "transfer floating" call followed by unref
+   * (e.g. some container_add and then container_remove).
+   * Bottom line; best not have a floating ref boldly going into unknown code.
+   */
+  g_object_ref_sink (source);
 
   g_signal_emit (decoder, gst_uri_decode_bin_signals[SIGNAL_SOURCE_SETUP],
       0, source);
@@ -2262,6 +2273,8 @@ setup_source (GstURIDecodeBin * decoder)
   /* state will be merged later - if file is not found, error will be
    * handled by the application right after. */
   gst_bin_add (GST_BIN_CAST (decoder), decoder->source);
+  /* bin now has a ref, but the local reference is not counted */
+  g_object_unref (decoder->source);
 
   /* notify of the new source used */
   g_object_notify (G_OBJECT (decoder), "source");
