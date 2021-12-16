@@ -7769,7 +7769,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "cbr (0)",
+                        "default": "constrained-vbr (2)",
                         "mutable": "playing",
                         "readable": true,
                         "type": "GstOpusEncBitrateType",
