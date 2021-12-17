@@ -1,7 +1,7 @@
 /*
  * This copyright notice applies to this header file only:
  *
- * Copyright (c) 2010-2019 NVIDIA Corporation
+ * Copyright (c) 2010-2021 NVIDIA Corporation
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -28,7 +28,7 @@
 /********************************************************************************************************************/
 //! \file nvcuvid.h
 //!   NVDECODE API provides video decoding interface to NVIDIA GPU devices.
-//! \date 2015-2019
+//! \date 2015-2020
 //!  This file contains the interface constants, structure definitions and function prototypes.
 /********************************************************************************************************************/
 
@@ -150,6 +150,37 @@ typedef struct
 
 /****************************************************************/
 //! \ingroup STRUCTS
+//! \struct CUVIDOPERATINGPOINTINFO
+//! Operating point information of scalable bitstream
+/****************************************************************/
+typedef struct 
+{
+    cudaVideoCodec codec;
+    union 
+    {
+        struct
+        {
+            unsigned char  operating_points_cnt;
+            unsigned char  reserved24_bits[3];
+            unsigned short operating_points_idc[32];
+        } av1;
+        unsigned char CodecReserved[1024];
+    };
+} CUVIDOPERATINGPOINTINFO;
+
+/****************************************************************/
+//! \ingroup STRUCTS
+//! \struct CUVIDAV1SEQHDR
+//! AV1 specific sequence header information
+/****************************************************************/
+typedef struct {
+    unsigned int max_width;
+    unsigned int max_height;
+    unsigned char reserved[1016];
+} CUVIDAV1SEQHDR;
+
+/****************************************************************/
+//! \ingroup STRUCTS
 //! \struct CUVIDEOFORMATEX
 //! Video format including raw sequence header information
 //! Used in cuvidGetSourceVideoFormat API
@@ -157,7 +188,10 @@ typedef struct
 typedef struct
 {
     CUVIDEOFORMAT format;                 /**< OUT: CUVIDEOFORMAT structure */
-    unsigned char raw_seqhdr_data[1024];  /**< OUT: Sequence header data    */
+    union {
+        CUVIDAV1SEQHDR av1;
+        unsigned char raw_seqhdr_data[1024];  /**< OUT: Sequence header data    */
+    };
 } CUVIDEOFORMATEX;
 
 /****************************************************************/
@@ -221,7 +255,9 @@ typedef int (CUDAAPI *PFNVIDSOURCECALLBACK)(void *, CUVIDSOURCEDATAPACKET *);
 typedef struct _CUVIDSOURCEPARAMS
 {
     unsigned int ulClockRate;                   /**< IN: Time stamp units in Hz (0=default=10000000Hz)      */
-    unsigned int uReserved1[7];                 /**< Reserved for future use - set to zero                  */
+    unsigned int bAnnexb : 1;                   /**< IN: AV1 annexB stream                                  */
+    unsigned int uReserved : 31;                /**< Reserved for future use - set to zero                  */
+    unsigned int uReserved1[6];                 /**< Reserved for future use - set to zero                  */
     void *pUserData;                            /**< IN: User private data passed in to the data handlers   */
     PFNVIDSOURCECALLBACK pfnVideoDataHandler;   /**< IN: Called to deliver video packets                    */
     PFNVIDSOURCECALLBACK pfnAudioDataHandler;   /**< IN: Called to deliver audio packets.                   */
@@ -323,14 +359,18 @@ typedef struct _CUVIDPARSERDISPINFO
 //! is ready to be decoded and/or displayed. First argument in functions is "void *pUserData" member of structure CUVIDSOURCEPARAMS
 //! Return values from these callbacks are interpreted as below. If the callbacks return failure, it will be propagated by
 //! cuvidParseVideoData() to the application.
+//! Parser picks default operating point as 0 and outputAllLayers flag as 0 if PFNVIDOPPOINTCALLBACK is not set or return value is 
+//! -1 or invalid operating point.
 //! PFNVIDSEQUENCECALLBACK : 0: fail, 1: succeeded, > 1: override dpb size of parser (set by CUVIDPARSERPARAMS::ulMaxNumDecodeSurfaces
 //! while creating parser)
 //! PFNVIDDECODECALLBACK   : 0: fail, >=1: succeeded
 //! PFNVIDDISPLAYCALLBACK  : 0: fail, >=1: succeeded
+//! PFNVIDOPPOINTCALLBACK  : <0: fail, >=0: succeeded (bit 0-9: OperatingPoint, bit 10-10: outputAllLayers, bit 11-30: reserved)
 /***********************************************************************************************************************/
 typedef int (CUDAAPI *PFNVIDSEQUENCECALLBACK)(void *, CUVIDEOFORMAT *);
 typedef int (CUDAAPI *PFNVIDDECODECALLBACK)(void *, CUVIDPICPARAMS *);
 typedef int (CUDAAPI *PFNVIDDISPLAYCALLBACK)(void *, CUVIDPARSERDISPINFO *);
+typedef int (CUDAAPI *PFNVIDOPPOINTCALLBACK)(void *, CUVIDOPERATINGPOINTINFO*);
 
 /**************************************/
 //! \ingroup STRUCTS
@@ -346,12 +386,16 @@ typedef struct _CUVIDPARSERPARAMS
                                                      IN: call pfnDecodePicture even if picture bitstream is fully corrupted) */
     unsigned int ulMaxDisplayDelay;             /**< IN: Max display queue delay (improves pipelining of decode with display)
                                                          0=no delay (recommended values: 2..4)                               */
-    unsigned int uReserved1[5];                 /**< IN: Reserved for future use - set to 0                                  */
+    unsigned int bAnnexb : 1;                   /**< IN: AV1 annexB stream                                                   */
+    unsigned int uReserved : 31;                /**< Reserved for future use - set to zero                                   */
+    unsigned int uReserved1[4];                 /**< IN: Reserved for future use - set to 0                                  */
     void *pUserData;                            /**< IN: User data for callbacks                                             */
     PFNVIDSEQUENCECALLBACK pfnSequenceCallback; /**< IN: Called before decoding frames and/or whenever there is a fmt change */
     PFNVIDDECODECALLBACK pfnDecodePicture;      /**< IN: Called when a picture is ready to be decoded (decode order)         */
     PFNVIDDISPLAYCALLBACK pfnDisplayPicture;    /**< IN: Called whenever a picture is ready to be displayed (display order)  */
-    void *pvReserved2[7];                       /**< Reserved for future use - set to NULL                                   */
+    PFNVIDOPPOINTCALLBACK pfnGetOperatingPoint; /**< IN: Called from AV1 sequence header to get operating point of a AV1 
+                                                         scalable bitstream                                                  */
+    void *pvReserved2[6];                       /**< Reserved for future use - set to NULL                                   */
     CUVIDEOFORMATEX *pExtVideoInfo;             /**< IN: [Optional] sequence header data from system layer                   */
 } CUVIDPARSERPARAMS;
 
