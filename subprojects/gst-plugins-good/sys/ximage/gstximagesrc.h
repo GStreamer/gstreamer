@@ -56,6 +56,8 @@ struct _GstXImageSrc
 
   Window xwindow;
   gchar *display_name;
+  gint xwin_width;
+  gint xwin_height;
 
   /* Window selection */
   guint64 xid;
@@ -87,6 +89,10 @@ struct _GstXImageSrc
   guint starty;
   guint endx;
   guint endy;
+
+  /* whether the user has put in specific coordinates for endx and/or endy */
+  gboolean endx_fit_to_screen;
+  gboolean endy_fit_to_screen;
 
   /* whether to use remote friendly calls */
   gboolean remote;

@@ -364,12 +364,23 @@ gst_ximage_src_unlock (GstBaseSrc * basesrc)
 static gboolean
 gst_ximage_src_recalc (GstXImageSrc * src)
 {
-  if (!src->xcontext)
-    return FALSE;
+  XWindowAttributes attrs;
+  gboolean has_changed = FALSE;
 
-  /* Maybe later we can check the display hasn't changed size */
-  /* We could use XQueryPointer to get only the current window. */
-  return TRUE;
+  g_assert (src->xwindow != 0 && src->xcontext);
+
+  if (XGetWindowAttributes (src->xcontext->disp, src->xwindow, &attrs)) {
+    if (src->xwin_width != attrs.width) {
+      src->xwin_width = attrs.width;
+      has_changed = TRUE;
+    }
+    if (src->xwin_height != attrs.height) {
+      src->xwin_height = attrs.height;
+      has_changed = TRUE;
+    }
+  }
+
+  return has_changed;
 }
 
 #ifdef HAVE_XFIXES
@@ -500,7 +511,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     ximagesrc->buffer_pool = g_slist_delete_link (ximagesrc->buffer_pool,
         ximagesrc->buffer_pool);
 
-    if ((meta->width == ximagesrc->width) ||
+    if ((meta->width == ximagesrc->width) &&
         (meta->height == ximagesrc->height))
       break;
 
@@ -832,12 +843,6 @@ gst_ximage_src_create (GstPushSrc * bs, GstBuffer ** buf)
   GstClockTime dur;
   gint64 next_frame_no;
 
-  if (!gst_ximage_src_recalc (s)) {
-    GST_ELEMENT_ERROR (s, RESOURCE, FAILED,
-        (_("Changing resolution at runtime is not yet supported.")), (NULL));
-    return GST_FLOW_ERROR;
-  }
-
   if (s->fps_n <= 0 || s->fps_d <= 0)
     return GST_FLOW_NOT_NEGOTIATED;     /* FPS must be > 0 */
 
@@ -906,7 +911,12 @@ gst_ximage_src_create (GstPushSrc * bs, GstBuffer ** buf)
   s->last_frame_no = next_frame_no;
   GST_OBJECT_UNLOCK (s);
 
+  if (gst_ximage_src_recalc (s) && !gst_base_src_negotiate (GST_BASE_SRC (s))) {
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+
   image = gst_ximage_src_ximage_get (s);
+
   if (!image)
     return GST_FLOW_ERROR;
 
@@ -944,9 +954,13 @@ gst_ximage_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_ENDX:
       src->endx = g_value_get_uint (value);
+      /* property comments say 0 means right/bottom, means we can't capture
+       * the top left pixel alone */
+      src->endx_fit_to_screen = (src->endx == 0);
       break;
     case PROP_ENDY:
       src->endy = g_value_get_uint (value);
+      src->endy_fit_to_screen = (src->endy == 0);
       break;
     case PROP_REMOTE:
       src->remote = g_value_get_boolean (value);
@@ -1069,32 +1083,21 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
   if ((!s->xcontext) && (!gst_ximage_src_open_display (s, s->display_name)))
     return gst_pad_get_pad_template_caps (GST_BASE_SRC (s)->srcpad);
 
-  if (!gst_ximage_src_recalc (s))
-    return gst_pad_get_pad_template_caps (GST_BASE_SRC (s)->srcpad);
+  gst_ximage_src_recalc (s);
 
   xcontext = s->xcontext;
-  width = s->xcontext->width;
-  height = s->xcontext->height;
-  if (s->xwindow != 0) {
-    XWindowAttributes attrs;
-    int status = XGetWindowAttributes (s->xcontext->disp, s->xwindow, &attrs);
-    if (status) {
-      width = attrs.width;
-      height = attrs.height;
-    }
-  }
+  width = s->xwin_width;
+  height = s->xwin_height;
 
-  /* property comments say 0 means right/bottom, means we can't capture
-     the top left pixel alone */
-  if (s->endx == 0)
+  if (s->endx_fit_to_screen)
     s->endx = width - 1;
-  if (s->endy == 0)
+  if (s->endy_fit_to_screen)
     s->endy = height - 1;
 
   if (s->endx >= s->startx && s->endy >= s->starty) {
     /* this means user has put in values */
-    if (s->startx < xcontext->width && s->endx < xcontext->width &&
-        s->starty < xcontext->height && s->endy < xcontext->height) {
+    if (s->startx < width && s->endx < width &&
+        s->starty < height && s->endy < height) {
       /* values are fine */
       s->width = width = s->endx - s->startx + 1;
       s->height = height = s->endy - s->starty + 1;
@@ -1105,6 +1108,8 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
       s->starty = 0;
       s->endx = width - 1;
       s->endy = height - 1;
+      s->endx_fit_to_screen = FALSE;
+      s->endy_fit_to_screen = FALSE;
     }
   } else {
     GST_WARNING ("User put in bogus co-ordinates, setting to full screen");
@@ -1112,6 +1117,8 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
     s->starty = 0;
     s->endx = width - 1;
     s->endy = height - 1;
+    s->endx_fit_to_screen = FALSE;
+    s->endy_fit_to_screen = FALSE;
   }
   GST_DEBUG ("width = %d, height=%d", width, height);
 
@@ -1311,6 +1318,8 @@ gst_ximage_src_init (GstXImageSrc * ximagesrc)
   ximagesrc->starty = 0;
   ximagesrc->endx = 0;
   ximagesrc->endy = 0;
+  ximagesrc->endx_fit_to_screen = TRUE;
+  ximagesrc->endy_fit_to_screen = TRUE;
   ximagesrc->remote = FALSE;
 }
 
