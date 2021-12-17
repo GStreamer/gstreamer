@@ -58,6 +58,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_av1_dec_debug);
  * and modified with "GST_" prefix
  */
 #pragma pack(push, 1)
+
+/* AV1 picture entry data structure */
 typedef struct _GST_DXVA_PicEntry_AV1
 {
   UINT width;
@@ -73,11 +75,11 @@ typedef struct _GST_DXVA_PicEntry_AV1
       UCHAR wmtype:2;
       UCHAR Reserved:5;
     };
-    UCHAR wGlobalMotionFlags;
-  };
+    UCHAR GlobalMotionFlags;
+  } DUMMYUNIONNAME;
 
   UCHAR Index;
-  USHORT Reserved16Bits;
+  UINT16 Reserved16Bits;
 
 } GST_DXVA_PicEntry_AV1;
 
@@ -338,16 +340,28 @@ typedef struct _GST_DXVA_PicParams_AV1
   UINT StatusReportFeedbackNumber;
 } GST_DXVA_PicParams_AV1;
 
+/* AV1 tile structure */
 typedef struct _GST_DXVA_Tile_AV1
 {
   UINT DataOffset;
   UINT DataSize;
   USHORT row;
   USHORT column;
-  USHORT Reserved16Bits;
+  UINT16 Reserved16Bits;
   UCHAR anchor_frame;
   UCHAR Reserved8Bits;
 } GST_DXVA_Tile_AV1;
+
+/* AV1 status reporting data structure */
+typedef struct _GST_DXVA_Status_AV1
+{
+  UINT StatusReportFeedbackNumber;
+  GST_DXVA_PicEntry_AV1 CurrPic;
+  UCHAR BufType;
+  UCHAR Status;
+  UCHAR Reserved8Bits;
+  USHORT NumMbsAffected;
+} GST_DXVA_Status_AV1;
 
 #pragma pack(pop)
 
