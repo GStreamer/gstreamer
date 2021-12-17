@@ -999,15 +999,21 @@ gst_d3d11_av1_dec_start_picture (GstAV1Decoder * decoder,
   pic_params->cdef.bits = frame_hdr->cdef_params.cdef_bits;
 
   for (i = 0; i < GST_AV1_CDEF_MAX; i++) {
+    guint8 secondary;
+
     pic_params->cdef.y_strengths[i].primary =
         frame_hdr->cdef_params.cdef_y_pri_strength[i];
-    pic_params->cdef.y_strengths[i].secondary =
-        frame_hdr->cdef_params.cdef_y_sec_strength[i];
+    secondary = frame_hdr->cdef_params.cdef_y_sec_strength[i];
+    if (secondary == 4)
+      secondary--;
+    pic_params->cdef.y_strengths[i].secondary = secondary;
 
     pic_params->cdef.uv_strengths[i].primary =
         frame_hdr->cdef_params.cdef_uv_pri_strength[i];
-    pic_params->cdef.uv_strengths[i].secondary =
-        frame_hdr->cdef_params.cdef_uv_sec_strength[i];
+    secondary = frame_hdr->cdef_params.cdef_uv_sec_strength[i];
+    if (secondary == 4)
+      secondary--;
+    pic_params->cdef.uv_strengths[i].secondary = secondary;
   }
 
   pic_params->interp_filter = frame_hdr->interpolation_filter;
