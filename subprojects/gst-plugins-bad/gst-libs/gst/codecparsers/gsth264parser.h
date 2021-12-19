@@ -241,6 +241,7 @@ typedef enum
  * @GST_H264_SEI_BUF_PERIOD: Buffering Period SEI Message
  * @GST_H264_SEI_PIC_TIMING: Picture Timing SEI Message
  * @GST_H264_SEI_REGISTERED_USER_DATA: Registered user data (D.2.5)
+ * @GST_H264_SEI_USER_DATA_UNREGISTERED: Registered user data (D.2.6) (Since: 1.22)
  * @GST_H264_SEI_RECOVERY_POINT: Recovery Point SEI Message (D.2.7)
  * @GST_H264_SEI_STEREO_VIDEO_INFO: stereo video info SEI message (Since: 1.6)
  * @GST_H264_SEI_FRAME_PACKING: Frame Packing Arrangement (FPA) message that
@@ -258,6 +259,7 @@ typedef enum
   GST_H264_SEI_BUF_PERIOD = 0,
   GST_H264_SEI_PIC_TIMING = 1,
   GST_H264_SEI_REGISTERED_USER_DATA = 4,
+  GST_H264_SEI_USER_DATA_UNREGISTERED = 5,
   GST_H264_SEI_RECOVERY_POINT = 6,
   GST_H264_SEI_STEREO_VIDEO_INFO = 21,
   GST_H264_SEI_FRAME_PACKING = 45,
@@ -357,6 +359,7 @@ typedef struct _GstH264SliceHdr               GstH264SliceHdr;
 typedef struct _GstH264ClockTimestamp         GstH264ClockTimestamp;
 typedef struct _GstH264PicTiming              GstH264PicTiming;
 typedef struct _GstH264RegisteredUserData     GstH264RegisteredUserData;
+typedef struct _GstH264UserDataUnregistered   GstH264UserDataUnregistered;
 typedef struct _GstH264BufferingPeriod        GstH264BufferingPeriod;
 typedef struct _GstH264RecoveryPoint          GstH264RecoveryPoint;
 typedef struct _GstH264StereoVideoInfo        GstH264StereoVideoInfo;
@@ -1111,6 +1114,22 @@ struct _GstH264RegisteredUserData
   guint size;
 };
 
+/**
+ * GstH264UserDataUnregistered:
+ * The User data unregistered SEI message syntax.
+ * @uuid: an uuid_iso_iec_11578.
+ * @data: the data of user_data_payload_byte
+ * @size: the size of @data in bytes
+ *
+ * Since: 1.22
+ */
+struct _GstH264UserDataUnregistered
+{
+  guint8 uuid[16];
+  const guint8 *data;
+  guint size;
+};
+
 struct _GstH264BufferingPeriod
 {
   GstH264SPS *sps;
@@ -1199,6 +1218,7 @@ struct _GstH264SEIMessage
     GstH264MasteringDisplayColourVolume mastering_display_colour_volume;
     GstH264ContentLightLevel content_light_level;
     GstH264SEIUnhandledPayload unhandled_payload;
+    GstH264UserDataUnregistered user_data_unregistered;
     /* ... could implement more */
   } payload;
 };
