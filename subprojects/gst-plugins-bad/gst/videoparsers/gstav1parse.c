@@ -1478,7 +1478,7 @@ again:
     *skipsize = map_info.size;
     GST_WARNING_OBJECT (parse, "Parse obu error, discard whole buffer %d.",
         *skipsize);
-    /* The adapter will be cleared in next loop because of 
+    /* The adapter will be cleared in next loop because of
        GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME flag */
     ret = GST_FLOW_OK;
   } else if (res == GST_AV1_PARSER_NO_MORE_DATA) {
