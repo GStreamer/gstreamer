@@ -169,6 +169,15 @@ gst_qsv_allocator_alloc_default (GstQsvAllocator * self,
     case MFX_FOURCC_NV12:
       format = GST_VIDEO_FORMAT_NV12;
       break;
+    case MFX_FOURCC_P010:
+      format = GST_VIDEO_FORMAT_P010_10LE;
+      break;
+    case MFX_FOURCC_AYUV:
+      format = GST_VIDEO_FORMAT_VUYA;
+      break;
+    case MFX_FOURCC_Y410:
+      format = GST_VIDEO_FORMAT_Y410;
+      break;
     default:
       /* TODO: add more formats */
       break;
@@ -222,6 +231,7 @@ gst_qsv_allocator_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
 {
   GstQsvAllocator *self = GST_QSV_ALLOCATOR (pthis);
   GstQsvFrame *frame = (GstQsvFrame *) mid;
+  guint stride;
 
   GST_TRACE_OBJECT (self, "Lock mfxMemId %p", mid);
 
@@ -232,13 +242,32 @@ gst_qsv_allocator_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
   }
 
   frame->map_count++;
-
-  ptr->Pitch = (mfxU16) GST_VIDEO_FRAME_PLANE_STRIDE (&frame->frame, 0);
-  ptr->Y = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame->frame, 0);
 
   /* FIXME: check and handle other formats */
-  if (GST_VIDEO_INFO_FORMAT (&frame->info) == GST_VIDEO_FORMAT_NV12)
-    ptr->UV = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 1);
+  switch (GST_VIDEO_INFO_FORMAT (&frame->info)) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_P010_10LE:
+      ptr->Pitch = (mfxU16) stride;
+      ptr->Y = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
+      ptr->UV = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 1);
+      break;
+    case GST_VIDEO_FORMAT_VUYA:
+      ptr->PitchHigh = (mfxU16) (stride / (1 << 16));
+      ptr->PitchLow = (mfxU16) (stride % (1 << 16));
+      ptr->V = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
+      ptr->U = ptr->V + 1;
+      ptr->Y = ptr->V + 2;
+      ptr->A = ptr->V + 3;
+      break;
+    case GST_VIDEO_FORMAT_Y410:
+      ptr->PitchHigh = (mfxU16) (stride / (1 << 16));
+      ptr->PitchLow = (mfxU16) (stride % (1 << 16));
+      ptr->Y410 = (mfxY410 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
+      break;
+    default:
+      break;
+  }
 
   g_mutex_unlock (&frame->lock);
 
