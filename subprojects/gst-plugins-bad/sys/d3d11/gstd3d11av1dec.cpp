@@ -1315,7 +1315,7 @@ gst_d3d11_av1_dec_register (GstPlugin * plugin, GstD3D11Device * device,
 
   sink_caps =
       gst_caps_from_string ("video/x-av1, "
-      "alignment = (string) frame, profile = (string) 0");
+      "alignment = (string) frame, profile = (string) main");
   src_caps = gst_caps_from_string ("video/x-raw("
       GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "); video/x-raw");
 
