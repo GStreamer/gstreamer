@@ -212,6 +212,8 @@ gst_h264_parse_finalize (GObject * object)
 {
   GstH264Parse *h264parse = GST_H264_PARSE (object);
 
+  gst_video_user_data_unregistered_free (&h264parse->user_data_unregistered);
+
   g_object_unref (h264parse->frame_out);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -607,6 +609,21 @@ gst_h264_parse_process_sei_user_data (GstH264Parse * h264parse,
 }
 
 static void
+gst_h264_parse_process_sei_user_data_unregistered (GstH264Parse * h264parse,
+    GstH264UserDataUnregistered * urud)
+{
+  GstByteReader br;
+
+  if (urud->data == NULL || urud->size < 1)
+    return;
+
+  gst_byte_reader_init (&br, urud->data, urud->size);
+
+  gst_video_parse_user_data_unregistered ((GstElement *) h264parse,
+      &h264parse->user_data_unregistered, &br, urud->uuid);
+}
+
+static void
 gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 {
   GstH264SEIMessage sei;
@@ -663,6 +680,10 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       case GST_H264_SEI_REGISTERED_USER_DATA:
         gst_h264_parse_process_sei_user_data (h264parse,
             &sei.payload.registered_user_data);
+        break;
+      case GST_H264_SEI_USER_DATA_UNREGISTERED:
+        gst_h264_parse_process_sei_user_data_unregistered (h264parse,
+            &sei.payload.user_data_unregistered);
         break;
       case GST_H264_SEI_BUF_PERIOD:
         if (h264parse->ts_trn_nb == GST_CLOCK_TIME_NONE ||
@@ -3340,6 +3361,9 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   gst_video_push_user_data ((GstElement *) h264parse, &h264parse->user_data,
       parse_buffer);
+
+  gst_video_push_user_data_unregistered ((GstElement *) h264parse,
+      &h264parse->user_data_unregistered, parse_buffer);
 
   gst_h264_parse_reset_frame (h264parse);
 

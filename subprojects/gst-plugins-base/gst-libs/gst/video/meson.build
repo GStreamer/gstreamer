@@ -30,6 +30,7 @@ video_sources = files([
   'video-multiview.c',
   'video-resampler.c',
   'video-scaler.c',
+  'video-sei.c',
   'video-tile.c',
   'video-overlay-composition.c',
   'videodirection.c',

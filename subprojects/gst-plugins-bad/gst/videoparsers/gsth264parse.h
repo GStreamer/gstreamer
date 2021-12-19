@@ -157,6 +157,7 @@ struct _GstH264Parse
   gboolean first_in_bundle;
 
   GstVideoParseUserData user_data;
+  GstVideoParseUserDataUnregistered user_data_unregistered;
 
   GstVideoMasteringDisplayInfo mastering_display_info;
   guint mastering_display_info_state;
