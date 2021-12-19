@@ -63,7 +63,7 @@ check_caps_event (GstHarness * h)
   fail_unless_equals_int (width, 400);
   fail_unless_equals_int (height, 300);
   fail_unless_equals_int (depth, 8);
-  fail_unless_equals_string (profile, "0");
+  fail_unless_equals_string (profile, "main");
   gst_caps_unref (caps);
 }
 

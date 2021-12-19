@@ -373,11 +373,11 @@ gst_av1_parse_profile_to_string (GstAV1Profile profile)
 {
   switch (profile) {
     case GST_AV1_PROFILE_0:
-      return "0";
+      return "main";
     case GST_AV1_PROFILE_1:
-      return "1";
+      return "high";
     case GST_AV1_PROFILE_2:
-      return "2";
+      return "professional";
     default:
       break;
   }
@@ -391,11 +391,11 @@ gst_av1_parse_profile_from_string (const gchar * profile)
   if (!profile)
     return GST_AV1_PROFILE_UNDEFINED;
 
-  if (g_strcmp0 (profile, "0") == 0)
+  if (g_strcmp0 (profile, "main") == 0)
     return GST_AV1_PROFILE_0;
-  else if (g_strcmp0 (profile, "1") == 0)
+  else if (g_strcmp0 (profile, "high") == 0)
     return GST_AV1_PROFILE_1;
-  else if (g_strcmp0 (profile, "2") == 0)
+  else if (g_strcmp0 (profile, "professional") == 0)
     return GST_AV1_PROFILE_2;
 
   return GST_AV1_PROFILE_UNDEFINED;
