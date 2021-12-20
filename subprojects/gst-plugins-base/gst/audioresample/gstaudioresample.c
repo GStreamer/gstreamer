@@ -759,6 +759,9 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
   in_len = srcabuf.n_samples;
   out_len = gst_audio_converter_get_out_frames (resample->converter, in_len);
 
+  GST_DEBUG_OBJECT (resample, "in %" G_GSIZE_FORMAT " frames, out %"
+      G_GSIZE_FORMAT " frames", in_len, out_len);
+
   /* ensure that the output buffer is not bigger than what we need */
   gst_buffer_set_size (outbuf, out_len * resample->in.bpf);
 

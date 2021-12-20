@@ -282,6 +282,7 @@ gst_audio_aggregator_convert_pad_update_converter (GstAudioAggregatorConvertPad
   if (in_info->finfo->format == GST_AUDIO_FORMAT_UNKNOWN) {
     /* If we haven't received caps yet, this pad should not have
      * a buffer to convert anyway */
+    GST_FIXME_OBJECT (aaggcpad, "UNREACHABLE CODE: Unknown input format");
     return;
   }
 
@@ -293,6 +294,7 @@ gst_audio_aggregator_convert_pad_update_converter (GstAudioAggregatorConvertPad
     /* FIXME: Not converting when we need to but the config is invalid (e.g.
      * because the mix-matrix is not the right size) produces garbage. An
      * invalid config should cause a GST_FLOW_NOT_NEGOTIATED. */
+    GST_FIXME_OBJECT (aaggcpad, "Failed to update converter");
     return;
   }
 
@@ -1335,7 +1337,7 @@ gst_audio_aggregator_sink_event (GstAggregator * agg,
       gst_event_parse_segment (event, &segment);
 
       if (segment->format != GST_FORMAT_TIME) {
-        GST_ERROR_OBJECT (agg, "Segment of type %s are not supported,"
+        GST_ERROR_OBJECT (aggpad, "Segment of type %s are not supported,"
             " only TIME segments are supported",
             gst_format_get_name (segment->format));
         gst_event_unref (event);
