@@ -4040,7 +4040,7 @@
    Memcheck:Leak
    fun:*alloc
    ...
-   fun:g_slist_copy_deep
+   fun:g_slist_copy*
    fun:gst_debug_add_log_function
 }
 
