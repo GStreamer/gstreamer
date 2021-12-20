@@ -1781,7 +1781,7 @@ gst_audio_resampler_resample (GstAudioResampler * resampler,
   need = resampler->n_taps + resampler->samp_index;
   if (G_UNLIKELY (samples_avail < need || out_frames == 0)) {
     GST_LOG ("not enough samples to start: need %" G_GSIZE_FORMAT ", avail %"
-        G_GSIZE_FORMAT ", out %" G_GSIZE_FORMAT, samples_avail, need,
+        G_GSIZE_FORMAT ", out %" G_GSIZE_FORMAT, need, samples_avail,
         out_frames);
     /* not enough samples to start */
     return;

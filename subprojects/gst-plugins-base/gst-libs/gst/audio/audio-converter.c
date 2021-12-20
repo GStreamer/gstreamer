@@ -253,7 +253,7 @@ audio_chain_get_samples (AudioChain * chain, gsize * avail)
 {
   gpointer *res;
 
-  while (!chain->samples)
+  if (!chain->samples)
     chain->make_func (chain, chain->make_func_data);
 
   res = chain->samples;
@@ -582,7 +582,8 @@ do_quantize (AudioChain * chain, gpointer user_data)
   out = (chain->allow_ip ? in : audio_chain_alloc_samples (chain, num_samples));
   GST_LOG ("quantize %p, %p %" G_GSIZE_FORMAT, in, out, num_samples);
 
-  gst_audio_quantize_samples (convert->quant, in, out, num_samples);
+  if (in && out)
+    gst_audio_quantize_samples (convert->quant, in, out, num_samples);
 
   audio_chain_set_samples (chain, out, num_samples);
 
@@ -1274,7 +1275,7 @@ converter_generic (GstAudioConverter * convert,
   /* get frames to pack */
   tmp = audio_chain_get_samples (chain, &produced);
 
-  if (!convert->out_default) {
+  if (!convert->out_default && tmp && out) {
     GST_LOG ("pack %p, %p %" G_GSIZE_FORMAT, tmp, out, produced);
     /* and pack if needed */
     for (i = 0; i < chain->blocks; i++)
