@@ -589,10 +589,24 @@ gst_av1_enc_get_downstream_profile (GstAV1Enc * av1enc)
       if (profile_str) {
         gchar *endptr = NULL;
 
-        profile = g_ascii_strtoull (profile_str, &endptr, 10);
-        if (*endptr != '\0' || profile < 0 || profile > 3) {
-          GST_ERROR_OBJECT (av1enc, "Invalid profile '%s'", profile_str);
-          profile = DEFAULT_PROFILE;
+        if (g_strcmp0 (profile_str, "main") == 0) {
+          GST_DEBUG_OBJECT (av1enc, "Downstream profile is \"main\"");
+          profile = 0;
+        } else if (g_strcmp0 (profile_str, "high") == 0) {
+          profile = 1;
+          GST_DEBUG_OBJECT (av1enc, "Downstream profile is \"high\"");
+        } else if (g_strcmp0 (profile_str, "professional") == 0) {
+          profile = 2;
+          GST_DEBUG_OBJECT (av1enc, "Downstream profile is \"professional\"");
+        } else {
+          profile = g_ascii_strtoull (profile_str, &endptr, 10);
+          if (*endptr != '\0' || profile < 0 || profile > 3) {
+            GST_ERROR_OBJECT (av1enc, "Invalid profile '%s'", profile_str);
+            profile = DEFAULT_PROFILE;
+          } else {
+            GST_DEBUG_OBJECT (av1enc,
+                "Downstream profile is \"%s\"", profile_str);
+          }
         }
       }
     }
