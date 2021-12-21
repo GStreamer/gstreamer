@@ -87,8 +87,24 @@ static const struct ProfileMap
   P (HEVC, SccMain444, "video/x-h265",
       "profile = (string) screen-extended-main-444"),
 #if VA_CHECK_VERSION(1,7,0)
-  P (AV1, Profile0, "video/x-av1", "profile = (string) 0"),
-  P (AV1, Profile1, "video/x-av1", "profile = (string) 1"),
+  /* Spec A.2:
+     "Main" compliant decoders must be able to decode streams with
+     seq_profile equal to 0.
+     "High" compliant decoders must be able to decode streams with
+     seq_profile less than or equal to 1.
+     "Professional" compliant decoders must be able to decode streams
+     with seq_profile less than or equal to 2.
+
+     The correct relationship between profile "main" "high" "professional"
+     and seq_profile "0" "1" "2" should be:
+     main <------> { 0 }
+     high <------> { main, 1 }
+     professional <------> { high, 2 }
+
+     So far, all va decoders can support "0" when they support "1",
+     we just map "0" to "main" and "1" to "high".  */
+  P (AV1, Profile0, "video/x-av1", "profile = (string) main"),
+  P (AV1, Profile1, "video/x-av1", "profile = (string) high"),
 #endif
 #if VA_CHECK_VERSION(1, 8, 0)
   P (HEVC, SccMain444_10, "video/x-h265",
