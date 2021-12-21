@@ -609,8 +609,10 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
       .pic_num = pic_num,
       .flags = V4L2_H264_DPB_ENTRY_FLAG_VALID
           | (GST_H264_PICTURE_IS_REF (ref_pic) ? V4L2_H264_DPB_ENTRY_FLAG_ACTIVE : 0)
-          | (GST_H264_PICTURE_IS_LONG_TERM_REF (ref_pic) ? V4L2_H264_DPB_ENTRY_FLAG_LONG_TERM : 0),
+          | (GST_H264_PICTURE_IS_LONG_TERM_REF (ref_pic) ? V4L2_H264_DPB_ENTRY_FLAG_LONG_TERM : 0)
+          | (ref_pic->field_pic_flag ? V4L2_H264_DPB_ENTRY_FLAG_FIELD : 0),
     };
+    /* *INDENT-ON* */
 
     switch (ref_pic->field) {
       case GST_H264_PICTURE_FIELD_FRAME:
@@ -626,8 +628,6 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
           entry->bottom_field_order_cnt =
               ref_pic->other_field->bottom_field_order_cnt;
           entry->fields |= V4L2_H264_BOTTOM_FIELD_REF;
-        } else {
-          entry->flags |= V4L2_H264_DPB_ENTRY_FLAG_FIELD;
         }
         break;
       case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
@@ -638,13 +638,10 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
           entry->top_field_order_cnt =
             ref_pic->other_field->top_field_order_cnt;
           entry->fields |= V4L2_H264_TOP_FIELD_REF;
-        } else {
-          entry->flags |= V4L2_H264_DPB_ENTRY_FLAG_FIELD;
         }
         break;
     }
   }
-  /* *INDENT-ON* */
 
   g_array_unref (refs);
 }
