@@ -142,6 +142,7 @@ struct _GstH264Picture
   gint nal_ref_idc;
   gboolean idr;
   gint idr_pic_id;
+  gboolean field_pic_flag;
   GstH264PictureReference ref;
   /* Whether a reference picture. */
   gboolean ref_pic;

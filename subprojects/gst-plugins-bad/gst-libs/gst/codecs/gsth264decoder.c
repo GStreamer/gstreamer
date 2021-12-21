@@ -823,6 +823,7 @@ gst_h264_decoder_split_frame (GstH264Decoder * self, GstH264Picture * picture)
   other_field->ref = picture->ref;
   other_field->nonexisting = picture->nonexisting;
   other_field->system_frame_number = picture->system_frame_number;
+  other_field->field_pic_flag = picture->field_pic_flag;
 
   return other_field;
 }
@@ -1515,6 +1516,8 @@ gst_h264_decoder_fill_picture_from_slice (GstH264Decoder * self,
 
   picture->idr = slice->nalu.idr_pic_flag;
   picture->dec_ref_pic_marking = slice_hdr->dec_ref_pic_marking;
+  picture->field_pic_flag = slice_hdr->field_pic_flag;
+
   if (picture->idr)
     picture->idr_pic_id = slice_hdr->idr_pic_id;
 
