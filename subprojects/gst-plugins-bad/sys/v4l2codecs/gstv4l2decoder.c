@@ -1053,7 +1053,7 @@ gst_v4l2_request_unref (GstV4l2Request * request)
   if (request->pending) {
     gint idx;
 
-    GST_DEBUG_OBJECT (decoder, "Freeing pending request %p.", request);
+    GST_DEBUG_OBJECT (decoder, "Freeing pending request %i.", request->fd);
 
     idx = gst_queue_array_find (decoder->pending_requests, NULL, request);
     if (idx >= 0)
@@ -1063,7 +1063,7 @@ gst_v4l2_request_unref (GstV4l2Request * request)
     return;
   }
 
-  GST_TRACE_OBJECT (decoder, "Recycling request %p.", request);
+  GST_TRACE_OBJECT (decoder, "Recycling request %i.", request->fd);
 
   ret = ioctl (request->fd, MEDIA_REQUEST_IOC_REINIT, NULL);
   if (ret < 0) {
@@ -1084,7 +1084,7 @@ gst_v4l2_request_queue (GstV4l2Request * request, guint flags)
   gint ret;
   guint max_pending;
 
-  GST_TRACE_OBJECT (decoder, "Queuing request %p.", request);
+  GST_TRACE_OBJECT (decoder, "Queuing request %i.", request->fd);
 
   if (!gst_v4l2_decoder_queue_sink_mem (decoder, request,
           request->bitstream, request->frame_num, flags)) {
@@ -1134,15 +1134,18 @@ gst_v4l2_request_set_done (GstV4l2Request * request)
   if (!request->pending)
     return 1;
 
+  GST_DEBUG_OBJECT (decoder, "Waiting for request %i to complete.",
+      request->fd);
+
   ret = gst_poll_wait (request->poll, GST_SECOND);
   if (ret == 0) {
-    GST_WARNING_OBJECT (decoder, "Request %p took too long.", request);
+    GST_WARNING_OBJECT (decoder, "Request %i took too long.", request->fd);
     return 0;
   }
 
   if (ret < 0) {
-    GST_WARNING_OBJECT (decoder, "Request %p error: %s (%i)",
-        request, g_strerror (errno), errno);
+    GST_WARNING_OBJECT (decoder, "Request %i error: %s (%i)",
+        request->fd, g_strerror (errno), errno);
     return ret;
   }
 
@@ -1186,4 +1189,10 @@ GstBuffer *
 gst_v4l2_request_dup_pic_buf (GstV4l2Request * request)
 {
   return gst_buffer_ref (request->pic_buf);
+}
+
+gint
+gst_v4l2_request_get_fd (GstV4l2Request * request)
+{
+  return request->fd;
 }

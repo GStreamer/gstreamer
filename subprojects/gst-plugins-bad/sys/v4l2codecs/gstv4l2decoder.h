@@ -138,6 +138,8 @@ gboolean          gst_v4l2_request_failed (GstV4l2Request * request);
 
 GstBuffer *       gst_v4l2_request_dup_pic_buf (GstV4l2Request * request);
 
+gint              gst_v4l2_request_get_fd (GstV4l2Request * request);
+
 G_END_DECLS
 
 #endif /* __GST_V4L2_DECODER_H__ */

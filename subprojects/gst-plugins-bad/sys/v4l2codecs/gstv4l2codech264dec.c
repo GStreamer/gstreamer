@@ -1316,7 +1316,8 @@ gst_v4l2_codec_h264_dec_new_field_picture (GstH264Decoder * decoder,
     return GST_FLOW_OK;
   }
 
-  GST_DEBUG_OBJECT (self, "Assigned request %p to second field.", request);
+  GST_DEBUG_OBJECT (self, "Assigned request %i to second field.",
+      gst_v4l2_request_get_fd (request));
 
   /* Associate the previous request with the new picture so that
    * submit_bitstream can create sub-request */
