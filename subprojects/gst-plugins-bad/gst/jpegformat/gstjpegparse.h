@@ -3,6 +3,7 @@
  * jpegparse: a parser for JPEG streams
  *
  * Copyright (C) <2009> Arnout Vandecappelle (Essensium/Mind) <arnout@mind.be>
+ *               <2022> Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -47,30 +48,22 @@ struct _GstJpegParse {
   GstBaseParse parse;
 
   guint last_offset;
-  guint last_entropy_len;
-  gboolean last_resync;
+  gint state;
 
-  /* negotiated state */
-  gint caps_width, caps_height;
-  gint caps_framerate_numerator;
-  gint caps_framerate_denominator;
+  gint8 sof;
+  gint8 adobe_transform;
 
   /* the parsed frame size */
   guint16 width, height;
 
   /* format color space */
-  const gchar *format;
+  guint colorspace;
+  guint sampling;
+  guint16 x_density;
+  guint16 y_density;
+  GstCaps *prev_caps;
 
-  /* TRUE if the src caps sets a specific framerate */
-  gboolean has_fps;
-
-  /* the (expected) timestamp of the next frame */
-  guint64 next_ts;
-
-  /* duration of the current frame */
-  guint64 duration;
-
-  /* video state */
+  /* fps */
   gint framerate_numerator;
   gint framerate_denominator;
 
