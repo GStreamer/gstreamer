@@ -202,7 +202,7 @@ static void
 /* The is_not_edge argument here controls when the code will enter a branch
  * which reads up to and including x-3 and x+3. */
 
-#define FILTER(start, end, is_not_edge) \
+#define FILTER(start, end, is_not_edge) G_STMT_START { \
     for (x = start;  x < end; x++) { \
         int c = stzero[x]; \
         int d = (smone[x] + smp[x])>>1; \
@@ -240,7 +240,8 @@ static void
  \
         sdst[x] = spatial_pred; \
  \
-    }
+    } \
+} G_STMT_END
 
 ALWAYS_INLINE static void
 filter_line_c (guint8 * sdst, const guint8 * stzero, const guint8 * sbzero,
@@ -257,7 +258,7 @@ filter_line_c (guint8 * sdst, const guint8 * stzero, const guint8 * sbzero,
    * This allows the FILTER macro to be
    * called so that it processes all the pixels normally.  A constant value of
    * true for is_not_edge lets the compiler ignore the if statement. */
-  FILTER (start, end, 1)
+  FILTER (start, end, 1);
 }
 
 #define MAX_ALIGN 8
@@ -295,7 +296,7 @@ filter_line_c_planar (void *ORC_RESTRICT dst, const void *ORC_RESTRICT tzero,
    * This allows the FILTER macro to be
    * called so that it processes all the pixels normally.  A constant value of
    * true for is_not_edge lets the compiler ignore the if statement. */
-  FILTER (start, end, 1)
+  FILTER (start, end, 1);
 }
 
 ALWAYS_INLINE G_GNUC_UNUSED static void
@@ -338,9 +339,9 @@ filter_edges (guint8 * sdst, const guint8 * stzero, const guint8 * sbzero,
 
   /* Only edge pixels need to be processed here.  A constant value of false
    * for is_not_edge should let the compiler ignore the whole branch. */
-  FILTER (0, border, 0)
-      FILTER (w - edge, w - border, 1)
-      FILTER (w - border, w, 0)
+  FILTER (0, border, 0);
+  FILTER (w - edge, w - border, 1);
+  FILTER (w - border, w, 0);
 }
 
 static void
