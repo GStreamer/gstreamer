@@ -782,7 +782,7 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
     guint32 finish_sz, gboolean frame_finished)
 {
   gsize sz;
-  GstBuffer *buf;
+  GstBuffer *buf, *header_buf;
   GstBuffer *buffer = frame->buffer;
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -802,9 +802,12 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
 
       /* frame_unit_size */
       _write_leb128 (size_data, &size_len, len);
+      header_buf = gst_buffer_new_memdup (size_data, size_len);
+      GST_BUFFER_PTS (header_buf) = GST_BUFFER_PTS (buf);
+      GST_BUFFER_DTS (header_buf) = GST_BUFFER_DTS (buf);
+      GST_BUFFER_DURATION (header_buf) = GST_BUFFER_DURATION (buf);
 
-      gst_adapter_push (self->cache_out,
-          gst_buffer_new_memdup (size_data, size_len));
+      gst_adapter_push (self->cache_out, header_buf);
       gst_adapter_push (self->cache_out, buf);
     }
 
@@ -814,9 +817,12 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
 
       /* temporal_unit_size */
       _write_leb128 (size_data, &size_len, len);
+      header_buf = gst_buffer_new_memdup (size_data, size_len);
+      GST_BUFFER_PTS (header_buf) = GST_BUFFER_PTS (buf);
+      GST_BUFFER_DTS (header_buf) = GST_BUFFER_DTS (buf);
+      GST_BUFFER_DURATION (header_buf) = GST_BUFFER_DURATION (buf);
 
-      gst_adapter_push (self->cache_out,
-          gst_buffer_new_memdup (size_data, size_len));
+      gst_adapter_push (self->cache_out, header_buf);
       gst_adapter_push (self->cache_out, buf);
     }
   }
@@ -862,8 +868,8 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
 }
 
 static void
-gst_av1_parse_convert_to_annexb (GstAV1Parse * self, GstAV1OBU * obu,
-    gboolean frame_complete)
+gst_av1_parse_convert_to_annexb (GstAV1Parse * self, GstBuffer * buffer,
+    GstAV1OBU * obu, gboolean frame_complete)
 {
   guint8 size_data[GST_AV1_MAX_LEB_128_SIZE];
   guint size_len = 0;
@@ -915,6 +921,9 @@ gst_av1_parse_convert_to_annexb (GstAV1Parse * self, GstAV1OBU * obu,
 
   /* The buf of this OBU */
   buf = gst_buffer_new_wrapped (data, len);
+  GST_BUFFER_PTS (buf) = GST_BUFFER_PTS (buffer);
+  GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (buffer);
+  GST_BUFFER_DURATION (buf) = GST_BUFFER_DURATION (buffer);
 
   gst_adapter_push (self->frame_cache, buf);
 
@@ -924,9 +933,12 @@ gst_av1_parse_convert_to_annexb (GstAV1Parse * self, GstAV1OBU * obu,
 
     /* frame_unit_size */
     _write_leb128 (size_data, &size_len, len2);
-    gst_adapter_push (self->cache_out,
-        gst_buffer_new_memdup (size_data, size_len));
+    buf = gst_buffer_new_memdup (size_data, size_len);
+    GST_BUFFER_PTS (buf) = GST_BUFFER_PTS (buf2);
+    GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (buf2);
+    GST_BUFFER_DURATION (buf) = GST_BUFFER_DURATION (buf2);
 
+    gst_adapter_push (self->cache_out, buf);
     gst_adapter_push (self->cache_out, buf2);
   }
 
@@ -934,7 +946,8 @@ gst_av1_parse_convert_to_annexb (GstAV1Parse * self, GstAV1OBU * obu,
 }
 
 static void
-gst_av1_parse_convert_from_annexb (GstAV1Parse * self, GstAV1OBU * obu)
+gst_av1_parse_convert_from_annexb (GstAV1Parse * self, GstBuffer * buffer,
+    GstAV1OBU * obu)
 {
   guint8 size_data[GST_AV1_MAX_LEB_128_SIZE];
   guint size_len = 0;
@@ -985,14 +998,18 @@ gst_av1_parse_convert_from_annexb (GstAV1Parse * self, GstAV1OBU * obu)
   memcpy (data + offset, obu->data, obu->obu_size);
 
   buf = gst_buffer_new_wrapped (data, len);
+  GST_BUFFER_PTS (buf) = GST_BUFFER_PTS (buffer);
+  GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (buffer);
+  GST_BUFFER_DURATION (buf) = GST_BUFFER_DURATION (buffer);
+
   gst_adapter_push (self->cache_out, buf);
 
   gst_bit_writer_reset (&bs);
 }
 
 static void
-gst_av1_parse_cache_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
-    guint8 * data, guint32 size, gboolean frame_complete)
+gst_av1_parse_cache_one_obu (GstAV1Parse * self, GstBuffer * buffer,
+    GstAV1OBU * obu, guint8 * data, guint32 size, gboolean frame_complete)
 {
   gboolean need_convert = FALSE;
   GstBuffer *buf;
@@ -1004,15 +1021,19 @@ gst_av1_parse_cache_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
 
   if (need_convert) {
     if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
-      gst_av1_parse_convert_from_annexb (self, obu);
+      gst_av1_parse_convert_from_annexb (self, buffer, obu);
     } else {
-      gst_av1_parse_convert_to_annexb (self, obu, frame_complete);
+      gst_av1_parse_convert_to_annexb (self, buffer, obu, frame_complete);
     }
   } else if (self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
     g_assert (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B);
-    gst_av1_parse_convert_to_annexb (self, obu, frame_complete);
+    gst_av1_parse_convert_to_annexb (self, buffer, obu, frame_complete);
   } else {
     buf = gst_buffer_new_memdup (data, size);
+    GST_BUFFER_PTS (buf) = GST_BUFFER_PTS (buffer);
+    GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (buffer);
+    GST_BUFFER_DURATION (buf) = GST_BUFFER_DURATION (buffer);
+
     gst_adapter_push (self->cache_out, buf);
   }
 }
@@ -1352,7 +1373,7 @@ again:
       break;
     }
 
-    gst_av1_parse_cache_one_obu (self, &obu,
+    gst_av1_parse_cache_one_obu (self, buffer, &obu,
         map_info.data + total_consumed, consumed, frame_complete);
 
     total_consumed += consumed;
@@ -1459,7 +1480,7 @@ again:
           self->last_parsed_offset, consumed);
       gst_adapter_push (self->cache_out, buf);
     } else if (self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
-      gst_av1_parse_convert_to_annexb (self, &obu, frame_complete);
+      gst_av1_parse_convert_to_annexb (self, buffer, &obu, frame_complete);
     } else {
       g_assert_not_reached ();
     }
