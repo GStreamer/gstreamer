@@ -2415,6 +2415,11 @@ gst_aggregator_default_src_event (GstAggregator * self, GstEvent * event)
       /* navigation is rather pointless. */
       gst_event_unref (event);
       return FALSE;
+    case GST_EVENT_RECONFIGURE:
+      /* We will renegotiate with downstream, we don't
+       * need to forward this further */
+      gst_event_unref (event);
+      return TRUE;
     default:
       break;
   }
