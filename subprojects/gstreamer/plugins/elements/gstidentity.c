@@ -75,6 +75,7 @@ enum
 #define DEFAULT_CHECK_IMPERFECT_OFFSET    FALSE
 #define DEFAULT_SIGNAL_HANDOFFS           TRUE
 #define DEFAULT_TS_OFFSET               0
+#define DEFAULT_LAST_BUFFER_TIMESTAMP   0
 #define DEFAULT_DROP_ALLOCATION         FALSE
 #define DEFAULT_EOS_AFTER               -1
 
@@ -92,6 +93,7 @@ enum
   PROP_DUMP,
   PROP_SYNC,
   PROP_TS_OFFSET,
+  PROP_LAST_BUFFER_TIMESTAMP,
   PROP_CHECK_IMPERFECT_TIMESTAMP,
   PROP_CHECK_IMPERFECT_OFFSET,
   PROP_SIGNAL_HANDOFFS,
@@ -216,6 +218,11 @@ gst_identity_class_init (GstIdentityClass * klass)
           "Timestamp offset in nanoseconds for synchronisation, negative for earlier sync",
           G_MININT64, G_MAXINT64, DEFAULT_TS_OFFSET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_LAST_BUFFER_TIMESTAMP,
+      g_param_spec_int64 ("last-buffer-timestamp", "last buffer timestamp",
+          "Timestamp offset in nanoseconds for synchronisation, negative for earlier sync",
+          0, G_MAXINT64, DEFAULT_LAST_BUFFER_TIMESTAMP,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_CHECK_IMPERFECT_TIMESTAMP,
       g_param_spec_boolean ("check-imperfect-timestamp",
@@ -1014,6 +1021,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TS_OFFSET:
       g_value_set_int64 (value, identity->ts_offset);
+      break;
+    case PROP_LAST_BUFFER_TIMESTAMP:
+      g_value_set_int64 (value, identity->prev_timestamp);
       break;
     case PROP_CHECK_IMPERFECT_TIMESTAMP:
       g_value_set_boolean (value, identity->check_imperfect_timestamp);
