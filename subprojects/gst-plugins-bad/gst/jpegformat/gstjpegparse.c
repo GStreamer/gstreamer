@@ -50,10 +50,14 @@
 
 #include <string.h>
 #include <gst/base/gstbytereader.h>
+#include <gst/codecparsers/gstjpegparser.h>
 #include <gst/tag/tag.h>
 
 #include "gstjpegparse.h"
-#include "gstjpegformat.h"
+
+#define GST_JPEG_MARKER_JPG   0xC8
+#define GST_JPEG_MARKER_JPG0  0xF0
+#define GST_JPEG_MARKER_JPG13 0xFD
 
 static GstStaticPadTemplate gst_jpeg_parse_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -185,7 +189,8 @@ gst_jpeg_parse_skip_to_jpeg_header (GstJpegParse * parse, GstMapInfo * mapinfo,
 static inline gboolean
 gst_jpeg_parse_parse_tag_has_entropy_segment (guint8 tag)
 {
-  if (tag == SOS || (tag >= RST0 && tag <= RST7))
+  if (tag == GST_JPEG_MARKER_SOS
+      || (tag >= GST_JPEG_MARKER_RST0 && tag <= GST_JPEG_MARKER_RST7))
     return TRUE;
   return FALSE;
 }
@@ -427,7 +432,7 @@ gst_jpeg_parse_skip_marker (GstJpegParse * parse,
 
 #ifndef GST_DISABLE_GST_DEBUG
   /* We'd pry the id of the skipped application segment */
-  if (marker >= APP0 && marker <= APP15) {
+  if (marker >= GST_JPEG_MARKER_APP0 && marker <= GST_JPEG_MARKER_APP15) {
     const gchar *id_str = NULL;
 
     if (gst_byte_reader_peek_string_utf8 (reader, &id_str)) {
@@ -511,7 +516,7 @@ gst_jpeg_parse_app1 (GstJpegParse * parse, GstByteReader * reader)
         gst_tag_list_from_exif_buffer_with_tiff_header);
 
     GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
-        APP1, id_str, size);
+        GST_JPEG_MARKER_APP1, id_str, size);
 
   } else if (!strncmp (id_str, "http://ns.adobe.com/xap/1.0/", 28)) {
 
@@ -528,13 +533,13 @@ gst_jpeg_parse_app1 (GstJpegParse * parse, GstByteReader * reader)
         gst_tag_list_from_xmp_buffer);
 
     GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
-        APP1, id_str, size);
+        GST_JPEG_MARKER_APP1, id_str, size);
 
   } else {
     /* restore the byte position and size */
     reader->size += 2;
     reader->byte -= 2;
-    if (!gst_jpeg_parse_skip_marker (parse, reader, APP1))
+    if (!gst_jpeg_parse_skip_marker (parse, reader, GST_JPEG_MARKER_APP1))
       return FALSE;
   }
 
@@ -602,35 +607,35 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstMapInfo * map, gint len)
     GST_DEBUG_OBJECT (parse, "marker = %x", marker);
 
     switch (marker) {
-      case SOS:                /* start of scan (begins compressed data) */
+      case GST_JPEG_MARKER_SOS:        /* start of scan (begins compressed data) */
         goto done;
 
-      case SOI:
+      case GST_JPEG_MARKER_SOI:
         break;
 
-      case DRI:
+      case GST_JPEG_MARKER_DRI:
         if (!gst_byte_reader_skip (&reader, 4)) /* fixed size */
           goto error;
         break;
 
-      case COM:
+      case GST_JPEG_MARKER_COM:
         if (!gst_jpeg_parse_com (parse, &reader))
           goto error;
         break;
 
-      case APP1:
+      case GST_JPEG_MARKER_APP1:
         if (!gst_jpeg_parse_app1 (parse, &reader))
           goto error;
         break;
 
-      case DHT:
-      case DQT:
+      case GST_JPEG_MARKER_DHT:
+      case GST_JPEG_MARKER_DQT:
         /* Ignore these codes */
         if (!gst_jpeg_parse_skip_marker (parse, &reader, marker))
           goto error;
         break;
 
-      case SOF0:
+      case GST_JPEG_MARKER_SOF0:
         /* parse Start Of Frame */
         if (!gst_jpeg_parse_sof (parse, &reader))
           goto error;
@@ -639,8 +644,11 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstMapInfo * map, gint len)
         goto done;
 
       default:
-        if (marker == JPG || (marker >= JPG0 && marker <= JPG13) ||
-            (marker >= APP0 && marker <= APP15)) {
+        if (marker == GST_JPEG_MARKER_JPG
+            || (marker >= GST_JPEG_MARKER_JPG0
+                && marker <= GST_JPEG_MARKER_JPG13)
+            || (marker >= GST_JPEG_MARKER_APP0
+                && marker <= GST_JPEG_MARKER_APP15)) {
           if (!gst_jpeg_parse_skip_marker (parse, &reader, marker))
             goto error;
         } else

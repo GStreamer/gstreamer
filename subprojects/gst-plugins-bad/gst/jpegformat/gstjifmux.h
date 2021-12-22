@@ -25,8 +25,6 @@
 
 #include <gst/gst.h>
 
-#include "gstjpegformat.h"
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_JIF_MUX \

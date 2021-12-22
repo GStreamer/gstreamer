@@ -57,6 +57,7 @@ gst-launch-1.0 videotestsrc num-buffers=1 ! jpegenc ! taginject tags="comment=te
 #include <string.h>
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbytewriter.h>
+#include <gst/codecparsers/gstjpegparser.h>
 #include <gst/tag/tag.h>
 #include <gst/tag/xmpwriter.h>
 
@@ -281,20 +282,20 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
       goto error;
 
     switch (marker) {
-      case RST0:
-      case RST1:
-      case RST2:
-      case RST3:
-      case RST4:
-      case RST5:
-      case RST6:
-      case RST7:
-      case SOI:
+      case GST_JPEG_MARKER_RST0:
+      case GST_JPEG_MARKER_RST1:
+      case GST_JPEG_MARKER_RST2:
+      case GST_JPEG_MARKER_RST3:
+      case GST_JPEG_MARKER_RST4:
+      case GST_JPEG_MARKER_RST5:
+      case GST_JPEG_MARKER_RST6:
+      case GST_JPEG_MARKER_RST7:
+      case GST_JPEG_MARKER_SOI:
         GST_DEBUG_OBJECT (self, "marker = %x", marker);
         m = gst_jif_mux_new_marker (marker, 0, NULL, FALSE);
         self->markers = g_list_prepend (self->markers, m);
         break;
-      case EOI:
+      case GST_JPEG_MARKER_EOI:
         GST_DEBUG_OBJECT (self, "marker = %x", marker);
         m = gst_jif_mux_new_marker (marker, 0, NULL, FALSE);
         self->markers = g_list_prepend (self->markers, m);
@@ -312,14 +313,15 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
         break;
     }
 
-    if (marker == SOS) {
+    if (marker == GST_JPEG_MARKER_SOS) {
       gint eoi_pos = -1;
       gint i;
 
       /* search the last 5 bytes for the EOI marker */
       g_assert (map.size >= 5);
       for (i = 5; i >= 2; i--) {
-        if (map.data[map.size - i] == 0xFF && map.data[map.size - i + 1] == EOI) {
+        if (map.data[map.size - i] == 0xFF
+            && map.data[map.size - i + 1] == GST_JPEG_MARKER_EOI) {
           eoi_pos = map.size - i;
           break;
         }
@@ -388,7 +390,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     m = (GstJifMuxMarker *) node->data;
 
     switch (m->marker) {
-      case APP0:
+      case GST_JPEG_MARKER_APP0:
         if (m->size > 5 && !memcmp (m->data, "JFIF\0", 5)) {
           GST_DEBUG_OBJECT (self, "found APP0 JFIF");
           colorspace |= COLORSPACE_GRAYSCALE | COLORSPACE_YUV;
@@ -396,7 +398,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
             app0_jfif = node;
         }
         break;
-      case APP1:
+      case GST_JPEG_MARKER_APP1:
         if (m->size > 6 && (!memcmp (m->data, "EXIF\0\0", 6) ||
                 !memcmp (m->data, "Exif\0\0", 6))) {
           GST_DEBUG_OBJECT (self, "found APP1 EXIF");
@@ -409,7 +411,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
             app1_xmp = node;
         }
         break;
-      case APP14:
+      case GST_JPEG_MARKER_APP14:
         /* check if this contains RGB */
         /*
          * This marker should have:
@@ -441,32 +443,32 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
         }
 
         break;
-      case COM:
+      case GST_JPEG_MARKER_COM:
         GST_INFO_OBJECT (self, "found COM, will be replaced");
         if (!com)
           com = node;
         break;
-      case DQT:
-      case SOF0:
-      case SOF1:
-      case SOF2:
-      case SOF3:
-      case SOF5:
-      case SOF6:
-      case SOF7:
-      case SOF9:
-      case SOF10:
-      case SOF11:
-      case SOF13:
-      case SOF14:
-      case SOF15:
+      case GST_JPEG_MARKER_DQT:
+      case GST_JPEG_MARKER_SOF0:
+      case GST_JPEG_MARKER_SOF1:
+      case GST_JPEG_MARKER_SOF2:
+      case GST_JPEG_MARKER_SOF3:
+      case GST_JPEG_MARKER_SOF5:
+      case GST_JPEG_MARKER_SOF6:
+      case GST_JPEG_MARKER_SOF7:
+      case GST_JPEG_MARKER_SOF9:
+      case GST_JPEG_MARKER_SOF10:
+      case GST_JPEG_MARKER_SOF11:
+      case GST_JPEG_MARKER_SOF13:
+      case GST_JPEG_MARKER_SOF14:
+      case GST_JPEG_MARKER_SOF15:
         if (!frame_hdr)
           frame_hdr = node;
         break;
-      case DAC:
-      case DHT:
-      case DRI:
-      case SOS:
+      case GST_JPEG_MARKER_DAC:
+      case GST_JPEG_MARKER_DHT:
+      case GST_JPEG_MARKER_DRI:
+      case GST_JPEG_MARKER_SOS:
         if (!scan_hdr)
           scan_hdr = node;
         break;
@@ -477,6 +479,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
   /* check if we don't have JFIF APP0 */
   if (!app0_jfif && (colorspace & (COLORSPACE_GRAYSCALE | COLORSPACE_YUV))) {
     /* build jfif header */
+    /* *INDENT-OFF* */
     static const struct
     {
       gchar id[5];
@@ -484,13 +487,16 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
       guint8 du;
       guint8 xd[2], yd[2];
       guint8 tw, th;
-    } jfif_data = {
-      "JFIF", {
-      1, 2}, 0, {
-      0, 1},                    /* FIXME: check pixel-aspect from caps */
-      {
-    0, 1}, 0, 0};
-    m = gst_jif_mux_new_marker (APP0, sizeof (jfif_data),
+    } jfif_data = { "JFIF",
+        { 1, 2 },
+        0,
+        { 0, 1 }, /* FIXME: check pixel-aspect from caps */
+        { 0, 1 },
+        0, 0
+    };
+    /* *INDENT-ON* */
+
+    m = gst_jif_mux_new_marker (GST_JPEG_MARKER_APP0, sizeof (jfif_data),
         (const guint8 *) &jfif_data, FALSE);
     /* insert into self->markers list */
     self->markers = g_list_insert (self->markers, m, 1);
@@ -538,7 +544,8 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
       data = g_malloc0 (exif_size + 6);
       memcpy (data, "Exif", 4);
       gst_buffer_extract (exif_data, 0, data + 6, exif_size);
-      m = gst_jif_mux_new_marker (APP1, exif_size + 6, data, TRUE);
+      m = gst_jif_mux_new_marker (GST_JPEG_MARKER_APP1, exif_size + 6, data,
+          TRUE);
       gst_buffer_unref (exif_data);
 
       if (app1_exif) {
@@ -574,7 +581,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     data = g_malloc (size + 29);
     memcpy (data, "http://ns.adobe.com/xap/1.0/\0", 29);
     gst_buffer_extract (xmp_data, 0, &data[29], size);
-    m = gst_jif_mux_new_marker (APP1, size + 29, data, TRUE);
+    m = gst_jif_mux_new_marker (GST_JPEG_MARKER_APP1, size + 29, data, TRUE);
 
     /*
      * Replace the old xmp marker and not add a new one.
@@ -608,8 +615,8 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
   if (str) {
     GST_DEBUG_OBJECT (self, "set COM marker to '%s'", str);
     /* insert new marker into self->markers list */
-    m = gst_jif_mux_new_marker (COM, strlen (str) + 1, (const guint8 *) str,
-        TRUE);
+    m = gst_jif_mux_new_marker (GST_JPEG_MARKER_COM, strlen (str) + 1,
+        (const guint8 *) str, TRUE);
     /* FIXME: if we have one already, replace */
     /* this should go before SOS, maybe at the end of file-header */
     self->markers = g_list_insert_before (self->markers, frame_hdr, m);
@@ -672,7 +679,7 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
       writer_status &= gst_byte_writer_put_data (writer, m->data, m->size);
     }
 
-    if (m->marker == SOS) {
+    if (m->marker == GST_JPEG_MARKER_SOS) {
       GST_DEBUG_OBJECT (self, "scan data, size = %u", self->scan_size);
       writer_status &=
           gst_byte_writer_put_data (writer, self->scan_data, self->scan_size);
