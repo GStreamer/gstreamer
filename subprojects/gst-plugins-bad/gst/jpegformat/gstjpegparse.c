@@ -53,6 +53,7 @@
 #include <gst/tag/tag.h>
 
 #include "gstjpegparse.h"
+#include "gstjpegformat.h"
 
 static GstStaticPadTemplate gst_jpeg_parse_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",

@@ -24,10 +24,7 @@
 #define __GST_JPEG_PARSE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
 #include <gst/base/gstbaseparse.h>
-
-#include "gstjpegformat.h"
 
 G_BEGIN_DECLS
 
