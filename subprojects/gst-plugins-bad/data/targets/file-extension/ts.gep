@@ -6,7 +6,7 @@ description=Default target for files with a .ts extension
 [profile-default]
 name=default
 type=container
-description=Default profile for files with a .ts extension. Suitable for streamming.
+description=Default profile for files with a .ts extension. Suitable for streaming.
 format=video/mpegts,systemstream=true,packetsize=188
 
 [streamprofile-default-0]
