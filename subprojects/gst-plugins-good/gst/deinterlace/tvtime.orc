@@ -26,12 +26,47 @@ shrsw t2, t2, 3
 convsuswb d1, t2
 
 
+.function deinterlace_line_vfir_16bits
+.dest 2 d1 guint16
+.source 2 s1 guint16
+.source 2 s2 guint16
+.source 2 s3 guint16
+.source 2 s4 guint16
+.source 2 s5 guint16
+.temp 4 t1
+.temp 4 t2
+.temp 4 t3
+
+convuwl t1, s1
+convuwl t2, s5
+addl t1, t1, t2
+convuwl t2, s2
+convuwl t3, s4
+addl t2, t2, t3
+shll t2, t2, 2
+convuwl t3, s3
+shll t3, t3, 1
+subl t2, t2, t1
+addl t2, t2, t3
+addl t2, t2, 4
+shrsl t2, t2, 3
+convsuslw d1, t2
+
+
 .function deinterlace_line_linear
 .dest 1 d1 guint8
 .source 1 s1 guint8
 .source 1 s2 guint8
 
 avgub d1, s1, s2
+
+
+.function deinterlace_line_linear_16bits
+.dest 2 d1 guint16
+.source 2 s1 guint16
+.source 2 s2 guint16
+
+avguw d1, s1, s2
 
 
 .function deinterlace_line_linear_blend

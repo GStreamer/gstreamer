@@ -75,6 +75,19 @@ deinterlace_c (guint8 * dst, const guint8 * lum_m4, const guint8 * lum_m3,
   }
 }
 
+static inline void
+deinterlace_c_16bits (guint16 * dst, const guint16 * lum_m4,
+    const guint16 * lum_m3, const guint16 * lum_m2, const guint16 * lum_m1,
+    const guint16 * lum, gint size)
+{
+  if (lum_m2 == NULL) {
+    deinterlace_line_linear_16bits (dst, lum_m1, lum_m3, size);
+  } else {
+    deinterlace_line_vfir_16bits (dst, lum_m4, lum_m3, lum_m2, lum_m1,
+        lum, size);
+  }
+}
+
 static void
 deinterlace_line_packed_c (GstDeinterlaceSimpleMethod * self, guint8 * dst,
     const GstDeinterlaceScanlineData * scanlines, guint size)
@@ -125,6 +138,20 @@ deinterlace_line_planar_v_c (GstDeinterlaceSimpleMethod * self, guint8 * dst,
   const guint8 *lum = scanlines->bb1;
 
   deinterlace_c (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
+}
+
+static void
+deinterlace_line_planar_plane_16bits_c (GstDeinterlaceSimpleMethod * self,
+    guint8 * dst, const GstDeinterlaceScanlineData * scanlines, guint size)
+{
+  const guint16 *lum_m4 = (const guint16 *) scanlines->tt1;
+  const guint16 *lum_m3 = (const guint16 *) scanlines->t0;
+  const guint16 *lum_m2 = (const guint16 *) scanlines->m1;
+  const guint16 *lum_m1 = (const guint16 *) scanlines->b0;
+  const guint16 *lum = (const guint16 *) scanlines->bb1;
+
+  deinterlace_c_16bits ((guint16 *) dst, lum_m4, lum_m3, lum_m2, lum_m1, lum,
+      size);
 }
 
 #undef BUILD_X86_ASM
@@ -306,6 +333,13 @@ gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
   dism_class->interpolate_scanline_planar_u = deinterlace_line_planar_u_c;
   dism_class->interpolate_scanline_planar_v = deinterlace_line_planar_v_c;
 #endif
+
+  dism_class->interpolate_scanline_planar_y_16bits =
+      deinterlace_line_planar_plane_16bits_c;
+  dism_class->interpolate_scanline_planar_u_16bits =
+      deinterlace_line_planar_plane_16bits_c;
+  dism_class->interpolate_scanline_planar_v_16bits =
+      deinterlace_line_planar_plane_16bits_c;
 }
 
 static void

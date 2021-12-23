@@ -101,6 +101,8 @@ struct _GstDeinterlaceMethodClass {
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_rgb;
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_bgr;
 
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_planar_high;
+
   const gchar *name;
   const gchar *nick;
 };
@@ -213,6 +215,14 @@ struct _GstDeinterlaceSimpleMethodClass {
   GstDeinterlaceSimpleMethodFunction interpolate_scanline_planar_u;
   GstDeinterlaceSimpleMethodFunction copy_scanline_planar_v;
   GstDeinterlaceSimpleMethodFunction interpolate_scanline_planar_v;
+
+  /* Planar high bitdepth formats */
+  GstDeinterlaceSimpleMethodFunction copy_scanline_planar_y_16bits;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_planar_y_16bits;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_planar_u_16bits;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_planar_u_16bits;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_planar_v_16bits;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_planar_v_16bits;
 };
 
 GType gst_deinterlace_simple_method_get_type (void);

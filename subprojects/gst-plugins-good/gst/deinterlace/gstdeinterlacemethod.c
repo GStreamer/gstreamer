@@ -89,6 +89,24 @@ gst_deinterlace_method_supported_impl (GstDeinterlaceMethodClass * klass,
       return (klass->deinterlace_frame_rgb != NULL);
     case GST_VIDEO_FORMAT_BGR:
       return (klass->deinterlace_frame_bgr != NULL);
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    case GST_VIDEO_FORMAT_Y444_16BE:
+    case GST_VIDEO_FORMAT_Y444_12BE:
+    case GST_VIDEO_FORMAT_Y444_10BE:
+    case GST_VIDEO_FORMAT_I422_12BE:
+    case GST_VIDEO_FORMAT_I422_10BE:
+    case GST_VIDEO_FORMAT_I420_12BE:
+    case GST_VIDEO_FORMAT_I420_10BE:
+#else
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I420_10LE:
+#endif
+      return (klass->deinterlace_frame_planar_high != NULL);
     default:
       return FALSE;
   }
@@ -170,6 +188,25 @@ gst_deinterlace_method_setup_impl (GstDeinterlaceMethod * self,
       break;
     case GST_VIDEO_FORMAT_BGR:
       self->deinterlace_frame = klass->deinterlace_frame_bgr;
+      break;
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    case GST_VIDEO_FORMAT_Y444_16BE:
+    case GST_VIDEO_FORMAT_Y444_12BE:
+    case GST_VIDEO_FORMAT_Y444_10BE:
+    case GST_VIDEO_FORMAT_I422_12BE:
+    case GST_VIDEO_FORMAT_I422_10BE:
+    case GST_VIDEO_FORMAT_I420_12BE:
+    case GST_VIDEO_FORMAT_I420_10BE:
+#else
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I420_10LE:
+#endif
+      self->deinterlace_frame = klass->deinterlace_frame_planar_high;
       break;
     default:
       self->deinterlace_frame = NULL;
@@ -287,6 +324,29 @@ gst_deinterlace_simple_method_supported (GstDeinterlaceMethodClass * mklass,
           && klass->copy_scanline_planar_u != NULL &&
           klass->interpolate_scanline_planar_v != NULL
           && klass->copy_scanline_planar_v != NULL);
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    case GST_VIDEO_FORMAT_Y444_16BE:
+    case GST_VIDEO_FORMAT_Y444_12BE:
+    case GST_VIDEO_FORMAT_Y444_10BE:
+    case GST_VIDEO_FORMAT_I422_12BE:
+    case GST_VIDEO_FORMAT_I422_10BE:
+    case GST_VIDEO_FORMAT_I420_12BE:
+    case GST_VIDEO_FORMAT_I420_10BE:
+#else
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I420_10LE:
+#endif
+      return (klass->interpolate_scanline_planar_y_16bits != NULL
+          && klass->copy_scanline_planar_y_16bits != NULL &&
+          klass->interpolate_scanline_planar_u_16bits != NULL
+          && klass->copy_scanline_planar_u_16bits != NULL &&
+          klass->interpolate_scanline_planar_v_16bits != NULL
+          && klass->copy_scanline_planar_v_16bits != NULL);
     default:
       return FALSE;
   }
@@ -743,6 +803,33 @@ gst_deinterlace_simple_method_setup (GstDeinterlaceMethod * method,
           klass->interpolate_scanline_planar_v;
       self->copy_scanline_planar[2] = klass->copy_scanline_planar_v;
       break;
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    case GST_VIDEO_FORMAT_Y444_16BE:
+    case GST_VIDEO_FORMAT_Y444_12BE:
+    case GST_VIDEO_FORMAT_Y444_10BE:
+    case GST_VIDEO_FORMAT_I422_12BE:
+    case GST_VIDEO_FORMAT_I422_10BE:
+    case GST_VIDEO_FORMAT_I420_12BE:
+    case GST_VIDEO_FORMAT_I420_10BE:
+#else
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I420_10LE:
+#endif
+      self->interpolate_scanline_planar[0] =
+          klass->interpolate_scanline_planar_y_16bits;
+      self->copy_scanline_planar[0] = klass->copy_scanline_planar_y_16bits;
+      self->interpolate_scanline_planar[1] =
+          klass->interpolate_scanline_planar_u_16bits;
+      self->copy_scanline_planar[1] = klass->copy_scanline_planar_u_16bits;
+      self->interpolate_scanline_planar[2] =
+          klass->interpolate_scanline_planar_v_16bits;
+      self->copy_scanline_planar[2] = klass->copy_scanline_planar_v_16bits;
+      break;
     default:
       break;
   }
@@ -788,6 +875,9 @@ gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass
       gst_deinterlace_simple_method_deinterlace_frame_nv12;
   dm_class->deinterlace_frame_nv21 =
       gst_deinterlace_simple_method_deinterlace_frame_nv12;
+  /* same as 8bits planar */
+  dm_class->deinterlace_frame_planar_high =
+      gst_deinterlace_simple_method_deinterlace_frame_planar;
   dm_class->fields_required = 2;
   dm_class->setup = gst_deinterlace_simple_method_setup;
   dm_class->supported = gst_deinterlace_simple_method_supported;
@@ -848,6 +938,16 @@ gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass
   klass->interpolate_scanline_planar_v =
       gst_deinterlace_simple_method_interpolate_scanline_planar_v;
   klass->copy_scanline_planar_v =
+      gst_deinterlace_simple_method_copy_scanline_planar_v;
+
+  /* planar high bitdepth formats use the same methods as 8bits planar,
+   * (i.e,memcpy) but interpolate_scanline_planar_{y,u,v}_16bits methods will
+   * be configured by each subclass */
+  klass->copy_scanline_planar_y_16bits =
+      gst_deinterlace_simple_method_copy_scanline_planar_y;
+  klass->copy_scanline_planar_u_16bits =
+      gst_deinterlace_simple_method_copy_scanline_planar_u;
+  klass->copy_scanline_planar_v_16bits =
       gst_deinterlace_simple_method_copy_scanline_planar_v;
 }
 

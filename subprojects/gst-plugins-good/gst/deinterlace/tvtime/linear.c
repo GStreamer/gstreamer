@@ -55,6 +55,13 @@ deinterlace_scanline_linear_c (GstDeinterlaceSimpleMethod * self,
 }
 
 static void
+deinterlace_scanline_linear_c_16bits (GstDeinterlaceSimpleMethod * self,
+    guint16 * out, const guint16 * s1, const guint16 * s2, gint size)
+{
+  deinterlace_line_linear_16bits (out, s1, s2, size / 2);
+}
+
+static void
 deinterlace_scanline_linear_packed_c (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
@@ -80,6 +87,15 @@ deinterlace_scanline_linear_planar_v_c (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   deinterlace_scanline_linear_c (self, out, scanlines->t0, scanlines->b0, size);
+}
+
+static void
+deinterlace_scanline_linear_planar_plane_16bits_c (GstDeinterlaceSimpleMethod *
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines,
+    guint size)
+{
+  deinterlace_scanline_linear_c_16bits (self, (guint16 *) out,
+      (const guint16 *) scanlines->t0, (const guint16 *) scanlines->b0, size);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodLinear, gst_deinterlace_method_linear,
@@ -117,6 +133,12 @@ gst_deinterlace_method_linear_class_init (GstDeinterlaceMethodLinearClass *
   dism_class->interpolate_scanline_planar_v =
       deinterlace_scanline_linear_planar_v_c;
 
+  dism_class->interpolate_scanline_planar_y_16bits =
+      deinterlace_scanline_linear_planar_plane_16bits_c;
+  dism_class->interpolate_scanline_planar_u_16bits =
+      deinterlace_scanline_linear_planar_plane_16bits_c;
+  dism_class->interpolate_scanline_planar_v_16bits =
+      deinterlace_scanline_linear_planar_plane_16bits_c;
 }
 
 static void

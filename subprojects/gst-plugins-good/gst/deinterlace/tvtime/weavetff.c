@@ -152,6 +152,14 @@ gst_deinterlace_method_weave_tff_class_init (GstDeinterlaceMethodWeaveTFFClass *
   dism_class->interpolate_scanline_planar_v =
       deinterlace_scanline_weave_planar_v;
 
+  /* we do just memcpy, nothing different */
+  dism_class->interpolate_scanline_planar_y_16bits =
+      deinterlace_scanline_weave_planar_y;
+  dism_class->interpolate_scanline_planar_u_16bits =
+      deinterlace_scanline_weave_planar_u;
+  dism_class->interpolate_scanline_planar_v_16bits =
+      deinterlace_scanline_weave_planar_v;
+
   dism_class->copy_scanline_ayuv = copy_scanline_packed;
   dism_class->copy_scanline_yuy2 = copy_scanline_packed;
   dism_class->copy_scanline_yvyu = copy_scanline_packed;
