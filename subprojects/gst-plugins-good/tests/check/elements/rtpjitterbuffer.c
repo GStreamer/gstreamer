@@ -3092,7 +3092,7 @@ GST_START_TEST (test_drop_messages_interval)
   guint final_seqnum;
   GstBus *bus;
   GstMessage *drop_msg;
-  GstClockType now;
+  GstClockTime now;
   guint num_late_not_sent = 0;
   guint num_sent_msg = 0;
 
