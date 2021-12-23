@@ -119,5 +119,9 @@ Caps for this interlace mode must also carry a `format:Interlaced` caps feature
 (`GST_CAPS_FEATURE_FORMAT_INTERLACED`) to ensure backwards compatibility for
 the new mode.
 
-The frame rate in the caps still signals the frame rate, so the notional field
+The frame rate in the caps still signals the *frame* rate, so the notional *field*
 rate will be twice the frame rate from the caps (see `GST_VIDEO_INFO_FIELD_RATE_N`).
+
+In the same vein the width and height in the caps will indicate *frame*
+dimensions not field dimensions, meaning the height of the video data inside
+the buffers (1 field) will be half of the height in the caps.

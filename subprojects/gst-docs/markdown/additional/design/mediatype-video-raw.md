@@ -43,7 +43,10 @@
      bottom field (`GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD`). Top and bottom fields
      are expected to alternate in this mode. Caps for this interlace mode must
      also carry a `format:Interlaced` caps feature (`GST_CAPS_FEATURE_FORMAT_INTERLACED`)
-     to ensure backwards compatibility for the new mode (Since: 1.16)
+     to ensure backwards compatibility for the new mode. `width` and `height`
+     fields in caps indicate **frame** dimensions not field dimensions, meaning
+     the height of the video data inside the buffers will be half of the height
+     in the caps. (Since: 1.16)
 
  - **chroma-site**, `G_TYPE_STRING`: Default `GST_VIDEO_CHROMA_SITE_UNKNOWN`.
    The chroma siting of the video frames.
