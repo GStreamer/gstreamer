@@ -77,7 +77,6 @@ enum
 {
   PROP_0,
   PROP_ENCMODE,
-  PROP_SPEEDCONTROL,
   PROP_B_PYRAMID,
   PROP_P_FRAMES,
   PROP_PRED_STRUCTURE,
@@ -99,7 +98,6 @@ enum
 #define PROP_RC_MODE_VBR 1
 
 #define PROP_ENCMODE_DEFAULT                8
-#define PROP_SPEEDCONTROL_DEFAULT           60
 #define PROP_HIERARCHICAL_LEVEL_DEFAULT     4
 #define PROP_P_FRAMES_DEFAULT               0
 #define PROP_PRED_STRUCTURE_DEFAULT         2
@@ -195,14 +193,6 @@ gst_svtav1enc_class_init (GstSvtAv1EncClass * klass)
           " that the encoding is to be performed at"
           " (0 is the highest quality, 8 is the highest speed) ",
           0, 8, PROP_ENCMODE_DEFAULT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-
-  g_object_class_install_property (gobject_class, PROP_SPEEDCONTROL,
-      g_param_spec_uint ("speed-control", "Speed Control (in fps)",
-          "Dynamically change the encoding speed preset"
-          " to meet this defined average encoding speed (in fps)",
-          1, 240, PROP_SPEEDCONTROL_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_B_PYRAMID,
@@ -348,13 +338,6 @@ gst_svtav1enc_set_property (GObject * object, guint property_id,
     case PROP_INTRA_REFRESH:
         svtav1enc->svt_config->intra_refresh_type = g_value_get_int(value);
         break;
-    case PROP_SPEEDCONTROL:
-      if (g_value_get_uint (value) > 0) {
-        svtav1enc->svt_config->speed_control_flag = 1;
-      } else {
-        svtav1enc->svt_config->speed_control_flag = 0;
-      }
-      break;
     case PROP_B_PYRAMID:
       svtav1enc->svt_config->hierarchical_levels = g_value_get_uint (value);
       break;
@@ -409,13 +392,6 @@ gst_svtav1enc_get_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_ENCMODE:
       g_value_set_uint (value, svtav1enc->svt_config->enc_mode);
-      break;
-    case PROP_SPEEDCONTROL:
-      if (svtav1enc->svt_config->speed_control_flag) {
-        g_value_set_uint (value, 60);
-      } else {
-        g_value_set_uint (value, 0);
-      }
       break;
     case PROP_B_PYRAMID:
       g_value_set_uint (value, svtav1enc->svt_config->hierarchical_levels);
@@ -605,72 +581,18 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->max_qp_allowed = PROP_QP_MAX_DEFAULT;
   svt_config->min_qp_allowed = PROP_QP_MIN_DEFAULT;
   svt_config->screen_content_mode = FALSE;
-  svt_config->intrabc_mode = -1;
   svt_config->enable_adaptive_quantization = FALSE;
   svt_config->qp = PROP_QP_DEFAULT;
   svt_config->use_qp_file = FALSE;
   svt_config->disable_dlf_flag = (PROP_DEBLOCKING_DEFAULT == FALSE);
   svt_config->film_grain_denoise_strength = FALSE;
-  svt_config->enable_warped_motion = FALSE;
-  svt_config->enable_global_motion = TRUE;
   svt_config->cdef_level = -1;
   svt_config->enable_restoration_filtering = -1;
-  svt_config->sg_filter_mode = -1;
-  svt_config->wn_filter_mode = -1;
   #if 0 //!REMOVE_EDGE_SKIP_ANGLE_INTRA
   svt_config->edge_skp_angle_intra = -1;
   #endif
-  svt_config->intra_angle_delta = -1;
-  svt_config->inter_intra_compound = -1;
-  svt_config->enable_paeth = -1;
-  svt_config->enable_smooth = -1;
   svt_config->enable_mfmv = -1;
-  svt_config->enable_redundant_blk = -1;
-  svt_config->spatial_sse_full_loop_level = -1;
-  svt_config->over_bndry_blk = -1;
-  svt_config->new_nearest_comb_inject = -1;
-  #if 0 //!REMOVE_REF_FOR_RECT_PART
-  svt_config->prune_ref_rec_part = -1;
-  #endif
-  svt_config->nsq_table = -1;
-  svt_config->frame_end_cdf_update = -1;
-  svt_config->pred_me = -1;
-  svt_config->bipred_3x3_inject = -1;
-  svt_config->compound_level = -1;
-  svt_config->set_chroma_mode = -1;
-  svt_config->disable_cfl_flag = -1;
-  svt_config->obmc_level = 1;
-  svt_config->rdoq_level = -1;
-  svt_config->filter_intra_level = 1;
-  svt_config->enable_intra_edge_filter = -1;
-  svt_config->pic_based_rate_est = -1;
-  svt_config->use_default_me_hme = TRUE;
-  svt_config->enable_hme_flag = TRUE;
-  svt_config->enable_hme_level0_flag = TRUE;
-  svt_config->enable_hme_level1_flag = FALSE;
-  svt_config->enable_hme_level2_flag = FALSE;
-  svt_config->ext_block_flag = FALSE;
-  svt_config->search_area_width = 16;
-  svt_config->search_area_height = 7;
-  svt_config->enable_hbd_mode_decision = 1;
-  svt_config->palette_level = -1;
   // HME parameters
-  svt_config->number_hme_search_region_in_width = 2;
-  svt_config->number_hme_search_region_in_height = 2;
-  svt_config->hme_level0_total_search_area_width = 64;
-  svt_config->hme_level0_total_search_area_height = 25;
-  svt_config->hme_level0_search_area_in_width_array[0] = 32;
-  svt_config->hme_level0_search_area_in_width_array[1] = 32;
-  svt_config->hme_level0_search_area_in_height_array[0] = 12;
-  svt_config->hme_level0_search_area_in_height_array[1] = 13;
-  svt_config->hme_level1_search_area_in_width_array[0] = 1;
-  svt_config->hme_level1_search_area_in_width_array[1] = 1;
-  svt_config->hme_level1_search_area_in_height_array[0] = 1;
-  svt_config->hme_level1_search_area_in_height_array[1] = 1;
-  svt_config->hme_level2_search_area_in_width_array[0] = 1;
-  svt_config->hme_level2_search_area_in_width_array[1] = 1;
-  svt_config->hme_level2_search_area_in_height_array[0] = 1;
-  svt_config->hme_level2_search_area_in_height_array[1] = 1;
   svt_config->channel_id = 0;
   svt_config->active_channel_count = 1;
   svt_config->recon_enabled = FALSE;
@@ -696,8 +618,6 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->superres_qthres = 43;
 
   // latency
-  svt_config->speed_control_flag = FALSE;
-  svt_config->super_block_size = 128;
 
   // Annex A
   svt_config->profile = 0;
@@ -707,14 +627,9 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->stat_report = FALSE;
   svt_config->high_dynamic_range_input = FALSE;
   svt_config->encoder_bit_depth = 8;
-  svt_config->is_16bit_pipeline = 0; // todo
   svt_config->encoder_color_format = 1; // todo. Only 420 for now.
   svt_config->compressed_ten_bit_format = FALSE;
-  svt_config->sb_sz = 64;
-  svt_config->partition_depth = 4;
-  svt_config->enable_qp_scaling_flag = 0;
   svt_config->use_cpu_flags = CPU_FLAGS_ALL;
-  svt_config->ten_bit_format = FALSE;
 
   // color description
   svt_config->color_range = 0;
