@@ -840,8 +840,10 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
       self->header = FALSE;
     }
     if (self->keyframe) {
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+      GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
       self->keyframe = FALSE;
+    } else {
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }
 
     if (frame_finished)
