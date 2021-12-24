@@ -285,7 +285,7 @@ gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
               ((tmp & 0x1c) << 1) | ((tmp & 0x03) << 6);
           tmp = *in++;
           *out++ = ((tmp & 0x80) >> 7) |
-              ((tmp & 0x70) >> 3) | ((tmp & 0x0e) << 4) | ((tmp & 0x01) << 7);
+              ((tmp & 0x70) >> 3) | ((tmp & 0x0e) << 3) | ((tmp & 0x01) << 7);
           tmp = *in++;
           *out++ = ((tmp & 0xc0) >> 6) |
               ((tmp & 0x38) >> 1) | ((tmp & 0x07) << 5);
