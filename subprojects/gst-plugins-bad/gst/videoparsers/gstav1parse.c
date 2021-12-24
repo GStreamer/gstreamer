@@ -485,6 +485,99 @@ gst_av1_parse_alignment_from_string (const gchar * align,
   return GST_AV1_PARSE_ALIGN_NONE;
 }
 
+static gboolean
+gst_av1_parse_caps_has_alignment (GstCaps * caps, GstAV1ParseAligment alignment)
+{
+  guint i, j, caps_size;
+  const gchar *cmp_align_str = NULL;
+  const gchar *cmp_stream_str = NULL;
+
+  GST_DEBUG ("Try to find alignment %d in caps: %" GST_PTR_FORMAT,
+      alignment, caps);
+
+  caps_size = gst_caps_get_size (caps);
+  if (caps_size == 0)
+    return FALSE;
+
+  switch (alignment) {
+    case GST_AV1_PARSE_ALIGN_BYTE:
+      cmp_align_str = "byte";
+      cmp_stream_str = "obu-stream";
+      break;
+    case GST_AV1_PARSE_ALIGN_OBU:
+      cmp_align_str = "obu";
+      cmp_stream_str = "obu-stream";
+      break;
+    case GST_AV1_PARSE_ALIGN_FRAME:
+      cmp_align_str = "frame";
+      cmp_stream_str = "obu-stream";
+      break;
+    case GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT:
+      cmp_align_str = "tu";
+      cmp_stream_str = "obu-stream";
+      break;
+    case GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B:
+      cmp_align_str = "tu";
+      cmp_stream_str = "annexb";
+      break;
+    default:
+      return FALSE;
+  }
+
+  for (i = 0; i < caps_size; i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+    const GValue *alignment_value = gst_structure_get_value (s, "alignment");
+    const GValue *stream_value = gst_structure_get_value (s, "stream-format");
+
+    if (!alignment_value || !stream_value)
+      continue;
+
+    if (G_VALUE_HOLDS_STRING (alignment_value)) {
+      const gchar *align_str = g_value_get_string (alignment_value);
+
+      if (g_strcmp0 (align_str, cmp_align_str) != 0)
+        continue;
+    } else if (GST_VALUE_HOLDS_LIST (alignment_value)) {
+      guint num_values = gst_value_list_get_size (alignment_value);
+
+      for (j = 0; j < num_values; j++) {
+        const GValue *v = gst_value_list_get_value (alignment_value, j);
+        const gchar *align_str = g_value_get_string (v);
+
+        if (g_strcmp0 (align_str, cmp_align_str) == 0)
+          break;
+      }
+
+      if (j == num_values)
+        continue;
+    }
+
+    if (G_VALUE_HOLDS_STRING (stream_value)) {
+      const gchar *stream_str = g_value_get_string (stream_value);
+
+      if (g_strcmp0 (stream_str, cmp_stream_str) != 0)
+        continue;
+    } else if (GST_VALUE_HOLDS_LIST (stream_value)) {
+      guint num_values = gst_value_list_get_size (stream_value);
+
+      for (j = 0; j < num_values; j++) {
+        const GValue *v = gst_value_list_get_value (stream_value, j);
+        const gchar *stream_str = g_value_get_string (v);
+
+        if (g_strcmp0 (stream_str, cmp_stream_str) == 0)
+          break;
+      }
+
+      if (j == num_values)
+        continue;
+    }
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static GstAV1ParseAligment
 gst_av1_parse_alignment_from_caps (GstCaps * caps)
 {
@@ -632,7 +725,7 @@ static void
 gst_av1_parse_negotiate (GstAV1Parse * self, GstCaps * in_caps)
 {
   GstCaps *caps;
-  GstAV1ParseAligment align = self->align;
+  GstAV1ParseAligment align = GST_AV1_PARSE_ALIGN_NONE;
 
   caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (self));
   GST_DEBUG_OBJECT (self, "allowed caps: %" GST_PTR_FORMAT, caps);
@@ -642,6 +735,13 @@ gst_av1_parse_negotiate (GstAV1Parse * self, GstCaps * in_caps)
   if (caps) {
     caps = gst_caps_truncate (caps);
     GST_DEBUG_OBJECT (self, "negotiating with caps: %" GST_PTR_FORMAT, caps);
+  }
+
+  /* prefer TU as default */
+  if (gst_av1_parse_caps_has_alignment (caps,
+          GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT)) {
+    align = GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT;
+    goto done;
   }
 
   /* Both upsteam and downstream support, best */
@@ -666,7 +766,7 @@ gst_av1_parse_negotiate (GstAV1Parse * self, GstCaps * in_caps)
 
   /* default */
   if (align == GST_AV1_PARSE_ALIGN_NONE)
-    align = GST_AV1_PARSE_ALIGN_FRAME;
+    align = GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT;
 
 done:
   self->align = align;
