@@ -218,7 +218,7 @@ static GstStaticPadTemplate gst_av1_enc_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-av1")
+    GST_STATIC_CAPS ("video/x-av1, alignment = (string) tu")
     );
 
 static void
