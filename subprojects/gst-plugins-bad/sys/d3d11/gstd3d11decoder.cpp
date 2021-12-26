@@ -1305,21 +1305,13 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
 
   if (!decoder->internal_pool) {
-    gboolean reconfigured;
-
-    /* Replicate gst_video_decoder_allocate_output_buffer().
-     * In case of zero-copy playback, this is the last chance for querying
-     * required min-buffer size by downstream and take account of
-     * the min-buffer size into our internel pool size */
-    GST_VIDEO_DECODER_STREAM_LOCK (videodec);
-    reconfigured =
-        gst_pad_check_reconfigure (GST_VIDEO_DECODER_SRC_PAD (videodec));
-    GST_DEBUG_OBJECT (videodec,
-        "Downstream was reconfigured, negotiating again");
-    GST_VIDEO_DECODER_STREAM_UNLOCK (videodec);
-
-    if (reconfigured)
-      gst_video_decoder_negotiate (videodec);
+    /* Try negotiate again whatever the previous negotiation result was.
+     * There could be updated field(s) in sinkpad caps after we negotiated with
+     * downstream on new_sequence() call. For example, h264/h265 parse
+     * will be able to update HDR10 related caps field after parsing
+     * corresponding SEI messages which are usually placed after the essential
+     * headers */
+    gst_video_decoder_negotiate (videodec);
 
     if (!gst_d3d11_decoder_prepare_output_view_pool (decoder)) {
       GST_ERROR_OBJECT (videodec, "Failed to setup internal pool");
