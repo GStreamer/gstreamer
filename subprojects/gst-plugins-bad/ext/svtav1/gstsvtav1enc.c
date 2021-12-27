@@ -588,9 +588,6 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->film_grain_denoise_strength = FALSE;
   svt_config->cdef_level = -1;
   svt_config->enable_restoration_filtering = -1;
-  #if 0 //!REMOVE_EDGE_SKIP_ANGLE_INTRA
-  svt_config->edge_skp_angle_intra = -1;
-  #endif
   svt_config->enable_mfmv = -1;
   // HME parameters
   svt_config->channel_id = 0;
