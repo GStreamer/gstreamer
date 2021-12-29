@@ -89,6 +89,8 @@ _gst_structure_take_structure (GstStructure * s, const char *fieldname,
 {
   GValue v = G_VALUE_INIT;
 
+  g_return_if_fail (GST_IS_STRUCTURE (*value_s));
+
   g_value_init (&v, GST_TYPE_STRUCTURE);
   g_value_take_boxed (&v, *value_s);
 
@@ -543,7 +545,9 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     /* Store the raw stats from GStreamer into the structure for advanced
      * information.
      */
-    _gst_structure_take_structure (in, "gst-rtpjitterbuffer-stats", &jb_stats);
+    if (jb_stats)
+      _gst_structure_take_structure (in, "gst-rtpjitterbuffer-stats",
+          &jb_stats);
 
     gst_structure_set (in, "gst-rtpsource-stats", GST_TYPE_STRUCTURE,
         source_stats, NULL);
