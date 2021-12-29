@@ -1554,7 +1554,11 @@ gst_ass_render_handle_tag_sample (GstAssRender * render, GstSample * sample)
     "application/x-font-ttf",
     "application/x-font-otf",
     "application/x-truetype-font",
-    "application/vnd.ms-opentype"
+    "application/vnd.ms-opentype",
+    "font/ttf",
+    "font/otf",
+    "font/sfnt",
+    "font/collection"
   };
   static const gchar *extensions[] = {
     ".otf",
