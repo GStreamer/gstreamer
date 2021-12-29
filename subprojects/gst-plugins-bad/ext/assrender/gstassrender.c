@@ -1558,7 +1558,8 @@ gst_ass_render_handle_tag_sample (GstAssRender * render, GstSample * sample)
   };
   static const gchar *extensions[] = {
     ".otf",
-    ".ttf"
+    ".ttf",
+    ".ttc"
   };
 
   GstBuffer *buf;
