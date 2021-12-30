@@ -43,6 +43,8 @@ G_DEFINE_TYPE (GstWlWindow, gst_wl_window, G_TYPE_OBJECT);
 
 static void gst_wl_window_finalize (GObject * gobject);
 
+static void gst_wl_window_update_borders (GstWlWindow * window);
+
 static void
 handle_xdg_toplevel_close (void *data, struct xdg_toplevel *xdg_toplevel)
 {
@@ -454,12 +456,19 @@ gst_wl_window_render (GstWlWindow * window, GstWlBuffer * buffer,
     wl_surface_damage_buffer (window->video_surface_wrapper, 0, 0, G_MAXINT32,
         G_MAXINT32);
     wl_surface_commit (window->video_surface_wrapper);
+
+    if (!window->is_area_surface_mapped) {
+      gst_wl_window_update_borders (window);
+      wl_surface_commit (window->area_surface_wrapper);
+      window->is_area_surface_mapped = TRUE;
+    }
   } else {
     /* clear both video and parent surfaces */
     wl_surface_attach (window->video_surface_wrapper, NULL, 0, 0);
     wl_surface_commit (window->video_surface_wrapper);
     wl_surface_attach (window->area_surface_wrapper, NULL, 0, 0);
     wl_surface_commit (window->area_surface_wrapper);
+    window->is_area_surface_mapped = FALSE;
   }
 
   if (G_UNLIKELY (info)) {
@@ -486,12 +495,19 @@ gst_wl_window_update_borders (GstWlWindow * window)
   GstWlBuffer *gwlbuf;
   GstAllocator *alloc;
 
-  if (window->no_border_update)
-    return;
+  if (window->display->viewporter) {
+    wp_viewport_set_destination (window->area_viewport,
+        window->render_rectangle.w, window->render_rectangle.h);
+
+    if (window->is_area_surface_mapped) {
+      /* The area_surface is already visible and only needed to get resized.
+       * We don't need to attach a new buffer and are done here. */
+      return;
+    }
+  }
 
   if (window->display->viewporter) {
     width = height = 1;
-    window->no_border_update = TRUE;
   } else {
     width = window->render_rectangle.w;
     height = window->render_rectangle.h;
@@ -527,6 +543,10 @@ gst_wl_window_set_render_rectangle (GstWlWindow * window, gint x, gint y,
 {
   g_return_if_fail (window != NULL);
 
+  if (window->render_rectangle.x == x && window->render_rectangle.y == y &&
+      window->render_rectangle.w == w && window->render_rectangle.h == h)
+    return;
+
   window->render_rectangle.x = x;
   window->render_rectangle.y = y;
   window->render_rectangle.w = w;
@@ -536,11 +556,8 @@ gst_wl_window_set_render_rectangle (GstWlWindow * window, gint x, gint y,
   if (window->area_subsurface)
     wl_subsurface_set_position (window->area_subsurface, x, y);
 
-  /* change the size of the area */
-  if (window->area_viewport)
-    wp_viewport_set_destination (window->area_viewport, w, h);
-
-  gst_wl_window_update_borders (window);
+  if (window->is_area_surface_mapped)
+    gst_wl_window_update_borders (window);
 
   if (!window->configured)
     return;
