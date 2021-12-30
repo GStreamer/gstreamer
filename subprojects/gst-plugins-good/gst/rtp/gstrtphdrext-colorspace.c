@@ -105,6 +105,7 @@ gst_rtp_header_extension_colorspace_write (GstRTPHeaderExtension * ext,
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   gboolean is_frame_last_buffer;
   guint8 *ptr = data;
+  guint8 range;
   guint8 horizontal_site;
   guint8 vertical_site;
 
@@ -134,6 +135,18 @@ gst_rtp_header_extension_colorspace_write (GstRTPHeaderExtension * ext,
   *ptr++ = gst_video_transfer_function_to_iso (self->colorimetry.transfer);
   *ptr++ = gst_video_color_matrix_to_iso (self->colorimetry.matrix);
 
+  switch (self->colorimetry.range) {
+    case GST_VIDEO_COLOR_RANGE_0_255:
+      range = 2;
+      break;
+    case GST_VIDEO_COLOR_RANGE_16_235:
+      range = 1;
+      break;
+    default:
+      range = 0;
+      break;
+  }
+
   if (self->chroma_site & GST_VIDEO_CHROMA_SITE_H_COSITED) {
     horizontal_site = 1;
   } else if (self->chroma_site & GST_VIDEO_CHROMA_SITE_NONE) {
@@ -150,8 +163,7 @@ gst_rtp_header_extension_colorspace_write (GstRTPHeaderExtension * ext,
     vertical_site = 0;
   }
 
-  *ptr++ =
-      (self->colorimetry.range << 4) + (horizontal_site << 2) + vertical_site;
+  *ptr++ = (range << 4) + (horizontal_site << 2) + vertical_site;
 
   if (self->has_hdr_meta) {
     guint i;
@@ -235,7 +247,17 @@ parse_colorspace (GstByteReader * reader, GstVideoColorimetry * colorimetry,
       break;
   }
 
-  colorimetry->range = val >> 4;
+  switch (val >> 4) {
+    case 1:
+      colorimetry->range = GST_VIDEO_COLOR_RANGE_16_235;
+      break;
+    case 2:
+      colorimetry->range = GST_VIDEO_COLOR_RANGE_0_255;
+      break;
+    default:
+      colorimetry->range = GST_VIDEO_COLOR_RANGE_UNKNOWN;
+      break;
+  }
 
   return TRUE;
 }
