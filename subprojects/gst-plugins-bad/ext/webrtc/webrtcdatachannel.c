@@ -705,6 +705,7 @@ webrtc_data_channel_start_negotiation (WebRTCDataChannel * channel)
   GST_WEBRTC_DATA_CHANNEL_LOCK (channel);
   channel->parent.buffered_amount += gst_buffer_get_size (buffer);
   GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
+  g_object_notify (G_OBJECT (&channel->parent), "buffered-amount");
 
   if (gst_app_src_push_buffer (GST_APP_SRC (channel->appsrc),
           buffer) == GST_FLOW_OK) {
@@ -788,6 +789,7 @@ webrtc_data_channel_send_data (GstWebRTCDataChannel * base_channel,
   GST_WEBRTC_DATA_CHANNEL_LOCK (channel);
   channel->parent.buffered_amount += gst_buffer_get_size (buffer);
   GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
+  g_object_notify (G_OBJECT (&channel->parent), "buffered-amount");
 
   ret = gst_app_src_push_buffer (GST_APP_SRC (channel->appsrc), buffer);
 
@@ -849,6 +851,7 @@ webrtc_data_channel_send_string (GstWebRTCDataChannel * base_channel,
   GST_WEBRTC_DATA_CHANNEL_LOCK (channel);
   channel->parent.buffered_amount += gst_buffer_get_size (buffer);
   GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
+  g_object_notify (G_OBJECT (&channel->parent), "buffered-amount");
 
   ret = gst_app_src_push_buffer (GST_APP_SRC (channel->appsrc), buffer);
 
@@ -927,6 +930,7 @@ on_appsrc_data (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
           NULL);
     }
     GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
+    g_object_notify (G_OBJECT (&channel->parent), "buffered-amount");
   }
 
   return GST_PAD_PROBE_OK;
