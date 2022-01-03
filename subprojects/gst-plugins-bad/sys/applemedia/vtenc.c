@@ -821,6 +821,28 @@ gst_vtenc_is_negotiated (GstVTEnc * self)
   return self->negotiated_width != 0;
 }
 
+/*
+ * When the image is opaque but the output ProRes format has an alpha
+ * component (4 component, 32 bits per pixel), Apple requires that we signal
+ * that it should be ignored by setting the depth to 24 bits per pixel. Not
+ * doing so causes the encoded files to fail validation.
+ *
+ * So we set that in the caps and qtmux sets the depth value in the container,
+ * which will be read by demuxers so that decoders can skip those bytes
+ * entirely. qtdemux does this, but vtdec does not use this information at
+ * present.
+ */
+static gboolean
+gst_vtenc_signal_ignored_alpha_component (GstVTEnc * self)
+{
+  if (self->preserve_alpha)
+    return FALSE;
+  if (self->specific_format_id == kCMVideoCodecType_AppleProRes4444XQ ||
+      self->specific_format_id == kCMVideoCodecType_AppleProRes4444)
+    return TRUE;
+  return FALSE;
+}
+
 static gboolean
 gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
 {
@@ -884,6 +906,8 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
       gst_structure_set (s, "variant", G_TYPE_STRING,
           gst_vtutil_codec_type_to_prores_variant (self->specific_format_id),
           NULL);
+      if (gst_vtenc_signal_ignored_alpha_component (self))
+        gst_structure_set (s, "depth", G_TYPE_INT, 24, NULL);
       break;
     default:
       g_assert_not_reached ();
