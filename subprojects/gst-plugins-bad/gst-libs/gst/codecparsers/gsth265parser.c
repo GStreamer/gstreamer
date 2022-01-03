@@ -2563,7 +2563,8 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
 
     if (sps->sample_adaptive_offset_enabled_flag) {
       READ_UINT8 (&nr, slice->sao_luma_flag, 1);
-      READ_UINT8 (&nr, slice->sao_chroma_flag, 1);
+      if (sps->chroma_array_type)
+        READ_UINT8 (&nr, slice->sao_chroma_flag, 1);
     }
 
     if (GST_H265_IS_B_SLICE (slice) || GST_H265_IS_P_SLICE (slice)) {
