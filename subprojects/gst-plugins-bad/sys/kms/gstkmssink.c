@@ -177,7 +177,7 @@ kms_open (gchar ** driver)
 {
   static const char *drivers[] = { "i915", "radeon", "nouveau", "vmwgfx",
     "exynos", "amdgpu", "imx-drm", "rockchip", "atmel-hlcdc", "msm",
-    "xlnx", "vc4", "meson", "sun4i-drm", "mxsfb-drm",
+    "xlnx", "vc4", "meson", "sun4i-drm", "mxsfb-drm", "tegra",
     "xilinx_drm",               /* DEPRECATED. Replaced by xlnx */
   };
   int i, fd = -1;
