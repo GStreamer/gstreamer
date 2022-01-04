@@ -24,13 +24,13 @@ ensure_not_uninstalled = '''
 import os
 assert('GST_ENV' not in os.environ)
 '''
-cmdres = run_command(python3, '-c', ensure_not_uninstalled)
+cmdres = run_command(python3, '-c', ensure_not_uninstalled, check: false)
 if cmdres.returncode() != 0
   error('Do not run `ninja` or `meson` for gst-build inside the uninstalled environment, you will run into problems')
 endif
 
 # Install gst-indent pre-commit hook
-run_command(python3, '-c', 'import shutil; shutil.copy("scripts/git-hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")')
+run_command(python3, '-c', 'import shutil; shutil.copy("scripts/git-hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")', check: false)
 
 # Ensure that the user does not have Strawberry Perl in PATH, since it ships
 # with a pkg-config.bat and broken pkgconfig files for libffi and zlib. Will
@@ -41,7 +41,7 @@ import os
 assert(r'Strawberry\perl\bin' not in os.environ['PATH'])
 '''
 if build_system == 'windows' and meson.version().version_compare('<0.60.0')
-  cmdres = run_command(python3, '-c', ensure_no_strawberry_perl)
+  cmdres = run_command(python3, '-c', ensure_no_strawberry_perl, check: false)
   if cmdres.returncode() != 0
     error('You have Strawberry Perl in PATH which is known to cause build issues with Meson < 0.60.0. Please remove it from PATH, uninstall it, or upgrade Meson.')
   endif
@@ -53,9 +53,9 @@ documented_projects = ''
 if not meson.is_subproject() and cc.get_id() == 'msvc'
   uname = find_program('uname', required: false)
   if uname.found()
-    ret = run_command(uname, '-o')
+    ret = run_command(uname, '-o', check: false)
     if ret.returncode() == 0 and ret.stdout().to_lower() == 'msys'
-      ret = run_command(uname, '-r')
+      ret = run_command(uname, '-r', check: false)
       # The kernel version returned by uname is actually the msys version
       if ret.returncode() == 0 and ret.stdout().startswith('2')
         # If a system zlib is found, disable UNIX features in zlib.h and zconf.h

@@ -78,8 +78,7 @@ icondir = join_paths(get_option('datadir'), 'icons/hicolor')
 subdir('data')
 
 
-if run_command(python3,
-    '-c', 'import gi; gi.require_version("Gtk", "3.0")').returncode() == 0
+if run_command(python3, '-c', 'import gi; gi.require_version("Gtk", "3.0")', check: false).returncode() == 0
   test('gst-debug-viewer', python3, args: ['-m', 'unittest'],
       workdir: meson.current_source_dir())
 endif

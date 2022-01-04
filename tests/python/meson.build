@@ -8,7 +8,7 @@ endif
 root_rel = '../..'
 python = import('python').find_installation()
 
-if run_command(python, '-c', 'import gi').returncode() != 0
+if run_command(python, '-c', 'import gi', check: false).returncode() != 0
     message('PyGObject not found, not running PyGObject tests')
     subdir_done()
 endif

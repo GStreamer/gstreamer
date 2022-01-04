@@ -13,22 +13,19 @@ if nunit_console.found()
         '--csharp-version=net45',
         '--current-builddir', meson.current_build_dir(),
         '--builddir', meson.build_root(), # FIXME: --builddir specified twice?!
+        check: true,
     )
 
 
     nunit_mono_path = []
     nunit_dep = dependency('mono-nunit', required: false, version: ['>=2.6', '< 2.7'])
     if not nunit_dep.found()
-        if get_nunit_res.returncode() != 0
-            message('Failed to get NUnit: ' + get_nunit_res.stderr())
-        else
-            foreach path: get_nunit_res.stdout().split()
-              nunit_mono_path += [join_paths(meson.build_root(), path.strip('-r:'), '..')]
-            endforeach
+        foreach path: get_nunit_res.stdout().split()
+          nunit_mono_path += [meson.build_root() / path.strip('-r:') / '..']
+        endforeach
 
-            nunit_dep = declare_dependency(link_args: get_nunit_res.stdout().split(),
-                version: nunit_version)
-        endif
+        nunit_dep = declare_dependency(link_args: get_nunit_res.stdout().split(),
+            version: nunit_version)
     endif
 
     if nunit_mono_path.length() > 0

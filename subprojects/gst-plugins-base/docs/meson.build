@@ -58,7 +58,7 @@ if not hotdoc_p.found()
 endif
 
 hotdoc_req = '>= 0.11.0'
-hotdoc_version = run_command(hotdoc_p, '--version').stdout()
+hotdoc_version = run_command(hotdoc_p, '--version', check: false).stdout()
 if not hotdoc_version.version_compare(hotdoc_req)
     if get_option('doc').enabled()
         error('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
@@ -202,12 +202,8 @@ import json
 
 with open("@0@") as f:
     print(':'.join(json.load(f).keys()), end='')
-'''.format(plugins_cache))
-
-assert(list_plugin_res.returncode() == 0,
-  'Could not list plugins from @0@\n@1@\n@1@'.format(plugins_cache, list_plugin_res.stdout(), list_plugin_res.stderr()))
-
-
+'''.format(plugins_cache),
+  check: true)
 foreach plugin_name: list_plugin_res.stdout().split(':')
     plugins_doc += [hotdoc.generate_doc(plugin_name,
         project_version: api_version,

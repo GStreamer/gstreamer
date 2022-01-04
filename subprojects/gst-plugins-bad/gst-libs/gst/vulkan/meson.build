@@ -110,7 +110,7 @@ if ['ios', 'darwin'].contains(host_system)
   #   https://github.com/KhronosGroup/MoltenVK/issues/492
   vulkan_dep = cc.find_library('MoltenVK', required : get_option('vulkan'))
 elif host_system == 'windows'
-  vulkan_root = run_command(python3, '-c', 'import os; print(os.environ.get("VK_SDK_PATH"))').stdout().strip()
+  vulkan_root = run_command(python3, '-c', 'import os; print(os.environ.get("VK_SDK_PATH"))', check: false).stdout().strip()
   if vulkan_root != '' and vulkan_root != 'None'
     vulkan_lib_dir = ''
     if build_machine.cpu_family() == 'x86_64'

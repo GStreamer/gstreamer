@@ -33,11 +33,7 @@ bison_cdata = configuration_data()
 bison_min_version='2.4'
 bison = find_program('bison', 'win_bison')
 
-bversion_res = run_command([bison, '--version'])
-if bversion_res.returncode() != 0
-  error('Could not get bison version (@0@)'.format(bversion_res.stderr()))
-endif
-
+bversion_res = run_command([bison, '--version'], check: true)
 bversion = bversion_res.stdout().split('\n')[0].split(' ')[-1].strip()
 if bversion.version_compare('<' + bison_min_version)
   error('bison version @0@ >= @1@: NO'.format(bversion, bison_min_version))

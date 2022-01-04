@@ -51,7 +51,7 @@ if mfx_api != 'oneVPL'
     use_msdk = true
   else
     # Old versions of MediaSDK don't provide a pkg-config file
-    mfx_root = run_command(python3, '-c', 'import os; print(os.environ.get("INTELMEDIASDKROOT", os.environ.get("MFX_HOME", "")))').stdout().strip()
+    mfx_root = run_command(python3, '-c', 'import os; print(os.environ.get("INTELMEDIASDKROOT", os.environ.get("MFX_HOME", "")))', check: false).stdout().strip()
 
     if mfx_root != ''
       mfx_libdir = [mfx_root + '/lib/lin_x64', mfx_root + '/lib/x64', mfx_root + '/lib64', mfx_root + '/lib']

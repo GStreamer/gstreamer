@@ -3,7 +3,7 @@ tests = [
 ]
 
 check_test = find_program ('configure_test_check.py')
-have_webrtc_check_deps = run_command (check_test).returncode() == 0
+have_webrtc_check_deps = run_command (check_test, check: false).returncode() == 0
 
 if openssl.found() and have_webrtc_check_deps
   test_deps = [certs]

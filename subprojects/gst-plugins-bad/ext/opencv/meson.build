@@ -89,15 +89,15 @@ if opencv_found
 
   # Check the data dir used by opencv for its xml data files
   # Use prefix from pkg-config to be compatible with cross-compilation
-  r = run_command('test', '-d', opencv_prefix + '/share/opencv')
+  r = run_command('test', '-d', opencv_prefix + '/share/opencv', check: false)
   if r.returncode() == 0
     gstopencv_cargs += '-DOPENCV_PATH_NAME="opencv"'
   else
-    r = run_command('test', '-d', opencv_prefix + '/share/OpenCV')
+    r = run_command('test', '-d', opencv_prefix + '/share/OpenCV', check: false)
     if r.returncode() == 0
       gstopencv_cargs += '-DOPENCV_PATH_NAME="OpenCV"'
     else
-      r = run_command('test', '-d', opencv_prefix + '/share/opencv4')
+      r = run_command('test', '-d', opencv_prefix + '/share/opencv4', check: false)
       if r.returncode() == 0
         gstopencv_cargs += '-DOPENCV_PATH_NAME="opencv4"'
       else

@@ -8,18 +8,15 @@ nuget = find_program('nuget.py')
 dependencies = []
 foreach dependency, version: { 'Newtonsoft.Json': '11.0.2', 'WebSocketSharp': '1.0.3-rc11'}
     message('Getting @0@:@1@'.format(dependency, version))
-    get_dep= run_command(nuget, 'get',
+    get_dep = run_command(nuget, 'get',
         '--builddir',  dependency,
         '--nuget-name', dependency,
         '--nuget-version', version,
         '--csharp-version=net45',
         '--current-builddir', meson.current_build_dir(),
         '--builddir', meson.global_build_root(),  # FIXME: --builddir specified twice?!
+        check: true,
     )
-
-    if get_dep.returncode() != 0
-        error('Failed to get @0@-@1@: @2@'.format(dependency, version, get_dep.stderr()))
-    endif
 
     link_args = get_dep.stdout().split()
     dependencies += [declare_dependency(link_args: link_args, version: version)]

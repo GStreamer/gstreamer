@@ -34,20 +34,19 @@ python_dep = python.dependency(embed:true, required : true)
 python_abi_flags = python.get_variable('ABIFLAGS', '')
 pylib_loc = get_option('libpython-dir')
 if pylib_loc == ''
-  check_path_exists = 'import os, sys; assert(os.path.exists(sys.argv[1]))'
+  fsmod = import('fs')
   pylib_loc = python.get_variable('LIBPL', '')
   if host_machine.system() != 'windows' and host_machine.system() != 'darwin'
     pylib_ldlibrary = python.get_variable('LDLIBRARY', '')
-    if run_command(python, '-c', check_path_exists, join_paths(pylib_loc, pylib_ldlibrary)).returncode() != 0
+    if not fsmod.exists(pylib_loc / pylib_ldlibrary)
       # Workaround for Fedora
       pylib_loc = python.get_variable('LIBDIR', '')
       message('pylib_loc = @0@'.format(pylib_loc))
     endif
 
-    assert(
-      run_command(python, '-c', check_path_exists, join_paths(pylib_loc, pylib_ldlibrary)).returncode() == 0,
-      'Python dynamic library path could not be determined'
-    )
+    if not fsmod.exists(pylib_loc / pylib_ldlibrary)
+      error('Python dynamic library path could not be determined')
+    endif
   endif
 endif
 

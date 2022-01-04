@@ -172,5 +172,3 @@ if not get_option('debug_viewer').disabled()
   subdir('debug-viewer')
 endif
 subdir('docs')
-
-run_command(python3, '-c', 'import shutil; shutil.copy("hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")')

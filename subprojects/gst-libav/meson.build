@@ -207,15 +207,10 @@ subdir('tests')
 # Set release date
 if gst_version_nano == 0
   extract_release_date = find_program('scripts/extract-release-date-from-doap-file.py')
-  run_result = run_command(extract_release_date, gst_version, files('gst-libav.doap'))
-  if run_result.returncode() == 0
-    release_date = run_result.stdout().strip()
-    cdata.set_quoted('GST_PACKAGE_RELEASE_DATETIME', release_date)
-    message('Package release date: ' + release_date)
-  else
-    # Error out if our release can't be found in the .doap file
-    error(run_result.stderr())
-  endif
+  run_result = run_command(extract_release_date, gst_version, files('gst-libav.doap'), check: true)
+  release_date = run_result.stdout().strip()
+  cdata.set_quoted('GST_PACKAGE_RELEASE_DATETIME', release_date)
+  message('Package release date: ' + release_date)
 endif
 
 configure_file(output: 'config.h', configuration: cdata)

@@ -174,18 +174,17 @@ elif build_gir
     if not cc.compiles('#include <Python.h>', dependencies: [python_dep])
       error_msg = 'Could not compile a simple program against python'
     elif pylib_loc == ''
-      check_path_exists = 'import os, sys; assert(os.path.exists(sys.argv[1]))'
+      fsmod = import('fs')
       pylib_loc = python.get_variable('LIBPL', '')
       if host_machine.system() != 'windows' and host_machine.system() != 'darwin'
         pylib_ldlibrary = python.get_variable('LDLIBRARY', '')
-        if run_command(python, '-c', check_path_exists, join_paths(pylib_loc, pylib_ldlibrary)).returncode() != 0
+        if not fsmod.exists(pylib_loc / pylib_ldlibrary)
           # Workaround for Fedora
           pylib_loc = python.get_variable('LIBDIR', '')
           message('pylib_loc = @0@'.format(pylib_loc))
         endif
 
-        res = run_command(python, '-c', check_path_exists, join_paths(pylib_loc, pylib_ldlibrary))
-        if res.returncode() != 0
+        if not fsmod.exists(pylib_loc / pylib_ldlibrary)
           error_msg = '@0@ doesn\' exist, can\'t use python'.format(join_paths(pylib_loc, pylib_ldlibrary))
         endif
       endif
@@ -310,7 +309,7 @@ else:
 '''
 pygi_override_dir = get_option('pygi-overrides-dir')
 if pygi_override_dir == ''
-    cres = run_command(python3, '-c', override_detector, get_option('prefix'))
+    cres = run_command(python3, '-c', override_detector, get_option('prefix'), check: false)
     if cres.returncode() == 0
       pygi_override_dir = cres.stdout().strip()
     endif
@@ -327,15 +326,10 @@ endif
 # Set release date
 if gst_version_nano == 0
   extract_release_date = find_program('scripts/extract-release-date-from-doap-file.py')
-  run_result = run_command(extract_release_date, gst_version, files('gst-editing-services.doap'))
-  if run_result.returncode() == 0
-    release_date = run_result.stdout().strip()
-    cdata.set_quoted('GST_PACKAGE_RELEASE_DATETIME', release_date)
-    message('Package release date: ' + release_date)
-  else
-    # Error out if our release can't be found in the .doap file
-    error(run_result.stderr())
-  endif
+  run_result = run_command(extract_release_date, gst_version, files('gst-editing-services.doap'), check: true)
+  release_date = run_result.stdout().strip()
+  cdata.set_quoted('GST_PACKAGE_RELEASE_DATETIME', release_date)
+  message('Package release date: ' + release_date)
 endif
 
 if gio_dep.version().version_compare('< 2.67.4')

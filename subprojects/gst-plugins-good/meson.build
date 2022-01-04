@@ -390,7 +390,7 @@ if host_cpu == 'x86_64'
     if nasm.found()
       # We can't use the version: kwarg for find_program because old versions
       # of nasm don't support --version
-      ret = run_command(nasm, '-v')
+      ret = run_command(nasm, '-v', check: false)
       if ret.returncode() == 0
         nasm_version = ret.stdout().strip().split()[2]
         nasm_req = '>=2.13'
@@ -489,15 +489,10 @@ subdir('scripts')
 # Set release date
 if gst_version_nano == 0
   extract_release_date = find_program('scripts/extract-release-date-from-doap-file.py')
-  run_result = run_command(extract_release_date, gst_version, files('gst-plugins-good.doap'))
-  if run_result.returncode() == 0
-    release_date = run_result.stdout().strip()
-    cdata.set_quoted('GST_PACKAGE_RELEASE_DATETIME', release_date)
-    message('Package release date: ' + release_date)
-  else
-    # Error out if our release can't be found in the .doap file
-    error(run_result.stderr())
-  endif
+  run_result = run_command(extract_release_date, gst_version, files('gst-plugins-good.doap'), check: true)
+  release_date = run_result.stdout().strip()
+  cdata.set_quoted('GST_PACKAGE_RELEASE_DATETIME', release_date)
+  message('Package release date: ' + release_date)
 endif
 
 if gio_dep.version().version_compare('< 2.67.4')
