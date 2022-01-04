@@ -43,12 +43,8 @@
 #endif
 
 #include "gstwaylandsink.h"
-#include "wlvideoformat.h"
-#include "wlbuffer.h"
-#include "wlshmallocator.h"
-#include "wllinuxdmabuf.h"
+#include <gst/allocators/allocators.h>
 
-#include <gst/wayland/wayland.h>
 #include <gst/video/videooverlay.h>
 
 /* signals */
@@ -110,59 +106,12 @@ static void gst_wayland_sink_set_render_rectangle (GstVideoOverlay * overlay,
     gint x, gint y, gint w, gint h);
 static void gst_wayland_sink_expose (GstVideoOverlay * overlay);
 
-/* WaylandVideo interface */
-static void gst_wayland_sink_waylandvideo_init (GstWaylandVideoInterface *
-    iface);
-static void gst_wayland_sink_begin_geometry_change (GstWaylandVideo * video);
-static void gst_wayland_sink_end_geometry_change (GstWaylandVideo * video);
-
 #define gst_wayland_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstWaylandSink, gst_wayland_sink, GST_TYPE_VIDEO_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
-        gst_wayland_sink_videooverlay_init)
-    G_IMPLEMENT_INTERFACE (GST_TYPE_WAYLAND_VIDEO,
-        gst_wayland_sink_waylandvideo_init));
+        gst_wayland_sink_videooverlay_init));
 GST_ELEMENT_REGISTER_DEFINE (waylandsink, "waylandsink", GST_RANK_MARGINAL,
     GST_TYPE_WAYLAND_SINK);
-
-/* A tiny GstVideoBufferPool subclass that modify the options to remove
- * VideoAlignment. To support VideoAlignment we would need to pass the padded
- * width/height + stride and use the viewporter interface to crop, a bit like
- * we use to do with XV. It would still be quite limited. It's a bit retro,
- * hopefully there will be a better Wayland interface in the future. */
-
-GType gst_wayland_pool_get_type (void);
-
-typedef struct
-{
-  GstVideoBufferPool parent;
-} GstWaylandPool;
-
-typedef struct
-{
-  GstVideoBufferPoolClass parent;
-} GstWaylandPoolClass;
-
-G_DEFINE_TYPE (GstWaylandPool, gst_wayland_pool, GST_TYPE_VIDEO_BUFFER_POOL);
-
-static const gchar **
-gst_wayland_pool_get_options (GstBufferPool * pool)
-{
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL };
-  return options;
-}
-
-static void
-gst_wayland_pool_class_init (GstWaylandPoolClass * klass)
-{
-  GstBufferPoolClass *pool_class = GST_BUFFER_POOL_CLASS (klass);
-  pool_class->get_options = gst_wayland_pool_get_options;
-}
-
-static void
-gst_wayland_pool_init (GstWaylandPool * pool)
-{
-}
 
 static void
 gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
@@ -211,8 +160,6 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
       g_param_spec_boolean ("fullscreen", "Fullscreen",
           "Whether the surface should be made fullscreen ", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  gst_type_mark_as_plugin_api (GST_TYPE_WAYLAND_VIDEO, 0);
 }
 
 static void
@@ -312,7 +259,7 @@ gst_wayland_sink_set_display_from_context (GstWaylandSink * sink,
   struct wl_display *display;
   GError *error = NULL;
 
-  display = gst_wayland_display_handle_context_get_handle (context);
+  display = gst_wl_display_handle_context_get_handle (context);
   sink->display = gst_wl_display_new_existing (display, FALSE, &error);
 
   if (error) {
@@ -336,7 +283,7 @@ gst_wayland_sink_find_display (GstWaylandSink * sink)
 
   if (!sink->display) {
     /* first query upstream for the needed display handle */
-    query = gst_query_new_context (GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE);
+    query = gst_query_new_context (GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE);
     if (gst_pad_peer_query (GST_VIDEO_SINK_PAD (sink), query)) {
       gst_query_parse_context (query, &context);
       gst_wayland_sink_set_display_from_context (sink, context);
@@ -346,7 +293,7 @@ gst_wayland_sink_find_display (GstWaylandSink * sink)
     if (G_LIKELY (!sink->display)) {
       /* now ask the application to set the display handle */
       msg = gst_message_new_need_context (GST_OBJECT_CAST (sink),
-          GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE);
+          GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE);
 
       g_mutex_unlock (&sink->display_lock);
       gst_element_post_message (GST_ELEMENT_CAST (sink), msg);
@@ -446,7 +393,7 @@ gst_wayland_sink_set_context (GstElement * element, GstContext * context)
   GstWaylandSink *sink = GST_WAYLAND_SINK (element);
 
   if (gst_context_has_context_type (context,
-          GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE)) {
+          GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE)) {
     g_mutex_lock (&sink->display_lock);
     if (G_LIKELY (!sink->display)) {
       gst_wayland_sink_set_display_from_context (sink, context);
@@ -487,7 +434,7 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     g_value_init (&dmabuf_list, GST_TYPE_LIST);
 
     /* Add corresponding shm formats */
-    formats = sink->display->shm_formats;
+    formats = gst_wl_display_get_shm_formats (sink->display);
     for (i = 0; i < formats->len; i++) {
       fmt = g_array_index (formats, uint32_t, i);
       gfmt = gst_wl_shm_format_to_video_format (fmt);
@@ -502,7 +449,7 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
         &shm_list);
 
     /* Add corresponding dmabuf formats */
-    formats = sink->display->dmabuf_formats;
+    formats = gst_wl_display_get_dmabuf_formats (sink->display);
     for (i = 0; i < formats->len; i++) {
       fmt = g_array_index (formats, uint32_t, i);
       gfmt = gst_wl_dmabuf_format_to_video_format (fmt);
@@ -541,7 +488,7 @@ gst_wayland_create_pool (GstWaylandSink * sink, GstCaps * caps)
   gsize size = sink->video_info.size;
   GstAllocator *alloc;
 
-  pool = g_object_new (gst_wayland_pool_get_type (), NULL);
+  pool = gst_wl_video_buffer_pool_new ();
 
   structure = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
@@ -731,12 +678,13 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   }
 
   /* make sure that the application has called set_render_rectangle() */
-  if (G_UNLIKELY (sink->window->render_rectangle.w == 0))
+  if (G_UNLIKELY (gst_wl_window_get_render_rectangle (sink->window)->w == 0))
     goto no_window_size;
 
   wlbuffer = gst_buffer_get_wl_buffer (sink->display, buffer);
 
-  if (G_LIKELY (wlbuffer && wlbuffer->display == sink->display)) {
+  if (G_LIKELY (wlbuffer &&
+          gst_wl_buffer_get_display (wlbuffer) == sink->display)) {
     GST_LOG_OBJECT (sink, "buffer %p has a wl_buffer from our display, "
         "writing directly", buffer);
     to_render = buffer;
@@ -954,7 +902,7 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
   if (handle) {
     if (G_LIKELY (gst_wayland_sink_find_display (sink))) {
       /* we cannot use our own display with an external window handle */
-      if (G_UNLIKELY (sink->display->own_display)) {
+      if (G_UNLIKELY (gst_wl_display_has_own_display (sink->display))) {
         GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ_WRITE,
             ("Application did not provide a wayland display handle"),
             ("waylandsink cannot use an externally-supplied surface without "
@@ -1013,56 +961,11 @@ gst_wayland_sink_expose (GstVideoOverlay * overlay)
   g_mutex_unlock (&sink->render_lock);
 }
 
-static void
-gst_wayland_sink_waylandvideo_init (GstWaylandVideoInterface * iface)
-{
-  iface->begin_geometry_change = gst_wayland_sink_begin_geometry_change;
-  iface->end_geometry_change = gst_wayland_sink_end_geometry_change;
-}
-
-static void
-gst_wayland_sink_begin_geometry_change (GstWaylandVideo * video)
-{
-  GstWaylandSink *sink = GST_WAYLAND_SINK (video);
-  g_return_if_fail (sink != NULL);
-
-  g_mutex_lock (&sink->render_lock);
-  if (!sink->window || !sink->window->area_subsurface) {
-    g_mutex_unlock (&sink->render_lock);
-    GST_INFO_OBJECT (sink,
-        "begin_geometry_change called without window, ignoring");
-    return;
-  }
-
-  wl_subsurface_set_sync (sink->window->area_subsurface);
-  g_mutex_unlock (&sink->render_lock);
-}
-
-static void
-gst_wayland_sink_end_geometry_change (GstWaylandVideo * video)
-{
-  GstWaylandSink *sink = GST_WAYLAND_SINK (video);
-  g_return_if_fail (sink != NULL);
-
-  g_mutex_lock (&sink->render_lock);
-  if (!sink->window || !sink->window->area_subsurface) {
-    g_mutex_unlock (&sink->render_lock);
-    GST_INFO_OBJECT (sink,
-        "end_geometry_change called without window, ignoring");
-    return;
-  }
-
-  wl_subsurface_set_desync (sink->window->area_subsurface);
-  g_mutex_unlock (&sink->render_lock);
-}
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gstwayland_debug, "waylandsink", 0,
       " wayland video sink");
-
-  gst_wl_shm_allocator_register ();
 
   return GST_ELEMENT_REGISTER (waylandsink, plugin);
 }

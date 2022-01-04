@@ -19,16 +19,11 @@
  * Boston, MA 02110-1301 USA.
  */
 
-#ifndef __GST_WAYLAND_VIDEO_SINK_H__
-#define __GST_WAYLAND_VIDEO_SINK_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-
-#include <wayland-client.h>
-
-#include "wldisplay.h"
-#include "wlwindow.h"
+#include <gst/wayland/wayland.h>
 
 G_BEGIN_DECLS
 
@@ -81,5 +76,3 @@ GType gst_wayland_sink_get_type (void) G_GNUC_CONST;
 GST_ELEMENT_REGISTER_DECLARE (waylandsink);
 
 G_END_DECLS
-
-#endif /* __GST_WAYLAND_VIDEO_SINK_H__ */

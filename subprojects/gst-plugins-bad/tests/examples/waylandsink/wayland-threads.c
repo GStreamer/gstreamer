@@ -76,9 +76,9 @@ bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
 {
   App *app = user_data;
 
-  if (gst_is_wayland_display_handle_need_context_message (message)) {
+  if (gst_is_wl_display_handle_need_context_message (message)) {
     GstContext *context;
-    context = gst_wayland_display_handle_context_new (app->display);
+    context = gst_wl_display_handle_context_new (app->display);
     gst_element_set_context (GST_ELEMENT (GST_MESSAGE_SRC (message)), context);
     gst_context_unref (context);
 
