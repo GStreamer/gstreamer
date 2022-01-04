@@ -678,7 +678,7 @@ _update_well_known_vars (GstValidateScenario * scenario)
     gst_structure_set (scenario->priv->vars, "position", G_TYPE_DOUBLE,
         dposition, NULL);
   } else {
-    GST_WARNING_OBJECT (scenario, "Could not query position");
+    GST_INFO_OBJECT (scenario, "Could not query position");
   }
 }
 
@@ -3340,26 +3340,77 @@ _execute_set_debug_threshold (GstValidateScenario * scenario,
   return TRUE;
 }
 
-static gboolean
+static GstValidateExecuteActionReturn
 _execute_emit_signal (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
   GstElement *target;
-  const gchar *signal_name;
+  guint n_params = 0;
+  GSignalQuery query = { 0, };
+  GValue *values = NULL, lparams = { 0, };
+  const GValue *params;
 
-  target = _get_target_element (scenario, action);
-  if (target == NULL) {
-    return FALSE;
+  REPORT_UNLESS ((target =
+          _get_target_element (scenario, action)), out, "No element found");
+
+  query.signal_name =
+      gst_structure_get_string (action->structure, "signal-name");
+  query.signal_id = g_signal_lookup (query.signal_name, G_OBJECT_TYPE (target));
+  REPORT_UNLESS (query.signal_id != 0, out, "Invalid signal `%s::%s`",
+      G_OBJECT_TYPE_NAME (target), query.signal_name);
+
+  g_signal_query (query.signal_id, &query);
+
+  params = gst_structure_get_value (action->structure, "params");
+  if (params) {
+    if (G_VALUE_HOLDS_STRING (params)) {
+      g_value_init (&lparams, GST_TYPE_ARRAY);
+
+      REPORT_UNLESS (gst_value_deserialize (&lparams,
+              g_value_get_string (params)), out,
+          "\"params\" argument should be a value array or a string deserializable"
+          " as value array, got string %s", g_value_get_string (params)
+          );
+      params = &lparams;
+    } else {
+      REPORT_UNLESS (GST_VALUE_HOLDS_ARRAY (params), out,
+          "\"params\" argument should be a value array, got %s",
+          G_VALUE_TYPE_NAME (params));
+    }
+    n_params = gst_value_array_get_size (params);
+  }
+  REPORT_UNLESS (query.n_params == (n_params), out,
+      "Expected %d `params` got %d", query.n_params, n_params);
+  values = g_malloc0 ((n_params + 2) * sizeof (GValue));
+  g_value_init (&values[0], G_OBJECT_TYPE (target));
+  g_value_take_object (&values[0], target);
+  for (gint i = 1; i < n_params + 1; i++) {
+    const GValue *param = gst_value_array_get_value (params, i - 1);
+    g_value_init (&values[i], query.param_types[i - 1]);
+
+    if (query.param_types[i - 1] == G_TYPE_BYTES
+        && G_VALUE_TYPE (param) == G_TYPE_STRING) {
+      const gchar *s = g_value_get_string (param);
+      g_value_take_boxed (&values[i], g_bytes_new (s, strlen (s)));
+    } else {
+      REPORT_UNLESS (g_value_transform (param, &values[i]), out,
+          "Could not transform param %d from %s to %s", i - 1,
+          G_VALUE_TYPE_NAME (param), G_VALUE_TYPE_NAME (&values[i]));
+    }
   }
 
-  signal_name = gst_structure_get_string (action->structure, "signal-name");
+  g_signal_emitv (values, query.signal_id, 0, NULL);
 
-  /* Right now we don't support arguments to signals as there weren't any use
-   * cases to cover yet but it should be possible to do so */
-  g_signal_emit_by_name (target, signal_name, NULL);
+  for (gint i = 0; i < n_params + 1; i++)
+    g_value_reset (&values[i]);
 
-  gst_object_unref (target);
-  return TRUE;
+  if (G_VALUE_TYPE (&lparams))
+    g_value_reset (&lparams);
+
+out:
+  return res;
+
 }
 
 typedef GstFlowReturn (*ChainWrapperFunction) (GstPad * pad, GstObject * parent,
@@ -3819,7 +3870,7 @@ gst_validate_utils_get_structures (gpointer source,
   if (G_VALUE_HOLDS_STRING (value) || GST_VALUE_HOLDS_STRUCTURE (value))
     return add_gvalue_to_list_as_struct (source, res, value);
 
-  if (!GST_VALUE_HOLDS_LIST (value)) {
+  if (!GST_VALUE_HOLDS_LIST (value) && !GST_VALUE_HOLDS_ARRAY (value)) {
     g_error ("%s must have type list of structure/string (or a string), "
         "e.g. %s={ [struct1, a=val1], [struct2, a=val2] }, got: \"%s\" in %s",
         fieldname, fieldname, gst_value_serialize (value),
@@ -3827,11 +3878,15 @@ gst_validate_utils_get_structures (gpointer source,
     return NULL;
   }
 
-  size = gst_value_list_get_size (value);
+  size =
+      GST_VALUE_HOLDS_LIST (value) ? gst_value_list_get_size (value) :
+      gst_value_array_get_size (value);
   for (i = 0; i < size; i++)
     res =
         add_gvalue_to_list_as_struct (source, res,
-        gst_value_list_get_value (value, i));
+        GST_VALUE_HOLDS_LIST (value) ?
+        gst_value_list_get_value (value, i) :
+        gst_value_array_get_value (value, i));
 
   return res;
 }
@@ -7012,6 +7067,13 @@ register_action_types (void)
           .description = "The name of the signal to emit on @target-element-name",
           .mandatory = TRUE,
           .types = "string",
+          NULL
+        },
+        {
+          .name = "params",
+          .description = "The signal parametters",
+          .mandatory = FALSE,
+          .types = "ValueArray",
           NULL
         },
         {NULL}
