@@ -500,7 +500,7 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
   gobject_class->finalize = gst_wpe_src_finalize;
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
-      g_param_spec_string ("location", "location", "The URL to display", "",
+      g_param_spec_string ("location", "location", "The URL to display", DEFAULT_LOCATION,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_DRAW_BACKGROUND,
       g_param_spec_boolean ("draw-background", "Draws the background",

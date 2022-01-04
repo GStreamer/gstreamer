@@ -84,6 +84,7 @@
 #include <config.h>
 #endif
 
+#include "gstwpe.h"
 #include "gstwpevideosrc.h"
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gstglmemoryegl.h>
@@ -752,6 +753,7 @@ static void
 gst_wpe_video_src_init (GstWpeVideoSrc * src)
 {
   src->draw_background = DEFAULT_DRAW_BACKGROUND;
+  src->location = g_strdup (DEFAULT_LOCATION);
 
   gst_base_src_set_live (GST_BASE_SRC_CAST (src), TRUE);
 
@@ -789,7 +791,7 @@ gst_wpe_video_src_class_init (GstWpeVideoSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "location",
           "The URL to display",
-          "", (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          DEFAULT_LOCATION, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_DRAW_BACKGROUND,
       g_param_spec_boolean ("draw-background", "Draws the background",
           "Whether to draw the WebView background", DEFAULT_DRAW_BACKGROUND,

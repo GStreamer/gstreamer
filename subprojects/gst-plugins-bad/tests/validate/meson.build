@@ -4,7 +4,8 @@ if not gst_tester.found()
 endif
 
 tests = [
-    'opencv/cvtracker'
+    {'path': 'opencv/cvtracker'},
+    {'path': 'wpe/load_bytes_first', 'skip': not building_wpe},
 ]
 
 env = environment()
@@ -16,14 +17,16 @@ env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-validate', 'gst-plugin
     'gst-plugins-bad@' + meson.project_build_root())
 
 foreach t: tests
-    test_dir_name = t.split('/')
-    test_name = 'validate'
-    foreach c: test_dir_name
-        test_name += '.' + c
-    endforeach
-    test_env = env
-    test_env.set('GST_VALIDATE_LOGSDIR', join_paths(meson.current_build_dir(), test_name))
-    test_file = join_paths(meson.current_source_dir(), t + '.validatetest')
-    test(test_name, gst_tester, args: [test_file, '--use-fakesinks'],
-        env: test_env, timeout : 3 * 60, protocol: 'tap')
+    if not t.get('skip', false)
+        test_dir_name = t.get('path').split('/')
+        test_name = 'validate'
+        foreach c: test_dir_name
+            test_name += '.' + c
+        endforeach
+        test_env = env
+        test_env.set('GST_VALIDATE_LOGSDIR', join_paths(meson.current_build_dir(), test_name))
+        test_file = join_paths(meson.current_source_dir(), t.get('path') + '.validatetest')
+        test(test_name, gst_tester, args: [test_file, '--use-fakesinks'],
+            env: test_env, timeout : 3 * 60, protocol: 'tap')
+    endif
 endforeach

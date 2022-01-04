@@ -21,4 +21,5 @@
 
 #include <gst/gst.h>
 
+#define DEFAULT_LOCATION "about:blank"
 const gchar *gst_wpe_get_devenv_extension_path (void);
