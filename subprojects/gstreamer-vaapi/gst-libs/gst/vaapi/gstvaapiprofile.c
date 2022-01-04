@@ -156,10 +156,26 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
   {GST_VAAPI_PROFILE_VP9_3, VAProfileVP9Profile3,
       "video/x-vp9", "3"},
 #if VA_CHECK_VERSION(1,8,0)
+  /* Spec A.2:
+     "Main" compliant decoders must be able to decode streams with
+     seq_profile equal to 0.
+     "High" compliant decoders must be able to decode streams with
+     seq_profile less than or equal to 1.
+     "Professional" compliant decoders must be able to decode streams
+     with seq_profile less than or equal to 2.
+
+     The correct relationship between profile "main" "high" "professional"
+     and seq_profile "0" "1" "2" should be:
+     main <------> { 0 }
+     high <------> { main, 1 }
+     professional <------> { high, 2 }
+
+     So far, all vaapi decoders can support "0" when they support "1",
+     we just map "0" to "main" and "1" to "high" in caps string.  */
   {GST_VAAPI_PROFILE_AV1_0, VAProfileAV1Profile0,
-      "video/x-av1", "0"},
+      "video/x-av1", "main"},
   {GST_VAAPI_PROFILE_AV1_1, VAProfileAV1Profile1,
-      "video/x-av1", "1"},
+      "video/x-av1", "high"},
 #endif
   {0,}
 };
