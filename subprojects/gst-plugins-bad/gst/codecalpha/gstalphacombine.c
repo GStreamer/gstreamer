@@ -29,8 +29,8 @@
  *
  * ## Example launch line
  * |[
- * gst-launch-1.0 -v videotestsrc ! .c videotestsrc pattern=ball ! .c
- *     alphacombine name=c ! compositor ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! c. videotestsrc pattern=ball ! c.
+ *     alphacombine name=c ! compositor ! videoconvert ! autovideosink
  * ]| This pipeline uses luma of a ball test pattern as alpha, combined with
  * default test pattern and renders the resulting moving ball on a checker
  * board.
