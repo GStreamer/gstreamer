@@ -605,7 +605,7 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->unrestricted_motion_vector = 1;
 
   // alt-ref
-  svt_config->tf_level = 1;
+  svt_config->enable_tf = TRUE;
   svt_config->enable_overlays = FALSE;
 
   // super resolution
