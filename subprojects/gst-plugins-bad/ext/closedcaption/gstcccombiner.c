@@ -683,8 +683,8 @@ schedule_caption (GstCCCombiner * self, GstBuffer * caption_buf,
 }
 
 static void
-dequeue_caption (GstCCCombiner * self, const GstVideoTimeCode * tc, guint field,
-    gboolean drain)
+dequeue_caption_one_field (GstCCCombiner * self, const GstVideoTimeCode * tc,
+    guint field, gboolean drain)
 {
   CaptionQueueItem *scheduled;
   CaptionData caption_data;
@@ -698,6 +698,39 @@ dequeue_caption (GstCCCombiner * self, const GstVideoTimeCode * tc, guint field,
     caption_data.buffer = make_padding (self, tc, field);
     g_array_append_val (self->current_frame_captions, caption_data);
   }
+}
+
+static void
+dequeue_caption_both_fields (GstCCCombiner * self, const GstVideoTimeCode * tc,
+    gboolean drain)
+{
+  CaptionQueueItem *field0_scheduled, *field1_scheduled;
+  GstBuffer *field0_buffer, *field1_buffer;
+  CaptionData caption_data;
+
+  field0_scheduled = gst_queue_array_pop_head_struct (self->scheduled[0]);
+  field1_scheduled = gst_queue_array_pop_head_struct (self->scheduled[1]);
+
+  if (drain && !field0_scheduled && !field1_scheduled) {
+    return;
+  }
+
+  if (field0_scheduled) {
+    field0_buffer = field0_scheduled->buffer;
+  } else {
+    field0_buffer = make_padding (self, tc, 0);
+  }
+
+  if (field1_scheduled) {
+    field1_buffer = field1_scheduled->buffer;
+  } else {
+    field1_buffer = make_padding (self, tc, 1);
+  }
+
+  caption_data.caption_type = self->caption_type;
+  caption_data.buffer = gst_buffer_append (field0_buffer, field1_buffer);
+
+  g_array_append_val (self->current_frame_captions, caption_data);
 }
 
 static GstFlowReturn
@@ -858,10 +891,10 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
         if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
                 GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
           if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
-            dequeue_caption (self, tc, 0, caption_pad_is_eos);
+            dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
           }
         } else {
-          dequeue_caption (self, tc, 0, caption_pad_is_eos);
+          dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
         }
         break;
       }
@@ -869,33 +902,32 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
       case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
       {
         if (self->progressive) {
-          dequeue_caption (self, tc, 0, caption_pad_is_eos);
+          dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
         } else if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
                 GST_VIDEO_BUFFER_FLAG_INTERLACED) &&
             GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
                 GST_VIDEO_BUFFER_FLAG_ONEFIELD)) {
           if (GST_VIDEO_BUFFER_IS_TOP_FIELD (self->current_video_buffer)) {
-            dequeue_caption (self, tc, 0, caption_pad_is_eos);
+            dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
           } else {
-            dequeue_caption (self, tc, 1, caption_pad_is_eos);
+            dequeue_caption_one_field (self, tc, 1, caption_pad_is_eos);
           }
         } else {
-          dequeue_caption (self, tc, 0, caption_pad_is_eos);
-          dequeue_caption (self, tc, 1, caption_pad_is_eos);
+          dequeue_caption_both_fields (self, tc, caption_pad_is_eos);
         }
         break;
       }
       case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
       {
         if (self->progressive) {
-          dequeue_caption (self, tc, 0, caption_pad_is_eos);
+          dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
         } else if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
                 GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
           if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
-            dequeue_caption (self, tc, 0, caption_pad_is_eos);
+            dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
           }
         } else {
-          dequeue_caption (self, tc, 0, caption_pad_is_eos);
+          dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
         }
         break;
       }
