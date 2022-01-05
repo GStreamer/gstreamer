@@ -422,6 +422,15 @@ _mixer_pad_get_output_size (GstCompositor * comp, GstCompositorPad * comp_pad,
   *height = pad_height;
 }
 
+static gboolean
+is_point_contained (const GstVideoRectangle rect, const gint px, const gint py)
+{
+  if ((px >= rect.x) && (px <= rect.x + rect.w) &&
+      (py >= rect.y) && (py <= rect.y + rect.h))
+    return TRUE;
+  return FALSE;
+}
+
 /* Test whether rectangle2 contains rectangle 1 (geometrically) */
 static gboolean
 is_rectangle_contained (const GstVideoRectangle rect1,
@@ -1513,6 +1522,79 @@ gst_compositor_release_pad (GstElement * element, GstPad * pad)
 }
 
 static gboolean
+src_pad_mouse_event (GstElement * element, GstPad * pad, gpointer user_data)
+{
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR_CAST (element);
+  GstCompositor *comp = GST_COMPOSITOR (element);
+  GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
+  GstStructure *st =
+      gst_structure_copy (gst_event_get_structure (GST_EVENT_CAST (user_data)));
+  gdouble event_x, event_y;
+  gint offset_x, offset_y;
+  GstVideoRectangle rect;
+
+  gst_structure_get (st, "pointer_x", G_TYPE_DOUBLE, &event_x,
+      "pointer_y", G_TYPE_DOUBLE, &event_y, NULL);
+
+  /* Find output rectangle of this pad */
+  _mixer_pad_get_output_size (comp, cpad,
+      GST_VIDEO_INFO_PAR_N (&vagg->info),
+      GST_VIDEO_INFO_PAR_D (&vagg->info),
+      &(rect.w), &(rect.h), &offset_x, &offset_y);
+  rect.x = cpad->xpos + offset_x;
+  rect.y = cpad->ypos + offset_y;
+
+  /* Translate coordinates and send event if it lies in this rectangle */
+  if (is_point_contained (rect, event_x, event_y)) {
+    GstVideoAggregatorPad *vpad = GST_VIDEO_AGGREGATOR_PAD_CAST (cpad);
+    gdouble w, h, x, y;
+
+    w = (gdouble) GST_VIDEO_INFO_WIDTH (&vpad->info);
+    h = (gdouble) GST_VIDEO_INFO_HEIGHT (&vpad->info);
+    x = (event_x - (gdouble) rect.x) * (w / (gdouble) rect.w);
+    y = (event_y - (gdouble) rect.y) * (h / (gdouble) rect.h);
+
+    gst_structure_set (st, "pointer_x", G_TYPE_DOUBLE, x,
+        "pointer_y", G_TYPE_DOUBLE, y, NULL);
+    gst_pad_push_event (pad, gst_event_new_navigation (st));
+  } else {
+    gst_structure_free (st);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_src_event (GstAggregator * agg, GstEvent * event)
+{
+  GstNavigationEventType event_type;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NAVIGATION:
+    {
+      event_type = gst_navigation_event_get_type (event);
+      switch (event_type) {
+        case GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS:
+        case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:
+        case GST_NAVIGATION_EVENT_MOUSE_MOVE:
+        case GST_NAVIGATION_EVENT_MOUSE_SCROLL:
+          gst_element_foreach_sink_pad (GST_ELEMENT_CAST (agg),
+              src_pad_mouse_event, event);
+          gst_event_unref (event);
+          return TRUE;
+
+        default:
+          break;
+      }
+    }
+    default:
+      break;
+  }
+
+  return GST_AGGREGATOR_CLASS (parent_class)->src_event (agg, event);
+}
+
+static gboolean
 _sink_query (GstAggregator * agg, GstAggregatorPad * bpad, GstQuery * query)
 {
   switch (GST_QUERY_TYPE (query)) {
@@ -1585,6 +1667,7 @@ gst_compositor_class_init (GstCompositorClass * klass)
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_compositor_release_pad);
   agg_class->sink_query = _sink_query;
+  agg_class->src_event = _src_event;
   agg_class->fixate_src_caps = _fixate_caps;
   agg_class->negotiated_src_caps = _negotiated_caps;
   videoaggregator_class->aggregate_frames = gst_compositor_aggregate_frames;

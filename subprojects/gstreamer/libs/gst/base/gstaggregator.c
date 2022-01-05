@@ -2412,7 +2412,7 @@ gst_aggregator_default_src_event (GstAggregator * self, GstEvent * event)
       /* _do_seek() unrefs the event. */
       return gst_aggregator_do_seek (self, event);
     case GST_EVENT_NAVIGATION:
-      /* navigation is rather pointless. */
+      /* specific handling has to be implemented in subclasses */
       gst_event_unref (event);
       return FALSE;
     case GST_EVENT_RECONFIGURE:
