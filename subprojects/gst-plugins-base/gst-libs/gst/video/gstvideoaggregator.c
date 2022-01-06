@@ -2009,6 +2009,13 @@ prepare_frames_start (GstElement * agg, GstPad * pad, gpointer user_data)
   if (vpad->priv->buffer == NULL || !vaggpad_class->prepare_frame_start)
     return TRUE;
 
+  /* GAP event, nothing to do */
+  if (vpad->priv->buffer &&
+      gst_buffer_get_size (vpad->priv->buffer) == 0 &&
+      GST_BUFFER_FLAG_IS_SET (vpad->priv->buffer, GST_BUFFER_FLAG_GAP)) {
+    return TRUE;
+  }
+
   g_return_val_if_fail (vaggpad_class->prepare_frame_start
       && vaggpad_class->prepare_frame_finish, TRUE);
 
