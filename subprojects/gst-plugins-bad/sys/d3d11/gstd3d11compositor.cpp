@@ -2429,6 +2429,12 @@ gst_d3d11_compositor_check_device_update (GstElement * agg,
   if (!buf)
     return TRUE;
 
+  /* Ignore gap buffer */
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP) ||
+      gst_buffer_get_size (buf) == 0) {
+    return TRUE;
+  }
+
   mem = gst_buffer_peek_memory (buf, 0);
   /* FIXME: we should be able to accept non-d3d11 memory later once
    * we remove intermediate elements (d3d11upload and d3d11colorconvert)
