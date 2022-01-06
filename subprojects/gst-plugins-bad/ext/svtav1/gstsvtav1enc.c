@@ -351,7 +351,7 @@ gst_svtav1enc_set_property (GObject * object, guint property_id,
       svtav1enc->svt_config->qp = g_value_get_uint (value);
       break;
     case PROP_DEBLOCKING:
-      svtav1enc->svt_config->disable_dlf_flag = !g_value_get_boolean (value);
+      svtav1enc->svt_config->enable_dlf_flag = g_value_get_boolean (value);
       break;
     case PROP_RC_MODE:
       svtav1enc->svt_config->rate_control_mode = g_value_get_uint (value);
@@ -413,7 +413,7 @@ gst_svtav1enc_get_property (GObject * object, guint property_id,
       g_value_set_uint (value, svtav1enc->svt_config->qp);
       break;
     case PROP_DEBLOCKING:
-      g_value_set_boolean (value, svtav1enc->svt_config->disable_dlf_flag == 0);
+      g_value_set_boolean (value, svtav1enc->svt_config->enable_dlf_flag == 1);
       break;
     case PROP_RC_MODE:
       g_value_set_uint (value, svtav1enc->svt_config->rate_control_mode);
@@ -584,7 +584,7 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->enable_adaptive_quantization = FALSE;
   svt_config->qp = PROP_QP_DEFAULT;
   svt_config->use_qp_file = FALSE;
-  svt_config->disable_dlf_flag = (PROP_DEBLOCKING_DEFAULT == FALSE);
+  svt_config->enable_dlf_flag = (PROP_DEBLOCKING_DEFAULT == TRUE);
   svt_config->film_grain_denoise_strength = FALSE;
   svt_config->cdef_level = -1;
   svt_config->enable_restoration_filtering = -1;
