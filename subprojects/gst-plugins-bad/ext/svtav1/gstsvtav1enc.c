@@ -602,7 +602,7 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   // tile based encoding
   svt_config->tile_columns = 0;
   svt_config->tile_rows = 0;
-  svt_config->unrestricted_motion_vector = 1;
+  svt_config->restricted_motion_vector = FALSE;
 
   // alt-ref
   svt_config->enable_tf = TRUE;
