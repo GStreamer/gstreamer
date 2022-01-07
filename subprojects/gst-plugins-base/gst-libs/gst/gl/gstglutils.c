@@ -245,7 +245,7 @@ gst_gl_element_propagate_display_context (GstElement * element,
 
 /**
  * gst_gl_ensure_element_data:
- * @element: the #GstElement running the query
+ * @element: (type Gst.Element): the #GstElement running the query
  * @display_ptr: (inout): the resulting #GstGLDisplay
  * @other_context_ptr: (inout): the resulting #GstGLContext
  *
@@ -312,8 +312,8 @@ done:
  * gst_gl_handle_set_context:
  * @element: a #GstElement
  * @context: a #GstContext
- * @display: (inout) (transfer full): location of a #GstGLDisplay
- * @other_context: (inout) (transfer full): location of a #GstGLContext
+ * @display: (out) (transfer full): location of a #GstGLDisplay
+ * @other_context: (out) (transfer full): location of a #GstGLContext
  *
  * Helper function for implementing #GstElementClass.set_context() in
  * OpenGL capable elements.
