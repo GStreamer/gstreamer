@@ -1383,6 +1383,11 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
       n_pads++;
   }
 
+  /* If no prepared frame, we should draw background unconditionally in order
+   * to clear output buffer */
+  if (n_pads == 0)
+    draw_background = TRUE;
+
   pads_info = g_newa (struct CompositePadInfo, n_pads);
   n_pads = 0;
 
