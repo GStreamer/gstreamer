@@ -359,7 +359,7 @@ make_padding (GstCCCombiner * self, const GstVideoTimeCode * tc, guint field)
 
       gst_buffer_map (ret, &map, GST_MAP_WRITE);
 
-      map.data[0] = 0x80 | (field == 0 ? 0x01 : 0x00);
+      map.data[0] = field == 0 ? 0x80 : 0x00;
       map.data[1] = 0x80;
       map.data[2] = 0x80;
 
@@ -493,9 +493,7 @@ schedule_cea608_s334_1a (GstCCCombiner * self, guint8 * data, guint len,
   }
 
   for (i = 0; i < len / 3; i++) {
-    guint8 cc_type = data[i * 3] & 0x03;
-
-    if (cc_type == 0x01) {
+    if (data[i * 3] & 0x80) {
       if (field0_608)
         continue;
 
@@ -507,7 +505,7 @@ schedule_cea608_s334_1a (GstCCCombiner * self, guint8 * data, guint len,
       field0_data[field0_len++] = data[i * 3];
       field0_data[field0_len++] = data[i * 3 + 1];
       field0_data[field0_len++] = data[i * 3 + 2];
-    } else if (cc_type == 0x00) {
+    } else {
       if (field1_608)
         continue;
 
@@ -519,8 +517,6 @@ schedule_cea608_s334_1a (GstCCCombiner * self, guint8 * data, guint len,
       field1_data[field1_len++] = data[i * 3];
       field1_data[field1_len++] = data[i * 3 + 1];
       field1_data[field1_len++] = data[i * 3 + 2];
-    } else {
-      break;
     }
   }
 
