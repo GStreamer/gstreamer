@@ -2268,6 +2268,115 @@ GST_START_TEST (test_signals)
 
 GST_END_TEST;
 
+static void
+on_reverse_handoff (GstElement * sink, GstBuffer * buffer, GstPad * pad,
+    GstClockTime * pos)
+{
+  GstClockTime pts = GST_BUFFER_PTS (buffer);
+  GstClockTime dur = GST_BUFFER_DURATION (buffer);
+
+  fail_unless (GST_CLOCK_TIME_IS_VALID (pts));
+  fail_unless_equals_clocktime (dur, GST_MSECOND * 100);
+
+  if (!GST_CLOCK_TIME_IS_VALID (*pos)) {
+    *pos = pts;
+  } else {
+    fail_unless (pts < *pos);
+    *pos = pts;
+  }
+}
+
+GST_START_TEST (test_reverse)
+{
+  GstElement *bin, *src1, *src2, *compositor, *sink;
+  GstElement *cp1, *cp2, *cp3;
+  GstCaps *caps;
+  GstBus *bus;
+  GstEvent *seek_event;
+  GstStateChangeReturn state_res;
+  gboolean res;
+  GstClockTime pos = GST_CLOCK_TIME_NONE;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  src1 = gst_element_factory_make ("videotestsrc", "src1");
+  src2 = gst_element_factory_make ("videotestsrc", "src2");
+  compositor = gst_element_factory_make ("compositor", "compositor");
+  cp1 = gst_element_factory_make ("capsfilter", "cp1");
+  cp2 = gst_element_factory_make ("capsfilter", "cp2");
+  cp3 = gst_element_factory_make ("capsfilter", "cp3");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (bin), src1, src2, compositor, sink, cp1, cp2,
+      cp3, NULL);
+
+  res = gst_element_link_many (src1, cp1, compositor, NULL);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link_many (src2, cp2, compositor, NULL);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link_many (compositor, cp3, sink, NULL);
+  fail_unless (res == TRUE, NULL);
+
+  caps = gst_caps_from_string ("video/x-raw,width=(int)64,height=(int)64,"
+      "framerate=(fraction)10/1");
+  fail_unless (caps != NULL, NULL);
+
+  g_object_set (cp1, "caps", caps, NULL);
+  g_object_set (cp2, "caps", caps, NULL);
+  g_object_set (cp3, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  seek_event = gst_event_new_seek (-1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_TRICKMODE,
+      GST_SEEK_TYPE_SET, (GstClockTime) 0,
+      GST_SEEK_TYPE_SET, (GstClockTime) 2 * GST_SECOND);
+
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::warning", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::eos", (GCallback) message_received, bin);
+
+  GST_INFO ("starting test");
+
+  /* prepare playing */
+  state_res = gst_element_set_state (bin, GST_STATE_PAUSED);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  /* wait for completion */
+  state_res = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (sink, "handoff", G_CALLBACK (on_reverse_handoff), &pos);
+
+  res = gst_element_send_event (bin, seek_event);
+  fail_unless (res == TRUE, NULL);
+
+  /* run pipeline */
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  GST_INFO ("running main loop");
+  g_main_loop_run (main_loop);
+
+  state_res = gst_element_set_state (bin, GST_STATE_NULL);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  fail_unless_equals_clocktime (pos, 0);
+
+  /* cleanup */
+  g_main_loop_unref (main_loop);
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 static Suite *
 compositor_suite (void)
 {
@@ -2308,6 +2417,7 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_start_time_first_live_drop_3_unlinked_1);
   tcase_add_test (tc_chain, test_gap_events);
   tcase_add_test (tc_chain, test_signals);
+  tcase_add_test (tc_chain, test_reverse);
 
   return s;
 }
