@@ -1761,6 +1761,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
     buf = gst_aggregator_pad_peek_buffer (bpad);
     if (buf) {
       GstClockTime start_time, end_time;
+      GstClockTime start_running_time, end_running_time;
 
     check_again:
       GST_TRACE_OBJECT (pad, "Next buffer %" GST_PTR_FORMAT, buf);
@@ -1773,7 +1774,6 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         return GST_FLOW_ERROR;
       }
 
-      /* FIXME: Make all this work with negative rates */
       end_time = GST_BUFFER_DURATION (buf);
 
       if (end_time == -1) {
@@ -1855,16 +1855,25 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
       start_time = MAX (start_time, segment.start);
       if (segment.stop != -1)
         end_time = MIN (end_time, segment.stop);
-      start_time =
-          gst_segment_to_running_time (&segment, GST_FORMAT_TIME, start_time);
-      end_time =
-          gst_segment_to_running_time (&segment, GST_FORMAT_TIME, end_time);
-      g_assert (start_time != -1 && end_time != -1);
+
+      if (segment.rate >= 0) {
+        start_running_time =
+            gst_segment_to_running_time (&segment, GST_FORMAT_TIME, start_time);
+        end_running_time =
+            gst_segment_to_running_time (&segment, GST_FORMAT_TIME, end_time);
+      } else {
+        start_running_time =
+            gst_segment_to_running_time (&segment, GST_FORMAT_TIME, end_time);
+        end_running_time =
+            gst_segment_to_running_time (&segment, GST_FORMAT_TIME, start_time);
+      }
+      g_assert (start_running_time != -1 && end_running_time != -1);
 
       GST_TRACE_OBJECT (pad, "dealing with buffer %p start %" GST_TIME_FORMAT
           " end %" GST_TIME_FORMAT " out start %" GST_TIME_FORMAT
-          " out end %" GST_TIME_FORMAT, buf, GST_TIME_ARGS (start_time),
-          GST_TIME_ARGS (end_time), GST_TIME_ARGS (output_start_running_time),
+          " out end %" GST_TIME_FORMAT, buf, GST_TIME_ARGS (start_running_time),
+          GST_TIME_ARGS (end_running_time),
+          GST_TIME_ARGS (output_start_running_time),
           GST_TIME_ARGS (output_end_running_time));
 
       if (pad->priv->end_time != -1 && pad->priv->end_time > end_time) {
@@ -1874,11 +1883,11 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         continue;
       }
 
-      if (end_time > output_start_running_time
-          && start_time < output_end_running_time) {
+      if (end_running_time > output_start_running_time
+          && start_running_time < output_end_running_time) {
         GST_DEBUG_OBJECT (pad,
             "Taking new buffer with start time %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (start_time));
+            GST_TIME_ARGS (start_running_time));
         gst_buffer_replace (&pad->priv->buffer, buf);
         if (pad->priv->pending_vinfo.finfo) {
           gst_caps_replace (&pad->priv->caps, pad->priv->pending_caps);
@@ -1887,15 +1896,15 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
           need_reconfigure = TRUE;
           pad->priv->pending_vinfo.finfo = NULL;
         }
-        pad->priv->start_time = start_time;
-        pad->priv->end_time = end_time;
+        pad->priv->start_time = start_running_time;
+        pad->priv->end_time = end_running_time;
 
         gst_buffer_unref (buf);
         gst_aggregator_pad_drop_buffer (bpad);
         eos = FALSE;
-      } else if (start_time >= output_end_running_time) {
+      } else if (start_running_time >= output_end_running_time) {
         GST_DEBUG_OBJECT (pad, "Keeping buffer until %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (start_time));
+            GST_TIME_ARGS (start_running_time));
         gst_buffer_unref (buf);
         eos = FALSE;
       } else {
@@ -1907,8 +1916,8 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
           need_reconfigure = TRUE;
           pad->priv->pending_vinfo.finfo = NULL;
         }
-        pad->priv->start_time = start_time;
-        pad->priv->end_time = end_time;
+        pad->priv->start_time = start_running_time;
+        pad->priv->end_time = end_running_time;
         GST_DEBUG_OBJECT (pad,
             "replacing old buffer with a newer buffer, start %" GST_TIME_FORMAT
             " out end %" GST_TIME_FORMAT, GST_TIME_ARGS (start_time),
@@ -2072,13 +2081,14 @@ clean_pad (GstElement * agg, GstPad * pad, gpointer user_data)
 static GstFlowReturn
 gst_video_aggregator_do_aggregate (GstVideoAggregator * vagg,
     GstClockTime output_start_time, GstClockTime output_end_time,
-    GstClockTime output_start_running_time, GstBuffer ** outbuf)
+    GstBuffer ** outbuf)
 {
   GstAggregator *agg = GST_AGGREGATOR (vagg);
   GstFlowReturn ret = GST_FLOW_OK;
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (vagg);
   GstVideoAggregatorClass *vagg_klass = (GstVideoAggregatorClass *) klass;
   GstClockTime out_stream_time;
+  GstSegment *agg_segment = &GST_AGGREGATOR_PAD (agg->srcpad)->segment;
 
   g_assert (vagg_klass->aggregate_frames != NULL);
   g_assert (vagg_klass->create_output_buffer != NULL);
@@ -2093,13 +2103,18 @@ gst_video_aggregator_do_aggregate (GstVideoAggregator * vagg,
     return GST_FLOW_OK;
   }
 
-  GST_BUFFER_TIMESTAMP (*outbuf) = output_start_time;
-  GST_BUFFER_DURATION (*outbuf) = output_end_time - output_start_time;
-
   GST_OBJECT_LOCK (agg->srcpad);
-  out_stream_time =
-      gst_segment_to_stream_time (&GST_AGGREGATOR_PAD (agg->srcpad)->segment,
-      GST_FORMAT_TIME, output_start_time);
+  if (agg_segment->rate >= 0) {
+    GST_BUFFER_TIMESTAMP (*outbuf) = output_start_time;
+    GST_BUFFER_DURATION (*outbuf) = output_end_time - output_start_time;
+    out_stream_time = gst_segment_to_stream_time (agg_segment,
+        GST_FORMAT_TIME, output_start_time);
+  } else {
+    GST_BUFFER_TIMESTAMP (*outbuf) = output_end_time;
+    GST_BUFFER_DURATION (*outbuf) = output_start_time - output_end_time;
+    out_stream_time = gst_segment_to_stream_time (agg_segment,
+        GST_FORMAT_TIME, output_end_time);
+  }
   GST_OBJECT_UNLOCK (agg->srcpad);
 
   /* Sync pad properties to the stream time */
@@ -2220,9 +2235,24 @@ gst_video_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     goto unlock_and_return;
   }
 
+  if (agg_segment->rate < 0 && !GST_CLOCK_TIME_IS_VALID (agg_segment->stop)) {
+    GST_ERROR_OBJECT (vagg, "Unknown segment.stop for negative rate");
+    flow_ret = GST_FLOW_ERROR;
+    goto unlock_and_return;
+  }
+
   output_start_time = agg_segment->position;
-  if (agg_segment->position == -1 || agg_segment->position < agg_segment->start)
-    output_start_time = agg_segment->start;
+  if (agg_segment->rate >= 0) {
+    if (agg_segment->position == -1 ||
+        agg_segment->position < agg_segment->start) {
+      output_start_time = agg_segment->start;
+    }
+  } else {
+    if (agg_segment->position == -1 ||
+        agg_segment->position > agg_segment->stop) {
+      output_start_time = agg_segment->stop;
+    }
+  }
 
   if (vagg->priv->nframes == 0) {
     vagg->priv->ts_offset = output_start_time;
@@ -2233,15 +2263,25 @@ gst_video_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   if (GST_VIDEO_INFO_FPS_N (&vagg->info) == 0) {
     output_end_time = -1;
   } else {
-    output_end_time =
-        vagg->priv->ts_offset +
-        gst_util_uint64_scale_round (vagg->priv->nframes + 1,
+    guint64 dur = gst_util_uint64_scale_round (vagg->priv->nframes + 1,
         GST_SECOND * GST_VIDEO_INFO_FPS_D (&vagg->info),
         GST_VIDEO_INFO_FPS_N (&vagg->info));
+
+    if (agg_segment->rate >= 0)
+      output_end_time = vagg->priv->ts_offset + dur;
+    else if (vagg->priv->ts_offset >= dur)
+      output_end_time = vagg->priv->ts_offset - dur;
+    else
+      output_end_time = -1;
   }
 
-  if (agg_segment->stop != -1)
-    output_end_time = MIN (output_end_time, agg_segment->stop);
+  if (agg_segment->rate >= 0) {
+    if (agg_segment->stop != -1)
+      output_end_time = MIN (output_end_time, agg_segment->stop);
+  } else {
+    if (agg_segment->start != -1)
+      output_end_time = MAX (output_end_time, agg_segment->start);
+  }
 
   output_start_running_time =
       gst_segment_to_running_time (agg_segment, GST_FORMAT_TIME,
@@ -2292,7 +2332,7 @@ gst_video_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   jitter = gst_video_aggregator_do_qos (vagg, output_start_time);
   if (jitter <= 0) {
     flow_ret = gst_video_aggregator_do_aggregate (vagg, output_start_time,
-        output_end_time, output_start_running_time, &outbuf);
+        output_end_time, &outbuf);
     if (flow_ret != GST_FLOW_OK)
       goto done;
     vagg->priv->qos_processed++;
