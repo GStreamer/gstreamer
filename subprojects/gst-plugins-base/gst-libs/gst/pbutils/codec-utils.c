@@ -2343,6 +2343,109 @@ done:
   return ret;
 }
 
+static gboolean
+hevc_caps_get_mime_codec (GstCaps * caps, gchar ** mime_codec)
+{
+  GstStructure *caps_st = NULL;
+  const GValue *codec_data_value = NULL;
+  GstBuffer *codec_data = NULL;
+  GstMapInfo map;
+  gboolean ret = FALSE;
+  const gchar *stream_format;
+  guint8 *data = NULL;
+  gsize size;
+  guint16 profile_space;
+  guint8 tier_flag;
+  guint16 profile_idc;
+  guint32 compat_flags;
+  guchar constraint_indicator_flags[6];
+  guint8 level_idc;
+  guint32 compat_flag_parameter = 0;
+  GString *codec_string;
+  const guint8 *profile_tier_level;
+  unsigned last_flag_index;
+
+  caps_st = gst_caps_get_structure (caps, 0);
+  codec_data_value = gst_structure_get_value (caps_st, "codec_data");
+  stream_format = gst_structure_get_string (caps_st, "stream-format");
+  if (!codec_data_value) {
+    GST_DEBUG ("video/x-h265 caps did not have codec_data set, cannot parse");
+    return FALSE;
+  } else if (!stream_format) {
+    GST_DEBUG
+        ("video/x-h265 caps did not have stream-format set, cannot parse");
+    return FALSE;
+  }
+
+  codec_data = gst_value_get_buffer (codec_data_value);
+  if (!gst_buffer_map (codec_data, &map, GST_MAP_READ)) {
+    return FALSE;
+  }
+  data = map.data;
+  size = map.size;
+
+  /* HEVCDecoderConfigurationRecord is at a minimum 23 bytes long */
+  if (size < 23) {
+    GST_DEBUG ("Incomplete HEVCDecoderConfigurationRecord");
+    goto done;
+  }
+
+  if (!g_str_equal (stream_format, "hev1")
+      && !g_str_equal (stream_format, "hvc1")) {
+    GST_DEBUG ("Unknown stream-format %s", stream_format);
+    goto done;
+  }
+
+  profile_tier_level = data + 1;
+  profile_space = (profile_tier_level[0] & 0x11) >> 6;
+  tier_flag = (profile_tier_level[0] & 0x001) >> 5;
+  profile_idc = (profile_tier_level[0] & 0x1f);
+
+  compat_flags = GST_READ_UINT32_BE (data + 2);
+  for (unsigned i = 0; i < 6; ++i)
+    constraint_indicator_flags[i] = GST_READ_UINT8 (data + 6 + i);
+
+  level_idc = data[12];
+
+  /* The 32 bits of the compat_flags, but in reverse bit order */
+  compat_flags =
+      ((compat_flags & 0xaaaaaaaa) >> 1) | ((compat_flags & 0x55555555) << 1);
+  compat_flags =
+      ((compat_flags & 0xcccccccc) >> 2) | ((compat_flags & 0x33333333) << 2);
+  compat_flags =
+      ((compat_flags & 0xf0f0f0f0) >> 4) | ((compat_flags & 0x0f0f0f0f) << 4);
+  compat_flags =
+      ((compat_flags & 0xff00ff00) >> 8) | ((compat_flags & 0x00ff00ff) << 8);
+  compat_flag_parameter = (compat_flags >> 16) | (compat_flags << 16);
+
+  codec_string = g_string_new (stream_format);
+  codec_string = g_string_append_c (codec_string, '.');
+  if (profile_space)
+    codec_string = g_string_append_c (codec_string, 'A' + profile_space - 1);
+  g_string_append_printf (codec_string, "%" G_GUINT16_FORMAT ".%X.%c%d",
+      profile_idc, compat_flag_parameter, tier_flag ? 'H' : 'L', level_idc);
+
+  /* Each of the 6 bytes of the constraint flags, starting from the byte containing the
+   * progressive_source_flag, each encoded as a hexadecimal number, and the encoding
+   * of each byte separated by a period; trailing bytes that are zero may be omitted.
+   */
+  last_flag_index = 5;
+  while ((int) (constraint_indicator_flags[last_flag_index]) == 0)
+    --last_flag_index;
+  for (unsigned i = 0; i <= last_flag_index; ++i) {
+    g_string_append_printf (codec_string, ".%02X",
+        constraint_indicator_flags[i]);
+  }
+
+  *mime_codec = g_string_free (codec_string, FALSE);
+
+  ret = TRUE;
+
+done:
+  gst_buffer_unmap (codec_data, &map);
+  return ret;
+}
+
 /**
  * gst_codec_utils_caps_get_mime_codec:
  * @caps: A #GstCaps to convert to mime codec
@@ -2395,13 +2498,10 @@ gst_codec_utils_caps_get_mime_codec (GstCaps * caps)
       mime_codec = g_strdup_printf ("avc1.%02X%02X%02X", profile, flags, level);
     }
   } else if (g_strcmp0 (media_type, "video/x-h265") == 0) {
-    /* TODO: this simple "hev1" is not complete and should contain more info
-     * similar to how avc1 does.
-     * However, as of writing there are no browsers that support h265 and the
-     * format of how to describe h265 codec info is badly documented.
-     * Examples exist online, but no public documentation seem to exist,
-     * however the paywalled ISO/IEC 14496-15 has it. */
-    mime_codec = g_strdup ("hev1");
+    if (!hevc_caps_get_mime_codec (caps, &mime_codec)) {
+      GST_DEBUG ("h265 caps parsing failed");
+      mime_codec = g_strdup ("hev1");
+    }
   } else if (g_strcmp0 (media_type, "video/x-av1") == 0) {
     /* TODO: Some browsers won't play the video unless more codec information is
      * available in the mime codec for av1. This is documented in
