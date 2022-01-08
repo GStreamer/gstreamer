@@ -1467,6 +1467,8 @@ libgstpbutils_suite (void)
   Suite *s = suite_create ("pbutils library");
   TCase *tc_chain = tcase_create ("general");
 
+  gst_pb_utils_init ();
+
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_pb_utils_init);
   tcase_add_test (tc_chain, test_pb_utils_post_missing_messages);

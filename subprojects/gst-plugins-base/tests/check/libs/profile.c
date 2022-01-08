@@ -28,6 +28,7 @@
 
 #include <gst/pbutils/encoding-profile.h>
 #include <gst/pbutils/encoding-target.h>
+#include <gst/pbutils/pbutils.h>
 
 #ifdef G_OS_UNIX
 #include <unistd.h>             /* For R_OK etc. */
@@ -697,6 +698,8 @@ profile_suite (void)
 #else
   can_write = FALSE;            /* FIXME: fix can_write test on Windows */
 #endif
+
+  gst_pb_utils_init ();
 
   suite_add_tcase (s, tc_chain);
 

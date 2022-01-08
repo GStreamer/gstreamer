@@ -43,6 +43,9 @@
 
 #include <string.h>
 
+GST_DEBUG_CATEGORY_EXTERN (pbutils_debug);
+#define GST_CAT_DEFAULT pbutils_debug
+
 #define GST_SIMPLE_CAPS_HAS_NAME(caps,name) \
     gst_structure_has_name(gst_caps_get_structure((caps),0),(name))
 

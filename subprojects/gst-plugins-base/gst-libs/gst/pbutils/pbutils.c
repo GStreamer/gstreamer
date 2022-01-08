@@ -61,6 +61,9 @@
 
 #include "gst/gst-i18n-plugin.h"
 
+GST_DEBUG_CATEGORY (pbutils_debug);
+#define GST_CAT_DEFAULT pbutils_debug
+
 static gpointer
 _init_locale_text_domain (gpointer data)
 {
@@ -101,6 +104,8 @@ gst_pb_utils_init (void)
     GST_LOG ("already initialised");
     return;
   }
+  GST_DEBUG_CATEGORY_INIT (pbutils_debug, "pbutils", 0,
+      "GStreamer Plugins Base utils");
   gst_pb_utils_init_locale_text_domain ();
 
   inited = TRUE;

@@ -88,6 +88,9 @@
 
 /* Documented in encoding-profile.c */
 
+GST_DEBUG_CATEGORY_EXTERN (pbutils_debug);
+#define GST_CAT_DEFAULT pbutils_debug
+
 #define GST_ENCODING_TARGET_HEADER "GStreamer Encoding Target"
 #define GST_ENCODING_TARGET_DIRECTORY "encoding-profiles"
 #define GST_ENCODING_TARGET_SUFFIX ".gep"

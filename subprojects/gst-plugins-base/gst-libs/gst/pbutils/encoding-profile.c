@@ -299,6 +299,9 @@
 
 #include <string.h>
 
+GST_DEBUG_CATEGORY_EXTERN (pbutils_debug);
+#define GST_CAT_DEFAULT pbutils_debug
+
 /* GstEncodingProfile API */
 #define PROFILE_LOCK(profile) (g_mutex_lock(&((GstEncodingProfile*)profile)->lock))
 #define PROFILE_UNLOCK(profile) (g_mutex_unlock(&((GstEncodingProfile*)profile)->lock))
