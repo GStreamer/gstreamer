@@ -1730,12 +1730,12 @@ gst_codec_utils_mpeg4video_caps_set_level_and_profile (GstCaps * caps,
 /**
  * gst_codec_utils_opus_parse_caps:
  * @caps: the #GstCaps to parse the data from
- * @rate: (out): the sample rate
- * @channels: (out): the number of channels
- * @channel_mapping_family: (out): the channel mapping family
- * @stream_count: (out): the number of independent streams
- * @coupled_count: (out): the number of stereo streams
- * @channel_mapping: (out) (array fixed-size=256): the mapping between the streams
+ * @rate: (optional) (out): the sample rate
+ * @channels: (optional) (out): the number of channels
+ * @channel_mapping_family: (optional) (out): the channel mapping family
+ * @stream_count: (optional) (out): the number of independent streams
+ * @coupled_count: (optional) (out): the number of stereo streams
+ * @channel_mapping: (optional) (out) (array fixed-size=256): the mapping between the streams
  *
  * Parses Opus caps and fills the different fields with defaults if possible.
  *
@@ -2152,14 +2152,14 @@ gst_codec_utils_opus_create_header (guint32 rate,
 /**
  * gst_codec_utils_opus_parse_header:
  * @header: the OpusHead #GstBuffer
- * @rate: (out): the sample rate
- * @channels: (out): the number of channels
- * @channel_mapping_family: (out): the channel mapping family
- * @stream_count: (out): the number of independent streams
- * @coupled_count: (out): the number of stereo streams
- * @channel_mapping: (out) (array fixed-size=256): the mapping between the streams
- * @pre_skip: (out): Pre-skip in 48kHz samples or 0
- * @output_gain: (out): Output gain or 0
+ * @rate: (optional) (out): the sample rate
+ * @channels: (optional) (out): the number of channels
+ * @channel_mapping_family: (optional) (out): the channel mapping family
+ * @stream_count: (optional) (out): the number of independent streams
+ * @coupled_count: (optional) (out): the number of stereo streams
+ * @channel_mapping: (optional) (out) (array fixed-size=256): the mapping between the streams
+ * @pre_skip: (optional) (out): Pre-skip in 48kHz samples or 0
+ * @output_gain: (optional) (out): Output gain or 0
  *
  * Parses the OpusHead header.
  *
