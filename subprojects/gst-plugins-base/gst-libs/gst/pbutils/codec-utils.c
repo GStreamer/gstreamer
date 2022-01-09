@@ -2270,29 +2270,28 @@ h264_caps_structure_get_profile_flags_level (GstStructure * caps_st,
   GstBuffer *codec_data = NULL;
   GstMapInfo map;
   gboolean ret = FALSE;
+  guint8 *data = NULL;
+  gsize size;
 
   codec_data_value = gst_structure_get_value (caps_st, "codec_data");
   if (!codec_data_value) {
     GST_DEBUG
-        ("video/x-h264 pad did not have codec_data set, cannot parse profile, flags and level");
+        ("video/x-h264 caps did not have codec_data set, cannot parse profile, flags and level");
     return FALSE;
-  } else {
-    guint8 *data = NULL;
-    gsize size;
+  }
 
-    codec_data = gst_value_get_buffer (codec_data_value);
-    if (!gst_buffer_map (codec_data, &map, GST_MAP_READ)) {
-      return FALSE;
-    }
-    data = map.data;
-    size = map.size;
+  codec_data = gst_value_get_buffer (codec_data_value);
+  if (!gst_buffer_map (codec_data, &map, GST_MAP_READ)) {
+    return FALSE;
+  }
+  data = map.data;
+  size = map.size;
 
-    if (!gst_codec_utils_h264_get_profile_flags_level (data, (guint) size,
-            profile, flags, level)) {
-      GST_WARNING
-          ("Failed to parse profile, flags and level from h264 codec data");
-      goto done;
-    }
+  if (!gst_codec_utils_h264_get_profile_flags_level (data, (guint) size,
+          profile, flags, level)) {
+    GST_WARNING
+        ("Failed to parse profile, flags and level from h264 codec data");
+    goto done;
   }
 
   ret = TRUE;
