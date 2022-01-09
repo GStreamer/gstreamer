@@ -1851,7 +1851,7 @@ gst_codec_utils_opus_parse_caps (GstCaps * caps,
  * @channel_mapping_family: the channel mapping family
  * @stream_count: the number of independent streams
  * @coupled_count: the number of stereo streams
- * @channel_mapping: (allow-none) (array): the mapping between the streams
+ * @channel_mapping: (nullable) (array): the mapping between the streams
  *
  * Creates Opus caps from the given parameters.
  *
@@ -2016,7 +2016,7 @@ _gst_caps_set_buffer_array (GstCaps * caps, const gchar * field,
 /**
  * gst_codec_utils_opus_create_caps_from_header:
  * @header: OpusHead header
- * @comments: (allow-none): Comment header or NULL
+ * @comments: (nullable): Comment header or NULL
  *
  * Creates Opus caps from the given OpusHead @header and comment header
  * @comments.
@@ -2075,7 +2075,7 @@ gst_codec_utils_opus_create_caps_from_header (GstBuffer * header,
  * @channel_mapping_family: the channel mapping family
  * @stream_count: the number of independent streams
  * @coupled_count: the number of stereo streams
- * @channel_mapping: (allow-none) (array): the mapping between the streams
+ * @channel_mapping: (nullable) (array): the mapping between the streams
  * @pre_skip: Pre-skip in 48kHz samples or 0
  * @output_gain: Output gain or 0
  *
