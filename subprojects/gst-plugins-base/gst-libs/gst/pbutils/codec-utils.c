@@ -820,15 +820,16 @@ gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
 
 /**
  * gst_codec_utils_h264_get_profile_flags_level:
- * @codec_data: H264 AVCC extradata
- * @len: lenth of @codec_data
- * @profile: return location for h264 profile_idc or %NULL
- * @flags: return location for h264 constraint set flags or %NULL
- * @level: return location h264 level_idc or %NULL
+ * @codec_data: (array length=len): H264 AVCC extradata
+ * @len: length of @codec_data
+ * @profile: (optional) (out): return location for h264 profile_idc or %NULL
+ * @flags: (optional) (out): return location for h264 constraint set flags or %NULL
+ * @level: (optional) (out): return location h264 level_idc or %NULL
  *
  * Parses profile, flags, and level from a H264 AVCC extradata/sequence_header.
  * These are most commonly retrieved from a video/x-h264 caps with a codec_data
  * buffer.
+ *
  * The format of H264 AVCC extradata/sequence_header is documented in the
  * ITU-T H.264 specification section 7.3.2.1.1 as well as in ISO/IEC 14496-15
  * section 5.3.3.1.2.
