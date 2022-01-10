@@ -127,7 +127,7 @@ struct TsMuxProgram {
   TsMuxStream *pcr_stream;
 
   /* programs TsMuxStream's */
-  GArray *streams;
+  GPtrArray *streams;
 };
 
 struct TsMux {

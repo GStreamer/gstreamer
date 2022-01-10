@@ -456,7 +456,8 @@ tsmux_program_new (TsMux * mux, gint prog_id)
   program->scte35_null_interval = TSMUX_DEFAULT_SCTE_35_NULL_INTERVAL;
   program->next_scte35_pcr = -1;
 
-  program->streams = g_array_sized_new (FALSE, TRUE, sizeof (TsMuxStream *), 1);
+  /* mux->streams owns the streams */
+  program->streams = g_ptr_array_new_full (1, NULL);
 
   mux->programs = g_list_prepend (mux->programs, program);
   mux->nb_programs++;
@@ -613,7 +614,7 @@ tsmux_program_add_stream (TsMuxProgram * program, TsMuxStream * stream)
 
   stream->program_array_index = program->streams->len;
 
-  g_array_append_val (program->streams, stream);
+  g_ptr_array_add (program->streams, stream);
   program->pmt_changed = TRUE;
 }
 
@@ -744,21 +745,21 @@ tsmux_find_stream (TsMux * mux, guint16 pid)
 static gboolean
 tsmux_program_remove_stream (TsMuxProgram * program, TsMuxStream * stream)
 {
-  GArray *streams = program->streams;
+  GPtrArray *streams = program->streams;
   TsMuxStream *s;
   gint i;
 
   i = stream->program_array_index;
   g_return_val_if_fail (i >= 0, FALSE);
 
-  s = g_array_index (streams, TsMuxStream *, i);
+  s = g_ptr_array_index (streams, i);
   g_return_val_if_fail (s == stream, FALSE);
 
-  g_array_remove_index (streams, i);
+  g_ptr_array_remove_index (streams, i);
 
   /* Correct indices of remaining streams, if any */
   for (; i < streams->len; i++) {
-    s = g_array_index (streams, TsMuxStream *, i);
+    s = g_ptr_array_index (streams, i);
     s->program_array_index -= 1;
   }
 
@@ -1653,7 +1654,7 @@ tsmux_program_free (TsMuxProgram * program)
   if (program->scte35_null_section)
     tsmux_section_free (program->scte35_null_section);
 
-  g_array_free (program->streams, TRUE);
+  g_ptr_array_free (program->streams, TRUE);
   g_slice_free (TsMuxProgram, program);
 }
 
@@ -1772,7 +1773,7 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
     /* Write out the entries */
     for (i = 0; i < program->streams->len; i++) {
       GstMpegtsPMTStream *pmt_stream;
-      TsMuxStream *stream = g_array_index (program->streams, TsMuxStream *, i);
+      TsMuxStream *stream = g_ptr_array_index (program->streams, i);
 
       pmt_stream = gst_mpegts_pmt_stream_new ();
 
