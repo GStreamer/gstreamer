@@ -612,8 +612,6 @@ tsmux_program_add_stream (TsMuxProgram * program, TsMuxStream * stream)
   g_return_if_fail (program != NULL);
   g_return_if_fail (stream != NULL);
 
-  stream->program_array_index = program->streams->len;
-
   g_ptr_array_add (program->streams, stream);
   program->pmt_changed = TRUE;
 }
@@ -746,21 +744,10 @@ static gboolean
 tsmux_program_remove_stream (TsMuxProgram * program, TsMuxStream * stream)
 {
   GPtrArray *streams = program->streams;
-  TsMuxStream *s;
-  gint i;
 
-  i = stream->program_array_index;
-  g_return_val_if_fail (i >= 0, FALSE);
-
-  s = g_ptr_array_index (streams, i);
-  g_return_val_if_fail (s == stream, FALSE);
-
-  g_ptr_array_remove_index (streams, i);
-
-  /* Correct indices of remaining streams, if any */
-  for (; i < streams->len; i++) {
-    s = g_ptr_array_index (streams, i);
-    s->program_array_index -= 1;
+  if (!g_ptr_array_remove (streams, stream)) {
+    g_warn_if_reached ();
+    return FALSE;
   }
 
   return streams->len == 0;

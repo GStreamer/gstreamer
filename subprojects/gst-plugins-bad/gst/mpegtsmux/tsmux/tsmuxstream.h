@@ -150,8 +150,6 @@ struct TsMuxStream {
   guint8 id;
   /* extended stream id (13818-1 Amdt 2) */
   guint8 id_extended;
-  /* array index in program array */
-  gint program_array_index;
 
   gboolean is_video_stream;
 

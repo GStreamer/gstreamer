@@ -117,7 +117,6 @@ tsmux_stream_new (guint16 pid, guint stream_type)
   stream->pes_payload_size = 0;
   stream->cur_pes_payload_size = 0;
   stream->pes_bytes_written = 0;
-  stream->program_array_index = -1;
 
   switch (stream_type) {
     case TSMUX_ST_VIDEO_MPEG1:
