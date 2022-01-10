@@ -1393,10 +1393,10 @@ struct _GstAV1FilmGrainParams {
   guint8 grain_scale_shift;
   guint8 cb_mult;
   guint8 cb_luma_mult;
-  guint8 cb_offset;
+  guint16 cb_offset;
   guint8 cr_mult;
   guint8 cr_luma_mult;
-  guint8 cr_offset;
+  guint16 cr_offset;
   gboolean overlap_flag;
   gboolean clip_to_restricted_range;
 };
