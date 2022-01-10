@@ -1656,6 +1656,16 @@ tsmux_program_set_pmt_pid (TsMuxProgram * program, guint16 pmt_pid)
   program->pmt_pid = pmt_pid;
 }
 
+static gint
+compare_program_number (gconstpointer a, gconstpointer b)
+{
+  const GstMpegtsPatProgram *pgm1 = *(const GstMpegtsPatProgram * const *) a;
+  const GstMpegtsPatProgram *pgm2 = *(const GstMpegtsPatProgram * const *) b;
+  gint num1 = pgm1->program_number, num2 = pgm2->program_number;
+
+  return num1 - num2;
+}
+
 static gboolean
 tsmux_write_pat (TsMux * mux)
 {
@@ -1684,6 +1694,8 @@ tsmux_write_pat (TsMux * mux)
 
       g_ptr_array_add (pat, pat_pgm);
     }
+
+    g_ptr_array_sort (pat, compare_program_number);
 
     if (mux->pat.section)
       gst_mpegts_section_unref (mux->pat.section);
