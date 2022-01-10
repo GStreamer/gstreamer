@@ -611,24 +611,39 @@ tsmux_program_add_stream (TsMuxProgram * program, TsMuxStream * stream)
 {
   GPtrArray *streams;
   guint i;
-  gint array_index = -1 /* append */ ;
+  gint pmt_index, array_index = -1 /* append */ ;
   guint16 pid;
 
   g_return_if_fail (program != NULL);
   g_return_if_fail (stream != NULL);
 
   streams = program->streams;
+  pmt_index = stream->pmt_index;
   pid = tsmux_stream_get_pid (stream);
 
-  /* Insert sorted by PID */
-  for (i = 0; i < streams->len; i++) {
-    TsMuxStream *s = g_ptr_array_index (streams, i);
+  if (pmt_index >= 0) {
+    /* Insert into streams with known indices */
+    for (i = 0; i < streams->len; i++) {
+      TsMuxStream *s = g_ptr_array_index (streams, i);
 
-    if (pid < tsmux_stream_get_pid (s)) {
-      array_index = i;
-      GST_DEBUG ("PID 0x%04x: Using PID-order index %d/%u",
-          pid, array_index, streams->len);
-      break;
+      if (s->pmt_index < 0 || pmt_index < s->pmt_index) {
+        array_index = i;
+        GST_DEBUG ("PID 0x%04x: Using known-order index %d/%u",
+            pid, array_index, streams->len);
+        break;
+      }
+    }
+  } else {
+    /* Insert after streams with known indices, sorted by PID */
+    for (i = 0; i < streams->len; i++) {
+      TsMuxStream *s = g_ptr_array_index (streams, i);
+
+      if (s->pmt_index < 0 && pid < tsmux_stream_get_pid (s)) {
+        array_index = i;
+        GST_DEBUG ("PID 0x%04x: Using PID-order index %d/%u",
+            pid, array_index, streams->len);
+        break;
+      }
     }
   }
 

@@ -388,6 +388,7 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
   guint8 color_spec = 0;
   const gchar *stream_format = NULL;
   const char *interlace_mode = NULL;
+  gchar *pmt_name;
 
   GST_DEBUG_OBJECT (ts_pad,
       "%s stream with PID 0x%04x for caps %" GST_PTR_FORMAT,
@@ -692,6 +693,12 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     if (ts_pad->stream == NULL)
       goto error;
   }
+
+  pmt_name = g_strdup_printf ("PMT_%d", ts_pad->pid);
+  if (mux->prog_map && gst_structure_has_field (mux->prog_map, pmt_name)) {
+    gst_structure_get_int (mux->prog_map, pmt_name, &ts_pad->stream->pmt_index);
+  }
+  g_free (pmt_name);
 
   interlace_mode = gst_structure_get_string (s, "interlace-mode");
   gst_structure_get_int (s, "rate", &ts_pad->stream->audio_sampling);
