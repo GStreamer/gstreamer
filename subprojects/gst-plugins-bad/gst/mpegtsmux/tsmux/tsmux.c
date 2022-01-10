@@ -609,10 +609,30 @@ tsmux_program_get_scte35_pid (TsMuxProgram * program)
 void
 tsmux_program_add_stream (TsMuxProgram * program, TsMuxStream * stream)
 {
+  GPtrArray *streams;
+  guint i;
+  gint array_index = -1 /* append */ ;
+  guint16 pid;
+
   g_return_if_fail (program != NULL);
   g_return_if_fail (stream != NULL);
 
-  g_ptr_array_add (program->streams, stream);
+  streams = program->streams;
+  pid = tsmux_stream_get_pid (stream);
+
+  /* Insert sorted by PID */
+  for (i = 0; i < streams->len; i++) {
+    TsMuxStream *s = g_ptr_array_index (streams, i);
+
+    if (pid < tsmux_stream_get_pid (s)) {
+      array_index = i;
+      GST_DEBUG ("PID 0x%04x: Using PID-order index %d/%u",
+          pid, array_index, streams->len);
+      break;
+    }
+  }
+
+  g_ptr_array_insert (streams, array_index, stream);
   program->pmt_changed = TRUE;
 }
 
