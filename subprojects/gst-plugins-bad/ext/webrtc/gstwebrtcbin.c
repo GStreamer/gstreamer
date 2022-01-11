@@ -5927,7 +5927,7 @@ gst_webrtc_bin_set_local_description (GstWebRTCBin * webrtc,
           (GDestroyNotify) _free_set_description_data, promise)) {
     GError *error =
         g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
-        "Could not set remote description. webrtcbin is closed");
+        "Could not set local description. webrtcbin is closed");
     GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
 
