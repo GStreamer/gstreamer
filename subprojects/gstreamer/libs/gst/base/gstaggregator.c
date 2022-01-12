@@ -2048,6 +2048,8 @@ gst_aggregator_default_create_new_pad (GstAggregator * self,
   GstAggregatorPrivate *priv = self->priv;
   gint serial = 0;
   gchar *name = NULL;
+  gchar *percent_str;
+
   GType pad_type =
       GST_PAD_TEMPLATE_GTYPE (templ) ==
       G_TYPE_NONE ? GST_TYPE_AGGREGATOR_PAD : GST_PAD_TEMPLATE_GTYPE (templ);
@@ -2058,33 +2060,55 @@ gst_aggregator_default_create_new_pad (GstAggregator * self,
   if (templ->presence != GST_PAD_REQUEST)
     goto not_request;
 
-  GST_OBJECT_LOCK (self);
-  if (req_name == NULL || strlen (req_name) < 6
-      || !g_str_has_prefix (req_name, "sink_")
-      || strrchr (req_name, '%') != NULL) {
-    /* no name given when requesting the pad, use next available int */
-    serial = ++priv->max_padserial;
-  } else {
-    gchar *endptr = NULL;
+  percent_str = strrchr (templ->name_template, '%');
 
-    /* parse serial number from requested padname */
-    serial = g_ascii_strtoull (&req_name[5], &endptr, 10);
-    if (endptr != NULL && *endptr == '\0') {
-      if (serial > priv->max_padserial) {
-        priv->max_padserial = serial;
+  if (percent_str == NULL) {
+    if (req_name)
+      name = g_strdup (req_name);
+    else
+      name = g_strdup (templ->name_template);
+  } else if (g_strcmp0 (percent_str, "%u") == 0
+      || g_strcmp0 (percent_str, "%d") == 0) {
+    guint percent_index = percent_str - templ->name_template;
+    gchar *template_str = g_strndup (templ->name_template, percent_index);
+
+    GST_OBJECT_LOCK (self);
+    if (req_name == NULL || g_strcmp0 (templ->name_template, req_name) == 0) {
+      /* no name given when requesting the pad, use next available int */
+      serial = ++priv->max_padserial;
+    } else if (g_str_has_prefix (req_name, template_str)) {
+      gchar *endptr = NULL;
+
+      /* parse serial number from requested padname */
+      serial = g_ascii_strtoull (&req_name[percent_index], &endptr, 10);
+
+      if (endptr != NULL && *endptr == '\0') {
+        if (serial > priv->max_padserial) {
+          priv->max_padserial = serial;
+        }
+      } else {
+        g_free (template_str);
+        GST_OBJECT_UNLOCK (self);
+        goto invalid_request_name;
       }
     } else {
-      serial = ++priv->max_padserial;
+      g_free (template_str);
+      GST_OBJECT_UNLOCK (self);
+      goto invalid_request_name;
     }
+
+    name = g_strdup_printf ("%s%u", template_str, serial);
+    g_free (template_str);
+
+    GST_OBJECT_UNLOCK (self);
+  } else {
+    goto invalid_template_name;
   }
 
-  name = g_strdup_printf ("sink_%u", serial);
   g_assert (g_type_is_a (pad_type, GST_TYPE_AGGREGATOR_PAD));
   agg_pad = g_object_new (pad_type,
       "name", name, "direction", GST_PAD_SINK, "template", templ, NULL);
   g_free (name);
-
-  GST_OBJECT_UNLOCK (self);
 
   return agg_pad;
 
@@ -2097,6 +2121,20 @@ not_sink:
 not_request:
   {
     GST_WARNING_OBJECT (self, "request new pad that is not a REQUEST pad");
+    return NULL;
+  }
+invalid_template_name:
+  {
+    GST_WARNING_OBJECT (self,
+        "template name %s is invalid, must be in the form name_%%u (%s)",
+        templ->name_template, percent_str);
+    return NULL;
+  }
+invalid_request_name:
+  {
+    GST_WARNING_OBJECT (self,
+        "requested name %s is invalid, must be in the form %s", req_name,
+        templ->name_template);
     return NULL;
   }
 }

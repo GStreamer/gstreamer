@@ -22,9 +22,9 @@
 #include <string.h>
 #include <gst/video/video.h>
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
-    GST_PAD_ALWAYS,
+    GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate video_src_template = GST_STATIC_PAD_TEMPLATE ("src",
