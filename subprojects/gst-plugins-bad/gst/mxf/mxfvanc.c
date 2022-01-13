@@ -138,12 +138,9 @@ mxf_vanc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
      *
      * The same scheme can be used for ANC packets.
      */
-
-    *outbuf = gst_buffer_new ();
-    GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_GAP);
-    ret = GST_FLOW_OK;
-    goto out;
+    goto no_data;
   }
+
   for (i = 0; i < num_packets; i++) {
     G_GNUC_UNUSED guint16 line_num;
     G_GNUC_UNUSED guint8 wrapping_type;
@@ -190,6 +187,7 @@ mxf_vanc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
 
     /* Not S334 EIA-708 */
     if (did != 0x61 && sdid != 0x01) {
+      GST_TRACE ("Skipping VANC data with DID/SDID 0x%02X/0x%02X", did, sdid);
       if (!gst_byte_reader_skip (&reader, array_count * array_item_size - 2))
         goto out;
       continue;
@@ -215,6 +213,14 @@ mxf_vanc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
+
+no_data:
+
+  /* No packets or we skipped over all packets */
+  *outbuf = gst_buffer_new ();
+  GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_GAP);
+  ret = GST_FLOW_OK;
+
 out:
   gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
