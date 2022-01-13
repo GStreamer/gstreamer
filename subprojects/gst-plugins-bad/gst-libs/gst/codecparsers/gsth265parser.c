@@ -3726,11 +3726,15 @@ gst_h265_profile_tier_level_get_profiles (const GstH265ProfileTierLevel * ptl,
 GstH265Profile
 gst_h265_profile_tier_level_get_profile (const GstH265ProfileTierLevel * ptl)
 {
-  guint len;
+  guint len = 0;
   GstH265Profile profiles[GST_H265_PROFILE_MAX] = { GST_H265_PROFILE_INVALID, };
 
   gst_h265_profile_tier_level_get_profiles (ptl, profiles, &len);
-  return profiles[0];
+
+  if (len > 0)
+    return profiles[0];
+
+  return GST_H265_PROFILE_INVALID;
 }
 
 /**
