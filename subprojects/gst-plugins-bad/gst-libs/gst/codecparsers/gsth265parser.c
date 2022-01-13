@@ -3643,7 +3643,8 @@ append_profile (GstH265Profile profiles[GST_H265_PROFILE_MAX], guint * idx,
 {
   if (profile == GST_H265_PROFILE_INVALID)
     return;
-  profiles[*idx++] = profile;
+  profiles[*idx] = profile;
+  (*idx)++;
 }
 
 /* *INDENT-OFF* */
