@@ -2622,7 +2622,7 @@ decoder_query_duration_fold (const GValue * item, GValue * ret,
 
     gst_query_parse_duration (fold->query, NULL, &duration);
 
-    GST_DEBUG_OBJECT (item, "got duration %" G_GINT64_FORMAT, duration);
+    GST_DEBUG_OBJECT (pad, "got duration %" G_GINT64_FORMAT, duration);
 
     if (duration > fold->max)
       fold->max = duration;
@@ -2655,7 +2655,7 @@ decoder_query_position_fold (const GValue * item, GValue * ret,
 
     gst_query_parse_position (fold->query, NULL, &position);
 
-    GST_DEBUG_OBJECT (item, "got position %" G_GINT64_FORMAT, position);
+    GST_DEBUG_OBJECT (pad, "got position %" G_GINT64_FORMAT, position);
 
     if (position > fold->max)
       fold->max = position;
@@ -2735,7 +2735,7 @@ decoder_query_seeking_fold (const GValue * item, GValue * ret, QueryFold * fold)
     g_value_set_boolean (ret, TRUE);
     gst_query_parse_seeking (fold->query, NULL, &seekable, NULL, NULL);
 
-    GST_DEBUG_OBJECT (item, "got seekable %d", seekable);
+    GST_DEBUG_OBJECT (pad, "got seekable %d", seekable);
 
     if (fold->seekable)
       fold->seekable = seekable;
@@ -2764,7 +2764,7 @@ decoder_query_generic_fold (const GValue * item, GValue * ret, QueryFold * fold)
 
   if ((res = gst_pad_query (pad, fold->query))) {
     g_value_set_boolean (ret, TRUE);
-    GST_DEBUG_OBJECT (item, "answered query %p", fold->query);
+    GST_DEBUG_OBJECT (pad, "answered query %p", fold->query);
   }
 
   /* and stop as soon as we have a valid result */
