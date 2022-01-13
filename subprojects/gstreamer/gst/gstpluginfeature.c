@@ -491,6 +491,7 @@ _priv_gst_plugin_feature_rank_initialize (void)
           if (feature) {
             gst_plugin_feature_set_rank (feature, rank);
             GST_DEBUG ("Update rank of plugin feature \"%s\" to %d", str, rank);
+            gst_object_unref (feature);
           }
         }
       }
