@@ -6,7 +6,10 @@ if not gstgl_dep.found()
   subdir_done()
 endif
 
-wpe_dep = dependency('wpe-webkit-1.0', version : '>= 2.28', required : get_option('wpe'))
+wpe_dep = dependency('wpe-webkit-1.1', version : '>= 2.28', required : false)
+if not wpe_dep.found()
+  wpe_dep = dependency('wpe-webkit-1.0', version : '>= 2.28', required : get_option('wpe'))
+endif
 wpe_fdo_dep = dependency('wpebackend-fdo-1.0', version : '>= 1.8', required : get_option('wpe'))
 egl_dep = dependency('egl', required : get_option('wpe'))
 xkbcommon_dep = dependency('xkbcommon', version : '>= 0.8', required : get_option('wpe'))
