@@ -392,6 +392,20 @@ if x11_dep.found()
   cdata.set('HAVE_X11', 1)
 endif
 
+#
+# Solaris and Illumos distros split a lot of networking-related code
+# into '-lsocket -lnsl'.  Anything that calls socketpair(), getifaddr(),
+# etc. probably needs to include network_deps
+#
+if host_machine.system() == 'sunos'
+  network_deps = [
+    cc.find_library('socket', required: false),
+    cc.find_library('nsl',    required: false)
+  ]
+else
+  network_deps = []
+endif
+
 if host_machine.system() == 'windows'
   winsock2 = [cc.find_library('ws2_32')]
 else
