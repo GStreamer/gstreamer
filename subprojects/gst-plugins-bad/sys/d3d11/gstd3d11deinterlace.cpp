@@ -2004,14 +2004,14 @@ static GstElementClass *bin_parent_class = NULL;
 #define GST_D3D11_DEINTERLACE_BIN_CAPS_MAKE(format) \
     "video/x-raw, " \
     "format = (string) " format ", "  \
-    "width = (int) [64, 8192], " \
-    "height = (int) [64, 8192] "
+    "width = (int) [1, 8192], " \
+    "height = (int) [1, 8192] "
 
 #define GST_D3D11_DEINTERLACE_BIN_CAPS_MAKE_WITH_FEATURES(features,format) \
     "video/x-raw(" features "), " \
     "format = (string) " format ", "  \
-    "width = (int) [64, 8192], " \
-    "height = (int) [64, 8192] "
+    "width = (int) [1, 8192], " \
+    "height = (int) [1, 8192] "
 
 static GstStaticPadTemplate bin_sink_template_caps =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -2393,8 +2393,8 @@ gst_d3d11_deinterlace_register (GstPlugin * plugin, GstD3D11Device * device,
   /* FIXME: Check supported resolution, it would be different from
    * supported max texture dimension */
   gst_caps_set_simple (caps,
-      "width", GST_TYPE_INT_RANGE, 64, 8192,
-      "height", GST_TYPE_INT_RANGE, 64, 8192, NULL);
+      "width", GST_TYPE_INT_RANGE, 1, 8192,
+      "height", GST_TYPE_INT_RANGE, 1, 8192, NULL);
   gst_caps_set_value (caps, "format", supported_formats);
   g_value_unset (supported_formats);
   g_free (supported_formats);
