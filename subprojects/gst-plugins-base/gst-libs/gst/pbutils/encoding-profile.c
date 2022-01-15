@@ -299,8 +299,26 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY_EXTERN (pbutils_debug);
-#define GST_CAT_DEFAULT pbutils_debug
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT gst_pb_utils_encoding_profile_ensure_debug_category()
+
+static GstDebugCategory *
+gst_pb_utils_encoding_profile_ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    GstDebugCategory *cat = NULL;
+
+    GST_DEBUG_CATEGORY_INIT (cat, "encoding-profile", 0,
+        "GstPbUtils encoding profile");
+
+    g_once_init_leave (&cat_gonce, (gsize) cat);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#endif /* GST_DISABLE_GST_DEBUG */
 
 /* GstEncodingProfile API */
 #define PROFILE_LOCK(profile) (g_mutex_lock(&((GstEncodingProfile*)profile)->lock))

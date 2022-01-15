@@ -43,8 +43,26 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY_EXTERN (pbutils_debug);
-#define GST_CAT_DEFAULT pbutils_debug
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT gst_pb_utils_codec_utils_ensure_debug_category()
+
+static GstDebugCategory *
+gst_pb_utils_codec_utils_ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    GstDebugCategory *cat = NULL;
+
+    GST_DEBUG_CATEGORY_INIT (cat, "codec-utils", 0,
+        "GstPbUtils codec helper functions");
+
+    g_once_init_leave (&cat_gonce, (gsize) cat);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#endif /* GST_DISABLE_GST_DEBUG */
 
 #define GST_SIMPLE_CAPS_HAS_NAME(caps,name) \
     gst_structure_has_name(gst_caps_get_structure((caps),0),(name))

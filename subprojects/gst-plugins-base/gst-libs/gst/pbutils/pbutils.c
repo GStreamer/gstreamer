@@ -61,8 +61,25 @@
 
 #include "gst/gst-i18n-plugin.h"
 
-GST_DEBUG_CATEGORY (pbutils_debug);
-#define GST_CAT_DEFAULT pbutils_debug
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT gst_pb_utils_ensure_debug_category()
+
+static GstDebugCategory *
+gst_pb_utils_ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    GstDebugCategory *cat = NULL;
+
+    GST_DEBUG_CATEGORY_INIT (cat, "pbutils", 0, "GStreamer Plugins Base utils");
+
+    g_once_init_leave (&cat_gonce, (gsize) cat);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#endif /* GST_DISABLE_GST_DEBUG */
 
 static gpointer
 _init_locale_text_domain (gpointer data)
@@ -104,8 +121,6 @@ gst_pb_utils_init (void)
     GST_LOG ("already initialised");
     return;
   }
-  GST_DEBUG_CATEGORY_INIT (pbutils_debug, "pbutils", 0,
-      "GStreamer Plugins Base utils");
   gst_pb_utils_init_locale_text_domain ();
 
   inited = TRUE;
