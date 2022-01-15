@@ -36,7 +36,7 @@ if shm_enabled
     shm_sources,
     c_args : gst_plugins_bad_args + ['-DSHM_PIPE_USE_GLIB'],
     include_directories : [configinc],
-    dependencies : [gstbase_dep, rt_dep],
+    dependencies : [gstbase_dep, rt_dep] + network_deps,
     install : true,
     install_dir : plugins_install_dir,
   )
