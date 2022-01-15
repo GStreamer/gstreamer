@@ -3720,7 +3720,7 @@ gst_sdp_media_get_caps_from_media (const GstSDPMedia * media, gint pt)
           }
         }
 
-        if (strlen (key) > 1) {
+        if (strlen (key)) {
           tmp = g_ascii_strdown (key, -1);
           gst_structure_set (s, tmp, G_TYPE_STRING, val, NULL);
           g_free (tmp);
