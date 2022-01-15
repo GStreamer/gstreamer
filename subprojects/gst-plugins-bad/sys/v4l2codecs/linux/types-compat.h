@@ -40,6 +40,11 @@
 #  endif
 #endif
 
+#if defined(__sun)
+/* for _IOR/_IORW on Illumos distros */
+#include <sys/ioccom.h>
+#endif
+
 #ifndef __bitwise
 #  ifdef __CHECK_ENDIAN__
 #    define __bitwise __bitwise__
