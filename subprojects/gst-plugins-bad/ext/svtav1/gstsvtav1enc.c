@@ -597,7 +597,7 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   // thread affinity
   svt_config->logical_processors = PROP_CORES_DEFAULT;
   svt_config->target_socket = PROP_SOCKET_DEFAULT;
-  svt_config->unpin = 1;
+  svt_config->pin_threads = 0;
 
   // tile based encoding
   svt_config->tile_columns = 0;
