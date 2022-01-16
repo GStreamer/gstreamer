@@ -21,7 +21,11 @@
 #include <glib.h>
 #include <gst/gst.h>
 
+#ifdef STATIC_SOUP
+#include <libsoup/soup.h>
+#else
 #include "stub/soup.h"
+#endif
 
 G_BEGIN_DECLS
 

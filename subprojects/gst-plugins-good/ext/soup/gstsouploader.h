@@ -15,7 +15,12 @@
 #ifndef __GST_SOUP_LOADER_H__
 #define __GST_SOUP_LOADER_H__
 
+#ifdef STATIC_SOUP
+#include <libsoup/soup.h>
+#else
 #include "stub/soup.h"
+#endif
+
 #include <gst/gst.h>
 #include <gio/gio.h>
 
