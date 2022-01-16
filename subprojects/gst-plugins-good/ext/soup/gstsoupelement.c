@@ -31,6 +31,7 @@ soup_element_init (GstPlugin * plugin)
   static gsize res = FALSE;
 
   if (g_once_init_enter (&res)) {
+    GST_DEBUG_CATEGORY_INIT (soup_utils_debug, "souputils", 0, "Soup utils");
 #ifdef ENABLE_NLS
     GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
         LOCALEDIR);
@@ -53,6 +54,5 @@ soup_element_init (GstPlugin * plugin)
     g_type_ensure (G_TYPE_TLS_INTERACTION);
 
     g_once_init_leave (&res, TRUE);
-    GST_DEBUG_CATEGORY_INIT (soup_utils_debug, "souputils", 0, "Soup utils");
   }
 }
