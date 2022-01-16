@@ -62,7 +62,7 @@ typedef struct _GstSoupVTable
 #if GLIB_CHECK_VERSION(2, 66, 0)
   GUri *(*_soup_message_get_uri_3)(SoupMessage * msg);
 #endif
-  SoupLogger (*_soup_logger_new_3) (SoupLoggerLogLevel level);
+  SoupLogger *(*_soup_logger_new_3) (SoupLoggerLogLevel level);
   SoupMessageHeaders *(*_soup_message_get_request_headers_3) (SoupMessage * msg);
   SoupMessageHeaders *(*_soup_message_get_response_headers_3) (SoupMessage * msg);
   void (*_soup_message_set_request_body_from_bytes_3) (SoupMessage * msg,
@@ -71,8 +71,8 @@ typedef struct _GstSoupVTable
   SoupStatus (*_soup_message_get_status_3) (SoupMessage * msg);
 
   /* Symbols present only in libsoup 2 */
-  SoupLogger (*_soup_logger_new_2) (SoupLoggerLogLevel, int);
-  SoupURI (*_soup_uri_new_2) (const char *);
+  SoupLogger *(*_soup_logger_new_2) (SoupLoggerLogLevel, int);
+  SoupURI *(*_soup_uri_new_2) (const char *);
   SoupURI *(*_soup_message_get_uri_2) (SoupMessage *);
   char *(*_soup_uri_to_string_2) (SoupURI *, gboolean);
   void (*_soup_message_body_append_2) (SoupMessageBody *, SoupMemoryUse,
