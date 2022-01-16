@@ -2355,7 +2355,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
   }
 
   if (buildcaps) {
-    AVCodec *codec;
+    const AVCodec *codec;
 
     if ((codec = avcodec_find_decoder (codec_id)) ||
         (codec = avcodec_find_encoder (codec_id))) {
@@ -3001,6 +3001,7 @@ gst_ffmpeg_videoinfo_to_context (GstVideoInfo * info, AVCodecContext * context)
     context->color_range = AVCOL_RANGE_JPEG;
   } else {
     context->color_range = AVCOL_RANGE_MPEG;
+    context->strict_std_compliance = FF_COMPLIANCE_UNOFFICIAL;
   }
 }
 
@@ -4373,7 +4374,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     audio = TRUE;
   } else if (!strncmp (mimetype, "audio/x-gst-av-", 15)) {
     gchar ext[16];
-    AVCodec *codec;
+    const AVCodec *codec;
 
     if (strlen (mimetype) <= 30 &&
         sscanf (mimetype, "audio/x-gst-av-%s", ext) == 1) {
@@ -4385,7 +4386,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     }
   } else if (!strncmp (mimetype, "video/x-gst-av-", 15)) {
     gchar ext[16];
-    AVCodec *codec;
+    const AVCodec *codec;
 
     if (strlen (mimetype) <= 30 &&
         sscanf (mimetype, "video/x-gst-av-%s", ext) == 1) {

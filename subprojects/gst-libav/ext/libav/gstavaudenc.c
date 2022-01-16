@@ -175,10 +175,8 @@ gst_ffmpegaudenc_finalize (GObject * object)
 
   /* clean up remaining allocated data */
   av_frame_free (&ffmpegaudenc->frame);
-  gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
-  gst_ffmpeg_avcodec_close (ffmpegaudenc->refcontext);
-  av_free (ffmpegaudenc->context);
-  av_free (ffmpegaudenc->refcontext);
+  avcodec_free_context (&ffmpegaudenc->context);
+  avcodec_free_context (&ffmpegaudenc->refcontext);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -193,9 +191,9 @@ gst_ffmpegaudenc_start (GstAudioEncoder * encoder)
   ffmpegaudenc->opened = FALSE;
   ffmpegaudenc->need_reopen = FALSE;
 
-  gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
-  if (avcodec_get_context_defaults3 (ffmpegaudenc->context,
-          oclass->in_plugin) < 0) {
+  avcodec_free_context (&ffmpegaudenc->context);
+  ffmpegaudenc->context = avcodec_alloc_context3 (oclass->in_plugin);
+  if (ffmpegaudenc->context == NULL) {
     GST_DEBUG_OBJECT (ffmpegaudenc, "Failed to set context defaults");
     return FALSE;
   }
@@ -241,10 +239,10 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
 
   /* close old session */
   if (ffmpegaudenc->opened) {
-    gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
+    avcodec_free_context (&ffmpegaudenc->context);
     ffmpegaudenc->opened = FALSE;
-    if (avcodec_get_context_defaults3 (ffmpegaudenc->context,
-            oclass->in_plugin) < 0) {
+    ffmpegaudenc->context = avcodec_alloc_context3 (oclass->in_plugin);
+    if (ffmpegaudenc->context == NULL) {
       GST_DEBUG_OBJECT (ffmpegaudenc, "Failed to set context defaults");
       return FALSE;
     }
@@ -286,11 +284,11 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   /* open codec */
   if (gst_ffmpeg_avcodec_open (ffmpegaudenc->context, oclass->in_plugin) < 0) {
     gst_caps_unref (allowed_caps);
-    gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
+    avcodec_free_context (&ffmpegaudenc->context);
     GST_DEBUG_OBJECT (ffmpegaudenc, "avenc_%s: Failed to open FFMPEG codec",
         oclass->in_plugin->name);
-    if (avcodec_get_context_defaults3 (ffmpegaudenc->context,
-            oclass->in_plugin) < 0)
+    ffmpegaudenc->context = avcodec_alloc_context3 (oclass->in_plugin);
+    if (ffmpegaudenc->context == NULL)
       GST_DEBUG_OBJECT (ffmpegaudenc, "Failed to set context defaults");
 
     if ((oclass->in_plugin->capabilities & AV_CODEC_CAP_EXPERIMENTAL) &&
@@ -312,10 +310,10 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
 
   if (!other_caps) {
     gst_caps_unref (allowed_caps);
-    gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
+    avcodec_free_context (&ffmpegaudenc->context);
     GST_DEBUG ("Unsupported codec - no caps found");
-    if (avcodec_get_context_defaults3 (ffmpegaudenc->context,
-            oclass->in_plugin) < 0)
+    ffmpegaudenc->context = avcodec_alloc_context3 (oclass->in_plugin);
+    if (ffmpegaudenc->context == NULL)
       GST_DEBUG_OBJECT (ffmpegaudenc, "Failed to set context defaults");
     return FALSE;
   }
@@ -331,10 +329,10 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
 
   if (!gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (ffmpegaudenc),
           icaps)) {
-    gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
+    avcodec_free_context (&ffmpegaudenc->context);
     gst_caps_unref (icaps);
-    if (avcodec_get_context_defaults3 (ffmpegaudenc->context,
-            oclass->in_plugin) < 0)
+    ffmpegaudenc->context = avcodec_alloc_context3 (oclass->in_plugin);
+    if (ffmpegaudenc->context == NULL)
       GST_DEBUG_OBJECT (ffmpegaudenc, "Failed to set context defaults");
     return FALSE;
   }
@@ -403,8 +401,8 @@ buffer_info_free (void *opaque, guint8 * data)
     gst_buffer_unmap (info->buffer, &info->map);
     gst_buffer_unref (info->buffer);
   } else {
-    av_free (info->ext_data);
-    av_free (info->ext_data_array);
+    av_freep (&info->ext_data);
+    av_freep (&info->ext_data_array);
   }
   g_slice_free (BufferInfo, info);
 }

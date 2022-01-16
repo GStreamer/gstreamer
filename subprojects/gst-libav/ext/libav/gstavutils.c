@@ -36,7 +36,7 @@
 const gchar *
 gst_ffmpeg_get_codecid_longname (enum AVCodecID codec_id)
 {
-  AVCodec *codec;
+  const AVCodec *codec;
   /* Let's use what ffmpeg can provide us */
 
   if ((codec = avcodec_find_decoder (codec_id)) ||

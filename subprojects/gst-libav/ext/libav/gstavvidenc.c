@@ -224,8 +224,8 @@ gst_ffmpegvidenc_finalize (GObject * object)
   av_frame_free (&ffmpegenc->picture);
   gst_ffmpeg_avcodec_close (ffmpegenc->context);
   gst_ffmpeg_avcodec_close (ffmpegenc->refcontext);
-  av_free (ffmpegenc->context);
-  av_free (ffmpegenc->refcontext);
+  av_freep (&ffmpegenc->context);
+  av_freep (&ffmpegenc->refcontext);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -247,10 +247,10 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
 
   /* close old session */
   if (ffmpegenc->opened) {
-    gst_ffmpeg_avcodec_close (ffmpegenc->context);
+    avcodec_free_context (&ffmpegenc->context);
     ffmpegenc->opened = FALSE;
-    if (avcodec_get_context_defaults3 (ffmpegenc->context,
-            oclass->in_plugin) < 0) {
+    ffmpegenc->context = avcodec_alloc_context3 (oclass->in_plugin);
+    if (ffmpegenc->context == NULL) {
       GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
       return FALSE;
     }
@@ -454,9 +454,9 @@ bad_input_fmt:
   }
 close_codec:
   {
-    gst_ffmpeg_avcodec_close (ffmpegenc->context);
-    if (avcodec_get_context_defaults3 (ffmpegenc->context,
-            oclass->in_plugin) < 0)
+    avcodec_free_context (&ffmpegenc->context);
+    ffmpegenc->context = avcodec_alloc_context3 (oclass->in_plugin);
+    if (ffmpegenc->context == NULL)
       GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
     goto cleanup_stats_in;
   }
@@ -896,8 +896,9 @@ gst_ffmpegvidenc_start (GstVideoEncoder * encoder)
   ffmpegenc->need_reopen = FALSE;
 
   /* close old session */
-  gst_ffmpeg_avcodec_close (ffmpegenc->context);
-  if (avcodec_get_context_defaults3 (ffmpegenc->context, oclass->in_plugin) < 0) {
+  avcodec_free_context (&ffmpegenc->context);
+  ffmpegenc->context = avcodec_alloc_context3 (oclass->in_plugin);
+  if (ffmpegenc->context == NULL) {
     GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
     return FALSE;
   }
