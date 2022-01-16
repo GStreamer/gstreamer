@@ -1291,6 +1291,16 @@ gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
       slice->nalu.size);
   self->bitstream_map.size += nal_size;
 
+  switch (slice->header.type % 5) {
+    case GST_H264_P_SLICE:
+      self->decode_params.flags |= V4L2_H264_DECODE_PARAM_FLAG_PFRAME;
+      break;
+
+    case GST_H264_B_SLICE:
+      self->decode_params.flags |= V4L2_H264_DECODE_PARAM_FLAG_BFRAME;
+      break;
+  }
+
   return GST_FLOW_OK;
 }
 
