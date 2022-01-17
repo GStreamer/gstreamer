@@ -2300,15 +2300,8 @@ gst_play_bin3_send_event (GstElement * element, GstEvent * event)
      * the selection with that combiner */
     event = update_select_streams_event (playbin, event, group);
 
-    if (group->collection) {
-      group->selected_stream_types =
-          get_stream_type_for_event (group->collection, event);
-      playbin->selected_stream_types =
-          playbin->groups[0].selected_stream_types | playbin->groups[1].
-          selected_stream_types;
-      if (playbin->active_stream_types != playbin->selected_stream_types)
-        reconfigure_output (playbin);
-    }
+    /* Don't reconfigure playsink just yet, until the streams-selected
+     * message(s) tell us as streams become active / available */
 
     /* Send this event directly to uridecodebin, so it works even
      * if uridecodebin didn't add any pads yet */
@@ -2585,6 +2578,32 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
     if (playbin->is_live && GST_STATE_TARGET (playbin) == GST_STATE_PLAYING) {
       do_reset_time = TRUE;
     }
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAMS_SELECTED) {
+    GstSourceGroup *target_group;
+
+    GST_PLAY_BIN3_LOCK (playbin);
+
+    target_group = find_source_group_owner (playbin, msg->src);
+    if (target_group) {
+      GstStreamType selected_types = 0;
+      guint i, nb;
+      nb = gst_message_streams_selected_get_size (msg);
+      for (i = 0; i < nb; i++) {
+        GstStream *stream = gst_message_streams_selected_get_stream (msg, i);
+        selected_types |= gst_stream_get_stream_type (stream);
+        gst_object_unref (stream);
+      }
+      target_group->selected_stream_types = selected_types;
+      playbin->selected_stream_types =
+          playbin->groups[0].selected_stream_types | playbin->groups[1].
+          selected_stream_types;
+      if (playbin->active_stream_types != playbin->selected_stream_types) {
+        GST_DEBUG_OBJECT (playbin,
+            "selected stream types changed, reconfiguring output");
+        reconfigure_output (playbin);
+      }
+    }
+    GST_PLAY_BIN3_UNLOCK (playbin);
   }
 
 beach:
