@@ -421,16 +421,26 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
   if (gst_v4l2_decoder_cmd (self->v4l2output, V4L2_DEC_CMD_STOP, 0)) {
-    GstTask *task = decoder->srcpad->task;
+    GstTask *task;
 
-    /* If the decoder stop command succeeded, just wait until processing is
-     * finished */
-    GST_DEBUG_OBJECT (self, "Waiting for decoder stop");
-    GST_OBJECT_LOCK (task);
-    while (GST_TASK_STATE (task) == GST_TASK_STARTED)
-      GST_TASK_WAIT (task);
-    GST_OBJECT_UNLOCK (task);
-    ret = GST_FLOW_FLUSHING;
+    GST_OBJECT_LOCK (decoder->srcpad);
+    task = GST_PAD_TASK (decoder->srcpad);
+    if (task)
+      gst_object_ref (task);
+    GST_OBJECT_UNLOCK (decoder->srcpad);
+
+    if (task) {
+      /* If the decoder stop command succeeded, just wait until processing is
+       * finished */
+      GST_DEBUG_OBJECT (self, "Waiting for decoder stop");
+      GST_OBJECT_LOCK (task);
+      while (GST_TASK_STATE (task) == GST_TASK_STARTED)
+        GST_TASK_WAIT (task);
+      GST_OBJECT_UNLOCK (task);
+
+      ret = GST_FLOW_FLUSHING;
+      gst_object_unref (task);
+    }
   } else {
     /* otherwise keep queuing empty buffers until the processing thread has
      * stopped, _pool_process() will return FLUSHING when that happened */
