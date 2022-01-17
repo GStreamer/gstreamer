@@ -3113,6 +3113,7 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstSourceGroup * group)
     goto unknown_type;
   }
 
+  GST_PLAY_BIN3_LOCK (playbin);
   combine = &playbin->combiner[pb_stream_type];
 
   combiner_control_pad (playbin, combine, pad);
@@ -3127,6 +3128,7 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstSourceGroup * group)
     group->pending_about_to_finish = FALSE;
     emit_about_to_finish (playbin);
   }
+  GST_PLAY_BIN3_UNLOCK (playbin);
 
   GST_PLAY_BIN3_SHUTDOWN_UNLOCK (playbin);
 
