@@ -1,5 +1,6 @@
 va_sources = [
   'plugin.c',
+  'gstjpegdecoder.c',
   'gstvabasedec.c',
   'gstvabasetransform.c',
   'gstvabaseenc.c',
