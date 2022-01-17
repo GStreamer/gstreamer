@@ -1053,6 +1053,12 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
 
   g_assert (period > 0);
 
+  if (self->buffer_size > period) {
+    GST_INFO_OBJECT (self, "Updating buffer size %d -> %d", self->buffer_size,
+        period);
+    self->buffer_size = period;
+  }
+
   spec->segsize = period * GST_AUDIO_INFO_BPF (&buf->spec.info);
   spec->segtotal = 2;
 
