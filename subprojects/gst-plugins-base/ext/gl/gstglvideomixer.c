@@ -193,6 +193,8 @@ static void gst_gl_video_mixer_input_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_gl_video_mixer_input_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
+static gboolean gst_gl_video_mixer_src_event (GstAggregator * agg,
+    GstEvent * event);
 
 typedef struct _GstGLVideoMixerInput GstGLVideoMixerInput;
 typedef GstGhostPadClass GstGLVideoMixerInputClass;
@@ -933,6 +935,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
 
   vagg_class->update_caps = _update_caps;
 
+  agg_class->src_event = gst_gl_video_mixer_src_event;
   agg_class->fixate_src_caps = _fixate_caps;
   agg_class->propose_allocation = gst_gl_video_mixer_propose_allocation;
 
@@ -1191,6 +1194,91 @@ _reset_gl (GstGLContext * context, GstGLVideoMixer * video_mixer)
   }
 
   gst_element_foreach_sink_pad (GST_ELEMENT (video_mixer), _reset_pad_gl, NULL);
+}
+
+static gboolean
+is_point_contained (const GstVideoRectangle rect, const gint px, const gint py)
+{
+  if ((px >= rect.x) && (px <= rect.x + rect.w) &&
+      (py >= rect.y) && (py <= rect.y + rect.h))
+    return TRUE;
+  return FALSE;
+}
+
+static gboolean
+src_pad_mouse_event (GstElement * element, GstPad * pad, gpointer user_data)
+{
+  GstGLVideoMixer *mix = GST_GL_VIDEO_MIXER (element);
+  GstGLVideoMixerPad *mix_pad = GST_GL_VIDEO_MIXER_PAD (pad);
+  GstCaps *caps = gst_pad_get_current_caps (pad);
+  GstStructure *event_st, *caps_st;
+  gint par_n, par_d;
+  gdouble event_x, event_y;
+  GstVideoRectangle rect;
+
+  event_st =
+      gst_structure_copy (gst_event_get_structure (GST_EVENT_CAST (user_data)));
+  caps_st = gst_structure_copy (gst_caps_get_structure (caps, 0));
+
+  gst_structure_get (event_st, "pointer_x", G_TYPE_DOUBLE, &event_x,
+      "pointer_y", G_TYPE_DOUBLE, &event_y, NULL);
+
+  /* Find output rectangle of this pad */
+  gst_structure_get_fraction (caps_st, "pixel-aspect-ratio", &par_n, &par_d);
+  _mixer_pad_get_output_size (mix, mix_pad, par_n, par_d, &(rect.w), &(rect.h));
+  rect.x = mix_pad->xpos;
+  rect.y = mix_pad->ypos;
+
+  /* Translate coordinates and send event if it lies in this rectangle */
+  if (is_point_contained (rect, event_x, event_y)) {
+    GstVideoAggregatorPad *vpad = GST_VIDEO_AGGREGATOR_PAD_CAST (mix_pad);
+    gdouble w, h, x, y;
+
+    w = (gdouble) GST_VIDEO_INFO_WIDTH (&vpad->info);
+    h = (gdouble) GST_VIDEO_INFO_HEIGHT (&vpad->info);
+    x = (event_x - (gdouble) rect.x) * (w / (gdouble) rect.w);
+    y = (event_y - (gdouble) rect.y) * (h / (gdouble) rect.h);
+
+    gst_structure_set (event_st, "pointer_x", G_TYPE_DOUBLE, x,
+        "pointer_y", G_TYPE_DOUBLE, y, NULL);
+    gst_pad_push_event (pad, gst_event_new_navigation (event_st));
+  } else {
+    gst_structure_free (event_st);
+  }
+
+  gst_structure_free (caps_st);
+  return TRUE;
+}
+
+static gboolean
+gst_gl_video_mixer_src_event (GstAggregator * agg, GstEvent * event)
+{
+  GstNavigationEventType event_type;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NAVIGATION:
+    {
+      event_type = gst_navigation_event_get_type (event);
+      switch (event_type) {
+        case GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS:
+        case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:
+        case GST_NAVIGATION_EVENT_MOUSE_MOVE:
+        case GST_NAVIGATION_EVENT_MOUSE_SCROLL:
+          gst_element_foreach_sink_pad (GST_ELEMENT_CAST (agg),
+              src_pad_mouse_event, event);
+          gst_event_unref (event);
+          return FALSE;
+
+        default:
+          break;
+      }
+    }
+
+    default:
+      break;
+  }
+
+  return GST_AGGREGATOR_CLASS (parent_class)->src_event (agg, event);
 }
 
 static gboolean

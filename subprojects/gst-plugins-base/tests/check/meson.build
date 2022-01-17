@@ -100,6 +100,7 @@ if build_gstgl and host_machine.system() != 'windows'
     [ 'libs/gstglsl.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
     [ 'libs/gstglslstage.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
     [ 'libs/gstglupload.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
+    [ 'libs/gstglvideomixerelement.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
     [ 'elements/glimagesink.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
     [ 'elements/glbin.c', not build_gstgl ],
     [ 'pipelines/gl-launch-lines.c', not build_gstgl ],
