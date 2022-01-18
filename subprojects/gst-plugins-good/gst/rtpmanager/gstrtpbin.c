@@ -1354,9 +1354,27 @@ stream_set_ts_offset (GstRtpBin * bin, GstRtpBinStream * stream,
       stream->avg_ts_offset = ts_offset;
       stream->is_initialized = TRUE;
     } else {
-      stream->avg_ts_offset =
-          ((bin->ts_offset_smoothing_factor - 1) * stream->avg_ts_offset +
-          ts_offset) / bin->ts_offset_smoothing_factor;
+      /* RMA algorithm using smoothing factor is following, but split into
+       * parts to check for overflows:
+       * stream->avg_ts_offset =
+       *   ((bin->ts_offset_smoothing_factor - 1) * stream->avg_ts_offset
+       *    + ts_offset) / bin->ts_offset_smoothing_factor
+       */
+      guint64 max_possible_smoothing_factor =
+          G_MAXINT64 / ABS (stream->avg_ts_offset);
+      gint64 cur_avg_product =
+          (bin->ts_offset_smoothing_factor - 1) * stream->avg_ts_offset;
+
+      if ((max_possible_smoothing_factor < bin->ts_offset_smoothing_factor) ||
+          (cur_avg_product > 0 && G_MAXINT64 - cur_avg_product < ts_offset) ||
+          (cur_avg_product < 0 && G_MININT64 - cur_avg_product > ts_offset)) {
+        GST_WARNING_OBJECT (bin,
+            "ts-offset-smoothing-factor calculation overflow, fallback to using ts-offset directly");
+        stream->avg_ts_offset = ts_offset;
+      } else {
+        stream->avg_ts_offset =
+            (cur_avg_product + ts_offset) / bin->ts_offset_smoothing_factor;
+      }
     }
   } else {
     stream->avg_ts_offset = ts_offset;
