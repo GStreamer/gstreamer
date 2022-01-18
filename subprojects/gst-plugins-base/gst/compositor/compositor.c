@@ -1389,6 +1389,10 @@ _negotiated_caps (GstAggregator * agg, GstCaps * caps)
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
   GstVideoInfo v_info;
   guint n_threads;
+  GList *iter;
+  guint n_sdr = 0;
+  guint n_hlg = 0;
+  guint n_pq = 0;
 
   GST_DEBUG_OBJECT (agg, "Negotiated caps %" GST_PTR_FORMAT, caps);
 
@@ -1398,6 +1402,40 @@ _negotiated_caps (GstAggregator * agg, GstCaps * caps)
   if (!set_functions (compositor, &v_info)) {
     GST_ERROR_OBJECT (agg, "Failed to setup vfuncs");
     return FALSE;
+  }
+
+  GST_OBJECT_LOCK (vagg);
+  for (iter = GST_ELEMENT (vagg)->sinkpads; iter; iter = g_list_next (iter)) {
+    GstVideoAggregatorPad *pad = (GstVideoAggregatorPad *) iter->data;
+
+    if (!pad->info.finfo)
+      continue;
+
+    switch (pad->info.colorimetry.transfer) {
+      case GST_VIDEO_TRANSFER_SMPTE2084:
+        n_pq++;
+        break;
+      case GST_VIDEO_TRANSFER_ARIB_STD_B67:
+        n_hlg++;
+        break;
+      default:
+        n_sdr++;
+        break;
+    }
+  }
+  GST_OBJECT_UNLOCK (vagg);
+
+  /* TODO: we don't have support for HDR tone-mapping, so mixing HDR/SDR might
+   * result in somewhat visually bad image. Needs enhancement to the
+   * video-convert or somewhere */
+  if (n_sdr > 0) {
+    if (n_hlg > 0 || n_pq > 0) {
+      GST_ELEMENT_WARNING (compositor, STREAM, NOT_IMPLEMENTED,
+          ("Mixing SDR and HDR contents would result in color loss"), (NULL));
+    }
+  } else if (n_hlg > 0 && n_pq > 0) {
+    GST_ELEMENT_WARNING (compositor, STREAM, NOT_IMPLEMENTED,
+        ("Mixing HDR10 and HLG contents would result in color loss"), (NULL));
   }
 
   if (compositor->max_threads == 0)
