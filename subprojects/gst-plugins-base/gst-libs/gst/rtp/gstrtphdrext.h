@@ -210,7 +210,7 @@ struct _GstRTPHeaderExtensionClass
                                                      GstCaps * caps);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTPHeaderExtension, gst_object_unref)
