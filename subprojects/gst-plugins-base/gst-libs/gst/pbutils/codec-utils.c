@@ -277,7 +277,7 @@ gst_codec_utils_aac_get_channels (const guint8 * audio_config, guint len)
  * normally determined using the AudioObjectType field which is in the first
  * 5 bits of @audio_config
  *
- * Returns: The profile as a const string and %NULL if the profile could not be
+ * Returns: (nullable): The profile as a const string and %NULL if the profile could not be
  * determined.
  */
 const gchar *
@@ -340,7 +340,7 @@ gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len)
  *     fields are appropriately shifted).
  *   * Bit 9:12 contains the channel configuration
  *
- * Returns: The level as a const string and %NULL if the level could not be
+ * Returns: (nullable): The level as a const string and %NULL if the level could not be
  * determined.
  */
 const gchar *
@@ -585,7 +585,7 @@ gst_codec_utils_aac_caps_set_level_and_profile (GstCaps * caps,
  * * Bit 13:15 - Reserved
  * * Bit 16:24 - Level indication
  *
- * Returns: The profile as a const string, or %NULL if there is an error.
+ * Returns: (nullable): The profile as a const string, or %NULL if there is an error.
  */
 const gchar *
 gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
@@ -686,7 +686,7 @@ gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
  * sequence parameter set into a string. The SPS is expected to have the
  * same format as for gst_codec_utils_h264_get_profile().
  *
- * Returns: The level as a const string, or %NULL if there is an error.
+ * Returns: (nullable): The level as a const string, or %NULL if there is an error.
  */
 const gchar *
 gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
@@ -1201,7 +1201,7 @@ utils_get_scalable_format_range_extensions_profile (GstH265ExtensionProfile *
  * * Bit 44:87 - See below
  * * Bit 88:95 - general_level_idc
  *
- * Returns: The profile as a const string, or %NULL if there is an error.
+ * Returns: (nullable): The profile as a const string, or %NULL if there is an error.
  *
  * Since: 1.4
  */
@@ -1367,7 +1367,7 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
  * profile_tier_level structure into a string. The profile_tier_level
  * is expected to have the same format as for gst_codec_utils_h264_get_profile().
  *
- * Returns: The tier as a const string, or %NULL if there is an error.
+ * Returns: (nullable): The tier as a const string, or %NULL if there is an error.
  *
  * Since: 1.4
  */
@@ -1404,7 +1404,7 @@ gst_codec_utils_h265_get_tier (const guint8 * profile_tier_level, guint len)
  * profile_tier_level structure into a string. The profiel_tier_level is
  * expected to have the same format as for gst_codec_utils_h264_get_profile().
  *
- * Returns: The level as a const string, or %NULL if there is an error.
+ * Returns: (nullable): The level as a const string, or %NULL if there is an error.
  *
  * Since: 1.4
  */
@@ -1554,7 +1554,7 @@ gst_codec_utils_h265_caps_set_level_tier_and_profile (GstCaps * caps,
  * object sequence start code. Only the first byte
  * (profile_and_level_indication) is used.
  *
- * Returns: The profile as a const string, or NULL if there is an error.
+ * Returns: (nullable): The profile as a const string, or NULL if there is an error.
  */
 const gchar *
 gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len)
@@ -1627,7 +1627,7 @@ gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len)
  * object sequence start code. Only the first byte
  * (profile_and_level_indication) is used.
  *
- * Returns: The level as a const string, or NULL if there is an error.
+ * Returns: (nullable): The level as a const string, or NULL if there is an error.
  */
 const gchar *
 gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
@@ -2474,7 +2474,7 @@ done:
  *
  * Registered codecs can be found at http://mp4ra.org/#/codecs
  *
- * Returns: (transfer full): a RFC 6381 compatible codec string or %NULL
+ * Returns: (transfer full) (nullable): a RFC 6381 compatible codec string or %NULL
  *
  * Since: 1.20
  */
