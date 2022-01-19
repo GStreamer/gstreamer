@@ -727,6 +727,69 @@ extract_symname (const char *filename)
   return symname;
 }
 
+#ifdef G_OS_WIN32
+/*
+ * It is an extremely common mistake on Windows to have incorrect PATH values
+ * when loading a plugin, and the error message is very confusing in this case:
+ * 'The specified module could not be found.' which implies the plugin itself
+ * could not be found. The actual issue is that a DLL dependency could not be
+ * found. We need to detect this case and print a more useful error message.
+ *
+ * Unfortunately, g_module_open() doesn't actually give us the GetLastError()
+ * code from LoadLibraryW() and only gives us a literal message from
+ * FormatMessageW(). We can't do a string comparison on that because it is
+ * locale-dependent.
+ *
+ * The only way out is for us to try loading the module ourselves on failure and
+ * get the error DWORD again from GetLastError().
+ */
+static char *
+get_better_module_load_error (const char *filename, const char *orig_err_msg)
+{
+  BOOL ret;
+  DWORD mode;
+  wchar_t *wfilename;
+  HMODULE handle;
+  char *err_msg = NULL;
+
+  wfilename = g_utf8_to_utf16 (filename, -1, NULL, NULL, NULL);
+  ret = SetThreadErrorMode (SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS,
+      &mode);
+#ifdef GST_WINAPI_ONLY_APP
+  handle = LoadPackagedLibrary (wfilename, 0);
+#else
+  handle = LoadLibraryW (wfilename);
+#endif
+  g_free (wfilename);
+
+  if (handle == NULL) {
+    DWORD err = GetLastError ();
+    char *win32_err_msg = g_win32_error_message (err);
+    if (err == ERROR_MOD_NOT_FOUND) {
+      err_msg = g_strdup_printf ("%s\nThis usually means Windows was unable "
+          "to find a DLL dependency of the plugin. Please check that PATH is "
+          "correct.\nYou can run 'dumpbin -dependents' (provided by the "
+          "Visual Studio developer prompt) to list the DLL deps of any DLL.\n"
+          "There are also some third-party GUIs to list and debug DLL "
+          "dependencies recursively.", win32_err_msg);
+      g_free (win32_err_msg);
+    } else {
+      err_msg = win32_err_msg;
+    }
+  } else {
+    err_msg = g_strdup_printf ("g_module_open() failed on %s with \"%s\" but "
+        "manual loading succeeded; this should be impossible! Please "
+        "report this as a GStreamer bug.", filename, orig_err_msg);
+    FreeLibrary (handle);
+  }
+
+  if (ret > 0)
+    SetThreadErrorMode (mode, NULL);
+
+  return err_msg;
+}
+#endif /* G_OS_WIN32 */
+
 /* Note: The return value is (transfer full) although we work with floating
  * references here. If a new plugin instance is created, it is always sinked
  * in the registry first and a new reference is returned
@@ -802,15 +865,23 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
 
   module = g_module_open (filename, flags);
   if (module == NULL) {
-    GST_CAT_WARNING (GST_CAT_PLUGIN_LOADING, "module_open failed: %s",
-        g_module_error ());
+#ifdef G_OS_WIN32
+    /* flags are meaningless / ignored on Windows */
+    char *err_msg = get_better_module_load_error (filename, g_module_error ());
+#else
+    const char *err_msg = g_module_error ();
+#endif
+    GST_CAT_WARNING (GST_CAT_PLUGIN_LOADING, "module_open failed: %s", err_msg);
     g_set_error (error,
         GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE, "Opening module failed: %s",
-        g_module_error ());
+        err_msg);
     /* If we failed to open the shared object, then it's probably because a
      * plugin is linked against the wrong libraries. Print out an easy-to-see
      * message in this case. */
-    g_warning ("Failed to load plugin '%s': %s", filename, g_module_error ());
+    g_warning ("Failed to load plugin '%s': %s", filename, err_msg);
+#ifdef G_OS_WIN32
+    g_free (err_msg);
+#endif
     goto return_error;
   }
 
