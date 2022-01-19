@@ -569,6 +569,7 @@ _media_replace_setup (GstSDPMedia * media, GstWebRTCDTLSSetup setup)
       GST_TRACE ("replace setup:%s with setup:%s", attr->value, setup_str);
       gst_sdp_attribute_set (&new_attr, "setup", setup_str);
       gst_sdp_media_replace_attribute (media, i, &new_attr);
+      g_free (setup_str);
       return;
     }
   }

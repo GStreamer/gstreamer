@@ -822,7 +822,7 @@ webrtc_data_channel_send_string (GstWebRTCDataChannel * base_channel,
     ppid = DATA_CHANNEL_PPID_WEBRTC_STRING_EMPTY;
   } else {
     gsize size = strlen (str);
-    gchar *str_copy = g_strdup (str);
+    gchar *str_copy;
 
     if (!_is_within_max_message_size (channel, size)) {
       GError *error = NULL;
@@ -835,6 +835,7 @@ webrtc_data_channel_send_string (GstWebRTCDataChannel * base_channel,
       return;
     }
 
+    str_copy = g_strdup (str);
     buffer =
         gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, str_copy,
         size, 0, size, str_copy, g_free);

@@ -3352,7 +3352,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
     reserved_pts = gather_reserved_pts (webrtc);
     if (last_offer && _parse_bundle (last_offer, &last_bundle, NULL)
-        && last_bundle && last_bundle && last_bundle[0]
+        && last_bundle && last_bundle[0]
         && _get_bundle_index (last_offer, last_bundle, &bundle_media_index)) {
       bundle_ufrag =
           g_strdup (_media_get_ice_ufrag (last_offer, bundle_media_index));
@@ -4746,6 +4746,7 @@ _set_rtx_ptmap_from_stream (GstWebRTCBin * webrtc, TransportStream * stream)
       g_object_set (stream->rtxsend, "payload-type-map", pt_map, NULL);
 
     gst_structure_free (pt_map);
+    g_free (rtx_pt);
   }
 }
 
@@ -6482,7 +6483,6 @@ on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
 {
   TransportStream *stream;
   gboolean have_rtx = FALSE;
-  GstStructure *pt_map = NULL;
   GstElement *ret = NULL;
 
   stream = _find_transport_for_session (webrtc, session_id);
@@ -6490,8 +6490,8 @@ on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
   if (stream)
     have_rtx = transport_stream_get_pt (stream, "RTX", -1) != 0;
 
-  GST_LOG_OBJECT (webrtc, "requesting aux sender for stream %" GST_PTR_FORMAT
-      " with pt map %" GST_PTR_FORMAT, stream, pt_map);
+  GST_LOG_OBJECT (webrtc, "requesting aux sender for stream %" GST_PTR_FORMAT,
+      stream);
 
   if (have_rtx) {
     GstElement *rtx;
@@ -6543,9 +6543,6 @@ on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
   }
 
 out:
-  if (pt_map)
-    gst_structure_free (pt_map);
-
   return ret;
 }
 
