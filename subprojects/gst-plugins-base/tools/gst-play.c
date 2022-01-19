@@ -39,6 +39,12 @@
 
 #include <glib/gprintf.h>
 
+#ifdef HAVE_WINMM
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <timeapi.h>
+#endif
+
 #include "gst-play-kb.h"
 
 #define VOLUME_STEPS 20
@@ -1491,6 +1497,43 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
   }
 }
 
+#ifdef HAVE_WINMM
+static guint
+enable_winmm_timer_resolution (void)
+{
+  TIMECAPS time_caps;
+  guint resolution = 0;
+  MMRESULT res;
+
+  res = timeGetDevCaps (&time_caps, sizeof (TIMECAPS));
+  if (res != TIMERR_NOERROR) {
+    g_warning ("timeGetDevCaps() returned non-zero code %d", res);
+    return 0;
+  }
+
+  resolution = MIN (MAX (time_caps.wPeriodMin, 1), time_caps.wPeriodMax);
+  res = timeBeginPeriod (resolution);
+  if (res != TIMERR_NOERROR) {
+    g_warning ("timeBeginPeriod() returned non-zero code %d", res);
+    return 0;
+  }
+
+  gst_println (_("Use Windows high-resolution clock, precision: %u ms\n"),
+      resolution);
+
+  return resolution;
+}
+
+static void
+clear_winmm_timer_resolution (guint resolution)
+{
+  if (resolution == 0)
+    return;
+
+  timeEndPeriod (resolution);
+}
+#endif
+
 int
 main (int argc, char **argv)
 {
@@ -1513,6 +1556,9 @@ main (int argc, char **argv)
   GOptionContext *ctx;
   gchar *playlist_file = NULL;
   gboolean use_playbin3 = FALSE;
+#ifdef HAVE_WINMM
+  guint winmm_timer_resolution = 0;
+#endif
   GOptionEntry options[] = {
     {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
         N_("Output status information and property notifications"), NULL},
@@ -1669,6 +1715,22 @@ main (int argc, char **argv)
         ("Failed to create 'playbin' element. Check your GStreamer installation.\n");
     return EXIT_FAILURE;
   }
+#ifdef HAVE_WINMM
+  /* Enable high-precision clock which will improve accuracy of various
+   * Windows timer APIs (e.g., Sleep()), and it will increase the precision
+   * of GstSystemClock as well
+   */
+
+  /* NOTE: Once timer resolution is updated via timeBeginPeriod(),
+   * application should undo it by calling timeEndPeriod()
+   *
+   * Prior to Windows 10, version 2004, timeBeginPeriod() affects global
+   * Windows setting (meaning that it will affect other processes),
+   * but starting with Windows 10, version 2004, this function no longer
+   * affects global timer resolution
+   */
+  winmm_timer_resolution = enable_winmm_timer_resolution ();
+#endif
 
   if (interactive) {
     if (gst_play_kb_set_key_handler (keyboard_cb, play)) {
@@ -1681,6 +1743,11 @@ main (int argc, char **argv)
 
   /* play */
   do_play (play);
+
+#ifdef HAVE_WINMM
+  /* Undo timeBeginPeriod() if required */
+  clear_winmm_timer_resolution (winmm_timer_resolution);
+#endif
 
   /* clean up */
   play_free (play);
