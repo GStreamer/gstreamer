@@ -63,6 +63,8 @@ gboolean      gst_wasapi2_util_parse_waveformatex (WAVEFORMATEX * format,
 
 gchar *       gst_wasapi2_util_get_error_message  (HRESULT hr);
 
+gboolean      gst_wasapi2_can_automatic_stream_routing (void);
+
 G_END_DECLS
 
 #endif /* __GST_WASAPI_UTIL_H__ */

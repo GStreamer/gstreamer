@@ -26,6 +26,7 @@
 #include "gstwasapi2util.h"
 #include <audioclient.h>
 #include <mmdeviceapi.h>
+#include <winternl.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_debug
@@ -442,4 +443,50 @@ gst_wasapi2_util_parse_waveformatex (WAVEFORMATEX * format,
   }
 
   return TRUE;
+}
+
+gboolean
+gst_wasapi2_can_automatic_stream_routing (void)
+{
+#ifdef GST_WASAPI2_WINAPI_ONLY_APP
+  /* Assume we are on very recent OS */
+  return TRUE;
+#else
+  static gboolean ret = FALSE;
+  static gsize version_once = 0;
+
+  if (g_once_init_enter (&version_once)) {
+    OSVERSIONINFOEXW osverinfo;
+    typedef NTSTATUS (WINAPI fRtlGetVersion) (PRTL_OSVERSIONINFOEXW);
+    fRtlGetVersion *RtlGetVersion = NULL;
+    HMODULE hmodule = NULL;
+
+    memset (&osverinfo, 0, sizeof (OSVERSIONINFOEXW));
+    osverinfo.dwOSVersionInfoSize = sizeof (OSVERSIONINFOEXW);
+
+    hmodule = LoadLibraryW (L"ntdll.dll");
+    if (hmodule)
+      RtlGetVersion =
+          (fRtlGetVersion *) GetProcAddress (hmodule, "RtlGetVersion");
+
+    if (RtlGetVersion) {
+      RtlGetVersion (&osverinfo);
+
+      /* automatic stream routing requires Windows 10
+       * Anniversary Update (version 1607, build number 14393.0) */
+      if (osverinfo.dwMajorVersion > 10 ||
+          (osverinfo.dwMajorVersion == 10 && osverinfo.dwBuildNumber >= 14393))
+        ret = TRUE;
+    }
+
+    if (hmodule)
+      FreeLibrary (hmodule);
+
+    g_once_init_leave (&version_once, 1);
+  }
+
+  GST_INFO ("Automatic stream routing support: %d", ret);
+
+  return ret;
+#endif
 }

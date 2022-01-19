@@ -164,7 +164,7 @@ public:
       HRESULT async_hr = S_OK;
 
       async_hr = ActivateAudioInterfaceAsync (device_id.c_str (),
-            __uuidof(IAudioClient3), nullptr, this, &async_op);
+            __uuidof(IAudioClient), nullptr, this, &async_op);
 
       /* for debugging */
       gst_wasapi2_result (async_hr);
@@ -590,17 +590,22 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
    * Note that default device is much preferred
    * See https://docs.microsoft.com/en-us/windows/win32/coreaudio/automatic-stream-routing
    */
-  if (self->device_id &&
-      g_ascii_strcasecmp (self->device_id, default_device_id.c_str ()) == 0) {
-    GST_DEBUG_OBJECT (self, "Default device was requested");
-    use_default_device = TRUE;
-  } else if (self->device_index < 0 && !self->device_id) {
-    GST_DEBUG_OBJECT (self,
-        "No device was explicitly requested, use default device");
-    use_default_device = TRUE;
-  } else if (!self->device_id && self->device_index == 0) {
-    GST_DEBUG_OBJECT (self, "device-index == zero means default device");
-    use_default_device = TRUE;
+
+  /* DEVINTERFACE_AUDIO_CAPTURE and DEVINTERFACE_AUDIO_RENDER are available
+   * as of Windows 10 */
+  if (gst_wasapi2_can_automatic_stream_routing ()) {
+    if (self->device_id &&
+        g_ascii_strcasecmp (self->device_id, default_device_id.c_str ()) == 0) {
+      GST_DEBUG_OBJECT (self, "Default device was requested");
+      use_default_device = TRUE;
+    } else if (self->device_index < 0 && !self->device_id) {
+      GST_DEBUG_OBJECT (self,
+          "No device was explicitly requested, use default device");
+      use_default_device = TRUE;
+    } else if (!self->device_id && self->device_index == 0) {
+      GST_DEBUG_OBJECT (self, "device-index == zero means default device");
+      use_default_device = TRUE;
+    }
   }
 
   if (use_default_device) {
@@ -652,8 +657,13 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
 
   GST_DEBUG_OBJECT (self, "Available device count: %d", count);
 
-  /* zero is for default device */
-  device_index = 1;
+  if (gst_wasapi2_can_automatic_stream_routing ()) {
+    /* zero is for default device */
+    device_index = 1;
+  } else {
+    device_index = 0;
+  }
+
   for (unsigned int i = 0; i < count; i++) {
     /* *INDENT-OFF* */
     ComPtr<IDeviceInformation> device_info;
@@ -712,6 +722,15 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
 
     GST_DEBUG_OBJECT (self, "device [%d] id: %s, name: %s",
         device_index, cur_device_id.c_str (), cur_device_name.c_str ());
+
+    if (self->device_index < 0 && !self->device_id) {
+      GST_INFO_OBJECT (self, "Select the first device, device id %s",
+          cur_device_id.c_str ());
+      target_device_id_wstring = id.GetRawBuffer (nullptr);
+      target_device_id = cur_device_id;
+      target_device_name = cur_device_name;
+      break;
+    }
 
     if (self->device_id &&
         g_ascii_strcasecmp (self->device_id, cur_device_id.c_str ()) == 0) {

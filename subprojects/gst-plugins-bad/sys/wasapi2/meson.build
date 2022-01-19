@@ -83,6 +83,16 @@ if not winapi_app
   endif
 endif
 
+winapi_desktop = cxx.compiles('''#include <winapifamily.h>
+    #if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+    #error "not win32"
+    #endif''',
+    name: 'building for WINAPI_PARTITION_DESKTOP')
+
+if winapi_app and not winapi_desktop
+  extra_args += ['-DGST_WASAPI2_WINAPI_ONLY_APP']
+endif
+
 win10_sdk = cxx.compiles('''#include <windows.h>
     #ifndef WDK_NTDDI_VERSION
     #error "unknown Windows SDK version"
