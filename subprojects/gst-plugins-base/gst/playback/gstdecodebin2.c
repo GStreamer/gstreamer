@@ -239,16 +239,16 @@ enum
   LAST_SIGNAL
 };
 
-/* automatic sizes, while prerolling we buffer up to 2MB, we ignore time
+/* automatic sizes, while prerolling we buffer up to 8MB, we ignore time
  * and buffers in this case. */
-#define AUTO_PREROLL_SIZE_BYTES                  2 * 1024 * 1024
+#define AUTO_PREROLL_SIZE_BYTES                  8 * 1024 * 1024
 #define AUTO_PREROLL_SIZE_BUFFERS                0
 #define AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME      10 * GST_SECOND
 #define AUTO_PREROLL_SEEKABLE_SIZE_TIME          0
 
-/* when playing, keep a max of 2MB of data but try to keep the number of buffers
+/* when playing, keep a max of 8MB of data but try to keep the number of buffers
  * as low as possible (try to aim for 5 buffers) */
-#define AUTO_PLAY_SIZE_BYTES        2 * 1024 * 1024
+#define AUTO_PLAY_SIZE_BYTES        8 * 1024 * 1024
 #define AUTO_PLAY_SIZE_BUFFERS      5
 #define AUTO_PLAY_SIZE_TIME         0
 
