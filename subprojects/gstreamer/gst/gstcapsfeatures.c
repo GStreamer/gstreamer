@@ -217,9 +217,7 @@ gst_caps_features_new_any (void)
  * gst_caps_features_new_single:
  * @feature: The feature
  *
- * Creates a new, ANY #GstCapsFeatures. This will be equal
- * to any other #GstCapsFeatures but caps with these are
- * unfixed.
+ * Creates a new #GstCapsFeatures with a single feature.
  *
  * Returns: (transfer full): a new #GstCapsFeatures
  *
