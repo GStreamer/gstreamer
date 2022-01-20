@@ -2258,13 +2258,6 @@ create_stream_profile_recurse (GstEncodingProfile * toplevel,
   return toplevel;
 }
 
-static gint
-_compare_profile_names (const GstEncodingProfile * a,
-    const GstEncodingProfile * b)
-{
-  return g_strcmp0 (a->name, b->name);
-}
-
 /**
  * gst_encoding_profile_from_discoverer:
  * @info: (transfer none): The #GstDiscovererInfo to read from
@@ -2296,11 +2289,6 @@ gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)
       g_object_unref (profile);
       return NULL;
     }
-    /* Sort by stream ID */
-    GST_ENCODING_CONTAINER_PROFILE (profile)->encodingprofiles =
-        g_list_sort (GST_ENCODING_CONTAINER_PROFILE (profile)->encodingprofiles,
-        (GCompareFunc) _compare_profile_names);
-
   }
 
   return (GstEncodingProfile *) profile;
