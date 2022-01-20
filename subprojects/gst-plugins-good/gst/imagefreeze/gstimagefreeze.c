@@ -29,7 +29,7 @@
  *
  * ## Example launch line
  * |[
- * gst-launch-1.0 -v filesrc location=some.png ! decodebin ! imagefreeze ! autovideosink
+ * gst-launch-1.0 -v filesrc location=some.png ! decodebin ! videoconvert ! imagefreeze ! autovideosink
  * ]| This pipeline shows a still frame stream of a PNG file.
  *
  */
