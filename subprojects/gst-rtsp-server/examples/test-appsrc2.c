@@ -63,6 +63,7 @@ need_data (GstElement * appsrc, guint unused, MyContext * ctx)
       GST_BUFFER_PTS (buffer) = pts;
       GST_BUFFER_DTS (buffer) = dts;
       g_signal_emit_by_name (appsrc, "push-buffer", buffer, &ret);
+      gst_buffer_unref (buffer);
     }
 
     /* we don't need the appsink sample anymore */
