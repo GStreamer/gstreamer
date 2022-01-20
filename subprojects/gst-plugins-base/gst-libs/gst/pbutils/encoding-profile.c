@@ -2193,7 +2193,7 @@ create_stream_profile_recurse (GstEncodingProfile * toplevel,
 
   gst_structure_remove_fields (s, "codec_data", "streamheader", "parsed",
       "colorimetry", "framed", "stream-format", "alignment", "tier", "level",
-      "profile", NULL);
+      "profile", "chroma-format", "bit-depth-luma", "bit-depth-chroma", NULL);
 
   GST_LOG ("Stream: %" GST_PTR_FORMAT, caps);
   if (GST_IS_DISCOVERER_AUDIO_INFO (sinfo)) {
