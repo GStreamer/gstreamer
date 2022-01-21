@@ -779,7 +779,7 @@ GST_START_TEST (test_serialize_nested_structures)
       ", main-sub1=(structure)[type-b, machine-type=(int)0;]"
       ", main-sub2=(structure)[type-a, plugin-filename=(string)\"/home/user/lib/lib\\ with\\ spaces.dll\", machine-type=(int)1;]"
       ", main-sub3=(structure)[type-b, plugin-filename=(string)/home/user/lib/lib_no_spaces.so, machine-type=(int)1;]"
-      ";";
+      ", main-sub4=(structure){ [s1, a=(int)1;], [s2, b=(int)2;] }" ";";
 
   s = gst_structure_from_string (str1, &end);
   fail_unless (s != NULL);
@@ -787,7 +787,7 @@ GST_START_TEST (test_serialize_nested_structures)
   GST_DEBUG ("not parsed part : %s", end);
   fail_unless (*end == '\0');
 
-  fail_unless (gst_structure_n_fields (s) == 3);
+  fail_unless (gst_structure_n_fields (s) == 4);
 
   fail_unless (gst_structure_has_field_typed (s, "main-sub1",
           GST_TYPE_STRUCTURE));
@@ -795,7 +795,7 @@ GST_START_TEST (test_serialize_nested_structures)
   str2 = gst_structure_serialize (s, GST_SERIALIZE_FLAG_NONE);
   fail_unless (str2 != NULL);
 
-  fail_unless (g_str_equal (str1, str2));
+  fail_unless_equals_string (str1, str2);
 
   g_free (str2);
 

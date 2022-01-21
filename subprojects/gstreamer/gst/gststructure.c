@@ -2044,9 +2044,11 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
     field = GST_STRUCTURE_FIELD (structure, i);
 
     if (G_VALUE_TYPE (&field->value) == GST_TYPE_ARRAY) {
-      t = _priv_gst_value_serialize_any_list (&field->value, "< ", " >", FALSE);
+      t = _priv_gst_value_serialize_any_list (&field->value, "< ", " >", FALSE,
+          flags);
     } else if (G_VALUE_TYPE (&field->value) == GST_TYPE_LIST) {
-      t = _priv_gst_value_serialize_any_list (&field->value, "{ ", " }", FALSE);
+      t = _priv_gst_value_serialize_any_list (&field->value, "{ ", " }", FALSE,
+          flags);
     } else if (!nested_structs_brackets
         || (G_VALUE_TYPE (&field->value) != GST_TYPE_STRUCTURE
             && G_VALUE_TYPE (&field->value) != GST_TYPE_CAPS)) {

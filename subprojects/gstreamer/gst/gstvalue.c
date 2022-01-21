@@ -348,7 +348,7 @@ gst_value_array_init (GValue * value, guint prealloc)
  */
 gchar *
 _priv_gst_value_serialize_any_list (const GValue * value, const gchar * begin,
-    const gchar * end, gboolean print_type)
+    const gchar * end, gboolean print_type, GstSerializeFlags flags)
 {
   guint i;
   GstValueList *vlist = value->data[0].v_pointer;
@@ -361,15 +361,30 @@ _priv_gst_value_serialize_any_list (const GValue * value, const gchar * begin,
   s = g_string_sized_new (2 + (6 * alen) + 2);
   g_string_append (s, begin);
   for (i = 0; i < alen; i++) {
+    gboolean nested_structs_brackets;
     v = &vlist->fields[i];
-    s_val = gst_value_serialize (v);
+    nested_structs_brackets = !(flags & GST_SERIALIZE_FLAG_BACKWARD_COMPAT)
+        && (GST_VALUE_HOLDS_STRUCTURE (v) || GST_VALUE_HOLDS_CAPS (v));
+    if (!nested_structs_brackets) {
+      s_val = gst_value_serialize (v);
+    } else {
+      if (GST_VALUE_HOLDS_STRUCTURE (v))
+        s_val = gst_structure_serialize (gst_value_get_structure (v), flags);
+      else if (GST_VALUE_HOLDS_CAPS (v))
+        s_val = gst_caps_serialize (gst_value_get_caps (v), flags);
+    }
     if (s_val != NULL) {
       if (print_type) {
         g_string_append_c (s, '(');
         g_string_append (s, _priv_gst_value_gtype_to_abbr (G_VALUE_TYPE (v)));
         g_string_append_c (s, ')');
       }
+
+      if (nested_structs_brackets)
+        g_string_append_c (s, '[');
       g_string_append (s, s_val);
+      if (nested_structs_brackets)
+        g_string_append_c (s, ']');
       g_free (s_val);
       if (i < alen - 1) {
         g_string_append_len (s, ", ", 2);
@@ -1240,7 +1255,8 @@ gst_value_compare_g_value_array (const GValue * value1, const GValue * value2)
 static gchar *
 gst_value_serialize_value_list (const GValue * value)
 {
-  return _priv_gst_value_serialize_any_list (value, "{ ", " }", TRUE);
+  return _priv_gst_value_serialize_any_list (value, "{ ", " }", TRUE,
+      GST_SERIALIZE_FLAG_BACKWARD_COMPAT);
 }
 
 static gboolean
@@ -1254,7 +1270,8 @@ gst_value_deserialize_value_list (GValue * dest, const gchar * s,
 static gchar *
 gst_value_serialize_value_array (const GValue * value)
 {
-  return _priv_gst_value_serialize_any_list (value, "< ", " >", TRUE);
+  return _priv_gst_value_serialize_any_list (value, "< ", " >", TRUE,
+      GST_SERIALIZE_FLAG_BACKWARD_COMPAT);
 }
 
 static gboolean

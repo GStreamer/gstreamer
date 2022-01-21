@@ -167,7 +167,7 @@ G_GNUC_INTERNAL const char * _priv_gst_value_gtype_to_abbr (GType type);
 G_GNUC_INTERNAL gboolean _priv_gst_value_parse_string (gchar * s, gchar ** end, gchar ** next, gboolean unescape);
 G_GNUC_INTERNAL gboolean _priv_gst_value_parse_simple_string (gchar * str, gchar ** end);
 G_GNUC_INTERNAL gboolean _priv_gst_value_parse_value (gchar * str, gchar ** after, GValue * value, GType default_type, GParamSpec *pspec);
-G_GNUC_INTERNAL gchar * _priv_gst_value_serialize_any_list (const GValue * value, const gchar * begin, const gchar * end, gboolean print_type);
+G_GNUC_INTERNAL gchar * _priv_gst_value_serialize_any_list (const GValue * value, const gchar * begin, const gchar * end, gboolean print_type, GstSerializeFlags flags);
 
 /* Used in GstBin for manual state handling */
 G_GNUC_INTERNAL  void _priv_gst_element_state_changed (GstElement *element,
