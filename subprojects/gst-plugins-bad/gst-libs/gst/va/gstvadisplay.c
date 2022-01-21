@@ -344,7 +344,7 @@ gst_va_display_initialize (GstVaDisplay * self)
 
   status = vaInitialize (priv->display, &major_version, &minor_version);
   if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR_OBJECT (self, "vaInitialize: %s", vaErrorStr (status));
+    GST_WARNING_OBJECT (self, "vaInitialize: %s", vaErrorStr (status));
     return FALSE;
   }
 
