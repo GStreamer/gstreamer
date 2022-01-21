@@ -976,6 +976,70 @@ free_input_async (GstDecodebin3 * dbin, DecodebinInput * input)
       (GstElementCallAsyncFunc) free_input, input, NULL);
 }
 
+static gboolean
+sink_query_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstQuery * query)
+{
+  DecodebinInput *input =
+      g_object_get_data (G_OBJECT (sinkpad), "decodebin.input");
+
+  g_return_val_if_fail (input, FALSE);
+
+  GST_DEBUG_OBJECT (sinkpad, "query %" GST_PTR_FORMAT, query);
+
+  /* We accept any caps, since we will reconfigure ourself internally if the new
+   * stream is incompatible */
+  if (GST_QUERY_TYPE (query) == GST_QUERY_ACCEPT_CAPS) {
+    GST_DEBUG_OBJECT (dbin, "Accepting ACCEPT_CAPS query");
+    gst_query_set_accept_caps_result (query, TRUE);
+    return TRUE;
+  }
+  return gst_pad_query_default (sinkpad, GST_OBJECT (dbin), query);
+}
+
+static gboolean
+sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
+{
+  DecodebinInput *input =
+      g_object_get_data (G_OBJECT (sinkpad), "decodebin.input");
+
+  g_return_val_if_fail (input, FALSE);
+
+  GST_DEBUG_OBJECT (sinkpad, "event %" GST_PTR_FORMAT, event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GST_DEBUG_OBJECT (sinkpad,
+          "New caps, checking if they are compatible with existing parsebin");
+      if (input->parsebin_sink) {
+        GstCaps *newcaps = NULL;
+
+        gst_event_parse_caps (event, &newcaps);
+        GST_DEBUG_OBJECT (sinkpad, "new caps %" GST_PTR_FORMAT, newcaps);
+
+        if (newcaps
+            && !gst_pad_query_accept_caps (input->parsebin_sink, newcaps)) {
+          GST_DEBUG_OBJECT (sinkpad,
+              "Parsebin doesn't accept the new caps %" GST_PTR_FORMAT, newcaps);
+          GST_STATE_LOCK (dbin);
+          /* Reset parsebin so that it reconfigures itself for the new stream format */
+          gst_element_set_state (input->parsebin, GST_STATE_NULL);
+          gst_element_sync_state_with_parent (input->parsebin);
+          GST_STATE_UNLOCK (dbin);
+        } else {
+          GST_DEBUG_OBJECT (sinkpad, "Parsebin accepts new caps");
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  /* Chain to parent function */
+  return gst_pad_event_default (sinkpad, GST_OBJECT (dbin), event);
+}
+
 /* Call with INPUT_LOCK taken */
 static DecodebinInput *
 create_new_input (GstDecodebin3 * dbin, gboolean main)
@@ -994,6 +1058,10 @@ create_new_input (GstDecodebin3 * dbin, gboolean main)
     g_free (pad_name);
   }
   g_object_set_data (G_OBJECT (input->ghost_sink), "decodebin.input", input);
+  gst_pad_set_event_function (input->ghost_sink,
+      (GstPadEventFunction) sink_event_function);
+  gst_pad_set_query_function (input->ghost_sink,
+      (GstPadQueryFunction) sink_query_function);
   gst_pad_set_link_function (input->ghost_sink, gst_decodebin3_input_pad_link);
   gst_pad_set_unlink_function (input->ghost_sink,
       gst_decodebin3_input_pad_unlink);
