@@ -91,9 +91,12 @@ translate_timestamp_from_internal_to_src (GstSmartEncoder * self,
 static GstFlowReturn
 gst_smart_encoder_finish_buffer (GstSmartEncoder * self, GstBuffer * buf)
 {
+  if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buf)))
+    GST_BUFFER_DTS (buf) = GST_BUFFER_PTS (buf);
+
   translate_timestamp_from_internal_to_src (self, &GST_BUFFER_PTS (buf));
   translate_timestamp_from_internal_to_src (self, &GST_BUFFER_DTS (buf));
-  GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (buf);
+
   if (self->last_dts > GST_BUFFER_DTS (buf)) {
     /* Hack to always produces dts increasing DTS-s that are close to what the
      * encoder produced. */
