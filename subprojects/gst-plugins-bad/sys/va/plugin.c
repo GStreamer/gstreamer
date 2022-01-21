@@ -36,6 +36,7 @@
 #include "gstvah264dec.h"
 #include "gstvah264enc.h"
 #include "gstvah265dec.h"
+#include "gstvajpegdec.h"
 #include "gstvampeg2dec.h"
 #include "gstvaprofile.h"
 #include "gstvavp8dec.h"
@@ -142,6 +143,13 @@ plugin_register_decoders (GstPlugin * plugin, GstVaDevice * device,
         }
         break;
 #endif
+      case JPEG:
+        if (!gst_va_jpeg_dec_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE)) {
+          GST_WARNING ("Failed to register JPEG decoder: %s",
+              device->render_device_path);
+        }
+        break;
       default:
         GST_DEBUG ("No decoder implementation for %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (codec));

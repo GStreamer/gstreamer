@@ -61,7 +61,7 @@ static const struct ProfileMap
   P (H263, Baseline, "baseline", "video/x-h263",
       "variant = (string) itu, h263version = (string) h263, "
       "profile = (string) baseline"),
-  P (JPEG, Baseline, "", "image/jpeg", NULL),
+  P (JPEG, Baseline, "", "image/jpeg", "sof-marker = (int) 0"),
   P (H264, ConstrainedBaseline, "constrained-baseline", "video/x-h264",
       "profile = (string) { constrained-baseline, baseline }"),
   P (VP8, Version0_3, "", "video/x-vp8", NULL),

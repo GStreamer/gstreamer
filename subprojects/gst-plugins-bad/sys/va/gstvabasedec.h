@@ -21,15 +21,16 @@
 
 #pragma once
 
+#include <gst/codecs/gstav1decoder.h>
 #include <gst/codecs/gsth264decoder.h>
 #include <gst/codecs/gsth265decoder.h>
 #include <gst/codecs/gstmpeg2decoder.h>
 #include <gst/codecs/gstvp8decoder.h>
 #include <gst/codecs/gstvp9decoder.h>
-#include <gst/codecs/gstav1decoder.h>
 
-#include "gstvadevice.h"
+#include "gstjpegdecoder.h"
 #include "gstvadecoder.h"
+#include "gstvadevice.h"
 #include "gstvaprofile.h"
 
 G_BEGIN_DECLS
@@ -57,6 +58,7 @@ struct _GstVaBaseDec
     GstVp8Decoder vp8;
     GstVp9Decoder vp9;
     GstAV1Decoder av1;
+    GstJpegDecoder jpeg;
   } parent;
 
   GstDebugCategory *debug_category;
