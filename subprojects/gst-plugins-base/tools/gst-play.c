@@ -61,8 +61,14 @@ typedef enum
   GST_PLAY_TRICK_MODE_DEFAULT_NO_AUDIO,
   GST_PLAY_TRICK_MODE_KEY_UNITS,
   GST_PLAY_TRICK_MODE_KEY_UNITS_NO_AUDIO,
-  GST_PLAY_TRICK_MODE_INSTANT_RATE,
-  GST_PLAY_TRICK_MODE_LAST
+  GST_PLAY_TRICK_MODE_LAST,
+
+  /* The instant-rate setting is a flag,
+   * applied on top of the trick-mode enum value.
+   * It needs to have a 2^n value bigger than 
+   * any of the enum values so setting it
+   * won't affect the trickmode value */
+  GST_PLAY_TRICK_MODE_INSTANT_RATE = (1 << 3)
 } GstPlayTrickMode;
 
 typedef enum
