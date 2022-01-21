@@ -135,6 +135,9 @@ GType gst_msdkdec_get_type (void);
 void
 gst_msdkdec_add_bs_extra_param (GstMsdkDec * thiz, mfxExtBuffer * param);
 
+void
+gst_msdkdec_add_video_extra_param (GstMsdkDec * thiz, mfxExtBuffer * param);
+
 G_END_DECLS
 
 #endif /* __GST_MSDKDEC_H__ */

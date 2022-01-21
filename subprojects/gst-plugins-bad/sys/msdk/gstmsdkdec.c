@@ -484,6 +484,13 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
     request.Type |= MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET;
     if (thiz->use_dmabuf)
       request.Type |= MFX_MEMTYPE_EXPORT_FRAME;
+#if (MFX_VERSION >= 1022)
+    if (thiz->sfc) {
+      request.Info.Width = ext_dec_video_proc.Out.Width;
+      request.Info.Height = ext_dec_video_proc.Out.Height;
+    }
+#endif
+
     gst_msdk_frame_alloc (thiz->context, &request, &thiz->alloc_resp);
   }
 
@@ -574,6 +581,25 @@ done:
   return ret;
 }
 
+static GstCaps *
+gst_msdkdec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
+{
+  GstCaps *caps, *tmp = NULL;
+
+  caps = gst_pad_get_pad_template_caps (decoder->sinkpad);
+  if (caps) {
+    if (filter) {
+      tmp = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+      caps = tmp;
+    }
+  } else {
+    caps = gst_video_decoder_proxy_getcaps (decoder, NULL, filter);
+  }
+
+  return caps;
+}
+
 static gboolean
 gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
 {
@@ -581,15 +607,15 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
   GstVideoInfo *vinfo;
   GstVideoAlignment align;
   GstCaps *allocation_caps = NULL;
-  GstCaps *allowed_caps, *temp_caps;
+  GstCaps *allowed_caps = NULL, *temp_caps;
   GstVideoFormat format;
   guint width, height;
   guint alloc_w, alloc_h;
+  int out_width, out_height;
   const gchar *format_str;
-  GstStructure *outs;
+  GstStructure *outs = NULL;
   const gchar *out_format;
   GValue v_format = G_VALUE_INIT;
-
 
   /* use display width and display height in output state, which
    * will be used for caps negotiation */
@@ -610,7 +636,8 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
   }
 #if (MFX_VERSION >= 1022)
   /* SFC is triggered (for AVC and HEVC) when default output format is not
-   * accepted by downstream.
+   * accepted by downstream or when downstream requests for a smaller
+   * resolution (i.e. SFC supports down-scaling)
    * For SFC csc, need to do the query twice: the first time uses default
    * color format to query peer pad, empty caps means default format is
    * not accepted by downstream; then we need the second query to decide
@@ -634,9 +661,30 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
         format = gst_video_format_from_string (out_format);
         thiz->sfc = TRUE;
       }
-      gst_caps_unref (allowed_caps);
     }
     gst_caps_unref (temp_caps);
+
+    /* SFC scaling, need to check if downstream asking for a different resolution */
+    if (!allowed_caps) {
+      allowed_caps =
+          gst_pad_get_allowed_caps (GST_VIDEO_DECODER (thiz)->srcpad);
+      outs = gst_caps_get_structure (allowed_caps, 0);
+    }
+
+    gst_structure_get_int (outs, "width", &out_width);
+    gst_structure_get_int (outs, "height", &out_height);
+    gst_caps_unref (allowed_caps);
+
+    if (out_width && out_height && (out_width != width || out_height != height)) {
+      if (out_width > width || out_height > height)
+        GST_WARNING_OBJECT (thiz, "Decoder SFC cannot do up-scaling");
+      else {
+        GST_LOG_OBJECT (thiz, "Decoder SFC is doing down-scaling");
+        thiz->sfc = TRUE;
+        width = out_width;
+        height = out_height;
+      }
+    }
   }
 #endif
 
@@ -657,9 +705,13 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
   /* Ensure output_state->caps and info have same width and height
    * Also, mandate 32 bit alignment */
   vinfo = &output_state->info;
-  gst_msdk_set_video_alignment (vinfo, alloc_w, alloc_h, &align);
+  if (width == out_width || height == out_height)
+    gst_msdk_set_video_alignment (vinfo, 0, 0, &align);
+  else
+    gst_msdk_set_video_alignment (vinfo, alloc_w, alloc_h, &align);
   gst_video_info_align (vinfo, &align);
   output_state->caps = gst_video_info_to_caps (vinfo);
+
   if (srcpad_can_dmabuf (thiz))
     gst_caps_set_features (output_state->caps, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
@@ -1092,6 +1144,7 @@ find_msdk_surface (GstMsdkDec * thiz, MsdkDecTask * task,
 {
   GList *l;
   task->surface = NULL;
+
   if (!out_surface)
     return TRUE;
   l = g_list_find_custom (thiz->locked_msdk_surfaces, out_surface,
@@ -1610,7 +1663,8 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   if (_gst_caps_has_feature (pool_caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
     GST_INFO_OBJECT (decoder, "This MSDK decoder uses DMABuf memory");
     thiz->use_video_memory = thiz->use_dmabuf = TRUE;
-  }
+  } else if (thiz->sfc)
+    thiz->use_video_memory = TRUE;
 
   /* Initialize MSDK decoder before new bufferpool tries to alloc each buffer,
    * which requires information about frame allocation.
@@ -2003,6 +2057,7 @@ gst_msdkdec_class_init (GstMsdkDecClass * klass)
   decoder_class->parse = GST_DEBUG_FUNCPTR (gst_msdkdec_parse);
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_msdkdec_decide_allocation);
+  decoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_msdkdec_getcaps);
   decoder_class->flush = GST_DEBUG_FUNCPTR (gst_msdkdec_flush);
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_msdkdec_drain);
   decoder_class->transform_meta =
