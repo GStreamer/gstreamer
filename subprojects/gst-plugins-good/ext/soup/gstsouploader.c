@@ -111,6 +111,10 @@ typedef struct _GstSoupVTable
   void (*_soup_auth_authenticate) (SoupAuth * auth, const char *username,
     const char *password);
   const char *(*_soup_message_get_method_3) (SoupMessage * msg);
+  GInputStream *(*_soup_session_send_async_2) (SoupSession * session, SoupMessage * msg,
+    GCancellable * cancellable, GAsyncReadyCallback callback, gpointer user_data);
+  GInputStream *(*_soup_session_send_async_3) (SoupSession * session, SoupMessage * msg,
+    int io_priority, GCancellable * cancellable, GAsyncReadyCallback callback, gpointer user_data);
   GInputStream *(*_soup_session_send_finish) (SoupSession * session,
     GAsyncResult * result, GError ** error);
   GInputStream *(*_soup_session_send) (SoupSession * session, SoupMessage * msg,
@@ -220,6 +224,7 @@ gst_soup_load_library (void)
         LOAD_VERSIONED_SYMBOL (2, soup_uri_to_string);
         LOAD_VERSIONED_SYMBOL (2, soup_message_get_uri);
         LOAD_VERSIONED_SYMBOL (2, soup_session_cancel_message);
+        LOAD_VERSIONED_SYMBOL (2, soup_session_send_async);
       } else {
         vtable->lib_version = 3;
         LOAD_VERSIONED_SYMBOL (3, soup_logger_new);
@@ -232,6 +237,7 @@ gst_soup_load_library (void)
         LOAD_VERSIONED_SYMBOL (3, soup_message_get_method);
         LOAD_VERSIONED_SYMBOL (3, soup_message_get_reason_phrase);
         LOAD_VERSIONED_SYMBOL (3, soup_message_get_status);
+        LOAD_VERSIONED_SYMBOL (3, soup_session_send_async);
       }
 
       LOAD_SYMBOL (soup_auth_authenticate);
@@ -791,6 +797,32 @@ _soup_message_get_method (SoupMessage * msg)
   } else {
     SoupMessage2 *msg2 = (SoupMessage2 *) msg;
     return msg2->method;
+  }
+#endif
+}
+
+void
+_soup_session_send_async (SoupSession * session, SoupMessage * msg,
+    GCancellable * cancellable, GAsyncReadyCallback callback,
+    gpointer user_data)
+{
+#ifdef STATIC_SOUP
+#if STATIC_SOUP == 2
+  return soup_session_send_async (session, msg, cancellable,
+      callback, user_data);
+#else
+  return soup_session_send_async (session, msg, G_PRIORITY_DEFAULT,
+      cancellable, callback, user_data);
+#endif
+#else
+  if (gst_soup_vtable.lib_version == 3) {
+    g_assert (gst_soup_vtable._soup_session_send_async_3 != NULL);
+    gst_soup_vtable._soup_session_send_async_3 (session, msg,
+        G_PRIORITY_DEFAULT, cancellable, callback, user_data);
+  } else {
+    g_assert (gst_soup_vtable._soup_session_send_async_2 != NULL);
+    gst_soup_vtable._soup_session_send_async_2 (session, msg,
+        cancellable, callback, user_data);
   }
 #endif
 }

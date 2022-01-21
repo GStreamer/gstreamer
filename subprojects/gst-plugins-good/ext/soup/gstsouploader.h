@@ -99,6 +99,12 @@ void _soup_auth_authenticate (SoupAuth *auth, const char *username,
 
 const char *_soup_message_get_method (SoupMessage *msg);
 
+void _soup_session_send_async (SoupSession *session,
+                               SoupMessage *msg,
+                               GCancellable *cancellable,
+                               GAsyncReadyCallback callback,
+                               gpointer user_data);
+
 GInputStream *_soup_session_send_finish (SoupSession *session,
                                          GAsyncResult *result, GError **error);
 

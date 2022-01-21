@@ -45,6 +45,9 @@ typedef enum {
   GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_CANCELLED,
 } GstSoupHTTPSrcSessionIOStatus;
 
+/* opaque from here, implementation detail */
+typedef struct _GstSoupSession GstSoupSession;
+
 struct _GstSoupHTTPSrc {
   GstPushSrc element;
 
@@ -59,15 +62,15 @@ struct _GstSoupHTTPSrc {
   gchar *proxy_id;             /* Authentication user id for proxy URI. */
   gchar *proxy_pw;             /* Authentication user password for proxy URI. */
   gchar **cookies;             /* HTTP request cookies. */
-  SoupSession *session;        /* Async context. */
+  GstSoupSession *session;     /* Libsoup session wrapper. */
   gboolean session_is_shared;
-  SoupSession *external_session; /* Shared via GstContext */
-  gboolean forced_external_session; /* If session was explicitly set from application */
+  GstSoupSession *external_session; /* Shared via GstContext */
   SoupMessage *msg;            /* Request message. */
   gint retry_count;            /* Number of retries since we received data */
   gint max_retries;            /* Maximum number of retries */
   gchar *method;               /* HTTP method */
 
+  GstFlowReturn headers_ret;
   gboolean got_headers;        /* Already received headers from the server */
   gboolean have_size;          /* Received and parsed Content-Length
                                   header. */
@@ -111,8 +114,12 @@ struct _GstSoupHTTPSrc {
 
   guint timeout;
 
-  GMutex mutex;
-  GCond have_headers_cond;
+  /* This mutex-cond pair is used to talk to the soup session thread; it is
+   * per src to allow concurrent access to shared sessions (if it was inside
+   * the shared session structure, it would be effectively global)
+   */
+  GMutex session_mutex;
+  GCond session_cond;
 
   GstEvent *http_headers_event;
 
