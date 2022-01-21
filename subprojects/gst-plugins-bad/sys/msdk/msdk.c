@@ -199,7 +199,7 @@ msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
     GST_INFO ("Use the Intel oneVPL SDK to create MFX session");
 
     if (!loader) {
-      GST_ERROR ("Failed to create a MFX loader");
+      GST_WARNING ("Failed to create a MFX loader");
       return MFX_ERR_UNKNOWN;
     }
 
@@ -300,7 +300,7 @@ msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
   status = MFXInitEx (init_par, &session);
 
   if (status != MFX_ERR_NONE) {
-    GST_ERROR ("Failed to initialize a MFX session (%s)",
+    GST_WARNING ("Failed to initialize a MFX session (%s)",
         msdk_status_to_string (status));
     return status;
   }
