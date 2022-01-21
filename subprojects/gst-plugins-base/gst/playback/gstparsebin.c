@@ -411,6 +411,8 @@ struct _GstParseChain
   GList *old_groups;            /* Groups that should be freed later */
 };
 
+static gboolean gst_parse_chain_accept_caps (GstParseChain * chain,
+    GstCaps * caps);
 static void gst_parse_chain_free (GstParseChain * chain);
 static GstParseChain *gst_parse_chain_new (GstParseBin * parsebin,
     GstParseGroup * group, GstPad * pad, GstCaps * start_caps);
@@ -855,6 +857,24 @@ gst_parse_bin_update_factories_list (GstParseBin * parsebin)
   }
 }
 
+static gboolean
+sink_query_function (GstPad * sinkpad, GstParseBin * parsebin, GstQuery * query)
+{
+  GST_DEBUG_OBJECT (parsebin, "query %" GST_PTR_FORMAT, query);
+
+  if (parsebin->parse_chain && GST_QUERY_TYPE (query) == GST_QUERY_ACCEPT_CAPS) {
+    GstCaps *querycaps = NULL;
+    gst_query_parse_accept_caps (query, &querycaps);
+    if (querycaps) {
+      gboolean ret =
+          gst_parse_chain_accept_caps (parsebin->parse_chain, querycaps);
+      gst_query_set_accept_caps_result (query, ret);
+    }
+    return TRUE;
+  }
+  return gst_pad_query_default (sinkpad, GST_OBJECT (parsebin), query);
+}
+
 static void
 gst_parse_bin_init (GstParseBin * parse_bin)
 {
@@ -885,6 +905,8 @@ gst_parse_bin_init (GstParseBin * parse_bin)
 
     /* ghost the sink pad to ourself */
     gpad = gst_ghost_pad_new_from_template ("sink", pad, pad_tmpl);
+    gst_pad_set_query_function (gpad,
+        (GstPadQueryFunction) sink_query_function);
     gst_pad_set_active (gpad, TRUE);
     gst_element_add_pad (GST_ELEMENT (parse_bin), gpad);
 
@@ -3081,6 +3103,33 @@ chain_remove_old_groups (GstParseChain * chain)
     gst_parse_group_hide (chain->old_groups->data);
     gst_parse_chain_start_free_hidden_groups_thread (chain);
   }
+}
+
+static gboolean
+gst_parse_chain_accept_caps (GstParseChain * chain, GstCaps * caps)
+{
+  GstParseElement *initial_element;
+  GList *lastlist;
+  GstPad *sink;
+  gboolean ret;
+
+  if (!chain->elements)
+    return TRUE;
+
+  lastlist = g_list_last (chain->elements);
+  initial_element = lastlist->data;
+
+  GST_DEBUG_OBJECT (chain->parsebin, "element %s caps %" GST_PTR_FORMAT,
+      GST_ELEMENT_NAME (initial_element->element), caps);
+
+  sink = gst_element_get_static_pad (initial_element->element, "sink");
+  ret = gst_pad_query_accept_caps (sink, caps);
+  gst_object_unref (sink);
+
+  GST_DEBUG_OBJECT (chain->parsebin, "Chain can%s handle caps",
+      ret ? "" : " NOT");
+
+  return ret;
 }
 
 static gboolean
