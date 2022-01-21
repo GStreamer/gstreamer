@@ -127,6 +127,7 @@ enum v4l2_colorfx {
 	V4L2_COLORFX_SOLARIZATION		= 13,
 	V4L2_COLORFX_ANTIQUE			= 14,
 	V4L2_COLORFX_SET_CBCR			= 15,
+	V4L2_COLORFX_SET_RGB			= 16,
 };
 #define V4L2_CID_AUTOBRIGHTNESS			(V4L2_CID_BASE+32)
 #define V4L2_CID_BAND_STOP_FILTER		(V4L2_CID_BASE+33)
@@ -144,9 +145,10 @@ enum v4l2_colorfx {
 
 #define V4L2_CID_ALPHA_COMPONENT		(V4L2_CID_BASE+41)
 #define V4L2_CID_COLORFX_CBCR			(V4L2_CID_BASE+42)
+#define V4L2_CID_COLORFX_RGB			(V4L2_CID_BASE+43)
 
 /* last CID + 1 */
-#define V4L2_CID_LASTP1                         (V4L2_CID_BASE+43)
+#define V4L2_CID_LASTP1                         (V4L2_CID_BASE+44)
 
 /* USER-class private control IDs */
 
@@ -210,6 +212,11 @@ enum v4l2_colorfx {
  * We reserve 128 controls for this driver.
  */
 #define V4L2_CID_USER_CCS_BASE			(V4L2_CID_USER_BASE + 0x10f0)
+/*
+ * The base for Allegro driver controls.
+ * We reserve 16 controls for this driver.
+ */
+#define V4L2_CID_USER_ALLEGRO_BASE		(V4L2_CID_USER_BASE + 0x1170)
 
 /* MPEG-class control IDs */
 /* The MPEG controls are applicable to all codec controls
@@ -1115,6 +1122,7 @@ enum v4l2_jpeg_chroma_subsampling {
 #define V4L2_CID_TEST_PATTERN_BLUE		(V4L2_CID_IMAGE_SOURCE_CLASS_BASE + 6)
 #define V4L2_CID_TEST_PATTERN_GREENB		(V4L2_CID_IMAGE_SOURCE_CLASS_BASE + 7)
 #define V4L2_CID_UNIT_CELL_SIZE			(V4L2_CID_IMAGE_SOURCE_CLASS_BASE + 8)
+#define V4L2_CID_NOTIFY_GAINS			(V4L2_CID_IMAGE_SOURCE_CLASS_BASE + 9)
 
 
 /* Image processing controls */
@@ -2009,23 +2017,21 @@ struct v4l2_ctrl_hdr10_mastering_display {
 
 /* Stateless VP9 controls */
 
-/**
- */
 #define V4L2_VP9_LOOP_FILTER_FLAG_DELTA_ENABLED	0x1
 #define	V4L2_VP9_LOOP_FILTER_FLAG_DELTA_UPDATE	0x2
 
 /**
  * struct v4l2_vp9_loop_filter - VP9 loop filter parameters
  *
- * @ref_deltas: contains the adjustment needed for the filter level based on the chosen
- *	reference frame. If this syntax element is not present in the bitstream, users
- *	should pass its last value.
- * @mode_deltas: contains the adjustment needed for the filter level based on the chosen mode.
- *	If this syntax element is not present in the bitstream, users
- *	should pass its last value.
- * @level: indicates the loop filter strength
- * @sharpness: indicates the sharpness level
- * @flags: combination of V4L2_VP9_LOOP_FILTER_FLAG_* flags
+ * @ref_deltas: contains the adjustment needed for the filter level based on the
+ * chosen reference frame. If this syntax element is not present in the bitstream,
+ * users should pass its last value.
+ * @mode_deltas: contains the adjustment needed for the filter level based on the
+ * chosen mode.	If this syntax element is not present in the bitstream, users should
+ * pass its last value.
+ * @level: indicates the loop filter strength.
+ * @sharpness: indicates the sharpness level.
+ * @flags: combination of V4L2_VP9_LOOP_FILTER_FLAG_{} flags.
  * @reserved: padding field. Should be zeroed by applications.
  *
  * This structure contains all loop filter related parameters. See sections
@@ -2043,10 +2049,10 @@ struct v4l2_vp9_loop_filter {
 /**
  * struct v4l2_vp9_quantization - VP9 quantization parameters
  *
- * @base_q_idx: indicates the base frame qindex
- * @delta_q_y_dc: indicates the Y DC quantizer relative to base_q_idx
- * @delta_q_uv_dc: indicates the UV DC quantizer relative to base_q_idx
- * @delta_q_uv_ac: indicates the UV AC quantizer relative to base_q_idx
+ * @base_q_idx: indicates the base frame qindex.
+ * @delta_q_y_dc: indicates the Y DC quantizer relative to base_q_idx.
+ * @delta_q_uv_dc: indicates the UV DC quantizer relative to base_q_idx.
+ * @delta_q_uv_ac: indicates the UV AC quantizer relative to base_q_idx.
  * @reserved: padding field. Should be zeroed by applications.
  *
  * Encodes the quantization parameters. See section '7.2.9 Quantization params
@@ -2078,19 +2084,19 @@ struct v4l2_vp9_quantization {
 /**
  * struct v4l2_vp9_segmentation - VP9 segmentation parameters
  *
- * @feature_data: data attached to each feature. Data entry is only valid if the feature is enabled.
- * The array shall be indexed with segment number as the first dimension (0..7) and one of
- * V4L2_VP9_SEG_* as the second dimension.
- * @feature_enabled: bitmask defining which features are enabled in each segment. The value for
- * each segment is a combination of V4L2_VP9_SEGMENT_FEATURE_ENABLED(id) values where id is one
- * of V4L2_VP9_SEG_*
- * @tree_probs: specifies the probability values to be used when
- *	decoding a Segment-ID. See '5.15. Segmentation map' section of the VP9 specification
- *	for more details.
+ * @feature_data: data attached to each feature. Data entry is only valid if
+ * the feature is enabled. The array shall be indexed with segment number as
+ * the first dimension (0..7) and one of V4L2_VP9_SEG_{} as the second dimension.
+ * @feature_enabled: bitmask defining which features are enabled in each segment.
+ * The value for each segment is a combination of V4L2_VP9_SEGMENT_FEATURE_ENABLED(id)
+ * values where id is one of V4L2_VP9_SEG_LVL_{}.
+ * @tree_probs: specifies the probability values to be used when decoding a
+ * Segment-ID. See '5.15. Segmentation map' section of the VP9 specification
+ * for more details.
  * @pred_probs: specifies the probability values to be used when decoding a
- *	Predicted-Segment-ID. See '6.4.14. Get segment id syntax' section of :ref:`vp9`
- *	for more details.
- * @flags: combination of V4L2_VP9_SEGMENTATION_FLAG_* flags
+ * Predicted-Segment-ID. See '6.4.14. Get segment id syntax' section of :ref:`vp9`
+ * for more details.
+ * @flags: combination of V4L2_VP9_SEGMENTATION_FLAG_{} flags.
  * @reserved: padding field. Should be zeroed by applications.
  *
  * Encodes the quantization parameters. See section '7.2.10 Segmentation params syntax' of
@@ -2140,20 +2146,20 @@ struct v4l2_vp9_segmentation {
 /**
  * struct v4l2_ctrl_vp9_frame - VP9 frame decoding control
  *
- * @lf: loop filter parameters. See &v4l2_vp9_loop_filter for more details
- * @quant: quantization parameters. See &v4l2_vp9_quantization for more details
- * @seg: segmentation parameters. See &v4l2_vp9_segmentation for more details
- * @flags: combination of V4L2_VP9_FRAME_FLAG_* flags
- * @compressed_header_size: compressed header size in bytes
- * @uncompressed_header_size: uncompressed header size in bytes
- * @frame_width_minus_1: add 1 to it and you'll get the frame width expressed in pixels
- * @frame_height_minus_1: add 1 to it and you'll get the frame height expressed in pixels
+ * @lf: loop filter parameters. See &v4l2_vp9_loop_filter for more details.
+ * @quant: quantization parameters. See &v4l2_vp9_quantization for more details.
+ * @seg: segmentation parameters. See &v4l2_vp9_segmentation for more details.
+ * @flags: combination of V4L2_VP9_FRAME_FLAG_{} flags.
+ * @compressed_header_size: compressed header size in bytes.
+ * @uncompressed_header_size: uncompressed header size in bytes.
+ * @frame_width_minus_1: add 1 to it and you'll get the frame width expressed in pixels.
+ * @frame_height_minus_1: add 1 to it and you'll get the frame height expressed in pixels.
  * @render_width_minus_1: add 1 to it and you'll get the expected render width expressed in
- *	pixels. This is not used during the decoding process but might be used by HW scalers
- *	to prepare a frame that's ready for scanout
+ * pixels. This is not used during the decoding process but might be used by HW scalers
+ * to prepare a frame that's ready for scanout.
  * @render_height_minus_1: add 1 to it and you'll get the expected render height expressed in
- *	pixels. This is not used during the decoding process but might be used by HW scalers
- *	to prepare a frame that's ready for scanout
+ * pixels. This is not used during the decoding process but might be used by HW scalers
+ * to prepare a frame that's ready for scanout.
  * @last_frame_ts: "last" reference buffer timestamp.
  * The timestamp refers to the timestamp field in struct v4l2_buffer.
  * Use v4l2_timeval_to_ns() to convert the struct timeval to a __u64.
@@ -2164,21 +2170,21 @@ struct v4l2_vp9_segmentation {
  * The timestamp refers to the timestamp field in struct v4l2_buffer.
  * Use v4l2_timeval_to_ns() to convert the struct timeval to a __u64.
  * @ref_frame_sign_bias: a bitfield specifying whether the sign bias is set for a given
- *	reference frame. Either of V4L2_VP9_SIGN_BIAS_*.
+ * reference frame. Either of V4L2_VP9_SIGN_BIAS_{}.
  * @reset_frame_context: specifies whether the frame context should be reset to default values.
- *	Either of V4L2_VP9_RESET_FRAME_CTX_*.
- * @frame_context_idx: frame context that should be used/updated
- * @profile: VP9 profile. Can be 0, 1, 2 or 3
+ * Either of V4L2_VP9_RESET_FRAME_CTX_{}.
+ * @frame_context_idx: frame context that should be used/updated.
+ * @profile: VP9 profile. Can be 0, 1, 2 or 3.
  * @bit_depth: bits per components. Can be 8, 10 or 12. Note that not all profiles support
- *	10 and/or 12 bits depths
+ * 10 and/or 12 bits depths.
  * @interpolation_filter: specifies the filter selection used for performing inter prediction.
- *	Either of V4L2_VP9_INTERP_FILTER_*
+ * Set to one of V4L2_VP9_INTERP_FILTER_{}.
  * @tile_cols_log2: specifies the base 2 logarithm of the width of each tile (where the width
- *	is measured in units of 8x8 blocks). Shall be less than or equal to 6
+ * is measured in units of 8x8 blocks). Shall be less than or equal to 6.
  * @tile_rows_log2: specifies the base 2 logarithm of the height of each tile (where the height
- *	is measured in units of 8x8 blocks)
- * @reference_mode: specifies the type of inter prediction to be used. See
- *	Either of V4L2_VP9_REFERENCE_MODE_*
+ * is measured in units of 8x8 blocks).
+ * @reference_mode: specifies the type of inter prediction to be used.
+ * Set to one of V4L2_VP9_REFERENCE_MODE_{}.
  * @reserved: padding field. Should be zeroed by applications.
  */
 struct v4l2_ctrl_vp9_frame {
@@ -2211,15 +2217,15 @@ struct v4l2_ctrl_vp9_frame {
 
 /**
  * struct v4l2_vp9_mv_probs - VP9 Motion vector probability updates
- * @joint: motion vector joint probability updates
- * @sign: motion vector sign probability updates
- * @classes: motion vector class probability updates
- * @class0_bit: motion vector class0 bit probability updates
- * @bits: motion vector bits probability updates
- * @class0_fr: motion vector class0 fractional bit probability updates
- * @fr: motion vector fractional bit probability updates
- * @class0_hp: motion vector class0 high precision fractional bit probability updates
- * @hp: motion vector high precision fractional bit probability updates
+ * @joint: motion vector joint probability updates.
+ * @sign: motion vector sign probability updates.
+ * @classes: motion vector class probability updates.
+ * @class0_bit: motion vector class0 bit probability updates.
+ * @bits: motion vector bits probability updates.
+ * @class0_fr: motion vector class0 fractional bit probability updates.
+ * @fr: motion vector fractional bit probability updates.
+ * @class0_hp: motion vector class0 high precision fractional bit probability updates.
+ * @hp: motion vector high precision fractional bit probability updates.
  *
  * This structure contains new values of motion vector probabilities.
  * A value of zero in an array element means there is no update of the relevant probability.
@@ -2247,22 +2253,22 @@ struct v4l2_vp9_mv_probs {
 
 /**
  * struct v4l2_ctrl_vp9_compressed_hdr - VP9 probability updates control
- * @tx_mode: specifies the TX mode. Either of V4L2_VP9_TX_MODE_*.
- * @tx8: TX 8x8 probability updates
- * @tx16: TX 16x16 probability updates
- * @tx32: TX 32x32 probability updates
- * @coef: coefficient probability updates
- * @skip: skip probability updates
- * @inter_mode: inter mode probability updates
- * @interp_filter: interpolation filter probability updates
- * @is_inter: is inter-block probability updates
- * @comp_mode: compound prediction mode probability updates
- * @single_ref: single ref probability updates
- * @comp_ref: compound ref probability updates
- * @y_mode: Y prediction mode probability updates
- * @uv_mode: UV prediction mode probability updates
- * @partition: partition probability updates
- * @mv: motion vector probability updates
+ * @tx_mode: specifies the TX mode. Set to one of V4L2_VP9_TX_MODE_{}.
+ * @tx8: TX 8x8 probability updates.
+ * @tx16: TX 16x16 probability updates.
+ * @tx32: TX 32x32 probability updates.
+ * @coef: coefficient probability updates.
+ * @skip: skip probability updates.
+ * @inter_mode: inter mode probability updates.
+ * @interp_filter: interpolation filter probability updates.
+ * @is_inter: is inter-block probability updates.
+ * @comp_mode: compound prediction mode probability updates.
+ * @single_ref: single ref probability updates.
+ * @comp_ref: compound ref probability updates.
+ * @y_mode: Y prediction mode probability updates.
+ * @uv_mode: UV prediction mode probability updates.
+ * @partition: partition probability updates.
+ * @mv: motion vector probability updates.
  *
  * This structure holds the probabilities update as parsed in the compressed
  * header (Spec 6.3). These values represent the value of probability update after
