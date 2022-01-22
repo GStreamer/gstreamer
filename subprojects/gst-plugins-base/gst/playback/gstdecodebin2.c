@@ -1582,7 +1582,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     if (group && !g_list_find (group->children, chain)) {
       g_assert (new_chain != NULL);
       *new_chain = chain = gst_decode_chain_new (dbin, group, pad);
-      group->children = g_list_prepend (group->children, chain);
+      group->children = g_list_append (group->children, chain);
     }
     CHAIN_MUTEX_UNLOCK (oldchain);
     if (!group) {
