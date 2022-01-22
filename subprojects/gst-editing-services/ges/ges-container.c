@@ -761,7 +761,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   mapping = g_slice_new0 (ChildMapping);
   mapping->child = gst_object_ref (child);
   g_hash_table_insert (priv->mappings, child, mapping);
-  container->children = g_list_prepend (container->children, child);
+  container->children = g_list_append (container->children, child);
 
   /* Listen to all property changes */
   mapping->start_notifyid =

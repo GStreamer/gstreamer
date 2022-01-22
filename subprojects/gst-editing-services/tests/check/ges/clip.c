@@ -614,12 +614,15 @@ GST_START_TEST (test_split_object)
 
   /* core elements have swapped order in the clip, this is ok since they
    * share the same priority */
-  assert_equal_children_properties (splittrackelement, trackelement2);
-  fail_unless (ges_track_element_get_track (splittrackelement) == track2);
-  fail_unless (ges_track_element_get_track (trackelement2) == track2);
+  assert_equal_children_properties (splittrackelement, trackelement1);
+  fail_unless (ges_track_element_get_track (splittrackelement) == track1);
+  fail_unless (ges_track_element_get_track (trackelement1) == track1);
   assert_equals_int (GES_TIMELINE_ELEMENT_PRIORITY (splittrackelement),
-      priority2 + 3);
-  fail_unless (GES_TIMELINE_ELEMENT_PRIORITY (trackelement2) == priority2);
+      priority1 + 3);
+  fail_unless (GES_TIMELINE_ELEMENT_PRIORITY (trackelement1) == priority1);
+  meta = ges_meta_container_get_string (GES_META_CONTAINER (splittrackelement),
+      "test_key");
+  fail_unless_equals_string (meta, "test_value");
 
   fail_unless (splittrackelement != trackelement1);
   fail_unless (splittrackelement != trackelement2);
@@ -631,15 +634,12 @@ GST_START_TEST (test_split_object)
   fail_unless (GES_IS_TRACK_ELEMENT (splittrackelement));
   CHECK_OBJECT_PROPS (splittrackelement, 67, 37, 25);
 
-  assert_equal_children_properties (splittrackelement, trackelement1);
-  fail_unless (ges_track_element_get_track (splittrackelement) == track1);
-  fail_unless (ges_track_element_get_track (trackelement1) == track1);
+  assert_equal_children_properties (splittrackelement, trackelement2);
+  fail_unless (ges_track_element_get_track (splittrackelement) == track2);
+  fail_unless (ges_track_element_get_track (trackelement2) == track2);
   assert_equals_int (GES_TIMELINE_ELEMENT_PRIORITY (splittrackelement),
-      priority1 + 3);
-  fail_unless (GES_TIMELINE_ELEMENT_PRIORITY (trackelement1) == priority2);
-  meta = ges_meta_container_get_string (GES_META_CONTAINER (splittrackelement),
-      "test_key");
-  fail_unless_equals_string (meta, "test_value");
+      priority2 + 3);
+  fail_unless (GES_TIMELINE_ELEMENT_PRIORITY (trackelement2) == priority2);
 
   fail_unless (splittrackelement != trackelement1);
   fail_unless (splittrackelement != trackelement2);

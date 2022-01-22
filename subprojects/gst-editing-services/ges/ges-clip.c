@@ -2008,7 +2008,7 @@ _child_removed (GESContainer * container, GESTimelineElement * element)
 static void
 add_clip_to_list (gpointer key, gpointer clip, GList ** list)
 {
-  *list = g_list_prepend (*list, gst_object_ref (clip));
+  *list = g_list_append (*list, gst_object_ref (clip));
 }
 
 /* NOTE: Since this does not change the track of @child, this should

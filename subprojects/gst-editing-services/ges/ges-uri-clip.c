@@ -583,7 +583,7 @@ ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
               NULL));
       ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (element),
           max_duration);
-      res = g_list_prepend (res, element);
+      res = g_list_append (res, element);
     }
   }
 
