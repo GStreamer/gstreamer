@@ -793,7 +793,7 @@ gst_smart_encoder_add_parser (GstSmartEncoder * self, GstCaps * format)
     }
 
     stream_format = gst_structure_get_string (structure, "stream-format");
-    if (g_strcmp0 (stream_format, "avc1"))
+    if (g_strcmp0 (stream_format, "avc"))
       g_object_set (parser, "config-interval", -1, NULL);
 
   } else if (gst_structure_has_name (gst_caps_get_structure (format, 0),
