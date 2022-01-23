@@ -92,8 +92,8 @@ enum
   PROP_DISPATCHER,
 };
 
-#define DEFAULT_DEVICE_PATH     NULL
-#define DEFAULT_DEVICE_NAME     NULL
+#define DEFAULT_DEVICE_PATH     nullptr
+#define DEFAULT_DEVICE_NAME     nullptr
 #define DEFAULT_DEVICE_INDEX    -1
 
 static void gst_mf_video_src_finalize (GObject * object);
@@ -124,6 +124,8 @@ gst_mf_video_src_class_init (GstMFVideoSrcClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseSrcClass *basesrc_class = GST_BASE_SRC_CLASS (klass);
   GstPushSrcClass *pushsrc_class = GST_PUSH_SRC_CLASS (klass);
+  GParamFlags flags = (GParamFlags) (G_PARAM_READWRITE |
+      GST_PARAM_MUTABLE_READY | G_PARAM_STATIC_STRINGS);
 
   gobject_class->finalize = gst_mf_video_src_finalize;
   gobject_class->get_property = gst_mf_video_src_get_property;
@@ -131,19 +133,14 @@ gst_mf_video_src_class_init (GstMFVideoSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_PATH,
       g_param_spec_string ("device-path", "Device Path",
-          "The device path", DEFAULT_DEVICE_PATH,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+          "The device path", DEFAULT_DEVICE_PATH, flags));
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device Name",
-          "The human-readable device name", DEFAULT_DEVICE_NAME,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+          "The human-readable device name", DEFAULT_DEVICE_NAME, flags));
   g_object_class_install_property (gobject_class, PROP_DEVICE_INDEX,
       g_param_spec_int ("device-index", "Device Index",
           "The zero-based device index", -1, G_MAXINT, DEFAULT_DEVICE_INDEX,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+          flags));
 #if GST_MF_WINAPI_APP
   /**
    * GstMFVideoSrc:dispatcher:
@@ -160,8 +157,9 @@ gst_mf_video_src_class_init (GstMFVideoSrcClass * klass)
           "the reference count of given ICoreDispatcher and release it after "
           "use. Therefore, caller does not need to consider additional "
           "reference count management",
-          GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+              GST_PARAM_MUTABLE_READY | G_PARAM_WRITABLE |
+              G_PARAM_STATIC_STRINGS)));
 #endif
 
   gst_element_class_set_static_metadata (element_class,
@@ -266,7 +264,7 @@ gst_mf_video_src_start (GstBaseSrc * src)
   GST_DEBUG_OBJECT (self, "Start");
 
   self->source = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO,
-      self->device_index, self->device_name, self->device_path, NULL);
+      self->device_index, self->device_name, self->device_path, nullptr);
 
   self->n_frames = 0;
   self->latency = 0;
@@ -291,7 +289,7 @@ gst_mf_video_src_stop (GstBaseSrc * src)
   if (self->source) {
     gst_mf_source_object_stop (self->source);
     gst_object_unref (self->source);
-    self->source = NULL;
+    self->source = nullptr;
   }
 
   self->started = FALSE;
@@ -327,7 +325,7 @@ static GstCaps *
 gst_mf_video_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
   GstMFVideoSrc *self = GST_MF_VIDEO_SRC (src);
-  GstCaps *caps = NULL;
+  GstCaps *caps = nullptr;
 
   if (self->source)
     caps = gst_mf_source_object_get_caps (self->source);
@@ -416,7 +414,7 @@ gst_mf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 {
   GstMFVideoSrc *self = GST_MF_VIDEO_SRC (pushsrc);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *buf = NULL;
+  GstBuffer *buf = nullptr;
   GstClock *clock;
   GstClockTime running_time = GST_CLOCK_TIME_NONE;
   GstClockTimeDiff diff;

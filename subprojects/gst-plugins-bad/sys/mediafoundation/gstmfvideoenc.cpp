@@ -36,14 +36,10 @@
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
-
-G_BEGIN_DECLS
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_video_enc_debug);
 #define GST_CAT_DEFAULT gst_mf_video_enc_debug
-
-G_END_DECLS
-/* *INDENT-ON* */
 
 #define gst_mf_video_enc_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstMFVideoEnc, gst_mf_video_enc,
@@ -168,7 +164,8 @@ gst_mf_video_enc_open (GstVideoEncoder * enc)
 
     device = self->d3d11_device;
 
-    hr = GstMFCreateDXGIDeviceManager (&self->reset_token, &self->device_manager);
+    hr = GstMFCreateDXGIDeviceManager (&self->reset_token,
+        &self->device_manager);
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (self, "Couldn't create DXGI device manager");
       gst_clear_object (&self->other_d3d11_device);
@@ -249,7 +246,7 @@ gst_mf_video_enc_close (GstVideoEncoder * enc)
 
   if (self->input_state) {
     gst_video_codec_state_unref (self->input_state);
-    self->input_state = NULL;
+    self->input_state = nullptr;
   }
 #if GST_MF_HAVE_D3D11
   if (self->device_manager) {
@@ -260,7 +257,7 @@ gst_mf_video_enc_close (GstVideoEncoder * enc)
   if (self->mf_allocator) {
     self->mf_allocator->UninitializeSampleAllocator ();
     self->mf_allocator->Release ();
-    self->mf_allocator = NULL;
+    self->mf_allocator = nullptr;
   }
 
   gst_clear_object (&self->other_d3d11_device);
@@ -288,7 +285,7 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   GstVideoInfo *info = &state->info;
   ComPtr < IMFMediaType > in_type;
   ComPtr < IMFMediaType > out_type;
-  GList *input_types = NULL;
+  GList *input_types = nullptr;
   GList *iter;
   HRESULT hr;
   gint fps_n, fps_d;
@@ -454,7 +451,7 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     return FALSE;
   }
 
-  g_assert (klass->set_src_caps != NULL);
+  g_assert (klass->set_src_caps != nullptr);
   if (!klass->set_src_caps (self, self->input_state, out_type.Get ())) {
     GST_ERROR_OBJECT (self, "subclass couldn't set src caps");
     return FALSE;
@@ -463,7 +460,7 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   if (self->mf_allocator) {
     self->mf_allocator->UninitializeSampleAllocator ();
     self->mf_allocator->Release ();
-    self->mf_allocator = NULL;
+    self->mf_allocator = nullptr;
   }
 
   /* Check whether upstream is d3d11 element */
@@ -644,7 +641,7 @@ gst_mf_video_enc_process_input (GstMFVideoEnc * self,
   GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (self);
   HRESULT hr;
   gboolean unset_force_keyframe = FALSE;
-  GstMFVideoEncFrameData *frame_data = NULL;
+  GstMFVideoEncFrameData *frame_data = nullptr;
   gboolean res;
 
   frame_data = g_new0 (GstMFVideoEncFrameData, 1);
@@ -702,8 +699,8 @@ static GstVideoCodecFrame *
 gst_mf_video_enc_find_output_frame (GstMFVideoEnc * self, LONGLONG mf_pts)
 {
   GList *l, *walk = gst_video_encoder_get_frames (GST_VIDEO_ENCODER (self));
-  GstVideoCodecFrame *ret = NULL;
-  GstVideoCodecFrame *closest = NULL;
+  GstVideoCodecFrame *ret = nullptr;
+  GstVideoCodecFrame *closest = nullptr;
   LONGLONG min_pts_abs_diff = 0;
 
   for (l = walk; l; l = l->next) {
@@ -769,11 +766,11 @@ gst_mf_video_enc_finish_sample (GstMFVideoEnc * self, IMFSample * sample)
   if (!gst_mf_result (hr))
     goto done;
 
-  hr = media_buffer->Lock (&data, NULL, &buffer_len);
+  hr = media_buffer->Lock (&data, nullptr, &buffer_len);
   if (!gst_mf_result (hr))
     goto done;
 
-  buffer = gst_buffer_new_allocate (NULL, buffer_len, NULL);
+  buffer = gst_buffer_new_allocate (nullptr, buffer_len, nullptr);
   gst_buffer_fill (buffer, 0, data, buffer_len);
   media_buffer->Unlock ();
 
@@ -934,8 +931,8 @@ gst_mf_video_enc_create_input_sample (GstMFVideoEnc * self,
   ComPtr < IGstMFVideoBuffer > video_buffer;
   GstVideoInfo *info = &self->input_state->info;
   gint i, j;
-  GstVideoFrame *vframe = NULL;
-  BYTE *data = NULL;
+  GstVideoFrame *vframe = nullptr;
+  BYTE *data = nullptr;
   gboolean need_copy;
 
   vframe = g_new0 (GstVideoFrame, 1);
@@ -970,7 +967,7 @@ gst_mf_video_enc_create_input_sample (GstMFVideoEnc * self,
     if (!gst_mf_result (hr))
       goto error;
   } else {
-    hr = media_buffer->Lock (&data, NULL, NULL);
+    hr = media_buffer->Lock (&data, nullptr, nullptr);
     if (!gst_mf_result (hr))
       goto error;
 
@@ -1016,7 +1013,7 @@ gst_mf_video_enc_create_input_sample (GstMFVideoEnc * self,
   } else {
     gst_video_frame_unmap (vframe);
     g_free (vframe);
-    vframe = NULL;
+    vframe = nullptr;
   }
 
   *sample = new_sample.Detach ();
@@ -1293,14 +1290,14 @@ gst_mf_video_enc_propose_allocation (GstVideoEncoder * enc, GstQuery * query)
 #if GST_MF_HAVE_D3D11
   GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
   GstVideoInfo info;
-  GstBufferPool *pool = NULL;
+  GstBufferPool *pool = nullptr;
   GstCaps *caps;
   guint size;
   GstD3D11Device *device = self->other_d3d11_device;
 
-  gst_query_parse_allocation (query, &caps, NULL);
+  gst_query_parse_allocation (query, &caps, nullptr);
 
-  if (caps == NULL)
+  if (caps == nullptr)
     return FALSE;
 
   if (!gst_video_info_from_caps (&info, caps))
@@ -1337,7 +1334,7 @@ gst_mf_video_enc_propose_allocation (GstVideoEncoder * enc, GstQuery * query)
       gboolean is_hardware = FALSE;
       gint i;
 
-      g_object_get (device, "hardware", &is_hardware, NULL);
+      g_object_get (device, "hardware", &is_hardware, nullptr);
 
       /* In case of hardware, set D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX flag
        * so that it can be shared with other d3d11 devices */
@@ -1377,7 +1374,7 @@ gst_mf_video_enc_propose_allocation (GstVideoEncoder * enc, GstQuery * query)
     gst_object_unref (pool);
   }
 
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
 
   return TRUE;
 
@@ -1467,16 +1464,16 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
   MFT_REGISTER_TYPE_INFO *infos;
   UINT32 info_size;
   gint i;
-  GstCaps *src_caps = NULL;
-  GstCaps *sink_caps = NULL;
-  GstCaps *d3d11_caps = NULL;
-  GValue *supported_formats = NULL;
-  GValue *profiles = NULL;
+  GstCaps *src_caps = nullptr;
+  GstCaps *sink_caps = nullptr;
+  GstCaps *d3d11_caps = nullptr;
+  GValue *supported_formats = nullptr;
+  GValue *profiles = nullptr;
   gboolean have_I420 = FALSE;
   gboolean have_NV12 = FALSE;
   gboolean have_P010 = FALSE;
   gboolean d3d11_aware = FALSE;
-  gchar *device_name = NULL;
+  gchar *device_name = nullptr;
   IMFActivate *activate;
   IMFTransform *encoder;
   ICodecAPI *codec_api;
@@ -1485,20 +1482,20 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
     {eAVEncH264VProfile_High, "high"},
     {eAVEncH264VProfile_Main, "main"},
     {eAVEncH264VProfile_Base, "baseline"},
-    {0, NULL},
+    {0, nullptr},
   };
   GstMFVideoEncProfileMap hevc_profile_map[] = {
     {eAVEncH265VProfile_Main_420_8, "main"},
     {eAVEncH265VProfile_Main_420_10, "main-10"},
-    {0, NULL},
+    {0, nullptr},
   };
-  GstMFVideoEncProfileMap *profile_to_check = NULL;
+  GstMFVideoEncProfileMap *profile_to_check = nullptr;
   static const gchar *h264_caps_str =
       "video/x-h264, stream-format=(string) byte-stream, alignment=(string) au";
   static const gchar *hevc_caps_str =
       "video/x-h265, stream-format=(string) byte-stream, alignment=(string) au";
   static const gchar *vp9_caps_str = "video/x-vp9";
-  const gchar *codec_caps_str = NULL;
+  const gchar *codec_caps_str = nullptr;
 
   /* NOTE: depending on environment,
    * some enumerated h/w MFT might not be usable (e.g., multiple GPU case) */
@@ -1523,7 +1520,7 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
     return;
   }
 
-  g_object_get (transform, "device-name", &device_name, NULL);
+  g_object_get (transform, "device-name", &device_name, nullptr);
   if (!device_name) {
     GST_WARNING_OBJECT (transform, "Unknown device name");
     return;
@@ -1639,7 +1636,7 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
       if (mf_profile == 0)
         break;
 
-      g_assert (profile_str != NULL);
+      g_assert (profile_str != nullptr);
 
       hr = out_type->SetUINT32 (MF_MT_MPEG2_PROFILE, mf_profile);
       if (!gst_mf_result (hr))
@@ -1683,15 +1680,15 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
    * API for querying supported max resolution... */
   gst_caps_set_simple (sink_caps,
       "width", GST_TYPE_INT_RANGE, 64, 8192,
-      "height", GST_TYPE_INT_RANGE, 64, 8192, NULL);
+      "height", GST_TYPE_INT_RANGE, 64, 8192, nullptr);
   gst_caps_set_simple (src_caps,
       "width", GST_TYPE_INT_RANGE, 64, 8192,
-      "height", GST_TYPE_INT_RANGE, 64, 8192, NULL);
+      "height", GST_TYPE_INT_RANGE, 64, 8192, nullptr);
 
 #if GST_MF_HAVE_D3D11
   /* Check whether this MFT can support D3D11 */
   if (d3d11_device && (have_NV12 || have_P010)) {
-    g_object_get (transform, "d3d11-aware", &d3d11_aware, NULL);
+    g_object_get (transform, "d3d11-aware", &d3d11_aware, nullptr);
     GST_DEBUG_OBJECT (transform, "d3d11 aware %d", d3d11_aware);
   }
 
@@ -1699,7 +1696,7 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
     gint64 adapter_luid = 0;
     GValue d3d11_formats = G_VALUE_INIT;
 
-    g_object_get (d3d11_device, "adapter-luid", &adapter_luid, NULL);
+    g_object_get (d3d11_device, "adapter-luid", &adapter_luid, nullptr);
 
     d3d11_caps = gst_caps_copy (sink_caps);
 
@@ -1797,8 +1794,8 @@ gst_mf_video_enc_enum (guint enum_flags, GUID * subtype, guint device_index,
   GstMFTransform *transform;
   gint64 adapter_luid = 0;
 
-  *sink_template = NULL;
-  *src_template = NULL;
+  *sink_template = nullptr;
+  *src_template = nullptr;
   memset (device_caps, 0, sizeof (GstMFVideoEncDeviceCaps));
 
   if (!IsEqualGUID (MFVideoFormat_H264, *subtype) &&
@@ -1806,14 +1803,14 @@ gst_mf_video_enc_enum (guint enum_flags, GUID * subtype, guint device_index,
       !IsEqualGUID (MFVideoFormat_VP90, *subtype)) {
     GST_ERROR ("Unknown subtype GUID");
 
-    return NULL;
+    return nullptr;
   }
 
   if (d3d11_device) {
-    g_object_get (d3d11_device, "adapter-luid", &adapter_luid, NULL);
+    g_object_get (d3d11_device, "adapter-luid", &adapter_luid, nullptr);
     if (!adapter_luid) {
       GST_ERROR ("Couldn't get adapter LUID");
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -1828,7 +1825,7 @@ gst_mf_video_enc_enum (guint enum_flags, GUID * subtype, guint device_index,
 
   transform = gst_mf_transform_new (&enum_params);
   if (!transform)
-    return NULL;
+    return nullptr;
 
   gst_mf_video_enc_enum_internal (transform, output_type.guidSubtype,
       d3d11_device, device_caps, sink_template, src_template);
@@ -1850,9 +1847,9 @@ gst_mf_video_enc_register_internal (GstPlugin * plugin, guint rank,
   gint i;
   GstMFVideoEncClassData *cdata;
   gboolean is_default = TRUE;
-  gchar *device_name = NULL;
-  const gchar *type_name_prefix = NULL;
-  const gchar *feature_name_prefix = NULL;
+  gchar *device_name = nullptr;
+  const gchar *type_name_prefix = nullptr;
+  const gchar *feature_name_prefix = nullptr;
 
   if (IsEqualGUID (MFVideoFormat_H264, *subtype)) {
     type_name_prefix = "H264";
@@ -1869,8 +1866,8 @@ gst_mf_video_enc_register_internal (GstPlugin * plugin, guint rank,
   }
 
   /* Must be checked already */
-  g_object_get (transform, "device-name", &device_name, NULL);
-  g_assert (device_name != NULL);
+  g_object_get (transform, "device-name", &device_name, nullptr);
+  g_assert (device_name != nullptr);
 
   cdata = g_new0 (GstMFVideoEncClassData, 1);
   cdata->sink_caps = gst_caps_copy (sink_caps);
@@ -1925,9 +1922,9 @@ void
 gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
     GTypeInfo * type_info, GList * d3d11_device)
 {
-  GstMFTransform *transform = NULL;
-  GstCaps *sink_template = NULL;
-  GstCaps *src_template = NULL;
+  GstMFTransform *transform = nullptr;
+  GstCaps *sink_template = nullptr;
+  GstCaps *src_template = nullptr;
   guint enum_flags;
   GstMFVideoEncDeviceCaps device_caps;
   guint i;
@@ -1964,7 +1961,7 @@ gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
     /* AMD seems to be able to support up to 12 GPUs */
     for (i = 0; i < 12; i++) {
       transform = gst_mf_video_enc_enum (enum_flags, subtype, i, &device_caps,
-          NULL, &sink_template, &src_template);
+          nullptr, &sink_template, &src_template);
 
       /* No more MFT to enumerate */
       if (!transform)
@@ -1989,7 +1986,7 @@ gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
       MFT_ENUM_FLAG_SORTANDFILTER | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
 
   transform = gst_mf_video_enc_enum (enum_flags, subtype, 0, &device_caps,
-      NULL, &sink_template, &src_template);
+      nullptr, &sink_template, &src_template);
 
   if (!transform)
     goto done;

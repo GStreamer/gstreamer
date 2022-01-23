@@ -1,19 +1,19 @@
 mf_sources = [
-  'plugin.c',
   'gstmfutils.cpp',
   'gstmftransform.cpp',
   'gstmfvideoenc.cpp',
   'gstmfh264enc.cpp',
   'gstmfh265enc.cpp',
   'gstmfvp9enc.cpp',
-  'gstmfvideosrc.c',
-  'gstmfsourceobject.c',
-  'gstmfdevice.c',
+  'gstmfvideosrc.cpp',
+  'gstmfsourceobject.cpp',
+  'gstmfdevice.cpp',
   'gstmfaudioenc.cpp',
   'gstmfaacenc.cpp',
   'gstmfmp3enc.cpp',
   'gstmfvideobuffer.cpp',
-  'gstmfplatloader.c',
+  'gstmfplatloader.cpp',
+  'plugin.cpp',
 ]
 
 mf_desktop_sources = [

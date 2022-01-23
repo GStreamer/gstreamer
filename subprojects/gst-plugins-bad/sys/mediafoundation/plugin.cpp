@@ -60,6 +60,7 @@
 #include "gstmfconfig.h"
 
 #include <winapifamily.h>
+#include <wrl.h>
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -86,6 +87,10 @@ GST_DEBUG_CATEGORY (gst_mf_video_enc_debug);
 
 #define GST_CAT_DEFAULT gst_mf_debug
 
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
+
 static void
 plugin_deinit (gpointer data)
 {
@@ -96,19 +101,17 @@ plugin_deinit (gpointer data)
 static GList *
 get_d3d11_devices (void)
 {
-  GList *ret = NULL;
+  GList *ret = nullptr;
   guint i;
   HRESULT hr;
-  IMFVideoSampleAllocatorEx *allocator = NULL;
+  ComPtr < IMFVideoSampleAllocatorEx > allocator;
 
   /* Check whether we can use IMFVideoSampleAllocatorEx interface */
-  hr = GstMFCreateVideoSampleAllocatorEx (&IID_IMFVideoSampleAllocatorEx,
+  hr = GstMFCreateVideoSampleAllocatorEx (IID_IMFVideoSampleAllocatorEx,
       &allocator);
   if (!gst_mf_result (hr)) {
     GST_DEBUG ("IMFVideoSampleAllocatorEx interface is unavailable");
-    return NULL;
-  } else {
-    IMFVideoSampleAllocatorEx_Release (allocator);
+    return nullptr;
   }
 
   /* AMD seems supporting up to 12 cards, and 8 for NVIDIA */
@@ -125,7 +128,7 @@ get_d3d11_devices (void)
     if (!device)
       break;
 
-    g_object_get (device, "hardware", &is_hardware, NULL);
+    g_object_get (device, "hardware", &is_hardware, nullptr);
 
     if (!is_hardware) {
       GST_DEBUG_OBJECT (device, "Given d3d11 device is not for hardware");
@@ -152,8 +155,8 @@ get_d3d11_devices (void)
      * MF specific texture pool without download texture */
 
     device_handle = gst_d3d11_device_get_device_handle (device);
-    hr = ID3D11Device_CheckFeatureSupport (device_handle,
-        D3D11_FEATURE_D3D11_OPTIONS4, &options, sizeof (options));
+    hr = device_handle->CheckFeatureSupport (D3D11_FEATURE_D3D11_OPTIONS4,
+        &options, sizeof (options));
     if (!gst_d3d11_result (hr, device) ||
         !options.ExtendedNV12SharedTextureSupported) {
       GST_DEBUG_OBJECT (device,
@@ -163,8 +166,7 @@ get_d3d11_devices (void)
     }
 
     /* can we bind NV12 texture for encoder? */
-    hr = ID3D11Device_CheckFormatSupport (device_handle,
-        DXGI_FORMAT_NV12, &supported);
+    hr = device_handle->CheckFormatSupport (DXGI_FORMAT_NV12, &supported);
 
     if (!gst_d3d11_result (hr, device)) {
       GST_DEBUG_OBJECT (device, "Couldn't query format support");
@@ -187,8 +189,8 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   HRESULT hr;
-  GstRank rank = GST_RANK_SECONDARY;
-  GList *device_list = NULL;
+  guint rank = GST_RANK_SECONDARY;
+  GList *device_list = nullptr;
 
   GST_DEBUG_CATEGORY_INIT (gst_mf_debug, "mf", 0, "media foundation");
   GST_DEBUG_CATEGORY_INIT (gst_mf_utils_debug,
@@ -244,7 +246,7 @@ plugin_init (GstPlugin * plugin)
    * of each MFStartup and MFShutdown call should be identical. This rule is
    * simliar to that of CoInitialize/CoUninitialize pair */
   g_object_set_data_full (G_OBJECT (plugin),
-      "plugin-mediafoundation-shutdown", "shutdown-data",
+      "plugin-mediafoundation-shutdown", (gpointer) "shutdown-data",
       (GDestroyNotify) plugin_deinit);
 
   return TRUE;

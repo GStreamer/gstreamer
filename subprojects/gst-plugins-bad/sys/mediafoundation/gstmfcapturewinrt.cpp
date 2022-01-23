@@ -36,14 +36,11 @@ using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows::Media::MediaProperties;
 using namespace ABI::Windows::Graphics::Imaging;
 using namespace ABI::Windows::Foundation;
-
-G_BEGIN_DECLS
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_source_object_debug);
 #define GST_CAT_DEFAULT gst_mf_source_object_debug
 
-G_END_DECLS
-/* *INDENT-ON* */
 
 enum
 {
@@ -250,7 +247,7 @@ gst_mf_capture_winrt_thread_func (GstMFCaptureWinRT * self)
 
   idle_source = g_idle_source_new ();
   g_source_set_callback (idle_source,
-      (GSourceFunc) gst_mf_capture_winrt_main_loop_running_cb, self, NULL);
+      (GSourceFunc) gst_mf_capture_winrt_main_loop_running_cb, self, nullptr);
   g_source_attach (idle_source, self->context);
   g_source_unref (idle_source);
 
@@ -341,9 +338,9 @@ run_loop:
   gst_mf_capture_winrt_stop (source);
 
   delete self->capture;
-  self->capture = NULL;
+  self->capture = nullptr;
 
-  return NULL;
+  return nullptr;
 }
 
 static gboolean
@@ -668,7 +665,7 @@ gst_mf_capture_winrt_get_caps (GstMFSourceObject * object)
   if (self->supported_caps)
     return gst_caps_ref (self->supported_caps);
 
-  return NULL;
+  return nullptr;
 }
 
 /* *INDENT-OFF* */
@@ -678,7 +675,7 @@ gst_mf_capture_winrt_set_caps (GstMFSourceObject * object, GstCaps * caps)
   GstMFCaptureWinRT *self = GST_MF_CAPTURE_WINRT (object);
   std::vector<GstWinRTMediaDescription> desc_list;
   HRESULT hr;
-  GstCaps *target_caps = NULL;
+  GstCaps *target_caps = nullptr;
 
   hr = self->capture->GetAvailableDescriptions(desc_list);
   if (!gst_mf_result (hr) || desc_list.empty()) {
@@ -732,7 +729,7 @@ gst_mf_capture_winrt_new (GstMFSourceType type, gint device_index,
   RoInitializeWrapper init_wrapper (RO_INIT_MULTITHREADED);
 
   /* TODO: Add audio capture support */
-  g_return_val_if_fail (type == GST_MF_SOURCE_TYPE_VIDEO, NULL);
+  g_return_val_if_fail (type == GST_MF_SOURCE_TYPE_VIDEO, nullptr);
 
   /* If application didn't pass ICoreDispatcher object,
    * try to get dispatcher object for the current thread */
@@ -752,7 +749,8 @@ gst_mf_capture_winrt_new (GstMFSourceType type, gint device_index,
 
   self = (GstMFSourceObject *) g_object_new (GST_TYPE_MF_CAPTURE_WINRT,
       "source-type", type, "device-index", device_index, "device-name",
-      device_name, "device-path", device_path, "dispatcher", dispatcher, NULL);
+      device_name, "device-path", device_path, "dispatcher", dispatcher,
+      nullptr);
 
   /* Reset explicitly to ensure that it happens before
    * RoInitializeWrapper dtor is called */
@@ -761,7 +759,7 @@ gst_mf_capture_winrt_new (GstMFSourceType type, gint device_index,
   if (!self->opened) {
     GST_WARNING_OBJECT (self, "Couldn't open device");
     gst_object_unref (self);
-    return NULL;
+    return nullptr;
   }
 
   gst_object_ref_sink (self);

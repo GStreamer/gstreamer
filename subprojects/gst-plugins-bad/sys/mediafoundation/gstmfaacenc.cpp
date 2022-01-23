@@ -84,7 +84,7 @@ typedef struct
 } GstMFAacEncClassData;
 /* *INDENT-ON* */
 
-static GstElementClass *parent_class = NULL;
+static GstElementClass *parent_class = nullptr;
 
 static void gst_mf_aac_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -210,7 +210,7 @@ gst_mf_aac_enc_get_output_type (GstMFAudioEnc * mfenc, GstAudioInfo * info,
 {
   GstMFAacEnc *self = (GstMFAacEnc *) mfenc;
   GstMFTransform *transform = mfenc->transform;
-  GList *output_list = NULL;
+  GList *output_list = nullptr;
   GList *iter;
   ComPtr < IMFMediaType > target_output;
   std::vector < ComPtr < IMFMediaType >> filtered_types;
@@ -360,7 +360,7 @@ gst_mf_aac_enc_get_input_type (GstMFAudioEnc * mfenc, GstAudioInfo * info,
 {
   GstMFAacEnc *self = (GstMFAacEnc *) mfenc;
   GstMFTransform *transform = mfenc->transform;
-  GList *input_list = NULL;
+  GList *input_list = nullptr;
   GList *iter;
   ComPtr < IMFMediaType > target_input;
   std::vector < ComPtr < IMFMediaType >> filtered_types;
@@ -438,7 +438,7 @@ gst_mf_aac_enc_set_src_caps (GstMFAudioEnc * mfenc, GstAudioInfo * info)
   HRESULT hr;
   GstCaps *src_caps;
   GstBuffer *codec_data;
-  UINT8 *blob = NULL;
+  UINT8 *blob = nullptr;
   UINT32 blob_size = 0;
   gboolean ret;
   ComPtr < IMFMediaType > output_type;
@@ -481,7 +481,7 @@ gst_mf_aac_enc_set_src_caps (GstMFAudioEnc * mfenc, GstAudioInfo * info)
       "channels", G_TYPE_INT, GST_AUDIO_INFO_CHANNELS (info),
       "rate", G_TYPE_INT, GST_AUDIO_INFO_RATE (info),
       "framed", G_TYPE_BOOLEAN, TRUE,
-      "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+      "codec_data", GST_TYPE_BUFFER, codec_data, nullptr);
   gst_buffer_unref (codec_data);
 
   gst_codec_utils_aac_caps_set_level_and_profile (src_caps,
@@ -513,11 +513,11 @@ gst_mf_aac_enc_register (GstPlugin * plugin, guint rank,
   gboolean is_default = TRUE;
   GTypeInfo type_info = {
     sizeof (GstMFAacEncClass),
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     (GClassInitFunc) gst_mf_aac_enc_class_init,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     sizeof (GstMFAacEnc),
     0,
     (GInstanceInitFunc) gst_mf_aac_enc_init,
@@ -566,10 +566,10 @@ gst_mf_aac_enc_plugin_init_internal (GstPlugin * plugin, guint rank,
 {
   HRESULT hr;
   gint i;
-  GstCaps *src_caps = NULL;
-  GstCaps *sink_caps = NULL;
-  gchar *device_name = NULL;
-  GList *output_list = NULL;
+  GstCaps *src_caps = nullptr;
+  GstCaps *sink_caps = nullptr;
+  gchar *device_name = nullptr;
+  GList *output_list = nullptr;
   GList *iter;
   std::set < UINT32 > channels_list;
   std::set < UINT32 > rate_list;
@@ -581,7 +581,7 @@ gst_mf_aac_enc_plugin_init_internal (GstPlugin * plugin, guint rank,
   if (!gst_mf_transform_open (transform))
     return;
 
-  g_object_get (transform, "device-name", &device_name, NULL);
+  g_object_get (transform, "device-name", &device_name, nullptr);
   if (!device_name) {
     GST_WARNING_OBJECT (transform, "Unknown device name");
     return;

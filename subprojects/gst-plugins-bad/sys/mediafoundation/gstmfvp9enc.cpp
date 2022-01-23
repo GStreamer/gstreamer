@@ -61,7 +61,7 @@ gst_mf_vp9_enc_rc_mode_get_type (void)
   static const GEnumValue rc_mode_types[] = {
     {GST_MF_VP9_ENC_RC_MODE_CBR, "Constant bitrate", "cbr"},
     {GST_MF_VP9_ENC_RC_MODE_QUALITY, "Quality-based variable bitrate", "qvbr"},
-    {0, NULL, NULL}
+    {0, nullptr, nullptr}
   };
 
   if (!rc_mode_type) {
@@ -86,7 +86,7 @@ gst_mf_vp9_enc_content_type_get_type (void)
     {GST_MF_VP9_ENC_CONTENT_TYPE_UNKNOWN, "Unknown", "unknown"},
     {GST_MF_VP9_ENC_CONTENT_TYPE_FIXED_CAMERA_ANGLE,
         "Fixed Camera Angle, such as a webcam", "fixed"},
-    {0, NULL, NULL}
+    {0, nullptr, nullptr}
   };
 
   if (!content_type) {
@@ -142,7 +142,7 @@ typedef struct _GstMFVP9EncClass
   GstMFVideoEncClass parent_class;
 } GstMFVP9EncClass;
 
-static GstElementClass *parent_class = NULL;
+static GstElementClass *parent_class = nullptr;
 
 static void gst_mf_vp9_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -559,7 +559,7 @@ gst_mf_vp9_enc_set_src_caps (GstMFVideoEnc * mfenc,
   tags = gst_tag_list_new_empty ();
   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
       gst_element_get_metadata (GST_ELEMENT_CAST (self),
-          GST_ELEMENT_METADATA_LONGNAME), NULL);
+          GST_ELEMENT_METADATA_LONGNAME), nullptr);
   gst_video_encoder_merge_tags (GST_VIDEO_ENCODER (self), tags,
       GST_TAG_MERGE_REPLACE);
   gst_tag_list_unref (tags);
@@ -573,11 +573,11 @@ gst_mf_vp9_enc_plugin_init (GstPlugin * plugin, guint rank,
 {
   GTypeInfo type_info = {
     sizeof (GstMFVP9EncClass),
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     (GClassInitFunc) gst_mf_vp9_enc_class_init,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     sizeof (GstMFVP9Enc),
     0,
     (GInstanceInitFunc) gst_mf_vp9_enc_init,

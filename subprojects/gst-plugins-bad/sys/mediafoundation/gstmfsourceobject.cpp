@@ -45,8 +45,8 @@ enum
   PROP_SOURCE_TYPE,
 };
 
-#define DEFAULT_DEVICE_PATH         NULL
-#define DEFAULT_DEVICE_NAME         NULL
+#define DEFAULT_DEVICE_PATH         nullptr
+#define DEFAULT_DEVICE_NAME         nullptr
 #define DEFAULT_DEVICE_INDEX        -1
 #define DEFAULT_SOURCE_TYPE        GST_MF_SOURCE_TYPE_VIDEO
 
@@ -57,7 +57,7 @@ gst_mf_source_type_get_type (void)
 
   static const GEnumValue source_types[] = {
     {GST_MF_SOURCE_TYPE_VIDEO, "Video", "video"},
-    {0, NULL, NULL}
+    {0, nullptr, nullptr}
   };
 
   if (!source_type) {
@@ -81,6 +81,9 @@ static void
 gst_mf_source_object_class_init (GstMFSourceObjectClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GParamFlags flags =
+      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY |
+      G_PARAM_STATIC_STRINGS);
 
   gobject_class->finalize = gst_mf_source_object_finalize;
   gobject_class->get_property = gst_mf_source_object_get_property;
@@ -88,21 +91,17 @@ gst_mf_source_object_class_init (GstMFSourceObjectClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_PATH,
       g_param_spec_string ("device-path", "Device Path",
-          "The device path", DEFAULT_DEVICE_PATH,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+          "The device path", DEFAULT_DEVICE_PATH, flags));
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device Name",
-          "The human-readable device name", DEFAULT_DEVICE_NAME,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+          "The human-readable device name", DEFAULT_DEVICE_NAME, flags));
   g_object_class_install_property (gobject_class, PROP_DEVICE_INDEX,
       g_param_spec_int ("device-index", "Device Index",
           "The zero-based device index", -1, G_MAXINT, DEFAULT_DEVICE_INDEX,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+          flags));
   g_object_class_install_property (gobject_class, PROP_SOURCE_TYPE,
       g_param_spec_enum ("source-type", "Source Type",
-          "Source Type", GST_TYPE_MF_SOURCE_TYPE,
-          DEFAULT_SOURCE_TYPE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+          "Source Type", GST_TYPE_MF_SOURCE_TYPE, DEFAULT_SOURCE_TYPE, flags));
 }
 
 static void
@@ -111,7 +110,7 @@ gst_mf_source_object_init (GstMFSourceObject * self)
   self->device_index = DEFAULT_DEVICE_INDEX;
   self->source_type = DEFAULT_SOURCE_TYPE;
 
-  g_weak_ref_init (&self->client, NULL);
+  g_weak_ref_init (&self->client, nullptr);
 }
 
 static void
@@ -171,7 +170,7 @@ gst_mf_source_object_set_property (GObject * object, guint prop_id,
       self->device_index = g_value_get_int (value);
       break;
     case PROP_SOURCE_TYPE:
-      self->source_type = g_value_get_enum (value);
+      self->source_type = (GstMFSourceType) g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -187,7 +186,7 @@ gst_mf_source_object_start (GstMFSourceObject * object)
   g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), FALSE);
 
   klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-  g_assert (klass->start != NULL);
+  g_assert (klass->start != nullptr);
 
   return klass->start (object);
 }
@@ -200,7 +199,7 @@ gst_mf_source_object_stop (GstMFSourceObject * object)
   g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), FALSE);
 
   klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-  g_assert (klass->stop != NULL);
+  g_assert (klass->stop != nullptr);
 
   return klass->stop (object);
 }
@@ -214,7 +213,7 @@ gst_mf_source_object_fill (GstMFSourceObject * object, GstBuffer * buffer)
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-  g_assert (klass->fill != NULL);
+  g_assert (klass->fill != nullptr);
 
   return klass->fill (object, buffer);
 }
@@ -225,10 +224,10 @@ gst_mf_source_object_create (GstMFSourceObject * object, GstBuffer ** buffer)
   GstMFSourceObjectClass *klass;
 
   g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), GST_FLOW_ERROR);
-  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (buffer != nullptr, GST_FLOW_ERROR);
 
   klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-  g_assert (klass->create != NULL);
+  g_assert (klass->create != nullptr);
 
   return klass->create (object, buffer);
 }
@@ -260,7 +259,7 @@ gst_mf_source_object_set_caps (GstMFSourceObject * object, GstCaps * caps)
   g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), FALSE);
 
   klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-  g_assert (klass->set_caps != NULL);
+  g_assert (klass->set_caps != nullptr);
 
   return klass->set_caps (object, caps);
 }
@@ -270,10 +269,10 @@ gst_mf_source_object_get_caps (GstMFSourceObject * object)
 {
   GstMFSourceObjectClass *klass;
 
-  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), NULL);
+  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), nullptr);
 
   klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
-  g_assert (klass->get_caps != NULL);
+  g_assert (klass->get_caps != nullptr);
 
   return klass->get_caps (object);
 }
@@ -292,7 +291,7 @@ gst_mf_source_object_set_client (GstMFSourceObject * object,
 GstClockTime
 gst_mf_source_object_get_running_time (GstMFSourceObject * object)
 {
-  GstElement *client = NULL;
+  GstElement *client = nullptr;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE;
 
   g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), GST_CLOCK_TIME_NONE);
@@ -379,7 +378,7 @@ gst_mf_source_object_new (GstMFSourceType type, gint device_index,
 #endif
   g_assert_not_reached ();
 
-  return NULL;
+  return nullptr;
 }
 
 gint

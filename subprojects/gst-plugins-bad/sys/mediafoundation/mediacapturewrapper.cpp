@@ -40,12 +40,8 @@ using namespace ABI::Windows::Foundation::Collections;
 using namespace ABI::Windows::Media::Devices;
 using namespace ABI::Windows::Media::MediaProperties;
 
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_source_object_debug);
 #define GST_CAT_DEFAULT gst_mf_source_object_debug
-
-G_END_DECLS
 
 static std::string
 convert_hstring_to_string (HString * hstr)
@@ -187,11 +183,11 @@ GstWinRTMediaDescription::Fill(HString &source_id,
 
   caps = gst_caps_new_simple ("video/x-raw",
       "format", G_TYPE_STRING, format.c_str(), "width", G_TYPE_INT, width,
-      "height", G_TYPE_INT, height, NULL);
+      "height", G_TYPE_INT, height, nullptr);
 
   if (fps_n > 0 && fps_d > 0)
     gst_caps_set_simple (caps,
-        "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+        "framerate", GST_TYPE_FRACTION, fps_n, fps_d, nullptr);
 
   source_id.CopyTo (source_id_.GetAddressOf());
   hstr_subtype.CopyTo (subtype_.GetAddressOf());

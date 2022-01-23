@@ -75,7 +75,7 @@ gst_mf_h264_enc_rc_mode_get_type (void)
     {GST_MF_H264_ENC_RC_MODE_UNCONSTRAINED_VBR,
         "Unconstrained variable bitrate", "uvbr"},
     {GST_MF_H264_ENC_RC_MODE_QUALITY, "Quality-based variable bitrate", "qvbr"},
-    {0, NULL, NULL}
+    {0, nullptr, nullptr}
   };
 
   if (!rc_mode_type) {
@@ -100,7 +100,7 @@ gst_mf_h264_enc_adaptive_mode_get_type (void)
     {GST_MF_H264_ENC_ADAPTIVE_MODE_NONE, "None", "none"},
     {GST_MF_H264_ENC_ADAPTIVE_MODE_FRAMERATE,
         "Adaptively change the frame rate", "framerate"},
-    {0, NULL, NULL}
+    {0, nullptr, nullptr}
   };
 
   if (!adaptive_mode_type) {
@@ -127,7 +127,7 @@ gst_mf_h264_enc_content_type_get_type (void)
     {GST_MF_H264_ENC_CONTENT_TYPE_UNKNOWN, "Unknown", "unknown"},
     {GST_MF_H264_ENC_CONTENT_TYPE_FIXED_CAMERA_ANGLE,
         "Fixed Camera Angle, such as a webcam", "fixed"},
-    {0, NULL, NULL}
+    {0, nullptr, nullptr}
   };
 
   if (!content_type) {
@@ -226,7 +226,7 @@ typedef struct _GstMFH264EncClass
   GstMFVideoEncClass parent_class;
 } GstMFH264EncClass;
 
-static GstElementClass *parent_class = NULL;
+static GstElementClass *parent_class = nullptr;
 
 static void gst_mf_h264_enc_finalize (GObject * object);
 static void gst_mf_h264_enc_get_property (GObject * object, guint prop_id,
@@ -1036,7 +1036,7 @@ gst_mf_h264_enc_set_src_caps (GstMFVideoEnc * mfenc,
 
   gst_structure_set (s, "stream-format", G_TYPE_STRING, "byte-stream",
       "alignment", G_TYPE_STRING, "au", "profile",
-      G_TYPE_STRING, self->profile_str, NULL);
+      G_TYPE_STRING, self->profile_str, nullptr);
 
   out_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self),
       out_caps, state);
@@ -1049,7 +1049,7 @@ gst_mf_h264_enc_set_src_caps (GstMFVideoEnc * mfenc,
   tags = gst_tag_list_new_empty ();
   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
       gst_element_get_metadata (GST_ELEMENT_CAST (self),
-          GST_ELEMENT_METADATA_LONGNAME), NULL);
+          GST_ELEMENT_METADATA_LONGNAME), nullptr);
   gst_video_encoder_merge_tags (GST_VIDEO_ENCODER (self), tags,
       GST_TAG_MERGE_REPLACE);
   gst_tag_list_unref (tags);
@@ -1063,11 +1063,11 @@ gst_mf_h264_enc_plugin_init (GstPlugin * plugin, guint rank,
 {
   GTypeInfo type_info = {
     sizeof (GstMFH264EncClass),
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     (GClassInitFunc) gst_mf_h264_enc_class_init,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     sizeof (GstMFH264Enc),
     0,
     (GInstanceInitFunc) gst_mf_h264_enc_init,

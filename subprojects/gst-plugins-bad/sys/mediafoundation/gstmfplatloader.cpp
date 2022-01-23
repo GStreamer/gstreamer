@@ -25,14 +25,10 @@
 #include "gstmfconfig.h"
 #include <gmodule.h>
 
-/* *INDENT-OFF* */
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_debug);
 #define GST_CAT_DEFAULT gst_mf_debug
 
-G_END_DECLS
-
+/* *INDENT-OFF* */
 #define LOAD_SYMBOL(name,func) G_STMT_START { \
   if (!g_module_symbol (module, G_STRINGIFY (name), (gpointer *) &vtable->func)) { \
     GST_WARNING ("Failed to load '%s', %s", G_STRINGIFY (name), g_module_error()); \
@@ -103,7 +99,7 @@ GstMFTEnum2 (GUID guidCategory, UINT32 Flags,
     IMFAttributes * pAttributes, IMFActivate *** pppMFTActivate,
     UINT32 * pnumMFTActivate)
 {
-  g_assert (gst_mf_plat_vtable.GstMFTEnum2 != NULL);
+  g_assert (gst_mf_plat_vtable.GstMFTEnum2 != nullptr);
 
   return gst_mf_plat_vtable.GstMFTEnum2 (guidCategory, Flags, pInputType,
       pOutputType, pAttributes, pppMFTActivate, pnumMFTActivate);
@@ -113,7 +109,7 @@ HRESULT __stdcall
 GstMFCreateDXGIDeviceManager (UINT * resetToken,
     IMFDXGIDeviceManager ** ppDeviceManager)
 {
-  g_assert (gst_mf_plat_vtable.GstMFCreateDXGIDeviceManager != NULL);
+  g_assert (gst_mf_plat_vtable.GstMFCreateDXGIDeviceManager != nullptr);
 
   return gst_mf_plat_vtable.GstMFCreateDXGIDeviceManager (resetToken,
       ppDeviceManager);
@@ -122,7 +118,7 @@ GstMFCreateDXGIDeviceManager (UINT * resetToken,
 HRESULT __stdcall
 GstMFCreateVideoSampleAllocatorEx (REFIID riid, void **ppSampleAllocator)
 {
-  g_assert (gst_mf_plat_vtable.GstMFCreateVideoSampleAllocatorEx != NULL);
+  g_assert (gst_mf_plat_vtable.GstMFCreateVideoSampleAllocatorEx != nullptr);
 
   return gst_mf_plat_vtable.GstMFCreateVideoSampleAllocatorEx (riid,
       ppSampleAllocator);

@@ -34,12 +34,8 @@
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_transform_debug);
 #define GST_CAT_DEFAULT gst_mf_transform_debug
-
-G_END_DECLS
 
 typedef HRESULT (*GstMFTransformAsyncCallbackOnEvent) (MediaEventType event,
     GstObject * client);
@@ -187,7 +183,7 @@ private:
     : ref_count_ (1)
     , running_ (false)
   {
-    g_weak_ref_init (&client_, NULL);
+    g_weak_ref_init (&client_, nullptr);
   }
 
   ~GstMFTransformAsyncCallback ()
@@ -295,7 +291,7 @@ gst_mf_transform_class_init (GstMFTransformClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "device-name",
-          "Device name", NULL,
+          "Device name", nullptr,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_HARDWARE,
       g_param_spec_boolean ("hardware", "Hardware",
@@ -346,10 +342,10 @@ static void
 gst_mf_transform_clear_enum_params (GstMFTransformEnumParams * params)
 {
   g_free (params->input_typeinfo);
-  params->input_typeinfo = NULL;
+  params->input_typeinfo = nullptr;
 
   g_free (params->output_typeinfo);
-  params->output_typeinfo = NULL;
+  params->output_typeinfo = nullptr;
 }
 
 static void
@@ -454,18 +450,18 @@ static gpointer
 gst_mf_transform_thread_func (GstMFTransform * self)
 {
   HRESULT hr = S_OK;
-  IMFActivate **devices = NULL;
+  IMFActivate **devices = nullptr;
   UINT32 num_devices, i;
-  LPWSTR name = NULL;
+  LPWSTR name = nullptr;
   GSource *source;
 
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
+  CoInitializeEx (nullptr, COINIT_MULTITHREADED);
 
   g_main_context_push_thread_default (self->context);
 
   source = g_idle_source_new ();
   g_source_set_callback (source,
-      (GSourceFunc) gst_mf_transform_main_loop_running_cb, self, NULL);
+      (GSourceFunc) gst_mf_transform_main_loop_running_cb, self, nullptr);
   g_source_attach (source, self->context);
   g_source_unref (source);
 
@@ -529,11 +525,11 @@ gst_mf_transform_thread_func (GstMFTransform * self)
     devices[i]->Release ();
 
   hr = self->activate->GetAllocatedString (MFT_FRIENDLY_NAME_Attribute,
-      &name, NULL);
+      &name, nullptr);
 
   if (gst_mf_result (hr)) {
     self->device_name = g_utf16_to_utf8 ((const gunichar2 *) name,
-        -1, NULL, NULL, NULL);
+        -1, nullptr, nullptr, nullptr);
 
     GST_INFO_OBJECT (self, "Open device %s", self->device_name);
     CoTaskMemFree (name);
@@ -556,12 +552,12 @@ run_loop:
 
   if (self->activate) {
     self->activate->Release ();
-    self->activate = NULL;
+    self->activate = nullptr;
   }
 
   CoUninitialize ();
 
-  return NULL;
+  return nullptr;
 }
 
 static GstFlowReturn
@@ -692,7 +688,7 @@ gst_mf_transform_process_input (GstMFTransform * object, IMFSample * sample)
   gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
-  g_return_val_if_fail (sample != NULL, FALSE);
+  g_return_val_if_fail (sample != nullptr, FALSE);
 
   GST_TRACE_OBJECT (object, "Process input");
 
@@ -759,7 +755,7 @@ gst_mf_transform_get_output (GstMFTransform * object, IMFSample ** sample)
   GstFlowReturn ret;
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), GST_FLOW_ERROR);
-  g_return_val_if_fail (sample != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (sample != nullptr, GST_FLOW_ERROR);
   /* Hardware MFT must not call this method, instead client must install
    * new sample callback so that outputting data from Media Foundation's
    * worker thread */
@@ -942,7 +938,7 @@ gst_mf_transform_open (GstMFTransform * object)
   GstMFTransformOpenData data;
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
-  g_return_val_if_fail (object->activate != NULL, FALSE);
+  g_return_val_if_fail (object->activate != nullptr, FALSE);
 
   data.object = object;
   data.invoked = FALSE;
@@ -1011,12 +1007,12 @@ gst_mf_transform_close (GstMFTransform * object)
 
   if (object->codec_api) {
     object->codec_api->Release ();
-    object->codec_api = NULL;
+    object->codec_api = nullptr;
   }
 
   if (object->transform) {
     object->transform->Release ();
-    object->transform = NULL;
+    object->transform = nullptr;
   }
 
   return TRUE;
@@ -1075,7 +1071,7 @@ gst_mf_transform_on_event (MediaEventType event, GstMFTransform * self)
 IMFActivate *
 gst_mf_transform_get_activate_handle (GstMFTransform * object)
 {
-  g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), NULL);
+  g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), nullptr);
 
   return object->activate;
 }
@@ -1083,12 +1079,12 @@ gst_mf_transform_get_activate_handle (GstMFTransform * object)
 IMFTransform *
 gst_mf_transform_get_transform_handle (GstMFTransform * object)
 {
-  g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), NULL);
+  g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), nullptr);
 
   if (!object->transform) {
     GST_WARNING_OBJECT (object,
         "IMFTransform is not configured, open MFT first");
-    return NULL;
+    return nullptr;
   }
 
   return object->transform;
@@ -1097,11 +1093,11 @@ gst_mf_transform_get_transform_handle (GstMFTransform * object)
 ICodecAPI *
 gst_mf_transform_get_codec_api_handle (GstMFTransform * object)
 {
-  g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), NULL);
+  g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), nullptr);
 
   if (!object->codec_api) {
     GST_WARNING_OBJECT (object, "ICodecAPI is not configured, open MFT first");
-    return NULL;
+    return nullptr;
   }
 
   return object->codec_api;
@@ -1114,10 +1110,10 @@ gst_mf_transform_get_input_available_types (GstMFTransform * object,
   IMFTransform *transform;
   HRESULT hr;
   DWORD index = 0;
-  GList *list = NULL;
+  GList *list = nullptr;
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
-  g_return_val_if_fail (input_types != NULL, FALSE);
+  g_return_val_if_fail (input_types != nullptr, FALSE);
 
   transform = object->transform;
 
@@ -1127,7 +1123,7 @@ gst_mf_transform_get_input_available_types (GstMFTransform * object,
   }
 
   do {
-    IMFMediaType *type = NULL;
+    IMFMediaType *type = nullptr;
 
     hr = transform->GetInputAvailableType (object->input_id, index, &type);
     if (SUCCEEDED (hr))
@@ -1148,10 +1144,10 @@ gst_mf_transform_get_output_available_types (GstMFTransform * object,
   IMFTransform *transform;
   HRESULT hr;
   DWORD index = 0;
-  GList *list = NULL;
+  GList *list = nullptr;
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
-  g_return_val_if_fail (output_types != NULL, FALSE);
+  g_return_val_if_fail (output_types != nullptr, FALSE);
 
   transform = object->transform;
 
@@ -1230,7 +1226,7 @@ gst_mf_transform_get_input_current_type (GstMFTransform * object,
   HRESULT hr;
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
-  g_return_val_if_fail (input_type != NULL, FALSE);
+  g_return_val_if_fail (input_type != nullptr, FALSE);
 
   transform = object->transform;
 
@@ -1255,7 +1251,7 @@ gst_mf_transform_get_output_current_type (GstMFTransform * object,
   HRESULT hr;
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
-  g_return_val_if_fail (output_type != NULL, FALSE);
+  g_return_val_if_fail (output_type != nullptr, FALSE);
 
   transform = object->transform;
 
@@ -1277,14 +1273,14 @@ gst_mf_transform_new (GstMFTransformEnumParams * params)
 {
   GstMFTransform *self;
 
-  g_return_val_if_fail (params != NULL, NULL);
+  g_return_val_if_fail (params != nullptr, nullptr);
 
   self = (GstMFTransform *) g_object_new (GST_TYPE_MF_TRANSFORM_OBJECT,
-      "enum-params", params, NULL);
+      "enum-params", params, nullptr);
 
   if (!self->initialized) {
     gst_object_unref (self);
-    return NULL;
+    return nullptr;
   }
 
   gst_object_ref_sink (self);
@@ -1300,7 +1296,7 @@ gst_mf_transform_set_codec_api_uint32 (GstMFTransform * object,
   VARIANT var;
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
-  g_return_val_if_fail (api != NULL, FALSE);
+  g_return_val_if_fail (api != nullptr, FALSE);
 
   if (!object->codec_api) {
     GST_WARNING_OBJECT (object, "codec api unavailable");
@@ -1325,7 +1321,7 @@ gst_mf_transform_set_codec_api_uint64 (GstMFTransform * object,
   VARIANT var;
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
-  g_return_val_if_fail (api != NULL, FALSE);
+  g_return_val_if_fail (api != nullptr, FALSE);
 
   if (!object->codec_api) {
     GST_WARNING_OBJECT (object, "codec api unavailable");
@@ -1350,7 +1346,7 @@ gst_mf_transform_set_codec_api_boolean (GstMFTransform * object,
   VARIANT var;
 
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
-  g_return_val_if_fail (api != NULL, FALSE);
+  g_return_val_if_fail (api != nullptr, FALSE);
 
   if (!object->codec_api) {
     GST_WARNING_OBJECT (object, "codec api unavailable");

@@ -20,14 +20,10 @@
 #include "gstmfvideobuffer.h"
 #include <string.h>
 
-/* *INDENT-OFF* */
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_video_buffer_debug);
 #define GST_CAT_DEFAULT gst_mf_video_buffer_debug
 
-G_END_DECLS
-
+/* *INDENT-OFF* */
 IGstMFVideoBuffer::IGstMFVideoBuffer ()
   : ref_count_ (1)
   , current_len_ (0)
@@ -241,7 +237,7 @@ IGstMFVideoBuffer::QueryInterface (REFIID riid, void ** object)
     GST_TRACE ("query IGstMFVideoBuffer interface %p", this);
     *object = this;
   } else {
-    *object = NULL;
+    *object = nullptr;
     return E_NOINTERFACE;
   }
 

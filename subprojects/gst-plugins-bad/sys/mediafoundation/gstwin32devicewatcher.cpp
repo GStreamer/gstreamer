@@ -119,7 +119,7 @@ gst_win32_device_watcher_finalize (GObject * object)
 static LRESULT CALLBACK
 window_proc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-  GstWin32DeviceWatcher * self;
+  GstWin32DeviceWatcher *self;
 
   switch (msg) {
     case WM_CREATE:
@@ -154,7 +154,7 @@ create_hwnd (GstWin32DeviceWatcher * self)
 {
   WNDCLASSEXA wc;
   ATOM atom = 0;
-  HINSTANCE hinstance = GetModuleHandle (NULL);
+  HINSTANCE hinstance = GetModuleHandle (nullptr);
   static const gchar *klass_name = "GstWin32DeviceWatcher";
   HWND hwnd;
 
@@ -174,7 +174,7 @@ create_hwnd (GstWin32DeviceWatcher * self)
       G_UNLOCK (create_lock);
       GST_ERROR_OBJECT (self, "Failed to register window class, lastError 0x%x",
           (guint) GetLastError ());
-      return NULL;
+      return nullptr;
     }
   } else {
     GST_LOG_OBJECT (self, "window class was already registered");
@@ -182,7 +182,7 @@ create_hwnd (GstWin32DeviceWatcher * self)
   G_UNLOCK (create_lock);
 
   hwnd = CreateWindowExA (0, klass_name, "", 0, 0, 0, 0, 0,
-      HWND_MESSAGE, NULL, hinstance, self);
+      HWND_MESSAGE, nullptr, hinstance, self);
   if (!hwnd) {
     GST_ERROR_OBJECT (self, "Failed to create window handle, lastError 0x%x",
         (guint) GetLastError ());
@@ -207,7 +207,7 @@ win32_msg_cb (GIOChannel * source, GIOCondition condition, gpointer data)
 {
   MSG msg;
 
-  if (!PeekMessage (&msg, NULL, 0, 0, PM_REMOVE))
+  if (!PeekMessage (&msg, nullptr, 0, 0, PM_REMOVE))
     return G_SOURCE_CONTINUE;
 
   TranslateMessage (&msg);
@@ -299,7 +299,7 @@ gst_win32_device_watcher_new (DWORD device_type, const GUID * class_guid,
 
 typedef struct
 {
-  GstWin32DeviceWatcher * self;
+  GstWin32DeviceWatcher *self;
 
   gboolean handled;
   gboolean ret;
@@ -308,7 +308,7 @@ typedef struct
 static gboolean
 register_device_notification (DeviceNotificationData * data)
 {
-  GstWin32DeviceWatcher * self = data->self;
+  GstWin32DeviceWatcher *self = data->self;
   DEV_BROADCAST_DEVICEINTERFACE di = { 0, };
 
   if (self->device_notify)
@@ -357,7 +357,7 @@ gst_win32_device_watcher_start (GstWin32DeviceWatcher * watcher)
 static gboolean
 unregister_device_notification (DeviceNotificationData * data)
 {
-  GstWin32DeviceWatcher * self = data->self;
+  GstWin32DeviceWatcher *self = data->self;
 
   if (!self->device_notify)
     goto out;

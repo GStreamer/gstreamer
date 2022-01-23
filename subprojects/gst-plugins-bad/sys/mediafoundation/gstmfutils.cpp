@@ -30,12 +30,8 @@
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_utils_debug);
 #define GST_CAT_DEFAULT gst_mf_utils_debug
-
-G_END_DECLS
 
 #define MAKE_RAW_FORMAT_CAPS(format) \
     "video/x-raw, format = (string) " format
@@ -116,14 +112,14 @@ gst_mf_video_subtype_from_video_format (GstVideoFormat format)
       return &raw_video_format_map[i].mf_format;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 static GstCaps *
 gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
 {
   HRESULT hr;
-  GstCaps *caps = NULL;
+  GstCaps *caps = nullptr;
   gint i;
   guint32 width = 0;
   guint32 height = 0;
@@ -138,7 +134,7 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
   hr = media_type->GetGUID (MF_MT_SUBTYPE, &subtype);
   if (FAILED (hr)) {
     GST_WARNING ("Failed to get subtype, hr: 0x%x", (guint) hr);
-    return NULL;
+    return nullptr;
   }
 
   for (i = 0; i < G_N_ELEMENTS (raw_video_format_map); i++) {
@@ -161,7 +157,7 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
   if (!caps) {
     GST_WARNING ("Unknown format %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (subtype.Data1));
-    return NULL;
+    return nullptr;
   }
 
   hr = MFGetAttributeSize (media_type, MF_MT_FRAME_SIZE, &width, &height);
@@ -170,23 +166,24 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
     if (raw_format) {
       gst_caps_unref (caps);
 
-      return NULL;
+      return nullptr;
     }
   }
 
   if (width > 0 && height > 0) {
     gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height, NULL);
+        "height", G_TYPE_INT, height, nullptr);
   }
 
   hr = MFGetAttributeRatio (media_type, MF_MT_FRAME_RATE, &num, &den);
   if (SUCCEEDED (hr) && num > 0 && den > 0)
-    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, num, den, NULL);
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, num, den,
+        nullptr);
 
   hr = MFGetAttributeRatio (media_type, MF_MT_PIXEL_ASPECT_RATIO, &num, &den);
   if (SUCCEEDED (hr) && num > 0 && den > 0)
     gst_caps_set_simple (caps,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, num, den, NULL);
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, num, den, nullptr);
 
   colorimetry.range = GST_VIDEO_COLOR_RANGE_UNKNOWN;
   colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
@@ -311,9 +308,9 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
 
   str = gst_video_colorimetry_to_string (&colorimetry);
   if (str) {
-    gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, str, NULL);
+    gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, str, nullptr);
     g_free (str);
-    str = NULL;
+    str = nullptr;
   }
 
   chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
@@ -341,7 +338,7 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
 
   if (chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN)
     gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING,
-        gst_video_chroma_to_string (chroma_site), NULL);
+        gst_video_chroma_to_string (chroma_site), nullptr);
 
   return caps;
 }
@@ -352,18 +349,18 @@ gst_mf_media_type_to_caps (IMFMediaType * media_type)
   GUID major_type;
   HRESULT hr;
 
-  g_return_val_if_fail (media_type != NULL, NULL);
+  g_return_val_if_fail (media_type != nullptr, nullptr);
 
   hr = media_type->GetMajorType (&major_type);
   if (FAILED (hr)) {
     GST_WARNING ("failed to get major type, hr: 0x%x", (guint) hr);
-    return NULL;
+    return nullptr;
   }
 
   if (IsEqualGUID (major_type, MFMediaType_Video))
     return gst_mf_media_type_to_video_caps (media_type);
 
-  return NULL;
+  return nullptr;
 }
 
 void
@@ -480,14 +477,14 @@ _gst_mf_result (HRESULT hr, GstDebugCategory * cat, const gchar * file,
   gboolean ret = TRUE;
 
   if (FAILED (hr)) {
-    gchar *error_text = NULL;
+    gchar *error_text = nullptr;
 
     error_text = g_win32_error_message ((gint) hr);
     /* g_win32_error_message() doesn't cover all HERESULT return code,
      * so it could be empty string, or null if there was an error
      * in g_utf16_to_utf8() */
     gst_debug_log (cat, GST_LEVEL_WARNING, file, function, line,
-        NULL, "MediaFoundation call failed: 0x%x, %s", (guint) hr,
+        nullptr, "MediaFoundation call failed: 0x%x, %s", (guint) hr,
         GST_STR_NULL (error_text));
     g_free (error_text);
 
@@ -675,16 +672,16 @@ gst_mf_guid_to_static_string (const GUID & guid)
   GST_MF_IF_EQUAL_RETURN (guid, MF_MT_ORIGINAL_WAVE_FORMAT_TAG);
 #endif
 
-  return NULL;
+  return nullptr;
 }
 
 static gchar *
 gst_mf_guid_to_string (const GUID & guid)
 {
-  const gchar *str = NULL;
+  const gchar *str = nullptr;
   HRESULT hr;
-  WCHAR *name = NULL;
-  gchar *ret = NULL;
+  WCHAR *name = nullptr;
+  gchar *ret = nullptr;
 
   str = gst_mf_guid_to_static_string (guid);
   if (str)
@@ -692,7 +689,9 @@ gst_mf_guid_to_string (const GUID & guid)
 
   hr = StringFromCLSID (guid, &name);
   if (gst_mf_result (hr) && name) {
-    ret = g_utf16_to_utf8 ((const gunichar2 *) name, -1, NULL, NULL, NULL);
+    ret =
+        g_utf16_to_utf8 ((const gunichar2 *) name, -1, nullptr, nullptr,
+        nullptr);
     CoTaskMemFree (name);
 
     if (ret)
@@ -740,14 +739,14 @@ gst_mf_attribute_value_to_string (const GUID & guid, const PROPVARIANT & var)
       return gst_mf_guid_to_string (*var.puuid);
     case VT_LPWSTR:
       return g_utf16_to_utf8 ((const gunichar2 *) var.pwszVal,
-          -1, NULL, NULL, NULL);
+          -1, nullptr, nullptr, nullptr);
     case VT_UNKNOWN:
       return g_strdup ("IUnknown");
     default:
       return g_strdup_printf ("Unhandled type (vt = %d)", var.vt);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 static void
@@ -755,8 +754,8 @@ gst_mf_dump_attribute_value_by_index (IMFAttributes * attr, const gchar * msg,
     guint index, GstDebugLevel level, GstDebugCategory * cat,
     const gchar * file, const gchar * function, gint line)
 {
-  gchar *guid_name = NULL;
-  gchar *value = NULL;
+  gchar *guid_name = nullptr;
+  gchar *value = nullptr;
   GUID guid = GUID_NULL;
   HRESULT hr;
 
@@ -776,7 +775,8 @@ gst_mf_dump_attribute_value_by_index (IMFAttributes * attr, const gchar * msg,
     goto done;
 
   gst_debug_log (cat, level, file, function, line,
-      NULL, "%s attribute %d, %s: %s", msg ? msg : "", index, guid_name, value);
+      nullptr, "%s attribute %d, %s: %s", msg ? msg : "", index, guid_name,
+      value);
 
 done:
   PropVariantClear (&var);

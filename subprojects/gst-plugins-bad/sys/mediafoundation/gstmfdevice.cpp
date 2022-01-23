@@ -43,6 +43,9 @@ DEFINE_GUID (GST_KSCATEGORY_CAPTURE, 0x65E8773DL, 0x8F56,
 
 #if GST_MF_WINAPI_APP
 #include <gst/winrt/gstwinrt.h>
+/* *INDENT-OFF* */
+using namespace ABI::Windows::Devices::Enumeration;
+/* *INDENT-ON* */
 #endif
 
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_debug);
@@ -85,8 +88,9 @@ gst_mf_device_class_init (GstMFDeviceClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_PATH,
       g_param_spec_string ("device-path", "Device Path",
-          "The device path", NULL,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+          "The device path", nullptr,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY |
+              G_PARAM_STATIC_STRINGS)));
 }
 
 static void
@@ -112,7 +116,7 @@ gst_mf_device_create_element (GstDevice * device, const gchar * name)
 
   elem = gst_element_factory_make ("mfvideosrc", name);
 
-  g_object_set (elem, "device-path", self->device_path, NULL);
+  g_object_set (elem, "device-path", self->device_path, nullptr);
 
   return elem;
 }
@@ -181,16 +185,12 @@ static void gst_mf_device_provider_device_changed (GstWin32DeviceWatcher *
 static gboolean gst_mf_device_provider_start_winrt (GstDeviceProvider * self);
 static void
 gst_mf_device_provider_device_added (GstWinRTDeviceWatcher * watcher,
-    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformation * info,
-    gpointer user_data);
+    IDeviceInformation * info, gpointer user_data);
 static void
 gst_mf_device_provider_device_updated (GstWinRTDeviceWatcher * watcher,
-    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate *
-    info_update, gpointer user_data);
+    IDeviceInformationUpdate * info_update, gpointer user_data);
 static void gst_mf_device_provider_device_removed (GstWinRTDeviceWatcher *
-    watcher,
-    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate *
-    info_update, gpointer user_data);
+    watcher, IDeviceInformationUpdate * info_update, gpointer user_data);
 static void
 gst_mf_device_provider_device_enum_completed (GstWinRTDeviceWatcher *
     watcher, gpointer user_data);
@@ -269,19 +269,19 @@ static GList *
 gst_mf_device_provider_probe (GstDeviceProvider * provider)
 {
   GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (provider);
-  GList *list = NULL;
+  GList *list = nullptr;
   gint i;
 
   for (i = 0;; i++) {
-    GstMFSourceObject *obj = NULL;
+    GstMFSourceObject *obj = nullptr;
     GstDevice *device;
-    GstStructure *props = NULL;
-    GstCaps *caps = NULL;
-    gchar *device_name = NULL;
-    gchar *device_path = NULL;
+    GstStructure *props = nullptr;
+    GstCaps *caps = nullptr;
+    gchar *device_name = nullptr;
+    gchar *device_path = nullptr;
 
     obj = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO,
-        i, NULL, NULL, NULL);
+        i, nullptr, nullptr, nullptr);
     if (!obj)
       break;
 
@@ -292,7 +292,7 @@ gst_mf_device_provider_probe (GstDeviceProvider * provider)
     }
 
     g_object_get (obj,
-        "device-path", &device_path, "device-name", &device_name, NULL);
+        "device-path", &device_path, "device-name", &device_name, nullptr);
 
     if (!device_path) {
       GST_WARNING_OBJECT (self, "Device path is unavailable");
@@ -307,11 +307,12 @@ gst_mf_device_provider_probe (GstDeviceProvider * provider)
     props = gst_structure_new ("mf-proplist",
         "device.api", G_TYPE_STRING, "mediafoundation",
         "device.path", G_TYPE_STRING, device_path,
-        "device.name", G_TYPE_STRING, device_name, NULL);
+        "device.name", G_TYPE_STRING, device_name, nullptr);
 
-    device = g_object_new (GST_TYPE_MF_DEVICE, "device-path", device_path,
+    device = (GstDevice *) g_object_new (GST_TYPE_MF_DEVICE,
+        "device-path", device_path,
         "display-name", device_name, "caps", caps,
-        "device-class", "Source/Video", "properties", props, NULL);
+        "device-class", "Source/Video", "properties", props, nullptr);
 
     list = g_list_append (list, device);
 
@@ -334,7 +335,7 @@ gst_mf_device_provider_start_win32 (GstDeviceProvider * provider)
 {
   GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (provider);
   GstWin32DeviceWatcher *watcher;
-  GList *devices = NULL;
+  GList *devices = nullptr;
   GList *iter;
 
   if (!GST_IS_WIN32_DEVICE_WATCHER (self->watcher))
@@ -363,7 +364,7 @@ gst_mf_device_provider_start_winrt (GstDeviceProvider * provider)
 {
   GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (provider);
   GstWinRTDeviceWatcher *watcher;
-  GList *devices = NULL;
+  GList *devices = nullptr;
   GList *iter;
 
   if (!GST_IS_WINRT_DEVICE_WATCHER (self->watcher))
@@ -479,15 +480,15 @@ static void
 gst_mf_device_provider_update_devices (GstMFDeviceProvider * self)
 {
   GstDeviceProvider *provider = GST_DEVICE_PROVIDER_CAST (self);
-  GList *prev_devices = NULL;
-  GList *new_devices = NULL;
-  GList *to_add = NULL;
-  GList *to_remove = NULL;
+  GList *prev_devices = nullptr;
+  GList *new_devices = nullptr;
+  GList *to_add = nullptr;
+  GList *to_remove = nullptr;
   GList *iter;
 
   GST_OBJECT_LOCK (self);
   prev_devices = g_list_copy_deep (provider->devices,
-      (GCopyFunc) gst_object_ref, NULL);
+      (GCopyFunc) gst_object_ref, nullptr);
   GST_OBJECT_UNLOCK (self);
 
   new_devices = gst_mf_device_provider_probe (provider);
@@ -544,8 +545,7 @@ gst_mf_device_provider_device_changed (GstWin32DeviceWatcher * watcher,
 #if GST_MF_WINAPI_APP
 static void
 gst_mf_device_provider_device_added (GstWinRTDeviceWatcher * watcher,
-    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformation * info,
-    gpointer user_data)
+    IDeviceInformation * info, gpointer user_data)
 {
   GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (user_data);
 
@@ -555,8 +555,7 @@ gst_mf_device_provider_device_added (GstWinRTDeviceWatcher * watcher,
 
 static void
 gst_mf_device_provider_device_removed (GstWinRTDeviceWatcher * watcher,
-    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate *
-    info_update, gpointer user_data)
+    IDeviceInformationUpdate * info_update, gpointer user_data)
 {
   GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (user_data);
 
@@ -567,8 +566,7 @@ gst_mf_device_provider_device_removed (GstWinRTDeviceWatcher * watcher,
 
 static void
 gst_mf_device_provider_device_updated (GstWinRTDeviceWatcher * watcher,
-    __x_ABI_CWindows_CDevices_CEnumeration_CIDeviceInformationUpdate *
-    info_update, gpointer user_data)
+    IDeviceInformationUpdate * info_update, gpointer user_data)
 {
   GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (user_data);
 

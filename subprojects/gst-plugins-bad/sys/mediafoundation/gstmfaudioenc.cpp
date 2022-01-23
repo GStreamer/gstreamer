@@ -125,7 +125,7 @@ gst_mf_audio_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     return FALSE;
   }
 
-  g_assert (klass->get_output_type != NULL);
+  g_assert (klass->get_output_type != nullptr);
   if (!klass->get_output_type (self, info, &out_type)) {
     GST_ERROR_OBJECT (self, "subclass failed to set output type");
     return FALSE;
@@ -138,7 +138,7 @@ gst_mf_audio_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     return FALSE;
   }
 
-  g_assert (klass->get_input_type != NULL);
+  g_assert (klass->get_input_type != nullptr);
   if (!klass->get_input_type (self, info, &in_type)) {
     GST_ERROR_OBJECT (self, "subclass didn't provide input type");
     return FALSE;
@@ -151,7 +151,7 @@ gst_mf_audio_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     return FALSE;
   }
 
-  g_assert (klass->set_src_caps != NULL);
+  g_assert (klass->set_src_caps != nullptr);
   if (!klass->set_src_caps (self, info))
     return FALSE;
 
@@ -185,7 +185,7 @@ gst_mf_audio_enc_process_input (GstMFAudioEnc * self, GstBuffer * buffer)
 
   if (!gst_buffer_map (buffer, &info, GST_MAP_READ)) {
     GST_ELEMENT_ERROR (self,
-        RESOURCE, READ, ("Couldn't map input buffer"), (NULL));
+        RESOURCE, READ, ("Couldn't map input buffer"), (nullptr));
     return FALSE;
   }
 
@@ -201,7 +201,7 @@ gst_mf_audio_enc_process_input (GstMFAudioEnc * self, GstBuffer * buffer)
   if (!gst_mf_result (hr))
     goto done;
 
-  hr = media_buffer->Lock (&data, NULL, NULL);
+  hr = media_buffer->Lock (&data, nullptr, nullptr);
   if (!gst_mf_result (hr))
     goto done;
 
@@ -260,7 +260,7 @@ gst_mf_audio_enc_process_output (GstMFAudioEnc * self)
   if (!gst_mf_result (hr))
     return GST_FLOW_ERROR;
 
-  hr = media_buffer->Lock (&data, NULL, &buffer_len);
+  hr = media_buffer->Lock (&data, nullptr, &buffer_len);
   if (!gst_mf_result (hr))
     return GST_FLOW_ERROR;
 
