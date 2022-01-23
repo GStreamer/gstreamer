@@ -694,8 +694,8 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_AUTOMATIC_REQUEST_SYNC_POINTS,
       g_param_spec_boolean ("automatic-request-sync-points",
-          "Discard Corrupted Frames",
-          "Discard frames marked as corrupted instead of outputting them",
+          "Automatic Request Sync Points",
+          "Automatically request sync points when it would be useful",
           DEFAULT_AUTOMATIC_REQUEST_SYNC_POINTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -710,8 +710,8 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_AUTOMATIC_REQUEST_SYNC_POINT_FLAGS,
       g_param_spec_flags ("automatic-request-sync-point-flags",
-          "Discard Corrupted Frames",
-          "Discard frames marked as corrupted instead of outputting them",
+          "Automatic Request Sync Point Flags",
+          "Flags to use when automatically requesting sync points",
           GST_TYPE_VIDEO_DECODER_REQUEST_SYNC_POINT_FLAGS,
           DEFAULT_AUTOMATIC_REQUEST_SYNC_POINT_FLAGS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
