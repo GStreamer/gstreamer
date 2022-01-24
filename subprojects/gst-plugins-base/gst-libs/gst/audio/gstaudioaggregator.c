@@ -266,24 +266,24 @@ struct _GstAudioAggregatorConvertPadPrivate
 G_DEFINE_TYPE_WITH_PRIVATE (GstAudioAggregatorConvertPad,
     gst_audio_aggregator_convert_pad, GST_TYPE_AUDIO_AGGREGATOR_PAD);
 
-static void
+static gboolean
 gst_audio_aggregator_convert_pad_update_converter (GstAudioAggregatorConvertPad
     * aaggcpad, GstAudioInfo * in_info, GstAudioInfo * out_info)
 {
   GstStructure *config = aaggcpad->priv->converter_config;
   GstAudioConverter *converter;
 
-  if (!aaggcpad->priv->converter_config_changed)
-    return;
+  if (!aaggcpad->priv->converter_config_changed) {
+    return TRUE;
+  }
 
   g_clear_pointer (&aaggcpad->priv->converter, gst_audio_converter_free);
-  aaggcpad->priv->converter_config_changed = FALSE;
 
   if (in_info->finfo->format == GST_AUDIO_FORMAT_UNKNOWN) {
     /* If we haven't received caps yet, this pad should not have
      * a buffer to convert anyway */
     GST_FIXME_OBJECT (aaggcpad, "UNREACHABLE CODE: Unknown input format");
-    return;
+    return FALSE;
   }
 
   converter =
@@ -291,17 +291,21 @@ gst_audio_aggregator_convert_pad_update_converter (GstAudioAggregatorConvertPad
       config ? gst_structure_copy (config) : NULL);
 
   if (converter == NULL) {
-    /* FIXME: Not converting when we need to but the config is invalid (e.g.
-     * because the mix-matrix is not the right size) produces garbage. An
-     * invalid config should cause a GST_FLOW_NOT_NEGOTIATED. */
-    GST_FIXME_OBJECT (aaggcpad, "Failed to update converter");
-    return;
+    /* Not converting when we need to but the config is invalid (e.g. because
+     * the mix-matrix is not the right size) produces garbage. An invalid
+     * config causes a GST_FLOW_NOT_NEGOTIATED. */
+    GST_WARNING_OBJECT (aaggcpad, "Failed to update converter");
+    return FALSE;
   }
+
+  aaggcpad->priv->converter_config_changed = FALSE;
 
   if (!gst_audio_converter_is_passthrough (converter))
     aaggcpad->priv->converter = converter;
   else
     gst_audio_converter_free (converter);
+
+  return TRUE;
 }
 
 static void
@@ -321,8 +325,10 @@ gst_audio_aggregator_convert_pad_convert_buffer (GstAudioAggregatorPad *
   GstAudioAggregatorConvertPad *aaggcpad =
       GST_AUDIO_AGGREGATOR_CONVERT_PAD (aaggpad);
 
-  gst_audio_aggregator_convert_pad_update_converter (aaggcpad, in_info,
-      out_info);
+  if (!gst_audio_aggregator_convert_pad_update_converter (aaggcpad, in_info,
+          out_info)) {
+    return NULL;
+  }
 
   if (aaggcpad->priv->converter) {
     gint insize = gst_buffer_get_size (input_buffer);
@@ -1162,7 +1168,7 @@ gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
 }
 
 /* Must be called with OBJECT_LOCK taken */
-static void
+static gboolean
 gst_audio_aggregator_update_converters (GstAudioAggregator * aagg,
     GstAudioInfo * new_info, GstAudioInfo * old_info)
 {
@@ -1183,9 +1189,12 @@ gst_audio_aggregator_update_converters (GstAudioAggregator * aagg,
           gst_audio_aggregator_convert_buffer (aagg, GST_PAD (aaggpad),
           old_info, new_info, aaggpad->priv->buffer);
       gst_buffer_replace (&aaggpad->priv->buffer, new_converted_buffer);
-      gst_buffer_unref (new_converted_buffer);
+      if (new_converted_buffer)
+        gst_buffer_unref (new_converted_buffer);
     }
   }
+
+  return TRUE;
 }
 
 /* We now have our final output caps, we can create the required converters */
@@ -1219,7 +1228,11 @@ gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
 
     memcpy (&srcpad->info, &info, sizeof (info));
 
-    gst_audio_aggregator_update_converters (aagg, &info, &old_info);
+    if (!gst_audio_aggregator_update_converters (aagg, &info, &old_info)) {
+      GST_OBJECT_UNLOCK (aagg);
+      GST_AUDIO_AGGREGATOR_UNLOCK (aagg);
+      return FALSE;
+    }
 
     if (srcpad_klass->update_conversion_info)
       srcpad_klass->update_conversion_info (GST_AUDIO_AGGREGATOR_PAD (agg->
@@ -1233,6 +1246,11 @@ gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
           &info, aagg->priv->current_buffer);
       gst_buffer_unref (aagg->priv->current_buffer);
       aagg->priv->current_buffer = converted;
+      if (!converted) {
+        GST_OBJECT_UNLOCK (aagg);
+        GST_AUDIO_AGGREGATOR_UNLOCK (aagg);
+        return FALSE;
+      }
     }
 
     /* Force recalculating in aggregate */
@@ -2334,12 +2352,18 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
     /* New buffer? */
     if (!pad->priv->buffer) {
-      if (GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (pad)->convert_buffer)
+      if (GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (pad)->convert_buffer) {
         pad->priv->buffer =
             gst_audio_aggregator_convert_buffer
             (aagg, GST_PAD (pad), &pad->info, &srcpad->info, input_buffer);
-      else
+        if (!pad->priv->buffer) {
+          GST_OBJECT_UNLOCK (pad);
+          GST_OBJECT_UNLOCK (agg);
+          goto not_negotiated;
+        }
+      } else {
         pad->priv->buffer = gst_buffer_ref (input_buffer);
+      }
 
       if (!gst_audio_aggregator_fill_buffer (aagg, pad)) {
         gst_buffer_replace (&pad->priv->buffer, NULL);
