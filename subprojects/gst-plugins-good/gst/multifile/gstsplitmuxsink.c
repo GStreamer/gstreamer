@@ -792,11 +792,13 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
           splitmux->threshold_timecode_str = NULL;
         }
       }
-      splitmux->next_fragment_start_tc_time = GST_CLOCK_TIME_NONE;
-      if (splitmux->tc_interval && splitmux->fragment_start_tc) {
-        splitmux->next_fragment_start_tc_time =
-            calculate_next_max_timecode (splitmux, splitmux->fragment_start_tc,
-            splitmux->fragment_start_time, NULL);
+      splitmux->next_fragment_start_tc_time =
+          calculate_next_max_timecode (splitmux, splitmux->fragment_start_tc,
+          splitmux->fragment_start_time, NULL);
+      if (splitmux->tc_interval && splitmux->fragment_start_tc
+          && !GST_CLOCK_TIME_IS_VALID (splitmux->next_fragment_start_tc_time)) {
+        GST_WARNING_OBJECT (splitmux,
+            "Couldn't calculate next fragment start time for timecode mode");
       }
       GST_OBJECT_UNLOCK (splitmux);
       break;
@@ -1540,6 +1542,11 @@ request_next_keyframe (GstSplitMuxSink * splitmux, GstBuffer * buffer,
 
       timecode_based = GST_CLOCK_TIME_IS_VALID (max_tc_time) &&
           GST_CLOCK_TIME_IS_VALID (next_max_tc_time);
+
+      if (!timecode_based) {
+        GST_WARNING_OBJECT (splitmux,
+            "Couldn't calculate maximum fragment time for timecode mode");
+      }
     } else {
       /* This can happen in the presence of GAP events that trigger
        * a new fragment start */
@@ -2541,7 +2548,8 @@ handle_gathered_gop (GstSplitMuxSink * splitmux, const InputGop * gop,
     splitmux->next_fragment_start_tc_time =
         calculate_next_max_timecode (splitmux, splitmux->fragment_start_tc,
         splitmux->fragment_start_time, NULL);
-    if (!GST_CLOCK_TIME_IS_VALID (splitmux->next_fragment_start_tc_time)) {
+    if (splitmux->tc_interval && splitmux->fragment_start_tc
+        && !GST_CLOCK_TIME_IS_VALID (splitmux->next_fragment_start_tc_time)) {
       GST_WARNING_OBJECT (splitmux,
           "Couldn't calculate next fragment start time for timecode mode");
     }
@@ -2969,7 +2977,12 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
         splitmux->next_fragment_start_tc_time =
             calculate_next_max_timecode (splitmux, &tc_meta->tc,
             running_time, NULL);
-
+        if (splitmux->tc_interval
+            && !GST_CLOCK_TIME_IS_VALID (splitmux->next_fragment_start_tc_time))
+        {
+          GST_WARNING_OBJECT (splitmux,
+              "Couldn't calculate next fragment start time for timecode mode");
+        }
 #ifndef GST_DISABLE_GST_DEBUG
         {
           gchar *tc_str;
