@@ -1753,3 +1753,43 @@ gst_va_buffer_get_surface_flags (GstBuffer * buffer, GstVideoInfo * info)
 
   return surface_flags;
 }
+
+gboolean
+gst_va_filter_has_video_format (GstVaFilter * self, GstVideoFormat format,
+    GstCapsFeatures * feature)
+{
+  guint i;
+  GstVideoFormat fmt;
+
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (GST_IS_CAPS_FEATURES (feature)
+      && !gst_caps_features_is_any (feature), FALSE);
+
+
+  GST_OBJECT_LOCK (self);
+  for (i = 0; i < self->surface_formats->len; i++) {
+    fmt = g_array_index (self->surface_formats, GstVideoFormat, i);
+    if (format == fmt) {
+      GST_OBJECT_UNLOCK (self);
+      return TRUE;
+    }
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  if (!gst_caps_features_is_equal (feature,
+          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
+    return FALSE;
+
+  GST_OBJECT_LOCK (self);
+  for (i = 0; i < self->image_formats->len; i++) {
+    fmt = g_array_index (self->image_formats, GstVideoFormat, i);
+    if (format == fmt) {
+      GST_OBJECT_UNLOCK (self);
+      return TRUE;
+    }
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  return FALSE;
+}

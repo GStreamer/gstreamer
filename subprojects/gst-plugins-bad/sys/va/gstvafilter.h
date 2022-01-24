@@ -118,4 +118,8 @@ gboolean              gst_va_filter_process               (GstVaFilter * self,
 guint32               gst_va_buffer_get_surface_flags     (GstBuffer * buffer,
                                                            GstVideoInfo * info);
 
+gboolean              gst_va_filter_has_video_format      (GstVaFilter * self,
+                                                           GstVideoFormat format,
+                                                           GstCapsFeatures * feature);
+
 G_END_DECLS

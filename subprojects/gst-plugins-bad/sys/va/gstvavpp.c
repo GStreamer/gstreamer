@@ -974,15 +974,14 @@ bail:
 /* calculate how much loss a conversion would be */
 static gboolean
 score_value (GstVaVpp * self, const GstVideoFormatInfo * in_info,
-    const GValue * val, gint * min_loss, const GstVideoFormatInfo ** out_info)
+    GstVideoFormat format, gint * min_loss,
+    const GstVideoFormatInfo ** out_info)
 {
-  const gchar *fname;
   const GstVideoFormatInfo *t_info;
   GstVideoFormatFlags in_flags, t_flags;
   gint loss;
 
-  fname = g_value_get_string (val);
-  t_info = gst_video_format_get_info (gst_video_format_from_string (fname));
+  t_info = gst_video_format_get_info (format);
   if (!t_info || t_info->format == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;
 
@@ -1057,9 +1056,12 @@ score_value (GstVaVpp * self, const GstVideoFormatInfo * in_info,
 static GstCaps *
 gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
 {
+  GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (self);
   GstStructure *ins;
   const gchar *in_format;
   const GstVideoFormatInfo *in_info, *out_info = NULL;
+  GstCapsFeatures *features;
+  GstVideoFormat fmt;
   gint min_loss = G_MAXINT;
   guint i, best_i, capslen;
 
@@ -1088,6 +1090,8 @@ gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
     if (format == NULL)
       continue;
 
+    features = gst_caps_get_features (result, i);
+
     if (GST_VALUE_HOLDS_LIST (format)) {
       gint j, len;
 
@@ -1098,14 +1102,20 @@ gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
 
         val = gst_value_list_get_value (format, j);
         if (G_VALUE_HOLDS_STRING (val)) {
-          if (score_value (self, in_info, val, &min_loss, &out_info))
+          fmt = gst_video_format_from_string (g_value_get_string (val));
+          if (!gst_va_filter_has_video_format (btrans->filter, fmt, features))
+            continue;
+          if (score_value (self, in_info, fmt, &min_loss, &out_info))
             best_i = i;
           if (min_loss == 0)
             break;
         }
       }
     } else if (G_VALUE_HOLDS_STRING (format)) {
-      if (score_value (self, in_info, format, &min_loss, &out_info))
+      fmt = gst_video_format_from_string (g_value_get_string (format));
+      if (!gst_va_filter_has_video_format (btrans->filter, fmt, features))
+        continue;
+      if (score_value (self, in_info, fmt, &min_loss, &out_info))
         best_i = i;
     }
 
@@ -1116,7 +1126,6 @@ gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
   if (out_info) {
     GstCaps *ret;
     GstStructure *out;
-    GstCapsFeatures *features;
 
     features = gst_caps_features_copy (gst_caps_get_features (result, best_i));
     out = gst_structure_copy (gst_caps_get_structure (result, best_i));
