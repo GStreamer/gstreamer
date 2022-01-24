@@ -382,9 +382,11 @@ gst_audio_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 
   if (gst_structure_get_int (structure, "channels", &channels) && channels > 2) {
     if (!gst_structure_has_field_typed (structure, "channel-mask",
-            GST_TYPE_BITMASK))
-      gst_structure_set (structure, "channel-mask", GST_TYPE_BITMASK, 0ULL,
+            GST_TYPE_BITMASK)) {
+      guint64 mask = gst_audio_channel_get_fallback_mask (channels);
+      gst_structure_set (structure, "channel-mask", GST_TYPE_BITMASK, mask,
           NULL);
+    }
   }
 
   caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
