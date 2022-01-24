@@ -911,11 +911,18 @@ gst_ximage_src_create (GstPushSrc * bs, GstBuffer ** buf)
   s->last_frame_no = next_frame_no;
   GST_OBJECT_UNLOCK (s);
 
+  XGrabServer (s->xcontext->disp);
+
   if (gst_ximage_src_recalc (s) && !gst_base_src_negotiate (GST_BASE_SRC (s))) {
+    XUngrabServer (s->xcontext->disp);
+    XSync (s->xcontext->disp, False);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
   image = gst_ximage_src_ximage_get (s);
+
+  XUngrabServer (s->xcontext->disp);
+  XSync (s->xcontext->disp, False);
 
   if (!image)
     return GST_FLOW_ERROR;
