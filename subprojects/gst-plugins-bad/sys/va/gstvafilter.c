@@ -447,15 +447,21 @@ gst_va_filter_close (GstVaFilter * self)
 static const struct VaFilterCapMap {
   VAProcFilterType type;
   guint count;
+  const char *name;
 } filter_cap_map[] = {
-  { VAProcFilterNoiseReduction, 1 },
-  { VAProcFilterDeinterlacing, VAProcDeinterlacingCount },
-  { VAProcFilterSharpening, 1 },
-  { VAProcFilterColorBalance, VAProcColorBalanceCount },
-  { VAProcFilterSkinToneEnhancement, 1 },
-  { VAProcFilterTotalColorCorrection, VAProcTotalColorCorrectionCount },
-  { VAProcFilterHVSNoiseReduction, 0 },
-  { VAProcFilterHighDynamicRangeToneMapping, 1 },
+#define F(name, count) { G_PASTE (VAProcFilter, name), count, G_STRINGIFY (name) }
+  F(NoiseReduction, 1),
+  F(Deinterlacing, VAProcDeinterlacingCount),
+  F(Sharpening, 1),
+  F(ColorBalance, VAProcColorBalanceCount),
+  F(SkinToneEnhancement, 1),
+  F(TotalColorCorrection, VAProcTotalColorCorrectionCount),
+  F(HVSNoiseReduction, 0),
+  F(HighDynamicRangeToneMapping, 1),
+#if VA_CHECK_VERSION (1, 12, 0)
+  F(3DLUT, 1),
+#endif
+#undef F
 };
 /* *INDENT-ON* */
 
@@ -1447,6 +1453,17 @@ gst_va_filter_add_deinterlace_buffer (GstVaFilter * self,
   return TRUE;
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
+static const gchar *
+get_va_filter_name (gpointer data)
+{
+  VAProcFilterType type = ((VAProcFilterParameterBuffer *) data)->type;
+  const struct VaFilterCapMap *m = gst_va_filter_get_filter_cap (type);
+
+  return m ? m->name : "Unknown";
+}
+#endif
+
 gboolean
 gst_va_filter_add_filter_buffer (GstVaFilter * self, gpointer data, gsize size,
     guint num)
@@ -1470,6 +1487,8 @@ gst_va_filter_add_filter_buffer (GstVaFilter * self, gpointer data, gsize size,
     GST_ERROR_OBJECT (self, "vaCreateBuffer: %s", vaErrorStr (status));
     return FALSE;
   }
+
+  GST_DEBUG_OBJECT (self, "Added filter: %s", get_va_filter_name (data));
 
   /* lazy creation */
   GST_OBJECT_LOCK (self);
