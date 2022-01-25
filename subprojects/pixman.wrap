@@ -3,4 +3,4 @@ directory=pixman
 url=https://gitlab.freedesktop.org/pixman/pixman
 push-url=git@gitlab.freedesktop.org:pixman/pixman.git
 depth=1
-revision=eadb82866b0f6a326a61c36f60e5c2be8f7479af
+revision=adc07d46188920806e32366917d00599fb183a5a
