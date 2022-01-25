@@ -619,11 +619,14 @@ gst_va_base_transform_allocator_from_caps (GstVaBaseTransform * self,
 static inline gsize
 _get_plane_data_size (GstVideoInfo * info, guint plane)
 {
+  gint comp[GST_VIDEO_MAX_COMPONENTS];
   gint height, padded_height;
+
+  gst_video_format_info_component (info->finfo, plane, comp);
 
   height = GST_VIDEO_INFO_HEIGHT (info);
   padded_height =
-      GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, plane, height);
+      GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, comp[0], height);
 
   return GST_VIDEO_INFO_PLANE_STRIDE (info, plane) * padded_height;
 }
