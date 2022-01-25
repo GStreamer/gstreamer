@@ -138,34 +138,6 @@ gst_kms_allocator_memory_reset (GstKMSAllocator * allocator, GstKMSMemory * mem)
   mem->bo = NULL;
 }
 
-/* Copied from gst_v4l2_object_extrapolate_stride() */
-static gint
-extrapolate_stride (const GstVideoFormatInfo * finfo, gint plane, gint stride)
-{
-  gint estride;
-
-  switch (finfo->format) {
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV12_64Z32:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_NV16:
-    case GST_VIDEO_FORMAT_NV61:
-    case GST_VIDEO_FORMAT_NV24:
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P010_10BE:
-    case GST_VIDEO_FORMAT_P016_LE:
-    case GST_VIDEO_FORMAT_P016_BE:
-      estride = (plane == 0 ? 1 : 2) *
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
-      break;
-    default:
-      estride = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
-      break;
-  }
-
-  return estride;
-}
-
 static gboolean
 gst_kms_allocator_memory_create (GstKMSAllocator * allocator,
     GstKMSMemory * kmsmem, GstVideoInfo * vinfo)
@@ -207,7 +179,8 @@ gst_kms_allocator_memory_create (GstKMSAllocator * allocator,
 
     /* Overwrite the video info's stride and offset using the pitch calculcated
      * by the kms driver. */
-    pitch = extrapolate_stride (vinfo->finfo, i, arg.pitch);
+    pitch = gst_video_format_info_extrapolate_stride (vinfo->finfo, i,
+        arg.pitch);
     GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i) = pitch;
     GST_VIDEO_INFO_PLANE_OFFSET (vinfo, i) = offs;
 

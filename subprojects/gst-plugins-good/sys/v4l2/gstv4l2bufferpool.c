@@ -270,7 +270,7 @@ gst_v4l2_buffer_pool_import_userptr (GstV4l2BufferPool * pool,
       for (i = 0; i < (GST_VIDEO_FORMAT_INFO_N_PLANES (finfo) - 1); i++) {
         const struct v4l2_pix_format *pix_fmt = &pool->obj->format.fmt.pix;
         gpointer tmp;
-        gint estride = gst_v4l2_object_extrapolate_stride (finfo, i,
+        gint estride = gst_video_format_info_extrapolate_stride (finfo, i,
             pix_fmt->bytesperline);
         guint eheight = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i,
             pix_fmt->height);

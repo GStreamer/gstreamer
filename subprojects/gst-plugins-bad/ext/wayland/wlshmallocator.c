@@ -144,31 +144,6 @@ gst_is_wl_shm_memory (GstMemory * mem)
   return gst_memory_is_type (mem, GST_ALLOCATOR_WL_SHM);
 }
 
-/* Copied from gst_v4l2_object_extrapolate_stride() */
-static gint
-gst_wl_shm_extrapolate_stride (const GstVideoFormatInfo * finfo, gint plane,
-    gint stride)
-{
-  gint estride;
-
-  switch (finfo->format) {
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV12_64Z32:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_NV16:
-    case GST_VIDEO_FORMAT_NV61:
-    case GST_VIDEO_FORMAT_NV24:
-      estride = (plane == 0 ? 1 : 2) *
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
-      break;
-    default:
-      estride = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
-      break;
-  }
-
-  return estride;
-}
-
 static gboolean
 gst_wl_shm_validate_video_info (const GstVideoInfo * vinfo)
 {
@@ -183,7 +158,8 @@ gst_wl_shm_validate_video_info (const GstVideoInfo * vinfo)
 
     /* Overwrite the video info's stride and offset using the pitch calculcated
      * by the kms driver. */
-    estride = gst_wl_shm_extrapolate_stride (vinfo->finfo, i, base_stride);
+    estride = gst_video_format_info_extrapolate_stride (vinfo->finfo, i,
+        base_stride);
 
     if (estride != GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i))
       return FALSE;

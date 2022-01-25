@@ -71,31 +71,6 @@ lookup_gst_fmt (GstVideoFormat gst_fmt)
   return ret;
 }
 
-static gint
-extrapolate_stride (const GstVideoFormatInfo * finfo, gint plane, gint stride)
-{
-  gint estride;
-
-  switch (finfo->format) {
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV12_4L4:
-    case GST_VIDEO_FORMAT_NV12_32L32:
-    case GST_VIDEO_FORMAT_NV12_64Z32:
-    case GST_VIDEO_FORMAT_NV16:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_NV24:
-    case GST_VIDEO_FORMAT_NV61:
-      estride = (plane == 0 ? 1 : 2) *
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
-      break;
-    default:
-      estride = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
-      break;
-  }
-
-  return estride;
-}
-
 static void
 set_stride (GstVideoInfo * info, gint plane, gint stride)
 {
@@ -152,10 +127,11 @@ gst_v4l2_format_to_video_info (struct v4l2_format *fmt, GstVideoInfo * out_info)
     gint stride;
 
     if (V4L2_TYPE_IS_MULTIPLANAR (fmt->type))
-      stride = extrapolate_stride (out_info->finfo, plane,
+      stride = gst_video_format_info_extrapolate_stride (out_info->finfo, plane,
           pix_mp->plane_fmt[0].bytesperline);
     else
-      stride = extrapolate_stride (out_info->finfo, plane, pix->bytesperline);
+      stride = gst_video_format_info_extrapolate_stride (out_info->finfo, plane,
+          pix->bytesperline);
 
     set_stride (out_info, plane, stride);
     out_info->offset[plane] = offset;

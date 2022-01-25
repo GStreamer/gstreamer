@@ -3204,7 +3204,7 @@ gst_v4l2_object_extrapolate_info (GstV4l2Object * v4l2object,
       align->padding_bottom;
 
   for (i = 0; i < finfo->n_planes; i++) {
-    estride = gst_v4l2_object_extrapolate_stride (finfo, i, stride);
+    estride = gst_video_format_info_extrapolate_stride (finfo, i, stride);
 
     gst_v4l2_object_set_stride (info, align, i, estride);
 
@@ -3367,30 +3367,6 @@ store_info:
   } else {
     v4l2object->duration = GST_CLOCK_TIME_NONE;
   }
-}
-
-gint
-gst_v4l2_object_extrapolate_stride (const GstVideoFormatInfo * finfo,
-    gint plane, gint stride)
-{
-  gint estride;
-
-  switch (finfo->format) {
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV12_64Z32:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_NV16:
-    case GST_VIDEO_FORMAT_NV61:
-    case GST_VIDEO_FORMAT_NV24:
-      estride = (plane == 0 ? 1 : 2) *
-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
-      break;
-    default:
-      estride = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
-      break;
-  }
-
-  return estride;
 }
 
 static enum v4l2_field
