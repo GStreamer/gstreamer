@@ -151,7 +151,7 @@ VideoItem::VideoItem(QQuickItem *parent)
 
     // add watch
     _priv->bus = gst_pipeline_get_bus(GST_PIPELINE(_priv->pipeline));
-    gst_bus_set_sync_handler(_priv->bus, messageHandler, _priv.get(), nullptr);
+    gst_bus_set_sync_handler(_priv->bus, messageHandler, _priv.data(), nullptr);
 
     gst_element_set_state(_priv->pipeline, GST_STATE_READY);
     gst_element_get_state(_priv->pipeline, nullptr, nullptr, _priv->timeout * GST_MSECOND);
