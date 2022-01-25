@@ -743,18 +743,19 @@ extract_symname (const char *filename)
 static char *
 get_better_module_load_error (const char *filename, const char *orig_err_msg)
 {
-  BOOL ret;
+  BOOL ret = 0;
   DWORD mode;
   wchar_t *wfilename;
   HMODULE handle;
   char *err_msg = NULL;
 
   wfilename = g_utf8_to_utf16 (filename, -1, NULL, NULL, NULL);
-  ret = SetThreadErrorMode (SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS,
-      &mode);
 #ifdef GST_WINAPI_ONLY_APP
   handle = LoadPackagedLibrary (wfilename, 0);
 #else
+  ret = SetThreadErrorMode (SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS,
+      &mode);
+
   handle = LoadLibraryW (wfilename);
 #endif
   g_free (wfilename);
