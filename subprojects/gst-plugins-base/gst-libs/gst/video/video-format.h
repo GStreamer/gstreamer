@@ -711,6 +711,10 @@ struct _GstVideoFormatInfo {
 GST_VIDEO_API
 void gst_video_format_info_component                  (const GstVideoFormatInfo *info, guint plane, gint components[GST_VIDEO_MAX_COMPONENTS]);
 
+GST_VIDEO_API
+gint gst_video_format_info_extrapolate_stride        (const GstVideoFormatInfo * finfo,
+                                                      gint plane, gint stride);
+
 /* format properties */
 
 GST_VIDEO_API

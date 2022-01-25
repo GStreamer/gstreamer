@@ -7565,6 +7565,44 @@ gst_video_format_info_component (const GstVideoFormatInfo * info, guint plane,
     components[c] = -1;
 }
 
+/**
+ * gst_video_format_info_extrapolate_stride:
+ * @info: #GstVideoFormatInfo
+ * @plane: a plane number
+ * @stride: The fist plane stride
+ *
+ * Extrapolate @plane stride from the first stride of an image. This helper is
+ * useful to support legacy API were only one stride is supported.
+ *
+ * Returns: The extrapolated stride for @plane
+ *
+ * Since: 1.22
+ */
+gint
+gst_video_format_info_extrapolate_stride (const GstVideoFormatInfo * finfo,
+    gint plane, gint stride)
+{
+  gint estride;
+  gint comp[GST_VIDEO_MAX_COMPONENTS];
+  gint i;
+
+  /* there is nothing to extrapolate on first plane */
+  if (plane == 0)
+    return stride;
+
+  gst_video_format_info_component (finfo, plane, comp);
+
+  /* For now, all planar formats have a single component on first plane, but
+   * if there was a planar format with more, we'd have to make a ratio of the
+   * number of component on the first plane against the number of component on
+   * the current plane. */
+  estride = 0;
+  for (i = 0; comp[i] >= 0; i++)
+    estride += GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, comp[i], stride);
+
+  return estride;
+}
+
 struct RawVideoFormats
 {
   GstVideoFormat *formats;
