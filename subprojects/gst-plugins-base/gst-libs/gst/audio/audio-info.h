@@ -105,6 +105,9 @@ GST_AUDIO_API
 GstAudioInfo * gst_audio_info_new         (void);
 
 GST_AUDIO_API
+GstAudioInfo * gst_audio_info_new_from_caps (const GstCaps * caps);
+
+GST_AUDIO_API
 void           gst_audio_info_init        (GstAudioInfo *info);
 
 GST_AUDIO_API

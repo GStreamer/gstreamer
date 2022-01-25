@@ -1,4 +1,4 @@
-pysources = ['Gst.py', 'GstPbutils.py']
+pysources = ['Gst.py', 'GstPbutils.py', 'GstVideo.py', 'GstAudio.py']
 install_data(pysources,
     install_dir: pygi_override_dir)
 

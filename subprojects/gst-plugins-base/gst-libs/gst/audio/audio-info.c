@@ -321,6 +321,28 @@ invalid_channel_mask:
 }
 
 /**
+ * gst_audio_info_new_from_caps:
+ * @caps: a #GstCaps
+ *
+ * Parse @caps to generate a #GstAudioInfo.
+ *
+ * Returns: A #GstAudioInfo, or %NULL if @caps couldn't be parsed
+ * Since: 1.20
+ */
+GstAudioInfo *
+gst_audio_info_new_from_caps (const GstCaps * caps)
+{
+  GstAudioInfo *ret = gst_audio_info_new ();
+
+  if (gst_audio_info_from_caps (ret, caps)) {
+    return ret;
+  } else {
+    gst_audio_info_free (ret);
+    return NULL;
+  }
+}
+
+/**
  * gst_audio_info_to_caps:
  * @info: a #GstAudioInfo
  *

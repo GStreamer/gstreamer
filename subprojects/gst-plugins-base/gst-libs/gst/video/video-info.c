@@ -569,6 +569,28 @@ alternate_no_feature:
 }
 
 /**
+ * gst_video_info_new_from_caps:
+ * @caps: a #GstCaps
+ *
+ * Parse @caps to generate a #GstVideoInfo.
+ *
+ * Returns: A #GstVideoInfo, or %NULL if @caps couldn't be parsed
+ * Since: 1.20
+ */
+GstVideoInfo *
+gst_video_info_new_from_caps (const GstCaps * caps)
+{
+  GstVideoInfo *ret = gst_video_info_new ();
+
+  if (gst_video_info_from_caps (ret, caps)) {
+    return ret;
+  } else {
+    gst_video_info_free (ret);
+    return NULL;
+  }
+}
+
+/**
  * gst_video_info_is_equal:
  * @info: a #GstVideoInfo
  * @other: a #GstVideoInfo
