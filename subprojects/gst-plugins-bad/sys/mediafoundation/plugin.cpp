@@ -72,6 +72,7 @@
 #include "gstmfvp9enc.h"
 #include "gstmfaacenc.h"
 #include "gstmfmp3enc.h"
+#include "gstmfaacdec.h"
 
 #if GST_MF_HAVE_D3D11
 #include <gst/d3d11/gstd3d11.h>
@@ -237,6 +238,7 @@ plugin_init (GstPlugin * plugin)
 
   gst_mf_aac_enc_plugin_init (plugin, GST_RANK_SECONDARY);
   gst_mf_mp3_enc_plugin_init (plugin, GST_RANK_SECONDARY);
+  gst_mf_aac_dec_plugin_init (plugin, GST_RANK_SECONDARY);
 
   /* So that call MFShutdown() when this plugin is no more used
    * (i.e., gst_deinit). Otherwise valgrind-like tools would complain

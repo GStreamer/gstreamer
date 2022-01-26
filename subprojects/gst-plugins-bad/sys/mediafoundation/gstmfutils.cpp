@@ -343,6 +343,198 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
   return caps;
 }
 
+/* Desktop only defines */
+#ifndef KSAUDIO_SPEAKER_MONO
+#define KSAUDIO_SPEAKER_MONO            (SPEAKER_FRONT_CENTER)
+#endif
+#ifndef KSAUDIO_SPEAKER_1POINT1
+#define KSAUDIO_SPEAKER_1POINT1         (SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY)
+#endif
+#ifndef KSAUDIO_SPEAKER_STEREO
+#define KSAUDIO_SPEAKER_STEREO          (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT)
+#endif
+#ifndef KSAUDIO_SPEAKER_2POINT1
+#define KSAUDIO_SPEAKER_2POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_LOW_FREQUENCY)
+#endif
+#ifndef KSAUDIO_SPEAKER_3POINT0
+#define KSAUDIO_SPEAKER_3POINT0         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER)
+#endif
+#ifndef KSAUDIO_SPEAKER_3POINT1
+#define KSAUDIO_SPEAKER_3POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
+                                         SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY)
+#endif
+#ifndef KSAUDIO_SPEAKER_QUAD
+#define KSAUDIO_SPEAKER_QUAD            (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
+                                         SPEAKER_BACK_LEFT  | SPEAKER_BACK_RIGHT)
+#endif
+#define KSAUDIO_SPEAKER_SURROUND        (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
+                                         SPEAKER_FRONT_CENTER | SPEAKER_BACK_CENTER)
+#ifndef KSAUDIO_SPEAKER_5POINT0
+#define KSAUDIO_SPEAKER_5POINT0         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | \
+                                         SPEAKER_SIDE_LEFT  | SPEAKER_SIDE_RIGHT)
+#endif
+#define KSAUDIO_SPEAKER_5POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
+                                         SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY | \
+                                         SPEAKER_BACK_LEFT  | SPEAKER_BACK_RIGHT)
+#ifndef KSAUDIO_SPEAKER_7POINT0
+#define KSAUDIO_SPEAKER_7POINT0         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | \
+                                         SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | \
+                                         SPEAKER_SIDE_LEFT | SPEAKER_SIDE_RIGHT)
+#endif
+#ifndef KSAUDIO_SPEAKER_7POINT1
+#define KSAUDIO_SPEAKER_7POINT1         (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | \
+                                         SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY | \
+                                         SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | \
+                                         SPEAKER_FRONT_LEFT_OF_CENTER | SPEAKER_FRONT_RIGHT_OF_CENTER)
+#endif
+
+static struct
+{
+  guint64 mf_pos;
+  GstAudioChannelPosition gst_pos;
+} mf_to_gst_pos[] = {
+  {SPEAKER_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT},
+  {SPEAKER_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {SPEAKER_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER},
+  {SPEAKER_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE1},
+  {SPEAKER_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT},
+  {SPEAKER_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+  {SPEAKER_FRONT_LEFT_OF_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER},
+  {SPEAKER_FRONT_RIGHT_OF_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER},
+  {SPEAKER_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
+  /* Enum values diverge from this point onwards */
+  {SPEAKER_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT},
+  {SPEAKER_SIDE_RIGHT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT},
+  {SPEAKER_TOP_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_CENTER},
+  {SPEAKER_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT},
+  {SPEAKER_TOP_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER},
+  {SPEAKER_TOP_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT},
+  {SPEAKER_TOP_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT},
+  {SPEAKER_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER},
+  {SPEAKER_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}
+};
+
+/* *INDENT-OFF* */
+static DWORD default_ch_masks[] = {
+  0,
+  KSAUDIO_SPEAKER_MONO,
+  /* 2ch */
+  KSAUDIO_SPEAKER_STEREO,
+  /* 2.1ch */
+  /* KSAUDIO_SPEAKER_3POINT0 ? */
+  KSAUDIO_SPEAKER_2POINT1,
+  /* 4ch */
+  /* KSAUDIO_SPEAKER_3POINT1 or KSAUDIO_SPEAKER_SURROUND ? */
+  KSAUDIO_SPEAKER_QUAD,
+  /* 5ch */
+  KSAUDIO_SPEAKER_5POINT0,
+  /* 5.1ch */
+  KSAUDIO_SPEAKER_5POINT1,
+  /* 7ch */
+  KSAUDIO_SPEAKER_7POINT0,
+  /* 7.1ch */
+  KSAUDIO_SPEAKER_7POINT1,
+};
+/* *INDENT-ON* */
+
+static void
+gst_mf_media_audio_channel_mask_to_position (guint channels, DWORD mask,
+    GstAudioChannelPosition * position)
+{
+  guint i, ch;
+
+  for (i = 0, ch = 0; i < G_N_ELEMENTS (mf_to_gst_pos) && ch < channels; i++) {
+    if ((mask & mf_to_gst_pos[i].mf_pos) == 0)
+      continue;
+
+    position[ch] = mf_to_gst_pos[i].gst_pos;
+    ch++;
+  }
+}
+
+static GstCaps *
+gst_mf_media_type_to_audio_caps (IMFMediaType * media_type)
+{
+  GUID subtype;
+  HRESULT hr;
+  UINT32 bps;
+  GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
+  GstAudioInfo info;
+  UINT32 rate, channels, mask;
+  GstAudioChannelPosition position[64];
+
+  hr = media_type->GetGUID (MF_MT_SUBTYPE, &subtype);
+  if (FAILED (hr)) {
+    GST_WARNING ("failed to get subtype, hr: 0x%x", (guint) hr);
+    return nullptr;
+  }
+
+  if (!IsEqualGUID (subtype, MFAudioFormat_PCM) &&
+      !IsEqualGUID (subtype, MFAudioFormat_Float)) {
+    GST_FIXME ("Unknown subtype");
+    return nullptr;
+  }
+
+  hr = media_type->GetUINT32 (MF_MT_AUDIO_BITS_PER_SAMPLE, &bps);
+  if (FAILED (hr)) {
+    GST_WARNING ("Failed to get bps, hr: 0x%x", (guint) hr);
+    return nullptr;
+  }
+
+  if (IsEqualGUID (subtype, MFAudioFormat_PCM)) {
+    format = gst_audio_format_build_integer (TRUE, G_LITTLE_ENDIAN, bps, bps);
+  } else if (bps == 32) {
+    format = GST_AUDIO_FORMAT_F32LE;
+  } else if (bps == 64) {
+    format = GST_AUDIO_FORMAT_F64LE;
+  }
+
+  if (format == GST_AUDIO_FORMAT_UNKNOWN) {
+    GST_WARNING ("Unknown audio format");
+    return nullptr;
+  }
+
+  hr = media_type->GetUINT32 (MF_MT_AUDIO_NUM_CHANNELS, &channels);
+  if (FAILED (hr) || channels == 0) {
+    GST_WARNING ("Unknown channels");
+    return nullptr;
+  }
+
+  hr = media_type->GetUINT32 (MF_MT_AUDIO_SAMPLES_PER_SECOND, &rate);
+  if (FAILED (hr) || rate == 0) {
+    GST_WARNING ("Unknown rate");
+    return nullptr;
+  }
+
+  for (guint i = 0; i < G_N_ELEMENTS (position); i++)
+    position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+
+  hr = media_type->GetUINT32 (MF_MT_AUDIO_CHANNEL_MASK, &mask);
+  if (FAILED (hr)) {
+    if (channels == 1) {
+      position[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+    } else if (channels == 2) {
+      position[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      position[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+    } else if (channels <= 8) {
+      GST_WARNING ("Unknown channel position, use default value");
+      gst_mf_media_audio_channel_mask_to_position (channels,
+          default_ch_masks[channels], position);
+    } else {
+      GST_WARNING ("Failed to determine channel position");
+      return nullptr;
+    }
+  } else {
+    gst_mf_media_audio_channel_mask_to_position (channels, mask, position);
+  }
+
+  gst_audio_info_set_format (&info, format, rate, channels, position);
+
+  return gst_audio_info_to_caps (&info);
+}
+
 GstCaps *
 gst_mf_media_type_to_caps (IMFMediaType * media_type)
 {
@@ -357,8 +549,11 @@ gst_mf_media_type_to_caps (IMFMediaType * media_type)
     return nullptr;
   }
 
-  if (IsEqualGUID (major_type, MFMediaType_Video))
+  if (IsEqualGUID (major_type, MFMediaType_Video)) {
     return gst_mf_media_type_to_video_caps (media_type);
+  } else if (IsEqualGUID (major_type, MFMediaType_Audio)) {
+    return gst_mf_media_type_to_audio_caps (media_type);
+  }
 
   return nullptr;
 }

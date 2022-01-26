@@ -1,5 +1,7 @@
 mf_sources = [
+  'gstmfaacdec.cpp',
   'gstmfaacenc.cpp',
+  'gstmfaudiodecoder.cpp',
   'gstmfaudioencoder.cpp',
   'gstmfdevice.cpp',
   'gstmfh264enc.cpp',
