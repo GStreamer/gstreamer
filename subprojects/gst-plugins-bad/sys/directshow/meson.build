@@ -22,5 +22,5 @@ endif
 
 subdir('strmbase')
 subdir('dshowdecwrapper')
-#subdir('dshowsrcwrapper')
+subdir('dshowsrcwrapper')
 #subdir('dshowvideosink')

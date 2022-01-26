@@ -456,6 +456,8 @@ gst_dshowvideosrc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
+    default:
+      break;
   }
 
   return GST_ELEMENT_CLASS(gst_dshowvideosrc_parent_class)->change_state(element, transition);
