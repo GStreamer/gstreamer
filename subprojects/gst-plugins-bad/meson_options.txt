@@ -99,6 +99,7 @@ option('dc1394', type : 'feature', value : 'auto', description : 'libdc1394 IIDC
 option('decklink', type : 'feature', value : 'auto', description : 'DeckLink audio/video source/sink plugin')
 option('directfb', type : 'feature', value : 'auto', description : 'DirectFB video sink plugin')
 option('directsound', type : 'feature', value : 'auto', description : 'Directsound audio source plugin')
+option('directshow', type : 'feature', value : 'auto', description : 'Directshow audio/video plugins')
 option('dtls', type : 'feature', value : 'auto', description : 'DTLS encoder and decoder plugin')
 option('dts', type : 'feature', value : 'auto', description : 'DTS audio decoder plugin (GPL - only built if gpl option is also enabled!)')
 option('dvb', type : 'feature', value : 'auto', description : 'DVB video bin and source plugin')
