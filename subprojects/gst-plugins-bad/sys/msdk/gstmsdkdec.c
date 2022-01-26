@@ -1675,6 +1675,9 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstCaps *pool_caps /*, *negotiated_caps */ ;
   guint size, min_buffers, max_buffers;
 
+  if (!thiz->param.mfx.FrameInfo.Width || !thiz->param.mfx.FrameInfo.Height)
+    return FALSE;
+
   if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
           query))
     return FALSE;
