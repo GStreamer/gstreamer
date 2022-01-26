@@ -973,6 +973,8 @@ gst_dshowvideosink_change_state (GstElement * element, GstStateChange transition
         return ret;
       sink->graph_running = TRUE;
       break;
+    default:
+      break;
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
@@ -996,6 +998,8 @@ gst_dshowvideosink_change_state (GstElement * element, GstStateChange transition
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_dshowvideosink_clear (sink);
+      break;
+    default:
       break;
   }
 
