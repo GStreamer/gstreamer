@@ -203,7 +203,7 @@ GType gst_video_aggregator_convert_pad_get_type           (void);
 GST_VIDEO_API
 void gst_video_aggregator_convert_pad_update_conversion_info (GstVideoAggregatorConvertPad * pad);
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoAggregatorConvertPad, gst_object_unref);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoAggregatorConvertPad, gst_object_unref)
 
 /****************************************
  * GstVideoAggregatorParallelConvertPad *
@@ -211,7 +211,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoAggregatorConvertPad, gst_object_unref);
 
 #define GST_TYPE_VIDEO_AGGREGATOR_PARALLEL_CONVERT_PAD           (gst_video_aggregator_parallel_convert_pad_get_type())
 GST_VIDEO_API
-G_DECLARE_DERIVABLE_TYPE (GstVideoAggregatorParallelConvertPad, gst_video_aggregator_parallel_convert_pad, GST, VIDEO_AGGREGATOR_PARALLEL_CONVERT_PAD, GstVideoAggregatorConvertPad);
+G_DECLARE_DERIVABLE_TYPE (GstVideoAggregatorParallelConvertPad, gst_video_aggregator_parallel_convert_pad, GST, VIDEO_AGGREGATOR_PARALLEL_CONVERT_PAD, GstVideoAggregatorConvertPad)
 
 #define GST_VIDEO_AGGREGATOR_PARALLEL_CONVERT_PAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_AGGREGATOR_PARALLEL_CONVERT_PAD, GstVideoAggregatorParallelConvertPad))
 #define GST_VIDEO_AGGREGATOR_PARALLEL_CONVERT_PAD_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_AGGREGATOR_PARALLEL_CONVERT_PAD, GstVideoAggregatorConvertPadClass))
