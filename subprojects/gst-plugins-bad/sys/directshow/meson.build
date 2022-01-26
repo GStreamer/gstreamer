@@ -21,6 +21,6 @@ if cxx.get_id() != 'msvc' or get_option('directshow').disabled()
 endif
 
 subdir('strmbase')
-#subdir('dshowdecwrapper')
+subdir('dshowdecwrapper')
 #subdir('dshowsrcwrapper')
 #subdir('dshowvideosink')

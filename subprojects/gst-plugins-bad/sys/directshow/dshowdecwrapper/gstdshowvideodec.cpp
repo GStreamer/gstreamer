@@ -607,7 +607,6 @@ gst_dshowvideodec_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstBufferPool *pool = NULL;
   GstStructure *pool_config = NULL;
   guint pool_size, pool_min, pool_max;
-  GstVideoInfo video_info;
 
   /* read data */
   if (!gst_structure_get_int (s, "width", &vdec->width) ||
