@@ -161,6 +161,23 @@ enum _GstRtspSrcRtcpSyncMode
   RTCP_SYNC_RTP
 };
 
+#define GST_TYPE_RTSP_SRC_TIMEOUT_CAUSE (gst_rtsp_src_timeout_cause_get_type())
+static GType
+gst_rtsp_src_timeout_cause_get_type (void)
+{
+  static GType timeout_cause_type = 0;
+  static const GEnumValue timeout_causes[] = {
+    {GST_RTSP_SRC_TIMEOUT_CAUSE_RTCP, "timeout triggered by RTCP", "RTCP"},
+    {0, NULL, NULL},
+  };
+
+  if (!timeout_cause_type) {
+    timeout_cause_type =
+        g_enum_register_static ("GstRTSPSrcTimeoutCause", timeout_causes);
+  }
+  return timeout_cause_type;
+}
+
 enum _GstRtspSrcBufferMode
 {
   BUFFER_MODE_NONE,
@@ -1267,6 +1284,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
 
   gst_rtsp_ext_list_init ();
 
+  gst_type_mark_as_plugin_api (GST_TYPE_RTSP_SRC_TIMEOUT_CAUSE, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_RTSP_SRC_BUFFER_MODE, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_RTSP_SRC_NTP_TIME_SOURCE, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_RTSP_BACKCHANNEL, 0);
@@ -3632,8 +3650,8 @@ on_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
   /* timeout, post element message */
   gst_element_post_message (GST_ELEMENT_CAST (src),
       gst_message_new_element (GST_OBJECT_CAST (src),
-          gst_structure_new ("GstRTSPSrcTimeout",
-              "cause", G_TYPE_ENUM, GST_RTSP_SRC_TIMEOUT_CAUSE_RTCP,
+          gst_structure_new ("GstRTSPSrcTimeout", "cause",
+              GST_TYPE_RTSP_SRC_TIMEOUT_CAUSE, GST_RTSP_SRC_TIMEOUT_CAUSE_RTCP,
               "stream-number", G_TYPE_INT, stream->id, "ssrc", G_TYPE_UINT,
               stream->ssrc, NULL)));
 
