@@ -212,18 +212,17 @@ gst_v4l2_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     }
   }
 
-  /* TODO Add renegotiation support */
-  g_return_val_if_fail (!GST_V4L2_IS_ACTIVE (self->v4l2output), FALSE);
-  g_return_val_if_fail (!GST_V4L2_IS_ACTIVE (self->v4l2capture), FALSE);
-
-  gst_caps_replace (&self->incaps, incaps);
-  gst_caps_replace (&self->outcaps, outcaps);
+  gst_v4l2_object_stop (self->v4l2output);
+  gst_v4l2_object_stop (self->v4l2capture);
 
   if (!gst_v4l2_object_set_format (self->v4l2output, incaps, &error))
     goto incaps_failed;
 
   if (!gst_v4l2_object_set_format (self->v4l2capture, outcaps, &error))
     goto outcaps_failed;
+
+  gst_caps_replace (&self->incaps, incaps);
+  gst_caps_replace (&self->outcaps, outcaps);
 
   /* FIXME implement fallback if crop not supported */
   if (!gst_v4l2_object_set_crop (self->v4l2output))
