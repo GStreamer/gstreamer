@@ -36,6 +36,7 @@ static struct FormatEntry format_map[] = {
   {V4L2_PIX_FMT_YUYV, 1, GST_VIDEO_FORMAT_YUY2, 8, 422},
   {V4L2_PIX_FMT_SUNXI_TILED_NV12, 1, GST_VIDEO_FORMAT_NV12_32L32, 8, 422},
   {V4L2_PIX_FMT_NV12_4L4, 1, GST_VIDEO_FORMAT_NV12_4L4, 8, 420},
+  {V4L2_PIX_FMT_MM21, 2, GST_VIDEO_FORMAT_NV12_16L32S, 8, 420},
   {0,}
 };
 
@@ -81,6 +82,10 @@ set_stride (GstVideoInfo * info, gint plane, gint stride)
 
     ws = GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
     hs = GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
+
+    /* this only works for what we support, NV12 subsampled tiles */
+    if (GST_VIDEO_FORMAT_INFO_HAS_SUBTILES (finfo) && plane == 1)
+      hs -= 1;
 
     padded_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
         info->height);
