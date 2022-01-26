@@ -318,7 +318,7 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   }
 #endif
 
-  hr = MFCreateMediaType (out_type.GetAddressOf ());
+  hr = MFCreateMediaType (&out_type);
   if (!gst_mf_result (hr))
     return FALSE;
 
@@ -762,7 +762,7 @@ gst_mf_video_enc_finish_sample (GstMFVideoEnc * self, IMFSample * sample)
   DWORD buffer_len;
   GstClockTime pts, dts, duration;
 
-  hr = sample->GetBufferByIndex (0, media_buffer.GetAddressOf ());
+  hr = sample->GetBufferByIndex (0, &media_buffer);
   if (!gst_mf_result (hr))
     goto done;
 

@@ -584,13 +584,13 @@ gst_mf_transform_process_output (GstMFTransform * self)
     ComPtr < IMFMediaBuffer > buffer;
     ComPtr < IMFSample > new_sample;
 
-    hr = MFCreateMemoryBuffer (out_stream_info.cbSize, buffer.GetAddressOf ());
+    hr = MFCreateMemoryBuffer (out_stream_info.cbSize, &buffer);
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (self, "Couldn't create memory buffer");
       return GST_FLOW_ERROR;
     }
 
-    hr = MFCreateSample (new_sample.GetAddressOf ());
+    hr = MFCreateSample (&new_sample);
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (self, "Couldn't create sample");
       return GST_FLOW_ERROR;
@@ -617,8 +617,7 @@ gst_mf_transform_process_output (GstMFTransform * self)
 
     GST_DEBUG_OBJECT (self, "Stream change, set output type again");
 
-    hr = transform->GetOutputAvailableType (stream_id,
-        0, output_type.GetAddressOf ());
+    hr = transform->GetOutputAvailableType (stream_id, 0, &output_type);
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (self, "Couldn't get available output type");
       ret = GST_FLOW_ERROR;
@@ -875,7 +874,7 @@ gst_mf_transform_open_internal (GstMFTransformOpenData * data)
     ComPtr < IMFAttributes > attr;
     UINT32 supports_d3d11 = 0;
 
-    hr = object->transform->GetAttributes (attr.GetAddressOf ());
+    hr = object->transform->GetAttributes (&attr);
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (object, "Couldn't get attribute object");
       goto done;

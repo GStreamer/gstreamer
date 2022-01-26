@@ -193,11 +193,11 @@ gst_mf_audio_enc_process_input (GstMFAudioEnc * self, GstBuffer * buffer)
 
   timestamp = self->sample_count * self->sample_duration_in_mf;
 
-  hr = MFCreateSample (sample.GetAddressOf ());
+  hr = MFCreateSample (&sample);
   if (!gst_mf_result (hr))
     goto done;
 
-  hr = MFCreateMemoryBuffer (info.size, media_buffer.GetAddressOf ());
+  hr = MFCreateMemoryBuffer (info.size, &media_buffer);
   if (!gst_mf_result (hr))
     goto done;
 
@@ -251,12 +251,12 @@ gst_mf_audio_enc_process_output (GstMFAudioEnc * self)
   GstFlowReturn res = GST_FLOW_ERROR;
   DWORD buffer_len = 0;
 
-  res = gst_mf_transform_get_output (self->transform, sample.GetAddressOf ());
+  res = gst_mf_transform_get_output (self->transform, &sample);
 
   if (res != GST_FLOW_OK)
     return res;
 
-  hr = sample->GetBufferByIndex (0, media_buffer.GetAddressOf ());
+  hr = sample->GetBufferByIndex (0, &media_buffer);
   if (!gst_mf_result (hr))
     return GST_FLOW_ERROR;
 
