@@ -1279,7 +1279,7 @@ gst_d3d11_av1_dec_register (GstPlugin * plugin, GstD3D11Device * device,
 
   if (!gst_d3d11_decoder_get_supported_decoder_profile (device,
           GST_DXVA_CODEC_AV1, GST_VIDEO_FORMAT_NV12, &profile_guid)) {
-    GST_INFO_OBJECT (device, "device does not support VP8 decoding");
+    GST_INFO_OBJECT (device, "device does not support AV1 decoding");
     return;
   }
 
