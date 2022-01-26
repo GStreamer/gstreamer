@@ -3069,7 +3069,8 @@ gst_v4l2_object_is_dmabuf_supported (GstV4l2Object * v4l2object)
     .flags = O_CLOEXEC | O_RDWR,
   };
 
-  if (v4l2object->fmtdesc->flags & V4L2_FMT_FLAG_EMULATED) {
+  if (v4l2object->fmtdesc &&
+      v4l2object->fmtdesc->flags & V4L2_FMT_FLAG_EMULATED) {
     GST_WARNING_OBJECT (v4l2object->dbg_obj,
         "libv4l2 converter detected, disabling DMABuf");
     ret = FALSE;
