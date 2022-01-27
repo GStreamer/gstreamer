@@ -21,6 +21,7 @@
 #define __GST_AUTO_DETECT_H__
 
 #include <gst/gst.h>
+#include "gstautodetectelements.h"
 
 G_BEGIN_DECLS
 
