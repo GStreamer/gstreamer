@@ -91,12 +91,10 @@ struct _GstV4l2CodecVp9Dec
   guint subsampling_y;
 };
 
-#define parent_class gst_v4l2_codec_vp9_dec_parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstV4l2CodecVp9Dec,
-    gst_v4l2_codec_vp9_dec, GST_TYPE_VP9_DECODER,
-    GST_DEBUG_CATEGORY_INIT (v4l2_vp9dec_debug, "v4l2codecs-vp9dec", 0,
-        "V4L2 stateless VP9 decoder"));
+G_DEFINE_ABSTRACT_TYPE (GstV4l2CodecVp9Dec, gst_v4l2_codec_vp9_dec,
+    GST_TYPE_VP9_DECODER);
 
+#define parent_class gst_v4l2_codec_vp9_dec_parent_class
 
 static guint
 gst_v4l2_codec_vp9_dec_get_preferred_output_delay (GstVp9Decoder * decoder,
@@ -1130,6 +1128,9 @@ gst_v4l2_codec_vp9_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
 {
   gchar *element_name;
   GstCaps *src_caps, *alpha_caps;
+
+  GST_DEBUG_CATEGORY_INIT (v4l2_vp9dec_debug, "v4l2codecs-vp9dec", 0,
+      "V4L2 stateless VP9 decoder");
 
   if (!gst_v4l2_decoder_set_sink_fmt (decoder, V4L2_PIX_FMT_VP9_FRAME,
           320, 240, 8))

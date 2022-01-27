@@ -92,10 +92,9 @@ struct _GstV4l2CodecMpeg2Dec
   gboolean copy_frames;
 };
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstV4l2CodecMpeg2Dec,
-    gst_v4l2_codec_mpeg2_dec, GST_TYPE_MPEG2_DECODER,
-    GST_DEBUG_CATEGORY_INIT (v4l2_mpeg2dec_debug, "v4l2codecs-mpeg2dec", 0,
-        "V4L2 stateless mpeg2 decoder"));
+G_DEFINE_ABSTRACT_TYPE (GstV4l2CodecMpeg2Dec, gst_v4l2_codec_mpeg2_dec,
+    GST_TYPE_MPEG2_DECODER);
+
 #define parent_class gst_v4l2_codec_mpeg2_dec_parent_class
 
 static guint
@@ -1053,6 +1052,9 @@ gst_v4l2_codec_mpeg2_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
     GstV4l2CodecDevice * device, guint rank)
 {
   GstCaps *src_caps;
+
+  GST_DEBUG_CATEGORY_INIT (v4l2_mpeg2dec_debug, "v4l2codecs-mpeg2dec", 0,
+      "V4L2 stateless mpeg2 decoder");
 
   if (!gst_v4l2_decoder_set_sink_fmt (decoder, V4L2_PIX_FMT_MPEG2_SLICE,
           320, 240, 8))

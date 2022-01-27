@@ -82,10 +82,9 @@ struct _GstV4l2CodecVp8Dec
   GstMapInfo bitstream_map;
 };
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstV4l2CodecVp8Dec,
-    gst_v4l2_codec_vp8_dec, GST_TYPE_VP8_DECODER,
-    GST_DEBUG_CATEGORY_INIT (v4l2_vp8dec_debug, "v4l2codecs-vp8dec", 0,
-        "V4L2 stateless VP8 decoder"));
+G_DEFINE_ABSTRACT_TYPE (GstV4l2CodecVp8Dec, gst_v4l2_codec_vp8_dec,
+    GST_TYPE_VP8_DECODER);
+
 #define parent_class gst_v4l2_codec_vp8_dec_parent_class
 
 static guint
@@ -932,6 +931,9 @@ gst_v4l2_codec_vp8_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
 {
   gchar *element_name;
   GstCaps *src_caps, *alpha_caps;
+
+  GST_DEBUG_CATEGORY_INIT (v4l2_vp8dec_debug, "v4l2codecs-vp8dec", 0,
+      "V4L2 stateless VP8 decoder");
 
   if (!gst_v4l2_decoder_set_sink_fmt (decoder, V4L2_PIX_FMT_VP8_FRAME,
           320, 240, 8))
