@@ -537,7 +537,11 @@ gst_mf_transform_thread_func (GstMFTransform * self)
 
   CoTaskMemFree (devices);
 
-  self->hardware = !!(self->enum_params.enum_flags & MFT_ENUM_FLAG_HARDWARE);
+  if ((self->enum_params.enum_flags & MFT_ENUM_FLAG_HARDWARE) != 0)
+    self->hardware = TRUE;
+  else
+    self->hardware = FALSE;
+
   self->initialized = TRUE;
 
 run_loop:
@@ -1131,9 +1135,12 @@ gst_mf_transform_get_input_available_types (GstMFTransform * object,
     index++;
   } while (SUCCEEDED (hr));
 
+  if (!list)
+    return FALSE;
+
   *input_types = list;
 
-  return !!list;
+  return TRUE;
 }
 
 gboolean
@@ -1165,9 +1172,12 @@ gst_mf_transform_get_output_available_types (GstMFTransform * object,
     index++;
   } while (SUCCEEDED (hr));
 
+  if (!list)
+    return FALSE;
+
   *output_types = list;
 
-  return !!list;
+  return TRUE;
 }
 
 gboolean

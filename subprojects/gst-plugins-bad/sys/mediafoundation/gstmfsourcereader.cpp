@@ -244,10 +244,13 @@ gst_mf_enum_media_type_from_source_reader (IMFSourceReader * source_reader,
   }
 
 done:
+  if (!list)
+    return FALSE;
+
   list = g_list_reverse (list);
   *media_types = list;
 
-  return !!list;
+  return TRUE;
 }
 
 static void
@@ -935,12 +938,14 @@ gst_mf_source_enum_device_activate (GstMFSourceReader * self,
   }
 
 done:
-  ret = g_list_reverse (ret);
   CoTaskMemFree (devices);
 
-  *device_sources = ret;
+  if (!ret)
+    return FALSE;
 
-  return !!ret;
+  *device_sources = g_list_reverse (ret);
+
+  return TRUE;
 }
 
 static void

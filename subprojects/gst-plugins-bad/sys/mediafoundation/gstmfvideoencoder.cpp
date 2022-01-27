@@ -23,7 +23,7 @@
 #endif
 
 #include <gst/gst.h>
-#include "gstmfvideoenc.h"
+#include "gstmfvideoencoder.h"
 #include "gstmfvideobuffer.h"
 #include "gstmfplatloader.h"
 #include <wrl.h>
@@ -38,72 +38,77 @@
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
-GST_DEBUG_CATEGORY_EXTERN (gst_mf_video_enc_debug);
-#define GST_CAT_DEFAULT gst_mf_video_enc_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_mf_video_encoder_debug);
+#define GST_CAT_DEFAULT gst_mf_video_encoder_debug
 
-#define gst_mf_video_enc_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstMFVideoEnc, gst_mf_video_enc,
+#define gst_mf_video_encoder_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE (GstMFVideoEncoder, gst_mf_video_encoder,
     GST_TYPE_VIDEO_ENCODER);
 
-static void gst_mf_video_enc_dispose (GObject * object);
-static void gst_mf_video_enc_set_context (GstElement * element,
+static void gst_mf_video_encoder_dispose (GObject * object);
+static void gst_mf_video_encoder_set_context (GstElement * element,
     GstContext * context);
-static gboolean gst_mf_video_enc_open (GstVideoEncoder * enc);
-static gboolean gst_mf_video_enc_close (GstVideoEncoder * enc);
-static gboolean gst_mf_video_enc_start (GstVideoEncoder * enc);
-static gboolean gst_mf_video_enc_set_format (GstVideoEncoder * enc,
+static gboolean gst_mf_video_encoder_open (GstVideoEncoder * enc);
+static gboolean gst_mf_video_encoder_close (GstVideoEncoder * enc);
+static gboolean gst_mf_video_encoder_start (GstVideoEncoder * enc);
+static gboolean gst_mf_video_encoder_set_format (GstVideoEncoder * enc,
     GstVideoCodecState * state);
-static GstFlowReturn gst_mf_video_enc_handle_frame (GstVideoEncoder * enc,
+static GstFlowReturn gst_mf_video_encoder_handle_frame (GstVideoEncoder * enc,
     GstVideoCodecFrame * frame);
-static GstFlowReturn gst_mf_video_enc_finish (GstVideoEncoder * enc);
-static gboolean gst_mf_video_enc_flush (GstVideoEncoder * enc);
-static gboolean gst_mf_video_enc_propose_allocation (GstVideoEncoder * enc,
+static GstFlowReturn gst_mf_video_encoder_finish (GstVideoEncoder * enc);
+static gboolean gst_mf_video_encoder_flush (GstVideoEncoder * enc);
+static gboolean gst_mf_video_encoder_propose_allocation (GstVideoEncoder * enc,
     GstQuery * query);
-static gboolean gst_mf_video_enc_sink_query (GstVideoEncoder * enc,
+static gboolean gst_mf_video_encoder_sink_query (GstVideoEncoder * enc,
     GstQuery * query);
-static gboolean gst_mf_video_enc_src_query (GstVideoEncoder * enc,
+static gboolean gst_mf_video_encoder_src_query (GstVideoEncoder * enc,
     GstQuery * query);
 
 static HRESULT gst_mf_video_on_new_sample (GstMFTransform * object,
-    IMFSample * sample, GstMFVideoEnc * self);
+    IMFSample * sample, GstMFVideoEncoder * self);
 
 static void
-gst_mf_video_enc_class_init (GstMFVideoEncClass * klass)
+gst_mf_video_encoder_class_init (GstMFVideoEncoderClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoEncoderClass *videoenc_class = GST_VIDEO_ENCODER_CLASS (klass);
 
-  gobject_class->dispose = gst_mf_video_enc_dispose;
+  gobject_class->dispose = gst_mf_video_encoder_dispose;
 
-  element_class->set_context = GST_DEBUG_FUNCPTR (gst_mf_video_enc_set_context);
+  element_class->set_context =
+      GST_DEBUG_FUNCPTR (gst_mf_video_encoder_set_context);
 
-  videoenc_class->open = GST_DEBUG_FUNCPTR (gst_mf_video_enc_open);
-  videoenc_class->close = GST_DEBUG_FUNCPTR (gst_mf_video_enc_close);
-  videoenc_class->start = GST_DEBUG_FUNCPTR (gst_mf_video_enc_start);
-  videoenc_class->set_format = GST_DEBUG_FUNCPTR (gst_mf_video_enc_set_format);
+  videoenc_class->open = GST_DEBUG_FUNCPTR (gst_mf_video_encoder_open);
+  videoenc_class->close = GST_DEBUG_FUNCPTR (gst_mf_video_encoder_close);
+  videoenc_class->start = GST_DEBUG_FUNCPTR (gst_mf_video_encoder_start);
+  videoenc_class->set_format =
+      GST_DEBUG_FUNCPTR (gst_mf_video_encoder_set_format);
   videoenc_class->handle_frame =
-      GST_DEBUG_FUNCPTR (gst_mf_video_enc_handle_frame);
-  videoenc_class->finish = GST_DEBUG_FUNCPTR (gst_mf_video_enc_finish);
-  videoenc_class->flush = GST_DEBUG_FUNCPTR (gst_mf_video_enc_flush);
+      GST_DEBUG_FUNCPTR (gst_mf_video_encoder_handle_frame);
+  videoenc_class->finish = GST_DEBUG_FUNCPTR (gst_mf_video_encoder_finish);
+  videoenc_class->flush = GST_DEBUG_FUNCPTR (gst_mf_video_encoder_flush);
   videoenc_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_mf_video_enc_propose_allocation);
-  videoenc_class->sink_query = GST_DEBUG_FUNCPTR (gst_mf_video_enc_sink_query);
-  videoenc_class->src_query = GST_DEBUG_FUNCPTR (gst_mf_video_enc_src_query);
+      GST_DEBUG_FUNCPTR (gst_mf_video_encoder_propose_allocation);
+  videoenc_class->sink_query =
+      GST_DEBUG_FUNCPTR (gst_mf_video_encoder_sink_query);
+  videoenc_class->src_query =
+      GST_DEBUG_FUNCPTR (gst_mf_video_encoder_src_query);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_MF_VIDEO_ENC, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_MF_VIDEO_ENCODER,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
-gst_mf_video_enc_init (GstMFVideoEnc * self)
+gst_mf_video_encoder_init (GstMFVideoEncoder * self)
 {
 }
 
 static void
-gst_mf_video_enc_dispose (GObject * object)
+gst_mf_video_encoder_dispose (GObject * object)
 {
 #if GST_MF_HAVE_D3D11
-  GstMFVideoEnc *self = GST_MF_VIDEO_ENC (object);
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (object);
 
   gst_clear_object (&self->d3d11_device);
   gst_clear_object (&self->other_d3d11_device);
@@ -113,12 +118,12 @@ gst_mf_video_enc_dispose (GObject * object)
 }
 
 static void
-gst_mf_video_enc_set_context (GstElement * element, GstContext * context)
+gst_mf_video_encoder_set_context (GstElement * element, GstContext * context)
 {
 #if GST_MF_HAVE_D3D11
-  GstMFVideoEnc *self = GST_MF_VIDEO_ENC (element);
-  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (self);
-  GstMFVideoEncDeviceCaps *device_caps = &klass->device_caps;
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (element);
+  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (self);
+  GstMFVideoEncoderDeviceCaps *device_caps = &klass->device_caps;
 
   if (device_caps->d3d11_aware) {
     gst_d3d11_handle_set_context_for_adapter_luid (element, context,
@@ -130,14 +135,13 @@ gst_mf_video_enc_set_context (GstElement * element, GstContext * context)
 }
 
 static gboolean
-gst_mf_video_enc_open (GstVideoEncoder * enc)
+gst_mf_video_encoder_open (GstVideoEncoder * enc)
 {
-  GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
-  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (enc);
-  GstMFVideoEncDeviceCaps *device_caps = &klass->device_caps;
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
+  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (enc);
+  GstMFVideoEncoderDeviceCaps *device_caps = &klass->device_caps;
   GstMFTransformEnumParams enum_params = { 0, };
   MFT_REGISTER_TYPE_INFO output_type;
-  gboolean ret;
 
 #if GST_MF_HAVE_D3D11
   if (device_caps->d3d11_aware) {
@@ -214,9 +218,7 @@ gst_mf_video_enc_open (GstVideoEncoder * enc)
       device_caps->d3d11_aware, device_caps->adapter_luid);
 
   self->transform = gst_mf_transform_new (&enum_params);
-  ret = !!self->transform;
-
-  if (!ret) {
+  if (!self->transform) {
     GST_ERROR_OBJECT (self, "Cannot create MFT object");
     return FALSE;
   }
@@ -234,13 +236,13 @@ gst_mf_video_enc_open (GstVideoEncoder * enc)
     self->async_mft = FALSE;
   }
 
-  return ret;
+  return TRUE;
 }
 
 static gboolean
-gst_mf_video_enc_close (GstVideoEncoder * enc)
+gst_mf_video_encoder_close (GstVideoEncoder * enc)
 {
-  GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
 
   gst_clear_object (&self->transform);
 
@@ -268,7 +270,7 @@ gst_mf_video_enc_close (GstVideoEncoder * enc)
 }
 
 static gboolean
-gst_mf_video_enc_start (GstVideoEncoder * enc)
+gst_mf_video_encoder_start (GstVideoEncoder * enc)
 {
   /* Media Foundation Transform will shift PTS in case that B-frame is enabled.
    * We need to adjust DTS correspondingly */
@@ -278,10 +280,11 @@ gst_mf_video_enc_start (GstVideoEncoder * enc)
 }
 
 static gboolean
-gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
+gst_mf_video_encoder_set_format (GstVideoEncoder * enc,
+    GstVideoCodecState * state)
 {
-  GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
-  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (enc);
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
+  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (enc);
   GstVideoInfo *info = &state->info;
   ComPtr < IMFMediaType > in_type;
   ComPtr < IMFMediaType > out_type;
@@ -292,7 +295,7 @@ gst_mf_video_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 
   GST_DEBUG_OBJECT (self, "Set format");
 
-  gst_mf_video_enc_finish (enc);
+  gst_mf_video_encoder_finish (enc);
 
   self->mf_pts_offset = 0;
   self->has_reorder_frame = FALSE;
@@ -547,7 +550,7 @@ gst_mf_video_buffer_free (GstVideoFrame * frame)
 }
 
 static gboolean
-gst_mf_video_enc_frame_needs_copy (GstVideoFrame * vframe)
+gst_mf_video_encoder_frame_needs_copy (GstVideoFrame * vframe)
 {
   /* Single plane data can be used without copy */
   if (GST_VIDEO_FRAME_N_PLANES (vframe) == 1)
@@ -632,19 +635,19 @@ gst_mf_video_enc_frame_needs_copy (GstVideoFrame * vframe)
 typedef struct
 {
   LONGLONG mf_pts;
-} GstMFVideoEncFrameData;
+} GstMFVideoEncoderFrameData;
 
 static gboolean
-gst_mf_video_enc_process_input (GstMFVideoEnc * self,
+gst_mf_video_encoder_process_input (GstMFVideoEncoder * self,
     GstVideoCodecFrame * frame, IMFSample * sample)
 {
-  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (self);
+  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (self);
   HRESULT hr;
   gboolean unset_force_keyframe = FALSE;
-  GstMFVideoEncFrameData *frame_data = nullptr;
+  GstMFVideoEncoderFrameData *frame_data = nullptr;
   gboolean res;
 
-  frame_data = g_new0 (GstMFVideoEncFrameData, 1);
+  frame_data = g_new0 (GstMFVideoEncoderFrameData, 1);
   frame_data->mf_pts = frame->pts / 100;
 
   gst_video_codec_frame_set_user_data (frame,
@@ -696,7 +699,8 @@ gst_mf_video_enc_process_input (GstMFVideoEnc * self,
 }
 
 static GstVideoCodecFrame *
-gst_mf_video_enc_find_output_frame (GstMFVideoEnc * self, LONGLONG mf_pts)
+gst_mf_video_encoder_find_output_frame (GstMFVideoEncoder * self,
+    LONGLONG mf_pts)
 {
   GList *l, *walk = gst_video_encoder_get_frames (GST_VIDEO_ENCODER (self));
   GstVideoCodecFrame *ret = nullptr;
@@ -705,7 +709,7 @@ gst_mf_video_enc_find_output_frame (GstMFVideoEnc * self, LONGLONG mf_pts)
 
   for (l = walk; l; l = l->next) {
     GstVideoCodecFrame *frame = (GstVideoCodecFrame *) l->data;
-    GstMFVideoEncFrameData *data = (GstMFVideoEncFrameData *)
+    GstMFVideoEncoderFrameData *data = (GstMFVideoEncoderFrameData *)
         gst_video_codec_frame_get_user_data (frame);
     LONGLONG abs_diff;
 
@@ -746,7 +750,8 @@ gst_mf_video_enc_find_output_frame (GstMFVideoEnc * self, LONGLONG mf_pts)
 }
 
 static HRESULT
-gst_mf_video_enc_finish_sample (GstMFVideoEnc * self, IMFSample * sample)
+gst_mf_video_encoder_finish_sample (GstMFVideoEncoder * self,
+    IMFSample * sample)
 {
   HRESULT hr = S_OK;
   BYTE *data;
@@ -845,7 +850,7 @@ gst_mf_video_enc_finish_sample (GstMFVideoEnc * self, IMFSample * sample)
     }
   }
 
-  frame = gst_mf_video_enc_find_output_frame (self, target_mf_pts);
+  frame = gst_mf_video_encoder_find_output_frame (self, target_mf_pts);
 
   if (frame) {
     if (keyframe) {
@@ -906,7 +911,7 @@ done:
 }
 
 static GstFlowReturn
-gst_mf_video_enc_process_output (GstMFVideoEnc * self)
+gst_mf_video_encoder_process_output (GstMFVideoEncoder * self)
 {
   ComPtr < IMFSample > sample;
   GstFlowReturn res = GST_FLOW_ERROR;
@@ -916,13 +921,13 @@ gst_mf_video_enc_process_output (GstMFVideoEnc * self)
   if (res != GST_FLOW_OK)
     return res;
 
-  gst_mf_video_enc_finish_sample (self, sample.Get ());
+  gst_mf_video_encoder_finish_sample (self, sample.Get ());
 
   return self->last_ret;
 }
 
 static gboolean
-gst_mf_video_enc_create_input_sample (GstMFVideoEnc * self,
+gst_mf_video_encoder_create_input_sample (GstMFVideoEncoder * self,
     GstVideoCodecFrame * frame, IMFSample ** sample)
 {
   HRESULT hr;
@@ -948,7 +953,7 @@ gst_mf_video_enc_create_input_sample (GstMFVideoEnc * self,
     goto error;
 
   /* Check if we can forward this memory to Media Foundation without copy */
-  need_copy = gst_mf_video_enc_frame_needs_copy (vframe);
+  need_copy = gst_mf_video_encoder_frame_needs_copy (vframe);
   if (need_copy) {
     GST_TRACE_OBJECT (self, "Copy input buffer into Media Foundation memory");
     hr = MFCreateMemoryBuffer (GST_VIDEO_INFO_SIZE (info), &media_buffer);
@@ -1031,7 +1036,7 @@ error:
 
 #if GST_MF_HAVE_D3D11
 static gboolean
-gst_mf_video_enc_create_input_sample_d3d11 (GstMFVideoEnc * self,
+gst_mf_video_encoder_create_input_sample_d3d11 (GstMFVideoEncoder * self,
     GstVideoCodecFrame * frame, IMFSample ** sample)
 {
   HRESULT hr;
@@ -1180,10 +1185,10 @@ gst_mf_video_enc_create_input_sample_d3d11 (GstMFVideoEnc * self,
 #endif
 
 static GstFlowReturn
-gst_mf_video_enc_handle_frame (GstVideoEncoder * enc,
+gst_mf_video_encoder_handle_frame (GstVideoEncoder * enc,
     GstVideoCodecFrame * frame)
 {
-  GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
   GstFlowReturn ret = GST_FLOW_OK;
   ComPtr < IMFSample > sample;
 
@@ -1194,19 +1199,20 @@ gst_mf_video_enc_handle_frame (GstVideoEncoder * enc,
   }
 #if GST_MF_HAVE_D3D11
   if (self->mf_allocator &&
-      !gst_mf_video_enc_create_input_sample_d3d11 (self, frame, &sample)) {
+      !gst_mf_video_encoder_create_input_sample_d3d11 (self, frame, &sample)) {
     GST_WARNING_OBJECT (self, "Failed to create IMFSample for D3D11");
     sample = nullptr;
   }
 #endif
 
-  if (!sample && !gst_mf_video_enc_create_input_sample (self, frame, &sample)) {
+  if (!sample
+      && !gst_mf_video_encoder_create_input_sample (self, frame, &sample)) {
     GST_ERROR_OBJECT (self, "Failed to create IMFSample");
     ret = GST_FLOW_ERROR;
     goto done;
   }
 
-  if (!gst_mf_video_enc_process_input (self, frame, sample.Get ())) {
+  if (!gst_mf_video_encoder_process_input (self, frame, sample.Get ())) {
     GST_ERROR_OBJECT (self, "Failed to process input");
     ret = GST_FLOW_ERROR;
     goto done;
@@ -1217,7 +1223,7 @@ gst_mf_video_enc_handle_frame (GstVideoEncoder * enc,
    * from Media Foundation's internal worker queue thread */
   if (!self->async_mft) {
     do {
-      ret = gst_mf_video_enc_process_output (self);
+      ret = gst_mf_video_encoder_process_output (self);
     } while (ret == GST_FLOW_OK);
   }
 
@@ -1231,9 +1237,9 @@ done:
 }
 
 static GstFlowReturn
-gst_mf_video_enc_finish (GstVideoEncoder * enc)
+gst_mf_video_encoder_finish (GstVideoEncoder * enc)
 {
-  GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (!self->transform)
@@ -1251,7 +1257,7 @@ gst_mf_video_enc_finish (GstVideoEncoder * enc)
 
   if (!self->async_mft) {
     do {
-      ret = gst_mf_video_enc_process_output (self);
+      ret = gst_mf_video_encoder_process_output (self);
     } while (ret == GST_FLOW_OK);
   }
 
@@ -1262,9 +1268,9 @@ gst_mf_video_enc_finish (GstVideoEncoder * enc)
 }
 
 static gboolean
-gst_mf_video_enc_flush (GstVideoEncoder * enc)
+gst_mf_video_encoder_flush (GstVideoEncoder * enc)
 {
-  GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
 
   if (!self->transform)
     goto out;
@@ -1285,10 +1291,11 @@ out:
 }
 
 static gboolean
-gst_mf_video_enc_propose_allocation (GstVideoEncoder * enc, GstQuery * query)
+gst_mf_video_encoder_propose_allocation (GstVideoEncoder * enc,
+    GstQuery * query)
 {
 #if GST_MF_HAVE_D3D11
-  GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
   GstVideoInfo info;
   GstBufferPool *pool = nullptr;
   GstCaps *caps;
@@ -1393,10 +1400,10 @@ config_failed:
 }
 
 static gboolean
-gst_mf_video_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
+gst_mf_video_encoder_sink_query (GstVideoEncoder * enc, GstQuery * query)
 {
 #if GST_MF_HAVE_D3D11
-  GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
@@ -1414,10 +1421,10 @@ gst_mf_video_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
 }
 
 static gboolean
-gst_mf_video_enc_src_query (GstVideoEncoder * enc, GstQuery * query)
+gst_mf_video_encoder_src_query (GstVideoEncoder * enc, GstQuery * query)
 {
 #if GST_MF_HAVE_D3D11
-  GstMFVideoEnc *self = GST_MF_VIDEO_ENC (enc);
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
@@ -1436,14 +1443,14 @@ gst_mf_video_enc_src_query (GstVideoEncoder * enc, GstQuery * query)
 
 static HRESULT
 gst_mf_video_on_new_sample (GstMFTransform * object,
-    IMFSample * sample, GstMFVideoEnc * self)
+    IMFSample * sample, GstMFVideoEncoder * self)
 {
   GST_LOG_OBJECT (self, "New Sample callback");
 
   /* NOTE: this callback will be called from Media Foundation's internal
    * worker queue thread */
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
-  gst_mf_video_enc_finish_sample (self, sample);
+  gst_mf_video_encoder_finish_sample (self, sample);
   GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
 
   return S_OK;
@@ -1453,11 +1460,11 @@ typedef struct
 {
   guint profile;
   const gchar *profile_str;
-} GstMFVideoEncProfileMap;
+} GstMFVideoEncoderProfileMap;
 
 static void
-gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
-    GstObject * d3d11_device, GstMFVideoEncDeviceCaps * device_caps,
+gst_mf_video_encoder_enum_internal (GstMFTransform * transform, GUID & subtype,
+    GstObject * d3d11_device, GstMFVideoEncoderDeviceCaps * device_caps,
     GstCaps ** sink_template, GstCaps ** src_template)
 {
   HRESULT hr;
@@ -1478,18 +1485,18 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
   IMFTransform *encoder;
   ICodecAPI *codec_api;
   ComPtr < IMFMediaType > out_type;
-  GstMFVideoEncProfileMap h264_profile_map[] = {
+  GstMFVideoEncoderProfileMap h264_profile_map[] = {
     {eAVEncH264VProfile_High, "high"},
     {eAVEncH264VProfile_Main, "main"},
     {eAVEncH264VProfile_Base, "baseline"},
     {0, nullptr},
   };
-  GstMFVideoEncProfileMap hevc_profile_map[] = {
+  GstMFVideoEncoderProfileMap hevc_profile_map[] = {
     {eAVEncH265VProfile_Main_420_8, "main"},
     {eAVEncH265VProfile_Main_420_10, "main-10"},
     {0, nullptr},
   };
-  GstMFVideoEncProfileMap *profile_to_check = nullptr;
+  GstMFVideoEncoderProfileMap *profile_to_check = nullptr;
   static const gchar *h264_caps_str =
       "video/x-h264, stream-format=(string) byte-stream, alignment=(string) au";
   static const gchar *hevc_caps_str =
@@ -1785,8 +1792,8 @@ gst_mf_video_enc_enum_internal (GstMFTransform * transform, GUID & subtype,
 }
 
 static GstMFTransform *
-gst_mf_video_enc_enum (guint enum_flags, GUID * subtype, guint device_index,
-    GstMFVideoEncDeviceCaps * device_caps, GstObject * d3d11_device,
+gst_mf_video_encoder_enum (guint enum_flags, GUID * subtype, guint device_index,
+    GstMFVideoEncoderDeviceCaps * device_caps, GstObject * d3d11_device,
     GstCaps ** sink_template, GstCaps ** src_template)
 {
   GstMFTransformEnumParams enum_params = { 0, };
@@ -1796,7 +1803,7 @@ gst_mf_video_enc_enum (guint enum_flags, GUID * subtype, guint device_index,
 
   *sink_template = nullptr;
   *src_template = nullptr;
-  memset (device_caps, 0, sizeof (GstMFVideoEncDeviceCaps));
+  memset (device_caps, 0, sizeof (GstMFVideoEncoderDeviceCaps));
 
   if (!IsEqualGUID (MFVideoFormat_H264, *subtype) &&
       !IsEqualGUID (MFVideoFormat_HEVC, *subtype) &&
@@ -1827,16 +1834,16 @@ gst_mf_video_enc_enum (guint enum_flags, GUID * subtype, guint device_index,
   if (!transform)
     return nullptr;
 
-  gst_mf_video_enc_enum_internal (transform, output_type.guidSubtype,
+  gst_mf_video_encoder_enum_internal (transform, output_type.guidSubtype,
       d3d11_device, device_caps, sink_template, src_template);
 
   return transform;
 }
 
 static void
-gst_mf_video_enc_register_internal (GstPlugin * plugin, guint rank,
+gst_mf_video_encoder_register_internal (GstPlugin * plugin, guint rank,
     GUID * subtype, GTypeInfo * type_info,
-    const GstMFVideoEncDeviceCaps * device_caps,
+    const GstMFVideoEncoderDeviceCaps * device_caps,
     guint32 enum_flags, guint device_index, GstMFTransform * transform,
     GstCaps * sink_caps, GstCaps * src_caps)
 {
@@ -1845,7 +1852,7 @@ gst_mf_video_enc_register_internal (GstPlugin * plugin, guint rank,
   gchar *type_name;
   gchar *feature_name;
   gint i;
-  GstMFVideoEncClassData *cdata;
+  GstMFVideoEncoderClassData *cdata;
   gboolean is_default = TRUE;
   gchar *device_name = nullptr;
   const gchar *type_name_prefix = nullptr;
@@ -1869,7 +1876,7 @@ gst_mf_video_enc_register_internal (GstPlugin * plugin, guint rank,
   g_object_get (transform, "device-name", &device_name, nullptr);
   g_assert (device_name != nullptr);
 
-  cdata = g_new0 (GstMFVideoEncClassData, 1);
+  cdata = g_new0 (GstMFVideoEncoderClassData, 1);
   cdata->sink_caps = gst_caps_copy (sink_caps);
   cdata->src_caps = gst_caps_copy (src_caps);
   cdata->device_name = device_name;
@@ -1901,7 +1908,7 @@ gst_mf_video_enc_register_internal (GstPlugin * plugin, guint rank,
   cdata->is_default = is_default;
 
   type =
-      g_type_register_static (GST_TYPE_MF_VIDEO_ENC, type_name,
+      g_type_register_static (GST_TYPE_MF_VIDEO_ENCODER, type_name,
       &local_type_info, (GTypeFlags) 0);
 
   /* make lower rank than default device */
@@ -1919,14 +1926,14 @@ gst_mf_video_enc_register_internal (GstPlugin * plugin, guint rank,
 }
 
 void
-gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
+gst_mf_video_encoder_register (GstPlugin * plugin, guint rank, GUID * subtype,
     GTypeInfo * type_info, GList * d3d11_device)
 {
   GstMFTransform *transform = nullptr;
   GstCaps *sink_template = nullptr;
   GstCaps *src_template = nullptr;
   guint enum_flags;
-  GstMFVideoEncDeviceCaps device_caps;
+  GstMFVideoEncoderDeviceCaps device_caps;
   guint i;
 
   /* register hardware encoders first */
@@ -1938,7 +1945,8 @@ gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
     for (iter = d3d11_device; iter; iter = g_list_next (iter)) {
       GstObject *device = (GstObject *) iter->data;
 
-      transform = gst_mf_video_enc_enum (enum_flags, subtype, 0, &device_caps,
+      transform =
+          gst_mf_video_encoder_enum (enum_flags, subtype, 0, &device_caps,
           device, &sink_template, &src_template);
 
       /* No more MFT to enumerate */
@@ -1951,7 +1959,7 @@ gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
         continue;
       }
 
-      gst_mf_video_enc_register_internal (plugin, rank, subtype, type_info,
+      gst_mf_video_encoder_register_internal (plugin, rank, subtype, type_info,
           &device_caps, enum_flags, 0, transform, sink_template, src_template);
       gst_clear_object (&transform);
       gst_clear_caps (&sink_template);
@@ -1960,7 +1968,8 @@ gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
   } else {
     /* AMD seems to be able to support up to 12 GPUs */
     for (i = 0; i < 12; i++) {
-      transform = gst_mf_video_enc_enum (enum_flags, subtype, i, &device_caps,
+      transform =
+          gst_mf_video_encoder_enum (enum_flags, subtype, i, &device_caps,
           nullptr, &sink_template, &src_template);
 
       /* No more MFT to enumerate */
@@ -1973,7 +1982,7 @@ gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
         continue;
       }
 
-      gst_mf_video_enc_register_internal (plugin, rank, subtype, type_info,
+      gst_mf_video_encoder_register_internal (plugin, rank, subtype, type_info,
           &device_caps, enum_flags, i, transform, sink_template, src_template);
       gst_clear_object (&transform);
       gst_clear_caps (&sink_template);
@@ -1985,7 +1994,7 @@ gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
   enum_flags = (MFT_ENUM_FLAG_SYNCMFT |
       MFT_ENUM_FLAG_SORTANDFILTER | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
 
-  transform = gst_mf_video_enc_enum (enum_flags, subtype, 0, &device_caps,
+  transform = gst_mf_video_encoder_enum (enum_flags, subtype, 0, &device_caps,
       nullptr, &sink_template, &src_template);
 
   if (!transform)
@@ -1994,7 +2003,7 @@ gst_mf_video_enc_register (GstPlugin * plugin, guint rank, GUID * subtype,
   if (!sink_template)
     goto done;
 
-  gst_mf_video_enc_register_internal (plugin, rank, subtype, type_info,
+  gst_mf_video_encoder_register_internal (plugin, rank, subtype, type_info,
       &device_caps, enum_flags, 0, transform, sink_template, src_template);
 
 done:

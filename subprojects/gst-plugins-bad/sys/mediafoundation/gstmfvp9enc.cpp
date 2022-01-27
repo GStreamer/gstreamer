@@ -35,7 +35,7 @@
 #endif
 
 #include <gst/gst.h>
-#include "gstmfvideoenc.h"
+#include "gstmfvideoencoder.h"
 #include "gstmfvp9enc.h"
 #include <wrl.h>
 
@@ -122,7 +122,7 @@ enum
 
 typedef struct _GstMFVP9Enc
 {
-  GstMFVideoEnc parent;
+  GstMFVideoEncoder parent;
 
   /* properties */
   guint bitrate;
@@ -139,7 +139,7 @@ typedef struct _GstMFVP9Enc
 
 typedef struct _GstMFVP9EncClass
 {
-  GstMFVideoEncClass parent_class;
+  GstMFVideoEncoderClass parent_class;
 } GstMFVP9EncClass;
 
 static GstElementClass *parent_class = nullptr;
@@ -148,9 +148,9 @@ static void gst_mf_vp9_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_mf_vp9_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static gboolean gst_mf_vp9_enc_set_option (GstMFVideoEnc * mfenc,
+static gboolean gst_mf_vp9_enc_set_option (GstMFVideoEncoder * encoder,
     GstVideoCodecState * state, IMFMediaType * output_type);
-static gboolean gst_mf_vp9_enc_set_src_caps (GstMFVideoEnc * mfenc,
+static gboolean gst_mf_vp9_enc_set_src_caps (GstMFVideoEncoder * encoder,
     GstVideoCodecState * state, IMFMediaType * output_type);
 
 static void
@@ -158,9 +158,9 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstMFVideoEncClass *mfenc_class = GST_MF_VIDEO_ENC_CLASS (klass);
-  GstMFVideoEncClassData *cdata = (GstMFVideoEncClassData *) data;
-  GstMFVideoEncDeviceCaps *device_caps = &cdata->device_caps;
+  GstMFVideoEncoderClass *encoder_class = GST_MF_VIDEO_ENCODER_CLASS (klass);
+  GstMFVideoEncoderClassData *cdata = (GstMFVideoEncoderClassData *) data;
+  GstMFVideoEncoderDeviceCaps *device_caps = &cdata->device_caps;
   gchar *long_name;
   gchar *classification;
 
@@ -301,13 +301,13 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
           cdata->src_caps));
 
-  mfenc_class->set_option = GST_DEBUG_FUNCPTR (gst_mf_vp9_enc_set_option);
-  mfenc_class->set_src_caps = GST_DEBUG_FUNCPTR (gst_mf_vp9_enc_set_src_caps);
+  encoder_class->set_option = GST_DEBUG_FUNCPTR (gst_mf_vp9_enc_set_option);
+  encoder_class->set_src_caps = GST_DEBUG_FUNCPTR (gst_mf_vp9_enc_set_src_caps);
 
-  mfenc_class->codec_id = MFVideoFormat_VP90;
-  mfenc_class->enum_flags = cdata->enum_flags;
-  mfenc_class->device_index = cdata->device_index;
-  mfenc_class->device_caps = *device_caps;
+  encoder_class->codec_id = MFVideoFormat_VP90;
+  encoder_class->enum_flags = cdata->enum_flags;
+  encoder_class->device_index = cdata->device_index;
+  encoder_class->device_caps = *device_caps;
 
   g_free (cdata->device_name);
   gst_caps_unref (cdata->sink_caps);
@@ -333,7 +333,7 @@ gst_mf_vp9_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstMFVP9Enc *self = (GstMFVP9Enc *) (object);
-  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (object);
+  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (object);
 
   switch (prop_id) {
     case PROP_BITRATE:
@@ -443,14 +443,14 @@ gst_mf_vp9_enc_content_type_to_enum (guint rc_mode)
   } G_STMT_END
 
 static gboolean
-gst_mf_vp9_enc_set_option (GstMFVideoEnc * mfenc, GstVideoCodecState * state,
-    IMFMediaType * output_type)
+gst_mf_vp9_enc_set_option (GstMFVideoEncoder * encoder,
+    GstVideoCodecState * state, IMFMediaType * output_type)
 {
-  GstMFVP9Enc *self = (GstMFVP9Enc *) mfenc;
-  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (mfenc);
-  GstMFVideoEncDeviceCaps *device_caps = &klass->device_caps;
+  GstMFVP9Enc *self = (GstMFVP9Enc *) encoder;
+  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (encoder);
+  GstMFVideoEncoderDeviceCaps *device_caps = &klass->device_caps;
   HRESULT hr;
-  GstMFTransform *transform = mfenc->transform;
+  GstMFTransform *transform = encoder->transform;
 
   hr = output_type->SetGUID (MF_MT_SUBTYPE, MFVideoFormat_VP90);
   if (!gst_mf_result (hr))
@@ -536,10 +536,10 @@ gst_mf_vp9_enc_set_option (GstMFVideoEnc * mfenc, GstVideoCodecState * state,
 }
 
 static gboolean
-gst_mf_vp9_enc_set_src_caps (GstMFVideoEnc * mfenc,
+gst_mf_vp9_enc_set_src_caps (GstMFVideoEncoder * encoder,
     GstVideoCodecState * state, IMFMediaType * output_type)
 {
-  GstMFVP9Enc *self = (GstMFVP9Enc *) mfenc;
+  GstMFVP9Enc *self = (GstMFVP9Enc *) encoder;
   GstVideoCodecState *out_state;
   GstStructure *s;
   GstCaps *out_caps;
@@ -586,5 +586,6 @@ gst_mf_vp9_enc_plugin_init (GstPlugin * plugin, guint rank,
 
   GST_DEBUG_CATEGORY_INIT (gst_mf_vp9_enc_debug, "mfvp9enc", 0, "mfvp9enc");
 
-  gst_mf_video_enc_register (plugin, rank, &subtype, &type_info, d3d11_device);
+  gst_mf_video_encoder_register (plugin,
+      rank, &subtype, &type_info, d3d11_device);
 }

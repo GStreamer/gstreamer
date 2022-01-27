@@ -39,7 +39,7 @@
 
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
-#include "gstmfvideoenc.h"
+#include "gstmfvideoencoder.h"
 #include "gstmfh264enc.h"
 #include <wrl.h>
 
@@ -191,7 +191,7 @@ enum
 
 typedef struct _GstMFH264Enc
 {
-  GstMFVideoEnc parent;
+  GstMFVideoEncoder parent;
 
   /* properties */
   guint bitrate;
@@ -223,7 +223,7 @@ typedef struct _GstMFH264Enc
 
 typedef struct _GstMFH264EncClass
 {
-  GstMFVideoEncClass parent_class;
+  GstMFVideoEncoderClass parent_class;
 } GstMFH264EncClass;
 
 static GstElementClass *parent_class = nullptr;
@@ -233,9 +233,9 @@ static void gst_mf_h264_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_mf_h264_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static gboolean gst_mf_h264_enc_set_option (GstMFVideoEnc * mfenc,
+static gboolean gst_mf_h264_enc_set_option (GstMFVideoEncoder * mfenc,
     GstVideoCodecState * state, IMFMediaType * output_type);
-static gboolean gst_mf_h264_enc_set_src_caps (GstMFVideoEnc * mfenc,
+static gboolean gst_mf_h264_enc_set_src_caps (GstMFVideoEncoder * mfenc,
     GstVideoCodecState * state, IMFMediaType * output_type);
 
 static void
@@ -243,9 +243,9 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstMFVideoEncClass *mfenc_class = GST_MF_VIDEO_ENC_CLASS (klass);
-  GstMFVideoEncClassData *cdata = (GstMFVideoEncClassData *) data;
-  GstMFVideoEncDeviceCaps *device_caps = &cdata->device_caps;
+  GstMFVideoEncoderClass *mfenc_class = GST_MF_VIDEO_ENCODER_CLASS (klass);
+  GstMFVideoEncoderClassData *cdata = (GstMFVideoEncoderClassData *) data;
+  GstMFVideoEncoderDeviceCaps *device_caps = &cdata->device_caps;
   gchar *long_name;
   gchar *classification;
 
@@ -571,7 +571,7 @@ gst_mf_h264_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstMFH264Enc *self = (GstMFH264Enc *) (object);
-  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (object);
+  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (object);
 
   switch (prop_id) {
     case PROP_BITRATE:
@@ -782,12 +782,12 @@ gst_mf_h264_enc_content_type_to_enum (guint rc_mode)
   } G_STMT_END
 
 static gboolean
-gst_mf_h264_enc_set_option (GstMFVideoEnc * mfenc, GstVideoCodecState * state,
-    IMFMediaType * output_type)
+gst_mf_h264_enc_set_option (GstMFVideoEncoder * mfenc,
+    GstVideoCodecState * state, IMFMediaType * output_type)
 {
   GstMFH264Enc *self = (GstMFH264Enc *) mfenc;
-  GstMFVideoEncClass *klass = GST_MF_VIDEO_ENC_GET_CLASS (mfenc);
-  GstMFVideoEncDeviceCaps *device_caps = &klass->device_caps;
+  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (mfenc);
+  GstMFVideoEncoderDeviceCaps *device_caps = &klass->device_caps;
   HRESULT hr;
   GstCaps *allowed_caps, *template_caps;
   eAVEncH264VProfile selected_profile = eAVEncH264VProfile_Main;
@@ -1022,7 +1022,7 @@ gst_mf_h264_enc_set_option (GstMFVideoEnc * mfenc, GstVideoCodecState * state,
 }
 
 static gboolean
-gst_mf_h264_enc_set_src_caps (GstMFVideoEnc * mfenc,
+gst_mf_h264_enc_set_src_caps (GstMFVideoEncoder * mfenc,
     GstVideoCodecState * state, IMFMediaType * output_type)
 {
   GstMFH264Enc *self = (GstMFH264Enc *) mfenc;
@@ -1076,5 +1076,6 @@ gst_mf_h264_enc_plugin_init (GstPlugin * plugin, guint rank,
 
   GST_DEBUG_CATEGORY_INIT (gst_mf_h264_enc_debug, "mfh264enc", 0, "mfh264enc");
 
-  gst_mf_video_enc_register (plugin, rank, &subtype, &type_info, d3d11_device);
+  gst_mf_video_encoder_register (plugin,
+      rank, &subtype, &type_info, d3d11_device);
 }

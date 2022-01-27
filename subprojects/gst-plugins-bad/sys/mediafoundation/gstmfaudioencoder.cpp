@@ -22,7 +22,7 @@
 #endif
 
 #include <gst/gst.h>
-#include "gstmfaudioenc.h"
+#include "gstmfaudioencoder.h"
 #include <wrl.h>
 #include <string.h>
 
@@ -30,53 +30,54 @@
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
-GST_DEBUG_CATEGORY (gst_mf_audio_enc_debug);
-#define GST_CAT_DEFAULT gst_mf_audio_enc_debug
+GST_DEBUG_CATEGORY (gst_mf_audio_encoder_debug);
+#define GST_CAT_DEFAULT gst_mf_audio_encoder_debug
 
-#define gst_mf_audio_enc_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstMFAudioEnc, gst_mf_audio_enc,
+#define gst_mf_audio_encoder_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstMFAudioEncoder, gst_mf_audio_encoder,
     GST_TYPE_AUDIO_ENCODER,
-    GST_DEBUG_CATEGORY_INIT (gst_mf_audio_enc_debug, "mfaudioenc", 0,
-        "mfaudioenc"));
+    GST_DEBUG_CATEGORY_INIT (gst_mf_audio_encoder_debug, "mfaudioencoder", 0,
+        "mfaudioencoder"));
 
-static gboolean gst_mf_audio_enc_open (GstAudioEncoder * enc);
-static gboolean gst_mf_audio_enc_close (GstAudioEncoder * enc);
-static gboolean gst_mf_audio_enc_set_format (GstAudioEncoder * enc,
+static gboolean gst_mf_audio_encoder_open (GstAudioEncoder * enc);
+static gboolean gst_mf_audio_encoder_close (GstAudioEncoder * enc);
+static gboolean gst_mf_audio_encoder_set_format (GstAudioEncoder * enc,
     GstAudioInfo * info);
-static GstFlowReturn gst_mf_audio_enc_handle_frame (GstAudioEncoder * enc,
+static GstFlowReturn gst_mf_audio_encoder_handle_frame (GstAudioEncoder * enc,
     GstBuffer * buffer);
-static GstFlowReturn gst_mf_audio_enc_drain (GstAudioEncoder * enc);
-static void gst_mf_audio_enc_flush (GstAudioEncoder * enc);
+static GstFlowReturn gst_mf_audio_encoder_drain (GstAudioEncoder * enc);
+static void gst_mf_audio_encoder_flush (GstAudioEncoder * enc);
 
 static void
-gst_mf_audio_enc_class_init (GstMFAudioEncClass * klass)
+gst_mf_audio_encoder_class_init (GstMFAudioEncoderClass * klass)
 {
   GstAudioEncoderClass *audioenc_class = GST_AUDIO_ENCODER_CLASS (klass);
 
-  audioenc_class->open = GST_DEBUG_FUNCPTR (gst_mf_audio_enc_open);
-  audioenc_class->close = GST_DEBUG_FUNCPTR (gst_mf_audio_enc_close);
-  audioenc_class->set_format = GST_DEBUG_FUNCPTR (gst_mf_audio_enc_set_format);
+  audioenc_class->open = GST_DEBUG_FUNCPTR (gst_mf_audio_encoder_open);
+  audioenc_class->close = GST_DEBUG_FUNCPTR (gst_mf_audio_encoder_close);
+  audioenc_class->set_format =
+      GST_DEBUG_FUNCPTR (gst_mf_audio_encoder_set_format);
   audioenc_class->handle_frame =
-      GST_DEBUG_FUNCPTR (gst_mf_audio_enc_handle_frame);
-  audioenc_class->flush = GST_DEBUG_FUNCPTR (gst_mf_audio_enc_flush);
+      GST_DEBUG_FUNCPTR (gst_mf_audio_encoder_handle_frame);
+  audioenc_class->flush = GST_DEBUG_FUNCPTR (gst_mf_audio_encoder_flush);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_MF_AUDIO_ENC, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_MF_AUDIO_ENCODER,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
-gst_mf_audio_enc_init (GstMFAudioEnc * self)
+gst_mf_audio_encoder_init (GstMFAudioEncoder * self)
 {
   gst_audio_encoder_set_drainable (GST_AUDIO_ENCODER (self), TRUE);
 }
 
 static gboolean
-gst_mf_audio_enc_open (GstAudioEncoder * enc)
+gst_mf_audio_encoder_open (GstAudioEncoder * enc)
 {
-  GstMFAudioEnc *self = GST_MF_AUDIO_ENC (enc);
-  GstMFAudioEncClass *klass = GST_MF_AUDIO_ENC_GET_CLASS (enc);
+  GstMFAudioEncoder *self = GST_MF_AUDIO_ENCODER (enc);
+  GstMFAudioEncoderClass *klass = GST_MF_AUDIO_ENCODER_GET_CLASS (enc);
   GstMFTransformEnumParams enum_params = { 0, };
   MFT_REGISTER_TYPE_INFO output_type;
-  gboolean ret;
 
   output_type.guidMajorType = MFMediaType_Audio;
   output_type.guidSubtype = klass->codec_id;
@@ -90,18 +91,18 @@ gst_mf_audio_enc_open (GstAudioEncoder * enc)
       klass->enum_flags, klass->device_index);
 
   self->transform = gst_mf_transform_new (&enum_params);
-  ret = !!self->transform;
-
-  if (!ret)
+  if (!self->transform) {
     GST_ERROR_OBJECT (self, "Cannot create MFT object");
+    return FALSE;
+  }
 
-  return ret;
+  return TRUE;
 }
 
 static gboolean
-gst_mf_audio_enc_close (GstAudioEncoder * enc)
+gst_mf_audio_encoder_close (GstAudioEncoder * enc)
 {
-  GstMFAudioEnc *self = GST_MF_AUDIO_ENC (enc);
+  GstMFAudioEncoder *self = GST_MF_AUDIO_ENCODER (enc);
 
   gst_clear_object (&self->transform);
 
@@ -109,16 +110,16 @@ gst_mf_audio_enc_close (GstAudioEncoder * enc)
 }
 
 static gboolean
-gst_mf_audio_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
+gst_mf_audio_encoder_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 {
-  GstMFAudioEnc *self = GST_MF_AUDIO_ENC (enc);
-  GstMFAudioEncClass *klass = GST_MF_AUDIO_ENC_GET_CLASS (enc);
+  GstMFAudioEncoder *self = GST_MF_AUDIO_ENCODER (enc);
+  GstMFAudioEncoderClass *klass = GST_MF_AUDIO_ENCODER_GET_CLASS (enc);
   ComPtr < IMFMediaType > in_type;
   ComPtr < IMFMediaType > out_type;
 
   GST_DEBUG_OBJECT (self, "Set format");
 
-  gst_mf_audio_enc_drain (enc);
+  gst_mf_audio_encoder_drain (enc);
 
   if (!gst_mf_transform_open (self->transform)) {
     GST_ERROR_OBJECT (self, "Failed to open MFT");
@@ -173,7 +174,8 @@ gst_mf_audio_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 }
 
 static gboolean
-gst_mf_audio_enc_process_input (GstMFAudioEnc * self, GstBuffer * buffer)
+gst_mf_audio_encoder_process_input (GstMFAudioEncoder * self,
+    GstBuffer * buffer)
 {
   HRESULT hr;
   ComPtr < IMFSample > sample;
@@ -240,9 +242,9 @@ done:
 }
 
 static GstFlowReturn
-gst_mf_audio_enc_process_output (GstMFAudioEnc * self)
+gst_mf_audio_encoder_process_output (GstMFAudioEncoder * self)
 {
-  GstMFAudioEncClass *klass = GST_MF_AUDIO_ENC_GET_CLASS (self);
+  GstMFAudioEncoderClass *klass = GST_MF_AUDIO_ENCODER_GET_CLASS (self);
   HRESULT hr;
   BYTE *data = nullptr;
   ComPtr < IMFMediaBuffer > media_buffer;
@@ -281,21 +283,21 @@ gst_mf_audio_enc_process_output (GstMFAudioEnc * self)
 }
 
 static GstFlowReturn
-gst_mf_audio_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
+gst_mf_audio_encoder_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 {
-  GstMFAudioEnc *self = GST_MF_AUDIO_ENC (enc);
+  GstMFAudioEncoder *self = GST_MF_AUDIO_ENCODER (enc);
   GstFlowReturn ret;
 
   if (!buffer)
-    return gst_mf_audio_enc_drain (enc);
+    return gst_mf_audio_encoder_drain (enc);
 
-  if (!gst_mf_audio_enc_process_input (self, buffer)) {
+  if (!gst_mf_audio_encoder_process_input (self, buffer)) {
     GST_ERROR_OBJECT (self, "Failed to process input");
     return GST_FLOW_ERROR;
   }
 
   do {
-    ret = gst_mf_audio_enc_process_output (self);
+    ret = gst_mf_audio_encoder_process_output (self);
   } while (ret == GST_FLOW_OK);
 
   if (ret == GST_MF_TRANSFORM_FLOW_NEED_DATA)
@@ -305,9 +307,9 @@ gst_mf_audio_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_mf_audio_enc_drain (GstAudioEncoder * enc)
+gst_mf_audio_encoder_drain (GstAudioEncoder * enc)
 {
-  GstMFAudioEnc *self = GST_MF_AUDIO_ENC (enc);
+  GstMFAudioEncoder *self = GST_MF_AUDIO_ENCODER (enc);
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (!self->transform)
@@ -316,7 +318,7 @@ gst_mf_audio_enc_drain (GstAudioEncoder * enc)
   gst_mf_transform_drain (self->transform);
 
   do {
-    ret = gst_mf_audio_enc_process_output (self);
+    ret = gst_mf_audio_encoder_process_output (self);
   } while (ret == GST_FLOW_OK);
 
   if (ret == GST_MF_TRANSFORM_FLOW_NEED_DATA)
@@ -326,9 +328,9 @@ gst_mf_audio_enc_drain (GstAudioEncoder * enc)
 }
 
 static void
-gst_mf_audio_enc_flush (GstAudioEncoder * enc)
+gst_mf_audio_encoder_flush (GstAudioEncoder * enc)
 {
-  GstMFAudioEnc *self = GST_MF_AUDIO_ENC (enc);
+  GstMFAudioEncoder *self = GST_MF_AUDIO_ENCODER (enc);
 
   if (!self->transform)
     return;

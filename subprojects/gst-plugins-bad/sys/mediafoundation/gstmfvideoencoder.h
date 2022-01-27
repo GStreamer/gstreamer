@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_MF_VIDEO_ENC_H__
-#define __GST_MF_VIDEO_ENC_H__
+#pragma once
 
 #include "gstmfconfig.h"
 
@@ -34,19 +33,19 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MF_VIDEO_ENC           (gst_mf_video_enc_get_type())
-#define GST_MF_VIDEO_ENC(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MF_VIDEO_ENC,GstMFVideoEnc))
-#define GST_MF_VIDEO_ENC_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_MF_VIDEO_ENC,GstMFVideoEncClass))
-#define GST_MF_VIDEO_ENC_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_MF_VIDEO_ENC,GstMFVideoEncClass))
-#define GST_IS_MF_VIDEO_ENC(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MF_VIDEO_ENC))
-#define GST_IS_MF_VIDEO_ENC_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_MF_VIDEO_ENC))
+#define GST_TYPE_MF_VIDEO_ENCODER           (gst_mf_video_encoder_get_type())
+#define GST_MF_VIDEO_ENCODER(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MF_VIDEO_ENCODER,GstMFVideoEncoder))
+#define GST_MF_VIDEO_ENCODER_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_MF_VIDEO_ENCODER,GstMFVideoEncoderClass))
+#define GST_MF_VIDEO_ENCODER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_MF_VIDEO_ENCODER,GstMFVideoEncoderClass))
+#define GST_IS_MF_VIDEO_ENCODER(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MF_VIDEO_ENCODER))
+#define GST_IS_MF_VIDEO_ENCODER_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_MF_VIDEO_ENCODER))
 
-typedef struct _GstMFVideoEnc GstMFVideoEnc;
-typedef struct _GstMFVideoEncClass GstMFVideoEncClass;
-typedef struct _GstMFVideoEncDeviceCaps GstMFVideoEncDeviceCaps;
-typedef struct _GstMFVideoEncClassData GstMFVideoEncClassData;
+typedef struct _GstMFVideoEncoder GstMFVideoEncoder;
+typedef struct _GstMFVideoEncoderClass GstMFVideoEncoderClass;
+typedef struct _GstMFVideoEncoderDeviceCaps GstMFVideoEncoderDeviceCaps;
+typedef struct _GstMFVideoEncoderClassData GstMFVideoEncoderClassData;
 
-struct _GstMFVideoEncDeviceCaps
+struct _GstMFVideoEncoderDeviceCaps
 {
   gboolean rc_mode; /* AVEncCommonRateControlMode */
   gboolean quality; /* AVEncCommonQuality */
@@ -79,18 +78,18 @@ struct _GstMFVideoEncDeviceCaps
   gint64 adapter_luid;
 };
 
-struct _GstMFVideoEncClassData
+struct _GstMFVideoEncoderClassData
 {
   GstCaps *sink_caps;
   GstCaps *src_caps;
   gchar *device_name;
   guint32 enum_flags;
   guint device_index;
-  GstMFVideoEncDeviceCaps device_caps;
+  GstMFVideoEncoderDeviceCaps device_caps;
   gboolean is_default;
 };
 
-struct _GstMFVideoEnc
+struct _GstMFVideoEncoder
 {
   GstVideoEncoder parent;
 
@@ -117,7 +116,7 @@ struct _GstMFVideoEnc
 #endif
 };
 
-struct _GstMFVideoEncClass
+struct _GstMFVideoEncoderClass
 {
   GstVideoEncoderClass parent_class;
 
@@ -125,25 +124,23 @@ struct _GstMFVideoEncClass
   GUID codec_id;      /* Output subtype of MFT */
   guint32 enum_flags; /* MFT_ENUM_FLAG */
   guint device_index; /* Index of enumerated IMFActivate via MFTEnum */
-  GstMFVideoEncDeviceCaps device_caps;
+  GstMFVideoEncoderDeviceCaps device_caps;
 
-  gboolean (*set_option)    (GstMFVideoEnc * mfenc,
+  gboolean (*set_option)    (GstMFVideoEncoder * encoder,
                              GstVideoCodecState * state,
                              IMFMediaType * output_type);
 
-  gboolean (*set_src_caps)  (GstMFVideoEnc * mfenc,
+  gboolean (*set_src_caps)  (GstMFVideoEncoder * encoder,
                              GstVideoCodecState * state,
                              IMFMediaType * output_type);
 };
 
-GType gst_mf_video_enc_get_type (void);
+GType gst_mf_video_encoder_get_type (void);
 
-void  gst_mf_video_enc_register (GstPlugin * plugin,
-                                 guint rank,
-                                 GUID * subtype,
-                                 GTypeInfo * type_info,
-                                 GList * d3d11_device);
+void  gst_mf_video_encoder_register (GstPlugin * plugin,
+                                     guint rank,
+                                     GUID * subtype,
+                                     GTypeInfo * type_info,
+                                     GList * d3d11_device);
 
 G_END_DECLS
-
-#endif /* __GST_MF_VIDEO_ENC_H__ */

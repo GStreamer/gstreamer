@@ -36,7 +36,7 @@
 
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
-#include "gstmfaudioenc.h"
+#include "gstmfaudioencoder.h"
 #include "gstmfaacenc.h"
 #include <wrl.h>
 #include <set>
@@ -60,7 +60,7 @@ enum
 
 typedef struct _GstMFAacEnc
 {
-  GstMFAudioEnc parent;
+  GstMFAudioEncoder parent;
 
   /* properties */
   guint bitrate;
@@ -68,7 +68,7 @@ typedef struct _GstMFAacEnc
 
 typedef struct _GstMFAacEncClass
 {
-  GstMFAudioEncClass parent_class;
+  GstMFAudioEncoderClass parent_class;
 
 } GstMFAacEncClass;
 
@@ -90,11 +90,11 @@ static void gst_mf_aac_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_mf_aac_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static gboolean gst_mf_aac_enc_get_output_type (GstMFAudioEnc * mfenc,
+static gboolean gst_mf_aac_enc_get_output_type (GstMFAudioEncoder * encoder,
     GstAudioInfo * info, IMFMediaType ** output_type);
-static gboolean gst_mf_aac_enc_get_input_type (GstMFAudioEnc * mfenc,
+static gboolean gst_mf_aac_enc_get_input_type (GstMFAudioEncoder * encoder,
     GstAudioInfo * info, IMFMediaType ** input_type);
-static gboolean gst_mf_aac_enc_set_src_caps (GstMFAudioEnc * mfenc,
+static gboolean gst_mf_aac_enc_set_src_caps (GstMFAudioEncoder * encoder,
     GstAudioInfo * info);
 
 static void
@@ -102,7 +102,7 @@ gst_mf_aac_enc_class_init (GstMFAacEncClass * klass, gpointer data)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstMFAudioEncClass *mfenc_class = GST_MF_AUDIO_ENC_CLASS (klass);
+  GstMFAudioEncoderClass *encoder_class = GST_MF_AUDIO_ENCODER_CLASS (klass);
   GstMFAacEncClassData *cdata = (GstMFAacEncClassData *) data;
   gchar *long_name;
   gchar *classification;
@@ -149,16 +149,16 @@ gst_mf_aac_enc_class_init (GstMFAacEncClass * klass, gpointer data)
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
           cdata->src_caps));
 
-  mfenc_class->get_output_type =
+  encoder_class->get_output_type =
       GST_DEBUG_FUNCPTR (gst_mf_aac_enc_get_output_type);
-  mfenc_class->get_input_type =
+  encoder_class->get_input_type =
       GST_DEBUG_FUNCPTR (gst_mf_aac_enc_get_input_type);
-  mfenc_class->set_src_caps = GST_DEBUG_FUNCPTR (gst_mf_aac_enc_set_src_caps);
+  encoder_class->set_src_caps = GST_DEBUG_FUNCPTR (gst_mf_aac_enc_set_src_caps);
 
-  mfenc_class->codec_id = MFAudioFormat_AAC;
-  mfenc_class->enum_flags = cdata->enum_flags;
-  mfenc_class->device_index = cdata->device_index;
-  mfenc_class->frame_samples = 1024;
+  encoder_class->codec_id = MFAudioFormat_AAC;
+  encoder_class->enum_flags = cdata->enum_flags;
+  encoder_class->device_index = cdata->device_index;
+  encoder_class->frame_samples = 1024;
 
   g_free (cdata->device_name);
   gst_caps_unref (cdata->sink_caps);
@@ -205,11 +205,11 @@ gst_mf_aac_enc_set_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_mf_aac_enc_get_output_type (GstMFAudioEnc * mfenc, GstAudioInfo * info,
-    IMFMediaType ** output_type)
+gst_mf_aac_enc_get_output_type (GstMFAudioEncoder * encoder,
+    GstAudioInfo * info, IMFMediaType ** output_type)
 {
-  GstMFAacEnc *self = (GstMFAacEnc *) mfenc;
-  GstMFTransform *transform = mfenc->transform;
+  GstMFAacEnc *self = (GstMFAacEnc *) encoder;
+  GstMFTransform *transform = encoder->transform;
   GList *output_list = nullptr;
   GList *iter;
   ComPtr < IMFMediaType > target_output;
@@ -355,11 +355,11 @@ gst_mf_aac_enc_get_output_type (GstMFAudioEnc * mfenc, GstAudioInfo * info,
 }
 
 static gboolean
-gst_mf_aac_enc_get_input_type (GstMFAudioEnc * mfenc, GstAudioInfo * info,
+gst_mf_aac_enc_get_input_type (GstMFAudioEncoder * encoder, GstAudioInfo * info,
     IMFMediaType ** input_type)
 {
-  GstMFAacEnc *self = (GstMFAacEnc *) mfenc;
-  GstMFTransform *transform = mfenc->transform;
+  GstMFAacEnc *self = (GstMFAacEnc *) encoder;
+  GstMFTransform *transform = encoder->transform;
   GList *input_list = nullptr;
   GList *iter;
   ComPtr < IMFMediaType > target_input;
@@ -432,9 +432,9 @@ gst_mf_aac_enc_get_input_type (GstMFAudioEnc * mfenc, GstAudioInfo * info,
 }
 
 static gboolean
-gst_mf_aac_enc_set_src_caps (GstMFAudioEnc * mfenc, GstAudioInfo * info)
+gst_mf_aac_enc_set_src_caps (GstMFAudioEncoder * encoder, GstAudioInfo * info)
 {
-  GstMFAacEnc *self = (GstMFAacEnc *) mfenc;
+  GstMFAacEnc *self = (GstMFAacEnc *) encoder;
   HRESULT hr;
   GstCaps *src_caps;
   GstBuffer *codec_data;
@@ -444,7 +444,7 @@ gst_mf_aac_enc_set_src_caps (GstMFAudioEnc * mfenc, GstAudioInfo * info)
   ComPtr < IMFMediaType > output_type;
   static const guint config_data_offset = 12;
 
-  if (!gst_mf_transform_get_output_current_type (mfenc->transform,
+  if (!gst_mf_transform_get_output_current_type (encoder->transform,
           &output_type)) {
     GST_ERROR_OBJECT (self, "Couldn't get current output type");
     return FALSE;
@@ -546,7 +546,7 @@ gst_mf_aac_enc_register (GstPlugin * plugin, guint rank,
   }
 
   type =
-      g_type_register_static (GST_TYPE_MF_AUDIO_ENC, type_name, &type_info,
+      g_type_register_static (GST_TYPE_MF_AUDIO_ENCODER, type_name, &type_info,
       (GTypeFlags) 0);
 
   /* make lower rank than default device */

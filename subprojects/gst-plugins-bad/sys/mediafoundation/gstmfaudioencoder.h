@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_MF_AUDIO_ENC_H__
-#define __GST_MF_AUDIO_ENC_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
@@ -27,17 +26,17 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MF_AUDIO_ENC           (gst_mf_audio_enc_get_type())
-#define GST_MF_AUDIO_ENC(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MF_AUDIO_ENC,GstMFAudioEnc))
-#define GST_MF_AUDIO_ENC_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_MF_AUDIO_ENC,GstMFAudioEncClass))
-#define GST_MF_AUDIO_ENC_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_MF_AUDIO_ENC,GstMFAudioEncClass))
-#define GST_IS_MF_AUDIO_ENC(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MF_AUDIO_ENC))
-#define GST_IS_MF_AUDIO_ENC_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_MF_AUDIO_ENC))
+#define GST_TYPE_MF_AUDIO_ENCODER           (gst_mf_audio_encoder_get_type())
+#define GST_MF_AUDIO_ENCODER(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MF_AUDIO_ENCODER,GstMFAudioEncoder))
+#define GST_MF_AUDIO_ENCODER_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_MF_AUDIO_ENCODER,GstMFAudioEncoderClass))
+#define GST_MF_AUDIO_ENCODER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_MF_AUDIO_ENCODER,GstMFAudioEncoderClass))
+#define GST_IS_MF_AUDIO_ENCODER(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MF_AUDIO_ENCODER))
+#define GST_IS_MF_AUDIO_ENCODER_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_MF_AUDIO_ENCODER))
 
-typedef struct _GstMFAudioEnc GstMFAudioEnc;
-typedef struct _GstMFAudioEncClass GstMFAudioEncClass;
+typedef struct _GstMFAudioEncoder GstMFAudioEncoder;
+typedef struct _GstMFAudioEncoderClass GstMFAudioEncoderClass;
 
-struct _GstMFAudioEnc
+struct _GstMFAudioEncoder
 {
   GstAudioEncoder parent;
 
@@ -46,7 +45,7 @@ struct _GstMFAudioEnc
   guint64 sample_count;
 };
 
-struct _GstMFAudioEncClass
+struct _GstMFAudioEncoderClass
 {
   GstAudioEncoderClass parent_class;
 
@@ -55,20 +54,19 @@ struct _GstMFAudioEncClass
   guint device_index;
   gint frame_samples;
 
-  gboolean (*get_output_type) (GstMFAudioEnc * mfenc,
+  gboolean (*get_output_type) (GstMFAudioEncoder * encoder,
                                GstAudioInfo * info,
                                IMFMediaType ** output_type);
 
-  gboolean (*get_input_type)  (GstMFAudioEnc * mfenc,
+  gboolean (*get_input_type)  (GstMFAudioEncoder * encoder,
                                GstAudioInfo * info,
                                IMFMediaType ** input_type);
 
-  gboolean (*set_src_caps)    (GstMFAudioEnc * mfenc,
+  gboolean (*set_src_caps)    (GstMFAudioEncoder * encoder,
                                GstAudioInfo * info);
 };
 
-GType gst_mf_audio_enc_get_type (void);
+GType gst_mf_audio_encoder_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_MF_AUDIO_ENC_H__ */
