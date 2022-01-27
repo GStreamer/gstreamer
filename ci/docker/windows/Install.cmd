@@ -25,8 +25,11 @@ if "%ERRORLEVEL%"=="3010" (
 ) else (
     if not "%ERRORLEVEL%"=="0" (
         set ERR=%ERRORLEVEL%
-        call C:\TEMP\collect.exe -zip:C:\vslogs.zip
-
+        if "%CI_PROJECT_PATH%"=="" (
+                call C:\TEMP\collect.exe -zip:C:\vslogs.zip
+        ) else (
+                call C:\TEMP\collect.exe -zip:%CI_PROJECT_PATH%\vslogs.zip
+        )
         exit /b !ERR!
     )
 )

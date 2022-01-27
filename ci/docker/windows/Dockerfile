@@ -25,17 +25,24 @@ RUN c:\msys64\usr\bin\bash -lc 'pacman -S --noconfirm mingw-w64-ucrt-x86_64-tool
 COPY Install.cmd C:\TEMP\
 ADD https://aka.ms/vscollect.exe C:\TEMP\collect.exe
 # Download channel for fixed install.
-ARG CHANNEL_URL=https://aka.ms/vs/15/release/channel
+ARG CHANNEL_URL=https://aka.ms/vs/16/release/channel
 ADD ${CHANNEL_URL} C:\TEMP\VisualStudio.chman
 # Download and install Build Tools for Visual Studio 2017 for native desktop workload.
-ADD https://aka.ms/vs/15/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
+ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 RUN C:\TEMP\Install.cmd C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
     --channelUri C:\TEMP\VisualStudio.chman `
     --installChannelUri C:\TEMP\VisualStudio.chman `
-    --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended`
+    --add Microsoft.VisualStudio.Workload.VCTools `
+    --add Microsoft.VisualStudio.Workload.UniversalBuildTools `
+    --add Microsoft.VisualStudio.Component.VC.Tools.ARM64 `
+    --add Microsoft.VisualStudio.Component.VC.Tools.ARM `
+    --add Microsoft.VisualStudio.Component.UWP.VC.ARM64 `
+    --includeRecommended `
     --installPath C:\BuildTools
 
 RUN Get-ChildItem C:\BuildTools
+RUN Get-ChildItem C:\BuildTools\VC\Tools\MSVC
+RUN Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\lib'
 
 RUN pip3 install meson
 

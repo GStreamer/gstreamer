@@ -27,7 +27,7 @@ variables:
   ###
   FEDORA_TAG:  '2021-12-03.1'
   INDENT_TAG: '2021-10-04.0'
-  WINDOWS_TAG: "2021-10-12.0"
+  WINDOWS_TAG: "2022-01-26.3"
 
   GST_UPSTREAM_REPO: 'gstreamer/gstreamer'
   FDO_UPSTREAM_REPO: 'gstreamer/gstreamer'
@@ -388,6 +388,9 @@ build clang fedora x86_64:
       -Dvaapi=disabled
       -Dgst-plugins-base:pango=enabled
       -Dgst-plugins-good:cairo=enabled
+    # Needs to not be empty otherwise the newline -> space replace command in
+    # `script:` will fail
+    MESON_CROSS_ARGS: ' '
   rules:
     # If this matches, it means the pipeline is running against either the main
     # or a stable branch, so make it manual
@@ -400,8 +403,9 @@ build clang fedora x86_64:
     # For some reason, options are separated by newline instead of space, so we
     # have to replace them first.
     - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
+    - $env:MESON_CROSS_ARGS = $env:MESON_CROSS_ARGS.replace("`n"," ")
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
-        meson build $env:MESON_ARGS &&
+        meson build $env:MESON_ARGS $env:MESON_CROSS_ARGS &&
         ninja -C build"
   # XXX: Re-enable when uploading stops timing out
   #artifacts:
@@ -409,16 +413,30 @@ build clang fedora x86_64:
   #  when: "always"
   #  paths:
   #    - 'build/meson-logs/'
+  #    - 'vslogs.zip'
 
-build vs2017 amd64:
+build vs2019 amd64:
   extends: '.build windows'
   variables:
     ARCH: 'amd64'
 
-build vs2017 x86:
+build vs2019 x86:
   extends: '.build windows'
   variables:
     ARCH: 'x86'
+
+build vs2019 arm64 uwp:
+  extends: '.build windows'
+  variables:
+    ARCH: 'arm64'
+    # pango pulls in cairo which pulls in pixman which doesn't build because of
+    # https://github.com/mesonbuild/meson/issues/9889
+    MESON_CROSS_ARGS: >
+      -Dgst-plugins-base:pango=disabled
+      -Dgst-plugins-good:cairo=disabled
+      -Dgst-devtools:cairo=disabled
+      --cross-file ci/meson/vs2019-arm64-cross-file.txt
+      --native-file ci/meson/vs2019-x64-native-file.txt
 
 build msys2 :
   extends: '.build windows'
