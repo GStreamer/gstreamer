@@ -858,6 +858,8 @@ gst_rtp_header_extension_create_from_uri (const gchar * uri)
 
     g_list_free_full (l, (GDestroyNotify) gst_object_unref);
 
+    gst_object_ref_sink (element);
+
     return GST_RTP_HEADER_EXTENSION (element);
   }
 
