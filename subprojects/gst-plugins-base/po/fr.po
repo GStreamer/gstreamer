@@ -4,14 +4,14 @@
 #
 # Nicolas Velin <nicolas@velin.fr>, 2008.
 # Claude Paroz <claude@2xlibre.net>, 2008-2011.
-# Stéphane Aulery <lkppo@free.fr>, 2015-2016, 2019.
+# Stéphane Aulery <lkppo@free.fr>, 2015-2016, 2019, 2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.16.0\n"
+"Project-Id-Version: gst-plugins-base 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2019-09-03 20:19+0200\n"
+"POT-Creation-Date: 2021-09-23 01:33+0100\n"
+"PO-Revision-Date: 2021-11-21 00:53+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -405,17 +405,14 @@ msgstr "identifiant d’artiste de l’album MusicBrainz"
 msgid "release group ID"
 msgstr ""
 
-#, fuzzy
 msgid "MusicBrainz release group ID"
-msgstr "identifiant de piste MusicBrainz"
+msgstr "identifiant de groupe de publication MusicBrainz"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "identifiant de piste"
+msgstr "identifiant de piste publié"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "identifiant de piste MusicBrainz"
+msgstr "identifiant de piste publié MusicBrainz"
 
 msgid "track TRM ID"
 msgstr "identifiant TRM de piste"

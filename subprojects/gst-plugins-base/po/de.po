@@ -1,4 +1,4 @@
-# German messages for gst-plugins-base 1.15.1
+# German messages for gst-plugins-base 1.19.2
 # Copyright © 2006 Karl Eichwalder
 # This file is distributed under the same license as the gst-plugins-base package.
 # Karl Eichwalder <ke@suse.de>, 2006.
@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.16.0\n"
+"Project-Id-Version: gst-plugins-base 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2019-09-08 12:27+0200\n"
+"POT-Creation-Date: 2021-09-23 01:33+0100\n"
+"PO-Revision-Date: 2021-11-06 23:14+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.2.1\n"
+"X-Generator: Poedit 3.0\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Gerät konnte nicht zur Wiedergabe in Mono geöffnet werden."
@@ -396,19 +396,17 @@ msgid "MusicBrainz album artist ID"
 msgstr "Kennung des Albenkünstlers von MusicBrainz"
 
 msgid "release group ID"
-msgstr ""
+msgstr "Veröffentlichungsgruppen-Kennung"
 
-#, fuzzy
+# https://www.wikidata.org/wiki/Property:P436
 msgid "MusicBrainz release group ID"
-msgstr "Titelkennung von MusicBrainz"
+msgstr "MusicBrainz Veröffentlichungsgruppen-Kennung"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "Titelkennung"
+msgstr "Veröffentlichungs-Titelkennung"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "Titelkennung von MusicBrainz"
+msgstr "MusicBrainz Veröffentlichungs-Titelkennung"
 
 msgid "track TRM ID"
 msgstr "TRM-Kennung verfolgen"
@@ -417,10 +415,10 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz-TRM-Kennung"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "AcoustID-Kennung"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "Fingerabdruck der AcoustID (Farbton-Abdruck)"
 
 msgid "capturing shutter speed"
 msgstr "Belichtungszeit"
@@ -578,17 +576,17 @@ msgstr ""
 "das Hinzufügen/Entfernen von Geräten warten."
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "Geräte von verborgenen Geräteanbietern einschließen."
 
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Lautstärke: %.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "Stumm: Ein"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "Stumm. Aus"
 
 msgid "Buffering..."
 msgstr "Zwischenspeichern …"
@@ -655,7 +653,7 @@ msgid "volume down"
 msgstr "Leiser"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "Ton ein-/ausschalten"
 
 msgid "increase playback rate"
 msgstr "Schneller wiedergeben"
@@ -712,13 +710,15 @@ msgid "Volume"
 msgstr "Lautstärke"
 
 msgid "Start position in seconds."
-msgstr ""
+msgstr "Startposition in Sekunden."
 
 msgid "Playlist file containing input media files"
 msgstr "Datei mit Wiedergabeliste enthält Eingabe-Mediendateien"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
+"Die experimentelle Markierung zur Sofort-Geschwindigkeitsänderung verwenden "
+"bei Geschwindigkeitsänderung"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Nichts ausgeben (außer Fehlermeldungen)"

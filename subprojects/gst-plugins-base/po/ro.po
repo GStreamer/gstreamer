@@ -1,15 +1,19 @@
 # Romanian translation for gst-plugins-base
 # This file is distributed under the same license as the gst-plugins-base package.
+#
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
+# Actualizare a mesajelor, de la fișierul „gst-plugins-base-1.19.2.pot”.
+# Eliminare a mesajelor ce-au dispărut în ultima versiune.
+# Actualizări realizate de Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 15.01.2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.16.0\n"
+"Project-Id-Version: gst-plugins-base 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2020-06-24 10:28+0300\n"
-"Last-Translator: Florentina Mușat <florentina.musat.28@gmail.com>\n"
+"POT-Creation-Date: 2021-09-23 01:33+0100\n"
+"PO-Revision-Date: 2022-01-21 01:00+0100\n"
+"Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
@@ -114,8 +118,11 @@ msgstr "Nu funcționează atât elementul autovideosink cât și %s."
 msgid "The autovideosink element is not working."
 msgstr "Elementul autovideosink nu funcționează."
 
+# R-GC, scrie:
+# modificat de la:
+# „Elementul sink de text personalizat nu este utilizabil.”
 msgid "Custom text sink element is not usable."
-msgstr "Elementul sink de text personalizat nu este utilizabil."
+msgstr "Elementul de colectare a textului personalizat nu este utilizabil."
 
 msgid "No volume control found"
 msgstr "Nu s-a găsit niciun control de volum"
@@ -146,18 +153,21 @@ msgid "No decoder available for type '%s'."
 msgstr "Niciun decodor disponibil pentru tipul „%s”."
 
 msgid "No URI specified to play from."
-msgstr "Nu s-a specificat URI pentru redare."
+msgstr "Nu s-a specificat URI-ul pentru redare."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "URI „%s” nevalid."
+msgstr "URI-ul „%s” este nevalid."
 
 msgid "This stream type cannot be played yet."
 msgstr "Acest tip de flux nu poate fi redat încă."
 
+# R-GC, scrie:
+# modificat de la:
+# „Nicio rutină de tratare de URI implementată pentru „%s”.”
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Nicio rutină de tratare de URI implementată pentru „%s”."
+msgstr "Nu a fost implementată nicio rutină de tratare a URI-ului pentru „%s”."
 
 msgid "Source element is invalid."
 msgstr "Element sursă nevalid."
@@ -179,7 +189,7 @@ msgid "A GL error occurred"
 msgstr "A apărut o eroare GL"
 
 msgid "format wasn't negotiated before get function"
-msgstr "formatul nu a fost negociat înainte de funcția get"
+msgstr "formatul nu a fost negociat înainte de funcția «get»"
 
 msgid "ID3 tag"
 msgstr "Etichetă ID3"
@@ -214,9 +224,12 @@ msgstr "MSZH fără pierdere"
 msgid "Run-length encoding"
 msgstr "Codarea run-length"
 
+# R-GC, scrie:
+# modificat de la:
+# „Text contra cronometru”
 #. subtitle formats with static descriptions
 msgid "Timed Text"
-msgstr "Text contra cronometru"
+msgstr "Text temporizat"
 
 #. FIXME: add variant field to typefinder?
 msgid "Subtitle"
@@ -282,9 +295,18 @@ msgstr "DivX MPEG-4 versiunea %d"
 msgid "Uncompressed audio"
 msgstr "Audio necomprimat"
 
+# R-GC, scrie:
+# modificat de la:
+# „Audio %d-bit %s raw”
+# Sugestie din partea lui DȘ:
+# Aici poți să spui: „Sunet %d-bit brut %s” (sunetul brut este neprelucrat)
+# Am preluat doar partea cu „neprelucrat” în loc de „nefiltrat”
+# Audio = sunete, cîntece/melodii, zgomote
+# precum
+# Software = exemple/fragmente de cod, scripturi, biblioteci, aplicații, programe
 #, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Audio %d-bit %s raw"
+msgstr "Audio %d-bit brut(neprelucrat) %s"
 
 msgid "Audio CD source"
 msgstr "Sursă CD audio"
@@ -305,41 +327,50 @@ msgstr "Sursă protocol Microsoft Media Server (MMS)"
 msgid "%s protocol source"
 msgstr "Sursă protocol %s"
 
+# R-GC, scrie:
+# modificare de la:
+# „depayloader RTP video %s”
 #, c-format
 msgid "%s video RTP depayloader"
-msgstr "depayloader RTP video %s"
+msgstr "program de încărcare RTP video %s"
 
 #, c-format
 msgid "%s audio RTP depayloader"
-msgstr "depayloader RTP audio %s"
+msgstr "program de încărcare RTP audio %s"
 
 #, c-format
 msgid "%s RTP depayloader"
-msgstr "depayloader RTP %s"
+msgstr "program de încărcare RTP %s"
 
+# R-GC, scrie:
+# modificat de la:
+# „Demuxer %s”
 #, c-format
 msgid "%s demuxer"
-msgstr "Demuxer %s"
+msgstr "demultiplexor %s"
 
+# R-GC, scrie:
+# modifica de la:
+# „Decoder %s”
 #, c-format
 msgid "%s decoder"
-msgstr "Decoder %s"
+msgstr "decodificator %s"
 
 #, c-format
 msgid "%s video RTP payloader"
-msgstr "payloader RTP video %s"
+msgstr "codificator RTP video %s"
 
 #, c-format
 msgid "%s audio RTP payloader"
-msgstr "payloader RTP audio %s"
+msgstr "codificator RTP audio %s"
 
 #, c-format
 msgid "%s RTP payloader"
-msgstr "payloader RTP %s"
+msgstr "codificator RTP %s"
 
 #, c-format
 msgid "%s muxer"
-msgstr "Muxer %s"
+msgstr "multiplexor %s"
 
 #, c-format
 msgid "%s encoder"
@@ -353,16 +384,16 @@ msgid "Unknown source element"
 msgstr "Element sursă necunoscut"
 
 msgid "Unknown sink element"
-msgstr "Element sink necunoscut"
+msgstr "Element de colectare necunoscut"
 
 msgid "Unknown element"
 msgstr "Element necunoscut"
 
 msgid "Unknown decoder element"
-msgstr "Element decodor necunoscut"
+msgstr "Element de decodare necunoscut"
 
 msgid "Unknown encoder element"
-msgstr "Element codor necunoscut"
+msgstr "Element de codare necunoscut"
 
 #. we should really never get here, but we better still return
 #. * something if we do
@@ -397,19 +428,16 @@ msgid "MusicBrainz album artist ID"
 msgstr "ID album artist MusicBrainz"
 
 msgid "release group ID"
-msgstr ""
+msgstr "ID lansare grup"
 
-#, fuzzy
 msgid "MusicBrainz release group ID"
-msgstr "ID pistă MusicBrainz"
+msgstr "ID lansare grup MusicBrainz"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "ID pistă"
+msgstr "ID lansare pistă"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "ID pistă MusicBrainz"
+msgstr "ID lansare pistă MusicBrainz"
 
 msgid "track TRM ID"
 msgstr "ID TRM pistă"
@@ -418,23 +446,23 @@ msgid "MusicBrainz TRM ID"
 msgstr "ID TRM MusicBrainz"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "AcoustID ID"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "Amprentă digitală AcoustID (chromaprint)"
 
 msgid "capturing shutter speed"
 msgstr "viteza obturatorului de capturare"
 
 msgid "Shutter speed used when capturing an image, in seconds"
 msgstr ""
-"Viteza obturatorului de utilizat când se capturează o imagine, în secunde"
+"Viteza obturatorului utilizată când se capturează o imagine, în secunde"
 
 msgid "capturing focal ratio"
 msgstr "proporția focală de capturare"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Proporția focală (f-număr) de utilizat când se capturează imaginea"
+msgstr "Proporția focală (f-număr) utilizată când se capturează imaginea"
 
 msgid "capturing focal length"
 msgstr "lungimea focală de capturare"
@@ -491,7 +519,7 @@ msgid "capturing gain adjustment"
 msgstr "ajustare de creștere de capturare"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr "Ajustarea creșterii per total aplicată la o imagine"
+msgstr "Ajustarea câștigului global aplicat unei imagini"
 
 msgid "capturing white balance"
 msgstr "balanță de alb de capturare"
@@ -531,12 +559,12 @@ msgid "The selected flash mode while capturing an image"
 msgstr "Modul de bliț selectat când se capturează o imagine"
 
 msgid "capturing metering mode"
-msgstr "modul de contorizare de capturare"
+msgstr "modul de măsurare de capturare"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
-"Modul de contorizare utilizat când se determină expunerea pentru capturarea "
+"Modul de măsurare utilizat când se determină expunerea pentru capturarea "
 "unei imagini"
 
 msgid "capturing source"
@@ -545,26 +573,30 @@ msgstr "sursă de capturare"
 msgid "The source or type of device used for the capture"
 msgstr "Sursa sau tipul de dispozitiv utilizat pentru captură"
 
+# R-GC, scrie:
+# modificat de la:
+# „ppi orizontal de imagine”
 msgid "image horizontal ppi"
-msgstr "ppi orizontal de imagine"
+msgstr "imagine orizontală în ppi(pixel per inch)"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr ""
-"Densitate de pixel orizontală intenționată pentru media (imagine/video) în "
-"ppi"
+"Densitatea de pixeli orizontală intenționată pentru media (imagine/video) în "
+"ppi(pixel per inch)"
 
 msgid "image vertical ppi"
-msgstr "ppi vertical de imagine"
+msgstr "imagine verticală în ppi(pixel per inch)"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
-"Densitate de pixel verticală intenționată pentru media (imagine/video) în ppi"
+"Densitatea de pixeli verticală intenționată pentru media (imagine/video) în "
+"ppi(pixel per inch)"
 
 msgid "ID3v2 frame"
 msgstr "Cadru ID3v2"
 
 msgid "unparsed id3v2 tag frame"
-msgstr "cadrul de etichetă id3v2 neparsat"
+msgstr "cadru de etichetă id3v2 neanalizat"
 
 msgid "musical-key"
 msgstr "cheie-muzicală"
@@ -573,27 +605,31 @@ msgid "Initial key in which the sound starts"
 msgstr "Cheia inițiază în care începe sunetul"
 
 msgid "Print version information and exit"
-msgstr "Tipărește informațiile de versiune și ieși"
+msgstr "Imprimă informațiile de versiune și iese"
 
+# R-GC, scrie:
+# s-a modificat de la:
+# „Nu se ieși după arătarea listei de dispozitive inițială, dar așteaptă pentru ca dispozitivele să fie adăugate/eliminate.”
+# Cred că sună și descrie mai bine acțiunea :)
 msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
-"Nu ieși după arătarea listei de dispozitive inițială, dar așteaptă pentru ca "
-"dispozitivele să fie adăugate/eliminate."
+"Nu se iese după arătarea listei de dispozitive inițială, ci se așteaptă "
+"pentru ca dispozitivele să fie adăugate/eliminate."
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "Adăugați dispozitive de la furnizorii de dispozitive ascunși."
 
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Volumul: %.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "Fără sunet: activat"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "Fără sunet: dezactivat"
 
 msgid "Buffering..."
 msgstr "Se preîncarcă..."
@@ -615,19 +651,33 @@ msgstr "Acum se redă %s\n"
 msgid "About to finish, preparing next title: %s"
 msgstr "Este pe cale să se termine, se pregătește următorul titlu: %s"
 
+# R-GC, scrie:
+# modificat de la:
+# „Rata de redare: %.2f”
+# la:
+# „Viteza de redare: %.2f”
+# știu că rate = rata(ă)
+# dar se referă la viteza de redare...
+# Așa că, poate cel mai corect ar fi fost:
+# Rata vitezei de redare: %.2f
+# Și așa rămâne...
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr "Rată de redare: %.2f"
+msgstr "Rata vitezei de redare: %.2f"
 
 #, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "Nu s-a putut schimba rata de redare la %.2f"
+msgstr "Nu s-a putut schimba rata vitezei de redare la %.2f"
 
 msgid "space"
 msgstr "spațiu"
 
+# R-GC, scrie:
+# modificat de la:
+# „pauzat/nepauzat”
+# Sună cam forțat, nu?
 msgid "pause/unpause"
-msgstr "pauzat/nepauzat"
+msgstr "pauză/redare"
 
 msgid "q or ESC"
 msgstr "q sau ESC"
@@ -660,19 +710,19 @@ msgid "volume down"
 msgstr "volum mai jos"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "comută între „cu sunet/fără sunet”"
 
 msgid "increase playback rate"
-msgstr "crește rata de redare"
+msgstr "crește rata vitezei de redare"
 
 msgid "decrease playback rate"
-msgstr "descrește rata de redare"
+msgstr "descrește rata vitezei de redare"
 
 msgid "change playback direction"
-msgstr "modifică direcția de redare"
+msgstr "schimbă direcția de redare"
 
 msgid "enable/disable trick modes"
-msgstr "activează/dezactivează modurile de truc"
+msgstr "activează/dezactivează sugestiile"
 
 msgid "change audio track"
 msgstr "modifică pista audio"
@@ -693,7 +743,7 @@ msgid "Interactive mode - keyboard controls:"
 msgstr "Mod interactiv - controale de tastatură:"
 
 msgid "Output status information and property notifications"
-msgstr "Produce informații de stare și înștiințări de proprietate"
+msgstr "Afișează informații de stare și înștiințări de proprietate"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
@@ -701,10 +751,10 @@ msgstr ""
 "„fanioane” ale playbin"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr "Sink video de utilizat (implicit este autovideosink)"
+msgstr "Colectarea video ce se utilizează (predefinită este autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr "Sink audio de utilizat (implicit este autoaudiosink)"
+msgstr "Colectarea audio ce se utilizează (predefinită este autoaudiosink)"
 
 msgid "Enable gapless playback"
 msgstr "Activează redarea fără întreruperi"
@@ -719,29 +769,33 @@ msgid "Volume"
 msgstr "Volum"
 
 msgid "Start position in seconds."
-msgstr ""
+msgstr "Poziția de start în secunde."
 
 msgid "Playlist file containing input media files"
-msgstr "Fișierul listei de redare care conține fișiere media de intrare"
+msgstr "Fișierul listei de redare care conține fișierele media de intrare"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
+"Se utilizează indicatorul experimental de schimbare instantanee a ratei "
+"vitezei atunci când se schimbă rata vitezei"
 
 msgid "Do not print any output (apart from errors)"
-msgstr "Nu tipări nicio ieșire (în afară de erori)"
+msgstr "Nu imprimă nicio ieșire (în afară de erori)"
 
 msgid "Use playbin3 pipeline"
 msgstr "Utilizează linia de conexiune playbin3"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
-msgstr "(implicitul variază în funcție de variabila de mediu „USE_PLAYBIN”)"
+msgstr ""
+"(valoarea predefinită variază în funcție de variabila de mediu „USE_PLAYBIN”)"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
 "(gapless is ignored)"
 msgstr ""
-"Continuă să arăți ultimul cadru pe EOS până la ieșire sau până la comanda de "
-"schimbare a listei de redare (fără întreruperi este ignorat)"
+"Se continuă afișarea ultimului cadru pe EOS până se iese sau până se "
+"primește comanda de schimbare a listei de redare (fără întreruperi este "
+"ignorat)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -752,144 +806,3 @@ msgstr "Trebuie să furnizați cel puțin un nume de fișier sau URI de redat."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Apăsați „k” pentru a vedea o listă de scurtături de tastatură.\n"
-
-#~ msgid "Master"
-#~ msgstr "Principal"
-
-#~ msgid "Bass"
-#~ msgstr "Bas"
-
-#~ msgid "Treble"
-#~ msgstr "Înalte"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Synth"
-#~ msgstr "Synth"
-
-#~ msgid "Line-in"
-#~ msgstr "Linie intrare"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Microphone"
-#~ msgstr "Microfon"
-
-#~ msgid "PC Speaker"
-#~ msgstr "Difuzor PC"
-
-#~ msgid "Playback"
-#~ msgstr "Redare"
-
-#~ msgid "Capture"
-#~ msgstr "Captură"
-
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Nu s-a putut deschide fișierul vsf „%s\" pentru scriere: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "Niciun nume de fișier dat."
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Nu s-a putut închide fișierul vsf „%s\"."
-
-#~ msgid "Error while writing to file \"%s\"."
-#~ msgstr "Eroare la scrierea fișierului „%s\"."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Eroare internă a fluxului de date."
-
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "Un modul de extensie %s este necesar pentru a reda acest flux, dar acesta "
-#~ "nu este instalat."
-
-#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-#~ msgstr "URI subtitrare „%s” nevalid, subtitrare dezactivată."
-
-#~ msgid "RTSP streams cannot be played yet."
-#~ msgstr "Fluxurile RTSP nu pot fi redate încă."
-
-#~ msgid ""
-#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
-#~ "file or some other type of text file, or the media file was not "
-#~ "recognized."
-#~ msgstr ""
-#~ "A fost detectat doar un flux pentru subtitrare. Fie încărcați un fișier "
-#~ "de subtitrare sau un alt tip de fișier text, sau fișierul nu a fost "
-#~ "recunoscut."
-
-#~ msgid ""
-#~ "You do not have a decoder installed to handle this file. You might need "
-#~ "to install the necessary plugins."
-#~ msgstr ""
-#~ "Nu există instalat un decodor pentru deschiderea acestui fișier. Probabil "
-#~ "trebuie să instalați modulele de extensie necesare."
-
-#~ msgid "This is not a media file"
-#~ msgstr "Acesta nu este un fișier media"
-
-#~ msgid "A subtitle stream was detected, but no video stream."
-#~ msgstr "A fost detectat un flux de subtitrare, dar nu există flux video."
-
-#~ msgid "Both autovideosink and xvimagesink elements are missing."
-#~ msgstr "Lipsesc ambele elemente autovideosink și xvimagesink."
-
-#~ msgid "Both autoaudiosink and alsasink elements are missing."
-#~ msgstr "Lipsesc ambele elemente autoaudiosink și alsasink."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Eroare la trimiterea antetului gdp către „%s:%d”."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Eroare la trimiterea conținutului gdp către „%s:%d”."
-
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Conexiunea la %s:%d a fost refuzată."
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Planar necomprimat YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Pachet necomprimat YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Pachet necomprimat YVU 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Pachet necomprimat YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Pachet necomprimat YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Planar necomprimat YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Planar necomprimat YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Plan-Y alb și negru necomprimat"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "PCM audio brut"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Audio în virgulă mobilă brut la %d biți"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Audio în virgulă mobilă brut"
-
-#~ msgid "No device specified."
-#~ msgstr "Nu s-a specificat niciun dispozitiv."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Dispozitivul „%s” nu există."
-
-#~ msgid "Device \"%s\" is already being used."
-#~ msgstr "Dispozitivul „%s” este deja folosit."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Nu s-a putut deschide dispozitivul „%s” pentru citire și scriere."
