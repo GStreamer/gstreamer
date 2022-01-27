@@ -2160,6 +2160,21 @@ gst_va_vpp_colorbalance_list_channels (GstColorBalance * balance)
   return self->channels;
 }
 
+/* This assumes --as happens with intel drivers-- that max values are
+ * bigger than the simmetrical values of min values */
+static float
+make_max_simmetrical (GParamSpecFloat * fpspec)
+{
+  gfloat max;
+
+  if (fpspec->default_value == 0)
+    max = -fpspec->minimum;
+  else
+    max = fpspec->default_value + ABS (fpspec->minimum - fpspec->default_value);
+
+  return MIN (max, fpspec->maximum);
+}
+
 static gboolean
 _set_cb_val (GstVaVpp * self, const gchar * name,
     GstColorBalanceChannel * channel, gint value, gfloat * cb)
@@ -2167,7 +2182,7 @@ _set_cb_val (GstVaVpp * self, const gchar * name,
   GObjectClass *klass = G_OBJECT_CLASS (GST_VA_VPP_GET_CLASS (self));
   GParamSpec *pspec;
   GParamSpecFloat *fpspec;
-  gfloat new_value;
+  gfloat new_value, max;
   gboolean changed;
 
   pspec = g_object_class_find_property (klass, name);
@@ -2175,14 +2190,16 @@ _set_cb_val (GstVaVpp * self, const gchar * name,
     return FALSE;
 
   fpspec = G_PARAM_SPEC_FLOAT (pspec);
-  new_value = (value - channel->min_value) * (fpspec->maximum - fpspec->minimum)
+  max = make_max_simmetrical (fpspec);
+
+  new_value = (value - channel->min_value) * (max - fpspec->minimum)
       / (channel->max_value - channel->min_value) + fpspec->minimum;
 
   GST_OBJECT_LOCK (self);
   changed = new_value != *cb;
   *cb = new_value;
   value = (*cb + fpspec->minimum) * (channel->max_value - channel->min_value)
-      / (fpspec->maximum - fpspec->minimum) + channel->min_value;
+      / (max - fpspec->minimum) + channel->min_value;
   GST_OBJECT_UNLOCK (self);
 
   if (changed) {
@@ -2217,16 +2234,18 @@ _get_cb_val (GstVaVpp * self, const gchar * name,
   GObjectClass *klass = G_OBJECT_CLASS (GST_VA_VPP_GET_CLASS (self));
   GParamSpec *pspec;
   GParamSpecFloat *fpspec;
+  gfloat max;
 
   pspec = g_object_class_find_property (klass, name);
   if (!pspec)
     return FALSE;
 
   fpspec = G_PARAM_SPEC_FLOAT (pspec);
+  max = make_max_simmetrical (fpspec);
 
   GST_OBJECT_LOCK (self);
   *val = (*cb + fpspec->minimum) * (channel->max_value - channel->min_value)
-      / (fpspec->maximum - fpspec->minimum) + channel->min_value;
+      / (max - fpspec->minimum) + channel->min_value;
   GST_OBJECT_UNLOCK (self);
 
   return TRUE;
