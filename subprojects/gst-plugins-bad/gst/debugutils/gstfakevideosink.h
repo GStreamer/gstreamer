@@ -65,11 +65,16 @@ struct _GstFakeVideoSink
     GstBin parent;
     GstElement *child;
     GstFakeVideoSinkAllocationMetaFlags allocation_meta_flags;
+    GstPad *sinkpad;
 };
 
 struct _GstFakeVideoSinkClass
 {
     GstBinClass parent;
+
+    /* signals */
+    void (*handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);
+    void (*preroll_handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);
 };
 
 GType gst_fake_video_sink_get_type (void);

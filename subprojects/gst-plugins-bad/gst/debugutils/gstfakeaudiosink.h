@@ -47,6 +47,7 @@ struct _GstFakeAudioSink
 {
     GstBin parent;
     GstElement *child;
+    GstPad *sinkpad;
     gdouble volume;
     gboolean mute;
 };
@@ -54,6 +55,10 @@ struct _GstFakeAudioSink
 struct _GstFakeAudioSinkClass
 {
     GstBinClass parent;
+
+    /* signals */
+    void (*handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);
+    void (*preroll_handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);
 };
 
 GType gst_fake_audio_sink_get_type (void);

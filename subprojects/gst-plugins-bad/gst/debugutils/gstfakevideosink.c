@@ -77,6 +77,15 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  SIGNAL_HANDOFF,
+  SIGNAL_PREROLL_HANDOFF,
+  LAST_SIGNAL
+};
+
+static guint gst_fake_video_sink_signals[LAST_SIGNAL] = { 0 };
+
 #define ALLOCATION_META_DEFAULT_FLAGS GST_ALLOCATION_FLAG_CROP_META | GST_ALLOCATION_FLAG_OVERLAY_COMPOSITION_META
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -140,6 +149,22 @@ gst_fake_video_sink_proxy_properties (GstFakeVideoSink * self,
 }
 
 static void
+gst_fake_video_sink_proxy_handoff (GstElement * element, GstBuffer * buffer,
+    GstPad * pad, GstFakeVideoSink * self)
+{
+  g_signal_emit (self, gst_fake_video_sink_signals[SIGNAL_HANDOFF], 0,
+      buffer, self->sinkpad);
+}
+
+static void
+gst_fake_video_sink_proxy_preroll_handoff (GstElement * element,
+    GstBuffer * buffer, GstPad * pad, GstFakeVideoSink * self)
+{
+  g_signal_emit (self, gst_fake_video_sink_signals[SIGNAL_PREROLL_HANDOFF], 0,
+      buffer, self->sinkpad);
+}
+
+static void
 gst_fake_video_sink_init (GstFakeVideoSink * self)
 {
   GstElement *child;
@@ -160,7 +185,8 @@ gst_fake_video_sink_init (GstFakeVideoSink * self)
 
     gst_bin_add (GST_BIN (self), child);
 
-    ghost_pad = gst_ghost_pad_new_from_template ("sink", sink_pad, template);
+    self->sinkpad = ghost_pad =
+        gst_ghost_pad_new_from_template ("sink", sink_pad, template);
     gst_object_unref (template);
     gst_element_add_pad (GST_ELEMENT (self), ghost_pad);
     gst_object_unref (sink_pad);
@@ -170,6 +196,10 @@ gst_fake_video_sink_init (GstFakeVideoSink * self)
     self->child = child;
 
     gst_fake_video_sink_proxy_properties (self, child);
+    g_signal_connect (child, "handoff",
+        G_CALLBACK (gst_fake_video_sink_proxy_handoff), self);
+    g_signal_connect (child, "preroll-handoff",
+        G_CALLBACK (gst_fake_video_sink_proxy_preroll_handoff), self);
   } else {
     g_warning ("Check your GStreamer installation, "
         "core element 'fakesink' is missing.");
@@ -239,6 +269,39 @@ gst_fake_video_sink_class_init (GstFakeVideoSinkClass * klass)
           GST_TYPE_FAKE_VIDEO_SINK_ALLOCATION_META_FLAGS,
           ALLOCATION_META_DEFAULT_FLAGS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
+  /**
+   * GstFakeVideoSink::handoff:
+   * @fakevideosink: the fakevideosink instance
+   * @buffer: the buffer that just has been received
+   * @pad: the pad that received it
+   *
+   * This signal gets emitted before unreffing the buffer.
+   *
+   * Since: 1.22
+   */
+  gst_fake_video_sink_signals[SIGNAL_HANDOFF] =
+      g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstFakeVideoSinkClass, handoff), NULL, NULL,
+      NULL, G_TYPE_NONE, 2, GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE,
+      GST_TYPE_PAD);
+
+  /**
+   * GstFakeVideoSink::preroll-handoff:
+   * @fakevideosink: the fakevideosink instance
+   * @buffer: the buffer that just has been received
+   * @pad: the pad that received it
+   *
+   * This signal gets emitted before unreffing the buffer.
+   *
+   * Since: 1.22
+   */
+  gst_fake_video_sink_signals[SIGNAL_PREROLL_HANDOFF] =
+      g_signal_new ("preroll-handoff", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstFakeVideoSinkClass,
+          preroll_handoff), NULL, NULL, NULL, G_TYPE_NONE, 2,
+      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
 
   gst_type_mark_as_plugin_api (GST_TYPE_FAKE_VIDEO_SINK_ALLOCATION_META_FLAGS,
       0);

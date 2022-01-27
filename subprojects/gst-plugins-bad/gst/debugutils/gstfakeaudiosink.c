@@ -51,6 +51,14 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  SIGNAL_HANDOFF,
+  SIGNAL_PREROLL_HANDOFF,
+  LAST_SIGNAL
+};
+
+static guint gst_fake_audio_sink_signals[LAST_SIGNAL] = { 0 };
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -75,6 +83,22 @@ gst_fake_audio_sink_proxy_properties (GstFakeAudioSink * self,
 }
 
 static void
+gst_fake_audio_sink_proxy_handoff (GstElement * element, GstBuffer * buffer,
+    GstPad * pad, GstFakeAudioSink * self)
+{
+  g_signal_emit (self, gst_fake_audio_sink_signals[SIGNAL_HANDOFF], 0,
+      buffer, self->sinkpad);
+}
+
+static void
+gst_fake_audio_sink_proxy_preroll_handoff (GstElement * element,
+    GstBuffer * buffer, GstPad * pad, GstFakeAudioSink * self)
+{
+  g_signal_emit (self, gst_fake_audio_sink_signals[SIGNAL_PREROLL_HANDOFF], 0,
+      buffer, self->sinkpad);
+}
+
+static void
 gst_fake_audio_sink_init (GstFakeAudioSink * self)
 {
   GstElement *child;
@@ -94,7 +118,8 @@ gst_fake_audio_sink_init (GstFakeAudioSink * self)
 
     gst_bin_add (GST_BIN_CAST (self), child);
 
-    ghost_pad = gst_ghost_pad_new_from_template ("sink", sink_pad, template);
+    self->sinkpad = ghost_pad =
+        gst_ghost_pad_new_from_template ("sink", sink_pad, template);
     gst_object_unref (template);
     gst_element_add_pad (GST_ELEMENT_CAST (self), ghost_pad);
     gst_object_unref (sink_pad);
@@ -102,6 +127,10 @@ gst_fake_audio_sink_init (GstFakeAudioSink * self)
     self->child = child;
 
     gst_fake_audio_sink_proxy_properties (self, child);
+    g_signal_connect (child, "handoff",
+        G_CALLBACK (gst_fake_audio_sink_proxy_handoff), self);
+    g_signal_connect (child, "preroll-handoff",
+        G_CALLBACK (gst_fake_audio_sink_proxy_preroll_handoff), self);
   } else {
     g_warning ("Check your GStreamer installation, "
         "core element 'fakesink' is missing.");
@@ -179,6 +208,38 @@ gst_fake_audio_sink_class_init (GstFakeAudioSinkClass * klass)
           "Mute the audio channel without changing the volume", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+
+  /**
+   * GstFakeAudioSink::handoff:
+   * @fakeaudiosink: the fakeaudiosink instance
+   * @buffer: the buffer that just has been received
+   * @pad: the pad that received it
+   *
+   * This signal gets emitted before unreffing the buffer.
+   *
+   * Since: 1.22
+   */
+  gst_fake_audio_sink_signals[SIGNAL_HANDOFF] =
+      g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstFakeAudioSinkClass, handoff), NULL, NULL,
+      NULL, G_TYPE_NONE, 2, GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE,
+      GST_TYPE_PAD);
+
+  /**
+   * GstFakeAudioSink::preroll-handoff:
+   * @fakeaudiosink: the fakeaudiosink instance
+   * @buffer: the buffer that just has been received
+   * @pad: the pad that received it
+   *
+   * This signal gets emitted before unreffing the buffer.
+   *
+   * Since: 1.22
+   */
+  gst_fake_audio_sink_signals[SIGNAL_PREROLL_HANDOFF] =
+      g_signal_new ("preroll-handoff", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstFakeAudioSinkClass,
+          preroll_handoff), NULL, NULL, NULL, G_TYPE_NONE, 2,
+      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
 
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
   gst_element_class_set_static_metadata (element_class, "Fake Audio Sink",
