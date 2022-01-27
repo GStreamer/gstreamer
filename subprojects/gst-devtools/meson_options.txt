@@ -1,7 +1,10 @@
 option('validate', type : 'feature', value : 'auto',
        description : 'Build GstValidate')
+option('cairo', type : 'feature', value : 'auto', description : 'Build GstValidateVideo')
 option('debug_viewer', type : 'feature', value : 'disabled',
         description : 'Build GstDebugViewer (GPLv3+)')
+
+# Common feature options
 option('introspection', type : 'feature', value : 'auto', yield : true,
        description : 'Generate gobject-introspection bindings')
 option('tests', type : 'feature', value : 'auto', yield : true,
