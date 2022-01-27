@@ -14,7 +14,6 @@ RUN choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
 RUN choco install -y git --params '/NoAutoCrlf /NoCredentialManager /NoShellHereIntegration /NoGuiHereIntegration /NoShellIntegration'
 RUN choco install -y git-lfs
 RUN choco install -y 7zip
-RUN choco install -y windows-sdk-8.1
 RUN choco install -y python3
 RUN choco install -y msys2 --params '/NoPath /NoUpdate /InstallDir:C:\\msys64'
 
