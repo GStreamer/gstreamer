@@ -1,14 +1,19 @@
 # Romanian translation for gst-plugins-ugly
 # This file is distributed under the same license as the gst-plugins-ugly package.
+#
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
+# Actualizare a mesajelor, de la fișierul „gst-plugins-ugly-1.19.2.pot”.
+# Eliminare a mesajelor ce-au dispărut în ultima versiune.
+# Actualizări realizate de Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 15.01.2022.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 1.15.1\n"
+"Project-Id-Version: gst-plugins-ugly 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2020-06-20 19:21+0300\n"
-"Last-Translator: Florentina Mușat <florentina.musat.28@gmail.com>\n"
+"POT-Creation-Date: 2021-09-23 01:34+0100\n"
+"PO-Revision-Date: 2022-01-17 12:10+0100\n"
+"Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
@@ -28,12 +33,17 @@ msgstr "Nu s-a putut deschide dispozitivul CD pentru citire."
 msgid "Disc is not an Audio CD."
 msgstr "Discul nu este un CD audio."
 
+# R-GC, scrie:
+# am adăugat „-ul”, pentru că limba romînă pentru
+# siglele „articulate” și pentru cuvintele străine, intrate în limbajul cotidian, netraduse; îl cere...
+# Și, deasemeni, pentru armonizarea cu restul
+# traducerilor gst/gstreamer
 msgid "Could not open DVD"
-msgstr "Nu s-a putut deschide DVD"
+msgstr "Nu s-a putut deschide DVD-ul"
 
 #, c-format
 msgid "Could not open DVD title %d"
-msgstr "Nu s-a putut deschide titlul DVD %d"
+msgstr "Nu s-a putut deschide titlul DVD-ul %d"
 
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
@@ -47,33 +57,19 @@ msgstr ""
 "Nu s-a putut deschide titlul DVD %d. Titlurile interactive nu sunt suportate "
 "de acest element"
 
+# R-GC, scrie:
+# modificat de la:
+# „Aceasta poate fi pentru că DVD-ul este criptat și o bibliotecă de decriptare de DVD nu este instalată.” - mi se pare o traducere laconică, ca un
+# limbaj de robot: „Paltonul dvs., vă rog!”
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
-"Nu s-a putut citi DVD-ul. Aceasta poate fi pentru că DVD-ul este criptat și "
-"o bibliotecă de decriptare de DVD nu este instalată."
+"Nu s-a putut citi DVD-ul. Acest lucru se poate datora faptului că DVD-ul "
+"este criptat și o bibliotecă de decriptare a DVD-ului nu este instalată."
 
 msgid "Could not read DVD."
 msgstr "Nu s-a putut citi DVD-ul."
 
 msgid "This stream contains no data."
 msgstr "Fluxul acesta nu conține date."
-
-#~ msgid "Failed to configure LAME encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Nu s-a putut configura codorul LAME. Verificați parametrii de codare."
-
-#~ msgid ""
-#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-#~ "bitrate was changed to %d kbit/s."
-#~ msgstr ""
-#~ "Rata de biți solicitată de %d kbiți/s pentru proprietatea „%s” nu este "
-#~ "permisă. Rata de biți a fost modificată la %d kbiți/s."
-
-#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Nu s-a putut configura codorul TwoLAME. Verificați parametrii de codare."
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Eroare internă a fluxului de date."
