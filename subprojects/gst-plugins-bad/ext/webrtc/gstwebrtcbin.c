@@ -7309,6 +7309,8 @@ gst_webrtc_bin_constructed (GObject * object)
       (GstWebRTCIceOnCandidateFunc) _on_local_ice_candidate_cb, webrtc, NULL);
 
   g_free (name);
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
 static void
