@@ -1,15 +1,20 @@
 # Romanian translation for gst-plugins-bad
 # This file is distributed under the same license as the gst-plugins-bad package.
+#
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
+# Actualizare a mesajelor, de la fișierul „gst-plugins-bad-1.19.2.pot”.
+# Eliminare a mesajelor ce-au dispărut în ultima versiune.
+# S-au efectuat mici corecții
+# Actualizări realizate de Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.15.1\n"
+"Project-Id-Version: gst-plugins-bad 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2020-06-21 12:16+0300\n"
-"Last-Translator: Florentina Mușat <florentina.musat.28@gmail.com>\n"
+"POT-Creation-Date: 2021-09-23 01:34+0100\n"
+"PO-Revision-Date: 2022-01-17 11:49+0100\n"
+"Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
@@ -69,8 +74,11 @@ msgstr ""
 msgid "Digitalzoom element couldn't be created"
 msgstr "Elementul digitalzoom nu a putut fi creat"
 
+# R-GC, scrie:
+# modificat de la:
+# „Formatul de subpictură nu a fost configurat înainte de fluxul de date”
 msgid "Subpicture format was not configured before data flow"
-msgstr "Formatul de subpictură nu a fost configurat înainte de fluxul de date"
+msgstr "Formatul de sub-imagine nu a fost configurat înainte de fluxul de date"
 
 msgid "Failed to get fragment URL."
 msgstr "Nu s-a putut obține URL-ul fragment."
@@ -86,19 +94,27 @@ msgstr "Eroare internă a fluxului de date."
 msgid "Device \"%s\" does not exist."
 msgstr "Dispozitivul „%s” nu există."
 
+# R-GC, scrie:
+# modificat de la:
+# „Nu s-a putut deschide dispozitivul frontend „%s”.”
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Nu s-a putut deschide dispozitivul frontend „%s”."
+msgstr "Nu s-a putut deschide dispozitivul frontal „%s”."
 
+# R-GC, scrie:
+# modificat de la:
+# „Nu s-au putut obține configurările de la dispozitivul frontend „%s”.”
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Nu s-au putut obține configurările de la dispozitivul frontend „%s”."
+msgstr "Nu s-au putut obține configurările de la dispozitivul frontal „%s”."
 
+# R-GC, scrie:
+# modificat de la:
+# „Nu s-au putut enumera sistemele de livrare de la dispozitivul de interfață „%s”.”
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr ""
-"Nu s-au putut enumera sistemele de livrare de la dispozitivul de interfață "
-"„%s”."
+"Nu s-au putut enumera sistemele de livrare de la dispozitivul frontal „%s”."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -126,20 +142,8 @@ msgstr "Nu s-au putut stabili proprietățile pentru canalul „%s”"
 
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Nu s-a putut găsi fișierul de configurare a canalului: „%s”"
+msgstr "Nu s-a putut găsi fișierul de configurare al canalului: „%s”"
 
 #, c-format
 msgid "Channel configuration file doesn't contain any channels"
-msgstr "Fișierul de configurare a canalului nu conține niciun canal"
-
-#~ msgid "No file name specified for writing."
-#~ msgstr "Niciun nume de fișier specificat pentru scriere."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Nu s-a putut deschide fișierul „%s” pentru scriere."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Nu s-a putut scrie în fișierul „%s”."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Eroare internă de flux al datelor."
+msgstr "Fișierul de configurare al canalului nu conține niciun canal"
