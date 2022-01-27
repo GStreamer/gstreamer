@@ -18,6 +18,10 @@ these operations:
 
 ### Where to File Issues and Feature Requests
 
+- If your issue is security related, please see
+  [GStreamer Security Center][https://gstreamer.freedesktop.org/security/] before
+  continuing.
+
 - Create a new issue if there is no existing report for this problem yet.
   The GStreamer [bugs page][bugs] also has shortcuts for the major components
   and simple search functionality if you'd like to browse or search for
@@ -131,8 +135,8 @@ Select the namespace (your username), ensure that the visibility is set to
 
 A new repository will be created in your user namespace
 (<https://gitlab.freedesktop.org/$GITLAB_USERNAME/gstreamer>). You will be redirected
-there automatically once the forking process is finished. For big repositories
-the forking might take a few minutes.
+there automatically once the forking process is finished. The forking might
+take a few minutes.
 
 Once this is done you can add your personal fork as new remote to the gstreamer
 repository clone you made in step 3 above with the following command (replace
@@ -367,7 +371,7 @@ In the simplest case, you might be able to get away with just doing a `git pull
 
 - Make liberal use of the reference syntax available to help cross-linking
   different issues and merge requests. e.g. `#100` references issue 100 in the
-  current module. `!100` references merge request 100 in the current project.
+  current project, and `!100` references merge request 100 in the current project.
   A complete list is available from [gitlab's documentation][special-md-references].
 
 - Please create separate merge requests for separate issues.
@@ -388,7 +392,8 @@ In the simplest case, you might be able to get away with just doing a `git pull
 - Please do not send pull requests to our github mirror. They will be closed
   automatically.
 
-- Please do not attach patches to issues.
+- Please do not attach patches to issues, except in the special case of a fix
+  for a security issue.
 
 - Please prepare any merge request against a current git checkout of the
   GStreamer monorepo (gstreamer module), against the tip of the `main` branch.
