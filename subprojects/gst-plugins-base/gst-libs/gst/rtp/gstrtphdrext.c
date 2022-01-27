@@ -180,7 +180,7 @@ gst_rtp_header_extension_class_set_uri (GstRTPHeaderExtensionClass * klass,
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_static_metadata (element_class,
+  gst_element_class_add_metadata (element_class,
       GST_RTP_HEADER_EXTENSION_URI_METADATA_KEY, uri);
 }
 
