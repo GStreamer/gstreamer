@@ -1,16 +1,16 @@
-# German translation for gstreamer 1.16.0
+# German translation for gstreamer 1.19.2
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
 # Roland Illig <roland.illig@gmx.de>, 2004.
-# Christian Kirbach <christian.kirbach@gmail.com>, 2009, 2010, 2011, 2012, 2013, 2015, 2016, 2019, 2020.
+# Christian Kirbach <christian.kirbach@gmail.com>, 2009, 2010, 2011, 2012, 2013, 2015, 2016, 2019, 2020, 2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.16.0\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2020-11-21 21:27+0100\n"
+"POT-Creation-Date: 2021-09-23 01:32+0100\n"
+"PO-Revision-Date: 2021-11-06 22:51+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.4.1\n"
+"X-Generator: Poedit 3.0\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 msgid "Print the GStreamer version"
@@ -276,7 +276,7 @@ msgstr "Keine Standardfehlermeldung für den Bereich %s und Fehlercode %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr ""
-"Der ausgewählte Referenztakt kann nicht in der Pipeline verwendet werden."
+"Der ausgewählte Referenztakt kann nicht in der Leitung verwendet werden."
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
@@ -864,7 +864,7 @@ msgstr ", "
 
 #, c-format
 msgid "Invalid URI: %s"
-msgstr ""
+msgstr "Ungültige Adresse: »%s«"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -906,14 +906,13 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 "Die Eigenschaft »%s« im Element »%s« konnte nicht auf »%s« gesetzt werden"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "Die Datei »%s« ist ein Socket."
+msgstr "Element »%s« ist kein GstPreset"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
-msgstr ""
-"Die Eigenschaft »%s« im Element »%s« konnte nicht auf »%s« gesetzt werden"
+msgstr "Die Voreinstellung »%s« konnte nicht im Element »%s« gesetzt werden"
 
 msgid "Delayed linking failed."
 msgstr "Verzögertes Verknüpfen ist fehlgeschlagen."
@@ -1104,9 +1103,8 @@ msgstr "veraltet"
 msgid "controllable"
 msgstr "regelbar"
 
-#, fuzzy
 msgid "conditionally available"
-msgstr "regelbar"
+msgstr "unter Vorbehalt verfügbar"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "änderbar in den Status NULL, BEREIT, PAUSIERT oder ABSPIELEN"
@@ -1189,17 +1187,16 @@ msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 "Unterstützte URI-Schemata mit den Elementen ausgeben, die sie implementieren"
 
-#, fuzzy
 msgid ""
 "Disable colors in output. You can also achieve the same by setting "
 "'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
-"Farben in der Ausgabe deaktivieren. Die Einstellung kann auch erzielt "
-"werden, indem die Umgebungsvariable GST_INSPECT_NO_COLORS auf einen "
-"beliebigen Wert gesetzt wird."
+"Farben in der Ausgabe deaktivieren. Dasselbe kann auch erzielt werden, indem "
+"die Umgebungsvariable »GST_INSPECT_NO_COLORS« auf einen beliebigen Wert "
+"gesetzt wird."
 
 msgid "Color output, even when not sending to a tty."
-msgstr ""
+msgstr "Farbausgabe, auch wenn nicht an tty gesendet wird"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1343,7 +1340,7 @@ msgstr "Ein Fehler ist beim Warten auf EOS aufgetreten\n"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
-msgstr ""
+msgstr "Hochgenaue Windows-Uhr verwenden. Präzision: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Kennzeichen (auch bekannt als Metadaten) ausgeben"
@@ -1384,11 +1381,16 @@ msgid ""
 "the position will be printed when stdout is a TTY. To enable printing "
 "position when stdout is not a TTY, use \"force-position\" option"
 msgstr ""
+"Nicht die aktuelle Position der Leitung ausgeben. Wenn diese Option nicht "
+"angegeben wird, dann wird die Position ausgegeben, wenn die Standardausgabe "
+"ein TTY ist"
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
 "This option has no effect if the \"no-position\" option is specified"
 msgstr ""
+"Die Ausgabe der aktuellen Position der Leitung zulassen, wenn die "
+"Standardausgabe kein TTY ist."
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1407,9 +1409,8 @@ msgstr "FEHLER: Das Element »Leitung« wurde nicht gefunden.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Leitung wird auf PAUSIERT gesetzt ...\n"
 
-#, fuzzy
 msgid "Failed to set pipeline to PAUSED.\n"
-msgstr "Leitung wird auf PAUSIERT gesetzt ...\n"
+msgstr "Setzen der Leitung auf PAUSIERT ist fehlgeschlagen.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Leitung ist aktiv und erfordert keinen VORLAUF …\n"

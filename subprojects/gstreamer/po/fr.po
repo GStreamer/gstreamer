@@ -4,14 +4,14 @@
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Claude Paroz <claude@2xlibre.net>, 2008-2012.
-# Stéphane Aulery <lkppo@free.fr>, 2015, 2017, 2019.
+# Stéphane Aulery <lkppo@free.fr>, 2015-2017, 2019, 2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.16.0\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2020-06-13 01:47+0200\n"
+"POT-Creation-Date: 2021-09-23 01:32+0100\n"
+"PO-Revision-Date: 2021-11-21 00:53+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -886,13 +886,13 @@ msgstr "pas de propriété « %s » dans l’élément « %s »"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "impossible de définir la propriété « %s » de l’élément « %s » à « %s »"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "Le fichier « %s » est un connecteur."
+msgstr "L'élément « %s » n'est pas de type GstPreset"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
-msgstr "impossible de définir la propriété « %s » de l’élément « %s » à « %s »"
+msgstr "impossible de définir le réglage « %s » de l’élément « %s »"
 
 msgid "Delayed linking failed."
 msgstr "Échec du chargement dynamique différé."
@@ -1078,9 +1078,8 @@ msgstr "obsolète"
 msgid "controllable"
 msgstr "contrôlable"
 
-#, fuzzy
 msgid "conditionally available"
-msgstr "contrôlable"
+msgstr "dospinibilité conditionnelle"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "modifiable en l’état NULL, READY, PAUSED ou PLAYING"
@@ -1164,7 +1163,6 @@ msgstr ""
 "Affiche les types d’URI pris en charge, avec les éléments qui les "
 "implémentent"
 
-#, fuzzy
 msgid ""
 "Disable colors in output. You can also achieve the same by setting "
 "'GST_INSPECT_NO_COLORS' environment variable to any value."
@@ -1378,9 +1376,8 @@ msgstr "ERREUR : l’élément « pipeline » est introuvable.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Définition du pipeline à PAUSED...\n"
 
-#, fuzzy
 msgid "Failed to set pipeline to PAUSED.\n"
-msgstr "Définition du pipeline à PAUSED...\n"
+msgstr "Impossible de mettre en pause le pipeline.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Le pipeline est actif et n’a pas besoin de phase PREROLL…\n"
