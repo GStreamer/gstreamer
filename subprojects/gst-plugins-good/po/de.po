@@ -1,4 +1,4 @@
-# German translations for gst-plugins-good 1.15.1
+# German translations for gst-plugins-good 1.19.2
 # Copyright (C) 2007 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 #
@@ -8,14 +8,14 @@
 # Pipeline = Weiterleitung
 # Stream = Strom
 # mixer  = Mischer
-# Christian Kirbach <christian.kirbach@gmail.com>, 2010, 2011, 2012, 2013, 2014, 2015, 2019.
+# Christian Kirbach <christian.kirbach@gmail.com>, 2010, 2011, 2012, 2013, 2014, 2015, 2019, 2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.15.1\n"
+"Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2019-02-09 21:19+0100\n"
+"POT-Creation-Date: 2021-09-23 01:33+0100\n"
+"PO-Revision-Date: 2021-11-06 23:20+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.2\n"
+"X-Generator: Poedit 3.0\n"
 
 msgid "Jack server not found"
 msgstr "Jack-Server nicht gefunden"
@@ -32,9 +32,8 @@ msgstr "Jack-Server nicht gefunden"
 msgid "Failed to decode JPEG image"
 msgstr "Dekodieren des JPEG-Bildes schlug fehl"
 
-#, fuzzy
 msgid "Failed to read memory"
-msgstr "Anfordern des benötigen Arbeitsspeichers schlug fehl."
+msgstr "Lesen des Arbeitsspeichers schlug fehl"
 
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
@@ -186,7 +185,7 @@ msgid "CoreAudio device could not be opened"
 msgstr "CoreAudio-Gerät konnte nicht geöffnet werden"
 
 msgid "Raspberry Pi Camera Module"
-msgstr ""
+msgstr "Kameramodul des Raspberry Pi"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -211,9 +210,8 @@ msgstr "Der Treiber von Gerät »%s« unterstützt nicht die EA-Methode %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Der Treiber des Geräts »%s« unterstützt keine bekannte E/A-Methode."
 
-#, fuzzy
 msgid "Invalid caps"
-msgstr "Ungültige Atom-Größe."
+msgstr "Ungültige Fähigkeiten"
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -422,10 +420,10 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 "Festlegen des Wertes »%d« der Einstellung »%d« des Geräts »%s« schlug fehl."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set value %s for control %d on device '%s'."
 msgstr ""
-"Festlegen des Wertes »%d« der Einstellung »%d« des Geräts »%s« schlug fehl."
+"Festlegen des Wertes »%s« der Einstellung »%d« des Geräts »%s« schlug fehl."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
@@ -433,9 +431,9 @@ msgstr ""
 "Auslesen der aktuellen Eingabe auf dem Gerät »%s« schlug fehl. Vielleicht "
 "ist es ein Funkgerät."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set input %u on device %s."
-msgstr "Festlegen der Eingabe »%d« des Geräts »%s« schlug fehl."
+msgstr "Festlegen der Eingabe »%u« des Geräts »%s« schlug fehl."
 
 #, c-format
 msgid ""
@@ -444,9 +442,9 @@ msgstr ""
 "Auslesen der aktuellen Ausgabe des Geräts »%s« schlug fehl. Vielleicht ist "
 "es ein Funkgerät."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %u on device %s."
-msgstr "Festlegen der Ausgabe »%d« des Geräts »%s« schlug fehl."
+msgstr "Festlegen der Ausgabe »%u« des Geräts »%s« schlug fehl."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Ein Wechsel der Auflösung zur Laufzeit wird noch nicht unterstützt."

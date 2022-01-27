@@ -4,14 +4,14 @@
 #
 # Nicolas Velin <nicolas@velin.fr>, 2008.
 # Claude Paroz <claude@2xlibre.net>, 2008-2011.
-# Stéphane Aulery <lkppo@free.fr>, 2015, 2017, 2019.
+# Stéphane Aulery <lkppo@free.fr>, 2015-2017, 2019, 2021.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.15.1\n"
+"Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2019-05-12 03:57+0200\n"
+"POT-Creation-Date: 2021-09-23 01:33+0100\n"
+"PO-Revision-Date: 2021-11-21 00:53+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -26,9 +26,8 @@ msgstr "serveur Jack introuvable"
 msgid "Failed to decode JPEG image"
 msgstr "Échec de décodage de l’image JPEG"
 
-#, fuzzy
 msgid "Failed to read memory"
-msgstr "Impossible d’allouer la mémoire nécessaire."
+msgstr "Impossible de lire la mémoire"
 
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
@@ -205,9 +204,8 @@ msgstr ""
 "Le pilote du périphérique « %s » ne prend en charge aucune méthode d’entrée-"
 "sortie connue."
 
-#, fuzzy
 msgid "Invalid caps"
-msgstr "Taille d’atome non valide."
+msgstr "Capacité incorrecte"
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -432,10 +430,10 @@ msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 "Impossible de récupérer la valeur %d du contrôle %d du périphérique « %s »."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set value %s for control %d on device '%s'."
 msgstr ""
-"Impossible de récupérer la valeur %d du contrôle %d du périphérique « %s »."
+"Impossible de récupérer la valeur %s du contrôle %d du périphérique « %s »."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
@@ -443,9 +441,9 @@ msgstr ""
 "Impossible de récupérer l’entrée actuelle du périphérique « %s ». C’est peut-"
 "être un périphérique radio"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set input %u on device %s."
-msgstr "Impossible de définir l’entrée %d sur le périphérique %s."
+msgstr "Impossible de définir l’entrée %u sur le périphérique %s."
 
 #, c-format
 msgid ""
@@ -454,9 +452,9 @@ msgstr ""
 "Impossible de récupérer la sortie actuelle du périphérique « %s ». C’est "
 "peut-être un périphérique radio"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %u on device %s."
-msgstr "Impossible de définir la sortie %d du périphérique %s."
+msgstr "Impossible de définir la sortie %u du périphérique %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
