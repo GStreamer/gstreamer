@@ -118,37 +118,42 @@ needs_start_codes (GstV4l2CodecH264Dec * self)
   return self->start_code == V4L2_STATELESS_H264_START_CODE_ANNEX_B;
 }
 
-
 static gboolean
-gst_v4l2_decoder_h264_api_check (GstV4l2CodecH264Dec * self)
+gst_v4l2_decoder_h264_api_check (GstV4l2Decoder * decoder)
 {
   guint i, ret_size;
   /* *INDENT-OFF* */
+  #define SET_ID(cid) .id = (cid), .name = #cid
   struct
   {
+    const gchar *name;
     unsigned int id;
     unsigned int size;
+    gboolean optional;
   } controls[] = {
     {
-      .id = V4L2_CID_STATELESS_H264_SPS,
+      SET_ID (V4L2_CID_STATELESS_H264_SPS),
       .size = sizeof(struct v4l2_ctrl_h264_sps),
     }, {
-      .id = V4L2_CID_STATELESS_H264_PPS,
+      SET_ID (V4L2_CID_STATELESS_H264_PPS),
       .size = sizeof(struct v4l2_ctrl_h264_pps),
     }, {
-      .id = V4L2_CID_STATELESS_H264_SCALING_MATRIX,
+      SET_ID (V4L2_CID_STATELESS_H264_SCALING_MATRIX),
       .size = sizeof(struct v4l2_ctrl_h264_scaling_matrix),
     }, {
-      .id = V4L2_CID_STATELESS_H264_DECODE_PARAMS,
+      SET_ID (V4L2_CID_STATELESS_H264_DECODE_PARAMS),
       .size = sizeof(struct v4l2_ctrl_h264_decode_params),
     }, {
-      .id = V4L2_CID_STATELESS_H264_SLICE_PARAMS,
+      SET_ID (V4L2_CID_STATELESS_H264_SLICE_PARAMS),
       .size = sizeof(struct v4l2_ctrl_h264_slice_params),
+      .optional = TRUE,
     }, {
-      .id = V4L2_CID_STATELESS_H264_PRED_WEIGHTS,
+      SET_ID (V4L2_CID_STATELESS_H264_PRED_WEIGHTS),
       .size = sizeof(struct v4l2_ctrl_h264_pred_weights),
+      .optional = TRUE,
     }
   };
+  #undef SET_ID
   /* *INDENT-ON* */
 
   /*
@@ -156,12 +161,19 @@ gst_v4l2_decoder_h264_api_check (GstV4l2CodecH264Dec * self)
    * the right size.
    */
   for (i = 0; i < G_N_ELEMENTS (controls); i++) {
-    if (gst_v4l2_decoder_query_control_size (self->decoder, controls[i].id,
-            &ret_size) && ret_size != controls[i].size) {
-      GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
-          ("H264 API mismatch!"),
-          ("%d control size mismatch: got %d bytes but %d expected.",
-              controls[i].id, ret_size, controls[i].size));
+    gboolean control_found;
+
+    control_found = gst_v4l2_decoder_query_control_size (decoder,
+        controls[i].id, &ret_size);
+
+    if (!controls[i].optional && !control_found) {
+      GST_WARNING ("Driver is missing %s support.", controls[i].name);
+      return FALSE;
+    }
+
+    if (control_found && ret_size != controls[i].size) {
+      GST_WARNING ("%s control size mismatch: got %d bytes but %d expected.",
+          controls[i].name, ret_size, controls[i].size);
       return FALSE;
     }
   }
@@ -173,7 +185,6 @@ static gboolean
 gst_v4l2_codec_h264_dec_open (GstVideoDecoder * decoder)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
-  guint version;
 
   /* *INDENT-OFF* */
   struct v4l2_ext_control control[] = {
@@ -190,20 +201,6 @@ gst_v4l2_codec_h264_dec_open (GstVideoDecoder * decoder)
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
         ("Failed to open H264 decoder"),
         ("gst_v4l2_decoder_open() failed: %s", g_strerror (errno)));
-    return FALSE;
-  }
-
-  version = gst_v4l2_decoder_get_version (self->decoder);
-  if (version < V4L2_MIN_KERNEL_VERSION)
-    GST_WARNING_OBJECT (self,
-        "V4L2 API v%u.%u too old, at least v%u.%u required",
-        (version >> 16) & 0xff, (version >> 8) & 0xff,
-        V4L2_MIN_KERNEL_VER_MAJOR, V4L2_MIN_KERNEL_VER_MINOR);
-
-  if (!gst_v4l2_decoder_h264_api_check (self)) {
-    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
-        ("Failed to open H264 decoder"),
-        ("gst_v4l2_decoder_h264_api_check() failed"));
     return FALSE;
   }
 
@@ -1520,6 +1517,7 @@ gst_v4l2_codec_h264_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
     GstV4l2CodecDevice * device, guint rank)
 {
   GstCaps *src_caps;
+  guint version;
 
   GST_DEBUG_CATEGORY_INIT (v4l2_h264dec_debug, "v4l2codecs-h264dec", 0,
       "V4L2 stateless h264 decoder");
@@ -1532,6 +1530,17 @@ gst_v4l2_codec_h264_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
   if (gst_caps_is_empty (src_caps)) {
     GST_WARNING ("Not registering H264 decoder since it produces no "
         "supported format");
+    goto done;
+  }
+
+  version = gst_v4l2_decoder_get_version (decoder);
+  if (version < V4L2_MIN_KERNEL_VERSION)
+    GST_WARNING ("V4L2 API v%u.%u too old, at least v%u.%u required",
+        (version >> 16) & 0xff, (version >> 8) & 0xff,
+        V4L2_MIN_KERNEL_VER_MAJOR, V4L2_MIN_KERNEL_VER_MINOR);
+
+  if (!gst_v4l2_decoder_h264_api_check (decoder)) {
+    GST_WARNING ("Not registering H264 decoder as it failed ABI check.");
     goto done;
   }
 
