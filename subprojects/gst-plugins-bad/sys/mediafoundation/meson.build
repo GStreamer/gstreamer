@@ -6,6 +6,7 @@ mf_sources = [
   'gstmfdevice.cpp',
   'gstmfh264enc.cpp',
   'gstmfh265enc.cpp',
+  'gstmfmp3dec.cpp',
   'gstmfmp3enc.cpp',
   'gstmfplatloader.cpp',
   'gstmfsourceobject.cpp',
