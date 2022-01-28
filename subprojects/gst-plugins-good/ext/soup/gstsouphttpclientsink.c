@@ -575,7 +575,7 @@ gst_soup_http_client_sink_start (GstBaseSink * sink)
     g_source_attach (source, souphttpsink->context);
     g_source_unref (source);
 
-    souphttpsink->loop = g_main_loop_new (souphttpsink->context, TRUE);
+    souphttpsink->loop = g_main_loop_new (souphttpsink->context, FALSE);
 
     g_mutex_lock (&souphttpsink->mutex);
 
@@ -591,7 +591,8 @@ gst_soup_http_client_sink_start (GstBaseSink * sink)
     }
 
     GST_LOG_OBJECT (souphttpsink, "waiting for main loop thread to start up");
-    g_cond_wait (&souphttpsink->cond, &souphttpsink->mutex);
+    while (!g_main_loop_is_running (souphttpsink->loop))
+      g_cond_wait (&souphttpsink->cond, &souphttpsink->mutex);
     g_mutex_unlock (&souphttpsink->mutex);
     GST_LOG_OBJECT (souphttpsink, "main loop thread running");
   }
