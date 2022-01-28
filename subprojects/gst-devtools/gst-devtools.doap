@@ -55,6 +55,16 @@
 
  <release>
   <Version>
+   <revision>1.19.90</revision>
+   <branch>main</branch>
+   <name></name>
+   <created>2022-01-28</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-devtools/gst-devtools-1.19.90.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.19.3</revision>
    <branch>main</branch>
    <name></name>

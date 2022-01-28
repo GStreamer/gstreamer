@@ -1,3 +1,18 @@
+=== release 1.19.90 ===
+
+2022-01-28 14:28:35 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.19.90
+
+2022-01-28 14:28:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.19.90
+
 2022-01-26 00:02:49 +0100  Mathieu Duponchelle <mathieu@centricular.com>
 
 	* gi/overrides/GstAudio.py:
