@@ -37,7 +37,11 @@ KNOWN_ISSUES = {
                 "level": "critical",
                 "summary": "The program stopped before some actions were executed",
                 "sometimes": True,
-            }
+            },
+            {
+                "timeout": True,
+                "sometimes": True,
+            },
         ]
     },
     "https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/311": {
