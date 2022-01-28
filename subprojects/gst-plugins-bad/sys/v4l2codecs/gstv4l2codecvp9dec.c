@@ -369,6 +369,10 @@ gst_v4l2_codec_vp9_dec_open (GstVideoDecoder * decoder)
     return FALSE;
   }
 
+  vp9dec->parse_compressed_headers =
+      gst_v4l2_decoder_query_control_size (self->decoder,
+      V4L2_CID_STATELESS_VP9_COMPRESSED_HDR, NULL);
+
   /* V4L2 does not support non-keyframe resolution change, this will ask the
    * base class to drop frame until the next keyframe as a workaround. */
   gst_vp9_decoder_set_non_keyframe_format_change_support (vp9dec, FALSE);
@@ -623,7 +627,9 @@ gst_v4l2_codec_vp9_dec_new_sequence (GstVp9Decoder * decoder,
   }
 
   gst_v4l2_codec_vp9_dec_fill_dec_params (self, frame_hdr, NULL);
-  gst_v4l2_codec_vp9_dec_fill_prob_updates (self, frame_hdr);
+
+  if (decoder->parse_compressed_headers)
+    gst_v4l2_codec_vp9_dec_fill_prob_updates (self, frame_hdr);
 
   if (negotiation_needed) {
     self->need_negotiation = TRUE;
@@ -734,6 +740,7 @@ gst_v4l2_codec_vp9_dec_end_picture (GstVp9Decoder * decoder,
   GstV4l2Request *request = NULL;
   GstFlowReturn flow_ret;
   gsize bytesused;
+  guint num_controls = 1;
 
   /* *INDENT-OFF* */
   struct v4l2_ext_control decode_params_control[] = {
@@ -743,11 +750,17 @@ gst_v4l2_codec_vp9_dec_end_picture (GstVp9Decoder * decoder,
       .size = sizeof(self->v4l2_vp9_frame),
     },
     {
+      /* V4L2_CID_STATELESS_VP9_COMPRESSED_HDR */
+    },
+  };
+
+  if (decoder->parse_compressed_headers) {
+    decode_params_control[num_controls++] = (struct v4l2_ext_control) {
       .id = V4L2_CID_STATELESS_VP9_COMPRESSED_HDR,
       .ptr = &self->v4l2_delta_probs,
       .size = sizeof (self->v4l2_delta_probs),
-    },
-  };
+    };
+  }
   /* *INDENT-ON* */
 
   bytesused = self->bitstream_map.size;
@@ -782,7 +795,7 @@ gst_v4l2_codec_vp9_dec_end_picture (GstVp9Decoder * decoder,
   }
 
   if (!gst_v4l2_decoder_set_controls (self->decoder, request,
-          decode_params_control, G_N_ELEMENTS (decode_params_control))) {
+          decode_params_control, num_controls)) {
     GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
         ("Driver did not accept the bitstream parameters."), (NULL));
     goto fail;
@@ -1025,8 +1038,6 @@ gst_v4l2_codec_vp9_dec_get_property (GObject * object, guint prop_id,
 static void
 gst_v4l2_codec_vp9_dec_init (GstV4l2CodecVp9Dec * self)
 {
-  GstVp9Decoder *parent = GST_VP9_DECODER (self);
-  parent->parse_compressed_headers = TRUE;
 }
 
 static void

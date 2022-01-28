@@ -739,7 +739,8 @@ gst_v4l2_decoder_query_control_size (GstV4l2Decoder * self,
     .id = control_id,
   };
 
-  *control_size = 0;
+  if (control_size)
+    *control_size = 0;
 
   ret = ioctl (self->video_fd, VIDIOC_QUERY_EXT_CTRL, &control);
   if (ret < 0)
@@ -749,7 +750,8 @@ gst_v4l2_decoder_query_control_size (GstV4l2Decoder * self,
      */
     return FALSE;
 
-  *control_size = control.elem_size;
+  if (control_size)
+    *control_size = control.elem_size;
   return TRUE;
 }
 
