@@ -1002,10 +1002,7 @@ thread_func (gpointer user_data)
       /* Unset the limit the number of maximum allowed connections */
       "max-conns", src->session_is_shared ? G_MAXINT : 10,
       "max-conns-per-host", src->session_is_shared ? G_MAXINT : 2, NULL);
-
-  if (!src->session->session) {
-    return NULL;
-  }
+  g_assert (session->session);
 
   if (gst_soup_loader_get_api_version () == 3) {
     if (src->proxy != NULL) {
