@@ -1353,6 +1353,10 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_avf_video_src_debug, "avfvideosrc",
       0, "iOS AVFoundation video source");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AVF_VIDEO_SOURCE_POSITION, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AVF_VIDEO_SOURCE_ORIENTATION, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AVF_VIDEO_SOURCE_DEVICE_TYPE, 0);
 }
 
 static void

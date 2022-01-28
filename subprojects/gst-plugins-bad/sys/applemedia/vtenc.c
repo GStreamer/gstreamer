@@ -17,6 +17,49 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
+/**
+ * SECTION:element-vtenc_h264
+ * @title: vtenc_h264
+ *
+ * Apple VideoToolbox H264 encoder, which can either use HW or a SW
+ * implementation depending on the device.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! vtenc_h264 ! qtmux ! filesink location=out.mov
+ * ]| Encode a test video pattern and save it as an MOV file
+ *
+ */
+
+/**
+ * SECTION:element-vtenc_h264_hw
+ * @title: vtenc_h264_hw
+ *
+ * Apple VideoToolbox H264 HW-only encoder (only available on macOS at
+ * present).
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! vtenc_h264_hw ! qtmux ! filesink location=out.mov
+ * ]| Encode a test video pattern and save it as an MOV file
+ *
+ */
+
+/**
+ * SECTION:element-vtenc_prores
+ * @title: vtenc_prores
+ *
+ * Apple VideoToolbox ProRes encoder
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! vtenc_prores ! qtmux ! filesink location=out.mov
+ * ]| Encode a test video pattern and save it as an MOV file
+ *
+ * Since: 1.20
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -315,11 +358,24 @@ gst_vtenc_class_init (GstVTEncClass * klass)
           G_MAXUINT64, VTENC_DEFAULT_MAX_KEYFRAME_INTERVAL_DURATION,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_PRESERVE_ALPHA,
-      g_param_spec_boolean ("preserve-alpha", "Preserve Video Alpha Values",
-          "Video alpha values (non opaque) need to be perserved.",
-          VTENC_DEFAULT_PRESERVE_ALPHA,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+  /*
+   * H264 doesn't support alpha components, so only add the property for prores
+   */
+  if (g_strcmp0 (G_OBJECT_CLASS_NAME (klass), "vtenc_prores") == 0) {
+    /**
+     * vtenc_prores:preserve-alpha
+     *
+     * Preserve non-opaque video alpha values from the input video when
+     * compressing, else treat all alpha component as opaque. Default is %TRUE.
+     *
+     * Since: 1.20
+     */
+    g_object_class_install_property (gobject_class, PROP_PRESERVE_ALPHA,
+        g_param_spec_boolean ("preserve-alpha", "Preserve Video Alpha Values",
+            "Video alpha values (non opaque) need to be preserved",
+            VTENC_DEFAULT_PRESERVE_ALPHA,
+            G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+  }
 }
 
 static void

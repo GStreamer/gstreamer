@@ -10749,6 +10749,182 @@
         "tracers": {},
         "url": "Unknown package origin"
     },
+    "osxaudio": {
+        "description": "OSX (Mac OS X) audio support for GStreamer",
+        "elements": {
+            "osxaudiosink": {
+                "author": "Zaheer Abbas Merali <zaheerabbas at merali dot org>",
+                "description": "Output to a sound card in OS X",
+                "hierarchy": [
+                    "GstOsxAudioSink",
+                    "GstAudioBaseSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstOsxAudioElement"
+                ],
+                "klass": "Sink/Audio",
+                "long-name": "Audio Sink (OSX)",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 9 ]\naudio/x-ac3:\n         framed: true\naudio/x-dts:\n         framed: true\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "device": {
+                        "blurb": "Device ID of output device",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "volume": {
+                        "blurb": "Volume of this stream",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "osxaudiosrc": {
+                "author": "Zaheer Abbas Merali <zaheerabbas at merali dot org>",
+                "description": "Input from a sound card in OS X",
+                "hierarchy": [
+                    "GstOsxAudioSrc",
+                    "GstAudioBaseSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstOsxAudioElement"
+                ],
+                "klass": "Source/Audio",
+                "long-name": "Audio Source (OSX)",
+                "pad-templates": {
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: { F64LE, F64BE, F32LE, F32BE, S32LE, S32BE, U32LE, U32BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, S16LE, S16BE, U16LE, U16BE, S8, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "device": {
+                        "blurb": "Device ID of input device",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            }
+        },
+        "filename": "gstosxaudio",
+        "license": "LGPL",
+        "other-types": {},
+        "package": "GStreamer Good Plug-ins",
+        "source": "gst-plugins-good",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "osxvideo": {
+        "description": "OSX native video output plugin",
+        "elements": {
+            "osxvideosink": {
+                "author": "Zaheer Abbas Merali <zaheerabbas at merali dot org>",
+                "description": "OSX native videosink",
+                "hierarchy": [
+                    "GstOSXVideoSink",
+                    "GstVideoSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstVideoOverlay",
+                    "GstNavigation"
+                ],
+                "klass": "Sink/Video",
+                "long-name": "OSX Video sink",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw:\n      framerate: [ 0/1, 2147483647/1 ]\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n         format: UYVY\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "embed": {
+                        "blurb": "For ABI compatibility only, do not use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "force-aspect-ratio": {
+                        "blurb": "When enabled, scaling will respect original aspect ration",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "marginal"
+            }
+        },
+        "filename": "gstosxvideo",
+        "license": "LGPL",
+        "other-types": {},
+        "package": "GStreamer Good Plug-ins",
+        "source": "gst-plugins-good",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
     "png": {
         "description": "PNG plugin library",
         "elements": {

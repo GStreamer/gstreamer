@@ -19,13 +19,28 @@
  */
 /**
  * SECTION:element-vtdec
- * @title: gstvtdec
+ * @title: vtdec
  *
- * Apple VideoToolbox based decoder.
+ * Apple VideoToolbox based decoder which might use a HW or a SW
+ * implementation depending on the device.
  *
  * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=file.mov ! qtdemux ! queue ! h264parse ! vtdec ! videoconvert ! autovideosink
+ * ]|
+ * Decode h264 video from a mov file.
+ *
+ */
+
+/**
+ * SECTION:element-vtdec_hw
+ * @title: vtdec_hw
+ *
+ * Apple VideoToolbox based HW-only decoder.
+ *
+ * ## Example launch line
+ * |[
+ * gst-launch-1.0 -v filesrc location=file.mov ! qtdemux ! queue ! h264parse ! vtdec_hw ! videoconvert ! autovideosink
  * ]|
  * Decode h264 video from a mov file.
  *
