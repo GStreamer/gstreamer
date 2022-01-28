@@ -1050,8 +1050,6 @@ thread_func (gpointer user_data)
     message = gst_message_new_have_context (GST_OBJECT_CAST (src), context);
     gst_element_post_message (GST_ELEMENT_CAST (src), message);
     GST_OBJECT_LOCK (src);
-  } else {
-    src->session_is_shared = FALSE;
   }
 
   /* soup2: connect the authenticate handler for the src that spawned the
