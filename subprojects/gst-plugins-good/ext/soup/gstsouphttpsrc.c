@@ -1212,7 +1212,7 @@ _session_close_cb (gpointer user_data)
     g_clear_object (&src->msg);
   }
 
-  if (src->session_is_shared)
+  if (!src->session_is_shared)
     _soup_session_abort (src->session->session);
 
   /* there may be multiple of this callback attached to the session,
