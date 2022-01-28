@@ -178,7 +178,7 @@ gst_d3d11_vp9_dec_class_init (GstD3D11Vp9DecClass * klass, gpointer data)
   /**
    * GstD3D11Vp9Dec:adapter-luid:
    *
-   * DXGI Adapter LUID for this elemenet
+   * DXGI Adapter LUID for this element
    *
    * Since: 1.20
    */

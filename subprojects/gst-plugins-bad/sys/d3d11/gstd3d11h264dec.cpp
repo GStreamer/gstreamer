@@ -179,7 +179,7 @@ gst_d3d11_h264_dec_class_init (GstD3D11H264DecClass * klass, gpointer data)
   /**
    * GstD3D11H264Dec:adapter-luid:
    *
-   * DXGI Adapter LUID for this elemenet
+   * DXGI Adapter LUID for this element
    *
    * Since: 1.20
    */

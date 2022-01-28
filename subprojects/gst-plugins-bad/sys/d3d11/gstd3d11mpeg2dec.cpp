@@ -157,7 +157,7 @@ gst_d3d11_mpeg2_dec_class_init (GstD3D11Mpeg2DecClass * klass, gpointer data)
   /**
    * GstD3D11Mpeg2Dec:adapter-luid:
    *
-   * DXGI Adapter LUID for this elemenet
+   * DXGI Adapter LUID for this element
    *
    * Since: 1.20
    */

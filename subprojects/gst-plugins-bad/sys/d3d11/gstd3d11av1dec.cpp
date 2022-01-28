@@ -458,7 +458,7 @@ gst_d3d11_av1_dec_class_init (GstD3D11AV1DecClass * klass, gpointer data)
   /**
    * GstD3D11AV1Dec:adapter-luid:
    *
-   * DXGI Adapter LUID for this elemenet
+   * DXGI Adapter LUID for this element
    *
    * Since: 1.20
    */
