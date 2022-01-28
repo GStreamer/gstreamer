@@ -598,7 +598,7 @@ gst_soup_http_client_sink_start (GstBaseSink * sink)
 
   /* Set up logging */
   gst_soup_util_log_setup (souphttpsink->session, souphttpsink->log_level,
-      GST_ELEMENT (souphttpsink));
+      G_OBJECT (souphttpsink));
 
   return TRUE;
 }

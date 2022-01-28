@@ -63,26 +63,26 @@ gst_soup_util_log_printer_cb (SoupLogger G_GNUC_UNUSED * logger,
 {
   gchar c;
   c = gst_soup_util_log_make_level_tag (level);
-  GST_TRACE_OBJECT (GST_ELEMENT (user_data), "HTTP_SESSION(%c): %c %s", c,
+  GST_TRACE_OBJECT (G_OBJECT (user_data), "HTTP_SESSION(%c): %c %s", c,
       direction, data);
 }
 
 void
 gst_soup_util_log_setup (SoupSession * session, SoupLoggerLogLevel level,
-    GstElement * element)
+    GObject * object)
 {
   SoupLogger *logger;
 
   if (!level) {
-    GST_INFO_OBJECT (element, "Not attaching a logger with level 0");
+    GST_INFO_OBJECT (object, "Not attaching a logger with level 0");
     return;
   }
 
-  g_assert (session && element);
+  g_assert (session && object);
 
   if (gst_debug_category_get_threshold (GST_CAT_DEFAULT)
       < GST_LEVEL_TRACE) {
-    GST_INFO_OBJECT (element, "Not setting up HTTP session logger. "
+    GST_INFO_OBJECT (object, "Not setting up HTTP session logger. "
         "Need at least GST_LEVEL_TRACE");
     return;
   }
@@ -91,7 +91,7 @@ gst_soup_util_log_setup (SoupSession * session, SoupLoggerLogLevel level,
   logger = _soup_logger_new (level);
 
   _soup_logger_set_printer (logger, gst_soup_util_log_printer_cb,
-      gst_object_ref (element), (GDestroyNotify) gst_object_unref);
+      gst_object_ref (object), (GDestroyNotify) gst_object_unref);
 
   /* Attach logger to session */
   _soup_session_add_feature (session, (SoupSessionFeature *) logger);

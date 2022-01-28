@@ -30,7 +30,7 @@
 G_BEGIN_DECLS
 
 void gst_soup_util_log_setup (SoupSession * session, SoupLoggerLogLevel level,
-    GstElement * element);
+    GObject * object);
 
 G_END_DECLS
 

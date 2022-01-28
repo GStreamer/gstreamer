@@ -985,18 +985,19 @@ static gpointer
 thread_func (gpointer user_data)
 {
   GstSoupHTTPSrc *src = user_data;
+  GstSoupSession *session = src->session;
   GMainContext *ctx;
 
   GST_DEBUG_OBJECT (src, "thread start");
 
-  ctx = g_main_loop_get_context (src->session->loop);
+  ctx = g_main_loop_get_context (session->loop);
 
   g_main_context_push_thread_default (ctx);
 
   /* We explicitly set User-Agent to NULL here and overwrite it per message
    * to be able to have the same session with different User-Agents per
    * source */
-  src->session->session =
+  session->session =
       _soup_session_new_with_options ("user-agent", NULL,
       "timeout", src->timeout, "tls-interaction", src->tls_interaction,
       /* Unset the limit the number of maximum allowed connections */
@@ -1015,20 +1016,19 @@ thread_func (gpointer user_data)
       g_object_unref (proxy_resolver);
     }
   } else {
-    g_object_set (src->session->session, "ssl-strict", src->ssl_strict, NULL);
+    g_object_set (session->session, "ssl-strict", src->ssl_strict, NULL);
     if (src->proxy != NULL) {
-      g_object_set (src->session->session, "proxy-uri", src->proxy->soup_uri,
-          NULL);
+      g_object_set (session->session, "proxy-uri", src->proxy->soup_uri, NULL);
     }
   }
 
-  gst_soup_util_log_setup (src->session->session, src->log_level,
-      GST_ELEMENT (src));
+  gst_soup_util_log_setup (session->session, src->log_level,
+      G_OBJECT (session));
   if (gst_soup_loader_get_api_version () < 3) {
-    _soup_session_add_feature_by_type (src->session->session,
+    _soup_session_add_feature_by_type (session->session,
         _soup_content_decoder_get_type ());
   }
-  _soup_session_add_feature_by_type (src->session->session,
+  _soup_session_add_feature_by_type (session->session,
       _soup_cookie_jar_get_type ());
 
   if (src->session_is_shared) {
@@ -1036,11 +1036,11 @@ thread_func (gpointer user_data)
     GstMessage *message;
     GstStructure *s;
 
-    GST_DEBUG_OBJECT (src, "Sharing session %p", src->session->session);
+    GST_DEBUG_OBJECT (session, "Sharing session %p", session->session);
 
     context = gst_context_new (GST_SOUP_SESSION_CONTEXT, TRUE);
     s = gst_context_writable_structure (context);
-    gst_structure_set (s, "session", GST_TYPE_SOUP_SESSION, src->session, NULL);
+    gst_structure_set (s, "session", GST_TYPE_SOUP_SESSION, session, NULL);
 
     /* during this time the src is locked by the parent thread,
      * which is waiting, so this is safe to do
@@ -1059,7 +1059,7 @@ thread_func (gpointer user_data)
    * and exits early if it does not)
    */
   if (gst_soup_loader_get_api_version () < 3) {
-    g_signal_connect (src->session->session, "authenticate",
+    g_signal_connect (session->session, "authenticate",
         G_CALLBACK (gst_soup_http_src_authenticate_cb_2), src);
   }
 
@@ -1077,11 +1077,17 @@ thread_func (gpointer user_data)
     }
   }
 
-  g_main_loop_run (src->session->loop);
+  /* Once the main loop is running, the source element that created this
+   * session might disappear if the session is shared with other source
+   * elements.
+   */
+  src = NULL;
+
+  g_main_loop_run (session->loop);
 
   g_main_context_pop_thread_default (ctx);
 
-  GST_DEBUG_OBJECT (src, "thread stop");
+  GST_DEBUG_OBJECT (session, "thread stop");
 
   return NULL;
 }
@@ -1164,6 +1170,8 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
 
     src->session =
         GST_SOUP_SESSION (g_object_new (GST_TYPE_SOUP_SESSION, NULL));
+
+    GST_DEBUG_OBJECT (src, "Created session %p", src->session);
 
     ctx = g_main_context_new ();
 
