@@ -7,6 +7,7 @@ webrtc_sources = files([
   'rtptransceiver.c',
   'datachannel.c',
   'sctptransport.c',
+  'webrtc.c',
 ])
 
 webrtc_headers = files([

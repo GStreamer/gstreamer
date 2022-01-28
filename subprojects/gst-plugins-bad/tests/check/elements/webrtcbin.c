@@ -3862,8 +3862,11 @@ GST_START_TEST (test_reject_create_offer)
   s = gst_promise_get_reply (promise);
   fail_unless (s != NULL);
   gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
-  fail_unless (g_error_matches (error, GST_WEBRTC_BIN_ERROR,
-          GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION));
+  fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_INTERNAL_FAILURE));
+  fail_unless (g_str_match_string
+      ("has locked mline 1 but the whole offer only has 0 sections",
+          error->message, FALSE));
   g_clear_error (&error);
   gst_promise_unref (promise);
 
@@ -3933,8 +3936,12 @@ GST_START_TEST (test_reject_set_description)
   fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
   s = gst_promise_get_reply (promise);
   gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
-  fail_unless (g_error_matches (error, GST_WEBRTC_BIN_ERROR,
-          GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION));
+  fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_INTERNAL_FAILURE));
+  fail_unless (g_str_match_string
+      ("m-line 0 was locked to audio, but SDP has audio media", error->message,
+          FALSE));
+
   g_clear_error (&error);
   fail_unless (s != NULL);
   gst_promise_unref (promise);
@@ -4129,8 +4136,11 @@ GST_START_TEST (test_codec_preferences_negotiation_sinkpad)
   s = gst_promise_get_reply (promise);
   fail_unless (s != NULL);
   gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
-  fail_unless (g_error_matches (error, GST_WEBRTC_BIN_ERROR,
-          GST_WEBRTC_BIN_ERROR_CAPS_NEGOTIATION_FAILED));
+  fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_INTERNAL_FAILURE));
+  fail_unless (g_str_match_string
+      ("Caps negotiation on pad sink_0 failed against codec preferences",
+          error->message, FALSE));
   g_clear_error (&error);
   gst_promise_unref (promise);
 

@@ -423,4 +423,45 @@ typedef enum /*<underscore_name=gst_webrtc_kind>*/
   GST_WEBRTC_KIND_VIDEO,
 } GstWebRTCKind;
 
+
+GST_WEBRTC_API
+GQuark gst_webrtc_error_quark (void);
+
+/**
+ * GST_WEBRTC_ERROR:
+ *
+ * Since: 1.20
+ */
+#define GST_WEBRTC_ERROR gst_webrtc_error_quark ()
+
+/**
+ * GstWebRTCError:
+ * @GST_WEBRTC_ERROR_DATA_CHANNEL_FAILURE: data-channel-failure
+ * @GST_WEBRTC_ERROR_DTLS_FAILURE: dtls-failure
+ * @GST_WEBRTC_ERROR_FINGERPRINT_FAILURE: fingerprint-failure
+ * @GST_WEBRTC_ERROR_SCTP_FAILURE: sctp-failure
+ * @GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR: sdp-syntax-error
+ * @GST_WEBRTC_ERROR_HARDWARE_ENCODER_NOT_AVAILABLE: hardware-encoder-not-available
+ * @GST_WEBRTC_ERROR_ENCODER_ERROR: encoder-error
+ * @GST_WEBRTC_ERROR_INVALID_STATE: invalid-state (part of WebIDL specification)
+ * @GST_WEBRTC_ERROR_INTERNAL_FAILURE: GStreamer-specific failure, not matching any other value from the specification
+ *
+ * See <https://www.w3.org/TR/webrtc/#dom-rtcerrordetailtype> for more information.
+ *
+ * Since: 1.20
+ */
+typedef enum /*<underscore_name=gst_webrtc_error>*/
+{
+  GST_WEBRTC_ERROR_DATA_CHANNEL_FAILURE,
+  GST_WEBRTC_ERROR_DTLS_FAILURE,
+  GST_WEBRTC_ERROR_FINGERPRINT_FAILURE,
+  GST_WEBRTC_ERROR_SCTP_FAILURE,
+  GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
+  GST_WEBRTC_ERROR_HARDWARE_ENCODER_NOT_AVAILABLE,
+  GST_WEBRTC_ERROR_ENCODER_ERROR,
+  GST_WEBRTC_ERROR_INVALID_STATE,
+  GST_WEBRTC_ERROR_INTERNAL_FAILURE
+} GstWebRTCError;
+
+
 #endif /* __GST_WEBRTC_FWD_H__ */

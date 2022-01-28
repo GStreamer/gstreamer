@@ -84,8 +84,8 @@ _check_valid_state_for_sdp_change (GstWebRTCSignalingState state,
     gchar *state_str = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
         state);
     gchar *type_str = _enum_value_to_string (GST_TYPE_WEBRTC_SDP_TYPE, type);
-    g_set_error (error, GST_WEBRTC_BIN_ERROR,
-        GST_WEBRTC_BIN_ERROR_INVALID_STATE,
+    g_set_error (error, GST_WEBRTC_ERROR,
+        GST_WEBRTC_ERROR_INVALID_STATE,
         "Not in the correct state (%s) for setting %s %s description",
         state_str, _sdp_source_to_string (source), type_str);
     g_free (state_str);
@@ -108,8 +108,8 @@ _check_sdp_crypto (SDPSource source, GstWebRTCSessionDescription * sdp,
 
   key = gst_sdp_message_get_key (sdp->sdp);
   if (!IS_EMPTY_SDP_ATTRIBUTE (key->data)) {
-    g_set_error_literal (error, GST_WEBRTC_BIN_ERROR,
-        GST_WEBRTC_BIN_ERROR_BAD_SDP, "sdp contains a k line");
+    g_set_error_literal (error, GST_WEBRTC_ERROR,
+        GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR, "sdp contains a k line");
     return FALSE;
   }
 
@@ -122,8 +122,8 @@ _check_sdp_crypto (SDPSource source, GstWebRTCSessionDescription * sdp,
 
     if (!IS_EMPTY_SDP_ATTRIBUTE (message_fingerprint)
         && !IS_EMPTY_SDP_ATTRIBUTE (media_fingerprint)) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR,
-          GST_WEBRTC_BIN_ERROR_FINGERPRINT,
+      g_set_error (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_FINGERPRINT_FAILURE,
           "No fingerprint lines in sdp for media %u", i);
       return FALSE;
     }
@@ -132,8 +132,8 @@ _check_sdp_crypto (SDPSource source, GstWebRTCSessionDescription * sdp,
     }
     if (!IS_EMPTY_SDP_ATTRIBUTE (media_fingerprint)
         && g_strcmp0 (fingerprint, media_fingerprint) != 0) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR,
-          GST_WEBRTC_BIN_ERROR_FINGERPRINT,
+      g_set_error (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_FINGERPRINT_FAILURE,
           "Fingerprint in media %u differs from %s fingerprint. "
           "\'%s\' != \'%s\'", i, message_fingerprint ? "global" : "previous",
           fingerprint, media_fingerprint);
@@ -178,8 +178,8 @@ static gboolean
 _check_trickle_ice (GstSDPMessage * msg, GError ** error)
 {
   if (!_session_has_attribute_key_value (msg, "ice-options", "trickle")) {
-    g_set_error_literal (error, GST_WEBRTC_BIN_ERROR,
-        GST_WEBRTC_BIN_ERROR_BAD_SDP,
+    g_set_error_literal (error, GST_WEBRTC_ERROR,
+        GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
         "No required \'a=ice-options:trickle\' line in sdp");
   }
   return TRUE;
@@ -204,7 +204,7 @@ _media_has_mid (const GstSDPMedia * media, guint media_idx, GError ** error)
 {
   const gchar *mid = gst_sdp_media_get_attribute_val (media, "mid");
   if (IS_EMPTY_SDP_ATTRIBUTE (mid)) {
-    g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+    g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
         "media %u is missing or contains an empty \'mid\' attribute",
         media_idx);
     return FALSE;
@@ -248,13 +248,13 @@ _media_has_setup (const GstSDPMedia * media, guint media_idx, GError ** error)
   static const gchar *valid_setups[] = { "actpass", "active", "passive", NULL };
   const gchar *setup = gst_sdp_media_get_attribute_val (media, "setup");
   if (IS_EMPTY_SDP_ATTRIBUTE (setup)) {
-    g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+    g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
         "media %u is missing or contains an empty \'setup\' attribute",
         media_idx);
     return FALSE;
   }
   if (!g_strv_contains (valid_setups, setup)) {
-    g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+    g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
         "media %u contains unknown \'setup\' attribute, \'%s\'", media_idx,
         setup);
     return FALSE;
@@ -268,7 +268,7 @@ _media_has_dtls_id (const GstSDPMedia * media, guint media_idx, GError ** error)
 {
   const gchar *dtls_id = gst_sdp_media_get_attribute_val (media, "ice-pwd");
   if (IS_EMPTY_SDP_ATTRIBUTE (dtls_id)) {
-    g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+    g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
         "media %u is missing or contains an empty \'dtls-id\' attribute",
         media_idx);
     return FALSE;
@@ -307,13 +307,13 @@ validate_sdp (GstWebRTCSignalingState state, SDPSource source,
     media_in_bundle = is_bundle
         && g_strv_contains ((const gchar **) group_members, mid);
     if (!_media_get_ice_ufrag (sdp->sdp, i)) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+      g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
           "media %u is missing or contains an empty \'ice-ufrag\' attribute",
           i);
       goto fail;
     }
     if (!_media_get_ice_pwd (sdp->sdp, i)) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+      g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
           "media %u is missing or contains an empty \'ice-pwd\' attribute", i);
       goto fail;
     }
@@ -327,7 +327,7 @@ validate_sdp (GstWebRTCSignalingState state, SDPSource source,
       if (!bundle_ice_ufrag)
         bundle_ice_ufrag = ice_ufrag;
       else if (g_strcmp0 (bundle_ice_ufrag, ice_ufrag) != 0) {
-        g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+        g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
             "media %u has different ice-ufrag values in bundle. "
             "%s != %s", i, bundle_ice_ufrag, ice_ufrag);
         goto fail;
@@ -335,7 +335,7 @@ validate_sdp (GstWebRTCSignalingState state, SDPSource source,
       if (!bundle_ice_pwd) {
         bundle_ice_pwd = ice_pwd;
       } else if (g_strcmp0 (bundle_ice_pwd, ice_pwd) != 0) {
-        g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+        g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
             "media %u has different ice-pwd values in bundle. "
             "%s != %s", i, bundle_ice_pwd, ice_pwd);
         goto fail;
@@ -884,7 +884,7 @@ _parse_bundle (GstSDPMessage * sdp, GStrv * bundled, GError ** error)
     *bundled = g_strsplit (group + strlen ("BUNDLE "), " ", 0);
 
     if (!(*bundled)[0]) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+      g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
           "Invalid format for BUNDLE group, expected at least one mid (%s)",
           group);
       g_strfreev (*bundled);

@@ -926,7 +926,7 @@ _execute_op (GstWebRTCBinTask * op)
 
     if (op->promise) {
       GError *error =
-          g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+          g_error_new (GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
           "webrtcbin is closed. aborting execution.");
       GstStructure *s = gst_structure_new ("application/x-gst-promise",
           "error", G_TYPE_ERROR, error, NULL);
@@ -1704,8 +1704,8 @@ _query_pad_caps (GstWebRTCBin * webrtc, GstWebRTCRTPTransceiver * rtp_trans,
 
   /* Only return an error if actual empty caps were returned from the query. */
   if (gst_caps_is_empty (caps)) {
-    g_set_error (error, GST_WEBRTC_BIN_ERROR,
-        GST_WEBRTC_BIN_ERROR_CAPS_NEGOTIATION_FAILED,
+    g_set_error (error, GST_WEBRTC_ERROR,
+        GST_WEBRTC_ERROR_INTERNAL_FAILURE,
         "Caps negotiation on pad %s failed", GST_PAD_NAME (pad));
     gst_clear_caps (&caps);
     gst_caps_unref (filter);
@@ -1840,9 +1840,9 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
       gst_clear_caps (&caps);
 
       if (gst_caps_is_empty (intersection)) {
-        g_set_error (error, GST_WEBRTC_BIN_ERROR,
-            GST_WEBRTC_BIN_ERROR_CAPS_NEGOTIATION_FAILED,
-            "Caps negotiation on pad %s failed againt codec preferences",
+        g_set_error (error, GST_WEBRTC_ERROR,
+            GST_WEBRTC_ERROR_INTERNAL_FAILURE,
+            "Caps negotiation on pad %s failed against codec preferences",
             GST_PAD_NAME (pad));
         gst_clear_caps (&intersection);
       } else {
@@ -2841,8 +2841,8 @@ _parse_extmap (GQuark field_id, const GValue * value, GError ** error)
   if (!ret && error) {
     gchar *val_str = gst_value_serialize (value);
 
-    g_set_error (error, GST_WEBRTC_BIN_ERROR,
-        GST_WEBRTC_BIN_ERROR_CAPS_NEGOTIATION_FAILED,
+    g_set_error (error, GST_WEBRTC_ERROR,
+        GST_WEBRTC_ERROR_INTERNAL_FAILURE,
         "Invalid value for %s: %s", g_quark_to_string (field_id), val_str);
     g_free (val_str);
   }
@@ -2886,8 +2886,8 @@ _dedup_extmap_field (GQuark field_id, const GValue * value, ExtmapData * data)
         GST_ERROR
             ("extmap contains different values for id %s (%s != %s)",
             g_quark_to_string (field_id), old_value, new_value);
-        g_set_error (data->error, GST_WEBRTC_BIN_ERROR,
-            GST_WEBRTC_BIN_ERROR_CAPS_NEGOTIATION_FAILED,
+        g_set_error (data->error, GST_WEBRTC_ERROR,
+            GST_WEBRTC_ERROR_INTERNAL_FAILURE,
             "extmap contains different values for id %s (%s != %s)",
             g_quark_to_string (field_id), old_value, new_value);
         data->ret = FALSE;
@@ -3392,8 +3392,8 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
             g_assert (!g_list_find (seen_transceivers, trans));
 
             if (wtrans->mline_locked && trans->mline != media_idx) {
-              g_set_error (error, GST_WEBRTC_BIN_ERROR,
-                  GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION,
+              g_set_error (error, GST_WEBRTC_ERROR,
+                  GST_WEBRTC_ERROR_INTERNAL_FAILURE,
                   "Previous negotiatied transceiver %"
                   GST_PTR_FORMAT " with mid %s was in mline %d but transceiver"
                   " has locked mline %u", trans, trans->mid, media_idx,
@@ -3414,8 +3414,8 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
             if (g_hash_table_contains (all_mids, mid)) {
               gst_sdp_media_free (media);
-              g_set_error (error, GST_WEBRTC_BIN_ERROR,
-                  GST_WEBRTC_BIN_ERROR_FAILED,
+              g_set_error (error, GST_WEBRTC_ERROR,
+                  GST_WEBRTC_ERROR_INTERNAL_FAILURE,
                   "Duplicate mid %s when creating offer", mid);
               goto cancel_offer;
             }
@@ -3459,7 +3459,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
     if (trans->mid) {
       if (g_hash_table_contains (all_mids, trans->mid)) {
-        g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_FAILED,
+        g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INTERNAL_FAILURE,
             "Duplicate mid %s when creating offer", trans->mid);
         goto cancel_offer;
       }
@@ -3539,8 +3539,8 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
             continue;
           g_assert (wtrans->mline_locked);
 
-          g_set_error (error, GST_WEBRTC_BIN_ERROR,
-              GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION,
+          g_set_error (error, GST_WEBRTC_ERROR,
+              GST_WEBRTC_ERROR_INTERNAL_FAILURE,
               "Tranceiver %" GST_PTR_FORMAT " with mid %s has locked mline %d"
               " but the whole offer only has %u sections", trans, trans->mid,
               trans->mline, media_idx);
@@ -3779,8 +3779,8 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
   GstSDPMessage *last_answer = _get_latest_self_generated_sdp (webrtc);
 
   if (!webrtc->pending_remote_description) {
-    g_set_error_literal (error, GST_WEBRTC_BIN_ERROR,
-        GST_WEBRTC_BIN_ERROR_INVALID_STATE,
+    g_set_error_literal (error, GST_WEBRTC_ERROR,
+        GST_WEBRTC_ERROR_INVALID_STATE,
         "Asked to create an answer without a remote description");
     return NULL;
   }
@@ -3793,7 +3793,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
     guint bundle_media_index;
 
     if (!_get_bundle_index (pending_remote->sdp, bundled, &bundle_idx)) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+      g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
           "Bundle tag is %s but no media found matching", bundled[0]);
       goto out;
     }
@@ -4289,7 +4289,7 @@ gst_webrtc_bin_create_offer (GstWebRTCBin * webrtc,
   if (!gst_webrtc_bin_enqueue_task (webrtc, (GstWebRTCBinFunc) _create_sdp_task,
           data, (GDestroyNotify) _free_create_sdp_data, promise)) {
     GError *error =
-        g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+        g_error_new (GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
         "Could not create offer. webrtcbin is closed");
     GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
@@ -4313,7 +4313,7 @@ gst_webrtc_bin_create_answer (GstWebRTCBin * webrtc,
   if (!gst_webrtc_bin_enqueue_task (webrtc, (GstWebRTCBinFunc) _create_sdp_task,
           data, (GDestroyNotify) _free_create_sdp_data, promise)) {
     GError *error =
-        g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+        g_error_new (GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
         "Could not create answer. webrtcbin is closed.");
     GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
@@ -4876,7 +4876,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     remote_setup = _get_dtls_setup_from_media (remote_media);
     new_setup = _get_final_setup (local_setup, remote_setup);
     if (new_setup == GST_WEBRTC_DTLS_SETUP_NONE) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+      g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
           "Cannot intersect direction attributes for media %u", media_idx);
       return;
     }
@@ -4885,7 +4885,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     remote_dir = _get_direction_from_media (remote_media);
     new_dir = _get_final_direction (local_dir, remote_dir);
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+      g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
           "Cannot intersect dtls setup attributes for media %u", media_idx);
       return;
     }
@@ -4893,8 +4893,8 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     if (prev_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE
         && new_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE
         && prev_dir != new_dir) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR,
-          GST_WEBRTC_BIN_ERROR_NOT_IMPLEMENTED,
+      g_set_error (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_INTERNAL_FAILURE,
           "transceiver direction changes are not implemented. Media %u",
           media_idx);
       return;
@@ -5107,7 +5107,7 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
   remote_setup = _get_dtls_setup_from_media (remote_media);
   new_setup = _get_final_setup (local_setup, remote_setup);
   if (new_setup == GST_WEBRTC_DTLS_SETUP_NONE) {
-    g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+    g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
         "Cannot intersect dtls setup for media %u", media_idx);
     return;
   }
@@ -5120,7 +5120,7 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
   local_port = _get_sctp_port_from_media (local_media);
   remote_port = _get_sctp_port_from_media (local_media);
   if (local_port == -1 || remote_port == -1) {
-    g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+    g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
         "Could not find sctp port for media %u (local %i, remote %i)",
         media_idx, local_port, remote_port);
     return;
@@ -5260,7 +5260,7 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
   if (bundled) {
 
     if (!_get_bundle_index (sdp->sdp, bundled, &bundle_idx)) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+      g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
           "Bundle tag is %s but no media found matching", bundled[0]);
       goto done;
     }
@@ -5312,7 +5312,7 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
       webrtc_transceiver_set_transport ((WebRTCTransceiver *) trans, stream);
 
     if (source == SDP_LOCAL && sdp->type == GST_WEBRTC_SDP_TYPE_OFFER && !trans) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+      g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
           "State mismatch.  Could not find local transceiver by mline %u", i);
       goto done;
     } else {
@@ -5415,8 +5415,8 @@ check_locked_mlines (GstWebRTCBin * webrtc, GstWebRTCSessionDescription * sdp,
       continue;
 
     if (rtp_trans->mline != i) {
-      g_set_error (error, GST_WEBRTC_BIN_ERROR,
-          GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION,
+      g_set_error (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_INTERNAL_FAILURE,
           "m-line with mid %s is at position %d, but was locked to %d, "
           "rejecting", rtp_trans->mid, i, rtp_trans->mline);
       return FALSE;
@@ -5425,8 +5425,8 @@ check_locked_mlines (GstWebRTCBin * webrtc, GstWebRTCSessionDescription * sdp,
     if (rtp_trans->kind != GST_WEBRTC_KIND_UNKNOWN) {
       if (!g_strcmp0 (gst_sdp_media_get_media (media), "audio") &&
           rtp_trans->kind != GST_WEBRTC_KIND_AUDIO) {
-        g_set_error (error, GST_WEBRTC_BIN_ERROR,
-            GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION,
+        g_set_error (error, GST_WEBRTC_ERROR,
+            GST_WEBRTC_ERROR_INTERNAL_FAILURE,
             "m-line %d was locked to audio, but SDP has %s media", i,
             gst_sdp_media_get_media (media));
         return FALSE;
@@ -5434,8 +5434,8 @@ check_locked_mlines (GstWebRTCBin * webrtc, GstWebRTCSessionDescription * sdp,
 
       if (!g_strcmp0 (gst_sdp_media_get_media (media), "video") &&
           rtp_trans->kind != GST_WEBRTC_KIND_VIDEO) {
-        g_set_error (error, GST_WEBRTC_BIN_ERROR,
-            GST_WEBRTC_BIN_ERROR_IMPOSSIBLE_MLINE_RESTRICTION,
+        g_set_error (error, GST_WEBRTC_ERROR,
+            GST_WEBRTC_ERROR_INTERNAL_FAILURE,
             "m-line %d was locked to video, but SDP has %s media", i,
             gst_sdp_media_get_media (media));
         return FALSE;
@@ -5511,7 +5511,7 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
 
   if (bundled) {
     if (!_get_bundle_index (sd->sdp->sdp, bundled, &bundle_idx)) {
-      g_set_error (&error, GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_BAD_SDP,
+      g_set_error (&error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
           "Bundle tag is %s but no matching media found", bundled[0]);
       goto out;
     }
@@ -5520,8 +5520,8 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
   if (!check_transceivers_not_removed (webrtc,
           get_previous_description (webrtc, sd->source, sd->sdp->type),
           sd->sdp)) {
-    g_set_error_literal (&error, GST_WEBRTC_BIN_ERROR,
-        GST_WEBRTC_BIN_ERROR_BAD_SDP,
+    g_set_error_literal (&error, GST_WEBRTC_ERROR,
+        GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
         "m=lines removed from the SDP. Processing a completely new connection "
         "is not currently supported.");
     goto out;
@@ -5889,7 +5889,7 @@ gst_webrtc_bin_set_remote_description (GstWebRTCBin * webrtc,
           (GstWebRTCBinFunc) _set_description_task, sd,
           (GDestroyNotify) _free_set_description_data, promise)) {
     GError *error =
-        g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+        g_error_new (GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
         "Could not set remote description. webrtcbin is closed.");
     GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
@@ -5927,7 +5927,7 @@ gst_webrtc_bin_set_local_description (GstWebRTCBin * webrtc,
           (GstWebRTCBinFunc) _set_description_task, sd,
           (GDestroyNotify) _free_set_description_data, promise)) {
     GError *error =
-        g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+        g_error_new (GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
         "Could not set local description. webrtcbin is closed");
     GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
@@ -6122,7 +6122,7 @@ gst_webrtc_bin_get_stats (GstWebRTCBin * webrtc, GstPad * pad,
   if (!gst_webrtc_bin_enqueue_task (webrtc, (GstWebRTCBinFunc) _get_stats_task,
           stats, (GDestroyNotify) _free_get_stats, promise)) {
     GError *error =
-        g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+        g_error_new (GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
         "Could not retrieve statistics. webrtcbin is closed.");
     GstStructure *s = gst_structure_new ("application/x-gst-promise",
         "error", G_TYPE_ERROR, error, NULL);
