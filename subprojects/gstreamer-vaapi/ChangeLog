@@ -1,7 +1,79 @@
+2022-01-05 02:07:59 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* docs/meson.build:
+	* meson.build:
+	  meson: Add explicit check: kwarg to all run_command() calls
+	  This is required since Meson 0.61.0, and causes a warning to be
+	  emitted otherwise:
+	  https://github.com/mesonbuild/meson/commit/2c079d855ed87488bdcc6c5c06f59abdb9b85b6c
+	  https://github.com/mesonbuild/meson/issues/9300
+	  This exposed a bunch of places where we had broken run_command()
+	  calls, unnecessary run_command() calls, and places where check: true
+	  should be used.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1507>
+
+2022-01-04 16:19:44 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiprofile.c:
+	  vaapi: av1dec: Use named profiles to replace the numeric ones.
+	  Use named AV1 profiles (i.e., main, high) to replace the old "0"
+	  and "1" profiles.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1491>
+
+2021-12-01 15:36:44 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  vaapidecodebin: Misc enhancements.
+	  - Use GST_WARNING rather than g_critical
+	  - Replace gst_ghost_pad_new_from_template() with
+	  gst_ghost_pad_new() to avoid using the template.
+	  - Declare extern variable
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1405>
+
+2021-12-01 12:26:11 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: Autogenerate caps template.
+	  vaapidecode is used in vaapidecodebin and it exposes all the
+	  theoretically supported caps, but that slows down autoplug. With this
+	  autplug is negotiated faster, giving more option to decodebin to select
+	  other decoder.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1405>
+
+2021-11-16 17:18:28 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  vaapi: libs: Use unsized arrays as parameters.
+	  Instead of defining a sized array for function signature, use it
+	  unsized (a pointer alias, basically). In this way clang warning is
+	  silenced:
+	  warning: ‘fill_profiles’ accessing 64 bytes in a region of size 12 [-Wstringop-overflow=]
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1357>
+
+2021-11-16 17:21:52 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* meson.build:
+	  vaapi: meson: Fail if static build.
+	  And initialize the plugin array.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1357>
+
+2021-11-15 16:38:34 +0800  Ung, Teng En <teng.en.ung@intel.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: fix mising metadata when using system
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1325>
+
+2021-11-03 18:44:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.19.3 ===
 
 2021-11-03 15:43:36 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gstreamer-vaapi.doap:

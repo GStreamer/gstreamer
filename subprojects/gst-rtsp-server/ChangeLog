@@ -1,7 +1,72 @@
+2022-01-20 17:13:36 -0600  Michael Gruner <michael.gruner@ridgerun.com>
+
+	* examples/test-appsrc2.c:
+	  gst-rtsp-server: Fix leak in appsrc2 example
+	  In the need-data appsrc callback, a buffer is pulled from the
+	  appsink. This buffer is then copied so that metadata is writable.
+	  The copy is pushed to the appsrc but it doesn't take ownership
+	  of the buffer so we need to manually unref it. The original buffer
+	  is finally unreffed when the sample is freed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1548>
+
+2022-01-05 02:07:59 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* docs/meson.build:
+	* meson.build:
+	  meson: Add explicit check: kwarg to all run_command() calls
+	  This is required since Meson 0.61.0, and causes a warning to be
+	  emitted otherwise:
+	  https://github.com/mesonbuild/meson/commit/2c079d855ed87488bdcc6c5c06f59abdb9b85b6c
+	  https://github.com/mesonbuild/meson/issues/9300
+	  This exposed a bunch of places where we had broken run_command()
+	  calls, unnecessary run_command() calls, and places where check: true
+	  should be used.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1507>
+
+2021-12-20 13:03:34 +0100  Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
+	* gst/rtsp-server/meson.build:
+	  rtsp-server: add gst_dep to gst_rtsp_server_deps
+	  Add gst_dep to gst_rtsp_server_deps, in the context of buildroot, this
+	  will avoid the following build failure, because the correct girdir
+	  location will be retrieved from gstreamer-1.0.pc:
+	  /home/giuliobenetti/autobuild/run/instance-3/output-1/host/riscv32-buildroot-linux-gnu/sysroot/usr/bin/g-ir-compiler gst/rtsp-server/GstRtspServer-1.0.gir --output gst/rtsp-server/GstRtspServer-1.0.typelib --includedir=/usr/share/gir-1.0
+	  Could not find GIR file 'Gst-1.0.gir'; check XDG_DATA_DIRS or use --includedir
+	  error parsing file gst/rtsp-server/GstRtspServer-1.0.gir: Failed to parse included gir Gst-1.0
+	  If the above error message is about missing .so libraries, then setting up GIR_EXTRA_LIBS_PATH in the .mk file should help.
+	  Typically like this: PKG_MAKE_ENV += GIR_EXTRA_LIBS_PATH="$(@D)/.libs"
+	  Fixes:
+	  - http://autobuild.buildroot.org/results/04af6b22cfa0cffb6a3109a3b32b27137ad2e0b0
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1460>
+
+2021-12-16 21:04:53 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: fix get_rates raciness
+	  Prior to this patch, we considered that a stream was blocking
+	  whenever a pad probe was triggered for either the RTP pad or
+	  the RTCP pad.
+	  This led to situations where we subsequently unblocked and expected
+	  to find a segment on the RTP pad, which was racy.
+	  Instead, we now only consider that the stream is blocking when
+	  the pad probe for the RTP pad has triggered with a blockable object
+	  (buffer, buffer list, gap event).
+	  The RTCP pad is simply blocked without affecting the state of the
+	  stream otherwise.
+	  Fixes #929
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1452>
+
+2021-11-03 18:44:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.19.3 ===
 
 2021-11-03 15:43:36 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* docs/gst_plugins_cache.json:

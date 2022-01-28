@@ -1,7 +1,57 @@
+2022-01-24 19:44:32 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/meson.build:
+	  ges: Include ges-image-source.h in the installed headers
+	  It's referenced by `ges.h` and was previously available, so removing it
+	  is an API change.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/963
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1563>
+
+2022-01-05 02:07:59 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* docs/meson.build:
+	* meson.build:
+	  meson: Add explicit check: kwarg to all run_command() calls
+	  This is required since Meson 0.61.0, and causes a warning to be
+	  emitted otherwise:
+	  https://github.com/mesonbuild/meson/commit/2c079d855ed87488bdcc6c5c06f59abdb9b85b6c
+	  https://github.com/mesonbuild/meson/issues/9300
+	  This exposed a bunch of places where we had broken run_command()
+	  calls, unnecessary run_command() calls, and places where check: true
+	  should be used.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1507>
+
+2021-11-11 19:11:25 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ges/ges-multi-file-source.c:
+	  docs: fix unnecessary ampersand, < and > escaping in code blocks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1340>
+
+2021-11-08 11:08:45 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/meson.build:
+	  meson:ges: Fix typo adding ges gir to libs list
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1322>
+
+2021-11-05 11:36:11 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/ges/mixers.c:
+	  tests:ges: Take TIMEOUT_FACTOR into account
+	  This env var is set in the CI so we grow the timeout as required
+	  (when running in valgrind for example).
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/jobs/15449209
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1315>
+
+2021-11-03 18:44:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.19.3 ===
 
 2021-11-03 15:43:36 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-editing-services.doap:

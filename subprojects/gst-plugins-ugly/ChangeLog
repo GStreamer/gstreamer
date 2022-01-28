@@ -1,7 +1,34 @@
+2022-01-27 01:39:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/LINGUAS:
+	* po/ro.po:
+	  gst-plugins-ugly: update translations
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1579>
+
+2022-01-05 02:07:59 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* docs/meson.build:
+	* meson.build:
+	  meson: Add explicit check: kwarg to all run_command() calls
+	  This is required since Meson 0.61.0, and causes a warning to be
+	  emitted otherwise:
+	  https://github.com/mesonbuild/meson/commit/2c079d855ed87488bdcc6c5c06f59abdb9b85b6c
+	  https://github.com/mesonbuild/meson/issues/9300
+	  This exposed a bunch of places where we had broken run_command()
+	  calls, unnecessary run_command() calls, and places where check: true
+	  should be used.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1507>
+
+2021-11-03 18:44:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.19.3 ===
 
 2021-11-03 15:43:36 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-plugins-ugly.doap:
