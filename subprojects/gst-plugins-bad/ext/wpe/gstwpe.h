@@ -21,4 +21,4 @@
 
 #include <gst/gst.h>
 
-const gchar *gst_wpe_get_extension_path (void);
+const gchar *gst_wpe_get_uninstalled_extension_path (void);

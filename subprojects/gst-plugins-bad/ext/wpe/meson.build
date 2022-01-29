@@ -16,11 +16,13 @@ if not wpe_dep.found() or not wpe_fdo_dep.found() or not egl_dep.found() or not 
   subdir_done()
 endif
 
+wpe_extension_install_dir = get_option('prefix') / get_option('libdir') / meson.project_name() / 'wpe-extension'
+
 giounix_dep = dependency('gio-unix-2.0', required: false)
 gstwpe = library('gstwpe',
   ['WPEThreadedView.cpp', 'gstwpe.cpp', 'gstwpevideosrc.cpp', 'gstwpesrcbin.cpp'],
   dependencies : [egl_dep, wpe_dep, wpe_fdo_dep, gstallocators_dep, gstaudio_dep, gstvideo_dep, gstbase_dep, gstgl_dep, xkbcommon_dep, wl_server_dep, giounix_dep],
-  cpp_args : gst_plugins_bad_args + ['-DHAVE_CONFIG_H=1'],
+  cpp_args : gst_plugins_bad_args + ['-DHAVE_CONFIG_H=1', '-DWPE_EXTENSION_INSTALL_DIR=' + wpe_extension_install_dir],
   include_directories : [configinc],
   install : true,
   install_dir : plugins_install_dir)

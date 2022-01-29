@@ -183,7 +183,10 @@ gpointer WPEContextThread::s_viewThread(gpointer data)
 static void
 initialize_web_extensions (WebKitWebContext *context)
 {
-    webkit_web_context_set_web_extensions_directory (context, gst_wpe_get_extension_path ());
+    const gchar *local_path = gst_wpe_get_uninstalled_extension_path ();
+    const gchar *path = g_file_test (local_path, G_FILE_TEST_IS_DIR) ? local_path : G_STRINGIFY (WPE_EXTENSION_INSTALL_DIR);
+    GST_INFO ("Loading WebExtension from %s", path);
+    webkit_web_context_set_web_extensions_directory (context, path);
 }
 
 static void

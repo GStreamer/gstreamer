@@ -33,7 +33,7 @@ GST_DEBUG_CATEGORY (wpe_video_src_debug);
 GST_DEBUG_CATEGORY (wpe_view_debug);
 GST_DEBUG_CATEGORY (wpe_src_debug);
 
-const gchar *gst_wpe_get_extension_path (void)
+const gchar *gst_wpe_get_uninstalled_extension_path (void)
 {
   return extension_path;
 }
