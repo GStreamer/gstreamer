@@ -125,7 +125,6 @@ _soup_session_finalize_cb (gpointer user_data)
 {
   GstSoupSession *sess = user_data;
 
-  g_clear_object (&sess->session);
   g_main_loop_quit (sess->loop);
 
   return FALSE;
@@ -1064,6 +1063,13 @@ thread_func (gpointer user_data)
 
   g_main_loop_run (session->loop);
 
+  /* Abort any pending operations on the session ... */
+  _soup_session_abort (session->session);
+  g_clear_object (&session->session);
+
+  /* ... and iterate the main context until nothing is pending anymore */
+  while (g_main_context_iteration (ctx, FALSE));
+
   g_main_context_pop_thread_default (ctx);
 
   GST_DEBUG_OBJECT (session, "thread stop");
@@ -1214,9 +1220,6 @@ _session_close_cb (gpointer user_data)
         src->cancellable);
     g_clear_object (&src->msg);
   }
-
-  if (!src->session_is_shared)
-    _soup_session_abort (src->session->session);
 
   /* there may be multiple of this callback attached to the session,
    * each with different data pointer; disconnect the one we are closing
