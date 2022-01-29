@@ -1884,11 +1884,13 @@ print_plugin_automatic_install_info_codecs (GstElementFactory * factory)
 
   if (strstr (klass, "Demuxer") ||
       strstr (klass, "Decoder") ||
+      strstr (klass, "Decryptor") ||
       strstr (klass, "Depay") || strstr (klass, "Parser")) {
     type_name = "decoder";
     direction = GST_PAD_SINK;
   } else if (strstr (klass, "Muxer") ||
-      strstr (klass, "Encoder") || strstr (klass, "Pay")) {
+      strstr (klass, "Encoder") ||
+      strstr (klass, "Encryptor") || strstr (klass, "Pay")) {
     type_name = "encoder";
     direction = GST_PAD_SRC;
   } else {
