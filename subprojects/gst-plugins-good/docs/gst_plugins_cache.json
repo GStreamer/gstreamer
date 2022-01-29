@@ -10854,7 +10854,15 @@
         },
         "filename": "gstosxaudio",
         "license": "LGPL",
-        "other-types": {},
+        "other-types": {
+            "GstOsxAudioElement": {
+                "hierarchy": [
+                    "GstOsxAudioElement",
+                    "GInterface"
+                ],
+                "kind": "interface"
+            }
+        },
         "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},

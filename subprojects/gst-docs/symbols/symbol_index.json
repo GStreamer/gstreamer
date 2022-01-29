@@ -12399,6 +12399,7 @@
   "GstOssSrc!src",
   "GstOssSrc:device",
   "GstOssSrc:device-name",
+  "GstOsxAudioElement",
   "GstOsxAudioSink!sink",
   "GstOsxAudioSrc!src",
   "GstOSXVideoSink!sink",
