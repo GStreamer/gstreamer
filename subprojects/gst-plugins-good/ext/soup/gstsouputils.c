@@ -90,8 +90,7 @@ gst_soup_util_log_setup (SoupSession * session, SoupLoggerLogLevel level,
   /* Create a new logger and set body_size_limit to -1 (no limit) */
   logger = _soup_logger_new (level);
 
-  _soup_logger_set_printer (logger, gst_soup_util_log_printer_cb,
-      gst_object_ref (object), (GDestroyNotify) gst_object_unref);
+  _soup_logger_set_printer (logger, gst_soup_util_log_printer_cb, object, NULL);
 
   /* Attach logger to session */
   _soup_session_add_feature (session, (SoupSessionFeature *) logger);
