@@ -920,9 +920,6 @@ gst_vaapi_create_test_display (void)
 #if USE_DRM
     GST_VAAPI_DISPLAY_TYPE_DRM,
 #endif
-#if USE_WAYLAND
-    GST_VAAPI_DISPLAY_TYPE_WAYLAND,
-#endif
 #if USE_X11
     GST_VAAPI_DISPLAY_TYPE_X11,
 #endif

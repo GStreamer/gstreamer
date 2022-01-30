@@ -124,9 +124,13 @@ USE_AV1_DECODER = cc.has_header('va/va_dec_av1.h', dependencies: libva_dep, pref
 
 USE_DRM = libva_drm_dep.found() and libdrm_dep.found() and libudev_dep.found() and get_option('with_drm') != 'no'
 USE_EGL = gmodule_dep.found() and egl_dep.found() and GLES_VERSION_MASK != 0 and get_option('with_egl') != 'no'
-USE_WAYLAND = libva_wayland_dep.found() and wayland_client_dep.found() and wayland_protocols_dep.found() and wayland_scanner_bin.found() and get_option('with_wayland') != 'no'
+USE_WAYLAND = libva_wayland_dep.found() and wayland_client_dep.found() and wayland_protocols_dep.found() and wayland_scanner_bin.found() and get_option('with_wayland') != 'no' and USE_DRM
 USE_X11 = libva_x11_dep.found() and x11_dep.found() and get_option('with_x11') != 'no'
 USE_GLX = gl_dep.found() and libdl_dep.found() and get_option('with_glx') != 'no' and USE_X11
+
+if get_option('with_wayland') == 'yes' and not USE_DRM
+   error('DRM support is required to enable Wayland support')
+endif
 
 if not (USE_DRM or USE_X11 or USE_WAYLAND)
   error('No renderer API found (it is requried either DRM, X11 and/or WAYLAND)')
