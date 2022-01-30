@@ -185,7 +185,7 @@ static const GstVideoFormatMap gst_vaapi_video_default_formats[] = {
 #undef DEF_RGB
 #undef DEF_YUV
 
-static GArray *gst_vaapi_video_formats_map;
+static GArray *gst_vaapi_video_formats_map = NULL;
 
 static inline gboolean
 va_format_is_rgb (const VAImageFormat * va_format)
@@ -254,6 +254,9 @@ get_map_by_gst_format (const GArray * formats, GstVideoFormat format)
   const GstVideoFormatMap *entry;
   guint i;
 
+  if (!formats)
+    return NULL;
+
   for (i = 0; i < formats->len; i++) {
     entry = &g_array_index (formats, GstVideoFormatMap, i);
     if (entry->format == format)
@@ -268,6 +271,9 @@ get_map_by_va_format (const VAImageFormat * va_format)
   const GArray *formats = gst_vaapi_video_formats_map;
   const GstVideoFormatMap *entry;
   guint i;
+
+  if (!formats)
+    return NULL;
 
   for (i = 0; i < formats->len; i++) {
     entry = &g_array_index (formats, GstVideoFormatMap, i);
@@ -642,6 +648,9 @@ gst_vaapi_drm_format_from_va_fourcc (guint32 fourcc)
   const GstVideoFormatMap *m;
   guint i;
 
+  if (!map)
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
   /* Note: VA fourcc values are now standardized and shall represent
      a unique format. The associated VAImageFormat is just a hint to
      determine RGBA component ordering */
@@ -674,6 +683,9 @@ gst_vaapi_video_format_from_drm_format (guint drm_format)
   const GArray *map = gst_vaapi_video_formats_map;
   const GstVideoFormatMap *m;
   guint i;
+
+  if (!map)
+    return GST_VIDEO_FORMAT_UNKNOWN;
 
   for (i = 0; i < map->len; i++) {
     m = &g_array_index (map, GstVideoFormatMap, i);
