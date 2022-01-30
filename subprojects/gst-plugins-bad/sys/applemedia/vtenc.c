@@ -366,7 +366,7 @@ gst_vtenc_class_init (GstVTEncClass * klass)
      * vtenc_prores:preserve-alpha
      *
      * Preserve non-opaque video alpha values from the input video when
-     * compressing, else treat all alpha component as opaque. Default is %TRUE.
+     * compressing, else treat all alpha component as opaque.
      *
      * Since: 1.20
      */

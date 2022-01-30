@@ -525,8 +525,8 @@ gst_osx_video_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_static_metadata (element_class, "OSX Video sink",
-      "Sink/Video", "OSX native videosink",
+  gst_element_class_set_static_metadata (element_class, "macOS Video sink",
+      "Sink/Video", "macOS native videosink",
       "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
   gst_element_class_add_static_pad_template (element_class, &gst_osx_video_sink_sink_template_factory);
