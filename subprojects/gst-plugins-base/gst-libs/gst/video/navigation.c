@@ -746,6 +746,146 @@ gst_navigation_event_get_type (GstEvent * event)
 }
 
 /**
+ * gst_navigation_event_new_key_press:
+ * @key: A string identifying the key press.
+ *
+ * Create a new navigation event for the given key press.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ * 
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_key_press (const gchar * key)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "key-press", "key", G_TYPE_STRING, key,
+          NULL));
+}
+
+/**
+ * gst_navigation_event_new_key_release:
+ * @key: A string identifying the released key.
+ *
+ * Create a new navigation event for the given key release.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ * 
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_key_release (const gchar * key)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "key-release", "key", G_TYPE_STRING, key,
+          NULL));
+}
+
+/**
+ * gst_navigation_event_new_mouse_button_press:
+ * @button: The number of the pressed mouse button.
+ * @x: The x coordinate of the mouse cursor.
+ * @y: The y coordinate of the mouse cursor.
+ *
+ * Create a new navigation event for the given key mouse button press.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ * 
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_mouse_button_press (gint button, gdouble x, gdouble y)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "mouse-button-press",
+          "button", G_TYPE_INT, button, "pointer_x", G_TYPE_DOUBLE, x,
+          "pointer_y", G_TYPE_DOUBLE, y, NULL));
+}
+
+/**
+ * gst_navigation_event_new_mouse_button_release:
+ * @button: The number of the released mouse button.
+ * @x: The x coordinate of the mouse cursor.
+ * @y: The y coordinate of the mouse cursor.
+ *
+ * Create a new navigation event for the given key mouse button release.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ * 
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_mouse_button_release (gint button, gdouble x,
+    gdouble y)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "mouse-button-release",
+          "button", G_TYPE_INT, button, "pointer_x", G_TYPE_DOUBLE, x,
+          "pointer_y", G_TYPE_DOUBLE, y, NULL));
+}
+
+/**
+ * gst_navigation_event_new_mouse_move:
+ * @x: The x coordinate of the mouse cursor.
+ * @y: The y coordinate of the mouse cursor.
+ *
+ * Create a new navigation event for the new mouse location.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ * 
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_mouse_move (gdouble x, gdouble y)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "mouse-move",
+          "pointer_x", G_TYPE_DOUBLE, x, "pointer_y", G_TYPE_DOUBLE, y, NULL));
+}
+
+/**
+ * gst_navigation_event_new_mouse_scroll:
+ * @x: The x coordinate of the mouse cursor.
+ * @y: The y coordinate of the mouse cursor.
+ * @delta_x: The x component of the scroll movement.
+ * @delta_y: The y component of the scroll movement.
+ *
+ * Create a new navigation event for the mouse scroll.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ * 
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_mouse_scroll (gdouble x, gdouble y, gdouble delta_x,
+    gdouble delta_y)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "mouse-scroll",
+          "pointer_x", G_TYPE_DOUBLE, x, "pointer_y", G_TYPE_DOUBLE, y,
+          "delta_pointer_x", G_TYPE_DOUBLE, delta_x,
+          "delta_pointer_y", G_TYPE_DOUBLE, delta_y, NULL));
+}
+
+/**
+ * gst_navigation_event_new_command:
+ * @command: The navigation command to use.
+ *
+ * Create a new navigation event given navigation command..
+ *
+ * Returns: (transfer full): a new #GstEvent
+ * 
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_command (GstNavigationCommand command)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "command",
+          "command-code", G_TYPE_UINT, (guint) command, NULL));
+}
+
+/**
  * gst_navigation_event_parse_key_event:
  * @event: A #GstEvent to inspect.
  * @key: (out) (optional) (transfer none): A pointer to a location to receive

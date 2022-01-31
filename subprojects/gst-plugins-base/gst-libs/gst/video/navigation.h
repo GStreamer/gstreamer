@@ -291,6 +291,30 @@ GST_VIDEO_API
 GstNavigationEventType gst_navigation_event_get_type          (GstEvent *event);
 
 GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_key_press            (const gchar * key) G_GNUC_MALLOC;
+
+GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_key_release          (const gchar * key) G_GNUC_MALLOC;
+
+GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_mouse_button_press   (gint button, gdouble x,
+                                                               gdouble y) G_GNUC_MALLOC;
+
+GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_mouse_button_release (gint button, gdouble x,
+                                                               gdouble y) G_GNUC_MALLOC;
+
+GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_mouse_move           (gdouble x, gdouble y) G_GNUC_MALLOC;
+
+GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_mouse_scroll         (gdouble x, gdouble y,
+                                                               gdouble delta_x, gdouble delta_y) G_GNUC_MALLOC;
+
+GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_command              (GstNavigationCommand command) G_GNUC_MALLOC;
+
+GST_VIDEO_API
 gboolean        gst_navigation_event_parse_key_event          (GstEvent *event,
                                                                const gchar **key);
 

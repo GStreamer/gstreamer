@@ -1492,7 +1492,8 @@ gst_event_parse_seek_trickmode_interval (GstEvent * event,
 /**
  * gst_event_new_navigation:
  * @structure: (transfer full): description of the event. The event will take
- *     ownership of the structure.
+ *     ownership of the structure. See #GstNavigation for more specific
+ *     constructors.
  *
  * Create a new navigation event from the given description.
  *
