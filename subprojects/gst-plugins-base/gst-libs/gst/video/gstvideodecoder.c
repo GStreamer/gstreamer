@@ -304,6 +304,10 @@ GST_DEBUG_CATEGORY (videodecoder_debug);
 
 /* properties */
 #define DEFAULT_QOS                 TRUE
+/* Catch-up per QoS message is the reported lateness plus this limit.
+ * The default matches the fixed cap this property replaces, and
+ * basesink's threshold for rendering late frames anyway. */
+#define DEFAULT_QOS_MAX_SKIP        GST_SECOND
 #define DEFAULT_MAX_ERRORS          GST_VIDEO_DECODER_MAX_ERRORS
 #define DEFAULT_MIN_FORCE_KEY_UNIT_INTERVAL 0
 #define DEFAULT_DISCARD_CORRUPTED_FRAMES FALSE
@@ -320,6 +324,7 @@ enum
 {
   PROP_0,
   PROP_QOS,
+  PROP_QOS_MAX_SKIP,
   PROP_MAX_ERRORS,
   PROP_MIN_FORCE_KEY_UNIT_INTERVAL,
   PROP_DISCARD_CORRUPTED_FRAMES,
@@ -437,6 +442,9 @@ struct _GstVideoDecoderPrivate
   gdouble proportion;           /* OBJECT_LOCK */
   GstClockTime earliest_time;   /* OBJECT_LOCK */
   GstClockTime qos_frame_duration;      /* OBJECT_LOCK */
+
+  GstClockTime qos_max_skip_time;       /* OBJECT_LOCK */
+
   gboolean discont;
   /* qos messages: frames dropped/processed */
   guint dropped;
@@ -643,6 +651,24 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
           DEFAULT_QOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstVideoDecoder:qos-max-skip:
+   *
+   * When downstream reports that frames are arriving late and
+   * #GstVideoDecoder:qos handling is enabled, the decoder will skip
+   * decoding or output of some video frames to catch up based on how
+   * late things are.
+   * This property places an upper limit on the length of time that
+   * will be skipped before sending at least 1 frame downstream.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_QOS_MAX_SKIP,
+      g_param_spec_uint64 ("qos-max-skip", "QoS Maximum Skip Time",
+          "When skipping decode for QoS, maximum amount of video to skip (ns)",
+          0, G_MAXUINT64, DEFAULT_QOS_MAX_SKIP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+
+  /**
    * GstVideoDecoder:max-errors:
    *
    * Maximum number of tolerated consecutive decode errors. See
@@ -798,6 +824,7 @@ gst_video_decoder_init (GstVideoDecoder * decoder, GstVideoDecoderClass * klass)
   decoder->priv->do_qos = DEFAULT_QOS;
   decoder->priv->max_errors = GST_VIDEO_DECODER_MAX_ERRORS;
   decoder->priv->error_no_valid_frames = DEFAULT_ERROR_NO_VALID_FRAMES;
+  decoder->priv->qos_max_skip_time = DEFAULT_QOS_MAX_SKIP;
 
   decoder->priv->min_latency = 0;
   decoder->priv->max_latency = 0;
@@ -1008,6 +1035,11 @@ gst_video_decoder_get_property (GObject * object, guint property_id,
     case PROP_QOS:
       g_value_set_boolean (value, priv->do_qos);
       break;
+    case PROP_QOS_MAX_SKIP:
+      GST_OBJECT_LOCK (object);
+      g_value_set_uint64 (value, priv->qos_max_skip_time);
+      GST_OBJECT_UNLOCK (object);
+      break;
     case PROP_MAX_ERRORS:
       g_value_set_int (value, gst_video_decoder_get_max_errors (dec));
       break;
@@ -1042,6 +1074,11 @@ gst_video_decoder_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_QOS:
       priv->do_qos = g_value_get_boolean (value);
+      break;
+    case PROP_QOS_MAX_SKIP:
+      GST_OBJECT_LOCK (object);
+      priv->qos_max_skip_time = g_value_get_uint64 (value);
+      GST_OBJECT_UNLOCK (object);
       break;
     case PROP_MAX_ERRORS:
       gst_video_decoder_set_max_errors (dec, g_value_get_int (value));
@@ -2026,7 +2063,8 @@ gst_video_decoder_src_event_default (GstVideoDecoder * decoder,
       if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
         if (G_UNLIKELY (diff > 0)) {
           priv->earliest_time =
-              timestamp + MIN (2 * diff, GST_SECOND) + priv->qos_frame_duration;
+              timestamp + MIN (2 * diff, priv->qos_max_skip_time) +
+              priv->qos_frame_duration;
         } else {
           priv->earliest_time = timestamp + diff;
         }

@@ -8675,6 +8675,15 @@ This includes dropping output frames which are detected as late
 using the metrics reported by those events.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
+      <property name="qos-max-skip" version="1.30" writable="1" transfer-ownership="none" default-value="1000000000">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodecoder.c">When downstream reports that frames are arriving late and
+#GstVideoDecoder:qos handling is enabled, the decoder will skip
+decoding or output of some video frames to catch up based on how
+late things are.
+This property places an upper limit on the length of time that
+will be skipped before sending at least 1 frame downstream.</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
       <field name="element" readable="0" private="1">
         <type name="Gst.Element" c:type="GstElement"/>
       </field>
