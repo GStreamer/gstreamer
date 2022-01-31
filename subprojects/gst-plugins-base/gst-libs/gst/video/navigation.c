@@ -784,6 +784,16 @@ gst_navigation_event_get_type (GstEvent * event)
     return GST_NAVIGATION_EVENT_KEY_RELEASE;
   else if (g_str_equal (e_type, "command"))
     return GST_NAVIGATION_EVENT_COMMAND;
+  else if (g_str_equal (e_type, "touch-down"))
+    return GST_NAVIGATION_EVENT_TOUCH_DOWN;
+  else if (g_str_equal (e_type, "touch-up"))
+    return GST_NAVIGATION_EVENT_TOUCH_UP;
+  else if (g_str_equal (e_type, "touch-cancel"))
+    return GST_NAVIGATION_EVENT_TOUCH_CANCEL;
+  else if (g_str_equal (e_type, "touch-motion"))
+    return GST_NAVIGATION_EVENT_TOUCH_MOTION;
+  else if (g_str_equal (e_type, "touch-frame"))
+    return GST_NAVIGATION_EVENT_TOUCH_FRAME;
 
   return GST_NAVIGATION_EVENT_INVALID;
 }
@@ -795,7 +805,7 @@ gst_navigation_event_get_type (GstEvent * event)
  * Create a new navigation event for the given key press.
  *
  * Returns: (transfer full): a new #GstEvent
- * 
+ *
  * Since: 1.22
  */
 GstEvent *
@@ -813,7 +823,7 @@ gst_navigation_event_new_key_press (const gchar * key)
  * Create a new navigation event for the given key release.
  *
  * Returns: (transfer full): a new #GstEvent
- * 
+ *
  * Since: 1.22
  */
 GstEvent *
@@ -833,7 +843,7 @@ gst_navigation_event_new_key_release (const gchar * key)
  * Create a new navigation event for the given key mouse button press.
  *
  * Returns: (transfer full): a new #GstEvent
- * 
+ *
  * Since: 1.22
  */
 GstEvent *
@@ -854,7 +864,7 @@ gst_navigation_event_new_mouse_button_press (gint button, gdouble x, gdouble y)
  * Create a new navigation event for the given key mouse button release.
  *
  * Returns: (transfer full): a new #GstEvent
- * 
+ *
  * Since: 1.22
  */
 GstEvent *
@@ -875,7 +885,7 @@ gst_navigation_event_new_mouse_button_release (gint button, gdouble x,
  * Create a new navigation event for the new mouse location.
  *
  * Returns: (transfer full): a new #GstEvent
- * 
+ *
  * Since: 1.22
  */
 GstEvent *
@@ -896,7 +906,7 @@ gst_navigation_event_new_mouse_move (gdouble x, gdouble y)
  * Create a new navigation event for the mouse scroll.
  *
  * Returns: (transfer full): a new #GstEvent
- * 
+ *
  * Since: 1.22
  */
 GstEvent *
@@ -917,7 +927,7 @@ gst_navigation_event_new_mouse_scroll (gdouble x, gdouble y, gdouble delta_x,
  * Create a new navigation event given navigation command..
  *
  * Returns: (transfer full): a new #GstEvent
- * 
+ *
  * Since: 1.22
  */
 GstEvent *
@@ -926,6 +936,122 @@ gst_navigation_event_new_command (GstNavigationCommand command)
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
           "event", G_TYPE_STRING, "command",
           "command-code", G_TYPE_UINT, (guint) command, NULL));
+}
+
+/**
+ * gst_navigation_event_new_touch_down:
+ * @identifier: A number uniquely identifying this touch point. It must stay
+ *    unique to this touch point at least until an up event is sent for
+ *    the same identifier, or all touch points are cancelled.
+ * @x: The x coordinate of the new touch point.
+ * @y: The y coordinate of the new touch point.
+ * @pressure: Pressure data of the touch point, from 0.0 to 1.0, or NaN if no
+ *    data is available.
+ *
+ * Create a new navigation event for an added touch point.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ *
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_touch_down (guint identifier, gdouble x, gdouble y,
+    gdouble pressure)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "touch-down",
+          "identifier", G_TYPE_UINT, identifier,
+          "pointer_x", G_TYPE_DOUBLE, x,
+          "pointer_y", G_TYPE_DOUBLE, y,
+          "pressure", G_TYPE_DOUBLE, pressure, NULL));
+}
+
+/**
+ * gst_navigation_event_new_touch_motion:
+ * @identifier: A number uniquely identifying this touch point. It must
+ *    correlate to exactly one previous touch_start event.
+ * @x: The x coordinate of the touch point.
+ * @y: The y coordinate of the touch point.
+ * @pressure: Pressure data of the touch point, from 0.0 to 1.0, or NaN if no
+ *    data is available.
+ *
+ * Create a new navigation event for a moved touch point.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ *
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_touch_motion (guint identifier, gdouble x, gdouble y,
+    gdouble pressure)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "touch-motion",
+          "identifier", G_TYPE_UINT, identifier,
+          "pointer_x", G_TYPE_DOUBLE, x,
+          "pointer_y", G_TYPE_DOUBLE, y,
+          "pressure", G_TYPE_DOUBLE, pressure, NULL));
+}
+
+/**
+ * gst_navigation_event_new_touch_up:
+ * @identifier: A number uniquely identifying this touch point. It must
+ *    correlate to exactly one previous down event, but can be reused
+ *    after sending this event.
+ * @x: The x coordinate of the touch point.
+ * @y: The y coordinate of the touch point.
+ *
+ * Create a new navigation event for a removed touch point.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ *
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_touch_up (guint identifier, gdouble x, gdouble y)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "touch-up",
+          "identifier", G_TYPE_UINT, identifier,
+          "pointer_x", G_TYPE_DOUBLE, x, "pointer_y", G_TYPE_DOUBLE, y, NULL));
+}
+
+/**
+ * gst_navigation_event_new_touch_frame:
+ *
+ * Create a new navigation event signalling the end of a touch frame. Touch
+ * frames signal that all previous down, motion and up events not followed by
+ * another touch frame event already should be considered simultaneous.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ *
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_touch_frame (void)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "touch-frame", NULL));
+}
+
+
+/**
+ * gst_navigation_event_new_touch_cancel:
+ *
+ * Create a new navigation event signalling that all currently active touch
+ * points are cancelled and should be discarded. For example, under Wayland
+ * this event might be sent when a swipe passes the threshold to be recognized
+ * as a gesture by the compositor.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ *
+ * Since: 1.22
+ */
+GstEvent *
+gst_navigation_event_new_touch_cancel (void)
+{
+  return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
+          "event", G_TYPE_STRING, "touch-cancel", NULL));
 }
 
 /**
@@ -1105,6 +1231,92 @@ gst_navigation_event_parse_command (GstEvent * event,
 }
 
 /**
+ * gst_navigation_event_parse_touch_event:
+ * @event: A #GstEvent to inspect.
+ * @identifier: (out) (optional): Pointer to a guint that will receive the
+ *     identifier unique to this touch point.
+ * @x: (out) (optional): Pointer to a gdouble that will receive the x
+ *     coordinate of the touch event.
+ * @y: (out) (optional): Pointer to a gdouble that will receive the y
+ *     coordinate of the touch event.
+ * @pressure: (out) (optional): Pointer to a gdouble that will receive the
+ *     force of the touch event, in the range from 0.0 to 1.0. If pressure
+ *     data is not available, NaN will be set instead.
+ *
+ * Retrieve the details of a #GstNavigation touch-down or touch-motion event.
+ * Determine which type the event is using gst_navigation_event_get_type()
+ * to retrieve the #GstNavigationEventType.
+ *
+ * Returns: TRUE if all details could be extracted, otherwise FALSE.
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_navigation_event_parse_touch_event (GstEvent * event, guint * identifier,
+    gdouble * x, gdouble * y, gdouble * pressure)
+{
+  GstNavigationEventType e_type;
+  const GstStructure *s;
+  gboolean ret = TRUE;
+
+  e_type = gst_navigation_event_get_type (event);
+  g_return_val_if_fail (e_type == GST_NAVIGATION_EVENT_TOUCH_DOWN ||
+      e_type == GST_NAVIGATION_EVENT_TOUCH_MOTION, FALSE);
+
+  s = gst_event_get_structure (event);
+  if (identifier)
+    ret &= gst_structure_get_uint (s, "identifier", identifier);
+  if (x)
+    ret &= gst_structure_get_double (s, "pointer_x", x);
+  if (y)
+    ret &= gst_structure_get_double (s, "pointer_y", y);
+  if (pressure)
+    ret &= gst_structure_get_double (s, "pressure", pressure);
+
+  WARN_IF_FAIL (ret, "Couldn't extract details from touch event");
+
+  return ret;
+}
+
+/**
+ * gst_navigation_event_parse_touch_up_event:
+ * @event: A #GstEvent to inspect.
+ * @identifier: (out) (optional): Pointer to a guint that will receive the
+ *     identifier unique to this touch point.
+ * @x: (out) (optional): Pointer to a gdouble that will receive the x
+ *     coordinate of the touch event.
+ * @y: (out) (optional): Pointer to a gdouble that will receive the y
+ *     coordinate of the touch event.
+ *
+ * Retrieve the details of a #GstNavigation touch-up event.
+ *
+ * Returns: TRUE if all details could be extracted, otherwise FALSE.
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_navigation_event_parse_touch_up_event (GstEvent * event,
+    guint * identifier, gdouble * x, gdouble * y)
+{
+  const GstStructure *s;
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (GST_NAVIGATION_EVENT_HAS_TYPE (event, TOUCH_UP), FALSE);
+
+  s = gst_event_get_structure (event);
+  if (identifier)
+    ret &= gst_structure_get_uint (s, "identifier", identifier);
+  if (x)
+    ret &= gst_structure_get_double (s, "pointer_x", x);
+  if (y)
+    ret &= gst_structure_get_double (s, "pointer_y", y);
+
+  WARN_IF_FAIL (ret, "Couldn't extract details from touch-up event");
+
+  return ret;
+}
+
+/**
  * gst_navigation_event_get_coordinates:
  * @event: The #GstEvent to inspect.
  * @x: (out) (optional): Pointer to a gdouble to receive the x coordinate of the
@@ -1129,7 +1341,10 @@ gst_navigation_event_get_coordinates (GstEvent * event,
   e_type = gst_navigation_event_get_type (event);
   if (e_type != GST_NAVIGATION_EVENT_MOUSE_MOVE
       && e_type != GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS
-      && e_type != GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE) {
+      && e_type != GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE
+      && e_type != GST_NAVIGATION_EVENT_TOUCH_DOWN
+      && e_type != GST_NAVIGATION_EVENT_TOUCH_MOTION
+      && e_type != GST_NAVIGATION_EVENT_TOUCH_UP) {
     return FALSE;
   }
 
@@ -1168,7 +1383,10 @@ gst_navigation_event_set_coordinates (GstEvent * event, gdouble x, gdouble y)
   e_type = gst_navigation_event_get_type (event);
   if (e_type != GST_NAVIGATION_EVENT_MOUSE_MOVE
       && e_type != GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS
-      && e_type != GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE) {
+      && e_type != GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE
+      && e_type != GST_NAVIGATION_EVENT_TOUCH_DOWN
+      && e_type != GST_NAVIGATION_EVENT_TOUCH_MOTION
+      && e_type != GST_NAVIGATION_EVENT_TOUCH_UP) {
     return FALSE;
   }
 

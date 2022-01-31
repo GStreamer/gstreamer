@@ -281,9 +281,26 @@ gboolean        gst_navigation_message_parse_event          (GstMessage *message
  * @GST_NAVIGATION_EVENT_MOUSE_SCROLL: A mouse scroll event. Use
  * gst_navigation_event_parse_mouse_scroll_event() to extract the details from
  * the event. (Since: 1.18)
+ * @GST_NAVIGATION_EVENT_TOUCH_DOWN: An event describing a new touch point,
+ * which will be assigned an identifier that is unique to it for the duration
+ * of its movement on the screen. Use gst_navigation_event_parse_touch_event()
+ * to extract the details from the event. (Since: 1.22)
+ * @GST_NAVIGATION_EVENT_TOUCH_MOTION: An event describing the movement of an
+ * active touch point across the screen. Use
+ * gst_navigation_event_parse_touch_event() to extract the details from the
+ * event. (Since: 1.22)
+ * @GST_NAVIGATION_EVENT_TOUCH_UP: An event describing a removed touch point.
+ * After this event, its identifier may be reused for any new touch points. Use
+ * gst_navigation_event_parse_touch_up_event() to extract the details from the
+ * event. (Since: 1.22)
+ * @GST_NAVIGATION_EVENT_TOUCH_FRAME: An event signaling the end of a sequence
+ * of simultaneous touch events. (Since: 1.22)
+ * @GST_NAVIGATION_EVENT_TOUCH_CANCEL: An event cancelling all currently active
+ * touch points. (Since: 1.22)
  *
  * Enum values for the various events that an element implementing the
- * GstNavigation interface might send up the pipeline.
+ * GstNavigation interface might send up the pipeline. Touch events have been
+ * inspired by the libinput API, and have the same meaning here.
  */
 typedef enum {
   GST_NAVIGATION_EVENT_INVALID                    = 0,
@@ -302,7 +319,60 @@ typedef enum {
    *
    * Since: 1.18
    */
-  GST_NAVIGATION_EVENT_MOUSE_SCROLL               = 7
+  GST_NAVIGATION_EVENT_MOUSE_SCROLL               = 7,
+
+  /**
+   * GST_NAVIGATION_EVENT_TOUCH_DOWN:
+   *
+   * An event describing a new touch point, which will be assigned an identifier
+   * that is unique to it for the duration of its movement on the screen.
+   * Use gst_navigation_event_parse_touch_event() to extract the details
+   * from the event.
+   *
+   * Since: 1.22
+   */
+  GST_NAVIGATION_EVENT_TOUCH_DOWN                 = 8,
+
+  /**
+   * GST_NAVIGATION_EVENT_TOUCH_MOTION:
+   *
+   * An event describing the movement of an active touch point across
+   * the screen. Use gst_navigation_event_parse_touch_event() to extract
+   * the details from the event.
+   *
+   * Since: 1.22
+   */
+  GST_NAVIGATION_EVENT_TOUCH_MOTION               = 9,
+
+  /**
+   * GST_NAVIGATION_EVENT_TOUCH_UP:
+   *
+   * An event describing a removed touch point. After this event,
+   * its identifier may be reused for any new touch points.
+   * Use gst_navigation_event_parse_touch_up_event() to extract the details
+   * from the event.
+   *
+   * Since: 1.22
+   */
+  GST_NAVIGATION_EVENT_TOUCH_UP                   = 10,
+
+  /**
+   * GST_NAVIGATION_EVENT_TOUCH_FRAME:
+   *
+   * An event signaling the end of a sequence of simultaneous touch events.
+   *
+   * Since: 1.22
+   */
+  GST_NAVIGATION_EVENT_TOUCH_FRAME                = 11,
+
+  /**
+   * GST_NAVIGATION_EVENT_TOUCH_CANCEL:
+   *
+   * An event cancelling all currently active touch points.
+   *
+   * Since: 1.22
+   */
+  GST_NAVIGATION_EVENT_TOUCH_CANCEL               = 12,
 } GstNavigationEventType;
 
 GST_VIDEO_API
@@ -333,6 +403,26 @@ GST_VIDEO_API
 GstEvent*       gst_navigation_event_new_command              (GstNavigationCommand command) G_GNUC_MALLOC;
 
 GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_touch_down           (guint identifier,
+                                                               gdouble x, gdouble y,
+                                                               gdouble pressure) G_GNUC_MALLOC;
+
+GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_touch_motion         (guint identifier,
+                                                               gdouble x, gdouble y,
+                                                               gdouble pressure) G_GNUC_MALLOC;
+
+GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_touch_up             (guint identifier,
+                                                               gdouble x, gdouble y) G_GNUC_MALLOC;
+
+GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_touch_frame          (void) G_GNUC_MALLOC;
+
+GST_VIDEO_API
+GstEvent*       gst_navigation_event_new_touch_cancel         (void) G_GNUC_MALLOC;
+
+GST_VIDEO_API
 gboolean        gst_navigation_event_parse_key_event          (GstEvent *event,
                                                                const gchar **key);
 
@@ -352,6 +442,17 @@ gboolean        gst_navigation_event_parse_mouse_scroll_event (GstEvent *event,
 GST_VIDEO_API
 gboolean        gst_navigation_event_parse_command            (GstEvent *event,
                                                                GstNavigationCommand *command);
+
+GST_VIDEO_API
+gboolean        gst_navigation_event_parse_touch_event        (GstEvent * event,
+                                                               guint * identifier,
+                                                               gdouble * x, gdouble * y,
+                                                               gdouble * pressure);
+
+GST_VIDEO_API
+gboolean        gst_navigation_event_parse_touch_up_event     (GstEvent * event,
+                                                               guint * identifier,
+                                                               gdouble * x, gdouble * y);
 
 GST_VIDEO_API
 gboolean  gst_navigation_event_get_coordinates (GstEvent * event,
