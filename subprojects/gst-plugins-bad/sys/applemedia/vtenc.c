@@ -216,7 +216,6 @@ gst_vtenc_base_init (GstVTEncClass * klass)
   const int min_height = 1, max_height = G_MAXINT;
   const int min_fps_n = 0, max_fps_n = G_MAXINT;
   const int min_fps_d = 1, max_fps_d = 1;
-  GstPadTemplate *sink_template, *src_template;
   GstCaps *src_caps;
   gchar *longname, *description;
 
@@ -230,9 +229,10 @@ gst_vtenc_base_init (GstVTEncClass * klass)
   g_free (longname);
   g_free (description);
 
-  sink_template = gst_pad_template_new ("sink",
-      GST_PAD_SINK, GST_PAD_ALWAYS, gst_static_caps_get (&sink_caps));
-  gst_element_class_add_pad_template (element_class, sink_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          gst_static_caps_get (&sink_caps));
+
 
   src_caps = gst_caps_new_simple (codec_details->mimetype,
       "width", GST_TYPE_INT_RANGE, min_width, max_width,
@@ -292,9 +292,9 @@ gst_vtenc_base_init (GstVTEncClass * klass)
     default:
       g_assert_not_reached ();
   }
-  src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-      src_caps);
-  gst_element_class_add_pad_template (element_class, src_template);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, src_caps));
   gst_caps_unref (src_caps);
 }
 
