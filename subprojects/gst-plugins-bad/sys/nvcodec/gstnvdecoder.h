@@ -55,6 +55,7 @@ gboolean       gst_nv_decoder_configure (GstNvDecoder * decoder,
                                          GstVideoInfo * info,
                                          gint coded_width,
                                          gint coded_height,
+                                         guint coded_bitdepth,
                                          guint pool_size);
 
 GstNvDecoderFrame * gst_nv_decoder_new_frame (GstNvDecoder * decoder);

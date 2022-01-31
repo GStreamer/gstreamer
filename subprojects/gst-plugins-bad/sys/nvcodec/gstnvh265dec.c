@@ -362,16 +362,20 @@ gst_nv_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
     GstVideoFormat out_format = GST_VIDEO_FORMAT_UNKNOWN;
 
     if (self->bitdepth == 8) {
-      if (self->chroma_format_idc == 1)
+      if (self->chroma_format_idc == 1) {
         out_format = GST_VIDEO_FORMAT_NV12;
-      else {
-        GST_FIXME_OBJECT (self, "Could not support 8bits non-4:2:0 format");
+      } else if (self->chroma_format_idc == 3) {
+        out_format = GST_VIDEO_FORMAT_Y444;
+      } else {
+        GST_FIXME_OBJECT (self, "8 bits supports only 4:2:0 or 4:4:4 format");
       }
     } else if (self->bitdepth == 10) {
-      if (self->chroma_format_idc == 1)
+      if (self->chroma_format_idc == 1) {
         out_format = GST_VIDEO_FORMAT_P010_10LE;
-      else {
-        GST_FIXME_OBJECT (self, "Could not support 10bits non-4:2:0 format");
+      } else if (self->chroma_format_idc == 3) {
+        out_format = GST_VIDEO_FORMAT_Y444_16LE;
+      } else {
+        GST_FIXME_OBJECT (self, "10 bits supports only 4:2:0 or 4:4:4 format");
       }
     }
 
@@ -384,6 +388,7 @@ gst_nv_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
 
     if (!gst_nv_decoder_configure (self->decoder,
             cudaVideoCodec_HEVC, &info, self->coded_width, self->coded_height,
+            self->bitdepth,
             /* Additional 2 buffers for margin */
             max_dpb_size + 2)) {
       GST_ERROR_OBJECT (self, "Failed to configure decoder");
