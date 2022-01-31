@@ -573,23 +573,9 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
   gstbasesink_class->propose_allocation = gst_osx_video_sink_propose_allocation;
   gstelement_class->change_state = gst_osx_video_sink_change_state;
 
-  /**
-   * GstOSXVideoSink:embed
-   *
-   * For ABI comatibility only, do not use
-   *
-   **/
-
   g_object_class_install_property (gobject_class, ARG_EMBED,
       g_param_spec_boolean ("embed", "embed", "For ABI compatibility only, do not use",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * GstOSXVideoSink:force-aspect-ratio
-   *
-   * When enabled, scaling will respect original aspect ratio.
-   *
-   **/
 
   g_object_class_install_property (gobject_class, ARG_FORCE_PAR,
       g_param_spec_boolean ("force-aspect-ratio", "force aspect ration",

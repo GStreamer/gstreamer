@@ -22,7 +22,7 @@
  */
 
 /**
- * SECTION:element-plugin
+ * SECTION:element-avfassetsrc
  *
  * Read and decode samples from AVFoundation assets using the AVFAssetReader API
  *
@@ -149,12 +149,6 @@ gst_avf_asset_src_class_init (GstAVFAssetSrcClass * klass)
   gobject_class->get_property = gst_avf_asset_src_get_property;
   gobject_class->dispose = gst_avf_asset_src_dispose;
 
-  /**
-   * GstAVFAssetSrc:uri
-   *
-   * URI of the asset to read
-   *
-   **/
   g_object_class_install_property (gobject_class, PROP_URI,
       g_param_spec_string ("uri", "Asset URI",
           "URI of the asset to read", NULL,

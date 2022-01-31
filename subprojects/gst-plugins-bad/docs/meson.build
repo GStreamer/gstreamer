@@ -228,9 +228,10 @@ foreach plugin_name: list_plugin_res.stdout().split(':')
         gst_index: 'plugins/index.md',
         gst_smart_index: true,
         gst_c_sources: [
-            join_paths(root_rel, 'sys/*/*.[ch]'),
+            join_paths(root_rel, 'sys/*/*.[cmh]'),
             join_paths(root_rel, 'sys/*/*.cpp'),
             join_paths(root_rel, 'sys/*/*.cc'),
+            join_paths(root_rel, 'sys/*/*.mm'),
             join_paths(root_rel, 'sys/*/*.hh'),
             join_paths(root_rel, 'ext/*/*.[ch]'),
             join_paths(root_rel, 'ext/*/*.cpp'),

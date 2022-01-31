@@ -21,7 +21,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:element-ios_assetsrc
+ * SECTION:element-iosassetsrc
  * @see_also: #GstIOSAssetSrc
  *
  * Read data from an iOS asset from the media library.
