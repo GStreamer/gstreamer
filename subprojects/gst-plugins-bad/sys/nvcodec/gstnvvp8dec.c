@@ -257,7 +257,7 @@ gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
         GST_VIDEO_FORMAT_NV12, self->width, self->height);
 
     if (!gst_nv_decoder_configure (self->decoder,
-            cudaVideoCodec_VP8, &info, self->width, self->height,
+            cudaVideoCodec_VP8, &info, self->width, self->height, 8,
             /* +4 for render delay */
             NUM_OUTPUT_VIEW + 4)) {
       GST_ERROR_OBJECT (self, "Failed to configure decoder");

@@ -162,29 +162,6 @@ chroma_format_from_video_format (GstVideoFormat format)
   return cudaVideoChromaFormat_420;
 }
 
-static guint
-bitdepth_minus8_from_video_format (GstVideoFormat format)
-{
-  switch (format) {
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_Y444:
-      return 0;
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P010_10BE:
-      return 2;
-    case GST_VIDEO_FORMAT_P016_LE:
-    case GST_VIDEO_FORMAT_P016_BE:
-    case GST_VIDEO_FORMAT_Y444_16LE:
-    case GST_VIDEO_FORMAT_Y444_16BE:
-      return 8;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  return 0;
-}
-
 static cudaVideoSurfaceFormat
 output_format_from_video_format (GstVideoFormat format)
 {
@@ -276,7 +253,8 @@ gst_nv_decoder_reset (GstNvDecoder * self)
 
 gboolean
 gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
-    GstVideoInfo * info, gint coded_width, gint coded_height, guint pool_size)
+    GstVideoInfo * info, gint coded_width, gint coded_height,
+    guint coded_bitdepth, guint pool_size)
 {
   CUVIDDECODECREATEINFO create_info = { 0, };
   GstVideoFormat format;
@@ -287,6 +265,7 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
   g_return_val_if_fail (info != NULL, FALSE);
   g_return_val_if_fail (coded_width >= GST_VIDEO_INFO_WIDTH (info), FALSE);
   g_return_val_if_fail (coded_height >= GST_VIDEO_INFO_HEIGHT (info), FALSE);
+  g_return_val_if_fail (coded_bitdepth >= 8, FALSE);
   g_return_val_if_fail (pool_size > 0, FALSE);
 
   gst_nv_decoder_reset (decoder);
@@ -304,7 +283,7 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
   create_info.CodecType = codec;
   create_info.ChromaFormat = chroma_format_from_video_format (format);
   create_info.ulCreationFlags = cudaVideoCreate_Default;
-  create_info.bitDepthMinus8 = bitdepth_minus8_from_video_format (format);
+  create_info.bitDepthMinus8 = coded_bitdepth - 8;
   create_info.ulIntraDecodeOnly = 0;
 
   create_info.display_area.left = 0;

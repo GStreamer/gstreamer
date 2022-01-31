@@ -256,10 +256,11 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
   if (self->profile == GST_VP9_PROFILE_0) {
     out_format = GST_VIDEO_FORMAT_NV12;
   } else if (self->profile == GST_VP9_PROFILE_2) {
-    if (frame_hdr->bit_depth == 10)
+    if (frame_hdr->bit_depth == 10) {
       out_format = GST_VIDEO_FORMAT_P010_10LE;
-    else
+    } else {
       out_format = GST_VIDEO_FORMAT_P016_LE;
+    }
   }
 
   if (out_format == GST_VIDEO_FORMAT_UNKNOWN) {
@@ -270,6 +271,7 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
   gst_video_info_set_format (&info, out_format, self->width, self->height);
   if (!gst_nv_decoder_configure (self->decoder,
           cudaVideoCodec_VP9, &info, self->width, self->height,
+          frame_hdr->bit_depth,
           /* +4 for render delay */
           NUM_OUTPUT_VIEW)) {
     GST_ERROR_OBJECT (self, "Failed to configure decoder");
