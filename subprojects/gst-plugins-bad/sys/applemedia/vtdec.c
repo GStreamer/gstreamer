@@ -132,7 +132,7 @@ const CFStringRef
 CFSTR ("RequireHardwareAcceleratedVideoDecoder");
 #endif
 
-#define VIDEO_SRC_CAPS_FORMATS "{ NV12, AYUV64, RGBA64_LE, ARGB64_BE }"
+#define VIDEO_SRC_CAPS_FORMATS "{ NV12, AYUV64, ARGB64_BE }"
 
 #define VIDEO_SRC_CAPS_NATIVE                                           \
     GST_VIDEO_CAPS_MAKE(VIDEO_SRC_CAPS_FORMATS) ";"                     \
@@ -161,9 +161,15 @@ gst_vtdec_class_init (GstVtdecClass * klass)
      base_class_init if you intend to subclass this class. */
   gst_element_class_add_static_pad_template (element_class,
       &gst_vtdec_sink_template);
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_caps_from_string (VIDEO_SRC_CAPS)));
+
+  {
+    GstCaps *caps = gst_caps_from_string (VIDEO_SRC_CAPS);
+    /* RGBA64_LE is kCVPixelFormatType_64RGBALE, only available on macOS 11.3+ */
+    if (GST_VTUTIL_HAVE_64ARGBALE)
+      caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE");
+    gst_element_class_add_pad_template (element_class,
+        gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
+  }
 
   gst_element_class_set_static_metadata (element_class,
       "Apple VideoToolbox decoder",
@@ -285,9 +291,17 @@ get_preferred_video_format (GstStructure * s, gboolean prores)
         break;
       case GST_VIDEO_FORMAT_AYUV64:
       case GST_VIDEO_FORMAT_ARGB64_BE:
-      case GST_VIDEO_FORMAT_RGBA64_LE:
         if (prores)
           return vfmt;
+        break;
+      case GST_VIDEO_FORMAT_RGBA64_LE:
+        if (GST_VTUTIL_HAVE_64ARGBALE) {
+          if (prores)
+            return vfmt;
+        } else {
+          /* Codepath will never be hit on macOS older than Big Sur (11.3) */
+          g_warn_if_reached ();
+        }
         break;
       default:
         break;
@@ -676,7 +690,11 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
       cv_format = kCVPixelFormatType_64ARGB;
       break;
     case GST_VIDEO_FORMAT_RGBA64_LE:
-      cv_format = kCVPixelFormatType_64RGBALE;
+      if (GST_VTUTIL_HAVE_64ARGBALE)
+        cv_format = kCVPixelFormatType_64RGBALE;
+      else
+        /* Codepath will never be hit on macOS older than Big Sur (11.3) */
+        g_warn_if_reached ();
       break;
     default:
       g_warn_if_reached ();

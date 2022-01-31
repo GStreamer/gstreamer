@@ -21,6 +21,7 @@
 #define __GST_VTUTIL_H__
 
 #include <glib.h>
+#include <gst/gst.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreMedia/CoreMedia.h>
 
@@ -28,6 +29,13 @@
  * variants / profiles, and we don't want to instantiate separate elements for
  * each variant, so we use a dummy type for details->format_id */
 #define GST_kCMVideoCodecType_Some_AppleProRes  1
+
+// kCVPixelFormatType_64RGBALE is only available for 11.3 +.
+// See https://developer.apple.com/documentation/corevideo/1563591-pixel_format_identifiers/kcvpixelformattype_64rgbale
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 110300
+#define kCVPixelFormatType_64RGBALE 'l64r'
+#endif
+#define GST_VTUTIL_HAVE_64ARGBALE __builtin_available(macOS 11.3, *)
 
 G_BEGIN_DECLS
 
@@ -46,6 +54,9 @@ void gst_vtutil_dict_set_object (CFMutableDictionaryRef dict,
 
 CMVideoCodecType gst_vtutil_codec_type_from_prores_variant (const char * variant);
 const char * gst_vtutil_codec_type_to_prores_variant (CMVideoCodecType codec_type);
+
+GstCaps * gst_vtutil_caps_append_video_format (GstCaps * caps,
+                                               const char * vfmt);
 
 G_END_DECLS
 

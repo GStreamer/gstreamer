@@ -135,3 +135,27 @@ gst_vtutil_codec_type_to_prores_variant (CMVideoCodecType codec_type)
       g_assert_not_reached ();
   }
 }
+
+GstCaps *
+gst_vtutil_caps_append_video_format (GstCaps * caps, const char *vfmt)
+{
+  GstStructure *s;
+  GValueArray *arr;
+  GValue val = G_VALUE_INIT;
+
+  caps = gst_caps_make_writable (caps);
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_get_list (s, "format", &arr);
+
+  g_value_init (&val, G_TYPE_STRING);
+
+  g_value_set_string (&val, vfmt);
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+  arr = g_value_array_append (arr, &val);
+  G_GNUC_END_IGNORE_DEPRECATIONS;
+
+  g_value_unset (&val);
+
+  gst_structure_set_list (s, "format", arr);
+  return caps;
+}

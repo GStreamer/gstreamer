@@ -203,8 +203,9 @@ GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ NV12, I420 }"));
 #else
 static GstStaticCaps sink_caps =
 GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
-    ("{ AYUV64, UYVY, NV12, I420, RGBA64_LE, ARGB64_BE }"));
+    ("{ AYUV64, UYVY, NV12, I420, ARGB64_BE }"));
 #endif
+
 
 static void
 gst_vtenc_base_init (GstVTEncClass * klass)
@@ -229,9 +230,14 @@ gst_vtenc_base_init (GstVTEncClass * klass)
   g_free (longname);
   g_free (description);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          gst_static_caps_get (&sink_caps));
+  {
+    GstCaps *caps = gst_static_caps_get (&sink_caps);
+    /* RGBA64_LE is kCVPixelFormatType_64RGBALE, only available on macOS 11.3+ */
+    if (GST_VTUTIL_HAVE_64ARGBALE)
+      caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE");
+    gst_element_class_add_pad_template (element_class,
+        gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps));
+  }
 
 
   src_caps = gst_caps_new_simple (codec_details->mimetype,
@@ -1641,7 +1647,11 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
           pixel_format_type = kCVPixelFormatType_4444AYpCbCr16;
           break;
         case GST_VIDEO_FORMAT_RGBA64_LE:
-          pixel_format_type = kCVPixelFormatType_64RGBALE;
+          if (GST_VTUTIL_HAVE_64ARGBALE)
+            pixel_format_type = kCVPixelFormatType_64RGBALE;
+          else
+            /* Codepath will never be hit on macOS older than Big Sur (11.3) */
+            g_assert_not_reached ();
           break;
         case GST_VIDEO_FORMAT_I420:
           pixel_format_type = kCVPixelFormatType_420YpCbCr8Planar;
