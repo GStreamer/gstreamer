@@ -314,15 +314,15 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
   create_info.OutputFormat = output_format_from_video_format (format);
   create_info.DeinterlaceMode = cudaVideoDeinterlaceMode_Weave;
 
-  create_info.ulTargetWidth = GST_VIDEO_INFO_WIDTH (&decoder->coded_info);
-  create_info.ulTargetHeight = GST_VIDEO_INFO_HEIGHT (&decoder->coded_info);
+  create_info.ulTargetWidth = GST_VIDEO_INFO_WIDTH (info);
+  create_info.ulTargetHeight = GST_VIDEO_INFO_HEIGHT (info);
   /* we always copy decoded picture to output buffer */
   create_info.ulNumOutputSurfaces = 1;
 
   create_info.target_rect.left = 0;
   create_info.target_rect.top = 0;
-  create_info.target_rect.right = GST_VIDEO_INFO_WIDTH (&decoder->coded_info);
-  create_info.target_rect.bottom = GST_VIDEO_INFO_HEIGHT (&decoder->coded_info);
+  create_info.target_rect.right = GST_VIDEO_INFO_WIDTH (info);
+  create_info.target_rect.bottom = GST_VIDEO_INFO_HEIGHT (info);
 
   if (!gst_cuda_context_push (decoder->context)) {
     GST_ERROR_OBJECT (decoder, "Failed to lock CUDA context");
@@ -661,7 +661,7 @@ gst_nv_decoder_copy_frame_to_gl_internal (GstGLContext * context,
         * GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
 
     copy_params.srcDevice = frame->devptr +
-        (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (&self->coded_info));
+        (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (&self->info));
     copy_params.dstDevice = dst_ptr;
     copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
@@ -730,7 +730,7 @@ gst_nv_decoder_copy_frame_to_system (GstNvDecoder * decoder,
 
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&video_frame); i++) {
     copy_params.srcDevice = frame->devptr +
-        (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->coded_info));
+        (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->info));
     copy_params.dstHost = GST_VIDEO_FRAME_PLANE_DATA (&video_frame, i);
     copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
     copy_params.Height = GST_VIDEO_FRAME_COMP_HEIGHT (&video_frame, i);
