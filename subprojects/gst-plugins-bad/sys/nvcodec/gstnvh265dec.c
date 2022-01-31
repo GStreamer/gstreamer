@@ -377,6 +377,15 @@ gst_nv_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
       } else {
         GST_FIXME_OBJECT (self, "10 bits supports only 4:2:0 or 4:4:4 format");
       }
+    } else if (self->bitdepth == 12 || self->bitdepth == 16) {
+      if (self->chroma_format_idc == 1) {
+        out_format = GST_VIDEO_FORMAT_P016_LE;
+      } else if (self->chroma_format_idc == 3) {
+        out_format = GST_VIDEO_FORMAT_Y444_16LE;
+      } else {
+        GST_FIXME_OBJECT (self, "%d bits supports only 4:2:0 or 4:4:4 format",
+            self->bitdepth);
+      }
     }
 
     if (out_format == GST_VIDEO_FORMAT_UNKNOWN) {
