@@ -1335,9 +1335,11 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
 
   GST_DEBUG_OBJECT (mux, "delta: %d", delta);
 
-  stream_data = stream_data_new (buf);
-  tsmux_stream_add_data (best->stream, stream_data->map_info.data,
-      stream_data->map_info.size, stream_data, pts, dts, !delta);
+  if (gst_buffer_get_size (buf) > 0) {
+    stream_data = stream_data_new (buf);
+    tsmux_stream_add_data (best->stream, stream_data->map_info.data,
+        stream_data->map_info.size, stream_data, pts, dts, !delta);
+  }
 
   /* outgoing ts follows ts of PCR program stream */
   if (prog->pcr_stream == best->stream) {
