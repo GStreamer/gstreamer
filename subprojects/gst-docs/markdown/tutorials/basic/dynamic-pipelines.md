@@ -264,6 +264,7 @@ typedef struct _CustomData {
   GstElement *pipeline;
   GstElement *source;
   GstElement *convert;
+  GstElement *resample;
   GstElement *sink;
 } CustomData;
 ```
