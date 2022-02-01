@@ -60,11 +60,13 @@ enum
 {
   PROP_0,
   PROP_SCHEDULE,
+  PROP_OUTPUT_PADDING,
   PROP_MAX_SCHEDULED,
 };
 
 #define DEFAULT_MAX_SCHEDULED 30
 #define DEFAULT_SCHEDULE TRUE
+#define DEFAULT_OUTPUT_PADDING TRUE
 
 typedef struct
 {
@@ -689,7 +691,7 @@ dequeue_caption_one_field (GstCCCombiner * self, const GstVideoTimeCode * tc,
     caption_data.buffer = scheduled->buffer;
     caption_data.caption_type = self->caption_type;
     g_array_append_val (self->current_frame_captions, caption_data);
-  } else if (!drain) {
+  } else if (!drain && self->output_padding) {
     caption_data.caption_type = self->caption_type;
     caption_data.buffer = make_padding (self, tc, field);
     g_array_append_val (self->current_frame_captions, caption_data);
@@ -701,7 +703,7 @@ dequeue_caption_both_fields (GstCCCombiner * self, const GstVideoTimeCode * tc,
     gboolean drain)
 {
   CaptionQueueItem *field0_scheduled, *field1_scheduled;
-  GstBuffer *field0_buffer, *field1_buffer;
+  GstBuffer *field0_buffer = NULL, *field1_buffer = NULL;
   CaptionData caption_data;
 
   field0_scheduled = gst_queue_array_pop_head_struct (self->scheduled[0]);
@@ -713,20 +715,31 @@ dequeue_caption_both_fields (GstCCCombiner * self, const GstVideoTimeCode * tc,
 
   if (field0_scheduled) {
     field0_buffer = field0_scheduled->buffer;
-  } else {
+  } else if (self->output_padding) {
     field0_buffer = make_padding (self, tc, 0);
   }
 
   if (field1_scheduled) {
     field1_buffer = field1_scheduled->buffer;
-  } else {
+  } else if (self->output_padding) {
     field1_buffer = make_padding (self, tc, 1);
   }
 
-  caption_data.caption_type = self->caption_type;
-  caption_data.buffer = gst_buffer_append (field0_buffer, field1_buffer);
+  if (field0_buffer || field1_buffer) {
+    if (field0_buffer && field1_buffer) {
+      caption_data.buffer = gst_buffer_append (field0_buffer, field1_buffer);
+    } else if (field0_buffer) {
+      caption_data.buffer = field0_buffer;
+    } else if (field1_buffer) {
+      caption_data.buffer = field1_buffer;
+    } else {
+      g_assert_not_reached ();
+    }
 
-  g_array_append_val (self->current_frame_captions, caption_data);
+    caption_data.caption_type = self->caption_type;
+
+    g_array_append_val (self->current_frame_captions, caption_data);
+  }
 }
 
 static GstFlowReturn
@@ -1419,6 +1432,7 @@ gst_cc_combiner_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       self->schedule = self->prop_schedule;
       self->max_scheduled = self->prop_max_scheduled;
+      self->output_padding = self->prop_output_padding;
       break;
     default:
       break;
@@ -1440,6 +1454,9 @@ gst_cc_combiner_set_property (GObject * object, guint prop_id,
     case PROP_MAX_SCHEDULED:
       self->prop_max_scheduled = g_value_get_uint (value);
       break;
+    case PROP_OUTPUT_PADDING:
+      self->prop_output_padding = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1458,6 +1475,9 @@ gst_cc_combiner_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MAX_SCHEDULED:
       g_value_set_uint (value, self->prop_max_scheduled);
+      break;
+    case PROP_OUTPUT_PADDING:
+      g_value_set_boolean (value, self->prop_output_padding);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1536,6 +1556,23 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /**
+   * GstCCCombiner:output-padding:
+   *
+   * When #GstCCCombiner:schedule is %TRUE, this property controls
+   * whether the output closed caption meta stream will be padded.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_OUTPUT_PADDING, g_param_spec_boolean ("output-padding",
+          "Output padding",
+          "Whether to output padding packets when schedule=true",
+          DEFAULT_OUTPUT_PADDING,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &sinktemplate, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
@@ -1585,6 +1622,7 @@ gst_cc_combiner_init (GstCCCombiner * self)
 
   self->prop_schedule = DEFAULT_SCHEDULE;
   self->prop_max_scheduled = DEFAULT_MAX_SCHEDULED;
+  self->prop_output_padding = DEFAULT_OUTPUT_PADDING;
   self->scheduled[0] =
       gst_queue_array_new_for_struct (sizeof (CaptionQueueItem), 0);
   self->scheduled[1] =

@@ -65,9 +65,11 @@ struct _GstCCCombiner
 
   gboolean prop_schedule;
   guint prop_max_scheduled;
+  gboolean prop_output_padding;
 
   gboolean schedule;
   guint max_scheduled;
+  gboolean output_padding;
   /* One queue per field */
   GstQueueArray *scheduled[2];
   guint16 cdp_hdr_sequence_cntr;
