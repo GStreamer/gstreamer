@@ -593,3 +593,19 @@ gtk_gst_base_widget_set_buffer (GtkGstBaseWidget * widget, GstBuffer * buffer)
 
   GTK_GST_BASE_WIDGET_UNLOCK (widget);
 }
+
+void
+gtk_gst_base_widget_queue_draw (GtkGstBaseWidget * widget)
+{
+  /* As we have no type, this is better then no check */
+  g_return_if_fail (GTK_IS_WIDGET (widget));
+
+  GTK_GST_BASE_WIDGET_LOCK (widget);
+
+  if (!widget->draw_id) {
+    widget->draw_id = g_idle_add_full (G_PRIORITY_DEFAULT,
+        (GSourceFunc) _queue_draw, widget, NULL);
+  }
+
+  GTK_GST_BASE_WIDGET_UNLOCK (widget);
+}
