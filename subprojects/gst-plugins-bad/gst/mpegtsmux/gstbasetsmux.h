@@ -183,6 +183,9 @@ struct GstBaseTsMux {
   GstAdapter *out_adapter;
   GstBuffer *out_buffer;
   GstClockTimeDiff output_ts_offset;
+
+  /* protects the tsmux object, the programs hash table, and pad streams */
+  GMutex lock;
 };
 
 /**
