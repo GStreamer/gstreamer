@@ -1,13 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 32
 
     defaultConfig {
         applicationId "org.freedesktop.gstreamer.tutorials.tutorial_1"
         minSdkVersion 15
-        targetSdkVersion 15
+        targetSdkVersion 32
         versionCode 1
         versionName "1.0"
 
