@@ -25,7 +25,7 @@
  *
  * ## Example launch line
  * |[
-  * gst-launch-1.0 dashsink name=dashsink max-files=5  audiotestsrc is-live=true ! avenc_aac ! dashsink.audio_0 videotestsrc is-live=true ! x264enc ! dashsink.video_0
+  * gst-launch-1.0 dashsink name=dashsink audiotestsrc is-live=true ! avenc_aac ! dashsink.audio_0 videotestsrc is-live=true ! x264enc ! dashsink.video_0
  * ]|
  *
  */
@@ -37,19 +37,19 @@
  * Introduction:
  *
  * This element aims to generate the Media Pressentation Description XML based file
- * used as DASH content in addition to the necessary media frgaments.
+ * used as DASH content in addition to the necessary media fragments.
  * Based on splitmuxsink branches to generate the media fragments,
  * the element will generate a new adaptation set for each media type (video/audio/test)
  * and a new representation for each additional stream for a media type.
  *                                    ,----------------dashsink------------------,
  *                                    ;  ,----------splitmuxsink--------------,  ;
- *    ,-videotestsrc-,  ,-x264enc-,   ;  ; ,-Queue-, ,-tsdemux-, ,-filesink-, ;  ;
+ *    ,-videotestsrc-,  ,-x264enc-,   ;  ; ,-Queue-, ,-mpegtsmux-, ,-filesink-, ;  ;
  *    ;              o--o         o---o--o ;       o-o         o-o          , ;  ;
  *    '--------------'  '---------'   ;  ; '-------' '---------' '----------' ;  ;
  *                                    ;  '------------------------------------'  ;
  *                                    ;                                          ;
  *                                    ;  ,----------splitmuxsink--------------,  ;
- *    ,-audiotestsrc-,  ,-avenc_aac-, ;  ; ,-Queue-, ,-tsdemux-, ,-filesink-, ;  ;
+ *    ,-audiotestsrc-,  ,-avenc_aac-, ;  ; ,-Queue-, ,-mpegtsmux-, ,-filesink-, ;  ;
  *    ;              o--o           o-o--o         o-o         o-o          ; ;  ;
  *    '--------------'  '-----------' ;  ; '-------' '---------' '----------' ;  ;
  *                                    ;  '------------------------------------'  ;
@@ -64,12 +64,13 @@
  * |       |_ Representation 2 - Container/Codec - bitrate Y
  *
  * This element is able to generate static or dynamic MPD with multiple adaptation sets,
- * multiple representations and multiple periods for three kind of .
+ * multiple representations and multiple periods for three kind of
+ * media streams (Video/Audio/Text).
  *
  * It supports any kind of stream input codec
- * which can be encapsulated in Transport Stream or ISO media format.
+ * which can be encapsulated in Transport Stream (MPEG-TS) or ISO media format (MP4).
  * The current implementation is generating compliant MPDs for both static and dynamic
- * prfiles with  https://conformance.dashif.org/
+ * profiles with  https://conformance.dashif.org/
  *
  * Limitations:
  *
