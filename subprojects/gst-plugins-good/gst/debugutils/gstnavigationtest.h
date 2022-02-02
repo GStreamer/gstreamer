@@ -42,16 +42,30 @@ typedef struct
 {
   gdouble x;
   gdouble y;
+  gint button;
   gint images_left;
   guint8 cy, cu, cv;
 } ButtonClick;
+
+typedef struct
+{
+  gdouble x;
+  gdouble y;
+  gdouble pressure;
+  gint images_left;
+  guint8 cy, cu, cv;
+  guint id;
+} TouchPoint;
 
 struct _GstNavigationtest
 {
   GstVideoFilter videofilter;
 
-  gdouble x, y;
+  gdouble mousex, mousey;
+  gboolean display_mouse, display_touch;
   GSList *clicks;
+  GSList *touches;
+  GMutex touch_lock;
 };
 
 struct _GstNavigationtestClass

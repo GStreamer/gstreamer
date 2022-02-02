@@ -10470,7 +10470,7 @@
         "elements": {
             "navigationtest": {
                 "author": "David Schleef <ds@schleef.org>",
-                "description": "Handle navigation events showing a black square following mouse pointer",
+                "description": "Handle navigation events showing black squares following mouse pointer and touch points",
                 "hierarchy": [
                     "GstNavigationtest",
                     "GstVideoFilter",
@@ -10494,7 +10494,32 @@
                         "presence": "always"
                     }
                 },
-                "properties": {},
+                "properties": {
+                    "display-mouse": {
+                        "blurb": "Toggles display of mouse events",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "display-touch": {
+                        "blurb": "Toggles display of touchscreen events",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                },
                 "rank": "none"
             }
         },
