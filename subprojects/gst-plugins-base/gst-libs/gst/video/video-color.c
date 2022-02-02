@@ -496,16 +496,16 @@ gst_video_transfer_function_encode (GstVideoTransferFunction func, gdouble val)
       break;
     case GST_VIDEO_TRANSFER_SMPTE2084:
     {
-      gdouble c1 = 3424.0 / 4096.0;     /* c3 - c2 + 1 */
-      gdouble c2 = 32 * 2413 / 4096.0;
-      gdouble c3 = 32 * 2392 / 4096.0;
-      gdouble m = 128 * 2523 / 4096.0;
-      gdouble n = 0.25 * 2610 / 4096.0;
-      gdouble Ln = pow (val, n);
+      gdouble c1 = 0.8359375;
+      gdouble c2 = 18.8515625;
+      gdouble c3 = 18.6875;
+      gdouble m1 = 0.1593017578125;
+      gdouble m2 = 78.84375;
+      gdouble Ln = pow (val, m1);
 
       /* val equal to 1 for peak white is ordinarily intended to
        * correspond to a reference output luminance level of 10000 cd/m^2  */
-      res = pow ((c1 + c2 * Ln) / (1.0 + c3 * Ln), m);
+      res = pow ((c1 + c2 * Ln) / (1.0 + c3 * Ln), m2);
       break;
     }
     case GST_VIDEO_TRANSFER_ARIB_STD_B67:
@@ -629,14 +629,15 @@ gst_video_transfer_function_decode (GstVideoTransferFunction func, gdouble val)
       break;
     case GST_VIDEO_TRANSFER_SMPTE2084:
     {
-      gdouble c1 = 3424.0 / 4096.0;     /* c3 - c2 + 1 */
-      gdouble c2 = 32 * 2413 / 4096.0;
-      gdouble c3 = 32 * 2392 / 4096.0;
-      gdouble mi = 1 / (128 * 2523 / 4096.0);
-      gdouble ni = 1 / (0.25 * 2610 / 4096.0);
-      gdouble nm = pow (val, mi);
+      gdouble c1 = 0.8359375;
+      gdouble c2 = 18.8515625;
+      gdouble c3 = 18.6875;
+      gdouble m1 = 0.1593017578125;
+      gdouble m2 = 78.84375;
+      gdouble tmp = pow (val, 1 / m2);
+      gdouble tmp2 = MAX (tmp - c1, 0.0f);
 
-      res = pow ((nm - c1) / (c2 - c3 * nm), ni);
+      res = pow (tmp2 / (c2 - c3 * tmp), 1 / m1);
       break;
     }
     case GST_VIDEO_TRANSFER_ARIB_STD_B67:
