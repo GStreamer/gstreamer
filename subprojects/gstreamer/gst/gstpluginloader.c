@@ -476,26 +476,33 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
     res = gst_plugin_loader_try_helper (loader, helper_bin);
     g_free (helper_bin);
   } else {
+    char *relocated_libgstreamer;
+
     /* use the installed version */
     GST_LOG ("Trying installed plugin scanner");
 
 #ifdef G_OS_WIN32
-    {
-      gchar *basedir;
-
-      basedir =
-          g_win32_get_package_installation_directory_of_module
-          (_priv_gst_dll_handle);
-      helper_bin =
-          g_build_filename (basedir, GST_PLUGIN_SCANNER_SUBDIR,
-          "gstreamer-" GST_API_VERSION, "gst-plugin-scanner.exe", NULL);
-      g_free (basedir);
-    }
+#define EXESUFFIX ".exe"
 #else
-    helper_bin = g_strdup (GST_PLUGIN_SCANNER_INSTALLED);
+#define EXESUFFIX
 #endif
+
+    relocated_libgstreamer = priv_gst_get_relocated_libgstreamer ();
+    if (relocated_libgstreamer) {
+      GST_DEBUG ("found libgstreamer-" GST_API_VERSION " library "
+          "at %s", relocated_libgstreamer);
+      helper_bin = g_build_filename (relocated_libgstreamer,
+          "..", GST_PLUGIN_SCANNER_SUBDIR, "gstreamer-" GST_API_VERSION,
+          "gst-plugin-scanner" EXESUFFIX, NULL);
+    } else {
+      helper_bin = g_strdup (GST_PLUGIN_SCANNER_INSTALLED);
+    }
+
+    GST_DEBUG ("using system plugin scanner at %s", helper_bin);
+
     res = gst_plugin_loader_try_helper (loader, helper_bin);
     g_free (helper_bin);
+    g_free (relocated_libgstreamer);
   }
 
   if (!res) {

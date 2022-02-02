@@ -525,5 +525,7 @@ struct _GstClockEntryImpl
                                          * virtual functions on the clock */
 };
 
+char * priv_gst_get_relocated_libgstreamer (void);
+
 G_END_DECLS
 #endif /* __GST_PRIVATE_H__ */

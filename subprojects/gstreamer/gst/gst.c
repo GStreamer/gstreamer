@@ -585,7 +585,9 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     g_free (basedir);
   }
 #else
-  libdir = g_strdup (LIBDIR);
+  libdir = priv_gst_get_relocated_libgstreamer ();
+  if (!libdir)
+    libdir = g_strdup (LIBDIR);
 #endif
   GST_INFO ("Initializing GStreamer Core Library version %s", VERSION);
   GST_INFO ("Using library installed in %s", libdir);
