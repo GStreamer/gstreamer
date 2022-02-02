@@ -42,6 +42,9 @@ G_BEGIN_DECLS
 GST_VULKAN_API
 GQuark gst_vulkan_error_quark (void);
 
+GST_VULKAN_API
+const char * gst_vulkan_result_to_string (VkResult result);
+
 /**
  * GstVulkanError:
  * @GST_VULKAN_FAILED: undetermined error

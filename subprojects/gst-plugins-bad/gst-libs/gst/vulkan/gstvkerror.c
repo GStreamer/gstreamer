@@ -39,7 +39,7 @@ static const struct
   VkResult result;
   const char *str;
 } vk_result_string_map[] = {
-  {VK_ERROR_OUT_OF_HOST_MEMORY, "Out Of host memory"},
+  {VK_ERROR_OUT_OF_HOST_MEMORY, "Out of host memory"},
   {VK_ERROR_OUT_OF_DEVICE_MEMORY, "Out of device memory"},
   {VK_ERROR_INITIALIZATION_FAILED, "Initialization failed"},
   {VK_ERROR_DEVICE_LOST, "Device lost"},
@@ -49,9 +49,9 @@ static const struct
   {VK_ERROR_FEATURE_NOT_PRESENT, "Feature not present"},
   {VK_ERROR_INCOMPATIBLE_DRIVER, "Incompatible driver"},
   {VK_ERROR_TOO_MANY_OBJECTS, "Too many objects"},
-  {VK_ERROR_FORMAT_NOT_SUPPORTED, "format not supported"},
+  {VK_ERROR_FORMAT_NOT_SUPPORTED, "Format not supported"},
   {VK_ERROR_SURFACE_LOST_KHR, "Surface lost"},
-  {VK_ERROR_OUT_OF_DATE_KHR, "out of date"},
+  {VK_ERROR_OUT_OF_DATE_KHR, "Out of date"},
   {VK_ERROR_INCOMPATIBLE_DISPLAY_KHR, "Incompatible display"},
   {VK_ERROR_NATIVE_WINDOW_IN_USE_KHR, "Native window in use"},
 };
@@ -63,8 +63,16 @@ gst_vulkan_error_quark (void)
   return g_quark_from_static_string ("gst-vulkan-error");
 }
 
-static const char *
-_vk_result_to_string (VkResult result)
+/**
+ * gst_vulkan_result_to_string: (skip)
+ * @result: a VkResult
+ *
+ * Returns: a message that corresponds to @result
+ *
+ * Since: 1.22
+ */
+const char *
+gst_vulkan_result_to_string (VkResult result)
 {
   int i;
 
@@ -105,7 +113,7 @@ gst_vulkan_error_to_g_error (VkResult result, GError ** error,
     /* we don't have an error to set */
     return result;
 
-  result_str = _vk_result_to_string (result);
+  result_str = gst_vulkan_result_to_string (result);
   if (result_str == NULL) {
     if (result < 0) {
       result_str = "Unknown";
