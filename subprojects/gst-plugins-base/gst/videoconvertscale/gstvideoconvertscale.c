@@ -726,7 +726,7 @@ gst_video_convert_scale_transform_meta (GstBaseTransform * trans,
         { &videofilter->in_info, &videofilter->out_info };
 
     if (info->transform_func)
-      return info->transform_func (outbuf, meta, inbuf, _scale_quark, &trans);
+      info->transform_func (outbuf, meta, inbuf, _scale_quark, &trans);
     return FALSE;
   }
 
