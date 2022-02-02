@@ -459,6 +459,7 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
       GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
 
       gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+      return GST_FLOW_OK;
     }
 
     pic_to_dup = priv->dpb->pic_list[frame_hdr.frame_to_show_map_idx];

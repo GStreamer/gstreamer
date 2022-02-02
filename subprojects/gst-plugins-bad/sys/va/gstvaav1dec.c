@@ -357,7 +357,7 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
 
 static GstAV1Picture *
 gst_va_av1_dec_duplicate_picture (GstAV1Decoder * decoder,
-    GstAV1Picture * picture)
+    GstVideoCodecFrame * frame, GstAV1Picture * picture)
 {
   GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);

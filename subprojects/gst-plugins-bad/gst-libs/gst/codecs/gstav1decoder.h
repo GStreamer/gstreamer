@@ -96,13 +96,16 @@ struct _GstAV1DecoderClass
    * GstAV1DecoderClass::duplicate_picture:
    * @decoder: a #GstAV1Decoder
    * @picture: (transfer none): a #GstAV1Picture
+   * @frame: (transfer none): the current #GstVideoCodecFrame
    *
-   * Optional. Called when need to duplicate an existing
-   * #GstAV1Picture.
+   * Called when need to duplicate an existing #GstAV1Picture. As
+   * duplicated key-frame will populate the DPB, this virtual
+   * function is not optional.
    *
-   * Since: 1.20
+   * Since: 1.22
    */
   GstAV1Picture * (*duplicate_picture) (GstAV1Decoder * decoder,
+                                        GstVideoCodecFrame * frame,
                                         GstAV1Picture * picture);
   /**
    * GstAV1DecoderClass::start_picture:

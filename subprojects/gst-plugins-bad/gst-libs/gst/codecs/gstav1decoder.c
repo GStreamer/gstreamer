@@ -74,9 +74,6 @@ static GstFlowReturn gst_av1_decoder_drain (GstVideoDecoder * decoder);
 static GstFlowReturn gst_av1_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 
-static GstAV1Picture *gst_av1_decoder_duplicate_picture_default (GstAV1Decoder *
-    decoder, GstAV1Picture * picture);
-
 static void
 gst_av1_decoder_class_init (GstAV1DecoderClass * klass)
 {
@@ -90,9 +87,6 @@ gst_av1_decoder_class_init (GstAV1DecoderClass * klass)
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_av1_decoder_drain);
   decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_av1_decoder_handle_frame);
-
-  klass->duplicate_picture =
-      GST_DEBUG_FUNCPTR (gst_av1_decoder_duplicate_picture_default);
 }
 
 static void
@@ -197,17 +191,6 @@ gst_av1_decoder_drain (GstVideoDecoder * decoder)
   gst_av1_decoder_reset (GST_AV1_DECODER (decoder));
 
   return GST_FLOW_OK;
-}
-
-static GstAV1Picture *
-gst_av1_decoder_duplicate_picture_default (GstAV1Decoder * decoder,
-    GstAV1Picture * picture)
-{
-  GstAV1Picture *new_picture;
-
-  new_picture = gst_av1_picture_new ();
-
-  return new_picture;
 }
 
 static const gchar *
@@ -363,10 +346,10 @@ gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
       return GST_FLOW_ERROR;
     }
 
-    /* FIXME: duplicate picture might be optional feature like that of VP9
-     * decoder baseclass */
+    /* The duplicated picture, if a key frame, will be placed in the DPB and
+     * for this reason is not optional. */
     g_assert (klass->duplicate_picture);
-    picture = klass->duplicate_picture (self, ref_picture);
+    picture = klass->duplicate_picture (self, priv->current_frame, ref_picture);
     if (!picture) {
       GST_ERROR_OBJECT (self, "subclass didn't provide duplicated picture");
       return GST_FLOW_ERROR;
