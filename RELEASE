@@ -1,4 +1,4 @@
-This is GStreamer core 1.18.5.
+This is GStreamer core 1.18.6.
 
 The GStreamer team is thrilled to announce a new major feature release
 of your favourite cross-platform multimedia framework!
@@ -82,7 +82,7 @@ for more details.
 For help and support, please subscribe to and send questions to the
 gstreamer-devel mailing list (see below for details).
 
-There is also a #gstreamer IRC channel on the Freenode IRC network.
+There is also a #gstreamer IRC channel on the OFTC IRC network.
 
 ==== Developers ====
 

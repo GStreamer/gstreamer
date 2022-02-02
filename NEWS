@@ -2,13 +2,13 @@ GStreamer 1.18 Release Notes
 
 GStreamer 1.18.0 was originally released on 8 September 2020.
 
-The latest bug-fix release in the 1.18 series is 1.18.5 and was released
-on 8 September 2021.
+The latest bug-fix release in the 1.18 series is 1.18.6 and was released
+on 2 February 2022.
 
 See https://gstreamer.freedesktop.org/releases/1.18/ for the latest
 version of this document.
 
-Last updated: Wednesday 8 September 2021, 11:00 UTC (log)
+Last updated: Wednesday 2 February 2022, 11:30 UTC (log)
 
 Introduction
 
@@ -2103,9 +2103,8 @@ Possibly Breaking Changes
 Known Issues
 
 -   GStreamer 1.18 versions <= 1.18.4 would fail to build on Linux with
-    Meson 0.58 due to an issue with the include directories. Either
-    apply the patch or build with an older Meson version (<= 0.57) until
-    there is a GStreamer 1.18.5 release that includes the fix.
+    Meson 0.58 due to an issue with the include directories.
+    GStreamer >= 1.18.5 includes a fix for this.
 
 Contributors
 
@@ -3183,16 +3182,180 @@ List of merge requests and issues fixed in 1.18.5
 -   List of Merge Requests applied in 1.18.5
 -   List of Issues fixed in 1.18.5
 
+1.18.6
+
+The sixth 1.18 bug-fix release (1.18.6) was released on 2 February 2022.
+
+This release only contains bugfixes and security fixes and it should be
+safe to update from 1.18.x.
+
+Highlighted bugfixes in 1.18.6
+
+-   tagdemux: Fix crash when presented with malformed files (security
+    fix)
+-   video-converter: Fix broken gamma remap with high bitdepth YUV
+    output
+-   shout2send: Fix issues with libshout >= 2.4.2
+-   mxfdemux: fix regression with VANC tracks that only contains packet
+    types we don’t handle
+-   Better plugin loading error reporting on Windows
+-   Fixes for deprecations in Python 3.10
+-   build fixes, memory leak fixes, reliability fixes
+-   security fixes
+
+gstreamer
+
+-   gstplugin: Fix for UWP build
+-   gstplugin: Better warnings on plugin load failure on Windows
+-   gst-ptp-helper: Do not disable multicast loopback
+-   concat: fix qos event handling
+-   pluginfeature: Fix object leak
+-   baseparse: fix invalid avg_bitrate after reset
+-   multiqueue: Fix query unref race on flush
+-   gst: Initialize optional event/message fields when parsing
+-   bitwriter: Fix the trailing bits lost when getting its data.
+-   multiqueue: never consider a queue that is not waiting
+-   input-selector: Use proper segments when cleaning cached buffers
+
+gst-plugins-base
+
+-   tagdemux: Fix crash when presented with malformed files (security
+    fix)
+-   videoencoder: make sure the buffer is writable before modifying
+    metadata
+-   video-converter: Fix for broken gamma remap with high bitdepth YUV
+    output
+-   sdpmessage: fix mapping single char fmtp params
+-   oggdemux: fix a race in push mode when performing the duration seek
+-   uridecodebin: Fix critical warnings
+-   audio-converter: Fix resampling when there’s nothing to output
+-   tcp: fix build on Solaris
+-   uridecodebin3: Nullify current item after all play items are freed.
+-   audio-resampler: Fix segfault when we can’t output any frames
+-   urisourcebin: Handle sources with dynamic pads and pads already
+    present
+-   playbin2/3: autoplug/caps: don’t expand caps to ANY
+-   uridecodebin3/urisourcebin: Reusability fixes
+-   rtspconnection: Only reset timeout when socket is unused
+-   gstvideoaggregator.c: fix build with gcc 4.8
+
+gst-plugins-good
+
+-   rtspsrc: Fix critical while serializing timeout element message
+-   multifilesrc: fix caps leak
+-   shout2: Add compatibility for libshout >= 2.4.2 shout_open return
+    values
+-   v4l2: Update fmt if padded height is greater than fmt height
+-   v4l2bufferpool: set video alignment of video meta
+-   qtmux: fix deadlock in gst_qt_mux_prepare_moov_recovery
+-   matroska: Add support for muxing/demuxing ffv1
+-   qtdemux: Try to build AAC codec-data whenever it’s possible
+
+gst-plugins-bad
+
+-   interlace: Fix a double-unref on shutdown
+-   webrtcbin: Chain up to parent constructed method
+-   webrtc: fix log error message in function
+    gst_webrtc_bin_set_local_description
+-   mxfdemux: don’t error out if VANC track only contains packets we
+    don’t handle
+-   av1parser: Fix data type of film grain param
+-   assrender: Support RFC8081 mime types
+-   pitch: Specify layout as required for negotiation
+-   magicleap: update lumin_rt libraries names to the latest official
+    version
+-   codecs: h265decoder: Fix per-slice leak
+-   mpeg4videoparse: fix criticals trying to insert configs that don’t
+    exist yet
+-   webrtcbin: Always set SINK/SRC flags
+-   mpegtspacketizer: memcmp potentially seen_before data
+-   zxing: update to support version 1.1.1
+
+gst-plugins-ugly
+
+-   No changes
+
+gst-libav
+
+-   avcodecmap: Add support for GBRA_10LE/BE
+
+gst-rtsp-server
+
+-   rtsp-stream: fix get_rates raciness
+-   rtsp-media: Only unprepare a media if it was not already unpreparing
+    anyway
+-   rtsp-media: Unprepare suspended medias too
+-   rtsp-client: make sure sessmedia will not get freed while used
+-   rtsp-media: Also mark receive-only (RECORD) medias as prepared when
+    unsuspending
+-   rtsp-session: Don’t unref medias twice if it is removed inside…
+-   examples: Fix leak in appsrc2 example
+
+gstreamer-vaapi
+
+-   libs: video-format: Check if formats map is not NULL
+-   vaapidecode: Autogenerate caps template
+-   vaapipostproc: copy over metadata also when using system allocated
+    buffer
+
+gst-python
+
+-   Avoid treating float as int (fix for Python 3.10)
+
+gst-editing-services
+
+-   meson: Remove duplicate definition of ‘examples’ option
+
+gst-devtools
+
+-   No changes
+
+gst-integration-testsuites
+
+-   No changes
+
+gst-build
+
+-   env: Fix deprecations from python 3.10
+-   Various fixes for macOS
+-   update FFmpeg wrap to 4.3.3
+
+Cerbero build tool and packaging changes in 1.18.6
+
+-   Some fixes for Fedora 34
+-   cerbero: Backport fix for removed loop param of PriorityQueue()
+-   cerbero: Fix support for Fedora 35
+-   Add support for Visual Studio 2022
+-   openssl.recipe: Fix crash on iOS TestFlight
+-   UnixBootstrapper: remove sudo as root user
+-   bzip2.recipe: bump version to 1.0.8
+-   openssl.recipe: upgrade to version 1.1.1l
+
+Contributors to 1.18.6
+
+Antonio Ospite, Célestin Marot, Dave Piché, Erlend Eriksen, Fabrice
+Fontaine, Guillaume Desmottes, Haihua Hu, He Junyan, Jakub Adam, Jan
+Alexander Steffens (heftig), Jan Schmidt, Jeremy Cline, Jordan Petridis,
+Mathieu Duponchelle, Matthew Waters, Mengkejiergeli Ba, Michael Gruner,
+Nirbheek Chauhan, Ognyan Tonchev, Pascal Hache, Rafał Dzięgiel,
+Sebastian Dröge, Seungha Yang, Stéphane Cerveau, Teng En Ung,Thibault
+Saunier, Thomas Klausner, Tim-Philipp Müller, Tobias Reineke, Tobias
+Ronge, Tomasz Andrzejak, Trung Do, Víctor Manuel Jáquez Leal, Vivia
+Nikolaidou,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.18.6
+
+-   List of Merge Requests applied in 1.18.6
+-   List of Issues fixed in 1.18.6
+
 Schedule for 1.20
 
-Our next major feature release will be 1.20, and 1.19 will be the
-unstable development version leading up to the stable 1.20 release. The
-development of 1.19/1.20 will happen in the git master branch.
-
-The plan for the 1.20 development cycle is yet to be confirmed, but it
-is now expected that feature freeze will take place some time in
-September/October 2021, with the first 1.20 stable release hopefully
-towards the end of October 2021.
+Our next major feature release will be 1.20, and will be released in
+early February 2022. You can track its progress on the 1.20 Release
+Notes page.
 
 1.20 will be backwards-compatible to the stable 1.18, 1.16, 1.14, 1.12,
 1.10, 1.8, 1.6, 1.4, 1.2 and 1.0 release series.
