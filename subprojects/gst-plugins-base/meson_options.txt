@@ -65,6 +65,7 @@ option('vorbis', type : 'feature', value : 'auto', description : 'Vorbis audio p
 option('x11', type : 'feature', value : 'auto', description : 'X11 ximagesink plugin, and X11 support in libraries, plugins, examples')
 option('xshm', type : 'feature', value : 'auto', description : 'X11 shared memory support for X11 plugins')
 option('xvideo', type : 'feature', value : 'auto', description : 'X11 XVideo xvimagesink plugin')
+option('xi', type : 'feature', value : 'auto', description : 'X11 input extension for touch support in ximagesink')
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)

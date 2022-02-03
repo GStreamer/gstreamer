@@ -115,6 +115,11 @@
 /* for XkbKeycodeToKeysym */
 #include <X11/XKBlib.h>
 
+/* used for touchscreen events */
+#ifdef HAVE_XI2
+#include <X11/extensions/XInput2.h>
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_x_image_pool);
 GST_DEBUG_CATEGORY (gst_debug_x_image_sink);
 GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
@@ -432,6 +437,98 @@ gst_x_image_sink_xwindow_set_title (GstXImageSink * ximagesink,
   }
 }
 
+#ifdef HAVE_XI2
+static void
+gst_x_image_sink_xtouchdevice_free (GstXTouchDevice * device)
+{
+  g_free (device->name);
+}
+
+static void
+gst_x_image_sink_xwindow_select_touch_events (GstXImageSink * ximagesink,
+    GstXWindow * xwindow)
+{
+  XIDeviceInfo *devices;
+  int ndevices, i, j, mask_len;
+  unsigned char *mask;
+
+  ximagesink->touch_devices = g_array_remove_range (ximagesink->touch_devices,
+      0, ximagesink->touch_devices->len);
+
+  mask_len = (XI_LASTEVENT + 7) << 3;
+  mask = g_new0 (unsigned char, mask_len);
+  XISetMask (mask, XI_TouchBegin);
+  XISetMask (mask, XI_TouchUpdate);
+  XISetMask (mask, XI_TouchEnd);
+
+  devices = XIQueryDevice (ximagesink->xcontext->disp, XIAllDevices, &ndevices);
+
+  /* Find suitable touch screen devices, and select touch events for each */
+  for (i = 0; i < ndevices; i++) {
+    XIEventMask mask_data;
+    GstXTouchDevice temp, *device;
+    gboolean has_touch = FALSE;
+
+    if (devices[i].use != XISlavePointer)
+      continue;
+
+    temp.pressure_valuator = -1;
+    temp.id = devices[i].deviceid;
+    temp.name = devices[i].name;
+
+    for (j = 0; j < devices[i].num_classes; j++) {
+      XIAnyClassInfo *class = devices[i].classes[j];
+
+      /* only pick devices with direct touch, to avoid touchpads and similar */
+      if (class->type == XITouchClass &&
+          ((XITouchClassInfo *) class)->mode == XIDirectTouch) {
+        has_touch = TRUE;
+      }
+
+      /* Find the valuator representing pressure, if present */
+      if (class->type == XIValuatorClass) {
+        XIValuatorClassInfo *val_info = (XIValuatorClassInfo *) class;
+
+        if (val_info->label == XInternAtom (ximagesink->xcontext->disp,
+                "Abs Pressure", TRUE))
+          temp.abs_pressure = TRUE;
+        else if (val_info->label == XInternAtom (ximagesink->xcontext->disp,
+                "Rel Pressure", TRUE))
+          temp.abs_pressure = FALSE;
+        else
+          continue;
+
+        temp.pressure_valuator = i;
+        temp.pressure_min = val_info->min;
+        temp.pressure_max = val_info->max;
+        temp.current_pressure = temp.pressure_min;
+      }
+    }
+
+    if (has_touch) {
+      GST_DEBUG ("found%s touch screen with id %d: %s",
+          temp.pressure_valuator < 0 ? "" : (temp.abs_pressure ?
+              "pressure-sensitive (abs)" : "pressure-sensitive (rel)"),
+          temp.id, temp.name);
+
+      device = g_new (GstXTouchDevice, 1);
+      *device = temp;
+      device->name = g_strdup (device->name);
+      ximagesink->touch_devices =
+          g_array_append_vals (ximagesink->touch_devices, device, 1);
+
+      mask_data.deviceid = temp.id;
+      mask_data.mask_len = mask_len;
+      mask_data.mask = mask;
+      XISelectEvents (ximagesink->xcontext->disp, xwindow->win, &mask_data, 1);
+    }
+  }
+
+  g_free (mask);
+  XIFreeDeviceInfo (devices);
+}
+#endif
+
 /* This function handles a GstXWindow creation */
 static GstXWindow *
 gst_x_image_sink_xwindow_new (GstXImageSink * ximagesink, gint width,
@@ -474,6 +571,23 @@ gst_x_image_sink_xwindow_new (GstXImageSink * ximagesink, gint width,
         "WM_DELETE_WINDOW", False);
     (void) XSetWMProtocols (ximagesink->xcontext->disp, xwindow->win,
         &wm_delete, 1);
+
+#ifdef HAVE_XI2
+    if (ximagesink->xcontext->use_xi2) {
+      XIEventMask mask_data;
+      unsigned char mask[2];
+
+      gst_x_image_sink_xwindow_select_touch_events (ximagesink, xwindow);
+
+      XISetMask (mask, XI_HierarchyChanged);
+      mask_data.deviceid = XIAllDevices;
+      mask_data.mask_len = sizeof (mask);
+      mask_data.mask = mask;
+
+      /* register for HierarchyChanged events to see device changes */
+      XISelectEvents (ximagesink->xcontext->disp, xwindow->win, &mask_data, 1);
+    }
+#endif
   }
 
   xwindow->gc = XCreateGC (ximagesink->xcontext->disp, xwindow->win,
@@ -577,7 +691,7 @@ gst_x_image_sink_handle_xevents (GstXImageSink * ximagesink)
 {
   XEvent e;
   gint pointer_x = 0, pointer_y = 0;
-  gboolean pointer_moved = FALSE;
+  gboolean pointer_moved = FALSE, touch_frame_open = FALSE;
   gboolean exposed = FALSE, configured = FALSE;
 
   g_return_if_fail (GST_IS_X_IMAGE_SINK (ximagesink));
@@ -708,11 +822,11 @@ gst_x_image_sink_handle_xevents (GstXImageSink * ximagesink)
     g_mutex_lock (&ximagesink->x_lock);
   }
 
-  /* Handle Display events */
   while (XPending (ximagesink->xcontext->disp)) {
     XNextEvent (ximagesink->xcontext->disp, &e);
 
     switch (e.type) {
+        /* Handle Display events */
       case ClientMessage:{
         Atom wm_delete;
 
@@ -730,13 +844,137 @@ gst_x_image_sink_handle_xevents (GstXImageSink * ximagesink)
         }
         break;
       }
-      default:
+      default:{
+#ifdef HAVE_XI2
+        /* Handle XInput2 touch screen events */
+        if (ximagesink->xcontext->use_xi2
+            && XGetEventData (ximagesink->xcontext->disp,
+                (XGenericEventCookie *) & e)
+            && e.xcookie.extension == ximagesink->xcontext->xi_opcode) {
+          XGenericEventCookie *cookie;
+          XIDeviceEvent *touch;
+          GstXTouchDevice device;
+          GstEvent *nav;
+          gdouble pressure;
+          gboolean device_found;
+          unsigned int ev_id, i;
+
+          cookie = &e.xcookie;
+          nav = NULL;
+
+          if (cookie->evtype == XI_HierarchyChanged) {
+            GST_DEBUG ("ximagesink devices changed, searching for "
+                "touch devices again");
+            gst_x_image_sink_xwindow_select_touch_events (ximagesink,
+                ximagesink->xwindow);
+            break;
+          }
+
+          if (cookie->evtype != XI_TouchBegin
+              && cookie->evtype != XI_TouchUpdate
+              && cookie->evtype != XI_TouchEnd)
+            break;
+
+          touch = cookie->data;
+          ev_id = ((unsigned int) touch->deviceid) << 16 |
+              (((unsigned int) touch->detail) & 0x00ff);
+
+          /* find device that the event belongs to */
+          device_found = FALSE;
+          for (i = 0; i < ximagesink->touch_devices->len; i++) {
+            device = g_array_index (ximagesink->touch_devices,
+                GstXTouchDevice, i);
+            if (device.id == touch->deviceid) {
+              device_found = TRUE;
+              break;
+            }
+          }
+          if (!device_found)
+            break;
+
+          if (device.pressure_valuator >= 0) {
+            pressure = touch->valuators.values[device.pressure_valuator];
+            pressure -= device.pressure_min;
+            pressure /= device.pressure_max - device.pressure_min;
+            if (!device.abs_pressure)
+              pressure += device.current_pressure;
+          } else
+            pressure = NAN;
+
+          device.current_pressure = pressure;
+
+          g_mutex_unlock (&ximagesink->x_lock);
+          g_mutex_unlock (&ximagesink->flow_lock);
+
+          /* assume the event queue is ordered chronologically, and end */
+          /* the previous touch event frame when the timestamp increases */
+          if (touch->time != ximagesink->last_touch && touch_frame_open) {
+            if (touch->time < ximagesink->last_touch) {
+              GST_WARNING ("ximagesink out of order touch event "
+                  "with timestamp %lu, not ending touch frame", touch->time);
+            } else {
+              GST_DEBUG ("ximagesink ending touch frame for %lu",
+                  ximagesink->last_touch);
+              gst_navigation_send_event_simple (GST_NAVIGATION (ximagesink),
+                  gst_navigation_event_new_touch_frame ());
+            }
+          }
+
+          switch (cookie->evtype) {
+            case XI_TouchBegin:{
+              GST_DEBUG ("ximagesink new touch point %d on device %d "
+                  "at %.0f,%.0f", touch->detail, touch->deviceid,
+                  touch->event_x, touch->event_y);
+              nav = gst_navigation_event_new_touch_down (ev_id, touch->event_x,
+                  touch->event_y, pressure);
+              break;
+            }
+            case XI_TouchEnd:{
+              GST_DEBUG ("ximagesink removed touch point %d from device %d "
+                  "at %.0f,%.0f", touch->detail, touch->deviceid,
+                  touch->event_x, touch->event_y);
+              nav = gst_navigation_event_new_touch_up (ev_id, touch->event_x,
+                  touch->event_y);
+              break;
+            }
+            case XI_TouchUpdate:{
+              GST_DEBUG ("ximagesink touch point %d on device %d moved "
+                  "to %.0f,%.0f", touch->detail, touch->deviceid,
+                  touch->event_x, touch->event_y);
+              nav = gst_navigation_event_new_touch_motion (ev_id,
+                  touch->event_x, touch->event_y, pressure);
+              break;
+            }
+            default:
+              break;
+          }
+
+          gst_navigation_send_event_simple (GST_NAVIGATION (ximagesink), nav);
+          ximagesink->last_touch = touch->time;
+          touch_frame_open = TRUE;
+
+          g_mutex_lock (&ximagesink->flow_lock);
+          g_mutex_lock (&ximagesink->x_lock);
+          XFreeEventData (ximagesink->xcontext->disp, cookie);
+        }
+#endif
         break;
+      }
     }
   }
 
   g_mutex_unlock (&ximagesink->x_lock);
   g_mutex_unlock (&ximagesink->flow_lock);
+
+#ifdef HAVE_XI2
+  /* send a touch-frame event now to avoid delay from having to wait for the */
+  /* next invocation */
+  if (touch_frame_open) {
+    GST_DEBUG ("ximagesink ending touch frame for %lu", ximagesink->last_touch);
+    gst_navigation_send_event_simple (GST_NAVIGATION (ximagesink),
+        gst_navigation_event_new_touch_frame ());
+  }
+#endif
 }
 
 static gpointer
@@ -872,8 +1110,12 @@ gst_x_image_sink_xcontext_get (GstXImageSink * ximagesink)
   GstVideoFormat vformat;
   guint32 alpha_mask;
   int opcode, event, err;
-  int major = XkbMajorVersion;
-  int minor = XkbMinorVersion;
+  int xkb_major = XkbMajorVersion;
+  int xkb_minor = XkbMinorVersion;
+#ifdef HAVE_XI2
+  int xi2_major = XI_2_Major;
+  int xi2_minor = XI_2_Minor;
+#endif
 
   g_return_val_if_fail (GST_IS_X_IMAGE_SINK (ximagesink), NULL);
 
@@ -945,12 +1187,29 @@ gst_x_image_sink_xcontext_get (GstXImageSink * ximagesink)
     xcontext->use_xshm = FALSE;
     GST_DEBUG ("ximagesink is not using XShm extension");
   }
-  if (XkbQueryExtension (xcontext->disp, &opcode, &event, &err, &major, &minor)) {
+  if (XkbQueryExtension (xcontext->disp, &opcode, &event, &err,
+          &xkb_major, &xkb_minor)) {
     xcontext->use_xkb = TRUE;
     GST_DEBUG ("ximagesink is using Xkb extension");
   } else {
     xcontext->use_xkb = FALSE;
     GST_DEBUG ("ximagesink is not using Xkb extension");
+  }
+
+  /* Search for XInput extension support */
+#ifdef HAVE_XI2
+  if (XQueryExtension (xcontext->disp, "XInputExtension",
+          &(xcontext->xi_opcode), &event, &err)
+      && (XIQueryVersion (xcontext->disp, &xi2_major, &xi2_minor) == Success
+          && (xi2_major > 2 || (xi2_major == 2 && xi2_minor >= 2)))) {
+    xcontext->use_xi2 = TRUE;
+    GST_DEBUG ("ximagesink is using XInput extension");
+  } else
+#endif /* HAVE_XI2 */
+  {
+    xcontext->use_xi2 = FALSE;
+    GST_DEBUG ("ximagesink is not using XInput extension: "
+        "XInput is not present");
   }
 
   /* extrapolate alpha mask */
@@ -1865,6 +2124,11 @@ gst_x_image_sink_reset (GstXImageSink * ximagesink)
 
   g_mutex_lock (&ximagesink->flow_lock);
 
+#ifdef HAVE_XI2
+  ximagesink->touch_devices = g_array_remove_range (ximagesink->touch_devices,
+      0, ximagesink->touch_devices->len);
+#endif
+
   if (ximagesink->pool) {
     gst_object_unref (ximagesink->pool);
     ximagesink->pool = NULL;
@@ -1897,6 +2161,9 @@ gst_x_image_sink_finalize (GObject * object)
     g_free (ximagesink->par);
     ximagesink->par = NULL;
   }
+#ifdef HAVE_XI2
+  g_array_free (ximagesink->touch_devices, TRUE);
+#endif
   g_mutex_clear (&ximagesink->x_lock);
   g_mutex_clear (&ximagesink->flow_lock);
 
@@ -1918,6 +2185,14 @@ gst_x_image_sink_init (GstXImageSink * ximagesink)
 
   ximagesink->fps_n = 0;
   ximagesink->fps_d = 1;
+
+#ifdef HAVE_XI2
+  ximagesink->last_touch = 0;
+  ximagesink->touch_devices = g_array_new (FALSE, FALSE,
+      sizeof (GstXTouchDevice));
+  g_array_set_clear_func (ximagesink->touch_devices,
+      (GDestroyNotify) gst_x_image_sink_xtouchdevice_free);
+#endif
 
   g_mutex_init (&ximagesink->x_lock);
   g_mutex_init (&ximagesink->flow_lock);

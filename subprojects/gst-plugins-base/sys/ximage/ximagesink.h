@@ -55,6 +55,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
+typedef struct _GstXTouchDevice GstXTouchDevice;
 
 typedef struct _GstXImageSink GstXImageSink;
 typedef struct _GstXImageSinkClass GstXImageSinkClass;
@@ -83,6 +84,9 @@ typedef struct _GstXImageSinkClass GstXImageSinkClass;
  * if the Extension is present
  * @use_xkb: used to known wether of not Xkb extension is usable or not even
  * if the Extension is present
+ * @use_xi2: used to known wether of not XInput2 extension is usable or not even
+ * if the Extension is present
+ * @xi_opcode: XInput opcode
  * @caps: the #GstCaps that Display @disp can accept
  *
  * Structure used to store various information collected/calculated for a
@@ -110,6 +114,9 @@ struct _GstXContext
 
   gboolean use_xshm;
   gboolean use_xkb;
+  gboolean use_xi2;
+
+  int xi_opcode;
 
   GstCaps *caps;
   GstCaps *last_caps;
@@ -134,6 +141,25 @@ struct _GstXWindow
   GC gc;
 };
 
+/*
+ * GstXTouchDevice:
+ * @name: the name of this decive
+ * @id: the device ID of this device
+ * @pressure_valuator: index of the valuator that encodes pressure data, if present
+ * @abs_pressure: if pressure is reported in absolute or relative values
+ * @current_pressure: stores the most recent pressure value for this device
+ * @pressure_min: lowest possible pressure value
+ * @pressure_max: highest possible pressure value
+ *
+ * Structure used to store information about a touchscreen device.
+ */
+struct _GstXTouchDevice {
+  gchar *name;
+  gint id, pressure_valuator;
+  gboolean abs_pressure;
+  gdouble current_pressure, pressure_min, pressure_max;
+};
+
 /**
  * GstXImageSink:
  * @display_name: the name of the Display we want to render to
@@ -147,6 +173,8 @@ struct _GstXWindow
  * @running: used to inform @event_thread if it should run/shutdown
  * @fps_n: the framerate fraction numerator
  * @fps_d: the framerate fraction denominator
+ * @last_touch: timestamp of the last received touch event
+ * @touch_devices: list of known touchscreen devices
  * @x_lock: used to protect X calls as we are not using the XLib in threaded
  * mode
  * @flow_lock: used to protect data flow routines from external calls such as
@@ -182,6 +210,11 @@ struct _GstXImageSink
   /* Framerate numerator and denominator */
   gint fps_n;
   gint fps_d;
+
+#ifdef HAVE_XI2
+  Time last_touch;
+  GArray *touch_devices;
+#endif
 
   GMutex x_lock;
   GMutex flow_lock;
