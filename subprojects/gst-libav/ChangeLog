@@ -1,7 +1,14 @@
+2022-01-28 19:58:55 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	  docs: gst-libav: update cache and symbol index for FFmpeg 4.4
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1597>
+
 === release 1.19.90 ===
 
 2022-01-28 14:28:35 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-libav.doap:

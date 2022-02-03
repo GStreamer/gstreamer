@@ -2,6 +2,7 @@
 
 2022-01-28 14:28:35 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-devtools.doap:
