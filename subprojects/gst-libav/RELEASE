@@ -1,13 +1,15 @@
-This is GStreamer gst-libav 1.19.90.
+This is GStreamer gst-libav 1.20.0.
 
-GStreamer 1.19 is the development branch leading up to the next major
-stable version which will be 1.20.
+The GStreamer team is thrilled to announce a new major feature release
+of your favourite cross-platform multimedia framework!
 
-The 1.19 development series adds new features on top of the 1.18 series and is
-part of the API and ABI-stable 1.x release series of the GStreamer multimedia
-framework.
+As always, this release is again packed with new features, bug fixes and
+other improvements.
 
-Full release notes will one day be found at:
+The 1.20 release series adds new features on top of the 1.18 series and is
+part of the API and ABI-stable 1.x release series.
+
+Full release notes can be found at:
 
   https://gstreamer.freedesktop.org/releases/1.20/
 
@@ -57,7 +59,7 @@ You can find source releases of gstreamer in the download
 directory: https://gstreamer.freedesktop.org/src/gstreamer/
 
 The git repository and details how to clone it can be found at
-https://gitlab.freedesktop.org/gstreamer/
+https://gitlab.freedesktop.org/gstreamer/gstreamer/
 
 ==== Homepage ====
 
@@ -65,10 +67,9 @@ The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
-We have recently moved from GNOME Bugzilla to GitLab on freedesktop.org
-for bug reports and feature requests:
+We track bugs and feature requests in GitLab:
 
-  https://gitlab.freedesktop.org/gstreamer
+  https://gitlab.freedesktop.org/gstreamer/gstreamer/
 
 Please submit patches via GitLab as well, in form of Merge Requests. See
 
@@ -81,11 +82,14 @@ gstreamer-devel mailing list (see below for details).
 
 There is also a #gstreamer IRC channel on the OFTC IRC network.
 
+Please do not submit support requests in GitLab, we only use it
+for bug tracking and merge requests review.
+
 ==== Developers ====
 
-GStreamer source code repositories can be found on GitLab on freedesktop.org:
+The GStreamer source code repository can be found on GitLab on freedesktop.org:
 
-  https://gitlab.freedesktop.org/gstreamer
+  https://gitlab.freedesktop.org/gstreamer/gstreamer/
 
 and can also be cloned from there and this is also where you can submit
 Merge Requests or file issues for bugs or feature requests.
