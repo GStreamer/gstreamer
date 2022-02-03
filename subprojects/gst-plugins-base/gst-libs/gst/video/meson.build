@@ -77,6 +77,7 @@ video_headers = files([
 install_headers(video_headers, subdir : 'gstreamer-1.0/gst/video/')
 
 video_mkenum_headers = [
+  'video.h',
   'video-anc.h',
   'video-format.h',
   'video-frame.h',

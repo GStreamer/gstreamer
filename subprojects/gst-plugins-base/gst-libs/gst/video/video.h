@@ -95,11 +95,6 @@ typedef enum {
  * Since: 1.20
  */
 
-GST_VIDEO_API
-GType gst_video_orientation_method_get_type (void);
-#define GST_TYPE_VIDEO_ORIENTATION_METHOD \
-  gst_video_orientation_method_get_type ()
-
 /* metadata macros */
 /**
  * GST_META_TAG_VIDEO_STR:
