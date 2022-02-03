@@ -27,6 +27,7 @@
 #include "gstvaallocator.h"
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
+#include "gstvaprofile.h"
 #include "gstvavideoformat.h"
 
 struct _GstVaDecoder
@@ -231,7 +232,8 @@ gst_va_decoder_open (GstVaDecoder * self, VAProfile profile, guint rt_format)
     return TRUE;
 
   if (!gst_va_decoder_has_profile (self, profile)) {
-    GST_ERROR_OBJECT (self, "Unsupported profile: %d", profile);
+    GST_ERROR_OBJECT (self, "Unsupported profile: %s",
+        gst_va_profile_name (profile));
     return FALSE;
   }
 
