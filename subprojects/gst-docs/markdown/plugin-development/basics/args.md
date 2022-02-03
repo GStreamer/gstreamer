@@ -141,13 +141,58 @@ gst_videotestsrc_pattern_get_type (void)
 static void
 gst_videotestsrc_class_init (GstvideotestsrcClass *klass)
 {
+
+  /* define virtual function pointers */
+  object_class->set_property = gst_my_filter_set_property;
+  object_class->get_property = gst_my_filter_get_property;
 [..]
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PATTERN,
     g_param_spec_enum ("pattern", "Pattern",
                "Type of test pattern to generate",
                        GST_TYPE_VIDEOTESTSRC_PATTERN, GST_VIDEOTESTSRC_SMPTE,
                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
+
 [..]
+}
+
+[..]
+
+static void
+gst_my_filter_set_property (GObject      *object,
+                guint         prop_id,
+                const GValue *value,
+                GParamSpec   *pspec)
+{
+  GstMyFilter *filter = GST_MY_FILTER (object);
+
+  switch (prop_id) {
+    case PROP_PATTERN:
+      filter->video_test_pattern = (GstVideotestsrcPattern)g_value_get_enum(value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_my_filter_get_property (GObject    *object,
+                guint       prop_id,
+                GValue     *value,
+                GParamSpec *pspec)
+{
+  GstMyFilter *filter = GST_MY_FILTER (object);
+
+  switch (prop_id) {
+    case PROP_PATTERN:
+      g_value_set_enum (value, filter->video_test_pattern);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 ```
