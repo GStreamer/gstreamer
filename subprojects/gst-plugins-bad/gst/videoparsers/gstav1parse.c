@@ -1654,7 +1654,7 @@ out:
 /* Try to recognize whether the input is annex-b format. */
 static GstFlowReturn
 gst_av1_parse_detect_alignment (GstBaseParse * parse,
-    GstBaseParseFrame * frame, gint * skipsize)
+    GstBaseParseFrame * frame, gint * skipsize, guint32 * total_consumed)
 {
   GstAV1Parse *self = GST_AV1_PARSE (parse);
   GstMapInfo map_info;
@@ -1663,7 +1663,7 @@ gst_av1_parse_detect_alignment (GstBaseParse * parse,
   GstBuffer *buffer = gst_buffer_ref (frame->buffer);
   gboolean got_seq, got_frame;
   gboolean frame_complete;
-  guint32 consumed, total_consumed;
+  guint32 consumed;
   guint32 frame_sz;
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -1678,18 +1678,19 @@ gst_av1_parse_detect_alignment (GstBaseParse * parse,
   /* Detect the alignment obu first */
   got_seq = FALSE;
   got_frame = FALSE;
-  total_consumed = 0;
+  *total_consumed = 0;
 again:
-  while (total_consumed < map_info.size) {
+  while (*total_consumed < map_info.size) {
     res = gst_av1_parser_identify_one_obu (self->parser,
-        map_info.data + total_consumed, map_info.size - total_consumed,
+        map_info.data + *total_consumed, map_info.size - *total_consumed,
         &obu, &consumed);
-    if (res == GST_AV1_PARSER_OK)
+    if (res == GST_AV1_PARSER_OK) {
+      *total_consumed += consumed;
       res = gst_av1_parse_handle_one_obu (self, &obu, &frame_complete);
+    }
+
     if (res != GST_AV1_PARSER_OK)
       break;
-
-    total_consumed += consumed;
 
     if (obu.obu_type == GST_AV1_OBU_SEQUENCE_HEADER)
       got_seq = TRUE;
@@ -1715,7 +1716,7 @@ again:
     ret = GST_FLOW_OK;
     goto out;
   } else if (res == GST_AV1_PARSER_DROP) {
-    total_consumed += consumed;
+    *total_consumed += consumed;
     res = GST_AV1_PARSER_OK;
     goto again;
   }
@@ -1812,17 +1813,20 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
   }
 
   if (self->in_align == GST_AV1_PARSE_ALIGN_NONE) {
+    guint32 consumed = 0;
+
     /* Only happend at the first time of handle_frame, and the
        alignment in the sink caps is unset. Try the default and
        if error, try the annex B. */
-    ret = gst_av1_parse_detect_alignment (parse, frame, skipsize);
-    if (ret == GST_FLOW_OK && self->in_align != GST_AV1_PARSE_ALIGN_NONE)
+    ret = gst_av1_parse_detect_alignment (parse, frame, skipsize, &consumed);
+    if (ret == GST_FLOW_OK && self->in_align != GST_AV1_PARSE_ALIGN_NONE) {
       GST_INFO_OBJECT (self, "Detect the input alignment %d", self->in_align);
-  }
-
-  if (self->in_align == GST_AV1_PARSE_ALIGN_NONE) {
-    GST_ERROR_OBJECT (self, "Input alignment is unknown");
-    return GST_FLOW_ERROR;
+    } else {
+      *skipsize = consumed > 0 ? consumed : gst_buffer_get_size (frame->buffer);
+      GST_WARNING_OBJECT (self, "Fail to detect the alignment, skip %d",
+          *skipsize);
+      return GST_FLOW_OK;
+    }
   }
 
   /* We may in pull mode and no caps is set */
