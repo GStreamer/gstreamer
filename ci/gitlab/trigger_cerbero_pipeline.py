@@ -46,6 +46,10 @@ if __name__ == "__main__":
         variables={
             "CI_GSTREAMER_URL": os.environ["CI_PROJECT_URL"],
             "CI_GSTREAMER_REF_NAME": os.environ["CI_COMMIT_REF_NAME"],
+            # This tells cerebero CI that this is a pipeline started via the
+            # trigger API, which means it can use a deps cache instead of
+            # building from scratch.
+            "CI_GSTREMER_TRIGGERED": "true",
         }
     )
 
