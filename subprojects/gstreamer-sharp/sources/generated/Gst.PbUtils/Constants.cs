@@ -18,8 +18,8 @@ namespace Gst.PbUtils {
 		public const string ENCODING_CATEGORY_STORAGE_EDITING = @"storage-editing";
 		public const int PLUGINS_BASE_VERSION_MAJOR = 1;
 		public const int PLUGINS_BASE_VERSION_MICRO = 0;
-		public const int PLUGINS_BASE_VERSION_MINOR = 20;
-		public const int PLUGINS_BASE_VERSION_NANO = 0;
+		public const int PLUGINS_BASE_VERSION_MINOR = 21;
+		public const int PLUGINS_BASE_VERSION_NANO = 1;
 #endregion
 	}
 }
