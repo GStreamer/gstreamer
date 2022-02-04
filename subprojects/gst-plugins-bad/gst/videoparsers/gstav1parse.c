@@ -1373,7 +1373,8 @@ gst_av1_parse_handle_obu_to_obu (GstBaseParse * parse,
 
   g_assert (consumed <= map_info.size);
 
-  if (res == GST_AV1_PARSER_BITSTREAM_ERROR) {
+  if (res == GST_AV1_PARSER_BITSTREAM_ERROR ||
+      res == GST_AV1_PARSER_MISSING_OBU_REFERENCE) {
     if (consumed) {
       *skipsize = consumed;
     } else {
@@ -1487,7 +1488,8 @@ again:
       break;
   }
 
-  if (res == GST_AV1_PARSER_BITSTREAM_ERROR) {
+  if (res == GST_AV1_PARSER_BITSTREAM_ERROR ||
+      res == GST_AV1_PARSER_MISSING_OBU_REFERENCE) {
     /* Discard the whole frame */
     *skipsize = map_info.size;
     GST_WARNING_OBJECT (parse, "Parse obu error, discard %d", *skipsize);
@@ -1609,7 +1611,8 @@ again:
     goto out;
   }
 
-  if (res == GST_AV1_PARSER_BITSTREAM_ERROR) {
+  if (res == GST_AV1_PARSER_BITSTREAM_ERROR ||
+      res == GST_AV1_PARSER_MISSING_OBU_REFERENCE) {
     *skipsize = map_info.size;
     GST_WARNING_OBJECT (parse, "Parse obu error, discard whole buffer %d.",
         *skipsize);
