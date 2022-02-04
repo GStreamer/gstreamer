@@ -79,6 +79,10 @@ if __name__ == "__main__":
     plugins_declaration = []
     plugins_registration = []
 
+    if ',' in options.plugins or ':' in options.plugins:
+        print("Only ';' is allowed in the list of plugins.")
+        exit(1)
+
     if options.plugins is None or options.plugins.isspace():
         plugins = []
     else:
