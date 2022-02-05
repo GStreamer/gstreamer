@@ -864,18 +864,12 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
       pool = gst_d3d11_buffer_pool_new (self->device);
       is_d3d11 = true;
     } else {
-      pool = gst_video_buffer_pool_new ();
+      pool = gst_d3d11_staging_buffer_pool_new (self->device);
     }
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-    /* d3d11 pool does not support video alignment */
-    if (!is_d3d11) {
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-    }
 
     size = GST_VIDEO_INFO_SIZE (&info);
     if (is_d3d11) {
@@ -898,14 +892,14 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
       return FALSE;
     }
 
-    if (is_d3d11) {
-      /* d3d11 buffer pool will update buffer size based on allocated texture,
-       * get size from config again */
-      config = gst_buffer_pool_get_config (pool);
-      gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr,
-          nullptr);
-      gst_structure_free (config);
+    /* d3d11 buffer pool will update buffer size based on allocated texture,
+     * get size from config again */
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr,
+        nullptr);
+    gst_structure_free (config);
 
+    if (is_d3d11) {
       /* In case of system memory, we will upload video frame to GPU memory,
        * (which is copy in any case), so crop meta support for system memory
        * is almost pointless */
