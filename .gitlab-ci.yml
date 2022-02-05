@@ -289,6 +289,7 @@ gst indent:
 
 .base_modules_changes: &modules_changes
   - .gitlab-ci.yml
+  - ci/gitlab/*.py
   - meson.build
   - subprojects/*.wrap
   - subprojects/gst-devtools/**/*
@@ -739,7 +740,7 @@ build documentation:
       when: never
     - changes:
       - .gitlab-ci.yml
-      - ci/gitlab/freedesktop_doc_importer.sh
+      - ci/gitlab/*.py
       - subprojects/*.wrap
       - subprojects/gst-docs/**/*
       - subprojects/gst-devtools/**/*
@@ -772,7 +773,7 @@ cerbero trigger:
       when: never
     - changes:
       - .gitlab-ci.yml
-      - ci/gitlab/trigger_cerbero_pipeline.py
+      - ci/gitlab/*.py
       - subprojects/gst-devtools/**/*
       - subprojects/gst-editing-services/**/*
       - subprojects/gst-libav/**/*
