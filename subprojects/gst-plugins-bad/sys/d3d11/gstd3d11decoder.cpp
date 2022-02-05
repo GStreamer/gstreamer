@@ -1393,140 +1393,11 @@ gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
   return view;
 }
 
-static gboolean
-copy_to_system (GstD3D11Decoder * self, GstBuffer * decoder_buffer,
-    GstBuffer * output)
-{
-  GstVideoFrame out_frame;
-  GstVideoInfo *info = &self->output_info;
-  guint i;
-  GstD3D11Memory *in_mem;
-  D3D11_MAPPED_SUBRESOURCE map;
-  HRESULT hr;
-  ID3D11Texture2D *in_texture;
-  guint in_subresource_index;
-  ID3D11DeviceContext *device_context =
-      gst_d3d11_device_get_device_context_handle (self->device);
-
-  if (!gst_d3d11_decoder_ensure_staging_texture (self)) {
-    GST_ERROR_OBJECT (self, "Staging texture is not available");
-    return FALSE;
-  }
-
-  if (!gst_video_frame_map (&out_frame, info, output, GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (self, "Couldn't map output buffer");
-    return FALSE;
-  }
-
-  in_mem = (GstD3D11Memory *) gst_buffer_peek_memory (decoder_buffer, 0);
-
-  in_texture = gst_d3d11_memory_get_texture_handle (in_mem);
-  in_subresource_index = gst_d3d11_memory_get_subresource_index (in_mem);
-
-  gst_d3d11_device_lock (self->device);
-  device_context->CopySubresourceRegion (self->staging, 0, 0, 0, 0,
-      in_texture, in_subresource_index, NULL);
-
-  hr = device_context->Map (self->staging, 0, D3D11_MAP_READ, 0, &map);
-
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to map, hr: 0x%x", (guint) hr);
-
-    gst_d3d11_device_unlock (self->device);
-    gst_video_frame_unmap (&out_frame);
-
-    return FALSE;
-  }
-
-  /* calculate stride and offset only once */
-  if (self->stating_texture_stride[0] == 0) {
-    D3D11_TEXTURE2D_DESC desc;
-    gsize dummy;
-
-    self->staging->GetDesc (&desc);
-
-    gst_d3d11_dxgi_format_get_size (desc.Format, desc.Width, desc.Height,
-        map.RowPitch, self->staging_texture_offset,
-        self->stating_texture_stride, &dummy);
-  }
-
-  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&out_frame); i++) {
-    guint8 *src, *dst;
-    gint j;
-    gint width;
-
-    src = (guint8 *) map.pData + self->staging_texture_offset[i];
-    dst = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&out_frame, i);
-    width = GST_VIDEO_FRAME_COMP_WIDTH (&out_frame, i) *
-        GST_VIDEO_FRAME_COMP_PSTRIDE (&out_frame, i);
-
-    for (j = 0; j < GST_VIDEO_FRAME_COMP_HEIGHT (&out_frame, i); j++) {
-      memcpy (dst, src, width);
-      dst += GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, i);
-      src += self->stating_texture_stride[i];
-    }
-  }
-
-  gst_video_frame_unmap (&out_frame);
-  device_context->Unmap (self->staging, 0);
-  gst_d3d11_device_unlock (self->device);
-
-  return TRUE;
-}
-
-static gboolean
-copy_to_d3d11 (GstD3D11Decoder * self, GstBuffer * decoder_buffer,
-    GstBuffer * output)
-{
-  GstVideoInfo *info = &self->output_info;
-  GstD3D11Memory *in_mem;
-  GstD3D11Memory *out_mem;
-  GstMapInfo out_map;
-  D3D11_BOX src_box;
-  ID3D11Texture2D *in_texture;
-  guint in_subresource_index, out_subresource_index;
-  ID3D11DeviceContext *device_context =
-      gst_d3d11_device_get_device_context_handle (self->device);
-
-  in_mem = (GstD3D11Memory *) gst_buffer_peek_memory (decoder_buffer, 0);
-  out_mem = (GstD3D11Memory *) gst_buffer_peek_memory (output, 0);
-
-  if (!gst_memory_map (GST_MEMORY_CAST (out_mem),
-          &out_map, (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
-    GST_ERROR_OBJECT (self, "Couldn't map output d3d11 memory");
-    return FALSE;
-  }
-
-  gst_d3d11_device_lock (self->device);
-  in_texture = gst_d3d11_memory_get_texture_handle (in_mem);
-  in_subresource_index = gst_d3d11_memory_get_subresource_index (in_mem);
-
-  src_box.left = 0;
-  src_box.top = 0;
-  src_box.front = 0;
-  src_box.back = 1;
-
-  src_box.right = GST_ROUND_UP_2 (GST_VIDEO_INFO_WIDTH (info));
-  src_box.bottom = GST_ROUND_UP_2 (GST_VIDEO_INFO_HEIGHT (info));
-
-  out_subresource_index = gst_d3d11_memory_get_subresource_index (out_mem);
-  device_context->CopySubresourceRegion ((ID3D11Resource *) out_map.data,
-      out_subresource_index, 0, 0, 0, in_texture, in_subresource_index,
-      &src_box);
-
-  gst_d3d11_device_unlock (self->device);
-  gst_memory_unmap (GST_MEMORY_CAST (out_mem), &out_map);
-
-  return TRUE;
-}
-
 gboolean
 gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
     GstVideoDecoder * videodec, gint display_width, gint display_height,
     GstBuffer * decoder_buffer, GstBuffer ** output)
 {
-  gboolean can_device_copy = TRUE;
-
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (decoder_buffer), FALSE);
@@ -1566,30 +1437,8 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
     return FALSE;
   }
 
-  /* decoder buffer must have single memory */
-  if (gst_buffer_n_memory (decoder_buffer) == gst_buffer_n_memory (*output)) {
-    GstMemory *mem;
-    GstD3D11Memory *dmem;
-
-    mem = gst_buffer_peek_memory (*output, 0);
-    if (!gst_is_d3d11_memory (mem)) {
-      can_device_copy = FALSE;
-      goto do_process;
-    }
-
-    dmem = (GstD3D11Memory *) mem;
-    if (dmem->device != decoder->device)
-      can_device_copy = FALSE;
-  } else {
-    can_device_copy = FALSE;
-  }
-
-do_process:
-  if (can_device_copy) {
-    return copy_to_d3d11 (decoder, decoder_buffer, *output);
-  }
-
-  return copy_to_system (decoder, decoder_buffer, *output);
+  return gst_d3d11_buffer_copy_into (*output,
+      decoder_buffer, &decoder->output_info);
 }
 
 gboolean
@@ -1718,6 +1567,7 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
   GstStructure *config;
   GstD3D11AllocationParams *d3d11_params;
   gboolean use_d3d11_pool;
+  gboolean has_videometa;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), FALSE);
@@ -1735,6 +1585,9 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
     return FALSE;
   }
 
+  has_videometa = gst_query_find_allocation_meta (query,
+      GST_VIDEO_META_API_TYPE, nullptr);
+
   use_d3d11_pool = decoder->downstream_supports_d3d11;
 
   gst_video_info_from_caps (&vinfo, outcaps);
@@ -1743,23 +1596,30 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
   /* create our own pool */
-  if (pool && use_d3d11_pool) {
-    if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
-      GST_DEBUG_OBJECT (videodec,
-          "Downstream pool is not d3d11, will create new one");
-      gst_clear_object (&pool);
-    } else {
-      GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
-      if (dpool->device != decoder->device) {
-        GST_DEBUG_OBJECT (videodec, "Different device, will create new one");
+  if (pool) {
+    if (use_d3d11_pool) {
+      if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
+        GST_DEBUG_OBJECT (videodec,
+            "Downstream pool is not d3d11, will create new one");
         gst_clear_object (&pool);
+      } else {
+        GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
+        if (dpool->device != decoder->device) {
+          GST_DEBUG_OBJECT (videodec, "Different device, will create new one");
+          gst_clear_object (&pool);
+        }
       }
+    } else if (has_videometa) {
+      /* We will use d3d11 staging buffer pool */
+      gst_clear_object (&pool);
     }
   }
 
   if (!pool) {
     if (use_d3d11_pool)
       pool = gst_d3d11_buffer_pool_new (decoder->device);
+    else if (has_videometa)
+      pool = gst_d3d11_staging_buffer_pool_new (decoder->device);
     else
       pool = gst_video_buffer_pool_new ();
 
@@ -1837,14 +1697,11 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
   }
 
   gst_buffer_pool_set_config (pool, config);
-  if (use_d3d11_pool) {
-    /* d3d11 buffer pool will update buffer size based on allocated texture,
-     * get size from config again */
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config,
-        nullptr, &size, nullptr, nullptr);
-    gst_structure_free (config);
-  }
+  /* d3d11 buffer pool will update buffer size based on allocated texture,
+   * get size from config again */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
+  gst_structure_free (config);
 
   if (n > 0)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
