@@ -77,6 +77,10 @@ typedef struct _GstD3D11BufferPool GstD3D11BufferPool;
 typedef struct _GstD3D11BufferPoolClass GstD3D11BufferPoolClass;
 typedef struct _GstD3D11BufferPoolPrivate GstD3D11BufferPoolPrivate;
 
+typedef struct _GstD3D11StagingBufferPool GstD3D11StagingBufferPool;
+typedef struct _GstD3D11StagingBufferPoolClass GstD3D11StagingBufferPoolClass;
+typedef struct _GstD3D11StagingBufferPoolPrivate GstD3D11StagingBufferPoolPrivate;
+
 typedef struct _GstD3D11Format GstD3D11Format;
 
 G_END_DECLS
