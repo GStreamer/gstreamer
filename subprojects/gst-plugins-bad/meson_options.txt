@@ -140,6 +140,7 @@ option('openni2', type : 'feature', value : 'auto', description : 'OpenNI2 libra
 option('opensles', type : 'feature', value : 'auto', description : 'OpenSL ES audio source/sink plugin')
 option('opus', type : 'feature', value : 'auto', description : 'OPUS audio parser plugin')
 option('qroverlay', type : 'feature', value : 'auto', description : 'Element to set random data on a qroverlay')
+option('qsv', type : 'feature', value : 'auto', description : 'Intel Quick Sync Video plugin')
 option('resindvd', type : 'feature', value : 'auto', description : 'Resin DVD playback plugin (GPL - only built if gpl option is also enabled!)')
 option('rsvg', type : 'feature', value : 'auto', description : 'SVG overlayer and image decoder plugin')
 option('rtmp', type : 'feature', value : 'auto', description : 'RTMP video network source and sink plugin')
@@ -190,6 +191,10 @@ option('sctp-internal-usrsctp', type: 'feature', value : 'enabled',
 # MSDK plugin options
 option('mfx_api', type : 'combo', choices : ['MSDK', 'oneVPL', 'auto'], value : 'auto',
        description : 'Select MFX API to build against')
+
+# QSV plugin options
+option('mfx-modules-dir', type: 'string', value : '',
+       description : 'libmfx runtime module dir, linux only')
 
 # License-related feature options
 option('gpl', type: 'feature', value: 'disabled', yield: true,
