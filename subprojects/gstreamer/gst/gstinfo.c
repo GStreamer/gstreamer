@@ -97,17 +97,7 @@
 #include <stdio.h>              /* fprintf */
 #include <glib/gstdio.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>           /* getpid on UNIX */
-#endif
-#ifdef HAVE_PROCESS_H
-#  include <process.h>          /* getpid on win32 */
-#endif
 #include <string.h>             /* G_VA_COPY */
-#ifdef G_OS_WIN32
-#  define WIN32_LEAN_AND_MEAN   /* prevents from including too many things */
-#  include <windows.h>          /* GetStdHandle, windows console */
-#endif
 
 #include "gst_private.h"
 #include "gstutils.h"
@@ -131,6 +121,34 @@ static char *gst_info_printf_pointer_extension_func (const char *format,
 
 #include <glib/gprintf.h>
 #endif /* !GST_DISABLE_GST_DEBUG */
+
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>           /* getpid on UNIX */
+#endif
+
+#ifdef G_OS_WIN32
+#  define WIN32_LEAN_AND_MEAN   /* prevents from including too many things */
+#  include <windows.h>          /* GetStdHandle, windows console */
+#  include <processthreadsapi.h>        /* GetCurrentProcessId */
+/* getpid() is not allowed in case of UWP, use GetCurrentProcessId() instead
+ * which can be used on both desktop and UWP */
+#endif
+
+/* use glib's abstraction once it's landed
+ * https://gitlab.gnome.org/GNOME/glib/-/merge_requests/2475 */
+#ifdef G_OS_WIN32
+static inline DWORD
+_gst_getpid (void)
+{
+  return GetCurrentProcessId ();
+}
+#else
+static inline pid_t
+_gst_getpid (void)
+{
+  return getpid ();
+}
+#endif
 
 #ifdef HAVE_UNWIND
 /* No need for remote debugging so turn on the 'local only' optimizations in
@@ -349,7 +367,7 @@ _priv_gst_debug_file_name (const gchar * env)
   gchar *name;
 
   name = g_strdup (env);
-  name = _replace_pattern_in_gst_debug_file_name (name, "%p", getpid ());
+  name = _replace_pattern_in_gst_debug_file_name (name, "%p", _gst_getpid ());
   name = _replace_pattern_in_gst_debug_file_name (name, "%r", g_random_int ());
 
   return name;
@@ -1129,7 +1147,11 @@ gst_debug_construct_win_color (guint colorinfo)
 #else
 #define PTR_FMT "%10p"
 #endif
+#ifdef G_OS_WIN32
+#define PID_FMT "%5lu"
+#else
 #define PID_FMT "%5d"
+#endif
 #define CAT_FMT "%20s %s:%d:%s:%s"
 #define NOCOLOR_PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
 
@@ -1246,7 +1268,7 @@ gst_debug_log_get_line (GstDebugCategory * category, GstDebugLevel level,
       &elapsed);
 
   ret = g_strdup_printf ("%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT,
-      GST_TIME_ARGS (elapsed), getpid (), g_thread_self (),
+      GST_TIME_ARGS (elapsed), _gst_getpid (), g_thread_self (),
       gst_debug_level_get_name (level), gst_debug_category_get_name
       (category), file, line, function, obj_str, message_str);
 
@@ -1343,7 +1365,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   _gst_debug_log_preamble (message, object, &file, &message_str, &obj,
       &elapsed);
 
-  pid = getpid ();
+  pid = _gst_getpid ();
   color_mode = gst_debug_get_color_mode ();
 
   if (color_mode != GST_DEBUG_COLOR_MODE_OFF) {
@@ -2944,7 +2966,7 @@ generate_unwind_trace (GstStackTraceFlags flags)
 #ifdef HAVE_DW
   /* Due to plugins being loaded, mapping of process might have changed,
    * so always scan it. */
-  if (dwfl_linux_proc_report (dwfl, getpid ()) != 0)
+  if (dwfl_linux_proc_report (dwfl, _gst_getpid ()) != 0)
     goto done;
 #endif
 
@@ -3278,7 +3300,6 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
     gint line, GObject * object, GstDebugMessage * message, gpointer user_data)
 {
   GstRingBufferLogger *logger = user_data;
-  gint pid;
   GThread *thread;
   GstClockTime elapsed;
   gchar *obj = NULL;
@@ -3305,14 +3326,13 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
   }
 
   elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
-  pid = getpid ();
   thread = g_thread_self ();
 
   /* no color, all platforms */
 #define PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
   output =
       g_strdup_printf ("%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
-      pid, thread, gst_debug_level_get_name (level),
+      _gst_getpid (), thread, gst_debug_level_get_name (level),
       gst_debug_category_get_name (category), file, line, function, obj,
       message_str);
 #undef PRINT_FMT

@@ -52,9 +52,6 @@
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>            /* getpid on UNIX */
 #endif
-#ifdef HAVE_PROCESS_H
-# include <process.h>           /* getpid on win32 */
-#endif
 
 #include "gst/gst-i18n-plugin.h"
 
@@ -62,6 +59,12 @@
 #include "pbutils-private.h"
 
 #include <string.h>
+
+#ifdef G_OS_WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <processthreadsapi.h>
+#endif
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_pb_utils_missing_plugins_ensure_debug_category()
@@ -83,6 +86,22 @@ gst_pb_utils_missing_plugins_ensure_debug_category (void)
   return (GstDebugCategory *) cat_gonce;
 }
 #endif /* GST_DISABLE_GST_DEBUG */
+
+/* use glib's abstraction once it's landed
+ * https://gitlab.gnome.org/GNOME/glib/-/merge_requests/2475 */
+#ifdef G_OS_WIN32
+static inline DWORD
+_gst_getpid (void)
+{
+  return GetCurrentProcessId ();
+}
+#else
+static inline pid_t
+_gst_getpid (void)
+{
+  return getpid ();
+}
+#endif
 
 #define GST_DETAIL_STRING_MARKER "gstreamer"
 
@@ -450,7 +469,7 @@ gst_missing_plugin_message_get_installer_detail (GstMessage * msg)
   if (progname) {
     g_string_append_printf (str, "%s|", progname);
   } else {
-    g_string_append_printf (str, "pid/%lu|", (gulong) getpid ());
+    g_string_append_printf (str, "pid/%lu|", (gulong) _gst_getpid ());
   }
 
   desc = gst_missing_plugin_message_get_description (msg);
@@ -642,7 +661,7 @@ gst_installer_detail_new (gchar * description, const gchar * type,
   if (progname) {
     g_string_append_printf (s, "%s|", progname);
   } else {
-    g_string_append_printf (s, "pid/%lu|", (gulong) getpid ());
+    g_string_append_printf (s, "pid/%lu|", (gulong) _gst_getpid ());
   }
 
   if (description) {

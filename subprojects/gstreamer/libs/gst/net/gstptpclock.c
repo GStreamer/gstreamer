@@ -63,6 +63,7 @@
 #ifdef G_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <processthreadsapi.h>  /* GetCurrentProcessId */
 #endif
 #include <sys/types.h>
 
@@ -1862,7 +1863,11 @@ have_stdin_data_cb (GIOChannel * channel, GIOCondition condition,
       }
       g_mutex_lock (&ptp_lock);
       ptp_clock_id.clock_identity = GST_READ_UINT64_BE (buffer);
+#ifdef G_OS_WIN32
+      ptp_clock_id.port_number = (guint16) GetCurrentProcessId ();
+#else
       ptp_clock_id.port_number = getpid ();
+#endif
       GST_DEBUG ("Got clock id 0x%016" G_GINT64_MODIFIER "x %u",
           ptp_clock_id.clock_identity, ptp_clock_id.port_number);
       g_cond_signal (&ptp_cond);

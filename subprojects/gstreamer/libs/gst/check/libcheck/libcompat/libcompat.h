@@ -54,11 +54,14 @@
 #define CK_DLL_EXP extern
 #endif
 
-#if _MSC_VER
+#ifdef _MSC_VER
 #include <WinSock2.h>           /* struct timeval, API used in gettimeofday implementation */
 #include <io.h>                 /* read, write */
-#include <process.h>            /* getpid */
 #include <BaseTsd.h>            /* for ssize_t */
+#include <processthreadsapi.h> /* GetCurrentProcessId */
+/* getpid() is not allowed in case of UWP, use GetCurrentProcessId() instead
+ * which can be used on both desktop and UWP */
+#define getpid GetCurrentProcessId
 typedef SSIZE_T ssize_t;
 #endif /* _MSC_VER */
 
@@ -114,7 +117,7 @@ CK_DLL_EXP void *rpl_malloc (size_t n);
 CK_DLL_EXP void *rpl_realloc (void *p, size_t n);
 #endif /* !HAVE_REALLOC */
 
-#if !HAVE_GETPID && HAVE__GETPID
+#if !HAVE_GETPID && HAVE__GETPID && !defined(_MSC_VER)
 #define getpid _getpid
 #endif /* !HAVE_GETPID && HAVE__GETPID */
 
