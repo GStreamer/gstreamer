@@ -247,9 +247,12 @@ gst_d3d11_allocation_params_init (GType type)
 struct _GstD3D11MemoryPrivate
 {
   ID3D11Texture2D *texture;
-  ID3D11Texture2D *staging;
+  ID3D11Buffer *buffer;
+
+  ID3D11Resource *staging;
 
   D3D11_TEXTURE2D_DESC desc;
+  D3D11_BUFFER_DESC buffer_desc;
 
   guint subresource_index;
 
@@ -265,6 +268,7 @@ struct _GstD3D11MemoryPrivate
 
   D3D11_MAPPED_SUBRESOURCE map;
 
+  GstD3D11MemoryNativeType native_type;
 
   GMutex lock;
   gint cpu_map_count;
@@ -320,11 +324,10 @@ gst_d3d11_memory_map_cpu_access (GstD3D11Memory * dmem, D3D11_MAP map_type)
 {
   GstD3D11MemoryPrivate *priv = dmem->priv;
   HRESULT hr;
-  ID3D11Resource *staging = (ID3D11Resource *) priv->staging;
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (dmem->device);
 
-  hr = device_context->Map (staging, 0, map_type, 0, &priv->map);
+  hr = device_context->Map (priv->staging, 0, map_type, 0, &priv->map);
 
   if (!gst_d3d11_result (hr, dmem->device)) {
     GST_ERROR_OBJECT (GST_MEMORY_CAST (dmem)->allocator,
@@ -379,36 +382,46 @@ gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
   GST_D3D11_MEMORY_LOCK (dmem);
 
   if ((flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
-    gst_d3d11_memory_upload (dmem);
-    GST_MEMORY_FLAG_UNSET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD);
+    if (priv->native_type == GST_D3D11_MEMORY_NATIVE_TYPE_BUFFER) {
+      /* FIXME: handle non-staging buffer */
+      g_assert (priv->buffer != nullptr);
+      ret = priv->buffer;
+    } else {
+      gst_d3d11_memory_upload (dmem);
+      GST_MEMORY_FLAG_UNSET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD);
 
-    if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE)
-      GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
+      if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE)
+        GST_MINI_OBJECT_FLAG_SET (dmem,
+            GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
-    g_assert (priv->texture != NULL);
-    ret = priv->texture;
-    goto out;
+      g_assert (priv->texture != NULL);
+      ret = priv->texture;
+      goto out;
+    }
   }
 
   if (priv->cpu_map_count == 0) {
     D3D11_MAP map_type;
 
-    /* Allocate staging texture for CPU access */
-    if (!priv->staging) {
-      priv->staging = gst_d3d11_allocate_staging_texture (dmem->device,
-          &priv->desc);
+    /* FIXME: handle non-staging buffer */
+    if (priv->native_type == GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D) {
+      /* Allocate staging texture for CPU access */
       if (!priv->staging) {
-        GST_ERROR_OBJECT (mem->allocator, "Couldn't create staging texture");
-        goto out;
+        priv->staging = gst_d3d11_allocate_staging_texture (dmem->device,
+            &priv->desc);
+        if (!priv->staging) {
+          GST_ERROR_OBJECT (mem->allocator, "Couldn't create staging texture");
+          goto out;
+        }
+
+        /* first memory, always need download to staging */
+        GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
       }
 
-      /* first memory, always need download to staging */
-      GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
+      gst_d3d11_memory_download (dmem);
     }
 
-    gst_d3d11_memory_download (dmem);
     map_type = gst_d3d11_map_flags_to_d3d11 (flags);
-
     if (!gst_d3d11_memory_map_cpu_access (dmem, map_type)) {
       GST_ERROR_OBJECT (mem->allocator, "Couldn't map staging texture");
       goto out;
@@ -436,11 +449,10 @@ static void
 gst_d3d11_memory_unmap_cpu_access (GstD3D11Memory * dmem)
 {
   GstD3D11MemoryPrivate *priv = dmem->priv;
-  ID3D11Resource *staging = (ID3D11Resource *) priv->staging;
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (dmem->device);
 
-  device_context->Unmap (staging, 0);
+  device_context->Unmap (priv->staging, 0);
 }
 
 static void
@@ -541,6 +553,23 @@ gst_is_d3d11_memory (GstMemory * mem)
 }
 
 /**
+ * gst_d3d11_memory_get_native_type:
+ * @mem: a #GstD3D11Memory
+ *
+ * Returns: a #GstD3D11MemoryNativeType
+ *
+ * Since: 1.22
+ */
+GstD3D11MemoryNativeType
+gst_d3d11_memory_get_native_type (GstD3D11Memory * mem)
+{
+  if (!gst_is_d3d11_memory (GST_MEMORY_CAST (mem)))
+    return GST_D3D11_MEMORY_NATIVE_TYPE_INVALID;
+
+  return mem->priv->native_type;
+}
+
+/**
  * gst_d3d11_memory_init_once:
  *
  * Initializes the Direct3D11 Texture allocator. It is safe to call
@@ -569,20 +598,29 @@ gst_d3d11_memory_init_once (void)
 }
 
 /**
- * gst_d3d11_memory_get_texture_handle:
+ * gst_d3d11_memory_get_resource_handle:
  * @mem: a #GstD3D11Memory
  *
- * Returns: (transfer none): a ID3D11Texture2D handle. Caller must not release
+ * Returns: (transfer none): a ID3D11Resource handle. Caller must not release
  * returned handle.
  *
- * Since: 1.20
+ * Since: 1.22
  */
-ID3D11Texture2D *
-gst_d3d11_memory_get_texture_handle (GstD3D11Memory * mem)
+ID3D11Resource *
+gst_d3d11_memory_get_resource_handle (GstD3D11Memory * mem)
 {
   g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
 
-  return mem->priv->texture;
+  switch (mem->priv->native_type) {
+    case GST_D3D11_MEMORY_NATIVE_TYPE_BUFFER:
+      return mem->priv->buffer;
+    case GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D:
+      return mem->priv->texture;
+    default:
+      break;
+  }
+
+  return nullptr;
 }
 
 /**
@@ -597,6 +635,9 @@ guint
 gst_d3d11_memory_get_subresource_index (GstD3D11Memory * mem)
 {
   g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), 0);
+
+  if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
+    return 0;
 
   return mem->priv->subresource_index;
 }
@@ -619,13 +660,51 @@ gst_d3d11_memory_get_texture_desc (GstD3D11Memory * mem,
   g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
   g_return_val_if_fail (desc != NULL, FALSE);
 
+  if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
+    return FALSE;
+
   *desc = mem->priv->desc;
 
   return TRUE;
 }
 
+/**
+ * gst_d3d11_memory_get_buffer_desc:
+ * @mem: a #GstD3D11Memory
+ * @desc: (out): a D3D11_BUFFER_DESC
+ *
+ * Fill @desc with D3D11_BUFFER_DESC for ID3D11Buffer
+ *
+ * Returns: %TRUE if successeed
+ *
+ * Since: 1.22
+ */
 gboolean
-gst_d3d11_memory_get_texture_stride (GstD3D11Memory * mem, guint * stride)
+gst_d3d11_memory_get_buffer_desc (GstD3D11Memory * mem,
+    D3D11_BUFFER_DESC * desc)
+{
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (desc != NULL, FALSE);
+
+  if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_BUFFER)
+    return FALSE;
+
+  *desc = mem->priv->buffer_desc;
+
+  return TRUE;
+}
+
+/**
+ * gst_d3d11_memory_get_resource_stride:
+ * @mem: a #GstD3D11Memory
+ * @stride: (out): stride of resource
+ *
+ * Returns: %TRUE if successeed
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_d3d11_memory_get_resource_stride (GstD3D11Memory * mem, guint * stride)
 {
   g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
   g_return_val_if_fail (stride != NULL, FALSE);
@@ -731,6 +810,9 @@ gst_d3d11_memory_ensure_shader_resource_view (GstD3D11Memory * mem)
 {
   GstD3D11MemoryPrivate *priv = mem->priv;
   gboolean ret = FALSE;
+
+  if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
+    return FALSE;
 
   if (!(priv->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE)) {
     GST_LOG_OBJECT (GST_MEMORY_CAST (mem)->allocator,
@@ -888,6 +970,9 @@ gst_d3d11_memory_ensure_render_target_view (GstD3D11Memory * mem)
   GstD3D11MemoryPrivate *priv = mem->priv;
   gboolean ret = FALSE;
 
+  if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
+    return FALSE;
+
   if (!(priv->desc.BindFlags & D3D11_BIND_RENDER_TARGET)) {
     GST_WARNING_OBJECT (GST_MEMORY_CAST (mem)->allocator,
         "Need BindFlags, current flag 0x%x", priv->desc.BindFlags);
@@ -968,6 +1053,9 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
   D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC desc;
   HRESULT hr;
   gboolean ret = FALSE;
+
+  if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
+    return FALSE;
 
   allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
 
@@ -1066,6 +1154,9 @@ gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
   HRESULT hr;
   gboolean ret = FALSE;
 
+  if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
+    return FALSE;
+
   allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
 
   if (!check_bind_flags_for_processor_input_view (dmem_priv->desc.BindFlags)) {
@@ -1138,6 +1229,9 @@ gst_d3d11_memory_ensure_processor_output_view (GstD3D11Memory * mem,
   D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC desc;
   HRESULT hr;
   gboolean ret;
+
+  if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
+    return FALSE;
 
   memset (&desc, 0, sizeof (D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC));
 
@@ -1253,6 +1347,9 @@ gst_d3d11_memory_copy (GstMemory * mem, gssize offset, gssize size)
   UINT bind_flags = 0;
   UINT supported_flags = 0;
 
+  if (dmem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
+    return priv->fallback_copy (mem, offset, size);
+
   /* non-zero offset or different size is not supported */
   if (offset != 0 || (size != -1 && (gsize) size != mem->size)) {
     GST_DEBUG_OBJECT (alloc, "Different size/offset, try fallback copy");
@@ -1364,6 +1461,7 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
   GST_D3D11_CLEAR_COM (dmem_priv->processor_output_view);
   GST_D3D11_CLEAR_COM (dmem_priv->texture);
   GST_D3D11_CLEAR_COM (dmem_priv->staging);
+  GST_D3D11_CLEAR_COM (dmem_priv->buffer);
 
   gst_clear_object (&dmem->device);
   g_mutex_clear (&dmem_priv->lock);
@@ -1386,6 +1484,7 @@ gst_d3d11_allocator_alloc_wrapped (GstD3D11Allocator * self,
   g_mutex_init (&mem->priv->lock);
   mem->priv->texture = texture;
   mem->priv->desc = *desc;
+  mem->priv->native_type = GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D;
   mem->device = (GstD3D11Device *) gst_object_ref (device);
 
   /* This is staging texture as well */
@@ -1447,6 +1546,59 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   }
 
   return mem;
+}
+
+/**
+ * gst_d3d11_allocator_alloc_buffer:
+ * @allocator: a #GstD3D11Allocator
+ * @device: a #GstD3D11Device
+ * @desc: a D3D11_BUFFER_DESC struct
+ *
+ * Returns: a newly allocated #GstD3D11Memory with given parameters.
+ *
+ * Since: 1.22
+ */
+GstMemory *
+gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
+    GstD3D11Device * device, const D3D11_BUFFER_DESC * desc)
+{
+  GstD3D11Memory *mem;
+  ID3D11Buffer *buffer;
+  ID3D11Device *device_handle;
+  HRESULT hr;
+
+  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), nullptr);
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
+  g_return_val_if_fail (desc != nullptr, nullptr);
+
+  if (desc->Usage != D3D11_USAGE_STAGING) {
+    GST_FIXME_OBJECT (allocator, "Non staging buffer is not supported");
+    return nullptr;
+  }
+
+  device_handle = gst_d3d11_device_get_device_handle (device);
+
+  hr = device_handle->CreateBuffer (desc, nullptr, &buffer);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (allocator, "Couldn't create buffer");
+    return nullptr;
+  }
+
+  mem = g_new0 (GstD3D11Memory, 1);
+  mem->priv = g_new0 (GstD3D11MemoryPrivate, 1);
+
+  gst_memory_init (GST_MEMORY_CAST (mem),
+      (GstMemoryFlags) 0, GST_ALLOCATOR_CAST (allocator), nullptr, 0, 0, 0, 0);
+  g_mutex_init (&mem->priv->lock);
+  mem->priv->buffer = buffer;
+  mem->priv->buffer_desc = *desc;
+  mem->priv->native_type = GST_D3D11_MEMORY_NATIVE_TYPE_BUFFER;
+  mem->device = (GstD3D11Device *) gst_object_ref (device);
+
+  GST_MEMORY_CAST (mem)->maxsize = GST_MEMORY_CAST (mem)->size =
+      desc->ByteWidth;
+
+  return GST_MEMORY_CAST (mem);
 }
 
 gboolean

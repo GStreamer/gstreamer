@@ -278,7 +278,7 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       return FALSE;
     }
 
-    if (!gst_d3d11_memory_get_texture_stride (GST_D3D11_MEMORY_CAST (mem),
+    if (!gst_d3d11_memory_get_resource_stride (GST_D3D11_MEMORY_CAST (mem),
             &stride) || stride < desc[i].Width) {
       GST_ERROR_OBJECT (self, "Failed to calculate stride");
 

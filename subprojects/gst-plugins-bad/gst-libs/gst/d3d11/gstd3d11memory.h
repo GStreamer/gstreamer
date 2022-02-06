@@ -106,6 +106,21 @@ typedef enum
   GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD     = (GST_MEMORY_FLAG_LAST << 1)
 } GstD3D11MemoryTransfer;
 
+/**
+ * GstD3D11MemoryNativeType:
+ * @GST_D3D11_MEMORY_NATIVE_TYPE_INVALID: not a valid object type
+ * @GST_D3D11_MEMORY_OBJECT_TYPE_BUFFER: memory holds ID3D11Buffer object
+ * @GST_D3D11_MEMORY_OBJECT_TYPE_TEXTURE_2D: memory holds ID3D11Texture2D object
+ *
+ * Since: 1.22
+ */
+typedef enum
+{
+  GST_D3D11_MEMORY_NATIVE_TYPE_INVALID = 0,
+  GST_D3D11_MEMORY_NATIVE_TYPE_BUFFER,
+  GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D,
+} GstD3D11MemoryNativeType;
+
 struct _GstD3D11AllocationParams
 {
   /* Texture description per plane */
@@ -162,15 +177,22 @@ GST_D3D11_API
 gboolean                   gst_is_d3d11_memory        (GstMemory * mem);
 
 GST_D3D11_API
-ID3D11Texture2D *          gst_d3d11_memory_get_texture_handle (GstD3D11Memory * mem);
+GstD3D11MemoryNativeType   gst_d3d11_memory_get_native_type (GstD3D11Memory * mem);
+
+GST_D3D11_API
+ID3D11Resource *           gst_d3d11_memory_get_resource_handle (GstD3D11Memory * mem);
 
 GST_D3D11_API
 gboolean                   gst_d3d11_memory_get_texture_desc (GstD3D11Memory * mem,
                                                               D3D11_TEXTURE2D_DESC * desc);
 
 GST_D3D11_API
-gboolean                   gst_d3d11_memory_get_texture_stride (GstD3D11Memory * mem,
-                                                                guint * stride);
+gboolean                   gst_d3d11_memory_get_buffer_desc  (GstD3D11Memory * mem,
+                                                              D3D11_BUFFER_DESC * desc);
+
+GST_D3D11_API
+gboolean                   gst_d3d11_memory_get_resource_stride (GstD3D11Memory * mem,
+                                                                 guint * stride);
 
 GST_D3D11_API
 guint                      gst_d3d11_memory_get_subresource_index (GstD3D11Memory * mem);
@@ -232,6 +254,11 @@ GST_D3D11_API
 GstMemory * gst_d3d11_allocator_alloc     (GstD3D11Allocator * allocator,
                                            GstD3D11Device * device,
                                            const D3D11_TEXTURE2D_DESC * desc);
+
+GST_D3D11_API
+GstMemory * gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
+                                              GstD3D11Device * device,
+                                              const D3D11_BUFFER_DESC * desc);
 
 GST_D3D11_API
 gboolean    gst_d3d11_allocator_set_active (GstD3D11Allocator * allocator,

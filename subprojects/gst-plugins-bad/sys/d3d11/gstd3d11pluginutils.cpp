@@ -649,7 +649,7 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
       goto error;
     }
 
-    if (!gst_d3d11_memory_get_texture_stride (new_mem, &cur_stride) ||
+    if (!gst_d3d11_memory_get_resource_stride (new_mem, &cur_stride) ||
         cur_stride < staging_desc.Width) {
       GST_ERROR ("Failed to calculate memory size");
       gst_memory_unref (GST_MEMORY_CAST (mem));
