@@ -639,25 +639,26 @@ gst_webrtc_ice_add_candidate (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
   if (!cand) {
     /* might be a .local candidate */
     char *prefix = NULL, *address = NULL, *postfix = NULL;
-    char *new_addr, *new_candidate;
+    char *new_addr = NULL, *new_candidate = NULL;
     char *new_candv[4] = { NULL, };
+    gboolean failure = TRUE;
 
     if (!get_candidate_address (candidate, &prefix, &address, &postfix)) {
       GST_WARNING_OBJECT (ice, "Failed to retrieve address from candidate %s",
           candidate);
-      goto fail;
+      goto done;
     }
 
     if (!g_str_has_suffix (address, ".local")) {
       GST_WARNING_OBJECT (ice, "candidate address \'%s\' does not end "
           "with \'.local\'", address);
-      goto fail;
+      goto done;
     }
 
     /* FIXME: async */
     if (!(new_addr = _resolve_host (ice, address))) {
       GST_WARNING_OBJECT (ice, "Failed to resolve %s", address);
-      goto fail;
+      goto done;
     }
 
     new_candv[0] = prefix;
@@ -671,24 +672,22 @@ gst_webrtc_ice_add_candidate (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
     cand =
         nice_agent_parse_remote_candidate_sdp (ice->priv->nice_agent,
         item->nice_stream_id, new_candidate);
-    g_free (new_candidate);
     if (!cand) {
       GST_WARNING_OBJECT (ice, "Could not parse candidate \'%s\'",
           new_candidate);
-      goto fail;
+      goto done;
     }
 
+    failure = FALSE;
+
+  done:
     g_free (prefix);
-    g_free (new_addr);
+    g_free (address);
     g_free (postfix);
-
-    if (0) {
-    fail:
-      g_free (prefix);
-      g_free (address);
-      g_free (postfix);
+    g_free (new_addr);
+    g_free (new_candidate);
+    if (failure)
       return;
-    }
   }
 
   if (cand->component_id == 2) {
