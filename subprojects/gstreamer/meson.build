@@ -381,6 +381,11 @@ if not cc.has_members('struct itimerspec', 'it_interval', 'it_value',
 		      prefix : '#include <time.h>')
   cdata.set('STRUCT_ITIMERSPEC_DEFINITION_MISSING', 1)
 endif
+if host_system != 'windows'
+  cdata.set('HAVE_PIPE', 1)
+elif cc.has_function('_pipe', prefix : '#include <io.h>')
+  cdata.set('HAVE_PIPE', 1)
+endif
 
 # Platform deps; only ws2_32 and execinfo for now
 platform_deps = []

@@ -34,6 +34,7 @@
 #include <sys/socket.h>
 #endif
 
+#ifdef HAVE_PIPE
 GST_START_TEST (test_poll_wait)
 {
   GstPoll *set;
@@ -101,6 +102,8 @@ GST_START_TEST (test_poll_wait)
 }
 
 GST_END_TEST;
+
+#endif /* HAVE_PIPE */
 
 GST_START_TEST (test_poll_basic)
 {
@@ -342,7 +345,10 @@ gst_poll_suite (void)
   tcase_add_test (tc_chain, test_poll_controllable);
 #else
   tcase_skip_broken_test (tc_chain, test_poll_basic);
+#ifdef HAVE_PIPE
+  /* pipe() or _pipe() is not available on UWP */
   tcase_skip_broken_test (tc_chain, test_poll_wait);
+#endif
   tcase_skip_broken_test (tc_chain, test_poll_wait_stop);
   tcase_skip_broken_test (tc_chain, test_poll_wait_restart);
   tcase_skip_broken_test (tc_chain, test_poll_wait_flush);

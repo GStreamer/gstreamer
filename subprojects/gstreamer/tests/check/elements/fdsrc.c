@@ -74,6 +74,7 @@ cleanup_fdsrc (GstElement * fdsrc)
   gst_check_teardown_element (fdsrc);
 }
 
+#ifdef HAVE_PIPE
 GST_START_TEST (test_num_buffers)
 {
   GstElement *src;
@@ -165,6 +166,7 @@ GST_START_TEST (test_nonseeking)
 }
 
 GST_END_TEST;
+#endif /* HAVE_PIPE */
 
 GST_START_TEST (test_seeking)
 {
@@ -209,8 +211,10 @@ fdsrc_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+#ifdef HAVE_PIPE
   tcase_add_test (tc_chain, test_num_buffers);
   tcase_add_test (tc_chain, test_nonseeking);
+#endif
   tcase_add_test (tc_chain, test_seeking);
 
   return s;
