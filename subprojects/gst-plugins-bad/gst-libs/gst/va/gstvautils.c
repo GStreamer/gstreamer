@@ -18,6 +18,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstvautils
+ * @title: GstVaUtils
+ * @short_description: Utility functions for context handling
+ * @sources:
+ * - gstvautils.h
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -244,11 +252,11 @@ done:
  * @render_device_path: the #gchar string of render device path
  * @display_ptr: (out) (transfer full): The #GstVaDisplay to set
  *
- * Called by elements in their GstElement::set_context() vmehtods.
+ * Called by elements in their #GstElementClass::set_context vmethod.
  * It gets a valid #GstVaDisplay if @context has it.
  *
- * Returns: whether the @display_ptr could be successfully set to
- * a valid #GstVaDisplay in the @context
+ * Returns: whether the @display_ptr could be successfully set to a
+ * valid #GstVaDisplay in the @context
  *
  * Since: 1.22
  **/

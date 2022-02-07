@@ -61,6 +61,8 @@ struct _GstJpegDecoderScan
  * GstJpegDecoder:
  *
  * The opaque #GstJpegDecoder data structure.
+ *
+ * Since: 1.22
  */
 struct _GstJpegDecoder
 {

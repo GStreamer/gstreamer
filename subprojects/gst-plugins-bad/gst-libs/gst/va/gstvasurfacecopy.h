@@ -28,6 +28,8 @@
 G_BEGIN_DECLS
 
 /**
+ * GstVaSurfaceCopy:
+ *
  * Opaque object helper for copying surfaces.
  *
  * It's purpose is to avoid circular dependencies.

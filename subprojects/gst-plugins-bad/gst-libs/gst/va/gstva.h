@@ -25,6 +25,14 @@
 #pragma message ("You can define GST_USE_UNSTABLE_API to avoid this warning.")
 #endif
 
+/**
+ * GstVaFeature:
+ * @GST_VA_FEATURE_DISABLED: The feature is disabled.
+ * @GST_VA_FEATURE_ENABLED: The feature is enabled.
+ * @GST_VA_FEATURE_AUTO: The feature is enabled automatically.
+ *
+ * Since: 1.22
+ */
 typedef enum
 {
   GST_VA_FEATURE_DISABLED,

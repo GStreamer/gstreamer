@@ -23,6 +23,7 @@
  * @title: GstVaDisplay
  * @short_description: Generic VADisplay wrapper.
  * @sources:
+ * - gstva.h
  * - gstvadisplay.h
  *
  * It is a generic wrapper for VADisplay. To create new instances

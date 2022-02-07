@@ -18,6 +18,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstvaallocator
+ * @title: VA allocators
+ * @short_description: VA allocators
+ * @sources:
+ * - gstvaallocator.h
+ *
+ * There are two types of VA allocators:
+ *
+ * * #GstVaAllocator
+ * * #GstVaDmabufAllocator
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -236,6 +249,15 @@ gst_va_memory_pool_surface_inc (GstVaMemoryPool * self)
 
 /*=========================== GstVaDmabufAllocator ===========================*/
 
+/**
+ * GstVaDmabufAllocator:
+ *
+ * A pooled memory allocator backed by the DMABufs exported from a
+ * VASurfaceID. Also it is possible to import DMAbufs into a
+ * VASurfaceID.
+ *
+ * Since: 1.22
+ */
 typedef struct _GstVaDmabufAllocator GstVaDmabufAllocator;
 typedef struct _GstVaDmabufAllocatorClass GstVaDmabufAllocatorClass;
 
@@ -445,6 +467,17 @@ gst_va_dmabuf_allocator_init (GstVaDmabufAllocator * self)
   gst_va_memory_pool_init (&self->pool);
 }
 
+/**
+ * gst_va_dmabuf_allocator_new:
+ * @display: a #GstVaDisplay
+ *
+ * Instanciate a new pooled allocator backed with both DMABuf and
+ * VASurfaceID.
+ *
+ * Returns: a new allocated #GstAllocator
+ *
+ * Since: 1.22
+ */
 GstAllocator *
 gst_va_dmabuf_allocator_new (GstVaDisplay * display)
 {
@@ -502,7 +535,7 @@ gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
   return FALSE;
 }
 
-/* Creates an exported VASurface and adds it as @buffer's memories
+/* Creates an exported VASurfaceID and adds it as @buffer's memories
  * qdata
  *
  * If @info is not NULL, a dummy (non-pooled) buffer is created to
@@ -661,6 +694,18 @@ failed:
   }
 }
 
+/**
+ * gst_va_dmabuf_allocator_setup_buffer:
+ * @allocator: a #GstAllocator
+ * @buffer: an empty #GstBuffer
+ *
+ * This funciton creates a new VASurfaceID and exposes its DMABufs,
+ * later it populates the @buffer with those DMABufs.
+ *
+ * Return: %TRUE if @buffer is populated correctly; %FALSE otherwise.
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
     GstBuffer * buffer)
@@ -750,6 +795,19 @@ gst_va_dmabuf_allocator_prepare_buffer_unlocked (GstVaDmabufAllocator * self,
   return buf->surface;
 }
 
+/**
+ * gst_va_dmabuf_allocator_prepare_buffer:
+ * @allocator: a #GstAllocator
+ * @buffer: an empty #GstBuffer
+ *
+ * This method will populate @buffer with pooled VASurfaceID/DMABuf
+ * memories. It doesn't allocate new VASurfacesID.
+ *
+ * Returns: %TRUE if @buffer was populated correctly; %FALSE
+ * otherwise.
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
     GstBuffer * buffer)
@@ -768,6 +826,14 @@ gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
   return (surface != VA_INVALID_ID);
 }
 
+/**
+ * gst_va_dmabuf_allocator_flush:
+ * @allocator: a #GstAllocator
+ *
+ * Removes all the memories in @allocator's pool.
+ *
+ * Since: 1.22
+ */
 void
 gst_va_dmabuf_allocator_flush (GstAllocator * allocator)
 {
@@ -780,6 +846,17 @@ gst_va_dmabuf_allocator_flush (GstAllocator * allocator)
   gst_va_memory_pool_flush (&self->pool, self->display);
 }
 
+/**
+ * gst_va_dmabuf_allocator_try:
+ * @allocator: a #GstAllocator
+ *
+ * Try to allocate a test buffer in order to verify that the
+ * allocator's configuration is valid.
+ *
+ * Returns: %TRUE if the configuration is valid; %FALSE otherwise.
+ *
+ * Since: 1.22
+ */
 static gboolean
 gst_va_dmabuf_allocator_try (GstAllocator * allocator)
 {
@@ -803,6 +880,25 @@ gst_va_dmabuf_allocator_try (GstAllocator * allocator)
   return ret;
 }
 
+/**
+ * gst_va_dmabuf_allocator_set_format:
+ * @allocator: a #GstAllocator
+ * @info: a #GstVideoInfo
+ * @usage_hint: VA usage hint
+ *
+ * Sets the configuration defined by @info and @usage_hint for
+ * @allocator, and it tries the configuration, if @allocator has not
+ * allocated memories yet.
+ *
+ * If @allocator has memory allocated already, and frame size and
+ * format in @info are the same as currently configured in @allocator,
+ * the rest of @info parameters are updated internally.
+ *
+ * Returns: %TRUE if the configuration is valid or updated; %FALSE if
+ * configuration is not valid or not updated.
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_va_dmabuf_allocator_set_format (GstAllocator * allocator,
     GstVideoInfo * info, guint usage_hint)
@@ -839,6 +935,19 @@ gst_va_dmabuf_allocator_set_format (GstAllocator * allocator,
   return ret;
 }
 
+/**
+ * gst_va_dmabuf_allocator_get_format:
+ * @allocator: a #GstAllocator
+ * @info: (out) (optional): a #GstVideoInfo
+ * @usage_hint: (out) (optional): VA usage hint
+ *
+ * Gets current internal configuration of @allocator.
+ *
+ * Returns: %TRUE if @allocator is already configured; %FALSE
+ * otherwise.
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_va_dmabuf_allocator_get_format (GstAllocator * allocator,
     GstVideoInfo * info, guint * usage_hint)
@@ -856,7 +965,29 @@ gst_va_dmabuf_allocator_get_format (GstAllocator * allocator,
   return TRUE;
 }
 
+/**
+ * gst_va_dmabuf_memories_setup:
+ * @display: a #GstVaDisplay
+ * @info: a #GstVideoInfo
+ * @n_planes: number of planes
+ * @mem: (array fixed-size=4) (element-type GstMemory): Memories. One
+ *     per plane.
+ * @fds: (array length=n_planes) (element-type uintptr_t): array of
+ *     DMABuf file descriptors.
+ * @offset: (array fixed-size=4) (element-type gsize): array of memory
+ *     offsets.
+ * @usage_hint: VA usage hint.
+ *
+ * It imports the array of @mem, representing a single frame, into a
+ * VASurfaceID and it's attached into every @mem.
+ *
+ * Returns: %TRUE if frame is imported correctly into a VASurfaceID;
+ * %FALSE otherwise.
+ *
+ * Since: 1.22
+ */
 /* XXX: use a surface pool to control the created surfaces */
+/* XXX: remove n_planes argument and use GST_VIDEO_INFO_N_PLANES (info) */
 gboolean
 gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
     guint n_planes, GstMemory * mem[GST_VIDEO_MAX_PLANES],
@@ -929,6 +1060,13 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
 
 /*===================== GstVaAllocator / GstVaMemory =========================*/
 
+/**
+ * GstVaAllocator:
+ *
+ * A pooled memory allocator backed by VASurfaceID.
+ *
+ * Since: 1.22
+ */
 typedef struct _GstVaAllocator GstVaAllocator;
 typedef struct _GstVaAllocatorClass GstVaAllocatorClass;
 
@@ -1423,6 +1561,16 @@ gst_va_memory_release (GstMiniObject * mini_object)
   return FALSE;
 }
 
+/**
+ * gst_va_allocator_alloc:
+ * @allocator: a #GstAllocator
+ *
+ * Allocate a new VASurfaceID backed #GstMemory.
+ *
+ * Returns: a #GstMemory backed with a VASurfaceID; %NULL, otherwise.
+ *
+ * Since: 1.22
+ */
 GstMemory *
 gst_va_allocator_alloc (GstAllocator * allocator)
 {
@@ -1461,6 +1609,18 @@ gst_va_allocator_alloc (GstAllocator * allocator)
   return GST_MEMORY_CAST (mem);
 }
 
+/**
+ * gst_va_allocator_new:
+ * @display: a #GstVaDisplay
+ * @surface_formats: (element-type guint) (transfer full): a #GArray
+ *     of valid #GstVideoFormat for surfaces in current VA context.
+ *
+ * Instanciate a new pooled #GstAllocator backed by VASurfaceID.
+ *
+ * Returns: a #GstVaDisplay
+ *
+ * Since: 1.22
+ */
 GstAllocator *
 gst_va_allocator_new (GstVaDisplay * display, GArray * surface_formats)
 {
@@ -1476,6 +1636,17 @@ gst_va_allocator_new (GstVaDisplay * display, GArray * surface_formats)
   return GST_ALLOCATOR (self);
 }
 
+/**
+ * gst_va_allocator_setup_buffer:
+ * @allocator: a #GstAllocator
+ * @buffer: a #GstBuffer
+ *
+ * Populates an empty @buffer with a VASuface backed #GstMemory.
+ *
+ * Returns: %TRUE if @buffer is populated; %FALSE otherwise.
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_va_allocator_setup_buffer (GstAllocator * allocator, GstBuffer * buffer)
 {
@@ -1507,6 +1678,19 @@ gst_va_allocator_prepare_buffer_unlocked (GstVaAllocator * self,
   return surface;
 }
 
+/**
+ * gst_va_allocator_prepare_buffer:
+ * @allocator: a #GstAllocator
+ * @buffer: an empty #GstBuffer
+ *
+ * This method will populate @buffer with pooled VASurfaceID
+ * memories. It doesn't allocate new VASurfacesID.
+ *
+ * Returns: %TRUE if @buffer was populated correctly; %FALSE
+ * otherwise.
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
 {
@@ -1524,6 +1708,14 @@ gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
   return (surface != VA_INVALID_ID);
 }
 
+/**
+ * gst_va_allocator_flush:
+ * @allocator: a #GstAllocator
+ *
+ * Removes all the memories in @allocator's pool.
+ *
+ * Since: 1.22
+ */
 void
 gst_va_allocator_flush (GstAllocator * allocator)
 {
@@ -1536,6 +1728,17 @@ gst_va_allocator_flush (GstAllocator * allocator)
   gst_va_memory_pool_flush (&self->pool, self->display);
 }
 
+/**
+ * gst_va_allocator_try:
+ * @allocator: a #GstAllocator
+ *
+ * Try to allocate a test buffer in order to verify that the
+ * allocator's configuration is valid.
+ *
+ * Returns: %TRUE if the configuration is valid; %FALSE otherwise.
+ *
+ * Since: 1.22
+ */
 static gboolean
 gst_va_allocator_try (GstAllocator * allocator)
 {
@@ -1585,6 +1788,26 @@ gst_va_allocator_try (GstAllocator * allocator)
   return TRUE;
 }
 
+/**
+ * gst_va_allocator_set_format:
+ * @allocator: a #GstAllocator
+ * @info: (inout): a #GstVideoInfo
+ * @usage_hint: VA usage hint
+ * @use_derived: a #GstVaFeature
+ *
+ * Sets the configuration defined by @info, @usage_hint and
+ * @use_derived for @allocator, and it tries the configuration, if
+ * @allocator has not allocated memories yet.
+ *
+ * If @allocator has memory allocated already, and frame size and
+ * format in @info are the same as currently configured in @allocator,
+ * the rest of @info parameters are updated internally.
+ *
+ * Returns: %TRUE if the configuration is valid or updated; %FALSE if
+ * configuration is not valid or not updated.
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_va_allocator_set_format (GstAllocator * allocator, GstVideoInfo * info,
     guint usage_hint, GstVaFeature use_derived)
@@ -1622,6 +1845,21 @@ gst_va_allocator_set_format (GstAllocator * allocator, GstVideoInfo * info,
   return ret;
 }
 
+/**
+ * gst_va_allocator_get_format:
+ * @allocator: a #GstAllocator
+ * @info: (out) (optional): a #GstVideoInfo
+ * @usage_hint: (out) (optional): VA usage hint
+ * @use_derived: (out) (optional): a #GstVaFeature if derived images
+ *     are used for buffer mapping.
+ *
+ * Gets current internal configuration of @allocator.
+ *
+ * Returns: %TRUE if @allocator is already configured; %FALSE
+ * otherwise.
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_va_allocator_get_format (GstAllocator * allocator, GstVideoInfo * info,
     guint * usage_hint, GstVaFeature * use_derived)
@@ -1644,6 +1882,15 @@ gst_va_allocator_get_format (GstAllocator * allocator, GstVideoInfo * info,
   return TRUE;
 }
 
+/**
+ * gst_va_allocator_set_hacks: (skip)
+ * @allocator: a #GstAllocator
+ * @hacks: hacks id to set
+ *
+ * Internal method to set allocator specific logic changes.
+ *
+ * Since: 1.22
+ */
 void
 gst_va_allocator_set_hacks (GstAllocator * allocator, guint32 hacks)
 {
@@ -1657,6 +1904,14 @@ gst_va_allocator_set_hacks (GstAllocator * allocator, guint32 hacks)
 
 /*============ Utilities =====================================================*/
 
+/**
+ * gst_va_memory_get_surface:
+ * @mem: a #GstMemory
+ *
+ * Returns: (type guint): the VASurfaceID in @mem.
+ *
+ * Since: 1.22
+ */
 VASurfaceID
 gst_va_memory_get_surface (GstMemory * mem)
 {
@@ -1680,6 +1935,14 @@ gst_va_memory_get_surface (GstMemory * mem)
   return surface;
 }
 
+/**
+ * gst_va_buffer_get_surface:
+ * @buffer: a #GstBuffer
+ *
+ * Returns: (type guint): the VASurfaceID in @buffer.
+ *
+ * Since: 1.22
+ */
 VASurfaceID
 gst_va_buffer_get_surface (GstBuffer * buffer)
 {
@@ -1692,6 +1955,20 @@ gst_va_buffer_get_surface (GstBuffer * buffer)
   return gst_va_memory_get_surface (mem);
 }
 
+/**
+ * gst_va_buffer_create_aux_surface:
+ * @buffer: a #GstBuffer
+ *
+ * Creates a new VASurfaceID with @buffer's allocator and attached it
+ * to it.
+ *
+ * *This method is used only by plugin's internal VA decoder.*
+ *
+ * Returns: %TRUE if the new VASurfaceID is attached to @buffer
+ *     correctly; %FALSE, otherwise.
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_va_buffer_create_aux_surface (GstBuffer * buffer)
 {
@@ -1706,7 +1983,7 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
   if (!mem)
     return FALSE;
 
-  /* Already created it. */
+  /* Already created. */
   surface_buffer = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
       gst_va_buffer_aux_surface_quark ());
   if (surface_buffer)
@@ -1771,6 +2048,15 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
   return TRUE;
 }
 
+/**
+ * gst_va_buffer_get_aux_surface:
+ * @buffer: a #GstBuffer
+ *
+ * Returns: (type guint): the VASurfaceID attached to
+ *     @buffer.
+ *
+ * Since: 1.22
+ */
 VASurfaceID
 gst_va_buffer_get_aux_surface (GstBuffer * buffer)
 {

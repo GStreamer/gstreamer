@@ -4,8 +4,11 @@ va_sources = files(
   'gstvadisplay_drm.c',
   'gstvadisplay_wrapped.c',
   'gstvapool.c',
-  'gstvasurfacecopy.c',
   'gstvautils.c',
+)
+
+va_sources_priv = files(
+  'gstvasurfacecopy.c',
   'gstvavideoformat.c',
   'vasurfaceimage.c',
 )
@@ -54,7 +57,7 @@ va_enumtypes_h = va_enums[1]
 va_gen_sources = [va_enumtypes_h]
 
 gstva = library('gstva-' + api_version,
-  va_sources, va_enums,
+  va_sources, va_sources_priv, va_enums,
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_VA', '-DG_LOG_DOMAIN="GStreamer-VA"'],
   include_directories : [configinc, libsinc],
   version : libversion,

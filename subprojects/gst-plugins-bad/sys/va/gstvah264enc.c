@@ -3556,16 +3556,6 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   }
 
   g_object_class_install_properties (object_class, n_props, properties);
-
-  /**
-   * GstVaFeature:
-   * @GST_VA_FEATURE_DISABLED: The feature is disabled.
-   * @GST_VA_FEATURE_ENABLED: The feature is enabled.
-   * @GST_VA_FEATURE_AUTO: The feature is enabled automatically.
-   *
-   * Since: 1.22
-   */
-  gst_type_mark_as_plugin_api (GST_TYPE_VA_FEATURE, 0);
 }
 
 static GstCaps *

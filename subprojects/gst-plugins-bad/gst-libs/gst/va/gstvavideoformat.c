@@ -229,9 +229,9 @@ get_format_map_from_va_image_format (const VAImageFormat * va_format)
 }
 
 GstVideoFormat
-gst_va_video_format_from_va_fourcc (guint va_fourcc)
+gst_va_video_format_from_va_fourcc (guint fourcc)
 {
-  const struct FormatMap *map = get_format_map_from_va_fourcc (va_fourcc);
+  const struct FormatMap *map = get_format_map_from_va_fourcc (fourcc);
 
   return map ? map->format : GST_VIDEO_FORMAT_UNKNOWN;
 }
@@ -276,6 +276,14 @@ gst_va_video_format_from_va_image_format (const VAImageFormat * va_format)
   return map ? map->format : GST_VIDEO_FORMAT_UNKNOWN;
 }
 
+/*
+ * XXX: Not all the surfaces formats can be converted into every image
+ * format when mapped. This funtion will return the #GstVideoFormat
+ * that a surface will map when it is asked for a @image_format.
+ *
+ * Current implementation only seeks for @image_format in
+ * @surface_formats.
+ */
 GstVideoFormat
 gst_va_video_surface_format_from_image_format (GstVideoFormat image_format,
     GArray * surface_formats)

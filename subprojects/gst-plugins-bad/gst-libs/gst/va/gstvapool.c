@@ -18,6 +18,18 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstvapool
+ * @title: GstVaPool
+ * @short_description: VA Buffer pool
+ * @sources:
+ * - gstvapool.h
+ *
+ * @GstVaPool is a buffer pool for VA allocators.
+ *
+ * Since: 1.22
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -27,6 +39,14 @@
 GST_DEBUG_CATEGORY_STATIC (gst_va_pool_debug);
 #define GST_CAT_DEFAULT gst_va_pool_debug
 
+/**
+ * GstVaPool:
+ *
+ * A buffer pool that uses either #GstVaAllocator or
+ * #GstVaDmabufAllocator to pre-allocate and recycle #GstBuffers.
+ *
+ * Since: 1.22
+ */
 typedef struct _GstVaPool GstVaPool;
 typedef struct _GstVaPoolClass GstVaPoolClass;
 
@@ -340,6 +360,13 @@ gst_va_pool_init (GstVaPool * self)
 {
 }
 
+/**
+ * gst_va_pool_new:
+ *
+ * Returns: A new #GstBufferPool for VA allocators.
+ *
+ * Since: 1.22
+ */
 GstBufferPool *
 gst_va_pool_new (void)
 {
@@ -353,6 +380,17 @@ gst_va_pool_new (void)
   return GST_BUFFER_POOL_CAST (pool);
 }
 
+/**
+ * gst_buffer_pool_config_set_va_allocation_params:
+ * @config: the #GstStructure with the pool's configuration.
+ * @usage_hint: the VA usage hint for new VASurfaceID.
+ * @use_derived: a #GstVaFeature for derived mapping (only used when
+ *     VA allocator).
+ *
+ * Sets the usage hint for the buffers handled by the buffer pool.
+ *
+ * Since: 1.22
+ */
 void
 gst_buffer_pool_config_set_va_allocation_params (GstStructure * config,
     guint usage_hint, GstVaFeature use_derived)
@@ -361,6 +399,19 @@ gst_buffer_pool_config_set_va_allocation_params (GstStructure * config,
       "use-derived", GST_TYPE_VA_FEATURE, use_derived, NULL);
 }
 
+/**
+ * gst_buffer_pool_config_set_va_alignment:
+ * @config: the #GstStructure with the pool's configuration.
+ * @align: a #GstVideoAlignment
+ *
+ * Video alignment is not handled as expected by VA since it uses
+ * opaque surfaces, not directly mappable memory. Still, decoders
+ * might need to request bigger surfaces for coded size rather than
+ * display sizes. This method will set the coded size to bufferpool's
+ * configuration, out of the typical video aligment.
+ *
+ * Since: 1.20.2
+ */
 void
 gst_buffer_pool_config_set_va_alignment (GstStructure * config,
     const GstVideoAlignment * align)
@@ -372,6 +423,15 @@ gst_buffer_pool_config_set_va_alignment (GstStructure * config,
       "va-padding-right", G_TYPE_UINT, align->padding_right, NULL);
 }
 
+/**
+ * gst_va_pool_requires_video_meta:
+ * @pool: the #GstBufferPool
+ *
+ * Retuns: %TRUE if @pool always add #GstVideoMeta to its
+ *     buffers. Otherwise, %FALSE.
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_va_pool_requires_video_meta (GstBufferPool * pool)
 {
@@ -381,6 +441,24 @@ gst_va_pool_requires_video_meta (GstBufferPool * pool)
   return GST_VA_POOL (pool)->force_videometa;
 }
 
+/**
+ * gst_va_pool_new_with_config:
+ * @caps: the #GstCaps of the buffers handled by the new pool.
+ * @size: the size of the frames to hold.
+ * @min_buffers: minimum number of frames to create.
+ * @max_buffers: maximum number of frames to create.
+ * @usage_hint: VA usage hint
+ * @use_derived: a #GstVaFeature for derived mapping (only used when
+ *     VA allocator).
+ * @allocator: the VA allocator to use.
+ * @alloc_params: #GstAllocationParams to use.
+ *
+ * Returns: a new #GstBufferPool that handles VASurfacesID-backed
+ *     buffers. If the pool cannot be configured correctly, %NULL is
+ *     returned.
+ *
+ * Since: 1.22
+ */
 GstBufferPool *
 gst_va_pool_new_with_config (GstCaps * caps, guint size, guint min_buffers,
     guint max_buffers, guint usage_hint, GstVaFeature use_derived,

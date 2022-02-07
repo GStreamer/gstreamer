@@ -1913,6 +1913,11 @@ gst_va_filter_has_video_format (GstVaFilter * self, GstVideoFormat format,
   return FALSE;
 }
 
+/**
+ * GstVaScaleMethod:
+ *
+ * Since: 1.22
+ */
 GType
 gst_va_scale_method_get_type (void)
 {

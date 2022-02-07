@@ -17,12 +17,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/**
- * SECTION:gstjpegdecoder
- * @title: GstJpegDecoder
- * @short_description: Base class to implement stateless JPEG decoders
- */
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -60,6 +54,13 @@ struct _GstJpegDecoderPrivate
 GST_DEBUG_CATEGORY (gst_jpeg_decoder_debug);
 #define GST_CAT_DEFAULT gst_jpeg_decoder_debug
 
+/**
+ * GstJpegDecoder:
+ *
+ * Base class to implement statelesss JPEG decoders
+ *
+ * Since: 1.22
+ */
 #define parent_class gst_jpeg_decoder_parent_clas
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstJpegDecoder, gst_jpeg_decoder,
     GST_TYPE_VIDEO_DECODER, G_ADD_PRIVATE (GstJpegDecoder);
@@ -81,6 +82,8 @@ gst_jpeg_decoder_class_init (GstJpegDecoderClass * klass)
   decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_jpeg_decoder_set_format);
   decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_jpeg_decoder_handle_frame);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_JPEG_DECODER, 0);
 }
 
 static void

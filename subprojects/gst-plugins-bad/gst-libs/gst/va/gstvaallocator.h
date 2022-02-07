@@ -72,8 +72,22 @@ gboolean              gst_va_dmabuf_memories_setup        (GstVaDisplay * displa
 #define GST_IS_VA_ALLOCATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VA_ALLOCATOR))
 #define GST_VA_ALLOCATOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VA_ALLOCATOR, GstVaAllocatorClass))
 
+/**
+ * GST_ALLOCATOR_VASURFACE:
+ *
+ * Since: 1.22
+ */
 #define GST_ALLOCATOR_VASURFACE   "VAMemory"
 
+/**
+ * GST_MAP_VA:
+ *
+ * Flag indicating that we should map the VASurfaceID instead of to
+ * system memory, so users can use libva primitives to operate with
+ * that surface.
+ *
+ * Since: 1.22
+ */
 #define GST_MAP_VA (GST_MAP_FLAG_LAST << 1)
 
 GST_VA_API

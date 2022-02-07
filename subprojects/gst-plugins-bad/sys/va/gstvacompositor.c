@@ -57,10 +57,18 @@
 GST_DEBUG_CATEGORY_STATIC (gst_va_compositor_debug);
 #define GST_CAT_DEFAULT gst_va_compositor_debug
 
+/**
+ * GstVaCompositorPad:
+ *
+ * VA aggregator pad.
+ *
+ * Since: 1.22
+ */
 struct _GstVaCompositorPad
 {
   GstVideoAggregatorPad parent;
 
+  /*< private> */
   GstBufferPool *pool;
 
   gint xpos;
@@ -1352,6 +1360,7 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
   gst_element_class_add_pad_template (element_class, sink_pad_templ);
   gst_pad_template_set_documentation_caps (sink_pad_templ,
       gst_caps_ref (doc_caps));
+  gst_type_mark_as_plugin_api (GST_TYPE_VA_COMPOSITOR_PAD, 0);
 
   src_pad_templ = gst_pad_template_new_with_gtype ("src", GST_PAD_SRC,
       GST_PAD_ALWAYS, caps, GST_TYPE_AGGREGATOR_PAD);
@@ -1387,6 +1396,8 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
   properties[PROP_SCALE_METHOD] = g_param_spec_enum ("scale-method",
       "Scale Method", "Scale method to use", GST_TYPE_VA_SCALE_METHOD,
       VA_FILTER_SCALING_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VA_SCALE_METHOD, 0);
 
   g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 

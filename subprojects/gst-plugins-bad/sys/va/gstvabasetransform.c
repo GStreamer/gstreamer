@@ -629,6 +629,13 @@ gst_va_base_transform_class_init (GstVaBaseTransformClass * klass)
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_va_base_transform_change_state);
 
+  /**
+   * GstVaBaseTransform:device-path:
+   *
+   * It shows the DRM device path used for the VA operation, if any.
+   *
+   * Since: 1.22
+   */
   properties[PROP_DEVICE_PATH] = g_param_spec_string ("device-path",
       "Device Path", "DRM device path", NULL,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
