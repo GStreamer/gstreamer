@@ -312,7 +312,7 @@ msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
 }
 
 void
-MFXUnload (mfxLoader loader)
+GstMFXUnload (mfxLoader loader)
 {
   g_assert (loader == NULL);
 }

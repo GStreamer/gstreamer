@@ -86,7 +86,12 @@ G_BEGIN_DECLS
 #if (MFX_VERSION < 2000)
 typedef void * mfxLoader;
 
-void MFXUnload (mfxLoader loader);
+void GstMFXUnload (mfxLoader loader);
+
+/* To avoid MFXUnload symbol re-define build issue in case of static build.
+ * MFXUnload symbol may exists if other plugin built its own libmfx dispatcher
+ */
+#define MFXUnload GstMFXUnload
 #endif
 
 typedef struct _MsdkSession MsdkSession;
