@@ -1011,6 +1011,10 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
       return FALSE;
     else if (field_id == g_quark_from_static_string ("profile"))
       return FALSE;
+    else if (field_id == g_quark_from_static_string ("width"))
+      return FALSE;
+    else if (field_id == g_quark_from_static_string ("height"))
+      return FALSE;
   }
 
   /* This fields aren't used and are not retained into the bitstream so we can
