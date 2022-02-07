@@ -112,6 +112,7 @@ struct _GstBufferPoolPrivate
   GstAllocationParams params;
 };
 
+static void gst_buffer_pool_dispose (GObject * object);
 static void gst_buffer_pool_finalize (GObject * object);
 
 G_DEFINE_TYPE_WITH_PRIVATE (GstBufferPool, gst_buffer_pool, GST_TYPE_OBJECT);
@@ -133,6 +134,7 @@ gst_buffer_pool_class_init (GstBufferPoolClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
+  gobject_class->dispose = gst_buffer_pool_dispose;
   gobject_class->finalize = gst_buffer_pool_finalize;
 
   klass->start = default_start;
@@ -178,6 +180,23 @@ gst_buffer_pool_init (GstBufferPool * pool)
 }
 
 static void
+gst_buffer_pool_dispose (GObject * object)
+{
+  GstBufferPool *pool;
+  GstBufferPoolPrivate *priv;
+
+  pool = GST_BUFFER_POOL_CAST (object);
+  priv = pool->priv;
+
+  GST_DEBUG_OBJECT (pool, "%p dispose", pool);
+
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_clear_object (&priv->allocator);
+
+  G_OBJECT_CLASS (gst_buffer_pool_parent_class)->dispose (object);
+}
+
+static void
 gst_buffer_pool_finalize (GObject * object)
 {
   GstBufferPool *pool;
@@ -188,13 +207,10 @@ gst_buffer_pool_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (pool, "%p finalize", pool);
 
-  gst_buffer_pool_set_active (pool, FALSE);
   gst_atomic_queue_unref (priv->queue);
   gst_poll_free (priv->poll);
   gst_structure_free (priv->config);
   g_rec_mutex_clear (&priv->rec_lock);
-  if (priv->allocator)
-    gst_object_unref (priv->allocator);
 
   G_OBJECT_CLASS (gst_buffer_pool_parent_class)->finalize (object);
 }
