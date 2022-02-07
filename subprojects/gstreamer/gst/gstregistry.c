@@ -1555,9 +1555,14 @@ priv_gst_get_relocated_libgstreamer (void)
   {
     char *base_dir;
 
+    GST_DEBUG ("attempting to retrieve libgstreamer-1.0 location using "
+        "Win32-specific method");
+
     base_dir =
         g_win32_get_package_installation_directory_of_module
         (_priv_gst_dll_handle);
+    if (!base_dir)
+      return NULL;
 
     dir = g_build_filename (base_dir, GST_PLUGIN_SUBDIR, NULL);
     GST_DEBUG ("using DLL dir %s", dir);
