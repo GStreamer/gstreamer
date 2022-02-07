@@ -1573,9 +1573,19 @@ priv_gst_get_relocated_libgstreamer (void)
   {
     Dl_info info;
 
+    GST_DEBUG ("attempting to retrieve libgstreamer-1.0 location using "
+        "dladdr()");
+
     if (dladdr (&gst_init, &info)) {
+      GST_LOG ("dli_fname: %s", info.dli_fname);
+
+      if (!info.dli_fname) {
+        return NULL;
+      }
+
       dir = g_path_get_dirname (info.dli_fname);
     } else {
+      GST_LOG ("dladdr() failed");
       return NULL;
     }
   }
