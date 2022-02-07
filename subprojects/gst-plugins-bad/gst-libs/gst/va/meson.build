@@ -26,7 +26,6 @@ libva_req = ['>= 1.6']
 
 libva_dep = dependency('libva', version: libva_req, required: va_option)
 libva_drm_dep = dependency('libva-drm', version: libva_req, required: va_option)
-libgudev_dep = dependency('gudev-1.0', required: va_option)
 libdrm_dep = dependency('libdrm', required: false, fallback: ['libdrm', 'ext_libdrm'])
 
 if not (libva_dep.found() and libva_drm_dep.found())
