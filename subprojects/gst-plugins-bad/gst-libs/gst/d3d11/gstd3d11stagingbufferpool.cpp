@@ -172,7 +172,7 @@ gst_d3d11_staging_buffer_pool_set_config (GstBufferPool * pool,
     desc = &priv->desc[0];
 
     width = GST_VIDEO_INFO_WIDTH (&info);
-    height = GST_VIDEO_INFO_WIDTH (&info);
+    height = GST_VIDEO_INFO_HEIGHT (&info);
 
     /* resolution of semi-planar formats must be multiple of 2 */
     switch (format->dxgi_format) {
