@@ -454,6 +454,83 @@ gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
   return TRUE;
 }
 
+static int
+count_directories (const char *filepath)
+{
+  int i = 0;
+  char *tmp;
+  gsize len;
+
+  g_return_val_if_fail (!g_path_is_absolute (filepath), 0);
+
+  tmp = g_strdup (filepath);
+  len = strlen (tmp);
+
+#if defined(G_OS_WIN32)
+  /* ignore UNC share paths entirely */
+  if (len >= 3 && G_IS_DIR_SEPARATOR (tmp[0]) && G_IS_DIR_SEPARATOR (tmp[1])
+      && !G_IS_DIR_SEPARATOR (tmp[2])) {
+    GST_WARNING ("found a UNC share path, ignoring");
+    return 0;
+  }
+#endif
+
+  /* remove trailing slashes if they exist */
+  while (
+#if defined(G_OS_WIN32)
+      /* don't remove the trailing slash for C:\.
+       * UNC paths are at least \\s\s */
+      len > 3
+#else
+      /* don't remove the trailing slash for / */
+      len > 1
+#endif
+      && G_IS_DIR_SEPARATOR (tmp[len - 1])) {
+    tmp[len - 1] = '\0';
+    len--;
+  }
+
+  while (tmp) {
+    char *dirname, *basename;
+    len = strlen (tmp);
+
+    if (g_strcmp0 (tmp, ".") == 0)
+      break;
+    if (g_strcmp0 (tmp, "/") == 0)
+      break;
+#if defined(G_OS_WIN32)
+    /* g_path_get_dirname() may return something of the form 'C:.', where C is
+     * a drive letter */
+    if (len == 3 && g_ascii_isalpha (tmp[0]) && tmp[1] == ':' && tmp[2] == '.')
+      break;
+#endif
+
+    basename = g_path_get_basename (tmp);
+    dirname = g_path_get_dirname (tmp);
+
+    if (g_strcmp0 (basename, "..") == 0) {
+      i--;
+    } else if (g_strcmp0 (basename, ".") == 0) {
+      /* nothing to do */
+    } else {
+      i++;
+    }
+
+    g_clear_pointer (&basename, g_free);
+    g_clear_pointer (&tmp, g_free);
+    tmp = dirname;
+  }
+
+  g_clear_pointer (&tmp, g_free);
+
+  if (i < 0) {
+    g_critical ("path counting resulted in a negative directory count!");
+    return 0;
+  }
+
+  return i;
+}
+
 static gboolean
 gst_plugin_loader_spawn (GstPluginLoader * loader)
 {
@@ -487,13 +564,38 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
 #define EXESUFFIX
 #endif
 
+#define MAX_PATH_DEPTH 64
+
     relocated_libgstreamer = priv_gst_get_relocated_libgstreamer ();
     if (relocated_libgstreamer) {
+      int plugin_subdir_depth = count_directories (GST_PLUGIN_SUBDIR);
+
       GST_DEBUG ("found libgstreamer-" GST_API_VERSION " library "
           "at %s", relocated_libgstreamer);
-      helper_bin = g_build_filename (relocated_libgstreamer,
-          "..", GST_PLUGIN_SCANNER_SUBDIR, "gstreamer-" GST_API_VERSION,
-          "gst-plugin-scanner" EXESUFFIX, NULL);
+
+      if (plugin_subdir_depth < MAX_PATH_DEPTH) {
+        const char *filenamev[MAX_PATH_DEPTH + 5];
+        int i = 0, j;
+
+        filenamev[i++] = relocated_libgstreamer;
+        for (j = 0; j < plugin_subdir_depth; j++)
+          filenamev[i++] = "..";
+        filenamev[i++] = GST_PLUGIN_SCANNER_SUBDIR;
+        filenamev[i++] = "gstreamer-" GST_API_VERSION;
+        filenamev[i++] = "gst-plugin-scanner" EXESUFFIX;
+        filenamev[i++] = NULL;
+        g_assert (i <= MAX_PATH_DEPTH + 5);
+
+        GST_DEBUG ("constructing path to system plugin scanner using "
+            "plugin dir: \'%s\', plugin scanner dir: \'%s\'",
+            GST_PLUGIN_SUBDIR, GST_PLUGIN_SCANNER_SUBDIR);
+
+        helper_bin = g_build_filenamev ((char **) filenamev);
+      } else {
+        GST_WARNING ("GST_PLUGIN_SUBDIR: \'%s\' has too many path segments",
+            GST_PLUGIN_SUBDIR);
+        helper_bin = g_strdup (GST_PLUGIN_SCANNER_INSTALLED);
+      }
     } else {
       helper_bin = g_strdup (GST_PLUGIN_SCANNER_INSTALLED);
     }

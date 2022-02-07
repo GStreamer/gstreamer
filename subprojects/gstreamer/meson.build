@@ -122,9 +122,9 @@ cdata.set_quoted('VERSION', gst_version)
 cdata.set_quoted('GST_PLUGIN_SCANNER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-plugin-scanner'))
 cdata.set_quoted('GST_PTP_HELPER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-ptp-helper'))
 cdata.set_quoted('GST_PLUGIN_SUBDIR', get_option('libdir'),
-  description: 'plugin directory path component, used to find plugins on relocatable builds on windows')
+  description: 'plugin directory path component, used to find plugins on relocatable builds')
 cdata.set_quoted('GST_PLUGIN_SCANNER_SUBDIR', libexecdir,
-  description: 'libexecdir path component, used to find plugin-scanner on relocatable builds on windows')
+  description: 'libexecdir path component, used to find plugin-scanner on relocatable builds')
 cdata.set('GST_DISABLE_OPTION_PARSING', not get_option('option-parsing'))
 
 mem_align_opt = get_option('memory-alignment')
