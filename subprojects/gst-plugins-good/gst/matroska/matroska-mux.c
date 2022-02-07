@@ -998,6 +998,10 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
       return FALSE;
     } else if (field_id == g_quark_from_static_string ("level")) {
       return FALSE;
+    } else if (field_id == g_quark_from_static_string ("width")) {
+      return FALSE;
+    } else if (field_id == g_quark_from_static_string ("height")) {
+      return FALSE;
     }
   } else if (gst_structure_has_name (structure, "video/x-vp8")
       || gst_structure_has_name (structure, "video/x-vp9")) {
