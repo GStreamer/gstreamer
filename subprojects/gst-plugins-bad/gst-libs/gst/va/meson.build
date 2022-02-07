@@ -20,18 +20,14 @@ if va_option.disabled() or host_system != 'linux'
 endif
 
 libva_req = ['>= 1.6']
-
 libva_dep = dependency('libva', version: libva_req, required: va_option)
 libva_drm_dep = dependency('libva-drm', version: libva_req, required: va_option)
-libdrm_dep = dependency('libdrm', required: false, fallback: ['libdrm', 'ext_libdrm'])
 
 if not (libva_dep.found() and libva_drm_dep.found())
-  if va_option.enabled()
-    error('The va lib was enabled explicity, but required dependencies were not found.')
-  endif
   subdir_done()
 endif
 
+libdrm_dep = dependency('libdrm', required: false, fallback: ['libdrm', 'ext_libdrm'])
 cdata.set10('HAVE_LIBDRM', libdrm_dep.found())
 
 gstva = library('gstva-' + api_version,
@@ -44,15 +40,8 @@ gstva = library('gstva-' + api_version,
   dependencies : [gst_dep, libva_dep, libva_drm_dep, libdrm_dep],
 )
 
-pkg_name = 'gstreamer-va-1.0'
+pkg_name = 'gstreamer-va-' + api_version
 libraries += [[pkg_name, {'lib': gstva}]]
-pkgconfig.generate(gstva,
-  libraries : gst_dep,
-  variables : pkgconfig_variables,
-  subdirs : pkgconfig_subdirs,
-  name : pkg_name,
-  description : 'GStreamer VA support',
-)
 
 gstva_dep = declare_dependency(link_with : gstva,
   include_directories : [libsinc],
