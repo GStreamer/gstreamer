@@ -2380,7 +2380,7 @@ hevc_caps_get_mime_codec (GstCaps * caps, gchar ** mime_codec)
   guint32 compat_flag_parameter = 0;
   GString *codec_string;
   const guint8 *profile_tier_level;
-  unsigned last_flag_index;
+  gint last_flag_index;
 
   caps_st = gst_caps_get_structure (caps, 0);
   codec_data_value = gst_structure_get_value (caps_st, "codec_data");
@@ -2447,9 +2447,10 @@ hevc_caps_get_mime_codec (GstCaps * caps, gchar ** mime_codec)
    * of each byte separated by a period; trailing bytes that are zero may be omitted.
    */
   last_flag_index = 5;
-  while ((int) (constraint_indicator_flags[last_flag_index]) == 0)
+  while (last_flag_index >= 0
+      && (int) (constraint_indicator_flags[last_flag_index]) == 0)
     --last_flag_index;
-  for (unsigned i = 0; i <= last_flag_index; ++i) {
+  for (gint i = 0; i <= last_flag_index; ++i) {
     g_string_append_printf (codec_string, ".%02X",
         constraint_indicator_flags[i]);
   }
