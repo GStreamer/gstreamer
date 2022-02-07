@@ -23,25 +23,16 @@ va_sources = [
   'vasurfaceimage.c',
 ]
 
-va_option = get_option('va')
-if va_option.disabled() or host_system != 'linux'
+if not gstva_dep.found()
   subdir_done()
 endif
 
 libgudev_dep = dependency('gudev-1.0', required: false)
-
-if not gstva_dep.found() or not libgudev_dep.found()
-  if va_option.enabled()
-    error('The va plugin was enabled explicity, but required dependencies were not found.')
-  endif
-  subdir_done()
-endif
+cdata.set10('HAVE_GUDEV', libgudev_dep.found())
 
 if libva_dep.version().version_compare('>= 1.8')
   va_sources += 'gstvaav1dec.c'
 endif
-
-cdata.set10('HAVE_GUDEV', libgudev_dep.found())
 
 driverdir = libva_dep.get_variable('driverdir', default_value: '')
 if driverdir == ''
