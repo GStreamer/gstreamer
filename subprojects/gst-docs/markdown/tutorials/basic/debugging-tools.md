@@ -87,7 +87,7 @@ The `GST_DEBUG` environment variable, then, is a comma-separated list of
 representing the default debug level for all categories.
 
 The `'*'` wildcard is also available. For example
-`GST_DEBUG=2,audio*:6` will use Debug Level 5 for all categories
+`GST_DEBUG=2,audio*:6` will use Debug Level 6 for all categories
 starting with the word `audio`. `GST_DEBUG=*:2` is equivalent to
 `GST_DEBUG=2`.
 
