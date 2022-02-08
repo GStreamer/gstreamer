@@ -174,7 +174,7 @@ struct timespec
 #endif /* STRUCT_TIMESPEC_DEFINITION_MISSING */
 
 #ifdef STRUCT_ITIMERSPEC_DEFINITION_MISSING
-/* 
+/*
  * The following structure is defined in POSIX.1b for timer start values and intervals.
  * If it is not defined in time.h, then we need to define it here.
  */
@@ -185,7 +185,7 @@ struct itimerspec
 };
 #endif /* STRUCT_ITIMERSPEC_DEFINITION_MISSING */
 
-/* 
+/*
  * Do a simple forward declaration in case the struct is not defined.
  * In the versions of timer_create in libcompat, sigevent is never
  * used.
