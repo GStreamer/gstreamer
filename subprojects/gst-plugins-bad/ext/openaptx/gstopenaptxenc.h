@@ -24,7 +24,11 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
+#ifdef USE_FREEAPTX
+#include <freeaptx.h>
+#else
 #include <openaptx.h>
+#endif
 
 G_BEGIN_DECLS
 
