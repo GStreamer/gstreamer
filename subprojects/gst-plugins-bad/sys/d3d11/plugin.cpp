@@ -193,13 +193,15 @@ plugin_init (GstPlugin * plugin)
         gst_d3d11_device_get_video_device_handle (device)) {
       gboolean legacy = gst_d3d11_decoder_util_is_legacy_device (device);
 
-      gst_d3d11_h264_dec_register (plugin, device, GST_RANK_SECONDARY, legacy);
+      /* avdec_h264 has primary rank, make this higher than it */
+      gst_d3d11_h264_dec_register (plugin,
+          device, GST_RANK_PRIMARY + 1, legacy);
       if (!legacy) {
-        gst_d3d11_h265_dec_register (plugin, device, GST_RANK_SECONDARY);
-        gst_d3d11_vp9_dec_register (plugin, device, GST_RANK_SECONDARY);
-        gst_d3d11_vp8_dec_register (plugin, device, GST_RANK_SECONDARY);
+        gst_d3d11_h265_dec_register (plugin, device, GST_RANK_PRIMARY);
+        gst_d3d11_vp9_dec_register (plugin, device, GST_RANK_PRIMARY);
+        gst_d3d11_vp8_dec_register (plugin, device, GST_RANK_PRIMARY);
+        gst_d3d11_av1_dec_register (plugin, device, GST_RANK_PRIMARY);
         gst_d3d11_mpeg2_dec_register (plugin, device, GST_RANK_SECONDARY);
-        gst_d3d11_av1_dec_register (plugin, device, GST_RANK_SECONDARY);
       }
     }
 #endif
