@@ -1569,7 +1569,7 @@ priv_gst_get_relocated_libgstreamer (void)
 
     g_free (base_dir);
   }
-#elif defined(__APPLE__) && defined(HAVE_DLADDR)
+#elif defined(HAVE_DLADDR)
   {
     Dl_info info;
 
@@ -1589,6 +1589,11 @@ priv_gst_get_relocated_libgstreamer (void)
       return NULL;
     }
   }
+#else
+#warning "Unsupported platform for retrieving the current location of a\
+ shared library. Relocatable builds will not work."
+  GST_WARNING ("Don't know how to retrieve the location of the shared "
+      "library libgstreamer-" GST_API_VERSION);
 #endif
 
   return dir;
