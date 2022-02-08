@@ -11,7 +11,7 @@ GStreamer library from Xcode using objective-C.
 ## Hello GStreamer!
 
 The tutorials code are in the
-[folder](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gst-docs/examples/tutorials/xcode%20iOS/).
+[`tutorials/xcode iOS` folder](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gst-docs/examples/tutorials/xcode%20iOS/).
 
 It was created using the GStreamer Single View
 Application template. The view contains only a `UILabel` that will be
