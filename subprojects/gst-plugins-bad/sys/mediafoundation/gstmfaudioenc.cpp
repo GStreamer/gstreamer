@@ -244,12 +244,12 @@ gst_mf_audio_enc_process_output (GstMFAudioEnc * self)
 {
   GstMFAudioEncClass *klass = GST_MF_AUDIO_ENC_GET_CLASS (self);
   HRESULT hr;
-  BYTE *data;
+  BYTE *data = nullptr;
   ComPtr < IMFMediaBuffer > media_buffer;
   ComPtr < IMFSample > sample;
   GstBuffer *buffer;
   GstFlowReturn res = GST_FLOW_ERROR;
-  DWORD buffer_len;
+  DWORD buffer_len = 0;
 
   res = gst_mf_transform_get_output (self->transform, sample.GetAddressOf ());
 
@@ -263,6 +263,13 @@ gst_mf_audio_enc_process_output (GstMFAudioEnc * self)
   hr = media_buffer->Lock (&data, NULL, &buffer_len);
   if (!gst_mf_result (hr))
     return GST_FLOW_ERROR;
+
+  /* Can happen while draining */
+  if (buffer_len == 0 || !data) {
+    GST_DEBUG_OBJECT (self, "Empty media buffer");
+    media_buffer->Unlock ();
+    return GST_FLOW_OK;
+  }
 
   buffer = gst_audio_encoder_allocate_output_buffer (GST_AUDIO_ENCODER (self),
       buffer_len);
