@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY_STATIC (v4l2_vp9dec_debug);
 #define GST_CAT_DEFAULT v4l2_vp9dec_debug
 
 /* Used to mark picture that have been outputed */
-#define FLAG_PICTURE_OUTPUTED GST_MINI_OBJECT_FLAG_LAST
+#define FLAG_PICTURE_HOLDS_BUFFER GST_MINI_OBJECT_FLAG_LAST
 
 enum
 {
@@ -882,10 +882,22 @@ gst_v4l2_codec_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
   new_picture->frame_hdr = picture->frame_hdr;
   new_picture->system_frame_number = frame->system_frame_number;
 
-  if (GST_MINI_OBJECT_FLAG_IS_SET (picture, FLAG_PICTURE_OUTPUTED)) {
+  if (GST_MINI_OBJECT_FLAG_IS_SET (picture, FLAG_PICTURE_HOLDS_BUFFER)) {
     GstBuffer *output_buffer = gst_vp9_picture_get_user_data (picture);
-    if (output_buffer)
+
+    if (output_buffer) {
       frame->output_buffer = gst_buffer_ref (output_buffer);
+
+      /* We need to also hold on the picture so it stays alive, but also to
+       * ensure we can duplicate it too. */
+      gst_vp9_picture_set_user_data (new_picture,
+          gst_buffer_ref (frame->output_buffer),
+          (GDestroyNotify) gst_buffer_unref);
+    }
+
+    /* Flag regardless if the buffer is null, so we don't start thinking it
+     * should hold a request unconditionally. */
+    GST_MINI_OBJECT_FLAG_SET (new_picture, FLAG_PICTURE_HOLDS_BUFFER);
   } else {
     GstV4l2Request *request = gst_vp9_picture_get_user_data (picture);
     gst_vp9_picture_set_user_data (new_picture, gst_v4l2_request_ref (request),
@@ -902,10 +914,13 @@ gst_v4l2_codec_vp9_dec_output_picture (GstVp9Decoder * decoder,
 {
   GstV4l2CodecVp9Dec *self = GST_V4L2_CODEC_VP9_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  GstV4l2Request *request = gst_vp9_picture_get_user_data (picture);
+  GstV4l2Request *request = NULL;
   gint ret;
 
   GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
+
+  if (!GST_MINI_OBJECT_FLAG_IS_SET (picture, FLAG_PICTURE_HOLDS_BUFFER))
+    request = gst_vp9_picture_get_user_data (picture);
 
   if (request) {
     ret = gst_v4l2_request_set_done (request);
@@ -931,7 +946,7 @@ gst_v4l2_codec_vp9_dec_output_picture (GstVp9Decoder * decoder,
         gst_buffer_ref (frame->output_buffer),
         (GDestroyNotify) gst_buffer_unref);
 
-    GST_MINI_OBJECT_FLAG_SET (picture, FLAG_PICTURE_OUTPUTED);
+    GST_MINI_OBJECT_FLAG_SET (picture, FLAG_PICTURE_HOLDS_BUFFER);
   }
 
   /* This may happen if we duplicate a picture witch failed to decode */
