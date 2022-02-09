@@ -1,9 +1,9 @@
-option('with_encoders', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
-option('with_drm', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
-option('with_x11', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
-option('with_glx', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
-option('with_wayland', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
-option('with_egl', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
+option('encoders', type : 'feature', value : 'auto')
+option('drm', type : 'feature', value : 'auto')
+option('x11', type : 'feature', value : 'auto')
+option('glx', type : 'feature', value : 'auto')
+option('wayland', type : 'feature', value : 'auto')
+option('egl', type : 'feature', value : 'auto')
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)
