@@ -30,13 +30,14 @@
 
 #include "gstrtponviftimestamp.h"
 
-#define GST_NTP_OFFSET_EVENT_NAME "GstNtpOffset"
+#define GST_ONVIF_TIMESTAMP_EVENT_NAME "GstOnvifTimestamp"
 
 #define DEFAULT_NTP_OFFSET GST_CLOCK_TIME_NONE
 #define DEFAULT_CSEQ 0
 #define DEFAULT_SET_E_BIT FALSE
 #define DEFAULT_SET_T_BIT FALSE
 #define DEFAULT_DROP_OUT_OF_SEGMENT TRUE
+#define DEFAULT_USE_REFERENCE_TIMESTAMPS FALSE
 
 GST_DEBUG_CATEGORY_STATIC (rtponviftimestamp_debug);
 #define GST_CAT_DEFAULT (rtponviftimestamp_debug)
@@ -72,7 +73,8 @@ enum
   PROP_CSEQ,
   PROP_SET_E_BIT,
   PROP_SET_T_BIT,
-  PROP_DROP_OUT_OF_SEGMENT
+  PROP_DROP_OUT_OF_SEGMENT,
+  PROP_USE_REFERENCE_TIMESTAMPS
 };
 
 /*static guint gst_rtp_onvif_timestamp_signals[LAST_SIGNAL] = { 0 }; */
@@ -103,6 +105,9 @@ gst_rtp_onvif_timestamp_get_property (GObject * object,
     case PROP_DROP_OUT_OF_SEGMENT:
       g_value_set_boolean (value, self->prop_drop_out_of_segment);
       break;
+    case PROP_USE_REFERENCE_TIMESTAMPS:
+      g_value_set_boolean (value, self->prop_use_reference_timestamps);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -130,6 +135,9 @@ gst_rtp_onvif_timestamp_set_property (GObject * object,
       break;
     case PROP_DROP_OUT_OF_SEGMENT:
       self->prop_drop_out_of_segment = g_value_get_boolean (value);
+      break;
+    case PROP_USE_REFERENCE_TIMESTAMPS:
+      self->prop_use_reference_timestamps = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -204,9 +212,18 @@ gst_rtp_onvif_timestamp_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      self->ntp_offset = self->prop_ntp_offset;
-      GST_DEBUG_OBJECT (self, "ntp-offset: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (self->ntp_offset));
+      if (self->prop_use_reference_timestamps &&
+          self->prop_ntp_offset != DEFAULT_NTP_OFFSET) {
+        GST_WARNING_OBJECT (self, "ntp-offset should not be set if reference "
+            "timestamps are used");
+        self->ntp_offset = DEFAULT_NTP_OFFSET;
+      } else if (self->prop_use_reference_timestamps) {
+        GST_DEBUG_OBJECT (self, "using reference timestamp meta");
+      } else {
+        self->ntp_offset = self->prop_ntp_offset;
+        GST_DEBUG_OBJECT (self, "ntp-offset: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (self->ntp_offset));
+      }
       self->set_d_bit = TRUE;
       self->set_e_bit = FALSE;
       self->set_t_bit = FALSE;
@@ -239,6 +256,7 @@ gst_rtp_onvif_timestamp_finalize (GObject * object)
   GstRtpOnvifTimestamp *self = GST_RTP_ONVIF_TIMESTAMP (object);
 
   g_queue_free (self->event_queue);
+  gst_caps_replace (&self->reference_timestamp_id, NULL);
 
   G_OBJECT_CLASS (gst_rtp_onvif_timestamp_parent_class)->finalize (object);
 }
@@ -287,6 +305,28 @@ gst_rtp_onvif_timestamp_class_init (GstRtpOnvifTimestampClass * klass)
           "not part of the specification but allows full reverse playback.",
           DEFAULT_DROP_OUT_OF_SEGMENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpOnvifTimestamp:use-reference-timestamps:
+   *
+   * Whether to obtain timestamps from reference timestamp meta instead of using
+   * the ntp-offset method. If enabled then timestamps are expected to be
+   * attached to the buffers, and in that case ntp-offset should not be
+   * configured.
+   *
+   * Default value is FALSE, meaning that the ntp-offset property is used.
+   * If neither is set then the element calculates an ntp-offset.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_USE_REFERENCE_TIMESTAMPS,
+      g_param_spec_boolean ("use-reference-timestamps",
+          "Use reference timestamps",
+          "Whether the element should use reference UTC timestamps from the "
+          "buffers instead of using the ntp-offset mechanism.",
+          DEFAULT_USE_REFERENCE_TIMESTAMPS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 
   /* register pads */
   gst_element_class_add_static_pad_template (gstelement_class,
@@ -347,9 +387,9 @@ gst_rtp_onvif_timestamp_sink_event (GstPad * pad, GstObject * parent,
     case GST_EVENT_CUSTOM_DOWNSTREAM:
       /* if the "set-e-bit" property is set, an offset event might mark the
        * stream as discontinued. We need to check if the currently cached buffer
-       * needs the e-bit before it's pushed */
-      if (self->buffer != NULL && self->prop_set_e_bit &&
-          gst_event_has_name (event, GST_NTP_OFFSET_EVENT_NAME)) {
+       * or buffer list needs the e-bit before it's pushed */
+      if ((self->buffer != NULL || self->list != NULL) && self->prop_set_e_bit
+          && gst_event_has_name (event, GST_ONVIF_TIMESTAMP_EVENT_NAME)) {
         gboolean discont;
         if (parse_event_ntp_offset (self, event, NULL, &discont)) {
           GST_DEBUG_OBJECT (self, "stream %s discontinued",
@@ -391,7 +431,7 @@ gst_rtp_onvif_timestamp_sink_event (GstPad * pad, GstObject * parent,
 
   /* enqueue serialized events if there is a cached buffer */
   if (GST_EVENT_IS_SERIALIZED (event) && (self->buffer || self->list)) {
-    GST_DEBUG ("enqueueing serialized event");
+    GST_WARNING ("enqueueing serialized event");
     g_queue_push_tail (self->event_queue, event);
     event = NULL;
     goto out;
@@ -403,7 +443,7 @@ gst_rtp_onvif_timestamp_sink_event (GstPad * pad, GstObject * parent,
       /* update the ntp-offset after any cached buffer/buffer list has been
        * pushed. the d-bit of the next buffer/buffer list should be set if
        * the stream is discontinued */
-      if (gst_event_has_name (event, GST_NTP_OFFSET_EVENT_NAME)) {
+      if (gst_event_has_name (event, GST_ONVIF_TIMESTAMP_EVENT_NAME)) {
         GstClockTime offset;
         gboolean discont;
         if (parse_event_ntp_offset (self, event, &offset, &discont)) {
@@ -452,6 +492,9 @@ gst_rtp_onvif_timestamp_init (GstRtpOnvifTimestamp * self)
       gst_pad_new_from_static_template (&src_template_factory, "src");
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
+  self->prop_use_reference_timestamps = DEFAULT_USE_REFERENCE_TIMESTAMPS;
+  self->reference_timestamp_id = gst_caps_new_empty_simple ("timestamp/x-unix");
+
   self->prop_ntp_offset = DEFAULT_NTP_OFFSET;
   self->prop_set_e_bit = DEFAULT_SET_E_BIT;
   self->prop_set_t_bit = DEFAULT_SET_T_BIT;
@@ -467,6 +510,51 @@ gst_rtp_onvif_timestamp_init (GstRtpOnvifTimestamp * self)
 #define EXTENSION_ID 0xABAC
 #define EXTENSION_SIZE 3
 
+static guint64
+get_utc_from_reference_timestamp (GstRtpOnvifTimestamp * self, GstBuffer * buf)
+{
+  GstReferenceTimestampMeta *meta;
+  GstClockTime time;
+
+  meta = gst_buffer_get_reference_timestamp_meta (buf,
+      self->reference_timestamp_id);
+  if (meta != NULL) {
+    /* the reference timestamp is expressed in unix times so add the difference
+     * between unix and ntp epochs */
+    time = meta->timestamp + G_GUINT64_CONSTANT (2208988800) * GST_SECOND;
+    GST_TRACE_OBJECT (self, "UTC reference timestamp found: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (time));
+  } else {
+    GST_ERROR_OBJECT (self, "UTC reference timestamp not found");
+    time = GST_CLOCK_TIME_NONE;
+  }
+
+  return time;
+}
+
+static guint64
+get_utc_from_offset (GstRtpOnvifTimestamp * self, GstBuffer * buf)
+{
+  guint64 time = GST_CLOCK_TIME_NONE;
+
+  if (GST_BUFFER_PTS_IS_VALID (buf)) {
+    time = gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME,
+        GST_BUFFER_PTS (buf));
+  } else if (GST_BUFFER_DTS_IS_VALID (buf)) {
+    time = gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME,
+        GST_BUFFER_DTS (buf));
+  } else {
+    g_assert_not_reached ();
+  }
+
+  /* add the offset (in seconds) */
+  if (time != GST_CLOCK_TIME_NONE) {
+    time += self->ntp_offset;
+  }
+
+  return time;
+}
+
 static gboolean
 handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf)
 {
@@ -477,7 +565,8 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf)
   guint64 time;
   guint8 field = 0;
 
-  if (!GST_CLOCK_TIME_IS_VALID (self->ntp_offset)) {
+  if (!self->prop_use_reference_timestamps &&
+      !GST_CLOCK_TIME_IS_VALID (self->ntp_offset)) {
     GstClock *clock = gst_element_get_clock (GST_ELEMENT (self));
 
     if (clock) {
@@ -535,33 +624,35 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf)
     return FALSE;
   }
 
-  /* NTP timestamp */
-  if (GST_BUFFER_PTS_IS_VALID (buf)) {
-    time = gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME,
-        GST_BUFFER_PTS (buf));
-  } else if (GST_BUFFER_DTS_IS_VALID (buf)) {
-    time = gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME,
-        GST_BUFFER_DTS (buf));
+  if (self->prop_use_reference_timestamps) {
+    time = get_utc_from_reference_timestamp (self, buf);
+    if (time == GST_CLOCK_TIME_NONE) {
+      gst_rtp_buffer_unmap (&rtp);
+      return FALSE;
+    }
+  } else if (GST_BUFFER_PTS_IS_VALID (buf) || GST_BUFFER_DTS_IS_VALID (buf)) {
+    time = get_utc_from_offset (self, buf);
+    if (self->prop_drop_out_of_segment && time == GST_CLOCK_TIME_NONE) {
+      GST_ERROR_OBJECT (self, "Failed to get stream time");
+      gst_rtp_buffer_unmap (&rtp);
+      return FALSE;
+    }
   } else {
     GST_INFO_OBJECT (self,
         "Buffer doesn't contain any valid DTS or PTS timestamp");
     goto done;
   }
 
-  if (self->prop_drop_out_of_segment && time == GST_CLOCK_TIME_NONE) {
-    GST_ERROR_OBJECT (self, "Failed to get stream time");
+  if (time == GST_CLOCK_TIME_NONE) {
+    GST_ERROR_OBJECT (self, "failed calculating timestamp");
     gst_rtp_buffer_unmap (&rtp);
     return FALSE;
   }
 
-  /* add the offset (in seconds) */
-  if (time != GST_CLOCK_TIME_NONE) {
-    time += self->ntp_offset;
-    /* convert to NTP time. upper 32 bits should contain the seconds
-     * and the lower 32 bits, the fractions of a second. */
-    time = gst_util_uint64_scale (time, (G_GINT64_CONSTANT (1) << 32),
-        GST_SECOND);
-  }
+  /* convert to NTP time. upper 32 bits should contain the seconds
+   * and the lower 32 bits, the fractions of a second. */
+  time = gst_util_uint64_scale (time, (G_GINT64_CONSTANT (1) << 32),
+      GST_SECOND);
 
   GST_DEBUG_OBJECT (self, "timestamp: %" G_GUINT64_FORMAT, time);
 

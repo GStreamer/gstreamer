@@ -66,7 +66,8 @@ create_ntp_offset_event (GstClockTime ntp_offset, gboolean discont)
 {
   GstStructure *structure;
 
-  structure = gst_structure_new ("GstNtpOffset", "ntp-offset", G_TYPE_UINT64,
+  structure =
+      gst_structure_new ("GstOnvifTimestamp", "ntp-offset", G_TYPE_UINT64,
       ntp_offset, "discont", G_TYPE_BOOLEAN, discont, NULL);
 
   return gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, structure);
@@ -757,6 +758,90 @@ GST_START_TEST (test_ntp_time)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reference_ts)
+{
+  GstCaps *ref_ts_id = gst_caps_new_empty_simple ("timestamp/x-unix");
+  GstSegment segment;
+  GstBuffer *buffer;
+  guint64 timestamp;
+  GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
+  guint8 *data;
+  guint64 expected_ntp_time;
+
+  /* configure element to use references timestamps */
+  g_object_set (element, "use-reference-timestamps", TRUE, NULL);
+
+  ASSERT_SET_STATE (element, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+
+  /* push initial events */
+  gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
+
+  /* a suitable segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 0;
+  segment.base = 0;
+  gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
+
+  /* create a buffer with PTS 0, which should result in both stream time and
+   * running time becoming 0 with the segment pushed above */
+  buffer = create_rtp_buffer (0, FALSE);
+
+  /* add a reference timestamp to the buffer and push it to the element */
+  timestamp = 42;
+  ck_assert_ptr_ne (gst_buffer_add_reference_timestamp_meta (buffer,
+          ref_ts_id, timestamp, GST_CLOCK_TIME_NONE), NULL);
+
+  /* the timestamp in the extension header is relative to the NTP epoch, so
+   * adjust the expected timestamp for the difference between unix and ntp
+   * epochs */
+  expected_ntp_time =
+      gst_util_uint64_scale (timestamp +
+      G_GUINT64_CONSTANT (2208988800) * GST_SECOND,
+      (G_GINT64_CONSTANT (1) << 32), GST_SECOND);
+
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  buffer = g_list_last (buffers)->data;
+
+  /* get the extension header */
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READWRITE, &rtpbuffer));
+  fail_unless (gst_rtp_buffer_get_extension_data (&rtpbuffer, NULL,
+          (gpointer) & data, NULL));
+
+  /* read the NTP timestamp and verify that it's the expected one, i.e. derived
+   * from the reference timestamp */
+  timestamp = GST_READ_UINT64_BE (data);
+  fail_unless_equals_uint64 (timestamp, expected_ntp_time);
+
+  gst_rtp_buffer_unmap (&rtpbuffer);
+  gst_check_drop_buffers ();
+  gst_caps_unref (ref_ts_id);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_reference_ts_not_present)
+{
+  GstBuffer *buffer;
+
+  /* configure element to use references timestamps */
+  g_object_set (element, "use-reference-timestamps", TRUE, NULL);
+
+  ASSERT_SET_STATE (element, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+
+  /* push initial events */
+  gst_check_setup_events (mysrcpad, element, NULL, GST_FORMAT_TIME);
+
+  /* create a buffer without reference timestamp, push it and verify that
+   * GST_FLOW_ERROR is returned */
+  buffer = create_rtp_buffer (0, FALSE);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_ERROR);
+
+  gst_check_drop_buffers ();
+}
+
+GST_END_TEST;
+
 static Suite *
 onviftimestamp_suite (void)
 {
@@ -775,6 +860,9 @@ onviftimestamp_suite (void)
   tcase_add_test (tc_general, test_reusable_element_e_bit);
   tcase_add_test (tc_general, test_ntp_offset_event);
   tcase_add_test (tc_general, test_ntp_time);
+
+  tcase_add_test (tc_general, test_reference_ts);
+  tcase_add_test (tc_general, test_reference_ts_not_present);
 
   tc_events = tcase_create ("events");
   suite_add_tcase (s, tc_events);

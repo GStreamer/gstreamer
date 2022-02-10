@@ -197,7 +197,7 @@ test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
     real_time += (G_GUINT64_CONSTANT (2208988800) * GST_SECOND);
     src->ntp_offset = real_time - clock_time;
 
-    s = gst_structure_new ("GstNtpOffset",
+    s = gst_structure_new ("GstOnvifTimestamp",
         "ntp-offset", G_TYPE_UINT64, src->ntp_offset,
         "discont", G_TYPE_BOOLEAN, FALSE, NULL);
 
@@ -221,7 +221,7 @@ test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
       next_n_frames = (n_frames / 10 - n_gops) * 10;
 
       src->segment->position = next_n_frames * GST_MSECOND;
-      s = gst_structure_new ("GstNtpOffset",
+      s = gst_structure_new ("GstOnvifTimestamp",
           "ntp-offset", G_TYPE_UINT64, src->ntp_offset,
           "discont", G_TYPE_BOOLEAN, TRUE, NULL);
 
@@ -609,7 +609,7 @@ test_play_response_200_and_check_data (GstRTSPClient * client,
       buf = gst_rtp_buffer_new_copy_data (body, body_size);
 
       switch (body_size) {
-        case 115:              /* Ignore our serialized custom events */
+        case 120:              /* Ignore our serialized custom events */
           is_custom_event = TRUE;
           break;
         case 56:

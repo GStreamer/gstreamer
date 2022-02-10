@@ -54,11 +54,16 @@ struct _GstRtpOnvifTimestamp {
   gboolean prop_set_t_bit;
   gboolean prop_drop_out_of_segment;
 
+  /* whether reference timestamps from the buffers should be used instead
+   * of the ntp offset mechanism */
+  gboolean prop_use_reference_timestamps;
+  GstCaps *reference_timestamp_id;
+
   /* currently used ntp-offset
-   *(can be changed runtime with a GstNtpOffset event)
+   *(can be changed runtime with a GstOnvifTimestamp event)
    */
   GstClockTime ntp_offset;
-  /* a GstNtpOffset event might mark the stream as discontinued */
+  /* a GstOnvifTimestamp event might mark the stream as discontinued */
   gboolean set_d_bit;
   gboolean set_e_bit;
   gboolean set_t_bit;

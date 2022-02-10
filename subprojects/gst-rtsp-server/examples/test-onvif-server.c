@@ -381,7 +381,7 @@ handle_segment_done (ReplayBin * self, GstPad * pad)
     GstStructure *s;
 
     /* Signify the end of a contiguous section of recording */
-    s = gst_structure_new ("GstNtpOffset",
+    s = gst_structure_new ("GstOnvifTimestamp",
         "ntp-offset", G_TYPE_UINT64, 0, "discont", G_TYPE_BOOLEAN, TRUE, NULL);
 
     event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
