@@ -129,6 +129,9 @@ struct _GstWpeVideoSrc
 
   WPEView *view;
 
+  GArray *touch_points;
+  struct wpe_input_touch_event_raw *last_touch;
+
   GMutex lock;
 };
 
@@ -550,6 +553,19 @@ gst_wpe_video_src_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+static void
+_set_touch_point (struct wpe_input_touch_event_raw * point,
+    GstEvent * event, enum wpe_input_touch_event_type type, guint id, gdouble x,
+    gdouble y)
+{
+
+  point->time = GST_TIME_AS_MSECONDS (GST_EVENT_TIMESTAMP (event));
+  point->type = type;
+  point->id = (int) id;
+  point->x = (int32_t) x;
+  point->y = (int32_t) y;
+}
+
 static gboolean
 gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
 {
@@ -559,6 +575,7 @@ gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
   if (src->view && GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION) {
     const gchar *key;
     gint button;
+    guint touch_id;
     gdouble x, y, delta_x, delta_y;
 
     GST_DEBUG_OBJECT (src, "Processing event %" GST_PTR_FORMAT, event);
@@ -637,10 +654,90 @@ gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
           ret = TRUE;
         }
         break;
+      case GST_NAVIGATION_EVENT_TOUCH_DOWN:
+        if (gst_navigation_event_parse_touch_event (event, &touch_id, &x, &y,
+              NULL)) {
+          struct wpe_input_touch_event_raw *point = g_new
+              (struct wpe_input_touch_event_raw, 1);
+
+          _set_touch_point (point, event, wpe_input_touch_event_type_down,
+              touch_id, x, y);
+          src->touch_points = g_array_append_vals(src->touch_points, point, 1);
+          src->last_touch = point;
+          ret = TRUE;
+        }
+        break;
+      case GST_NAVIGATION_EVENT_TOUCH_MOTION:
+        if (gst_navigation_event_parse_touch_event (event, &touch_id, &x, &y,
+              NULL)) {
+          struct wpe_input_touch_event_raw *touch_points;
+          guint idx;
+
+          touch_points = (struct wpe_input_touch_event_raw *)
+              src->touch_points->data;
+          for (idx = 0; idx < src->touch_points->len; idx++) {
+            if (touch_points[idx].id == (int32_t) touch_id) {
+              _set_touch_point (&touch_points[idx], event,
+                  wpe_input_touch_event_type_motion, touch_id, x, y);
+              src->last_touch = &touch_points[idx];
+              break;
+            }
+          }
+          ret = TRUE;
+        }
+        break;
+      case GST_NAVIGATION_EVENT_TOUCH_UP:
+        if (gst_navigation_event_parse_touch_up_event (event, &touch_id, &x,
+              &y)) {
+          struct wpe_input_touch_event_raw *touch_points;
+          guint idx;
+
+          touch_points = (struct wpe_input_touch_event_raw *)
+              src->touch_points->data;
+          for (idx = 0; idx < src->touch_points->len; idx++) {
+            if (touch_points[idx].id == (int32_t) touch_id) {
+              _set_touch_point (&touch_points[idx], event,
+                  wpe_input_touch_event_type_up, touch_id, x, y);
+              src->last_touch = &touch_points[idx];
+              break;
+            }
+          }
+          ret = TRUE;
+        }
+        break;
+      case GST_NAVIGATION_EVENT_TOUCH_FRAME:
+        if (src->last_touch && src->touch_points->len > 0)
+        {
+          struct wpe_input_touch_event_raw *touch_points;
+          struct wpe_input_touch_event wpe_event;
+          guint idx;
+
+          wpe_event.touchpoints =
+              (struct wpe_input_touch_event_raw *) src->touch_points->data;
+          wpe_event.touchpoints_length = src->touch_points->len;
+          wpe_event.type = src->last_touch->type;
+          wpe_event.id = src->last_touch->id;
+          wpe_event.time = src->last_touch->time;
+          src->view->dispatchTouchEvent (wpe_event);
+
+          touch_points = (struct wpe_input_touch_event_raw *)
+              src->touch_points->data;
+          for (idx = 0; idx < src->touch_points->len; idx++) {
+            if (touch_points[idx].type == wpe_input_touch_event_type_up ||
+                touch_points[idx].type == wpe_input_touch_event_type_null) {
+              g_array_remove_index_fast(src->touch_points, idx);
+              idx--;
+            }
+          }
+          src->last_touch = NULL;
+          ret = TRUE;
+        }
+        break;
+      case GST_NAVIGATION_EVENT_TOUCH_CANCEL:
+        break;
       default:
         break;
     }
-    /* FIXME: No touch events handling support in GstNavigation */
   }
 
   if (!ret) {
@@ -658,6 +755,7 @@ gst_wpe_video_src_init (GstWpeVideoSrc * src)
 
   gst_base_src_set_live (GST_BASE_SRC_CAST (src), TRUE);
 
+  src->touch_points = g_array_sized_new (FALSE, FALSE, sizeof (void *), 10);
   g_mutex_init (&src->lock);
 }
 
@@ -668,6 +766,7 @@ gst_wpe_video_src_finalize (GObject * object)
 
   g_free (src->location);
   g_clear_pointer (&src->bytes, g_bytes_unref);
+  g_array_unref (src->touch_points);
   g_mutex_clear (&src->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);

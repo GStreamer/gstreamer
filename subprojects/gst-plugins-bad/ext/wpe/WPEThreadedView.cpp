@@ -857,3 +857,10 @@ void WPEView::dispatchAxisEvent(struct wpe_input_axis_event& wpe_event)
         wpe_view_backend_dispatch_axis_event(backend(), &wpe_event);
     });
 }
+
+void WPEView::dispatchTouchEvent(struct wpe_input_touch_event& wpe_event)
+{
+    s_view->dispatch([&]() {
+        wpe_view_backend_dispatch_touch_event(backend(), &wpe_event);
+    });
+}
