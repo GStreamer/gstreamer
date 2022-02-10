@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/d3d11/gstd3d11.h>
+#include <d3d11_4.h>
+#include <dxgi1_6.h>
 
 G_BEGIN_DECLS
 
@@ -63,18 +65,14 @@ gboolean        gst_d3d11_is_windows_8_or_greater   (void);
 
 GstD3D11DeviceVendor gst_d3d11_get_device_vendor    (GstD3D11Device * device);
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
 gboolean        gst_d3d11_hdr_meta_data_to_dxgi     (GstVideoMasteringDisplayInfo * minfo,
                                                      GstVideoContentLightLevel * cll,
                                                      DXGI_HDR_METADATA_HDR10 * dxgi_hdr10);
-#endif
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
 const GstDxgiColorSpace * gst_d3d11_video_info_to_dxgi_color_space (GstVideoInfo * info);
 
 const GstDxgiColorSpace * gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
                                                                  IDXGISwapChain3 * swapchain);
-#endif
 
 GstBuffer *     gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
                                                        const GstVideoInfo * info,

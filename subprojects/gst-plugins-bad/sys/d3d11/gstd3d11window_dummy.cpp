@@ -114,7 +114,6 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
 
   gst_d3d11_device_lock (window->device);
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
   {
     const GstDxgiColorSpace *in_color_space =
         gst_d3d11_video_info_to_dxgi_color_space (&window->info);
@@ -167,7 +166,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
 
     window->processor = processor;
   }
-#endif
+
   *video_processor_available = !!window->processor;
 
   window->converter =

@@ -452,14 +452,10 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   };
   const GstD3D11WindowDisplayFormat *chosen_format = NULL;
   const GstDxgiColorSpace *chosen_colorspace = NULL;
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
   gboolean have_hdr10 = FALSE;
   DXGI_COLOR_SPACE_TYPE native_colorspace_type =
       DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
-#endif
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
   DXGI_HDR_METADATA_HDR10 hdr10_metadata = { 0, };
-#endif
 
   /* Step 1: Clear old resources and objects */
   gst_clear_buffer (&window->cached_buffer);
@@ -534,7 +530,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
    * (or reuse old swapchain if the format is not changed) */
   window->allow_tearing = FALSE;
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
   {
     ComPtr < IDXGIFactory5 > factory5;
     IDXGIFactory1 *factory_handle;
@@ -550,7 +545,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     if (SUCCEEDED (hr) && allow_tearing)
       window->allow_tearing = allow_tearing;
   }
-#endif
 
   if (window->allow_tearing) {
     GST_DEBUG_OBJECT (window, "device support tearning");
@@ -583,7 +577,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   window->input_rect.bottom = GST_VIDEO_INFO_HEIGHT (&window->info);
 
   /* Step 4: Decide render color space and set it on converter/processor */
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
   {
     GstVideoMasteringDisplayInfo minfo;
     GstVideoContentLightLevel cll;
@@ -610,7 +603,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
       }
     }
   }
-#endif
 
   /* Step 5: Choose display color space */
   gst_video_info_set_format (&window->render_info,
@@ -625,7 +617,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
    * target display color space type */
   window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
   {
     ComPtr < IDXGISwapChain3 > swapchain3;
     HRESULT hr;
@@ -660,7 +651,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
       }
     }
   }
-#endif
 
   /* otherwise, use most common DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709
    * color space */
@@ -670,7 +660,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     window->render_info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
     window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
   }
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
+
   if (chosen_colorspace) {
     const GstDxgiColorSpace *in_color_space =
         gst_d3d11_video_info_to_dxgi_color_space (&window->info);
@@ -712,7 +702,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
         gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
             out_dxgi_color_space);
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
         if (have_hdr10) {
           GST_DEBUG_OBJECT (window, "Set HDR metadata on video processor");
           gst_d3d11_video_processor_set_input_hdr10_metadata (processor,
@@ -720,13 +709,12 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
           gst_d3d11_video_processor_set_output_hdr10_metadata (processor,
               &hdr10_metadata);
         }
-#endif
       }
 
       window->processor = processor;
     }
   }
-#endif
+
   *video_processor_available = !!window->processor;
 
   /* configure shader even if video processor is available for fallback */
@@ -976,11 +964,9 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
     gst_d3d11_overlay_compositor_upload (self->compositor, buffer);
     gst_d3d11_overlay_compositor_draw_unlocked (self->compositor, &rtv);
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
     if (self->allow_tearing && self->fullscreen) {
       present_flags |= DXGI_PRESENT_ALLOW_TEARING;
     }
-#endif
 
     if (klass->present)
       ret = klass->present (self, present_flags);

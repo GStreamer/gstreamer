@@ -1810,7 +1810,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     GST_ERROR_OBJECT (self, "couldn't set converter");
     return FALSE;
   }
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
+
   /* If both input and output formats are native DXGI format */
   if (self->in_d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN &&
       self->out_d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN) {
@@ -1863,7 +1863,6 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     self->processor = processor;
     gst_d3d11_device_unlock (filter->device);
   }
-#endif
 
   GST_DEBUG_OBJECT (self, "from=%dx%d (par=%d/%d dar=%d/%d), size %"
       G_GSIZE_FORMAT " -> to=%dx%d (par=%d/%d dar=%d/%d borders=%d:%d), "

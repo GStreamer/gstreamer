@@ -26,6 +26,7 @@
 #include "gstd3d11memory.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
+#include "gstd3d11_private.h"
 
 #include <string.h>
 

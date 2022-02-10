@@ -133,7 +133,6 @@ gst_d3d11_get_device_vendor (GstD3D11Device * device)
   return vendor;
 }
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
 gboolean
 gst_d3d11_hdr_meta_data_to_dxgi (GstVideoMasteringDisplayInfo * minfo,
     GstVideoContentLightLevel * cll, DXGI_HDR_METADATA_HDR10 * dxgi_hdr10)
@@ -163,9 +162,7 @@ gst_d3d11_hdr_meta_data_to_dxgi (GstVideoMasteringDisplayInfo * minfo,
 
   return TRUE;
 }
-#endif
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
 typedef enum
 {
   GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 = 0,
@@ -573,7 +570,6 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
 
   return colorspace;
 }
-#endif
 
 static void
 fill_staging_desc (const D3D11_TEXTURE2D_DESC * ref,

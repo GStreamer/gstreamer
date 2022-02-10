@@ -7,23 +7,6 @@ d3d11_sources = [
   'gstd3d11utils.cpp',
 ]
 
-dxgi_headers = [
-  ['dxgi1_6.h', 6],
-  ['dxgi1_5.h', 5],
-  ['dxgi1_4.h', 4],
-  ['dxgi1_3.h', 3],
-  ['dxgi1_2.h', 2],
-  ['dxgi.h', 1]
-]
-
-d3d11_headers = [
-  ['d3d11_4.h', 4],
-  ['d3d11_3.h', 3],
-  ['d3d11_2.h', 2],
-  ['d3d11_1.h', 1],
-  ['d3d11.h', 0]
-]
-
 gstd3d11_dep = dependency('', required : false)
 
 d3d11_option = get_option('d3d11')
@@ -41,43 +24,17 @@ extra_comm_args = [
   '-DG_LOG_DOMAIN="GStreamer-D3D11"',
 ]
 
-have_dxgi_header = false
-have_d3d11_header = false
 have_d3d11sdk_h = false
 have_dxgidebug_h = false
-winapi_desktop = false
-winapi_app = false
+d3d11_winapi_app = false
 d3d11_conf = configuration_data()
-d3d11_conf_options = [
-  'GST_D3D11_DXGI_HEADER_VERSION',
-  'GST_D3D11_HEADER_VERSION',
-  'GST_D3D11_WINAPI_ONLY_APP',
-]
-
-foreach option : d3d11_conf_options
-  d3d11_conf.set10(option, false)
-endforeach
 
 d3d11_lib = cc.find_library('d3d11', required : d3d11_option)
 dxgi_lib = cc.find_library('dxgi', required : d3d11_option)
 d3dcompiler_lib = cc.find_library('d3dcompiler', required: d3d11_option)
 runtimeobject_lib = cc.find_library('runtimeobject', required : false)
 
-foreach dxgi_h: dxgi_headers
-  if not have_dxgi_header and cc.has_header(dxgi_h[0])
-    d3d11_conf.set('GST_D3D11_DXGI_HEADER_VERSION', dxgi_h[1])
-    have_dxgi_header = true
-  endif
-endforeach
-
-foreach d3d11_h: d3d11_headers
-  if not have_d3d11_header and cc.has_header(d3d11_h[0])
-    d3d11_conf.set('GST_D3D11_HEADER_VERSION', d3d11_h[1])
-    have_d3d11_header = true
-  endif
-endforeach
-
-have_d3d11 = d3d11_lib.found() and dxgi_lib.found() and have_d3d11_header and have_dxgi_header
+have_d3d11 = d3d11_lib.found() and dxgi_lib.found() and cc.has_header('d3d11_4.h') and cc.has_header('dxgi1_6.h')
 if not have_d3d11
   if d3d11_option.enabled()
     error('The d3d11 was enabled explicitly, but required dependencies were not found.')
@@ -97,8 +54,8 @@ if runtimeobject_lib.found() and d3dcompiler_lib.found()
       #include <windows.applicationmodel.core.h>
       #include <wrl.h>
       #include <wrl/wrappers/corewrappers.h>
-      #include <d3d11.h>
-      #include <dxgi1_2.h>
+      #include <d3d11_4.h>
+      #include <dxgi1_6.h>
       #if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
       #error "not winrt"
       #endif

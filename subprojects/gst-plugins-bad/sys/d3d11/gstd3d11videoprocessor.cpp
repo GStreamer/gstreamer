@@ -22,20 +22,11 @@
 #endif
 
 #include "gstd3d11videoprocessor.h"
-#include "gstd3d11pluginutils.h"
 
 #include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_video_processor_debug);
 #define GST_CAT_DEFAULT gst_d3d11_video_processor_debug
-
-#if (GST_D3D11_HEADER_VERSION >= 1 && GST_D3D11_DXGI_HEADER_VERSION >= 4)
-#define HAVE_VIDEO_CONTEXT_ONE
-#endif
-
-#if (GST_D3D11_HEADER_VERSION >= 4) && (GST_D3D11_DXGI_HEADER_VERSION >= 5)
-#define HAVE_VIDEO_CONTEXT_TWO
-#endif
 
 struct _GstD3D11VideoProcessor
 {
@@ -43,17 +34,11 @@ struct _GstD3D11VideoProcessor
 
   ID3D11VideoDevice *video_device;
   ID3D11VideoContext *video_context;
-#ifdef HAVE_VIDEO_CONTEXT_ONE
   ID3D11VideoContext1 *video_context1;
-#endif
-#ifdef HAVE_VIDEO_CONTEXT_TWO
   ID3D11VideoContext2 *video_context2;
-#endif
   ID3D11VideoProcessor *processor;
   ID3D11VideoProcessorEnumerator *enumerator;
-#ifdef HAVE_VIDEO_CONTEXT_ONE
   ID3D11VideoProcessorEnumerator1 *enumerator1;
-#endif
   D3D11_VIDEO_PROCESSOR_CAPS processor_caps;
 };
 
@@ -105,12 +90,11 @@ gst_d3d11_video_processor_new (GstD3D11Device * device, guint in_width,
       &self->enumerator);
   if (!gst_d3d11_result (hr, device))
     goto fail;
-#ifdef HAVE_VIDEO_CONTEXT_ONE
+
   hr = self->enumerator->QueryInterface (IID_PPV_ARGS (&self->enumerator1));
   if (gst_d3d11_result (hr, device)) {
     GST_DEBUG ("ID3D11VideoProcessorEnumerator1 interface available");
   }
-#endif
 
   hr = self->enumerator->GetVideoProcessorCaps (&self->processor_caps);
   if (!gst_d3d11_result (hr, device))
@@ -121,20 +105,17 @@ gst_d3d11_video_processor_new (GstD3D11Device * device, guint in_width,
   if (!gst_d3d11_result (hr, device))
     goto fail;
 
-#ifdef HAVE_VIDEO_CONTEXT_ONE
   hr = self->video_context->
       QueryInterface (IID_PPV_ARGS (&self->video_context1));
   if (gst_d3d11_result (hr, device)) {
     GST_DEBUG ("ID3D11VideoContext1 interface available");
   }
-#endif
-#ifdef HAVE_VIDEO_CONTEXT_TWO
+
   hr = self->video_context->
       QueryInterface (IID_PPV_ARGS (&self->video_context2));
   if (gst_d3d11_result (hr, device)) {
     GST_DEBUG ("ID3D11VideoContext2 interface available");
   }
-#endif
 
   /* Setting up default options */
   gst_d3d11_device_lock (self->device);
@@ -158,17 +139,11 @@ gst_d3d11_video_processor_free (GstD3D11VideoProcessor * processor)
 
   GST_D3D11_CLEAR_COM (processor->video_device);
   GST_D3D11_CLEAR_COM (processor->video_context);
-#ifdef HAVE_VIDEO_CONTEXT_ONE
   GST_D3D11_CLEAR_COM (processor->video_context1);
-#endif
-#ifdef HAVE_VIDEO_CONTEXT_TWO
   GST_D3D11_CLEAR_COM (processor->video_context2);
-#endif
   GST_D3D11_CLEAR_COM (processor->processor);
   GST_D3D11_CLEAR_COM (processor->enumerator);
-#ifdef HAVE_VIDEO_CONTEXT_ONE
   GST_D3D11_CLEAR_COM (processor->enumerator1);
-#endif
 
   gst_clear_object (&processor->device);
   g_free (processor);
@@ -302,13 +277,11 @@ gst_d3d11_video_processor_set_output_color_space (GstD3D11VideoProcessor *
   return TRUE;
 }
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
 gboolean
 gst_d3d11_video_processor_check_format_conversion (GstD3D11VideoProcessor *
     processor, DXGI_FORMAT in_format, DXGI_COLOR_SPACE_TYPE in_color_space,
     DXGI_FORMAT out_format, DXGI_COLOR_SPACE_TYPE out_color_space)
 {
-#ifdef HAVE_VIDEO_CONTEXT_ONE
   HRESULT hr;
   BOOL supported = TRUE;
 
@@ -325,9 +298,6 @@ gst_d3d11_video_processor_check_format_conversion (GstD3D11VideoProcessor *
   }
 
   return supported;
-#endif
-
-  return FALSE;
 }
 
 gboolean
@@ -336,13 +306,11 @@ gst_d3d11_video_processor_set_input_dxgi_color_space (GstD3D11VideoProcessor *
 {
   g_return_val_if_fail (processor != NULL, FALSE);
 
-#ifdef HAVE_VIDEO_CONTEXT_ONE
   if (processor->video_context1) {
     processor->video_context1->VideoProcessorSetStreamColorSpace1
         (processor->processor, 0, color_space);
     return TRUE;
   }
-#endif
 
   return FALSE;
 }
@@ -353,19 +321,15 @@ gst_d3d11_video_processor_set_output_dxgi_color_space (GstD3D11VideoProcessor *
 {
   g_return_val_if_fail (processor != NULL, FALSE);
 
-#ifdef HAVE_VIDEO_CONTEXT_ONE
   if (processor->video_context1) {
     processor->video_context1->VideoProcessorSetOutputColorSpace1
         (processor->processor, color_space);
     return TRUE;
   }
-#endif
 
   return FALSE;
 }
-#endif
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
 /* D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_METADATA_HDR10
  * missing in mingw header */
 #define FEATURE_CAPS_METADATA_HDR10 (0x800)
@@ -376,7 +340,6 @@ gst_d3d11_video_processor_set_input_hdr10_metadata (GstD3D11VideoProcessor *
 {
   g_return_val_if_fail (processor != NULL, FALSE);
 
-#ifdef HAVE_VIDEO_CONTEXT_TWO
   if (processor->video_context2 && (processor->processor_caps.FeatureCaps &
           FEATURE_CAPS_METADATA_HDR10)) {
     if (hdr10_meta) {
@@ -391,7 +354,6 @@ gst_d3d11_video_processor_set_input_hdr10_metadata (GstD3D11VideoProcessor *
 
     return TRUE;
   }
-#endif
 
   return FALSE;
 }
@@ -402,7 +364,6 @@ gst_d3d11_video_processor_set_output_hdr10_metadata (GstD3D11VideoProcessor *
 {
   g_return_val_if_fail (processor != NULL, FALSE);
 
-#ifdef HAVE_VIDEO_CONTEXT_TWO
   if (processor->video_context2 && (processor->processor_caps.FeatureCaps &
           FEATURE_CAPS_METADATA_HDR10)) {
     if (hdr10_meta) {
@@ -416,11 +377,9 @@ gst_d3d11_video_processor_set_output_hdr10_metadata (GstD3D11VideoProcessor *
 
     return TRUE;
   }
-#endif
 
   return FALSE;
 }
-#endif
 
 gboolean
 gst_d3d11_video_processor_create_input_view (GstD3D11VideoProcessor * processor,

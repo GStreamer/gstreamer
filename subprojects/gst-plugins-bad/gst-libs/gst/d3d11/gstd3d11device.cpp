@@ -277,7 +277,7 @@ gst_d3d11_device_enable_dxgi_debug (void)
           "DXGIGetDebugInterface", (gpointer *) & GstDXGIGetDebugInterface);
     if (GstDXGIGetDebugInterface)
       ret = TRUE;
-#elif (GST_D3D11_DXGI_HEADER_VERSION >= 3)
+#else
     ret = TRUE;
 #endif
     g_once_init_leave (&_init, 1);
@@ -292,12 +292,12 @@ gst_d3d11_device_dxgi_get_device_interface (REFIID riid, void **debug)
 #if (!GST_D3D11_WINAPI_ONLY_APP)
   if (GstDXGIGetDebugInterface) {
     return GstDXGIGetDebugInterface (riid, debug);
+  } else {
+    return E_NOINTERFACE;
   }
-#elif (GST_D3D11_DXGI_HEADER_VERSION >= 3)
+#else
   return DXGIGetDebugInterface1 (0, riid, debug);
 #endif
-
-  return E_NOINTERFACE;
 }
 
 static inline GstDebugLevel

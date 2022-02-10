@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/d3d11/gstd3d11.h>
+#include "gstd3d11pluginutils.h"
 
 G_BEGIN_DECLS
 
@@ -51,7 +52,6 @@ gboolean  gst_d3d11_video_processor_set_input_color_space  (GstD3D11VideoProcess
 gboolean  gst_d3d11_video_processor_set_output_color_space (GstD3D11VideoProcessor * processor,
                                                             GstVideoColorimetry * color);
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 4)
 gboolean  gst_d3d11_video_processor_check_format_conversion (GstD3D11VideoProcessor * processor,
                                                              DXGI_FORMAT in_format,
                                                              DXGI_COLOR_SPACE_TYPE in_color_space,
@@ -63,15 +63,12 @@ gboolean  gst_d3d11_video_processor_set_input_dxgi_color_space (GstD3D11VideoPro
 
 gboolean  gst_d3d11_video_processor_set_output_dxgi_color_space (GstD3D11VideoProcessor * processor,
                                                                 DXGI_COLOR_SPACE_TYPE color_space);
-#endif
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 5)
 gboolean  gst_d3d11_video_processor_set_input_hdr10_metadata (GstD3D11VideoProcessor * processor,
                                                               DXGI_HDR_METADATA_HDR10 * hdr10_meta);
 
 gboolean  gst_d3d11_video_processor_set_output_hdr10_metadata (GstD3D11VideoProcessor * processor,
                                                               DXGI_HDR_METADATA_HDR10 * hdr10_meta);
-#endif
 
 gboolean  gst_d3d11_video_processor_create_input_view  (GstD3D11VideoProcessor * processor,
                                                         D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC * desc,

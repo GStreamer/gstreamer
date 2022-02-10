@@ -896,7 +896,6 @@ create_swap_chain (GstD3D11WindowWin32 * self, GstD3D11Device * device,
   return swap_chain;
 }
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 2)
 static IDXGISwapChain1 *
 create_swap_chain_for_hwnd (GstD3D11WindowWin32 * self, GstD3D11Device * device,
     HWND hwnd, DXGI_SWAP_CHAIN_DESC1 * desc,
@@ -927,7 +926,6 @@ create_swap_chain_for_hwnd (GstD3D11WindowWin32 * self, GstD3D11Device * device,
 
   return swap_chain;
 }
-#endif
 
 static gboolean
 gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
@@ -941,7 +939,6 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
 
   self->have_swapchain1 = FALSE;
 
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 2)
   {
     DXGI_SWAP_CHAIN_DESC1 desc1 = { 0, };
     desc1.Width = 0;
@@ -972,7 +969,6 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
       self->have_swapchain1 = TRUE;
     }
   }
-#endif
 
   if (!new_swapchain) {
     DXGI_SWAP_EFFECT swap_effect = DXGI_SWAP_EFFECT_DISCARD;
@@ -1070,7 +1066,7 @@ gst_d3d11_window_win32_present (GstD3D11Window * window, guint present_flags)
 
     return GST_D3D11_WINDOW_FLOW_CLOSED;
   }
-#if (GST_D3D11_DXGI_HEADER_VERSION >= 2)
+
   if (self->have_swapchain1) {
     IDXGISwapChain1 *swap_chain1 = (IDXGISwapChain1 *) window->swap_chain;
     DXGI_PRESENT_PARAMETERS present_params = { 0, };
@@ -1082,9 +1078,7 @@ gst_d3d11_window_win32_present (GstD3D11Window * window, guint present_flags)
     }
 
     hr = swap_chain1->Present1 (0, present_flags, &present_params);
-  } else
-#endif
-  {
+  } else {
     hr = window->swap_chain->Present (0, present_flags);
   }
 

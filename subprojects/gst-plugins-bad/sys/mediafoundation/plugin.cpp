@@ -77,6 +77,8 @@
 
 #if GST_MF_HAVE_D3D11
 #include <gst/d3d11/gstd3d11.h>
+#include <d3d11_4.h>
+#include <dxgi1_6.h>
 #include <gstmfplatloader.h>
 #endif
 

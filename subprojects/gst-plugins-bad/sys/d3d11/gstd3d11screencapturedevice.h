@@ -20,6 +20,7 @@
 #pragma once
 
 #include <gst/gst.h>
+#include "gstd3d11pluginutils.h"
 
 G_BEGIN_DECLS
 
