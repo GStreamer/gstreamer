@@ -337,3 +337,16 @@ if gio_dep.version().version_compare('< 2.67.4')
 endif
 
 configure_file(output: 'config.h', configuration: cdata)
+
+plugin_names = []
+foreach plugin: plugins
+  if plugin.name().startswith('gst')
+    plugin_names += [plugin.name().substring(3)]
+  else
+    plugin_names += [plugin.name()]
+  endif
+endforeach
+
+summary({
+    'Plugins': plugin_names,
+}, list_sep: ', ')
