@@ -9,12 +9,10 @@ d3d11_sources = [
 
 gstd3d11_dep = dependency('', required : false)
 
-d3d11_option = get_option('d3d11')
-if host_system != 'windows' or d3d11_option.disabled()
+if host_system != 'windows'
   subdir_done()
 endif
 
-have_d3d11 = false
 extra_c_args = [
   '-DCOBJMACROS',
 ]
@@ -29,16 +27,12 @@ have_dxgidebug_h = false
 d3d11_winapi_app = false
 d3d11_conf = configuration_data()
 
-d3d11_lib = cc.find_library('d3d11', required : d3d11_option)
-dxgi_lib = cc.find_library('dxgi', required : d3d11_option)
-d3dcompiler_lib = cc.find_library('d3dcompiler', required: d3d11_option)
+d3d11_lib = cc.find_library('d3d11', required : false)
+dxgi_lib = cc.find_library('dxgi', required : false)
+d3dcompiler_lib = cc.find_library('d3dcompiler', required: false)
 runtimeobject_lib = cc.find_library('runtimeobject', required : false)
 
-have_d3d11 = d3d11_lib.found() and dxgi_lib.found() and cc.has_header('d3d11_4.h') and cc.has_header('dxgi1_6.h')
-if not have_d3d11
-  if d3d11_option.enabled()
-    error('The d3d11 was enabled explicitly, but required dependencies were not found.')
-  endif
+if not d3d11_lib.found() or not dxgi_lib.found() or not cc.has_header('d3d11_4.h') or not cc.has_header('dxgi1_6.h')
   subdir_done()
 endif
 
@@ -67,7 +61,7 @@ if runtimeobject_lib.found() and d3dcompiler_lib.found()
 endif
 
 if not d3d11_winapi_desktop and not d3d11_winapi_app
-  error('Neither Desktop partition nor App partition')
+  subdir_done()
 endif
 
 d3d11_winapi_only_app = d3d11_winapi_app and not d3d11_winapi_desktop
