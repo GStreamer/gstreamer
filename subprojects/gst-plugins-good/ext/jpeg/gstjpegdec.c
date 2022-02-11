@@ -1189,6 +1189,7 @@ gst_jpeg_dec_prepare_decode (GstJpegDec * dec)
   dec->cinfo.do_block_smoothing = FALSE;
   dec->cinfo.dct_method = dec->idct_method;
 #ifdef JCS_EXTENSIONS
+  gst_jpeg_turbo_parse_ext_fmt_convert (dec, NULL);
   if (dec->format_convert) {
     dec->cinfo.out_color_space = dec->libjpeg_ext_format;
     dec->cinfo.raw_data_out = FALSE;
