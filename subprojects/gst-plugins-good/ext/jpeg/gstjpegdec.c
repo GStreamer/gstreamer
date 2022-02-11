@@ -915,7 +915,7 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame,
 
 #ifdef JCS_EXTENSIONS
   if (dec->format_convert) {
-    gint row_stride = dec->cinfo.output_width * dec->cinfo.output_components;
+    gint row_stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
     guchar *bufbase = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
 
     if (num_fields == 2) {
