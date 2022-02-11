@@ -1,4 +1,9 @@
+lame_dep = dependency('', required: false)
 lame_option = get_option('lame')
+
+if lame_option.disabled()
+  subdir_done()
+endif
 
 lame_extra_c_args = []
 lame_dep = cc.find_library('mp3lame', required: false)
