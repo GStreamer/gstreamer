@@ -24,12 +24,6 @@ msdk_sources = [
   'msdk.c',
 ]
 
-if host_machine.system() == 'windows'
-  msdk_sources += ['msdk_d3d.c', 'gstmsdkallocator_d3d.c' ]
-else
-  msdk_sources += ['msdk_libva.c', 'gstmsdkallocator_libva.c']
-endif
-
 have_msdk = false
 msdk_dep = []
 use_msdk = false
@@ -38,6 +32,18 @@ use_onevpl = false
 msdk_option = get_option('msdk')
 if msdk_option.disabled()
   subdir_done()
+endif
+
+if host_machine.system() == 'windows'
+  msdk_sources += ['msdk_d3d.c', 'gstmsdkallocator_d3d.c' ]
+else
+  if not gstva_dep.found()
+    if msdk_option.enabled()
+      error('The msdk plugin was enabled explicity, but required va dependencies were not found.')
+    endif
+    subdir_done()
+  endif
+  msdk_sources += ['msdk_libva.c', 'gstmsdkallocator_libva.c']
 endif
 
 mfx_api = get_option('mfx_api')
@@ -147,15 +153,11 @@ if host_machine.system() == 'windows'
   msdk_deps = declare_dependency(dependencies: [d3d11_dep, legacy_stdio_dep])
   msdk_deps_found = d3d11_dep.found() and legacy_stdio_dep.found() and cc.get_id() == 'msvc'
 else
-  libva_dep = dependency('libva', required: get_option('msdk'),
-      fallback: ['libva', 'libva_dep'])
-  libva_drm_dep = dependency('libva-drm', required: get_option('msdk'),
-      fallback: ['libva', 'libva_drm_dep'])
   libdl_dep = cc.find_library('dl', required: get_option('msdk'))
   libgudev_dep = dependency('gudev-1.0', required: get_option('msdk'))
   libdrm_dep = dependency('libdrm', required: get_option('msdk'))
-  msdk_deps = declare_dependency(dependencies: [libva_dep, libva_drm_dep, libdl_dep, libgudev_dep, libdrm_dep])
-  msdk_deps_found = libva_dep.found() and libva_drm_dep.found() and libdl_dep.found() and libgudev_dep.found() and libdrm_dep.found()
+  msdk_deps = declare_dependency(dependencies: [gstva_dep, libdl_dep, libgudev_dep, libdrm_dep])
+  msdk_deps_found = gstva_dep.found() and libdl_dep.found() and libgudev_dep.found() and libdrm_dep.found()
 endif
 
 if msdk_deps_found
