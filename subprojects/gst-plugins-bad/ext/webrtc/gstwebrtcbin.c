@@ -5555,7 +5555,7 @@ _generate_data_channel_id (GstWebRTCBin * webrtc)
     }
 
     /* client must generate even ids, server must generate odd ids */
-    if (new_id % 2 == ! !is_client)
+    if (new_id % 2 == !(!is_client))
       continue;
 
     channel = _find_data_channel_for_id (webrtc, new_id);
