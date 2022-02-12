@@ -900,17 +900,26 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
   ret = gst_va_vpp_caps_remove_fields (caps);
 
   tmp = gst_va_vpp_complete_caps_features (ret, GST_CAPS_FEATURE_MEMORY_VA);
-  if (!gst_caps_is_subset (tmp, ret))
+  if (!gst_caps_is_subset (tmp, ret)) {
     gst_caps_append (ret, tmp);
+  } else {
+    gst_caps_unref (tmp);
+  }
 
   tmp = gst_va_vpp_complete_caps_features (ret, GST_CAPS_FEATURE_MEMORY_DMABUF);
-  if (!gst_caps_is_subset (tmp, ret))
+  if (!gst_caps_is_subset (tmp, ret)) {
     gst_caps_append (ret, tmp);
+  } else {
+    gst_caps_unref (tmp);
+  }
 
   tmp = gst_va_vpp_complete_caps_features (ret,
       GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
-  if (!gst_caps_is_subset (tmp, ret))
+  if (!gst_caps_is_subset (tmp, ret)) {
     gst_caps_append (ret, tmp);
+  } else {
+    gst_caps_unref (tmp);
+  }
 
 bail:
   if (filter) {
