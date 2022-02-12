@@ -56,8 +56,8 @@ struct _GstD3D11BaseConvert
 {
   GstD3D11BaseFilter parent;
 
-  const GstD3D11Format *in_d3d11_format;
-  const GstD3D11Format *out_d3d11_format;
+  GstD3D11Format in_d3d11_format;
+  GstD3D11Format out_d3d11_format;
 
   ID3D11Texture2D *in_texture[GST_VIDEO_MAX_PLANES];
   ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
@@ -1168,7 +1168,7 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
   GstStructure *config;
   guint size;
   GstD3D11AllocationParams *d3d11_params;
-  const GstD3D11Format *d3d11_format;
+  GstD3D11Format d3d11_format;
   guint bind_flags = D3D11_BIND_SHADER_RESOURCE;
   DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
   UINT supported = 0;
@@ -1193,17 +1193,16 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
     return FALSE;
   }
 
-  d3d11_format = gst_d3d11_device_format_from_gst (filter->device,
-      GST_VIDEO_INFO_FORMAT (&info));
-  if (!d3d11_format) {
+  if (!gst_d3d11_device_get_format (filter->device,
+          GST_VIDEO_INFO_FORMAT (&info), &d3d11_format)) {
     GST_ERROR_OBJECT (filter, "Unknown format caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 
-  if (d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    dxgi_format = d3d11_format->resource_format[0];
+  if (d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
+    dxgi_format = d3d11_format.resource_format[0];
   } else {
-    dxgi_format = d3d11_format->dxgi_format;
+    dxgi_format = d3d11_format.dxgi_format;
   }
 
   device_handle = gst_d3d11_device_get_device_handle (filter->device);
@@ -1292,7 +1291,7 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
   gboolean update_pool = FALSE;
   GstVideoInfo info;
   guint i;
-  const GstD3D11Format *d3d11_format;
+  GstD3D11Format d3d11_format;
   guint bind_flags = D3D11_BIND_RENDER_TARGET;
   DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
   UINT supported = 0;
@@ -1309,17 +1308,16 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
     return FALSE;
   }
 
-  d3d11_format = gst_d3d11_device_format_from_gst (filter->device,
-      GST_VIDEO_INFO_FORMAT (&info));
-  if (!d3d11_format) {
+  if (!gst_d3d11_device_get_format (filter->device,
+          GST_VIDEO_INFO_FORMAT (&info), &d3d11_format)) {
     GST_ERROR_OBJECT (filter, "Unknown format caps %" GST_PTR_FORMAT, outcaps);
     return FALSE;
   }
 
-  if (d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    dxgi_format = d3d11_format->resource_format[0];
+  if (d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
+    dxgi_format = d3d11_format.resource_format[0];
   } else {
-    dxgi_format = d3d11_format->dxgi_format;
+    dxgi_format = d3d11_format.dxgi_format;
   }
 
   device_handle = gst_d3d11_device_get_device_handle (filter->device);
@@ -1787,18 +1785,14 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), FALSE);
   }
 
-  self->in_d3d11_format =
-      gst_d3d11_device_format_from_gst (filter->device,
-      GST_VIDEO_INFO_FORMAT (in_info));
-  if (!self->in_d3d11_format) {
+  if (!gst_d3d11_device_get_format (filter->device,
+          GST_VIDEO_INFO_FORMAT (in_info), &self->in_d3d11_format)) {
     unknown_info = in_info;
     goto format_unknown;
   }
 
-  self->out_d3d11_format =
-      gst_d3d11_device_format_from_gst (filter->device,
-      GST_VIDEO_INFO_FORMAT (out_info));
-  if (!self->out_d3d11_format) {
+  if (!gst_d3d11_device_get_format (filter->device,
+          GST_VIDEO_INFO_FORMAT (out_info), &self->out_d3d11_format)) {
     unknown_info = out_info;
     goto format_unknown;
   }
@@ -1812,8 +1806,8 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   }
 
   /* If both input and output formats are native DXGI format */
-  if (self->in_d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN &&
-      self->out_d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN) {
+  if (self->in_d3d11_format.dxgi_format != DXGI_FORMAT_UNKNOWN &&
+      self->out_d3d11_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
     gboolean hardware = FALSE;
     GstD3D11VideoProcessor *processor = NULL;
 
@@ -1832,8 +1826,8 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       out_color_space = gst_d3d11_video_info_to_dxgi_color_space (out_info);
 
       if (in_color_space && out_color_space) {
-        DXGI_FORMAT in_dxgi_format = self->in_d3d11_format->dxgi_format;
-        DXGI_FORMAT out_dxgi_format = self->out_d3d11_format->dxgi_format;
+        DXGI_FORMAT in_dxgi_format = self->in_d3d11_format.dxgi_format;
+        DXGI_FORMAT out_dxgi_format = self->out_d3d11_format.dxgi_format;
         DXGI_COLOR_SPACE_TYPE in_dxgi_color_space =
             (DXGI_COLOR_SPACE_TYPE) in_color_space->dxgi_color_space_type;
         DXGI_COLOR_SPACE_TYPE out_dxgi_color_space =
@@ -2079,7 +2073,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
   /* Ensure shader resource views */
   if (!gst_d3d11_buffer_get_shader_resource_view (inbuf, resource_view)) {
     if (!create_shader_input_resource (self, device,
-            self->in_d3d11_format, &filter->in_info)) {
+            &self->in_d3d11_format, &filter->in_info)) {
       GST_ERROR_OBJECT (self, "Failed to configure fallback input texture");
       goto fallback_failed;
     }
@@ -2115,7 +2109,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
   /* Ensure render target views */
   if (!gst_d3d11_buffer_get_render_target_view (outbuf, render_view)) {
     if (!create_shader_output_resource (self, device,
-            self->out_d3d11_format, &filter->out_info)) {
+            &self->out_d3d11_format, &filter->out_info)) {
       GST_ERROR_OBJECT (self, "Failed to configure fallback output texture");
       goto fallback_failed;
     }

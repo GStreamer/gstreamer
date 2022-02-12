@@ -122,7 +122,7 @@ get_d3d11_devices (void)
   for (i = 0; i < 12; i++) {
     GstD3D11Device *device;
     gboolean is_hardware = FALSE;
-    const GstD3D11Format *d3d11_format;
+    GstD3D11Format d3d11_format;
     ID3D11Device *device_handle;
     D3D11_FEATURE_DATA_D3D11_OPTIONS4 options = { 0, };
     UINT supported = 0;
@@ -141,9 +141,9 @@ get_d3d11_devices (void)
     }
 
     /* device can support NV12 format? */
-    d3d11_format =
-        gst_d3d11_device_format_from_gst (device, GST_VIDEO_FORMAT_NV12);
-    if (!d3d11_format || d3d11_format->dxgi_format != DXGI_FORMAT_NV12) {
+    if (!gst_d3d11_device_get_format (device,
+        GST_VIDEO_FORMAT_NV12, &d3d11_format) ||
+        d3d11_format.dxgi_format != DXGI_FORMAT_NV12) {
       GST_DEBUG_OBJECT (device,
           "Given d3d11 device cannot support NV12 format");
       gst_object_unref (device);

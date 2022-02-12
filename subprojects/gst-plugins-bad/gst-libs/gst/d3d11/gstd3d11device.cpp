@@ -1419,30 +1419,40 @@ gst_d3d11_device_unlock (GstD3D11Device * device)
 }
 
 /**
- * gst_d3d11_device_format_from_gst:
+ * gst_d3d11_device_get_format:
  * @device: a #GstD3D11Device
  * @format: a #GstVideoFormat
+ * @device_format: (out caller-allocates) (nullable): a #GstD3D11Format
  *
- * Returns: (transfer none) (nullable): a pointer to #GstD3D11Format
- * or %NULL if @format is not supported by @device
+ * Converts @format to #GstD3D11Format if the @format is supported
+ * by device
  *
- * Since: 1.20
+ * Returns: %TRUE if @format is supported by @device
+ *
+ * Since: 1.22
  */
-const GstD3D11Format *
-gst_d3d11_device_format_from_gst (GstD3D11Device * device,
-    GstVideoFormat format)
+gboolean
+gst_d3d11_device_get_format (GstD3D11Device * device, GstVideoFormat format,
+    GstD3D11Format * device_format)
 {
   GstD3D11DevicePrivate *priv;
-  guint i;
 
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
 
   priv = device->priv;
 
-  for (i = 0; i < G_N_ELEMENTS (priv->format_table); i++) {
-    if (priv->format_table[i].format == format)
-      return &priv->format_table[i];
+  for (guint i = 0; i < G_N_ELEMENTS (priv->format_table); i++) {
+    if (priv->format_table[i].format != format)
+      continue;
+
+    if (device_format)
+      *device_format = priv->format_table[i];
+
+    return TRUE;
   }
 
-  return NULL;
+  if (device_format)
+    gst_d3d11_format_init (device_format);
+
+  return FALSE;
 }

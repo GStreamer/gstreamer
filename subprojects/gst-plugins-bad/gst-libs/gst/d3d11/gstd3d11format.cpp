@@ -192,3 +192,19 @@ gst_d3d11_dxgi_format_to_gst (DXGI_FORMAT format)
 
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
+
+/**
+ * gst_d3d11_format_init:
+ * @format: (out caller-allocates): a #GstD3D11Format
+ *
+ * Initialize @format with default values.
+ *
+ * Since: 1.22
+ */
+void
+gst_d3d11_format_init (GstD3D11Format * format)
+{
+  g_return_if_fail (format != nullptr);
+
+  memset (format, 0, sizeof (GstD3D11Format));
+}

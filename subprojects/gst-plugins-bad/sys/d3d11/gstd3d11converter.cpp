@@ -424,9 +424,6 @@ struct _GstD3D11Converter
   GstVideoInfo out_info;
   gdouble alpha;
 
-  const GstD3D11Format *in_d3d11_format;
-  const GstD3D11Format *out_d3d11_format;
-
   guint num_input_view;
   guint num_output_view;
 
@@ -717,18 +714,16 @@ get_packed_yuv_components (GstD3D11Converter * self, GstVideoFormat
   switch (format) {
     case GST_VIDEO_FORMAT_YUY2:
     {
-      const GstD3D11Format *d3d11_format =
-          gst_d3d11_device_format_from_gst (self->device,
-          GST_VIDEO_FORMAT_YUY2);
+      GstD3D11Format d3d11_format;
 
-      g_assert (d3d11_format != NULL);
+      gst_d3d11_device_get_format (self->device, GST_VIDEO_FORMAT_YUY2,
+          &d3d11_format);
 
-      if (d3d11_format->resource_format[0] == DXGI_FORMAT_R8G8B8A8_UNORM) {
+      if (d3d11_format.resource_format[0] == DXGI_FORMAT_R8G8B8A8_UNORM) {
         *y = 'x';
         *u = 'y';
         *v = 'a';
-      } else if (d3d11_format->resource_format[0] ==
-          DXGI_FORMAT_G8R8_G8B8_UNORM) {
+      } else if (d3d11_format.resource_format[0] == DXGI_FORMAT_G8R8_G8B8_UNORM) {
         *y = 'y';
         *u = 'x';
         *v = 'z';
@@ -1804,8 +1799,8 @@ gst_d3d11_converter_new (GstD3D11Device * device,
     GstVideoInfo * in_info, GstVideoInfo * out_info, GstStructure * config)
 {
   const GstVideoInfo *unknown_info;
-  const GstD3D11Format *in_d3d11_format;
-  const GstD3D11Format *out_d3d11_format;
+  GstD3D11Format in_d3d11_format;
+  GstD3D11Format out_d3d11_format;
   gboolean is_supported = FALSE;
   MatrixData matrix;
   GstD3D11Converter *converter = NULL;
@@ -1820,18 +1815,14 @@ gst_d3d11_converter_new (GstD3D11Device * device,
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)),
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
 
-  in_d3d11_format =
-      gst_d3d11_device_format_from_gst (device,
-      GST_VIDEO_INFO_FORMAT (in_info));
-  if (!in_d3d11_format) {
+  if (!gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (in_info),
+          &in_d3d11_format)) {
     unknown_info = in_info;
     goto format_unknown;
   }
 
-  out_d3d11_format =
-      gst_d3d11_device_format_from_gst (device,
-      GST_VIDEO_INFO_FORMAT (out_info));
-  if (!out_d3d11_format) {
+  if (!gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (out_info),
+          &out_d3d11_format)) {
     unknown_info = out_info;
     goto format_unknown;
   }

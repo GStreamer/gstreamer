@@ -712,7 +712,7 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder,
     GstVideoCodecState * input_state, GstVideoInfo * info, gint coded_width,
     gint coded_height, guint dpb_size)
 {
-  const GstD3D11Format *d3d11_format;
+  GstD3D11Format d3d11_format;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
@@ -723,9 +723,9 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder,
 
   gst_d3d11_decoder_reset (decoder);
 
-  d3d11_format = gst_d3d11_device_format_from_gst (decoder->device,
-      GST_VIDEO_INFO_FORMAT (info));
-  if (!d3d11_format || d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
+  if (!gst_d3d11_device_get_format (decoder->device,
+          GST_VIDEO_INFO_FORMAT (info), &d3d11_format) ||
+      d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (decoder, "Could not determine dxgi format from %s",
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
     return FALSE;
@@ -736,7 +736,7 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder,
   decoder->coded_width = coded_width;
   decoder->coded_height = coded_height;
   decoder->dpb_size = dpb_size;
-  decoder->decoder_format = d3d11_format->dxgi_format;
+  decoder->decoder_format = d3d11_format.dxgi_format;
 
   decoder->configured = TRUE;
 

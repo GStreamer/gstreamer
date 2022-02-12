@@ -599,7 +599,7 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
   gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
   guint i;
   gsize size = 0;
-  const GstD3D11Format *format;
+  GstD3D11Format format;
   D3D11_TEXTURE2D_DESC desc;
 
   for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
@@ -614,9 +614,8 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
 
   dmem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, 0);
   device = dmem->device;
-  format = gst_d3d11_device_format_from_gst (device,
-      GST_VIDEO_INFO_FORMAT (info));
-  if (!format) {
+  if (!gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (info),
+          &format)) {
     GST_ERROR ("Unknown d3d11 format");
     return NULL;
   }
@@ -660,7 +659,7 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
   }
 
   /* single texture semi-planar formats */
-  if (format->dxgi_format != DXGI_FORMAT_UNKNOWN &&
+  if (format.dxgi_format != DXGI_FORMAT_UNKNOWN &&
       GST_VIDEO_INFO_N_PLANES (info) == 2) {
     stride[1] = stride[0];
     offset[1] = stride[0] * desc.Height;

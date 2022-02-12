@@ -664,14 +664,16 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   if (chosen_colorspace) {
     const GstDxgiColorSpace *in_color_space =
         gst_d3d11_video_info_to_dxgi_color_space (&window->info);
-    const GstD3D11Format *in_format =
-        gst_d3d11_device_format_from_gst (window->device,
-        GST_VIDEO_INFO_FORMAT (&window->info));
+    GstD3D11Format in_format;
     gboolean hardware = FALSE;
     GstD3D11VideoProcessor *processor = NULL;
+    DXGI_FORMAT in_dxgi_format;
 
-    if (in_color_space && in_format &&
-        in_format->dxgi_format != DXGI_FORMAT_UNKNOWN) {
+    gst_d3d11_device_get_format (window->device,
+        GST_VIDEO_INFO_FORMAT (&window->info), &in_format);
+    in_dxgi_format = in_format.dxgi_format;
+
+    if (in_color_space && in_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
       g_object_get (window->device, "hardware", &hardware, NULL);
     }
 
@@ -683,7 +685,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     }
 
     if (processor) {
-      DXGI_FORMAT in_dxgi_format = in_format->dxgi_format;
       DXGI_FORMAT out_dxgi_format = chosen_format->dxgi_format;
       DXGI_COLOR_SPACE_TYPE in_dxgi_color_space =
           (DXGI_COLOR_SPACE_TYPE) in_color_space->dxgi_color_space_type;

@@ -126,7 +126,7 @@ gst_d3d11_staging_buffer_pool_set_config (GstBufferPool * pool,
   GstCaps *caps = nullptr;
   guint min_buffers, max_buffers;
   D3D11_TEXTURE2D_DESC *desc;
-  const GstD3D11Format *format;
+  GstD3D11Format format;
   gsize offset = 0;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, nullptr, &min_buffers,
@@ -140,10 +140,10 @@ gst_d3d11_staging_buffer_pool_set_config (GstBufferPool * pool,
   if (!gst_video_info_from_caps (&info, caps))
     goto wrong_caps;
 
-  format = gst_d3d11_device_format_from_gst (self->device,
-      GST_VIDEO_INFO_FORMAT (&info));
-  if (!format)
+  if (!gst_d3d11_device_get_format (self->device, GST_VIDEO_INFO_FORMAT (&info),
+          &format)) {
     goto wrong_caps;
+  }
 
   GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
       caps);
@@ -154,7 +154,7 @@ gst_d3d11_staging_buffer_pool_set_config (GstBufferPool * pool,
   memset (priv->offset, 0, sizeof (priv->offset));
   memset (priv->desc, 0, sizeof (priv->desc));
 
-  if (format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
+  if (format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
     for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
       desc = &priv->desc[i];
 
@@ -162,7 +162,7 @@ gst_d3d11_staging_buffer_pool_set_config (GstBufferPool * pool,
       desc->Height = GST_VIDEO_INFO_COMP_HEIGHT (&info, i);
       desc->MipLevels = 1;
       desc->ArraySize = 1;
-      desc->Format = format->resource_format[i];
+      desc->Format = format.resource_format[i];
       desc->SampleDesc.Count = 1;
       desc->Usage = D3D11_USAGE_STAGING;
       desc->CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
@@ -176,7 +176,7 @@ gst_d3d11_staging_buffer_pool_set_config (GstBufferPool * pool,
     height = GST_VIDEO_INFO_HEIGHT (&info);
 
     /* resolution of semi-planar formats must be multiple of 2 */
-    switch (format->dxgi_format) {
+    switch (format.dxgi_format) {
       case DXGI_FORMAT_NV12:
       case DXGI_FORMAT_P010:
       case DXGI_FORMAT_P016:
@@ -191,7 +191,7 @@ gst_d3d11_staging_buffer_pool_set_config (GstBufferPool * pool,
     desc->Height = height;
     desc->MipLevels = 1;
     desc->ArraySize = 1;
-    desc->Format = format->dxgi_format;
+    desc->Format = format.dxgi_format;
     desc->SampleDesc.Count = 1;
     desc->Usage = D3D11_USAGE_STAGING;
     desc->CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
@@ -247,7 +247,7 @@ gst_d3d11_staging_buffer_pool_set_config (GstBufferPool * pool,
   }
 
   /* single texture semi-planar formats */
-  if (format->dxgi_format != DXGI_FORMAT_UNKNOWN &&
+  if (format.dxgi_format != DXGI_FORMAT_UNKNOWN &&
       GST_VIDEO_INFO_N_PLANES (&info) == 2) {
     priv->stride[1] = priv->stride[0];
     priv->offset[1] = priv->stride[0] * priv->desc[0].Height;

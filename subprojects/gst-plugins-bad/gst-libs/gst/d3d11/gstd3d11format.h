@@ -73,6 +73,9 @@ gboolean        gst_d3d11_dxgi_format_get_size      (DXGI_FORMAT format,
 GST_D3D11_API
 GstVideoFormat  gst_d3d11_dxgi_format_to_gst        (DXGI_FORMAT format);
 
+GST_D3D11_API
+void            gst_d3d11_format_init               (GstD3D11Format * format);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_FORMAT_H__ */

@@ -299,8 +299,7 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     gst_memory_unref (mem);
   }
 
-  g_assert (priv->d3d11_params->d3d11_format != NULL);
-  format = priv->d3d11_params->d3d11_format;
+  format = &priv->d3d11_params->d3d11_format;
   /* single texture semi-planar formats */
   if (format->dxgi_format != DXGI_FORMAT_UNKNOWN &&
       GST_VIDEO_INFO_N_PLANES (&info) == 2) {

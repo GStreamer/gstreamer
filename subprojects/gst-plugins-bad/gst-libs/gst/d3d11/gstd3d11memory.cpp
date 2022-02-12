@@ -61,14 +61,13 @@ gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
     GstD3D11AllocationFlags flags, guint bind_flags)
 {
   GstD3D11AllocationParams *ret;
-  const GstD3D11Format *d3d11_format;
+  GstD3D11Format d3d11_format;
   guint i;
 
   g_return_val_if_fail (info != NULL, NULL);
 
-  d3d11_format = gst_d3d11_device_format_from_gst (device,
-      GST_VIDEO_INFO_FORMAT (info));
-  if (!d3d11_format) {
+  if (!gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (info),
+          &d3d11_format)) {
     GST_WARNING ("Couldn't get d3d11 format");
     return NULL;
   }
@@ -93,15 +92,15 @@ gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
    */
 
   /* If corresponding dxgi format is undefined, use resource format instead */
-  if (d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
+  if (d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-      g_assert (d3d11_format->resource_format[i] != DXGI_FORMAT_UNKNOWN);
+      g_assert (d3d11_format.resource_format[i] != DXGI_FORMAT_UNKNOWN);
 
       ret->desc[i].Width = GST_VIDEO_INFO_COMP_WIDTH (info, i);
       ret->desc[i].Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
       ret->desc[i].MipLevels = 1;
       ret->desc[i].ArraySize = 1;
-      ret->desc[i].Format = d3d11_format->resource_format[i];
+      ret->desc[i].Format = d3d11_format.resource_format[i];
       ret->desc[i].SampleDesc.Count = 1;
       ret->desc[i].SampleDesc.Quality = 0;
       ret->desc[i].Usage = D3D11_USAGE_DEFAULT;
@@ -112,7 +111,7 @@ gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
     ret->desc[0].Height = GST_VIDEO_INFO_HEIGHT (info);
     ret->desc[0].MipLevels = 1;
     ret->desc[0].ArraySize = 1;
-    ret->desc[0].Format = d3d11_format->dxgi_format;
+    ret->desc[0].Format = d3d11_format.dxgi_format;
     ret->desc[0].SampleDesc.Count = 1;
     ret->desc[0].SampleDesc.Quality = 0;
     ret->desc[0].Usage = D3D11_USAGE_DEFAULT;

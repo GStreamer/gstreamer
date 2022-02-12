@@ -299,7 +299,7 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   GstStructure *config;
   gboolean update_pool = FALSE;
   GstVideoInfo vinfo;
-  const GstD3D11Format *d3d11_format;
+  GstD3D11Format d3d11_format;
   GstD3D11AllocationParams *d3d11_params;
   guint bind_flags = 0;
   guint i;
@@ -315,17 +315,16 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 
   gst_video_info_from_caps (&vinfo, outcaps);
 
-  d3d11_format = gst_d3d11_device_format_from_gst (filter->device,
-      GST_VIDEO_INFO_FORMAT (&vinfo));
-  if (!d3d11_format) {
+  if (!gst_d3d11_device_get_format (filter->device,
+          GST_VIDEO_INFO_FORMAT (&vinfo), &d3d11_format)) {
     GST_ERROR_OBJECT (filter, "Unknown format caps %" GST_PTR_FORMAT, outcaps);
     return FALSE;
   }
 
-  if (d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    dxgi_format = d3d11_format->resource_format[0];
+  if (d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
+    dxgi_format = d3d11_format.resource_format[0];
   } else {
-    dxgi_format = d3d11_format->dxgi_format;
+    dxgi_format = d3d11_format.dxgi_format;
   }
 
   device_handle = gst_d3d11_device_get_device_handle (filter->device);

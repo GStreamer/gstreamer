@@ -91,8 +91,9 @@ GST_D3D11_API
 void                  gst_d3d11_device_unlock             (GstD3D11Device * device);
 
 GST_D3D11_API
-const GstD3D11Format * gst_d3d11_device_format_from_gst (GstD3D11Device * device,
-                                                         GstVideoFormat format);
+gboolean              gst_d3d11_device_get_format         (GstD3D11Device * device,
+                                                           GstVideoFormat format,
+                                                           GstD3D11Format * device_format);
 
 G_END_DECLS
 

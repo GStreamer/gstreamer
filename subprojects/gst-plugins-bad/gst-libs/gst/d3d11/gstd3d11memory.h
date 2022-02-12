@@ -128,7 +128,7 @@ struct _GstD3D11AllocationParams
 
   GstVideoInfo info;
   GstVideoInfo aligned_info;
-  const GstD3D11Format *d3d11_format;
+  GstD3D11Format d3d11_format;
 
   GstD3D11AllocationFlags flags;
 

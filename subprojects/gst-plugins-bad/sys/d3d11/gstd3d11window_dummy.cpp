@@ -117,9 +117,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
   {
     const GstDxgiColorSpace *in_color_space =
         gst_d3d11_video_info_to_dxgi_color_space (&window->info);
-    const GstD3D11Format *in_format =
-        gst_d3d11_device_format_from_gst (window->device,
-        GST_VIDEO_INFO_FORMAT (&window->info));
+    GstD3D11Format in_format;
     gboolean hardware = FALSE;
     GstD3D11VideoProcessor *processor = NULL;
     guint i;
@@ -128,9 +126,13 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
       DXGI_FORMAT_B8G8R8A8_UNORM,
       DXGI_FORMAT_R10G10B10A2_UNORM
     };
+    DXGI_FORMAT in_dxgi_format;
 
-    if (in_color_space && in_format &&
-        in_format->dxgi_format != DXGI_FORMAT_UNKNOWN) {
+    gst_d3d11_device_get_format (window->device,
+        GST_VIDEO_INFO_FORMAT (&window->info), &in_format);
+    in_dxgi_format = in_format.dxgi_format;
+
+    if (in_color_space && in_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
       g_object_get (window->device, "hardware", &hardware, NULL);
     }
 
@@ -143,7 +145,6 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
 
     /* Check if video processor can support all possible output dxgi formats */
     for (i = 0; i < G_N_ELEMENTS (formats_to_check) && processor; i++) {
-      DXGI_FORMAT in_dxgi_format = in_format->dxgi_format;
       DXGI_FORMAT out_dxgi_format = formats_to_check[i];
       DXGI_COLOR_SPACE_TYPE in_dxgi_color_space =
           (DXGI_COLOR_SPACE_TYPE) in_color_space->dxgi_color_space_type;
