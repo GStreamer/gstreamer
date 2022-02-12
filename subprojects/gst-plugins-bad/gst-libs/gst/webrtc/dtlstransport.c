@@ -64,12 +64,19 @@ void
 gst_webrtc_dtls_transport_set_transport (GstWebRTCDTLSTransport * transport,
     GstWebRTCICETransport * ice)
 {
+  gboolean notify = FALSE;
+
   g_return_if_fail (GST_IS_WEBRTC_DTLS_TRANSPORT (transport));
   g_return_if_fail (GST_IS_WEBRTC_ICE_TRANSPORT (ice));
 
   GST_OBJECT_LOCK (transport);
-  gst_object_replace ((GstObject **) & transport->transport, GST_OBJECT (ice));
+  notify =
+      gst_object_replace ((GstObject **) & transport->transport,
+      GST_OBJECT (ice));
   GST_OBJECT_UNLOCK (transport);
+
+  if (notify)
+    g_object_notify (G_OBJECT (transport), "transport");
 }
 
 static void
