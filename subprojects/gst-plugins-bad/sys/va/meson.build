@@ -22,7 +22,12 @@ va_sources = [
   'vasurfaceimage.c',
 ]
 
-if not gstva_dep.found()
+if host_system != 'linux'
+  subdir_done()
+endif
+
+va_option = get_option('va').require(gstva_dep.found(), error_message: 'va plugin requires libgstva.')
+if va_option.disabled()
   subdir_done()
 endif
 
