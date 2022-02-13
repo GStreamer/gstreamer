@@ -269,25 +269,23 @@ gst_d3d11_download_decide_allocation (GstBaseTransform * trans,
   gboolean has_videometa;
   GstCaps *outcaps = NULL;
 
+  gst_query_parse_allocation (query, &outcaps, NULL);
+
+  if (!outcaps)
+    return FALSE;
+
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-
-    if (!pool)
-      gst_query_parse_allocation (query, &outcaps, NULL);
 
     update_pool = TRUE;
   } else {
     GstVideoInfo vinfo;
 
-    gst_query_parse_allocation (query, &outcaps, NULL);
     gst_video_info_from_caps (&vinfo, outcaps);
     size = vinfo.size;
     min = max = 0;
     update_pool = FALSE;
   }
-
-  if (!outcaps)
-    return FALSE;
 
   has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, nullptr);
