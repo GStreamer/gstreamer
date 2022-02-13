@@ -54,12 +54,12 @@ struct _GstD3D11Format
   /* formats for texture processing */
   DXGI_FORMAT resource_format[GST_VIDEO_MAX_PLANES];
 
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
+  /* extra format used for unordered access view */
+  DXGI_FORMAT uav_format[GST_VIDEO_MAX_PLANES];
 
-GST_D3D11_API
-guint           gst_d3d11_dxgi_format_n_planes      (DXGI_FORMAT format);
+  /* cached flags */
+  D3D11_FORMAT_SUPPORT support_flags;
+};
 
 GST_D3D11_API
 gboolean        gst_d3d11_dxgi_format_get_size      (DXGI_FORMAT format,
@@ -75,6 +75,16 @@ GstVideoFormat  gst_d3d11_dxgi_format_to_gst        (DXGI_FORMAT format);
 
 GST_D3D11_API
 void            gst_d3d11_format_init               (GstD3D11Format * format);
+
+GST_D3D11_API
+guint           gst_d3d11_dxgi_format_get_resource_format (DXGI_FORMAT format,
+                                                           DXGI_FORMAT resource_format[GST_VIDEO_MAX_PLANES]);
+
+GST_D3D11_API
+guint           gst_d3d11_dxgi_format_get_alignment       (DXGI_FORMAT format);
+
+GST_D3D11_API
+const gchar *   gst_d3d11_dxgi_format_to_string           (DXGI_FORMAT format);
 
 G_END_DECLS
 

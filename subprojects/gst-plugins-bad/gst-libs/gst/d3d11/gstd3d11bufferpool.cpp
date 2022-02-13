@@ -147,6 +147,7 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   D3D11_TEXTURE2D_DESC *desc;
   const GstD3D11Format *format;
   gsize offset = 0;
+  guint align = 0;
   gint i;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
@@ -180,26 +181,24 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   }
 
   desc = priv->d3d11_params->desc;
+  align = gst_d3d11_dxgi_format_get_alignment (desc[0].Format);
 
   /* resolution of semi-planar formats must be multiple of 2 */
-  if (desc[0].Format == DXGI_FORMAT_NV12 || desc[0].Format == DXGI_FORMAT_P010
-      || desc[0].Format == DXGI_FORMAT_P016) {
-    if (desc[0].Width % 2 || desc[0].Height % 2) {
-      gint width, height;
-      GstVideoAlignment align;
+  if (align != 0 && (desc[0].Width % align || desc[0].Height % align)) {
+    gint width, height;
+    GstVideoAlignment video_align;
 
-      GST_WARNING_OBJECT (self, "Resolution %dx%d is not mutiple of 2, fixing",
-          desc[0].Width, desc[0].Height);
+    GST_WARNING_OBJECT (self, "Resolution %dx%d is not mutiple of %d, fixing",
+        desc[0].Width, desc[0].Height, align);
 
-      width = GST_ROUND_UP_2 (desc[0].Width);
-      height = GST_ROUND_UP_2 (desc[0].Height);
+    width = GST_ROUND_UP_N (desc[0].Width, align);
+    height = GST_ROUND_UP_N (desc[0].Height, align);
 
-      gst_video_alignment_reset (&align);
-      align.padding_right = width - desc[0].Width;
-      align.padding_bottom = height - desc[0].Height;
+    gst_video_alignment_reset (&video_align);
+    video_align.padding_right = width - desc[0].Width;
+    video_align.padding_bottom = height - desc[0].Height;
 
-      gst_d3d11_allocation_params_alignment (priv->d3d11_params, &align);
-    }
+    gst_d3d11_allocation_params_alignment (priv->d3d11_params, &video_align);
   }
 #ifndef GST_DISABLE_GST_DEBUG
   {

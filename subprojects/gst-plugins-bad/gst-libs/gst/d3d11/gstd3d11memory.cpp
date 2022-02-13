@@ -731,51 +731,16 @@ create_shader_resource_views (GstD3D11Memory * mem)
 
   device_handle = gst_d3d11_device_get_device_handle (mem->device);
 
-  switch (priv->desc.Format) {
-    case DXGI_FORMAT_B8G8R8A8_UNORM:
-    case DXGI_FORMAT_R8G8B8A8_UNORM:
-    case DXGI_FORMAT_R10G10B10A2_UNORM:
-    case DXGI_FORMAT_R8_UNORM:
-    case DXGI_FORMAT_R8G8_UNORM:
-    case DXGI_FORMAT_R16_UNORM:
-    case DXGI_FORMAT_R16G16_UNORM:
-    case DXGI_FORMAT_G8R8_G8B8_UNORM:
-    case DXGI_FORMAT_R8G8_B8G8_UNORM:
-    case DXGI_FORMAT_R16G16B16A16_UNORM:
-      num_views = 1;
-      formats[0] = priv->desc.Format;
-      break;
-    case DXGI_FORMAT_AYUV:
-    case DXGI_FORMAT_YUY2:
-      num_views = 1;
-      formats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-      break;
-    case DXGI_FORMAT_NV12:
-      num_views = 2;
-      formats[0] = DXGI_FORMAT_R8_UNORM;
-      formats[1] = DXGI_FORMAT_R8G8_UNORM;
-      break;
-    case DXGI_FORMAT_P010:
-    case DXGI_FORMAT_P016:
-      num_views = 2;
-      formats[0] = DXGI_FORMAT_R16_UNORM;
-      formats[1] = DXGI_FORMAT_R16G16_UNORM;
-      break;
-    case DXGI_FORMAT_Y210:
-      num_views = 1;
-      formats[0] = DXGI_FORMAT_R16G16B16A16_UNORM;
-      break;
-    case DXGI_FORMAT_Y410:
-      num_views = 1;
-      formats[0] = DXGI_FORMAT_R10G10B10A2_UNORM;
-      break;
-    default:
-      g_assert_not_reached ();
-      return FALSE;
+  num_views = gst_d3d11_dxgi_format_get_resource_format (priv->desc.Format,
+      formats);
+  if (!num_views) {
+    GST_ERROR_OBJECT (GST_MEMORY_CAST (mem)->allocator,
+        "Unknown resource formats for DXGI format %s (%d)",
+        gst_d3d11_dxgi_format_to_string (priv->desc.Format), priv->desc.Format);
+    return FALSE;
   }
 
-  if ((priv->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE) ==
-      D3D11_BIND_SHADER_RESOURCE) {
+  if ((priv->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE) != 0) {
     resource_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     resource_desc.Texture2D.MipLevels = 1;
 
@@ -786,7 +751,9 @@ create_shader_resource_views (GstD3D11Memory * mem)
 
       if (!gst_d3d11_result (hr, mem->device)) {
         GST_ERROR_OBJECT (GST_MEMORY_CAST (mem)->allocator,
-            "Failed to create %dth resource view (0x%x)", i, (guint) hr);
+            "Failed to create resource DXGI format %s (%d) for plane %d"
+            " view (0x%x)", gst_d3d11_dxgi_format_to_string (formats[i]),
+            formats[i], i, (guint) hr);
         goto error;
       }
     }
@@ -902,39 +869,16 @@ create_render_target_views (GstD3D11Memory * mem)
 
   device_handle = gst_d3d11_device_get_device_handle (mem->device);
 
-  switch (priv->desc.Format) {
-    case DXGI_FORMAT_B8G8R8A8_UNORM:
-    case DXGI_FORMAT_R8G8B8A8_UNORM:
-    case DXGI_FORMAT_R10G10B10A2_UNORM:
-    case DXGI_FORMAT_R8_UNORM:
-    case DXGI_FORMAT_R8G8_UNORM:
-    case DXGI_FORMAT_R16_UNORM:
-    case DXGI_FORMAT_R16G16_UNORM:
-      num_views = 1;
-      formats[0] = priv->desc.Format;
-      break;
-    case DXGI_FORMAT_AYUV:
-      num_views = 1;
-      formats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-      break;
-    case DXGI_FORMAT_NV12:
-      num_views = 2;
-      formats[0] = DXGI_FORMAT_R8_UNORM;
-      formats[1] = DXGI_FORMAT_R8G8_UNORM;
-      break;
-    case DXGI_FORMAT_P010:
-    case DXGI_FORMAT_P016:
-      num_views = 2;
-      formats[0] = DXGI_FORMAT_R16_UNORM;
-      formats[1] = DXGI_FORMAT_R16G16_UNORM;
-      break;
-    default:
-      g_assert_not_reached ();
-      return FALSE;
+  num_views = gst_d3d11_dxgi_format_get_resource_format (priv->desc.Format,
+      formats);
+  if (!num_views) {
+    GST_ERROR_OBJECT (GST_MEMORY_CAST (mem)->allocator,
+        "Unknown resource formats for DXGI format %s (%d)",
+        gst_d3d11_dxgi_format_to_string (priv->desc.Format), priv->desc.Format);
+    return FALSE;
   }
 
-  if ((priv->desc.BindFlags & D3D11_BIND_RENDER_TARGET) ==
-      D3D11_BIND_RENDER_TARGET) {
+  if ((priv->desc.BindFlags & D3D11_BIND_RENDER_TARGET) != 0) {
     render_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
     render_desc.Texture2D.MipSlice = 0;
 
@@ -945,7 +889,9 @@ create_render_target_views (GstD3D11Memory * mem)
           &priv->render_target_view[i]);
       if (!gst_d3d11_result (hr, mem->device)) {
         GST_ERROR_OBJECT (GST_MEMORY_CAST (mem)->allocator,
-            "Failed to create %dth render target view (0x%x)", i, (guint) hr);
+            "Failed to create resource DXGI format %s (%d) for plane %d"
+            " view (0x%x)", gst_d3d11_dxgi_format_to_string (formats[i]),
+            formats[i], i, (guint) hr);
         goto error;
       }
     }

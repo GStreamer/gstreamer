@@ -169,22 +169,19 @@ gst_d3d11_staging_buffer_pool_set_config (GstBufferPool * pool,
     }
   } else {
     guint width, height;
+    guint align;
 
     desc = &priv->desc[0];
 
     width = GST_VIDEO_INFO_WIDTH (&info);
     height = GST_VIDEO_INFO_HEIGHT (&info);
 
+    align = gst_d3d11_dxgi_format_get_alignment (format.dxgi_format);
+
     /* resolution of semi-planar formats must be multiple of 2 */
-    switch (format.dxgi_format) {
-      case DXGI_FORMAT_NV12:
-      case DXGI_FORMAT_P010:
-      case DXGI_FORMAT_P016:
-        width = GST_ROUND_UP_2 (width);
-        height = GST_ROUND_UP_2 (height);
-        break;
-      default:
-        break;
+    if (align != 0) {
+      width = GST_ROUND_UP_N (width, align);
+      height = GST_ROUND_UP_N (height, align);
     }
 
     desc->Width = width;
