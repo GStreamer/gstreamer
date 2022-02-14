@@ -353,6 +353,14 @@ GST_VIDEO_API
 gboolean        gst_navigation_event_parse_command            (GstEvent *event,
                                                                GstNavigationCommand *command);
 
+GST_VIDEO_API
+gboolean  gst_navigation_event_get_coordinates (GstEvent * event,
+                                                gdouble * x, gdouble * y);
+
+GST_VIDEO_API
+gboolean  gst_navigation_event_set_coordinates (GstEvent * event,
+                                                gdouble x, gdouble y);
+
 /* interface virtual function wrappers */
 
 GST_VIDEO_DEPRECATED_FOR(gst_navigation_send_event_simple)

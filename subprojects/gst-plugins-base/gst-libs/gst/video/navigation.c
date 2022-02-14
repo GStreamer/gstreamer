@@ -1103,3 +1103,78 @@ gst_navigation_event_parse_command (GstEvent * event,
 
   return ret;
 }
+
+/**
+ * gst_navigation_event_get_coordinates:
+ * @event: The #GstEvent to inspect.
+ * @x: (out) (optional): Pointer to a gdouble to receive the x coordinate of the
+ *     navigation event.
+ * @y: (out) (optional): Pointer to a gdouble to receive the y coordinate of the
+ *     navigation event.
+ *
+ * Try to retrieve x and y coordinates of a #GstNavigation event.
+ *
+ * Returns: A boolean indicating success.
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_navigation_event_get_coordinates (GstEvent * event,
+    gdouble * x, gdouble * y)
+{
+  GstNavigationEventType e_type;
+  const GstStructure *s;
+  gboolean ret = TRUE;
+
+  e_type = gst_navigation_event_get_type (event);
+  if (e_type != GST_NAVIGATION_EVENT_MOUSE_MOVE
+      && e_type != GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS
+      && e_type != GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE) {
+    return FALSE;
+  }
+
+  s = gst_event_get_structure (event);
+  if (x)
+    ret &= gst_structure_get_double (s, "pointer_x", x);
+  if (y)
+    ret &= gst_structure_get_double (s, "pointer_y", y);
+
+  WARN_IF_FAIL (ret, "Couldn't extract coordinates from the event");
+
+  return ret;
+}
+
+/**
+ * gst_navigation_event_set_coordinates:
+ * @event: The #GstEvent to modify.
+ * @x: The x coordinate to set.
+ * @y: The y coordinate to set.
+ *
+ * Try to set x and y coordinates on a #GstNavigation event. The event must
+ * be writable.
+ *
+ * Returns: A boolean indicating success.
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_navigation_event_set_coordinates (GstEvent * event, gdouble x, gdouble y)
+{
+  GstNavigationEventType e_type;
+  GstStructure *s;
+
+  g_return_val_if_fail (gst_event_is_writable (event), FALSE);
+
+  e_type = gst_navigation_event_get_type (event);
+  if (e_type != GST_NAVIGATION_EVENT_MOUSE_MOVE
+      && e_type != GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS
+      && e_type != GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE) {
+    return FALSE;
+  }
+
+  s = gst_event_writable_structure (event);
+  gst_structure_set (s, "pointer_x", G_TYPE_DOUBLE, x,
+      "pointer_y", G_TYPE_DOUBLE, y, NULL);
+
+  return TRUE;
+}
