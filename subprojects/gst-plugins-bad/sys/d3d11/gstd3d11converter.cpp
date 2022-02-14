@@ -291,7 +291,7 @@ static const gchar templ_PACKED_YUV_TO_SEMI_PLANAR_CHROMA_BODY[] =
 static const gchar templ_RGB_to_GRAY_BODY[] =
     "  float4 sample, rgba;\n"
     "  rgba.rgb = shaderTexture[0].Sample(samplerState, input.Texture).rgb;\n"
-    "  sample.x = rgb_to_yuv (sample.rgb).x;\n"
+    "  sample.x = rgb_to_yuv (rgba.rgb).x;\n"
     "  sample.y = 0.0;\n"
     "  sample.z = 0.0;\n"
     "  sample.a = 0.0;\n"
