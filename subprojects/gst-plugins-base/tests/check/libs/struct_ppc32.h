@@ -36,7 +36,7 @@ GstCheckABIStruct list[] = {
   {"GstFFTF64Complex", sizeof (GstFFTF64Complex), 16},
   {"GstFFTS16Complex", sizeof (GstFFTS16Complex), 4},
   {"GstFFTS32Complex", sizeof (GstFFTS32Complex), 8},
-  {"GstNavigationInterface", sizeof (GstNavigationInterface), 12},
+  {"GstNavigationInterface", sizeof (GstNavigationInterface), 16},
   {"gst_riff_acid", sizeof (gst_riff_acid), 24},
   {"gst_riff_dmlh", sizeof (gst_riff_dmlh), 4},
   {"gst_riff_index_entry", sizeof (gst_riff_index_entry), 16},

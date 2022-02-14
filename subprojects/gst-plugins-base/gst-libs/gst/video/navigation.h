@@ -44,6 +44,7 @@ typedef struct _GstNavigationInterface GstNavigationInterface;
  * GstNavigationInterface:
  * @iface: the parent interface
  * @send_event: sending a navigation event
+ * @send_event_simple: sending a navigation event (Since: 1.22)
  *
  * Navigation interface.
  */
@@ -51,7 +52,24 @@ struct _GstNavigationInterface {
   GTypeInterface iface;
 
   /* virtual functions */
+
+  /**
+   * GstNavigationInterface::send_event:
+   *
+   * sending a navigation event.
+   *
+   * Deprecated: 1.22: Use #GstNavigationInterface.send_event_simple() instead.
+   */
   void (*send_event) (GstNavigation *navigation, GstStructure *structure);
+
+  /**
+   * GstNavigationInterface::send_event_simple:
+   *
+   * sending a navigation event.
+   *
+   * Since: 1.22
+   */
+  void (*send_event_simple) (GstNavigation *navigation, GstEvent *event);
 };
 
 GST_VIDEO_API
@@ -337,25 +355,29 @@ gboolean        gst_navigation_event_parse_command            (GstEvent *event,
 
 /* interface virtual function wrappers */
 
-GST_VIDEO_API
-void    gst_navigation_send_event       (GstNavigation *navigation,
-                                         GstStructure *structure);
+GST_VIDEO_DEPRECATED_FOR(gst_navigation_send_event_simple)
+void    gst_navigation_send_event        (GstNavigation *navigation,
+                                          GstStructure *structure);
 
-GST_VIDEO_API
-void    gst_navigation_send_key_event   (GstNavigation *navigation,
-                                         const char *event, const char *key);
+GST_VIDEO_DEPRECATED_FOR(gst_navigation_send_event_simple)
+void    gst_navigation_send_key_event    (GstNavigation *navigation,
+                                          const char *event, const char *key);
 
-GST_VIDEO_API
-void    gst_navigation_send_mouse_event (GstNavigation *navigation,
-                                         const char *event, int button, double x, double y);
+GST_VIDEO_DEPRECATED_FOR(gst_navigation_send_event_simple)
+void    gst_navigation_send_mouse_event  (GstNavigation *navigation,
+                                          const char *event, int button, double x, double y);
 
-GST_VIDEO_API
+GST_VIDEO_DEPRECATED_FOR(gst_navigation_send_event_simple)
 void    gst_navigation_send_mouse_scroll_event (GstNavigation *navigation,
                                                 double x, double y, double delta_x, double delta_y);
 
+GST_VIDEO_DEPRECATED_FOR(gst_navigation_send_event_simple)
+void    gst_navigation_send_command      (GstNavigation *navigation,
+                                          GstNavigationCommand command);
+
 GST_VIDEO_API
-void    gst_navigation_send_command     (GstNavigation *navigation,
-                                         GstNavigationCommand command);
+void    gst_navigation_send_event_simple (GstNavigation *navigation,
+                                          GstEvent *event);
 
 G_END_DECLS
 

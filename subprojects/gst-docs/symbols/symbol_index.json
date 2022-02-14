@@ -12300,6 +12300,8 @@
   "GstNavigationInterface.iface",
   "GstNavigationInterface.send_event",
   "GstNavigationInterface::send_event",
+  "GstNavigationInterface.send_event_simple",
+  "GstNavigationInterface::send_event_simple",
   "GstNavigationMessageType",
   "GstNavigationQueryType",
   "GstNavigationtest",

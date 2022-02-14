@@ -65,10 +65,25 @@
 G_DEFINE_INTERFACE (GstNavigation, gst_navigation, 0);
 
 static void
+gst_navigation_default_send_event_simple (GstNavigation * navigation,
+    GstEvent * event)
+{
+  GstNavigationInterface *iface = GST_NAVIGATION_GET_INTERFACE (navigation);
+
+  if (iface->send_event) {
+    iface->send_event (navigation,
+        gst_structure_copy (gst_event_get_structure (event)));
+  } else {
+    gst_event_unref (event);
+  }
+}
+
+static void
 gst_navigation_default_init (GstNavigationInterface * iface)
 {
   /* default virtual functions */
   iface->send_event = NULL;
+  iface->send_event_simple = gst_navigation_default_send_event_simple;
 }
 
 /* The interface implementer should make sure that the object can handle
@@ -80,6 +95,8 @@ gst_navigation_send_event (GstNavigation * navigation, GstStructure * structure)
 
   if (iface->send_event) {
     iface->send_event (navigation, structure);
+  } else if (iface->send_event_simple) {
+    iface->send_event_simple (navigation, gst_event_new_navigation (structure));
   } else {
     gst_structure_free (structure);
   }
@@ -177,6 +194,32 @@ gst_navigation_send_command (GstNavigation * navigation,
   gst_navigation_send_event (navigation,
       gst_structure_new (GST_NAVIGATION_EVENT_NAME, "event", G_TYPE_STRING,
           "command", "command-code", G_TYPE_UINT, (guint) command, NULL));
+}
+
+/**
+ * gst_navigation_send_event_simple:
+ * @navigation: The navigation interface instance
+ * @event: The event to send
+ *
+ * Sends an event to the navigation interface.
+ * Since: 1.22
+ */
+void
+gst_navigation_send_event_simple (GstNavigation * navigation, GstEvent * event)
+{
+  GstNavigationInterface *iface = GST_NAVIGATION_GET_INTERFACE (navigation);
+
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION);
+
+  if (iface->send_event_simple) {
+    iface->send_event_simple (navigation, event);
+  } else if (iface->send_event) {
+    iface->send_event (navigation,
+        gst_structure_copy (gst_event_get_structure (event)));
+    gst_event_unref (event);
+  } else {
+    gst_event_unref (event);
+  }
 }
 
 /* Navigation Queries */
