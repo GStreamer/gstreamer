@@ -551,6 +551,7 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_RGBA:
       case GST_VIDEO_FORMAT_RGBx:
       case GST_VIDEO_FORMAT_RGB10A2_LE:
+      case GST_VIDEO_FORMAT_RGBA64_LE:
         g_assert (format->dxgi_format != DXGI_FORMAT_UNKNOWN);
         update_format_support_flag (self, format);
         break;
@@ -580,6 +581,8 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_Y444_10LE:
       case GST_VIDEO_FORMAT_Y444_12LE:
       case GST_VIDEO_FORMAT_Y444_16LE:
+      case GST_VIDEO_FORMAT_AYUV:
+      case GST_VIDEO_FORMAT_AYUV64:
       {
         g_assert (format->dxgi_format == DXGI_FORMAT_UNKNOWN);
         update_format_support_flag (self, format);

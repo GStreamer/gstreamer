@@ -126,12 +126,18 @@ static const gchar templ_REORDER_BODY[] =
     "  xyza.a = shaderTexture[0].Sample(samplerState, input.Texture).a * alpha_mul;\n"
     "  output.Plane_0 = xyza;\n";
 
+static const gchar templ_REORDER_SWIZZLE_BODY[] =
+    "  float4 xyza;\n"
+    "  xyza.%c%c%c = shaderTexture[0].Sample(samplerState, input.Texture).%c%c%c;\n"
+    "  xyza.%c = shaderTexture[0].Sample(samplerState, input.Texture).%c * alpha_mul;\n"
+    "  output.Plane_0 = xyza;\n";
+
 static const gchar templ_VUYA_to_RGB_BODY[] =
     "  float4 sample, rgba;\n"
-    "  sample.x  = shaderTexture[0].Sample(samplerState, input.Texture).z;\n"
-    "  sample.y  = shaderTexture[0].Sample(samplerState, input.Texture).y;\n"
-    "  sample.z  = shaderTexture[0].Sample(samplerState, input.Texture).x;\n"
-    "  sample.a  = shaderTexture[0].Sample(samplerState, input.Texture).a;\n"
+    "  sample.x  = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.y  = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.z  = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.a  = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
     "  rgba.rgb = yuv_to_rgb (sample.xyz);\n"
     "  rgba.a = sample.a;\n"
     "  output.Plane_0 = rgba;\n";
@@ -139,8 +145,8 @@ static const gchar templ_VUYA_to_RGB_BODY[] =
 static const gchar templ_RGB_to_VUYA_BODY[] =
     "  float4 sample, vuya;\n"
     "  sample = shaderTexture[0].Sample(samplerState, input.Texture);\n"
-    "  vuya.zyx = rgb_to_yuv (sample.rgb);\n"
-    "  vuya.a = sample.a;\n"
+    "  vuya.%c%c%c = rgb_to_yuv (sample.rgb);\n"
+    "  vuya.%c = sample.a;\n"
     "  output.Plane_0 = vuya;\n";
 
 static const gchar templ_PACKED_YUV_to_RGB_BODY[] =
@@ -233,40 +239,45 @@ static const gchar templ_PLANAR_TO_PLANAR_CHROMA_BODY[] =
 /* VUYA to YUV */
 static const gchar templ_VUYA_to_LUMA_BODY[] =
     "  float4 sample;\n"
-    "  sample.x = shaderTexture[0].Sample(samplerState, input.Texture).z;\n"
+    "  sample.x = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
     "  output.Plane_0 = float4(sample.x / %u, 0.0, 0.0, 0.0);\n";
 
 static const gchar templ_VUYA_TO_PLANAR_CHROMA_BODY[] =
     "  float4 sample;\n"
-    "  sample.yz = shaderTexture[0].Sample(samplerState, input.Texture).yx;\n"
+    "  sample.yz = shaderTexture[0].Sample(samplerState, input.Texture).%c%c;\n"
     "  output.Plane_0 = float4(sample.%c / %d, 0.0, 0.0, 0.0);\n"
     "  output.Plane_1 = float4(sample.%c / %d, 0.0, 0.0, 0.0);\n";
 
 static const gchar templ_VUYA_TO_SEMI_PLANAR_CHROMA_BODY[] =
     "  float2 sample;\n"
-    "  sample.xy = shaderTexture[0].Sample(samplerState, input.Texture).%c%c;\n"
-    "  output.Plane_0 = float4(sample.xy, 0.0, 0.0);\n";
+    "  sample.%c%c = shaderTexture[0].Sample(samplerState, input.Texture).%c%c;\n"
+    "  output.Plane_0 = float4(sample, 0.0, 0.0);\n";
 
 /* YUV to VUYA */
 static const gchar templ_PLANAR_to_VUYA_BODY[] =
-    "  float4 sample;\n"
+    "  float3 sample;\n"
+    "  float4 vuya;\n"
     "  sample.x = shaderTexture[0].Sample(samplerState, input.Texture).x * %u;\n"
     "  sample.%c = shaderTexture[1].Sample(samplerState, input.Texture).x * %u;\n"
     "  sample.%c = shaderTexture[2].Sample(samplerState, input.Texture).x * %u;\n"
-    "  output.Plane_0 = float4(sample.zyx, 1.0f);\n";
+    "  vuya.%c%c%c = sample;\n"
+    "  vuya.%c = 1.0f;\n"
+    "  output.Plane_0 = vuya;\n";
 
 static const gchar templ_SEMI_PLANAR_to_VUYA_BODY[] =
     "  float4 sample;\n"
-    "  sample.z = shaderTexture[0].Sample(samplerState, input.Texture).x;\n"
-    "  sample.xy = shaderTexture[1].Sample(samplerState, input.Texture).%c%c;\n"
-    "  output.Plane_0 = float4(sample.xyz, 1.0f);\n";
+    "  sample.%c = shaderTexture[0].Sample(samplerState, input.Texture).x;\n"
+    "  sample.%c%c = shaderTexture[1].Sample(samplerState, input.Texture).%c%c;\n"
+    "  sample.%c = 1.0f;\n"
+    "  output.Plane_0 = sample;\n";
 
 static const gchar templ_PACKED_YUV_to_VUYA_BODY[] =
     "  float4 sample;\n"
-    "  sample.z = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
-    "  sample.y = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
-    "  sample.x = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
-    "  output.Plane_0 = float4(sample.xyz, 1.0f);\n";
+    "  sample.%c = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.%c = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.%c = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
+    "  sample.%c = 1.0f;\n"
+    "  output.Plane_0 = sample;\n";
 
 /* packed YUV to (semi) planar YUV */
 static const gchar templ_PACKED_YUV_to_LUMA_BODY[] =
@@ -299,7 +310,7 @@ static const gchar templ_RGB_to_GRAY_BODY[] =
 
 static const gchar templ_VUYA_to_GRAY_BODY[] =
     "  float4 sample;\n"
-    "  sample.x = shaderTexture[0].Sample(samplerState, input.Texture).z;\n"
+    "  sample.x = shaderTexture[0].Sample(samplerState, input.Texture).%c;\n"
     "  sample.y = 0.0;\n"
     "  sample.z = 0.0;\n"
     "  sample.a = 0.0;\n"
@@ -340,10 +351,10 @@ static const gchar templ_GRAY_to_RGB_BODY[] =
 
 static const gchar templ_GRAY_to_VUYA_BODY[] =
     "  float4 sample;\n"
-    "  sample.z = shaderTexture[0].Sample(samplerState, input.Texture).x;\n"
-    "  sample.x = 0.5;\n"
-    "  sample.y = 0.5;\n"
-    "  sample.a = 1.0;\n"
+    "  sample.%c = shaderTexture[0].Sample(samplerState, input.Texture).x;\n"
+    "  sample.%c = 0.5;\n"
+    "  sample.%c = 0.5;\n"
+    "  sample.%c = 1.0;\n"
     "  output.Plane_0 = sample;\n";
 
 static const gchar templ_GRAY_to_LUMA_BODY[] =
@@ -802,6 +813,38 @@ get_semi_planar_component (const GstVideoInfo * info, gchar * u, gchar * v)
   }
 }
 
+static void
+get_vuya_component (const GstVideoInfo * info, gchar * y, gchar * u,
+    gchar * v, gchar * a)
+{
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_VUYA:
+      if (y)
+        *y = 'z';
+      if (u)
+        *u = 'y';
+      if (v)
+        *v = 'x';
+      if (a)
+        *a = 'a';
+      break;
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_AYUV64:
+      if (y)
+        *y = 'g';
+      if (u)
+        *u = 'b';
+      if (v)
+        *v = 'a';
+      if (a)
+        *a = 'r';
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+}
+
 static gboolean
 setup_convert_info_yuv_to_rgb (GstD3D11Converter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info)
@@ -813,8 +856,15 @@ setup_convert_info_yuv_to_rgb (GstD3D11Converter * self,
 
   switch (GST_VIDEO_INFO_FORMAT (in_info)) {
     case GST_VIDEO_FORMAT_VUYA:
-      info->ps_body[0] = g_strdup_printf (templ_VUYA_to_RGB_BODY);
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_AYUV64:
+    {
+      gchar y, u, v, a;
+      get_vuya_component (in_info, &y, &u, &v, &a);
+
+      info->ps_body[0] = g_strdup_printf (templ_VUYA_to_RGB_BODY, y, u, v, a);
       break;
+    }
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_VYUY:
@@ -885,8 +935,16 @@ setup_convert_info_rgb_to_yuv (GstD3D11Converter * self,
 
   switch (GST_VIDEO_INFO_FORMAT (out_info)) {
     case GST_VIDEO_FORMAT_VUYA:
-      info->ps_body[0] = g_strdup_printf (templ_RGB_to_VUYA_BODY);
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_AYUV64:
+    {
+      gchar y, u, v, a;
+
+      get_vuya_component (out_info, &y, &u, &v, &a);
+      info->ps_body[0] = g_strdup_printf (templ_RGB_to_VUYA_BODY, y, u, v, a);
+
       break;
+    }
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_P010_10LE:
@@ -1032,11 +1090,17 @@ setup_convert_info_vuya_to_vuya (GstD3D11Converter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info)
 {
   ConvertInfo *info = &self->convert_info;
+  gchar sy, su, sv, sa;
+  gchar dy, du, dv, da;
 
   info->templ = &templ_REORDER;
   info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
-  info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY);
+  get_vuya_component (in_info, &sy, &su, &sv, &sa);
+  get_vuya_component (out_info, &dy, &du, &dv, &da);
+
+  info->ps_body[0] = g_strdup_printf (templ_REORDER_SWIZZLE_BODY, dy, du, dv,
+      sy, su, sv, da, sa);
 
   return TRUE;
 }
@@ -1048,16 +1112,18 @@ setup_convert_info_vuya_to_planar (GstD3D11Converter * self,
   ConvertInfo *info = &self->convert_info;
   guint div;
   gchar u, v;
+  gchar sy, su, sv, sa;
 
   info->templ = &templ_REORDER;
   info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
   info->ps_output[1] = HLSL_PS_OUTPUT_TWO_PLANES_BODY;
 
   get_planar_component (out_info, &u, &v, &div);
+  get_vuya_component (in_info, &sy, &su, &sv, &sa);
 
-  info->ps_body[0] = g_strdup_printf (templ_VUYA_to_LUMA_BODY, div);
-  info->ps_body[1] =
-      g_strdup_printf (templ_VUYA_TO_PLANAR_CHROMA_BODY, u, div, v, div);
+  info->ps_body[0] = g_strdup_printf (templ_VUYA_to_LUMA_BODY, sy, div);
+  info->ps_body[1] = g_strdup_printf (templ_VUYA_TO_PLANAR_CHROMA_BODY,
+      su, sv, u, div, v, div);
 
   return TRUE;
 }
@@ -1069,16 +1135,18 @@ setup_convert_info_vuya_to_semi_planar (GstD3D11Converter * self,
   ConvertInfo *info = &self->convert_info;
   guint div = 1;
   gchar u, v;
+  gchar sy, su, sv, sa;
 
   info->templ = &templ_REORDER;
   info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
   info->ps_output[1] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
   get_semi_planar_component (out_info, &u, &v);
+  get_vuya_component (in_info, &sy, &su, &sv, &sa);
 
-  info->ps_body[0] = g_strdup_printf (templ_VUYA_to_LUMA_BODY, div);
-  info->ps_body[1] =
-      g_strdup_printf (templ_VUYA_TO_SEMI_PLANAR_CHROMA_BODY, v, u);
+  info->ps_body[0] = g_strdup_printf (templ_VUYA_to_LUMA_BODY, sy, div);
+  info->ps_body[1] = g_strdup_printf (templ_VUYA_TO_SEMI_PLANAR_CHROMA_BODY,
+      u, v, su, sv);
 
   return TRUE;
 }
@@ -1090,14 +1158,16 @@ setup_convert_info_planar_to_vuya (GstD3D11Converter * self,
   ConvertInfo *info = &self->convert_info;
   guint mul;
   gchar u, v;
+  gchar dy, du, dv, da;
 
   get_planar_component (in_info, &u, &v, &mul);
+  get_vuya_component (out_info, &dy, &du, &dv, &da);
 
   info->templ = &templ_REORDER;
   info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
 
-  info->ps_body[0] =
-      g_strdup_printf (templ_PLANAR_to_VUYA_BODY, mul, u, mul, v, mul);
+  info->ps_body[0] = g_strdup_printf (templ_PLANAR_to_VUYA_BODY,
+      mul, u, mul, v, mul, dy, du, dv, da);
 
   return TRUE;
 }
@@ -1108,6 +1178,7 @@ setup_convert_info_packed_yuv_to_vuya (GstD3D11Converter * self,
 {
   ConvertInfo *info = &self->convert_info;
   gchar y, u, v;
+  gchar dy, du, dv, da;
 
   info->templ = &templ_REORDER;
   info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
@@ -1117,7 +1188,10 @@ setup_convert_info_packed_yuv_to_vuya (GstD3D11Converter * self,
     return FALSE;
   }
 
-  info->ps_body[0] = g_strdup_printf (templ_PACKED_YUV_to_VUYA_BODY, y, u, v);
+  get_vuya_component (out_info, &dy, &du, &dv, &da);
+
+  info->ps_body[0] = g_strdup_printf (templ_PACKED_YUV_to_VUYA_BODY,
+      dy, y, du, u, dv, v, da);
 
   return TRUE;
 }
@@ -1128,13 +1202,15 @@ setup_convert_info_semi_planar_to_vuya (GstD3D11Converter * self,
 {
   ConvertInfo *info = &self->convert_info;
   gchar u, v;
+  gchar dy, du, dv, da;
 
   get_semi_planar_component (in_info, &u, &v);
+  get_vuya_component (out_info, &dy, &du, &dv, &da);
 
   info->templ = &templ_REORDER;
   info->ps_output[0] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
-
-  info->ps_body[0] = g_strdup_printf (templ_SEMI_PLANAR_to_VUYA_BODY, v, u);
+  info->ps_body[0] = g_strdup_printf (templ_SEMI_PLANAR_to_VUYA_BODY,
+      dy, du, dv, u, v, da);
 
   return TRUE;
 }
@@ -1226,8 +1302,12 @@ setup_convert_info_yuv_to_yuv (GstD3D11Converter * self,
   gboolean in_vuya, out_vuya;
   gboolean in_packed;
 
-  in_vuya = GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_VUYA;
-  out_vuya = GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_VUYA;
+  in_vuya = (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_VUYA ||
+      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_AYUV ||
+      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_AYUV64);
+  out_vuya = (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_VUYA ||
+      GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_AYUV ||
+      GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_AYUV64);
   in_planar = is_planar_format (in_info);
   in_packed = (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_YUY2 ||
       GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_UYVY ||
@@ -1313,8 +1393,17 @@ setup_convert_info_yuv_to_gray (GstD3D11Converter * self,
 
   switch (GST_VIDEO_INFO_FORMAT (in_info)) {
     case GST_VIDEO_FORMAT_VUYA:
-      info->ps_body[0] = g_strdup_printf (templ_VUYA_to_GRAY_BODY);
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_AYUV64:
+    {
+      gchar y;
+
+      get_vuya_component (in_info, &y, nullptr, nullptr, nullptr);
+
+      info->ps_body[0] = g_strdup_printf (templ_VUYA_to_GRAY_BODY, y);
+
       break;
+    }
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_I420_10LE:
@@ -1412,8 +1501,15 @@ setup_convert_info_gray_to_yuv (GstD3D11Converter * self,
 
   switch (GST_VIDEO_INFO_FORMAT (out_info)) {
     case GST_VIDEO_FORMAT_VUYA:
-      info->ps_body[0] = g_strdup_printf (templ_GRAY_to_VUYA_BODY);
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_AYUV64:
+    {
+      gchar y, u, v, a;
+
+      get_vuya_component (out_info, &y, &u, &v, &a);
+      info->ps_body[0] = g_strdup_printf (templ_GRAY_to_VUYA_BODY, y, u, v, a);
       break;
+    }
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_I420_10LE:

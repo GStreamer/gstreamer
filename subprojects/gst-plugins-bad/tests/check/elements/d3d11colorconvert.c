@@ -29,6 +29,8 @@
 #include <gst/check/gstharness.h>
 #include <gst/video/video.h>
 
+static const gchar *run_visual_test = NULL;
+
 /* enable this define to see color conversion result with videosink */
 #define RUN_VISUAL_TEST 0
 
@@ -48,11 +50,11 @@ static const guint8 bgra_reorder_data[] = { 0x72, 0x24, 0x49, 0xff };
 static const gchar *YUV_FORMATS[] = {
   "VUYA", "NV12", "P010_10LE", "P012_LE", "P016_LE", "I420", "I420_10LE",
   "I420_12LE", "YV12", "NV21", "Y444", "Y444_10LE", "Y444_12LE", "Y444_16LE",
-  "Y42B", "I422_10LE", "I422_12LE",
+  "Y42B", "I422_10LE", "I422_12LE", "AYUV", "AYUV64"
 };
 
 static const gchar *RGB_FORMATS[] = {
-  "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx",
+  "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx", "RGBA64_LE"
 };
 
 static const gchar *PACKED_YUV_FORMATS[] = {
@@ -157,7 +159,8 @@ run_convert_pipelne (const gchar * in_format, const gchar * out_format)
       g_strdup_printf ("videotestsrc num-buffers=1 is-live=true ! "
       "video/x-raw,format=%s,framerate=3/1 ! d3d11upload ! "
       "d3d11convert ! d3d11download ! video/x-raw,format=%s ! "
-      "videoconvert ! d3d11videosink", in_format, out_format);
+      "videoconvert ! %s", in_format, out_format,
+      run_visual_test ? "d3d11videosink" : "fakesink");
   GstElement *pipeline;
 
   pipeline = gst_parse_launch (pipeline_str, NULL);
@@ -351,11 +354,15 @@ d3d11colorconvert_suite (void)
 {
   Suite *s = suite_create ("d3d11colorconvert");
   TCase *tc_basic = tcase_create ("general");
-  const gchar *run_visual_test = g_getenv ("RUN_VISUAL_TEST");
+
+  run_visual_test = g_getenv ("ENABLE_D3D11_VISUAL_TEST");
 
   suite_add_tcase (s, tc_basic);
   tcase_add_test (tc_basic, test_d3d11_color_convert_rgba_reorder);
-  if (run_visual_test != NULL) {
+
+  /* XXX: Some methods for device's capability checking and initialization
+   * are plugin internal. Enable conversion tests only when it's enabled */
+  if (g_getenv ("ENABLE_D3D11_CONVERSION_TEST")) {
     tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_yuv);
     tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_rgb);
     tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_gray);
