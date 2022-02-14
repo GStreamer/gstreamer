@@ -759,6 +759,7 @@ build documentation:
 # https://gitlab.com/gitlab-org/gitlab/-/issues/341737
 cerbero trigger:
   stage: build
+  timeout: '3h'
   extends:
     - '.fedora image'
     - '.fdo.suffixed-image@fedora'
