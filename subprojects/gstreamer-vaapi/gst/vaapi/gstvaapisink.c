@@ -896,40 +896,34 @@ gst_vaapisink_color_balance_iface_init (GstColorBalanceInterface * iface)
 
 static void
 gst_vaapisink_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure)
+    GstEvent * event)
 {
   GstVaapiSink *const sink = GST_VAAPISINK (navigation);
   GstPad *peer;
 
   if (!sink->window) {
-    gst_structure_free (structure);
+    gst_event_unref (event);
     return;
   }
 
   if ((peer = gst_pad_get_peer (GST_VAAPI_PLUGIN_BASE_SINK_PAD (sink)))) {
-    GstEvent *event;
     GstVaapiRectangle *disp_rect = &sink->display_rect;
     gdouble x, y, xscale = 1.0, yscale = 1.0;
-
-    event = gst_event_new_navigation (structure);
 
     /* We calculate scaling using the original video frames geometry to include
        pixel aspect ratio scaling. */
     xscale = (gdouble) sink->video_width / disp_rect->width;
     yscale = (gdouble) sink->video_height / disp_rect->height;
 
+    event = gst_event_make_writable (event);
+
     /* Converting pointer coordinates to the non scaled geometry */
-    if (gst_structure_get_double (structure, "pointer_x", &x)) {
+    if (gst_navigation_event_get_coordinates (event, &x, &y)) {
       x = MIN (x, disp_rect->x + disp_rect->width);
       x = MAX (x - disp_rect->x, 0);
-      gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
-          (gdouble) x * xscale, NULL);
-    }
-    if (gst_structure_get_double (structure, "pointer_y", &y)) {
       y = MIN (y, disp_rect->y + disp_rect->height);
       y = MAX (y - disp_rect->y, 0);
-      gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
-          (gdouble) y * yscale, NULL);
+      gst_navigation_event_set_coordinates (event, x * xscale, y * yscale);
     }
 
     if (!gst_pad_send_event (peer, gst_event_ref (event))) {
@@ -946,7 +940,7 @@ gst_vaapisink_navigation_send_event (GstNavigation * navigation,
 static void
 gst_vaapisink_navigation_iface_init (GstNavigationInterface * iface)
 {
-  iface->send_event = gst_vaapisink_navigation_send_event;
+  iface->send_event_simple = gst_vaapisink_navigation_send_event;
 }
 
 /* ------------------------------------------------------------------------ */

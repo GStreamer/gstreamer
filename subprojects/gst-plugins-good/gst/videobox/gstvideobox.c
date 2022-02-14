@@ -3187,41 +3187,28 @@ static gboolean
 gst_video_box_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (trans);
-  GstStructure *new_structure;
-  const GstStructure *structure;
-  const gchar *event_name;
+  GstNavigationEventType type;
   gdouble pointer_x;
   gdouble pointer_y;
 
   GST_OBJECT_LOCK (video_box);
+  type = gst_navigation_event_get_type (event);
   if (GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION &&
-      (video_box->box_left != 0 || video_box->box_top != 0)) {
-    structure = gst_event_get_structure (event);
-    event_name = gst_structure_get_string (structure, "event");
+      (video_box->box_left != 0 || video_box->box_top != 0) &&
+      (type == GST_NAVIGATION_EVENT_MOUSE_MOVE
+          || type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS
+          || type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE)) {
+    if (gst_navigation_event_get_coordinates (event, &pointer_x, &pointer_y)) {
+      gdouble new_pointer_x, new_pointer_y;
 
-    if (event_name &&
-        (strcmp (event_name, "mouse-move") == 0 ||
-            strcmp (event_name, "mouse-button-press") == 0 ||
-            strcmp (event_name, "mouse-button-release") == 0)) {
-      if (gst_structure_get_double (structure, "pointer_x", &pointer_x) &&
-          gst_structure_get_double (structure, "pointer_y", &pointer_y)) {
-        gdouble new_pointer_x, new_pointer_y;
-        GstEvent *new_event;
+      event = gst_event_make_writable (event);
+      new_pointer_x = pointer_x + video_box->box_left;
+      new_pointer_y = pointer_y + video_box->box_top;
 
-        new_pointer_x = pointer_x + video_box->box_left;
-        new_pointer_y = pointer_y + video_box->box_top;
-
-        new_structure = gst_structure_copy (structure);
-        gst_structure_set (new_structure,
-            "pointer_x", G_TYPE_DOUBLE, (gdouble) (new_pointer_x),
-            "pointer_y", G_TYPE_DOUBLE, (gdouble) (new_pointer_y), NULL);
-
-        new_event = gst_event_new_navigation (new_structure);
-        gst_event_unref (event);
-        event = new_event;
-      } else {
-        GST_WARNING_OBJECT (video_box, "Failed to read navigation event");
-      }
+      gst_navigation_event_set_coordinates (event, new_pointer_x,
+          new_pointer_y);
+    } else {
+      GST_WARNING_OBJECT (video_box, "Failed to read navigation event");
     }
   }
   GST_OBJECT_UNLOCK (video_box);

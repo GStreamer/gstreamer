@@ -605,8 +605,8 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
             default:
               GST_DEBUG_OBJECT (dfbvideosink, "key press event %c !",
                   event.input.key_symbol);
-              gst_navigation_send_key_event (GST_NAVIGATION (dfbvideosink),
-                  "key-press", "prout");
+              gst_dfbvideosink_navigation_send_event
+                  (gst_navigation_event_new_key_press ("prout"));
           }
         } else if (event.input.type == DIET_BUTTONPRESS) {
           gint x, y;
@@ -616,8 +616,9 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
           GST_DEBUG_OBJECT (dfbvideosink, "button %d pressed at %dx%d",
               event.input.button, x, y);
 
-          gst_navigation_send_mouse_event (GST_NAVIGATION (dfbvideosink),
-              "mouse-button-press", event.input.button, x, y);
+          gst_dfbvideosink_navigation_send_event
+              (gst_navigation_event_new_mouse_button_press (event.input.button,
+                  x, y));
         } else if (event.input.type == DIET_BUTTONRELEASE) {
           gint x, y;
 
@@ -626,14 +627,15 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
           GST_DEBUG_OBJECT (dfbvideosink, "button %d released at %dx%d",
               event.input.button, x, y);
 
-          gst_navigation_send_mouse_event (GST_NAVIGATION (dfbvideosink),
-              "mouse-button-release", event.input.button, x, y);
+          gst_dfbvideosink_navigation_send_event
+              (gst_navigation_event_new_mouse_button_release
+              (event.input.button, x, y));
         } else if (event.input.type == DIET_AXISMOTION) {
           gint x, y;
 
           dfbvideosink->layer->GetCursorPosition (dfbvideosink->layer, &x, &y);
-          gst_navigation_send_mouse_event (GST_NAVIGATION (dfbvideosink),
-              "mouse-move", 0, x, y);
+          gst_dfbvideosink_navigation_send_event
+              (gst_navigation_event_new_mouse_move (x, y));
         } else {
           GST_WARNING_OBJECT (dfbvideosink, "unhandled event type %d",
               event.input.type);
@@ -1983,10 +1985,9 @@ beach:
 
 static void
 gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure)
+    GstEvent * event)
 {
   GstDfbVideoSink *dfbvideosink = GST_DFBVIDEOSINK (navigation);
-  GstEvent *event;
   GstVideoRectangle dst = { 0, };
   GstVideoRectangle src = { 0, };
   GstVideoRectangle result;
@@ -1999,13 +2000,15 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
   dst.h = dfbvideosink->out_height;
   gst_video_sink_center_rect (src, dst, &result, dfbvideosink->hw_scaling);
 
-  event = gst_event_new_navigation (structure);
+  event = gst_event_make_writable (event);
 
   /* Our coordinates can be wrong here if we centered the video */
 
   /* Converting pointer coordinates to the non scaled geometry */
-  if (gst_structure_get_double (structure, "pointer_x", &old_x)) {
+  if gst_navigation_event_get_coordinates
+    (event, &old_x, &old_y) {
     x = old_x;
+    y = old_y;
 
     if (x >= result.x && x <= (result.x + result.w)) {
       x -= result.x;
@@ -2014,13 +2017,6 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
     } else {
       x = 0;
     }
-    GST_DEBUG_OBJECT (dfbvideosink, "translated navigation event x "
-        "coordinate from %f to %f", old_x, x);
-    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
-  }
-  if (gst_structure_get_double (structure, "pointer_y", &old_y)) {
-    y = old_y;
-
     if (y >= result.y && y <= (result.y + result.h)) {
       y -= result.y;
       y *= dfbvideosink->video_height;
@@ -2028,14 +2024,17 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
     } else {
       y = 0;
     }
+
+    GST_DEBUG_OBJECT (dfbvideosink, "translated navigation event x "
+        "coordinate from %f to %f", old_x, x);
     GST_DEBUG_OBJECT (dfbvideosink, "translated navigation event y "
         "coordinate from %fd to %fd", old_y, y);
-    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
-  }
+    gst_navigation_event_set_coordinates (event, x, y);
+    }
 
   pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (dfbvideosink));
 
-  if (GST_IS_PAD (pad) && GST_IS_EVENT (event)) {
+  if (GST_IS_PAD (pad)) {
     if (!gst_pad_send_event (pad, gst_event_ref (event))) {
       /* If upstream didn't handle the event we'll post a message with it
        * for the application in case it wants to do something with it */
@@ -2051,7 +2050,7 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
 static void
 gst_dfbvideosink_navigation_init (GstNavigationInterface * iface)
 {
-  iface->send_event = gst_dfbvideosink_navigation_send_event;
+  iface->send_event_simple = gst_dfbvideosink_navigation_send_event;
 }
 
 static void

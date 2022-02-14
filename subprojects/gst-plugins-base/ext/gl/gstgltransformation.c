@@ -658,7 +658,6 @@ static gboolean
 gst_gl_transformation_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstGLTransformation *transformation = GST_GL_TRANSFORMATION (trans);
-  GstStructure *structure;
   gboolean ret;
 
   GST_DEBUG_OBJECT (trans, "handling %s event", GST_EVENT_TYPE_NAME (event));
@@ -666,12 +665,9 @@ gst_gl_transformation_src_event (GstBaseTransform * trans, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:{
       gdouble x, y;
-      event =
-          GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
+      event = gst_event_make_writable (event);
 
-      structure = (GstStructure *) gst_event_get_structure (event);
-      if (gst_structure_get_double (structure, "pointer_x", &x) &&
-          gst_structure_get_double (structure, "pointer_y", &y)) {
+      if (gst_navigation_event_get_coordinates (event, &x, &y)) {
         gdouble new_x, new_y;
 
         if (!_screen_coord_to_model_coord (transformation, x, y, &new_x,
@@ -680,8 +676,7 @@ gst_gl_transformation_src_event (GstBaseTransform * trans, GstEvent * event)
           return TRUE;
         }
 
-        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, new_x,
-            "pointer_y", G_TYPE_DOUBLE, new_y, NULL);
+        gst_navigation_event_set_coordinates (event, x, y);
       }
       break;
     }

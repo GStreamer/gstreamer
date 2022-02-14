@@ -1223,7 +1223,6 @@ gst_video_flip_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstVideoFlip *vf = GST_VIDEO_FLIP (trans);
   gdouble new_x, new_y, x, y;
-  GstStructure *structure;
   gboolean ret;
   GstVideoInfo *out_info = &GST_VIDEO_FILTER (trans)->out_info;
 
@@ -1231,12 +1230,9 @@ gst_video_flip_src_event (GstBaseTransform * trans, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
-      event =
-          GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
+      event = gst_event_make_writable (event);
 
-      structure = (GstStructure *) gst_event_get_structure (event);
-      if (gst_structure_get_double (structure, "pointer_x", &x) &&
-          gst_structure_get_double (structure, "pointer_y", &y)) {
+      if (gst_navigation_event_get_coordinates (event, &x, &y)) {
         GST_DEBUG_OBJECT (vf, "converting %fx%f", x, y);
         GST_OBJECT_LOCK (vf);
         switch (vf->active_method) {
@@ -1275,8 +1271,7 @@ gst_video_flip_src_event (GstBaseTransform * trans, GstEvent * event)
         }
         GST_OBJECT_UNLOCK (vf);
         GST_DEBUG_OBJECT (vf, "to %fx%f", new_x, new_y);
-        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, new_x,
-            "pointer_y", G_TYPE_DOUBLE, new_y, NULL);
+        gst_navigation_event_set_coordinates (event, new_x, new_y);
       }
       break;
     default:

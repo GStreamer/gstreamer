@@ -59,7 +59,7 @@ gst_navigationtest_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstVideoInfo *info;
   GstNavigationtest *navtest;
-  const gchar *type;
+  GstNavigationEventType type;
 
   navtest = GST_NAVIGATIONTEST (trans);
 
@@ -68,38 +68,44 @@ gst_navigationtest_src_event (GstBaseTransform * trans, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
     {
-      const GstStructure *s = gst_event_get_structure (event);
       gint fps_n, fps_d;
 
       fps_n = GST_VIDEO_INFO_FPS_N (info);
       fps_d = GST_VIDEO_INFO_FPS_D (info);
 
-      type = gst_structure_get_string (s, "event");
-      if (g_str_equal (type, "mouse-move")) {
-        gst_structure_get_double (s, "pointer_x", &navtest->x);
-        gst_structure_get_double (s, "pointer_y", &navtest->y);
-      } else if (g_str_equal (type, "mouse-button-press")) {
-        ButtonClick *click = g_new (ButtonClick, 1);
+      type = gst_navigation_event_get_type (event);
+      switch (type) {
+        case GST_NAVIGATION_EVENT_MOUSE_MOVE:{
+          gst_navigation_event_get_coordinates (event, &navtest->x,
+              &navtest->y);
+          break;
+        }
+        case GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS:{
+          ButtonClick *click = g_new (ButtonClick, 1);
 
-        gst_structure_get_double (s, "pointer_x", &click->x);
-        gst_structure_get_double (s, "pointer_y", &click->y);
-        click->images_left = (fps_n + fps_d - 1) / fps_d;
-        /* green */
-        click->cy = 150;
-        click->cu = 46;
-        click->cv = 21;
-        navtest->clicks = g_slist_prepend (navtest->clicks, click);
-      } else if (g_str_equal (type, "mouse-button-release")) {
-        ButtonClick *click = g_new (ButtonClick, 1);
+          gst_navigation_event_get_coordinates (event, &click->x, &click->y);
+          click->images_left = (fps_n + fps_d - 1) / fps_d;
+          /* green */
+          click->cy = 150;
+          click->cu = 46;
+          click->cv = 21;
+          navtest->clicks = g_slist_prepend (navtest->clicks, click);
+          break;
+        }
+        case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:{
+          ButtonClick *click = g_new (ButtonClick, 1);
 
-        gst_structure_get_double (s, "pointer_x", &click->x);
-        gst_structure_get_double (s, "pointer_y", &click->y);
-        click->images_left = (fps_n + fps_d - 1) / fps_d;
-        /* red */
-        click->cy = 76;
-        click->cu = 85;
-        click->cv = 255;
-        navtest->clicks = g_slist_prepend (navtest->clicks, click);
+          gst_navigation_event_get_coordinates (event, &click->x, &click->y);
+          click->images_left = (fps_n + fps_d - 1) / fps_d;
+          /* red */
+          click->cy = 76;
+          click->cu = 85;
+          click->cv = 255;
+          navtest->clicks = g_slist_prepend (navtest->clicks, click);
+          break;
+        }
+        default:
+          break;
       }
       break;
     }

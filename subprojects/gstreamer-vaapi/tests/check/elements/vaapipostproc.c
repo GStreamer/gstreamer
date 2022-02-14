@@ -155,8 +155,7 @@ static void
 vpp_test_mouse_events (VppTestContext * ctx,
     const VppTestCoordinateParams * const params, const size_t nparams)
 {
-  GstStructure *structure;
-  GstEvent *event;
+  GstEvent *event = NULL;
   VppTestCoordinate probed = { 0, };
   guint i, j;
 
@@ -180,13 +179,23 @@ vpp_test_mouse_events (VppTestContext * ctx,
     for (j = 0; j < G_N_ELEMENTS (mouse_events); ++j) {
       probed.x = probed.y = -1;
 
+      switch (j) {
+        case 0:
+          event = gst_navigation_event_new_mouse_move (params[i].send.x,
+              params[i].send.y);
+          break;
+        case 1:
+          event = gst_navigation_event_new_mouse_button_press (0,
+              params[i].send.x, params[i].send.y);
+          break;
+        case 2:
+          event = gst_navigation_event_new_mouse_button_release (0,
+              params[i].send.x, params[i].send.y);
+          break;
+      }
+
       GST_LOG ("sending %s event %fx%f", mouse_events[j], params[i].send.x,
           params[i].send.y);
-      structure = gst_structure_new ("application/x-gst-navigation", "event",
-          G_TYPE_STRING, mouse_events[j],
-          "pointer_x", G_TYPE_DOUBLE, params[i].send.x,
-          "pointer_y", G_TYPE_DOUBLE, params[i].send.y, NULL);
-      event = gst_event_new_navigation (structure);
       gst_element_send_event (ctx->pipeline, event);
 
       GST_LOG ("probed %s event %fx%f", mouse_events[j], probed.x, probed.y);

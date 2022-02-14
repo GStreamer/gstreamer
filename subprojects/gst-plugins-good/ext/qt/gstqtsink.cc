@@ -558,16 +558,15 @@ config_failed:
 
 static void
 gst_qt_sink_navigation_send_event (GstNavigation * navigation,
-                                         GstStructure * structure)
+                                   GstEvent * event)
 {
   GstQtSink *qt_sink = GST_QT_SINK (navigation);
-  GstEvent *event;
   GstPad *pad;
 
-  event = gst_event_new_navigation (structure);
   pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (qt_sink));
 
-  GST_TRACE_OBJECT (qt_sink, "navigation event %" GST_PTR_FORMAT, structure);
+  GST_TRACE_OBJECT (qt_sink, "navigation event %" GST_PTR_FORMAT,
+      gst_event_get_structure(event));
 
   if (GST_IS_PAD (pad) && GST_IS_EVENT (event)) {
     if (!gst_pad_send_event (pad, gst_event_ref (event))) {
@@ -583,5 +582,5 @@ gst_qt_sink_navigation_send_event (GstNavigation * navigation,
 
 static void gst_qt_sink_navigation_interface_init (GstNavigationInterface * iface)
 {
-  iface->send_event = gst_qt_sink_navigation_send_event;
+  iface->send_event_simple = gst_qt_sink_navigation_send_event;
 }

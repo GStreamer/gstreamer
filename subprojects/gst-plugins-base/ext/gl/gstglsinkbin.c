@@ -447,20 +447,17 @@ gst_gl_sink_bin_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
-gst_gl_sink_bin_navigation_send_event (GstNavigation * navigation, GstStructure
-    * structure)
+gst_gl_sink_bin_navigation_send_event (GstNavigation * navigation,
+    GstEvent * event)
 {
   GstGLSinkBin *self = GST_GL_SINK_BIN (navigation);
   GstElement *nav =
       gst_bin_get_by_interface (GST_BIN (self), GST_TYPE_NAVIGATION);
 
   if (nav) {
-    gst_navigation_send_event (GST_NAVIGATION (nav), structure);
-    structure = NULL;
+    gst_navigation_send_event_simple (GST_NAVIGATION (nav), event);
     gst_object_unref (nav);
   } else {
-    GstEvent *event = gst_event_new_navigation (structure);
-    structure = NULL;
     gst_element_send_event (GST_ELEMENT (self), event);
   }
 }
@@ -470,7 +467,7 @@ gst_gl_sink_bin_navigation_interface_init (gpointer g_iface,
     gpointer g_iface_data)
 {
   GstNavigationInterface *iface = (GstNavigationInterface *) g_iface;
-  iface->send_event = gst_gl_sink_bin_navigation_send_event;
+  iface->send_event_simple = gst_gl_sink_bin_navigation_send_event;
 }
 
 static void

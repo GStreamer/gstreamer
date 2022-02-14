@@ -2175,7 +2175,8 @@ navigation_cmd_cb (GtkButton * button, PlaybackApp * app)
   }
 
   if (cmd != GST_NAVIGATION_COMMAND_INVALID)
-    gst_navigation_send_command (GST_NAVIGATION (app->navigation_element), cmd);
+    gst_navigation_send_event_simple (GST_NAVIGATION (app->navigation_element),
+        gst_navigation_event_new_command (cmd));
 }
 
 #if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
@@ -2271,8 +2272,9 @@ button_press_cb (GtkWidget * widget, GdkEventButton * event, PlaybackApp * app)
   gtk_widget_grab_focus (widget);
 
   if (app->navigation_element)
-    gst_navigation_send_mouse_event (GST_NAVIGATION (app->navigation_element),
-        "mouse-button-press", event->button, event->x, event->y);
+    gst_navigation_send_event_simple (GST_NAVIGATION (app->navigation_element),
+        gst_navigation_event_new_mouse_button_press (event->button, event->x,
+            event->y));
 
   return FALSE;
 }
@@ -2282,8 +2284,9 @@ button_release_cb (GtkWidget * widget, GdkEventButton * event,
     PlaybackApp * app)
 {
   if (app->navigation_element)
-    gst_navigation_send_mouse_event (GST_NAVIGATION (app->navigation_element),
-        "mouse-button-release", event->button, event->x, event->y);
+    gst_navigation_send_event_simple (GST_NAVIGATION (app->navigation_element),
+        gst_navigation_event_new_mouse_button_release (event->button, event->x,
+            event->y));
 
   return FALSE;
 }
@@ -2292,8 +2295,8 @@ static gboolean
 key_press_cb (GtkWidget * widget, GdkEventKey * event, PlaybackApp * app)
 {
   if (app->navigation_element)
-    gst_navigation_send_key_event (GST_NAVIGATION (app->navigation_element),
-        "key-press", gdk_keyval_name (event->keyval));
+    gst_navigation_send_event_simple (GST_NAVIGATION (app->navigation_element),
+        gst_navigation_event_new_key_press (gdk_keyval_name (event->keyval)));
 
   return FALSE;
 }
@@ -2302,8 +2305,8 @@ static gboolean
 key_release_cb (GtkWidget * widget, GdkEventKey * event, PlaybackApp * app)
 {
   if (app->navigation_element)
-    gst_navigation_send_key_event (GST_NAVIGATION (app->navigation_element),
-        "key-release", gdk_keyval_name (event->keyval));
+    gst_navigation_send_event_simple (GST_NAVIGATION (app->navigation_element),
+        gst_navigation_event_new_key_release (gdk_keyval_name (event->keyval)));
 
   return FALSE;
 }
@@ -2312,8 +2315,8 @@ static gboolean
 motion_notify_cb (GtkWidget * widget, GdkEventMotion * event, PlaybackApp * app)
 {
   if (app->navigation_element)
-    gst_navigation_send_mouse_event (GST_NAVIGATION (app->navigation_element),
-        "mouse-move", 0, event->x, event->y);
+    gst_navigation_send_event_simple (GST_NAVIGATION (app->navigation_element),
+        gst_navigation_event_new_mouse_move (event->x, event->y));
 
   return FALSE;
 }

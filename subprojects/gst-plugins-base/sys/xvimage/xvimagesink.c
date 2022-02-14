@@ -453,8 +453,8 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
 
     GST_DEBUG ("xvimagesink pointer moved over window at %d,%d",
         pointer_x, pointer_y);
-    gst_navigation_send_mouse_event (GST_NAVIGATION (xvimagesink),
-        "mouse-move", 0, e.xbutton.x, e.xbutton.y);
+    gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
+        gst_navigation_event_new_mouse_move (e.xbutton.x, e.xbutton.y));
 
     g_mutex_lock (&xvimagesink->flow_lock);
     g_mutex_lock (&xvimagesink->context->lock);
@@ -478,16 +478,18 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
            events for interactivity/navigation */
         GST_DEBUG ("xvimagesink button %d pressed over window at %d,%d",
             e.xbutton.button, e.xbutton.x, e.xbutton.y);
-        gst_navigation_send_mouse_event (GST_NAVIGATION (xvimagesink),
-            "mouse-button-press", e.xbutton.button, e.xbutton.x, e.xbutton.y);
+        gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
+            gst_navigation_event_new_mouse_button_press (e.xbutton.button,
+                e.xbutton.x, e.xbutton.y));
         break;
       case ButtonRelease:
         /* Mouse button released over our window. We send upstream
            events for interactivity/navigation */
         GST_DEBUG ("xvimagesink button %d released over window at %d,%d",
             e.xbutton.button, e.xbutton.x, e.xbutton.y);
-        gst_navigation_send_mouse_event (GST_NAVIGATION (xvimagesink),
-            "mouse-button-release", e.xbutton.button, e.xbutton.x, e.xbutton.y);
+        gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
+            gst_navigation_event_new_mouse_button_release (e.xbutton.button,
+                e.xbutton.x, e.xbutton.y));
         break;
       case KeyPress:
       case KeyRelease:
@@ -510,8 +512,10 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
         GST_DEBUG_OBJECT (xvimagesink,
             "key %d pressed over window at %d,%d (%s)",
             e.xkey.keycode, e.xkey.x, e.xkey.y, key_str);
-        gst_navigation_send_key_event (GST_NAVIGATION (xvimagesink),
-            e.type == KeyPress ? "key-press" : "key-release", key_str);
+        gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
+            (e.type == KeyPress) ?
+            gst_navigation_event_new_key_press (key_str) :
+            gst_navigation_event_new_key_release (key_str));
         break;
       default:
         GST_DEBUG_OBJECT (xvimagesink, "xvimagesink unhandled X event (%d)",
@@ -1147,11 +1151,10 @@ no_pool:
 /* Interfaces stuff */
 static void
 gst_xv_image_sink_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure)
+    GstEvent * event)
 {
   GstXvImageSink *xvimagesink = GST_XV_IMAGE_SINK (navigation);
   gboolean handled = FALSE;
-  GstEvent *event = NULL;
 
   GstVideoRectangle src = { 0, };
   GstVideoRectangle dst = { 0, };
@@ -1164,7 +1167,7 @@ gst_xv_image_sink_navigation_send_event (GstNavigation * navigation,
 
   if (!(xwindow = xvimagesink->xwindow)) {
     g_mutex_unlock (&xvimagesink->flow_lock);
-    gst_structure_free (structure);
+    gst_event_unref (event);
     return;
   }
 
@@ -1190,37 +1193,31 @@ gst_xv_image_sink_navigation_send_event (GstNavigation * navigation,
   xscale = (gdouble) xvimagesink->video_width / result.w;
   yscale = (gdouble) xvimagesink->video_height / result.h;
 
+  event = gst_event_make_writable (event);
+
   /* Converting pointer coordinates to the non scaled geometry */
-  if (gst_structure_get_double (structure, "pointer_x", &x)) {
+  if (gst_navigation_event_get_coordinates (event, &x, &y)) {
     x = MIN (x, result.x + result.w);
     x = MAX (x - result.x, 0);
-    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
-        (gdouble) x * xscale, NULL);
-  }
-  if (gst_structure_get_double (structure, "pointer_y", &y)) {
     y = MIN (y, result.y + result.h);
     y = MAX (y - result.y, 0);
-    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
-        (gdouble) y * yscale, NULL);
+    gst_navigation_event_set_coordinates (event, x * xscale, y * yscale);
   }
 
-  event = gst_event_new_navigation (structure);
-  if (event) {
-    gst_event_ref (event);
-    handled = gst_pad_push_event (GST_VIDEO_SINK_PAD (xvimagesink), event);
+  gst_event_ref (event);
+  handled = gst_pad_push_event (GST_VIDEO_SINK_PAD (xvimagesink), event);
 
-    if (!handled)
-      gst_element_post_message ((GstElement *) xvimagesink,
-          gst_navigation_message_new_event ((GstObject *) xvimagesink, event));
+  if (!handled)
+    gst_element_post_message ((GstElement *) xvimagesink,
+        gst_navigation_message_new_event ((GstObject *) xvimagesink, event));
 
-    gst_event_unref (event);
-  }
+  gst_event_unref (event);
 }
 
 static void
 gst_xv_image_sink_navigation_init (GstNavigationInterface * iface)
 {
-  iface->send_event = gst_xv_image_sink_navigation_send_event;
+  iface->send_event_simple = gst_xv_image_sink_navigation_send_event;
 }
 
 static void

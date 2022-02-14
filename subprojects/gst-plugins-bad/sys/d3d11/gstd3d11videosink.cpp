@@ -687,9 +687,17 @@ static void
 gst_d3d11_video_sink_key_event (GstD3D11Window * window, const gchar * event,
     const gchar * key, GstD3D11VideoSink * self)
 {
+  GstEvent *key_event = NULL;
+
   if (self->enable_navigation_events) {
     GST_LOG_OBJECT (self, "send key event %s, key %s", event, key);
-    gst_navigation_send_key_event (GST_NAVIGATION (self), event, key);
+    if (0 == g_strcmp0 ("key-press", event))
+      key_event = gst_navigation_event_new_key_press (key);
+    else if (0 == g_strcmp0 ("key-release", event))
+      key_event = gst_navigation_event_new_key_release (key);
+
+    if (event)
+      gst_navigation_send_event_simple (GST_NAVIGATION (self), key_event);
   }
 }
 
@@ -697,11 +705,20 @@ static void
 gst_d3d11_video_mouse_key_event (GstD3D11Window * window, const gchar * event,
     gint button, gdouble x, gdouble y, GstD3D11VideoSink * self)
 {
+  GstEvent *mouse_event = NULL;
+
   if (self->enable_navigation_events) {
     GST_LOG_OBJECT (self,
         "send mouse event %s, button %d (%.1f, %.1f)", event, button, x, y);
-    gst_navigation_send_mouse_event (GST_NAVIGATION (self), event, button, x,
-        y);
+    if (0 == g_strcmp0 ("mouse-button-press", event))
+      mouse_event = gst_navigation_event_new_mouse_button_press (button, x, y);
+    else if (0 == g_strcmp0 ("mouse-button-release", event))
+      mouse_event = gst_navigation_event_new_mouse_button_release (button, x, y);
+    else if (0 == g_strcmp0 ("mouse-move", event))
+      mouse_event = gst_navigation_event_new_mouse_move (x, y);
+
+    if (event)
+      gst_navigation_send_event_simple (GST_NAVIGATION (self), mouse_event);
   }
 }
 
@@ -1330,10 +1347,9 @@ gst_d3d11_video_sink_video_overlay_init (GstVideoOverlayInterface * iface)
 /* Navigation interface */
 static void
 gst_d3d11_video_sink_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure)
+    GstEvent * event)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (navigation);
-  GstEvent *event = gst_event_new_navigation (structure);
 
   /* TODO: add support for translating native coordinate and video coordinate
    * when force-aspect-ratio is set */
@@ -1354,7 +1370,7 @@ gst_d3d11_video_sink_navigation_send_event (GstNavigation * navigation,
 static void
 gst_d3d11_video_sink_navigation_init (GstNavigationInterface * iface)
 {
-  iface->send_event = gst_d3d11_video_sink_navigation_send_event;
+  iface->send_event_simple = gst_d3d11_video_sink_navigation_send_event;
 }
 
 static gboolean

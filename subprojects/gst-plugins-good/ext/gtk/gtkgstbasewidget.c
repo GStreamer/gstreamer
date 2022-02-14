@@ -290,13 +290,14 @@ gtk_gst_base_widget_key_event (GtkWidget * widget, GdkEventKey * event)
   if ((element = g_weak_ref_get (&base_widget->element))) {
     if (GST_IS_NAVIGATION (element)) {
       const gchar *str = _gdk_key_to_navigation_string (event->keyval);
-      const gchar *key_type =
-          event->type == GDK_KEY_PRESS ? "key-press" : "key-release";
 
       if (!str)
         str = event->string;
 
-      gst_navigation_send_key_event (GST_NAVIGATION (element), key_type, str);
+      gst_navigation_send_event_simple (GST_NAVIGATION (element),
+          (event->type == GDK_KEY_PRESS) ?
+          gst_navigation_event_new_key_press (str) :
+          gst_navigation_event_new_key_release (str));
     }
     g_object_unref (element);
   }
@@ -378,11 +379,12 @@ gtk_gst_base_widget_button_event (GtkWidget * widget, GdkEventButton * event)
 
   if ((element = g_weak_ref_get (&base_widget->element))) {
     if (GST_IS_NAVIGATION (element)) {
-      const gchar *key_type =
-          event->type ==
-          GDK_BUTTON_PRESS ? "mouse-button-press" : "mouse-button-release";
-      gst_navigation_send_mouse_event (GST_NAVIGATION (element), key_type,
-          event->button, event->x, event->y);
+      gst_navigation_send_event_simple (GST_NAVIGATION (element),
+          (event->type == GDK_BUTTON_PRESS) ?
+          gst_navigation_event_new_mouse_button_press (event->button,
+              event->x, event->y) :
+          gst_navigation_event_new_mouse_button_release (event->button,
+              event->x, event->y));
     }
     g_object_unref (element);
   }
@@ -398,8 +400,8 @@ gtk_gst_base_widget_motion_event (GtkWidget * widget, GdkEventMotion * event)
 
   if ((element = g_weak_ref_get (&base_widget->element))) {
     if (GST_IS_NAVIGATION (element)) {
-      gst_navigation_send_mouse_event (GST_NAVIGATION (element), "mouse-move",
-          0, event->x, event->y);
+      gst_navigation_send_event_simple (GST_NAVIGATION (element),
+          gst_navigation_event_new_mouse_move (event->x, event->y));
     }
     g_object_unref (element);
   }
@@ -443,8 +445,8 @@ gtk_gst_base_widget_scroll_event (GtkWidget * widget, GdkEventScroll * event)
             break;
         }
       }
-      gst_navigation_send_mouse_scroll_event (GST_NAVIGATION (element),
-          x, y, delta_x, delta_y);
+      gst_navigation_send_event_simple (GST_NAVIGATION (element),
+          gst_navigation_event_new_mouse_scroll (x, y, delta_x, delta_y));
     }
     g_object_unref (element);
   }

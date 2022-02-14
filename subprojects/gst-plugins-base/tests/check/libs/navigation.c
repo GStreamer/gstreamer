@@ -55,8 +55,7 @@ struct TestElementClass
 GType test_element_get_type (void);
 
 static void init_interface (GType type);
-static void nav_send_event (GstNavigation * navigation,
-    GstStructure * structure);
+static void nav_send_event (GstNavigation * navigation, GstEvent * event);
 
 G_DEFINE_TYPE_WITH_CODE (TestElement, test_element, GST_TYPE_ELEMENT,
     init_interface (g_define_type_id));
@@ -64,7 +63,7 @@ G_DEFINE_TYPE_WITH_CODE (TestElement, test_element, GST_TYPE_ELEMENT,
 static void
 test_element_navigation_interface_init (GstNavigationInterface * iface)
 {
-  iface->send_event = nav_send_event;
+  iface->send_event_simple = nav_send_event;
 }
 
 static void
@@ -91,9 +90,8 @@ test_element_init (TestElement * this)
 }
 
 static void
-nav_send_event (GstNavigation * navigation, GstStructure * structure)
+nav_send_event (GstNavigation * navigation, GstEvent * event)
 {
-  GstEvent *event = gst_event_new_navigation (structure);
   GstNavigationEventType etype = gst_navigation_event_get_type (event);
   TestElement *self = (TestElement *) (navigation);
 
@@ -171,17 +169,23 @@ GST_START_TEST (test_events)
   test_element->sent_key = "1";
   gst_navigation_send_key_event (GST_NAVIGATION (test_element), "key-press",
       "1");
+  gst_navigation_send_event_simple (GST_NAVIGATION (test_element),
+      gst_navigation_event_new_key_press ("1"));
 
   test_element->sent_type = GST_NAVIGATION_EVENT_KEY_RELEASE;
   test_element->sent_key = "2";
   gst_navigation_send_key_event (GST_NAVIGATION (test_element), "key-release",
       "2");
+  gst_navigation_send_event_simple (GST_NAVIGATION (test_element),
+      gst_navigation_event_new_key_release ("2"));
 
   test_element->sent_type = GST_NAVIGATION_EVENT_MOUSE_MOVE;
   test_element->sent_x = 50;
   test_element->sent_y = 100;
   gst_navigation_send_mouse_event (GST_NAVIGATION (test_element), "mouse-move",
       0, 50, 100);
+  gst_navigation_send_event_simple (GST_NAVIGATION (test_element),
+      gst_navigation_event_new_mouse_move (50, 100));
 
   test_element->sent_type = GST_NAVIGATION_EVENT_MOUSE_SCROLL;
   test_element->sent_x = 60;
@@ -190,6 +194,8 @@ GST_START_TEST (test_events)
   test_element->sent_delta_y = 3;
   gst_navigation_send_mouse_scroll_event (GST_NAVIGATION (test_element),
       60, 120, 2, 3);
+  gst_navigation_send_event_simple (GST_NAVIGATION (test_element),
+      gst_navigation_event_new_mouse_scroll (60, 120, 2, 3));
 
   test_element->sent_type = GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS;
   test_element->sent_x = 10;
@@ -197,11 +203,15 @@ GST_START_TEST (test_events)
   test_element->sent_button = 1;
   gst_navigation_send_mouse_event (GST_NAVIGATION (test_element),
       "mouse-button-press", 1, 10, 20);
+  gst_navigation_send_event_simple (GST_NAVIGATION (test_element),
+      gst_navigation_event_new_mouse_button_press (1, 10, 20));
 
   for (i = 0; i < G_N_ELEMENTS (cmds); i++) {
     test_element->sent_type = GST_NAVIGATION_EVENT_COMMAND;
     test_element->sent_command = cmds[i];
     gst_navigation_send_command (GST_NAVIGATION (test_element), cmds[i]);
+    gst_navigation_send_event_simple (GST_NAVIGATION (test_element),
+        gst_navigation_event_new_command (cmds[i]));
   }
 
   gst_object_unref (test_element);

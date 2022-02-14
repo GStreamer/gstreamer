@@ -1899,20 +1899,16 @@ gst_vaapipostproc_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
   gdouble new_x = 0, new_y = 0, x = 0, y = 0, w_factor = 1, h_factor = 1;
-  GstStructure *structure;
   gboolean ret;
 
   GST_TRACE_OBJECT (postproc, "handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
-      event =
-          GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
+      event = gst_event_make_writable (event);
 
-      structure = (GstStructure *) gst_event_get_structure (event);
-      if (postproc->has_vpp
-          && gst_structure_get_double (structure, "pointer_x", &x)
-          && gst_structure_get_double (structure, "pointer_y", &y)) {
+      if (postproc->has_vpp &&
+          gst_navigation_event_get_coordinates (event, &x, &y)) {
         GST_DEBUG_OBJECT (postproc, "converting %fx%f", x, y);
 
         /* video-direction compensation */
@@ -1961,8 +1957,7 @@ gst_vaapipostproc_src_event (GstBaseTransform * trans, GstEvent * event)
         new_y += postproc->crop_top;
 
         GST_DEBUG_OBJECT (postproc, "to %fx%f", new_x, new_y);
-        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, new_x,
-            "pointer_y", G_TYPE_DOUBLE, new_y, NULL);
+        gst_navigation_event_set_coordinates (event, new_x, new_y);
       }
       break;
     default:

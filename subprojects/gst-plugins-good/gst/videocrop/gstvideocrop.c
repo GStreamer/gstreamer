@@ -123,48 +123,31 @@ static GstFlowReturn gst_video_crop_transform_ip (GstBaseTransform * trans,
 static gboolean
 gst_video_crop_src_event (GstBaseTransform * trans, GstEvent * event)
 {
-  GstEvent *new_event;
-  GstStructure *new_structure;
-  const GstStructure *structure;
-  const gchar *event_name;
+  GstNavigationEventType type;
   double pointer_x;
   double pointer_y;
 
   GstVideoCrop *vcrop = GST_VIDEO_CROP (trans);
-  new_event = NULL;
-
   GST_OBJECT_LOCK (vcrop);
+
+  type = gst_navigation_event_get_type (event);
   if (GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION &&
-      (vcrop->crop_left != 0 || vcrop->crop_top != 0)) {
-    structure = gst_event_get_structure (event);
-    event_name = gst_structure_get_string (structure, "event");
-
-    if (event_name &&
-        (strcmp (event_name, "mouse-move") == 0 ||
-            strcmp (event_name, "mouse-button-press") == 0 ||
-            strcmp (event_name, "mouse-button-release") == 0)) {
-
-      if (gst_structure_get_double (structure, "pointer_x", &pointer_x) &&
-          gst_structure_get_double (structure, "pointer_y", &pointer_y)) {
-
-        new_structure = gst_structure_copy (structure);
-        gst_structure_set (new_structure,
-            "pointer_x", G_TYPE_DOUBLE, (double) (pointer_x + vcrop->crop_left),
-            "pointer_y", G_TYPE_DOUBLE, (double) (pointer_y + vcrop->crop_top),
-            NULL);
-
-        new_event = gst_event_new_navigation (new_structure);
-        gst_event_unref (event);
-      } else {
-        GST_WARNING_OBJECT (vcrop, "Failed to read navigation event");
-      }
+      (vcrop->crop_left != 0 || vcrop->crop_top != 0) &&
+      (type == GST_NAVIGATION_EVENT_MOUSE_MOVE
+          || type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS
+          || type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE)) {
+    if (gst_navigation_event_get_coordinates (event, &pointer_x, &pointer_y)) {
+      event = gst_event_make_writable (event);
+      gst_navigation_event_set_coordinates (event, pointer_x + vcrop->crop_left,
+          pointer_y + vcrop->crop_top);
+    } else {
+      GST_WARNING_OBJECT (vcrop, "Failed to read navigation event");
     }
   }
 
   GST_OBJECT_UNLOCK (vcrop);
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans,
-      (new_event ? new_event : event));
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
 }
 
 static void

@@ -1885,7 +1885,6 @@ gst_va_vpp_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstVaVpp *self = GST_VA_VPP (trans);
   GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (trans);
-  GstStructure *structure;
   const GstVideoInfo *in_info = &btrans->in_info, *out_info = &btrans->out_info;
   gdouble new_x = 0, new_y = 0, x = 0, y = 0, w_factor = 1, h_factor = 1;
   gboolean ret;
@@ -1899,12 +1898,9 @@ gst_va_vpp_src_event (GstBaseTransform * trans, GstEvent * event)
           || gst_va_filter_get_orientation (btrans->filter) !=
           GST_VIDEO_ORIENTATION_IDENTITY) {
 
-        event =
-            GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
+        event = gst_event_make_writable (event);
 
-        structure = (GstStructure *) gst_event_get_structure (event);
-        if (!gst_structure_get_double (structure, "pointer_x", &x)
-            || !gst_structure_get_double (structure, "pointer_y", &y))
+        if (!gst_navigation_event_get_coordinates (event, &x, &y))
           break;
 
         /* video-direction compensation */
@@ -1952,8 +1948,7 @@ gst_va_vpp_src_event (GstBaseTransform * trans, GstEvent * event)
         /* crop compensation is done by videocrop */
 
         GST_TRACE_OBJECT (self, "from %fx%f to %fx%f", x, y, new_x, new_y);
-        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, new_x,
-            "pointer_y", G_TYPE_DOUBLE, new_y, NULL);
+        gst_navigation_event_set_coordinates (event, new_x, new_y);
       }
       break;
     default:

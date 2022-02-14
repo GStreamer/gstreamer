@@ -112,7 +112,7 @@ private:
     void fitStreamToAllocatedSize(GstVideoRectangle * result);
     QPointF mapPointToStreamSize(QPointF);
 
-    void sendMouseEvent(QMouseEvent * event, const gchar * type);
+    void sendMouseEvent(QMouseEvent * event, gboolean is_press);
 
     quint32 mousePressedButton;
     bool mouseHovering;

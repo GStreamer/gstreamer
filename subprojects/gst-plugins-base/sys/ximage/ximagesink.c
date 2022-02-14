@@ -610,8 +610,8 @@ gst_x_image_sink_handle_xevents (GstXImageSink * ximagesink)
 
     GST_DEBUG ("ximagesink pointer moved over window at %d,%d",
         pointer_x, pointer_y);
-    gst_navigation_send_mouse_event (GST_NAVIGATION (ximagesink),
-        "mouse-move", 0, pointer_x, pointer_y);
+    gst_navigation_send_event_simple (GST_NAVIGATION (ximagesink),
+        gst_navigation_event_new_mouse_move (pointer_x, pointer_y));
 
     g_mutex_lock (&ximagesink->flow_lock);
     g_mutex_lock (&ximagesink->x_lock);
@@ -635,14 +635,16 @@ gst_x_image_sink_handle_xevents (GstXImageSink * ximagesink)
            events for interactivity/navigation */
         GST_DEBUG ("ximagesink button %d pressed over window at %d,%d",
             e.xbutton.button, e.xbutton.x, e.xbutton.x);
-        gst_navigation_send_mouse_event (GST_NAVIGATION (ximagesink),
-            "mouse-button-press", e.xbutton.button, e.xbutton.x, e.xbutton.y);
+        gst_navigation_send_event_simple (GST_NAVIGATION (ximagesink),
+            gst_navigation_event_new_mouse_button_press (e.xbutton.button,
+                e.xbutton.x, e.xbutton.y));
         break;
       case ButtonRelease:
         GST_DEBUG ("ximagesink button %d release over window at %d,%d",
             e.xbutton.button, e.xbutton.x, e.xbutton.x);
-        gst_navigation_send_mouse_event (GST_NAVIGATION (ximagesink),
-            "mouse-button-release", e.xbutton.button, e.xbutton.x, e.xbutton.y);
+        gst_navigation_send_event_simple (GST_NAVIGATION (ximagesink),
+            gst_navigation_event_new_mouse_button_release (e.xbutton.button,
+                e.xbutton.x, e.xbutton.y));
         break;
       case KeyPress:
       case KeyRelease:
@@ -665,8 +667,10 @@ gst_x_image_sink_handle_xevents (GstXImageSink * ximagesink)
         GST_DEBUG_OBJECT (ximagesink,
             "key %d pressed over window at %d,%d (%s)",
             e.xkey.keycode, e.xkey.x, e.xkey.y, key_str);
-        gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
-            e.type == KeyPress ? "key-press" : "key-release", key_str);
+        gst_navigation_send_event_simple (GST_NAVIGATION (ximagesink),
+            (e.type == KeyPress) ?
+            gst_navigation_event_new_key_press (key_str) :
+            gst_navigation_event_new_key_release (key_str));
         break;
       default:
         GST_DEBUG_OBJECT (ximagesink, "ximagesink unhandled X event (%d)",
@@ -1550,10 +1554,9 @@ no_pool:
 /* Interfaces stuff */
 static void
 gst_x_image_sink_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure)
+    GstEvent * event)
 {
   GstXImageSink *ximagesink = GST_X_IMAGE_SINK (navigation);
-  GstEvent *event = NULL;
   gint x_offset, y_offset;
   gdouble x, y;
   gboolean handled = FALSE;
@@ -1569,42 +1572,37 @@ gst_x_image_sink_navigation_send_event (GstNavigation * navigation,
 
   if (!ximagesink->xwindow) {
     g_mutex_unlock (&ximagesink->flow_lock);
-    gst_structure_free (structure);
+    gst_event_unref (event);
     return;
   }
+
+  event = gst_event_make_writable (event);
 
   x_offset = ximagesink->xwindow->width - GST_VIDEO_SINK_WIDTH (ximagesink);
   y_offset = ximagesink->xwindow->height - GST_VIDEO_SINK_HEIGHT (ximagesink);
 
   g_mutex_unlock (&ximagesink->flow_lock);
 
-  if (x_offset > 0 && gst_structure_get_double (structure, "pointer_x", &x)) {
+  if (gst_navigation_event_get_coordinates (event, &x, &y)) {
     x -= x_offset / 2;
-    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
-  }
-  if (y_offset > 0 && gst_structure_get_double (structure, "pointer_y", &y)) {
     y -= y_offset / 2;
-    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
+    gst_navigation_event_set_coordinates (event, x, y);
   }
 
-  event = gst_event_new_navigation (structure);
-  if (event) {
-    gst_event_ref (event);
-    handled = gst_pad_push_event (GST_VIDEO_SINK_PAD (ximagesink), event);
+  gst_event_ref (event);
+  handled = gst_pad_push_event (GST_VIDEO_SINK_PAD (ximagesink), event);
 
-    if (!handled)
-      gst_element_post_message (GST_ELEMENT_CAST (ximagesink),
-          gst_navigation_message_new_event (GST_OBJECT_CAST (ximagesink),
-              event));
+  if (!handled)
+    gst_element_post_message (GST_ELEMENT_CAST (ximagesink),
+        gst_navigation_message_new_event (GST_OBJECT_CAST (ximagesink), event));
 
-    gst_event_unref (event);
-  }
+  gst_event_unref (event);
 }
 
 static void
 gst_x_image_sink_navigation_init (GstNavigationInterface * iface)
 {
-  iface->send_event = gst_x_image_sink_navigation_send_event;
+  iface->send_event_simple = gst_x_image_sink_navigation_send_event;
 }
 
 static void

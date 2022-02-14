@@ -437,8 +437,9 @@ QtGLVideoItem::wheelEvent(QWheelEvent * event)
 #else
     auto position = *event;
 #endif
-    gst_navigation_send_mouse_scroll_event (GST_NAVIGATION (element),
-                                            position.x(), position.y(), delta.x(), delta.y());
+    gst_navigation_send_event_simple (GST_NAVIGATION (element),
+        gst_navigation_event_new_mouse_scroll (position.x(), position.y(),
+                                               delta.x(), delta.y()));
     g_object_unref (element);
   }
   g_mutex_unlock (&this->priv->lock);
@@ -462,8 +463,6 @@ QtGLVideoItem::hoverMoveEvent(QHoverEvent * event)
   if (!mouseHovering)
     return;
 
-  quint32 button = !!mousePressedButton;
-
   g_mutex_lock (&this->priv->lock);
 
   /* can't do anything when we don't have input format */
@@ -477,8 +476,8 @@ QtGLVideoItem::hoverMoveEvent(QHoverEvent * event)
     GstElement *element = GST_ELEMENT_CAST (g_weak_ref_get (&this->priv->sink));
 
     if (element != NULL) {
-      gst_navigation_send_mouse_event (GST_NAVIGATION (element), "mouse-move",
-                                       button, pos.x(), pos.y());
+      gst_navigation_send_event_simple (GST_NAVIGATION (element),
+          gst_navigation_event_new_mouse_move (pos.x(), pos.y()));
       g_object_unref (element);
     }
   }
@@ -486,7 +485,7 @@ QtGLVideoItem::hoverMoveEvent(QHoverEvent * event)
 }
 
 void
-QtGLVideoItem::sendMouseEvent(QMouseEvent * event, const gchar * type)
+QtGLVideoItem::sendMouseEvent(QMouseEvent * event, gboolean is_press)
 {
   quint32 button = 0;
 
@@ -512,16 +511,17 @@ QtGLVideoItem::sendMouseEvent(QMouseEvent * event, const gchar * type)
   }
 
   QPointF pos = mapPointToStreamSize(event->pos());
-  gchar* event_type = g_strconcat ("mouse-button-", type, NULL);
   GstElement *element = GST_ELEMENT_CAST (g_weak_ref_get (&this->priv->sink));
 
   if (element != NULL) {
-    gst_navigation_send_mouse_event (GST_NAVIGATION (element), event_type,
-                                     button, pos.x(), pos.y());
+    gst_navigation_send_event_simple (GST_NAVIGATION (element),
+        (is_press) ? gst_navigation_event_new_mouse_button_press (button,
+                pos.x(), pos.y()) :
+            gst_navigation_event_new_mouse_button_release (button, pos.x(),
+                pos.y()));
     g_object_unref (element);
   }
 
-  g_free (event_type);
   g_mutex_unlock (&this->priv->lock);
 }
 
@@ -529,13 +529,13 @@ void
 QtGLVideoItem::mousePressEvent(QMouseEvent * event)
 {
   forceActiveFocus();
-  sendMouseEvent(event, "press");
+  sendMouseEvent(event, TRUE);
 }
 
 void
 QtGLVideoItem::mouseReleaseEvent(QMouseEvent * event)
 {
-  sendMouseEvent(event, "release");
+  sendMouseEvent(event, FALSE);
 }
 
 void

@@ -5437,7 +5437,7 @@ gst_play_sink_overlay_init (gpointer g_iface, gpointer g_iface_data)
 
 static void
 gst_play_sink_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure)
+    GstEvent * event)
 {
   GstPlaySink *playsink = GST_PLAY_SINK (navigation);
   GstBin *bin = NULL;
@@ -5451,20 +5451,14 @@ gst_play_sink_navigation_send_event (GstNavigation * navigation,
     GstElement *nav = gst_bin_get_by_interface (bin, GST_TYPE_NAVIGATION);
 
     if (nav) {
-      gst_navigation_send_event (GST_NAVIGATION (nav), structure);
-      structure = NULL;
+      gst_navigation_send_event_simple (GST_NAVIGATION (nav), event);
       gst_object_unref (nav);
     } else {
-      GstEvent *event = gst_event_new_navigation (structure);
-      structure = NULL;
       gst_element_send_event (GST_ELEMENT (bin), event);
     }
 
     gst_object_unref (bin);
   }
-
-  if (structure)
-    gst_structure_free (structure);
 }
 
 static void
@@ -5472,7 +5466,7 @@ gst_play_sink_navigation_init (gpointer g_iface, gpointer g_iface_data)
 {
   GstNavigationInterface *iface = (GstNavigationInterface *) g_iface;
 
-  iface->send_event = gst_play_sink_navigation_send_event;
+  iface->send_event_simple = gst_play_sink_navigation_send_event;
 }
 
 static const GList *

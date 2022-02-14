@@ -122,7 +122,7 @@ static CascadeClassifier *gst_handdetect_load_profile (GstHanddetect * filter,
 static void gst_handdetect_navigation_interface_init (GstNavigationInterface *
     iface);
 static void gst_handdetect_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure);
+    GstEvent * event);
 
 G_DEFINE_TYPE_WITH_CODE (GstHanddetect, gst_handdetect,
     GST_TYPE_OPENCV_VIDEO_FILTER,
@@ -136,7 +136,7 @@ GST_ELEMENT_REGISTER_DEFINE (handdetect, "handdetect", GST_RANK_NONE,
 static void
 gst_handdetect_navigation_interface_init (GstNavigationInterface * iface)
 {
-  iface->send_event = gst_handdetect_navigation_send_event;
+  iface->send_event_simple = gst_handdetect_navigation_send_event;
 }
 
 /* FIXME: this function used to parse the region of interests coordinates
@@ -146,14 +146,12 @@ gst_handdetect_navigation_interface_init (GstNavigationInterface * iface)
  */
 static void
 gst_handdetect_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure)
+    GstEvent * event)
 {
   GstHanddetect *filter = GST_HANDDETECT (navigation);
   GstPad *peer;
 
   if ((peer = gst_pad_get_peer (GST_BASE_TRANSFORM_CAST (filter)->sinkpad))) {
-    GstEvent *event;
-    event = gst_event_new_navigation (structure);
     gst_pad_send_event (peer, event);
     gst_object_unref (peer);
   }
@@ -481,11 +479,10 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
          * !!! this will CHANGE in the future !!!
          * !!! by adding gst_navigation_send_hand_detect_event() in navigation.c !!!
          */
-        gst_navigation_send_mouse_event (GST_NAVIGATION (filter),
-            "mouse-move",
-            0,
-            (double) (filter->best_r->x + filter->best_r->width * 0.5),
-            (double) (filter->best_r->y + filter->best_r->height * 0.5));
+        gst_handdetect_navigation_send_event (GST_NAVIGATION (filter),
+            gst_navigation_event_new_mouse_move (
+              (double) (filter->best_r->x + filter->best_r->width * 0.5),
+              (double) (filter->best_r->y + filter->best_r->height * 0.5)));
 
 #endif
       }
@@ -571,11 +568,10 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
            * !!! this will CHANGE in the future !!!
            * !!! by adding gst_navigation_send_hand_detect_event() in navigation.c !!!
            */
-          gst_navigation_send_mouse_event (GST_NAVIGATION (filter),
-              "mouse-move",
-              0,
-              (double) (filter->best_r->x + filter->best_r->width * 0.5),
-              (double) (filter->best_r->y + filter->best_r->height * 0.5));
+          gst_handdetect_navigation_send_event (GST_NAVIGATION (filter),
+              gst_navigation_event_new_mouse_move (
+                (double) (filter->best_r->x + filter->best_r->width * 0.5),
+                (double) (filter->best_r->y + filter->best_r->height * 0.5)));
 
           /* or use another way to send upstream navigation event for debug
            *

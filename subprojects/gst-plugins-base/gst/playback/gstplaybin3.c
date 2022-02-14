@@ -5149,11 +5149,11 @@ gst_play_bin3_overlay_init (gpointer g_iface, gpointer g_iface_data)
 
 static void
 gst_play_bin3_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure)
+    GstEvent * event)
 {
   GstPlayBin3 *playbin = GST_PLAY_BIN3 (navigation);
 
-  gst_navigation_send_event (GST_NAVIGATION (playbin->playsink), structure);
+  gst_navigation_send_event_simple (GST_NAVIGATION (playbin->playsink), event);
 }
 
 static void
@@ -5161,7 +5161,7 @@ gst_play_bin3_navigation_init (gpointer g_iface, gpointer g_iface_data)
 {
   GstNavigationInterface *iface = (GstNavigationInterface *) g_iface;
 
-  iface->send_event = gst_play_bin3_navigation_send_event;
+  iface->send_event_simple = gst_play_bin3_navigation_send_event;
 }
 
 static const GList *

@@ -29,6 +29,7 @@
 
 #include "gstdebugutilselements.h"
 #include "gstnavseek.h"
+#include <gst/video/navigation.h>
 #include <string.h>
 #include <math.h>
 
@@ -252,19 +253,11 @@ gst_navseek_src_event (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_NAVIGATION:
     {
       /* Check for a keyup and convert left/right to a seek event */
-      const GstStructure *structure;
-      const gchar *event_type;
-
-      structure = gst_event_get_structure (event);
-      g_return_val_if_fail (structure != NULL, FALSE);
-
-      event_type = gst_structure_get_string (structure, "event");
-      g_return_val_if_fail (event_type != NULL, FALSE);
-
-      if (strcmp (event_type, "key-press") == 0) {
+      if (gst_navigation_event_get_type (event)
+          == GST_NAVIGATION_EVENT_KEY_PRESS) {
         const gchar *key;
 
-        key = gst_structure_get_string (structure, "key");
+        gst_navigation_event_parse_key_event (event, &key);
         g_return_val_if_fail (key != NULL, FALSE);
 
         if (strcmp (key, "Left") == 0) {

@@ -155,13 +155,10 @@ gst_dshowvideosink_videooverlay_init (GstVideoOverlayInterface * iface)
 
 static void
 gst_dshowvideosink_navigation_send_event (GstNavigation * navigation,
-    GstStructure * structure)
+    GstEvent * event)
 {
   GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (navigation);
-  GstEvent *event = NULL;
   GstPad *pad = NULL;
-
-  event = gst_event_new_navigation (structure);
 
   /* FXIME: handle aspect ratio. */
 
@@ -178,10 +175,9 @@ static void
 gst_dshowvideosink_navigation_interface_init (GstNavigationInterface * iface)
 {
   /* FIXME: navigation interface partially implemented.
-   * Need to call gst_navigation_send_mouse_event and
-   * gst_navigation_send_key_event like in directdrawsink.
+   * Need to call gst_navigation_send_event_simple and like in directdrawsink.
    */
-  iface->send_event = gst_dshowvideosink_navigation_send_event;
+  iface->send_event_simple = gst_dshowvideosink_navigation_send_event;
 }
 
 static void

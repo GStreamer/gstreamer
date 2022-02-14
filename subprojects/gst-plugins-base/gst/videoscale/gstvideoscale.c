@@ -1193,8 +1193,7 @@ gst_video_scale_src_event (GstBaseTransform * trans, GstEvent * event)
   GstVideoScale *videoscale = GST_VIDEO_SCALE_CAST (trans);
   GstVideoFilter *filter = GST_VIDEO_FILTER_CAST (trans);
   gboolean ret;
-  gdouble a;
-  GstStructure *structure;
+  gdouble x, y;
 
   GST_DEBUG_OBJECT (videoscale, "handling %s event",
       GST_EVENT_TYPE_NAME (event));
@@ -1203,17 +1202,12 @@ gst_video_scale_src_event (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_NAVIGATION:
       if (filter->in_info.width != filter->out_info.width ||
           filter->in_info.height != filter->out_info.height) {
-        event =
-            GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
+        event = gst_event_make_writable (event);
 
-        structure = (GstStructure *) gst_event_get_structure (event);
-        if (gst_structure_get_double (structure, "pointer_x", &a)) {
-          gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
-              a * filter->in_info.width / filter->out_info.width, NULL);
-        }
-        if (gst_structure_get_double (structure, "pointer_y", &a)) {
-          gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
-              a * filter->in_info.height / filter->out_info.height, NULL);
+        if (gst_navigation_event_get_coordinates (event, &x, &y)) {
+          gst_navigation_event_set_coordinates (event,
+              x * filter->in_info.width / filter->out_info.width,
+              y * filter->in_info.height / filter->out_info.height);
         }
       }
       break;
