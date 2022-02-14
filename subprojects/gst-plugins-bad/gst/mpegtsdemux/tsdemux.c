@@ -976,6 +976,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
     if (G_UNLIKELY (start_offset == -1)) {
       GST_WARNING_OBJECT (demux,
           "Couldn't convert start position to an offset");
+      g_mutex_unlock (&demux->lock);
       goto done;
     }
 
