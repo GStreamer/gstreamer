@@ -140,6 +140,7 @@ gst_v4l2_decoder_h264_api_check (GstV4l2Decoder * decoder)
     }, {
       SET_ID (V4L2_CID_STATELESS_H264_SCALING_MATRIX),
       .size = sizeof(struct v4l2_ctrl_h264_scaling_matrix),
+      .optional = TRUE,
     }, {
       SET_ID (V4L2_CID_STATELESS_H264_DECODE_PARAMS),
       .size = sizeof(struct v4l2_ctrl_h264_decode_params),
