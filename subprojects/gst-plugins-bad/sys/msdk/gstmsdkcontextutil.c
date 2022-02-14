@@ -49,6 +49,95 @@ _init_context_debug (void)
 #endif
 }
 
+#ifdef _WIN32
+static gboolean
+_pad_query (const GValue * item, GValue * value, gpointer user_data)
+{
+  GstPad *pad = g_value_get_object (item);
+  GstQuery *query = user_data;
+  gboolean res;
+
+  res = gst_pad_peer_query (pad, query);
+
+  if (res) {
+    g_value_set_boolean (value, TRUE);
+    return FALSE;
+  }
+
+  GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, pad, "pad peer query failed");
+  return TRUE;
+}
+
+static gboolean
+_run_query (GstElement * element, GstQuery * query, GstPadDirection direction)
+{
+  GstIterator *it;
+  GstIteratorFoldFunction func = _pad_query;
+  GValue res = G_VALUE_INIT;
+
+  g_value_init (&res, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&res, FALSE);
+
+  if (direction == GST_PAD_SRC)
+    it = gst_element_iterate_src_pads (element);
+  else
+    it = gst_element_iterate_sink_pads (element);
+
+  while (gst_iterator_fold (it, func, &res, query) == GST_ITERATOR_RESYNC)
+    gst_iterator_resync (it);
+
+  gst_iterator_free (it);
+
+  return g_value_get_boolean (&res);
+}
+
+static void
+_context_query (GstElement * element, const gchar * context_type)
+{
+  GstQuery *query;
+  GstContext *ctxt = NULL;
+
+  /*  2a) Query downstream with GST_QUERY_CONTEXT for the context and
+   *      check if downstream already has a context of the specific type
+   *  2b) Query upstream as above.
+   */
+  query = gst_query_new_context (context_type);
+  if (_run_query (element, query, GST_PAD_SRC)) {
+    gst_query_parse_context (query, &ctxt);
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+        "found context (%p) in downstream query", ctxt);
+    gst_element_set_context (element, ctxt);
+  } else if (_run_query (element, query, GST_PAD_SINK)) {
+    gst_query_parse_context (query, &ctxt);
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+        "found context (%p) in upstream query", ctxt);
+    gst_element_set_context (element, ctxt);
+  } else {
+    /* 3) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with
+     *    the required context type and afterwards check if a
+     *    usable context was set now as in 1). The message could
+     *    be handled by the parent bins of the element and the
+     *    application.
+     */
+    GstMessage *msg;
+
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+        "posting need context message");
+    msg = gst_message_new_need_context (GST_OBJECT_CAST (element),
+        context_type);
+    gst_element_post_message (element, msg);
+  }
+
+  /*
+   * Whomever responds to the need-context message performs a
+   * GstElement::set_context() with the required context in which the element
+   * is required to update the display_ptr or call gst_va_handle_set_context().
+   */
+
+  gst_query_unref (query);
+}
+#endif
+
 /* Find whether the other elements already have a msdk context. */
 gboolean
 gst_msdk_context_find (GstElement * element, GstMsdkContext ** context_ptr)
@@ -66,7 +155,11 @@ gst_msdk_context_find (GstElement * element, GstMsdkContext ** context_ptr)
   }
 
   /* This may indirectly set *context_ptr, see function body */
+#ifndef _WIN32
   gst_va_context_query (element, GST_MSDK_CONTEXT_TYPE_NAME);
+#else
+  _context_query (element, GST_MSDK_CONTEXT_TYPE_NAME);
+#endif
 
   if (*context_ptr) {
     GST_LOG_OBJECT (element, "found a context %" GST_PTR_FORMAT, *context_ptr);

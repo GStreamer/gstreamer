@@ -120,7 +120,9 @@ typedef struct
   mfxFrameSurface1 *surface;
   GstBuffer *buf;
   GstBuffer *buf_external;
+#ifndef _WIN32
   VASurfaceID cache_surface;
+#endif
 } MsdkSurface;
 
 void
@@ -964,7 +966,9 @@ gst_msdkenc_free_surface (MsdkSurface * surface)
 
     mfx_surface = surface->surface;
     msdk_mid = (GstMsdkMemoryID *) mfx_surface->Data.MemId;
+#ifndef _WIN32
     *msdk_mid->surface = surface->cache_surface;
+#endif
 
     gst_buffer_unref (surface->buf_external);
   }
