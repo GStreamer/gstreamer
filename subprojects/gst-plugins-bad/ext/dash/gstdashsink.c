@@ -675,8 +675,11 @@ gst_dash_sink_add_splitmuxsink (GstDashSink * sink, GstDashSinkStream * stream)
   g_object_set (stream->splitmuxsink, "location", NULL,
       "max-size-time", ((GstClockTime) sink->target_duration * GST_SECOND),
       "send-keyframe-requests", TRUE, "muxer", mux, "sink",
-      stream->giostreamsink, "reset-muxer", FALSE, "send-keyframe-requests",
+      stream->giostreamsink, "send-keyframe-requests",
       sink->send_keyframe_requests, NULL);
+
+  if (sink->muxer == GST_DASH_SINK_MUXER_TS)
+    g_object_set (stream->splitmuxsink, "reset-muxer", FALSE, NULL);
 
   g_signal_connect (stream->splitmuxsink, "format-location",
       G_CALLBACK (on_format_location), stream);
