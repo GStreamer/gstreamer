@@ -863,8 +863,7 @@ setup_convert_info_yuv_to_rgb (GstD3D11Converter * self,
       break;
     }
     default:
-      GST_FIXME_OBJECT (self,
-          "Unhandled input format %s",
+      GST_ERROR ("Unhandled input format %s",
           gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)));
       return FALSE;
   }
@@ -925,8 +924,7 @@ setup_convert_info_rgb_to_yuv (GstD3D11Converter * self,
       break;
     }
     default:
-      GST_FIXME_OBJECT (self,
-          "Unhandled output format %s",
+      GST_ERROR ("Unhandled output format %s",
           gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
       return FALSE;
   }
@@ -1289,8 +1287,7 @@ setup_convert_info_rgb_to_gray (GstD3D11Converter * self,
       info->ps_body[0] = g_strdup_printf (templ_RGB_to_GRAY_BODY);
       break;
     default:
-      GST_FIXME_OBJECT (self,
-          "Unhandled output format %s",
+      GST_ERROR ("Unhandled output format %s",
           gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
       return FALSE;
   }
@@ -1341,8 +1338,7 @@ setup_convert_info_yuv_to_gray (GstD3D11Converter * self,
       break;
     }
     default:
-      GST_FIXME_OBJECT (self,
-          "Unhandled input format %s",
+      GST_ERROR ("Unhandled input format %s",
           gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)));
       return FALSE;
   }
@@ -1439,8 +1435,7 @@ setup_convert_info_gray_to_yuv (GstD3D11Converter * self,
           g_strdup_printf (templ_GRAY_to_SEMI_PLANAR_CHROMA_BODY);
       info->ps_output[1] = HLSL_PS_OUTPUT_ONE_PLANE_BODY;
     default:
-      GST_FIXME_OBJECT (self,
-          "Unhandled output format %s",
+      GST_ERROR ("Unhandled output format %s",
           gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
       return FALSE;
   }
