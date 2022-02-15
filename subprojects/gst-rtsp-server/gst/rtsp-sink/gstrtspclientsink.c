@@ -3602,6 +3602,18 @@ request_fec_encoder (GstElement * rtpbin, guint sessid,
 }
 
 static gboolean
+gst_rtsp_client_sink_is_stopping (GstRTSPClientSink * sink)
+{
+  gboolean is_stopping;
+
+  GST_OBJECT_LOCK (sink);
+  is_stopping = sink->task == NULL;
+  GST_OBJECT_UNLOCK (sink);
+
+  return is_stopping;
+}
+
+static gboolean
 gst_rtsp_client_sink_collect_streams (GstRTSPClientSink * sink)
 {
   GstRTSPStreamContext *context;
@@ -3640,7 +3652,8 @@ gst_rtsp_client_sink_collect_streams (GstRTSPClientSink * sink)
       continue;
 
     g_mutex_lock (&sink->preroll_lock);
-    while (!context->prerolled && !sink->conninfo.flushing) {
+    while (!context->prerolled && !sink->conninfo.flushing
+        && !gst_rtsp_client_sink_is_stopping (sink)) {
       GST_DEBUG_OBJECT (sink, "Waiting for caps on stream %d", context->index);
       g_cond_wait (&sink->preroll_cond, &sink->preroll_lock);
     }
@@ -4374,18 +4387,6 @@ done:
   return res;
 }
 
-static gboolean
-gst_rtsp_client_sink_is_stopping (GstRTSPClientSink * sink)
-{
-  gboolean is_stopping;
-
-  GST_OBJECT_LOCK (sink);
-  is_stopping = sink->task == NULL;
-  GST_OBJECT_UNLOCK (sink);
-
-  return is_stopping;
-}
-
 static GstRTSPResult
 gst_rtsp_client_sink_record (GstRTSPClientSink * sink, gboolean async)
 {
@@ -4988,6 +4989,10 @@ gst_rtsp_client_sink_stop (GstRTSPClientSink * sink)
     g_mutex_lock (&sink->block_streams_lock);
     g_cond_broadcast (&sink->block_streams_cond);
     g_mutex_unlock (&sink->block_streams_lock);
+
+    g_mutex_lock (&sink->preroll_lock);
+    g_cond_broadcast (&sink->preroll_cond);
+    g_mutex_unlock (&sink->preroll_lock);
 
     /* make sure it is not running */
     GST_RTSP_STREAM_LOCK (sink);
