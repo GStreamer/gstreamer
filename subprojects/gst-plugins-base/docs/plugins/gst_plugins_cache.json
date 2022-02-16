@@ -813,6 +813,20 @@
                         "type": "GstAudioDitherMethod",
                         "writable": true
                     },
+                    "dithering-threshold": {
+                        "blurb": "Threshold for the output bit depth at/below which to apply dithering.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "20",
+                        "max": "32",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
                     "mix-matrix": {
                         "blurb": "Transformation matrix for input/output channels",
                         "conditionally-available": false,

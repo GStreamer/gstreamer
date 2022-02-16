@@ -157,6 +157,7 @@ enum
   PROP_DITHERING,
   PROP_NOISE_SHAPING,
   PROP_MIX_MATRIX,
+  PROP_DITHERING_THRESHOLD
 };
 
 #define DEBUG_INIT \
@@ -224,6 +225,18 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstAudioConvert:dithering-threshold:
+   *
+   * Threshold for the output bit depth at/below which to apply dithering.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_DITHERING_THRESHOLD,
+      g_param_spec_uint ("dithering-threshold", "Dithering Threshold",
+          "Threshold for the output bit depth at/below which to apply dithering.",
+          0, 32, 20, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (element_class,
       &gst_audio_convert_src_template);
   gst_element_class_add_static_pad_template (element_class,
@@ -260,6 +273,7 @@ static void
 gst_audio_convert_init (GstAudioConvert * this)
 {
   this->dither = GST_AUDIO_DITHER_TPDF;
+  this->dither_threshold = 20;
   this->ns = GST_AUDIO_NOISE_SHAPING_NONE;
   g_value_init (&this->mix_matrix, GST_TYPE_ARRAY);
 
@@ -765,6 +779,8 @@ gst_audio_convert_set_caps (GstBaseTransform * base, GstCaps * incaps,
   config = gst_structure_new ("GstAudioConverterConfig",
       GST_AUDIO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_AUDIO_DITHER_METHOD,
       this->dither,
+      GST_AUDIO_CONVERTER_OPT_DITHER_THRESHOLD, G_TYPE_UINT,
+      this->dither_threshold,
       GST_AUDIO_CONVERTER_OPT_NOISE_SHAPING_METHOD,
       GST_TYPE_AUDIO_NOISE_SHAPING_METHOD, this->ns, NULL);
 
@@ -978,6 +994,9 @@ gst_audio_convert_set_property (GObject * object, guint prop_id,
     case PROP_NOISE_SHAPING:
       this->ns = g_value_get_enum (value);
       break;
+    case PROP_DITHERING_THRESHOLD:
+      this->dither_threshold = g_value_get_uint (value);
+      break;
     case PROP_MIX_MATRIX:
       if (!gst_value_array_get_size (value)) {
         this->mix_matrix_is_set = FALSE;
@@ -1013,6 +1032,9 @@ gst_audio_convert_get_property (GObject * object, guint prop_id,
       break;
     case PROP_NOISE_SHAPING:
       g_value_set_enum (value, this->ns);
+      break;
+    case PROP_DITHERING_THRESHOLD:
+      g_value_set_uint (value, this->dither_threshold);
       break;
     case PROP_MIX_MATRIX:
       if (this->mix_matrix_is_set)
