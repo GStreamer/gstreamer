@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
-import contextlib
 import glob
 import json
 import os
 import platform
 import re
-import site
 import shlex
 import shutil
 import subprocess
-import sys
 import tempfile
 import pathlib
 import signal
@@ -42,7 +39,7 @@ SHAREDLIB_REG = re.compile(r'\.so|\.dylib|\.dll')
 GSTPLUGIN_FILEPATH_REG_TEMPLATE = r'.*/{libdir}/gstreamer-1.0/[^/]+$'
 GSTPLUGIN_FILEPATH_REG = None
 
-BC_RC =  '''
+BC_RC = '''
 BASH_COMPLETION_SCRIPTS="{bash_completions}"
 BASH_COMPLETION_PATHS="{bash_completions_paths}"
 for p in $BASH_COMPLETION_PATHS; do
@@ -71,6 +68,7 @@ def listify(o):
         return o
     raise AssertionError('Object {!r} must be a string or a list'.format(o))
 
+
 def stringify(o):
     if isinstance(o, str):
         return o
@@ -79,6 +77,7 @@ def stringify(o):
             return o[0]
         raise AssertionError('Did not expect object {!r} to have more than one element'.format(o))
     raise AssertionError('Object {!r} must be a string or a list'.format(o))
+
 
 def prepend_env_var(env, var, value, sysroot):
     if var is None:
@@ -96,6 +95,7 @@ def prepend_env_var(env, var, value, sysroot):
     env[var] = val + env_val
     env[var] = env[var].replace(os.pathsep + os.pathsep, os.pathsep).strip(os.pathsep)
 
+
 def get_target_install_filename(target, filename):
     '''
     Checks whether this file is one of the files installed by the target
@@ -105,6 +105,7 @@ def get_target_install_filename(target, filename):
         if install_filename.endswith(basename):
             return install_filename
     return None
+
 
 def get_pkgconfig_variable_from_pcfile(pcfile, varname):
     variables = {}
@@ -122,6 +123,7 @@ def get_pkgconfig_variable_from_pcfile(pcfile, varname):
                 value = value.replace(k, v)
             variables[key] = value
     return variables.get(varname, '')
+
 
 @lru_cache()
 def get_pkgconfig_variable(builddir, pcname, varname):
@@ -147,6 +149,7 @@ def is_gio_module(target, filename, builddir):
         return False
     return True
 
+
 def is_library_target_and_not_plugin(target, filename):
     '''
     Don't add plugins to PATH/LD_LIBRARY_PATH because:
@@ -168,6 +171,7 @@ def is_library_target_and_not_plugin(target, filename):
     if GSTPLUGIN_FILEPATH_REG.search(install_filename.replace('\\', '/')):
         return False
     return True
+
 
 def is_binary_target_and_in_path(target, filename, bindir):
     if target['type'] != 'executable':
@@ -199,6 +203,7 @@ def get_wine_subprocess_env(options, env):
     env['WINEDEBUG'] = 'fixme-all'
 
     return env
+
 
 def setup_gdb(options):
     python_paths = set()
@@ -242,20 +247,22 @@ def setup_gdb(options):
 
     return python_paths
 
-def is_bash_completion_available (options):
-    return  os.path.exists(os.path.join(options.builddir, 'subprojects/gstreamer/data/bash-completion/helpers/gst'))
+
+def is_bash_completion_available(options):
+    return os.path.exists(os.path.join(options.builddir, 'subprojects/gstreamer/data/bash-completion/helpers/gst'))
+
 
 def get_subprocess_env(options, gst_version):
     env = os.environ.copy()
 
     env["CURRENT_GST"] = os.path.normpath(SCRIPTDIR)
     env["GST_VERSION"] = gst_version
-    prepend_env_var (env, "GST_VALIDATE_SCENARIOS_PATH", os.path.normpath(
+    prepend_env_var(env, "GST_VALIDATE_SCENARIOS_PATH", os.path.normpath(
         "%s/subprojects/gst-devtools/validate/data/scenarios" % SCRIPTDIR),
         options.sysroot)
     env["GST_VALIDATE_PLUGIN_PATH"] = os.path.normpath(
         "%s/subprojects/gst-devtools/validate/plugins" % options.builddir)
-    prepend_env_var (env, "GST_VALIDATE_APPS_DIR", os.path.normpath(
+    prepend_env_var(env, "GST_VALIDATE_APPS_DIR", os.path.normpath(
         "%s/subprojects/gst-editing-services/tests/validate" % SCRIPTDIR),
         options.sysroot)
     env["GST_ENV"] = 'gst-' + gst_version
@@ -264,10 +271,10 @@ def get_subprocess_env(options, gst_version):
         "%s/subprojects/gst-devtools/validate/tools" % options.builddir),
         options.sysroot)
 
-    prepend_env_var (env, "GST_VALIDATE_SCENARIOS_PATH", os.path.normpath(
+    prepend_env_var(env, "GST_VALIDATE_SCENARIOS_PATH", os.path.normpath(
         "%s/subprojects/gst-examples/webrtc/check/validate/scenarios" %
         SCRIPTDIR), options.sysroot)
-    prepend_env_var (env, "GST_VALIDATE_APPS_DIR", os.path.normpath(
+    prepend_env_var(env, "GST_VALIDATE_APPS_DIR", os.path.normpath(
         "%s/subprojects/gst-examples/webrtc/check/validate/apps" %
         SCRIPTDIR), options.sysroot)
 
@@ -404,7 +411,6 @@ def get_subprocess_env(options, gst_version):
         installed_s = subprocess.check_output(meson + ['introspect', options.builddir, '--installed'])
         for path, installpath in json.loads(installed_s.decode()).items():
             installpath_parts = pathlib.Path(installpath).parts
-            path_parts = pathlib.Path(path).parts
 
             # We want to add all python modules to the PYTHONPATH
             # in a manner consistent with the way they would be imported:
@@ -423,7 +429,7 @@ def get_subprocess_env(options, gst_version):
                     if os.path.commonprefix(["gi/overrides", install_subpath]):
                         overrides_dirs.add(os.path.dirname(path))
                     else:
-                        python_dirs.add(path[:len (install_subpath) * -1])
+                        python_dirs.add(path[:len(install_subpath) * -1])
 
             if path.endswith('.prs'):
                 presets.add(os.path.dirname(path))
@@ -466,11 +472,11 @@ def get_subprocess_env(options, gst_version):
         # Preserve default paths when empty
         prepend_env_var(env, 'XDG_DATA_DIRS', '/usr/local/share/:/usr/share/', '')
 
-    prepend_env_var (env, 'XDG_DATA_DIRS', os.path.join(options.builddir,
-                                                        'subprojects',
-                                                        'gst-docs',
-                                                        'GStreamer-doc'),
-                     options.sysroot)
+    prepend_env_var(env, 'XDG_DATA_DIRS', os.path.join(options.builddir,
+                                                       'subprojects',
+                                                       'gst-docs',
+                                                       'GStreamer-doc'),
+                    options.sysroot)
 
     if 'XDG_CONFIG_DIRS' not in env or not env['XDG_CONFIG_DIRS']:
         # Preserve default paths when empty
@@ -481,11 +487,13 @@ def get_subprocess_env(options, gst_version):
 
     return env
 
+
 def get_windows_shell():
-    command = ['powershell.exe' ,'-noprofile', '-executionpolicy', 'bypass', '-file',
+    command = ['powershell.exe', '-noprofile', '-executionpolicy', 'bypass', '-file',
         os.path.join(SCRIPTDIR, 'data', 'misc', 'cmd_or_ps.ps1')]
     result = subprocess.check_output(command)
     return result.decode().strip()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="gst-env")
@@ -536,10 +544,10 @@ if __name__ == "__main__":
 
     # The following incantation will retrieve the current branch name.
     try:
-      gst_version = git("rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD",
-                        repository_path=options.srcdir).strip('\n')
+        gst_version = git("rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD",
+                          repository_path=options.srcdir).strip('\n')
     except subprocess.CalledProcessError:
-      gst_version = "unknown"
+        gst_version = "unknown"
 
     if options.wine:
         gst_version += '-' + os.path.basename(options.wine)
@@ -571,7 +579,7 @@ if __name__ == "__main__":
                 bash_completions_files = []
                 for p in BASH_COMPLETION_PATHS:
                     if os.path.exists(p):
-                        bash_completions_files +=  os.listdir(path=p)
+                        bash_completions_files += os.listdir(path=p)
                 bc_rc = BC_RC.format(bash_completions=' '.join(bash_completions_files), bash_completions_paths=' '.join(BASH_COMPLETION_PATHS))
                 tmprc.write(bc_rc)
                 tmprc.flush()
