@@ -177,7 +177,8 @@ gst_buffer_add_video_sei_user_data_unregistered_meta (GstBuffer * buffer,
   meta = (GstVideoSEIUserDataUnregisteredMeta *) gst_buffer_add_meta (buffer,
       GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_INFO, NULL);
   g_assert (meta != NULL);
-
+  memcpy (meta->uuid, uuid, 16);
+  meta->data = g_malloc (size);
   memcpy (meta->data, data, size);
   meta->size = size;
 
