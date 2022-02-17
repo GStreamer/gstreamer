@@ -35,6 +35,14 @@ output to standard error.
 
 You can use the special names `stdout` and `stderr` to use those output.
 
+**GST_VALIDATE_APPS_DIR.**
+
+Set this variable to a colon separated list of paths. The validate test
+runner will execute all `.py` scripts found within the directories.
+By default GstValidate will look for test applications in the folders:
+* subprojects/gst-examples/webrtc/check/validate/apps
+* subprojects/gst-editing-services/tests/validate
+
 **GST_VALIDATE_PLUGIN_PATH.**
 
 Set this variable to a colon-separated list of paths. GstValidate will
