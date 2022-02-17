@@ -882,7 +882,12 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
         GST_MINI_OBJECT_FLAG_SET (surface->buf, GST_MINI_OBJECT_FLAG_LOCKABLE);
         frame->output_buffer = gst_buffer_ref (surface->buf);
       } else {
-        gst_video_frame_copy (&surface->copy, &surface->data);
+        if (!gst_video_frame_copy (&surface->copy, &surface->data)) {
+          GST_ERROR_OBJECT (thiz, "Failed to copy surface data");
+          gst_video_frame_unmap (&surface->copy);
+          gst_video_frame_unmap (&surface->data);
+          return GST_FLOW_ERROR;
+        }
         frame->output_buffer = gst_buffer_ref (surface->copy.buffer);
         unmap_frame (thiz, surface);
       }
@@ -1321,7 +1326,12 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
           gst_video_decoder_get_output_state (GST_VIDEO_DECODER (thiz));
       if (output_state) {
         if (output_state->allocation_caps) {
-          gst_video_info_from_caps (&alloc_info, output_state->allocation_caps);
+          if (!gst_video_info_from_caps (&alloc_info,
+                  output_state->allocation_caps)) {
+            GST_ERROR_OBJECT (thiz, "Failed to get video info from caps");
+            flow = GST_FLOW_ERROR;
+            goto error;
+          }
 
           /* Check whether we need complete reset for dynamic resolution change */
           if (thiz->param.mfx.FrameInfo.Width >
@@ -1727,7 +1737,10 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
         min_buffers, max_buffers);
     if (!gst_buffer_pool_set_config (pool, pool_config))
       goto error_set_config;
-    gst_video_info_from_caps (&thiz->non_msdk_pool_info, pool_caps);
+    if (!gst_video_info_from_caps (&thiz->non_msdk_pool_info, pool_caps)) {
+      GST_ERROR_OBJECT (thiz, "Failed to get video info from caps");
+      return FALSE;
+    }
 
     /* update width and height with actual negotiated values */
     output_state =

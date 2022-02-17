@@ -1300,8 +1300,10 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
           gst_caps_get_features (out_caps, 0)))
     thiz->need_vpp = 1;
 
-  gst_video_info_from_caps (&in_info, caps);
-  gst_video_info_from_caps (&out_info, out_caps);
+  if (!gst_video_info_from_caps (&in_info, caps))
+    goto error_no_video_info;
+  if (!gst_video_info_from_caps (&out_info, out_caps))
+    goto error_no_video_info;
 
   if (!gst_video_info_is_equal (&in_info, &thiz->sinkpad_info))
     sinkpad_info_changed = TRUE;
@@ -1347,6 +1349,10 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
   }
 
   return TRUE;
+
+error_no_video_info:
+  GST_ERROR_OBJECT (thiz, "Failed to get video info from caps");
+  return FALSE;
 }
 
 static gboolean
