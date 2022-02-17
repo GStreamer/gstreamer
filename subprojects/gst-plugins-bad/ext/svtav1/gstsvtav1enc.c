@@ -191,8 +191,8 @@ gst_svtav1enc_class_init (GstSvtAv1EncClass * klass)
       g_param_spec_uint ("speed", "speed (Encoder Mode)",
           "Quality vs density tradeoff point"
           " that the encoding is to be performed at"
-          " (0 is the highest quality, 8 is the highest speed) ",
-          0, 8, PROP_ENCMODE_DEFAULT,
+          " (0 is the highest quality, 12 is the highest speed) ",
+          0, 12, PROP_ENCMODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_B_PYRAMID,
