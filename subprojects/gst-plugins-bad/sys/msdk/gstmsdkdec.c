@@ -611,7 +611,7 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
   GstVideoFormat format;
   guint width, height;
   guint alloc_w, alloc_h;
-  int out_width, out_height;
+  int out_width = 0, out_height = 0;
   const gchar *format_str;
   GstStructure *outs = NULL;
   const gchar *out_format;
