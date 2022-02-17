@@ -6643,16 +6643,16 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     }
     *codec_name = g_strdup_printf ("FFMpeg v1");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_PRORES)) {
-    guint32 fourcc;
+    guint32 fourcc = 0;
     const gchar *variant, *variant_descr = "";
 
     /* Expect a fourcc in the codec private data */
-    if (!data || size < 4) {
-      GST_WARNING ("No or too small PRORESS fourcc (%d bytes)", size);
-      return NULL;
+    if (data && size >= 4) {
+      fourcc = GST_STR_FOURCC (data);
+    } else {
+      GST_DEBUG ("Picking apcn variant because no ProRes codec data found");
     }
 
-    fourcc = GST_STR_FOURCC (data);
     switch (fourcc) {
       case GST_MAKE_FOURCC ('a', 'p', 'c', 's'):
         variant_descr = " 4:2:2 LT";
