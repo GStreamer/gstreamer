@@ -27,6 +27,36 @@
 G_BEGIN_DECLS
 
 /**
+ * MISB UUID for H.264 Precision Time Stamp
+ *
+ * This is from MISB ST 0604.6 Section 11.1.
+ */
+static const guint8 H264_MISP_MICROSECTIME[] = {
+  0x4D, 0x49, 0x53, 0x50, 0x6D, 0x69, 0x63, 0x72,
+  0x6F, 0x73, 0x65, 0x63, 0x74, 0x69, 0x6D, 0x65
+};
+
+/**
+ * MISB UUID for H.265 Precision Time Stamp
+ *
+ * This is from MISB ST 0604.6 Section 12.1.
+ */
+static const guint8 H265_MISP_MICROSECONDS[] = {
+  0xA8, 0x68, 0x7D, 0xD4, 0xD7, 0x59, 0x37, 0x58,
+  0xA5, 0xCE, 0xF0, 0x33, 0x8B, 0x65, 0x45, 0xF1
+};
+
+/**
+ * MISB UUID for H.265 Nano Time Stamp
+ *
+ * This is from MISB ST 0604.6 Section 12.1.
+ */
+static const guint8 H265_MISP_NANOSECONDS[] = {
+  0xCF, 0x84, 0x82, 0x78, 0xEE, 0x23, 0x30, 0x6C,
+  0x92, 0x65, 0xE8, 0xFE, 0xF2, 0x2F, 0xB8, 0xB8
+};
+
+/**
  * GstVideoSEIUserDataUnregisteredMeta:
  * @meta: parent #GstMeta
  * @description: H.264 H.265 metadata from SEI User Data Unregistered messages

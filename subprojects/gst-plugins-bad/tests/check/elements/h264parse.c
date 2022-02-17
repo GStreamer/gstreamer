@@ -29,6 +29,7 @@
 
 #include <gst/check/check.h>
 #include <gst/video/video.h>
+#include <gst/video/video-sei.h>
 #include "gst-libs/gst/codecparsers/gsth264parser.h"
 #include "parser.h"
 
@@ -1463,6 +1464,58 @@ GST_START_TEST (test_parse_aud_insert)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_sei_userdefinedunregistered)
+{
+  GstVideoSEIUserDataUnregisteredMeta *meta;
+  GstHarness *h;
+  GstBuffer *buf;
+
+  const guint8 misb_sei[] = {
+    0x00, 0x00, 0x00, 0x20, 0x06, 0x05, 0x1c, 0x4d,
+    0x49, 0x53, 0x50, 0x6d, 0x69, 0x63, 0x72, 0x6f,
+    0x73, 0x65, 0x63, 0x74, 0x69, 0x6d, 0x65, 0x1f,
+    0x00, 0x05, 0xff, 0x21, 0x7e, 0xff, 0x29, 0xb5,
+    0xff, 0xdc, 0x13, 0x80,
+    /* IDR frame (doesn't match caps) */
+    0x00, 0x00, 0x00, 0x14, 0x65, 0x88, 0x84, 0x00,
+    0x10, 0xff, 0xfe, 0xf6, 0xf0, 0xfe, 0x05, 0x36,
+    0x56, 0x04, 0x50, 0x96, 0x7b, 0x3f, 0x53, 0xe1
+  };
+  const gsize misb_sei_size = sizeof (misb_sei);
+
+  // Expected result - time status plus padded data
+  const guint8 st0604_data[] = {
+    0x1f, 0x00, 0x05, 0xff, 0x21, 0x7e, 0xff, 0x29,
+    0xb5, 0xff, 0xdc, 0x13
+  };
+
+  h = gst_harness_new ("h264parse");
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h264, stream-format=(string)avc,"
+      " width=(int)1920, height=(int)1080, framerate=(fraction)25/1,"
+      " bit-depth-chroma=(uint)8, parsed=(boolean)true,"
+      " alignment=(string)au, profile=(string)high, level=(string)4,"
+      " codec_data=(buffer)01640028ffe1001a67640028acb200f0044fcb080000030008000003019478c1924001000568ebccb22c");
+
+  buf = gst_buffer_new_and_alloc (misb_sei_size);
+  gst_buffer_fill (buf, 0, misb_sei, misb_sei_size);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  buf = gst_harness_pull (h);
+  meta = gst_buffer_get_video_sei_user_data_unregistered_meta (buf);
+  fail_unless (meta != NULL);
+
+  fail_unless (memcmp (meta->uuid, H264_MISP_MICROSECTIME, 16) == 0);
+  fail_unless (memcmp (meta->data, st0604_data, 12) == 0);
+
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 /*
  * TODO:
  *   - Both push- and pull-modes need to be tested
@@ -1575,6 +1628,7 @@ main (int argc, char **argv)
     tcase_add_test (tc_chain, test_parse_compatible_caps);
     tcase_add_test (tc_chain, test_parse_skip_to_4bytes_sc);
     tcase_add_test (tc_chain, test_parse_aud_insert);
+    tcase_add_test (tc_chain, test_parse_sei_userdefinedunregistered);
     nf += gst_check_run_suite (s, "h264parse", __FILE__);
   }
 
