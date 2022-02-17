@@ -30,8 +30,8 @@ information and consider differently the level of the reported issues.
 **GST_VALIDATE_FILE.**
 
 Set this variable to a colon-separated list of paths to redirect all
-GstValidate messages to this file. If left unset, debug messages will be
-outputed into the standard error.
+GstValidate messages to this file. If left unset, debug messages are
+output to standard error.
 
 You can use the special names `stdout` and `stderr` to use those output.
 
