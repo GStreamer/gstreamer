@@ -390,10 +390,16 @@ def get_subprocess_env(options, gst_version):
                                 os.path.join(options.builddir, root),
                                 options.sysroot)
 
-    with open(os.path.join(options.builddir, 'GstPluginsPath.json')) as f:
-        for plugin_path in json.load(f):
-            prepend_env_var(env, 'GST_PLUGIN_PATH', plugin_path,
-                            options.sysroot)
+    # Search for the Plugin paths file either in the build directory root
+    # or check if gstreamer is a subproject of another project
+    for sub_directories in [[], ['subprojects', 'gstreamer']]:
+        plugin_paths = os.path.join(options.builddir, *sub_directories, 'GstPluginsPath.json')
+        if os.path.exists(plugin_paths):
+            with open(plugin_paths) as f:
+                for plugin_path in json.load(f):
+                    prepend_env_var(env, 'GST_PLUGIN_PATH', plugin_path,
+                                    options.sysroot)
+            break
 
     # Sort to iterate in a consistent order (`set`s and `hash`es are randomized)
     for p in sorted(paths):
