@@ -62,7 +62,7 @@ struct _GstCCCombiner
 {
   GstAggregator parent;
 
-  GstAggregatorPad *video_pad;
+  GstAggregatorPad *video_pad, *caption_pad;
 
   gint video_fps_n, video_fps_d;
   gboolean progressive;

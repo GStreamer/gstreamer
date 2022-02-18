@@ -125,6 +125,8 @@ gst_cc_combiner_finalize (GObject * object)
 {
   GstCCCombiner *self = GST_CCCOMBINER (object);
 
+  gst_clear_object (&self->caption_pad);
+
   g_array_unref (self->current_frame_captions);
   self->current_frame_captions = NULL;
 
@@ -512,9 +514,10 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
 
   g_assert (self->current_video_buffer != NULL);
 
-  caption_pad =
-      GST_AGGREGATOR_PAD_CAST (gst_element_get_static_pad (GST_ELEMENT_CAST
-          (self), "caption"));
+  GST_OBJECT_LOCK (self);
+  caption_pad = self->caption_pad ? gst_object_ref (self->caption_pad) : NULL;
+  GST_OBJECT_UNLOCK (self);
+
   /* No caption pad, forward buffer directly */
   if (!caption_pad) {
     GST_LOG_OBJECT (self, "No caption pad, passing through video");
@@ -998,9 +1001,24 @@ gst_cc_combiner_create_new_pad (GstAggregator * aggregator,
   agg_pad = g_object_new (GST_TYPE_AGGREGATOR_PAD,
       "name", "caption", "direction", GST_PAD_SINK, "template", templ, NULL);
   self->caption_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
+  self->caption_pad = gst_object_ref (agg_pad);
   GST_OBJECT_UNLOCK (self);
 
   return agg_pad;
+}
+
+static void
+gst_cc_combiner_release_pad (GstElement * element, GstPad * pad)
+{
+  GstCCCombiner *self = GST_CCCOMBINER (element);
+
+  GST_OBJECT_LOCK (self);
+  if (pad == GST_PAD_CAST (self->caption_pad)) {
+    gst_clear_object (&self->caption_pad);
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
 }
 
 static gboolean
@@ -1397,6 +1415,8 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_cc_combiner_change_state);
+  gstelement_class->release_pad =
+      GST_DEBUG_FUNCPTR (gst_cc_combiner_release_pad);
 
   aggregator_class->aggregate = gst_cc_combiner_aggregate;
   aggregator_class->stop = gst_cc_combiner_stop;
