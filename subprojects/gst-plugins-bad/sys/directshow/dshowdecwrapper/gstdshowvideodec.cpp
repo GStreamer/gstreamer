@@ -114,8 +114,8 @@ static PreferredFilter preferred_wmv_filters[] = {
   {&CLSID_CWMVDecMediaObject, &DMOCATEGORY_VIDEO_DECODER}, {0}
 };
 
-static const GUID CLSID_AVI_DECOMPRESSOR = 
-  {0xCF49D4E0, 0x1115, 0x11CE, 
+static const GUID CLSID_AVI_DECOMPRESSOR =
+  {0xCF49D4E0, 0x1115, 0x11CE,
    {0xB0, 0x3A, 0x00, 0x20, 0xAF, 0x0B, 0xA7, 0x70}};
 static PreferredFilter preferred_cinepack_filters[] = {
   {&CLSID_AVI_DECOMPRESSOR}, {0}
@@ -132,8 +132,8 @@ static PreferredFilter preferred_mp4s_filters[] = {
 static PreferredFilter preferred_mp43_filters[] = {
   {&CLSID_CMpeg43DecMediaObject, &DMOCATEGORY_VIDEO_DECODER}, {0}};
 
-static const GUID CLSID_MPEG_VIDEO_DECODER = 
-  {0xFEB50740, 0x7BEF, 0x11CE, 
+static const GUID CLSID_MPEG_VIDEO_DECODER =
+  {0xFEB50740, 0x7BEF, 0x11CE,
    {0x9B, 0xD9, 0x00, 0x00, 0xE2, 0x02, 0x59, 0x9C}};
 static PreferredFilter preferred_mpeg1_filters[] = {
   {&CLSID_MPEG_VIDEO_DECODER}, {0}
@@ -240,7 +240,7 @@ static const VideoCodecEntry video_dec_codecs[] = {
    GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
    GST_VIDEO_CAPS_MAKE("YUY2"),
    preferred_mpeg1_filters},
-   
+
   {"dshowvdec_mpeg4", "MPEG-4 Video",
    GST_MAKE_FOURCC ('M', 'P', 'G', '4'),
    GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_MPG4,
@@ -328,7 +328,7 @@ HRESULT VideoFakeSink::DoRenderSample(IMediaSample *pMediaSample)
 
     gst_buffer_map(buf, &map, GST_MAP_WRITE);
     if (strstr (klass->entry->srccaps, "rgb")) {
-      /* FOR RGB directshow decoder will return bottom-up BITMAP 
+      /* FOR RGB directshow decoder will return bottom-up BITMAP
        * There is probably a way to get top-bottom video frames from
        * the decoder...
        */
@@ -390,7 +390,7 @@ gst_dshowvideodec_base_init (gpointer klass)
   description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
       tmp->element_longname);
 
-  gst_element_class_set_metadata(element_class, longname, "Codec/Decoder/Video", description, 
+  gst_element_class_set_metadata(element_class, longname, "Codec/Decoder/Video", description,
     "Sebastien Moutte <sebastien@moutte.net>");
 
   g_free (longname);
@@ -787,7 +787,7 @@ gst_dshowvideodec_sink_setcaps (GstPad * pad, GstCaps * caps)
           "framerate", GST_TYPE_FRACTION, vdec->fps_n, vdec->fps_d, NULL);
   }
 
-  gst_caps_set_simple (caps_out, 
+  gst_caps_set_simple (caps_out,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, vdec->par_n, vdec->par_d, NULL);
 
   if (!gst_pad_set_caps (vdec->srcpad, caps_out)) {
@@ -990,7 +990,7 @@ gst_dshowvideodec_src_getcaps (GstPad * pad)
       enum_mediatypes->Reset();
       while (hres =
           enum_mediatypes->Next(1, &mediatype, &fetched),
-          hres == S_OK) 
+          hres == S_OK)
       {
         VIDEOINFOHEADER *video_info;
         GstCaps *mediacaps = NULL;
@@ -1084,7 +1084,7 @@ gst_dshowvideodec_get_filter_output_format (GstDshowVideoDec * vdec,
     enum_mediatypes->Reset();
     while (hres =
         enum_mediatypes->Next(1, &mediatype, &fetched),
-        hres == S_OK) 
+        hres == S_OK)
     {
       if (IsEqualGUID (mediatype->subtype, subtype) &&
           IsEqualGUID (mediatype->formattype, FORMAT_VideoInfo))

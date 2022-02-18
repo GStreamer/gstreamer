@@ -23,7 +23,7 @@ GST_DEBUG_CATEGORY_EXTERN (dshowvideosink_debug);
 #define GST_CAT_DEFAULT dshowvideosink_debug
 
 // {A0A5CF33-BD0C-4158-9A56-3011DEE3AF6B}
-const GUID CLSID_VideoFakeSrc = 
+const GUID CLSID_VideoFakeSrc =
 { 0xa0a5cf33, 0xbd0c, 0x4158, { 0x9a, 0x56, 0x30, 0x11, 0xde, 0xe3, 0xaf, 0x6b } };
 
 /* output pin*/
@@ -43,7 +43,7 @@ HRESULT VideoFakeSrcPin::GetMediaType(int iPosition, CMediaType *pMediaType)
     *pMediaType = m_MediaType;
     return S_OK;
   }
-  
+
   return VFW_S_NO_MORE_ITEMS;
 }
 
@@ -73,7 +73,7 @@ HRESULT VideoFakeSrcPin::CheckMediaType(const CMediaType *pmt)
             (newvh->bmiHeader.biWidth >= curvh->bmiHeader.biWidth))
         {
           GST_DEBUG ("CheckMediaType has same media type, width %d (%d image)", newvh->bmiHeader.biWidth, curvh->bmiHeader.biWidth);
-        
+
           /* OK, compatible! */
           return S_OK;
         }
@@ -81,7 +81,7 @@ HRESULT VideoFakeSrcPin::CheckMediaType(const CMediaType *pmt)
           GST_WARNING ("Looked similar, but aren't...");
         }
       }
-      
+
     }
     GST_WARNING ("Different media types, FAILING!");
     return S_FALSE;
@@ -90,8 +90,8 @@ HRESULT VideoFakeSrcPin::CheckMediaType(const CMediaType *pmt)
 HRESULT VideoFakeSrcPin::DecideBufferSize (IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *ppropInputRequest)
 {
   ALLOCATOR_PROPERTIES properties;
-  GST_DEBUG ("Required allocator properties: %d, %d, %d, %d", 
-        ppropInputRequest->cbAlign, ppropInputRequest->cbBuffer, 
+  GST_DEBUG ("Required allocator properties: %d, %d, %d, %d",
+        ppropInputRequest->cbAlign, ppropInputRequest->cbBuffer,
         ppropInputRequest->cbPrefix, ppropInputRequest->cBuffers);
 
   ppropInputRequest->cbBuffer = m_SampleSize;
@@ -99,8 +99,8 @@ HRESULT VideoFakeSrcPin::DecideBufferSize (IMemAllocator *pAlloc, ALLOCATOR_PROP
 
   /* First set the buffer descriptions we're interested in */
   HRESULT hres = pAlloc->SetProperties(ppropInputRequest, &properties);
-  GST_DEBUG ("Actual Allocator properties: %d, %d, %d, %d", 
-        properties.cbAlign, properties.cbBuffer, 
+  GST_DEBUG ("Actual Allocator properties: %d, %d, %d, %d",
+        properties.cbAlign, properties.cbBuffer,
         properties.cbPrefix, properties.cBuffers);
 
   return S_OK;
@@ -147,7 +147,7 @@ STDMETHODIMP VideoFakeSrcPin::CopyToDestinationBuffer (byte *srcbuf, byte *dstbu
    * most of the time */
   if ((fourcc == GST_MAKE_FOURCC ('Y', 'U', 'Y', '2')) ||
       (fourcc == GST_MAKE_FOURCC ('Y', 'U', 'Y', 'V')) ||
-      (fourcc == GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'))) 
+      (fourcc == GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y')))
   {
     /* Nice and simple */
     int srcstride = GST_ROUND_UP_4 (vh->rcSource.right * 2);
@@ -271,7 +271,7 @@ GstFlowReturn VideoFakeSrcPin::PushBuffer(GstBuffer *buffer)
     Sleep(100);
   }
 
-  if (FAILED (hres)) 
+  if (FAILED (hres))
   {
     StopUsingOutputPin();
     GST_WARNING ("Could not get sample for delivery to sink: %x", hres);
@@ -285,9 +285,9 @@ GstFlowReturn VideoFakeSrcPin::PushBuffer(GstBuffer *buffer)
 
   if(sample_buffer)
   {
-    /* Copy to the destination stride. 
-     * This is not just a simple memcpy because of the different strides. 
-     * TODO: optimise for the same-stride case and avoid the copy entirely. 
+    /* Copy to the destination stride.
+     * This is not just a simple memcpy because of the different strides.
+     * TODO: optimise for the same-stride case and avoid the copy entirely.
      */
     CopyToDestinationBuffer (data, sample_buffer);
   }
@@ -295,10 +295,10 @@ GstFlowReturn VideoFakeSrcPin::PushBuffer(GstBuffer *buffer)
 
   pSample->SetDiscontinuity(FALSE); /* Decoded frame; unimportant */
   pSample->SetSyncPoint(TRUE); /* Decoded frame; always a valid syncpoint */
-  pSample->SetPreroll(FALSE); /* For non-displayed frames. 
+  pSample->SetPreroll(FALSE); /* For non-displayed frames.
                                  Not used in GStreamer */
 
-  /* Disable synchronising on this sample. We instead let GStreamer handle 
+  /* Disable synchronising on this sample. We instead let GStreamer handle
    * this at a higher level, inside BaseSink. */
   pSample->SetTime(NULL, NULL);
 

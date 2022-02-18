@@ -48,7 +48,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "video/x-raw,"
         "width = (int) [ 1, MAX ],"
         "height = (int) [ 1, MAX ],"
-        "framerate = (fraction) [ 0, MAX ]," 
+        "framerate = (fraction) [ 0, MAX ],"
         "format = {(string)YUY2, (string)UYVY, (string)YV12 }")
     );
 
@@ -94,9 +94,9 @@ static void gst_dshowvideosink_set_window_for_renderer (GstDshowVideoSink *sink)
 
 /* COM initialization/uninitialization thread */
 static void gst_dshowvideosink_com_thread (GstDshowVideoSink * sink);
-/* TODO: event, preroll, buffer_alloc? 
- * buffer_alloc won't generally be all that useful because the renderers require a 
- * different stride to GStreamer's implicit values. 
+/* TODO: event, preroll, buffer_alloc?
+ * buffer_alloc won't generally be all that useful because the renderers require a
+ * different stride to GStreamer's implicit values.
  */
 
 static void
@@ -233,7 +233,7 @@ gst_dshowvideosink_class_init (GstDshowVideoSinkClass * klass)
           (GParamFlags)G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_RENDERER, g_param_spec_string ("renderer", "Renderer", 
+      PROP_RENDERER, g_param_spec_string ("renderer", "Renderer",
       "Force usage of specific DirectShow renderer (EVR, VMR9 or VMR7)",
       NULL, (GParamFlags)G_PARAM_READWRITE));
 }
@@ -436,7 +436,7 @@ dump_all_pin_media_types (IBaseFilter *filter)
 {
   IEnumPins *enumpins = NULL;
   IPin *pin = NULL;
-  HRESULT hres; 
+  HRESULT hres;
 
   hres = filter->EnumPins (&enumpins);
   if (FAILED(hres)) {
@@ -468,13 +468,13 @@ dump_all_pin_media_types (IBaseFilter *filter)
   enumpins->Release();
 }
 
-gboolean 
+gboolean
 gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin **pin)
 {
   gboolean ret = FALSE;
   IEnumPins *enumpins = NULL;
   IPin *pintmp = NULL;
-  HRESULT hres; 
+  HRESULT hres;
   *pin = NULL;
 
   hres = filter->EnumPins (&enumpins);
@@ -498,7 +498,7 @@ gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin *
   return ret;
 }
 
-static void 
+static void
 gst_dshowvideosink_handle_event (GstDshowVideoSink *sink)
 {
   if (sink->filter_media_event) {
@@ -545,7 +545,7 @@ LRESULT APIENTRY WndProcHook (HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 }
 
 /* WndProc for our default window, if the application didn't supply one */
-LRESULT APIENTRY 
+LRESULT APIENTRY
 WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   GstDshowVideoSink *sink = (GstDshowVideoSink *)GetWindowLongPtr (hWnd, GWLP_USERDATA);
@@ -618,7 +618,7 @@ gst_dshowvideosink_window_thread (GstDshowVideoSink * sink)
     exstyle = 0;
   }
   else {
-    /* By default, create a normal top-level window, the size 
+    /* By default, create a normal top-level window, the size
      * of the video.
      */
     RECT rect;
@@ -759,7 +759,7 @@ static void gst_dshowvideosink_set_window_for_renderer (GstDshowVideoSink *sink)
   }
   sink->is_new_window = FALSE;
 
-  /* This tells the renderer where the window is located, needed to 
+  /* This tells the renderer where the window is located, needed to
    * start drawing in the right place.  */
   sink->renderersupport->MoveWindow();
   GST_INFO_OBJECT (sink, "Set renderer window to %x", sink->window_id);
@@ -813,7 +813,7 @@ gst_dshowvideosink_connect_graph (GstDshowVideoSink *sink)
 
   srcpin = sink->fakesrc->GetOutputPin();
 
-  gst_dshow_get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT, 
+  gst_dshow_get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT,
       &sinkpin);
   if (!sinkpin) {
     GST_WARNING_OBJECT (sink, "Cannot get input pin from Renderer");
@@ -861,7 +861,7 @@ gst_dshowvideosink_start_graph (GstDshowVideoSink *sink)
     ret = GST_STATE_CHANGE_FAILURE;
     goto done;
   }
-  
+
   GST_DEBUG_OBJECT (sink, "DirectShow graph is now running");
   ret = GST_STATE_CHANGE_SUCCESS;
 
@@ -931,7 +931,7 @@ gst_dshowvideosink_stop_graph (GstDshowVideoSink *sink)
 
   sink->filter_graph->Disconnect(sink->fakesrc->GetOutputPin());
 
-  gst_dshow_get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT, 
+  gst_dshow_get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT,
       &sinkpin);
   sink->filter_graph->Disconnect(sinkpin);
   sinkpin->Release();
@@ -1016,7 +1016,7 @@ private:
   HWND video_window;
 
 public:
-  EVRSupport (GstDshowVideoSink *sink) : 
+  EVRSupport (GstDshowVideoSink *sink) :
       sink(sink),
       filter(NULL),
       service(NULL),
@@ -1066,7 +1066,7 @@ public:
         IID_IBaseFilter, (LPVOID *) &filter);
     GST_DEBUG_OBJECT (sink, "cocreateinstance returned %d", hres);
     if (FAILED (hres)) {
-      GST_ERROR_OBJECT (sink, 
+      GST_ERROR_OBJECT (sink,
           "Can't create an instance of renderer (error=%x)",
           hres);
       return FALSE;
@@ -1079,7 +1079,7 @@ public:
       return FALSE;
     }
 
-    hres = service->GetService (MR_VIDEO_RENDER_SERVICE, 
+    hres = service->GetService (MR_VIDEO_RENDER_SERVICE,
           IID_IMFVideoDisplayControl, (void **) &control);
     if (FAILED (hres)) {
       GST_WARNING_OBJECT (sink, "EVR control service missing: %x", hres);
@@ -1152,8 +1152,8 @@ private:
   HWND video_window;
 
 public:
-  VMR9Support (GstDshowVideoSink *sink) : 
-      sink(sink), 
+  VMR9Support (GstDshowVideoSink *sink) :
+      sink(sink),
       filter(NULL),
       control(NULL),
       config(NULL)
@@ -1183,7 +1183,7 @@ public:
     hres = CoCreateInstance (CLSID_VideoMixingRenderer9, NULL, CLSCTX_INPROC,
         IID_IBaseFilter, (LPVOID *) &filter);
     if (FAILED (hres)) {
-      GST_ERROR_OBJECT (sink, 
+      GST_ERROR_OBJECT (sink,
           "Can't create an instance of renderer (error=%x)",
           hres);
       return FALSE;
@@ -1205,7 +1205,7 @@ public:
       GST_DEBUG_OBJECT (sink, "Set VMR9 (%p) to windowless mode!", filter);
     }
 
-    /* We can't QI to this until _after_ we've been set to windowless mode. 
+    /* We can't QI to this until _after_ we've been set to windowless mode.
      * Apparently this is against the rules in COM, but that's how it is... */
     hres = filter->QueryInterface (
           IID_IVMRWindowlessControl9, (void **) &control);
@@ -1281,8 +1281,8 @@ private:
   HWND video_window;
 
 public:
-  VMR7Support (GstDshowVideoSink *sink) : 
-      sink(sink), 
+  VMR7Support (GstDshowVideoSink *sink) :
+      sink(sink),
       filter(NULL),
       control(NULL),
       config(NULL)
@@ -1312,7 +1312,7 @@ public:
     hres = CoCreateInstance (CLSID_VideoMixingRenderer, NULL, CLSCTX_INPROC,
         IID_IBaseFilter, (LPVOID *) &filter);
     if (FAILED (hres)) {
-      GST_ERROR_OBJECT (sink, 
+      GST_ERROR_OBJECT (sink,
           "Can't create an instance of renderer (error=%x)",
           hres);
       return FALSE;
@@ -1398,8 +1398,8 @@ public:
   }
 };
 
-static gboolean 
-gst_dshowvideosink_create_renderer (GstDshowVideoSink *sink) 
+static gboolean
+gst_dshowvideosink_create_renderer (GstDshowVideoSink *sink)
 {
   GST_DEBUG_OBJECT (sink, "Trying to create renderer '%s'", "EVR");
 
@@ -1458,7 +1458,7 @@ gst_dshowvideosink_build_filtergraph (GstDshowVideoSink *sink)
 {
   HRESULT hres;
 
-  /* Build our DirectShow FilterGraph, looking like: 
+  /* Build our DirectShow FilterGraph, looking like:
    *
    *    [ fakesrc ] -> [ sink filter ]
    *
@@ -1470,7 +1470,7 @@ gst_dshowvideosink_build_filtergraph (GstDshowVideoSink *sink)
   hres = CoCreateInstance (CLSID_FilterGraph, NULL, CLSCTX_INPROC,
       IID_IFilterGraph, (LPVOID *) & sink->filter_graph);
   if (FAILED (hres)) {
-    GST_ERROR_OBJECT (sink, 
+    GST_ERROR_OBJECT (sink,
           "Can't create an instance of the dshow graph manager (error=%x)", hres);
     goto error;
   }
@@ -1503,7 +1503,7 @@ gst_dshowvideosink_build_filtergraph (GstDshowVideoSink *sink)
       sink->filter_graph->AddFilter (sink->renderersupport->GetFilter(),
       L"renderer");
   if (FAILED (hres)) {
-    GST_ERROR_OBJECT (sink, 
+    GST_ERROR_OBJECT (sink,
           "Can't add renderer to the graph (error=%x)", hres);
     goto error;
   }
@@ -1547,7 +1547,7 @@ gst_dshowvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (sink->connected) {
       IPin *sinkpin;
       sink->filter_graph->Disconnect(sink->fakesrc->GetOutputPin());
-      gst_dshow_get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT, 
+      gst_dshow_get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT,
           &sinkpin);
       sink->filter_graph->Disconnect(sinkpin);
       sinkpin->Release();
@@ -1560,7 +1560,7 @@ gst_dshowvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   GST_DEBUG_OBJECT (sink, "Configuring output pin media type");
   /* Now we have an AM_MEDIA_TYPE describing what we're going to send.
-   * We set this on our DirectShow fakesrc's output pin. 
+   * We set this on our DirectShow fakesrc's output pin.
    */
   sink->fakesrc->GetOutputPin()->SetMediaType (&sink->mediatype);
   GST_DEBUG_OBJECT (sink, "Configured output pin media type");
@@ -1590,8 +1590,8 @@ gst_dshowvideosink_stop (GstBaseSink * bsink)
     GST_WARNING_OBJECT (sink, "Cannot destroy filter graph; it doesn't exist");
     return TRUE;
   }
-  
-  /* If we created a new window, send the close message and wait until 
+
+  /* If we created a new window, send the close message and wait until
    * it's closed in the window thread */
   if (sink->is_new_window) {
     SendMessage (sink->window_id, WM_CLOSE, NULL, NULL);
@@ -1714,9 +1714,9 @@ video_media_type_to_caps (AM_MEDIA_TYPE *mediatype)
   {
     VIDEOINFOHEADER *vh = (VIDEOINFOHEADER *)mediatype->pbFormat;
 
-	/* TODO: Set PAR here. Based on difference between source and target RECTs? 
+	/* TODO: Set PAR here. Based on difference between source and target RECTs?
      *       Do we want framerate? Based on AvgTimePerFrame? */
-    gst_caps_set_simple (caps, 
+    gst_caps_set_simple (caps,
             "width", G_TYPE_INT, vh->bmiHeader.biWidth,
             "height", G_TYPE_INT, vh->bmiHeader.biHeight,
 			NULL);
@@ -1841,7 +1841,7 @@ gst_caps_to_directshow_media_type (GstDshowVideoSink * sink, GstCaps *caps,
       if (sink->keep_aspect_ratio) {
         par_n = GST_VIDEO_INFO_PAR_N (&info);
         par_d = GST_VIDEO_INFO_PAR_D (&info);
-        /* To handle non-square pixels, we set the target rectangle to a 
+        /* To handle non-square pixels, we set the target rectangle to a
          * different size than the source rectangle.
          * There might be a better way, but this seems to work. */
         vi->rcTarget.bottom = height;

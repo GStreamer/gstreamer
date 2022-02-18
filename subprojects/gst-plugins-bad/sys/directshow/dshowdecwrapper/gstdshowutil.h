@@ -54,9 +54,9 @@ typedef struct {
 IPin *gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir);
 
 /* find and return a filter according to the input and output types */
-IBaseFilter * 
-gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype, 
-                      CLSID output_majortype, CLSID output_subtype, 
+IBaseFilter *
+gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
+                      CLSID output_majortype, CLSID output_subtype,
                       PreferredFilter *preferred_filters);
 
 #define DSHOW_CODEC_QDATA g_quark_from_string ("dshow-codec")

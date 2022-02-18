@@ -27,12 +27,12 @@
 
 _COM_SMARTPTR_TYPEDEF(IDMOWrapperFilter, __uuidof(IDMOWrapperFilter));
 
-IPin * 
+IPin *
 gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir)
 {
   IEnumPinsPtr enumpins;
   IPinPtr pin;
-  HRESULT hres; 
+  HRESULT hres;
 
   hres = filter->EnumPins (&enumpins);
   if (FAILED(hres)) {
@@ -52,9 +52,9 @@ gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir)
   return NULL;
 }
 
-IBaseFilter * 
-gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype, 
-                      CLSID output_majortype, CLSID output_subtype, 
+IBaseFilter *
+gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
+                      CLSID output_majortype, CLSID output_subtype,
                       PreferredFilter *preferred_filters)
 {
   HRESULT hres;
@@ -69,20 +69,20 @@ gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
   /* First, see if any of our preferred filters is available.
    * If not, we fall back to the highest-ranked installed filter */
   if (preferred_filters) {
-    while (preferred_filters->filter_guid) 
+    while (preferred_filters->filter_guid)
     {
       /* If the filter is a DMO, we need to do this a bit differently */
-      if (preferred_filters->dmo_category) 
+      if (preferred_filters->dmo_category)
       {
         IDMOWrapperFilterPtr wrapper;
 
-        hres = CoCreateInstance (CLSID_DMOWrapperFilter, NULL, 
+        hres = CoCreateInstance (CLSID_DMOWrapperFilter, NULL,
           CLSCTX_INPROC,
           IID_IBaseFilter, (void **)&filter);
         if (SUCCEEDED(hres)) {
           hres = filter->QueryInterface (&wrapper);
           if (SUCCEEDED(hres)) {
-            hres = wrapper->Init (*preferred_filters->filter_guid, 
+            hres = wrapper->Init (*preferred_filters->filter_guid,
                 *preferred_filters->dmo_category);
             if (SUCCEEDED(hres))
               return filter;
@@ -90,9 +90,9 @@ gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
           filter->Release();
         }
       }
-      else 
+      else
       {
-        hres = CoCreateInstance (*preferred_filters->filter_guid, 
+        hres = CoCreateInstance (*preferred_filters->filter_guid,
           NULL, CLSCTX_INPROC,
           IID_IBaseFilter, (void **)&filter);
         if (SUCCEEDED(hres))
@@ -104,28 +104,28 @@ gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
     }
   }
 
-  hres = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC, 
+  hres = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC,
       IID_IFilterMapper2, (void **) &mapper);
   if (FAILED(hres))
     return NULL;
-  
+
   inTypes[0] = input_majortype;
   inTypes[1] = input_subtype;
   outTypes[0] = output_majortype;
   outTypes[1] = output_subtype;
 
-  hres = mapper->EnumMatchingFilters (&enum_moniker, 0, 
-          FALSE, MERIT_DO_NOT_USE+1, 
-          TRUE, 1, inTypes, NULL, NULL, FALSE, 
+  hres = mapper->EnumMatchingFilters (&enum_moniker, 0,
+          FALSE, MERIT_DO_NOT_USE+1,
+          TRUE, 1, inTypes, NULL, NULL, FALSE,
           TRUE, 1, outTypes, NULL, NULL);
   if (FAILED(hres))
     return NULL;
-  
+
   enum_moniker->Reset ();
 
   while(enum_moniker->Next (1, &moniker, &fetched) == S_OK)
   {
-    hres = moniker->BindToObject(NULL, NULL, 
+    hres = moniker->BindToObject(NULL, NULL,
           IID_IBaseFilter, (void**)&filter);
     if(SUCCEEDED(hres)) {
       return filter;

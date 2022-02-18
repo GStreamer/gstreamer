@@ -69,11 +69,11 @@ void gst_dshow_free_mediatype (AM_MEDIA_TYPE * pmt);
 GstCapturePinMediaType *gst_dshow_new_pin_mediatype (IPin * pin);
 
 /* create a new capture media type from enum mediatype */
-GstCapturePinMediaType * gst_dshow_new_pin_mediatype_from_enum_mediatypes (IPin * pin, 
+GstCapturePinMediaType * gst_dshow_new_pin_mediatype_from_enum_mediatypes (IPin * pin,
     IEnumMediaTypes *enum_mediatypes);
 
 /* create a new capture media type from streamcaps */
-GstCapturePinMediaType *gst_dshow_new_pin_mediatype_from_streamcaps (IPin * pin, 
+GstCapturePinMediaType *gst_dshow_new_pin_mediatype_from_streamcaps (IPin * pin,
     gint id, IAMStreamConfig * streamcaps);
 
 /* free the memory of all mediatypes of the input list if pin mediatype */
@@ -92,7 +92,7 @@ gboolean gst_dshow_find_filter (CLSID input_majortype, CLSID input_subtype,
     CLSID output_majortype, CLSID output_subtype,
     gchar * prefered_filter_name, IBaseFilter ** filter);
 
-/* get the dshow device path from device friendly name. 
+/* get the dshow device path from device friendly name.
 If friendly name is not set, it will return the first available device */
 gchar *gst_dshow_getdevice_from_devicename (const GUID * device_category,
     gchar ** device_name, gint * device_index);

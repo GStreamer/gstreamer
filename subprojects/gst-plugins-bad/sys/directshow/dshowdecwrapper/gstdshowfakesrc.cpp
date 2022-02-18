@@ -25,7 +25,7 @@
 GST_DEBUG_CATEGORY_EXTERN (dshowdec_debug);
 #define GST_CAT_DEFAULT dshowdec_debug
 
-const GUID CLSID_DecodeFakeSrc = 
+const GUID CLSID_DecodeFakeSrc =
 { 0x039527db, 0x6b48, 0x45a7, { 0xab, 0xcf, 0x21, 0xab, 0xc5, 0x44, 0xbb, 0xb6} };
 
 static CCritSec g_pCriticSec;
@@ -40,14 +40,14 @@ FakeOutputPin::~FakeOutputPin()
 {
 }
 
-HRESULT FakeOutputPin::GetMediaType(int iPosition, 
+HRESULT FakeOutputPin::GetMediaType(int iPosition,
                                     CMediaType *pMediaType)
 {
   if(iPosition == 0) {
     *pMediaType = m_MediaType;
     return S_OK;
   }
-  
+
   return VFW_S_NO_MORE_ITEMS;
 }
 #if 0
@@ -79,7 +79,7 @@ HRESULT FakeOutputPin::CheckMediaType(const CMediaType *pmt)
   return S_FALSE;
 }
 
-HRESULT FakeOutputPin::DecideBufferSize (IMemAllocator *pAlloc, 
+HRESULT FakeOutputPin::DecideBufferSize (IMemAllocator *pAlloc,
                                          ALLOCATOR_PROPERTIES *ppropInputRequest)
 {
   ALLOCATOR_PROPERTIES properties;
@@ -98,12 +98,12 @@ STDMETHODIMP FakeOutputPin::SetMediaType (AM_MEDIA_TYPE *pmt)
   return S_OK;
 }
 
-STDMETHODIMP FakeOutputPin::PushBuffer(byte *buffer, 
-                                       __int64 start, __int64 stop, 
+STDMETHODIMP FakeOutputPin::PushBuffer(byte *buffer,
+                                       __int64 start, __int64 stop,
                                        unsigned int size, bool discont)
 {
   IMediaSample *pSample = NULL;
-  
+
   if (start != -1) {
     start /= 100;
     stop /= 100;
@@ -120,10 +120,10 @@ STDMETHODIMP FakeOutputPin::PushBuffer(byte *buffer,
       pSample->SetActualDataLength(size);
     }
     pSample->SetDiscontinuity(discont);
-    
+
     pSample->SetSyncPoint(TRUE);
     pSample->SetPreroll(FALSE);
-  
+
     if (start != -1)
       pSample->SetTime(&start, &stop);
 

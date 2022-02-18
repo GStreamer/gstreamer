@@ -99,8 +99,8 @@ static PreferredFilter preferred_mp3_filters[] = {
 };
 
 /* MPEG 1/2: use the MPEG Audio Decoder filter */
-static const GUID CLSID_WINDOWS_MPEG_AUDIO_DECODER = 
-  {0x4A2286E0, 0x7BEF, 0x11CE, 
+static const GUID CLSID_WINDOWS_MPEG_AUDIO_DECODER =
+  {0x4A2286E0, 0x7BEF, 0x11CE,
    {0x9B, 0xD9, 0x00, 0x00, 0xE2, 0x02, 0x59, 0x9C}};
 static PreferredFilter preferred_mpegaudio_filters[] = {
   {&CLSID_WINDOWS_MPEG_AUDIO_DECODER},
@@ -171,7 +171,7 @@ HRESULT AudioFakeSink::DoRenderSample(IMediaSample *pMediaSample)
 
     pMediaSample->GetPointer(&pBuffer);
     pMediaSample->GetTime(&lStart, &lStop);
-    
+
     if (!GST_CLOCK_TIME_IS_VALID (mDec->timestamp)) {
       // Convert REFERENCE_TIME to GST_CLOCK_TIME
       mDec->timestamp = (GstClockTime)lStart * 100;
@@ -205,7 +205,7 @@ HRESULT AudioFakeSink::DoRenderSample(IMediaSample *pMediaSample)
       GST_WARNING_OBJECT (mDec, "cannot allocate a new GstBuffer");
       goto done;
     }
-    
+
     /* set buffer properties */
     GST_BUFFER_TIMESTAMP (out_buf) = buf_start;
     GST_BUFFER_DURATION (out_buf) = duration;
@@ -233,8 +233,8 @@ HRESULT AudioFakeSink::DoRenderSample(IMediaSample *pMediaSample)
 
     /* truncating */
     if ((start_offset != 0) || (stop_offset != (size_t) size)) {
-      
-      GstBuffer *subbuf = gst_buffer_copy_region (out_buf, GST_BUFFER_COPY_ALL, 
+
+      GstBuffer *subbuf = gst_buffer_copy_region (out_buf, GST_BUFFER_COPY_ALL,
         start_offset, stop_offset - start_offset);
 
       if (subbuf) {
@@ -268,7 +268,7 @@ HRESULT AudioFakeSink::CheckMediaType(const CMediaType *pmt)
 {
   if(pmt != NULL)
   {
-    /* The Vista MP3 decoder (and possibly others?) outputs an 
+    /* The Vista MP3 decoder (and possibly others?) outputs an
      * AM_MEDIA_TYPE with the wrong cbFormat. So, rather than using
      * CMediaType.operator==, we implement a sufficient check ourselves.
      * I think this is a bug in the MP3 decoder.
@@ -279,7 +279,7 @@ HRESULT AudioFakeSink::CheckMediaType(const CMediaType *pmt)
     {
       /* Types are the same at the top-level. Now, we need to compare
        * the format blocks.
-       * We special case WAVEFORMATEX to not check that 
+       * We special case WAVEFORMATEX to not check that
        * pmt->cbFormat == m_MediaType.cbFormat, though the actual format
        * blocks must still be the same.
        */
@@ -343,9 +343,9 @@ gst_dshowaudiodec_base_init (gpointer klass)
   description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
       tmp->element_longname);
 
-  gst_element_class_set_metadata(element_class, longname, "Codec/Decoder/Audio", description, 
+  gst_element_class_set_metadata(element_class, longname, "Codec/Decoder/Audio", description,
     "Sebastien Moutte <sebastien@moutte.net>");
-  
+
   g_free (longname);
   g_free (description);
 
@@ -471,7 +471,7 @@ gst_dshowaudiodec_init (GstDshowAudioDec * adec)
   g_mutex_lock (&adec->com_init_lock);
 
   /* create the COM initialization thread */
-  g_thread_new ("COM init thread", (GThreadFunc)gst_dshowaudiodec_com_thread, 
+  g_thread_new ("COM init thread", (GThreadFunc)gst_dshowaudiodec_com_thread,
     adec);
 
   /* wait until the COM thread signals that COM has been initialized */
@@ -738,7 +738,7 @@ dshowaudiodec_set_input_format (GstDshowAudioDec *adec, GstCaps *caps)
       mpeg1_format->fwHeadMode = ACM_MPEG_STEREO;
     else
       mpeg1_format->fwHeadMode = ACM_MPEG_SINGLECHANNEL;
-    
+
     mpeg1_format->fwHeadModeExt = 0;
     mpeg1_format->wHeadEmphasis = 0;
     mpeg1_format->fwHeadFlags = 0;
@@ -769,8 +769,8 @@ dshowaudiodec_set_input_format (GstDshowAudioDec *adec, GstCaps *caps)
     mpeg1_format->wfx.nSamplesPerSec = adec->rate;
     mpeg1_format->dwHeadBitrate = 128000; /* This doesn't seem to matter */
     mpeg1_format->wfx.nAvgBytesPerSec = mpeg1_format->dwHeadBitrate / 8;
-  } 
-  else 
+  }
+  else
   {
     size = sizeof (WAVEFORMATEX) +
         (adec->codec_data ? gst_buffer_get_size(adec->codec_data) : 0);
@@ -778,7 +778,7 @@ dshowaudiodec_set_input_format (GstDshowAudioDec *adec, GstCaps *caps)
     if (adec->layer == 3) {
       MPEGLAYER3WAVEFORMAT *mp3format;
 
-      /* The WinXP mp3 decoder doesn't actually check the size of this structure, 
+      /* The WinXP mp3 decoder doesn't actually check the size of this structure,
        * but requires that this be allocated and filled out (or we get obscure
        * random crashes)
        */
@@ -802,7 +802,7 @@ dshowaudiodec_set_input_format (GstDshowAudioDec *adec, GstCaps *caps)
 
       if (adec->codec_data) {     /* Codec data is appended after our header */
         gsize codec_size = gst_buffer_get_size(adec->codec_data);
-        gst_buffer_extract(adec->codec_data, 0, ((guchar *) format) + sizeof (WAVEFORMATEX), 
+        gst_buffer_extract(adec->codec_data, 0, ((guchar *) format) + sizeof (WAVEFORMATEX),
           codec_size);
         format->cbSize = codec_size;
       }
@@ -853,7 +853,7 @@ dshowaudiodec_set_output_format (GstDshowAudioDec *adec)
   mediatype->formattype = FORMAT_WaveFormatEx;
   mediatype->cbFormat = sizeof (WAVEFORMATEX);
   mediatype->pbFormat = (BYTE *)format;
-  
+
   return mediatype;
 }
 
@@ -919,7 +919,7 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec, GstCaps *caps)
   adec->fakesink->SetMediaType(output_mediatype);
 
   gst_audio_info_init(&audio_info);
-  gst_audio_info_set_format(&audio_info, 
+  gst_audio_info_set_format(&audio_info,
     gst_audio_format_build_integer(TRUE, G_BYTE_ORDER, adec->depth, adec->depth),
     adec->rate, adec->channels, NULL);
 
@@ -998,7 +998,7 @@ gst_dshowaudiodec_get_filter_settings (GstDshowAudioDec * adec)
     AM_MEDIA_TYPE *mediatype = NULL;
 
     enum_mediatypes->Reset();
-    while (!ret && enum_mediatypes->Next(1, &mediatype, &fetched) == S_OK) 
+    while (!ret && enum_mediatypes->Next(1, &mediatype, &fetched) == S_OK)
     {
       if (IsEqualGUID (mediatype->subtype, MEDIASUBTYPE_PCM) &&
           IsEqualGUID (mediatype->formattype, FORMAT_WaveFormatEx))
@@ -1178,7 +1178,7 @@ dshow_adec_register (GstPlugin * plugin)
             outsubtype,
             audio_dec_codecs[i].preferred_filters);
 
-    if (filter) 
+    if (filter)
     {
       GST_DEBUG ("Registering %s", audio_dec_codecs[i].element_name);
 

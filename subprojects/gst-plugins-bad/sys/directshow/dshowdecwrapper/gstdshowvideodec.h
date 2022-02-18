@@ -86,7 +86,7 @@ struct _GstDshowVideoDec
 
   /* caps of our src pad */
   GstCaps *srccaps;
-  
+
   GstFlowReturn last_ret;
 
   /* list of dshow mediatypes corresponding to the caps list */
@@ -130,23 +130,23 @@ struct _GstDshowVideoDecClass
 
 gboolean dshow_vdec_register (GstPlugin * plugin);
 
-const GUID CLSID_VideoFakeSink = 
+const GUID CLSID_VideoFakeSink =
 { 0xff8f0c8e, 0x64f9, 0x4471,
   { 0x96, 0x0e, 0xd2, 0xd3, 0x18, 0x87, 0x78, 0x9a} };
 
 class VideoFakeSink :  public CBaseRenderer
 {
 public:
-  VideoFakeSink(GstDshowVideoDec *dec) : 
+  VideoFakeSink(GstDshowVideoDec *dec) :
       m_hres(S_OK),
       CBaseRenderer(CLSID_VideoFakeSink, _T("VideoFakeSink"), NULL, &m_hres),
-      mDec(dec) 
+      mDec(dec)
   {};
   virtual ~VideoFakeSink() {};
 
   HRESULT DoRenderSample(IMediaSample *pMediaSample);
   HRESULT CheckMediaType(const CMediaType *pmt);
-  HRESULT SetMediaType (AM_MEDIA_TYPE *pmt) 
+  HRESULT SetMediaType (AM_MEDIA_TYPE *pmt)
   {
     m_MediaType.Set (*pmt);
     return S_OK;

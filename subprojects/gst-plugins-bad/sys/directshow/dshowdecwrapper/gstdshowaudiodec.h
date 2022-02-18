@@ -79,7 +79,7 @@ struct _GstDshowAudioDec
   /* element pads */
   GstPad *sinkpad;
   GstPad *srcpad;
-  
+
   GstFlowReturn last_ret;
 
   /* filters interfaces*/
@@ -87,8 +87,8 @@ struct _GstDshowAudioDec
   AudioFakeSink *fakesink;
 
   IBaseFilterPtr decfilter;
-  
-  /* graph manager interfaces */  
+
+  /* graph manager interfaces */
   IMediaFilterPtr mediafilter;
   IFilterGraphPtr filtergraph;
 
@@ -103,7 +103,7 @@ struct _GstDshowAudioDec
   gint rate;
   gint layer;
   GstBuffer *codec_data;
-  
+
   /* current segment */
   GstSegment * segment;
 
@@ -126,23 +126,23 @@ struct _GstDshowAudioDecClass
 
 gboolean dshow_adec_register (GstPlugin * plugin);
 
-const GUID CLSID_AudioFakeSink = 
-{ 0x3867f537, 0x3e3d, 0x44da, 
+const GUID CLSID_AudioFakeSink =
+{ 0x3867f537, 0x3e3d, 0x44da,
   { 0xbb, 0xf2, 0x02, 0x48, 0x7b, 0xb0, 0xbc, 0xc4} };
 
 class AudioFakeSink :  public CBaseRenderer
 {
 public:
-  AudioFakeSink(GstDshowAudioDec *dec) : 
+  AudioFakeSink(GstDshowAudioDec *dec) :
       m_hres(S_OK),
       CBaseRenderer(CLSID_AudioFakeSink, _T("AudioFakeSink"), NULL, &m_hres),
-      mDec(dec) 
+      mDec(dec)
   {};
   virtual ~AudioFakeSink() {};
 
   HRESULT DoRenderSample(IMediaSample *pMediaSample);
   HRESULT CheckMediaType(const CMediaType *pmt);
-  HRESULT SetMediaType (AM_MEDIA_TYPE *pmt) 
+  HRESULT SetMediaType (AM_MEDIA_TYPE *pmt)
   {
     m_MediaType.Set (*pmt);
     return S_OK;

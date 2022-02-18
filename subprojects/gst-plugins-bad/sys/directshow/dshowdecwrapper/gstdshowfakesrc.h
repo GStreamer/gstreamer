@@ -36,7 +36,7 @@ public:
 /* methods */
   FakeOutputPin (CBaseFilter *pFilter, CCritSec *sec);
   ~FakeOutputPin ();
-  
+
   virtual HRESULT CheckMediaType(const CMediaType *pmt);
   HRESULT GetMediaType(int iPosition, CMediaType *pMediaType);
   virtual HRESULT DecideBufferSize (IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *ppropInputRequest);

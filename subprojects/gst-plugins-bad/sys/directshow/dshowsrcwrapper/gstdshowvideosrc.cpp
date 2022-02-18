@@ -504,7 +504,7 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
   }
 
   /*
-  The filter graph now is created via the IGraphBuilder Interface   
+  The filter graph now is created via the IGraphBuilder Interface
   Code added to build upstream filters, needed for USB Analog TV Tuners / DVD Maker, based on AMCap code.
   by Fabrice Costa <fabricio.costa@moldeointeractive.com.ar>
   */
@@ -520,18 +520,18 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
 	/*graph builder is derived from IFilterGraph so we can assign it to the old src->filter_graph*/
 	src->filter_graph = (IFilterGraph*) src->graph_builder;
   }
-  
+
   /*adding capture graph builder to correctly create upstream filters, Analog TV, TV Tuner */
 
   hres = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL,
-        CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, 
+        CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2,
         (LPVOID *) & src->capture_builder);
-  if ( hres != S_OK || !src->capture_builder ) {	
+  if ( hres != S_OK || !src->capture_builder ) {
     GST_ERROR
         ("Can't create an instance of the dshow capture graph builder manager (error=0x%x)",
         hres);
 	goto error;
-  } else {	
+  } else {
 	src->capture_builder->SetFiltergraph(src->graph_builder);
   }
 
@@ -557,16 +557,16 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
   /* Finding interfaces really creates the upstream filters */
 
   hres = src->capture_builder->FindInterface(&PIN_CATEGORY_CAPTURE,
-                                      &MEDIATYPE_Interleaved, src->video_cap_filter, 
+                                      &MEDIATYPE_Interleaved, src->video_cap_filter,
                                       IID_IAMVideoCompression, (LPVOID *)&src->pVC);
-  
+
   if(hres != S_OK)
   {
 	hres = src->capture_builder->FindInterface(&PIN_CATEGORY_CAPTURE,
-                                          &MEDIATYPE_Video, src->video_cap_filter, 
+                                          &MEDIATYPE_Video, src->video_cap_filter,
                                           IID_IAMVideoCompression, (LPVOID *)&src->pVC);
   }
-  
+
   hres = src->capture_builder->FindInterface(&PIN_CATEGORY_CAPTURE,
                                       &MEDIATYPE_Interleaved,
                                       src->video_cap_filter, IID_IAMStreamConfig, (LPVOID *)&src->pVSC);
@@ -944,7 +944,7 @@ gst_dshowvideosrc_getcaps_from_streamcaps (IPin * pin, GList ** pins_mediatypes)
     if (pin_mediatype) {
 
       GstCaps *mediacaps = NULL;
-      GstVideoFormat video_format = 
+      GstVideoFormat video_format =
         gst_dshow_guid_to_gst_video_format (pin_mediatype->mediatype);
 
       if (video_format != GST_VIDEO_FORMAT_UNKNOWN) {
