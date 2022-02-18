@@ -4004,6 +4004,43 @@ GST_START_TEST (test_video_make_raw_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_extrapolate_stride)
+{
+  guint num_formats = get_num_formats ();
+  GstVideoFormat format;
+
+  for (format = 2; format < num_formats; format++) {
+    GstVideoInfo info;
+    guint p;
+
+    /*
+     * Use an easy resolution, since GStreamer uses arbitrary padding which
+     * cannot be extrapolated.
+     */
+    gst_video_info_set_format (&info, format, 320, 240);
+
+    /* Skip over tiled formats, since stride meaning is different */
+    if (GST_VIDEO_FORMAT_INFO_IS_TILED (info.finfo))
+      continue;
+
+    for (p = 0; p < GST_VIDEO_INFO_N_PLANES (&info); p++) {
+      guint stride;
+
+      /* Skip over palette planes */
+      if (GST_VIDEO_FORMAT_INFO_HAS_PALETTE (info.finfo) &&
+          p >= GST_VIDEO_COMP_PALETTE)
+        break;
+
+      stride = gst_video_format_info_extrapolate_stride (info.finfo, p,
+          info.stride[0]);
+      fail_unless (stride == info.stride[p]);
+    }
+  }
+}
+
+GST_END_TEST;
+
+
 static Suite *
 video_suite (void)
 {
@@ -4058,6 +4095,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_meta_align);
   tcase_add_test (tc_chain, test_video_flags);
   tcase_add_test (tc_chain, test_video_make_raw_caps);
+  tcase_add_test (tc_chain, test_video_extrapolate_stride);
 
   return s;
 }
