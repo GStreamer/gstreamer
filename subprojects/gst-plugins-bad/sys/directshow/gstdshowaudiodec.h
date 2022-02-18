@@ -56,7 +56,7 @@ G_BEGIN_DECLS
 typedef struct {
   gchar *element_name;      /* The gst element factory name */
   gchar *element_longname;  /* Description string for element */
-  gint32 format;            /* WAVEFORMATEX format */
+  unsigned long format;     /* WAVEFORMATEX format */
   gchar *sinkcaps;          /* GStreamer caps of input format */
   PreferredFilter *preferred_filters; /* NULL-terminated list of preferred filters */
 } AudioCodecEntry;

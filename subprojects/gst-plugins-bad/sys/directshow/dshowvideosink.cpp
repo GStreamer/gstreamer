@@ -676,7 +676,7 @@ gst_dshowvideosink_window_thread (GstDshowVideoSink * sink)
 
   /* signal application we created a window */
   gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (sink),
-      (gulong)video_window);
+      (guintptr)video_window);
 
   /* Set the renderer's clipping window */
   if (!sink->renderersupport->SetRendererWindow (video_window)) {
