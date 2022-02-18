@@ -308,7 +308,6 @@ gst_v4l2_codec_vp9_dec_fill_dec_params (GstV4l2CodecVp9Dec * self,
     .compressed_header_size = h->header_size_in_bytes,
     .uncompressed_header_size = h->frame_header_length_in_bytes,
     .profile = h->profile,
-    .reset_frame_context = h->reset_frame_context,
     .frame_context_idx = h->frame_context_idx,
     .bit_depth = self->bit_depth,
     .interpolation_filter = h->interpolation_filter,
@@ -350,11 +349,25 @@ gst_v4l2_codec_vp9_dec_fill_dec_params (GstV4l2CodecVp9Dec * self,
   };
   /* *INDENT-ON* */
 
+  switch (h->reset_frame_context) {
+    case 0:
+    case 1:
+      self->v4l2_vp9_frame.reset_frame_context = V4L2_VP9_RESET_FRAME_CTX_NONE;
+      break;
+    case 2:
+      self->v4l2_vp9_frame.reset_frame_context = V4L2_VP9_RESET_FRAME_CTX_SPEC;
+      break;
+    case 3:
+      self->v4l2_vp9_frame.reset_frame_context = V4L2_VP9_RESET_FRAME_CTX_ALL;
+      break;
+    default:
+      break;
+  }
+
   gst_v4l2_codecs_vp9_dec_fill_refs (self, h, reference_frames);
   gst_v4l2_codec_vp9_dec_fill_lf_params (self, &h->loop_filter_params);
   gst_v4l2_codec_vp9_dec_fill_seg_params (self, &h->segmentation_params);
 }
-
 
 static gboolean
 gst_v4l2_codec_vp9_dec_open (GstVideoDecoder * decoder)
