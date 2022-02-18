@@ -723,7 +723,9 @@ gst_v4l2_codec_vp9_dec_decode_picture (GstVp9Decoder * decoder,
   }
 
   gst_v4l2_codec_vp9_dec_fill_dec_params (self, &picture->frame_hdr, dpb);
-  gst_v4l2_codec_vp9_dec_fill_prob_updates (self, &picture->frame_hdr);
+
+  if (decoder->parse_compressed_headers)
+    gst_v4l2_codec_vp9_dec_fill_prob_updates (self, &picture->frame_hdr);
 
   memcpy (bitstream_data, picture->data, picture->size);
   self->bitstream_map.size = picture->size;
