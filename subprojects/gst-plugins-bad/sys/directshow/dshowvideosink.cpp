@@ -468,8 +468,8 @@ dump_all_pin_media_types (IBaseFilter *filter)
   enumpins->Release();
 }
 
-gboolean
-gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin **pin)
+static gboolean
+get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin **pin)
 {
   gboolean ret = FALSE;
   IEnumPins *enumpins = NULL;
@@ -813,7 +813,7 @@ gst_dshowvideosink_connect_graph (GstDshowVideoSink *sink)
 
   srcpin = sink->fakesrc->GetOutputPin();
 
-  gst_dshow_get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT,
+  get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT,
       &sinkpin);
   if (!sinkpin) {
     GST_WARNING_OBJECT (sink, "Cannot get input pin from Renderer");
@@ -931,7 +931,7 @@ gst_dshowvideosink_stop_graph (GstDshowVideoSink *sink)
 
   sink->filter_graph->Disconnect(sink->fakesrc->GetOutputPin());
 
-  gst_dshow_get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT,
+  get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT,
       &sinkpin);
   sink->filter_graph->Disconnect(sinkpin);
   sinkpin->Release();
@@ -1547,7 +1547,7 @@ gst_dshowvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (sink->connected) {
       IPin *sinkpin;
       sink->filter_graph->Disconnect(sink->fakesrc->GetOutputPin());
-      gst_dshow_get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT,
+      get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT,
           &sinkpin);
       sink->filter_graph->Disconnect(sinkpin);
       sinkpin->Release();
@@ -1879,20 +1879,3 @@ gst_caps_to_directshow_media_type (GstDshowVideoSink * sink, GstCaps *caps,
   return FALSE;
 }
 
-/* Plugin entry point */
-extern "C" static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  /* PRIMARY: this is the best videosink to use on windows */
-  if (!gst_element_register (plugin, "dshowvideosink",
-          GST_RANK_SECONDARY, GST_TYPE_DSHOWVIDEOSINK))
-    return FALSE;
-
-  return TRUE;
-}
-
-extern "C" GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    dshowsinkwrapper,
-    "DirectShow sink wrapper plugin",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

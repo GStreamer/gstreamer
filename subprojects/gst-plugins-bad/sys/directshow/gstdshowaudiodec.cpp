@@ -888,13 +888,13 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec, GstCaps *caps)
   srcfilter = adec->fakesrc;
 
   /* connect our fake source to decoder */
-  output_pin = gst_dshow_get_pin_from_filter (srcfilter, PINDIR_OUTPUT);
+  output_pin = gst_dshow_util_get_pin_from_filter (srcfilter, PINDIR_OUTPUT);
   if (!output_pin) {
     GST_ELEMENT_ERROR (adec, CORE, NEGOTIATION,
         ("Can't get output pin from our directshow fakesrc filter"), (NULL));
     goto end;
   }
-  input_pin = gst_dshow_get_pin_from_filter (adec->decfilter, PINDIR_INPUT);
+  input_pin = gst_dshow_util_get_pin_from_filter (adec->decfilter, PINDIR_INPUT);
   if (!input_pin) {
     GST_ELEMENT_ERROR (adec, CORE, NEGOTIATION,
         ("Can't get input pin from decoder filter"), (NULL));
@@ -932,7 +932,7 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec, GstCaps *caps)
   }
 
   /* connect the decoder to our fake sink */
-  output_pin = gst_dshow_get_pin_from_filter (adec->decfilter, PINDIR_OUTPUT);
+  output_pin = gst_dshow_util_get_pin_from_filter (adec->decfilter, PINDIR_OUTPUT);
   if (!output_pin) {
     GST_ELEMENT_ERROR (adec, CORE, NEGOTIATION,
         ("Can't get output pin from our decoder filter"), (NULL));
@@ -940,7 +940,7 @@ gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec, GstCaps *caps)
   }
 
   sinkfilter = adec->fakesink;
-  input_pin = gst_dshow_get_pin_from_filter (sinkfilter, PINDIR_INPUT);
+  input_pin = gst_dshow_util_get_pin_from_filter (sinkfilter, PINDIR_INPUT);
   if (!input_pin) {
     GST_ELEMENT_ERROR (adec, CORE, NEGOTIATION,
         ("Can't get input pin from our directshow fakesink filter"), (NULL));
@@ -986,7 +986,7 @@ gst_dshowaudiodec_get_filter_settings (GstDshowAudioDec * adec)
   if (adec->decfilter == 0)
     return FALSE;
 
-  output_pin = gst_dshow_get_pin_from_filter (adec->decfilter, PINDIR_OUTPUT);
+  output_pin = gst_dshow_util_get_pin_from_filter (adec->decfilter, PINDIR_OUTPUT);
   if (!output_pin) {
     GST_ELEMENT_ERROR (adec, CORE, NEGOTIATION,
         ("failed getting output pin from the decoder"), (NULL));
@@ -1050,7 +1050,7 @@ gst_dshowaudiodec_create_graph_and_filters (GstDshowAudioDec * adec)
   adec->fakesrc->AddRef();
 
   /* create decoder filter */
-  adec->decfilter = gst_dshow_find_filter (MEDIATYPE_Audio,
+  adec->decfilter = gst_dshow_util_find_filter (MEDIATYPE_Audio,
           insubtype,
           MEDIATYPE_Audio,
           outsubtype,
@@ -1172,7 +1172,7 @@ dshow_adec_register (GstPlugin * plugin)
     GUID insubtype = GUID_MEDIASUBTYPE_FROM_FOURCC (audio_dec_codecs[i].format);
     GUID outsubtype = GUID_MEDIASUBTYPE_FROM_FOURCC (WAVE_FORMAT_PCM);
 
-    filter = gst_dshow_find_filter (MEDIATYPE_Audio,
+    filter = gst_dshow_util_find_filter (MEDIATYPE_Audio,
             insubtype,
             MEDIATYPE_Audio,
             outsubtype,

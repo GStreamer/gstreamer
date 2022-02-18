@@ -51,11 +51,11 @@ typedef struct {
 } PreferredFilter;
 
 /* get a pin from directshow filter */
-IPin *gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir);
+IPin *gst_dshow_util_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir);
 
 /* find and return a filter according to the input and output types */
 IBaseFilter *
-gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
+gst_dshow_util_find_filter(CLSID input_majortype, CLSID input_subtype,
                       CLSID output_majortype, CLSID output_subtype,
                       PreferredFilter *preferred_filters);
 

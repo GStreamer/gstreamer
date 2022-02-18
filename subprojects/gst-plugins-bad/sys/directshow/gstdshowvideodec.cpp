@@ -705,13 +705,13 @@ gst_dshowvideodec_sink_setcaps (GstPad * pad, GstCaps * caps)
     goto end;
   }
 
-  output_pin = gst_dshow_get_pin_from_filter (srcfilter, PINDIR_OUTPUT);
+  output_pin = gst_dshow_util_get_pin_from_filter (srcfilter, PINDIR_OUTPUT);
   if (!output_pin) {
     GST_ELEMENT_ERROR (vdec, CORE, NEGOTIATION,
         ("Can't get output pin from our directshow fakesrc filter"), (NULL));
     goto end;
   }
-  input_pin = gst_dshow_get_pin_from_filter (vdec->decfilter, PINDIR_INPUT);
+  input_pin = gst_dshow_util_get_pin_from_filter (vdec->decfilter, PINDIR_INPUT);
   if (!input_pin) {
     GST_ELEMENT_ERROR (vdec, CORE, NEGOTIATION,
         ("Can't get input pin from decoder filter"), (NULL));
@@ -746,7 +746,7 @@ gst_dshowvideodec_sink_setcaps (GstPad * pad, GstCaps * caps)
   vdec->fakesink->SetMediaType (&output_mediatype);
 
   /* connect decoder to our fake sink */
-  output_pin = gst_dshow_get_pin_from_filter (vdec->decfilter, PINDIR_OUTPUT);
+  output_pin = gst_dshow_util_get_pin_from_filter (vdec->decfilter, PINDIR_OUTPUT);
   if (!output_pin) {
     GST_ELEMENT_ERROR (vdec, CORE, NEGOTIATION,
         ("Can't get output pin from our decoder filter"), (NULL));
@@ -761,7 +761,7 @@ gst_dshowvideodec_sink_setcaps (GstPad * pad, GstCaps * caps)
     goto end;
   }
 
-  input_pin = gst_dshow_get_pin_from_filter (sinkfilter, PINDIR_INPUT);
+  input_pin = gst_dshow_util_get_pin_from_filter (sinkfilter, PINDIR_INPUT);
   if (!input_pin) {
     GST_ELEMENT_ERROR (vdec, CORE, NEGOTIATION,
         ("Can't get input pin from our directshow fakesink filter"), (NULL));
@@ -976,7 +976,7 @@ gst_dshowvideodec_src_getcaps (GstPad * pad)
     HRESULT hres;
     ULONG fetched;
 
-    output_pin = gst_dshow_get_pin_from_filter (vdec->decfilter, PINDIR_OUTPUT);
+    output_pin = gst_dshow_util_get_pin_from_filter (vdec->decfilter, PINDIR_OUTPUT);
     if (!output_pin) {
       GST_ELEMENT_ERROR (vdec, STREAM, FAILED,
           ("failed getting output pin from the decoder"), (NULL));
@@ -1070,7 +1070,7 @@ gst_dshowvideodec_get_filter_output_format (GstDshowVideoDec * vdec,
   if (!vdec->decfilter)
     return FALSE;
 
-  output_pin = gst_dshow_get_pin_from_filter (vdec->decfilter, PINDIR_OUTPUT);
+  output_pin = gst_dshow_util_get_pin_from_filter (vdec->decfilter, PINDIR_OUTPUT);
   if (!output_pin) {
     GST_ELEMENT_ERROR (vdec, CORE, NEGOTIATION,
         ("failed getting output pin from the decoder"), (NULL));
@@ -1144,7 +1144,7 @@ gst_dshowvideodec_create_graph_and_filters (GstDshowVideoDec * vdec)
   }
 
   /* search a decoder filter and create it */
-  vdec->decfilter = gst_dshow_find_filter (
+  vdec->decfilter = gst_dshow_util_find_filter (
           klass->entry->input_majortype,
           klass->entry->input_subtype,
           klass->entry->output_majortype,
@@ -1310,7 +1310,7 @@ dshow_vdec_register (GstPlugin * plugin)
     IBaseFilterPtr filter;
     guint rank = GST_RANK_MARGINAL;
 
-    filter = gst_dshow_find_filter (
+    filter = gst_dshow_util_find_filter (
             video_dec_codecs[i].input_majortype,
             video_dec_codecs[i].input_subtype,
             video_dec_codecs[i].output_majortype,
