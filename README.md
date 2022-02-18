@@ -234,6 +234,9 @@ An external script can be run in development environment with:
 ./gst-env.py external_script.sh
 ```
 
+For more extensive documentation about the development environment go to [the
+documentation](https://gstreamer.freedesktop.org/documentation/installing/building-from-source-using-meson.html).
+
 ## Custom subprojects
 
 We also added a meson option, `custom_subprojects`, that allows the user
