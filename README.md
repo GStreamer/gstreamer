@@ -205,7 +205,7 @@ All the selected features will be registered into a dedicated `NULL` plugin name
 
 This will cause the features/plugins that are not registered to not be included in the final gstreamer-full library.
 
-This is an experimental feature, backward uncompatible changes could still be
+This is an experimental feature, backward incompatible changes could still be
 made in the future.
 
 # Development environment
