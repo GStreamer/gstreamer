@@ -718,6 +718,29 @@ done:
   return gst_aggregator_finish_buffer (GST_AGGREGATOR_CAST (self), video_buf);
 }
 
+static GstClockTime
+gst_cc_combiner_get_next_time (GstAggregator * aggregator)
+{
+  GstCCCombiner *self = GST_CCCOMBINER (aggregator);
+
+  GST_OBJECT_LOCK (self);
+  /* No point timing out if we can't combine captions */
+  if (!self->caption_pad)
+    goto wait_for_data;
+
+  /* We need a video buffer */
+  if (!self->current_video_buffer &&
+      !gst_aggregator_pad_has_buffer (self->video_pad))
+    goto wait_for_data;
+  GST_OBJECT_UNLOCK (self);
+
+  return gst_aggregator_simple_get_next_time (aggregator);
+
+wait_for_data:
+  GST_OBJECT_UNLOCK (self);
+  return GST_CLOCK_TIME_NONE;
+}
+
 static GstFlowReturn
 gst_cc_combiner_aggregate (GstAggregator * aggregator, gboolean timeout)
 {
@@ -1424,7 +1447,7 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
   aggregator_class->create_new_pad = gst_cc_combiner_create_new_pad;
   aggregator_class->sink_event = gst_cc_combiner_sink_event;
   aggregator_class->negotiate = NULL;
-  aggregator_class->get_next_time = gst_aggregator_simple_get_next_time;
+  aggregator_class->get_next_time = gst_cc_combiner_get_next_time;
   aggregator_class->src_query = gst_cc_combiner_src_query;
   aggregator_class->sink_query = gst_cc_combiner_sink_query;
   aggregator_class->peek_next_sample = gst_cc_combiner_peek_next_sample;
