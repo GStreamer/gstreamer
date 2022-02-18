@@ -6650,7 +6650,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     if (data && size >= 4) {
       fourcc = GST_STR_FOURCC (data);
     } else {
-      GST_DEBUG ("Picking apcn variant because no ProRes codec data found");
+      GST_WARNING ("No ProRes codec data found, picking 'standard 422 SD'");
     }
 
     switch (fourcc) {
