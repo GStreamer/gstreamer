@@ -111,6 +111,9 @@ GType test_src_get_type (void);
 #define test_src_parent_class parent_class
 G_DEFINE_TYPE (TestSrc, test_src, GST_TYPE_PUSH_SRC);
 
+#define TEST_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), test_src_get_type(), TestSrc))
+
 #define ROUND_UP_TO_10(x) (((x + 10 - 1) / 10) * 10)
 #define ROUND_DOWN_TO_10(x) (x - (x % 10))
 
@@ -241,6 +244,17 @@ test_src_init (TestSrc * src)
   src->ntp_offset = GST_CLOCK_TIME_NONE;
 }
 
+static void
+test_src_finalize (GObject * obj)
+{
+  TestSrc *src = TEST_SRC (obj);
+
+  if (src->segment != NULL)
+    gst_segment_free (src->segment);
+
+  G_OBJECT_CLASS (test_src_parent_class)->finalize (obj);
+}
+
 /*
  * We support seeking, both this method and GstBaseSrc.do_seek must
  * be implemented for GstBaseSrc to report TRUE in the seeking query.
@@ -304,6 +318,8 @@ test_src_event (GstBaseSrc * bsrc, GstEvent * event)
 static void
 test_src_class_init (TestSrcClass * klass)
 {
+  G_OBJECT_CLASS (klass)->finalize = test_src_finalize;
+
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
       &test_src_template);
   GST_PUSH_SRC_CLASS (klass)->create = test_src_create;
@@ -457,6 +473,7 @@ test_response_x_onvif_track (GstRTSPClient * client, GstRTSPMessage * response,
 
     fail_unless_equals_string (gst_sdp_media_get_attribute_val (smedia,
             "x-onvif-track"), x_onvif_track);
+    g_free (x_onvif_track);
   }
 
   gst_sdp_message_free (sdp);

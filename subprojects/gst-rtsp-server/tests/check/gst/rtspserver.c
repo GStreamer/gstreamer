@@ -2401,6 +2401,8 @@ GST_START_TEST (test_record_tcp)
   stop_server ();
   iterate ();
   g_free (session);
+  /* release the reference to server_sink, obtained in media_constructed_cb */
+  gst_object_unref (server_sink);
 }
 
 GST_END_TEST;
@@ -2698,6 +2700,7 @@ GST_START_TEST (test_double_play)
 
   stop_server ();
   iterate ();
+  g_object_unref (client);
 }
 
 GST_END_TEST;

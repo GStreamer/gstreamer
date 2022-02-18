@@ -632,8 +632,8 @@ add_transports (gboolean add_twice)
     fail_if (gst_rtsp_stream_remove_transport (stream, tr));
   }
 
-  fail_unless (gst_rtsp_transport_free (transport) == GST_RTSP_OK);
   fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
+  g_object_unref (tr);
   gst_object_unref (bin);
   gst_object_unref (stream);
 }
