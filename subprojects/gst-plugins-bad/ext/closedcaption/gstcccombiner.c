@@ -736,9 +736,7 @@ gst_cc_combiner_aggregate (GstAggregator * aggregator, gboolean timeout)
     GstClockTime video_start;
     GstBuffer *video_buf;
 
-    video_pad =
-        GST_AGGREGATOR_PAD_CAST (gst_element_get_static_pad (GST_ELEMENT_CAST
-            (aggregator), "sink"));
+    video_pad = self->video_pad;
     video_buf = gst_aggregator_pad_peek_buffer (video_pad);
     if (!video_buf) {
       if (gst_aggregator_pad_is_eos (video_pad)) {
@@ -762,14 +760,12 @@ gst_cc_combiner_aggregate (GstAggregator * aggregator, gboolean timeout)
         flow_ret = GST_FLOW_OK;
       }
 
-      gst_object_unref (video_pad);
       return flow_ret;
     }
 
     video_start = GST_BUFFER_PTS (video_buf);
     if (!GST_CLOCK_TIME_IS_VALID (video_start)) {
       gst_buffer_unref (video_buf);
-      gst_object_unref (video_pad);
 
       GST_ERROR_OBJECT (aggregator, "Video buffer without PTS");
 
@@ -783,7 +779,6 @@ gst_cc_combiner_aggregate (GstAggregator * aggregator, gboolean timeout)
       GST_DEBUG_OBJECT (aggregator, "Buffer outside segment, dropping");
       gst_aggregator_pad_drop_buffer (video_pad);
       gst_buffer_unref (video_buf);
-      gst_object_unref (video_pad);
       return GST_FLOW_OK;
     }
 
@@ -832,8 +827,6 @@ gst_cc_combiner_aggregate (GstAggregator * aggregator, gboolean timeout)
           GST_TIME_ARGS (self->current_video_running_time),
           GST_TIME_ARGS (self->current_video_running_time_end));
     }
-
-    gst_object_unref (video_pad);
   }
 
   /* At this point we have a video buffer queued and can start collecting
@@ -1019,8 +1012,7 @@ gst_cc_combiner_create_new_pad (GstAggregator * aggregator,
 static gboolean
 gst_cc_combiner_src_query (GstAggregator * aggregator, GstQuery * query)
 {
-  GstPad *video_sinkpad =
-      gst_element_get_static_pad (GST_ELEMENT_CAST (aggregator), "sink");
+  GstCCCombiner *self = GST_CCCOMBINER (aggregator);
   gboolean ret;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -1029,7 +1021,7 @@ gst_cc_combiner_src_query (GstAggregator * aggregator, GstQuery * query)
     case GST_QUERY_URI:
     case GST_QUERY_CAPS:
     case GST_QUERY_ALLOCATION:
-      ret = gst_pad_peer_query (video_sinkpad, query);
+      ret = gst_pad_peer_query (GST_PAD_CAST (self->video_pad), query);
       break;
     case GST_QUERY_ACCEPT_CAPS:{
       GstCaps *caps;
@@ -1047,8 +1039,6 @@ gst_cc_combiner_src_query (GstAggregator * aggregator, GstQuery * query)
       break;
   }
 
-  gst_object_unref (video_sinkpad);
-
   return ret;
 }
 
@@ -1056,8 +1046,7 @@ static gboolean
 gst_cc_combiner_sink_query (GstAggregator * aggregator,
     GstAggregatorPad * aggpad, GstQuery * query)
 {
-  GstPad *video_sinkpad =
-      gst_element_get_static_pad (GST_ELEMENT_CAST (aggregator), "sink");
+  GstCCCombiner *self = GST_CCCOMBINER (aggregator);
   GstPad *srcpad = GST_AGGREGATOR_SRC_PAD (aggregator);
 
   gboolean ret;
@@ -1067,7 +1056,7 @@ gst_cc_combiner_sink_query (GstAggregator * aggregator,
     case GST_QUERY_DURATION:
     case GST_QUERY_URI:
     case GST_QUERY_ALLOCATION:
-      if (GST_PAD_CAST (aggpad) == video_sinkpad) {
+      if (aggpad == self->video_pad) {
         ret = gst_pad_peer_query (srcpad, query);
       } else {
         ret =
@@ -1076,7 +1065,7 @@ gst_cc_combiner_sink_query (GstAggregator * aggregator,
       }
       break;
     case GST_QUERY_CAPS:
-      if (GST_PAD_CAST (aggpad) == video_sinkpad) {
+      if (aggpad == self->video_pad) {
         ret = gst_pad_peer_query (srcpad, query);
       } else {
         GstCaps *filter;
@@ -1097,7 +1086,7 @@ gst_cc_combiner_sink_query (GstAggregator * aggregator,
       }
       break;
     case GST_QUERY_ACCEPT_CAPS:
-      if (GST_PAD_CAST (aggpad) == video_sinkpad) {
+      if (aggpad == self->video_pad) {
         ret = gst_pad_peer_query (srcpad, query);
       } else {
         GstCaps *caps;
@@ -1116,8 +1105,6 @@ gst_cc_combiner_sink_query (GstAggregator * aggregator,
       break;
   }
 
-  gst_object_unref (video_sinkpad);
-
   return ret;
 }
 
@@ -1125,18 +1112,11 @@ static GstSample *
 gst_cc_combiner_peek_next_sample (GstAggregator * agg,
     GstAggregatorPad * aggpad)
 {
-  GstAggregatorPad *caption_pad, *video_pad;
   GstCCCombiner *self = GST_CCCOMBINER (agg);
   GstSample *res = NULL;
 
-  caption_pad =
-      GST_AGGREGATOR_PAD_CAST (gst_element_get_static_pad (GST_ELEMENT_CAST
-          (self), "caption"));
-  video_pad =
-      GST_AGGREGATOR_PAD_CAST (gst_element_get_static_pad (GST_ELEMENT_CAST
-          (self), "sink"));
-
-  if (aggpad == caption_pad) {
+  if (aggpad != self->video_pad) {
+    /* Must be the caption pad */
     if (self->current_frame_captions->len > 0) {
       GstCaps *caps = gst_pad_get_current_caps (GST_PAD (aggpad));
       GstBufferList *buflist = gst_buffer_list_new ();
@@ -1154,7 +1134,7 @@ gst_cc_combiner_peek_next_sample (GstAggregator * agg,
       gst_sample_set_buffer_list (res, buflist);
       gst_buffer_list_unref (buflist);
     }
-  } else if (aggpad == video_pad) {
+  } else {
     if (self->current_video_buffer) {
       GstCaps *caps = gst_pad_get_current_caps (GST_PAD (aggpad));
       res = gst_sample_new (self->current_video_buffer,
@@ -1162,12 +1142,6 @@ gst_cc_combiner_peek_next_sample (GstAggregator * agg,
       gst_caps_unref (caps);
     }
   }
-
-  if (caption_pad)
-    gst_object_unref (caption_pad);
-
-  if (video_pad)
-    gst_object_unref (video_pad);
 
   return res;
 }
@@ -1451,13 +1425,12 @@ static void
 gst_cc_combiner_init (GstCCCombiner * self)
 {
   GstPadTemplate *templ;
-  GstAggregatorPad *agg_pad;
 
   templ = gst_static_pad_template_get (&sinktemplate);
-  agg_pad = g_object_new (GST_TYPE_AGGREGATOR_PAD,
+  self->video_pad = g_object_new (GST_TYPE_AGGREGATOR_PAD,
       "name", "sink", "direction", GST_PAD_SINK, "template", templ, NULL);
   gst_object_unref (templ);
-  gst_element_add_pad (GST_ELEMENT_CAST (self), GST_PAD_CAST (agg_pad));
+  gst_element_add_pad (GST_ELEMENT_CAST (self), GST_PAD_CAST (self->video_pad));
 
   self->current_frame_captions =
       g_array_new (FALSE, FALSE, sizeof (CaptionData));
