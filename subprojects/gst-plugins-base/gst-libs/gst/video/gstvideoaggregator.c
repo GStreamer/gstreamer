@@ -2263,7 +2263,7 @@ gst_video_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   if (GST_VIDEO_INFO_FPS_N (&vagg->info) == 0) {
     output_end_time = -1;
   } else {
-    guint64 dur = gst_util_uint64_scale_round (vagg->priv->nframes + 1,
+    guint64 dur = gst_util_uint64_scale (vagg->priv->nframes + 1,
         GST_SECOND * GST_VIDEO_INFO_FPS_D (&vagg->info),
         GST_VIDEO_INFO_FPS_N (&vagg->info));
 
