@@ -32,9 +32,19 @@ GList *         gst_qsv_get_platform_devices (void);
 
 const gchar *   gst_qsv_status_to_string (mfxStatus status);
 
-/* helper macro for debugging log */
 #define QSV_STATUS_ARGS(status) \
     status, gst_qsv_status_to_string (status)
+
+#define QSV_CHECK_STATUS(e,s,f) G_STMT_START { \
+  if (s < MFX_ERR_NONE) { \
+    GST_ERROR_OBJECT (e, G_STRINGIFY (f) " failed %d (%s)", \
+        QSV_STATUS_ARGS (s)); \
+    goto error; \
+  } else if (status != MFX_ERR_NONE) { \
+    GST_WARNING_OBJECT (e, G_STRINGIFY (f) " returned warning %d (%s)", \
+        QSV_STATUS_ARGS (s)); \
+  } \
+} G_STMT_END
 
 static inline GstClockTime
 gst_qsv_timestamp_to_gst (mfxU64 timestamp)

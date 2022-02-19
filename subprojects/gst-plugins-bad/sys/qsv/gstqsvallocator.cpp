@@ -43,9 +43,7 @@ struct _GstQsvFrame
   GstVideoInfo info;
   GstVideoFrame frame;
   GstQsvMemoryType mem_type;
-
-  /* For direct GPU access */
-  GstMapInfo map_info;
+  GstMapFlags map_flags;
 };
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstQsvFrame, gst_qsv_frame);
@@ -82,11 +80,39 @@ gst_qsv_frame_peek_buffer (GstQsvFrame * frame)
   return frame->buffer;
 }
 
+gboolean
+gst_qsv_frame_set_buffer (GstQsvFrame * frame, GstBuffer * buffer)
+{
+  g_return_val_if_fail (GST_IS_QSV_FRAME (frame), FALSE);
+
+  g_mutex_lock (&frame->lock);
+  if (frame->buffer == buffer) {
+    g_mutex_unlock (&frame->lock);
+    return TRUE;
+  }
+
+  if (frame->map_count > 0) {
+    GST_ERROR ("frame is locked");
+    g_mutex_unlock (&frame->lock);
+
+    return FALSE;
+  }
+
+  gst_clear_buffer (&frame->buffer);
+  frame->buffer = buffer;
+  g_mutex_unlock (&frame->lock);
+
+  return TRUE;
+}
+
 struct _GstQsvAllocatorPrivate
 {
   GstAtomicQueue *queue;
 
   mfxFrameAllocator allocator;
+  mfxFrameAllocResponse response;
+  guint16 extra_alloc_size;
+  gboolean dummy_alloc;
 };
 
 #define gst_qsv_allocator_parent_class parent_class
@@ -104,6 +130,9 @@ static mfxStatus gst_qsv_allocator_get_hdl (mfxHDL pthis, mfxMemId mid,
     mfxHDL * handle);
 static mfxStatus gst_qsv_allocator_free (mfxHDL pthis,
     mfxFrameAllocResponse * response);
+static GstBuffer *gst_qsv_allocator_download_default (GstQsvAllocator * self,
+    const GstVideoInfo * info, gboolean force_copy, GstQsvFrame * frame,
+    GstBufferPool * pool);
 
 static void
 gst_qsv_allocator_class_init (GstQsvAllocatorClass * klass)
@@ -111,6 +140,8 @@ gst_qsv_allocator_class_init (GstQsvAllocatorClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->finalize = gst_qsv_allocator_finalize;
+
+  klass->download = GST_DEBUG_FUNCPTR (gst_qsv_allocator_download_default);
 }
 
 static void
@@ -144,19 +175,22 @@ gst_qsv_allocator_finalize (GObject * object)
     gst_qsv_frame_unref (frame);
 
   gst_atomic_queue_unref (priv->queue);
+  gst_qsv_allocator_free ((mfxHDL) self, &priv->response);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static mfxStatus
-gst_qsv_allocator_alloc_default (GstQsvAllocator * self,
+gst_qsv_allocator_alloc_default (GstQsvAllocator * self, gboolean dummy_alloc,
     mfxFrameAllocRequest * request, mfxFrameAllocResponse * response)
 {
   GstQsvFrame **mids = nullptr;
   GstVideoInfo info;
+  GstVideoAlignment align;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
-
-  GST_TRACE_OBJECT (self, "Alloc");
+  GstBufferPool *pool;
+  GstCaps *caps;
+  GstStructure *config;
 
   /* Something unexpected and went wrong */
   if ((request->Type & MFX_MEMTYPE_SYSTEM_MEMORY) == 0) {
@@ -194,19 +228,96 @@ gst_qsv_allocator_alloc_default (GstQsvAllocator * self,
   response->NumFrameActual = request->NumFrameSuggested;
 
   gst_video_info_set_format (&info,
-      format, request->Info.Width, request->Info.Height);
+      format, request->Info.CropW, request->Info.CropH);
+
+  if (dummy_alloc) {
+    for (guint i = 0; i < request->NumFrameSuggested; i++) {
+      mids[i] = gst_qsv_allocator_acquire_frame (self,
+          GST_QSV_SYSTEM_MEMORY, &info, nullptr, nullptr);
+    }
+
+    response->mids = (mfxMemId *) mids;
+
+    return MFX_ERR_NONE;
+  }
+
+  caps = gst_video_info_to_caps (&info);
+  if (!caps) {
+    GST_ERROR_OBJECT (self, "Failed to convert video-info to caps");
+    return MFX_ERR_UNSUPPORTED;
+  }
+
+  gst_video_alignment_reset (&align);
+  align.padding_right = request->Info.Width - request->Info.CropW;
+  align.padding_bottom = request->Info.Height - request->Info.CropH;
+
+  pool = gst_video_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_add_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+  gst_buffer_pool_config_set_video_alignment (config, &align);
+  gst_buffer_pool_config_set_params (config, caps, GST_VIDEO_INFO_SIZE (&info),
+      0, 0);
+  gst_caps_unref (caps);
+  gst_buffer_pool_set_config (pool, config);
+  gst_buffer_pool_set_active (pool, TRUE);
+
   for (guint i = 0; i < request->NumFrameSuggested; i++) {
     GstBuffer *buffer;
 
-    buffer = gst_buffer_new_and_alloc (info.size);
+    if (gst_buffer_pool_acquire_buffer (pool, &buffer, nullptr) != GST_FLOW_OK) {
+      GST_ERROR_OBJECT (self, "Failed to allocate texture buffer");
+      gst_buffer_pool_set_active (pool, FALSE);
+      gst_object_unref (pool);
+      goto error;
+    }
+
     mids[i] = gst_qsv_allocator_acquire_frame (self,
         GST_QSV_SYSTEM_MEMORY, &info, buffer, nullptr);
-    gst_buffer_unref (buffer);
   }
+
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
 
   response->mids = (mfxMemId *) mids;
 
   return MFX_ERR_NONE;
+
+error:
+  if (mids) {
+    for (guint i = 0; i < response->NumFrameActual; i++)
+      gst_clear_qsv_frame (&mids[i]);
+
+    g_free (mids);
+  }
+
+  response->NumFrameActual = 0;
+
+  return MFX_ERR_MEMORY_ALLOC;
+}
+
+static gboolean
+gst_qsv_allocator_copy_cached_response (GstQsvAllocator * self,
+    mfxFrameAllocResponse * dst, mfxFrameAllocResponse * src)
+{
+  GstQsvFrame **mids;
+
+  if (src->NumFrameActual == 0)
+    return FALSE;
+
+  mids = g_new0 (GstQsvFrame *, src->NumFrameActual);
+
+  for (guint i = 0; i < src->NumFrameActual; i++) {
+    GstQsvFrame *frame = (GstQsvFrame *) src->mids[i];
+
+    mids[i] = gst_qsv_frame_ref (frame);
+  }
+
+  dst->NumFrameActual = src->NumFrameActual;
+  dst->mids = (mfxMemId *) mids;
+
+  return TRUE;
 }
 
 static mfxStatus
@@ -214,16 +325,52 @@ gst_qsv_allocator_alloc (mfxHDL pthis,
     mfxFrameAllocRequest * request, mfxFrameAllocResponse * response)
 {
   GstQsvAllocator *self = GST_QSV_ALLOCATOR (pthis);
+  GstQsvAllocatorPrivate *priv = self->priv;
   GstQsvAllocatorClass *klass;
+  mfxStatus status;
+  mfxFrameAllocRequest req = *request;
+  gboolean dummy_alloc = priv->dummy_alloc;
 
-  if ((request->Type & MFX_MEMTYPE_SYSTEM_MEMORY) != 0)
-    return gst_qsv_allocator_alloc_default (self, request, response);
+  GST_INFO_OBJECT (self, "Alloc, Request Type: 0x%x, %dx%d (%dx%d)",
+      req.Type, req.Info.Width, req.Info.Height,
+      req.Info.CropW, req.Info.CropH);
 
-  klass = GST_QSV_ALLOCATOR_GET_CLASS (self);
+  /* Apply extra_alloc_size only for GST internal use case */
+  if ((request->Type & MFX_MEMTYPE_EXTERNAL_FRAME) != 0)
+    req.NumFrameSuggested += priv->extra_alloc_size;
 
-  g_assert (klass->alloc);
+  if (req.Info.CropW == 0 || req.Info.CropH == 0) {
+    req.Info.CropW = req.Info.Width;
+    req.Info.CropH = req.Info.Height;
+  }
 
-  return klass->alloc (self, request, response);
+  if (request->Info.FourCC == MFX_FOURCC_P8 ||
+      (request->Type & MFX_MEMTYPE_EXTERNAL_FRAME) == 0) {
+    dummy_alloc = FALSE;
+  }
+
+  GST_INFO_OBJECT (self, "Dummy alloc %d", dummy_alloc);
+
+  if ((request->Type & MFX_MEMTYPE_SYSTEM_MEMORY) != 0) {
+    status = gst_qsv_allocator_alloc_default (self,
+        dummy_alloc, &req, response);
+  } else {
+    klass = GST_QSV_ALLOCATOR_GET_CLASS (self);
+    g_assert (klass->alloc);
+
+    status = klass->alloc (self, dummy_alloc, &req, response);
+  }
+
+  if (status != MFX_ERR_NONE)
+    return status;
+
+  /* Cache this respons so that this can be accessible from GST side */
+  if (dummy_alloc) {
+    gst_qsv_allocator_free ((mfxHDL) self, &priv->response);
+    gst_qsv_allocator_copy_cached_response (self, &priv->response, response);
+  }
+
+  return MFX_ERR_NONE;
 }
 
 static mfxStatus
@@ -236,9 +383,15 @@ gst_qsv_allocator_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
   GST_TRACE_OBJECT (self, "Lock mfxMemId %p", mid);
 
   g_mutex_lock (&frame->lock);
+  if (!frame->buffer) {
+    GST_ERROR_OBJECT (self, "MemId %p doesn't hold buffer", mid);
+    g_mutex_unlock (&frame->lock);
+    return MFX_ERR_LOCK_MEMORY;
+  }
+
   if (frame->map_count == 0) {
     gst_video_frame_map (&frame->frame, &frame->info, frame->buffer,
-        GST_MAP_READ);
+        (GstMapFlags) GST_MAP_READWRITE);
   }
 
   frame->map_count++;
@@ -303,15 +456,26 @@ gst_qsv_allocator_get_hdl (mfxHDL pthis, mfxMemId mid, mfxHDL * handle)
 {
   GstQsvAllocator *self = GST_QSV_ALLOCATOR (pthis);
   GstQsvFrame *frame = GST_QSV_FRAME_CAST (mid);
+  GstMapInfo map_info;
 
-  if (frame->mem_type != GST_QSV_VIDEO_MEMORY) {
+  if (!GST_QSV_MEM_TYPE_IS_VIDEO (frame->mem_type)) {
     GST_ERROR_OBJECT (self, "Unexpected call");
+    return MFX_ERR_UNSUPPORTED;
+  }
+
+  g_mutex_lock (&frame->lock);
+  if (!frame->buffer) {
+    GST_ERROR_OBJECT (self, "MemId %p doesn't hold buffer", mid);
+    g_mutex_unlock (&frame->lock);
 
     return MFX_ERR_UNSUPPORTED;
   }
 
-  if (!frame->map_info.data) {
-    GST_ERROR_OBJECT (self, "No mapped data");
+  g_assert ((frame->map_flags & GST_MAP_QSV) != 0);
+  if (!gst_buffer_map (frame->buffer, &map_info, frame->map_flags)) {
+    GST_ERROR_OBJECT (self, "Failed to map buffer");
+    g_mutex_unlock (&frame->lock);
+
     return MFX_ERR_UNSUPPORTED;
   }
 
@@ -319,13 +483,17 @@ gst_qsv_allocator_get_hdl (mfxHDL pthis, mfxMemId mid, mfxHDL * handle)
 
 #ifdef G_OS_WIN32
   mfxHDLPair *pair = (mfxHDLPair *) handle;
-  pair->first = (mfxHDL) frame->map_info.data;
+  pair->first = (mfxHDL) map_info.data;
 
   /* GstD3D11 will fill user_data[0] with subresource index */
-  pair->second = (mfxHDL) frame->map_info.user_data[0];
+  pair->second = (mfxHDL) map_info.user_data[0];
 #else
-  *handle = (mfxHDL) frame->map_info.data;
+  *handle = (mfxHDL) map_info.data;
 #endif
+
+  /* XXX: Ideally we should unmap only when this surface is unlocked... */
+  gst_buffer_unmap (frame->buffer, &map_info);
+  g_mutex_unlock (&frame->lock);
 
   return MFX_ERR_NONE;
 }
@@ -339,6 +507,7 @@ gst_qsv_allocator_free (mfxHDL pthis, mfxFrameAllocResponse * response)
     gst_clear_qsv_frame (&frames[i]);
 
   g_clear_pointer (&response->mids, g_free);
+  response->NumFrameActual = 0;
 
   return MFX_ERR_NONE;
 }
@@ -354,14 +523,9 @@ gst_qsv_frame_release (GstQsvFrame * frame)
     gst_video_frame_unmap (&frame->frame);
   }
   frame->map_count = 0;
+  gst_clear_buffer (&frame->buffer);
   g_mutex_unlock (&frame->lock);
 
-  if (frame->mem_type == GST_QSV_VIDEO_MEMORY && frame->map_info.data)
-    gst_buffer_unmap (frame->buffer, &frame->map_info);
-
-  memset (&frame->map_info, 0, sizeof (GstMapInfo));
-
-  gst_clear_buffer (&frame->buffer);
   GST_MINI_OBJECT_CAST (frame)->dispose = nullptr;
   frame->allocator = nullptr;
 
@@ -451,7 +615,7 @@ gst_qsv_allocator_upload_default (GstQsvAllocator * allocator,
  * @allocator: a #GstQsvAllocator
  * @mem_type: a memory type
  * @info: a #GstVideoInfo
- * @buffer: (transfer none): a #GstBuffer
+ * @buffer: (nullable) (transfer full): a #GstBuffer
  * @pool: (nullable): a #GstBufferPool
  *
  * Uploads @buffer to video memory if required, and wraps GstBuffer using
@@ -467,8 +631,31 @@ gst_qsv_allocator_acquire_frame (GstQsvAllocator * allocator,
 {
   GstQsvAllocatorPrivate *priv;
   GstQsvFrame *frame;
+  guint32 map_flags = 0;
 
   g_return_val_if_fail (GST_IS_QSV_ALLOCATOR (allocator), nullptr);
+
+  if (GST_QSV_MEM_TYPE_IS_SYSTEM (mem_type) &&
+      GST_QSV_MEM_TYPE_IS_VIDEO (mem_type)) {
+    GST_ERROR_OBJECT (allocator, "Invalid memory type");
+    return nullptr;
+  }
+
+  if (GST_QSV_MEM_TYPE_IS_VIDEO (mem_type)) {
+    map_flags = GST_MAP_QSV;
+
+    if ((mem_type & GST_QSV_ENCODER_IN_MEMORY) != 0) {
+      map_flags |= GST_MAP_READ;
+    } else if ((mem_type & GST_QSV_DECODER_OUT_MEMORY) != 0) {
+      map_flags |= GST_MAP_WRITE;
+    } else {
+      GST_ERROR_OBJECT (allocator,
+          "Unknown read/write access for video memory");
+      return nullptr;
+    }
+  } else {
+    map_flags = GST_MAP_READWRITE;
+  }
 
   priv = allocator->priv;
   frame = (GstQsvFrame *) gst_atomic_queue_pop (priv->queue);
@@ -477,17 +664,19 @@ gst_qsv_allocator_acquire_frame (GstQsvAllocator * allocator,
     frame = gst_qsv_frame_new ();
 
   frame->mem_type = mem_type;
-  frame->allocator = (GstQsvAllocator *) gst_object_ref (allocator);
-  GST_MINI_OBJECT_CAST (frame)->dispose =
-      (GstMiniObjectDisposeFunction) gst_qsv_frame_dispose;
+  frame->map_flags = (GstMapFlags) map_flags;
+  frame->info = *info;
 
   if (!pool) {
-    frame->buffer = gst_buffer_ref (buffer);
-    frame->info = *info;
-  } else {
+    frame->buffer = buffer;
+  } else if (buffer) {
     GstBuffer *upload_buf;
 
-    if (mem_type == GST_QSV_SYSTEM_MEMORY) {
+    frame->allocator = (GstQsvAllocator *) gst_object_ref (allocator);
+    GST_MINI_OBJECT_CAST (frame)->dispose =
+        (GstMiniObjectDisposeFunction) gst_qsv_frame_dispose;
+
+    if (GST_QSV_MEM_TYPE_IS_SYSTEM (mem_type)) {
       upload_buf = gst_qsv_allocator_upload_default (allocator, info, buffer,
           pool);
     } else {
@@ -499,6 +688,8 @@ gst_qsv_allocator_acquire_frame (GstQsvAllocator * allocator,
       upload_buf = klass->upload (allocator, info, buffer, pool);
     }
 
+    gst_buffer_unref (buffer);
+
     if (!upload_buf) {
       GST_WARNING_OBJECT (allocator, "Failed to upload buffer");
       gst_qsv_frame_unref (frame);
@@ -507,23 +698,83 @@ gst_qsv_allocator_acquire_frame (GstQsvAllocator * allocator,
     }
 
     frame->buffer = upload_buf;
-    frame->info = *info;
-  }
-
-  if (mem_type == GST_QSV_VIDEO_MEMORY) {
-    /* TODO: we need to know context whether this memory is for
-     * output (e.g., decoder or vpp), but we have only encoder
-     * implementation at the moment, so GST_MAP_READ should be fine */
-    if (!gst_buffer_map (frame->buffer, &frame->map_info,
-            (GstMapFlags) (GST_MAP_READ | GST_MAP_QSV))) {
-      GST_ERROR_OBJECT (allocator, "Failed to map video buffer");
-      gst_qsv_frame_unref (frame);
-
-      return nullptr;
-    }
   }
 
   return frame;
+}
+
+static GstBuffer *
+gst_qsv_allocator_download_default (GstQsvAllocator * self,
+    const GstVideoInfo * info, gboolean force_copy, GstQsvFrame * frame,
+    GstBufferPool * pool)
+{
+  GstBuffer *buffer = nullptr;
+  GstFlowReturn ret;
+  GstVideoFrame dst_frame;
+  mfxStatus status;
+  mfxFrameData dummy;
+  gboolean copy_ret;
+
+  GST_TRACE_OBJECT (self, "Download");
+
+  if (!force_copy)
+    return gst_buffer_ref (frame->buffer);
+
+  ret = gst_buffer_pool_acquire_buffer (pool, &buffer, nullptr);
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (self, "Failed to acquire buffer");
+    return nullptr;
+  }
+
+  /* Use gst_qsv_allocator_lock() instead of gst_video_frame_map() to avoid
+   * redundant map if it's already locked by driver, already locked by driver
+   * sounds unsafe situaltion though */
+  status = gst_qsv_allocator_lock ((mfxHDL) self, (mfxMemId) frame, &dummy);
+  if (status != MFX_ERR_NONE) {
+    gst_buffer_unref (buffer);
+    GST_ERROR_OBJECT (self, "Failed to lock frame");
+    return nullptr;
+  }
+
+  if (!gst_video_frame_map (&dst_frame, &frame->info, buffer, GST_MAP_WRITE)) {
+    gst_qsv_allocator_unlock ((mfxHDL) self, (mfxMemId) frame, &dummy);
+    gst_buffer_unref (buffer);
+    GST_ERROR_OBJECT (self, "Failed to map output buffer");
+    return nullptr;
+  }
+
+  copy_ret = gst_video_frame_copy (&dst_frame, &frame->frame);
+  gst_qsv_allocator_unlock ((mfxHDL) self, (mfxMemId) frame, &dummy);
+  gst_video_frame_unmap (&dst_frame);
+
+  if (!copy_ret) {
+    GST_ERROR_OBJECT (self, "Failed to copy frame");
+    gst_buffer_unref (buffer);
+    return nullptr;
+  }
+
+  return buffer;
+}
+
+GstBuffer *
+gst_qsv_allocator_download_frame (GstQsvAllocator * allocator,
+    gboolean force_copy, GstQsvFrame * frame, GstBufferPool * pool)
+{
+  GstQsvAllocatorClass *klass;
+
+  g_return_val_if_fail (GST_IS_QSV_ALLOCATOR (allocator), nullptr);
+  g_return_val_if_fail (GST_IS_QSV_FRAME (frame), nullptr);
+  g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), nullptr);
+
+  if (GST_QSV_MEM_TYPE_IS_SYSTEM (frame->mem_type)) {
+    return gst_qsv_allocator_download_default (allocator, &frame->info,
+        force_copy, frame, pool);
+  }
+
+  klass = GST_QSV_ALLOCATOR_GET_CLASS (allocator);
+  g_assert (klass->download);
+
+  return klass->download (allocator, &frame->info, force_copy, frame, pool);
 }
 
 mfxFrameAllocator *
@@ -532,4 +783,24 @@ gst_qsv_allocator_get_allocator_handle (GstQsvAllocator * allocator)
   g_return_val_if_fail (GST_IS_QSV_ALLOCATOR (allocator), nullptr);
 
   return &allocator->priv->allocator;
+}
+
+gboolean
+gst_qsv_allocator_get_cached_response (GstQsvAllocator * allocator,
+    mfxFrameAllocResponse * response)
+{
+  g_return_val_if_fail (GST_IS_QSV_ALLOCATOR (allocator), FALSE);
+
+  return gst_qsv_allocator_copy_cached_response (allocator,
+      response, &allocator->priv->response);
+}
+
+void
+gst_qsv_allocator_set_options (GstQsvAllocator * allocator,
+    guint16 extra_alloc_size, gboolean dummy_alloc)
+{
+  g_return_if_fail (GST_IS_QSV_ALLOCATOR (allocator));
+
+  allocator->priv->extra_alloc_size = extra_alloc_size;
+  allocator->priv->dummy_alloc = dummy_alloc;
 }

@@ -1,6 +1,8 @@
 qsv_sources = [
   'gstqsvallocator.cpp',
+  'gstqsvdecoder.cpp',
   'gstqsvencoder.cpp',
+  'gstqsvh264dec.cpp',
   'gstqsvh264enc.cpp',
   'gstqsvh265enc.cpp',
   'gstqsvutils.cpp',

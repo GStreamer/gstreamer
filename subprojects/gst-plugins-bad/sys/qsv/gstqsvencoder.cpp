@@ -913,14 +913,14 @@ gst_qsv_encoder_prepare_pool (GstQsvEncoder * self, GstCaps * caps,
 
   /* TODO: Add Linux video memory (VA/DMABuf) support */
 #ifdef G_OS_WIN32
-  priv->mem_type = GST_QSV_VIDEO_MEMORY;
+  priv->mem_type = GST_QSV_VIDEO_MEMORY | GST_QSV_ENCODER_IN_MEMORY;
   *io_pattern = MFX_IOPATTERN_IN_VIDEO_MEMORY;
 
   ret = gst_qsv_encoder_prepare_d3d11_pool (self, aligned_caps, aligned_info);
 #endif
 
   if (!ret) {
-    priv->mem_type = GST_QSV_SYSTEM_MEMORY;
+    priv->mem_type = GST_QSV_SYSTEM_MEMORY | GST_QSV_ENCODER_IN_MEMORY;
     *io_pattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
 
     ret = gst_qsv_encoder_prepare_system_pool (self,
@@ -988,17 +988,6 @@ gst_qsv_encoder_set_format (GstVideoEncoder * encoder,
     goto error;
   }
 
-#define CHECK_STATUS(s,func) G_STMT_START { \
-  if (s < MFX_ERR_NONE) { \
-    GST_ERROR_OBJECT (self, G_STRINGIFY (func) " failed %d (%s)", \
-        QSV_STATUS_ARGS (s)); \
-    goto error; \
-  } else if (status != MFX_ERR_NONE) { \
-    GST_WARNING_OBJECT (self, G_STRINGIFY (func) " returned warning %d (%s)", \
-        QSV_STATUS_ARGS (s)); \
-  } \
-} G_STMT_END
-
   status = encoder_handle->Query (&param, &param);
   /* If device is unhappy with LowPower = OFF, try again with unknown */
   if (status < MFX_ERR_NONE) {
@@ -1008,18 +997,16 @@ gst_qsv_encoder_set_format (GstVideoEncoder * encoder,
   }
 
   status = encoder_handle->Query (&param, &param);
-  CHECK_STATUS (status, MFXVideoENCODE::Query);
+  QSV_CHECK_STATUS (self, status, MFXVideoENCODE::Query);
 
   status = encoder_handle->QueryIOSurf (&param, &alloc_request);
-  CHECK_STATUS (status, MFXVideoENCODE::QueryIOSurf);
+  QSV_CHECK_STATUS (self, status, MFXVideoENCODE::QueryIOSurf);
 
   status = encoder_handle->Init (&param);
-  CHECK_STATUS (status, MFXVideoENCODE::Init);
+  QSV_CHECK_STATUS (self, status, MFXVideoENCODE::Init);
 
   status = encoder_handle->GetVideoParam (&param);
-  CHECK_STATUS (status, MFXVideoENCODE::GetVideoParam);
-
-#undef CHECK_STATUS
+  QSV_CHECK_STATUS (self, status, MFXVideoENCODE::GetVideoParam);
 
   GST_DEBUG_OBJECT (self, "NumFrameSuggested: %d, AsyncDepth %d",
       alloc_request.NumFrameSuggested, param.AsyncDepth);
@@ -1185,7 +1172,9 @@ gst_qsv_encoder_handle_frame (GstVideoEncoder * encoder,
 
   surface->qsv_frame =
       gst_qsv_allocator_acquire_frame (priv->allocator, priv->mem_type,
-      &priv->input_state->info, frame->input_buffer, priv->internal_pool);
+      &priv->input_state->info, gst_buffer_ref (frame->input_buffer),
+      priv->internal_pool);
+
   if (!surface->qsv_frame) {
     GST_ERROR_OBJECT (self, "Failed to wrap buffer with qsv frame");
     gst_qsv_encoder_task_reset (self, task);

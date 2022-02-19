@@ -46,6 +46,9 @@ GType       gst_qsv_frame_get_type (void);
 
 GstBuffer * gst_qsv_frame_peek_buffer (GstQsvFrame * frame);
 
+gboolean    gst_qsv_frame_set_buffer  (GstQsvFrame * frame,
+                                       GstBuffer * buffer);
+
 static inline GstQsvFrame *
 gst_qsv_frame_ref (GstQsvFrame * frame)
 {
@@ -66,9 +69,14 @@ gst_clear_qsv_frame (GstQsvFrame ** frame)
 
 typedef enum
 {
-  GST_QSV_SYSTEM_MEMORY,
-  GST_QSV_VIDEO_MEMORY,
+  GST_QSV_SYSTEM_MEMORY = (1 << 0),
+  GST_QSV_VIDEO_MEMORY = (1 << 1),
+  GST_QSV_ENCODER_IN_MEMORY = (1 << 2),
+  GST_QSV_DECODER_OUT_MEMORY = (1 << 3),
 } GstQsvMemoryType;
+
+#define GST_QSV_MEM_TYPE_IS_SYSTEM(type) ((type & GST_QSV_SYSTEM_MEMORY) != 0)
+#define GST_QSV_MEM_TYPE_IS_VIDEO(type) ((type & GST_QSV_VIDEO_MEMORY) != 0)
 
 struct _GstQsvAllocator
 {
@@ -82,12 +90,19 @@ struct _GstQsvAllocatorClass
   GstObjectClass parent_class;
 
   mfxStatus   (*alloc)      (GstQsvAllocator * allocator,
+                             gboolean dummy_alloc,
                              mfxFrameAllocRequest * request,
                              mfxFrameAllocResponse * response);
 
   GstBuffer * (*upload)     (GstQsvAllocator * allocator,
                              const GstVideoInfo * info,
                              GstBuffer * buffer,
+                             GstBufferPool * pool);
+
+  GstBuffer * (*download)   (GstQsvAllocator * allocator,
+                             const GstVideoInfo * info,
+                             gboolean force_copy,
+                             GstQsvFrame * frame,
                              GstBufferPool * pool);
 };
 
@@ -99,8 +114,35 @@ GstQsvFrame *       gst_qsv_allocator_acquire_frame   (GstQsvAllocator * allocat
                                                        GstBuffer * buffer,
                                                        GstBufferPool * pool);
 
+GstBuffer *         gst_qsv_allocator_download_frame  (GstQsvAllocator * allocator,
+                                                       gboolean force_copy,
+                                                       GstQsvFrame * frame,
+                                                       GstBufferPool * pool);
+
 mfxFrameAllocator * gst_qsv_allocator_get_allocator_handle (GstQsvAllocator * allocator);
+
+gboolean            gst_qsv_allocator_get_cached_response  (GstQsvAllocator * allocator,
+                                                            mfxFrameAllocResponse * response);
+
+void                gst_qsv_allocator_set_options          (GstQsvAllocator * allocator,
+                                                            guint16 extra_alloc_size,
+                                                            gboolean dummy_alloc);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstQsvAllocator, gst_object_unref)
 
 G_END_DECLS
+
+#ifdef __cplusplus
+inline GstQsvMemoryType
+operator | (const GstQsvMemoryType & lhs, const GstQsvMemoryType & rhs)
+{
+  return static_cast<GstQsvMemoryType> (static_cast<guint>(lhs) |
+      static_cast<guint> (rhs));
+}
+
+inline GstQsvMemoryType &
+operator |= (GstQsvMemoryType & lhs, const GstQsvMemoryType & rhs)
+{
+  return lhs = lhs | rhs;
+}
+#endif

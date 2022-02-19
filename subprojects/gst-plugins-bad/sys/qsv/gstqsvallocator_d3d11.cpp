@@ -40,9 +40,13 @@ G_DEFINE_TYPE (GstQsvD3D11Allocator, gst_qsv_d3d11_allocator,
 
 static void gst_qsv_d3d11_allocator_dispose (GObject * object);
 static mfxStatus gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
-    mfxFrameAllocRequest * request, mfxFrameAllocResponse * response);
+    gboolean dummy_alloc, mfxFrameAllocRequest * request,
+    mfxFrameAllocResponse * response);
 static GstBuffer *gst_qsv_d3d11_allocator_upload (GstQsvAllocator * allocator,
     const GstVideoInfo * info, GstBuffer * buffer, GstBufferPool * pool);
+static GstBuffer *gst_qsv_d3d11_allocator_download (GstQsvAllocator * allocator,
+    const GstVideoInfo * info, gboolean force_copy, GstQsvFrame * frame,
+    GstBufferPool * pool);
 
 static void
 gst_qsv_d3d11_allocator_class_init (GstQsvD3D11AllocatorClass * klass)
@@ -54,6 +58,7 @@ gst_qsv_d3d11_allocator_class_init (GstQsvD3D11AllocatorClass * klass)
 
   alloc_class->alloc = GST_DEBUG_FUNCPTR (gst_qsv_d3d11_allocator_alloc);
   alloc_class->upload = GST_DEBUG_FUNCPTR (gst_qsv_d3d11_allocator_upload);
+  alloc_class->download = GST_DEBUG_FUNCPTR (gst_qsv_d3d11_allocator_download);
 }
 
 static void
@@ -73,13 +78,12 @@ gst_qsv_d3d11_allocator_dispose (GObject * object)
 
 static mfxStatus
 gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
-    mfxFrameAllocRequest * request, mfxFrameAllocResponse * response)
+    gboolean dummy_alloc, mfxFrameAllocRequest * request,
+    mfxFrameAllocResponse * response)
 {
   GstQsvD3D11Allocator *self = GST_QSV_D3D11_ALLOCATOR (allocator);
   DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
   GstQsvFrame **mids = nullptr;
-
-  GST_TRACE_OBJECT (self, "Alloc");
 
   /* Something unexpected and went wrong */
   if ((request->Type & MFX_MEMTYPE_SYSTEM_MEMORY) != 0) {
@@ -143,7 +147,6 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
 
     if (!mem) {
       GST_ERROR_OBJECT (self, "Failed to allocate buffer");
-
       return MFX_ERR_MEMORY_ALLOC;
     }
 
@@ -160,8 +163,8 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     mids = g_new0 (GstQsvFrame *, 1);
     response->NumFrameActual = 1;
     mids[0] = gst_qsv_allocator_acquire_frame (allocator,
-        GST_QSV_VIDEO_MEMORY, &info, buffer, nullptr);
-    gst_buffer_unref (buffer);
+        GST_QSV_VIDEO_MEMORY | GST_QSV_ENCODER_IN_MEMORY, &info, buffer,
+        nullptr);
   } else {
     GstBufferPool *pool;
     GstVideoFormat format;
@@ -170,18 +173,52 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     GstStructure *config;
     GstD3D11AllocationParams *params;
     guint bind_flags = 0;
+    GstVideoAlignment align;
+    GstQsvMemoryType mem_type = GST_QSV_VIDEO_MEMORY;
 
-    if ((request->Type & MFX_MEMTYPE_VIDEO_MEMORY_ENCODER_TARGET) != 0)
+    if ((request->Type & MFX_MEMTYPE_VIDEO_MEMORY_ENCODER_TARGET) != 0) {
       bind_flags |= D3D11_BIND_VIDEO_ENCODER;
+      mem_type |= GST_QSV_ENCODER_IN_MEMORY;
+    }
+
+    if ((request->Type & MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET) != 0) {
+      bind_flags |= D3D11_BIND_DECODER;
+      mem_type |= GST_QSV_DECODER_OUT_MEMORY;
+    }
+
+    if (mem_type == GST_QSV_VIDEO_MEMORY) {
+      GST_ERROR_OBJECT (self, "Unknown read/write access");
+      return MFX_ERR_UNSUPPORTED;
+    }
+
+    mids = g_new0 (GstQsvFrame *, request->NumFrameSuggested);
+    response->NumFrameActual = request->NumFrameSuggested;
 
     format = gst_d3d11_dxgi_format_to_gst (dxgi_format);
     gst_video_info_set_format (&info,
-        format, request->Info.Width, request->Info.Height);
+        format, request->Info.CropW, request->Info.CropH);
+
+    if (dummy_alloc) {
+      for (guint i = 0; i < request->NumFrameSuggested; i++) {
+        mids[i] = gst_qsv_allocator_acquire_frame (allocator,
+            mem_type, &info, nullptr, nullptr);
+      }
+
+      response->mids = (mfxMemId *) mids;
+
+      return MFX_ERR_NONE;
+    }
+
     caps = gst_video_info_to_caps (&info);
+    gst_video_alignment_reset (&align);
+    align.padding_right = request->Info.Width - request->Info.CropW;
+    align.padding_bottom = request->Info.Height - request->Info.CropH;
 
     pool = gst_d3d11_buffer_pool_new (self->device);
     params = gst_d3d11_allocation_params_new (self->device, &info,
         (GstD3D11AllocationFlags) 0, bind_flags);
+
+    gst_d3d11_allocation_params_alignment (params, &align);
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
@@ -192,8 +229,6 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     gst_buffer_pool_set_config (pool, config);
     gst_buffer_pool_set_active (pool, TRUE);
 
-    mids = g_new0 (GstQsvFrame *, request->NumFrameSuggested);
-    response->NumFrameActual = request->NumFrameSuggested;
     for (guint i = 0; i < request->NumFrameSuggested; i++) {
       GstBuffer *buffer;
 
@@ -206,9 +241,9 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
       }
 
       mids[i] = gst_qsv_allocator_acquire_frame (allocator,
-          GST_QSV_VIDEO_MEMORY, &info, buffer, nullptr);
-      gst_buffer_unref (buffer);
+          mem_type, &info, buffer, nullptr);
     }
+
     gst_buffer_pool_set_active (pool, FALSE);
     gst_object_unref (pool);
   }
@@ -407,6 +442,70 @@ gst_qsv_d3d11_allocator_upload (GstQsvAllocator * allocator,
   }
 
   return gst_qsv_frame_copy_d3d11 (info, buffer, dst_buf);
+}
+
+static GstBuffer *
+gst_qsv_d3d11_allocator_download (GstQsvAllocator * allocator,
+    const GstVideoInfo * info, gboolean force_copy, GstQsvFrame * frame,
+    GstBufferPool * pool)
+{
+  GstBuffer *src_buf, *dst_buf;
+  GstMemory *mem;
+  GstD3D11Memory *dmem;
+  GstFlowReturn ret;
+
+  GST_TRACE_OBJECT (allocator, "Download");
+
+  src_buf = gst_qsv_frame_peek_buffer (frame);
+
+  if (!force_copy)
+    return gst_buffer_ref (src_buf);
+
+  mem = gst_buffer_peek_memory (src_buf, 0);
+  if (!gst_is_d3d11_memory (mem) || gst_buffer_n_memory (src_buf) != 1) {
+    GST_ERROR_OBJECT (allocator, "frame holds invalid d3d11 memory");
+    return nullptr;
+  }
+
+  if (!GST_IS_D3D11_BUFFER_POOL (pool) &&
+      !GST_IS_D3D11_STAGING_BUFFER_POOL (pool)) {
+    GST_TRACE_OBJECT (allocator, "Output is not d3d11 memory");
+    goto fallback;
+  }
+
+  dmem = GST_D3D11_MEMORY_CAST (mem);
+
+  /* both pool and qsvframe should hold the same d3d11 device already */
+  if (GST_IS_D3D11_BUFFER_POOL (pool)) {
+    GstD3D11BufferPool *d3d11_pool = GST_D3D11_BUFFER_POOL (pool);
+
+    if (d3d11_pool->device != dmem->device) {
+      GST_WARNING_OBJECT (allocator, "Pool holds different device");
+      goto fallback;
+    }
+  } else {
+    GstD3D11StagingBufferPool *d3d11_pool =
+        GST_D3D11_STAGING_BUFFER_POOL (pool);
+
+    if (d3d11_pool->device != dmem->device) {
+      GST_WARNING_OBJECT (allocator, "Staging pool holds different device");
+      goto fallback;
+    }
+  }
+
+  ret = gst_buffer_pool_acquire_buffer (pool, &dst_buf, nullptr);
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (allocator, "Failed to allocate output buffer");
+    return nullptr;
+  }
+
+  return gst_qsv_frame_copy_d3d11 (info, src_buf, dst_buf);
+
+fallback:
+  GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
+
+  return GST_QSV_ALLOCATOR_CLASS (parent_class)->download (allocator,
+      info, TRUE, frame, pool);
 }
 
 GstQsvAllocator *

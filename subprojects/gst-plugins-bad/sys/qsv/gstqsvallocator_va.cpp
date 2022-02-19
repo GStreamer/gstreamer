@@ -38,9 +38,13 @@ G_DEFINE_TYPE (GstQsvVaAllocator, gst_qsv_va_allocator, GST_TYPE_QSV_ALLOCATOR);
 
 static void gst_qsv_va_allocator_dispose (GObject * object);
 static mfxStatus gst_qsv_va_allocator_alloc (GstQsvAllocator * allocator,
-    mfxFrameAllocRequest * request, mfxFrameAllocResponse * response);
+    gboolean dummy_alloc, mfxFrameAllocRequest * request,
+    mfxFrameAllocResponse * response);
 static GstBuffer *gst_qsv_va_allocator_upload (GstQsvAllocator * allocator,
     const GstVideoInfo * info, GstBuffer * buffer, GstBufferPool * pool);
+static GstBuffer *gst_qsv_va_allocator_download (GstQsvAllocator * allocator,
+    const GstVideoInfo * info, gboolean force_copy, GstQsvFrame * frame,
+    GstBufferPool * pool);
 
 static void
 gst_qsv_va_allocator_class_init (GstQsvVaAllocatorClass * klass)
@@ -52,6 +56,7 @@ gst_qsv_va_allocator_class_init (GstQsvVaAllocatorClass * klass)
 
   alloc_class->alloc = GST_DEBUG_FUNCPTR (gst_qsv_va_allocator_alloc);
   alloc_class->upload = GST_DEBUG_FUNCPTR (gst_qsv_va_allocator_upload);
+  alloc_class->download = GST_DEBUG_FUNCPTR (gst_qsv_va_allocator_download);
 }
 
 static void
@@ -70,7 +75,7 @@ gst_qsv_va_allocator_dispose (GObject * object)
 }
 
 static mfxStatus
-gst_qsv_va_allocator_alloc (GstQsvAllocator * allocator,
+gst_qsv_va_allocator_alloc (GstQsvAllocator * allocator, gboolean dummy_alloc,
     mfxFrameAllocRequest * request, mfxFrameAllocResponse * response)
 {
   GST_ERROR_OBJECT (allocator, "Not implemented");
@@ -81,6 +86,16 @@ gst_qsv_va_allocator_alloc (GstQsvAllocator * allocator,
 static GstBuffer *
 gst_qsv_va_allocator_upload (GstQsvAllocator * allocator,
     const GstVideoInfo * info, GstBuffer * buffer, GstBufferPool * pool)
+{
+  GST_ERROR_OBJECT (allocator, "Not implemented");
+
+  return nullptr;
+}
+
+static GstBuffer *
+gst_qsv_va_allocator_download (GstQsvAllocator * allocator,
+    const GstVideoInfo * info, gboolean force_copy, GstQsvFrame * frame,
+    GstBufferPool * pool)
 {
   GST_ERROR_OBJECT (allocator, "Not implemented");
 

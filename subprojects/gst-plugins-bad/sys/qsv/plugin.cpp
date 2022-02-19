@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <mfx.h>
 #include "gstqsvutils.h"
+#include "gstqsvh264dec.h"
 #include "gstqsvh264enc.h"
 #include "gstqsvh265enc.h"
 #include "gstqsvvp9enc.h"
@@ -41,7 +42,9 @@
 
 GST_DEBUG_CATEGORY (gst_qsv_debug);
 GST_DEBUG_CATEGORY (gst_qsv_allocator_debug);
+GST_DEBUG_CATEGORY (gst_qsv_decoder_debug);
 GST_DEBUG_CATEGORY (gst_qsv_encoder_debug);
+GST_DEBUG_CATEGORY (gst_qsv_h264_dec_debug);
 GST_DEBUG_CATEGORY (gst_qsv_h264_enc_debug);
 GST_DEBUG_CATEGORY (gst_qsv_h265_enc_debug);
 GST_DEBUG_CATEGORY (gst_qsv_vp9_enc_debug);
@@ -213,10 +216,14 @@ plugin_init (GstPlugin * plugin)
 
   GST_INFO ("Found %d platform devices", g_list_length (platform_devices));
 
-  GST_DEBUG_CATEGORY_INIT (gst_qsv_encoder_debug,
-      "qsvencoder", 0, "qsvencoder");
   GST_DEBUG_CATEGORY_INIT (gst_qsv_allocator_debug,
       "qsvallocator", 0, "qsvallocator");
+  GST_DEBUG_CATEGORY_INIT (gst_qsv_decoder_debug,
+      "qsvdecoder", 0, "qsvdecoder");
+  GST_DEBUG_CATEGORY_INIT (gst_qsv_encoder_debug,
+      "qsvencoder", 0, "qsvencoder");
+  GST_DEBUG_CATEGORY_INIT (gst_qsv_h264_dec_debug,
+      "qsvh264dec", 0, "qsvh264dec");
   GST_DEBUG_CATEGORY_INIT (gst_qsv_h264_enc_debug,
       "qsvh264enc", 0, "qsvh264enc");
   GST_DEBUG_CATEGORY_INIT (gst_qsv_h265_enc_debug,
@@ -245,6 +252,8 @@ plugin_init (GstPlugin * plugin)
         &platform_devices);
     if (!session)
       goto next;
+
+    gst_qsv_h264_dec_register (plugin, GST_RANK_MARGINAL, i, device, session);
 
     gst_qsv_h264_enc_register (plugin, GST_RANK_NONE, i, device, session);
     gst_qsv_h265_enc_register (plugin, GST_RANK_NONE, i, device, session);
