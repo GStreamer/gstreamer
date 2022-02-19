@@ -24,12 +24,6 @@
 #include "gstgdiscreencapsrc.h"
 #include "gstdx9screencapsrc.h"
 
-#ifdef HAVE_DXGI_CAP
-#include "gstdxgiscreencapsrc.h"
-
-GST_DEBUG_CATEGORY (gst_dxgi_screen_cap_src_debug);
-#endif
-
 static BOOL CALLBACK
 _diplay_monitor_enum (HMONITOR hMon, HDC hdc, LPRECT rect, LPARAM param)
 {
@@ -71,11 +65,6 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_DX9SCREENCAPSRC)) {
     return FALSE;
   }
-#ifdef HAVE_DXGI_CAP
-  GST_DEBUG_CATEGORY_INIT (gst_dxgi_screen_cap_src_debug,
-      "dxgiscreencapsrc", 0, "DirectX DXGI screen capture source");
-  gst_dxgi_screen_cap_src_register (plugin, GST_RANK_NONE);
-#endif
 
   return TRUE;
 }
