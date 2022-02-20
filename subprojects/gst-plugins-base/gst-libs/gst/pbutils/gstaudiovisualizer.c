@@ -336,6 +336,10 @@ shader_fade_and_move_horiz_out (GstAudioVisualizer * scope,
     }
     d += ds;
   }
+
+  /* rewind one stride */
+  d -= ds;
+
   /* move lower half down */
   for (j = 0; j < height / 2; j++) {
     d += ds;
