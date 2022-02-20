@@ -383,6 +383,7 @@ gst_d3d11_screen_capture_src_decide_allocation (GstBaseSrc * bsrc,
   guint min, max, size;
   gboolean update_pool;
   GstVideoInfo vinfo;
+  gboolean has_videometa;
 
   if (self->pool) {
     gst_buffer_pool_set_active (self->pool, FALSE);
@@ -390,6 +391,9 @@ gst_d3d11_screen_capture_src_decide_allocation (GstBaseSrc * bsrc,
   }
 
   gst_query_parse_allocation (query, &caps, NULL);
+
+  has_videometa = gst_query_find_allocation_meta (query,
+      GST_VIDEO_META_API_TYPE, nullptr);
 
   if (!caps) {
     GST_ERROR_OBJECT (self, "No output caps");
@@ -408,19 +412,26 @@ gst_d3d11_screen_capture_src_decide_allocation (GstBaseSrc * bsrc,
     update_pool = FALSE;
   }
 
-  if (pool && self->downstream_supports_d3d11) {
-    if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
-      gst_clear_object (&pool);
-    } else {
-      GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
-      if (dpool->device != self->device)
+  if (pool) {
+    if (self->downstream_supports_d3d11) {
+      if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
         gst_clear_object (&pool);
+      } else {
+        GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
+        if (dpool->device != self->device)
+          gst_clear_object (&pool);
+      }
+    } else if (has_videometa) {
+      /* We will use staging buffer pool for better performance */
+      gst_clear_object (&pool);
     }
   }
 
   if (!pool) {
     if (self->downstream_supports_d3d11)
       pool = gst_d3d11_buffer_pool_new (self->device);
+    else if (has_videometa)
+      pool = gst_d3d11_staging_buffer_pool_new (self->device);
     else
       pool = gst_video_buffer_pool_new ();
   }
@@ -449,14 +460,14 @@ gst_d3d11_screen_capture_src_decide_allocation (GstBaseSrc * bsrc,
     goto error;
   }
 
-  if (self->downstream_supports_d3d11) {
-    /* d3d11 buffer pool will update buffer size based on allocated texture,
-     * get size from config again */
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config,
-        nullptr, &size, nullptr, nullptr);
-    gst_structure_free (config);
-  } else {
+  /* d3d11 buffer pool will update buffer size based on allocated texture,
+   * get size from config again */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config,
+      nullptr, &size, nullptr, nullptr);
+  gst_structure_free (config);
+
+  if (!self->downstream_supports_d3d11) {
     self->pool = gst_d3d11_buffer_pool_new (self->device);
 
     config = gst_buffer_pool_get_config (self->pool);
@@ -842,9 +853,6 @@ again:
   }
 
   if (!self->downstream_supports_d3d11) {
-    GstVideoFrame src_frame, dst_frame;
-    gboolean copy_ret;
-
     ret = GST_BASE_SRC_CLASS (parent_class)->alloc (bsrc,
         offset, size, &sysmem_buf);
     if (ret != GST_FLOW_OK) {
@@ -852,24 +860,7 @@ again:
       goto out;
     }
 
-    if (!gst_video_frame_map (&src_frame, &self->video_info, buffer,
-            GST_MAP_READ)) {
-      GST_ERROR_OBJECT (self, "Failed to map d3d11 buffer");
-      goto error;
-    }
-
-    if (!gst_video_frame_map (&dst_frame, &self->video_info, sysmem_buf,
-            GST_MAP_WRITE)) {
-      GST_ERROR_OBJECT (self, "Failed to map sysmem buffer");
-      gst_video_frame_unmap (&src_frame);
-      goto error;
-    }
-
-    copy_ret = gst_video_frame_copy (&dst_frame, &src_frame);
-    gst_video_frame_unmap (&dst_frame);
-    gst_video_frame_unmap (&src_frame);
-
-    if (!copy_ret) {
+    if (!gst_d3d11_buffer_copy_into (sysmem_buf, buffer, &self->video_info)) {
       GST_ERROR_OBJECT (self, "Failed to copy frame");
       goto error;
     }
