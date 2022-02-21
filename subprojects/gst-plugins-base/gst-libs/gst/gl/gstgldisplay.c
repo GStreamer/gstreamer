@@ -741,8 +741,6 @@ gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
  * @data: (closure): some data to pass to @compare_func
  * @compare_func: (scope call): a comparison function to run
  *
- * Deprecated for gst_gl_display_retrieve_window().
- *
  * Execute @compare_func over the list of windows stored by @display.  The
  * first argument to @compare_func is the #GstGLWindow being checked and the
  * second argument is @data.
@@ -751,6 +749,7 @@ gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
  *          from @compare_func
  *
  * Since: 1.12
+ * Deprecated: 1.18: Use gst_gl_display_retrieve_window() instead.
  */
 GstGLWindow *
 gst_gl_display_find_window (GstGLDisplay * display, gpointer data,
