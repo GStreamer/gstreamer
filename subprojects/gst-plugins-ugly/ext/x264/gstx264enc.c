@@ -86,7 +86,7 @@
  * |[
  * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! tee name=t ! queue ! videoconvert ! autovideosink \
  *   t. ! queue ! x264enc rc-lookahead=5 ! fakesink
- * ]| This example pipeline will encode a test video source to H264 while
+ * ]| This example pipeline will encode a test video source to H.264 while
  * displaying the input material at the same time.  As mentioned above,
  * specific settings are needed in this case to avoid pipeline stalling.
  * Depending on goals and context, other approaches are possible, e.g.
@@ -1199,7 +1199,8 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_string_append_printf (x264enc_defaults, ":weightp=0");
 
   gst_element_class_set_static_metadata (element_class,
-      "x264enc", "Codec/Encoder/Video", "H264 Encoder",
+      "x264 H.264 Encoder", "Codec/Encoder/Video",
+      "libx264-based H.264 video encoder",
       "Josef Zlomek <josef.zlomek@itonis.tv>, "
       "Mark Nauwelaerts <mnauw@users.sf.net>");
 
@@ -3053,5 +3054,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     x264,
-    "libx264-based H264 plugins",
+    "libx264-based H.264 encoder plugin",
     plugin_init, VERSION, "GPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

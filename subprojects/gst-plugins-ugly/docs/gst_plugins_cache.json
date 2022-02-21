@@ -1178,11 +1178,11 @@
         "url": "Unknown package origin"
     },
     "x264": {
-        "description": "libx264-based H264 plugins",
+        "description": "libx264-based H.264 encoder plugin",
         "elements": {
             "x264enc": {
                 "author": "Josef Zlomek <josef.zlomek@itonis.tv>, Mark Nauwelaerts <mnauw@users.sf.net>",
-                "description": "H264 Encoder",
+                "description": "libx264-based H.264 video encoder",
                 "hierarchy": [
                     "GstX264Enc",
                     "GstVideoEncoder",
@@ -1195,7 +1195,7 @@
                     "GstPreset"
                 ],
                 "klass": "Codec/Encoder/Video",
-                "long-name": "x264enc",
+                "long-name": "x264 H.264 Encoder",
                 "pad-templates": {
                     "sink": {
                         "caps": "video/x-raw:\n      framerate: [ 0/1, 2147483647/1 ]\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n         format: { Y444, Y42B, I420, YV12, NV12, Y444_10LE, I422_10LE, I420_10LE }\n",
