@@ -225,8 +225,8 @@ GStreamer from source yourself instead of using pre-built packages),
 make sure the `PKG_CONFIG_PATH` environment variable is set to the
 correct location (`$libdir/pkgconfig`).
 
-In the unlikely case that you are using an uninstalled GStreamer setup
-(ie. gst-uninstalled), you will need to use libtool to build the hello
+In the unlikely case that you are using the GStreamer development environment
+(ie. gst-env), you will need to use libtool to build the hello
 world program, like this:
 
 ```

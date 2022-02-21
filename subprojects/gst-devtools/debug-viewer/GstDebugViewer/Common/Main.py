@@ -238,9 +238,9 @@ class PathsBase (object):
         pass
 
     @classmethod
-    def setup_uninstalled(cls, source_dir):
-        """Set up paths for running 'uninstalled' (i.e. directly from the
-        source dist)."""
+    def setup_devenv(cls, source_dir):
+        """Set up paths for running the development environment
+        (i.e. directly from the source dist)."""
 
         pass
 
@@ -251,7 +251,7 @@ class PathsBase (object):
         if cls.data_dir is None:
             source_dir = os.path.dirname(
                 os.path.dirname(os.path.abspath(__file__)))
-            cls.setup_uninstalled(source_dir)
+            cls.setup_devenv(source_dir)
 
     def __new__(cls):
 
@@ -275,9 +275,9 @@ class PathsProgramBase (PathsBase):
         cls.locale_dir = os.path.join(data_prefix, "locale")
 
     @classmethod
-    def setup_uninstalled(cls, source_dir):
-        """Set up paths for running 'uninstalled' (i.e. directly from the
-        source dist)."""
+    def setup_devenv(cls, source_dir):
+        """Set up paths for running the development environment
+        (i.e. directly from the source dist)."""
 
         # This is essential: The GUI module needs to find the .glade file.
         cls.data_dir = os.path.join(source_dir, "data")

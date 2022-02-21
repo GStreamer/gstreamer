@@ -1189,7 +1189,7 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
     /* Load plugin the old fashioned way... */
 
     /* We don't use a GError here because a failure to load some shared
-     * objects as plugins is normal (particularly in the uninstalled case)
+     * objects as plugins is normal (particularly in the development environment case)
      */
     newplugin = _priv_gst_plugin_load_file_for_registry (filename,
         context->registry, NULL);
@@ -1229,7 +1229,7 @@ is_blacklisted_directory (const gchar * dirent)
     return TRUE;
 
   /* can also skip .git and .deps dirs, those won't contain useful files.
-   * This speeds up scanning a bit in uninstalled setups. */
+   * This speeds up scanning a bit in development environment setups. */
   if (strcmp (dirent, ".git") == 0 || strcmp (dirent, ".deps") == 0)
     return TRUE;
 

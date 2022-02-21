@@ -4,7 +4,7 @@
 
 The GStreamer multimedia framework is a set of libraries and plugins split into a number of distinct modules which are released independently and which have so far been developed in separate git repositories in [freedesktop.org GitLab](https://gitlab.freedesktop.org/gstreamer/).
 
-In addition to these separate git repositories there was a `gst-build` meta-repository that would use the Meson build systems's subproject feature to download each individual module and then build everything in one go. It would also provide an uninstalled development environment that made it easy to work on GStreamer and use or test versions other than the system-installed GStreamer version.
+In addition to these separate git repositories there was a `gst-build` meta-repository that would use the Meson build systems's subproject feature to download each individual module and then build everything in one go. It would also provide a development environment that made it easy to work on GStreamer and use or test versions other than the system-installed GStreamer version.
 
 All of these modules have now (as of 28 September 2021) been merged into a single git repository ("Mono repository" or "monorepo") which should simplify development workflows and continuous integration, especially where changes need to be made to multiple modules at once.
 

@@ -33,12 +33,12 @@ For bigger projects, you should integrate `pkg-config` use in your
 Makefile, or with autoconf using the pkg.m4 macro (providing
 `PKG_CONFIG_CHECK`).
 
-## How do I develop against an uninstalled GStreamer copy?
+## How do I develop against a GStreamer copy within a development environment?
 
-It is possible to develop and compile against an uninstalled copy of GStreamer
-and its plugins, for example, against git checkouts. This enables you to test
-the latest version of GStreamer without interfering with your system-wide
-installation. See the [Building from source using
+It is possible to develop and compile against a copy of GStreamer and its
+plugins within a development environment, for example, against git checkouts.
+This enables you to test the latest version of GStreamer without interfering
+with your system-wide installation. See the [Building from source using
 meson](installing/building-from-source-using-meson.md) documentation.
 
 
@@ -54,10 +54,9 @@ If what you want is automatic audio/video sinks, consider using the
 
 ## How do I debug these funny shell scripts that libtool makes?
 
-When you link a program against uninstalled GStreamer using
-libtool, funny shell scripts are made to modify your shared object
-search path and then run your program. For instance, to debug
-`gst-launch`, try:
+When you link a program against a GStreamer within a development environment
+using libtool, funny shell scripts are made to modify your shared object search
+path and then run your program. For instance, to debug `gst-launch`, try:
 
 ```
 libtool --mode=execute gdb /path/to/gst-launch

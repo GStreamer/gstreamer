@@ -5305,7 +5305,7 @@ gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
     }
   }
 
-  /* Hack to make it work uninstalled */
+  /* Hack to make it work within the development environment */
   dir = g_file_new_for_path ("data/scenarios");
   _list_scenarios_in_dir (dir, kf);
   g_object_unref (dir);
