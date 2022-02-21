@@ -288,7 +288,7 @@ endif
 have_omx_vp8 = cc.has_header_symbol(
     'OMX_Video.h',
     'OMX_VIDEO_CodingVP8',
-    prefix : extra_video_headers, 
+    prefix : extra_video_headers,
     args : gst_omx_args,
     include_directories : [omx_inc])
 if have_omx_vp8

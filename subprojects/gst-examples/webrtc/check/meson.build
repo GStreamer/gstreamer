@@ -20,3 +20,8 @@ if openssl.found() and have_webrtc_check_deps
              'TEST_CA_CERT_PATH=' + join_paths(meson.project_build_root(), 'signalling')])
   endforeach
 endif
+
+env = environment()
+env.prepend('GST_VALIDATE_SCENARIOS_PATH', meson.current_source_dir() / 'validate/scenarios')
+env.prepend('GST_VALIDATE_APPS_DIR', meson.current_source_dir() / 'validate')
+meson.add_devenv(env)

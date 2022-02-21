@@ -20,3 +20,7 @@ plugins += [gstequalizer]
 
 install_data(sources: ['GstIirEqualizer3Bands.prs',
   'GstIirEqualizer10Bands.prs'], install_dir: presetdir)
+
+env = environment()
+env.prepend('GST_PRESET_PATH', meson.current_source_dir())
+meson.add_devenv(env)

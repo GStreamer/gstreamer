@@ -76,4 +76,7 @@ if vpx_dep.found()
   plugins += [gstvpx]
 
   install_data(sources: ['GstVP8Enc.prs'], install_dir: presetdir)
+  env = environment()
+  env.prepend('GST_PRESET_PATH', meson.current_source_dir())
+  meson.add_devenv(env)
 endif

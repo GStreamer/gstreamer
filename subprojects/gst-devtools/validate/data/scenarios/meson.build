@@ -37,3 +37,7 @@ install_subdir('includes',
 install_subdir('rtsp_overrides',
              install_dir: get_option('datadir') + '/gstreamer-' +
              apiversion + '/validate/scenarios')
+
+env = environment()
+env.prepend('GST_VALIDATE_SCENARIOS_PATH', meson.current_source_dir())
+meson.add_devenv(env)

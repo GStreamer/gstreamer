@@ -16,8 +16,15 @@ encoding_targets = [
   ['device', ['targets/device/dvd.gep',]],
 ]
 
+srcdirs = []
+
 foreach path_targets : encoding_targets
   dir = join_paths(encoding_targetsdir, path_targets.get(0))
   etargets = path_targets.get(1)
   install_data(sources: etargets, install_dir: dir)
+  srcdirs += meson.current_source_dir() / 'targets' / path_targets.get(0)
 endforeach
+
+env = environment()
+env.prepend('GST_ENCODING_TARGET_PATH', srcdirs)
+meson.add_devenv(env)

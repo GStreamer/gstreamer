@@ -33,3 +33,7 @@ pkgconfig.generate(gstisomp4, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstisomp4]
 
 install_data(sources: 'GstQTMux.prs', install_dir: presetdir)
+
+env = environment()
+env.prepend('GST_PRESET_PATH', meson.current_source_dir())
+meson.add_devenv(env)

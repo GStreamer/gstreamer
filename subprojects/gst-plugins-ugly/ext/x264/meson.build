@@ -33,4 +33,7 @@ if x264_dep.found()
   plugins += [gstx264]
 
   install_data(sources: 'GstX264Enc.prs', install_dir: presetdir)
+  env = environment()
+  env.prepend('GST_PRESET_PATH', meson.current_source_dir())
+  meson.add_devenv(env)
 endif
