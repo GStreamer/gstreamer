@@ -273,8 +273,6 @@ struct _GstD3D11MemoryPrivate
   gint cpu_map_count;
 };
 
-GST_DEFINE_MINI_OBJECT_TYPE (GstD3D11Memory, gst_d3d11_memory);
-
 static inline D3D11_MAP
 gst_d3d11_map_flags_to_d3d11 (GstMapFlags flags)
 {

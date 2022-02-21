@@ -31,7 +31,6 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_D3D11_ALLOCATION_PARAMS    (gst_d3d11_allocation_params_get_type())
 
-#define GST_TYPE_D3D11_MEMORY               (gst_d3d11_memory_get_type())
 #define GST_D3D11_MEMORY_CAST(obj)          ((GstD3D11Memory *)obj)
 
 #define GST_TYPE_D3D11_ALLOCATOR            (gst_d3d11_allocator_get_type())
@@ -166,9 +165,6 @@ struct _GstD3D11Memory
   GstD3D11MemoryPrivate *priv;
   gpointer _gst_reserved[GST_PADDING];
 };
-
-GST_D3D11_API
-GType                      gst_d3d11_memory_get_type (void);
 
 GST_D3D11_API
 void                       gst_d3d11_memory_init_once (void);
