@@ -697,72 +697,6 @@ _get_stats_from_dtls_transport (GstWebRTCBin * webrtc,
   return id;
 }
 
-static void
-_get_stats_from_transport_channel (GstWebRTCBin * webrtc,
-    TransportStream * stream, const gchar * codec_id, guint ssrc,
-    guint clock_rate, GstStructure * s)
-{
-  GstWebRTCDTLSTransport *transport;
-  GObject *rtp_session;
-  GObject *gst_rtp_session;
-  GstStructure *rtp_stats, *twcc_stats;
-  GValueArray *source_stats;
-  gchar *transport_id;
-  double ts;
-  int i;
-
-  gst_structure_get_double (s, "timestamp", &ts);
-
-  transport = stream->transport;
-  if (!transport)
-    return;
-
-  g_signal_emit_by_name (webrtc->rtpbin, "get-internal-session",
-      stream->session_id, &rtp_session);
-  g_object_get (rtp_session, "stats", &rtp_stats, NULL);
-  g_signal_emit_by_name (webrtc->rtpbin, "get-session",
-      stream->session_id, &gst_rtp_session);
-  g_object_get (gst_rtp_session, "twcc-stats", &twcc_stats, NULL);
-
-  gst_structure_get (rtp_stats, "source-stats", G_TYPE_VALUE_ARRAY,
-      &source_stats, NULL);
-
-  GST_DEBUG_OBJECT (webrtc, "retrieving rtp stream stats from transport %"
-      GST_PTR_FORMAT " rtp session %" GST_PTR_FORMAT " with %u rtp sources, "
-      "transport %" GST_PTR_FORMAT, stream, rtp_session, source_stats->n_values,
-      transport);
-
-  transport_id =
-      _get_stats_from_dtls_transport (webrtc, transport, twcc_stats, s);
-
-  /* construct stats objects */
-  for (i = 0; i < source_stats->n_values; i++) {
-    const GstStructure *stats;
-    const GValue *val = g_value_array_get_nth (source_stats, i);
-    guint stats_ssrc = 0;
-
-    stats = gst_value_get_structure (val);
-
-    /* skip foreign sources */
-    if (gst_structure_get_uint (stats, "ssrc", &stats_ssrc) &&
-        ssrc == stats_ssrc)
-      _get_stats_from_rtp_source_stats (webrtc, stream, stats, codec_id,
-          transport_id, s);
-    else if (gst_structure_get_uint (stats, "rb-ssrc", &stats_ssrc) &&
-        ssrc == stats_ssrc)
-      _get_stats_from_remote_rtp_source_stats (webrtc, stream, stats, ssrc,
-          clock_rate, codec_id, transport_id, s);
-  }
-
-  g_object_unref (rtp_session);
-  g_object_unref (gst_rtp_session);
-  gst_structure_free (rtp_stats);
-  if (twcc_stats)
-    gst_structure_free (twcc_stats);
-  g_value_array_free (source_stats);
-  g_free (transport_id);
-}
-
 /* https://www.w3.org/TR/webrtc-stats/#codec-dict* */
 static gboolean
 _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
@@ -860,33 +794,110 @@ _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
   return has_caps_ssrc;
 }
 
+struct transport_stream_stats
+{
+  GstWebRTCBin *webrtc;
+  TransportStream *stream;
+  char *transport_id;
+  char *codec_id;
+  guint clock_rate;
+  GValueArray *source_stats;
+  GstStructure *s;
+};
+
+static gboolean
+webrtc_stats_get_from_transport (SsrcMapItem * entry,
+    struct transport_stream_stats *ts_stats)
+{
+  double ts;
+  int i;
+
+  gst_structure_get_double (ts_stats->s, "timestamp", &ts);
+
+  /* construct stats objects */
+  for (i = 0; i < ts_stats->source_stats->n_values; i++) {
+    const GstStructure *stats;
+    const GValue *val = g_value_array_get_nth (ts_stats->source_stats, i);
+    guint stats_ssrc = 0;
+
+    stats = gst_value_get_structure (val);
+
+    /* skip foreign sources */
+    if (gst_structure_get_uint (stats, "ssrc", &stats_ssrc) &&
+        entry->ssrc == stats_ssrc)
+      _get_stats_from_rtp_source_stats (ts_stats->webrtc, ts_stats->stream,
+          stats, ts_stats->codec_id, ts_stats->transport_id, ts_stats->s);
+    else if (gst_structure_get_uint (stats, "rb-ssrc", &stats_ssrc) &&
+        entry->ssrc == stats_ssrc)
+      _get_stats_from_remote_rtp_source_stats (ts_stats->webrtc,
+          ts_stats->stream, stats, entry->ssrc, ts_stats->clock_rate,
+          ts_stats->codec_id, ts_stats->transport_id, ts_stats->s);
+  }
+
+  /* we want to look at all the entries */
+  return FALSE;
+}
+
 static gboolean
 _get_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad, GstStructure * s)
 {
   GstWebRTCBinPad *wpad = GST_WEBRTC_BIN_PAD (pad);
-  TransportStream *stream;
-  gchar *codec_id;
+  struct transport_stream_stats ts_stats = { NULL, };
   guint ssrc, clock_rate;
-  gboolean has_caps_ssrc;
+  GObject *rtp_session;
+  GObject *gst_rtp_session;
+  GstStructure *rtp_stats, *twcc_stats;
 
-  has_caps_ssrc = _get_codec_stats_from_pad (webrtc, pad, s, &codec_id, &ssrc,
+  _get_codec_stats_from_pad (webrtc, pad, s, &ts_stats.codec_id, &ssrc,
       &clock_rate);
 
   if (!wpad->trans)
     goto out;
 
-  stream = WEBRTC_TRANSCEIVER (wpad->trans)->stream;
-  if (!stream)
+  ts_stats.stream = WEBRTC_TRANSCEIVER (wpad->trans)->stream;
+  if (!ts_stats.stream)
     goto out;
 
-  if (!has_caps_ssrc)
-    ssrc = wpad->last_ssrc;
+  if (wpad->trans->mline == G_MAXUINT)
+    goto out;
 
-  _get_stats_from_transport_channel (webrtc, stream, codec_id, ssrc,
-      clock_rate, s);
+  if (!ts_stats.stream->transport)
+    goto out;
+
+  g_signal_emit_by_name (webrtc->rtpbin, "get-internal-session",
+      ts_stats.stream->session_id, &rtp_session);
+  g_object_get (rtp_session, "stats", &rtp_stats, NULL);
+  g_signal_emit_by_name (webrtc->rtpbin, "get-session",
+      ts_stats.stream->session_id, &gst_rtp_session);
+  g_object_get (gst_rtp_session, "twcc-stats", &twcc_stats, NULL);
+
+  gst_structure_get (rtp_stats, "source-stats", G_TYPE_VALUE_ARRAY,
+      &ts_stats.source_stats, NULL);
+
+  ts_stats.transport_id =
+      _get_stats_from_dtls_transport (webrtc, ts_stats.stream->transport,
+      twcc_stats, s);
+
+  GST_DEBUG_OBJECT (webrtc, "retrieving rtp stream stats from transport %"
+      GST_PTR_FORMAT " rtp session %" GST_PTR_FORMAT " with %u rtp sources, "
+      "transport %" GST_PTR_FORMAT, ts_stats.stream, rtp_session,
+      ts_stats.source_stats->n_values, ts_stats.stream->transport);
+
+  ts_stats.s = s;
+
+  transport_stream_find_ssrc_map_item (ts_stats.stream, &ts_stats,
+      (FindSsrcMapFunc) webrtc_stats_get_from_transport);
+
+  g_clear_object (&rtp_session);
+  g_clear_object (&gst_rtp_session);
+  gst_clear_structure (&rtp_stats);
+  gst_clear_structure (&twcc_stats);
+  g_value_array_free (ts_stats.source_stats);
+  ts_stats.source_stats = NULL;
+  g_clear_pointer (&ts_stats.transport_id, g_free);
 
 out:
-  g_free (codec_id);
+  g_clear_pointer (&ts_stats.codec_id, g_free);
   return TRUE;
 }
 
