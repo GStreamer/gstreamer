@@ -884,7 +884,6 @@ gst_qsv_encoder_prepare_system_pool (GstQsvEncoder * self,
 
   priv->internal_pool = gst_video_buffer_pool_new ();
   config = gst_buffer_pool_get_config (priv->internal_pool);
-  caps = gst_video_info_to_caps (aligned_info);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_set_params (config,
       caps, GST_VIDEO_INFO_SIZE (aligned_info), 0, 0);
