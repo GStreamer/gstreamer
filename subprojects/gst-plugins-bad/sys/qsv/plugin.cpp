@@ -216,7 +216,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_qsv_encoder_debug,
       "qsvencoder", 0, "qsvencoder");
   GST_DEBUG_CATEGORY_INIT (gst_qsv_allocator_debug,
-      "gstqsvallocator", 0, "gstqsvallocator");
+      "qsvallocator", 0, "qsvallocator");
   GST_DEBUG_CATEGORY_INIT (gst_qsv_h264_enc_debug,
       "qsvh264enc", 0, "qsvh264enc");
   GST_DEBUG_CATEGORY_INIT (gst_qsv_h265_enc_debug,
