@@ -34,14 +34,14 @@ const gchar *gst_gl_shader_string_fragment_mediump_precision;
 
 GST_GL_API
 const gchar *gst_gl_shader_string_vertex_default;
-GST_GL_API G_DEPRECATED_FOR(gst_gl_shader_string_fragment_get_default)
+GST_GL_DEPRECATED_FOR(gst_gl_shader_string_fragment_get_default)
 const gchar *gst_gl_shader_string_fragment_default;
 
 GST_GL_API
 const gchar *gst_gl_shader_string_vertex_mat4_texture_transform;
 GST_GL_API
 const gchar *gst_gl_shader_string_vertex_mat4_vertex_transform;
-GST_GL_API G_DEPRECATED_FOR(gst_gl_shader_string_fragment_external_oes_get_default)
+GST_GL_DEPRECATED_FOR(gst_gl_shader_string_fragment_external_oes_get_default)
 const gchar *gst_gl_shader_string_fragment_external_oes_default;
 
 GST_GL_API

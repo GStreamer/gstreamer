@@ -180,7 +180,7 @@ GST_GL_API
 GstGLWindow *   gst_gl_display_create_window    (GstGLDisplay * display);
 GST_GL_API
 gboolean        gst_gl_display_remove_window    (GstGLDisplay * display, GstGLWindow * window);
-GST_GL_API G_DEPRECATED_FOR(gst_gl_display_retrieve_window)
+GST_GL_DEPRECATED_FOR(gst_gl_display_retrieve_window)
 GstGLWindow *   gst_gl_display_find_window      (GstGLDisplay * display, gpointer data, GCompareFunc compare_func);
 GST_GL_API
 GstGLWindow *   gst_gl_display_retrieve_window  (GstGLDisplay * display, gpointer data, GCompareFunc compare_func);
