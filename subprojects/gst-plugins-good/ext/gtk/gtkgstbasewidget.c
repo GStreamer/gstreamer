@@ -23,6 +23,7 @@
 #endif
 
 #include <stdio.h>
+#include <math.h>
 
 #include "gtkgstbasewidget.h"
 
@@ -453,6 +454,55 @@ gtk_gst_base_widget_scroll_event (GtkWidget * widget, GdkEventScroll * event)
   return FALSE;
 }
 
+static gboolean
+gtk_gst_base_widget_touch_event (GtkWidget * widget, GdkEventTouch * event)
+{
+  GtkGstBaseWidget *base_widget = GTK_GST_BASE_WIDGET (widget);
+  GstElement *element;
+
+  if ((element = g_weak_ref_get (&base_widget->element))) {
+    if (GST_IS_NAVIGATION (element)) {
+      GstEvent *nav_event;
+      gdouble x, y, p;
+      guint id, i;
+
+      id = GPOINTER_TO_UINT (event->sequence);
+      gtk_gst_base_widget_display_size_to_stream_size (base_widget, event->x,
+          event->y, &x, &y);
+
+      p = NAN;
+      for (i = 0; i < gdk_device_get_n_axes (event->device); i++) {
+        if (gdk_device_get_axis_use (event->device, i) == GDK_AXIS_PRESSURE) {
+          p = event->axes[i];
+          break;
+        }
+      }
+
+      switch (event->type) {
+        case GDK_TOUCH_BEGIN:
+          nav_event = gst_navigation_event_new_touch_down (id, x, y, p);
+          break;
+        case GDK_TOUCH_UPDATE:
+          nav_event = gst_navigation_event_new_touch_motion (id, x, y, p);
+          break;
+        case GDK_TOUCH_END:
+        case GDK_TOUCH_CANCEL:
+          nav_event = gst_navigation_event_new_touch_up (id, x, y);
+          break;
+        default:
+          nav_event = NULL;
+          break;
+      }
+
+      if (nav_event)
+        gst_navigation_send_event_simple (GST_NAVIGATION (element), nav_event);
+    }
+    g_object_unref (element);
+  }
+
+  return FALSE;
+}
+
 
 void
 gtk_gst_base_widget_class_init (GtkGstBaseWidgetClass * klass)
@@ -500,6 +550,7 @@ gtk_gst_base_widget_class_init (GtkGstBaseWidgetClass * klass)
   widget_klass->button_release_event = gtk_gst_base_widget_button_event;
   widget_klass->motion_notify_event = gtk_gst_base_widget_motion_event;
   widget_klass->scroll_event = gtk_gst_base_widget_scroll_event;
+  widget_klass->touch_event = gtk_gst_base_widget_touch_event;
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_gtk_base_widget, "gtkbasewidget", 0,
       "Gtk Video Base Widget");
@@ -529,7 +580,8 @@ gtk_gst_base_widget_init (GtkGstBaseWidget * widget)
       | GDK_KEY_RELEASE_MASK
       | GDK_BUTTON_PRESS_MASK
       | GDK_BUTTON_RELEASE_MASK
-      | GDK_POINTER_MOTION_MASK | GDK_BUTTON_MOTION_MASK | GDK_SCROLL_MASK;
+      | GDK_POINTER_MOTION_MASK | GDK_BUTTON_MOTION_MASK | GDK_SCROLL_MASK
+      | GDK_TOUCH_MASK;
   gtk_widget_set_events (GTK_WIDGET (widget), event_mask);
 }
 
