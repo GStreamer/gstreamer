@@ -55,7 +55,9 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 G_DEFINE_TYPE (GstGLMemoryEGLAllocator, gst_gl_memory_egl_allocator,
     GST_TYPE_GL_MEMORY_ALLOCATOR);
 
+#ifndef GST_REMOVE_DEPRECATED
 GST_DEFINE_MINI_OBJECT_TYPE (GstGLMemoryEGL, gst_gl_memory_egl);
+#endif
 
 /**
  * gst_is_gl_memory_egl:

@@ -104,7 +104,9 @@ static GstAllocator *_gl_allocator;
 G_DEFINE_TYPE (GstGLMemoryPBOAllocator, gst_gl_memory_pbo_allocator,
     GST_TYPE_GL_MEMORY_ALLOCATOR);
 
+#ifndef GST_REMOVE_DEPRECATED
 GST_DEFINE_MINI_OBJECT_TYPE (GstGLMemoryPBO, gst_gl_memory_pbo);
+#endif
 
 typedef struct
 {

@@ -69,9 +69,10 @@ struct _GstGLMemoryEGL
  * GST_TYPE_GL_MEMORY_EGL:
  *
  * Since: 1.20
+ * Deprecated: 1.22: This type has no use.
  */
 #define GST_TYPE_GL_MEMORY_EGL (gst_gl_memory_egl_get_type())
-GST_GL_API
+GST_GL_DEPRECATED
 GType gst_gl_memory_egl_get_type(void);
 
 GST_GL_API

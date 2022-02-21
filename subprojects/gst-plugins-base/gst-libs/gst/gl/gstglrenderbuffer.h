@@ -147,9 +147,10 @@ GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_ne
  * GST_TYPE_GL_RENDERBUFFER:
  *
  * Since: 1.20
+ * Deprecated: 1.22: This type has no use.
  */
 #define GST_TYPE_GL_RENDERBUFFER (gst_gl_renderbuffer_get_type())
-GST_GL_API
+GST_GL_DEPRECATED
 GType gst_gl_renderbuffer_get_type(void);
 
 GST_GL_API

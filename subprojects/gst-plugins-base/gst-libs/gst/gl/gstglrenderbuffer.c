@@ -59,7 +59,9 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_RENDERBUFFER);
 G_DEFINE_TYPE (GstGLRenderbufferAllocator, gst_gl_renderbuffer_allocator,
     GST_TYPE_GL_BASE_MEMORY_ALLOCATOR);
 
+#ifndef GST_REMOVE_DEPRECATED
 GST_DEFINE_MINI_OBJECT_TYPE (GstGLRenderbuffer, gst_gl_renderbuffer);
+#endif
 
 static guint
 _new_renderbuffer (GstGLContext * context, guint format, guint width,
