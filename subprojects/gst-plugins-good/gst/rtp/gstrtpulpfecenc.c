@@ -753,7 +753,9 @@ gst_rtp_ulpfec_enc_dispose (GObject * obj)
 {
   GstRtpUlpFecEnc *fec = GST_RTP_ULPFEC_ENC (obj);
 
-  g_hash_table_destroy (fec->ssrc_to_ctx);
+  if (fec->ssrc_to_ctx)
+    g_hash_table_destroy (fec->ssrc_to_ctx);
+  fec->ssrc_to_ctx = NULL;
 
   G_OBJECT_CLASS (gst_rtp_ulpfec_enc_parent_class)->dispose (obj);
 }
