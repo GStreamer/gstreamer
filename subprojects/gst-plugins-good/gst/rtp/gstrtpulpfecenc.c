@@ -508,7 +508,7 @@ gst_rtp_ulpfec_enc_stream_ctx_free (GstRtpUlpFecEncStreamCtx * ctx)
   g_assert (0 == ctx->info_arr->len);
   g_array_free (ctx->info_arr, TRUE);
   g_array_free (ctx->scratch_buf, TRUE);
-  g_slice_free1 (sizeof (GstRtpUlpFecEncStreamCtx), ctx);
+  g_free (ctx);
 }
 
 static GstFlowReturn
