@@ -26,7 +26,7 @@ assert('GST_ENV' not in os.environ)
 '''
 cmdres = run_command(python3, '-c', ensure_not_devenv, check: false)
 if cmdres.returncode() != 0
-  error('Do not run `ninja` or `meson` for gst-build inside the development environment, you will run into problems')
+  error('Do not run `ninja reconfigure` or `meson` for gst-build inside the development environment, you will run into problems')
 endif
 
 # Install gst-indent pre-commit hook
