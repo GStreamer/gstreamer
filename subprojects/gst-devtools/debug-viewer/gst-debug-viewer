@@ -41,7 +41,8 @@ def main():
     if data_dir:
         installed = True
     else:
-        # Substitution has not been run, we are running uninstalled:
+        # Substitution has not been run, we are running within a development
+        # environment:
         lib_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
         installed = False
 
@@ -61,7 +62,7 @@ def main():
         else:
             # Assume that we reside inside the source dist.
             source_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-            GstDebugViewer.Paths.setup_uninstalled(source_dir)
+            GstDebugViewer.Paths.setup_devenv(source_dir)
 
     GstDebugViewer.run()
 

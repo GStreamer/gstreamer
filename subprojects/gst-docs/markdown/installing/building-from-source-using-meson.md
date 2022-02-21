@@ -132,7 +132,7 @@ figure out on its own that `meson` needs to be re-run and will do that
 automatically.
 
 
-## Entering the "uninstalled" environment
+## Entering the development environment
 
 GStreamer is made of several tools, plugins and components. In order to make it
 easier for development and testing, there is a target (provided by `gst-build`

@@ -87,7 +87,7 @@ gst_tag_get_license_translations_dictionary (void)
     gchar *data;
     gsize len;
 
-    /* for gst-uninstalled */
+    /* for gst-env */
     dict_path = g_getenv ("GST_TAG_LICENSE_TRANSLATIONS_DICT");
 
     if (dict_path == NULL)

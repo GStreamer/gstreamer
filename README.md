@@ -423,13 +423,13 @@ git clone https://github.com/mesonbuild/meson.git
 ```
 BUILDDIR=$PWD/winebuild/
 export WINEPREFIX=$BUILDDIR/wine-prefix/ && mkdir -p $WINEPREFIX
-# Setting the prefix is mandatory as it is used to setup symlinks during uninstalled development
+# Setting the prefix is mandatory as it is used to setup symlinks within the development environment
 meson/meson.py $BUILDDIR --cross-file meson/cross/linux-mingw-w64-64bit.txt -Dgst-plugins-bad:vulkan=disabled -Dorc:gtk_doc=disabled --prefix=$BUILDDIR/wininstall/ -Djson-glib:gtk_doc=disabled
 meson/meson.py install -C $BUILDDIR/
 ```
 
 > __NOTE__: You should use `meson install -C $BUILDDIR`  each time you make a change
-> instead of the usual `ninja -C build` as the environment is not uninstalled.
+> instead of the usual `ninja -C build` as this is not in the development environment.
 
 #### The development environment
 

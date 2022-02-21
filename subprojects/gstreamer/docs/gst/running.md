@@ -38,8 +38,8 @@ the non-versioned one if it is set.
 
 Setting this variable to an empty string will cause GStreamer not to
 scan any system paths at all for plug-ins. This can be useful if you're
-running uninstalled (for development purposes) or while running
-testsuites.
+running a development environment (for development purposes) or while
+running testsuites.
 
 **`GST_PLUGIN_PATH`, `GST_PLUGIN_PATH_1_0`.**
 
