@@ -735,6 +735,7 @@ gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
   return ret;
 }
 
+#ifndef GST_REMOVE_DEPRECATED
 /**
  * gst_gl_display_find_window:
  * @display: a #GstGLDisplay
@@ -763,6 +764,7 @@ gst_gl_display_find_window (GstGLDisplay * display, gpointer data,
 
   return ret;
 }
+#endif
 
 /**
  * gst_gl_display_retrieve_window:

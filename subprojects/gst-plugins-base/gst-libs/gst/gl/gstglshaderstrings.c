@@ -80,9 +80,11 @@ const gchar *gst_gl_shader_string_vertex_mat4_vertex_transform =
     "{\n" \
     "  gl_FragColor = texture2D(tex, v_texcoord);\n" \
     "}"
+#ifndef GST_REMOVE_DEPRECATED
 const gchar *gst_gl_shader_string_fragment_default =
     MEDIUMP_PRECISION
     DEFAULT_FRAGMENT_BODY;
+#endif
 
 #define EXTERNAL_FRAGMENT_HEADER \
     "#extension GL_OES_EGL_image_external : require\n"
@@ -94,10 +96,12 @@ const gchar *gst_gl_shader_string_fragment_default =
     "{\n" \
     "  gl_FragColor = texture2D(tex, v_texcoord);\n" \
     "}"
+#ifndef GST_REMOVE_DEPRECATED
 const gchar *gst_gl_shader_string_fragment_external_oes_default =
     EXTERNAL_FRAGMENT_HEADER
     MEDIUMP_PRECISION
     EXTERNAL_FRAGMENT_BODY;
+#endif
 /* *INDENT-ON* */
 
 /**
