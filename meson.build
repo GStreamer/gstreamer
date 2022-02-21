@@ -234,7 +234,7 @@ pathsep = host_machine.system() == 'windows' ? ';' : ':'
 all_plugins_paths = pathsep.join(all_plugins_paths)
 
 devenv = environment()
-devenv.set('GST_PLUGIN_PATH', all_plugins_dirs)
+devenv.prepend('GST_PLUGIN_PATH', all_plugins_dirs)
 devenv.set('CURRENT_GST', meson.current_source_dir())
 devenv.set('GST_VERSION', meson.project_version())
 devenv.set('GST_ENV', 'gst-' + meson.project_version())
