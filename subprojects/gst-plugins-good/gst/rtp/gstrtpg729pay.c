@@ -189,6 +189,7 @@ gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay, GstBuffer * buf)
   if (G_UNLIKELY (rtpg729pay->discont)) {
     GST_DEBUG_OBJECT (basepayload, "discont, setting marker bit");
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
     gst_rtp_buffer_set_marker (&rtp, TRUE);
     rtpg729pay->discont = FALSE;
   }

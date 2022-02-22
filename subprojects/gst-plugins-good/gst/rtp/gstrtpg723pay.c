@@ -164,6 +164,7 @@ gst_rtp_g723_pay_flush (GstRTPG723Pay * pay)
   /* set discont and marker */
   if (pay->discont) {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
     gst_rtp_buffer_set_marker (&rtp, TRUE);
     pay->discont = FALSE;
   }

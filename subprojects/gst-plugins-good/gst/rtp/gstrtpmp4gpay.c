@@ -534,6 +534,8 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
 
     /* marker only if the packet is complete */
     gst_rtp_buffer_set_marker (&rtp, avail <= payload_len);
+    if (avail <= payload_len)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
 
     gst_rtp_buffer_unmap (&rtp);
 

@@ -432,6 +432,8 @@ gst_rtp_vp9_create_header_buffer (GstRtpVP9Pay * self,
   g_assert_cmpint (off, ==, hdrlen);
 
   gst_rtp_buffer_set_marker (&rtpbuffer, mark);
+  if (mark)
+    GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_MARKER);
 
   gst_rtp_buffer_unmap (&rtpbuffer);
 

@@ -234,6 +234,8 @@ gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
     avail -= payload_len;
 
     gst_rtp_buffer_set_marker (&rtp, avail == 0);
+    if (avail == 0)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
     gst_rtp_buffer_unmap (&rtp);
 
     paybuf = gst_adapter_take_buffer_fast (rtpmpvpay->adapter, payload_len);

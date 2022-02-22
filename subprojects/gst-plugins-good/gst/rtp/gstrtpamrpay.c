@@ -333,6 +333,7 @@ gst_rtp_amr_pay_handle_buffer (GstRTPBasePayload * basepayload,
   if (GST_BUFFER_IS_DISCONT (buffer)) {
     GST_DEBUG_OBJECT (basepayload, "discont, setting marker bit");
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
     gst_rtp_buffer_set_marker (&rtp, TRUE);
     gst_rtp_amr_pay_recalc_rtp_time (rtpamrpay, timestamp);
   }

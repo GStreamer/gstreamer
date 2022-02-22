@@ -432,6 +432,8 @@ gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
     /* marker only if the packet is complete */
     gst_rtp_buffer_set_marker (&rtp, size == payload_len);
+    if (size == payload_len)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
 
     gst_rtp_buffer_unmap (&rtp);
 

@@ -167,7 +167,8 @@ GST_START_TEST (rtpreddec_main_block)
   bufout = gst_harness_push_and_pull (h, bufinp);
   fail_unless (gst_rtp_buffer_map (bufout, GST_MAP_READ, &rtp));
   fail_unless_equals_int (GST_BUFFER_TIMESTAMP (bufout), gst_ts);
-  fail_unless_equals_int (GST_BUFFER_FLAGS (bufout), bufinp_flags);
+  fail_unless_equals_int (GST_BUFFER_FLAGS (bufout),
+      bufinp_flags | GST_BUFFER_FLAG_MARKER);
   fail_unless_equals_int (gst_buffer_get_size (bufout),
       gst_rtp_buffer_calc_packet_len (sizeof (out_data), 0, csrc_count));
   fail_unless_equals_int (gst_rtp_buffer_get_timestamp (&rtp),

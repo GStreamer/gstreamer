@@ -310,6 +310,8 @@ rtp_ulpfec_bitstring_to_fec_rtp_buffer (GArray * arr,
     g_assert_not_reached ();
 
   gst_rtp_buffer_set_marker (&rtp, marker);
+  if (marker)
+    GST_BUFFER_FLAG_SET (ret, GST_BUFFER_FLAG_MARKER);
   gst_rtp_buffer_set_payload_type (&rtp, pt);
   gst_rtp_buffer_set_seq (&rtp, seq);
   gst_rtp_buffer_set_timestamp (&rtp, timestamp);

@@ -1311,8 +1311,10 @@ gst_rtp_h263_pay_push (GstRtpH263Pay * rtph263pay,
   GST_BUFFER_PTS (package->outbuf) = rtph263pay->first_ts;
 
   gst_rtp_buffer_set_marker (&rtp, package->marker);
-  if (package->marker)
+  if (package->marker) {
+    GST_BUFFER_FLAG_SET (package->outbuf, GST_BUFFER_FLAG_MARKER);
     GST_DEBUG_OBJECT (rtph263pay, "Marker set!");
+  }
 
   gst_rtp_buffer_unmap (&rtp);
 

@@ -566,6 +566,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
       if (line >= height) {
         GST_LOG_OBJECT (rtpvrawpay, "field/frame complete, set marker");
         gst_rtp_buffer_set_marker (&rtp, TRUE);
+        GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_MARKER);
         complete = TRUE;
       }
       gst_rtp_buffer_unmap (&rtp);

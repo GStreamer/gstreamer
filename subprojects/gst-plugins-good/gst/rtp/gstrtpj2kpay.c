@@ -459,6 +459,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
       /* reached the end of a packetization unit */
       if (pu_size == 0 && end >= map.size) {
         gst_rtp_buffer_set_marker (&rtp, TRUE);
+        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
       }
       /* If we were processing a header, see if all fits in one RTP packet
          or if we have to fragment it */

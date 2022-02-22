@@ -1140,6 +1140,7 @@ gst_rtp_h265_pay_payload_nal_single (GstRTPBasePayload * basepayload,
 
   /* Mark the end of a frame */
   gst_rtp_buffer_set_marker (&rtp, marker);
+  GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
 
   /* timestamp the outbuffer */
   GST_BUFFER_PTS (outbuf) = pts;
@@ -1224,6 +1225,8 @@ gst_rtp_h265_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
     /* If it's the last fragment and the end of this au, mark the end of
      * slice */
     gst_rtp_buffer_set_marker (&rtp, last_fragment && marker);
+    if (last_fragment && marker)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
 
     /* FU Header */
     payload[2] = (first_fragment << 7) | (last_fragment << 6) |

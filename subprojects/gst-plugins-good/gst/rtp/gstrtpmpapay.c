@@ -242,8 +242,10 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
     avail -= payload_len;
     frag_offset += payload_len;
 
-    if (avail == 0)
+    if (avail == 0) {
       gst_rtp_buffer_set_marker (&rtp, TRUE);
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
+    }
 
     gst_rtp_buffer_unmap (&rtp);
 

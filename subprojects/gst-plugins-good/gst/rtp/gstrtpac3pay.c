@@ -322,8 +322,10 @@ gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay)
     payload[1] = NF;
     payload_len -= 2;
 
-    if (avail == payload_len)
+    if (avail == payload_len) {
       gst_rtp_buffer_set_marker (&rtp, TRUE);
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
+    }
     gst_rtp_buffer_unmap (&rtp);
 
     payload_buffer =

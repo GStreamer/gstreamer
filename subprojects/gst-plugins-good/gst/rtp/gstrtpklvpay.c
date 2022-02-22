@@ -157,6 +157,7 @@ gst_rtp_klv_pay_handle_buffer (GstRTPBasePayload * basepayload, GstBuffer * buf)
       gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
       gst_rtp_buffer_set_marker (&rtp, 1);
       gst_rtp_buffer_unmap (&rtp);
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
     }
 
     GST_LOG_OBJECT (pay, "packet with payload size %u", payload_size);

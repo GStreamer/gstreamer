@@ -742,6 +742,8 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
     /* last fragment gets the marker bit set */
     gst_rtp_buffer_set_marker (&rtp, avail > towrite ? 0 : 1);
+    if (avail <= towrite)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
 
     payload = gst_rtp_buffer_get_payload (&rtp);
 

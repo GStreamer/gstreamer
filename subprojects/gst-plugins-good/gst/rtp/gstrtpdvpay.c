@@ -372,6 +372,7 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
         /* set marker */
         gst_rtp_buffer_set_marker (&rtp, TRUE);
+        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
 
         /* shrink buffer to last packet */
         hlen = gst_rtp_buffer_get_header_len (&rtp);

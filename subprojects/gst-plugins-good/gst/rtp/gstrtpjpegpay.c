@@ -899,6 +899,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
       GST_LOG_OBJECT (pay, "last packet of frame");
       frame_done = TRUE;
       gst_rtp_buffer_set_marker (&rtp, 1);
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
     }
 
     payload = gst_rtp_buffer_get_payload (&rtp);

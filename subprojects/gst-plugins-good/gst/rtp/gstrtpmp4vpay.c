@@ -297,6 +297,8 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
     gst_rtp_buffer_set_marker (&rtp, avail == 0);
+    if (avail == 0)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
     gst_rtp_buffer_unmap (&rtp);
     gst_rtp_copy_video_meta (rtpmp4vpay, outbuf, outbuf_data);
     outbuf = gst_buffer_append (outbuf, outbuf_data);

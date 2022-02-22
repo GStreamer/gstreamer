@@ -313,6 +313,8 @@ gst_rtp_red_create_packet (GstRtpRedDec * self, GstRTPBuffer * red_rtp,
 
   /* Timestamps, meta, flags from the RED packet should go to main block packet */
   gst_buffer_copy_into (ret, red_rtp->buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+  if (marker)
+    GST_BUFFER_FLAG_SET (ret, GST_BUFFER_FLAG_MARKER);
   return ret;
 }
 

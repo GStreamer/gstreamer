@@ -335,8 +335,10 @@ gst_rtp_gst_pay_create_from_adapter (GstRtpGSTPay * rtpgstpay,
     frag_offset += payload_len;
     avail -= payload_len;
 
-    if (avail == 0)
+    if (avail == 0) {
       gst_rtp_buffer_set_marker (&rtp, TRUE);
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
+    }
 
     gst_rtp_buffer_unmap (&rtp);
 

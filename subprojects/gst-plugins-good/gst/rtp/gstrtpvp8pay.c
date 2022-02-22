@@ -548,6 +548,8 @@ gst_rtp_vp8_create_header_buffer (GstRtpVP8Pay * self, guint8 partid,
   }
 
   gst_rtp_buffer_set_marker (&rtpbuffer, mark);
+  if (mark)
+    GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_MARKER);
 
   gst_rtp_buffer_unmap (&rtpbuffer);
 

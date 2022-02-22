@@ -844,6 +844,8 @@ gst_rtp_h261_pay_fragment_push (GstRtpH261Pay * pay, GstBuffer * buffer,
       bits + GST_ROUND_DOWN_8 (start) / 8, nbytes);
 
   GST_BUFFER_TIMESTAMP (outbuf) = pay->timestamp;
+  if (marker)
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
   gst_rtp_buffer_set_marker (&rtp, marker);
   pay->offset = end & 7;
 
