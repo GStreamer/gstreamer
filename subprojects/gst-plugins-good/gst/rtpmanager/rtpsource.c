@@ -2033,7 +2033,7 @@ rtp_source_get_nacks (RTPSource * src, guint * n_nacks)
 }
 
 /**
- * rtp_source_get_nacks:
+ * rtp_source_get_nack_deadlines:
  * @src: The #RTPSource
  * @n_nacks: result number of nacks
  *
