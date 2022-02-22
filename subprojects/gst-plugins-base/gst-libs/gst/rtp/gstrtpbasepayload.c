@@ -851,7 +851,7 @@ gst_rtp_base_payload_chain (GstPad * pad, GstObject * parent,
      * buffer. */
     rtpbasepayload->priv->input_meta_buffer = gst_buffer_new ();
     gst_buffer_copy_into (rtpbasepayload->priv->input_meta_buffer, buffer,
-        GST_BUFFER_COPY_META, 0, -1);
+        GST_BUFFER_COPY_METADATA, 0, -1);
   }
 
   if (gst_pad_check_reconfigure (GST_RTP_BASE_PAYLOAD_SRCPAD (rtpbasepayload))) {
