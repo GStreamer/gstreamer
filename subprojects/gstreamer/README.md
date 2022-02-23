@@ -169,64 +169,8 @@ Find more information about the various packages at
 
   https://gstreamer.freedesktop.org/download/
 
-COMPILING FROM SOURCE TARBALLS
-------------------------------
-
-- again, make sure that you really need to install from source!
-  If GStreamer is one of your first projects ever that you build from source,
-  consider taking on an easier project.
-
-- you need a recent version of Meson installed, see
-
-    http://mesonbuild.com/Getting-meson.html
-
-  and
-
-    https://gitlab.freedesktop.org/gstreamer/gst-build/blob/master/README.md
-
-- run
-
-    meson build
-    ninja -C build
-
-  to build GStreamer.
-
-- if you want to install it (not required, but what you usually want to do), run
-
-    ninja -C build install
-
-- try out a simple test:
-  gst-launch-1.0 -v fakesrc num_buffers=5 ! fakesink
-  (If you didn't install GStreamer, run `./build/tools/gst-launch-1.0`)
-
-  If it outputs a bunch of messages from fakesrc and fakesink, everything is
-  ok.
-
-  If it did not work, keep in mind that you might need to adjust the
-  PATH and/or LD_LIBRARY_PATH environment variables to make the system
-  find GStreamer in the prefix where you installed (by default that is /usr/local).
-
-- After this, you're ready to install gst-plugins, which will provide the
-  functionality you're probably looking for by now, so go on and read
-  that README.
-
-COMPILING FROM GIT
-------------------
-
-You can build an uninstalled GStreamer from git for development or testing
-purposes without affecting your system installation.
-
-Get started with:
-
-    git clone https://gitlab.freedesktop.org/gstreamer/gst-build
-    meson build
-    ninja -C build
-    ninja -C build uninstalled
-
-For more information, see the `gst-build` module and its documentation:
-
-  https://gitlab.freedesktop.org/gstreamer/gst-build/blob/master/README.md
-
+For in-depth instructions about building GStreamer visit:
+[getting-started](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/main/README.md#getting-started).
 
 PLUG-IN DEPENDENCIES AND LICENSES
 ---------------------------------
