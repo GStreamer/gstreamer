@@ -198,7 +198,9 @@ typedef struct _GstBufferPool GstBufferPool;
  * @GST_BUFFER_FLAG_CORRUPTED:     the buffer data is corrupted.
  * @GST_BUFFER_FLAG_MARKER:        the buffer contains a media specific marker. for
  *                                 video this is the end of a frame boundary, for audio
- *                                 this is the start of a talkspurt.
+ *                                 this is the start of a talkspurt. for RTP
+ *                                 packets this matches the marker flag in the
+ *                                 RTP packet header.
  * @GST_BUFFER_FLAG_HEADER:        the buffer contains header information that is
  *                                 needed to decode the following data.
  * @GST_BUFFER_FLAG_GAP:           the buffer has been created to fill a gap in the
