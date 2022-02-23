@@ -74,7 +74,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) { " SAMPLE_RATES " }, "
         "channels = (int) {1, 2, 3, 4, 5, 6, 8}, "
         "stream-format = (string) { adts, adif, raw }, "
-        "base-profile = (string) lc, " "framed = (boolean) true")
+        "profile = (string) { lc, sbr, ps }, " "framed = (boolean) true")
     );
 
 GST_DEBUG_CATEGORY_STATIC (gst_fdkaacenc_debug);
@@ -162,14 +162,34 @@ static GstCaps *
 gst_fdkaacenc_get_caps (GstAudioEncoder * enc, GstCaps * filter)
 {
   const GstFdkAacChannelLayout *layout;
-  GstCaps *res, *caps;
+  GstCaps *res, *caps, *allowed_caps;
+  gboolean allow_mono = TRUE;
+
+  allowed_caps = gst_pad_get_allowed_caps (GST_AUDIO_ENCODER_SRC_PAD (enc));
+  GST_DEBUG_OBJECT (enc, "allowed caps %" GST_PTR_FORMAT, allowed_caps);
+
+  /* We need at least 2 channels if Parametric Stereo is in use. */
+  if (allowed_caps && gst_caps_get_size (allowed_caps) > 0) {
+    GstStructure *s = gst_caps_get_structure (allowed_caps, 0);
+    const gchar *profile = NULL;
+
+    if ((profile = gst_structure_get_string (s, "profile"))
+        && strcmp (profile, "ps") == 0) {
+      allow_mono = FALSE;
+    }
+  }
+  gst_clear_caps (&allowed_caps);
 
   caps = gst_caps_new_empty ();
 
   for (layout = channel_layouts; layout->channels; layout++) {
+    GstCaps *tmp;
     gint channels = layout->channels;
-    GstCaps *tmp =
-        gst_caps_make_writable (gst_pad_get_pad_template_caps
+
+    if (channels == 1 && !allow_mono)
+      continue;
+
+    tmp = gst_caps_make_writable (gst_pad_get_pad_template_caps
         (GST_AUDIO_ENCODER_SINK_PAD (enc)));
 
     if (channels == 1) {
@@ -203,7 +223,8 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   gint mpegversion = 4;
   CHANNEL_MODE channel_mode;
   AACENC_InfoStruct enc_info = { 0 };
-  gint bitrate;
+  gint bitrate, signaling_mode;
+  const gchar *ext_profile;
 
   if (self->enc && !self->is_drained) {
     /* drain */
@@ -233,6 +254,19 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       }
     }
 
+    if ((str = gst_structure_get_string (s, "profile"))) {
+      if (strcmp (str, "lc") == 0) {
+        GST_DEBUG_OBJECT (self, "using LC profile for output");
+        aot = AOT_AAC_LC;
+      } else if (strcmp (str, "sbr") == 0) {
+        GST_DEBUG_OBJECT (self, "using SBR (HE-AAC) profile for output");
+        aot = AOT_SBR;
+      } else if (strcmp (str, "ps") == 0) {
+        GST_DEBUG_OBJECT (self, "using PS (HE-AACv2) profile for output");
+        aot = AOT_PS;
+      }
+    }
+
     gst_structure_get_int (s, "mpegversion", &mpegversion);
   }
   if (allowed_caps)
@@ -244,10 +278,22 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     return FALSE;
   }
 
-  aot = AOT_AAC_LC;
-
   if ((err = aacEncoder_SetParam (self->enc, AACENC_AOT, aot)) != AACENC_OK) {
     GST_ERROR_OBJECT (self, "Unable to set AOT %d: %d", aot, err);
+    return FALSE;
+  }
+
+  /* Use explicit hierarchical signaling (2) with raw output stream-format
+   * and implicit signaling (0) with ADTS/ADIF */
+  if (transmux == 0)
+    signaling_mode = 2;
+  else
+    signaling_mode = 0;
+
+  if ((err = aacEncoder_SetParam (self->enc, AACENC_SIGNALING_MODE,
+              signaling_mode)) != AACENC_OK) {
+    GST_ERROR_OBJECT (self, "Unable to set signaling mode %d: %d",
+        signaling_mode, err);
     return FALSE;
   }
 
@@ -414,6 +460,14 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 
   gst_codec_utils_aac_caps_set_level_and_profile (src_caps, enc_info.confBuf,
       enc_info.confSize);
+
+  /* The above only parses the "base" profile, which is always going to be LC.
+   * Let's retrieve the extension AOT and set it as our profile in the caps. */
+  ext_profile = gst_codec_utils_aac_get_extension_profile (enc_info.confBuf,
+      enc_info.confSize);
+
+  if (ext_profile)
+    gst_caps_set_simple (src_caps, "profile", G_TYPE_STRING, ext_profile, NULL);
 
   ret = gst_audio_encoder_set_output_format (enc, src_caps);
   gst_caps_unref (src_caps);
