@@ -124,6 +124,12 @@ QtGLVideoItem::QtGLVideoItem()
   setAcceptedMouseButtons(Qt::AllButtons);
   setAcceptHoverEvents(true);
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
+  setAcceptTouchEvents(true);
+#else
+  GST_INFO ("Qt version is below 5.10, touchscreen events will not work");
+#endif
+
   GST_DEBUG ("%p init Qt Video Item", this);
 }
 
@@ -481,6 +487,68 @@ QtGLVideoItem::hoverMoveEvent(QHoverEvent * event)
       g_object_unref (element);
     }
   }
+  g_mutex_unlock (&this->priv->lock);
+}
+
+void
+QtGLVideoItem::touchEvent(QTouchEvent * event)
+{
+  g_mutex_lock (&this->priv->lock);
+
+  /* can't do anything when we don't have input format */
+  if (!this->priv->caps) {
+    g_mutex_unlock (&this->priv->lock);
+    return;
+  }
+
+  GstElement *element = GST_ELEMENT_CAST (g_weak_ref_get (&this->priv->sink));
+  if (element == NULL)
+    return;
+
+  if (event->type() == QEvent::TouchCancel) {
+    gst_navigation_send_event_simple (GST_NAVIGATION (element),
+        gst_navigation_event_new_touch_cancel ());
+  } else {
+    const QList<QTouchEvent::TouchPoint> points = event->touchPoints();
+    gboolean sent_event = FALSE;
+
+    for (int i = 0; i < points.count(); i++) {
+      GstEvent *nav_event;
+      QPointF pos = mapPointToStreamSize(points[i].pos());
+
+      switch (points[i].state()) {
+        case Qt::TouchPointPressed:
+          nav_event = gst_navigation_event_new_touch_down ((guint) points[i].id(),
+              pos.x(), pos.y(), (gdouble) points[i].pressure());
+          break;
+        case Qt::TouchPointMoved:
+          nav_event = gst_navigation_event_new_touch_motion ((guint) points[i].id(),
+              pos.x(), pos.y(), (gdouble) points[i].pressure());
+          break;
+        case Qt::TouchPointReleased:
+          nav_event = gst_navigation_event_new_touch_up ((guint) points[i].id(),
+              pos.x(), pos.y());
+          break;
+        /* Don't send an event if the point did not change */
+        default:
+          nav_event = NULL;
+          break;
+      }
+
+      if (nav_event) {
+        gst_navigation_send_event_simple (GST_NAVIGATION (element), nav_event);
+        sent_event = TRUE;
+      }
+    }
+
+    /* Group simultaneos touch events with a frame event */
+    if (sent_event) {
+      gst_navigation_send_event_simple (GST_NAVIGATION (element),
+          gst_navigation_event_new_touch_frame ());
+    }
+  }
+
+  g_object_unref (element);
   g_mutex_unlock (&this->priv->lock);
 }
 

@@ -103,6 +103,7 @@ protected:
     void hoverMoveEvent (QHoverEvent *) override;
     void mousePressEvent(QMouseEvent*) override;
     void mouseReleaseEvent(QMouseEvent*) override;
+    void touchEvent(QTouchEvent*) override;
 
 private:
 
