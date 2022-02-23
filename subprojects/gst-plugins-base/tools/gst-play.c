@@ -501,6 +501,8 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
             case GST_NAVIGATION_EVENT_KEY_PRESS:
             {
               const gchar *key;
+              const gchar *key_input;
+              gchar key_adjusted[2];
 
               if (gst_navigation_event_parse_key_event (ev, &key)) {
                 GST_INFO ("Key press: %s", key);
@@ -529,7 +531,21 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
                   break;
                 }
 
-                keyboard_cb (key, user_data);
+                /* In the case of a simple single-char input,
+                 * make it lower or upper as needed, and
+                 * send that instead */
+                if (key[0] != '\0' && key[1] == '\0') {
+                  if (play->shift_pressed)
+                    key_adjusted[0] = g_ascii_toupper (key[0]);
+                  else
+                    key_adjusted[0] = g_ascii_tolower (key[0]);
+                  key_adjusted[1] = '\0';
+                  key_input = key_adjusted;
+                } else {
+                  key_input = key;
+                }
+
+                keyboard_cb (key_input, user_data);
               }
               break;
             }
@@ -1158,7 +1174,8 @@ play_get_nth_stream_in_collection (GstPlay * play, guint index,
 }
 
 static void
-play_cycle_track_selection (GstPlay * play, GstPlayTrackType track_type)
+play_cycle_track_selection (GstPlay * play, GstPlayTrackType track_type,
+    gboolean forward)
 {
   const gchar *prop_cur, *prop_n, *prop_get, *name;
   gint cur = -1, n = -1;
@@ -1270,19 +1287,34 @@ play_cycle_track_selection (GstPlay * play, GstPlayTrackType track_type)
 
   if (play->is_playbin3) {
     if (n > 0) {
-      if (cur < 0)
-        cur = 0;
-      else
-        cur = (cur + 1) % (n + 1);
+      if (forward) {
+        if (cur < 0)
+          cur = 0;
+        else
+          cur = (cur + 1) % (n + 1);
+      } else {
+        if (cur <= 0)
+          cur = n;
+        else
+          cur = (cur - 1) % (n + 1);
+      }
     }
   } else {
     g_object_get (play->playbin, prop_cur, &cur, prop_n, &n, "flags",
         &cur_flags, NULL);
 
-    if (!(cur_flags & flag))
-      cur = 0;
-    else
-      cur = (cur + 1) % (n + 1);
+    if (forward) {
+      if (!(cur_flags & flag))
+        cur = 0;
+      else
+        cur = (cur + 1) % (n + 1);
+
+    } else {
+      if (cur <= 0)
+        cur = n;
+      else
+        cur = (cur - 1) % (n + 1);
+    }
   }
 
   if (n < 1) {
@@ -1382,9 +1414,9 @@ print_keyboard_help (void)
     "-", N_("decrease playback rate")}, {
     "d", N_("change playback direction")}, {
     "t", N_("enable/disable trick modes")}, {
-    "a", N_("change audio track")}, {
-    "v", N_("change video track")}, {
-    "s", N_("change subtitle track")}, {
+    "A/a", N_("change to previous/next audio track")}, {
+    "V/v", N_("change to previous/next video track")}, {
+    "S/s", N_("change to previous/next subtitle track")}, {
     "0", N_("seek to beginning")}, {
   "k", N_("show keyboard shortcuts")},};
   /* *INDENT-ON* */
@@ -1413,9 +1445,12 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
   GstPlay *play = (GstPlay *) user_data;
   gchar key = '\0';
 
-  /* only want to switch/case on single char, not first char of string */
-  if (key_input[0] != '\0' && key_input[1] == '\0')
-    key = g_ascii_tolower (key_input[0]);
+  /* Switch on the first char for single char inputs,
+   * otherwise leave key = '\0' to fall through to
+   * the default case below */
+  if (key_input[0] != '\0' && key_input[1] == '\0') {
+    key = key_input[0];
+  }
 
   switch (key) {
     case 'k':
@@ -1471,13 +1506,17 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
         break;
       }
     case 'a':
-      play_cycle_track_selection (play, GST_PLAY_TRACK_TYPE_AUDIO);
+    case 'A':
+      play_cycle_track_selection (play, GST_PLAY_TRACK_TYPE_AUDIO, key == 'a');
       break;
     case 'v':
-      play_cycle_track_selection (play, GST_PLAY_TRACK_TYPE_VIDEO);
+    case 'V':
+      play_cycle_track_selection (play, GST_PLAY_TRACK_TYPE_VIDEO, key == 'v');
       break;
     case 's':
-      play_cycle_track_selection (play, GST_PLAY_TRACK_TYPE_SUBTITLE);
+    case 'S':
+      play_cycle_track_selection (play, GST_PLAY_TRACK_TYPE_SUBTITLE,
+          key == 's');
       break;
     case '0':
       play_do_seek (play, 0, play->rate, play->trick_mode);
