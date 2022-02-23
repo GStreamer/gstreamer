@@ -43,10 +43,10 @@
 #include "config.h"
 #endif
 
-#include <gst/codecs/gstav1decoder.h>
+#include <gst/va/gstvaallocator.h>
+
 #include "gstvaav1dec.h"
 #include "gstvabasedec.h"
-#include "gstvaallocator.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_av1dec_debug);
 #ifndef GST_DISABLE_GST_DEBUG

@@ -25,13 +25,14 @@
 
 #include "gstvaencoder.h"
 
+#include <gst/va/gstvaallocator.h>
+#include <gst/va/gstvadisplay_wrapped.h>
+#include <gst/va/gstvapool.h>
+#include <gst/va/gstvavideoformat.h>
+
 #include "vacompat.h"
-#include "gstvaallocator.h"
-#include "gstvapool.h"
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
-#include "gstvavideoformat.h"
-#include <gst/va/gstvadisplay_wrapped.h>
 
 #define VA_ENTRYPOINT_FLAG(entry) (1U << G_PASTE(VAEntrypoint, entry))
 

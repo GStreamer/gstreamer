@@ -23,9 +23,7 @@
 #endif
 
 #include "gstvapool.h"
-
 #include "gstvaallocator.h"
-#include "gstvacaps.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_pool_debug);
 #define GST_CAT_DEFAULT gst_va_pool_debug
@@ -43,6 +41,11 @@ struct _GstVaPool
   gint crop_top;
 
   gboolean starting;
+};
+
+struct _GstVaPoolClass
+{
+  GstBufferPoolClass parent_class;
 };
 
 #define gst_va_pool_parent_class parent_class
@@ -341,6 +344,9 @@ gst_buffer_pool_config_set_va_allocation_params (GstStructure * config,
 gboolean
 gst_va_pool_requires_video_meta (GstBufferPool * pool)
 {
+
+  g_return_val_if_fail (GST_IS_VA_POOL (pool), FALSE);
+
   return GST_VA_POOL (pool)->force_videometa;
 }
 

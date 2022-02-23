@@ -24,9 +24,10 @@
 
 #include "gstvabasetransform.h"
 
-#include "gstvaallocator.h"
+#include <gst/va/gstvaallocator.h>
+#include <gst/va/gstvapool.h>
+
 #include "gstvacaps.h"
-#include "gstvapool.h"
 
 #define GST_CAT_DEFAULT gst_va_base_transform_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);

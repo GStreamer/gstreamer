@@ -20,11 +20,11 @@
 
 #include "gstvabasedec.h"
 
+#include <gst/va/gstvaallocator.h>
+#include <gst/va/gstvapool.h>
 #include <gst/va/gstvavideoformat.h>
 
-#include "gstvaallocator.h"
 #include "gstvacaps.h"
-#include "gstvapool.h"
 
 #define GST_CAT_DEFAULT (base->debug_category)
 #define GST_VA_BASE_DEC_GET_PARENT_CLASS(obj) (GST_VA_BASE_DEC_GET_CLASS(obj)->parent_decoder_class)

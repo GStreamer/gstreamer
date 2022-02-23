@@ -24,12 +24,11 @@
 
 #include "gstvaallocator.h"
 
-#include <gst/va/gstvavideoformat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "gstvacaps.h"
 #include "gstvasurfacecopy.h"
+#include "gstvavideoformat.h"
 #include "vasurfaceimage.h"
 
 #define GST_CAT_DEFAULT gst_va_memory_debug
@@ -252,6 +251,11 @@ struct _GstVaDmabufAllocator
   GstVaSurfaceCopy *copy;
 
   GstVaMemoryPool pool;
+};
+
+struct _GstVaDmabufAllocatorClass
+{
+  GstDmaBufAllocatorClass parent_class;
 };
 
 #define gst_va_dmabuf_allocator_parent_class dmabuf_parent_class
@@ -735,8 +739,12 @@ gboolean
 gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
     GstBuffer * buffer)
 {
-  GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
+  GstVaDmabufAllocator *self;
   VASurfaceID surface;
+
+  g_return_val_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator), FALSE);
+
+  self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
   GST_VA_MEMORY_POOL_LOCK (&self->pool);
   surface = gst_va_dmabuf_allocator_prepare_buffer_unlocked (self, buffer);
@@ -748,7 +756,11 @@ gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
 void
 gst_va_dmabuf_allocator_flush (GstAllocator * allocator)
 {
-  GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
+  GstVaDmabufAllocator *self;
+
+  g_return_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator));
+
+  self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
   gst_va_memory_pool_flush (&self->pool, self->display);
 }
@@ -757,9 +769,14 @@ static gboolean
 gst_va_dmabuf_allocator_try (GstAllocator * allocator)
 {
   GstBuffer *buffer;
-  GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
-  GstVideoInfo info = self->info;
+  GstVaDmabufAllocator *self;
+  GstVideoInfo info;
   gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator), FALSE);
+
+  self = GST_VA_DMABUF_ALLOCATOR (allocator);
+  info = self->info;
 
   buffer = gst_buffer_new ();
   ret = gst_va_dmabuf_allocator_setup_buffer_full (allocator, buffer, &info);
@@ -918,6 +935,11 @@ struct _GstVaAllocator
   GstVaSurfaceCopy *copy;
 
   GstVaMemoryPool pool;
+};
+
+struct _GstVaAllocatorClass
+{
+  GstAllocatorClass parent_class;
 };
 
 typedef struct _GstVaMemory GstVaMemory;
@@ -1452,8 +1474,12 @@ gst_va_allocator_prepare_buffer_unlocked (GstVaAllocator * self,
 gboolean
 gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
 {
-  GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
+  GstVaAllocator *self;
   VASurfaceID surface;
+
+  g_return_val_if_fail (GST_IS_VA_ALLOCATOR (allocator), FALSE);
+
+  self = GST_VA_ALLOCATOR (allocator);
 
   GST_VA_MEMORY_POOL_LOCK (&self->pool);
   surface = gst_va_allocator_prepare_buffer_unlocked (self, buffer);
@@ -1465,7 +1491,11 @@ gst_va_allocator_prepare_buffer (GstAllocator * allocator, GstBuffer * buffer)
 void
 gst_va_allocator_flush (GstAllocator * allocator)
 {
-  GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
+  GstVaAllocator *self;
+
+  g_return_if_fail (GST_IS_VA_ALLOCATOR (allocator));
+
+  self = GST_VA_ALLOCATOR (allocator);
 
   gst_va_memory_pool_flush (&self->pool, self->display);
 }
@@ -1473,7 +1503,11 @@ gst_va_allocator_flush (GstAllocator * allocator)
 static gboolean
 gst_va_allocator_try (GstAllocator * allocator)
 {
-  GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
+  GstVaAllocator *self;
+
+  g_return_val_if_fail (GST_IS_VA_ALLOCATOR (allocator), FALSE);
+
+  self = GST_VA_ALLOCATOR (allocator);
 
   self->fourcc = 0;
   self->rt_format = 0;
@@ -1553,7 +1587,10 @@ gboolean
 gst_va_allocator_get_format (GstAllocator * allocator, GstVideoInfo * info,
     guint * usage_hint)
 {
-  GstVaAllocator *self = GST_VA_ALLOCATOR (allocator);
+  GstVaAllocator *self;
+
+  g_return_val_if_fail (GST_IS_VA_ALLOCATOR (allocator), FALSE);
+  self = GST_VA_ALLOCATOR (allocator);
 
   if (GST_VIDEO_INFO_FORMAT (&self->info) == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;

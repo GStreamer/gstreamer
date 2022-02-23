@@ -28,23 +28,40 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VA_DMABUF_ALLOCATOR (gst_va_dmabuf_allocator_get_type())
-G_DECLARE_FINAL_TYPE (GstVaDmabufAllocator, gst_va_dmabuf_allocator, GST,
-    VA_DMABUF_ALLOCATOR, GstDmaBufAllocator);
+typedef struct _GstVaAllocator GstVaAllocator;
+typedef struct _GstVaAllocatorClass GstVaAllocatorClass;
+typedef struct _GstVaDmabufAllocator GstVaDmabufAllocator;
+typedef struct _GstVaDmabufAllocatorClass GstVaDmabufAllocatorClass;
 
+#define GST_TYPE_VA_DMABUF_ALLOCATOR (gst_va_dmabuf_allocator_get_type())
+#define GST_VA_DMABUF_ALLOCATOR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VA_DMABUF_ALLOCATOR, GstVaDmabufAllocator))
+#define GST_VA_DMABUF_ALLOCATOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VA_DMABUF_ALLOCATOR, GstVaDmabufAllocatorClass))
+#define GST_IS_VA_DMABUF_ALLOCATOR(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VA_DMABUF_ALLOCATOR))
+#define GST_IS_VA_DMABUF_ALLOCATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VA_DMABUF_ALLOCATOR))
+#define GST_VA_DMABUF_ALLOCATOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VA_DMABUF_ALLOCATOR, GstVaDmabufAllocatorClass))
+
+GST_VA_API
+GType                 gst_va_dmabuf_allocator_get_type    (void);
+GST_VA_API
 GstAllocator *        gst_va_dmabuf_allocator_new         (GstVaDisplay * display);
+GST_VA_API
 gboolean              gst_va_dmabuf_allocator_setup_buffer (GstAllocator * allocator,
                                                             GstBuffer * buffer);
+GST_VA_API
 gboolean              gst_va_dmabuf_allocator_prepare_buffer (GstAllocator * allocator,
                                                               GstBuffer * buffer);
+GST_VA_API
 void                  gst_va_dmabuf_allocator_flush       (GstAllocator * allocator);
+GST_VA_API
 gboolean              gst_va_dmabuf_allocator_set_format  (GstAllocator * allocator,
                                                            GstVideoInfo * info,
                                                            guint usage_hint);
+GST_VA_API
 gboolean              gst_va_dmabuf_allocator_get_format  (GstAllocator * allocator,
                                                            GstVideoInfo * info,
                                                            guint * usage_hint);
 
+GST_VA_API
 gboolean              gst_va_dmabuf_memories_setup        (GstVaDisplay * display,
                                                            GstVideoInfo * info,
                                                            guint n_planes,
@@ -54,31 +71,48 @@ gboolean              gst_va_dmabuf_memories_setup        (GstVaDisplay * displa
                                                            guint usage_hint);
 
 #define GST_TYPE_VA_ALLOCATOR (gst_va_allocator_get_type())
-G_DECLARE_FINAL_TYPE (GstVaAllocator, gst_va_allocator, GST, VA_ALLOCATOR, GstAllocator);
+#define GST_VA_ALLOCATOR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VA_ALLOCATOR, GstVaAllocator))
+#define GST_VA_ALLOCATOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VA_ALLOCATOR, GstVaAllocatorClass))
+#define GST_IS_VA_ALLOCATOR(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VA_ALLOCATOR))
+#define GST_IS_VA_ALLOCATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VA_ALLOCATOR))
+#define GST_VA_ALLOCATOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VA_ALLOCATOR, GstVaAllocatorClass))
 
 #define GST_ALLOCATOR_VASURFACE   "VAMemory"
 
 #define GST_MAP_VA (GST_MAP_FLAG_LAST << 1)
 
+GST_VA_API
+GType                 gst_va_allocator_get_type           (void);
+GST_VA_API
 GstAllocator *        gst_va_allocator_new                (GstVaDisplay * display,
                                                            GArray * surface_formats);
+GST_VA_API
 GstMemory *           gst_va_allocator_alloc              (GstAllocator * allocator);
+GST_VA_API
 gboolean              gst_va_allocator_setup_buffer       (GstAllocator * allocator,
                                                            GstBuffer * buffer);
+GST_VA_API
 gboolean              gst_va_allocator_prepare_buffer     (GstAllocator * allocator,
                                                            GstBuffer * buffer);
+GST_VA_API
 void                  gst_va_allocator_flush              (GstAllocator * allocator);
+GST_VA_API
 gboolean              gst_va_allocator_set_format         (GstAllocator * allocator,
                                                            GstVideoInfo * info,
                                                            guint usage_hint);
+GST_VA_API
 gboolean              gst_va_allocator_get_format         (GstAllocator * allocator,
                                                            GstVideoInfo * info,
                                                            guint * usage_hint);
 
+GST_VA_API
 VASurfaceID           gst_va_memory_get_surface           (GstMemory * mem);
+GST_VA_API
 VASurfaceID           gst_va_buffer_get_surface           (GstBuffer * buffer);
 
+GST_VA_API
 gboolean              gst_va_buffer_create_aux_surface    (GstBuffer * buffer);
+GST_VA_API
 VASurfaceID           gst_va_buffer_get_aux_surface       (GstBuffer * buffer);
 
 G_END_DECLS

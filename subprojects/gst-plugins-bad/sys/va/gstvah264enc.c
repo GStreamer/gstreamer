@@ -50,22 +50,22 @@
 #include "config.h"
 #endif
 
-#include <gst/video/video.h>
 
-#include <va/va_drmcommon.h>
+#include "gstvah264enc.h"
 
 #include <gst/codecparsers/gsth264bitwriter.h>
+#include <gst/va/gstvaallocator.h>
+#include <gst/va/gstvapool.h>
 #include <gst/va/gstvautils.h>
+#include <gst/va/gstvavideoformat.h>
+#include <gst/video/video.h>
+#include <va/va_drmcommon.h>
 
 #include "vacompat.h"
-#include "gstvah264enc.h"
 #include "gstvaencoder.h"
-#include "gstvavideoformat.h"
-#include "gstvaallocator.h"
 #include "gstvacaps.h"
 #include "gstvaprofile.h"
 #include "gstvadisplay_priv.h"
-#include "gstvapool.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_h264enc_debug);
 #ifndef GST_DISABLE_GST_DEBUG

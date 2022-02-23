@@ -51,16 +51,15 @@
 
 #include "gstvadeinterlace.h"
 
+#include <gst/va/gstvaallocator.h>
+#include <gst/va/gstvapool.h>
 #include <gst/video/video.h>
-
 #include <va/va_drmcommon.h>
 
-#include "gstvaallocator.h"
 #include "gstvabasetransform.h"
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
 #include "gstvafilter.h"
-#include "gstvapool.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_deinterlace_debug);
 #define GST_CAT_DEFAULT gst_va_deinterlace_debug

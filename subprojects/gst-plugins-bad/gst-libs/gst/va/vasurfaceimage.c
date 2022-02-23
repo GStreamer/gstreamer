@@ -18,9 +18,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "vasurfaceimage.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include <gst/va/gstvavideoformat.h>
+#include "vasurfaceimage.h"
+#include "gstvavideoformat.h"
 #include <va/va.h>
 
 gboolean

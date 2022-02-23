@@ -18,11 +18,11 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "gstvasurfacecopy.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include "gstvaallocator.h"
-#include "gstvadisplay_priv.h"
-#include "gstvafilter.h"
+#include "gstvasurfacecopy.h"
 #include "vasurfaceimage.h"
 
 #define GST_CAT_DEFAULT gst_va_memory_debug
@@ -36,7 +36,6 @@ struct _GstVaSurfaceCopy
   gboolean has_copy;
 
   GRecMutex lock;
-  GstVaFilter *filter;
 };
 
 static gboolean
@@ -76,15 +75,7 @@ gst_va_surface_copy_new (GstVaDisplay * display, GstVideoInfo * vinfo)
   self->display = gst_object_ref (display);
   self->has_copy = _has_copy (display);
   self->info = *vinfo;
-  self->filter = NULL;
   g_rec_mutex_init (&self->lock);
-
-  if (gst_va_display_has_vpp (display)) {
-    self->filter = gst_va_filter_new (display);
-    if (!(gst_va_filter_open (self->filter)
-            && gst_va_filter_set_video_info (self->filter, vinfo, vinfo)))
-      gst_clear_object (&self->filter);
-  }
 
   return self;
 }
@@ -95,33 +86,10 @@ gst_va_surface_copy_free (GstVaSurfaceCopy * self)
   g_return_if_fail (self && GST_IS_VA_DISPLAY (self->display));
 
   gst_clear_object (&self->display);
-  if (self->filter) {
-    gst_va_filter_close (self->filter);
-    gst_clear_object (&self->filter);
-  }
 
   g_rec_mutex_clear (&self->lock);
 
   g_slice_free (GstVaSurfaceCopy, self);
-}
-
-static gboolean
-_vpp_copy_surface (GstVaSurfaceCopy * self, VASurfaceID dst, VASurfaceID src)
-{
-  gboolean ret;
-
-  GstVaSample gst_src = {
-    .surface = src,
-  };
-  GstVaSample gst_dst = {
-    .surface = dst,
-  };
-
-  g_rec_mutex_lock (&self->lock);
-  ret = gst_va_filter_process (self->filter, &gst_src, &gst_dst);
-  g_rec_mutex_unlock (&self->lock);
-
-  return ret;
 }
 
 gboolean
@@ -137,10 +105,7 @@ gst_va_surface_copy (GstVaSurfaceCopy * self, VASurfaceID dst, VASurfaceID src)
     return TRUE;
   }
 
-  if (self->filter && _vpp_copy_surface (self, dst, src)) {
-    GST_LOG ("VPP copy of %#x to %#x", src, dst);
-    return TRUE;
-  }
+  /* TODO: Add the VPP copy. */
 
   if (!va_ensure_image (self->display, src, &self->info, &image, FALSE))
     return FALSE;

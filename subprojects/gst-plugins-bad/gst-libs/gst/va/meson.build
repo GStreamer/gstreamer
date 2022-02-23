@@ -1,20 +1,26 @@
 va_sources = [
+  'gstvaallocator.c',
   'gstvadisplay.c',
   'gstvadisplay_drm.c',
   'gstvadisplay_wrapped.c',
+  'gstvapool.c',
+  'gstvasurfacecopy.c',
   'gstvautils.c',
   'gstvavideoformat.c',
+  'vasurfaceimage.c',
 ]
 
 va_headers = [
   'gstva.h',
+  'gstvaallocator.h',
   'gstvadisplay.h',
   'gstvadisplay_drm.h',
   'gstvadisplay_wrapped.h',
+  'gstvapool.h',
   'gstvautils.h',
   'gstvavideoformat.h',
-  'va_fwd.h',
   'va-prelude.h',
+  'va_fwd.h',
 ]
 
 gstva_dep = dependency('', required : false)
@@ -51,5 +57,5 @@ libraries += [[pkg_name, {'lib': gstva}]]
 
 gstva_dep = declare_dependency(link_with : gstva,
   include_directories : [libsinc],
-  dependencies : [gst_dep, gstvideo_dep, libva_dep, libva_drm_dep, libdrm_dep])
+  dependencies : [gst_dep, gstvideo_dep, gstallocators_dep, libva_dep, libva_drm_dep, libdrm_dep])
 meson.override_dependency(pkg_name, gstva_dep)

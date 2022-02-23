@@ -1,6 +1,5 @@
 va_sources = [
   'plugin.c',
-  'gstvaallocator.c',
   'gstvabasedec.c',
   'gstvabasetransform.c',
   'gstvacaps.c',
@@ -9,18 +8,16 @@ va_sources = [
   'gstvaencoder.c',
   'gstvadevice.c',
   'gstvadisplay_priv.c',
+  'gstvaencoder.c',
   'gstvafilter.c',
   'gstvah264dec.c',
+  'gstvah264enc.c',
   'gstvah265dec.c',
-  'gstvapool.c',
+  'gstvampeg2dec.c',
   'gstvaprofile.c',
-  'gstvasurfacecopy.c',
   'gstvavp8dec.c',
   'gstvavp9dec.c',
-  'gstvampeg2dec.c',
   'gstvavpp.c',
-  'gstvah264enc.c',
-  'vasurfaceimage.c'
 ]
 
 if host_system != 'linux'
@@ -53,7 +50,7 @@ gstva = library('gstva',
   va_sources,
   c_args : gst_plugins_bad_args + gstva_cargs,
   include_directories : [configinc],
-  dependencies : [gstvideo_dep, gstcodecs_dep, gstallocators_dep, gstva_dep, libgudev_dep] + extra_dep,
+  dependencies : [gstcodecs_dep, gstva_dep, libgudev_dep] + extra_dep,
   install : true,
   install_dir : plugins_install_dir,
 )
