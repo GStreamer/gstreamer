@@ -24,11 +24,12 @@
 
 #include "gstvadecoder.h"
 
+#include <gst/va/gstvavideoformat.h>
+
 #include "gstvaallocator.h"
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
 #include "gstvaprofile.h"
-#include "gstvavideoformat.h"
 
 struct _GstVaDecoder
 {

@@ -25,13 +25,13 @@
 #include "gstvafilter.h"
 
 #include <gst/video/video.h>
+#include <gst/va/gstvavideoformat.h>
 
 #include <va/va_drmcommon.h>
 
 #include "gstvaallocator.h"
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
-#include "gstvavideoformat.h"
 #include "vasurfaceimage.h"
 
 struct _GstVaFilter

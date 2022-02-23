@@ -24,12 +24,12 @@
 
 #include "gstvaallocator.h"
 
+#include <gst/va/gstvavideoformat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "gstvacaps.h"
 #include "gstvasurfacecopy.h"
-#include "gstvavideoformat.h"
 #include "vasurfaceimage.h"
 
 #define GST_CAT_DEFAULT gst_va_memory_debug

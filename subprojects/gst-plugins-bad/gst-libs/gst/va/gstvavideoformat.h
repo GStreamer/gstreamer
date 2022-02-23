@@ -20,19 +20,33 @@
 
 #pragma once
 
+#include <gst/va/va_fwd.h>
+#include <gst/va/va-prelude.h>
 #include <gst/video/video.h>
 #include <va/va.h>
 
 G_BEGIN_DECLS
 
+GST_VA_API
 GstVideoFormat        gst_va_video_format_from_va_fourcc  (guint fourcc);
+
+GST_VA_API
 guint                 gst_va_fourcc_from_video_format     (GstVideoFormat format);
+
+GST_VA_API
 guint                 gst_va_chroma_from_video_format     (GstVideoFormat format);
+
+GST_VA_API
 const VAImageFormat * gst_va_image_format_from_video_format (GstVideoFormat format);
+
+GST_VA_API
 GstVideoFormat        gst_va_video_format_from_va_image_format (const VAImageFormat * va_format);
+
+GST_VA_API
 GstVideoFormat        gst_va_video_surface_format_from_image_format (GstVideoFormat image_format,
-								     GArray * surface_formats);
+                                                                     GArray * surface_formats);
+GST_VA_API
 void                  gst_va_video_format_fix_map         (VAImageFormat * image_formats,
-							   gint num);
+                                                           gint num);
 
 G_END_DECLS

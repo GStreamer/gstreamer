@@ -24,7 +24,8 @@
 
 #include "gstvavideoformat.h"
 
-GST_DEBUG_CATEGORY_STATIC (gstva_debug);
+#define GST_CAT_DEFAULT gst_va_display_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_va_display_debug);
 
 #define VA_NSB_FIRST 0          /* No Significant Bit  */
 
@@ -324,8 +325,6 @@ fix_map (gpointer data)
   struct FormatMap *map;
   guint i;
 
-  GST_DEBUG_CATEGORY_GET (gstva_debug, "va");
-
   for (i = 0; i < args->len; i++) {
     image_format = &args->image_formats[i];
     if (!va_format_is_rgb (image_format))
@@ -341,7 +340,7 @@ fix_map (gpointer data)
 
     map->va_format = *image_format;
 
-    GST_CAT_INFO (gstva_debug, "GST_VIDEO_FORMAT_%s => { fourcc %"
+    GST_INFO ("GST_VIDEO_FORMAT_%s => { fourcc %"
         GST_FOURCC_FORMAT ", %s, bpp %d, depth %d, R %#010x, G %#010x, "
         "B %#010x, A %#010x }", gst_video_format_to_string (map->format),
         GST_FOURCC_ARGS (map->va_format.fourcc),

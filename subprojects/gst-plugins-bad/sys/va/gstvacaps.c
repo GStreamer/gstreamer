@@ -25,12 +25,12 @@
 #include "gstvacaps.h"
 
 #include <gst/allocators/allocators.h>
+#include <gst/va/gstvavideoformat.h>
 
 #include <va/va_drmcommon.h>
 
 #include "gstvadisplay_priv.h"
 #include "gstvaprofile.h"
-#include "gstvavideoformat.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gstva_debug);
 #define GST_CAT_DEFAULT gstva_debug

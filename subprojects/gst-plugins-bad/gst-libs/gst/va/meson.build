@@ -3,6 +3,7 @@ va_sources = [
   'gstvadisplay_drm.c',
   'gstvadisplay_wrapped.c',
   'gstvautils.c',
+  'gstvavideoformat.c',
 ]
 
 va_headers = [
@@ -11,6 +12,7 @@ va_headers = [
   'gstvadisplay_drm.h',
   'gstvadisplay_wrapped.h',
   'gstvautils.h',
+  'gstvavideoformat.h',
   'va_fwd.h',
   'va-prelude.h',
 ]
@@ -41,7 +43,7 @@ gstva = library('gstva-' + api_version,
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gst_dep, libva_dep, libva_drm_dep, libdrm_dep],
+  dependencies : [gst_dep, gstbase_dep, gstvideo_dep, gstallocators_dep, libva_dep, libva_drm_dep, libdrm_dep],
 )
 
 pkg_name = 'gstreamer-va-' + api_version
@@ -49,5 +51,5 @@ libraries += [[pkg_name, {'lib': gstva}]]
 
 gstva_dep = declare_dependency(link_with : gstva,
   include_directories : [libsinc],
-  dependencies : [gst_dep, libva_dep, libva_drm_dep, libdrm_dep])
+  dependencies : [gst_dep, gstvideo_dep, libva_dep, libva_drm_dep, libdrm_dep])
 meson.override_dependency(pkg_name, gstva_dep)

@@ -20,7 +20,7 @@
 
 #include "vasurfaceimage.h"
 
-#include "gstvavideoformat.h"
+#include <gst/va/gstvavideoformat.h>
 #include <va/va.h>
 
 gboolean

@@ -22,9 +22,10 @@
 #include "config.h"
 #endif
 
+#include <gst/va/gstvavideoformat.h>
+
 #include "gstvadisplay_priv.h"
 #include "gstvaprofile.h"
-#include "gstvavideoformat.h"
 
 GArray *
 gst_va_display_get_profiles (GstVaDisplay * self, guint32 codec,
