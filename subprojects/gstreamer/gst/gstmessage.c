@@ -1166,15 +1166,15 @@ gst_message_get_structure (GstMessage * message)
 
 /**
  * gst_message_writable_structure:
- * @message: The #GstMessage.
+ * @message: A writable #GstMessage.
  *
  * Get a writable version of the structure.
  *
  * Returns: (transfer none): The structure of the message. The structure
  * is still owned by the message, which means that you should not free
  * it and that the pointer becomes invalid when you free the message.
- * This function checks if @message is writable and will never return
- * %NULL.
+ * This function ensures that @message is writable, and if so, will
+ * never return %NULL.
  *
  * MT safe.
  *

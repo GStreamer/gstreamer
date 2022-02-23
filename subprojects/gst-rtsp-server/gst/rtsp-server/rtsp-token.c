@@ -239,14 +239,14 @@ gst_rtsp_token_get_structure (GstRTSPToken * token)
 
 /**
  * gst_rtsp_token_writable_structure:
- * @token: The #GstRTSPToken.
+ * @token: A writable #GstRTSPToken.
  *
  * Get a writable version of the structure.
  *
  * Returns: (transfer none): The structure of the token. The structure is still
  * owned by the token, which means that you should not free it and that the
- * pointer becomes invalid when you free the token. This function checks if
- * @token is writable and will never return %NULL.
+ * pointer becomes invalid when you free the token. This function ensures
+ * that @token is writable, and if so, will never return %NULL.
  *
  * MT safe.
  */
