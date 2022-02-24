@@ -163,7 +163,7 @@ gst-indent amd64 docker:
   # Do not depend on the trigger, as we want to run indent always
   needs: []
 
-windows amd64 docker:
+.windows amd64 docker:
   stage: "build docker"
   needs:
     - "trigger"
@@ -224,14 +224,14 @@ windows amd64 docker:
         Exit 1
       }
 
-windows rust amd64 docker latest stable:
+.windows rust amd64 docker latest stable:
   extends: '.windows rust docker build'
   variables:
     RUST_IMAGE: !reference [variables, "WINDOWS_RUST_LATEST_IMAGE"]
     RUST_UPSTREAM_IMAGE: !reference [variables, "WINDOWS_RUST_LATEST_UPSTREAM_IMAGE"]
     RUST_VERSION: !reference [variables, "RUST_LATEST_VERSION"]
 
-windows rust amd64 docker minimum supported version:
+.windows rust amd64 docker minimum supported version:
   extends: '.windows rust docker build'
   variables:
     RUST_IMAGE: !reference [variables, "WINDOWS_RUST_MINIMUM_IMAGE"]
@@ -416,17 +416,17 @@ build clang fedora x86_64:
   #    - 'build/meson-logs/'
   #    - 'vslogs.zip'
 
-build vs2019 amd64:
+.build vs2019 amd64:
   extends: '.build windows'
   variables:
     ARCH: 'amd64'
 
-build vs2019 x86:
+.build vs2019 x86:
   extends: '.build windows'
   variables:
     ARCH: 'x86'
 
-build vs2019 arm64 uwp:
+.build vs2019 arm64 uwp:
   extends: '.build windows'
   variables:
     ARCH: 'arm64'
@@ -439,7 +439,7 @@ build vs2019 arm64 uwp:
       --cross-file ci/meson/vs2019-arm64-cross-file.txt
       --native-file ci/meson/vs2019-x64-native-file.txt
 
-build msys2 :
+.build msys2 :
   extends: '.build windows'
   timeout: '60min'
   rules:
