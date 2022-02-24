@@ -42,6 +42,7 @@ typedef struct _GstRtpLdacPayClass GstRtpLdacPayClass;
 
 struct _GstRtpLdacPay {
   GstRTPBasePayload base;
+  guint8 frame_count;
 };
 
 struct _GstRtpLdacPayClass {

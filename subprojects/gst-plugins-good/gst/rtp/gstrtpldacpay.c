@@ -48,7 +48,7 @@
 #include "gstrtpldacpay.h"
 #include "gstrtputils.h"
 
-#define GST_RTP_HEADER_LENGTH    12
+#define GST_RTP_LDAC_PAYLOAD_HEADER_SIZE 1
 /* MTU size required for LDAC A2DP streaming */
 #define GST_LDAC_MTU_REQUIRED    679
 
@@ -64,6 +64,7 @@ static GstStaticPadTemplate gst_rtp_ldac_pay_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-ldac, "
         "channels = (int) [ 1, 2 ], "
+        "eqmid = (int) { 0, 1, 2 }, "
         "rate = (int) { 44100, 48000, 88200, 96000 }")
     );
 
@@ -80,6 +81,38 @@ static gboolean gst_rtp_ldac_pay_set_caps (GstRTPBasePayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_ldac_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
+
+/**
+ * gst_rtp_ldac_pay_get_num_frames
+ * @eqmid: Encode Quality Mode Index
+ * @channels: Number of channels
+ *
+ * Returns: Number of LDAC frames per packet.
+ */
+static guint8
+gst_rtp_ldac_pay_get_num_frames (gint eqmid, gint channels)
+{
+  g_assert (channels == 1 || channels == 2);
+
+  switch (eqmid) {
+      /* Encode setting for High Quality */
+    case 0:
+      return 4 / channels;
+      /* Encode setting for Standard Quality */
+    case 1:
+      return 6 / channels;
+      /* Encode setting for Mobile use Quality */
+    case 2:
+      return 12 / channels;
+    default:
+      break;
+  }
+
+  g_assert_not_reached ();
+
+  /* If assertion gets compiled out */
+  return 6 / channels;
+}
 
 static void
 gst_rtp_ldac_pay_class_init (GstRtpLdacPayClass * klass)
@@ -115,7 +148,7 @@ gst_rtp_ldac_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   GstRtpLdacPay *ldacpay = GST_RTP_LDAC_PAY (payload);
   GstStructure *structure;
-  gint rate;
+  gint channels, eqmid, rate;
 
   if (GST_RTP_BASE_PAYLOAD_MTU (ldacpay) < GST_LDAC_MTU_REQUIRED) {
     GST_ERROR_OBJECT (ldacpay, "Invalid MTU %d, should be >= %d",
@@ -128,6 +161,18 @@ gst_rtp_ldac_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
     GST_ERROR_OBJECT (ldacpay, "Failed to get audio rate from caps");
     return FALSE;
   }
+
+  if (!gst_structure_get_int (structure, "channels", &channels)) {
+    GST_ERROR_OBJECT (ldacpay, "Failed to get audio rate from caps");
+    return FALSE;
+  }
+
+  if (!gst_structure_get_int (structure, "eqmid", &eqmid)) {
+    GST_ERROR_OBJECT (ldacpay, "Failed to get eqmid from caps");
+    return FALSE;
+  }
+
+  ldacpay->frame_count = gst_rtp_ldac_pay_get_num_frames (eqmid, channels);
 
   gst_rtp_base_payload_set_options (payload, "audio", TRUE, "X-GST-LDAC", rate);
 
@@ -145,14 +190,26 @@ gst_rtp_ldac_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
 static GstFlowReturn
 gst_rtp_ldac_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 {
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   GstRtpLdacPay *ldacpay = GST_RTP_LDAC_PAY (payload);
   GstBuffer *outbuf;
   GstClockTime outbuf_frame_duration, outbuf_pts;
+  guint8 *payload_data;
   gsize buf_sz;
 
   outbuf =
       gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD
-      (ldacpay), GST_RTP_HEADER_LENGTH, 0, 0);
+      (ldacpay), GST_RTP_LDAC_PAYLOAD_HEADER_SIZE, 0, 0);
+
+  /* Get payload */
+  gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+
+  /* Write header and copy data into payload */
+  payload_data = gst_rtp_buffer_get_payload (&rtp);
+  /* Upper 3 fragment bits not used, ref A2DP v13, 4.3.4 */
+  payload_data[0] = ldacpay->frame_count & 0x0f;
+
+  gst_rtp_buffer_unmap (&rtp);
 
   outbuf_pts = GST_BUFFER_PTS (buffer);
   outbuf_frame_duration = GST_BUFFER_DURATION (buffer);
