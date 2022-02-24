@@ -231,6 +231,9 @@ gst_ldac_enc_do_negotiate (GstAudioEncoder * audio_enc)
   output_caps = gst_caps_fixate (output_caps);
   gst_caps_set_simple (output_caps, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
 
+  /* Set EQMID in caps to be used downstream by rtpldacpay */
+  gst_caps_set_simple (output_caps, "eqmid", G_TYPE_INT, enc->eqmid, NULL);
+
   GST_INFO_OBJECT (enc, "output caps %" GST_PTR_FORMAT, output_caps);
 
   if (enc->channels == 1)
