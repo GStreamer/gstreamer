@@ -761,6 +761,9 @@ deinterlace_frame_di_greedyh_plane (GstDeinterlaceMethodGreedyH * self,
     // then first odd line
     memcpy (Dest, L1, RowStride);
     Dest += RowStride;
+
+    L2 += Pitch;
+    L2P += Pitch;
   }
 
   for (Line = 0; Line < (FieldHeight - 1); ++Line) {
@@ -788,16 +791,6 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
   GstDeinterlaceMethodGreedyH *self = GST_DEINTERLACE_METHOD_GREEDY_H (method);
   GstDeinterlaceMethodGreedyHClass *klass =
       GST_DEINTERLACE_METHOD_GREEDY_H_GET_CLASS (self);
-  gint InfoIsOdd = 0;
-  gint Line;
-  gint RowStride = GST_VIDEO_FRAME_COMP_STRIDE (outframe, 0);
-  gint FieldHeight = GST_VIDEO_FRAME_HEIGHT (outframe) / 2;
-  gint Pitch = RowStride * 2;
-  const guint8 *L1;             // ptr to Line1, of 3
-  const guint8 *L2;             // ptr to Line2, the weave line
-  const guint8 *L3;             // ptr to Line3
-  const guint8 *L2P;            // ptr to prev Line2
-  guint8 *Dest = GST_VIDEO_FRAME_COMP_DATA (outframe, 0);
   ScanlineFunction scanline;
 
   if (cur_field_idx + 2 > history_count || cur_field_idx < 1) {
@@ -832,69 +825,8 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
       return;
   }
 
-  // copy first even line no matter what, and the first odd line if we're
-  // processing an EVEN field. (note diff from other deint rtns.)
-
-  if (history[cur_field_idx - 1].flags == PICTURE_INTERLACED_BOTTOM) {
-    InfoIsOdd = 1;
-
-    L1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 2].frame, 0);
-    if (history[cur_field_idx - 2].flags & PICTURE_INTERLACED_BOTTOM)
-      L1 += RowStride;
-
-    L2 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 1].frame, 0);
-    if (history[cur_field_idx - 1].flags & PICTURE_INTERLACED_BOTTOM)
-      L2 += RowStride;
-
-    L3 = L1 + Pitch;
-    L2P = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 3].frame, 0);
-    if (history[cur_field_idx - 3].flags & PICTURE_INTERLACED_BOTTOM)
-      L2P += RowStride;
-
-    // copy first even line
-    memcpy (Dest, L1, RowStride);
-    Dest += RowStride;
-  } else {
-    InfoIsOdd = 0;
-    L1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 2].frame, 0);
-    if (history[cur_field_idx - 2].flags & PICTURE_INTERLACED_BOTTOM)
-      L1 += RowStride;
-
-    L2 = (guint8 *) GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx -
-            1].frame, 0) + Pitch;
-    if (history[cur_field_idx - 1].flags & PICTURE_INTERLACED_BOTTOM)
-      L2 += RowStride;
-
-    L3 = L1 + Pitch;
-    L2P =
-        (guint8 *) GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 3].frame,
-        0) + Pitch;
-    if (history[cur_field_idx - 3].flags & PICTURE_INTERLACED_BOTTOM)
-      L2P += RowStride;
-
-    // copy first even line
-    memcpy (Dest, L1, RowStride);
-    Dest += RowStride;
-    // then first odd line
-    memcpy (Dest, L1, RowStride);
-    Dest += RowStride;
-  }
-
-  for (Line = 0; Line < (FieldHeight - 1); ++Line) {
-    scanline (self, L1, L2, L3, L2P, Dest, RowStride);
-    Dest += RowStride;
-    memcpy (Dest, L3, RowStride);
-    Dest += RowStride;
-
-    L1 += Pitch;
-    L2 += Pitch;
-    L3 += Pitch;
-    L2P += Pitch;
-  }
-
-  if (InfoIsOdd) {
-    memcpy (Dest, L2, RowStride);
-  }
+  deinterlace_frame_di_greedyh_plane (self, history, history_count, outframe,
+      cur_field_idx, 0, scanline);
 }
 
 static void
