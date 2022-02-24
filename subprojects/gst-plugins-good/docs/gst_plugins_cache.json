@@ -14678,7 +14678,7 @@
                 "long-name": "RTP packet payloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-ldac:\n       channels: [ 1, 2 ]\n           rate: { (int)44100, (int)48000, (int)88200, (int)96000 }\n",
+                        "caps": "audio/x-ldac:\n       channels: [ 1, 2 ]\n          eqmid: { (int)0, (int)1, (int)2 }\n           rate: { (int)44100, (int)48000, (int)88200, (int)96000 }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
