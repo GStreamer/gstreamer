@@ -718,15 +718,38 @@ greedyh_scanline_C_planar_uv (GstDeinterlaceMethodGreedyH * self,
 
 static void
 deinterlace_frame_di_greedyh_planar_plane (GstDeinterlaceMethodGreedyH * self,
-    const guint8 * L1, const guint8 * L2, const guint8 * L3, const guint8 * L2P,
-    guint8 * Dest, gint RowStride, gint FieldHeight, gint Pitch, gint InfoIsOdd,
+    const GstDeinterlaceField * history, guint history_count,
+    GstVideoFrame * outframe, int cur_field_idx, int i,
     ScanlineFunction scanline)
 {
+  guint8 *Dest = GST_VIDEO_FRAME_COMP_DATA (outframe, i);
+  gint RowStride = GST_VIDEO_FRAME_COMP_STRIDE (outframe, i);
+  gint FieldHeight = GST_VIDEO_FRAME_COMP_HEIGHT (outframe, i) / 2;
+  gint Pitch = RowStride * 2;
+  const guint8 *L1;             // ptr to Line1, of 3
+  const guint8 *L2;             // ptr to Line2, the weave line
+  const guint8 *L3;             // ptr to Line3
+  const guint8 *L2P;            // ptr to prev Line2
+  gint InfoIsOdd;
   gint Line;
+
+  L1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 2].frame, i);
+  if (history[cur_field_idx - 2].flags & PICTURE_INTERLACED_BOTTOM)
+    L1 += RowStride;
+
+  L2 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 1].frame, i);
+  if (history[cur_field_idx - 1].flags & PICTURE_INTERLACED_BOTTOM)
+    L2 += RowStride;
+
+  L3 = L1 + Pitch;
+  L2P = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 3].frame, i);
+  if (history[cur_field_idx - 3].flags & PICTURE_INTERLACED_BOTTOM)
+    L2P += RowStride;
 
   // copy first even line no matter what, and the first odd line if we're
   // processing an EVEN field. (note diff from other deint rtns.)
 
+  InfoIsOdd = (history[cur_field_idx - 1].flags == PICTURE_INTERLACED_BOTTOM);
   if (InfoIsOdd) {
     // copy first even line
     memcpy (Dest, L1, RowStride);
@@ -882,17 +905,6 @@ deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
   GstDeinterlaceMethodGreedyH *self = GST_DEINTERLACE_METHOD_GREEDY_H (method);
   GstDeinterlaceMethodGreedyHClass *klass =
       GST_DEINTERLACE_METHOD_GREEDY_H_GET_CLASS (self);
-  gint InfoIsOdd;
-  gint RowStride;
-  gint FieldHeight;
-  gint Pitch;
-  const guint8 *L1;             // ptr to Line1, of 3
-  const guint8 *L2;             // ptr to Line2, the weave line
-  const guint8 *L3;             // ptr to Line3
-  const guint8 *L2P;            // ptr to prev Line2
-  guint8 *Dest;
-  gint i;
-  ScanlineFunction scanline;
 
   if (cur_field_idx + 2 > history_count || cur_field_idx < 1) {
     GstDeinterlaceMethod *backup_method;
@@ -910,35 +922,12 @@ deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
 
   cur_field_idx += 2;
 
-  for (i = 0; i < 3; i++) {
-    InfoIsOdd = (history[cur_field_idx - 1].flags == PICTURE_INTERLACED_BOTTOM);
-    RowStride = GST_VIDEO_FRAME_COMP_STRIDE (outframe, i);
-    FieldHeight = GST_VIDEO_FRAME_COMP_HEIGHT (outframe, i) / 2;
-    Pitch = RowStride * 2;
-
-    if (i == 0)
-      scanline = klass->scanline_planar_y;
-    else
-      scanline = klass->scanline_planar_uv;
-
-    Dest = GST_VIDEO_FRAME_COMP_DATA (outframe, i);
-
-    L1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 2].frame, i);
-    if (history[cur_field_idx - 2].flags & PICTURE_INTERLACED_BOTTOM)
-      L1 += RowStride;
-
-    L2 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 1].frame, i);
-    if (history[cur_field_idx - 1].flags & PICTURE_INTERLACED_BOTTOM)
-      L2 += RowStride;
-
-    L3 = L1 + Pitch;
-    L2P = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 3].frame, i);
-    if (history[cur_field_idx - 3].flags & PICTURE_INTERLACED_BOTTOM)
-      L2P += RowStride;
-
-    deinterlace_frame_di_greedyh_planar_plane (self, L1, L2, L3, L2P, Dest,
-        RowStride, FieldHeight, Pitch, InfoIsOdd, scanline);
-  }
+  deinterlace_frame_di_greedyh_planar_plane (self, history, history_count,
+      outframe, cur_field_idx, 0, klass->scanline_planar_y);
+  deinterlace_frame_di_greedyh_planar_plane (self, history, history_count,
+      outframe, cur_field_idx, 1, klass->scanline_planar_uv);
+  deinterlace_frame_di_greedyh_planar_plane (self, history, history_count,
+      outframe, cur_field_idx, 2, klass->scanline_planar_uv);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodGreedyH, gst_deinterlace_method_greedy_h,
