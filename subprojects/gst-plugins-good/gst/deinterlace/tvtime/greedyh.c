@@ -733,23 +733,23 @@ deinterlace_frame_di_greedyh_plane (GstDeinterlaceMethodGreedyH * self,
   gint InfoIsOdd;
   gint Line;
 
-  L1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 2].frame, plane);
-  if (history[cur_field_idx - 2].flags & PICTURE_INTERLACED_BOTTOM)
+  L1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx].frame, plane);
+  if (history[cur_field_idx].flags & PICTURE_INTERLACED_BOTTOM)
     L1 += RowStride;
 
-  L2 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 1].frame, plane);
-  if (history[cur_field_idx - 1].flags & PICTURE_INTERLACED_BOTTOM)
+  L2 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx + 1].frame, plane);
+  if (history[cur_field_idx + 1].flags & PICTURE_INTERLACED_BOTTOM)
     L2 += RowStride;
 
   L3 = L1 + Pitch;
-  L2P = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 3].frame, plane);
-  if (history[cur_field_idx - 3].flags & PICTURE_INTERLACED_BOTTOM)
+  L2P = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 1].frame, plane);
+  if (history[cur_field_idx - 1].flags & PICTURE_INTERLACED_BOTTOM)
     L2P += RowStride;
 
   // copy first even line no matter what, and the first odd line if we're
   // processing an EVEN field. (note diff from other deint rtns.)
 
-  InfoIsOdd = (history[cur_field_idx - 1].flags == PICTURE_INTERLACED_BOTTOM);
+  InfoIsOdd = (history[cur_field_idx + 1].flags == PICTURE_INTERLACED_BOTTOM);
   if (InfoIsOdd) {
     // copy first even line
     memcpy (Dest, L1, RowStride);
@@ -807,8 +807,6 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
     return;
   }
 
-  cur_field_idx += 2;
-
   switch (GST_VIDEO_INFO_FORMAT (method->vinfo)) {
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_YVYU:
@@ -851,8 +849,6 @@ deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
     g_object_unref (backup_method);
     return;
   }
-
-  cur_field_idx += 2;
 
   deinterlace_frame_di_greedyh_plane (self, history, history_count, outframe,
       cur_field_idx, 0, klass->scanline_planar_y);
