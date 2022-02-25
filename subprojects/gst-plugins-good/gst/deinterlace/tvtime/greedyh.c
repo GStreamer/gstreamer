@@ -717,6 +717,47 @@ greedyh_scanline_C_planar_uv (GstDeinterlaceMethodGreedyH * self,
 #endif
 
 static void
+deinterlace_frame_di_greedyh_planar_plane (GstDeinterlaceMethodGreedyH * self,
+    const guint8 * L1, const guint8 * L2, const guint8 * L3, const guint8 * L2P,
+    guint8 * Dest, gint RowStride, gint FieldHeight, gint Pitch, gint InfoIsOdd,
+    ScanlineFunction scanline)
+{
+  gint Line;
+
+  // copy first even line no matter what, and the first odd line if we're
+  // processing an EVEN field. (note diff from other deint rtns.)
+
+  if (InfoIsOdd) {
+    // copy first even line
+    memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
+  } else {
+    // copy first even line
+    memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
+    // then first odd line
+    memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
+  }
+
+  for (Line = 0; Line < (FieldHeight - 1); ++Line) {
+    scanline (self, L1, L2, L3, L2P, Dest, RowStride);
+    Dest += RowStride;
+    memcpy (Dest, L3, RowStride);
+    Dest += RowStride;
+
+    L1 += Pitch;
+    L2 += Pitch;
+    L3 += Pitch;
+    L2P += Pitch;
+  }
+
+  if (InfoIsOdd) {
+    memcpy (Dest, L2, RowStride);
+  }
+}
+
+static void
 deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
     const GstDeinterlaceField * history, guint history_count,
     GstVideoFrame * outframe, int cur_field_idx)
@@ -808,47 +849,6 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
     if (history[cur_field_idx - 3].flags & PICTURE_INTERLACED_BOTTOM)
       L2P += RowStride;
 
-    // copy first even line
-    memcpy (Dest, L1, RowStride);
-    Dest += RowStride;
-    // then first odd line
-    memcpy (Dest, L1, RowStride);
-    Dest += RowStride;
-  }
-
-  for (Line = 0; Line < (FieldHeight - 1); ++Line) {
-    scanline (self, L1, L2, L3, L2P, Dest, RowStride);
-    Dest += RowStride;
-    memcpy (Dest, L3, RowStride);
-    Dest += RowStride;
-
-    L1 += Pitch;
-    L2 += Pitch;
-    L3 += Pitch;
-    L2P += Pitch;
-  }
-
-  if (InfoIsOdd) {
-    memcpy (Dest, L2, RowStride);
-  }
-}
-
-static void
-deinterlace_frame_di_greedyh_planar_plane (GstDeinterlaceMethodGreedyH * self,
-    const guint8 * L1, const guint8 * L2, const guint8 * L3, const guint8 * L2P,
-    guint8 * Dest, gint RowStride, gint FieldHeight, gint Pitch, gint InfoIsOdd,
-    ScanlineFunction scanline)
-{
-  gint Line;
-
-  // copy first even line no matter what, and the first odd line if we're
-  // processing an EVEN field. (note diff from other deint rtns.)
-
-  if (InfoIsOdd) {
-    // copy first even line
-    memcpy (Dest, L1, RowStride);
-    Dest += RowStride;
-  } else {
     // copy first even line
     memcpy (Dest, L1, RowStride);
     Dest += RowStride;
