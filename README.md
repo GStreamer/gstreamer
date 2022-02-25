@@ -53,6 +53,20 @@ binary in your PATH.
 
 You can find [instructions for Windows below](#windows-prerequisites-setup).
 
+
+On macOS, you might need to execute "Install Certificates.command" from
+the Python folder in the user Applications folder or install it manually:
+
+```
+  $ pip3 install certifi
+```
+
+It will solve this issue:
+
+```
+urllib.error.URLError: urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed
+```
+
 ### Build GStreamer and its modules
 
 You can get all GStreamer built running:
