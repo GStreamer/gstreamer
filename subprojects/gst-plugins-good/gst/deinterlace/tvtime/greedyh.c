@@ -717,14 +717,14 @@ greedyh_scanline_C_planar_uv (GstDeinterlaceMethodGreedyH * self,
 #endif
 
 static void
-deinterlace_frame_di_greedyh_planar_plane (GstDeinterlaceMethodGreedyH * self,
+deinterlace_frame_di_greedyh_plane (GstDeinterlaceMethodGreedyH * self,
     const GstDeinterlaceField * history, guint history_count,
-    GstVideoFrame * outframe, int cur_field_idx, int i,
+    GstVideoFrame * outframe, int cur_field_idx, int plane,
     ScanlineFunction scanline)
 {
-  guint8 *Dest = GST_VIDEO_FRAME_COMP_DATA (outframe, i);
-  gint RowStride = GST_VIDEO_FRAME_COMP_STRIDE (outframe, i);
-  gint FieldHeight = GST_VIDEO_FRAME_COMP_HEIGHT (outframe, i) / 2;
+  guint8 *Dest = GST_VIDEO_FRAME_COMP_DATA (outframe, plane);
+  gint RowStride = GST_VIDEO_FRAME_COMP_STRIDE (outframe, plane);
+  gint FieldHeight = GST_VIDEO_FRAME_COMP_HEIGHT (outframe, plane) / 2;
   gint Pitch = RowStride * 2;
   const guint8 *L1;             // ptr to Line1, of 3
   const guint8 *L2;             // ptr to Line2, the weave line
@@ -733,16 +733,16 @@ deinterlace_frame_di_greedyh_planar_plane (GstDeinterlaceMethodGreedyH * self,
   gint InfoIsOdd;
   gint Line;
 
-  L1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 2].frame, i);
+  L1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 2].frame, plane);
   if (history[cur_field_idx - 2].flags & PICTURE_INTERLACED_BOTTOM)
     L1 += RowStride;
 
-  L2 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 1].frame, i);
+  L2 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 1].frame, plane);
   if (history[cur_field_idx - 1].flags & PICTURE_INTERLACED_BOTTOM)
     L2 += RowStride;
 
   L3 = L1 + Pitch;
-  L2P = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 3].frame, i);
+  L2P = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 3].frame, plane);
   if (history[cur_field_idx - 3].flags & PICTURE_INTERLACED_BOTTOM)
     L2P += RowStride;
 
@@ -922,12 +922,12 @@ deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
 
   cur_field_idx += 2;
 
-  deinterlace_frame_di_greedyh_planar_plane (self, history, history_count,
-      outframe, cur_field_idx, 0, klass->scanline_planar_y);
-  deinterlace_frame_di_greedyh_planar_plane (self, history, history_count,
-      outframe, cur_field_idx, 1, klass->scanline_planar_uv);
-  deinterlace_frame_di_greedyh_planar_plane (self, history, history_count,
-      outframe, cur_field_idx, 2, klass->scanline_planar_uv);
+  deinterlace_frame_di_greedyh_plane (self, history, history_count, outframe,
+      cur_field_idx, 0, klass->scanline_planar_y);
+  deinterlace_frame_di_greedyh_plane (self, history, history_count, outframe,
+      cur_field_idx, 1, klass->scanline_planar_uv);
+  deinterlace_frame_di_greedyh_plane (self, history, history_count, outframe,
+      cur_field_idx, 2, klass->scanline_planar_uv);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodGreedyH, gst_deinterlace_method_greedy_h,
