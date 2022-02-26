@@ -865,12 +865,22 @@ gst_matroska_mux_handle_sink_event (GstCollectPads * pads,
         g_free (lang);
       }
 
-      /* FIXME: what about stream-specific tags? */
       if (gst_tag_list_get_scope (list) == GST_TAG_SCOPE_GLOBAL) {
         gst_tag_setter_merge_tags (GST_TAG_SETTER (mux), list,
             gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
       } else {
+        gchar *title = NULL;
+
+        /* Stream specific tags */
         gst_tag_list_insert (collect_pad->tags, list, GST_TAG_MERGE_REPLACE);
+
+        /* If the tags contain a title, update the context name to write it there */
+        if (gst_tag_list_get_string (list, GST_TAG_TITLE, &title)) {
+          GST_INFO_OBJECT (pad, "Setting track name to '%s'", title);
+          g_free (context->name);
+          context->name = g_strdup (title);
+        }
+        g_free (title);
       }
 
       gst_event_unref (event);
