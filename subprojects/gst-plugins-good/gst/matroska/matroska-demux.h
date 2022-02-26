@@ -68,8 +68,10 @@ typedef struct _GstMatroskaDemux {
   gboolean                 seek_first;
 
   /* did we parse cues/tracks/segmentinfo already? */
-  gboolean                 tracks_parsed;
   GList                   *seek_parsed;
+  /* Offset of the last Tracks element parsed,
+   * to avoid reparsing or recreating tracks unecessarily */
+  guint64                 tracks_ebml_offset;
 
   /* cluster positions (optional) */
   GArray                  *clusters;

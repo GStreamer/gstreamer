@@ -325,7 +325,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->group_id = G_MAXUINT;
 
   demux->clock = NULL;
-  demux->tracks_parsed = FALSE;
+  demux->tracks_ebml_offset = G_MAXUINT64;
 
   if (demux->clusters) {
     g_array_unref (demux->clusters);
@@ -3400,6 +3400,7 @@ gst_matroska_demux_parse_tracks (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint32 id;
+  guint64 ebml_offset = ebml->offset;
 
   DEBUG_ELEMENT_START (demux, ebml, "Tracks");
 
@@ -3440,7 +3441,7 @@ gst_matroska_demux_parse_tracks (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   }
   DEBUG_ELEMENT_STOP (demux, ebml, "Tracks", ret);
 
-  demux->tracks_parsed = TRUE;
+  demux->tracks_ebml_offset = ebml_offset;
   GST_DEBUG_OBJECT (demux, "signaling no more pads");
   gst_element_no_more_pads (GST_ELEMENT (demux));
 
@@ -5633,20 +5634,22 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
           break;
         case GST_MATROSKA_ID_TRACKS:
           GST_READ_CHECK (gst_matroska_demux_take (demux, read, &ebml));
-          if (!demux->tracks_parsed) {
+          if (demux->tracks_ebml_offset == G_MAXUINT64) {
             ret = gst_matroska_demux_parse_tracks (demux, &ebml);
-          } else {
+          } else if (demux->tracks_ebml_offset != ebml.offset) {
+            /* This is a new Tracks entry, as can happen in MSE
+             * playback */
             ret = gst_matroska_demux_update_tracks (demux, &ebml);
           }
           break;
         case GST_MATROSKA_ID_CLUSTER:
-          if (G_UNLIKELY (!demux->tracks_parsed)) {
+          if (G_UNLIKELY (demux->tracks_ebml_offset == G_MAXUINT64)) {
             if (demux->streaming) {
               GST_DEBUG_OBJECT (demux, "Cluster before Track");
               goto not_streamable;
             } else {
               ret = gst_matroska_demux_find_tracks (demux);
-              if (!demux->tracks_parsed)
+              if (demux->tracks_ebml_offset == G_MAXUINT64)
                 goto no_tracks;
             }
           }
