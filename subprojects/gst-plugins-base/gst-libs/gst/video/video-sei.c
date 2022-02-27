@@ -33,6 +33,8 @@
  *
  * A collection of objects and methods to assist with SEI User Data Unregistered
  * metadata in H.264 and H.265 streams.
+ *
+ * Since: 1.22
  */
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -59,6 +61,13 @@ ensure_debug_category (void)
 
 /* SEI User Data Unregistered implementation */
 
+/**
+ * gst_video_sei_user_data_unregistered_meta_api_get_type:
+ *
+ * Returns: #GType for the #GstVideoSEIUserDataUnregisteredMeta structure.
+ *
+ * Since: 1.22
+ */
 GType
 gst_video_sei_user_data_unregistered_meta_api_get_type (void)
 {
@@ -118,6 +127,13 @@ gst_video_sei_user_data_unregistered_meta_free (GstMeta * meta, GstBuffer * buf)
   smeta->data = NULL;
 }
 
+/**
+ * gst_video_sei_user_data_unregistered_meta_get_info:
+ *
+ * Returns: #GstMetaInfo pointer that describes #GstVideoSEIUserDataUnregisteredMeta.
+ *
+ * Since: 1.22
+ */
 const GstMetaInfo *
 gst_video_sei_user_data_unregistered_meta_get_info (void)
 {
@@ -169,6 +185,18 @@ gst_buffer_add_video_sei_user_data_unregistered_meta (GstBuffer * buffer,
   return meta;
 }
 
+/**
+ * gst_video_sei_user_data_unregistered_parse_precision_time_stamp:
+ * @user_data: (transfer none): a #GstVideoSEIUserDataUnregisteredMeta
+ * @status: (out): User Data Unregistered UUID
+ * @precision_time_stamp: (out): The parsed Precision Time Stamp SEI
+ *
+ * Parses and returns the Precision Time Stamp (ST 0604) from the SEI User Data Unregistered buffer
+ *
+ * Returns: True if data is a Precision Time Stamp and it was parsed correctly
+ *
+ * Since: 1.22
+ */
 gboolean
     gst_video_sei_user_data_unregistered_parse_precision_time_stamp
     (GstVideoSEIUserDataUnregisteredMeta * user_data, guint8 * status,

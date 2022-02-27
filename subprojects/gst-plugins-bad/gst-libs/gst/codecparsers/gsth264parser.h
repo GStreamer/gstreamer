@@ -241,7 +241,6 @@ typedef enum
  * @GST_H264_SEI_BUF_PERIOD: Buffering Period SEI Message
  * @GST_H264_SEI_PIC_TIMING: Picture Timing SEI Message
  * @GST_H264_SEI_REGISTERED_USER_DATA: Registered user data (D.2.5)
- * @GST_H264_SEI_USER_DATA_UNREGISTERED: Registered user data (D.2.6) (Since: 1.22)
  * @GST_H264_SEI_RECOVERY_POINT: Recovery Point SEI Message (D.2.7)
  * @GST_H264_SEI_STEREO_VIDEO_INFO: stereo video info SEI message (Since: 1.6)
  * @GST_H264_SEI_FRAME_PACKING: Frame Packing Arrangement (FPA) message that
@@ -254,6 +253,14 @@ typedef enum
  *
  * The type of SEI message.
  */
+/**
+ * GST_H264_SEI_USER_DATA_UNREGISTERED:
+ *
+ * User Data Unregistered (D.2.6)
+ *
+ * Since: 1.22
+ */
+
 typedef enum
 {
   GST_H264_SEI_BUF_PERIOD = 0,
@@ -1116,10 +1123,11 @@ struct _GstH264RegisteredUserData
 
 /**
  * GstH264UserDataUnregistered:
- * The User data unregistered SEI message syntax.
  * @uuid: an uuid_iso_iec_11578.
  * @data: the data of user_data_payload_byte
  * @size: the size of @data in bytes
+ *
+ * The User data unregistered SEI message syntax.
  *
  * Since: 1.22
  */
@@ -1204,6 +1212,13 @@ struct _GstH264SEIUnhandledPayload
   guint size;
 };
 
+/**
+ * _GstH264SEIMessage.payload.user_data_unregistered:
+ *
+ * User Data Unregistered
+ *
+ * Since: 1.22
+ */
 struct _GstH264SEIMessage
 {
   GstH264SEIPayloadType payloadType;
