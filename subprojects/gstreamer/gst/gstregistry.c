@@ -1590,8 +1590,8 @@ priv_gst_get_relocated_libgstreamer (void)
     }
   }
 #else
-#warning "Unsupported platform for retrieving the current location of a\
- shared library. Relocatable builds will not work."
+#warning "Unsupported platform for retrieving the current location of a shared library."
+#warning "Relocatable builds will not work."
   GST_WARNING ("Don't know how to retrieve the location of the shared "
       "library libgstreamer-" GST_API_VERSION);
 #endif
