@@ -7567,7 +7567,7 @@ gst_video_format_info_component (const GstVideoFormatInfo * info, guint plane,
 
 /**
  * gst_video_format_info_extrapolate_stride:
- * @info: #GstVideoFormatInfo
+ * @finfo: #GstVideoFormatInfo
  * @plane: a plane number
  * @stride: The fist plane stride
  *
