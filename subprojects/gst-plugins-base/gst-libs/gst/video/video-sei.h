@@ -26,31 +26,16 @@
 
 G_BEGIN_DECLS
 
-/**
- * MISB UUID for H.264 Precision Time Stamp
- *
- * This is from MISB ST 0604.6 Section 11.1.
- */
 static const guint8 H264_MISP_MICROSECTIME[] = {
   0x4D, 0x49, 0x53, 0x50, 0x6D, 0x69, 0x63, 0x72,
   0x6F, 0x73, 0x65, 0x63, 0x74, 0x69, 0x6D, 0x65
 };
 
-/**
- * MISB UUID for H.265 Precision Time Stamp
- *
- * This is from MISB ST 0604.6 Section 12.1.
- */
 static const guint8 H265_MISP_MICROSECONDS[] = {
   0xA8, 0x68, 0x7D, 0xD4, 0xD7, 0x59, 0x37, 0x58,
   0xA5, 0xCE, 0xF0, 0x33, 0x8B, 0x65, 0x45, 0xF1
 };
 
-/**
- * MISB UUID for H.265 Nano Time Stamp
- *
- * This is from MISB ST 0604.6 Section 12.1.
- */
 static const guint8 H265_MISP_NANOSECONDS[] = {
   0xCF, 0x84, 0x82, 0x78, 0xEE, 0x23, 0x30, 0x6C,
   0x92, 0x65, 0xE8, 0xFE, 0xF2, 0x2F, 0xB8, 0xB8
@@ -59,10 +44,11 @@ static const guint8 H265_MISP_NANOSECONDS[] = {
 /**
  * GstVideoSEIUserDataUnregisteredMeta:
  * @meta: parent #GstMeta
- * @description: H.264 H.265 metadata from SEI User Data Unregistered messages
  * @uuid: User Data Unregistered UUID
  * @data: Unparsed data buffer
  * @size: Size of the data buffer
+ *
+ * H.264 H.265 metadata from SEI User Data Unregistered messages
  *
  * Since: 1.22
  */
@@ -98,12 +84,12 @@ const GstMetaInfo *gst_video_sei_user_data_unregistered_meta_get_info (void);
  * gst_buffer_get_video_sei_user_data_unregistered_meta:
  * @b: A #GstBuffer
  *
- * Gets the #GstVideoSEIUserDataUnregisteredMeta that might be present on @b.
- *
- * Since: 1.22
+ * Gets the GstVideoSEIUserDataUnregisteredMeta that might be present on @b.
  *
  * Returns: The first #GstVideoSEIUserDataUnregisteredMeta present on @b, or %NULL if
  * no #GstVideoSEIUserDataUnregisteredMeta are present
+ *
+ * Since: 1.22
  */
 #define gst_buffer_get_video_sei_user_data_unregistered_meta(b) \
         ((GstVideoSEIUserDataUnregisteredMeta*)gst_buffer_get_meta((b),GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_API_TYPE))
