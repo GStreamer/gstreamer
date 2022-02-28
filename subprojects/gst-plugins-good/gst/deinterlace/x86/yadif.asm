@@ -59,7 +59,7 @@ SECTION .text
     mova      m4, m2
     ; m5 = t0[x+1+j]
     mova      m5, m2
-    ; m4 = xor(t0[x+1+j], b0[x+1-j]
+    ; m4 = xor(t0[x+1+j], b0[x+1-j])
     pxor      m4, m3
     pavgb     m5, m3
     ; round down to 0
@@ -82,7 +82,7 @@ SECTION .text
     pmaxub    m2, m3
     ; m3 = FFABS(t0[x+1+j] - b0[x+1-j]);
     mova      m3, m2
-    ; m4 = FFABS(FFABS(t0[x+1+j] - b0[x+1-j]);
+    ; m4 = FFABS(t0[x+1+j] - b0[x+1-j]);
     mova      m4, m2
     ; m3 = FFABS(t0[x+j] - b0[x-j])
     psrldq    m3, 1
