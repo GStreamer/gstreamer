@@ -83,13 +83,13 @@ else
 endif
 
 
-pkg_name = 'gst-validate-1.0'
+pkg_name = 'gstreamer-validate-1.0'
 library_def = {'lib': gstvalidate}
 pkgconfig.generate(gstvalidate,
   libraries : [gst_dep],
   subdirs : pkgconfig_subdirs,
   name : pkg_name,
-  description : 'Gstreamer Validate',
+  description : 'GStreamer Validate',
 )
 
 validate_gen_sources = []
