@@ -5,7 +5,7 @@ gs_sources = [
   'gstgs.cpp',
 ]
 
-gs_dep = dependency('storage_client', version : '>= 1.25.0', required : get_option('gs'))
+gs_dep = dependency('google_cloud_cpp_storage', version : '>= 1.25.0', required : get_option('gs'))
 
 if gs_dep.found()
   gstgs = library('gstgs',
