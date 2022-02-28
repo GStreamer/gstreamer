@@ -42,6 +42,10 @@ if gstgl_dep.found()
   extra_c_args += ['-DHAVE_NVCODEC_GST_GL=1']
 endif
 
+if gstd3d11_dep.found()
+  extra_c_args += ['-DHAVE_NVCODEC_GST_D3D11=1']
+endif
+
 if host_system == 'linux'
   have_nvmm = false
   if cc.has_header('nvbufsurface.h')
@@ -62,7 +66,7 @@ gstnvcodec = library('gstnvcodec',
   nvcodec_sources,
   c_args : gst_plugins_bad_args + extra_c_args,
   include_directories : plugin_incdirs,
-  dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstgl_dep, gstglproto_dep, gmodule_dep, gstcodecs_dep],
+  dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstgl_dep, gstglproto_dep, gmodule_dep, gstcodecs_dep, gstd3d11_dep],
   install : true,
   install_dir : plugins_install_dir,
 )

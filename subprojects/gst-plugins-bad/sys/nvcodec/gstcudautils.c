@@ -29,6 +29,10 @@
 #include <gst/gl/gstglfuncs.h>
 #endif
 
+#ifdef HAVE_NVCODEC_GST_D3D11
+#include <gst/d3d11/gstd3d11.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_utils_debug);
 #define GST_CAT_DEFAULT gst_cuda_utils_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
@@ -458,6 +462,42 @@ gst_cuda_graphics_resource_register_gl_buffer (GstCudaGraphicsResource *
 }
 
 /**
+ * gst_cuda_graphics_resource_register_d3d11_resource: (skip)
+ * @resource a #GstCudaGraphicsResource
+ * @d3d11_resource: a ID3D11Resource
+ * @flags: a #CUgraphicsRegisterFlags
+ *
+ * Register the @d3d11_resource for accessing by CUDA.
+ * Must be called with d3d11 device lock with current cuda context was
+ * pushed on the current thread
+ *
+ * Returns: whether @d3d11_resource was registered or not
+ */
+gboolean
+gst_cuda_graphics_resource_register_d3d11_resource (GstCudaGraphicsResource *
+    resource, gpointer d3d11_resource, CUgraphicsRegisterFlags flags)
+{
+  CUresult cuda_ret;
+
+  g_return_val_if_fail (resource != NULL, FALSE);
+  g_return_val_if_fail (resource->registered == FALSE, FALSE);
+
+  _init_debug ();
+
+  cuda_ret = CuGraphicsD3D11RegisterResource (&resource->resource,
+      d3d11_resource, flags);
+
+  if (!gst_cuda_result (cuda_ret))
+    return FALSE;
+
+  resource->registered = TRUE;
+  resource->type = GST_CUDA_GRAPHICS_RESOURCE_D3D11_RESOURCE;
+  resource->flags = flags;
+
+  return TRUE;
+}
+
+/**
  * gst_cuda_graphics_resource_unregister: (skip)
  * @resource: a #GstCudaGraphicsResource
  *
@@ -561,6 +601,28 @@ unregister_resource_from_gl_thread (GstGLContext * gl_context,
 }
 #endif
 
+#ifdef HAVE_NVCODEC_GST_D3D11
+static void
+unregister_d3d11_resource (GstCudaGraphicsResource * resource)
+{
+  GstCudaContext *cuda_context = resource->cuda_context;
+  GstD3D11Device *device = GST_D3D11_DEVICE (resource->graphics_context);
+
+  if (!gst_cuda_context_push (cuda_context)) {
+    GST_WARNING_OBJECT (cuda_context, "failed to push CUDA context");
+    return;
+  }
+
+  gst_d3d11_device_lock (device);
+  gst_cuda_graphics_resource_unregister (resource);
+  gst_d3d11_device_unlock (device);
+
+  if (!gst_cuda_context_pop (NULL)) {
+    GST_WARNING_OBJECT (cuda_context, "failed to pop CUDA context");
+  }
+}
+#endif
+
 /**
  * gst_cuda_graphics_resource_free: (skip)
  * @resource: a #GstCudaGraphicsResource
@@ -580,8 +642,13 @@ gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource)
           resource);
     } else
 #endif
+#ifdef HAVE_NVCODEC_GST_D3D11
+    if (resource->type == GST_CUDA_GRAPHICS_RESOURCE_D3D11_RESOURCE) {
+      unregister_d3d11_resource (resource);
+    } else
+#endif
     {
-      /* FIXME: currently opengl only */
+      /* FIXME: currently only opengl & d3d11 */
       g_assert_not_reached ();
     }
   }

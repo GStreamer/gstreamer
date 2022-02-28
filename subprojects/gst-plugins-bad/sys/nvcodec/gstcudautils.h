@@ -83,12 +83,13 @@ typedef enum
 {
   GST_CUDA_GRAPHICS_RESOURCE_NONE = 0,
   GST_CUDA_GRAPHICS_RESOURCE_GL_BUFFER = 1,
+  GST_CUDA_GRAPHICS_RESOURCE_D3D11_RESOURCE = 2,
 } GstCudaGraphicsResourceType;
 
 typedef struct _GstCudaGraphicsResource
 {
   GstCudaContext *cuda_context;
-  /* GL context (or d3d11 context in the future) */
+  /* GL context or D3D11 device */
   GstObject *graphics_context;
 
   GstCudaGraphicsResourceType type;
@@ -123,6 +124,10 @@ GstCudaGraphicsResource * gst_cuda_graphics_resource_new  (GstCudaContext * cont
 gboolean        gst_cuda_graphics_resource_register_gl_buffer (GstCudaGraphicsResource * resource,
                                                                guint buffer,
                                                                CUgraphicsRegisterFlags flags);
+
+gboolean        gst_cuda_graphics_resource_register_d3d11_resource (GstCudaGraphicsResource * resource,
+                                                                    gpointer d3d11_resource,
+                                                                    CUgraphicsRegisterFlags flags);
 
 void            gst_cuda_graphics_resource_unregister (GstCudaGraphicsResource * resource);
 
