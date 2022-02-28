@@ -265,7 +265,7 @@ struct _GstValidateActionType
   GstValidateActionTypePrivate* priv;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE - sizeof (GstRank) - 2];
+  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 #ifndef __GI_SCANNER__
