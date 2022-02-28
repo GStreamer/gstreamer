@@ -190,13 +190,14 @@ static void
 #define FFMAX3(a,b,c) FFMAX(FFMAX(a,b),c)
 #define FFMIN3(a,b,c) FFMIN(FFMIN(a,b),c)
 
-#define CHECK(j1, j2, j3)\
-    {   int score = FFABS(stzero[x - j1] - sbzero[x - j2])\
-                  + FFABS(stzero[x + j3] - sbzero[x - j3])\
-                  + FFABS(stzero[x + j1] - sbzero[x + j2]);\
+
+#define CHECK(j)\
+    {   int score = FFABS(stzero[x - colors2 + j] - sbzero[x - colors2 - j])\
+                  + FFABS(stzero[x  + j] - sbzero[x  - j])\
+                  + FFABS(stzero[x + colors2 + j] - sbzero[x + colors2 - j]);\
         if (score < spatial_score) {\
             spatial_score= score;\
-            spatial_pred= (stzero[x + j3] + sbzero[x - j3])>>1;\
+            spatial_pred= (stzero[x  + j] + sbzero[x - j])>>1;\
 
 /* The is_not_edge argument here controls when the code will enter a branch
  * which reads up to and including x-3 and x+3. */
@@ -219,14 +220,8 @@ static void
         if (is_not_edge) {\
             int spatial_score = FFABS(stzero[x-colors2] - sbzero[x-colors2]) + FFABS(c-e) \
                               + FFABS(stzero[x+colors2] - sbzero[x+colors2]); \
-            int twice_colors2 = colors2 << 1; \
-            int minus_colors2 = -colors2; \
-            int thrice_colors2 = colors2 * 3; \
-            int minus2_colors2 = colors2 * -2; \
-            CHECK(0, twice_colors2, minus_colors2) \
-              CHECK(-colors2, thrice_colors2, minus2_colors2) }} }} \
-            CHECK(twice_colors2, 0, colors2) \
-              CHECK(thrice_colors2, minus_colors2, twice_colors2) }} }} \
+            CHECK(-1) CHECK(-2) }} }} \
+            CHECK( 1) CHECK( 2) }} }} \
         }\
  \
         if (!(mode&2)) { \
