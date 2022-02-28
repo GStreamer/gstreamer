@@ -60,6 +60,9 @@ CUresult CUDAAPI CuGraphicsUnmapResources   (unsigned int count,
                                              CUgraphicsResource * resources,
                                              CUstream hStream);
 
+CUresult CUDAAPI CuGraphicsResourceSetMapFlags (CUgraphicsResource resource,
+                                                unsigned int flags);
+
 CUresult CUDAAPI CuGraphicsSubResourceGetMappedArray    (CUarray * pArray,
                                                          CUgraphicsResource resource,
                                                          unsigned int arrayIndex,
@@ -155,13 +158,24 @@ CUresult CUDAAPI CuGraphicsGLRegisterBuffer (CUgraphicsResource * pCudaResource,
                                              unsigned int buffer,
                                              unsigned int Flags);
 
-CUresult CUDAAPI CuGraphicsResourceSetMapFlags (CUgraphicsResource resource,
-                                                unsigned int flags);
-
 CUresult CUDAAPI CuGLGetDevices (unsigned int * pCudaDeviceCount,
                                  CUdevice * pCudaDevices,
                                  unsigned int cudaDeviceCount,
                                  CUGLDeviceList deviceList);
+
+/* cudaD3D11.h */
+CUresult CUDAAPI CuGraphicsD3D11RegisterResource(CUgraphicsResource * pCudaResource,
+                                                 gpointer pD3DResource,
+                                                 unsigned int Flags);
+
+CUresult CUDAAPI CuD3D11GetDevice(CUdevice * device,
+                                  gpointer pAdapter);
+
+CUresult CUDAAPI CuD3D11GetDevices(unsigned int * pCudaDeviceCount,
+                                   CUdevice* pCudaDevices,
+                                   unsigned int cudaDeviceCount,
+                                   gpointer pD3D11Device,
+                                   CUD3D11DeviceList deviceList);
 
 G_END_DECLS
 #endif /* __GST_CUDA_LOADER_H__ */

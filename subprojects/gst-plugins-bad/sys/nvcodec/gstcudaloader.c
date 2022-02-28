@@ -62,6 +62,9 @@ typedef struct _GstNvCodecCudaVTable
       CUgraphicsResource * resources, CUstream hStream);
   CUresult (CUDAAPI * CuGraphicsUnmapResources) (unsigned int count,
       CUgraphicsResource * resources, CUstream hStream);
+  CUresult (CUDAAPI *
+      CuGraphicsResourceSetMapFlags) (CUgraphicsResource resource,
+      unsigned int flags);
   CUresult (CUDAAPI * CuGraphicsSubResourceGetMappedArray) (CUarray * pArray,
       CUgraphicsResource resource, unsigned int arrayIndex,
       unsigned int mipLevel);
@@ -115,12 +118,17 @@ typedef struct _GstNvCodecCudaVTable
       unsigned int Flags);
   CUresult (CUDAAPI * CuGraphicsGLRegisterBuffer) (CUgraphicsResource *
       pCudaResource, unsigned int buffer, unsigned int Flags);
-  CUresult (CUDAAPI *
-      CuGraphicsResourceSetMapFlags) (CUgraphicsResource resource,
-      unsigned int flags);
   CUresult (CUDAAPI * CuGLGetDevices) (unsigned int *pCudaDeviceCount,
       CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
       CUGLDeviceList deviceList);
+
+  CUresult (CUDAAPI * CuGraphicsD3D11RegisterResource) (CUgraphicsResource *
+      pCudaResource, gpointer pD3DResource, unsigned int Flags);
+  CUresult (CUDAAPI * CuD3D11GetDevice) (CUdevice * device,
+      gpointer pAdapter);
+  CUresult (CUDAAPI * CuD3D11GetDevices) (unsigned int *pCudaDeviceCount,
+      CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
+      gpointer pD3D11Device, CUD3D11DeviceList deviceList);
 } GstNvCodecCudaVTable;
 /* *INDENT-ON* */
 
@@ -157,6 +165,7 @@ gst_cuda_load_library (void)
 
   LOAD_SYMBOL (cuGraphicsMapResources, CuGraphicsMapResources);
   LOAD_SYMBOL (cuGraphicsUnmapResources, CuGraphicsUnmapResources);
+  LOAD_SYMBOL (cuGraphicsResourceSetMapFlags, CuGraphicsResourceSetMapFlags);
   LOAD_SYMBOL (cuGraphicsSubResourceGetMappedArray,
       CuGraphicsSubResourceGetMappedArray);
   LOAD_SYMBOL (cuGraphicsResourceGetMappedPointer,
@@ -194,8 +203,15 @@ gst_cuda_load_library (void)
   /* cudaGL.h */
   LOAD_SYMBOL (cuGraphicsGLRegisterImage, CuGraphicsGLRegisterImage);
   LOAD_SYMBOL (cuGraphicsGLRegisterBuffer, CuGraphicsGLRegisterBuffer);
-  LOAD_SYMBOL (cuGraphicsResourceSetMapFlags, CuGraphicsResourceSetMapFlags);
   LOAD_SYMBOL (cuGLGetDevices, CuGLGetDevices);
+
+#ifdef HAVE_NVCODEC_GST_D3D11
+  /* cudaD3D11.h */
+  LOAD_SYMBOL (cuGraphicsD3D11RegisterResource,
+      CuGraphicsD3D11RegisterResource);
+  LOAD_SYMBOL (cuD3D11GetDevice, CuD3D11GetDevice);
+  LOAD_SYMBOL (cuD3D11GetDevices, CuD3D11GetDevices);
+#endif
 
   vtable->loaded = TRUE;
 
@@ -295,6 +311,14 @@ CuGraphicsUnmapResources (unsigned int count, CUgraphicsResource * resources,
   g_assert (gst_cuda_vtable.CuGraphicsUnmapResources != NULL);
 
   return gst_cuda_vtable.CuGraphicsUnmapResources (count, resources, hStream);
+}
+
+CUresult CUDAAPI
+CuGraphicsResourceSetMapFlags (CUgraphicsResource resource, unsigned int flags)
+{
+  g_assert (gst_cuda_vtable.CuGraphicsResourceSetMapFlags != NULL);
+
+  return gst_cuda_vtable.CuGraphicsResourceSetMapFlags (resource, flags);
 }
 
 CUresult CUDAAPI
@@ -538,14 +562,6 @@ CuGraphicsGLRegisterBuffer (CUgraphicsResource * pCudaResource,
 }
 
 CUresult CUDAAPI
-CuGraphicsResourceSetMapFlags (CUgraphicsResource resource, unsigned int flags)
-{
-  g_assert (gst_cuda_vtable.CuGraphicsResourceSetMapFlags != NULL);
-
-  return gst_cuda_vtable.CuGraphicsResourceSetMapFlags (resource, flags);
-}
-
-CUresult CUDAAPI
 CuGLGetDevices (unsigned int *pCudaDeviceCount, CUdevice * pCudaDevices,
     unsigned int cudaDeviceCount, CUGLDeviceList deviceList)
 {
@@ -553,4 +569,35 @@ CuGLGetDevices (unsigned int *pCudaDeviceCount, CUdevice * pCudaDevices,
 
   return gst_cuda_vtable.CuGLGetDevices (pCudaDeviceCount, pCudaDevices,
       cudaDeviceCount, deviceList);
+}
+
+/* cudaD3D11.h */
+CUresult CUDAAPI
+CuGraphicsD3D11RegisterResource (CUgraphicsResource * pCudaResource,
+    gpointer pD3DResource, unsigned int Flags)
+{
+  g_assert (gst_cuda_vtable.CuGraphicsD3D11RegisterResource != NULL);
+
+  return gst_cuda_vtable.CuGraphicsD3D11RegisterResource (pCudaResource,
+      pD3DResource, Flags);
+}
+
+CUresult CUDAAPI
+CuD3D11GetDevice (CUdevice * device, gpointer pAdapter)
+{
+  g_assert (gst_cuda_vtable.CuD3D11GetDevice != NULL);
+
+  return gst_cuda_vtable.CuD3D11GetDevice (device, pAdapter);
+}
+
+CUresult CUDAAPI
+CuD3D11GetDevices (unsigned int *pCudaDeviceCount,
+    CUdevice * pCudaDevices,
+    unsigned int cudaDeviceCount,
+    gpointer pD3D11Device, CUD3D11DeviceList deviceList)
+{
+  g_assert (gst_cuda_vtable.CuD3D11GetDevices != NULL);
+
+  return gst_cuda_vtable.CuD3D11GetDevices (pCudaDeviceCount, pCudaDevices,
+      cudaDeviceCount, pD3D11Device, deviceList);
 }
