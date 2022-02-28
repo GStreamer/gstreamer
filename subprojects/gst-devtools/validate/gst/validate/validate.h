@@ -11,12 +11,17 @@
 #include <gst/validate/gst-validate-enums.h>
 #include <gst/validate/gst-validate-scenario.h>
 
-#include <gst/validate/gst-validate-runner.h>
+#include <gst/validate/gst-validate-bin-monitor.h>
+#include <gst/validate/gst-validate-media-info.h>
 #include <gst/validate/gst-validate-monitor-factory.h>
 #include <gst/validate/gst-validate-override-registry.h>
+#include <gst/validate/gst-validate-pad-monitor.h>
+#include <gst/validate/gst-validate-pipeline-monitor.h>
 #include <gst/validate/gst-validate-report.h>
 #include <gst/validate/gst-validate-reporter.h>
-#include <gst/validate/gst-validate-media-info.h>
+#include <gst/validate/gst-validate-runner.h>
+#include <gst/validate/media-descriptor-parser.h>
+#include <gst/validate/media-descriptor-writer.h>
 
 G_BEGIN_DECLS
 
