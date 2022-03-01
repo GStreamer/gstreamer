@@ -95,7 +95,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 #define PROP_QPP_DEFAULT                 0
 #define PROP_QPB_DEFAULT                 0
 #define PROP_GOP_SIZE_DEFAULT            256
-#define PROP_REF_FRAMES_DEFAULT          1
+#define PROP_REF_FRAMES_DEFAULT          0
 #define PROP_I_FRAMES_DEFAULT            0
 #define PROP_B_FRAMES_DEFAULT            0
 #define PROP_NUM_SLICES_DEFAULT          0
