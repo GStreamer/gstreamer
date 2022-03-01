@@ -117,10 +117,6 @@ struct _GstSourceItem
    * Can be NULL */
   GstSourceHandler *handler;
 
-  /* Last buffering information */
-  gint last_perc;
-  GstMessage *last_buffering_message;
-
   /* The groupid created by urisourcebin for this uri */
   guint internal_groupid;
 
