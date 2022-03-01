@@ -4355,12 +4355,43 @@ gst_rtspsrc_get_transport_info (GstRTSPSrc * src, GstRTSPStream * stream,
   }
 }
 
+static GstElement *
+element_make_from_addr (const GstURIType type, const char *addr_s,
+    int port, const char *name, GError ** error)
+{
+  GInetAddress *addr;
+  GstElement *element = NULL;
+  char *uri = NULL;
+
+  addr = g_inet_address_new_from_string (addr_s);
+
+  switch (g_inet_address_get_family (addr)) {
+    case G_SOCKET_FAMILY_IPV6:
+      uri = g_strdup_printf ("udp://[%s]:%i", addr_s, port);
+      break;
+    case G_SOCKET_FAMILY_INVALID:
+      GST_ERROR ("Unknown family type for %s", addr_s);
+      goto out;
+    case G_SOCKET_FAMILY_UNIX:
+      GST_ERROR ("Unexpected family type UNIX for %s", addr_s);
+      goto out;
+    case G_SOCKET_FAMILY_IPV4:
+      uri = g_strdup_printf ("udp://%s:%i", addr_s, port);
+      break;
+  }
+
+  element = gst_element_make_from_uri (type, uri, name, error);
+out:
+  g_object_unref (addr);
+  g_free (uri);
+  return element;
+}
+
 /* For multicast create UDP sources and join the multicast group. */
 static gboolean
 gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
     GstRTSPTransport * transport, GstPad ** outpad)
 {
-  gchar *uri;
   const gchar *destination;
   gint min, max;
 
@@ -4385,10 +4416,8 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
 
   /* creating UDP source for RTP */
   if (min != -1) {
-    uri = g_strdup_printf ("udp://%s:%d", destination, min);
     stream->udpsrc[0] =
-        gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
-    g_free (uri);
+        element_make_from_addr (GST_URI_SRC, destination, min, NULL, NULL);
     if (stream->udpsrc[0] == NULL)
       goto no_element;
 
@@ -4412,10 +4441,8 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
   if (max != -1) {
     GstCaps *caps;
 
-    uri = g_strdup_printf ("udp://%s:%d", destination, max);
     stream->udpsrc[1] =
-        gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
-    g_free (uri);
+        element_make_from_addr (GST_URI_SRC, destination, max, NULL, NULL);
     if (stream->udpsrc[1] == NULL)
       goto no_element;
 
@@ -4555,7 +4582,7 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
   gint rtp_port, rtcp_port;
   gboolean do_rtp, do_rtcp;
   const gchar *destination;
-  gchar *uri, *name;
+  gchar *name;
   guint ttl = 0;
   GSocket *socket;
 
@@ -4579,10 +4606,8 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     GST_DEBUG_OBJECT (src, "configure RTP UDP sink for %s:%d", destination,
         rtp_port);
 
-    uri = g_strdup_printf ("udp://%s:%d", destination, rtp_port);
-    stream->udpsink[0] =
-        gst_element_make_from_uri (GST_URI_SINK, uri, NULL, NULL);
-    g_free (uri);
+    stream->udpsink[0] = element_make_from_addr (GST_URI_SINK, destination,
+        rtp_port, NULL, NULL);
     if (stream->udpsink[0] == NULL)
       goto no_sink_element;
 
@@ -4644,10 +4669,8 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     GST_DEBUG_OBJECT (src, "configure RTCP UDP sink for %s:%d", destination,
         rtcp_port);
 
-    uri = g_strdup_printf ("udp://%s:%d", destination, rtcp_port);
-    stream->udpsink[1] =
-        gst_element_make_from_uri (GST_URI_SINK, uri, NULL, NULL);
-    g_free (uri);
+    stream->udpsink[1] = element_make_from_addr (GST_URI_SINK, destination,
+        rtcp_port, NULL, NULL);
     if (stream->udpsink[1] == NULL)
       goto no_sink_element;
 
