@@ -25,6 +25,7 @@ webrtcbin name=sendrecv bundle-policy=max-bundle stun-server=stun://stun.l.googl
 
 from websockets.version import version as wsv
 
+
 class WebRTCClient:
     def __init__(self, id_, peer_id, server):
         self.id_ = id_
@@ -33,7 +34,6 @@ class WebRTCClient:
         self.webrtc = None
         self.peer_id = peer_id
         self.server = server or 'wss://webrtc.nirbheek.in:8443'
-
 
     async def connect(self):
         sslctx = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
@@ -45,7 +45,7 @@ class WebRTCClient:
 
     def send_sdp_offer(self, offer):
         text = offer.sdp.as_text()
-        print ('Sending offer:\n%s' % text)
+        print('Sending offer:\n%s' % text)
         msg = json.dumps({'sdp': {'type': 'offer', 'sdp': text}})
         loop = asyncio.new_event_loop()
         loop.run_until_complete(self.conn.send(msg))
@@ -72,7 +72,7 @@ class WebRTCClient:
 
     def on_incoming_decodebin_stream(self, _, pad):
         if not pad.has_current_caps():
-            print (pad, 'has no caps, ignoring')
+            print(pad, 'has no caps, ignoring')
             return
 
         caps = pad.get_current_caps()
@@ -125,7 +125,7 @@ class WebRTCClient:
             sdp = msg['sdp']
             assert(sdp['type'] == 'answer')
             sdp = sdp['sdp']
-            print ('Received answer:\n%s' % sdp)
+            print('Received answer:\n%s' % sdp)
             res, sdpmsg = GstSdp.SDPMessage.new()
             GstSdp.sdp_message_parse_buffer(bytes(sdp.encode()), sdpmsg)
             answer = GstWebRTC.WebRTCSessionDescription.new(GstWebRTC.WebRTCSDPType.ANSWER, sdpmsg)
@@ -151,7 +151,7 @@ class WebRTCClient:
             elif message == 'SESSION_OK':
                 self.start_pipeline()
             elif message.startswith('ERROR'):
-                print (message)
+                print(message)
                 self.close_pipeline()
                 return 1
             else:
@@ -175,7 +175,7 @@ def check_plugins():
     return True
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     Gst.init(None)
     if not check_plugins():
         sys.exit(1)
