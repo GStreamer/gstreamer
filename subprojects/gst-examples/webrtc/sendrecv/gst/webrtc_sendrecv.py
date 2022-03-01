@@ -22,12 +22,14 @@ except ImportError:
     print('gstreamer-python binding overrides aren\'t available, please install them')
     raise
 
+# These properties all mirror the ones in webrtc-sendrecv.c, see there for explanations
 PIPELINE_DESC = '''
 webrtcbin name=sendrecv bundle-policy=max-bundle stun-server=stun://stun.l.google.com:19302
- videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! vp8enc deadline=1 ! rtpvp8pay !
- queue ! application/x-rtp,media=video,encoding-name=VP8,payload=97 ! sendrecv.
+ videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! \
+  vp8enc deadline=1 keyframe-max-dist=2000 ! rtpvp8pay !
+  queue ! application/x-rtp,media=video,encoding-name=VP8,payload=97 ! sendrecv.
  audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay !
- queue ! application/x-rtp,media=audio,encoding-name=OPUS,payload=96 ! sendrecv.
+  queue ! application/x-rtp,media=audio,encoding-name=OPUS,payload=96 ! sendrecv.
 '''
 
 from websockets.version import version as wsv
