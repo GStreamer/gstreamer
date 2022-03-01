@@ -2,7 +2,7 @@
  * Demo gstreamer app for negotiating and streaming a sendrecv webrtc stream
  * with a browser JS app.
  *
- * gcc webrtc-sendrecv.c $(pkg-config --cflags --libs gstreamer-webrtc-1.0 gstreamer-sdp-1.0 libsoup-2.4 json-glib-1.0) -o webrtc-sendrecv
+ * Build by running: `make webrtc-sendrecv`, or build the gstreamer monorepo.
  *
  * Author: Nirbheek Chauhan <nirbheek@centricular.com>
  */
