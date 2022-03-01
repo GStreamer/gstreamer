@@ -74,7 +74,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) { " SAMPLE_RATES " }, "
         "channels = (int) {1, 2, 3, 4, 5, 6, 8}, "
         "stream-format = (string) { adts, adif, raw }, "
-        "profile = (string) { lc, sbr, ps }, " "framed = (boolean) true")
+        "profile = (string) { lc, sbr, ps, ld }, " "framed = (boolean) true")
     );
 
 GST_DEBUG_CATEGORY_STATIC (gst_fdkaacenc_debug);
@@ -256,7 +256,7 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 
     if ((str = gst_structure_get_string (s, "profile"))) {
       if (strcmp (str, "lc") == 0) {
-        GST_DEBUG_OBJECT (self, "using LC profile for output");
+        GST_DEBUG_OBJECT (self, "using AAC-LC profile for output");
         aot = AOT_AAC_LC;
       } else if (strcmp (str, "sbr") == 0) {
         GST_DEBUG_OBJECT (self, "using SBR (HE-AAC) profile for output");
@@ -264,6 +264,9 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       } else if (strcmp (str, "ps") == 0) {
         GST_DEBUG_OBJECT (self, "using PS (HE-AACv2) profile for output");
         aot = AOT_PS;
+      } else if (strcmp (str, "ld") == 0) {
+        GST_DEBUG_OBJECT (self, "using AAC-LD profile for output");
+        aot = AOT_ER_AAC_LD;
       }
     }
 
