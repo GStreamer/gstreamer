@@ -15,6 +15,13 @@ from gi.repository import GstWebRTC
 gi.require_version('GstSdp', '1.0')
 from gi.repository import GstSdp
 
+# Ensure that gst-python is installed
+try:
+    from gi.overrides import Gst as _
+except ImportError:
+    print('gstreamer-python binding overrides aren\'t available, please install them')
+    raise
+
 PIPELINE_DESC = '''
 webrtcbin name=sendrecv bundle-policy=max-bundle stun-server=stun://stun.l.google.com:19302
  videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! vp8enc deadline=1 ! rtpvp8pay !
