@@ -2247,31 +2247,6 @@ get_source_group_for_streams (GstPlayBin3 * playbin, GstEvent * event)
   return res;
 }
 
-static GstStreamType
-get_stream_type_for_event (GstStreamCollection * collection, GstEvent * event)
-{
-  GList *stream_list = NULL;
-  GList *tmp;
-  GstStreamType res = 0;
-  guint i, len;
-
-  gst_event_parse_select_streams (event, &stream_list);
-  len = gst_stream_collection_get_size (collection);
-  for (tmp = stream_list; tmp; tmp = tmp->next) {
-    gchar *stid = (gchar *) tmp->data;
-
-    for (i = 0; i < len; i++) {
-      GstStream *stream = gst_stream_collection_get_stream (collection, i);
-      if (!g_strcmp0 (stid, gst_stream_get_stream_id (stream))) {
-        res |= gst_stream_get_stream_type (stream);
-      }
-    }
-  }
-  g_list_free_full (stream_list, g_free);
-
-  return res;
-}
-
 static gboolean
 gst_play_bin3_send_event (GstElement * element, GstEvent * event)
 {
