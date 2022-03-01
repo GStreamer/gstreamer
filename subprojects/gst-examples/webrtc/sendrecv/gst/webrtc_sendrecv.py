@@ -36,8 +36,7 @@ class WebRTCClient:
         self.server = server or 'wss://webrtc.nirbheek.in:8443'
 
     async def connect(self):
-        sslctx = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
-        self.conn = await websockets.connect(self.server, ssl=sslctx)
+        self.conn = await websockets.connect(self.server)
         await self.conn.send('HELLO %d' % self.id_)
 
     async def setup_call(self):
