@@ -134,11 +134,9 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
 static void
 gst_cuda_context_constructed (GObject * object)
 {
-  static gsize once = 0;
   GstCudaContext *context = GST_CUDA_CONTEXT (object);
   GstCudaContextPrivate *priv = context->priv;
   CUcontext cuda_ctx, old_ctx;
-  gboolean ret = TRUE;
   CUdevice cdev = 0, cuda_dev = -1;
   gint dev_count = 0;
   gchar name[256];
@@ -146,17 +144,6 @@ gst_cuda_context_constructed (GObject * object)
   gint i;
   gint tex_align = 0;
   GList *iter;
-
-  if (g_once_init_enter (&once)) {
-    if (CuInit (0) != CUDA_SUCCESS) {
-      GST_ERROR_OBJECT (context, "Failed to cuInit");
-      ret = FALSE;
-    }
-    g_once_init_leave (&once, ret);
-
-    if (!ret)
-      return;
-  }
 
   if (!gst_cuda_result (CuDeviceGetCount (&dev_count)) || dev_count == 0) {
     GST_WARNING ("No CUDA devices detected");
