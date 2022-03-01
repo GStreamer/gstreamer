@@ -999,7 +999,15 @@ gst_dshowvideodec_src_getcaps (GstPad * pad)
         if (IsEqualGUID (mediatype->subtype, MEDIASUBTYPE_RGB24) &&
             IsEqualGUID (mediatype->formattype, FORMAT_VideoInfo))
         {
+          gint fps_n;
+
           video_info = (VIDEOINFOHEADER *) mediatype->pbFormat;
+
+          if (video_info->AvgTimePerFrame > 0) {
+            fps_n = 10000000 / video_info->AvgTimePerFrame;
+          } else {
+            fps_n = 30;
+          }
 
           /* ffmpegcolorspace handles RGB24 in BIG_ENDIAN */
           mediacaps = gst_caps_new_simple ("video/x-raw-rgb",
@@ -1007,8 +1015,7 @@ gst_dshowvideodec_src_getcaps (GstPad * pad)
               "depth", G_TYPE_INT, 24,
               "width", G_TYPE_INT, video_info->bmiHeader.biWidth,
               "height", G_TYPE_INT, video_info->bmiHeader.biHeight,
-              "framerate", GST_TYPE_FRACTION,
-              (int) (10000000 / video_info->AvgTimePerFrame), 1, "endianness",
+              "framerate", GST_TYPE_FRACTION, fps_n, 1, "endianness",
               G_TYPE_INT, G_BIG_ENDIAN, "red_mask", G_TYPE_INT, 255,
               "green_mask", G_TYPE_INT, 65280, "blue_mask", G_TYPE_INT,
               16711680, NULL);
