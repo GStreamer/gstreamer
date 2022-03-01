@@ -518,6 +518,8 @@ struct _GstPlayBin3
   guint64 ring_buffer_max_size; /* 0 means disabled */
 
   gboolean is_live;             /* Whether our current group is live */
+
+  GMutex buffering_post_lock;   /* Protect serialisation of buffering messages. Must not acquire this while holding any SOURCE_GROUP lock */
 };
 
 struct _GstPlayBin3Class
@@ -1326,6 +1328,8 @@ gst_play_bin3_init (GstPlayBin3 * playbin)
   g_rec_mutex_init (&playbin->lock);
   g_mutex_init (&playbin->dyn_lock);
 
+  g_mutex_init (&playbin->buffering_post_lock);
+
   /* assume we can create an input-selector */
   playbin->have_selector = TRUE;
 
@@ -1431,6 +1435,8 @@ gst_play_bin3_finalize (GObject * object)
 
   g_rec_mutex_clear (&playbin->activation_lock);
   g_rec_mutex_clear (&playbin->lock);
+
+  g_mutex_clear (&playbin->buffering_post_lock);
   g_mutex_clear (&playbin->dyn_lock);
   g_mutex_clear (&playbin->elements_lock);
 
@@ -2480,12 +2486,20 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
     playbin->curr_group = group;
     playbin->next_group = other_group;
 
+    /* we may need to serialise a buffering
+     * message, and need to take that lock
+     * before any source group lock, so
+     * do that now */
+    g_mutex_lock (&playbin->buffering_post_lock);
+
     GST_SOURCE_GROUP_LOCK (group);
     if (group->playing == FALSE)
       changed = TRUE;
     group->playing = TRUE;
+
     buffering_msg = group->pending_buffering_msg;
     group->pending_buffering_msg = NULL;
+
     GST_SOURCE_GROUP_UNLOCK (group);
 
     GST_SOURCE_GROUP_LOCK (other_group);
@@ -2498,9 +2512,13 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
       gst_play_bin3_check_group_status (playbin);
     else
       GST_DEBUG_OBJECT (bin, "Groups didn't changed");
+
     /* If there was a pending buffering message to send, do it now */
     if (buffering_msg)
       GST_BIN_CLASS (parent_class)->handle_message (bin, buffering_msg);
+
+    g_mutex_unlock (&playbin->buffering_post_lock);
+
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_BUFFERING) {
     GstSourceGroup *group;
 
@@ -2508,8 +2526,11 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
     GST_PLAY_BIN3_LOCK (playbin);
     group = find_source_group_owner (playbin, msg->src);
     if (group->active) {
+      g_mutex_lock (&playbin->buffering_post_lock);
+
       GST_SOURCE_GROUP_LOCK (group);
       GST_PLAY_BIN3_UNLOCK (playbin);
+
       if (!group->playing) {
         GST_DEBUG_OBJECT (playbin,
             "Storing buffering message from pending group " "%p %"
@@ -2517,8 +2538,17 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
         gst_message_replace (&group->pending_buffering_msg, msg);
         gst_message_unref (msg);
         msg = NULL;
+      } else {
+        /* Ensure there's no cached buffering message for this group */
+        gst_message_replace (&group->pending_buffering_msg, NULL);
       }
       GST_SOURCE_GROUP_UNLOCK (group);
+
+      if (msg != NULL) {
+        GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
+        msg = NULL;
+      }
+      g_mutex_unlock (&playbin->buffering_post_lock);
     } else {
       GST_PLAY_BIN3_UNLOCK (playbin);
     }
