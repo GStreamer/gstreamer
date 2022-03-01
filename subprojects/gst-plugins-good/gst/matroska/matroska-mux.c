@@ -1009,6 +1009,18 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
     else if (field_id == g_quark_from_static_string ("bit-depth-luma"))
       return FALSE;
 
+    /* Remove pixel-aspect-ratio field if it contains 1/1 as that's considered
+     * equivalent to not having the field but are not considered equivalent
+     * by the generic caps functions
+     */
+    if (field_id == g_quark_from_static_string ("pixel-aspect-ratio")) {
+      gint par_n = gst_value_get_fraction_numerator (value);
+      gint par_d = gst_value_get_fraction_denominator (value);
+
+      if (par_n == 1 && par_d == 1)
+        return FALSE;
+    }
+
     /* Remove multiview-mode=mono and multiview-flags=0 fields as those are
      * equivalent with not having the fields but are not considered equivalent
      * by the generic caps functions.
