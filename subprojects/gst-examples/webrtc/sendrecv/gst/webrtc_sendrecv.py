@@ -138,8 +138,9 @@ class WebRTCClient:
             self.webrtc.emit('add-ice-candidate', sdpmlineindex, candidate)
 
     def close_pipeline(self):
-        self.pipe.set_state(Gst.State.NULL)
-        self.pipe = None
+        if self.pipe:
+            self.pipe.set_state(Gst.State.NULL)
+            self.pipe = None
         self.webrtc = None
 
     async def loop(self):
