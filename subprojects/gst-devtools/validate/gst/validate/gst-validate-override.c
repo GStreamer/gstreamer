@@ -137,8 +137,8 @@ void
 gst_validate_override_change_severity (GstValidateOverride * override,
     GstValidateIssueId issue_id, GstValidateReportLevel new_level)
 {
-  g_hash_table_insert (override->priv->level_override, (gpointer) issue_id,
-      (gpointer) new_level);
+  g_hash_table_insert (override->priv->level_override,
+      GINT_TO_POINTER (issue_id), (gpointer) new_level);
 }
 
 /*
@@ -153,7 +153,7 @@ gst_validate_override_get_severity (GstValidateOverride * override,
   GstValidateReportLevel *level = NULL;
 
   if (g_hash_table_lookup_extended (override->priv->level_override,
-          (gpointer) issue_id, NULL, (gpointer) & level)) {
+          GINT_TO_POINTER (issue_id), NULL, (gpointer) & level)) {
 
     return GPOINTER_TO_INT (level);
   }

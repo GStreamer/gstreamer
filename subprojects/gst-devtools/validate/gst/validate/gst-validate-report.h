@@ -25,7 +25,7 @@
 #include <glib-object.h>
 
 typedef struct _GstValidateReport GstValidateReport;
-typedef guintptr GstValidateIssueId;
+typedef GQuark GstValidateIssueId;
 
 #include <gst/gst.h>
 #include <gst/validate/validate-prelude.h>
@@ -241,7 +241,7 @@ struct _GstValidateReport {
 void gst_validate_report_add_message (GstValidateReport *report,
     const gchar *message);
 
-#define GST_VALIDATE_ISSUE_FORMAT G_GUINTPTR_FORMAT " (%s) : %s: %s"
+#define GST_VALIDATE_ISSUE_FORMAT G_GUINT32_FORMAT " (%s) : %s: %s"
 #define GST_VALIDATE_ISSUE_ARGS(i) gst_validate_issue_get_id (i), \
                                    gst_validate_report_level_get_name (i->default_level), \
                                    i->area, \
@@ -257,7 +257,7 @@ void               gst_validate_report_init (void);
 GST_VALIDATE_API
 GstValidateIssue  *gst_validate_issue_from_id (GstValidateIssueId issue_id);
 GST_VALIDATE_API
-GstValidateIssueId gst_validate_issue_get_id (GstValidateIssue * issue);
+guint32 gst_validate_issue_get_id (GstValidateIssue * issue);
 GST_VALIDATE_API
 void               gst_validate_issue_register (GstValidateIssue * issue);
 GST_VALIDATE_API
@@ -282,7 +282,7 @@ GST_VALIDATE_API
 GstValidateReport *gst_validate_report_ref   (GstValidateReport * report);
 
 GST_VALIDATE_API
-GstValidateIssueId gst_validate_report_get_issue_id (GstValidateReport * report);
+guint32 gst_validate_report_get_issue_id (GstValidateReport * report);
 
 GST_VALIDATE_API
 gboolean           gst_validate_report_check_abort (GstValidateReport * report);
@@ -333,4 +333,3 @@ void gst_validate_skip_test (const gchar* format, ...);
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_REPORT_H__ */
-

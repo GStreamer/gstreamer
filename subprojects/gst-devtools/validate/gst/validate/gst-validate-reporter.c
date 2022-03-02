@@ -161,7 +161,7 @@ gst_validate_reporter_get_report (GstValidateReporter * reporter,
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
 
   GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);
-  report = g_hash_table_lookup (priv->reports, (gconstpointer) issue_id);
+  report = g_hash_table_lookup (priv->reports, GINT_TO_POINTER (issue_id));
   GST_VALIDATE_REPORTER_REPORTS_UNLOCK (reporter);
 
   return report;
@@ -216,7 +216,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
     goto done;
   }
 
-  prev_report = g_hash_table_lookup (priv->reports, (gconstpointer) issue_id);
+  prev_report = g_hash_table_lookup (priv->reports, GINT_TO_POINTER (issue_id));
 
   runner = gst_validate_reporter_get_runner (reporter);
   if (prev_report && prev_report->level != GST_VALIDATE_REPORT_LEVEL_EXPECTED) {
@@ -240,7 +240,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   }
 
   GST_VALIDATE_REPORTER_REPORTS_LOCK (reporter);
-  g_hash_table_insert (priv->reports, (gpointer) issue_id, report);
+  g_hash_table_insert (priv->reports, GINT_TO_POINTER (issue_id), report);
   GST_VALIDATE_REPORTER_REPORTS_UNLOCK (reporter);
 
   if (runner && int_ret == GST_VALIDATE_REPORTER_REPORT) {

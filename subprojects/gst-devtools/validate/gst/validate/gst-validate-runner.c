@@ -564,10 +564,10 @@ synthesize_reports (GstValidateRunner * runner, GstValidateReport * report)
   GST_VALIDATE_RUNNER_LOCK (runner);
   reports =
       g_hash_table_lookup (runner->priv->reports_by_type,
-      (gconstpointer) issue_id);
+      GINT_TO_POINTER (issue_id));
   reports = g_list_append (reports, gst_validate_report_ref (report));
-  g_hash_table_insert (runner->priv->reports_by_type, (gpointer) issue_id,
-      reports);
+  g_hash_table_insert (runner->priv->reports_by_type,
+      GINT_TO_POINTER (issue_id), reports);
   GST_VALIDATE_RUNNER_UNLOCK (runner);
 }
 

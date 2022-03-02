@@ -144,7 +144,7 @@ G_DEFINE_BOXED_TYPE (GstValidateIssue, gst_validate_issue,
     (GBoxedCopyFunc) gst_validate_issue_ref,
     (GBoxedFreeFunc) gst_validate_issue_unref);
 
-GstValidateIssueId
+guint32
 gst_validate_issue_get_id (GstValidateIssue * issue)
 {
   return issue->issue_id;
@@ -247,10 +247,10 @@ void
 gst_validate_issue_register (GstValidateIssue * issue)
 {
   g_return_if_fail (g_hash_table_lookup (_gst_validate_issues,
-          (gpointer) gst_validate_issue_get_id (issue)) == NULL);
+          GINT_TO_POINTER (gst_validate_issue_get_id (issue))) == NULL);
 
   g_hash_table_insert (_gst_validate_issues,
-      (gpointer) gst_validate_issue_get_id (issue), issue);
+      GINT_TO_POINTER (gst_validate_issue_get_id (issue)), issue);
 }
 
 #define REGISTER_VALIDATE_ISSUE(lvl,id,sum,desc)			\
@@ -673,7 +673,7 @@ gst_validate_report_deinit (void)
 GstValidateIssue *
 gst_validate_issue_from_id (GstValidateIssueId issue_id)
 {
-  return g_hash_table_lookup (_gst_validate_issues, (gpointer) issue_id);
+  return g_hash_table_lookup (_gst_validate_issues, GINT_TO_POINTER (issue_id));
 }
 
 /* TODO how are these functions going to work with extensions */
@@ -754,7 +754,7 @@ gst_validate_report_check_abort (GstValidateReport * report)
   return FALSE;
 }
 
-GstValidateIssueId
+guint32
 gst_validate_report_get_issue_id (GstValidateReport * report)
 {
   return gst_validate_issue_get_id (report->issue);
@@ -1386,7 +1386,7 @@ gst_validate_skip_test (const gchar * format, ...)
 static void
 print_issue (gpointer key, GstValidateIssue * issue, gpointer user_data)
 {
-  gst_validate_printf (NULL, "\n# `%s` (%" G_GUINTPTR_FORMAT ")\n\n",
+  gst_validate_printf (NULL, "\n# `%s` (%" G_GUINT32_FORMAT ")\n\n",
       g_quark_to_string (issue->issue_id), issue->issue_id);
   gst_validate_printf (NULL, "%c%s\n\n", g_ascii_toupper (issue->summary[0]),
       &issue->summary[1]);
