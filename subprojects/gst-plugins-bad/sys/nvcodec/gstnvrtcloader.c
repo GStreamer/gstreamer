@@ -42,22 +42,24 @@ GST_DEBUG_CATEGORY_EXTERN (gst_nvcodec_debug);
   } \
 } G_STMT_END;
 
+/* *INDENT-OFF* */
 typedef struct _GstNvCodecNvrtcVtahle
 {
   gboolean loaded;
 
-    nvrtcResult (*NvrtcCompileProgram) (nvrtcProgram prog, int numOptions,
+  nvrtcResult (*NvrtcCompileProgram) (nvrtcProgram prog, int numOptions,
       const char **options);
-    nvrtcResult (*NvrtcCreateProgram) (nvrtcProgram * prog, const char *src,
+  nvrtcResult (*NvrtcCreateProgram) (nvrtcProgram * prog, const char *src,
       const char *name, int numHeaders, const char **headers,
       const char **includeNames);
-    nvrtcResult (*NvrtcDestroyProgram) (nvrtcProgram * prog);
-    nvrtcResult (*NvrtcGetPTX) (nvrtcProgram prog, char *ptx);
-    nvrtcResult (*NvrtcGetPTXSize) (nvrtcProgram prog, size_t * ptxSizeRet);
-    nvrtcResult (*NvrtcGetProgramLog) (nvrtcProgram prog, char *log);
-    nvrtcResult (*NvrtcGetProgramLogSize) (nvrtcProgram prog,
+  nvrtcResult (*NvrtcDestroyProgram) (nvrtcProgram * prog);
+  nvrtcResult (*NvrtcGetPTX) (nvrtcProgram prog, char *ptx);
+  nvrtcResult (*NvrtcGetPTXSize) (nvrtcProgram prog, size_t * ptxSizeRet);
+  nvrtcResult (*NvrtcGetProgramLog) (nvrtcProgram prog, char *log);
+  nvrtcResult (*NvrtcGetProgramLogSize) (nvrtcProgram prog,
       size_t * logSizeRet);
 } GstNvCodecNvrtcVtahle;
+/* *INDENT-ON* */
 
 static GstNvCodecNvrtcVtahle gst_nvrtc_vtable = { 0, };
 
@@ -174,6 +176,7 @@ NvrtcGetPTX (nvrtcProgram prog, char *ptx)
   return gst_nvrtc_vtable.NvrtcGetPTX (prog, ptx);
 }
 
+/* *INDENT-OFF* */
 nvrtcResult
 NvrtcGetPTXSize (nvrtcProgram prog, size_t * ptxSizeRet)
 {
@@ -181,6 +184,7 @@ NvrtcGetPTXSize (nvrtcProgram prog, size_t * ptxSizeRet)
 
   return gst_nvrtc_vtable.NvrtcGetPTXSize (prog, ptxSizeRet);
 }
+/* *INDENT-ON* */
 
 nvrtcResult
 NvrtcGetProgramLog (nvrtcProgram prog, char *log)
@@ -190,6 +194,7 @@ NvrtcGetProgramLog (nvrtcProgram prog, char *log)
   return gst_nvrtc_vtable.NvrtcGetProgramLog (prog, log);
 }
 
+/* *INDENT-OFF* */
 nvrtcResult
 NvrtcGetProgramLogSize (nvrtcProgram prog, size_t * logSizeRet)
 {
@@ -197,3 +202,4 @@ NvrtcGetProgramLogSize (nvrtcProgram prog, size_t * logSizeRet)
 
   return gst_nvrtc_vtable.NvrtcGetProgramLogSize (prog, logSizeRet);
 }
+/* *INDENT-ON* */

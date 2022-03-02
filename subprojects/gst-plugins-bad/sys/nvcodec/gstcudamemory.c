@@ -251,7 +251,10 @@ gst_cuda_memory_download_transfer (GstCudaMemory * mem)
   }
   gst_cuda_result (CuStreamSynchronize (NULL));
 
-  return ! !mem->map_data;
+  if (!mem->map_data)
+    return FALSE;
+
+  return TRUE;
 }
 
 static gpointer

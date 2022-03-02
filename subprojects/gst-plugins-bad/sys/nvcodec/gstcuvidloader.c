@@ -136,7 +136,10 @@ gst_cuvid_get_api_version (guint * api_major_ver, guint * api_minor_ver)
 gboolean
 gst_cuvid_can_get_decoder_caps (void)
 {
-  return ! !gst_cuvid_vtable.CuvidGetDecoderCaps;
+  if (gst_cuvid_vtable.CuvidGetDecoderCaps)
+    return TRUE;
+
+  return FALSE;
 }
 
 CUresult CUDAAPI

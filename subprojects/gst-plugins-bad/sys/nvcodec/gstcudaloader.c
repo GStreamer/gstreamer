@@ -40,87 +40,89 @@ GST_DEBUG_CATEGORY_EXTERN (gst_nvcodec_debug);
   } \
 } G_STMT_END;
 
+/* *INDENT-OFF* */
 typedef struct _GstNvCodecCudaVTable
 {
   gboolean loaded;
 
-    CUresult (CUDAAPI * CuInit) (unsigned int Flags);
-    CUresult (CUDAAPI * CuGetErrorName) (CUresult error, const char **pStr);
-    CUresult (CUDAAPI * CuGetErrorString) (CUresult error, const char **pStr);
+  CUresult (CUDAAPI * CuInit) (unsigned int Flags);
+  CUresult (CUDAAPI * CuGetErrorName) (CUresult error, const char **pStr);
+  CUresult (CUDAAPI * CuGetErrorString) (CUresult error, const char **pStr);
 
-    CUresult (CUDAAPI * CuCtxCreate) (CUcontext * pctx, unsigned int flags,
+  CUresult (CUDAAPI * CuCtxCreate) (CUcontext * pctx, unsigned int flags,
       CUdevice dev);
-    CUresult (CUDAAPI * CuCtxDestroy) (CUcontext ctx);
-    CUresult (CUDAAPI * CuCtxPopCurrent) (CUcontext * pctx);
-    CUresult (CUDAAPI * CuCtxPushCurrent) (CUcontext ctx);
+  CUresult (CUDAAPI * CuCtxDestroy) (CUcontext ctx);
+  CUresult (CUDAAPI * CuCtxPopCurrent) (CUcontext * pctx);
+  CUresult (CUDAAPI * CuCtxPushCurrent) (CUcontext ctx);
 
-    CUresult (CUDAAPI * CuCtxEnablePeerAccess) (CUcontext peerContext,
+  CUresult (CUDAAPI * CuCtxEnablePeerAccess) (CUcontext peerContext,
       unsigned int Flags);
-    CUresult (CUDAAPI * CuCtxDisablePeerAccess) (CUcontext peerContext);
-    CUresult (CUDAAPI * CuGraphicsMapResources) (unsigned int count,
+  CUresult (CUDAAPI * CuCtxDisablePeerAccess) (CUcontext peerContext);
+  CUresult (CUDAAPI * CuGraphicsMapResources) (unsigned int count,
       CUgraphicsResource * resources, CUstream hStream);
-    CUresult (CUDAAPI * CuGraphicsUnmapResources) (unsigned int count,
+  CUresult (CUDAAPI * CuGraphicsUnmapResources) (unsigned int count,
       CUgraphicsResource * resources, CUstream hStream);
-    CUresult (CUDAAPI * CuGraphicsSubResourceGetMappedArray) (CUarray * pArray,
+  CUresult (CUDAAPI * CuGraphicsSubResourceGetMappedArray) (CUarray * pArray,
       CUgraphicsResource resource, unsigned int arrayIndex,
       unsigned int mipLevel);
-    CUresult (CUDAAPI * CuGraphicsResourceGetMappedPointer) (CUdeviceptr *
+  CUresult (CUDAAPI * CuGraphicsResourceGetMappedPointer) (CUdeviceptr *
       pDevPtr, size_t * pSize, CUgraphicsResource resource);
-    CUresult (CUDAAPI *
+  CUresult (CUDAAPI *
       CuGraphicsUnregisterResource) (CUgraphicsResource resource);
 
-    CUresult (CUDAAPI * CuMemAlloc) (CUdeviceptr * dptr, unsigned int bytesize);
-    CUresult (CUDAAPI * CuMemAllocPitch) (CUdeviceptr * dptr, size_t * pPitch,
+  CUresult (CUDAAPI * CuMemAlloc) (CUdeviceptr * dptr, unsigned int bytesize);
+  CUresult (CUDAAPI * CuMemAllocPitch) (CUdeviceptr * dptr, size_t * pPitch,
       size_t WidthInBytes, size_t Height, unsigned int ElementSizeBytes);
-    CUresult (CUDAAPI * CuMemAllocHost) (void **pp, unsigned int bytesize);
-    CUresult (CUDAAPI * CuMemcpy2D) (const CUDA_MEMCPY2D * pCopy);
-    CUresult (CUDAAPI * CuMemcpy2DAsync) (const CUDA_MEMCPY2D * pCopy,
+  CUresult (CUDAAPI * CuMemAllocHost) (void **pp, unsigned int bytesize);
+  CUresult (CUDAAPI * CuMemcpy2D) (const CUDA_MEMCPY2D * pCopy);
+  CUresult (CUDAAPI * CuMemcpy2DAsync) (const CUDA_MEMCPY2D * pCopy,
       CUstream hStream);
 
-    CUresult (CUDAAPI * CuMemFree) (CUdeviceptr dptr);
-    CUresult (CUDAAPI * CuMemFreeHost) (void *p);
+  CUresult (CUDAAPI * CuMemFree) (CUdeviceptr dptr);
+  CUresult (CUDAAPI * CuMemFreeHost) (void *p);
 
-    CUresult (CUDAAPI * CuStreamCreate) (CUstream * phStream,
+  CUresult (CUDAAPI * CuStreamCreate) (CUstream * phStream,
       unsigned int Flags);
-    CUresult (CUDAAPI * CuStreamDestroy) (CUstream hStream);
-    CUresult (CUDAAPI * CuStreamSynchronize) (CUstream hStream);
+  CUresult (CUDAAPI * CuStreamDestroy) (CUstream hStream);
+  CUresult (CUDAAPI * CuStreamSynchronize) (CUstream hStream);
 
-    CUresult (CUDAAPI * CuDeviceGet) (CUdevice * device, int ordinal);
-    CUresult (CUDAAPI * CuDeviceGetCount) (int *count);
-    CUresult (CUDAAPI * CuDeviceGetName) (char *name, int len, CUdevice dev);
-    CUresult (CUDAAPI * CuDeviceGetAttribute) (int *pi,
+  CUresult (CUDAAPI * CuDeviceGet) (CUdevice * device, int ordinal);
+  CUresult (CUDAAPI * CuDeviceGetCount) (int *count);
+  CUresult (CUDAAPI * CuDeviceGetName) (char *name, int len, CUdevice dev);
+  CUresult (CUDAAPI * CuDeviceGetAttribute) (int *pi,
       CUdevice_attribute attrib, CUdevice dev);
-    CUresult (CUDAAPI * CuDeviceCanAccessPeer) (int *canAccessPeer,
+  CUresult (CUDAAPI * CuDeviceCanAccessPeer) (int *canAccessPeer,
       CUdevice dev, CUdevice peerDev);
-    CUresult (CUDAAPI * CuDriverGetVersion) (int *driverVersion);
+  CUresult (CUDAAPI * CuDriverGetVersion) (int *driverVersion);
 
-    CUresult (CUDAAPI * CuModuleLoadData) (CUmodule * module,
+  CUresult (CUDAAPI * CuModuleLoadData) (CUmodule * module,
       const void *image);
-    CUresult (CUDAAPI * CuModuleUnload) (CUmodule module);
-    CUresult (CUDAAPI * CuModuleGetFunction) (CUfunction * hfunc,
+  CUresult (CUDAAPI * CuModuleUnload) (CUmodule module);
+  CUresult (CUDAAPI * CuModuleGetFunction) (CUfunction * hfunc,
       CUmodule hmod, const char *name);
-    CUresult (CUDAAPI * CuTexObjectCreate) (CUtexObject * pTexObject,
+  CUresult (CUDAAPI * CuTexObjectCreate) (CUtexObject * pTexObject,
       const CUDA_RESOURCE_DESC * pResDesc, const CUDA_TEXTURE_DESC * pTexDesc,
       const CUDA_RESOURCE_VIEW_DESC * pResViewDesc);
-    CUresult (CUDAAPI * CuTexObjectDestroy) (CUtexObject texObject);
-    CUresult (CUDAAPI * CuLaunchKernel) (CUfunction f, unsigned int gridDimX,
+  CUresult (CUDAAPI * CuTexObjectDestroy) (CUtexObject texObject);
+  CUresult (CUDAAPI * CuLaunchKernel) (CUfunction f, unsigned int gridDimX,
       unsigned int gridDimY, unsigned int gridDimZ,
       unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ,
       unsigned int sharedMemBytes, CUstream hStream, void **kernelParams,
       void **extra);
 
-    CUresult (CUDAAPI * CuGraphicsGLRegisterImage) (CUgraphicsResource *
+  CUresult (CUDAAPI * CuGraphicsGLRegisterImage) (CUgraphicsResource *
       pCudaResource, unsigned int image, unsigned int target,
       unsigned int Flags);
-    CUresult (CUDAAPI * CuGraphicsGLRegisterBuffer) (CUgraphicsResource *
+  CUresult (CUDAAPI * CuGraphicsGLRegisterBuffer) (CUgraphicsResource *
       pCudaResource, unsigned int buffer, unsigned int Flags);
-    CUresult (CUDAAPI *
+  CUresult (CUDAAPI *
       CuGraphicsResourceSetMapFlags) (CUgraphicsResource resource,
       unsigned int flags);
-    CUresult (CUDAAPI * CuGLGetDevices) (unsigned int *pCudaDeviceCount,
+  CUresult (CUDAAPI * CuGLGetDevices) (unsigned int *pCudaDeviceCount,
       CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
       CUGLDeviceList deviceList);
 } GstNvCodecCudaVTable;
+/* *INDENT-ON* */
 
 static GstNvCodecCudaVTable gst_cuda_vtable = { 0, };
 
@@ -305,6 +307,7 @@ CuGraphicsSubResourceGetMappedArray (CUarray * pArray,
       arrayIndex, mipLevel);
 }
 
+/* *INDENT-OFF* */
 CUresult CUDAAPI
 CuGraphicsResourceGetMappedPointer (CUdeviceptr * pDevPtr, size_t * pSize,
     CUgraphicsResource resource)
@@ -314,6 +317,7 @@ CuGraphicsResourceGetMappedPointer (CUdeviceptr * pDevPtr, size_t * pSize,
   return gst_cuda_vtable.CuGraphicsResourceGetMappedPointer (pDevPtr, pSize,
       resource);
 }
+/* *INDENT-ON* */
 
 CUresult CUDAAPI
 CuGraphicsUnregisterResource (CUgraphicsResource resource)
@@ -331,6 +335,7 @@ CuMemAlloc (CUdeviceptr * dptr, unsigned int bytesize)
   return gst_cuda_vtable.CuMemAlloc (dptr, bytesize);
 }
 
+/* *INDENT-OFF* */
 CUresult CUDAAPI
 CuMemAllocPitch (CUdeviceptr * dptr, size_t * pPitch, size_t WidthInBytes,
     size_t Height, unsigned int ElementSizeBytes)
@@ -340,6 +345,7 @@ CuMemAllocPitch (CUdeviceptr * dptr, size_t * pPitch, size_t WidthInBytes,
   return gst_cuda_vtable.CuMemAllocPitch (dptr, pPitch, WidthInBytes, Height,
       ElementSizeBytes);
 }
+/* *INDENT-ON* */
 
 CUresult CUDAAPI
 CuMemAllocHost (void **pp, unsigned int bytesize)
