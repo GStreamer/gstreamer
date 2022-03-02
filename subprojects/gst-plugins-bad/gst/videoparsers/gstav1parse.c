@@ -608,8 +608,7 @@ gst_av1_parse_alignment_from_caps (GstCaps * caps)
     str_align = gst_structure_get_string (s, "alignment");
     str_stream = gst_structure_get_string (s, "stream-format");
 
-    if (str_align || str_stream)
-      align = gst_av1_parse_alignment_from_string (str_align, str_stream);
+    align = gst_av1_parse_alignment_from_string (str_align, str_stream);
   }
 
   return align;
