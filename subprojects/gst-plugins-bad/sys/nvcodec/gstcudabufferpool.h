@@ -46,6 +46,8 @@ struct _GstCudaBufferPool
 {
   GstBufferPool parent;
 
+  GstCudaContext *context;
+
   GstCudaBufferPoolPrivate *priv;
 };
 

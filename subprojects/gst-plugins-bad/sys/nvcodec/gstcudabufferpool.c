@@ -30,7 +30,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_cuda_buffer_pool_debug);
 
 struct _GstCudaBufferPoolPrivate
 {
-  GstCudaContext *context;
   GstAllocator *allocator;
   GstVideoInfo info;
   gboolean add_videometa;
@@ -90,7 +89,7 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       priv->allocator = gst_object_ref (allocator);
     }
   } else {
-    allocator = priv->allocator = gst_cuda_allocator_new (priv->context);
+    allocator = priv->allocator = gst_cuda_allocator_new (cuda_pool->context);
     if (G_UNLIKELY (priv->allocator == NULL))
       goto no_allocator;
   }
@@ -214,7 +213,7 @@ gst_cuda_buffer_pool_new (GstCudaContext * context)
   pool = g_object_new (GST_TYPE_CUDA_BUFFER_POOL, NULL);
   gst_object_ref_sink (pool);
 
-  pool->priv->context = gst_object_ref (context);
+  pool->context = gst_object_ref (context);
 
   GST_LOG_OBJECT (pool, "new CUDA buffer pool %p", pool);
 
@@ -230,7 +229,7 @@ gst_cuda_buffer_pool_dispose (GObject * object)
   GST_LOG_OBJECT (pool, "finalize CUDA buffer pool %p", pool);
 
   gst_clear_object (&priv->allocator);
-  gst_clear_object (&priv->context);
+  gst_clear_object (&pool->context);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
