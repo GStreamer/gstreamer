@@ -2169,11 +2169,15 @@ _add_execute_actions_gsource (GstValidateScenario * scenario)
       && priv->signal_handler_id == 0 && priv->wait_message_action == NULL) {
     if (!scenario->priv->action_execution_interval)
       priv->execute_actions_source_id =
-          g_idle_add ((GSourceFunc) execute_next_action, scenario);
+          g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+          (GSourceFunc) execute_next_action,
+          gst_object_ref (GST_OBJECT_CAST (scenario)), gst_object_unref);
     else
       priv->execute_actions_source_id =
-          g_timeout_add (scenario->priv->action_execution_interval,
-          (GSourceFunc) execute_next_action, scenario);
+          g_timeout_add_full (G_PRIORITY_DEFAULT,
+          scenario->priv->action_execution_interval,
+          (GSourceFunc) execute_next_action,
+          gst_object_ref (GST_OBJECT_CAST (scenario)), gst_object_unref);
     SCENARIO_UNLOCK (scenario);
 
     GST_DEBUG_OBJECT (scenario, "Start checking position again");
