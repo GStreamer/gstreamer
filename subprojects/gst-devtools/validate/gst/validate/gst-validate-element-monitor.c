@@ -152,6 +152,10 @@ gst_validate_element_monitor_init (GstValidateElementMonitor * element_monitor)
 /**
  * gst_validate_element_monitor_new:
  * @element: (transfer none): a #GstElement to run Validate on
+ * @runner: (transfer none): a #GstValidateRunner
+ * @parent: (nullable): The parent of the new monitor
+ *
+ * Returns: (transfer full): A #GstValidateElementMonitor or NULL
  */
 GstValidateElementMonitor *
 gst_validate_element_monitor_new (GstElement * element,

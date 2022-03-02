@@ -77,7 +77,7 @@ _get_reporting_level (GstValidateReporter * monitor)
  * gst_validate_monitor_get_pipeline:
  * @monitor: The monitor to get the pipeline from
  *
- * Returns: (transfer full): The pipeline in which @monitor
+ * Returns: (transfer full)(nullable): The pipeline in which @monitor
  * target is in.
  */
 GstPipeline *
@@ -90,7 +90,7 @@ gst_validate_monitor_get_pipeline (GstValidateMonitor * monitor)
  * gst_validate_monitor_get_target:
  * @monitor: The monitor to get the target from
  *
- * Returns: (transfer full): The target object
+ * Returns: (transfer full)(nullable): The target object
  */
 GstObject *
 gst_validate_monitor_get_target (GstValidateMonitor * monitor)

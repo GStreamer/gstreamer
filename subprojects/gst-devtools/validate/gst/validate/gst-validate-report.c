@@ -25,6 +25,13 @@
 #  include "config.h"
 #endif
 
+/**
+ * SECTION:gstvalidatereport
+ * @title: GstValidateReport
+ * @short_description: A Validate report
+ * @see_also: #GstValidateRunner
+ *
+ */
 
 #include <stdlib.h>             /* exit */
 #include <stdio.h>              /* fprintf */

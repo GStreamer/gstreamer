@@ -825,6 +825,10 @@ done:
 /**
  * gst_validate_pipeline_monitor_new:
  * @pipeline: (transfer none): a #GstPipeline to run Validate on
+ * @runner: (transfer none): a #GstValidateRunner
+ * @parent: (nullable): The parent of the new monitor
+ *
+ * Returns: (transfer full): A #GstValidatePipelineMonitor or NULL
  */
 GstValidatePipelineMonitor *
 gst_validate_pipeline_monitor_new (GstPipeline * pipeline,

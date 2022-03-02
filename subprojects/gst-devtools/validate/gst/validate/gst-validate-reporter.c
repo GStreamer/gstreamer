@@ -139,7 +139,7 @@ gst_validate_reporter_get_reporting_level (GstValidateReporter * reporter)
  * gst_validate_reporter_get_pipeline:
  * @reporter: The reporter to get the pipeline from
  *
- * Returns: (transfer full) (allow-none): The #GstPipeline
+ * Returns: (transfer full)(nullable): The #GstPipeline
  */
 GstPipeline *
 gst_validate_reporter_get_pipeline (GstValidateReporter * reporter)
@@ -436,7 +436,7 @@ gst_validate_reporter_get_name (GstValidateReporter * reporter)
  * gst_validate_reporter_get_runner:
  * @reporter: The reporter to get the runner from
  *
- * Returns: (transfer full): The runner
+ * Returns: (transfer full)(nullable): The runner
  */
 GstValidateRunner *
 gst_validate_reporter_get_runner (GstValidateReporter * reporter)

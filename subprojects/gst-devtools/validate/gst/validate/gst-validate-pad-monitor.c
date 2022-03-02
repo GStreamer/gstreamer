@@ -1038,6 +1038,10 @@ gst_validate_pad_monitor_init (GstValidatePadMonitor * pad_monitor)
 /**
  * gst_validate_pad_monitor_new:
  * @pad: (transfer none): a #GstPad to run Validate on
+ * @runner: (transfer none): a #GstValidateRunner
+ * @parent: (nullable): The parent of the new monitor
+ *
+ * Returns: (transfer full): A #GstValidatePadMonitor or NULL
  */
 GstValidatePadMonitor *
 gst_validate_pad_monitor_new (GstPad * pad, GstValidateRunner * runner,

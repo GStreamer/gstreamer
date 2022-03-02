@@ -191,6 +191,10 @@ gst_validate_bin_monitor_init (GstValidateBinMonitor * bin_monitor)
 /**
  * gst_validate_bin_monitor_new:
  * @bin: (transfer none): a #GstBin to run Validate on
+ * @runner: (transfer none): a #GstValidateRunner
+ * @parent: (nullable): The parent of the new monitor
+ *
+ * Returns: (transfer full): A #GstValidateBinMonitor or NULL
  */
 GstValidateBinMonitor *
 gst_validate_bin_monitor_new (GstBin * bin, GstValidateRunner * runner,
