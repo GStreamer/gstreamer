@@ -54,10 +54,7 @@ gst_qsv_h264_dec_class_init (GstQsvH264DecClass * klass, gpointer data)
   qsvdec_class->codec_id = MFX_CODEC_AVC;
   qsvdec_class->impl_index = cdata->impl_index;
   qsvdec_class->adapter_luid = cdata->adapter_luid;
-  if (cdata->display_path) {
-    strncpy (qsvdec_class->display_path, cdata->display_path,
-        sizeof (qsvdec_class->display_path));
-  }
+  qsvdec_class->display_path = cdata->display_path;
 
   gst_element_class_set_static_metadata (element_class,
       "Intel Quick Sync Video H.264 Decoder",
@@ -74,7 +71,6 @@ gst_qsv_h264_dec_class_init (GstQsvH264DecClass * klass, gpointer data)
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
-  g_free (cdata->display_path);
   g_free (cdata);
 }
 

@@ -66,7 +66,7 @@ struct _GstQsvEncoderClass
   gint64 adapter_luid;
 
   /* VA display device path, for Linux */
-  gchar display_path[64];
+  gchar *display_path;
 
   gboolean (*set_format)       (GstQsvEncoder * encoder,
                                 GstVideoCodecState * state,

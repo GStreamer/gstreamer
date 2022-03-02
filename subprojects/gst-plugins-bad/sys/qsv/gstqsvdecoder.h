@@ -66,7 +66,7 @@ struct _GstQsvDecoderClass
   gint64 adapter_luid;
 
   /* VA display device path, for Linux */
-  gchar display_path[64];
+  gchar *display_path;
 };
 
 GType gst_qsv_decoder_get_type (void);

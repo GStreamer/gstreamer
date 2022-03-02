@@ -146,8 +146,7 @@ gst_qsv_vp9_enc_class_init (GstQsvVP9EncClass * klass, gpointer data)
   qsvenc_class->codec_id = MFX_CODEC_VP9;
   qsvenc_class->impl_index = cdata->impl_index;
   qsvenc_class->adapter_luid = cdata->adapter_luid;
-  if (cdata->display_path)
-    strcpy (qsvenc_class->display_path, cdata->display_path);
+  qsvenc_class->display_path = cdata->display_path;
 
   object_class->finalize = gst_qsv_vp9_enc_finalize;
   object_class->set_property = gst_qsv_vp9_enc_set_property;
@@ -220,7 +219,6 @@ gst_qsv_vp9_enc_class_init (GstQsvVP9EncClass * klass, gpointer data)
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
-  g_free (cdata->display_path);
   g_free (cdata);
 }
 
