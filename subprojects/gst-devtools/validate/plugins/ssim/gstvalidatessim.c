@@ -583,8 +583,7 @@ _should_dump_buffer (ValidateSsimOverride * self,
   if (priv->recurrence == 0)
     return FALSE;
 
-  if (position > priv->last_dump_position ?
-      position - priv->last_dump_position : 0 >= priv->recurrence)
+  if (GST_CLOCK_DIFF (priv->last_dump_position, position) >= priv->recurrence)
     return TRUE;
 
   return FALSE;
