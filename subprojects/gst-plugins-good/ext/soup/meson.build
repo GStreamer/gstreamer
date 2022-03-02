@@ -17,9 +17,10 @@ gobject_dep = dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])
 
 libdl_dep = cc.find_library('dl', required: false)
 
-extra_args = []
-extra_deps = []
-if get_option('default_library') == 'static'
+static_args = []
+static_deps = []
+default_library = get_option('default_library')
+if default_library in ['static', 'both']
   libsoup2_dep = dependency('libsoup-2.4', version : '>=2.48',
                             required : false, fallback : ['libsoup', 'libsoup_dep'],
                             default_options: ['sysprof=disabled'])
@@ -32,22 +33,45 @@ if get_option('default_library') == 'static'
     subdir_done()
   endif
   if libsoup3_dep.found()
-    extra_deps += libsoup3_dep
-    extra_args += '-DSTATIC_SOUP=3'
+    static_deps += libsoup3_dep
+    static_args += '-DSTATIC_SOUP=3'
   elif libsoup2_dep.found()
-    extra_deps += libsoup2_dep
-    extra_args += '-DSTATIC_SOUP=2'
+    static_deps += libsoup2_dep
+    static_args += '-DSTATIC_SOUP=2'
   endif
 endif
 
-gstsouphttpsrc = library('gstsoup',
-  soup_sources,
-  c_args : gst_plugins_good_args + extra_args,
-  link_args : noseh_link_args,
-  include_directories : [configinc, libsinc],
-  dependencies : [gst_dep, gstbase_dep, gsttag_dep, gmodule_dep, gobject_dep, gio_dep, libdl_dep] + extra_deps,
-  install : true,
-  install_dir : plugins_install_dir,
-)
+soup_library_kwargs = {
+  'sources' : soup_sources,
+  'link_args' : noseh_link_args,
+  'include_directories' : [configinc, libsinc],
+  'install' : true,
+  'install_dir' : plugins_install_dir,
+}
+soup_library_deps = [gst_dep, gstbase_dep, gsttag_dep, gmodule_dep, gobject_dep, gio_dep, libdl_dep]
+soup_library_c_args = gst_plugins_good_args
+
+if default_library in ['shared', 'both']
+  gstsouphttpsrc_shared = shared_library('gstsoup',
+    c_args : soup_library_c_args,
+    dependencies : soup_library_deps,
+    kwargs: soup_library_kwargs,
+  )
+endif
+
+if default_library in ['static', 'both']
+  gstsouphttpsrc_static = static_library('gstsoup',
+    c_args : soup_library_c_args + static_args,
+    dependencies : soup_library_deps + static_deps,
+    kwargs: soup_library_kwargs,
+  )
+endif
+
+if default_library == 'static'
+  gstsouphttpsrc = gstsouphttpsrc_static
+else
+  gstsouphttpsrc = gstsouphttpsrc_shared
+endif
+
 pkgconfig.generate(gstsouphttpsrc, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstsouphttpsrc]
