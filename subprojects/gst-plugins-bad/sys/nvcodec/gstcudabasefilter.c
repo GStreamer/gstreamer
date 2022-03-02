@@ -168,46 +168,29 @@ gst_cuda_base_filter_propose_allocation (GstBaseTransform * trans,
 
   if (gst_query_get_n_allocation_pools (query) == 0) {
     GstStructure *config;
-    GstVideoAlignment align;
-    GstAllocationParams params = { 0, 31, 0, 0, };
-    GstAllocator *allocator = NULL;
-    gint i;
 
     pool = gst_cuda_buffer_pool_new (ctrans->context);
 
     config = gst_buffer_pool_get_config (pool);
 
-    gst_video_alignment_reset (&align);
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-      align.stride_align[i] = 31;
-    }
-    gst_video_info_align (&info, &align);
-
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
-    gst_buffer_pool_config_set_video_alignment (config, &align);
     size = GST_VIDEO_INFO_SIZE (&info);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-
-    gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-    gst_query_add_allocation_pool (query, pool, size, 0, 0);
-
-    if (gst_buffer_pool_config_get_allocator (config, &allocator, &params)) {
-      if (params.align < 31)
-        params.align = 31;
-
-      gst_query_add_allocation_param (query, allocator, &params);
-      gst_buffer_pool_config_set_allocator (config, allocator, &params);
-    }
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       GST_ERROR_OBJECT (ctrans, "failed to set config");
       gst_object_unref (pool);
       return FALSE;
     }
+
+    /* Get updated size by cuda buffer pool */
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
+    gst_structure_free (config);
+
+    gst_query_add_allocation_pool (query, pool, size, 0, 0);
 
     gst_object_unref (pool);
   }
@@ -265,6 +248,12 @@ gst_cuda_base_filter_decide_allocation (GstBaseTransform * trans,
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
   gst_buffer_pool_set_config (pool, config);
+
+  /* Get updated size by cuda buffer pool */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
+  gst_structure_free (config);
+
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
@@ -285,8 +274,6 @@ gst_cuda_base_filter_transform (GstBaseTransform * trans,
   GstVideoFrame in_frame, out_frame;
   GstFlowReturn ret = GST_FLOW_OK;
   GstMemory *mem;
-  GstCudaMemory *in_cuda_mem = NULL;
-  GstCudaMemory *out_cuda_mem = NULL;
 
   if (gst_buffer_n_memory (inbuf) != 1) {
     GST_ERROR_OBJECT (self, "Invalid input buffer");
@@ -299,8 +286,6 @@ gst_cuda_base_filter_transform (GstBaseTransform * trans,
     return GST_FLOW_ERROR;
   }
 
-  in_cuda_mem = GST_CUDA_MEMORY_CAST (mem);
-
   if (gst_buffer_n_memory (outbuf) != 1) {
     GST_ERROR_OBJECT (self, "Invalid output buffer");
     return GST_FLOW_ERROR;
@@ -311,8 +296,6 @@ gst_cuda_base_filter_transform (GstBaseTransform * trans,
     GST_ERROR_OBJECT (self, "Input buffer is not CUDA");
     return GST_FLOW_ERROR;
   }
-
-  out_cuda_mem = GST_CUDA_MEMORY_CAST (mem);
 
   if (!gst_video_frame_map (&in_frame, &ctrans->in_info, inbuf,
           GST_MAP_READ | GST_MAP_CUDA)) {
@@ -327,9 +310,8 @@ gst_cuda_base_filter_transform (GstBaseTransform * trans,
     return GST_FLOW_ERROR;
   }
 
-  if (!gst_cuda_converter_frame (self->converter,
-          in_cuda_mem, &ctrans->in_info,
-          out_cuda_mem, &ctrans->out_info, ctrans->cuda_stream)) {
+  if (!gst_cuda_converter_convert_frame (self->converter, &in_frame, &out_frame,
+          ctrans->cuda_stream)) {
     GST_ERROR_OBJECT (self, "Failed to convert frame");
     ret = GST_FLOW_ERROR;
   }

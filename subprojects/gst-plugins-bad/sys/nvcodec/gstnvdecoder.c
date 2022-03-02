@@ -740,33 +740,24 @@ gst_nv_decoder_copy_frame_to_cuda (GstNvDecoder * decoder,
 {
   CUDA_MEMCPY2D copy_params = { 0, };
   GstMemory *mem;
-  GstCudaMemory *cuda_mem = NULL;
   gint i;
   gboolean ret = FALSE;
+  GstVideoFrame video_frame;
 
   mem = gst_buffer_peek_memory (buffer, 0);
   if (!gst_is_cuda_memory (mem)) {
     GST_WARNING_OBJECT (decoder, "Not a CUDA memory");
     return FALSE;
-  } else {
-    GstCudaMemory *cmem = GST_CUDA_MEMORY_CAST (mem);
-
-    if (cmem->context == decoder->context ||
-        gst_cuda_context_get_handle (cmem->context) ==
-        gst_cuda_context_get_handle (decoder->context) ||
-        (gst_cuda_context_can_access_peer (cmem->context, decoder->context) &&
-            gst_cuda_context_can_access_peer (decoder->context,
-                cmem->context))) {
-      cuda_mem = cmem;
-    }
   }
 
-  if (!cuda_mem) {
-    GST_WARNING_OBJECT (decoder, "Access to CUDA memory is not allowed");
+  if (!gst_video_frame_map (&video_frame,
+          &decoder->info, buffer, GST_MAP_WRITE | GST_MAP_CUDA)) {
+    GST_ERROR_OBJECT (decoder, "frame map failure");
     return FALSE;
   }
 
   if (!gst_cuda_context_push (decoder->context)) {
+    gst_video_frame_unmap (&video_frame);
     GST_ERROR_OBJECT (decoder, "Failed to push CUDA context");
     return FALSE;
   }
@@ -778,8 +769,9 @@ gst_nv_decoder_copy_frame_to_cuda (GstNvDecoder * decoder,
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&decoder->info); i++) {
     copy_params.srcDevice = frame->devptr +
         (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->info));
-    copy_params.dstDevice = cuda_mem->data + cuda_mem->offset[i];
-    copy_params.dstPitch = cuda_mem->stride;
+    copy_params.dstDevice =
+        (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (&video_frame, i);
+    copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
     copy_params.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (&decoder->info, 0)
         * GST_VIDEO_INFO_COMP_PSTRIDE (&decoder->info, 0);
     copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (&decoder->info, i);
@@ -795,6 +787,7 @@ gst_nv_decoder_copy_frame_to_cuda (GstNvDecoder * decoder,
   ret = TRUE;
 
 done:
+  gst_video_frame_unmap (&video_frame);
   gst_cuda_context_pop (NULL);
 
   GST_LOG_OBJECT (decoder, "Copy frame to CUDA ret %d", ret);
@@ -1567,6 +1560,12 @@ gst_nv_decoder_ensure_cuda_pool (GstNvDecoder * decoder, GstQuery * query)
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_set_config (pool, config);
+
+  /* Get updated size by cuda buffer pool */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
+  gst_structure_free (config);
+
   if (n > 0)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else

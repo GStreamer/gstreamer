@@ -229,7 +229,7 @@ static const gchar templ_YUV_TO_YUV[] =
 GST_CUDA_KERNEL_FUNC
 "(cudaTextureObject_t tex0, cudaTextureObject_t tex1, cudaTextureObject_t tex2,\n"
 "    unsigned char *dst0, unsigned char *dst1, unsigned char *dst2,\n"
-"    int stride)\n"
+"    int stride, int uv_stride)\n"
 "{\n"
 "  int x_pos = blockIdx.x * blockDim.x + threadIdx.x;\n"
 "  int y_pos = blockIdx.y * blockDim.y + threadIdx.y;\n"
@@ -265,7 +265,7 @@ GST_CUDA_KERNEL_FUNC
 "      v = tmp;\n"
 "    }\n"
 "    write_chroma (dst1,\n"
-"      dst2, u, v, x_pos, y_pos, CHROMA_PSTRIDE, stride, MASK);\n"
+"      dst2, u, v, x_pos, y_pos, CHROMA_PSTRIDE, uv_stride, MASK);\n"
 "  }\n"
 "}\n"
 "\n"
@@ -589,7 +589,7 @@ GST_CUDA_KERNEL_FUNC_TO_Y444
 GST_CUDA_KERNEL_FUNC_Y444_TO_YUV
 "(cudaTextureObject_t tex0, cudaTextureObject_t tex1, cudaTextureObject_t tex2,\n"
 "    unsigned char *dst0, unsigned char *dst1, unsigned char *dst2,\n"
-"    int stride)\n"
+"    int stride, int uv_stride)\n"
 "{\n"
 "  int x_pos = blockIdx.x * blockDim.x + threadIdx.x;\n"
 "  int y_pos = blockIdx.y * blockDim.y + threadIdx.y;\n"
@@ -626,7 +626,7 @@ GST_CUDA_KERNEL_FUNC_Y444_TO_YUV
 "      v = tmp;\n"
 "    }\n"
 "    write_chroma (dst1,\n"
-"      dst2, u, v, x_pos, y_pos, CHROMA_PSTRIDE, stride, MASK);\n"
+"      dst2, u, v, x_pos, y_pos, CHROMA_PSTRIDE, uv_stride, MASK);\n"
 "  }\n"
 "}\n"
 "\n"
@@ -745,9 +745,10 @@ struct _GstCudaConverter
   gchar *ptx;
   GstCudaStageBuffer fallback_buffer[GST_VIDEO_MAX_PLANES];
 
-    gboolean (*convert) (GstCudaConverter * convert, const GstCudaMemory * src,
-      GstVideoInfo * in_info, GstCudaMemory * dst, GstVideoInfo * out_info,
-      CUstream cuda_stream);
+  /* *INDENT-OFF* */
+  gboolean (*convert) (GstCudaConverter * convert, GstVideoFrame * src_frame,
+      GstVideoFrame * dst_frame, CUstream cuda_stream);
+  /* *INDENT-ON* */
 
   const CUdeviceptr src;
   GstVideoInfo *cur_in_info;
@@ -893,65 +894,23 @@ gst_cuda_converter_free (GstCudaConverter * convert)
   g_free (convert);
 }
 
-/**
- * gst_cuda_converter_frame:
- * @convert: a #GstCudaConverter
- * @src: a #GstCudaMemory
- * @in_info: a #GstVideoInfo representing @src
- * @dst: a #GstCudaMemory
- * @out_info: a #GstVideoInfo representing @dst
- * @cuda_stream: a #CUstream
- *
- * Convert the pixels of @src into @dest using @convert.
- * Called without gst_cuda_context_push() and gst_cuda_context_pop() by caller
- */
 gboolean
-gst_cuda_converter_frame (GstCudaConverter * convert, const GstCudaMemory * src,
-    GstVideoInfo * in_info, GstCudaMemory * dst, GstVideoInfo * out_info,
-    CUstream cuda_stream)
+gst_cuda_converter_convert_frame (GstCudaConverter * convert,
+    GstVideoFrame * src_frame, GstVideoFrame * dst_frame, CUstream cuda_stream)
 {
   gboolean ret;
 
   g_return_val_if_fail (convert, FALSE);
-  g_return_val_if_fail (src, FALSE);
-  g_return_val_if_fail (in_info, FALSE);
-  g_return_val_if_fail (dst, FALSE);
-  g_return_val_if_fail (out_info, FALSE);
+  g_return_val_if_fail (src_frame, FALSE);
+  g_return_val_if_fail (dst_frame, FALSE);
 
   gst_cuda_context_push (convert->cuda_ctx);
 
-  ret = gst_cuda_converter_frame_unlocked (convert,
-      src, in_info, dst, out_info, cuda_stream);
+  ret = convert->convert (convert, src_frame, dst_frame, cuda_stream);
 
   gst_cuda_context_pop (NULL);
 
   return ret;
-}
-
-/**
- * gst_cuda_converter_frame_unlocked:
- * @convert: a #GstCudaConverter
- * @src: a #GstCudaMemory
- * @in_info: a #GstVideoInfo representing @src
- * @dst: a #GstCudaMemory
- * @out_info: a #GstVideoInfo representing @dest
- * @cuda_stream: a #CUstream
- *
- * Convert the pixels of @src into @dest using @convert.
- * Caller should call this method after gst_cuda_context_push()
- */
-gboolean
-gst_cuda_converter_frame_unlocked (GstCudaConverter * convert,
-    const GstCudaMemory * src, GstVideoInfo * in_info, GstCudaMemory * dst,
-    GstVideoInfo * out_info, CUstream cuda_stream)
-{
-  g_return_val_if_fail (convert, FALSE);
-  g_return_val_if_fail (src, FALSE);
-  g_return_val_if_fail (in_info, FALSE);
-  g_return_val_if_fail (dst, FALSE);
-  g_return_val_if_fail (out_info, FALSE);
-
-  return convert->convert (convert, src, in_info, dst, out_info, cuda_stream);
 }
 
 /* allocate fallback memory for texture alignment requirement */
@@ -1020,8 +979,8 @@ convert_create_texture_unchecked (const CUdeviceptr src, gint width,
 }
 
 static CUtexObject
-convert_create_texture (GstCudaConverter * convert, const GstCudaMemory * src,
-    GstVideoInfo * info, guint plane, CUstream cuda_stream)
+convert_create_texture (GstCudaConverter * convert, GstVideoFrame * src_frame,
+    guint plane, CUstream cuda_stream)
 {
   CUarray_format format = CU_AD_FORMAT_UNSIGNED_INT8;
   guint channels = 1;
@@ -1030,22 +989,23 @@ convert_create_texture (GstCudaConverter * convert, const GstCudaMemory * src,
   CUresult cuda_ret;
   CUfilter_mode mode;
 
-  if (GST_VIDEO_INFO_COMP_DEPTH (info, plane) > 8)
+  if (GST_VIDEO_FRAME_COMP_DEPTH (src_frame, plane) > 8)
     format = CU_AD_FORMAT_UNSIGNED_INT16;
 
   /* FIXME: more graceful method ? */
   if (plane != 0 &&
-      GST_VIDEO_INFO_N_PLANES (info) != GST_VIDEO_INFO_N_COMPONENTS (info)) {
+      GST_VIDEO_FRAME_N_PLANES (src_frame) !=
+      GST_VIDEO_FRAME_N_COMPONENTS (src_frame)) {
     channels = 2;
   }
 
-  src_ptr = src->data + src->offset[plane];
-  stride = src->stride;
+  src_ptr = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (src_frame, plane);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, plane);
 
   if (convert->texture_alignment && (src_ptr % convert->texture_alignment)) {
     CUDA_MEMCPY2D copy_params = { 0, };
 
-    if (!convert_ensure_fallback_memory (convert, info, plane))
+    if (!convert_ensure_fallback_memory (convert, &src_frame->info, plane))
       return 0;
 
     GST_LOG ("device memory was not aligned, copy to fallback memory");
@@ -1057,9 +1017,9 @@ convert_create_texture (GstCudaConverter * convert, const GstCudaMemory * src,
     copy_params.dstMemoryType = CU_MEMORYTYPE_DEVICE;
     copy_params.dstPitch = convert->fallback_buffer[plane].cuda_stride;
     copy_params.dstDevice = convert->fallback_buffer[plane].device_ptr;
-    copy_params.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (info, plane)
-        * GST_VIDEO_INFO_COMP_PSTRIDE (info, plane);
-    copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, plane);
+    copy_params.WidthInBytes = GST_VIDEO_FRAME_COMP_WIDTH (src_frame, plane)
+        * GST_VIDEO_FRAME_COMP_PSTRIDE (src_frame, plane);
+    copy_params.Height = GST_VIDEO_FRAME_COMP_HEIGHT (src_frame, plane);
 
     cuda_ret = CuMemcpy2DAsync (&copy_params, cuda_stream);
     if (!gst_cuda_result (cuda_ret)) {
@@ -1079,27 +1039,26 @@ convert_create_texture (GstCudaConverter * convert, const GstCudaMemory * src,
     mode = CU_TR_FILTER_MODE_LINEAR;
 
   return convert_create_texture_unchecked (src_ptr,
-      GST_VIDEO_INFO_COMP_WIDTH (info, plane),
-      GST_VIDEO_INFO_COMP_HEIGHT (info, plane), channels, stride, format, mode,
-      cuda_stream);
+      GST_VIDEO_FRAME_COMP_WIDTH (src_frame, plane),
+      GST_VIDEO_FRAME_COMP_HEIGHT (src_frame, plane), channels, stride, format,
+      mode, cuda_stream);
 }
 
 /* main conversion function for YUV to YUV conversion */
 static gboolean
-convert_YUV_TO_YUV (GstCudaConverter * convert,
-    const GstCudaMemory * src, GstVideoInfo * in_info, GstCudaMemory * dst,
-    GstVideoInfo * out_info, CUstream cuda_stream)
+convert_YUV_TO_YUV (GstCudaConverter * convert, GstVideoFrame * src_frame,
+    GstVideoFrame * dst_frame, CUstream cuda_stream)
 {
   CUtexObject texture[GST_VIDEO_MAX_PLANES] = { 0, };
   CUresult cuda_ret;
   gboolean ret = FALSE;
   CUdeviceptr dst_ptr[GST_VIDEO_MAX_PLANES] = { 0, };
-  gint dst_stride;
+  gint dst_stride, dst_uv_stride;
   gint width, height;
   gint i;
 
   gpointer kernel_args[] = { &texture[0], &texture[1], &texture[2],
-    &dst_ptr[0], &dst_ptr[1], &dst_ptr[2], &dst_stride
+    &dst_ptr[0], &dst_ptr[1], &dst_ptr[2], &dst_stride, &dst_uv_stride
   };
 
   /* conversion step
@@ -1110,21 +1069,23 @@ convert_YUV_TO_YUV (GstCudaConverter * convert,
    */
 
   /* map CUDA device memory to CUDA texture object */
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (in_info); i++) {
-    texture[i] = convert_create_texture (convert, src, in_info, i, cuda_stream);
+  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (src_frame); i++) {
+    texture[i] = convert_create_texture (convert, src_frame, i, cuda_stream);
     if (!texture[i]) {
       GST_ERROR ("couldn't create texture for %d th plane", i);
       goto done;
     }
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (out_info); i++)
-    dst_ptr[i] = dst->data + dst->offset[i];
+  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (dst_frame); i++) {
+    dst_ptr[i] = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (dst_frame, i);
+  }
 
-  dst_stride = dst->stride;
+  dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dst_frame, 0);
+  dst_uv_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dst_frame, 1);
 
-  width = GST_VIDEO_INFO_WIDTH (out_info);
-  height = GST_VIDEO_INFO_HEIGHT (out_info);
+  width = GST_VIDEO_FRAME_WIDTH (dst_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (dst_frame);
 
   cuda_ret =
       CuLaunchKernel (convert->kernel_func[0], DIV_UP (width, CUDA_BLOCK_X),
@@ -1140,7 +1101,7 @@ convert_YUV_TO_YUV (GstCudaConverter * convert,
   gst_cuda_result (CuStreamSynchronize (cuda_stream));
 
 done:
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (in_info); i++) {
+  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (src_frame); i++) {
     if (texture[i])
       gst_cuda_result (CuTexObjectDestroy (texture[i]));
   }
@@ -1150,9 +1111,8 @@ done:
 
 /* main conversion function for YUV to RGB conversion */
 static gboolean
-convert_YUV_TO_RGB (GstCudaConverter * convert,
-    const GstCudaMemory * src, GstVideoInfo * in_info, GstCudaMemory * dst,
-    GstVideoInfo * out_info, CUstream cuda_stream)
+convert_YUV_TO_RGB (GstCudaConverter * convert, GstVideoFrame * src_frame,
+    GstVideoFrame * dst_frame, CUstream cuda_stream)
 {
   CUtexObject texture[GST_VIDEO_MAX_PLANES] = { 0, };
   CUresult cuda_ret;
@@ -1174,19 +1134,19 @@ convert_YUV_TO_RGB (GstCudaConverter * convert,
    */
 
   /* map CUDA device memory to CUDA texture object */
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (in_info); i++) {
-    texture[i] = convert_create_texture (convert, src, in_info, i, cuda_stream);
+  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (src_frame); i++) {
+    texture[i] = convert_create_texture (convert, src_frame, i, cuda_stream);
     if (!texture[i]) {
       GST_ERROR ("couldn't create texture for %d th plane", i);
       goto done;
     }
   }
 
-  dstRGB = dst->data;
-  dst_stride = dst->stride;
+  dstRGB = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (dst_frame, 0);
+  dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dst_frame, 0);
 
-  width = GST_VIDEO_INFO_WIDTH (out_info);
-  height = GST_VIDEO_INFO_HEIGHT (out_info);
+  width = GST_VIDEO_FRAME_WIDTH (dst_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (dst_frame);
 
   cuda_ret =
       CuLaunchKernel (convert->kernel_func[0], DIV_UP (width, CUDA_BLOCK_X),
@@ -1202,7 +1162,7 @@ convert_YUV_TO_RGB (GstCudaConverter * convert,
   gst_cuda_result (CuStreamSynchronize (cuda_stream));
 
 done:
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (in_info); i++) {
+  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (src_frame); i++) {
     if (texture[i])
       gst_cuda_result (CuTexObjectDestroy (texture[i]));
   }
@@ -1212,7 +1172,7 @@ done:
 
 static gboolean
 convert_UNPACK_RGB (GstCudaConverter * convert, CUfunction kernel_func,
-    CUstream cuda_stream, const GstCudaMemory * src, GstVideoInfo * in_info,
+    CUstream cuda_stream, GstVideoFrame * src_frame,
     CUdeviceptr dst, gint dst_stride, GstCudaRGBOrder * rgb_order)
 {
   CUdeviceptr srcRGB = 0;
@@ -1227,12 +1187,12 @@ convert_UNPACK_RGB (GstCudaConverter * convert, CUfunction kernel_func,
     &convert->in_rgb_order.B, &convert->in_rgb_order.A,
   };
 
-  srcRGB = src->data;
-  src_stride = src->stride;
+  srcRGB = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (src_frame, 0);
+  src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
 
-  width = GST_VIDEO_INFO_WIDTH (in_info);
-  height = GST_VIDEO_INFO_HEIGHT (in_info);
-  src_pstride = GST_VIDEO_INFO_COMP_PSTRIDE (in_info, 0);
+  width = GST_VIDEO_FRAME_WIDTH (src_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (src_frame);
+  src_pstride = GST_VIDEO_FRAME_COMP_PSTRIDE (src_frame, 0);
 
   cuda_ret =
       CuLaunchKernel (kernel_func, DIV_UP (width, CUDA_BLOCK_X),
@@ -1274,9 +1234,8 @@ convert_TO_Y444 (GstCudaConverter * convert, CUfunction kernel_func,
 
 /* main conversion function for RGB to YUV conversion */
 static gboolean
-convert_RGB_TO_YUV (GstCudaConverter * convert,
-    const GstCudaMemory * src, GstVideoInfo * in_info, GstCudaMemory * dst,
-    GstVideoInfo * out_info, CUstream cuda_stream)
+convert_RGB_TO_YUV (GstCudaConverter * convert, GstVideoFrame * src_frame,
+    GstVideoFrame * dst_frame, CUstream cuda_stream)
 {
   CUtexObject texture = 0;
   CUtexObject yuv_texture[3] = { 0, };
@@ -1285,7 +1244,7 @@ convert_RGB_TO_YUV (GstCudaConverter * convert,
   gboolean ret = FALSE;
   gint in_width, in_height;
   gint out_width, out_height;
-  gint dst_stride;
+  gint dst_stride, dst_uv_stride;
   CUarray_format format = CU_AD_FORMAT_UNSIGNED_INT8;
   CUfilter_mode mode = CU_TR_FILTER_MODE_POINT;
   gint pstride = 1;
@@ -1293,7 +1252,7 @@ convert_RGB_TO_YUV (GstCudaConverter * convert,
   gint i;
 
   gpointer kernel_args[] = { &yuv_texture[0], &yuv_texture[1], &yuv_texture[2],
-    &dst_ptr[0], &dst_ptr[1], &dst_ptr[2], &dst_stride
+    &dst_ptr[0], &dst_ptr[1], &dst_ptr[2], &dst_stride, &dst_uv_stride
   };
 
   /* conversion step
@@ -1304,21 +1263,22 @@ convert_RGB_TO_YUV (GstCudaConverter * convert,
    *         the CUDA kernel function
    */
   if (!convert_UNPACK_RGB (convert, convert->kernel_func[0], cuda_stream,
-          src, in_info, convert->unpack_surface.device_ptr,
+          src_frame, convert->unpack_surface.device_ptr,
           convert->unpack_surface.cuda_stride, &convert->in_rgb_order)) {
     GST_ERROR ("could not unpack input rgb");
 
     goto done;
   }
 
-  in_width = GST_VIDEO_INFO_WIDTH (in_info);
-  in_height = GST_VIDEO_INFO_HEIGHT (in_info);
+  in_width = GST_VIDEO_FRAME_WIDTH (src_frame);
+  in_height = GST_VIDEO_FRAME_HEIGHT (src_frame);
 
-  out_width = GST_VIDEO_INFO_WIDTH (out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (out_info);
-  dst_stride = dst->stride;
+  out_width = GST_VIDEO_FRAME_WIDTH (dst_frame);
+  out_height = GST_VIDEO_FRAME_HEIGHT (dst_frame);
+  dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dst_frame, 0);
+  dst_uv_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dst_frame, 1);
 
-  if (GST_VIDEO_INFO_COMP_DEPTH (in_info, 0) > 8) {
+  if (GST_VIDEO_FRAME_COMP_DEPTH (src_frame, 0) > 8) {
     pstride = 2;
     bitdepth = 16;
     format = CU_AD_FORMAT_UNSIGNED_INT16;
@@ -1365,8 +1325,8 @@ convert_RGB_TO_YUV (GstCudaConverter * convert,
     }
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (out_info); i++)
-    dst_ptr[i] = dst->data + dst->offset[i];
+  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (dst_frame); i++)
+    dst_ptr[i] = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (dst_frame, i);
 
   cuda_ret =
       CuLaunchKernel (convert->kernel_func[2], DIV_UP (out_width, CUDA_BLOCK_X),
@@ -1394,9 +1354,8 @@ done:
 
 /* main conversion function for RGB to RGB conversion */
 static gboolean
-convert_RGB_TO_RGB (GstCudaConverter * convert,
-    const GstCudaMemory * src, GstVideoInfo * in_info, GstCudaMemory * dst,
-    GstVideoInfo * out_info, CUstream cuda_stream)
+convert_RGB_TO_RGB (GstCudaConverter * convert, GstVideoFrame * src_frame,
+    GstVideoFrame * dst_frame, CUstream cuda_stream)
 {
   CUtexObject texture = 0;
   CUresult cuda_ret;
@@ -1418,23 +1377,23 @@ convert_RGB_TO_RGB (GstCudaConverter * convert,
    */
 
   if (!convert_UNPACK_RGB (convert, convert->kernel_func[0], cuda_stream,
-          src, in_info, convert->unpack_surface.device_ptr,
+          src_frame, convert->unpack_surface.device_ptr,
           convert->unpack_surface.cuda_stride, &convert->in_rgb_order)) {
     GST_ERROR ("could not unpack input rgb");
 
     goto done;
   }
 
-  in_width = GST_VIDEO_INFO_WIDTH (in_info);
-  in_height = GST_VIDEO_INFO_HEIGHT (in_info);
+  in_width = GST_VIDEO_FRAME_WIDTH (src_frame);
+  in_height = GST_VIDEO_FRAME_HEIGHT (src_frame);
 
-  out_width = GST_VIDEO_INFO_WIDTH (out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (out_info);
+  out_width = GST_VIDEO_FRAME_WIDTH (dst_frame);
+  out_height = GST_VIDEO_FRAME_HEIGHT (dst_frame);
 
-  dstRGB = dst->data;
-  dst_stride = dst->stride;
+  dstRGB = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (dst_frame, 0);
+  dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dst_frame, 0);
 
-  if (GST_VIDEO_INFO_COMP_DEPTH (in_info, 0) > 8)
+  if (GST_VIDEO_FRAME_COMP_DEPTH (src_frame, 0) > 8)
     format = CU_AD_FORMAT_UNSIGNED_INT16;
 
   /* Use h/w linear interpolation only when resize is required.

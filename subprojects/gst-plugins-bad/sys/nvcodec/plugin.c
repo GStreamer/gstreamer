@@ -39,6 +39,7 @@
 #include "gstcudadownload.h"
 #include "gstcudaupload.h"
 #include "gstcudafilter.h"
+#include "gstcudamemory.h"
 
 GST_DEBUG_CATEGORY (gst_nvcodec_debug);
 GST_DEBUG_CATEGORY (gst_nvdec_debug);
@@ -238,6 +239,7 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_CUDA_UPLOAD);
 
   gst_cuda_filter_plugin_init (plugin);
+  gst_cuda_memory_init_once ();
 
   return TRUE;
 }

@@ -180,10 +180,6 @@ gst_cuda_download_propose_allocation (GstBaseTransform * trans,
   if (gst_query_get_n_allocation_pools (query) == 0) {
     GstCapsFeatures *features;
     GstStructure *config;
-    GstVideoAlignment align;
-    GstAllocationParams params = { 0, 31, 0, 0, };
-    GstAllocator *allocator = NULL;
-    gint i;
 
     features = gst_caps_get_features (caps, 0);
 
@@ -197,37 +193,24 @@ gst_cuda_download_propose_allocation (GstBaseTransform * trans,
 
     config = gst_buffer_pool_get_config (pool);
 
-    gst_video_alignment_reset (&align);
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-      align.stride_align[i] = 31;
-    }
-    gst_video_info_align (&info, &align);
-
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
-    gst_buffer_pool_config_set_video_alignment (config, &align);
     size = GST_VIDEO_INFO_SIZE (&info);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-
-    gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-    gst_query_add_allocation_pool (query, pool, size, 0, 0);
-
-    if (gst_buffer_pool_config_get_allocator (config, &allocator, &params)) {
-      if (params.align < 31)
-        params.align = 31;
-
-      gst_query_add_allocation_param (query, allocator, &params);
-      gst_buffer_pool_config_set_allocator (config, allocator, &params);
-    }
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       GST_ERROR_OBJECT (ctrans, "failed to set config");
       gst_object_unref (pool);
       return FALSE;
     }
+
+    /* Get updated size by cuda buffer pool */
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
+    gst_structure_free (config);
+
+    gst_query_add_allocation_pool (query, pool, size, 0, 0);
 
     gst_object_unref (pool);
   }
@@ -295,6 +278,12 @@ gst_cuda_download_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
   gst_buffer_pool_set_config (pool, config);
+
+  /* Get updated size by cuda buffer pool */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
+  gst_structure_free (config);
+
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else

@@ -37,10 +37,11 @@ G_BEGIN_DECLS
 #define GST_CUDA_ALLOCATOR_CAST(obj)        ((GstCudaAllocator *)(obj))
 #define GST_CUDA_MEMORY_CAST(mem)           ((GstCudaMemory *) (mem))
 
-typedef struct _GstCudaAllocationParams GstCudaAllocationParams;
 typedef struct _GstCudaAllocator GstCudaAllocator;
 typedef struct _GstCudaAllocatorClass GstCudaAllocatorClass;
+
 typedef struct _GstCudaMemory GstCudaMemory;
+typedef struct _GstCudaMemoryPrivate GstCudaMemoryPrivate;
 
 /**
  * GST_MAP_CUDA:
@@ -65,32 +66,6 @@ typedef struct _GstCudaMemory GstCudaMemory;
  */
 #define GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY "memory:CUDAMemory"
 
-struct _GstCudaAllocationParams
-{
-  GstAllocationParams parent;
-
-  GstVideoInfo info;
-};
-
-struct _GstCudaAllocator
-{
-  GstAllocator parent;
-  GstCudaContext *context;
-};
-
-struct _GstCudaAllocatorClass
-{
-  GstAllocatorClass parent_class;
-};
-
-GType          gst_cuda_allocator_get_type (void);
-
-GstAllocator * gst_cuda_allocator_new (GstCudaContext * context);
-
-GstMemory    * gst_cuda_allocator_alloc (GstAllocator * allocator,
-                                         gsize size,
-                                         GstCudaAllocationParams * params);
-
 /**
  * GstCudaMemoryTransfer:
  * @GST_CUDA_MEMORY_TRANSFER_NEED_DOWNLOAD: the device memory needs downloading
@@ -106,32 +81,36 @@ typedef enum
 
 struct _GstCudaMemory
 {
-  GstMemory       mem;
+  GstMemory mem;
 
+  /*< public >*/
   GstCudaContext *context;
-  CUdeviceptr data;
+  GstVideoInfo info;
 
-  GstCudaAllocationParams alloc_params;
-
-  /* offset and stride of CUDA device memory */
-  gsize offset[GST_VIDEO_MAX_PLANES];
-  gint stride;
-
-  /* allocated CUDA Host memory */
-  gpointer map_alloc_data;
-
-  /* aligned CUDA Host memory */
-  guint8 *align_data;
-
-  /* pointing align_data if the memory is mapped */
-  gpointer map_data;
-
-  gint map_count;
-
-  GMutex lock;
+  /*< private >*/
+  GstCudaMemoryPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
-gboolean        gst_is_cuda_memory        (GstMemory * mem);
+struct _GstCudaAllocator
+{
+  GstAllocator parent;
+};
+
+struct _GstCudaAllocatorClass
+{
+  GstAllocatorClass parent_class;
+};
+
+void           gst_cuda_memory_init_once   (void);
+
+gboolean       gst_is_cuda_memory          (GstMemory * mem);
+
+GType          gst_cuda_allocator_get_type (void);
+
+GstMemory    * gst_cuda_allocator_alloc    (GstCudaAllocator * allocator,
+                                            GstCudaContext * context,
+                                            const GstVideoInfo * info);
 
 G_END_DECLS
 

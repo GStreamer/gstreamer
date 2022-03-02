@@ -1241,34 +1241,25 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
   GstVideoInfo *info = &nvdec->output_state->info;
   gint i;
   GstMemory *mem;
-  GstCudaMemory *cuda_mem = NULL;
-
-  if (!gst_cuda_context_push (nvdec->cuda_ctx)) {
-    GST_WARNING_OBJECT (nvdec, "failed to lock CUDA context");
-    return FALSE;
-  }
+  gboolean use_device_copy = FALSE;
+  GstMapFlags map_flags = GST_MAP_WRITE;
 
   if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_CUDA &&
       (mem = gst_buffer_peek_memory (output_buffer, 0)) &&
       gst_is_cuda_memory (mem)) {
-    GstCudaMemory *cmem = GST_CUDA_MEMORY_CAST (mem);
-
-    if (cmem->context == nvdec->cuda_ctx ||
-        gst_cuda_context_get_handle (cmem->context) ==
-        gst_cuda_context_get_handle (nvdec->cuda_ctx) ||
-        (gst_cuda_context_can_access_peer (cmem->context, nvdec->cuda_ctx) &&
-            gst_cuda_context_can_access_peer (nvdec->cuda_ctx,
-                cmem->context))) {
-      cuda_mem = cmem;
-    }
+    map_flags |= GST_MAP_CUDA;
+    use_device_copy = TRUE;
   }
 
-  if (!cuda_mem) {
-    if (!gst_video_frame_map (&video_frame, info, output_buffer, GST_MAP_WRITE)) {
-      GST_ERROR_OBJECT (nvdec, "frame map failure");
-      gst_cuda_context_pop (NULL);
-      return FALSE;
-    }
+  if (!gst_video_frame_map (&video_frame, info, output_buffer, map_flags)) {
+    GST_ERROR_OBJECT (nvdec, "frame map failure");
+    return FALSE;
+  }
+
+  if (!gst_cuda_context_push (nvdec->cuda_ctx)) {
+    gst_video_frame_unmap (&video_frame);
+    GST_WARNING_OBJECT (nvdec, "failed to lock CUDA context");
+    return FALSE;
   }
 
   params.progressive_frame = dispinfo->progressive_frame;
@@ -1286,17 +1277,17 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
   copy_params.srcMemoryType = CU_MEMORYTYPE_DEVICE;
   copy_params.srcPitch = pitch;
   copy_params.dstMemoryType =
-      cuda_mem ? CU_MEMORYTYPE_DEVICE : CU_MEMORYTYPE_HOST;
+      use_device_copy ? CU_MEMORYTYPE_DEVICE : CU_MEMORYTYPE_HOST;
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
     copy_params.srcDevice = dptr + (i * pitch * GST_VIDEO_INFO_HEIGHT (info));
-    if (cuda_mem) {
-      copy_params.dstDevice = cuda_mem->data + cuda_mem->offset[i];
-      copy_params.dstPitch = cuda_mem->stride;
+    if (use_device_copy) {
+      copy_params.dstDevice =
+          (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (&video_frame, i);
     } else {
       copy_params.dstHost = GST_VIDEO_FRAME_PLANE_DATA (&video_frame, i);
-      copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
     }
+    copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
     copy_params.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (info, i)
         * GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
     copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
@@ -1304,8 +1295,7 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
     if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, nvdec->cuda_stream))) {
       GST_ERROR_OBJECT (nvdec, "failed to copy %dth plane", i);
       CuvidUnmapVideoFrame (nvdec->decoder, dptr);
-      if (!cuda_mem)
-        gst_video_frame_unmap (&video_frame);
+      gst_video_frame_unmap (&video_frame);
       gst_cuda_context_pop (NULL);
       return FALSE;
     }
@@ -1313,8 +1303,7 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
 
   gst_cuda_result (CuStreamSynchronize (nvdec->cuda_stream));
 
-  if (!cuda_mem)
-    gst_video_frame_unmap (&video_frame);
+  gst_video_frame_unmap (&video_frame);
 
   if (!gst_cuda_result (CuvidUnmapVideoFrame (nvdec->decoder, dptr)))
     GST_WARNING_OBJECT (nvdec, "failed to unmap video frame");
@@ -1558,9 +1547,15 @@ gst_nvdec_ensure_cuda_pool (GstNvDec * nvdec, GstQuery * query)
   n = gst_query_get_n_allocation_pools (query);
   if (n > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-    if (pool && !GST_IS_CUDA_BUFFER_POOL (pool)) {
-      gst_object_unref (pool);
-      pool = NULL;
+    if (pool) {
+      if (!GST_IS_CUDA_BUFFER_POOL (pool)) {
+        gst_clear_object (&pool);
+      } else {
+        GstCudaBufferPool *cpool = GST_CUDA_BUFFER_POOL (pool);
+
+        if (cpool->context != nvdec->cuda_ctx)
+          gst_clear_object (&pool);
+      }
     }
   }
 
@@ -1578,6 +1573,12 @@ gst_nvdec_ensure_cuda_pool (GstNvDec * nvdec, GstQuery * query)
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_set_config (pool, config);
+
+  /* Get updated size by cuda buffer pool */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
+  gst_structure_free (config);
+
   if (n > 0)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else

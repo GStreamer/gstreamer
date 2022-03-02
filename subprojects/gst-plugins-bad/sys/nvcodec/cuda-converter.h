@@ -34,20 +34,10 @@ GstCudaConverter *    gst_cuda_converter_new           (GstVideoInfo * in_info,
 
 void                 gst_cuda_converter_free           (GstCudaConverter * convert);
 
-gboolean             gst_cuda_converter_frame          (GstCudaConverter * convert,
-                                                        const GstCudaMemory * src,
-                                                        GstVideoInfo * in_info,
-                                                        GstCudaMemory * dst,
-                                                        GstVideoInfo * out_info,
+gboolean             gst_cuda_converter_convert_frame  (GstCudaConverter * convert,
+                                                        GstVideoFrame * src_frame,
+                                                        GstVideoFrame * dst_frame,
                                                         CUstream cuda_stream);
-
-gboolean             gst_cuda_converter_frame_unlocked (GstCudaConverter * convert,
-                                                        const GstCudaMemory * src,
-                                                        GstVideoInfo * in_info,
-                                                        GstCudaMemory * dst,
-                                                        GstVideoInfo * out_info,
-                                                        CUstream cuda_stream);
-
 
 G_END_DECLS
 
