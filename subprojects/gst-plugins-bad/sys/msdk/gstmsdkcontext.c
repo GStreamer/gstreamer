@@ -170,7 +170,7 @@ gst_msdk_context_use_vaapi (GstMsdkContext * context)
 
   path = get_device_path ();
   if (path == NULL) {
-    GST_ERROR ("Couldn't find a drm device node to open");
+    GST_WARNING ("Couldn't find a drm device node to open");
     return FALSE;
   }
 
