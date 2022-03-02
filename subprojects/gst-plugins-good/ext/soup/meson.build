@@ -67,11 +67,20 @@ if default_library in ['static', 'both']
   )
 endif
 
-if default_library == 'static'
-  gstsouphttpsrc = gstsouphttpsrc_static
+# Use the static library to generate the .pc file if it's available. The shared
+# library .pc file does not have a Requires: on libsoup-2.4, and we use plugin
+# .pc files to generate dependencies for linking plugins statically.
+if default_library == 'shared'
+  pkgconfig.generate(gstsouphttpsrc_shared, install_dir : plugins_pkgconfig_install_dir)
 else
-  gstsouphttpsrc = gstsouphttpsrc_shared
+  pkgconfig.generate(gstsouphttpsrc_static, install_dir : plugins_pkgconfig_install_dir)
 endif
 
-pkgconfig.generate(gstsouphttpsrc, install_dir : plugins_pkgconfig_install_dir)
-plugins += [gstsouphttpsrc]
+# Add the shared library to the plugins list if available. We pass this list of
+# plugins to hotdoc to generate the plugins cache, which introspects the plugin
+# by loading it. We need the shared plugin for that.
+if default_library == 'static'
+  plugins += [gstsouphttpsrc_static]
+else
+  plugins += [gstsouphttpsrc_shared]
+endif
