@@ -862,9 +862,11 @@ gst_av1_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
 
   in_caps = gst_caps_copy (caps);
   /* default */
-  if (align == GST_AV1_PARSE_ALIGN_NONE)
+  if (align == GST_AV1_PARSE_ALIGN_NONE) {
+    align = GST_AV1_PARSE_ALIGN_BYTE;
     gst_caps_set_simple (in_caps, "alignment", G_TYPE_STRING,
-        gst_av1_parse_alignment_to_string (GST_AV1_PARSE_ALIGN_BYTE), NULL);
+        gst_av1_parse_alignment_to_string (align), NULL);
+  }
 
   /* negotiate with downstream, set output align */
   gst_av1_parse_negotiate (self, in_caps);
