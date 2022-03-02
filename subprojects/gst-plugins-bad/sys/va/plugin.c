@@ -192,7 +192,7 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
         }
         break;
       default:
-        GST_DEBUG ("No decoder implementation for %" GST_FOURCC_FORMAT,
+        GST_DEBUG ("No encoder implementation for %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (codec));
         break;
     }
