@@ -2144,7 +2144,7 @@ _get_muxer (GstEncodeBaseBin * ebin)
       GstCaps *sformat = gst_encoding_profile_get_format (sprof);
 
       if (!_factory_can_handle_caps (muxerfact, sformat, GST_PAD_SINK, FALSE)) {
-        GST_ERROR ("Skipping muxer because it can't sink caps %"
+        GST_DEBUG ("Skipping muxer because it can't sink caps %"
             GST_PTR_FORMAT, sformat);
         cansinkstreams = FALSE;
         if (sformat)
