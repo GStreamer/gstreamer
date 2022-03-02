@@ -1602,6 +1602,17 @@ calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
         low = oq->cached_sinktime;
       if (high == GST_CLOCK_STIME_NONE || oq->cached_sinktime > high)
         high = oq->cached_sinktime;
+
+      /* If the input is before the segment start, consider as inactive to allow
+       * the interleave to grow until *all* streams have data within the segment.
+       *
+       * The reason for this is that there is no requirements for data before
+       * the segment start to be "aligned" and therefore interleave calculation
+       * can't reliably be done. For example a demuxer could provide video data
+       * from the previous keyframe but audio only from just before the segment
+       * start */
+      if (oq->cached_sinktime < 0)
+        some_inactive = TRUE;
     }
     GST_LOG_OBJECT (mq,
         "queue %d , sinktime:%" GST_STIME_FORMAT " low:%" GST_STIME_FORMAT
