@@ -26,7 +26,9 @@ if get_option('default_library') == 'static'
   libsoup3_dep = dependency('libsoup-3.0', required : false,
                             fallback : ['libsoup3', 'libsoup_dep'])
   if not libsoup2_dep.found() and not libsoup3_dep.found()
-    error('Either libsoup2 or libsoup3 is needed')
+    if soup_opt.enabled()
+      error('Either libsoup2 or libsoup3 is needed')
+    endif
     subdir_done()
   endif
   if libsoup3_dep.found()
