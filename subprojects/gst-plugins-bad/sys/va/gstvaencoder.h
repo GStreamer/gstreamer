@@ -83,11 +83,6 @@ guint32               gst_va_encoder_get_rtformat         (GstVaEncoder * self,
 guint32               gst_va_encoder_get_packed_headers   (GstVaEncoder * self,
                                                            VAProfile profile,
                                                            VAEntrypoint entrypoint);
-gboolean              gst_va_encoder_add_global_param     (GstVaEncoder * self,
-                                                           VABufferType type,
-                                                           gpointer data,
-                                                           gsize size);
-gboolean              gst_va_encoder_reset_global_params  (GstVaEncoder * self);
 gboolean              gst_va_encoder_add_param            (GstVaEncoder * self,
                                                            GstVaEncodePicture * pic,
                                                            VABufferType type,

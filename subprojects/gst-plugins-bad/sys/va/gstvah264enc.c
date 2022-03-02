@@ -2142,7 +2142,7 @@ _add_sequence_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture,
 }
 
 static gboolean
-_add_rate_control_parameter (GstVaH264Enc * self)
+_add_rate_control_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture)
 {
   uint32_t window_size;
   struct VAEncMiscParameterRateControlWrap
@@ -2173,7 +2173,7 @@ _add_rate_control_parameter (GstVaH264Enc * self)
   };
   /* *INDENT-ON* */
 
-  if (!gst_va_encoder_add_global_param (self->encoder,
+  if (!gst_va_encoder_add_param (self->encoder, picture,
           VAEncMiscParameterBufferType, &rate_control, sizeof (rate_control))) {
     GST_ERROR_OBJECT (self, "Failed to create the race control parameter");
     return FALSE;
@@ -2183,7 +2183,7 @@ _add_rate_control_parameter (GstVaH264Enc * self)
 }
 
 static gboolean
-_add_hrd_parameter (GstVaH264Enc * self)
+_add_hrd_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture)
 {
   /* *INDENT-OFF* */
   struct
@@ -2205,7 +2205,7 @@ _add_hrd_parameter (GstVaH264Enc * self)
   g_assert (self->rc.max_bitrate_bits > 0);
 
 
-  if (!gst_va_encoder_add_global_param (self->encoder,
+  if (!gst_va_encoder_add_param (self->encoder, picture,
           VAEncMiscParameterBufferType, &hrd, sizeof (hrd))) {
     GST_ERROR_OBJECT (self, "Failed to create the HRD parameter");
     return FALSE;
@@ -2215,7 +2215,7 @@ _add_hrd_parameter (GstVaH264Enc * self)
 }
 
 static gboolean
-_add_quality_level_parameter (GstVaH264Enc * self)
+_add_quality_level_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture)
 {
   /* *INDENT-OFF* */
   struct
@@ -2231,7 +2231,7 @@ _add_quality_level_parameter (GstVaH264Enc * self)
   if (self->rc.target_usage == 0)
     return TRUE;
 
-  if (!gst_va_encoder_add_global_param (self->encoder,
+  if (!gst_va_encoder_add_param (self->encoder, picture,
           VAEncMiscParameterBufferType, &quality_level,
           sizeof (quality_level))) {
     GST_ERROR_OBJECT (self, "Failed to create the quality level parameter");
@@ -2242,7 +2242,7 @@ _add_quality_level_parameter (GstVaH264Enc * self)
 }
 
 static gboolean
-_add_frame_rate_parameter (GstVaH264Enc * self)
+_add_frame_rate_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture)
 {
   /* *INDENT-OFF* */
   struct
@@ -2258,7 +2258,7 @@ _add_frame_rate_parameter (GstVaH264Enc * self)
   };
   /* *INDENT-ON* */
 
-  if (!gst_va_encoder_add_global_param (self->encoder,
+  if (!gst_va_encoder_add_param (self->encoder, picture,
           VAEncMiscParameterBufferType, &framerate, sizeof (framerate))) {
     GST_ERROR_OBJECT (self, "Failed to create the frame rate parameter");
     return FALSE;
@@ -2268,7 +2268,7 @@ _add_frame_rate_parameter (GstVaH264Enc * self)
 }
 
 static gboolean
-_add_trellis_parameter (GstVaH264Enc * self)
+_add_trellis_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture)
 {
   /* *INDENT-OFF* */
   struct
@@ -2289,7 +2289,7 @@ _add_trellis_parameter (GstVaH264Enc * self)
   if (!self->use_trellis)
     return TRUE;
 
-  if (!gst_va_encoder_add_global_param (self->encoder,
+  if (!gst_va_encoder_add_param (self->encoder, picture,
           VAEncMiscParameterBufferType, &trellis, sizeof (trellis))) {
     GST_ERROR_OBJECT (self, "Failed to create the trellis parameter");
     return FALSE;
@@ -2832,21 +2832,19 @@ gst_va_h264_enc_encode_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
   if (frame->poc == 0) {
     VAEncSequenceParameterBufferH264 sequence;
 
-    gst_va_encoder_reset_global_params (self->encoder);
-
-    if (!_add_rate_control_parameter (self))
+    if (!_add_rate_control_parameter (self, frame->picture))
       return FALSE;
 
-    if (!_add_quality_level_parameter (self))
+    if (!_add_quality_level_parameter (self, frame->picture))
       return FALSE;
 
-    if (!_add_frame_rate_parameter (self))
+    if (!_add_frame_rate_parameter (self, frame->picture))
       return FALSE;
 
-    if (!_add_hrd_parameter (self))
+    if (!_add_hrd_parameter (self, frame->picture))
       return FALSE;
 
-    if (!_add_trellis_parameter (self))
+    if (!_add_trellis_parameter (self, frame->picture))
       return FALSE;
 
     _fill_sequence_param (self, &sequence);

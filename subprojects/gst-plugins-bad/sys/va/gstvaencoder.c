@@ -64,8 +64,6 @@ struct _GstVaEncoder
   gint codedbuf_size;
 
   GstBufferPool *recon_pool;
-  /* global parameters va buffers, such as sequence, hrd, etc */
-  GArray *params;
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_encoder_debug);
@@ -232,20 +230,17 @@ gst_va_encoder_close (GstVaEncoder * self)
 
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
 
-
-  if (!gst_va_encoder_is_open (self))
-    return TRUE;
-
-  gst_va_encoder_reset_global_params (self);
-
   GST_OBJECT_LOCK (self);
+  if (!_is_open_unlocked (self)) {
+    GST_OBJECT_UNLOCK (self);
+    return TRUE;
+  }
+
   config = self->config;
   context = self->context;
 
   recon_pool = self->recon_pool;
   self->recon_pool = NULL;
-
-  g_clear_pointer (&self->params, g_array_unref);
 
   gst_va_encoder_init (self);
   GST_OBJECT_UNLOCK (self);
@@ -471,7 +466,6 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   self->coded_width = coded_width;
   self->coded_height = coded_height;
   self->codedbuf_size = codedbuf_size;
-  self->params = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 8);
   gst_object_replace ((GstObject **) & self->recon_pool,
       (GstObject *) recon_pool);
 
@@ -930,67 +924,6 @@ gst_va_encoder_add_param (GstVaEncoder * self, GstVaEncodePicture * pic,
   return TRUE;
 }
 
-gboolean
-gst_va_encoder_add_global_param (GstVaEncoder * self, VABufferType type,
-    gpointer data, gsize size)
-{
-  VABufferID buffer;
-
-  g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
-  g_return_val_if_fail (self->context != VA_INVALID_ID, FALSE);
-  g_return_val_if_fail (data && size > 0, FALSE);
-
-  if (!gst_va_encoder_is_open (self)) {
-    GST_ERROR_OBJECT (self, "encoder has not been opened yet");
-    return FALSE;
-  }
-
-  buffer = _create_buffer (self, type, data, size);
-  if (buffer == VA_INVALID_ID)
-    return FALSE;
-
-  GST_OBJECT_LOCK (self);
-  self->params = g_array_append_val (self->params, buffer);
-  GST_OBJECT_UNLOCK (self);
-
-  return TRUE;
-}
-
-gboolean
-gst_va_encoder_reset_global_params (GstVaEncoder * self)
-{
-  guint i;
-  gboolean ret = TRUE;
-  GArray *params;
-
-  g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
-  g_return_val_if_fail (self->context != VA_INVALID_ID, FALSE);
-
-  GST_OBJECT_LOCK (self);
-
-  if (!_is_open_unlocked (self)) {
-    GST_OBJECT_UNLOCK (self);
-    GST_ERROR_OBJECT (self, "encoder has not been opened yet");
-    return TRUE;
-  }
-
-  params = g_array_copy (self->params);
-  self->params = g_array_set_size (self->params, 0);
-
-  GST_OBJECT_UNLOCK (self);
-
-  for (i = 0; i < params->len; i++) {
-    VABufferID buffer;
-
-    buffer = g_array_index (params, VABufferID, i);
-    ret &= _destroy_buffer (self->display, buffer);
-  }
-
-  g_array_unref (params);
-
-  return ret;
-}
-
 GArray *
 gst_va_encoder_get_surface_formats (GstVaEncoder * self)
 {
@@ -1105,7 +1038,6 @@ gst_va_encoder_encode (GstVaEncoder * self, GstVaEncodePicture * pic)
   VASurfaceID surface;
   VAContextID context;
   gboolean ret = FALSE;
-  guint orig_len;
 
   g_return_val_if_fail (pic, FALSE);
 
@@ -1136,15 +1068,9 @@ gst_va_encoder_encode (GstVaEncoder * self, GstVaEncodePicture * pic)
     goto bail;
   }
 
-  GST_OBJECT_LOCK (self);
-  orig_len = self->params->len;
-  self->params = g_array_append_vals (self->params, pic->params->data,
-      pic->params->len);
-  GST_OBJECT_UNLOCK (self);
-
   if (pic->params->len > 0) {
-    status = vaRenderPicture (dpy, context, (VABufferID *) self->params->data,
-        self->params->len);
+    status = vaRenderPicture (dpy, context, (VABufferID *) pic->params->data,
+        pic->params->len);
     if (status != VA_STATUS_SUCCESS) {
       GST_WARNING_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
       goto fail_end_pic;
@@ -1156,8 +1082,6 @@ gst_va_encoder_encode (GstVaEncoder * self, GstVaEncodePicture * pic)
   if (!ret)
     GST_WARNING_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
 
-  self->params = g_array_set_size (self->params, orig_len);
-
 bail:
   _destroy_all_buffers (pic);
 
@@ -1165,7 +1089,7 @@ bail:
 
 fail_end_pic:
   {
-    self->params = g_array_set_size (self->params, orig_len);
+    _destroy_all_buffers (pic);
     status = vaEndPicture (dpy, context);
     ret = FALSE;
     goto bail;
