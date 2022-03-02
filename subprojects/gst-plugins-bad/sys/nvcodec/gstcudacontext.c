@@ -38,13 +38,11 @@ enum
   PROP_DEVICE_ID
 };
 
-#define DEFAULT_DEVICE_ID -1
-
 struct _GstCudaContextPrivate
 {
   CUcontext context;
   CUdevice device;
-  gint device_id;
+  guint device_id;
 
   gint tex_align;
 
@@ -76,9 +74,9 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
   gobject_class->finalize = gst_cuda_context_finalize;
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
-      g_param_spec_int ("cuda-device-id", "Cuda Device ID",
-          "Set the GPU device to use for operations (-1 = auto)",
-          -1, G_MAXINT, DEFAULT_DEVICE_ID,
+      g_param_spec_uint ("cuda-device-id", "Cuda Device ID",
+          "Set the GPU device to use for operations",
+          0, G_MAXUINT, 0,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_cuda_context_debug,
@@ -90,8 +88,6 @@ gst_cuda_context_init (GstCudaContext * context)
 {
   GstCudaContextPrivate *priv = gst_cuda_context_get_instance_private (context);
 
-  priv->context = NULL;
-  priv->device_id = DEFAULT_DEVICE_ID;
   priv->accessible_peer = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   context->priv = priv;
@@ -106,7 +102,7 @@ gst_cuda_context_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE_ID:
-      priv->device_id = g_value_get_int (value);
+      priv->device_id = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -123,7 +119,7 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE_ID:
-      g_value_set_int (value, priv->device_id);
+      g_value_set_uint (value, priv->device_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -137,11 +133,8 @@ gst_cuda_context_constructed (GObject * object)
   GstCudaContext *context = GST_CUDA_CONTEXT (object);
   GstCudaContextPrivate *priv = context->priv;
   CUcontext cuda_ctx, old_ctx;
-  CUdevice cdev = 0, cuda_dev = -1;
+  CUdevice cdev = 0;
   gint dev_count = 0;
-  gchar name[256];
-  gint min = 0, maj = 0;
-  gint i;
   gint tex_align = 0;
   GList *iter;
 
@@ -150,34 +143,30 @@ gst_cuda_context_constructed (GObject * object)
     return;
   }
 
-  for (i = 0; i < dev_count; ++i) {
-    if (gst_cuda_result (CuDeviceGet (&cdev, i)) &&
-        gst_cuda_result (CuDeviceGetName (name, sizeof (name), cdev)) &&
-        gst_cuda_result (CuDeviceGetAttribute (&maj,
-                CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, cdev)) &&
-        gst_cuda_result (CuDeviceGetAttribute (&min,
-                CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, cdev)) &&
-        gst_cuda_result (CuDeviceGetAttribute (&tex_align,
-                CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT, cdev))) {
-      GST_INFO ("GPU #%d supports NVENC: %s (%s) (Compute SM %d.%d)", i,
-          (((maj << 4) + min) >= 0x30) ? "yes" : "no", name, maj, min);
-      if (priv->device_id == -1 || priv->device_id == cdev) {
-        priv->device_id = cuda_dev = cdev;
-        priv->tex_align = tex_align;
-        break;
-      }
-    }
-  }
-
-  if (cuda_dev == -1) {
-    GST_WARNING ("Device with id %d does not exist", priv->device_id);
+  if (priv->device_id >= dev_count) {
+    GST_WARNING ("Unavailable device id %d", priv->device_id);
     return;
   }
 
-  GST_DEBUG ("Creating cuda context for device index %d", cuda_dev);
+  if (!gst_cuda_result (CuDeviceGet (&cdev, priv->device_id))) {
+    GST_WARNING ("Failed to get device for id %d", priv->device_id);
+    return;
+  }
 
-  if (!gst_cuda_result (CuCtxCreate (&cuda_ctx, 0, cuda_dev))) {
-    GST_WARNING ("Failed to create CUDA context for cuda device %d", cuda_dev);
+  if (!gst_cuda_result (CuDeviceGetAttribute (&tex_align,
+              CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT, cdev))) {
+    GST_WARNING ("Failed to query texture alignment");
+    return;
+  }
+
+  priv->tex_align = tex_align;
+
+  GST_DEBUG ("Creating cuda context for device index %d, Texture Alignment: %d",
+      priv->device_id, priv->tex_align);
+
+  if (!gst_cuda_result (CuCtxCreate (&cuda_ctx, 0, cdev))) {
+    GST_WARNING ("Failed to create CUDA context for cuda device %d",
+        priv->device_id);
     return;
   }
 
@@ -185,10 +174,11 @@ gst_cuda_context_constructed (GObject * object)
     return;
   }
 
-  GST_INFO ("Created CUDA context %p with device-id %d", cuda_ctx, cuda_dev);
+  GST_INFO ("Created CUDA context %p with device-id %d",
+      cuda_ctx, priv->device_id);
 
   priv->context = cuda_ctx;
-  priv->device = cuda_dev;
+  priv->device = cdev;
 
   G_LOCK (list_lock);
   g_object_weak_ref (G_OBJECT (object),
@@ -302,16 +292,14 @@ gst_cuda_context_finalize (GObject * object)
 
 /**
  * gst_cuda_context_new:
- * @device_id: device-id for creating #GstCudaContext or -1 for auto selection
+ * @device_id: device-id for creating #GstCudaContext
  *
- * Create #GstCudaContext with given device_id. If the @device_id was not -1
- * but was out of range (e.g., exceed the number of device),
- * #GstCudaContext will not be created.
+ * Create #GstCudaContext with given device_id
  *
  * Returns: a new #GstCudaContext or %NULL on failure
  */
 GstCudaContext *
-gst_cuda_context_new (gint device_id)
+gst_cuda_context_new (guint device_id)
 {
   GstCudaContext *self =
       g_object_new (GST_TYPE_CUDA_CONTEXT, "cuda-device-id", device_id, NULL);

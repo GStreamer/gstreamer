@@ -60,7 +60,7 @@ struct _GstCudaContextClass
 
 GType            gst_cuda_context_get_type    (void);
 
-GstCudaContext * gst_cuda_context_new         (gint device_id);
+GstCudaContext * gst_cuda_context_new         (guint device_id);
 
 gboolean         gst_cuda_context_push        (GstCudaContext * ctx);
 

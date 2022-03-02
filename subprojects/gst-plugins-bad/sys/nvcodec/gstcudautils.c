@@ -145,7 +145,7 @@ static void
 context_set_cuda_context (GstContext * context, GstCudaContext * cuda_ctx)
 {
   GstStructure *s;
-  gint device_id;
+  guint device_id;
 
   g_return_if_fail (context != NULL);
 
@@ -180,6 +180,8 @@ gboolean
 gst_cuda_ensure_element_context (GstElement * element, gint device_id,
     GstCudaContext ** cuda_ctx)
 {
+  guint target_device_id = 0;
+
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (cuda_ctx != NULL, FALSE);
 
@@ -192,8 +194,11 @@ gst_cuda_ensure_element_context (GstElement * element, gint device_id,
   if (*cuda_ctx)
     return TRUE;
 
+  if (device_id > 0)
+    target_device_id = device_id;
+
   /* No available CUDA context in pipeline, create new one here */
-  *cuda_ctx = gst_cuda_context_new (device_id);
+  *cuda_ctx = gst_cuda_context_new (target_device_id);
 
   if (*cuda_ctx == NULL) {
     GST_CAT_ERROR_OBJECT (GST_CAT_CONTEXT, element,
@@ -253,7 +258,7 @@ gst_cuda_handle_set_context (GstElement * element,
   if (g_strcmp0 (context_type, GST_CUDA_CONTEXT_TYPE) == 0) {
     const GstStructure *str;
     GstCudaContext *other_ctx = NULL;
-    gint other_device_id = 0;
+    guint other_device_id = 0;
 
     /* If we had context already, will not replace it */
     if (*cuda_ctx)
