@@ -6621,7 +6621,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       gst_caps_set_simple (caps, "codec-alpha", G_TYPE_BOOLEAN, TRUE, NULL);
     *codec_name = g_strdup_printf ("On2 VP9");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_AV1)) {
-    caps = gst_caps_new_empty_simple ("video/x-av1");
+    caps = gst_caps_new_simple ("video/x-av1",
+        "alignment", G_TYPE_STRING, "tu", NULL);
     if (data) {
       GstBuffer *priv;
 
