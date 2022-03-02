@@ -17,35 +17,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_CUDA_DOWNLOAD_H__
-#define __GST_CUDA_DOWNLOAD_H__
+#pragma once
 
 #include "gstcudabasetransform.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CUDA_DOWNLOAD             (gst_cuda_download_get_type())
-#define GST_CUDA_DOWNLOAD(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CUDA_DOWNLOAD,GstCudaDownload))
-#define GST_CUDA_DOWNLOAD_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_CUDA_DOWNLOAD,GstCudaDownloadClass))
-#define GST_CUDA_DOWNLOAD_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_CUDA_DOWNLOAD,GstCudaDownloadClass))
-#define GST_IS_CUDA_DOWNLOAD(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CUDA_DOWNLOAD))
-#define GST_IS_CUDA_DOWNLOAD_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_CUDA_DOWNLOAD))
-
-typedef struct _GstCudaDownload GstCudaDownload;
-typedef struct _GstCudaDownloadClass GstCudaDownloadClass;
-
-struct _GstCudaDownload
-{
-  GstCudaBaseTransform parent;
-};
-
-struct _GstCudaDownloadClass
-{
-  GstCudaBaseTransformClass parent_class;
-};
-
-GType gst_cuda_download_get_type (void);
+#define GST_TYPE_CUDA_DOWNLOAD (gst_cuda_download_get_type())
+G_DECLARE_FINAL_TYPE (GstCudaDownload,
+    gst_cuda_download, GST, CUDA_DOWNLOAD, GstCudaBaseTransform);
 
 G_END_DECLS
 
-#endif /* __GST_CUDA_DOWNLOAD_H__ */

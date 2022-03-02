@@ -28,10 +28,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstCudaConverter GstCudaConverter;
 
-#define GST_CUDA_CONVERTER_FORMATS \
-    "{ I420, YV12, NV12, NV21, P010_10LE, P016_LE, I420_10LE, Y444, Y444_16LE, " \
-    "BGRA, RGBA, RGBx, BGRx, ARGB, ABGR, RGB, BGR, BGR10A2_LE, RGB10A2_LE }"
-
 GstCudaConverter *    gst_cuda_converter_new           (GstVideoInfo * in_info,
                                                         GstVideoInfo * out_info,
                                                         GstCudaContext * cuda_ctx);

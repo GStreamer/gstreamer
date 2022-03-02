@@ -42,13 +42,11 @@ struct _GstCudaBaseTransform
 {
   GstBaseTransform parent;
 
-  gboolean negotiated;
+  GstCudaContext *context;
+  CUstream cuda_stream;
 
   GstVideoInfo in_info;
   GstVideoInfo out_info;
-
-  GstCudaContext *context;
-  CUstream cuda_stream;
 
   gint device_id;
 };
@@ -57,18 +55,16 @@ struct _GstCudaBaseTransformClass
 {
   GstBaseTransformClass parent_class;
 
-  gboolean      (*set_info)           (GstCudaBaseTransform *filter,
-                                       GstCaps *incaps, GstVideoInfo *in_info,
-                                       GstCaps *outcaps, GstVideoInfo *out_info);
-
-  GstFlowReturn (*transform_frame)    (GstCudaBaseTransform *filter,
-                                       GstVideoFrame *in_frame,
-                                       GstCudaMemory *in_cuda_mem,
-                                       GstVideoFrame *out_frame,
-                                       GstCudaMemory *out_cuda_mem);
+  gboolean  (*set_info) (GstCudaBaseTransform *filter,
+                         GstCaps *incaps,
+                         GstVideoInfo *in_info,
+                         GstCaps *outcaps,
+                         GstVideoInfo *out_info);
 };
 
 GType gst_cuda_base_transform_get_type (void);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstCudaBaseTransform, gst_object_unref)
 
 G_END_DECLS
 

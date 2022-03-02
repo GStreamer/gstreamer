@@ -42,11 +42,6 @@ struct _GstCudaBaseFilter
   GstCudaBaseTransform parent;
 
   GstCudaConverter *converter;
-
-  /* fallback CUDA memory */
-  GstAllocator *allocator;
-  GstCudaMemory *in_fallback;
-  GstCudaMemory *out_fallback;
 };
 
 struct _GstCudaBaseFilterClass

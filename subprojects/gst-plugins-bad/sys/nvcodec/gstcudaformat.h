@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2019> Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) 2022 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,13 +19,12 @@
 
 #pragma once
 
-#include "gstcudabasetransform.h"
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CUDA_UPLOAD (gst_cuda_upload_get_type())
-G_DECLARE_FINAL_TYPE (GstCudaUpload,
-    gst_cuda_upload, GST, CUDA_UPLOAD, GstCudaBaseTransform);
+#define GST_CUDA_FORMATS \
+    "{ I420, YV12, NV12, NV21, P010_10LE, P016_LE, I420_10LE, Y444, Y444_16LE, " \
+    "BGRA, RGBA, RGBx, BGRx, ARGB, ABGR, RGB, BGR, BGR10A2_LE, RGB10A2_LE }"
 
 G_END_DECLS
-
