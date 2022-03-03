@@ -31,6 +31,14 @@
 #define GST_CAT_DEFAULT gst_va_base_transform_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+enum
+{
+  PROP_DEVICE_PATH = 1,
+  N_PROPERTIES
+};
+
+static GParamSpec *properties[N_PROPERTIES];
+
 struct _GstVaBaseTransformPrivate
 {
   GstVideoInfo srcpad_info;
@@ -59,6 +67,26 @@ G_DEFINE_TYPE_WITH_CODE (GstVaBaseTransform, gst_va_base_transform,
     );
 
 extern GRecMutex GST_VA_SHARED_LOCK;
+
+static void
+gst_va_base_transform_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVaBaseTransform *self = GST_VA_BASE_TRANSFORM (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE_PATH:{
+      if (!(self->display && GST_IS_VA_DISPLAY_DRM (self->display))) {
+        g_value_set_string (value, NULL);
+        return;
+      }
+      g_object_get_property (G_OBJECT (self->display), "path", value);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
 
 static void
 gst_va_base_transform_dispose (GObject * object)
@@ -504,6 +532,7 @@ gst_va_base_transform_change_state (GstElement * element,
       if (!gst_va_ensure_element_data (element, klass->render_device_path,
               &self->display))
         goto open_failed;
+      g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DEVICE_PATH]);
       gst_clear_caps (&self->priv->filter_caps);
       gst_clear_object (&self->filter);
       self->filter = gst_va_filter_new (self->display);
@@ -526,6 +555,7 @@ gst_va_base_transform_change_state (GstElement * element,
       gst_clear_caps (&self->priv->filter_caps);
       gst_clear_object (&self->filter);
       gst_clear_object (&self->display);
+      g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DEVICE_PATH]);
       break;
     default:
       break;
@@ -579,6 +609,7 @@ gst_va_base_transform_class_init (GstVaBaseTransformClass * klass)
   trans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->dispose = gst_va_base_transform_dispose;
+  gobject_class->get_property = gst_va_base_transform_get_property;
 
   trans_class->query = GST_DEBUG_FUNCPTR (gst_va_base_transform_query);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_va_base_transform_set_caps);
@@ -595,6 +626,12 @@ gst_va_base_transform_class_init (GstVaBaseTransformClass * klass)
       GST_DEBUG_FUNCPTR (gst_va_base_transform_set_context);
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_va_base_transform_change_state);
+
+  properties[PROP_DEVICE_PATH] = g_param_spec_string ("device-path",
+      "Device Path", "DRM device path", NULL,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, properties);
 
   gst_type_mark_as_plugin_api (GST_TYPE_VA_BASE_TRANSFORM, 0);
 }
