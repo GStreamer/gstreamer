@@ -761,9 +761,11 @@ gst_av1_parse_negotiate (GstAV1Parse * self, GstCaps * in_caps)
   /* Both upsteam and downstream support, best */
   if (in_caps && caps) {
     if (gst_caps_can_intersect (in_caps, caps)) {
-      GST_DEBUG_OBJECT (self, "downstream accepts upstream caps");
-      align = gst_av1_parse_alignment_from_caps (in_caps);
-      gst_clear_caps (&caps);
+      GstCaps *common_caps = NULL;
+
+      common_caps = gst_caps_intersect (in_caps, caps);
+      align = gst_av1_parse_alignment_from_caps (common_caps);
+      gst_clear_caps (&common_caps);
     }
   }
   if (align != GST_AV1_PARSE_ALIGN_NONE)
@@ -867,7 +869,8 @@ gst_av1_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
   if (align == GST_AV1_PARSE_ALIGN_NONE) {
     align = GST_AV1_PARSE_ALIGN_BYTE;
     gst_caps_set_simple (in_caps, "alignment", G_TYPE_STRING,
-        gst_av1_parse_alignment_to_string (align), NULL);
+        gst_av1_parse_alignment_to_string (align),
+        "stream-format", G_TYPE_STRING, "obu-stream", NULL);
   }
 
   /* negotiate with downstream, set output align */
