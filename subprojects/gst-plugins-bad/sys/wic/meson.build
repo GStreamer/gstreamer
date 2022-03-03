@@ -11,7 +11,7 @@ extra_args = []
 wic_deps = []
 
 wic_option = get_option('wic')
-if host_system != 'windows' or mf_option.disabled()
+if host_system != 'windows' or wic_option.disabled()
   subdir_done()
 endif
 
@@ -22,7 +22,7 @@ if cc.get_id() != 'msvc'
   subdir_done()
 endif
 
-windowscodecs_lib = cc.find_library('windowscodecs', required : mf_option)
+windowscodecs_lib = cc.find_library('windowscodecs', required : wic_option)
 have_wic = windowscodecs_lib.found() and cc.has_header('wincodec.h') and cc.has_header('wincodecsdk.h')
 if not have_wic
   if wic_option.enabled()
