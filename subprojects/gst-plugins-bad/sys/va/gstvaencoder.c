@@ -482,10 +482,10 @@ error:
   g_clear_pointer (&reconstruct_buffers, g_ptr_array_unref);
   g_clear_pointer (&recon_pool, gst_object_unref);
 
-  if (config == VA_INVALID_ID)
+  if (config != VA_INVALID_ID)
     vaDestroyConfig (dpy, config);
 
-  if (context == VA_INVALID_ID)
+  if (context != VA_INVALID_ID)
     vaDestroyContext (dpy, context);
 
   return FALSE;
