@@ -28,6 +28,26 @@
 #define GST_CAT_DEFAULT (base->debug_category)
 #define GST_VA_BASE_DEC_GET_PARENT_CLASS(obj) (GST_VA_BASE_DEC_GET_CLASS(obj)->parent_decoder_class)
 
+static void
+gst_va_base_dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVaBaseDec *self = GST_VA_BASE_DEC (object);
+
+  switch (prop_id) {
+    case GST_VA_DEC_PROP_DEVICE_PATH:{
+      if (!(self->display && GST_IS_VA_DISPLAY_DRM (self->display))) {
+        g_value_set_string (value, NULL);
+        return;
+      }
+      g_object_get_property (G_OBJECT (self->display), "path", value);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
 static gboolean
 gst_va_base_dec_open (GstVideoDecoder * decoder)
 {
@@ -38,6 +58,8 @@ gst_va_base_dec_open (GstVideoDecoder * decoder)
   if (!gst_va_ensure_element_data (decoder, klass->render_device_path,
           &base->display))
     return FALSE;
+
+  g_object_notify (G_OBJECT (decoder), "device-path");
 
   if (!g_atomic_pointer_get (&base->decoder)) {
     GstVaDecoder *va_decoder;
@@ -65,6 +87,8 @@ gst_va_base_dec_close (GstVideoDecoder * decoder)
 
   gst_clear_object (&base->decoder);
   gst_clear_object (&base->display);
+
+  g_object_notify (G_OBJECT (decoder), "device-path");
 
   return TRUE;
 }
@@ -632,6 +656,7 @@ gst_va_base_dec_class_init (GstVaBaseDecClass * klass, GstVaCodecs codec,
     GstCaps * doc_src_caps, GstCaps * doc_sink_caps)
 {
   GstPadTemplate *sink_pad_templ, *src_pad_templ;
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
@@ -658,6 +683,8 @@ gst_va_base_dec_class_init (GstVaBaseDecClass * klass, GstVaCodecs codec,
     gst_caps_unref (doc_src_caps);
   }
 
+  object_class->get_property = gst_va_base_dec_get_property;
+
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_va_base_dec_set_context);
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_va_base_dec_open);
@@ -668,6 +695,10 @@ gst_va_base_dec_class_init (GstVaBaseDecClass * klass, GstVaCodecs codec,
   decoder_class->sink_query = GST_DEBUG_FUNCPTR (gst_va_base_dec_sink_query);
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_va_base_dec_decide_allocation);
+
+  g_object_class_install_property (object_class, GST_VA_DEC_PROP_DEVICE_PATH,
+      g_param_spec_string ("device-path", "Device Path",
+          "DRM device path", NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static GstVideoFormat

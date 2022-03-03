@@ -38,6 +38,11 @@ G_BEGIN_DECLS
 #define GST_VA_BASE_DEC_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_FROM_INSTANCE (obj), GstVaBaseDecClass))
 #define GST_VA_BASE_DEC_CLASS(klass) ((GstVaBaseDecClass *)(klass))
 
+enum {
+  GST_VA_DEC_PROP_DEVICE_PATH = 1,
+  GST_VA_DEC_PROP_LAST,
+};
+
 typedef struct _GstVaBaseDec GstVaBaseDec;
 typedef struct _GstVaBaseDecClass GstVaBaseDecClass;
 
