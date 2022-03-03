@@ -111,6 +111,7 @@ struct _GstAV1Parse
   GstAV1Profile profile;
 
   GstAV1ParseAligment in_align;
+  gboolean detect_annex_b;
   GstAV1ParseAligment align;
 
   GstAV1Parser *parser;
@@ -294,6 +295,7 @@ gst_av1_parse_reset (GstAV1Parse * self)
   self->bit_depth = 0;
   self->align = GST_AV1_PARSE_ALIGN_NONE;
   self->in_align = GST_AV1_PARSE_ALIGN_NONE;
+  self->detect_annex_b = FALSE;
   self->discont = TRUE;
   self->header = FALSE;
   self->keyframe = FALSE;
@@ -881,6 +883,9 @@ gst_av1_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
   gst_caps_unref (in_caps);
 
   self->in_align = align;
+
+  if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT)
+    self->detect_annex_b = TRUE;
 
   if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
     gst_av1_parser_reset (self->parser, TRUE);
@@ -1766,10 +1771,12 @@ out:
   return ret;
 }
 
-/* Try to recognize whether the input is annex-b format. */
-static GstFlowReturn
-gst_av1_parse_detect_alignment (GstBaseParse * parse,
-    GstBaseParseFrame * frame, gint * skipsize, guint32 * total_consumed)
+/* Try to recognize whether the input is annex-b format.
+   return TRUE if we decide, FALSE if we can not decide or
+   encounter some error. */
+static gboolean
+gst_av1_parse_detect_stream_format (GstBaseParse * parse,
+    GstBaseParseFrame * frame)
 {
   GstAV1Parse *self = GST_AV1_PARSE (parse);
   GstMapInfo map_info;
@@ -1779,28 +1786,31 @@ gst_av1_parse_detect_alignment (GstBaseParse * parse,
   gboolean got_seq, got_frame;
   gboolean frame_complete;
   guint32 consumed;
-  guint32 frame_sz;
-  GstFlowReturn ret = GST_FLOW_OK;
+  guint32 total_consumed;
+  guint32 tu_sz;
+  gboolean ret = FALSE;
+
+  g_assert (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT);
+  g_assert (self->detect_annex_b == TRUE);
 
   if (!gst_buffer_map (buffer, &map_info, GST_MAP_READ)) {
-    *skipsize = 0;
     GST_ERROR_OBJECT (parse, "Couldn't map incoming buffer");
-    return GST_FLOW_ERROR;
+    return FALSE;
   }
 
   gst_av1_parser_reset (self->parser, FALSE);
 
-  /* Detect the alignment obu first */
   got_seq = FALSE;
   got_frame = FALSE;
-  *total_consumed = 0;
+  total_consumed = 0;
+
 again:
-  while (*total_consumed < map_info.size) {
+  while (total_consumed < map_info.size) {
     res = gst_av1_parser_identify_one_obu (self->parser,
-        map_info.data + *total_consumed, map_info.size - *total_consumed,
+        map_info.data + total_consumed, map_info.size - total_consumed,
         &obu, &consumed);
     if (res == GST_AV1_PARSER_OK) {
-      *total_consumed += consumed;
+      total_consumed += consumed;
       res = gst_av1_parse_handle_one_obu (self, &obu, &frame_complete, NULL);
     }
 
@@ -1809,6 +1819,7 @@ again:
 
     if (obu.obu_type == GST_AV1_OBU_SEQUENCE_HEADER)
       got_seq = TRUE;
+
     if (obu.obu_type == GST_AV1_OBU_REDUNDANT_FRAME_HEADER ||
         obu.obu_type == GST_AV1_OBU_FRAME ||
         obu.obu_type == GST_AV1_OBU_FRAME_HEADER)
@@ -1820,51 +1831,45 @@ again:
 
   gst_av1_parser_reset (self->parser, FALSE);
 
-  if (res == GST_AV1_PARSER_OK || res == GST_AV1_PARSER_NO_MORE_DATA) {
-    *skipsize = 0;
-
-    /* If succeed recognize seq or frame, we can decide,
-       otherwise, just skipsize to 0 and get more data. */
-    if (got_seq || got_frame)
-      self->in_align = GST_AV1_PARSE_ALIGN_BYTE;
-
-    ret = GST_FLOW_OK;
+  /* If succeed recognize seq or frame, it's done.
+     otherwise, just need to get more data. */
+  if (got_seq || got_frame) {
+    ret = TRUE;
+    self->detect_annex_b = FALSE;
     goto out;
-  } else if (res == GST_AV1_PARSER_DROP) {
-    *total_consumed += consumed;
+  }
+
+  if (res == GST_AV1_PARSER_DROP) {
+    total_consumed += consumed;
     res = GST_AV1_PARSER_OK;
     gst_av1_parse_reset_obu_data_state (self);
     goto again;
   }
 
-  /* Try the annexb. The buffer should hold the whole frame, and
-     the buffer start with the frame size in leb128() format. */
+  /* Try the annex b format. The buffer should contain the whole TU,
+     and the buffer start with the TU size in leb128() format. */
   if (map_info.size < 8) {
-    /* Get more data. */
-    *skipsize = 0;
-    ret = GST_FLOW_OK;
+    /* Too small. */
     goto out;
   }
 
-  frame_sz = _read_leb128 (map_info.data, &res, &consumed);
-  if (frame_sz == 0 || res != GST_AV1_PARSER_OK) {
-    /* Both modes does not match, we can decide a error */
-    ret = GST_FLOW_ERROR;
+  tu_sz = _read_leb128 (map_info.data, &res, &consumed);
+  if (tu_sz == 0 || res != GST_AV1_PARSER_OK) {
+    /* error to get the TU size, should not be annex b. */
     goto out;
   }
 
-  if (frame_sz + consumed != map_info.size) {
-    GST_DEBUG_OBJECT (self, "Buffer size %" G_GSSIZE_FORMAT ", frame size %d,"
-        " consumed %d, does not match annex b format.",
-        map_info.size, frame_sz, consumed);
-    /* Both modes does not match, we can decide a error */
-    ret = GST_FLOW_ERROR;
+  if (tu_sz + consumed != map_info.size) {
+    GST_DEBUG_OBJECT (self, "Buffer size %" G_GSSIZE_FORMAT ", TU size %d,"
+        " do not match.", map_info.size, tu_sz);
     goto out;
   }
 
+  GST_INFO_OBJECT (self, "Detect the annex-b format");
   self->in_align = GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B;
+  self->detect_annex_b = FALSE;
   gst_av1_parser_reset (self->parser, TRUE);
-  ret = GST_FLOW_OK;
+  ret = TRUE;
 
 out:
   gst_av1_parse_reset_obu_data_state (self);
@@ -1928,24 +1933,27 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
           self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B);
     }
 
-    if (self->in_align != GST_AV1_PARSE_ALIGN_NONE)
-      GST_LOG_OBJECT (self, "Query the upstream get the alignment %d",
-          self->in_align);
+    if (self->in_align != GST_AV1_PARSE_ALIGN_NONE) {
+      GST_LOG_OBJECT (self, "Query the upstream get the alignment %s",
+          gst_av1_parse_alignment_to_string (self->in_align));
+    } else {
+      self->in_align = GST_AV1_PARSE_ALIGN_BYTE;
+      GST_DEBUG_OBJECT (self, "alignment set to default %s",
+          gst_av1_parse_alignment_to_string (GST_AV1_PARSE_ALIGN_BYTE));
+    }
   }
 
-  if (self->in_align == GST_AV1_PARSE_ALIGN_NONE) {
-    guint32 consumed = 0;
-
-    /* Only happend at the first time of handle_frame, and the
-       alignment in the sink caps is unset. Try the default and
-       if error, try the annex B. */
-    ret = gst_av1_parse_detect_alignment (parse, frame, skipsize, &consumed);
-    if (ret == GST_FLOW_OK && self->in_align != GST_AV1_PARSE_ALIGN_NONE) {
-      GST_INFO_OBJECT (self, "Detect the input alignment %d", self->in_align);
+  if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT
+      && self->detect_annex_b) {
+    /* Only happend at the first time of handle_frame, try to
+       recognize the annex b stream format. */
+    if (gst_av1_parse_detect_stream_format (parse, frame)) {
+      GST_INFO_OBJECT (self, "Input alignment %s",
+          gst_av1_parse_alignment_to_string (self->in_align));
     } else {
-      *skipsize = consumed > 0 ? consumed : gst_buffer_get_size (frame->buffer);
-      GST_WARNING_OBJECT (self, "Fail to detect the alignment, skip %d",
-          *skipsize);
+      *skipsize = gst_buffer_get_size (frame->buffer);
+      GST_WARNING_OBJECT (self, "Fail to detect the stream format for TU,"
+          " skip %d", *skipsize);
       return GST_FLOW_OK;
     }
   }
