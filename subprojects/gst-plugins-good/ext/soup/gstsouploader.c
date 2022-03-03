@@ -814,11 +814,10 @@ _soup_session_send_async (SoupSession * session, SoupMessage * msg,
 {
 #ifdef STATIC_SOUP
 #if STATIC_SOUP == 2
-  return soup_session_send_async (session, msg, cancellable,
-      callback, user_data);
+  soup_session_send_async (session, msg, cancellable, callback, user_data);
 #else
-  return soup_session_send_async (session, msg, G_PRIORITY_DEFAULT,
-      cancellable, callback, user_data);
+  soup_session_send_async (session, msg, G_PRIORITY_DEFAULT, cancellable,
+      callback, user_data);
 #endif
 #else
   if (gst_soup_vtable.lib_version == 3) {
