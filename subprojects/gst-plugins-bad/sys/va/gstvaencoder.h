@@ -53,7 +53,7 @@ gboolean              gst_va_encoder_open                 (GstVaEncoder * self,
                                                            gint coded_width,
                                                            gint coded_height,
                                                            gint codedbuf_size,
-                                                           guint reconstruct_buffer_num,
+                                                           guint max_reconstruct_surfaces,
                                                            guint rc_ctrl,
                                                            guint32 packed_headers);
 gboolean              gst_va_encoder_close                (GstVaEncoder * self);

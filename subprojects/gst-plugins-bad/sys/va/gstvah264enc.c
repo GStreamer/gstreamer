@@ -3733,7 +3733,7 @@ gst_va_h264_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
   GstVaH264Enc *self = GST_VA_H264_ENC (venc);
   GstVaH264EncClass *klass = GST_VA_H264_ENC_GET_CLASS (self);
   GstCaps *out_caps;
-  guint reconstruct_buffer_num;
+  guint max_ref_frames;
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
@@ -3760,12 +3760,11 @@ gst_va_h264_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
     return FALSE;
   }
 
-  reconstruct_buffer_num = self->gop.num_ref_frames + 3 /* scratch frames */ ;
+  max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
   if (!gst_va_encoder_open (self->encoder, self->profile, self->entrypoint,
           GST_VIDEO_INFO_FORMAT (&self->in_info), self->rt_format,
           self->mb_width * 16, self->mb_height * 16, self->codedbuf_size,
-          reconstruct_buffer_num, self->rc.rc_ctrl_mode,
-          self->packed_headers)) {
+          max_ref_frames, self->rc.rc_ctrl_mode, self->packed_headers)) {
     GST_ERROR_OBJECT (self, "Failed to open the VA encoder.");
     return FALSE;
   }

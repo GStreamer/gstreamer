@@ -303,7 +303,8 @@ _get_surface_formats (GstVaDisplay * display, VAConfigID config)
 
 static GstBufferPool *
 _create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
-    GstVideoFormat format, gint coded_width, gint coded_height, guint max_num)
+    GstVideoFormat format, gint coded_width, gint coded_height,
+    guint max_buffers)
 {
   GstAllocator *allocator = NULL;
   guint usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
@@ -331,8 +332,8 @@ _create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
 
   gst_allocation_params_init (&params);
 
-  pool = gst_va_pool_new_with_config (caps, size, 1, max_num,
-      usage_hint, allocator, &params);
+  pool = gst_va_pool_new_with_config (caps, size, 0, max_buffers, usage_hint,
+      allocator, &params);
 
   gst_clear_object (&allocator);
   gst_clear_caps (&caps);
@@ -344,7 +345,7 @@ gboolean
 gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
     VAEntrypoint entrypoint, GstVideoFormat video_format, guint rt_format,
     gint coded_width, gint coded_height, gint codedbuf_size,
-    guint reconstruct_buffer_num, guint rc_ctrl, guint32 packed_headers)
+    guint max_reconstruct_surfaces, guint rc_ctrl, guint32 packed_headers)
 {
   /* *INDENT-OFF* */
   VAConfigAttrib attribs[3] = {
@@ -355,15 +356,12 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   VAConfigID config = VA_INVALID_ID;
   VAContextID context = VA_INVALID_ID;
   VADisplay dpy;
-  GPtrArray *reconstruct_buffers = NULL;
-  GArray *surfaces = NULL;
   GArray *surface_formats = NULL;
   VAStatus status;
   GstBufferPool *recon_pool = NULL;
-  guint i, attrib_idx = 2;
+  guint attrib_idx = 2;
 
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
-  g_return_val_if_fail (reconstruct_buffer_num > 0, FALSE);
   g_return_val_if_fail (codedbuf_size > 0, FALSE);
 
   if (gst_va_encoder_is_open (self))
@@ -397,61 +395,19 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   }
 
   recon_pool = _create_reconstruct_pool (self->display, surface_formats,
-      video_format, coded_width, coded_height, reconstruct_buffer_num);
+      video_format, coded_width, coded_height, max_reconstruct_surfaces);
   if (!recon_pool) {
     GST_ERROR_OBJECT (self, "Failed to create reconstruct pool");
     goto error;
   }
   gst_buffer_pool_set_active (recon_pool, TRUE);
 
-  /* Create VA surfaces list for vaCreateContext() */
-  surfaces = g_array_sized_new (FALSE, FALSE, sizeof (VASurfaceID),
-      reconstruct_buffer_num);
-  if (!surfaces)
-    goto error;
-
-  reconstruct_buffers = g_ptr_array_sized_new (reconstruct_buffer_num);
-  if (!reconstruct_buffers)
-    goto error;
-
-  g_ptr_array_set_free_func (reconstruct_buffers,
-      (GDestroyNotify) gst_buffer_unref);
-
-  /* The encoder need to binding all reconstruct surface when create contex,
-     we have to allocate them all here. */
-  for (i = 0; i < reconstruct_buffer_num; i++) {
-    GstBuffer *buffer;
-    VASurfaceID surface_id;
-    GstFlowReturn ret;
-    GstBufferPoolAcquireParams buffer_pool_params = { 0, };
-
-    buffer_pool_params.flags = GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
-    ret = gst_buffer_pool_acquire_buffer (recon_pool, &buffer,
-        &buffer_pool_params);
-    if (ret != GST_FLOW_OK) {
-      GST_ERROR_OBJECT (self, "Failed to create the reconstruct picture.");
-      goto error;
-    }
-
-    surface_id = gst_va_buffer_get_surface (buffer);
-    g_assert (surface_id != VA_INVALID_ID);
-
-    g_ptr_array_add (reconstruct_buffers, buffer);
-    g_array_append_val (surfaces, surface_id);
-  }
-
-  g_assert (surfaces->len == reconstruct_buffer_num);
-
   status = vaCreateContext (dpy, config, coded_width, coded_height,
-      VA_PROGRESSIVE, (VASurfaceID *) surfaces->data, reconstruct_buffer_num,
-      &context);
+      VA_PROGRESSIVE, NULL, 0, &context);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateConfig: %s", vaErrorStr (status));
     goto error;
   }
-
-  g_clear_pointer (&surfaces, g_array_unref);
-  g_clear_pointer (&reconstruct_buffers, g_ptr_array_unref);
 
   GST_OBJECT_LOCK (self);
 
@@ -475,8 +431,6 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   return TRUE;
 
 error:
-  g_clear_pointer (&surfaces, g_array_unref);
-  g_clear_pointer (&reconstruct_buffers, g_ptr_array_unref);
   g_clear_pointer (&recon_pool, gst_object_unref);
 
   if (config != VA_INVALID_ID)
@@ -1149,7 +1103,7 @@ gst_va_encode_picture_new (GstVaEncoder * self, GstBuffer * raw_buffer)
 
   GST_OBJECT_UNLOCK (self);
 
-  ret = gst_buffer_pool_acquire_buffer (self->recon_pool, &reconstruct_buffer,
+  ret = gst_buffer_pool_acquire_buffer (recon_pool, &reconstruct_buffer,
       &buffer_pool_params);
   gst_clear_object (&recon_pool);
 
