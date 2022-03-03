@@ -238,6 +238,9 @@ gst_ivf_parse_update_src_caps (GstIvfParse * ivf)
         ivf->fps_d, NULL);
   }
 
+  if (ivf->fourcc == GST_MAKE_FOURCC ('A', 'V', '0', '1'))
+    gst_caps_set_simple (caps, "alignment", G_TYPE_STRING, "tu", NULL);
+
   gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (ivf), caps);
   gst_caps_unref (caps);
 }
