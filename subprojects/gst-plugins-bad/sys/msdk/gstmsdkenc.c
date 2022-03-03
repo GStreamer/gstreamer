@@ -53,7 +53,7 @@
 
 #ifndef _WIN32
 #include "gstmsdkallocator_libva.h"
-#include "gstmsdk_va.h"
+#include <gst/va/gstvaallocator.h>
 #endif
 
 static inline void *
@@ -1730,7 +1730,7 @@ import_va_surface_to_msdk (GstMsdkEnc * thiz, GstBuffer * buf,
   VASurfaceID surface;
   gint i;
 
-  surface = gst_msdk_va_peek_buffer_surface (buf);
+  surface = gst_va_buffer_get_surface (buf);
   if (surface == VA_INVALID_SURFACE)
     return FALSE;
 
