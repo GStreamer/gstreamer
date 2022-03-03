@@ -2080,8 +2080,10 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
       gst_buffer_unref (buffer);
       buffer = NULL;
     }
-    gst_object_unref (best);
-    best = NULL;
+    if (best) {
+      gst_object_unref (best);
+      best = NULL;
+    }
   }
 
   if (best) {
