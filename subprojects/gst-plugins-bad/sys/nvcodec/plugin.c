@@ -36,8 +36,7 @@
 #include "gstnvvp8dec.h"
 #include "gstnvvp9dec.h"
 #include "gstnvdecoder.h"
-#include "gstcudadownload.h"
-#include "gstcudaupload.h"
+#include "gstcudamemorycopy.h"
 #include "gstcudafilter.h"
 #include "gstcudamemory.h"
 
@@ -233,10 +232,7 @@ plugin_init (GstPlugin * plugin)
     CuCtxDestroy (cuda_ctx);
   }
 
-  gst_element_register (plugin, "cudadownload", GST_RANK_NONE,
-      GST_TYPE_CUDA_DOWNLOAD);
-  gst_element_register (plugin, "cudaupload", GST_RANK_NONE,
-      GST_TYPE_CUDA_UPLOAD);
+  gst_cuda_memory_copy_register (plugin, GST_RANK_NONE);
 
   gst_cuda_filter_plugin_init (plugin);
   gst_cuda_memory_init_once ();
