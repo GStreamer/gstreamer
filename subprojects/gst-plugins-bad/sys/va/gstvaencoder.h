@@ -107,8 +107,5 @@ GstVaEncodePicture *  gst_va_encode_picture_new           (GstVaEncoder * self,
 void                  gst_va_encode_picture_free          (GstVaEncodePicture * pic);
 VASurfaceID           gst_va_encode_picture_get_raw_surface (GstVaEncodePicture * pic);
 VASurfaceID           gst_va_encode_picture_get_reconstruct_surface (GstVaEncodePicture * pic);
-gint                  gst_va_encode_picture_get_coded_size (GstVaEncodePicture * pic);
-gboolean              gst_va_encode_picture_copy_coded_data (GstVaEncodePicture * pic,
-                                                             GstBuffer * dest);
 
 G_END_DECLS

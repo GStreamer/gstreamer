@@ -3211,26 +3211,42 @@ _push_buffer_to_downstream (GstVaH264Enc * self, GstVaH264EncFrame * frame_enc)
 {
   GstVideoCodecFrame *frame;
   GstFlowReturn ret;
-  gint coded_size;
-  GstBuffer *buf = NULL;
+  guint coded_size;
+  goffset offset;
+  GstBuffer *buf;
+  VADisplay dpy;
   VASurfaceID surface;
-  VADisplay dpy = gst_va_display_get_va_dpy (self->display);
   VAStatus status;
+  VACodedBufferSegment *seg, *seg_list;
 
   frame = frame_enc->frame;
 
+  dpy = gst_va_display_get_va_dpy (self->display);
+
+  /* Wait for encoding to finish */
   surface = gst_va_encode_picture_get_raw_surface (frame_enc->picture);
   status = vaSyncSurface (dpy, surface);
   if (status != VA_STATUS_SUCCESS) {
-    GST_WARNING ("vaSyncSurface: %s", vaErrorStr (status));
+    GST_WARNING_OBJECT (self, "vaSyncSurface: %s", vaErrorStr (status));
     goto error;
   }
 
-  coded_size = gst_va_encode_picture_get_coded_size (frame_enc->picture);
-  if (coded_size <= 0) {
-    GST_ERROR_OBJECT (self, "Failed to get the coded size,");
+  seg_list = NULL;
+  status = vaMapBuffer (dpy, frame_enc->picture->coded_buffer,
+      (gpointer *) & seg_list);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_WARNING_OBJECT (self, "vaMapBuffer: %s", vaErrorStr (status));
     goto error;
   }
+
+  if (!seg_list) {
+    GST_WARNING_OBJECT (self, "coded buffer has no segment list");
+    goto error;
+  }
+
+  coded_size = 0;
+  for (seg = seg_list; seg; seg = seg->next)
+    coded_size += seg->size;
 
   buf = gst_video_encoder_allocate_output_buffer (GST_VIDEO_ENCODER_CAST (self),
       coded_size);
@@ -3240,11 +3256,22 @@ _push_buffer_to_downstream (GstVaH264Enc * self, GstVaH264EncFrame * frame_enc)
     goto error;
   }
 
-  if (!gst_va_encode_picture_copy_coded_data (frame_enc->picture, buf)) {
-    GST_ERROR_OBJECT (self, "Failed to copy output buffer, size %d",
-        coded_size);
-    goto error;
+  offset = 0;
+  for (seg = seg_list; seg; seg = seg->next) {
+    gsize write_size;
+
+    write_size = gst_buffer_fill (buf, offset, seg->buf, seg->size);
+    if (write_size != seg->size) {
+      GST_WARNING_OBJECT (self, "Segment size is %d, but copied %"
+          G_GSIZE_FORMAT, seg->size, write_size);
+      break;
+    }
+    offset += seg->size;
   }
+
+  status = vaUnmapBuffer (dpy, frame_enc->picture->coded_buffer);
+  if (status != VA_STATUS_SUCCESS)
+    GST_WARNING ("vaUnmapBuffer: %s", vaErrorStr (status));
 
   frame->pts =
       self->start_pts + self->frame_duration * frame_enc->total_frame_count;
