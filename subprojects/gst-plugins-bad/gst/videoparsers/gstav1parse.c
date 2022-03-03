@@ -739,7 +739,7 @@ static void
 gst_av1_parse_negotiate (GstAV1Parse * self, GstCaps * in_caps)
 {
   GstCaps *caps;
-  GstAV1ParseAligment align = GST_AV1_PARSE_ALIGN_NONE;
+  GstAV1ParseAligment align;
 
   caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (self));
   GST_DEBUG_OBJECT (self, "allowed caps: %" GST_PTR_FORMAT, caps);
@@ -754,7 +754,7 @@ gst_av1_parse_negotiate (GstAV1Parse * self, GstCaps * in_caps)
   /* prefer TU as default */
   if (gst_av1_parse_caps_has_alignment (caps,
           GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT)) {
-    align = GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT;
+    self->align = GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT;
     goto done;
   }
 
@@ -766,28 +766,33 @@ gst_av1_parse_negotiate (GstAV1Parse * self, GstCaps * in_caps)
       common_caps = gst_caps_intersect (in_caps, caps);
       align = gst_av1_parse_alignment_from_caps (common_caps);
       gst_clear_caps (&common_caps);
+
+      if (align != GST_AV1_PARSE_ALIGN_NONE
+          && align != GST_AV1_PARSE_ALIGN_ERROR) {
+        self->align = align;
+        goto done;
+      }
     }
   }
-  if (align != GST_AV1_PARSE_ALIGN_NONE)
-    goto done;
 
   /* Select first one of downstream support */
   if (caps && !gst_caps_is_empty (caps)) {
     /* fixate to avoid ambiguity with lists when parsing */
     caps = gst_caps_fixate (caps);
     align = gst_av1_parse_alignment_from_caps (caps);
+
+    if (align != GST_AV1_PARSE_ALIGN_NONE && align != GST_AV1_PARSE_ALIGN_ERROR) {
+      self->align = align;
+      goto done;
+    }
   }
-  if (align != GST_AV1_PARSE_ALIGN_NONE)
-    goto done;
 
   /* default */
-  if (align == GST_AV1_PARSE_ALIGN_NONE)
-    align = GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT;
+  self->align = GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT;
 
 done:
-  self->align = align;
   GST_INFO_OBJECT (self, "selected alignment %s",
-      gst_av1_parse_alignment_to_string (align));
+      gst_av1_parse_alignment_to_string (self->align));
 
   gst_clear_caps (&caps);
 }
@@ -1924,10 +1929,22 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
     if (upstream_caps) {
       if (!gst_caps_is_empty (upstream_caps)
           && !gst_caps_is_any (upstream_caps)) {
+        GstAV1ParseAligment align;
+
         GST_LOG_OBJECT (self, "upstream caps: %" GST_PTR_FORMAT, upstream_caps);
+
         /* fixate to avoid ambiguity with lists when parsing */
         upstream_caps = gst_caps_fixate (upstream_caps);
-        self->in_align = gst_av1_parse_alignment_from_caps (upstream_caps);
+        align = gst_av1_parse_alignment_from_caps (upstream_caps);
+        if (align == GST_AV1_PARSE_ALIGN_ERROR) {
+          GST_ERROR_OBJECT (self, "upstream caps %" GST_PTR_FORMAT
+              " set stream-format and alignment conflict.", upstream_caps);
+
+          gst_caps_unref (upstream_caps);
+          return GST_FLOW_ERROR;
+        }
+
+        self->in_align = align;
       }
 
       gst_caps_unref (upstream_caps);
