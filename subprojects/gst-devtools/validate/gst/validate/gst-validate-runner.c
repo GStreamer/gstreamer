@@ -780,7 +780,7 @@ gst_validate_runner_get_reports_count (GstValidateRunner * runner)
  * gst_validate_runner_get_reports:
  * @runner: The #GstValidateRunner
  *
- * Returns: (element-type GstValidateReport) (transfer full): All the reports in a #GList of #GstValidateReportg
+ * Returns: (element-type GstValidateReport) (transfer full): The list of reports
  */
 GList *
 gst_validate_runner_get_reports (GstValidateRunner * runner)

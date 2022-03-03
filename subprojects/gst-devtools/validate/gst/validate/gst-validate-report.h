@@ -150,7 +150,7 @@ typedef enum {
 /**
  * GstValidateIssueFlags:
  * GST_VALIDATE_ISSUE_FLAGS_NONE: No special flags for the issue type
- * GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS: Always show all accurences of the issue in full details
+ * GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS: Always show all occurrences of the issue in full details
  * GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE: Do not generate backtrace for the issue type
  */
 typedef enum {
@@ -237,6 +237,33 @@ struct _GstValidateReport {
 
   gpointer _gst_reserved[GST_PADDING - 2];
 };
+
+GST_VALIDATE_API
+GstValidateIssue * gst_validate_report_get_issue (GstValidateReport * report);
+
+GST_VALIDATE_API
+GstValidateReportLevel gst_validate_report_get_level (GstValidateReport * report);
+
+GST_VALIDATE_API
+GstValidateReporter * gst_validate_report_get_reporter (GstValidateReport * report);
+
+GST_VALIDATE_API
+GstClockTime gst_validate_report_get_timestamp (GstValidateReport * report);
+
+GST_VALIDATE_API
+gchar * gst_validate_report_get_message (GstValidateReport * report);
+
+GST_VALIDATE_API
+GstValidateReportingDetails gst_validate_report_get_reporting_level (GstValidateReport * report);
+
+GST_VALIDATE_API
+gchar * gst_validate_report_get_reporter_name (GstValidateReport * report);
+
+GST_VALIDATE_API
+gchar * gst_validate_report_get_trace (GstValidateReport * report);
+
+GST_VALIDATE_API
+gchar * gst_validate_report_get_dotfile_name (GstValidateReport * report);
 
 void gst_validate_report_add_message (GstValidateReport *report,
     const gchar *message);

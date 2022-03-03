@@ -115,6 +115,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_report_debug);
   (g_mutex_unlock (&((GstValidateReport *) r)->shadow_reports_lock));		\
   } G_STMT_END
 
+
 static GstValidateIssue *
 gst_validate_issue_ref (GstValidateIssue * issue)
 {
@@ -149,6 +150,79 @@ gst_validate_issue_get_id (GstValidateIssue * issue)
 {
   return issue->issue_id;
 }
+
+#define MAKE_GETTER_COPY(type, field, copier) \
+  type gst_validate_report_get_##field(GstValidateReport *report) { return copier(report->field); }
+
+#define MAKE_GETTER(type, field) \
+  type gst_validate_report_get_##field(GstValidateReport *report) { return report->field; }
+
+/**
+ * gst_validate_report_get_level:
+ *
+ * Returns: report level
+ * Since: 1.22
+ */
+MAKE_GETTER (GstValidateReportLevel, level);
+/**
+ * gst_validate_report_get_timestamp:
+ *
+ * Returns: report timestamp
+ * Since: 1.22
+ */
+MAKE_GETTER (GstClockTime, timestamp);
+/**
+ * gst_validate_report_get_reporting_level:
+ *
+ * Returns: reporting level
+ * Since: 1.22
+ */
+MAKE_GETTER (GstValidateReportingDetails, reporting_level);
+/**
+ * gst_validate_report_get_issue:
+ *
+ * Returns: (transfer full): report issue
+ * Since: 1.22
+ */
+MAKE_GETTER_COPY (GstValidateIssue *, issue, gst_validate_issue_ref);
+/**
+ * gst_validate_report_get_reporter:
+ *
+ * Returns: (transfer full): report reporter
+ * Since: 1.22
+ */
+MAKE_GETTER_COPY (GstValidateReporter *, reporter, gst_object_ref);
+/**
+ * gst_validate_report_get_message:
+ *
+ * Returns: (transfer full): report message
+ * Since: 1.22
+ */
+MAKE_GETTER_COPY (gchar *, message, g_strdup);
+/**
+ * gst_validate_report_get_reporter_name:
+ *
+ * Returns: (transfer full): report issue
+ * Since: 1.22
+ */
+MAKE_GETTER_COPY (gchar *, reporter_name, g_strdup);
+/**
+ * gst_validate_report_get_trace:
+ *
+ * Returns: (transfer full): report backtrace
+ * Since: 1.22
+ */
+MAKE_GETTER_COPY (gchar *, trace, g_strdup);
+/**
+ * gst_validate_report_get_dotfile_name:
+ *
+ * Returns: (transfer full): report dot file name
+ * Since: 1.22
+ */
+MAKE_GETTER_COPY (gchar *, dotfile_name, g_strdup);
+
+#undef MAKE_GETTER
+#undef MAKE_GETTER_COPY
 
 /**
  * gst_validate_issue_new_full:
