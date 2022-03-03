@@ -744,7 +744,7 @@ gst_v4l2_buffer_pool_streamoff (GstV4l2BufferPool * pool)
   for (i = 0; i < VIDEO_MAX_FRAME; i++) {
     gint old_buffer_state =
         g_atomic_int_and (&pool->buffer_state[i], ~BUFFER_STATE_QUEUED);
-    if (old_buffer_state & BUFFER_STATE_QUEUED) {
+    if ((old_buffer_state & BUFFER_STATE_QUEUED) && pool->buffers[i]) {
       GstBuffer *buffer = pool->buffers[i];
       GstBufferPool *bpool = GST_BUFFER_POOL (pool);
 
