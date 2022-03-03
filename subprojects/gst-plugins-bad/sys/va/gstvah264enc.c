@@ -210,7 +210,6 @@ struct _GstVaH264Enc
   GQueue ref_list;
 
   GQueue output_list;
-  guint preferred_output_delay;
 
   /* H264 fields */
   gint mb_width;
@@ -2958,9 +2957,6 @@ gst_va_h264_enc_start (GstVideoEncoder * encoder)
 {
   GstVaH264Enc *self = GST_VA_H264_ENC (encoder);
 
-  /* TODO: how to poll and wait for the encoded buffer. */
-  self->preferred_output_delay = 0;
-
   /* Set the minimum pts to some huge value (1000 hours). This keeps
    * the dts at the start of the stream from needing to be
    * negative. */
@@ -3490,8 +3486,7 @@ gst_va_h264_enc_handle_frame (GstVideoEncoder * venc,
     if (ret != GST_FLOW_OK)
       goto error_encode;
 
-    while (g_queue_get_length (&self->output_list) >
-        self->preferred_output_delay) {
+    while (g_queue_get_length (&self->output_list) > 0) {
       frame_out = g_queue_pop_head (&self->output_list);
       ret = _push_buffer_to_downstream (self, frame_out);
       if (ret != GST_FLOW_OK)
@@ -3676,16 +3671,15 @@ gst_va_h264_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
   if (!(allocator = _allocator_from_caps (self, caps)))
     return FALSE;
 
-  pool = gst_va_pool_new_with_config (caps,
-      size, self->preferred_output_delay, 0, usage_hint, allocator, &params);
+  pool = gst_va_pool_new_with_config (caps, size, 1, 0, usage_hint, allocator,
+      &params);
   if (!pool) {
     gst_object_unref (allocator);
     goto config_failed;
   }
 
   gst_query_add_allocation_param (query, allocator, &params);
-  gst_query_add_allocation_pool (query, pool, size,
-      self->preferred_output_delay, 0);
+  gst_query_add_allocation_pool (query, pool, size, 0, 0);
 
   GST_DEBUG_OBJECT (self,
       "proposing %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
@@ -3766,8 +3760,7 @@ gst_va_h264_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
     return FALSE;
   }
 
-  reconstruct_buffer_num = self->gop.num_ref_frames
-      + self->preferred_output_delay + 3 /* scratch frames */ ;
+  reconstruct_buffer_num = self->gop.num_ref_frames + 3 /* scratch frames */ ;
   if (!gst_va_encoder_open (self->encoder, self->profile, self->entrypoint,
           GST_VIDEO_INFO_FORMAT (&self->in_info), self->rt_format,
           self->mb_width * 16, self->mb_height * 16, self->codedbuf_size,
