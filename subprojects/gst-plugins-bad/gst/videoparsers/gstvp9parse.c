@@ -51,6 +51,7 @@ struct _GstVp9Parse
   GstVp9ColorRange color_range;
   GstVP9Profile profile;
   GstVp9BitDepth bit_depth;
+  gboolean codec_alpha;
 
   GstVp9ParseAligment in_align;
   GstVp9ParseAligment align;
@@ -133,6 +134,7 @@ gst_vp9_parse_reset (GstVp9Parse * self)
   self->color_range = GST_VP9_CR_LIMITED;
   self->profile = GST_VP9_PROFILE_UNDEFINED;
   self->bit_depth = (GstVp9BitDepth) 0;
+  self->codec_alpha = FALSE;
 }
 
 static gboolean
@@ -245,6 +247,18 @@ gst_vp9_parse_alignment_from_caps (GstCaps * caps, GstVp9ParseAligment * align)
   }
 }
 
+/* implement custom semantic for codec-alpha */
+static gboolean
+gst_vp9_parse_check_codec_alpha (GstStructure * s, gboolean codec_alpha)
+{
+  gboolean value;
+
+  if (gst_structure_get_boolean (s, "codec-alpha", &value))
+    return value == codec_alpha;
+
+  return codec_alpha == FALSE;
+}
+
 /* check downstream caps to configure format and alignment */
 static void
 gst_vp9_parse_negotiate (GstVp9Parse * self, GstVp9ParseAligment in_align,
@@ -259,6 +273,23 @@ gst_vp9_parse_negotiate (GstVp9Parse * self, GstVp9ParseAligment in_align,
   /* concentrate on leading structure, since decodebin parser
    * capsfilter always includes parser template caps */
   if (caps) {
+    while (gst_caps_get_size (caps) > 0) {
+      GstStructure *s = gst_caps_get_structure (caps, 0);
+
+      if (gst_vp9_parse_check_codec_alpha (s, self->codec_alpha))
+        break;
+
+      gst_caps_remove_structure (caps, 0);
+    }
+
+    /* this may happen if there is simply no codec alpha decoder in the
+     * gstreamer installation, in this case, pick the first non-alpha decoder.
+     */
+    if (gst_caps_is_empty (caps)) {
+      gst_caps_unref (caps);
+      caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (self));
+    }
+
     caps = gst_caps_truncate (caps);
     GST_DEBUG_OBJECT (self, "negotiating with caps: %" GST_PTR_FORMAT, caps);
   }
@@ -503,7 +534,6 @@ gst_vp9_parse_update_src_caps (GstVp9Parse * self, GstCaps * caps)
   gchar *colorimetry = NULL;
   const gchar *chroma_format = NULL;
   const gchar *profile = NULL;
-  gboolean codec_alpha_allowed = FALSE;
 
   if (!self->update_caps)
     return;
@@ -546,10 +576,6 @@ gst_vp9_parse_update_src_caps (GstVp9Parse * self, GstCaps * caps)
 
   if (s && gst_structure_has_field (s, "framerate")) {
     gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
-  }
-
-  if (s && gst_structure_has_field (s, "codec-alpha")) {
-    gst_structure_get_boolean (s, "codec-alpha", &codec_alpha_allowed);
   }
 
   if (fps_n > 0 && fps_d > 0) {
@@ -660,7 +686,7 @@ gst_vp9_parse_update_src_caps (GstVp9Parse * self, GstCaps * caps)
     gst_caps_set_simple (final_caps, "profile", G_TYPE_STRING, profile, NULL);
 
   gst_caps_set_simple (final_caps, "codec-alpha", G_TYPE_BOOLEAN,
-      codec_alpha_allowed, NULL);
+      self->codec_alpha, NULL);
 
   src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (self));
 
@@ -723,6 +749,7 @@ gst_vp9_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
   profile = gst_structure_get_string (str, "profile");
   if (profile)
     self->profile = gst_vp9_parse_profile_from_string (profile);
+  gst_structure_get_boolean (str, "codec-alpha", &self->codec_alpha);
 
   /* get upstream align from caps */
   gst_vp9_parse_alignment_from_caps (caps, &align);
