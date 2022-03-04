@@ -4657,14 +4657,14 @@ gst_play_message_parse_buffering_percent (GstMessage * msg, guint * percent)
  * gst_play_message_parse_error:
  * @msg: A #GstMessage
  * @error: (out) (optional) (transfer full): the resulting error
- * @details: (out) (optional) (nullable) (transfer full): A GstStructure containing extra details about the error
+ * @details: (out) (optional) (nullable) (transfer full): A #GstStructure containing additional details about the error
  *
  * Parse the given error @msg and extract the corresponding #GError
  *
  * Since: 1.20
  */
 void
-gst_play_message_parse_error (GstMessage * msg, GError * error,
+gst_play_message_parse_error (GstMessage * msg, GError ** error,
     GstStructure ** details)
 {
   PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_ERROR, G_TYPE_ERROR, error);
