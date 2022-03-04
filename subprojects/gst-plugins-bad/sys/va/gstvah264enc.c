@@ -4212,8 +4212,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_BFRAMES] = g_param_spec_uint ("b-frames", "B Frames",
       "Number of B frames between I and P reference frames", 0, 31, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      GST_PARAM_CONDITIONALLY_AVAILABLE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**
    * GstVaH264Enc:i-frames:
@@ -4242,8 +4241,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_B_PYRAMID] = g_param_spec_boolean ("b-pyramid", "b pyramid",
       "Enable the b-pyramid reference structure in the GOP", FALSE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      GST_PARAM_CONDITIONALLY_AVAILABLE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
   /**
    * GstVaH264Enc:num-slices:
    *
@@ -4251,8 +4249,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_NUM_SLICES] = g_param_spec_uint ("num-slices",
       "Number of Slices", "Number of slices per frame", 1, 200, 1,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      GST_PARAM_CONDITIONALLY_AVAILABLE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**
    * GstVaH264Enc:max-qp:
@@ -4314,8 +4311,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_DCT8X8] = g_param_spec_boolean ("dct8x8",
       "Enable 8x8 DCT",
       "Enable adaptive use of 8x8 transforms in I-frames", TRUE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      GST_PARAM_CONDITIONALLY_AVAILABLE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**
    * GstVaH264Enc:cabac:
@@ -4325,8 +4321,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_CABAC] = g_param_spec_boolean ("cabac", "Enable CABAC",
       "Enable CABAC entropy coding mode", TRUE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      GST_PARAM_CONDITIONALLY_AVAILABLE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**
    * GstVaH264Enc:trellis:
@@ -4336,8 +4331,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_TRELLIS] = g_param_spec_boolean ("trellis", "Enable trellis",
       "Enable the trellis quantization method", FALSE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      GST_PARAM_CONDITIONALLY_AVAILABLE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**
    * GstVaH264Enc:aud:
@@ -4358,8 +4352,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
       "Macroblock level Bitrate Control",
       "Macroblock level Bitrate Control. It is not compatible with CQP",
       gst_va_h264_enc_mbbrc_get_type (), 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      GST_PARAM_CONDITIONALLY_AVAILABLE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**
    * GstVaH264Enc:bitrate:
@@ -4423,8 +4416,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_RATE_CONTROL] = g_param_spec_enum ("rate-control",
       "rate control mode", "The desired rate control mode for the encoder",
       gst_va_h264_enc_rate_control_get_type (), VA_RC_CBR,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      GST_PARAM_CONDITIONALLY_AVAILABLE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 
