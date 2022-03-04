@@ -237,10 +237,6 @@ static void
 gst_wrapper_camera_bin_src_set_output (GstWrapperCameraBinSrc * self,
     GstPad * old_pad, GstPad * output_pad)
 {
-  GstQuery *drain = gst_query_new_drain ();
-  gst_pad_peer_query (self->src_pad, drain);
-  gst_query_unref (drain);
-
   if (old_pad)
     gst_ghost_pad_set_target (GST_GHOST_PAD (old_pad), NULL);
   if (output_pad)
