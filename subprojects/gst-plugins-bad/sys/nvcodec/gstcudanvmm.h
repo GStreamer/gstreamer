@@ -20,19 +20,15 @@
 #pragma once
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
+#include <nvbufsurface.h>
 
 G_BEGIN_DECLS
 
-#define GST_CUDA_FORMATS \
-    "{ I420, YV12, NV12, NV21, P010_10LE, P016_LE, I420_10LE, Y444, Y444_16LE, " \
-    "BGRA, RGBA, RGBx, BGRx, ARGB, ABGR, RGB, BGR, BGR10A2_LE, RGB10A2_LE }"
+#define GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY "memory:NVMM"
 
-#define GST_CUDA_GL_FORMATS \
-    "{ I420, YV12, NV12, NV21, P010_10LE, P016_LE, Y444, " \
-    "BGRA, RGBA, RGBx, BGRx, ARGB, ABGR, RGB, BGR, BGR10A2_LE, RGB10A2_LE }"
+gboolean                gst_cuda_nvmm_init_once       (void);
 
-#define GST_CUDA_NVMM_FORMATS \
-    "{ I420, YV12, NV12, NV21, P010_10LE, Y444, " \
-    "BGRA, RGBA, RGBx, BGRx, ARGB, ABGR, RGB, BGR }"
+GstBufferPool *         gst_cuda_nvmm_buffer_pool_new (void);
 
 G_END_DECLS

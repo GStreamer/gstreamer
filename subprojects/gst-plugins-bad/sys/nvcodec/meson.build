@@ -27,6 +27,10 @@ nvcodec_sources = [
   'gstnvvp9dec.c',
 ]
 
+nvmm_sources = [
+  'gstcudanvmm.c',
+]
+
 if get_option('nvcodec').disabled()
   subdir_done()
 endif
@@ -36,6 +40,22 @@ extra_c_args = ['-DGST_USE_UNSTABLE_API']
 
 if gstgl_dep.found()
   extra_c_args += ['-DHAVE_NVCODEC_GST_GL=1']
+endif
+
+if host_system == 'linux'
+  have_nvmm = false
+  if cc.has_header('nvbufsurface.h')
+    have_nvmm = true
+  elif cc.has_header('/opt/nvidia/deepstream/deepstream/sources/includes/nvbufsurface.h')
+    # XXX: Should add an option for SDK path??
+    have_nvmm = true
+    plugin_incdirs += [include_directories('/opt/nvidia/deepstream/deepstream/sources/includes')]
+  endif
+
+  if have_nvmm
+    extra_c_args += ['-DHAVE_NVCODEC_NVMM']
+    nvcodec_sources += nvmm_sources
+  endif
 endif
 
 gstnvcodec = library('gstnvcodec',

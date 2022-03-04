@@ -39,11 +39,18 @@
 #include "gstcudamemorycopy.h"
 #include "gstcudafilter.h"
 #include "gstcudamemory.h"
+#ifdef HAVE_NVCODEC_NVMM
+#include "gstcudanvmm.h"
+#endif
 
 GST_DEBUG_CATEGORY (gst_nvcodec_debug);
 GST_DEBUG_CATEGORY (gst_nvdec_debug);
 GST_DEBUG_CATEGORY (gst_nvenc_debug);
 GST_DEBUG_CATEGORY (gst_nv_decoder_debug);
+
+#ifdef HAVE_NVCODEC_NVMM
+GST_DEBUG_CATEGORY (gst_cuda_nvmm_debug);
+#endif
 
 #define GST_CAT_DEFAULT gst_nvcodec_debug
 
@@ -68,6 +75,10 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug, "nvdec", 0, "nvdec");
   GST_DEBUG_CATEGORY_INIT (gst_nvenc_debug, "nvenc", 0, "nvenc");
   GST_DEBUG_CATEGORY_INIT (gst_nv_decoder_debug, "nvdecoder", 0, "nvdecoder");
+
+#ifdef HAVE_NVCODEC_NVMM
+  GST_DEBUG_CATEGORY_INIT (gst_cuda_nvmm_debug, "cudanvmm", 0, "cudanvmm");
+#endif
 
   if (!gst_cuda_load_library ()) {
     GST_WARNING ("Failed to load cuda library");
@@ -236,6 +247,12 @@ plugin_init (GstPlugin * plugin)
 
   gst_cuda_filter_plugin_init (plugin);
   gst_cuda_memory_init_once ();
+
+#ifdef HAVE_NVCODEC_NVMM
+  if (gst_cuda_nvmm_init_once ()) {
+    GST_INFO ("Enable NVMM support");
+  }
+#endif
 
   return TRUE;
 }

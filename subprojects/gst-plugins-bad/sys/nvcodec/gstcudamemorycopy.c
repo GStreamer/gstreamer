@@ -34,13 +34,26 @@
 #include "gstcudamemorycopy.h"
 #include "gstcudaformat.h"
 #include "gstcudautils.h"
+#ifdef HAVE_NVCODEC_NVMM
+#include "gstcudanvmm.h"
+#endif
 
 #ifdef HAVE_NVCODEC_GST_GL
 #include <gst/gl/gl.h>
 #endif
 
+#include <string.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_memory_copy_debug);
 #define GST_CAT_DEFAULT gst_cuda_memory_copy_debug
+
+typedef enum
+{
+  GST_CUDA_MEMORY_COPY_MEM_SYSTEM,
+  GST_CUDA_MEMORY_COPY_MEM_CUDA,
+  GST_CUDA_MEMORY_COPY_MEM_NVMM,
+  GST_CUDA_MEMORY_COPY_MEM_GL,
+} GstCudaMemoryCopyMemType;
 
 typedef struct _GstCudaMemoryCopyClassData
 {
@@ -51,6 +64,8 @@ typedef struct _GstCudaMemoryCopyClassData
 struct _GstCudaMemoryCopy
 {
   GstCudaBaseTransform parent;
+  gboolean in_nvmm;
+  gboolean out_nvmm;
 
 #ifdef HAVE_NVCODEC_GST_GL
   GstGLDisplay *gl_display;
@@ -93,6 +108,9 @@ static gboolean gst_cuda_memory_copy_propose_allocation (GstBaseTransform *
     trans, GstQuery * decide_query, GstQuery * query);
 static gboolean gst_cuda_memory_copy_decide_allocation (GstBaseTransform *
     trans, GstQuery * query);
+static gboolean gst_cuda_memory_copy_set_info (GstCudaBaseTransform * btrans,
+    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
+    GstVideoInfo * out_info);
 static GstFlowReturn gst_cuda_memory_copy_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 
@@ -101,6 +119,8 @@ gst_cuda_memory_copy_class_init (GstCudaMemoryCopyClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+  GstCudaBaseTransformClass *btrans_class =
+      GST_CUDA_BASE_TRANSFORM_CLASS (klass);
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_set_context);
@@ -112,6 +132,8 @@ gst_cuda_memory_copy_class_init (GstCudaMemoryCopyClass * klass)
   trans_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_decide_allocation);
   trans_class->query = GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_query);
+
+  btrans_class->set_info = GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_set_info);
 }
 
 static void
@@ -167,13 +189,35 @@ create_transform_caps (GstCaps * caps, gboolean to_cuda)
   if (to_cuda) {
     GstCaps *sys_caps = gst_caps_simplify (_set_caps_features (caps,
             GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY));
+    GstCaps *new_caps;
 
-    ret = _set_caps_features (sys_caps, GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
-    ret = gst_caps_merge (ret, sys_caps);
+    ret = gst_caps_copy (sys_caps);
+
+#ifdef HAVE_NVCODEC_NVMM
+    if (gst_cuda_nvmm_init_once ()) {
+      new_caps = _set_caps_features (sys_caps,
+          GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY);
+      ret = gst_caps_merge (ret, new_caps);
+    }
+#endif
+
+    new_caps = _set_caps_features (sys_caps,
+        GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
+    ret = gst_caps_merge (ret, new_caps);
+
+    gst_caps_unref (sys_caps);
   } else {
     GstCaps *new_caps;
 
     ret = gst_caps_ref (caps);
+
+#ifdef HAVE_NVCODEC_NVMM
+    if (gst_cuda_nvmm_init_once ()) {
+      new_caps = _set_caps_features (caps,
+          GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY);
+      ret = gst_caps_merge (ret, new_caps);
+    }
+#endif
 
 #ifdef HAVE_NVCODEC_GST_GL
     new_caps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
@@ -345,6 +389,38 @@ gst_cuda_memory_copy_propose_allocation (GstBaseTransform * trans,
 
       pool = gst_gl_buffer_pool_new (self->gl_context);
 #endif
+#ifdef HAVE_NVCODEC_NVMM
+    } else if (features && gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY) &&
+        gst_cuda_nvmm_init_once ()) {
+      guint gpu_id = 0;
+      GST_DEBUG_OBJECT (self, "upstream support NVMM memory");
+
+      g_object_get (ctrans->context, "cuda-device-id", &gpu_id, NULL);
+
+      pool = gst_cuda_nvmm_buffer_pool_new ();
+      if (!pool) {
+        GST_ERROR_OBJECT (self, "Failed to create pool");
+        return FALSE;
+      }
+
+      config = gst_buffer_pool_get_config (pool);
+      gst_buffer_pool_config_set_params (config, caps,
+          sizeof (NvBufSurface), 0, 0);
+
+      gst_structure_set (config, "memtype", G_TYPE_UINT, NVBUF_MEM_DEFAULT,
+          "gpu-id", G_TYPE_UINT, gpu_id, "batch-size", G_TYPE_UINT, 1, NULL);
+
+      if (!gst_buffer_pool_set_config (pool, config)) {
+        GST_ERROR_OBJECT (self, "Failed to set config");
+        gst_object_unref (pool);
+        return FALSE;
+      }
+
+      gst_query_add_allocation_pool (query, pool, sizeof (NvBufSurface), 0, 0);
+
+      return TRUE;
+#endif
     }
 
     if (!pool) {
@@ -397,6 +473,9 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
 #ifdef HAVE_NVCODEC_GST_GL
   gboolean need_gl = FALSE;
 #endif
+#ifdef HAVE_NVCODEC_NVMM
+  gboolean need_nvmm = FALSE;
+#endif
 
   gst_query_parse_allocation (query, &outcaps, NULL);
 
@@ -415,6 +494,13 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
     need_gl = TRUE;
   }
 #endif
+#ifdef HAVE_NVCODEC_NVMM
+  else if (features && gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY) &&
+      gst_cuda_nvmm_init_once ()) {
+    need_nvmm = TRUE;
+  }
+#endif
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
@@ -429,6 +515,12 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
         }
       }
     }
+#ifdef HAVE_NVCODEC_NVMM
+    if (need_nvmm) {
+      /* XXX: Always create new pool to set config option */
+      gst_clear_object (&pool);
+    }
+#endif
 
     update_pool = TRUE;
   } else {
@@ -447,6 +539,48 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
     else if (need_gl) {
       GST_DEBUG_OBJECT (self, "creating gl pool");
       pool = gst_gl_buffer_pool_new (self->gl_context);
+    }
+#endif
+#ifdef HAVE_NVCODEC_NVMM
+    else if (need_nvmm) {
+      guint gpu_id = 0;
+      GST_DEBUG_OBJECT (self, "create nvmm pool");
+
+      g_object_get (ctrans->context, "cuda-device-id", &gpu_id, NULL);
+
+      pool = gst_cuda_nvmm_buffer_pool_new ();
+      if (!pool) {
+        GST_ERROR_OBJECT (self, "Failed to create pool");
+        return FALSE;
+      }
+
+      config = gst_buffer_pool_get_config (pool);
+      gst_buffer_pool_config_set_params (config, outcaps,
+          sizeof (NvBufSurface), min, max);
+
+      gst_structure_set (config, "memtype", G_TYPE_UINT, NVBUF_MEM_DEFAULT,
+          "gpu-id", G_TYPE_UINT, gpu_id, "batch-size", G_TYPE_UINT, 1, NULL);
+
+      if (!gst_buffer_pool_set_config (pool, config)) {
+        GST_ERROR_OBJECT (self, "Failed to set config");
+        gst_object_unref (pool);
+        return FALSE;
+      }
+
+      if (update_pool) {
+        gst_query_set_nth_allocation_pool (query,
+            0, pool, sizeof (NvBufSurface), min, max);
+      } else {
+        gst_query_add_allocation_pool (query,
+            pool, sizeof (NvBufSurface), min, max);
+      }
+
+      gst_object_unref (pool);
+
+      /* Don't chain up to parent method, which will break NVMM specific
+       * config */
+
+      return TRUE;
     }
 #endif
     else {
@@ -504,6 +638,39 @@ gst_cuda_memory_copy_query (GstBaseTransform * trans,
 }
 
 static gboolean
+gst_cuda_memory_copy_set_info (GstCudaBaseTransform * btrans,
+    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
+    GstVideoInfo * out_info)
+{
+#ifdef HAVE_NVCODEC_NVMM
+  GstCudaMemoryCopy *self = GST_CUDA_MEMORY_COPY (btrans);
+
+  self->in_nvmm = FALSE;
+  self->out_nvmm = FALSE;
+
+  if (gst_cuda_nvmm_init_once ()) {
+    GstCapsFeatures *features;
+
+    features = gst_caps_get_features (incaps, 0);
+    if (features && gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY)) {
+      GST_DEBUG_OBJECT (self, "Input memory type is NVMM");
+      self->in_nvmm = TRUE;
+    }
+
+    features = gst_caps_get_features (outcaps, 0);
+    if (features && gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY)) {
+      GST_DEBUG_OBJECT (self, "Output memory type is NVMM");
+      self->out_nvmm = TRUE;
+    }
+  }
+#endif
+
+  return TRUE;
+}
+
+static gboolean
 gst_cuda_memory_copy_transform_sysmem (GstCudaMemoryCopy * self,
     GstBuffer * inbuf, GstVideoInfo * in_info, GstBuffer * outbuf,
     GstVideoInfo * out_info)
@@ -533,6 +700,238 @@ gst_cuda_memory_copy_transform_sysmem (GstCudaMemoryCopy * self,
   return ret;
 }
 
+static gboolean
+gst_cuda_memory_copy_map_and_fill_copy2d (GstCudaMemoryCopy * self,
+    GstBuffer * buf, GstVideoInfo * info, GstCudaMemoryCopyMemType mem_type,
+    GstVideoFrame * frame, GstMapInfo * map_info, gboolean is_src,
+    CUDA_MEMCPY2D copy_params[GST_VIDEO_MAX_PLANES])
+{
+  gboolean buffer_mapped = FALSE;
+  guint i;
+
+#ifdef HAVE_NVCODEC_NVMM
+  if (mem_type == GST_CUDA_MEMORY_COPY_MEM_NVMM) {
+    NvBufSurface *surface;
+    NvBufSurfaceParams *surface_params;
+    NvBufSurfacePlaneParams *plane_params;
+
+    if (!gst_buffer_map (buf, map_info, GST_MAP_READ)) {
+      GST_ERROR_OBJECT (self, "Failed to map input NVMM buffer");
+      memset (map_info, 0, sizeof (GstMapInfo));
+      return FALSE;
+    }
+
+    surface = (NvBufSurface *) map_info->data;
+
+    GST_TRACE_OBJECT (self, "batch-size %d, num-filled %d, memType %d",
+        surface->batchSize, surface->numFilled, surface->memType);
+
+    surface_params = surface->surfaceList;
+    buffer_mapped = TRUE;
+    if (!surface_params) {
+      GST_ERROR_OBJECT (self, "NVMM memory doesn't hold buffer");
+      goto error;
+    }
+
+    plane_params = &surface_params->planeParams;
+    if (plane_params->num_planes != GST_VIDEO_INFO_N_PLANES (info)) {
+      GST_ERROR_OBJECT (self, "num_planes mismatch, %d / %d",
+          plane_params->num_planes, GST_VIDEO_INFO_N_PLANES (info));
+      goto error;
+    }
+
+    switch (surface->memType) {
+        /* TODO: NVBUF_MEM_DEFAULT on jetson is SURFACE_ARRAY */
+      case NVBUF_MEM_DEFAULT:
+      case NVBUF_MEM_CUDA_DEVICE:
+      {
+        for (i = 0; i < plane_params->num_planes; i++) {
+          if (is_src) {
+            copy_params[i].srcMemoryType = CU_MEMORYTYPE_DEVICE;
+            copy_params[i].srcDevice = (CUdeviceptr)
+                ((guint8 *) surface_params->dataPtr + plane_params->offset[i]);
+            copy_params[i].srcPitch = plane_params->pitch[i];
+          } else {
+            copy_params[i].dstMemoryType = CU_MEMORYTYPE_DEVICE;
+            copy_params[i].dstDevice = (CUdeviceptr)
+                ((guint8 *) surface_params->dataPtr + plane_params->offset[i]);
+            copy_params[i].dstPitch = plane_params->pitch[i];
+          }
+        }
+        break;
+      }
+      case NVBUF_MEM_CUDA_PINNED:
+      {
+        for (i = 0; i < plane_params->num_planes; i++) {
+          if (is_src) {
+            copy_params[i].srcMemoryType = CU_MEMORYTYPE_HOST;
+            copy_params[i].srcHost =
+                ((guint8 *) surface_params->dataPtr + plane_params->offset[i]);
+            copy_params[i].srcPitch = plane_params->pitch[i];
+          } else {
+            copy_params[i].dstMemoryType = CU_MEMORYTYPE_HOST;
+            copy_params[i].dstHost =
+                ((guint8 *) surface_params->dataPtr + plane_params->offset[i]);
+            copy_params[i].dstPitch = plane_params->pitch[i];
+          }
+        }
+        break;
+      }
+      case NVBUF_MEM_CUDA_UNIFIED:
+      {
+        for (i = 0; i < plane_params->num_planes; i++) {
+          if (is_src) {
+            copy_params[i].srcMemoryType = CU_MEMORYTYPE_UNIFIED;
+            copy_params[i].srcDevice = (CUdeviceptr)
+                ((guint8 *) surface_params->dataPtr + plane_params->offset[i]);
+            copy_params[i].srcPitch = plane_params->pitch[i];
+          } else {
+            copy_params[i].dstMemoryType = CU_MEMORYTYPE_UNIFIED;
+            copy_params[i].dstDevice = (CUdeviceptr)
+                ((guint8 *) surface_params->dataPtr + plane_params->offset[i]);
+            copy_params[i].dstPitch = plane_params->pitch[i];
+          }
+        }
+        break;
+      }
+      default:
+        GST_ERROR_OBJECT (self, "Unexpected NVMM memory type %d",
+            surface->memType);
+        goto error;
+    }
+
+    for (i = 0; i < plane_params->num_planes; i++) {
+      copy_params[i].WidthInBytes = plane_params->width[i] *
+          plane_params->bytesPerPix[i];
+      copy_params[i].Height = plane_params->height[i];
+    }
+  } else
+#endif
+  {
+    GstMapFlags map_flags;
+
+    if (is_src)
+      map_flags = GST_MAP_READ;
+    else
+      map_flags = GST_MAP_WRITE;
+
+    if (mem_type == GST_CUDA_MEMORY_COPY_MEM_CUDA)
+      map_flags |= GST_MAP_CUDA;
+
+    if (!gst_video_frame_map (frame, info, buf, map_flags)) {
+      GST_ERROR_OBJECT (self, "Failed to map buffer");
+      goto error;
+    }
+
+    for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
+      if (is_src) {
+        if (mem_type == GST_CUDA_MEMORY_COPY_MEM_CUDA) {
+          copy_params[i].srcMemoryType = CU_MEMORYTYPE_DEVICE;
+          copy_params[i].srcDevice =
+              (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, i);
+        } else {
+          copy_params[i].srcMemoryType = CU_MEMORYTYPE_HOST;
+          copy_params[i].srcHost = GST_VIDEO_FRAME_PLANE_DATA (frame, i);
+        }
+        copy_params[i].srcPitch = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
+      } else {
+        if (mem_type == GST_CUDA_MEMORY_COPY_MEM_CUDA) {
+          copy_params[i].dstMemoryType = CU_MEMORYTYPE_DEVICE;
+          copy_params[i].dstDevice =
+              (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (frame, i);
+        } else {
+          copy_params[i].dstMemoryType = CU_MEMORYTYPE_HOST;
+          copy_params[i].dstHost = GST_VIDEO_FRAME_PLANE_DATA (frame, i);
+        }
+        copy_params[i].dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
+      }
+
+      copy_params[i].WidthInBytes = GST_VIDEO_FRAME_COMP_WIDTH (frame, i) *
+          GST_VIDEO_FRAME_COMP_PSTRIDE (frame, i);
+      copy_params[i].Height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
+    }
+  }
+
+  return TRUE;
+
+error:
+  if (buffer_mapped) {
+    gst_buffer_unmap (buf, map_info);
+    memset (map_info, 0, sizeof (GstMapInfo));
+  }
+
+  return FALSE;
+}
+
+static void
+gst_cuda_memory_copy_unmap (GstCudaMemoryCopy * self, GstBuffer * buf,
+    GstVideoFrame * frame, GstMapInfo * map_info)
+{
+  if (frame->buffer)
+    gst_video_frame_unmap (frame);
+
+  if (map_info->data)
+    gst_buffer_unmap (buf, map_info);
+}
+
+static gboolean
+gst_cuda_memory_copy_transform_cuda (GstCudaMemoryCopy * self,
+    GstBuffer * inbuf, GstVideoInfo * in_info, GstCudaMemoryCopyMemType in_type,
+    GstBuffer * outbuf, GstVideoInfo * out_info,
+    GstCudaMemoryCopyMemType out_type)
+{
+  GstCudaBaseTransform *trans = GST_CUDA_BASE_TRANSFORM (self);
+  GstVideoFrame in_frame, out_frame;
+  gboolean ret = FALSE;
+  CUstream cuda_stream = trans->cuda_stream;
+  GstMapInfo in_map, out_map;
+  guint i;
+  CUDA_MEMCPY2D copy_params[GST_VIDEO_MAX_PLANES];
+
+  memset (copy_params, 0, sizeof (copy_params));
+  memset (&in_frame, 0, sizeof (GstVideoFrame));
+  memset (&out_frame, 0, sizeof (GstVideoFrame));
+  memset (&in_map, 0, sizeof (GstMapInfo));
+  memset (&out_map, 0, sizeof (GstMapInfo));
+
+  if (!gst_cuda_memory_copy_map_and_fill_copy2d (self, inbuf, in_info,
+          in_type, &in_frame, &in_map, TRUE, copy_params)) {
+    GST_ERROR_OBJECT (self, "Failed to map input buffer");
+    return FALSE;
+  }
+
+  if (!gst_cuda_memory_copy_map_and_fill_copy2d (self, outbuf, out_info,
+          out_type, &out_frame, &out_map, FALSE, copy_params)) {
+    GST_ERROR_OBJECT (self, "Failed to map output buffer");
+    gst_cuda_memory_copy_unmap (self, inbuf, &in_frame, &in_map);
+
+    return FALSE;
+  }
+
+  if (!gst_cuda_context_push (trans->context)) {
+    GST_ERROR_OBJECT (self, "Failed to push our context");
+    gst_cuda_context_pop (NULL);
+    goto unmap_and_out;
+  }
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (in_info); i++) {
+    ret = gst_cuda_result (CuMemcpy2DAsync (&copy_params[i], cuda_stream));
+    if (!ret) {
+      GST_ERROR_OBJECT (self, "Failted to copy plane %d", i);
+      break;
+    }
+  }
+
+  gst_cuda_result (CuStreamSynchronize (cuda_stream));
+  gst_cuda_context_pop (NULL);
+
+unmap_and_out:
+  gst_cuda_memory_copy_unmap (self, inbuf, &in_frame, &in_map);
+  gst_cuda_memory_copy_unmap (self, outbuf, &out_frame, &out_map);
+
+  return ret;
+}
+
 #ifdef HAVE_NVCODEC_GST_GL
 typedef struct _GLCopyData
 {
@@ -543,6 +942,7 @@ typedef struct _GLCopyData
   GstVideoInfo *out_info;
 
   gboolean pbo_to_cuda;
+  GstCudaMemoryCopyMemType cuda_mem_type;
   gboolean ret;
 } GLCopyData;
 
@@ -606,12 +1006,17 @@ gl_copy_thread_func (GstGLContext * gl_context, GLCopyData * data)
   GstCudaBaseTransform *trans = GST_CUDA_BASE_TRANSFORM (self);
   GstCudaGraphicsResource *resources[GST_VIDEO_MAX_PLANES];
   guint num_resources;
-  GstBuffer *gl_buf;
+  GstBuffer *gl_buf, *cuda_buf;
   GstVideoFrame cuda_frame;
-  CUDA_MEMCPY2D copy_params = { 0, };
+  GstMapInfo cuda_map_info;
+  CUDA_MEMCPY2D copy_params[GST_VIDEO_MAX_PLANES];
   CUstream cuda_stream = trans->cuda_stream;
   gboolean ret = FALSE;
   guint i;
+
+  memset (copy_params, 0, sizeof (copy_params));
+  memset (&cuda_frame, 0, sizeof (GstVideoFrame));
+  memset (&cuda_map_info, 0, sizeof (GstMapInfo));
 
   data->ret = FALSE;
 
@@ -622,30 +1027,34 @@ gl_copy_thread_func (GstGLContext * gl_context, GLCopyData * data)
 
   if (data->pbo_to_cuda) {
     gl_buf = data->inbuf;
-    if (!gst_video_frame_map (&cuda_frame, data->out_info, data->outbuf,
-            (GstMapFlags) (GST_MAP_WRITE | GST_MAP_CUDA))) {
+    cuda_buf = data->outbuf;
+    if (!gst_cuda_memory_copy_map_and_fill_copy2d (self, cuda_buf,
+            data->out_info, data->cuda_mem_type, &cuda_frame, &cuda_map_info,
+            FALSE, copy_params)) {
       GST_ERROR_OBJECT (self, "Failed to map output CUDA buffer");
       return;
     }
   } else {
     gl_buf = data->outbuf;
-    if (!gst_video_frame_map (&cuda_frame, data->in_info, data->inbuf,
-            (GstMapFlags) (GST_MAP_READ | GST_MAP_CUDA))) {
-      GST_ERROR_OBJECT (self, "Failed to map input CUDA buffer");
+    cuda_buf = data->inbuf;
+    if (!gst_cuda_memory_copy_map_and_fill_copy2d (self, cuda_buf,
+            data->in_info, data->cuda_mem_type, &cuda_frame, &cuda_map_info,
+            TRUE, copy_params)) {
+      GST_ERROR_OBJECT (self, "Failed to map output CUDA buffer");
       return;
     }
   }
 
   num_resources = gst_buffer_n_memory (gl_buf);
-  g_assert (num_resources >= GST_VIDEO_FRAME_N_PLANES (&cuda_frame));
+  g_assert (num_resources >= GST_VIDEO_INFO_N_PLANES (data->in_info));
 
   if (!gst_cuda_context_push (trans->context)) {
     GST_ERROR_OBJECT (self, "Failed to push context");
-    gst_video_frame_unmap (&cuda_frame);
+    gst_cuda_memory_copy_unmap (self, cuda_buf, &cuda_frame, &cuda_map_info);
     return;
   }
 
-  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&cuda_frame); i++) {
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (data->in_info); i++) {
     GstMemory *mem = gst_buffer_peek_memory (gl_buf, i);
     GstGLMemoryPBO *pbo;
 
@@ -668,10 +1077,7 @@ gl_copy_thread_func (GstGLContext * gl_context, GLCopyData * data)
     }
   }
 
-  copy_params.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-  copy_params.dstMemoryType = CU_MEMORYTYPE_DEVICE;
-
-  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&cuda_frame); i++) {
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (data->in_info); i++) {
     CUgraphicsResource cuda_resource;
     CUdeviceptr dev_ptr;
     size_t size;
@@ -699,27 +1105,17 @@ gl_copy_thread_func (GstGLContext * gl_context, GLCopyData * data)
       goto out;
     }
 
-    copy_params.WidthInBytes = GST_VIDEO_FRAME_COMP_WIDTH (&cuda_frame, i)
-        * GST_VIDEO_FRAME_COMP_PSTRIDE (&cuda_frame, i);
-    copy_params.Height = GST_VIDEO_FRAME_COMP_HEIGHT (&cuda_frame, i);
-
     if (data->pbo_to_cuda) {
-      copy_params.srcDevice = dev_ptr;
-      copy_params.srcPitch = GST_VIDEO_INFO_PLANE_STRIDE (data->in_info, i);
-
-      copy_params.dstDevice =
-          (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (&cuda_frame, i);
-      copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&cuda_frame, i);
+      copy_params[i].srcMemoryType = CU_MEMORYTYPE_DEVICE;
+      copy_params[i].srcDevice = dev_ptr;
+      copy_params[i].srcPitch = GST_VIDEO_INFO_PLANE_STRIDE (data->in_info, i);
     } else {
-      copy_params.srcDevice =
-          (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (&cuda_frame, i);
-      copy_params.srcPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&cuda_frame, i);
-
-      copy_params.dstDevice = dev_ptr;
-      copy_params.dstPitch = GST_VIDEO_INFO_PLANE_STRIDE (data->out_info, i);
+      copy_params[i].dstMemoryType = CU_MEMORYTYPE_DEVICE;
+      copy_params[i].dstDevice = dev_ptr;
+      copy_params[i].dstPitch = GST_VIDEO_INFO_PLANE_STRIDE (data->out_info, i);
     }
 
-    copy_ret = gst_cuda_result (CuMemcpy2DAsync (&copy_params, cuda_stream));
+    copy_ret = gst_cuda_result (CuMemcpy2DAsync (&copy_params[i], cuda_stream));
     gst_cuda_graphics_resource_unmap (resources[i], cuda_stream);
 
     if (!copy_ret) {
@@ -732,16 +1128,19 @@ gl_copy_thread_func (GstGLContext * gl_context, GLCopyData * data)
 
 out:
   gst_cuda_result (CuStreamSynchronize (cuda_stream));
-  gst_cuda_context_pop (NULL);
-  gst_video_frame_unmap (&cuda_frame);
+  gst_cuda_memory_copy_unmap (self, cuda_buf, &cuda_frame, &cuda_map_info);
 }
 
 static gboolean
 gst_cuda_memory_copy_gl_interop (GstCudaMemoryCopy * self,
     GstBuffer * inbuf, GstVideoInfo * in_info, GstBuffer * outbuf,
-    GstVideoInfo * out_info, GstGLContext * context, gboolean pbo_to_cuda)
+    GstVideoInfo * out_info, GstGLContext * context, gboolean pbo_to_cuda,
+    GstCudaMemoryCopyMemType cuda_mem_type)
 {
   GLCopyData data;
+
+  g_assert (cuda_mem_type == GST_CUDA_MEMORY_COPY_MEM_CUDA ||
+      cuda_mem_type == GST_CUDA_MEMORY_COPY_MEM_NVMM);
 
   data.self = self;
   data.inbuf = inbuf;
@@ -749,6 +1148,7 @@ gst_cuda_memory_copy_gl_interop (GstCudaMemoryCopy * self,
   data.outbuf = outbuf;
   data.out_info = out_info;
   data.pbo_to_cuda = pbo_to_cuda;
+  data.cuda_mem_type = cuda_mem_type;
   data.ret = FALSE;
 
   gst_gl_context_thread_add (context,
@@ -758,87 +1158,24 @@ gst_cuda_memory_copy_gl_interop (GstCudaMemoryCopy * self,
 }
 #endif
 
-static gboolean
-gst_cuda_memory_copy_transform_cuda (GstCudaMemoryCopy * self,
-    GstBuffer * inbuf, GstVideoInfo * in_info, gboolean in_cuda,
-    GstBuffer * outbuf, GstVideoInfo * out_info, gboolean out_cuda)
+static const gchar *
+mem_type_to_string (GstCudaMemoryCopyMemType type)
 {
-  GstCudaBaseTransform *trans = GST_CUDA_BASE_TRANSFORM (self);
-  GstVideoFrame in_frame, out_frame;
-  GstMapFlags in_map = GST_MAP_READ;
-  GstMapFlags out_map = GST_MAP_WRITE;
-  gboolean ret = TRUE;
-  CUstream cuda_stream = trans->cuda_stream;
-  guint i;
-
-  g_assert (in_cuda || out_cuda);
-
-  if (in_cuda)
-    in_map |= GST_MAP_CUDA;
-
-  if (out_cuda)
-    out_map |= GST_MAP_CUDA;
-
-  if (!gst_video_frame_map (&in_frame, in_info, inbuf, in_map)) {
-    GST_ERROR_OBJECT (self, "Failed to map input buffer");
-    return FALSE;
-  }
-
-  if (!gst_video_frame_map (&out_frame, out_info, outbuf, out_map)) {
-    gst_video_frame_unmap (&in_frame);
-
-    GST_ERROR_OBJECT (self, "Failed to map output buffer");
-    return FALSE;
-  }
-
-  if (!gst_cuda_context_push (trans->context)) {
-    GST_ERROR_OBJECT (self, "Failed to push context");
-    gst_video_frame_unmap (&in_frame);
-    gst_video_frame_unmap (&out_frame);
-    return FALSE;
-  }
-
-  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&in_frame); i++) {
-    CUDA_MEMCPY2D copy_params = { 0, };
-
-    if (in_cuda) {
-      copy_params.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-      copy_params.srcDevice =
-          (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (&in_frame, i);
-    } else {
-      copy_params.srcMemoryType = CU_MEMORYTYPE_HOST;
-      copy_params.srcHost = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, i);
-    }
-    copy_params.srcPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, i);
-
-    if (out_cuda) {
-      copy_params.dstMemoryType = CU_MEMORYTYPE_DEVICE;
-      copy_params.dstDevice =
-          (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (&out_frame, i);
-    } else {
-      copy_params.dstMemoryType = CU_MEMORYTYPE_HOST;
-      copy_params.dstHost = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, i);
-    }
-    copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, i);
-
-    copy_params.WidthInBytes = GST_VIDEO_FRAME_COMP_WIDTH (&in_frame, i)
-        * GST_VIDEO_FRAME_COMP_PSTRIDE (&in_frame, i);
-    copy_params.Height = GST_VIDEO_FRAME_COMP_HEIGHT (&in_frame, i);
-
-    ret = gst_cuda_result (CuMemcpy2DAsync (&copy_params, cuda_stream));
-    if (!ret) {
-      GST_ERROR_OBJECT (self, "Failted to copy plane %d", i);
+  switch (type) {
+    case GST_CUDA_MEMORY_COPY_MEM_SYSTEM:
+      return "SYSTEM";
+    case GST_CUDA_MEMORY_COPY_MEM_CUDA:
+      return "CUDA";
+    case GST_CUDA_MEMORY_COPY_MEM_NVMM:
+      return "NVMM";
+    case GST_CUDA_MEMORY_COPY_MEM_GL:
+      return "GL";
+    default:
+      g_assert_not_reached ();
       break;
-    }
   }
 
-  gst_video_frame_unmap (&in_frame);
-  gst_video_frame_unmap (&out_frame);
-
-  gst_cuda_result (CuStreamSynchronize (cuda_stream));
-  gst_cuda_context_pop (NULL);
-
-  return ret;
+  return "UNKNOWN";
 }
 
 static GstFlowReturn
@@ -849,13 +1186,11 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   GstCudaBaseTransform *ctrans = GST_CUDA_BASE_TRANSFORM (trans);
   GstMemory *in_mem;
   GstMemory *out_mem;
-  gboolean in_cuda, out_cuda;
   GstVideoInfo *in_info, *out_info;
   gboolean ret = FALSE;
-#ifdef HAVE_NVCODEC_GST_GL
-  gboolean in_gl = FALSE;
-  gboolean out_gl = FALSE;
-#endif
+  GstCudaMemoryCopyMemType in_type = GST_CUDA_MEMORY_COPY_MEM_SYSTEM;
+  GstCudaMemoryCopyMemType out_type = GST_CUDA_MEMORY_COPY_MEM_SYSTEM;
+  gboolean use_device_copy = FALSE;
 
   in_info = &ctrans->in_info;
   out_info = &ctrans->out_info;
@@ -872,17 +1207,35 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     return GST_FLOW_ERROR;
   }
 
-  in_cuda = gst_is_cuda_memory (in_mem);
-  out_cuda = gst_is_cuda_memory (out_mem);
-
+  if (self->in_nvmm) {
+    in_type = GST_CUDA_MEMORY_COPY_MEM_NVMM;
+    use_device_copy = TRUE;
+  } else if (gst_is_cuda_memory (in_mem)) {
+    in_type = GST_CUDA_MEMORY_COPY_MEM_CUDA;
+    use_device_copy = TRUE;
 #ifdef HAVE_NVCODEC_GST_GL
-  if (self->gl_context) {
-    in_gl = gst_is_gl_memory_pbo (in_mem);
-    out_gl = gst_is_gl_memory_pbo (out_mem);
-  }
+  } else if (self->gl_context && gst_is_gl_memory_pbo (in_mem)) {
+    in_type = GST_CUDA_MEMORY_COPY_MEM_GL;
 #endif
+  } else {
+    in_type = GST_CUDA_MEMORY_COPY_MEM_SYSTEM;
+  }
 
-  if (!in_cuda && !out_cuda) {
+  if (self->out_nvmm) {
+    out_type = GST_CUDA_MEMORY_COPY_MEM_NVMM;
+    use_device_copy = TRUE;
+  } else if (gst_is_cuda_memory (out_mem)) {
+    out_type = GST_CUDA_MEMORY_COPY_MEM_CUDA;
+    use_device_copy = TRUE;
+#ifdef HAVE_NVCODEC_GST_GL
+  } else if (self->gl_context && gst_is_gl_memory_pbo (out_mem)) {
+    out_type = GST_CUDA_MEMORY_COPY_MEM_GL;
+#endif
+  } else {
+    out_type = GST_CUDA_MEMORY_COPY_MEM_SYSTEM;
+  }
+
+  if (!use_device_copy) {
     GST_TRACE_OBJECT (self, "Both in/out buffers are not CUDA");
     if (!gst_cuda_memory_copy_transform_sysmem (self, inbuf, in_info,
             outbuf, out_info)) {
@@ -892,32 +1245,69 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     return GST_FLOW_OK;
   }
 #ifdef HAVE_NVCODEC_GST_GL
-  if (in_gl) {
+  if (in_type == GST_CUDA_MEMORY_COPY_MEM_GL) {
     GstGLMemory *gl_mem = (GstGLMemory *) in_mem;
     GstGLContext *context = gl_mem->mem.context;
 
-    GST_TRACE_OBJECT (self, "PBO -> CUDA");
+    GST_TRACE_OBJECT (self, "GL -> %s", mem_type_to_string (out_type));
 
     ret = gst_cuda_memory_copy_gl_interop (self, inbuf, in_info,
-        outbuf, out_info, context, TRUE);
-  } else if (out_gl) {
+        outbuf, out_info, context, TRUE, out_type);
+
+    if (!ret) {
+      GST_LOG_OBJECT (self, "GL interop failed, try normal CUDA copy");
+
+      /* We cannot use software fallback for NVMM */
+      if (out_type == GST_CUDA_MEMORY_COPY_MEM_NVMM) {
+        ret = gst_cuda_memory_copy_transform_cuda (self, inbuf, in_info,
+            GST_CUDA_MEMORY_COPY_MEM_SYSTEM, outbuf, out_info, out_type);
+      } else {
+        ret = !gst_cuda_memory_copy_transform_sysmem (self, inbuf, in_info,
+            outbuf, out_info);
+      }
+    }
+
+    if (!ret)
+      return GST_FLOW_ERROR;
+
+    return GST_FLOW_OK;
+  }
+
+  if (out_type == GST_CUDA_MEMORY_COPY_MEM_GL) {
     GstGLMemory *gl_mem = (GstGLMemory *) out_mem;
     GstGLContext *context = gl_mem->mem.context;
 
-    GST_TRACE_OBJECT (self, "CUDA -> PBO");
+    GST_TRACE_OBJECT (self, "%s -> GL", mem_type_to_string (in_type));
 
     ret = gst_cuda_memory_copy_gl_interop (self, inbuf, in_info,
-        outbuf, out_info, context, FALSE);
-  } else
-#endif
-  {
-    GST_TRACE_OBJECT (self, "CUDA <-> SYSTEM");
+        outbuf, out_info, context, FALSE, in_type);
 
-    ret = gst_cuda_memory_copy_transform_cuda (self, inbuf, in_info, in_cuda,
-        outbuf, out_info, out_cuda);
+    if (!ret) {
+      GST_LOG_OBJECT (self, "GL interop failed, try normal CUDA copy");
+
+      /* We cannot use software fallback for NVMM */
+      if (in_type == GST_CUDA_MEMORY_COPY_MEM_NVMM) {
+        ret = gst_cuda_memory_copy_transform_cuda (self, inbuf, in_info,
+            in_type, outbuf, out_info, GST_CUDA_MEMORY_COPY_MEM_SYSTEM);
+      } else {
+        ret = !gst_cuda_memory_copy_transform_sysmem (self, inbuf, in_info,
+            outbuf, out_info);
+      }
+    }
+
+    if (!ret)
+      return GST_FLOW_ERROR;
+
+    return GST_FLOW_OK;
   }
+#endif /* HAVE_NVCODEC_GST_GL */
 
-  if (!ret) {
+  GST_TRACE_OBJECT (self, "%s -> %s",
+      mem_type_to_string (in_type), mem_type_to_string (out_type));
+
+  ret = gst_cuda_memory_copy_transform_cuda (self, inbuf, in_info, in_type,
+      outbuf, out_info, out_type);
+  if (!ret && !self->in_nvmm && !self->out_nvmm) {
     GST_LOG_OBJECT (self, "Failed to copy using fast path, trying fallback");
     ret =
         gst_cuda_memory_copy_transform_sysmem (self, inbuf, in_info, outbuf,
@@ -1029,6 +1419,9 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
   };
   GstCaps *sys_caps;
   GstCaps *cuda_caps;
+#ifdef HAVE_NVCODEC_NVMM
+  GstCaps *nvmm_caps = NULL;
+#endif
 #ifdef HAVE_NVCODEC_GST_GL
   GstCaps *gl_caps;
 #endif
@@ -1046,6 +1439,13 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
   cuda_caps =
       gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
       (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, GST_CUDA_FORMATS));
+#ifdef HAVE_NVCODEC_NVMM
+  if (gst_cuda_nvmm_init_once ()) {
+    nvmm_caps =
+        gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY, GST_CUDA_NVMM_FORMATS));
+  }
+#endif
 #ifdef HAVE_NVCODEC_GST_GL
   gl_caps =
       gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
@@ -1056,19 +1456,42 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
 #ifdef HAVE_NVCODEC_GST_GL
   upload_sink_caps = gst_caps_merge (upload_sink_caps, gst_caps_copy (gl_caps));
 #endif
+#ifdef HAVE_NVCODEC_NVMM
+  if (nvmm_caps) {
+    upload_sink_caps = gst_caps_merge (upload_sink_caps,
+        gst_caps_copy (nvmm_caps));
+  }
+#endif
   upload_sink_caps =
       gst_caps_merge (upload_sink_caps, gst_caps_copy (cuda_caps));
 
   upload_src_caps = gst_caps_copy (cuda_caps);
+#ifdef HAVE_NVCODEC_NVMM
+  if (nvmm_caps) {
+    upload_src_caps = gst_caps_merge (upload_src_caps,
+        gst_caps_copy (nvmm_caps));
+  }
+#endif
   upload_src_caps = gst_caps_merge (upload_src_caps, gst_caps_copy (sys_caps));
 
   download_sink_caps = gst_caps_copy (cuda_caps);
+#ifdef HAVE_NVCODEC_NVMM
+  if (nvmm_caps) {
+    download_sink_caps = gst_caps_merge (download_sink_caps,
+        gst_caps_copy (nvmm_caps));
+  }
+#endif
   download_sink_caps =
       gst_caps_merge (download_sink_caps, gst_caps_copy (sys_caps));
 
   download_src_caps = sys_caps;
 #ifdef HAVE_NVCODEC_GST_GL
   download_src_caps = gst_caps_merge (download_src_caps, gl_caps);
+#endif
+#ifdef HAVE_NVCODEC_NVMM
+  if (nvmm_caps) {
+    download_src_caps = gst_caps_merge (download_src_caps, nvmm_caps);
+  }
 #endif
   download_src_caps = gst_caps_merge (download_src_caps, cuda_caps);
 
