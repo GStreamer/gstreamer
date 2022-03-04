@@ -4376,20 +4376,47 @@ remove_recv_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session)
   }
 }
 
+static gint
+fec_sinkpad_find (const GValue * item, gchar * padname)
+{
+  GstPad *pad = g_value_get_object (item);
+  return g_strcmp0 (GST_PAD_NAME (pad), padname);
+}
+
 static GstPad *
 complete_session_fec (GstRtpBin * rtpbin, GstRtpBinSession * session,
     guint fec_idx)
 {
+  gboolean have_static_pad;
   gchar *padname;
+
   GstPad *ret;
+  GstIterator *it;
+  GValue item = { 0, };
 
   if (!ensure_early_fec_decoder (rtpbin, session))
     goto no_decoder;
 
-  GST_DEBUG_OBJECT (rtpbin, "getting FEC sink pad");
   padname = g_strdup_printf ("fec_%u", fec_idx);
-  ret = gst_element_request_pad_simple (session->early_fec_decoder, padname);
+
+  GST_DEBUG_OBJECT (rtpbin, "getting FEC sink pad %s", padname);
+
+  /* First try to find the decoder static pad that matches the padname */
+  it = gst_element_iterate_sink_pads (session->early_fec_decoder);
+  have_static_pad =
+      gst_iterator_find_custom (it, (GCompareFunc) fec_sinkpad_find, &item,
+      padname);
+
+  if (have_static_pad) {
+    ret = g_value_get_object (&item);
+    gst_object_ref (ret);
+    g_value_unset (&item);
+  } else {
+    ret = gst_element_request_pad_simple (session->early_fec_decoder, padname);
+  }
+
   g_free (padname);
+  gst_iterator_free (it);
 
   if (ret == NULL)
     goto pad_failed;
@@ -4647,9 +4674,24 @@ remove_recv_fec_for_pad (GstRtpBin * rtpbin, GstRtpBinSession * session,
   if (target) {
     item = g_slist_find (session->recv_fec_sinks, target);
     if (item) {
-      gst_element_release_request_pad (session->early_fec_decoder, item->data);
+      GstPadTemplate *templ;
+      GstPad *pad;
+
+      pad = item->data;
+      templ = gst_pad_get_pad_template (pad);
+
+      if (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_REQUEST) {
+        GST_DEBUG_OBJECT (rtpbin,
+            "Releasing FEC decoder pad %" GST_PTR_FORMAT, pad);
+        gst_element_release_request_pad (session->early_fec_decoder, pad);
+      } else {
+        gst_object_unref (pad);
+      }
+
       session->recv_fec_sinks =
           g_slist_delete_link (session->recv_fec_sinks, item);
+
+      gst_object_unref (templ);
     }
     gst_object_unref (target);
   }
@@ -4867,8 +4909,7 @@ setup_aux_sender (GstRtpBin * rtpbin, GstRtpBinSession * session,
 }
 
 static void
-fec_encoder_pad_added_cb (GstElement * encoder, GstPad * pad,
-    GstRtpBinSession * session)
+fec_encoder_add_pad_unlocked (GstPad * pad, GstRtpBinSession * session)
 {
   GstElementClass *klass;
   gchar *gname;
@@ -4886,7 +4927,6 @@ fec_encoder_pad_added_cb (GstElement * encoder, GstPad * pad,
   GST_INFO_OBJECT (session->bin, "FEC encoder for session %u exposed new pad",
       session->id);
 
-  GST_RTP_BIN_LOCK (session->bin);
   klass = GST_ELEMENT_GET_CLASS (session->bin);
   gname = g_strdup_printf ("send_fec_src_%u_%u", session->id, fec_idx);
   templ = gst_element_class_get_pad_template (klass, "send_fec_src_%u_%u");
@@ -4897,10 +4937,48 @@ fec_encoder_pad_added_cb (GstElement * encoder, GstPad * pad,
   gst_pad_sticky_events_foreach (pad, copy_sticky_events, ghost);
   gst_element_add_pad (GST_ELEMENT (session->bin), ghost);
   g_free (gname);
-  GST_RTP_BIN_UNLOCK (session->bin);
 
 done:
   return;
+}
+
+static void
+fec_encoder_add_pad (GstPad * pad, GstRtpBinSession * session)
+{
+  GST_RTP_BIN_LOCK (session->bin);
+  fec_encoder_add_pad_unlocked (pad, session);
+  GST_RTP_BIN_UNLOCK (session->bin);
+}
+
+static gint
+fec_srcpad_iterator_filter (const GValue * item, GValue * unused)
+{
+  guint fec_idx;
+  GstPad *pad = g_value_get_object (item);
+  GstPadTemplate *templ = gst_pad_get_pad_template (pad);
+
+  gint have_static_pad =
+      (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_ALWAYS) &&
+      (sscanf (GST_PAD_NAME (pad), "fec_%u", &fec_idx) == 1);
+
+  gst_object_unref (templ);
+
+  /* return 0 to retain pad in filtered iterator */
+  return !have_static_pad;
+}
+
+static void
+fec_srcpad_iterator_foreach (const GValue * item, GstRtpBinSession * session)
+{
+  GstPad *pad = g_value_get_object (item);
+  fec_encoder_add_pad_unlocked (pad, session);
+}
+
+static void
+fec_encoder_pad_added_cb (GstElement * encoder, GstPad * pad,
+    GstRtpBinSession * session)
+{
+  fec_encoder_add_pad (pad, session);
 }
 
 static GstElement *
@@ -4940,6 +5018,28 @@ request_fec_encoder (GstRtpBin * rtpbin, GstRtpBinSession * session,
     ret = session_request_element (session, SIGNAL_REQUEST_FEC_ENCODER);
 
   if (ret) {
+    /* First, add encoder pads that match fec_% template and are already present */
+    GstIterator *it, *filter;
+    GstIteratorResult it_ret = GST_ITERATOR_OK;
+
+    it = gst_element_iterate_src_pads (ret);
+    filter =
+        gst_iterator_filter (it, (GCompareFunc) fec_srcpad_iterator_filter,
+        NULL);
+
+    while (it_ret == GST_ITERATOR_OK || it_ret == GST_ITERATOR_RESYNC) {
+      it_ret =
+          gst_iterator_foreach (filter,
+          (GstIteratorForeachFunction) fec_srcpad_iterator_foreach, session);
+
+      if (it_ret == GST_ITERATOR_RESYNC)
+        gst_iterator_resync (filter);
+    }
+
+    gst_iterator_free (filter);
+
+    /* Finally, connect to pad-added signal if any of the encoder pads are
+     * added later */
     g_signal_connect (ret, "pad-added", G_CALLBACK (fec_encoder_pad_added_cb),
         session);
   }
