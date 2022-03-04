@@ -412,8 +412,11 @@ gst_deinterlace_set_method (GstDeinterlace * self, GstDeinterlaceMethods method)
     gst_child_proxy_child_removed (GST_OBJECT (self),
         GST_OBJECT (self->method));
 #endif
+
+    GST_OBJECT_LOCK (self);
     gst_object_unparent (GST_OBJECT (self->method));
     self->method = NULL;
+    GST_OBJECT_UNLOCK (self);
   }
 
   method_type =
@@ -443,10 +446,13 @@ gst_deinterlace_set_method (GstDeinterlace * self, GstDeinterlaceMethods method)
     g_assert (method_type != G_TYPE_INVALID);
   }
 
-  self->method = g_object_new (method_type, "name", "method", NULL);
   self->method_id = method;
 
+  GST_OBJECT_LOCK (self);
+  self->method = g_object_new (method_type, "name", "method", NULL);
   gst_object_set_parent (GST_OBJECT (self->method), GST_OBJECT (self));
+  GST_OBJECT_UNLOCK (self);
+
 #if 0
   gst_child_proxy_child_added (GST_OBJECT (self), GST_OBJECT (self->method));
 #endif
@@ -3283,12 +3289,14 @@ gst_deinterlace_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
             gint fields_required = 0;
             gint method_latency = 0;
 
+            GST_OBJECT_LOCK (self);
             if (self->method) {
               fields_required =
                   gst_deinterlace_method_get_fields_required (self->method);
               method_latency =
                   gst_deinterlace_method_get_latency (self->method);
             }
+            GST_OBJECT_UNLOCK (self);
 
             gst_query_parse_latency (query, &live, &min, &max);
 
