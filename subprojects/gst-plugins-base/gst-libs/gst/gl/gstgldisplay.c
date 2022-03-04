@@ -302,14 +302,14 @@ gst_gl_display_type_from_environment (void)
       return GST_GL_DISPLAY_TYPE_WIN32;
     } else if (g_strstr_len (env, 8, "dispmanx")) {
       return GST_GL_DISPLAY_TYPE_DISPMANX;
+    } else if (g_strstr_len (env, 10, "egl-device")) {
+      return GST_GL_DISPLAY_TYPE_EGL_DEVICE;
     } else if (g_strstr_len (env, 3, "egl")) {
       return GST_GL_DISPLAY_TYPE_EGL;
     } else if (g_strstr_len (env, 6, "viv-fb")) {
       return GST_GL_DISPLAY_TYPE_VIV_FB;
     } else if (g_strstr_len (env, 3, "gbm")) {
       return GST_GL_DISPLAY_TYPE_GBM;
-    } else if (g_strstr_len (env, 10, "egl-device")) {
-      return GST_GL_DISPLAY_TYPE_EGL_DEVICE;
     } else if (g_strstr_len (env, 4, "eagl")) {
       return GST_GL_DISPLAY_TYPE_EAGL;
     } else if (g_strstr_len (env, 7, "android")) {
