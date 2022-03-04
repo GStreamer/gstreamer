@@ -36,9 +36,6 @@
 #define VA_ENTRYPOINT_FLAG(entry) (1U << G_PASTE(VAEntrypoint, entry))
 
 typedef struct _GstVaProfileConfig GstVaProfileConfig;
-typedef struct _GstVaPackedHeader GstVaPackedHeader;
-typedef struct _GstVaEncSlice GstVaEncSlice;
-typedef struct _GstVaEncReconstruct GstVaEncReconstruct;
 
 struct _GstVaProfileConfig
 {
