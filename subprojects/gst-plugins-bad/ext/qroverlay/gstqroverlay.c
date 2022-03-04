@@ -30,6 +30,15 @@
  * ``` bash
  * gst-launch -v -m videotestsrc ! qroverlay ! fakesink silent=TRUE
  * ```
+ * Since 1.22 the `qroverlay` element also supports a #GstCustomMeta called
+ * `GstQROverlayMeta` which allows upstream elements to set the data to be
+ * rendered on the buffers that flow through it. This custom meta
+ * #GstStructure has the following fields:
+ *
+ * * #gchar* `data` (**mandatory**): The data to use to render the qrcode.
+ * * #gboolean `keep_data` (**mandatory**): Set to %TRUE if the data from that
+ *   metadata should be used as #qroverlay:data
+ *
  *
  * Since: 1.20
  */
@@ -75,6 +84,34 @@ get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
 {
   gchar *content;
   GstQROverlay *self = GST_QR_OVERLAY (base);
+
+  GstCustomMeta *meta = gst_buffer_get_custom_meta (buf, "GstQROverlayMeta");
+  if (meta) {
+    gchar *data;
+    GstStructure *structure =
+        gst_custom_meta_get_structure ((GstCustomMeta *) meta);
+
+    if (gst_structure_get (structure, "data", G_TYPE_STRING, &data, NULL)) {
+      gboolean keep_data;
+
+      GST_OBJECT_LOCK (self);
+      self->data_changed = TRUE;
+      if (gst_structure_get_boolean (structure, "keep_data", &keep_data)
+          && keep_data) {
+        g_free (self->data);
+        self->data = g_strdup (self->data);
+      }
+      GST_OBJECT_UNLOCK (self);
+
+      *reuse_prev = FALSE;
+
+      return data;
+    }
+
+    GST_WARNING_OBJECT (self,
+        "Got a GstQROverlayMeta without a 'data' field in its struct");
+  }
+
 
   GST_OBJECT_LOCK (self);
   content = g_strdup (self->data);
@@ -124,9 +161,11 @@ gst_qr_overlay_class_init (GstQROverlayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  static const gchar *tags[] = { NULL };
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+
 
   gobject_class->set_property = gst_qr_overlay_set_property;
   gobject_class->get_property = gst_qr_overlay_get_property;
@@ -136,6 +175,8 @@ gst_qr_overlay_class_init (GstQROverlayClass * klass)
       "Qrcode overlay containing random data",
       "Overlay Qrcodes over each buffer with data passed in",
       "Thibault Saunier <tsaunier@igalia.com>");
+
+  gst_meta_register_custom ("GstQROverlayMeta", tags, NULL, NULL, NULL);
 
   g_object_class_install_property (gobject_class,
       PROP_DATA, g_param_spec_string ("data",
