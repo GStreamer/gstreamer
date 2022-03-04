@@ -83,11 +83,6 @@ typedef struct _GstVaH264LevelLimits GstVaH264LevelLimits;
 #define GST_VA_H264_ENC_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_FROM_INSTANCE (obj), GstVaH264EncClass))
 #define GST_VA_H264_ENC_CLASS(klass)    ((GstVaH264EncClass *) klass)
 
-static GType gst_va_h264_enc_frame_get_type (void);
-#define GST_TYPE_VA_H264_ENC_FRAME    (gst_va_h264_enc_frame_get_type())
-#define GST_IS_VA_H264_ENC_FRAME(obj) (GST_IS_MINI_OBJECT_TYPE((obj), GST_TYPE_VA_H264_ENC_FRAME))
-#define GST_VA_H264_ENC_FRAME(obj)    ((GstVaH264EncFrame *)(obj))
-
 enum
 {
   PROP_KEY_INT_MAX = 1,
@@ -141,12 +136,12 @@ struct _GstVaH264EncClass
 
   gboolean (*reconfig)       (GstVaH264Enc * encoder);
   gboolean (*push_frame)     (GstVaH264Enc * encoder,
-                              GstVaH264EncFrame * frame,
+                              GstVideoCodecFrame * frame,
                               gboolean last);
   gboolean (*pop_frame)      (GstVaH264Enc * encoder,
-                              GstVaH264EncFrame ** out_frame);
+                              GstVideoCodecFrame ** out_frame);
   gboolean (*encode_frame)   (GstVaH264Enc * encoder,
-                              GstVaH264EncFrame * frame);
+                              GstVideoCodecFrame * frame);
 };
 /* *INDENT-ON* */
 
@@ -300,9 +295,6 @@ struct _GstVaH264Enc
 
 struct _GstVaH264EncFrame
 {
-  GstMiniObject parent;
-
-  GstVideoCodecFrame *frame;
   GstVaEncodePicture *picture;
   GstH264SliceType type;
   gboolean is_ref;
@@ -322,8 +314,6 @@ struct _GstVaH264EncFrame
   /* The total frame count we handled. */
   guint total_frame_count;
 };
-
-GST_DEFINE_MINI_OBJECT_TYPE (GstVaH264EncFrame, gst_va_h264_enc_frame);
 
 /**
  * GstVaH264LevelLimits:
@@ -469,13 +459,35 @@ gst_va_h264_enc_mbbrc_get_type (void)
   return type;
 }
 
-static void
-gst_va_enc_frame_free (GstVaH264EncFrame * frame)
+static GstVaH264EncFrame *
+gst_va_enc_frame_new (void)
 {
-  g_clear_pointer (&frame->picture, gst_va_encode_picture_free);
-  g_clear_pointer (&frame->frame, gst_video_codec_frame_unref);
+  GstVaH264EncFrame *frame;
 
-  g_free (frame);
+  frame = g_slice_new (GstVaH264EncFrame);
+  frame->last_frame = FALSE;
+  frame->frame_num = 0;
+  frame->unused_for_reference_pic_num = -1;
+  frame->picture = NULL;
+  frame->total_frame_count = 0;
+
+  return frame;
+}
+
+static void
+gst_va_enc_frame_free (gpointer pframe)
+{
+  GstVaH264EncFrame *frame = pframe;
+  g_clear_pointer (&frame->picture, gst_va_encode_picture_free);
+  g_slice_free (GstVaH264EncFrame, frame);
+}
+
+static inline GstVaH264EncFrame *
+_enc_frame (GstVideoCodecFrame * frame)
+{
+  GstVaH264EncFrame *enc_frame = gst_video_codec_frame_get_user_data (frame);
+  g_assert (enc_frame);
+  return enc_frame;
 }
 
 /* Normalizes bitrate (and CPB size) for HRD conformance */
@@ -1649,13 +1661,15 @@ gst_va_h264_enc_reconfig (GstVaH264Enc * self)
 }
 
 static gboolean
-gst_va_h264_enc_push_frame (GstVaH264Enc * self,
-    GstVaH264EncFrame * frame, gboolean last)
+gst_va_h264_enc_push_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame,
+    gboolean last)
 {
+  GstVaH264EncFrame *frame;
+
   g_return_val_if_fail (self->gop.cur_frame_index <= self->gop.idr_period,
       FALSE);
 
-  if (frame) {
+  if (gst_frame) {
     /* Begin a new GOP, should have a empty reorder_list. */
     if (self->gop.cur_frame_index == self->gop.idr_period) {
       g_assert (g_queue_is_empty (&self->reorder_list));
@@ -1663,16 +1677,17 @@ gst_va_h264_enc_push_frame (GstVaH264Enc * self,
       self->gop.cur_frame_num = 0;
     }
 
+    frame = _enc_frame (gst_frame);
     frame->poc =
         ((self->gop.cur_frame_index * 2) % self->gop.max_pic_order_cnt);
 
     if (self->gop.cur_frame_index == 0) {
       g_assert (frame->poc == 0);
       GST_LOG_OBJECT (self, "system_frame_number: %d, an IDR frame, starts"
-          " a new GOP", frame->frame->system_frame_number);
+          " a new GOP", gst_frame->system_frame_number);
 
       g_queue_clear_full (&self->ref_list,
-          (GDestroyNotify) gst_mini_object_unref);
+          (GDestroyNotify) gst_video_codec_frame_unref);
     }
 
     frame->type = self->gop.frame_types[self->gop.cur_frame_index].slice_type;
@@ -1684,34 +1699,36 @@ gst_va_h264_enc_push_frame (GstVaH264Enc * self,
     frame->right_ref_poc_diff =
         self->gop.frame_types[self->gop.cur_frame_index].right_ref_poc_diff;
 
-    if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame->frame)) {
+    if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (gst_frame)) {
       GST_DEBUG_OBJECT (self, "system_frame_number: %d, a force key frame,"
-          " promote its type from %s to %s", frame->frame->system_frame_number,
+          " promote its type from %s to %s", gst_frame->system_frame_number,
           _slice_type_name (frame->type), _slice_type_name (GST_H264_I_SLICE));
       frame->type = GST_H264_I_SLICE;
       frame->is_ref = TRUE;
     }
 
     GST_LOG_OBJECT (self, "Push frame, system_frame_number: %d, poc %d, "
-        "frame type %s", frame->frame->system_frame_number, frame->poc,
+        "frame type %s", gst_frame->system_frame_number, frame->poc,
         _slice_type_name (frame->type));
 
     self->gop.cur_frame_index++;
-    g_queue_push_tail (&self->reorder_list, frame);
+    g_queue_push_tail (&self->reorder_list,
+        gst_video_codec_frame_ref (gst_frame));
   }
 
   /* ensure the last one a non-B and end the GOP. */
   if (last && self->gop.cur_frame_index < self->gop.idr_period) {
-    GstVaH264EncFrame *last_frame;
+    GstVideoCodecFrame *last_frame;
 
     /* Ensure next push will start a new GOP. */
     self->gop.cur_frame_index = self->gop.idr_period;
 
     if (!g_queue_is_empty (&self->reorder_list)) {
       last_frame = g_queue_peek_tail (&self->reorder_list);
-      if (last_frame->type == GST_H264_B_SLICE) {
-        last_frame->type = GST_H264_P_SLICE;
-        last_frame->is_ref = TRUE;
+      frame = _enc_frame (last_frame);
+      if (frame->type == GST_H264_B_SLICE) {
+        frame->type = GST_H264_P_SLICE;
+        frame->is_ref = TRUE;
       }
     }
   }
@@ -1728,7 +1745,7 @@ struct RefFramesCount
 static void
 _count_backward_ref_num (gpointer data, gpointer user_data)
 {
-  GstVaH264EncFrame *frame = (GstVaH264EncFrame *) data;
+  GstVaH264EncFrame *frame = _enc_frame (data);
   struct RefFramesCount *count = (struct RefFramesCount *) user_data;
 
   g_assert (frame->poc != count->poc);
@@ -1736,20 +1753,24 @@ _count_backward_ref_num (gpointer data, gpointer user_data)
     count->num++;
 }
 
-static GstVaH264EncFrame *
+static GstVideoCodecFrame *
 _pop_pyramid_b_frame (GstVaH264Enc * self)
 {
   guint i;
-  GstVaH264EncFrame *b_frame;
   gint index = -1;
+  GstVaH264EncFrame *b_vaframe;
+  GstVideoCodecFrame *b_frame;
   struct RefFramesCount count;
 
   g_assert (self->gop.ref_num_list1 == 1);
 
-  /* Find the lowest level with smallest poc. */
   b_frame = NULL;
+  b_vaframe = NULL;
+
+  /* Find the lowest level with smallest poc. */
   for (i = 0; i < g_queue_get_length (&self->reorder_list); i++) {
-    GstVaH264EncFrame *f;
+    GstVaH264EncFrame *vaf;
+    GstVideoCodecFrame *f;
 
     f = g_queue_peek_nth (&self->reorder_list, i);
 
@@ -1759,13 +1780,14 @@ _pop_pyramid_b_frame (GstVaH264Enc * self)
       continue;
     }
 
-    if (b_frame->pyramid_level > f->pyramid_level) {
+    vaf = _enc_frame (f);
+    if (b_vaframe->pyramid_level > vaf->pyramid_level) {
       b_frame = f;
       index = i;
       continue;
     }
 
-    if (b_frame->poc > f->poc) {
+    if (b_vaframe->poc > vaf->poc) {
       b_frame = f;
       index = i;
     }
@@ -1773,18 +1795,20 @@ _pop_pyramid_b_frame (GstVaH264Enc * self)
 
 again:
   /* Check whether its refs are already poped. */
-  g_assert (b_frame->left_ref_poc_diff != 0);
-  g_assert (b_frame->right_ref_poc_diff != 0);
+  g_assert (b_vaframe->left_ref_poc_diff != 0);
+  g_assert (b_vaframe->right_ref_poc_diff != 0);
   for (i = 0; i < g_queue_get_length (&self->reorder_list); i++) {
-    GstVaH264EncFrame *f;
+    GstVaH264EncFrame *vaf;
+    GstVideoCodecFrame *f;
 
     f = g_queue_peek_nth (&self->reorder_list, i);
 
     if (f == b_frame)
       continue;
 
-    if (f->poc == b_frame->poc + b_frame->left_ref_poc_diff ||
-        f->poc == b_frame->poc + b_frame->right_ref_poc_diff) {
+    vaf = _enc_frame (f);
+    if (vaf->poc == b_vaframe->poc + b_vaframe->left_ref_poc_diff
+        || vaf->poc == b_vaframe->poc + b_vaframe->right_ref_poc_diff) {
       b_frame = f;
       index = i;
       goto again;
@@ -1793,11 +1817,12 @@ again:
 
   /* Ensure we already have enough backward refs */
   count.num = 0;
-  count.poc = b_frame->poc;
+  count.poc = b_vaframe->poc;
   g_queue_foreach (&self->ref_list, (GFunc) _count_backward_ref_num, &count);
   if (count.num >= self->gop.ref_num_list1) {
-    GstVaH264EncFrame *f;
+    GstVideoCodecFrame *f;
 
+    /* it will unref at pop_frame */
     f = g_queue_pop_nth (&self->reorder_list, index);
     g_assert (f == b_frame);
   } else {
@@ -1808,23 +1833,23 @@ again:
 }
 
 static gboolean
-gst_va_h264_enc_pop_frame (GstVaH264Enc * self, GstVaH264EncFrame ** out_frame)
+gst_va_h264_enc_pop_frame (GstVaH264Enc * self, GstVideoCodecFrame ** out_frame)
 {
-  GstVaH264EncFrame *frame;
+  GstVaH264EncFrame *vaframe;
+  GstVideoCodecFrame *frame;
   struct RefFramesCount count;
 
   g_return_val_if_fail (self->gop.cur_frame_index <= self->gop.idr_period,
       FALSE);
-
-  *out_frame = NULL;
 
   if (g_queue_is_empty (&self->reorder_list))
     return TRUE;
 
   /* Return the last pushed non-B immediately. */
   frame = g_queue_peek_tail (&self->reorder_list);
-  if (frame->type != GST_H264_B_SLICE) {
-    *out_frame = g_queue_pop_tail (&self->reorder_list);
+  vaframe = _enc_frame (frame);
+  if (vaframe->type != GST_H264_B_SLICE) {
+    frame = g_queue_pop_tail (&self->reorder_list);
     goto get_one;
   }
 
@@ -1832,8 +1857,6 @@ gst_va_h264_enc_pop_frame (GstVaH264Enc * self, GstVaH264EncFrame ** out_frame)
     frame = _pop_pyramid_b_frame (self);
     if (frame == NULL)
       return TRUE;
-
-    *out_frame = frame;
     goto get_one;
   }
 
@@ -1841,17 +1864,18 @@ gst_va_h264_enc_pop_frame (GstVaH264Enc * self, GstVaH264EncFrame ** out_frame)
 
   /* If GOP end, pop anyway. */
   if (self->gop.cur_frame_index == self->gop.idr_period) {
-    *out_frame = g_queue_pop_head (&self->reorder_list);
+    frame = g_queue_pop_head (&self->reorder_list);
     goto get_one;
   }
 
   /* Ensure we already have enough backward refs */
   frame = g_queue_peek_head (&self->reorder_list);
+  vaframe = _enc_frame (frame);
   count.num = 0;
-  count.poc = frame->poc;
-  g_queue_foreach (&self->ref_list, (GFunc) _count_backward_ref_num, &count);
+  count.poc = vaframe->poc;
+  g_queue_foreach (&self->ref_list, _count_backward_ref_num, &count);
   if (count.num >= self->gop.ref_num_list1) {
-    *out_frame = g_queue_pop_head (&self->reorder_list);
+    frame = g_queue_pop_head (&self->reorder_list);
     goto get_one;
   }
 
@@ -1860,29 +1884,31 @@ gst_va_h264_enc_pop_frame (GstVaH264Enc * self, GstVaH264EncFrame ** out_frame)
 get_one:
   g_assert (self->gop.cur_frame_num < self->gop.max_frame_num);
 
-  (*out_frame)->frame_num = self->gop.cur_frame_num;
+  vaframe = _enc_frame (frame);
+  vaframe->frame_num = self->gop.cur_frame_num;
 
   /* Add the frame number for ref frames. */
-  if ((*out_frame)->is_ref)
+  if (vaframe->is_ref)
     self->gop.cur_frame_num++;
 
-  if ((*out_frame)->frame_num == 0)
+  if (vaframe->frame_num == 0)
     self->gop.total_idr_count++;
 
-  if (self->gop.b_pyramid && (*out_frame)->type == GST_H264_B_SLICE) {
+  if (self->gop.b_pyramid && vaframe->type == GST_H264_B_SLICE) {
     GST_LOG_OBJECT (self, "pop a pyramid B frame with system_frame_number:"
         " %d, poc: %d, frame num: %d, is_ref: %s, level %d",
-        (*out_frame)->frame->system_frame_number, (*out_frame)->poc,
-        (*out_frame)->frame_num, (*out_frame)->is_ref ? "true" : "false",
-        (*out_frame)->pyramid_level);
+        frame->system_frame_number, vaframe->poc, vaframe->frame_num,
+        vaframe->is_ref ? "true" : "false", vaframe->pyramid_level);
   } else {
     GST_LOG_OBJECT (self, "pop a frame with system_frame_number: %d,"
         " frame type: %s, poc: %d, frame num: %d, is_ref: %s",
-        (*out_frame)->frame->system_frame_number,
-        _slice_type_name ((*out_frame)->type),
-        (*out_frame)->poc, (*out_frame)->frame_num,
-        (*out_frame)->is_ref ? "true" : "false");
+        frame->system_frame_number, _slice_type_name (vaframe->type),
+        vaframe->poc, vaframe->frame_num, vaframe->is_ref ? "true" : "false");
   }
+
+  /* unref frame popped from queue or pyramid b_frame */
+  gst_video_codec_frame_unref (frame);
+  *out_frame = frame;
   return TRUE;
 }
 
@@ -2353,7 +2379,7 @@ _fill_picture_parameter (GstVaH264Enc * self, GstVaH264EncFrame * frame,
 
     /* ref frames in queue are already sorted by frame_num. */
     for (; i < g_queue_get_length (&self->ref_list); i++) {
-      f = g_queue_peek_nth (&self->ref_list, i);
+      f = _enc_frame (g_queue_peek_nth (&self->ref_list, i));
 
       pic_param->ReferenceFrames[i].picture_id =
           gst_va_encode_picture_get_reconstruct_surface (f->picture);
@@ -2816,7 +2842,8 @@ _add_aud (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 }
 
 static gboolean
-gst_va_h264_enc_encode_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
+gst_va_h264_enc_encode_frame (GstVaH264Enc * self,
+    GstVideoCodecFrame * gst_frame)
 {
   VAEncPictureParameterBufferH264 pic_param;
   GstH264PPS pps;
@@ -2826,6 +2853,11 @@ gst_va_h264_enc_encode_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
   guint list1_num = 0;
   guint slice_of_mbs, slice_mod_mbs, slice_start_mb, slice_mbs;
   gint i;
+  GstVaH264EncFrame *frame;
+
+  g_return_val_if_fail (gst_frame, FALSE);
+
+  frame = _enc_frame (gst_frame);
 
   /* Repeat the SPS for IDR. */
   if (frame->poc == 0) {
@@ -2866,14 +2898,16 @@ gst_va_h264_enc_encode_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 
   /* Non I frame, construct reference list. */
   if (frame->type != GST_H264_I_SLICE) {
-    GstVaH264EncFrame *f;
+    GstVaH264EncFrame *vaf;
+    GstVideoCodecFrame *f;
 
     for (i = g_queue_get_length (&self->ref_list) - 1; i >= 0; i--) {
       f = g_queue_peek_nth (&self->ref_list, i);
-      if (f->poc > frame->poc)
+      vaf = _enc_frame (f);
+      if (vaf->poc > frame->poc)
         continue;
 
-      list0[list0_num] = f;
+      list0[list0_num] = vaf;
       list0_num++;
     }
 
@@ -2886,14 +2920,16 @@ gst_va_h264_enc_encode_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
   }
 
   if (frame->type == GST_H264_B_SLICE) {
-    GstVaH264EncFrame *f;
+    GstVaH264EncFrame *vaf;
+    GstVideoCodecFrame *f;
 
     for (i = 0; i < g_queue_get_length (&self->ref_list); i++) {
       f = g_queue_peek_nth (&self->ref_list, i);
-      if (f->poc < frame->poc)
+      vaf = _enc_frame (f);
+      if (vaf->poc < frame->poc)
         continue;
 
-      list1[list1_num] = f;
+      list1[list1_num] = vaf;
       list1_num++;
     }
 
@@ -3036,10 +3072,11 @@ _flush_all_frames (GstVideoEncoder * venc)
   GstVaH264Enc *self = GST_VA_H264_ENC (venc);
 
   g_queue_clear_full (&self->reorder_list,
-      (GDestroyNotify) gst_mini_object_unref);
+      (GDestroyNotify) gst_video_codec_frame_unref);
   g_queue_clear_full (&self->output_list,
-      (GDestroyNotify) gst_mini_object_unref);
-  g_queue_clear_full (&self->ref_list, (GDestroyNotify) gst_mini_object_unref);
+      (GDestroyNotify) gst_video_codec_frame_unref);
+  g_queue_clear_full (&self->ref_list,
+      (GDestroyNotify) gst_video_codec_frame_unref);
 }
 
 static gboolean
@@ -3203,9 +3240,9 @@ invalid_buffer:
 }
 
 static GstFlowReturn
-_push_buffer_to_downstream (GstVaH264Enc * self, GstVaH264EncFrame * frame_enc)
+_push_buffer_to_downstream (GstVaH264Enc * self, GstVideoCodecFrame * frame)
 {
-  GstVideoCodecFrame *frame;
+  GstVaH264EncFrame *frame_enc;
   GstFlowReturn ret;
   guint coded_size;
   goffset offset;
@@ -3215,9 +3252,9 @@ _push_buffer_to_downstream (GstVaH264Enc * self, GstVaH264EncFrame * frame_enc)
   VAStatus status;
   VACodedBufferSegment *seg, *seg_list;
 
-  frame = frame_enc->frame;
-
   dpy = gst_va_display_get_va_dpy (self->display);
+
+  frame_enc = _enc_frame (frame);
 
   /* Wait for encoding to finish */
   surface = gst_va_encode_picture_get_raw_surface (frame_enc->picture);
@@ -3278,7 +3315,6 @@ _push_buffer_to_downstream (GstVaH264Enc * self, GstVaH264EncFrame * frame_enc)
   self->output_frame_count++;
   frame->duration = self->frame_duration;
 
-  gst_clear_mini_object ((GstMiniObject **) & frame_enc);
   gst_buffer_replace (&frame->output_buffer, buf);
   gst_clear_buffer (&buf);
 
@@ -3293,39 +3329,37 @@ _push_buffer_to_downstream (GstVaH264Enc * self, GstVaH264EncFrame * frame_enc)
   return ret;
 
 error:
-  gst_clear_mini_object ((GstMiniObject **) & frame_enc);
-  gst_clear_buffer (&buf);
   gst_clear_buffer (&frame->output_buffer);
+  gst_clear_buffer (&buf);
   gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (self), frame);
+
   return GST_FLOW_ERROR;
 }
 
 static gboolean
-_reorder_frame (GstVideoEncoder * venc, GstVaH264EncFrame * in_frame,
-    gboolean bump_all, GstVaH264EncFrame ** out_frame)
+_reorder_frame (GstVideoEncoder * venc, GstVideoCodecFrame * frame,
+    gboolean bump_all, GstVideoCodecFrame ** out_frame)
 {
   GstVaH264Enc *self = GST_VA_H264_ENC (venc);
   GstVaH264EncClass *klass = GST_VA_H264_ENC_GET_CLASS (self);
-  GstVaH264EncFrame *frame_out = NULL;
 
   g_assert (klass->push_frame);
-  if (!klass->push_frame (self, in_frame, bump_all)) {
+  if (!klass->push_frame (self, frame, bump_all)) {
     GST_ERROR_OBJECT (self, "Failed to push the input frame"
         " system_frame_number: %d into the reorder list",
-        in_frame->frame->system_frame_number);
+        frame->system_frame_number);
 
     *out_frame = NULL;
     return FALSE;
   }
 
   g_assert (klass->pop_frame);
-  if (!klass->pop_frame (self, &frame_out)) {
+  if (!klass->pop_frame (self, out_frame)) {
     GST_ERROR_OBJECT (self, "Failed to pop the frame from the reorder list");
     *out_frame = NULL;
     return FALSE;
   }
 
-  *out_frame = frame_out;
   return TRUE;
 }
 
@@ -3340,11 +3374,12 @@ _sort_by_frame_num (gconstpointer a, gconstpointer b, gpointer user_data)
   return frame1->frame_num - frame2->frame_num;
 }
 
-static GstVaH264EncFrame *
+static GstVideoCodecFrame *
 _find_unused_reference_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 {
+  GstVaH264EncFrame *b_vaframe;
+  GstVideoCodecFrame *b_frame;
   guint i;
-  GstVaH264EncFrame *b_frame;
 
   /* We still have more space. */
   if (g_queue_get_length (&self->ref_list) < self->gop.num_ref_frames)
@@ -3361,11 +3396,12 @@ _find_unused_reference_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
   /* Choose the B frame with lowest POC. */
   b_frame = NULL;
   for (i = 0; i < g_queue_get_length (&self->ref_list); i++) {
-    GstVaH264EncFrame *f;
+    GstVaH264EncFrame *vaf;
+    GstVideoCodecFrame *f;
 
     f = g_queue_peek_nth (&self->ref_list, i);
-
-    if (f->type != GST_H264_B_SLICE)
+    vaf = _enc_frame (f);
+    if (vaf->type != GST_H264_B_SLICE)
       continue;
 
     if (!b_frame) {
@@ -3373,8 +3409,9 @@ _find_unused_reference_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
       continue;
     }
 
-    g_assert (f->poc != b_frame->poc);
-    if (f->poc < b_frame->poc)
+    b_vaframe = _enc_frame (b_frame);
+    g_assert (vaf->poc != b_vaframe->poc);
+    if (vaf->poc < b_vaframe->poc)
       b_frame = f;
   }
 
@@ -3383,26 +3420,29 @@ _find_unused_reference_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
     return g_queue_peek_head (&self->ref_list);
 
   if (b_frame != g_queue_peek_head (&self->ref_list)) {
-    frame->unused_for_reference_pic_num = b_frame->frame_num;
+    b_vaframe = _enc_frame (b_frame);
+    frame->unused_for_reference_pic_num = b_vaframe->frame_num;
     GST_LOG_OBJECT (self, "The frame with POC: %d, pic_num %d will be"
         " replaced by the frame with POC: %d, pic_num %d explicitly by"
         " using memory_management_control_operation=1",
-        b_frame->poc, b_frame->frame_num, frame->poc, frame->frame_num);
+        b_vaframe->poc, b_vaframe->frame_num, frame->poc, frame->frame_num);
   }
 
   return b_frame;
 }
 
 static GstFlowReturn
-_encode_frame (GstVideoEncoder * venc, GstVaH264EncFrame * frame)
+_encode_frame (GstVideoEncoder * venc, GstVideoCodecFrame * gst_frame)
 {
   GstVaH264Enc *self = GST_VA_H264_ENC (venc);
   GstVaH264EncClass *klass = GST_VA_H264_ENC_GET_CLASS (self);
-  GstVaH264EncFrame *unused_ref = NULL;
+  GstVaH264EncFrame *frame;
+  GstVideoCodecFrame *unused_ref = NULL;
 
+  frame = _enc_frame (gst_frame);
   g_assert (frame->picture == NULL);
   frame->picture = gst_va_encode_picture_new (self->encoder,
-      frame->frame->input_buffer);
+      gst_frame->input_buffer);
 
   if (!frame->picture) {
     GST_ERROR_OBJECT (venc, "Failed to create the encode picture");
@@ -3412,24 +3452,23 @@ _encode_frame (GstVideoEncoder * venc, GstVaH264EncFrame * frame)
   if (frame->is_ref)
     unused_ref = _find_unused_reference_frame (self, frame);
 
-  if (!klass->encode_frame (self, frame)) {
+  if (!klass->encode_frame (self, gst_frame)) {
     GST_ERROR_OBJECT (venc, "Failed to encode the frame");
     return GST_FLOW_ERROR;
   }
 
-  g_queue_push_tail (&self->output_list, frame);
+  g_queue_push_tail (&self->output_list, gst_video_codec_frame_ref (gst_frame));
 
   if (frame->is_ref) {
     if (unused_ref) {
       if (!g_queue_remove (&self->ref_list, unused_ref))
         g_assert_not_reached ();
 
-      gst_mini_object_unref ((GstMiniObject *) unused_ref);
+      gst_video_codec_frame_unref (unused_ref);
     }
 
     /* Add it into the reference list. */
-    gst_mini_object_ref ((GstMiniObject *) frame);
-    g_queue_push_tail (&self->ref_list, frame);
+    g_queue_push_tail (&self->ref_list, gst_video_codec_frame_ref (gst_frame));
     g_queue_sort (&self->ref_list, _sort_by_frame_num, NULL);
 
     g_assert (g_queue_get_length (&self->ref_list) <= self->gop.num_ref_frames);
@@ -3446,8 +3485,7 @@ gst_va_h264_enc_handle_frame (GstVideoEncoder * venc,
   GstFlowReturn ret;
   GstBuffer *in_buf = NULL;
   GstVaH264EncFrame *frame_in = NULL;
-  GstVaH264EncFrame *frame_encode = NULL;
-  GstVaH264EncFrame *frame_out = NULL;
+  GstVideoCodecFrame *frame_out, *frame_encode = NULL;
 
   GST_LOG_OBJECT (venc,
       "handle frame id %d, dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT,
@@ -3462,24 +3500,15 @@ gst_va_h264_enc_handle_frame (GstVideoEncoder * venc,
   gst_buffer_replace (&frame->input_buffer, in_buf);
   gst_clear_buffer (&in_buf);
 
-  frame_in = g_new (GstVaH264EncFrame, 1);
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (frame_in), 0,
-      GST_TYPE_VA_H264_ENC_FRAME, NULL, NULL,
-      (GstMiniObjectFreeFunction) gst_va_enc_frame_free);
-  frame_in->last_frame = FALSE;
-  frame_in->frame_num = 0;
-  frame_in->unused_for_reference_pic_num = -1;
-  frame_in->frame = gst_video_codec_frame_ref (frame);
-  frame_in->picture = NULL;
-  frame_in->total_frame_count = self->input_frame_count;
-  self->input_frame_count++;
+  frame_in = gst_va_enc_frame_new ();
+  frame_in->total_frame_count = self->input_frame_count++;
+  gst_video_codec_frame_set_user_data (frame, frame_in, gst_va_enc_frame_free);
 
-  if (!_reorder_frame (venc, frame_in, FALSE, &frame_encode))
+  if (!_reorder_frame (venc, frame, FALSE, &frame_encode))
     goto error_reorder;
 
   /* pass it to reorder list and we should not use it again. */
   frame = NULL;
-  frame_in = NULL;
 
   while (frame_encode) {
     ret = _encode_frame (venc, frame_encode);
@@ -3488,6 +3517,7 @@ gst_va_h264_enc_handle_frame (GstVideoEncoder * venc,
 
     while (g_queue_get_length (&self->output_list) > 0) {
       frame_out = g_queue_pop_head (&self->output_list);
+      gst_video_codec_frame_unref (frame_out);
       ret = _push_buffer_to_downstream (self, frame_out);
       if (ret != GST_FLOW_OK)
         goto error_push_buffer;
@@ -3513,20 +3543,18 @@ error_reorder:
   {
     GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
         ("Failed to reorder the input frame."), (NULL));
-    if (frame_in) {
-      gst_clear_buffer (&frame_in->frame->output_buffer);
-      gst_video_encoder_finish_frame (venc, frame_in->frame);
+    if (frame) {
+      gst_clear_buffer (&frame->output_buffer);
+      gst_video_encoder_finish_frame (venc, frame);
     }
-    gst_clear_mini_object ((GstMiniObject **) & frame_in);
     return GST_FLOW_ERROR;
   }
 error_encode:
   {
     GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
         ("Failed to encode the frame."), (NULL));
-    gst_clear_buffer (&frame_encode->frame->output_buffer);
-    gst_video_encoder_finish_frame (venc, frame_encode->frame);
-    gst_clear_mini_object ((GstMiniObject **) & frame_encode);
+    gst_clear_buffer (&frame_encode->output_buffer);
+    gst_video_encoder_finish_frame (venc, frame_encode);
     return ret;
   }
 error_push_buffer:
@@ -3539,7 +3567,7 @@ gst_va_h264_enc_drain (GstVideoEncoder * venc)
 {
   GstVaH264Enc *self = GST_VA_H264_ENC (venc);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstVaH264EncFrame *frame_enc = NULL;
+  GstVideoCodecFrame *frame_enc = NULL;
 
   GST_DEBUG_OBJECT (self, "Encoder is draining");
 
@@ -3551,13 +3579,14 @@ gst_va_h264_enc_drain (GstVideoEncoder * venc)
 
   while (frame_enc) {
     if (g_queue_is_empty (&self->reorder_list))
-      frame_enc->last_frame = TRUE;
+      _enc_frame (frame_enc)->last_frame = TRUE;
 
     ret = _encode_frame (venc, frame_enc);
     if (ret != GST_FLOW_OK)
       goto error_and_purge_all;
 
     frame_enc = g_queue_pop_head (&self->output_list);
+    gst_video_codec_frame_unref (frame_enc);
     ret = _push_buffer_to_downstream (self, frame_enc);
     frame_enc = NULL;
     if (ret != GST_FLOW_OK)
@@ -3575,6 +3604,7 @@ gst_va_h264_enc_drain (GstVideoEncoder * venc)
   /* Output all frames. */
   while (!g_queue_is_empty (&self->output_list)) {
     frame_enc = g_queue_pop_head (&self->output_list);
+    gst_video_codec_frame_unref (frame_enc);
     ret = _push_buffer_to_downstream (self, frame_enc);
     frame_enc = NULL;
     if (ret != GST_FLOW_OK)
@@ -3582,15 +3612,15 @@ gst_va_h264_enc_drain (GstVideoEncoder * venc)
   }
 
   /* Also clear the reference list. */
-  g_queue_clear_full (&self->ref_list, (GDestroyNotify) gst_mini_object_unref);
+  g_queue_clear_full (&self->ref_list,
+      (GDestroyNotify) gst_video_codec_frame_unref);
 
   return GST_FLOW_OK;
 
 error_and_purge_all:
   if (frame_enc) {
-    gst_clear_buffer (&frame_enc->frame->output_buffer);
-    gst_video_encoder_finish_frame (venc, frame_enc->frame);
-    gst_clear_mini_object ((GstMiniObject **) & frame_enc);
+    gst_clear_buffer (&frame_enc->output_buffer);
+    gst_video_encoder_finish_frame (venc, frame_enc);
   }
 
   if (!g_queue_is_empty (&self->output_list)) {
@@ -3598,9 +3628,9 @@ error_and_purge_all:
         " after drain", g_queue_get_length (&self->output_list));
     while (!g_queue_is_empty (&self->output_list)) {
       frame_enc = g_queue_pop_head (&self->output_list);
-      gst_clear_buffer (&frame_enc->frame->output_buffer);
-      gst_video_encoder_finish_frame (venc, frame_enc->frame);
-      gst_clear_mini_object ((GstMiniObject **) & frame_enc);
+      gst_video_codec_frame_unref (frame_enc);
+      gst_clear_buffer (&frame_enc->output_buffer);
+      gst_video_encoder_finish_frame (venc, frame_enc);
     }
   }
 
@@ -3609,14 +3639,15 @@ error_and_purge_all:
         " after drain", g_queue_get_length (&self->reorder_list));
     while (!g_queue_is_empty (&self->reorder_list)) {
       frame_enc = g_queue_pop_head (&self->reorder_list);
-      gst_clear_buffer (&frame_enc->frame->output_buffer);
-      gst_video_encoder_finish_frame (venc, frame_enc->frame);
-      gst_clear_mini_object ((GstMiniObject **) & frame_enc);
+      gst_video_codec_frame_unref (frame_enc);
+      gst_clear_buffer (&frame_enc->output_buffer);
+      gst_video_encoder_finish_frame (venc, frame_enc);
     }
   }
 
   /* Also clear the reference list. */
-  g_queue_clear_full (&self->ref_list, (GDestroyNotify) gst_mini_object_unref);
+  g_queue_clear_full (&self->ref_list,
+      (GDestroyNotify) gst_video_codec_frame_unref);
 
   return ret;
 }
