@@ -1971,9 +1971,11 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
       GST_INFO_OBJECT (self, "Input alignment %s",
           gst_av1_parse_alignment_to_string (self->in_align));
     } else {
+      /* Because the input is already TU aligned, we should skip
+         the whole problematic TU and check the next one. */
       *skipsize = gst_buffer_get_size (frame->buffer);
       GST_WARNING_OBJECT (self, "Fail to detect the stream format for TU,"
-          " skip %d", *skipsize);
+          " skip the whole TU %d", *skipsize);
       return GST_FLOW_OK;
     }
   }
