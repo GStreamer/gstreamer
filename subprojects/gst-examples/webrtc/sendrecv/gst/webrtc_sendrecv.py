@@ -220,6 +220,8 @@ class WebRTCClient:
             candidate = ice['candidate']
             sdpmlineindex = ice['sdpMLineIndex']
             self.webrtc.emit('add-ice-candidate', sdpmlineindex, candidate)
+        else:
+            print_error('Unknown JSON message')
 
     def close_pipeline(self):
         if self.pipe:
