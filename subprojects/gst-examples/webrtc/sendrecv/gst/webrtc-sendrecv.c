@@ -59,7 +59,7 @@ static GOptionEntry entries[] = {
   {"peer-id", 0, 0, G_OPTION_ARG_STRING, &peer_id,
       "String ID of the peer to connect to", "ID"},
   {"our-id", 0, 0, G_OPTION_ARG_STRING, &our_id,
-      "String ID of the session that peer can connect to us", "ID"},
+      "String ID that the peer can use to connect to us", "ID"},
   {"server", 0, 0, G_OPTION_ARG_STRING, &server_url,
       "Signalling server to connect to", "URL"},
   {"disable-ssl", 0, 0, G_OPTION_ARG_NONE, &disable_ssl, "Disable ssl", NULL},
