@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+#
+# Copyright (C) 2018 Matthew Waters <matthew@centricular.com>
+#               2022 Nirbheek Chauhan <nirbheek@centricular.com>
+#
+# Demo gstreamer app for negotiating and streaming a sendrecv webrtc stream
+# with a browser JS app, implemented in Python.
 
 import random
 import ssl
