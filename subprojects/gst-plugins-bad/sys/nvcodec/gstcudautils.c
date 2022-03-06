@@ -102,18 +102,22 @@ find_cuda_context (GstElement * element, GstCudaContext ** cuda_ctx)
   query = gst_query_new_context (GST_CUDA_CONTEXT_TYPE);
   if (run_query (element, query, GST_PAD_SRC)) {
     gst_query_parse_context (query, &ctxt);
-    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
-        "found context (%p) in downstream query", ctxt);
-    gst_element_set_context (element, ctxt);
+    if (ctxt) {
+      GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+          "found context (%p) in downstream query", ctxt);
+      gst_element_set_context (element, ctxt);
+    }
   }
 
   /* although we found cuda context above, the element does not want
    * to use the context. Then try to find from the other direction */
   if (*cuda_ctx == NULL && run_query (element, query, GST_PAD_SINK)) {
     gst_query_parse_context (query, &ctxt);
-    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
-        "found context (%p) in upstream query", ctxt);
-    gst_element_set_context (element, ctxt);
+    if (ctxt) {
+      GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+          "found context (%p) in upstream query", ctxt);
+      gst_element_set_context (element, ctxt);
+    }
   }
 
   if (*cuda_ctx == NULL) {
