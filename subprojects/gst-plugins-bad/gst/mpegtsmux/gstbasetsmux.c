@@ -310,7 +310,7 @@ gst_base_ts_mux_reset (GstBaseTsMux * mux, gboolean alloc)
 
   mux->first = TRUE;
   mux->last_flow_ret = GST_FLOW_OK;
-  mux->last_ts = 0;
+  mux->last_ts = GST_CLOCK_TIME_NONE;
   mux->is_delta = TRUE;
   mux->is_header = FALSE;
 
@@ -1148,10 +1148,13 @@ new_packet_cb (GstBuffer * buf, void *user_data, gint64 new_pcr)
     }
 
     GST_BUFFER_PTS (buf) += mux->output_ts_offset;
-  }
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf))) {
     agg_segment->position = GST_BUFFER_PTS (buf);
+  } else if (agg_segment->position == -1
+      || agg_segment->position < agg_segment->start) {
+    GST_BUFFER_PTS (buf) = agg_segment->start;
+  } else {
+    GST_BUFFER_PTS (buf) = agg_segment->position;
   }
 
   /* do common init (flags and streamheaders) */
