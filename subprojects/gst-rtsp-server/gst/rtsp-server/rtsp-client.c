@@ -5304,12 +5304,15 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
 
   gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);
 
+  /* take the lock before attaching the client watch, so that the client thread
+   * can not access the control channel timer until it's properly in place */
+  g_mutex_lock (&priv->lock);
+
   GST_INFO ("client %p: attaching to context %p", client, context);
   res = gst_rtsp_watch_attach (priv->watch, context);
 
   /* Setting up a timeout for the RTSP control channel until a session
    * is up where it is handling timeouts. */
-  g_mutex_lock (&priv->lock);
 
   /* remove old timeout if any */
   rtsp_ctrl_timeout_remove_unlocked (client->priv);
