@@ -98,7 +98,7 @@ vulkan_conf_options = [
 ]
 
 foreach option : vulkan_conf_options
-  vulkan_conf.set10(option, false)
+  vulkan_conf.set(option, 0)
 endforeach
 
 if ['ios', 'darwin'].contains(host_system)
@@ -168,7 +168,7 @@ if xcb_dep.found() and xkbcommon_dep.found() and xkbcommon_x11_dep.found() and c
 
   optional_deps += [xcb_dep, xkbcommon_dep, xkbcommon_x11_dep]
   vulkan_windowing = true
-  vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_XCB', 1)
+  vulkan_conf.set('GST_VULKAN_HAVE_WINDOW_XCB', 1)
   enabled_vulkan_winsys += ['xcb']
 endif
 
@@ -189,7 +189,7 @@ if wayland_client_dep.found() and cc.has_header('vulkan/vulkan_wayland.h', depen
 
   optional_deps += wayland_client_dep
   vulkan_windowing = true
-  vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_WAYLAND', 1)
+  vulkan_conf.set('GST_VULKAN_HAVE_WINDOW_WAYLAND', 1)
   enabled_vulkan_winsys += ['wayland']
 endif
 
@@ -219,7 +219,7 @@ if host_system == 'darwin'
     )
     optional_deps += [cocoa_dep]
     vulkan_windowing = true
-    vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_COCOA', 1)
+    vulkan_conf.set('GST_VULKAN_HAVE_WINDOW_COCOA', 1)
     enabled_vulkan_winsys += ['cocoa']
   endif
 endif
@@ -234,7 +234,7 @@ if host_system == 'ios'
     )
     optional_deps += [uikit_dep]
     vulkan_windowing = true
-    vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_IOS', 1)
+    vulkan_conf.set('GST_VULKAN_HAVE_WINDOW_IOS', 1)
     enabled_vulkan_winsys += ['ios']
   endif
 endif
@@ -247,7 +247,7 @@ if host_system == 'windows'
     vulkan_priv_sources += ['win32/gstvkwindow_win32.c']
     optional_deps += [gdi_dep]
     vulkan_windowing = true
-    vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_WIN32', 1)
+    vulkan_conf.set('GST_VULKAN_HAVE_WINDOW_WIN32', 1)
     enabled_vulkan_winsys += ['win32']
   endif
 endif
@@ -259,7 +259,7 @@ if host_system == 'android'
       'android/gstvkwindow_android.c',
     )
     vulkan_windowing = true
-    vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_ANDROID', 1)
+    vulkan_conf.set('GST_VULKAN_HAVE_WINDOW_ANDROID', 1)
     enabled_vulkan_winsys += ['android']
   endif
 endif

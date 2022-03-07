@@ -100,7 +100,7 @@ endif
 
 if use_onevpl or cxx.has_header('mfxvp9.h', args: '-I' + mfx_incdir)
   msdk_sources += [ 'gstmsdkvp9dec.c' ]
-  cdata.set10('USE_MSDK_VP9_DEC', 1)
+  cdata.set('USE_MSDK_VP9_DEC', 1)
 endif
 
 # Usually MFX_VERSION 1026+ is required to support raw VP9 stream, however Fedora 30 has MFX_VERSION==1026
@@ -120,7 +120,7 @@ have_mfx_ver126 = cc.compiles(mfx_ver126_check_code,
 
 if have_mfx_ver126
   msdk_sources += [ 'gstmsdkvp9enc.c' ]
-  cdata.set10('USE_MSDK_VP9_ENC', 1)
+  cdata.set('USE_MSDK_VP9_ENC', 1)
 endif
 
 mfx_ver134_check_code = '''
@@ -135,7 +135,7 @@ have_mfx_ver134 = cc.compiles(mfx_ver134_check_code,
 
 if have_mfx_ver134
   msdk_sources += [ 'gstmsdkav1dec.c' ]
-  cdata.set10('USE_MSDK_AV1_DEC', 1)
+  cdata.set('USE_MSDK_AV1_DEC', 1)
 endif
 
 if host_machine.system() == 'windows'
