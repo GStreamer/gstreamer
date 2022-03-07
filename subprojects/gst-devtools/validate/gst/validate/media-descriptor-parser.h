@@ -49,11 +49,17 @@ typedef struct {
 
   GstValidateMediaDescriptorParserPrivate *priv;
 
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+
 } GstValidateMediaDescriptorParser;
 
 typedef struct {
 
   GstValidateMediaDescriptorClass parent;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 
 } GstValidateMediaDescriptorParserClass;
 

@@ -37,6 +37,9 @@ typedef struct {
   GQueue name_overrides;
   GQueue gtype_overrides;
   GQueue klass_overrides;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 } GstValidateOverrideRegistry;
 
 GST_VALIDATE_API

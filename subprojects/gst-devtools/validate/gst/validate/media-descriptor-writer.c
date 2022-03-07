@@ -23,6 +23,8 @@
 #include "media-descriptor-writer.h"
 #include <string.h>
 
+#include "gst-validate-internal.h"
+
 struct _GstValidateMediaDescriptorWriterPrivate
 {
   GstElement *pipeline;

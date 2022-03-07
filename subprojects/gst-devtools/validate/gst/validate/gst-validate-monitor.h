@@ -100,6 +100,9 @@ struct _GstValidateMonitor {
   GHashTable *reports;
 
   GstValidateVerbosityFlags verbosity;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -115,6 +118,9 @@ struct _GstValidateMonitorClass {
   GstElement *(* get_element) (GstValidateMonitor * monitor);
   void (*set_media_descriptor) (GstValidateMonitor * monitor,
           GstValidateMediaDescriptor * media_descriptor);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* normal GObject stuff */

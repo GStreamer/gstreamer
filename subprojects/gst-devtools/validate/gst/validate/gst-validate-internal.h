@@ -71,4 +71,103 @@ G_GNUC_INTERNAL GList * gst_validate_get_test_file_expected_issues (void);
 G_GNUC_INTERNAL gboolean gst_validate_extra_checks_init (void);
 G_GNUC_INTERNAL gboolean gst_validate_flow_init (void);
 G_GNUC_INTERNAL gboolean is_tty (void);
+
+/* MediaDescriptor structures */
+
+typedef struct
+{
+  /* Children */
+  /* GstValidateMediaTagNode */
+  GList *tags;
+
+  gchar *str_open;
+  gchar *str_close;
+} GstValidateMediaTagsNode;
+
+/* Parsing structures */
+struct _GstValidateMediaFileNode
+{
+  /* Children */
+  /* GstValidateMediaStreamNode */
+  GList *streams;
+  /* GstValidateMediaTagsNode */
+  GstValidateMediaTagsNode *tags;
+
+  /* attributes */
+  guint64 id;
+  gchar *uri;
+  GstClockTime duration;
+  gboolean frame_detection;
+  gboolean skip_parsers;
+  gboolean seekable;
+
+  GstCaps *caps;
+
+  gchar *str_open;
+  gchar *str_close;
+};
+
+struct _GstValidateMediaTagNode
+{
+  /* Children */
+  GstTagList *taglist;
+
+  /* Testing infos */
+  gboolean found;
+
+  gchar *str_open;
+  gchar *str_close;
+};
+
+typedef struct
+{
+  /* Children */
+  /* GstValidateMediaFrameNode */
+  GList *frames;
+
+  /* GstValidateMediaTagsNode */
+  GstValidateMediaTagsNode *tags;
+
+  /* Attributes */
+  GstCaps *caps;
+  GList * segments;
+  gchar *id;
+  gchar *padname;
+
+  /* Testing infos */
+  GstPad *pad;
+  GList *cframe;
+
+  gchar *str_open;
+  gchar *str_close;
+} GstValidateMediaStreamNode;
+
+typedef struct
+{
+  /* Attributes */
+  guint64 id;
+  guint64 offset;
+  guint64 offset_end;
+  GstClockTime duration;
+  GstClockTime pts, dts;
+  GstClockTime running_time;
+  gboolean is_keyframe;
+
+  GstBuffer *buf;
+
+  gchar *checksum;
+  gchar *str_open;
+  gchar *str_close;
+} GstValidateMediaFrameNode;
+
+typedef struct
+{
+  gint next_frame_id;
+
+  GstSegment segment;
+
+  gchar *str_open;
+  gchar *str_close;
+} GstValidateSegmentNode;
+
 #endif

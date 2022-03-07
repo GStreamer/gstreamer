@@ -50,11 +50,17 @@ typedef struct {
 
   GstValidateMediaDescriptorWriterPrivate *priv;
 
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+
 } GstValidateMediaDescriptorWriter;
 
 typedef struct {
 
   GstValidateMediaDescriptorClass parent;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 
 } GstValidateMediaDescriptorWriterClass;
 

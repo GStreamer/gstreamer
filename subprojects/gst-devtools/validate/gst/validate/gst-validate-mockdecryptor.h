@@ -47,11 +47,17 @@ G_BEGIN_DECLS
 struct _GstMockDecryptor
 {
   GstBaseTransform element;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstMockDecryptorClass
 {
   GstBaseTransformClass parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 G_GNUC_INTERNAL GType gst_mockdecryptor_get_type (void);

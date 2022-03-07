@@ -112,11 +112,11 @@ typedef GstValidateExecuteActionReturn (*GstValidatePrepareAction) (GstValidateA
 
 typedef struct _GstValidateActionPrivate          GstValidateActionPrivate;
 
-#define GST_VALIDATE_ACTION_LINENO(action) (((GstValidateAction*) action)->ABI.abi.lineno)
-#define GST_VALIDATE_ACTION_FILENAME(action) (((GstValidateAction*) action)->ABI.abi.filename)
-#define GST_VALIDATE_ACTION_DEBUG(action) (((GstValidateAction*) action)->ABI.abi.debug)
-#define GST_VALIDATE_ACTION_N_REPEATS(action) (((GstValidateAction*) action)->ABI.abi.n_repeats)
-#define GST_VALIDATE_ACTION_RANGE_NAME(action) (((GstValidateAction*) action)->ABI.abi.rangename)
+#define GST_VALIDATE_ACTION_LINENO(action) (((GstValidateAction*) action)->lineno)
+#define GST_VALIDATE_ACTION_FILENAME(action) (((GstValidateAction*) action)->filename)
+#define GST_VALIDATE_ACTION_DEBUG(action) (((GstValidateAction*) action)->debug)
+#define GST_VALIDATE_ACTION_N_REPEATS(action) (((GstValidateAction*) action)->n_repeats)
+#define GST_VALIDATE_ACTION_RANGE_NAME(action) (((GstValidateAction*) action)->rangename)
 
 /**
  * GstValidateAction:
@@ -148,18 +148,15 @@ struct _GstValidateAction
   gint repeat;
   GstClockTime playback_time;
 
+  gint lineno;
+  gchar *filename;
+  gchar *debug;
+  gint n_repeats;
+  const gchar *rangename;
+
   GstValidateActionPrivate *priv;
 
-  union {
-    gpointer _gst_reserved[GST_PADDING_LARGE - 1]; /* ->priv */
-    struct {
-      gint lineno;
-      gchar *filename;
-      gchar *debug;
-      gint n_repeats;
-      const gchar *rangename;
-    } abi;
-  } ABI;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GST_VALIDATE_API
@@ -336,12 +333,9 @@ struct _GstValidateScenario
   /*< private >*/
   GstValidateScenarioPrivate *priv;
 
-  union {
-    gpointer _gst_reserved[GST_PADDING];
-    struct {
-      GMutex eos_handling_lock;
-    } abi;
-  } ABI;
+  GMutex eos_handling_lock;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* Some actions may trigger EOS during their execution. Unlocked this
@@ -352,8 +346,8 @@ struct _GstValidateScenario
  * lock. Actions expecting to cause an EOS can hold the lock for their
  * duration so that they are guaranteed to finish before the EOS
  * terminates the test. */
-#define GST_VALIDATE_SCENARIO_EOS_HANDLING_LOCK(scenario) (g_mutex_lock(&(scenario)->ABI.abi.eos_handling_lock))
-#define GST_VALIDATE_SCENARIO_EOS_HANDLING_UNLOCK(scenario) (g_mutex_unlock(&(scenario)->ABI.abi.eos_handling_lock))
+#define GST_VALIDATE_SCENARIO_EOS_HANDLING_LOCK(scenario) (g_mutex_lock(&(scenario)->eos_handling_lock))
+#define GST_VALIDATE_SCENARIO_EOS_HANDLING_UNLOCK(scenario) (g_mutex_unlock(&(scenario)->eos_handling_lock))
 
 GST_VALIDATE_API
 GType gst_validate_scenario_get_type (void);

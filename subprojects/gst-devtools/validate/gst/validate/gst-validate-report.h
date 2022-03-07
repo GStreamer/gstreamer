@@ -235,7 +235,7 @@ struct _GstValidateReport {
   gchar *trace;
   gchar *dotfile_name;
 
-  gpointer _gst_reserved[GST_PADDING - 2];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GST_VALIDATE_API

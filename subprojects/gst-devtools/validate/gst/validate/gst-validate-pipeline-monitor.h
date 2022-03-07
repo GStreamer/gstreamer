@@ -72,6 +72,8 @@ struct _GstValidatePipelineMonitor {
   GList *streams_selected;
 
   gulong deep_notify_id;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -82,6 +84,9 @@ struct _GstValidatePipelineMonitor {
  */
 struct _GstValidatePipelineMonitorClass {
   GstValidateBinMonitorClass parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* normal GObject stuff */

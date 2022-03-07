@@ -36,10 +36,16 @@ typedef struct {
   GstObject parent;
 
   GssimPrivate *priv;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 } Gssim;
 
 typedef struct {
   GstObjectClass parent;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 } GssimClass;
 
 #define GSSIM_TYPE (gssim_get_type ())

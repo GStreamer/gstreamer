@@ -41,10 +41,16 @@ typedef struct {
   GstObject parent;
 
   GstValidateSsimPrivate *priv;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 } GstValidateSsim;
 
 typedef struct {
   GstObjectClass parent;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 } GstValidateSsimClass;
 
 #define GST_VALIDATE_SSIM_TIME_FORMAT "u-%02u-%02u.%09u"

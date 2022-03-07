@@ -68,6 +68,8 @@ struct _GstValidateElementMonitor {
   gboolean       is_demuxer;
   gboolean       is_converter;
   gboolean       is_sink;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -78,6 +80,9 @@ struct _GstValidateElementMonitor {
  */
 struct _GstValidateElementMonitorClass {
   GstValidateMonitorClass	parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* normal GObject stuff */

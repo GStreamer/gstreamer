@@ -33,101 +33,8 @@ G_BEGIN_DECLS
 
 #define GST_VALIDATE_UNKNOWN_BOOL - 1
 
-typedef struct
-{
-  /* Children */
-  /* GstValidateMediaTagNode */
-  GList *tags;
-
-  gchar *str_open;
-  gchar *str_close;
-} GstValidateMediaTagsNode;
-
-/* Parsing structures */
-typedef struct
-{
-  /* Children */
-  /* GstValidateMediaStreamNode */
-  GList *streams;
-  /* GstValidateMediaTagsNode */
-  GstValidateMediaTagsNode *tags;
-
-  /* attributes */
-  guint64 id;
-  gchar *uri;
-  GstClockTime duration;
-  gboolean frame_detection;
-  gboolean skip_parsers;
-  gboolean seekable;
-
-  GstCaps *caps;
-
-  gchar *str_open;
-  gchar *str_close;
-} GstValidateMediaFileNode;
-
-typedef struct
-{
-  /* Children */
-  GstTagList *taglist;
-
-  /* Testing infos */
-  gboolean found;
-
-  gchar *str_open;
-  gchar *str_close;
-} GstValidateMediaTagNode;
-
-typedef struct
-{
-  /* Children */
-  /* GstValidateMediaFrameNode */
-  GList *frames;
-
-  /* GstValidateMediaTagsNode */
-  GstValidateMediaTagsNode *tags;
-
-  /* Attributes */
-  GstCaps *caps;
-  GList * segments;
-  gchar *id;
-  gchar *padname;
-
-  /* Testing infos */
-  GstPad *pad;
-  GList *cframe;
-
-  gchar *str_open;
-  gchar *str_close;
-} GstValidateMediaStreamNode;
-
-typedef struct
-{
-  /* Attributes */
-  guint64 id;
-  guint64 offset;
-  guint64 offset_end;
-  GstClockTime duration;
-  GstClockTime pts, dts;
-  GstClockTime running_time;
-  gboolean is_keyframe;
-
-  GstBuffer *buf;
-
-  gchar *checksum;
-  gchar *str_open;
-  gchar *str_close;
-} GstValidateMediaFrameNode;
-
-typedef struct
-{
-  gint next_frame_id;
-
-  GstSegment segment;
-
-  gchar *str_open;
-  gchar *str_close;
-} GstValidateSegmentNode;
+typedef struct _GstValidateMediaFileNode GstValidateMediaFileNode;
+typedef struct _GstValidateMediaTagNode GstValidateMediaTagNode;
 
 GST_VALIDATE_API
 void gst_validate_filenode_free (GstValidateMediaFileNode *
@@ -163,12 +70,18 @@ typedef struct
 
   GMutex lock;
 
+  /*< private >*/
   GstValidateMediaDescriptorPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
+
 } GstValidateMediaDescriptor;
 
 typedef struct
 {
   GstObjectClass parent;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 
 } GstValidateMediaDescriptorClass;
 

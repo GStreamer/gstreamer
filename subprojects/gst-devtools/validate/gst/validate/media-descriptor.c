@@ -23,6 +23,8 @@
 #include <string.h>
 #include "media-descriptor.h"
 
+#include "gst-validate-internal.h"
+
 struct _GstValidateMediaDescriptorPrivate
 {
   gpointer dummy;

@@ -60,6 +60,9 @@ struct _GstValidateMediaInfo {
   gboolean discover_only;
 
   GstValidateStreamInfo *stream_info;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GST_VALIDATE_API

@@ -22,6 +22,8 @@
 #include "media-descriptor-parser.h"
 #include <string.h>
 
+#include "gst-validate-internal.h"
+
 struct _GstValidateMediaDescriptorParserPrivate
 {
   gchar *xmlpath;

@@ -57,6 +57,8 @@ struct _GstValidateOverrideClass
       GstValidateMonitor * monitor);
 
   void (*attached)(GstValidateOverride * override);
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstValidateOverride
@@ -73,6 +75,8 @@ struct _GstValidateOverride
 
   /*<private>*/
   GstValidateOverridePrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GST_VALIDATE_API

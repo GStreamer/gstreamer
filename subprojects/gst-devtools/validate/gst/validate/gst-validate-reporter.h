@@ -99,16 +99,21 @@ typedef enum
 } GstValidateInterceptionReturn;
 
 /**
- * GstValidateReporter:
+ * GstValidateReporterInterface:
+ * @parent: parent interface type.
+ *
  */
 struct _GstValidateReporterInterface
 {
   GTypeInterface parent;
 
-    GstValidateInterceptionReturn (*intercept_report)    (GstValidateReporter * reporter,
-                                                          GstValidateReport   * report);
-    GstValidateReportingDetails   (*get_reporting_level) (GstValidateReporter * reporter);
-    GstPipeline *                 (*get_pipeline)        (GstValidateReporter *reporter);
+  GstValidateInterceptionReturn (*intercept_report)    (GstValidateReporter * reporter,
+                                                        GstValidateReport   * report);
+  GstValidateReportingDetails   (*get_reporting_level) (GstValidateReporter * reporter);
+  GstPipeline *                 (*get_pipeline)        (GstValidateReporter *reporter);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GST_VALIDATE_API

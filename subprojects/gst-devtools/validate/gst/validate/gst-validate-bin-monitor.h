@@ -61,6 +61,9 @@ struct _GstValidateBinMonitor {
   /*< private >*/
   gulong element_added_id;
   gulong element_removed_id;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -71,6 +74,9 @@ struct _GstValidateBinMonitor {
  */
 struct _GstValidateBinMonitorClass {
   GstValidateElementMonitorClass parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* normal GObject stuff */

@@ -60,6 +60,8 @@ struct _GstValidateRunner {
 
   /* <private> */
   GstValidateRunnerPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -70,6 +72,9 @@ struct _GstValidateRunner {
  */
 struct _GstValidateRunnerClass {
   GstTracerClass	parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* normal GObject stuff */
