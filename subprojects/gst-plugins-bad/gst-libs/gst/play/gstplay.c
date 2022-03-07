@@ -4566,9 +4566,7 @@ gst_play_is_play_message (GstMessage * msg)
     const GstStructure *data = NULL;                                      \
     g_return_if_fail (gst_play_is_play_message (msg));                    \
     data = gst_message_get_structure (msg);                               \
-    if (!gst_structure_get (data, field, value_type, value, NULL)) {      \
-      g_error ("Could not parse field from structure: %s", field);        \
-    }                                                                     \
+    gst_structure_get (data, field, value_type, value, NULL);             \
 } G_STMT_END
 
 /**
