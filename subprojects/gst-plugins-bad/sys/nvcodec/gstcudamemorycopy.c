@@ -205,6 +205,8 @@ create_transform_caps (GstCaps * caps, gboolean to_cuda)
         GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
     ret = gst_caps_merge (ret, new_caps);
 
+    _remove_field (ret, "texture-target");
+
     gst_caps_unref (sys_caps);
   } else {
     GstCaps *new_caps;
@@ -221,14 +223,13 @@ create_transform_caps (GstCaps * caps, gboolean to_cuda)
 
 #ifdef HAVE_NVCODEC_GST_GL
     new_caps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
-    _remove_field (new_caps, "texture-target");
     ret = gst_caps_merge (ret, new_caps);
 #endif
 
     new_caps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
-    _remove_field (new_caps, "texture-target");
 
     ret = gst_caps_merge (ret, new_caps);
+    _remove_field (ret, "texture-target");
   }
 
   return ret;
