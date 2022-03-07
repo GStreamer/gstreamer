@@ -320,7 +320,7 @@ gst_base_ts_mux_reset (GstBaseTsMux * mux, gboolean alloc)
 
   if (mux->out_adapter)
     gst_adapter_clear (mux->out_adapter);
-  mux->output_ts_offset = GST_CLOCK_TIME_NONE;
+  mux->output_ts_offset = GST_CLOCK_STIME_NONE;
 
   if (mux->tsmux) {
     if (mux->tsmux->si_sections)
@@ -1133,7 +1133,7 @@ new_packet_cb (GstBuffer * buf, void *user_data, gint64 new_pcr)
   }
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf))) {
-    if (!GST_CLOCK_TIME_IS_VALID (mux->output_ts_offset)) {
+    if (!GST_CLOCK_STIME_IS_VALID (mux->output_ts_offset)) {
       GstClockTime output_start_time = agg_segment->position;
       if (agg_segment->position == -1
           || agg_segment->position < agg_segment->start) {
@@ -1147,9 +1147,7 @@ new_packet_cb (GstBuffer * buf, void *user_data, gint64 new_pcr)
           GST_STIME_ARGS (mux->output_ts_offset));
     }
 
-    if (GST_CLOCK_TIME_IS_VALID (mux->output_ts_offset)) {
-      GST_BUFFER_PTS (buf) += mux->output_ts_offset;
-    }
+    GST_BUFFER_PTS (buf) += mux->output_ts_offset;
   }
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf))) {
