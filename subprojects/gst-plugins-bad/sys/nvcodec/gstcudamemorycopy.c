@@ -908,8 +908,9 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
     ret = gst_cuda_memory_copy_gl_interop (self, inbuf, in_info,
         outbuf, out_info, context, FALSE);
-  } else {
+  } else
 #endif
+  {
     GST_TRACE_OBJECT (self, "CUDA <-> SYSTEM");
 
     ret = gst_cuda_memory_copy_transform_cuda (self, inbuf, in_info, in_cuda,
