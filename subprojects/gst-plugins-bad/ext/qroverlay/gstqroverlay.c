@@ -116,6 +116,7 @@ get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
   GST_OBJECT_LOCK (self);
   content = g_strdup (self->data);
   *reuse_prev = self->data_changed;
+  self->data_changed = FALSE;
   GST_OBJECT_UNLOCK (self);
 
   return content;
