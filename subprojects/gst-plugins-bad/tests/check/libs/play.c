@@ -175,13 +175,15 @@ struct _TestPlayerState
 {
   gint buffering_percent;
   guint64 position, duration, seek_done_position;
-  gboolean end_of_stream, error, warning, seek_done;
+  gboolean end_of_stream, is_error, is_warning, seek_done;
   GstPlayState state;
   guint width, height;
   GstPlayMediaInfo *media_info;
   gchar *uri_loaded;
   GstClockTime last_position;
   gboolean done;
+  GError *error;
+  GstStructure *error_details;
 
   void (*test_callback) (GstPlay * player, TestPlayerStateChange change,
       TestPlayerState * old_state, TestPlayerState * new_state);
@@ -213,7 +215,7 @@ test_play_state_change_debug (GstPlay * player,
       GST_TIME_ARGS (old_state->duration), GST_TIME_ARGS (new_state->duration),
       GST_TIME_ARGS (old_state->seek_done_position),
       GST_TIME_ARGS (new_state->seek_done_position), old_state->end_of_stream,
-      new_state->end_of_stream, old_state->error, new_state->error,
+      new_state->end_of_stream, old_state->is_error, new_state->is_error,
       old_state->seek_done, new_state->seek_done,
       gst_play_state_get_name (old_state->state),
       gst_play_state_get_name (new_state->state), old_state->width,
@@ -227,13 +229,15 @@ test_play_state_reset (GstPlay * player, TestPlayerState * state)
 {
   state->buffering_percent = 100;
   state->position = state->duration = state->seek_done_position = -1;
-  state->end_of_stream = state->error = state->seek_done = FALSE;
+  state->end_of_stream = state->is_error = state->seek_done = FALSE;
   state->state = GST_PLAY_STATE_STOPPED;
   state->width = state->height = 0;
   state->media_info = NULL;
   state->last_position = GST_CLOCK_TIME_NONE;
   state->done = FALSE;
   g_clear_pointer (&state->uri_loaded, g_free);
+  g_clear_error (&state->error);
+  gst_clear_structure (&state->error_details);
 }
 
 static GstPlay *
@@ -445,14 +449,22 @@ process_play_messages (GstPlay * player, TestPlayerState * state)
               state);
           break;
         case GST_PLAY_MESSAGE_ERROR:{
-          state->error = TRUE;
+          gst_play_message_parse_error (msg, &state->error,
+              &state->error_details);
+          GST_DEBUG ("error: %s details: %" GST_PTR_FORMAT,
+              state->error ? state->error->message : "", state->error_details);
+          state->is_error = TRUE;
           test_play_state_change_debug (player, STATE_CHANGE_ERROR,
               &old_state, state);
           state->test_callback (player, STATE_CHANGE_ERROR, &old_state, state);
           break;
         }
         case GST_PLAY_MESSAGE_WARNING:{
-          state->warning = TRUE;
+          gst_play_message_parse_error (msg, &state->error,
+              &state->error_details);
+          GST_DEBUG ("error: %s details: %" GST_PTR_FORMAT,
+              state->error ? state->error->message : "", state->error_details);
+          state->is_warning = TRUE;
           test_play_state_change_debug (player, STATE_CHANGE_WARNING,
               &old_state, state);
           state->test_callback (player, STATE_CHANGE_WARNING, &old_state,
