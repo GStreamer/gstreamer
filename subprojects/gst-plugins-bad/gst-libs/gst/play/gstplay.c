@@ -4676,14 +4676,14 @@ gst_play_message_parse_error (GstMessage * msg, GError ** error,
  * gst_play_message_parse_warning:
  * @msg: A #GstMessage
  * @error: (out) (optional) (transfer full): the resulting warning
- * @details: (out) (optional) (nullable) (transfer full): A GstStructure containing extra details about the error
+ * @details: (out) (optional) (nullable) (transfer full): A #GstStructure containing additional details about the warning
  *
  * Parse the given error @msg and extract the corresponding #GError warning
  *
  * Since: 1.20
  */
 void
-gst_play_message_parse_warning (GstMessage * msg, GError * error,
+gst_play_message_parse_warning (GstMessage * msg, GError ** error,
     GstStructure ** details)
 {
   PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_WARNING, G_TYPE_ERROR, error);
