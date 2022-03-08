@@ -100,6 +100,7 @@ G_DEFINE_ABSTRACT_TYPE (GstCudaMemoryCopy, gst_cuda_memory_copy,
 
 static void gst_cuda_memory_copy_set_context (GstElement * element,
     GstContext * context);
+static gboolean gst_cuda_memory_copy_transform_stop (GstBaseTransform * trans);
 static GstCaps *gst_cuda_memory_copy_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_cuda_memory_copy_query (GstBaseTransform * trans,
@@ -125,6 +126,7 @@ gst_cuda_memory_copy_class_init (GstCudaMemoryCopyClass * klass)
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_set_context);
 
+  trans_class->stop = GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_transform_stop);
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_transform_caps);
   trans_class->propose_allocation =
@@ -153,6 +155,20 @@ gst_cuda_memory_copy_set_context (GstElement * element, GstContext * context)
 #endif
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+}
+
+static gboolean
+gst_cuda_memory_copy_transform_stop (GstBaseTransform * trans)
+{
+#ifdef HAVE_NVCODEC_GST_GL
+  GstCudaMemoryCopy *self = GST_CUDA_MEMORY_COPY (trans);
+
+  gst_clear_object (&self->gl_display);
+  gst_clear_object (&self->gl_context);
+  gst_clear_object (&self->other_gl_context);
+#endif
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
 }
 
 static GstCaps *
@@ -1328,9 +1344,6 @@ gst_cuda_upload_class_init (GstCudaUploadClass * klass, gpointer data)
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   GstCudaMemoryCopyClass *copy_class = GST_CUDA_MEMORY_COPY_CLASS (klass);
   GstCudaMemoryCopyClassData *cdata = (GstCudaMemoryCopyClassData *) data;
-
-  element_class->set_context =
-      GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_set_context);
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
