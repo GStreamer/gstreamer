@@ -1359,9 +1359,10 @@ static const guint8 h265_sample_codec_data[] = {
   0x44, 0x01, 0xc0, 0x2c, 0xbc, 0x14, 0xc9
 };
 
-GST_START_TEST (test_pb_utils_caps_get_mime_codec)
+GST_START_TEST (test_pb_utils_caps_mime_codec)
 {
   GstCaps *caps = NULL;
+  GstCaps *caps2 = NULL;
   gchar *mime_codec = NULL;
   GstBuffer *buffer = NULL;
   guint8 *codec_data = NULL;
@@ -1371,6 +1372,9 @@ GST_START_TEST (test_pb_utils_caps_get_mime_codec)
   caps = gst_caps_new_empty_simple ("video/x-h264");
   mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
   fail_unless_equals_string (mime_codec, "avc1");
+  caps2 = gst_codec_utils_caps_from_mime_codec (mime_codec);
+  fail_unless (gst_caps_is_equal_fixed (caps, caps2));
+  gst_caps_unref (caps2);
   g_free (mime_codec);
   gst_caps_unref (caps);
 
@@ -1412,6 +1416,9 @@ GST_START_TEST (test_pb_utils_caps_get_mime_codec)
   caps = gst_caps_new_empty_simple ("video/x-av1");
   mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
   fail_unless_equals_string (mime_codec, "av01");
+  caps2 = gst_codec_utils_caps_from_mime_codec (mime_codec);
+  fail_unless (gst_caps_is_equal_fixed (caps, caps2));
+  gst_caps_unref (caps2);
   g_free (mime_codec);
   gst_caps_unref (caps);
 
@@ -1419,6 +1426,9 @@ GST_START_TEST (test_pb_utils_caps_get_mime_codec)
   caps = gst_caps_new_empty_simple ("video/x-vp8");
   mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
   fail_unless_equals_string (mime_codec, "vp08");
+  caps2 = gst_codec_utils_caps_from_mime_codec (mime_codec);
+  fail_unless (gst_caps_is_equal_fixed (caps, caps2));
+  gst_caps_unref (caps2);
   g_free (mime_codec);
   gst_caps_unref (caps);
 
@@ -1426,6 +1436,9 @@ GST_START_TEST (test_pb_utils_caps_get_mime_codec)
   caps = gst_caps_new_empty_simple ("video/x-vp9");
   mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
   fail_unless_equals_string (mime_codec, "vp09");
+  caps2 = gst_codec_utils_caps_from_mime_codec (mime_codec);
+  fail_unless (gst_caps_is_equal_fixed (caps, caps2));
+  gst_caps_unref (caps2);
   g_free (mime_codec);
   gst_caps_unref (caps);
 
@@ -1462,6 +1475,9 @@ GST_START_TEST (test_pb_utils_caps_get_mime_codec)
   caps = gst_caps_new_empty_simple ("audio/x-opus");
   mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
   fail_unless_equals_string (mime_codec, "opus");
+  caps2 = gst_codec_utils_caps_from_mime_codec (mime_codec);
+  fail_unless (gst_caps_is_equal_fixed (caps, caps2));
+  gst_caps_unref (caps2);
   g_free (mime_codec);
   gst_caps_unref (caps);
 
@@ -1469,6 +1485,9 @@ GST_START_TEST (test_pb_utils_caps_get_mime_codec)
   caps = gst_caps_new_empty_simple ("audio/x-mulaw");
   mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
   fail_unless_equals_string (mime_codec, "ulaw");
+  caps2 = gst_codec_utils_caps_from_mime_codec (mime_codec);
+  fail_unless (gst_caps_is_equal_fixed (caps, caps2));
+  gst_caps_unref (caps2);
   g_free (mime_codec);
   gst_caps_unref (caps);
 
@@ -1478,6 +1497,9 @@ GST_START_TEST (test_pb_utils_caps_get_mime_codec)
       NULL);
   mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
   fail_unless_equals_string (mime_codec, "g726");
+  caps2 = gst_codec_utils_caps_from_mime_codec (mime_codec);
+  fail_unless (gst_caps_is_equal_fixed (caps, caps2));
+  gst_caps_unref (caps2);
   g_free (mime_codec);
   gst_caps_unref (caps);
 }
@@ -1504,7 +1526,7 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_h264_profiles);
   tcase_add_test (tc_chain, test_pb_utils_h264_get_profile_flags_level);
   tcase_add_test (tc_chain, test_pb_utils_h265_profiles);
-  tcase_add_test (tc_chain, test_pb_utils_caps_get_mime_codec);
+  tcase_add_test (tc_chain, test_pb_utils_caps_mime_codec);
   return s;
 }
 
