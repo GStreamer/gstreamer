@@ -1889,10 +1889,12 @@ get_index_for_RefPicListX (VAPictureHEVC * ReferenceFrames,
 }
 
 static gboolean
-fill_picture (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture)
+fill_picture (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture,
+    GstVaapiParserInfoH265 * pi)
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   GstVaapiPicture *const base_picture = &picture->base;
+  GstH265SliceHdr *const slice_hdr = &pi->data.slice_hdr;
   GstH265PPS *const pps = get_pps (decoder);
   GstH265SPS *const sps = get_sps (decoder);
   VAPictureParameterBufferHEVC *pic_param = base_picture->param;
@@ -2034,8 +2036,10 @@ fill_picture (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture)
   pic_param->pps_tc_offset_div2 = pps->tc_offset_div2;
   COPY_FIELD (pps, num_extra_slice_header_bits);
 
-  /* FIXME: Set correct value as mentioned in va_dec_hevc.h */
-  pic_param->st_rps_bits = 0;
+  if (slice_hdr->short_term_ref_pic_set_sps_flag == 0)
+    pic_param->st_rps_bits = slice_hdr->short_term_ref_pic_set_size;
+  else
+    pic_param->st_rps_bits = 0;
 
 #if VA_CHECK_VERSION(1,2,0)
   if (pic_rext_param) {
@@ -2497,7 +2501,7 @@ decode_picture (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
   if (!dpb_init (decoder, picture, pi))
     return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
-  if (!fill_picture (decoder, picture))
+  if (!fill_picture (decoder, picture, pi))
     return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
   priv->decoder_state = pi->state;
