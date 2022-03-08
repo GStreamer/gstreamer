@@ -110,7 +110,7 @@ gst_av1_decoder_reset (GstAV1Decoder * self)
 
   priv->max_width = 0;
   priv->max_height = 0;
-  gst_av1_picture_clear (&priv->current_picture);
+  gst_clear_av1_picture (&priv->current_picture);
   priv->current_frame = NULL;
   priv->profile = GST_AV1_PROFILE_UNDEFINED;
 

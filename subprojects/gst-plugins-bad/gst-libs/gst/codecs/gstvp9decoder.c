@@ -340,7 +340,7 @@ gst_vp9_decoder_clear_output_frame (GstVp9DecoderOutputFrame * output_frame)
     output_frame->frame = NULL;
   }
 
-  gst_vp9_picture_clear (&output_frame->picture);
+  gst_clear_vp9_picture (&output_frame->picture);
 }
 
 static GstFlowReturn

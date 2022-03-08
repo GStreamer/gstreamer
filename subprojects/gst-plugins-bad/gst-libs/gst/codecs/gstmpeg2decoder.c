@@ -856,7 +856,7 @@ gst_mpeg2_decoder_ensure_current_picture (GstMpeg2Decoder * decoder,
 
     if (priv->first_field) {
       GST_WARNING_OBJECT (decoder, "An unmatched first field");
-      gst_mpeg2_picture_clear (&priv->first_field);
+      gst_clear_mpeg2_picture (&priv->first_field);
     }
 
     picture = gst_mpeg2_picture_new ();
@@ -955,7 +955,7 @@ gst_mpeg2_decoder_finish_current_field (GstMpeg2Decoder * decoder)
         priv->current_picture, priv->current_picture->structure ==
         GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME ?
         " a field" : "the first field");
-    gst_mpeg2_picture_clear (&priv->current_picture);
+    gst_clear_mpeg2_picture (&priv->current_picture);
   }
 
   return GST_FLOW_OK;
@@ -1191,7 +1191,7 @@ gst_mpeg2_decoder_clear_output_frame (GstMpeg2DecoderOutputFrame * output_frame)
     output_frame->frame = NULL;
   }
 
-  gst_mpeg2_picture_clear (&output_frame->picture);
+  gst_clear_mpeg2_picture (&output_frame->picture);
 }
 
 static GstFlowReturn
@@ -1259,8 +1259,8 @@ gst_mpeg2_decoder_handle_frame (GstVideoDecoder * decoder,
   }
 
   ret = gst_mpeg2_decoder_output_current_picture (self);
-  gst_mpeg2_picture_clear (&priv->current_picture);
-  gst_mpeg2_picture_clear (&priv->first_field);
+  gst_clear_mpeg2_picture (&priv->current_picture);
+  gst_clear_mpeg2_picture (&priv->first_field);
   gst_video_codec_frame_unref (priv->current_frame);
   priv->current_frame = NULL;
   return ret;
@@ -1274,8 +1274,8 @@ failed:
     }
 
     gst_video_decoder_drop_frame (decoder, frame);
-    gst_mpeg2_picture_clear (&priv->current_picture);
-    gst_mpeg2_picture_clear (&priv->first_field);
+    gst_clear_mpeg2_picture (&priv->current_picture);
+    gst_clear_mpeg2_picture (&priv->first_field);
     priv->current_frame = NULL;
 
     return ret;

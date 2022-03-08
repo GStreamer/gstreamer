@@ -1816,7 +1816,7 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
     }
 
     gst_video_decoder_drop_frame (decoder, frame);
-    gst_h265_picture_clear (&priv->current_picture);
+    gst_clear_h265_picture (&priv->current_picture);
 
     return decode_ret;
   }

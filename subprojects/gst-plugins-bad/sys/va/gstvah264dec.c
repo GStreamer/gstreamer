@@ -946,7 +946,7 @@ gst_va_h264_dec_init (GTypeInstance * instance, gpointer g_class)
   self->ref_list = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 16);
   g_array_set_clear_func (self->ref_list,
-      (GDestroyNotify) gst_h264_picture_clear);
+      (GDestroyNotify) gst_clear_h264_picture);
 }
 
 static gpointer

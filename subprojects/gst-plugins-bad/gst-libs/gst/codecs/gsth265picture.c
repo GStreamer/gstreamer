@@ -130,7 +130,7 @@ gst_h265_dpb_new (void)
       g_array_sized_new (FALSE, TRUE, sizeof (GstH265Picture *),
       GST_H265_DPB_MAX_SIZE);
   g_array_set_clear_func (dpb->pic_list,
-      (GDestroyNotify) gst_h265_picture_clear);
+      (GDestroyNotify) gst_clear_h265_picture);
 
   return dpb;
 }

@@ -115,7 +115,7 @@ gst_h265_picture_replace (GstH265Picture ** old_picture,
 }
 
 static inline void
-gst_h265_picture_clear (GstH265Picture ** picture)
+gst_clear_h265_picture (GstH265Picture ** picture)
 {
   if (picture && *picture) {
     gst_h265_picture_unref (*picture);

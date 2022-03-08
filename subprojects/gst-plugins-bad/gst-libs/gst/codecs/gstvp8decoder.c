@@ -124,9 +124,9 @@ gst_vp8_decoder_reset (GstVp8Decoder * self)
 {
   GstVp8DecoderPrivate *priv = self->priv;
 
-  gst_vp8_picture_clear (&self->last_picture);
-  gst_vp8_picture_clear (&self->golden_ref_picture);
-  gst_vp8_picture_clear (&self->alt_ref_picture);
+  gst_clear_vp8_picture (&self->last_picture);
+  gst_clear_vp8_picture (&self->golden_ref_picture);
+  gst_clear_vp8_picture (&self->alt_ref_picture);
 
   priv->wait_keyframe = TRUE;
   gst_queue_array_clear (priv->output_queue);
@@ -288,9 +288,9 @@ gst_vp8_decoder_drain_internal (GstVp8Decoder * self, gboolean wait_keyframe)
   GstVp8DecoderPrivate *priv = self->priv;
 
   gst_vp8_decoder_drain_output_queue (self, 0, &ret);
-  gst_vp8_picture_clear (&self->last_picture);
-  gst_vp8_picture_clear (&self->golden_ref_picture);
-  gst_vp8_picture_clear (&self->alt_ref_picture);
+  gst_clear_vp8_picture (&self->last_picture);
+  gst_clear_vp8_picture (&self->golden_ref_picture);
+  gst_clear_vp8_picture (&self->alt_ref_picture);
 
   priv->wait_keyframe = wait_keyframe;
 
@@ -337,7 +337,7 @@ gst_vp8_decoder_clear_output_frame (GstVp8DecoderOutputFrame * output_frame)
     output_frame->frame = NULL;
   }
 
-  gst_vp8_picture_clear (&output_frame->picture);
+  gst_clear_vp8_picture (&output_frame->picture);
 }
 
 static GstFlowReturn

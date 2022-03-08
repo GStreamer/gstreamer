@@ -77,7 +77,7 @@ gst_vp8_picture_replace (GstVp8Picture ** old_picture,
 }
 
 static inline void
-gst_vp8_picture_clear (GstVp8Picture ** picture)
+gst_clear_vp8_picture (GstVp8Picture ** picture)
 {
   if (picture && *picture) {
     gst_vp8_picture_unref (*picture);

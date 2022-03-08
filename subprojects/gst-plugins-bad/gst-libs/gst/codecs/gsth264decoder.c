@@ -346,32 +346,32 @@ gst_h264_decoder_init (GstH264Decoder * self)
   priv->ref_pic_list_p0 = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
   g_array_set_clear_func (priv->ref_pic_list_p0,
-      (GDestroyNotify) gst_h264_picture_clear);
+      (GDestroyNotify) gst_clear_h264_picture);
 
   priv->ref_pic_list_b0 = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
   g_array_set_clear_func (priv->ref_pic_list_b0,
-      (GDestroyNotify) gst_h264_picture_clear);
+      (GDestroyNotify) gst_clear_h264_picture);
 
   priv->ref_pic_list_b1 = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
   g_array_set_clear_func (priv->ref_pic_list_b1,
-      (GDestroyNotify) gst_h264_picture_clear);
+      (GDestroyNotify) gst_clear_h264_picture);
 
   priv->ref_frame_list_0_short_term = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
   g_array_set_clear_func (priv->ref_frame_list_0_short_term,
-      (GDestroyNotify) gst_h264_picture_clear);
+      (GDestroyNotify) gst_clear_h264_picture);
 
   priv->ref_frame_list_1_short_term = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
   g_array_set_clear_func (priv->ref_frame_list_1_short_term,
-      (GDestroyNotify) gst_h264_picture_clear);
+      (GDestroyNotify) gst_clear_h264_picture);
 
   priv->ref_frame_list_long_term = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
   g_array_set_clear_func (priv->ref_frame_list_long_term,
-      (GDestroyNotify) gst_h264_picture_clear);
+      (GDestroyNotify) gst_clear_h264_picture);
 
   priv->ref_pic_list0 = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
@@ -412,7 +412,7 @@ gst_h264_decoder_reset (GstH264Decoder * self)
   g_clear_pointer (&self->input_state, gst_video_codec_state_unref);
   g_clear_pointer (&priv->parser, gst_h264_nal_parser_free);
   g_clear_pointer (&priv->dpb, gst_h264_dpb_free);
-  gst_h264_picture_clear (&priv->last_field);
+  gst_clear_h264_picture (&priv->last_field);
 
   priv->profile_idc = 0;
   priv->width = 0;
@@ -456,7 +456,7 @@ gst_h264_decoder_clear_output_frame (GstH264DecoderOutputFrame * output_frame)
     output_frame->frame = NULL;
   }
 
-  gst_h264_picture_clear (&output_frame->picture);
+  gst_clear_h264_picture (&output_frame->picture);
 }
 
 static void
@@ -481,7 +481,7 @@ gst_h264_decoder_clear_dpb (GstH264Decoder * self, gboolean flush)
 
   gst_queue_array_clear (priv->output_queue);
   gst_h264_decoder_clear_ref_pic_lists (self);
-  gst_h264_picture_clear (&priv->last_field);
+  gst_clear_h264_picture (&priv->last_field);
   gst_h264_dpb_clear (priv->dpb);
   priv->last_output_poc = G_MININT32;
 }
@@ -569,7 +569,7 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
     }
 
     gst_video_decoder_drop_frame (decoder, frame);
-    gst_h264_picture_clear (&priv->current_picture);
+    gst_clear_h264_picture (&priv->current_picture);
     priv->current_frame = NULL;
 
     return decode_ret;
@@ -862,7 +862,7 @@ output_picture_directly (GstH264Decoder * self, GstH264Picture * picture,
           priv->last_field, priv->last_field->pic_order_cnt,
           picture, picture->pic_order_cnt);
 
-      gst_h264_picture_clear (&priv->last_field);
+      gst_clear_h264_picture (&priv->last_field);
       flow_ret = GST_FLOW_ERROR;
       goto output;
     }
@@ -884,7 +884,7 @@ output:
     gst_h264_decoder_do_output_picture (self, out_pic, &flow_ret);
   }
 
-  gst_h264_picture_clear (&picture);
+  gst_clear_h264_picture (&picture);
 
   UPDATE_FLOW_RETURN (ret, flow_ret);
 }
@@ -1216,7 +1216,7 @@ gst_h264_decoder_find_first_field_picture (GstH264Decoder * self,
 
 error:
   if (!in_dpb) {
-    gst_h264_picture_clear (&priv->last_field);
+    gst_clear_h264_picture (&priv->last_field);
   } else {
     /* FIXME: implement fill gap field picture if it is already in DPB */
   }
@@ -1899,7 +1899,7 @@ gst_h264_decoder_drain_internal (GstH264Decoder * self)
 
   gst_h264_decoder_drain_output_queue (self, 0, &ret);
 
-  gst_h264_picture_clear (&priv->last_field);
+  gst_clear_h264_picture (&priv->last_field);
   gst_h264_dpb_clear (priv->dpb);
   priv->last_output_poc = G_MININT32;
 

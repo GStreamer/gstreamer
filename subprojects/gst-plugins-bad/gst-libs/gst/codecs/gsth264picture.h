@@ -206,7 +206,7 @@ gst_h264_picture_replace (GstH264Picture ** old_picture,
 }
 
 static inline void
-gst_h264_picture_clear (GstH264Picture ** picture)
+gst_clear_h264_picture (GstH264Picture ** picture)
 {
   if (picture && *picture) {
     gst_h264_picture_unref (*picture);

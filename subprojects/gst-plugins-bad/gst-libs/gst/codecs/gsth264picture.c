@@ -142,7 +142,7 @@ gst_h264_dpb_new (void)
       g_array_sized_new (FALSE, TRUE, sizeof (GstH264Picture *),
       GST_H264_DPB_MAX_SIZE);
   g_array_set_clear_func (dpb->pic_list,
-      (GDestroyNotify) gst_h264_picture_clear);
+      (GDestroyNotify) gst_clear_h264_picture);
 
   return dpb;
 }

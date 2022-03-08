@@ -110,7 +110,7 @@ gst_av1_picture_replace (GstAV1Picture ** old_picture,
 }
 
 static inline void
-gst_av1_picture_clear (GstAV1Picture ** picture)
+gst_clear_av1_picture (GstAV1Picture ** picture)
 {
   if (picture && *picture) {
     gst_av1_picture_unref (*picture);

@@ -137,7 +137,7 @@ gst_mpeg2_picture_replace (GstMpeg2Picture ** old_picture,
 }
 
 static inline void
-gst_mpeg2_picture_clear (GstMpeg2Picture ** picture)
+gst_clear_mpeg2_picture (GstMpeg2Picture ** picture)
 {
   if (picture && *picture) {
     gst_mpeg2_picture_unref (*picture);
