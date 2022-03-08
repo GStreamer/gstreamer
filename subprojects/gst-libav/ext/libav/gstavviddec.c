@@ -1778,15 +1778,16 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   res = avcodec_receive_frame (ffmpegdec->context, ffmpegdec->picture);
 
   /* No frames available at this time */
-  if (res == AVERROR (EAGAIN))
+  if (res == AVERROR (EAGAIN)) {
+    GST_DEBUG_OBJECT (ffmpegdec, "Need more data");
     goto beach;
-  else if (res == AVERROR_EOF) {
+  } else if (res == AVERROR_EOF) {
     *ret = GST_FLOW_EOS;
     GST_DEBUG_OBJECT (ffmpegdec, "Context was entirely flushed");
     goto beach;
   } else if (res < 0) {
-    *ret = GST_FLOW_OK;
-    GST_WARNING_OBJECT (ffmpegdec, "Legitimate decoding error");
+    GST_VIDEO_DECODER_ERROR (ffmpegdec, 1, STREAM, DECODE, (NULL),
+        ("Video decoding error"), *ret);
     goto beach;
   }
 

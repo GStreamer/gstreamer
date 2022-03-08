@@ -545,14 +545,15 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     if (ffmpegdec->frame->flags & AV_FRAME_FLAG_CORRUPT)
       GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_CORRUPTED);
   } else if (res == AVERROR (EAGAIN)) {
+    GST_DEBUG_OBJECT (ffmpegdec, "Need more data");
     *outbuf = NULL;
     *need_more_data = TRUE;
   } else if (res == AVERROR_EOF) {
     *ret = GST_FLOW_EOS;
     GST_DEBUG_OBJECT (ffmpegdec, "Context was entirely flushed");
   } else if (res < 0) {
-    *ret = GST_FLOW_OK;
-    GST_WARNING_OBJECT (ffmpegdec, "Legitimate decoding error");
+    GST_AUDIO_DECODER_ERROR (ffmpegdec, 1, STREAM, DECODE, (NULL),
+        ("Audio decoding error"), *ret);
   }
 
 beach:
@@ -834,12 +835,16 @@ not_negotiated:
 
 send_packet_failed:
   {
-    GST_WARNING_OBJECT (ffmpegdec, "decoding error");
-    /* Even if ffmpeg was not able to decode current audio frame,
-     * we should call gst_audio_decoder_finish_frame() so that baseclass
-     * can clear its internal status and can respect timestamp of later
-     * incoming buffers */
-    ret = gst_ffmpegauddec_drain (ffmpegdec, TRUE);
+    GST_AUDIO_DECODER_ERROR (ffmpegdec, 1, STREAM, DECODE, (NULL),
+        ("Audio decoding error"), ret);
+
+    if (ret == GST_FLOW_OK) {
+      /* Even if ffmpeg was not able to decode current audio frame,
+       * we should call gst_audio_decoder_finish_frame() so that baseclass
+       * can clear its internal status and can respect timestamp of later
+       * incoming buffers */
+      ret = gst_ffmpegauddec_drain (ffmpegdec, TRUE);
+    }
     goto unmap;
   }
 }
