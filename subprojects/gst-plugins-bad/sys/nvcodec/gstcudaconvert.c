@@ -387,30 +387,31 @@ gst_cuda_convert_filter_meta (GstBaseTransform * trans, GstQuery * query,
   return TRUE;
 }
 
+#define CHECK_INFO_FIELDS_MATCHES(field) { \
+  if (in_info->field != in_info->field) { \
+    GST_ERROR_OBJECT (btrans, "%s do not match %d != %d", G_STRINGIFY(field), \
+      in_info->field, out_info->field); \
+    return FALSE;\
+  } \
+}
+
 static gboolean
 gst_cuda_convert_set_info (GstCudaBaseTransform * btrans, GstCaps * incaps,
     GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  /* these must match */
-  if (in_info->width != out_info->width || in_info->height != out_info->height
-      || in_info->fps_n != out_info->fps_n || in_info->fps_d != out_info->fps_d)
-    goto format_mismatch;
+  CHECK_INFO_FIELDS_MATCHES (width);
+  CHECK_INFO_FIELDS_MATCHES (height);
+  CHECK_INFO_FIELDS_MATCHES (fps_n);
+  CHECK_INFO_FIELDS_MATCHES (fps_d);
+  CHECK_INFO_FIELDS_MATCHES (par_n);
 
   /* if present, these must match too */
-  if (in_info->par_n != out_info->par_n || in_info->par_d != out_info->par_d)
-    goto format_mismatch;
+  CHECK_INFO_FIELDS_MATCHES (par_d);
+  CHECK_INFO_FIELDS_MATCHES (interlace_mode);
 
-  /* if present, these must match too */
-  if (in_info->interlace_mode != out_info->interlace_mode)
-    goto format_mismatch;
 
   return GST_CUDA_BASE_TRANSFORM_CLASS (parent_class)->set_info (btrans, incaps,
       in_info, outcaps, out_info);
-
-  /* ERRORS */
-format_mismatch:
-  {
-    GST_ERROR_OBJECT (btrans, "input and output formats do not match");
-    return FALSE;
-  }
 }
+
+#undef CHECK_INFO_FIELDS_MATCHES
