@@ -844,13 +844,12 @@ gst_decodebin3_input_pad_link (GstPad * pad, GstObject * parent, GstPad * peer)
 {
   GstDecodebin3 *dbin = (GstDecodebin3 *) parent;
   GstPadLinkReturn res = GST_PAD_LINK_OK;
-  DecodebinInput *input;
+  DecodebinInput *input = g_object_get_data (G_OBJECT (pad), "decodebin.input");
+
+  g_return_val_if_fail (input, GST_PAD_LINK_REFUSED);
 
   GST_LOG_OBJECT (parent, "Got link on input pad %" GST_PTR_FORMAT
       ". Creating parsebin if needed", pad);
-
-  if ((input = g_object_get_data (G_OBJECT (pad), "decodebin.input")) == NULL)
-    goto fail;
 
   INPUT_LOCK (dbin);
   if (!ensure_input_parsebin (dbin, input))
@@ -858,9 +857,6 @@ gst_decodebin3_input_pad_link (GstPad * pad, GstObject * parent, GstPad * peer)
   INPUT_UNLOCK (dbin);
 
   return res;
-fail:
-  GST_ERROR_OBJECT (parent, "Failed to retrieve input state from ghost pad");
-  return GST_PAD_LINK_REFUSED;
 }
 
 /* Drop duration query during _input_pad_unlink */
@@ -885,13 +881,12 @@ static void
 gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
 {
   GstDecodebin3 *dbin = (GstDecodebin3 *) parent;
-  DecodebinInput *input;
+  DecodebinInput *input = g_object_get_data (G_OBJECT (pad), "decodebin.input");
+
+  g_return_if_fail (input);
 
   GST_LOG_OBJECT (parent, "Got unlink on input pad %" GST_PTR_FORMAT
       ". Removing parsebin.", pad);
-
-  if ((input = g_object_get_data (G_OBJECT (pad), "decodebin.input")) == NULL)
-    goto fail;
 
   INPUT_LOCK (dbin);
   if (input->parsebin == NULL) {
@@ -951,10 +946,6 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
     }
   }
   INPUT_UNLOCK (dbin);
-  return;
-
-fail:
-  GST_ERROR_OBJECT (parent, "Failed to retrieve input state from ghost pad");
   return;
 }
 
