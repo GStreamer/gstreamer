@@ -33,14 +33,15 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_soup_debug);
 #define GST_CAT_DEFAULT gst_soup_debug
 
+/* G_OS_WIN32 is handled separately below */
 #ifdef __APPLE__
-#define MODULE_SUFFIX ".dylib"
+#define LIBSOUP_3_SONAME "libsoup-3.0.0.dylib"
+#define LIBSOUP_2_SONAME "libsoup-2.4.1.dylib"
 #else
-#define MODULE_SUFFIX "." G_MODULE_SUFFIX
+#define LIBSOUP_3_SONAME "libsoup-3.0.so.0"
+#define LIBSOUP_2_SONAME "libsoup-2.4.so.1"
 #endif
 
-#define LIBSOUP_3_SONAME "libsoup-3.0" MODULE_SUFFIX
-#define LIBSOUP_2_SONAME "libsoup-2.4" MODULE_SUFFIX
 
 #define LOAD_SYMBOL(name) G_STMT_START {                                \
     if (!g_module_symbol (module, G_STRINGIFY (name), (gpointer *) &G_PASTE (vtable->_, name))) { \
