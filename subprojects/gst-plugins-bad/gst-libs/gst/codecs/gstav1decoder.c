@@ -372,7 +372,7 @@ gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
       return GST_FLOW_ERROR;
     }
 
-    picture->system_frame_number = priv->current_frame->system_frame_number;
+    picture->system_frame_number = ref_picture->system_frame_number;
     picture->frame_hdr = *frame_header;
     priv->current_picture = picture;
   } else {
