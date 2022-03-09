@@ -35,8 +35,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpbasepayload_debug);
 #define GST_CAT_DEFAULT (rtpbasepayload_debug)
 
-static gboolean enable_experimental_twcc = FALSE;
-
 struct _GstRTPBasePayloadPrivate
 {
   gboolean ts_offset_random;
@@ -258,9 +256,6 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
-  if (g_getenv ("GST_RTP_ENABLE_EXPERIMENTAL_TWCC_PROPERTY"))
-    enable_experimental_twcc = TRUE;
 
   if (private_offset != 0)
     g_type_class_adjust_private_offset (klass, &private_offset);
