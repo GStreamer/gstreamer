@@ -25,6 +25,10 @@
 #include "gstcudacontext.h"
 #include "gstcudautils.h"
 
+#ifdef HAVE_NVCODEC_GST_D3D11
+#include <gst/d3d11/gstd3d11.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_context_debug);
 #define GST_CAT_DEFAULT gst_cuda_context_debug
 
@@ -35,7 +39,8 @@ G_LOCK_DEFINE_STATIC (list_lock);
 enum
 {
   PROP_0,
-  PROP_DEVICE_ID
+  PROP_DEVICE_ID,
+  PROP_DXGI_ADAPTER_LUID,
 };
 
 struct _GstCudaContextPrivate
@@ -43,6 +48,7 @@ struct _GstCudaContextPrivate
   CUcontext context;
   CUdevice device;
   guint device_id;
+  gint64 dxgi_adapter_luid;
 
   gint tex_align;
 
@@ -78,6 +84,15 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
           "Set the GPU device to use for operations",
           0, G_MAXUINT, 0,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+#ifdef HAVE_NVCODEC_GST_D3D11
+  g_object_class_install_property (gobject_class, PROP_DXGI_ADAPTER_LUID,
+      g_param_spec_int64 ("dxgi-adapter-luid", "DXGI Adapter LUID",
+          "Associated DXGI Adapter LUID (Locally Unique Identifier) ",
+          G_MININT64, G_MAXINT64, 0,
+          GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READABLE |
+          G_PARAM_STATIC_STRINGS));
+#endif
 
   GST_DEBUG_CATEGORY_INIT (gst_cuda_context_debug,
       "cudacontext", 0, "CUDA Context");
@@ -121,11 +136,63 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
     case PROP_DEVICE_ID:
       g_value_set_uint (value, priv->device_id);
       break;
+    case PROP_DXGI_ADAPTER_LUID:
+      g_value_set_int64 (value, priv->dxgi_adapter_luid);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
+
+#ifdef HAVE_NVCODEC_GST_D3D11
+static gint64
+gst_cuda_context_find_dxgi_adapter_luid (CUdevice cuda_device)
+{
+  gint64 ret = 0;
+  HRESULT hr;
+  IDXGIFactory1 *factory = NULL;
+  guint i;
+
+  hr = CreateDXGIFactory1 (&IID_IDXGIFactory1, (void **) &factory);
+  if (FAILED (hr))
+    return 0;
+
+  for (i = 0;; i++) {
+    IDXGIAdapter1 *adapter;
+    DXGI_ADAPTER_DESC desc;
+    CUdevice other_dev = 0;
+    CUresult cuda_ret;
+
+    hr = IDXGIFactory1_EnumAdapters1 (factory, i, &adapter);
+    if (FAILED (hr))
+      break;
+
+    hr = IDXGIAdapter1_GetDesc (adapter, &desc);
+    if (FAILED (hr)) {
+      IDXGIAdapter1_Release (adapter);
+      continue;
+    }
+
+    if (desc.VendorId != 0x10de) {
+      IDXGIAdapter1_Release (adapter);
+      continue;
+    }
+
+    cuda_ret = CuD3D11GetDevice (&other_dev, adapter);
+    IDXGIAdapter1_Release (adapter);
+
+    if (cuda_ret == CUDA_SUCCESS && other_dev == cuda_device) {
+      ret = gst_d3d11_luid_to_int64 (&desc.AdapterLuid);
+      break;
+    }
+  }
+
+  IDXGIFactory1_Release (factory);
+
+  return ret;
+}
+#endif
 
 static void
 gst_cuda_context_constructed (GObject * object)
@@ -179,6 +246,9 @@ gst_cuda_context_constructed (GObject * object)
 
   priv->context = cuda_ctx;
   priv->device = cdev;
+#ifdef HAVE_NVCODEC_GST_D3D11
+  priv->dxgi_adapter_luid = gst_cuda_context_find_dxgi_adapter_luid (cdev);
+#endif
 
   G_LOCK (list_lock);
   g_object_weak_ref (G_OBJECT (object),

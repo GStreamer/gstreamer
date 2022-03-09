@@ -43,7 +43,7 @@ if gstgl_dep.found()
 endif
 
 if gstd3d11_dep.found()
-  extra_c_args += ['-DHAVE_NVCODEC_GST_D3D11=1']
+  extra_c_args += ['-DHAVE_NVCODEC_GST_D3D11=1', '-DCOBJMACROS']
 endif
 
 if host_system == 'linux'
