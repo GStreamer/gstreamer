@@ -914,10 +914,16 @@ static gboolean
 gst_nvdec_start (GstVideoDecoder * decoder)
 {
   GstNvDec *nvdec = GST_NVDEC (decoder);
+  GstNvDecClass *klass = GST_NVDEC_GET_CLASS (nvdec);
 
   nvdec->state = GST_NVDEC_STATE_INIT;
   nvdec->last_ret = GST_FLOW_OK;
   gst_video_info_init (&nvdec->out_info);
+
+  if (klass->codec_type == cudaVideoCodec_H264)
+    nvdec->h264_parser = gst_h264_nal_parser_new ();
+  else if (klass->codec_type == cudaVideoCodec_HEVC)
+    nvdec->h265_parser = gst_h265_parser_new ();
 
   return TRUE;
 }
@@ -957,6 +963,34 @@ maybe_destroy_decoder_and_parser (GstNvDec * nvdec)
   return ret;
 }
 
+static void
+gst_nvdec_clear_codec_data (GstNvDec * self)
+{
+  GstNvDecClass *klass = GST_NVDEC_GET_CLASS (self);
+  guint i;
+
+  if (klass->codec_type == cudaVideoCodec_HEVC) {
+    for (i = 0; i < G_N_ELEMENTS (self->vps_nals); i++) {
+      gst_clear_buffer (&self->vps_nals[i]);
+    }
+  }
+
+  if (klass->codec_type == cudaVideoCodec_HEVC ||
+      klass->codec_type == cudaVideoCodec_H264) {
+    for (i = 0; i < G_N_ELEMENTS (self->sps_nals); i++) {
+      gst_clear_buffer (&self->sps_nals[i]);
+    }
+
+    for (i = 0; i < G_N_ELEMENTS (self->pps_nals); i++) {
+      gst_clear_buffer (&self->pps_nals[i]);
+    }
+  }
+
+  gst_clear_buffer (&self->codec_data);
+
+  self->need_codec_data = TRUE;
+}
+
 static gboolean
 gst_nvdec_stop (GstVideoDecoder * decoder)
 {
@@ -968,33 +1002,18 @@ gst_nvdec_stop (GstVideoDecoder * decoder)
     return FALSE;
 
 #ifdef HAVE_NVCODEC_GST_GL
-  if (nvdec->gl_context) {
-    gst_object_unref (nvdec->gl_context);
-    nvdec->gl_context = NULL;
-  }
-
-  if (nvdec->other_gl_context) {
-    gst_object_unref (nvdec->other_gl_context);
-    nvdec->other_gl_context = NULL;
-  }
-
-  if (nvdec->gl_display) {
-    gst_object_unref (nvdec->gl_display);
-    nvdec->gl_display = NULL;
-  }
+  gst_clear_object (&nvdec->gl_context);
+  gst_clear_object (&nvdec->other_gl_context);
+  gst_clear_object (&nvdec->gl_display);
 #endif
 
-  if (nvdec->input_state) {
-    gst_video_codec_state_unref (nvdec->input_state);
-    nvdec->input_state = NULL;
-  }
+  g_clear_pointer (&nvdec->input_state, gst_video_codec_state_unref);
+  g_clear_pointer (&nvdec->output_state, gst_video_codec_state_unref);
 
-  if (nvdec->output_state) {
-    gst_video_codec_state_unref (nvdec->output_state);
-    nvdec->output_state = NULL;
-  }
+  g_clear_pointer (&nvdec->h264_parser, gst_h264_nal_parser_free);
+  g_clear_pointer (&nvdec->h265_parser, gst_h265_parser_free);
 
-  gst_clear_buffer (&nvdec->codec_data);
+  gst_nvdec_clear_codec_data (nvdec);
 
   return TRUE;
 }
@@ -1069,15 +1088,20 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   gst_cuda_context_pop (NULL);
 
   /* store codec data */
+  gst_nvdec_clear_codec_data (nvdec);
+
   if (ret && nvdec->input_state->caps) {
-    const GValue *codec_data_value;
     GstStructure *str;
 
     str = gst_caps_get_structure (nvdec->input_state->caps, 0);
-    codec_data_value = gst_structure_get_value (str, "codec_data");
-    if (codec_data_value && GST_VALUE_HOLDS_BUFFER (codec_data_value)) {
-      GstBuffer *codec_data = gst_value_get_buffer (codec_data_value);
-      gst_buffer_replace (&nvdec->codec_data, codec_data);
+
+    if (klass->codec_type == cudaVideoCodec_MPEG4) {
+      const GValue *codec_data_value;
+      codec_data_value = gst_structure_get_value (str, "codec_data");
+      if (codec_data_value && GST_VALUE_HOLDS_BUFFER (codec_data_value)) {
+        GstBuffer *codec_data = gst_value_get_buffer (codec_data_value);
+        gst_buffer_replace (&nvdec->codec_data, codec_data);
+      }
     }
 
     /* For all CODEC we get complete picture ... */
@@ -1314,11 +1338,315 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
   return TRUE;
 }
 
+static void
+gst_nvdec_store_h264_nal (GstNvDec * self, guint id,
+    GstH264NalUnitType nal_type, GstH264NalUnit * nalu)
+{
+  GstBuffer *buf, **store;
+  guint size = nalu->size, store_size;
+  static const guint8 start_code[] = { 0, 0, 1 };
+
+  if (nal_type == GST_H264_NAL_SPS || nal_type == GST_H264_NAL_SUBSET_SPS) {
+    store_size = GST_H264_MAX_SPS_COUNT;
+    store = self->sps_nals;
+    GST_DEBUG_OBJECT (self, "storing sps %u", id);
+  } else if (nal_type == GST_H264_NAL_PPS) {
+    store_size = GST_H264_MAX_PPS_COUNT;
+    store = self->pps_nals;
+    GST_DEBUG_OBJECT (self, "storing pps %u", id);
+  } else {
+    return;
+  }
+
+  if (id >= store_size) {
+    GST_DEBUG_OBJECT (self, "unable to store nal, id out-of-range %d", id);
+    return;
+  }
+
+  buf = gst_buffer_new_allocate (NULL, size + sizeof (start_code), NULL);
+  gst_buffer_fill (buf, 0, start_code, sizeof (start_code));
+  gst_buffer_fill (buf, sizeof (start_code), nalu->data + nalu->offset, size);
+
+  if (store[id])
+    gst_buffer_unref (store[id]);
+
+  store[id] = buf;
+}
+
+static GstBuffer *
+gst_nvdec_handle_h264_buffer (GstNvDec * self, GstBuffer * buffer)
+{
+  GstH264NalParser *parser = self->h264_parser;
+  GstH264NalUnit nalu;
+  GstH264ParserResult pres;
+  GstMapInfo map;
+  gboolean have_sps = FALSE;
+  gboolean have_pps = FALSE;
+  guint i;
+  GstBuffer *new_buf;
+
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+    GST_WARNING_OBJECT (self, "Failed to map input buffer");
+    return gst_buffer_ref (buffer);
+  }
+
+  memset (&nalu, 0, sizeof (GstH264NalUnit));
+
+  do {
+    pres = gst_h264_parser_identify_nalu (parser,
+        map.data, nalu.offset + nalu.size, map.size, &nalu);
+
+    if (pres == GST_H264_PARSER_NO_NAL_END)
+      pres = GST_H264_PARSER_OK;
+
+    switch (nalu.type) {
+      case GST_H264_NAL_SPS:
+      case GST_H264_NAL_SUBSET_SPS:{
+        GstH264SPS sps;
+
+        if (nalu.type == GST_H264_NAL_SPS) {
+          pres = gst_h264_parser_parse_sps (parser, &nalu, &sps);
+        } else {
+          pres = gst_h264_parser_parse_subset_sps (parser, &nalu, &sps);
+        }
+
+        if (pres != GST_H264_PARSER_OK)
+          break;
+
+        have_sps = TRUE;
+        gst_nvdec_store_h264_nal (self, sps.id, nalu.type, &nalu);
+        gst_h264_sps_clear (&sps);
+        break;
+      }
+      case GST_H264_NAL_PPS:{
+        GstH264PPS pps;
+
+        pres = gst_h264_parser_parse_pps (parser, &nalu, &pps);
+        if (pres != GST_H264_PARSER_OK)
+          break;
+
+        have_pps = TRUE;
+        gst_nvdec_store_h264_nal (self, pps.id, nalu.type, &nalu);
+        gst_h264_pps_clear (&pps);
+        break;
+      }
+      default:
+        break;
+    }
+  } while (pres == GST_H264_PARSER_OK);
+
+  gst_buffer_unmap (buffer, &map);
+
+  if (!self->need_codec_data || (have_sps && have_pps)) {
+    self->need_codec_data = FALSE;
+    return gst_buffer_ref (buffer);
+  }
+
+  new_buf = gst_buffer_new ();
+  if (!have_sps) {
+    for (i = 0; i < GST_H264_MAX_SPS_COUNT; i++) {
+      if (!self->sps_nals[i])
+        continue;
+
+      have_sps = TRUE;
+      new_buf = gst_buffer_append (new_buf, gst_buffer_ref (self->sps_nals[i]));
+    }
+  }
+
+  if (!have_pps) {
+    for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++) {
+      if (!self->pps_nals[i])
+        continue;
+
+      have_pps = TRUE;
+      new_buf = gst_buffer_append (new_buf, gst_buffer_ref (self->pps_nals[i]));
+    }
+  }
+
+  new_buf = gst_buffer_append (new_buf, gst_buffer_ref (buffer));
+
+  if (have_sps && have_pps)
+    self->need_codec_data = FALSE;
+
+  return new_buf;
+}
+
+static void
+gst_nvdec_store_h265_nal (GstNvDec * self, guint id,
+    GstH265NalUnitType nal_type, GstH265NalUnit * nalu)
+{
+  GstBuffer *buf, **store;
+  guint size = nalu->size, store_size;
+  static const guint8 start_code[] = { 0, 0, 1 };
+
+  if (nal_type == GST_H265_NAL_VPS) {
+    store_size = GST_H265_MAX_VPS_COUNT;
+    store = self->vps_nals;
+    GST_DEBUG_OBJECT (self, "storing vps %u", id);
+  } else if (nal_type == GST_H265_NAL_SPS) {
+    store_size = GST_H265_MAX_SPS_COUNT;
+    store = self->sps_nals;
+    GST_DEBUG_OBJECT (self, "storing sps %u", id);
+  } else if (nal_type == GST_H265_NAL_PPS) {
+    store_size = GST_H265_MAX_PPS_COUNT;
+    store = self->pps_nals;
+    GST_DEBUG_OBJECT (self, "storing pps %u", id);
+  } else {
+    return;
+  }
+
+  if (id >= store_size) {
+    GST_DEBUG_OBJECT (self, "unable to store nal, id out-of-range %d", id);
+    return;
+  }
+
+  buf = gst_buffer_new_allocate (NULL, size + sizeof (start_code), NULL);
+  gst_buffer_fill (buf, 0, start_code, sizeof (start_code));
+  gst_buffer_fill (buf, sizeof (start_code), nalu->data + nalu->offset, size);
+
+  if (store[id])
+    gst_buffer_unref (store[id]);
+
+  store[id] = buf;
+}
+
+static GstBuffer *
+gst_nvdec_handle_h265_buffer (GstNvDec * self, GstBuffer * buffer)
+{
+  GstH265Parser *parser = self->h265_parser;
+  GstH265NalUnit nalu;
+  GstH265ParserResult pres;
+  GstMapInfo map;
+  gboolean have_vps = FALSE;
+  gboolean have_sps = FALSE;
+  gboolean have_pps = FALSE;
+  GstBuffer *new_buf;
+  guint i;
+
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+    GST_WARNING_OBJECT (self, "Failed to map input buffer");
+    return gst_buffer_ref (buffer);
+  }
+
+  memset (&nalu, 0, sizeof (GstH265NalUnit));
+
+  do {
+    pres = gst_h265_parser_identify_nalu (parser,
+        map.data, nalu.offset + nalu.size, map.size, &nalu);
+
+    if (pres == GST_H265_PARSER_NO_NAL_END)
+      pres = GST_H265_PARSER_OK;
+
+    switch (nalu.type) {
+      case GST_H265_NAL_VPS:{
+        GstH265VPS vps;
+
+        pres = gst_h265_parser_parse_vps (parser, &nalu, &vps);
+        if (pres != GST_H265_PARSER_OK)
+          break;
+
+        have_vps = TRUE;
+        gst_nvdec_store_h265_nal (self, vps.id, nalu.type, &nalu);
+        break;
+      }
+      case GST_H265_NAL_SPS:{
+        GstH265SPS sps;
+
+        pres = gst_h265_parser_parse_sps (parser, &nalu, &sps, FALSE);
+        if (pres != GST_H265_PARSER_OK)
+          break;
+
+        have_sps = TRUE;
+        gst_nvdec_store_h265_nal (self, sps.id, nalu.type, &nalu);
+        break;
+      }
+      case GST_H265_NAL_PPS:{
+        GstH265PPS pps;
+
+        pres = gst_h265_parser_parse_pps (parser, &nalu, &pps);
+        if (pres != GST_H265_PARSER_OK)
+          break;
+
+        have_pps = TRUE;
+        gst_nvdec_store_h265_nal (self, pps.id, nalu.type, &nalu);
+        break;
+      }
+      default:
+        break;
+    }
+  } while (pres == GST_H265_PARSER_OK);
+
+  gst_buffer_unmap (buffer, &map);
+
+  if (!self->need_codec_data || (have_sps && have_pps)) {
+    self->need_codec_data = FALSE;
+    return gst_buffer_ref (buffer);
+  }
+
+  new_buf = gst_buffer_new ();
+  if (!have_vps) {
+    for (i = 0; i < GST_H265_MAX_VPS_COUNT; i++) {
+      if (!self->vps_nals[i])
+        continue;
+
+      new_buf = gst_buffer_append (new_buf, gst_buffer_ref (self->vps_nals[i]));
+    }
+  }
+
+  if (!have_sps) {
+    for (i = 0; i < GST_H265_MAX_SPS_COUNT; i++) {
+      if (!self->sps_nals[i])
+        continue;
+
+      have_sps = TRUE;
+      new_buf = gst_buffer_append (new_buf, gst_buffer_ref (self->sps_nals[i]));
+    }
+  }
+
+  if (!have_pps) {
+    for (i = 0; i < GST_H265_MAX_PPS_COUNT; i++) {
+      if (!self->pps_nals[i])
+        continue;
+
+      have_pps = TRUE;
+      new_buf = gst_buffer_append (new_buf, gst_buffer_ref (self->pps_nals[i]));
+    }
+  }
+
+  if (have_sps && have_pps)
+    self->need_codec_data = FALSE;
+
+  return gst_buffer_append (new_buf, gst_buffer_ref (buffer));
+}
+
+static GstBuffer *
+gst_nvdec_process_input (GstNvDec * self, GstBuffer * inbuf)
+{
+  GstNvDecClass *klass = GST_NVDEC_GET_CLASS (self);
+  gboolean parse_nal = FALSE;
+
+  if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DELTA_UNIT) ||
+      self->need_codec_data) {
+    parse_nal = TRUE;
+  }
+
+  if (klass->codec_type == cudaVideoCodec_MPEG4 &&
+      self->codec_data && GST_BUFFER_IS_DISCONT (inbuf)) {
+    return gst_buffer_append (gst_buffer_ref (self->codec_data),
+        gst_buffer_ref (inbuf));
+  } else if (klass->codec_type == cudaVideoCodec_H264 && parse_nal) {
+    return gst_nvdec_handle_h264_buffer (self, inbuf);
+  } else if (klass->codec_type == cudaVideoCodec_HEVC && parse_nal) {
+    return gst_nvdec_handle_h265_buffer (self, inbuf);
+  }
+
+  return gst_buffer_ref (inbuf);
+}
+
 static GstFlowReturn
 gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 {
   GstNvDec *nvdec = GST_NVDEC (decoder);
-  GstNvDecClass *klass = GST_NVDEC_GET_CLASS (nvdec);
   GstMapInfo map_info = GST_MAP_INFO_INIT;
   CUVIDSOURCEDATAPACKET packet = { 0, };
   GstBuffer *in_buffer;
@@ -1328,13 +1656,7 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   /* initialize with zero to keep track of frames */
   gst_video_codec_frame_set_user_data (frame, GUINT_TO_POINTER (0), NULL);
 
-  in_buffer = gst_buffer_ref (frame->input_buffer);
-  if (GST_BUFFER_IS_DISCONT (frame->input_buffer)) {
-    if (nvdec->codec_data && klass->codec_type == cudaVideoCodec_MPEG4) {
-      in_buffer = gst_buffer_append (gst_buffer_ref (nvdec->codec_data),
-          in_buffer);
-    }
-  }
+  in_buffer = gst_nvdec_process_input (nvdec, frame->input_buffer);
 
   if (!gst_buffer_map (in_buffer, &map_info, GST_MAP_READ)) {
     GST_ERROR_OBJECT (nvdec, "failed to map input buffer");
@@ -1383,6 +1705,8 @@ gst_nvdec_flush (GstVideoDecoder * decoder)
       && !gst_cuda_result (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
 
+  nvdec->need_codec_data = TRUE;
+
   return TRUE;
 }
 
@@ -1404,6 +1728,8 @@ gst_nvdec_drain (GstVideoDecoder * decoder)
   if (nvdec->parser
       && !gst_cuda_result (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
+
+  nvdec->need_codec_data = TRUE;
 
   return nvdec->last_ret;
 }
