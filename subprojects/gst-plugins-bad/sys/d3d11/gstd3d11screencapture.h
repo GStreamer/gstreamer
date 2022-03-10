@@ -45,7 +45,8 @@ gboolean        gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * captu
 
 GstFlowReturn   gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
                                                      ID3D11Texture2D * texture,
-                                                     ID3D11RenderTargetView *rtv,
+                                                     ID3D11RenderTargetView * rtv,
+                                                     D3D11_BOX * crop_box,
                                                      gboolean draw_mouse);
 
 HRESULT         gst_d3d11_screen_capture_find_output_for_monitor (HMONITOR monitor,

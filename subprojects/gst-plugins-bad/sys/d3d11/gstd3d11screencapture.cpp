@@ -344,7 +344,7 @@ public:
     return GST_FLOW_OK;
   }
 
-  bool DrawMouse (ID3D11RenderTargetView * rtv)
+  bool DrawMouse (ID3D11RenderTargetView * rtv, D3D11_BOX * cropBox)
   {
     GST_TRACE ("Drawing mouse");
 
@@ -428,13 +428,20 @@ public:
         break;
     }
 
-    /* Nothing draw */
-    if (PtrWidth == 0 || PtrHeight == 0) {
+    /* Nothing to draw */
+    if (PtrWidth == 0 || PtrHeight == 0 ||
+        (PtrLeft + PtrWidth) < static_cast<INT>(cropBox->left) ||
+        PtrLeft > static_cast<INT>(cropBox->right) ||
+        (PtrTop + PtrHeight) < static_cast<INT>(cropBox->top) ||
+        PtrTop > static_cast<INT>(cropBox->bottom)) {
       if (InitBuffer)
         delete[] InitBuffer;
 
       return true;
     }
+
+    PtrLeft -= cropBox->left;
+    PtrTop -= cropBox->top;
 
     Vertices[0].Pos.x = (PtrLeft - CenterX) / (FLOAT)CenterX;
     Vertices[0].Pos.y = -1 * ((PtrTop + PtrHeight) - CenterY) / (FLOAT)CenterY;
@@ -523,13 +530,13 @@ public:
   }
 
   void
-  CopyToTexture (ID3D11Texture2D * texture)
+  CopyToTexture (ID3D11Texture2D * texture, D3D11_BOX * cropBox)
   {
     ID3D11DeviceContext *context_handle =
         gst_d3d11_device_get_device_context_handle (device_);
 
     context_handle->CopySubresourceRegion (texture, 0, 0, 0, 0,
-      shared_texture_.Get(), 0, nullptr);
+      shared_texture_.Get(), 0, cropBox);
   }
 
   void
@@ -1790,10 +1797,9 @@ gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * capture,
 GstFlowReturn
 gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
     ID3D11Texture2D * texture, ID3D11RenderTargetView * rtv,
-    gboolean draw_mouse)
+    D3D11_BOX * crop_box, gboolean draw_mouse)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  D3D11_TEXTURE2D_DESC desc;
   guint width, height;
 
   g_return_val_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture), GST_FLOW_ERROR);
@@ -1811,11 +1817,12 @@ gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
 
   gst_d3d11_screen_capture_get_size (capture, &width, &height);
 
-  texture->GetDesc (&desc);
-  if (desc.Width != width || desc.Height != height) {
+  if (crop_box->left > width || crop_box->right > width ||
+      crop_box->top > height || crop_box->bottom > height) {
     GST_INFO_OBJECT (capture,
-        "Different texture size, ours: %dx%d, external: %dx%d",
-        width, height, desc.Width, desc.Height);
+        "Capture area (%u, %u, %u, %u) doesn't fit into screen size %ux%u",
+        crop_box->left, crop_box->right, crop_box->top,
+        crop_box->bottom, width, height);
     g_rec_mutex_unlock (&capture->lock);
 
     return GST_D3D11_SCREEN_CAPTURE_FLOW_SIZE_CHANGED;
@@ -1843,9 +1850,9 @@ gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
 
   GST_LOG_OBJECT (capture, "Capture done");
 
-  capture->dupl_obj->CopyToTexture (texture);
+  capture->dupl_obj->CopyToTexture (texture, crop_box);
   if (draw_mouse)
-    capture->dupl_obj->DrawMouse (rtv);
+    capture->dupl_obj->DrawMouse (rtv, crop_box);
   gst_d3d11_device_unlock (capture->device);
   g_rec_mutex_unlock (&capture->lock);
 

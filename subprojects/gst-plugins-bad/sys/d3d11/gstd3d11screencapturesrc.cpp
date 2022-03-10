@@ -55,6 +55,10 @@ enum
   PROP_MONITOR_INDEX,
   PROP_MONITOR_HANDLE,
   PROP_SHOW_CURSOR,
+  PROP_CROP_X,
+  PROP_CROP_Y,
+  PROP_CROP_WIDTH,
+  PROP_CROP_HEIGHT,
 
   PROP_LAST,
 };
@@ -86,6 +90,12 @@ struct _GstD3D11ScreenCaptureSrc
   gint monitor_index;
   HMONITOR monitor_handle;
   gboolean show_cursor;
+
+  guint crop_x;
+  guint crop_y;
+  guint crop_w;
+  guint crop_h;
+  D3D11_BOX crop_box;
 
   gboolean flushing;
   GstClockTime min_latency;
@@ -155,6 +165,30 @@ gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
       g_param_spec_boolean ("show-cursor",
       "Show Mouse Cursor", "Whether to show mouse cursor",
       DEFAULT_SHOW_CURSOR,
+      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  properties[PROP_CROP_X] =
+      g_param_spec_uint ("crop-x", "Crop X",
+      "Horizontal coordinate of top left corner for the screen capture area",
+      0, G_MAXUINT, 0,
+      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  properties[PROP_CROP_Y] =
+      g_param_spec_uint ("crop-y", "Crop Y",
+      "Vertical coordinate of top left corner for the screen capture area",
+      0, G_MAXUINT, 0,
+      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  properties[PROP_CROP_WIDTH] =
+      g_param_spec_uint ("crop-width", "Crop Width",
+      "Width of screen capture area (0 = maximum)",
+      0, G_MAXUINT, 0,
+      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  properties[PROP_CROP_HEIGHT] =
+      g_param_spec_uint ("crop-height", "Crop Height",
+      "Height of screen capture area (0 = maximum)",
+      0, G_MAXUINT, 0,
       (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
@@ -232,6 +266,18 @@ gst_d3d11_screen_capture_src_set_property (GObject * object, guint prop_id,
     case PROP_SHOW_CURSOR:
       self->show_cursor = g_value_get_boolean (value);
       break;
+    case PROP_CROP_X:
+      self->crop_x = g_value_get_uint (value);
+      break;
+    case PROP_CROP_Y:
+      self->crop_y = g_value_get_uint (value);
+      break;
+    case PROP_CROP_WIDTH:
+      self->crop_w = g_value_get_uint (value);
+      break;
+    case PROP_CROP_HEIGHT:
+      self->crop_h = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -254,6 +300,18 @@ gst_d3d11_screen_capture_src_get_property (GObject * object, guint prop_id,
     case PROP_SHOW_CURSOR:
       g_value_set_boolean (value, self->show_cursor);
       break;
+    case PROP_CROP_X:
+      g_value_set_uint (value, self->crop_x);
+      break;
+    case PROP_CROP_Y:
+      g_value_set_uint (value, self->crop_y);
+      break;
+    case PROP_CROP_WIDTH:
+      g_value_set_uint (value, self->crop_w);
+      break;
+    case PROP_CROP_HEIGHT:
+      g_value_set_uint (value, self->crop_h);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -272,6 +330,36 @@ gst_d3d11_screen_capture_src_set_context (GstElement * element,
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
+static D3D11_BOX
+gst_d3d11_screen_capture_src_get_crop_box (GstD3D11ScreenCaptureSrc * self)
+{
+  D3D11_BOX box;
+  guint screen_width, screen_height;
+
+  box.front = 0;
+  box.back = 1;
+
+  gst_d3d11_screen_capture_get_size (self->capture, &screen_width,
+      &screen_height);
+
+  if ((self->crop_x + self->crop_w) > screen_width ||
+      (self->crop_y + self->crop_h) > screen_height) {
+    GST_WARNING ("Capture region outside of the screen bounds; ignoring.");
+
+    box.left = 0;
+    box.top = 0;
+    box.right = screen_width;
+    box.bottom = screen_height;
+  } else {
+    box.left = self->crop_x;
+    box.top = self->crop_y;
+    box.right = self->crop_w ? (self->crop_x + self->crop_w) : screen_width;
+    box.bottom = self->crop_h ? (self->crop_y + self->crop_h) : screen_height;
+  }
+
+  return box;
+}
+
 static GstCaps *
 gst_d3d11_screen_capture_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 {
@@ -284,11 +372,9 @@ gst_d3d11_screen_capture_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
     return gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
   }
 
-  if (!gst_d3d11_screen_capture_get_size (self->capture, &width, &height)) {
-    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
-        ("Cannot query supported resolution"), (NULL));
-    return NULL;
-  }
+  self->crop_box = gst_d3d11_screen_capture_src_get_crop_box (self);
+  width = self->crop_box.right - self->crop_box.left;
+  height = self->crop_box.bottom - self->crop_box.top;
 
   caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
   caps = gst_caps_make_writable (caps);
@@ -691,6 +777,7 @@ gst_d3d11_screen_capture_src_create (GstBaseSrc * bsrc, guint64 offset,
   gint unsupported_retry_count = 100;
   GstBuffer *buffer = NULL;
   GstBuffer *sysmem_buf = NULL;
+  D3D11_BOX crop_box;
 
   if (!self->capture) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
@@ -703,6 +790,18 @@ gst_d3d11_screen_capture_src_create (GstBaseSrc * bsrc, guint64 offset,
 
   if (fps_n <= 0 || fps_d <= 0)
     return GST_FLOW_NOT_NEGOTIATED;
+
+  crop_box = gst_d3d11_screen_capture_src_get_crop_box (self);
+  if (crop_box.left != self->crop_box.left ||
+      crop_box.right != self->crop_box.right ||
+      crop_box.top != self->crop_box.top ||
+      crop_box.bottom != self->crop_box.bottom) {
+    GST_INFO_OBJECT (self, "Capture area changed, need negotiation");
+    if (!gst_base_src_negotiate (bsrc)) {
+      GST_ERROR_OBJECT (self, "Failed to negotiate with new capture area");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
 
 again:
   clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
@@ -820,7 +919,7 @@ again:
   before_capture = gst_clock_get_time (clock);
   ret =
       gst_d3d11_screen_capture_do_capture (self->capture, texture, rtv,
-      draw_mouse);
+      &self->crop_box, draw_mouse);
   gst_memory_unmap (mem, &info);
 
   switch (ret) {
