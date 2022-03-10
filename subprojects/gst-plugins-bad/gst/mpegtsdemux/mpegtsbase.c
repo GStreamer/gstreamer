@@ -501,8 +501,15 @@ mpegts_base_steal_program (MpegTSBase * base, gint program_number)
 
   for (i = 0; i < base->programs->len; i++) {
     MpegTSBaseProgram *program = g_ptr_array_index (base->programs, i);
-    if (program->program_number == program_number)
+    if (program->program_number == program_number) {
+#if GLIB_CHECK_VERSION(2, 58, 0)
       return g_ptr_array_steal_index (base->programs, i);
+#else
+      program->recycle = TRUE;
+      g_ptr_array_remove_index (base->programs, i);
+      return program;
+#endif
+    }
   }
 
   return NULL;
@@ -522,6 +529,11 @@ static void
 mpegts_base_free_program (MpegTSBaseProgram * program)
 {
   GList *tmp;
+
+  if (program->recycle) {
+    program->recycle = FALSE;
+    return;
+  }
 
   if (program->pmt) {
     gst_mpegts_section_unref (program->section);
