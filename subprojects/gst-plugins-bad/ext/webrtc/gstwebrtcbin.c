@@ -1102,7 +1102,11 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
 {
 #define STATE(val) GST_WEBRTC_ICE_GATHERING_STATE_ ## val
   GstWebRTCICEGatheringState any_state = 0;
-  gboolean all_completed = webrtc->priv->transceivers->len > 0;
+  GstWebRTCICEGatheringState ice_state;
+  GstWebRTCDTLSTransport *dtls_transport;
+  GstWebRTCICETransport *transport;
+  gboolean all_completed = webrtc->priv->transceivers->len > 0 ||
+      webrtc->priv->data_channel_transport;
   int i;
 
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
@@ -1110,9 +1114,6 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
         g_ptr_array_index (webrtc->priv->transceivers, i);
     WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
     TransportStream *stream = trans->stream;
-    GstWebRTCDTLSTransport *dtls_transport;
-    GstWebRTCICETransport *transport;
-    GstWebRTCICEGatheringState ice_state;
 
     if (rtp_trans->stopped || stream == NULL) {
       GST_TRACE_OBJECT (webrtc, "transceiver %p stopped or unassociated",
@@ -1141,6 +1142,20 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
     any_state |= (1 << ice_state);
     if (ice_state != STATE (COMPLETE))
       all_completed = FALSE;
+  }
+
+  /* check data channel transport gathering state */
+  if (all_completed && webrtc->priv->data_channel_transport) {
+    if ((dtls_transport = webrtc->priv->data_channel_transport->transport)) {
+      transport = dtls_transport->transport;
+      g_object_get (transport, "gathering-state", &ice_state, NULL);
+      GST_TRACE_OBJECT (webrtc,
+          "data channel transport %p gathering state: 0x%x", dtls_transport,
+          ice_state);
+      any_state |= (1 << ice_state);
+      if (ice_state != STATE (COMPLETE))
+        all_completed = FALSE;
+    }
   }
 
   GST_TRACE_OBJECT (webrtc, "ICE gathering state: 0x%x", any_state);
