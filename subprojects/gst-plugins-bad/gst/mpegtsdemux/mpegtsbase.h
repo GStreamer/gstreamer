@@ -95,6 +95,9 @@ struct _MpegTSBaseProgram
   gboolean active;
   /* TRUE if this is the first program created */
   gboolean initial_program;
+
+  /* TRUE if the program shouldn't be freed */
+  gboolean recycle;
 };
 
 typedef enum {
