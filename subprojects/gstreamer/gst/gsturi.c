@@ -1315,7 +1315,7 @@ _gst_uri_string_to_list (const gchar * str, const gchar * sep, gboolean convert,
       for (next_elem = split_str; *next_elem; next_elem += 1) {
         gchar *elem = *next_elem;
         if (*elem == '\0') {
-          new_list = g_list_append (new_list, NULL);
+          new_list = g_list_prepend (new_list, NULL);
         } else {
           if (convert && !unescape) {
             gchar *next_sep;
@@ -1331,7 +1331,7 @@ _gst_uri_string_to_list (const gchar * str, const gchar * sep, gboolean convert,
             g_free (elem);
             elem = *next_elem;
           }
-          new_list = g_list_append (new_list, g_strdup (elem));
+          new_list = g_list_prepend (new_list, g_strdup (elem));
         }
       }
     }
@@ -1340,7 +1340,7 @@ _gst_uri_string_to_list (const gchar * str, const gchar * sep, gboolean convert,
       g_free (pct_sep);
   }
 
-  return new_list;
+  return g_list_reverse (new_list);
 }
 
 static GHashTable *
