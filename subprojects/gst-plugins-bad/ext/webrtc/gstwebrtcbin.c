@@ -4599,7 +4599,12 @@ _set_internal_rtpbin_element_props_from_stream (GstWebRTCBin * webrtc,
           trans, ulpfec_pt, red_pt);
 
       if (trans->ulpfecenc) {
-        g_object_set (trans->ulpfecenc, "pt", ulpfec_pt, "multipacket",
+        guint ulpfecenc_pt = ulpfec_pt;
+
+        if (ulpfecenc_pt == 0)
+          ulpfecenc_pt = 255;
+
+        g_object_set (trans->ulpfecenc, "pt", ulpfecenc_pt, "multipacket",
             rtp_trans->kind == GST_WEBRTC_KIND_VIDEO, "percentage",
             trans->fec_percentage, NULL);
       }
