@@ -402,6 +402,8 @@ gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
     s = gst_caps_get_structure (stream->caps, 0);
     gst_structure_set_name (s, "application/x-rtp");
 
+    gst_sdp_media_attributes_to_caps (media, stream->caps);
+
     if (stream->pt >= 96) {
       /* If we have a dynamic payload type, see if we have a stream with the
        * same payload number. If there is one, they are part of the same
