@@ -24,6 +24,9 @@
 
 #include <string.h>
 #include "video.h"
+#ifdef HAVE_GL
+#include <gst/gl/gstglmemory.h>
+#endif
 
 static gboolean
 caps_are_raw (const GstCaps * caps)
@@ -117,8 +120,17 @@ build_convert_frame_pipeline (GstElement ** src_element,
 {
   GstElement *vcrop = NULL, *csp = NULL, *csp2 = NULL, *vscale = NULL;
   GstElement *src = NULL, *sink = NULL, *encoder = NULL, *pipeline;
+  GstElement *dl = NULL;
   GstVideoInfo info;
   GError *error = NULL;
+#ifdef HAVE_GL
+  GstCapsFeatures *features;
+
+  features = gst_caps_get_features (from_caps, 0);
+  if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY))
+    if (!create_element ("gldownload", &dl, &error))
+      goto no_elements;
+#endif
 
   if (cmeta) {
     if (!create_element ("videocrop", &vcrop, &error)) {
@@ -150,6 +162,8 @@ build_convert_frame_pipeline (GstElement ** src_element,
   gst_bin_add_many (GST_BIN (pipeline), src, csp, vscale, sink, NULL);
   if (vcrop)
     gst_bin_add_many (GST_BIN (pipeline), vcrop, csp2, NULL);
+  if (dl)
+    gst_bin_add (GST_BIN (pipeline), dl);
 
   /* set caps */
   g_object_set (src, "caps", from_caps, NULL);
@@ -168,9 +182,19 @@ build_convert_frame_pipeline (GstElement ** src_element,
 
   /* FIXME: linking is still way too expensive, profile this properly */
   if (vcrop) {
-    GST_DEBUG ("linking src->csp2");
-    if (!gst_element_link_pads (src, "src", csp2, "sink"))
-      goto link_failed;
+    if (!dl) {
+      GST_DEBUG ("linking src->csp2");
+      if (!gst_element_link_pads (src, "src", csp2, "sink"))
+        goto link_failed;
+    } else {
+      GST_DEBUG ("linking src->dl");
+      if (!gst_element_link_pads (src, "src", dl, "sink"))
+        goto link_failed;
+
+      GST_DEBUG ("linking dl->csp2");
+      if (!gst_element_link_pads (dl, "src", csp2, "sink"))
+        goto link_failed;
+    }
 
     GST_DEBUG ("linking csp2->vcrop");
     if (!gst_element_link_pads (csp2, "src", vcrop, "sink"))
@@ -181,8 +205,18 @@ build_convert_frame_pipeline (GstElement ** src_element,
       goto link_failed;
   } else {
     GST_DEBUG ("linking src->csp");
-    if (!gst_element_link_pads (src, "src", csp, "sink"))
-      goto link_failed;
+    if (!dl) {
+      if (!gst_element_link_pads (src, "src", csp, "sink"))
+        goto link_failed;
+    } else {
+      GST_DEBUG ("linking src->dl");
+      if (!gst_element_link_pads (src, "src", dl, "sink"))
+        goto link_failed;
+
+      GST_DEBUG ("linking dl->csp");
+      if (!gst_element_link_pads (dl, "src", csp, "sink"))
+        goto link_failed;
+    }
   }
 
   GST_DEBUG ("linking csp->vscale");

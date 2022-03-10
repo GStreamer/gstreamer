@@ -492,6 +492,7 @@ subdir('scripts')
 
 base_libraries = ['allocators', 'app', 'audio', 'fft', 'pbutils', 'riff', 'rtp', 'rtsp', 'sdp', 'tag', 'video']
 if build_gstgl
+  core_conf.set('HAVE_GL', 1)
   base_libraries += 'gl'
 endif
 
