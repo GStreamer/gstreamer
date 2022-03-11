@@ -144,6 +144,9 @@ static GstFlowReturn gst_nv_h265_dec_decode_slice (GstH265Decoder * decoder,
     GArray * ref_pic_list0, GArray * ref_pic_list1);
 static GstFlowReturn gst_nv_h265_dec_end_picture (GstH265Decoder * decoder,
     GstH265Picture * picture);
+static guint
+gst_nv_h265_dec_get_preferred_output_delay (GstH265Decoder * decoder,
+    gboolean live);
 
 static void
 gst_nv_h265_dec_class_init (GstNvH265DecClass * klass)
@@ -182,6 +185,8 @@ gst_nv_h265_dec_class_init (GstNvH265DecClass * klass)
       GST_DEBUG_FUNCPTR (gst_nv_h265_dec_decode_slice);
   h265decoder_class->end_picture =
       GST_DEBUG_FUNCPTR (gst_nv_h265_dec_end_picture);
+  h265decoder_class->get_preferred_output_delay =
+      GST_DEBUG_FUNCPTR (gst_nv_h265_dec_get_preferred_output_delay);
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_h265_dec_debug,
       "nvh265dec", 0, "Nvidia H.265 Decoder");
@@ -919,6 +924,18 @@ gst_nv_h265_dec_end_picture (GstH265Decoder * decoder, GstH265Picture * picture)
   }
 
   return GST_FLOW_OK;
+}
+
+static guint
+gst_nv_h265_dec_get_preferred_output_delay (GstH265Decoder * decoder,
+    gboolean live)
+{
+  /* Prefer to zero latency for live pipeline */
+  if (live)
+    return 0;
+
+  /* NVCODEC SDK uses 4 frame delay for better throughput performance */
+  return 4;
 }
 
 typedef struct
