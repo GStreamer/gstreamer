@@ -6,4 +6,5 @@ bash_helper_conf.set('GST_API_VERSION', apiversion)
 configure_file(input : 'gst.in',
     output : 'gst',
     install_dir : bash_helpers_dir,
-    configuration : bash_helper_conf)
+    configuration : bash_helper_conf,
+    install_tag : 'runtime')

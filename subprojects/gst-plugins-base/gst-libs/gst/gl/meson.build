@@ -1012,6 +1012,7 @@ if build_gstgl
   configure_file(input : 'gstglconfig.h.meson',
     output : 'gstglconfig.h',
     install_dir : get_option('libdir') + '/gstreamer-1.0/include/gst/gl',
+    install_tag : 'devel',
     configuration : glconf)
 
   glib_mkenums = find_program('glib-mkenums')

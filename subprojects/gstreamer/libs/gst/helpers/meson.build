@@ -125,7 +125,8 @@ if have_ptp
 endif
 
 install_data(['gst_gdb.py', 'glib_gobject_helper.py'],
-  install_dir : join_paths(get_option('datadir'), 'gstreamer-@0@'.format(apiversion), 'gdb'))
+  install_dir : join_paths(get_option('datadir'), 'gstreamer-@0@'.format(apiversion), 'gdb'),
+  install_tag : 'devel')
 
 gdbconf = configuration_data()
 gdbconf.set('GST_API_VERSION', apiversion)
@@ -143,4 +144,5 @@ endif
 configure_file(input : 'libgstreamer-gdb.py.in',
   output : 'libgstreamer-@0@.so.@1@-gdb.py'.format(apiversion, libversion),
   install_dir : gdb_install_dir,
+  install_tag : 'devel',
   configuration : gdbconf)
