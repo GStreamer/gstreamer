@@ -346,11 +346,13 @@ WPEView* WPEContextThread::createWPEView(GstWpeVideoSrc* src, GstGLContext* cont
 
     WPEView* view = nullptr;
     dispatch([&]() mutable {
-        auto* manager = webkit_website_data_manager_new_ephemeral();
-        auto web_context = webkit_web_context_new_with_website_data_manager(manager);
-        g_object_unref(manager);
-
-        view = new WPEView(web_context, src, context, display, width, height);
+        if (!glib.web_context) {
+            auto *manager = webkit_website_data_manager_new_ephemeral();
+            glib.web_context =
+                webkit_web_context_new_with_website_data_manager(manager);
+            g_object_unref(manager);
+        }
+        view = new WPEView(glib.web_context, src, context, display, width, height);
     });
 
     if (view && view->hasUri()) {
