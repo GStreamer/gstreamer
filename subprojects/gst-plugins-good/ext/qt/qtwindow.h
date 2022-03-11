@@ -64,6 +64,7 @@ gboolean        qt_window_set_context (QtGLWindow * qt_window, GstGLContext * co
 GstGLDisplay *  qt_window_get_display (QtGLWindow * qt_window);
 gboolean        qt_window_is_scenegraph_initialized (QtGLWindow * qt_window);
 void            qt_window_use_default_fbo (QtGLWindow * qt_window, gboolean useDefaultFbo);
+void            qt_window_stop(QtGLWindow* qt_window);
 }
 
 #endif /* __QT_WINDOW_H__ */
