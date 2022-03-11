@@ -89,9 +89,6 @@ struct _GstNvH265Dec
 
   GstVideoCodecState *output_state;
 
-  const GstH265SPS *last_sps;
-  const GstH265PPS *last_pps;
-
   GstCudaContext *context;
   GstNvDecoder *decoder;
   CUVIDPICPARAMS params;
@@ -409,8 +406,6 @@ gst_nv_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
       return GST_FLOW_NOT_NEGOTIATED;
     }
 
-    self->last_sps = NULL;
-    self->last_pps = NULL;
     memset (&self->params, 0, sizeof (CUVIDPICPARAMS));
   }
 
@@ -711,24 +706,10 @@ gst_nv_h265_dec_start_picture (GstH265Decoder * decoder,
   h265_params->IrapPicFlag = GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type);
   h265_params->IdrPicFlag = GST_H265_IS_NAL_TYPE_IDR (slice->nalu.type);
 
-  if (!self->last_sps || self->last_sps != sps) {
-    GST_DEBUG_OBJECT (self, "Update params from SPS and PPS");
-    gst_nv_h265_dec_picture_params_from_sps (self, sps, h265_params);
-    if (!gst_nv_h265_dec_picture_params_from_pps (self, pps, h265_params)) {
-      GST_ERROR_OBJECT (self, "Couldn't copy pps");
-      return GST_FLOW_ERROR;
-    }
-    self->last_sps = sps;
-    self->last_pps = pps;
-  } else if (!self->last_pps || self->last_pps != pps) {
-    GST_DEBUG_OBJECT (self, "Update params from PPS");
-    if (!gst_nv_h265_dec_picture_params_from_pps (self, pps, h265_params)) {
-      GST_ERROR_OBJECT (self, "Couldn't copy pps");
-      return GST_FLOW_ERROR;
-    }
-    self->last_pps = pps;
-  } else {
-    GST_TRACE_OBJECT (self, "SPS and PPS were not updated");
+  gst_nv_h265_dec_picture_params_from_sps (self, sps, h265_params);
+  if (!gst_nv_h265_dec_picture_params_from_pps (self, pps, h265_params)) {
+    GST_ERROR_OBJECT (self, "Couldn't copy pps");
+    return GST_FLOW_ERROR;
   }
 
   /* Fill reference */
