@@ -82,6 +82,8 @@ struct _GstH265DecoderPrivate
   guint8 cur_source_scan_type;
   guint8 cur_duplicate_flag;
 
+  gboolean no_output_of_prior_pics_flag;
+
   /* vps/sps/pps of the current slice */
   const GstH265VPS *active_vps;
   const GstH265SPS *active_sps;
@@ -123,7 +125,19 @@ struct _GstH265DecoderPrivate
   GArray *ref_pic_list_tmp;
   GArray *ref_pic_list0;
   GArray *ref_pic_list1;
+
+  GArray *nalu;
 };
+
+typedef struct
+{
+  union
+  {
+    GstH265SPS sps;
+    GstH265Slice slice;
+  } unit;
+  gboolean is_slice;
+} GstH265DecoderNalUnit;
 
 #define UPDATE_FLOW_RETURN(ret,new_ret) G_STMT_START { \
   if (*(ret) == GST_FLOW_OK) \
@@ -156,6 +170,7 @@ static void gst_h265_decoder_clear_dpb (GstH265Decoder * self, gboolean flush);
 static GstFlowReturn gst_h265_decoder_drain_internal (GstH265Decoder * self);
 static GstFlowReturn
 gst_h265_decoder_start_current_picture (GstH265Decoder * self);
+static void gst_h265_decoder_clear_nalu (GstH265DecoderNalUnit * nalu);
 
 static void
 gst_h265_decoder_class_init (GstH265DecoderClass * klass)
@@ -192,6 +207,10 @@ gst_h265_decoder_init (GstH265Decoder * self)
       sizeof (GstH265Picture *), 32);
   priv->ref_pic_list1 = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH265Picture *), 32);
+  priv->nalu = g_array_sized_new (FALSE, TRUE, sizeof (GstH265DecoderNalUnit),
+      8);
+  g_array_set_clear_func (priv->nalu,
+      (GDestroyNotify) gst_h265_decoder_clear_nalu);
 }
 
 static void
@@ -203,6 +222,7 @@ gst_h265_decoder_finalize (GObject * object)
   g_array_unref (priv->ref_pic_list_tmp);
   g_array_unref (priv->ref_pic_list0);
   g_array_unref (priv->ref_pic_list1);
+  g_array_unref (priv->nalu);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -247,24 +267,6 @@ gst_h265_decoder_stop (GstVideoDecoder * decoder)
   gst_h265_decoder_clear_ref_pic_sets (self);
 
   return TRUE;
-}
-
-static GstFlowReturn
-gst_h265_decoder_parse_vps (GstH265Decoder * self, GstH265NalUnit * nalu)
-{
-  GstH265DecoderPrivate *priv = self->priv;
-  GstH265VPS vps;
-  GstH265ParserResult pres;
-
-  pres = gst_h265_parser_parse_vps (priv->parser, nalu, &vps);
-  if (pres != GST_H265_PARSER_OK) {
-    GST_WARNING_OBJECT (self, "Failed to parse VPS, result %d", pres);
-    return GST_FLOW_ERROR;
-  }
-
-  GST_LOG_OBJECT (self, "VPS parsed");
-
-  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -340,6 +342,14 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
 
     g_assert (klass->new_sequence);
 
+    if (priv->no_output_of_prior_pics_flag) {
+      gst_h265_decoder_clear_dpb (self, FALSE);
+    } else {
+      ret = gst_h265_decoder_drain_internal (self);
+      if (ret != GST_FLOW_OK)
+        return ret;
+    }
+
     ret = klass->new_sequence (self, sps, max_dpb_size);
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (self, "subclass does not want accept new sequence");
@@ -371,53 +381,7 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
   return GST_FLOW_OK;
 }
 
-static GstFlowReturn
-gst_h265_decoder_parse_sps (GstH265Decoder * self, GstH265NalUnit * nalu)
-{
-  GstH265DecoderPrivate *priv = self->priv;
-  GstH265SPS sps;
-  GstH265ParserResult pres;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  pres = gst_h265_parse_sps (priv->parser, nalu, &sps, TRUE);
-  if (pres != GST_H265_PARSER_OK) {
-    GST_WARNING_OBJECT (self, "Failed to parse SPS, result %d", pres);
-    return GST_FLOW_ERROR;
-  }
-
-  GST_LOG_OBJECT (self, "SPS parsed");
-
-  ret = gst_h265_decoder_process_sps (self, &sps);
-  if (ret != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (self, "Failed to process SPS");
-  } else if (gst_h265_parser_update_sps (priv->parser,
-          &sps) != GST_H265_PARSER_OK) {
-    GST_WARNING_OBJECT (self, "Failed to update SPS");
-    ret = GST_FLOW_ERROR;
-  }
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_h265_decoder_parse_pps (GstH265Decoder * self, GstH265NalUnit * nalu)
-{
-  GstH265DecoderPrivate *priv = self->priv;
-  GstH265PPS pps;
-  GstH265ParserResult pres;
-
-  pres = gst_h265_parser_parse_pps (priv->parser, nalu, &pps);
-  if (pres != GST_H265_PARSER_OK) {
-    GST_WARNING_OBJECT (self, "Failed to parse PPS, result %d", pres);
-    return GST_FLOW_ERROR;
-  }
-
-  GST_LOG_OBJECT (self, "PPS parsed");
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
+static GstH265ParserResult
 gst_h265_decoder_parse_sei (GstH265Decoder * self, GstH265NalUnit * nalu)
 {
   GstH265DecoderPrivate *priv = self->priv;
@@ -432,7 +396,7 @@ gst_h265_decoder_parse_sei (GstH265Decoder * self, GstH265NalUnit * nalu)
     /* XXX: Ignore error from SEI parsing, it might be malformed bitstream,
      * or our fault. But shouldn't be critical  */
     g_clear_pointer (&messages, g_array_unref);
-    return GST_FLOW_OK;
+    return GST_H265_PARSER_OK;
   }
 
   for (i = 0; i < messages->len; i++) {
@@ -457,7 +421,7 @@ gst_h265_decoder_parse_sei (GstH265Decoder * self, GstH265NalUnit * nalu)
   g_array_free (messages, TRUE);
   GST_LOG_OBJECT (self, "SEI parsed");
 
-  return GST_FLOW_OK;
+  return GST_H265_PARSER_OK;
 }
 
 static void
@@ -631,31 +595,12 @@ gst_h265_decoder_preprocess_slice (GstH265Decoder * self, GstH265Slice * slice)
 }
 
 static GstFlowReturn
-gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu)
+gst_h265_decoder_process_slice (GstH265Decoder * self, GstH265Slice * slice)
 {
   GstH265DecoderPrivate *priv = self->priv;
-  GstH265ParserResult pres = GST_H265_PARSER_OK;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  memset (&priv->current_slice, 0, sizeof (GstH265Slice));
-
-  pres = gst_h265_parser_parse_slice_hdr (priv->parser, nalu,
-      &priv->current_slice.header);
-
-  if (pres != GST_H265_PARSER_OK) {
-    GST_ERROR_OBJECT (self, "Failed to parse slice header, ret %d", pres);
-    memset (&priv->current_slice, 0, sizeof (GstH265Slice));
-
-    return GST_FLOW_ERROR;
-  }
-
-  /* NOTE: gst_h265_parser_parse_slice_hdr() allocates array
-   * GstH265SliceHdr::entry_point_offset_minus1 but we don't use it
-   * in this h265decoder baseclass at the moment
-   */
-  gst_h265_slice_hdr_free (&priv->current_slice.header);
-
-  priv->current_slice.nalu = *nalu;
+  priv->current_slice = *slice;
 
   if (priv->current_slice.header.dependent_slice_segment_flag) {
     GstH265SliceHdr *slice_hdr = &priv->current_slice.header;
@@ -713,24 +658,99 @@ gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu)
   return gst_h265_decoder_decode_slice (self);
 }
 
-static GstFlowReturn
-gst_h265_decoder_decode_nal (GstH265Decoder * self, GstH265NalUnit * nalu)
+static GstH265ParserResult
+gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu)
 {
   GstH265DecoderPrivate *priv = self->priv;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstH265ParserResult pres;
+  GstH265Slice slice;
+  GstH265DecoderNalUnit decoder_nalu;
+
+  memset (&slice, 0, sizeof (GstH265Slice));
+
+  pres = gst_h265_parser_parse_slice_hdr (priv->parser, nalu, &slice.header);
+  if (pres != GST_H265_PARSER_OK)
+    return pres;
+
+  /* NOTE: gst_h265_parser_parse_slice_hdr() allocates array
+   * GstH265SliceHdr::entry_point_offset_minus1 but we don't use it
+   * in this h265decoder baseclass at the moment
+   */
+  gst_h265_slice_hdr_free (&priv->current_slice.header);
+  slice.nalu = *nalu;
+
+  if (nalu->type >= GST_H265_NAL_SLICE_BLA_W_LP &&
+      nalu->type <= GST_H265_NAL_SLICE_CRA_NUT) {
+    slice.rap_pic_flag = TRUE;
+  }
+
+  /* NoRaslOutputFlag == 1 if the current picture is
+   * 1) an IDR picture
+   * 2) a BLA picture
+   * 3) a CRA picture that is the first access unit in the bitstream
+   * 4) first picture that follows an end of sequence NAL unit in decoding order
+   * 5) has HandleCraAsBlaFlag == 1 (set by external means, so not considering )
+   */
+  if (GST_H265_IS_NAL_TYPE_IDR (nalu->type) ||
+      GST_H265_IS_NAL_TYPE_BLA (nalu->type) ||
+      (GST_H265_IS_NAL_TYPE_CRA (nalu->type) && priv->new_bitstream) ||
+      priv->prev_nal_is_eos) {
+    slice.no_rasl_output_flag = TRUE;
+  }
+
+  if (GST_H265_IS_NAL_TYPE_IRAP (nalu->type)) {
+    slice.intra_pic_flag = TRUE;
+
+    if (slice.no_rasl_output_flag && !priv->new_bitstream) {
+      /* C 3.2 */
+      slice.clear_dpb = TRUE;
+      if (nalu->type == GST_H265_NAL_SLICE_CRA_NUT) {
+        slice.no_output_of_prior_pics_flag = TRUE;
+      } else {
+        slice.no_output_of_prior_pics_flag =
+            slice.header.no_output_of_prior_pics_flag;
+      }
+    }
+  }
+
+  if (slice.no_output_of_prior_pics_flag)
+    priv->no_output_of_prior_pics_flag = TRUE;
+
+  decoder_nalu.unit.slice = slice;
+  decoder_nalu.is_slice = TRUE;
+  g_array_append_val (priv->nalu, decoder_nalu);
+
+  return GST_H265_PARSER_OK;
+}
+
+static GstH265ParserResult
+gst_h265_decoder_parse_nalu (GstH265Decoder * self, GstH265NalUnit * nalu)
+{
+  GstH265DecoderPrivate *priv = self->priv;
+  GstH265VPS vps;
+  GstH265SPS sps;
+  GstH265PPS pps;
+  GstH265ParserResult ret = GST_H265_PARSER_OK;
+  GstH265DecoderNalUnit decoder_nalu;
 
   GST_LOG_OBJECT (self, "Parsed nal type: %d, offset %d, size %d",
       nalu->type, nalu->offset, nalu->size);
 
   switch (nalu->type) {
     case GST_H265_NAL_VPS:
-      ret = gst_h265_decoder_parse_vps (self, nalu);
+      ret = gst_h265_parser_parse_vps (priv->parser, nalu, &vps);
       break;
     case GST_H265_NAL_SPS:
-      ret = gst_h265_decoder_parse_sps (self, nalu);
+      ret = gst_h265_parser_parse_sps (priv->parser, nalu, &sps, TRUE);
+      if (ret != GST_H265_PARSER_OK)
+        break;
+
+      memset (&decoder_nalu, 0, sizeof (GstH265DecoderNalUnit));
+      decoder_nalu.unit.sps = sps;
+      g_array_append_val (priv->nalu, decoder_nalu);
       break;
     case GST_H265_NAL_PPS:
-      ret = gst_h265_decoder_parse_pps (self, nalu);
+      ret = gst_h265_parser_parse_pps (priv->parser, nalu, &pps);
       break;
     case GST_H265_NAL_PREFIX_SEI:
     case GST_H265_NAL_SUFFIX_SEI:
@@ -767,6 +787,16 @@ gst_h265_decoder_decode_nal (GstH265Decoder * self, GstH265NalUnit * nalu)
   }
 
   return ret;
+}
+
+static GstFlowReturn
+gst_h265_decoder_decode_nalu (GstH265Decoder * self,
+    GstH265DecoderNalUnit * nalu)
+{
+  if (!nalu->is_slice)
+    return gst_h265_decoder_process_sps (self, &nalu->unit.sps);
+
+  return gst_h265_decoder_process_slice (self, &nalu->unit.slice);
 }
 
 static void
@@ -823,6 +853,9 @@ gst_h265_decoder_parse_codec_data (GstH265Decoder * self, const guint8 * data,
   GstH265ParserResult pres;
   GstH265NalUnit nalu;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstH265VPS vps;
+  GstH265SPS sps;
+  GstH265PPS pps;
 
   /* parse the hvcC data */
   if (size < 23) {
@@ -860,24 +893,30 @@ gst_h265_decoder_parse_codec_data (GstH265Decoder * self, const guint8 * data,
 
       switch (nalu.type) {
         case GST_H265_NAL_VPS:
-          ret = gst_h265_decoder_parse_vps (self, &nalu);
-          if (ret != GST_FLOW_OK) {
+          pres = gst_h265_parser_parse_vps (priv->parser, &nalu, &vps);
+          if (pres != GST_H265_PARSER_OK) {
             GST_WARNING_OBJECT (self, "Failed to parse VPS");
-            return ret;
+            return GST_FLOW_ERROR;
           }
           break;
         case GST_H265_NAL_SPS:
-          ret = gst_h265_decoder_parse_sps (self, &nalu);
-          if (ret != GST_FLOW_OK) {
+          pres = gst_h265_parser_parse_sps (priv->parser, &nalu, &sps, TRUE);
+          if (pres != GST_H265_PARSER_OK) {
             GST_WARNING_OBJECT (self, "Failed to parse SPS");
+            return GST_FLOW_ERROR;
+          }
+
+          ret = gst_h265_decoder_process_sps (self, &sps);
+          if (ret != GST_FLOW_OK) {
+            GST_WARNING_OBJECT (self, "Failed to process SPS");
             return ret;
           }
           break;
         case GST_H265_NAL_PPS:
-          ret = gst_h265_decoder_parse_pps (self, &nalu);
-          if (ret != GST_FLOW_OK) {
+          pres = gst_h265_parser_parse_pps (priv->parser, &nalu, &pps);
+          if (pres != GST_H265_PARSER_OK) {
             GST_WARNING_OBJECT (self, "Failed to parse PPS");
-            return ret;
+            return GST_FLOW_ERROR;
           }
           break;
         default:
@@ -1010,26 +1049,11 @@ gst_h265_decoder_fill_picture_from_slice (GstH265Decoder * self,
   const GstH265SliceHdr *slice_hdr = &slice->header;
   const GstH265NalUnit *nalu = &slice->nalu;
 
-  if (nalu->type >= GST_H265_NAL_SLICE_BLA_W_LP &&
-      nalu->type <= GST_H265_NAL_SLICE_CRA_NUT)
-    picture->RapPicFlag = TRUE;
-
-  /* NoRaslOutputFlag == 1 if the current picture is
-   * 1) an IDR picture
-   * 2) a BLA picture
-   * 3) a CRA picture that is the first access unit in the bitstream
-   * 4) first picture that follows an end of sequence NAL unit in decoding order
-   * 5) has HandleCraAsBlaFlag == 1 (set by external means, so not considering )
-   */
-  if (GST_H265_IS_NAL_TYPE_IDR (nalu->type) ||
-      GST_H265_IS_NAL_TYPE_BLA (nalu->type) ||
-      (GST_H265_IS_NAL_TYPE_CRA (nalu->type) && priv->new_bitstream) ||
-      priv->prev_nal_is_eos) {
-    picture->NoRaslOutputFlag = TRUE;
-  }
-
-  if (GST_H265_IS_NAL_TYPE_IRAP (nalu->type)) {
-    picture->IntraPicFlag = TRUE;
+  picture->RapPicFlag = slice->rap_pic_flag;
+  picture->NoRaslOutputFlag = slice->no_rasl_output_flag;
+  picture->IntraPicFlag = slice->intra_pic_flag;
+  picture->NoOutputOfPriorPicsFlag = slice->no_output_of_prior_pics_flag;
+  if (picture->IntraPicFlag) {
     priv->associated_irap_NoRaslOutputFlag = picture->NoRaslOutputFlag;
   }
 
@@ -1555,21 +1579,12 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
     GstH265Picture * picture)
 {
   GstH265DecoderPrivate *priv = self->priv;
-  const GstH265SliceHdr *slice_hdr = &slice->header;
-  const GstH265NalUnit *nalu = &slice->nalu;
   const GstH265SPS *sps = priv->active_sps;
   GstH265Picture *to_output;
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* C 3.2 */
-  if (GST_H265_IS_NAL_TYPE_IRAP (nalu->type) && picture->NoRaslOutputFlag
-      && !priv->new_bitstream) {
-    if (nalu->type == GST_H265_NAL_SLICE_CRA_NUT)
-      picture->NoOutputOfPriorPicsFlag = TRUE;
-    else
-      picture->NoOutputOfPriorPicsFlag =
-          slice_hdr->no_output_of_prior_pics_flag;
-
+  if (slice->clear_dpb) {
     if (picture->NoOutputOfPriorPicsFlag) {
       GST_DEBUG_OBJECT (self, "Clear dpb");
       gst_h265_decoder_clear_dpb (self, FALSE);
@@ -1742,6 +1757,9 @@ gst_h265_decoder_reset_frame_state (GstH265Decoder * self)
   priv->cur_pic_struct = GST_H265_SEI_PIC_STRUCT_FRAME;
   priv->cur_source_scan_type = 2;
   priv->cur_duplicate_flag = 0;
+  priv->no_output_of_prior_pics_flag = FALSE;
+  priv->current_frame = NULL;
+  g_array_set_size (priv->nalu, 0);
 }
 
 static GstFlowReturn
@@ -1755,15 +1773,16 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
   GstH265ParserResult pres;
   GstMapInfo map;
   GstFlowReturn decode_ret = GST_FLOW_OK;
+  guint i;
 
   GST_LOG_OBJECT (self,
       "handle frame, PTS: %" GST_TIME_FORMAT ", DTS: %"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (in_buf)),
       GST_TIME_ARGS (GST_BUFFER_DTS (in_buf)));
 
-  priv->current_frame = frame;
-
   gst_h265_decoder_reset_frame_state (self);
+
+  priv->current_frame = frame;
 
   if (!gst_buffer_map (in_buf, &map, GST_MAP_READ)) {
     GST_ELEMENT_ERROR (self, RESOURCE, READ,
@@ -1776,8 +1795,10 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
     pres = gst_h265_parser_identify_nalu_hevc (priv->parser,
         map.data, 0, map.size, priv->nal_length_size, &nalu);
 
-    while (pres == GST_H265_PARSER_OK && decode_ret == GST_FLOW_OK) {
-      decode_ret = gst_h265_decoder_decode_nal (self, &nalu);
+    while (pres == GST_H265_PARSER_OK) {
+      pres = gst_h265_decoder_parse_nalu (self, &nalu);
+      if (pres != GST_H265_PARSER_OK)
+        break;
 
       pres = gst_h265_parser_identify_nalu_hevc (priv->parser,
           map.data, nalu.offset + nalu.size, map.size, priv->nal_length_size,
@@ -1790,19 +1811,26 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
     if (pres == GST_H265_PARSER_NO_NAL_END)
       pres = GST_H265_PARSER_OK;
 
-    while (pres == GST_H265_PARSER_OK && decode_ret == GST_FLOW_OK) {
-      decode_ret = gst_h265_decoder_decode_nal (self, &nalu);
+    while (pres == GST_H265_PARSER_OK) {
+      pres = gst_h265_decoder_parse_nalu (self, &nalu);
+      if (pres != GST_H265_PARSER_OK)
+        break;
 
       pres = gst_h265_parser_identify_nalu (priv->parser,
           map.data, nalu.offset + nalu.size, map.size, &nalu);
-
       if (pres == GST_H265_PARSER_NO_NAL_END)
         pres = GST_H265_PARSER_OK;
     }
   }
 
+  for (i = 0; i < priv->nalu->len && decode_ret == GST_FLOW_OK; i++) {
+    GstH265DecoderNalUnit *decoder_nalu =
+        &g_array_index (priv->nalu, GstH265DecoderNalUnit, i);
+    decode_ret = gst_h265_decoder_decode_nalu (self, decoder_nalu);
+  }
+
   gst_buffer_unmap (in_buf, &map);
-  priv->current_frame = NULL;
+  gst_h265_decoder_reset_frame_state (self);
 
   if (decode_ret != GST_FLOW_OK) {
     if (decode_ret == GST_FLOW_ERROR) {
@@ -1830,6 +1858,15 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
   }
 
   return decode_ret;
+}
+
+static void
+gst_h265_decoder_clear_nalu (GstH265DecoderNalUnit * nalu)
+{
+  if (!nalu)
+    return;
+
+  memset (nalu, 0, sizeof (GstH265DecoderNalUnit));
 }
 
 /**

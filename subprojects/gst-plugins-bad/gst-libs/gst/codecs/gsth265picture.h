@@ -48,6 +48,13 @@ struct _GstH265Slice
 
   /* parsed nal unit (doesn't take ownership of raw data) */
   GstH265NalUnit nalu;
+
+  /*< private >*/
+  gboolean rap_pic_flag;
+  gboolean no_rasl_output_flag;
+  gboolean no_output_of_prior_pics_flag;
+  gboolean clear_dpb;
+  gboolean intra_pic_flag;
 };
 
 struct _GstH265Picture
