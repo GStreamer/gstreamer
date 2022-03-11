@@ -631,8 +631,7 @@ gst_h265_decoder_preprocess_slice (GstH265Decoder * self, GstH265Slice * slice)
 }
 
 static GstFlowReturn
-gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu,
-    GstClockTime pts)
+gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu)
 {
   GstH265DecoderPrivate *priv = self->priv;
   GstH265ParserResult pres = GST_H265_PARSER_OK;
@@ -685,7 +684,6 @@ gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu,
     g_assert (priv->current_frame);
 
     picture = gst_h265_picture_new ();
-    picture->pts = pts;
     /* This allows accessing the frame from the picture. */
     picture->system_frame_number = priv->current_frame->system_frame_number;
 
@@ -716,8 +714,7 @@ gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu,
 }
 
 static GstFlowReturn
-gst_h265_decoder_decode_nal (GstH265Decoder * self, GstH265NalUnit * nalu,
-    GstClockTime pts)
+gst_h265_decoder_decode_nal (GstH265Decoder * self, GstH265NalUnit * nalu)
 {
   GstH265DecoderPrivate *priv = self->priv;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -755,7 +752,7 @@ gst_h265_decoder_decode_nal (GstH265Decoder * self, GstH265NalUnit * nalu,
     case GST_H265_NAL_SLICE_IDR_W_RADL:
     case GST_H265_NAL_SLICE_IDR_N_LP:
     case GST_H265_NAL_SLICE_CRA_NUT:
-      ret = gst_h265_decoder_parse_slice (self, nalu, pts);
+      ret = gst_h265_decoder_parse_slice (self, nalu);
       priv->new_bitstream = FALSE;
       priv->prev_nal_is_eos = FALSE;
       break;
@@ -1780,8 +1777,7 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
         map.data, 0, map.size, priv->nal_length_size, &nalu);
 
     while (pres == GST_H265_PARSER_OK && decode_ret == GST_FLOW_OK) {
-      decode_ret = gst_h265_decoder_decode_nal (self,
-          &nalu, GST_BUFFER_PTS (in_buf));
+      decode_ret = gst_h265_decoder_decode_nal (self, &nalu);
 
       pres = gst_h265_parser_identify_nalu_hevc (priv->parser,
           map.data, nalu.offset + nalu.size, map.size, priv->nal_length_size,
@@ -1795,8 +1791,7 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
       pres = GST_H265_PARSER_OK;
 
     while (pres == GST_H265_PARSER_OK && decode_ret == GST_FLOW_OK) {
-      decode_ret = gst_h265_decoder_decode_nal (self,
-          &nalu, GST_BUFFER_PTS (in_buf));
+      decode_ret = gst_h265_decoder_decode_nal (self, &nalu);
 
       pres = gst_h265_parser_identify_nalu (priv->parser,
           map.data, nalu.offset + nalu.size, map.size, &nalu);

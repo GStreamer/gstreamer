@@ -51,7 +51,6 @@ gst_h265_picture_new (void)
 
   pic = g_new0 (GstH265Picture, 1);
 
-  pic->pts = GST_CLOCK_TIME_NONE;
   pic->pic_struct = GST_H265_SEI_PIC_STRUCT_FRAME;
   /* 0: interlaced, 1: progressive, 2: unspecified, 3: reserved, can be
    * interpreted as 2 */
