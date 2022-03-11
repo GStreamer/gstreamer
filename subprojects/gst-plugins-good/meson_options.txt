@@ -44,6 +44,7 @@ option('wavparse', type : 'feature', value : 'auto')
 option('y4m', type : 'feature', value : 'auto')
 
 # Feature options for plugins with external deps
+option('adaptivedemux2', type : 'feature', value : 'auto', description : '2nd generation adaptive demuxer plugin')
 option('aalib', type : 'feature', value : 'auto', description : 'aalib text console video sink plugin')
 option('bz2', type : 'feature', value : 'auto', description : 'libbz2 support in the matroska plugin')
 option('cairo', type : 'feature', value : 'auto', description : 'Cairo overlay plugin')
@@ -73,6 +74,10 @@ option('twolame', type : 'feature', value : 'auto', description : 'twolame mp2 a
 option('vpx', type : 'feature', value : 'auto', description : 'VP8 and VP9 video codec plugin')
 option('waveform', type : 'feature', value : 'auto', description : 'Windows waveform audio sink plugin')
 option('wavpack', type : 'feature', value : 'auto', description : 'Wavpack audio codec plugin')
+
+# HLS plugin options
+option('hls-crypto', type : 'combo', value : 'auto', choices : ['auto', 'nettle', 'libgcrypt', 'openssl'],
+       description: 'Crypto library to use for HLS plugin')
 
 # rpicamsrc plugin options
 option('rpicamsrc', type : 'feature', value : 'auto', description : 'Raspberry Pi camera module plugin')

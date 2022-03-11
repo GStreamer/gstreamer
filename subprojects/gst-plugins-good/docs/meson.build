@@ -95,6 +95,7 @@ foreach plugin_name: list_plugin_res.stdout().split(':')
       gst_c_sources: [
         '../sys/*/*.[cmh]',
         '../ext/*/*.[ch]',
+        '../ext/*/*/*.[ch]',
         '../gst/*/*.[ch]',
       ],
       gst_c_source_filters: excludes,

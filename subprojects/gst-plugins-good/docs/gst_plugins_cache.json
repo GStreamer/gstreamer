@@ -992,6 +992,426 @@
         "tracers": {},
         "url": "Unknown package origin"
     },
+    "adaptivedemux2": {
+        "description": "Adaptive Streaming 2 plugin",
+        "elements": {
+            "dashdemux2": {
+                "author": "Edward Hervey <edward@centricular.com>\nJan Schmidt <jan@centricular.com>",
+                "description": "Dynamic Adaptive Streaming over HTTP demuxer",
+                "hierarchy": [
+                    "GstDashDemux2",
+                    "GstAdaptiveDemux2",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Codec/Demuxer/Adaptive",
+                "long-name": "DASH Demuxer",
+                "pad-templates": {
+                    "audio_%%02u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "sink": {
+                        "caps": "application/dash+xml:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "subtitle_%%02u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "video_%%02u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "properties": {
+                    "max-bitrate": {
+                        "blurb": "Max of bitrate supported by target video decoder (0 = no maximum)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-video-framerate": {
+                        "blurb": "Max video framerate to select (0/1 = no maximum)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0/1",
+                        "max": "2147483647/1",
+                        "min": "0/1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstFraction",
+                        "writable": true
+                    },
+                    "max-video-height": {
+                        "blurb": "Max video height to select (0 = no maximum)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-video-width": {
+                        "blurb": "Max video width to select (0 = no maximum)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "presentation-delay": {
+                        "blurb": "Default presentation delay (in seconds, milliseconds or fragments) (e.g. 12s, 2500ms, 3f)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "10s",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "primary + 1"
+            },
+            "hlsdemux2": {
+                "author": "Edward Hervey <edward@centricular.com>\nJan Schmidt <jan@centricular.com>",
+                "description": "HTTP Live Streaming demuxer",
+                "hierarchy": [
+                    "GstHLSDemux2",
+                    "GstAdaptiveDemux2",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Codec/Demuxer/Adaptive",
+                "long-name": "HLS Demuxer",
+                "pad-templates": {
+                    "audio_%%02u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "sink": {
+                        "caps": "application/x-hls:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "subtitle_%%02u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "video_%%02u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "properties": {
+                    "start-bitrate": {
+                        "blurb": "Initial bitrate to use to choose first alternate (0 = automatic) (bits/s)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "primary + 1"
+            },
+            "mssdemux2": {
+                "author": "Thiago Santos <thiago.sousa.santos@collabora.com>",
+                "description": "Parse and demultiplex a Smooth Streaming manifest into audio and video streams",
+                "hierarchy": [
+                    "GstMssDemux2",
+                    "GstAdaptiveDemux2",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "klass": "Codec/Demuxer/Adaptive",
+                "long-name": "Smooth Streaming demuxer (v2)",
+                "pad-templates": {
+                    "audio_%%02u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "sink": {
+                        "caps": "application/vnd.ms-sstr+xml:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "subtitle_%%02u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "video_%%02u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "rank": "primary + 1"
+            }
+        },
+        "filename": "gstadaptivedemux2",
+        "license": "LGPL",
+        "other-types": {
+            "GstAdaptiveDemux2": {
+                "hierarchy": [
+                    "GstAdaptiveDemux2",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy"
+                ],
+                "kind": "object",
+                "properties": {
+                    "bandwidth-target-ratio": {
+                        "blurb": "Limit of the available bitrate to use when switching to alternates",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0.8",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gfloat",
+                        "writable": true
+                    },
+                    "connection-bitrate": {
+                        "blurb": "Network connection speed to use (0 = automatic) (bits/s)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "connection-speed": {
+                        "blurb": "Network connection speed to use in kbps (0 = calculate from downloaded fragments)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "4294967",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "current-bandwidth": {
+                        "blurb": "Report of current download bandwidth (based on arriving data) (bits/s)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": false
+                    },
+                    "current-level-time-audio": {
+                        "blurb": "Currently buffered level of audio track(s) (ns)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
+                    "current-level-time-video": {
+                        "blurb": "Currently buffered level of video track(s) (ns)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
+                    "high-watermark-fragments": {
+                        "blurb": "High watermark for parsed data above which downloads are paused (in fragments, 0=disable)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "3.40282e+38",
+                        "min": "0",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
+                    "high-watermark-time": {
+                        "blurb": "High watermark for parsed data above which downloads are paused (in ns, 0=disable)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "30000000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "low-watermark-fragments": {
+                        "blurb": "Low watermark for parsed data below which downloads are resumed (in fragments, 0=disable)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "3.40282e+38",
+                        "min": "0",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
+                    "low-watermark-time": {
+                        "blurb": "Low watermark for parsed data below which downloads are resumed (in ns, 0=disable)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "3000000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "max-bitrate": {
+                        "blurb": "Maximum bitrate to use when switching to alternates (bits/s)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "max-buffering-time": {
+                        "blurb": "Upper limit on the high watermark for parsed data, above which downloads are paused (in ns, 0=disable)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "30000000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "min-bitrate": {
+                        "blurb": "Minimum bitrate to use when switching to alternates (bits/s)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    }
+                }
+            }
+        },
+        "package": "GStreamer Good Plug-ins",
+        "source": "gst-plugins-good",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
     "alaw": {
         "description": "ALaw audio conversion routines",
         "elements": {

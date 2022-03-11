@@ -96,6 +96,14 @@ void _soup_message_disable_feature (SoupMessage *msg, GType feature_type);
 const char *_soup_message_headers_get_content_type (SoupMessageHeaders *hdrs,
                                                     GHashTable **params);
 
+#ifdef BUILDING_ADAPTIVEDEMUX2
+gboolean _soup_message_headers_get_content_range (SoupMessageHeaders *hdrs,
+                                                   goffset *start, goffset *end,
+                                                   goffset *total_length);
+
+void _soup_message_headers_set_range (SoupMessageHeaders *hdrs, goffset start, goffset end);
+#endif
+
 void _soup_auth_authenticate (SoupAuth *auth, const char *username,
                               const char *password);
 
