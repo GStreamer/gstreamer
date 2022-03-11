@@ -855,8 +855,10 @@ normal_bump:
     return TRUE;
   }
 
-  GST_TRACE ("No empty frame buffer, but lowest poc %d > current poc %d,"
-      " no need bumping.", lowest_poc, to_insert->pic_order_cnt);
+  if (to_insert) {
+    GST_TRACE ("No empty frame buffer, but lowest poc %d > current poc %d,"
+        " no need bumping.", lowest_poc, to_insert->pic_order_cnt);
+  }
 
   return FALSE;
 }
