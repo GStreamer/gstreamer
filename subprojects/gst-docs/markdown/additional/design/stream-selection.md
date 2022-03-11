@@ -11,10 +11,16 @@ Since 1.10:
 * `GST_EVENT_SELECT_STREAMS`, `GST_EVENT_STREAM_COLLECTION`,
   `GST_MESSAGE_STREAMS_SELECTED`, `GST_MESSAGE_STREAM_COLLECTION`
 * `GstStream` present in `GST_EVENT_STREAM_START`
+* `GST_BIN_FLAG_STREAMS_AWARE`
+
+Since 1.22:
+* `gst_query_new_selectable()`
+* `gst_query_set_selectable()`
+* `gst_query_parse_selectable()`
 
 Initial version: June 2015 (Edward Hervey)
 
-Last reviewed: May 2020 (Edward Hervey)
+Last reviewed: March 2022 (Edward Hervey)
 
 
 ##  Background
@@ -89,8 +95,9 @@ This new API is *intended* to address the use cases described in this section:
    https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/118)
 
 
-**FIXME** - need some use cases indicating what alternate streams in HLS might
- require - what are the possibilities?
+6. Playing an adaptive stream (HLS or DASH), the user can know the various
+   streams it can select, and only the required streams will be downloaded. This
+   is independent of the bitrate selection mechanism.
 
 
 ## Design Overview
@@ -104,7 +111,8 @@ Stream selection in GStreamer is implemented in several parts:
 4. Messages informing the user/application about the available streams and
    current status: `GST_MESSAGE_STREAM_COLLECTION` and
    `GST_MESSAGE_STREAMS_SELECTED`
-
+5. A field on `GST_EVENT_SELECT_STREAMS` to inform downstream elements that a
+   certain element can handle the stream selection itself.
 
 ##  GstStream objects
 
@@ -259,6 +267,12 @@ bus (via a `GST_MESSAGE_COLLECTION`) and on each pad (via a
 That new collection must be posted on the bus *before* the changes are made
 available. i.e. before pads corresponding to that selection are added/removed.
 
+If an element can handle selecting a sub-set of those streams (for example a
+HLS/DASH demuxer which only download the required streams), it can inform
+downstream elements by answer the `GST_QUERY_SELECTABLE` with `TRUE`. It should
+therefore be able to handle `GST_EVENT_SELECT_STREAMS` at any point in time
+(including while posting the initial collection on the bus).
+
 In order to be backwards-compatible and support elements that don't create
 streams/collection yet, the `parsebin` element (used by `decodebin3`) will
 automatically create the stream and collection if not provided by the elements
@@ -287,6 +301,25 @@ pads being added/removed from an element.
 
 This allows providing stream listing/selection for any demuxer-like element even
 if it doesn't implement the `GstStreamCollection` usage.
+
+
+## Adding and removing pads dynamically
+
+API:
+
+``` c
+GST_BIN_FLAG_STREAMS_AWARE
+```
+
+If an element is within a `GstBin` with the `GST_BIN_FLAG_STREAMS_AWARE` set, it
+can add and remove streams (and corresponding source `GstPad`) dynamically. It
+does **not** have to (re)add all pads of the new stream set, emit `no-more-pads`
+and then remove olds source pads.
+
+This method is more efficient than the legacy behaviour, but is opt-in. Several
+elements (`playbin3`, `decodebin3`, `urisourcebin` and more) have this flag set
+by default. Application developers creating custom `GstBin` can set the flag to
+make compatible elements add/remove pads dynamically.
 
 
 ## Stream selection event
@@ -349,7 +382,7 @@ activate/deactivate streams need to look at the list of stream-id contained in
 the event and decide if they need to do some action.
 
 In the standard demuxer case (demuxing and exposing all streams), there is
-nothing to do by default.
+nothing to do by default (see below).
 
 In `decodebin3`, activating or deactivating streams is taken care of by linking
 only the streams present in the event to decoders and output ghostpad.
@@ -361,6 +394,27 @@ those streams.
 Containers that receive the event (via `GstElement::send_event()`) should pass
 it to any elements with no downstream peers, so that streams can be configured
 during pre-roll before a pipeline is completely linked down to sinks.
+
+
+#### Which elements should handle stream-selection ?
+
+By default demuxers *must* process and expose all streams contained within the
+multiplex. This is to allow downstream stream switching to happen as fast as
+possible.
+
+The only exception to this is if extra processing (such as network download) can
+be avoided upstream as is the case with HLS/DASH sources. Those elements inform
+other downstream elements of this capability by replying to the
+`GST_QUERY_SELECTABLE`. They are also responsible for selecting a default
+selection of streams to output (one of each available `GstStreamType`) if no
+`GST_EVENT_SELECT_STREAMS` was received before.
+
+Furthermore, for all elements, stream-selection can only happen if the `GstBin`
+they are in has the `GST_BIN_FLAG_STREAMS_AWARE` flag set.
+
+Later design/API will be researched to allow use-cases where regular demuxers
+could completely disable outputting some of the contained streams (to allow more
+efficient I/O and memory usage).
 
 
 ## decodebin3 usage and example
@@ -490,7 +544,7 @@ use-case than the simple playback one. Such examples could be :
   ...
 
 
-### Changes coming from upstream
+### Changes of stream collection
 
 At some point in time, a PMT change happens. Let's assume a change in
 video-codec and/or PID.
@@ -525,31 +579,40 @@ pad as the previous video stream in a gapless fashion.
 
 ### Further examples
 
-##### HLS alternates
-
-**NOTE:** Not properly handled yet.
+##### DASH/HLS alternates (selection handled upstream of decodebin3)
 
 There is a main (multi-bitrate or not) stream with audio and video interleaved
 in MPEG-TS. The manifest also indicates the presence of alternate language
-audio-only streams. `hlsdemux` would expose one collection containing:
+audio-only streams.
 
-1. The main A+V CONTAINER stream (MPEG-TS), initially active, downloaded and
-   exposed as a pad
- 
-2. The alternate audio-only streams, initially inactive and not exposed as
-   pads. The `tsdemux` element connected to the first stream will also expose a
-   collection containing:
-   * A video stream
-   * An audio stream
+* (main) variant stream : `video`, `audio-eng`
+* alternate rendition streams : `audio-kor`, `audio-fre`
+
+A new element, `hlsdemux2`, used within `urisourcebin`, exposes one collection
+containing all individual elementary streams (regardless of bitrates). This is
+based on the contents of the manifest:
+
+* `[ video , audio-eng, audio-kor, audio-fre ]`
+
+Similar to other demuxers, it will post the collection on the bus, and will
+add/remove pads dynamically based on `GST_EVENT_SELECT_STREAMS` (or make a
+default choice if no event was received).
+
+Since it can offer a selection of "elementary" streams, it will internally
+demux, parse and buffer the requested streams.
+
+If ever it receives the `GST_QUERY_SELECTABLE`, it will set the `selectable`
+field of that query to TRUE. This informs `decodebin3` that it should handle all
+incoming streams and not do any selection (it is done upstream).
 
 ```
-    [ Collection 1 ]         [ Collection 2 ]
-    [  (hlsdemux)  ]         [   (tsdemux)  ]
-    [ upstream:nil ]    /----[ upstream:main]
-    [              ]   /     [              ]
-    [ "main" (A+V) ]<-/      [ "video"  (V) ]  viddec1 : "video"
-    [ "fre"  (A)   ]         [ "eng"    (A) ]  auddec1 : "eng"
-    [ "kor"  (A)   ]         [              ]
+  +-----------+               + decodebin3 -----------------------------+
+  | hlsdemux2 |               |                                         |
+  |           |               |             +------------+              |
+  |           +-   `video`   -+-[parsebin]--+ multiqueue +--[videodec]--[
+  |           +- `audio-eng` -+-[parsebin]--+------------+--[audiodec]--[
+  |           |               |                                         |
+  +-----------+               +-----------------------------------------+
 ```
 
 The user might want to use the korean audio track instead of the default english
@@ -559,19 +622,39 @@ one.
   => SELECT_STREAMS ("video", "kor")
 ```
 
-1) `decodebin3` receives and sends the event further upstream
+0) When `decodebin3` received `GST_EVENT_STREAM_START` on the *initial* incoming
+  streams, it sent a `GST_QUERY_SELECTABLE` which `hlsdemux2` answered
+  succesfully. `decodebin3` therefore knows that the upstream of that stream can
+  handle stream-selection itself.
 
-2) `tsdemux` sees that "video" is part of its current upstream, so adds the
-  corresponding stream-id ("main") to the event and sends it upstream ("main",
-  "video", "kor")
+1) `decodebin3` receives the new `SELECT_STREAMS` event, and knows that upstream
+  can handle stream selection and therefore forwards it upstream.
 
-3) `hlsdemux` receives the event
-  => It activates "kor" in addition to "main"
+2) `hlsdemux2` receives the event, and prepares the `audio-kor` backing stream
+  to be downloaded and returns. `decodebin3` also returns the event as is and
+  doesn't do any selection itself.
 
-4) The event travels back to `decodebin3` which will remember the requested
-  selection. If "kor" is already present it will switch the "eng" stream from
-  the audio decoder to the "kor" stream.  If it appears a bit later, it will
-  wait until that "kor" stream is available before switching
+3) Once `hlsdemux2` has downloaded enough from the target `audio-kor` stream,
+  which it has demuxed, parsed and buffered internally, it will output it to the
+  same output pad (replacing `audio-eng`):
+  * Send a new `GST_EVENT_STREAM_START` containing the information about
+    `audio-kor`
+  * Send the various required events (caps, stream-collection,...)
+  * Send the buffers for the new stream
+
+4) If the incoming stream isn't compatible with the existing `parsebin`,
+  `decodebin3` will reset it so that it reconfigures itself.
+
+
+```
+  +-----------+               + decodebin3 -----------------------------+
+  | hlsdemux2 |               |                                         |
+  |           |               |             +------------+              |
+  |           +-   `video`   -+-[parsebin]--+ multiqueue +--[videodec]--[
+  |           +- `audio-kor` -+-[parsebin]--+------------+--[audiodec]--[
+  |           |               |                                         |
+  +-----------+               +-----------------------------------------+
+```
 
 
 #### Multi-program MPEG-TS
