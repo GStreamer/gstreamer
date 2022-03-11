@@ -450,3 +450,15 @@ qt_window_use_default_fbo (QtGLWindow * qt_window, gboolean useDefaultFbo)
 
   g_mutex_unlock (&qt_window->priv->lock);
 }
+
+void
+qt_window_stop(QtGLWindow* qt_window)
+{
+  g_mutex_lock(&qt_window->priv->lock);
+
+  GST_DEBUG("stop window");
+  qt_window->priv->updated = TRUE;
+  g_cond_signal(&qt_window->priv->update_cond);
+
+  g_mutex_unlock(&qt_window->priv->lock);
+}

@@ -513,6 +513,8 @@ gst_qt_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      if (qt_src->window)
+        qt_window_stop (qt_src->window);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
