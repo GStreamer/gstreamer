@@ -167,6 +167,7 @@ windows amd64 docker:
   stage: "build docker"
   needs:
     - "trigger"
+  timeout: '3h'
   variables:
     # Unlike the buildah/linux jobs, this file
     # needs to be relative to docker/windows/ subdir
