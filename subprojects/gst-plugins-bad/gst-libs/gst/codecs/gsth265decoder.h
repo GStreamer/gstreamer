@@ -73,58 +73,94 @@ struct _GstH265Decoder
 
 /**
  * GstH265DecoderClass:
- * @new_sequence:   Notifies subclass of SPS update
- * @new_picture:    Optional.
- *                  Called whenever new #GstH265Picture is created.
- *                  Subclass can set implementation specific user data
- *                  on the #GstH265Picture via gst_h265_picture_set_user_data()
- * @start_picture:  Optional.
- *                  Called per one #GstH265Picture to notify subclass to prepare
- *                  decoding process for the #GstH265Picture
- * @decode_slice:   Provides per slice data with parsed slice header and
- *                  required raw bitstream for subclass to decode it
- * @end_picture:    Optional.
- *                  Called per one #GstH265Picture to notify subclass to finish
- *                  decoding process for the #GstH265Picture
- * @output_picture: Called with a #GstH265Picture which is required to be outputted.
- *                  The #GstVideoCodecFrame must be consumed by subclass via
- *                  gst_video_decoder_{finish,drop,release}_frame().
+ *
+ * The opaque #GstH265DecoderClass data structure.
  */
 struct _GstH265DecoderClass
 {
   GstVideoDecoderClass parent_class;
 
+  /**
+   * GstH265DecoderClass::new_sequence:
+   * @decoder: a #GstH265Decoder
+   * @sps: a #GstH265SPS
+   * @max_dpb_size: the maximum dpb size
+   *
+   * Notifies subclass of video sequence update
+   */
   GstFlowReturn (*new_sequence)     (GstH265Decoder * decoder,
                                      const GstH265SPS * sps,
                                      gint max_dpb_size);
+
   /**
-   * GstH265Decoder:new_picture:
+   * GstH265DecoderClass::new_picture:
    * @decoder: a #GstH265Decoder
    * @frame: (transfer none): a #GstVideoCodecFrame
    * @picture: (transfer none): a #GstH265Picture
+   *
+   * Optional. Called whenever new #GstH265Picture is created.
+   * Subclass can set implementation specific user data
+   * on the #GstH265Picture via gst_h265_picture_set_user_data()
    */
   GstFlowReturn (*new_picture)      (GstH265Decoder * decoder,
                                      GstVideoCodecFrame * frame,
                                      GstH265Picture * picture);
 
+  /**
+   * GstH265DecoderClass::start_picture:
+   * @decoder: a #GstH265Decoder
+   * @picture: (transfer none): a #GstH265Picture
+   * @slice: (transfer none): a #GstH265Slice
+   * @dpb: (transfer none): a #GstH265Dpb
+   *
+   * Optional. Called per one #GstH265Picture to notify subclass to prepare
+   * decoding process for the #GstH265Picture
+   */
   GstFlowReturn (*start_picture)    (GstH265Decoder * decoder,
                                      GstH265Picture * picture,
                                      GstH265Slice * slice,
                                      GstH265Dpb * dpb);
 
+  /**
+   * GstH265DecoderClass::decode_slice:
+   * @decoder: a #GstH265Decoder
+   * @picture: (transfer none): a #GstH265Picture
+   * @slice: (transfer none): a #GstH265Slice
+   * @dpb: (transfer none): a #GstH265Dpb
+   * @ref_pic_list0: (element-type GstH265Picture) (transfer none):
+   *    an array of #GstH265Picture pointers
+   * @ref_pic_list1: (element-type GstH265Picture) (transfer none):
+   *    an array of #GstH265Picture pointers
+   *
+   * Provides per slice data with parsed slice header and required raw bitstream
+   * for subclass to decode it. If gst_h265_decoder_set_process_ref_pic_lists()
+   * is called with %TRUE by the subclass, @ref_pic_list0 and @ref_pic_list1
+   * are non-%NULL.
+   */
   GstFlowReturn (*decode_slice)     (GstH265Decoder * decoder,
                                      GstH265Picture * picture,
                                      GstH265Slice * slice,
                                      GArray * ref_pic_list0,
                                      GArray * ref_pic_list1);
 
+  /**
+   * GstH265DecoderClass::end_picture:
+   * @decoder: a #GstH265Decoder
+   * @picture: (transfer none): a #GstH265Picture
+   *
+   * Optional. Called per one #GstH265Picture to notify subclass to finish
+   * decoding process for the #GstH265Picture
+   */
   GstFlowReturn (*end_picture)      (GstH265Decoder * decoder,
                                      GstH265Picture * picture);
+
   /**
-   * GstH265Decoder:output_picture:
+   * GstH265DecoderClass:output_picture:
    * @decoder: a #GstH265Decoder
    * @frame: (transfer full): a #GstVideoCodecFrame
    * @picture: (transfer full): a #GstH265Picture
+   *
+   * Called with a #GstH265Picture which is required to be outputted.
    */
   GstFlowReturn (*output_picture)   (GstH265Decoder * decoder,
                                      GstVideoCodecFrame * frame,
