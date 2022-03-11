@@ -1460,7 +1460,8 @@ struct _GstH265SliceHdr
   /* Number of emulation prevention bytes (EPB) in this slice_header() */
   guint n_emulation_prevention_bytes;
 
-  /* Size of short_term_ref_pic_set() in bits */
+  /* Size of short_term_ref_pic_set() after emulation preventation bytes are
+   * removed, in bits */
   guint short_term_ref_pic_set_size;
 };
 
