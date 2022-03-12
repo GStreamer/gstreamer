@@ -30,6 +30,7 @@
 #include <config.h>
 #endif
 
+#include <gst/base/base.h>
 #include "gsth265decoder.h"
 
 GST_DEBUG_CATEGORY (gst_h265_decoder_debug);
@@ -127,6 +128,11 @@ struct _GstH265DecoderPrivate
   GArray *ref_pic_list1;
 
   GArray *nalu;
+
+  /* For delayed output */
+  guint preferred_output_delay;
+  gboolean is_live;
+  GstQueueArray *output_queue;
 };
 
 typedef struct
@@ -138,6 +144,15 @@ typedef struct
   } unit;
   gboolean is_slice;
 } GstH265DecoderNalUnit;
+
+typedef struct
+{
+  /* Holds ref */
+  GstVideoCodecFrame *frame;
+  GstH265Picture *picture;
+  /* Without ref */
+  GstH265Decoder *self;
+} GstH265DecoderOutputFrame;
 
 #define UPDATE_FLOW_RETURN(ret,new_ret) G_STMT_START { \
   if (*(ret) == GST_FLOW_OK) \
@@ -171,6 +186,8 @@ static GstFlowReturn gst_h265_decoder_drain_internal (GstH265Decoder * self);
 static GstFlowReturn
 gst_h265_decoder_start_current_picture (GstH265Decoder * self);
 static void gst_h265_decoder_clear_nalu (GstH265DecoderNalUnit * nalu);
+static void
+gst_h265_decoder_clear_output_frame (GstH265DecoderOutputFrame * output_frame);
 
 static void
 gst_h265_decoder_class_init (GstH265DecoderClass * klass)
@@ -211,6 +228,10 @@ gst_h265_decoder_init (GstH265Decoder * self)
       8);
   g_array_set_clear_func (priv->nalu,
       (GDestroyNotify) gst_h265_decoder_clear_nalu);
+  priv->output_queue =
+      gst_queue_array_new_for_struct (sizeof (GstH265DecoderOutputFrame), 1);
+  gst_queue_array_set_clear_func (priv->output_queue,
+      (GDestroyNotify) gst_h265_decoder_clear_output_frame);
 }
 
 static void
@@ -223,6 +244,7 @@ gst_h265_decoder_finalize (GObject * object)
   g_array_unref (priv->ref_pic_list0);
   g_array_unref (priv->ref_pic_list1);
   g_array_unref (priv->nalu);
+  gst_queue_array_free (priv->output_queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -269,6 +291,21 @@ gst_h265_decoder_stop (GstVideoDecoder * decoder)
   return TRUE;
 }
 
+static void
+gst_h265_decoder_clear_output_frame (GstH265DecoderOutputFrame * output_frame)
+{
+  if (!output_frame)
+    return;
+
+  if (output_frame->frame) {
+    gst_video_decoder_release_frame (GST_VIDEO_DECODER (output_frame->self),
+        output_frame->frame);
+    output_frame->frame = NULL;
+  }
+
+  gst_clear_h265_picture (&output_frame->picture);
+}
+
 static gboolean
 gst_h265_decoder_is_crop_rect_changed (GstH265Decoder * self, GstH265SPS * sps)
 {
@@ -286,6 +323,26 @@ gst_h265_decoder_is_crop_rect_changed (GstH265Decoder * self, GstH265SPS * sps)
     return TRUE;
 
   return FALSE;
+}
+
+static void
+gst_h265_decoder_drain_output_queue (GstH265Decoder * self, guint num,
+    GstFlowReturn * ret)
+{
+  GstH265DecoderPrivate *priv = self->priv;
+  GstH265DecoderClass *klass = GST_H265_DECODER_GET_CLASS (self);
+
+  g_assert (klass->output_picture);
+  g_assert (ret != NULL);
+
+  while (gst_queue_array_get_length (priv->output_queue) > num) {
+    GstH265DecoderOutputFrame *output_frame = (GstH265DecoderOutputFrame *)
+        gst_queue_array_pop_head_struct (priv->output_queue);
+    GstFlowReturn flow_ret = klass->output_picture (self, output_frame->frame,
+        output_frame->picture);
+
+    UPDATE_FLOW_RETURN (ret, flow_ret);
+  }
 }
 
 static GstFlowReturn
@@ -340,17 +397,26 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
         priv->progressive_source_flag, progressive_source_flag,
         priv->interlaced_source_flag, interlaced_source_flag);
 
-    g_assert (klass->new_sequence);
-
     if (priv->no_output_of_prior_pics_flag) {
+      gst_h265_decoder_drain_output_queue (self, 0, &ret);
       gst_h265_decoder_clear_dpb (self, FALSE);
     } else {
       ret = gst_h265_decoder_drain_internal (self);
-      if (ret != GST_FLOW_OK)
-        return ret;
     }
 
-    ret = klass->new_sequence (self, sps, max_dpb_size);
+    if (ret != GST_FLOW_OK)
+      return ret;
+
+    if (klass->get_preferred_output_delay) {
+      priv->preferred_output_delay =
+          klass->get_preferred_output_delay (self, priv->is_live);
+    } else {
+      priv->preferred_output_delay = 0;
+    }
+
+    g_assert (klass->new_sequence);
+    ret = klass->new_sequence (self,
+        sps, max_dpb_size + priv->preferred_output_delay);
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (self, "subclass does not want accept new sequence");
       return ret;
@@ -936,6 +1002,7 @@ gst_h265_decoder_set_format (GstVideoDecoder * decoder,
 {
   GstH265Decoder *self = GST_H265_DECODER (decoder);
   GstH265DecoderPrivate *priv = self->priv;
+  GstQuery *query;
 
   GST_DEBUG_OBJECT (decoder, "Set format");
 
@@ -1012,6 +1079,12 @@ gst_h265_decoder_set_format (GstVideoDecoder * decoder,
     }
     gst_buffer_unmap (priv->codec_data, &map);
   }
+
+  priv->is_live = FALSE;
+  query = gst_query_new_latency ();
+  if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (self), query))
+    gst_query_parse_latency (query, &priv->is_live, NULL, NULL);
+  gst_query_unref (query);
 
   return TRUE;
 }
@@ -1495,8 +1568,8 @@ gst_h265_decoder_do_output_picture (GstH265Decoder * self,
     GstH265Picture * picture, GstFlowReturn * ret)
 {
   GstH265DecoderPrivate *priv = self->priv;
-  GstH265DecoderClass *klass;
   GstVideoCodecFrame *frame = NULL;
+  GstH265DecoderOutputFrame output_frame;
   GstFlowReturn flow_ret = GST_FLOW_OK;
 
   g_assert (ret != NULL);
@@ -1525,11 +1598,13 @@ gst_h265_decoder_do_output_picture (GstH265Decoder * self,
     return;
   }
 
-  klass = GST_H265_DECODER_GET_CLASS (self);
+  output_frame.frame = frame;
+  output_frame.picture = picture;
+  output_frame.self = self;
+  gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
 
-  g_assert (klass->output_picture);
-  flow_ret = klass->output_picture (self, frame, picture);
-
+  gst_h265_decoder_drain_output_queue (self, priv->preferred_output_delay,
+      &flow_ret);
   UPDATE_FLOW_RETURN (ret, flow_ret);
 }
 
@@ -1553,6 +1628,7 @@ gst_h265_decoder_clear_dpb (GstH265Decoder * self, gboolean flush)
     }
   }
 
+  gst_queue_array_clear (priv->output_queue);
   gst_h265_dpb_clear (priv->dpb);
   priv->last_output_poc = G_MININT32;
 }
@@ -1566,6 +1642,8 @@ gst_h265_decoder_drain_internal (GstH265Decoder * self)
 
   while ((picture = gst_h265_dpb_bump (priv->dpb, TRUE)) != NULL)
     gst_h265_decoder_do_output_picture (self, picture, &ret);
+
+  gst_h265_decoder_drain_output_queue (self, 0, &ret);
 
   gst_h265_dpb_clear (priv->dpb);
   priv->last_output_poc = G_MININT32;
@@ -1587,6 +1665,7 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
   if (slice->clear_dpb) {
     if (picture->NoOutputOfPriorPicsFlag) {
       GST_DEBUG_OBJECT (self, "Clear dpb");
+      gst_h265_decoder_drain_output_queue (self, 0, &ret);
       gst_h265_decoder_clear_dpb (self, FALSE);
     } else {
       gst_h265_dpb_delete_unused (priv->dpb);

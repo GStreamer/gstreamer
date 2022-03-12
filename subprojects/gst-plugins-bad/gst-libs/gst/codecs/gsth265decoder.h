@@ -84,7 +84,8 @@ struct _GstH265DecoderClass
    * GstH265DecoderClass::new_sequence:
    * @decoder: a #GstH265Decoder
    * @sps: a #GstH265SPS
-   * @max_dpb_size: the maximum dpb size
+   * @max_dpb_size: the size of dpb including preferred output delay
+   *   by subclass reported via get_preferred_output_delay method.
    *
    * Notifies subclass of video sequence update
    */
@@ -165,6 +166,21 @@ struct _GstH265DecoderClass
   GstFlowReturn (*output_picture)   (GstH265Decoder * decoder,
                                      GstVideoCodecFrame * frame,
                                      GstH265Picture * picture);
+
+  /**
+   * GstH265DecoderClass::get_preferred_output_delay:
+   * @decoder: a #GstH265Decoder
+   * @live: whether upstream is live or not
+   *
+   * Optional. Called by baseclass to query whether delaying output is
+   * preferred by subclass or not.
+   *
+   * Returns: the number of perferred delayed output frame
+   *
+   * Since: 1.22
+   */
+  guint (*get_preferred_output_delay)   (GstH265Decoder * decoder,
+                                         gboolean live);
 
   /*< private >*/
   gpointer padding[GST_PADDING_LARGE];
