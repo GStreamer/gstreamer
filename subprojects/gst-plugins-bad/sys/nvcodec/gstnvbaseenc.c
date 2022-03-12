@@ -669,8 +669,7 @@ gst_nv_base_enc_propose_allocation (GstVideoEncoder * enc, GstQuery * query)
   size = GST_VIDEO_INFO_SIZE (&info);
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, caps, size,
-      nvenc->items->len, nvenc->items->len);
+  gst_buffer_pool_config_set_params (config, caps, size, nvenc->items->len, 0);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   if (!gst_buffer_pool_set_config (pool, config))
@@ -681,8 +680,7 @@ gst_nv_base_enc_propose_allocation (GstVideoEncoder * enc, GstQuery * query)
   gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
   gst_structure_free (config);
 
-  gst_query_add_allocation_pool (query, pool, size,
-      nvenc->items->len, nvenc->items->len);
+  gst_query_add_allocation_pool (query, pool, size, nvenc->items->len, 0);
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
   gst_object_unref (pool);
