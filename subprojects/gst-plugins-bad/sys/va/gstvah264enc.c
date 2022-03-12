@@ -1776,6 +1776,7 @@ _pop_pyramid_b_frame (GstVaH264Enc * self)
 
     if (!b_frame) {
       b_frame = f;
+      b_vaframe = _enc_frame (b_frame);
       index = i;
       continue;
     }
@@ -1783,12 +1784,14 @@ _pop_pyramid_b_frame (GstVaH264Enc * self)
     vaf = _enc_frame (f);
     if (b_vaframe->pyramid_level > vaf->pyramid_level) {
       b_frame = f;
+      b_vaframe = vaf;
       index = i;
       continue;
     }
 
     if (b_vaframe->poc > vaf->poc) {
       b_frame = f;
+      b_vaframe = vaf;
       index = i;
     }
   }
@@ -1810,6 +1813,7 @@ again:
     if (vaf->poc == b_vaframe->poc + b_vaframe->left_ref_poc_diff
         || vaf->poc == b_vaframe->poc + b_vaframe->right_ref_poc_diff) {
       b_frame = f;
+      b_vaframe = vaf;
       index = i;
       goto again;
     }
@@ -1841,6 +1845,8 @@ gst_va_h264_enc_pop_frame (GstVaH264Enc * self, GstVideoCodecFrame ** out_frame)
 
   g_return_val_if_fail (self->gop.cur_frame_index <= self->gop.idr_period,
       FALSE);
+
+  *out_frame = NULL;
 
   if (g_queue_is_empty (&self->reorder_list))
     return TRUE;
@@ -3366,8 +3372,8 @@ _reorder_frame (GstVideoEncoder * venc, GstVideoCodecFrame * frame,
 static gint
 _sort_by_frame_num (gconstpointer a, gconstpointer b, gpointer user_data)
 {
-  GstVaH264EncFrame *frame1 = (GstVaH264EncFrame *) a;
-  GstVaH264EncFrame *frame2 = (GstVaH264EncFrame *) b;
+  GstVaH264EncFrame *frame1 = _enc_frame ((GstVideoCodecFrame *) a);
+  GstVaH264EncFrame *frame2 = _enc_frame ((GstVideoCodecFrame *) b);
 
   g_assert (frame1->frame_num != frame2->frame_num);
 
@@ -3395,6 +3401,7 @@ _find_unused_reference_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 
   /* Choose the B frame with lowest POC. */
   b_frame = NULL;
+  b_vaframe = NULL;
   for (i = 0; i < g_queue_get_length (&self->ref_list); i++) {
     GstVaH264EncFrame *vaf;
     GstVideoCodecFrame *f;
@@ -3406,13 +3413,16 @@ _find_unused_reference_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 
     if (!b_frame) {
       b_frame = f;
+      b_vaframe = _enc_frame (b_frame);
       continue;
     }
 
     b_vaframe = _enc_frame (b_frame);
     g_assert (vaf->poc != b_vaframe->poc);
-    if (vaf->poc < b_vaframe->poc)
+    if (vaf->poc < b_vaframe->poc) {
       b_frame = f;
+      b_vaframe = _enc_frame (b_frame);
+    }
   }
 
   /* No B frame as ref. */
