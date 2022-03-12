@@ -220,8 +220,8 @@ static void
         if (is_not_edge) {\
             int spatial_score = FFABS(stzero[x-colors2] - sbzero[x-colors2]) + FFABS(c-e) \
                               + FFABS(stzero[x+colors2] - sbzero[x+colors2]); \
-            CHECK(-1) CHECK(-2) }} }} \
-            CHECK( 1) CHECK( 2) }} }} \
+            CHECK(-1 * colors2) CHECK(-2 * colors2) }} }} \
+            CHECK(colors2) CHECK(2 * colors2) }} }} \
         }\
  \
         if (!(mode&2)) { \
