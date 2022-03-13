@@ -21,6 +21,7 @@
 #define __GST_CUDA_UTILS_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include "gstcudaloader.h"
 #include "gstcudacontext.h"
 
@@ -139,6 +140,26 @@ void            gst_cuda_graphics_resource_unmap (GstCudaGraphicsResource * reso
                                                   CUstream stream);
 
 void            gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource);
+
+typedef enum
+{
+  GST_CUDA_BUFFER_COPY_SYSTEM,
+  GST_CUDA_BUFFER_COPY_CUDA,
+  GST_CUDA_BUFFER_COPY_GL,
+  GST_CUDA_BUFFER_COPY_D3D11,
+  GST_CUDA_BUFFER_COPY_NVMM,
+} GstCudaBufferCopyType;
+
+const gchar * gst_cuda_buffery_copy_type_to_string (GstCudaBufferCopyType type);
+
+gboolean      gst_cuda_buffer_copy (GstBuffer * dst,
+                                    GstCudaBufferCopyType dst_type,
+                                    const GstVideoInfo * dst_info,
+                                    GstBuffer * src,
+                                    GstCudaBufferCopyType src_type,
+                                    const GstVideoInfo * src_info,
+                                    GstCudaContext * context,
+                                    CUstream stream);
 
 G_END_DECLS
 
