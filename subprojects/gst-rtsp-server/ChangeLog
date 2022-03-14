@@ -1,3 +1,19 @@
+=== release 1.20.1 ===
+
+2022-03-14 11:33:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* docs/gst_plugins_cache.json:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.20.1
+
+2022-03-14 11:33:25 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.20.1
+
 2022-03-07 09:14:46 +0100  Branko Subasic <branko@axis.com>
 
 	* gst/rtsp-server/rtsp-client.c:

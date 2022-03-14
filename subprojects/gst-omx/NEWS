@@ -1,11 +1,14 @@
 GStreamer 1.20 Release Notes
 
-GStreamer 1.20.0 was released on 3 February 2022.
+GStreamer 1.20.0 was originally released on 3 February 2022.
+
+The latest bug-fix release in the 1.20 series is 1.20.1 and was released
+on 14 March 2022.
 
 See https://gstreamer.freedesktop.org/releases/1.20/ for the latest
 version of this document.
 
-Last updated: Wednesday 2 February 2022, 23:30 UTC (log)
+Last updated: Monday 14 March 2022, 00:30 UTC (log)
 
 Introduction
 
@@ -1875,6 +1878,203 @@ the git 1.20 branch, which will be a stable branch.
 1.20.0
 
 1.20.0 was released on 3 February 2022.
+
+1.20.1
+
+The first 1.20 bug-fix release (1.20.1) was released on 14 March 2022.
+
+This release only contains bugfixes and it should be safe to update from
+1.20.0.
+
+Highlighted bugfixes in 1.20.1
+
+-   deinterlace: various bug fixes for yadif and greedy methods
+-   gtk video sink: Fix rotation not being applied when paused
+-   gst-play-1.0: Fix trick-mode handling in keyboard shortcut
+-   jpegdec: fix RGB conversion handling
+-   matroskademux: improved ProRes video handling
+-   matroskamux: Handle multiview-mode/flags/pixel-aspect-ratio caps
+    fields correctly when checking caps equality on input caps changes
+-   videoaggregator fixes (negative rate handling, current position
+    rounding)
+-   soup http plugin: Lookup libsoup dylib files on Apple platforms &
+    fix Cerbero static build on Android and iOS
+-   Support build against libfreeaptx in openaptx plugin
+-   Fix linking issues on Illumos distros
+-   GstPlay: Fix new error + warning parsing API (was unusuable before)
+-   mpegtsmux: VBR muxing fixes
+-   nvdecoder: Various fixes for 4:4:4 and high-bitdepth decoding
+-   Support build against libfreeaptx in openaptx plugin
+-   webrtc: Various fixes to the webrtc-sendrecv python example
+-   macOS: support a relocatable GStreamer.framework on macOS (see below
+    for details)
+-   macOS: fix applemedia plugin failing to load on ARM64 macOS
+-   windows: ship wavpack library
+-   gst-python: Fix build with Python 3.11
+-   various bug fixes, memory leak fixes, and other stability and
+    reliability improvements
+
+gstreamer
+
+-   plugin loader: show the reason when spawning of gst-plugin-scanner
+    fails
+-   registry, plugin loading: fix dynamic relocation if
+    GST_PLUGIN_SUBDIR (libdir) is not a single subdirectory; improve
+    GST_PLUGIN_SUBDIR handling
+-   context: fix transfer annotation on gst_context_writable_structure()
+    for bindings
+-   baseparse: Don’t truncate the duration to milliseconds in
+    gst_base_parse_convert_default()
+-   bufferpool: Deactivate pool and get rid of references to other
+    objects from dispose instead of finalize
+
+gst-plugins-base
+
+-   typefindfunctions: Fix WebVTT format detection for very short files
+-   gldisplay: Reorder GST_GL_WINDOW check for egl-device
+-   rtpbasepayload: Copy all buffer metadata instead of just GstMetas
+    for the input meta buffer
+-   codec-utils: Avoid out-of-bounds error
+-   navigation: Fix Since markers for mouse scroll events
+-   videoaggregator: Fix for unhandled negative rate
+-   videoaggregator: Use floor() to calculate current position
+-   video-color: Fix for missing clipping in PQ EOTF function
+-   gst-play-1.0: Fix trick-mode handling in keyboard shortcut
+-   audiovisualizer: shader: Fix out of bound write
+
+gst-plugins-good
+
+-   deinterlace: various bug fixes for yadif method
+-   deinterlace: Refactor greedyh and fix planar formats
+-   deinterlace: Prevent race between method configuration and latency
+    query
+-   gtk video sink: Fix rotation not being applied when paused
+-   jpegdec: fix RGB conversion handling
+-   matroskademux: improved ProRes video handling
+-   matroskamux: Handle multiview-mode/flags/pixel-aspect-ratio caps
+    fields correctly when checking caps equality on input caps changes
+-   rtprtx: don’t access type-system per buffer (performance
+    optimisation); code cleanups
+-   rtpulpfecenc: fix unmatched g_slice_free()
+-   rtpvp8depay: fix crash when making GstRTPPacketLost custom event
+-   qtmux: Don’t post an error message if pushing a sample failed with
+    FLUSHING (e.g. on pipeline shutdown)
+-   soup: Lookup libsoup dylib files on Apple platforms & fix Cerbero
+    static build on Android and iOS
+-   souphttpsrc: element not present on iOS after 1.20.0 update
+-   v4l2tuner: return NULL if no norm set
+-   v4l2bufferpool: Fix race condition between qbuf and pool streamoff
+-   meson: Don’t build lame plugin with -Dlame=disabled
+
+gst-plugins-bad
+
+-   GstPlay: Fix new error + warning parsing API (was unusuable before)
+-   av1parse: let the parser continue on verbose OBUs
+-   d3d11converter: Fix RGB to GRAY conversion, broken debug messages,
+    and add missing GRAY conversion
+-   gs: look for google_cloud_cpp_storage.pc
+-   ipcpipeline: fix crash and error on windows with SOCKET or _pipe()
+-   ivfparse: Don’t set zero resolution on caps
+-   mpegtsdemux: Handle PES headers bigger than a mpeg-ts packet; fix
+    locking in error code path; handle more program updates
+-   mpegtsmux: Start last_ts with GST_CLOCK_TIME_NONE to fix VBR muxing
+    behaviour
+-   mpegtsmux: Thread safety fixes: lock mux->tsmux, the programs hash
+    table, and pad streams
+-   mpegtsmux: Skip empty buffers
+-   osxaudiodeviceprovider: Add initial support for duplex devices on
+    OSX
+-   rtpldacpay: Fix missing payload information
+-   sdpdemux: add media attributes to caps, fixes ptp clock handling
+-   mfaudioenc: Handle empty IMFMediaBuffer
+-   nvdecoder: Various fixes for 4:4:4 and high-bitdepth decoding
+-   nvenc: Fix deadlock because of too strict buffer pool size
+-   va: fix library build issues, caps leaks in the vpp transform
+    function, and add vaav1dec to documentation
+-   v4l2codecs: vp9: Minor fixes
+-   v4l2codecs: h264: Correct scaling matrix ABI check
+-   dtlstransport: Notify ICE transport property changes
+-   webrtc: Various fixes to the webrtc-sendrecv python example
+-   webrtc-ice: Fix memory leaks in gst_webrtc_ice_add_candidate()
+-   Support build against libfreeaptx in openaptx plugin
+-   Fix linking issues on Illumos distros
+
+gst-plugins-ugly
+
+-   x264enc: fix plugin long-name and description
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   Fix race in rtsp-client when tunneling over HTTP
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   Fix build with Python 3.11
+
+gst-editing-services
+
+-   Update validate test scenarios for videoaggregator rounding
+    behaviour change
+
+gst-integration-testsuites
+
+-   Update validate test scenarios for videoaggregator rounding
+    behaviour change
+
+Development build environment
+
+-   gst-env: various clean-ups and documentation improvements
+
+Cerbero build tool and packaging changes in 1.20.1
+
+-   Fix nasm version check
+-   Disable certificate checking on RHEL/CentOS 7
+-   packages: Ship wavpack.dll for Windows
+-   osx/universal: make the library name relocatable
+-   macOS: In order to support a relocatable GStreamer.framework on
+    macOS, an application may now need to add an rpath entry to the
+    location of the GStreamer.framework (which could be bundled with the
+    application itself). Some build systems will do this for you by
+    default.
+-   Disable MoltenVK on macOS arm64 to fix applemedia plugin loading
+-   Fix applemedia plugin failing to load on ARM64 macOS
+
+Contributors to 1.20.1
+
+Bastien Nocera, Branko Subasic, David Svensson Fors, Dmitry Osipenko,
+Edward Hervey, Guillaume Desmottes, Havard Graff, Heiko Becker, He
+Junyan, Igor V. Kovalenko, Jan Alexander Steffens (heftig), Jan Schmidt,
+jinsl00000, Joseph Donofry, Jose Quaresma, Marek Vasut, Matthew Waters,
+Mengkejiergeli Ba, Nicolas Dufresne, Nirbheek Chauhan, Philippe Normand,
+Qi Hou, Rouven Czerwinski, Ruben Gonzalez, Sanchayan Maity, Sangchul
+Lee, Sebastian Dröge, Sebastian Fricke, Sebastian Groß, Sebastian
+Mueller, Sebastian Wick, Seungha Yang, Stéphane Cerveau, Thibault
+Saunier, Tim Mooney, Tim-Philipp Müller, Víctor Manuel Jáquez Leal,
+Vivia Nikolaidou, Zebediah Figura,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.20.1
+
+-   List of Merge Requests applied in 1.20.1
+-   List of Issues fixed in 1.20.1
 
 Schedule for 1.22
 

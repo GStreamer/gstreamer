@@ -1,3 +1,18 @@
+=== release 1.20.1 ===
+
+2022-03-14 11:33:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.20.1
+
+2022-03-14 11:33:25 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.20.1
+
 2022-02-04 15:53:45 +0100  Mathieu Duponchelle <mathieu@centricular.com>
 
 	* gi/overrides/gstmodule.c:

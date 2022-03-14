@@ -1,3 +1,18 @@
+=== release 1.20.1 ===
+
+2022-03-14 11:33:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.20.1
+
+2022-03-14 11:33:25 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.20.1
+
 2022-02-19 03:26:00 +0900  Seungha Yang <seungha@centricular.com>
 
 	* tests/check/scenarios/complex_effect_bin_desc/flow-expectations/log-videosink-sink-expected:
