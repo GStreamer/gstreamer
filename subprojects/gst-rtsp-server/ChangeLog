@@ -1,7 +1,25 @@
+2022-03-07 09:14:46 +0100  Branko Subasic <branko@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  gst-rtsp-server: fix race in rtsp-client
+	  When tunneling over HTTP, if connection on the second channel happens
+	  before the control timer is created we may trigger an assert in
+	  rtsp_ctrl_timeout_remove(). Avoid that by taking the priv->lock before
+	  attaching the client thread to the context.
+	  Fixes #1025
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1870>
+
+2022-02-07 16:17:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.20.0 ===
 
 2022-02-03 19:53:25 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* docs/gst_plugins_cache.json:

@@ -1,7 +1,20 @@
+2022-02-04 15:53:45 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gi/overrides/gstmodule.c:
+	  gst-python: gstmodule.c: fix build with 3.11
+	  https://docs.python.org/fr/3.10/whatsnew/3.10.html
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1910>
+
+2022-02-07 16:17:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.0 ===
 
 2022-02-03 19:53:25 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-python.doap:

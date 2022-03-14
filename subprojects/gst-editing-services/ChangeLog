@@ -1,7 +1,20 @@
+2022-02-19 03:26:00 +0900  Seungha Yang <seungha@centricular.com>
+
+	* tests/check/scenarios/complex_effect_bin_desc/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-videosink-sink-expected:
+	  scenarios: Update for videoaggregator rounding behavior change
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1755>
+
+2022-02-07 16:17:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.0 ===
 
 2022-02-03 19:53:25 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-editing-services.doap:

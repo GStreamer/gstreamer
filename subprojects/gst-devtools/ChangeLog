@@ -1,7 +1,54 @@
+2022-02-21 10:49:15 +0100  Sebastian Fricke <sebastian.fricke@collabora.com>
+
+	* debug-viewer/GstDebugViewer/Common/Main.py:
+	* debug-viewer/gst-debug-viewer:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  Remove the uninstalled term
+	  Remove the symbolic link `gst-uninstalled` which points to `gst-env`.
+	  The `uninstalled` is the old name and the project should stick to a
+	  single name for the procedure.
+	  Remove the term from all the files, exceptions are variables from
+	  dependencies like `uninstalled_variables` from pkgconfig and
+	  `meson-uninstalled`.
+	  Adjust mentions of the script in the documentation and README.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1829>
+
+2022-02-17 15:25:21 +0100  Sebastian Fricke <sebastian.fricke@collabora.com>
+
+	* docs/gst-validate-environment-variables.md:
+	  Add documentation for GST_VALIDATE_APPS_DIR
+	  Add documentation for the environment variable, explaining what it is
+	  used for and the default search locations.
+	  Fixes: 4d569b51ed2 add a way to specify an application directory.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1829>
+
+2022-02-17 11:35:49 +0100  Sebastian Fricke <sebastian.fricke@collabora.com>
+
+	* docs/gst-validate-environment-variables.md:
+	  Improve environment variable documentation
+	  At GST_VALIDATE_FILE:
+	  s/will be outputed/are output/
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1829>
+
+2022-02-17 11:32:14 +0100  Sebastian Fricke <sebastian.fricke@collabora.com>
+
+	* docs/gst-validate-environment-variables.md:
+	  Add documentation for GST_VALIDATE_PLUGIN_PATH
+	  Add documentation for the environment variable, explaining what it is
+	  used for and the default search locations.
+	  Fixes: 83d6978f80 Implement fault_injection as a Gs(tValidate)Plugin
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1829>
+
+2022-02-07 16:17:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.0 ===
 
 2022-02-03 19:53:25 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-devtools.doap:
