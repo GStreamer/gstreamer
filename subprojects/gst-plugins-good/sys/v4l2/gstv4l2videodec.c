@@ -732,6 +732,7 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
     if (oldest_frame)
       gst_video_codec_frame_unref (oldest_frame);
 
+    frame->duration = self->v4l2capture->duration;
     frame->output_buffer = buffer;
     buffer = NULL;
     ret = gst_video_decoder_finish_frame (decoder, frame);
