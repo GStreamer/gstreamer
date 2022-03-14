@@ -774,7 +774,11 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
    *  "packets-sent"     G_TYPE_UINT    Number of packets sent
    *  "packets-recv"     G_TYPE_UINT    Number of packets reported recevied
    *  "packet-loss-pct"  G_TYPE_DOUBLE  Packetloss percentage, based on
-   *      packets reported as lost from the recevier.
+   *      packets reported as lost from the receiver. Note: depending on the
+   *      implementation of the receiver and due to the nature of the TWCC
+   *      RRs being sent with high frequency, out of order packets may not
+   *      be fully accounted for and this number could be higher than other
+   *      measurement sources of packet loss.
    *  "avg-delta-of-delta", G_TYPE_INT64 In nanoseconds, a moving window
    *      average of the difference in inter-packet spacing between
    *      sender and receiver. A sudden increase in this number can indicate
