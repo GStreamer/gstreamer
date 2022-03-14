@@ -202,7 +202,7 @@ dnf builddep -y gstreamer1 \
     python3-gstreamer1
 
 dnf remove -y meson
-pip3 install meson==0.59.1 hotdoc python-gitlab
+pip3 install meson==0.60.3 hotdoc python-gitlab
 
 
 # Remove gst-devel packages installed by builddep above
