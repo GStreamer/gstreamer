@@ -870,48 +870,94 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
   } else if (rfc7273_mode && (jbuf->mode == RTP_JITTER_BUFFER_MODE_SLAVE
           || jbuf->mode == RTP_JITTER_BUFFER_MODE_SYNCED)
       && media_clock_offset != -1 && jbuf->rfc7273_sync) {
-    GstClockTime ntptime, rtptime_tmp;
+    GstClockTime ntptime;
     GstClockTime ntprtptime, rtpsystime;
     GstClockTime internal, external;
     GstClockTime rate_num, rate_denom;
+    GstClockTime ntprtptime_period_start;
 
     /* Don't do any of the dts related adjustments further down */
     dts = -1;
 
     /* Calculate the actual clock time on the sender side based on the
-     * RFC7273 clock and convert it to our pipeline clock
-     */
+     * RFC7273 clock and convert it to our pipeline clock. */
 
     gst_clock_get_calibration (media_clock, &internal, &external, &rate_num,
         &rate_denom);
 
+    /* Current NTP clock estimation */
     ntptime = gst_clock_get_internal_time (media_clock);
 
+    /* Current RTP time based on the estimated NTP clock */
     ntprtptime = gst_util_uint64_scale (ntptime, jbuf->clock_rate, GST_SECOND);
     ntprtptime += media_clock_offset;
+
+    GST_TRACE ("Current NTP time %" GST_TIME_FORMAT " (RTP: %" G_GUINT64_FORMAT
+        ")", GST_TIME_ARGS (ntptime), ntprtptime);
+
+    /* Start RTP time of the current RTP time period we are in */
+    ntprtptime_period_start = ntprtptime & 0xffffffff00000000;
+
+    /* Current RTP timestamp in this RTP time period */
     ntprtptime &= 0xffffffff;
 
-    rtptime_tmp = rtptime;
+    GST_TRACE ("Current NTP RTP time period start %" GST_TIME_FORMAT " (RTP: %"
+        G_GUINT64_FORMAT ")",
+        GST_TIME_ARGS (gst_util_uint64_scale (ntprtptime_period_start,
+                GST_SECOND, jbuf->clock_rate)), ntprtptime_period_start);
+    GST_TRACE ("Current NTP RTP time related to period start %" GST_TIME_FORMAT
+        " (RTP: %" G_GUINT64_FORMAT ")",
+        GST_TIME_ARGS (gst_util_uint64_scale (ntprtptime, GST_SECOND,
+                jbuf->clock_rate)), ntprtptime);
+
     /* Check for wraparounds, we assume that the diff between current RTP
-     * timestamp and current media clock time can't be bigger than
-     * 2**31 clock units */
-    if (ntprtptime > rtptime_tmp && ntprtptime - rtptime_tmp >= 0x80000000)
-      rtptime_tmp += G_GUINT64_CONSTANT (0x100000000);
-    else if (rtptime_tmp > ntprtptime && rtptime_tmp - ntprtptime >= 0x80000000)
-      ntprtptime += G_GUINT64_CONSTANT (0x100000000);
+     * timestamp and current media clock time can't be bigger than 2**31 clock
+     * rate units. If it is bigger then get closer to it by moving one RTP
+     * timestamp period into the future or into the past.
+     *
+     * E.g.
+     *    current NTP: 0x_______5 fffffffe
+     *    packet  RTP: 0x         00000001
+     * => packet  NTP: 0x_______6 00000001
+     *
+     *    current NTP: 0x_______5 00000001
+     *    packet  RTP: 0x         fffffffe
+     * => packet  NTP: 0x_______4 fffffffe
+     *
+     */
+    if (ntprtptime > rtptime && ntprtptime - rtptime >= 0x80000000) {
+      ntprtptime_period_start += 0x100000000;
+    } else if (rtptime > ntprtptime && rtptime - ntprtptime >= 0x80000000) {
+      /* If there was not a full RTP time period yet then assume we're
+       * actually that far away. This can only really happen if the epoch of
+       * the clock is very close to now. */
+      if (ntprtptime_period_start >= 0x100000000)
+        ntprtptime_period_start -= 0x100000000;
+    }
 
-    if (ntprtptime > rtptime_tmp)
-      ntptime -=
-          gst_util_uint64_scale (ntprtptime - rtptime_tmp, GST_SECOND,
-          jbuf->clock_rate);
-    else
-      ntptime +=
-          gst_util_uint64_scale (rtptime_tmp - ntprtptime, GST_SECOND,
-          jbuf->clock_rate);
+    GST_TRACE ("Wraparound adjusted NTP RTP time period start %" GST_TIME_FORMAT
+        " (RTP: %" G_GUINT64_FORMAT ")",
+        GST_TIME_ARGS (gst_util_uint64_scale (ntprtptime_period_start,
+                GST_SECOND, jbuf->clock_rate)), ntprtptime_period_start);
 
+    /* Packet timestamp according to the NTP clock in RTP time units.
+     * Note that this does not include any inaccuracy caused by the estimation
+     * of the NTP clock unless it is more than 2**31 RTP time units off. */
+    ntprtptime = ntprtptime_period_start + rtptime;
+
+    /* Packet timestamp in nanoseconds according to the NTP clock. */
+    ntptime = gst_util_uint64_scale (ntprtptime, GST_SECOND, jbuf->clock_rate);
+
+    GST_DEBUG ("RFC7273 packet NTP time %" GST_TIME_FORMAT " (RTP: %"
+        G_GUINT64_FORMAT ")", GST_TIME_ARGS (ntptime), ntprtptime);
+
+    /* Packet timestamp converted to the pipeline clock.
+     * Note that this includes again inaccuracy caused by the estimation of
+     * the NTP vs. pipeline clock. */
     rtpsystime =
         gst_clock_adjust_with_calibration (media_clock, ntptime, internal,
         external, rate_num, rate_denom);
+
     /* All this assumes that the pipeline has enough additional
      * latency to cover for the network delay */
     if (rtpsystime > base_time)
@@ -919,14 +965,8 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
     else
       pts = 0;
 
-    GST_DEBUG ("RFC7273 clock time %" GST_TIME_FORMAT ", ntptime %"
-        GST_TIME_FORMAT ", ntprtptime %" G_GUINT64_FORMAT ", rtptime %"
-        G_GUINT32_FORMAT ", base_time %" GST_TIME_FORMAT ", internal %"
-        GST_TIME_FORMAT ", external %" GST_TIME_FORMAT ", out %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (ntptime),
-        ntprtptime, rtptime, GST_TIME_ARGS (base_time),
-        GST_TIME_ARGS (internal), GST_TIME_ARGS (external),
-        GST_TIME_ARGS (pts));
+    GST_DEBUG ("Packet pipeline clock time %" GST_TIME_FORMAT ", PTS %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (pts));
   } else {
     /* If we used the RFC7273 clock before and not anymore,
      * we need to resync it later again */
