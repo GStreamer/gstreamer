@@ -336,8 +336,10 @@ rtp_twcc_manager_get_recv_twcc_seqnum (RTPTWCCManager * twcc,
   gint32 val = -1;
   gpointer data;
 
-  if (twcc->recv_ext_id == 0)
+  if (twcc->recv_ext_id == 0) {
+    GST_DEBUG ("Received TWCC packet, but no extension registered; ignoring");
     return val;
+  }
 
   if (_get_twcc_seqnum_data (pinfo, twcc->recv_ext_id, &data)) {
     val = GST_READ_UINT16_BE (data);

@@ -4245,6 +4245,8 @@ generate_twcc (const gchar * key, RTPSource * source, ReportData * data)
     return;
   }
 
+  GST_DEBUG ("generating TWCC feedback for source %08x", source->ssrc);
+
   while ((buf = rtp_twcc_manager_get_feedback (sess->twcc, source->ssrc))) {
     ReportOutput *output = g_slice_new (ReportOutput);
     output->source = g_object_ref (source);
