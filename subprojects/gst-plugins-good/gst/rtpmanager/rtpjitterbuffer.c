@@ -703,13 +703,15 @@ queue_do_insert (RTPJitterBuffer * jbuf, GList * list, GList * item)
 GstClockTime
 rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
     gboolean estimated_dts, guint32 rtptime, GstClockTime base_time,
-    gint gap, gboolean is_rtx)
+    gint gap, gboolean is_rtx, GstClockTime * p_ntp_time)
 {
   guint64 ext_rtptime;
   GstClockTime gstrtptime, pts;
   GstClock *media_clock, *pipeline_clock;
   guint64 media_clock_offset;
   gboolean rfc7273_mode;
+
+  *p_ntp_time = GST_CLOCK_TIME_NONE;
 
   /* rtp time jumps are checked for during skew calculation, but bypassed
    * in other mode, so mind those here and reset jb if needed.
@@ -950,6 +952,8 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
 
     GST_DEBUG ("RFC7273 packet NTP time %" GST_TIME_FORMAT " (RTP: %"
         G_GUINT64_FORMAT ")", GST_TIME_ARGS (ntptime), ntprtptime);
+
+    *p_ntp_time = ntptime;
 
     /* Packet timestamp converted to the pipeline clock.
      * Note that this includes again inaccuracy caused by the estimation of

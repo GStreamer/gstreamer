@@ -17523,6 +17523,18 @@
                     }
                 },
                 "properties": {
+                    "add-reference-timestamp-meta": {
+                        "blurb": "Add Reference Timestamp Meta to buffers with the original clock timestamp before any adjustments when syncing to an RFC7273 clock.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "do-lost": {
                         "blurb": "Send an event downstream when a packet is lost",
                         "conditionally-available": false,

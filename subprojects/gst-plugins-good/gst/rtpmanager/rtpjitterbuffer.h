@@ -210,7 +210,7 @@ void                  rtp_jitter_buffer_get_sync         (RTPJitterBuffer *jbuf,
 
 GstClockTime          rtp_jitter_buffer_calculate_pts    (RTPJitterBuffer * jbuf, GstClockTime dts, gboolean estimated_dts,
                                                           guint32 rtptime, GstClockTime base_time, gint gap,
-                                                          gboolean is_rtx);
+                                                          gboolean is_rtx, GstClockTime * p_ntp_time);
 
 gboolean              rtp_jitter_buffer_can_fast_start   (RTPJitterBuffer * jbuf, gint num_packet);
 

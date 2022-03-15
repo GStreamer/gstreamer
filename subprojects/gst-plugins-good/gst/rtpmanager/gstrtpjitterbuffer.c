@@ -153,6 +153,7 @@ enum
 #define DEFAULT_MAX_DROPOUT_TIME    60000
 #define DEFAULT_MAX_MISORDER_TIME   2000
 #define DEFAULT_RFC7273_SYNC        FALSE
+#define DEFAULT_ADD_REFERENCE_TIMESTAMP_META FALSE
 #define DEFAULT_FASTSTART_MIN_PACKETS 0
 
 #define DEFAULT_AUTO_RTX_DELAY (20 * GST_MSECOND)
@@ -186,6 +187,7 @@ enum
   PROP_MAX_DROPOUT_TIME,
   PROP_MAX_MISORDER_TIME,
   PROP_RFC7273_SYNC,
+  PROP_ADD_REFERENCE_TIMESTAMP_META,
   PROP_FASTSTART_MIN_PACKETS
 };
 
@@ -334,6 +336,10 @@ struct _GstRtpJitterBufferPrivate
   guint32 max_dropout_time;
   guint32 max_misorder_time;
   guint faststart_min_packets;
+  gboolean add_reference_timestamp_meta;
+
+  /* Reference for GstReferenceTimestampMeta */
+  GstCaps *rfc7273_ref;
 
   /* the last seqnum we pushed out */
   guint32 last_popped_seqnum;
@@ -886,6 +892,23 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtpJitterBuffer:add-reference-timestamp-meta:
+   *
+   * When syncing to a RFC7273 clock, add #GstReferenceTimestampMeta
+   * to buffers with the original reconstructed reference clock timestamp.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_ADD_REFERENCE_TIMESTAMP_META,
+      g_param_spec_boolean ("add-reference-timestamp-meta",
+          "Add Reference Timestamp Meta",
+          "Add Reference Timestamp Meta to buffers with the original clock timestamp "
+          "before any adjustments when syncing to an RFC7273 clock.",
+          DEFAULT_ADD_REFERENCE_TIMESTAMP_META,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRtpJitterBuffer:faststart-min-packets
    *
    * The number of consecutive packets needed to start (set to 0 to
@@ -1388,6 +1411,7 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
   gint payload = -1;
   GstClockTime tval;
   const gchar *ts_refclk, *mediaclk;
+  GstCaps *ts_meta_ref = NULL;
 
   priv = jitterbuffer->priv;
 
@@ -1503,6 +1527,10 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
           hostname = g_strdup (host);
 
         clock = gst_ntp_clock_new (NULL, hostname, port, 0);
+
+        ts_meta_ref = gst_caps_new_simple ("timestamp/x-ntp",
+            "host", G_TYPE_STRING, hostname, "port", G_TYPE_INT, port, NULL);
+
         g_free (hostname);
       }
     } else if (g_str_has_prefix (ts_refclk, "ptp=IEEE1588-2008:")) {
@@ -1514,6 +1542,10 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
         domain = 0;
 
       clock = gst_ptp_clock_new (NULL, domain);
+
+      ts_meta_ref = gst_caps_new_simple ("timestamp/x-ptp",
+          "version", G_TYPE_STRING, "IEEE1588-2008",
+          "domain", G_TYPE_INT, domain, NULL);
     } else {
       GST_FIXME_OBJECT (jitterbuffer, "Unsupported timestamp reference clock");
     }
@@ -1536,6 +1568,7 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
     rtp_jitter_buffer_set_media_clock (priv->jbuf, NULL, -1);
   }
 
+  gst_caps_take (&priv->rfc7273_ref, ts_meta_ref);
   return TRUE;
 
   /* ERRORS */
@@ -1721,6 +1754,7 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       JBUF_UNLOCK (priv);
       g_thread_join (priv->timer_thread);
       priv->timer_thread = NULL;
+      gst_clear_caps (&priv->rfc7273_ref);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -2914,6 +2948,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime now;
   GstClockTime dts, pts;
+  GstClockTime ntp_time;
   guint64 latency_ts;
   gboolean head;
   gboolean duplicate;
@@ -3073,7 +3108,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     pts =
         rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, estimated_dts,
         rtptime, gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)),
-        0, FALSE);
+        0, FALSE, &ntp_time);
 
     if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (pts))) {
       /* A valid timestamp cannot be calculated, discard packet */
@@ -3136,7 +3171,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     pts =
         rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, estimated_dts,
         rtptime, gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)),
-        gap, is_rtx);
+        gap, is_rtx, &ntp_time);
 
     if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (pts))) {
       /* A valid timestamp cannot be calculated, discard packet */
@@ -3247,6 +3282,14 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
        * see if it can push now */
       JBUF_SIGNAL_EVENT (priv);
     }
+  }
+  // ntp_time will only be set in case of RFC7273 sync
+  if (priv->add_reference_timestamp_meta && GST_CLOCK_TIME_IS_VALID (ntp_time)
+      && priv->rfc7273_ref != NULL) {
+    buffer = gst_buffer_make_writable (buffer);
+
+    gst_buffer_add_reference_timestamp_meta (buffer,
+        priv->rfc7273_ref, ntp_time, GST_CLOCK_TIME_NONE);
   }
 
   /* If we estimated the DTS, don't consider it in the clock skew calculations
@@ -4741,6 +4784,11 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->faststart_min_packets = g_value_get_uint (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_ADD_REFERENCE_TIMESTAMP_META:
+      JBUF_LOCK (priv);
+      priv->add_reference_timestamp_meta = g_value_get_boolean (value);
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -4895,6 +4943,11 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_FASTSTART_MIN_PACKETS:
       JBUF_LOCK (priv);
       g_value_set_uint (value, priv->faststart_min_packets);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_ADD_REFERENCE_TIMESTAMP_META:
+      JBUF_LOCK (priv);
+      g_value_set_boolean (value, priv->add_reference_timestamp_meta);
       JBUF_UNLOCK (priv);
       break;
     default:
