@@ -655,8 +655,10 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
   if (g_atomic_int_get (&self->capture_configuration_change)) {
     gst_v4l2_object_stop (self->v4l2capture);
     ret = gst_v4l2_video_dec_setup_capture (decoder);
-    if (ret != GST_FLOW_OK)
+    if (ret != GST_FLOW_OK) {
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       return;
+    }
     g_atomic_int_set (&self->capture_configuration_change, FALSE);
   }
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
