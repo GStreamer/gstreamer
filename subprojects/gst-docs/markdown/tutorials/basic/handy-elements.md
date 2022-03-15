@@ -109,7 +109,7 @@ gst-launch-1.0 videotestsrc ! videoconvert ! autovideosink
 ### `audiotestsrc`
 
 This element produces an audio wave (selectable among many different
-options with the `wave` property). Use it to test video pipelines.
+options with the `wave` property). Use it to test audio pipelines.
 
 ``` bash
 gst-launch-1.0 audiotestsrc ! audioconvert ! autoaudiosink
