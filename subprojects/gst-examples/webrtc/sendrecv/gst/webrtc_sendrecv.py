@@ -35,9 +35,9 @@ PIPELINE_DESC = '''
 webrtcbin name=sendrecv bundle-policy=max-bundle stun-server=stun://stun.l.google.com:19302
  videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! \
   vp8enc deadline=1 keyframe-max-dist=2000 ! rtpvp8pay picture-id-mode=15-bit !
-  queue ! application/x-rtp,media=video,encoding-name=VP8,payload=97 ! sendrecv.
+  queue ! application/x-rtp,media=video,encoding-name=VP8,payload={vp8_pt} ! sendrecv.
  audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay !
-  queue ! application/x-rtp,media=audio,encoding-name=OPUS,payload=96 ! sendrecv.
+  queue ! application/x-rtp,media=audio,encoding-name=OPUS,payload={opus_pt} ! sendrecv.
 '''
 
 from websockets.version import version as wsv
@@ -49,6 +49,33 @@ def print_status(msg):
 
 def print_error(msg):
     print(f'!!! {msg}', file=sys.stderr)
+
+
+def get_payload_types(sdpmsg, video_encoding, audio_encoding):
+    '''
+    Find the payload types for the specified video and audio encoding.
+
+    Very simplistically finds the first payload type matching the encoding
+    name. More complex applications will want to match caps on
+    profile-level-id, packetization-mode, etc.
+    '''
+    video_pt = None
+    audio_pt = None
+    for i in range(0, sdpmsg.medias_len()):
+        media = sdpmsg.get_media(i)
+        for j in range(0, media.formats_len()):
+            fmt = media.get_format(j)
+            if fmt == 'webrtc-datachannel':
+                continue
+            pt = int(fmt)
+            caps = media.get_caps_from_media(pt)
+            s = caps.get_structure(0)
+            encoding_name = s['encoding-name']
+            if video_pt is None and encoding_name == video_encoding:
+                video_pt = pt
+            elif audio_pt is None and encoding_name == audio_encoding:
+                audio_pt = pt
+    return {video_encoding: video_pt, audio_encoding: audio_pt}
 
 
 class WebRTCClient:
@@ -114,10 +141,6 @@ class WebRTCClient:
             print_status('Call was connected: creating offer')
             promise = Gst.Promise.new_with_change_func(self.on_offer_created, None, None)
             self.webrtc.emit('create-offer', None, promise)
-        elif self.remote_is_offerer:
-            # We are initiating the call, but we want the remote peer to create the offer
-            print_status('Call was connected: requesting remote peer for offer')
-            self.send_soon('OFFER_REQUEST')
 
     def send_ice_candidate_message(self, _, mlineindex, candidate):
         icemsg = json.dumps({'ice': {'candidate': candidate, 'sdpMLineIndex': mlineindex}})
@@ -167,9 +190,9 @@ class WebRTCClient:
         decodebin.sync_state_with_parent()
         self.webrtc.link(decodebin)
 
-    def start_pipeline(self, create_offer=True):
+    def start_pipeline(self, create_offer=True, opus_pt=96, vp8_pt=97):
         print_status(f'Creating pipeline, create_offer: {create_offer}')
-        self.pipe = Gst.parse_launch(PIPELINE_DESC)
+        self.pipe = Gst.parse_launch(PIPELINE_DESC.format(vp8_pt=vp8_pt, opus_pt=opus_pt))
         self.webrtc = self.pipe.get_by_name('sendrecv')
         self.webrtc.connect('on-negotiation-needed', self.on_negotiation_needed, create_offer)
         self.webrtc.connect('on-ice-candidate', self.send_ice_candidate_message)
@@ -192,7 +215,6 @@ class WebRTCClient:
         self.webrtc.emit('create-answer', None, promise)
 
     def handle_json(self, message):
-        assert (self.webrtc)
         try:
             msg = json.loads(message)
         except json.decoder.JSONDecoderError:
@@ -212,10 +234,21 @@ class WebRTCClient:
                 print_status('Received offer:\n%s' % sdp)
                 res, sdpmsg = GstSdp.SDPMessage.new()
                 GstSdp.sdp_message_parse_buffer(bytes(sdp.encode()), sdpmsg)
+
+                if not self.webrtc:
+                    print_status('Incoming call: received an offer, creating pipeline')
+                    pts = get_payload_types(sdpmsg, video_encoding='VP8', audio_encoding='OPUS')
+                    assert('VP8' in pts)
+                    assert('OPUS' in pts)
+                    self.start_pipeline(create_offer=False, vp8_pt=pts['VP8'], opus_pt=pts['OPUS'])
+
+                assert(self.webrtc)
+
                 offer = GstWebRTC.WebRTCSessionDescription.new(GstWebRTC.WebRTCSDPType.OFFER, sdpmsg)
                 promise = Gst.Promise.new_with_change_func(self.on_offer_set, None, None)
                 self.webrtc.emit('set-remote-description', offer, promise)
         elif 'ice' in msg:
+            assert(self.webrtc)
             ice = msg['ice']
             candidate = ice['candidate']
             sdpmlineindex = ice['sdpMLineIndex']
@@ -228,13 +261,6 @@ class WebRTCClient:
             self.pipe.set_state(Gst.State.NULL)
             self.pipe = None
         self.webrtc = None
-
-    def is_incoming_offer(self, msg):
-        if self.webrtc:
-            return False
-        if self.remote_is_offerer:
-            return True
-        return True
 
     async def loop(self):
         assert self.conn
@@ -254,7 +280,9 @@ class WebRTCClient:
                     await self.setup_call()
             elif message == 'SESSION_OK':
                 if self.remote_is_offerer:
-                    self.start_pipeline(create_offer=False)
+                    # We are initiating the call, but we want the remote peer to create the offer
+                    print_status('Call was connected: requesting remote peer for offer')
+                    await self.send('OFFER_REQUEST')
                 else:
                     self.start_pipeline()
             elif message == 'OFFER_REQUEST':
@@ -265,9 +293,6 @@ class WebRTCClient:
                 self.close_pipeline()
                 return 1
             else:
-                if self.is_incoming_offer(message):
-                    print_status('Incoming call: received an offer, creating pipeline')
-                    self.start_pipeline(create_offer=False)
                 self.handle_json(message)
         self.close_pipeline()
         return 0
