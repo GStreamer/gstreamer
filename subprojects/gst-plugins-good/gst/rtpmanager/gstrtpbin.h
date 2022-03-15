@@ -74,6 +74,7 @@ struct _GstRtpBin {
   guint32         max_dropout_time;
   guint32         max_misorder_time;
   gboolean        rfc7273_sync;
+  gboolean        add_reference_timestamp_meta;
   guint           max_streams;
   guint64         max_ts_offset_adjustment;
   gint64          max_ts_offset;

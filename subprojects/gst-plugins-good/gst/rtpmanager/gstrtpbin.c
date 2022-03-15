@@ -350,6 +350,7 @@ enum
 #define DEFAULT_MAX_DROPOUT_TIME     60000
 #define DEFAULT_MAX_MISORDER_TIME    2000
 #define DEFAULT_RFC7273_SYNC         FALSE
+#define DEFAULT_ADD_REFERENCE_TIMESTAMP_META FALSE
 #define DEFAULT_MAX_STREAMS          G_MAXUINT
 #define DEFAULT_MAX_TS_OFFSET_ADJUSTMENT G_GUINT64_CONSTANT(0)
 #define DEFAULT_MAX_TS_OFFSET        G_GINT64_CONSTANT(3000000000)
@@ -379,6 +380,7 @@ enum
   PROP_MAX_DROPOUT_TIME,
   PROP_MAX_MISORDER_TIME,
   PROP_RFC7273_SYNC,
+  PROP_ADD_REFERENCE_TIMESTAMP_META,
   PROP_MAX_STREAMS,
   PROP_MAX_TS_OFFSET_ADJUSTMENT,
   PROP_MAX_TS_OFFSET,
@@ -1905,6 +1907,9 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
     g_object_set (buffer, "max-misorder-time", rtpbin->max_misorder_time, NULL);
   if (g_object_class_find_property (jb_class, "rfc7273-sync"))
     g_object_set (buffer, "rfc7273-sync", rtpbin->rfc7273_sync, NULL);
+  if (g_object_class_find_property (jb_class, "add-reference-timestamp-meta"))
+    g_object_set (buffer, "add-reference-timestamp-meta",
+        rtpbin->add_reference_timestamp_meta, NULL);
   if (g_object_class_find_property (jb_class, "max-ts-offset-adjustment"))
     g_object_set (buffer, "max-ts-offset-adjustment",
         rtpbin->max_ts_offset_adjustment, NULL);
@@ -2763,6 +2768,23 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "(requires clock and offset to be provided)", DEFAULT_RFC7273_SYNC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpBin:add-reference-timestamp-meta:
+   *
+   * When syncing to a RFC7273 clock, add #GstReferenceTimestampMeta
+   * to buffers with the original reconstructed reference clock timestamp.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_ADD_REFERENCE_TIMESTAMP_META,
+      g_param_spec_boolean ("add-reference-timestamp-meta",
+          "Add Reference Timestamp Meta",
+          "Add Reference Timestamp Meta to buffers with the original clock timestamp "
+          "before any adjustments when syncing to an RFC7273 clock.",
+          DEFAULT_ADD_REFERENCE_TIMESTAMP_META,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_MAX_STREAMS,
       g_param_spec_uint ("max-streams", "Max Streams",
           "The maximum number of streams to create for one session",
@@ -2967,6 +2989,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->max_dropout_time = DEFAULT_MAX_DROPOUT_TIME;
   rtpbin->max_misorder_time = DEFAULT_MAX_MISORDER_TIME;
   rtpbin->rfc7273_sync = DEFAULT_RFC7273_SYNC;
+  rtpbin->add_reference_timestamp_meta = DEFAULT_ADD_REFERENCE_TIMESTAMP_META;
   rtpbin->max_streams = DEFAULT_MAX_STREAMS;
   rtpbin->max_ts_offset_adjustment = DEFAULT_MAX_TS_OFFSET_ADJUSTMENT;
   rtpbin->max_ts_offset = DEFAULT_MAX_TS_OFFSET;
@@ -3283,6 +3306,11 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin,
           "rfc7273-sync", value);
       break;
+    case PROP_ADD_REFERENCE_TIMESTAMP_META:
+      rtpbin->add_reference_timestamp_meta = g_value_get_boolean (value);
+      gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin,
+          "add-reference-timestamp-meta", value);
+      break;
     case PROP_MAX_STREAMS:
       rtpbin->max_streams = g_value_get_uint (value);
       break;
@@ -3392,6 +3420,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RFC7273_SYNC:
       g_value_set_boolean (value, rtpbin->rfc7273_sync);
+      break;
+    case PROP_ADD_REFERENCE_TIMESTAMP_META:
+      g_value_set_boolean (value, rtpbin->add_reference_timestamp_meta);
       break;
     case PROP_MAX_STREAMS:
       g_value_set_uint (value, rtpbin->max_streams);
