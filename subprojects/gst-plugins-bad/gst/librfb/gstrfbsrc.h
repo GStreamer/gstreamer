@@ -51,6 +51,7 @@ struct _GstRfbSrc
 {
   GstPushSrc element;
 
+  GstUri *uri;
   gchar *host;
   gint port;
 
@@ -64,7 +65,6 @@ struct _GstRfbSrc
   /* protocol version */
   guint version_major;
   guint version_minor;
-
 };
 
 GType gst_rfb_src_get_type (void);

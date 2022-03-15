@@ -25,8 +25,10 @@
 #endif
 
 #include "gstrfbsrc.h"
+#include "gstrfb-utils.h"
 
 #include <gst/video/video.h>
+#include <glib/gi18n-lib.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -34,9 +36,14 @@
 #include <X11/Xlib.h>
 #endif
 
+#define DEFAULT_PROP_HOST             "127.0.0.1"
+#define DEFAULT_PROP_PORT             5900
+#define DEFAULT_PROP_URI              "rfb://"DEFAULT_PROP_HOST":"G_STRINGIFY(DEFAULT_PROP_PORT)
+
 enum
 {
   PROP_0,
+  PROP_URI,
   PROP_HOST,
   PROP_PORT,
   PROP_VERSION,
@@ -80,8 +87,15 @@ static gboolean gst_rfb_src_decide_allocation (GstBaseSrc * bsrc,
     GstQuery * query);
 static GstFlowReturn gst_rfb_src_fill (GstPushSrc * psrc, GstBuffer * outbuf);
 
+static void gst_rfb_src_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
+static gboolean
+gst_rfb_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error);
+
 #define gst_rfb_src_parent_class parent_class
-G_DEFINE_TYPE (GstRfbSrc, gst_rfb_src, GST_TYPE_PUSH_SRC);
+G_DEFINE_TYPE_WITH_CODE (GstRfbSrc, gst_rfb_src, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_rfb_src_uri_handler_init));
 GST_ELEMENT_REGISTER_DEFINE (rfbsrc, "rfbsrc", GST_RANK_NONE, GST_TYPE_RFB_SRC);
 
 static void
@@ -104,12 +118,26 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   gobject_class->set_property = gst_rfb_src_set_property;
   gobject_class->get_property = gst_rfb_src_get_property;
 
+  /**
+   * GstRfbSrc:uri:
+   *
+   * uri to an RFB from. All GStreamer parameters can be
+   * encoded in the URI, this URI format is RFC compliant.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_URI,
+      g_param_spec_string ("uri", "URI",
+          "URI in the form of rfb://host:port?query", DEFAULT_PROP_URI,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_HOST,
       g_param_spec_string ("host", "Host to connect to", "Host to connect to",
-          "127.0.0.1", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_HOST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PORT,
       g_param_spec_int ("port", "Port", "Port",
-          1, 65535, 5900, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          1, 65535, DEFAULT_PROP_PORT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_VERSION,
       g_param_spec_string ("version", "RFB protocol version",
           "RFB protocol version", "3.3",
@@ -179,8 +207,9 @@ gst_rfb_src_init (GstRfbSrc * src)
   gst_base_src_set_live (bsrc, TRUE);
   gst_base_src_set_format (bsrc, GST_FORMAT_TIME);
 
-  src->host = g_strdup ("127.0.0.1");
-  src->port = 5900;
+  src->uri = gst_uri_from_string (DEFAULT_PROP_URI);
+  src->host = g_strdup (DEFAULT_PROP_HOST);
+  src->port = DEFAULT_PROP_PORT;
   src->version_major = 3;
   src->version_minor = 3;
 
@@ -195,6 +224,9 @@ static void
 gst_rfb_src_finalize (GObject * object)
 {
   GstRfbSrc *src = GST_RFB_SRC (object);
+
+  if (src->uri)
+    gst_uri_unref (src->uri);
 
   g_free (src->host);
 
@@ -248,6 +280,12 @@ gst_rfb_src_set_property (GObject * object, guint prop_id,
   GstRfbSrc *src = GST_RFB_SRC (object);
 
   switch (prop_id) {
+    case PROP_URI:{
+      const gchar *str_uri = g_value_get_string (value);
+
+      gst_rfb_src_uri_set_uri ((GstURIHandler *) src, str_uri, NULL);
+      break;
+    }
     case PROP_HOST:
       src->host = g_value_dup_string (value);;
       break;
@@ -298,6 +336,14 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
   gchar *version;
 
   switch (prop_id) {
+    case PROP_URI:
+      GST_OBJECT_LOCK (object);
+      if (src->uri)
+        g_value_take_string (value, gst_uri_to_string (src->uri));
+      else
+        g_value_set_string (value, NULL);
+      GST_OBJECT_UNLOCK (object);
+      break;
     case PROP_HOST:
       g_value_set_string (value, src->host);
       break;
@@ -631,6 +677,124 @@ gst_rfb_src_unlock (GstBaseSrc * bsrc)
   GstRfbSrc *src = GST_RFB_SRC (bsrc);
   g_cancellable_cancel (src->decoder->cancellable);
   return TRUE;
+}
+
+static GstURIType
+gst_rfb_src_uri_get_type (GType type)
+{
+  return GST_URI_SRC;
+}
+
+static const gchar *const *
+gst_rfb_src_uri_get_protocols (GType type)
+{
+  static const gchar *protocols[] = { (char *) "rfb", NULL };
+
+  return protocols;
+}
+
+static gchar *
+gst_rfb_src_uri_get_uri (GstURIHandler * handler)
+{
+  GstRfbSrc *src = (GstRfbSrc *) handler;
+  gchar *str_uri = NULL;
+
+  GST_OBJECT_LOCK (src);
+  str_uri = gst_uri_to_string (src->uri);
+  GST_OBJECT_UNLOCK (src);
+
+  return str_uri;
+}
+
+static gboolean
+gst_rfb_src_uri_set_uri (GstURIHandler * handler, const gchar * str_uri,
+    GError ** error)
+{
+  GstRfbSrc *src = (GstRfbSrc *) handler;
+  GstUri *uri = NULL;
+  const gchar *userinfo;
+
+  g_return_val_if_fail (str_uri != NULL, FALSE);
+
+  if (GST_STATE (src) >= GST_STATE_PAUSED) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
+        _("Changing the URI on rfbsrc when it is running is not supported"));
+    GST_ERROR_OBJECT (src,
+        "Changing the URI on rfbsrc when it is running is not supported");
+    return FALSE;
+  }
+
+  if (!(uri = gst_uri_from_string (str_uri))) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        _("Invalid URI: %s"), str_uri);
+    GST_ERROR_OBJECT (src, "Invalid URI: %s", str_uri);
+    return FALSE;
+  }
+
+  if (g_strcmp0 (gst_uri_get_scheme (uri), "rfb") != 0) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        _("Invalid scheme in uri (needs to be rfb): %s"), str_uri);
+    GST_ERROR_OBJECT (src, "Invalid scheme in uri (needs to be rfb): %s",
+        str_uri);
+    gst_uri_unref (uri);
+    return FALSE;
+  }
+
+  /* Recursive set to src, do not use the same lock in all property
+   * setters. */
+  g_object_set (src, "host", gst_uri_get_host (uri), NULL);
+  g_object_set (src, "port", gst_uri_get_port (uri), NULL);
+
+  userinfo = gst_uri_get_userinfo (uri);
+  if (userinfo) {
+    gchar *pass;
+    gchar **split = g_strsplit (userinfo, ":", 2);
+
+    if (!split || !split[0] || !split[1]) {
+      g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+          _("Failed to parse username:password data"));
+      GST_ERROR_OBJECT (src, "Failed to parse username:password data");
+      g_strfreev (split);
+      gst_uri_unref (uri);
+      return FALSE;
+    }
+
+    if (g_strrstr (split[1], ":") != NULL)
+      GST_WARNING_OBJECT (src,
+          "userinfo %s contains more than one ':', will "
+          "assume that the first ':' delineates user:pass. You should escape "
+          "the user and pass before adding to the URI.", userinfo);
+
+    pass = g_uri_unescape_string (split[1], NULL);
+    g_strfreev (split);
+
+    g_object_set (src, "password", pass, NULL);
+    g_free (pass);
+  }
+
+  /* Only save URI once it is accepted */
+  GST_OBJECT_LOCK (src);
+  if (src->uri)
+    gst_uri_unref (src->uri);
+  src->uri = gst_uri_ref (uri);
+  GST_OBJECT_UNLOCK (src);
+
+  gst_rfb_utils_set_properties_from_uri_query (G_OBJECT (src), uri);
+
+  gst_uri_unref (uri);
+
+  return TRUE;
+}
+
+static void
+gst_rfb_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_rfb_src_uri_get_type;
+  iface->get_protocols = gst_rfb_src_uri_get_protocols;
+  iface->get_uri = gst_rfb_src_uri_get_uri;
+  iface->set_uri = gst_rfb_src_uri_set_uri;
 }
 
 static gboolean

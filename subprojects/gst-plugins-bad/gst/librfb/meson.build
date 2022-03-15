@@ -1,5 +1,6 @@
 rfbsrc_sources = [
   'gstrfbsrc.c',
+  'gstrfb-utils.c',
   'rfbdecoder.c',
   'd3des.c',
 ]
