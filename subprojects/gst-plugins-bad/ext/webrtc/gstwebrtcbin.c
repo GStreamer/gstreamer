@@ -4463,7 +4463,7 @@ _build_fec_encoder (GstWebRTCBin * webrtc, WebRTCTransceiver * trans)
   sinkpad = gst_element_get_static_pad (trans->ulpfecenc, "sink");
 
   g_object_bind_property (rtp_trans, "fec-percentage", trans->ulpfecenc,
-      "percentage", G_BINDING_BIDIRECTIONAL);
+      "percentage", G_BINDING_DEFAULT);
 
   trans->redenc = gst_element_factory_make ("rtpredenc", NULL);
   gst_object_ref_sink (trans->redenc);
