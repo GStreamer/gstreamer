@@ -1265,7 +1265,8 @@ rtp_jitter_buffer_pop (RTPJitterBuffer * jbuf, gint * percent)
 
   /* let's clear the pointers so we can ensure we don't free items that are
    * still in the jitterbuffer */
-  item->next = item->prev = NULL;
+  if (item)
+    item->next = item->prev = NULL;
 
   return (RTPJitterBufferItem *) item;
 }
