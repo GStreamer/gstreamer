@@ -34,16 +34,20 @@
 #include <termios.h>
 #endif
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#include <io.h>
+#endif
+
 #include <gst/gst.h>
 
 /* This is all not thread-safe, but doesn't have to be really */
-
-#ifdef G_OS_UNIX
-
-static struct termios term_settings;
-static gboolean term_settings_saved = FALSE;
 static GstNvCodecPlayKbFunc kb_callback;
 static gpointer kb_callback_data;
+
+#ifdef G_OS_UNIX
+static struct termios term_settings;
+static gboolean term_settings_saved = FALSE;
 static gulong io_watch_id;
 
 static gboolean
@@ -129,7 +133,158 @@ gst_nvcodec_kb_set_key_handler (GstNvCodecPlayKbFunc kb_func,
   return TRUE;
 }
 
-#else /* !G_OS_UNIX */
+#elif defined(G_OS_WIN32)
+
+typedef struct
+{
+  GThread *thread;
+  HANDLE event_handle;
+  HANDLE console_handle;
+  gboolean closing;
+  GMutex lock;
+} Win32KeyHandler;
+
+static Win32KeyHandler *win32_handler = NULL;
+
+static gboolean
+gst_nvcodec_kb_source_cb (Win32KeyHandler * handler)
+{
+  HANDLE h_input = handler->console_handle;
+  INPUT_RECORD buffer;
+  DWORD n;
+
+  if (PeekConsoleInput (h_input, &buffer, 1, &n) && n == 1) {
+    ReadConsoleInput (h_input, &buffer, 1, &n);
+
+    if (buffer.EventType == KEY_EVENT && buffer.Event.KeyEvent.bKeyDown) {
+      gchar key_val[2] = { 0 };
+
+      switch (buffer.Event.KeyEvent.wVirtualKeyCode) {
+        case VK_RIGHT:
+          kb_callback (GST_NVCODEC_KB_ARROW_RIGHT, kb_callback_data);
+          break;
+        case VK_LEFT:
+          kb_callback (GST_NVCODEC_KB_ARROW_LEFT, kb_callback_data);
+          break;
+        case VK_UP:
+          kb_callback (GST_NVCODEC_KB_ARROW_UP, kb_callback_data);
+          break;
+        case VK_DOWN:
+          kb_callback (GST_NVCODEC_KB_ARROW_DOWN, kb_callback_data);
+          break;
+        default:
+          key_val[0] = buffer.Event.KeyEvent.uChar.AsciiChar;
+          kb_callback (key_val, kb_callback_data);
+          break;
+      }
+    }
+  }
+
+  return G_SOURCE_REMOVE;
+}
+
+static gpointer
+gst_nvcodec_kb_win32_thread (gpointer user_data)
+{
+  Win32KeyHandler *handler = (Win32KeyHandler *) user_data;
+  HANDLE handles[2];
+
+  handles[0] = handler->event_handle;
+  handles[1] = handler->console_handle;
+
+  if (!kb_callback)
+    return NULL;
+
+  while (TRUE) {
+    DWORD ret = WaitForMultipleObjects (2, handles, FALSE, INFINITE);
+
+    if (ret == WAIT_FAILED) {
+      GST_WARNING ("WaitForMultipleObject Failed");
+      return NULL;
+    }
+
+    g_mutex_lock (&handler->lock);
+    if (handler->closing) {
+      g_mutex_unlock (&handler->lock);
+
+      return NULL;
+    }
+    g_mutex_unlock (&handler->lock);
+
+    g_idle_add ((GSourceFunc) gst_nvcodec_kb_source_cb, handler);
+  }
+
+  return NULL;
+}
+
+gboolean
+gst_nvcodec_kb_set_key_handler (GstNvCodecPlayKbFunc kb_func,
+    gpointer user_data)
+{
+  gint fd = _fileno (stdin);
+
+  if (!_isatty (fd)) {
+    GST_INFO ("stdin is not connected to a terminal");
+    return FALSE;
+  }
+
+  if (win32_handler) {
+    g_mutex_lock (&win32_handler->lock);
+    win32_handler->closing = TRUE;
+    g_mutex_unlock (&win32_handler->lock);
+
+    SetEvent (win32_handler->event_handle);
+    g_thread_join (win32_handler->thread);
+    CloseHandle (win32_handler->event_handle);
+
+    g_mutex_clear (&win32_handler->lock);
+    g_free (win32_handler);
+    win32_handler = NULL;
+  }
+
+  if (kb_func) {
+    SECURITY_ATTRIBUTES sec_attrs;
+
+    sec_attrs.nLength = sizeof (SECURITY_ATTRIBUTES);
+    sec_attrs.lpSecurityDescriptor = NULL;
+    sec_attrs.bInheritHandle = FALSE;
+
+    win32_handler = g_new0 (Win32KeyHandler, 1);
+
+    /* create cancellable event handle */
+    win32_handler->event_handle = CreateEvent (&sec_attrs, TRUE, FALSE, NULL);
+
+    if (!win32_handler->event_handle) {
+      GST_WARNING ("Couldn't create event handle");
+      g_free (win32_handler);
+      win32_handler = NULL;
+
+      return FALSE;
+    }
+
+    win32_handler->console_handle = GetStdHandle (STD_INPUT_HANDLE);
+    if (!win32_handler->console_handle) {
+      GST_WARNING ("Couldn't get console handle");
+      CloseHandle (win32_handler->event_handle);
+      g_free (win32_handler);
+      win32_handler = NULL;
+
+      return FALSE;
+    }
+
+    g_mutex_init (&win32_handler->lock);
+    win32_handler->thread =
+        g_thread_new ("gst-play-kb", gst_nvcodec_kb_win32_thread,
+        win32_handler);
+  }
+
+  kb_callback = kb_func;
+  kb_callback_data = user_data;
+
+  return TRUE;
+}
+
+#else
 
 gboolean
 gst_nvcodec_kb_set_key_handler (GstNvCodecPlayKbFunc key_func,

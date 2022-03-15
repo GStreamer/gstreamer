@@ -231,14 +231,15 @@ bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
 }
 
 static gboolean
-check_nvcodec_available (void)
+check_nvcodec_available (const gchar * encoder_name)
 {
   gboolean ret = TRUE;
   GstElement *elem;
 
-  elem = gst_element_factory_make ("nvh264enc", NULL);
+  elem = gst_element_factory_make (encoder_name, NULL);
   if (!elem) {
-    GST_WARNING ("nvh264enc is not available, possibly driver load failure");
+    GST_WARNING ("%s is not available, possibly driver load failure",
+        encoder_name);
     return FALSE;
   }
 
@@ -332,13 +333,16 @@ main (gint argc, gchar ** argv)
   GstCaps *caps;
   TestCallbackData data = { 0, };
   GstPad *pad;
-
+  gchar *encoder_name = NULL;
+  /* *INDENT-OFF* */
   GOptionEntry options[] = {
     {"use-gl", 0, 0, G_OPTION_ARG_NONE, &use_gl,
-        "Use OpenGL memory as input to the nvenc", NULL}
-    ,
+        "Use OpenGL memory as input to the nvenc", NULL},
+    {"encoder", 0, 0, G_OPTION_ARG_STRING, &encoder_name,
+        "NVENC encoder element to test, default: nvh264enc"},
     {NULL}
   };
+  /* *INDENT-ON* */
 
   option_ctx = g_option_context_new ("nvcodec dynamic reconfigure example");
   g_option_context_add_main_entries (option_ctx, options, NULL);
@@ -352,7 +356,10 @@ main (gint argc, gchar ** argv)
   g_option_context_free (option_ctx);
   gst_init (NULL, NULL);
 
-  if (!check_nvcodec_available ()) {
+  if (!encoder_name)
+    encoder_name = g_strdup ("nvh264enc");
+
+  if (!check_nvcodec_available (encoder_name)) {
     g_printerr ("Cannot load nvcodec plugin");
     exit (1);
   }
@@ -404,7 +411,7 @@ main (gint argc, gchar ** argv)
 
   capsfilter = gst_element_factory_make ("capsfilter", NULL);
   queue = gst_element_factory_make ("queue", NULL);
-  enc = gst_element_factory_make ("nvh264enc", NULL);
+  enc = gst_element_factory_make (encoder_name, NULL);
   parse = gst_element_factory_make ("h264parse", NULL);
 
   /* vbr with target bitrate */
@@ -471,6 +478,7 @@ terminate:
 
   gst_object_unref (pipeline);
   g_main_loop_unref (loop);
+  g_free (encoder_name);
 
   return exitcode;
 }

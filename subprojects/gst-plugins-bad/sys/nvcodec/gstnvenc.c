@@ -261,6 +261,20 @@ NvEncEncodePicture (void *encoder, NV_ENC_PIC_PARAMS * pic_params)
   return nvenc_api.nvEncEncodePicture (encoder, pic_params);
 }
 
+NVENCSTATUS NVENCAPI
+NvEncRegisterAsyncEvent (void *encoder, NV_ENC_EVENT_PARAMS * event_params)
+{
+  g_assert (nvenc_api.nvEncRegisterAsyncEvent != NULL);
+  return nvenc_api.nvEncRegisterAsyncEvent (encoder, event_params);
+}
+
+NVENCSTATUS NVENCAPI
+NvEncUnregisterAsyncEvent (void *encoder, NV_ENC_EVENT_PARAMS * event_params)
+{
+  g_assert (nvenc_api.nvEncUnregisterAsyncEvent != NULL);
+  return nvenc_api.nvEncUnregisterAsyncEvent (encoder, event_params);
+}
+
 gboolean
 gst_nvenc_cmp_guid (GUID g1, GUID g2)
 {

@@ -26,6 +26,8 @@
 #include "gstcudaloader.h"
 #include "nvEncodeAPI.h"
 
+G_BEGIN_DECLS
+
 gboolean                gst_nvenc_cmp_guid (GUID g1, GUID g2);
 
 NV_ENC_BUFFER_FORMAT    gst_nvenc_get_nv_buffer_format (GstVideoFormat fmt);
@@ -88,5 +90,7 @@ guint32                 gst_nvenc_get_open_encode_session_ex_params_version (voi
 
 gboolean                gst_nvenc_load_library (guint * api_major_ver,
                                                 guint * api_minor_ver);
+
+G_END_DECLS
 
 #endif /* __GST_NVENC_H_INCLUDED__ */

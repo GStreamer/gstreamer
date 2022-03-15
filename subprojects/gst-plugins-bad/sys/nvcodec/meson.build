@@ -25,6 +25,9 @@ nvcodec_sources = [
   'gstcudascale.c',
   'gstnvvp8dec.c',
   'gstnvvp9dec.c',
+  'gstnvencoder.cpp',
+  'gstnvh264encoder.cpp',
+  'gstnvh265encoder.cpp',
 ]
 
 nvmm_sources = [
@@ -36,14 +39,14 @@ if get_option('nvcodec').disabled()
 endif
 
 plugin_incdirs = [configinc, include_directories('./stub')]
-extra_c_args = ['-DGST_USE_UNSTABLE_API']
+extra_args = ['-DGST_USE_UNSTABLE_API']
 
 if gstgl_dep.found()
-  extra_c_args += ['-DHAVE_NVCODEC_GST_GL=1']
+  extra_args += ['-DHAVE_NVCODEC_GST_GL=1']
 endif
 
 if gstd3d11_dep.found()
-  extra_c_args += ['-DHAVE_NVCODEC_GST_D3D11=1', '-DCOBJMACROS']
+  extra_args += ['-DHAVE_NVCODEC_GST_D3D11=1', '-DCOBJMACROS']
 endif
 
 if host_system == 'linux'
@@ -57,14 +60,29 @@ if host_system == 'linux'
   endif
 
   if have_nvmm
-    extra_c_args += ['-DHAVE_NVCODEC_NVMM']
+    extra_args += ['-DHAVE_NVCODEC_NVMM']
     nvcodec_sources += nvmm_sources
   endif
 endif
 
+override_opt = []
+if host_system == 'windows'
+  # MinGW 32bits compiler seems to be complaining about redundant-decls
+  # when ComPtr is in use. Let's just disable the warning
+  if cc.get_id() != 'msvc'
+    extra_args += cc.get_supported_arguments([
+      '-Wno-redundant-decls',
+    ])
+  endif
+else
+  override_opt += ['cpp_std=c++11']
+endif
+
 gstnvcodec = library('gstnvcodec',
   nvcodec_sources,
-  c_args : gst_plugins_bad_args + extra_c_args,
+  c_args : gst_plugins_bad_args + extra_args,
+  cpp_args : gst_plugins_bad_args + extra_args,
+  override_options: override_opt,
   include_directories : plugin_incdirs,
   dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstgl_dep, gstglproto_dep, gmodule_dep, gstcodecs_dep, gstd3d11_dep],
   install : true,
