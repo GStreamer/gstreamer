@@ -270,6 +270,7 @@ struct _GstRTSPSrc {
   gchar            *user_agent;
   gint              max_rtcp_rtp_time_diff;
   gboolean          rfc7273_sync;
+  gboolean          add_reference_timestamp_meta;
   guint64           max_ts_offset_adjustment;
   gint64            max_ts_offset;
   gboolean          max_ts_offset_is_set;

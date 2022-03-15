@@ -301,6 +301,7 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_USER_AGENT       "GStreamer/" PACKAGE_VERSION
 #define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
 #define DEFAULT_RFC7273_SYNC         FALSE
+#define DEFAULT_ADD_REFERENCE_TIMESTAMP_META FALSE
 #define DEFAULT_MAX_TS_OFFSET_ADJUSTMENT   G_GUINT64_CONSTANT(0)
 #define DEFAULT_MAX_TS_OFFSET   G_GINT64_CONSTANT(3000000000)
 #define DEFAULT_VERSION         GST_RTSP_VERSION_1_0
@@ -350,6 +351,7 @@ enum
   PROP_USER_AGENT,
   PROP_MAX_RTCP_RTP_TIME_DIFF,
   PROP_RFC7273_SYNC,
+  PROP_ADD_REFERENCE_TIMESTAMP_META,
   PROP_MAX_TS_OFFSET_ADJUSTMENT,
   PROP_MAX_TS_OFFSET,
   PROP_DEFAULT_VERSION,
@@ -897,6 +899,23 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_param_spec_boolean ("rfc7273-sync", "Sync on RFC7273 clock",
           "Synchronize received streams to the RFC7273 clock "
           "(requires clock and offset to be provided)", DEFAULT_RFC7273_SYNC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRTSPSrc:add-reference-timestamp-meta:
+   *
+   * When syncing to a RFC7273 clock, add #GstReferenceTimestampMeta
+   * to buffers with the original reconstructed reference clock timestamp.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_ADD_REFERENCE_TIMESTAMP_META,
+      g_param_spec_boolean ("add-reference-timestamp-meta",
+          "Add Reference Timestamp Meta",
+          "Add Reference Timestamp Meta to buffers with the original clock timestamp "
+          "before any adjustments when syncing to an RFC7273 clock.",
+          DEFAULT_ADD_REFERENCE_TIMESTAMP_META,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -1457,6 +1476,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->user_agent = g_strdup (DEFAULT_USER_AGENT);
   src->max_rtcp_rtp_time_diff = DEFAULT_MAX_RTCP_RTP_TIME_DIFF;
   src->rfc7273_sync = DEFAULT_RFC7273_SYNC;
+  src->add_reference_timestamp_meta = DEFAULT_ADD_REFERENCE_TIMESTAMP_META;
   src->max_ts_offset_adjustment = DEFAULT_MAX_TS_OFFSET_ADJUSTMENT;
   src->max_ts_offset = DEFAULT_MAX_TS_OFFSET;
   src->max_ts_offset_is_set = FALSE;
@@ -1779,6 +1799,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_RFC7273_SYNC:
       rtspsrc->rfc7273_sync = g_value_get_boolean (value);
       break;
+    case PROP_ADD_REFERENCE_TIMESTAMP_META:
+      rtspsrc->add_reference_timestamp_meta = g_value_get_boolean (value);
+      break;
     case PROP_MAX_TS_OFFSET_ADJUSTMENT:
       rtspsrc->max_ts_offset_adjustment = g_value_get_uint64 (value);
       break;
@@ -1949,6 +1972,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_RFC7273_SYNC:
       g_value_set_boolean (value, rtspsrc->rfc7273_sync);
+      break;
+    case PROP_ADD_REFERENCE_TIMESTAMP_META:
+      g_value_set_boolean (value, rtspsrc->add_reference_timestamp_meta);
       break;
     case PROP_MAX_TS_OFFSET_ADJUSTMENT:
       g_value_set_uint64 (value, rtspsrc->max_ts_offset_adjustment);
@@ -4030,6 +4056,11 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
       if (g_object_class_find_property (klass, "rfc7273-sync")) {
         g_object_set (src->manager, "rfc7273-sync", src->rfc7273_sync, NULL);
+      }
+
+      if (g_object_class_find_property (klass, "add-reference-timestamp-meta")) {
+        g_object_set (src->manager, "add-reference-timestamp-meta",
+            src->add_reference_timestamp_meta, NULL);
       }
 
       if (src->use_pipeline_clock) {
