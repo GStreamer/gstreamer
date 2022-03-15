@@ -34,7 +34,7 @@ except ImportError:
 PIPELINE_DESC = '''
 webrtcbin name=sendrecv bundle-policy=max-bundle stun-server=stun://stun.l.google.com:19302
  videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! \
-  vp8enc deadline=1 keyframe-max-dist=2000 ! rtpvp8pay !
+  vp8enc deadline=1 keyframe-max-dist=2000 ! rtpvp8pay picture-id-mode=15-bit !
   queue ! application/x-rtp,media=video,encoding-name=VP8,payload=97 ! sendrecv.
  audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay !
   queue ! application/x-rtp,media=audio,encoding-name=OPUS,payload=96 ! sendrecv.
