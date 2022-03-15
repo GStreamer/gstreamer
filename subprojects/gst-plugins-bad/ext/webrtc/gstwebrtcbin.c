@@ -4064,7 +4064,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
             goto rejected;
           }
 
-          GST_TRACE_OBJECT (webrtc, "trying to compare %" GST_PTR_FORMAT
+          GST_LOG_OBJECT (webrtc, "trying to compare %" GST_PTR_FORMAT
               " and %" GST_PTR_FORMAT, offer_caps, trans_caps);
 
           /* FIXME: technically this is a little overreaching as some fields we
@@ -4095,6 +4095,8 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
         /* if no transceiver, then we only receive that stream and respond with
          * the intersection with the transceivers codec preferences caps */
         answer_dir = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
+        GST_WARNING_OBJECT (webrtc, "did not find compatible transceiver for "
+            "offer caps %" GST_PTR_FORMAT ", will only receive", offer_caps);
       }
 
       if (!rtp_trans) {
