@@ -272,6 +272,11 @@ struct _GstAudioDecoderClass
   gboolean      (*set_format)         (GstAudioDecoder *dec,
                                        GstCaps *caps);
 
+  /**
+   * GstAudioDecoderClass::parse:
+   * @offset: (out):
+   * @length: (out):
+   */
   GstFlowReturn (*parse)              (GstAudioDecoder *dec,
                                        GstAdapter *adapter,
                                        gint *offset, gint *length);

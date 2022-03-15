@@ -1675,7 +1675,7 @@ not_started:
 /**
  * gst_audio_ring_buffer_commit:
  * @buf: the #GstAudioRingBuffer to commit
- * @sample: the sample position of the data
+ * @sample: (inout): the sample position of the data
  * @data: (array length=in_samples): the data to commit
  * @in_samples: the number of samples in the data to commit
  * @out_samples: the number of samples to write to the ringbuffer

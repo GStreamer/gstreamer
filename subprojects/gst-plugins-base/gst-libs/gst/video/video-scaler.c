@@ -302,8 +302,8 @@ gst_video_scaler_get_max_taps (GstVideoScaler * scale)
  * gst_video_scaler_get_coeff:
  * @scale: a #GstVideoScaler
  * @out_offset: an output offset
- * @in_offset: result input offset
- * @n_taps: result n_taps
+ * @in_offset: (out) (optional): result input offset
+ * @n_taps: (out) (optional): result n_taps
  *
  * For a given pixel at @out_offset, get the first required input pixel at
  * @in_offset and the @n_taps filter coefficients.

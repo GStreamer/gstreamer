@@ -310,6 +310,10 @@ struct _GstVideoAggregatorClass
                                                    GstBuffer          *  outbuffer);
   GstFlowReturn      (*create_output_buffer)      (GstVideoAggregator *  videoaggregator,
                                                    GstBuffer          ** outbuffer);
+  /**
+   * GstVideoAggregatorClass::find_best_format:
+   * @at_least_one_alpha: (out):
+   */
   void               (*find_best_format)          (GstVideoAggregator *  vagg,
                                                    GstCaps            *  downstream_caps,
                                                    GstVideoInfo       *  best_info,

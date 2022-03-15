@@ -1111,8 +1111,8 @@ gst_video_chroma_resample_new (GstVideoChromaMethod method,
 /**
  * gst_video_chroma_resample_get_info:
  * @resample: a #GstVideoChromaResample
- * @n_lines: the number of input lines
- * @offset: the first line
+ * @n_lines: (out) (optional): the number of input lines
+ * @offset: (out) (optional): the first line
  *
  * The resampler must be fed @n_lines at a time. The first line should be
  * at @offset.
