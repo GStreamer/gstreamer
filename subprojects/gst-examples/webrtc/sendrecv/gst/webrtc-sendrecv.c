@@ -438,7 +438,8 @@ start_pipeline (gboolean create_offer)
        * fix corrupted video.
        */
       "vp8enc deadline=1 keyframe-max-dist=2000 ! "
-      /* picture-id-mode=15-bit seems to make TWCC stats behave better */
+      /* picture-id-mode=15-bit seems to make TWCC stats behave better, and
+       * fixes stuttery video playback in Chrome */
       "rtpvp8pay name=videopay picture-id-mode=15-bit ! "
       "queue ! " RTP_CAPS_VP8 "96 ! sendrecv. "
       "audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay name=audiopay ! "
