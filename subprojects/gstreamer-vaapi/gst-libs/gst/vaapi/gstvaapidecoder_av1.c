@@ -753,12 +753,6 @@ av1_decode_frame_header (GstVaapiDecoderAV1 * decoder,
       return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     }
 
-    if (gst_av1_parser_reference_frame_loading (priv->parser,
-            &to_show_picture->frame_header) != GST_AV1_PARSER_OK) {
-      GST_ERROR ("load frame to show ref frame failed");
-      return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-    }
-
     picture = (GstVaapiPictureAV1 *)
         gst_vaapi_picture_new_clone (GST_VAAPI_PICTURE_CAST (to_show_picture));
     if (!picture)
@@ -769,15 +763,6 @@ av1_decode_frame_header (GstVaapiDecoderAV1 * decoder,
     GST_VAAPI_PICTURE_FLAG_UNSET (picture, GST_VAAPI_PICTURE_FLAG_SKIPPED);
 
     picture->frame_header = to_show_picture->frame_header;
-    /* only update references if the frame_to_show_map_idx is a KEY FRAME */
-    if (picture->frame_header.frame_type == GST_AV1_KEY_FRAME) {
-      picture->frame_header = to_show_picture->frame_header;
-      g_assert (picture->frame_header.refresh_frame_flags ==
-          ((1 << GST_AV1_NUM_REF_FRAMES) - 1));
-    } else {
-      /* Just set to no update ref */
-      picture->frame_header.refresh_frame_flags = 0;
-    }
   } else {
     /* Resolution changed */
     if (priv->width != priv->seq_header->max_frame_width_minus_1 + 1 ||

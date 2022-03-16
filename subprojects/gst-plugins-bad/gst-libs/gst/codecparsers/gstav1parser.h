@@ -1822,11 +1822,6 @@ gst_av1_parser_parse_frame_obu (GstAV1Parser * parser, GstAV1OBU * obu,
 
 GST_CODEC_PARSERS_API
 GstAV1ParserResult
-gst_av1_parser_reference_frame_loading (GstAV1Parser * parser,
-    GstAV1FrameHeaderOBU * frame_header);
-
-GST_CODEC_PARSERS_API
-GstAV1ParserResult
 gst_av1_parser_reference_frame_update (GstAV1Parser * parser,
     GstAV1FrameHeaderOBU * frame_header);
 

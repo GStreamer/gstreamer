@@ -37478,7 +37478,6 @@
   "gst_av1_parser_parse_temporal_delimiter_obu",
   "gst_av1_parser_parse_tile_group_obu",
   "gst_av1_parser_parse_tile_list_obu",
-  "gst_av1_parser_reference_frame_loading",
   "gst_av1_parser_reference_frame_update",
   "gst_av1_parser_reset",
   "gst_av1_parser_reset_annex_b",
