@@ -722,35 +722,66 @@ store_cc_data (GstCCConverter * self, const guint8 * ccp_data,
     guint ccp_data_len, const guint8 * cea608_1, guint cea608_1_len,
     const guint8 * cea608_2, guint cea608_2_len)
 {
-  GST_DEBUG_OBJECT (self, "holding data of len ccp:%u, cea608 1:%u, "
+  GST_TRACE_OBJECT (self, "attempting to hold data of len ccp:%u, cea608 1:%u, "
       "cea608 2:%u until next input buffer", ccp_data_len, cea608_1_len,
       cea608_2_len);
 
   if (ccp_data && ccp_data_len > 0) {
-    memcpy (self->scratch_ccp, ccp_data, ccp_data_len);
-    self->scratch_ccp_len = ccp_data_len;
+    if (ccp_data_len > sizeof (self->scratch_ccp)) {
+      GST_ELEMENT_WARNING (self, STREAM, DECODE,
+          ("Closed Caption internal buffer overun. Dropping data"),
+          ("CCP scratch buffer requires space for %u bytes but only %"
+              G_GSIZE_FORMAT " bytes are available", ccp_data_len,
+              sizeof (self->scratch_ccp)));
+      self->scratch_ccp_len = 0;
+    } else {
+      memcpy (self->scratch_ccp, ccp_data, ccp_data_len);
+      self->scratch_ccp_len = ccp_data_len;
+    }
   } else {
     self->scratch_ccp_len = 0;
   }
-  g_assert_cmpint (self->scratch_ccp_len, <, sizeof (self->scratch_ccp));
+  g_assert_cmpint (self->scratch_ccp_len, <=, sizeof (self->scratch_ccp));
 
   if (cea608_1 && cea608_1_len > 0) {
-    memcpy (self->scratch_cea608_1, cea608_1, cea608_1_len);
-    self->scratch_cea608_1_len = cea608_1_len;
+    if (cea608_1_len > sizeof (self->scratch_cea608_1)) {
+      GST_ELEMENT_WARNING (self, STREAM, DECODE,
+          ("Closed Caption internal buffer overun. Dropping data"),
+          ("CEA608 field 1 scratch buffer requires space for %u bytes but "
+              "only %" G_GSIZE_FORMAT " bytes are available", cea608_1_len,
+              sizeof (self->scratch_cea608_1_len)));
+      self->scratch_cea608_1_len = 0;
+    } else {
+      memcpy (self->scratch_cea608_1, cea608_1, cea608_1_len);
+      self->scratch_cea608_1_len = cea608_1_len;
+    }
   } else {
     self->scratch_cea608_1_len = 0;
   }
-  g_assert_cmpint (self->scratch_cea608_1_len, <,
+  g_assert_cmpint (self->scratch_cea608_1_len, <=,
       sizeof (self->scratch_cea608_1));
 
   if (cea608_2 && cea608_2_len > 0) {
-    memcpy (self->scratch_cea608_2, cea608_2, cea608_2_len);
-    self->scratch_cea608_2_len = cea608_2_len;
+    if (cea608_2_len > sizeof (self->scratch_cea608_2)) {
+      GST_ELEMENT_WARNING (self, STREAM, DECODE,
+          ("Closed Caption internal buffer overun. Dropping data"),
+          ("CEA608 field 2 scratch buffer requires space for %u bytes but "
+              "only %" G_GSIZE_FORMAT " bytes are available", cea608_2_len,
+              sizeof (self->scratch_cea608_2_len)));
+      self->scratch_cea608_2_len = 0;
+    } else {
+      memcpy (self->scratch_cea608_2, cea608_2, cea608_2_len);
+      self->scratch_cea608_2_len = cea608_2_len;
+    }
   } else {
     self->scratch_cea608_2_len = 0;
   }
-  g_assert_cmpint (self->scratch_cea608_2_len, <,
+  g_assert_cmpint (self->scratch_cea608_2_len, <=,
       sizeof (self->scratch_cea608_2));
+
+  GST_DEBUG_OBJECT (self, "holding data of len ccp:%u, cea608 1:%u, "
+      "cea608 2:%u until next input buffer", self->scratch_ccp_len,
+      self->scratch_cea608_1_len, self->scratch_cea608_2_len);
 }
 
 static gboolean
