@@ -381,8 +381,8 @@ message('Building subprojects: ' + ', '.join(subprojects_names))
 
 setenv = find_program('gst-env.py')
 
-devenv_cmd = [setenv, '--builddir=@0@'.format(meson.build_root()),
-              '--srcdir=@0@'.format(meson.source_root())]
+devenv_cmd = [setenv, '--builddir=@0@'.format(meson.global_build_root()),
+              '--srcdir=@0@'.format(meson.global_source_root())]
 
 subdir('tests')
 if meson.can_run_host_binaries() and build_machine.system() == 'linux' and host_machine.system() == 'windows'
