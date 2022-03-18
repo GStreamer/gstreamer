@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include "gstv4l2codecav1dec.h"
 #include "gstv4l2codecdevice.h"
 #include "gstv4l2codech264dec.h"
 #include "gstv4l2codech265dec.h"
@@ -80,7 +81,12 @@ register_video_decoder (GstPlugin * plugin, GstV4l2CodecDevice * device)
         gst_v4l2_codec_vp9_dec_register (plugin, decoder, device,
             GST_RANK_PRIMARY + 1);
         break;
-
+      case V4L2_PIX_FMT_AV1_FRAME:
+        GST_INFO_OBJECT (decoder, "Registering %s as AV1 Decoder",
+            device->name);
+        gst_v4l2_codec_av1_dec_register (plugin, decoder, device,
+            GST_RANK_PRIMARY + 1);
+        break;
       default:
         GST_FIXME_OBJECT (decoder, "%" GST_FOURCC_FORMAT " is not supported.",
             GST_FOURCC_ARGS (fmt));

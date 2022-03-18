@@ -1,6 +1,7 @@
 v4l2codecs_sources = [
   'plugin.c',
   'gstv4l2codecallocator.c',
+  'gstv4l2codecav1dec.c',
   'gstv4l2codecdevice.c',
   'gstv4l2codech264dec.c',
   'gstv4l2codech265dec.c',
