@@ -26,10 +26,10 @@
 
 #include <gst/base/base.h>
 #include <string.h>
+#include <stdint.h>
 
 #include <ImfRgbaFile.h>
 #include <ImfIO.h>
-#include <ImfInt64.h>
 using namespace Imf;
 using namespace Imath;
 
@@ -43,8 +43,8 @@ public:
   }
 
   virtual bool read (char c[], int n);
-  virtual Int64 tellg ();
-  virtual void seekg (Int64 pos);
+  virtual uint64_t tellg ();
+  virtual void seekg (uint64_t pos);
   virtual void clear ();
 
 private:
@@ -64,13 +64,13 @@ bool MemIStream::read (char c[], int n)
   return (offset == size);
 }
 
-Int64 MemIStream::tellg ()
+uint64_t MemIStream::tellg ()
 {
   return offset;
 }
 
 void
-MemIStream::seekg (Int64 pos)
+MemIStream::seekg (uint64_t pos)
 {
   offset = pos;
   if (offset > size)
