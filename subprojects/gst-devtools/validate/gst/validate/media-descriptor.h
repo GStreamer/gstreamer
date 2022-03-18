@@ -33,16 +33,6 @@ G_BEGIN_DECLS
 
 #define GST_VALIDATE_UNKNOWN_BOOL - 1
 
-typedef struct _GstValidateMediaFileNode GstValidateMediaFileNode;
-typedef struct _GstValidateMediaTagNode GstValidateMediaTagNode;
-
-GST_VALIDATE_API
-void gst_validate_filenode_free (GstValidateMediaFileNode *
-    filenode);
-GST_VALIDATE_API
-gboolean gst_validate_tag_node_compare (GstValidateMediaTagNode *
-    tnode, const GstTagList * tlist);
-
 GST_VALIDATE_API
 GType gst_validate_media_descriptor_get_type (void);
 
@@ -65,8 +55,6 @@ typedef struct _GstValidateMediaDescriptorPrivate
 typedef struct
 {
   GstObject parent;
-
-  GstValidateMediaFileNode *filenode;
 
   GMutex lock;
 

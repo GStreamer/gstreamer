@@ -74,6 +74,9 @@ G_GNUC_INTERNAL gboolean is_tty (void);
 
 /* MediaDescriptor structures */
 
+typedef struct _GstValidateMediaFileNode GstValidateMediaFileNode;
+typedef struct _GstValidateMediaTagNode GstValidateMediaTagNode;
+
 typedef struct
 {
   /* Children */
@@ -169,5 +172,12 @@ typedef struct
   gchar *str_open;
   gchar *str_close;
 } GstValidateSegmentNode;
+
+void gst_validate_filenode_free (GstValidateMediaFileNode *
+    filenode);
+gboolean gst_validate_tag_node_compare (GstValidateMediaTagNode *
+    tnode, const GstTagList * tlist);
+
+GstValidateMediaFileNode * gst_validate_media_descriptor_get_file_node (GstValidateMediaDescriptor *self);
 
 #endif
