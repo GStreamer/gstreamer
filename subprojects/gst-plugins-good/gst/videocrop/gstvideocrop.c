@@ -294,6 +294,41 @@ gst_video_crop_transform_packed_yvyu (GstVideoCrop * vcrop,
 }
 
 static void
+gst_video_crop_transform_packed_v210 (GstVideoCrop * vcrop,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame, gint x, gint y)
+{
+  guint8 *in_data, *out_data;
+  guint i, dx;
+  gint width, height;
+  gint in_stride;
+  gint out_stride;
+
+  width = GST_VIDEO_FRAME_WIDTH (out_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (out_frame);
+
+  in_data = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  out_data = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+
+  in_stride = GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
+
+  in_data += vcrop->crop_top * in_stride;
+
+  /* rounding down here so we end up at the start of a macro-pixel and not
+   * in the middle of one */
+  in_data += (vcrop->crop_left / 6) * 16;
+
+  /* copy a whole set of macro-pixels */
+  dx = ((width + 5) / 6) * 16;
+
+  for (i = 0; i < height; ++i) {
+    memcpy (out_data, in_data, dx);
+    in_data += in_stride;
+    out_data += out_stride;
+  }
+}
+
+static void
 gst_video_crop_transform_packed_simple (GstVideoCrop * vcrop,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame, gint x, gint y)
 {
@@ -448,6 +483,9 @@ gst_video_crop_transform_frame (GstVideoFilter * vfilter,
       break;
     case VIDEO_CROP_PIXEL_FORMAT_PACKED_YVYU:
       gst_video_crop_transform_packed_yvyu (vcrop, in_frame, out_frame, x, y);
+      break;
+    case VIDEO_CROP_PIXEL_FORMAT_PACKED_v210:
+      gst_video_crop_transform_packed_v210 (vcrop, in_frame, out_frame, x, y);
       break;
     case VIDEO_CROP_PIXEL_FORMAT_PLANAR:
       gst_video_crop_transform_planar (vcrop, in_frame, out_frame, x, y);
@@ -838,6 +876,9 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
         /* YUYV = 4:2:2 - [Y0 U0 Y1 V0] [Y2 U2 Y3 V2] [Y4 U4 Y5 V4] = YUY2 */
         crop->macro_y_off = 0;
       }
+      break;
+    case GST_VIDEO_FORMAT_v210:
+      crop->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_v210;
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_I420_10BE:
