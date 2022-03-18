@@ -468,6 +468,8 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
       GST_ERROR_OBJECT (self, "subclass didn't provide duplicated picture");
       goto unmap_and_error;
     }
+
+    picture->system_frame_number = pic_to_dup->system_frame_number;
   } else {
     picture = gst_vp9_picture_new ();
     picture->frame_hdr = frame_hdr;
