@@ -583,11 +583,11 @@ gst_h265_decoder_process_ref_pic_lists (GstH265Decoder * self,
   if (GST_H265_IS_I_SLICE (&slice->header))
     return;
 
-  /* Inifinit loop prevention */
+  /* Infinite loop prevention */
   if (self->NumPocStCurrBefore == 0 && self->NumPocStCurrAfter == 0 &&
       self->NumPocLtCurr == 0 && !scc_ext->pps_curr_pic_ref_enabled_flag) {
     GST_WARNING_OBJECT (self,
-        "Expected references, got none, preventing infinit loop.");
+        "Expected references, got none, preventing infinite loop.");
     return;
   }
 
@@ -595,7 +595,7 @@ gst_h265_decoder_process_ref_pic_lists (GstH265Decoder * self,
   tmp_refs = priv->ref_pic_list_tmp;
 
   /* (8-8)
-   * Deriving l0 consist of appending in loop RefPicSetStCurrBefore,
+   * Deriving l0 consists of appending in loop RefPicSetStCurrBefore,
    * RefPicSetStCurrAfter and RefPicSetLtCurr until NumRpsCurrTempList0 item
    * has been reached.
    */
@@ -618,7 +618,7 @@ gst_h265_decoder_process_ref_pic_lists (GstH265Decoder * self,
   }
 
   /* (8-9)
-   * If needed, apply the modificaiton base on the lookup table found in the
+   * If needed, apply the modification based on the lookup table found in the
    * slice header (list_entry_l0).
    */
   for (i = 0; i <= slice->header.num_ref_idx_l0_active_minus1; i++) {
@@ -645,8 +645,8 @@ gst_h265_decoder_process_ref_pic_lists (GstH265Decoder * self,
 
   /* 8.3.4 Deriving l1 */
   /* (8-10)
-   * Deriving l1 consist of appending in loop RefPicSetStCurrAfter,
-   * RefPicSetStCurrBefore and RefPicSetLtCurr until NumRpsCurrTempList0 item
+   * Deriving l1 consists of appending in loop RefPicSetStCurrAfter,
+   * RefPicSetStCurrBefore and RefPicSetLtCurr until NumRpsCurrTempList1 items
    * has been reached.
    */
 
@@ -668,7 +668,7 @@ gst_h265_decoder_process_ref_pic_lists (GstH265Decoder * self,
   }
 
   /* (8-11)
-   * If needed, apply the modificaiton base on the lookup table found in the
+   * If needed, apply the modification based on the lookup table found in the
    * slice header (list_entry_l1).
    */
   for (i = 0; i <= slice->header.num_ref_idx_l1_active_minus1; i++) {
