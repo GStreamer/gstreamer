@@ -93,7 +93,6 @@ do
         -Dgtk_doc=disabled \
         -Dgstreamer:tracer_hooks=false \
         -Dgstreamer:registry=false \
-        -Dgst-plugins-base:cairo=disabled \
         -Dgst-plugins-base:opus=disabled \
         -Dgst-plugins-base:pango=disabled \
         _builddir \
