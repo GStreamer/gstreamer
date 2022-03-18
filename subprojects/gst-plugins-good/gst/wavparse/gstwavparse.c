@@ -2657,12 +2657,11 @@ gst_wavparse_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
   gboolean res = TRUE;
   GstWavParse *wav = GST_WAVPARSE (parent);
 
-  /* only if we know */
-  if (wav->state != GST_WAVPARSE_DATA) {
-    return FALSE;
-  }
-
   GST_LOG_OBJECT (pad, "%s query", GST_QUERY_TYPE_NAME (query));
+
+  if (wav->state != GST_WAVPARSE_DATA) {
+    return gst_pad_query_default (pad, parent, query);
+  }
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:

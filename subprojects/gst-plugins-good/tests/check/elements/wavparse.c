@@ -209,6 +209,36 @@ GST_START_TEST (test_seek)
 
 GST_END_TEST;
 
+GST_START_TEST (test_query_uri)
+{
+  GstElement *pipeline, *filesrc, *wavparse, *fakesink;
+  GstQuery *query;
+  gchar *uri;
+  fail_unless ((pipeline = gst_pipeline_new (NULL)) != NULL,
+      "Could not create pipeline");
+  fail_unless ((filesrc = gst_element_factory_make ("filesrc", NULL)) != NULL,
+      "Could not create filesrc");
+  fail_unless ((wavparse = gst_element_factory_make ("wavparse", NULL)) != NULL,
+      "Could not create wavparse");
+  fail_unless ((fakesink = gst_element_factory_make ("fakesink", NULL)) != NULL,
+      "Could not create fakesink");
+  gst_bin_add_many (GST_BIN (pipeline), filesrc, wavparse, fakesink, NULL);
+  gst_element_link_many (filesrc, wavparse, fakesink, NULL);
+  g_object_set (G_OBJECT (filesrc), "location", "my_test_file", NULL);
+  fail_unless ((query = gst_query_new_uri ()) != NULL,
+      "Could not prepare uri query");
+  fail_unless (gst_element_query (GST_ELEMENT (wavparse), query),
+      "Could not query uri");
+  gst_query_parse_uri (query, &uri);
+  fail_unless (uri != NULL);
+
+  g_free (uri);
+  gst_query_unref (query);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 wavparse_suite (void)
 {
@@ -221,6 +251,7 @@ wavparse_suite (void)
   tcase_add_test (tc_chain, test_simple_file_pull);
   tcase_add_test (tc_chain, test_simple_file_push);
   tcase_add_test (tc_chain, test_seek);
+  tcase_add_test (tc_chain, test_query_uri);
   return s;
 }
 
