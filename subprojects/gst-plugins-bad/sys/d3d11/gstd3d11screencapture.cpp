@@ -881,7 +881,7 @@ private:
         RECT *rects = (RECT *) dirty_rects;
         for (guint i = 0; i < *dirty_count; i++) {
           GST_TRACE ("DirtyRect[%d] left:top:right:bottom: %ldx%ldx%ldx%ld",
-            i, rects->left, rects->top, rects->right, rects->bottom);
+            i, rects[i].left, rects[i].top, rects[i].right, rects[i].bottom);
         }
       }
 #endif
@@ -1153,7 +1153,7 @@ private:
     ID3D11DeviceContext *device_context =
        gst_d3d11_device_get_device_context_handle (device_);
 
-    GST_TRACE ("Copying DiretyRects (count %d)", DirtyCount);
+    GST_TRACE ("Copying DirtyRects (count %d)", DirtyCount);
 
     SharedSurf->GetDesc(&FullDesc);
     SrcSurface->GetDesc(&ThisDesc);
@@ -1161,7 +1161,7 @@ private:
     if (!rtv_) {
       hr = device_handle->CreateRenderTargetView(SharedSurf, nullptr, &rtv_);
       if (!gst_d3d11_result (hr, device_)) {
-        GST_ERROR ("Couldn't create renter target view, hr 0x%x", (guint) hr);
+        GST_ERROR ("Couldn't create render target view, hr 0x%x", (guint) hr);
         return GST_FLOW_ERROR;
       }
     }
