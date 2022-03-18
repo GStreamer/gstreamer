@@ -41,6 +41,65 @@ typedef struct _GstNavigation GstNavigation;
 typedef struct _GstNavigationInterface GstNavigationInterface;
 
 /**
+ * GstNavigationModifierType:
+ * @GST_NAVIGATION_MODIFIER_SHIFT_MASK: the Shift key.
+ * @GST_NAVIGATION_MODIFIER_CONTROL_MASK: the Control key.
+ * @GST_NAVIGATION_MODIFIER_ALT_MASK: the fourth modifier key
+ * @GST_NAVIGATION_MODIFIER_BUTTON1_MASK: the first mouse button (usually the left button).
+ * @GST_NAVIGATION_MODIFIER_BUTTON2_MASK: the second mouse button (usually the right button).
+ * @GST_NAVIGATION_MODIFIER_BUTTON3_MASK: the third mouse button (usually the mouse wheel button or middle button).
+ * @GST_NAVIGATION_MODIFIER_BUTTON4_MASK: the fourth mouse button (typically the "Back" button).
+ * @GST_NAVIGATION_MODIFIER_BUTTON5_MASK: the fifth mouse button (typically the "forward" button).
+ * @GST_NAVIGATION_MODIFIER_SUPER_MASK: the Super modifier
+ * @GST_NAVIGATION_MODIFIER_HYPER_MASK: the Hyper modifier
+ * @GST_NAVIGATION_MODIFIER_META_MASK: the Meta modifier
+ * @GST_NAVIGATION_MODIFIER_MASK: A mask covering all entries in #GdkModifierType.
+ *
+ * Flags to indicate the state of modifier keys and mouse buttons
+ * in events.
+ *
+ * Typical modifier keys are Shift, Control, Meta, Super, Hyper, Alt, Compose,
+ * Apple, CapsLock or ShiftLock.
+ *
+ * Since: 1.22
+ */
+typedef enum
+{
+  GST_NAVIGATION_MODIFIER_NONE          = 0,
+  GST_NAVIGATION_MODIFIER_SHIFT_MASK    = 1 << 0,
+  GST_NAVIGATION_MODIFIER_LOCK_MASK     = 1 << 1,
+  GST_NAVIGATION_MODIFIER_CONTROL_MASK  = 1 << 2,
+  GST_NAVIGATION_MODIFIER_ALT_MASK      = 1 << 3,
+
+  GST_NAVIGATION_MODIFIER_BUTTON1_MASK  = 1 << 8,
+  GST_NAVIGATION_MODIFIER_BUTTON2_MASK  = 1 << 9,
+  GST_NAVIGATION_MODIFIER_BUTTON3_MASK  = 1 << 10,
+  GST_NAVIGATION_MODIFIER_BUTTON4_MASK  = 1 << 11,
+  GST_NAVIGATION_MODIFIER_BUTTON5_MASK  = 1 << 12,
+
+  GST_NAVIGATION_MODIFIER_SUPER_MASK    = 1 << 26,
+  GST_NAVIGATION_MODIFIER_HYPER_MASK    = 1 << 27,
+  GST_NAVIGATION_MODIFIER_META_MASK     = 1 << 28,
+
+  GST_NAVIGATION_MODIFIER_MASK = (
+    GST_NAVIGATION_MODIFIER_NONE          |
+    GST_NAVIGATION_MODIFIER_SHIFT_MASK    |
+    GST_NAVIGATION_MODIFIER_LOCK_MASK     |
+    GST_NAVIGATION_MODIFIER_CONTROL_MASK  |
+    GST_NAVIGATION_MODIFIER_ALT_MASK      |
+    GST_NAVIGATION_MODIFIER_BUTTON1_MASK  |
+    GST_NAVIGATION_MODIFIER_BUTTON2_MASK  |
+    GST_NAVIGATION_MODIFIER_BUTTON3_MASK  |
+    GST_NAVIGATION_MODIFIER_BUTTON4_MASK  |
+    GST_NAVIGATION_MODIFIER_BUTTON5_MASK  |
+    GST_NAVIGATION_MODIFIER_SUPER_MASK    |
+    GST_NAVIGATION_MODIFIER_HYPER_MASK    |
+    GST_NAVIGATION_MODIFIER_META_MASK
+  )
+
+} GstNavigationModifierType;
+
+/**
  * GstNavigationInterface:
  * @iface: the parent interface
  * @send_event: sending a navigation event
@@ -381,25 +440,32 @@ GST_VIDEO_API
 GstNavigationEventType gst_navigation_event_get_type          (GstEvent *event);
 
 GST_VIDEO_API
-GstEvent*       gst_navigation_event_new_key_press            (const gchar * key) G_GNUC_MALLOC;
+GstEvent*       gst_navigation_event_new_key_press            (const gchar * key,
+                                                               GstNavigationModifierType state) G_GNUC_MALLOC;
 
 GST_VIDEO_API
-GstEvent*       gst_navigation_event_new_key_release          (const gchar * key) G_GNUC_MALLOC;
+GstEvent*       gst_navigation_event_new_key_release          (const gchar * key,
+                                                               GstNavigationModifierType state) G_GNUC_MALLOC;
 
 GST_VIDEO_API
 GstEvent*       gst_navigation_event_new_mouse_button_press   (gint button, gdouble x,
-                                                               gdouble y) G_GNUC_MALLOC;
+                                                               gdouble y,
+                                                               GstNavigationModifierType state) G_GNUC_MALLOC;
 
 GST_VIDEO_API
 GstEvent*       gst_navigation_event_new_mouse_button_release (gint button, gdouble x,
-                                                               gdouble y) G_GNUC_MALLOC;
+                                                               gdouble y,
+                                                               GstNavigationModifierType state) G_GNUC_MALLOC;
 
 GST_VIDEO_API
-GstEvent*       gst_navigation_event_new_mouse_move           (gdouble x, gdouble y) G_GNUC_MALLOC;
+GstEvent*       gst_navigation_event_new_mouse_move           (gdouble x,
+                                                               gdouble y,
+                                                               GstNavigationModifierType state) G_GNUC_MALLOC;
 
 GST_VIDEO_API
 GstEvent*       gst_navigation_event_new_mouse_scroll         (gdouble x, gdouble y,
-                                                               gdouble delta_x, gdouble delta_y) G_GNUC_MALLOC;
+                                                               gdouble delta_x, gdouble delta_y,
+                                                               GstNavigationModifierType state) G_GNUC_MALLOC;
 
 GST_VIDEO_API
 GstEvent*       gst_navigation_event_new_command              (GstNavigationCommand command) G_GNUC_MALLOC;
@@ -407,22 +473,25 @@ GstEvent*       gst_navigation_event_new_command              (GstNavigationComm
 GST_VIDEO_API
 GstEvent*       gst_navigation_event_new_touch_down           (guint identifier,
                                                                gdouble x, gdouble y,
-                                                               gdouble pressure) G_GNUC_MALLOC;
+                                                               gdouble pressure,
+                                                               GstNavigationModifierType state) G_GNUC_MALLOC;
 
 GST_VIDEO_API
 GstEvent*       gst_navigation_event_new_touch_motion         (guint identifier,
                                                                gdouble x, gdouble y,
-                                                               gdouble pressure) G_GNUC_MALLOC;
+                                                               gdouble pressure,
+                                                               GstNavigationModifierType state) G_GNUC_MALLOC;
 
 GST_VIDEO_API
 GstEvent*       gst_navigation_event_new_touch_up             (guint identifier,
-                                                               gdouble x, gdouble y) G_GNUC_MALLOC;
+                                                               gdouble x, gdouble y,
+                                                               GstNavigationModifierType state) G_GNUC_MALLOC;
 
 GST_VIDEO_API
-GstEvent*       gst_navigation_event_new_touch_frame          (void) G_GNUC_MALLOC;
+GstEvent*       gst_navigation_event_new_touch_frame          (GstNavigationModifierType state) G_GNUC_MALLOC;
 
 GST_VIDEO_API
-GstEvent*       gst_navigation_event_new_touch_cancel         (void) G_GNUC_MALLOC;
+GstEvent*       gst_navigation_event_new_touch_cancel         (GstNavigationModifierType state) G_GNUC_MALLOC;
 
 GST_VIDEO_API
 gboolean        gst_navigation_event_parse_key_event          (GstEvent *event,
@@ -489,6 +558,10 @@ void    gst_navigation_send_command      (GstNavigation *navigation,
 GST_VIDEO_API
 void    gst_navigation_send_event_simple (GstNavigation *navigation,
                                           GstEvent *event);
+
+GST_VIDEO_API
+gboolean        gst_navigation_event_parse_state (GstEvent *event,
+                                                  GstNavigationModifierType *state);
 
 G_END_DECLS
 

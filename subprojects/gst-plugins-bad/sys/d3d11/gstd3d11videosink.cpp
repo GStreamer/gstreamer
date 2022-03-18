@@ -692,9 +692,9 @@ gst_d3d11_video_sink_key_event (GstD3D11Window * window, const gchar * event,
   if (self->enable_navigation_events) {
     GST_LOG_OBJECT (self, "send key event %s, key %s", event, key);
     if (0 == g_strcmp0 ("key-press", event))
-      key_event = gst_navigation_event_new_key_press (key);
+      key_event = gst_navigation_event_new_key_press (key, GST_NAVIGATION_MODIFIER_NONE);
     else if (0 == g_strcmp0 ("key-release", event))
-      key_event = gst_navigation_event_new_key_release (key);
+      key_event = gst_navigation_event_new_key_release (key, GST_NAVIGATION_MODIFIER_NONE);
 
     if (event)
       gst_navigation_send_event_simple (GST_NAVIGATION (self), key_event);
@@ -711,11 +711,11 @@ gst_d3d11_video_mouse_key_event (GstD3D11Window * window, const gchar * event,
     GST_LOG_OBJECT (self,
         "send mouse event %s, button %d (%.1f, %.1f)", event, button, x, y);
     if (0 == g_strcmp0 ("mouse-button-press", event))
-      mouse_event = gst_navigation_event_new_mouse_button_press (button, x, y);
+      mouse_event = gst_navigation_event_new_mouse_button_press (button, x, y, GST_NAVIGATION_MODIFIER_NONE);
     else if (0 == g_strcmp0 ("mouse-button-release", event))
-      mouse_event = gst_navigation_event_new_mouse_button_release (button, x, y);
+      mouse_event = gst_navigation_event_new_mouse_button_release (button, x, y, GST_NAVIGATION_MODIFIER_NONE);
     else if (0 == g_strcmp0 ("mouse-move", event))
-      mouse_event = gst_navigation_event_new_mouse_move (x, y);
+      mouse_event = gst_navigation_event_new_mouse_move (x, y, GST_NAVIGATION_MODIFIER_NONE);
 
     if (event)
       gst_navigation_send_event_simple (GST_NAVIGATION (self), mouse_event);

@@ -482,7 +482,7 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
         gst_handdetect_navigation_send_event (GST_NAVIGATION (filter),
             gst_navigation_event_new_mouse_move (
               (double) (filter->best_r->x + filter->best_r->width * 0.5),
-              (double) (filter->best_r->y + filter->best_r->height * 0.5)));
+              (double) (filter->best_r->y + filter->best_r->height * 0.5), GST_NAVIGATION_MODIFIER_NONE));
 
 #endif
       }
@@ -571,7 +571,7 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
           gst_handdetect_navigation_send_event (GST_NAVIGATION (filter),
               gst_navigation_event_new_mouse_move (
                 (double) (filter->best_r->x + filter->best_r->width * 0.5),
-                (double) (filter->best_r->y + filter->best_r->height * 0.5)));
+                (double) (filter->best_r->y + filter->best_r->height * 0.5), GST_NAVIGATION_MODIFIER_NONE));
 
           /* or use another way to send upstream navigation event for debug
            *

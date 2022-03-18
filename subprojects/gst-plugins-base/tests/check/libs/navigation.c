@@ -170,14 +170,14 @@ GST_START_TEST (test_events)
   gst_navigation_send_key_event (GST_NAVIGATION (test_element), "key-press",
       "1");
   gst_navigation_send_event_simple (GST_NAVIGATION (test_element),
-      gst_navigation_event_new_key_press ("1"));
+      gst_navigation_event_new_key_press ("1", GST_NAVIGATION_MODIFIER_NONE));
 
   test_element->sent_type = GST_NAVIGATION_EVENT_KEY_RELEASE;
   test_element->sent_key = "2";
   gst_navigation_send_key_event (GST_NAVIGATION (test_element), "key-release",
       "2");
   gst_navigation_send_event_simple (GST_NAVIGATION (test_element),
-      gst_navigation_event_new_key_release ("2"));
+      gst_navigation_event_new_key_release ("2", GST_NAVIGATION_MODIFIER_NONE));
 
   test_element->sent_type = GST_NAVIGATION_EVENT_MOUSE_MOVE;
   test_element->sent_x = 50;
@@ -185,7 +185,8 @@ GST_START_TEST (test_events)
   gst_navigation_send_mouse_event (GST_NAVIGATION (test_element), "mouse-move",
       0, 50, 100);
   gst_navigation_send_event_simple (GST_NAVIGATION (test_element),
-      gst_navigation_event_new_mouse_move (50, 100));
+      gst_navigation_event_new_mouse_move (50, 100,
+          GST_NAVIGATION_MODIFIER_NONE));
 
   test_element->sent_type = GST_NAVIGATION_EVENT_MOUSE_SCROLL;
   test_element->sent_x = 60;
@@ -195,7 +196,8 @@ GST_START_TEST (test_events)
   gst_navigation_send_mouse_scroll_event (GST_NAVIGATION (test_element),
       60, 120, 2, 3);
   gst_navigation_send_event_simple (GST_NAVIGATION (test_element),
-      gst_navigation_event_new_mouse_scroll (60, 120, 2, 3));
+      gst_navigation_event_new_mouse_scroll (60, 120, 2, 3,
+          GST_NAVIGATION_MODIFIER_NONE));
 
   test_element->sent_type = GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS;
   test_element->sent_x = 10;
@@ -204,7 +206,8 @@ GST_START_TEST (test_events)
   gst_navigation_send_mouse_event (GST_NAVIGATION (test_element),
       "mouse-button-press", 1, 10, 20);
   gst_navigation_send_event_simple (GST_NAVIGATION (test_element),
-      gst_navigation_event_new_mouse_button_press (1, 10, 20));
+      gst_navigation_event_new_mouse_button_press (1, 10, 20,
+          GST_NAVIGATION_MODIFIER_NONE));
 
   for (i = 0; i < G_N_ELEMENTS (cmds); i++) {
     test_element->sent_type = GST_NAVIGATION_EVENT_COMMAND;

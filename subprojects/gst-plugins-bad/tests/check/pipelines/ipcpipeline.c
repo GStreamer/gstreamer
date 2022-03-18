@@ -3077,10 +3077,12 @@ send_navigation_event (const GValue * v, gpointer user_data)
 
   switch (d->step) {
     case TEST_NAV_MOUSE_MOVE:
-      e = gst_navigation_event_new_mouse_move (4.7, 0.1);
+      e = gst_navigation_event_new_mouse_move (4.7, 0.1,
+          GST_NAVIGATION_MODIFIER_NONE);
       break;
     case TEST_NAV_KEY_PRESS:
-      e = gst_navigation_event_new_key_press ("Left");
+      e = gst_navigation_event_new_key_press ("Left",
+          GST_NAVIGATION_MODIFIER_NONE);
       break;
   }
 

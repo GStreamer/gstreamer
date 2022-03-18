@@ -2141,10 +2141,12 @@ d3d_wnd_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           if (utfrep) {
             if (message == WM_KEYDOWN)
               gst_navigation_send_event_simple (GST_NAVIGATION (sink),
-                  gst_navigation_event_new_key_press (utfrep));
+                  gst_navigation_event_new_key_press (utfrep,
+                      GST_NAVIGATION_MODIFIER_NONE));
             else if (message == WM_KEYUP)
               gst_navigation_send_event_simple (GST_NAVIGATION (sink),
-                  gst_navigation_event_new_key_release (utfrep));
+                  gst_navigation_event_new_key_release (utfrep,
+                      GST_NAVIGATION_MODIFIER_NONE));
             g_free (utfrep);
           }
         }
@@ -2164,31 +2166,38 @@ d3d_wnd_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         switch (message) {
           case WM_MOUSEMOVE:
             gst_navigation_send_event_simple (GST_NAVIGATION (sink),
-                gst_navigation_event_new_mouse_move (x, y));
+                gst_navigation_event_new_mouse_move (x, y,
+                    GST_NAVIGATION_MODIFIER_NONE));
             break;
           case WM_LBUTTONDOWN:
             gst_navigation_send_event_simple (GST_NAVIGATION (sink),
-                gst_navigation_event_new_mouse_button_press (1, x, y));
+                gst_navigation_event_new_mouse_button_press (1, x, y,
+                    GST_NAVIGATION_MODIFIER_NONE));
             break;
           case WM_LBUTTONUP:
             gst_navigation_send_event_simple (GST_NAVIGATION (sink),
-                gst_navigation_event_new_mouse_button_release (1, x, y));
+                gst_navigation_event_new_mouse_button_release (1, x, y,
+                    GST_NAVIGATION_MODIFIER_NONE));
             break;
           case WM_RBUTTONDOWN:
             gst_navigation_send_event_simple (GST_NAVIGATION (sink),
-                gst_navigation_event_new_mouse_button_press (2, x, y));
+                gst_navigation_event_new_mouse_button_press (2, x, y,
+                    GST_NAVIGATION_MODIFIER_NONE));
             break;
           case WM_RBUTTONUP:
             gst_navigation_send_event_simple (GST_NAVIGATION (sink),
-                gst_navigation_event_new_mouse_button_release (2, x, y));
+                gst_navigation_event_new_mouse_button_release (2, x, y,
+                    GST_NAVIGATION_MODIFIER_NONE));
             break;
           case WM_MBUTTONDOWN:
             gst_navigation_send_event_simple (GST_NAVIGATION (sink),
-                gst_navigation_event_new_mouse_button_press (3, x, y));
+                gst_navigation_event_new_mouse_button_press (3, x, y,
+                    GST_NAVIGATION_MODIFIER_NONE));
             break;
           case WM_MBUTTONUP:
             gst_navigation_send_event_simple (GST_NAVIGATION (sink),
-                gst_navigation_event_new_mouse_button_release (3, x, y));
+                gst_navigation_event_new_mouse_button_release (3, x, y,
+                    GST_NAVIGATION_MODIFIER_NONE));
             break;
           default:
             break;

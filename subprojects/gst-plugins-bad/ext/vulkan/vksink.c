@@ -682,10 +682,15 @@ gst_vulkan_sink_key_event_cb (GstVulkanWindow * window, char *event_name, char
   GstEvent *event = NULL;
 
   GST_DEBUG_OBJECT (vk_sink, "event %s key %s pressed", event_name, key_string);
+  /* FIXME: Add support for modifiers */
   if (0 == g_strcmp0 ("key-press", event_name))
-    event = gst_navigation_event_new_key_press (key_string);
+    event =
+        gst_navigation_event_new_key_press (key_string,
+        GST_NAVIGATION_MODIFIER_NONE);
   else if (0 == g_strcmp0 ("key-release", event_name))
-    event = gst_navigation_event_new_key_release (key_string);
+    event =
+        gst_navigation_event_new_key_release (key_string,
+        GST_NAVIGATION_MODIFIER_NONE);
 
   if (event)
     gst_navigation_send_event_simple (GST_NAVIGATION (vk_sink), event);
@@ -697,13 +702,20 @@ gst_vulkan_sink_mouse_event_cb (GstVulkanWindow * window, char *event_name,
 {
   GstEvent *event = NULL;
 
+  /* FIXME: Add support for modifiers */
   GST_DEBUG_OBJECT (vk_sink, "event %s at %g, %g", event_name, posx, posy);
   if (0 == g_strcmp0 ("mouse-button-press", event_name))
-    event = gst_navigation_event_new_mouse_button_press (button, posx, posy);
+    event =
+        gst_navigation_event_new_mouse_button_press (button, posx, posy,
+        GST_NAVIGATION_MODIFIER_NONE);
   else if (0 == g_strcmp0 ("mouse-button-release", event_name))
-    event = gst_navigation_event_new_mouse_button_release (button, posx, posy);
+    event =
+        gst_navigation_event_new_mouse_button_release (button, posx, posy,
+        GST_NAVIGATION_MODIFIER_NONE);
   else if (0 == g_strcmp0 ("mouse-move", event_name))
-    event = gst_navigation_event_new_mouse_move (posx, posy);
+    event =
+        gst_navigation_event_new_mouse_move (posx, posy,
+        GST_NAVIGATION_MODIFIER_NONE);
 
   if (event)
     gst_navigation_send_event_simple (GST_NAVIGATION (vk_sink), event);

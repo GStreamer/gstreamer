@@ -182,15 +182,15 @@ vpp_test_mouse_events (VppTestContext * ctx,
       switch (j) {
         case 0:
           event = gst_navigation_event_new_mouse_move (params[i].send.x,
-              params[i].send.y);
+              params[i].send.y, GST_NAVIGATION_MODIFIER_NONE);
           break;
         case 1:
           event = gst_navigation_event_new_mouse_button_press (0,
-              params[i].send.x, params[i].send.y);
+              params[i].send.x, params[i].send.y, GST_NAVIGATION_MODIFIER_NONE);
           break;
         case 2:
           event = gst_navigation_event_new_mouse_button_release (0,
-              params[i].send.x, params[i].send.y);
+              params[i].send.x, params[i].send.y, GST_NAVIGATION_MODIFIER_NONE);
           break;
       }
 

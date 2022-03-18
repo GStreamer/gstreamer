@@ -2274,7 +2274,7 @@ button_press_cb (GtkWidget * widget, GdkEventButton * event, PlaybackApp * app)
   if (app->navigation_element)
     gst_navigation_send_event_simple (GST_NAVIGATION (app->navigation_element),
         gst_navigation_event_new_mouse_button_press (event->button, event->x,
-            event->y));
+            event->y, event->state));
 
   return FALSE;
 }
@@ -2286,7 +2286,7 @@ button_release_cb (GtkWidget * widget, GdkEventButton * event,
   if (app->navigation_element)
     gst_navigation_send_event_simple (GST_NAVIGATION (app->navigation_element),
         gst_navigation_event_new_mouse_button_release (event->button, event->x,
-            event->y));
+            event->y, event->state));
 
   return FALSE;
 }
@@ -2296,7 +2296,8 @@ key_press_cb (GtkWidget * widget, GdkEventKey * event, PlaybackApp * app)
 {
   if (app->navigation_element)
     gst_navigation_send_event_simple (GST_NAVIGATION (app->navigation_element),
-        gst_navigation_event_new_key_press (gdk_keyval_name (event->keyval)));
+        gst_navigation_event_new_key_press (gdk_keyval_name (event->keyval),
+            event->state));
 
   return FALSE;
 }
@@ -2306,7 +2307,8 @@ key_release_cb (GtkWidget * widget, GdkEventKey * event, PlaybackApp * app)
 {
   if (app->navigation_element)
     gst_navigation_send_event_simple (GST_NAVIGATION (app->navigation_element),
-        gst_navigation_event_new_key_release (gdk_keyval_name (event->keyval)));
+        gst_navigation_event_new_key_release (gdk_keyval_name (event->keyval),
+            event->state));
 
   return FALSE;
 }
@@ -2316,7 +2318,7 @@ motion_notify_cb (GtkWidget * widget, GdkEventMotion * event, PlaybackApp * app)
 {
   if (app->navigation_element)
     gst_navigation_send_event_simple (GST_NAVIGATION (app->navigation_element),
-        gst_navigation_event_new_mouse_move (event->x, event->y));
+        gst_navigation_event_new_mouse_move (event->x, event->y, event->state));
 
   return FALSE;
 }

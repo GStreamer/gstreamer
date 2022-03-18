@@ -297,8 +297,8 @@ gtk_gst_base_widget_key_event (GtkWidget * widget, GdkEventKey * event)
 
       gst_navigation_send_event_simple (GST_NAVIGATION (element),
           (event->type == GDK_KEY_PRESS) ?
-          gst_navigation_event_new_key_press (str) :
-          gst_navigation_event_new_key_release (str));
+          gst_navigation_event_new_key_press (str, event->state) :
+          gst_navigation_event_new_key_release (str, event->state));
     }
     g_object_unref (element);
   }
@@ -383,9 +383,9 @@ gtk_gst_base_widget_button_event (GtkWidget * widget, GdkEventButton * event)
       gst_navigation_send_event_simple (GST_NAVIGATION (element),
           (event->type == GDK_BUTTON_PRESS) ?
           gst_navigation_event_new_mouse_button_press (event->button,
-              event->x, event->y) :
+              event->x, event->y, event->state) :
           gst_navigation_event_new_mouse_button_release (event->button,
-              event->x, event->y));
+              event->x, event->y, event->state));
     }
     g_object_unref (element);
   }
@@ -402,7 +402,8 @@ gtk_gst_base_widget_motion_event (GtkWidget * widget, GdkEventMotion * event)
   if ((element = g_weak_ref_get (&base_widget->element))) {
     if (GST_IS_NAVIGATION (element)) {
       gst_navigation_send_event_simple (GST_NAVIGATION (element),
-          gst_navigation_event_new_mouse_move (event->x, event->y));
+          gst_navigation_event_new_mouse_move (event->x, event->y,
+              event->state));
     }
     g_object_unref (element);
   }
@@ -447,7 +448,8 @@ gtk_gst_base_widget_scroll_event (GtkWidget * widget, GdkEventScroll * event)
         }
       }
       gst_navigation_send_event_simple (GST_NAVIGATION (element),
-          gst_navigation_event_new_mouse_scroll (x, y, delta_x, delta_y));
+          gst_navigation_event_new_mouse_scroll (x, y, delta_x, delta_y,
+              event->state));
     }
     g_object_unref (element);
   }
@@ -480,14 +482,17 @@ gtk_gst_base_widget_touch_event (GtkWidget * widget, GdkEventTouch * event)
 
       switch (event->type) {
         case GDK_TOUCH_BEGIN:
-          nav_event = gst_navigation_event_new_touch_down (id, x, y, p);
+          nav_event =
+              gst_navigation_event_new_touch_down (id, x, y, p, event->state);
           break;
         case GDK_TOUCH_UPDATE:
-          nav_event = gst_navigation_event_new_touch_motion (id, x, y, p);
+          nav_event =
+              gst_navigation_event_new_touch_motion (id, x, y, p, event->state);
           break;
         case GDK_TOUCH_END:
         case GDK_TOUCH_CANCEL:
-          nav_event = gst_navigation_event_new_touch_up (id, x, y);
+          nav_event =
+              gst_navigation_event_new_touch_up (id, x, y, event->state);
           break;
         default:
           nav_event = NULL;

@@ -606,7 +606,8 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
               GST_DEBUG_OBJECT (dfbvideosink, "key press event %c !",
                   event.input.key_symbol);
               gst_dfbvideosink_navigation_send_event
-                  (gst_navigation_event_new_key_press ("prout"));
+                  (gst_navigation_event_new_key_press ("prout",
+                      GST_NAVIGATION_MODIFIER_NONE));
           }
         } else if (event.input.type == DIET_BUTTONPRESS) {
           gint x, y;
@@ -618,7 +619,7 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
 
           gst_dfbvideosink_navigation_send_event
               (gst_navigation_event_new_mouse_button_press (event.input.button,
-                  x, y));
+                  x, y, GST_NAVIGATION_MODIFIER_NONE));
         } else if (event.input.type == DIET_BUTTONRELEASE) {
           gint x, y;
 
@@ -629,13 +630,14 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
 
           gst_dfbvideosink_navigation_send_event
               (gst_navigation_event_new_mouse_button_release
-              (event.input.button, x, y));
+              (event.input.button, x, y, GST_NAVIGATION_MODIFIER_NONE));
         } else if (event.input.type == DIET_AXISMOTION) {
           gint x, y;
 
           dfbvideosink->layer->GetCursorPosition (dfbvideosink->layer, &x, &y);
           gst_dfbvideosink_navigation_send_event
-              (gst_navigation_event_new_mouse_move (x, y));
+              (gst_navigation_event_new_mouse_move (x, y,
+                  GST_NAVIGATION_MODIFIER_NONE));
         } else {
           GST_WARNING_OBJECT (dfbvideosink, "unhandled event type %d",
               event.input.type);

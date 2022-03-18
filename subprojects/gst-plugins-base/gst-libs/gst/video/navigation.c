@@ -26,27 +26,29 @@
  * @short_description: Interface for creating, sending and parsing navigation
  * events.
  *
- * The Navigation interface is used for creating and injecting navigation related
- * events such as mouse button presses, cursor motion and key presses. The associated
- * library also provides methods for parsing received events, and for sending and
- * receiving navigation related bus events. One main usecase is DVD menu navigation.
+ * The Navigation interface is used for creating and injecting navigation
+ * related events such as mouse button presses, cursor motion and key presses.
+ * The associated library also provides methods for parsing received events, and
+ * for sending and receiving navigation related bus events. One main usecase is
+ * DVD menu navigation.
  *
  * The main parts of the API are:
  *
- * * The GstNavigation interface, implemented by elements which provide an application
- *   with the ability to create and inject navigation events into the pipeline.
- * * GstNavigation event handling API. GstNavigation events are created in response to
- *   calls on a GstNavigation interface implementation, and sent in the pipeline. Upstream
- *   elements can use the navigation event API functions to parse the contents of received
- *   messages.
+ * * The GstNavigation interface, implemented by elements which provide an
+ *   application with the ability to create and inject navigation events into
+ *   the pipeline.
+ * * GstNavigation event handling API. GstNavigation events are created in
+ *   response to calls on a GstNavigation interface implementation, and sent in
+ *   the pipeline. Upstream elements can use the navigation event API functions
+ *   to parse the contents of received messages.
  *
- * * GstNavigation message handling API. GstNavigation messages may be sent on the message
- *   bus to inform applications of navigation related changes in the pipeline, such as the
- *   mouse moving over a clickable region, or the set of available angles changing.
+ * * GstNavigation message handling API. GstNavigation messages may be sent on
+ *   the message bus to inform applications of navigation related changes in the
+ *   pipeline, such as the mouse moving over a clickable region, or the set of
+ *   available angles changing.
  *
- * The GstNavigation message functions provide functions for creating and parsing
- * custom bus messages for signaling GstNavigation changes.
- *
+ * The GstNavigation message functions provide functions for creating and
+ * parsing custom bus messages for signaling GstNavigation changes.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -801,6 +803,8 @@ gst_navigation_event_get_type (GstEvent * event)
 /**
  * gst_navigation_event_new_key_press:
  * @key: A string identifying the key press.
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
  *
  * Create a new navigation event for the given key press.
  *
@@ -809,16 +813,19 @@ gst_navigation_event_get_type (GstEvent * event)
  * Since: 1.22
  */
 GstEvent *
-gst_navigation_event_new_key_press (const gchar * key)
+gst_navigation_event_new_key_press (const gchar * key,
+    GstNavigationModifierType state)
 {
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
           "event", G_TYPE_STRING, "key-press", "key", G_TYPE_STRING, key,
-          NULL));
+          "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state, NULL));
 }
 
 /**
  * gst_navigation_event_new_key_release:
  * @key: A string identifying the released key.
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
  *
  * Create a new navigation event for the given key release.
  *
@@ -827,11 +834,12 @@ gst_navigation_event_new_key_press (const gchar * key)
  * Since: 1.22
  */
 GstEvent *
-gst_navigation_event_new_key_release (const gchar * key)
+gst_navigation_event_new_key_release (const gchar * key,
+    GstNavigationModifierType state)
 {
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
           "event", G_TYPE_STRING, "key-release", "key", G_TYPE_STRING, key,
-          NULL));
+          "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state, NULL));
 }
 
 /**
@@ -839,6 +847,8 @@ gst_navigation_event_new_key_release (const gchar * key)
  * @button: The number of the pressed mouse button.
  * @x: The x coordinate of the mouse cursor.
  * @y: The y coordinate of the mouse cursor.
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
  *
  * Create a new navigation event for the given key mouse button press.
  *
@@ -847,12 +857,14 @@ gst_navigation_event_new_key_release (const gchar * key)
  * Since: 1.22
  */
 GstEvent *
-gst_navigation_event_new_mouse_button_press (gint button, gdouble x, gdouble y)
+gst_navigation_event_new_mouse_button_press (gint button, gdouble x, gdouble y,
+    GstNavigationModifierType state)
 {
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
           "event", G_TYPE_STRING, "mouse-button-press",
           "button", G_TYPE_INT, button, "pointer_x", G_TYPE_DOUBLE, x,
-          "pointer_y", G_TYPE_DOUBLE, y, NULL));
+          "pointer_y", G_TYPE_DOUBLE, y,
+          "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state, NULL));
 }
 
 /**
@@ -860,6 +872,8 @@ gst_navigation_event_new_mouse_button_press (gint button, gdouble x, gdouble y)
  * @button: The number of the released mouse button.
  * @x: The x coordinate of the mouse cursor.
  * @y: The y coordinate of the mouse cursor.
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
  *
  * Create a new navigation event for the given key mouse button release.
  *
@@ -869,18 +883,21 @@ gst_navigation_event_new_mouse_button_press (gint button, gdouble x, gdouble y)
  */
 GstEvent *
 gst_navigation_event_new_mouse_button_release (gint button, gdouble x,
-    gdouble y)
+    gdouble y, GstNavigationModifierType state)
 {
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
           "event", G_TYPE_STRING, "mouse-button-release",
           "button", G_TYPE_INT, button, "pointer_x", G_TYPE_DOUBLE, x,
-          "pointer_y", G_TYPE_DOUBLE, y, NULL));
+          "pointer_y", G_TYPE_DOUBLE, y,
+          "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state, NULL));
 }
 
 /**
  * gst_navigation_event_new_mouse_move:
  * @x: The x coordinate of the mouse cursor.
  * @y: The y coordinate of the mouse cursor.
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
  *
  * Create a new navigation event for the new mouse location.
  *
@@ -889,11 +906,14 @@ gst_navigation_event_new_mouse_button_release (gint button, gdouble x,
  * Since: 1.22
  */
 GstEvent *
-gst_navigation_event_new_mouse_move (gdouble x, gdouble y)
+gst_navigation_event_new_mouse_move (gdouble x, gdouble y,
+    GstNavigationModifierType state)
 {
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
           "event", G_TYPE_STRING, "mouse-move",
-          "pointer_x", G_TYPE_DOUBLE, x, "pointer_y", G_TYPE_DOUBLE, y, NULL));
+          "pointer_x", G_TYPE_DOUBLE, x,
+          "pointer_y", G_TYPE_DOUBLE, y,
+          "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state, NULL));
 }
 
 /**
@@ -902,6 +922,8 @@ gst_navigation_event_new_mouse_move (gdouble x, gdouble y)
  * @y: The y coordinate of the mouse cursor.
  * @delta_x: The x component of the scroll movement.
  * @delta_y: The y component of the scroll movement.
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
  *
  * Create a new navigation event for the mouse scroll.
  *
@@ -911,13 +933,14 @@ gst_navigation_event_new_mouse_move (gdouble x, gdouble y)
  */
 GstEvent *
 gst_navigation_event_new_mouse_scroll (gdouble x, gdouble y, gdouble delta_x,
-    gdouble delta_y)
+    gdouble delta_y, GstNavigationModifierType state)
 {
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
           "event", G_TYPE_STRING, "mouse-scroll",
           "pointer_x", G_TYPE_DOUBLE, x, "pointer_y", G_TYPE_DOUBLE, y,
           "delta_pointer_x", G_TYPE_DOUBLE, delta_x,
-          "delta_pointer_y", G_TYPE_DOUBLE, delta_y, NULL));
+          "delta_pointer_y", G_TYPE_DOUBLE, delta_y,
+          "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state, NULL));
 }
 
 /**
@@ -947,6 +970,8 @@ gst_navigation_event_new_command (GstNavigationCommand command)
  * @y: The y coordinate of the new touch point.
  * @pressure: Pressure data of the touch point, from 0.0 to 1.0, or NaN if no
  *    data is available.
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
  *
  * Create a new navigation event for an added touch point.
  *
@@ -956,14 +981,15 @@ gst_navigation_event_new_command (GstNavigationCommand command)
  */
 GstEvent *
 gst_navigation_event_new_touch_down (guint identifier, gdouble x, gdouble y,
-    gdouble pressure)
+    gdouble pressure, GstNavigationModifierType state)
 {
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
           "event", G_TYPE_STRING, "touch-down",
           "identifier", G_TYPE_UINT, identifier,
           "pointer_x", G_TYPE_DOUBLE, x,
           "pointer_y", G_TYPE_DOUBLE, y,
-          "pressure", G_TYPE_DOUBLE, pressure, NULL));
+          "pressure", G_TYPE_DOUBLE, pressure,
+          "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state, NULL));
 }
 
 /**
@@ -974,6 +1000,8 @@ gst_navigation_event_new_touch_down (guint identifier, gdouble x, gdouble y,
  * @y: The y coordinate of the touch point.
  * @pressure: Pressure data of the touch point, from 0.0 to 1.0, or NaN if no
  *    data is available.
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
  *
  * Create a new navigation event for a moved touch point.
  *
@@ -983,14 +1011,15 @@ gst_navigation_event_new_touch_down (guint identifier, gdouble x, gdouble y,
  */
 GstEvent *
 gst_navigation_event_new_touch_motion (guint identifier, gdouble x, gdouble y,
-    gdouble pressure)
+    gdouble pressure, GstNavigationModifierType state)
 {
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
           "event", G_TYPE_STRING, "touch-motion",
           "identifier", G_TYPE_UINT, identifier,
           "pointer_x", G_TYPE_DOUBLE, x,
           "pointer_y", G_TYPE_DOUBLE, y,
-          "pressure", G_TYPE_DOUBLE, pressure, NULL));
+          "pressure", G_TYPE_DOUBLE, pressure,
+          "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state, NULL));
 }
 
 /**
@@ -1000,6 +1029,8 @@ gst_navigation_event_new_touch_motion (guint identifier, gdouble x, gdouble y,
  *    after sending this event.
  * @x: The x coordinate of the touch point.
  * @y: The y coordinate of the touch point.
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
  *
  * Create a new navigation event for a removed touch point.
  *
@@ -1008,16 +1039,20 @@ gst_navigation_event_new_touch_motion (guint identifier, gdouble x, gdouble y,
  * Since: 1.22
  */
 GstEvent *
-gst_navigation_event_new_touch_up (guint identifier, gdouble x, gdouble y)
+gst_navigation_event_new_touch_up (guint identifier, gdouble x, gdouble y,
+    GstNavigationModifierType state)
 {
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
           "event", G_TYPE_STRING, "touch-up",
           "identifier", G_TYPE_UINT, identifier,
-          "pointer_x", G_TYPE_DOUBLE, x, "pointer_y", G_TYPE_DOUBLE, y, NULL));
+          "pointer_x", G_TYPE_DOUBLE, x, "pointer_y", G_TYPE_DOUBLE, y,
+          "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state, NULL));
 }
 
 /**
  * gst_navigation_event_new_touch_frame:
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
  *
  * Create a new navigation event signalling the end of a touch frame. Touch
  * frames signal that all previous down, motion and up events not followed by
@@ -1028,15 +1063,18 @@ gst_navigation_event_new_touch_up (guint identifier, gdouble x, gdouble y)
  * Since: 1.22
  */
 GstEvent *
-gst_navigation_event_new_touch_frame (void)
+gst_navigation_event_new_touch_frame (GstNavigationModifierType state)
 {
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
-          "event", G_TYPE_STRING, "touch-frame", NULL));
+          "event", G_TYPE_STRING, "touch-frame",
+          "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state, NULL));
 }
 
 
 /**
  * gst_navigation_event_new_touch_cancel:
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
  *
  * Create a new navigation event signalling that all currently active touch
  * points are cancelled and should be discarded. For example, under Wayland
@@ -1048,10 +1086,11 @@ gst_navigation_event_new_touch_frame (void)
  * Since: 1.22
  */
 GstEvent *
-gst_navigation_event_new_touch_cancel (void)
+gst_navigation_event_new_touch_cancel (GstNavigationModifierType state)
 {
   return gst_event_new_navigation (gst_structure_new (GST_NAVIGATION_EVENT_NAME,
-          "event", G_TYPE_STRING, "touch-cancel", NULL));
+          "event", G_TYPE_STRING, "touch-cancel",
+          "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state, NULL));
 }
 
 /**
@@ -1060,6 +1099,11 @@ gst_navigation_event_new_touch_cancel (void)
  * @key: (out) (optional) (transfer none): A pointer to a location to receive
  *     the string identifying the key press. The returned string is owned by the
  *     event, and valid only until the event is unreffed.
+ *
+ * Note: Modifier keys (as defined in #GstNavigationModifierType)
+ * [press](GST_NAVIGATION_EVENT_KEY_PRESS) and
+ * [release](GST_NAVIGATION_KEY_PRESS) events are generated even if those states are
+ * present on all other related events
  */
 gboolean
 gst_navigation_event_parse_key_event (GstEvent * event, const gchar ** key)
@@ -1393,6 +1437,40 @@ gst_navigation_event_set_coordinates (GstEvent * event, gdouble x, gdouble y)
   s = gst_event_writable_structure (event);
   gst_structure_set (s, "pointer_x", G_TYPE_DOUBLE, x,
       "pointer_y", G_TYPE_DOUBLE, y, NULL);
+
+  return TRUE;
+}
+
+
+/**
+ * gst_navigation_event_parse_state:
+ * @event: The #GstEvent to modify.
+ * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
+ * Shift and Alt).
+ *
+ * Returns: TRUE if the event is a #GstNavigation event with associated
+ * modifiers state, otherwise FALSE.
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_navigation_event_parse_state (GstEvent * event,
+    GstNavigationModifierType * state)
+{
+  GstNavigationEventType e_type;
+  const GstStructure *s;
+
+  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+
+  e_type = gst_navigation_event_get_type (event);
+  if (e_type == GST_NAVIGATION_EVENT_COMMAND) {
+    return FALSE;
+  }
+
+  s = gst_event_get_structure (event);
+  if (!gst_structure_get (s, "state", GST_TYPE_NAVIGATION_MODIFIER_TYPE, state,
+          NULL))
+    *state = GST_NAVIGATION_MODIFIER_NONE;
 
   return TRUE;
 }

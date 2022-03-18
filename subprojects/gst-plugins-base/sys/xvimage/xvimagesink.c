@@ -423,6 +423,7 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
 {
   XEvent e;
   gint pointer_x = 0, pointer_y = 0;
+  GstNavigationModifierType state = GST_NAVIGATION_MODIFIER_NONE;
   gboolean pointer_moved = FALSE, touch_frame_open = FALSE;
   gboolean exposed = FALSE, configured = FALSE;
 
@@ -459,7 +460,8 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
     GST_DEBUG ("xvimagesink pointer moved over window at %d,%d",
         pointer_x, pointer_y);
     gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
-        gst_navigation_event_new_mouse_move (e.xbutton.x, e.xbutton.y));
+        gst_navigation_event_new_mouse_move (e.xbutton.x, e.xbutton.y,
+            e.xbutton.state));
 
     g_mutex_lock (&xvimagesink->flow_lock);
     g_mutex_lock (&xvimagesink->context->lock);
@@ -485,7 +487,7 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
             e.xbutton.button, e.xbutton.x, e.xbutton.y);
         gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
             gst_navigation_event_new_mouse_button_press (e.xbutton.button,
-                e.xbutton.x, e.xbutton.y));
+                e.xbutton.x, e.xbutton.y, e.xbutton.state));
         break;
       case ButtonRelease:
         /* Mouse button released over our window. We send upstream
@@ -494,7 +496,7 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
             e.xbutton.button, e.xbutton.x, e.xbutton.y);
         gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
             gst_navigation_event_new_mouse_button_release (e.xbutton.button,
-                e.xbutton.x, e.xbutton.y));
+                e.xbutton.x, e.xbutton.y, e.xbutton.state));
         break;
       case KeyPress:
       case KeyRelease:
@@ -519,8 +521,8 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
             e.xkey.keycode, e.xkey.x, e.xkey.y, key_str);
         gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
             (e.type == KeyPress) ?
-            gst_navigation_event_new_key_press (key_str) :
-            gst_navigation_event_new_key_release (key_str));
+            gst_navigation_event_new_key_press (key_str, e.xkey.state) :
+            gst_navigation_event_new_key_release (key_str, e.xkey.state));
         break;
       default:
         GST_DEBUG_OBJECT (xvimagesink, "xvimagesink unhandled X event (%d)",
@@ -647,6 +649,7 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
           g_mutex_unlock (&xvimagesink->context->lock);
           g_mutex_unlock (&xvimagesink->flow_lock);
 
+          state = touch->mods.effective;
           /* assume the event queue is ordered chronologically, and end */
           /* the previous touch event frame when the timestamp increases */
           if (touch->time != xwindow->last_touch && touch_frame_open) {
@@ -657,7 +660,7 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
               GST_DEBUG ("ximagesink ending touch frame for %lu",
                   xwindow->last_touch);
               gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
-                  gst_navigation_event_new_touch_frame ());
+                  gst_navigation_event_new_touch_frame (state));
             }
           }
 
@@ -667,7 +670,7 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
                   "at %.0f,%.0f", touch->detail, touch->deviceid,
                   touch->event_x, touch->event_y);
               nav = gst_navigation_event_new_touch_down (ev_id,
-                  touch->event_x, touch->event_y, pressure);
+                  touch->event_x, touch->event_y, pressure, state);
               break;
             }
             case XI_TouchEnd:{
@@ -675,7 +678,7 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
                   "at %.0f,%.0f", touch->detail, touch->deviceid,
                   touch->event_x, touch->event_y);
               nav = gst_navigation_event_new_touch_up (ev_id,
-                  touch->event_x, touch->event_y);
+                  touch->event_x, touch->event_y, state);
               break;
             }
             case XI_TouchUpdate:{
@@ -683,7 +686,7 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
                   "to %.0f,%.0f", touch->detail, touch->deviceid,
                   touch->event_x, touch->event_y);
               nav = gst_navigation_event_new_touch_motion (ev_id,
-                  touch->event_x, touch->event_y, pressure);
+                  touch->event_x, touch->event_y, pressure, state);
               break;
             }
             default:
@@ -714,7 +717,7 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
     GST_DEBUG ("xvimagesink ending touch frame for %lu",
         xvimagesink->xwindow->last_touch);
     gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
-        gst_navigation_event_new_touch_frame ());
+        gst_navigation_event_new_touch_frame (state));
   }
 #endif
 }
