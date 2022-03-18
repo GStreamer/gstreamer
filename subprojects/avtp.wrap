@@ -1,4 +1,7 @@
 [wrap-git]
-directory=avtp
-url=https://github.com/Avnu/libavtp.git
-revision=9482c1143d2bca1303c4c0eeff30674eb468d357
+directory = libavtp
+url = https://github.com/Avnu/libavtp.git
+revision = v0.2.0
+
+[provide]
+avtp = avtp_dep
