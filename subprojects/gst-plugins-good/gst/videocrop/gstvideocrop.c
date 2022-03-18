@@ -243,7 +243,7 @@ gst_video_crop_init (GstVideoCrop * vcrop)
 #define ROUND_DOWN_2(n)  ((n)&(~1))
 
 static void
-gst_video_crop_transform_packed_complex (GstVideoCrop * vcrop,
+gst_video_crop_transform_packed_yvyu (GstVideoCrop * vcrop,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame, gint x, gint y)
 {
   guint8 *in_data, *out_data;
@@ -448,9 +448,8 @@ gst_video_crop_transform_frame (GstVideoFilter * vfilter,
     case VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE:
       gst_video_crop_transform_packed_simple (vcrop, in_frame, out_frame, x, y);
       break;
-    case VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX:
-      gst_video_crop_transform_packed_complex (vcrop, in_frame, out_frame, x,
-          y);
+    case VIDEO_CROP_PIXEL_FORMAT_PACKED_YVYU:
+      gst_video_crop_transform_packed_yvyu (vcrop, in_frame, out_frame, x, y);
       break;
     case VIDEO_CROP_PIXEL_FORMAT_PLANAR:
       gst_video_crop_transform_planar (vcrop, in_frame, out_frame, x, y);
@@ -833,7 +832,7 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
     case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
-      crop->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX;
+      crop->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_YVYU;
       if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_UYVY) {
         /* UYVY = 4:2:2 - [U0 Y0 V0 Y1] [U2 Y2 V2 Y3] [U4 Y4 V4 Y5] */
         crop->macro_y_off = 1;
