@@ -240,8 +240,6 @@ gst_video_crop_init (GstVideoCrop * vcrop)
   vcrop->crop_bottom = 0;
 }
 
-#define ROUND_DOWN_2(n)  ((n)&(~1))
-
 static void
 gst_video_crop_transform_packed_yvyu (GstVideoCrop * vcrop,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame, gint x, gint y)
@@ -265,7 +263,7 @@ gst_video_crop_transform_packed_yvyu (GstVideoCrop * vcrop,
 
   /* rounding down here so we end up at the start of a macro-pixel and not
    * in the middle of one */
-  in_data += ROUND_DOWN_2 (vcrop->crop_left) *
+  in_data += GST_ROUND_DOWN_2 (vcrop->crop_left) *
       GST_VIDEO_FRAME_COMP_PSTRIDE (in_frame, 0);
 
   dx = width * GST_VIDEO_FRAME_COMP_PSTRIDE (out_frame, 0);
