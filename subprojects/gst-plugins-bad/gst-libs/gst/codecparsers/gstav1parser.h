@@ -1421,7 +1421,7 @@ struct _GstAV1FilmGrainParams {
  *   of bitstream conformance that whenever @display_frame_id is read, the value matches
  *   @ref_frame_id[ @frame_to_show_map_idx ] (the value of @current_frame_id at the time that the
  *   frame indexed by @frame_to_show_map_idx was stored), and that
- *   @ref_valid[ @frame_to_show_map_idx ] is equjal to 1. It is a requirement of bitstream
+ *   @ref_valid[ @frame_to_show_map_idx ] is equal to 1. It is a requirement of bitstream
  *   conformance that the number of bits needed to read @display_frame_id does not exceed 16.
  *   This is equivalent to the constraint that idLen <= 16
  * @frame_type: specifies the type of the frame.
