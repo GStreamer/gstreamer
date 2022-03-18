@@ -42,8 +42,8 @@ cd $WORK
 
 # 1) BUILD GLIB AND GSTREAMER
 # Note: we build glib ourselves so that we get proper malloc/free backtraces
-tar xvJf $SRC/glib-2.64.2.tar.xz
-cd glib-2.64.2
+tar xvJf $SRC/glib-2.72.0.tar.xz
+cd glib-2.72.0
 # options taken from glib's oss-fuzz build definition
 meson \
     --prefix=$PREFIX \
@@ -52,7 +52,6 @@ meson \
     -Db_lundef=false \
     -Doss_fuzz=enabled \
     -Dlibmount=disabled \
-    -Dinternal_pcre=true \
     _builddir
 ninja -C _builddir
 ninja -C _builddir install
