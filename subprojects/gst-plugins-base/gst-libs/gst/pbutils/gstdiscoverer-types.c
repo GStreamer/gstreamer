@@ -74,6 +74,8 @@ gst_discoverer_stream_info_finalize (GObject * object)
 
   if (info->misc)
     gst_structure_free (info->misc);
+
+  G_OBJECT_CLASS (gst_discoverer_stream_info_parent_class)->finalize (object);
 }
 
 static void
@@ -180,7 +182,8 @@ gst_discoverer_container_info_finalize (GObject * object)
   if (info->tags)
     gst_tag_list_unref (info->tags);
 
-  gst_discoverer_stream_info_finalize ((GObject *) info);
+  G_OBJECT_CLASS (gst_discoverer_container_info_parent_class)->finalize
+      (object);
 }
 
 static void
@@ -388,6 +391,8 @@ gst_discoverer_info_finalize (GObject * object)
   g_free (info->cachefile);
 
   g_ptr_array_unref (info->missing_elements_details);
+
+  G_OBJECT_CLASS (gst_discoverer_info_parent_class)->finalize (object);
 }
 
 static GstDiscovererInfo *
