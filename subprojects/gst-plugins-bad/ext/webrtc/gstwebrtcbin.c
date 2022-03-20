@@ -8426,7 +8426,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    *
    * RTCOutboundRTPStreamStats supported fields (https://w3c.github.io/webrtc-stats/#outboundrtpstats-dict*)
    *
-   *  "remote-id"           G_TYPE_STRING               identifier for the associated RTCRemoteInboundRTPSTreamStats
+   *  "remote-id"           G_TYPE_STRING               identifier for the associated RTCRemoteInboundRTPSTreamStats (optional since 1.22)
    *  "fir-count"           G_TYPE_UINT                 FIR packets received by the sender
    *  "pli-count"           G_TYPE_UINT                 PLI packets received by the sender
    *  "nack-count"          G_TYPE_UINT                 NACK packets received by the sender
@@ -8436,6 +8436,21 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    *  "local-id"            G_TYPE_STRING               identifier for the associated RTCInboundRTPSTreamStats
    *  "remote-timestamp"    G_TYPE_DOUBLE               remote timestamp the statistics were sent by the remote
    *
+   * RTCIceCandidateStats supported fields (https://www.w3.org/TR/webrtc-stats/#icecandidate-dict*) (Since: 1.22)
+   *
+   *  "transport-id"         G_TYPE_STRING              identifier for the associated RTCTransportStats for this stream
+   *  "address"              G_TYPE_STRING              address of the candidate, allowing for IPv4, IPv6 and FQDNs
+   *  "port"                 G_TYPE_UINT                port number of the candidate
+   *  "candidate-type"       G_TYPE_STRING              RTCIceCandidateType
+   *  "priority"             G_TYPE_UINT64              calculated as defined in RFC 5245
+   *  "protocol"             G_TYPE_STRING              Either "udp" or "tcp". Based on the "transport" defined in RFC 5245
+   *  "relay-protocol"       G_TYPE_STRING              protocol used by the endpoint to communicate with the TURN server. Only present for local candidates. Either "udp", "tcp" or "tls"
+   *  "url"                  G_TYPE_STRING              URL of the ICE server from which the candidate was obtained. Only present for local candidates
+   *
+   * RTCIceCandidatePairStats supported fields (https://www.w3.org/TR/webrtc-stats/#candidatepair-dict*) (Since: 1.22)
+   *
+   *  "local-candidate-id"  G_TYPE_STRING               unique identifier that is associated to the object that was inspected to produce the RTCIceCandidateStats for the local candidate associated with this candidate pair.
+   *  "remote-candidate-id" G_TYPE_STRING               unique identifier that is associated to the object that was inspected to produce the RTCIceCandidateStats for the remote candidate associated with this candidate pair.
    */
   gst_webrtc_bin_signals[GET_STATS_SIGNAL] =
       g_signal_new_class_handler ("get-stats",
