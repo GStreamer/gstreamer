@@ -7696,25 +7696,29 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    *  "ssrc"                G_TYPE_STRING               the rtp sequence src in use
    *  "transport-id"        G_TYPE_STRING               identifier for the associated RTCTransportStats for this stream
    *  "codec-id"            G_TYPE_STRING               identifier for the associated RTCCodecStats for this stream
-   *  "fir-count"           G_TYPE_UINT                 FIR requests received by the sender (only for local statistics)
-   *  "pli-count"           G_TYPE_UINT                 PLI requests received by the sender (only for local statistics)
-   *  "nack-count"          G_TYPE_UINT                 NACK requests received by the sender (only for local statistics)
    *
    * RTCReceivedStreamStats supported fields (https://w3c.github.io/webrtc-stats/#receivedrtpstats-dict*)
    *
-   *  "packets-received"     G_TYPE_UINT64              number of packets received (only for local inbound)
-   *  "bytes-received"       G_TYPE_UINT64              number of bytes received (only for local inbound)
-   *  "packets-lost"         G_TYPE_UINT                number of packets lost
-   *  "jitter"               G_TYPE_DOUBLE              packet jitter measured in secondss
+   *  "packets-received"    G_TYPE_UINT64               number of packets received (only for local inbound)
+   *  "packets-lost"        G_TYPE_UINT64               number of packets lost
+   *  "packets-discarded"   G_TYPE_UINT64               number of packets discarded
+   *  "packets-repaired"    G_TYPE_UINT64               number of packets repaired
+   *  "jitter"              G_TYPE_DOUBLE               packet jitter measured in seconds
    *
    * RTCInboundRTPStreamStats supported fields (https://w3c.github.io/webrtc-stats/#inboundrtpstats-dict*)
    *
    *  "remote-id"           G_TYPE_STRING               identifier for the associated RTCRemoteOutboundRTPStreamStats
+   *  "bytes-received"      G_TYPE_UINT64               number of bytes received (only for local inbound)
+   *  "packets-duplicated"  G_TYPE_UINT64               number of packets duplicated
+   *  "fir-count"           G_TYPE_UINT                 FIR packets sent by the receiver
+   *  "pli-count"           G_TYPE_UINT                 PLI packets sent by the receiver
+   *  "nack-count"          G_TYPE_UINT                 NACK packets sent by the receiver
    *
    * RTCRemoteInboundRTPStreamStats supported fields (https://w3c.github.io/webrtc-stats/#remoteinboundrtpstats-dict*)
    *
    *  "local-id"            G_TYPE_STRING               identifier for the associated RTCOutboundRTPSTreamStats
    *  "round-trip-time"     G_TYPE_DOUBLE               round trip time of packets measured in seconds
+   *  "fraction-lost"       G_TYPE_DOUBLE               fraction packet loss
    *
    * RTCSentRTPStreamStats supported fields (https://w3c.github.io/webrtc-stats/#sentrtpstats-dict*)
    *
@@ -7724,10 +7728,14 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    * RTCOutboundRTPStreamStats supported fields (https://w3c.github.io/webrtc-stats/#outboundrtpstats-dict*)
    *
    *  "remote-id"           G_TYPE_STRING               identifier for the associated RTCRemoteInboundRTPSTreamStats
+   *  "fir-count"           G_TYPE_UINT                 FIR packets received by the sender
+   *  "pli-count"           G_TYPE_UINT                 PLI packets received by the sender
+   *  "nack-count"          G_TYPE_UINT                 NACK packets received by the sender
    *
    * RTCRemoteOutboundRTPStreamStats supported fields (https://w3c.github.io/webrtc-stats/#remoteoutboundrtpstats-dict*)
    *
    *  "local-id"            G_TYPE_STRING               identifier for the associated RTCInboundRTPSTreamStats
+   *  "remote-timestamp"    G_TYPE_DOUBLE               remote timestamp the statistics were sent by the remote
    *
    */
   gst_webrtc_bin_signals[GET_STATS_SIGNAL] =
