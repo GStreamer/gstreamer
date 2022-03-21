@@ -44,11 +44,15 @@ driverdir = libva_dep.get_variable('driverdir', default_value: '')
 if driverdir == ''
   driverdir = join_paths(get_option('prefix'), get_option('libdir'), 'dri')
 endif
-gstva_cargs = ['-DLIBVA_DRIVERS_PATH="' + driverdir + '"']
+gstva_cargs = [
+  '-DLIBVA_DRIVERS_PATH="' + driverdir + '"',
+  '-std=c99',
+  '-DGST_USE_UNSTABLE_API',
+]
 
 gstva = library('gstva',
   va_sources,
-  c_args : gst_plugins_bad_args + extra_c_args + gstva_cargs + ['-std=c99'],
+  c_args : gst_plugins_bad_args + gstva_cargs,
   include_directories : [configinc],
   dependencies : [gstvideo_dep, gstcodecs_dep, gstallocators_dep, gstva_dep, libgudev_dep] + extra_dep,
   install : true,
