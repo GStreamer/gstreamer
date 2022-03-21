@@ -222,8 +222,8 @@ struct _GstWebRTCDataChannelClass
 {
   GObjectClass        parent_class;
 
-  void              (*send_data)   (GstWebRTCDataChannel * channel, GBytes *data);
-  void              (*send_string) (GstWebRTCDataChannel * channel, const gchar *str);
+  gboolean          (*send_data)   (GstWebRTCDataChannel * channel, GBytes *data, GError ** error);
+  gboolean          (*send_string) (GstWebRTCDataChannel * channel, const gchar *str, GError ** error);
   void              (*close)       (GstWebRTCDataChannel * channel);
 
   gpointer           _padding[GST_PADDING];

@@ -745,35 +745,30 @@ _is_within_max_message_size (WebRTCDataChannel * channel, gsize size)
   return size <= channel->sctp_transport->max_message_size;
 }
 
-static void
+static gboolean
 webrtc_data_channel_send_data (GstWebRTCDataChannel * base_channel,
-    GBytes * bytes)
+    GBytes * bytes, GError ** error)
 {
   WebRTCDataChannel *channel = WEBRTC_DATA_CHANNEL (base_channel);
   GstSctpSendMetaPartiallyReliability reliability;
   guint rel_param;
   guint32 ppid;
   GstBuffer *buffer;
+  gsize size = 0;
   GstFlowReturn ret;
 
   if (!bytes) {
     buffer = gst_buffer_new ();
     ppid = DATA_CHANNEL_PPID_WEBRTC_BINARY_EMPTY;
   } else {
-    gsize size;
     guint8 *data;
 
     data = (guint8 *) g_bytes_get_data (bytes, &size);
-    g_return_if_fail (data != NULL);
+    g_return_val_if_fail (data != NULL, FALSE);
     if (!_is_within_max_message_size (channel, size)) {
-      GError *error = NULL;
-      g_set_error (&error, GST_WEBRTC_ERROR,
-          GST_WEBRTC_ERROR_DATA_CHANNEL_FAILURE,
+      g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_TYPE_ERROR,
           "Requested to send data that is too large");
-      _channel_store_error (channel, error);
-      _channel_enqueue_task (channel, (ChannelTask) _close_procedure, NULL,
-          NULL);
-      return;
+      return FALSE;
     }
 
     buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, data, size,
@@ -789,52 +784,61 @@ webrtc_data_channel_send_data (GstWebRTCDataChannel * base_channel,
       buffer);
 
   GST_WEBRTC_DATA_CHANNEL_LOCK (channel);
-  channel->parent.buffered_amount += gst_buffer_get_size (buffer);
+  if (channel->parent.ready_state == GST_WEBRTC_DATA_CHANNEL_STATE_OPEN) {
+    channel->parent.buffered_amount += size;
+  } else {
+    GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
+    g_set_error (error, GST_WEBRTC_ERROR,
+        GST_WEBRTC_ERROR_INVALID_STATE, "channel is not open");
+    return FALSE;
+  }
   GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
-  g_object_notify (G_OBJECT (&channel->parent), "buffered-amount");
 
   ret = gst_app_src_push_buffer (GST_APP_SRC (channel->appsrc), buffer);
-
-  if (ret != GST_FLOW_OK) {
-    GError *error = NULL;
-    g_set_error (&error, GST_WEBRTC_ERROR,
+  if (ret == GST_FLOW_OK) {
+    g_object_notify (G_OBJECT (&channel->parent), "buffered-amount");
+  } else {
+    g_set_error (error, GST_WEBRTC_ERROR,
         GST_WEBRTC_ERROR_DATA_CHANNEL_FAILURE, "Failed to send data");
-    _channel_store_error (channel, error);
+
+    GST_WEBRTC_DATA_CHANNEL_LOCK (channel);
+    channel->parent.buffered_amount -= size;
+    GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
+
     _channel_enqueue_task (channel, (ChannelTask) _close_procedure, NULL, NULL);
+    return FALSE;
   }
+
+  return TRUE;
 }
 
-static void
+static gboolean
 webrtc_data_channel_send_string (GstWebRTCDataChannel * base_channel,
-    const gchar * str)
+    const gchar * str, GError ** error)
 {
   WebRTCDataChannel *channel = WEBRTC_DATA_CHANNEL (base_channel);
   GstSctpSendMetaPartiallyReliability reliability;
   guint rel_param;
   guint32 ppid;
   GstBuffer *buffer;
+  gsize size = 0;
   GstFlowReturn ret;
 
   if (!channel->parent.negotiated)
-    g_return_if_fail (channel->opened);
-  g_return_if_fail (channel->sctp_transport != NULL);
+    g_return_val_if_fail (channel->opened, FALSE);
+  g_return_val_if_fail (channel->sctp_transport != NULL, FALSE);
 
   if (!str) {
     buffer = gst_buffer_new ();
     ppid = DATA_CHANNEL_PPID_WEBRTC_STRING_EMPTY;
   } else {
-    gsize size = strlen (str);
     gchar *str_copy;
+    size = strlen (str);
 
     if (!_is_within_max_message_size (channel, size)) {
-      GError *error = NULL;
-      g_set_error (&error, GST_WEBRTC_ERROR,
-          GST_WEBRTC_ERROR_DATA_CHANNEL_FAILURE,
+      g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_TYPE_ERROR,
           "Requested to send a string that is too large");
-      _channel_store_error (channel, error);
-      _channel_enqueue_task (channel, (ChannelTask) _close_procedure, NULL,
-          NULL);
-      return;
+      return FALSE;
     }
 
     str_copy = g_strdup (str);
@@ -852,19 +856,32 @@ webrtc_data_channel_send_string (GstWebRTCDataChannel * base_channel,
       buffer);
 
   GST_WEBRTC_DATA_CHANNEL_LOCK (channel);
-  channel->parent.buffered_amount += gst_buffer_get_size (buffer);
+  if (channel->parent.ready_state == GST_WEBRTC_DATA_CHANNEL_STATE_OPEN) {
+    channel->parent.buffered_amount += size;
+  } else {
+    GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
+    g_set_error (error, GST_WEBRTC_ERROR,
+        GST_WEBRTC_ERROR_INVALID_STATE, "channel is not open");
+    return FALSE;
+  }
   GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
-  g_object_notify (G_OBJECT (&channel->parent), "buffered-amount");
 
   ret = gst_app_src_push_buffer (GST_APP_SRC (channel->appsrc), buffer);
-
-  if (ret != GST_FLOW_OK) {
-    GError *error = NULL;
-    g_set_error (&error, GST_WEBRTC_ERROR,
+  if (ret == GST_FLOW_OK) {
+    g_object_notify (G_OBJECT (&channel->parent), "buffered-amount");
+  } else {
+    g_set_error (error, GST_WEBRTC_ERROR,
         GST_WEBRTC_ERROR_DATA_CHANNEL_FAILURE, "Failed to send string");
-    _channel_store_error (channel, error);
+
+    GST_WEBRTC_DATA_CHANNEL_LOCK (channel);
+    channel->parent.buffered_amount -= size;
+    GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
+
     _channel_enqueue_task (channel, (ChannelTask) _close_procedure, NULL, NULL);
+    return FALSE;
   }
+
+  return TRUE;
 }
 
 static void

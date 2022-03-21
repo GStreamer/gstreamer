@@ -37,13 +37,21 @@ GType gst_webrtc_data_channel_get_type(void);
 #define GST_WEBRTC_DATA_CHANNEL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_WEBRTC_DATA_CHANNEL,GstWebRTCDataChannelClass))
 
 GST_WEBRTC_API
-void gst_webrtc_data_channel_send_data (GstWebRTCDataChannel * channel, GBytes * data);
+gboolean gst_webrtc_data_channel_send_data_full (GstWebRTCDataChannel * channel, GBytes * data, GError ** error);
 
 GST_WEBRTC_API
-void gst_webrtc_data_channel_send_string (GstWebRTCDataChannel * channel, const gchar * str);
+gboolean gst_webrtc_data_channel_send_string_full (GstWebRTCDataChannel * channel, const gchar * str, GError ** error);
 
 GST_WEBRTC_API
 void gst_webrtc_data_channel_close (GstWebRTCDataChannel * channel);
+
+#ifndef GST_REMOVE_DEPRECATED
+GST_WEBRTC_DEPRECATED_FOR(gst_webrtc_data_channel_send_data_full)
+void gst_webrtc_data_channel_send_data (GstWebRTCDataChannel * channel, GBytes * data);
+
+GST_WEBRTC_DEPRECATED_FOR(gst_webrtc_data_channel_send_string_full)
+void gst_webrtc_data_channel_send_string (GstWebRTCDataChannel * channel, const gchar * str);
+#endif
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCDataChannel, g_object_unref)
 

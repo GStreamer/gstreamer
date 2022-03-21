@@ -2094,13 +2094,16 @@ have_data_channel_transfer_string (struct test_webrtc *t, GstElement * element,
 {
   GObject *other = user_data;
   GstWebRTCDataChannelState state;
+  GError *error = NULL;
 
   g_object_get (our, "ready-state", &state, NULL);
   fail_unless_equals_int (GST_WEBRTC_DATA_CHANNEL_STATE_OPEN, state);
 
   g_object_set_data_full (our, "expected", g_strdup (test_string), g_free);
 
-  g_signal_emit_by_name (other, "send-string", test_string);
+  fail_unless (gst_webrtc_data_channel_send_string_full (GST_WEBRTC_DATA_CHANNEL
+          (other), test_string, &error));
+  g_assert_null (error);
 }
 
 GST_START_TEST (test_data_channel_transfer_string)
@@ -2171,6 +2174,7 @@ have_data_channel_transfer_data (struct test_webrtc *t, GstElement * element,
   GObject *other = user_data;
   GBytes *data = g_bytes_new_static (test_string, strlen (test_string));
   GstWebRTCDataChannelState state;
+  GError *error = NULL;
 
   g_object_get (our, "ready-state", &state, NULL);
   fail_unless_equals_int (GST_WEBRTC_DATA_CHANNEL_STATE_OPEN, state);
@@ -2178,7 +2182,9 @@ have_data_channel_transfer_data (struct test_webrtc *t, GstElement * element,
   g_object_set_data_full (our, "expected", g_bytes_ref (data),
       (GDestroyNotify) g_bytes_unref);
 
-  g_signal_emit_by_name (other, "send-data", data);
+  fail_unless (gst_webrtc_data_channel_send_data_full (GST_WEBRTC_DATA_CHANNEL
+          (other), data, &error));
+  g_assert_null (error);
   g_bytes_unref (data);
 }
 
@@ -2445,7 +2451,8 @@ have_data_channel_check_low_threshold_emitted (struct test_webrtc *t,
 
   g_signal_connect (our, "on-error", G_CALLBACK (on_channel_error_not_reached),
       NULL);
-  g_signal_emit_by_name (our, "send-string", "A");
+  gst_webrtc_data_channel_send_string_full (GST_WEBRTC_DATA_CHANNEL (our), "A",
+      NULL);
 }
 
 GST_START_TEST (test_data_channel_low_threshold)
@@ -2484,14 +2491,6 @@ GST_START_TEST (test_data_channel_low_threshold)
 GST_END_TEST;
 
 static void
-on_channel_error (GObject * channel, GError * error, struct test_webrtc *t)
-{
-  g_assert_nonnull (error);
-
-  test_webrtc_signal_state (t, STATE_CUSTOM);
-}
-
-static void
 have_data_channel_transfer_large_data (struct test_webrtc *t,
     GstElement * element, GObject * our, gpointer user_data)
 {
@@ -2500,6 +2499,7 @@ have_data_channel_transfer_large_data (struct test_webrtc *t,
   guint8 *random_data = g_new (guint8, size);
   GBytes *data;
   gsize i;
+  GError *error = NULL;
 
   for (i = 0; i < size; i++)
     random_data[i] = (guint8) (i & 0xff);
@@ -2511,9 +2511,15 @@ have_data_channel_transfer_large_data (struct test_webrtc *t,
       (GDestroyNotify) g_bytes_unref);
   g_signal_connect (our, "on-message-data", G_CALLBACK (on_message_data), t);
 
-  g_signal_connect (other, "on-error", G_CALLBACK (on_channel_error), t);
-  g_signal_emit_by_name (other, "send-data", data);
+  g_signal_connect (other, "on-error",
+      G_CALLBACK (on_channel_error_not_reached), NULL);
+  fail_if (gst_webrtc_data_channel_send_data_full (GST_WEBRTC_DATA_CHANNEL
+          (other), data, &error));
+  g_assert_nonnull (error);
+  g_clear_error (&error);
   g_bytes_unref (data);
+
+  test_webrtc_signal_state_unlocked (t, STATE_CUSTOM);
 }
 
 GST_START_TEST (test_data_channel_max_message_size)

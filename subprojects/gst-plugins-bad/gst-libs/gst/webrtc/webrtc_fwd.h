@@ -40,6 +40,20 @@
 # endif
 #endif
 
+/**
+ * GST_WEBRTC_DEPRECATED: (attributes doc.skip=true)
+ */
+/**
+ * GST_WEBRTC_DEPRECATED_FOR: (attributes doc.skip=true)
+ */
+#ifndef GST_DISABLE_DEPRECATED
+#define GST_WEBRTC_DEPRECATED GST_WEBRTC_API
+#define GST_WEBRTC_DEPRECATED_FOR(f) GST_WEBRTC_API
+#else
+#define GST_WEBRTC_DEPRECATED G_DEPRECATED GST_WEBRTC_API
+#define GST_WEBRTC_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) GST_WEBRTC_API
+#endif
+
 #include <gst/webrtc/webrtc-enumtypes.h>
 
 /**
@@ -472,6 +486,13 @@ GQuark gst_webrtc_error_quark (void);
  * Since: 1.20
  */
 /**
+ * GST_WEBRTC_ERROR_TYPE_ERROR:
+ *
+ * type-error (maps to JavaScript TypeError)
+ *
+ * Since: 1.22
+ */
+/**
  * GST_WEBRTC_ERROR_INVALID_MODIFICATION:
  *
  * invalid-modification (part of WebIDL specification)
@@ -488,6 +509,7 @@ typedef enum /*<underscore_name=gst_webrtc_error>*/
   GST_WEBRTC_ERROR_HARDWARE_ENCODER_NOT_AVAILABLE,
   GST_WEBRTC_ERROR_ENCODER_ERROR,
   GST_WEBRTC_ERROR_INVALID_STATE,
+  GST_WEBRTC_ERROR_TYPE_ERROR,
   GST_WEBRTC_ERROR_INTERNAL_FAILURE,
   GST_WEBRTC_ERROR_INVALID_MODIFICATION,
 } GstWebRTCError;
