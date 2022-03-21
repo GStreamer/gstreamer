@@ -114,6 +114,7 @@ gst_v4l2_decoder_finalize (GObject * obj)
   g_free (self->media_device);
   g_free (self->video_device);
   gst_queue_array_free (self->request_pool);
+  gst_queue_array_free (self->pending_requests);
 
   G_OBJECT_CLASS (gst_v4l2_decoder_parent_class)->finalize (obj);
 }
