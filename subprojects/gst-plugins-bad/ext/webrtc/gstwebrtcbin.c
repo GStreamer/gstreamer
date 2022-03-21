@@ -2724,6 +2724,23 @@ typedef struct
   WebRTCTransceiver *trans;
 } RtxSsrcData;
 
+/* https://tools.ietf.org/html/draft-ietf-mmusic-msid-16 */
+static gchar *
+_construct_msid (WebRTCTransceiver * trans, guint ssrc)
+{
+  gchar *ret;
+
+  if (trans->msid_appdata) {
+    ret =
+        g_strdup_printf ("%u msid:%s %s", ssrc, GST_OBJECT_NAME (trans),
+        trans->msid_appdata);
+  } else {
+    ret = g_strdup_printf ("%u msid:%s", ssrc, GST_OBJECT_NAME (trans));
+  }
+
+  return ret;
+}
+
 static gboolean
 _media_add_rtx_ssrc (GQuark field_id, const GValue * value, RtxSsrcData * data)
 {
@@ -2735,10 +2752,8 @@ _media_add_rtx_ssrc (GQuark field_id, const GValue * value, RtxSsrcData * data)
   /* http://www.freesoft.org/CIE/RFC/1889/24.htm */
   cname = gst_structure_get_string (sdes, "cname");
 
-  /* https://tools.ietf.org/html/draft-ietf-mmusic-msid-16 */
-  str =
-      g_strdup_printf ("%u msid:%s %s", g_value_get_uint (value),
-      cname, GST_OBJECT_NAME (data->trans));
+  str = _construct_msid (data->trans, g_value_get_uint (value));
+
   gst_sdp_media_add_attribute (data->media, "ssrc", str);
   g_free (str);
 
@@ -2775,10 +2790,8 @@ _media_add_ssrcs (GstSDPMedia * media, GstCaps * caps, GstWebRTCBin * webrtc,
     if (gst_structure_get_uint (s, "ssrc", &ssrc)) {
       gchar *str;
 
-      /* https://tools.ietf.org/html/draft-ietf-mmusic-msid-16 */
-      str =
-          g_strdup_printf ("%u msid:%s %s", ssrc, cname,
-          GST_OBJECT_NAME (trans));
+      str = _construct_msid (trans, ssrc);
+
       gst_sdp_media_add_attribute (media, "ssrc", str);
       g_free (str);
 

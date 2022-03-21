@@ -4425,6 +4425,66 @@ GST_START_TEST (test_renego_rtx)
 
 GST_END_TEST;
 
+static void
+_check_msid_appdata (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer expected)
+{
+  guint i = 0;
+
+  for (i = 0; i < gst_sdp_message_medias_len (desc->sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
+
+    if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0
+        || g_strcmp0 (gst_sdp_media_get_media (media), "video") == 0) {
+      int j;
+
+      for (j = 0; j < gst_sdp_media_attributes_len (media); j++) {
+        const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, j);
+
+        if (!g_strcmp0 (attr->key, "ssrc")) {
+          gchar **split = g_strsplit (attr->value, " ", 3);
+
+          fail_unless (g_strv_length (split) >= 2);
+
+          if (g_str_has_prefix (split[1], "msid:")) {
+            if (expected) {
+              fail_unless_equals_int (g_strv_length (split), 3);
+              fail_unless_equals_string (split[2], expected);
+            } else {
+              fail_unless_equals_int (g_strv_length (split), 2);
+            }
+          }
+
+          g_strfreev (split);
+        }
+      }
+    }
+  }
+}
+
+GST_START_TEST (test_msid_appdata)
+{
+  struct test_webrtc *t = create_audio_test ();
+  gchar *expected = g_strdup ("foobar");
+  GstWebRTCRTPTransceiver *trans;
+
+  VAL_SDP_INIT (offer, _check_msid_appdata, expected, NULL);
+  VAL_SDP_INIT (answer, _check_msid_appdata, expected, NULL);
+
+  g_signal_emit_by_name (t->webrtc1, "get-transceiver", 0, &trans);
+  g_object_set (trans, "msid-appdata", expected, NULL);
+  g_clear_object (&trans);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  g_free (expected);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -4480,6 +4540,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_codec_preferences_incompatible_extmaps);
     tcase_add_test (tc, test_codec_preferences_invalid_extmap);
     tcase_add_test (tc, test_renego_rtx);
+    tcase_add_test (tc, test_msid_appdata);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
