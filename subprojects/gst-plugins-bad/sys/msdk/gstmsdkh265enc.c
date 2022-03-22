@@ -130,12 +130,20 @@ enum
 #define PRFOLIE_STR     "{ " PROFILES_1032 " }"
 #endif
 
+#ifdef _WIN32
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT,
+            "{ NV12, P010_10LE }")));
+#else
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT,
             "{ NV12, P010_10LE }") "; "
         GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("NV12")));
+#endif
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
