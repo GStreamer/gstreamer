@@ -26,7 +26,7 @@ variables:
   ###
   FEDORA_TAG:  '2022-03-14.0'
   INDENT_TAG: '2022-03-07.1'
-  WINDOWS_TAG: "2022-04-26.0"
+  WINDOWS_TAG: "2022-05-09.0"
 
   GST_UPSTREAM_REPO: 'gstreamer/gstreamer'
   FDO_UPSTREAM_REPO: 'gstreamer/gstreamer'
@@ -180,7 +180,7 @@ windows amd64 docker:
   tags:
     - windows
     - shell
-    - "1809"
+    - "2022"
   script:
     # We need to pass an array and to resolve the env vars, so we can't use a variable:
     - $DOCKER_BUILD_ARGS = @("--build-arg", "DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH")
@@ -208,7 +208,7 @@ windows amd64 docker:
   tags:
     - 'windows'
     - 'shell'
-    - '1809'
+    - '2022'
   script:
     # We need to pass an array and to resolve the env vars, so we can't use a variable:
     - $DOCKER_BUILD_ARGS = @("--build-arg", "DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH", "--build-arg", "BASE_IMAGE=$WINDOWS_IMAGE", "--build-arg", "RUST_VERSION=$RUST_VERSION")
@@ -371,7 +371,7 @@ build clang fedora x86_64:
   tags:
     - 'docker'
     - 'windows'
-    - '1809'
+    - '2022'
   needs:
     - "windows amd64 docker"
   timeout: '45min'
