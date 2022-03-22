@@ -132,6 +132,11 @@
 /* for XkbKeycodeToKeysym */
 #include <X11/XKBlib.h>
 
+/* for touchscreen events */
+#ifdef HAVE_XI2
+#include <X11/extensions/XInput2.h>
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_xv_context);
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_xv_image_pool);
 GST_DEBUG_CATEGORY (gst_debug_xv_image_sink);
@@ -418,7 +423,7 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
 {
   XEvent e;
   gint pointer_x = 0, pointer_y = 0;
-  gboolean pointer_moved = FALSE;
+  gboolean pointer_moved = FALSE, touch_frame_open = FALSE;
   gboolean exposed = FALSE, configured = FALSE;
 
   g_return_if_fail (GST_IS_XV_IMAGE_SINK (xvimagesink));
@@ -557,11 +562,11 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
     g_mutex_lock (&xvimagesink->context->lock);
   }
 
-  /* Handle Display events */
   while (XPending (xvimagesink->context->disp)) {
     XNextEvent (xvimagesink->context->disp, &e);
 
     switch (e.type) {
+        /* Handle Display events */
       case ClientMessage:{
         Atom wm_delete;
 
@@ -579,13 +584,139 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
         }
         break;
       }
-      default:
+      default:{
+#ifdef HAVE_XI2
+        /* Handle XInput2 touch screen events */
+        if (xvimagesink->context->use_xi2
+            && XGetEventData (xvimagesink->context->disp,
+                (XGenericEventCookie *) & e)
+            && e.xcookie.extension == xvimagesink->context->xi_opcode) {
+          XGenericEventCookie *cookie;
+          XIDeviceEvent *touch;
+          GstXvTouchDevice device;
+          GstXWindow *xwindow;
+          GstEvent *nav;
+          gdouble pressure;
+          gboolean device_found;
+          unsigned int ev_id, i;
+
+          cookie = &e.xcookie;
+          xwindow = xvimagesink->xwindow;
+          nav = NULL;
+
+          if (cookie->evtype == XI_HierarchyChanged) {
+            GST_DEBUG ("ximagesink devices changed, searching for "
+                "touch devices again");
+            gst_xwindow_select_touch_events (xvimagesink->context, xwindow);
+            break;
+          }
+
+          if (cookie->evtype != XI_TouchBegin
+              && cookie->evtype != XI_TouchUpdate
+              && cookie->evtype != XI_TouchEnd)
+            break;
+
+          touch = cookie->data;
+          ev_id = ((unsigned int) touch->deviceid) << 16 |
+              (((unsigned int) touch->detail) & 0x00ff);
+
+          /* find device that the event belongs to */
+          device_found = FALSE;
+          for (i = 0; i < xwindow->touch_devices->len; i++) {
+            device = g_array_index (xwindow->touch_devices,
+                GstXvTouchDevice, i);
+            if (device.id == touch->deviceid) {
+              device_found = TRUE;
+              break;
+            }
+          }
+          if (!device_found)
+            break;
+
+          if (device.pressure_valuator >= 0) {
+            pressure = touch->valuators.values[device.pressure_valuator];
+            pressure -= device.pressure_min;
+            pressure /= device.pressure_max - device.pressure_min;
+            if (!device.abs_pressure)
+              pressure += device.current_pressure;
+          } else
+            pressure = NAN;
+
+          device.current_pressure = pressure;
+
+          g_mutex_unlock (&xvimagesink->context->lock);
+          g_mutex_unlock (&xvimagesink->flow_lock);
+
+          /* assume the event queue is ordered chronologically, and end */
+          /* the previous touch event frame when the timestamp increases */
+          if (touch->time != xwindow->last_touch && touch_frame_open) {
+            if (touch->time < xwindow->last_touch) {
+              GST_WARNING ("ximagesink out of order touch event "
+                  "with timestamp %lu, not ending touch frame", touch->time);
+            } else {
+              GST_DEBUG ("ximagesink ending touch frame for %lu",
+                  xwindow->last_touch);
+              gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
+                  gst_navigation_event_new_touch_frame ());
+            }
+          }
+
+          switch (cookie->evtype) {
+            case XI_TouchBegin:{
+              GST_DEBUG ("xvimagesink new touch point %d on device %d "
+                  "at %.0f,%.0f", touch->detail, touch->deviceid,
+                  touch->event_x, touch->event_y);
+              nav = gst_navigation_event_new_touch_down (ev_id,
+                  touch->event_x, touch->event_y, pressure);
+              break;
+            }
+            case XI_TouchEnd:{
+              GST_DEBUG ("xvimagesink removed touch point %d from device %d "
+                  "at %.0f,%.0f", touch->detail, touch->deviceid,
+                  touch->event_x, touch->event_y);
+              nav = gst_navigation_event_new_touch_up (ev_id,
+                  touch->event_x, touch->event_y);
+              break;
+            }
+            case XI_TouchUpdate:{
+              GST_DEBUG ("xvimagesink touch point %d on device %d moved "
+                  "to %.0f,%.0f", touch->detail, touch->deviceid,
+                  touch->event_x, touch->event_y);
+              nav = gst_navigation_event_new_touch_motion (ev_id,
+                  touch->event_x, touch->event_y, pressure);
+              break;
+            }
+            default:
+              break;
+          }
+
+          gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink), nav);
+          xvimagesink->xwindow->last_touch = touch->time;
+          touch_frame_open = TRUE;
+
+          g_mutex_lock (&xvimagesink->flow_lock);
+          g_mutex_lock (&xvimagesink->context->lock);
+          XFreeEventData (xvimagesink->context->disp, cookie);
+        }
+#endif
         break;
+      }
     }
   }
 
   g_mutex_unlock (&xvimagesink->context->lock);
   g_mutex_unlock (&xvimagesink->flow_lock);
+
+#ifdef HAVE_XI2
+  /* send a touch-frame event now to avoid delay from having to wait for the */
+  /* next invocation */
+  if (touch_frame_open) {
+    GST_DEBUG ("xvimagesink ending touch frame for %lu",
+        xvimagesink->xwindow->last_touch);
+    gst_navigation_send_event_simple (GST_NAVIGATION (xvimagesink),
+        gst_navigation_event_new_touch_frame ());
+  }
+#endif
 }
 
 static gpointer

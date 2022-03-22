@@ -47,6 +47,7 @@ G_BEGIN_DECLS
 typedef struct _GstXvContextConfig GstXvContextConfig;
 typedef struct _GstXvImageFormat GstXvImageFormat;
 typedef struct _GstXvContext GstXvContext;
+typedef struct _GstXvTouchDevice GstXvTouchDevice;
 
 /**
  * GstXvContextConfig:
@@ -112,6 +113,9 @@ struct _GstXvImageFormat
  * if the Extension is present
  * @use_xkb: used to known wether of not Xkb extension is usable or not even
  * if the Extension is present
+ * @use_xi2: used to known wether of not XInput extension is usable or not even
+ * if the Extension is present
+ * @xi_opcode: XInput opcode
  * @xv_port_id: the XVideo port ID
  * @im_format: used to store at least a valid format for XShm calls checks
  * @formats_list: list of supported image formats on @xv_port_id
@@ -148,6 +152,8 @@ struct _GstXvContext
 
   gboolean use_xshm;
   gboolean use_xkb;
+  gboolean use_xi2;
+  int xi_opcode;
 
   XvPortID xv_port_id;
   guint nb_adaptors;
@@ -217,6 +223,8 @@ typedef struct _GstXWindow GstXWindow;
  * @internal: used to remember if Window @win was created internally or passed
  * through the #GstVideoOverlay interface
  * @gc: the Graphical Context of Window @win
+ * @last_touch: timestamp of the last received touch event
+ * @touch_devices: list of known touchscreen devices
  *
  * Structure used to store information about a Window.
  */
@@ -230,6 +238,30 @@ struct _GstXWindow
   GstVideoRectangle render_rect;
   gboolean internal;
   GC gc;
+
+#ifdef HAVE_XI2
+  Time last_touch;
+  GArray *touch_devices;
+#endif
+};
+
+/*
+ * GstXvTouchDevice:
+ * @name: the name of this decive
+ * @id: the device ID of this device
+ * @pressure_valuator: index of the valuator that encodes pressure data, if present
+ * @abs_pressure: if pressure is reported in absolute or relative values
+ * @current_pressure: stores the most recent pressure value for this device
+ * @pressure_min: lowest possible pressure value
+ * @pressure_max: highest possible pressure value
+ *
+ * Structure used to store information about a touchscreen device.
+ */
+struct _GstXvTouchDevice {
+  gchar *name;
+  gint id, pressure_valuator;
+  gboolean abs_pressure;
+  gdouble current_pressure, pressure_min, pressure_max;
 };
 
 G_END_DECLS
@@ -239,6 +271,10 @@ GstXWindow *   gst_xvcontext_create_xwindow     (GstXvContext * context,
 GstXWindow *   gst_xvcontext_create_xwindow_from_xid (GstXvContext * context, XID xid);
 
 void           gst_xwindow_destroy              (GstXWindow * window);
+
+#ifdef HAVE_XI2
+void           gst_xwindow_select_touch_events  (GstXvContext * context, GstXWindow * window);
+#endif
 
 void           gst_xwindow_set_event_handling   (GstXWindow * window, gboolean handle_events);
 void           gst_xwindow_set_title            (GstXWindow * window, const gchar * title);

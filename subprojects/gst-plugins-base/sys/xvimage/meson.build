@@ -19,7 +19,7 @@ if xvideo_dep.found()
     xvimage_sources,
     c_args : gst_plugins_base_args + no_warn_args,
     include_directories: [configinc, libsinc],
-    dependencies : glib_deps + [video_dep, gst_base_dep, gst_dep, x11_dep, xshm_dep, xvideo_dep, libm],
+    dependencies : glib_deps + [video_dep, gst_base_dep, gst_dep, x11_dep, xshm_dep, xvideo_dep, xi_dep, libm],
     install : true,
     install_dir : plugins_install_dir,
   )

@@ -33,6 +33,11 @@
 /* for XkbKeycodeToKeysym */
 #include <X11/XKBlib.h>
 
+/* for touchscreen events */
+#ifdef HAVE_XI2
+#include <X11/extensions/XInput2.h>
+#endif
+
 GST_DEBUG_CATEGORY (gst_debug_xv_context);
 #define GST_CAT_DEFAULT gst_debug_xv_context
 
@@ -642,8 +647,12 @@ gst_xvcontext_new (GstXvContextConfig * config, GError ** error)
     "XV_BRIGHTNESS", "XV_CONTRAST"
   };
   int opcode, event, err;
-  int major = XkbMajorVersion;
-  int minor = XkbMinorVersion;
+  int xkb_major = XkbMajorVersion;
+  int xkb_minor = XkbMinorVersion;
+#ifdef HAVE_XI2
+  int xi2_major = XI_2_Major;
+  int xi2_minor = XI_2_Minor;
+#endif
 
   g_return_val_if_fail (config != NULL, NULL);
 
@@ -726,12 +735,29 @@ gst_xvcontext_new (GstXvContextConfig * config, GError ** error)
     context->use_xshm = FALSE;
     GST_DEBUG ("xvimagesink is not using XShm extension");
   }
-  if (XkbQueryExtension (context->disp, &opcode, &event, &err, &major, &minor)) {
+  if (XkbQueryExtension (context->disp, &opcode, &event, &err, &xkb_major,
+          &xkb_minor)) {
     context->use_xkb = TRUE;
     GST_DEBUG ("xvimagesink is using Xkb extension");
   } else {
     context->use_xkb = FALSE;
     GST_DEBUG ("xvimagesink is not using Xkb extension");
+  }
+
+  /* Search for XInput extension support */
+#ifdef HAVE_XI2
+  if (XQueryExtension (context->disp, "XInputExtension",
+          &(context->xi_opcode), &event, &err)
+      && (XIQueryVersion (context->disp, &xi2_major, &xi2_minor) == Success
+          && (xi2_major > 2 || (xi2_major == 2 && xi2_minor >= 2)))) {
+    context->use_xi2 = TRUE;
+    GST_DEBUG ("xvimagesink is using XInput extension");
+  } else
+#endif /* HAVE_XI2 */
+  {
+    context->use_xi2 = FALSE;
+    GST_DEBUG ("xvimagesink is not using XInput extension: "
+        "XInput is not present");
   }
 
   xv_attr = XvQueryPortAttributes (context->disp, context->xv_port_id, &N_attr);
@@ -943,6 +969,14 @@ gst_xvcontext_set_colorimetry (GstXvContext * context,
   g_mutex_unlock (&context->lock);
 }
 
+#ifdef HAVE_XI2
+static void
+gst_xv_touchdevice_free (GstXvTouchDevice * device)
+{
+  g_free (device->name);
+}
+#endif
+
 GstXWindow *
 gst_xvcontext_create_xwindow (GstXvContext * context, gint width, gint height)
 {
@@ -963,6 +997,13 @@ gst_xvcontext_create_xwindow (GstXvContext * context, gint width, gint height)
   window->width = width;
   window->height = height;
   window->internal = TRUE;
+
+#ifdef HAVE_XI2
+  window->last_touch = 0;
+  window->touch_devices = g_array_new (FALSE, FALSE, sizeof (GstXvTouchDevice));
+  g_array_set_clear_func (window->touch_devices,
+      (GDestroyNotify) gst_xv_touchdevice_free);
+#endif
 
   g_mutex_lock (&context->lock);
 
@@ -1033,6 +1074,13 @@ gst_xvcontext_create_xwindow_from_xid (GstXvContext * context, XID xid)
   window->render_rect.w = attr.width;
   window->render_rect.h = attr.height;
 
+#ifdef HAVE_XI2
+  window->last_touch = 0;
+  window->touch_devices = g_array_new (FALSE, FALSE, sizeof (GstXvTouchDevice));
+  g_array_set_clear_func (window->touch_devices,
+      (GDestroyNotify) gst_xv_touchdevice_free);
+#endif
+
   window->gc = XCreateGC (context->disp, window->win, 0, NULL);
   g_mutex_unlock (&context->lock);
 
@@ -1050,6 +1098,10 @@ gst_xwindow_destroy (GstXWindow * window)
 
   g_mutex_lock (&context->lock);
 
+#ifdef HAVE_XI2
+  g_array_free (window->touch_devices, TRUE);
+#endif
+
   /* If we did not create that window we just free the GC and let it live */
   if (window->internal)
     XDestroyWindow (context->disp, window->win);
@@ -1066,6 +1118,91 @@ gst_xwindow_destroy (GstXWindow * window)
 
   g_slice_free1 (sizeof (GstXWindow), window);
 }
+
+#ifdef HAVE_XI2
+void
+gst_xwindow_select_touch_events (GstXvContext * context, GstXWindow * window)
+{
+  XIDeviceInfo *devices;
+  int ndevices, i, j, mask_len;
+  unsigned char *mask;
+
+  window->touch_devices = g_array_remove_range (window->touch_devices,
+      0, window->touch_devices->len);
+
+  mask_len = (XI_LASTEVENT + 7) << 3;
+  mask = g_new0 (unsigned char, mask_len);
+  XISetMask (mask, XI_TouchBegin);
+  XISetMask (mask, XI_TouchUpdate);
+  XISetMask (mask, XI_TouchEnd);
+
+  devices = XIQueryDevice (window->context->disp, XIAllDevices, &ndevices);
+
+  /* Find suitable touch screen devices, and select touch events for each */
+  for (i = 0; i < ndevices; i++) {
+    XIEventMask mask_data;
+    GstXvTouchDevice temp, *device;
+    gboolean has_touch = FALSE;
+
+    if (devices[i].use != XISlavePointer)
+      continue;
+
+    temp.pressure_valuator = -1;
+    temp.id = devices[i].deviceid;
+    temp.name = devices[i].name;
+
+    for (j = 0; j < devices[i].num_classes; j++) {
+      XIAnyClassInfo *class = devices[i].classes[j];
+
+      /* only pick devices with direct touch, to avoid touchpads and similar */
+      if (class->type == XITouchClass &&
+          ((XITouchClassInfo *) class)->mode == XIDirectTouch) {
+        has_touch = TRUE;
+      }
+
+      /* Find the valuator representing pressure, if present */
+      if (class->type == XIValuatorClass) {
+        XIValuatorClassInfo *val_info = (XIValuatorClassInfo *) class;
+
+        if (val_info->label == XInternAtom (context->disp,
+                "Abs Pressure", TRUE))
+          temp.abs_pressure = TRUE;
+        else if (val_info->label == XInternAtom (context->disp,
+                "Rel Pressure", TRUE))
+          temp.abs_pressure = FALSE;
+        else
+          continue;
+
+        temp.pressure_valuator = i;
+        temp.pressure_min = val_info->min;
+        temp.pressure_max = val_info->max;
+        temp.current_pressure = temp.pressure_min;
+      }
+    }
+
+    if (has_touch) {
+      GST_DEBUG ("found%s touch screen with id %d: %s",
+          temp.pressure_valuator < 0 ? "" : (temp.abs_pressure ?
+              "pressure-sensitive (abs)" : "pressure-sensitive (rel)"),
+          temp.id, temp.name);
+
+      device = g_new (GstXvTouchDevice, 1);
+      *device = temp;
+      device->name = g_strdup (device->name);
+      window->touch_devices =
+          g_array_append_vals (window->touch_devices, device, 1);
+
+      mask_data.deviceid = temp.id;
+      mask_data.mask_len = mask_len;
+      mask_data.mask = mask;
+      XISelectEvents (context->disp, window->win, &mask_data, 1);
+    }
+  }
+
+  g_free (mask);
+  XIFreeDeviceInfo (devices);
+}
+#endif
 
 void
 gst_xwindow_set_event_handling (GstXWindow * window, gboolean handle_events)
@@ -1087,6 +1224,23 @@ gst_xwindow_set_event_handling (GstXWindow * window, gboolean handle_events)
           ExposureMask | StructureNotifyMask | PointerMotionMask |
           KeyPressMask | KeyReleaseMask);
     }
+
+#ifdef HAVE_XI2
+    if (context->use_xi2) {
+      XIEventMask mask_data;
+      unsigned char mask[2];
+
+      gst_xwindow_select_touch_events (context, window);
+
+      XISetMask (mask, XI_HierarchyChanged);
+      mask_data.deviceid = XIAllDevices;
+      mask_data.mask_len = sizeof (mask);
+      mask_data.mask = mask;
+
+      /* register for HierarchyChanged events to see device changes */
+      XISelectEvents (context->disp, window->win, &mask_data, 1);
+    }
+#endif
   } else {
     XSelectInput (context->disp, window->win, 0);
   }
