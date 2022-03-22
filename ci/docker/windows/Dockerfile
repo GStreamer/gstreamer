@@ -1,10 +1,12 @@
 # escape=`
 
-FROM 'mcr.microsoft.com/windows/servercore:ltsc2019'
+FROM 'mcr.microsoft.com/windows/server:ltsc2022'
 
-# Make sure any failure in PowerShell scripts is fatal
-SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
+# Make sure any failure in PowerShell is fatal
 ENV ErrorActionPreference='Stop'
+SHELL ["powershell","-NoLogo", "-NonInteractive", "-Command"]
+
+RUN Install-WindowsFeature -Name Server-Media-Foundation
 
 # Install Chocolatey
 RUN iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
