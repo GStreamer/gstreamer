@@ -87,6 +87,9 @@ struct _GstV4l2Decoder
   gchar *media_device;
   gchar *video_device;
   guint render_delay;
+
+  /* detected features */
+  gboolean supports_holding_capture;
 };
 
 G_DEFINE_TYPE_WITH_CODE (GstV4l2Decoder, gst_v4l2_decoder, GST_TYPE_OBJECT,
@@ -486,6 +489,13 @@ gst_v4l2_decoder_request_buffers (GstV4l2Decoder * self,
   if (ret < 0) {
     GST_ERROR_OBJECT (self, "VIDIOC_REQBUFS failed: %s", g_strerror (errno));
     return ret;
+  }
+
+  if (direction == GST_PAD_SINK) {
+    if (reqbufs.capabilities & V4L2_BUF_CAP_SUPPORTS_M2M_HOLD_CAPTURE_BUF)
+      self->supports_holding_capture = TRUE;
+    else
+      self->supports_holding_capture = FALSE;
   }
 
   return reqbufs.count;
@@ -1085,6 +1095,15 @@ gst_v4l2_request_queue (GstV4l2Request * request, guint flags)
   guint max_pending;
 
   GST_TRACE_OBJECT (decoder, "Queuing request %i.", request->fd);
+
+  /* this would lead to stalls if we tried to use this feature and it wasn't
+   * supported. */
+  if ((flags & V4L2_BUF_FLAG_M2M_HOLD_CAPTURE_BUF)
+      && !decoder->supports_holding_capture) {
+    GST_ERROR_OBJECT (decoder,
+        "Driver does not support holding capture buffer.");
+    return FALSE;
+  }
 
   if (!gst_v4l2_decoder_queue_sink_mem (decoder, request,
           request->bitstream, request->frame_num, flags)) {
