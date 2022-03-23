@@ -80,4 +80,28 @@ echo "==========================================================================
         exit 1
     fi
 done
+
+csharp_files=` git diff-index --cached --name-only HEAD --diff-filter=ACMR| grep "^subprojects/gstreamer-sharp/.*cs$" `
+if test "x$csharp_files" != "x"; then
+  version=`dotnet-format --version 2>/dev/null`
+  if test "x$version" = "x"; then
+      echo "GStreamer git pre-commit hook:"
+      echo "Did not find dotnet-format required to format C# files, please install it before continuing."
+      exit 1
+  fi
+  scripts/format-csharp --check
+  r=$?
+  if [ $r != 0 ] ; then
+echo "================================================================================================="
+echo " Code style error:                                                                               "
+echo "                                                                                                 "
+echo " Please fix before committing, running from the top-level directory:                             "
+echo "   scripts/format-chsarp                                                                         "
+echo "                                                                                                 "
+echo " Don't forget to run git add before trying to commit again.                                      "
+echo "================================================================================================="
+    exit 1
+  fi
+fi
+
 echo "--Checking style pass--"
