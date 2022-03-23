@@ -1345,7 +1345,7 @@ gst_qsv_h264_enc_set_output_state (GstQsvEncoder * encoder,
       return FALSE;
     }
 
-    data = sps_nalu.data + sps_nalu.offset;
+    data = sps_nalu.data + sps_nalu.offset + sps_nalu.header_bytes;
     profile_idc = data[0];
     profile_comp = data[1];
     level_idc = data[2];
