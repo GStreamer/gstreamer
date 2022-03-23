@@ -559,19 +559,26 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
              (slice_hdr->field_pic_flag ? V4L2_H264_DECODE_PARAM_FLAG_FIELD_PIC : 0) |
              (slice_hdr->bottom_field_flag ? V4L2_H264_DECODE_PARAM_FLAG_BOTTOM_FIELD : 0),
   };
+  /* *INDENT-ON* */
 
   switch (picture->field) {
     case GST_H264_PICTURE_FIELD_FRAME:
       self->decode_params.top_field_order_cnt = picture->top_field_order_cnt;
       self->decode_params.bottom_field_order_cnt =
-        picture->bottom_field_order_cnt;
+          picture->bottom_field_order_cnt;
       break;
     case GST_H264_PICTURE_FIELD_TOP_FIELD:
       self->decode_params.top_field_order_cnt = picture->top_field_order_cnt;
       self->decode_params.bottom_field_order_cnt = 0;
+      if (picture->other_field)
+        self->decode_params.bottom_field_order_cnt =
+            picture->other_field->bottom_field_order_cnt;
       break;
     case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
       self->decode_params.top_field_order_cnt = 0;
+      if (picture->other_field)
+        self->decode_params.top_field_order_cnt =
+            picture->other_field->top_field_order_cnt;
       self->decode_params.bottom_field_order_cnt =
           picture->bottom_field_order_cnt;
       break;
@@ -599,6 +606,7 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
     }
 
     entry = &self->decode_params.dpb[entry_id++];
+    /* *INDENT-OFF* */
     *entry = (struct v4l2_h264_dpb_entry) {
       /*
        * The reference is multiplied by 1000 because it's was set as micro
@@ -636,7 +644,7 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
 
         if (ref_pic->other_field) {
           entry->top_field_order_cnt =
-            ref_pic->other_field->top_field_order_cnt;
+              ref_pic->other_field->top_field_order_cnt;
           entry->fields |= V4L2_H264_TOP_FIELD_REF;
         }
         break;
