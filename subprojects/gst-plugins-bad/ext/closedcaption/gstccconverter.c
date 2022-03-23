@@ -795,17 +795,23 @@ static gboolean
 write_cea608 (GstCCConverter * self, gboolean pad_cea608,
     const struct cdp_fps_entry *out_fps_entry, const guint8 * cea608_1,
     guint cea608_1_len, const guint8 * cea608_2, guint cea608_2_len,
-    guint8 * out, guint * out_size)
+    guint8 * out, guint * out_size, gboolean * is_last_cea608_field1)
 {
   guint i = 0, out_i = 0, max_size = 0, cea608_1_i = 0, cea608_2_i = 0;
   guint cea608_output_count;
   guint total_cea608_1_count, total_cea608_2_count;
+  gboolean write_cea608_field2_first = FALSE;
+  gboolean wrote_field1_last = FALSE;
+  gboolean wrote_first = FALSE;
 
   g_assert (out);
   g_assert (out_size);
   g_assert (!cea608_1 || cea608_1_len % 2 == 0);
   g_assert (!cea608_2 || cea608_2_len % 2 == 0);
   g_assert (cea608_1 || cea608_2);
+
+  if (is_last_cea608_field1)
+    write_cea608_field2_first = *is_last_cea608_field1;
 
   cea608_1_len /= 2;
   cea608_2_len /= 2;
@@ -818,9 +824,6 @@ write_cea608 (GstCCConverter * self, gboolean pad_cea608,
   g_assert_cmpint (cea608_1_len + cea608_2_len, <=,
       out_fps_entry->max_cea608_count);
 
-  total_cea608_1_count = cea608_1_len;
-  total_cea608_2_count = cea608_2_len;
-
 #if 0
   /* FIXME: if cea608 field 2 is generated, field 1 needs to be generated. */
   if (cea608_1_len < cea608_2_len)
@@ -830,7 +833,7 @@ write_cea608 (GstCCConverter * self, gboolean pad_cea608,
   if (pad_cea608) {
     max_size = out_fps_entry->max_cea608_count * 3;
   } else {
-    max_size = total_cea608_1_count + total_cea608_2_count * 3;
+    max_size = (cea608_1_len + cea608_2_len) * 3;
   }
   if (*out_size < max_size) {
     GST_WARNING_OBJECT (self, "Output data too small (%u < %u) for cea608 data",
@@ -841,17 +844,24 @@ write_cea608 (GstCCConverter * self, gboolean pad_cea608,
   /* FIXME: interlacing, tff, rff, ensuring cea608 field1 is generated if
    * field2 exists even across packets */
 
+  total_cea608_1_count = cea608_1_len;
+  total_cea608_2_count = cea608_2_len;
   cea608_output_count = cea608_1_len + cea608_2_len;
   if (pad_cea608) {
-    for (i = total_cea608_1_count + total_cea608_2_count;
-        i < out_fps_entry->max_cea608_count; i++) {
-      /* try to pad evenly */
-      if (!cea608_2 || i > cea608_1_len / 2)
-        total_cea608_1_count++;
-      else
+    guint max_cea608_count = out_fps_entry->max_cea608_count;
+
+    total_cea608_1_count = max_cea608_count / 2;
+    total_cea608_2_count = max_cea608_count / 2;
+
+    if (total_cea608_1_count + total_cea608_2_count < max_cea608_count) {
+      if (write_cea608_field2_first) {
         total_cea608_2_count++;
-      cea608_output_count++;
+      } else {
+        total_cea608_1_count++;
+      }
     }
+
+    cea608_output_count = total_cea608_1_count + total_cea608_2_count;
   }
 
   GST_LOG ("writing %u cea608-1 fields and %u cea608-2 fields",
@@ -859,19 +869,24 @@ write_cea608 (GstCCConverter * self, gboolean pad_cea608,
   g_assert_cmpint (total_cea608_1_count + total_cea608_2_count, <=,
       out_fps_entry->max_cea608_count);
 
+  wrote_first = !write_cea608_field2_first;
   while (cea608_1_i + cea608_2_i < cea608_output_count) {
-    if (cea608_1_i < cea608_1_len) {
-      out[out_i++] = 0xfc;
-      out[out_i++] = cea608_1[cea608_1_i * 2];
-      out[out_i++] = cea608_1[cea608_1_i * 2 + 1];
-      cea608_1_i++;
-      i++;
-    } else if (cea608_1_i < total_cea608_1_count) {
-      out[out_i++] = 0xf8;
-      out[out_i++] = 0x80;
-      out[out_i++] = 0x80;
-      cea608_1_i++;
-      i++;
+    if (wrote_first) {
+      if (cea608_1_i < cea608_1_len) {
+        out[out_i++] = 0xfc;
+        out[out_i++] = cea608_1[cea608_1_i * 2];
+        out[out_i++] = cea608_1[cea608_1_i * 2 + 1];
+        cea608_1_i++;
+        i++;
+        wrote_field1_last = TRUE;
+      } else if (cea608_1_i < total_cea608_1_count) {
+        out[out_i++] = 0xf8;
+        out[out_i++] = 0x80;
+        out[out_i++] = 0x80;
+        cea608_1_i++;
+        i++;
+        wrote_field1_last = TRUE;
+      }
     }
 
     if (cea608_2_i < cea608_2_len) {
@@ -880,18 +895,24 @@ write_cea608 (GstCCConverter * self, gboolean pad_cea608,
       out[out_i++] = cea608_2[cea608_2_i * 2 + 1];
       cea608_2_i++;
       i++;
+      wrote_field1_last = FALSE;
     } else if (cea608_2_i < total_cea608_2_count) {
       out[out_i++] = 0xf9;
       out[out_i++] = 0x80;
       out[out_i++] = 0x80;
       cea608_2_i++;
       i++;
+      wrote_field1_last = FALSE;
     }
+
+    wrote_first = TRUE;
   }
 
   g_assert_cmpint (out_i / 3, <=, out_fps_entry->max_cea608_count);
 
   *out_size = out_i;
+  if (is_last_cea608_field1)
+    *is_last_cea608_field1 = wrote_field1_last;
 
   return TRUE;
 }
@@ -900,7 +921,8 @@ static gboolean
 combine_cc_data (GstCCConverter * self, gboolean pad_cea608,
     const struct cdp_fps_entry *out_fps_entry, const guint8 * ccp_data,
     guint ccp_data_len, const guint8 * cea608_1, guint cea608_1_len,
-    const guint8 * cea608_2, guint cea608_2_len, guint8 * out, guint * out_size)
+    const guint8 * cea608_2, guint cea608_2_len, guint8 * out, guint * out_size,
+    gboolean * last_cea608_is_field1)
 {
   guint out_i = 0, max_size = 0;
   guint cea608_size = *out_size;
@@ -911,7 +933,7 @@ combine_cc_data (GstCCConverter * self, gboolean pad_cea608,
 
   if (cea608_1 || cea608_2) {
     if (!write_cea608 (self, pad_cea608, out_fps_entry, cea608_1, cea608_1_len,
-            cea608_2, cea608_2_len, out, &cea608_size))
+            cea608_2, cea608_2_len, out, &cea608_size, last_cea608_is_field1))
       return FALSE;
   } else {
     cea608_size = 0;
@@ -946,7 +968,8 @@ fit_and_scale_cc_data (GstCCConverter * self,
     const struct cdp_fps_entry *in_fps_entry,
     const struct cdp_fps_entry *out_fps_entry, const guint8 * ccp_data,
     guint * ccp_data_len, const guint8 * cea608_1, guint * cea608_1_len,
-    const guint8 * cea608_2, guint * cea608_2_len, const GstVideoTimeCode * tc)
+    const guint8 * cea608_2, guint * cea608_2_len, const GstVideoTimeCode * tc,
+    gboolean use_cea608_field2_first)
 {
   if (!in_fps_entry || in_fps_entry->fps_n == 0) {
     in_fps_entry = cdp_fps_entry_from_fps (self->in_fps_n, self->in_fps_d);
@@ -1020,6 +1043,8 @@ fit_and_scale_cc_data (GstCCConverter * self,
        * size. Split them where necessary. */
       gint extra_ccp = 0, extra_cea608_1 = 0, extra_cea608_2 = 0;
       gint ccp_off = 0, cea608_1_off = 0, cea608_2_off = 0;
+      gboolean wrote_first = FALSE;
+      gint field2_padding = 0;
 
       if (output_time_cmp == 0) {
         /* we have completed a cycle and can reset our counters to avoid
@@ -1041,6 +1066,7 @@ fit_and_scale_cc_data (GstCCConverter * self,
       extra_cea608_1 = VAL_OR_0 (cea608_1_len);
       extra_cea608_2 = VAL_OR_0 (cea608_2_len);
 
+      wrote_first = !use_cea608_field2_first;
       /* try to push data into the packets.  Anything 'extra' will be
        * stored for later */
       while (extra_cea608_1 > 0 || extra_cea608_2 > 0) {
@@ -1048,10 +1074,11 @@ fit_and_scale_cc_data (GstCCConverter * self,
 
         avail_1 = VAL_OR_0 (cea608_1_len) - extra_cea608_1;
         avail_2 = VAL_OR_0 (cea608_2_len) - extra_cea608_2;
-        if (avail_1 + avail_2 >= 2 * out_fps_entry->max_cea608_count)
+        if (avail_1 + avail_2 + field2_padding >=
+            2 * out_fps_entry->max_cea608_count)
           break;
 
-        if (extra_cea608_1 > 0) {
+        if (wrote_first && extra_cea608_1 > 0) {
           extra_cea608_1 -= 2;
           g_assert_cmpint (extra_cea608_1, >=, 0);
           cea608_1_off += 2;
@@ -1060,7 +1087,8 @@ fit_and_scale_cc_data (GstCCConverter * self,
 
         avail_1 = VAL_OR_0 (cea608_1_len) - extra_cea608_1;
         avail_2 = VAL_OR_0 (cea608_2_len) - extra_cea608_2;
-        if (avail_1 + avail_2 >= 2 * out_fps_entry->max_cea608_count)
+        if (avail_1 + avail_2 + field2_padding >=
+            2 * out_fps_entry->max_cea608_count)
           break;
 
         if (extra_cea608_2 > 0) {
@@ -1068,8 +1096,16 @@ fit_and_scale_cc_data (GstCCConverter * self,
           g_assert_cmpint (extra_cea608_2, >=, 0);
           cea608_2_off += 2;
           g_assert_cmpint (cea608_2_off, <=, *cea608_2_len);
+        } else if (!wrote_first) {
+          /* we need to insert field 2 padding if we don't have data and are
+           * requested to start with field2 */
+          field2_padding += 2;
         }
+        wrote_first = TRUE;
       }
+
+      GST_TRACE_OBJECT (self, "allocated sizes ccp:%u, cea608-1:%u, "
+          "cea608-2:%u", ccp_off, cea608_1_off, cea608_2_off);
 
       if (extra_ccp > 0 || extra_cea608_1 > 0 || extra_cea608_2 > 0) {
         /* packet would overflow, push extra bytes into the next packet */
@@ -1367,8 +1403,11 @@ convert_cea708_cdp_cea708_cc_data_internal (GstCCConverter * self,
     cc_count &= 0x1f;
 
     len = 3 * cc_count;
-    if (gst_byte_reader_get_remaining (&br) < len)
+    if (gst_byte_reader_get_remaining (&br) < len) {
+      GST_WARNING_OBJECT (self, "not enough bytes (%u) left for the number of "
+          "byte triples (%u)", gst_byte_reader_get_remaining (&br), cc_count);
       return 0;
+    }
 
     memcpy (cc_data, gst_byte_reader_get_data_unchecked (&br, len), len);
   }
@@ -1708,11 +1747,13 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     g_assert_not_reached ();
 
   if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, NULL, 0,
-          cea608_1, &cea608_1_len, NULL, 0, tc_meta ? &tc_meta->tc : NULL))
+          cea608_1, &cea608_1_len, NULL, 0, tc_meta ? &tc_meta->tc : NULL,
+          FALSE))
     goto drop;
 
   if (!combine_cc_data (self, TRUE, out_fps_entry, NULL, 0, cea608_1,
-          cea608_1_len, (guint8 *) 0x1, 0, cc_data, &cc_data_len))
+          cea608_1_len, NULL, 0, cc_data, &cc_data_len,
+          &self->last_cea608_written_was_field1))
     goto drop;
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
@@ -1871,12 +1912,14 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
   if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, NULL, 0,
           cea608_1, &cea608_1_len, cea608_2, &cea608_2_len,
-          tc_meta ? &tc_meta->tc : NULL)) {
+          tc_meta ? &tc_meta->tc : NULL,
+          self->last_cea608_written_was_field1)) {
     goto drop;
   }
 
   if (!combine_cc_data (self, TRUE, out_fps_entry, NULL, 0, cea608_1,
-          cea608_1_len, cea608_2, cea608_2_len, cc_data, &cc_data_len)) {
+          cea608_1_len, cea608_2, cea608_2_len, cc_data, &cc_data_len,
+          &self->last_cea608_written_was_field1)) {
     goto drop;
   }
 
@@ -2027,12 +2070,12 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
   if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, ccp_data,
           &ccp_data_len, cea608_1, &cea608_1_len, cea608_2, &cea608_2_len,
-          tc_meta ? &tc_meta->tc : NULL))
+          tc_meta ? &tc_meta->tc : NULL, self->last_cea608_written_was_field1))
     goto drop;
 
   if (!combine_cc_data (self, TRUE, out_fps_entry, ccp_data, ccp_data_len,
           cea608_1, cea608_1_len, cea608_2, cea608_2_len, cc_data,
-          &cc_data_len))
+          &cc_data_len, &self->last_cea608_written_was_field1))
     goto drop;
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
@@ -2074,12 +2117,12 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
     out_fps_entry = in_fps_entry;
 
   if (fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, NULL, 0,
-          cea608_1, &cea608_1_len, NULL, NULL, &tc)) {
+          cea608_1, &cea608_1_len, NULL, NULL, &tc, FALSE)) {
     guint i, out_size = (guint) out.size;
 
     self->output_frames++;
     if (!write_cea608 (self, TRUE, out_fps_entry, cea608_1, cea608_1_len, NULL,
-            0, out.data, &out_size)) {
+            0, out.data, &out_size, NULL)) {
       gst_buffer_unmap (outbuf, &out);
       return GST_FLOW_ERROR;
     }
@@ -2126,14 +2169,16 @@ convert_cea708_cdp_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
     out_fps_entry = in_fps_entry;
 
   if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, NULL, 0,
-          cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, &tc))
+          cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, &tc,
+          self->last_cea608_written_was_field1))
     goto drop;
 
   cc_data_len = gst_buffer_get_sizes (outbuf, NULL, NULL);
 
   gst_buffer_map (outbuf, &out, GST_MAP_READWRITE);
   if (!combine_cc_data (self, TRUE, out_fps_entry, NULL, 0, cea608_1,
-          cea608_1_len, cea608_2, cea608_2_len, out.data, &cc_data_len)) {
+          cea608_1_len, cea608_2, cea608_2_len, out.data, &cc_data_len,
+          &self->last_cea608_written_was_field1)) {
     gst_buffer_unmap (outbuf, &out);
     goto drop;
   }
@@ -2184,13 +2229,15 @@ convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
     out_fps_entry = in_fps_entry;
 
   if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, ccp_data,
-          &ccp_data_len, cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, &tc))
+          &ccp_data_len, cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, &tc,
+          self->last_cea608_written_was_field1))
     goto out;
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
   out_len = (guint) out.size;
   if (!combine_cc_data (self, TRUE, out_fps_entry, ccp_data, ccp_data_len,
-          cea608_1, cea608_1_len, cea608_2, cea608_2_len, out.data, &out_len)) {
+          cea608_1, cea608_1_len, cea608_2, cea608_2_len, out.data, &out_len,
+          &self->last_cea608_written_was_field1)) {
     gst_buffer_unmap (outbuf, &out);
     out_len = 0;
     goto out;
@@ -2233,12 +2280,13 @@ convert_cea708_cdp_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     out_fps_entry = in_fps_entry;
 
   if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, ccp_data,
-          &ccp_data_len, cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, &tc))
+          &ccp_data_len, cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, &tc,
+          self->last_cea608_written_was_field1))
     goto out;
 
   if (!combine_cc_data (self, TRUE, out_fps_entry, ccp_data, ccp_data_len,
           cea608_1, cea608_1_len, cea608_2, cea608_2_len, cc_data,
-          &cc_data_len)) {
+          &cc_data_len, &self->last_cea608_written_was_field1)) {
     goto out;
   }
 
@@ -2450,6 +2498,7 @@ reset_counters (GstCCConverter * self)
   self->output_frames = 1;
   gst_video_time_code_clear (&self->current_output_timecode);
   gst_clear_buffer (&self->previous_buffer);
+  self->last_cea608_written_was_field1 = FALSE;
 }
 
 static GstFlowReturn
@@ -2592,11 +2641,7 @@ gst_cc_converter_start (GstBaseTransform * base)
   /* Resetting this is not really needed but makes debugging easier */
   self->cdp_hdr_sequence_cntr = 0;
   self->current_output_timecode = (GstVideoTimeCode) GST_VIDEO_TIME_CODE_INIT;
-  self->input_frames = 0;
-  self->output_frames = 1;
-  self->scratch_ccp_len = 0;
-  self->scratch_cea608_1_len = 0;
-  self->scratch_cea608_2_len = 0;
+  reset_counters (self);
 
   return TRUE;
 }

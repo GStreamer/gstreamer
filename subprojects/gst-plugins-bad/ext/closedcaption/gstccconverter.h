@@ -79,6 +79,9 @@ struct _GstCCConverter
   GstVideoTimeCode current_output_timecode;
   /* previous buffer for copying metas onto */
   GstBuffer *previous_buffer;
+
+  /* used for tracking which field to write across output buffer boundaries */
+  gboolean last_cea608_written_was_field1;
 };
 
 struct _GstCCConverterClass
